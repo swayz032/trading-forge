@@ -1,0 +1,77 @@
+{
+  "input": {
+    "video_metadata": {
+      "youtube_url": "https://www.youtube.com/watch?v=xQ4pTz7mAbc",
+      "title": "4H Bias Continuation Setup — Short Example on MES",
+      "channel": "SmartMoney Trader",
+      "duration_seconds": 1820
+    },
+    "transcript_snippet": "Let me walk you through this short setup. My 4-hour chart is bearish — we're below the 4H FVG so bias is down. I drop to the 15-minute and I see a bearish CHoCH, change of character, so 15-minute structure confirms bearish too. I come to the 5-minute and I'm waiting for a fair value gap to form. When price retraces into that bearish FVG during the New York morning session, that's my short entry. I target previous equal lows as my take profit. I don't trade on FOMC or CPI days — the noise is too unpredictable. When the 4-hour is bullish I flip it to go long — exact same mechanics. My win rate on this is roughly 68 percent over the last 300 trades."
+  },
+  "wrong_output": {
+    "_comment": "DO NOT PRODUCE THIS — this output shows 3 extraction errors",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "name": "4h_bias_short_continuation",
+        "concept_name": "4h_bias_bearish_fvg_short",
+        "_error_1": "concept_name uses literal video phrase + direction. Should be: ict_bias_aligned_continuation",
+        "direction": "short",
+        "_error_2": "direction='short' because video title + example are bearish. WRONG: speaker says 'When the 4H is bullish I flip it to go long — exact same mechanics'. This is bidirectional. Must be direction='both'.",
+        "entry_indicator": "ema_crossover",
+        "_error_3": "entry_indicator='ema_crossover' because video mentions 'bias'. WRONG: this is a structural archetype — 4H bias + 15m CHoCH + 5m FVG retrace. Must be entry_indicator='archetype:ict_bias_aligned_continuation'.",
+        "entry_params": { "fast_period": 9, "slow_period": 21 },
+        "_error_4": "entry_params has EMA periods that speaker never mentioned. This is fabrication.",
+        "confluence_factors": [],
+        "_error_5": "empty confluence_factors despite transcript describing 4H bias (regime_match), CHoCH+FVG (structural_setup), killzone NY morning (structural_setup), no FOMC/CPI (macro_alignment). Should have at minimum ['regime_match', 'structural_setup', 'macro_alignment'].",
+        "confirming_indicators": null,
+        "_error_6": "null confirming_indicators despite 5 explicitly described conditions: 4H FVG bias / 15m CHoCH / 5m FVG / NY AM killzone / macro filter."
+      }
+    ]
+  },
+  "correct_output": {
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "name": "ict_bias_aligned_continuation_mes_5m",
+        "concept_name": "ict_bias_aligned_continuation",
+        "description": "Bidirectional ICT bias continuation: 4H FVG sets directional bias, 15m CHoCH confirms structure, 5m FVG retrace during NY AM session triggers entry; skip FOMC/CPI per SmartMoney Trader YouTube walkthrough.",
+        "symbol": "MES",
+        "timeframe": "5m",
+        "direction": "both",
+        "entry_type": "trend_follow",
+        "entry_indicator": "archetype:ict_bias_aligned_continuation",
+        "primary_indicator": "ict_bias_aligned_continuation",
+        "entry_params": {},
+        "entry_long": "high < low",
+        "entry_short": "high < low",
+        "entry_condition": "LONG: 4H bias is bullish (above 4H FVG) + 15m bullish CHoCH confirmed + price retraces into unmitigated bullish 5m FVG during NY AM session. SHORT: 4H bearish (below 4H FVG) + 15m bearish CHoCH + 5m bearish FVG retrace in NY AM killzone. Skip FOMC/CPI days. Target equal highs/lows.",
+        "confirming_indicators": [
+          { "indicator": "htf_bias", "params": {}, "direction": "agree" },
+          { "indicator": "market_structure_aligned", "params": {}, "direction": "agree" },
+          { "indicator": "fvg_retrace", "params": {}, "direction": "agree" },
+          { "indicator": "killzone", "params": {}, "direction": "agree" },
+          { "indicator": "macro_filter", "params": {}, "direction": "agree" }
+        ],
+        "min_factors_satisfied": 5,
+        "bias_timeframe": "4h",
+        "bias_condition": "4H chart: bearish bias when price below 4H FVG; bullish bias when price above",
+        "execution_timeframe": "5m",
+        "exit_type": "atr_multiple",
+        "exit_params": { "multiplier": 2.0 },
+        "stop_loss_atr_multiple": 1.5,
+        "take_profit_atr_multiple": 3.0,
+        "preferred_regime": "TRENDING_UP",
+        "preferred_regimes": ["TRENDING_UP", "TRENDING_DOWN"],
+        "session_filter": "RTH_ONLY",
+        "source_url": "https://www.youtube.com/watch?v=xQ4pTz7mAbc",
+        "extraction_confidence": 1.0,
+        "confluence_factors": ["regime_match", "structural_setup", "macro_alignment"],
+        "source_claim_win_rate": 0.68,
+        "source_claim_avg_r": null,
+        "symbols": ["MES"]
+      }
+    ]
+  },
+  "notes": "COUNTEREXAMPLE — demonstrates 6 common extraction errors and their fixes. The three headline errors: (1) SINGLE-DIRECTION DEFAULT: video title says 'Short Example' so extractor defaults direction='short'. WRONG — the mechanic is symmetric; speaker says 'when 4H is bullish I flip it to long'. Always read the full transcript for symmetric language. (2) WRONG ENTRY INDICATOR: ema_crossover is chosen because 'bias' sounds like a trend indicator. WRONG — the entry mechanic is 4H structural zone + 15m CHoCH + 5m FVG retrace. That is archetype:ict_bias_aligned_continuation, not ema_crossover. (3) EMPTY CONFLUENCE: confluence_factors=[] despite 5 explicitly described factors. Emptiness signals insufficient scanning. The correct extraction has 5 confirming_indicators and 3 confluence_factors tokens. Additional error: concept_name uses the video title phrasing ('4h_bias_bearish_fvg_short') instead of the canonical archetype name."
+}

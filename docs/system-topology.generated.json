@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-26T08:33:10.148Z",
+  "generatedAt": "2026-05-26T08:58:31.987Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -21,7 +21,7 @@
     "canonicalWorkflows": 28,
     "engineSubsystems": 27,
     "databaseTables": 97,
-    "registrySubsystems": 54
+    "registrySubsystems": 55
   },
   "routes": [
     "/api/admin",
@@ -868,34 +868,34 @@
     "weekly_drift_reports"
   ],
   "registryCoverage": {
-    "registryEntries": 54,
-    "autonomousSubsystems": 50,
+    "registryEntries": 55,
+    "autonomousSubsystems": 51,
     "selfEvolvingSubsystems": 8,
     "proofStatusCounts": {
       "runtime-proven": 37,
       "partially-proven": 1,
       "offline-by-design": 0,
       "experimental": 5,
-      "drifted": 11
+      "drifted": 12
     },
     "runtimeStateCounts": {
-      "active": 48,
+      "active": 49,
       "experimental": 5,
       "scaffold": 1
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
       "partially_active_preprod": 0,
-      "active_preprod": 49,
+      "active_preprod": 50,
       "experimental_preprod": 5
     },
     "launchTargetCounts": {
-      "runtime_proven_autonomous": 47,
+      "runtime_proven_autonomous": 48,
       "runtime_proven_manual_gate": 2,
       "experimental_challenger": 5
     },
     "closedLoopCounts": {
-      "not_collecting": 42,
+      "not_collecting": 43,
       "collecting_only": 0,
       "learning_active": 7,
       "learning_blocked": 0,
@@ -903,13 +903,13 @@
     },
     "learningModeCounts": {
       "active_learning": 6,
-      "deterministic_instrumented": 41,
+      "deterministic_instrumented": 42,
       "manual_gate_only": 2,
       "shadow_experimental": 5
     },
     "operatingClassCounts": {
       "adaptive": 6,
-      "deterministic_instrumented": 46,
+      "deterministic_instrumented": 47,
       "manual_gated": 2
     },
     "manualGates": [
@@ -922,21 +922,15 @@
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 71,
-      "schedulerJobs": 84,
+      "routes": 72,
+      "schedulerJobs": 85,
       "engineSubsystems": 27,
-      "databaseTables": 96
+      "databaseTables": 97
     },
-    "missingRoutes": [
-      "/api/composite-health"
-    ],
-    "missingSchedulerJobs": [
-      "composite-health-daily-digest"
-    ],
+    "missingRoutes": [],
+    "missingSchedulerJobs": [],
     "missingEngineSubsystems": [],
-    "missingDatabaseTables": [
-      "strategy_health_scores"
-    ],
+    "missingDatabaseTables": [],
     "subsystemsMissingAudit": [],
     "subsystemsMissingAuditActions": [],
     "subsystemsMissingMetrics": [],
@@ -956,11 +950,11 @@
     "manualGateViolations": [],
     "preprodIntegrity": {
       "status": "incomplete",
-      "automationComplete": 45,
-      "dataCollectionComplete": 54,
-      "auditabilityComplete": 54,
-      "failureVisibilityComplete": 54,
-      "authorityCorrect": 54,
+      "automationComplete": 46,
+      "dataCollectionComplete": 55,
+      "auditabilityComplete": 55,
+      "failureVisibilityComplete": 55,
+      "authorityCorrect": 55,
       "learningActive": 7,
       "incompleteSubsystems": [
         "adaptive_exit_engine",
@@ -974,13 +968,14 @@
         "replay_grade_survival_twin",
         "replay_grade_unified_dispatcher",
         "replay_harness_engine",
+        "strategy_health_observability",
         "ts_python_parity_ci_gate"
       ]
     },
     "productionConvergence": {
       "status": "blocked",
       "targetStateCounts": {
-        "production_autonomous": 47,
+        "production_autonomous": 48,
         "production_manual_gate": 2,
         "production_experimental": 5,
         "production_not_intended": 0
@@ -1036,6 +1031,7 @@
         "replay_grade_survival_twin",
         "replay_grade_unified_dispatcher",
         "replay_harness_engine",
+        "strategy_health_observability",
         "ts_python_parity_ci_gate"
       ],
       "experimentalSubsystems": [
@@ -1081,6 +1077,7 @@
         "replay_grade_unified_dispatcher:manual_gate:operator-approve",
         "replay_harness_engine:invalid-active-proof-mode",
         "replay_harness_engine:manual_gate:operator-approve",
+        "strategy_health_observability:invalid-active-proof-mode",
         "ts_python_parity_ci_gate:invalid-active-proof-mode",
         "ts_python_parity_ci_gate:manual_gate:ci_gate",
         "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
@@ -1123,6 +1120,7 @@
         "replay_grade_unified_dispatcher:manual_gate:operator-approve",
         "replay_harness_engine:invalid-active-proof-mode",
         "replay_harness_engine:manual_gate:operator-approve",
+        "strategy_health_observability:invalid-active-proof-mode",
         "synthetic_black_swan_survival:experimental_governance",
         "ts_python_parity_ci_gate:invalid-active-proof-mode",
         "ts_python_parity_ci_gate:manual_gate:ci_gate",
@@ -1153,6 +1151,7 @@
         "replay_grade_survival_twin",
         "replay_grade_unified_dispatcher",
         "replay_harness_engine",
+        "strategy_health_observability",
         "synthetic_black_swan_survival",
         "ts_python_parity_ci_gate"
       ],
@@ -5443,6 +5442,108 @@
           "src/server/__tests__/wave26-smt-live-bridge.test.ts"
         ],
         "coverageGaps": []
+      },
+      {
+        "id": "strategy_health_observability",
+        "domain": "observability",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "system",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "audit_log_evidence",
+        "proofStatus": "drifted",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "observability_only",
+        "deploymentAuthority": "operator_only",
+        "criticality": "observability",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "route contract reachable",
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
+        ],
+        "runtimeEvidence": [
+          "/api/composite-health",
+          "composite_health.aggregator_uncaught_error",
+          "composite_health.daily_digest_emitted",
+          "composite_health.digest_discord_failed",
+          "composite_health.digest_skipped_dst_guard",
+          "composite_health.digest_skipped_lock_contention",
+          "composite_health.evaluated",
+          "composite_health.evaluated audit rows",
+          "composite_health.skipped_below_subsystem_threshold",
+          "strategy_health_scores.evaluated_at"
+        ],
+        "dataCollectionCoverage": [
+          "12 canonical subsystems",
+          "audit_log",
+          "backtests",
+          "composite-health-digest-service",
+          "strategies",
+          "strategy_health_aggregator",
+          "strategy_health_scores"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": false,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "drifted",
+        "productionBlockers": [
+          "invalid-active-proof-mode"
+        ],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "/api/composite-health",
+          "composite_health.aggregator_uncaught_error",
+          "composite_health.daily_digest_emitted",
+          "composite_health.digest_discord_failed",
+          "composite_health.digest_skipped_dst_guard",
+          "composite_health.digest_skipped_lock_contention",
+          "composite_health.evaluated",
+          "composite_health.evaluated audit rows",
+          "composite_health.skipped_below_subsystem_threshold",
+          "SELECT * FROM audit_log WHERE action = 'composite_health.daily_digest_emitted' ORDER BY created_at DESC LIMIT 1",
+          "SELECT COUNT(*) FROM strategy_health_scores WHERE evaluated_at > NOW() - INTERVAL '24 hours'",
+          "strategy_health_scores.evaluated_at"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [
+          "/api/composite-health"
+        ],
+        "schedulerJobs": [
+          "composite-health-daily-digest"
+        ],
+        "healthCheck": "src/server/__tests__/wave28-pass-a-strategy-health-aggregator.test.ts",
+        "freshnessSignals": [
+          "strategy_health_scores.evaluated_at",
+          "composite_health.evaluated audit rows"
+        ],
+        "evidenceQueries": [
+          "SELECT COUNT(*) FROM strategy_health_scores WHERE evaluated_at > NOW() - INTERVAL '24 hours'",
+          "SELECT * FROM audit_log WHERE action = 'composite_health.daily_digest_emitted' ORDER BY created_at DESC LIMIT 1"
+        ],
+        "coverageGaps": [
+          "invalid-active-proof-mode"
+        ]
       },
       {
         "id": "strategy_lifecycle",
@@ -10695,6 +10796,108 @@
         "src/server/__tests__/wave26-smt-live-bridge.test.ts"
       ],
       "coverageGaps": []
+    },
+    {
+      "id": "strategy_health_observability",
+      "domain": "observability",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "system",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "audit_log_evidence",
+      "proofStatus": "drifted",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "observability_only",
+      "deploymentAuthority": "operator_only",
+      "criticality": "observability",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "route contract reachable",
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
+      ],
+      "runtimeEvidence": [
+        "/api/composite-health",
+        "composite_health.aggregator_uncaught_error",
+        "composite_health.daily_digest_emitted",
+        "composite_health.digest_discord_failed",
+        "composite_health.digest_skipped_dst_guard",
+        "composite_health.digest_skipped_lock_contention",
+        "composite_health.evaluated",
+        "composite_health.evaluated audit rows",
+        "composite_health.skipped_below_subsystem_threshold",
+        "strategy_health_scores.evaluated_at"
+      ],
+      "dataCollectionCoverage": [
+        "12 canonical subsystems",
+        "audit_log",
+        "backtests",
+        "composite-health-digest-service",
+        "strategies",
+        "strategy_health_aggregator",
+        "strategy_health_scores"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": false,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "drifted",
+      "productionBlockers": [
+        "invalid-active-proof-mode"
+      ],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "/api/composite-health",
+        "composite_health.aggregator_uncaught_error",
+        "composite_health.daily_digest_emitted",
+        "composite_health.digest_discord_failed",
+        "composite_health.digest_skipped_dst_guard",
+        "composite_health.digest_skipped_lock_contention",
+        "composite_health.evaluated",
+        "composite_health.evaluated audit rows",
+        "composite_health.skipped_below_subsystem_threshold",
+        "SELECT * FROM audit_log WHERE action = 'composite_health.daily_digest_emitted' ORDER BY created_at DESC LIMIT 1",
+        "SELECT COUNT(*) FROM strategy_health_scores WHERE evaluated_at > NOW() - INTERVAL '24 hours'",
+        "strategy_health_scores.evaluated_at"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [
+        "/api/composite-health"
+      ],
+      "schedulerJobs": [
+        "composite-health-daily-digest"
+      ],
+      "healthCheck": "src/server/__tests__/wave28-pass-a-strategy-health-aggregator.test.ts",
+      "freshnessSignals": [
+        "strategy_health_scores.evaluated_at",
+        "composite_health.evaluated audit rows"
+      ],
+      "evidenceQueries": [
+        "SELECT COUNT(*) FROM strategy_health_scores WHERE evaluated_at > NOW() - INTERVAL '24 hours'",
+        "SELECT * FROM audit_log WHERE action = 'composite_health.daily_digest_emitted' ORDER BY created_at DESC LIMIT 1"
+      ],
+      "coverageGaps": [
+        "invalid-active-proof-mode"
+      ]
     },
     {
       "id": "strategy_lifecycle",

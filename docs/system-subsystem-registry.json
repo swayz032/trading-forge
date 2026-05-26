@@ -3918,5 +3918,79 @@
     "learning_boundary": "engine_only",
     "deployment_authority": "operator_only",
     "criticality": "important"
+  },
+  {
+    "id": "strategy_health_observability",
+    "domain": "observability",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Wave 28 Pass A composite-health observability bus + aggregator. PURE OBSERVABILITY MODE — writes one immutable row per strategy per cycle to strategy_health_scores. Composite scores DO NOT GATE promotion; Wave 27.5 hard gates retain independent veto power.",
+    "data_sources": [
+      "strategy_health_aggregator",
+      "12 canonical subsystems",
+      "composite-health-digest-service"
+    ],
+    "reads_from": [
+      "strategies",
+      "backtests",
+      "audit_log"
+    ],
+    "writes_to": [
+      "strategy_health_scores",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "strategy_health_scores"
+    ],
+    "audit_actions": [
+      "composite_health.evaluated",
+      "composite_health.skipped_below_subsystem_threshold",
+      "composite_health.aggregator_uncaught_error",
+      "composite_health.daily_digest_emitted",
+      "composite_health.digest_skipped_lock_contention",
+      "composite_health.digest_skipped_dst_guard",
+      "composite_health.digest_discord_failed"
+    ],
+    "metrics_surfaces": [
+      "/api/composite-health"
+    ],
+    "telemetry_sources": [
+      "/api/composite-health"
+    ],
+    "scheduler_jobs": [
+      "composite-health-daily-digest"
+    ],
+    "routes": [
+      "/api/composite-health"
+    ],
+    "engine_subsystems": [],
+    "database_tables": [
+      "strategy_health_scores"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": "discord_daily_digest",
+    "recovery_mode": "operator-skip-write",
+    "health_check": "src/server/__tests__/wave28-pass-a-strategy-health-aggregator.test.ts",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "audit_log_evidence",
+    "freshness_signals": [
+      "strategy_health_scores.evaluated_at",
+      "composite_health.evaluated audit rows"
+    ],
+    "evidence_queries": [
+      "SELECT COUNT(*) FROM strategy_health_scores WHERE evaluated_at > NOW() - INTERVAL '24 hours'",
+      "SELECT * FROM audit_log WHERE action = 'composite_health.daily_digest_emitted' ORDER BY created_at DESC LIMIT 1"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "observability_only",
+    "deployment_authority": "operator_only",
+    "criticality": "observability"
   }
 ]

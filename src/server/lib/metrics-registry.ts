@@ -185,3 +185,40 @@ export const strategySourceResolutionTotal = new Counter({
   labelNames: ["path"] as const,
   registers: [promRegistry],
 });
+
+// ─── Wave 26 Pass G B3 — confluence quality counters (2026-05-26) ─────────────
+//
+// tf_graduation_factor_quality_total
+//   Incremented by confluence-quality-audit.ts::emitFactorQualityClassified()
+//   on every graduation. label "quality" carries: rich | thin | fallback_only.
+//   Lets dashboards track library confluence-health over time without a full
+//   audit_log query. Declared at registry init so Prometheus sees zero values
+//   from first scrape (no "no data" gaps in Grafana).
+export const graduationFactorQualityTotal = new Counter({
+  name: "tf_graduation_factor_quality_total",
+  help: "Total graduation factor-quality classifications, labelled by quality bucket",
+  labelNames: ["quality"] as const,
+  registers: [promRegistry],
+});
+
+// tf_graduation_bidirectional_rejection_total
+//   Incremented when Gate 1 fires (direction=both, one side empty).
+//   label "reason" carries the structured rejection reason code.
+export const graduationBidirectionalRejectionTotal = new Counter({
+  name: "tf_graduation_bidirectional_rejection_total",
+  help: "Total bidirectional graduation rejections, labelled by reason code",
+  labelNames: ["reason"] as const,
+  registers: [promRegistry],
+});
+
+// tf_extraction_confluence_depth_histogram
+//   Observed by confluence-quality-audit.ts on every graduation.
+//   Buckets cover 0–5+ confluence factors extracted from the transcript.
+//   Lets operators query "what fraction of extractions produce ≥3 factors"
+//   to track whether B1's richer Gemma prompt is working over time.
+export const extractionConfluenceDepthHistogram = new Histogram({
+  name: "tf_extraction_confluence_depth_histogram",
+  help: "Number of confluence factors extracted per graduation attempt",
+  buckets: [0, 1, 2, 3, 4, 5],
+  registers: [promRegistry],
+});

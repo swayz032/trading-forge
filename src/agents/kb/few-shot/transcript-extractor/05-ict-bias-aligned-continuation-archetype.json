@@ -1,0 +1,56 @@
+{
+  "input": {
+    "video_metadata": {
+      "youtube_url": "https://www.youtube.com/watch?v=nK7xLmW9pQs",
+      "title": "My EXACT 4H Bias + BOS + FVG Setup (Short Setup Walkthrough)",
+      "channel": "ICT Breakdown Daily",
+      "duration_seconds": 2105
+    },
+    "transcript_snippet": "Alright let me break down exactly how I find these setups. I start on the 4-hour chart. I need to know what the bias is. Today the 4H was bearish — price was trading below the 4-hour FVG that formed two days ago, so my bias is short. Once I have that bearish bias on the 4H, I drop to the 15-minute chart. I'm waiting for a bearish BOS or a CHoCH on the 15-minute. Once I see that break of structure to the downside, I know the 15-minute structure is now confirmed bearish aligning with my 4H bias. Now I come all the way down to the 5-minute chart. On the 5-minute I'm waiting for price to retrace back into an unmitigated bearish FVG. That's my entry trigger. The FVG has to be unmitigated — if price already came back to it once, I skip it. And I only take this during the NY AM session or the NY PM session, those killzones matter. I don't trade this at 2 PM randomly — it needs to be in a high-probability time window. Now I want to be clear — this works both ways. When the 4H is bullish, I'm looking for a bullish BOS on the 15-minute, then a bullish FVG retrace on the 5-minute, and I'm long. The logic is symmetric. I avoid FOMC and CPI days. My stop goes below the FVG plus some buffer. Average trade is about 2R when it works."
+  },
+  "expected_output": {
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "name": "ict_bias_aligned_continuation_mes_5m",
+        "concept_name": "ict_bias_aligned_continuation",
+        "description": "Bidirectional ICT 3-layer continuation: 4H bias direction + 15m BOS/CHoCH alignment + 5m unmitigated FVG retrace entry during NY AM or NY PM killzone; skip FOMC/CPI per ICT Breakdown Daily YouTube walkthrough.",
+        "symbol": "MES",
+        "timeframe": "5m",
+        "direction": "both",
+        "entry_type": "trend_follow",
+        "entry_indicator": "archetype:ict_bias_aligned_continuation",
+        "primary_indicator": "ict_bias_aligned_continuation",
+        "entry_params": {},
+        "entry_long": "high < low",
+        "entry_short": "high < low",
+        "entry_condition": "LONG: 4H bias is bullish + 15m bullish BOS or CHoCH confirmed + price retraces into unmitigated bullish 5m FVG during NY AM (8-11 ET) or NY PM (1:30-4 ET) killzone. Enter on FVG close. SHORT: mirror — 4H bearish bias + 15m bearish BOS/CHoCH + price retraces into unmitigated bearish 5m FVG in killzone. Skip FOMC/CPI days.",
+        "confirming_indicators": [
+          { "indicator": "htf_bias", "params": {}, "direction": "agree" },
+          { "indicator": "market_structure_aligned", "params": {}, "direction": "agree" },
+          { "indicator": "fvg_retrace", "params": {}, "direction": "agree" },
+          { "indicator": "killzone", "params": {}, "direction": "agree" },
+          { "indicator": "macro_filter", "params": {}, "direction": "agree" }
+        ],
+        "min_factors_satisfied": 5,
+        "bias_timeframe": "4h",
+        "bias_condition": "4H chart determines long/short bias — bearish when price trades below 4H FVG; bullish when price trades above",
+        "execution_timeframe": "5m",
+        "exit_type": "atr_multiple",
+        "exit_params": { "multiplier": 2.0 },
+        "stop_loss_atr_multiple": 1.5,
+        "take_profit_atr_multiple": 3.0,
+        "preferred_regime": "TRENDING_UP",
+        "preferred_regimes": ["TRENDING_UP", "TRENDING_DOWN"],
+        "session_filter": "RTH_ONLY",
+        "source_url": "https://www.youtube.com/watch?v=nK7xLmW9pQs",
+        "extraction_confidence": 1.0,
+        "confluence_factors": ["regime_match", "structural_setup", "macro_alignment"],
+        "source_claim_win_rate": null,
+        "source_claim_avg_r": 2.0,
+        "symbols": ["MES"]
+      }
+    ]
+  },
+  "notes": "ARCHETYPE: ict_bias_aligned_continuation. Key decisions: (1) entry_indicator='archetype:ict_bias_aligned_continuation' even though video title says 'Short Setup Walkthrough' — speaker EXPLICITLY states 'this works both ways' and describes the bullish mirror. NEVER let the title set direction='short'. (2) direction='both' — speaker said it's symmetric. entry_long and entry_short are BOTH sentinel 'high < low'. (3) 5 confluence factors: HTF bias (4H), structure break (15m BOS/CHoCH), FVG retrace (5m), killzone (NY AM/PM), macro filter (no FOMC/CPI). 5 factors = rich institutional setup, correct. (4) bias_timeframe='4h' — explicit 3-TF workflow described: 4H→15m→5m. (5) concept_name='ict_bias_aligned_continuation' — NOT 'multi_confluence_short_setup' or '4h_bias_bearish_fvg' (literal video phrases). The archetype name IS the canonical concept name. This fixture demonstrates the correct ict_bias_aligned_continuation extraction including ignoring the directional video title."
+}

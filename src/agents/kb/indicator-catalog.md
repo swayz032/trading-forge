@@ -546,6 +546,51 @@ the archetype's detector path handles the actual signal — not a DSL expression
 
 ---
 
+---
+
+## Confluence Factor Vocabulary — Wave 25 11-Factor Reference
+
+> **Loaded by:** `transcript_extractor` at call time. This section maps spoken/written phrases to the canonical factor tokens used by the A+ confluence gate and the 11-factor weighted-scoring model.
+
+The operator's 2026 library audit found 66 of 99 strategies with only the auto-injected `regime_match + structural_setup` fallback pair — Gemma was extracting 0-1 real confluence factors per video. The 2026 institutional standard is **≥3 factors per strategy**. This vocabulary table exists so Gemma can match spoken phrases to the correct tokens.
+
+### Instructions for Gemma
+
+After identifying the primary archetype, scan the ENTIRE transcript for phrases from the left column. When found, emit both the `confluence_factors` token (closed 5-enum for the A+ gate) AND a corresponding `confirming_indicators` entry (for the richer weighted-scoring path).
+
+Bias toward INCLUSION. A missed factor scores the strategy wrong permanently until re-extracted. The operator prunes false positives; the system cannot add missing true positives after graduation.
+
+### Trigger phrase → factor mapping
+
+| Trigger phrases (if you hear any of these...) | `confluence_factors` token | `confirming_indicators` indicator |
+|---|---|---|
+| "higher timeframe bias", "4H bias", "daily trend", "HTF direction", "weekly trend", "HTF in premium", "HTF in discount" | `regime_match` + `structural_setup` | `{"indicator": "htf_bias", "params": {}, "direction": "agree"}` |
+| "killzone", "NY open", "NY AM session", "NY PM session", "London session", "10 AM window", "11 AM", "silver bullet hour", "2:30 PM reversal", "3 PM session" | `structural_setup` | `{"indicator": "killzone", "params": {}, "direction": "agree"}` |
+| "volume spike", "delta divergence", "cumulative delta", "footprint chart", "absorption", "order flow confirmation", "CVD" | `volume_confirmation` | `{"indicator": "cumulative_delta", "params": {}, "direction": "agree"}` |
+| "market breadth", "NYSE TICK", "ADD", "advance/decline", "internals confirm" | `volume_confirmation` | `{"indicator": "market_internals", "params": {}, "direction": "agree"}` |
+| "POC", "VAH", "VAL", "value area", "volume profile", "high-volume node", "vacuum area", "low-volume node" | `vp_shape` | `{"indicator": "volume_profile", "params": {}, "direction": "agree"}` |
+| "liquidity sweep", "stop run", "equal highs", "equal lows", "stop hunt", "swept the lows", "grabbed the stops" | `structural_setup` | `{"indicator": "liquidity_sweep", "params": {}, "direction": "agree"}` |
+| "no FOMC", "no CPI", "no NFP", "avoid news", "check the calendar", "macro filter", "news blackout" | `macro_alignment` | `{"indicator": "macro_filter", "params": {}, "direction": "agree"}` |
+| "ES and NQ confirm", "NQ leads ES", "SMT divergence", "smart money technique", "correlation divergence" | `structural_setup` | `{"indicator": "smt_divergence", "params": {}, "direction": "agree"}` |
+| "VWAP", "anchored VWAP", "AVWAP", "above VWAP", "below VWAP", "VWAP reclaim" | `structural_setup` | `{"indicator": "vwap", "params": {}, "direction": "agree"}` |
+| "DXY", "10-year yield", "dollar index", "bonds moving", "cross-asset" | `structural_setup` | `{"indicator": "cross_asset", "params": {}, "direction": "agree"}` |
+| "BOS", "break of structure", "CHoCH", "change of character", "MSS", "market structure shift", "price broke structure" | `structural_setup` | `{"indicator": "market_structure_aligned", "params": {}, "direction": "agree"}` |
+| "FVG", "fair value gap", "imbalance", "price fills the gap", "IFVG", "inversion FVG" | `structural_setup` | `{"indicator": "fvg_retrace", "params": {}, "direction": "agree"}` |
+| "regime filter", "trending market", "only in trend", "ADX above", "uptrend confirmed", "downtrend confirmed" | `regime_match` | `{"indicator": "regime_filter", "params": {}, "direction": "agree"}` |
+| "swing high", "swing low", "opening range", "previous high/low", "structural level", "key level" | `structural_setup` | `{"indicator": "structural_level", "params": {}, "direction": "agree"}` |
+
+### How many factors is enough?
+
+| Count | Assessment |
+|---|---|
+| 0 factors extracted | RED FLAG — re-scan the transcript. Most strategy videos describe at least regime + structure. |
+| 1 factor | LIKELY UNDER-EXTRACTION — acceptable only for truly single-condition scalps (rare). |
+| 2 factors | Minimum viable. Check if the video describes a regime or session window — likely 3 is achievable. |
+| 3+ factors | INSTITUTIONAL STANDARD — this is the target for every extraction. |
+| 5 factors | Rich confluence — typical for ICT/SMC multi-timeframe setups. |
+
+---
+
 ## NOT Recommended for Intraday Futures
 
 These are technically computable but consistently fail the Trading Forge performance gates on MES/MNQ/MCL data. Strategies proposing them should be rejected at synthesis time.

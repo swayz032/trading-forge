@@ -8021,6 +8021,38 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 
 ---
 
+### Session Log — 2026-05-26 Wave 26 Pass G — Pass B Close-out (B4 architect)
+
+**Mission:** Reconcile the audit-row ownership between B2 (graduator-side) and B3 (helper-side) emissions, wire B3 Prom/SSE/Discord helpers into B2 gate call-sites without runtime duplicates, sync System Map (clearing the 3 pre-existing Wave 28 Pass A drift items), run all CI hard gates GREEN, run the 99-strategy backfill `--apply`, and update CLAUDE.md + AGENT-LOGS.md + memory + System Map v2.
+
+**Work completed:**
+- `src/server/lib/confluence-quality-audit.ts` — added `skipAuditRow` field to all 3 payload interfaces; wired `if (payload.skipAuditRow) return;` guards in `emitBidirectionalIncompleteRejected` + `emitFactorQualityClassified`; wired `if (payload.skipAuditRow) { /* fall through */ } else { audit write }` block in `emitThinConfluenceWarning` plus a second `if (payload.skipAuditRow) return;` immediately before the Discord block (suppresses the graduator's duplicate Discord call on the helper-side path while keeping SSE + Prom unconditional).
+- `src/server/services/direct-bucket-graduator.ts` — imported the 3 helpers; added fire-and-forget `emitBidirectionalIncompleteRejected({ ..., skipAuditRow: true })` right before the Gate 1 `return { skipped: true }`; added `emitFactorQualityClassified(...)` right after the 5-TF MTF `db.execute` and before the per-market fan-out (Gate 2 telemetry — helper owns audit row); added `emitThinConfluenceWarning({ ..., skipAuditRow: true })` at the end of the Gate 3 `if (factor_quality === "fallback_only")` block (after the existing graduator audit row + Discord notify so SSE + Prom fire additively without duplicating).
+- `docs/system-subsystem-registry.json` — appended new `strategy_health_observability` subsystem entry (covers `/api/composite-health` route + `composite-health-daily-digest` scheduler job + `strategy_health_scores` database table — clears all 3 pre-existing Wave 28 Pass A drift items).
+- `Trading Forge System Map v2.md` — appended new §2g Wave 26 Pass G Pass B close-out section (sub-track table, audit-row ownership matrix, new surfaces, backfill outcome, verification, carry-forwards).
+- `CLAUDE.md` — added 3 new hard-gate rows to §12 (`graduation_bidirectional_completeness`, `graduation_factor_quality_telemetry`, `graduation_thin_confluence_warning`); updated §13 Gemma prompt strictness reference to v10 + 5-fixture parity test as the gate; added §10b audit-action canonical list of 5 new actions.
+- `scripts/wave26-pass-g-b3-backfill-factor-quality-audit.ts --apply` — wrote 99 audit rows + updated 99 strategy config JSONBs; 0 errors. Final distribution: 0 rich / 30 thin / 69 fallback_only.
+
+**Verification:**
+- `npx vitest run src/server/__tests__/wave26-pass-g-b2-auditor-gates.test.ts src/server/__tests__/wave26-pass-g-b3-observability.test.ts` — **90 GREEN (40 + 50), 0 failed**
+- `npm run check:production-isolation` — EXIT 0, CLEAN (4 files, 0 violations)
+- `npm run check:2026-compliance` — EXIT 0, OK (MFFU + Topstep aligned)
+- `npm run system-map:sync && npm run system-map:check` — EXIT 0, status `ok`, driftItems `[]` (3 pre-existing Wave 28 Pass A drift items CLEARED)
+- `tsx scripts/wave26-gemma4-smoke-test.ts --parity-only` — `PARITY SPEC VALIDATION: PASS` (all 5 fixtures)
+- Backfill `--apply` — `audit rows written: 99 / config rows updated: 99 / errors: 0`
+
+**Known-facts updates:** none new — Gemma prompt strictness reference updated from v9 to v10 in CLAUDE.md §13.
+
+**Carry-forward for next session:**
+1. **Library re-extraction cohort** — 69 fallback_only strategies are the highest-ROI cohort for Gemma v10 re-extraction. Operator decision on when to schedule (no automatic re-graduation today).
+2. **Pass A Python `backtester.py` archetype audit-event mirror** — TS-side archetype signal audit is live; Python live-paper bar loop emission still deferred. Same carry-forward as Pass A close-out.
+3. **Source URL resolution at Gate 3** — `emitThinConfluenceWarning` is currently called with `source_url: null` from the graduator. Once the graduator hot-path resolves strategy-source-resolver inline, wire in the real URL for the Discord WARN body.
+4. **Audit-row name canonicalization** — Gate 1 uses two different action names (`graduation.rejected_incomplete_bidirectional` vs `graduation.bidirectional_incomplete_rejected`) for graduator-side vs helper-side respectively; at runtime only the graduator-side fires because the helper is always called with `skipAuditRow: true`. Future cleanup could collapse the two names; out-of-scope for Pass B since both test suites lock the strings.
+
+**Audit row:** `wave26-pass-g.pass_b.master_close` — payload includes B1+B2+B3 sub-track summary, file changes (3 source + 1 registry + 2 docs + backfill), test counts (40 + 50 = 90 vitest GREEN), CI state (3 of 3 GREEN — production-isolation + 2026-compliance + system-map:check), backfill distribution (0/30/69 actual vs ~24/9/66 estimated), zero new regressions vs Pass A baseline.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)

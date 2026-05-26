@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-26T08:33:10.148Z",
+  "generatedAt": "2026-05-26T08:58:31.987Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -26,6 +26,7 @@
     "replay_grade_unified_dispatcher:manual_gate:operator-approve",
     "replay_harness_engine:invalid-active-proof-mode",
     "replay_harness_engine:manual_gate:operator-approve",
+    "strategy_health_observability:invalid-active-proof-mode",
     "ts_python_parity_ci_gate:invalid-active-proof-mode",
     "ts_python_parity_ci_gate:manual_gate:ci_gate",
     "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
@@ -38,9 +39,9 @@
     "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
-    "total": 54,
+    "total": 55,
     "ready": 33,
-    "blocked": 14,
+    "blocked": 15,
     "manualGated": 2,
     "experimental": 5
   },
@@ -1087,6 +1088,33 @@
         "smt.snapshot_captured",
         "smt.snapshot_stale_skipped",
         "src/server/__tests__/wave26-smt-live-bridge.test.ts"
+      ]
+    },
+    {
+      "id": "strategy_health_observability",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "operator_only",
+      "blockers": [
+        "invalid-active-proof-mode"
+      ],
+      "requiredEvidence": [
+        "/api/composite-health",
+        "composite_health.aggregator_uncaught_error",
+        "composite_health.daily_digest_emitted",
+        "composite_health.digest_discord_failed",
+        "composite_health.digest_skipped_dst_guard",
+        "composite_health.digest_skipped_lock_contention",
+        "composite_health.evaluated",
+        "composite_health.evaluated audit rows",
+        "composite_health.skipped_below_subsystem_threshold",
+        "SELECT * FROM audit_log WHERE action = 'composite_health.daily_digest_emitted' ORDER BY created_at DESC LIMIT 1",
+        "SELECT COUNT(*) FROM strategy_health_scores WHERE evaluated_at > NOW() - INTERVAL '24 hours'",
+        "strategy_health_scores.evaluated_at"
       ]
     },
     {

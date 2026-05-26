@@ -268,6 +268,16 @@ export const FACTORY_EVENTS = {
   // Data shape: { strategy_id, correlation_id, direction, archetype, bar_timestamp }
   // plus archetype-specific fields (see archetype-signal-audit.ts).
   ARCHETYPE_SIGNAL_FIRED:     "factory:archetype_signal_fired",
+  // Wave 26 Pass G B3 (2026-05-26) — confluence quality observability.
+  // BIDIRECTIONAL_REJECTED: broadcast when Gate 1 fires (direction=both, one side
+  //   empty). Dashboard shows graduation was rejected before strategy row written.
+  //   Data shape: { strategy_name, correlation_id, rejection_reason, direction }
+  // THIN_CONFLUENCE_GRADUATED: broadcast when Gate 3 fires (graduation completes
+  //   with factor_quality="fallback_only"). Library debt indicator for dashboard.
+  //   Data shape: { strategy_id, strategy_name, correlation_id, factor_quality,
+  //                 confluence_factors, source_url }
+  BIDIRECTIONAL_REJECTED:     "factory:bidirectional_rejected",
+  THIN_CONFLUENCE_GRADUATED:  "factory:thin_confluence_graduated",
 } as const;
 
 export type FactoryEventName = (typeof FACTORY_EVENTS)[keyof typeof FACTORY_EVENTS];

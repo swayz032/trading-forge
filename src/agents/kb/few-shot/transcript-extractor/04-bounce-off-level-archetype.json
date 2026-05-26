@@ -1,0 +1,60 @@
+{
+  "input": {
+    "video_metadata": {
+      "youtube_url": "https://www.youtube.com/watch?v=rBfJ9kP2mXz",
+      "title": "200 SMA Bounce Strategy on MES — How I Use the 200 MA as a Floor and Ceiling",
+      "channel": "FuturesEdge Pro",
+      "duration_seconds": 1580
+    },
+    "transcript_snippet": "Today I want to show you the 200 SMA bounce strategy I've been trading on the MES for the last two years. The idea is simple — the 200-period simple moving average on the 15-minute chart acts as a massive support and resistance level. Institutional players watch this level closely. When price comes down and tests the 200 SMA from above, and we get a rejection — I like to see a pin bar or a wick — I go long. When price is below the 200 SMA and rallies up to test it from underneath, and we see it acting as ceiling, I go short. It's a bidirectional setup. I don't care whether the market is going up or down overall — if we're near that 200 SMA and we get a rejection candle I'm looking to trade it. I only do this during regular trading hours, not overnight. I use ATR for my stop, about one and a half times ATR below the swing low on a long. I target back toward VWAP or the previous high/low depending on where we are. I also check the daily trend first — I want the 4H to be somewhat aligned but it's not a hard rule. I check the economic calendar too, I don't trade around FOMC or CPI. Win rate on this for me is around 65 percent, profit factor about 2.1."
+  },
+  "expected_output": {
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "name": "sma_support_resistance_bounce_mes_15m",
+        "concept_name": "sma_support_resistance_bounce",
+        "description": "Bidirectional 200 SMA bounce on MES 15m — price tests the 200 SMA and prints a rejection candle; long when SMA is support, short when SMA is resistance; RTH only, skip FOMC/CPI per FuturesEdge Pro YouTube walkthrough.",
+        "symbol": "MES",
+        "timeframe": "15m",
+        "direction": "both",
+        "entry_type": "mean_reversion",
+        "entry_indicator": "archetype:bounce_off_level",
+        "primary_indicator": "bounce_off_level",
+        "entry_params": {
+          "ma_period": 200,
+          "ma_type": "sma",
+          "direction": "both",
+          "rejection_pattern": "pin_bar"
+        },
+        "entry_long": "high < low",
+        "entry_short": "high < low",
+        "entry_condition": "Price tests the 200-period SMA from above (support) and prints a pin bar or wick rejection; enter long on the confirmation bar close. SHORT: price tests the 200-period SMA from below (resistance) and prints a rejection candle; enter short. Both sides require RTH session and no FOMC/CPI on calendar. HTF (4H) alignment preferred but not required.",
+        "confirming_indicators": [
+          { "indicator": "htf_bias", "params": {}, "direction": "agree" },
+          { "indicator": "killzone", "params": {}, "direction": "agree" },
+          { "indicator": "macro_filter", "params": {}, "direction": "agree" },
+          { "indicator": "structural_level", "params": {}, "direction": "agree" }
+        ],
+        "min_factors_satisfied": 3,
+        "bias_timeframe": "4h",
+        "bias_condition": "4H chart provides HTF directional context for bounce direction preference",
+        "execution_timeframe": "15m",
+        "exit_type": "atr_multiple",
+        "exit_params": { "multiplier": 2.0 },
+        "stop_loss_atr_multiple": 1.5,
+        "take_profit_atr_multiple": 3.0,
+        "preferred_regime": "TRENDING_UP",
+        "preferred_regimes": ["TRENDING_UP", "TRENDING_DOWN", "RANGE_BOUND"],
+        "session_filter": "RTH_ONLY",
+        "source_url": "https://www.youtube.com/watch?v=rBfJ9kP2mXz",
+        "extraction_confidence": 0.9,
+        "confluence_factors": ["regime_match", "structural_setup", "macro_alignment"],
+        "source_claim_win_rate": 0.65,
+        "source_claim_avg_r": null,
+        "symbols": ["MES"]
+      }
+    ]
+  },
+  "notes": "ARCHETYPE: bounce_off_level. Key decisions: (1) entry_indicator='archetype:bounce_off_level' — this is MA-as-S/R, NOT ema_crossover (which requires two MAs crossing). The 200 SMA acts as a price level, not a crossover signal. (2) direction='both' — speaker EXPLICITLY says 'bidirectional setup'; long at support, short at resistance. (3) entry_long and entry_short are BOTH the sentinel 'high < low' — archetype detector handles the actual signal. NEVER one real expression + one sentinel. (4) 3 confluence factors extracted: regime_match (4H alignment check), structural_setup (200 SMA level + rejection pattern), macro_alignment (no FOMC/CPI). (5) concept_name='sma_support_resistance_bounce' — describes the mechanic, NOT '200_ma_ceiling_floor' (literal video phrase). The number 200 belongs in entry_params.ma_period. This fixture demonstrates the correct bounce_off_level extraction pattern."
+}

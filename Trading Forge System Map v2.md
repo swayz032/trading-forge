@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-05-26T08:33:10.148Z`.
+Updated automatically from the repo on `2026-05-26T08:58:31.987Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -20,74 +20,74 @@ Updated automatically from the repo on `2026-05-26T08:33:10.148Z`.
 - Database tables tracked: `97`
 
 ### Subsystem Runtime States
-- `active`: `48`
+- `active`: `49`
 - `experimental`: `5`
 - `scaffold`: `1`
 
 ### Current Pre-Production States
-- `active_preprod`: `49`
+- `active_preprod`: `50`
 - `experimental_preprod`: `5`
 - `inactive_preprod`: `0`
 - `partially_active_preprod`: `0`
 
 ### Launch Target States
 - `experimental_challenger`: `5`
-- `runtime_proven_autonomous`: `47`
+- `runtime_proven_autonomous`: `48`
 - `runtime_proven_manual_gate`: `2`
 
 ### Production Target States
-- `production_autonomous`: `47`
+- `production_autonomous`: `48`
 - `production_experimental`: `5`
 - `production_manual_gate`: `2`
 - `production_not_intended`: `0`
 
 ### Subsystem Operating Classes
 - `adaptive`: `6`
-- `deterministic_instrumented`: `46`
+- `deterministic_instrumented`: `47`
 - `manual_gated`: `2`
 
 ### Learning Modes
 - `active_learning`: `6`
-- `deterministic_instrumented`: `41`
+- `deterministic_instrumented`: `42`
 - `manual_gate_only`: `2`
 - `shadow_experimental`: `5`
 
 ### Registry Coverage
-- Registry subsystems tracked: `54`
-- Route coverage: `71/72`
-- Scheduler coverage: `84/85`
+- Registry subsystems tracked: `55`
+- Route coverage: `72/72`
+- Scheduler coverage: `85/85`
 - Engine coverage: `27/27`
-- Database coverage: `96/97`
-- Autonomous subsystems with audit coverage: `50/50`
-- Autonomous subsystems with audit actions: `50/50`
-- Autonomous subsystems with telemetry evidence: `50/50`
-- Active-runtime subsystems with freshness signals: `54/54`
-- Runtime/experimental subsystems with evidence queries: `54/54`
+- Database coverage: `97/97`
+- Autonomous subsystems with audit coverage: `51/51`
+- Autonomous subsystems with audit actions: `51/51`
+- Autonomous subsystems with telemetry evidence: `51/51`
+- Active-runtime subsystems with freshness signals: `55/55`
+- Runtime/experimental subsystems with evidence queries: `55/55`
 - Self-evolving subsystems with learning inputs: `8/8`
 - Self-evolving subsystems with learning persistence: `8/8`
-- Failure visibility complete: `54/54`
+- Failure visibility complete: `55/55`
 
 ### Proof Status
 - `runtime-proven`: `37`
 - `partially-proven`: `1`
 - `offline-by-design`: `0`
 - `experimental`: `5`
-- `drifted`: `11`
+- `drifted`: `12`
 
 ### Pre-Production Integrity
 - Integrity status: `incomplete`
-- Automation complete: `45/54`
-- Data collection complete: `54/54`
-- Auditability complete: `54/54`
-- Failure visibility complete: `54/54`
-- Authority correct: `54/54`
+- Automation complete: `46/55`
+- Data collection complete: `55/55`
+- Auditability complete: `55/55`
+- Failure visibility complete: `55/55`
+- Authority correct: `55/55`
 - Learning active: `7/8`
-- Incomplete subsystems: `12`
+- Incomplete subsystems: `13`
 
 ### Production Convergence
 - Convergence status: `blocked`
 - Ready subsystem targets: `35`
-- Blocked subsystem targets: `14`
+- Blocked subsystem targets: `15`
 - Experimental subsystem targets: `5`
 - Shadow workflow candidates: `0`
 - Inactive workflow candidates: `0`
@@ -101,7 +101,7 @@ Updated automatically from the repo on `2026-05-26T08:33:10.148Z`.
 ### Readiness Summary
 - Launch ready: `false`
 - Only TradingView manual at launch: `true`
-- Launch-blocked subsystems: `19`
+- Launch-blocked subsystems: `20`
 - Inactive by design: `0`
 - Collecting only: `0`
 - Learning blocked: `0`
@@ -111,7 +111,7 @@ Updated automatically from the repo on `2026-05-26T08:33:10.148Z`.
 - `collecting_only`: `0`
 - `learning_active`: `7`
 - `learning_blocked`: `0`
-- `not_collecting`: `42`
+- `not_collecting`: `43`
 - `shadow_experimental`: `5`
 
 ### Workflow States
@@ -172,6 +172,7 @@ Updated automatically from the repo on `2026-05-26T08:33:10.148Z`.
 - `signal_correlation_gate` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `smt_divergence_engine` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `smt_live_bridge_service` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
+- `strategy_health_observability` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=none productionBlockers=invalid-active-proof-mode gaps=invalid-active-proof-mode
 - `strategy_lifecycle` class=`manual_gated` learningMode=`manual_gate_only` current=`active_preprod` target=`production_manual_gate` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`active` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `synthetic_black_swan_survival` class=`deterministic_instrumented` learningMode=`shadow_experimental` current=`experimental_preprod` target=`production_experimental` automation=`experimental` data=`complete` audit=`complete` failureVisibility=`complete` learning=`experimental` authority=`correct` ready=`false` preprodBlockers=experimental_governance productionBlockers=experimental_governance gaps=none
 - `trade_critique_service` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
@@ -1345,3 +1346,75 @@ Wave 25 Pass 2 = institutional-grade hardening pass driven by 3 parallel Phase A
 2. **HTF narrative parallel work stream** — uncommitted migrations 0137/0138, `htf_narrative.py`, `wave25-5tf-compile.test.ts` belong to a different agent; NOT in this close-out's scope.
 3. **`.claude/agents/*.md` deletions** — 3 deleted agent definition files in working tree; operator decision per Wave 24 carry-forward.
 4. **Wave 25 Pass 2 pre-existing failures** — `wave25-payout-audit-packet.test.ts` (2 tests) + `wave25-htf-narrative-persistence.test.ts` need follow-up; not blockers for Pass 2 close-out.
+
+## §2g Wave 26 Pass G — Pass B Close-out (2026-05-26)
+
+Wave 26 Pass G Pass B = "library factor quality + bidirectional completeness" hardening on top of Pass A's archetype expansion. Closed GREEN 2026-05-26. 3 sub-tracks (B1 + B2 + B3) shipped, plus B4 architect close-out (this entry). 90 new vitest GREEN across 2 new test files; 0 regressions vs Pass A baseline.
+
+### Tracks shipped
+
+| Sub-track | Charter | Tests |
+|---|---|---|
+| B1 (Gemma v10 prompt + KB) | `transcript-extractor.md` v9→v10 (concept normalization + 11-factor vocab + bidirectional default + new-archetype awareness); 3 new few-shot fixtures (04 bounce_off_level, 05 ict_bias_aligned_continuation, 06 anti-pattern under-extraction); `kb/indicator-catalog.md` §Confluence Factor Vocabulary; parity-test runner in `wave26-gemma4-smoke-test.ts` | 5-fixture parity PASS |
+| B2 (Auditor gates) | `direct-bucket-graduator.ts` — `auditBidirectionalCompleteness()`, `classifyFactorSources()`, `BIDIR_SENTINEL`, `EntryQualityWithSources` type, 3 gate call-sites (Gate 1 reject + bucket-revert; Gate 2 telemetry attached to entry_quality; Gate 3 warn) | 40 vitest |
+| B3 (Observability) | `confluence-quality-audit.ts` (Prom/SSE/Discord helpers + parity-test hook); 3 new metrics in `metrics-registry.ts`; 2 new SSE events in `sse.ts`; backfill script; `docs/observability/library-health.md` operator query book | 50 vitest |
+| B4 (architect close-out, this commit) | Wired B3 helpers into B2 gate call-sites via fire-and-forget; reconciled audit-row ownership via `skipAuditRow` flag; registered `strategy_health_observability` subsystem (cleared 3 pre-existing Wave 28 Pass A drift items); ran backfill `--apply` on 99 strategies | n/a |
+
+### Audit-row ownership contract (B4 reconciliation)
+
+To prevent runtime duplicate audit rows while preserving both B2 and B3 test contracts:
+
+| Gate | Action name (graduator) | Action name (helper) | Owner |
+|---|---|---|---|
+| Gate 1 | `graduation.rejected_incomplete_bidirectional` | `graduation.bidirectional_incomplete_rejected` (suppressed at runtime via `skipAuditRow: true`) | Graduator |
+| Gate 2 | (none) | `graduation.factor_quality_classified` | Helper |
+| Gate 3 | `graduation.thin_confluence_warning` | `graduation.thin_confluence_warning` (suppressed at runtime via `skipAuditRow: true`) | Graduator (helper still emits SSE + Prom + Discord, Discord suppressed in graduator-path via same flag) |
+
+### New surfaces registered
+
+**New audit_log actions (4):**
+- `graduation.rejected_incomplete_bidirectional` (Gate 1, graduator-side)
+- `graduation.bidirectional_incomplete_rejected` (Gate 1, helper-side — non-graduator callers only)
+- `graduation.factor_quality_classified` (Gate 2, helper-side — every graduation + backfill rows tagged `backfill: true`)
+- `graduation.thin_confluence_warning` (Gate 3, graduator-side)
+- `extraction.parity_test_run` (B1 parity-test hook, helper-side)
+
+**New SSE events (2, registered in `src/server/routes/sse.ts` FACTORY_EVENTS):**
+- `factory:bidirectional_rejected`
+- `factory:thin_confluence_graduated`
+
+**New Prometheus metrics (3, registered in `src/server/lib/metrics-registry.ts`):**
+- `tf_graduation_factor_quality_total{quality}` (Counter)
+- `tf_graduation_bidirectional_rejection_total{reason}` (Counter)
+- `tf_extraction_confluence_depth_histogram` (Histogram, buckets 0-5)
+
+**New env vars (2):**
+- `THIN_CONFLUENCE_DISCORD_ENABLED` (default `true`) — opt-OUT for Gate 3 Discord WARN.
+- `DISCORD_CH_STRATEGY_FINDS` (optional) — dedicated channel webhook override for Gate 1 + Gate 3 alerts.
+
+**New subsystem (`docs/system-subsystem-registry.json`):**
+- `strategy_health_observability` (carries `/api/composite-health` route + `composite-health-daily-digest` cron + `strategy_health_scores` table — closes 3 pre-existing Wave 28 Pass A drift items, no Wave 26 Pass G code change required)
+
+### Backfill outcome (99 strategies, `--apply` 2026-05-26)
+
+`scripts/wave26-pass-g-b3-backfill-factor-quality-audit.ts --apply` final distribution:
+- `rich`: **0**
+- `thin`: **30**
+- `fallback_only`: **69**
+- total: **99**
+- audit rows written: 99 / config rows updated: 99 / errors: 0
+
+(Brief estimated ~24 / 9 / 66; actual library data showed the opposite skew. 0 rich is the truthful baseline.)
+
+### Verification (Pass B close-out)
+- `npx vitest run wave26-pass-g-b2-auditor-gates wave26-pass-g-b3-observability` — **90 GREEN (40 + 50)**
+- `npm run check:production-isolation` — EXIT 0 (4 files, 0 violations)
+- `npm run check:2026-compliance` — EXIT 0
+- `npm run system-map:sync && npm run system-map:check` — EXIT 0, status `ok`, driftItems `[]`
+- `tsx scripts/wave26-gemma4-smoke-test.ts --parity-only` — PARITY SPEC VALIDATION: PASS
+- backfill `--apply` — 99/99 OK, 0 errors
+
+### Operator carry-forwards (NOT in scope for Pass B close-out)
+1. **Library re-extraction sweep** — 69 fallback_only strategies are the next high-ROI cohort to re-process through Gemma v10. Operator decision on when to schedule (no automatic re-graduation today; queue priority can be biased by `factor_quality` query against `entry_quality.factor_quality`).
+2. **Python `backtester.py` archetype audit-event mirror (Pass A carry-forward)** — TS-side archetype signal audit is live; Python-side live-paper bar loop emission deferred to Pass C.
+3. **Source URL resolution at Gate 3** — `emitThinConfluenceWarning` is currently called with `source_url: null` from the graduator (resolver lookup deferred). Once the graduator hot-path has a strategy-source-resolver call site, wire in real source URL for the Discord WARN.

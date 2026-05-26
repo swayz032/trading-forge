@@ -37,6 +37,16 @@ import { runDslQualityCritic } from "./agent-service.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { CANONICAL_PARAM_RANGES } from "../lib/param-ranges.js";
 import { applyWave25Defaults } from "../lib/wave25-strategy-defaults.js";
+// Wave 26 Pass G B4 (2026-05-26) — Prom/SSE/Discord observability helpers.
+// Graduator owns the audit_log writes (Gates 1 + 3); these helpers add the
+// Prometheus + SSE + Discord layer additively. `skipAuditRow: true` is passed
+// on Gate 1 (helper has a different action name, so no duplication) and on
+// Gate 3 (same action name — flag prevents the runtime double-write).
+import {
+  emitBidirectionalIncompleteRejected,
+  emitFactorQualityClassified,
+  emitThinConfluenceWarning,
+} from "../lib/confluence-quality-audit.js";
 
 /**
  * Pass 21 v3 (2026-05-17) — STRUCTURAL ARCHETYPE REGISTRY.
@@ -198,6 +208,8 @@ import { auditGraduatedConfig, formatAuditResult } from "./graduated-strategy-au
 import { computeWideConceptFingerprintHash } from "./strategy-fingerprint.js";
 import { logger } from "../index.js";
 import { broadcastSSE } from "../routes/sse.js";
+import { notify } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 // ─── Wave 23F Track D (2026-05-19): Entry quality provenance resolver ─────────
 type ExtractionProvenance =
@@ -221,6 +233,122 @@ function resolveProvenance(
   }
   // Defensive fallback — should not hit in practice
   return "web_article";
+}
+
+// ─── Wave 26 Pass G B2 (2026-05-26): AUDITOR GATES ─────────────────────────
+
+// Sentinel value emitted by compileDslToEngine for the non-applicable direction.
+// Long-only strategies get entry_short = BIDIR_SENTINEL, meaning "never fires".
+const BIDIR_SENTINEL = "high < low";
+
+/**
+ * Gate 1 — Bidirectional Completeness Check.
+ *
+ * When direction === "both":
+ *   Parametric path (no archetype): BOTH entry_long AND entry_short must be
+ *   non-empty AND non-sentinel ("high < low").
+ *   Structural-archetype path (archetype declared): both may be sentinel OR both
+ *   may be real expressions — but never ONE sentinel and ONE empty/sentinel (mixed
+ *   state means the LLM extracted only one side).
+ *
+ * Single-direction strategies (long/short) are NOT checked — asymmetric is allowed.
+ */
+export interface BidirectionalAuditResult {
+  pass: boolean;
+  reason: string | null;
+}
+
+export function auditBidirectionalCompleteness(compiledConfig: {
+  direction?: string;
+  archetype?: string | null;
+  entry_long?: string;
+  entry_short?: string;
+}): BidirectionalAuditResult {
+  const direction = compiledConfig.direction ?? "";
+
+  // Only applies when direction is "both"
+  if (direction !== "both") {
+    return { pass: true, reason: null };
+  }
+
+  const entryLong  = compiledConfig.entry_long  ?? "";
+  const entryShort = compiledConfig.entry_short ?? "";
+  const hasArchetype = Boolean(compiledConfig.archetype);
+
+  const longIsSentinel  = entryLong  === BIDIR_SENTINEL || entryLong  === "";
+  const shortIsSentinel = entryShort === BIDIR_SENTINEL || entryShort === "";
+
+  if (hasArchetype) {
+    // Structural-archetype path: both sentinel or both real — mixed is a bug
+    if (longIsSentinel !== shortIsSentinel) {
+      return {
+        pass: false,
+        reason: "incomplete_bidirectional_extraction",
+      };
+    }
+    return { pass: true, reason: null };
+  }
+
+  // Parametric path: both must be non-empty and non-sentinel
+  if (longIsSentinel || shortIsSentinel) {
+    return {
+      pass: false,
+      reason: "incomplete_bidirectional_extraction",
+    };
+  }
+
+  return { pass: true, reason: null };
+}
+
+// ─── Gate 2 — Factor Source Telemetry Types ─────────────────────────────────
+
+export type FactorSourceLabel = "extracted" | "auto_floor" | "kb_inferred";
+
+export interface EntryQualityWithSources {
+  confluence_factors: string[];
+  min_factors_satisfied: number;
+  source_claim_win_rate: number | null;
+  source_claim_avg_r: number | null;
+  extraction_provenance: ExtractionProvenance | "legacy_no_confluence";
+  /** Maps factor name → origin label. Optional/additive — legacy rows omit this key. */
+  factor_sources?: Record<string, FactorSourceLabel>;
+  /** Telemetric quality tag. Optional/additive — legacy rows omit this key. */
+  factor_quality?: "rich" | "thin" | "fallback_only" | null;
+}
+
+/**
+ * Builds `factor_sources` and `factor_quality` for an entry_quality block.
+ *
+ * @param rawFactors   Factors extracted directly by the LLM before floor injection.
+ * @param finalFactors Factors after the ≥2 floor guard (may include auto_floor additions).
+ * @returns            factor_sources record + factor_quality classification.
+ */
+export function classifyFactorSources(
+  rawFactors: string[],
+  finalFactors: string[],
+): { factor_sources: Record<string, FactorSourceLabel>; factor_quality: "rich" | "thin" | "fallback_only" } {
+  const rawSet = new Set(rawFactors);
+  const sources: Record<string, FactorSourceLabel> = {};
+
+  for (const factor of finalFactors) {
+    // kb_inferred is reserved for Pass B1 prompt-rewrite enrichment — no source yet
+    sources[factor] = rawSet.has(factor) ? "extracted" : "auto_floor";
+  }
+
+  const realCount = finalFactors.filter(
+    (f) => sources[f] === "extracted" || sources[f] === "kb_inferred",
+  ).length;
+
+  let factor_quality: "rich" | "thin" | "fallback_only";
+  if (realCount >= 2) {
+    factor_quality = "rich";
+  } else if (realCount === 1) {
+    factor_quality = "thin";
+  } else {
+    factor_quality = "fallback_only";
+  }
+
+  return { factor_sources: sources, factor_quality };
 }
 
 interface Mention {
@@ -1792,6 +1920,109 @@ export async function graduateBucketDirectly(opts: {
     bucketId,
   });
 
+  // ─── Wave 26 Pass G B2 (2026-05-26): GATE 1 — BIDIRECTIONAL COMPLETENESS ──
+  // When direction === "both" the compiled engine config must have coherent
+  // entry expressions on BOTH sides. Extractions that only captured one
+  // direction produce a sentinel on the other side ("high < low" or ""), which
+  // the backtester silently ignores — the strategy runs as long-only, not
+  // bidirectional. This gate catches the pattern before it reaches the DB.
+  {
+    const biAudit = auditBidirectionalCompleteness({
+      direction: compiled.direction,
+      archetype: isArchetype && archetypeName ? archetypeName : null,
+      entry_long:  String(compiled.strategy?.entry_long  ?? ""),
+      entry_short: String(compiled.strategy?.entry_short ?? ""),
+    });
+    if (!biAudit.pass) {
+      logger.warn(
+        {
+          bucketId,
+          strategyName,
+          conceptName,
+          direction: compiled.direction,
+          entryLong:  String(compiled.strategy?.entry_long  ?? "").slice(0, 100),
+          entryShort: String(compiled.strategy?.entry_short ?? "").slice(0, 100),
+          isArchetype,
+        },
+        `direct-graduator: REJECTED by Gate 1 bidirectional-completeness — ${biAudit.reason}`,
+      );
+
+      // Revert bucket to pending (no-poison: set both status=pending AND graduated_at=NULL).
+      await db.update(strategyPendingBuckets)
+        .set({ status: "pending", graduatedAt: null })
+        .where(eq(strategyPendingBuckets.id, bucketId))
+        .catch((revErr: unknown) => logger.warn({ err: revErr, bucketId }, "Gate1: bucket revert failed (non-blocking)"));
+
+      await db.insert(auditLog).values({
+        action: "graduation.rejected_incomplete_bidirectional",
+        entityType: "strategy_pending_bucket",
+        entityId: bucketId,
+        input: { bucket_id: bucketId, concept_name: conceptName, direction: compiled.direction } as Record<string, unknown>,
+        result: {
+          reason: biAudit.reason,
+          entry_long_head:  String(compiled.strategy?.entry_long  ?? "").slice(0, 200),
+          entry_short_head: String(compiled.strategy?.entry_short ?? "").slice(0, 200),
+          is_archetype: isArchetype,
+          archetype_name: isArchetype ? archetypeName : null,
+        } as Record<string, unknown>,
+        status: "rejected",
+        decisionAuthority: "system",
+        correlationId: correlationId ?? null,
+      }).catch((auditErr: unknown) => logger.warn({ err: auditErr }, "Gate1: audit_log write failed (non-blocking)"));
+
+      // Discord notify — operator sees these as re-extract debt
+      const discordChannel = process.env.DISCORD_CH_STRATEGY_FINDS ?? "strategy-finds";
+      notify({
+        severity: "WARNING",
+        title: `Strategy \`${strategyName}\` bidirectional extraction incomplete`,
+        body: appendFamilyGradePostscript(
+          `Strategy \`${strategyName}\` (bucket \`${bucketId}\`) had bidirectional intent but Gemma only extracted one side. Bucket reset to \`pending\` for re-extract. Channel: #${discordChannel}.`,
+          `The scout pipeline found a strategy but couldn't figure out both the BUY and SELL entry rules from the source video/article.`,
+          `No action needed — the system will re-try the extraction automatically.`,
+        ),
+        metadata: {
+          strategy_name: strategyName,
+          bucket_id: bucketId,
+          concept_name: conceptName,
+          direction: compiled.direction,
+          reason: biAudit.reason,
+        },
+      });
+
+      // Pass G B4 (2026-05-26): Prom counter + SSE broadcast on Gate 1 reject.
+      // Helper's own audit row is suppressed (different action name from the
+      // graduator-side row but we keep the contract symmetric); helper still
+      // emits Prometheus `tf_graduation_bidirectional_rejection_total{reason}`
+      // and SSE `factory:bidirectional_rejected` to the dashboard.
+      try {
+        emitBidirectionalIncompleteRejected({
+          strategy_name: strategyName,
+          correlation_id: correlationId ?? null,
+          direction: String(compiled.direction ?? ""),
+          rejection_reason: biAudit.reason ?? "incomplete_bidirectional_extraction",
+          empty_side: (() => {
+            const longEmpty  = !compiled.strategy?.entry_long  || String(compiled.strategy.entry_long)  === "high < low";
+            const shortEmpty = !compiled.strategy?.entry_short || String(compiled.strategy.entry_short) === "high < low";
+            if (longEmpty && shortEmpty) return "both_sides_empty";
+            if (longEmpty) return "long_side_empty";
+            if (shortEmpty) return "short_side_empty";
+            return "neither_empty";
+          })(),
+          skipAuditRow: true,
+        });
+      } catch (helperErr: unknown) {
+        logger.warn({ err: String(helperErr), bucketId, strategyName }, "Gate1: emitBidirectionalIncompleteRejected helper failed (non-blocking)");
+      }
+
+      return {
+        strategyId: null,
+        strategyName,
+        skipped: true,
+        reason: `gate1_incomplete_bidirectional: ${biAudit.reason}`,
+      };
+    }
+  }
+
   // ─── Pass 21 v3 corrected³ (2026-05-17): SOURCE-FIDELITY CHECK ────────
   // Anti-fabrication: verify the strategy's final entry_long has meaningful
   // overlap with the source mention's extracted_idea.entry_rules. Catches the
@@ -2006,7 +2237,15 @@ export async function graduateBucketDirectly(opts: {
     : 2;
   const sourceClaimWinRate: number | null = (extractedIdea as any)?.source_claim_win_rate ?? null;
   const sourceClaimAvgR: number | null = (extractedIdea as any)?.source_claim_avg_r ?? null;
-  const entryQualityBlock = {
+
+  // ─── Wave 26 Pass G B2 (2026-05-26): GATE 2 — Factor Source Telemetry ─────
+  // Classify each confluence factor by its origin: extracted (LLM), auto_floor
+  // (injected by the ≥2 floor guard), or kb_inferred (future Pass B1 enrichment).
+  // Purely additive — legacy rows omit these keys; JSONB column accepts them
+  // transparently without a migration.
+  const { factor_sources, factor_quality } = classifyFactorSources(rawConfluenceFactors, confluenceFactors);
+
+  const entryQualityBlock: EntryQualityWithSources = {
     confluence_factors: confluenceFactors,
     min_factors_satisfied: entryQualityMinFactors,
     source_claim_win_rate: sourceClaimWinRate,
@@ -2015,6 +2254,9 @@ export async function graduateBucketDirectly(opts: {
     extraction_provenance: confluenceFactors.length === 0
       ? "legacy_no_confluence" as const
       : resolveProvenance(bestMention.scoutLayer ?? undefined, bestMention.sourceProvider),
+    // Gate 2 telemetric fields — additive, null-safe for legacy consumers
+    factor_sources,
+    factor_quality,
   };
 
   // Symbols array: prefer LLM-extracted symbols, fallback to bucket primary market
@@ -2113,6 +2355,23 @@ export async function graduateBucketDirectly(opts: {
     await db.update(strategyPendingBuckets)
       .set({ graduatedStrategyId: inserted.id, wideFingerprintHash: wideFingerprint })
       .where(eq(strategyPendingBuckets.id, bucketId));
+
+    // ─── Wave 26 Pass G B4 (2026-05-26): GATE 2 — Factor Quality Telemetry ─
+    // Fire-and-forget Prometheus counter + confluence-depth histogram. Helper
+    // owns the `graduation.factor_quality_classified` audit row end-to-end
+    // (graduator does not write a competing row for this action name).
+    try {
+      emitFactorQualityClassified({
+        strategy_id:        inserted.id,
+        strategy_name:      strategyName,
+        correlation_id:     correlationId ?? null,
+        factor_quality:     factor_quality as "rich" | "thin" | "fallback_only",
+        factor_sources:     factor_sources as Record<string, "extracted" | "auto_floor" | "kb_inferred">,
+        confluence_factors: confluenceFactors,
+      });
+    } catch (helperErr: unknown) {
+      logger.warn({ err: String(helperErr), strategyId: inserted.id, strategyName }, "Gate2: emitFactorQualityClassified helper failed (non-blocking)");
+    }
 
     // ─── Wave 26 Pass F (2026-05-25) — per-market fan-out ────────────────
     // Operator mandate: each (concept × market) pair gets its OWN strategy
@@ -2310,6 +2569,70 @@ export async function graduateBucketDirectly(opts: {
         });
       } catch (sseErr) {
         logger.warn({ sseErr }, "direct-graduator: factory:multi_market_bucket SSE broadcast failed (non-blocking)");
+      }
+    }
+
+    // ─── Wave 26 Pass G B2 (2026-05-26): GATE 3 — fallback_only thin-confluence warning ─
+    // When the strategy graduated with ALL auto-floor factors (no real LLM extraction),
+    // write a library-debt audit row and Discord WARN so the operator knows this strategy
+    // needs a re-extract pass to lift factor_quality to "rich" or "thin".
+    // Purely advisory — does NOT block or revert the successful graduation.
+    if (factor_quality === "fallback_only") {
+      await db.insert(auditLog).values({
+        action: "graduation.thin_confluence_warning",
+        entityType: "strategy",
+        entityId: inserted.id,
+        input: { bucket_id: bucketId, concept_name: conceptName } as Record<string, unknown>,
+        result: {
+          strategy_id: inserted.id,
+          factor_quality,
+          factor_sources,
+          confluence_factors: confluenceFactors,
+          raw_factor_count: rawConfluenceFactors.length,
+          final_factor_count: confluenceFactors.length,
+        } as Record<string, unknown>,
+        status: "warning",
+        decisionAuthority: "system",
+        correlationId: correlationId ?? null,
+      }).catch((auditErr: unknown) => logger.warn({ auditErr }, "Gate3: thin_confluence_warning audit write failed (non-blocking)"));
+
+      notify({
+        severity: "WARNING",
+        title: `Library debt: \`${strategyName}\` graduated with auto-floor-only confluence`,
+        body: appendFamilyGradePostscript(
+          `Strategy \`${strategyName}\` (id: \`${inserted.id}\`) graduated successfully but ALL ${confluenceFactors.length} confluence factors were auto-injected by the floor guard — the LLM extracted zero real factors from the source. This strategy may rank lower in backtest scheduler queue until re-extracted. factor_quality=fallback_only.`,
+          `A new trading strategy was added to the library but the system couldn't confirm what specific signals it uses — it filled in generic defaults instead.`,
+          `No action needed now. The system will flag this for re-processing on the next scout cycle.`,
+        ),
+        metadata: {
+          strategy_id: inserted.id,
+          strategy_name: strategyName,
+          factor_quality,
+          confluence_factors: confluenceFactors,
+          factor_sources,
+        },
+      });
+
+      logger.warn(
+        { strategyId: inserted.id, strategyName, factor_quality, factor_sources, confluenceFactors },
+        "direct-graduator Gate3: fallback_only factor_quality — graduated with auto-floor confluence only",
+      );
+
+      // Pass G B4 (2026-05-26): SSE broadcast (audit row + Discord already
+      // written above by graduator — skipAuditRow=true on helper prevents
+      // the runtime duplicate). Helper still drives FACTORY_EVENTS.THIN_CONFLUENCE_GRADUATED.
+      try {
+        emitThinConfluenceWarning({
+          strategy_id:        inserted.id,
+          strategy_name:      strategyName,
+          correlation_id:     correlationId ?? null,
+          factor_quality:     factor_quality as "fallback_only",
+          confluence_factors: confluenceFactors,
+          source_url:         null, // graduator does not currently resolve the source URL at this site
+          skipAuditRow:       true,
+        });
+      } catch (helperErr: unknown) {
+        logger.warn({ err: String(helperErr), strategyId: inserted.id, strategyName }, "Gate3: emitThinConfluenceWarning helper failed (non-blocking)");
       }
     }
 
