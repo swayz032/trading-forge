@@ -726,6 +726,188 @@ def load_classical_baseline(
         conn.close()
 
 
+def load_backtest_bar_data(
+    backtest_id: int,
+    cpcv_purge: bool = True,
+) -> list[dict]:
+    """Load bar-level arrays for RL feature engineering.
+
+    Wave 29 Pass C.1 — feeds quantum_rl_agent.py TradingEnv.
+    CPCV purge is MANDATORY for training data — default cpcv_purge=True.
+
+    Returns one dict per bar with:
+      - timestamp: ISO string entry_time
+      - open, high, low, close: OHLC prices as float
+      - volume: bar volume as float
+      - pnl: trade P&L if this bar was a close bar, else None
+      - direction: 'long' | 'short' | None
+      - _wf_window_id: walk-forward fold ID (for CPCV join)
+      - _in_oos: True if this bar falls in an OOS fold
+      - _cpcv_purged: True if this bar was excluded by CPCV purge
+
+    When cpcv_purge=True:
+      Bars that fall within any OOS fold of the WF windows are excluded
+      from the result (prevents IS/OOS leakage during RL training).
+      The IS bars are returned; OOS bars are filtered out.
+
+    When cpcv_purge=False:
+      All bars are returned (debug-only mode — do NOT use for training).
+
+    Args:
+        backtest_id: integer primary key of the backtest
+        cpcv_purge: if True (default), filter out OOS-overlap bars from IS/OOS boundary
+
+    Returns:
+        List of bar dicts ordered by entry_time ASC.
+        Empty list if backtest not found or has no trades.
+
+    Raises:
+        RuntimeError: if DATABASE_URL is not set or DB connection fails.
+
+    Contract:
+        "Wave 29 Pass C.1 — feeds quantum_rl_agent.py TradingEnv.
+         CPCV purge is mandatory for training data."
+    """
+    conn = _get_db_connection()
+    try:
+        import psycopg2.extras
+
+        # 1. Load walk-forward windows for this backtest to determine OOS ranges
+        sql_wf = """
+            SELECT
+                id,
+                window_index,
+                is_start,
+                is_end,
+                oos_start,
+                oos_end
+            FROM walk_forward_windows
+            WHERE backtest_id = %s
+            ORDER BY window_index
+        """
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+            cur.execute(sql_wf, (str(backtest_id),))
+            wf_rows = cur.fetchall()
+
+        # Build OOS date ranges for CPCV purge gate
+        oos_ranges: list[tuple[str, str]] = []
+        if cpcv_purge:
+            for row in wf_rows:
+                is_end = row["is_end"]
+                oos_start = row["oos_start"]
+                oos_end = row["oos_end"]
+                if is_end is not None and oos_start is not None:
+                    try:
+                        from datetime import date as _date
+                        is_end_dt = _date.fromisoformat(str(is_end)[:10])
+                        oos_start_dt = _date.fromisoformat(str(oos_start)[:10])
+                        if oos_start_dt <= is_end_dt:
+                            logger.warning(
+                                "[db_loader] load_backtest_bar_data CPCV violation — "
+                                "backtest %s fold %s: oos_start=%s <= is_end=%s — fold excluded",
+                                backtest_id, str(row["id"]), oos_start, is_end,
+                            )
+                            continue
+                        if oos_end is not None:
+                            oos_ranges.append((str(oos_start), str(oos_end)))
+                    except (ValueError, TypeError) as exc:
+                        logger.warning(
+                            "[db_loader] load_backtest_bar_data: cannot parse dates "
+                            "for fold %s (backtest %s): %s — fold excluded",
+                            str(row["id"]), backtest_id, exc,
+                        )
+                        continue
+
+        # 2. Load backtest_trades as bar proxies (one trade = one bar event)
+        sql_trades = """
+            SELECT
+                entry_time,
+                exit_time,
+                direction,
+                entry_price,
+                exit_price,
+                pnl,
+                net_pnl,
+                contracts,
+                commission,
+                session_type,
+                macro_regime
+            FROM backtest_trades
+            WHERE backtest_id = %s
+            ORDER BY entry_time ASC
+        """
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+            cur.execute(sql_trades, (str(backtest_id),))
+            trade_rows = cur.fetchall()
+
+    finally:
+        conn.close()
+
+    if not trade_rows:
+        return []
+
+    bars: list[dict] = []
+    for row in trade_rows:
+        entry_time = row["entry_time"]
+        if isinstance(entry_time, datetime):
+            entry_ts = entry_time.isoformat()
+            entry_date = entry_time.date()
+        else:
+            try:
+                from datetime import date as _date
+                entry_ts = str(entry_time)
+                entry_date = _date.fromisoformat(str(entry_time)[:10])
+            except (ValueError, TypeError):
+                entry_ts = str(entry_time)
+                entry_date = None
+
+        # CPCV purge check: exclude bars in OOS windows
+        in_oos = False
+        if cpcv_purge and entry_date is not None:
+            for oos_start_str, oos_end_str in oos_ranges:
+                try:
+                    from datetime import date as _date
+                    oos_s = _date.fromisoformat(oos_start_str[:10])
+                    oos_e = _date.fromisoformat(oos_end_str[:10])
+                    if oos_s <= entry_date <= oos_e:
+                        in_oos = True
+                        break
+                except (ValueError, TypeError):
+                    pass
+
+        if cpcv_purge and in_oos:
+            continue
+
+        bar: dict = {
+            "timestamp": entry_ts,
+            "open": _safe_float_bar(row["entry_price"]),
+            "high": _safe_float_bar(row["exit_price"]),   # proxy: use exit as high
+            "low": _safe_float_bar(row["entry_price"]),    # proxy: use entry as low
+            "close": _safe_float_bar(row["exit_price"]),
+            "volume": None,  # backtest_trades does not carry bar volume
+            "pnl": _safe_float_bar(row["net_pnl"] or row["pnl"]),
+            "direction": row["direction"],
+            "contracts": row["contracts"],
+            "session_type": row["session_type"],
+            "macro_regime": row["macro_regime"],
+            "_in_oos": in_oos,
+            "_cpcv_purged": in_oos and cpcv_purge,
+        }
+        bars.append(bar)
+
+    return bars
+
+
+def _safe_float_bar(val: Any) -> Optional[float]:
+    """Convert DB value to float for bar data, or None."""
+    if val is None:
+        return None
+    try:
+        return float(val)
+    except (TypeError, ValueError):
+        return None
+
+
 def write_replay_row(
     replay_result: dict,
     apply: bool,

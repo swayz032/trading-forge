@@ -4179,5 +4179,101 @@
     "learning_boundary": "none",
     "deployment_authority": "operator_only",
     "criticality": "signal"
+  },
+  {
+    "id": "quantum_rl_challenger",
+    "domain": "research",
+    "owner_surface": "node-python",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Wave 29 Pass C. Quantum RL agent bridge to production state — extends TradingEnv to 25-feature production state vector (5-TF MTF + structure + narrative + killzones + 11-factor confluence + regime + liquidity + optional QCNN noise_score) + LONG/FLAT 2-action enforcement (n_actions=3 raises ValueError) + reward shaping R = realized_R - alpha*max(0, ci_high - 0.40) - beta*drawdown_penalty. Regime-conditioned policy-gradient training loop (4 institutional regimes). Auto-fire fire-and-forget from backtest-service when entry_quality.train_rl_policy=true via quantum-rl-training-runner.ts. Off-RTH hourly cron quantum-rl-training-window ({6,7,8,16,17 ET}, _PIPELINE_GATE_EXEMPT, DST-safe). Writes to NEW quantum_rl_runs namespace (migration 0152) — namespace-separate from quantum_mc_runs to prevent circular IAE-vs-RL feedback. IBM cloud opt-in two-gate (QUANTUM_RL_IBM_CLOUD_OPT_IN=true AND QUANTUM_CLOUD_ENABLED=true AND IBM_QUANTUM_TOKEN). Advisory Sharpe-gap kill switch + DSR>=0.5 floor (QuantBeckman 2025 + arXiv 2512.12924). first-100-trades confidence dampening + first-200-trades static router epsilon-greedy exploration. Composite-health 13th subsystem feeder + A/B paper routing (slumdawg-baseline vs slumdawg-rl-challenger) per migration 0159. CHALLENGER-ONLY governance: NEVER gates promotion — Wave 27.5 + Wave 28 gates retain authoritative veto.",
+    "data_sources": [
+      "quantum_rl_agent (TradingEnv production state)",
+      "backtest_bar_data (CPCV-purged)",
+      "quantum_mc_runs (warm-start training data)",
+      "bias_state",
+      "liquidity_levels"
+    ],
+    "reads_from": [
+      "backtests",
+      "quantum_mc_runs",
+      "bias_state",
+      "liquidity_levels",
+      "strategies"
+    ],
+    "writes_to": [
+      "quantum_rl_runs",
+      "audit_log",
+      "strategy_health_scores"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "quantum_rl_runs"
+    ],
+    "audit_actions": [
+      "quantum_rl.training_auto_fire_enqueued",
+      "quantum_rl.training_auto_fire_failed",
+      "quantum_rl.training_circuit_breaker_opened",
+      "quantum_rl.kill_switch_evaluated",
+      "quantum_rl.kill_switch_engaged",
+      "quantum_rl.cloud_path_engaged",
+      "quantum_rl.training_cpcv_purge_violation",
+      "quantum_rl.dsr_floor_block",
+      "quantum_rl.dsr_passed",
+      "quantum_rl.signal_routed",
+      "quantum_rl.regime_insufficient_data",
+      "quantum_rl.training_skipped_in_rth_window",
+      "signal.rl_ab_routed"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "audit_log.quantum_rl.*",
+      "SSE signal:rl_ab_routed"
+    ],
+    "scheduler_jobs": [
+      "quantum-rl-training-window"
+    ],
+    "routes": [],
+    "engine_subsystems": [
+      "quantum_rl_agent.py::TradingEnv",
+      "quantum_rl_agent.py::regime_conditioned_training",
+      "quantum_rl_agent.py::compute_rl_kill_switch_state",
+      "quantum_rl_agent.py::compute_effective_confidence",
+      "quantum_rl_agent.py::should_use_static_router_epsilon_greedy"
+    ],
+    "database_tables": [
+      "quantum_rl_runs",
+      "broker_accounts"
+    ],
+    "learning_from": [
+      "quantum_mc_runs",
+      "backtest_bar_data"
+    ],
+    "learning_assets": [
+      "quantum_rl_runs.policy_state"
+    ],
+    "learning_writes_to": [
+      "quantum_rl_runs"
+    ],
+    "failure_visibility": "audit_log",
+    "recovery_mode": "fail-open",
+    "health_check": "src/engine/tests/test_wave29_pass_c1_trading_env.py",
+    "status": "active",
+    "self_evolving": true,
+    "proof_mode": "audit_log_evidence",
+    "freshness_signals": [
+      "quantum_rl_runs.created_at",
+      "audit_log.quantum_rl.training_auto_fire_enqueued"
+    ],
+    "evidence_queries": [
+      "SELECT COUNT(*) FROM quantum_rl_runs WHERE created_at > NOW() - INTERVAL '7 days'",
+      "SELECT * FROM audit_log WHERE action LIKE 'quantum_rl.%' ORDER BY created_at DESC LIMIT 10"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "challenger_only",
+    "deployment_authority": "operator_only",
+    "criticality": "observability"
   }
 ]

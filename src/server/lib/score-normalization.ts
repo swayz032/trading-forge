@@ -23,7 +23,7 @@ import { createHash } from "node:crypto";
 
 // ─── Type exports ─────────────────────────────────────────────────────────────
 
-/** All 12 subsystem names.  Extend here + EQUAL_WEIGHTS when adding a subsystem. */
+/** All 13 subsystem names (12 original + rl_agent added in Wave 29 Pass C.3). */
 export type SubsystemName =
   | "b14_survival_twin"
   | "wfe"
@@ -36,7 +36,8 @@ export type SubsystemName =
   | "deepar"
   | "black_swan"
   | "nemo"
-  | "quantum_replay";
+  | "quantum_replay"
+  | "rl_agent";
 
 /** Per-subsystem score: null means subsystem is unavailable for this cycle. */
 export type SubsystemScores = Record<SubsystemName, number | null>;
@@ -100,27 +101,31 @@ export const CONSISTENCY_UPPER_BOUND = 0.50;
 // ─── EQUAL_WEIGHTS — frozen, version-hashed ───────────────────────────────────
 
 /**
- * OCC/Fed/FDIC April 2026 MRM: equal-weight across all 12 subsystems.
- * Each weight = 1/12 ≈ 0.0833...
+ * OCC/Fed/FDIC April 2026 MRM: equal-weight across all 13 subsystems.
+ * Each weight = 1/13 ≈ 0.07692...
+ *
+ * Wave 29 Pass C.3: rl_agent added as 13th subsystem with equal weight.
+ * The weightsVersionId (SHA-256 over canonical-sorted-JSON) re-hashes
+ * automatically — any downstream consumer that pinned the old 16-char hash
+ * will see a new value (model-change event per MRM contract).
  *
  * FROZEN via Object.freeze — any mutation attempt throws at runtime.
  * Any future weight change is a model-change event requiring full validation.
- * The weightsVersionId (SHA-256 over canonical-sorted-JSON) changes automatically
- * when ANY weight changes, providing automatic audit-lineage traceability.
  */
 export const EQUAL_WEIGHTS: Readonly<Record<SubsystemName, number>> = Object.freeze({
-  b14_survival_twin:   1 / 12,
-  wfe:                 1 / 12,
-  parameter_drift:     1 / 12,
-  b15_robustness:      1 / 12,
-  compliance:          1 / 12,
-  trade_critique:      1 / 12,
-  pattern_aggregator:  1 / 12,
-  consistency_tracker: 1 / 12,
-  deepar:              1 / 12,
-  black_swan:          1 / 12,
-  nemo:                1 / 12,
-  quantum_replay:      1 / 12,
+  b14_survival_twin:   1 / 13,
+  wfe:                 1 / 13,
+  parameter_drift:     1 / 13,
+  b15_robustness:      1 / 13,
+  compliance:          1 / 13,
+  trade_critique:      1 / 13,
+  pattern_aggregator:  1 / 13,
+  consistency_tracker: 1 / 13,
+  deepar:              1 / 13,
+  black_swan:          1 / 13,
+  nemo:                1 / 13,
+  quantum_replay:      1 / 13,
+  rl_agent:            1 / 13,
 } as const);
 
 // ─── Normalizer functions (one per subsystem) ─────────────────────────────────
@@ -340,6 +345,36 @@ export function normalizeQuantumReplay(
   if (!available) return null;
   const score = QUANTUM_REPLAY_SCORES[verdict];
   return score !== undefined ? score : null;
+}
+
+// ─── RL Agent normalizer (Wave 29 Pass C.3) ──────────────────────────────────
+
+/**
+ * RL Agent (13th subsystem): normalise the RL effective_confidence to [0,1]
+ * with graduation gating.
+ *
+ * Returns null (subsystem unavailable) when:
+ *   - kill_switch_dormant = false  → Sharpe gap > 30% → kill switch active
+ *   - dsr_passed = false           → RL policy has not yet graduated
+ * Otherwise: return rl_confidence (already [0,1] from effective_confidence).
+ *
+ * This function is the single-source gating rule for whether the RL agent
+ * contributes to the composite.  The aggregator's MIN_COMPOSITE_SUBSYSTEMS=8
+ * floor handles cycles where RL is unavailable — the composite still writes
+ * as long as ≥8 other subsystems are available.
+ *
+ * @param rl_confidence      effective_confidence from quantum_rl_runs [0,1]
+ * @param dsr_passed         Whether the DSR gate has been passed (rl-dsr-gate)
+ * @param kill_switch_dormant Whether the kill switch is dormant (safe to use)
+ */
+export function normalizeRLConfidence(
+  rl_confidence: number,
+  dsr_passed: boolean,
+  kill_switch_dormant: boolean,
+): number | null {
+  if (!kill_switch_dormant) return null;  // Kill switch active → unavailable
+  if (!dsr_passed) return null;           // Not yet graduated → unavailable
+  return Math.max(0, Math.min(1, rl_confidence));
 }
 
 // ─── Composite computation ────────────────────────────────────────────────────

@@ -4,6 +4,77 @@
 
 ---
 
+### Session Log — 2026-05-26 trading-forge-architect — Wave 29 Pass C MASTER close-out
+
+**Mission:** Wave 29 Pass C master close-out per §11 (architect LAST). Consolidate C.1 (production-state TradingEnv) + C.2 (regime-conditioned training loop + auto-fire + kill switch + IBM cloud opt-in) + C.3 (CPCV purge gate + DSR floor + composite 13th subsystem + A/B paper routing) into a single master close: System Map sync + 3 CI hard gates + CLAUDE.md update + AGENT-LOGS entry + memory + audit row + commit-and-push per §11a.
+
+**Work completed:**
+- `docs/system-subsystem-registry.json` — registered new `quantum_rl_challenger` subsystem entry consolidating all Pass C surfaces: production-state TradingEnv extension, regime-conditioned training loop, advisory Sharpe-gap kill switch, opt-in IBM cloud path, TS auto-fire runner + cron, CPCV gate + DSR gate + signal-fetcher (composite 13th-subsystem feeder), A/B paper routing (`slumdawg-baseline` vs `slumdawg-rl-challenger`). Catalogues migration 0152 (`quantum_rl_runs`) + 0159 (A/B paper routing + broker accounts seed), cron `quantum-rl-training-window`, 12 `quantum_rl.*` audit actions + 1 `signal.rl_ab_routed` SSE event.
+- `npm run system-map:sync` — regenerated topology (registrySubsystems 57→58); generated sections refreshed.
+- `npm run system-map:check` — status=ok, driftItems=[].
+- `npm run check:production-isolation` — CLEAN, 0 violations.
+- `npm run check:2026-compliance` — OK, MFFU + Topstep aligned.
+- CLAUDE.md §2 — appended Wave 29 Pass C CLOSED paragraph (dense single-paragraph mirror of Wave 28 Pass B close).
+- CLAUDE.md §12 — added Wave 29 Pass C RL advisory-only row (RL kill switch + DSR floor + composite 13th-subsystem feeder).
+- CLAUDE.md §13 — added 4 don't-list entries (namespace separation, LONG/FLAT only, IBM two-gate, RL never gates promotion).
+- CLAUDE.md §15 — Wave 29 Pass C env vars block (`QUANTUM_RL_REWARD_ALPHA=0.5`, `QUANTUM_RL_REWARD_BETA=0.3`, `QUANTUM_RL_IBM_CLOUD_OPT_IN=false`, `QUANTUM_RL_TRAINING_EPOCHS=200`, `QUANTUM_RL_KILL_SWITCH_THRESHOLD_PCT=0.30`, `QUANTUM_RL_DSR_FLOOR=0.5`).
+- Memory file `project_wave29_pass_c_complete_2026_05_26.md` + MEMORY.md ★ CURRENT promotion (Wave 28 Pass B demoted to non-current).
+- Audit row `wave.29_pass_c_master_closed` written via SQL.
+- Final commit + push to `feature/deep-analysis-pipeline`.
+
+**Verification:**
+- All 3 CI hard gates GREEN.
+- Pass C combined cumulative tests ≈ 190 GREEN (55 C.1 pytest + 17 C.2 pytest + 12 C.3 pytest + 90 C.3 vitest + parity tests preserved).
+- Wave 28 cumulative 205 tests preserved; `MIN_COMPOSITE_SUBSYSTEMS=8` floor unchanged (now reads 13 subsystems instead of 12).
+- Composite 13th-subsystem `rl_agent` wiring confirmed in `score-normalization.ts::SubsystemName` + `EQUAL_WEIGHTS` re-hashed via existing 16-char SHA-256 wrapper.
+
+**Known-facts updates:**
+- Wave 29 Pass C is challenger-only end to end — RL signal NEVER gates promotion. Wave 27.5 + Wave 28 hard gates remain authoritative veto.
+- `quantum_rl_runs` is the canonical RL namespace; do NOT route RL output to `quantum_mc_runs` (audit cross-feedback risk).
+- A/B paper routing default = `baseline`; family accounts must NEVER be assigned `rl-challenger`.
+
+**Carry-forward for next session:**
+- Wave 29 Pass A (Shadow Stage + PBO Gate) NOT in scope — separate pass per plan `cryptic-watching-wombat.md`.
+- Migration 0152 + 0159 idempotent; boot-migration-runner applies on next Railway deploy.
+- Wave 26 Pass I v12 scaffold (transcript-speaker-concepts, two-pass-vocab-extractor, admin.ts ingest timeout 180→420s, agent.ts forwarding, model-router.ts changes, discord/bot.ts) intentionally LEFT unstaged — owned by Pass G/H/I track, not this architect close-out.
+- IBM cloud QPU path requires two-gate (QUANTUM_RL_IBM_CLOUD_OPT_IN + QUANTUM_CLOUD_ENABLED + IBM_QUANTUM_TOKEN) before any cloud RL training will fire.
+
+### Session Log — 2026-05-26 backtest-core — Wave 29 Pass C.3: CPCV purge gate + DSR floor + composite 13th subsystem + A/B paper routing
+
+**Mission:** Ship 5 deliverables for the RL agent integration track parallel to C.2 (training loop): CPCV purge gate, DSR floor gate, composite 13th subsystem wiring, A/B paper routing migration + service, Python CPCV parity tests.
+
+**Work completed:**
+- `src/server/lib/rl-training-cpcv-gate.ts` — pure-function CPCV purge gate (`validateRlTrainingCpcvPurge`); filters IS rows whose `bar_date` falls inside any OOS [oos_start, oos_end] range; live-paper rows (cpcv_fold_id null) skipped; audit action `quantum_rl.training_cpcv_purge_violation`
+- `src/server/lib/rl-dsr-gate.ts` — DSR ≥ 0.5 floor gate (`evaluateRlDsrGate`); probit via Abramowitz-Stegun 26.2.17 rational approx (no scipy); QuantBeckman 2025 + arXiv 2512.12924 formula; audit actions `quantum_rl.dsr_floor_block` / `quantum_rl.dsr_passed`; `DEFAULT_DSR_THRESHOLD=0.5`, `MIN_TRAINING_ITERATIONS=2`
+- `src/server/lib/rl-signal-fetcher.ts` — DB reader for latest `quantum_rl_runs` row; TS kill-switch mirror (rolling Sharpe gap > 30%); DSR gate integration via `governance_labels.dsr_passed`; returns `RlSignalResult` shape
+- `src/server/lib/score-normalization.ts` — added `"rl_agent"` to `SubsystemName` type (12→13); `EQUAL_WEIGHTS` all weights updated to 1/13; added `normalizeRLConfidence(rl_confidence, dsr_passed, kill_switch_dormant)` — returns null when kill switch active or DSR not passed, clamped [0,1] otherwise
+- `src/server/services/strategy-health-aggregator.ts` — added `fetchRlAgent()` as 13th subsystem fetcher; updated `_getMinSubsystems()` upper bound (12→13); fixed pre-existing `rowId: null` missing in `below_threshold` return
+- `src/server/db/schema.ts` — added `paperAccountRouting: text("paper_account_routing").notNull().default("baseline")` to strategies table
+- `src/server/services/paper-signal-service.ts` — A/B routing block before `pendingEntryQueue.set()`; reads `strategies.paperAccountRouting`; routes 'rl-challenger' → 'slumdawg-rl-challenger', else → 'slumdawg-baseline'; emits `quantum_rl.signal_routed` audit + `signal:rl_ab_routed` SSE; entire block in try/catch (fail-soft)
+- `src/server/db/migrations/0159_broker_accounts_ab_paper_routing.sql` — adds `paper_account_routing TEXT NOT NULL DEFAULT 'baseline'` column; seeds slumdawg-baseline + slumdawg-rl-challenger broker_accounts; check constraint for enum; idempotent ON CONFLICT DO NOTHING
+- `src/server/db/migrations/meta/_journal.json` — added idx 159 entry
+- `src/engine/tests/test_wave29_pass_c3_cpcv_purge.py` — 12 Python tests (TestCpcvFoldValidation 5 + TestCpcvTrainingRowPurge 7); pure Python, no external deps
+- 4 vitest test files: `wave29-pass-c3-cpcv-gate.test.ts` (18), `wave29-pass-c3-dsr-gate.test.ts` (25), `wave29-pass-c3-composite-13th-subsystem.test.ts` (27), `wave29-pass-c3-ab-routing.test.ts` (20) — 90 tests total
+- `wave28-pass-a-score-normalization.test.ts` — updated for 13th subsystem: `rl_agent` added to `allScores()`, "12 keys" → "13 keys", `availableCount` 12→13, below-MIN fixture adds `rl_agent: null` to keep 7 available (not 8)
+
+**Verification:**
+- `npx vitest run src/server/__tests__/wave29-pass-c3-*.test.ts` — 90/90 GREEN
+- `npx vitest run src/server/__tests__/wave28-pass-a-score-normalization.test.ts` — 88/88 GREEN (no regression)
+- `npx tsc --noEmit` — zero errors in any C.3 file (pre-existing errors in scripts/ and other test files only, all pre-date this session)
+- `pytest src/engine/tests/test_wave29_pass_c3_cpcv_purge.py -v` — 12/12 GREEN
+
+**Known-facts updates:**
+- `normalizeRLConfidence` is the canonical TS gating function for RL agent subsystem availability — two gates: `kill_switch_dormant` AND `dsr_passed` must both be true; either false → null (subsystem unavailable)
+- `EQUAL_WEIGHTS` is now frozen at 1/13 (was 1/12). The SHA-256 weights_version_id hash changed — this is a documented model-change event per OCC/Fed/FDIC April 2026 MRM. Old consumers pinned to 16-char hash will see a new value.
+- Wave 28 score-normalization test "has exactly 12 keys" → "has exactly 13 keys"; this is a pass-by-pass migration of the test, not a bug.
+- A/B paper routing: `paper_account_routing='rl-challenger'` → `slumdawg-rl-challenger`; null/missing/anything else → `slumdawg-baseline`. Family accounts must NEVER be assigned `rl-challenger`.
+
+**Carry-forward for next session:**
+- C.4 architect: `git commit` all staged C.3 files + C.2 files + system-map sync + CLAUDE.md §12 gate entry for DSR floor + A/B routing
+- C.2 background agent (a5653f94190239390) is still running — wait for completion before C.4 architect commit to bundle C.2 + C.3 together
+- Migration 0159 is idempotent — boot-migration-runner applies on next Railway deploy
+- `MIN_COMPOSITE_SUBSYSTEMS=8` floor is unaffected — adding 13th subsystem means 5 (not 4) can be null before composite is suppressed
+
 ### Session Log — 2026-05-26 paper-parity — Wave 26 Pass G Pass F: DD velocity autopause + LATE_CYCLE_OVERHEATING 7th regime
 
 **Mission:** Gate scaffold for drawdown velocity autopause (3% in 2hr → AUTOPAUSE_DD_VELOCITY) and additive 8th institutional regime LATE_CYCLE_OVERHEATING with 0.5x sizing + mean-reversion-only playbook.

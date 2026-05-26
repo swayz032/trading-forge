@@ -60,6 +60,7 @@ import {
   EQUAL_WEIGHTS as LIB_EQUAL_WEIGHTS,
   type SubsystemName,
 } from "../lib/score-normalization.js";
+import { fetchRlSignal } from "../lib/rl-signal-fetcher.js";
 
 // ─── Public Types ─────────────────────────────────────────────────────────────
 
@@ -101,8 +102,9 @@ function _getMinSubsystems(): number {
   const raw = process.env.MIN_COMPOSITE_SUBSYSTEMS;
   if (!raw) return DEFAULT_MIN_COMPOSITE_SUBSYSTEMS;
   const n = parseInt(raw, 10);
-  // Allow 0 as an explicit test/bypass value; reject negatives and values > 12
-  if (isNaN(n) || n < 0 || n > 12) {
+  // Allow 0 as an explicit test/bypass value; reject negatives and values > 13
+  // (Wave 29 Pass C.3: 13 subsystems now — upper bound updated from 12 → 13)
+  if (isNaN(n) || n < 0 || n > 13) {
     logger.warn({ raw }, "MIN_COMPOSITE_SUBSYSTEMS invalid — using default 8");
     return DEFAULT_MIN_COMPOSITE_SUBSYSTEMS;
   }
@@ -711,6 +713,52 @@ export async function fetchQuantumReplay(strategyId: string): Promise<SubsystemR
   }
 }
 
+/**
+ * RL Agent — Wave 29 Pass C.3 13th subsystem.
+ *
+ * Reads the latest quantum_rl_runs row for the strategy via rl-signal-fetcher.ts.
+ * Returns null (available=false) when:
+ *   - No RL rows exist (strategy not yet RL-evaluated)
+ *   - DSR gate not passed (policy not graduated)
+ *   - Kill switch active (>30% Sharpe gap)
+ *   - Any DB error (fail-soft)
+ *
+ * Score = effective_confidence ∈ [0,1] when available.
+ * Confidence reflects how many trade observations were used for dampening.
+ */
+export async function fetchRlAgent(strategyId: string): Promise<SubsystemResult> {
+  const name = "rl_agent";
+  try {
+    const result = await fetchRlSignal(strategyId);
+    if (!result.available || result.confidence === null) {
+      return {
+        name,
+        score: null,
+        confidence: null,
+        available: false,
+        computed_at: result.computed_at,
+        error: result.error ?? result.unavailable_reason,
+      };
+    }
+    return {
+      name,
+      score: result.confidence,
+      confidence: result.confidence,
+      available: true,
+      computed_at: result.computed_at,
+    };
+  } catch (err) {
+    return {
+      name,
+      score: null,
+      confidence: null,
+      available: false,
+      computed_at: null,
+      error: String(err),
+    };
+  }
+}
+
 // ─── Orchestrator ─────────────────────────────────────────────────────────────
 
 /**
@@ -730,7 +778,10 @@ export async function aggregateStrategyHealth(strategyId: string): Promise<Aggre
   const startedAt = new Date();
 
   try {
-    // ── Step 1: Run all 12 fetchers in parallel ─────────────────────────────
+    // ── Step 1: Run all 13 fetchers in parallel ─────────────────────────────
+    // Wave 29 Pass C.3: rl_agent added as 13th subsystem.
+    // MIN_COMPOSITE_SUBSYSTEMS=8 floor unchanged — RL unavailability does NOT
+    // prevent composite writes; other 12 subsystems carry the composite.
     const fetchers: Promise<SubsystemResult>[] = [
       fetchB14SurvivalTwin(strategyId),
       fetchWfe(strategyId),
@@ -744,6 +795,7 @@ export async function aggregateStrategyHealth(strategyId: string): Promise<Aggre
       fetchBlackSwan(strategyId),
       fetchNemo(strategyId),
       fetchQuantumReplay(strategyId),
+      fetchRlAgent(strategyId),  // 13th — Wave 29 Pass C.3
     ];
 
     const settled = await Promise.allSettled(fetchers);
@@ -793,7 +845,7 @@ export async function aggregateStrategyHealth(strategyId: string): Promise<Aggre
         "strategy-health-aggregator: below threshold — composite row NOT written",
       );
 
-      return { written: false, reason: "below_threshold", n };
+      return { written: false, rowId: null, reason: "below_threshold", n };
     }
 
     // ── Step 3: Compute composite via scoring lib (A.3 stub path) ───────────

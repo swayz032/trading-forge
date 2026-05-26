@@ -1820,6 +1820,66 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       })();
     }
 
+    // ─── W29 Pass C.2: Regime-conditioned RL training auto-fire ─────────────────
+    // Fires when strategy has entry_quality.train_rl_policy=true.
+    // Uses quantum-rl-training-runner.ts (mirrors quantum-replay-runner.ts pattern).
+    // ET-hour guard: only off-RTH windows {6,7,8,16,17} — enforced inside runner.
+    // Circuit breaker: 5 consecutive failures → 1h cooldown.
+    // governance: challenger_only, training_mode=true, never blocks lifecycle.
+    {
+      const entryQuality = (config as Record<string, unknown>).entry_quality as Record<string, unknown> | undefined;
+      const trainRlPolicy = entryQuality?.train_rl_policy === true;
+      if (!config.suppressAutoPromote && trainRlPolicy && result.tier && result.tier !== "REJECTED") {
+        void (async () => {
+          try {
+            const { runRlTrainingForStrategy, _getRlConsecutiveFailuresForTests } = await import("../lib/quantum-rl-training-runner.js");
+            const rlTrainingResult = await runRlTrainingForStrategy(strategyId, 200, correlationId);
+            await db.insert(auditLog).values({
+              action: "quantum_rl.training_auto_fire_enqueued",
+              entityType: "strategy",
+              entityId: String(strategyId),
+              status: "success",
+              correlationId: correlationId ?? null,
+              result: {
+                trigger: "post_backtest_auto_fire",
+                backtest_id: backtestId,
+                strategy_id: strategyId,
+                regimes_trained: rlTrainingResult.regimesTrained,
+                duration_ms: rlTrainingResult.durationMs,
+                training_status: rlTrainingResult.status,
+              },
+            });
+          } catch (rlTrainErr) {
+            logger.error({ err: rlTrainErr, strategyId, correlationId }, "RL training auto-fire failed (non-blocking)");
+            try {
+              const { _getRlConsecutiveFailuresForTests } = await import("../lib/quantum-rl-training-runner.js");
+              const failures = _getRlConsecutiveFailuresForTests();
+              const threshold = Math.max(1, parseInt(process.env.QUANTUM_RL_TRAINING_FAILURE_THRESHOLD ?? "5", 10) || 5);
+              if (failures >= threshold) {
+                await db.insert(auditLog).values({
+                  action: "quantum_rl.training_circuit_breaker_opened",
+                  entityType: "strategy",
+                  entityId: String(strategyId),
+                  status: "failure",
+                  correlationId: correlationId ?? null,
+                  result: { consecutive_failures: failures, threshold, strategy_id: strategyId, error: String(rlTrainErr) },
+                });
+                return;
+              }
+            } catch { /* circuit-breaker-check failure — fall through */ }
+            await db.insert(auditLog).values({
+              action: "quantum_rl.training_auto_fire_failed",
+              entityType: "strategy",
+              entityId: String(strategyId),
+              status: "failure",
+              correlationId: correlationId ?? null,
+              result: { error: String(rlTrainErr), strategy_id: strategyId, backtest_id: backtestId },
+            });
+          }
+        })();
+      }
+    }
+
     // ─── Auto Quantum Monte Carlo (fire-and-forget) ───
     // Quantum-enhanced breach probability estimation for qualifying backtests.
     // Same guard pattern as QUBO/Tensor/RL: non-REJECTED tier with daily P&Ls.

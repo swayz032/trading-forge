@@ -95,6 +95,10 @@ export const strategies = pgTable("strategies", {
   // New strategies get exit_style="adaptive" via framework-overlay (Pass 7 default).
   // Migration: 0144_strategies_adaptive_exits.sql, idx 146.
   exitPlanConfig: jsonb("exit_plan_config").$type<ExitPlanConfig>().default(undefined),
+  // Wave 29 Pass C.3: A/B paper routing. 'baseline' → Sub-Account 1 (slumdawg-baseline);
+  // 'rl-challenger' → Sub-Account 2 (slumdawg-rl-challenger). Default 'baseline' for all
+  // pre-C.3 strategies (backward-compat). Migration: 0159_broker_accounts_ab_paper_routing.sql
+  paperAccountRouting: text("paper_account_routing").notNull().default("baseline"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 },
@@ -2853,6 +2857,54 @@ export const liquidityLevels = pgTable(
 // disagreement engine.
 //
 // Migration: 0149_strategy_health_scores.sql (idx 151)
+// ─── quantum_rl_runs — Wave 29 Pass C.1 ──────────────────────────────────────
+// Append-only RL training + inference row log.
+// SEPARATE NAMESPACE from quantum_mc_runs — prevents circular IAE-vs-RL feedback
+// (audit finding 2026-05-26). governance_labels.training_mode=true (NOT replay_mode).
+export const quantumRlRuns = pgTable(
+  "quantum_rl_runs",
+  {
+    // Surrogate key — bigserial for high-volume append workload
+    id:                   bigserial("id", { mode: "bigint" }).primaryKey(),
+    // FK to the strategy being evaluated. Cascade on strategy deletion.
+    strategyId:           integer("strategy_id")
+                            .notNull()
+                            .references(() => strategies.id, { onDelete: "cascade" }),
+    // When this RL decision was produced (wall-clock UTC)
+    evaluatedAt:          timestamp("evaluated_at", { withTimezone: true }).notNull().defaultNow(),
+    // Institutional regime at decision time.
+    // TRENDING | RANGE_BOUND | HIGH_VOL_MACRO | COMPRESSION | EXPANSION | LOW_LIQ_CHOP
+    regime:               text("regime").notNull(),
+    // ~25-feature production state vector serialized for replay
+    stateVector:          jsonb("state_vector").notNull(),
+    // Agent action: 'act' | 'skip' — LONG/FLAT 2-action only, no shorts
+    action:               text("action").notNull(),
+    // Raw VQC policy confidence in [0, 1] before dampening
+    confidenceScore:      real("confidence_score").notNull(),
+    // Post-dampening effective confidence (C.2 computes, C.1 persists)
+    effectiveConfidence:  real("effective_confidence").notNull(),
+    // Realized reward: realized_R − α × max(0, ci_high − 0.40) − β × drawdown_penalty
+    reward:               real("reward").notNull(),
+    // BCa-bootstrap ci_high snapshot from monte_carlo_runs at decision time (nullable)
+    ciHighAtEvaluation:   real("ci_high_at_evaluation"),
+    // β drawdown penalty component from rolling 20-step P&L drawdown (nullable)
+    drawdownPenalty:      real("drawdown_penalty"),
+    // Governance: { experimental: true, authoritative: false,
+    //               decision_role: "challenger_only", training_mode: true }
+    governanceLabels:     jsonb("governance_labels").notNull(),
+    // Walk-forward fold ID for CPCV purge gate (C.3); NULL for live-paper rows
+    cpcvFoldId:           integer("cpcv_fold_id"),
+    // Row creation timestamp
+    createdAt:            timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    // Primary lookup: latest RL run per strategy (most-recent-first)
+    index("idx_quantum_rl_runs_strategy_evaluated").on(table.strategyId, table.evaluatedAt),
+    // Per-regime training set queries
+    index("idx_quantum_rl_runs_regime_action").on(table.regime, table.action),
+  ],
+);
+
 export const strategyHealthScores = pgTable(
   "strategy_health_scores",
   {

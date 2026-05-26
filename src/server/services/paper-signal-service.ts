@@ -4314,6 +4314,76 @@ export async function evaluateSignals(
           );
         }
 
+        // ─── Wave 29 Pass C.3: A/B paper routing audit ───────────────────────
+        // Emit quantum_rl.signal_routed audit + signal:rl_ab_routed SSE for every
+        // signal that passes all gates, identifying which sub-account it maps to.
+        //
+        // Routing decision:
+        //   strategies.paper_account_routing = 'rl-challenger'
+        //     → Sub-Account 2 (slumdawg-rl-challenger)
+        //   strategies.paper_account_routing = 'baseline' (default)
+        //     → Sub-Account 1 (slumdawg-baseline)
+        //
+        // Fail-soft: if paper_account_routing column missing (legacy DB / schema drift),
+        //   defaults to 'baseline' behavior — no routing change, no crash.
+        //
+        // Family constraint (CLAUDE.md feedback_family_not_part_of_operator_scaling):
+        //   A/B routing is operator-only. Family accounts always go to 'baseline'.
+        //   The routing field MUST NOT be set to 'rl-challenger' for family strategy IDs.
+        //   This is enforced by only setting paper_account_routing='rl-challenger'
+        //   via operator-controlled tooling, never auto-assigning it.
+        try {
+          const strategyForRouting = await db
+            .select({ paperAccountRouting: strategies.paperAccountRouting })
+            .from(strategies)
+            .where(eq(strategies.id, sessionConfig.strategyId))
+            .limit(1);
+
+          const routingDecision = strategyForRouting[0]?.paperAccountRouting ?? "baseline";
+          const targetSubAccount = routingDecision === "rl-challenger"
+            ? "slumdawg-rl-challenger"
+            : "slumdawg-baseline";
+
+          insertAuditRow({
+            action: "quantum_rl.signal_routed",
+            entityType: "strategy",
+            entityId: sessionConfig.strategyId,
+            decisionAuthority: "system",
+            result: {
+              paper_account_routing: routingDecision,
+              target_sub_account: targetSubAccount,
+              symbol,
+              side: config.side,
+              contracts: contextContracts,
+              signal_bar: bar.timestamp,
+              session_id: sessionId,
+              correlation_id: correlationId ?? null,
+            } as Record<string, unknown>,
+            status: "info",
+            correlationId: correlationId ?? null,
+          }).catch((err: unknown) =>
+            logger.warn({ err, sessionId }, "audit_log insert failed for quantum_rl.signal_routed"),
+          );
+
+          broadcastSSE("signal:rl_ab_routed", {
+            sessionId,
+            strategyId: sessionConfig.strategyId,
+            symbol,
+            routing: routingDecision,
+            targetSubAccount,
+            side: config.side,
+            contracts: contextContracts,
+            signalBar: bar.timestamp,
+          });
+        } catch (abRoutingErr: unknown) {
+          // Fail-soft: A/B routing audit failure MUST NOT block the entry path
+          logger.warn(
+            { err: String(abRoutingErr), sessionId, symbol },
+            "paper-signal-service: A/B routing audit failed (non-blocking)",
+          );
+        }
+        // ─── End Wave 29 Pass C.3 A/B routing ────────────────────────────────
+
         span.setAttribute("pending_entry_queued", true);
         span.setAttribute("signal_bar", bar.timestamp);
         logger.info(

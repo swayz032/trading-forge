@@ -60,6 +60,8 @@ import { runQuantumReplayWeeklyAnalysis } from "./services/quantum-replay-weekly
 import { runCompositeHealthDailyDigest } from "./services/composite-health-digest-service.js";
 // W26 Pass G Pass D: Strategy stale detector — 04:00 ET daily
 import { runStrategyStaleDetector } from "./services/strategy-stale-detector.js";
+// W29 Pass C.2: Quantum RL training window cron
+import { isOffRthTrainingWindow } from "./lib/quantum-rl-training-runner.js";
 
 let initialized = false;
 
@@ -4517,6 +4519,70 @@ except Exception as e:
     }
   });
   _scheduledJobs.add("dd-velocity-cron");
+
+  // ─── W29 Pass C.2: Quantum RL training window cron ──────────────────────────
+  //
+  // Fires every hour at off-RTH ET windows {6,7,8,16,17} (Topstep April 2026
+  // unattended-automation rule). The cron fires hourly; the ET-hour guard inside
+  // the handler ensures training only begins in allowed windows.
+  //
+  // Pipeline-gate EXEMPT: RL training is challenger-only observability.
+  // An operator who paused trading still accumulates training evidence.
+  // _PIPELINE_GATE_EXEMPT entry prevents pipelineGate() blocking.
+  //
+  // Audit actions (written by backtest-service.ts fire-and-forget hook; this
+  // scheduler job fires independently from the training runner):
+  //   - quantum_rl.training_auto_fire_enqueued
+  //   - quantum_rl.training_auto_fire_failed
+  //   - quantum_rl.training_circuit_breaker_opened
+  //   - quantum_rl.training_skipped_in_rth_window
+
+  _PIPELINE_GATE_EXEMPT.add("quantum-rl-training-window");
+
+  registerJob("quantum-rl-training-window", 60 * 60 * 1000, async () => {
+    // Job body is intentionally minimal — the actual training is kicked off
+    // by backtest-service.ts fire-and-forget hook. This scheduler job exists
+    // to ensure the training window guard is evaluated every hour and logged.
+    const etHour = parseInt(
+      new Date().toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+      10,
+    );
+    if (!isOffRthTrainingWindow()) {
+      logger.debug(
+        { etHour, job: "quantum-rl-training-window" },
+        "quantum-rl-training-window: RTH window — no training dispatch",
+      );
+      // Emit audit so the window guard is auditable
+      await insertAuditRow({
+        action: "quantum_rl.training_skipped_in_rth_window",
+        entityType: "scheduler",
+        entityId: "quantum-rl-training-window",
+        status: "info",
+        result: { et_hour: etHour, reason: "rth_window", governance_labels: { experimental: true, authoritative: false, decision_role: "challenger_only", training_mode: true } },
+      });
+    } else {
+      logger.info(
+        { etHour, job: "quantum-rl-training-window" },
+        "quantum-rl-training-window: off-RTH window open — training eligible for fire-and-forget callers",
+      );
+    }
+  });
+
+  // Fires every hour on the hour (off-RTH guard inside job body)
+  cron.schedule("0 * * * *", async () => {
+    if (!_tryAcquireJobLock("quantum-rl-training-window")) return;
+    try {
+      // NOT pipeline-gated (in _PIPELINE_GATE_EXEMPT)
+      logger.debug({ job: "quantum-rl-training-window" }, "quantum-rl-training-window: cron tick");
+      const t0rl = Date.now();
+      await withRetry("quantum-rl-training-window", SCHEDULER_JOBS["quantum-rl-training-window"].run, 1);
+      markJobRun("quantum-rl-training-window");
+      emitJobComplete("quantum-rl-training-window", Date.now() - t0rl);
+    } finally {
+      _releaseJobLock("quantum-rl-training-window");
+    }
+  });
+  _scheduledJobs.add("quantum-rl-training-window");
 
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every

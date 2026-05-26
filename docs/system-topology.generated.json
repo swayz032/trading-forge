@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-26T11:50:29.483Z",
+  "generatedAt": "2026-05-26T21:58:56.965Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,12 +16,12 @@
   },
   "counts": {
     "routes": 72,
-    "schedulerJobs": 87,
+    "schedulerJobs": 88,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 28,
-    "databaseTables": 97,
-    "registrySubsystems": 58
+    "databaseTables": 98,
+    "registrySubsystems": 59
   },
   "routes": [
     "/api/admin",
@@ -167,6 +167,7 @@
     "python-pool-saturation-check",
     "quantum-cost-prune",
     "quantum-replay-weekly-analysis",
+    "quantum-rl-training-window",
     "regen-declining-sweep",
     "regime-coverage-check",
     "regret-score-fill",
@@ -834,6 +835,7 @@
     "prop_firm_health_checks",
     "quantum_mc_benchmarks",
     "quantum_mc_runs",
+    "quantum_rl_runs",
     "quantum_run_costs",
     "qubo_timing_runs",
     "regime_hmm_models",
@@ -871,47 +873,47 @@
     "weekly_drift_reports"
   ],
   "registryCoverage": {
-    "registryEntries": 58,
-    "autonomousSubsystems": 54,
-    "selfEvolvingSubsystems": 8,
+    "registryEntries": 59,
+    "autonomousSubsystems": 55,
+    "selfEvolvingSubsystems": 9,
     "proofStatusCounts": {
       "runtime-proven": 37,
       "partially-proven": 1,
       "offline-by-design": 0,
       "experimental": 5,
-      "drifted": 15
+      "drifted": 16
     },
     "runtimeStateCounts": {
-      "active": 52,
+      "active": 53,
       "experimental": 5,
       "scaffold": 1
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
       "partially_active_preprod": 0,
-      "active_preprod": 53,
+      "active_preprod": 54,
       "experimental_preprod": 5
     },
     "launchTargetCounts": {
-      "runtime_proven_autonomous": 51,
+      "runtime_proven_autonomous": 52,
       "runtime_proven_manual_gate": 2,
       "experimental_challenger": 5
     },
     "closedLoopCounts": {
       "not_collecting": 46,
       "collecting_only": 0,
-      "learning_active": 7,
+      "learning_active": 8,
       "learning_blocked": 0,
       "shadow_experimental": 5
     },
     "learningModeCounts": {
-      "active_learning": 6,
+      "active_learning": 7,
       "deterministic_instrumented": 45,
       "manual_gate_only": 2,
       "shadow_experimental": 5
     },
     "operatingClassCounts": {
-      "adaptive": 6,
+      "adaptive": 7,
       "deterministic_instrumented": 50,
       "manual_gated": 2
     },
@@ -927,9 +929,9 @@
     ],
     "coveredCounts": {
       "routes": 72,
-      "schedulerJobs": 87,
+      "schedulerJobs": 88,
       "engineSubsystems": 28,
-      "databaseTables": 97
+      "databaseTables": 98
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
@@ -954,12 +956,12 @@
     "manualGateViolations": [],
     "preprodIntegrity": {
       "status": "incomplete",
-      "automationComplete": 49,
-      "dataCollectionComplete": 58,
-      "auditabilityComplete": 58,
-      "failureVisibilityComplete": 58,
-      "authorityCorrect": 58,
-      "learningActive": 7,
+      "automationComplete": 50,
+      "dataCollectionComplete": 59,
+      "auditabilityComplete": 59,
+      "failureVisibilityComplete": 59,
+      "authorityCorrect": 59,
+      "learningActive": 8,
       "incompleteSubsystems": [
         "adaptive_exit_engine",
         "composite_shadow_gate",
@@ -967,6 +969,7 @@
         "exit_engine_ab_harness",
         "late_cycle_overheating_regime",
         "phase5_contract_spec_scaffold",
+        "quantum_rl_challenger",
         "replay_grade_confluence",
         "replay_grade_consistency",
         "replay_grade_critique",
@@ -982,7 +985,7 @@
     "productionConvergence": {
       "status": "blocked",
       "targetStateCounts": {
-        "production_autonomous": 51,
+        "production_autonomous": 52,
         "production_manual_gate": 2,
         "production_experimental": 5,
         "production_not_intended": 0
@@ -1033,6 +1036,7 @@
         "pattern_aggregator_service",
         "phase5_contract_spec_scaffold",
         "production_hardening",
+        "quantum_rl_challenger",
         "replay_grade_confluence",
         "replay_grade_consistency",
         "replay_grade_critique",
@@ -1075,6 +1079,7 @@
         "pattern_aggregator_service:manual_gate:kill_switch",
         "phase5_contract_spec_scaffold:manual_gate:operator-approve",
         "production_hardening:manual_gate:operator-halt-only",
+        "quantum_rl_challenger:invalid-active-proof-mode",
         "replay_grade_confluence:invalid-active-proof-mode",
         "replay_grade_confluence:manual_gate:operator-approve",
         "replay_grade_consistency:invalid-active-proof-mode",
@@ -1122,6 +1127,7 @@
         "production_hardening:manual_gate:operator-halt-only",
         "prop_firm_survival_twin:experimental_governance",
         "quantum_adversarial_stress:experimental_governance",
+        "quantum_rl_challenger:invalid-active-proof-mode",
         "replay_grade_confluence:invalid-active-proof-mode",
         "replay_grade_confluence:manual_gate:operator-approve",
         "replay_grade_consistency:invalid-active-proof-mode",
@@ -1164,6 +1170,7 @@
         "production_hardening",
         "prop_firm_survival_twin",
         "quantum_adversarial_stress",
+        "quantum_rl_challenger",
         "replay_grade_confluence",
         "replay_grade_consistency",
         "replay_grade_critique",
@@ -4713,6 +4720,126 @@
           "quantum-fallback-boundary"
         ],
         "coverageGaps": []
+      },
+      {
+        "id": "quantum_rl_challenger",
+        "domain": "research",
+        "ownerSurface": "node-python",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "system",
+        "manualGate": "none",
+        "selfEvolving": true,
+        "proofMode": "audit_log_evidence",
+        "proofStatus": "drifted",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "challenger_only",
+        "deploymentAuthority": "operator_only",
+        "criticality": "observability",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "learning loop affects downstream behavior",
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
+        ],
+        "runtimeEvidence": [
+          "audit_log.quantum_rl.*",
+          "audit_log.quantum_rl.training_auto_fire_enqueued",
+          "quantum_rl_runs.created_at",
+          "quantum_rl.cloud_path_engaged",
+          "quantum_rl.dsr_floor_block",
+          "quantum_rl.dsr_passed",
+          "quantum_rl.kill_switch_engaged",
+          "quantum_rl.kill_switch_evaluated",
+          "quantum_rl.regime_insufficient_data",
+          "quantum_rl.signal_routed",
+          "quantum_rl.training_auto_fire_enqueued",
+          "quantum_rl.training_auto_fire_failed",
+          "quantum_rl.training_circuit_breaker_opened",
+          "quantum_rl.training_cpcv_purge_violation",
+          "quantum_rl.training_skipped_in_rth_window",
+          "signal.rl_ab_routed",
+          "SSE signal:rl_ab_routed"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "backtest_bar_data (CPCV-purged)",
+          "backtests",
+          "bias_state",
+          "broker_accounts",
+          "liquidity_levels",
+          "quantum_mc_runs",
+          "quantum_mc_runs (warm-start training data)",
+          "quantum_rl_agent (TradingEnv production state)",
+          "quantum_rl_runs",
+          "strategies",
+          "strategy_health_scores"
+        ],
+        "closedLoopStatus": "learning_active",
+        "learningMode": "active_learning",
+        "operatingClass": "adaptive",
+        "launchReady": false,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "active",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "drifted",
+        "productionBlockers": [
+          "invalid-active-proof-mode"
+        ],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "learning loop remains bounded to pre-deploy authority",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log.quantum_rl.*",
+          "audit_log.quantum_rl.training_auto_fire_enqueued",
+          "quantum_rl_runs.created_at",
+          "quantum_rl.cloud_path_engaged",
+          "quantum_rl.dsr_floor_block",
+          "quantum_rl.dsr_passed",
+          "quantum_rl.kill_switch_engaged",
+          "quantum_rl.kill_switch_evaluated",
+          "quantum_rl.regime_insufficient_data",
+          "quantum_rl.signal_routed",
+          "quantum_rl.training_auto_fire_enqueued",
+          "quantum_rl.training_auto_fire_failed",
+          "quantum_rl.training_circuit_breaker_opened",
+          "quantum_rl.training_cpcv_purge_violation",
+          "quantum_rl.training_skipped_in_rth_window",
+          "SELECT * FROM audit_log WHERE action LIKE 'quantum_rl.%' ORDER BY created_at DESC LIMIT 10",
+          "SELECT COUNT(*) FROM quantum_rl_runs WHERE created_at > NOW() - INTERVAL '7 days'",
+          "signal.rl_ab_routed",
+          "SSE signal:rl_ab_routed"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [],
+        "schedulerJobs": [
+          "quantum-rl-training-window"
+        ],
+        "healthCheck": "src/engine/tests/test_wave29_pass_c1_trading_env.py",
+        "freshnessSignals": [
+          "quantum_rl_runs.created_at",
+          "audit_log.quantum_rl.training_auto_fire_enqueued"
+        ],
+        "evidenceQueries": [
+          "SELECT COUNT(*) FROM quantum_rl_runs WHERE created_at > NOW() - INTERVAL '7 days'",
+          "SELECT * FROM audit_log WHERE action LIKE 'quantum_rl.%' ORDER BY created_at DESC LIMIT 10"
+        ],
+        "coverageGaps": [
+          "invalid-active-proof-mode"
+        ]
       },
       {
         "id": "replay_grade_confluence",
@@ -10336,6 +10463,126 @@
         "quantum-fallback-boundary"
       ],
       "coverageGaps": []
+    },
+    {
+      "id": "quantum_rl_challenger",
+      "domain": "research",
+      "ownerSurface": "node-python",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "system",
+      "manualGate": "none",
+      "selfEvolving": true,
+      "proofMode": "audit_log_evidence",
+      "proofStatus": "drifted",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "challenger_only",
+      "deploymentAuthority": "operator_only",
+      "criticality": "observability",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "learning loop affects downstream behavior",
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
+      ],
+      "runtimeEvidence": [
+        "audit_log.quantum_rl.*",
+        "audit_log.quantum_rl.training_auto_fire_enqueued",
+        "quantum_rl_runs.created_at",
+        "quantum_rl.cloud_path_engaged",
+        "quantum_rl.dsr_floor_block",
+        "quantum_rl.dsr_passed",
+        "quantum_rl.kill_switch_engaged",
+        "quantum_rl.kill_switch_evaluated",
+        "quantum_rl.regime_insufficient_data",
+        "quantum_rl.signal_routed",
+        "quantum_rl.training_auto_fire_enqueued",
+        "quantum_rl.training_auto_fire_failed",
+        "quantum_rl.training_circuit_breaker_opened",
+        "quantum_rl.training_cpcv_purge_violation",
+        "quantum_rl.training_skipped_in_rth_window",
+        "signal.rl_ab_routed",
+        "SSE signal:rl_ab_routed"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "backtest_bar_data (CPCV-purged)",
+        "backtests",
+        "bias_state",
+        "broker_accounts",
+        "liquidity_levels",
+        "quantum_mc_runs",
+        "quantum_mc_runs (warm-start training data)",
+        "quantum_rl_agent (TradingEnv production state)",
+        "quantum_rl_runs",
+        "strategies",
+        "strategy_health_scores"
+      ],
+      "closedLoopStatus": "learning_active",
+      "learningMode": "active_learning",
+      "operatingClass": "adaptive",
+      "launchReady": false,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "active",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "drifted",
+      "productionBlockers": [
+        "invalid-active-proof-mode"
+      ],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "learning loop remains bounded to pre-deploy authority",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log.quantum_rl.*",
+        "audit_log.quantum_rl.training_auto_fire_enqueued",
+        "quantum_rl_runs.created_at",
+        "quantum_rl.cloud_path_engaged",
+        "quantum_rl.dsr_floor_block",
+        "quantum_rl.dsr_passed",
+        "quantum_rl.kill_switch_engaged",
+        "quantum_rl.kill_switch_evaluated",
+        "quantum_rl.regime_insufficient_data",
+        "quantum_rl.signal_routed",
+        "quantum_rl.training_auto_fire_enqueued",
+        "quantum_rl.training_auto_fire_failed",
+        "quantum_rl.training_circuit_breaker_opened",
+        "quantum_rl.training_cpcv_purge_violation",
+        "quantum_rl.training_skipped_in_rth_window",
+        "SELECT * FROM audit_log WHERE action LIKE 'quantum_rl.%' ORDER BY created_at DESC LIMIT 10",
+        "SELECT COUNT(*) FROM quantum_rl_runs WHERE created_at > NOW() - INTERVAL '7 days'",
+        "signal.rl_ab_routed",
+        "SSE signal:rl_ab_routed"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [],
+      "schedulerJobs": [
+        "quantum-rl-training-window"
+      ],
+      "healthCheck": "src/engine/tests/test_wave29_pass_c1_trading_env.py",
+      "freshnessSignals": [
+        "quantum_rl_runs.created_at",
+        "audit_log.quantum_rl.training_auto_fire_enqueued"
+      ],
+      "evidenceQueries": [
+        "SELECT COUNT(*) FROM quantum_rl_runs WHERE created_at > NOW() - INTERVAL '7 days'",
+        "SELECT * FROM audit_log WHERE action LIKE 'quantum_rl.%' ORDER BY created_at DESC LIMIT 10"
+      ],
+      "coverageGaps": [
+        "invalid-active-proof-mode"
+      ]
     },
     {
       "id": "replay_grade_confluence",

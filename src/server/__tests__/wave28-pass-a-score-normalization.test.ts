@@ -51,8 +51,9 @@ describe("EQUAL_WEIGHTS", () => {
     }).toThrow();
   });
 
-  it("has exactly 12 keys", () => {
-    expect(Object.keys(EQUAL_WEIGHTS).length).toBe(12);
+  it("has exactly 13 keys", () => {
+    // Wave 29 Pass C.3 added rl_agent as the 13th subsystem
+    expect(Object.keys(EQUAL_WEIGHTS).length).toBe(13);
   });
 });
 
@@ -372,17 +373,19 @@ function allScores(value: number): SubsystemScores {
     black_swan:          value,
     nemo:                value,
     quantum_replay:      value,
+    rl_agent:            value,
   };
 }
 
 describe("computeComposite — happy path", () => {
-  it("all 12 scores at 0.5 → composite=0.5", () => {
+  it("all 13 scores at 0.5 → composite=0.5", () => {
+    // Wave 29 Pass C.3: allScores() now includes rl_agent as 13th subsystem
     const result = computeComposite(allScores(0.5));
     expect(result.score).toBeCloseTo(0.5);
-    expect(result.availableCount).toBe(12);
+    expect(result.availableCount).toBe(13);
   });
 
-  it("all 12 scores at 1.0 → composite=1.0", () => {
+  it("all 13 scores at 1.0 → composite=1.0", () => {
     const result = computeComposite(allScores(1.0));
     expect(result.score).toBeCloseTo(1.0);
   });
@@ -394,7 +397,8 @@ describe("computeComposite — happy path", () => {
 });
 
 describe("computeComposite — renormalization with nulls", () => {
-  it("4 nulls + 8 scores of 0.5 → composite=0.5 (denominator = sum of 8 weights)", () => {
+  // Wave 29 Pass C.3: now 13 subsystems. 4 nulls → 9 available.
+  it("4 nulls + 9 scores of 0.5 → composite=0.5 (denominator = sum of 9 weights)", () => {
     const scores: SubsystemScores = {
       ...allScores(0.5),
       black_swan:    null,
@@ -403,12 +407,12 @@ describe("computeComposite — renormalization with nulls", () => {
       deepar:        null,
     };
     const result = computeComposite(scores);
-    expect(result.availableCount).toBe(8);
-    // Each equal weight is 1/12.  8 × (1/12) × 0.5  / (8 × 1/12) = 0.5
+    expect(result.availableCount).toBe(9);
+    // Equal weights renormalized: 9 × (1/13) × 0.5 / (9 × 1/13) = 0.5
     expect(result.score).toBeCloseTo(0.5);
   });
 
-  it("4 nulls + 8 scores at 1.0 → composite=1.0 (renorm denominator correct)", () => {
+  it("4 nulls + 9 scores at 1.0 → composite=1.0 (renorm denominator correct)", () => {
     const scores: SubsystemScores = {
       ...allScores(1.0),
       black_swan:    null,
@@ -431,12 +435,13 @@ describe("computeComposite — below MIN_AVAILABLE", () => {
       compliance:        0.8,
       trade_critique:    0.8,
       pattern_aggregator: 0.8,
-      // 5 nulls → only 7 available
+      // 6 nulls → only 7 available
       consistency_tracker: null,
       deepar:              null,
       black_swan:          null,
       nemo:                null,
       quantum_replay:      null,
+      rl_agent:            null, // Wave 29 Pass C.3: 13th subsystem must also be null to keep 7 available
     };
     const result = computeComposite(scores);
     expect(result.score).toBeNull();

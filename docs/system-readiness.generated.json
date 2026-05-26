@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-26T11:50:29.483Z",
+  "generatedAt": "2026-05-26T21:58:56.965Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -14,6 +14,7 @@
     "pattern_aggregator_service:manual_gate:kill_switch",
     "phase5_contract_spec_scaffold:manual_gate:operator-approve",
     "production_hardening:manual_gate:operator-halt-only",
+    "quantum_rl_challenger:invalid-active-proof-mode",
     "replay_grade_confluence:invalid-active-proof-mode",
     "replay_grade_confluence:manual_gate:operator-approve",
     "replay_grade_consistency:invalid-active-proof-mode",
@@ -43,9 +44,9 @@
     "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
-    "total": 58,
+    "total": 59,
     "ready": 33,
-    "blocked": 18,
+    "blocked": 19,
     "manualGated": 2,
     "experimental": 5
   },
@@ -905,6 +906,40 @@
         "quantum-mc.run",
         "quantum-route-coverage",
         "quantum-run-persistence"
+      ]
+    },
+    {
+      "id": "quantum_rl_challenger",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": true,
+      "learningMode": "active_learning",
+      "operatingClass": "adaptive",
+      "deploymentAuthority": "operator_only",
+      "blockers": [
+        "invalid-active-proof-mode"
+      ],
+      "requiredEvidence": [
+        "audit_log.quantum_rl.*",
+        "audit_log.quantum_rl.training_auto_fire_enqueued",
+        "quantum_rl_runs.created_at",
+        "quantum_rl.cloud_path_engaged",
+        "quantum_rl.dsr_floor_block",
+        "quantum_rl.dsr_passed",
+        "quantum_rl.kill_switch_engaged",
+        "quantum_rl.kill_switch_evaluated",
+        "quantum_rl.regime_insufficient_data",
+        "quantum_rl.signal_routed",
+        "quantum_rl.training_auto_fire_enqueued",
+        "quantum_rl.training_auto_fire_failed",
+        "quantum_rl.training_circuit_breaker_opened",
+        "quantum_rl.training_cpcv_purge_violation",
+        "quantum_rl.training_skipped_in_rth_window",
+        "SELECT * FROM audit_log WHERE action LIKE 'quantum_rl.%' ORDER BY created_at DESC LIMIT 10",
+        "SELECT COUNT(*) FROM quantum_rl_runs WHERE created_at > NOW() - INTERVAL '7 days'",
+        "signal.rl_ab_routed",
+        "SSE signal:rl_ab_routed"
       ]
     },
     {
