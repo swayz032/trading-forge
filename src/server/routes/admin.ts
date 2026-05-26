@@ -358,6 +358,17 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
           "htf_bias", "htf_bias_confirmation", "daily_bias", "4h_bias",
           "bos_confirmation", "choch_entry", "change_of_character_entry",
           "displacement_entry", "killzone_entry", "asian_range_raid",
+          // Wave 26 Pass H Phase 1.5 Fix 5 (2026-05-26) — Gemma v10 synonyms
+          // observed in live ingests (e.g. video dE4lPhAWke8, htf_bias_and_ms_*).
+          // Gemma fabricates bogus `entry_indicator: ema_crossover` for these
+          // structural concepts; the merger re-routes them to the master archetype.
+          "htf_bias_and_ms_confirmation", "htf_bias_and_market_structure",
+          "bias_and_structure", "mss_continuation",
+          "daily_bias_market_structure", "daily_bias_market_structure_and_targets",
+          "market_structure_shift_confirmation",
+          "fvg_retrace_entry", "liquidity_targeting",
+          // Compact one-word sub-layer aliases also observed.
+          "htf_bias_and_ms", "bias_and_ms", "ms_confirmation",
         ],
         ict_power_of_3: [
           "accumulation", "accumulation_phase", "manipulation", "manipulation_phase",
@@ -397,26 +408,61 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
         }
       }
 
+      // ─── Wave 26 Pass H Phase 1.5 Fix 5 (2026-05-26) — single-idea sub-layer re-route ──
+      // When a SINGLE idea's concept_name is a known sub-layer of a multi-layer
+      // archetype X but Gemma did NOT emit master-archetype entry_indicator
+      // (typically because Gemma fabricates a bogus parametric entry_indicator
+      // like "ema_crossover" for the structural concept), re-route the idea to
+      // the master archetype. The operator's intent was clearly one layered
+      // strategy — without this Fix the graduator would honor Gemma's bogus
+      // ema_crossover via gemma_archetype_respected, producing 3 EMA strategies
+      // for an ICT bias+MS video. Captured as _absorbed_sub_concepts for trace.
+      if (masterIdeaIdx === -1 && extractResult.ideas.length === 1) {
+        const onlyIdea = extractResult.ideas[0];
+        const cn = String((onlyIdea.concept_name as string) ?? "").toLowerCase().replace(/\s+/g, "_");
+        for (const [arch, subLayers] of Object.entries(SUB_LAYERS_BY_ARCHETYPE)) {
+          const subLayerSet = new Set(subLayers.map(s => s.toLowerCase()));
+          if (subLayerSet.has(cn)) {
+            masterArchetype = arch;
+            masterIdeaIdx = 0;
+            break;
+          }
+        }
+      }
+
       let ideasToProcess: Array<Record<string, unknown>>;
       let absorbedSubConcepts: string[] = [];
 
-      if (masterIdeaIdx >= 0 && masterArchetype !== null && extractResult.ideas.length > 1) {
-        // Merge: keep master idea, absorb siblings
+      if (masterIdeaIdx >= 0 && masterArchetype !== null && extractResult.ideas.length >= 1) {
+        // Wave 26 Pass H Phase 1.5 Fix 5: relaxed to ≥1 so single-idea sub-layer
+        // re-route fires. Multi-idea path: master idea kept + siblings absorbed.
+        // Single-idea path: the only idea IS the master; the absorbed_sub_concepts
+        // list captures the original concept_name as Gemma emitted it (so the
+        // re-route is replay-traceable in audit_log).
         const masterIdea = extractResult.ideas[masterIdeaIdx];
-        absorbedSubConcepts = extractResult.ideas
-          .filter((_, i) => i !== masterIdeaIdx)
-          .map((idea) => String((idea.concept_name as string) ?? (idea.name as string) ?? "unknown"));
+        const isSingleIdeaRoute = extractResult.ideas.length === 1;
+        absorbedSubConcepts = isSingleIdeaRoute
+          ? [String((masterIdea.concept_name as string) ?? (masterIdea.name as string) ?? "unknown")]
+          : extractResult.ideas
+              .filter((_, i) => i !== masterIdeaIdx)
+              .map((idea) => String((idea.concept_name as string) ?? (idea.name as string) ?? "unknown"));
         ideasToProcess = [{
           ...masterIdea,
-          // Ensure entry_indicator reflects the archetype
+          // Ensure entry_indicator reflects the archetype (overrides any bogus
+          // parametric entry_indicator Gemma may have emitted, e.g. ema_crossover
+          // for an ICT bias+MS concept).
           entry_indicator: `archetype:${masterArchetype}`,
           // Embed absorbed sub-concepts into the idea so the bucket config can store them
           _absorbed_sub_concepts: absorbedSubConcepts,
         }];
 
-        // Audit row + Discord NOTE (fire-and-forget)
+        // Audit row + Discord NOTE (fire-and-forget). Single-idea re-route uses
+        // a distinct action so it can be queried separately from multi-idea merge.
+        const auditAction = isSingleIdeaRoute
+          ? "scout.single_idea_sub_layer_rerouted"
+          : "scout.ideas_merged_under_archetype";
         db.insert(await import("../db/schema.js").then(m => m.auditLog)).values({
-          action: "scout.ideas_merged_under_archetype",
+          action: auditAction,
           entityType: "scout_extract",
           entityId: null,
           input: { url, video_id: videoId, correlation_id: correlationId, archetype: masterArchetype } as Record<string, unknown>,
@@ -424,12 +470,13 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
             total_ideas: extractResult.ideas.length,
             absorbed: absorbedSubConcepts,
             master_concept: (masterIdea.concept_name as string) ?? "unknown",
+            single_idea_route: isSingleIdeaRoute,
           } as Record<string, unknown>,
           status: "success",
           decisionAuthority: "system",
           correlationId,
         } as Record<string, unknown>).catch((auditErr: unknown) =>
-          logger.warn({ auditErr }, "scout.ideas_merged_under_archetype audit write failed")
+          logger.warn({ auditErr }, `${auditAction} audit write failed`)
         );
 
         // Discord NOTE (not WARN — this is expected behavior for multi-layer ICT videos)

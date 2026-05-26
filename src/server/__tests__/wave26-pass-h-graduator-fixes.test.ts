@@ -609,3 +609,132 @@ describe("Bug 1 — source contract: admin.ts sibling merge wiring", () => {
     expect(AGENT_SRC).toContain("z.array(z.string()).optional()");
   });
 });
+
+// ─── Wave 26 Pass H Phase 1.5 (2026-05-26) Fix 4/5/6 regression tests ────────
+
+describe("Phase 1.5 Fix 4 — market-structure regex guard in deriveEntryIndicator", () => {
+  // Mirror of the production isMarketStructureish guard regex in
+  // direct-bucket-graduator.ts. If you change one, change both.
+  const isMarketStructureish = (cn: string) =>
+    /(^|_)(ms|mss|bos|choch)(_|$)|market[_\s-]?structure|structure[_\s-]?shift|break[_\s-]?of[_\s-]?structure/.test(cn);
+
+  // Production MA-cross regex (line 620 of direct-bucket-graduator.ts), but
+  // now gated behind isMarketStructureish.
+  const wouldRouteToMaCross = (cn: string) =>
+    !isMarketStructureish(cn) &&
+    /ema.cross|exponential_moving_average_cross|moving_average_cross|(^|_)ma_cross(_|$)|(^|_)ma\.cross|ema.pullback|pullback.ema/.test(cn);
+
+  it("'ms_' concepts are guarded from moving-average routing", () => {
+    expect(isMarketStructureish("htf_bias_and_ms_confirmation")).toBe(true);
+    expect(isMarketStructureish("ms_continuation")).toBe(true);
+    expect(wouldRouteToMaCross("htf_bias_and_ms_confirmation")).toBe(false);
+  });
+
+  it("'market_structure' concepts are guarded from MA routing", () => {
+    expect(isMarketStructureish("daily_bias_market_structure")).toBe(true);
+    expect(isMarketStructureish("market_structure_shift_confirmation")).toBe(true);
+    expect(wouldRouteToMaCross("daily_bias_market_structure_and_targets")).toBe(false);
+  });
+
+  it("'bos_' / 'choch_' tokens are guarded", () => {
+    expect(isMarketStructureish("bos_confirmation")).toBe(true);
+    expect(isMarketStructureish("choch_entry")).toBe(true);
+  });
+
+  it("'break_of_structure' (with underscores) is guarded", () => {
+    expect(isMarketStructureish("break_of_structure_long")).toBe(true);
+  });
+
+  it("genuine ema_crossover still routes to MA cross", () => {
+    expect(isMarketStructureish("ema_9_21_crossover")).toBe(false);
+    expect(wouldRouteToMaCross("ema_cross_strategy")).toBe(true);
+  });
+
+  it("bare 2-letter 'ma' / 'ms' alone do NOT match ema/sma/wma regex tokens", () => {
+    // The Phase 1.5 fix replaced (ma|ema|sma|...) with (ema|sma|wma|hull|kama|vwma)
+    // in the bounce_off_level and pullback regex chains. Verify bare "ma" no
+    // longer counts as an MA token in those alternations.
+    const bounceRegex = /(ceiling|floor|support|resistance|bounce|reject|holds?|test).{0,12}(ema|sma|wma|moving.?average)/;
+    // "support_ma" used to match the old (ma|ema|sma) alternation but should
+    // not match the new (ema|sma|wma|moving.?average) alternation.
+    expect(bounceRegex.test("support_ma")).toBe(false);
+    expect(bounceRegex.test("support_ema")).toBe(true);
+  });
+
+  it("graduator source contains the isMarketStructureish guard", () => {
+    expect(GRADUATOR_SRC).toContain("isMarketStructureish");
+    expect(GRADUATOR_SRC).toContain("Phase 1.5");
+  });
+});
+
+describe("Phase 1.5 Fix 5 — Gemma synonym coverage + single-idea sub-layer re-route", () => {
+  it("admin.ts SUB_LAYERS_BY_ARCHETYPE includes new Gemma v10 synonyms", () => {
+    expect(ADMIN_SRC).toContain("htf_bias_and_ms_confirmation");
+    expect(ADMIN_SRC).toContain("htf_bias_and_market_structure");
+    expect(ADMIN_SRC).toContain("daily_bias_market_structure");
+    expect(ADMIN_SRC).toContain("mss_continuation");
+  });
+
+  it("admin.ts has single-idea sub-layer re-route block", () => {
+    expect(ADMIN_SRC).toContain("single-idea sub-layer re-route");
+    expect(ADMIN_SRC).toContain("extractResult.ideas.length === 1");
+  });
+
+  it("admin.ts emits scout.single_idea_sub_layer_rerouted audit action", () => {
+    expect(ADMIN_SRC).toContain("scout.single_idea_sub_layer_rerouted");
+  });
+
+  it("single-idea sub-layer match resolves to ict_bias_aligned_continuation", () => {
+    // Inline replica of the Fix 5 single-idea routing logic.
+    const SUB_LAYERS_BY_ARCHETYPE: Record<string, string[]> = {
+      ict_bias_aligned_continuation: [
+        "htf_bias_and_ms_confirmation",
+        "daily_bias_market_structure",
+        "mss_continuation",
+      ],
+    };
+    const cn = "htf_bias_and_ms_confirmation";
+    let masterArchetype: string | null = null;
+    for (const [arch, subLayers] of Object.entries(SUB_LAYERS_BY_ARCHETYPE)) {
+      if (new Set(subLayers).has(cn)) {
+        masterArchetype = arch;
+        break;
+      }
+    }
+    expect(masterArchetype).toBe("ict_bias_aligned_continuation");
+  });
+
+  it("admin.ts merger block accepts ideas.length >= 1 (single + multi)", () => {
+    // The Phase 1.5 patch relaxed the length>1 guard to length>=1 to enable
+    // single-idea re-route. Verify the source reflects the relaxation.
+    expect(ADMIN_SRC).toContain("extractResult.ideas.length >= 1");
+  });
+});
+
+describe("Phase 1.5 Fix 6 — Gemma extractor determinism (seed + audit)", () => {
+  const MODEL_ROUTER_SRC = fs.readFileSync(
+    path.resolve(__dirname, "../services/model-router.ts"),
+    "utf8",
+  );
+
+  it("model-router.ts sets a deterministic seed for transcript_extractor", () => {
+    expect(MODEL_ROUTER_SRC).toContain("TRANSCRIPT_EXTRACTOR_OLLAMA_SEED");
+    expect(MODEL_ROUTER_SRC).toContain("seed: TRANSCRIPT_EXTRACTOR_SEED");
+  });
+
+  it("temperature remains at 0.1 (Ollama issue #15502 invariant)", () => {
+    // The Phase 1.5 dispatch requested temperature=0.0; the documented Ollama
+    // bug overrides that. Test that the invariant is preserved.
+    expect(MODEL_ROUTER_SRC).toMatch(/temperature:\s*0\.1/);
+  });
+
+  it("top_p remains at 0.95 (JSON escape preservation invariant)", () => {
+    expect(MODEL_ROUTER_SRC).toMatch(/top_p:\s*0\.95/);
+  });
+
+  it("emits extraction.config_used audit per call", () => {
+    expect(MODEL_ROUTER_SRC).toContain("extraction.config_used");
+    expect(MODEL_ROUTER_SRC).toContain("temperature: samplingOptions.temperature");
+    expect(MODEL_ROUTER_SRC).toContain("seed: samplingOptions.seed");
+  });
+});

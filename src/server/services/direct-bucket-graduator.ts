@@ -614,14 +614,25 @@ export function deriveEntryIndicator(
   // SMA crossover (slower than EMA).
   if (/(^|_)sma_cross|simple_moving_average_cross/.test(cn)) return "sma_crossover";
 
+  // ─── Wave 26 Pass H Phase 1.5 (2026-05-26) Fix 4 — Market-structure guard ──
+  // "ms" / "mss" / "bos" / "choch" / "market_structure" / "structure_shift" are
+  // ICT market-structure tokens — they must NEVER fall into MA/EMA crossover
+  // matching. Without this guard, concept names like "htf_bias_and_ms_confirmation"
+  // could (via Gemma's pass-through entry_indicator) collide with the MA regex
+  // family. This early-negative is checked BEFORE every MA/EMA/SMA branch below
+  // and lets the concept fall through to its proper structural archetype.
+  const isMarketStructureish = /(^|_)(ms|mss|bos|choch)(_|$)|market[_\s-]?structure|structure[_\s-]?shift|break[_\s-]?of[_\s-]?structure/.test(cn);
+
   // EMA crossover / moving-average crossover — genuine MA-vs-MA cross signals.
   // KEEP these routed to ema_crossover. "ema.cross", "ma_cross", "pullback.ema" are
   // MA-vs-MA or price-returning-to-trending-MA patterns, NOT S/R bounce patterns.
-  if (/ema.cross|exponential_moving_average_cross|moving_average_cross|ma_cross|ema.pullback|pullback.ema/.test(cn)) return "ema_crossover";
+  // Phase 1.5: bare 2-letter "ma" / "ms" alone DO NOT trigger MA — require explicit
+  // ≥3-char tokens (ema/sma/wma/hull/kama/vwma) OR explicit "_ma_cross" / "ma.cross".
+  if (!isMarketStructureish && /ema.cross|exponential_moving_average_cross|moving_average_cross|(^|_)ma_cross(_|$)|(^|_)ma\.cross|ema.pullback|pullback.ema/.test(cn)) return "ema_crossover";
   // W23H-postmortem (2026-05-20): single-MA-pullback (Linda Raschke / Bellafiore
   // style — "20 moving average pullback") — price pulls BACK to a trending MA,
   // NOT bouncing off a static S/R level. Stays ema_crossover (same compile path).
-  if (/moving.average.pullback|ma.pullback|(\d+).{0,4}(ma|ema|sma).{0,8}pullback|pullback.{0,8}\d+.{0,4}(ma|ema|sma)/.test(cn)) return "ema_crossover";
+  if (!isMarketStructureish && /moving.average.pullback|(^|_)ma\.pullback|(\d+).{0,4}(ema|sma|wma|hull|kama|vwma).{0,8}pullback|pullback.{0,8}\d+.{0,4}(ema|sma|wma|hull|kama|vwma)/.test(cn)) return "ema_crossover";
 
   // ─── bounce_off_level routing (2026-05-26) ──────────────────────────────────
   // MA-as-support/resistance signal class: price BOUNCES OFF a single MA that
@@ -634,13 +645,14 @@ export function deriveEntryIndicator(
   //
   // Ordering: must come AFTER the genuine crossover routes above so that concept
   // names containing "ema_cross" or "pullback" still hit ema_crossover above.
-  if (/(ceiling|floor|support|resistance|bounce|reject|holds?|test).{0,12}(ma|ema|sma|moving.?average)/.test(cn)) return "archetype:bounce_off_level";
-  if (/(ma|ema|sma|moving.?average).{0,12}(ceiling|floor|support|resistance|bounce|reject|holds?|test)/.test(cn)) return "archetype:bounce_off_level";
-  if (/(\d+).{0,4}(ma|ema|sma).{0,12}(ceiling|floor|support|resistance|bounce)/.test(cn)) return "archetype:bounce_off_level";
+  // Phase 1.5 Fix 4: market-structure-ish concepts never route into MA-as-S/R.
+  if (!isMarketStructureish && /(ceiling|floor|support|resistance|bounce|reject|holds?|test).{0,12}(ema|sma|wma|moving.?average)/.test(cn)) return "archetype:bounce_off_level";
+  if (!isMarketStructureish && /(ema|sma|wma|moving.?average).{0,12}(ceiling|floor|support|resistance|bounce|reject|holds?|test)/.test(cn)) return "archetype:bounce_off_level";
+  if (!isMarketStructureish && /(\d+).{0,4}(ema|sma|wma).{0,12}(ceiling|floor|support|resistance|bounce)/.test(cn)) return "archetype:bounce_off_level";
   // "trendline_bounce_setup" — trendline-bounce is behaviorally identical to
   // MA-as-S/R (dynamic level + rejection candle). Same archetype handler.
   if (/trendline.bounce|trendline.{0,8}(reject|test|hold|support|resistance)/.test(cn)) return "archetype:bounce_off_level";
-  if (/(^|_)(\d+)_(ma|ema|sma)(_|$)/.test(cn)) return "archetype:bounce_off_level";  // bare "200_ma", "50_sma"
+  if (!isMarketStructureish && /(^|_)(\d+)_(ma|ema|sma)(_|$)/.test(cn)) return "archetype:bounce_off_level";  // bare "200_ma", "50_sma"
   if (/(^|_)ema(_|$)/.test(cn)) return "ema_crossover";  // generic EMA without S/R qualifier → crossover default
   if (/(^|_)sma(_|$)/.test(cn)) return "ema_crossover";  // generic SMA without S/R qualifier → crossover default
 

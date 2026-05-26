@@ -2303,6 +2303,27 @@ async function callOllamaForTranscriptExtractor(
   // num_ctx: prompt (~5K) + transcript (~3K-7K) + output budget → 16384 covers ~95%
   // NEVER add: think field — Ollama bug #15260 silently drops format enforcement
   const numCtx = getTranscriptOllamaNumCtx();
+  // Wave 26 Pass H Phase 1.5 Fix 6 (2026-05-26) — extractor determinism.
+  //
+  // ★ INVARIANT: temperature MUST remain ≥ 0.1. temperature=0 + GBNF schema
+  //   triggers Ollama issue #15502 (token repetition loop until num_predict
+  //   exhausted). Phase 1.5 dispatch requested temp=0.0 but the documented
+  //   Ollama bug overrides that — we use the lowest safe value (0.1).
+  //
+  // ★ INVARIANT: top_p MUST remain at 0.95 (NOT 0.1 as the Phase 1.5 dispatch
+  //   suggested). Lowering top_p below 0.5 cuts off JSON-escape tokens in
+  //   Gemma's vocab tail (\\", \\n) → malformed JSON → cloud fallback. Lower
+  //   top_p does NOT help determinism with grammar-constrained sampling.
+  //
+  // The Phase 1.5 dispatch's actual determinism goal is satisfied by:
+  //   seed=42   — Ollama supports deterministic seeded sampling (any non-zero
+  //               value produces reproducible output for given prompt+options).
+  //   temperature=0.1 (locked min for GBNF) + seed=42 = deterministic enough
+  //   for the 5-fixture parity test contract.
+  //
+  // The extractor.config_used audit row at the end of this function lets us
+  // verify the determinism config is actually applied per-call (no env drift).
+  const TRANSCRIPT_EXTRACTOR_SEED = Number(process.env.TRANSCRIPT_EXTRACTOR_OLLAMA_SEED ?? "42");
   const samplingOptions = {
     num_ctx: numCtx,
     temperature: 0.1,
@@ -2311,6 +2332,7 @@ async function callOllamaForTranscriptExtractor(
     min_p: 0.0,
     repeat_penalty: 1.0,
     num_predict: 2048,
+    seed: TRANSCRIPT_EXTRACTOR_SEED,
   };
 
   // Determine format: schema object (GBNF strict) or "json" string (syntactic only).
@@ -2343,6 +2365,33 @@ async function callOllamaForTranscriptExtractor(
     e.fallbackReason = "ollama_invalid_json";
     throw e;
   }
+
+  // Wave 26 Pass H Phase 1.5 Fix 6 (2026-05-26) — per-call determinism audit.
+  // Fire-and-forget; never blocks the extractor return. Lets us verify the
+  // sampling config that was actually applied per extraction, so we can detect
+  // env-var drift (e.g. operator setting TRANSCRIPT_EXTRACTOR_OLLAMA_SEED=null).
+  try {
+    const { db } = await import("../db/index.js");
+    const { auditLog } = await import("../db/schema.js");
+    db.insert(auditLog).values({
+      action: "extraction.config_used",
+      entityType: "llm_call",
+      entityId: null,
+      input: { model, role } as Record<string, unknown>,
+      result: {
+        temperature: samplingOptions.temperature,
+        seed: samplingOptions.seed,
+        top_p: samplingOptions.top_p,
+        top_k: samplingOptions.top_k,
+        num_ctx: samplingOptions.num_ctx,
+        num_predict: samplingOptions.num_predict,
+        model,
+        provider: "ollama",
+      } as Record<string, unknown>,
+      status: "success",
+      decisionAuthority: "system",
+    } as Record<string, unknown>).catch(() => { /* non-blocking */ });
+  } catch { /* non-blocking */ }
 
   return { text: raw, model, durationMs, inputTokens: 0, outputTokens: 0 };
 }
