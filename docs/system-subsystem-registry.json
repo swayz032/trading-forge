@@ -177,7 +177,8 @@
       "funnel-snapshot",
       "harsh-regime-phase-activation-check",
       "lifecycle-auto-check",
-      "rolling-sharpe"
+      "rolling-sharpe",
+      "strategy-stale-detector"
     ],
     "routes": [
       "/api/graveyard",
@@ -185,7 +186,8 @@
       "/api/strategy-names"
     ],
     "engine_subsystems": [
-      "graveyard"
+      "graveyard",
+      "statistics"
     ],
     "database_tables": [
       "audit_log",
@@ -3994,6 +3996,71 @@
     "criticality": "observability"
   },
   {
+    "id": "composite_shadow_gate",
+    "domain": "observability",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Wave 28 Pass B SHADOW GATE MODE. Pure-function composite-health shadow gate wired into lifecycle-service.ts alongside Wave 27.5 hard gates. OBSERVABILITY ONLY — never blocks promotion. Reads latest strategy_health_scores row and derives WOULD_PROMOTE/WOULD_WARN/WOULD_BLOCK. Companion Discord router emits P2 disagreement alerts (24h per-strategy×agreement-type dedup). Companion analyzer recommends Pass C activation when ≥85% agreement over 14 days.",
+    "data_sources": [
+      "strategy_health_scores",
+      "audit_log"
+    ],
+    "reads_from": [
+      "strategy_health_scores",
+      "audit_log"
+    ],
+    "writes_to": [
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "composite.shadow_evaluation",
+      "composite.shadow_evaluation_error",
+      "composite.shadow_disagreement_alerted",
+      "composite.shadow_disagreement_rate_limited",
+      "composite.shadow_disagreement_discord_failed",
+      "shadow_analysis.completed",
+      "shadow_analysis.failed"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "audit_log.composite.shadow_evaluation"
+    ],
+    "scheduler_jobs": [],
+    "routes": [],
+    "engine_subsystems": [],
+    "database_tables": [
+      "strategy_health_scores",
+      "audit_log"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": "audit_log",
+    "recovery_mode": "fail-open",
+    "health_check": "src/server/__tests__/wave28-pass-b-composite-shadow-gate.test.ts",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "audit_log_evidence",
+    "freshness_signals": [
+      "audit_log.composite.shadow_evaluation",
+      "audit_log.shadow_analysis.completed"
+    ],
+    "evidence_queries": [
+      "SELECT COUNT(*) FROM audit_log WHERE action = 'composite.shadow_evaluation' AND created_at > NOW() - INTERVAL '24 hours'",
+      "SELECT * FROM audit_log WHERE action = 'shadow_analysis.completed' ORDER BY created_at DESC LIMIT 1"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "observability_only",
+    "deployment_authority": "operator_only",
+    "criticality": "observability"
+  },
+  {
     "id": "dd_velocity_gate",
     "domain": "risk",
     "owner_surface": "node",
@@ -4083,7 +4150,9 @@
     "metrics_surfaces": [
       "tf_regime_transition_total{from,to}"
     ],
-    "telemetry_sources": [],
+    "telemetry_sources": [
+      "audit_log.regime.late_cycle_overheating_detected"
+    ],
     "scheduler_jobs": [],
     "routes": [],
     "engine_subsystems": [

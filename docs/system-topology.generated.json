@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-26T09:24:56.806Z",
+  "generatedAt": "2026-05-26T10:27:52.190Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -21,7 +21,7 @@
     "canonicalWorkflows": 28,
     "engineSubsystems": 28,
     "databaseTables": 97,
-    "registrySubsystems": 57
+    "registrySubsystems": 58
   },
   "routes": [
     "/api/admin",
@@ -871,34 +871,34 @@
     "weekly_drift_reports"
   ],
   "registryCoverage": {
-    "registryEntries": 57,
-    "autonomousSubsystems": 53,
+    "registryEntries": 58,
+    "autonomousSubsystems": 54,
     "selfEvolvingSubsystems": 8,
     "proofStatusCounts": {
       "runtime-proven": 37,
       "partially-proven": 1,
       "offline-by-design": 0,
       "experimental": 5,
-      "drifted": 14
+      "drifted": 15
     },
     "runtimeStateCounts": {
-      "active": 51,
+      "active": 52,
       "experimental": 5,
       "scaffold": 1
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
       "partially_active_preprod": 0,
-      "active_preprod": 52,
+      "active_preprod": 53,
       "experimental_preprod": 5
     },
     "launchTargetCounts": {
-      "runtime_proven_autonomous": 50,
+      "runtime_proven_autonomous": 51,
       "runtime_proven_manual_gate": 2,
       "experimental_challenger": 5
     },
     "closedLoopCounts": {
-      "not_collecting": 45,
+      "not_collecting": 46,
       "collecting_only": 0,
       "learning_active": 7,
       "learning_blocked": 0,
@@ -906,13 +906,13 @@
     },
     "learningModeCounts": {
       "active_learning": 6,
-      "deterministic_instrumented": 44,
+      "deterministic_instrumented": 45,
       "manual_gate_only": 2,
       "shadow_experimental": 5
     },
     "operatingClassCounts": {
       "adaptive": 6,
-      "deterministic_instrumented": 49,
+      "deterministic_instrumented": 50,
       "manual_gated": 2
     },
     "manualGates": [
@@ -927,24 +927,18 @@
     ],
     "coveredCounts": {
       "routes": 72,
-      "schedulerJobs": 86,
-      "engineSubsystems": 27,
+      "schedulerJobs": 87,
+      "engineSubsystems": 28,
       "databaseTables": 97
     },
     "missingRoutes": [],
-    "missingSchedulerJobs": [
-      "strategy-stale-detector"
-    ],
-    "missingEngineSubsystems": [
-      "statistics"
-    ],
+    "missingSchedulerJobs": [],
+    "missingEngineSubsystems": [],
     "missingDatabaseTables": [],
     "subsystemsMissingAudit": [],
     "subsystemsMissingAuditActions": [],
     "subsystemsMissingMetrics": [],
-    "subsystemsMissingTelemetrySources": [
-      "late_cycle_overheating_regime"
-    ],
+    "subsystemsMissingTelemetrySources": [],
     "subsystemsMissingLearning": [],
     "subsystemsMissingLearningPersistence": [],
     "subsystemsMissingDecisionAuthority": [],
@@ -960,14 +954,15 @@
     "manualGateViolations": [],
     "preprodIntegrity": {
       "status": "incomplete",
-      "automationComplete": 48,
-      "dataCollectionComplete": 57,
-      "auditabilityComplete": 56,
-      "failureVisibilityComplete": 56,
-      "authorityCorrect": 57,
+      "automationComplete": 49,
+      "dataCollectionComplete": 58,
+      "auditabilityComplete": 58,
+      "failureVisibilityComplete": 58,
+      "authorityCorrect": 58,
       "learningActive": 7,
       "incompleteSubsystems": [
         "adaptive_exit_engine",
+        "composite_shadow_gate",
         "dd_velocity_gate",
         "exit_engine_ab_harness",
         "late_cycle_overheating_regime",
@@ -987,7 +982,7 @@
     "productionConvergence": {
       "status": "blocked",
       "targetStateCounts": {
-        "production_autonomous": 50,
+        "production_autonomous": 51,
         "production_manual_gate": 2,
         "production_experimental": 5,
         "production_not_intended": 0
@@ -1031,6 +1026,7 @@
       ],
       "blockedSubsystems": [
         "adaptive_exit_engine",
+        "composite_shadow_gate",
         "dd_velocity_gate",
         "exit_engine_ab_harness",
         "late_cycle_overheating_regime",
@@ -1070,12 +1066,12 @@
       "blockers": [
         "adaptive_exit_engine:invalid-active-proof-mode",
         "adaptive_exit_engine:manual_gate:operator_opt_in_per_strategy",
+        "composite_shadow_gate:invalid-active-proof-mode",
         "dd_velocity_gate:invalid-active-proof-mode",
         "dd_velocity_gate:manual_gate:operator-only-recovery",
         "exit_engine_ab_harness:invalid-active-proof-mode",
         "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
         "late_cycle_overheating_regime:invalid-active-proof-mode",
-        "late_cycle_overheating_regime:missing-telemetry-sources",
         "pattern_aggregator_service:manual_gate:kill_switch",
         "phase5_contract_spec_scaffold:manual_gate:operator-approve",
         "production_hardening:manual_gate:operator-halt-only",
@@ -1115,12 +1111,12 @@
         "adaptive_exit_engine:invalid-active-proof-mode",
         "adaptive_exit_engine:manual_gate:operator_opt_in_per_strategy",
         "cloud_qmc_ising:experimental_governance",
+        "composite_shadow_gate:invalid-active-proof-mode",
         "dd_velocity_gate:invalid-active-proof-mode",
         "dd_velocity_gate:manual_gate:operator-only-recovery",
         "exit_engine_ab_harness:invalid-active-proof-mode",
         "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
         "late_cycle_overheating_regime:invalid-active-proof-mode",
-        "late_cycle_overheating_regime:missing-telemetry-sources",
         "pattern_aggregator_service:manual_gate:kill_switch",
         "phase5_contract_spec_scaffold:manual_gate:operator-approve",
         "production_hardening:manual_gate:operator-halt-only",
@@ -1159,6 +1155,7 @@
         "a_plus_market_auditor",
         "adaptive_exit_engine",
         "cloud_qmc_ising",
+        "composite_shadow_gate",
         "dd_velocity_gate",
         "exit_engine_ab_harness",
         "late_cycle_overheating_regime",
@@ -1940,6 +1937,95 @@
           "compliance-route-coverage"
         ],
         "coverageGaps": []
+      },
+      {
+        "id": "composite_shadow_gate",
+        "domain": "observability",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "system",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "audit_log_evidence",
+        "proofStatus": "drifted",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "observability_only",
+        "deploymentAuthority": "operator_only",
+        "criticality": "observability",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "runtime evidence persisted"
+        ],
+        "runtimeEvidence": [
+          "audit_log.composite.shadow_evaluation",
+          "audit_log.shadow_analysis.completed",
+          "composite.shadow_disagreement_alerted",
+          "composite.shadow_disagreement_discord_failed",
+          "composite.shadow_disagreement_rate_limited",
+          "composite.shadow_evaluation",
+          "composite.shadow_evaluation_error",
+          "shadow_analysis.completed",
+          "shadow_analysis.failed"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "strategy_health_scores"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": false,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "drifted",
+        "productionBlockers": [
+          "invalid-active-proof-mode"
+        ],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log.composite.shadow_evaluation",
+          "audit_log.shadow_analysis.completed",
+          "composite.shadow_disagreement_alerted",
+          "composite.shadow_disagreement_discord_failed",
+          "composite.shadow_disagreement_rate_limited",
+          "composite.shadow_evaluation",
+          "composite.shadow_evaluation_error",
+          "SELECT * FROM audit_log WHERE action = 'shadow_analysis.completed' ORDER BY created_at DESC LIMIT 1",
+          "SELECT COUNT(*) FROM audit_log WHERE action = 'composite.shadow_evaluation' AND created_at > NOW() - INTERVAL '24 hours'",
+          "shadow_analysis.completed",
+          "shadow_analysis.failed"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [],
+        "schedulerJobs": [],
+        "healthCheck": "src/server/__tests__/wave28-pass-b-composite-shadow-gate.test.ts",
+        "freshnessSignals": [
+          "audit_log.composite.shadow_evaluation",
+          "audit_log.shadow_analysis.completed"
+        ],
+        "evidenceQueries": [
+          "SELECT COUNT(*) FROM audit_log WHERE action = 'composite.shadow_evaluation' AND created_at > NOW() - INTERVAL '24 hours'",
+          "SELECT * FROM audit_log WHERE action = 'shadow_analysis.completed' ORDER BY created_at DESC LIMIT 1"
+        ],
+        "coverageGaps": [
+          "invalid-active-proof-mode"
+        ]
       },
       {
         "id": "confluence_decay_engine",
@@ -3102,14 +3188,13 @@
         "launchReady": false,
         "automationStatus": "complete",
         "dataCollectionStatus": "complete",
-        "auditabilityStatus": "incomplete",
-        "failureVisibilityStatus": "incomplete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
         "preprodProofStatus": "drifted",
         "productionBlockers": [
-          "invalid-active-proof-mode",
-          "missing-telemetry-sources"
+          "invalid-active-proof-mode"
         ],
         "productionCriteria": [
           "authority boundary remains enforced",
@@ -3134,8 +3219,7 @@
           "SELECT * FROM audit_log WHERE action = 'regime.late_cycle_overheating_detected' ORDER BY created_at DESC LIMIT 5"
         ],
         "coverageGaps": [
-          "invalid-active-proof-mode",
-          "missing-telemetry-sources"
+          "invalid-active-proof-mode"
         ]
       },
       {
@@ -5835,7 +5919,8 @@
           "funnel-snapshot",
           "harsh-regime-phase-activation-check",
           "lifecycle-auto-check",
-          "rolling-sharpe"
+          "rolling-sharpe",
+          "strategy-stale-detector"
         ],
         "healthCheck": "/api/health/dashboard",
         "freshnessSignals": [
@@ -6648,17 +6733,15 @@
       },
       {
         "id": "statistics",
-        "ownerSubsystemId": null,
-        "ownerDomain": null,
-        "runtimeState": "unmapped",
-        "proofStatus": "drifted",
-        "manualGate": "none",
-        "learningMode": "unmapped",
-        "operatingClass": "unmapped",
-        "criticality": "unmapped",
-        "coverageGaps": [
-          "missing-registry-owner"
-        ]
+        "ownerSubsystemId": "strategy_lifecycle",
+        "ownerDomain": "lifecycle",
+        "runtimeState": "active",
+        "proofStatus": "runtime-proven",
+        "manualGate": "tradingview_deploy",
+        "learningMode": "manual_gate_only",
+        "operatingClass": "manual_gated",
+        "criticality": "critical",
+        "coverageGaps": []
       },
       {
         "id": "strategy_memory",
@@ -7477,6 +7560,95 @@
         "compliance-route-coverage"
       ],
       "coverageGaps": []
+    },
+    {
+      "id": "composite_shadow_gate",
+      "domain": "observability",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "system",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "audit_log_evidence",
+      "proofStatus": "drifted",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "observability_only",
+      "deploymentAuthority": "operator_only",
+      "criticality": "observability",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "runtime evidence persisted"
+      ],
+      "runtimeEvidence": [
+        "audit_log.composite.shadow_evaluation",
+        "audit_log.shadow_analysis.completed",
+        "composite.shadow_disagreement_alerted",
+        "composite.shadow_disagreement_discord_failed",
+        "composite.shadow_disagreement_rate_limited",
+        "composite.shadow_evaluation",
+        "composite.shadow_evaluation_error",
+        "shadow_analysis.completed",
+        "shadow_analysis.failed"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "strategy_health_scores"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": false,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "drifted",
+      "productionBlockers": [
+        "invalid-active-proof-mode"
+      ],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log.composite.shadow_evaluation",
+        "audit_log.shadow_analysis.completed",
+        "composite.shadow_disagreement_alerted",
+        "composite.shadow_disagreement_discord_failed",
+        "composite.shadow_disagreement_rate_limited",
+        "composite.shadow_evaluation",
+        "composite.shadow_evaluation_error",
+        "SELECT * FROM audit_log WHERE action = 'shadow_analysis.completed' ORDER BY created_at DESC LIMIT 1",
+        "SELECT COUNT(*) FROM audit_log WHERE action = 'composite.shadow_evaluation' AND created_at > NOW() - INTERVAL '24 hours'",
+        "shadow_analysis.completed",
+        "shadow_analysis.failed"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [],
+      "schedulerJobs": [],
+      "healthCheck": "src/server/__tests__/wave28-pass-b-composite-shadow-gate.test.ts",
+      "freshnessSignals": [
+        "audit_log.composite.shadow_evaluation",
+        "audit_log.shadow_analysis.completed"
+      ],
+      "evidenceQueries": [
+        "SELECT COUNT(*) FROM audit_log WHERE action = 'composite.shadow_evaluation' AND created_at > NOW() - INTERVAL '24 hours'",
+        "SELECT * FROM audit_log WHERE action = 'shadow_analysis.completed' ORDER BY created_at DESC LIMIT 1"
+      ],
+      "coverageGaps": [
+        "invalid-active-proof-mode"
+      ]
     },
     {
       "id": "confluence_decay_engine",
@@ -8639,14 +8811,13 @@
       "launchReady": false,
       "automationStatus": "complete",
       "dataCollectionStatus": "complete",
-      "auditabilityStatus": "incomplete",
-      "failureVisibilityStatus": "incomplete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
       "preprodProofStatus": "drifted",
       "productionBlockers": [
-        "invalid-active-proof-mode",
-        "missing-telemetry-sources"
+        "invalid-active-proof-mode"
       ],
       "productionCriteria": [
         "authority boundary remains enforced",
@@ -8671,8 +8842,7 @@
         "SELECT * FROM audit_log WHERE action = 'regime.late_cycle_overheating_detected' ORDER BY created_at DESC LIMIT 5"
       ],
       "coverageGaps": [
-        "invalid-active-proof-mode",
-        "missing-telemetry-sources"
+        "invalid-active-proof-mode"
       ]
     },
     {
@@ -11372,7 +11542,8 @@
         "funnel-snapshot",
         "harsh-regime-phase-activation-check",
         "lifecycle-auto-check",
-        "rolling-sharpe"
+        "rolling-sharpe",
+        "strategy-stale-detector"
       ],
       "healthCheck": "/api/health/dashboard",
       "freshnessSignals": [
@@ -12185,17 +12356,15 @@
     },
     {
       "id": "statistics",
-      "ownerSubsystemId": null,
-      "ownerDomain": null,
-      "runtimeState": "unmapped",
-      "proofStatus": "drifted",
-      "manualGate": "none",
-      "learningMode": "unmapped",
-      "operatingClass": "unmapped",
-      "criticality": "unmapped",
-      "coverageGaps": [
-        "missing-registry-owner"
-      ]
+      "ownerSubsystemId": "strategy_lifecycle",
+      "ownerDomain": "lifecycle",
+      "runtimeState": "active",
+      "proofStatus": "runtime-proven",
+      "manualGate": "tradingview_deploy",
+      "learningMode": "manual_gate_only",
+      "operatingClass": "manual_gated",
+      "criticality": "critical",
+      "coverageGaps": []
     },
     {
       "id": "strategy_memory",

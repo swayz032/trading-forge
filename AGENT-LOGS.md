@@ -4,6 +4,39 @@
 
 ---
 
+### Session Log — 2026-05-26 paper-parity — Wave 26 Pass G Pass F: DD velocity autopause + LATE_CYCLE_OVERHEATING 7th regime
+
+**Mission:** Gate scaffold for drawdown velocity autopause (3% in 2hr → AUTOPAUSE_DD_VELOCITY) and additive 8th institutional regime LATE_CYCLE_OVERHEATING with 0.5x sizing + mean-reversion-only playbook.
+
+**Work completed:**
+- `src/server/services/dd-velocity-gate.ts` (NEW): in-process equity sliding window (180 samples, 1-min cron), rolling 2hr DD, warning at 1.5%, autopause at 3%; Topstep buffer tightening uses `totalAccountDD = accountSize - currentEquity` to measure proximity to trailing floor (NOT in-window rolling DD — important distinction); idempotent autopause; fire-and-forget side effects; dynamic import of pipeline-control-service avoids circular deps
+- `src/server/services/pipeline-control-service.ts`: AUTOPAUSE_DD_VELOCITY as 4th PipelineMode (numeric string "3"); VALID_MODES + encoding maps updated
+- `src/server/lib/metrics-registry.ts`: `ddVelocityAutopauseTotal` + `regimeTransitionTotal{from,to}` Prometheus counters
+- `src/server/scheduler.ts`: `dd-velocity-cron` (every 1min, `pipelineGate`-gated, `withRetry(1)`)
+- `src/server/services/bias-state-service.ts`: `regime.late_cycle_overheating_detected` audit + regimeTransitionTotal increment on institutional regime change
+- `src/engine/context/bias_engine.py`: `detect_late_cycle_overheating()` pure function (all 4 conditions must hold simultaneously); REGIME_VALUES now 8 entries; wired in `compute_bias()` after 4-arm classifier, skipping HIGH_VOL_MACRO/LOW_LIQ_CHOP; `# noqa: F821` on pre-existing StructureState/HtfNarrative forward refs
+- `src/engine/context/playbook_router.py`: `LATE_CYCLE_MEAN_REVERSION` playbook entry + routing arm; `confidence_modifier=0.5`; continuation strategies explicitly excluded
+- Migrations: 0153 (idx 153, AUTOPAUSE_DD_VELOCITY encoding doc) + 0154 (idx 154, COMMENT ON TABLE bias_state for LCO regime)
+- Tests: 18 vitest GREEN + 19 pytest GREEN
+- System map: `dd_velocity_gate` + `late_cycle_overheating_regime` registered
+- 2 commits: `9ec1872` (core implementation) + `890e09c` (wiring + system map), pushed to `feature/deep-analysis-pipeline`
+
+**Verification:**
+- `npx vitest run wave26-pass-g-pass-f-dd-velocity.test.ts` → 18/18 PASS
+- `python -m pytest test_late_cycle_overheating.py` → 19/19 PASS
+- `npm run check:production-isolation` → CLEAN
+- `npm run check:2026-compliance` → OK
+- `npm run system-map:check` → 14 drift (12 pre-existing + 2 new subsystems without production evidence)
+- Ruff lint PASS on all 3 Python files
+
+**Known-facts updates:**
+- Topstep tightening uses `totalAccountDD = accountSize - currentEquity` NOT `rollingDD`; critical distinction because in-window rolling DD measures session velocity, not proximity to trailing floor
+- Window cutoff uses `now - windowMinutes*60_000 - 1_000ms` (1s tolerance) to prevent boundary trim when injected test samples land at exactly windowMinutes
+
+**Carry-forward for next session:** None — Pass F is complete. Migrations 0153+0154 will auto-apply via boot-migration-runner on next deploy. AUTOPAUSE_DD_VELOCITY recovery requires `POST /api/admin/pipeline/mode { mode: "ACTIVE" }`.
+
+---
+
 ### Session Log — 2026-05-25 backtest-core — Wave 27.5 Pass C.1: 4 backtest engine HIGH findings
 
 **Mission:** Close HIGH #5 (exit slippage asymmetry), HIGH #6 (partial fills not modeled), HIGH #7 (MC autocorr NaN guard), HIGH #8 (no outlier truncation in MC). Commit `47bdb95`.
@@ -8050,6 +8083,84 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 4. **Audit-row name canonicalization** — Gate 1 uses two different action names (`graduation.rejected_incomplete_bidirectional` vs `graduation.bidirectional_incomplete_rejected`) for graduator-side vs helper-side respectively; at runtime only the graduator-side fires because the helper is always called with `skipAuditRow: true`. Future cleanup could collapse the two names; out-of-scope for Pass B since both test suites lock the strings.
 
 **Audit row:** `wave26-pass-g.pass_b.master_close` — payload includes B1+B2+B3 sub-track summary, file changes (3 source + 1 registry + 2 docs + backfill), test counts (40 + 50 = 90 vitest GREEN), CI state (3 of 3 GREEN — production-isolation + 2026-compliance + system-map:check), backfill distribution (0/30/69 actual vs ~24/9/66 estimated), zero new regressions vs Pass A baseline.
+
+---
+
+### Session Log — 2026-05-26 Wave 26 Pass G Pass D: lifecycle states + STALE cron + needs-attention API
+
+**Mission:** Add NEEDS_ARCHETYPE/NEEDS_REVISION lifecycle states, 6 lifecycle_metadata JSONB fields, daily STALE cron, lifecycle event hooks, and GET /api/admin/strategies/needs-attention API.
+
+**Work completed:**
+- Migration `0152_strategies_needs_revision_states.sql`: additive COMMENT ON COLUMN documenting NEEDS_ARCHETYPE + NEEDS_REVISION on `strategies.lifecycle_state`; audit row `migration.lifecycle_states_needs_revision_added`; no existing rows modified; GRAVEYARD never written
+- `src/server/services/strategy-stale-detector.ts` (new): `runStrategyStaleDetector()` main cron with full pipeline-paused-awareness (PAUSED/VACATION = exit with `skippedPaused: true`); 30d stale threshold → mark `stale_since`; 60d demotion threshold → NEEDS_REVISION; DEPLOYED + PILOT exempt (belt-and-suspenders guard at both processStrategy and demoteToNeedsRevision levels); idempotent (activity-resumed clears stale_since); `setNeedsArchetype()` + `setNeedsRevision()` exported hooks for graduator/paper-signal; all lifecycle_metadata writes via `jsonb_set(COALESCE..., '{lifecycle_metadata}', ...)` — additive, never clobbers config
+- `src/server/db/migrations/meta/_journal.json`: idx 152 added
+- `src/server/db/schema.ts`: `lifecycle_state` comment updated to include NEEDS_ARCHETYPE + NEEDS_REVISION
+- `src/server/routes/admin.ts`: `GET /api/admin/strategies/needs-attention` — returns 3 cohorts (NEEDS_ARCHETYPE/NEEDS_REVISION + fallback_only + stale); source_urls via `getStrategySourceUrls`; per-row `suggested_action`
+- `src/server/scheduler.ts`: `strategy-stale-detector` registered + `cron.schedule("0 8,9 * * *")` + ET-hour=4 DST-safe guard + `pipelineGate("strategy-stale-detector")` call (NOT pipeline-gate-exempt — the service itself handles paused mode internally)
+- `src/server/__tests__/wave26-pass-g-pass-d-lifecycle.test.ts` (new): 56 tests covering migration idempotency, paused-mode guard, demotion thresholds, stale-cleared logic, DEPLOYED/PILOT exemption, idempotency, API cohorts, audit event names, JSONB additivity, hook exports, scheduler registration
+
+**Verification:** 56/56 vitest GREEN; 2 CI hard gates GREEN (production-isolation + 2026-compliance); commit eb86a93 pushed to `feature/deep-analysis-pipeline`
+
+**Known-facts updates:** None (all patterns consistent with existing codebase)
+
+**Carry-forward for next session:**
+- system-map:check carries 3 pre-existing drift items from Wave 28 Pass A close-out (route `/api/composite-health`, cron `composite-health-daily-digest`, table `strategy_health_scores`) — pre-date this session, not introduced here
+- `setNeedsArchetype` and `setNeedsRevision` hooks exist but are not yet wired into the graduator/paper-signal call sites — Pass E/F can consume them; they're fire-and-forget
+- Current lifecycle bucket distribution before this session: 0 rich / 30 thin / 69 fallback_only (from Pass G Pass B backfill); NEEDS_ARCHETYPE and NEEDS_REVISION will be 0 until the cron runs or the graduator wires the hooks
+
+---
+
+### Session Log — 2026-05-26 Wave 26 Pass G Pass C: re-extraction script + 54 tests + both cohorts applied
+
+**Mission:** Re-extract 69 `factor_quality=fallback_only` strategies (and 30 `thin`) through the new Gemma v10 prompt (shipped in Pass B1) to lift the library's `rich` confluence depth from 0 → ≥40 strategies.
+
+**Work completed:**
+- Created `scripts/wave26-pass-g-pass-c-reextract.ts` (~500 lines): cohort loader, URL resolver, transcript fetch via `youtube-transcript` npm, HTTP call to `/api/agent/scout-extract`, regression guard, idempotency flag, surgical jsonb_set mutations, audit row writes, Prometheus counter, Discord WARN summary, `--dry-run` / `--apply` / `--cohort` / `--limit` / `--parallelism` flags
+- Created `src/server/__tests__/wave26-pass-g-pass-c-reextract.test.ts`: 54 vitest tests (static source inspection pattern — no DB/network) covering cohort filter, idempotency, regression guard, audit rows, DEPLOYED/PILOT skip, archetype change, dry-run contract, Discord notify, no-URL skip, transition labels, structural contracts
+- Discovered and patched B3 backfill double-encoding bug: `JSON.stringify(s.quality)::jsonb` in postgres.js template literal stored `"fallback_only"` (15 chars with embedded quotes). SQL query normalized with `replace(config->'entry_quality'->>'factor_quality', '"', '')` OR clause; in-memory reading normalized with `.replace(/^"|"$/g, "")`
+- Ran `--dry-run` on fallback_only cohort to verify projected distribution before applying
+- Applied fallback_only cohort (`--apply --cohort=fallback_only`): 36 → rich, 6 → thin, 15 no_change (marked attempted), 12 skip_no_url
+- Applied thin cohort (`--apply --cohort=thin`): 14 → rich, 8 regression_skipped (Gemma v10 produced fewer real factors than existing config)
+- Final distribution: rich=50 (target ≥40 MET), thin=22, fallback_only=27
+- Committed as `93cb584` and pushed to `feature/deep-analysis-pipeline`
+
+**Verification:** 54/54 vitest GREEN; both apply runs completed with 0 errors; final distribution confirmed via `queryLibraryDistribution` dry-run output; rich=50 exceeds ≥40 target
+
+**Known-facts updates:**
+- B3 backfill (script `scripts/wave26-pass-g-b3-backfill-factor-quality-audit.ts`) stored `factor_quality` with extra JSON encoding layer — `->>` JSONB operator returns `"fallback_only"` (15 chars, embedded quotes) not `fallback_only` (12 chars). Any future SQL that filters on this column in `config->'entry_quality'` must normalize with `replace(..., '"', '')` or use the ORM correctly. The re-extraction script patches this inline.
+- 12 strategies remain `skip_no_url`: these are MNQ/MCL fan-out variants of MES leader strategies (ORB, first_15_min_open, top_down_bias_oil, master_institutional_supply_demand, fvg_retrace) where the bucket graduation path only recorded the MES leader URL. They are NOT malformed — they need a separate URL-resolution pass that resolves the MES leader URL and fans out to the variants.
+
+**Carry-forward for next session:**
+- 12 no-URL strategies (fan-out MNQ/MCL variants of MES leaders) remain `factor_quality=fallback_only` and `reextract_attempted=true`. A Pass D follow-up could add a 5th URL resolution path: find the MES leader strategy by stripping the market suffix (`_mnq_*` → `_mes_*`), use its resolved URL, then fan out the extraction to all same-concept variants. These 12 are idempotent-locked (will not re-process without a `reextract_attempted=false` reset).
+- system-map:check still carries 3 pre-existing Wave 28 Pass A close-out drift items (route `/api/composite-health`, cron `composite-health-daily-digest`, table `strategy_health_scores`) — NOT introduced by Pass G Pass C; pre-date this session
+
+---
+
+### Session Log — 2026-05-26 Wave 28 Pass B MASTER close-out (architect last per §11)
+
+**Mission:** Close Wave 28 Pass B — composite-health SHADOW GATE MODE — per the cryptic-watching-wombat plan. Architect runs last to sync System Map, gate-verify, write audit row, and update CLAUDE.md / AGENT-LOGS / memory.
+
+**Work completed:**
+- Registered `composite_shadow_gate` in `docs/system-subsystem-registry.json` (domain=observability, owner=node, status=active, criticality=observability). Captures the 7 new Pass B audit-action namespaces + reads `strategy_health_scores` + reuses Pass A `COMPOSITE_MAX_AGE_HOURS` env.
+- Resolved 3 pre-existing system-map drift items that had been carry-forwards from Wave 28 Pass A architect close-out and Wave 26 Pass G Pass A architect close-out: added `strategy-stale-detector` to `strategy_lifecycle.scheduler_jobs`, added `statistics` to `strategy_lifecycle.engine_subsystems`, populated `late_cycle_overheating_regime.telemetry_sources` with `audit_log.regime.late_cycle_overheating_detected`. These were not introduced by Pass B but the charter requires `system-map:check` exit 0.
+- Re-ran `npm run system-map:sync` (exit 0) → `Trading Forge System Map v2.md` + `docs/system-topology.generated.json` + `docs/system-readiness.generated.json` regenerated.
+- Re-ran the 3 CI hard gates: `system-map:check` exit 0 (`driftItems: []`), `check:production-isolation` exit 0 (CLEAN, 4 files, 0 violations), `check:2026-compliance` exit 0 (MFFU + Topstep aligned).
+- Wrote `scripts/wave28-pass-b-master-audit.ts` (mirror of Pass A pattern) and executed it — `wave.28_pass_b_master_closed` audit row written to Railway prod `audit_log` (id `28746cd3-5818-4d93-85c3-07f2bcedf35f`).
+- Updated CLAUDE.md §2 (Pass B close paragraph, dense format mirroring Pass A), §12 hard-gates table (advisory-only row "Wave 28 composite shadow gate (Pass B)" — emphasizes OBSERVABILITY ONLY, hard gates retain veto), §13 Don'ts (new entry: "Don't gate promotion on composite shadow result — Wave 27.5 hard gates remain authoritative through Pass B"), §15 env vars (explicit note: no new env vars introduced; B.1 reuses Pass A's `COMPOSITE_MAX_AGE_HOURS=48`).
+
+**Verification:**
+- `git log -1` (after architect close commit) shows the master close-out hash.
+- 3 of 3 CI gates exit 0 (re-verified post-edits).
+- Audit row visible via `SELECT id, action, status FROM audit_log WHERE id = '28746cd3-5818-4d93-85c3-07f2bcedf35f'`.
+- Pass B cumulative tests: 49 vitest (21 Round 1 + 8 Round 2 router + 20 Round 2 analyzer). Wave 28 cumulative (Pass A + B): 205 new tests.
+
+**Known-facts updates:** None — Pass B introduced shadow-only observability; no contract surfaces or production gates changed that would require a known-facts pin.
+
+**Carry-forward for next session:**
+1. Accumulate 14 days of `composite.shadow_evaluation` rows in production audit_log (passive — autonomous lifecycle evaluations will populate).
+2. Run `npx tsx scripts/analyze-shadow-evidence.ts` after the 14-day window (expects ≥85% composite-vs-hard-gate agreement).
+3. Pass C (Three-Layer LIVE) dispatch ONLY if analyzer returns verdict `ACTIVATE_PASS_C`. INCONCLUSIVE / REVISE_COMPOSITE → operator review before Pass C. PRELIMINARY → keep accumulating evidence.
+4. Pass C is NOT in scope for any agent until the analyzer issues `ACTIVATE_PASS_C` — this is a hard evidence gate, not a calendar gate.
 
 ---
 
