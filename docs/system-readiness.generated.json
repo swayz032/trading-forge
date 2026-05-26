@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-26T21:58:56.965Z",
+  "generatedAt": "2026-05-26T22:29:12.900Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -12,6 +12,7 @@
     "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
     "late_cycle_overheating_regime:invalid-active-proof-mode",
     "pattern_aggregator_service:manual_gate:kill_switch",
+    "pbo_overfit_gate:invalid-active-proof-mode",
     "phase5_contract_spec_scaffold:manual_gate:operator-approve",
     "production_hardening:manual_gate:operator-halt-only",
     "quantum_rl_challenger:invalid-active-proof-mode",
@@ -31,6 +32,7 @@
     "replay_grade_unified_dispatcher:manual_gate:operator-approve",
     "replay_harness_engine:invalid-active-proof-mode",
     "replay_harness_engine:manual_gate:operator-approve",
+    "shadow_stage:invalid-active-proof-mode",
     "strategy_health_observability:invalid-active-proof-mode",
     "ts_python_parity_ci_gate:invalid-active-proof-mode",
     "ts_python_parity_ci_gate:manual_gate:ci_gate",
@@ -44,9 +46,9 @@
     "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
-    "total": 59,
+    "total": 61,
     "ready": 33,
-    "blocked": 19,
+    "blocked": 21,
     "manualGated": 2,
     "experimental": 5
   },
@@ -731,6 +733,30 @@
       ]
     },
     {
+      "id": "pbo_overfit_gate",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "operator_only",
+      "blockers": [
+        "invalid-active-proof-mode"
+      ],
+      "requiredEvidence": [
+        "audit_log.lifecycle.pbo_*",
+        "audit_log.walk_forward.pbo_*",
+        "audit_log.walk_forward.pbo_computed",
+        "lifecycle.pbo_overfit_block",
+        "lifecycle.pbo_unavailable_legacy",
+        "SELECT * FROM audit_log WHERE action LIKE 'lifecycle.pbo_%' ORDER BY created_at DESC LIMIT 10",
+        "SSE lifecycle:pbo_evaluated",
+        "walk_forward.pbo_computed",
+        "walk_forward.pbo_high_overfit_risk"
+      ]
+    },
+    {
       "id": "phase5_contract_spec_scaffold",
       "status": "blocked",
       "productionTargetState": "production_autonomous",
@@ -1140,6 +1166,34 @@
         "recent-agent-audit-events",
         "research-topology-health",
         "system_journal:recent-entry"
+      ]
+    },
+    {
+      "id": "shadow_stage",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "operator_only",
+      "blockers": [
+        "invalid-active-proof-mode"
+      ],
+      "requiredEvidence": [
+        "audit_log.lifecycle.shadow_*",
+        "audit_log.lifecycle.shadow_signal_logged",
+        "lifecycle_shadow_signals.created_at",
+        "lifecycle.shadow_divergence_blocked",
+        "lifecycle.shadow_divergence_check_unavailable_legacy",
+        "lifecycle.shadow_divergence_insufficient_samples",
+        "lifecycle.shadow_mode_inconsistency_warn",
+        "lifecycle.shadow_promotion_passed",
+        "lifecycle.shadow_signal_logged",
+        "SELECT * FROM audit_log WHERE action LIKE 'lifecycle.shadow_%' ORDER BY created_at DESC LIMIT 10",
+        "SELECT COUNT(*) FROM lifecycle_shadow_signals WHERE created_at > NOW() - INTERVAL '7 days'",
+        "SSE lifecycle:shadow_divergence_evaluated",
+        "SSE signal:shadow_logged"
       ]
     },
     {

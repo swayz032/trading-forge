@@ -99,6 +99,12 @@ export const strategies = pgTable("strategies", {
   // 'rl-challenger' → Sub-Account 2 (slumdawg-rl-challenger). Default 'baseline' for all
   // pre-C.3 strategies (backward-compat). Migration: 0159_broker_accounts_ab_paper_routing.sql
   paperAccountRouting: text("paper_account_routing").notNull().default("baseline"),
+  // Wave 29 Pass A.1: SHADOW lifecycle stage. When true, signals are intercepted before
+  // openPosition() — logged to lifecycle_shadow_signals but TradersPost webhook NOT called.
+  // Pine alerts still fire on TradingView (operator sees signal on chart).
+  // Default false: all pre-Wave-29 strategies use existing TESTING → PAPER path.
+  // Migration: 0160_shadow_signals.sql
+  shadowModeEnabled: boolean("shadow_mode_enabled").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 },
@@ -2902,6 +2908,52 @@ export const quantumRlRuns = pgTable(
     index("idx_quantum_rl_runs_strategy_evaluated").on(table.strategyId, table.evaluatedAt),
     // Per-regime training set queries
     index("idx_quantum_rl_runs_regime_action").on(table.regime, table.action),
+  ],
+);
+
+// ─── lifecycle_shadow_signals — Wave 29 Pass A.1 ─────────────────────────────
+// Append-only log of signals intercepted in the SHADOW lifecycle stage.
+// TradersPost webhook is NEVER called for rows in this table.
+// Pine alerts still fire on TradingView (operator sees signal on chart).
+// divergence_vs_backtest is populated post-insert by Wave 29 Pass A.3 divergence checker.
+// Migration: 0160_shadow_signals.sql (idx 160).
+export const lifecycleShadowSignals = pgTable(
+  "lifecycle_shadow_signals",
+  {
+    id:                        bigserial("id", { mode: "bigint" }).primaryKey(),
+    // FK to strategies.id (UUID). ON DELETE CASCADE: shadow rows are meaningless without parent.
+    strategyId:                uuid("strategy_id")
+                                 .notNull()
+                                 .references(() => strategies.id, { onDelete: "cascade" }),
+    // Wall-clock UTC time the signal was evaluated.
+    signalTs:                  timestamp("signal_ts", { withTimezone: true }).notNull().defaultNow(),
+    // Trade direction: 'long' | 'short'
+    direction:                 text("direction").notNull(),
+    // Entry price at signal bar close.
+    entryPrice:                real("entry_price").notNull(),
+    // Contracts the strategy would have entered (pre-shadow intercept).
+    intendedSize:              integer("intended_size").notNull(),
+    // Active killzone at signal time: 'london'|'ny_am'|'ny_pm'|'silver_bullet'|'macro_window'|null
+    killzone:                  text("killzone"),
+    // Institutional regime at signal time.
+    regime:                    text("regime"),
+    // Weighted confluence score [0,1] at signal time. NULL when strategy uses boolean path (Path A/B).
+    confluenceScore:           real("confluence_score"),
+    // Lifecycle state at insert time. Always 'SHADOW'.
+    lifecycleState:            text("lifecycle_state").notNull().default("SHADOW"),
+    // Divergence vs backtest expected signals [0,1]. NULL on insert; filled by A.3 checker.
+    divergenceVsBacktest:      real("divergence_vs_backtest"),
+    // End-to-end trace ID per §10b. Required.
+    sourceCorrelationId:       text("source_correlation_id").notNull(),
+    // INVARIANT: always false. Shadow signals NEVER route to TradersPost.
+    traderspostWebhookCalled:  boolean("traderspost_webhook_called").notNull().default(false),
+    createdAt:                 timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    // Primary access pattern: all shadow signals for a strategy, newest first.
+    index("idx_shadow_signals_strategy_ts").on(table.strategyId, table.signalTs),
+    // A.3 divergence checker join queries.
+    index("idx_shadow_signals_lifecycle_state").on(table.lifecycleState),
   ],
 );
 

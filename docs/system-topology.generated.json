@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-26T21:58:56.965Z",
+  "generatedAt": "2026-05-26T22:29:12.900Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -20,8 +20,8 @@
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 28,
-    "databaseTables": 98,
-    "registrySubsystems": 59
+    "databaseTables": 99,
+    "registrySubsystems": 61
   },
   "routes": [
     "/api/admin",
@@ -811,6 +811,7 @@
     "harsh_regime_phase",
     "idempotency_keys",
     "instance_config",
+    "lifecycle_shadow_signals",
     "lifecycle_transitions",
     "liquidity_levels",
     "llm_injection_attempts",
@@ -873,34 +874,34 @@
     "weekly_drift_reports"
   ],
   "registryCoverage": {
-    "registryEntries": 59,
-    "autonomousSubsystems": 55,
+    "registryEntries": 61,
+    "autonomousSubsystems": 57,
     "selfEvolvingSubsystems": 9,
     "proofStatusCounts": {
       "runtime-proven": 37,
       "partially-proven": 1,
       "offline-by-design": 0,
       "experimental": 5,
-      "drifted": 16
+      "drifted": 18
     },
     "runtimeStateCounts": {
-      "active": 53,
+      "active": 55,
       "experimental": 5,
       "scaffold": 1
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
       "partially_active_preprod": 0,
-      "active_preprod": 54,
+      "active_preprod": 56,
       "experimental_preprod": 5
     },
     "launchTargetCounts": {
-      "runtime_proven_autonomous": 52,
+      "runtime_proven_autonomous": 54,
       "runtime_proven_manual_gate": 2,
       "experimental_challenger": 5
     },
     "closedLoopCounts": {
-      "not_collecting": 46,
+      "not_collecting": 48,
       "collecting_only": 0,
       "learning_active": 8,
       "learning_blocked": 0,
@@ -908,13 +909,13 @@
     },
     "learningModeCounts": {
       "active_learning": 7,
-      "deterministic_instrumented": 45,
+      "deterministic_instrumented": 47,
       "manual_gate_only": 2,
       "shadow_experimental": 5
     },
     "operatingClassCounts": {
       "adaptive": 7,
-      "deterministic_instrumented": 50,
+      "deterministic_instrumented": 52,
       "manual_gated": 2
     },
     "manualGates": [
@@ -931,7 +932,7 @@
       "routes": 72,
       "schedulerJobs": 88,
       "engineSubsystems": 28,
-      "databaseTables": 98
+      "databaseTables": 99
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
@@ -956,11 +957,11 @@
     "manualGateViolations": [],
     "preprodIntegrity": {
       "status": "incomplete",
-      "automationComplete": 50,
-      "dataCollectionComplete": 59,
-      "auditabilityComplete": 59,
-      "failureVisibilityComplete": 59,
-      "authorityCorrect": 59,
+      "automationComplete": 52,
+      "dataCollectionComplete": 61,
+      "auditabilityComplete": 61,
+      "failureVisibilityComplete": 61,
+      "authorityCorrect": 61,
       "learningActive": 8,
       "incompleteSubsystems": [
         "adaptive_exit_engine",
@@ -968,6 +969,7 @@
         "dd_velocity_gate",
         "exit_engine_ab_harness",
         "late_cycle_overheating_regime",
+        "pbo_overfit_gate",
         "phase5_contract_spec_scaffold",
         "quantum_rl_challenger",
         "replay_grade_confluence",
@@ -978,6 +980,7 @@
         "replay_grade_survival_twin",
         "replay_grade_unified_dispatcher",
         "replay_harness_engine",
+        "shadow_stage",
         "strategy_health_observability",
         "ts_python_parity_ci_gate"
       ]
@@ -985,7 +988,7 @@
     "productionConvergence": {
       "status": "blocked",
       "targetStateCounts": {
-        "production_autonomous": 52,
+        "production_autonomous": 54,
         "production_manual_gate": 2,
         "production_experimental": 5,
         "production_not_intended": 0
@@ -1034,6 +1037,7 @@
         "exit_engine_ab_harness",
         "late_cycle_overheating_regime",
         "pattern_aggregator_service",
+        "pbo_overfit_gate",
         "phase5_contract_spec_scaffold",
         "production_hardening",
         "quantum_rl_challenger",
@@ -1045,6 +1049,7 @@
         "replay_grade_survival_twin",
         "replay_grade_unified_dispatcher",
         "replay_harness_engine",
+        "shadow_stage",
         "strategy_health_observability",
         "ts_python_parity_ci_gate"
       ],
@@ -1077,6 +1082,7 @@
         "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
         "late_cycle_overheating_regime:invalid-active-proof-mode",
         "pattern_aggregator_service:manual_gate:kill_switch",
+        "pbo_overfit_gate:invalid-active-proof-mode",
         "phase5_contract_spec_scaffold:manual_gate:operator-approve",
         "production_hardening:manual_gate:operator-halt-only",
         "quantum_rl_challenger:invalid-active-proof-mode",
@@ -1096,6 +1102,7 @@
         "replay_grade_unified_dispatcher:manual_gate:operator-approve",
         "replay_harness_engine:invalid-active-proof-mode",
         "replay_harness_engine:manual_gate:operator-approve",
+        "shadow_stage:invalid-active-proof-mode",
         "strategy_health_observability:invalid-active-proof-mode",
         "ts_python_parity_ci_gate:invalid-active-proof-mode",
         "ts_python_parity_ci_gate:manual_gate:ci_gate",
@@ -1123,6 +1130,7 @@
         "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
         "late_cycle_overheating_regime:invalid-active-proof-mode",
         "pattern_aggregator_service:manual_gate:kill_switch",
+        "pbo_overfit_gate:invalid-active-proof-mode",
         "phase5_contract_spec_scaffold:manual_gate:operator-approve",
         "production_hardening:manual_gate:operator-halt-only",
         "prop_firm_survival_twin:experimental_governance",
@@ -1144,6 +1152,7 @@
         "replay_grade_unified_dispatcher:manual_gate:operator-approve",
         "replay_harness_engine:invalid-active-proof-mode",
         "replay_harness_engine:manual_gate:operator-approve",
+        "shadow_stage:invalid-active-proof-mode",
         "strategy_health_observability:invalid-active-proof-mode",
         "synthetic_black_swan_survival:experimental_governance",
         "ts_python_parity_ci_gate:invalid-active-proof-mode",
@@ -1166,6 +1175,7 @@
         "exit_engine_ab_harness",
         "late_cycle_overheating_regime",
         "pattern_aggregator_service",
+        "pbo_overfit_gate",
         "phase5_contract_spec_scaffold",
         "production_hardening",
         "prop_firm_survival_twin",
@@ -1179,6 +1189,7 @@
         "replay_grade_survival_twin",
         "replay_grade_unified_dispatcher",
         "replay_harness_engine",
+        "shadow_stage",
         "strategy_health_observability",
         "synthetic_black_swan_survival",
         "ts_python_parity_ci_gate"
@@ -3991,6 +4002,92 @@
         "coverageGaps": []
       },
       {
+        "id": "pbo_overfit_gate",
+        "domain": "backtest",
+        "ownerSurface": "node-python",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "gate",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "audit_log_evidence",
+        "proofStatus": "drifted",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "production",
+        "deploymentAuthority": "operator_only",
+        "criticality": "high",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "runtime evidence persisted"
+        ],
+        "runtimeEvidence": [
+          "audit_log.lifecycle.pbo_*",
+          "audit_log.walk_forward.pbo_*",
+          "audit_log.walk_forward.pbo_computed",
+          "lifecycle.pbo_overfit_block",
+          "lifecycle.pbo_unavailable_legacy",
+          "SSE lifecycle:pbo_evaluated",
+          "walk_forward.pbo_computed",
+          "walk_forward.pbo_high_overfit_risk"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "backtests",
+          "backtests.walk_forward_results",
+          "strategies"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": false,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "drifted",
+        "productionBlockers": [
+          "invalid-active-proof-mode"
+        ],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log.lifecycle.pbo_*",
+          "audit_log.walk_forward.pbo_*",
+          "audit_log.walk_forward.pbo_computed",
+          "lifecycle.pbo_overfit_block",
+          "lifecycle.pbo_unavailable_legacy",
+          "SELECT * FROM audit_log WHERE action LIKE 'lifecycle.pbo_%' ORDER BY created_at DESC LIMIT 10",
+          "SSE lifecycle:pbo_evaluated",
+          "walk_forward.pbo_computed",
+          "walk_forward.pbo_high_overfit_risk"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [],
+        "schedulerJobs": [],
+        "healthCheck": "src/engine/tests/test_wave29_pass_a2_pbo_gate.py + src/server/__tests__/wave29-pass-a2-pbo-gate.test.ts",
+        "freshnessSignals": [
+          "audit_log.walk_forward.pbo_computed"
+        ],
+        "evidenceQueries": [
+          "SELECT * FROM audit_log WHERE action LIKE 'lifecycle.pbo_%' ORDER BY created_at DESC LIMIT 10"
+        ],
+        "coverageGaps": [
+          "invalid-active-proof-mode"
+        ]
+      },
+      {
         "id": "phase5_contract_spec_scaffold",
         "domain": "execution",
         "ownerSurface": "python",
@@ -5617,6 +5714,101 @@
           "research-topology-health"
         ],
         "coverageGaps": []
+      },
+      {
+        "id": "shadow_stage",
+        "domain": "lifecycle",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "system",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "audit_log_evidence",
+        "proofStatus": "drifted",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "production",
+        "deploymentAuthority": "operator_only",
+        "criticality": "high",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "runtime evidence persisted"
+        ],
+        "runtimeEvidence": [
+          "audit_log.lifecycle.shadow_*",
+          "audit_log.lifecycle.shadow_signal_logged",
+          "lifecycle_shadow_signals.created_at",
+          "lifecycle.shadow_divergence_blocked",
+          "lifecycle.shadow_divergence_check_unavailable_legacy",
+          "lifecycle.shadow_divergence_insufficient_samples",
+          "lifecycle.shadow_mode_inconsistency_warn",
+          "lifecycle.shadow_promotion_passed",
+          "lifecycle.shadow_signal_logged",
+          "SSE lifecycle:shadow_divergence_evaluated",
+          "SSE signal:shadow_logged"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "backtests",
+          "lifecycle_shadow_signals",
+          "strategies"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": false,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "drifted",
+        "productionBlockers": [
+          "invalid-active-proof-mode"
+        ],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log.lifecycle.shadow_*",
+          "audit_log.lifecycle.shadow_signal_logged",
+          "lifecycle_shadow_signals.created_at",
+          "lifecycle.shadow_divergence_blocked",
+          "lifecycle.shadow_divergence_check_unavailable_legacy",
+          "lifecycle.shadow_divergence_insufficient_samples",
+          "lifecycle.shadow_mode_inconsistency_warn",
+          "lifecycle.shadow_promotion_passed",
+          "lifecycle.shadow_signal_logged",
+          "SELECT * FROM audit_log WHERE action LIKE 'lifecycle.shadow_%' ORDER BY created_at DESC LIMIT 10",
+          "SELECT COUNT(*) FROM lifecycle_shadow_signals WHERE created_at > NOW() - INTERVAL '7 days'",
+          "SSE lifecycle:shadow_divergence_evaluated",
+          "SSE signal:shadow_logged"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [],
+        "schedulerJobs": [],
+        "healthCheck": "src/server/__tests__/wave29-pass-a1-shadow-signals.test.ts + wave29-pass-a3-shadow-divergence.test.ts",
+        "freshnessSignals": [
+          "lifecycle_shadow_signals.created_at",
+          "audit_log.lifecycle.shadow_signal_logged"
+        ],
+        "evidenceQueries": [
+          "SELECT COUNT(*) FROM lifecycle_shadow_signals WHERE created_at > NOW() - INTERVAL '7 days'",
+          "SELECT * FROM audit_log WHERE action LIKE 'lifecycle.shadow_%' ORDER BY created_at DESC LIMIT 10"
+        ],
+        "coverageGaps": [
+          "invalid-active-proof-mode"
+        ]
       },
       {
         "id": "signal_correlation_gate",
@@ -9734,6 +9926,92 @@
       "coverageGaps": []
     },
     {
+      "id": "pbo_overfit_gate",
+      "domain": "backtest",
+      "ownerSurface": "node-python",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "gate",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "audit_log_evidence",
+      "proofStatus": "drifted",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "production",
+      "deploymentAuthority": "operator_only",
+      "criticality": "high",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "runtime evidence persisted"
+      ],
+      "runtimeEvidence": [
+        "audit_log.lifecycle.pbo_*",
+        "audit_log.walk_forward.pbo_*",
+        "audit_log.walk_forward.pbo_computed",
+        "lifecycle.pbo_overfit_block",
+        "lifecycle.pbo_unavailable_legacy",
+        "SSE lifecycle:pbo_evaluated",
+        "walk_forward.pbo_computed",
+        "walk_forward.pbo_high_overfit_risk"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "backtests",
+        "backtests.walk_forward_results",
+        "strategies"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": false,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "drifted",
+      "productionBlockers": [
+        "invalid-active-proof-mode"
+      ],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log.lifecycle.pbo_*",
+        "audit_log.walk_forward.pbo_*",
+        "audit_log.walk_forward.pbo_computed",
+        "lifecycle.pbo_overfit_block",
+        "lifecycle.pbo_unavailable_legacy",
+        "SELECT * FROM audit_log WHERE action LIKE 'lifecycle.pbo_%' ORDER BY created_at DESC LIMIT 10",
+        "SSE lifecycle:pbo_evaluated",
+        "walk_forward.pbo_computed",
+        "walk_forward.pbo_high_overfit_risk"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [],
+      "schedulerJobs": [],
+      "healthCheck": "src/engine/tests/test_wave29_pass_a2_pbo_gate.py + src/server/__tests__/wave29-pass-a2-pbo-gate.test.ts",
+      "freshnessSignals": [
+        "audit_log.walk_forward.pbo_computed"
+      ],
+      "evidenceQueries": [
+        "SELECT * FROM audit_log WHERE action LIKE 'lifecycle.pbo_%' ORDER BY created_at DESC LIMIT 10"
+      ],
+      "coverageGaps": [
+        "invalid-active-proof-mode"
+      ]
+    },
+    {
       "id": "phase5_contract_spec_scaffold",
       "domain": "execution",
       "ownerSurface": "python",
@@ -11360,6 +11638,101 @@
         "research-topology-health"
       ],
       "coverageGaps": []
+    },
+    {
+      "id": "shadow_stage",
+      "domain": "lifecycle",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "system",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "audit_log_evidence",
+      "proofStatus": "drifted",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "production",
+      "deploymentAuthority": "operator_only",
+      "criticality": "high",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "runtime evidence persisted"
+      ],
+      "runtimeEvidence": [
+        "audit_log.lifecycle.shadow_*",
+        "audit_log.lifecycle.shadow_signal_logged",
+        "lifecycle_shadow_signals.created_at",
+        "lifecycle.shadow_divergence_blocked",
+        "lifecycle.shadow_divergence_check_unavailable_legacy",
+        "lifecycle.shadow_divergence_insufficient_samples",
+        "lifecycle.shadow_mode_inconsistency_warn",
+        "lifecycle.shadow_promotion_passed",
+        "lifecycle.shadow_signal_logged",
+        "SSE lifecycle:shadow_divergence_evaluated",
+        "SSE signal:shadow_logged"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "backtests",
+        "lifecycle_shadow_signals",
+        "strategies"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": false,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "drifted",
+      "productionBlockers": [
+        "invalid-active-proof-mode"
+      ],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log.lifecycle.shadow_*",
+        "audit_log.lifecycle.shadow_signal_logged",
+        "lifecycle_shadow_signals.created_at",
+        "lifecycle.shadow_divergence_blocked",
+        "lifecycle.shadow_divergence_check_unavailable_legacy",
+        "lifecycle.shadow_divergence_insufficient_samples",
+        "lifecycle.shadow_mode_inconsistency_warn",
+        "lifecycle.shadow_promotion_passed",
+        "lifecycle.shadow_signal_logged",
+        "SELECT * FROM audit_log WHERE action LIKE 'lifecycle.shadow_%' ORDER BY created_at DESC LIMIT 10",
+        "SELECT COUNT(*) FROM lifecycle_shadow_signals WHERE created_at > NOW() - INTERVAL '7 days'",
+        "SSE lifecycle:shadow_divergence_evaluated",
+        "SSE signal:shadow_logged"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [],
+      "schedulerJobs": [],
+      "healthCheck": "src/server/__tests__/wave29-pass-a1-shadow-signals.test.ts + wave29-pass-a3-shadow-divergence.test.ts",
+      "freshnessSignals": [
+        "lifecycle_shadow_signals.created_at",
+        "audit_log.lifecycle.shadow_signal_logged"
+      ],
+      "evidenceQueries": [
+        "SELECT COUNT(*) FROM lifecycle_shadow_signals WHERE created_at > NOW() - INTERVAL '7 days'",
+        "SELECT * FROM audit_log WHERE action LIKE 'lifecycle.shadow_%' ORDER BY created_at DESC LIMIT 10"
+      ],
+      "coverageGaps": [
+        "invalid-active-proof-mode"
+      ]
     },
     {
       "id": "signal_correlation_gate",

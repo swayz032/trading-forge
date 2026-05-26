@@ -40,10 +40,24 @@ import { evaluateParameterDriftGate } from "../lib/parameter-drift-gate.js";
 import { evaluateCompositeShadow } from "../lib/composite-shadow-gate.js";
 import { routeShadowDisagreementAlert } from "../lib/composite-shadow-discord-router.js";
 import { evaluatePromotionGates, getWfePromotionFloor, getCpcvMinPaths } from "../lib/promotion-gate-orchestrator.js";
+// Wave 29 Pass A.2 — PBO lifecycle gate (TESTING → SHADOW/PAPER hard gate).
+// PBO_OVERFIT_THRESHOLD_PCT (default 0.15) — stricter than W27.5 PBO_OVERFIT_THRESHOLD (0.5).
+import { evaluatePboGate } from "../lib/pbo-gate.js";
+// Wave 29 Pass A.3 — shadow-signal divergence gate (SHADOW → PAPER).
+// TODO (A.4 architect): Once A.1's SHADOW lifecycle state lands and the
+// shadow_signals schema is extended with direction/intended_size/killzone/
+// regime/confluence_score columns, remove the TODO markers in the loader.
+import { compareShadowToBacktest } from "../lib/shadow-signal-divergence-checker.js";
+import { loadDivergenceInputs } from "../lib/shadow-signal-divergence-loader.js";
 
 const VALID_STATES = [
   "CANDIDATE",
   "TESTING",
+  // Wave 29 Pass A.1: SHADOW stage sits between TESTING and PAPER.
+  // Signals fire Pine alerts (TradingView) but TradersPost webhook is OFF.
+  // Logged to lifecycle_shadow_signals for divergence analysis (A.3).
+  // Promotes to PAPER after ≥20 shadow signals with <5% divergence (A.3 gate).
+  "SHADOW",
   "PAPER",
   "DEPLOY_READY",
   "PILOT",
@@ -66,7 +80,12 @@ interface PromoteStrategyOptions {
 
 const VALID_TRANSITIONS: Record<LifecycleState, LifecycleState[]> = {
   CANDIDATE: ["TESTING", "PAPER", "GRAVEYARD"],  // PAPER is fast-track for tier-qualified strategies (Wave B1)
-  TESTING: ["PAPER", "DECLINING", "GRAVEYARD"],  // Demotable on catastrophic failure
+  // Wave 29 Pass A.1: TESTING can go to SHADOW (new path) OR directly to PAPER (legacy path preserved).
+  // Both routes are valid depending on whether shadow_mode_enabled=true on the strategy.
+  TESTING: ["SHADOW", "PAPER", "DECLINING", "GRAVEYARD"],
+  // Wave 29 Pass A.1: SHADOW → PAPER after A.3 divergence gate clears (≥20 signals, <5% divergence).
+  // SHADOW → DEPLOY_READY direct is INVALID — must go through PAPER first (full paper history required).
+  SHADOW: ["PAPER", "DECLINING", "GRAVEYARD"],
   PAPER: ["DEPLOY_READY", "DECLINING", "GRAVEYARD"],  // Demotable on drift
   DEPLOY_READY: ["PILOT", "DEPLOYED", "PAPER", "GRAVEYARD"],  // Human approves PILOT canary OR legacy direct deploy OR back to paper
   // B8: PILOT canary state — 5 sessions, 1 contract.
@@ -850,6 +869,106 @@ export class LifecycleService {
       } catch (pboErr) {
         // Non-blocking: PBO gate failure must not abort a promotion.
         logger.warn({ strategyId: id, backtestId: promotionEvidence.backtestId, err: pboErr }, "lifecycle.pbo_gate: read failed (non-blocking — promotion continues)");
+      }
+    }
+
+    // ── Wave 29 Pass A.2: PBO lifecycle gate (TESTING → SHADOW/PAPER) ────────
+    // Institutional 2026 standard: PBO < 0.15 required (Lopez de Prado /
+    // QuantBeckman 2025 / arXiv 2512.12924).
+    //
+    // Wire target: TESTING → SHADOW AND TESTING → PAPER (legacy fast-track).
+    // A.1 HAS landed SHADOW in VALID_STATES. Gate fires on both routes.
+    // A.4 architect: if desired, restrict to TESTING → SHADOW only; legacy
+    // TESTING → PAPER fast-track can stay gated for extra safety.
+    //
+    // Two separate thresholds:
+    //   PBO_OVERFIT_THRESHOLD     (0.5)  — W27.5 warn threshold (walk_forward.py)
+    //   PBO_OVERFIT_THRESHOLD_PCT (0.15) — this gate (Wave 29 lifecycle hard gate)
+    if (
+      fromState === "TESTING" &&
+      (toState === "SHADOW" || toState === "PAPER") &&
+      promotionEvidence.backtestId
+    ) {
+      try {
+        const [btExtrasPboW29] = await (tx ?? db)
+          .select({ walkForwardResults: backtests.walkForwardResults })
+          .from(backtests)
+          .where(eq(backtests.id, promotionEvidence.backtestId))
+          .limit(1);
+
+        if (btExtrasPboW29) {
+          // pbo_overall lives in walkForwardResults (the WF result JSON blob).
+          // Wave 29 Pass A.2 wires pbo_overall + pbo_overall_p_value into the
+          // walk_forward.py return dict, which backtest-service persists here.
+          const wfMeta = btExtrasPboW29.walkForwardResults as Record<string, unknown> | null | undefined;
+          const pboOverall = wfMeta?.pbo_overall as number | null | undefined;
+          const pboOverallPValue = wfMeta?.pbo_overall_p_value as number | null | undefined;
+
+          const pboGateResult = evaluatePboGate(
+            { pbo_overall: pboOverall, pbo_p_value: pboOverallPValue },
+          );
+
+          if (!pboGateResult.ok) {
+            const pboError =
+              `lifecycle.pbo_overfit_block: strategy ${id} has PBO=${pboGateResult.pbo?.toFixed(4) ?? "?"} ` +
+              `which exceeds threshold ${pboGateResult.threshold} (Wave 29 institutional gate). ` +
+              `Strategy appears overfit — block promotion to ${toState}. ` +
+              `Re-run backtest with more CPCV folds or reduce parameter search space.`;
+            logger.warn(
+              { strategyId: id, fromState, toState, pbo: pboGateResult.pbo, threshold: pboGateResult.threshold, backtestId: promotionEvidence.backtestId },
+              pboError,
+            );
+            // Emit lifecycle.pbo_overfit_block audit (canonical Wave 29 action name)
+            insertAuditRow({
+              action: "lifecycle.pbo_overfit_block",
+              entityType: "strategy",
+              entityId: id,
+              decisionAuthority: "gate",
+              status: "failure",
+              input: { fromState, toState, backtestId: promotionEvidence.backtestId } as Record<string, unknown>,
+              result: pboGateResult.auditPayload as Record<string, unknown>,
+              correlationId: options.correlationId ?? null,
+            }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.pbo_overfit_block audit row write failed"));
+            // Emit SSE event lifecycle:pbo_evaluated
+            broadcastSSE("lifecycle:pbo_evaluated", {
+              strategyId: id,
+              fromState,
+              toState,
+              pbo: pboGateResult.pbo,
+              threshold: pboGateResult.threshold,
+              blocked: true,
+            });
+            return { success: false, error: pboError };
+          }
+
+          // Legacy null or pbo passes — emit lifecycle.pbo_unavailable_legacy warn if needed
+          if (pboGateResult.legacyNull) {
+            insertAuditRow({
+              action: "lifecycle.pbo_unavailable_legacy",
+              entityType: "strategy",
+              entityId: id,
+              decisionAuthority: "gate",
+              status: "success",
+              input: { fromState, toState, backtestId: promotionEvidence.backtestId } as Record<string, unknown>,
+              result: pboGateResult.auditPayload as Record<string, unknown>,
+              correlationId: options.correlationId ?? null,
+            }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.pbo_unavailable_legacy audit row write failed"));
+          }
+
+          // Emit SSE event lifecycle:pbo_evaluated on every evaluation
+          broadcastSSE("lifecycle:pbo_evaluated", {
+            strategyId: id,
+            fromState,
+            toState,
+            pbo: pboGateResult.pbo,
+            threshold: pboGateResult.threshold,
+            blocked: false,
+            legacy_null: pboGateResult.legacyNull,
+          });
+        }
+      } catch (pboW29Err) {
+        // Non-blocking: PBO gate failure must not abort a promotion.
+        logger.warn({ strategyId: id, backtestId: promotionEvidence.backtestId, err: pboW29Err }, "lifecycle.pbo_gate (Wave 29): read/eval failed (non-blocking — promotion continues)");
       }
     }
 
@@ -1848,6 +1967,162 @@ export class LifecycleService {
       } catch (err) {
         logger.error({ strategyId: s.id, err }, "Error checking TESTING → PAPER promotion");
       }
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // Gate 2.5 — Wave 29 Pass A.3: SHADOW → PAPER (shadow-signal divergence)
+    //
+    // Catches training-serving skew before paper money is deployed.
+    // Compare logged shadow signals (TradingView Pine WITHOUT TradersPost webhook)
+    // against what the historical backtest expected for the same period.
+    // Gate: ≥5% divergence across ≥20 signals = BLOCK SHADOW → PAPER.
+    //
+    // TODO (A.4 architect): A.1 (paper-parity, parallel) adds the SHADOW lifecycle
+    // state and shadow_mode_enabled flag. Until that lands, this block is a
+    // PLACEHOLDER that returns ok: true (PROCEED) so the existing TESTING → PAPER
+    // path is unblocked. A.4 will reconcile by wiring:
+    //   1. Query strategies WHERE lifecycle_state = 'SHADOW'
+    //   2. Remove the placeholder ok=true short-circuit below
+    //
+    // Fail-soft contract: if shadow_signals table is missing or query throws,
+    // emit lifecycle.shadow_divergence_check_unavailable_legacy warn + PROCEED
+    // (grandfather window for pre-Wave-29 strategies).
+    // ──────────────────────────────────────────────────────────────
+    try {
+      // Wave 29 Pass A.4 architect close: A.1's SHADOW lifecycle state landed in VALID_STATES;
+      // real Drizzle query replaces the empty-array placeholder.
+      const shadowStrategies = await db
+        .select()
+        .from(strategies)
+        .where(eq(strategies.lifecycleState, "SHADOW"));
+
+      for (const s of shadowStrategies) {
+        try {
+          const { shadowSignals: sSignals, backtestExpected } = await loadDivergenceInputs(s.id, 20);
+
+          const divergenceResult = compareShadowToBacktest(sSignals, backtestExpected);
+
+          if (!divergenceResult.ok) {
+            const isInsufficientSamples = divergenceResult.reason === "insufficient_samples";
+            const auditAction = isInsufficientSamples
+              ? "lifecycle.shadow_divergence_insufficient_samples"
+              : "lifecycle.shadow_divergence_blocked";
+
+            logger.warn(
+              {
+                strategyId: s.id,
+                divergence_pct: divergenceResult.divergence_pct,
+                sample_size: divergenceResult.sample_size,
+                reason: divergenceResult.reason,
+                violations: divergenceResult.per_signal_violations.length,
+              },
+              `SHADOW → PAPER BLOCKED: ${divergenceResult.reason}`,
+            );
+
+            await db.insert(auditLog).values({
+              action: auditAction,
+              entityType: "strategy",
+              entityId: s.id,
+              status: "failure",
+              decisionAuthority: "gate",
+              input: { fromState: "SHADOW", toState: "PAPER" },
+              result: {
+                ok: false,
+                divergence_pct: divergenceResult.divergence_pct,
+                sample_size: divergenceResult.sample_size,
+                reason: divergenceResult.reason,
+                per_signal_violations: divergenceResult.per_signal_violations,
+                note: "SHADOW → PAPER blocked by divergence gate (Wave 29 Pass A.3)",
+              },
+              correlationId,
+            }).catch((auditErr: unknown) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "shadow divergence block audit insert failed (non-blocking)");
+            });
+
+            broadcastSSE("lifecycle:shadow_divergence_evaluated", {
+              strategyId: s.id,
+              ok: false,
+              divergence_pct: divergenceResult.divergence_pct,
+              sample_size: divergenceResult.sample_size,
+              reason: divergenceResult.reason,
+            });
+
+            continue; // BLOCK SHADOW → PAPER
+          }
+
+          // ok: true — PROMOTE to PAPER
+          logger.info(
+            {
+              strategyId: s.id,
+              divergence_pct: divergenceResult.divergence_pct,
+              sample_size: divergenceResult.sample_size,
+            },
+            "SHADOW → PAPER: divergence gate PASSED",
+          );
+
+          await db.insert(auditLog).values({
+            action: "lifecycle.shadow_promotion_passed",
+            entityType: "strategy",
+            entityId: s.id,
+            status: "success",
+            decisionAuthority: "gate",
+            input: { fromState: "SHADOW", toState: "PAPER" },
+            result: {
+              ok: true,
+              divergence_pct: divergenceResult.divergence_pct,
+              sample_size: divergenceResult.sample_size,
+              note: "SHADOW → PAPER cleared by divergence gate (Wave 29 Pass A.3)",
+            },
+            correlationId,
+          }).catch((auditErr: unknown) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "shadow promotion passed audit insert failed (non-blocking)");
+          });
+
+          broadcastSSE("lifecycle:shadow_divergence_evaluated", {
+            strategyId: s.id,
+            ok: true,
+            divergence_pct: divergenceResult.divergence_pct,
+            sample_size: divergenceResult.sample_size,
+          });
+
+          const shadowResult = await this.promoteStrategy(s.id, "SHADOW", "PAPER", { correlationId: correlationId ?? undefined });
+          if (shadowResult.success) {
+            promoted.push(s.id);
+            logger.info({ strategyId: s.id }, "Auto-promoted SHADOW → PAPER");
+          }
+        } catch (shadowStratErr: unknown) {
+          // Fail-soft: shadow_signals table missing or query throws →
+          // grandfather window for pre-Wave-29 strategies.
+          logger.warn(
+            { strategyId: s.id, err: shadowStratErr },
+            "SHADOW → PAPER divergence check threw — emitting unavailable legacy warn + PROCEED",
+          );
+
+          await db.insert(auditLog).values({
+            action: "lifecycle.shadow_divergence_check_unavailable_legacy",
+            entityType: "strategy",
+            entityId: s.id,
+            status: "warning",
+            decisionAuthority: "gate",
+            input: { fromState: "SHADOW", toState: "PAPER" },
+            result: {
+              note: "shadow_divergence_check threw (legacy grandfather window) — promotion proceeds via classical gates",
+              error: String(shadowStratErr),
+            },
+            correlationId,
+          }).catch(() => {});
+
+          // Proceed: classical gates still apply via promoteStrategy
+          const legacyResult = await this.promoteStrategy(s.id, "SHADOW", "PAPER", { correlationId: correlationId ?? undefined });
+          if (legacyResult.success) {
+            promoted.push(s.id);
+            logger.info({ strategyId: s.id }, "SHADOW → PAPER: proceeded via legacy fallback (grandfather window)");
+          }
+        }
+      }
+    } catch (shadowGateErr: unknown) {
+      // Fail-soft: outer SHADOW query failure is non-blocking.
+      logger.warn({ err: shadowGateErr }, "SHADOW → PAPER gate: outer query threw (non-blocking)");
     }
 
     // ──────────────────────────────────────────────────────────────

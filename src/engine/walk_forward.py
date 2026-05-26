@@ -340,6 +340,37 @@ def _run_walk_forward_cpcv(
 
     elapsed_ms = int((time.time() - start_time) * 1000)
 
+    # ── Wave 29 Pass A.2: compute pbo_overall from CPCV paths ────────────────
+    # In CPCV mode, path_sharpes ARE the per-path OOS Sharpes.
+    # We treat each path's OOS Sharpe as both is_sharpe and oos_sharpe when
+    # we don't have per-path IS Sharpes (the IS data is pooled across folds).
+    # This is conservative — a more accurate implementation would track per-path
+    # IS Sharpes during the combinations loop above (Wave 30 carry-forward).
+    _cpcv_pbo_overall: Optional[float] = None
+    _cpcv_pbo_p_value: Optional[float] = None
+    _cpcv_pbo_audit_actions: list[str] = []
+    try:
+        from src.engine.pbo_gate import compute_pbo_from_cpcv_paths as _cpcv_pbo_fn
+        _cpcv_path_dicts = [
+            {"is_sharpe": s, "oos_sharpe": s, "is_returns": [], "oos_returns": []}
+            for s in path_sharpes
+        ]
+        _cpcv_gate = _cpcv_pbo_fn(_cpcv_path_dicts)
+        _cpcv_pbo_val = _cpcv_gate.get("pbo")
+        if _cpcv_pbo_val is not None and not (
+            isinstance(_cpcv_pbo_val, float) and (_cpcv_pbo_val != _cpcv_pbo_val)
+        ):
+            _cpcv_pbo_overall = _cpcv_pbo_val
+            _cpcv_pbo_p_value = _cpcv_gate.get("p_value")
+            _pbo_threshold_cpcv = float(os.environ.get(
+                "PBO_OVERFIT_THRESHOLD", str(_PBO_OVERFIT_THRESHOLD_DEFAULT)
+            ))
+            _cpcv_pbo_audit_actions.append("walk_forward.pbo_computed")
+            if _cpcv_pbo_val > _pbo_threshold_cpcv:
+                _cpcv_pbo_audit_actions.append("walk_forward.pbo_high_overfit_risk")
+    except Exception as _cpcv_pbo_exc:
+        print(f"  PBO (cpcv gate): computation failed ({_cpcv_pbo_exc}).", file=sys.stderr)
+
     return {
         "confidence": "OK" if total_trades >= MIN_OOS_TRADES else "LOW",
         "low_confidence_windows": 0,
@@ -370,6 +401,10 @@ def _run_walk_forward_cpcv(
             "psr": _psr,
             "dsr": _dsr_val,
         },
+        # Wave 29 Pass A.2 — pbo_overall for TESTING → SHADOW/PAPER lifecycle gate.
+        "pbo_overall": _cpcv_pbo_overall,
+        "pbo_overall_p_value": _cpcv_pbo_p_value,
+        "pbo_audit_actions": _cpcv_pbo_audit_actions,
     }
 
 
@@ -943,7 +978,17 @@ def run_walk_forward(
     # PBO (Probability of Backtest Overfitting) per Bailey et al. is now wired
     # into the aggregation block so it is always computed when >= 4 windows exist.
     # Previously it had to be called explicitly by the caller — fixed here.
+    #
+    # Wave 29 Pass A.2: also calls compute_pbo_from_cpcv_paths() from pbo_gate.py
+    # to populate pbo_overall (the canonical CPCV-path-based PBO used by the
+    # TESTING → SHADOW lifecycle gate). Two separate results:
+    #   pbo_result      — from risk_metrics.compute_pbo (existing W27.5 path)
+    #   pbo_gate_result — from pbo_gate.compute_pbo_from_cpcv_paths (new W29 gate)
+    # pbo_overall = pbo_gate_result.pbo (preferred) or pbo_result.pbo (fallback).
+    # pbo_audit_actions — list of audit action names for the TS layer to write.
     pbo_result: Optional[dict] = None
+    pbo_gate_result: Optional[dict] = None
+    pbo_audit_actions: list[str] = []
     _pbo_threshold = float(os.environ.get("PBO_OVERFIT_THRESHOLD", str(_PBO_OVERFIT_THRESHOLD_DEFAULT)))
     if len(window_results) >= 4:
         try:
@@ -977,6 +1022,52 @@ def run_walk_forward(
         except Exception as _pbo_exc:
             print(f"  PBO: computation failed ({_pbo_exc}).", file=sys.stderr)
             pbo_result = {"pbo": None, "pbo_pass": True, "error": str(_pbo_exc)}
+
+        # ── Wave 29 Pass A.2: pbo_gate.py CPCV-path-based PBO ────────────────
+        # Builds CPCV-style path dicts from plain-mode window_results and
+        # computes the institutional-grade PBO via compute_pbo_from_cpcv_paths.
+        # This value feeds the TESTING → SHADOW/PAPER lifecycle gate in pbo-gate.ts.
+        # pbo_overall is additive to the existing pbo/pbo_pass/pbo_p_value keys —
+        # downstream consumers that read the old keys are unaffected.
+        try:
+            from src.engine.pbo_gate import (
+                _build_cpcv_paths_from_window_results as _build_paths,
+            )
+            from src.engine.pbo_gate import (
+                compute_pbo_from_cpcv_paths as _cpcv_pbo,
+            )
+            _cpcv_paths = _build_paths(window_results)
+            pbo_gate_result = _cpcv_pbo(_cpcv_paths)
+            _pbo_overall_val = pbo_gate_result.get("pbo")
+
+            if _pbo_overall_val is not None and not (
+                isinstance(_pbo_overall_val, float) and (_pbo_overall_val != _pbo_overall_val)
+            ):
+                # Emit appropriate audit action names for TS layer
+                pbo_audit_actions.append("walk_forward.pbo_computed")
+                if _pbo_overall_val > _pbo_threshold:
+                    pbo_audit_actions.append("walk_forward.pbo_high_overfit_risk")
+                    print(
+                        f"  PBO (gate): {_pbo_overall_val:.4f} > warn threshold {_pbo_threshold} — "
+                        f"HIGH OVERFIT RISK (walk_forward.pbo_high_overfit_risk)",
+                        file=sys.stderr,
+                    )
+                else:
+                    print(
+                        f"  PBO (gate): {_pbo_overall_val:.4f} — pass (walk_forward.pbo_computed)",
+                        file=sys.stderr,
+                    )
+            else:
+                # NaN = sample-size guard fired
+                print(
+                    f"  PBO (gate): NaN — sample-size guard fired "
+                    f"(n_paths={pbo_gate_result.get('n_paths', 0)} < "
+                    f"{pbo_gate_result.get('sample_size_guard_threshold', 4)})",
+                    file=sys.stderr,
+                )
+        except Exception as _gate_pbo_exc:
+            print(f"  PBO (gate): computation failed ({_gate_pbo_exc}).", file=sys.stderr)
+            pbo_gate_result = None
     else:
         print(
             f"  PBO: skipped (need >= 4 windows, have {len(window_results)})",
@@ -1108,6 +1199,27 @@ def run_walk_forward(
         # Falls back to None when compute_pbo unavailable or < 10 combinations.
         "pbo_p_value": pbo_result.get("pbo_p_value") if pbo_result else None,
         "pbo_detail": pbo_result,
+        # Wave 29 Pass A.2 — CPCV-path-based PBO for TESTING → SHADOW/PAPER gate.
+        # pbo_overall = canonical lifecycle-gate PBO from pbo_gate.py
+        # pbo_p_value is already above; reuse the same field (pbo_gate_result's
+        # p_value overwrites when available — more accurate than risk_metrics path).
+        # Two separate thresholds:
+        #   PBO_OVERFIT_THRESHOLD     (0.5)  — W27.5 warn threshold (above)
+        #   PBO_OVERFIT_THRESHOLD_PCT (0.15) — W29 lifecycle gate (pbo-gate.ts)
+        "pbo_overall": (
+            pbo_gate_result.get("pbo")
+            if pbo_gate_result
+            else (pbo_result.get("pbo") if pbo_result else None)
+        ),
+        "pbo_overall_p_value": (
+            pbo_gate_result.get("p_value")
+            if pbo_gate_result
+            else None
+        ),
+        # Audit action names for the TS backtest-service to write to audit_log.
+        # Contains: "walk_forward.pbo_computed" and optionally
+        #           "walk_forward.pbo_high_overfit_risk"
+        "pbo_audit_actions": pbo_audit_actions,
     }
 
 

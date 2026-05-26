@@ -4,6 +4,8 @@ import { randomUUID } from "crypto";
 import { AgentService } from "../services/agent-service.js";
 import { analyzeMarket } from "../services/regime-service.js";
 import { synthesizeV11FromGemmaProse } from "../lib/gemma-prose-to-v11.js";
+import { extractSpeakerConceptsFromTranscript } from "../lib/transcript-speaker-concepts.js";
+import { runPass1VocabularyExtraction } from "../lib/two-pass-vocab-extractor.js";
 import { runRobustnessTest } from "../services/robustness-service.js";
 import { db } from "../db/index.js";
 import { auditLog, strategyPendingBuckets, strategyPendingMentions, systemJournal, strategies } from "../db/schema.js";
@@ -1199,8 +1201,58 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       // synthesizer parses Gemma's prose (entry_rules, risk_rules, etc.) and
       // produces v11 structured fields. Merge happens BEFORE the field
       // extraction below so synthesized fields flow through the same forward path.
-      const synthesized = synthesizeV11FromGemmaProse(s as Record<string, unknown>);
-      const sMerged: Record<string, unknown> = { ...s, ...synthesized };
+      //
+      // v12+v13 SPEAKER VOCABULARY (2026-05-26): two-tier extraction.
+      //
+      // TIER 1 (v13 Pass 1 LLM call) — small focused Gemma call that ONLY
+      //   extracts speaker_concepts. Tiny schema = high compliance even on
+      //   gemma4:e2b's 2B-effective brain. Works on ANY domain (Volume Profile,
+      //   Wyckoff, options flow) — not constrained to a hardcoded catalog.
+      //   Research: arXiv 2604.05158 + MasterPrompting 2026-05-12 benchmark.
+      //
+      // TIER 2 (v12 server-side NLP) — regex catalog for ICT/SMC vocabulary
+      //   as backup if Pass 1 returns few/no concepts. Augmenting, not
+      //   competing — concepts from both tiers get merged and deduplicated.
+      //
+      // Skip both tiers if Gemma already emitted speaker_concepts (future-proof).
+      const sWithConcepts: Record<string, unknown> = { ...s };
+      const existingConcepts = (s as Record<string, unknown>).speaker_concepts;
+      if (!Array.isArray(existingConcepts) || existingConcepts.length === 0) {
+        const mergedConcepts: Array<Record<string, unknown>> = [];
+        const seenTerms = new Set<string>();
+        // Tier 1 — Pass 1 LLM vocab extraction (works on any domain)
+        try {
+          const pass1 = await runPass1VocabularyExtraction(markdown);
+          if (pass1 && pass1.speaker_concepts.length > 0) {
+            for (const c of pass1.speaker_concepts) {
+              const k = c.term.toLowerCase().trim();
+              if (seenTerms.has(k)) continue;
+              seenTerms.add(k);
+              mergedConcepts.push({ ...c, source: "pass1_llm_extraction" });
+            }
+          }
+        } catch (p1Err) {
+          logger.warn({ err: p1Err instanceof Error ? p1Err.message : String(p1Err) }, "scout-extract: Pass 1 LLM vocab extraction failed (falling back to NLP)");
+        }
+        // Tier 2 — server-side NLP (ICT/SMC catalog as augmentation)
+        try {
+          const nlpConcepts = extractSpeakerConceptsFromTranscript(markdown);
+          for (const c of nlpConcepts) {
+            const k = c.term.toLowerCase().trim();
+            if (seenTerms.has(k)) continue;
+            seenTerms.add(k);
+            mergedConcepts.push({ ...c, source: "server_side_nlp" } as Record<string, unknown>);
+            if (mergedConcepts.length >= 25) break;
+          }
+        } catch (nlpErr) {
+          logger.warn({ err: nlpErr instanceof Error ? nlpErr.message : String(nlpErr) }, "scout-extract: server-side NLP fallback failed (non-blocking)");
+        }
+        if (mergedConcepts.length > 0) {
+          sWithConcepts.speaker_concepts = mergedConcepts;
+        }
+      }
+      const synthesized = synthesizeV11FromGemmaProse(sWithConcepts);
+      const sMerged: Record<string, unknown> = { ...sWithConcepts, ...synthesized };
       const entrySequence = Array.isArray(sMerged.entry_sequence)
         ? (sMerged.entry_sequence as unknown[]).filter((it): it is Record<string, unknown> => typeof it === "object" && it !== null)
         : (sMerged.entry_sequence === null ? null : undefined);

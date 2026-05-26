@@ -1,5 +1,6 @@
+import { randomUUID } from "crypto";
 import { db } from "../db/index.js";
-import { paperSessions, paperPositions, paperTrades, strategies, paperSignalLogs, skipDecisions, shadowSignals, preMarketSessions, brokerAccounts } from "../db/schema.js";
+import { paperSessions, paperPositions, paperTrades, strategies, paperSignalLogs, skipDecisions, shadowSignals, preMarketSessions, brokerAccounts, lifecycleShadowSignals } from "../db/schema.js";
 import { openPosition, closePosition } from "./paper-execution-service.js";
 import { checkRiskGate } from "./paper-risk-gate.js";
 import { evaluateContextGate } from "./context-gate-service.js";
@@ -474,6 +475,10 @@ interface CachedSession {
   // B8b: PILOT canary state — read from strategy.lifecycleState at session cache load.
   // Used to enforce the 1-contract ceiling during PILOT canary window.
   lifecycleState: string;
+  // Wave 29 Pass A.1: SHADOW stage flag. When true, signals are intercepted before
+  // openPosition() — logged to lifecycle_shadow_signals but TradersPost webhook NOT called.
+  // Pine alerts still fire on TradingView (operator sees signal on chart).
+  shadowModeEnabled: boolean;
 }
 
 // ─── B4.3: In-memory Governor State (per session) ──────────────
@@ -828,6 +833,9 @@ async function getSessionConfig(sessionId: string): Promise<CachedSession | null
     // are only in PILOT during the narrow canary window. Callers that need the
     // latest state will see it on the next cache miss (session restart or invalidation).
     lifecycleState: strategy.lifecycleState,
+    // Wave 29 Pass A.1: capture shadow_mode_enabled at cache-load time.
+    // Fail-soft: if column is absent (legacy DB / schema drift), default to false.
+    shadowModeEnabled: (strategy as unknown as Record<string, unknown>).shadowModeEnabled === true,
   };
 
   sessionCache.set(sessionId, entry);
@@ -4243,6 +4251,150 @@ export async function evaluateSignals(
               : (sortedVolumes[sortedVolumes.length / 2 - 1] + sortedVolumes[sortedVolumes.length / 2]) / 2;
         const currentAtrForEntry = indicators["atr_14"];
         const stopLimitOffset = currentAtrForEntry ? 0.5 * currentAtrForEntry : undefined;
+
+        // ─── Wave 29 Pass A.1: SHADOW stage intercept ───────────────────────────
+        // When shadow_mode_enabled=true, the signal has passed all gates and
+        // WOULD be queued for execution — but MUST NOT be.  Pine alerts already
+        // fired upstream (TradingView chart shows the signal).  We log the signal
+        // to lifecycle_shadow_signals and return early, NEVER calling TradersPost.
+        //
+        // Fail-soft on shadow INSERT failure: log error + STILL skip the pending
+        // queue.  The shadow invariant (never route to TradersPost) is inviolable.
+        //
+        // Special case: strategy with shadow_mode_enabled=true AND
+        // lifecycleState='PAPER' → operator override.  Log inconsistency warn +
+        // route to TradersPost (proceed through normal path below).
+        if (sessionConfig.shadowModeEnabled) {
+          if (sessionConfig.lifecycleState === "PAPER") {
+            // Operator override: shadow flag set but strategy already in PAPER.
+            // Log the inconsistency and allow normal execution.
+            logger.warn(
+              { sessionId, symbol, strategyId: sessionConfig.strategyId },
+              "Wave 29 Pass A.1: shadow_mode_enabled=true but lifecycle_state=PAPER — operator override, routing to TradersPost",
+            );
+            insertAuditRow({
+              action: "lifecycle.shadow_mode_inconsistency_warn",
+              entityType: "strategy",
+              entityId: sessionConfig.strategyId,
+              decisionAuthority: "system",
+              result: {
+                shadow_mode_enabled: true,
+                lifecycle_state: "PAPER",
+                decision: "override_route_to_traderspost",
+                symbol,
+                direction: config.side,
+                bar_timestamp: bar.timestamp,
+                correlation_id: correlationId ?? null,
+              } as Record<string, unknown>,
+              status: "warning",
+              correlationId: correlationId ?? null,
+            }).catch((err: unknown) =>
+              logger.warn({ err, sessionId }, "audit_log insert failed for lifecycle.shadow_mode_inconsistency_warn"),
+            );
+            // Fall through to normal pendingEntryQueue path below
+          } else {
+            // Normal SHADOW stage: intercept signal, log, skip TradersPost.
+            span.setAttribute("shadow_mode_intercepted", true);
+            logger.info(
+              { sessionId, symbol, strategyId: sessionConfig.strategyId, side: config.side, contracts: contextContracts, price: bar.close },
+              "Wave 29 Pass A.1: SHADOW stage signal intercepted — logging to lifecycle_shadow_signals, skipping TradersPost",
+            );
+
+            // Derive killzone from bar timestamp for shadow signal context.
+            // Inline detection: London 03-08 ET, NY AM 08-12 ET, NY PM 12-16 ET.
+            // Fail-soft: null on any error.
+            let detectedKillzone: string | null = null;
+            try {
+              const barDate = bar.timestamp ? new Date(bar.timestamp) : new Date();
+              const etHour = Number(
+                barDate.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false })
+              );
+              if (etHour >= 3 && etHour < 8) detectedKillzone = "london";
+              else if (etHour >= 8 && etHour < 12) detectedKillzone = "ny_am";
+              else if (etHour >= 12 && etHour < 16) detectedKillzone = "ny_pm";
+            } catch {
+              detectedKillzone = null;
+            }
+
+            // Derive weighted confluence score from current bar indicators (Path C) or null.
+            const rawWeightedScore = (bar as unknown as Record<string, unknown>).__weightedScore as number | undefined;
+            const shadowConfluenceScore: number | null =
+              rawWeightedScore != null && Number.isFinite(rawWeightedScore) ? rawWeightedScore : null;
+
+            // INSERT lifecycle_shadow_signals row.
+            // traderspost_webhook_called MUST be false — invariant enforced here.
+            const shadowCorrelationId = correlationId ?? randomUUID();
+            db.insert(lifecycleShadowSignals).values({
+              strategyId: sessionConfig.strategyId,
+              signalTs: bar.timestamp ? new Date(bar.timestamp) : new Date(),
+              direction: config.side,
+              entryPrice: bar.close,
+              intendedSize: contextContracts,
+              killzone: detectedKillzone,
+              regime: (biasState as Record<string, unknown> | null)?.regimeLabel as string | undefined ?? null,
+              confluenceScore: shadowConfluenceScore,
+              lifecycleState: "SHADOW",
+              divergenceVsBacktest: null,  // filled by A.3 divergence checker
+              sourceCorrelationId: shadowCorrelationId,
+              traderspostWebhookCalled: false,  // INVARIANT: always false
+            }).catch((err: unknown) => {
+              // Fail-soft: shadow INSERT failure logs error but STILL skips TradersPost.
+              // The shadow invariant (never route) takes precedence over observability.
+              logger.error(
+                { err, sessionId, strategyId: sessionConfig.strategyId, symbol },
+                "Wave 29 Pass A.1: lifecycle_shadow_signals INSERT failed — still skipping TradersPost (invariant preserved)",
+              );
+            });
+
+            // Emit audit row: lifecycle.shadow_signal_logged
+            insertAuditRow({
+              action: "lifecycle.shadow_signal_logged",
+              entityType: "strategy",
+              entityId: sessionConfig.strategyId,
+              decisionAuthority: "system",
+              result: {
+                direction: config.side,
+                entry_price: bar.close,
+                intended_size: contextContracts,
+                killzone: detectedKillzone,
+                regime: (biasState as Record<string, unknown> | null)?.regimeLabel ?? null,
+                confluence_score: shadowConfluenceScore,
+                lifecycle_state: "SHADOW",
+                traderspost_webhook_called: false,
+                symbol,
+                bar_timestamp: bar.timestamp,
+                correlation_id: shadowCorrelationId,
+              } as Record<string, unknown>,
+              status: "info",
+              correlationId: shadowCorrelationId,
+            }).catch((err: unknown) =>
+              logger.warn({ err, sessionId }, "audit_log insert failed for lifecycle.shadow_signal_logged"),
+            );
+
+            // Emit SSE: signal:shadow_logged (per §10b — links bar → DB → SSE → audit)
+            broadcastSSE("signal:shadow_logged", {
+              sessionId,
+              strategyId: sessionConfig.strategyId,
+              symbol,
+              direction: config.side,
+              entryPrice: bar.close,
+              intendedSize: contextContracts,
+              killzone: detectedKillzone,
+              regime: (biasState as Record<string, unknown> | null)?.regimeLabel ?? null,
+              lifecycleState: "SHADOW",
+              traderspostWebhookCalled: false,
+              barTimestamp: bar.timestamp,
+              correlationId: shadowCorrelationId,
+            });
+
+            // RETURN EARLY — do NOT add to pendingEntryQueue, do NOT call TradersPost.
+            previousIndicators.set(prevKey, indicators);
+            span.setAttribute("shadow_signal_logged", true);
+            span.end();
+            return;
+          }
+        }
+        // ─── End Wave 29 Pass A.1 SHADOW intercept ───────────────────────────
 
         // Store the pending entry — execution deferred to bar N+1 in the next evaluateSignals call
         pendingEntryQueue.set(pendingKey, {

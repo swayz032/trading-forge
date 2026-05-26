@@ -4275,5 +4275,146 @@
     "learning_boundary": "challenger_only",
     "deployment_authority": "operator_only",
     "criticality": "observability"
+  },
+  {
+    "id": "shadow_stage",
+    "domain": "lifecycle",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Wave 29 Pass A.1 + A.3. SHADOW lifecycle stage sits between TESTING and PAPER — TradingView Pine alerts fire but TradersPost webhook is OFF (paper invariant: traderspost_webhook_called=false enforced at lifecycle_shadow_signals table level). paper-signal-service.ts shadow intercept block skips TradersPost + emits lifecycle.shadow_signal_logged + SSE signal:shadow_logged. Shadow-signal divergence checker (shadow-signal-divergence-checker.ts pure function + shadow-signal-divergence-loader.ts DB helper) wired into lifecycle-service.ts at SHADOW -> PAPER (Gate 2.5): >=5% divergence across >=20 signals BLOCKS promotion. Catches training-serving skew — institutional grade #1 failure mode (15-25% of all institutional model failures per AltStreet Quant 2.0 Dec 2025). Fail-soft contract: legacy/missing shadow_signals table -> lifecycle.shadow_divergence_check_unavailable_legacy + PROCEED.",
+    "data_sources": [
+      "lifecycle_shadow_signals",
+      "backtests"
+    ],
+    "reads_from": [
+      "lifecycle_shadow_signals",
+      "strategies",
+      "backtests"
+    ],
+    "writes_to": [
+      "lifecycle_shadow_signals",
+      "audit_log",
+      "strategies"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "lifecycle_shadow_signals"
+    ],
+    "audit_actions": [
+      "lifecycle.shadow_signal_logged",
+      "lifecycle.shadow_mode_inconsistency_warn",
+      "lifecycle.shadow_divergence_blocked",
+      "lifecycle.shadow_divergence_insufficient_samples",
+      "lifecycle.shadow_promotion_passed",
+      "lifecycle.shadow_divergence_check_unavailable_legacy"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "audit_log.lifecycle.shadow_*",
+      "SSE signal:shadow_logged",
+      "SSE lifecycle:shadow_divergence_evaluated"
+    ],
+    "scheduler_jobs": [],
+    "routes": [],
+    "engine_subsystems": [
+      "shadow-signal-divergence-checker.ts::compareShadowToBacktest",
+      "shadow-signal-divergence-loader.ts::loadDivergenceInputs",
+      "paper-signal-service.ts::shadowInterceptBlock",
+      "lifecycle-service.ts::gate2_5_shadow_to_paper"
+    ],
+    "database_tables": [
+      "lifecycle_shadow_signals",
+      "strategies"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": "audit_log",
+    "recovery_mode": "fail-soft",
+    "health_check": "src/server/__tests__/wave29-pass-a1-shadow-signals.test.ts + wave29-pass-a3-shadow-divergence.test.ts",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "audit_log_evidence",
+    "freshness_signals": [
+      "lifecycle_shadow_signals.created_at",
+      "audit_log.lifecycle.shadow_signal_logged"
+    ],
+    "evidence_queries": [
+      "SELECT COUNT(*) FROM lifecycle_shadow_signals WHERE created_at > NOW() - INTERVAL '7 days'",
+      "SELECT * FROM audit_log WHERE action LIKE 'lifecycle.shadow_%' ORDER BY created_at DESC LIMIT 10"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "production",
+    "deployment_authority": "operator_only",
+    "criticality": "high"
+  },
+  {
+    "id": "pbo_overfit_gate",
+    "domain": "backtest",
+    "owner_surface": "node-python",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Wave 29 Pass A.2. Probability of Backtest Overfitting hard gate at TESTING -> SHADOW and TESTING -> PAPER lifecycle transitions. Bailey et al. rank-based PBO via src/engine/pbo_gate.py (Python pure-functional rank correlation) + src/server/lib/pbo-gate.ts (lifecycle wrapper). Threshold via PBO_OVERFIT_THRESHOLD_PCT (default 0.15 — institutional 2026 standard, stricter than Wave 27.5 PBO_OVERFIT_THRESHOLD=0.5). walk_forward.py extended to emit pbo_overall + pbo_overall_p_value in output dict. Lifecycle blocks promotion when pbo_overall > threshold + emits lifecycle.pbo_overfit_block + lifecycle:pbo_evaluated SSE. Legacy backtests without pbo_overall -> PROCEED + lifecycle.pbo_unavailable_legacy warn (grandfather window).",
+    "data_sources": [
+      "backtests.walk_forward_results"
+    ],
+    "reads_from": [
+      "backtests",
+      "strategies"
+    ],
+    "writes_to": [
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "lifecycle.pbo_overfit_block",
+      "lifecycle.pbo_unavailable_legacy",
+      "walk_forward.pbo_computed",
+      "walk_forward.pbo_high_overfit_risk"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "audit_log.lifecycle.pbo_*",
+      "audit_log.walk_forward.pbo_*",
+      "SSE lifecycle:pbo_evaluated"
+    ],
+    "scheduler_jobs": [],
+    "routes": [],
+    "engine_subsystems": [
+      "src/engine/pbo_gate.py::compute_pbo",
+      "src/engine/walk_forward.py::aggregate_with_pbo",
+      "src/server/lib/pbo-gate.ts::evaluatePboGate",
+      "lifecycle-service.ts::testing_to_shadow_pbo",
+      "lifecycle-service.ts::testing_to_paper_pbo"
+    ],
+    "database_tables": [
+      "backtests"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": "audit_log",
+    "recovery_mode": "fail-soft",
+    "health_check": "src/engine/tests/test_wave29_pass_a2_pbo_gate.py + src/server/__tests__/wave29-pass-a2-pbo-gate.test.ts",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "audit_log_evidence",
+    "freshness_signals": [
+      "audit_log.walk_forward.pbo_computed"
+    ],
+    "evidence_queries": [
+      "SELECT * FROM audit_log WHERE action LIKE 'lifecycle.pbo_%' ORDER BY created_at DESC LIMIT 10"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "production",
+    "deployment_authority": "operator_only",
+    "criticality": "high"
   }
 ]

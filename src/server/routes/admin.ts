@@ -324,7 +324,7 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
             sourceUrl: `https://youtube.com/watch?v=${videoId}`,
             title,
           }),
-          signal: AbortSignal.timeout(180_000),
+          signal: AbortSignal.timeout(420_000), // v12 Gemma thinking mode + 32K ctx can take 4-6 min on RTX 5060 8GB
         });
         extractResult = await resp.json();
       } catch (e) {
@@ -335,6 +335,34 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
       if (!extractResult.extracted || !extractResult.ideas?.length) {
         results.push({ url, video_id: videoId, title, status: "not_extracted", reason: extractResult.reason });
         continue;
+      }
+
+      // Wave 26 Pass I v12 (2026-05-26) — Server-side speaker-vocabulary extraction.
+      // Gemma's training prior is stronger than any prompt mandate; it consistently
+      // emits v10 prose shape regardless of v11/v12 instructions. So instead of
+      // relying on Gemma to identify proprietary vocabulary, we scan the transcript
+      // server-side using NLP patterns and ATTACH the speaker_concepts to each idea
+      // BEFORE the route chain forwards them. The gemma-prose-to-v11 synthesizer
+      // then uses these concepts to build entry_sequence / stop_loss / targets /
+      // filters / indicators_used with the speaker's verbatim vocabulary.
+      try {
+        const { extractSpeakerConceptsFromTranscript } = await import("../lib/transcript-speaker-concepts.js");
+        const transcriptConcepts = extractSpeakerConceptsFromTranscript(transcript);
+        if (transcriptConcepts.length > 0) {
+          for (const idea of extractResult.ideas) {
+            // Don't override if Gemma actually emitted speaker_concepts (future-proofing)
+            const existing = (idea as Record<string, unknown>).speaker_concepts;
+            if (!Array.isArray(existing) || existing.length === 0) {
+              (idea as Record<string, unknown>).speaker_concepts = transcriptConcepts;
+            }
+          }
+          req.log?.info?.(
+            { video_id: videoId, concepts_found: transcriptConcepts.length, terms: transcriptConcepts.slice(0, 5).map(c => c.term) },
+            "operator-ingest: server-side speaker concepts attached"
+          );
+        }
+      } catch (conceptErr) {
+        req.log?.warn?.({ err: conceptErr instanceof Error ? conceptErr.message : String(conceptErr) }, "operator-ingest: speaker concept extraction failed (non-blocking)");
       }
 
       // ─── Wave 26 Pass H1 (2026-05-26) Bug 1 — Multi-Layer Archetype Merge ──
@@ -508,7 +536,14 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
       for (const idea of ideasToProcess) {
         const ideaName = (idea.name as string) || (idea.concept_name as string) || `operator_${videoId}`;
         const conceptName = (idea.concept_name as string) || ideaName;
-        const market = (idea.symbol as string) || (Array.isArray(idea.symbols) ? (idea.symbols[0] as string) : "MES");
+        // Wave 26 Pass I v12 (2026-05-26) — bug fix: prior logic returned undefined
+        // when idea.symbols was an empty array (fallback "MES" only fired when
+        // idea.symbols wasn't an array at all). z3Qn3fBoe2I exposed this:
+        // Gemma emitted symbols:[] → market undefined → /scout-ideas/pending 400.
+        const symbolFromArray = Array.isArray(idea.symbols) && (idea.symbols as unknown[]).length > 0
+          ? (idea.symbols[0] as string)
+          : null;
+        const market = (idea.symbol as string) || symbolFromArray || "MES";
 
         // Schema enforces min-length on entry/exit/risk rules. When LLM idea is
         // sparse (archetype with no entry_condition / no exit_params), pad with

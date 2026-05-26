@@ -55,9 +55,11 @@ function isForceCloud(): boolean {
  *      enforcement on gemma4 when think:false is explicitly set — omit entirely)
  *   5. Literal "Return JSON matching the schema." in user message
  *
- * qwen2.5-coder:7b available as override via env var when needed. */
+ * Bug 2026-05-26: bare "gemma4" returned `{"error":"model 'gemma4' not found"}`
+ * from Ollama (no gemma4:latest alias shipped). Default is now the tagged
+ * "gemma4:e2b" — matches the actual pulled model. */
 function getLocalTranscriptModel(): string {
-  return process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4";
+  return process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4:e2b";
 }
 
 /**
@@ -2352,15 +2354,65 @@ async function callOllamaForTranscriptExtractor(
   // TRANSCRIPT_EXTRACTOR_OLLAMA_KEEP_ALIVE (e.g. "1h", "0" to disable).
   const keepAlive = process.env.TRANSCRIPT_EXTRACTOR_OLLAMA_KEEP_ALIVE ?? "30m";
 
+  // Wave 26 Pass I v12 (2026-05-26) — Gemma 4 native THINKING MODE.
+  // Per Google's Gemma 4 control-token docs: thinking mode is activated by
+  // including the <|think|> control token in the system instruction with
+  // proper <|turn>system ... <turn|> wrapping.
+  //
+  // CRITICAL: Ollama's gemma4:e2b chat template is naked `{{ .Prompt }}` (no
+  // chat-template wrapping). So passing a system role via Ollama /api/chat
+  // does NOT auto-wrap with <|turn>system ... <turn|>. We must inject the
+  // Gemma 4 control tokens MANUALLY into the user-turn content so the model
+  // sees them in its input stream.
+  //
+  // Output parsing: strip everything between <|channel>thought and <channel|>
+  // before JSON.parse. The thought content must NOT be returned to the next
+  // turn per Google docs.
+  const ENABLE_GEMMA_THINKING = (process.env.TRANSCRIPT_EXTRACTOR_THINKING_MODE ?? "true").toLowerCase() === "true";
+
+  // Inject Gemma 4 thinking activation as PLAIN-TEXT instruction at the very
+  // top of the first user message. We do NOT inject raw <|turn>... markers
+  // because (a) Ollama's gemma4:e2b template is naked {{ .Prompt }} so those
+  // markers reach the model as literal text it doesn't know how to parse,
+  // and (b) raw control tokens trigger Ollama runner errors.
+  //
+  // Instead we instruct Gemma in NATURAL LANGUAGE to do step-by-step reasoning
+  // before JSON output. Gemma 4 is highly instructable per Google docs
+  // ("Adaptive Thought Efficiency using System Instructions" section).
+  const chatMessagesWithThinking = ENABLE_GEMMA_THINKING && chatMessages.length > 0
+    ? chatMessages.map((msg, idx) => {
+        if (idx === 0 && msg.role === "user") {
+          const preamble = "STEP 1 — THINK FIRST (do not skip this):\nBefore emitting JSON, write a brief 'reasoning_notes' section enumerating the speaker's proprietary vocabulary you noticed in the transcript. Look for:\n- Named tools/zones (e.g. 'the X Box', 'the Hidden Level', 'the Optimum Zone')\n- Named models/frameworks (e.g. 'IRS Model', 'Power of 3', 'CRT', 'the Box system')\n- Named entry steps (e.g. 'Change of State', 'Rebalance', 'Sweep')\n- Named filters (e.g. 'avoid skinny candles', 'no equal liquidity')\nEmit this reasoning AT THE TOP of your output as a JSON comment-like string `\"reasoning_notes\": \"<2-3 sentences listing speaker terms you found>\"` ABOVE the strategies array.\n\nSTEP 2 — EXTRACT TO JSON using those speaker terms in speaker_concepts.\n\n---\n\n";
+          return { role: msg.role, content: preamble + msg.content };
+        }
+        return msg;
+      })
+    : chatMessages;
+
   const startedAt = Date.now();
-  const res = await ollama.chat(model, chatMessages, samplingOptions, formatArg, keepAlive);
+  const res = await ollama.chat(model, chatMessagesWithThinking, samplingOptions, formatArg, keepAlive);
   const durationMs = Date.now() - startedAt;
 
-  const raw = res?.message?.content ?? "";
+  let raw = res?.message?.content ?? "";
   if (!raw || raw.trim().length === 0) {
     const e = new Error("Ollama returned empty response for transcript_extractor") as Error & { fallbackReason: string };
     e.fallbackReason = "ollama_empty_response";
     throw e;
+  }
+
+  // Strip Gemma 4 thought channel from raw response BEFORE JSON parse.
+  // Pattern (per Google Gemma 4 docs): <|channel>thought ... <channel|>
+  // Also handle variant: model may emit "<channel|>" without leading "<|channel>thought".
+  // Conservative: strip everything from first <|channel> up to and including <channel|>.
+  if (raw.includes("<|channel>") || raw.includes("<channel|>")) {
+    const beforeStrip = raw.length;
+    raw = raw.replace(/<\|channel>[\s\S]*?<channel\|>/g, "").trim();
+    // If still contains an orphan <channel|>, drop everything before it (just keep the response part)
+    if (raw.includes("<channel|>")) raw = raw.split("<channel|>").pop()?.trim() ?? raw;
+    if (raw.includes("<|channel>")) raw = raw.split("<|channel>")[0]?.trim() ?? raw;
+    // Strip any stray <|turn>...<turn|> wrappers Ollama left in
+    raw = raw.replace(/<\|turn>[a-z]+\s*/g, "").replace(/<turn\|>/g, "").trim();
+    logger.info({ stripped_chars: beforeStrip - raw.length, remaining: raw.length }, "model-router: stripped Gemma 4 thought channel");
   }
 
   // R3: JSON validation gate — if parse fails, record reason and throw
@@ -2439,7 +2491,8 @@ async function callOllamaForTranscriptExtractor(
         num_predict: samplingOptions.num_predict,
         model,
         provider: "ollama",
-        prompt_version: 11,
+        prompt_version: 12,
+        thinking_mode: ENABLE_GEMMA_THINKING,
       } as Record<string, unknown>,
       status: "success",
       decisionAuthority: "system",

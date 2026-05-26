@@ -8235,6 +8235,32 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 
 ---
 
+### Session Log — 2026-05-26 Wave 29 Pass A master close-out (architect LAST per §11)
+
+**Mission:** Close Wave 29 Pass A (SHADOW lifecycle stage + PBO overfit hard gate + shadow-signal divergence promotion gate) per §11a — reconcile the A.3 TODO, register new subsystems, run all CI gates, update CLAUDE.md / AGENT-LOGS / memory / audit row, push close-out commit.
+
+**Work completed:**
+- A.3 TODO reconciliation at `src/server/services/lifecycle-service.ts:1994` — replaced `const shadowStrategies: typeof strategies.$inferSelect[] = []` empty-array placeholder with real Drizzle query `await db.select().from(strategies).where(eq(strategies.lifecycleState, "SHADOW"))`. Gate 2.5 (SHADOW → PAPER divergence check) now operates on live SHADOW-state strategies instead of no-op stub.
+- Subsystem registry — registered `shadow_stage` (consolidating shadow_signals + paper-signal-service shadow branch + divergence checker + loader) and `pbo_overfit_gate` (Python `pbo_gate.py` + TS `pbo-gate.ts` lifecycle wrapper) in `docs/system-subsystem-registry.json`. `registrySubsystems` count went 59 → 61.
+- System Map sync — `npm run system-map:sync` regenerated `Trading Forge System Map v2.md` derived artifacts.
+- CI hard gates — `system-map:check` driftItems=[] EXIT 0; `production-isolation` CLEAN 0 violations EXIT 0; `2026-compliance` OK EXIT 0.
+- CLAUDE.md — §2 appended Wave 29 Pass A CLOSED paragraph (mirroring Pass C close); §12 added 2 SHADOW-stage hard-gate table entries (PBO < 15% TESTING → SHADOW/PAPER + Shadow-signal divergence < 5% SHADOW → PAPER); §13 added 2 Don't-list entries (don't bypass SHADOW lifecycle stage + don't route shadow_signals to TradersPost); §15 appended Wave 29 Pass A env vars block (PBO_OVERFIT_THRESHOLD_PCT=0.15 + SHADOW_DIVERGENCE_THRESHOLD_PCT=0.05 + SHADOW_DIVERGENCE_MIN_SAMPLE=20).
+- A.3 vitest suite re-verified GREEN (19/19) after TODO reconciliation — `src/server/__tests__/wave29-pass-a3-shadow-divergence.test.ts`.
+- Memory file `project_wave29_pass_a_complete_2026_05_26.md` written + MEMORY.md ★ CURRENT promoted (Pass C demoted).
+
+**Verification:**
+- A.3 vitest: 1 file, 19 tests, 19 passed.
+- Pass A combined test count preserved: 111 (57 A.1 + 12+23 A.2 + 19 A.3).
+- 3 CI hard gates: all exit 0 (system-map:check + production-isolation + 2026-compliance).
+- Reconciliation grep: `grep -n 'shadowStrategies' src/server/services/lifecycle-service.ts` confirms line 1994 is the real Drizzle query (no longer empty array).
+
+**Carry-forward for next session:**
+- Wave 29 Pass B (Frozen-Policy + Regime Retrain) and Pass D remain in plan `cryptic-watching-wombat.md` — evidence-gated per the 4-pass Wave 29 ladder. Pass B is the next operator candidate when shadow + PBO data accumulates.
+- Migration 0160 (lifecycle_shadow_signals table) idempotent — applied automatically by boot-migration-runner on next deploy; no operator action required.
+- Wave 28 Pass C (Three-Layer LIVE) still evidence-gated on 14 days of composite shadow data + ≥85% composite-vs-hard-gate agreement per `analyze-shadow-evidence.ts` — not affected by Pass A close.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)
