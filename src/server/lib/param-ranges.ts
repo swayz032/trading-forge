@@ -41,4 +41,8 @@ export const CANONICAL_PARAM_RANGES: Record<string, RangeMap> = {
   vwap_fade:             { atr_extension_threshold: [1.0, 3.0], confirmation_bars: [1, 5], vwap_touch_exit: [0, 1] },
   event_driven_fade:     { atr_move_threshold: [1.5, 4.0], event_window_minutes: [5, 30], confirmation_bars: [1, 3] },
   overnight_drift:       { drift_atr_threshold: [0.5, 2.0], asia_lookback_bars: [4, 24],  min_drift_bars: [2, 12] },
+  // bounce_off_level — MA-as-S/R archetype (price bounces off single MA).
+  // Distinct from ema_crossover (MA vs MA cross). Fixed routing 2026-05-26.
+  // ma_type is a string enum ("sma"|"ema") — not validated numerically here.
+  bounce_off_level:      { ma_period: [10, 250], proximity_atr_mult: [0.5, 3.0], swing_lookback: [3, 20], atr_period: [7, 21] },
 } as const;

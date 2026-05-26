@@ -262,6 +262,12 @@ export const FACTORY_EVENTS = {
   SCOUT_IDEA_EXTRACTED:       "factory:scout_idea_extracted",
   STRATEGY_CREATED:           "factory:strategy_created",
   FRAMEWORK_OVERLAY_APPLIED:  "factory:framework_overlay_applied",
+  // Wave 26 Pass G (2026-05-26) — broadcast on every signal fired from the
+  // two new engine archetypes (bounce_off_level, ict_bias_aligned_continuation).
+  // Dashboard consumers subscribe to this event for real-time archetype activity.
+  // Data shape: { strategy_id, correlation_id, direction, archetype, bar_timestamp }
+  // plus archetype-specific fields (see archetype-signal-audit.ts).
+  ARCHETYPE_SIGNAL_FIRED:     "factory:archetype_signal_fired",
 } as const;
 
 export type FactoryEventName = (typeof FACTORY_EVENTS)[keyof typeof FACTORY_EVENTS];

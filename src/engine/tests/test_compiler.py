@@ -169,7 +169,8 @@ class TestPatternLibrary:
     def test_list_patterns_returns_all(self):
         patterns = list_patterns()
         # 10 original + 3 (vwap_fade, event_driven_fade, overnight_drift) + 2 W25P5 (vwap_band_reject, anchored_vwap_retest)
-        assert len(patterns) == 15
+        # + 1 bounce_off_level (MA-as-S/R archetype, 2026-05-26)
+        assert len(patterns) == 16
         assert "sma_crossover" in patterns
         assert "rsi_reversal" in patterns
         assert "macd_crossover" in patterns
@@ -180,6 +181,8 @@ class TestPatternLibrary:
         # Wave 25 Pass 5 VWAP institutional archetypes
         assert "vwap_band_reject" in patterns
         assert "anchored_vwap_retest" in patterns
+        # bounce_off_level — MA-as-S/R signal class (2026-05-26)
+        assert "bounce_off_level" in patterns
 
     def test_validate_entry_params_directly(self):
         valid, errors = validate_entry_params("bollinger_breakout", {"period": 20, "std_dev": 2.0})

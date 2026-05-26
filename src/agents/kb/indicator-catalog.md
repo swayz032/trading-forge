@@ -98,6 +98,59 @@ Tools that buy strength and sell weakness. Best when ADX ≥ 25 or directional m
 - Don't trust signals when price is INSIDE the cloud — that is by definition no-edge territory.
 - Cloud thickness is a vol proxy. Thin cloud = mean-reverting, thick cloud = trending.
 
+### `bounce_off_level`
+**Description.** Price approaches a **single** moving average (SMA or EMA) acting as a dynamic support/resistance level, prints a rejection candle, and entry fires on the confirmation bar close.
+
+**Signal class: MA-as-S/R (NOT MA-vs-MA cross).** This is the correct indicator for concepts like:
+- "200 MA ceiling/floor", "50 SMA support", "100 EMA resistance"
+- "trendline bounce setup", "price tests MA and rejects"
+- "<N>_ma_<bounce|reject|holds|test>" concept names
+
+**DO NOT confuse with `ema_crossover`:** `ema_crossover` requires TWO MAs crossing each other (fast over/under slow). `bounce_off_level` uses ONE MA as a price level. If the research source describes price bouncing off a single MA, use `bounce_off_level`.
+
+**Required params:**
+| Param | Range | Default | Notes |
+|---|---|---|---|
+| `ma_period` | 10–250 | 200 | The MA period — 20/50/100/200 are the institutional defaults |
+
+**Optional params:**
+| Param | Range | Default | Notes |
+|---|---|---|---|
+| `proximity_atr_mult` | 0.5–3.0 | 1.0 | How close (in ATR units) price must get to the MA to qualify as a touch |
+| `swing_lookback` | 3–20 | 5 | Bars to look back for structural swing (stop placement) |
+| `atr_period` | 7–21 | 14 | ATR period for stop floor and proximity zone |
+
+**String params (not validated numerically):**
+- `ma_type`: `"sma"` or `"ema"` (default `"sma"`)
+- `direction`: `"ceiling"` | `"floor"` | `"both"` (default `"both"`)
+- `rejection_pattern`: `"wick_reject"` | `"engulfing"` | `"pin_bar"` | `"any_close_back_through"` (default `"any_close_back_through"`)
+
+**Best regime:** `TRENDING_UP`, `TRENDING_DOWN` (MA is rising/falling and acts as dynamic S/R); also works in `RANGE_BOUND` when MA is flat.
+**Worst regime:** `HIGH_VOL_MACRO` (MA loses its S/R significance when price gaps through levels).
+**Gotchas:**
+- The 200 SMA is the most respected institutional level — use `ma_period: 200` as your default for any "MA ceiling/floor" concept. The 50 SMA is the second most common.
+- ATR proximity filter (`proximity_atr_mult`) prevents entries when price approaches the MA without actually touching it — keeps you out of "near miss" setups.
+- Stop placement: structural swing + 1.5×ATR floor + 14pt MES ceiling (CLAUDE.md §4). If stop exceeds ceiling, skip the trade.
+- Confirmation bar prevents entries on the rejection candle itself (avoids chasing a wick).
+
+**Example DSL:**
+```json
+{
+  "name": "200_ma_ceiling_floor_mes_15m",
+  "entry_indicator": "archetype:bounce_off_level",
+  "entry_params": {
+    "ma_period": 200,
+    "ma_type": "sma",
+    "direction": "both",
+    "rejection_pattern": "any_close_back_through",
+    "proximity_atr_mult": 1.0
+  },
+  "direction": "both",
+  "symbol": "MES",
+  "timeframe": "15m"
+}
+```
+
 ---
 
 ## Category: MEAN REVERSION
@@ -416,6 +469,80 @@ Indicators with built-in adaptation to volatility or regime. Higher complexity b
 **Worst regime:** Strong `TRENDING` (divergences fail repeatedly in real trends).
 **Gotchas:**
 - Divergence is a confirmation signal, not a primary entry. Pair with a structural trigger (level break, volume spike).
+
+---
+
+## Category: ICT STRUCTURAL ARCHETYPES
+
+These are structural (detector-driven) archetypes registered in `ARCHETYPE_REGISTRY`.
+They compile via the `archetype:<name>` route — NOT via `pattern_library`. When you
+identify one of these patterns in a transcript, emit the archetype name as
+`entry_indicator` — do NOT try to shoehorn the pattern into a parametric indicator.
+
+### `ict_bias_aligned_continuation`
+**Description.** BIDIRECTIONAL by default. Fires LONG when HTF bias is bullish + 15m
+structure breaks bullish (BOS or CHoCH) + 5m FVG retest fires inside a killzone.
+Fires SHORT under the mirror-image bearish conditions.
+
+**Direction contract (critical for Gemma):**
+- The source video may show ONLY the short setup (4H bearish bias → 15m bearish BOS → 5m
+  bearish FVG retrace into premium zone). That is the bearish **leg** of this archetype.
+- The archetype is SYMMETRIC — it will fire longs when bias flips bullish. You must set
+  `direction: "both"` even if the source only shows one direction.
+- If you set `direction: "short"`, the long side is permanently disabled. Do not do this.
+
+**Signal sequence (both directions):**
+```
+LONG:  HTF bias = bullish (discount PD zone)
+       + recent bullish BOS or CHoCH (structure confirms shift)
+       + price retraces into unmitigated bullish FVG (entry trigger)
+       + current bar inside a killzone (NY AM / NY PM / London / Silver Bullet)
+
+SHORT: HTF bias = bearish (premium PD zone)
+       + recent bearish BOS or CHoCH
+       + price retraces into unmitigated bearish FVG
+       + current bar inside a killzone
+```
+
+**Anti-trend reject:** If HTF bias is bullish but a bearish BOS fires, the archetype
+does NOT take a short. Bias must align with the structure break direction.
+
+**Key distinction from silver_bullet:**
+- `silver_bullet` fires only in the 1-hour windows 10-11 AM, 2-3 PM, 3-4 AM ET.
+  It requires a displacement candle to validate the FVG.
+- `ict_bias_aligned_continuation` fires during ANY of the 4 ICT killzones
+  (NY AM 8-11, NY PM 1:30-4, London 2-5 AM, Silver Bullet windows).
+  It requires BOS/CHoCH to validate the directional bias alignment — no displacement candle required.
+
+**Key distinction from power_of_3:**
+- `power_of_3` requires an Asia session range, followed by a London Judas sweep.
+- `ict_bias_aligned_continuation` does NOT require a prior-session sweep.
+  It only needs HTF bias + LTF BOS + FVG.
+
+**DSL fields to emit:**
+```json
+{
+  "entry_indicator": "archetype:ict_bias_aligned_continuation",
+  "direction": "both",
+  "bias_timeframe": "4h",
+  "entry_long": "high < low",
+  "entry_short": "high < low"
+}
+```
+Both `entry_long` and `entry_short` are the never-true sentinel `"high < low"` because
+the archetype's detector path handles the actual signal — not a DSL expression.
+
+**Required params:** None — the archetype uses structural detection internally.
+**Best regime:** `TRENDING_UP` (for longs), `TRENDING_DOWN` (for shorts). Avoid `RANGE_BOUND`.
+**Worst regime:** `HIGH_VOL_MACRO` — FVGs form but fill too fast and the bias is noisy.
+**Gotchas:**
+- If you see a transcript describing "4H bias" + "15 minute structure break" + "5 minute
+  FVG entry" + "killzone filter", that is this archetype. Do not emit `ema_crossover`.
+- The source video may title the strategy "short setup" or "bearish setup". Ignore the
+  direction framing in the title — always emit `direction: "both"`.
+- Concept names that map here: `multi_confluence_short_setup`, `bias_aligned_short_continuation`,
+  `ict_short_continuation`, `bias_aligned_continuation`, `htf_bias_continuation`,
+  `4h_bias_structure_fvg`, `ict_3_layer_model`, `ict_multi_timeframe_continuation`.
 
 ---
 

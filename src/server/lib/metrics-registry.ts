@@ -158,3 +158,30 @@ export const cronJobsConcurrent = new Gauge({
   help: "Number of scheduler cron jobs currently executing",
   registers: [promRegistry],
 });
+
+// ─── Wave 26 Pass G archetype signal counters (2026-05-26) ────────────────────
+// Incremented by archetype-signal-audit.ts emitArchetypeSignalAudit() on every
+// signal fired from a Wave 26 Pass G archetype. Labels:
+//   archetype: "bounce_off_level" | "ict_bias_aligned_continuation"
+//   direction: "long" | "short"
+// Lets dashboards track signal rate per archetype + per direction without a
+// full audit_log query. Declared at registry init so Prometheus sees zero values
+// from first scrape (no "no data" gaps in Grafana).
+export const archetypeSignalsTotal = new Counter({
+  name: "tf_archetype_signals_total",
+  help: "Total archetype signal fires, labelled by archetype name and direction",
+  labelNames: ["archetype", "direction"] as const,
+  registers: [promRegistry],
+});
+
+// ─── Strategy source-URL resolution counter (2026-05-26) ──────────────────────
+// Incremented by getStrategySourceUrl (Wave 26 Pass G A3) on every resolution
+// attempt. label "path" carries: direct | variant_inheritance | audit_fallback |
+// multi_source | unresolved. Lets operators track which resolution path dominates
+// and catch "unresolved" spikes that indicate orphan-strategy accumulation.
+export const strategySourceResolutionTotal = new Counter({
+  name: "tf_strategy_source_resolution_total",
+  help: "Total strategy source-URL resolution calls, labelled by resolution path",
+  labelNames: ["path"] as const,
+  registers: [promRegistry],
+});

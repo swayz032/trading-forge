@@ -164,6 +164,26 @@ ENTRY_PATTERNS: dict[str, dict] = {
             "tolerance_ticks": (1, 10),          # proximity to AVWAP that counts as a touch
         },
     },
+    # bounce_off_level — MA-as-S/R signal class (price bounces off single MA).
+    # DISTINCT from ema_crossover (MA vs MA cross): here ONE MA acts as a dynamic
+    # S/R level.  Closed the graduation gap for the 6 mis-mapped MA-as-S/R
+    # strategies that previously routed to ema_crossover (2026-05-26).
+    "bounce_off_level": {
+        "description": (
+            "Price approaches a single moving average (SMA or EMA) and rejects off it. "
+            "Long: price approaches MA from below, prints rejection candle, enters on confirmation bar. "
+            "Short: price approaches MA from above, prints rejection candle, enters on confirmation bar. "
+            "DIFFERENT from ema_crossover — single MA as dynamic S/R, not two MAs crossing."
+        ),
+        "required_params": ["ma_period"],
+        "optional_params": ["ma_type", "proximity_atr_mult", "swing_lookback", "atr_period"],
+        "param_ranges": {
+            "ma_period": (10, 250),
+            "proximity_atr_mult": (0.5, 3.0),
+            "swing_lookback": (3, 20),
+            "atr_period": (7, 21),
+        },
+    },
 }
 
 

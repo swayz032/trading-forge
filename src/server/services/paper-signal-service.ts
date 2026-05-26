@@ -4260,6 +4260,60 @@ export async function evaluateSignals(
           correlationId,
         });
 
+        // ─── Wave 26 Pass G A.4: Archetype signal-fire audit hook ────────────
+        // Fire-and-forget — never blocks the entry path.
+        // Fires for bounce_off_level and ict_bias_aligned_continuation only when
+        // an entry signal has passed all gates (riskGatePassed === true).
+        // entry_indicator is "archetype:<name>" on graduated archetype strategies.
+        try {
+          const rawConfigForArchetype = config as unknown as Record<string, unknown>;
+          const entryIndicatorForAudit = rawConfigForArchetype.entry_indicator as string | undefined;
+          if (typeof entryIndicatorForAudit === "string" && entryIndicatorForAudit.startsWith("archetype:")) {
+            const archetypeName = entryIndicatorForAudit.slice("archetype:".length);
+            const entryParamsForAudit = (rawConfigForArchetype.entry_params ?? {}) as Record<string, unknown>;
+            const barTs = typeof bar.timestamp === "number"
+              ? new Date(bar.timestamp).toISOString()
+              : typeof bar.timestamp === "string" ? bar.timestamp : new Date().toISOString();
+            const signalDirection = (config.side === "short" ? "short" : "long") as "long" | "short";
+
+            if (archetypeName === "bounce_off_level") {
+              const { emitBounceOffLevelSignal } = await import("../lib/archetype-signal-audit.js");
+              emitBounceOffLevelSignal({
+                strategy_id:       sessionConfig.strategyId,
+                correlation_id:    correlationId ?? null,
+                direction:         signalDirection,
+                ma_type:           typeof entryParamsForAudit.ma_type === "string" ? entryParamsForAudit.ma_type : "sma",
+                ma_period:         typeof entryParamsForAudit.ma_period === "number" ? entryParamsForAudit.ma_period : 200,
+                rejection_pattern: typeof entryParamsForAudit.rejection_pattern === "string" ? entryParamsForAudit.rejection_pattern : "any_close_back_through",
+                bar_timestamp:     barTs,
+              });
+            } else if (archetypeName === "ict_bias_aligned_continuation") {
+              const { emitIctBiasAlignedContinuationSignal } = await import("../lib/archetype-signal-audit.js");
+              // htf_bias: derived from signal direction (ICT archetype ONLY fires when
+              // HTF bias aligns with trade direction — this is the core archetype invariant).
+              // structure_break_type, fvg_age_bars, killzone: bar-time Python values not
+              // available in TS signal service. Emit best-effort defaults; Python compute()
+              // has already validated these conditions before setting entry_long/entry_short.
+              emitIctBiasAlignedContinuationSignal({
+                strategy_id:          sessionConfig.strategyId,
+                correlation_id:       correlationId ?? null,
+                direction:            signalDirection,
+                htf_bias:             signalDirection === "long" ? "bullish" : "bearish",
+                structure_break_type: (entryParamsForAudit.structure_break_type as "BOS" | "CHoCH" | undefined) ?? "BOS",
+                fvg_age_bars:         typeof entryParamsForAudit.fvg_age_bars === "number" ? entryParamsForAudit.fvg_age_bars : 0,
+                killzone:             typeof entryParamsForAudit.killzone === "string" ? entryParamsForAudit.killzone : "unknown",
+                bar_timestamp:        barTs,
+              });
+            }
+          }
+        } catch (archetypeAuditErr: unknown) {
+          // Fire-and-forget — never rethrows; audit failure MUST NOT reach the entry path
+          logger.warn(
+            { err: String(archetypeAuditErr), sessionId, symbol },
+            "paper-signal-service: archetype signal audit hook failed (non-blocking)",
+          );
+        }
+
         span.setAttribute("pending_entry_queued", true);
         span.setAttribute("signal_bar", bar.timestamp);
         logger.info(

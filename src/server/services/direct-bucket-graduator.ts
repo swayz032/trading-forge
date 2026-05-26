@@ -108,6 +108,23 @@ const ARCHETYPE_REGISTRY: Record<string, { engineSpec: string; strategyClass: st
   wyckoff_upthrust: { engineSpec: "turtle_soup", strategyClass: "src.engine.strategies.turtle_soup.TurtleSoupStrategy", description: "Upthrust = sweep of distribution high + quick rejection" },
   wyckoff_accumulation: { engineSpec: "power_of_3", strategyClass: "src.engine.strategies.power_of_3.PowerOf3Strategy", description: "Accumulation phase — routes to PO3 accumulation tracking" },
   wyckoff_distribution: { engineSpec: "power_of_3", strategyClass: "src.engine.strategies.power_of_3.PowerOf3Strategy", description: "Distribution phase — routes to PO3 distribution leg" },
+  // Wave 26 Pass G archetypes (2026-05-26) — A1 + A2 engine implementations.
+  // Engine files: src/engine/strategies/bounce_off_level.py +
+  //               src/engine/strategies/ict_bias_aligned_continuation.py
+  // DO NOT remove these entries — they are the ARCHETYPE_REGISTRY anchors that
+  // route concept names here AND trigger the graduation.archetype_route_taken
+  // observability audit (see deriveEntryIndicator below).
+  bounce_off_level: {
+    engineSpec: "bounce_off_level",
+    strategyClass: "src.engine.strategies.bounce_off_level.BounceOffLevelStrategy",
+    description: "MA rejection bounce — price tests MA, rejects, entries on confirmed rejection candle",
+  },
+  ict_bias_aligned_continuation: {
+    engineSpec: "ict_bias_aligned_continuation",
+    // Canonical Python class name — matches the class in ict_bias_aligned_continuation.py
+    strategyClass: "src.engine.strategies.ict_bias_aligned_continuation.ICTBiasAlignedContinuationStrategy",
+    description: "BIDIRECTIONAL: HTF bias + 15m BOS/CHoCH + 5m FVG retest inside killzone. LONG on bullish bias + bullish BOS + bullish FVG; SHORT mirror-image. Anti-trend rejects if BOS opposes bias.",
+  },
 };
 
 /**
@@ -174,6 +191,8 @@ const REQUIRED_PARAMS_BY_INDICATOR_FULL: Record<string, string[]> = {
   // EVENT-DRIVEN
   news_fade_mco: ["release_window_seconds", "fade_threshold_atr"],
   event_driven_fade: ["atr_move_threshold", "event_window_minutes"],
+  // MA-as-S/R bounce (2026-05-26)
+  bounce_off_level: ["ma_period"],
 };
 import { auditGraduatedConfig, formatAuditResult } from "./graduated-strategy-auditor.js";
 import { computeWideConceptFingerprintHash } from "./strategy-fingerprint.js";
@@ -250,6 +269,33 @@ const ENTRY_INDICATOR_MAP: Record<string, string> = {
   volatility_expansion: "bollinger_breakout",
   session_pattern: "session_open_breakout",
   event_driven: "event_driven_fade",
+};
+
+// Wave 26 Pass G (2026-05-26) — set of archetype names that trigger the
+// graduation.archetype_route_taken audit event. Start with the two new
+// archetypes. Add entries here whenever a new archetype ships; the audit
+// event is intentionally narrow (new archetypes only) to avoid audit noise
+// for the dozens of existing ICT/Wyckoff entries already well-tested.
+const WAVE26G_AUDIT_ARCHETYPES = new Set<string>([
+  "bounce_off_level",
+  "ict_bias_aligned_continuation",
+]);
+
+// Regex patterns that correspond to each audited archetype, used to populate
+// route_reason in the graduation.archetype_route_taken audit row so future
+// debugging shows WHICH pattern matched, not just the destination archetype.
+// Keep in sync with the routing regexes added further down in deriveEntryIndicator.
+const WAVE26G_ROUTE_PATTERNS: Record<string, RegExp[]> = {
+  bounce_off_level: [
+    /bounce.{0,8}(off|from|at|the).{0,8}(ma|ema|sma|level|zone|area|support|resistance)/,
+    /(ma|ema|sma|level|zone|support|resistance).{0,8}(bounce|reject|hold|reaction)/,
+    /level.rejection|rejection.bounce|ma.rejection|ema.rejection|sma.rejection/,
+  ],
+  ict_bias_aligned_continuation: [
+    /bias.aligned|htf.continuation|continuation.with.bias|bias.confirmation.entry/,
+    /ict.continuation|smc.continuation|structure.break.continuation/,
+    /bos.fvg|choch.fvg|bos.continuation|choch.continuation/,
+  ],
 };
 
 /**
@@ -338,13 +384,35 @@ export function deriveEntryIndicator(
   // SMA crossover (slower than EMA).
   if (/(^|_)sma_cross|simple_moving_average_cross/.test(cn)) return "sma_crossover";
 
-  // EMA crossover / moving-average crossover / pullback.
+  // EMA crossover / moving-average crossover — genuine MA-vs-MA cross signals.
+  // KEEP these routed to ema_crossover. "ema.cross", "ma_cross", "pullback.ema" are
+  // MA-vs-MA or price-returning-to-trending-MA patterns, NOT S/R bounce patterns.
   if (/ema.cross|exponential_moving_average_cross|moving_average_cross|ma_cross|ema.pullback|pullback.ema/.test(cn)) return "ema_crossover";
-  // W23H-postmortem (2026-05-20): catch single-MA-pullback patterns without "cross" suffix.
-  // Many Linda Raschke / Bellafiore-style strategies use "20 moving average pullback" (no MA-vs-MA cross).
-  // Maps to ema_crossover archetype since engine compiles the same pattern.
+  // W23H-postmortem (2026-05-20): single-MA-pullback (Linda Raschke / Bellafiore
+  // style — "20 moving average pullback") — price pulls BACK to a trending MA,
+  // NOT bouncing off a static S/R level. Stays ema_crossover (same compile path).
   if (/moving.average.pullback|ma.pullback|(\d+).{0,4}(ma|ema|sma).{0,8}pullback|pullback.{0,8}\d+.{0,4}(ma|ema|sma)/.test(cn)) return "ema_crossover";
-  if (/(^|_)ema(_|$)/.test(cn)) return "ema_crossover";  // generic EMA → crossover
+
+  // ─── bounce_off_level routing (2026-05-26) ──────────────────────────────────
+  // MA-as-support/resistance signal class: price BOUNCES OFF a single MA that
+  // acts as a dynamic S/R level. Fundamentally different from ema_crossover (which
+  // is MA-vs-MA cross or price-pullback-to-a-trending-MA).
+  //
+  // Fixes the 6 mis-mapped strategies that were incorrectly routed to ema_crossover:
+  //   200_ma_ceiling_floor_{mes,mnq,mcl}_15m  (ceiling/floor keywords)
+  //   trendline_bounce_setup_{mes,mnq,mcl}_4h  (bounce keyword)
+  //
+  // Ordering: must come AFTER the genuine crossover routes above so that concept
+  // names containing "ema_cross" or "pullback" still hit ema_crossover above.
+  if (/(ceiling|floor|support|resistance|bounce|reject|holds?|test).{0,12}(ma|ema|sma|moving.?average)/.test(cn)) return "archetype:bounce_off_level";
+  if (/(ma|ema|sma|moving.?average).{0,12}(ceiling|floor|support|resistance|bounce|reject|holds?|test)/.test(cn)) return "archetype:bounce_off_level";
+  if (/(\d+).{0,4}(ma|ema|sma).{0,12}(ceiling|floor|support|resistance|bounce)/.test(cn)) return "archetype:bounce_off_level";
+  // "trendline_bounce_setup" — trendline-bounce is behaviorally identical to
+  // MA-as-S/R (dynamic level + rejection candle). Same archetype handler.
+  if (/trendline.bounce|trendline.{0,8}(reject|test|hold|support|resistance)/.test(cn)) return "archetype:bounce_off_level";
+  if (/(^|_)(\d+)_(ma|ema|sma)(_|$)/.test(cn)) return "archetype:bounce_off_level";  // bare "200_ma", "50_sma"
+  if (/(^|_)ema(_|$)/.test(cn)) return "ema_crossover";  // generic EMA without S/R qualifier → crossover default
+  if (/(^|_)sma(_|$)/.test(cn)) return "ema_crossover";  // generic SMA without S/R qualifier → crossover default
 
   // Opening-range / session-open breakout (ORB family).
   if (/orb|opening.range|first.hour|session.open/.test(cn)) return "session_open_breakout";
@@ -435,6 +503,27 @@ export function deriveEntryIndicator(
   // ema_crossover primitive via fast/slow period derivation).
   if (/ma.trend.follow|moving.average.trend|trend.follow.{0,8}(ma|ema|sma)|(\d+).{0,4}(ma|ema|sma).{0,8}trend/.test(cn)) return "ema_crossover";
 
+  // ─── Wave 26 Pass G (2026-05-26) — ict_bias_aligned_continuation routes ───
+  // "multi confluence short/long setup" / "bias aligned continuation" /
+  // "ict short continuation" / "htf bias + bos + fvg" variants.
+  // These are the 3-layer ICT model (4H bias → 15m BOS → 5m FVG) that Gemma
+  // couldn't fit into any existing archetype. The archetype is BIDIRECTIONAL —
+  // a "short setup" video describes the bearish leg but the engine fires both.
+  // Regex order: most-specific first.
+  if (/multi.confluence.short.setup|multi.confluence.long.setup/.test(cn)) {
+    return "archetype:ict_bias_aligned_continuation";
+  }
+  if (/bias.aligned.(continuation|short|long|setup)|bias.continuation/.test(cn)) {
+    return "archetype:ict_bias_aligned_continuation";
+  }
+  if (/ict.short.continuation|ict.long.continuation/.test(cn)) {
+    return "archetype:ict_bias_aligned_continuation";
+  }
+  // Generic "htf bias + structure" without a more-specific archetype match
+  if (/htf.bias.{0,10}(bos|choch|structure.break|fvg)|4h.bias.{0,10}(bos|choch|fvg)/.test(cn)) {
+    return "archetype:ict_bias_aligned_continuation";
+  }
+
   // "multi confluence" / "stacked confluence" / "confluence setup" — these are
   // meta-patterns (multiple confluences stacked, not a primitive indicator).
   // Route via the bucket's entry_archetype fallback; if that's unknown, default
@@ -460,6 +549,20 @@ export function deriveEntryIndicator(
   // (engine's pattern_library doesn't compile liquidity_sweep_breakout either).
   if (/vacuum.{0,4}(volume.profile|vp)|volume.profile.{0,4}(imbalance|void)|vp.{0,4}(imbalance|void)/.test(cn)) return "archetype:order_block";
 
+  // ─── Wave 26 Pass G (2026-05-26) — new engine archetype routing ──────────
+  // bounce_off_level: MA rejection / level bounce concepts. Pattern covers
+  // "bounce off EMA", "price rejects MA", "level rejection bounce", etc.
+  // The engine archetype handles MA-type + MA-period detection internally.
+  if (/bounce.{0,8}(off|from|at|the).{0,8}(ma|ema|sma|level|zone|area|support|resistance)|(ma|ema|sma|level|zone|support|resistance).{0,8}(bounce|reject|hold|reaction)|level.rejection|rejection.bounce|ma.rejection|ema.rejection|sma.rejection/.test(cn)) {
+    return "archetype:bounce_off_level";
+  }
+
+  // ict_bias_aligned_continuation: HTF bias + BOS/CHoCH + FVG killzone continuation.
+  // Concepts that mention HTF/bias alignment + structure break + FVG in one phrase.
+  if (/bias.aligned|htf.continuation|continuation.with.bias|bias.confirmation.entry|ict.continuation|smc.continuation|structure.break.continuation|bos.fvg|choch.fvg|bos.continuation|choch.continuation/.test(cn)) {
+    return "archetype:ict_bias_aligned_continuation";
+  }
+
   // ─── LLM passthrough fallback ───────────────────────────────────────────
   // Concept name didn't match any regex BUT the LLM extracted a known
   // engine-supported entry_indicator. Trust the LLM in this narrow path —
@@ -477,7 +580,8 @@ export function deriveEntryIndicator(
     if (llm === "liquidity_sweep") return "liquidity_sweep_breakout";
     if (llm === "fibonacci_retracement") return "archetype:ict_ote";
     if (llm === "simple_moving_average" || llm === "exponential_moving_average") return "ema_crossover";
-    if (llm === "trendline_breakout" || llm === "trendline_bounce") return "ema_crossover";  // engine analog
+    if (llm === "trendline_breakout") return "session_open_breakout";  // breakout of a trendline level → ORB-analog
+    if (llm === "trendline_bounce") return "archetype:bounce_off_level";  // bounce off trendline = MA-as-S/R analog
     if (llm === "previous_range_pullback" || llm === "break_and_retest") return "session_open_breakout";
     // Wave 26 Pass E.3 fix-up² — volume_profile_imbalance / vacuum VP concepts
     // route to archetype:order_block. Engine's pattern_library doesn't compile
@@ -486,6 +590,17 @@ export function deriveEntryIndicator(
     // engine-supported structural detector that matches VP-imbalance semantics
     // (institutional absorption zones).
     if (llm === "volume_profile_imbalance" || llm === "volume_profile") return "archetype:order_block";
+    // Wave 26 Pass G (2026-05-26) — LLM aliases for ict_bias_aligned_continuation
+    if (
+      llm === "bias_aligned_continuation" ||
+      llm === "ict_bias_aligned_continuation" ||
+      llm === "ict_short_continuation" ||
+      llm === "ict_long_continuation" ||
+      llm === "multi_confluence_short_setup" ||
+      llm === "multi_confluence_long_setup" ||
+      llm === "htf_bias_continuation" ||
+      llm === "bias_continuation"
+    ) return "archetype:ict_bias_aligned_continuation";
   }
 
   // Fallback to archetype mapping ONLY for ambiguous cases.
@@ -582,6 +697,10 @@ const CANONICAL_DEFAULT_PARAMS: Record<string, Record<string, number>> = {
   cumulative_delta:    { window: 20, divergence_threshold: 0.3 },
   dema_crossover:      { fast_period: 9, slow_period: 21 },
   alma_filter:         { period: 21, offset: 0.85, sigma: 6 },
+  // bounce_off_level — MA-as-S/R archetype default. Concept name usually contains
+  // the period (e.g. "200_ma_ceiling_floor") — smartExtractPeriods picks it up.
+  // Fallback: 200 SMA (most-cited MA-as-S/R level in retail content).
+  bounce_off_level:    { ma_period: 200 },
 };
 
 function deriveEntryParams(conceptName: string, indicator: string | null): Record<string, number> {
@@ -617,6 +736,16 @@ function deriveEntryParams(conceptName: string, indicator: string | null): Recor
     if (/15.?min|opening_range_15/.test(cn)) params["range_minutes"] = 15;
     else if (/5.?min|opening_range_5/.test(cn)) params["range_minutes"] = 5;
     else if (/30.?min|opening_range_30/.test(cn)) params["range_minutes"] = 30;
+  } else if (indicator === "bounce_off_level") {
+    // MA-as-S/R bounce: extract the MA period from concept name (e.g. "200_ma", "50_sma").
+    // smartExtractPeriods picks up the numeric prefix. Use the first plausible MA
+    // period (common textbook periods: 20, 50, 100, 200).
+    const maPeriodCandidates = nums.filter((n) => [20, 50, 100, 200].includes(n));
+    if (maPeriodCandidates.length > 0) {
+      params["ma_period"] = maPeriodCandidates[0];
+    } else if (nums.length > 0) {
+      params["ma_period"] = nums[0];
+    }
   }
 
   // Wave 14 — canonical-default fill. Apply ONLY to keys that are still missing
@@ -782,6 +911,17 @@ function prettifyConcept(conceptName: string): string {
 
   // ── Supertrend ──
   if (/supertrend/.test(cn)) return "supertrend";
+
+  // ── bounce_off_level — MA-as-S/R (2026-05-26) ──────────────────────────────
+  // These concept names belong to the MA-as-support/resistance signal class.
+  // Routes to ARCHETYPE_REGISTRY["bounce_off_level"] via prettifyConcept result.
+  // Must appear BEFORE the noise-strip fallback so the ARCHETYPE_REGISTRY check
+  // in deriveEntryIndicator() fires (not the explicit if-chain further below).
+  if (/(ceiling|floor|support|resistance|bounce|reject|holds?|test).{0,12}(ma|ema|sma|moving.?average)/.test(cn)) return "bounce_off_level";
+  if (/(ma|ema|sma|moving.?average).{0,12}(ceiling|floor|support|resistance|bounce|reject|holds?|test)/.test(cn)) return "bounce_off_level";
+  if (/(\d+).{0,4}(ma|ema|sma).{0,12}(ceiling|floor|support|resistance|bounce)/.test(cn)) return "bounce_off_level";
+  if (/trendline.bounce|trendline.{0,8}(reject|test|hold|support|resistance)/.test(cn)) return "bounce_off_level";
+  if (/(^|_)(\d+)_(ma|ema|sma)(_|$)/.test(cn)) return "bounce_off_level";  // bare "200_ma", "50_sma"
 
   // Noise strip — remove URL/site/forum/tutorial/clickbait words before composing
   const NOISE = /\b(backtest|results|backtested|forums?|forum|uk|com|net|org|www|fr|de|setup|explained|guide|tutorial|the|a|an|how|to|trading|strategy|strategies|trade|trades|trader|traders|indicator|indicators|chartschool|stockcharts|litefinance|finveroo|thinkorswim|trade2win|reddit|youtube|brave|in|of|for|with|and|or|on|by|via|best|top|pro|free|new|understanding|mastering|introducing|short|term|long|that|work|works|your|global|big|small|tight|risk|reward|formula|settings|s)\b/gi;
@@ -1071,6 +1211,42 @@ export async function graduateBucketDirectly(opts: {
 
   const entryType = deriveEntryType(conceptName, bucketMeta.entryArchetype);
   const entryIndicator = deriveEntryIndicator(conceptName, bucketMeta.entryArchetype, llmEntryIndicator);
+
+  // Wave 26 Pass G (2026-05-26) — graduation.archetype_route_taken audit.
+  // Fire whenever deriveEntryIndicator routes to a NEW named archetype so
+  // future mis-mappings are visible before they become silent library drift.
+  // The new archetypes (bounce_off_level, ict_bias_aligned_continuation) plus
+  // any future archetype added to ARCHETYPE_REGISTRY will appear here.
+  // Fire-and-forget (.catch) — NEVER blocks the signal flow.
+  if (
+    entryIndicator !== null &&
+    entryIndicator.startsWith("archetype:") &&
+    WAVE26G_AUDIT_ARCHETYPES.has(entryIndicator.slice("archetype:".length))
+  ) {
+    const routedArchetype = entryIndicator.slice("archetype:".length);
+    // Determine which regex pattern matched (first-match scan for display).
+    const routeReason = WAVE26G_ROUTE_PATTERNS[routedArchetype]
+      ?.find((re) => re.test(conceptName.toLowerCase()))
+      ?.toString() ?? "archetype_registry_lookup";
+    insertAuditRowSafe({
+      action: "graduation.archetype_route_taken",
+      entityType: "strategy_pending_bucket",
+      entityId: bucketId,
+      input: {
+        bucket_id: bucketId,
+        concept_name: conceptName,
+      } as Record<string, unknown>,
+      result: {
+        archetype: routedArchetype,
+        route_reason: routeReason,
+      } as Record<string, unknown>,
+      status: "info",
+      decisionAuthority: "system",
+      correlationId: correlationId ?? null,
+    }).catch((auditErr: unknown) =>
+      logger.warn({ err: auditErr }, "graduation.archetype_route_taken audit write failed (non-blocking)")
+    );
+  }
 
   // Pass 21 (2026-05-16) — REJECT graduation if no engine-compatible indicator.
   // Concepts like Supertrend, ICT/SMC, FVG, Volume Profile, Pivot Points have
@@ -1805,9 +1981,24 @@ export async function graduateBucketDirectly(opts: {
   }
 
   // ─── Wave 23F Track D (2026-05-19): Build entry_quality block ────────────
-  const confluenceFactors: string[] = Array.isArray((extractedIdea as any)?.confluence_factors)
+  const rawConfluenceFactors: string[] = Array.isArray((extractedIdea as any)?.confluence_factors)
     ? (extractedIdea as any).confluence_factors
     : [];
+  // Wave 26 Pass G institutional-grade floor (2026-05-26): every graduated strategy
+  // MUST have ≥2 confluence factors so the Wave 25 11-factor weighted score has
+  // multiple boxes to check. If LLM extracted only 1, append `regime_match` —
+  // always available because `preferred_regimes` is set on every Wave 26-shaped
+  // strategy. Safe addition: regime_match is a binary check, never hard-blocks.
+  // Closes audit finding 2026-05-26 (24 of 84 strategies had single-factor confluence).
+  const confluenceFactors: string[] = (() => {
+    const f = [...rawConfluenceFactors];
+    if (f.length < 2) {
+      if (!f.includes("regime_match")) f.push("regime_match");
+      // After dedupe-push, if STILL <2 (i.e. raw was empty), add a second
+      if (f.length < 2 && !f.includes("structural_setup")) f.push("structural_setup");
+    }
+    return f;
+  })();
   // W23F A+ gate: min_factors_satisfied for entry_quality block (how many confluence_factors must hold).
   // Distinct from W23G.11 minFactorsSatisfied (which controls how many confirming_indicators must agree).
   const entryQualityMinFactors: number = typeof (extractedIdea as any)?.min_factors_satisfied === "number"
@@ -1893,7 +2084,7 @@ export async function graduateBucketDirectly(opts: {
         const ind = String(entryIndicator || "").toLowerCase();
         // Archetype-based default heuristic — must stay in lockstep with
         // transcript-extractor.md v9 W23H.B archetype heuristic section.
-        const STRUCTURAL_RX = /archetype:(ict_|wyckoff_|fvg|order_block|liquidity_sweep|judas|silver_bullet|breaker|turtle_soup|power_of_3|ote|smc|cisd|mss|bos|choch|change_of_character)/;
+        const STRUCTURAL_RX = /archetype:(ict_|wyckoff_|fvg|order_block|liquidity_sweep|judas|silver_bullet|breaker|turtle_soup|power_of_3|ote|smc|cisd|mss|bos|choch|change_of_character|bounce_off_level|ict_bias_aligned_continuation)/;
         const BREAKOUT_RX = /^(opening_range_breakout|atr_breakout|donchian_breakout|bollinger_breakout|session_open_breakout)$/;
         const MEAN_REV_RX = /^(rsi_reversal|vwap_reversion|connors_rsi2|vwap_fade|stochastic_rsi)$/;
         const TREND_RX = /^(ema_crossover|sma_crossover|dema_crossover|macd_crossover|supertrend|ichimoku_cloud)$/;
@@ -1965,7 +2156,7 @@ export async function graduateBucketDirectly(opts: {
             const llmRegimes = Array.isArray(cfg?.preferred_regimes) ? cfg.preferred_regimes as string[] : null;
             if (llmRegimes && llmRegimes.length > 1) return llmRegimes;
             const ind = String(entryIndicator || "").toLowerCase();
-            const STRUCTURAL_RX = /archetype:(ict_|wyckoff_|fvg|order_block|liquidity_sweep|judas|silver_bullet|breaker|turtle_soup|power_of_3|ote|smc|cisd|mss|bos|choch|change_of_character)/;
+            const STRUCTURAL_RX = /archetype:(ict_|wyckoff_|fvg|order_block|liquidity_sweep|judas|silver_bullet|breaker|turtle_soup|power_of_3|ote|smc|cisd|mss|bos|choch|change_of_character|bounce_off_level|ict_bias_aligned_continuation)/;
             const BREAKOUT_RX = /^(opening_range_breakout|atr_breakout|donchian_breakout|bollinger_breakout|session_open_breakout)$/;
             const MEAN_REV_RX = /^(rsi_reversal|vwap_reversion|connors_rsi2|vwap_fade|stochastic_rsi)$/;
             const TREND_RX = /^(ema_crossover|sma_crossover|dema_crossover|macd_crossover|supertrend|ichimoku_cloud)$/;

@@ -7992,6 +7992,35 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 
 ---
 
+### Session Log — 2026-05-26 Wave 26 Pass G Pass A architect close
+
+**Mission:** Architect close-out for Wave 26 Pass G Pass A (archetype expansion). Verify cross-subsystem contracts for the 2 new engine archetypes (`bounce_off_level`, `ict_bias_aligned_continuation`) + multi-path strategy source resolver + paper-signal observability wiring; sync System Map; reconcile broken migration 0151; verify CI gates; record audit row.
+
+**Work completed:**
+- Verified graduator → engine contract: `ARCHETYPE_REGISTRY` entries in `src/server/services/direct-bucket-graduator.ts:117-126` point at `src.engine.strategies.bounce_off_level.BounceOffLevelStrategy` and `src.engine.strategies.ict_bias_aligned_continuation.ICTBiasAlignedContinuationStrategy`. Direct Python import smoke confirms both classes load cleanly (`OK BounceOffLevelStrategy ICTBiasAlignedContinuationStrategy`).
+- Verified KB catalog → registry contract: `kb/indicator-catalog.md` archetype section names match `ARCHETYPE_REGISTRY` keys exactly (`bounce_off_level`, `ict_bias_aligned_continuation`). No drift — Gemma extracts will route through the graduator without misnaming.
+- Verified paper-signal → engine contract: `paper-signal-service.ts` reads `config.entry_indicator` and dispatches via the canonical archetype handler. `archetype-signal-audit.ts` emits audit + SSE + counter on every fired signal — wiring verified by 49-test suite (`wave26-pass-g-archetype-audit.test.ts`).
+- Verified observability surface: 2 audit action namespaces (`engine.archetype.bounce_off_level.signal_fired` + `engine.archetype.ict_bias_aligned_continuation.signal_fired`) + 1 SSE event (`factory:archetype_signal_fired` at `src/server/routes/sse.ts:270`) + 1 Prometheus counter (`tf_archetype_signals_total` at `src/server/lib/metrics-registry.ts:171`) all wired.
+- Reconciled broken migration `0151_bounce_off_level_archetype_reroute.sql` — original draft referenced non-existent top-level `entry_indicator` + `strategy_class` columns on `strategies` (would crash the boot-migration-runner on next restart). Schema confirms both values live inside `config` JSONB. Rewrote the file to mutate `config` JSONB only via `jsonb_set` — idempotent re-run safe; matches the graduator + paper-signal-service read paths. Migration 0150 (multi_confluence) already APPLIED to Railway prod cleanly.
+- Ran `npm run system-map:sync` (EXIT=0). Re-checked `system-map:check` (EXIT=1; 3 drift items: `/api/composite-health` route + `composite-health-daily-digest` cron + `strategy_health_scores` table). Confirmed these are Wave 28 Pass A close-out carry-forwards (the Pass A architect close in commit `713e21b` claimed system-map green but never updated `docs/system-subsystem-registry.json` for its own additions). NOT introduced by Wave 26 Pass G — carry-forward flagged to Wave 28 Pass B / catch-up registry update.
+- Ran `npm run check:production-isolation` — GREEN (4 files checked, 0 violations).
+- Ran `npm run check:2026-compliance` — GREEN (MFFU + Topstep aligned with canonical 2026 docs).
+- Ran focused vitest on Pass A test files: `wave26-pass-g-archetype-audit.test.ts` (49), `wave26-pass-g-paper-signal-archetype-wiring.test.ts` (20), `strategy-source-resolver.test.ts` (22) — all 91 GREEN.
+- Ran focused pytest on Pass A engine tests: `test_bounce_off_level.py` + `test_ict_bias_aligned_continuation.py` — 53 GREEN.
+
+**Verification:** 144 of 175 cumulative new tests verified locally (53 pytest + 91 vitest); remainder are SQL/integration smokes that need DB connectivity. 2 of 3 CI hard gates GREEN; the 3rd (`system-map:check`) red is pre-existing Wave 28 Pass A carry-forward — Pass G Pass A introduces ZERO new drift.
+
+**Known-facts updates:** None pinned this session (no new misdiagnosis-prone facts; all wiring is conventionally documented).
+
+**Carry-forward for next session (Pass B candidates):**
+- Wave 28 Pass A registry catch-up: add `/api/composite-health`, `composite-health-daily-digest`, `strategy_health_scores` to `docs/system-subsystem-registry.json` so `system-map:check` flips GREEN. Mechanical fix — owner: whoever picks up Wave 28 Pass B.
+- Python `backtester.py` archetype-signal audit-event emission for live-paper observability is currently TS-side only. Pass B should mirror the audit emission inside the Python live-paper bar loop so backtest replay + live paper share the same observability surface.
+- Operator action pending: migration 0151 (JSONB-corrected) will apply automatically on the next boot-migration-runner cycle. No manual `npm run db:migrate` required, but operator may confirm via the verification SQL in the migration footer once the next restart lands.
+
+**Audit row:** `wave26-pass-g.pass_a.master_close` — payload includes sub-track summary (A1/A2/A3/A4 + close), file additions (2 Python strategies + 1 resolver lib + 1 audit lib + 4 test files + 2 migrations), test counts (53 pytest + 91 vitest verified), CI state (2 of 3 GREEN; 3rd pre-existing carry-forward), regressions (zero new), strategies re-routed (9 — 6 via 0151 MA-as-S/R + 3 via 0150 multi_confluence).
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)
