@@ -24,7 +24,6 @@ W25.10 — 5-Regime Institutional Expansion:
 """
 from __future__ import annotations
 
-import dataclasses
 from dataclasses import dataclass, field
 from typing import List, Optional
 
@@ -33,7 +32,6 @@ import polars as pl
 
 from src.engine.context.htf_context import HTFContext
 from src.engine.context.session_context import SessionContext
-
 
 # ---------------------------------------------------------------------------
 # W25.10 — Institutional regime vocabulary
@@ -49,6 +47,7 @@ REGIME_VALUES = [
     "COMPRESSION",
     "HIGH_VOL_MACRO",
     "LOW_LIQ_CHOP",
+    "LATE_CYCLE_OVERHEATING",   # Wave 26 Pass G Pass F — 7th institutional regime
     "NO_TRADE",
 ]
 
@@ -317,6 +316,115 @@ def classify_institutional_regime(
     return "_PASS_THROUGH", evidence
 
 
+# ─── LATE_CYCLE_OVERHEATING detector (Wave 26 Pass G Pass F) ─────────────────
+
+def detect_late_cycle_overheating(
+    htf: "HTFContext",
+    bars: Optional[pl.DataFrame] = None,
+    volume_ratio_override: Optional[float] = None,
+    vix_percentile_override: Optional[float] = None,
+    multi_day_melt_up_pct: Optional[float] = None,
+    atr_ratio_override: Optional[float] = None,
+) -> tuple[bool, dict]:
+    """Detect LATE_CYCLE_OVERHEATING regime — 7th institutional regime.
+
+    Fires when ALL four conditions hold simultaneously:
+
+      1. ATR > 2.5× rolling-30-day avg ATR  (extreme intra-day volatility)
+      2. Volume > 2× rolling-30-day avg volume  (blow-off-top participation surge)
+      3. VIX-proxy ATR percentile > 80th percentile  (fear + late-cycle jitters)
+         — uses htf.atr_percentile as VIX proxy when no live VIX feed is available
+      4. Multi-day melt-up > 5% in last 5 sessions  (parabolic price extension)
+
+    This regime maps to mean-reversion playbooks ONLY. Continuation/breakout
+    strategies statistically blow up at the top (melt-up + blow-off top pattern).
+    Size multiplier is 0.5× (REDUCED_SIZING playbook — same as HIGH_VOL_MACRO).
+
+    Args:
+        htf:                       HTFContext — provides atr_percentile as VIX proxy.
+        bars:                      OHLCV DataFrame (daily or exec bars).
+        volume_ratio_override:     Pre-computed volume ratio (if caller already has it).
+        vix_percentile_override:   Live VIX percentile [0-100] when available.
+        multi_day_melt_up_pct:     Pre-computed 5-session price change as fraction
+                                   (e.g. 0.06 = 6%). When None, computed from bars.
+        atr_ratio_override:        Pre-computed ATR/30d-avg ratio. When None, computed.
+
+    Returns:
+        (detected: bool, evidence: dict) where evidence is JSON-serialisable.
+    """
+    evidence: dict = {
+        "condition_atr_ratio": False,
+        "condition_volume_surge": False,
+        "condition_vix_proxy": False,
+        "condition_melt_up": False,
+        "atr_ratio": None,
+        "volume_ratio": None,
+        "vix_pct_proxy": None,
+        "melt_up_pct": None,
+    }
+
+    atr_pct = float(htf.atr_percentile)
+
+    # ── Condition 3: VIX-proxy > 80th pct ────────────────────────────────────
+    effective_vix_pct = vix_percentile_override if vix_percentile_override is not None else atr_pct
+    evidence["vix_pct_proxy"] = round(effective_vix_pct, 2)
+    condition_vix = effective_vix_pct > 80.0
+    evidence["condition_vix_proxy"] = condition_vix
+
+    # ── Condition 1: ATR > 2.5× rolling-30d avg ATR ──────────────────────────
+    if atr_ratio_override is not None:
+        atr_ratio = float(atr_ratio_override)
+    elif bars is not None and len(bars) >= 32 and "high" in bars.columns and "low" in bars.columns:
+        bar_ranges = (bars["high"] - bars["low"]).cast(pl.Float64).to_numpy()
+        last_range = float(bar_ranges[-1])
+        prior_30 = bar_ranges[-31:-1]
+        avg_30 = float(np.mean(prior_30)) if len(prior_30) > 0 else 0.0
+        atr_ratio = (last_range / avg_30) if avg_30 > 0 else 0.0
+    else:
+        # Insufficient data — default to 1.0 (no extraordinary volatility)
+        atr_ratio = 1.0
+
+    evidence["atr_ratio"] = round(atr_ratio, 4)
+    condition_atr = atr_ratio > 2.5
+    evidence["condition_atr_ratio"] = condition_atr
+
+    # ── Condition 2: Volume > 2× rolling-30d avg ─────────────────────────────
+    if volume_ratio_override is not None:
+        vol_ratio = float(volume_ratio_override)
+    elif bars is not None and len(bars) >= 32 and "volume" in bars.columns:
+        vol = bars["volume"].cast(pl.Float64).to_numpy()
+        last_vol = float(vol[-1])
+        prior_30 = vol[-31:-1]
+        avg_30 = float(np.mean(prior_30)) if len(prior_30) > 0 else 0.0
+        vol_ratio = (last_vol / avg_30) if avg_30 > 0 else 1.0
+    else:
+        vol_ratio = 1.0
+
+    evidence["volume_ratio"] = round(vol_ratio, 4)
+    condition_vol = vol_ratio > 2.0
+    evidence["condition_volume_surge"] = condition_vol
+
+    # ── Condition 4: Multi-day melt-up > 5% in last 5 sessions ───────────────
+    if multi_day_melt_up_pct is not None:
+        melt_up = float(multi_day_melt_up_pct)
+    elif bars is not None and len(bars) >= 6 and "close" in bars.columns:
+        closes = bars["close"].cast(pl.Float64).to_numpy()
+        price_5sessions_ago = float(closes[-6])
+        price_now = float(closes[-1])
+        melt_up = (price_now - price_5sessions_ago) / price_5sessions_ago if price_5sessions_ago > 0 else 0.0
+    else:
+        melt_up = 0.0
+
+    evidence["melt_up_pct"] = round(melt_up * 100, 4)
+    condition_melt = melt_up > 0.05
+    evidence["condition_melt_up"] = condition_melt
+
+    # All four conditions must hold
+    detected = condition_atr and condition_vol and condition_vix and condition_melt
+    evidence["detected"] = detected
+    return detected, evidence
+
+
 BIAS_WEIGHTS = {
     "htf_trend": 0.25,
     "pd_location": 0.20,
@@ -406,11 +514,11 @@ class DailyBiasState:
     # None when MTF data is unavailable or structure engine fails (fail-open).
     # Stage 2 weighted scoring (W25.1) reads this to compute market_structure_aligned.
     # Downstream JSON shape: see structure_engine.py module docstring.
-    structure_state: Optional["StructureState"] = None
+    structure_state: Optional["StructureState"] = None  # noqa: F821
     # W25.5 — HTF Narrative state (Asian/London/NY session + dealing range quadrant).
     # None when intraday_bars not provided (back-compat: all existing callers unaffected).
     # Serialised to bias_state.htf_narrative JSONB by bias-state-service.ts (migration 0137).
-    htf_narrative: Optional["HtfNarrative"] = None
+    htf_narrative: Optional["HtfNarrative"] = None  # noqa: F821
     # W25.10 — Institutional regime label (one of REGIME_VALUES).
     # "NO_TRADE" when bias is flat/blocked; "_PASS_THROUGH" is never stored —
     # it is collapsed to the classic label derived from net_bias at assembly time.
@@ -1038,6 +1146,39 @@ def compute_bias(
                     )
                 # Reset playbook to NO_TRADE (may have been set above)
                 playbook = "NO_TRADE"
+
+        # Wave 26 Pass G Pass F: LATE_CYCLE_OVERHEATING override.
+        # Evaluated AFTER the 4-arm classifier so it can intercept any non-NO_TRADE
+        # regime. When detected, override the regime label and restrict to mean-reversion
+        # playbooks (REDUCED_SIZING path — 0.5× contracts, no continuation/breakout).
+        if raw_regime_label not in ("HIGH_VOL_MACRO", "LOW_LIQ_CHOP"):
+            try:
+                lco_detected, lco_evidence = detect_late_cycle_overheating(
+                    htf=htf,
+                    bars=bars,
+                )
+                if lco_detected:
+                    institutional_regime_label = "LATE_CYCLE_OVERHEATING"
+                    # Store detection evidence in primary_driver for audit trail
+                    # Use a fresh RegimeEvidence wrapping the LCO sub-evidence
+                    institutional_regime_evidence = RegimeEvidence(
+                        atr_percentile_vs_30d=float(htf.atr_percentile),
+                        volume_ratio_vs_session_avg=float(lco_evidence.get("volume_ratio", 1.0)),
+                        range_size_vs_atr=float(lco_evidence.get("atr_ratio", 1.0)),
+                        is_macro_event_day=event_active,
+                        session_health=_compute_session_health(session),
+                        primary_driver=(
+                            f"late_cycle_overheating:"
+                            f"atr_ratio={lco_evidence.get('atr_ratio', '?')},"
+                            f"vol_ratio={lco_evidence.get('volume_ratio', '?')},"
+                            f"melt_up={lco_evidence.get('melt_up_pct', '?')}%"
+                        ),
+                    )
+                    # LATE_CYCLE_OVERHEATING does NOT force NO_TRADE — mean-reversion
+                    # playbooks are allowed. playbook assignment remains, but the
+                    # playbook_router will route to REDUCED_SIZING / mean-reversion.
+            except Exception:  # noqa: BLE001
+                pass  # Never let LCO detection break compute_bias()
     except Exception:  # noqa: BLE001
         # Never let regime classification break compute_bias()
         institutional_regime_label = None
@@ -1164,11 +1305,11 @@ def _maybe_persist_bias_decision(state: "DailyBiasState", vp_levels: Optional["V
         return
 
     try:
+        import datetime
         import json
         import subprocess
-        import datetime
 
-        from src.engine.context.playbook_router import ROUTER_VERSION, ROUTER_HASH
+        from src.engine.context.playbook_router import ROUTER_HASH, ROUTER_VERSION
 
         symbol = getattr(state.session_context, "symbol", "UNKNOWN")
         feature_snapshot = {

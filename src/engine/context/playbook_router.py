@@ -1,6 +1,6 @@
 """Playbook Router — Maps bias state to allowed playbook and strategy families.
 
-Routes: bias + confidence + conditions -> one of 13 playbooks -> allowed strategies.
+Routes: bias + confidence + conditions -> one of 14 playbooks -> allowed strategies.
 
 PLAYBOOK_ROUTING contains the declarative spec for each playbook.
 route_playbook() evaluates the current DailyBiasState and returns a PlaybookDecision.
@@ -17,12 +17,19 @@ W25.10 — 5-Regime Institutional Expansion:
     BEFORE the classic net_bias arms run. This preserves backward compatibility:
     strategies that never see EXPANSION/COMPRESSION/HIGH_VOL_MACRO/LOW_LIQ_CHOP
     use the same routing logic as before.
+
+Wave 26 Pass G Pass F — 7th Regime:
+    LATE_CYCLE_OVERHEATING routes to LATE_CYCLE_MEAN_REVERSION playbook.
+    ONLY mean-reversion setups allowed — continuation/breakout are suppressed.
+    Size multiplier 0.5× applied via REDUCED_SIZING contract-cap halving (same
+    mechanism as HIGH_VOL_MACRO). Evaluation order: LATE_CYCLE checked after
+    the 4 W25 arms and before classic net_bias logic.
 """
 from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List
 
 from src.engine.context.bias_engine import DailyBiasState
 
@@ -33,7 +40,7 @@ from src.engine.context.bias_engine import DailyBiasState
 #                 automatically when routing logic changes, audit row captures
 #                 the exact version that produced each bias decision.
 # ---------------------------------------------------------------------------
-ROUTER_VERSION = "2026-05-24-w25.10"
+ROUTER_VERSION = "2026-05-26-w26f-late-cycle"
 # Hash is computed lazily at module load after PLAYBOOK_ROUTING is defined.
 # See _compute_router_hash() below.
 _ROUTER_HASH_CACHE: str = ""
@@ -184,6 +191,25 @@ PLAYBOOK_ROUTING: Dict[str, Dict[str, Any]] = {
             "fvg_continuation",
         ],
     },
+    # ── Wave 26 Pass G Pass F — 7th regime playbook ────────────────────────────
+    "LATE_CYCLE_MEAN_REVERSION": {
+        # LATE_CYCLE_OVERHEATING: melt-up + blow-off-top pattern.
+        # ONLY mean-reversion and reversal strategies allowed.
+        # Continuation/breakout strategies are suppressed — they statistically
+        # blow up at the top of a parabolic move.
+        # Contract cap is halved (0.5× via REDUCED_SIZING mechanism in framework-overlay.ts).
+        "institutional_regime": "LATE_CYCLE_OVERHEATING",
+        "confidence_min": None,
+        "requires": ["institutional_regime_late_cycle_overheating"],
+        "allowed_strategies": MEAN_REV_STRATS + REVERSAL_STRATS,
+        "allowed_setups": [
+            "mean_reversion_extreme",
+            "sweep_reversal",
+            "breaker_reversal",
+            "fvg_fade",
+            "midnight_open_reversal",
+        ],
+    },
 }
 
 
@@ -304,6 +330,18 @@ def route_playbook(
             allowed_strategies=spec["allowed_strategies"],
             allowed_setups=spec["allowed_setups"],
             confidence_modifier=0.8,
+        )
+
+    # LATE_CYCLE_OVERHEATING → LATE_CYCLE_MEAN_REVERSION (Wave 26 Pass G Pass F)
+    # Mean-reversion only. Contract cap halved by framework (same REDUCED_SIZING mechanism).
+    # Continuation/breakout strategies are suppressed — blow up at the top.
+    if inst_regime == "LATE_CYCLE_OVERHEATING":
+        spec = PLAYBOOK_ROUTING["LATE_CYCLE_MEAN_REVERSION"]
+        return PlaybookDecision(
+            playbook="LATE_CYCLE_MEAN_REVERSION",
+            allowed_strategies=spec["allowed_strategies"],
+            allowed_setups=spec["allowed_setups"],
+            confidence_modifier=0.5,  # 0.5× contracts + reduced conviction at top
         )
 
     # ------------------------------------------------------------------
