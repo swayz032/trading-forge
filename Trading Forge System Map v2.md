@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-05-26T05:32:15.412Z`.
+Updated automatically from the repo on `2026-05-26T08:13:40.273Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -11,13 +11,13 @@ Updated automatically from the repo on `2026-05-26T05:32:15.412Z`.
 
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `ci_gate, kill_switch, operator_invoke_for_cohort_validation, operator_opt_in_per_strategy, operator-approve, operator-halt-only, tradingview_deploy`
-- API routes tracked: `71`
-- Scheduler jobs tracked: `84`
+- API routes tracked: `72`
+- Scheduler jobs tracked: `85`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
 - Engine subsystems tracked: `27`
-- Database tables tracked: `96`
+- Database tables tracked: `97`
 
 ### Subsystem Runtime States
 - `active`: `48`
@@ -54,10 +54,10 @@ Updated automatically from the repo on `2026-05-26T05:32:15.412Z`.
 
 ### Registry Coverage
 - Registry subsystems tracked: `54`
-- Route coverage: `71/71`
-- Scheduler coverage: `84/84`
+- Route coverage: `71/72`
+- Scheduler coverage: `84/85`
 - Engine coverage: `27/27`
-- Database coverage: `96/96`
+- Database coverage: `96/97`
 - Autonomous subsystems with audit coverage: `50/50`
 - Autonomous subsystems with audit actions: `50/50`
 - Autonomous subsystems with telemetry evidence: `50/50`
@@ -228,6 +228,7 @@ Updated automatically from the repo on `2026-05-26T05:32:15.412Z`.
 - `/api/cloud-qmc`
 - `/api/compiler`
 - `/api/compliance`
+- `/api/composite-health`
 - `/api/consistency`
 - `/api/context`
 - `/api/critic-optimizer`
@@ -300,6 +301,7 @@ Updated automatically from the repo on `2026-05-26T05:32:15.412Z`.
 - `cloud-qmc-poll`
 - `cme-status-poll`
 - `compliance-rule-drift`
+- `composite-health-daily-digest`
 - `consistency-tracker-daily-digest`
 - `contract-roll-sweep`
 - `critic-feedback`
@@ -505,6 +507,7 @@ Updated automatically from the repo on `2026-05-26T05:32:15.412Z`.
 - `strategy_exports`
 - `strategy_firm_eligibility`
 - `strategy_graveyard`
+- `strategy_health_scores`
 - `strategy_lockouts`
 - `strategy_names`
 - `strategy_pending_buckets`

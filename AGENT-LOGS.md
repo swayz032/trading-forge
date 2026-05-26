@@ -7957,6 +7957,41 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 
 ---
 
+### Session Log — 2026-05-26 Wave 28 Pass A master close-out (composite-health observability bus)
+
+**Mission:** Close Wave 28 Pass A as `trading-forge-architect` (LAST per §11). Reconcile the 2 A.2 TODOs left in `strategy-health-aggregator.ts` after Round 1 (typed Drizzle insert + real `computeComposite` from A.3 lib). Run system map sync + 3 CI hard gates. Update CLAUDE.md §2 phase marker + §12 hard gates table (composite is NOT a gate) + §15 env vars. Append this AGENT-LOGS entry. Write memory record + audit row. Commit + push (§11a fail-CLOSED).
+
+**Work completed:**
+- Reconciled A.2 TODO #1: imported `strategyHealthScores` from `../db/schema.js` and replaced raw `db.execute(sql\`INSERT INTO strategy_health_scores ...\`)` with typed Drizzle `db.insert(strategyHealthScores).values({...})`. Removed the documented bridge code; preserved every column written (strategyId, evaluatedAt, compositeScore, verdict, subsystemScores JSONB, computedFromNSubsystems, weightsVersionId, stalenessAgeHours). DB-generated `id` (BIGSERIAL) replaces the dropped UUID-cast bridge. Surrogate `rowId` (UUID) retained on the AggregatorResult for in-process correlation only.
+- Reconciled A.2 TODO #2: imported `computeComposite as libComputeComposite`, `computeWeightsVersionId as libComputeWeightsVersionId`, `verdictFromComposite`, `EQUAL_WEIGHTS as LIB_EQUAL_WEIGHTS`, and `type SubsystemName` from `../lib/score-normalization.js`. Replaced local 12-key EQUAL_WEIGHTS literal with the lib's frozen EQUAL_WEIGHTS (single source of truth). Replaced local `computeComposite(subsystems[], weights)` stub with a thin shape adapter that builds the lib's `Record<string, number|null>` then delegates to `libComputeComposite`. Replaced local `classifyVerdict` body with a delegate to `verdictFromComposite`. Preserved aggregator's 16-char `computeWeightsVersionId` via `libComputeWeightsVersionId(weights).slice(0, 16)` wrapper — keeps the public test contract (`/^[0-9a-f]{16}$/`) AND the firm-rules-version.ts parity convention while routing through the lib's canonical-sorted-JSON SHA-256 path.
+- Updated test mocks: added `strategyHealthScores` to schema mock with all column references; added `mockDbInsert` chain returning `{ values: vi.fn().mockResolvedValue([{ id: 1n }]) }` in beforeEach. No assertion changes — preserved every behavior contract.
+- Verified `npx vitest run src/server/__tests__/wave28-pass-a-aggregator.test.ts` GREEN: 30/30 tests pass. Combined Wave 28 vitest GREEN: 132/132 (30 aggregator + 88 score-normalization + 7 composite-health routes + 7 digest cron).
+- Ran `npm run system-map:sync` → wrote `docs/system-readiness.generated.json` + `docs/system-topology.generated.json`. New subsystems / scheduler jobs / routes / migration auto-detected through code scans (route coverage 71/72, scheduler coverage 84/85, engine coverage 27/27, DB coverage 96/97, migration 0149 idx 151 registered).
+- 3 CI hard gates GREEN: `npm run check:production-isolation` exit 0 (CLEAN, 4 files checked, 0 violations); `npm run check:2026-compliance` exit 0 (MFFU + Topstep aligned); `npm run system-map:check` exit 0.
+- CLAUDE.md §2 — appended "Wave 28 Pass A CLOSED 2026-05-26" paragraph matching the Wave 27 carry-forward format (1 dense paragraph summarizing 3 rounds + 4 commits + 156 cumulative new tests + new subsystems + new env vars + Pass B evidence-gating).
+- CLAUDE.md §12 — appended composite health hard-gates-table row explicitly marked "OBSERVABILITY ONLY, NOT A GATE" so future agents do not misread the composite write path as authoritative.
+- CLAUDE.md §15 — appended Wave 28 Pass A env vars block (`MIN_COMPOSITE_SUBSYSTEMS=8`, `COMPOSITE_MAX_AGE_HOURS=48`, `WAVE_28_COMPOSITE_GATING_ENABLED=false`).
+- Memory: wrote `project_wave28_pass_a_complete_2026_05_26.md` in `C:\Users\tonio\.claude\projects\C--Users-tonio-Projects-trading-forge\memory\` and added ★ CURRENT-marked line to MEMORY.md index; demoted the prior ★ CURRENT marker on the Wave 27 carry-forward entry.
+- Audit row written: `wave.28_pass_a_master_closed` via psql one-shot.
+- Master close-out commit + push to `feature/deep-analysis-pipeline` per §11a.
+
+**Verification:**
+- 30 aggregator vitest GREEN after the typed-Drizzle + lib-delegated reconciliation (no test assertion changes; only mock surface additions for the new schema + insert chain).
+- 132 cumulative Wave 28 Pass A vitest GREEN (30 + 88 + 7 + 7).
+- 3 CI hard gates exit 0.
+- PURE OBSERVABILITY MODE invariant verified: composite writes are READ-ONLY downstream; Wave 27.5 hard gates (B14 ci_high, WFE, parameter drift, B15, compliance enforce) retain independent veto power in `lifecycle-service.ts`. No path was added in this pass that gates promotion on composite.
+- Append-only contract verified: migration 0149 uses BIGSERIAL + no UPDATE statements anywhere in the codebase reference `strategy_health_scores`.
+
+**Known-facts updates:** None pinned this session — all behavior contracts preserved; reconciliation was a surface-level swap of bridge code for typed code without semantic drift.
+
+**Carry-forward for next session (Pass B — Shadow Gate Mode, evidence-gated start):**
+- Pass B introduces `src/server/lib/composite-shadow-gate.ts` invoked alongside Wave 27.5 hard gates in `lifecycle-service.ts` for SHADOW logging only.
+- Pass B verification gate requires 14 days of composite write data + ≥85% composite-vs-hard-gate agreement BEFORE Pass C activation. Until that evidence exists, Pass C remains deferred.
+- Operator action: migration 0149 idempotent (CREATE TABLE IF NOT EXISTS) — applied automatically by boot-migration-runner on next deploy; no manual `npm run db:migrate` required.
+- The aggregator currently has no scheduler-driven invocation in Pass A — composite writes will accumulate as callers (Pass B shadow-gate evaluator + Pass C tier-router + the digest cron's read-side) invoke `aggregateStrategyHealth(strategyId)`. The digest cron in Pass A is read-only.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)

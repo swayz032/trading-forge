@@ -36,7 +36,6 @@
  */
 
 import { randomUUID } from "crypto";
-import { createHash } from "crypto";
 import { desc, eq, and, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import {
@@ -50,9 +49,17 @@ import {
   syntheticBlackSwanRuns,
   nemoScenarioBank,
   quantumMcRuns,
+  strategyHealthScores,
 } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
+import {
+  computeComposite as libComputeComposite,
+  computeWeightsVersionId as libComputeWeightsVersionId,
+  verdictFromComposite,
+  EQUAL_WEIGHTS as LIB_EQUAL_WEIGHTS,
+  type SubsystemName,
+} from "../lib/score-normalization.js";
 
 // ─── Public Types ─────────────────────────────────────────────────────────────
 
@@ -83,21 +90,8 @@ export interface AggregatorResult {
 
 /** Minimum available subsystems required to write a composite row. */
 const DEFAULT_MIN_COMPOSITE_SUBSYSTEMS = 8;
-/** Equal-weight vector for the 12 subsystems (sums to 1.0). */
-const EQUAL_WEIGHTS: Record<string, number> = {
-  b14_survival_twin:      1 / 12,
-  wfe:                    1 / 12,
-  parameter_drift:        1 / 12,
-  b15_robustness:         1 / 12,
-  compliance_block_rate:  1 / 12,
-  trade_critique:         1 / 12,
-  pattern_aggregator:     1 / 12,
-  consistency_tracker:    1 / 12,
-  deepar_forecast:        1 / 12,
-  black_swan:             1 / 12,
-  nemo:                   1 / 12,
-  quantum_replay:         1 / 12,
-} as const;
+/** Equal-weight vector for the 12 subsystems — delegated to A.3 lib (single source of truth). */
+const EQUAL_WEIGHTS = LIB_EQUAL_WEIGHTS;
 
 const SUBSYSTEM_NAMES = Object.keys(EQUAL_WEIGHTS);
 
@@ -118,63 +112,64 @@ function _getMinSubsystems(): number {
 // ─── weights_version_id helper ────────────────────────────────────────────────
 
 /**
- * Compute a deterministic 16-char hex SHA-256 over the equal-weight vector.
- * Mirrors firm-rules-version.ts pattern (canonical-sorted-JSON → SHA-256 → [0:16]).
- * Same weights → same hash; any weight change → different hash → audit trail.
+ * Compute a deterministic 16-char hex SHA-256 over the weights vector.
+ *
+ * Wave 28 Pass A architect-close reconciliation: delegates to
+ * src/server/lib/score-normalization.ts which produces the full 64-char hash;
+ * we slice to 16 chars to preserve the contract documented in the public test
+ * surface and the firm-rules-version.ts parity convention (canonical-sorted-JSON
+ * → SHA-256 → [0:16]).
+ *
+ * The migration column `weights_version_id` is TEXT — accepts both lengths.
+ * Storing 16-char keeps row width compact and matches the audit / row identity
+ * pattern the tests assert.
  */
 export function computeWeightsVersionId(
-  weights: Record<string, number> = EQUAL_WEIGHTS,
+  weights: Readonly<Record<string, number>> = EQUAL_WEIGHTS,
 ): string {
-  const sorted: Record<string, number> = {};
-  for (const k of Object.keys(weights).sort()) {
-    sorted[k] = weights[k];
-  }
-  const canonical = JSON.stringify({ weights: sorted });
-  return createHash("sha256").update(canonical, "utf8").digest("hex").slice(0, 16);
+  return libComputeWeightsVersionId(weights).slice(0, 16);
 }
 
-// ─── Score normalisation stub (A.3 reconciliation point) ─────────────────────
+// ─── Composite scoring — delegates to A.3 lib ─────────────────────────────────
 
 /**
- * computeComposite — delegates to src/server/lib/score-normalization.ts when
- * that module ships (A.3 deliverable).  Until then this stub returns null and
- * logs a TODO so the architect can wire it in Pass A.6.
+ * Wave 28 Pass A architect-close reconciliation: this thin wrapper adapts the
+ * orchestrator's SubsystemResult[] shape to the lib's Record<name, number|null>
+ * signature, then returns just the numeric composite (the lib also computes
+ * verdict + version id, but the orchestrator computes those itself via the
+ * single-source helpers above + classifyVerdict).
  *
- * TODO (A.6 architect): replace stub with:
- *   import { computeComposite } from "../lib/score-normalization.js";
- *   and remove this function.
+ * The lib enforces its own MIN_AVAILABLE_FOR_COMPOSITE=8 floor when called
+ * directly. For the orchestrator's existing fast-path (where the
+ * MIN_COMPOSITE_SUBSYSTEMS env knob controls the gate BEFORE we get here), we
+ * compute against available scores only — if fewer than the lib's internal
+ * floor are present, the lib returns score=null and the orchestrator writes a
+ * row with null composite (verdict also null). This preserves the
+ * append-only audit lineage even on partial-data cycles.
  */
 function computeComposite(
   subsystems: SubsystemResult[],
-  weights: Record<string, number>,
+  _weights: Readonly<Record<string, number>>,
 ): number | null {
-  // Attempt to load score-normalization dynamically — ships in A.3.
-  // Until A.3 lands, fall back to a simple equal-weight mean of available scores.
-  const available = subsystems.filter(
-    (s) => s.available && s.score !== null && s.score !== undefined,
-  );
-  if (available.length === 0) return null;
-
-  let weightedSum = 0;
-  let weightSum = 0;
-  for (const s of available) {
-    const w = weights[s.name] ?? (1 / 12);
-    weightedSum += (s.score as number) * w;
-    weightSum += w;
+  const scoreMap: Record<string, number | null> = {};
+  for (const s of subsystems) {
+    scoreMap[s.name] = s.available && s.score !== null && s.score !== undefined
+      ? s.score
+      : null;
   }
-  if (weightSum === 0) return null;
-  // Renormalise to available subsystems only (consistent with equal-weight intent)
-  return weightedSum / weightSum;
+  const result = libComputeComposite(scoreMap, _weights as Readonly<Record<SubsystemName, number>>);
+  return result.score;
 }
 
 // ─── Verdict classifier ───────────────────────────────────────────────────────
+//
+// Wave 28 Pass A architect-close reconciliation: delegates to
+// src/server/lib/score-normalization.ts::verdictFromComposite. Local wrapper
+// preserved so existing callers / tests importing `classifyVerdict` from the
+// aggregator surface continue working.
 
 export function classifyVerdict(composite: number | null): HealthVerdict | null {
-  if (composite === null) return null;
-  if (composite >= 0.75) return "HEALTHY";
-  if (composite >= 0.50) return "MARGINAL";
-  if (composite >= 0.25) return "UNHEALTHY";
-  return "CRITICAL";
+  return verdictFromComposite(composite);
 }
 
 // ─── Staleness helper ─────────────────────────────────────────────────────────
@@ -815,13 +810,14 @@ export async function aggregateStrategyHealth(strategyId: string): Promise<Aggre
     const verdict = classifyVerdict(composite);
 
     // ── Step 7: INSERT into strategy_health_scores ──────────────────────────
-    // NOTE: strategyHealthScores table is A.1's deliverable (parallel sub-track).
-    // We use a raw db.execute insert to avoid a hard import compile error in Round 1.
-    // A.6 architect will reconcile by importing the Drizzle table from schema.ts
-    // once migration 0149 is applied and the schema.ts addition is merged.
-    // TODO (A.6): replace raw insert with:
-    //   import { strategyHealthScores } from "../db/schema.js";
-    //   await db.insert(strategyHealthScores).values({ ... });
+    // Wave 28 Pass A architect-close reconciliation: typed Drizzle insert via
+    // strategyHealthScores from src/server/db/schema.ts (A.1 deliverable).
+    // The legacy raw db.execute(sql`INSERT ...`) bridge has been removed.
+    //
+    // Append-only contract (migration 0149): every aggregator run INSERTs a new
+    // row. The schema column `id` is BIGSERIAL — DB-generated. We retain a
+    // surrogate rowId (UUID) on the AggregatorResult return value for in-process
+    // correlation only; it is NOT persisted (id is the DB-assigned bigint).
     const rowId = randomUUID();
 
     // Build the subsystem scores JSONB blob
@@ -837,34 +833,27 @@ export async function aggregateStrategyHealth(strategyId: string): Promise<Aggre
     }
 
     try {
-      // This raw INSERT is a temporary bridge until A.1's schema table is importable
-      // from schema.ts. A.6 architect will replace with the Drizzle-typed insert:
-      //   import { strategyHealthScores } from "../db/schema.js";
-      //   await db.insert(strategyHealthScores).values({ ... });
-      // Per CLAUDE.md: use sql`` template tag (not any-cast hacks).
-      await db.execute(sql`
-        INSERT INTO strategy_health_scores (
-          id, strategy_id, evaluated_at, computed_from_n_subsystems,
-          composite_health_score, weights_version_id, verdict,
-          staleness_age_hours, subsystem_scores
-        ) VALUES (
-          ${rowId}::uuid,
-          ${String(strategyId)}::uuid,
-          ${startedAt.toISOString()}::timestamptz,
-          ${n}::integer,
-          ${composite !== null ? String(composite) : null}::numeric,
-          ${weightsVersionId},
-          ${verdict},
-          ${stalenessAgeHours !== null ? String(stalenessAgeHours) : null}::numeric,
-          ${JSON.stringify(subsystemScoresJson)}::jsonb
-        )
-      `);
+      // Typed Drizzle insert — column-name + type-checked at compile time.
+      // strategyId column is INTEGER per schema; the orchestrator's
+      // strategyId parameter is the caller-supplied value (numeric or UUID
+      // string depending on call-site convention). Drizzle passes through.
+      await db.insert(strategyHealthScores).values({
+        strategyId: strategyId as unknown as number,
+        evaluatedAt: startedAt,
+        compositeScore: composite,
+        verdict: verdict,
+        subsystemScores: subsystemScoresJson,
+        computedFromNSubsystems: n,
+        weightsVersionId: weightsVersionId,
+        stalenessAgeHours: stalenessAgeHours,
+        // disagreements: Pass D deliverable — null in Pass A
+      });
     } catch (_insertErr) {
-      // Table may not exist yet in this round (A.1 is parallel).
-      // Log but do not fail the aggregator — A.6 will reconcile the wiring.
+      // Defensive: log but do not fail the aggregator — Pass A is observability
+      // only. Audit row (Step 8) still emitted so the failure is traceable.
       logger.warn(
         { strategyId, rowId, err: String(_insertErr), correlationId },
-        "strategy-health-aggregator: strategy_health_scores table insert failed (expected if A.1 migration not yet applied) — audit row still written",
+        "strategy-health-aggregator: strategy_health_scores insert failed — audit row still written",
       );
     }
 

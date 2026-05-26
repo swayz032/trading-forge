@@ -79,6 +79,16 @@ vi.mock("../db/schema.js", () => ({
     governanceLabels: "governance_labels", toleranceDelta: "tolerance_delta", createdAt: "created_at" },
   auditLog: { action: "action", entityType: "entity_type", entityId: "entity_id",
     result: "result", status: "status", correlationId: "correlation_id" },
+  // Wave 28 Pass A architect-close reconciliation: typed Drizzle insert target.
+  strategyHealthScores: {
+    id: "id", strategyId: "strategy_id", evaluatedAt: "evaluated_at",
+    compositeScore: "composite_score", verdict: "verdict",
+    subsystemScores: "subsystem_scores",
+    computedFromNSubsystems: "computed_from_n_subsystems",
+    weightsVersionId: "weights_version_id",
+    stalenessAgeHours: "staleness_age_hours",
+    disagreements: "disagreements",
+  },
 }));
 
 // ── Helper: build a mock Drizzle chain ─────────────────────────────────────────
@@ -157,6 +167,11 @@ beforeEach(() => {
   mockDbExecute.mockResolvedValue([]);
   // Default: db.select() returns chain resolving to []
   mockDbSelect.mockReturnValue(buildSelectChain([]));
+  // Wave 28 Pass A architect-close: db.insert(table).values({...}) chain mock.
+  // Returns a thenable from .values() so `await db.insert(t).values({...})` resolves.
+  mockDbInsert.mockReturnValue({
+    values: vi.fn().mockResolvedValue([{ id: 1n }]),
+  });
   delete process.env.MIN_COMPOSITE_SUBSYSTEMS;
 });
 

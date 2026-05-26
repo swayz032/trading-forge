@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-26T05:32:15.412Z",
+  "generatedAt": "2026-05-26T08:13:40.273Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,12 +15,12 @@
     ]
   },
   "counts": {
-    "routes": 71,
-    "schedulerJobs": 84,
+    "routes": 72,
+    "schedulerJobs": 85,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 27,
-    "databaseTables": 96,
+    "databaseTables": 97,
     "registrySubsystems": 54
   },
   "routes": [
@@ -42,6 +42,7 @@
     "/api/cloud-qmc",
     "/api/compiler",
     "/api/compliance",
+    "/api/composite-health",
     "/api/consistency",
     "/api/context",
     "/api/critic-optimizer",
@@ -114,6 +115,7 @@
     "cloud-qmc-poll",
     "cme-status-poll",
     "compliance-rule-drift",
+    "composite-health-daily-digest",
     "consistency-tracker-daily-digest",
     "contract-roll-sweep",
     "critic-feedback",
@@ -844,6 +846,7 @@
     "strategy_exports",
     "strategy_firm_eligibility",
     "strategy_graveyard",
+    "strategy_health_scores",
     "strategy_lockouts",
     "strategy_names",
     "strategy_pending_buckets",
@@ -924,10 +927,16 @@
       "engineSubsystems": 27,
       "databaseTables": 96
     },
-    "missingRoutes": [],
-    "missingSchedulerJobs": [],
+    "missingRoutes": [
+      "/api/composite-health"
+    ],
+    "missingSchedulerJobs": [
+      "composite-health-daily-digest"
+    ],
     "missingEngineSubsystems": [],
-    "missingDatabaseTables": [],
+    "missingDatabaseTables": [
+      "strategy_health_scores"
+    ],
     "subsystemsMissingAudit": [],
     "subsystemsMissingAuditActions": [],
     "subsystemsMissingMetrics": [],
