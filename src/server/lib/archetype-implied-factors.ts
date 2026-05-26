@@ -146,8 +146,44 @@ export const ARCHETYPE_IMPLIED_FACTORS: Record<string, string[]> = {
   ],
 
   // ─── Break of Structure (BoS / CHoCH) ───────────────────────────────────────
+  // Wave 26 Pass H Phase 1 (2026-05-26) — extended depth: BoS implies HTF bias
+  // alignment + displacement (the impulse that broke structure) on top of the
+  // structural shift itself. Lifts thin → rich for BoS strategies.
   break_of_structure: [
     "market_structure_aligned",
+    "displacement_confirmed",
+    "htf_bias_aligned",
+  ],
+
+  // ─── Session Open Breakout (e.g. London open / NY open continuation) ────────
+  session_open_breakout: [
+    "killzone_active",
+    "opening_range_breakout",
+    "first_30min_volume_above_avg",
+  ],
+
+  // ─── EMA Crossover (parametric trend-follow) ────────────────────────────────
+  ema_crossover: [
+    "regime_match",
+    "htf_bias_aligned",
+  ],
+
+  // ─── Opening Range Breakout (parametric ORB) ────────────────────────────────
+  opening_range_breakout: [
+    "killzone_active",
+    "first_30min_volume_above_avg",
+  ],
+
+  // ─── VWAP Bounce (parametric VWAP touch + reject) ───────────────────────────
+  vwap_bounce: [
+    "vwap_alignment",
+    "regime_match",
+  ],
+
+  // ─── Moving Average (parametric MA-as-S/R bare) ─────────────────────────────
+  moving_average: [
+    "regime_match",
+    "ma_as_support_resistance",
   ],
 
   // ─── Displacement: impulsive move creating FVG ──────────────────────────────

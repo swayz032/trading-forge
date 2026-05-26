@@ -96,12 +96,19 @@ const ARCHETYPE_IMPLIED_FACTORS: Record<string, string[]> = {
   order_block: ["fvg_present_or_ob", "market_structure_aligned"],
   liquidity_magnet: ["liquidity_target_clear", "market_structure_aligned"],
   market_structure_shift: ["market_structure_aligned", "displacement_confirmed"],
-  break_of_structure: ["market_structure_aligned"],
+  // Wave 26 Pass H Phase 1 (2026-05-26) — extended depth for BoS
+  break_of_structure: ["market_structure_aligned", "displacement_confirmed", "htf_bias_aligned"],
   displacement: ["displacement_confirmed"],
   wyckoff_spring: ["accumulation_phase_active", "liquidity_sweep_confirmed"],
   wyckoff_upthrust: ["distribution_phase_active", "liquidity_sweep_confirmed"],
   vwap_band_reject: ["vwap_alignment", "market_structure_aligned"],
   anchored_vwap_retest: ["vwap_alignment", "market_structure_aligned", "displacement_confirmed"],
+  // Wave 26 Pass H Phase 1 (2026-05-26) — new parametric KB entries
+  session_open_breakout:  ["killzone_active", "opening_range_breakout", "first_30min_volume_above_avg"],
+  ema_crossover:          ["regime_match", "htf_bias_aligned"],
+  opening_range_breakout: ["killzone_active", "first_30min_volume_above_avg"],
+  vwap_bounce:            ["vwap_alignment", "regime_match"],
+  moving_average:         ["regime_match", "ma_as_support_resistance"],
 };
 
 function inferFactorsFromArchetype(archetypeName: string): string[] {
@@ -132,6 +139,30 @@ function classifyFactorQuality(factors: string[]): FactorQuality {
   const realFactors = factors.filter((f) => !AUTO_FLOOR_FACTORS.has(f));
   if (realFactors.length === 0) return "fallback_only";
   if (realFactors.length < 2)   return "thin";
+  return "rich";
+}
+
+/**
+ * Wave 26 Pass H Phase 1 (2026-05-26) — source-aware quality classifier.
+ *
+ * Mirrors the graduator/lib `classifyFactorSources` semantics: a factor counts
+ * as "real" if its source is `extracted` OR `kb_inferred`. Auto-floor factors
+ * (regime_match, structural_setup tagged as `auto_floor`) do not count.
+ *
+ * This MUST be used in the backfill once Pass H2 introduces archetype-implied
+ * factors that may legitimately be `regime_match` / `structural_setup` via
+ * the kb_inferred path (e.g. ema_crossover → [regime_match, htf_bias_aligned]).
+ * The simpler `classifyFactorQuality(factors)` cannot distinguish these
+ * paths because it operates on the merged list without source labels.
+ */
+function classifyFactorQualityFromSources(
+  sources: Record<string, FactorSource>,
+): FactorQuality {
+  const realCount = Object.values(sources).filter(
+    (s) => s === "extracted" || s === "kb_inferred",
+  ).length;
+  if (realCount === 0) return "fallback_only";
+  if (realCount < 2)   return "thin";
   return "rich";
 }
 
@@ -257,11 +288,12 @@ async function main(): Promise<void> {
       }
       const mergedFactors = [...mergedSet];
 
-      // Post-Pass-H2 quality (uses merged list)
-      const quality = classifyFactorQuality(mergedFactors);
-      postDist[quality]++;
-
+      // Post-Pass-H2 quality — source-aware (Phase 1: kb_inferred counts as
+      // real, matching graduator/lib semantics; required for parametric KB
+      // entries whose implied set legitimately contains regime_match).
       const sources = tagFactorSources(rawLlmFactors, kbInferredAdded, mergedFactors);
+      const quality = classifyFactorQualityFromSources(sources);
+      postDist[quality]++;
 
       classified.push({
         id: row.id,
@@ -359,7 +391,13 @@ async function main(): Promise<void> {
         // When kb_inferred factors were added, also update confluence_factors and
         // factor_sources so the live config reflects the full merged state.
         if (s.kbInferredAdded.length > 0) {
-          // Full update: factor_quality + confluence_factors + factor_sources
+          // Wave 26 Pass H Phase 1 (2026-05-26) — Fix 3 bare-string normalization:
+          // Use `to_jsonb(text)` for the bare-string factor_quality stamp instead of
+          // `JSON.stringify(...)::jsonb` (postgres-js auto-encodes the JS string at
+          // the parameter boundary, then `JSON.stringify` adds a second encode →
+          // JSONB string `"rich"` with literal quote characters). Arrays/objects still
+          // use the `JSON.stringify(...)::jsonb` pattern because postgres-js does NOT
+          // auto-encode non-string parameters.
           await sql`
             UPDATE strategies
             SET
@@ -368,7 +406,7 @@ async function main(): Promise<void> {
                   jsonb_set(
                     config,
                     '{entry_quality,factor_quality}',
-                    ${JSON.stringify(s.quality)}::jsonb,
+                    to_jsonb(${s.quality}::text),
                     true
                   ),
                   '{entry_quality,confluence_factors}',
@@ -391,7 +429,7 @@ async function main(): Promise<void> {
               config = jsonb_set(
                 config,
                 '{entry_quality,factor_quality}',
-                ${JSON.stringify(s.quality)}::jsonb,
+                to_jsonb(${s.quality}::text),
                 true
               ),
               updated_at = NOW()

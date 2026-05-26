@@ -153,6 +153,58 @@ describe("Wave 26 Pass H2 — inferFactorsFromArchetype()", () => {
     }
   });
 
+  // ─── Wave 26 Pass H Phase 1 (2026-05-26) — KB depth + parametric coverage ───
+
+  it("break_of_structure returns 3 factors (Phase 1 extended depth)", () => {
+    const factors = inferFactorsFromArchetype("break_of_structure");
+    expect(factors).toHaveLength(3);
+    expect(factors).toContain("market_structure_aligned");
+    expect(factors).toContain("displacement_confirmed");
+    expect(factors).toContain("htf_bias_aligned");
+  });
+
+  it("session_open_breakout returns its 3 parametric factors", () => {
+    const factors = inferFactorsFromArchetype("session_open_breakout");
+    expect(factors).toEqual(
+      expect.arrayContaining([
+        "killzone_active",
+        "opening_range_breakout",
+        "first_30min_volume_above_avg",
+      ]),
+    );
+    expect(factors).toHaveLength(3);
+  });
+
+  it("ema_crossover returns regime_match + htf_bias_aligned", () => {
+    const factors = inferFactorsFromArchetype("ema_crossover");
+    expect(factors).toEqual(["regime_match", "htf_bias_aligned"]);
+  });
+
+  it("opening_range_breakout returns killzone_active + first_30min_volume_above_avg", () => {
+    const factors = inferFactorsFromArchetype("opening_range_breakout");
+    expect(factors).toEqual([
+      "killzone_active",
+      "first_30min_volume_above_avg",
+    ]);
+  });
+
+  it("vwap_bounce returns vwap_alignment + regime_match", () => {
+    const factors = inferFactorsFromArchetype("vwap_bounce");
+    expect(factors).toEqual(["vwap_alignment", "regime_match"]);
+  });
+
+  it("moving_average bare (no prefix) returns regime_match + ma_as_support_resistance", () => {
+    const factors = inferFactorsFromArchetype("moving_average");
+    expect(factors).toEqual(["regime_match", "ma_as_support_resistance"]);
+  });
+
+  it("archetype:break_of_structure prefixed form returns same 3 factors (regression)", () => {
+    const bare = inferFactorsFromArchetype("break_of_structure");
+    const prefixed = inferFactorsFromArchetype("archetype:break_of_structure");
+    expect(prefixed).toEqual(bare);
+    expect(prefixed).toHaveLength(3);
+  });
+
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -242,7 +294,10 @@ describe("Wave 26 Pass H2 — classifyFactorSources() archetype kb_inferred path
   it("non-archetype entry_indicator → no inference → fallback_only when 0 extracted", () => {
     const rawLlm:    string[] = [];
     const afterFloor           = ["regime_match", "structural_setup"];
-    const entryIndicator       = "ema_crossover"; // parametric, NOT an archetype
+    // Wave 26 Pass H Phase 1 (2026-05-26): ema_crossover is now KB-mapped to
+    // ["regime_match", "htf_bias_aligned"]; use a deliberately-unknown name to
+    // exercise the "non-archetype + no KB entry" path.
+    const entryIndicator       = "totally_unknown_parametric_indicator_xyz";
 
     const { factor_quality, factor_sources, mergedFactors } = classifyFactorSources(
       rawLlm,

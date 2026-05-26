@@ -484,4 +484,18 @@ describe("Wave 26 Pass G B2 — additive invariant: existing gates are unchanged
     expect(GRADUATOR_SRC).toContain("if (f.length < 2)");
   });
 
+  // ─── Wave 26 Pass H Phase 1 (2026-05-26) — Fix 3 factor_quality bare-string guard
+  it("graduator does NOT double-encode factor_quality via JSON.stringify(...)::jsonb", () => {
+    // factor_quality is written as a bare string inside the entryQualityBlock
+    // object, which Drizzle ORM encodes ONCE at the JSONB column boundary.
+    // If anyone introduces a raw `sql\`...\`` UPDATE/INSERT that uses
+    // `${JSON.stringify(factor_quality)}::jsonb` pattern, postgres-js will
+    // double-encode (JS string auto-encode + JSON.stringify wrap → JSONB string
+    // with literal quote chars). Guard against regression.
+    const stringifyFqMatches = GRADUATOR_SRC.match(
+      /JSON\.stringify\([^)]*factor_quality[^)]*\)\s*::\s*jsonb/g,
+    );
+    expect(stringifyFqMatches).toBeNull();
+  });
+
 });
