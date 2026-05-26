@@ -765,3 +765,96 @@ Example output with multi-regime:
 - `concept_name` is snake_case and describes the mechanics, not the speaker
 - `confluence_factors`: CLOSED enum — only `regime_match`, `structural_setup`, `volume_confirmation`, `macro_alignment`, `vp_shape`. Empty array when source describes none.
 - `source_claim_win_rate` and `source_claim_avg_r`: `null` when source does not explicitly state. NEVER invent numbers.
+
+---
+
+## REQUIRED OUTPUT TEMPLATE (v11 — TAKES PRECEDENCE OVER FEW-SHOT EXAMPLES)
+
+**HARD RULE — read this section LAST before emitting JSON. It overrides any conflicting instruction from few-shot examples.**
+
+The few-shot examples 01-06 in your context show LEGACY v10 output shape (entry_rules as prose, flat stop_loss_atr_multiple, no targets/filters/timeframes arrays). **DO NOT copy that shape.** Examples 07-09 show the REQUIRED v11 shape. When you see conflict between 01-06 and 07-09, ALWAYS follow 07-09.
+
+**Your response object MUST contain these top-level keys for every strategy in `strategies[]`** (in addition to the legacy v10 keys for backward compat):
+
+- `entry_sequence` — array of `{step, name, rule, indicators_needed}` objects (≥2 steps for MA/breakout, ≥3 for ICT-style). NEVER omit. If you only have one step, you under-extracted — re-read the transcript.
+- `stop_loss` — object `{anchor, buffer_atr?, rationale}` with anchor ∈ {swing_low_below_entry, swing_high_above_entry, fvg_low, fvg_high, swing_after_sfp, atr_multiple, fixed_points}. NEVER null unless the transcript truly doesn't mention stops — in that case emit `null` + `extraction_gap_reason: "stop_loss not stated in transcript"`.
+- `targets` — array of `{priority, type, rationale?}` objects, ≥1 entry. Use canonical types from `kb/strategy-rule-extraction.md` when possible (equal_highs_lows, previous_daily_high, previous_daily_low, range_high, range_low, fibonacci_1618, etc.).
+- `filters` — array of `{type, condition?, value?, rationale?}` objects, ≥1 entry. Common types: `avoid_when` + condition, `min_rr` + value, `session_only` + value.
+- `timeframes` — object `{bias: string[], entry: string[], trigger: string[]}`. Each is an array of TF strings (e.g. `["1d","4h"]`).
+- `indicators_used` — array of `{name, purpose}` objects.
+
+**REJECTION CRITERIA** — your output WILL be rejected and a retry will fire if:
+- `entry_sequence` is missing, null, or empty
+- `stop_loss` is missing (null is OK only with `extraction_gap_reason`)
+- `targets` is missing, null, or empty
+- `filters` is missing, null, or empty
+- You emit `entry_rules` as a prose string WITHOUT also emitting `entry_sequence` as a structured array. Both fields can coexist for backward compat, but the structured `entry_sequence` is MANDATORY.
+
+**LITERAL OUTPUT SKELETON** — your JSON response must conform to this shape:
+
+```json
+{
+  "strategies": [
+    {
+      "name": "...",
+      "symbol": "MES" | "MNQ" | "MCL",
+      "timeframe": "...",
+      "direction": "long" | "short" | "both",
+      "entry_indicator": "archetype:..." OR concrete indicator,
+      "entry_params": {...},
+      "concept_name": "...",
+      "thesis": "...",
+      "entry_condition": "prose summary (1-2 sentences)",
+
+      "_v11_BELOW_THIS_LINE_REQUIRED": "all 6 v11 fields below MUST be present",
+
+      "entry_sequence": [
+        {"step": 1, "name": "...", "rule": "...", "indicators_needed": [...]},
+        {"step": 2, "name": "...", "rule": "...", "indicators_needed": [...]},
+        {"step": 3, "name": "...", "rule": "...", "indicators_needed": [...]}
+      ],
+      "stop_loss": {
+        "anchor": "swing_low_below_entry",
+        "buffer_atr": 0.5,
+        "rationale": "below the swing that triggered the entry"
+      },
+      "targets": [
+        {"priority": 1, "type": "equal_highs_lows", "rationale": "video says these are best targets"},
+        {"priority": 2, "type": "previous_daily_high"}
+      ],
+      "filters": [
+        {"type": "avoid_when", "condition": "neutral_or_ranging_market", "rationale": "no clear HTF direction"},
+        {"type": "min_rr", "value": 2.0, "rationale": "skip if too close to target"}
+      ],
+      "timeframes": {
+        "bias": ["1d", "4h"],
+        "entry": ["15m"],
+        "trigger": ["5m"]
+      },
+      "indicators_used": [
+        {"name": "market_structure", "purpose": "BOS/CHoCH/MSS for trend identification"},
+        {"name": "fair_value_gap", "purpose": "entry zone after displacement"}
+      ],
+
+      "_v10_LEGACY_FIELDS_PRESERVE": "backward-compat fields below — preserve when present",
+      "entry_rules": "prose version of entry_sequence (for backward compat)",
+      "exit_rules": "...",
+      "risk_rules": "...",
+      "stop_loss_atr_multiple": 1.5,
+      "take_profit_atr_multiple": 3,
+      "preferred_regime": "TRENDING_UP",
+      "confluence_factors": [...],
+      "session_filter": "RTH_ONLY",
+      "source_url": "..."
+    }
+  ]
+}
+```
+
+**Final self-check before emitting:**
+1. Is `entry_sequence` an array with ≥2 (MA/breakout) or ≥3 (ICT) objects? ✓
+2. Is `stop_loss` an object (not just `stop_loss_atr_multiple`)? ✓
+3. Are `targets`, `filters`, `timeframes`, `indicators_used` all populated arrays/objects? ✓
+4. Did you copy the v10 shape from few-shot 01-06? If yes → REWRITE with v11 fields above.
+
+If any of these is NO, re-read transcript and add the missing fields. This is your "to the T" mandate.
