@@ -1948,6 +1948,65 @@ export async function graduateBucketDirectly(opts: {
   const isConfluenceStrategy = confirmingIndicators !== undefined && confirmingIndicators.length > 0;
   const isMtfStrategy = biasTimeframe !== null;
 
+  // ─── Wave 26 Pass I (2026-05-26): Extract v11 Gemma fields ───────────────────
+  // Null-safe reads — all fields are optional (v10 extractions leave them absent).
+  // If absent, defaults keep existing behavior unchanged (backward-compat absolute).
+  const v11EntrySequence: Array<{ step: number; name: string; rule: string; indicators_needed?: string[] }> =
+    Array.isArray((extractedIdea as any)?.entry_sequence)
+      ? (extractedIdea as any).entry_sequence
+      : [];
+  const v11StopLoss: { anchor?: string; buffer_atr?: number; rationale?: string } | null =
+    (extractedIdea as any)?.stop_loss && typeof (extractedIdea as any).stop_loss === "object"
+      ? (extractedIdea as any).stop_loss
+      : null;
+  const v11Targets: Array<{ priority: number; type: string; rationale?: string }> =
+    Array.isArray((extractedIdea as any)?.targets)
+      ? (extractedIdea as any).targets
+      : [];
+  const v11Filters: Array<{ type: string; condition?: string; value?: unknown; rationale?: string }> =
+    Array.isArray((extractedIdea as any)?.filters)
+      ? (extractedIdea as any).filters
+      : [];
+  const v11Timeframes: { bias?: string[]; entry?: string[]; trigger?: string[] } | null =
+    (extractedIdea as any)?.timeframes && typeof (extractedIdea as any).timeframes === "object"
+      ? (extractedIdea as any).timeframes
+      : null;
+  const v11IndicatorsUsed: Array<{ name: string; purpose?: string }> =
+    Array.isArray((extractedIdea as any)?.indicators_used)
+      ? (extractedIdea as any).indicators_used
+      : [];
+  const v11ExtractionGapReason: string | null =
+    typeof (extractedIdea as any)?.extraction_gap_reason === "string"
+      ? (extractedIdea as any).extraction_gap_reason
+      : null;
+
+  // Resolve v11 timeframe hierarchy fields. First elements of each tier take priority.
+  const v11BiasTf: string | null = v11Timeframes?.bias?.[0] ?? null;
+  const v11EntryTf: string | null = v11Timeframes?.entry?.[0] ?? null;
+  const v11TriggerTf: string | null = v11Timeframes?.trigger?.[0] ?? null;
+
+  // 5-TF hierarchy from bias array — map the multiple bias TFs to the
+  // Wave 25 Pass 2 column contract (daily/htf/itf columns).
+  // Schema: bias[0]=highest-TF bias → daily_tf proxy; bias[1]=HTF; remaining=ITF candidate.
+  const v11DailyTf: string | null =
+    v11Timeframes?.bias && v11Timeframes.bias.length >= 1 ? v11Timeframes.bias[0] : null;
+  const v11HtfTf: string | null =
+    v11Timeframes?.bias && v11Timeframes.bias.length >= 2 ? v11Timeframes.bias[1] : null;
+  const v11ItfTf: string | null =
+    v11Timeframes?.bias && v11Timeframes.bias.length >= 3
+      ? v11Timeframes.bias[2]
+      : (v11EntryTf ?? null);
+
+  // Flatten all entry_sequence[].indicators_needed into a unique set
+  // to UNION with existing confirming_indicators.
+  const v11SeqIndicators: string[] = v11EntrySequence.flatMap(
+    (step) => Array.isArray(step.indicators_needed) ? step.indicators_needed : []
+  );
+
+  // Whether v11 emits explicit stop/targets (triggers adaptive exit override)
+  const v11HasExplicitStop = v11StopLoss !== null && typeof v11StopLoss.anchor === "string";
+  const v11HasTargets = v11Targets.length > 0;
+
   const compileInput = {
     entry_indicator: isArchetype && archetypeName ? `archetype:${archetypeName}` : entryIndicator,
     entry_params: derivedEntryParams,
@@ -2375,9 +2434,17 @@ export async function graduateBucketDirectly(opts: {
   // transparently without a migration.
   const {
     factor_sources,
-    factor_quality,
+    factor_quality: rawFactorQuality,
     mergedFactors: finalConfluenceFactors,
   } = classifyFactorSources(rawConfluenceFactors, confluenceFactors, entryIndicator);
+
+  // Wave 26 Pass I — v11 factor_quality promotion rule.
+  // A richly-extracted strategy (entry_sequence ≥ 3 steps OR targets ≥ 3) is
+  // treated as "rich" even if the LLM confluence_factors list was auto-floored.
+  // This reflects that the v11 extraction provided institutional-grade detail.
+  const v11RichExtraction = v11EntrySequence.length >= 3 || v11Targets.length >= 3;
+  const factor_quality: "rich" | "thin" | "fallback_only" =
+    v11RichExtraction ? "rich" : rawFactorQuality;
 
   // Use the merged factor list (may include kb_inferred additions from archetype)
   // as the canonical confluence_factors for the entry_quality block.
@@ -2413,6 +2480,73 @@ export async function graduateBucketDirectly(opts: {
       originalMarket: market,
       confluenceFactors: finalConfluenceFactors,
     });
+
+    // ─── Wave 26 Pass I (2026-05-26): v11 config additions ────────────────────
+    // Build the fields to stamp on every row (leader + variants).
+    // All v11 arrays/objects read from extractedIdea were extracted null-safely
+    // above — if absent they are [] or null so the spread below is a no-op for
+    // legacy v10 graduations (backward-compat absolute).
+
+    // Merged confirming_indicators: union of Wave 25 defaults + v11 entry_sequence indicators.
+    const v11MergedConfirmingIndicators: string[] = Array.from(
+      new Set([
+        ...wave25Defaults.configAdditions.confirming_indicators,
+        ...v11SeqIndicators,
+      ])
+    ).filter((s) => typeof s === "string" && s.length > 0);
+
+    // Bias/entry/trigger timeframe overrides from v11 timeframes block.
+    // Only override when v11 actually emits the field; otherwise preserve Wave 25 defaults.
+    const v11BiasTimeframe: string = v11BiasTf ?? wave25Defaults.configAdditions.bias_timeframe;
+    const v11EntryTimeframe: string | null = v11EntryTf;
+    const v11TriggerTimeframe: string | null = v11TriggerTf;
+
+    // Adaptive exit_plan_config override when v11 emits explicit stop + targets.
+    // The adaptive engine (Wave 25 Pass 7 / Wave 25.5) reads target_sequence + stop_anchor.
+    const v11ExitPlanConfigOverride: Record<string, unknown> | null =
+      v11HasExplicitStop && v11HasTargets
+        ? {
+            exit_style: "adaptive",
+            ...(v11StopLoss?.anchor ? { stop_anchor: v11StopLoss.anchor } : {}),
+            ...(typeof v11StopLoss?.buffer_atr === "number" ? { stop_buffer_atr: v11StopLoss.buffer_atr } : {}),
+            target_sequence: v11Targets,
+          }
+        : null;
+
+    // Build the final exit_plan_config for this row: v11 override wins over wave25 default.
+    const finalExitPlanConfig: Record<string, unknown> =
+      v11ExitPlanConfigOverride ?? (wave25Defaults.exitPlanConfig as Record<string, unknown>);
+
+    // Lifecycle metadata: extraction_gap_reason triggers NEEDS_REVISION path.
+    const v11LifecycleMetadata: Record<string, unknown> | null =
+      v11ExtractionGapReason
+        ? { extraction_gap_reason: v11ExtractionGapReason }
+        : null;
+
+    // Helper: build v11-stamped additions object for config JSONB (shared leader + variant).
+    const buildV11ConfigAdditions = (): Record<string, unknown> => ({
+      // v11 entry sequence — array of ordered entry steps with indicators_needed
+      ...(v11EntrySequence.length > 0 ? { entry_sequence: v11EntrySequence } : {}),
+      // v11 stop_loss — overrides any prior auto-injected stop_loss
+      ...(v11StopLoss !== null ? { stop_loss: v11StopLoss } : {}),
+      // v11 targets — overrides exit_plan_config.targets if richer
+      ...(v11Targets.length > 0 ? { targets: v11Targets } : {}),
+      // v11 filters — avoid_when conditions + min_rr
+      ...(v11Filters.length > 0 ? { filters: v11Filters } : {}),
+      // v11 indicators_used — explicit indicator roles list
+      ...(v11IndicatorsUsed.length > 0 ? { indicators_used: v11IndicatorsUsed } : {}),
+      // v11 timeframe slots: bias/entry/trigger as canonical fields
+      bias_timeframe: v11BiasTimeframe,
+      ...(v11EntryTimeframe ? { entry_timeframe: v11EntryTimeframe } : {}),
+      ...(v11TriggerTimeframe ? { trigger_timeframe: v11TriggerTimeframe } : {}),
+      // 5-TF hierarchy overrides from v11 bias[] array
+      ...(v11DailyTf ? { daily_tf: v11DailyTf } : {}),
+      ...(v11HtfTf ? { htf_tf: v11HtfTf } : {}),
+      ...(v11ItfTf ? { itf_tf: v11ItfTf } : {}),
+      // lifecycle_metadata for NEEDS_REVISION path
+      ...(v11LifecycleMetadata ? { lifecycle_metadata: v11LifecycleMetadata } : {}),
+    });
+
     // Wave 26 Pass F (2026-05-25) — REVISED multi-symbol approach. Instead of
     // packing [MES,MNQ,MCL] into one row (Pass E), graduate as SEPARATE rows
     // per market. Operator decision: backtest each (concept × market) pair
@@ -2433,18 +2567,21 @@ export async function graduateBucketDirectly(opts: {
         ...(overlayed.config as Record<string, unknown>),
         entry_quality: entryQualityBlock,
         // Wave 26 Pass E — bias_timeframe + confirming_indicators in config JSONB
-        bias_timeframe: wave25Defaults.configAdditions.bias_timeframe,
-        confirming_indicators: wave25Defaults.configAdditions.confirming_indicators,
+        bias_timeframe: v11BiasTimeframe,
+        confirming_indicators: v11MergedConfirmingIndicators,
         // Wave 26 Pass H1 Bug 3 — traceability fields on leader row
         source_url:       bestMention.sourceUrl ?? null,
         source_bucket_id: bucketId,
+        // Wave 26 Pass I — v11 Gemma fields stamped on config JSONB
+        ...buildV11ConfigAdditions(),
       },
       // Wave 26 Pass E — Wave 25 Pass 1/2/7 institutional columns auto-set
       // (5-TF columns are set via raw SQL below — Drizzle schema not synced with migration 0138)
       useWeightedScoring: wave25Defaults.useWeightedScoring,
       confluenceScoreThreshold: String(wave25Defaults.confluenceScoreThreshold),
       confluenceScoreWeights: wave25Defaults.confluenceScoreWeights,
-      exitPlanConfig: wave25Defaults.exitPlanConfig,
+      // Wave 26 Pass I — v11 adaptive exit override takes precedence over wave25 default
+      exitPlanConfig: finalExitPlanConfig as typeof wave25Defaults.exitPlanConfig,
       preferredRegime,
       // W23H.B: also write the new array column so Pass 2 W23H.C picker
       // (regime = ANY(preferred_regimes)) has data on every new graduation.
@@ -2482,18 +2619,53 @@ export async function graduateBucketDirectly(opts: {
     // Wave 26 Pass E — 5-TF MTF hierarchy columns (Wave 25 Pass 2 W25.4).
     // Migration 0138 added daily_tf/htf_tf/itf_tf/trigger_tf to PG but Drizzle
     // schema.ts isn't synced — use raw SQL UPDATE for these 4 columns.
+    // Wave 26 Pass I: v11 TF overrides from bias[] take precedence over wave25 defaults.
     await db.execute(sql`
       UPDATE strategies SET
-        daily_tf   = ${wave25Defaults.dailyTf},
-        htf_tf     = ${wave25Defaults.htfTf},
-        itf_tf     = ${wave25Defaults.itfTf},
-        trigger_tf = ${wave25Defaults.triggerTf}
+        daily_tf   = ${v11DailyTf ?? wave25Defaults.dailyTf},
+        htf_tf     = ${v11HtfTf   ?? wave25Defaults.htfTf},
+        itf_tf     = ${v11ItfTf   ?? wave25Defaults.itfTf},
+        trigger_tf = ${v11TriggerTf ?? wave25Defaults.triggerTf}
       WHERE id = ${inserted.id}::uuid
     `);
 
     await db.update(strategyPendingBuckets)
       .set({ graduatedStrategyId: inserted.id, wideFingerprintHash: wideFingerprint })
       .where(eq(strategyPendingBuckets.id, bucketId));
+
+    // ─── Wave 26 Pass I (2026-05-26): NEEDS_REVISION lifecycle path ──────────
+    // When v11 emits extraction_gap_reason, the strategy was extracted but with
+    // known gaps. Mark lifecycle_state = NEEDS_REVISION so the operator dashboard
+    // surfaces these as re-extract debt.
+    if (v11ExtractionGapReason) {
+      await db.execute(sql`
+        UPDATE strategies SET lifecycle_state = 'NEEDS_REVISION'
+        WHERE id = ${inserted.id}::uuid
+          AND lifecycle_state NOT IN ('GRAVEYARD', 'RETIRED', 'DEPLOYED', 'PILOT', 'DEPLOY_READY')
+      `).catch((revErr: unknown) =>
+        logger.warn({ err: revErr, strategyId: inserted.id }, "Pass I: NEEDS_REVISION lifecycle update failed (non-blocking)")
+      );
+      insertAuditRowSafe({
+        action: "lifecycle.needs_revision_set",
+        entityType: "strategy",
+        entityId: inserted.id,
+        input: { bucket_id: bucketId, concept_name: conceptName } as Record<string, unknown>,
+        result: {
+          extraction_gap_reason: v11ExtractionGapReason,
+          strategy_name: strategyName,
+          v11_fields_present: v11EntrySequence.length > 0 || v11Targets.length > 0,
+        } as Record<string, unknown>,
+        status: "warning",
+        decisionAuthority: "system",
+        correlationId: correlationId ?? null,
+      }).catch((auditErr: unknown) =>
+        logger.warn({ err: auditErr }, "Pass I: lifecycle.needs_revision_set audit write failed (non-blocking)")
+      );
+      logger.warn(
+        { strategyId: inserted.id, strategyName, extractionGapReason: v11ExtractionGapReason },
+        "direct-graduator Pass I: strategy marked NEEDS_REVISION due to extraction_gap_reason",
+      );
+    }
 
     // ─── Wave 26 Pass G B4 (2026-05-26): GATE 2 — Factor Quality Telemetry ─
     // Fire-and-forget Prometheus counter + confluence-depth histogram. Helper
@@ -2555,16 +2727,19 @@ export async function graduateBucketDirectly(opts: {
               metadata: { ...variantMetadata, entry_archetype: variantEntryArchetype },
             } : {}),
             entry_quality: entryQualityBlock,
-            bias_timeframe: wave25Defaults.configAdditions.bias_timeframe,
-            confirming_indicators: wave25Defaults.configAdditions.confirming_indicators,
+            bias_timeframe: v11BiasTimeframe,
+            confirming_indicators: v11MergedConfirmingIndicators,
             // Wave 26 Pass H1: stamp traceability fields identical to leader
             source_url:       bestMention.sourceUrl ?? null,
             source_bucket_id: bucketId,
+            // Wave 26 Pass I — v11 fields byte-identical on variants (Pass H1 rule)
+            ...buildV11ConfigAdditions(),
           },
           useWeightedScoring: wave25Defaults.useWeightedScoring,
           confluenceScoreThreshold: String(wave25Defaults.confluenceScoreThreshold),
           confluenceScoreWeights: wave25Defaults.confluenceScoreWeights,
-          exitPlanConfig: wave25Defaults.exitPlanConfig,
+          // Wave 26 Pass I — v11 adaptive exit override on variants too
+          exitPlanConfig: finalExitPlanConfig as typeof wave25Defaults.exitPlanConfig,
           preferredRegime,
           preferredRegimes: (() => {
             const cfg = variantOverlayed.config as Record<string, unknown>;
@@ -2584,12 +2759,13 @@ export async function graduateBucketDirectly(opts: {
           tags: strategyTags,
         }).returning({ id: strategies.id });
         // 5-TF columns via raw SQL (Drizzle schema not synced w/ migration 0138)
+        // Wave 26 Pass I: v11 TF overrides on variants, identical to leader.
         await db.execute(sql`
           UPDATE strategies SET
-            daily_tf   = ${wave25Defaults.dailyTf},
-            htf_tf     = ${wave25Defaults.htfTf},
-            itf_tf     = ${wave25Defaults.itfTf},
-            trigger_tf = ${wave25Defaults.triggerTf}
+            daily_tf   = ${v11DailyTf   ?? wave25Defaults.dailyTf},
+            htf_tf     = ${v11HtfTf     ?? wave25Defaults.htfTf},
+            itf_tf     = ${v11ItfTf     ?? wave25Defaults.itfTf},
+            trigger_tf = ${v11TriggerTf ?? wave25Defaults.triggerTf}
           WHERE id = ${variantInserted.id}::uuid
         `);
         fanOutStrategyIds.push(variantInserted.id);
