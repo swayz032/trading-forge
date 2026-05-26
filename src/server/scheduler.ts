@@ -58,6 +58,8 @@ import { runConsistencyDailyDigest } from "./services/consistency-tracker-servic
 import { runQuantumReplayWeeklyAnalysis } from "./services/quantum-replay-weekly-service.js";
 // W28 Pass A.4: Composite health daily digest — 5:00 PM ET daily
 import { runCompositeHealthDailyDigest } from "./services/composite-health-digest-service.js";
+// W26 Pass G Pass D: Strategy stale detector — 04:00 ET daily
+import { runStrategyStaleDetector } from "./services/strategy-stale-detector.js";
 
 let initialized = false;
 
@@ -3330,7 +3332,7 @@ except Exception as e:
   });
   _scheduledJobs.add("harsh-regime-phase-activation-check");
 
-  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), regen-declining-sweep (2 AM ET daily — B4 W13), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h), cme-status-poll (60s — C1 W15), prop-firm-health-check (15m — C2 W15), prop-firm-dashboard-snapshot (1h — C2 W15), validation-cadence-monthly (1st of month 3:30 AM UTC — C7 W16, bypasses pipeline gate), bias-engine-session-start (9:30 AM ET weekdays — W23 Gap-Fix-B, NOT pipeline-gated), bias-engine-refresh-10am-et (10:00 AM ET weekdays — W23 Gap-Fix-B, fail-open, NOT pipeline-gated), harsh-regime-phase-activation-check (03:00 UTC daily — W23D, 90-day clock from first PAPER, NOT pipeline-gated), bw-session-refresh (every 6h — W24P1, NOT pipeline-gated), prop-firm-cookie-refresh (every 1h — W24P1, NOT pipeline-gated), weekly-drift-2sigma-check (Sunday 18:00 ET — W24P1, pipeline-gate-EXEMPT W25P2), n8n-drift-detector-weekly (Sunday 19:00 ET — W25P2-A2, pipeline-gate-EXEMPT), n8n-drift-detector-monthly (1st of month 09:00 ET — W25P2-A2, pipeline-gate-EXEMPT), pre-market-briefing-discord (14:00 UTC daily — W25.5d, pipeline-gate-EXEMPT), naked-poc-sync-daily (4:30 PM ET weekdays — W25.6-P3A3, pipeline-gate-EXEMPT), liquidity-map-refresh (every 30min RTH Mon-Fri — W25.6-P3A1, pipeline-gate-EXEMPT), quantum-replay-weekly-analysis (Sunday 19:00 ET — W27P1.5-A2, pipeline-gate-EXEMPT, kill-switch=auto_patch_loop_enabled)");
+  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), regen-declining-sweep (2 AM ET daily — B4 W13), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h), cme-status-poll (60s — C1 W15), prop-firm-health-check (15m — C2 W15), prop-firm-dashboard-snapshot (1h — C2 W15), validation-cadence-monthly (1st of month 3:30 AM UTC — C7 W16, bypasses pipeline gate), bias-engine-session-start (9:30 AM ET weekdays — W23 Gap-Fix-B, NOT pipeline-gated), bias-engine-refresh-10am-et (10:00 AM ET weekdays — W23 Gap-Fix-B, fail-open, NOT pipeline-gated), harsh-regime-phase-activation-check (03:00 UTC daily — W23D, 90-day clock from first PAPER, NOT pipeline-gated), bw-session-refresh (every 6h — W24P1, NOT pipeline-gated), prop-firm-cookie-refresh (every 1h — W24P1, NOT pipeline-gated), weekly-drift-2sigma-check (Sunday 18:00 ET — W24P1, pipeline-gate-EXEMPT W25P2), n8n-drift-detector-weekly (Sunday 19:00 ET — W25P2-A2, pipeline-gate-EXEMPT), n8n-drift-detector-monthly (1st of month 09:00 ET — W25P2-A2, pipeline-gate-EXEMPT), pre-market-briefing-discord (14:00 UTC daily — W25.5d, pipeline-gate-EXEMPT), naked-poc-sync-daily (4:30 PM ET weekdays — W25.6-P3A3, pipeline-gate-EXEMPT), liquidity-map-refresh (every 30min RTH Mon-Fri — W25.6-P3A1, pipeline-gate-EXEMPT), quantum-replay-weekly-analysis (Sunday 19:00 ET — W27P1.5-A2, pipeline-gate-EXEMPT, kill-switch=auto_patch_loop_enabled), strategy-stale-detector (04:00 ET daily — W26PassG-PassD, pipeline-gated, GRAVEYARD-never)");
 
   // ─── Wave 24 Pass 1 Item 1: BW session refresh — every 6 hours ────────────────
   // CATASTROPHIC GAP: runBwSessionRefreshCheck existed but had ZERO callers in
@@ -4425,6 +4427,55 @@ except Exception as e:
     }
   });
   _scheduledJobs.add("composite-health-daily-digest");
+
+  // ─── W26 Pass G Pass D: Strategy STALE detector — 04:00 ET daily ──────────
+  //
+  // Scans all ACTIVE strategies (CANDIDATE / PAPER / DEPLOY_READY / PILOT) for
+  // inactivity and manages lifecycle_metadata.stale_since + NEEDS_REVISION
+  // demotion at thresholds (30d → stale, 60d → NEEDS_REVISION).
+  //
+  // Pipeline-paused-AWARE: if pipeline is not ACTIVE, the job logs and exits
+  // without any demotions — per operator mandate (paused mode should not
+  // penalize strategies for not trading).
+  //
+  // Schedule: "0 9 * * *" = 09:00 UTC = 04:00 ET (DST-aware: 04:00 EST both
+  // winter (UTC-5: 09:00 UTC) and summer (UTC-4: 08:00 UTC → covered by the
+  // ET-hour=4 guard inside the handler). Double-fire "0 8,9 * * *" covers both
+  // UTC offsets. The ET-hour guard inside filters to exactly 04:00 ET.
+  //
+  // GRAVEYARD invariant: never writes GRAVEYARD. Max demotion = NEEDS_REVISION.
+  // DEPLOYED + PILOT are never demoted (the service enforces this itself).
+  registerJob("strategy-stale-detector", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "strategy-stale-detector" }, "cron tick start");
+    await runStrategyStaleDetector();
+  });
+
+  // 04:00 ET = 09:00 UTC (EST, UTC-5) or 08:00 UTC (EDT, UTC-4)
+  // Double-fire "0 8,9 * * *" + ET-hour guard ensures exactly one execution per day.
+  cron.schedule("0 8,9 * * *", async () => {
+    if (!_tryAcquireJobLock("strategy-stale-detector")) return;
+    try {
+      const now = new Date();
+      const etHour = parseInt(
+        now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+        10,
+      );
+      if (etHour !== 4) {
+        logger.debug({ etHour }, "Scheduler: strategy-stale-detector cron fired but not 04:00 ET — skipping");
+        return;
+      }
+      if (!(await pipelineGate("strategy-stale-detector"))) return;
+      logger.info("Scheduler: strategy-stale-detector (04:00 ET confirmed)");
+      const t0ssd = Date.now();
+      await withRetry("strategy-stale-detector", SCHEDULER_JOBS["strategy-stale-detector"].run, 1);
+      markJobRun("strategy-stale-detector");
+      emitJobComplete("strategy-stale-detector", Date.now() - t0ssd);
+    } finally {
+      _releaseJobLock("strategy-stale-detector");
+    }
+  });
+  _scheduledJobs.add("strategy-stale-detector");
 
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every

@@ -1065,6 +1065,13 @@
       "when": 1748476800000,
       "tag": "0149_strategy_health_scores",
       "breakpoints": true
+    },
+    {
+      "idx": 152,
+      "version": "7",
+      "when": 1748563200000,
+      "tag": "0152_strategies_needs_revision_states",
+      "breakpoints": true
     }
   ]
 }

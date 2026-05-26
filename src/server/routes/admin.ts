@@ -12,11 +12,13 @@ import { randomUUID, createHmac, timingSafeEqual } from "crypto";
 import { desc, eq, and, sql } from "drizzle-orm";
 import { getMode, setMode } from "../services/pipeline-control-service.js";
 import { db } from "../db/index.js";
-import { agentHealthReports, dataIntegrityFindings, liquidityLevels } from "../db/schema.js";
+import { agentHealthReports, dataIntegrityFindings, liquidityLevels, strategies } from "../db/schema.js";
+import { AgentService } from "../services/agent-service.js";
 import { getPhaseRecord, setPhaseOverride, type PhaseValue } from "../services/harsh-regime-phase-service.js";
 import { notifyCritical, notifyWarning } from "../services/notification-service.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { logger } from "../lib/logger.js";
+import { getStrategySourceUrls } from "../lib/strategy-source-resolver.js";
 
 export const adminRoutes = Router();
 
@@ -484,12 +486,57 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
     }
 
     const ingested = results.filter(r => r.status === "ingested").length;
+
+    // ─── INLINE DRAIN (Wave 26 Pass G — Discord/operator-ingest sync path) ───
+    // Run the drain right now so the response contains the final per-market
+    // strategy rows + lifecycle stage + Wave 25 shape — instead of making the
+    // caller wait 10 min for the periodic cron to pick them up.
+    let drainSummary: { scanned: number; drained: number; failed: number } | null = null;
+    let graduatedStrategies: Array<Record<string, unknown>> = [];
+    if (ingested > 0) {
+      try {
+        const agent = new AgentService();
+        const drainResult = await agent.drainScoutedIdeas(10, undefined, { correlationId });
+        drainSummary = { scanned: drainResult.scanned, drained: drainResult.drained, failed: drainResult.failed };
+        // Query strategies created from this ingest (match by source_url present in entry_quality OR last-N-minutes window)
+        const sourceUrls = results.filter(r => r.video_id).map(r => `https://youtube.com/watch?v=${r.video_id}`);
+        if (sourceUrls.length > 0) {
+          const rows = await db
+            .select({
+              id: strategies.id,
+              name: strategies.name,
+              symbols: strategies.symbols,
+              lifecycleState: strategies.lifecycleState,
+              useWeightedScoring: strategies.useWeightedScoring,
+              exitPlanConfig: strategies.exitPlanConfig,
+              preferredRegimes: strategies.preferredRegimes,
+              dailyTf: strategies.dailyTf,
+              htfTf: strategies.htfTf,
+              itfTf: strategies.itfTf,
+              triggerTf: strategies.triggerTf,
+              entryQuality: strategies.entryQuality,
+            })
+            .from(strategies)
+            .where(sql`${strategies.createdAt} > NOW() - INTERVAL '5 minutes'`)
+            .orderBy(desc(strategies.createdAt))
+            .limit(20);
+          graduatedStrategies = rows;
+        }
+      } catch (drainErr) {
+        req.log.warn({ err: drainErr instanceof Error ? drainErr.message : String(drainErr) }, "operator-ingest: inline drain failed (will be caught by next cron tick)");
+      }
+    }
+
     res.json({
       correlation_id: correlationId,
       total: urls.length,
       ingested,
       results,
-      note: "Mentions persisted across 3 synthetic layers (web/youtube/reddit) so graduator cross-validation is met. Graduator drain runs every ~30 min via 'drain-scouted-ideas-periodic' cron; bucket entries should appear within that window.",
+      drain: drainSummary,
+      graduated_strategies: graduatedStrategies,
+      note: drainSummary
+        ? `Drain fired inline (drained ${drainSummary.drained}/${drainSummary.scanned}). Strategies sitting in CANDIDATE/TESTING — backtest gates queued.`
+        : "Mentions persisted; next drain cron tick (~10 min) will create the per-market strategy rows.",
     });
   } catch (err) {
     req.log.error({ err }, "Admin: operator-ingest failed");
@@ -964,3 +1011,147 @@ adminRoutes.post("/liquidity-map/naked-pocs-batch", async (req, res) => {
     correlation_id: correlationId,
   });
 });
+
+// ─── Wave 26 Pass G Pass D: GET /strategies/needs-attention ──────────────────
+//
+// Returns all strategies that need operator attention:
+//   - status ∈ {NEEDS_ARCHETYPE, NEEDS_REVISION}  (hard lifecycle blockers)
+//   - config.entry_quality.factor_quality = 'fallback_only'  (thin library debt)
+//   - config.lifecycle_metadata.stale_since != null  (inactive candidates)
+//
+// Each row includes a suggested_action so the dashboard tile is self-contained.
+//
+// Response shape:
+// {
+//   ok: true,
+//   count: number,
+//   strategies: Array<{
+//     id: string,
+//     name: string,
+//     status: string,
+//     factor_quality: string | null,
+//     stale_since: string | null,
+//     last_extraction_outcome: string | null,
+//     last_graduation_outcome: string | null,
+//     extraction_attempt_count: number | null,
+//     source_urls: string[],
+//     suggested_action: string
+//   }>
+// }
+
+adminRoutes.get("/strategies/needs-attention", async (req, res) => {
+  const correlationId = randomUUID();
+
+  try {
+    const rows = await db.execute(sql`
+      SELECT
+        id::text                                                        AS id,
+        name,
+        lifecycle_state                                                 AS status,
+        config->'entry_quality'->>'factor_quality'                     AS factor_quality,
+        config->'lifecycle_metadata'->>'stale_since'                   AS stale_since,
+        config->'lifecycle_metadata'->>'last_extraction_outcome'       AS last_extraction_outcome,
+        config->'lifecycle_metadata'->>'last_graduation_outcome'       AS last_graduation_outcome,
+        (config->'lifecycle_metadata'->>'extraction_attempt_count')::int AS extraction_attempt_count
+      FROM strategies
+      WHERE
+        lifecycle_state IN ('NEEDS_ARCHETYPE', 'NEEDS_REVISION')
+        OR config->'entry_quality'->>'factor_quality' = 'fallback_only'
+        OR (config->'lifecycle_metadata'->>'stale_since') IS NOT NULL
+      ORDER BY
+        CASE lifecycle_state
+          WHEN 'NEEDS_ARCHETYPE' THEN 0
+          WHEN 'NEEDS_REVISION'  THEN 1
+          ELSE 2
+        END,
+        name ASC
+    `);
+
+    type RawRow = {
+      id: string;
+      name: string;
+      status: string;
+      factor_quality: string | null;
+      stale_since: string | null;
+      last_extraction_outcome: string | null;
+      last_graduation_outcome: string | null;
+      extraction_attempt_count: number | null;
+    };
+
+    const rawRows = (rows as unknown) as RawRow[];
+
+    // Resolve source URLs for all strategies in one pass
+    const names = rawRows.map((r) => r.name);
+    let urlMap: Record<string, string[]> = {};
+    try {
+      urlMap = await getStrategySourceUrls(names);
+    } catch (err) {
+      logger.warn({ err, correlationId }, "needs-attention: source URL resolution failed — proceeding without URLs");
+    }
+
+    const strategiesOut = rawRows.map((r) => {
+      const suggestedAction = deriveSuggestedAction(r.status, r.factor_quality, r.stale_since, r.last_extraction_outcome);
+      return {
+        id: r.id,
+        name: r.name,
+        status: r.status,
+        factor_quality: r.factor_quality ?? null,
+        stale_since: r.stale_since ?? null,
+        last_extraction_outcome: r.last_extraction_outcome ?? null,
+        last_graduation_outcome: r.last_graduation_outcome ?? null,
+        extraction_attempt_count: r.extraction_attempt_count ?? null,
+        source_urls: urlMap[r.name] ?? [],
+        suggested_action: suggestedAction,
+      };
+    });
+
+    logger.info(
+      { correlationId, count: strategiesOut.length },
+      "admin: needs-attention query complete",
+    );
+
+    return res.json({
+      ok: true,
+      count: strategiesOut.length,
+      strategies: strategiesOut,
+    });
+  } catch (err) {
+    logger.error({ err, correlationId }, "admin: needs-attention query failed");
+    return res.status(500).json({ error: "needs_attention_query_failed", correlationId });
+  }
+});
+
+function deriveSuggestedAction(
+  status: string,
+  factorQuality: string | null,
+  staleSince: string | null,
+  lastExtractionOutcome: string | null,
+): string {
+  if (status === "NEEDS_ARCHETYPE") {
+    return "Register archetype in ARCHETYPE_REGISTRY and re-run extraction";
+  }
+  if (status === "NEEDS_REVISION") {
+    if (lastExtractionOutcome === "source_url_unreachable") {
+      return "Source URL is unreachable — find a replacement video or update source URL, then re-extract";
+    }
+    if (lastExtractionOutcome === "gemma_failed") {
+      return "Gemma extraction failed — check Ollama health, then trigger manual re-extraction";
+    }
+    if (lastExtractionOutcome === "no_archetype_match") {
+      return "Register missing archetype in ARCHETYPE_REGISTRY and re-run extraction";
+    }
+    if (staleSince) {
+      const staleDays = Math.floor((Date.now() - new Date(staleSince).getTime()) / 86_400_000);
+      return `Inactive ${staleDays}+ days — run a backtest or paper session to re-activate, or manually revise`;
+    }
+    return "Review strategy config and re-extract or manually edit; then reset lifecycle to CANDIDATE";
+  }
+  if (factorQuality === "fallback_only") {
+    return "Re-extract: all confluence factors are auto-floor injections — no LLM-extracted factors present";
+  }
+  if (staleSince) {
+    const staleDays = Math.floor((Date.now() - new Date(staleSince).getTime()) / 86_400_000);
+    return `Stale ${staleDays}+ days — run a backtest or paper session to resume activity`;
+  }
+  return "Review strategy config";
+}

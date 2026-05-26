@@ -63,7 +63,7 @@ export const strategies = pgTable("strategies", {
   symbols: text("symbols").array().notNull().default(sql`ARRAY['MES']::TEXT[]`),
   timeframe: text("timeframe").notNull(),
   config: jsonb("config").notNull(), // Full strategy definition JSON
-  lifecycleState: text("lifecycle_state").notNull().default("CANDIDATE"), // CANDIDATE | TESTING | PAPER | DEPLOY_READY | PILOT | DEPLOYED | DECLINING | RETIRED | GRAVEYARD
+  lifecycleState: text("lifecycle_state").notNull().default("CANDIDATE"), // CANDIDATE | TESTING | PAPER | DEPLOY_READY | PILOT | DEPLOYED | DECLINING | RETIRED | GRAVEYARD | NEEDS_ARCHETYPE | NEEDS_REVISION
   lifecycleChangedAt: timestamp("lifecycle_changed_at").defaultNow(),
   preferredRegime: text("preferred_regime"), // TRENDING_UP | TRENDING_DOWN | RANGE_BOUND | HIGH_VOL | LOW_VOL (single — deprecated in W24)
   // W23H.B: multi-regime array. Supersedes preferredRegime. Both readable; single deprecated in W24.
@@ -170,6 +170,14 @@ export const backtests = pgTable(
     // Research runs must explicitly opt-out; silence = enforcement.
     // Applied migration: 0148_backtests_compliance_mode.sql (idx 150).
     complianceMode: text("compliance_mode"),
+    // Wave 26 Pass G Pass E — White's Reality Check result
+    // { p_value, test_stat, passed, threshold, n_obs, n_bootstrap, block_length, mean_excess_return }
+    // Null for backtests run before Pass E. Migration: 0152_wrc_spa_promotion_gates.sql.
+    wrcResult: jsonb("wrc_result"),
+    // Wave 26 Pass G Pass E — Hansen's SPA result
+    // { spa_lower_p, spa_consistent_p, spa_upper_p, passed, threshold, n_obs, n_bootstrap, block_length }
+    // Null for backtests run before Pass E. Migration: 0152_wrc_spa_promotion_gates.sql.
+    spaResult: jsonb("spa_result"),
     errorMessage: text("error_message"),
     executionTimeMs: integer("execution_time_ms"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
