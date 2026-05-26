@@ -567,6 +567,18 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
           min_factors_satisfied: idea.min_factors_satisfied,
           source_claim_win_rate: idea.source_claim_win_rate,
           source_claim_avg_r: idea.source_claim_avg_r,
+          // Wave 26 Pass I (2026-05-26) — v11 deep-extraction fields forwarded
+          // from scout-extract response (synthesized from Gemma prose by
+          // gemma-prose-to-v11.ts). Without these forwards the v11 fields are
+          // silently dropped at the operator-ingest → /scout-ideas/pending hop.
+          entry_sequence: idea.entry_sequence,
+          stop_loss: idea.stop_loss,
+          targets: idea.targets,
+          filters: idea.filters,
+          timeframes: idea.timeframes,
+          indicators_used: idea.indicators_used,
+          extraction_gap_reason: idea.extraction_gap_reason,
+          _v11_synthesis_source: idea._v11_synthesis_source,
         };
 
         // Drop null/undefined fields before posting — pending schema rejects null

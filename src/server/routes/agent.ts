@@ -3,6 +3,7 @@ import { z } from "zod";
 import { randomUUID } from "crypto";
 import { AgentService } from "../services/agent-service.js";
 import { analyzeMarket } from "../services/regime-service.js";
+import { synthesizeV11FromGemmaProse } from "../lib/gemma-prose-to-v11.js";
 import { runRobustnessTest } from "../services/robustness-service.js";
 import { db } from "../db/index.js";
 import { auditLog, strategyPendingBuckets, strategyPendingMentions, systemJournal, strategies } from "../db/schema.js";
@@ -1191,24 +1192,33 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       // filters, timeframes object, indicators_used) so the graduator can stamp
       // them per Pass I track 2 spec. Without these forwards the route silently
       // drops v11 depth and falls back to v10 prose-only shape.
-      const entrySequence = Array.isArray(s.entry_sequence)
-        ? (s.entry_sequence as unknown[]).filter((it): it is Record<string, unknown> => typeof it === "object" && it !== null)
-        : (s.entry_sequence === null ? null : undefined);
-      const stopLossV11 = s.stop_loss && typeof s.stop_loss === "object" && !Array.isArray(s.stop_loss)
-        ? s.stop_loss as Record<string, unknown>
-        : (s.stop_loss === null ? null : undefined);
-      const targetsV11 = Array.isArray(s.targets)
-        ? (s.targets as unknown[]).filter((it): it is Record<string, unknown> => typeof it === "object" && it !== null)
-        : (s.targets === null ? null : undefined);
-      const filtersV11 = Array.isArray(s.filters)
-        ? (s.filters as unknown[]).filter((it): it is Record<string, unknown> => typeof it === "object" && it !== null)
-        : (s.filters === null ? null : undefined);
-      const timeframesV11 = s.timeframes && typeof s.timeframes === "object" && !Array.isArray(s.timeframes)
-        ? s.timeframes as Record<string, unknown>
-        : (s.timeframes === null ? null : undefined);
-      const indicatorsUsedV11 = Array.isArray(s.indicators_used)
-        ? (s.indicators_used as unknown[]).filter((it): it is Record<string, unknown> => typeof it === "object" && it !== null)
-        : (s.indicators_used === null ? null : undefined);
+      //
+      // PROSE SYNTHESIZER (2026-05-26): Gemma4:e2b cannot emit v11 nested JSON
+      // without GBNF grammar enforcement (which crashes Ollama on 8GB VRAM).
+      // BUT Gemma captures the semantic content in v10 prose fields. The
+      // synthesizer parses Gemma's prose (entry_rules, risk_rules, etc.) and
+      // produces v11 structured fields. Merge happens BEFORE the field
+      // extraction below so synthesized fields flow through the same forward path.
+      const synthesized = synthesizeV11FromGemmaProse(s as Record<string, unknown>);
+      const sMerged: Record<string, unknown> = { ...s, ...synthesized };
+      const entrySequence = Array.isArray(sMerged.entry_sequence)
+        ? (sMerged.entry_sequence as unknown[]).filter((it): it is Record<string, unknown> => typeof it === "object" && it !== null)
+        : (sMerged.entry_sequence === null ? null : undefined);
+      const stopLossV11 = sMerged.stop_loss && typeof sMerged.stop_loss === "object" && !Array.isArray(sMerged.stop_loss)
+        ? sMerged.stop_loss as Record<string, unknown>
+        : (sMerged.stop_loss === null ? null : undefined);
+      const targetsV11 = Array.isArray(sMerged.targets)
+        ? (sMerged.targets as unknown[]).filter((it): it is Record<string, unknown> => typeof it === "object" && it !== null)
+        : (sMerged.targets === null ? null : undefined);
+      const filtersV11 = Array.isArray(sMerged.filters)
+        ? (sMerged.filters as unknown[]).filter((it): it is Record<string, unknown> => typeof it === "object" && it !== null)
+        : (sMerged.filters === null ? null : undefined);
+      const timeframesV11 = sMerged.timeframes && typeof sMerged.timeframes === "object" && !Array.isArray(sMerged.timeframes)
+        ? sMerged.timeframes as Record<string, unknown>
+        : (sMerged.timeframes === null ? null : undefined);
+      const indicatorsUsedV11 = Array.isArray(sMerged.indicators_used)
+        ? (sMerged.indicators_used as unknown[]).filter((it): it is Record<string, unknown> => typeof it === "object" && it !== null)
+        : (sMerged.indicators_used === null ? null : undefined);
       const extractionGapReasonV11 = typeof s.extraction_gap_reason === "string"
         ? s.extraction_gap_reason.slice(0, 500)
         : (s.extraction_gap_reason === null ? null : undefined);
@@ -1609,6 +1619,17 @@ const pendingIdeaSchema = z.object({
   // Wave 26 Pass H1 Bug 1 — absorbed sub-concepts for multi-layer archetype merge.
   // Stored in bucket.config.absorbed_sub_concepts for traceability.
   absorbed_sub_concepts: z.array(z.string()).optional(),
+  // Wave 26 Pass I (2026-05-26) — v11 deep-extraction fields. Synthesized from
+  // Gemma prose by gemma-prose-to-v11.ts and forwarded through the route chain.
+  // All optional + permissive shape — zod was stripping these silently without explicit declaration.
+  entry_sequence:        z.array(z.record(z.unknown())).optional(),
+  stop_loss:             z.record(z.unknown()).optional(),
+  targets:               z.array(z.record(z.unknown())).optional(),
+  filters:               z.array(z.record(z.unknown())).optional(),
+  timeframes:            z.record(z.unknown()).optional(),
+  indicators_used:       z.array(z.record(z.unknown())).optional(),
+  extraction_gap_reason: z.string().optional(),
+  _v11_synthesis_source: z.string().optional(),
 });
 
 // Graduation threshold constants — explicit, no magic numbers
@@ -1856,6 +1877,12 @@ agentRoutes.post("/scout-ideas/pending", idempotencyMiddleware, async (req, res)
       "source_claim_win_rate", "source_claim_avg_r", "symbols",
       // W23F.E — scout rotation seed metadata (post-restart fix 2026-05-19)
       "__scout_seeded_symbol",
+      // Wave 26 Pass I (2026-05-26) — v11 deep-extraction fields (synthesized from
+      // Gemma prose by gemma-prose-to-v11.ts when model doesn't emit them directly).
+      // Persisted to extracted_idea so the graduator's Pass I track 2 stamping path
+      // can read them. Without this addition v11 fields are silently dropped here.
+      "entry_sequence", "stop_loss", "targets", "filters", "timeframes",
+      "indicators_used", "extraction_gap_reason", "_v11_synthesis_source",
     ] as const;
     // These Wave 23F fields can legitimately be null (null = "source didn't state a value").
     // They must pass through even when null so the graduator can distinguish
