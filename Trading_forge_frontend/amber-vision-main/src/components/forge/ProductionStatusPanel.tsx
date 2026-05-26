@@ -17,6 +17,7 @@
  */
 
 import { useEffect, useState, useMemo } from "react";
+import { CompositeHealthTile } from "./CompositeHealthTile";
 import { motion } from "framer-motion";
 import {
   CheckCircle2,
@@ -422,6 +423,9 @@ export function ProductionStatusPanel() {
           </span>
         </div>
       )}
+
+      {/* Composite Health tile — portfolio summary mode (READ-ONLY, W28 A.5) */}
+      <CompositeHealthTile />
 
       {/* 6 Questions — 2-column grid on wide, 1-column on narrow.
           Each card gets a subtle amber ring when stale, so the staleness cue

@@ -56,6 +56,8 @@ import { runN8nExecutionScrape } from "./services/n8n-execution-scraper-service.
 import { runConsistencyDailyDigest } from "./services/consistency-tracker-service.js";
 // W27 Pass 1.5 A2: Weekly quantum replay analysis + Discord verdict emitter
 import { runQuantumReplayWeeklyAnalysis } from "./services/quantum-replay-weekly-service.js";
+// W28 Pass A.4: Composite health daily digest — 5:00 PM ET daily
+import { runCompositeHealthDailyDigest } from "./services/composite-health-digest-service.js";
 
 let initialized = false;
 
@@ -375,6 +377,10 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   // predictor is producing signal. Silencing it during a pipeline pause would break
   // the evidence-accumulation contract.
   "quantum-replay-weekly-analysis",     // W27P1.5: quantum replay weekly verdict
+  // W28 Pass A.4: composite health daily digest must fire even when pipeline is
+  // paused. The digest is a pure observability signal for the operator — strategy
+  // health monitoring must continue regardless of pipeline gate state.
+  "composite-health-daily-digest",      // W28A.4: composite strategy health digest
 ]);
 
 function _validateAllJobsScheduled(): void {
@@ -4371,6 +4377,54 @@ except Exception as e:
     }
   });
   _scheduledJobs.add("quantum-replay-weekly-analysis");
+
+  // ─── W28 Pass A.4: Composite health daily digest — 5:00 PM ET daily ─────────
+  //
+  // Runs aggregateStrategyHealth() across all active strategies (DEPLOYED / PILOT /
+  // PAPER / DEPLOY_READY), tallies HEALTHY / MARGINAL / UNHEALTHY / CRITICAL /
+  // SKIPPED verdicts, and posts a single family-grade Discord summary.
+  //
+  // Schedule: 0 22 * * * (22:00 UTC = 17:00 ET during EST, UTC-5).
+  // DST-aware double-fire not required for this job — the ET-hour guard inside
+  // the handler fires at hour=17. 22:00 UTC covers EST (UTC-5=17:00 ET).
+  // During EDT (UTC-4), 22:00 UTC = 18:00 ET — the ET-hour guard will skip.
+  // The guard fires correctly at 21:00 UTC during EDT (17:00 ET EDT).
+  // Therefore schedule is "0 21,22 * * *" to cover both offsets (mirrors
+  // consistency-tracker-daily-digest pattern exactly).
+  //
+  // Pipeline-gate EXEMPT: composite health is a pure observability signal —
+  // strategy health monitoring must fire even when the operator pauses research.
+  // NOT pipeline-gated (in _PIPELINE_GATE_EXEMPT).
+  registerJob("composite-health-daily-digest", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "composite-health-daily-digest" }, "cron tick start");
+    await runCompositeHealthDailyDigest();
+  });
+
+  // 17:00 ET = 21:00 UTC (EDT, UTC-4) or 22:00 UTC (EST, UTC-5)
+  cron.schedule("0 21,22 * * *", async () => {
+    if (!_tryAcquireJobLock("composite-health-daily-digest")) return;
+    try {
+      const now = new Date();
+      const etHour = parseInt(
+        now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+        10,
+      );
+      if (etHour !== 17) {
+        logger.debug({ etHour }, "Scheduler: composite-health-daily-digest cron fired but not 17:00 ET — skipping");
+        return;
+      }
+      // NOT pipeline-gated — safety/observability signal (in _PIPELINE_GATE_EXEMPT)
+      logger.info("Scheduler: composite-health-daily-digest (5:00 PM ET confirmed)");
+      const t0chd = Date.now();
+      await withRetry("composite-health-daily-digest", SCHEDULER_JOBS["composite-health-daily-digest"].run, 1);
+      markJobRun("composite-health-daily-digest");
+      emitJobComplete("composite-health-daily-digest", Date.now() - t0chd);
+    } finally {
+      _releaseJobLock("composite-health-daily-digest");
+    }
+  });
+  _scheduledJobs.add("composite-health-daily-digest");
 
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every

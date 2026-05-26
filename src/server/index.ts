@@ -87,6 +87,7 @@ import { webhookLatencyRoutes } from "./routes/webhook-latency.js";
 import { b15RobustnessRoutes } from "./routes/b15-robustness.js";
 import { consistencyRoutes } from "./routes/consistency.js";
 import { tradeJournalRoutes } from "./routes/trade-journal.js";
+import { compositeHealthRoutes } from "./routes/composite-health.js";
 import { runPendingMigrations } from "./lib/boot-migration-runner.js";
 
 // ─── Boot migration runner ────────────────────────────────────────
@@ -538,6 +539,9 @@ app.use("/api/b15-robustness", b15RobustnessRoutes);
 // W26 Pass 6: Topstep consistency concentration tracker — GET /api/consistency/:accountId
 app.use("/api/consistency", consistencyRoutes);
 app.use("/api/trade-journal", tradeJournalRoutes);
+
+// W28 Pass A.5: Composite health tile — READ-ONLY observability, no gate authority
+app.use("/api/composite-health", compositeHealthRoutes);
 
 // 404 handler for API routes — returns JSON instead of Express default HTML
 app.use("/api", (_req, res) => {
