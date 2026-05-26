@@ -1,5 +1,85 @@
-<!-- PROMPT_VERSION: 11 -->
+<!-- PROMPT_VERSION: 12 -->
 # Trading Forge — Transcript Extractor
+
+## SPEAKER-VOCABULARY MANDATE (v12 — Wave 26 Pass I — TAKES PRECEDENCE OVER EVERYTHING BELOW)
+
+**THE CORE RULE: Preserve the speaker's exact words. Do NOT translate to a canonical catalog.**
+
+Every speaker invents their own vocabulary. Some examples we have seen in the wild:
+- One speaker says "Swing Failure Pattern" → SFP
+- One speaker says "Hidden Level" → the open/close of his 4H candle
+- One speaker says "IRS Model" → impulse / range / sweep sequence
+- One speaker says "Optimum Zone" → the 25-50% Fibonacci retracement
+- One speaker says "Premature Zone" → the 0-25% retracement
+- One speaker says "Box for the day" → the previous 4H candle range
+- One speaker says "Power of 3" → accumulation / manipulation / distribution
+- One speaker says "Change of State" → close above/below a structural level
+
+**If you only emit concepts from a fixed catalog, you LOSE the strategy's actual mechanics.** A "4H Candle Box Continuation with Hidden Level + IRS Model" is NOT the same as "ICT Bias Aligned Continuation." Treating them as the same destroys what makes the strategy unique.
+
+## REQUIRED v12 FIELD — `speaker_concepts` (MANDATORY for every strategy):
+
+Before emitting v10/v11 fields, scan the transcript and emit a `speaker_concepts` array with EVERY proprietary term, model name, indicator name, zone name, or filter name the speaker uses. Use the speaker's EXACT phrasing.
+
+```json
+"speaker_concepts": [
+  {
+    "term": "4-Hour Candle Box",
+    "role": "indicator" | "zone" | "filter" | "entry_step" | "stop_anchor" | "target" | "model" | "phase",
+    "verbatim_description": "<copy the speaker's literal explanation, 1-3 sentences from transcript>",
+    "transcript_quote": "<one direct quote where this term is defined or first introduced, ≤150 chars>"
+  },
+  {
+    "term": "Hidden Level",
+    "role": "zone",
+    "verbatim_description": "the open/close of the 4H candle — price bounces between these before breakout, retests for continuation",
+    "transcript_quote": "It is using the open and closing price of that 4hour candle because price will always look to bounce between these two levels"
+  },
+  {
+    "term": "IRS Model",
+    "role": "model",
+    "verbatim_description": "Impulse / Range / Sweep — price impulses strongly, then ranges/consolidates, then sweeps liquidity at range top or bottom before new impulse",
+    "transcript_quote": "first phase is our impulse phase ... we have our range ... we have our sweep"
+  },
+  {
+    "term": "Optimum Zone",
+    "role": "zone",
+    "verbatim_description": "25-50% Fibonacci retracement of the 4H candle box — ideal entry level for healthy retracements in impulsive markets",
+    "transcript_quote": "the 25 to 50% is going to be optimum ... ideally we want to see price make a retracement into and then continue to spiral higher"
+  },
+  {
+    "term": "Change of State",
+    "role": "entry_step",
+    "verbatim_description": "price closes below a structural low (short) or above a structural high (long) — must be a close, not just a wick",
+    "transcript_quote": "we don't want a wick. If it's a wick, price can easily just return"
+  }
+]
+```
+
+**Inclusion rules:**
+1. Include EVERY named concept the speaker introduces — even if you've never seen it before. Especially if you've never seen it.
+2. Use the speaker's exact term (don't normalize "4-Hour Candle Box" to "candle_range" or "ict_bias_aligned_continuation"). The CASE and SPACING should match the speaker.
+3. `verbatim_description` must come from the transcript — paraphrase only slightly; preserve the speaker's framing.
+4. `transcript_quote` MUST be a literal substring of the transcript (the route validates this).
+5. If the speaker says "I use X for Y reason" — that's enough. Emit it.
+6. The MINIMUM for any strategy video is 5 speaker_concepts. If you only emit 2-3, you have under-extracted — re-read the transcript.
+7. The MAXIMUM is 20 (cap on extraction noise).
+
+**Concept roles (the `role` field):**
+- `indicator` — a tool/metric the speaker uses (Gann box, Fibonacci, RSI, breaker block)
+- `zone` — a price area (Optimum Zone, Premature Zone, Danger Zone, Hidden Level, FVG, Order Block)
+- `filter` — an avoid/skip condition (skinny candle, equal liquidity both sides, FOMC day)
+- `entry_step` — a required action before entering (Change of State, Rebalance, Candle Close)
+- `stop_anchor` — where to place stop loss (below swing, below FVG, below structural low)
+- `target` — where to take profit (highs of TF, equal highs, previous daily high)
+- `model` — a multi-step framework the speaker references (IRS Model, Power of 3, CRT, ICT 2022, SMC)
+- `phase` — a sub-state of a model (accumulation, manipulation, distribution, impulse, range, sweep)
+
+**Why this is mandatory:** Downstream code (`gemma-prose-to-v11.ts` speaker-concept mapper) reads `speaker_concepts` to populate `entry_sequence`, `stop_loss.anchor`, `targets[]`, `filters[]`, and `indicators_used[]` USING THE SPEAKER'S WORDS. If you don't emit speaker_concepts, the v11 fields fall back to generic defaults that erase the strategy's actual edge.
+
+**Backward compat:** Continue emitting all v10 + v11 fields below. `speaker_concepts` is ADDITIVE.
+
+---
 
 ## EXTRACTION DEPTH MANDATE (v11 — Wave 26 Pass I — HARD REQUIREMENT)
 

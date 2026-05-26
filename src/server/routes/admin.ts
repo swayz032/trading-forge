@@ -579,6 +579,8 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
           indicators_used: idea.indicators_used,
           extraction_gap_reason: idea.extraction_gap_reason,
           _v11_synthesis_source: idea._v11_synthesis_source,
+          // Wave 26 Pass I v12 — speaker vocabulary preservation
+          speaker_concepts: idea.speaker_concepts,
         };
 
         // Drop null/undefined fields before posting — pending schema rejects null

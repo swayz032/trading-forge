@@ -1223,6 +1223,16 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
         ? s.extraction_gap_reason.slice(0, 500)
         : (s.extraction_gap_reason === null ? null : undefined);
 
+      // Wave 26 Pass I v12 (2026-05-26) — speaker_concepts vocabulary preservation.
+      // Gemma emits speaker's exact terms (4H Candle Box, Hidden Level, IRS Model,
+      // Optimum Zone, etc.) and the synthesizer maps them to v11 fields using the
+      // speaker's words. Captures novel concepts that no canonical catalog can hold.
+      const speakerConceptsV12 = Array.isArray(sMerged.speaker_concepts)
+        ? (sMerged.speaker_concepts as unknown[])
+            .filter((it): it is Record<string, unknown> => typeof it === "object" && it !== null && typeof (it as { term?: unknown }).term === "string")
+            .slice(0, 20)
+        : (sMerged.speaker_concepts === null ? null : undefined);
+
       ideas.push({
         thesis,
         market,
@@ -1276,6 +1286,7 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
         ...(timeframesV11 !== undefined           && { timeframes:               timeframesV11 }),
         ...(indicatorsUsedV11 !== undefined       && { indicators_used:          indicatorsUsedV11 }),
         ...(extractionGapReasonV11 !== undefined  && { extraction_gap_reason:    extractionGapReasonV11 }),
+        ...(speakerConceptsV12 !== undefined      && { speaker_concepts:         speakerConceptsV12 }),
       });
     }
 
@@ -1630,6 +1641,8 @@ const pendingIdeaSchema = z.object({
   indicators_used:       z.array(z.record(z.unknown())).optional(),
   extraction_gap_reason: z.string().optional(),
   _v11_synthesis_source: z.string().optional(),
+  // Wave 26 Pass I v12 — speaker vocabulary preservation
+  speaker_concepts:      z.array(z.record(z.unknown())).optional(),
 });
 
 // Graduation threshold constants — explicit, no magic numbers
@@ -1883,6 +1896,8 @@ agentRoutes.post("/scout-ideas/pending", idempotencyMiddleware, async (req, res)
       // can read them. Without this addition v11 fields are silently dropped here.
       "entry_sequence", "stop_loss", "targets", "filters", "timeframes",
       "indicators_used", "extraction_gap_reason", "_v11_synthesis_source",
+      // Wave 26 Pass I v12 — speaker vocabulary preservation
+      "speaker_concepts",
     ] as const;
     // These Wave 23F fields can legitimately be null (null = "source didn't state a value").
     // They must pass through even when null so the graduator can distinguish

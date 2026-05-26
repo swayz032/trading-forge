@@ -301,9 +301,88 @@ function synthesizeIndicatorsUsed(idea: GemmaIdea): Array<Record<string, unknown
   return out.length > 0 ? out : undefined;
 }
 
+// ─── v12 speaker-concept-driven synthesis ────────────────────────────────
+// When Gemma emits speaker_concepts (the speaker's exact vocabulary), use THOSE
+// to build v11 fields instead of the generic regex catalog above. This is what
+// makes the system extract ANY video — the speaker tells us their terms;
+// we just translate role → v11 field slot, keeping their verbatim words.
+
+type SpeakerConcept = {
+  term?: string;
+  role?: string;
+  verbatim_description?: string;
+  transcript_quote?: string;
+};
+
+function buildEntrySequenceFromSpeakerConcepts(concepts: SpeakerConcept[]): unknown[] | undefined {
+  // Entry-step concepts in their original order from the speaker
+  const steps = concepts.filter(c => c.role === "entry_step" || c.role === "phase");
+  if (steps.length === 0) return undefined;
+  return steps.map((c, idx) => ({
+    step: idx + 1,
+    name: String(c.term ?? "unnamed_step").toLowerCase().replace(/[^a-z0-9_]+/g, "_").slice(0, 60),
+    rule: c.verbatim_description ?? c.transcript_quote ?? c.term ?? "",
+    speaker_term: c.term,
+    indicators_needed: [],
+    source: "speaker_concept",
+  }));
+}
+
+function buildStopLossFromSpeakerConcepts(concepts: SpeakerConcept[], fallbackAtr: number): Record<string, unknown> | undefined {
+  const stop = concepts.find(c => c.role === "stop_anchor");
+  if (!stop) return undefined;
+  return {
+    anchor: String(stop.term ?? "speaker_defined").toLowerCase().replace(/[^a-z0-9_]+/g, "_").slice(0, 60),
+    speaker_term: stop.term,
+    buffer_atr: fallbackAtr,
+    rationale: stop.verbatim_description ?? stop.transcript_quote ?? stop.term ?? "speaker-defined stop",
+    source: "speaker_concept",
+  };
+}
+
+function buildTargetsFromSpeakerConcepts(concepts: SpeakerConcept[]): Array<Record<string, unknown>> | undefined {
+  const tgs = concepts.filter(c => c.role === "target");
+  if (tgs.length === 0) return undefined;
+  return tgs.map((c, idx) => ({
+    priority: idx + 1,
+    type: String(c.term ?? "target").toLowerCase().replace(/[^a-z0-9_]+/g, "_").slice(0, 60),
+    speaker_term: c.term,
+    rationale: c.verbatim_description ?? c.transcript_quote ?? c.term ?? "",
+    source: "speaker_concept",
+  }));
+}
+
+function buildFiltersFromSpeakerConcepts(concepts: SpeakerConcept[]): Array<Record<string, unknown>> | undefined {
+  const fls = concepts.filter(c => c.role === "filter");
+  if (fls.length === 0) return undefined;
+  return fls.map(c => ({
+    type: "speaker_filter",
+    condition: String(c.term ?? "filter").toLowerCase().replace(/[^a-z0-9_]+/g, "_").slice(0, 60),
+    speaker_term: c.term,
+    rationale: c.verbatim_description ?? c.transcript_quote ?? c.term ?? "",
+    source: "speaker_concept",
+  }));
+}
+
+function buildIndicatorsUsedFromSpeakerConcepts(concepts: SpeakerConcept[]): Array<Record<string, unknown>> | undefined {
+  // indicator + zone + model = things to track on the chart
+  const inds = concepts.filter(c => c.role === "indicator" || c.role === "zone" || c.role === "model");
+  if (inds.length === 0) return undefined;
+  return inds.map(c => ({
+    name: String(c.term ?? "indicator").toLowerCase().replace(/[^a-z0-9_]+/g, "_").slice(0, 60),
+    speaker_term: c.term,
+    role: c.role,
+    purpose: c.verbatim_description ?? c.transcript_quote ?? c.term ?? "",
+    source: "speaker_concept",
+  }));
+}
+
 /**
  * Main entry — given a Gemma idea, return the v11 fields to merge in.
- * Returns ONLY the synthesized fields (does not include the input).
+ * Priority order per field:
+ *   1. Gemma's direct v11 emission (model emitted entry_sequence/stop_loss/etc directly)
+ *   2. Speaker-concept-driven build (v12 — uses the speaker's exact vocabulary)
+ *   3. Prose synthesizer (regex catalog fallback — generic ICT/SMC terms only)
  */
 export function synthesizeV11FromGemmaProse(idea: GemmaIdea): Partial<{
   entry_sequence: unknown[];
@@ -323,13 +402,36 @@ export function synthesizeV11FromGemmaProse(idea: GemmaIdea): Partial<{
     indicators_used: Array<Record<string, unknown>>;
     _v11_synthesis_source: string;
   }> = {};
-  const es = synthesizeEntrySequence(idea); if (es) out.entry_sequence = es;
-  const sl = synthesizeStopLoss(idea);      if (sl) out.stop_loss = sl;
-  const tg = synthesizeTargets(idea);        if (tg) out.targets = tg;
-  const fl = synthesizeFilters(idea);        if (fl) out.filters = fl;
-  const tf = synthesizeTimeframes(idea);     if (tf) out.timeframes = tf;
-  const iu = synthesizeIndicatorsUsed(idea); if (iu) out.indicators_used = iu;
-  if (Object.keys(out).length > 0) {
+
+  // ── v12 PRIORITY: speaker_concepts drives v11 field synthesis ──
+  const sc = (idea as { speaker_concepts?: unknown }).speaker_concepts;
+  const speakerConcepts: SpeakerConcept[] = Array.isArray(sc)
+    ? (sc as unknown[]).filter((it): it is SpeakerConcept => typeof it === "object" && it !== null)
+    : [];
+
+  if (speakerConcepts.length > 0) {
+    const fallbackAtr = typeof idea.stop_loss_atr_multiple === "number" ? idea.stop_loss_atr_multiple : 1.5;
+    const esSpeaker = buildEntrySequenceFromSpeakerConcepts(speakerConcepts);
+    const slSpeaker = buildStopLossFromSpeakerConcepts(speakerConcepts, fallbackAtr);
+    const tgSpeaker = buildTargetsFromSpeakerConcepts(speakerConcepts);
+    const flSpeaker = buildFiltersFromSpeakerConcepts(speakerConcepts);
+    const iuSpeaker = buildIndicatorsUsedFromSpeakerConcepts(speakerConcepts);
+    if (esSpeaker && !isFilledArray(idea.entry_sequence)) out.entry_sequence = esSpeaker;
+    if (slSpeaker && !(idea.stop_loss && typeof idea.stop_loss === "object")) out.stop_loss = slSpeaker;
+    if (tgSpeaker && !isFilledArray(idea.targets)) out.targets = tgSpeaker;
+    if (flSpeaker && !isFilledArray(idea.filters)) out.filters = flSpeaker;
+    if (iuSpeaker && !isFilledArray(idea.indicators_used)) out.indicators_used = iuSpeaker;
+    if (Object.keys(out).length > 0) out._v11_synthesis_source = "speaker_concepts_v12";
+  }
+
+  // ── Fallback: regex catalog synthesis for fields speaker_concepts didn't fill ──
+  if (!out.entry_sequence) { const es = synthesizeEntrySequence(idea); if (es) out.entry_sequence = es; }
+  if (!out.stop_loss)      { const sl = synthesizeStopLoss(idea);      if (sl) out.stop_loss = sl; }
+  if (!out.targets)        { const tg = synthesizeTargets(idea);       if (tg) out.targets = tg; }
+  if (!out.filters)        { const fl = synthesizeFilters(idea);       if (fl) out.filters = fl; }
+  if (!out.timeframes)     { const tf = synthesizeTimeframes(idea);    if (tf) out.timeframes = tf; }
+  if (!out.indicators_used){ const iu = synthesizeIndicatorsUsed(idea); if (iu) out.indicators_used = iu; }
+  if (Object.keys(out).length > 0 && !out._v11_synthesis_source) {
     out._v11_synthesis_source = "gemma_prose_to_v11_synthesizer";
   }
   return out;
