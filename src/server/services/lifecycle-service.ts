@@ -37,6 +37,7 @@ import { killSwitch } from "../production/kill-switch.js";
 import { evaluateB14CiGate } from "../lib/b14-ci-gate.js";
 import { evaluateWfeGate } from "../lib/wfe-gate.js";
 import { evaluateParameterDriftGate } from "../lib/parameter-drift-gate.js";
+import { evaluateCompositeShadow } from "../lib/composite-shadow-gate.js";
 import { evaluatePromotionGates, getWfePromotionFloor, getCpcvMinPaths } from "../lib/promotion-gate-orchestrator.js";
 
 const VALID_STATES = [
@@ -2746,6 +2747,113 @@ export class LifecycleService {
             "Wave 26 Pass G Pass E gate orchestrator: read failed (non-blocking — promotion continues)",
           );
         }
+
+        // ── Wave 28 Pass B.1: Composite shadow gate (OBSERVABILITY ONLY) ─────
+        //
+        // OBSERVABILITY ONLY — Pass B shadow mode; Wave 27.5 hard gates remain
+        // authoritative. See Wave 28 plan.
+        //
+        // This block runs AFTER all Wave 27.5 hard gates (B14 ci_high, WFE,
+        // parameter drift, orchestrator gates) have already made their
+        // ALLOW/BLOCK decisions.  The composite shadow result is logged as an
+        // audit row so 14 days of agreement data can accumulate before Pass C
+        // considers activation.  The shadow result NEVER changes the hard-gate
+        // decision that precedes or follows it.  Fail-OPEN for observability:
+        // any throw is caught, emits composite.shadow_evaluation_error, and
+        // promotion proceeds via the hard-gate outcome alone.
+        {
+          // hard_gate_outcome reflects whether all gates above allowed promotion.
+          // We have reached this line only because none of the earlier `continue`
+          // statements fired — so hard gates ALLOWED this promotion attempt.
+          // The type is widened to string so the agreement branches compile cleanly
+          // (TypeScript would otherwise flag the "blocked" branches as dead code
+          // because the const literal type narrows to "allowed").
+          const hardGateOutcome: string = "allowed";
+
+          try {
+            const shadowResult = await evaluateCompositeShadow(s.id);
+
+            // Compute agreement between shadow and hard-gate outcome.
+            type AgreementLabel =
+              | "agree_allow"
+              | "agree_block"
+              | "disagree_shadow_blocks"
+              | "disagree_shadow_allows"
+              | "shadow_no_opinion";
+
+            let agreement: AgreementLabel;
+            if (
+              shadowResult.shadow_decision === "NO_OPINION" ||
+              shadowResult.shadow_decision === "WOULD_WARN"
+            ) {
+              agreement = "shadow_no_opinion";
+            } else if (hardGateOutcome === "allowed" && shadowResult.shadow_decision === "WOULD_PROMOTE") {
+              agreement = "agree_allow";
+            } else if (hardGateOutcome === "allowed" && shadowResult.shadow_decision === "WOULD_BLOCK") {
+              agreement = "disagree_shadow_blocks";
+            } else if (hardGateOutcome === "blocked" && shadowResult.shadow_decision === "WOULD_BLOCK") {
+              agreement = "agree_block";
+            } else if (hardGateOutcome === "blocked" && shadowResult.shadow_decision === "WOULD_PROMOTE") {
+              agreement = "disagree_shadow_allows";
+            } else {
+              agreement = "shadow_no_opinion";
+            }
+
+            await db.insert(auditLog).values({
+              action: "composite.shadow_evaluation",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "success",
+              decisionAuthority: "gate",
+              input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+              result: {
+                strategy_id: s.id,
+                hard_gate_outcome: hardGateOutcome,
+                shadow_result: shadowResult,
+                agreement,
+              },
+              correlationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "composite shadow evaluation audit insert failed (non-blocking)");
+            });
+
+            logger.info(
+              {
+                strategyId: s.id,
+                agreement,
+                shadow_decision: shadowResult.shadow_decision,
+                composite_score: shadowResult.composite_score,
+                verdict: shadowResult.verdict,
+                availability: shadowResult.availability,
+                hard_gate_outcome: hardGateOutcome,
+              },
+              "composite-shadow-gate: shadow evaluation logged (observability only — no gate authority)",
+            );
+          } catch (shadowErr) {
+            // Fail-OPEN: shadow infrastructure must NEVER cause a real lifecycle failure.
+            // Catch any throw, emit a separate error audit, and proceed to promoteStrategy.
+            const msg = shadowErr instanceof Error ? shadowErr.message : String(shadowErr);
+            logger.warn(
+              { strategyId: s.id, err: shadowErr },
+              "composite-shadow-gate: helper threw — emitting error audit, promotion proceeds (fail-OPEN)",
+            );
+            await db.insert(auditLog).values({
+              action: "composite.shadow_evaluation_error",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "warning",
+              decisionAuthority: "gate",
+              input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+              result: {
+                error: msg,
+                hard_gate_outcome: hardGateOutcome,
+                note: "composite shadow gate threw — promotion proceeds via Wave 27.5 hard gates alone",
+              },
+              correlationId,
+            }).catch(() => {});
+          }
+        }
+        // ── End Wave 28 Pass B.1 composite shadow gate ───────────────────────
 
         const result = await this.promoteStrategy(s.id, "PAPER", "DEPLOY_READY", { correlationId: correlationId ?? undefined });
         if (result.success) {
