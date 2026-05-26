@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-26T08:58:31.987Z",
+  "generatedAt": "2026-05-26T09:24:56.806Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,12 +16,12 @@
   },
   "counts": {
     "routes": 72,
-    "schedulerJobs": 85,
+    "schedulerJobs": 87,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
-    "engineSubsystems": 27,
+    "engineSubsystems": 28,
     "databaseTables": 97,
-    "registrySubsystems": 55
+    "registrySubsystems": 57
   },
   "routes": [
     "/api/admin",
@@ -121,6 +121,7 @@
     "critic-feedback",
     "data-integrity-suite",
     "databento-weekly-refresh",
+    "dd-velocity-cron",
     "decay-monitor",
     "deepar-predict",
     "deepar-train",
@@ -174,6 +175,7 @@
     "session-analytics-rollup",
     "stale-pending-sweeper",
     "stale-session-check",
+    "strategy-stale-detector",
     "system-map-drift",
     "tournament-staleness-check",
     "validation-cadence-monthly",
@@ -762,6 +764,7 @@
     "quantum_mc",
     "replay",
     "skip_engine",
+    "statistics",
     "strategy_memory",
     "survival",
     "validation",
@@ -868,34 +871,34 @@
     "weekly_drift_reports"
   ],
   "registryCoverage": {
-    "registryEntries": 55,
-    "autonomousSubsystems": 51,
+    "registryEntries": 57,
+    "autonomousSubsystems": 53,
     "selfEvolvingSubsystems": 8,
     "proofStatusCounts": {
       "runtime-proven": 37,
       "partially-proven": 1,
       "offline-by-design": 0,
       "experimental": 5,
-      "drifted": 12
+      "drifted": 14
     },
     "runtimeStateCounts": {
-      "active": 49,
+      "active": 51,
       "experimental": 5,
       "scaffold": 1
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
       "partially_active_preprod": 0,
-      "active_preprod": 50,
+      "active_preprod": 52,
       "experimental_preprod": 5
     },
     "launchTargetCounts": {
-      "runtime_proven_autonomous": 48,
+      "runtime_proven_autonomous": 50,
       "runtime_proven_manual_gate": 2,
       "experimental_challenger": 5
     },
     "closedLoopCounts": {
-      "not_collecting": 43,
+      "not_collecting": 45,
       "collecting_only": 0,
       "learning_active": 7,
       "learning_blocked": 0,
@@ -903,13 +906,13 @@
     },
     "learningModeCounts": {
       "active_learning": 6,
-      "deterministic_instrumented": 42,
+      "deterministic_instrumented": 44,
       "manual_gate_only": 2,
       "shadow_experimental": 5
     },
     "operatingClassCounts": {
       "adaptive": 6,
-      "deterministic_instrumented": 47,
+      "deterministic_instrumented": 49,
       "manual_gated": 2
     },
     "manualGates": [
@@ -919,22 +922,29 @@
       "operator_opt_in_per_strategy",
       "operator-approve",
       "operator-halt-only",
+      "operator-only-recovery",
       "tradingview_deploy"
     ],
     "coveredCounts": {
       "routes": 72,
-      "schedulerJobs": 85,
+      "schedulerJobs": 86,
       "engineSubsystems": 27,
       "databaseTables": 97
     },
     "missingRoutes": [],
-    "missingSchedulerJobs": [],
-    "missingEngineSubsystems": [],
+    "missingSchedulerJobs": [
+      "strategy-stale-detector"
+    ],
+    "missingEngineSubsystems": [
+      "statistics"
+    ],
     "missingDatabaseTables": [],
     "subsystemsMissingAudit": [],
     "subsystemsMissingAuditActions": [],
     "subsystemsMissingMetrics": [],
-    "subsystemsMissingTelemetrySources": [],
+    "subsystemsMissingTelemetrySources": [
+      "late_cycle_overheating_regime"
+    ],
     "subsystemsMissingLearning": [],
     "subsystemsMissingLearningPersistence": [],
     "subsystemsMissingDecisionAuthority": [],
@@ -950,15 +960,17 @@
     "manualGateViolations": [],
     "preprodIntegrity": {
       "status": "incomplete",
-      "automationComplete": 46,
-      "dataCollectionComplete": 55,
-      "auditabilityComplete": 55,
-      "failureVisibilityComplete": 55,
-      "authorityCorrect": 55,
+      "automationComplete": 48,
+      "dataCollectionComplete": 57,
+      "auditabilityComplete": 56,
+      "failureVisibilityComplete": 56,
+      "authorityCorrect": 57,
       "learningActive": 7,
       "incompleteSubsystems": [
         "adaptive_exit_engine",
+        "dd_velocity_gate",
         "exit_engine_ab_harness",
+        "late_cycle_overheating_regime",
         "phase5_contract_spec_scaffold",
         "replay_grade_confluence",
         "replay_grade_consistency",
@@ -975,7 +987,7 @@
     "productionConvergence": {
       "status": "blocked",
       "targetStateCounts": {
-        "production_autonomous": 48,
+        "production_autonomous": 50,
         "production_manual_gate": 2,
         "production_experimental": 5,
         "production_not_intended": 0
@@ -1019,7 +1031,9 @@
       ],
       "blockedSubsystems": [
         "adaptive_exit_engine",
+        "dd_velocity_gate",
         "exit_engine_ab_harness",
+        "late_cycle_overheating_regime",
         "pattern_aggregator_service",
         "phase5_contract_spec_scaffold",
         "production_hardening",
@@ -1056,8 +1070,12 @@
       "blockers": [
         "adaptive_exit_engine:invalid-active-proof-mode",
         "adaptive_exit_engine:manual_gate:operator_opt_in_per_strategy",
+        "dd_velocity_gate:invalid-active-proof-mode",
+        "dd_velocity_gate:manual_gate:operator-only-recovery",
         "exit_engine_ab_harness:invalid-active-proof-mode",
         "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
+        "late_cycle_overheating_regime:invalid-active-proof-mode",
+        "late_cycle_overheating_regime:missing-telemetry-sources",
         "pattern_aggregator_service:manual_gate:kill_switch",
         "phase5_contract_spec_scaffold:manual_gate:operator-approve",
         "production_hardening:manual_gate:operator-halt-only",
@@ -1097,8 +1115,12 @@
         "adaptive_exit_engine:invalid-active-proof-mode",
         "adaptive_exit_engine:manual_gate:operator_opt_in_per_strategy",
         "cloud_qmc_ising:experimental_governance",
+        "dd_velocity_gate:invalid-active-proof-mode",
+        "dd_velocity_gate:manual_gate:operator-only-recovery",
         "exit_engine_ab_harness:invalid-active-proof-mode",
         "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
+        "late_cycle_overheating_regime:invalid-active-proof-mode",
+        "late_cycle_overheating_regime:missing-telemetry-sources",
         "pattern_aggregator_service:manual_gate:kill_switch",
         "phase5_contract_spec_scaffold:manual_gate:operator-approve",
         "production_hardening:manual_gate:operator-halt-only",
@@ -1137,7 +1159,9 @@
         "a_plus_market_auditor",
         "adaptive_exit_engine",
         "cloud_qmc_ising",
+        "dd_velocity_gate",
         "exit_engine_ab_harness",
+        "late_cycle_overheating_regime",
         "pattern_aggregator_service",
         "phase5_contract_spec_scaffold",
         "production_hardening",
@@ -2442,6 +2466,97 @@
         "coverageGaps": []
       },
       {
+        "id": "dd_velocity_gate",
+        "domain": "risk",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "system",
+        "manualGate": "operator-only-recovery",
+        "selfEvolving": false,
+        "proofMode": "audit_log_evidence",
+        "proofStatus": "drifted",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "none",
+        "deploymentAuthority": "operator_only",
+        "criticality": "safety",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [
+          "manual_gate:operator-only-recovery"
+        ],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
+        ],
+        "runtimeEvidence": [
+          "audit_log.risk.dd_velocity_autopause",
+          "audit_log.risk.dd_velocity_warning",
+          "risk.dd_velocity_autopause",
+          "risk.dd_velocity_warning",
+          "SSE risk:dd_velocity_autopause",
+          "SSE risk:dd_velocity_warning",
+          "tf_dd_velocity_autopause_total"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "in-process equity sliding window",
+          "paper_sessions",
+          "system_parameters"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": false,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "drifted",
+        "productionBlockers": [
+          "invalid-active-proof-mode",
+          "manual_gate:operator-only-recovery"
+        ],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log.risk.dd_velocity_autopause",
+          "audit_log.risk.dd_velocity_warning",
+          "risk.dd_velocity_autopause",
+          "risk.dd_velocity_warning",
+          "SELECT * FROM audit_log WHERE action = 'risk.dd_velocity_autopause' ORDER BY created_at DESC LIMIT 5",
+          "SSE risk:dd_velocity_autopause",
+          "SSE risk:dd_velocity_warning",
+          "tf_dd_velocity_autopause_total"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [],
+        "schedulerJobs": [
+          "dd-velocity-cron"
+        ],
+        "healthCheck": "src/server/__tests__/wave26-pass-g-pass-f-dd-velocity.test.ts",
+        "freshnessSignals": [
+          "audit_log.risk.dd_velocity_warning",
+          "audit_log.risk.dd_velocity_autopause"
+        ],
+        "evidenceQueries": [
+          "SELECT * FROM audit_log WHERE action = 'risk.dd_velocity_autopause' ORDER BY created_at DESC LIMIT 5"
+        ],
+        "coverageGaps": [
+          "invalid-active-proof-mode"
+        ]
+      },
+      {
         "id": "deepar_regime",
         "domain": "forecasting",
         "ownerSurface": "python-node",
@@ -2944,6 +3059,84 @@
           "wave25-regime-evidence-persistence.test.ts"
         ],
         "coverageGaps": []
+      },
+      {
+        "id": "late_cycle_overheating_regime",
+        "domain": "bias_engine",
+        "ownerSurface": "python",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "system",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "audit_log_evidence",
+        "proofStatus": "drifted",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "none",
+        "deploymentAuthority": "operator_only",
+        "criticality": "signal",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "runtime evidence persisted"
+        ],
+        "runtimeEvidence": [
+          "audit_log.regime.late_cycle_overheating_detected",
+          "regime.late_cycle_overheating_detected",
+          "tf_regime_transition_total{from,to}"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "bias_state",
+          "HTFContext.atr_percentile",
+          "OHLCV bars (Polars DataFrame)"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": false,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "incomplete",
+        "failureVisibilityStatus": "incomplete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "drifted",
+        "productionBlockers": [
+          "invalid-active-proof-mode",
+          "missing-telemetry-sources"
+        ],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log.regime.late_cycle_overheating_detected",
+          "regime.late_cycle_overheating_detected",
+          "SELECT * FROM audit_log WHERE action = 'regime.late_cycle_overheating_detected' ORDER BY created_at DESC LIMIT 5",
+          "tf_regime_transition_total{from,to}"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [],
+        "schedulerJobs": [],
+        "healthCheck": "src/engine/tests/test_late_cycle_overheating.py",
+        "freshnessSignals": [
+          "audit_log.regime.late_cycle_overheating_detected"
+        ],
+        "evidenceQueries": [
+          "SELECT * FROM audit_log WHERE action = 'regime.late_cycle_overheating_detected' ORDER BY created_at DESC LIMIT 5"
+        ],
+        "coverageGaps": [
+          "invalid-active-proof-mode",
+          "missing-telemetry-sources"
+        ]
       },
       {
         "id": "liquidity_map_service",
@@ -6454,6 +6647,20 @@
         "coverageGaps": []
       },
       {
+        "id": "statistics",
+        "ownerSubsystemId": null,
+        "ownerDomain": null,
+        "runtimeState": "unmapped",
+        "proofStatus": "drifted",
+        "manualGate": "none",
+        "learningMode": "unmapped",
+        "operatingClass": "unmapped",
+        "criticality": "unmapped",
+        "coverageGaps": [
+          "missing-registry-owner"
+        ]
+      },
+      {
         "id": "strategy_memory",
         "ownerSubsystemId": "research_orchestration",
         "ownerDomain": "research",
@@ -7796,6 +8003,97 @@
       "coverageGaps": []
     },
     {
+      "id": "dd_velocity_gate",
+      "domain": "risk",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "system",
+      "manualGate": "operator-only-recovery",
+      "selfEvolving": false,
+      "proofMode": "audit_log_evidence",
+      "proofStatus": "drifted",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "none",
+      "deploymentAuthority": "operator_only",
+      "criticality": "safety",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [
+        "manual_gate:operator-only-recovery"
+      ],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
+      ],
+      "runtimeEvidence": [
+        "audit_log.risk.dd_velocity_autopause",
+        "audit_log.risk.dd_velocity_warning",
+        "risk.dd_velocity_autopause",
+        "risk.dd_velocity_warning",
+        "SSE risk:dd_velocity_autopause",
+        "SSE risk:dd_velocity_warning",
+        "tf_dd_velocity_autopause_total"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "in-process equity sliding window",
+        "paper_sessions",
+        "system_parameters"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": false,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "drifted",
+      "productionBlockers": [
+        "invalid-active-proof-mode",
+        "manual_gate:operator-only-recovery"
+      ],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log.risk.dd_velocity_autopause",
+        "audit_log.risk.dd_velocity_warning",
+        "risk.dd_velocity_autopause",
+        "risk.dd_velocity_warning",
+        "SELECT * FROM audit_log WHERE action = 'risk.dd_velocity_autopause' ORDER BY created_at DESC LIMIT 5",
+        "SSE risk:dd_velocity_autopause",
+        "SSE risk:dd_velocity_warning",
+        "tf_dd_velocity_autopause_total"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [],
+      "schedulerJobs": [
+        "dd-velocity-cron"
+      ],
+      "healthCheck": "src/server/__tests__/wave26-pass-g-pass-f-dd-velocity.test.ts",
+      "freshnessSignals": [
+        "audit_log.risk.dd_velocity_warning",
+        "audit_log.risk.dd_velocity_autopause"
+      ],
+      "evidenceQueries": [
+        "SELECT * FROM audit_log WHERE action = 'risk.dd_velocity_autopause' ORDER BY created_at DESC LIMIT 5"
+      ],
+      "coverageGaps": [
+        "invalid-active-proof-mode"
+      ]
+    },
+    {
       "id": "deepar_regime",
       "domain": "forecasting",
       "ownerSurface": "python-node",
@@ -8298,6 +8596,84 @@
         "wave25-regime-evidence-persistence.test.ts"
       ],
       "coverageGaps": []
+    },
+    {
+      "id": "late_cycle_overheating_regime",
+      "domain": "bias_engine",
+      "ownerSurface": "python",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "system",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "audit_log_evidence",
+      "proofStatus": "drifted",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "none",
+      "deploymentAuthority": "operator_only",
+      "criticality": "signal",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "runtime evidence persisted"
+      ],
+      "runtimeEvidence": [
+        "audit_log.regime.late_cycle_overheating_detected",
+        "regime.late_cycle_overheating_detected",
+        "tf_regime_transition_total{from,to}"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "bias_state",
+        "HTFContext.atr_percentile",
+        "OHLCV bars (Polars DataFrame)"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": false,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "incomplete",
+      "failureVisibilityStatus": "incomplete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "drifted",
+      "productionBlockers": [
+        "invalid-active-proof-mode",
+        "missing-telemetry-sources"
+      ],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log.regime.late_cycle_overheating_detected",
+        "regime.late_cycle_overheating_detected",
+        "SELECT * FROM audit_log WHERE action = 'regime.late_cycle_overheating_detected' ORDER BY created_at DESC LIMIT 5",
+        "tf_regime_transition_total{from,to}"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [],
+      "schedulerJobs": [],
+      "healthCheck": "src/engine/tests/test_late_cycle_overheating.py",
+      "freshnessSignals": [
+        "audit_log.regime.late_cycle_overheating_detected"
+      ],
+      "evidenceQueries": [
+        "SELECT * FROM audit_log WHERE action = 'regime.late_cycle_overheating_detected' ORDER BY created_at DESC LIMIT 5"
+      ],
+      "coverageGaps": [
+        "invalid-active-proof-mode",
+        "missing-telemetry-sources"
+      ]
     },
     {
       "id": "liquidity_map_service",
@@ -11808,6 +12184,20 @@
       "coverageGaps": []
     },
     {
+      "id": "statistics",
+      "ownerSubsystemId": null,
+      "ownerDomain": null,
+      "runtimeState": "unmapped",
+      "proofStatus": "drifted",
+      "manualGate": "none",
+      "learningMode": "unmapped",
+      "operatingClass": "unmapped",
+      "criticality": "unmapped",
+      "coverageGaps": [
+        "missing-registry-owner"
+      ]
+    },
+    {
       "id": "strategy_memory",
       "ownerSubsystemId": "research_orchestration",
       "ownerDomain": "research",
@@ -11875,6 +12265,7 @@
     "operator_opt_in_per_strategy",
     "operator-approve",
     "operator-halt-only",
+    "operator-only-recovery",
     "tradingview_deploy"
   ]
 }

@@ -1072,6 +1072,20 @@
       "when": 1748563200000,
       "tag": "0152_strategies_needs_revision_states",
       "breakpoints": true
+    },
+    {
+      "idx": 153,
+      "version": "7",
+      "when": 1748649600000,
+      "tag": "0153_pipeline_modes_autopause",
+      "breakpoints": true
+    },
+    {
+      "idx": 154,
+      "version": "7",
+      "when": 1748736000000,
+      "tag": "0154_regime_late_cycle_overheating",
+      "breakpoints": true
     }
   ]
 }

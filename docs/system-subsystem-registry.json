@@ -3992,5 +3992,123 @@
     "learning_boundary": "observability_only",
     "deployment_authority": "operator_only",
     "criticality": "observability"
+  },
+  {
+    "id": "dd_velocity_gate",
+    "domain": "risk",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "operator-only-recovery",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Wave 26 Pass G Pass F. Rolling 2hr drawdown velocity gate. Monitors session-cumulative P&L per account every minute via in-process equity window. Fires risk.dd_velocity_warning at 1.5% and risk.dd_velocity_autopause + AUTOPAUSE_DD_VELOCITY pipeline mode at 3%. Per-firm aware: Topstep tightens effective threshold when within 70% of trailing-DD floor. MFFU uses plain pct. Recovery: operator-only via POST /api/admin/pipeline/mode.",
+    "data_sources": [
+      "paper_sessions",
+      "in-process equity sliding window"
+    ],
+    "reads_from": [
+      "paper_sessions"
+    ],
+    "writes_to": [
+      "audit_log",
+      "system_parameters"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "risk.dd_velocity_warning",
+      "risk.dd_velocity_autopause"
+    ],
+    "metrics_surfaces": [
+      "tf_dd_velocity_autopause_total"
+    ],
+    "telemetry_sources": [
+      "SSE risk:dd_velocity_warning",
+      "SSE risk:dd_velocity_autopause"
+    ],
+    "scheduler_jobs": [
+      "dd-velocity-cron"
+    ],
+    "routes": [],
+    "engine_subsystems": [],
+    "database_tables": [],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": "discord_critical",
+    "recovery_mode": "operator-only",
+    "health_check": "src/server/__tests__/wave26-pass-g-pass-f-dd-velocity.test.ts",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "audit_log_evidence",
+    "freshness_signals": [
+      "audit_log.risk.dd_velocity_warning",
+      "audit_log.risk.dd_velocity_autopause"
+    ],
+    "evidence_queries": [
+      "SELECT * FROM audit_log WHERE action = 'risk.dd_velocity_autopause' ORDER BY created_at DESC LIMIT 5"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "none",
+    "deployment_authority": "operator_only",
+    "criticality": "safety"
+  },
+  {
+    "id": "late_cycle_overheating_regime",
+    "domain": "bias_engine",
+    "owner_surface": "python",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Wave 26 Pass G Pass F. 8th institutional regime (7th non-NO_TRADE). Detected when all 4 conditions hold: ATR > 2.5x 30d avg AND volume > 2x 30d avg AND VIX-proxy ATR percentile > 80th pct AND multi-day melt-up > 5% in last 5 sessions. Routes to LATE_CYCLE_MEAN_REVERSION playbook (mean-reversion + reversal strategies ONLY, NOT continuation/breakout). Sizing multiplier 0.5x via confidence_modifier=0.5. Does NOT force NO_TRADE — mean-reversion strategies allowed.",
+    "data_sources": [
+      "HTFContext.atr_percentile",
+      "OHLCV bars (Polars DataFrame)"
+    ],
+    "reads_from": [
+      "bias_state"
+    ],
+    "writes_to": [
+      "bias_state",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "regime.late_cycle_overheating_detected"
+    ],
+    "metrics_surfaces": [
+      "tf_regime_transition_total{from,to}"
+    ],
+    "telemetry_sources": [],
+    "scheduler_jobs": [],
+    "routes": [],
+    "engine_subsystems": [
+      "bias_engine.py::detect_late_cycle_overheating",
+      "playbook_router.py::LATE_CYCLE_MEAN_REVERSION"
+    ],
+    "database_tables": [],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": "audit_log",
+    "recovery_mode": "fail-open",
+    "health_check": "src/engine/tests/test_late_cycle_overheating.py",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "audit_log_evidence",
+    "freshness_signals": [
+      "audit_log.regime.late_cycle_overheating_detected"
+    ],
+    "evidence_queries": [
+      "SELECT * FROM audit_log WHERE action = 'regime.late_cycle_overheating_detected' ORDER BY created_at DESC LIMIT 5"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "none",
+    "deployment_authority": "operator_only",
+    "criticality": "signal"
   }
 ]

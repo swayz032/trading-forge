@@ -1133,6 +1133,41 @@ except Exception as e:
     }
   }
 
+  // Wave 26 Pass G Pass F: emit regime.late_cycle_overheating_detected on transition
+  // into the 7th institutional regime. Also increments Prometheus tf_regime_transition_total.
+  if (institutionalRegimeLabel != null) {
+    try {
+      const { regimeTransitionTotal } = await import("../lib/metrics-registry.js");
+      const previousRegime = (biasResult as Record<string, unknown>).previous_institutional_regime as string | undefined;
+      const fromLabel = previousRegime ?? "unknown";
+      if (fromLabel !== institutionalRegimeLabel) {
+        regimeTransitionTotal.labels({ from: fromLabel, to: institutionalRegimeLabel }).inc();
+      }
+      if (institutionalRegimeLabel === "LATE_CYCLE_OVERHEATING") {
+        await insertAuditRow({
+          action: "regime.late_cycle_overheating_detected",
+          entityType: "paper_session",
+          entityId: `${sessionDate}-${sym}`,
+          decisionAuthority: "system",
+          status: "success",
+          input: { sessionDate, symbol: sym, correlationId },
+          result: {
+            institutional_regime: "LATE_CYCLE_OVERHEATING",
+            regime_evidence: regimeEvidenceJson,
+            previous_regime: fromLabel,
+          },
+          correlationId,
+        });
+        logger.info(
+          { sessionDate, symbol: sym, regimeEvidence: regimeEvidenceJson },
+          "bias-state: LATE_CYCLE_OVERHEATING regime detected — mean-reversion playbooks only, 0.5× contracts",
+        );
+      }
+    } catch (lcoAuditErr) {
+      logger.warn({ err: lcoAuditErr, sessionDate, symbol: sym }, "bias-state W26F: late_cycle audit write failed (non-blocking)");
+    }
+  }
+
   // P2.A3 W25.5: emit audit event when htf_narrative is populated (guard: only on non-null)
   // Correlation_id is threaded from caller chain per §10b reconstruction mandate.
   if (htfNarrativeJson != null) {

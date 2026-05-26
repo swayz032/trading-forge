@@ -4477,6 +4477,47 @@ except Exception as e:
   });
   _scheduledJobs.add("strategy-stale-detector");
 
+  // ─── Wave 26 Pass G Pass F: DD velocity cron — every minute ─────────────────
+  //
+  // Sweeps all active paper sessions every minute, records equity samples,
+  // and evaluates rolling 2-hour drawdown velocity.
+  //
+  // Pipeline-gate: NOT EXEMPT (same gate as paper execution). If pipeline is
+  // AUTOPAUSE_DD_VELOCITY or PAUSED, the gate blocks correctly — the job exits
+  // without firing new autopause events (idempotent when already paused).
+  //
+  // Schedule: "* * * * *" = every minute.
+  // This is the batch-level sweep; fine-grained check also happens per-tick
+  // from paper-execution-service.ts (fire-and-forget, non-blocking).
+  registerJob("dd-velocity-cron", 60_000, async () => {
+    const correlationId = randomUUID();
+    logger.debug({ correlationId, jobName: "dd-velocity-cron" }, "cron tick start");
+    const { batchCheckActiveSessions } = await import("./services/dd-velocity-gate.js");
+    const results = await batchCheckActiveSessions();
+    const autopaused = results.filter((r) => r.level === "autopause");
+    const warned = results.filter((r) => r.level === "warning");
+    if (autopaused.length > 0 || warned.length > 0) {
+      logger.info(
+        { autopaused: autopaused.length, warned: warned.length, total: results.length, correlationId },
+        "dd-velocity-cron: velocity events fired",
+      );
+    }
+  });
+
+  cron.schedule("* * * * *", async () => {
+    if (!_tryAcquireJobLock("dd-velocity-cron")) return;
+    try {
+      if (!(await pipelineGate("dd-velocity-cron"))) return;
+      const t0dv = Date.now();
+      await withRetry("dd-velocity-cron", SCHEDULER_JOBS["dd-velocity-cron"].run, 1);
+      markJobRun("dd-velocity-cron");
+      emitJobComplete("dd-velocity-cron", Date.now() - t0dv);
+    } finally {
+      _releaseJobLock("dd-velocity-cron");
+    }
+  });
+  _scheduledJobs.add("dd-velocity-cron");
+
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every
   // cron.schedule body). Catches the F-1/F-2 class of bug — a job registered

@@ -222,3 +222,28 @@ export const extractionConfluenceDepthHistogram = new Histogram({
   buckets: [0, 1, 2, 3, 4, 5],
   registers: [promRegistry],
 });
+
+// ─── Wave 26 Pass G Pass F — DD velocity + regime transition counters (2026-05-26) ──
+//
+// tf_dd_velocity_autopause_total
+//   Incremented by dd-velocity-gate.ts::_handleAutopause() on every DD velocity
+//   breach that triggers pipeline AUTOPAUSE_DD_VELOCITY. No labels needed —
+//   the session context is in the audit_log. Cardinality = 1 time series.
+//   Declared at registry init so Prometheus sees zero from first scrape.
+export const ddVelocityAutopauseTotal = new Counter({
+  name: "tf_dd_velocity_autopause_total",
+  help: "Total DD velocity autopause events triggered",
+  registers: [promRegistry],
+});
+
+// tf_regime_transition_total
+//   Incremented by bias-state-service.ts (or the bias engine TS caller) on every
+//   regime transition. Labels: from (previous regime), to (new regime).
+//   Lets dashboards track regime-transition frequency and detect LATE_CYCLE spikes.
+//   Cardinality: 8 from × 8 to = 64 time series max — safe.
+export const regimeTransitionTotal = new Counter({
+  name: "tf_regime_transition_total",
+  help: "Total institutional regime transitions, labelled by from and to regime",
+  labelNames: ["from", "to"] as const,
+  registers: [promRegistry],
+});

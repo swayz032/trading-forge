@@ -1,12 +1,16 @@
 {
-  "generatedAt": "2026-05-26T08:58:31.987Z",
+  "generatedAt": "2026-05-26T09:24:56.806Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
     "adaptive_exit_engine:invalid-active-proof-mode",
     "adaptive_exit_engine:manual_gate:operator_opt_in_per_strategy",
+    "dd_velocity_gate:invalid-active-proof-mode",
+    "dd_velocity_gate:manual_gate:operator-only-recovery",
     "exit_engine_ab_harness:invalid-active-proof-mode",
     "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
+    "late_cycle_overheating_regime:invalid-active-proof-mode",
+    "late_cycle_overheating_regime:missing-telemetry-sources",
     "pattern_aggregator_service:manual_gate:kill_switch",
     "phase5_contract_spec_scaffold:manual_gate:operator-approve",
     "production_hardening:manual_gate:operator-halt-only",
@@ -39,9 +43,9 @@
     "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
-    "total": 55,
+    "total": 57,
     "ready": 33,
-    "blocked": 15,
+    "blocked": 17,
     "manualGated": 2,
     "experimental": 5
   },
@@ -348,6 +352,30 @@
       ]
     },
     {
+      "id": "dd_velocity_gate",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "operator-only-recovery",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "operator_only",
+      "blockers": [
+        "invalid-active-proof-mode",
+        "manual_gate:operator-only-recovery"
+      ],
+      "requiredEvidence": [
+        "audit_log.risk.dd_velocity_autopause",
+        "audit_log.risk.dd_velocity_warning",
+        "risk.dd_velocity_autopause",
+        "risk.dd_velocity_warning",
+        "SELECT * FROM audit_log WHERE action = 'risk.dd_velocity_autopause' ORDER BY created_at DESC LIMIT 5",
+        "SSE risk:dd_velocity_autopause",
+        "SSE risk:dd_velocity_warning",
+        "tf_dd_velocity_autopause_total"
+      ]
+    },
+    {
       "id": "deepar_regime",
       "status": "ready",
       "productionTargetState": "production_autonomous",
@@ -464,6 +492,26 @@
         "src/engine/tests/test_playbook_router_5regimes.py",
         "src/engine/tests/test_regime_5way.py",
         "wave25-regime-evidence-persistence.test.ts"
+      ]
+    },
+    {
+      "id": "late_cycle_overheating_regime",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "operator_only",
+      "blockers": [
+        "invalid-active-proof-mode",
+        "missing-telemetry-sources"
+      ],
+      "requiredEvidence": [
+        "audit_log.regime.late_cycle_overheating_detected",
+        "regime.late_cycle_overheating_detected",
+        "SELECT * FROM audit_log WHERE action = 'regime.late_cycle_overheating_detected' ORDER BY created_at DESC LIMIT 5",
+        "tf_regime_transition_total{from,to}"
       ]
     },
     {

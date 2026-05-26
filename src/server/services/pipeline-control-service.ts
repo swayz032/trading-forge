@@ -15,7 +15,7 @@ import { systemParameters, auditLog } from "../db/schema.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
 
-export type PipelineMode = "ACTIVE" | "PAUSED" | "VACATION";
+export type PipelineMode = "ACTIVE" | "PAUSED" | "VACATION" | "AUTOPAUSE_DD_VELOCITY";
 export type N8nPipelineControlStatus = {
   action: "left_running";
   status: "always_on";
@@ -25,20 +25,23 @@ export type N8nPipelineControlStatus = {
   note: string;
 };
 
-const VALID_MODES: PipelineMode[] = ["ACTIVE", "PAUSED", "VACATION"];
+const VALID_MODES: PipelineMode[] = ["ACTIVE", "PAUSED", "VACATION", "AUTOPAUSE_DD_VELOCITY"];
 const PARAM_NAME = "pipeline_mode";
 
 // system_parameters.current_value is numeric (per migration 0045 + schema.ts).
-// Encode mode as integer: 0=PAUSED, 1=ACTIVE, 2=VACATION (per 0045 comment).
+// Encode mode as integer: 0=PAUSED, 1=ACTIVE, 2=VACATION, 3=AUTOPAUSE_DD_VELOCITY
+// (migration 0153 documents the AUTOPAUSE_DD_VELOCITY extension).
 const MODE_TO_NUMERIC: Record<PipelineMode, string> = {
   PAUSED: "0",
   ACTIVE: "1",
   VACATION: "2",
+  AUTOPAUSE_DD_VELOCITY: "3",
 };
 const NUMERIC_TO_MODE: Record<string, PipelineMode> = {
   "0": "PAUSED",
   "1": "ACTIVE",
   "2": "VACATION",
+  "3": "AUTOPAUSE_DD_VELOCITY",
 };
 
 // ─── In-memory cache (10s TTL) ────────────────────────────────
@@ -144,7 +147,7 @@ export async function setMode(
       paramName: PARAM_NAME,
       currentValue: numericValue,
       domain: "scheduler",
-      description: "Pipeline execution mode: 0=PAUSED, 1=ACTIVE, 2=VACATION",
+      description: "Pipeline execution mode: 0=PAUSED, 1=ACTIVE, 2=VACATION, 3=AUTOPAUSE_DD_VELOCITY",
     });
   }
 
