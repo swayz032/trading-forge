@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-25T21:54:45.135Z",
+  "generatedAt": "2026-05-26T05:32:15.412Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -8,7 +8,22 @@
     "exit_engine_ab_harness:invalid-active-proof-mode",
     "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
     "pattern_aggregator_service:manual_gate:kill_switch",
+    "phase5_contract_spec_scaffold:manual_gate:operator-approve",
     "production_hardening:manual_gate:operator-halt-only",
+    "replay_grade_confluence:invalid-active-proof-mode",
+    "replay_grade_confluence:manual_gate:operator-approve",
+    "replay_grade_consistency:invalid-active-proof-mode",
+    "replay_grade_consistency:manual_gate:operator-approve",
+    "replay_grade_critique:invalid-active-proof-mode",
+    "replay_grade_critique:manual_gate:operator-approve",
+    "replay_grade_pattern_aggregator:invalid-active-proof-mode",
+    "replay_grade_pattern_aggregator:manual_gate:operator-approve",
+    "replay_grade_robustness:invalid-active-proof-mode",
+    "replay_grade_robustness:manual_gate:operator-approve",
+    "replay_grade_survival_twin:invalid-active-proof-mode",
+    "replay_grade_survival_twin:manual_gate:operator-approve",
+    "replay_grade_unified_dispatcher:invalid-active-proof-mode",
+    "replay_grade_unified_dispatcher:manual_gate:operator-approve",
     "replay_harness_engine:invalid-active-proof-mode",
     "replay_harness_engine:manual_gate:operator-approve",
     "ts_python_parity_ci_gate:invalid-active-proof-mode",
@@ -23,9 +38,9 @@
     "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
-    "total": 46,
+    "total": 54,
     "ready": 33,
-    "blocked": 6,
+    "blocked": 14,
     "manualGated": 2,
     "experimental": 5
   },
@@ -641,6 +656,24 @@
       ]
     },
     {
+      "id": "phase5_contract_spec_scaffold",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "operator-approve",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "operator_only",
+      "blockers": [
+        "manual_gate:operator-approve"
+      ],
+      "requiredEvidence": [
+        "phase5.contract_spec_refused_disabled",
+        "phase5.contract_spec_resolved",
+        "tests/python/test_phase5_contract_spec.py"
+      ]
+    },
+    {
       "id": "pine_export_preparation",
       "status": "manual-gated",
       "productionTargetState": "production_manual_gate",
@@ -798,6 +831,162 @@
         "quantum-mc.run",
         "quantum-route-coverage",
         "quantum-run-persistence"
+      ]
+    },
+    {
+      "id": "replay_grade_confluence",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "operator-approve",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [
+        "invalid-active-proof-mode",
+        "manual_gate:operator-approve"
+      ],
+      "requiredEvidence": [
+        "replay_grade_confluence.inconclusive",
+        "replay_grade_confluence.no_signal",
+        "replay_grade_confluence.preliminary",
+        "replay_grade_confluence.signal_detected",
+        "src/server/__tests__/replay/replay-grade-confluence.test.ts",
+        "stdout-json-summary"
+      ]
+    },
+    {
+      "id": "replay_grade_consistency",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "operator-approve",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [
+        "invalid-active-proof-mode",
+        "manual_gate:operator-approve"
+      ],
+      "requiredEvidence": [
+        "replay_grade_consistency.inconclusive",
+        "replay_grade_consistency.no_signal",
+        "replay_grade_consistency.preliminary",
+        "replay_grade_consistency.signal_detected",
+        "src/server/__tests__/replay/replay-grade-consistency.test.ts",
+        "stdout-json-summary"
+      ]
+    },
+    {
+      "id": "replay_grade_critique",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "operator-approve",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [
+        "invalid-active-proof-mode",
+        "manual_gate:operator-approve"
+      ],
+      "requiredEvidence": [
+        "replay_grade_critique.inconclusive",
+        "replay_grade_critique.no_signal",
+        "replay_grade_critique.preliminary",
+        "replay_grade_critique.signal_detected",
+        "src/server/__tests__/replay/replay-grade-critique.test.ts",
+        "stdout-json-summary"
+      ]
+    },
+    {
+      "id": "replay_grade_pattern_aggregator",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "operator-approve",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [
+        "invalid-active-proof-mode",
+        "manual_gate:operator-approve"
+      ],
+      "requiredEvidence": [
+        "replay_grade_pattern_aggregator.inconclusive",
+        "replay_grade_pattern_aggregator.no_signal",
+        "replay_grade_pattern_aggregator.preliminary",
+        "replay_grade_pattern_aggregator.signal_detected",
+        "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts",
+        "stdout-json-summary"
+      ]
+    },
+    {
+      "id": "replay_grade_robustness",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "operator-approve",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [
+        "invalid-active-proof-mode",
+        "manual_gate:operator-approve"
+      ],
+      "requiredEvidence": [
+        "replay_grade_robustness.inconclusive",
+        "replay_grade_robustness.no_signal",
+        "replay_grade_robustness.preliminary",
+        "replay_grade_robustness.signal_detected",
+        "src/server/__tests__/replay/replay-grade-robustness.test.ts",
+        "stdout-json-summary"
+      ]
+    },
+    {
+      "id": "replay_grade_survival_twin",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "operator-approve",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [
+        "invalid-active-proof-mode",
+        "manual_gate:operator-approve"
+      ],
+      "requiredEvidence": [
+        "replay_grade_survival_twin.inconclusive",
+        "replay_grade_survival_twin.no_signal",
+        "replay_grade_survival_twin.preliminary",
+        "replay_grade_survival_twin.signal_detected",
+        "src/server/__tests__/replay/replay-grade-survival-twin.test.ts",
+        "stdout-json-summary",
+        "survival_twin_replay.completed",
+        "survival_twin_replay.failed",
+        "tests/python/replay/test_survival_twin_replay.py"
+      ]
+    },
+    {
+      "id": "replay_grade_unified_dispatcher",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "operator-approve",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "blockers": [
+        "invalid-active-proof-mode",
+        "manual_gate:operator-approve"
+      ],
+      "requiredEvidence": [
+        "replay_grade.aggregate_verdict_emitted",
+        "replay_grade.dispatcher_invoked",
+        "scripts/replay-grade.ts",
+        "src/server/lib/replay/harness-base.ts",
+        "stdout-json-summary"
       ]
     },
     {

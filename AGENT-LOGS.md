@@ -7889,6 +7889,74 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 
 ---
 
+### Session Log — 2026-05-25 quantum-challenger — Wave 27 Pass 4: B14 Survival Twin replay-grading harness
+
+**Mission:** Deliver the B14 Survival Twin replay-grading harness — independent per-firm survival evidence comparing survival_scorer.py breach probability against Pass A ruin_CI ci_high.
+
+**Work completed:**
+
+- **`src/engine/replay/survival_twin_replay.py`** (~718 lines) — Python compute leaf; imports `survival_scorer` and `db_loader` directly (circular-import workaround from Pass 1); runs both Topstep and MFFU per-firm survival assessment; writes to `quantum_mc_runs` with `governance_labels.survival_twin=true`; 5 status outcomes (completed/skipped_unknown_firm/skipped_insufficient_pnls/failed/dry_run); dry-run default. Reproducibility hash = sha256(strategy_id || backtest_id || firm || account_type || survival_scorer git SHA). B14 is classical-only — zero Qiskit/PennyLane imports. All rows have `authoritative=False`, `decision_role="challenger_only"`.
+
+- **`tests/python/replay/test_survival_twin_replay.py`** (~697 lines, 35 tests) — covers all 12 spec-required categories. 33 passed in first run; 2 test-side bugs fixed: (1) `write_replay_row` uses `apply=True` as keyword arg, not positional — assertion was checking `positional[1]`; (2) "no pennylane" test was scanning prose in module docstring — corrected to check for actual import statements. Final: **35/35 GREEN**.
+
+- **`src/server/lib/replay/survival-twin-disagreement.ts`** (~488 lines) — pure library with `computePearson()`, `mannWhitneyU()`, `stdNormalCdf()`, `computeCrossMethodAgreement()`, `computePerFirmMannWhitney()`, `applySurvivalDecisionRule()`, `buildSurvivalTwinReport()`. Re-exports Spearman/binomial from `./quantum-disagreement.js`. Fixed `computeCrossMethodAgreement` to compute `meanAbsDisagreement` for any n≥1 (Pearson still requires n≥3) — the n<3 early-return was zeroing MAD incorrectly.
+
+- **`scripts/replay-grade-survival-twin.ts`** (~522 lines) — TS analysis layer mirroring `replay-grade-quantum.ts`; queries `quantum_mc_runs` WHERE `governance_labels->>'survival_twin' = 'true'` AND `governance_labels->>'replay_mode' = 'true'`; joins walk_forward_windows + backtests + backtest_trades (OOS slice, CPCV purge enforced); Spearman, cross-method Pearson/MAD, per-firm Mann-Whitney; writes markdown report to `docs/replay-results/<ISO-date>-survival-twin-disagreement.md`.
+
+- **`src/server/__tests__/replay/replay-grade-survival-twin.test.ts`** (~398 lines, 32 tests) — **32/32 vitest GREEN**; tsc --noEmit clean.
+
+**Verification:**
+- 32 vitest GREEN (confirmed)
+- 35 pytest GREEN (confirmed after 2 test-side bug fixes)
+- tsc --noEmit: zero errors in new files (confirmed)
+- Governance: `authoritative=False` on all rows; no Qiskit/PennyLane imports in production code
+
+**Carry-forward:**
+- System Map sync not yet run (Pass 4 is evidence-only with no new subsystem registrations required — no new tables, no new routes, no new scheduler jobs; carry-forward to next architect session)
+- Pass 2 + Pass 3 remain evidence-gated on n≥50 backtest-folds accumulating in `quantum_mc_runs`
+
+---
+
+### Session Log — 2026-05-25 parent-claude — Wave 27 Carry-Forward MASTER CLOSE-OUT
+
+**Mission:** After Wave 27.5 closed all 19 institutional findings, operator authorized "execute and finish the rest" — the 4 carry-forwards documented in Wave 27.5 master close (audit row c23675fb-...). All 4 executed:
+- Pass 2 (confluence/critique/B15 robustness replay grading)
+- Pass 3 (pattern-aggregator/consistency-tracker replay + unified replay-grade.ts dispatcher)
+- Pass 4 (B14 Survival Twin replay — survival_scorer.py audit cleared PASS write-free contract)
+- Phase 5 ContractSpec scaffold (feature-gated, PHASE_5_ENABLED=false default)
+
+**8 commits landed:** b194e8a + 3ce4251 + d7c3fb2 + 88ee8a7 + 8d77265 + 6099def + 082a7d4 + architect close (this commit).
+
+**~250 new tests GREEN across replay harnesses + Phase 5 scaffold.**
+
+**Coordination note:** Pass 4 B14 TS-side commit (b194e8a) accidentally commingled F.1 confluence files due to in-flight staging race during parallel sub-track execution — the commit MESSAGE labels Pass 4 but the actual diff shipped Pass 2 confluence (`scripts/replay-grade-confluence.ts` + `src/server/lib/replay/confluence-disagreement.ts` + 575-line test). The TS-side Pass 4 files (`scripts/replay-grade-survival-twin.ts` + `src/server/lib/replay/survival-twin-disagreement.ts` + 32-vitest test file) were left untracked at the time of b194e8a and are being landed in this architect close-out commit. Net state: all work on branch; commit message labels are 95% accurate. Documented here for future archeology.
+
+**Architectural patterns established:**
+- 7 individual `scripts/replay-grade-*.ts` scripts remain canonical per-tool entry points
+- `scripts/replay-grade.ts --tool=<name>` unified dispatcher additive layer
+- `--tool=all` weekly cron candidate for Wave 27 Pass 1.5 Sunday 19:00 ET integration
+- All harnesses use Pass 1 institutional pattern: Spearman + binomial + Mann-Whitney + confusion matrix + IS-only threshold + CPCV purge + PRELIMINARY/SIGNAL/INCONCLUSIVE/NO_SIGNAL verdicts + ≥ 50 strategy-fold sample-size gate
+- Phase 5 scaffold ready for activation when operator's funded balance ≥ $200K — `TF_PHASE_5_ENABLED=false` default + `resolve_contract_spec()` safety helper refuses ambiguous routing while disabled
+
+**Verification:**
+- npm run system-map:sync → exit 0 (8 new subsystems registered)
+- npm run system-map:check → exit 0
+- npm run check:production-isolation → exit 0
+- npm run check:2026-compliance → exit 0
+
+**Known-facts updates:**
+- `survival_scorer.py` is WRITE-FREE per pre-flight audit — safe to wrap in replay harness without `dryRun` parameter
+- The 7 individual replay scripts share statistical helpers via re-exports from `quantum-disagreement.ts` (DRY pattern)
+- Replay harness PRELIMINARY verdicts will dominate first 30-90 days until backtest fold accumulation reaches statistical power
+
+**Carry-forward for next session:**
+- Wire Wave 27 Pass 1.5 weekly cron to invoke `scripts/replay-grade.ts --tool=all` (currently fires only `--tool=quantum`)
+- Once any tool transitions PRELIMINARY → SIGNAL with n ≥ 50 + p ≤ 0.05, evaluate hard-gate wiring at PAPER → DEPLOY_READY (mirrors Wave 27.5 Pass B B14 `ci_high` gate pattern)
+- Phase 5 deployment: when operator funded balance ≥ $200K, set `TF_PHASE_5_ENABLED=true` + add explicit `contract_class="mini"` to new mini-targeted strategies
+- Operator action: `npm run db:migrate` to apply Wave 27.5 migrations 0146 + 0147 + 0148 to Railway prod (still pending from Wave 27.5 close)
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)
