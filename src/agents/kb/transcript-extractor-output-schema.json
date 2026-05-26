@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "TranscriptExtractorOutput",
-  "description": "Output schema for the transcript_extractor role. Passed as format object to Ollama /api/chat for GBNF grammar-constrained sampling (Ollama 0.5+). Self-contained — no $ref to external files; Ollama needs the schema resolvable at request time.",
+  "description": "Output schema for the transcript_extractor role v11. Passed as format object to Ollama /api/chat for GBNF grammar-constrained sampling (Ollama 0.5+). Self-contained — no $ref to external files. v11 adds entry_sequence, stop_loss (structured), targets, filters, timeframes, indicators_used as ADDITIVE fields — all v10 fields preserved for backward compat.",
   "type": "object",
   "additionalProperties": false,
   "required": ["strategies"],
@@ -272,6 +272,144 @@
         },
         "source_claim_avg_r": {
           "type": ["number", "null"],
+          "default": null
+        },
+        "entry_sequence": {
+          "description": "v11 — Ordered list of entry steps exactly as the speaker describes them. ICT strategies require ≥3 steps; MA/breakout strategies require ≥2.",
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": ["step", "name", "rule"],
+                "properties": {
+                  "step": { "type": "integer", "minimum": 1 },
+                  "name": { "type": "string" },
+                  "rule": { "type": "string", "minLength": 10 },
+                  "indicators_needed": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  }
+                }
+              }
+            },
+            { "type": "null" }
+          ],
+          "default": null
+        },
+        "stop_loss_structured": {
+          "description": "v11 — Structured stop loss rule. Use anchor + rationale from speaker's words. Null only if speaker never mentions stop. When null, emit extraction_gap_reason.",
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "anchor": {
+                  "type": "string",
+                  "enum": [
+                    "swing_low_below_entry",
+                    "swing_high_above_entry",
+                    "fvg_low",
+                    "fvg_high",
+                    "swing_after_sfp",
+                    "atr_multiple",
+                    "fixed_points",
+                    "displacement_candle_low",
+                    "ob_low",
+                    "ob_high"
+                  ]
+                },
+                "buffer_atr": { "type": ["number", "null"] },
+                "rationale": { "type": "string" }
+              }
+            },
+            { "type": "null" }
+          ],
+          "default": null
+        },
+        "targets": {
+          "description": "v11 — Profit targets in priority order as named by the speaker. Equal highs/lows, previous daily/weekly levels, etc.",
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": ["priority", "type"],
+                "properties": {
+                  "priority": { "type": "integer", "minimum": 1 },
+                  "type": { "type": "string" },
+                  "rationale": { "type": "string" }
+                }
+              }
+            },
+            { "type": "null" }
+          ],
+          "default": null
+        },
+        "filters": {
+          "description": "v11 — Avoid conditions and trade filters the speaker explicitly states. Min R:R, session filters, market condition avoids.",
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": ["type"],
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["avoid_when", "min_rr", "time_filter", "session_only", "regime_required"]
+                  },
+                  "condition": { "type": "string" },
+                  "value": { "type": "number" },
+                  "rationale": { "type": "string" }
+                }
+              }
+            },
+            { "type": "null" }
+          ],
+          "default": null
+        },
+        "timeframes": {
+          "description": "v11 — Structured timeframe breakdown: bias TFs, entry TF, trigger TF.",
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "bias": { "type": "array", "items": { "type": "string" } },
+                "entry": { "type": "array", "items": { "type": "string" } },
+                "trigger": { "type": "array", "items": { "type": "string" } }
+              }
+            },
+            { "type": "null" }
+          ],
+          "default": null
+        },
+        "indicators_used": {
+          "description": "v11 — Chart indicators required to execute the strategy, with their purpose.",
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": ["name", "purpose"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "purpose": { "type": "string" }
+                }
+              }
+            },
+            { "type": "null" }
+          ],
+          "default": null
+        },
+        "extraction_gap_reason": {
+          "description": "v11 — When a required field (especially stop_loss) is absent from the transcript, state why here. Lets the graduator flag NEEDS_REVISION rather than guess.",
+          "type": ["string", "null"],
           "default": null
         }
       }

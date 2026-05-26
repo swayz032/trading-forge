@@ -11,8 +11,8 @@
  *   G5. Schema is re-stated in the final user turn
  *   G6. Final user turn contains "Return ONLY JSON matching the schema above"
  *   G7. Final user turn contains the transcript payload
- *   G8. callScoutExtractLlm sends temperature=0.1, top_p=0.95, top_k=64, num_predict=2048
- *   G9. callScoutExtractLlm sends min_p=0.0, repeat_penalty=1.0, num_ctx=16384
+ *   G8. callScoutExtractLlm sends temperature=0.1, top_p=0.95, top_k=64, num_predict=4096 (v11: raised from 2048)
+ *   G9. callScoutExtractLlm sends min_p=0.0, repeat_penalty=1.0, num_ctx=32768 (v11: raised from 16384)
  *   G10. No `think` field in the request body or options (Ollama bug #15260)
  *   G11. No system role in messages sent to Ollama
  *   G12. When no few-shot examples exist, rules+KB+schema appear in the only user turn
@@ -272,7 +272,9 @@ describe("wave26-gemma-fewshot-format", () => {
 
   // ── G8-G9: Gemma 4 sampling parameters ──────────────────────────────────────
 
-  it("G8: callScoutExtractLlm sends temperature=0.1, top_p=0.95, top_k=64, num_predict=2048", async () => {
+  // Wave 26 Pass I (v11): num_predict raised 2048→4096 (richer v11 output requires more tokens);
+  // num_ctx raised 16384→32768 (23K+ transcripts + v11 prompt fit without truncation).
+  it("G8: callScoutExtractLlm sends temperature=0.1, top_p=0.95, top_k=64, num_predict=4096 (v11)", async () => {
     __setOllamaHealthyForTests(true);
     delete process.env.TRANSCRIPT_EXTRACTOR_FORCE_CLOUD;
 
@@ -284,10 +286,10 @@ describe("wave26-gemma-fewshot-format", () => {
     expect(options!.temperature).toBe(0.1);
     expect(options!.top_p).toBe(0.95);
     expect(options!.top_k).toBe(64);
-    expect(options!.num_predict).toBe(2048);
+    expect(options!.num_predict).toBe(4096);
   });
 
-  it("G9: callScoutExtractLlm sends min_p=0.0, repeat_penalty=1.0, num_ctx=16384 (default)", async () => {
+  it("G9: callScoutExtractLlm sends min_p=0.0, repeat_penalty=1.0, num_ctx=32768 (v11 default)", async () => {
     __setOllamaHealthyForTests(true);
     delete process.env.TRANSCRIPT_EXTRACTOR_FORCE_CLOUD;
 
@@ -297,7 +299,7 @@ describe("wave26-gemma-fewshot-format", () => {
     const { options } = capturedChatCalls[0]!;
     expect(options!.min_p).toBe(0.0);
     expect(options!.repeat_penalty).toBe(1.0);
-    expect(options!.num_ctx).toBe(16384);
+    expect(options!.num_ctx).toBe(32768);
   });
 
   // ── G10: No think field ───────────────────────────────────────────────────────

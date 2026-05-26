@@ -85,15 +85,17 @@ function isStrictSchemaMode(): boolean {
 
 /** Ollama context window for transcript_extractor.
  *
- * Default 16384: prompt (~5K tokens with KB injection + few-shot) + transcript
- * (~3K-7K typical, up to ~10K for long-form videos). 16K leaves headroom for
- * output. RTX 5060 8 GB VRAM: model (~3-9 GB depending on variant) + 16K ctx
- * (~2.4 GB) fits comfortably. Operator can lower for VRAM relief or raise to
- * 32768 for institutional max (TIGHT on 8 GB GPUs). */
+ * Wave 26 Pass I (v11): default raised 16384 → 32768.
+ * Rationale: 23K-char transcripts (e.g. dE4lPhAWke8) + v11 extended-rule
+ * prompt (~6K tokens with KB injection + few-shot) + v11 richer output (4K+)
+ * requires 32K to avoid truncation. 16K covered ~95% of v10 transcripts but
+ * failed on long-form institutional strategy videos. RTX 5060 8 GB VRAM:
+ * gemma4:e2b (~5.5 GB) + 32K ctx (~4.8 GB KV cache) FITS but is tight.
+ * Operator can lower to 16384 for VRAM relief via TRANSCRIPT_EXTRACTOR_NUM_CTX=16384. */
 function getTranscriptOllamaNumCtx(): number {
   const raw = process.env.TRANSCRIPT_EXTRACTOR_NUM_CTX;
-  const parsed = raw ? Number.parseInt(raw, 10) : 16384;
-  if (!Number.isFinite(parsed) || parsed < 2048 || parsed > 131072) return 16384;
+  const parsed = raw ? Number.parseInt(raw, 10) : 32768;
+  if (!Number.isFinite(parsed) || parsed < 2048 || parsed > 131072) return 32768;
   return parsed;
 }
 
@@ -2298,9 +2300,13 @@ async function callOllamaForTranscriptExtractor(
   //                    JSON escapes: \", \n, etc. top_k=20 cuts these off).
   //   min_p=0.0        Google default; explicit for documentation.
   //   repeat_penalty=1.0  Ollama default; explicit to prevent unintended change.
-  //   num_predict=2048    HARD CAP — when issue #15502 repetition loop fires,
-  //                    this prevents it running until context exhaustion.
-  // num_ctx: prompt (~5K) + transcript (~3K-7K) + output budget → 16384 covers ~95%
+  //   num_predict=4096    Wave 26 Pass I (v11): raised from 2048.
+  //                    v11 richer output (entry_sequence + stop_loss + targets
+  //                    + filters + timeframes + indicators_used) requires 3-4K
+  //                    output tokens for a full 3-step ICT strategy. 2048 was
+  //                    truncating v11 outputs mid-array. Still acts as hard cap
+  //                    against issue #15502 repetition loop.
+  // num_ctx: v11 raised to 32768 (see getTranscriptOllamaNumCtx for rationale).
   // NEVER add: think field — Ollama bug #15260 silently drops format enforcement
   const numCtx = getTranscriptOllamaNumCtx();
   // Wave 26 Pass H Phase 1.5 Fix 6 (2026-05-26) — extractor determinism.
@@ -2331,7 +2337,7 @@ async function callOllamaForTranscriptExtractor(
     top_k: 64,
     min_p: 0.0,
     repeat_penalty: 1.0,
-    num_predict: 2048,
+    num_predict: 4096,
     seed: TRANSCRIPT_EXTRACTOR_SEED,
   };
 
@@ -2358,13 +2364,59 @@ async function callOllamaForTranscriptExtractor(
   }
 
   // R3: JSON validation gate — if parse fails, record reason and throw
+  let parsedOutput: Record<string, unknown>;
   try {
-    JSON.parse(raw);
+    parsedOutput = JSON.parse(raw) as Record<string, unknown>;
   } catch {
     const e = new Error("Ollama returned non-JSON for transcript_extractor") as Error & { fallbackReason: string };
     e.fallbackReason = "ollama_invalid_json";
     throw e;
   }
+
+  // Wave 26 Pass I (v11) — under-extraction detection + fire-and-forget audit.
+  // Check if any extracted strategies are missing v11 required depth fields for
+  // ICT/archetype strategies. Log the audit row; do NOT block the extraction
+  // (graduator handles downstream rejection; we audit for visibility only).
+  // Archetypes that require deep extraction: ict_*, bounce_off_level, archetype:*.
+  const ICT_ARCHETYPES_RE = /archetype:|ict_|bounce_off_level|sfp|liquidity_raid|bias_aligned/i;
+  try {
+    const strategies = Array.isArray((parsedOutput as Record<string, unknown>).strategies)
+      ? ((parsedOutput as Record<string, unknown>).strategies as Record<string, unknown>[])
+      : [];
+    const underExtracted = strategies.filter((s) => {
+      const ind = String((s as Record<string, unknown>).entry_indicator ?? "");
+      if (!ICT_ARCHETYPES_RE.test(ind)) return false;
+      const seq = (s as Record<string, unknown>).entry_sequence;
+      const hasSeq = Array.isArray(seq) && seq.length >= 2;
+      const stopS = (s as Record<string, unknown>).stop_loss_structured;
+      const hasStop = stopS !== null && stopS !== undefined;
+      const tgts = (s as Record<string, unknown>).targets;
+      const hasTargets = Array.isArray(tgts) && tgts.length >= 1;
+      return !hasSeq || !hasStop || !hasTargets;
+    });
+    if (underExtracted.length > 0) {
+      const { db } = await import("../db/index.js");
+      const { auditLog } = await import("../db/schema.js");
+      db.insert(auditLog).values({
+        action: "extraction.under_extracted",
+        entityType: "llm_call",
+        entityId: null,
+        input: { model, role } as Record<string, unknown>,
+        result: {
+          under_extracted_count: underExtracted.length,
+          strategy_names: underExtracted.map((s) => (s as Record<string, unknown>).name),
+          missing_fields: underExtracted.map((s) => ({
+            name: (s as Record<string, unknown>).name,
+            has_entry_sequence: Array.isArray((s as Record<string, unknown>).entry_sequence) && ((s as Record<string, unknown>).entry_sequence as unknown[]).length >= 2,
+            has_stop_loss_structured: (s as Record<string, unknown>).stop_loss_structured != null,
+            has_targets: Array.isArray((s as Record<string, unknown>).targets) && ((s as Record<string, unknown>).targets as unknown[]).length >= 1,
+          })),
+        } as Record<string, unknown>,
+        status: "warn",
+        decisionAuthority: "system",
+      } as Record<string, unknown>).catch(() => { /* non-blocking */ });
+    }
+  } catch { /* non-blocking — never fail extraction on audit error */ }
 
   // Wave 26 Pass H Phase 1.5 Fix 6 (2026-05-26) — per-call determinism audit.
   // Fire-and-forget; never blocks the extractor return. Lets us verify the
@@ -2387,6 +2439,7 @@ async function callOllamaForTranscriptExtractor(
         num_predict: samplingOptions.num_predict,
         model,
         provider: "ollama",
+        prompt_version: 11,
       } as Record<string, unknown>,
       status: "success",
       decisionAuthority: "system",

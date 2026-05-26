@@ -1,0 +1,137 @@
+{
+  "input": {
+    "video_metadata": {
+      "youtube_url": "https://www.youtube.com/watch?v=dE4lPhAWke8",
+      "title": "My Trading Strategy is Boring (But it Works)",
+      "channel": "TradingStrategy",
+      "duration_seconds": 1800
+    },
+    "transcript_snippet": "So the strategy I'm going to walk you through is actually pretty simple once you understand the core concepts. But before I get into the actual entry, I want to talk about why most traders fail. They look for setups in the wrong market conditions. Step one is always higher timeframe bias. Weekly. Daily. Four hour. All three need to be trending in the same direction. I'm talking higher highs and higher lows for a long bias, lower highs and lower lows for a short bias. If any of those three timeframes are neutral or ranging I don't trade that day. It's a coin toss. Then what happens to a lot of traders is they enter too early or they get trapped. So what I'm looking for is step two — a swing failure pattern. Price needs to raid an old swing high or low. The wick goes through and takes out everybody's stops. But here's the key — the candle has to CLOSE back through that level. The wick takes retail out. Then the closure back through is the actual trap signal — it tells you institutional money is stepping in. If you just see a wick without the closure, skip it. Step three is the displacement and the fair value gap. After that swing failure pattern, I'm waiting for a large body candle. Not a doji, not a small body — a large displacement candle that creates a fair value gap and breaks market structure. I then enter inside that FVG or after price rejects from it. My stop goes below the swing low that was raided for longs, above the swing high for shorts. Never risk more than you can make at least 2R on. If your target is too close and you can't make 2R minimum, skip the trade. Speaking of targets — the best targets are equal highs and equal lows. They are liquidity magnets. Price is drawn to those levels like a magnet. Second choice is the previous daily high or low. Third is the previous weekly high or low. Now what about conditions to avoid? Besides neutral markets, I avoid when there's equal liquidity on both sides — you'll get trapped either way. I also avoid when there are conflicting HTF structure breaks or FVGs pointing in opposite directions. And obviously no FOMC, no CPI days."
+  },
+  "expected_output": {
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "name": "htf_bias_sfp_displacement_fvg_continuation_mes",
+        "concept_name": "htf_bias_sfp_displacement_fvg_continuation",
+        "description": "3-step ICT continuation: weekly/daily/4H HTF bias alignment → swing failure pattern (liquidity raid + closure back through) → displacement candle creates FVG; enter inside FVG; stops below raided swing; targets equal highs/lows then prior daily/weekly levels; skip if R:R < 2.",
+        "symbol": "MES",
+        "timeframe": "15m",
+        "direction": "both",
+        "entry_type": "trend_follow",
+        "entry_indicator": "archetype:ict_bias_aligned_continuation",
+        "primary_indicator": "ict_bias_aligned_continuation",
+        "entry_params": {},
+        "entry_long": "high < low",
+        "entry_short": "high < low",
+        "entry_condition": "LONG: weekly + daily + 4H all trending bullish (HH+HL) + prior swing low raided by wick then candle closes back above the level (SFP) + large displacement candle forms bullish FVG + enter inside FVG or on rejection. SHORT: mirror — all HTF bearish (LH+LL) + swing high raided then close back below + bearish displacement FVG + enter inside bearish FVG. Skip if R:R < 2. No FOMC/CPI.",
+        "confirming_indicators": [
+          { "indicator": "htf_bias", "params": {}, "direction": "agree" },
+          { "indicator": "liquidity_raid_sfp", "params": {}, "direction": "agree" },
+          { "indicator": "displacement_candle", "params": {}, "direction": "agree" },
+          { "indicator": "fvg_retrace", "params": {}, "direction": "agree" },
+          { "indicator": "macro_filter", "params": {}, "direction": "agree" }
+        ],
+        "min_factors_satisfied": 5,
+        "bias_timeframe": "4h",
+        "bias_condition": "Weekly + daily + 4H all trending same direction. HTF neutral or ranging = skip day entirely.",
+        "execution_timeframe": "15m",
+        "exit_type": "atr_multiple",
+        "exit_params": { "multiplier": 2.0 },
+        "stop_loss_atr_multiple": 1.5,
+        "take_profit_atr_multiple": 3.0,
+        "preferred_regime": "TRENDING_UP",
+        "preferred_regimes": ["TRENDING_UP", "TRENDING_DOWN"],
+        "session_filter": "RTH_ONLY",
+        "source_url": "https://www.youtube.com/watch?v=dE4lPhAWke8",
+        "extraction_confidence": 1.0,
+        "confluence_factors": ["regime_match", "structural_setup", "macro_alignment"],
+        "source_claim_win_rate": null,
+        "source_claim_avg_r": null,
+        "symbols": ["MES"],
+        "entry_sequence": [
+          {
+            "step": 1,
+            "name": "htf_bias_confirmed",
+            "rule": "weekly + daily + 4H all trending in same direction; higher highs + higher lows for long bias OR lower highs + lower lows for short bias; if any of those three timeframes are neutral or ranging do NOT trade that day",
+            "indicators_needed": ["market_structure", "trend_continuity"]
+          },
+          {
+            "step": 2,
+            "name": "liquidity_raid_sfp",
+            "rule": "price raids prior swing high (short bias) or swing low (long bias) AND the candle CLOSES BACK through that level — the wick takes retail stops out then the closure back through signals institutional trap reversal; if only a wick without closure, skip",
+            "indicators_needed": ["swing_highs_lows", "candle_closure"]
+          },
+          {
+            "step": 3,
+            "name": "displacement_with_fvg_entry",
+            "rule": "after SFP, a large-body displacement candle creates a fair value gap AND breaks market structure; enter inside the FVG or after price rejects from the FVG boundary",
+            "indicators_needed": ["fair_value_gap", "displacement_candle", "market_structure_break"]
+          }
+        ],
+        "stop_loss_structured": {
+          "anchor": "swing_after_sfp",
+          "buffer_atr": 0.5,
+          "rationale": "below the swing low that was raided for longs / above the swing high for shorts — the SFP invalidation point"
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "equal_highs_lows",
+            "rationale": "speaker explicitly says equal highs/lows are the BEST targets — they are liquidity magnets, price is drawn to them"
+          },
+          {
+            "priority": 2,
+            "type": "previous_daily_high",
+            "rationale": "second choice: prior daily high for longs / prior daily low for shorts"
+          },
+          {
+            "priority": 3,
+            "type": "previous_weekly_high",
+            "rationale": "third choice: prior weekly high/low for swing targets"
+          }
+        ],
+        "filters": [
+          {
+            "type": "avoid_when",
+            "condition": "neutral_or_ranging_market",
+            "rationale": "any of weekly/daily/4H neutral or ranging = coin toss, do not trade that day"
+          },
+          {
+            "type": "avoid_when",
+            "condition": "equal_liquidity_both_sides",
+            "rationale": "equal liquidity on both sides traps either direction"
+          },
+          {
+            "type": "avoid_when",
+            "condition": "conflicting_htf_structure_or_fvgs",
+            "rationale": "opposing FVGs or structure breaks pointing in different directions = no clear bias"
+          },
+          {
+            "type": "min_rr",
+            "value": 2.0,
+            "rationale": "speaker explicitly states: if target is too close and you can't make at least 2R, skip the trade"
+          },
+          {
+            "type": "avoid_when",
+            "condition": "fomc_or_high_impact_news_day",
+            "rationale": "no FOMC, no CPI days"
+          }
+        ],
+        "timeframes": {
+          "bias": ["1w", "1d", "4h"],
+          "entry": ["15m", "1h"],
+          "trigger": ["5m"]
+        },
+        "indicators_used": [
+          { "name": "market_structure", "purpose": "BOS/CHoCH/MSS detection for HTF trend identification and LTF entry confirmation" },
+          { "name": "fair_value_gap", "purpose": "displacement entry zone — must form after the SFP on the displacement candle" },
+          { "name": "liquidity_pools", "purpose": "identify equal-highs/equal-lows as primary targets AND as SFP raid zones" },
+          { "name": "swing_points", "purpose": "stop loss anchor (below the raided swing) + SFP detection trigger" },
+          { "name": "displacement_candle", "purpose": "confirms directional commitment after SFP — must be large-body, creates FVG" }
+        ]
+      }
+    ]
+  },
+  "notes": "v11 DEEP EXTRACTION FIXTURE — dE4lPhAWke8. This is the canonical fixture showing v11 extraction vs v10 under-extraction. v10 would emit: {idea_name: 'htf_bias_and_ms_confirmation', entry_indicator: 'archetype:ict_bias_aligned_continuation', direction: 'both'}. v11 captures: 3 ordered entry_sequence steps with verbatim speaker vocabulary ('swing failure pattern', 'closure back through', 'displacement candle'), structured stop_loss with anchor='swing_after_sfp', 3-priority targets starting with equal_highs_lows, 5 filters including the explicit min_rr=2.0 rule, structured timeframes for bias/entry/trigger, and 5 indicators_used with purpose. Key decisions: (1) Step 2 name is 'liquidity_raid_sfp' not 'liquidity_sweep' — the speaker says 'swing failure pattern' explicitly. (2) stop_loss.anchor is 'swing_after_sfp' not generic 'swing_low_below_entry' — speaker specifies 'the swing low that was raided'. (3) targets[0].type is 'equal_highs_lows' because speaker EXPLICITLY calls these the BEST targets. (4) min_rr filter value is 2.0 because speaker states it as a hard rule, not just a preference. (5) timeframes.bias includes '1w' because speaker starts with 'weekly' — many extractors miss the weekly timeframe."
+}

@@ -542,9 +542,66 @@ the archetype's detector path handles the actual signal — not a DSL expression
   direction framing in the title — always emit `direction: "both"`.
 - Concept names that map here: `multi_confluence_short_setup`, `bias_aligned_short_continuation`,
   `ict_short_continuation`, `bias_aligned_continuation`, `htf_bias_continuation`,
-  `4h_bias_structure_fvg`, `ict_3_layer_model`, `ict_multi_timeframe_continuation`.
+  `4h_bias_structure_fvg`, `ict_3_layer_model`, `ict_multi_timeframe_continuation`,
+  `htf_bias_sfp_displacement_fvg_continuation`.
 
 ---
+
+## v11 Entry Sequence Vocabulary — Canonical Names for Rule Extraction
+
+> **Wave 26 Pass I (2026-05-26).** These canonical names map speaker phrases to `entry_sequence[].name` values and `indicators_used[].name` values. Use these exact names in v11 entry_sequence extraction.
+
+### Entry Sequence Step Names
+
+| Canonical `name` | Speaker phrases that trigger this name | `indicators_needed` |
+|---|---|---|
+| `htf_bias_confirmed` | "weekly/daily/4H bias", "HTF trending direction", "higher timeframe says bullish/bearish", "all higher timeframes aligned", "trending market on the higher timeframe", "MSS on the daily", "macro direction" | `["market_structure", "trend_continuity"]` |
+| `liquidity_raid_sfp` | "swing failure pattern", "SFP", "wick takes everybody out then closes back", "liquidity raid", "price takes out the high and reverses", "swept the lows and closed above", "fake breakout then reversal close", "turtle soup", "stop run then close back through" | `["swing_highs_lows", "candle_closure"]` |
+| `displacement_with_fvg_entry` | "displacement candle", "large body candle creates a fair value gap", "FVG forms after the raid", "displacement + FVG", "imbalance created by displacement", "enter inside the gap", "retrace into the fair value gap" | `["fair_value_gap", "displacement_candle", "market_structure_break"]` |
+| `bos_confirmation` | "break of structure", "BOS", "price broke through the swing high", "confirmed higher high on LTF", "structure break to the upside/downside" | `["market_structure", "swing_points"]` |
+| `choch_confirmation` | "change of character", "CHoCH", "first sign of reversal", "initial structure flip", "character changed on the 15-minute" | `["market_structure", "swing_points"]` |
+| `mss_confirmation` | "market structure shift", "MSS", "price shifted structure", "reclaimed above the swing", "closed above the most recent swing high" | `["market_structure", "swing_points"]` |
+| `fvg_retrace_entry` | "fair value gap", "FVG", "imbalance", "price filling the gap", "retrace into the imbalance", "gap between the wicks" | `["fair_value_gap"]` |
+| `order_block_entry` | "order block", "OB", "last bearish candle before the rally", "last bullish candle before the drop", "institutional OB", "entry at the order block" | `["order_block"]` |
+| `killzone_timing` | "killzone", "NY AM session", "10 to 11 AM", "London open", "only during the kill zone", "within the kill zone window" | `["session_time", "killzone"]` |
+| `sfp_plus_ob_confluence` | "swing failure at the order block", "SFP into an OB", "wick into order block then closes", "OB + SFP confluence" | `["swing_highs_lows", "order_block", "candle_closure"]` |
+| `ma_bias_filter` | "price above the 200 SMA", "200 MA as bias filter", "above/below the moving average for direction", "MA defines the trend" | `["moving_average"]` |
+| `htf_premium_discount` | "price in premium", "price in discount", "trading at equilibrium", "50% of the range", "premium zone for shorts", "discount zone for longs" | `["price_level", "range_midpoint"]` |
+| `equal_highs_lows_target` | "equal highs", "equal lows", "double top liquidity", "double bottom liquidity", "price will seek equal highs", "those equal lows are the target" | `["liquidity_pools", "swing_points"]` |
+| `rr_filter` | "minimum 2R", "risk-reward must be at least 2", "skip if not enough room to target", "only take it if R:R is 2 or better" | `["price_level"]` |
+
+### Target Type Canonical Names (for `targets[].type`)
+
+| Canonical type | Speaker phrases |
+|---|---|
+| `equal_highs_lows` | "equal highs", "equal lows", "double top liquidity above", "double bottom liquidity below", "those equal highs are my target" |
+| `equal_highs` | "equal highs", "the equal highs up there", "that liquidity above the equal highs" |
+| `equal_lows` | "equal lows", "the equal lows below", "that liquidity sitting at the equal lows" |
+| `previous_daily_high` | "previous day high", "yesterday's high", "prior daily high", "PDH" |
+| `previous_daily_low` | "previous day low", "yesterday's low", "prior daily low", "PDL" |
+| `previous_weekly_high` | "previous weekly high", "last week's high", "prior weekly high", "PWH" |
+| `previous_weekly_low` | "previous weekly low", "last week's low", "prior weekly low", "PWL" |
+| `range_high` | "top of the range", "range high", "high of the range", "session high" |
+| `range_low` | "bottom of the range", "range low", "low of the range", "session low" |
+| `fvg_high` | "top of the fair value gap", "FVG high", "upper boundary of the imbalance" |
+| `fvg_low` | "bottom of the fair value gap", "FVG low", "lower boundary of the imbalance" |
+| `ob_high` | "top of the order block", "OB high", "upper boundary of the OB" |
+| `ob_low` | "bottom of the order block", "OB low", "lower boundary of the OB" |
+
+### Stop Loss Anchor Canonical Names (for `stop_loss.anchor`)
+
+| Canonical anchor | Speaker phrases |
+|---|---|
+| `swing_low_below_entry` | "stop below the swing low", "stop below the most recent low", "invalidate below this swing", "stop at the swing that created the setup" |
+| `swing_high_above_entry` | "stop above the swing high", "stop above the most recent high", "invalidate above this level" |
+| `swing_after_sfp` | "stop below the swing that was raided", "below the low that got swept", "stop at the swing failure point" |
+| `fvg_low` | "stop at the bottom of the FVG", "if price leaves the fair value gap I'm out" |
+| `fvg_high` | "stop at the top of the FVG", "stop above the imbalance" |
+| `displacement_candle_low` | "stop below the displacement candle", "the candle that created the FVG is my stop anchor" |
+| `ob_low` | "stop below the order block", "if price closes below the OB I'm wrong" |
+| `ob_high` | "stop above the order block" |
+| `atr_multiple` | "1.5 ATR stop", "ATR-based stop", "stop is 1 ATR from entry" |
+| `fixed_points` | "12-point stop", "10-tick stop", "fixed stop distance" |
 
 ---
 

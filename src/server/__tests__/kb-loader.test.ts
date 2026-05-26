@@ -351,16 +351,19 @@ describe("New role configs", () => {
     expect(cfg.fallback?.model).toBe("deepseek-r1:14b");
   });
 
-  it("transcript_extractor config exists with qwen2.5-coder:7b fallback", () => {
-    // Pass 21 (2026-05-12): qwen3-coder:30b retired (18 GB, can't load on
-    // RTX 5060 8 GB VRAM). Replaced with qwen2.5-coder:7b across all roles.
+  it("transcript_extractor config is Ollama-primary (gemma4) with gpt-5-mini cloud fallback", () => {
+    // Wave 26 Pass A (2026-05-24): transcript_extractor swapped to Ollama-first
+    // (gemma4:e2b local); gpt-5-mini is now the CLOUD FALLBACK.
+    // OLLAMA_HEALTHY defaults true at module load → provider resolves to "ollama".
+    // Wave 26 Pass I (v11): maxTokens 8192 (was 4096 pre-Pass-A).
     const cfg = mod.MODEL_CONFIGS.transcript_extractor;
     expect(cfg).toBeTruthy();
-    expect(cfg.provider).toBe("openai");
-    expect(cfg.model).toBe("gpt-5-mini");
+    expect(cfg.provider).toBe("ollama");
+    expect(cfg.model).toBe("gemma4");
     expect(cfg.responseFormat).toBe("json");
-    expect(cfg.maxTokens).toBe(4096);
-    expect(cfg.fallback?.model).toBe("qwen2.5-coder:7b");
+    expect(cfg.maxTokens).toBe(8192);
+    expect(cfg.fallback?.provider).toBe("openai");
+    expect(cfg.fallback?.model).toBe("gpt-5-mini");
   });
 
   it("each new role has a systemPromptPath that resolves correctly", () => {

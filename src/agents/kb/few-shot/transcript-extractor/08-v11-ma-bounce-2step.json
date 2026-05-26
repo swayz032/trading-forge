@@ -1,0 +1,110 @@
+{
+  "input": {
+    "video_metadata": {
+      "youtube_url": "https://www.youtube.com/watch?v=maBounce200sma",
+      "title": "Simple 200 SMA Bounce Strategy — Works on Any Futures Market",
+      "channel": "SimpleEdgeTrading",
+      "duration_seconds": 900
+    },
+    "transcript_snippet": "I keep this really simple. I only trade in the direction of the 200 SMA trend. If price is above the 200 SMA, I'm looking for longs only. If price is below the 200 SMA, I'm looking for shorts only. That's my bias filter. The actual entry setup is when price pulls back and tests the 200 SMA itself. I need to see a rejection candle — a pin bar or a hammer or just a strong close off the level. That's my trigger. I don't enter on the touch, I wait for the candle to close. Stop goes about 1.5 ATR below the swing low on the rejection candle. I target the previous session high for longs or previous session low for shorts. I avoid trading this in choppy, sideways markets — you get chopped up. And no FOMC or news days."
+  },
+  "expected_output": {
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "name": "sma_200_bias_bounce_mes",
+        "concept_name": "sma_support_resistance_bounce",
+        "description": "2-step 200 SMA bounce: price above 200 SMA = long bias only / below = short bias only; entry on SMA touch with rejection candle close; stop 1.5 ATR below swing low; target prior session high/low; skip choppy markets and news days per SimpleEdgeTrading YouTube.",
+        "symbol": "MES",
+        "timeframe": "15m",
+        "direction": "both",
+        "entry_type": "mean_reversion",
+        "entry_indicator": "archetype:bounce_off_level",
+        "primary_indicator": "bounce_off_level",
+        "entry_params": {
+          "ma_period": 200,
+          "ma_type": "sma",
+          "direction": "both",
+          "rejection_pattern": "pin_bar"
+        },
+        "entry_long": "high < low",
+        "entry_short": "high < low",
+        "entry_condition": "LONG: price above 200 SMA (bias = long only) + price pulls back to test 200 SMA + rejection candle (pin bar/hammer/strong close) confirmed on candle close. SHORT: mirror — price below 200 SMA (short only bias) + rally tests 200 SMA + rejection candle close confirms. Wait for candle close, not touch. Skip choppy sideways and news days.",
+        "confirming_indicators": [
+          { "indicator": "ma_trend_filter", "params": { "period": 200, "type": "sma" }, "direction": "agree" },
+          { "indicator": "macro_filter", "params": {}, "direction": "agree" }
+        ],
+        "min_factors_satisfied": 2,
+        "bias_timeframe": null,
+        "bias_condition": "Price position relative to 200 SMA: above = long bias; below = short bias",
+        "execution_timeframe": "15m",
+        "exit_type": "atr_multiple",
+        "exit_params": { "multiplier": 1.5 },
+        "stop_loss_atr_multiple": 1.5,
+        "take_profit_atr_multiple": 2.0,
+        "preferred_regime": "TRENDING_UP",
+        "preferred_regimes": ["TRENDING_UP", "TRENDING_DOWN"],
+        "session_filter": "RTH_ONLY",
+        "source_url": "https://www.youtube.com/watch?v=maBounce200sma",
+        "extraction_confidence": 1.0,
+        "confluence_factors": ["regime_match", "structural_setup", "macro_alignment"],
+        "source_claim_win_rate": null,
+        "source_claim_avg_r": null,
+        "symbols": ["MES"],
+        "entry_sequence": [
+          {
+            "step": 1,
+            "name": "ma_bias_filter",
+            "rule": "price must be above the 200 SMA for long trades only; price must be below the 200 SMA for short trades only — the MA defines the bias and direction filter",
+            "indicators_needed": ["moving_average"]
+          },
+          {
+            "step": 2,
+            "name": "ma_rejection_entry",
+            "rule": "price pulls back and tests the 200 SMA; a rejection candle (pin bar, hammer, or strong close off the level) must form and CLOSE — do not enter on the touch, wait for candle close confirmation",
+            "indicators_needed": ["moving_average", "candle_pattern"]
+          }
+        ],
+        "stop_loss_structured": {
+          "anchor": "swing_low_below_entry",
+          "buffer_atr": 1.5,
+          "rationale": "1.5 ATR below the swing low on the rejection candle — per speaker's explicit rule"
+        },
+        "targets": [
+          {
+            "priority": 1,
+            "type": "previous_daily_high",
+            "rationale": "speaker says target is the previous session high for longs"
+          },
+          {
+            "priority": 2,
+            "type": "previous_daily_low",
+            "rationale": "previous session low for shorts"
+          }
+        ],
+        "filters": [
+          {
+            "type": "avoid_when",
+            "condition": "neutral_or_ranging_market",
+            "rationale": "speaker explicitly says avoid choppy sideways markets — you get chopped up"
+          },
+          {
+            "type": "avoid_when",
+            "condition": "fomc_or_high_impact_news_day",
+            "rationale": "no FOMC or news days per speaker"
+          }
+        ],
+        "timeframes": {
+          "bias": [],
+          "entry": ["15m"],
+          "trigger": ["15m"]
+        },
+        "indicators_used": [
+          { "name": "moving_average", "purpose": "200 SMA as both bias filter (above/below) and entry level (price tests the MA)" },
+          { "name": "candle_pattern", "purpose": "rejection candle (pin bar/hammer/strong close) confirms entry on close" }
+        ]
+      }
+    ]
+  },
+  "notes": "v11 MA-BOUNCE 2-STEP FIXTURE. Demonstrates the simpler 2-step extraction for MA-based strategies. Key differences from ICT fixtures: (1) Only 2 entry_sequence steps required — (1) bias filter + (2) rejection entry trigger. (2) timeframes.bias is empty [] because the 200 SMA itself IS the bias filter — no separate HTF timeframe check. (3) stop_loss.anchor='swing_low_below_entry' with buffer_atr=1.5 because speaker says '1.5 ATR below the swing low on the rejection candle'. (4) targets are previous_daily_high/low, not equal_highs_lows. (5) min_factors_satisfied=2 because only 2 confirming indicators. The v11 extraction shows 3x more rule density than v10 would (entry_sequence + stop_loss + targets + filters vs v10's one-line archetype label)."
+}

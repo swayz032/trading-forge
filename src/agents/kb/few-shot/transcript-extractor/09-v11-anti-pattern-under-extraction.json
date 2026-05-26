@@ -1,0 +1,72 @@
+{
+  "input": {
+    "video_metadata": {
+      "youtube_url": "https://www.youtube.com/watch?v=dE4lPhAWke8",
+      "title": "My Trading Strategy is Boring (But it Works)",
+      "channel": "TradingStrategy",
+      "duration_seconds": 1800
+    },
+    "transcript_snippet": "So the strategy I'm going to walk you through is actually pretty simple once you understand the core concepts. Step one is always higher timeframe bias. Weekly. Daily. Four hour. All three need to be trending in the same direction. Then what I'm looking for is a swing failure pattern. Price raids an old swing high or low. The wick goes through, closes back through. That's the trap signal. Step three is the displacement and the fair value gap. A large body candle creates a fair value gap, breaks market structure. Enter inside the FVG. Stop below the raided swing. Minimum 2R or skip the trade. Best targets are equal highs and equal lows."
+  },
+  "wrong_output": {
+    "_comment": "DO NOT PRODUCE THIS — v10-style under-extraction. This output contains all 4 under-extraction errors.",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "name": "htf_bias_and_ms_confirmation",
+        "entry_indicator": "archetype:ict_bias_aligned_continuation",
+        "direction": "both",
+        "_error_1": "entry_sequence is MISSING. Speaker describes 3 explicit ordered steps: (1) HTF bias alignment, (2) swing failure pattern, (3) displacement+FVG. All three must appear as entry_sequence steps.",
+        "_error_2": "stop_loss_structured is MISSING. Speaker explicitly says 'stop below the raided swing' — that maps to anchor='swing_after_sfp'. This must be captured.",
+        "_error_3": "targets is MISSING. Speaker explicitly says 'best targets are equal highs and equal lows' then daily/weekly levels. These must appear as targets[] with equal_highs_lows as priority 1.",
+        "_error_4": "filters is MISSING. Speaker says 'minimum 2R or skip' — that is a min_rr=2.0 filter. Must be captured.",
+        "_error_5": "The entire extraction is 3 fields. A 23K-char transcript that teaches 3 explicit ordered steps, a stop rule, explicit targets, and a min R:R rule must never compress to 3 fields. This is the v10 failure mode that v11 fixes."
+      }
+    ]
+  },
+  "correct_output": {
+    "_comment": "v11 CORRECT output — every rule the speaker stated is captured",
+    "instrument_classification": "futures_primary",
+    "strategies": [
+      {
+        "name": "htf_bias_sfp_displacement_fvg_continuation_mes",
+        "concept_name": "htf_bias_sfp_displacement_fvg_continuation",
+        "direction": "both",
+        "entry_indicator": "archetype:ict_bias_aligned_continuation",
+        "entry_sequence": [
+          {
+            "step": 1,
+            "name": "htf_bias_confirmed",
+            "rule": "weekly + daily + 4H all trending in same direction; higher highs + higher lows for long bias OR lower highs + lower lows for short bias",
+            "indicators_needed": ["market_structure", "trend_continuity"]
+          },
+          {
+            "step": 2,
+            "name": "liquidity_raid_sfp",
+            "rule": "price raids prior swing high or low (wick through), then CLOSES BACK through that level — the wick takes retail out then the closure is the trap signal",
+            "indicators_needed": ["swing_highs_lows", "candle_closure"]
+          },
+          {
+            "step": 3,
+            "name": "displacement_with_fvg_entry",
+            "rule": "large body candle creates fair value gap AND breaks market structure; enter inside the FVG",
+            "indicators_needed": ["fair_value_gap", "displacement_candle", "market_structure_break"]
+          }
+        ],
+        "stop_loss_structured": {
+          "anchor": "swing_after_sfp",
+          "buffer_atr": 0.5,
+          "rationale": "below the swing low that was raided — the SFP invalidation point"
+        },
+        "targets": [
+          { "priority": 1, "type": "equal_highs_lows", "rationale": "speaker says 'best targets are equal highs and equal lows'" }
+        ],
+        "filters": [
+          { "type": "min_rr", "value": 2.0, "rationale": "speaker says minimum 2R or skip the trade" }
+        ],
+        "timeframes": { "bias": ["1w", "1d", "4h"], "entry": ["15m"], "trigger": ["5m"] }
+      }
+    ]
+  },
+  "notes": "v11 ANTI-PATTERN FIXTURE — contrasts v10 shell extraction vs v11 deep extraction. The wrong_output shows the exact failure mode that prompted v11: a 23K-char strategy tutorial compressed to 3 fields (name + entry_indicator + direction). The correct_output captures every rule the speaker stated. Four extraction errors to detect: (1) missing entry_sequence despite 3 explicit steps, (2) missing stop_loss_structured despite explicit 'stop below raided swing', (3) missing targets despite explicit 'equal highs and equal lows are the best targets', (4) missing min_rr filter despite explicit '2R or skip'. The v11 EXTRACTION DEPTH MANDATE and self-check section exist specifically to prevent this failure mode."
+}

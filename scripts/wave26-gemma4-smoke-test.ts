@@ -141,6 +141,18 @@ const PARITY_FIXTURES: ParityFixture[] = [
       bias_timeframe_required: true,
     },
   },
+  {
+    id: "F6",
+    name: "dE4lPhAWke8 — HTF bias + SFP + Displacement+FVG (v11 deep extraction test)",
+    transcript: `So the strategy I'm going to walk you through is actually pretty simple. Step one is always higher timeframe bias. Weekly. Daily. Four hour. All three need to be trending in the same direction. Higher highs and higher lows for a long bias, lower highs and lower lows for a short bias. If any of those three timeframes are neutral or ranging I don't trade that day — it's a coin toss. Then what I'm looking for is step two — a swing failure pattern. Price needs to raid an old swing high or low. The wick goes through and takes out everybody's stops. But here's the key — the candle has to CLOSE back through that level. The wick takes retail out. Then the closure back through is the actual trap signal. If you just see a wick without the closure, skip it. Step three is the displacement and the fair value gap. After that swing failure pattern, I'm waiting for a large body candle. A large displacement candle that creates a fair value gap and breaks market structure. I then enter inside that FVG. My stop goes below the swing low that was raided for longs, above the swing high for shorts. Never risk more than you can make at least 2R on — if your target is too close, skip the trade. Best targets are equal highs and equal lows. They are liquidity magnets. Second choice is the previous daily high or low. Third is the previous weekly high or low. Avoid neutral markets. Avoid equal liquidity on both sides. Avoid conflicting HTF structure or FVGs. No FOMC, no CPI days.`,
+    requirements: {
+      min_confluence_factors: 3,
+      expected_direction: "both",
+      expected_entry_indicator_prefix: "archetype:ict_bias_aligned_continuation",
+      expected_confirming_indicators_min: 3,
+      bias_timeframe_required: true,
+    },
+  },
 ];
 
 // ─── Parity validation function ───────────────────────────────────────────────
@@ -259,12 +271,60 @@ function validateParityFixtureOutput(
 
 // ─── Parity test runner (static — validates fixtures against new prompt spec) ──
 
+// ─── v11 deep-extraction check (Wave 26 Pass I) ──────────────────────────────
+// Validates that a strategy object contains the new v11 required depth fields:
+// entry_sequence (≥ min steps), stop_loss_structured (non-null), targets (≥1), filters (≥1).
+
+interface V11DeepCheck {
+  has_entry_sequence: boolean;
+  entry_sequence_length: number;
+  has_stop_loss_structured: boolean;
+  has_targets: boolean;
+  targets_length: number;
+  has_filters: boolean;
+  filters_length: boolean;
+  has_timeframes: boolean;
+  has_indicators_used: boolean;
+  min_entry_sequence_met: boolean;
+  pass: boolean;
+}
+
+function checkV11Depth(strategy: Record<string, unknown>, minEntrySteps = 2): V11DeepCheck {
+  const entrySeq = Array.isArray(strategy["entry_sequence"]) ? strategy["entry_sequence"] as unknown[] : [];
+  const stopLoss = strategy["stop_loss_structured"];
+  const targets = Array.isArray(strategy["targets"]) ? strategy["targets"] as unknown[] : [];
+  const filters = Array.isArray(strategy["filters"]) ? strategy["filters"] as unknown[] : [];
+  const timeframes = strategy["timeframes"];
+  const indicators = Array.isArray(strategy["indicators_used"]) ? strategy["indicators_used"] as unknown[] : [];
+
+  const hasSeq = entrySeq.length > 0;
+  const hasStop = stopLoss !== null && stopLoss !== undefined;
+  const hasTargets = targets.length > 0;
+  const hasFilters = filters.length > 0;
+  const seqMet = entrySeq.length >= minEntrySteps;
+
+  return {
+    has_entry_sequence: hasSeq,
+    entry_sequence_length: entrySeq.length,
+    has_stop_loss_structured: hasStop,
+    has_targets: hasTargets,
+    targets_length: targets.length,
+    has_filters: hasFilters,
+    filters_length: hasFilters,
+    has_timeframes: timeframes !== null && timeframes !== undefined,
+    has_indicators_used: indicators.length > 0,
+    min_entry_sequence_met: seqMet,
+    pass: hasSeq && hasStop && hasTargets && hasFilters && seqMet,
+  };
+}
+
 function runStaticParityTests(): boolean {
   console.log("\n─────────────────────────────────────────────────────");
-  console.log("WAVE 26 PASS G — 5-FIXTURE PARITY TEST (STATIC SPEC VALIDATION)");
+  console.log("WAVE 26 PASS I — 5-FIXTURE PARITY TEST v11 (STATIC SPEC VALIDATION)");
   console.log("─────────────────────────────────────────────────────");
-  console.log("This test validates the v10 prompt SPECIFICATION against 5 representative");
-  console.log("fixture scenarios. Each fixture shows what the CORRECT output should be.");
+  console.log("This test validates the v11 prompt SPECIFICATION against fixtures.");
+  console.log("v11 checks: entry_sequence ≥ 2 steps, stop_loss_structured non-null,");
+  console.log("           targets ≥ 1, filters ≥ 1 — on top of v10 direction/archetype checks.");
   console.log("Running against the few-shot fixtures in kb/few-shot/transcript-extractor/");
   console.log();
 
@@ -272,6 +332,8 @@ function runStaticParityTests(): boolean {
   const fixtureFiles = [
     "04-bounce-off-level-archetype.json",
     "05-ict-bias-aligned-continuation-archetype.json",
+    "07-v11-deep-extraction-sfp-displacement-fvg.json",
+    "08-v11-ma-bounce-2step.json",
   ];
 
   let allPass = true;
@@ -303,16 +365,30 @@ function runStaticParityTests(): boolean {
         console.log(`    confluence_factors.length=${confluenceFactors.length}  (expected: ≥2)`);
         console.log(`    confirming_indicators.length=${confirmingIndicators.length}  (expected: ≥2)`);
 
-        const checks = [
+        const v10Checks = [
           direction === "both",
           entryIndicator.startsWith("archetype:"),
           confluenceFactors.length >= 2,
           confirmingIndicators.length >= 2,
         ];
 
-        const fixturePass = checks.every(Boolean);
-        console.log(`  ${fixturePass ? "PASS" : "FAIL"}: ${fixtureFile}`);
-        if (!fixturePass) allPass = false;
+        // v11 deep-extraction checks (Wave 26 Pass I mandate)
+        const isV11Fixture = fixtureFile.includes("07-") || fixtureFile.includes("08-");
+        const minSteps = entryIndicator.includes("ict_") || entryIndicator.includes("sfp") ? 3 : 2;
+        const v11 = checkV11Depth(s, minSteps);
+
+        if (isV11Fixture) {
+          console.log(`    [v11] entry_sequence.length=${v11.entry_sequence_length}  (expected: ≥${minSteps})`);
+          console.log(`    [v11] stop_loss_structured=${v11.has_stop_loss_structured}  (expected: true)`);
+          console.log(`    [v11] targets.length=${v11.targets_length}  (expected: ≥1)`);
+          console.log(`    [v11] has_filters=${v11.has_filters}  (expected: true)`);
+          console.log(`    [v11] has_timeframes=${v11.has_timeframes}`);
+          console.log(`    [v11] has_indicators_used=${v11.has_indicators_used}`);
+        }
+
+        const allChecksPass = v10Checks.every(Boolean) && (!isV11Fixture || v11.pass);
+        console.log(`  ${allChecksPass ? "PASS" : "FAIL"}: ${fixtureFile}`);
+        if (!allChecksPass) allPass = false;
       }
     } catch (err) {
       console.error(`  ERROR reading fixture ${fixtureFile}:`, err);
@@ -320,70 +396,58 @@ function runStaticParityTests(): boolean {
     }
   }
 
-  // Print parity comparison table (old v9 vs new v10 expected behavior)
+  // Print parity comparison table (v10 vs v11 deep-extraction expected behavior)
   console.log("\n─────────────────────────────────────────────────────");
-  console.log("PARITY COMPARISON: v9 prompt vs v10 prompt (expected behavior)");
+  console.log("PARITY COMPARISON: v10 prompt vs v11 deep-extraction (Wave 26 Pass I)");
   console.log("─────────────────────────────────────────────────────");
+  console.log("v10 failure mode: archetype label only (3 fields) for 23K-char strategy tutorials");
+  console.log("v11 mandate: entry_sequence (≥2 steps) + stop_loss + targets + filters always");
   console.log();
 
   const comparisonRows = [
     {
-      fixture: "F1 — ICT Silver Bullet",
-      v9_direction: "short (from video title)",
-      v10_direction: "both",
-      v9_factors: "1 (structural_setup only)",
-      v10_factors: "≥3 (regime_match + structural_setup + killzone + macro_alignment)",
-      v9_archetype: "fvg_retrace or ema_crossover",
-      v10_archetype: "archetype:ict_silver_bullet_ny_am",
+      fixture: "dE4lPhAWke8 (HTF bias + SFP + displacement+FVG)",
+      v10_output: "{idea_name: 'htf_bias_and_ms_confirmation', entry_indicator: 'archetype:ict_bias_aligned_continuation', direction: 'both'} — 3 fields only",
+      v11_output: "3-step entry_sequence + stop_loss.anchor='swing_after_sfp' + 3 targets (equal_highs_lows > prev_daily > prev_weekly) + 5 filters (neutral avoid + equal_liq + conflicting_htf + min_rr=2.0 + news) + timeframes + indicators_used",
+      rule_density_lift: "~15× (3 fields → ~45+ structured fields)",
     },
     {
-      fixture: "F2 — Power of 3",
-      v9_direction: "long or short based on example",
-      v10_direction: "both",
-      v9_factors: "1 (structural_setup)",
-      v10_factors: "≥3 (regime_match + structural_setup + killzone + macro_alignment)",
-      v9_archetype: "session_open_breakout or ema_crossover",
-      v10_archetype: "archetype:ict_power_of_3",
+      fixture: "F1 — ICT Silver Bullet (NY AM)",
+      v10_output: "direction='both' + archetype:ict_silver_bullet_ny_am + 3+ confluence_factors",
+      v11_output: "v10 fields + entry_sequence[sweep step, MSS step, FVG entry step] + stop_loss + targets[equal_highs_lows, prior_daily] + filters[news, min_rr]",
+      rule_density_lift: "3× (adds sequence + stop + targets + filters)",
     },
     {
-      fixture: "F3 — 200 SMA Bounce",
-      v9_direction: "long (from long example in transcript)",
-      v10_direction: "both",
-      v9_factors: "1 (structural_setup)",
-      v10_factors: "≥2 (structural_setup + regime_match + macro_alignment)",
-      v9_archetype: "ema_crossover (WRONG — MA-as-S/R not two-MA cross)",
-      v10_archetype: "archetype:bounce_off_level",
+      fixture: "F3/F8 — 200 SMA Bounce (MA-as-S/R)",
+      v10_output: "direction='both' + archetype:bounce_off_level + 2+ confluence_factors",
+      v11_output: "v10 fields + entry_sequence[ma_bias_filter, ma_rejection_entry] + stop_loss.anchor='swing_low_below_entry' buffer_atr=1.5 + targets[prev_daily_high, prev_daily_low] + filters[choppy avoid, news]",
+      rule_density_lift: "3× (adds 2-step sequence + structured stop + targets + filters)",
     },
     {
-      fixture: "F4 — 9/21 EMA Pullback",
-      v9_direction: "long only (from long example)",
-      v10_direction: "both",
-      v9_factors: "1 (regime_match)",
-      v10_factors: "≥1 (regime_match + structural_setup)",
-      v9_archetype: "ema_crossover",
-      v10_archetype: "ema_crossover (correct — parametric indicator)",
+      fixture: "F5 — ICT 4H Bias + BOS + FVG",
+      v10_output: "direction='both' + archetype:ict_bias_aligned_continuation + 3+ confluence_factors + 4+ confirming_indicators",
+      v11_output: "v10 fields + entry_sequence[htf_bias_confirmed, bos_confirmation, fvg_retrace_entry, killzone_timing] + stop_loss + targets + filters[news, min_rr]",
+      rule_density_lift: "3× (adds sequence + stop + targets + filters)",
     },
     {
-      fixture: "F5 — 4H Bias + BOS + FVG",
-      v9_direction: "short (from bearish video examples)",
-      v10_direction: "both",
-      v9_factors: "1 (structural_setup only — empty confirming_indicators)",
-      v10_factors: "≥3 (regime_match + structural_setup + macro_alignment), 4+ confirming_indicators",
-      v9_archetype: "ema_crossover (WRONG — this is ict_bias_aligned_continuation)",
-      v10_archetype: "archetype:ict_bias_aligned_continuation",
+      fixture: "v11 Anti-pattern (fixture 09)",
+      v10_output: "3 fields: {name, entry_indicator, direction} — under-extraction",
+      v11_output: "REJECTED by under-extraction self-check: missing entry_sequence + stop + targets + filters. Extractor retries with deeper scan.",
+      rule_density_lift: "N/A — v11 prevents this output entirely",
     },
   ];
 
   for (const row of comparisonRows) {
     console.log(`Fixture: ${row.fixture}`);
-    console.log(`  direction:       v9="${row.v9_direction}" → v10="${row.v10_direction}"`);
-    console.log(`  factors:         v9="${row.v9_factors}" → v10="${row.v10_factors}"`);
-    console.log(`  entry_indicator: v9="${row.v9_archetype}" → v10="${row.v10_archetype}"`);
+    console.log(`  v10: ${row.v10_output}`);
+    console.log(`  v11: ${row.v11_output}`);
+    console.log(`  lift: ${row.rule_density_lift}`);
     console.log();
   }
 
   console.log("─────────────────────────────────────────────────────");
-  console.log(`PARITY SPEC VALIDATION: ${allPass ? "PASS" : "FAIL"}`);
+  console.log(`PARITY SPEC VALIDATION v11: ${allPass ? "PASS" : "FAIL"}`);
+  console.log("v11 PASS = fixtures 04, 05, 07, 08 all have correct v10+v11 fields");
   console.log("─────────────────────────────────────────────────────");
 
   return allPass;
@@ -449,6 +513,27 @@ async function runLiveLlmParityTest(): Promise<boolean> {
     for (const check of parityResult.checks) {
       const symbol = check.pass ? "  OK" : "  FAIL";
       console.log(`  ${symbol}: ${check.check} — actual="${check.actual}" expected="${check.expected}"`);
+    }
+
+    // v11 deep-extraction checks for ICT/archetype strategies
+    if (strategies.length > 0) {
+      const s = strategies[0];
+      const ind = String(s["entry_indicator"] ?? "");
+      const isIct = /archetype:|ict_|sfp|bias_aligned/i.test(ind);
+      if (isIct) {
+        const minSteps = /ict_|sfp/i.test(ind) ? 3 : 2;
+        const v11 = checkV11Depth(s, minSteps);
+        console.log(`  [v11] entry_sequence: ${v11.entry_sequence_length} steps (need ≥${minSteps}) — ${v11.min_entry_sequence_met ? "OK" : "FAIL"}`);
+        console.log(`  [v11] stop_loss_structured: ${v11.has_stop_loss_structured ? "present" : "MISSING"}`);
+        console.log(`  [v11] targets: ${v11.targets_length} entries (need ≥1) — ${v11.has_targets ? "OK" : "FAIL"}`);
+        console.log(`  [v11] filters: ${v11.has_filters ? "present" : "MISSING"}`);
+        if (!v11.pass) {
+          console.log(`  [v11] FAIL: v11 deep-extraction requirements not met`);
+          allFixturesPass = false;
+        } else {
+          console.log(`  [v11] PASS: deep-extraction requirements met`);
+        }
+      }
     }
 
     console.log(`  [${fixture.id}] ${parityResult.pass ? "PASS" : "FAIL"}: ${fixture.name}`);
