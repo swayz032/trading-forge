@@ -1186,6 +1186,33 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
         ? (s.preferred_regimes as unknown[]).filter((r): r is string => typeof r === "string" && VALID_REGIMES.has(r))
         : (s.preferred_regimes === null ? null : undefined);
 
+      // Wave 26 Pass I (2026-05-26) — v11 "to-the-T" deep extraction fields.
+      // Forward Gemma's v11 output (entry_sequence, stop_loss object, targets,
+      // filters, timeframes object, indicators_used) so the graduator can stamp
+      // them per Pass I track 2 spec. Without these forwards the route silently
+      // drops v11 depth and falls back to v10 prose-only shape.
+      const entrySequence = Array.isArray(s.entry_sequence)
+        ? (s.entry_sequence as unknown[]).filter((it): it is Record<string, unknown> => typeof it === "object" && it !== null)
+        : (s.entry_sequence === null ? null : undefined);
+      const stopLossV11 = s.stop_loss && typeof s.stop_loss === "object" && !Array.isArray(s.stop_loss)
+        ? s.stop_loss as Record<string, unknown>
+        : (s.stop_loss === null ? null : undefined);
+      const targetsV11 = Array.isArray(s.targets)
+        ? (s.targets as unknown[]).filter((it): it is Record<string, unknown> => typeof it === "object" && it !== null)
+        : (s.targets === null ? null : undefined);
+      const filtersV11 = Array.isArray(s.filters)
+        ? (s.filters as unknown[]).filter((it): it is Record<string, unknown> => typeof it === "object" && it !== null)
+        : (s.filters === null ? null : undefined);
+      const timeframesV11 = s.timeframes && typeof s.timeframes === "object" && !Array.isArray(s.timeframes)
+        ? s.timeframes as Record<string, unknown>
+        : (s.timeframes === null ? null : undefined);
+      const indicatorsUsedV11 = Array.isArray(s.indicators_used)
+        ? (s.indicators_used as unknown[]).filter((it): it is Record<string, unknown> => typeof it === "object" && it !== null)
+        : (s.indicators_used === null ? null : undefined);
+      const extractionGapReasonV11 = typeof s.extraction_gap_reason === "string"
+        ? s.extraction_gap_reason.slice(0, 500)
+        : (s.extraction_gap_reason === null ? null : undefined);
+
       ideas.push({
         thesis,
         market,
@@ -1231,6 +1258,14 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
         ...(primaryIndicator !== undefined     && { primary_indicator:        primaryIndicator }),
         ...(confirmingIndicators !== undefined && { confirming_indicators:    confirmingIndicators }),
         ...(preferredRegimes !== undefined     && { preferred_regimes:        preferredRegimes }),
+        // Wave 26 Pass I (2026-05-26) — v11 deep-extraction forwards
+        ...(entrySequence !== undefined           && { entry_sequence:           entrySequence }),
+        ...(stopLossV11 !== undefined             && { stop_loss:                stopLossV11 }),
+        ...(targetsV11 !== undefined              && { targets:                  targetsV11 }),
+        ...(filtersV11 !== undefined              && { filters:                  filtersV11 }),
+        ...(timeframesV11 !== undefined           && { timeframes:               timeframesV11 }),
+        ...(indicatorsUsedV11 !== undefined       && { indicators_used:          indicatorsUsedV11 }),
+        ...(extractionGapReasonV11 !== undefined  && { extraction_gap_reason:    extractionGapReasonV11 }),
       });
     }
 
