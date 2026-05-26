@@ -1,8 +1,9 @@
 {
-  "generatedAt": "2026-05-26T23:00:09.388Z",
+  "generatedAt": "2026-05-26T23:19:17.856Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
+    "ab_comparison:invalid-active-proof-mode",
     "adaptive_exit_engine:invalid-active-proof-mode",
     "adaptive_exit_engine:manual_gate:operator_opt_in_per_strategy",
     "composite_shadow_gate:invalid-active-proof-mode",
@@ -39,6 +40,7 @@
     "strategy_health_observability:invalid-active-proof-mode",
     "ts_python_parity_ci_gate:invalid-active-proof-mode",
     "ts_python_parity_ci_gate:manual_gate:ci_gate",
+    "wave29_observability_surface:invalid-active-proof-mode",
     "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
     "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
     "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
@@ -49,9 +51,9 @@
     "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
-    "total": 63,
+    "total": 65,
     "ready": 33,
-    "blocked": 23,
+    "blocked": 25,
     "manualGated": 2,
     "experimental": 5
   },
@@ -94,6 +96,32 @@
         "a-plus-auditor:scan-complete SSE",
         "a-plus-auditor.scan-complete",
         "quantum_run_costs"
+      ]
+    },
+    {
+      "id": "ab_comparison",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "operator_only",
+      "blockers": [
+        "invalid-active-proof-mode"
+      ],
+      "requiredEvidence": [
+        "/api/ab-comparison/recent",
+        "ab_comparison_digest.completed",
+        "ab_comparison_digest.discord_failed",
+        "ab_comparison_digest.skipped_dst_guard",
+        "ab_comparison_digest.skipped_lock_contention",
+        "audit_log.ab_comparison_digest.*",
+        "audit_log.ab_comparison_digest.completed",
+        "GET /api/ab-comparison/recent",
+        "scheduler:ab-comparison-weekly-digest:21,22-utc-friday",
+        "SELECT * FROM audit_log WHERE action LIKE 'ab_comparison_digest.%' ORDER BY created_at DESC LIMIT 8",
+        "SELECT account_id, paper_account_routing FROM strategies WHERE paper_account_routing IS NOT NULL LIMIT 50"
       ]
     },
     {
@@ -1469,6 +1497,40 @@
         "test_anchored_vwap.py",
         "test_archetype_vwap_band_reject.py",
         "test_vwap_bands.py"
+      ]
+    },
+    {
+      "id": "wave29_observability_surface",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "operator_only",
+      "blockers": [
+        "invalid-active-proof-mode"
+      ],
+      "requiredEvidence": [
+        "/metrics endpoint reachable",
+        "/metrics tf_frozen_policy_overrides_total",
+        "/metrics tf_lifecycle_shadow_promotions_total",
+        "/metrics tf_pbo_blocks_total",
+        "/metrics tf_regime_drift_detections_total",
+        "/metrics tf_rl_ab_pnl_delta",
+        "/metrics tf_rl_ab_sharpe_delta",
+        "/metrics tf_rl_kill_switch_total",
+        "/metrics tf_rl_training_epochs_total",
+        "/metrics tf_shadow_signals_total",
+        "SSE lifecycle:pbo_evaluated",
+        "SSE lifecycle:shadow_divergence_evaluated",
+        "SSE quantum_rl:kill_switch_engaged",
+        "SSE quantum_rl:training_completed",
+        "SSE signal:rl_ab_routed",
+        "SSE signal:shadow_logged",
+        "SSE stream open",
+        "wave29_observability.metrics_emitted",
+        "wave29_observability.sse_broadcast_failed"
       ]
     },
     {

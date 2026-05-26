@@ -8385,6 +8385,33 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 
 ---
 
+### Session Log — 2026-05-26 Wave 29 Pass D + MASTER close-out (D.4 architect LAST)
+
+**Mission:** Close Wave 29 at the wave level — D.4 architect master close consolidating Pass C/A/B/D into one institutional-grade record.
+
+**Work completed:**
+- Pass D Round 1 (`150b329`) shipped 78 vitest GREEN across D.1 observability (42 — 9 new Prometheus counters + WAVE29_EVENTS SSE constants + quantum_rl:training_completed + quantum_rl:kill_switch_engaged broadcasters wired in backtest-service.ts + rl-signal-fetcher.ts) + D.2 paper-parity (16 — GET /api/ab-comparison/recent + AbSharpeComparisonTile.tsx + ProductionStatusPanel mount + computeRolling20SessionSharpe pure helper) + D.3 critic-optimizer (20 — ab-comparison-weekly-digest-service.ts Friday 17:00 ET DST-safe cron with day-of-week + ET-hour guards + _PIPELINE_GATE_EXEMPT + _tryAcquireJobLock + scheduler 0 21,22 * * 5 registration).
+- D.4 architect master close (this commit): registered 2 new subsystems in `docs/system-subsystem-registry.json` (`ab_comparison` consolidating route + tile + weekly digest cron, `wave29_observability_surface` consolidating the 9 Prometheus counters + 6 SSE events catalog + WAVE29_EVENTS registry); added 8 new audit-action namespaces (`ab_comparison_digest.{completed, skipped_lock_contention, skipped_dst_guard, discord_failed}` + `wave29_observability.{metrics_emitted, sse_broadcast_failed}`); CLAUDE.md updated with ★ Wave 29 MASTER paragraph + 2 new §12 Hard Gates rows (D.1 observability surface ADVISORY-ONLY + D.3 weekly digest ADVISORY-ONLY) + new §13 Don't entry on disabling Wave 29 Prometheus/SSE; MEMORY.md ★ CURRENT promoted to Wave 29 MASTER + new `project_wave29_master_complete_2026_05_26.md` memory file; Wave 29 plan file annotated with SHIPPED notice.
+
+**Verification:**
+- `npm run system-map:check` → exit 0 (driftItems: [])
+- `npm run check:production-isolation` → exit 0 (CLEAN, 4 files, 0 violations)
+- `npm run check:2026-compliance` → exit 0 (MFFU + Topstep aligned)
+- Wave 29 cumulative tests: ~432 (190 Pass C + 111 Pass A + 53 Pass B + 78 Pass D Round 1)
+- Wave 28 cumulative 205-test baseline preserved (zero regressions)
+
+**Known-facts updates:** No new pinned facts — Wave 29 surfaces are observability-additive, not behavior-changing for any existing contract.
+
+**Carry-forward for next session:**
+- Operator: set `ADMIN_OVERRIDE_HMAC_SECRET` (≥32 chars random) in production .env before any frozen-policy HMAC override attempt
+- Operator: `npm run db:migrate` to apply 0152 + 0159 + 0160 + 0161 to Railway prod OR wait for boot-migration-runner on next deploy
+- First RL-influenced paper trade expected ~3 days after first off-RTH training cycle completes (RL training auto-fires at off-RTH windows when `entry_quality.train_rl_policy=true`)
+- 4 new cron jobs registered total across Wave 29 (verify `scheduler.ts` list on next startup): `quantum-rl-training-window` (Pass C), `regime-drift-detector` (Pass B.3), `ab-comparison-weekly-digest` (Pass D.3); plus existing Wave 27 Pass 1.5 + Wave 28 Pass A crons
+- A/B paper sub-accounts (slumdawg-baseline + slumdawg-rl-challenger) routed automatically once strategies graduate to PAPER via existing lifecycle ladder
+- Wave 30+ candidates: AWS Braket bridge completion (per Pass C decision — stays a stub through Wave 29); Wave 29 Phase 2 hard-gate wiring on RL signal if A/B evidence shows positive marginal edge over 30-60 days; Wave 27 unified replay-grading harness `--tool=all` wiring into Wave 27 Pass 1.5 weekly cron
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)
