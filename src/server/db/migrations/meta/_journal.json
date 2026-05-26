@@ -1128,6 +1128,20 @@
       "when": 1748390400000,
       "tag": "0160_shadow_signals",
       "breakpoints": true
+    },
+    {
+      "idx": 161,
+      "version": "7",
+      "when": 1748476800001,
+      "tag": "0161_frozen_policy_contract",
+      "breakpoints": true
+    },
+    {
+      "idx": 162,
+      "version": "7",
+      "when": 1748563200000,
+      "tag": "0162_needs_archetype_queue",
+      "breakpoints": true
     }
   ]
 }

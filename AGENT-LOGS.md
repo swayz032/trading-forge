@@ -4,6 +4,98 @@
 
 ---
 
+### Session Log — 2026-05-26 claude (Slumdawg debug + Wave 26 Pass J Phase 2-3 mechanic portability + uncatalogued archetype queue)
+
+**Mission:** Operator reported Slumdawg Discord bot rejecting all YouTube links with "model unavailable", then with "no supported market" on legit price-action videos. Diagnose root cause, fix, then design + ship the robust adaptive route so gemma extracts ANY trading strategy whose mechanics port to intraday MES/MNQ/MCL — regardless of catalog match or demo chart symbol.
+
+**Work completed:**
+
+- **Fix 1 — bare gemma4 → gemma4:e2b model name (early in session):**
+  - `src/server/services/model-router.ts:60` default flipped `"gemma4"` → `"gemma4:e2b"` (Ollama bare-name doesn't resolve; tagged name required). My fix got rolled into the other agent's Phase 1.5 commit `b83c7c2` that landed in parallel.
+  - `CLAUDE.md §15` rewritten — removed stale "Wave 26 Pass B qwen swap" claim, restored gemma4:e2b as canonical primary, documented the bare-name-doesn't-resolve gotcha.
+  - `CLAUDE.md §13` "Don't change transcript_extractor prompt" rule updated — gemma4:e2b now labeled primary (was "legacy").
+  - Deleted `qwen2.5-coder:7b` from Ollama (`ollama rm`) so it can't accidentally re-route.
+  - Memory: `feedback_transcript_extractor_gemma4_canonical.md` pinned (gemma4:e2b primary, tag required, qwen removed).
+
+- **Diagnosis — "no supported market" root cause:**
+  - User dropped `https://youtu.be/e-QmGJU1XYc` ("NOBODY TEACHES THIS") — bot replied `Reason: no supported market`. I pulled the transcript myself: it's a textbook 3-step price-action strategy (HH/HL trend identification + supply/demand zones + R:R ≥ 2.5 filter), 100% portable to MES/MNQ/MCL.
+  - Root cause: gemma's `instrument_classification` gate at extraction time emitted `non_futures_primary` because the speaker never named a ticker. Route at `agent.ts:1346` hard-coded `reason: "no_supported_market"` for any empty-ideas response. The prompt has a "Generic-pattern fallback" rule that SHOULD have caught this but gemma4:e2b ignores it at single-pass capacity ceiling (confirmed by `f9cb341` commit message: "gemma4:e2b ignores the v12 mandate in single-call mode (capacity ceiling)").
+  - User constraint: "gemma should be able to handle any traidng strategy this is yotube many vidoes is not gone be in the ai list of strategy types" + "a strategy that says forex or stock works on futures too most strategies work cross market" + "swing traidng is banned we are intra day and day traders".
+
+- **Memory pins (3 new feedbacks):**
+  - `feedback_extractor_any_strategy_no_catalog_gate.md` — catalog (archetypes, indicator list) is DOWNSTREAM mapping for graduator, NEVER an extraction-time gate. YouTube videos that don't match catalog are the NORM not the exception.
+  - `feedback_transcript_extractor_gemma4_canonical.md` (above).
+  - Updated `MEMORY.md` index with both.
+
+- **Wave 26 Pass J Phase 2 — Mechanic Portability Classifier (LIVE):**
+  - NEW `src/server/lib/mechanic-portability.ts` (~200 LOC, pure-function, no I/O, no LLM, no `Date.now()` — replay-deterministic). 5 hard-reject mechanic classes (mechanic-based, NOT chart-based):
+    - `options_derivative` (Greeks / theta / multi-leg)
+    - `swing_multi_day` (per-Topstep-EOD-trailing-DD; operator's day-trader-only mandate)
+    - `forex_specific_mechanics` (carry trade / swap / central-bank intervention)
+    - `stock_specific_mechanics` (dividend capture / earnings / sector rotation / short-squeeze / merger arb)
+    - `crypto_specific_mechanics` (on-chain / funding-rate arb / halving cycle / DeFi yield)
+  - Cross-market mechanics (EMA, RSI, supply/demand, ICT/SMC, ORB, VWAP, breakouts, structure) are the DEFAULT — speaker chart is NOT the strategy's market.
+  - NEW `src/server/__tests__/wave26-pass-j-mechanic-portability.test.ts` — 50 vitest GREEN covering all 5 reject classes + 10 cross-market keep cases + evidence shape + priority + soft/hard signal disambiguation + the critical "bare SPY/AAPL/BTC/EURUSD without specific mechanic" KEEP cases.
+  - Wired into `src/server/routes/agent.ts` scout-extract route:
+    - When `ideas.length === 0` AND `portability.portable === true` → emit `reason: "no_strategy_content"` (truthful — gemma didn't extract) instead of misleading `no_supported_market`.
+    - When `ideas.length === 0` AND `portability.portable === false` → emit the specific `reject_class` + `reason_detail` + `evidence` array.
+    - When LLM said `non_futures_primary` BUT mechanics port → override to `futures_primary` + emit `extraction.mechanic_classification_override` audit row.
+    - Every scout-extract call emits `extraction.mechanic_portability_classified` audit row with full evidence + LLM-vs-classifier disagreement field for ongoing observability.
+  - `src/discord/bot.ts` `buildSlumdawgVerdictEmbed` — 4 new dedicated embeds for `options_derivative` / `forex_specific_mechanics` / `stock_specific_mechanics` / `crypto_specific_mechanics` so operators get specific reasoning instead of the generic "Slumdawg passed on that one" fallback. (swing_multi_day already covered by existing `/swing|multi_day|overnight/` regex.)
+
+- **Wave 26 Pass J Phase 3 — Uncatalogued Archetype Queue (LIVE):**
+  - NEW migration `src/server/db/migrations/0162_needs_archetype_queue.sql` (idempotent CREATE TABLE IF NOT EXISTS):
+    - Columns: `id`, `bucket_id`, `speaker_term` (UNIQUE), `verbatim_description`, `transcript_quote`, `source_url`, `extraction_count` (default 1), `proposed_archetype_name`, `status` (`pending` / `archetype_created` / `rejected` — CHECK constraint), `created_at`, `updated_at`.
+    - 3 indexes: `(speaker_term)` UNIQUE for UPSERT path, `(status, extraction_count DESC)` for dashboard top-N queries, `(created_at DESC)` for time-window analytics.
+    - Journal idx 162 added.
+  - `src/server/db/schema.ts` — `needsArchetypeQueue` typed table export with Drizzle bigserial/uuid/text/integer/timestamp/uniqueIndex/index helpers.
+  - `src/server/services/direct-bucket-graduator.ts::deriveEntryIndicator()` final fallback:
+    - Previously returned `null` → caller silently dropped strategy.
+    - Now returns `uncatalogued:<sanitized_speaker_term>` (lowercase, `[a-z0-9_]` only, ≤64 chars, never empty) — preserves the strategy concept for future archetype creation instead of dropping it into oblivion.
+    - Tags `_derivePathOut.path = "uncatalogued_speaker_term"` for observability.
+    - Final `return null` retained only for truly unrecoverable input (all 3 sources sanitize to empty).
+  - `direct-bucket-graduator.ts` caller — NEW branch BEFORE the legacy null-reject path:
+    - When `entryIndicator.startsWith("uncatalogued:")` → UPSERT into `needs_archetype_queue` (bumps `extraction_count` on conflict per `speaker_term`).
+    - Emits `graduation.queued_for_archetype` audit row with `speaker_term` + `derive_entry_indicator_path`.
+    - Returns `{ skipped: true, reason: "queued_for_archetype" }` — bucket NOT graduated to library (engine can't compile uncatalogued indicator yet) but speaker term PRESERVED in queue for operator review.
+    - UPSERT failure is non-blocking (caught with warn log) — strategy concept still survives via audit row even if DB write fails.
+  - NEW `src/server/__tests__/wave26-pass-j-uncatalogued-routing.test.ts` — 34 vitest GREEN covering:
+    - Inlined sanitizer logic (9 tests: novel LLM indicator, fallback chain, special-char strip, leading/trailing underscore strip, 64-char cap, whitespace-only inputs, underscore preservation)
+    - Graduator source contract (7 tests: route exists, derive path tagged, branch ordering, UPSERT shape, audit action, non-blocking failure, return shape)
+    - Migration 0162 contract (6 tests: file exists, idempotent CREATE, CHECK constraint, UNIQUE+status indexes, journal entry)
+    - Schema export (3 tests: needsArchetypeQueue declared, canonical columns, unique index)
+    - agent.ts mechanic classifier wiring (5 tests: imports, audit actions, override path, reject_class routing, mechanic_portable flag)
+    - Discord bot mechanic-class embeds (4 tests: options/forex/stock/crypto embed branches)
+
+**Verification:**
+- `npx vitest run src/server/__tests__/wave26-pass-j-mechanic-portability.test.ts` → **50/50 GREEN**
+- `npx vitest run src/server/__tests__/wave26-pass-j-uncatalogued-routing.test.ts` → **34/34 GREEN**
+- Total: **84 new tests GREEN, 0 new failures.**
+- Regression check: `wave26-pass-h-graduator-fixes.test.ts` 62/63 (1 pre-existing failure unchanged — confirmed via `git stash` baseline); `wave26-pass-i-graduator-v11-fields.test.ts` 47/47 GREEN unchanged; `wave26-pass-d-graduator-vocab-expansion.test.ts` 47/47 GREEN unchanged.
+- `npm run check:production-isolation` → CLEAN (4 files checked, 0 violations).
+- `npm run check:2026-compliance` → OK.
+- TradingForgeAPI restarted via HMAC self-restart endpoint (`correlationId: 3baab68e-05a9-4afb-a849-d15eb0199ea7`); health probe confirmed 16s uptime + `ollama: ok` post-restart.
+- **Live smoke probe — the failing video that started this session:**
+  - BEFORE: `https://youtu.be/e-QmGJU1XYc` → `reason: "no_supported_market"` (false-positive — gemma misclassified a real PA strategy as non-futures).
+  - AFTER: same URL → `reason: "no_strategy_content"` + truthful baby-jargon "Gemma couldn't find a real strategy in that video". The misleading "no supported market" rejection is GONE for portable strategies; remaining gap (gemma not extracting from this specific transcript at single-pass capacity) is the separate Pass I v12 work.
+- **Synthetic-transcript smoke probes:**
+  - "Iron condor on SPX weeklies, sell at delta 16, collect theta, hold to expiration" → `reason: "options_content_forbidden"` (caught by earlier CLAUDE.md §13 hard block at route entry — defense-in-depth working as expected).
+  - "Swing trading, daily chart, hold for days, overnight gaps, position trading" → `reason: "swing_multi_day"` + `reason_detail: "Swing / multi-day / overnight hold. Topstep EOD trailing drawdown makes overnight risk fatal..."` + `evidence: ["swing trading", "Position trading", "hold for days"]` — **mechanic classifier worked live** ✅.
+
+**Known-facts updates:**
+- See `feedback_extractor_any_strategy_no_catalog_gate.md` (new) — catalog is downstream mapping, never extraction gate.
+- See `feedback_transcript_extractor_gemma4_canonical.md` (new) — gemma4:e2b canonical, qwen removed, tag required.
+- The CLAUDE.md §15 "Wave 26 Pass B qwen swap" claim was stale/wrong — corrected in §15 + §13. Future agents: if you see references to qwen2.5-coder for transcript_extractor, that's drift. gemma4:e2b is canonical.
+
+**Carry-forward for next session:**
+- **System Map sync** — I did NOT run `npm run system-map:sync` after the migration + schema + new lib. Should run before next commit. Pre-existing 14 drift items remain (12 pre-existing + 2 from Wave 26 Pass G Pass F) per the prior session log; my additions will need registration: `mechanic_portability_lib` + `needs_archetype_queue` table + 2 new audit action namespaces (`extraction.mechanic_portability_classified`, `extraction.mechanic_classification_override`, `graduation.queued_for_archetype`) + the bot embed branches.
+- **Migration 0162 deployment** — idempotent CREATE TABLE IF NOT EXISTS, applies automatically on next deploy via boot-migration-runner. Operator can also run `npm run db:migrate` manually if desired.
+- **Frontend `LibraryDiversityPanel`** — Pass J Phase 3 sub-track C was descoped from tonight (backend first). Add a "Pending Archetypes" section showing top-N speaker_term entries from `needs_archetype_queue` with extraction_count ≥ 3 so operator can promote them to real canonical archetypes. Currently the queue is populated + queryable but no UI surface.
+- **Gemma capacity ceiling** — Pass J doesn't fix the underlying issue that gemma4:e2b can't fit v11+v12 deep extraction into single-pass. Pass I v12 + Phase 1.5 server-side `speaker_concepts` extraction is the architectural workaround already in flight. If extraction yield is still vague (the "any market mood" / empty `• —` checklist problem), evaluate 2-pass extraction (vocab pre-pass + rules pass) or local model upgrade as Wave 26 Pass K candidate.
+- **Commit + push** — per CLAUDE.md §11a HARD RULE after every GREEN dispatch. My changes ready to commit: `src/server/lib/mechanic-portability.ts` (new) + `src/server/routes/agent.ts` (mod) + `src/discord/bot.ts` (mod) + `src/server/services/direct-bucket-graduator.ts` (mod) + `src/server/db/schema.ts` (mod) + `src/server/db/migrations/0162_needs_archetype_queue.sql` (new) + `src/server/db/migrations/meta/_journal.json` (mod) + 2 new test files. CLAUDE.md updates already committed in `b83c7c2` (rolled in with Phase 1.5).
+
+---
+
 ### Session Log — 2026-05-26 trading-forge-architect — Wave 29 Pass C MASTER close-out
 
 **Mission:** Wave 29 Pass C master close-out per §11 (architect LAST). Consolidate C.1 (production-state TradingEnv) + C.2 (regime-conditioned training loop + auto-fire + kill switch + IBM cloud opt-in) + C.3 (CPCV purge gate + DSR floor + composite 13th subsystem + A/B paper routing) into a single master close: System Map sync + 3 CI hard gates + CLAUDE.md update + AGENT-LOGS entry + memory + audit row + commit-and-push per §11a.
@@ -8258,6 +8350,38 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 - Wave 29 Pass B (Frozen-Policy + Regime Retrain) and Pass D remain in plan `cryptic-watching-wombat.md` — evidence-gated per the 4-pass Wave 29 ladder. Pass B is the next operator candidate when shadow + PBO data accumulates.
 - Migration 0160 (lifecycle_shadow_signals table) idempotent — applied automatically by boot-migration-runner on next deploy; no operator action required.
 - Wave 28 Pass C (Three-Layer LIVE) still evidence-gated on 14 days of composite shadow data + ≥85% composite-vs-hard-gate agreement per `analyze-shadow-evidence.ts` — not affected by Pass A close.
+
+---
+
+### Session Log — 2026-05-26 Wave 29 Pass B master close-out (architect LAST)
+
+**Mission:** Master close-out for Wave 29 Pass B (frozen-policy SHA-256 contract + HMAC override route + daily regime-drift-detector cron with two-step auto-demotion). Architect LAST per §11 — system map sync, 3 CI hard gates, CLAUDE.md / AGENT-LOGS / memory / audit row, close-out commit + push.
+
+**Work completed:**
+- Registered 2 new subsystems in `docs/system-subsystem-registry.json`:
+  - `frozen_policy_contract` — consolidates `frozen-policy-contract.ts` + `admin-frozen-policy-override.ts` route + lifecycle drift gate at PAPER → DEPLOY_READY; lists migration 0161; 5 audit actions (`frozen_policy.{set, override_used, override_rationale_too_short, hash_compute_failed}` + `lifecycle.frozen_policy_drift_blocked`); 1 route (`/api/admin/frozen-policy-override`).
+  - `regime_drift_detector` — consolidates `regime-drift-detector-service.ts` daily 18:00 ET cron (DST-safe at 21,22 UTC); `_PIPELINE_GATE_EXEMPT` + `_tryAcquireJobLock`; 7 audit actions (`regime_drift_detector.{skipped_lock_contention, skipped_dst_guard, legacy_strategy_skipped, dry_run, completed}` + `strategy.regime_drift_detected` + `lifecycle.regime_drift_demotion`); 1 scheduler cron (`regime-drift-detector`).
+- Swept pre-existing `needs_archetype_queue` table drift (Wave 26 Pass J carry-forward — attached to `research_orchestration.database_tables` as part of close-out scope hygiene, mirrors Wave 28 Pass B close-out pattern).
+- Ran `npm run system-map:sync` to regenerate `docs/system-readiness.generated.json` + `docs/system-topology.generated.json` + System Map v2 generated section.
+- CLAUDE.md edits: §2 appended Wave 29 Pass B close paragraph above Wave 29 Pass A; §12 added 2 hard-gate rows (frozen-policy hash drift + regime drift auto-demotion); §13 added 2 Don'ts (manual config-JSONB edit bypass + 5-field hash slice mutation); §15 added `ADMIN_OVERRIDE_HMAC_SECRET` block above Pass A env-var block.
+- Audit row `wave.29_pass_b_master_closed` written via psql.
+
+**Verification:**
+- `npm run system-map:check` → EXIT 0, `driftItems: []`.
+- `npm run check:production-isolation` → EXIT 0 CLEAN.
+- `npm run check:2026-compliance` → EXIT 0 OK.
+- Pass B combined test count preserved: 53 (15 pytest B.1 + 22 vitest B.2 + 16 vitest B.3).
+- Wave 29 cumulative: ~354 tests (Pass C 190 + Pass A 111 + Pass B 53).
+- Wave 28 baseline (205 cumulative) + Wave 29 Pass C (190) + Wave 29 Pass A (111) preserved — zero regressions.
+- Pass B production logic (B.1/B.2/B.3 staged files) untouched per architect-charter constraint — edits scoped to System Map / docs / audit only.
+
+**Known-facts updates:** None new — Pass B's surfaces are documented in §12 + §13 + §15 entries above, and the registry tells the subsystem story.
+
+**Carry-forward for next session:**
+- Wave 29 Pass D (A/B Sharpe comparison dashboard tile + weekly Friday 17:00 ET Discord A/B digest + Wave 29 MASTER close-out) remains in plan `cryptic-watching-wombat.md` — evidence-gated per the 4-pass Wave 29 ladder. Pass D is the wave-level master close; activate when Pass C RL training data + Pass A shadow data + Pass B frozen-policy stamps accumulate enough to make the A/B dashboard meaningful (~7-14 days post-Pass-C live).
+- Operator action: ensure `ADMIN_OVERRIDE_HMAC_SECRET` is set in production .env before any HMAC override is attempted (route returns 503 if missing).
+- Migration 0161 idempotent (ADD COLUMN IF NOT EXISTS × 4) — applied automatically by boot-migration-runner on next deploy.
+- The `regime-drift-detector` cron is registered in scheduler.ts (0 21,22 UTC) and will start firing on next API restart; zero operator action required.
 
 ---
 

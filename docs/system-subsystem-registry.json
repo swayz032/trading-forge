@@ -79,6 +79,7 @@
     "database_tables": [
       "audit_log",
       "llm_injection_attempts",
+      "needs_archetype_queue",
       "prompt_ab_tests",
       "prompt_versions",
       "scout_drain_samples",
@@ -4411,6 +4412,156 @@
     ],
     "evidence_queries": [
       "SELECT * FROM audit_log WHERE action LIKE 'lifecycle.pbo_%' ORDER BY created_at DESC LIMIT 10"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "production",
+    "deployment_authority": "operator_only",
+    "criticality": "high"
+  },
+  {
+    "id": "frozen_policy_contract",
+    "domain": "lifecycle",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "operator_hmac_override",
+    "runtime_state": "active",
+    "decision_authority": "gate",
+    "automation_scope": "Wave 29 Pass B.1 + B.2. SHA-256 frozen-policy contract per CFA Institute Halperin/Kolm/Ritter Nov 2025 institutional 2026 mandate. When CPCV + PBO + WFE all clear simultaneously, the 5-field policy slice (entry_quality + position_size + stop_loss + take_profit + exit_plan_config) is hashed via src/server/lib/frozen-policy-contract.ts (sha256 of canonical-sorted-JSON; mirrors firm-rules-version.ts pattern) and stamped on strategies.frozen_policy_hash + frozen_policy_set_at + regime_trained_on (migration 0161). Re-promotion with a mutated 5-field slice triggers lifecycle-service.ts frozen-policy drift gate at PAPER -> DEPLOY_READY (runs AFTER all Wave 27.5 hard gates clear). Drift -> BLOCK + lifecycle.frozen_policy_drift_blocked audit. Operator override via POST /api/admin/frozen-policy-override (HMAC-signed via ADMIN_OVERRIDE_HMAC_SECRET, 60s drift, rationale string >=50 chars required, increments strategies.frozen_policy_override_count). Audit-grade governance trail for every override. Closes the silent-retraining-drift failure mode that the Pass B audit identified as institutional-grade unsound (parameter mutation between CPCV-grade freeze and live promotion).",
+    "data_sources": [
+      "strategies.frozen_policy_hash",
+      "strategies.frozen_policy_set_at",
+      "strategies.regime_trained_on",
+      "strategies.frozen_policy_override_count"
+    ],
+    "reads_from": [
+      "strategies",
+      "backtests"
+    ],
+    "writes_to": [
+      "strategies",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "frozen_policy.set",
+      "frozen_policy.override_used",
+      "frozen_policy.override_rationale_too_short",
+      "frozen_policy.hash_compute_failed",
+      "lifecycle.frozen_policy_drift_blocked"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "audit_log.frozen_policy.*",
+      "audit_log.lifecycle.frozen_policy_drift_blocked"
+    ],
+    "scheduler_jobs": [],
+    "routes": [
+      "/api/admin/frozen-policy-override"
+    ],
+    "engine_subsystems": [
+      "src/server/lib/frozen-policy-contract.ts::computeFrozenPolicyHash",
+      "src/server/lib/frozen-policy-contract.ts::stampFrozenPolicy",
+      "src/server/routes/admin-frozen-policy-override.ts::POST",
+      "lifecycle-service.ts::paper_to_deploy_ready_frozen_policy_drift"
+    ],
+    "database_tables": [
+      "strategies",
+      "audit_log"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": "audit_log",
+    "recovery_mode": "fail-closed",
+    "health_check": "src/server/__tests__/wave29-pass-b2-frozen-policy.test.ts + src/engine/tests/test_wave29_pass_b1_frozen_policy_migration.py",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "audit_log_evidence",
+    "freshness_signals": [
+      "strategies.frozen_policy_set_at",
+      "audit_log.frozen_policy.set"
+    ],
+    "evidence_queries": [
+      "SELECT id, frozen_policy_hash, frozen_policy_set_at, frozen_policy_override_count FROM strategies WHERE frozen_policy_hash IS NOT NULL",
+      "SELECT * FROM audit_log WHERE action LIKE 'frozen_policy.%' OR action = 'lifecycle.frozen_policy_drift_blocked' ORDER BY created_at DESC LIMIT 20"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "production",
+    "deployment_authority": "operator_only",
+    "criticality": "high"
+  },
+  {
+    "id": "regime_drift_detector",
+    "domain": "lifecycle",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "system",
+    "automation_scope": "Wave 29 Pass B.3. Daily 18:00 ET cron (DST-safe double-fire at 21,22 UTC with ET-hour guard, mirrors W25P2 consistency-tracker + Wave 27 Pass 1.5 quantum-replay-weekly pattern) that scans every DEPLOYED strategy and compares current institutional_regime vs strategies.regime_trained_on (stamped by Pass B.2 frozen-policy contract). >=5 consecutive days of regime difference -> strategy.regime_drift_detected warn audit + Discord WARN + auto-demote DEPLOYED -> DECLINING -> TESTING (two-step demotion preserves observability of the transition + lifecycle.regime_drift_demotion audit). Fresh CPCV + PBO + WFE pass required before re-promotion (frozen_policy_hash will recompute on re-freeze). _PIPELINE_GATE_EXEMPT (cron runs even when pipeline paused); _tryAcquireJobLock prevents overlap re-entry. Legacy strategies with regime_trained_on=NULL skip via regime_drift_detector.legacy_strategy_skipped info audit. Closes the silent-stale-regime failure mode where strategies trained on TRENDING continue trading through a regime shift to COMPRESSION without re-validation.",
+    "data_sources": [
+      "strategies.regime_trained_on",
+      "bias_state.institutional_regime"
+    ],
+    "reads_from": [
+      "strategies",
+      "bias_state"
+    ],
+    "writes_to": [
+      "strategies",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "regime_drift_detector.skipped_lock_contention",
+      "regime_drift_detector.skipped_dst_guard",
+      "regime_drift_detector.legacy_strategy_skipped",
+      "regime_drift_detector.dry_run",
+      "regime_drift_detector.completed",
+      "strategy.regime_drift_detected",
+      "lifecycle.regime_drift_demotion"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "audit_log.regime_drift_detector.*",
+      "audit_log.strategy.regime_drift_detected",
+      "audit_log.lifecycle.regime_drift_demotion",
+      "scheduler:regime-drift-detector:21,22-utc"
+    ],
+    "scheduler_jobs": [
+      "regime-drift-detector"
+    ],
+    "routes": [],
+    "engine_subsystems": [
+      "src/server/services/regime-drift-detector-service.ts::runRegimeDriftDetector",
+      "src/server/services/regime-drift-detector-service.ts::demoteOnPersistentDrift",
+      "scheduler.ts::regime-drift-detector-cron"
+    ],
+    "database_tables": [
+      "strategies",
+      "bias_state",
+      "audit_log"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": "audit_log",
+    "recovery_mode": "fail-soft",
+    "health_check": "src/server/__tests__/wave29-pass-b3-regime-drift.test.ts",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "audit_log_evidence",
+    "freshness_signals": [
+      "audit_log.regime_drift_detector.completed",
+      "scheduler:regime-drift-detector:21,22-utc"
+    ],
+    "evidence_queries": [
+      "SELECT * FROM audit_log WHERE action = 'regime_drift_detector.completed' ORDER BY created_at DESC LIMIT 7",
+      "SELECT * FROM audit_log WHERE action IN ('strategy.regime_drift_detected','lifecycle.regime_drift_demotion') ORDER BY created_at DESC LIMIT 20"
     ],
     "ownership_boundary": "internal-only",
     "learning_boundary": "production",

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-26T22:29:12.900Z",
+  "generatedAt": "2026-05-26T23:00:09.388Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,12 +16,12 @@
   },
   "counts": {
     "routes": 72,
-    "schedulerJobs": 88,
+    "schedulerJobs": 89,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 28,
-    "databaseTables": 99,
-    "registrySubsystems": 61
+    "databaseTables": 100,
+    "registrySubsystems": 63
   },
   "routes": [
     "/api/admin",
@@ -170,6 +170,7 @@
     "quantum-rl-training-window",
     "regen-declining-sweep",
     "regime-coverage-check",
+    "regime-drift-detector",
     "regret-score-fill",
     "resource-snapshot",
     "rolling-sharpe",
@@ -821,6 +822,7 @@
     "monte_carlo_runs",
     "mutation_outcomes",
     "n8n_execution_log",
+    "needs_archetype_queue",
     "nemo_scenario_bank",
     "opening_auction_imbalance",
     "paper_positions",
@@ -874,34 +876,34 @@
     "weekly_drift_reports"
   ],
   "registryCoverage": {
-    "registryEntries": 61,
-    "autonomousSubsystems": 57,
+    "registryEntries": 63,
+    "autonomousSubsystems": 59,
     "selfEvolvingSubsystems": 9,
     "proofStatusCounts": {
       "runtime-proven": 37,
       "partially-proven": 1,
       "offline-by-design": 0,
       "experimental": 5,
-      "drifted": 18
+      "drifted": 20
     },
     "runtimeStateCounts": {
-      "active": 55,
+      "active": 57,
       "experimental": 5,
       "scaffold": 1
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
       "partially_active_preprod": 0,
-      "active_preprod": 56,
+      "active_preprod": 58,
       "experimental_preprod": 5
     },
     "launchTargetCounts": {
-      "runtime_proven_autonomous": 54,
+      "runtime_proven_autonomous": 56,
       "runtime_proven_manual_gate": 2,
       "experimental_challenger": 5
     },
     "closedLoopCounts": {
-      "not_collecting": 48,
+      "not_collecting": 50,
       "collecting_only": 0,
       "learning_active": 8,
       "learning_blocked": 0,
@@ -909,18 +911,19 @@
     },
     "learningModeCounts": {
       "active_learning": 7,
-      "deterministic_instrumented": 47,
+      "deterministic_instrumented": 49,
       "manual_gate_only": 2,
       "shadow_experimental": 5
     },
     "operatingClassCounts": {
       "adaptive": 7,
-      "deterministic_instrumented": 52,
+      "deterministic_instrumented": 54,
       "manual_gated": 2
     },
     "manualGates": [
       "ci_gate",
       "kill_switch",
+      "operator_hmac_override",
       "operator_invoke_for_cohort_validation",
       "operator_opt_in_per_strategy",
       "operator-approve",
@@ -930,9 +933,9 @@
     ],
     "coveredCounts": {
       "routes": 72,
-      "schedulerJobs": 88,
+      "schedulerJobs": 89,
       "engineSubsystems": 28,
-      "databaseTables": 99
+      "databaseTables": 100
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
@@ -957,21 +960,23 @@
     "manualGateViolations": [],
     "preprodIntegrity": {
       "status": "incomplete",
-      "automationComplete": 52,
-      "dataCollectionComplete": 61,
-      "auditabilityComplete": 61,
-      "failureVisibilityComplete": 61,
-      "authorityCorrect": 61,
+      "automationComplete": 54,
+      "dataCollectionComplete": 63,
+      "auditabilityComplete": 63,
+      "failureVisibilityComplete": 63,
+      "authorityCorrect": 63,
       "learningActive": 8,
       "incompleteSubsystems": [
         "adaptive_exit_engine",
         "composite_shadow_gate",
         "dd_velocity_gate",
         "exit_engine_ab_harness",
+        "frozen_policy_contract",
         "late_cycle_overheating_regime",
         "pbo_overfit_gate",
         "phase5_contract_spec_scaffold",
         "quantum_rl_challenger",
+        "regime_drift_detector",
         "replay_grade_confluence",
         "replay_grade_consistency",
         "replay_grade_critique",
@@ -988,7 +993,7 @@
     "productionConvergence": {
       "status": "blocked",
       "targetStateCounts": {
-        "production_autonomous": 54,
+        "production_autonomous": 56,
         "production_manual_gate": 2,
         "production_experimental": 5,
         "production_not_intended": 0
@@ -1035,12 +1040,14 @@
         "composite_shadow_gate",
         "dd_velocity_gate",
         "exit_engine_ab_harness",
+        "frozen_policy_contract",
         "late_cycle_overheating_regime",
         "pattern_aggregator_service",
         "pbo_overfit_gate",
         "phase5_contract_spec_scaffold",
         "production_hardening",
         "quantum_rl_challenger",
+        "regime_drift_detector",
         "replay_grade_confluence",
         "replay_grade_consistency",
         "replay_grade_critique",
@@ -1080,12 +1087,15 @@
         "dd_velocity_gate:manual_gate:operator-only-recovery",
         "exit_engine_ab_harness:invalid-active-proof-mode",
         "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
+        "frozen_policy_contract:invalid-active-proof-mode",
+        "frozen_policy_contract:manual_gate:operator_hmac_override",
         "late_cycle_overheating_regime:invalid-active-proof-mode",
         "pattern_aggregator_service:manual_gate:kill_switch",
         "pbo_overfit_gate:invalid-active-proof-mode",
         "phase5_contract_spec_scaffold:manual_gate:operator-approve",
         "production_hardening:manual_gate:operator-halt-only",
         "quantum_rl_challenger:invalid-active-proof-mode",
+        "regime_drift_detector:invalid-active-proof-mode",
         "replay_grade_confluence:invalid-active-proof-mode",
         "replay_grade_confluence:manual_gate:operator-approve",
         "replay_grade_consistency:invalid-active-proof-mode",
@@ -1128,6 +1138,8 @@
         "dd_velocity_gate:manual_gate:operator-only-recovery",
         "exit_engine_ab_harness:invalid-active-proof-mode",
         "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
+        "frozen_policy_contract:invalid-active-proof-mode",
+        "frozen_policy_contract:manual_gate:operator_hmac_override",
         "late_cycle_overheating_regime:invalid-active-proof-mode",
         "pattern_aggregator_service:manual_gate:kill_switch",
         "pbo_overfit_gate:invalid-active-proof-mode",
@@ -1136,6 +1148,7 @@
         "prop_firm_survival_twin:experimental_governance",
         "quantum_adversarial_stress:experimental_governance",
         "quantum_rl_challenger:invalid-active-proof-mode",
+        "regime_drift_detector:invalid-active-proof-mode",
         "replay_grade_confluence:invalid-active-proof-mode",
         "replay_grade_confluence:manual_gate:operator-approve",
         "replay_grade_consistency:invalid-active-proof-mode",
@@ -1173,6 +1186,7 @@
         "composite_shadow_gate",
         "dd_velocity_gate",
         "exit_engine_ab_harness",
+        "frozen_policy_contract",
         "late_cycle_overheating_regime",
         "pattern_aggregator_service",
         "pbo_overfit_gate",
@@ -1181,6 +1195,7 @@
         "prop_firm_survival_twin",
         "quantum_adversarial_stress",
         "quantum_rl_challenger",
+        "regime_drift_detector",
         "replay_grade_confluence",
         "replay_grade_consistency",
         "replay_grade_critique",
@@ -2921,6 +2936,106 @@
           "frankenstein-pass-rate"
         ],
         "coverageGaps": []
+      },
+      {
+        "id": "frozen_policy_contract",
+        "domain": "lifecycle",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "gate",
+        "manualGate": "operator_hmac_override",
+        "selfEvolving": false,
+        "proofMode": "audit_log_evidence",
+        "proofStatus": "drifted",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "production",
+        "deploymentAuthority": "operator_only",
+        "criticality": "high",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [
+          "manual_gate:operator_hmac_override"
+        ],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "route contract reachable",
+          "runtime evidence persisted"
+        ],
+        "runtimeEvidence": [
+          "audit_log.frozen_policy.*",
+          "audit_log.frozen_policy.set",
+          "audit_log.lifecycle.frozen_policy_drift_blocked",
+          "frozen_policy.hash_compute_failed",
+          "frozen_policy.override_rationale_too_short",
+          "frozen_policy.override_used",
+          "frozen_policy.set",
+          "lifecycle.frozen_policy_drift_blocked",
+          "strategies.frozen_policy_set_at"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "backtests",
+          "strategies",
+          "strategies.frozen_policy_hash",
+          "strategies.frozen_policy_override_count",
+          "strategies.frozen_policy_set_at",
+          "strategies.regime_trained_on"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": false,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "drifted",
+        "productionBlockers": [
+          "invalid-active-proof-mode",
+          "manual_gate:operator_hmac_override"
+        ],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log.frozen_policy.*",
+          "audit_log.frozen_policy.set",
+          "audit_log.lifecycle.frozen_policy_drift_blocked",
+          "frozen_policy.hash_compute_failed",
+          "frozen_policy.override_rationale_too_short",
+          "frozen_policy.override_used",
+          "frozen_policy.set",
+          "lifecycle.frozen_policy_drift_blocked",
+          "SELECT * FROM audit_log WHERE action LIKE 'frozen_policy.%' OR action = 'lifecycle.frozen_policy_drift_blocked' ORDER BY created_at DESC LIMIT 20",
+          "SELECT id, frozen_policy_hash, frozen_policy_set_at, frozen_policy_override_count FROM strategies WHERE frozen_policy_hash IS NOT NULL",
+          "strategies.frozen_policy_set_at"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [
+          "/api/admin/frozen-policy-override"
+        ],
+        "schedulerJobs": [],
+        "healthCheck": "src/server/__tests__/wave29-pass-b2-frozen-policy.test.ts + src/engine/tests/test_wave29_pass_b1_frozen_policy_migration.py",
+        "freshnessSignals": [
+          "strategies.frozen_policy_set_at",
+          "audit_log.frozen_policy.set"
+        ],
+        "evidenceQueries": [
+          "SELECT id, frozen_policy_hash, frozen_policy_set_at, frozen_policy_override_count FROM strategies WHERE frozen_policy_hash IS NOT NULL",
+          "SELECT * FROM audit_log WHERE action LIKE 'frozen_policy.%' OR action = 'lifecycle.frozen_policy_drift_blocked' ORDER BY created_at DESC LIMIT 20"
+        ],
+        "coverageGaps": [
+          "invalid-active-proof-mode"
+        ]
       },
       {
         "id": "hod_lod_persistence_bridge",
@@ -4939,6 +5054,107 @@
         ]
       },
       {
+        "id": "regime_drift_detector",
+        "domain": "lifecycle",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "system",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "audit_log_evidence",
+        "proofStatus": "drifted",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "production",
+        "deploymentAuthority": "operator_only",
+        "criticality": "high",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
+        ],
+        "runtimeEvidence": [
+          "audit_log.lifecycle.regime_drift_demotion",
+          "audit_log.regime_drift_detector.*",
+          "audit_log.regime_drift_detector.completed",
+          "audit_log.strategy.regime_drift_detected",
+          "lifecycle.regime_drift_demotion",
+          "regime_drift_detector.completed",
+          "regime_drift_detector.dry_run",
+          "regime_drift_detector.legacy_strategy_skipped",
+          "regime_drift_detector.skipped_dst_guard",
+          "regime_drift_detector.skipped_lock_contention",
+          "scheduler:regime-drift-detector:21,22-utc",
+          "strategy.regime_drift_detected"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "bias_state",
+          "bias_state.institutional_regime",
+          "strategies",
+          "strategies.regime_trained_on"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": false,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "drifted",
+        "productionBlockers": [
+          "invalid-active-proof-mode"
+        ],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log.lifecycle.regime_drift_demotion",
+          "audit_log.regime_drift_detector.*",
+          "audit_log.regime_drift_detector.completed",
+          "audit_log.strategy.regime_drift_detected",
+          "lifecycle.regime_drift_demotion",
+          "regime_drift_detector.completed",
+          "regime_drift_detector.dry_run",
+          "regime_drift_detector.legacy_strategy_skipped",
+          "regime_drift_detector.skipped_dst_guard",
+          "regime_drift_detector.skipped_lock_contention",
+          "scheduler:regime-drift-detector:21,22-utc",
+          "SELECT * FROM audit_log WHERE action = 'regime_drift_detector.completed' ORDER BY created_at DESC LIMIT 7",
+          "SELECT * FROM audit_log WHERE action IN ('strategy.regime_drift_detected','lifecycle.regime_drift_demotion') ORDER BY created_at DESC LIMIT 20",
+          "strategy.regime_drift_detected"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [],
+        "schedulerJobs": [
+          "regime-drift-detector"
+        ],
+        "healthCheck": "src/server/__tests__/wave29-pass-b3-regime-drift.test.ts",
+        "freshnessSignals": [
+          "audit_log.regime_drift_detector.completed",
+          "scheduler:regime-drift-detector:21,22-utc"
+        ],
+        "evidenceQueries": [
+          "SELECT * FROM audit_log WHERE action = 'regime_drift_detector.completed' ORDER BY created_at DESC LIMIT 7",
+          "SELECT * FROM audit_log WHERE action IN ('strategy.regime_drift_detected','lifecycle.regime_drift_demotion') ORDER BY created_at DESC LIMIT 20"
+        ],
+        "coverageGaps": [
+          "invalid-active-proof-mode"
+        ]
+      },
+      {
         "id": "replay_grade_confluence",
         "domain": "validation",
         "ownerSurface": "node",
@@ -5629,6 +5845,7 @@
           "concept specs",
           "LLM prompts and responses",
           "llm_injection_attempts",
+          "needs_archetype_queue",
           "OpenClaw scout outputs",
           "prompt_ab_tests",
           "prompt_versions",
@@ -8847,6 +9064,106 @@
       "coverageGaps": []
     },
     {
+      "id": "frozen_policy_contract",
+      "domain": "lifecycle",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "gate",
+      "manualGate": "operator_hmac_override",
+      "selfEvolving": false,
+      "proofMode": "audit_log_evidence",
+      "proofStatus": "drifted",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "production",
+      "deploymentAuthority": "operator_only",
+      "criticality": "high",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [
+        "manual_gate:operator_hmac_override"
+      ],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "route contract reachable",
+        "runtime evidence persisted"
+      ],
+      "runtimeEvidence": [
+        "audit_log.frozen_policy.*",
+        "audit_log.frozen_policy.set",
+        "audit_log.lifecycle.frozen_policy_drift_blocked",
+        "frozen_policy.hash_compute_failed",
+        "frozen_policy.override_rationale_too_short",
+        "frozen_policy.override_used",
+        "frozen_policy.set",
+        "lifecycle.frozen_policy_drift_blocked",
+        "strategies.frozen_policy_set_at"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "backtests",
+        "strategies",
+        "strategies.frozen_policy_hash",
+        "strategies.frozen_policy_override_count",
+        "strategies.frozen_policy_set_at",
+        "strategies.regime_trained_on"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": false,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "drifted",
+      "productionBlockers": [
+        "invalid-active-proof-mode",
+        "manual_gate:operator_hmac_override"
+      ],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log.frozen_policy.*",
+        "audit_log.frozen_policy.set",
+        "audit_log.lifecycle.frozen_policy_drift_blocked",
+        "frozen_policy.hash_compute_failed",
+        "frozen_policy.override_rationale_too_short",
+        "frozen_policy.override_used",
+        "frozen_policy.set",
+        "lifecycle.frozen_policy_drift_blocked",
+        "SELECT * FROM audit_log WHERE action LIKE 'frozen_policy.%' OR action = 'lifecycle.frozen_policy_drift_blocked' ORDER BY created_at DESC LIMIT 20",
+        "SELECT id, frozen_policy_hash, frozen_policy_set_at, frozen_policy_override_count FROM strategies WHERE frozen_policy_hash IS NOT NULL",
+        "strategies.frozen_policy_set_at"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [
+        "/api/admin/frozen-policy-override"
+      ],
+      "schedulerJobs": [],
+      "healthCheck": "src/server/__tests__/wave29-pass-b2-frozen-policy.test.ts + src/engine/tests/test_wave29_pass_b1_frozen_policy_migration.py",
+      "freshnessSignals": [
+        "strategies.frozen_policy_set_at",
+        "audit_log.frozen_policy.set"
+      ],
+      "evidenceQueries": [
+        "SELECT id, frozen_policy_hash, frozen_policy_set_at, frozen_policy_override_count FROM strategies WHERE frozen_policy_hash IS NOT NULL",
+        "SELECT * FROM audit_log WHERE action LIKE 'frozen_policy.%' OR action = 'lifecycle.frozen_policy_drift_blocked' ORDER BY created_at DESC LIMIT 20"
+      ],
+      "coverageGaps": [
+        "invalid-active-proof-mode"
+      ]
+    },
+    {
       "id": "hod_lod_persistence_bridge",
       "domain": "signal_generation",
       "ownerSurface": "python_to_node_bridge",
@@ -10863,6 +11180,107 @@
       ]
     },
     {
+      "id": "regime_drift_detector",
+      "domain": "lifecycle",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "system",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "audit_log_evidence",
+      "proofStatus": "drifted",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "production",
+      "deploymentAuthority": "operator_only",
+      "criticality": "high",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
+      ],
+      "runtimeEvidence": [
+        "audit_log.lifecycle.regime_drift_demotion",
+        "audit_log.regime_drift_detector.*",
+        "audit_log.regime_drift_detector.completed",
+        "audit_log.strategy.regime_drift_detected",
+        "lifecycle.regime_drift_demotion",
+        "regime_drift_detector.completed",
+        "regime_drift_detector.dry_run",
+        "regime_drift_detector.legacy_strategy_skipped",
+        "regime_drift_detector.skipped_dst_guard",
+        "regime_drift_detector.skipped_lock_contention",
+        "scheduler:regime-drift-detector:21,22-utc",
+        "strategy.regime_drift_detected"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "bias_state",
+        "bias_state.institutional_regime",
+        "strategies",
+        "strategies.regime_trained_on"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": false,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "drifted",
+      "productionBlockers": [
+        "invalid-active-proof-mode"
+      ],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log.lifecycle.regime_drift_demotion",
+        "audit_log.regime_drift_detector.*",
+        "audit_log.regime_drift_detector.completed",
+        "audit_log.strategy.regime_drift_detected",
+        "lifecycle.regime_drift_demotion",
+        "regime_drift_detector.completed",
+        "regime_drift_detector.dry_run",
+        "regime_drift_detector.legacy_strategy_skipped",
+        "regime_drift_detector.skipped_dst_guard",
+        "regime_drift_detector.skipped_lock_contention",
+        "scheduler:regime-drift-detector:21,22-utc",
+        "SELECT * FROM audit_log WHERE action = 'regime_drift_detector.completed' ORDER BY created_at DESC LIMIT 7",
+        "SELECT * FROM audit_log WHERE action IN ('strategy.regime_drift_detected','lifecycle.regime_drift_demotion') ORDER BY created_at DESC LIMIT 20",
+        "strategy.regime_drift_detected"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [],
+      "schedulerJobs": [
+        "regime-drift-detector"
+      ],
+      "healthCheck": "src/server/__tests__/wave29-pass-b3-regime-drift.test.ts",
+      "freshnessSignals": [
+        "audit_log.regime_drift_detector.completed",
+        "scheduler:regime-drift-detector:21,22-utc"
+      ],
+      "evidenceQueries": [
+        "SELECT * FROM audit_log WHERE action = 'regime_drift_detector.completed' ORDER BY created_at DESC LIMIT 7",
+        "SELECT * FROM audit_log WHERE action IN ('strategy.regime_drift_detected','lifecycle.regime_drift_demotion') ORDER BY created_at DESC LIMIT 20"
+      ],
+      "coverageGaps": [
+        "invalid-active-proof-mode"
+      ]
+    },
+    {
       "id": "replay_grade_confluence",
       "domain": "validation",
       "ownerSurface": "node",
@@ -11553,6 +11971,7 @@
         "concept specs",
         "LLM prompts and responses",
         "llm_injection_attempts",
+        "needs_archetype_queue",
         "OpenClaw scout outputs",
         "prompt_ab_tests",
         "prompt_versions",
@@ -13050,6 +13469,7 @@
   "manualGates": [
     "ci_gate",
     "kill_switch",
+    "operator_hmac_override",
     "operator_invoke_for_cohort_validation",
     "operator_opt_in_per_strategy",
     "operator-approve",

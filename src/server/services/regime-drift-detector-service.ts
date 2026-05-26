@@ -1,0 +1,524 @@
+/**
+ * regime-drift-detector-service.ts — Wave 29 Pass B.3 (critic-optimizer)
+ *
+ * Monitors DEPLOYED strategies for persistent regime drift. Runs daily at
+ * 18:00 ET (22:00 UTC). If the last 5 consecutive days of bias_state.regime_label
+ * for a strategy's symbol ALL differ from the strategy's regime_trained_on, the
+ * strategy is demoted DEPLOYED → DECLINING → TESTING and a Discord WARN is fired.
+ *
+ * Per arXiv 2509.14385 (2025-09-17): regime-conditioned policies must be re-trained
+ * when regime shifts persistently. 5-consecutive-day threshold is the operator's
+ * production setting. Must be ALL 5 consecutive days (not 5-of-7-day average).
+ *
+ * Audit actions:
+ *   regime_drift_detector.skipped_lock_contention  (info)
+ *   regime_drift_detector.skipped_dst_guard        (info)
+ *   regime_drift_detector.legacy_strategy_skipped  (info — regime_trained_on IS NULL)
+ *   regime_drift_detector.dry_run                  (info — drift detected but demotion suppressed)
+ *   strategy.regime_drift_detected                 (warn — 5-consecutive-day drift found)
+ *   lifecycle.regime_drift_demotion                (warn — DEPLOYED → DECLINING → TESTING)
+ *   regime_drift_detector.completed                (info — summary counts)
+ *
+ * Lifecycle path on drift:
+ *   DEPLOYED → DECLINING (first step; supported by VALID_TRANSITIONS)
+ *   DECLINING → TESTING  (second step; supported by VALID_TRANSITIONS)
+ *
+ * Import notes:
+ *   logger from ./logger.js leaf module (per CLAUDE.md feedback_helper_logger_import.md)
+ */
+
+import { randomUUID } from "crypto";
+import { eq, and, isNotNull, desc } from "drizzle-orm";
+import { db } from "../db/index.js";
+import { strategies, biasState } from "../db/schema.js";
+import { logger } from "../lib/logger.js";
+import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
+import { notifyWarning } from "./notification-service.js";
+import { LifecycleService } from "./lifecycle-service.js";
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+/** Number of consecutive days ALL must differ from trained regime to trigger demotion. */
+export const DRIFT_CONSECUTIVE_DAYS = 5;
+
+/** Target ET hour for DST-safe guard (18 = 6:00 PM ET). */
+const TARGET_ET_HOUR = 18;
+
+// ─── Public types ─────────────────────────────────────────────────────────────
+
+export interface DriftDetectorStrategyResult {
+  strategyId: string;
+  strategyName: string;
+  regimeTrainedOn: string;
+  recentRegimes: string[];
+  driftDetected: boolean;
+  demoted: boolean;
+  skippedReason?: "legacy_null_regime" | "insufficient_bias_data" | "dry_run";
+}
+
+export interface DriftDetectorResult {
+  status: "completed" | "skipped_lock_contention" | "skipped_dst_guard";
+  correlationId: string;
+  durationMs: number;
+  strategiesChecked: number;
+  driftDetected: number;
+  demoted: number;
+  skipped: number;
+  dryRun: boolean;
+  strategyResults?: DriftDetectorStrategyResult[];
+}
+
+// ─── DST-safe ET-hour helper ──────────────────────────────────────────────────
+
+/**
+ * Returns the current Eastern Time hour (0-23) using Intl.DateTimeFormat.
+ * DST-safe: America/New_York resolves spring-forward/fall-back automatically.
+ * Mirrors composite-health-digest-service.ts / quantum-replay-weekly-service.ts.
+ */
+export function _getEtHour(asOf: Date): number {
+  const etHourStr = asOf.toLocaleString("en-US", {
+    timeZone: "America/New_York",
+    hour: "numeric",
+    hour12: false,
+  });
+  return parseInt(etHourStr, 10);
+}
+
+// ─── In-flight lock ───────────────────────────────────────────────────────────
+// Mirrors scheduler._tryAcquireJobLock for services that manage their own lock.
+
+let _detectorInFlight = false;
+
+export function _tryAcquireDetectorLock(): boolean {
+  if (_detectorInFlight) return false;
+  _detectorInFlight = true;
+  return true;
+}
+
+export function _releaseDetectorLock(): void {
+  _detectorInFlight = false;
+}
+
+/** Test seam — reset the in-flight lock between tests. Do NOT call from production code. */
+export function _resetDetectorLockForTest(): void {
+  _detectorInFlight = false;
+}
+
+// ─── Core detector ────────────────────────────────────────────────────────────
+
+/**
+ * runRegimeDriftDetector — main entry point.
+ *
+ * Flow:
+ *  1. Acquire job lock (skip + audit on contention)
+ *  2. DST-safe ET-hour=18 guard (skip + audit if not at target hour)
+ *  3. Query DEPLOYED strategies with regime_trained_on IS NOT NULL
+ *  4. For each strategy: read last 5 days of bias_state.regime_label by symbol
+ *  5. If all 5 days != regime_trained_on → drift detected
+ *  6. On drift: Discord WARN + DEPLOYED → DECLINING → TESTING demotion
+ *  7. Legacy strategies (regime_trained_on IS NULL): skipped + info audit
+ *  8. dryRun=true: detect but suppress Discord + demotion + emit dry_run audit
+ *
+ * @param opts.asOf   Override the "now" timestamp (default: new Date()). Used
+ *                    in tests to simulate different ET hours and date windows.
+ * @param opts.dryRun When true, drift detection runs but no lifecycle changes or
+ *                    Discord posts are made. Audit `regime_drift_detector.dry_run`
+ *                    is emitted instead. Default: false.
+ */
+export async function runRegimeDriftDetector(opts?: {
+  asOf?: Date;
+  dryRun?: boolean;
+}): Promise<DriftDetectorResult> {
+  const asOf = opts?.asOf ?? new Date();
+  const dryRun = opts?.dryRun ?? false;
+  const correlationId = randomUUID();
+  const startMs = Date.now();
+
+  // ── Step 1: Job lock ──────────────────────────────────────────────────────
+  const acquired = _tryAcquireDetectorLock();
+  if (!acquired) {
+    logger.info(
+      { correlationId, jobName: "regime-drift-detector" },
+      "regime-drift-detector: previous tick still in-flight — skipping",
+    );
+    await insertAuditRowSafe({
+      action: "regime_drift_detector.skipped_lock_contention",
+      entityType: "scheduler_job",
+      entityId: "regime-drift-detector",
+      result: { correlationId },
+      status: "info",
+      decisionAuthority: "system",
+      correlationId,
+    });
+    return {
+      status: "skipped_lock_contention",
+      correlationId,
+      durationMs: Date.now() - startMs,
+      strategiesChecked: 0,
+      driftDetected: 0,
+      demoted: 0,
+      skipped: 0,
+      dryRun,
+    };
+  }
+
+  try {
+    // ── Step 2: DST-safe ET-hour guard ──────────────────────────────────────
+    const etHour = _getEtHour(asOf);
+    if (etHour !== TARGET_ET_HOUR) {
+      logger.info(
+        { correlationId, jobName: "regime-drift-detector", etHour, expected: TARGET_ET_HOUR },
+        "regime-drift-detector: ET-hour guard failed — skipping (DST double-fire protection)",
+      );
+      await insertAuditRowSafe({
+        action: "regime_drift_detector.skipped_dst_guard",
+        entityType: "scheduler_job",
+        entityId: "regime-drift-detector",
+        result: { correlationId, etHour, expected: TARGET_ET_HOUR },
+        status: "info",
+        decisionAuthority: "system",
+        correlationId,
+      });
+      return {
+        status: "skipped_dst_guard",
+        correlationId,
+        durationMs: Date.now() - startMs,
+        strategiesChecked: 0,
+        driftDetected: 0,
+        demoted: 0,
+        skipped: 0,
+        dryRun,
+      };
+    }
+
+    // ── Step 3: Query DEPLOYED strategies ──────────────────────────────────
+    // Include both strategies with and without regime_trained_on so we can
+    // emit legacy-skip audits for null rows.
+    const deployedStrategies = await db
+      .select({
+        id: strategies.id,
+        name: strategies.name,
+        symbol: strategies.symbol,
+        regimeTrainedOn: strategies.regimeTrainedOn,
+      })
+      .from(strategies)
+      .where(eq(strategies.lifecycleState, "DEPLOYED"));
+
+    logger.info(
+      { correlationId, strategyCount: deployedStrategies.length, dryRun },
+      "regime-drift-detector: starting daily sweep",
+    );
+
+    const lifecycleService = new LifecycleService();
+    const strategyResults: DriftDetectorStrategyResult[] = [];
+    let driftDetectedCount = 0;
+    let demotedCount = 0;
+    let skippedCount = 0;
+
+    // ── Step 4-6: Per-strategy evaluation ─────────────────────────────────
+    for (const strategy of deployedStrategies) {
+      const result = await _evaluateStrategyDrift(
+        strategy,
+        asOf,
+        dryRun,
+        correlationId,
+        lifecycleService,
+      );
+      strategyResults.push(result);
+
+      // "dry_run" is a special skip — drift was detected but suppressed; count as detected.
+      // Other skipped reasons (legacy_null_regime, insufficient_bias_data) are true skips.
+      if (result.skippedReason && result.skippedReason !== "dry_run") {
+        skippedCount++;
+      } else if (result.driftDetected) {
+        driftDetectedCount++;
+        if (result.demoted) demotedCount++;
+      }
+    }
+
+    // ── Step 7: Completion audit ───────────────────────────────────────────
+    const durationMs = Date.now() - startMs;
+    logger.info(
+      {
+        correlationId,
+        strategiesChecked: deployedStrategies.length,
+        driftDetected: driftDetectedCount,
+        demoted: demotedCount,
+        skipped: skippedCount,
+        durationMs,
+        dryRun,
+      },
+      "regime-drift-detector: sweep completed",
+    );
+
+    await insertAuditRowSafe({
+      action: "regime_drift_detector.completed",
+      entityType: "scheduler_job",
+      entityId: "regime-drift-detector",
+      result: {
+        correlationId,
+        strategiesChecked: deployedStrategies.length,
+        driftDetected: driftDetectedCount,
+        demoted: demotedCount,
+        skipped: skippedCount,
+        durationMs,
+        dryRun,
+      },
+      status: "success",
+      decisionAuthority: "system",
+      correlationId,
+    });
+
+    return {
+      status: "completed",
+      correlationId,
+      durationMs,
+      strategiesChecked: deployedStrategies.length,
+      driftDetected: driftDetectedCount,
+      demoted: demotedCount,
+      skipped: skippedCount,
+      dryRun,
+      strategyResults,
+    };
+  } finally {
+    _releaseDetectorLock();
+  }
+}
+
+// ─── Per-strategy drift evaluation ──────────────────────────────────────────
+
+async function _evaluateStrategyDrift(
+  strategy: { id: string; name: string; symbol: string; regimeTrainedOn: string | null },
+  asOf: Date,
+  dryRun: boolean,
+  correlationId: string,
+  lifecycleService: LifecycleService,
+): Promise<DriftDetectorStrategyResult> {
+  const { id: strategyId, name: strategyName, symbol, regimeTrainedOn } = strategy;
+
+  // Step 6a: Legacy null regime_trained_on — skip with info audit
+  if (!regimeTrainedOn) {
+    logger.info(
+      { correlationId, strategyId, strategyName },
+      "regime-drift-detector: legacy strategy (regime_trained_on IS NULL) — skipped",
+    );
+    await insertAuditRowSafe({
+      action: "regime_drift_detector.legacy_strategy_skipped",
+      entityType: "strategy",
+      entityId: strategyId,
+      result: { correlationId, strategyId, strategyName, symbol },
+      status: "info",
+      decisionAuthority: "system",
+      correlationId,
+    });
+    return {
+      strategyId,
+      strategyName,
+      regimeTrainedOn: "(null)",
+      recentRegimes: [],
+      driftDetected: false,
+      demoted: false,
+      skippedReason: "legacy_null_regime",
+    };
+  }
+
+  // Step 4: Read last 5 days of bias_state.regime_label for the strategy's symbol.
+  // Order by session_date DESC, take 5 rows, each row = one trading day's regime.
+  const recentRows = await db
+    .select({ regimeLabel: biasState.regimeLabel, sessionDate: biasState.sessionDate })
+    .from(biasState)
+    .where(eq(biasState.symbol, symbol))
+    .orderBy(desc(biasState.sessionDate))
+    .limit(DRIFT_CONSECUTIVE_DAYS);
+
+  const recentRegimes = recentRows.map((r) => r.regimeLabel);
+
+  if (recentRegimes.length < DRIFT_CONSECUTIVE_DAYS) {
+    // Insufficient data — cannot establish 5-consecutive-day pattern
+    logger.info(
+      { correlationId, strategyId, strategyName, symbol, rowsFound: recentRegimes.length },
+      "regime-drift-detector: insufficient bias_state data for strategy — skipped",
+    );
+    return {
+      strategyId,
+      strategyName,
+      regimeTrainedOn,
+      recentRegimes,
+      driftDetected: false,
+      demoted: false,
+      skippedReason: "insufficient_bias_data",
+    };
+  }
+
+  // Step 5: Drift check — ALL 5 consecutive days must differ from regime_trained_on
+  const allDiffer = recentRegimes.every((r) => r !== regimeTrainedOn);
+
+  if (!allDiffer) {
+    // No drift — at least one of the last 5 days matched trained regime
+    return {
+      strategyId,
+      strategyName,
+      regimeTrainedOn,
+      recentRegimes,
+      driftDetected: false,
+      demoted: false,
+    };
+  }
+
+  // ── Drift detected ─────────────────────────────────────────────────────────
+  logger.warn(
+    { correlationId, strategyId, strategyName, symbol, regimeTrainedOn, recentRegimes },
+    "regime-drift-detector: 5-consecutive-day regime drift detected",
+  );
+
+  await insertAuditRowSafe({
+    action: "strategy.regime_drift_detected",
+    entityType: "strategy",
+    entityId: strategyId,
+    result: {
+      correlationId,
+      strategyId,
+      strategyName,
+      symbol,
+      regime_trained_on: regimeTrainedOn,
+      recent_regimes: recentRegimes,
+      days_observed: DRIFT_CONSECUTIVE_DAYS,
+    },
+    status: "warning",
+    decisionAuthority: "system",
+    correlationId,
+  });
+
+  // dryRun: detect but suppress Discord + lifecycle changes
+  if (dryRun) {
+    logger.info(
+      { correlationId, strategyId, strategyName },
+      "regime-drift-detector: dry_run=true — skipping Discord and demotion",
+    );
+    await insertAuditRowSafe({
+      action: "regime_drift_detector.dry_run",
+      entityType: "strategy",
+      entityId: strategyId,
+      result: {
+        correlationId,
+        strategyId,
+        strategyName,
+        symbol,
+        regime_trained_on: regimeTrainedOn,
+        recent_regimes: recentRegimes,
+        days_observed: DRIFT_CONSECUTIVE_DAYS,
+        dry_run: true,
+      },
+      status: "info",
+      decisionAuthority: "system",
+      correlationId,
+    });
+    return {
+      strategyId,
+      strategyName,
+      regimeTrainedOn,
+      recentRegimes,
+      driftDetected: true,
+      demoted: false,
+      skippedReason: "dry_run",
+    };
+  }
+
+  // Step 6: Discord WARN with family-grade postscript
+  const operatorBody =
+    `[WARN] Regime Drift Detected — Strategy: ${strategyName} (${strategyId})\n` +
+    `Symbol: ${symbol}\n` +
+    `Trained on regime: ${regimeTrainedOn}\n` +
+    `Last ${DRIFT_CONSECUTIVE_DAYS} days observed: ${recentRegimes.join(", ")}\n` +
+    `Action: Strategy demoted DEPLOYED → TESTING for re-validation.\n` +
+    `Strategy must complete fresh CPCV + PBO + WFE before re-promotion.\n` +
+    `Correlation ID: ${correlationId}`;
+
+  const plainWhat =
+    "Your bot detected that market conditions have shifted away from what one of the strategies was trained on for 5 days in a row.";
+  const plainAction =
+    "The strategy was automatically moved to re-validation mode. No manual action is needed — it will re-qualify before trading again.";
+
+  const fullBody = appendFamilyGradePostscript(operatorBody, plainWhat, plainAction);
+
+  notifyWarning(
+    `[W29B.3] Regime Drift — Strategy ${strategyName} demoted to TESTING`,
+    fullBody,
+    { strategyId, strategyName, symbol, regimeTrainedOn, recentRegimes, correlationId },
+  );
+
+  // Step 6: Demote DEPLOYED → DECLINING → TESTING
+  // VALID_TRANSITIONS: DEPLOYED → DECLINING is allowed; DECLINING → TESTING is allowed.
+  let demoted = false;
+  try {
+    const step1 = await lifecycleService.promoteStrategy(
+      strategyId,
+      "DEPLOYED",
+      "DECLINING",
+      { correlationId, actor: "system", reason: `regime_drift: ${regimeTrainedOn} → [${recentRegimes.join(",")}]` },
+    );
+
+    if (!step1.success) {
+      logger.error(
+        { correlationId, strategyId, error: step1.error },
+        "regime-drift-detector: DEPLOYED → DECLINING failed",
+      );
+    } else {
+      const step2 = await lifecycleService.promoteStrategy(
+        strategyId,
+        "DECLINING",
+        "TESTING",
+        { correlationId, actor: "system", reason: `regime_drift_demotion: fresh CPCV required` },
+      );
+
+      if (!step2.success) {
+        logger.error(
+          { correlationId, strategyId, error: step2.error },
+          "regime-drift-detector: DECLINING → TESTING failed",
+        );
+      } else {
+        demoted = true;
+        logger.warn(
+          { correlationId, strategyId, strategyName },
+          "regime-drift-detector: strategy demoted DEPLOYED → DECLINING → TESTING",
+        );
+
+        await insertAuditRowSafe({
+          action: "lifecycle.regime_drift_demotion",
+          entityType: "strategy",
+          entityId: strategyId,
+          result: {
+            correlationId,
+            strategyId,
+            strategyName,
+            symbol,
+            regime_trained_on: regimeTrainedOn,
+            recent_regimes: recentRegimes,
+            days_observed: DRIFT_CONSECUTIVE_DAYS,
+            from_state: "DEPLOYED",
+            to_state: "TESTING",
+            note: "Two-step demotion via DECLINING intermediate state",
+          },
+          status: "warning",
+          decisionAuthority: "system",
+          correlationId,
+        });
+      }
+    }
+  } catch (err) {
+    logger.error(
+      { err, correlationId, strategyId },
+      "regime-drift-detector: demotion threw — strategy may still be in DEPLOYED state",
+    );
+  }
+
+  return {
+    strategyId,
+    strategyName,
+    regimeTrainedOn,
+    recentRegimes,
+    driftDetected: true,
+    demoted,
+  };
+}

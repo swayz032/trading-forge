@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-26T22:29:12.900Z",
+  "generatedAt": "2026-05-26T23:00:09.388Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -10,12 +10,15 @@
     "dd_velocity_gate:manual_gate:operator-only-recovery",
     "exit_engine_ab_harness:invalid-active-proof-mode",
     "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
+    "frozen_policy_contract:invalid-active-proof-mode",
+    "frozen_policy_contract:manual_gate:operator_hmac_override",
     "late_cycle_overheating_regime:invalid-active-proof-mode",
     "pattern_aggregator_service:manual_gate:kill_switch",
     "pbo_overfit_gate:invalid-active-proof-mode",
     "phase5_contract_spec_scaffold:manual_gate:operator-approve",
     "production_hardening:manual_gate:operator-halt-only",
     "quantum_rl_challenger:invalid-active-proof-mode",
+    "regime_drift_detector:invalid-active-proof-mode",
     "replay_grade_confluence:invalid-active-proof-mode",
     "replay_grade_confluence:manual_gate:operator-approve",
     "replay_grade_consistency:invalid-active-proof-mode",
@@ -46,9 +49,9 @@
     "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
-    "total": 61,
+    "total": 63,
     "ready": 33,
-    "blocked": 21,
+    "blocked": 23,
     "manualGated": 2,
     "experimental": 5
   },
@@ -467,6 +470,33 @@
         "frankenstein:* SSE",
         "frankenstein.run-complete",
         "lifecycle.gate-blocked-frankenstein"
+      ]
+    },
+    {
+      "id": "frozen_policy_contract",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "operator_hmac_override",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "operator_only",
+      "blockers": [
+        "invalid-active-proof-mode",
+        "manual_gate:operator_hmac_override"
+      ],
+      "requiredEvidence": [
+        "audit_log.frozen_policy.*",
+        "audit_log.frozen_policy.set",
+        "audit_log.lifecycle.frozen_policy_drift_blocked",
+        "frozen_policy.hash_compute_failed",
+        "frozen_policy.override_rationale_too_short",
+        "frozen_policy.override_used",
+        "frozen_policy.set",
+        "lifecycle.frozen_policy_drift_blocked",
+        "SELECT * FROM audit_log WHERE action LIKE 'frozen_policy.%' OR action = 'lifecycle.frozen_policy_drift_blocked' ORDER BY created_at DESC LIMIT 20",
+        "SELECT id, frozen_policy_hash, frozen_policy_set_at, frozen_policy_override_count FROM strategies WHERE frozen_policy_hash IS NOT NULL",
+        "strategies.frozen_policy_set_at"
       ]
     },
     {
@@ -966,6 +996,35 @@
         "SELECT COUNT(*) FROM quantum_rl_runs WHERE created_at > NOW() - INTERVAL '7 days'",
         "signal.rl_ab_routed",
         "SSE signal:rl_ab_routed"
+      ]
+    },
+    {
+      "id": "regime_drift_detector",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "operator_only",
+      "blockers": [
+        "invalid-active-proof-mode"
+      ],
+      "requiredEvidence": [
+        "audit_log.lifecycle.regime_drift_demotion",
+        "audit_log.regime_drift_detector.*",
+        "audit_log.regime_drift_detector.completed",
+        "audit_log.strategy.regime_drift_detected",
+        "lifecycle.regime_drift_demotion",
+        "regime_drift_detector.completed",
+        "regime_drift_detector.dry_run",
+        "regime_drift_detector.legacy_strategy_skipped",
+        "regime_drift_detector.skipped_dst_guard",
+        "regime_drift_detector.skipped_lock_contention",
+        "scheduler:regime-drift-detector:21,22-utc",
+        "SELECT * FROM audit_log WHERE action = 'regime_drift_detector.completed' ORDER BY created_at DESC LIMIT 7",
+        "SELECT * FROM audit_log WHERE action IN ('strategy.regime_drift_detected','lifecycle.regime_drift_demotion') ORDER BY created_at DESC LIMIT 20",
+        "strategy.regime_drift_detected"
       ]
     },
     {

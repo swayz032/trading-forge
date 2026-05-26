@@ -49,6 +49,13 @@ import { evaluatePboGate } from "../lib/pbo-gate.js";
 // regime/confluence_score columns, remove the TODO markers in the loader.
 import { compareShadowToBacktest } from "../lib/shadow-signal-divergence-checker.js";
 import { loadDivergenceInputs } from "../lib/shadow-signal-divergence-loader.js";
+// Wave 29 Pass B.2 — frozen-policy drift gate (PAPER → DEPLOY_READY).
+// evaluateFrozenPolicyDriftAtPromotion: hash mismatch blocks promotion; first-time freeze stamps hash.
+// freezePolicyForStrategy: called on first-time freeze to stamp all 4 columns atomically.
+import {
+  evaluateFrozenPolicyDriftAtPromotion,
+  freezePolicyForStrategy,
+} from "../lib/frozen-policy-contract.js";
 
 const VALID_STATES = [
   "CANDIDATE",
@@ -3146,6 +3153,101 @@ export class LifecycleService {
           }
         }
         // ── End Wave 28 Pass B.1 composite shadow gate ───────────────────────
+
+        // ── Wave 29 Pass B.2: Frozen-policy drift gate (PAPER → DEPLOY_READY) ──
+        // Gate: evaluate whether the live config hash matches the frozen hash.
+        //   - First-time freeze (frozenPolicyHash == null): PERMIT promotion + stamp hash.
+        //   - Hash matches: PERMIT promotion — policy is stable.
+        //   - Hash mismatch (config changed since freeze): BLOCK promotion.
+        //     Operator must POST /api/admin/frozen-policy-override with HMAC + rationale ≥50.
+        // Fail-soft: hash computation error → emit warn audit + PROCEED (never block on hash plumbing).
+        let frozenPolicyBlocked = false;
+        try {
+          const driftResult = evaluateFrozenPolicyDriftAtPromotion({
+            id: s.id,
+            config: s.config,
+            frozenPolicyHash: s.frozenPolicyHash,
+          });
+
+          if (!driftResult.ok && driftResult.frozenHash !== null) {
+            // Hash mismatch — config changed after policy was frozen.  Hard block.
+            frozenPolicyBlocked = true;
+            logger.warn(
+              {
+                strategyId: s.id,
+                currentHash: driftResult.currentHash.slice(0, 16),
+                frozenHash: (driftResult.frozenHash ?? "").slice(0, 16),
+                transition: "PAPER→DEPLOY_READY",
+              },
+              "Frozen-policy drift gate BLOCKED PAPER→DEPLOY_READY promotion",
+            );
+            await db.insert(auditLog).values({
+              action: "lifecycle.frozen_policy_drift_blocked",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "blocked",
+              decisionAuthority: "gate",
+              input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+              result: {
+                strategy_id: s.id,
+                current_hash: driftResult.currentHash,
+                frozen_hash: driftResult.frozenHash,
+                reason: driftResult.reason ?? "frozen_policy.hash_mismatch",
+                note: "Operator must POST /api/admin/frozen-policy-override with HMAC + rationale ≥50 chars",
+              },
+              correlationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "frozen_policy drift-block audit failed (non-blocking)");
+            });
+            continue; // skip this strategy in the current pass
+          }
+
+          if (driftResult.ok && driftResult.frozenHash === null) {
+            // First-time freeze: stamp the policy hash + regime. Fire-and-forget.
+            // Determine the current institutional_regime from bias_state (regimeLabel field).
+            // Fail-soft: if regime is unavailable, use "UNKNOWN" — never block on it.
+            let currentRegime = "UNKNOWN";
+            try {
+              const { biasState: biasStateTable } = await import("../db/schema.js");
+              const biasStateRows = await db
+                .select({ regimeLabel: biasStateTable.regimeLabel })
+                .from(biasStateTable)
+                .limit(1)
+                .catch(() => [] as { regimeLabel: string }[]);
+              if (biasStateRows.length > 0 && typeof biasStateRows[0].regimeLabel === "string") {
+                currentRegime = biasStateRows[0].regimeLabel;
+              }
+            } catch {
+              // Regime lookup error is non-fatal.
+            }
+
+            freezePolicyForStrategy(s.id, currentRegime).catch((freezeErr) => {
+              logger.warn({ strategyId: s.id, err: freezeErr }, "frozen_policy first-time freeze failed (non-blocking — promotion proceeds)");
+            });
+
+            logger.info(
+              { strategyId: s.id, regime: currentRegime },
+              "Frozen-policy first-time freeze: hash will be stamped (fire-and-forget)",
+            );
+          }
+        } catch (frozenPolicyErr) {
+          // Fail-soft: hash compute error NEVER blocks real lifecycle.
+          const msg = frozenPolicyErr instanceof Error ? frozenPolicyErr.message : String(frozenPolicyErr);
+          logger.warn({ strategyId: s.id, err: frozenPolicyErr }, "frozen_policy gate threw — emitting warn audit, promotion proceeds (fail-soft)");
+          await db.insert(auditLog).values({
+            action: "frozen_policy.hash_compute_failed",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "warning",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: { error: msg, note: "hash compute error — promotion proceeds" },
+            correlationId,
+          }).catch(() => {});
+        }
+
+        if (frozenPolicyBlocked) continue; // already continued above; guard for clarity
+        // ── End Wave 29 Pass B.2 frozen-policy drift gate ────────────────────
 
         const result = await this.promoteStrategy(s.id, "PAPER", "DEPLOY_READY", { correlationId: correlationId ?? undefined });
         if (result.success) {

@@ -848,7 +848,28 @@ export function deriveEntryIndicator(
   // Fallback to archetype mapping ONLY for ambiguous cases.
   if (fallback && ENTRY_INDICATOR_MAP[fallback]) return ENTRY_INDICATOR_MAP[fallback];
 
-  // No mapping at all → reject. Logging this helps tune the mapping.
+  // ─── Wave 26 Pass J Phase 3 (2026-05-26) — UNCATALOGUED SPEAKER TERM ──
+  // Previously: no mapping → return null → caller dropped the strategy silently.
+  // Now: emit `uncatalogued:<sanitized_term>` so the caller graduates the
+  // strategy AND queues the speaker term in `needs_archetype_queue` for
+  // operator/Claude review. The catalog grows from real-world videos instead
+  // of bottlenecking them. derive_entry_indicator_path: 'uncatalogued_speaker_term'.
+  //
+  // Sanitize: lowercase, [a-z0-9_] only, max 64 chars, never empty.
+  const speakerCandidate =
+    (llmEntryIndicator?.toLowerCase().trim() ?? "") ||
+    (fallback?.toLowerCase().trim() ?? "") ||
+    cn;
+  const sanitized = speakerCandidate
+    .replace(/[^a-z0-9_]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 64);
+  if (sanitized.length > 0) {
+    if (_derivePathOut) _derivePathOut.path = "uncatalogued_speaker_term";
+    return `uncatalogued:${sanitized}`;
+  }
+
+  // Truly empty input → unrecoverable. Log + reject.
   return null;
 }
 
@@ -1502,11 +1523,71 @@ export async function graduateBucketDirectly(opts: {
     );
   }
 
+  // ─── Wave 26 Pass J Phase 3 (2026-05-26) — UNCATALOGUED → QUEUE, DON'T DROP ──
+  // When deriveEntryIndicator returns `uncatalogued:<speaker_term>`, the
+  // speaker taught a real strategy whose vocabulary doesn't map to a known
+  // canonical indicator or archetype. Previously these were silently dropped.
+  // Now: insert into needs_archetype_queue (UPSERT bumps extraction_count) and
+  // emit a `graduation.queued_for_archetype` audit so operator + Claude can
+  // review high-frequency terms (extraction_count >= 3) and promote them to
+  // real canonical archetypes. Bucket reverts to pending (not graduated)
+  // because the engine can't compile an uncatalogued indicator yet — but the
+  // strategy concept is PRESERVED for future archetype creation instead of
+  // dropped into oblivion.
+  if (entryIndicator !== null && entryIndicator.startsWith("uncatalogued:")) {
+    const speakerTerm = entryIndicator.slice("uncatalogued:".length);
+    try {
+      // UPSERT: insert new row OR bump extraction_count on collision
+      await db.execute(sql`
+        INSERT INTO needs_archetype_queue (
+          bucket_id, speaker_term, verbatim_description, transcript_quote, source_url, extraction_count, status
+        ) VALUES (
+          ${bucketId}::uuid, ${speakerTerm}, ${conceptName}, NULL, NULL, 1, 'pending'
+        )
+        ON CONFLICT (speaker_term)
+        DO UPDATE SET
+          extraction_count = needs_archetype_queue.extraction_count + 1,
+          updated_at = NOW()
+      `);
+    } catch (qErr) {
+      logger.warn(
+        { err: qErr, bucketId, speakerTerm },
+        "needs_archetype_queue UPSERT failed (non-blocking — strategy still preserved via audit)",
+      );
+    }
+    await db.insert(auditLog).values({
+      action: "graduation.queued_for_archetype",
+      entityType: "strategy_pending_bucket",
+      entityId: bucketId,
+      input: { bucket_id: bucketId, concept_name: conceptName, archetype: bucketMeta.entryArchetype } as Record<string, unknown>,
+      result: {
+        speaker_term: speakerTerm,
+        strategy_name: strategyName,
+        next_action: "operator_review_when_extraction_count_ge_3",
+        derive_entry_indicator_path: deriveEntryIndicatorPath,
+      } as Record<string, unknown>,
+      status: "info",
+      decisionAuthority: "system",
+      correlationId: correlationId ?? null,
+    }).catch((auditErr: unknown) => logger.warn({ err: auditErr }, "audit_log write failed (non-blocking)"));
+    return {
+      strategyId: null,
+      strategyName,
+      skipped: true,
+      reason: "queued_for_archetype",
+    };
+  }
+
   // Pass 21 (2026-05-16) — REJECT graduation if no engine-compatible indicator.
   // Concepts like Supertrend, ICT/SMC, FVG, Volume Profile, Pivot Points have
   // no entry in the engine's pattern_library, so a strategy with these would
   // fail at compile time anyway. Better to reject here, log the concept for
   // future engine work, and free up the daily-cap slot.
+  //
+  // Wave 26 Pass J Phase 3: deriveEntryIndicator now returns null ONLY when
+  // both llmEntryIndicator AND fallback AND conceptName all sanitize to empty —
+  // truly unrecoverable input. Common "no canonical match" cases now route to
+  // the uncatalogued queue (block above) instead of returning null.
   if (entryIndicator === null) {
     logger.warn(
       { bucketId, conceptName, strategyName, archetype: bucketMeta.entryArchetype },

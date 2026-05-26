@@ -105,6 +105,19 @@ export const strategies = pgTable("strategies", {
   // Default false: all pre-Wave-29 strategies use existing TESTING → PAPER path.
   // Migration: 0160_shadow_signals.sql
   shadowModeEnabled: boolean("shadow_mode_enabled").notNull().default(false),
+  // Wave 29 Pass B.1: Frozen-policy contract — CFA Institute Nov 2025 institutional 2026 mandate.
+  // SHA-256 hex of canonical-sorted-JSON of {entry_quality, position_size, stop_loss,
+  // take_profit, exit_plan_config}.  NULL until CPCV + PBO + WFE all pass on the same backtest.
+  // Re-optimization after freeze requires operator HMAC override + rationale ≥50 chars.
+  // Migration: 0161_frozen_policy_contract.sql
+  frozenPolicyHash: text("frozen_policy_hash"),
+  // Wall-clock UTC when frozenPolicyHash was last committed.  NULL until first freeze.
+  frozenPolicySetAt: timestamp("frozen_policy_set_at", { withTimezone: true }),
+  // institutional_regime value at time of last full CPCV run.  Feeds Pass B.3 drift detector.
+  // Values: TRENDING | RANGE_BOUND | HIGH_VOL_MACRO | COMPRESSION | EXPANSION | LOW_LIQ_CHOP.
+  regimeTrainedOn: text("regime_trained_on"),
+  // Incremented per successful HMAC override.  NOT NULL DEFAULT 0.  Observability signal.
+  frozenPolicyOverrideCount: integer("frozen_policy_override_count").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 },
@@ -2954,6 +2967,38 @@ export const lifecycleShadowSignals = pgTable(
     index("idx_shadow_signals_strategy_ts").on(table.strategyId, table.signalTs),
     // A.3 divergence checker join queries.
     index("idx_shadow_signals_lifecycle_state").on(table.lifecycleState),
+  ],
+);
+
+// Wave 26 Pass J Phase 3 (2026-05-26) — uncatalogued speaker vocabulary queue
+// When transcript_extractor emits a strategy whose entry_indicator maps to
+// NEITHER a canonical indicator NOR a known archetype, the graduator writes
+// entry_indicator: "uncatalogued:<speaker_term>" AND inserts a row here
+// instead of dropping the strategy. Operator reviews terms with
+// extraction_count >= 3 to decide whether to promote to a real archetype.
+export const needsArchetypeQueue = pgTable(
+  "needs_archetype_queue",
+  {
+    id:                       bigserial("id", { mode: "bigint" }).primaryKey(),
+    bucketId:                 uuid("bucket_id"),
+    speakerTerm:              text("speaker_term").notNull(),
+    verbatimDescription:      text("verbatim_description"),
+    transcriptQuote:          text("transcript_quote"),
+    sourceUrl:                text("source_url"),
+    extractionCount:          integer("extraction_count").notNull().default(1),
+    proposedArchetypeName:    text("proposed_archetype_name"),
+    // pending | archetype_created | rejected — CHECK constraint at SQL level
+    status:                   text("status").notNull().default("pending"),
+    createdAt:                timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt:                timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    // Unique on speaker_term — UPSERT path bumps extraction_count on collision
+    uniqueIndex("needs_archetype_queue_term_idx").on(table.speakerTerm),
+    // Dashboard query: top-N pending archetype requests by extraction frequency
+    index("needs_archetype_queue_status_idx").on(table.status, table.extractionCount),
+    // Time-window analytics
+    index("needs_archetype_queue_created_at_idx").on(table.createdAt),
   ],
 );
 

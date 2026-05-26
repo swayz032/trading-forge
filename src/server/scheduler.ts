@@ -62,6 +62,8 @@ import { runCompositeHealthDailyDigest } from "./services/composite-health-diges
 import { runStrategyStaleDetector } from "./services/strategy-stale-detector.js";
 // W29 Pass C.2: Quantum RL training window cron
 import { isOffRthTrainingWindow } from "./lib/quantum-rl-training-runner.js";
+// W29 Pass B.3: Regime drift detector — daily 18:00 ET sweep
+import { runRegimeDriftDetector } from "./services/regime-drift-detector-service.js";
 
 let initialized = false;
 
@@ -385,6 +387,12 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   // paused. The digest is a pure observability signal for the operator — strategy
   // health monitoring must continue regardless of pipeline gate state.
   "composite-health-daily-digest",      // W28A.4: composite strategy health digest
+  // W29 Pass B.3: regime drift detection must fire even when pipeline is paused.
+  // Regime drift continues regardless of operator intent to pause research. A
+  // DEPLOYED strategy losing its trained regime during a pipeline pause is still
+  // dangerous — the operator must be alerted and the strategy demoted regardless
+  // of the pipeline gate state.
+  "regime-drift-detector",              // W29B.3: daily regime drift sweep
 ]);
 
 function _validateAllJobsScheduled(): void {
@@ -4583,6 +4591,53 @@ except Exception as e:
     }
   });
   _scheduledJobs.add("quantum-rl-training-window");
+
+  // ─── W29 Pass B.3: Regime Drift Detector — 18:00 ET daily ──────────────────
+  //
+  // Scans all DEPLOYED strategies with regime_trained_on IS NOT NULL.
+  // If last 5 consecutive days of bias_state.regime_label ALL differ from
+  // strategies.regime_trained_on, demotes strategy DEPLOYED → DECLINING → TESTING
+  // and fires a Discord WARN.
+  //
+  // Schedule: 18:00 ET = 22:00 UTC (EST, UTC-5) or 21:00 UTC (EDT, UTC-4).
+  // Double-fire "0 21,22 * * *" covers both UTC offsets; ET-hour=18 guard inside
+  // runRegimeDriftDetector() filters to exactly 18:00 ET.
+  //
+  // Pipeline-gate EXEMPT: drift continues regardless of operator intent to pause.
+  // A DEPLOYED strategy losing its trained regime during a pause is still dangerous.
+  // Registered in _PIPELINE_GATE_EXEMPT above.
+  _PIPELINE_GATE_EXEMPT.add("regime-drift-detector");
+
+  registerJob("regime-drift-detector", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "regime-drift-detector" }, "cron tick start");
+    await runRegimeDriftDetector();
+  });
+
+  // 18:00 ET = 22:00 UTC (EST, UTC-5) or 21:00 UTC (EDT, UTC-4)
+  cron.schedule("0 21,22 * * *", async () => {
+    if (!_tryAcquireJobLock("regime-drift-detector")) return;
+    try {
+      const now = new Date();
+      const etHour = parseInt(
+        now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+        10,
+      );
+      if (etHour !== 18) {
+        logger.debug({ etHour }, "Scheduler: regime-drift-detector cron fired but not 18:00 ET — skipping (DST guard)");
+        return;
+      }
+      // NOT pipeline-gated — in _PIPELINE_GATE_EXEMPT
+      logger.info("Scheduler: regime-drift-detector (18:00 ET confirmed)");
+      const t0rdd = Date.now();
+      await withRetry("regime-drift-detector", SCHEDULER_JOBS["regime-drift-detector"].run, 1);
+      markJobRun("regime-drift-detector");
+      emitJobComplete("regime-drift-detector", Date.now() - t0rdd);
+    } finally {
+      _releaseJobLock("regime-drift-detector");
+    }
+  });
+  _scheduledJobs.add("regime-drift-detector");
 
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every
