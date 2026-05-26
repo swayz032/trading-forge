@@ -337,11 +337,128 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
         continue;
       }
 
+      // ─── Wave 26 Pass H1 (2026-05-26) Bug 1 — Multi-Layer Archetype Merge ──
+      // When Gemma extracts N ideas that are actually N layers of ONE ICT strategy
+      // (e.g. HTF bias + MSS + FVG + liquidity target from a single ICT video),
+      // creating N separate buckets causes over-fragmentation. Detect this by
+      // checking if ANY idea names a multi-layer archetype. If so, keep only the
+      // master idea and record siblings in config.absorbed_sub_concepts.
+      //
+      // Multi-layer archetypes: archetype names that by definition bundle sub-layers.
+      // Sub-layers: known sub-concept names Gemma emits for each multi-layer archetype.
+      const MULTI_LAYER_ARCHETYPES = new Set<string>([
+        "ict_bias_aligned_continuation",
+        "ict_power_of_3",
+      ]);
+      const SUB_LAYERS_BY_ARCHETYPE: Record<string, string[]> = {
+        ict_bias_aligned_continuation: [
+          "market_structure_shift_confirmation", "market_structure_shift", "mss_confirmation",
+          "fvg_retrace_entry", "fvg_entry", "fair_value_gap_entry", "fvg_retrace",
+          "liquidity_targeting", "liquidity_target", "liquidity_sweep", "liquidity_raid",
+          "htf_bias", "htf_bias_confirmation", "daily_bias", "4h_bias",
+          "bos_confirmation", "choch_entry", "change_of_character_entry",
+          "displacement_entry", "killzone_entry", "asian_range_raid",
+        ],
+        ict_power_of_3: [
+          "accumulation", "accumulation_phase", "manipulation", "manipulation_phase",
+          "distribution", "distribution_phase", "asian_range",
+        ],
+      };
+
+      // Determine if any idea references a multi-layer archetype
+      let masterIdeaIdx = -1;
+      let masterArchetype: string | null = null;
+      for (let i = 0; i < extractResult.ideas.length; i++) {
+        const idea = extractResult.ideas[i];
+        const entryInd = String((idea.entry_indicator as string) ?? "").trim().toLowerCase();
+        const archetypeKey = entryInd.startsWith("archetype:") ? entryInd.slice("archetype:".length) : entryInd;
+        if (MULTI_LAYER_ARCHETYPES.has(archetypeKey)) {
+          masterIdeaIdx = i;
+          masterArchetype = archetypeKey;
+          break;
+        }
+      }
+
+      // If no explicit archetype idea found, check concept names against SUB_LAYERS
+      if (masterIdeaIdx === -1 && extractResult.ideas.length > 1) {
+        for (const [arch, subLayers] of Object.entries(SUB_LAYERS_BY_ARCHETYPE)) {
+          const subLayerSet = new Set(subLayers.map(s => s.toLowerCase()));
+          const siblingCount = extractResult.ideas.filter((idea) => {
+            const cn = String((idea.concept_name as string) ?? "").toLowerCase().replace(/\s+/g, "_");
+            return subLayerSet.has(cn);
+          }).length;
+          // If ≥50% of ideas are sub-layers of this archetype, treat as multi-layer
+          if (siblingCount >= Math.ceil(extractResult.ideas.length * 0.5)) {
+            masterArchetype = arch;
+            // Pick the first idea as master
+            masterIdeaIdx = 0;
+            break;
+          }
+        }
+      }
+
+      let ideasToProcess: Array<Record<string, unknown>>;
+      let absorbedSubConcepts: string[] = [];
+
+      if (masterIdeaIdx >= 0 && masterArchetype !== null && extractResult.ideas.length > 1) {
+        // Merge: keep master idea, absorb siblings
+        const masterIdea = extractResult.ideas[masterIdeaIdx];
+        absorbedSubConcepts = extractResult.ideas
+          .filter((_, i) => i !== masterIdeaIdx)
+          .map((idea) => String((idea.concept_name as string) ?? (idea.name as string) ?? "unknown"));
+        ideasToProcess = [{
+          ...masterIdea,
+          // Ensure entry_indicator reflects the archetype
+          entry_indicator: `archetype:${masterArchetype}`,
+          // Embed absorbed sub-concepts into the idea so the bucket config can store them
+          _absorbed_sub_concepts: absorbedSubConcepts,
+        }];
+
+        // Audit row + Discord NOTE (fire-and-forget)
+        db.insert(await import("../db/schema.js").then(m => m.auditLog)).values({
+          action: "scout.ideas_merged_under_archetype",
+          entityType: "scout_extract",
+          entityId: null,
+          input: { url, video_id: videoId, correlation_id: correlationId, archetype: masterArchetype } as Record<string, unknown>,
+          result: {
+            total_ideas: extractResult.ideas.length,
+            absorbed: absorbedSubConcepts,
+            master_concept: (masterIdea.concept_name as string) ?? "unknown",
+          } as Record<string, unknown>,
+          status: "success",
+          decisionAuthority: "system",
+          correlationId,
+        } as Record<string, unknown>).catch((auditErr: unknown) =>
+          logger.warn({ auditErr }, "scout.ideas_merged_under_archetype audit write failed")
+        );
+
+        // Discord NOTE (not WARN — this is expected behavior for multi-layer ICT videos)
+        // notifyInfo/notifyWarning return void; no .catch() needed
+        try {
+          const notifySvc = await import("../services/notification-service.js");
+          const notifyFn = (notifySvc as Record<string, unknown>).notifyInfo as
+            ((title: string, body: string) => void) | undefined
+            ?? notifySvc.notifyWarning;
+          notifyFn(
+            `[Scout] Multi-layer archetype merge`,
+            `Merged ${extractResult.ideas.length} sub-concepts from "${title.slice(0, 60)}" under \`${masterArchetype}\`. Absorbed: ${absorbedSubConcepts.slice(0, 3).join(", ")}${absorbedSubConcepts.length > 3 ? ` + ${absorbedSubConcepts.length - 3} more` : ""}`
+          );
+        } catch { /* non-blocking */ }
+      } else {
+        ideasToProcess = extractResult.ideas;
+      }
+
       // 4. Persist mentions — write 3 synthetic layers (web + youtube + reddit)
       //    so cross-validation requirement is met (operator IS the cross-validator).
       //    All 3 share the same source_url + extracted content; only scout_layer differs.
+      // ─── Wave 26 Pass H1 Bug 4 — source-URL sibling-accept tracking ──────
+      // Track bucket_ids that successfully pass source URL verification within this
+      // ingest's correlationId. If a later layer fails URL verification with
+      // reason="unreachable" but the same video_id already has ≥1 validated bucket,
+      // the agent.ts endpoint can accept-by-sibling when we pass the sibling bucket_id.
+      const validatedBucketIdsForVideoId = new Set<string>();
       const ideaPersistResults: Array<Record<string, unknown>> = [];
-      for (const idea of extractResult.ideas) {
+      for (const idea of ideasToProcess) {
         const ideaName = (idea.name as string) || (idea.concept_name as string) || `operator_${videoId}`;
         const conceptName = (idea.concept_name as string) || ideaName;
         const market = (idea.symbol as string) || (Array.isArray(idea.symbols) ? (idea.symbols[0] as string) : "MES");
@@ -433,13 +550,31 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
             // layer_coverage_json flags to true so graduator cross-validation passes.
             const layerUrl = `${baseBody.source_url}#operator_layer=${layer}`;
             const layerProvider = LAYER_PROVIDER_MAP[layer];
+            // Wave 26 Pass H1 Bug 4: pass sibling_bucket_id when this video_id already
+            // has ≥1 validated bucket — allows agent.ts to accept-by-sibling on
+            // intermittent URL verification failures for the same video.
+            const siblingBucketId = validatedBucketIdsForVideoId.size > 0
+              ? [...validatedBucketIdsForVideoId][0]
+              : undefined;
+            // Wave 26 Pass H1 Bug 1: pass absorbed_sub_concepts so the bucket
+            // config can store sibling idea names.
+            const absorbedSubConceptsField = (idea as Record<string, unknown>)._absorbed_sub_concepts as string[] | undefined;
+            const extraFields: Record<string, unknown> = {};
+            if (siblingBucketId) extraFields.operator_ingest_sibling_bucket_id = siblingBucketId;
+            if (absorbedSubConceptsField && absorbedSubConceptsField.length > 0) {
+              extraFields.absorbed_sub_concepts = absorbedSubConceptsField;
+            }
             const resp = await fetch(`${BACKEND_URL}/api/agent/scout-ideas/pending`, {
               method: "POST",
               headers: { "Content-Type": "application/json", "x-correlation-id": correlationId },
-              body: JSON.stringify({ ...baseBody, layer, source_url: layerUrl, source_provider: layerProvider }),
+              body: JSON.stringify({ ...baseBody, layer, source_url: layerUrl, source_provider: layerProvider, ...extraFields }),
               signal: AbortSignal.timeout(30_000),
             });
             const j = await resp.json();
+            // Track validated bucket IDs for sibling-accept (Bug 4)
+            if (j.accepted && j.bucket_id && typeof j.bucket_id === "string") {
+              validatedBucketIdsForVideoId.add(j.bucket_id);
+            }
             // Surface real error if endpoint rejected (validation, etc.) so operator can see why
             layerResults[layer] = {
               accepted: Boolean(j.accepted),

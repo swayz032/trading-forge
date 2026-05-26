@@ -1565,6 +1565,15 @@ const pendingIdeaSchema = z.object({
   // W23F.E — scout-runner rotation seed tag (post-restart fix 2026-05-19).
   // Stored in extracted_idea so the graduator can prefer it when LLM symbol inference is ambiguous.
   __scout_seeded_symbol:      z.enum(["MES", "MNQ", "MCL"]).optional(),
+  // Wave 26 Pass H1 Bug 4 — operator-ingest sibling-accept bypass.
+  // When operator-ingest already has ≥1 validated bucket for the same video_id,
+  // subsequent layers that fail source-URL verification (e.g. intermittent YouTube
+  // network failures) can be accepted-by-sibling. The field carries the UUID of an
+  // already-accepted bucket from this same ingest correlationId.
+  operator_ingest_sibling_bucket_id: z.string().uuid().optional(),
+  // Wave 26 Pass H1 Bug 1 — absorbed sub-concepts for multi-layer archetype merge.
+  // Stored in bucket.config.absorbed_sub_concepts for traceability.
+  absorbed_sub_concepts: z.array(z.string()).optional(),
 });
 
 // Graduation threshold constants — explicit, no magic numbers
@@ -1631,6 +1640,12 @@ agentRoutes.post("/scout-ideas/pending", idempotencyMiddleware, async (req, res)
   // Every mention must point to a REAL, REACHABLE URL with content that
   // matches the strategy thesis. Stops fabricated URLs from incrementing
   // bucket source counts and falsely graduating strategies.
+  //
+  // Wave 26 Pass H1 Bug 4: when operator_ingest_sibling_bucket_id is set,
+  // the same video_id's URL already passed verification for a sibling mention
+  // in this same operator-ingest correlationId. Accept-by-sibling if the
+  // failure reason is "unreachable" (intermittent network) — do NOT bypass
+  // for content-mismatch failures (those indicate a genuinely wrong URL).
   try {
     const { verifySourceUrl } = await import("../services/source-url-verifier.js");
     const verification = await verifySourceUrl({
@@ -1641,27 +1656,55 @@ agentRoutes.post("/scout-ideas/pending", idempotencyMiddleware, async (req, res)
       thesis:         idea.thesis,
     });
     if (!verification.verified) {
-      logger.warn(
-        { sourceUrl: idea.source_url, reason: verification.reason, detail: verification.detail, correlationId },
-        "scout-ideas/pending: source URL verification FAILED — rejecting mention",
-      );
-      db.insert(auditLog).values({
-        action:            "pending_bucket.source_url_rejected",
-        entityType:        "system_journal",
-        input:             { source_url: idea.source_url, source_provider: idea.source_provider, market: idea.market, concept_name: idea.concept_name } as Record<string, unknown>,
-        result:            { reason: verification.reason, detail: verification.detail, fetchedBytes: verification.fetchedBytes ?? null } as Record<string, unknown>,
-        status:            "rejected",
-        decisionAuthority: "gate",
-        correlationId,
-      }).catch((err) => logger.warn({ err }, "pending_bucket.source_url_rejected audit write failed"));
-      res.status(422).json({
-        accepted: false,
-        reason:   "source_url_verification_failed",
-        detail:   verification.reason,
-        message:  verification.detail,
-        hint:     "Source URL must be reachable (HEAD 2xx), return ≥200 chars of content, and match ≥2 strategy keywords (market, concept, archetype, thesis). Test/fixture URLs are rejected.",
-      });
-      return;
+      // Check for sibling-accept bypass (same-ingest same-video_id intermittent failure)
+      const siblingBucketId = idea.operator_ingest_sibling_bucket_id;
+      const isIntermittentFailure = verification.reason === "unreachable";
+      if (siblingBucketId && isIntermittentFailure) {
+        // Accept-by-sibling: emit audit row and continue
+        logger.info(
+          { sourceUrl: idea.source_url, reason: verification.reason, siblingBucketId, correlationId },
+          "scout-ideas/pending: source URL accepted-by-sibling (same ingest, intermittent failure)",
+        );
+        db.insert(auditLog).values({
+          action:            "pending_bucket.source_url_accepted_by_sibling",
+          entityType:        "system_journal",
+          input:             { source_url: idea.source_url, source_provider: idea.source_provider, market: idea.market, concept_name: idea.concept_name } as Record<string, unknown>,
+          result:            {
+            reason: verification.reason,
+            sibling_bucket_id: siblingBucketId,
+            video_id: (() => {
+              const m = idea.source_url.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+              return m?.[1] ?? null;
+            })(),
+          } as Record<string, unknown>,
+          status:            "accepted",
+          decisionAuthority: "gate",
+          correlationId,
+        }).catch((err) => logger.warn({ err }, "pending_bucket.source_url_accepted_by_sibling audit write failed"));
+        // Fall through to rest of handler (do NOT return here)
+      } else {
+        logger.warn(
+          { sourceUrl: idea.source_url, reason: verification.reason, detail: verification.detail, correlationId },
+          "scout-ideas/pending: source URL verification FAILED — rejecting mention",
+        );
+        db.insert(auditLog).values({
+          action:            "pending_bucket.source_url_rejected",
+          entityType:        "system_journal",
+          input:             { source_url: idea.source_url, source_provider: idea.source_provider, market: idea.market, concept_name: idea.concept_name } as Record<string, unknown>,
+          result:            { reason: verification.reason, detail: verification.detail, fetchedBytes: verification.fetchedBytes ?? null } as Record<string, unknown>,
+          status:            "rejected",
+          decisionAuthority: "gate",
+          correlationId,
+        }).catch((err) => logger.warn({ err }, "pending_bucket.source_url_rejected audit write failed"));
+        res.status(422).json({
+          accepted: false,
+          reason:   "source_url_verification_failed",
+          detail:   verification.reason,
+          message:  verification.detail,
+          hint:     "Source URL must be reachable (HEAD 2xx), return ≥200 chars of content, and match ≥2 strategy keywords (market, concept, archetype, thesis). Test/fixture URLs are rejected.",
+        });
+        return;
+      }
     }
   } catch (verifyErr) {
     // Fail-CLOSED on verifier crash — better to reject than to admit unverified.
@@ -1686,6 +1729,10 @@ agentRoutes.post("/scout-ideas/pending", idempotencyMiddleware, async (req, res)
     //    after the upsert (or by checking if the returned row has sourceCount==0).
     //    The reliable approach: attempt insert, if conflict → update, then check
     //    if the row's first_seen_at equals its last_seen_at at time of returning.
+    // Wave 26 Pass H1 Bug 1: when absorbed_sub_concepts is present, embed in
+    // layerCoverageJson (the only available JSONB column on pending_buckets).
+    // Consumers read bucket.layerCoverageJson.absorbed_sub_concepts for traceability.
+    const absorbedSubConcepts = Array.isArray(idea.absorbed_sub_concepts) ? idea.absorbed_sub_concepts : undefined;
     const upserted = await db.insert(strategyPendingBuckets).values({
       fingerprintHash,
       market:        idea.market,
@@ -1694,7 +1741,10 @@ agentRoutes.post("/scout-ideas/pending", idempotencyMiddleware, async (req, res)
       conceptName:       idea.concept_name || null,
       // Pass 20: initialize layer_coverage_json with the incoming layer set to true.
       // Other layers default to false until they post a mention.
-      layerCoverageJson: { web: false, youtube: false, reddit: false, [idea.layer ?? "web"]: true },
+      layerCoverageJson: {
+        web: false, youtube: false, reddit: false, [idea.layer ?? "web"]: true,
+        ...(absorbedSubConcepts ? { absorbed_sub_concepts: absorbedSubConcepts } : {}),
+      },
       sourceCount:       0,
       distinctProviders: 0,
       status:            "pending",
@@ -1821,11 +1871,16 @@ agentRoutes.post("/scout-ideas/pending", idempotencyMiddleware, async (req, res)
     // All 3 layers confirmed — Pass 20 graduation requirement for concept-fingerprinted buckets
     const allLayersCovered = hasWeb && hasYoutube && hasReddit;
 
-    // Update bucket with fresh counts and layer coverage
+    // Update bucket with fresh counts and layer coverage.
+    // Wave 26 Pass H1 Bug 1: merge absorbed_sub_concepts into layerCoverageJson
+    // using spread so existing absorbed_sub_concepts are never overwritten on re-post.
+    const layerCoverageWithAbsorbed = absorbedSubConcepts
+      ? { ...layerCoverageJson, absorbed_sub_concepts: absorbedSubConcepts }
+      : layerCoverageJson;
     await db.update(strategyPendingBuckets).set({
       sourceCount,
       distinctProviders,
-      layerCoverageJson,
+      layerCoverageJson: layerCoverageWithAbsorbed,
       lastSeenAt: sql`NOW()`,
     }).where(eq(strategyPendingBuckets.id, bucket.id));
 
@@ -2121,7 +2176,8 @@ async function runGraduation(
 
     if (mentions.length === 0) {
       logger.warn({ bucketId }, "graduation: no mentions found — rolling back to pending");
-      await db.update(strategyPendingBuckets).set({ status: "pending" })
+      // 2026-05-26 fix: also null graduatedAt so the bucket isn't poisoned for future retries.
+      await db.update(strategyPendingBuckets).set({ status: "pending", graduatedAt: null })
         .where(eq(strategyPendingBuckets.id, bucketId));
       return;
     }
@@ -2332,8 +2388,11 @@ async function runGraduation(
         { bucketId, conceptName, reason: grad.reason },
         "graduation: INSERT failed — reverting bucket to pending for retry"
       );
+      // 2026-05-26 fix: null graduatedAt too — leaving it set poisons the bucket
+      // for future drain cycles (drain skips when graduatedAt != null).
       await db.update(strategyPendingBuckets).set({
         status: "pending",
+        graduatedAt: null,
       }).where(eq(strategyPendingBuckets.id, bucketId));
 
       db.insert(auditLog).values({
@@ -2383,8 +2442,11 @@ async function runGraduation(
         { bucketId, conceptName, reason: grad.reason },
         "graduation: gate rejected — reverting bucket to pending"
       );
+      // 2026-05-26 fix: clear graduatedAt so the bucket isn't poisoned for future
+      // retries (when the engine gains support for previously-rejected concepts).
       await db.update(strategyPendingBuckets).set({
         status: "pending",
+        graduatedAt: null,
       }).where(eq(strategyPendingBuckets.id, bucketId));
 
       db.insert(auditLog).values({
@@ -2520,7 +2582,8 @@ async function runGraduation(
   } catch (err) {
     // Rollback to pending so the next mention can retry graduation
     logger.error({ err, bucketId }, "graduation: failed — rolling bucket back to pending");
-    await db.update(strategyPendingBuckets).set({ status: "pending" })
+    // 2026-05-26 fix: null graduatedAt too — leaving it set poisons future retries.
+    await db.update(strategyPendingBuckets).set({ status: "pending", graduatedAt: null })
       .where(eq(strategyPendingBuckets.id, bucketId))
       .catch((rollbackErr) => {
         logger.error({ err: rollbackErr, bucketId }, "graduation: rollback itself failed");
