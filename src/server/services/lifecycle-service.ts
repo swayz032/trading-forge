@@ -38,6 +38,7 @@ import { evaluateB14CiGate } from "../lib/b14-ci-gate.js";
 import { evaluateWfeGate } from "../lib/wfe-gate.js";
 import { evaluateParameterDriftGate } from "../lib/parameter-drift-gate.js";
 import { evaluateCompositeShadow } from "../lib/composite-shadow-gate.js";
+import { routeShadowDisagreementAlert } from "../lib/composite-shadow-discord-router.js";
 import { evaluatePromotionGates, getWfePromotionFloor, getCpcvMinPaths } from "../lib/promotion-gate-orchestrator.js";
 
 const VALID_STATES = [
@@ -2829,6 +2830,22 @@ export class LifecycleService {
               },
               "composite-shadow-gate: shadow evaluation logged (observability only — no gate authority)",
             );
+
+            // ── Wave 28 Pass B.2: Discord disagreement routing ──────────────
+            // Fire-and-forget — must never block or throw into this try-block.
+            // Agreements and shadow_no_opinion are silenced inside the router.
+            routeShadowDisagreementAlert({
+              strategyId: s.id,
+              strategyName: s.name,
+              hardGateOutcome,
+              shadow_result: shadowResult,
+              agreement,
+            }).catch((routerErr) => {
+              logger.warn(
+                { strategyId: s.id, err: routerErr },
+                "composite-shadow-discord-router: unexpected throw (caught at lifecycle boundary) — promotion unaffected",
+              );
+            });
           } catch (shadowErr) {
             // Fail-OPEN: shadow infrastructure must NEVER cause a real lifecycle failure.
             // Catch any throw, emit a separate error audit, and proceed to promoteStrategy.
