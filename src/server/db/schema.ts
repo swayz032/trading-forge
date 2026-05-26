@@ -33,6 +33,7 @@ import {
   bigserial,
   jsonb,
   boolean,
+  real,
   index,
   uniqueIndex,
   customType,
@@ -2824,5 +2825,58 @@ export const liquidityLevels = pgTable(
     index("idx_liquidity_levels_active").on(table.symbol, table.levelType).where(sql`expired_at IS NULL`),
     index("idx_liquidity_levels_price").on(table.symbol, table.price).where(sql`expired_at IS NULL`),
     index("idx_liquidity_levels_rank").on(table.symbol, table.htfSignificance, table.sweepProbability).where(sql`expired_at IS NULL`),
+  ],
+);
+
+// ─── Strategy Health Scores (Wave 28 Pass A.1 — Layer C decision bus) ─────────
+// Append-only composite health bus. One row per aggregator run per strategy.
+// NEVER UPDATE — insert a new row on each aggregation cycle.
+// OCC/Fed/FDIC April 2026 MRM "one lineage graph" pattern.
+//
+// composite_score is NULL when computed_from_n_subsystems < MIN_COMPOSITE_SUBSYSTEMS.
+// Callers MUST gate on computed_from_n_subsystems before trusting composite_score
+// or verdict.
+//
+// weights_version_id is SHA-256 (64 hex chars) of canonical-sorted-JSON of the
+// weights config — full hash (not 16-char prefix) for complete audit lineage.
+// Mirrors the firm_rules_version pattern from Wave 27.5 Pass A.
+//
+// disagreements is NULL in Pass A — reserved for Pass D multi-subsystem
+// disagreement engine.
+//
+// Migration: 0149_strategy_health_scores.sql (idx 151)
+export const strategyHealthScores = pgTable(
+  "strategy_health_scores",
+  {
+    // Surrogate key — bigserial for high-volume append workload
+    id:                        bigserial("id", { mode: "bigint" }).primaryKey(),
+    // FK to the strategy being evaluated. Cascade on strategy deletion.
+    strategyId:                integer("strategy_id")
+                                 .notNull()
+                                 .references(() => strategies.id, { onDelete: "cascade" }),
+    // When the aggregator produced this row (wall-clock UTC)
+    evaluatedAt:               timestamp("evaluated_at", { withTimezone: true }).notNull().defaultNow(),
+    // Composite [0,1] health score. NULL when insufficient subsystems.
+    compositeScore:            real("composite_score"),
+    // HEALTHY | MARGINAL | UNHEALTHY | CRITICAL | NULL (insufficient data)
+    verdict:                   text("verdict"),
+    // Per-subsystem detail: { name: { score, confidence, available, computed_at, error? } }
+    subsystemScores:           jsonb("subsystem_scores").notNull(),
+    // How many of 12 canonical subsystems contributed a valid score this cycle
+    computedFromNSubsystems:   integer("computed_from_n_subsystems").notNull(),
+    // SHA-256 (64 hex chars) of canonical-sorted-JSON of the weights config
+    weightsVersionId:          text("weights_version_id").notNull(),
+    // Hours elapsed from NOW() to oldest subsystem.computed_at in this run
+    stalenessAgeHours:         real("staleness_age_hours"),
+    // Pairwise subsystem disagreement deltas — populated in Pass D (nullable in Pass A)
+    disagreements:             jsonb("disagreements"),
+    // Row creation timestamp (consistent with project schema conventions)
+    createdAt:                 timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    // Primary lookup: latest health score per strategy (most-recent-first)
+    index("idx_strategy_health_scores_strategy_evaluated").on(table.strategyId, table.evaluatedAt),
+    // Audit lineage: all rows produced under a given weights config
+    index("idx_strategy_health_scores_weights_version").on(table.weightsVersionId),
   ],
 );

@@ -1058,6 +1058,13 @@
       "when": 1748390400000,
       "tag": "0148_backtests_compliance_mode",
       "breakpoints": true
+    },
+    {
+      "idx": 151,
+      "version": "7",
+      "when": 1748476800000,
+      "tag": "0149_strategy_health_scores",
+      "breakpoints": true
     }
   ]
 }
