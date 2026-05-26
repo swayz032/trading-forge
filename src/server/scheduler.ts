@@ -64,6 +64,8 @@ import { runStrategyStaleDetector } from "./services/strategy-stale-detector.js"
 import { isOffRthTrainingWindow } from "./lib/quantum-rl-training-runner.js";
 // W29 Pass B.3: Regime drift detector — daily 18:00 ET sweep
 import { runRegimeDriftDetector } from "./services/regime-drift-detector-service.js";
+// W29 Pass D.3: A/B comparison weekly digest — Friday 17:00 ET
+import { runAbComparisonWeeklyDigest } from "./services/ab-comparison-weekly-digest-service.js";
 
 let initialized = false;
 
@@ -393,6 +395,11 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   // dangerous — the operator must be alerted and the strategy demoted regardless
   // of the pipeline gate state.
   "regime-drift-detector",              // W29B.3: daily regime drift sweep
+  // W29 Pass D.3: A/B comparison weekly digest must fire even when pipeline is
+  // paused. The operator needs weekly A/B performance visibility regardless of
+  // whether the research pipeline is paused — pausing research does not stop
+  // the paper accounts from accumulating evidence.
+  "ab-comparison-weekly-digest",        // W29D.3: weekly A/B paper routing digest
 ]);
 
 function _validateAllJobsScheduled(): void {
@@ -4638,6 +4645,59 @@ except Exception as e:
     }
   });
   _scheduledJobs.add("regime-drift-detector");
+
+  // ─── W29 Pass D.3: A/B Comparison Weekly Digest — Friday 17:00 ET ──────────
+  //
+  // Posts a weekly Discord summary of the A/B paper routing performance:
+  // Sub-Account 1 (baseline) vs Sub-Account 2 (RL-challenger) cumulative P&L
+  // and 20-session Sharpe, plus RL training epoch count and kill switch state,
+  // plus per-regime Sharpe gap breakdown.
+  //
+  // Schedule: 0 21,22 * * 5 (Friday 21,22 UTC).
+  //   17:00 ET = 21:00 UTC (EDT, UTC-4) or 22:00 UTC (EST, UTC-5).
+  //   Double-fire covers both DST offsets; ET-hour=17 + weekday=Fri guard inside
+  //   runAbComparisonWeeklyDigest() filters to exactly Friday 17:00 ET.
+  //
+  // Pipeline-gate EXEMPT: operator visibility into A/B performance must fire
+  // regardless of pipeline state. A paused pipeline does not stop paper accounts
+  // from accumulating evidence — the operator needs the Friday digest either way.
+  // Registered in _PIPELINE_GATE_EXEMPT above.
+
+  registerJob("ab-comparison-weekly-digest", 7 * 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "ab-comparison-weekly-digest" }, "cron tick start");
+    await runAbComparisonWeeklyDigest();
+  });
+
+  // Fri 17:00 ET = Fri 21:00 UTC (EDT, UTC-4) or Fri 22:00 UTC (EST, UTC-5)
+  // Double-fire: "0 21,22 * * 5"; ET-hour + weekday guards inside handler filter to Fri 17:00 ET.
+  cron.schedule("0 21,22 * * 5", async () => {
+    if (!_tryAcquireJobLock("ab-comparison-weekly-digest")) return;
+    try {
+      const now = new Date();
+      const etHour = parseInt(
+        now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+        10,
+      );
+      const etWeekday = now.toLocaleString("en-US", { timeZone: "America/New_York", weekday: "short" });
+      if (etHour !== 17 || etWeekday !== "Fri") {
+        logger.debug(
+          { etHour, etWeekday },
+          "Scheduler: ab-comparison-weekly-digest cron fired but not Friday 17:00 ET — skipping (DST guard)",
+        );
+        return;
+      }
+      // NOT pipeline-gated — in _PIPELINE_GATE_EXEMPT
+      logger.info("Scheduler: ab-comparison-weekly-digest (Friday 17:00 ET confirmed)");
+      const t0abd = Date.now();
+      await withRetry("ab-comparison-weekly-digest", SCHEDULER_JOBS["ab-comparison-weekly-digest"].run, 1);
+      markJobRun("ab-comparison-weekly-digest");
+      emitJobComplete("ab-comparison-weekly-digest", Date.now() - t0abd);
+    } finally {
+      _releaseJobLock("ab-comparison-weekly-digest");
+    }
+  });
+  _scheduledJobs.add("ab-comparison-weekly-digest");
 
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every

@@ -281,3 +281,42 @@ export const FACTORY_EVENTS = {
 } as const;
 
 export type FactoryEventName = (typeof FACTORY_EVENTS)[keyof typeof FACTORY_EVENTS];
+
+// ─── Wave 29 Pass D.1 SSE Event Names ────────────────────────────────────────
+//
+// Centralized event-name constants for Wave 29 lifecycle, signal, and RL events.
+// All names follow the existing `{subsystem}:{event_name}` convention.
+// These constants are declared here so consumers can import a stable name
+// rather than embed magic strings that may drift.
+//
+// Emission sites (as of Wave 29 Pass A + B + C close):
+//   SHADOW_LOGGED             — paper-signal-service.ts:4375   (Pass A.1)
+//   PBO_EVALUATED             — lifecycle-service.ts:940/965   (Pass A.2)
+//   SHADOW_DIVERGENCE_EVALUATED — lifecycle-service.ts:2049/2088 (Pass A.3)
+//   RL_AB_ROUTED              — paper-signal-service.ts:4520   (Pass C.3)
+//   RL_TRAINING_COMPLETED     — quantum-rl-training-runner.ts post-completion callers
+//   RL_KILL_SWITCH_ENGAGED    — rl-signal-fetcher.ts kill-switch path callers
+//
+// Data shapes:
+//   SHADOW_LOGGED             { strategy_id, signal_ts, direction, regime, correlation_id }
+//   PBO_EVALUATED             { strategy_id, pbo_overall, threshold, blocked, correlation_id }
+//   SHADOW_DIVERGENCE_EVALUATED { strategy_id, divergence_pct, sample_size, outcome, correlation_id }
+//   RL_AB_ROUTED              { strategy_id, target_account, composite_verdict, correlation_id }
+//   RL_TRAINING_COMPLETED     { strategy_id, regime, epochs_completed, dsr_passed, correlation_id }
+//   RL_KILL_SWITCH_ENGAGED    { strategy_id, reason, sharpe_gap_ratio, correlation_id }
+export const WAVE29_EVENTS = {
+  // Pass A.1 — shadow signal logged (TradersPost webhook suppressed)
+  SHADOW_LOGGED: "signal:shadow_logged",
+  // Pass A.2 — PBO gate evaluated at TESTING → SHADOW / TESTING → PAPER
+  PBO_EVALUATED: "lifecycle:pbo_evaluated",
+  // Pass A.3 — shadow-signal divergence gate evaluated at SHADOW → PAPER
+  SHADOW_DIVERGENCE_EVALUATED: "lifecycle:shadow_divergence_evaluated",
+  // Pass C.3 — strategy routed to A/B paper sub-account
+  RL_AB_ROUTED: "signal:rl_ab_routed",
+  // Pass C.2 — RL training epoch batch completed (emitted post-subprocess success)
+  RL_TRAINING_COMPLETED: "quantum_rl:training_completed",
+  // Pass C.2 — RL kill switch engaged (Sharpe gap > 30% over 20 sessions)
+  RL_KILL_SWITCH_ENGAGED: "quantum_rl:kill_switch_engaged",
+} as const;
+
+export type Wave29EventName = (typeof WAVE29_EVENTS)[keyof typeof WAVE29_EVENTS];

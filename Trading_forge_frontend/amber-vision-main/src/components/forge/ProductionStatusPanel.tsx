@@ -18,6 +18,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { CompositeHealthTile } from "./CompositeHealthTile";
+import { AbSharpeComparisonTile } from "./AbSharpeComparisonTile";
 import { motion } from "framer-motion";
 import {
   CheckCircle2,
@@ -426,6 +427,9 @@ export function ProductionStatusPanel() {
 
       {/* Composite Health tile — portfolio summary mode (READ-ONLY, W28 A.5) */}
       <CompositeHealthTile />
+
+      {/* A/B Paper Trade Comparison tile — READ-ONLY, W29 D.2 */}
+      <AbSharpeComparisonTile />
 
       {/* 6 Questions — 2-column grid on wide, 1-column on narrow.
           Each card gets a subtle amber ring when stale, so the staleness cue

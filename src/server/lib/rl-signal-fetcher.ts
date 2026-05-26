@@ -33,6 +33,7 @@ import { db } from "../db/index.js";
 import { quantumRlRuns, backtests, monteCarloRuns } from "../db/schema.js";
 import { logger } from "./logger.js";
 import { evaluateRlDsrGate } from "./rl-dsr-gate.js";
+import { broadcastSSE } from "../routes/sse.js";
 
 // ─── Public Return Type ───────────────────────────────────────────────────────
 
@@ -199,6 +200,21 @@ export async function fetchRlSignal(strategyId: string): Promise<RlSignalResult>
         { strategyId, reason: killSwitch.reason, sharpeGap: killSwitch.sharpe_gap_ratio },
         "rl-signal-fetcher: kill switch triggered — RL subsystem unavailable",
       );
+      // Wave 29 Pass D.1: emit SSE quantum_rl:kill_switch_engaged so dashboard
+      // subscribers and the operator receive immediate visibility.
+      const killSwitchReason = killSwitch.sharpe_gap_ratio !== null &&
+        killSwitch.sharpe_gap_ratio > RL_KILL_SWITCH_SHARPE_GAP_THRESHOLD
+        ? "sharpe_gap_30pct"
+        : killSwitch.sessions_evaluated < 5
+        ? "insufficient_samples"
+        : "manual";
+      broadcastSSE("quantum_rl:kill_switch_engaged", {
+        strategy_id: strategyId,
+        reason: killSwitchReason,
+        sharpe_gap_ratio: killSwitch.sharpe_gap_ratio,
+        sessions_evaluated: killSwitch.sessions_evaluated,
+        kill_switch_reason_detail: killSwitch.reason,
+      });
       return {
         confidence: null,
         available: false,

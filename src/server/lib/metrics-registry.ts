@@ -247,3 +247,122 @@ export const regimeTransitionTotal = new Counter({
   labelNames: ["from", "to"] as const,
   registers: [promRegistry],
 });
+
+// ─── Wave 29 Pass D.1 — observability surface (2026-05-26) ────────────────────
+//
+// Closed label-set enumerations used across Wave 29 metrics.
+// All labels are from closed sets to prevent unbounded cardinality.
+//
+// Institutional regime vocab (Wave 25 Pass 6, 5-state canonical):
+//   TRENDING | EXPANSION | RANGE_BOUND | COMPRESSION | HIGH_VOL_MACRO | LOW_LIQ_CHOP
+//
+// divergence_bucket: pre_check | low | medium | high
+//   pre_check  → shadow not yet evaluated (< SHADOW_DIVERGENCE_MIN_SAMPLE rows)
+//   low        → divergence_pct < 0.02
+//   medium     → 0.02 ≤ divergence_pct < 0.05
+//   high       → divergence_pct ≥ 0.05 (BLOCKED)
+//
+// shadow_promotion outcome: passed | blocked_divergence | blocked_insufficient_samples
+//
+// kill_switch reason: sharpe_gap_30pct | insufficient_samples | manual
+
+// tf_pbo_blocks_total{regime}
+//   Incremented by pbo-gate.ts / lifecycle-service.ts when lifecycle.pbo_overfit_block
+//   audit fires (Pass A.2 gate at TESTING → SHADOW / TESTING → PAPER).
+//   regime label = institutional regime at the time of block evaluation.
+//   Cardinality: 6 regime values × 1 counter = 6 time series max.
+export const pboBLocksTotal = new Counter({
+  name: "tf_pbo_blocks_total",
+  help: "Total PBO overfit blocks at TESTING lifecycle gate, labelled by institutional regime",
+  labelNames: ["regime"] as const,
+  registers: [promRegistry],
+});
+
+// tf_shadow_signals_total{strategy_id, divergence_bucket}
+//   Incremented on each shadow signal write (lifecycle.shadow_signal_logged audit).
+//   strategy_id: numeric string — callers supply from strategy DB row.
+//   divergence_bucket: pre_check | low | medium | high (closed enum above).
+//   WARNING: strategy_id label creates cardinality proportional to strategy count.
+//   With ~100-200 strategies this is safe; do NOT accept user-input values here.
+export const shadowSignalsTotal = new Counter({
+  name: "tf_shadow_signals_total",
+  help: "Total shadow signals written per strategy with divergence bucket classification",
+  labelNames: ["strategy_id", "divergence_bucket"] as const,
+  registers: [promRegistry],
+});
+
+// tf_rl_training_epochs_total{regime}
+//   Incremented per RL training epoch completion (quantum_rl.training_completed audit).
+//   regime label = institutional regime the policy was trained on.
+//   Cardinality: 6 regime values × 1 counter = 6 time series max.
+export const rlTrainingEpochsTotal = new Counter({
+  name: "tf_rl_training_epochs_total",
+  help: "Total RL training epochs completed, labelled by institutional regime",
+  labelNames: ["regime"] as const,
+  registers: [promRegistry],
+});
+
+// tf_rl_kill_switch_total{reason}
+//   Incremented when the RL kill switch engages (quantum_rl.kill_switch_engaged audit).
+//   reason: sharpe_gap_30pct | insufficient_samples | manual  (closed set).
+//   Cardinality: 3 reason values = 3 time series max.
+export const rlKillSwitchTotal = new Counter({
+  name: "tf_rl_kill_switch_total",
+  help: "Total RL kill switch engagements, labelled by trigger reason",
+  labelNames: ["reason"] as const,
+  registers: [promRegistry],
+});
+
+// tf_rl_ab_sharpe_delta
+//   Gauge holding the current rolling 20-session Sharpe delta: Sub2 − Sub1.
+//   Positive → RL-challenger outperforms baseline.
+//   Negative → RL-challenger underperforms baseline (approaches kill-switch threshold).
+//   Updated whenever the composite aggregator evaluates the RL subsystem.
+export const rlAbSharpeDelta = new Gauge({
+  name: "tf_rl_ab_sharpe_delta",
+  help: "Current rolling 20-session Sharpe delta: RL-challenger (Sub2) minus baseline (Sub1)",
+  registers: [promRegistry],
+});
+
+// tf_rl_ab_pnl_delta
+//   Gauge holding the cumulative P&L delta: Sub2 − Sub1.
+//   Captures the real-dollar marginal edge of the RL-challenger path.
+//   Updated alongside tf_rl_ab_sharpe_delta on each aggregator cycle.
+export const rlAbPnlDelta = new Gauge({
+  name: "tf_rl_ab_pnl_delta",
+  help: "Cumulative P&L delta: RL-challenger (Sub2) minus baseline (Sub1)",
+  registers: [promRegistry],
+});
+
+// tf_frozen_policy_overrides_total
+//   Incremented on every HMAC override use (frozen_policy.override_used audit, Pass B.2).
+//   No label — cardinality 1, session context in audit_log.
+//   Lets operators detect systematic override patterns without querying DB.
+export const frozenPolicyOverridesTotal = new Counter({
+  name: "tf_frozen_policy_overrides_total",
+  help: "Total frozen-policy HMAC override uses (lifecycle contract bypasses)",
+  registers: [promRegistry],
+});
+
+// tf_regime_drift_detections_total{from_regime, to_regime}
+//   Incremented per regime drift detected (strategy.regime_drift_detected audit, Pass B.3).
+//   from_regime: regime the strategy was trained on.
+//   to_regime:   current live institutional_regime.
+//   Cardinality: 6 from × 6 to = 36 time series max — safe.
+export const regimeDriftDetectionsTotal = new Counter({
+  name: "tf_regime_drift_detections_total",
+  help: "Total regime drift detections triggering auto-demotion, labelled by from/to regime",
+  labelNames: ["from_regime", "to_regime"] as const,
+  registers: [promRegistry],
+});
+
+// tf_lifecycle_shadow_promotions_total{outcome}
+//   Incremented at the SHADOW → PAPER gate evaluation (Pass A.3).
+//   outcome: passed | blocked_divergence | blocked_insufficient_samples (closed set).
+//   Lets operators track funnel attrition at the shadow-divergence gate over time.
+export const lifecycleShadowPromotionsTotal = new Counter({
+  name: "tf_lifecycle_shadow_promotions_total",
+  help: "Total SHADOW → PAPER gate evaluations, labelled by outcome",
+  labelNames: ["outcome"] as const,
+  registers: [promRegistry],
+});

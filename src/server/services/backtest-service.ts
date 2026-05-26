@@ -1849,6 +1849,16 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
                 training_status: rlTrainingResult.status,
               },
             });
+            // Wave 29 Pass D.1: emit SSE quantum_rl:training_completed so
+            // dashboard subscribers receive real-time training visibility.
+            if (rlTrainingResult.status === "completed") {
+              broadcastSSE("quantum_rl:training_completed", {
+                strategy_id: strategyId,
+                regimes_trained: rlTrainingResult.regimesTrained,
+                duration_ms: rlTrainingResult.durationMs,
+                correlation_id: correlationId ?? null,
+              });
+            }
           } catch (rlTrainErr) {
             logger.error({ err: rlTrainErr, strategyId, correlationId }, "RL training auto-fire failed (non-blocking)");
             try {
