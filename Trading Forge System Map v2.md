@@ -1539,6 +1539,82 @@ CANDIDATE → TESTING → SHADOW → PAPER (A/B) → DEPLOY_READY → PILOT → 
 2. **Composite Health Bus** (Wave 28): 13 subsystems aggregated nightly; shadow-gates promotions but never blocks
 3. **Quantum RL agent** (Wave 29 Pass C): challenger-only routing signal; A/B-tested live on paper; kill switch on Sharpe divergence
 
+### The TWO backtest engines — main vs parity (truthiness check)
+
+Trading Forge runs **two independent backtest engines in parallel**. The main engine (vectorbt-based) produces the canonical result; the parity engine (Backtrader-based) runs as a SHADOW pass after the main engine completes and validates that the main engine is accurate. If they diverge beyond institutional tolerances, the discrepancy is audit-logged + Discord-alerted as a B-3 Truthiness Check failure (CRITICAL severity).
+
+```
+[run_backtest() request]
+        │
+        ▼
+┌───────────────────────────────────┐
+│ MAIN ENGINE (canonical)           │
+│ src/engine/backtester.py          │
+│ • vectorbt + Polars + DuckDB      │
+│ • Full institutional stack:       │
+│   5-TF MTF + structure + narrative│
+│   + 11-factor confluence + regime │
+│   + adaptive exit + Style C       │
+│ • Writes to `backtests` table     │
+│ • Drives all production decisions │
+└─────────────┬─────────────────────┘
+              │
+              ▼ (non-blocking shadow pass — never affects caller)
+┌───────────────────────────────────┐
+│ PARITY ENGINE (reference)         │
+│ src/engine/parity_engine/         │
+│ • shadow_runner.py — env gate     │
+│ • diff_harness.py — reconciler    │
+│ • backtrader_adapter.py — engine  │
+│ • Backtrader-based (independent)  │
+│ • Supports ema_crossover +        │
+│   atr_breakout archetypes (core)  │
+│ • Computes futures P&L internally │
+│   (never delegated to vectorbt)   │
+└─────────────┬─────────────────────┘
+              │
+              ▼
+┌───────────────────────────────────┐
+│ DIFF HARNESS (reconciliation)     │
+│ Compares main vs parity:          │
+│ • PnL% tolerance: ±10% (default)  │
+│ • Trade count tolerance: ±1       │
+│ • Sharpe tolerance: ±0.05         │
+│ Within tolerance → PASS           │
+│ Beyond tolerance → B-3 FAILURE    │
+│   → audit_log CRITICAL + Discord  │
+│   → SSE event broadcasts          │
+└───────────────────────────────────┘
+```
+
+**Why two engines:**
+- Catches silent computational drift in the main engine (e.g., a vectorbt upgrade that subtly changes fill-timing semantics)
+- Independent implementation = independent failure mode (Backtrader and vectorbt won't fail the same way at the same time)
+- Institutional 2026 standard for backtest-engine validation — "truthiness check" pattern per §12 hard gates table
+
+**Env gates (parity engine is opt-in for cost control):**
+- `PARITY_SHADOW_ENABLED=true` — activates shadow pass (default `false` — zero cost when off)
+- `PARITY_TOLERANCE_PNL_PCT=0.10` — PnL% tolerance threshold override
+- `PARITY_TOLERANCE_TRADE_COUNT=1` — trade-count tolerance override
+- `PARITY_TOLERANCE_SHARPE=0.05` — Sharpe tolerance override
+
+**Supported archetypes (Wave 26 status):**
+- `ema_crossover` ✅
+- `atr_breakout` ✅
+- All other archetypes (bounce_off_level, ict_bias_aligned_continuation, multi-confluence, etc.) → parity returns `ran=False` with `reason: unsupported_archetype` — NOT a pass, explicit unsupported signal (operator candidate for expanding parity coverage)
+
+**Test coverage:**
+- `src/engine/tests/test_shadow_runner.py` — parity engine wrapper tests
+- `src/engine/tests/test_cross_engine_parity.py` — main vs parity reconciliation
+- `src/engine/tests/test_paper_backtest_sizing_parity.py` — paper/backtest sizing parity (sweep-aware stops, liquidity haircut, vol-scaling)
+
+**Authority boundary:**
+- Parity engine is **OBSERVABILITY ONLY** — never blocks the main engine's result
+- A B-3 Truthiness Check failure does NOT auto-revert the backtest — operator decides whether to investigate the discrepancy or accept it
+- Main engine result is canonical regardless; parity is reference signal for confidence/audit only
+
+**Registered as subsystem** `parity_engine` in `docs/system-subsystem-registry.json` (line 212, status=`runtime-proven`, state=`active`).
+
 ### Quantum stack module dependency graph (post-Wave-29)
 
 ```
