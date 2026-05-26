@@ -1086,6 +1086,20 @@
       "when": 1748736000000,
       "tag": "0154_regime_late_cycle_overheating",
       "breakpoints": true
+    },
+    {
+      "idx": 155,
+      "version": "7",
+      "when": 1748822400000,
+      "tag": "0155_wrc_spa_promotion_gates",
+      "breakpoints": true
+    },
+    {
+      "idx": 156,
+      "version": "7",
+      "when": 1748822401000,
+      "tag": "0156_cpcv_min_paths",
+      "breakpoints": true
     }
   ]
 }

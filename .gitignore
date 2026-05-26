@@ -20,6 +20,19 @@ __pycache__/
 .claude/cache/
 .claude/sessions/
 .claude/state/
+.claude/agent-memory/
+.claude/commands/
+Trading_forge_frontend/amber-vision-main/.claude/
+
+# Operator diagnostic scratch files at repo root (Wave 26 Pass G master close)
+/tmp-*.ts
+
+# TypeScript build artifacts (should not be committed — produced by tsc)
+scripts/*.d.ts
+scripts/*.d.ts.map
+scripts/*.js
+scripts/*.js.map
+Trading_forge_frontend/amber-vision-main/tsconfig.*.tsbuildinfo
 .clawhub/
 data_cache/
 backups/
