@@ -1,17 +1,59 @@
 """Strategy configuration schema — Pydantic v2 models.
 
 Contract specs MUST match src/server/routes/risk.ts lines 6-15 exactly.
+
+─── Phase 5 Mini Contract Scaffold ────────────────────────────────────────────
+
+Phase 5 deployment criteria: operator funded account balance >= $200K.
+This is a FUTURE deployment, not currently active.
+
+How to enable: set TF_PHASE_5_ENABLED=true in tower .env AFTER:
+  1. Operator deposits and funded balance reaches $200K
+  2. Operator runs the Phase 5 validation cycle (manual sign-off required)
+  3. System Map sync passes with mini contract entries registered
+
+Why feature-gated: prevent accidental 10x size inflation from generic symbol
+routing. The micro aliases (ES→$5/pt, NQ→$2/pt, CL→$100/pt) vs true minis
+(ES=$50/pt, NQ=$20/pt, CL=$1000/pt) differ by exactly 10x. Routing a mini
+symbol to the micro spec silently inflates risk math by a full order of magnitude.
+
+Reference: CLAUDE.md §5 "Mini contracts (ES/NQ/CL) are FUTURE — graduate when
+single account funded balance >= $200K" and feedback_day_trader_only_no_swing.md
+(Pass 1 Track 1 safety guard). See also src/shared/firm-config.ts for TS mirror.
+
+ENABLED DEFAULT: False (institutional default is opt-IN explicitly).
+FIRST-CALL WARNING: When PHASE_5_ENABLED=True, a stderr WARN fires once per
+process lifetime so operators cannot miss Phase 5 activation on boot.
 """
 
 from __future__ import annotations  # noqa: I001
 
 import os
+import sys
 from dataclasses import dataclass
 from typing import Literal, Optional
 
 from datetime import datetime
 
 from pydantic import BaseModel, field_validator, model_validator
+
+
+# ─── Phase 5 Feature Gate ───────────────────────────────────────────────────────
+#
+# PHASE_5_ENABLED controls whether mini contract specs (ES/NQ/CL at 10x point
+# values) are accessible via resolve_contract_spec().
+#
+# Default: False — micro-only safety, matches all current production strategies.
+# Enable: set env var TF_PHASE_5_ENABLED=true (case-insensitive) on tower .env.
+#
+# DO NOT set this to True until the operator has a funded balance >= $200K and
+# has completed the Phase 5 validation cycle.
+
+PHASE_5_ENABLED: bool = os.environ.get("TF_PHASE_5_ENABLED", "false").lower() == "true"
+
+# Track whether the Phase 5 activation WARN has already been printed this process.
+# One-shot: we warn once on first call, not on every resolve.
+_phase5_warn_emitted: bool = False
 
 
 # ─── Contract Specs (mirrors risk.ts) ──────────────────────────────
@@ -23,20 +65,80 @@ class ContractSpec(BaseModel):
     day_margin: float = 500       # Intraday margin per contract
     overnight_margin: float = 0   # Overnight/maintenance margin per contract
     default_commission: float = 0.62  # Per-side commission (MES/micro default)
+    contract_class: Literal["micro", "mini"] = "micro"  # Phase 5 scaffold field
 
+
+# ─── Micro contract specs (current production) ─────────────────────────────────
+#
+# These are the ONLY specs used today. All graduated strategies trade these.
+# Do NOT remove or modify these entries — downstream regression tests pin them.
+
+_MICRO_SPECS: dict[str, ContractSpec] = {
+    "MES": ContractSpec(
+        tick_size=0.25, tick_value=1.25,  point_value=5.00,
+        day_margin=50,  overnight_margin=2659, contract_class="micro",
+    ),
+    "MNQ": ContractSpec(
+        tick_size=0.25, tick_value=0.50,  point_value=2.00,
+        day_margin=50,  overnight_margin=4044, contract_class="micro",
+    ),
+    "MCL": ContractSpec(
+        tick_size=0.01, tick_value=1.00,  point_value=100.00,
+        day_margin=50,  overnight_margin=1120, contract_class="micro",
+    ),
+}
+
+# ─── Phase 5 mini contract specs (FUTURE — NOT active in production) ───────────
+#
+# True CME e-mini specs with INSTITUTIONAL-CORRECT 10x point values vs micros.
+# Verified against CME Group fee schedule and contract specifications 2026-05-25.
+#
+# ES: 250 × price (50 pts/contract × $50/pt = $12,500/point — correction: $50/pt)
+# NQ: 20 × price  ($20/pt vs MNQ $2/pt)
+# CL: 1,000 barrels × $1/bbl = $1,000/pt vs MCL $100/pt
+#
+# These entries are SEPARATE from the micro aliases below — they carry distinct
+# contract_class="mini" and 10x point_value. The micro aliases (ES/NQ/CL in
+# CONTRACT_SPECS) remain intact for S3 data-path backward compat.
+
+_MINI_SPECS: dict[str, ContractSpec] = {
+    "ES": ContractSpec(
+        tick_size=0.25,  tick_value=12.50, point_value=50.00,
+        day_margin=500,  overnight_margin=26590, contract_class="mini",
+        default_commission=3.70,  # Topstep rate (conservative for unknown firm)
+    ),
+    "NQ": ContractSpec(
+        tick_size=0.25,  tick_value=5.00,  point_value=20.00,
+        day_margin=500,  overnight_margin=40440, contract_class="mini",
+        default_commission=3.70,
+    ),
+    "CL": ContractSpec(
+        tick_size=0.01,  tick_value=10.00, point_value=1000.00,
+        day_margin=5000, overnight_margin=11200, contract_class="mini",
+        default_commission=3.70,
+    ),
+}
+
+
+# ─── Merged CONTRACT_SPECS table ────────────────────────────────────────────────
+#
+# Maintains the existing public API: CONTRACT_SPECS["MES"] / ["ES"] etc.
+# The ES/NQ/CL entries here remain the MICRO aliases (for S3 data-path compat).
+# Phase 5 true-mini specs live in _MINI_SPECS and are accessed only via
+# resolve_contract_spec() with an explicit contract_class argument or PHASE_5_ENABLED.
 
 CONTRACT_SPECS: dict[str, ContractSpec] = {
     # Micro contracts only — user trades MES/MNQ/MCL exclusively
-    "MES": ContractSpec(tick_size=0.25, tick_value=1.25,  point_value=5.00,    day_margin=50,   overnight_margin=2659),
-    "MNQ": ContractSpec(tick_size=0.25, tick_value=0.50,  point_value=2.00,    day_margin=50,   overnight_margin=4044),
-    "MCL": ContractSpec(tick_size=0.01, tick_value=1.00,  point_value=100.00,  day_margin=50,   overnight_margin=1120),
+    "MES": _MICRO_SPECS["MES"],
+    "MNQ": _MICRO_SPECS["MNQ"],
+    "MCL": _MICRO_SPECS["MCL"],
     # S3 data path labels — intentionally map to MICRO specs (ES→MES, NQ→MNQ, CL→MCL).
     # WARNING: point_value here is MICRO (NQ=$2, ES=$5, CL=$100), NOT full-size ($20/$50/$1000).
     # Any caller passing these symbols receives micro P&L. This is the documented design
     # for this system. Use get_contract_spec() to surface a runtime warning when accessed.
-    "ES":  ContractSpec(tick_size=0.25, tick_value=1.25,  point_value=5.00,    day_margin=50,   overnight_margin=2659),
-    "NQ":  ContractSpec(tick_size=0.25, tick_value=0.50,  point_value=2.00,    day_margin=50,   overnight_margin=4044),
-    "CL":  ContractSpec(tick_size=0.01, tick_value=1.00,  point_value=100.00,  day_margin=50,   overnight_margin=1120),
+    "ES":  _MICRO_SPECS["MES"],
+    "NQ":  _MICRO_SPECS["MNQ"],
+    "CL":  _MICRO_SPECS["MCL"],
 }
 
 # Symbols that use MICRO point values despite carrying full-size ticker names.
@@ -60,6 +162,121 @@ def get_contract_spec(symbol: str) -> ContractSpec:
     if symbol not in CONTRACT_SPECS:
         raise KeyError(f"Unknown symbol: '{symbol}'. Add to CONTRACT_SPECS in config.py.")
     return CONTRACT_SPECS[symbol]
+
+
+def resolve_contract_spec(
+    symbol: str,
+    contract_class: Optional[str] = None,
+) -> ContractSpec:
+    """Resolve the ContractSpec for a symbol with Phase 5 safety gating.
+
+    This is the Phase 5-aware replacement for direct CONTRACT_SPECS lookups.
+    All new callers that may encounter ES/NQ/CL symbols should use this helper
+    rather than CONTRACT_SPECS[symbol] directly.
+
+    Resolution rules:
+    1. If contract_class explicitly provided:
+       - "micro" → returns the micro spec (from _MICRO_SPECS / CONTRACT_SPECS)
+       - "mini"  → returns the true mini spec (from _MINI_SPECS)
+       - other   → raises ValueError with valid options
+    2. If contract_class is None AND PHASE_5_ENABLED is False:
+       - Always returns the MICRO spec (safety default — prevent accidental 10x
+         risk inflation from generic symbol routing during Phase 1-4 deployment)
+    3. If contract_class is None AND PHASE_5_ENABLED is True:
+       - Raises ValueError demanding explicit class
+       - This forces every call site to explicitly declare intent when Phase 5
+         is live — prevents silent micro/mini confusion in production
+
+    Audit: if PHASE_5_ENABLED is True, a one-shot WARN fires to stderr on first
+    call so operators cannot miss Phase 5 activation on boot.
+
+    Args:
+        symbol: Contract symbol. Case-sensitive; use uppercase (MES, ES, NQ, etc.)
+        contract_class: "micro", "mini", or None (auto-resolve per rules above).
+
+    Returns:
+        ContractSpec matching the resolved class.
+
+    Raises:
+        KeyError: symbol not in any known spec table.
+        ValueError: invalid contract_class value, or ambiguous (Phase 5 + no class).
+    """
+    global _phase5_warn_emitted
+
+    # ── Phase 5 activation banner (one-shot per process) ───────────────────────
+    if PHASE_5_ENABLED and not _phase5_warn_emitted:
+        print(
+            "WARN [config.py::resolve_contract_spec] PHASE_5_ENABLED=True — "
+            "mini contract specs (ES/NQ/CL at 10x point values) are active. "
+            "Verify operator has funded balance >= $200K and completed Phase 5 "
+            "validation cycle before any live order routing.",
+            file=sys.stderr,
+        )
+        _phase5_warn_emitted = True
+
+    sym_upper = symbol.upper() if symbol else symbol
+
+    # ── Explicit contract_class provided ───────────────────────────────────────
+    if contract_class is not None:
+        if contract_class == "micro":
+            # Map mini ticker names back to the micro spec entry
+            micro_sym = sym_upper
+            if micro_sym in _MICRO_ALIAS_SYMBOLS:
+                # ES→MES, NQ→MNQ, CL→MCL for point-value lookup
+                _alias_map = {"ES": "MES", "NQ": "MNQ", "CL": "MCL"}
+                micro_sym = _alias_map[micro_sym]
+            if micro_sym not in _MICRO_SPECS:
+                raise KeyError(
+                    f"Unknown micro symbol: '{symbol}'. "
+                    f"Valid micro symbols: {sorted(_MICRO_SPECS.keys())}"
+                )
+            return _MICRO_SPECS[micro_sym]
+
+        elif contract_class == "mini":
+            # Direct mini lookup — only valid for ES/NQ/CL
+            _mini_sym = sym_upper
+            # Also accept MES/MNQ/MCL as a mistaken mini request and correct course
+            _micro_to_mini = {"MES": "ES", "MNQ": "NQ", "MCL": "CL"}
+            if _mini_sym in _micro_to_mini:
+                raise ValueError(
+                    f"Symbol '{symbol}' is a micro contract. "
+                    f"For the mini equivalent use '{_micro_to_mini[_mini_sym]}' + contract_class='mini'."
+                )
+            if _mini_sym not in _MINI_SPECS:
+                raise KeyError(
+                    f"Unknown mini symbol: '{symbol}'. "
+                    f"Valid Phase 5 mini symbols: {sorted(_MINI_SPECS.keys())}"
+                )
+            return _MINI_SPECS[_mini_sym]
+
+        else:
+            raise ValueError(
+                f"Invalid contract_class='{contract_class}'. "
+                f"Must be 'micro' or 'mini'."
+            )
+
+    # ── No explicit class — apply Phase 5 gating ───────────────────────────────
+    if PHASE_5_ENABLED:
+        raise ValueError(
+            f"resolve_contract_spec('{symbol}') called without explicit contract_class "
+            f"while PHASE_5_ENABLED=True. "
+            f"When Phase 5 is active every call site must explicitly declare "
+            f"contract_class='micro' or contract_class='mini' to prevent accidental "
+            f"10x size inflation. Set TF_PHASE_5_ENABLED=false to restore "
+            f"micro-safety-default behaviour."
+        )
+
+    # PHASE_5_ENABLED=False + no class → safety default: always return micro spec
+    # This is the default for all Phase 1-4 deployment. ES/NQ/CL route to micro.
+    if sym_upper in _MICRO_ALIAS_SYMBOLS:
+        _alias_map = {"ES": "MES", "NQ": "MNQ", "CL": "MCL"}
+        return _MICRO_SPECS[_alias_map[sym_upper]]
+    if sym_upper in _MICRO_SPECS:
+        return _MICRO_SPECS[sym_upper]
+    raise KeyError(
+        f"Unknown symbol: '{symbol}'. "
+        f"Valid symbols: {sorted(set(_MICRO_SPECS) | set(_MICRO_ALIAS_SYMBOLS))}"
+    )
 
 MARGIN_EXPANSION_MULTIPLIER = 2.0  # Applied when VIX > 30 or ATR > 90th percentile
 

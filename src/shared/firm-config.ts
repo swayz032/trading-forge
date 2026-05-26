@@ -3,6 +3,29 @@
 // Only Topstep (PRIMARY) + MFFU (secondary) per CLAUDE.md §6.
 // Legacy firms (TPT, Apex, FFN, Alpha, Tradeify, Earn2Trade) removed 2026-05-19.
 // ALL firms are 50K accounts. We trade MICROS only (MES/MNQ/MCL).
+//
+// ─── Phase 5 Mini Contract Scaffold ─────────────────────────────────────────
+//
+// Phase 5 deployment criteria: operator funded account balance >= $200K.
+// This is a FUTURE deployment, not currently active.
+//
+// How to enable: set TF_PHASE_5_ENABLED=true in tower .env AFTER:
+//   1. Operator deposits and funded balance reaches $200K
+//   2. Operator runs the Phase 5 validation cycle (manual sign-off required)
+//   3. System Map sync passes with mini contract entries registered
+//
+// Why feature-gated: prevent accidental 10x size inflation from generic symbol
+// routing. Micro aliases (ES→$5/pt, NQ→$2/pt, CL→$100/pt) vs true minis
+// (ES=$50/pt, NQ=$20/pt, CL=$1000/pt) differ by exactly 10x. Routing a mini
+// symbol to the micro spec silently inflates risk math by a full order of magnitude.
+//
+// Reference: CLAUDE.md §5 "Mini contracts (ES/NQ/CL) are FUTURE — graduate when
+// single account funded balance >= $200K" and feedback_day_trader_only_no_swing.md
+// (Pass 1 Track 1 safety guard). See also src/engine/config.py for Python mirror.
+//
+// ENABLED DEFAULT: false (institutional default is opt-IN explicitly).
+// FIRST-CALL WARNING: When PHASE_5_ENABLED=true, resolveContractSpec() logs
+// once so operators cannot miss Phase 5 activation on boot.
 
 export interface FirmAccountConfig {
   accountSize: number;
@@ -106,13 +129,179 @@ export const FIRMS: Record<string, FirmConfig> = {
   // 2026-05-19 per CLAUDE.md §6 — Topstep + MFFU only.
 };
 
+// ─── Phase 5 Feature Gate ─────────────────────────────────────────────────────
+//
+// Read from env var TF_PHASE_5_ENABLED (case-insensitive, default false).
+// DO NOT set this to true until the operator has a funded balance >= $200K and
+// has completed the Phase 5 validation cycle.
+//
+// Warn tracking is done at module level so the activation banner fires once per
+// process, not on every resolveContractSpec() call.
+
+export const PHASE_5_ENABLED: boolean =
+  (process.env["TF_PHASE_5_ENABLED"] ?? "false").toLowerCase() === "true";
+
+let _phase5WarnEmitted = false;
+
+// ─── Contract Spec Interface ─────────────────────────────────────────────────
+
+export interface ContractSpec {
+  tickSize: number;
+  tickValue: number;
+  pointValue: number;
+  /** Phase 5 scaffold: "micro" for current production, "mini" for Phase 5 true-mini specs. */
+  contractClass: "micro" | "mini";
+}
+
 // ─── Contract Specs ─────────────────────────────────────────────────────────
 
-export const CONTRACT_SPECS: Record<string, { tickSize: number; tickValue: number; pointValue: number }> = {
-  MES: { tickSize: 0.25, tickValue: 1.25,  pointValue: 5.00 },
-  MNQ: { tickSize: 0.25, tickValue: 0.50,  pointValue: 2.00 },
-  MCL: { tickSize: 0.01, tickValue: 1.00,  pointValue: 100.00 },
+// Micro contract specs (current production).
+// Do NOT modify these entries — downstream tests pin exact values.
+const MICRO_SPECS: Record<string, ContractSpec> = {
+  MES: { tickSize: 0.25, tickValue: 1.25,  pointValue: 5.00,     contractClass: "micro" },
+  MNQ: { tickSize: 0.25, tickValue: 0.50,  pointValue: 2.00,     contractClass: "micro" },
+  MCL: { tickSize: 0.01, tickValue: 1.00,  pointValue: 100.00,   contractClass: "micro" },
+} as const;
+
+// Phase 5 true-mini contract specs (FUTURE — NOT active in production).
+// These carry INSTITUTIONAL-CORRECT 10x point values vs the micro specs.
+// ES: $50/pt (vs MES $5/pt)   — 10x multiplier
+// NQ: $20/pt (vs MNQ $2/pt)   — 10x multiplier
+// CL: $1000/pt (vs MCL $100/pt) — 10x multiplier
+// Verified against CME Group contract specifications 2026-05-25.
+const MINI_SPECS: Record<string, ContractSpec> = {
+  ES: { tickSize: 0.25, tickValue: 12.50, pointValue: 50.00,   contractClass: "mini" },
+  NQ: { tickSize: 0.25, tickValue: 5.00,  pointValue: 20.00,   contractClass: "mini" },
+  CL: { tickSize: 0.01, tickValue: 10.00, pointValue: 1000.00, contractClass: "mini" },
+} as const;
+
+/**
+ * CONTRACT_SPECS — public table (backward-compat surface).
+ *
+ * ES/NQ/CL entries here remain the MICRO aliases (S3 data-path compat).
+ * Phase 5 true-mini specs live in MINI_SPECS and are only accessible via
+ * resolveContractSpec() with an explicit contractClass argument.
+ */
+export const CONTRACT_SPECS: Record<string, ContractSpec> = {
+  // Micro contracts — current production
+  MES: MICRO_SPECS["MES"]!,
+  MNQ: MICRO_SPECS["MNQ"]!,
+  MCL: MICRO_SPECS["MCL"]!,
+  // S3 data-path labels — MICRO aliases (point_value = micro, NOT full-size)
+  ES: MICRO_SPECS["MES"]!,
+  NQ: MICRO_SPECS["MNQ"]!,
+  CL: MICRO_SPECS["MCL"]!,
 };
+
+// ─── Phase 5-aware contract spec resolver ────────────────────────────────────
+
+/**
+ * Resolve the ContractSpec for a symbol with Phase 5 safety gating.
+ *
+ * This is the Phase 5-aware replacement for direct CONTRACT_SPECS[symbol] lookups.
+ * All new callers that may encounter ES/NQ/CL symbols should use this helper.
+ *
+ * Resolution rules (mirrors src/engine/config.py::resolve_contract_spec):
+ * 1. If contractClass explicitly provided:
+ *    - "micro" → returns the micro spec (MICRO_SPECS via alias map)
+ *    - "mini"  → returns the true mini spec (MINI_SPECS)
+ *    - other   → throws with valid options listed
+ * 2. If contractClass is undefined AND PHASE_5_ENABLED is false:
+ *    - Always returns the MICRO spec (safety default)
+ * 3. If contractClass is undefined AND PHASE_5_ENABLED is true:
+ *    - Throws — forces every call site to explicitly declare intent
+ *
+ * Activation banner: if PHASE_5_ENABLED=true, logs one WARN via console.warn
+ * on first call so operators cannot miss Phase 5 activation.
+ *
+ * @param symbol        Contract symbol (case-insensitive: "MES", "ES", etc.)
+ * @param contractClass "micro" | "mini" | undefined (auto-resolve per rules)
+ * @returns ContractSpec matching the resolved class
+ * @throws Error on invalid contractClass, unknown symbol, or ambiguous Phase 5 call
+ */
+export function resolveContractSpec(
+  symbol: string,
+  contractClass?: "micro" | "mini",
+): ContractSpec {
+  // ── Phase 5 activation banner (one-shot per process) ─────────────────────
+  if (PHASE_5_ENABLED && !_phase5WarnEmitted) {
+    console.warn(
+      "WARN [firm-config.ts::resolveContractSpec] PHASE_5_ENABLED=true — " +
+      "mini contract specs (ES/NQ/CL at 10x point values) are active. " +
+      "Verify operator has funded balance >= $200K and completed Phase 5 " +
+      "validation cycle before any live order routing.",
+    );
+    _phase5WarnEmitted = true;
+  }
+
+  const sym = symbol.toUpperCase();
+  // Alias map: micro-named mini tickers → canonical micro symbol
+  const microAliasMap: Record<string, string> = { ES: "MES", NQ: "MNQ", CL: "MCL" };
+  const microAliasSymbols = new Set(["ES", "NQ", "CL"]);
+
+  // ── Explicit contractClass provided ──────────────────────────────────────
+  if (contractClass !== undefined) {
+    if (contractClass === "micro") {
+      const microSym = microAliasSymbols.has(sym) ? microAliasMap[sym]! : sym;
+      const spec = MICRO_SPECS[microSym];
+      if (!spec) {
+        throw new Error(
+          `Unknown micro symbol: '${symbol}'. ` +
+          `Valid micro symbols: ${Object.keys(MICRO_SPECS).sort().join(", ")}`,
+        );
+      }
+      return spec;
+    }
+
+    if (contractClass === "mini") {
+      // Reject micro symbols with mini class — mismatched pairing
+      const microToMini: Record<string, string> = { MES: "ES", MNQ: "NQ", MCL: "CL" };
+      if (microToMini[sym]) {
+        throw new Error(
+          `Symbol '${symbol}' is a micro contract. ` +
+          `For the mini equivalent use '${microToMini[sym]}' + contractClass='mini'.`,
+        );
+      }
+      const spec = MINI_SPECS[sym];
+      if (!spec) {
+        throw new Error(
+          `Unknown mini symbol: '${symbol}'. ` +
+          `Valid Phase 5 mini symbols: ${Object.keys(MINI_SPECS).sort().join(", ")}`,
+        );
+      }
+      return spec;
+    }
+
+    // TypeScript narrows away invalid values at compile time, but guard at runtime
+    throw new Error(
+      `Invalid contractClass='${contractClass as string}'. Must be 'micro' or 'mini'.`,
+    );
+  }
+
+  // ── No explicit class — apply Phase 5 gating ─────────────────────────────
+  if (PHASE_5_ENABLED) {
+    throw new Error(
+      `resolveContractSpec('${symbol}') called without explicit contractClass ` +
+      `while PHASE_5_ENABLED=true. ` +
+      `When Phase 5 is active every call site must explicitly declare ` +
+      `contractClass='micro' or contractClass='mini' to prevent accidental ` +
+      `10x size inflation. Set TF_PHASE_5_ENABLED=false to restore ` +
+      `micro-safety-default behaviour.`,
+    );
+  }
+
+  // PHASE_5_ENABLED=false + no class → safety default: always return micro spec
+  if (microAliasSymbols.has(sym)) {
+    return MICRO_SPECS[microAliasMap[sym]!]!;
+  }
+  const microSpec = MICRO_SPECS[sym];
+  if (microSpec) return microSpec;
+
+  throw new Error(
+    `Unknown symbol: '${symbol}'. ` +
+    `Valid symbols: ${[...Object.keys(MICRO_SPECS), ...Object.keys(microAliasMap)].sort().join(", ")}`,
+  );
+}
 
 // ─── Contract Cap Bounds (mirrors Python firm_config.py) ────────────────────
 // Micros at $50K Combine/Funded:
