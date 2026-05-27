@@ -334,9 +334,9 @@ a { color: inherit; text-decoration: none; }
 .sh-horiz::-webkit-scrollbar { height: 6px; }
 .sh-horiz::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
 
-/* ─── POT CHIP — cooking station treatment ───────────────────────── */
+/* ─── POT CHIP — premium card with floating steam sparkles ────────── */
 .sh-chip {
-  flex-shrink: 0; width: 200px; min-height: 156px;
+  flex-shrink: 0; width: 200px; min-height: 128px;
   background: #000;
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -361,7 +361,7 @@ a { color: inherit; text-decoration: none; }
   content: "";
   position: absolute;
   left: -10%; right: -10%; bottom: -20px; height: 60px;
-  background: radial-gradient(ellipse at center, rgba(255, 184, 77, 0.10), transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(255, 184, 77, 0.08), transparent 70%);
   pointer-events: none;
   z-index: 0;
 }
@@ -375,37 +375,31 @@ a { color: inherit; text-decoration: none; }
 }
 
 .sh-chip-head {
-  padding: 10px 12px 6px;
+  padding: 12px 14px 8px;
   display: flex; justify-content: space-between; align-items: center;
   position: relative; z-index: 1;
 }
-.sh-chip-icon {
-  width: 26px; height: 26px; border-radius: 6px;
-  background: linear-gradient(135deg, rgba(255, 184, 77, 0.18), rgba(255, 99, 99, 0.10));
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px;
-  border: 1px solid rgba(255, 184, 77, 0.18);
-  flex-shrink: 0;
-}
-/* Steam puffs rising — three soft dots animated up + fade */
+
+/* Floating steam sparkles — 4 dots rising on infinite loop, staggered */
 .sh-chip-steam {
-  position: relative; width: 18px; height: 18px;
-  margin-left: 6px; flex-shrink: 0;
+  position: relative; width: 26px; height: 22px;
+  flex-shrink: 0;
 }
 .sh-chip-steam i {
   position: absolute;
-  width: 4px; height: 4px; border-radius: 50%;
-  background: rgba(255, 255, 255, 0.30);
-  filter: blur(1px);
-  animation: sh-steam 2.4s ease-out infinite;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  filter: blur(1.2px);
+  animation: sh-steam 2.8s ease-out infinite;
 }
 .sh-chip-steam i:nth-child(1) { left: 2px;  bottom: 0; animation-delay: 0.0s; }
-.sh-chip-steam i:nth-child(2) { left: 8px;  bottom: 0; animation-delay: 0.6s; }
-.sh-chip-steam i:nth-child(3) { left: 13px; bottom: 0; animation-delay: 1.2s; }
+.sh-chip-steam i:nth-child(2) { left: 9px;  bottom: 0; animation-delay: 0.7s; }
+.sh-chip-steam i:nth-child(3) { left: 16px; bottom: 0; animation-delay: 1.4s; }
+.sh-chip-steam i:nth-child(4) { left: 22px; bottom: 0; animation-delay: 2.1s; }
 @keyframes sh-steam {
-  0%   { opacity: 0; transform: translate(0, 0) scale(0.6); }
-  30%  { opacity: 0.7; }
-  100% { opacity: 0; transform: translate(-3px, -18px) scale(1.2); }
+  0%   { opacity: 0; transform: translate(0, 0) scale(0.5); }
+  25%  { opacity: 0.8; }
+  100% { opacity: 0; transform: translate(-4px, -22px) scale(1.3); }
 }
 
 .sh-chip-stage {
@@ -418,30 +412,44 @@ a { color: inherit; text-decoration: none; }
 }
 .sh-chip-name {
   font-weight: 600; color: var(--ink);
-  font-size: 12px;
-  padding: 0 12px;
+  font-size: 14px;
+  padding: 2px 14px 0;
   position: relative; z-index: 1;
-  font-family: var(--num-font);
   letter-spacing: -0.01em;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.sh-chip-spark {
-  flex: 1; min-height: 36px;
-  margin: 6px -1px -1px;
-  position: relative; z-index: 1;
-}
-.sh-chip-spark svg { width: 100%; height: 100%; display: block; }
 .sh-chip-foot {
-  padding: 6px 12px 10px;
+  padding: 8px 14px 12px;
+  margin-top: auto;
   display: flex; justify-content: space-between; align-items: baseline;
   position: relative; z-index: 1;
 }
 .sh-chip-pnl {
   color: var(--lime); font-weight: 700;
-  font-size: 16px;
+  font-size: 17px;
   font-family: var(--num-font); letter-spacing: -0.02em;
 }
 .sh-chip-meta { color: var(--mute); font-size: 10px; font-family: var(--num-font); }
+
+/* ─── BANNER "In the Pot" tile — floating steam sparkles in corner ── */
+.sh-tile-steam {
+  position: absolute;
+  top: 10px; right: 12px;
+  width: 26px; height: 22px;
+  pointer-events: none;
+  z-index: 3;
+}
+.sh-tile-steam i {
+  position: absolute;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: rgba(255, 184, 77, 0.55);
+  filter: blur(1.2px);
+  animation: sh-steam 2.8s ease-out infinite;
+}
+.sh-tile-steam i:nth-child(1) { left: 2px;  bottom: 0; animation-delay: 0.0s; }
+.sh-tile-steam i:nth-child(2) { left: 9px;  bottom: 0; animation-delay: 0.7s; }
+.sh-tile-steam i:nth-child(3) { left: 16px; bottom: 0; animation-delay: 1.4s; }
+.sh-tile-steam i:nth-child(4) { left: 22px; bottom: 0; animation-delay: 2.1s; }
 
 /* Crew rows */
 .sh-crew-row {
