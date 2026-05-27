@@ -267,26 +267,65 @@ a { color: inherit; text-decoration: none; }
 .sh-btn:hover { transform: translateY(-1px); }
 .sh-btn:active { transform: translateY(0); }
 
-/* Discord feed rows */
+/* ─── DISCORD FEED — premium intake row treatment ──────────────────── */
 .sh-feed-item {
-  display: flex; gap: 10px;
-  padding: 11px 0;
+  display: grid; grid-template-columns: 38px 1fr auto;
+  gap: 10px; align-items: center;
+  padding: 11px 4px;
   border-bottom: 1px solid var(--line);
   font-size: 12px;
-  transition: background 0.15s;
+  transition: background 0.18s, transform 0.18s;
+  border-radius: 8px;
 }
-.sh-feed-item:last-child { border: none; }
-.sh-feed-item:hover { background: rgba(255, 255, 255, 0.015); }
+.sh-feed-item:last-child { border-bottom: none; }
+.sh-feed-item:hover {
+  background: rgba(255, 255, 255, 0.018);
+  transform: translateX(2px);
+}
+/* Source-coded thumbnail tile with glow rim */
 .sh-feed-thumb {
-  width: 32px; height: 32px; border-radius: 8px;
-  background: #131313;
+  width: 36px; height: 36px; border-radius: 8px;
+  background: #0d0d0d;
   flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  font-size: 14px;
+  font-size: 16px;
   border: 1px solid var(--line);
+  position: relative;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
-.sh-feed-name { color: var(--ink); font-weight: 500; }
-.sh-feed-meta { color: var(--mute); font-size: 10px; margin-top: 2px; letter-spacing: 0.02em; }
+.sh-feed-thumb.youtube {
+  background: linear-gradient(135deg, rgba(255, 0, 0, 0.20), rgba(255, 0, 0, 0.04));
+  border-color: rgba(255, 0, 0, 0.35);
+  color: #ff4d4d;
+}
+.sh-feed-thumb.discord {
+  background: linear-gradient(135deg, rgba(88, 101, 242, 0.22), rgba(88, 101, 242, 0.04));
+  border-color: rgba(88, 101, 242, 0.40);
+  color: #8e9bf5;
+}
+.sh-feed-thumb.manual {
+  background: linear-gradient(135deg, rgba(163, 255, 18, 0.18), rgba(163, 255, 18, 0.04));
+  border-color: rgba(163, 255, 18, 0.30);
+  color: var(--lime);
+}
+
+.sh-feed-name { color: var(--ink); font-weight: 500; font-size: 13px; }
+.sh-feed-meta { color: var(--mute); font-size: 10px; margin-top: 2px; letter-spacing: 0.02em; font-family: var(--num-font); }
+
+/* Status pill — right side of row */
+.sh-feed-status {
+  font-size: 9px; padding: 3px 8px; border-radius: 999px;
+  letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700;
+  font-family: var(--num-font);
+}
+.sh-feed-status.queued     { background: rgba(255, 255, 255, 0.06); color: var(--dim); }
+.sh-feed-status.extracting {
+  background: rgba(255, 184, 77, 0.12); color: var(--warm);
+  animation: sh-pulse-soft 1.6s ease-in-out infinite;
+}
+.sh-feed-status.graduated  { background: rgba(163, 255, 18, 0.14); color: var(--lime); }
+.sh-feed-status.failed     { background: rgba(255, 99, 99, 0.14); color: var(--red); }
+@keyframes sh-pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 
 /* ─── POT (horizontal scroll) ──────────────────────────────────────── */
 /* Pot card min-height grows row 2 — Crew card on the right auto-stretches. */
@@ -295,15 +334,18 @@ a { color: inherit; text-decoration: none; }
 .sh-horiz::-webkit-scrollbar { height: 6px; }
 .sh-horiz::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
 
+/* ─── POT CHIP — cooking station treatment ───────────────────────── */
 .sh-chip {
-  flex-shrink: 0; width: 180px;
+  flex-shrink: 0; width: 200px; min-height: 156px;
   background: #000;
   border: 1px solid var(--line);
   border-radius: 12px;
-  padding: 12px;
+  padding: 0;
   font-size: 11px;
-  transition: border-color 0.15s, transform 0.15s;
+  transition: transform 0.2s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.2s, border-color 0.2s;
   position: relative;
+  overflow: hidden;
+  display: flex; flex-direction: column;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.015);
 }
 .sh-chip::before {
@@ -312,19 +354,94 @@ a { color: inherit; text-decoration: none; }
   top: 0; left: 12px; right: 12px; height: 1px;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.10), transparent);
   pointer-events: none;
+  z-index: 2;
+}
+/* Faint warm-cooking glow at the bottom of each pot chip */
+.sh-chip::after {
+  content: "";
+  position: absolute;
+  left: -10%; right: -10%; bottom: -20px; height: 60px;
+  background: radial-gradient(ellipse at center, rgba(255, 184, 77, 0.10), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
 }
 .sh-chip:hover {
   border-color: var(--lime-dim);
-  transform: translateY(-1px);
+  transform: translateY(-2px) perspective(800px) rotateX(2deg);
+  box-shadow:
+    inset 0 0 0 1px rgba(163, 255, 18, 0.12),
+    0 10px 28px rgba(0, 0, 0, 0.5),
+    0 0 24px rgba(163, 255, 18, 0.08);
 }
-.sh-chip-stage { font-size: 9px; color: var(--lime); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
-.sh-chip-name { font-weight: 600; color: var(--ink); margin: 3px 0 0; font-size: 12px; }
+
+.sh-chip-head {
+  padding: 10px 12px 6px;
+  display: flex; justify-content: space-between; align-items: center;
+  position: relative; z-index: 1;
+}
+.sh-chip-icon {
+  width: 26px; height: 26px; border-radius: 6px;
+  background: linear-gradient(135deg, rgba(255, 184, 77, 0.18), rgba(255, 99, 99, 0.10));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  border: 1px solid rgba(255, 184, 77, 0.18);
+  flex-shrink: 0;
+}
+/* Steam puffs rising — three soft dots animated up + fade */
+.sh-chip-steam {
+  position: relative; width: 18px; height: 18px;
+  margin-left: 6px; flex-shrink: 0;
+}
+.sh-chip-steam i {
+  position: absolute;
+  width: 4px; height: 4px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.30);
+  filter: blur(1px);
+  animation: sh-steam 2.4s ease-out infinite;
+}
+.sh-chip-steam i:nth-child(1) { left: 2px;  bottom: 0; animation-delay: 0.0s; }
+.sh-chip-steam i:nth-child(2) { left: 8px;  bottom: 0; animation-delay: 0.6s; }
+.sh-chip-steam i:nth-child(3) { left: 13px; bottom: 0; animation-delay: 1.2s; }
+@keyframes sh-steam {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0.6); }
+  30%  { opacity: 0.7; }
+  100% { opacity: 0; transform: translate(-3px, -18px) scale(1.2); }
+}
+
+.sh-chip-stage {
+  font-size: 8px; color: var(--lime);
+  text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;
+  background: rgba(163, 255, 18, 0.08);
+  padding: 3px 7px; border-radius: 999px;
+  border: 1px solid rgba(163, 255, 18, 0.15);
+  position: relative; z-index: 1;
+}
+.sh-chip-name {
+  font-weight: 600; color: var(--ink);
+  font-size: 12px;
+  padding: 0 12px;
+  position: relative; z-index: 1;
+  font-family: var(--num-font);
+  letter-spacing: -0.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sh-chip-spark {
+  flex: 1; min-height: 36px;
+  margin: 6px -1px -1px;
+  position: relative; z-index: 1;
+}
+.sh-chip-spark svg { width: 100%; height: 100%; display: block; }
+.sh-chip-foot {
+  padding: 6px 12px 10px;
+  display: flex; justify-content: space-between; align-items: baseline;
+  position: relative; z-index: 1;
+}
 .sh-chip-pnl {
   color: var(--lime); font-weight: 700;
-  font-size: 16px; margin-top: 8px;
-  font-family: var(--num-font); letter-spacing: -0.01em;
+  font-size: 16px;
+  font-family: var(--num-font); letter-spacing: -0.02em;
 }
-.sh-chip-meta { color: var(--mute); font-size: 10px; margin-top: 4px; }
+.sh-chip-meta { color: var(--mute); font-size: 10px; font-family: var(--num-font); }
 
 /* Crew rows */
 .sh-crew-row {

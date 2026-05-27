@@ -91,33 +91,60 @@
       // Kill switch (live pulse, no chart)
       b.appendChild(killStat(bag.killSwitch));
 
-      // ─── Discord feed ───────────────────────────────────────────────
+      // ─── Discord feed — premium intake list ─────────────────────────
       const df = document.getElementById("sh-discord-feed");
       if (data.discordFeed.length === 0) {
         df.appendChild(el("div", { class: "sh-feed-meta" }, "Nothing fresh in the queue."));
       } else {
         for (const f of data.discordFeed) {
+          const sourceLower = String(f.source ?? "").toLowerCase();
+          const sourceClass = sourceLower.includes("youtube") ? "youtube"
+            : sourceLower.includes("discord") ? "discord"
+            : "manual";
+          const sourceIcon = sourceClass === "youtube" ? "▶"
+            : sourceClass === "discord" ? "✦"
+            : "+";
+          const statusClass = String(f.status ?? "").toLowerCase();
           df.appendChild(el("div", { class: "sh-feed-item" },
-            el("div", { class: "sh-feed-thumb" }, "📺"),
+            el("div", { class: `sh-feed-thumb ${sourceClass}` }, sourceIcon),
             el("div", {},
               el("div", { class: "sh-feed-name" }, f.name),
-              el("div", { class: "sh-feed-meta" }, `${f.source} · ${f.ageMin}m ago · ${f.status}`),
+              el("div", { class: "sh-feed-meta" }, `${f.source} · ${f.ageMin}m ago`),
             ),
+            el("div", { class: `sh-feed-status ${statusClass}` }, f.status),
           ));
         }
       }
 
-      // ─── Pot ────────────────────────────────────────────────────────
+      // ─── Pot — cooking station chips with steam + mini chart ────────
       const pot = document.getElementById("sh-pot");
       if (data.pot.length === 0) {
         pot.appendChild(el("div", { class: "sh-chip-meta" }, "Nothing testing right now."));
       } else {
         for (const s of data.pot) {
+          const chipSparkBox = el("div", { class: "sh-chip-spark" });
+          // Generate calm baseline for chip mini-chart until backend ships
+          // per-strategy sparkline data.
+          const baseValue = parseFloat(String(s.netPnl).replace(/[^\d.\-−]/g, "")) || 0;
+          const chipSpark = baselineSpark(baseValue, 10);
+          chipSparkBox.appendChild(SH.sparkline(chipSpark, { width: 200, height: 36 }));
+
           pot.appendChild(el("a", { class: "sh-chip", href: `/slumhouse/recipe.html?id=${encodeURIComponent(s.id)}` },
-            el("div", { class: "sh-chip-stage" }, s.stage),
+            el("div", { class: "sh-chip-head" },
+              el("div", { style: "display:flex;align-items:center" },
+                el("div", { class: "sh-chip-icon" }, "🍳"),
+                el("div", { class: "sh-chip-steam" },
+                  el("i"), el("i"), el("i"),
+                ),
+              ),
+              el("div", { class: "sh-chip-stage" }, s.stage),
+            ),
             el("div", { class: "sh-chip-name" }, s.name),
-            el("div", { class: "sh-chip-pnl" }, s.netPnl),
-            el("div", { class: "sh-chip-meta" }, `${s.tradesCount} plays`),
+            chipSparkBox,
+            el("div", { class: "sh-chip-foot" },
+              el("div", { class: "sh-chip-pnl" }, s.netPnl),
+              el("div", { class: "sh-chip-meta" }, `${s.tradesCount} plays`),
+            ),
           ));
         }
       }
@@ -188,12 +215,14 @@
     // Generates a 12-point subtle placeholder series. Used when the backend
     // returns no historical data yet — keeps the chart slot visually filled
     // with a calm baseline that doesn't pretend to show real activity.
-    function baselineSpark(displayValue) {
-      const v = parseFloat(String(displayValue).replace(/[^\d.\-−]/g, "")) || 0;
+    function baselineSpark(displayValue, len) {
+      const N = len || 12;
+      const v = (typeof displayValue === "number")
+        ? displayValue
+        : parseFloat(String(displayValue).replace(/[^\d.\-−]/g, "")) || 0;
       const out = [];
-      const drift = Math.abs(v) * 0.04 + 1; // small noise band
-      for (let i = 0; i < 12; i++) {
-        // Sine-wave with tiny noise so the chart looks alive but neutral.
+      const drift = Math.abs(v) * 0.04 + 1;
+      for (let i = 0; i < N - 1; i++) {
         out.push(v * 0.6 + Math.sin(i * 0.7) * drift + (Math.random() - 0.5) * drift * 0.4);
       }
       out.push(v); // last point lands on the current value
