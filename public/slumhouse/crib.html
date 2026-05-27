@@ -171,14 +171,15 @@
       ));
       node.appendChild(el("div", { class: "sh-stat-val " + (opts.valueClass || "") }, opts.value));
 
-      // Spark
+      node.appendChild(el("div", { class: "sh-stat-sub" }, opts.sub || ""));
+
+      // Chart IS the card — full-bleed sparkline takes the bottom 60%
       const sparkBox = el("div", { class: "sh-stat-spark" });
       if (opts.spark && opts.spark.length >= 2) {
-        sparkBox.appendChild(sparkline(opts.spark, { width: 200, height: 28 }));
+        sparkBox.appendChild(sparkline(opts.spark, { width: 300, height: 72 }));
       }
       node.appendChild(sparkBox);
 
-      node.appendChild(el("div", { class: "sh-stat-sub" }, opts.sub || ""));
       return node;
     }
 
@@ -192,8 +193,8 @@
       const dot = el("span", { class: "sh-kill-dot " + (state === "green" ? "" : "red") });
       const valWrap = el("div", { class: "sh-stat-val " + (state === "green" ? "green" : "red") }, dot, state === "green" ? "Green" : "Red");
       node.appendChild(valWrap);
-      node.appendChild(el("div", { class: "sh-stat-spark" })); // spacer for alignment
       node.appendChild(el("div", { class: "sh-stat-sub" }, state === "green" ? "bot running" : "bot halted"));
+      node.appendChild(el("div", { class: "sh-stat-spark" })); // flex spacer holds full-bleed bottom area
       return node;
     }
   </script>
