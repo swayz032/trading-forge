@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Slumhouse · The Kitchen</title>
+  <link rel="stylesheet" href="/slumhouse/slumhouse.css">
+  <style>
+    .kv-hero { background:#080808; border:1px solid var(--line); border-radius:16px; overflow:hidden; margin-bottom:24px; display:grid; grid-template-columns:360px 1fr; min-height:230px; }
+    .kv-hero-art { background-image:url('/slumhouse/images/slumdawg-kitchen.png'); background-size:cover; background-position:center; }
+    .kv-hero-body { padding:26px 32px; display:flex; flex-direction:column; justify-content:center; }
+    .kv-hero-eyebrow { font-size:10px; color:var(--lime); text-transform:uppercase; letter-spacing:0.14em; margin-bottom:10px; }
+    .kv-hero-h { font-size:22px; font-weight:700; color:var(--ink); line-height:1.3; letter-spacing:-0.01em; }
+    .kv-hero-p { font-size:13px; color:var(--dim); margin-top:10px; line-height:1.6; }
+    .kv-section-label { font-size:11px; color:var(--mute); text-transform:uppercase; letter-spacing:0.12em; margin-bottom:14px; }
+    .kv-pipeline { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:28px; }
+    .kv-stage { background:#080808; border:1px solid var(--line); border-radius:14px; padding:18px 16px; min-height:148px; display:flex; flex-direction:column; justify-content:space-between; }
+    .kv-stage-name { font-size:13px; font-weight:600; color:var(--ink); }
+    .kv-stage-real { font-size:10px; color:var(--mute); text-transform:uppercase; letter-spacing:0.06em; margin-top:3px; }
+    .kv-stage-num { font-size:30px; font-weight:700; color:var(--ink); letter-spacing:-0.02em; }
+    .kv-stage-num-lbl { font-size:10px; color:var(--mute); margin-top:-2px; }
+    .kv-menu { background:#080808; border:1px solid var(--line); border-radius:18px; padding:32px 38px; }
+    .kv-menu-mark { font-size:11px; color:var(--lime); letter-spacing:0.28em; text-transform:uppercase; text-align:center; }
+    .kv-menu-h { text-align:center; font-size:26px; font-weight:700; color:var(--ink); margin:8px 0 4px; }
+    .kv-menu-cap { text-align:center; font-size:12px; color:var(--mute); margin-bottom:28px; font-style:italic; }
+    .kv-dish { display:grid; grid-template-columns:38px 1fr 130px; gap:24px; align-items:center; padding:22px 0; border-top:1px dashed var(--line); }
+    .kv-dish:first-of-type { border-top:none; padding-top:6px; }
+    .kv-dish-num-c { font-size:18px; color:var(--lime); font-weight:700; text-align:center; }
+    .kv-dish-name { font-size:17px; font-weight:600; color:var(--ink); letter-spacing:-0.01em; }
+    .kv-dish-note { font-size:11px; color:var(--warm); margin-top:8px; font-style:italic; }
+    .kv-dish-stat-big { font-size:22px; font-weight:700; color:var(--lime); letter-spacing:-0.02em; text-align:right; }
+    .kv-dish-stat-cap { font-size:10px; color:var(--mute); text-transform:uppercase; letter-spacing:0.08em; text-align:right; margin-top:2px; }
+    .kv-dish-stat-sub { font-size:11px; color:var(--dim); margin-top:8px; text-align:right; }
+  </style>
+</head>
+<body>
+  <nav class="sh-nav">
+    <a class="sh-pill" href="/slumhouse/crib.html">The Crib</a>
+    <a class="sh-pill active" href="/slumhouse/kitchen.html">The Kitchen</a>
+    <a class="sh-pill" href="/slumhouse/recipe.html">The Recipe</a>
+  </nav>
+
+  <div class="sh-page">
+    <h1 class="sh-title">The Kitchen</h1>
+    <p class="sh-sub">Where every play gets cooked before it touches your money.</p>
+
+    <div class="kv-hero">
+      <div class="kv-hero-art"></div>
+      <div class="kv-hero-body">
+        <div class="kv-hero-eyebrow">In the pot right now</div>
+        <div id="kv-hero-h" class="kv-hero-h">Loading...</div>
+        <p class="kv-hero-p">Every video, every idea, every dropped link gets boiled down, tested, and judged. Only the ones that survive all 6 stages eat real money. The rest? Tossed.</p>
+      </div>
+    </div>
+
+    <div class="kv-section-label">The pipeline · click a station</div>
+    <div id="kv-pipeline" class="kv-pipeline"></div>
+
+    <div class="kv-menu">
+      <div class="kv-menu-mark">— TODAY'S MENU —</div>
+      <div class="kv-menu-h">On the Menu</div>
+      <div class="kv-menu-cap">Plays that survived the kitchen · running for real money right now</div>
+      <div id="kv-menu-rows"></div>
+    </div>
+  </div>
+
+  <script src="/slumhouse/slumhouse.js"></script>
+  <script>
+    (async () => {
+      const k = await SH.fetchJSON("/slumhouse/api/kitchen");
+      const m = await SH.fetchJSON("/slumhouse/api/kitchen/menu");
+      if (!k || !m) return;
+
+      const total = k.totalCooking + k.totalOnMenu;
+      document.getElementById("kv-hero-h").textContent =
+        `Slumdawg is cooking ${total} plays. ${k.totalOnMenu} made it to the menu.`;
+
+      const pipe = document.getElementById("kv-pipeline");
+      for (const s of k.stages) {
+        pipe.appendChild(SH.el("div", { class: "kv-stage" },
+          SH.el("div", {},
+            SH.el("div", { class: "kv-stage-name" }, s.name),
+            SH.el("div", { class: "kv-stage-real" }, s.subtitle)
+          ),
+          SH.el("div", {},
+            SH.el("div", { class: "kv-stage-num" }, String(s.count)),
+            SH.el("div", { class: "kv-stage-num-lbl" }, s.countLabel)
+          )
+        ));
+      }
+
+      const rows = document.getElementById("kv-menu-rows");
+      if (m.dishes.length === 0) {
+        rows.appendChild(SH.el("p", { class: "kv-dish-note" }, "Nothing on the menu yet. Kitchen's still cooking."));
+      } else {
+        m.dishes.forEach((d, i) => {
+          rows.appendChild(SH.el("a", { class: "kv-dish", href: `/slumhouse/recipe.html?id=${encodeURIComponent(d.id)}` },
+            SH.el("div", { class: "kv-dish-num-c" }, String(i + 1).padStart(2, "0")),
+            SH.el("div", {},
+              SH.el("div", { class: "kv-dish-name" }, d.dishName),
+              d.slumdawgNote ? SH.el("div", { class: "kv-dish-note" }, `Slumdawg's note: "${d.slumdawgNote}"`) : null
+            ),
+            SH.el("div", {},
+              SH.el("div", { class: "kv-dish-stat-big" }, d.monthMade),
+              SH.el("div", { class: "kv-dish-stat-cap" }, "made this month"),
+              SH.el("div", { class: "kv-dish-stat-sub" },
+                d.plays > 0 ? `${d.plays} plays · ~$${Math.round(d.avgPerPlay)} each` : "no plays yet"
+              )
+            )
+          ));
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
