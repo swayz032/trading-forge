@@ -310,7 +310,7 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
       }
 
       // 3. Run through scout-extract (same pipeline as autonomous cron uses)
-      let extractResult: { extracted?: boolean; ideas?: Array<Record<string, unknown>>; reason?: string };
+      let extractResult: { extracted?: boolean; ideas?: Array<Record<string, unknown>>; reason?: string; gemma_saw?: string[]; gemma_saw_count?: number };
       try {
         const resp = await fetch(`${BACKEND_URL}/api/agent/scout-extract`, {
           method: "POST",
@@ -333,7 +333,19 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
       }
 
       if (!extractResult.extracted || !extractResult.ideas?.length) {
-        results.push({ url, video_id: videoId, title, status: "not_extracted", reason: extractResult.reason });
+        // Wave 26 Pass K Phase 7 (2026-05-27) — forward `gemma_saw` so the Discord
+        // bot can render "Slumdawg almost had it" instead of generic "mostly talk"
+        // when gemma extracted a strategy name but ideas[] ended up empty.
+        const extra = (extractResult as { gemma_saw?: string[]; gemma_saw_count?: number });
+        results.push({
+          url,
+          video_id: videoId,
+          title,
+          status: "not_extracted",
+          reason: extractResult.reason,
+          ...(extra.gemma_saw ? { gemma_saw: extra.gemma_saw } : {}),
+          ...(extra.gemma_saw_count != null ? { gemma_saw_count: extra.gemma_saw_count } : {}),
+        });
         continue;
       }
 

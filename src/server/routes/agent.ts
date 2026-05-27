@@ -638,6 +638,39 @@ function remapMarket(raw: string): RemapResult | null {
   return { market, sizeMultiplier };
 }
 
+// Wave 26 Pass K Phase 7 (2026-05-27) — Cross-market mechanic fallback.
+// When the speaker demos on a non-MES/MNQ/MCL symbol (EURUSD, GBPUSD, AAPL,
+// BTC, etc.) but the strategy mechanics PORT (per feedback_extractor_any_strategy_
+// no_catalog_gate + mechanic-portability.ts), default the symbol to MES so the
+// strategy survives extraction. The 3-symbol fan-out in admin.ts will then graduate
+// it as MES + MNQ + MCL variants. Returning null here means "drop the strategy
+// entirely" which contradicts the user's explicit cross-market rule.
+//
+// Patterns matched here are KNOWN demo symbols speakers commonly use that don't
+// map to micro futures: forex (EURUSD/GBPUSD/USDJPY etc.), single-name stocks
+// (AAPL/TSLA/MSFT/etc.), crypto (BTC/ETH/SOL), broad-market ETFs (SPY/QQQ),
+// and major-index futures (ES/NQ/CL — these route to MES/MNQ/MCL via existing
+// MARKET_REMAP). When raw matches the cross-market list AND the strategy's
+// mechanic is portable (caller checks mechanicPortable upstream), default to MES.
+const CROSS_MARKET_DEMO_SYMBOLS = new Set([
+  // Major forex pairs
+  "EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCHF", "USDCAD", "NZDUSD", "EURJPY",
+  "GBPJPY", "EURGBP", "AUDJPY", "EURAUD", "EURCHF", "XAUUSD",
+  // Major single-name stocks
+  "AAPL", "MSFT", "GOOGL", "GOOG", "TSLA", "NVDA", "AMZN", "META", "AMD", "NFLX",
+  "GME", "AMC", "PLTR", "COIN",
+  // Major crypto
+  "BTC", "BTCUSD", "BTCUSDT", "XBTUSD", "ETH", "ETHUSD", "ETHUSDT", "SOL", "SOLUSD",
+  "BNB", "ADA", "DOGE", "MATIC",
+  // Broad-market ETFs (SPY/QQQ commonly used as index-futures-portable demos)
+  "SPY", "QQQ", "IWM", "DIA", "GLD", "SLV", "USO", "TLT",
+]);
+
+function isCrossMarketDemoSymbol(raw: string): boolean {
+  const k = String(raw ?? "").toUpperCase().trim();
+  return CROSS_MARKET_DEMO_SYMBOLS.has(k);
+}
+
 // Pass 21 — CLAUDE.md §13 hard block: Trading Forge trades MES/MNQ/MCL micro
 // futures EXCLUSIVELY. Options strategies (straddles, strangles, iron condors,
 // calendar spreads, etc.) violate the framework even when discovered alongside
@@ -1038,8 +1071,47 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
     for (const sRaw of strategiesIn) {
       const s = sRaw as Record<string, unknown>;
       const rawSymbol = typeof s.symbol === "string" ? s.symbol : "";
-      const remapped = remapMarket(rawSymbol);
-      if (!remapped) continue; // unmapped symbol (e.g. forex, single-stock options) — drop
+      let remapped = remapMarket(rawSymbol);
+
+      // Wave 26 Pass K Phase 7 (2026-05-27) — Cross-market demo fallback.
+      // Per feedback_extractor_any_strategy_no_catalog_gate: a strategy
+      // demonstrated on EURUSD / AAPL / BTC / SPY teaches mechanics that
+      // PORT to MES/MNQ/MCL. Previously these dropped silently at this filter
+      // (causing "no strategy content" Discord rejects on real strategies).
+      // When the raw symbol is a known cross-market demo symbol AND the
+      // mechanic-portability classifier upstream said portable=true (we
+      // re-check here via the same heuristic — the formal check fired earlier
+      // and would have rejected the WHOLE response if non-portable), default
+      // to MES with sizeMultiplier=1 (no scaling — the speaker's contract
+      // count is irrelevant for non-futures demos; graduator's risk-derived
+      // pyramid recomputes from MES base anyway).
+      if (!remapped && rawSymbol && isCrossMarketDemoSymbol(rawSymbol) && portability.portable) {
+        remapped = { market: "MES", sizeMultiplier: 1 };
+        // Audit so operators can see when fallback fires
+        insertAuditRow({
+          action: "scout.cross_market_demo_remap",
+          entityType: "scout_extract",
+          entityId: null,
+          status: "info",
+          input: { source_url: sourceUrl, raw_symbol: rawSymbol },
+          result: { defaulted_to: "MES", reason: "cross_market_mechanic_portable" },
+        }).catch(() => {});
+      } else if (!remapped && !rawSymbol && portability.portable) {
+        // Gemma extracted a strategy with NO symbol field at all (common when
+        // the speaker never names a market or uses generic "the chart" language).
+        // If the mechanic ports, default to MES same as the cross-market case.
+        remapped = { market: "MES", sizeMultiplier: 1 };
+        insertAuditRow({
+          action: "scout.no_symbol_defaulted_to_mes",
+          entityType: "scout_extract",
+          entityId: null,
+          status: "info",
+          input: { source_url: sourceUrl },
+          result: { defaulted_to: "MES", reason: "no_symbol_emitted_but_mechanic_portable" },
+        }).catch(() => {});
+      }
+
+      if (!remapped) continue; // truly unmapped + non-portable — drop
 
       const { market, sizeMultiplier } = remapped;
 
@@ -1343,6 +1415,20 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       });
     }
 
+    // ─── Wave 26 Pass K Phase 7 (2026-05-27) — Under-extraction detection ─────
+    // Before mechanic-portability fires, remember how many raw strategies gemma
+    // emitted BEFORE the symbol-remap + schema filter dropped them. If gemma saw
+    // a strategy but ideas[] ended up empty, the user-facing embed should say
+    // "Slumdawg almost had it — couldn't pull all the rules" instead of the
+    // generic "mostly talk" reject. The bot reads `gemma_saw` to branch.
+    const rawStrategyCount = Array.isArray(strategiesIn) ? (strategiesIn as unknown[]).length : 0;
+    const rawStrategyNames = Array.isArray(strategiesIn)
+      ? (strategiesIn as Array<Record<string, unknown>>)
+          .map((s) => (typeof s?.name === "string" ? s.name : (typeof s?.concept_name === "string" ? s.concept_name : null)))
+          .filter((n): n is string => n != null && n.length > 0)
+          .slice(0, 3)
+      : [];
+
     // ─── Wave 26 Pass J Phase 2 (2026-05-26) — Mechanic Portability Classifier ──
     // Cross-market mechanics are the default. Most strategies (EMA, RSI, supply/demand,
     // ICT/SMC, ORB, VWAP fades, etc.) port from forex/stock/crypto demos to MES/MNQ/MCL
@@ -1368,9 +1454,24 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
 
     if (ideas.length === 0) {
       // Disambiguate the empty-ideas case using mechanic portability:
-      //   - portable: Gemma actually found no concrete rules → no_strategy_content
+      //   - portable + gemma saw something: under-extraction → extracted_under_filled
+      //   - portable + gemma saw nothing:   no_strategy_content (mostly talk)
       //   - not portable: strategy mechanics don't port to intraday futures → reject_class
       if (portability.portable) {
+        if (rawStrategyCount > 0) {
+          // Gemma emitted a strategy but the symbol-remap + schema filter dropped it
+          // (most common cause: under-extraction — strategy name present but
+          // targets/entry_sequence/stop_loss missing or symbol field empty).
+          res.status(200).json({
+            extracted: false,
+            reason: "extracted_under_filled",
+            ideas: [],
+            portable: true,
+            gemma_saw: rawStrategyNames,
+            gemma_saw_count: rawStrategyCount,
+          });
+          return;
+        }
         res.status(200).json({
           extracted: false,
           reason: "no_strategy_content",

@@ -165,8 +165,11 @@ function humanizeLifecycle(s: string): string {
 type IngestResult = {
   baby_jargon_summary?: string;
   error?: string;
-  results?: Array<{ status?: string; title?: string; idea_count?: number; reason?: string; video_id?: string; ideas?: Array<{ idea_name?: string; concept_name?: string; preferred_regime?: string; entry_indicator?: string; confluence_factors?: string[] }> }>;
-  ingest_result?: { status?: string; title?: string; idea_count?: number; reason?: string; video_id?: string; ideas?: Array<{ idea_name?: string; concept_name?: string; preferred_regime?: string; entry_indicator?: string; confluence_factors?: string[] }> };
+  // Wave 26 Pass K Phase 7 (2026-05-27) — gemma_saw + gemma_saw_count fields
+  // carry partial-extraction info so the bot can render the "almost had it"
+  // embed when gemma extracted a strategy name but ideas[] ended up empty.
+  results?: Array<{ status?: string; title?: string; idea_count?: number; reason?: string; video_id?: string; gemma_saw?: string[]; gemma_saw_count?: number; ideas?: Array<{ idea_name?: string; concept_name?: string; preferred_regime?: string; entry_indicator?: string; confluence_factors?: string[] }> }>;
+  ingest_result?: { status?: string; title?: string; idea_count?: number; reason?: string; video_id?: string; gemma_saw?: string[]; gemma_saw_count?: number; ideas?: Array<{ idea_name?: string; concept_name?: string; preferred_regime?: string; entry_indicator?: string; confluence_factors?: string[] }> };
   drain?: { scanned: number; drained: number; failed: number } | null;
   graduated_strategies?: Array<{
     id: string;
@@ -295,6 +298,54 @@ function buildSlumdawgVerdictEmbed(result: IngestResult, sourceUrl: string): Emb
         inline: false,
       });
     }
+    return e;
+  }
+
+  // ─── Wave 26 Pass K Phase 7 (2026-05-27) — Under-extracted (gemma almost had it) ──
+  // Different from "no strategy content" — gemma DID see a strategy in the
+  // transcript and even named it, but the symbol-remap or schema filter
+  // dropped it (most common cause: forex/stock demo symbol, or under-filled
+  // entry_sequence/targets/stop_loss). User-facing message should be honest:
+  // "almost had it" not "mostly talk".
+  if (r.reason === "extracted_under_filled") {
+    const rExtra = r as { gemma_saw?: string[]; gemma_saw_count?: number };
+    const seenList = (rExtra.gemma_saw ?? []).slice(0, 2).join(" / ") || "a setup";
+    e.setColor(SLUMDAWG_COLOR.hype)
+      .setTitle("🎯 Slumdawg almost had it")
+      .setDescription(
+        `Yo fam, Slumdawg **did** see a strategy in this video (looked like **${seenList}**) — but he couldn't pull all the details out of it.\n\n` +
+        `Usually means the speaker was talking too fast, skipping the specifics, or jumping around between charts.\n\n` +
+        `Try one of these:\n` +
+        `• Find another video from the same trader where they walk through it slower\n` +
+        `• Look for a video titled "explained" or "step by step" from the same channel\n` +
+        `• Drop the link in the operator chat and we'll re-run it manually`
+      );
+    const vh = videoHeaderField(r.title);
+    if (vh) e.addFields(vh);
+    return e;
+  }
+
+  // ─── Status-based: transcript_unavailable / transcript_too_short ────────
+  // Wave 26 Pass K Phase 7 fix: status field carries this, not reason. Operator-
+  // ingest emits {status: "transcript_unavailable", error: "..."} with NO reason
+  // field — the old regex check on r.reason was missing this entirely.
+  if (r.status === "transcript_unavailable") {
+    e.setColor(SLUMDAWG_COLOR.swing)
+      .setTitle("📭 Can't read that video")
+      .setDescription(
+        "Couldn't pull the captions on that one. Might be private, age-restricted, or the creator turned captions off.\n\n" +
+        "Try a different video — one where YouTube shows a transcript when you click the **\"...\"** menu under the video."
+      );
+    const vh = videoHeaderField(r.title);
+    if (vh) e.addFields(vh);
+    return e;
+  }
+  if (r.status === "transcript_too_short") {
+    e.setColor(SLUMDAWG_COLOR.swing)
+      .setTitle("📭 Video's too short")
+      .setDescription("That video's too short to pull real trading rules out of — probably a TikTok-style clip.\nSend me a longer one where the trader actually walks through the strategy.");
+    const vh = videoHeaderField(r.title);
+    if (vh) e.addFields(vh);
     return e;
   }
 
