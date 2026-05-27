@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Slumhouse · The Recipe</title>
+  <link rel="stylesheet" href="/slumhouse/slumhouse.css">
+  <style>
+    .r-hero { background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.85) 100%), url('/slumhouse/images/slumdawg-command.png'); background-size: cover; background-position: center 30%; border:1px solid var(--line); border-radius:16px; padding:28px 32px; margin-bottom:14px; display:grid; grid-template-columns:1fr 220px; gap:22px; align-items:center; min-height:200px; }
+    .r-hero-name { font-size:28px; font-weight:800; color:var(--ink); letter-spacing:-0.02em; text-shadow:0 2px 16px rgba(0,0,0,0.7); }
+    .r-hero-badge { font-size:10px; padding:4px 10px; border-radius:999px; background:rgba(163,255,18,0.18); color:var(--lime); text-transform:uppercase; letter-spacing:0.12em; font-weight:700; border:1px solid rgba(163,255,18,0.4); margin-left:12px; }
+    .r-hero-caveat { font-size:11px; color:#bbb; margin-top:14px; text-shadow:0 2px 12px rgba(0,0,0,0.8); }
+    .r-hero-caveat b { color: var(--lime); }
+    .r-hero-score { display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
+    .r-ring { width:96px; height:96px; border-radius:50%; display:flex; align-items:center; justify-content:center; position:relative; box-shadow:0 0 30px rgba(163,255,18,0.25); }
+    .r-ring::before { content:""; position:absolute; inset:6px; border-radius:50%; background:rgba(0,0,0,0.85); }
+    .r-ring span { position:relative; font-size:26px; font-weight:800; color:var(--lime); }
+    .r-ring-lbl { font-size:10px; color:#bbb; text-transform:uppercase; letter-spacing:0.1em; text-shadow:0 2px 12px rgba(0,0,0,0.8); }
+    .r-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+    .r-panel { background:#080808; border:1px solid var(--line); border-radius:14px; padding:22px 24px; }
+    .r-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .r-h { font-size:15px; font-weight:700; color:var(--ink); display:flex; align-items:center; gap:10px; }
+    .src { font-size:9px; padding:3px 8px; border-radius:999px; letter-spacing:0.08em; text-transform:uppercase; font-weight:700; }
+    .src.replay { background:rgba(96,165,250,0.14); color:var(--blue); }
+    .src.whatif { background:rgba(255,184,77,0.14); color:var(--warm); }
+    .r-cap { font-size:11px; color:var(--dim); margin-bottom:18px; line-height:1.5; }
+    .r-cap b { color:var(--ink); }
+    .r-bt-stats { display:grid; grid-template-columns:repeat(2,1fr); gap:16px 24px; margin-bottom:18px; }
+    .r-bt-big { font-size:24px; font-weight:700; letter-spacing:-0.02em; }
+    .r-bt-big.green { color:var(--lime); }
+    .r-bt-big.red { color:var(--red); }
+    .r-bt-cap { font-size:10px; color:var(--mute); text-transform:uppercase; letter-spacing:0.08em; margin-top:2px; }
+    .r-mc-row { display:flex; justify-content:space-between; padding:11px 0; border-bottom:1px solid var(--line); font-size:13px; }
+    .r-mc-row:last-child { border:none; }
+    .r-mc-val.green { color:var(--lime); font-weight:600; }
+    .r-mc-val.red { color:var(--red); font-weight:600; }
+    .r-mc-bar { margin-top:14px; height:6px; background:#1a1a1a; border-radius:3px; overflow:hidden; }
+    .r-mc-fill { height:100%; background:linear-gradient(90deg, var(--lime), #34d399); border-radius:3px; }
+    .r-bot { display:grid; grid-template-columns:1fr 340px; gap:12px; }
+    .r-cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+    .r-cal-day { aspect-ratio:1/1; background:#0d0d0d; border-radius:4px; padding:4px 5px; font-size:9px; color:var(--mute); display:flex; flex-direction:column; justify-content:space-between; }
+    .r-cal-day.green { background:rgba(163,255,18,0.22); color:var(--ink); }
+    .r-cal-day.red { background:rgba(255,99,99,0.18); color:#ffaaaa; }
+    .r-feed-row { display:grid; grid-template-columns:22px 1fr; gap:10px; padding:11px 0; border-bottom:1px solid var(--line); }
+    .r-feed-row:last-child { border:none; }
+    .r-feed-light { width:10px; height:10px; border-radius:50%; margin-top:5px; }
+    .r-feed-light.pass { background:var(--lime); box-shadow:0 0 10px var(--lime); }
+    .r-feed-light.warn { background:var(--warm); }
+    .r-feed-light.fail { background:var(--red); }
+    .r-feed-name { font-size:12px; font-weight:700; color:var(--ink); }
+    .r-feed-desc { font-size:11px; color:var(--dim); margin-top:2px; line-height:1.45; }
+  </style>
+</head>
+<body>
+  <nav class="sh-nav">
+    <a class="sh-pill" href="/slumhouse/crib.html">The Crib</a>
+    <a class="sh-pill" href="/slumhouse/kitchen.html">The Kitchen</a>
+    <a class="sh-pill active" href="/slumhouse/recipe.html">The Recipe</a>
+  </nav>
+
+  <div class="sh-page">
+    <a class="sh-feed-meta" href="/slumhouse/kitchen.html" style="color:var(--lime);font-size:12px;display:block;margin-bottom:10px">← Back to The Kitchen</a>
+    <div id="r-app">Loading…</div>
+  </div>
+
+  <script src="/slumhouse/slumhouse.js"></script>
+  <script>
+    (async () => {
+      const id = new URLSearchParams(location.search).get("id");
+      if (!id) {
+        document.getElementById("r-app").innerHTML =
+          '<p style="color:#888;padding:40px 0">No strategy picked yet — go to <a href="/slumhouse/kitchen.html" style="color:var(--lime)">The Kitchen</a> and tap a dish.</p>';
+        return;
+      }
+      const r = await SH.fetchJSON(`/slumhouse/api/recipe/${encodeURIComponent(id)}`);
+      if (!r) return;
+      render(r);
+    })();
+
+    function render(r) {
+      const { el } = SH;
+      const app = document.getElementById("r-app");
+      app.innerHTML = "";
+
+      // HERO
+      const ringStyle = `background: conic-gradient(var(--lime) 0% ${r.slumdawgScore}%, rgba(255,255,255,0.1) ${r.slumdawgScore}% 100%);`;
+      app.appendChild(el("div", { class: "r-hero" },
+        el("div", {},
+          el("div", { class: "r-hero-name" },
+            r.identity.name,
+            el("span", { class: "r-hero-badge" }, "● " + r.identity.stationStreet),
+          ),
+          el("div", { class: "r-hero-caveat" },
+            "Recipe stage — ",
+            el("b", {}, "none of this is live money"),
+            ". Numbers below are from backtest replay and Monte Carlo simulation."
+          ),
+        ),
+        el("div", { class: "r-hero-score" },
+          el("div", { class: "r-ring", style: ringStyle }, el("span", {}, String(r.slumdawgScore))),
+          el("div", { class: "r-ring-lbl" }, "Slumdawg Score"),
+        ),
+      ));
+
+      // 2-col: Backtest + Monte Carlo
+      const grid = el("div", { class: "r-grid" });
+      grid.appendChild(renderBacktest(r));
+      grid.appendChild(renderMC(r));
+      app.appendChild(grid);
+
+      // Bottom: Calendar + Other Tests
+      const bot = el("div", { class: "r-bot" });
+      bot.appendChild(renderCalendar(r));
+      bot.appendChild(renderFeed(r));
+      app.appendChild(bot);
+    }
+
+    function renderBacktest(r) {
+      const { el } = SH;
+      return el("div", { class: "r-panel" },
+        el("div", { class: "r-head" },
+          el("div", { class: "r-h" }, "Backtest", el("span", { class: "src replay" }, "📼 Replay")),
+        ),
+        el("div", { class: "r-cap" },
+          "If the bot had been running on the ",
+          el("b", {}, "last 12 months"),
+          " of real market data, here's what would've happened. None of it actually did.",
+        ),
+        el("div", { class: "r-bt-stats" },
+          kpi("Total made", r.backtest.totalMade || "$0", "green", `across ${r.backtest.tradesCount} plays`),
+          kpi("Per play", r.backtest.perPlay || "$0", null, "average win-or-lose"),
+          kpi("Worst day", r.backtest.worstDay || "$0", "red", "single rough session"),
+          kpi("Winning days", String(r.backtest.winningDays || 0), null, "of trading days"),
+        ),
+      );
+    }
+
+    function renderMC(r) {
+      const { el } = SH;
+      const mc = r.monteCarlo || {};
+      return el("div", { class: "r-panel" },
+        el("div", { class: "r-head" },
+          el("div", { class: "r-h" }, "Monte Carlo", el("span", { class: "src whatif" }, "🧪 What-if")),
+        ),
+        el("div", { class: "r-cap" },
+          "We ran ",
+          el("b", {}, "1,000 fake years"),
+          " using the bot's playstyle. None of these actually happened — it's a stress test for what could happen.",
+        ),
+        mcRow("Chance the account blows up this year", mc.blowUpOdds || "—", "green"),
+        mcRow("Bad year — money lost", mc.worstYear || "—", "red"),
+        mcRow("Good year — money made", mc.bestYear || "—", "green"),
+        mcRow("Most likely year", mc.medianYear || "—", "green"),
+        mcRow("Verdict", mc.verdictGreen ? "Survives ✓" : "Risky", mc.verdictGreen ? "green" : "red"),
+        el("div", { class: "r-mc-bar" }, el("div", { class: "r-mc-fill", style: `width:${mc.survivalScore || 0}%` })),
+      );
+    }
+
+    function renderCalendar(r) {
+      const { el } = SH;
+      const panel = el("div", { class: "r-panel" },
+        el("div", { class: "r-head" },
+          el("div", { class: "r-h" }, "Backtest Calendar", el("span", { class: "src replay" }, "📼 Replay")),
+        ),
+        el("div", { class: "r-cap" },
+          "Day-by-day P&L from the backtest. Green = profitable, red = loss. ",
+          el("b", {}, "None of these are real trades.")
+        ),
+      );
+      const grid = el("div", { class: "r-cal-grid" });
+      const last30 = (r.calendar || []).slice(-30);
+      for (const d of last30) {
+        const cls = d.pnl > 0 ? "green" : d.pnl < 0 ? "red" : "";
+        grid.appendChild(el("div", { class: "r-cal-day " + cls },
+          el("div", {}, d.date ? d.date.slice(-2) : ""),
+          el("div", {}, d.pnl !== 0 ? (d.pnl > 0 ? "+" : "−") + "$" + Math.abs(Math.round(d.pnl)) : ""),
+        ));
+      }
+      if (last30.length === 0) {
+        grid.appendChild(el("p", { class: "r-cap" }, "No backtest calendar yet."));
+      }
+      panel.appendChild(grid);
+      return panel;
+    }
+
+    function renderFeed(r) {
+      const { el } = SH;
+      const panel = el("div", { class: "r-panel" },
+        el("div", { class: "r-h" }, "Other Tests"),
+        el("div", { class: "r-cap" }, "Every other system this play had to pass. Green = passed, amber = warning, red = failed."),
+      );
+      for (const t of (r.otherTests || [])) {
+        panel.appendChild(el("div", { class: "r-feed-row" },
+          el("div", { class: "r-feed-light " + t.status }),
+          el("div", {},
+            el("div", { class: "r-feed-name" }, t.name),
+            el("div", { class: "r-feed-desc" }, t.sentence),
+          ),
+        ));
+      }
+      return panel;
+    }
+
+    function kpi(cap, big, color, sub) {
+      return SH.el("div", {},
+        SH.el("div", { class: "r-bt-big " + (color || "") }, big),
+        SH.el("div", { class: "r-bt-cap" }, cap),
+        SH.el("div", { class: "r-bt-cap", style: "color:var(--dim);text-transform:none" }, sub),
+      );
+    }
+
+    function mcRow(label, val, color) {
+      return SH.el("div", { class: "r-mc-row" },
+        SH.el("div", { style: "color:var(--dim)" }, label),
+        SH.el("div", { class: "r-mc-val " + (color || "") }, val),
+      );
+    }
+  </script>
+</body>
+</html>
