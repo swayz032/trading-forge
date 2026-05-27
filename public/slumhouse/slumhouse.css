@@ -444,6 +444,92 @@ a { color: inherit; text-decoration: none; }
 }
 .sh-chip-meta { color: var(--mute); font-size: 10px; font-family: var(--num-font); }
 
+/* ─── 3D KILL SWITCH toggle visual ──────────────────────────────────
+   A pill-shaped toggle rendered in pure CSS. The track is a dark sunken
+   capsule (inset shadow = depth). The knob is a raised gradient sphere
+   (outer + inner shadow = 3D lift). Sliding by 30px between on/off.
+   When LIVE, the knob radiates a lime halo; when HALT, it sits red. */
+.sh-killswitch-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sh-killswitch {
+  position: relative;
+  transform: perspective(360px) rotateX(8deg);
+  transform-origin: center 70%;
+}
+.sh-killswitch-track {
+  position: relative;
+  width: 84px; height: 36px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #050505, #1a1a1a);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.9),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+    0 1px 0 rgba(255, 255, 255, 0.03);
+  border: 1px solid #0a0a0a;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.sh-killswitch-knob {
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #f0ffd1, #a3ff12 55%, #6dd900 100%);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.7),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.25),
+    inset 0 2px 2px rgba(255, 255, 255, 0.35),
+    0 0 16px rgba(163, 255, 18, 0.55),
+    0 0 32px rgba(163, 255, 18, 0.25);
+  transition: left 0.32s cubic-bezier(0.5, 1.6, 0.5, 1), background 0.3s, box-shadow 0.3s;
+  animation: sh-kill-glow 2.4s ease-in-out infinite;
+}
+.sh-killswitch.on .sh-killswitch-track {
+  background: linear-gradient(180deg, #1a2a05, #0a1500);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.9),
+    inset 0 -1px 0 rgba(163, 255, 18, 0.08),
+    inset 0 0 12px rgba(163, 255, 18, 0.18),
+    0 0 18px rgba(163, 255, 18, 0.15);
+}
+.sh-killswitch.off .sh-killswitch-knob {
+  left: 53px; /* slide right when halted */
+  background: radial-gradient(circle at 35% 30%, #ffcccc, #ff6363 55%, #c41515 100%);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.7),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.25),
+    inset 0 2px 2px rgba(255, 255, 255, 0.35),
+    0 0 16px rgba(255, 99, 99, 0.55),
+    0 0 32px rgba(255, 99, 99, 0.25);
+  animation: sh-kill-jitter 0.6s ease-in-out infinite;
+}
+.sh-killswitch.off .sh-killswitch-track {
+  background: linear-gradient(180deg, #2a0505, #150000);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.9),
+    inset 0 0 12px rgba(255, 99, 99, 0.18);
+}
+@keyframes sh-kill-glow {
+  0%, 100% { box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.7),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.25),
+    inset 0 2px 2px rgba(255, 255, 255, 0.35),
+    0 0 16px rgba(163, 255, 18, 0.55),
+    0 0 32px rgba(163, 255, 18, 0.25); }
+  50% { box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.7),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.25),
+    inset 0 2px 2px rgba(255, 255, 255, 0.35),
+    0 0 22px rgba(163, 255, 18, 0.75),
+    0 0 44px rgba(163, 255, 18, 0.35); }
+}
+@keyframes sh-kill-jitter {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(1px); }
+}
+
 /* ─── BANNER "In the Pot" tile — floating steam sparkles in corner ── */
 .sh-tile-steam {
   position: absolute;

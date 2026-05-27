@@ -71,11 +71,10 @@
         sub: `${bag.tradesToday.wins} wins · ${bag.tradesToday.losses} losses`,
       }));
 
-      // Open Right Now (no time series — render compact)
+      // Open Right Now (no real time series yet — falls back to baseline)
       b.appendChild(stat({
         label: "Open Right Now",
         value: String(bag.openNow),
-        spark: null,
         sub: bag.openNow > 0 ? "live positions" : "none open",
       }));
 
@@ -247,16 +246,25 @@
 
     function killStat(state) {
       const { el } = SH;
+      const isGreen = state === "green";
       const node = el("div", { class: "sh-stat" });
+
       node.appendChild(el("div", { class: "sh-stat-row" },
         el("div", { class: "sh-stat-label" }, "Kill Switch"),
-        el("span", { class: "sh-stat-trend " + (state === "green" ? "" : "down") }, state === "green" ? "LIVE" : "HALT"),
+        el("span", { class: "sh-stat-trend " + (isGreen ? "" : "down") }, isGreen ? "LIVE" : "HALT"),
       ));
-      const dot = el("span", { class: "sh-kill-dot " + (state === "green" ? "" : "red") });
-      const valWrap = el("div", { class: "sh-stat-val " + (state === "green" ? "green" : "red") }, dot, state === "green" ? "Green" : "Red");
-      node.appendChild(valWrap);
-      node.appendChild(el("div", { class: "sh-stat-sub" }, state === "green" ? "bot running" : "bot halted"));
-      node.appendChild(el("div", { class: "sh-stat-spark" })); // flex spacer holds full-bleed bottom area
+      node.appendChild(el("div", { class: "sh-stat-val " + (isGreen ? "green" : "red") }, isGreen ? "Green" : "Red"));
+      node.appendChild(el("div", { class: "sh-stat-sub" }, isGreen ? "bot running" : "bot halted"));
+
+      // 3D toggle switch visual — fills the chart slot
+      const toggleSlot = el("div", { class: "sh-stat-spark sh-killswitch-slot" });
+      const toggle = el("div", { class: "sh-killswitch " + (isGreen ? "on" : "off") });
+      const track = el("div", { class: "sh-killswitch-track" });
+      const knob = el("div", { class: "sh-killswitch-knob" });
+      track.appendChild(knob);
+      toggle.appendChild(track);
+      toggleSlot.appendChild(toggle);
+      node.appendChild(toggleSlot);
       return node;
     }
   </script>
