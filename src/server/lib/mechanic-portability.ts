@@ -75,6 +75,17 @@ const REJECT_PATTERNS: RejectPattern[] = [
   { class: "options_derivative", pattern: /\b(?:call option|put option|long call|long put|short call|short put|sell to open|buy to close)\b/i, hard: true },
   // SPY/QQQ context: standalone "SPY" can be index-futures-portable, but "SPY options" is hard reject
   { class: "options_derivative", pattern: /\b(?:SPY|QQQ|IWM|SPX|NDX|RUT|VIX) (?:options?|calls?|puts?|premium|chain)\b/i, hard: true },
+  // 2026-05-27 false-positive fix (N7uP9V0Iktc — "ONLY 2 Indicators I use to make $4351/Day Trading"):
+  // Speaker said "I never take CALLS under VWAP" and "I never take PUTS over VWAP" repeatedly while
+  // teaching VWAP+EMA options trading on AAPL/PLTR/IWM. My prior regex required "call option" or
+  // "<TICKER> calls" full constructions — bare first-person "take calls" / "take puts" usage went
+  // through and graduated as if it were futures. Add subjective-attribution patterns for verb+calls/puts.
+  { class: "options_derivative", pattern: /\b(?:I|we|you|you'll|i'll|we'll)\s+(?:never\s+)?(?:take|trade|sell|buy|hold|grab|enter)\s+(?:calls?|puts?)\b/i, hard: true },
+  { class: "options_derivative", pattern: /\b(?:taking|trading|selling|buying|holding|grabbing|entering)\s+(?:calls?|puts?)\b/i, hard: true },
+  { class: "options_derivative", pattern: /\b(?:can\s+(?:you\s+)?(?:buy|sell|take|trade))\s+(?:calls?|puts?)\b/i, hard: true },
+  // Speaker uses "calls or puts" as a disjunction → definitely options reasoning
+  { class: "options_derivative", pattern: /\bcalls?\s+or\s+puts?\b/i, hard: true },
+  { class: "options_derivative", pattern: /\bputs?\s+or\s+calls?\b/i, hard: true },
 
   // ─── 2. SWING / MULTI-DAY ───────────────────────────────────
   // 2026-05-26 false-positive fix: require SUBJECTIVE ATTRIBUTION (speaker DOES it)
