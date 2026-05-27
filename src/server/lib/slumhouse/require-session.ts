@@ -26,7 +26,10 @@ export async function requireSlumhouseUser(
     res.status(401).json({ error: "no_session" });
     return;
   }
-  const ver = verifySession(match[1]);
+  // Express's res.cookie() URL-encodes the value by default; decode before
+  // verifying the HMAC-signed token (which uses colons as separators).
+  const rawCookie = decodeURIComponent(match[1]);
+  const ver = verifySession(rawCookie);
   if (!ver.ok) {
     res.status(401).json({ error: "invalid_session", reason: ver.reason });
     return;
