@@ -138,36 +138,41 @@ describe("classifyMechanicPortability — options_derivative rejects", () => {
     expect(r.portable).toBe(true);
   });
 
-  // 2026-05-27 false-positive fix (N7uP9V0Iktc — VWAP+EMA options trading on stocks):
-  // Speaker repeatedly says "I never take CALLS under VWAP" / "I never take PUTS over VWAP" while
-  // teaching options trading on AAPL/PLTR/IWM. The prior regex required "call option" / "long call"
-  // full constructions; bare first-person "take calls" usage slipped through and graduated.
-  it("rejects 'I take calls' (first-person options trading attribution)", () => {
-    const r = classifyMechanicPortability("I never take calls under VWAP. I only buy calls when the stock is above VWAP.");
-    expect(r.portable).toBe(false);
-    expect(r.reject_class).toBe("options_derivative");
+  // 2026-05-27 REVERTED — bare "I take calls/puts" patterns over-rejected chart-mechanic
+  // strategies. Per feedback_strategy_mechanic_not_instrument: we care about the MECHANIC,
+  // not the speaker's instrument. The following tests verify that chart-mechanic strategies
+  // demonstrated through options vocabulary PORT to futures (not rejected):
+  it("KEEPS 'I take calls/puts on VWAP retest' — chart mechanic, instrument is irrelevant", () => {
+    // N7uP9V0Iktc — speaker teaches VWAP retest + 8 EMA runner trail, happens to use options.
+    // The MECHANIC (VWAP filter + retest + EMA exit) ports to futures regardless of
+    // whether the speaker uses calls/puts/long/short as their instrument.
+    const r = classifyMechanicPortability(
+      "I never take calls under VWAP. I never take puts over VWAP. My entry is a VWAP retest. " +
+      "I hold while price stays above the 8 EMA on 5-minute."
+    );
+    expect(r.portable).toBe(true);
   });
 
-  it("rejects 'I take puts' (first-person options trading attribution)", () => {
-    const r = classifyMechanicPortability("I take puts when price retests pre-market low and is under VWAP.");
-    expect(r.portable).toBe(false);
-    expect(r.reject_class).toBe("options_derivative");
-  });
-
-  it("rejects 'calls or puts' disjunction (options-reasoning vocabulary)", () => {
-    const r = classifyMechanicPortability("This setup tells me whether to buy calls or puts on the breakout.");
-    expect(r.portable).toBe(false);
-    expect(r.reject_class).toBe("options_derivative");
-  });
-
-  it("rejects 'taking puts' present-participle attribution", () => {
+  it("KEEPS 'taking puts on the retest' — present-participle is just instrument label", () => {
     const r = classifyMechanicPortability("If price is below VWAP we're taking puts; above VWAP we're taking calls.");
-    expect(r.portable).toBe(false);
-    expect(r.reject_class).toBe("options_derivative");
+    expect(r.portable).toBe(true);
   });
 
-  it("does NOT reject 'call out the level' or 'put your stop' (false positives — not options)", () => {
-    // 'call out' = announce/say; 'put' as a verb = place
+  it("KEEPS 'calls or puts on the breakout' — disjunction reflects bidirectional chart mechanic", () => {
+    const r = classifyMechanicPortability("Pre-market high breakout tells me whether to buy calls or puts.");
+    expect(r.portable).toBe(true);
+  });
+
+  it("STILL rejects when options-mechanic vocabulary IS present (Greeks/iron condor/premium)", () => {
+    const r1 = classifyMechanicPortability("I sell iron condors on SPX weeklies and collect theta decay.");
+    expect(r1.portable).toBe(false);
+    expect(r1.reject_class).toBe("options_derivative");
+    const r2 = classifyMechanicPortability("I take puts on PLTR when implied volatility crushes after earnings.");
+    expect(r2.portable).toBe(false);
+    expect(r2.reject_class).toBe("options_derivative");
+  });
+
+  it("does NOT reject 'call out the level' or 'put your stop' (verb-other-meaning)", () => {
     const r1 = classifyMechanicPortability("I'll call out the level when price hits the EMA.");
     expect(r1.portable).toBe(true);
     const r2 = classifyMechanicPortability("Put your stop below the swing low and let it ride.");
