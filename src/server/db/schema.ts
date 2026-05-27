@@ -3037,3 +3037,27 @@ export const strategyHealthScores = pgTable(
     index("idx_strategy_health_scores_weights_version").on(table.weightsVersionId),
   ],
 );
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Slumhouse portal (migration 0164 — 2026-05-27)
+// ─────────────────────────────────────────────────────────────────────────────
+// Friend-facing read-only portal user mapping. discord_user_id is the OAuth
+// subject; broker_account_id is null until operator manually maps each friend
+// via POST /api/admin/slumhouse-users.
+export const slumhouseUsers = pgTable(
+  "slumhouse_users",
+  {
+    discordUserId:   text("discord_user_id").primaryKey(),
+    displayName:     text("display_name").notNull(),
+    jerseyNumber:    integer("jersey_number"),
+    brokerAccountId: uuid("broker_account_id"),
+    createdAt:       timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    lastSeenAt:      timestamp("last_seen_at", { withTimezone: true }),
+  },
+  (table) => [
+    index("idx_slumhouse_users_broker").on(table.brokerAccountId),
+  ],
+);
+
+export type SlumhouseUser = typeof slumhouseUsers.$inferSelect;
+export type NewSlumhouseUser = typeof slumhouseUsers.$inferInsert;
