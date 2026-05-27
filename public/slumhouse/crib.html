@@ -19,29 +19,24 @@
 
     <div id="sh-banner" class="sh-banner"></div>
 
+    <!-- 2x2 grid: row heights are dictated by left column (Anam tall, Pot short),
+         right column cards stretch to match row heights automatically. -->
     <div class="sh-main">
-      <!-- LEFT COLUMN: Anam stage on top, Pot underneath (same width) -->
-      <div class="sh-col-left">
-        <div class="sh-card sh-stage">
-          <div class="sh-anam-host" id="sh-anam-stage">Tap below to start talking to Slumdawg</div>
-          <button id="sh-anam-launch" class="sh-btn">Video with Slumdawg</button>
-        </div>
-        <div class="sh-card">
-          <div class="sh-rail-title">In the Pot · click to peek</div>
-          <div id="sh-pot" class="sh-horiz"></div>
-        </div>
+      <div class="sh-card sh-stage">
+        <div class="sh-anam-host" id="sh-anam-stage">Tap below to start talking to Slumdawg</div>
+        <button id="sh-anam-launch" class="sh-btn">Video with Slumdawg</button>
       </div>
-
-      <!-- RIGHT COLUMN: Discord feed on top, Crew leaderboard underneath (same width) -->
-      <div class="sh-col-right">
-        <div class="sh-card">
-          <div class="sh-rail-title">Fresh from Discord</div>
-          <div id="sh-discord-feed"></div>
-        </div>
-        <div class="sh-card">
-          <div class="sh-rail-title">The Crew · week leaderboard</div>
-          <div id="sh-crew"></div>
-        </div>
+      <div class="sh-card sh-rail-card">
+        <div class="sh-rail-title">Fresh from Discord</div>
+        <div id="sh-discord-feed"></div>
+      </div>
+      <div class="sh-card">
+        <div class="sh-rail-title">In the Pot · click to peek</div>
+        <div id="sh-pot" class="sh-horiz"></div>
+      </div>
+      <div class="sh-card sh-rail-card">
+        <div class="sh-rail-title">The Crew · week leaderboard</div>
+        <div id="sh-crew"></div>
       </div>
     </div>
   </div>

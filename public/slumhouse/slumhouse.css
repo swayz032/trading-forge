@@ -193,19 +193,22 @@ a { color: inherit; text-decoration: none; }
 /* LEFT col: Anam stage (big) + Pot horizontal underneath (same width).
    RIGHT col: Discord feed + Crew leaderboard underneath (same width).
    Each column is its own vertical stack — no row spans across the full page. */
+/* 2-col × 2-row grid.
+   Row 1 height is set by Anam stage (420px). Discord card (right) stretches
+   to fill the same row height automatically.
+   Row 2 height is set by the taller of Pot or Crew (both grow to row max).
+   minmax(0, 1fr) on columns prevents intrinsic-width content
+   (Pot chips, sparklines) from blowing out either column. */
 .sh-main {
   display: grid;
-  /* minmax(0, 1fr) prevents the Pot's horizontal-scroll chips from
-     forcing the left column wider than the viewport. */
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-auto-rows: auto;
   gap: 12px;
-  align-items: start;
 }
-.sh-col-left,
-.sh-col-right {
-  display: flex; flex-direction: column; gap: 12px;
-  min-width: 0; /* allow children with intrinsic width to shrink */
-}
+/* Right-column cards make their content fill the row (so the Discord feed
+   has breathing room when paired with the tall Anam stage). */
+.sh-rail-card { display: flex; flex-direction: column; min-width: 0; }
+.sh-rail-card > div:last-child { flex: 1; min-height: 0; overflow-y: auto; }
 
 .sh-stage {
   min-height: 420px; position: relative;

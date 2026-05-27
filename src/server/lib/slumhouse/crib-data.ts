@@ -130,7 +130,9 @@ export async function assembleCribData(args: { brokerAccountId: string }): Promi
     LIMIT 8
   `).catch(() => [] as any[])) as any[];
 
-  // 7. Crew leaderboard — top 4 mapped friends this week by P&L
+  // 7. Crew leaderboard — every mapped friend, ordered by week P&L.
+  //    Friends without a broker_account_id yet still appear (week_pnl = 0)
+  //    so the crew feels populated even when an account is pending.
   const crewRows = (await db.execute(sql`
     SELECT u.jersey_number AS jersey, u.display_name,
       COALESCE(
@@ -144,9 +146,8 @@ export async function assembleCribData(args: { brokerAccountId: string }): Promi
         0
       )::float AS week_pnl
     FROM slumhouse_users u
-    WHERE u.broker_account_id IS NOT NULL
-    ORDER BY week_pnl DESC
-    LIMIT 4
+    ORDER BY week_pnl DESC, u.jersey_number ASC
+    LIMIT 8
   `).catch(() => [] as any[])) as any[];
 
   const todayPnl = Number(todayRow?.today_pnl ?? 0);
