@@ -211,7 +211,7 @@ a { color: inherit; text-decoration: none; }
 .sh-rail-card > div:last-child { flex: 1; min-height: 0; overflow-y: auto; }
 
 .sh-stage {
-  min-height: 340px; position: relative;
+  min-height: 420px; position: relative;
   background: #000;
   display: flex; align-items: center; justify-content: center;
   flex-direction: column; gap: 14px;
@@ -220,7 +220,7 @@ a { color: inherit; text-decoration: none; }
 }
 .sh-anam-host {
   width: 100%; flex: 1;
-  min-height: 240px;
+  min-height: 320px;
   display: flex; align-items: center; justify-content: center;
   color: #444; font-size: 12px;
   position: relative; z-index: 1;
@@ -260,6 +260,8 @@ a { color: inherit; text-decoration: none; }
 .sh-feed-meta { color: var(--mute); font-size: 10px; margin-top: 2px; letter-spacing: 0.02em; }
 
 /* ─── POT (horizontal scroll) ──────────────────────────────────────── */
+/* Pot card min-height grows row 2 — Crew card on the right auto-stretches. */
+.sh-main > .sh-card:nth-child(3) { min-height: 200px; }
 .sh-horiz { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
 .sh-horiz::-webkit-scrollbar { height: 6px; }
 .sh-horiz::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
