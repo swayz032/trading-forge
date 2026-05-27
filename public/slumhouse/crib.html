@@ -19,25 +19,29 @@
 
     <div id="sh-banner" class="sh-banner"></div>
 
-    <div class="sh-grid-2col">
-      <div class="sh-card sh-stage">
-        <div class="sh-anam-host" id="sh-anam-stage">Tap below to start talking to Slumdawg</div>
-        <button id="sh-anam-launch" class="sh-btn">Video with Slumdawg</button>
+    <div class="sh-main">
+      <!-- LEFT COLUMN: Anam stage on top, Pot underneath (same width) -->
+      <div class="sh-col-left">
+        <div class="sh-card sh-stage">
+          <div class="sh-anam-host" id="sh-anam-stage">Tap below to start talking to Slumdawg</div>
+          <button id="sh-anam-launch" class="sh-btn">Video with Slumdawg</button>
+        </div>
+        <div class="sh-card">
+          <div class="sh-rail-title">In the Pot · click to peek</div>
+          <div id="sh-pot" class="sh-horiz"></div>
+        </div>
       </div>
-      <div class="sh-card">
-        <div class="sh-rail-title">Fresh from Discord</div>
-        <div id="sh-discord-feed"></div>
-      </div>
-    </div>
 
-    <div class="sh-grid-bottom">
-      <div class="sh-card">
-        <div class="sh-rail-title">In the Pot · click to peek</div>
-        <div id="sh-pot" class="sh-horiz"></div>
-      </div>
-      <div class="sh-card">
-        <div class="sh-rail-title">The Crew · week leaderboard</div>
-        <div id="sh-crew"></div>
+      <!-- RIGHT COLUMN: Discord feed on top, Crew leaderboard underneath (same width) -->
+      <div class="sh-col-right">
+        <div class="sh-card">
+          <div class="sh-rail-title">Fresh from Discord</div>
+          <div id="sh-discord-feed"></div>
+        </div>
+        <div class="sh-card">
+          <div class="sh-rail-title">The Crew · week leaderboard</div>
+          <div id="sh-crew"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -144,7 +148,7 @@
         const stage = document.getElementById("sh-anam-stage");
         const frame = document.createElement("iframe");
         frame.src = `https://lab.anam.ai/embed/${PERSONA_ID}`;
-        frame.style.cssText = "width:100%;height:340px;border:0;border-radius:12px;background:#000";
+        frame.style.cssText = "width:100%;height:460px;border:0;border-radius:12px;background:#000";
         stage.innerHTML = "";
         stage.appendChild(frame);
         launch.style.display = "none";
