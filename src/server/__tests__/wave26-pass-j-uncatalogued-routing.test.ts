@@ -219,24 +219,44 @@ describe("Pass J Phase 2 — Discord bot embed mechanic-class branches", () => {
   const BOT_PATH = path.resolve(__dirname, "../../discord/bot.ts");
   const BOT_SRC = fs.readFileSync(BOT_PATH, "utf-8");
 
-  it("has a dedicated embed for options_derivative reject", () => {
+  it("has a dedicated embed for options_derivative reject (rookie-friendly title)", () => {
     expect(BOT_SRC).toMatch(/r\.reason\s*===\s*["']options_derivative["']/);
-    expect(BOT_SRC).toMatch(/Options play/);
+    expect(BOT_SRC).toMatch(/That's options trading/);
   });
 
-  it("has a dedicated embed for forex_specific_mechanics reject", () => {
+  it("has a dedicated embed for forex_specific_mechanics reject (rookie-friendly title)", () => {
     expect(BOT_SRC).toMatch(/r\.reason\s*===\s*["']forex_specific_mechanics["']/);
-    expect(BOT_SRC).toMatch(/Forex mechanic/);
+    expect(BOT_SRC).toMatch(/currency-trading strategy/);
   });
 
-  it("has a dedicated embed for stock_specific_mechanics reject", () => {
+  it("has a dedicated embed for stock_specific_mechanics reject (rookie-friendly title)", () => {
     expect(BOT_SRC).toMatch(/r\.reason\s*===\s*["']stock_specific_mechanics["']/);
-    expect(BOT_SRC).toMatch(/Stock mechanic/);
+    expect(BOT_SRC).toMatch(/individual-stock strategy/);
   });
 
-  it("has a dedicated embed for crypto_specific_mechanics reject", () => {
+  it("has a dedicated embed for crypto_specific_mechanics reject (rookie-friendly title)", () => {
     expect(BOT_SRC).toMatch(/r\.reason\s*===\s*["']crypto_specific_mechanics["']/);
-    expect(BOT_SRC).toMatch(/Crypto mechanic/);
+    expect(BOT_SRC).toMatch(/crypto-only strategy/);
+  });
+
+  // Wave 26 Pass K Phase 6 (2026-05-26) — rookie-friendly voice check.
+  // Members are non-technical first-time traders; embeds must NEVER use trading
+  // jargon without inline explanation, and must NEVER use slang words that get
+  // confused for real terms ("vid", "joint", "dude", "tradin'", "type beat", etc.)
+  it("voice: no slang-word abbreviations in embed bodies (vid/joint/tradin'/type beat/real bread)", () => {
+    const bannedSlang = [/\bvid\b/i, /\bjoint\b/i, /\btradin'\b/i, /type beat/i, /real bread/i, /\bcookin'\b/i, /\brunnin'\b/i];
+    for (const re of bannedSlang) {
+      expect(BOT_SRC).not.toMatch(re);
+    }
+  });
+
+  it("voice: no raw trading jargon in user-facing embed text (theta/Greeks/carry trade/dividend capture)", () => {
+    // These terms can appear in COMMENTS (// rationale prose) but not in the
+    // string literals shown to Discord users. We approximate by ensuring the
+    // string-literal forms used in setDescription/setTitle don't contain bare jargon.
+    const description_blocks = BOT_SRC.match(/setDescription\([\s\S]*?\)/g) ?? [];
+    const combined_descriptions = description_blocks.join("\n");
+    expect(combined_descriptions).not.toMatch(/\b(theta plays|options Greeks|carry trade|swap rates|dividend capture|short[- ]squeeze setup|on-chain metrics|halving narrative)\b/i);
   });
 
   // Wave 26 Pass K Phase 5 (2026-05-26) — voice + ET footer

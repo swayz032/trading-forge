@@ -215,8 +215,11 @@ function videoHeaderField(title: string | undefined): { name: string; value: str
 }
 
 // Build the rich verdict embed — replaces plain text reply.
-// Voice: Slumdawg — street, direct, no corporate. "Yo fam", "cooked it",
-// "passed on that one", "ain't tradin' that", "real plays only".
+// Voice: Slumdawg — slang TONE + PHRASING ("Yo fam", "Slumdawg passed on this one",
+// "send me", "no fluff") but PLAIN ENGLISH WORDS. Members are non-technical rookies
+// to trading — NEVER use trading jargon (theta, Greeks, carry trade, dividend capture,
+// trailing drawdown, intraday, indicator-as-noun, structural setup). When a concept
+// must be mentioned (futures, swing, options), explain it in one short clause.
 function buildSlumdawgVerdictEmbed(result: IngestResult, sourceUrl: string): EmbedBuilder {
   const e = new EmbedBuilder()
     .setTimestamp()                             // machine-readable; UI also renders our human footer below
@@ -227,9 +230,9 @@ function buildSlumdawgVerdictEmbed(result: IngestResult, sourceUrl: string): Emb
   if (result.error) {
     e.setColor(SLUMDAWG_COLOR.error).setTitle("⚠️ System hiccup");
     if (/invalid_url/i.test(result.error)) {
-      e.setDescription("Yo that ain't a YouTube link fam. Drop me a `youtube.com` or `youtu.be` joint.");
+      e.setDescription("Yo fam, that's not a YouTube link. Send me a `youtube.com` or `youtu.be` link.");
     } else {
-      e.setDescription(`Pipeline tripped — \`${result.error.replace(/_/g, " ")}\`.\nTry again in a sec or holler at the operator.`);
+      e.setDescription(`Slumdawg hit a snag on the back end — \`${result.error.replace(/_/g, " ")}\`.\nWait a minute and try again, or message the operator if it keeps happening.`);
     }
     return e;
   }
@@ -239,7 +242,7 @@ function buildSlumdawgVerdictEmbed(result: IngestResult, sourceUrl: string): Emb
     return e
       .setColor(SLUMDAWG_COLOR.error)
       .setTitle("⚠️ Empty pipeline")
-      .setDescription("Came back with nothin'. Run it back.");
+      .setDescription("Came back with nothing. Try again.");
   }
 
   // ─── Strategy extracted (the win) ───────────────────────
@@ -252,21 +255,22 @@ function buildSlumdawgVerdictEmbed(result: IngestResult, sourceUrl: string): Emb
     const triggerLine = humanizeTrigger(firstIdea?.entry_indicator);
     const factorBullets = (firstIdea?.confluence_factors ?? []).slice(0, 4).map(f => `  • ${humanizeFactor(f)}`).join("\n") || "  • —";
 
+    // Plain-English labels — no trading jargon.
     const takeLines: string[] = [
-      `**Mood:** ${moodLine}`,
+      `**The kind of market he wants:** ${moodLine}`,
     ];
-    if (firstIdea?.entry_indicator) takeLines.push(`**Trigger:** ${triggerLine}`);
-    takeLines.push(`**Checklist before he fires:**\n${factorBullets}`);
+    if (firstIdea?.entry_indicator) takeLines.push(`**What he waits for before pulling the trigger:** ${triggerLine}`);
+    takeLines.push(`**What needs to line up first:**\n${factorBullets}`);
 
     e.setColor(SLUMDAWG_COLOR.success)
       .setTitle(stratCount > 0
-        ? `🔥 Cooked it — ${stratCount} ${stratCount === 1 ? "play" : "plays"} in the kitchen`
-        : `🔥 Cooked it — play extracted`)
+        ? `🔥 Slumdawg cooked it — ${stratCount} ${stratCount === 1 ? "play" : "plays"} in the kitchen`
+        : `🔥 Slumdawg cooked it — play extracted`)
       .setDescription(
-        `Yo fam, Slumdawg pulled real rules out this one.\n` +
+        `Yo fam, Slumdawg pulled real rules out of this one.\n` +
         (stratCount > 0
-          ? `Got **${stratCount}** ${stratCount === 1 ? "play" : "plays"} cookin' — each one runnin' on a different market.\nVerdict drops in about a day.`
-          : `Kitchen picks it up next cycle (~10 min).`)
+          ? `Got **${stratCount}** ${stratCount === 1 ? "play" : "plays"} in the kitchen right now — each one running on a different market.\nEach one is gonna get stress-tested against the worst trading days in history. We'll know in about a day if they hold up with real money.`
+          : `Kitchen picks it up on the next cycle (about 10 minutes).`)
       );
 
     const vh = videoHeaderField(r.title);
@@ -281,13 +285,13 @@ function buildSlumdawgVerdictEmbed(result: IngestResult, sourceUrl: string): Emb
       e.addFields({ name: `🍳 The Plays`, value: playLines, inline: false });
       e.addFields({
         name: "🏆 What's Next",
-        value: "Stress test first — Slumdawg makes sure each play survives the worst case before it ever sees real bread. Then a 30-day backtest. Verdict in about a day.",
+        value: "Stress test first — Slumdawg makes sure each play survives the worst trading days in history before it ever sees real money. Then a 30-day backtest. Verdict comes back in about a day.",
         inline: false,
       });
     } else {
       e.addFields({
         name: "🍳 What's Next",
-        value: "Kitchen 'bout to fan it into 3 plays — **Mini S&P**, **Mini Nasdaq**, **Mini Crude**. Each runs the stress test + 30-day backtest. Check back in about an hour.",
+        value: "Kitchen's about to fan this out into 3 plays — one for the **Mini S&P 500**, one for the **Mini Nasdaq 100**, one for **Mini Crude Oil**. Each one runs through the stress test plus a 30-day backtest. Check back in about an hour.",
         inline: false,
       });
     }
@@ -298,7 +302,14 @@ function buildSlumdawgVerdictEmbed(result: IngestResult, sourceUrl: string): Emb
   if (r.reason && /no_strategy_content|no_rules|too_vague|hype/i.test(r.reason)) {
     e.setColor(SLUMDAWG_COLOR.hype)
       .setTitle("🚧 Mostly talk, not enough rules")
-      .setDescription("Dude talked the talk but ain't drop the actual plays.\nFind me one where he says **when to enter**, **when to exit**, **what timeframe** — step-by-step type beat.");
+      .setDescription(
+        "Yo, the speaker hyped it up but never actually told us **how to trade it**.\n\n" +
+        "A real strategy needs to say:\n" +
+        "• **when to buy or sell**\n" +
+        "• **when to close the trade**\n" +
+        "• **what chart he's looking at** (5-minute? 15-minute?)\n\n" +
+        "Send me a video where the trader walks through it step by step, no fluff."
+      );
     const vh = videoHeaderField(r.title);
     if (vh) e.addFields(vh);
     return e;
@@ -307,8 +318,12 @@ function buildSlumdawgVerdictEmbed(result: IngestResult, sourceUrl: string): Emb
   // ─── Swing / multi-day reject ───────────────────────────
   if (r.status === "rejected_swing_or_screenshot" || (r.reason && /swing|multi_day|overnight|screenshot|recap/i.test(r.reason))) {
     e.setColor(SLUMDAWG_COLOR.swing)
-      .setTitle("🌙 Swing or overnight — we day-only over here")
-      .setDescription("Topstep trailing drawdown don't let us hold overnight, fam.\nDrop me an **intraday** breakdown — we flat by **3:55 ET** every day, no exceptions.");
+      .setTitle("🌙 Swing trade — we close every day")
+      .setDescription(
+        "Yo fam, that one's a **swing trade** — meaning the speaker holds the trade for days or weeks.\n\n" +
+        "We can't do that. Our prop firm rules say every trade has to close **before the market shuts down each day** (by **3:55 PM Eastern**). Holding overnight will get the account shut down.\n\n" +
+        "Send me a video where the trader takes the trade and closes it the **same day** — quick in, quick out."
+      );
     const vh = videoHeaderField(r.title);
     if (vh) e.addFields(vh);
     return e;
@@ -319,44 +334,60 @@ function buildSlumdawgVerdictEmbed(result: IngestResult, sourceUrl: string): Emb
     e.setColor(SLUMDAWG_COLOR.swing)
       .setTitle("📭 Can't read that one");
     if (/too short/i.test(r.reason)) {
-      e.setDescription("Vid's too short to pull real rules — probably a Short or a clip.\nDrop me a longer breakdown.");
+      e.setDescription("That video's too short to pull real trading rules out of — probably a TikTok-style clip.\nSend me a longer one where the trader actually walks through the strategy.");
     } else {
-      e.setDescription("No captions — private, age-gated, or transcript missing.\nTry a different vid.");
+      e.setDescription("Couldn't pull the captions on that video. Might be private, age-restricted, or just missing a transcript.\nTry a different one.");
     }
     const vh = videoHeaderField(r.title);
     if (vh) e.addFields(vh);
     return e;
   }
 
-  // ─── Wave 26 Pass J — mechanic-class rejects (street-slang voice) ──
+  // ─── Wave 26 Pass J — mechanic-class rejects (rookie-friendly, no jargon) ──
   if (r.reason === "options_derivative") {
     e.setColor(SLUMDAWG_COLOR.swing)
-      .setTitle("📊 Options play — don't port to futures")
-      .setDescription("Iron condors, credit spreads, theta plays — all that runs on options Greeks.\nFutures got no theta, fam. Mechanics literally don't translate.\nDrop me a **price-action**, **indicator**, or **structure** setup instead.");
+      .setTitle("📊 That's options trading — different game")
+      .setDescription(
+        "Yo, that one's about **options trading** — a totally different game from what we play.\n\n" +
+        "We trade **futures**, which means we're just betting on whether a price will go up or down. Options have a bunch of extra moving parts (time decay, strike prices, all that) that don't apply to us.\n\n" +
+        "Send me a video where the trader is just **reading a price chart** and saying \"when this happens, I buy\" — that's the kind I can use."
+      );
     const vh = videoHeaderField(r.title);
     if (vh) e.addFields(vh);
     return e;
   }
   if (r.reason === "forex_specific_mechanics") {
     e.setColor(SLUMDAWG_COLOR.swing)
-      .setTitle("💱 Forex mechanic — don't port")
-      .setDescription("Carry trade, swap rates, central-bank intervention — that's broker-specific to forex.\nFutures don't run on that. If the same dude has a vid on **price action** or **indicators**, that ports. Drop one of those.");
+      .setTitle("💱 That's a currency-trading strategy")
+      .setDescription(
+        "Yo fam, that strategy is built for **currency trading (forex)** — like betting on the Euro vs the Dollar.\n\n" +
+        "The way they're making money in this one only works in currency markets, not the ones we trade.\n\n" +
+        "If the same person has another video where they're **just reading a price chart**, send me that one — it'll probably work."
+      );
     const vh = videoHeaderField(r.title);
     if (vh) e.addFields(vh);
     return e;
   }
   if (r.reason === "stock_specific_mechanics") {
     e.setColor(SLUMDAWG_COLOR.swing)
-      .setTitle("📈 Stock mechanic — don't port")
-      .setDescription("Dividend capture, earnings plays, sector rotation, short-squeeze — all that needs single-name stocks.\nFutures don't pay dividends, don't got earnings dates. Drop me a **chart-mechanic** vid instead.");
+      .setTitle("📈 That's an individual-stock strategy")
+      .setDescription(
+        "Yo, that one's about trading **individual stocks** like Apple, Tesla, or GameStop.\n\n" +
+        "The moves they're trying to catch (earnings announcements, dividend payments, short squeezes) only happen with stocks — they don't exist in the markets we trade.\n\n" +
+        "If they have a video where they're **just reading a price chart** with no mention of company news, send me that one."
+      );
     const vh = videoHeaderField(r.title);
     if (vh) e.addFields(vh);
     return e;
   }
   if (r.reason === "crypto_specific_mechanics") {
     e.setColor(SLUMDAWG_COLOR.swing)
-      .setTitle("🪙 Crypto mechanic — don't port")
-      .setDescription("On-chain metrics, funding-rate arb, halving narratives, DeFi yield — all that needs 24/7 crypto markets.\nFutures got sessions, no funding rate. Drop a **price-action** or **indicator** setup from the same speaker.");
+      .setTitle("🪙 That's a crypto-only strategy")
+      .setDescription(
+        "Yo fam, that strategy only works in **crypto markets** (Bitcoin, Ethereum, that whole world).\n\n" +
+        "They're using stuff that's specific to crypto — blockchain data, the Bitcoin halving, 24/7 trading. Our markets work different.\n\n" +
+        "If the same speaker has a video where they're **just reading a price chart**, send me that one. That one works."
+      );
     const vh = videoHeaderField(r.title);
     if (vh) e.addFields(vh);
     return e;
@@ -365,8 +396,8 @@ function buildSlumdawgVerdictEmbed(result: IngestResult, sourceUrl: string): Emb
   // ─── Generic reject ─────────────────────────────────────
   if (r.reason) {
     e.setColor(SLUMDAWG_COLOR.hype)
-      .setTitle("🤔 Slumdawg passed on that one")
-      .setDescription(`Reason: \`${r.reason.replace(/_/g, " ")}\`.\nTry a different vid, fam.`);
+      .setTitle("🤔 Slumdawg passed on this one")
+      .setDescription(`Reason: \`${r.reason.replace(/_/g, " ")}\`.\nSend me a different video.`);
     const vh = videoHeaderField(r.title);
     if (vh) e.addFields(vh);
     return e;
