@@ -221,21 +221,32 @@ describe("Pass J Phase 2 — Discord bot embed mechanic-class branches", () => {
 
   it("has a dedicated embed for options_derivative reject", () => {
     expect(BOT_SRC).toMatch(/r\.reason\s*===\s*["']options_derivative["']/);
-    expect(BOT_SRC).toMatch(/Options strategy/);
+    expect(BOT_SRC).toMatch(/Options play/);
   });
 
   it("has a dedicated embed for forex_specific_mechanics reject", () => {
     expect(BOT_SRC).toMatch(/r\.reason\s*===\s*["']forex_specific_mechanics["']/);
-    expect(BOT_SRC).toMatch(/Forex-specific/);
+    expect(BOT_SRC).toMatch(/Forex mechanic/);
   });
 
   it("has a dedicated embed for stock_specific_mechanics reject", () => {
     expect(BOT_SRC).toMatch(/r\.reason\s*===\s*["']stock_specific_mechanics["']/);
-    expect(BOT_SRC).toMatch(/Stock-specific/);
+    expect(BOT_SRC).toMatch(/Stock mechanic/);
   });
 
   it("has a dedicated embed for crypto_specific_mechanics reject", () => {
     expect(BOT_SRC).toMatch(/r\.reason\s*===\s*["']crypto_specific_mechanics["']/);
-    expect(BOT_SRC).toMatch(/Crypto-specific/);
+    expect(BOT_SRC).toMatch(/Crypto mechanic/);
+  });
+
+  // Wave 26 Pass K Phase 5 (2026-05-26) — voice + ET footer
+  it("emits ET-localized footer via nowEtFooter helper (not Discord browser-local time)", () => {
+    expect(BOT_SRC).toMatch(/function nowEtFooter\(\)/);
+    expect(BOT_SRC).toMatch(/America\/New_York/);
+    expect(BOT_SRC).toMatch(/setFooter\(\{\s*text:\s*nowEtFooter\(\)\s*\}\)/);
+  });
+
+  it("uses videoHeaderField helper for consistent video-title row", () => {
+    expect(BOT_SRC).toMatch(/function videoHeaderField\(/);
   });
 });

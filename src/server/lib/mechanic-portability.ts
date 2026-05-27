@@ -77,13 +77,25 @@ const REJECT_PATTERNS: RejectPattern[] = [
   { class: "options_derivative", pattern: /\b(?:SPY|QQQ|IWM|SPX|NDX|RUT|VIX) (?:options?|calls?|puts?|premium|chain)\b/i, hard: true },
 
   // ─── 2. SWING / MULTI-DAY ───────────────────────────────────
-  { class: "swing_multi_day", pattern: /\bswing trad(?:es?|ers?|ing)\b/i, hard: true },
-  { class: "swing_multi_day", pattern: /\bposition trad(?:es?|ers?|ing)\b/i, hard: true },
-  { class: "swing_multi_day", pattern: /\b(?:hold (?:for )?(?:days?|weeks?|months?)|hold(?:ing)? overnight|overnight (?:hold|position|swing)|overnight risk|multi[- ]?day (?:hold|position|trade))\b/i, hard: true },
+  // 2026-05-26 false-positive fix: require SUBJECTIVE ATTRIBUTION (speaker DOES it)
+  // not just any mention. Scalping/intraday videos commonly DISMISS swing trading
+  // ("I don't care what anybody says about swing trading", "made more than silly old
+  // swing traders") — bare-mention regex matched those and rejected real intraday
+  // strategies. New rule: require "I'm/I am/we're/we are a swing trader", "I/we
+  // swing trade", "my/our swing", or "swing trades I/we take" — first-person
+  // self-attribution. Bare "swing trading" without self-attribution is now CLEAR.
+  // Negation guard (`evaluateLunchBlackoutGate`-style) suppresses matches when
+  // "don't/not/never/no/instead of/against/avoid" appears within 25 chars before.
+  { class: "swing_multi_day", pattern: /\b(?:I(?:'m| am)? a swing trader|we(?:'re| are) swing traders?|I swing trade|we swing trade|my swing trades?|our swing trades?|swing trades? (?:I|we) take)\b/i, hard: true },
+  { class: "swing_multi_day", pattern: /\b(?:I(?:'m| am)? a position trader|we(?:'re| are) position traders?|I position trade|we position trade)\b/i, hard: true },
+  // First-person overnight/multi-day action — speaker DOES it
+  { class: "swing_multi_day", pattern: /\b(?:I|we) (?:hold (?:for )?(?:days?|weeks?|months?)|hold(?:ing)? overnight|carry (?:positions? )?over(?:night)?)\b/i, hard: true },
+  { class: "swing_multi_day", pattern: /\b(?:I'll|we'll|I will|we will) (?:hold (?:for )?(?:days?|weeks?|months?)|hold(?:ing)? overnight|carry (?:positions? )?over(?:night)?)\b/i, hard: true },
+  // Multi-day hold patterns with explicit time framing — the language is too
+  // specific to be incidental (e.g. "weekly chart strategy" only said by users)
   { class: "swing_multi_day", pattern: /\b(?:weekly chart entry|daily chart entry|monthly chart entry).{0,40}(?:hold|swing|position)\b/i, hard: true },
-  { class: "swing_multi_day", pattern: /\b(?:carry (?:positions? )?over(?:night)?|hold (?:through|past) (?:the )?close)\b/i, hard: true },
-  // Soft: "buy and hold" / "long-term" framing
-  { class: "swing_multi_day", pattern: /\b(?:buy and hold|long[- ]term invest(?:ing|or|ment)|set and forget)\b/i, hard: false },
+  // Soft: "buy and hold" / "long-term" framing — first-person attribution
+  { class: "swing_multi_day", pattern: /\b(?:I|we) (?:buy and hold|long[- ]term invest|set and forget)\b/i, hard: false },
 
   // ─── 3. FOREX-SPECIFIC MECHANICS ────────────────────────────
   { class: "forex_specific_mechanics", pattern: /\b(?:carry trade|carry pair|positive carry|negative carry|swap rate|swap (?:fee|cost|interest)|rollover (?:fee|interest|swap))\b/i, hard: true },

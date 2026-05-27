@@ -139,33 +139,39 @@ describe("classifyMechanicPortability — options_derivative rejects", () => {
   });
 });
 
-describe("classifyMechanicPortability — swing_multi_day rejects", () => {
-  it("rejects 'swing trade' explicit", () => {
+describe("classifyMechanicPortability — swing_multi_day rejects (self-attribution required)", () => {
+  it("rejects first-person 'I'm a swing trader'", () => {
     const r = classifyMechanicPortability("I'm a swing trader. I hold positions for weeks at a time.");
     expect(r.portable).toBe(false);
     expect(r.reject_class).toBe("swing_multi_day");
   });
 
-  it("rejects 'hold for days'", () => {
-    const r = classifyMechanicPortability("Enter on the daily breakout and hold for days until the trend reverses.");
+  it("rejects 'I hold for days'", () => {
+    const r = classifyMechanicPortability("I enter on the daily breakout and I hold for days until the trend reverses.");
     expect(r.portable).toBe(false);
     expect(r.reject_class).toBe("swing_multi_day");
   });
 
-  it("rejects 'hold overnight'", () => {
+  it("rejects 'I hold overnight'", () => {
     const r = classifyMechanicPortability("I hold overnight when the setup is strong enough.");
     expect(r.portable).toBe(false);
     expect(r.reject_class).toBe("swing_multi_day");
   });
 
-  it("rejects 'position trader' explicit", () => {
-    const r = classifyMechanicPortability("Position traders look at the weekly chart for trend, daily for entry.");
+  it("rejects 'I'm a position trader' explicit", () => {
+    const r = classifyMechanicPortability("I'm a position trader who looks at the weekly chart for trend, daily for entry.");
     expect(r.portable).toBe(false);
     expect(r.reject_class).toBe("swing_multi_day");
   });
 
-  it("rejects 'buy and hold' (soft signal, still rejected)", () => {
-    const r = classifyMechanicPortability("This is a long-term investing approach: buy and hold the index.");
+  it("rejects first-person 'I buy and hold' (soft signal)", () => {
+    const r = classifyMechanicPortability("My approach is simple: I buy and hold the index for years.");
+    expect(r.portable).toBe(false);
+    expect(r.reject_class).toBe("swing_multi_day");
+  });
+
+  it("rejects 'we'll carry overnight' (we-attribution)", () => {
+    const r = classifyMechanicPortability("If the trend is strong we'll carry overnight to capture the gap.");
     expect(r.portable).toBe(false);
     expect(r.reject_class).toBe("swing_multi_day");
   });
@@ -177,6 +183,29 @@ describe("classifyMechanicPortability — swing_multi_day rejects", () => {
 
   it("does NOT reject intraday strategy using daily-chart context", () => {
     const r = classifyMechanicPortability("I look at the daily chart for bias, then drop to 5-minute for my entry and exit same day.");
+    expect(r.portable).toBe(true);
+  });
+
+  // 2026-05-26 false-positive fix: speaker DISMISSES swing trading
+  it("does NOT reject scalper who dismisses swing trading", () => {
+    const r = classifyMechanicPortability(
+      "We're scalping all year. I don't care what anybody says about swing trading. " +
+      "Find a trend, find a breakout, get in, and get out within 15 minutes — " +
+      "made more than one of them silly old swing traders."
+    );
+    expect(r.portable).toBe(true);
+  });
+
+  // Speaker MENTIONS but doesn't DO swing
+  it("does NOT reject when speaker contrasts vs swing without doing it", () => {
+    const r = classifyMechanicPortability(
+      "Unlike swing traders who hold for weeks, our setup closes by 3:55 ET every day."
+    );
+    expect(r.portable).toBe(true);
+  });
+
+  it("does NOT reject bare 'position trader' mention without first-person attribution", () => {
+    const r = classifyMechanicPortability("Position traders look at the weekly chart for trend, daily for entry.");
     expect(r.portable).toBe(true);
   });
 });
@@ -290,8 +319,9 @@ describe("classifyMechanicPortability — priority + evidence shape", () => {
     expect(r.confidence).toBe(1.0);
   });
 
-  it("soft-only signal returns confidence 0.7", () => {
-    const r = classifyMechanicPortability("This is a long-term investing approach for retirement accounts.");
+  it("soft-only signal returns confidence 0.7 (first-person 'I buy and hold')", () => {
+    // Post-2026-05-26 regex tightening: soft pattern also requires first-person attribution
+    const r = classifyMechanicPortability("My retirement approach is simple: I buy and hold the index.");
     expect(r.portable).toBe(false);
     expect(r.reject_class).toBe("swing_multi_day");
     expect(r.confidence).toBe(0.7);
