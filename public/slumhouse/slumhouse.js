@@ -173,4 +173,184 @@ function sparkTrend(values) {
   return { pct, direction: pct > 0 ? "up" : "down" };
 }
 
-window.SH = { fetchJSON, el, sparkline, sparkTrend };
+// ─── potChart — renders a 3D-style SVG pot with bubbling liquid ───────
+// Used in the banner "In the Pot" tile. Liquid level scales with `count`
+// (capped at 28 strategies = full pot). Includes animated wave + bubbles.
+function potChart(count, opts) {
+  opts = opts || {};
+  const width = opts.width || 320;
+  const height = opts.height || 110;
+  const tint = opts.color || "#ffb84d"; // amber for the cooking pot
+
+  // Normalize count → fill level (0 to 0.85, never quite full so wave doesn't clip)
+  const level = Math.max(0.08, Math.min(0.85, Number(count || 0) / 28));
+
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("viewBox", `0 0 200 100`);
+  svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+  svg.style.width = "100%";
+  svg.style.height = "100%";
+  svg.style.display = "block";
+
+  // ── Defs: liquid gradient + glow filter ──
+  const defs = document.createElementNS(svgNS, "defs");
+  const gradId = "pg" + Math.random().toString(36).slice(2, 8);
+  const grad = document.createElementNS(svgNS, "linearGradient");
+  grad.setAttribute("id", gradId);
+  grad.setAttribute("x1", "0"); grad.setAttribute("y1", "0");
+  grad.setAttribute("x2", "0"); grad.setAttribute("y2", "1");
+  const stops = [
+    ["0%", tint, 0.55],
+    ["50%", tint, 0.28],
+    ["100%", tint, 0.08],
+  ];
+  for (const [offset, color, op] of stops) {
+    const s = document.createElementNS(svgNS, "stop");
+    s.setAttribute("offset", offset);
+    s.setAttribute("stop-color", color);
+    s.setAttribute("stop-opacity", String(op));
+    grad.appendChild(s);
+  }
+  defs.appendChild(grad);
+
+  // Glow filter (gives the pot stroke a halo — the "3D" lift)
+  const filter = document.createElementNS(svgNS, "filter");
+  const filterId = "pf" + Math.random().toString(36).slice(2, 8);
+  filter.setAttribute("id", filterId);
+  filter.setAttribute("x", "-30%"); filter.setAttribute("y", "-30%");
+  filter.setAttribute("width", "160%"); filter.setAttribute("height", "160%");
+  const blur = document.createElementNS(svgNS, "feGaussianBlur");
+  blur.setAttribute("in", "SourceGraphic");
+  blur.setAttribute("stdDeviation", "1.8");
+  blur.setAttribute("result", "g");
+  const merge = document.createElementNS(svgNS, "feMerge");
+  const m1 = document.createElementNS(svgNS, "feMergeNode"); m1.setAttribute("in", "g");
+  const m2 = document.createElementNS(svgNS, "feMergeNode"); m2.setAttribute("in", "SourceGraphic");
+  merge.appendChild(m1); merge.appendChild(m2);
+  filter.appendChild(blur); filter.appendChild(merge);
+  defs.appendChild(filter);
+
+  svg.appendChild(defs);
+
+  // ── Pot geometry ──
+  // Outer trapezoidal pot body, centered. ViewBox is 200x100.
+  // Top rim is wider than bottom (slight taper). Rounded bottom corners.
+  const potLeft = 60, potRight = 140;   // rim x-range
+  const potTop = 30;                      // rim y
+  const potBottom = 88;                   // bottom y
+  const potBL = 68, potBR = 132;          // bottom x-range (inset for taper)
+  const potRadius = 8;
+
+  // Clip path so liquid stays inside pot shape
+  const clipId = "pc" + Math.random().toString(36).slice(2, 8);
+  const clipPath = document.createElementNS(svgNS, "clipPath");
+  clipPath.setAttribute("id", clipId);
+  const clipShape = document.createElementNS(svgNS, "path");
+  clipShape.setAttribute("d", `M ${potLeft} ${potTop} L ${potRight} ${potTop} L ${potBR - potRadius} ${potBottom - potRadius} Q ${potBR} ${potBottom} ${potBR - potRadius} ${potBottom} L ${potBL + potRadius} ${potBottom} Q ${potBL} ${potBottom} ${potBL + potRadius} ${potBottom - potRadius} Z`);
+  clipPath.appendChild(clipShape);
+  defs.appendChild(clipPath);
+
+  // Liquid fill — wavy top with translate animation for "boiling" motion
+  const liquidGroup = document.createElementNS(svgNS, "g");
+  liquidGroup.setAttribute("clip-path", `url(#${clipId})`);
+
+  const liquidY = potTop + (potBottom - potTop) * (1 - level);
+  // Wide wavy path that pans horizontally
+  const wave = document.createElementNS(svgNS, "path");
+  const waveD = `M 0 ${liquidY}
+                 Q 25 ${liquidY - 4}, 50 ${liquidY}
+                 T 100 ${liquidY}
+                 T 150 ${liquidY}
+                 T 200 ${liquidY}
+                 T 250 ${liquidY}
+                 T 300 ${liquidY}
+                 T 350 ${liquidY}
+                 T 400 ${liquidY}
+                 L 400 100 L 0 100 Z`;
+  wave.setAttribute("d", waveD);
+  wave.setAttribute("fill", `url(#${gradId})`);
+  wave.style.animation = "sh-pot-wave 4s linear infinite";
+  liquidGroup.appendChild(wave);
+
+  // Bubbles — 3 circles rising from random spots, staggered
+  const bubbles = [
+    { cx: 84,  delay: 0.0 },
+    { cx: 100, delay: 1.3 },
+    { cx: 116, delay: 2.6 },
+  ];
+  for (const b of bubbles) {
+    const bub = document.createElementNS(svgNS, "circle");
+    bub.setAttribute("cx", String(b.cx));
+    bub.setAttribute("cy", "0");
+    bub.setAttribute("r", "1.6");
+    bub.setAttribute("fill", tint);
+    bub.setAttribute("opacity", "0.7");
+    bub.style.animation = `sh-pot-bubble 3.6s ${b.delay}s linear infinite`;
+    liquidGroup.appendChild(bub);
+  }
+
+  svg.appendChild(liquidGroup);
+
+  // Pot outline (drawn AFTER liquid so it sits on top)
+  const outline = document.createElementNS(svgNS, "path");
+  // Body + rounded bottom
+  outline.setAttribute("d", `
+    M ${potLeft} ${potTop}
+    L ${potRight} ${potTop}
+    L ${potBR} ${potBottom - potRadius}
+    Q ${potBR} ${potBottom}, ${potBR - potRadius} ${potBottom}
+    L ${potBL + potRadius} ${potBottom}
+    Q ${potBL} ${potBottom}, ${potBL} ${potBottom - potRadius}
+    L ${potLeft} ${potTop}
+    Z
+  `);
+  outline.setAttribute("fill", "none");
+  outline.setAttribute("stroke", tint);
+  outline.setAttribute("stroke-width", "1.6");
+  outline.setAttribute("stroke-linejoin", "round");
+  outline.setAttribute("filter", `url(#${filterId})`);
+  svg.appendChild(outline);
+
+  // Rim (top lid edge — slightly wider than pot for the rim look)
+  const rim = document.createElementNS(svgNS, "rect");
+  rim.setAttribute("x", String(potLeft - 6));
+  rim.setAttribute("y", String(potTop - 4));
+  rim.setAttribute("width", String((potRight - potLeft) + 12));
+  rim.setAttribute("height", "5");
+  rim.setAttribute("rx", "1.5");
+  rim.setAttribute("fill", "none");
+  rim.setAttribute("stroke", tint);
+  rim.setAttribute("stroke-width", "1.6");
+  rim.setAttribute("filter", `url(#${filterId})`);
+  svg.appendChild(rim);
+
+  // Two side handles (small open arcs)
+  for (const side of ["left", "right"]) {
+    const handle = document.createElementNS(svgNS, "path");
+    const x0 = side === "left" ? potLeft - 4 : potRight + 4;
+    const x1 = side === "left" ? potLeft - 14 : potRight + 14;
+    handle.setAttribute("d", `M ${x0} ${potTop + 8} Q ${x1} ${potTop + 18}, ${x0} ${potTop + 28}`);
+    handle.setAttribute("fill", "none");
+    handle.setAttribute("stroke", tint);
+    handle.setAttribute("stroke-width", "1.5");
+    handle.setAttribute("stroke-linecap", "round");
+    handle.setAttribute("filter", `url(#${filterId})`);
+    svg.appendChild(handle);
+  }
+
+  // Fire flames under the pot (3 small flame shapes)
+  for (let i = 0; i < 5; i++) {
+    const fx = 70 + i * 14;
+    const flame = document.createElementNS(svgNS, "path");
+    flame.setAttribute("d", `M ${fx} 92 q -3 -6, 0 -10 q 3 4, 0 10 Z`);
+    flame.setAttribute("fill", "#ff6363");
+    flame.setAttribute("opacity", "0.7");
+    flame.style.animation = `sh-pot-flame ${0.7 + (i % 3) * 0.15}s ease-in-out ${i * 0.13}s infinite alternate`;
+    svg.appendChild(flame);
+  }
+
+  return svg;
+}
+
+window.SH = { fetchJSON, el, sparkline, sparkTrend, potChart };

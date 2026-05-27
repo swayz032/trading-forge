@@ -79,18 +79,23 @@
         sub: bag.openNow > 0 ? "live positions" : "none open",
       }));
 
-      // In the Pot (with floating steam-sparkle kitchen visual)
+      // In the Pot (custom SVG cooking pot with bubbling liquid + flames)
       const potTile = stat({
         label: "In the Pot",
         value: String(bag.inPot),
         valueClass: "amber",
-        spark: bag.inPotSpark,
+        spark: null, // skip the default sparkline; we'll inject the pot instead
         sub: "testing",
       });
-      // Inject floating steam sparkles in the top-right corner of the tile
-      const steamEl = SH.el("div", { class: "sh-tile-steam" },
-        SH.el("i"), SH.el("i"), SH.el("i"), SH.el("i"));
-      potTile.appendChild(steamEl);
+      // Replace the empty spark slot with the SVG pot chart
+      const potSparkSlot = potTile.querySelector(".sh-stat-spark");
+      if (potSparkSlot) {
+        potSparkSlot.innerHTML = "";
+        potSparkSlot.appendChild(SH.potChart(bag.inPot, { width: 320, height: 110 }));
+      }
+      // Steam sparkles in the top-right corner (above the lid)
+      potTile.appendChild(SH.el("div", { class: "sh-tile-steam" },
+        SH.el("i"), SH.el("i"), SH.el("i"), SH.el("i")));
       b.appendChild(potTile);
 
       // Kill switch (live pulse, no chart)
@@ -207,14 +212,17 @@
 
       node.appendChild(el("div", { class: "sh-stat-sub" }, opts.sub || ""));
 
-      // Chart IS the card — full-bleed sparkline takes the bottom 60%.
-      // If real data is missing or too short, render a subtle baseline series
-      // so the chart always lands visually (premium feel preserved on day 0).
+      // Chart slot — bottom 60% of card, full-bleed.
+      // - If opts.spark is an array → render sparkline (real or placeholder).
+      // - If opts.spark === null → leave slot empty (caller will inject
+      //   custom content, e.g. the SVG pot chart on the "In the Pot" tile).
       const sparkBox = el("div", { class: "sh-stat-spark" });
-      const spark = (opts.spark && opts.spark.length >= 2)
-        ? opts.spark
-        : baselineSpark(opts.value);
-      sparkBox.appendChild(sparkline(spark, { width: 320, height: 110 }));
+      if (opts.spark !== null) {
+        const spark = (opts.spark && opts.spark.length >= 2)
+          ? opts.spark
+          : baselineSpark(opts.value);
+        sparkBox.appendChild(sparkline(spark, { width: 320, height: 110 }));
+      }
       node.appendChild(sparkBox);
 
       return node;
