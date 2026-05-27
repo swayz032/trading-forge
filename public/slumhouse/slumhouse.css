@@ -99,12 +99,25 @@ a { color: inherit; text-decoration: none; }
   border-radius: 14px;
   padding: 14px 16px 0;
   position: relative; overflow: hidden;
-  min-height: 140px;
+  min-height: 180px;
   display: flex; flex-direction: column;
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateY(8px) perspective(800px) rotateX(0);
   animation: sh-rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.015);
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.25s;
+  transform-style: preserve-3d;
+  cursor: default;
+}
+/* 3D hover tilt — perspective rotation tracking mouse via :hover (CSS-only).
+   For a real mouse-tracking tilt we'd add JS; this fixed-axis lift reads
+   as 3D depth without per-frame work. */
+.sh-stat:hover {
+  transform: translateY(-2px) perspective(800px) rotateX(2deg);
+  box-shadow:
+    inset 0 0 0 1px rgba(163, 255, 18, 0.10),
+    0 12px 32px rgba(0, 0, 0, 0.5),
+    0 0 28px rgba(163, 255, 18, 0.06);
 }
 .sh-stat:nth-child(1) { animation-delay: 0.00s; }
 .sh-stat:nth-child(2) { animation-delay: 0.06s; }
@@ -122,7 +135,14 @@ a { color: inherit; text-decoration: none; }
 }
 
 @keyframes sh-rise {
-  to { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: translateY(0) perspective(800px) rotateX(0); }
+}
+@keyframes sh-spark-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes sh-spark-dot {
+  from { opacity: 0; transform: scale(0); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .sh-stat-row {
@@ -166,10 +186,19 @@ a { color: inherit; text-decoration: none; }
 /* The chart IS the hero — full-bleed to the card edges, 60% of card height */
 .sh-stat-spark {
   flex: 1;
-  margin: 0 -16px -1px;     /* full-bleed sides + bottom (matches new padding) */
-  height: 58px;
-  min-height: 58px;
+  margin: 6px -16px -1px;   /* full-bleed sides + bottom */
+  height: 110px;            /* chart now dominates the card */
+  min-height: 110px;
   display: block;
+  position: relative;
+}
+/* 3D depth illusion under the line: faint white reflection at the bottom */
+.sh-stat-spark::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0; height: 18px;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.02), transparent);
+  pointer-events: none;
 }
 .sh-stat-spark svg { width: 100%; height: 100%; display: block; }
 
