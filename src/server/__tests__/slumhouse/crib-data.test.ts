@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // assembleCribData issues 7 queries in deterministic order. We route by
 // call index instead of by SQL content (Drizzle sql templates don't stringify
 // usefully).
-const ORDER = ["today", "open", "pot", "kill", "discord", "potRows", "crew"] as const;
+const ORDER = ["today", "open", "pot", "kill", "sparkPnl", "discord", "potRows", "crew"] as const;
 type QueryKey = typeof ORDER[number];
 
 let responses: Record<QueryKey, unknown[]> = freshResponses();
@@ -15,6 +15,11 @@ function freshResponses(): Record<QueryKey, unknown[]> {
     open: [{ open_now: 2 }],
     pot: [{ in_pot: 14 }],
     kill: [{ value: "true" }],
+    sparkPnl: [
+      { d: "2026-05-21", pnl: 412, cnt: 3 },
+      { d: "2026-05-22", pnl: -98, cnt: 2 },
+      { d: "2026-05-23", pnl: 705, cnt: 4 },
+    ],
     discord: [
       { name: "ICT Killzones", source: "youtube", status: "queued", age_min: 2 },
       { name: "FVG Setup", source: "discord", status: "extracting", age_min: 11 },

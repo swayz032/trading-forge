@@ -47,27 +47,52 @@
     (async () => {
       const data = await SH.fetchJSON("/slumhouse/api/crib");
       if (!data) return;
-      const { el } = SH;
+      const { el, sparkline, sparkTrend } = SH;
 
-      // Banner
+      // ─── Premium fintech banner ─────────────────────────────────────
       const b = document.getElementById("sh-banner");
-      b.appendChild(stat("Today's Bag", data.banner.todayBag, "green",
-        data.banner.tradesToday.count > 0
-          ? `${data.banner.tradesToday.wins}W · ${data.banner.tradesToday.losses}L`
-          : "no trades yet"));
-      b.appendChild(stat("Trades Today", String(data.banner.tradesToday.count), null,
-        `${data.banner.tradesToday.wins} wins · ${data.banner.tradesToday.losses} losses`));
-      b.appendChild(stat("Open Right Now", String(data.banner.openNow), null,
-        data.banner.openNow > 0 ? "live positions" : "none open"));
-      b.appendChild(stat("In the Pot", String(data.banner.inPot), "amber", "testing"));
-      b.appendChild(stat(
-        "Kill Switch",
-        data.banner.killSwitch === "green" ? "● Green" : "● Red",
-        data.banner.killSwitch === "green" ? "green" : "red",
-        data.banner.killSwitch === "green" ? "bot running" : "bot halted"
-      ));
+      const bag = data.banner;
 
-      // Discord feed
+      // Today's Bag
+      b.appendChild(stat({
+        label: "Today's Bag",
+        value: bag.todayBag,
+        valueClass: bag.todayBagRaw < 0 ? "red" : bag.todayBagRaw > 0 ? "green" : "",
+        spark: bag.todayBagSpark,
+        sub: bag.tradesToday.count > 0
+          ? `${bag.tradesToday.wins}W · ${bag.tradesToday.losses}L`
+          : "no trades yet",
+      }));
+
+      // Trades Today
+      b.appendChild(stat({
+        label: "Trades Today",
+        value: String(bag.tradesToday.count),
+        spark: bag.tradesSpark,
+        sub: `${bag.tradesToday.wins} wins · ${bag.tradesToday.losses} losses`,
+      }));
+
+      // Open Right Now (no time series — render compact)
+      b.appendChild(stat({
+        label: "Open Right Now",
+        value: String(bag.openNow),
+        spark: null,
+        sub: bag.openNow > 0 ? "live positions" : "none open",
+      }));
+
+      // In the Pot
+      b.appendChild(stat({
+        label: "In the Pot",
+        value: String(bag.inPot),
+        valueClass: "amber",
+        spark: bag.inPotSpark,
+        sub: "testing",
+      }));
+
+      // Kill switch (live pulse, no chart)
+      b.appendChild(killStat(bag.killSwitch));
+
+      // ─── Discord feed ───────────────────────────────────────────────
       const df = document.getElementById("sh-discord-feed");
       if (data.discordFeed.length === 0) {
         df.appendChild(el("div", { class: "sh-feed-meta" }, "Nothing fresh in the queue."));
@@ -83,7 +108,7 @@
         }
       }
 
-      // Pot (clickable chips → Recipe page)
+      // ─── Pot ────────────────────────────────────────────────────────
       const pot = document.getElementById("sh-pot");
       if (data.pot.length === 0) {
         pot.appendChild(el("div", { class: "sh-chip-meta" }, "Nothing testing right now."));
@@ -98,7 +123,7 @@
         }
       }
 
-      // Crew
+      // ─── Crew ───────────────────────────────────────────────────────
       const crew = document.getElementById("sh-crew");
       if (data.crew.length === 0) {
         crew.appendChild(el("div", { class: "sh-feed-meta" }, "No crew yet — operator hasn't mapped anyone."));
@@ -112,7 +137,7 @@
         }
       }
 
-      // Anam launcher (placeholder until ANAM session-token endpoint lands)
+      // ─── Anam launcher ──────────────────────────────────────────────
       const launch = document.getElementById("sh-anam-launch");
       launch.addEventListener("click", () => {
         const PERSONA_ID = "026cacc4-619e-4cec-a144-c4a8dfcb623e";
@@ -126,12 +151,50 @@
       });
     })();
 
-    function stat(label, val, color, sub) {
-      return SH.el("div", { class: "sh-stat" },
-        SH.el("div", { class: "sh-stat-label" }, label),
-        SH.el("div", { class: "sh-stat-val " + (color || "") }, val),
-        SH.el("div", { class: "sh-stat-sub" }, sub || "")
-      );
+    function stat(opts) {
+      const { el, sparkline, sparkTrend } = SH;
+      const node = el("div", { class: "sh-stat" });
+
+      // Trend pill (only when sparkline data present)
+      let trendNode = null;
+      if (opts.spark && opts.spark.length > 1) {
+        const t = sparkTrend(opts.spark);
+        const cls = "sh-stat-trend " + (t.direction === "down" ? "down" : t.direction === "up" ? "" : "flat");
+        const arrow = t.direction === "down" ? "▼" : t.direction === "up" ? "▲" : "—";
+        const pctText = t.direction === "flat" ? "" : ` ${Math.abs(Math.round(t.pct))}%`;
+        trendNode = el("span", { class: cls }, `${arrow}${pctText}`);
+      }
+
+      node.appendChild(el("div", { class: "sh-stat-row" },
+        el("div", { class: "sh-stat-label" }, opts.label),
+        trendNode,
+      ));
+      node.appendChild(el("div", { class: "sh-stat-val " + (opts.valueClass || "") }, opts.value));
+
+      // Spark
+      const sparkBox = el("div", { class: "sh-stat-spark" });
+      if (opts.spark && opts.spark.length >= 2) {
+        sparkBox.appendChild(sparkline(opts.spark, { width: 200, height: 28 }));
+      }
+      node.appendChild(sparkBox);
+
+      node.appendChild(el("div", { class: "sh-stat-sub" }, opts.sub || ""));
+      return node;
+    }
+
+    function killStat(state) {
+      const { el } = SH;
+      const node = el("div", { class: "sh-stat" });
+      node.appendChild(el("div", { class: "sh-stat-row" },
+        el("div", { class: "sh-stat-label" }, "Kill Switch"),
+        el("span", { class: "sh-stat-trend " + (state === "green" ? "" : "down") }, state === "green" ? "LIVE" : "HALT"),
+      ));
+      const dot = el("span", { class: "sh-kill-dot " + (state === "green" ? "" : "red") });
+      const valWrap = el("div", { class: "sh-stat-val " + (state === "green" ? "green" : "red") }, dot, state === "green" ? "Green" : "Red");
+      node.appendChild(valWrap);
+      node.appendChild(el("div", { class: "sh-stat-spark" })); // spacer for alignment
+      node.appendChild(el("div", { class: "sh-stat-sub" }, state === "green" ? "bot running" : "bot halted"));
+      return node;
     }
   </script>
 </body>

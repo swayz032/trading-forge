@@ -17,9 +17,13 @@ import { formatBag } from "./translate.js";
 export interface CribData {
   banner: {
     todayBag: string;
+    todayBagRaw: number;             // signed dollars (for trend arrow + animation)
+    todayBagSpark: number[];         // last 7 trading days net P&L
     tradesToday: { count: number; wins: number; losses: number };
+    tradesSpark: number[];           // last 7 days trade count
     openNow: number;
     inPot: number;
+    inPotSpark: number[];            // last 7 days in-pot count (rough)
     killSwitch: "green" | "red";
   };
   discordFeed: Array<{ name: string; source: string; status: string; ageMin: number }>;
@@ -70,6 +74,28 @@ export async function assembleCribData(args: { brokerAccountId: string }): Promi
   `).catch(() => [] as any[]));
   const killSwitch: "green" | "red" =
     killRow?.value === "false" || killRow?.value === false ? "red" : "green";
+
+  // 4b. Sparklines — last 7 trading days
+  const sparkPnlRows = (await db.execute(sql`
+    SELECT (pt.exit_time::date) AS d,
+      COALESCE(SUM(pt.pnl::float), 0)::float AS pnl,
+      COUNT(pt.*)::int AS cnt
+    FROM paper_trades pt
+    JOIN paper_sessions ps ON ps.id = pt.session_id
+    JOIN account_strategy_assignments asa
+      ON asa.strategy_id = ps.strategy_id AND asa.status = 'active'
+    WHERE asa.account_id = ${brokerAccountId}::uuid
+      AND pt.exit_time >= NOW() - INTERVAL '7 days'
+    GROUP BY pt.exit_time::date
+    ORDER BY pt.exit_time::date ASC
+  `).catch(() => [] as any[])) as any[];
+  const todayBagSpark = sparkPnlRows.map((r) => Number(r.pnl ?? 0));
+  const tradesSpark = sparkPnlRows.map((r) => Number(r.cnt ?? 0));
+
+  // In-pot history sparkline is harder (would need a daily snapshot table) —
+  // approximate by emitting flat current value, frontend interprets as no trend.
+  const inPotValue = Number((potRow as any)?.in_pot ?? 0);
+  const inPotSpark = [inPotValue, inPotValue, inPotValue, inPotValue, inPotValue, inPotValue, inPotValue];
 
   // 5. Discord feed — recent scout ingest rows (graceful fallback if scout_audit absent)
   const discordRows = (await db.execute(sql`
@@ -123,16 +149,21 @@ export async function assembleCribData(args: { brokerAccountId: string }): Promi
     LIMIT 4
   `).catch(() => [] as any[])) as any[];
 
+  const todayPnl = Number(todayRow?.today_pnl ?? 0);
   return {
     banner: {
-      todayBag: formatBag(Number(todayRow?.today_pnl ?? 0)),
+      todayBag: formatBag(todayPnl),
+      todayBagRaw: todayPnl,
+      todayBagSpark,
       tradesToday: {
         count: Number(todayRow?.trades_today ?? 0),
         wins: Number(todayRow?.wins ?? 0),
         losses: Number(todayRow?.losses ?? 0),
       },
+      tradesSpark,
       openNow: Number(openRow?.open_now ?? 0),
-      inPot: Number(potRow?.in_pot ?? 0),
+      inPot: inPotValue,
+      inPotSpark,
       killSwitch,
     },
     discordFeed: discordRows.map((r) => ({
