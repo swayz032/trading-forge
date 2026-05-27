@@ -8460,6 +8460,72 @@ Added `# FUTURE-WORK: Bagged CPCV / Adaptive CPCV (SSRN 4686376, 2025)` comment 
 
 ---
 
+### Session Log — 2026-05-27 Slumhouse Portal SHIPPED
+
+**Mission:** Brainstorm + ship Slumhouse — a Discord-OAuth'd friend-facing read-only portal sitting alongside Trading Forge admin. 3 pages (The Crib · The Kitchen · The Recipe), street-translated copy, all data sourced from existing TF systems. No governance writes, no broker calls.
+
+**Work completed (20 tasks across 6 passes):**
+
+Pass 1 — Foundation:
+- Migration `0164_slumhouse_users.sql` + Drizzle `slumhouseUsers` schema (discord_user_id PK → broker_account_id UUID FK)
+- `src/server/lib/slumhouse/discord-oauth.ts` — token exchange + user fetch
+- `src/server/lib/slumhouse/session.ts` — HMAC-SHA256 signed cookie helpers
+- `src/server/routes/slumhouse/auth.ts` — login/callback/logout (`/slumhouse/auth/*`)
+- `src/server/routes/slumhouse/admin-mapping.ts` — operator-only POST/GET `/api/admin/slumhouse-users`
+
+Pass 2 — Translators:
+- `src/server/lib/slumhouse/translate.ts` — `symbolToStreet` (MES→Mini-S&P), `lifecycleToStation` (TESTING→On the Stove), `formatBag` (signed $$), `betSize` (small/medium/big), `oddsOuttaHundred` (3%→"3 outta 100")
+
+Pass 3 — The Crib:
+- `src/server/lib/slumhouse/crib-data.ts` — banner (today's bag/trades/open/in pot/kill switch) + Discord feed + In the Pot horizontal + Crew leaderboard
+- `src/server/routes/slumhouse/api/crib.ts` + shared `lib/slumhouse/require-session.ts` middleware (401/403)
+- `public/slumhouse/crib.html` — top-nav pill + banner + Anam iframe stage + Discord feed rail + Pot chips + Crew rows
+- `public/slumhouse/slumhouse.css` (brand: pure black, lime #a3ff12 accents, slim flat cards) + `slumhouse.js` (shared fetch helper)
+
+Pass 4 — The Kitchen:
+- `src/server/lib/slumhouse/kitchen-data.ts` — 6-stage pipeline aggregation (Ingredients → Prep Station → On the Stove → Taste Test → Small Plates → On the Menu) + Today's Menu DEPLOYED dishes with monthly $ + plays count + Slumdawg's note (latest `trade_critique.plain_english_summary`)
+- `src/server/routes/slumhouse/api/kitchen.ts` (2 endpoints) + `public/slumhouse/kitchen.html`
+
+Pass 5 — The Recipe:
+- `src/server/lib/slumhouse/recipe-data.ts` — 4 panels (Backtest + Monte Carlo + Backtest Calendar + 8 Other Tests) reading from `backtests`, `monte_carlo_runs`, `lifecycle_shadow_signals`, `paper_trades`, `strategy_health_scores`
+- 8 Other Tests with street-translated names: Surprise Test (WFE), Sloppy Bot Test (B15), Worst Day Test (A14), Every Mood Test (B10), Real or Lucky (Frankenstein/PBO), Preseason (paper), Real-Time Match (SHADOW divergence), Plays Clean (compliance)
+- `src/server/routes/slumhouse/api/recipe.ts` + `public/slumhouse/recipe.html` (command-center image hero, score ring, 2×2 panel grid, calendar + feed bottom)
+
+Pass 6 — Mount + close:
+- `src/server/routes/slumhouse/index.ts` (aggregator router + static serving at /slumhouse with index=crib.html) + mounted into `src/server/index.ts`
+- `public/slumhouse/login.html` (Discord OAuth button) + `not-mapped.html` (operator pending mapping)
+- `docs/slumhouse-deployment.md` — env vars + Discord app setup + curl examples for mapping friends
+- `docs/system-subsystem-registry.json` — registered 4 new subsystems (slumhouse_users_table, slumhouse_discord_oauth, slumhouse_routes, slumhouse_frontend)
+
+Also restored Anam.ai persona during this session:
+- New persona ID `026cacc4-619e-4cec-a144-c4a8dfcb623e` ("Slumdawg UpTOP"); old `afb9ea0a-…` is dead
+- `scripts/restore-slumdawg-anam.ts` — idempotent restore via Anam REST API (PUT systemPrompt + initialMessage)
+- `scripts/list-anam-personas.ts` — list helper if persona ID ever lost again
+- Pinned in memory: `reference_anam_persona.md`
+
+**Verification:**
+- 62 cumulative new vitest GREEN across 11 slumhouse test files (oauth 5, session 8, auth 7, admin-mapping 5, translate 14, crib-data 4, crib-route 4, kitchen-data 5, kitchen-route 2, recipe-data 5, recipe-route 3)
+- `npm run system-map:check` exits 0
+- `npm run check:production-isolation` CLEAN — 4 files checked, 0 violations
+- `npm run check:2026-compliance` OK — MFFU + Topstep aligned
+- Zero new failures vs Wave 29 cumulative 432-test baseline
+
+**Known-facts updates:**
+- Added pinned reference at `~/.claude/projects/.../memory/reference_anam_persona.md` (Anam persona ID swap)
+
+**Carry-forward for next session:**
+- Operator: create Discord application at https://discord.com/developers/applications, paste `DISCORD_CLIENT_ID` + `DISCORD_CLIENT_SECRET` into `.env`, set `DISCORD_REDIRECT_URI=https://tf-relay-production.up.railway.app/slumhouse/auth/callback`
+- Operator: `openssl rand -hex 32` → `SLUMHOUSE_SESSION_SECRET` in `.env`
+- Operator: `npm run db:migrate` to apply 0164 to Railway prod (or wait for boot-migration-runner)
+- Operator: restart TF API via HMAC self-restart endpoint to load new routes
+- Operator: `curl -X POST /api/admin/slumhouse-users` once per friend to map Discord ID → broker_account_id
+- Operator: DM friends `https://tf-relay-production.up.railway.app/slumhouse`
+- Spec open question #5 (Crew leaderboard P&L visibility) — currently shows everyone's $$ to everyone; consider per-friend hide toggle if any friend wants privacy
+- Spec open question #4 (Anam auto-start vs click-to-start) — currently click-to-start (operator-confirmed during brainstorm)
+- Mobile-responsive audit deferred — current layouts assume desktop browser per spec §11 out-of-scope
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)
