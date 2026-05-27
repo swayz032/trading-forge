@@ -41,8 +41,21 @@ describe("discord-oauth", () => {
     await expect(exchangeCodeForToken("bad")).rejects.toThrow(/discord_oauth_token_exchange_failed/);
   });
 
-  it("exchangeCodeForToken throws when env vars missing", async () => {
+  it("exchangeCodeForToken throws when neither DISCORD_CLIENT_ID nor DISCORD_APPLICATION_ID is set", async () => {
     delete process.env.DISCORD_CLIENT_ID;
-    await expect(exchangeCodeForToken("abc")).rejects.toThrow(/DISCORD_CLIENT_ID/);
+    delete process.env.DISCORD_APPLICATION_ID;
+    await expect(exchangeCodeForToken("abc")).rejects.toThrow(/DISCORD_APPLICATION_ID/);
+  });
+
+  it("exchangeCodeForToken falls back to DISCORD_APPLICATION_ID when DISCORD_CLIENT_ID is unset", async () => {
+    delete process.env.DISCORD_CLIENT_ID;
+    process.env.DISCORD_APPLICATION_ID = "appid-fallback";
+    const fetchSpy = vi.spyOn(globalThis, "fetch" as any).mockResolvedValue(
+      new Response(JSON.stringify({ access_token: "tok_from_appid" }), { status: 200 }),
+    );
+    const tok = await exchangeCodeForToken("abc");
+    expect(tok).toBe("tok_from_appid");
+    const body = String((fetchSpy.mock.calls[0] as any[])[1].body);
+    expect(body).toContain("client_id=appid-fallback");
   });
 });

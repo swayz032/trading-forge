@@ -23,10 +23,11 @@ import { insertAuditRowSafe } from "../../lib/audit-log-helper.js";
 const SESSION_TTL_SEC = 60 * 60 * 24 * 14; // 14 days
 
 export async function handleLogin(_req: Request, res: Response): Promise<void> {
-  const clientId = process.env.DISCORD_CLIENT_ID;
+  // Falls back to DISCORD_APPLICATION_ID — same value Discord shows in the dev portal.
+  const clientId = process.env.DISCORD_CLIENT_ID ?? process.env.DISCORD_APPLICATION_ID;
   const redirect = process.env.DISCORD_REDIRECT_URI;
   if (!clientId || !redirect) {
-    res.status(500).send("slumhouse_misconfigured: DISCORD_CLIENT_ID or DISCORD_REDIRECT_URI missing");
+    res.status(500).send("slumhouse_misconfigured: DISCORD_CLIENT_ID/APPLICATION_ID or DISCORD_REDIRECT_URI missing");
     return;
   }
   const url =

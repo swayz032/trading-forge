@@ -10,7 +10,9 @@ const TOKEN_URL = "https://discord.com/api/oauth2/token";
 const USER_URL = "https://discord.com/api/users/@me";
 
 export async function exchangeCodeForToken(code: string): Promise<string> {
-  const clientId = required("DISCORD_CLIENT_ID");
+  // DISCORD_CLIENT_ID falls back to DISCORD_APPLICATION_ID (same value — Discord
+  // calls it "Application ID" in the dev portal, "Client ID" in OAuth flows).
+  const clientId = process.env.DISCORD_CLIENT_ID ?? required("DISCORD_APPLICATION_ID");
   const clientSecret = required("DISCORD_CLIENT_SECRET");
   const redirectUri = required("DISCORD_REDIRECT_URI");
 
