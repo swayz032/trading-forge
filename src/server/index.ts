@@ -583,7 +583,7 @@ process.on("uncaughtException", (err) => {
   process.exit(1);
 });
 
-const server = app.listen(port, () => {
+export const server = app.listen(port, () => {
   logger.info(`Trading Forge running on http://localhost:${port}`);
 
   // ─── Production HTTP server timeouts ─────────────────────────

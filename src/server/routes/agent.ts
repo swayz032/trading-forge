@@ -1065,6 +1065,21 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       return;
     }
 
+    // ─── Wave 26 Pass K Phase 7 (2026-05-27) — Mechanic Portability (early) ──
+    // Classify BEFORE the strategy-processing loop so the cross-market demo
+    // fallback at the symbol-remap site can reference `portability.portable`.
+    // (Pass K Phase 7 v1 had this defined AFTER the loop — caused ReferenceError
+    // inside the loop body, which silently aborted the response. Reason fields
+    // never reached the caller.)
+    const portability = classifyMechanicPortability(markdown);
+    const rawStrategyCount = Array.isArray(strategiesIn) ? (strategiesIn as unknown[]).length : 0;
+    const rawStrategyNames = Array.isArray(strategiesIn)
+      ? (strategiesIn as Array<Record<string, unknown>>)
+          .map((s) => (typeof s?.name === "string" ? s.name : (typeof s?.concept_name === "string" ? s.concept_name : null)))
+          .filter((n): n is string => n != null && n.length > 0)
+          .slice(0, 3)
+      : [];
+
     // Transform DSL-shaped output → strict scout shape.
     // CLAUDE.md §13 enforcement: MES/MNQ/MCL only — silently drop ES/NQ/CL/etc.
     const ideas: Array<Record<string, unknown>> = [];
@@ -1421,21 +1436,10 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
     // a strategy but ideas[] ended up empty, the user-facing embed should say
     // "Slumdawg almost had it — couldn't pull all the rules" instead of the
     // generic "mostly talk" reject. The bot reads `gemma_saw` to branch.
-    const rawStrategyCount = Array.isArray(strategiesIn) ? (strategiesIn as unknown[]).length : 0;
-    const rawStrategyNames = Array.isArray(strategiesIn)
-      ? (strategiesIn as Array<Record<string, unknown>>)
-          .map((s) => (typeof s?.name === "string" ? s.name : (typeof s?.concept_name === "string" ? s.concept_name : null)))
-          .filter((n): n is string => n != null && n.length > 0)
-          .slice(0, 3)
-      : [];
-
-    // ─── Wave 26 Pass J Phase 2 (2026-05-26) — Mechanic Portability Classifier ──
-    // Cross-market mechanics are the default. Most strategies (EMA, RSI, supply/demand,
-    // ICT/SMC, ORB, VWAP fades, etc.) port from forex/stock/crypto demos to MES/MNQ/MCL
-    // without modification. The chart symbol is NOT the strategy's market.
-    // Hard rejects ONLY when MECHANICS don't port: options Greeks, swing/multi-day,
-    // forex carry/swap/intervention, stock dividend/earnings/sector-rotation, crypto on-chain/funding.
-    const portability = classifyMechanicPortability(markdown);
+    // ─── Wave 26 Pass J Phase 2 (2026-05-26) — Mechanic Portability Audit ──
+    // (Classification moved earlier in Pass K Phase 7v2 — see comment above the
+    // strategy-processing loop. Audit emission stays here since it needs the
+    // final ideas.length to surface "ideas_extracted: N" for observability.)
     insertAuditRow({
       action: "extraction.mechanic_portability_classified",
       entityType: "scout_extract",

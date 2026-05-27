@@ -136,11 +136,51 @@ adminRoutes.post("/self-restart", async (req, res) => {
   // ── Respond before exiting ────────────────────────────────────────────────
   res.json({ status: "restart_initiated", reason, correlationId });
 
-  // ── Flush logs + exit ─────────────────────────────────────────────────────
-  logger.info({ correlationId, reason }, "self-restart: flushing logs — process.exit(0) in 1s");
-  setTimeout(() => {
-    process.exit(0);
-  }, 1_000);
+  // ── Graceful shutdown (Wave 26 Pass K Phase 7 v2 — 2026-05-27 fix) ────────
+  // Pass K Phase 7 v1 used a plain setTimeout → process.exit(0). The audit row
+  // confirmed the route was hit, but the process kept running past the 1s exit
+  // window (operator caught this when uptime kept incrementing instead of
+  // resetting). Root cause hypothesis: process.exit(0) is forceful but the
+  // setTimeout callback never fired — event loop was busy / a downstream
+  // microtask was blocking macrotask processing, OR process.exit was being
+  // intercepted somewhere.
+  //
+  // Hardened sequence:
+  //   1. Schedule a SIGKILL fallback at +5s — process.kill(SIGKILL) is
+  //      OS-level termination, cannot be intercepted by Node.
+  //   2. Call server.close() to stop accepting new HTTP connections.
+  //   3. Force-close any remaining connections after server.close completes.
+  //   4. Call process.exit(0) for clean exit.
+  // If any step hangs, the SIGKILL fallback at +5s guarantees death.
+  // NSSM AppRestartDelay=2000 + AppThrottle=5000 then auto-respawns.
+  logger.info({ correlationId, reason }, "self-restart: scheduling graceful shutdown (SIGKILL fallback at +5s)");
+
+  const HARD_KILL_FALLBACK_MS = 5_000;
+  const killTimer = setTimeout(() => {
+    logger.warn({ correlationId }, "self-restart: graceful shutdown timed out — sending SIGKILL");
+    try { process.kill(process.pid, "SIGKILL"); } catch { /* if SIGKILL fails, nothing will save us */ }
+    // Belt-and-suspenders: process.exit if kill silently no-op'd
+    process.exit(1);
+  }, HARD_KILL_FALLBACK_MS);
+  killTimer.unref();
+
+  // Best-effort graceful close. If `server` import fails (legacy code path
+  // pre-Phase-7v2 didn't export it), skip straight to process.exit.
+  try {
+    const { server } = await import("../index.js");
+    server.close(() => {
+      logger.info({ correlationId }, "self-restart: server closed cleanly — calling process.exit(0)");
+      process.exit(0);
+    });
+    // server.close() only kills LISTENING sockets, not active connections.
+    // Force-destroy any keep-alive sockets to actually let it return.
+    if (typeof (server as { closeAllConnections?: () => void }).closeAllConnections === "function") {
+      (server as { closeAllConnections: () => void }).closeAllConnections();
+    }
+  } catch (importErr) {
+    logger.warn({ err: importErr, correlationId }, "self-restart: could not import server for graceful close — calling process.exit(0) directly");
+    setTimeout(() => process.exit(0), 200);
+  }
 });
 
 // ─── Wave 24 Pass 1.5 Item 6: POST /operator-mark-present ────────────────────
