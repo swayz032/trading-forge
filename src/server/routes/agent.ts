@@ -5,6 +5,7 @@ import { AgentService } from "../services/agent-service.js";
 import { analyzeMarket } from "../services/regime-service.js";
 import { synthesizeV11FromGemmaProse } from "../lib/gemma-prose-to-v11.js";
 import { extractSpeakerConceptsFromTranscript } from "../lib/transcript-speaker-concepts.js";
+import { classifyMechanicPortability, explainRejectClass } from "../lib/mechanic-portability.js";
 import { runPass1VocabularyExtraction } from "../lib/two-pass-vocab-extractor.js";
 import { runRobustnessTest } from "../services/robustness-service.js";
 import { db } from "../db/index.js";
@@ -1342,20 +1343,84 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       });
     }
 
+    // ─── Wave 26 Pass J Phase 2 (2026-05-26) — Mechanic Portability Classifier ──
+    // Cross-market mechanics are the default. Most strategies (EMA, RSI, supply/demand,
+    // ICT/SMC, ORB, VWAP fades, etc.) port from forex/stock/crypto demos to MES/MNQ/MCL
+    // without modification. The chart symbol is NOT the strategy's market.
+    // Hard rejects ONLY when MECHANICS don't port: options Greeks, swing/multi-day,
+    // forex carry/swap/intervention, stock dividend/earnings/sector-rotation, crypto on-chain/funding.
+    const portability = classifyMechanicPortability(markdown);
+    insertAuditRow({
+      action: "extraction.mechanic_portability_classified",
+      entityType: "scout_extract",
+      entityId: null,
+      status: portability.portable ? "success" : "info",
+      result: {
+        source_url: sourceUrl,
+        portable: portability.portable,
+        reject_class: portability.reject_class,
+        evidence: portability.evidence,
+        confidence: portability.confidence,
+        ideas_extracted: ideas.length,
+        llm_instrument_classification: lastInstrumentClassification,
+      },
+    });
+
     if (ideas.length === 0) {
-      res.status(200).json({ extracted: false, reason: "no_supported_market", ideas: [] });
+      // Disambiguate the empty-ideas case using mechanic portability:
+      //   - portable: Gemma actually found no concrete rules → no_strategy_content
+      //   - not portable: strategy mechanics don't port to intraday futures → reject_class
+      if (portability.portable) {
+        res.status(200).json({
+          extracted: false,
+          reason: "no_strategy_content",
+          ideas: [],
+          portable: true,
+        });
+      } else {
+        res.status(200).json({
+          extracted: false,
+          reason: portability.reject_class!,
+          reason_detail: explainRejectClass(portability.reject_class!),
+          evidence: portability.evidence,
+          ideas: [],
+          portable: false,
+        });
+      }
       return;
+    }
+
+    // Override path: Gemma flagged non_futures_primary but mechanic portability says it ports.
+    // Speaker demonstrated on a forex/stock/crypto chart while teaching universal mechanics.
+    // Trust the mechanic classifier over Gemma's chart-based classification.
+    let finalClassification = lastInstrumentClassification ?? "futures_primary";
+    if (lastInstrumentClassification === "non_futures_primary" && portability.portable) {
+      insertAuditRow({
+        action: "extraction.mechanic_classification_override",
+        entityType: "scout_extract",
+        entityId: null,
+        status: "info",
+        result: {
+          source_url: sourceUrl,
+          llm_said: "non_futures_primary",
+          override_to: "futures_primary",
+          reason: "mechanic_portability=true (cross-market mechanic — speaker chart is not the strategy's market)",
+          ideas_count: ideas.length,
+        },
+      });
+      finalClassification = "futures_primary";
     }
 
     // W23G.7 + W23G.2 — include telemetry fields in success response.
     // extraction_mode: single_pass | chunked_fallback — for callers to log cycle-level stats.
-    // instrument_classification: advisory classification from the LLM (may be null if LLM omitted).
+    // instrument_classification: advisory classification (Pass J: post-override-aware).
     // tokens_estimated: char_count / 4 estimate for budget observability.
     res.json({
       extracted: true,
       ideas,
       extraction_mode: extractionMode,
-      instrument_classification: lastInstrumentClassification ?? "futures_primary",
+      instrument_classification: finalClassification,
+      mechanic_portable: portability.portable,
       tokens_estimated: Math.ceil(markdown.length / 4),
     });
   } catch (err) {

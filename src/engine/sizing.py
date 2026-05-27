@@ -214,6 +214,8 @@ def compute_risk_derived_contracts(
     account_starting_floor: float = 50_000.0,
     # ── Wave 25 Pass 2 Inst-10: Drawdown-room cap (Topstep only) ────────────
     current_drawdown_room: Optional[float] = None,
+    # ── Wave 26 Pass K Phase 3: PM session size factor ──────────────────────
+    pm_size_factor: Optional[float] = None,
 ) -> RiskSizingResult:
     """Compute risk-derived contract count at signal time.
 
@@ -276,7 +278,21 @@ def compute_risk_derived_contracts(
         if tier_threshold_dollars > 0
         else 0
     )
-    pyramid_tier = base_contracts + tier_increment * tiers
+    pyramid_tier_raw = base_contracts + tier_increment * tiers
+
+    # ── Wave 26 Pass K Phase 3 (2026-05-26) — Apply PM session size factor ──
+    # Mirrors src/server/lib/risk-sizing.ts. EOD-DD-aware multiplier per TTT
+    # Markets 2026-04 + SurgeFunded 2026-02. None/missing → no scaling
+    # (backward compat; pre-Pass-K backtests unchanged).
+    if (
+        pm_size_factor is None
+        or not isinstance(pm_size_factor, (int, float))
+        or not math.isfinite(pm_size_factor)
+    ):
+        _pm_factor = 1.0
+    else:
+        _pm_factor = max(0.0, min(1.0, float(pm_size_factor)))
+    pyramid_tier = int(math.floor(pyramid_tier_raw * _pm_factor))
 
     # Determine risk cap method from firm
     risk_cap_method = "topstep_trailing_dd" if firm == "topstep" else "mffu_balance_pct"
@@ -1138,18 +1154,58 @@ def compute_position_sizes(
                 0.0,
                 risk_derived_caps,
             )
-            # Step 1: min(pyramid_tier, risk_derived_cap, firm_cap, liquidity_cap)
-            bar_sizes = np.minimum(pyramid_tier_bar, risk_derived_caps)
+
+            # ── Wave 26 Pass K Phase 3 (2026-05-26) — Per-bar PM size factor ──
+            # Apply EOD-DD-aware multiplier to pyramid_tier_bar per-bar (NOT to
+            # risk_derived_caps — those already reflect per-bar ATR risk). Mirrors
+            # TS src/server/lib/risk-sizing.ts + paper-signal-service.ts wiring.
+            # Fail-soft: if ts_event column absent or vectorizer raises, factor=1.0
+            # (no scaling) so backward-compat preserved for legacy DataFrames.
+            try:
+                from src.engine.pm_size_factor import compute_pm_size_factor_vec
+                if "ts_event" in df.columns:
+                    # Convert UTC ts_event → ET minute-of-day vector (DST-correct via Polars)
+                    et_minutes = (
+                        df.select(
+                            (
+                                pl.col("ts_event")
+                                .dt.convert_time_zone("America/New_York")
+                                .dt.hour() * 60
+                                + pl.col("ts_event")
+                                .dt.convert_time_zone("America/New_York")
+                                .dt.minute()
+                            ).alias("et_min")
+                        )["et_min"].to_numpy()
+                    )
+                    pm_factors = compute_pm_size_factor_vec(et_minutes)
+                    pyramid_tier_per_bar = np.floor(pyramid_tier_bar * pm_factors)
+                else:
+                    pyramid_tier_per_bar = np.full(n, float(pyramid_tier_bar))
+            except Exception as _pm_err:  # noqa: BLE001
+                logger.warning("pm_size_factor: per-bar vectorization failed (%s) — falling back to no PM scaling", _pm_err)
+                pyramid_tier_per_bar = np.full(n, float(pyramid_tier_bar))
+
+            # Step 1: min(pyramid_tier_per_bar, risk_derived_cap, firm_cap, liquidity_cap)
+            bar_sizes = np.minimum(pyramid_tier_per_bar, risk_derived_caps)
             bar_sizes = np.minimum(bar_sizes, effective_firm_cap_bar)
             bar_sizes = np.minimum(bar_sizes, liquidity_cap_bar)
             bar_sizes = np.maximum(bar_sizes, 0.0)
             # Step 2 (Wave 23): Pyramid floor on healthy accounts — element-wise
+            # NOTE: Wave 26 Pass K — floor binds ONLY when pyramid_tier_per_bar >= base_contr
+            # so PM-tapered bars don't get re-inflated above the EOD-DD safe size.
             if account_is_healthy_bar and base_contr > 0:
                 bar_sizes = np.where(
-                    bar_sizes < base_contr, float(base_contr), bar_sizes
+                    (bar_sizes < base_contr) & (pyramid_tier_per_bar >= base_contr),
+                    float(base_contr),
+                    bar_sizes,
                 )
             # Bars where risk_derived_caps == 0 and account unhealthy → 1 fallback (minimum tradeable)
-            bar_sizes = np.where(bar_sizes <= 0, 1.0, bar_sizes)
+            # Wave 26 Pass K: PM-closed bars (pyramid_tier_per_bar == 0) stay at 0 (no entry).
+            bar_sizes = np.where(
+                (bar_sizes <= 0) & (pyramid_tier_per_bar > 0),
+                1.0,
+                bar_sizes,
+            )
             sizes = bar_sizes
 
         over_risk = np.zeros(n, dtype=bool)

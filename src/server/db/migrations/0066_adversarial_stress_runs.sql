@@ -5,7 +5,7 @@
 -- Phase 1 block (W7b Day 52): worst_case_breach_prob > 0.5 AND breach_minimal_n_trades < 4
 --   will block TESTING->PAPER promotion ONLY after graduation from Phase 0.
 
-CREATE TABLE adversarial_stress_runs (
+CREATE TABLE IF NOT EXISTS adversarial_stress_runs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   backtest_id uuid REFERENCES backtests(id) NOT NULL,
   strategy_id uuid REFERENCES strategies(id) NOT NULL,
@@ -25,14 +25,23 @@ CREATE TABLE adversarial_stress_runs (
 );
 
 -- Lookup by backtest (most common query: "what did adversarial stress find for this backtest?")
-CREATE INDEX idx_adversarial_stress_backtest
+CREATE INDEX IF NOT EXISTS idx_adversarial_stress_backtest
   ON adversarial_stress_runs(backtest_id, created_at DESC);
 
 -- Lookup by strategy (Tier 7 graduation queries — all runs for a strategy over 30d)
-CREATE INDEX idx_adversarial_stress_strategy
+CREATE INDEX IF NOT EXISTS idx_adversarial_stress_strategy
   ON adversarial_stress_runs(strategy_id, created_at DESC);
 
 -- Partial index for high-risk rows (Phase 1 decision rule queries)
-CREATE INDEX idx_adversarial_stress_high_risk
+CREATE INDEX IF NOT EXISTS idx_adversarial_stress_high_risk
   ON adversarial_stress_runs(worst_case_breach_prob, breach_minimal_n_trades)
   WHERE status = 'completed' AND worst_case_breach_prob IS NOT NULL;
+
+-- Wave 26 Pass K Phase 4 (2026-05-26) — IF NOT EXISTS retrofit. The original
+-- 0066 used bare CREATE TABLE / CREATE INDEX, so on a second boot (e.g. after
+-- a Railway redeploy that lost the drizzle.__drizzle_migrations tracking row
+-- but kept the table itself) the boot-migration-runner errored out and operator
+-- disabled it via BOOT_MIGRATION_ENABLED=false. That cascaded into migrations
+-- 0067–0162 silently sitting unapplied for ~2 days until graduation insert
+-- started failing on Wave 29 Pass A/B/C columns. Adding IF NOT EXISTS makes
+-- this migration idempotent so the runner can safely re-process it.

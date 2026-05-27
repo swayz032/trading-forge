@@ -20,6 +20,7 @@
     "check:production-isolation": "node scripts/check-production-isolation.mjs",
     "check:2026-compliance": "node scripts/verify-2026-rules-compliance.mjs",
     "check:ts-python-exit-parity": "npx tsx scripts/wave26-ts-python-exit-parity.ts",
+    "check:ts-python-pm-factor-parity": "npx tsx scripts/check-ts-python-pm-factor-parity.ts",
     "audit:n8n": "node scripts/audit-n8n-workflows.mjs",
     "preflight:vacation": "tsx scripts/pre-vacation-preflight.ts",
     "forge": "tsx scripts/cli.ts",

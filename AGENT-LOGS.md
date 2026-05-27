@@ -4,6 +4,54 @@
 
 ---
 
+### Session Log — 2026-05-26 claude (Wave 26 Pass K — 1-2 trades/day hard gate + 11:30-13:30 ET lunch blackout + PM size taper)
+
+**Mission:** Operator asked "we do 1-2 trades a day and we have a 12pm cutoff time is this info in claude md and in our files?" Audit revealed: NO — neither rule codified. Operator authorized "executr and we eill run test at the end" + "research 2026 if we need to let a institional bot run after 12pm or exit the market". Build 1-2 trade gate AND institutional-research-validate the 12 PM cutoff design.
+
+**Work completed:**
+
+- **Phase 1 — Daily Trade Cap (1-2 A+ trades/day HARD signal-time gate):**
+  - NEW `src/server/lib/daily-trade-cap.ts` — pure-function evaluator + env-default reader (`TF_MAX_TRADES_PER_DAY=2` operator default; per-session override via `paper_sessions.config.max_trades_per_day` per CLAUDE.md §15-style precedence DB > env > default).
+  - NEW `src/server/__tests__/wave26-pass-k-daily-trade-cap.test.ts` — 24 vitest covering precedence / quota math / fail-open on bad input / cap-disable sentinel / env defaults.
+  - Wired into `paper-signal-service.ts` INSIDE the entry-conditional, BEFORE the `lockoutBlocked` aggregation. New variable `dailyTradeCapBlocked` joins `symbolWhitelistBlocked || blackoutBlocked || dllHaltBlocked` so downstream gates short-circuit on cap reached. Counts via per-CME-trading-day `paper_trades` query (matches `paper-execution-service.ts:925` convention). Fail-OPEN on DB error.
+  - Audit: `consistency.daily_trade_cap_blocked` per block with `effective_cap` + `trades_today` + `reason`.
+  - The post-fill Python kill switch (`paper-execution-service.ts:913`) continues to enforce as a belt-and-suspenders defense layer.
+
+- **Institutional research (background subagent → completed in ~6 min):**
+  - Launched `institutional-edge-researcher` per its charter on the question "should an institutional bot stop trading at 12:00 PM ET?"
+  - Verdict: **HARD-CUTOFF AT NOON IS MISCALIBRATED ON BOTH SIDES.** Dead zone starts 30 min earlier (11:30 ET, per Tradeify 13-yr prop firm dataset showing >60% false-breakout rate) and PM session (13:30–15:30 ET) hosts 35% of NQ HOD formations (per TradingStats.net 12,095-day futures study) — blocking PM discards a structural edge.
+  - 16 sources cited, all ≥2025-01-01 publication date, every recommendation ≥3 corroborating sources.
+  - Full report persisted to `docs/institutional-evidence/intraday-session-timing-2026.md`.
+
+- **Phase 2 — Lunch Blackout (11:30-13:30 ET) HARD gate + PM Size Taper SOFT modifier:**
+  - NEW `src/server/lib/lunch-blackout-gate.ts` — pure-function evaluator reusing `entry-windows.ts::parseEntryWindow` + `isBarInWindow` for DST-aware ET time math. Defaults `LUNCH_BLACKOUT_START_ET=11:30` / `LUNCH_BLACKOUT_END_ET=13:30`. Per-strategy override via `entry_quality.lunch_blackout_disabled=true`. FAIL-CLOSED on malformed config (opposite of daily trade cap's fail-OPEN — better to halt on misconfig than silently re-enable a known-bad window).
+  - NEW `src/server/lib/pm-size-factor.ts` — pure-function EOD-DD-aware multiplier. Phases: AM (before 13:30 ET) factor 1.0; PM taper (13:30→15:00 ET) linear 0.50→0.25; PM floor (15:00→15:30 ET) held at 0.25; PM closed (15:30 ET+) factor 0.0. Configurable via 5 env vars. Conservative fallback to 0.25 on misconfig.
+  - NEW tests: `wave26-pass-k-lunch-blackout.test.ts` (22 vitest) + `wave26-pass-k-pm-size-factor.test.ts` (24 vitest) — full coverage including DST handling (Jan EST + Mar EDT + Nov post-fall-back).
+  - Wired into `paper-signal-service.ts`: `lunchBlackoutBlocked` joins `lockoutBlocked` aggregation AFTER `dailyTradeCapBlocked`; audit `consistency.lunch_blackout_blocked` per block + `consistency.lunch_blackout_per_strategy_override` per override-bypass.
+  - PM size factor: NEW optional `pmSizeFactor` field on `RiskSizingInputs` in `src/server/lib/risk-sizing.ts`. `computeRiskDerivedContracts()` applies the multiplier to `pyramidTier` BEFORE the `min()` against caps. Backward-compat preserved — null/undefined factor → no scaling. Caller (`paper-signal-service.ts:4144`) computes the factor via `computePmSizeFactor({ barTsUtc: new Date(bar.timestamp) }).factor`.
+  - CLAUDE.md updates: §4 framework adds Daily Trade Cap subsection; §12 hard gates table adds Pass K Phase 1 row; §13 Don't adds 3 new rules.
+
+**Verification:**
+- Pure-function tests: **120/120 GREEN** across 5 files (24 daily-trade-cap + 22 lunch-blackout + 24 pm-size-factor + 34 risk-sizing + 16 risk-sizing-wave23). Zero new regressions vs pre-Pass-K baseline.
+- TradingForgeAPI restarted via HMAC self-restart (`correlationId: b3e89da5-1b54-4f60-ae78-41c6ecbda538`); health probe confirmed 18s uptime + `status: ok`.
+- CI hard gates: `check:production-isolation` CLEAN; `check:2026-compliance` OK.
+- Institutional research: 16 sources cited, all ≥2025-01-01. Cross-validated 3-source-minimum on every recommendation.
+
+**Known-facts updates:**
+- `TF_MAX_TRADES_PER_DAY=2` is operator's "1-2 A+ trades/day" mandate default; 3rd signal of the day is the FIRST rejected.
+- Lunch blackout window 11:30–13:30 ET is institutional 2026 standard, NOT 12:00–13:00 or noon-onward.
+- PM session 13:30–15:30 ET stays OPEN with size-tapered 50%→25% (NOT blocked) — discarding PM throws away 35% of NQ HOD formations per the same 12,095-day dataset.
+- Lunch blackout gate is FAIL-CLOSED on misconfig (opposite of daily trade cap's fail-OPEN) — different risk policies because the lunch gate exists to PREVENT a known-bad window; the trade cap exists to LIMIT over-trading.
+
+**Carry-forward for next session:**
+- **System Map sync** — did NOT run `npm run system-map:sync` after the 3 new lib files. Should run before commit.
+- **PM size factor needs Python mirror** for backtester parity. The current implementation is TS-only — backtests run via Python `backtester.py` and won't apply the PM size taper unless mirrored. Plan a `src/engine/pm_size_factor.py` + parity CI gate. Without this, backtest vs paper P&L will diverge whenever a strategy fires entries in the PM session.
+- **Wave 29 Pass C 0159 seed bug (carry-forward from earlier tonight)** — `firm_id='paper'` violates broker_accounts CHECK constraint. Either relax constraint OR drop the seed INSERT OR use a separate paper_sub_accounts table.
+- **Re-enable boot-migration-runner safely** — fix 0066 collision (likely `CREATE TABLE IF NOT EXISTS` retrofit), then flip `BOOT_MIGRATION_ENABLED=true` so future migrations don't sit silently unapplied like 0159/0160/0161/0162 did tonight.
+- **Commit + push** per CLAUDE.md §11a HARD RULE — pending all Pass K + Pass J + earlier tonight work.
+
+---
+
 ### Session Log — 2026-05-26 claude (Slumdawg debug + Wave 26 Pass J Phase 2-3 mechanic portability + uncatalogued archetype queue)
 
 **Mission:** Operator reported Slumdawg Discord bot rejecting all YouTube links with "model unavailable", then with "no supported market" on legit price-action videos. Diagnose root cause, fix, then design + ship the robust adaptive route so gemma extracts ANY trading strategy whose mechanics port to intraday MES/MNQ/MCL — regardless of catalog match or demo chart symbol.

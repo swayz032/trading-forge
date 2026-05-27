@@ -1142,6 +1142,13 @@
       "when": 1748563200000,
       "tag": "0162_needs_archetype_queue",
       "breakpoints": true
+    },
+    {
+      "idx": 163,
+      "version": "7",
+      "when": 1748563200001,
+      "tag": "0163_broker_accounts_allow_paper_firm",
+      "breakpoints": true
     }
   ]
 }

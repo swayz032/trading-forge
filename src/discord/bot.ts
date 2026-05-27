@@ -6,7 +6,11 @@ import {
   Routes,
   EmbedBuilder,
   TextChannel,
+  AttachmentBuilder,
 } from "discord.js";
+import { resolve as pathResolve } from "path";
+import { existsSync, writeFileSync, readFileSync, unlinkSync, mkdirSync } from "fs";
+import { dirname } from "path";
 import express from "express";
 import pino from "pino";
 import { z } from "zod";
@@ -21,9 +25,322 @@ const log = pino({
       : undefined,
 });
 
+// ─── Pidfile singleton lock (Wave 26 Pass G fix 2026-05-26) ─────────────
+// Prevents two bot processes from connecting to the Discord gateway with the
+// same token, which causes double-replies to every #slumdawg-feed message.
+// NSSM restarts sometimes leave the old node child alive for a few seconds
+// while the new one connects; without this lock, both fire on messageCreate.
+const BOT_PIDFILE = "C:\\Users\\tonio\\bin\\tf-logs\\discord-bot.pid";
+function acquireBotSingletonLock() {
+  try { mkdirSync(dirname(BOT_PIDFILE), { recursive: true }); } catch {}
+
+  // Atomic exclusive-create. If two processes race here, exactly ONE wins.
+  try {
+    writeFileSync(BOT_PIDFILE, String(process.pid), { flag: "wx" });
+  } catch {
+    // Someone else holds the lock — check if they're alive
+    let oldPid: number | null = null;
+    try { oldPid = parseInt(readFileSync(BOT_PIDFILE, "utf8").trim(), 10); } catch {}
+    if (oldPid && Number.isFinite(oldPid) && oldPid !== process.pid) {
+      try {
+        process.kill(oldPid, 0); // signal 0 = check alive
+        log.warn({ oldPid, ourPid: process.pid }, "Discord bot pidfile owned by live process — exiting to avoid double-gateway-session");
+        process.exit(0);
+      } catch {
+        // Old pid is dead — stale pidfile, take over
+        try { unlinkSync(BOT_PIDFILE); } catch {}
+        writeFileSync(BOT_PIDFILE, String(process.pid), { flag: "wx" });
+      }
+    }
+  }
+
+  // Wmic kill removed 2026-05-26: it terminated the tsx parent wrapper of
+  // THIS process (ProcessId!=current excluded self but not parent), causing
+  // bot to suicide-loop. Atomic pidfile lock above is sufficient now that
+  // PM2 duplicates are deleted (see memory: pm2-vs-nssm-supervisor-conflict).
+
+  const cleanup = () => { try { unlinkSync(BOT_PIDFILE); } catch {} };
+  process.on("exit", cleanup);
+  process.on("SIGINT",  () => { cleanup(); process.exit(0); });
+  process.on("SIGTERM", () => { cleanup(); process.exit(0); });
+  log.info({ pid: process.pid, pidfile: BOT_PIDFILE }, "Discord bot singleton lock acquired");
+}
+acquireBotSingletonLock();
+
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds],
+  intents: [
+    GatewayIntentBits.Guilds,
+    // Wave 26 Pass G — Slumdawg #slumdawg-feed YouTube URL watcher
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent, // privileged — must be enabled in dev portal
+  ],
 });
+
+// In-handler dedupe — even if two processes briefly coexist, each msg.id only
+// gets one reply per process. Map auto-evicts entries older than 60s.
+const recentlyHandledMsgIds = new Map<string, number>();
+const DEDUPE_TTL_MS = 60_000;
+function alreadyHandled(messageId: string): boolean {
+  const now = Date.now();
+  for (const [k, t] of recentlyHandledMsgIds) {
+    if (t < now - DEDUPE_TTL_MS) recentlyHandledMsgIds.delete(k);
+  }
+  if (recentlyHandledMsgIds.has(messageId)) return true;
+  recentlyHandledMsgIds.set(messageId, now);
+  return false;
+}
+
+// ─── Slumdawg #slumdawg-feed YouTube URL intake (Wave 26 Pass G) ───────
+// Community pastes YouTube link, bot ingests via existing /api/admin/slumdawg/ingest-youtube
+const SLUMDAWG_FEED_CHANNEL_ID =
+  process.env.DISCORD_CH_SLUMDAWG_FEED || "1482571931222937642";
+const YOUTUBE_URL_RE =
+  /https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/watch\?[^\s]*v=[A-Za-z0-9_-]{11}|youtu\.be\/[A-Za-z0-9_-]{11})[^\s]*/i;
+
+// Slumdawg voice — keyed responses, never speak raw audit text.
+// Goal: street, gritty, calm. Same persona as Anam avatar.
+function slumdawgAck(): string {
+  const opts = [
+    "Yo fam, caught it. About to cook this up in the lab — hit you back when it's done.",
+    "Yo fam, got the link. Heading to the lab now — back at you in like two minutes.",
+    "Yo fam, taking this to the kitchen. Holler at you when it's done cooking.",
+    "Yo fam, locked in. Cooking this one up now — back in two.",
+  ];
+  return opts[Math.floor(Math.random() * opts.length)];
+}
+
+// Plain-English translations for community (matches Anam persona prompt)
+function humanizeRegime(r: string | null | undefined): string {
+  const map: Record<string, string> = {
+    RANGE_BOUND: "bouncing in a box", TRENDING_UP: "climbing", TRENDING_DOWN: "dropping",
+    EXPANSION: "making big moves", COMPRESSION: "winding up tight, about to pop",
+    HIGH_VOL_MACRO: "wild from news", LOW_LIQ_CHOP: "dead between sessions",
+  };
+  return r ? (map[r] ?? r.toLowerCase().replace(/_/g, " ")) : "any market mood";
+}
+function humanizeSymbol(s: string): string {
+  return ({ MES: "Mini S&P", MNQ: "Mini Nasdaq", MCL: "Mini Crude" } as Record<string, string>)[s] ?? s;
+}
+function humanizeFactor(f: string): string {
+  const map: Record<string, string> = {
+    structural_setup: "the trend pattern lining up",
+    volume_confirmation: "volume confirming the move",
+    vp_shape: "the volume profile pattern",
+    vwap_alignment: "price agreeing with the daily average",
+    killzone_active: "in the prime trading hour",
+    delta_or_volume_signature: "big money footprint showing up",
+    macro_alignment: "not in a news blackout",
+    smt_confirmation: "S&P and Nasdaq agreeing",
+    regime_match: "market mood matches the playbook",
+    liquidity_target_clear: "a clear target on the way",
+    market_structure_aligned: "the chart structure lining up",
+  };
+  return map[f] ?? f.replace(/_/g, " ");
+}
+function humanizeTrigger(t: string | null | undefined): string {
+  const map: Record<string, string> = {
+    break_of_structure: "trend breaking out",
+    change_of_character: "trend cracking",
+    fair_value_gap: "filling a price gap",
+    liquidity_sweep: "stops getting hunted",
+    order_block: "where big money parked orders",
+    sma_crossover: "moving averages crossing",
+    ema_crossover: "moving averages crossing",
+    opening_range_breakout: "first hour breaking out",
+    session_open_breakout: "open price breaking out",
+  };
+  return t ? (map[t] ?? t.replace(/_/g, " ")) : "—";
+}
+function humanizeLifecycle(s: string): string {
+  return ({
+    CANDIDATE: "🆕 just signed",
+    TESTING: "🔬 in practice",
+    PAPER: "📋 preseason",
+    DEPLOY_READY: "✅ coach reviewing tape",
+    PILOT: "🏀 bench minutes",
+    DEPLOYED: "🔥 starter with real money",
+  } as Record<string, string>)[s] ?? s.toLowerCase();
+}
+
+type IngestResult = {
+  baby_jargon_summary?: string;
+  error?: string;
+  results?: Array<{ status?: string; title?: string; idea_count?: number; reason?: string; video_id?: string; ideas?: Array<{ idea_name?: string; concept_name?: string; preferred_regime?: string; entry_indicator?: string; confluence_factors?: string[] }> }>;
+  ingest_result?: { status?: string; title?: string; idea_count?: number; reason?: string; video_id?: string; ideas?: Array<{ idea_name?: string; concept_name?: string; preferred_regime?: string; entry_indicator?: string; confluence_factors?: string[] }> };
+  drain?: { scanned: number; drained: number; failed: number } | null;
+  graduated_strategies?: Array<{
+    id: string;
+    name: string;
+    symbols: string[];
+    lifecycleState: string;
+    useWeightedScoring?: boolean | null;
+    exitPlanConfig?: { exit_style?: string } | null;
+    preferredRegimes?: string[] | null;
+    dailyTf?: string | null; htfTf?: string | null; itfTf?: string | null; triggerTf?: string | null;
+    entryQuality?: { confluence_factors?: string[]; min_factors_satisfied?: number } | null;
+  }>;
+};
+
+// Brand thumbnail (Slumdawg robot stirring the backtesting pot)
+const SLUMDAWG_THUMB_PATH = pathResolve(process.cwd(), "assets/discord/slumdawg-backtesting-pot.png");
+const SLUMDAWG_THUMB_NAME = "slumdawg-backtesting-pot.png";
+const SLUMDAWG_THUMB_AVAILABLE = existsSync(SLUMDAWG_THUMB_PATH);
+
+// Brand palette (Trading Forge emerald-on-near-black)
+const SLUMDAWG_COLOR = {
+  success: 0x10b981,  // emerald — strategy extracted
+  hype:    0xf59e0b,  // amber — hype / no real rules
+  swing:   0x6b7280,  // gray — swing/screenshot reject
+  error:   0xef4444,  // red — system error
+  info:    0x3b82f6,  // blue — processing/info
+};
+
+// Build the rich verdict embed — replaces plain text reply.
+function buildSlumdawgVerdictEmbed(result: IngestResult, sourceUrl: string): EmbedBuilder {
+  const e = new EmbedBuilder()
+    .setTimestamp()
+    .setFooter({ text: "Slumdawg Kitchen · Trading Forge" });
+  // BIG image (not thumbnail) — Slumdawg pot renders full-width at bottom of embed
+  if (SLUMDAWG_THUMB_AVAILABLE) e.setImage(`attachment://${SLUMDAWG_THUMB_NAME}`);
+
+  // ─── Error path ─────────────────────────────────────────
+  if (result.error) {
+    e.setColor(SLUMDAWG_COLOR.error).setTitle("⚠️ System hiccup");
+    if (/invalid_url/i.test(result.error)) {
+      e.setDescription("Yo that ain't a YouTube link. Drop me a `youtube.com` or `youtu.be` link.");
+    } else {
+      e.setDescription(`Pipeline tripped — \`${result.error.replace(/_/g, " ")}\`. Try again in a sec or hit the operator.`);
+    }
+    return e;
+  }
+
+  const r = result.ingest_result ?? result.results?.[0];
+  if (!r) {
+    return e.setColor(SLUMDAWG_COLOR.error).setTitle("⚠️ Empty pipeline").setDescription("Came back with nothing. Try again.");
+  }
+
+  // ─── Strategy extracted (the win) ─ COMMUNITY-FRIENDLY copy, no DSL jargon ──
+  if ((r.idea_count ?? 0) > 0 && (r.status === "ingested" || r.status === "graduated" || r.status === "extracted" || r.status === "ok")) {
+    const firstIdea = r.ideas?.[0];
+    const grads = result.graduated_strategies ?? [];
+    const stratCount = grads.length;
+
+    // Plain English "Slumdawg's Take" — built from the extracted idea fields
+    const moodLine = humanizeRegime(firstIdea?.preferred_regime);
+    const triggerLine = humanizeTrigger(firstIdea?.entry_indicator);
+    const factorBullets = (firstIdea?.confluence_factors ?? []).slice(0, 4).map(f => `  • ${humanizeFactor(f)}`).join("\n") || "  • —";
+    const takeLines: string[] = [];
+    takeLines.push(`Looking for a market that's **${moodLine}**.`);
+    if (firstIdea?.entry_indicator) takeLines.push(`Slumdawg waits for **${triggerLine}** before he pulls the trigger.`);
+    takeLines.push(`What needs to check off first:\n${factorBullets}`);
+
+    e.setColor(SLUMDAWG_COLOR.success)
+      .setTitle(stratCount > 0
+        ? `🔥 Slumdawg cooked it — ${stratCount} ${stratCount === 1 ? "play" : "plays"} in the kitchen`
+        : `🔥 Slumdawg cooked it — play extracted`)
+      .setDescription(
+        (r.title ? `*"${r.title.slice(0, 200)}"*\n\n` : "") +
+        `Yo fam, Slumdawg pulled real rules out of this one. ` +
+        (stratCount > 0
+          ? `Got **${stratCount}** ${stratCount === 1 ? "play" : "plays"} cooking in the kitchen — each one running on a different market. Verdict from the engine in about a day.`
+          : `Kitchen picks it up on the next cycle (~10 min).`)
+      )
+      .addFields({ name: "📊 Slumdawg's Take", value: takeLines.join("\n"), inline: false });
+
+    if (stratCount > 0) {
+      // Plain-English per-market lineup
+      const playLines = grads.slice(0, 6).map((s) => {
+        const symHuman = (s.symbols ?? []).map(humanizeSymbol).join(" / ") || "—";
+        return `**${symHuman}** — ${humanizeLifecycle(s.lifecycleState)}`;
+      }).join("\n");
+      e.addFields({ name: `🍳 The Plays`, value: playLines, inline: false });
+
+      // What's Next (plain English)
+      e.addFields({
+        name: "🏆 What's Next",
+        value: "First up: the **stress test** — Slumdawg makes sure each play survives the worst-case scenarios before it ever sees real money. Then a 30-day backtest. We'll know which ones earn their keep in about a day.",
+        inline: false,
+      });
+    } else if (result.drain || !stratCount) {
+      e.addFields({
+        name: "🍳 What happens next",
+        value: "Kitchen's about to graduate it into 3 plays — one for **Mini S&P**, one for **Mini Nasdaq**, one for **Mini Crude**. Each goes through the stress test + 30-day backtest. Check back in about an hour.",
+        inline: false,
+      });
+    }
+    return e;
+  }
+
+  // ─── Hype / no real rules ───────────────────────────────
+  if (r.reason && /no_strategy_content|no_rules|too_vague|hype/i.test(r.reason)) {
+    return e.setColor(SLUMDAWG_COLOR.hype)
+      .setTitle("🚧 Mostly talk, not enough rules")
+      .setDescription("Speaker talked the talk but didn't drop the actual plays. Find me one where dude says **when to enter, when to exit, what timeframe** — step-by-step type beat.")
+      .addFields(
+        r.title ? { name: "Video", value: `*"${r.title.slice(0, 200)}"*`, inline: false } : { name: "​", value: "​", inline: false },
+        { name: "Why skipped", value: `\`${r.reason.replace(/_/g, " ")}\``, inline: true },
+      );
+  }
+
+  // ─── Swing / multi-day reject ───────────────────────────
+  if (r.status === "rejected_swing_or_screenshot" || (r.reason && /swing|multi_day|overnight|screenshot|recap/i.test(r.reason))) {
+    return e.setColor(SLUMDAWG_COLOR.swing)
+      .setTitle("🌙 Swing or recap content — day-only over here")
+      .setDescription("EOD trailing drawdown don't let us hold overnight. Drop me an **intraday** breakdown — we close every position by three fifty five Eastern.")
+      .addFields(
+        r.title ? { name: "Video", value: `*"${r.title.slice(0, 200)}"*`, inline: false } : { name: "​", value: "​", inline: false },
+      );
+  }
+
+  // ─── Transcript unavailable / too short ─────────────────
+  if (r.reason && /transcript_unavailable|no.*caption|transcript_too_short|too short/i.test(r.reason)) {
+    return e.setColor(SLUMDAWG_COLOR.swing)
+      .setTitle("📭 Couldn't read that one")
+      .setDescription(
+        /too short/i.test(r.reason)
+          ? "Video too short to pull real rules out of — probably a Short or a clip. Find a longer breakdown."
+          : "No captions available — private, age-gated, or no transcript. Try a different video."
+      );
+  }
+
+  // ─── Wave 26 Pass J — mechanic-class rejects (specific messaging) ──
+  if (r.reason === "options_derivative") {
+    return e.setColor(SLUMDAWG_COLOR.swing)
+      .setTitle("📊 Options strategy — doesn't port to futures")
+      .setDescription("Iron condors, credit spreads, theta plays — these depend on options Greeks. Futures has no theta. The mechanics literally don't translate. Drop me a price-action / indicator / structure setup.")
+      .addFields(r.title ? { name: "Video", value: `*"${r.title.slice(0, 200)}"*`, inline: false } : { name: "​", value: "​", inline: false });
+  }
+  if (r.reason === "forex_specific_mechanics") {
+    return e.setColor(SLUMDAWG_COLOR.swing)
+      .setTitle("💱 Forex-specific mechanic — doesn't port")
+      .setDescription("Carry trade, swap rates, central-bank intervention — these need a forex broker, not futures. If the same speaker has a video on **price action** or **indicator setups**, that ports. Drop one of those instead.")
+      .addFields(r.title ? { name: "Video", value: `*"${r.title.slice(0, 200)}"*`, inline: false } : { name: "​", value: "​", inline: false });
+  }
+  if (r.reason === "stock_specific_mechanics") {
+    return e.setColor(SLUMDAWG_COLOR.swing)
+      .setTitle("📈 Stock-specific mechanic — doesn't port")
+      .setDescription("Dividend capture, earnings plays, sector rotation, short-squeeze setups — these need single-name stocks. Futures don't pay dividends and don't have earnings dates. Drop me a chart-mechanic video instead.")
+      .addFields(r.title ? { name: "Video", value: `*"${r.title.slice(0, 200)}"*`, inline: false } : { name: "​", value: "​", inline: false });
+  }
+  if (r.reason === "crypto_specific_mechanics") {
+    return e.setColor(SLUMDAWG_COLOR.swing)
+      .setTitle("🪙 Crypto-specific mechanic — doesn't port")
+      .setDescription("On-chain metrics, funding-rate arb, halving narratives, DeFi yield — these need 24/7 crypto markets. Futures has sessions and no funding rate. Drop a price-action or indicator setup from the same speaker.")
+      .addFields(r.title ? { name: "Video", value: `*"${r.title.slice(0, 200)}"*`, inline: false } : { name: "​", value: "​", inline: false });
+  }
+
+  // ─── Generic reject ─────────────────────────────────────
+  if (r.reason) {
+    return e.setColor(SLUMDAWG_COLOR.hype)
+      .setTitle("🤔 Slumdawg passed on that one")
+      .setDescription(`Reason: \`${r.reason.replace(/_/g, " ")}\`. Try a different video.`);
+  }
+
+  // ─── Fallback ───────────────────────────────────────────
+  return e.setColor(SLUMDAWG_COLOR.info)
+    .setTitle("📊 Result")
+    .setDescription(result.baby_jargon_summary ?? `Got back status \`${r.status ?? "unknown"}\`. Check the dashboard library.`);
+}
 
 const FORGE_API = `http://localhost:${process.env.PORT || 4000}`;
 
@@ -336,6 +653,57 @@ client.once("ready", async () => {
 client.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
   await handleCommand(interaction, FORGE_API, CHANNEL_MAP);
+});
+
+// ─── #slumdawg-feed YouTube URL intake (Wave 26 Pass G) ──────
+// Watch the community channel; on YouTube URL, ingest via existing endpoint.
+// Voice-first Anam avatar can't accept long URLs, so this is the text path.
+client.on("messageCreate", async (msg) => {
+  try {
+    if (msg.author.bot) return;
+    if (msg.channelId !== SLUMDAWG_FEED_CHANNEL_ID) return;
+
+    const m = msg.content.match(YOUTUBE_URL_RE);
+    if (!m) return;
+    if (alreadyHandled(msg.id)) {
+      log.warn({ msgId: msg.id }, "slumdawg-feed: duplicate messageCreate event suppressed");
+      return;
+    }
+    const url = m[0];
+
+    // Acknowledge immediately
+    try { await msg.react("✅"); } catch {}
+    const ack = await msg.reply(slumdawgAck());
+
+    // HMAC sign + POST to local ingest proxy (same box, same secret)
+    const secret = process.env.SLUMDAWG_WEBHOOK_SECRET || "";
+    const ts = String(Math.floor(Date.now() / 1000));
+    const body = JSON.stringify({ url });
+    const sig = secret
+      ? createHash("sha256").update(`${ts}.${body}.${secret}`).digest("hex")
+      : "";
+
+    const resp = await fetch(`${FORGE_API}/api/admin/slumdawg/ingest-youtube`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(sig ? { "X-Slumdawg-Signature": sig, "X-Slumdawg-Timestamp": ts } : {}),
+      },
+      body,
+      signal: AbortSignal.timeout(180_000),
+    });
+
+    const result = (await resp.json().catch(() => ({}))) as IngestResult;
+    const embed = buildSlumdawgVerdictEmbed(result, url);
+    const editPayload: { content: null; embeds: EmbedBuilder[]; files?: AttachmentBuilder[] } = { content: null, embeds: [embed] };
+    if (SLUMDAWG_THUMB_AVAILABLE) {
+      editPayload.files = [new AttachmentBuilder(SLUMDAWG_THUMB_PATH, { name: SLUMDAWG_THUMB_NAME })];
+    }
+    await ack.edit(editPayload).catch(() => {});
+  } catch (err) {
+    log.error({ err, channel: msg.channelId, msgId: msg.id }, "slumdawg-feed handler failed");
+    try { await msg.reply("System tripped on that one — operator gonna look at it."); } catch {}
+  }
 });
 
 client.on("error", (err) => {

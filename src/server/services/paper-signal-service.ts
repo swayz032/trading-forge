@@ -35,6 +35,9 @@ import { computeRiskDerivedContracts, type RiskSizingInputs } from "../lib/risk-
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 // W23H.3: per-strategy allowed_entry_windows time gates
 import { parseEntryWindows, isBarInAnyWindow } from "../lib/entry-windows.js";
+import { evaluateDailyTradeCap, getDailyTradeCapEnvDefault } from "../lib/daily-trade-cap.js";
+import { evaluateLunchBlackoutGate, getLunchBlackoutStartEnvDefault, getLunchBlackoutEndEnvDefault } from "../lib/lunch-blackout-gate.js";
+import { computePmSizeFactor } from "../lib/pm-size-factor.js";
 // W23H.F: cross-symbol DLL coordinator + pre-market blackout consumption
 import { getAccountSessionCumulativePnL, evaluateCrossSymbolDll, DEFAULT_PERSONAL_DLL_DOLLARS } from "./cross-symbol-pnl.js";
 import { toFuturesTradingDayString } from "./paper-risk-gate.js";
@@ -2731,6 +2734,130 @@ export async function evaluateSignals(
       }
     }
 
+    // ─── Wave 26 Pass K Phase 1 (2026-05-26) — Daily Trade Cap (1-2 A+ trades/day) ──
+    // Hard signal-time gate enforcing operator's "1-2 A+ trades/day per account"
+    // mandate (CLAUDE.md §4 / memory pin project_one_aplus_trade_per_day). The
+    // post-fill Python kill switch already enforces sessionCfg.max_trades_per_day
+    // but only when that per-session field is set — and most sessions don't set
+    // it. This gate enforces the framework default (TF_MAX_TRADES_PER_DAY=2)
+    // at SIGNAL TIME so the 3rd signal of the day never reaches openPosition.
+    //
+    // Counting: paper_trades rows CLOSED on the current CME futures trading day
+    // (same date convention as paper-execution-service.ts:925). Per-session
+    // scope — each prop-firm account has its own quota.
+    //
+    // Precedence: sessionRow.max_trades_per_day (if set + positive) > env default.
+    // Fail-OPEN: DB error → allow the trade through + warn audit (better to let
+    // a 3rd trade slip on rare infra failure than silently halt trading).
+    let dailyTradeCapBlocked = false;
+    try {
+      const capTodayEt = toFuturesTradingDayString(new Date(bar.timestamp));
+      const [capRow] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(paperTrades)
+        .where(and(
+          eq(paperTrades.sessionId, sessionId),
+          sql`to_char(${paperTrades.exitTime} AT TIME ZONE 'America/New_York' + interval '7 hours', 'YYYY-MM-DD') = ${capTodayEt}`,
+        ));
+      const tradesToday = capRow?.count ?? 0;
+      // Per-session cap lives inside paper_sessions.config JSONB (max_trades_per_day),
+      // matching paper-execution-service.ts:913 conventions. Null → fall through to env default.
+      const sessionCfgRaw = (sessionRow as { config?: { max_trades_per_day?: number | null } }).config;
+      const perSessionCap = sessionCfgRaw?.max_trades_per_day != null
+        ? Number(sessionCfgRaw.max_trades_per_day)
+        : null;
+      const capResult = evaluateDailyTradeCap({
+        tradesToday,
+        perSessionCap,
+        envDefault: getDailyTradeCapEnvDefault(),
+      });
+      if (!capResult.allow) {
+        dailyTradeCapBlocked = true;
+        span.setAttribute("daily_trade_cap_blocked", true);
+        span.setAttribute("daily_trade_cap_effective", capResult.effectiveCap);
+        span.setAttribute("daily_trade_cap_trades_today", capResult.tradesToday);
+        logger.info(
+          { sessionId, symbol, tradesToday, effectiveCap: capResult.effectiveCap, reason: capResult.reason },
+          "Wave 26 Pass K: daily trade cap reached — blocking new entry signal",
+        );
+        insertAuditRow({
+          action: "consistency.daily_trade_cap_blocked",
+          entityType: "paper_session",
+          entityId: sessionId,
+          decisionAuthority: "system",
+          status: "info",
+          input: { symbol, perSessionCap, envDefault: getDailyTradeCapEnvDefault(), trades_today: tradesToday },
+          result: { effective_cap: capResult.effectiveCap, reason: capResult.reason },
+        }).catch(() => {});
+      }
+    } catch (capErr) {
+      logger.warn({ err: capErr, sessionId, symbol }, "Wave 26 Pass K: daily trade cap query error — fail-open, proceeding");
+    }
+
+    // ─── Wave 26 Pass K Phase 2 (2026-05-26) — Lunch Blackout Gate (11:30-13:30 ET) ──
+    // Hard signal-time gate rejecting all entries inside the institutional 2026
+    // lunch dead zone. Backed by Tradeify 13-yr prop firm dataset (>60% false-
+    // breakout rate from 11:30 ET), Tradecovex hour-by-hour ("the worst hours
+    // of the day, do not trade at all"), TradingStats.net 12,095-day study
+    // (lunch only 4.5% of NQ HODs vs PM 35%). Default 11:30-13:30 ET; configurable
+    // via LUNCH_BLACKOUT_START_ET / LUNCH_BLACKOUT_END_ET env vars.
+    //
+    // Per-strategy override: entry_quality.lunch_blackout_disabled=true bypasses
+    // the gate. Reserved for mean-reversion archetypes targeting compressed-vol
+    // lunch (QUANTUITION 2026-05 SPX scalp study). NEVER enable on trend-following
+    // or structural-setup strategies.
+    //
+    // Fail-CLOSED on malformed window config (opposite of daily trade cap fail-OPEN
+    // policy — better to halt trading on misconfig than silently re-enable a known-bad
+    // time window). Config-error reason captured in audit row.
+    let lunchBlackoutBlocked = false;
+    try {
+      const perStrategyDisabled =
+        ((config as { entry_quality?: { lunch_blackout_disabled?: boolean } }).entry_quality
+          ?.lunch_blackout_disabled) === true;
+      const lunchResult = evaluateLunchBlackoutGate({
+        barTsUtc: new Date(bar.timestamp),
+        startEt: getLunchBlackoutStartEnvDefault(),
+        endEt: getLunchBlackoutEndEnvDefault(),
+        perStrategyDisabled,
+      });
+      if (lunchResult.block) {
+        lunchBlackoutBlocked = true;
+        span.setAttribute("lunch_blackout_blocked", true);
+        span.setAttribute("lunch_blackout_window", lunchResult.windowSpec);
+        logger.info(
+          { sessionId, symbol, windowSpec: lunchResult.windowSpec, reason: lunchResult.reason },
+          "Wave 26 Pass K: lunch blackout (11:30-13:30 ET institutional dead zone) — blocking new entry signal",
+        );
+        insertAuditRow({
+          action: "consistency.lunch_blackout_blocked",
+          entityType: "paper_session",
+          entityId: sessionId,
+          decisionAuthority: "system",
+          status: "info",
+          input: { symbol, window_spec: lunchResult.windowSpec, bar_timestamp: bar.timestamp, per_strategy_disabled: perStrategyDisabled },
+          result: { reason: lunchResult.reason, per_strategy_override_applied: lunchResult.perStrategyOverrideApplied },
+        }).catch(() => {});
+      } else if (lunchResult.perStrategyOverrideApplied) {
+        // Per-strategy override fired — emit info audit for observability (operator
+        // can monitor which strategies are bypassing the institutional default).
+        insertAuditRow({
+          action: "consistency.lunch_blackout_per_strategy_override",
+          entityType: "paper_session",
+          entityId: sessionId,
+          decisionAuthority: "system",
+          status: "info",
+          input: { symbol, strategy_id: sessionConfig.strategyId, window_spec: lunchResult.windowSpec },
+          result: { reason: lunchResult.reason },
+        }).catch(() => {});
+      }
+    } catch (lunchErr) {
+      // Lunch gate is fail-CLOSED on config error (handled inside the lib); this
+      // catch only fires on unexpected JS errors. Log and proceed (fail-open here
+      // because we don't want a thrown JS exception to halt all trading).
+      logger.warn({ err: lunchErr, sessionId, symbol }, "Wave 26 Pass K: lunch blackout gate unexpected error — fail-open, proceeding");
+    }
+
     // ─── Tier 5.3: 24-hour lockout gate ─────────────────────────────────
     // Runs BEFORE anti-setup and risk gate. If a strategy lockout is active
     // (written by writeLockoutFromKillEvent on daily_loss_kill), block all
@@ -2738,7 +2865,7 @@ export async function evaluateSignals(
     // Fail-OPEN: lockout query errors return null so trading is not blocked.
     // W23H.H/F: symbol whitelist, pre-market blackout, and DLL halt are treated as
     // early lockouts (same short-circuit pattern — downstream gates all check lockoutBlocked).
-    let lockoutBlocked = symbolWhitelistBlocked || blackoutBlocked || dllHaltBlocked;
+    let lockoutBlocked = symbolWhitelistBlocked || blackoutBlocked || dllHaltBlocked || dailyTradeCapBlocked || lunchBlackoutBlocked;
     try {
       const activeLockout = await getActiveLockout(sessionConfig.strategyId);
       if (activeLockout) {
@@ -4013,6 +4140,12 @@ export async function evaluateSignals(
             const trailingFloorForRoom = Math.min(highWaterBalance - trailingDDForRoom, accountStartingFloor);
             return Math.max(0, accountBalance - trailingFloorForRoom);
           })(),
+          // Wave 26 Pass K Phase 2 (2026-05-26) — PM session size factor.
+          // EOD-DD-aware multiplier per TTT Markets 2026-04 + SurgeFunded 2026-02.
+          // Default: 1.0 AM, 0.50 at 13:30 ET decaying linearly to 0.25 by 15:00 ET,
+          // 0.0 after 15:30 ET (no new entries). Configurable via PM_SIZE_FACTOR_AT_13_30
+          // / PM_SIZE_FACTOR_AT_15_00 env vars.
+          pmSizeFactor: computePmSizeFactor({ barTsUtc: new Date(bar.timestamp) }).factor,
         };
 
         const sizingResult = computeRiskDerivedContracts(sizingInputs);

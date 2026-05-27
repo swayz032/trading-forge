@@ -201,6 +201,15 @@ export interface RiskSizingInputs {
    * NOT applied for firm="mffu" (MFFU uses static 2% rule; drawdown-room logic is Topstep-only).
    */
   currentDrawdownRoom?: number | null;
+
+  /**
+   * Wave 26 Pass K Phase 2 (2026-05-26) — PM session size factor.
+   * Multiplier in [0, 1] applied to pyramidTier BEFORE the min() against caps.
+   * Computed by src/server/lib/pm-size-factor.ts; defaults: 1.0 AM, 0.50 at 13:30
+   * ET linearly decaying to 0.25 by 15:00 ET, 0.0 after 15:30 ET.
+   * null/undefined → no PM scaling (backward compat — pre-Pass-K call sites unchanged).
+   */
+  pmSizeFactor?: number | null;
 }
 
 /**
@@ -376,7 +385,18 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
   // Pyramid tier (slow ramp-up)
   const profitFloor = Math.max(0, input.cumulativeProfit);
   const tiers = Math.floor(profitFloor / cfg.tier_threshold_dollars);
-  const pyramidTier = cfg.base_contracts + cfg.tier_increment * tiers;
+  const pyramidTierRaw = cfg.base_contracts + cfg.tier_increment * tiers;
+
+  // Wave 26 Pass K Phase 2 (2026-05-26) — Apply PM session size factor BEFORE
+  // the min() against caps. EOD-DD-aware sizing per TTT Markets 2026-04 +
+  // SurgeFunded 2026-02 institutional 2026 standard. Topstep EOD trailing DD
+  // makes a PM loss un-recoverable before 15:55 flatten — every minute past
+  // 13:30 ET reduces the recovery window. null/undefined factor → no scaling
+  // (backward compat).
+  const pmFactor = Number.isFinite(input.pmSizeFactor) && input.pmSizeFactor !== null && input.pmSizeFactor !== undefined
+    ? Math.max(0, Math.min(1, input.pmSizeFactor as number))
+    : 1.0;
+  const pyramidTier = Math.floor(pyramidTierRaw * pmFactor);
 
   // Wave 23: Account health ratio for pyramid floor enforcement.
   // Floor binds when account is healthy (>= 85% of starting capital).
