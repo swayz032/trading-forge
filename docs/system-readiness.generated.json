@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-27T00:25:33.691Z",
+  "generatedAt": "2026-05-27T06:35:40.323Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -37,6 +37,18 @@
     "replay_harness_engine:invalid-active-proof-mode",
     "replay_harness_engine:manual_gate:operator-approve",
     "shadow_stage:invalid-active-proof-mode",
+    "slumhouse_discord_oauth:invalid-active-proof-mode",
+    "slumhouse_discord_oauth:missing-telemetry-sources",
+    "slumhouse_frontend:invalid-active-proof-mode",
+    "slumhouse_frontend:missing-audit-actions",
+    "slumhouse_frontend:missing-audit-tables",
+    "slumhouse_frontend:missing-telemetry-sources",
+    "slumhouse_routes:invalid-active-proof-mode",
+    "slumhouse_routes:missing-audit-actions",
+    "slumhouse_routes:missing-audit-tables",
+    "slumhouse_routes:missing-telemetry-sources",
+    "slumhouse_users_table:invalid-active-proof-mode",
+    "slumhouse_users_table:manual_gate:operator",
     "strategy_health_observability:invalid-active-proof-mode",
     "ts_python_parity_ci_gate:invalid-active-proof-mode",
     "ts_python_parity_ci_gate:manual_gate:ci_gate",
@@ -51,9 +63,9 @@
     "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
   ],
   "subsystemCounts": {
-    "total": 65,
+    "total": 69,
     "ready": 33,
-    "blocked": 25,
+    "blocked": 29,
     "manualGated": 2,
     "experimental": 5
   },
@@ -1301,6 +1313,80 @@
         "signal-correlation-matrix",
         "signal-vector-coverage",
         "strategy_signal_vectors:recent-write"
+      ]
+    },
+    {
+      "id": "slumhouse_discord_oauth",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "operator_only",
+      "blockers": [
+        "invalid-active-proof-mode",
+        "missing-telemetry-sources"
+      ],
+      "requiredEvidence": [
+        "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.login_%' ORDER BY created_at DESC LIMIT 50",
+        "slumhouse.login_failed",
+        "slumhouse.login_success",
+        "slumhouse.login_unmapped_user"
+      ]
+    },
+    {
+      "id": "slumhouse_frontend",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "operator_only",
+      "blockers": [
+        "invalid-active-proof-mode",
+        "missing-audit-actions",
+        "missing-audit-tables",
+        "missing-telemetry-sources"
+      ],
+      "requiredEvidence": []
+    },
+    {
+      "id": "slumhouse_routes",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "operator_only",
+      "blockers": [
+        "invalid-active-proof-mode",
+        "missing-audit-actions",
+        "missing-audit-tables",
+        "missing-telemetry-sources"
+      ],
+      "requiredEvidence": [
+        "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.%' ORDER BY created_at DESC LIMIT 50"
+      ]
+    },
+    {
+      "id": "slumhouse_users_table",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "operator",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "operator_only",
+      "blockers": [
+        "invalid-active-proof-mode",
+        "manual_gate:operator"
+      ],
+      "requiredEvidence": [
+        "SELECT * FROM slumhouse_users ORDER BY created_at DESC LIMIT 50",
+        "slumhouse.user_mapped"
       ]
     },
     {
