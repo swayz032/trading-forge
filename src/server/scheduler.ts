@@ -4646,6 +4646,54 @@ except Exception as e:
   });
   _scheduledJobs.add("regime-drift-detector");
 
+  // ─── Wave 26 Pass L Tweak 2: MCL pre-EIA stop tightening — Wed 10:00 ET ───
+  //
+  // 30 minutes before the weekly EIA crude oil inventory release at 10:30 ET,
+  // walk open MCL positions in profit ≥ 0.5R and tighten runner stop to whichever
+  // is tighter of (BE+1tick, 1× ATR). Per QuantStrategy.io 2026-01-30 institutional
+  // CL practice — Pass L research validated this against 15 fresh 2026 sources.
+  //
+  // Schedule: 0 14,15 * * 3  (Wed 14:00 UTC EDT / 15:00 UTC EST).
+  // ET-hour guard inside the handler filters to exactly 10:00 ET.
+  //
+  // Pipeline-gate EXEMPT: pre-EIA tightening protects operator's open exposure
+  // even when pipeline is PAUSED. An operator may have paused FOR the EIA event;
+  // the tightening must still fire.
+  _PIPELINE_GATE_EXEMPT.add("mcl-pre-eia-stop-tighten");
+
+  registerJob("mcl-pre-eia-stop-tighten", 7 * 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "mcl-pre-eia-stop-tighten" }, "cron tick start");
+    const { runMclPreEiaStopTighten } = await import("./services/mcl-pre-eia-stop-tighten-service.js");
+    const summary = await runMclPreEiaStopTighten();
+    logger.info({ correlationId, summary }, "mcl-pre-eia-stop-tighten: complete");
+  });
+
+  // 10:00 ET = 14:00 UTC (EDT) or 15:00 UTC (EST). Fire both; ET-hour guard
+  // inside filters to exactly 10:00 ET on Wednesdays.
+  cron.schedule("0 14,15 * * 3", async () => {
+    if (!_tryAcquireJobLock("mcl-pre-eia-stop-tighten")) return;
+    try {
+      const now = new Date();
+      const etHour = parseInt(
+        now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+        10,
+      );
+      if (etHour !== 10) {
+        logger.debug({ etHour }, "Scheduler: mcl-pre-eia-stop-tighten fired but not 10:00 ET — skipping (DST guard)");
+        return;
+      }
+      logger.info("Scheduler: mcl-pre-eia-stop-tighten (Wed 10:00 ET confirmed)");
+      const t0mcl = Date.now();
+      await withRetry("mcl-pre-eia-stop-tighten", SCHEDULER_JOBS["mcl-pre-eia-stop-tighten"].run, 1);
+      markJobRun("mcl-pre-eia-stop-tighten");
+      emitJobComplete("mcl-pre-eia-stop-tighten", Date.now() - t0mcl);
+    } finally {
+      _releaseJobLock("mcl-pre-eia-stop-tighten");
+    }
+  });
+  _scheduledJobs.add("mcl-pre-eia-stop-tighten");
+
   // ─── W29 Pass D.3: A/B Comparison Weekly Digest — Friday 17:00 ET ──────────
   //
   // Posts a weekly Discord summary of the A/B paper routing performance:

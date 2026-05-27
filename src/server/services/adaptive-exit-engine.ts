@@ -524,11 +524,28 @@ export async function computeExitPlan(opts: ExitPlanInput): Promise<ExitPlan> {
   //   chandelier      → use entry ATR stop as the Chandelier seed
   //   structure_trail → use entry stop price as the structural reference
   //   developing_poc  → 0 (POC computed externally, not parameterized here)
+  //
+  // Wave 26 Pass L (2026-05-27) Tweak 1 — Chandelier multiplier is regime-aware:
+  //   TRENDING_UP / TRENDING_DOWN / EXPANSION → 2.5× (StratBase 2026-02:
+  //     PF 1.56 at 2.5× vs 1.44 at 2.0× — 8% profit factor improvement on
+  //     trending regimes per institutional 2026 evidence).
+  //   Other regimes (HIGH_VOL_MACRO, RANGE_BOUND, etc.) → 2.0× (intraday default).
+  //   Operator override: STOP_CHANDELIER_MULTIPLIER_TRENDING env var.
+  const CHANDELIER_MULTIPLIER_TRENDING = Number(
+    process.env.STOP_CHANDELIER_MULTIPLIER_TRENDING ?? 2.5,
+  );
+  const CHANDELIER_MULTIPLIER_DEFAULT = 2.0;
+  const isTrendingRegime =
+    regime === "TRENDING_UP" || regime === "TRENDING_DOWN" || regime === "EXPANSION";
+  const chandelierMultiplier = Number.isFinite(CHANDELIER_MULTIPLIER_TRENDING) && isTrendingRegime
+    ? CHANDELIER_MULTIPLIER_TRENDING
+    : CHANDELIER_MULTIPLIER_DEFAULT;
+
   const trailAnchorValue =
     trailMethod === "anchored_vwap"
       ? entry.timestamp.getTime()
       : trailMethod === "chandelier"
-        ? marketState.atr * 2.0  // Chandelier(14, 2.0) multiplier
+        ? marketState.atr * chandelierMultiplier
         : entry.stop;             // structure_trail + developing_poc
 
   // ─ Pre-lunch and delta-div config params ─

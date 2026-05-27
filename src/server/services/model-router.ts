@@ -442,7 +442,12 @@ const MODEL_CONFIGS: Record<ModelRole, ModelConfig> = {
     model: getTranscriptExtractorModel(),
     temperature: 0.3,
     maxTokens: 8192,
-    systemPromptPath: "src/agents/transcript-extractor.md",
+    // Wave 26 Pass L (2026-05-27) — Minimal 8-field prompt is the default.
+    // Legacy 940-line v12 prompt available via TRANSCRIPT_EXTRACTOR_USE_LEGACY=true.
+    // The minimal prompt fixed gemma4:e2b's recursive-loop bug + restored extraction
+    // depth. Direct A/B probe: v12 = 82s + infinite recursive output; minimal = 29s
+    // + clean JSON with strategies/stop/confluences populated.
+    systemPromptPath: getTranscriptExtractorPromptPath(),
     responseFormat: "json",
     // NOTE: responsesApiVersion intentionally NOT set for Ollama primary path.
     // When force-cloud is active the provider flips to "openai" but we still
@@ -2057,14 +2062,34 @@ let _transcriptOutputSchema: Record<string, unknown> | null = null;
 function loadTranscriptOutputSchema(): Record<string, unknown> | null {
   if (_transcriptOutputSchema !== null) return _transcriptOutputSchema;
   try {
-    const schemaPath = resolve(PROJECT_ROOT, "src/agents/kb/transcript-extractor-output-schema.json");
+    // Wave 26 Pass L (2026-05-27) — Minimal flat 8-field schema is the default.
+    // The legacy v11 schema with nested $defs caused gemma4:e2b to enter
+    // recursive-loop output ("results":[{"results":[...]}]) that exhausted
+    // num_predict before producing parseable JSON. Operator escape hatch:
+    // TRANSCRIPT_EXTRACTOR_USE_LEGACY=true to fall back to the v11 schema.
+    const useLegacy = (process.env.TRANSCRIPT_EXTRACTOR_USE_LEGACY ?? "false").toLowerCase() === "true";
+    const schemaRel = useLegacy
+      ? "src/agents/kb/transcript-extractor-output-schema.json"
+      : "src/agents/kb/transcript-extractor-minimal-schema.json";
+    const schemaPath = resolve(PROJECT_ROOT, schemaRel);
     const raw = readFileSync(schemaPath, "utf-8");
     _transcriptOutputSchema = JSON.parse(raw) as Record<string, unknown>;
     return _transcriptOutputSchema;
   } catch (err) {
-    logger.warn({ err }, "model-router: failed to load transcript-extractor-output-schema.json — falling back to format:json string mode");
+    logger.warn({ err }, "model-router: failed to load transcript-extractor schema — falling back to format:json string mode");
     return null;
   }
+}
+
+// Wave 26 Pass L (2026-05-27) — System prompt selector.
+// Default: minimal 8-field prompt (~90 lines). Legacy: v12 940-line prompt
+// behind TRANSCRIPT_EXTRACTOR_USE_LEGACY=true. The minimal prompt is paired
+// with the minimal schema; the env var flips BOTH atomically.
+function getTranscriptExtractorPromptPath(): string {
+  const useLegacy = (process.env.TRANSCRIPT_EXTRACTOR_USE_LEGACY ?? "false").toLowerCase() === "true";
+  return useLegacy
+    ? "src/agents/transcript-extractor.md"
+    : "src/agents/transcript-extractor-minimal.md";
 }
 
 /**

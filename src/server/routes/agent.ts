@@ -666,6 +666,34 @@ const CROSS_MARKET_DEMO_SYMBOLS = new Set([
   "SPY", "QQQ", "IWM", "DIA", "GLD", "SLV", "USO", "TLT",
 ]);
 
+// Wave 26 Pass L (2026-05-27) — Direction inference from entry_rule.
+// The minimal-prompt extractor dropped `direction` from the schema (gemma now
+// only emits the speaker's edge — entry rule, timeframes, stop, confluences).
+// This helper derives direction from the entry_rule prose by scanning for
+// long/short keywords. Defaults to "both" per the operator's mandate that most
+// strategies are bidirectional.
+//
+// Returns "long" | "short" | "both". Always returns a value (never null).
+// Bias rules:
+//   - both long AND short keywords → "both"
+//   - only long keywords           → "long"
+//   - only short keywords          → "short"
+//   - neither → "both" (operator default; bidirectional setup gate will
+//     reject downstream if both entry sides aren't actually populated, so
+//     wrong default is caught not silently shipped)
+function inferDirectionFromEntryRule(entryRule: string | undefined | null): "long" | "short" | "both" {
+  if (!entryRule || typeof entryRule !== "string") return "both";
+  const text = entryRule.toLowerCase();
+  // Long-side signals
+  const longHit = /\b(?:buy|long|bullish|uptrend|higher highs?|bull(?:ish)?\s+(?:close|candle|bar)|go(?:ing)?\s+long|take\s+(?:a\s+)?long)\b/.test(text);
+  // Short-side signals
+  const shortHit = /\b(?:sell|short|bearish|downtrend|lower lows?|bear(?:ish)?\s+(?:close|candle|bar)|go(?:ing)?\s+short|take\s+(?:a\s+)?short)\b/.test(text);
+  if (longHit && shortHit) return "both";
+  if (longHit && !shortHit) return "long";
+  if (shortHit && !longHit) return "short";
+  return "both"; // operator default — most strategies trade both ways
+}
+
 function isCrossMarketDemoSymbol(raw: string): boolean {
   const k = String(raw ?? "").toUpperCase().trim();
   return CROSS_MARKET_DEMO_SYMBOLS.has(k);

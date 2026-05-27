@@ -15,6 +15,34 @@ Buffer (W24-P2 Item 20 — sweep-aware, 2026-05-23):
     STOP_BUFFER_TICKS_MES, STOP_BUFFER_TICKS_MNQ, STOP_BUFFER_TICKS_MCL
 
   Unknown symbols fall back to legacy max(tick_size, ATR×0.10) with a warning.
+
+────────────────────────────────────────────────────────────────────────────────
+Wave 26 Pass L Tweak 3 — Empirical Validation Flag (2026-05-27):
+────────────────────────────────────────────────────────────────────────────────
+
+  ⚠️ THE 3/5/2 BUFFER VALUES ARE EMPIRICALLY-DERIVED FROM COMMUNITY DATA,
+  NOT ACADEMICALLY VALIDATED.
+
+  Source: 2025-05 r/FuturesTrading sweep-zone analysis + 2026 funded-trader
+  consensus. The numbers reflect "what worked in 2025-2026 prop-firm trading
+  intervals" — not a formal statistical study.
+
+  Action item: re-validate every 90 days against actual paper/live trade data.
+  Use scripts/wave26-pass-l-sweep-buffer-revalidation.ts which reports the
+  distribution of stop_reason values from audit_log over the rolling 90-day
+  window. If sweep_wick stops exceed 40% of all stops for any symbol, the
+  buffer may need WIDENING by +1 tick (the buffer is being eaten — sweeps are
+  pushing through). If sweep_wick stops are < 5%, the buffer may be too wide
+  (stops are sitting too far from price; consider tightening by -1 tick).
+
+  Per-symbol thresholds:
+    MES: target sweep_wick stop reason rate 15–25%. >40% → widen to 4 ticks.
+    MNQ: target sweep_wick stop reason rate 15–25%. >40% → widen to 6 ticks.
+    MCL: target sweep_wick stop reason rate 10–20%. >40% → widen to 3 ticks.
+
+  This is institutional-2026 best practice per docs/institutional-evidence/
+  stoploss-methodology-2026.md. The buffer is fine for now; this flag exists
+  so future agents know to RE-CHECK rather than treat the values as immutable.
 """
 from __future__ import annotations
 

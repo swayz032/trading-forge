@@ -1,0 +1,206 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "TranscriptExtractorMinimalOutput",
+  "description": "Wave 26 Pass L (2026-05-27) — Minimal 8-field schema for the transcript_extractor role. Flat structure (no $ref nesting) to avoid the recursive-loop bug gemma4:e2b hits with the v11 schema. Passed as `format` object to Ollama /api/chat for GBNF grammar-constrained sampling.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["strategies", "instrument_classification"],
+  "properties": {
+    "strategies": {
+      "type": "array",
+      "description": "Strategies the extractor was able to capture. Empty array is honest — don't invent.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["higher_timeframe", "entry_rule", "preferred_regime", "stop", "targets", "confluences"],
+        "properties": {
+          "name": {
+            "type": ["string", "null"],
+            "description": "snake_case name combining speaker's pattern + timeframes. null lets pipeline derive.",
+            "maxLength": 80
+          },
+          "higher_timeframe": {
+            "type": "string",
+            "description": "Chart used for direction/bias.",
+            "enum": ["1m", "5m", "15m", "30m", "1h", "4h", "1d"]
+          },
+          "lower_timeframe": {
+            "type": ["string", "null"],
+            "description": "Chart used for entry trigger. null if same as higher.",
+            "enum": ["1m", "5m", "15m", "30m", "1h", "4h", "1d", null]
+          },
+          "entry_rule": {
+            "type": "string",
+            "description": "One sentence in speaker's words — the specific trigger that fires the trade.",
+            "minLength": 10,
+            "maxLength": 600
+          },
+          "preferred_regime": {
+            "type": "string",
+            "description": "trending | ranging | any | speaker's specific term",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "stop": {
+            "type": "object",
+            "description": "Initial stop placement. anchor=null falls back to framework default (1.5x ATR + structural ceiling).",
+            "additionalProperties": false,
+            "required": ["anchor"],
+            "properties": {
+              "anchor": {
+                "type": ["string", "null"],
+                "description": "Where the initial stop sits. NEVER fixed_points (banned per CLAUDE.md §13).",
+                "enum": [
+                  "sweep_wick_below_entry",
+                  "sweep_wick_above_entry",
+                  "ob_low",
+                  "ob_high",
+                  "fvg_low",
+                  "fvg_high",
+                  "swing_low_below_entry",
+                  "swing_high_above_entry",
+                  "displacement_candle_low",
+                  "displacement_candle_high",
+                  "swing_after_sfp",
+                  "atr_multiple",
+                  null
+                ]
+              },
+              "buffer_atr": {
+                "type": ["number", "null"],
+                "description": "Extra cushion in ATR units beyond the anchor.",
+                "minimum": 0,
+                "maximum": 5
+              },
+              "atr_multiplier": {
+                "type": ["number", "null"],
+                "description": "ONLY when anchor=atr_multiple. Range 0.5-5.",
+                "minimum": 0.5,
+                "maximum": 5
+              },
+              "rationale": {
+                "type": ["string", "null"],
+                "description": "1 sentence quoting speaker.",
+                "maxLength": 300
+              }
+            }
+          },
+          "stop_management": {
+            "type": ["string", "null"],
+            "description": "1 sentence rule for moving the stop AFTER entry. null if speaker doesn't specify.",
+            "maxLength": 300
+          },
+          "targets": {
+            "type": "array",
+            "description": "What the speaker is aiming at. Empty array if speaker doesn't say (framework Style C 33/33/33 default kicks in).",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["priority", "type"],
+              "properties": {
+                "priority": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 5
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Canonical type or speaker's own term (snake_case).",
+                  "maxLength": 80
+                },
+                "r_multiple": {
+                  "type": ["number", "null"],
+                  "description": "R-multiple if speaker stated one (e.g. 1.5 for 'minimum 1.5R').",
+                  "minimum": 0.1,
+                  "maximum": 50
+                },
+                "rationale": {
+                  "type": ["string", "null"],
+                  "description": "1 sentence quoting speaker.",
+                  "maxLength": 300
+                }
+              }
+            }
+          },
+          "confluences": {
+            "type": "array",
+            "description": "THE KEY FIELD — every condition the speaker says must be TRUE before they take a trade. Empty array is honest.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "description"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Speaker's term (if named) or descriptive snake_case label.",
+                  "minLength": 1,
+                  "maxLength": 80
+                },
+                "description": {
+                  "type": "string",
+                  "description": "1 sentence quoting speaker.",
+                  "minLength": 5,
+                  "maxLength": 400
+                },
+                "canonical_match": {
+                  "type": ["string", "null"],
+                  "description": "Map to one of the 11 canonical factors if it fits, else null.",
+                  "enum": [
+                    "market_structure_aligned",
+                    "liquidity_target_clear",
+                    "smt_confirmation",
+                    "vwap_alignment",
+                    "killzone_active",
+                    "delta_or_volume_signature",
+                    "vp_level_proximity",
+                    "macro_alignment",
+                    "internals_aligned",
+                    "cross_asset_aligned",
+                    "regime_match",
+                    null
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "rejected_strategies": {
+      "type": "array",
+      "description": "Strategies the extractor found but couldn't use. Helps downstream observability.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["reason"],
+        "properties": {
+          "name": {
+            "type": ["string", "null"],
+            "maxLength": 80
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "fixed_point_stop_not_supported",
+              "options_strategy",
+              "swing_or_overnight",
+              "forex_specific_mechanic",
+              "stock_specific_mechanic",
+              "crypto_specific_mechanic",
+              "not_enough_rules"
+            ]
+          },
+          "detail": {
+            "type": ["string", "null"],
+            "maxLength": 300
+          }
+        }
+      },
+      "default": []
+    },
+    "instrument_classification": {
+      "type": "string",
+      "enum": ["futures_primary", "non_futures_primary", "futures_with_forex_illustration"]
+    }
+  }
+}

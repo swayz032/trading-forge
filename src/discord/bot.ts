@@ -256,14 +256,43 @@ function buildSlumdawgVerdictEmbed(result: IngestResult, sourceUrl: string): Emb
 
     const moodLine = humanizeRegime(firstIdea?.preferred_regime);
     const triggerLine = humanizeTrigger(firstIdea?.entry_indicator);
-    const factorBullets = (firstIdea?.confluence_factors ?? []).slice(0, 4).map(f => `  • ${humanizeFactor(f)}`).join("\n") || "  • —";
+    const confluences = firstIdea?.confluence_factors ?? [];
 
-    // Plain-English labels — no trading jargon.
+    // Wave 26 Pass L (2026-05-27) — Recipe-format Slumdawg's Take.
+    // Operator-approved single-numbered-list format (Option A). Confluences
+    // become numbered steps blended with the entry trigger — reads like a
+    // recipe. Removed the redundant "what he waits for" / "what needs to
+    // line up first" split (members were confused by the overlap).
+    // Stop + Target shown separately so the member sees the full trade.
+    const recipeSteps: string[] = [];
+
+    // Build the numbered steps from the strategy's actual fields.
+    // Each confluence factor becomes a CHECK step; the entry trigger is the ACTION step.
+    if (confluences.length > 0) {
+      for (const c of confluences.slice(0, 4)) {
+        recipeSteps.push(humanizeFactor(c));
+      }
+    }
+    // Final ACTION step — the entry trigger
+    if (triggerLine && triggerLine !== "—") {
+      recipeSteps.push(`Take the trade when **${triggerLine}** lines up`);
+    } else {
+      recipeSteps.push(`Take the trade once the conditions above are confirmed`);
+    }
+
+    const numberedRecipe = recipeSteps
+      .map((step, i) => `   ${i + 1}. ${step}`)
+      .join("\n");
+
     const takeLines: string[] = [
-      `**The kind of market he wants:** ${moodLine}`,
+      `📈 Best when the market is: **${moodLine}**`,
+      ``,
+      `🎯 **How to take the trade**`,
+      numberedRecipe,
+      ``,
+      `🛑 **Stop:** framework default — adaptive (1.5× ATR with structural ceiling, never fixed-point)`,
+      `💰 **Target:** minimum 1.5R, then move stop to break-even on the first partial fill`,
     ];
-    if (firstIdea?.entry_indicator) takeLines.push(`**What he waits for before pulling the trigger:** ${triggerLine}`);
-    takeLines.push(`**What needs to line up first:**\n${factorBullets}`);
 
     e.setColor(SLUMDAWG_COLOR.success)
       .setTitle(stratCount > 0
