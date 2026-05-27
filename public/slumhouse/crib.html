@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Slumhouse · The Crib</title>
+  <link rel="stylesheet" href="/slumhouse/slumhouse.css">
+</head>
+<body>
+  <nav class="sh-nav">
+    <a class="sh-pill active" href="/slumhouse/crib.html">The Crib</a>
+    <a class="sh-pill" href="/slumhouse/kitchen.html">The Kitchen</a>
+    <a class="sh-pill" href="/slumhouse/recipe.html">The Recipe</a>
+  </nav>
+
+  <div class="sh-page">
+    <h1 class="sh-title">The Crib</h1>
+    <p class="sh-sub">Slumdawg's home — talk to him, see what's cooking.</p>
+
+    <div id="sh-banner" class="sh-banner"></div>
+
+    <div class="sh-grid-2col">
+      <div class="sh-card sh-stage">
+        <div class="sh-anam-host" id="sh-anam-stage">Tap below to start talking to Slumdawg</div>
+        <button id="sh-anam-launch" class="sh-btn">Video with Slumdawg</button>
+      </div>
+      <div class="sh-card">
+        <div class="sh-rail-title">Fresh from Discord</div>
+        <div id="sh-discord-feed"></div>
+      </div>
+    </div>
+
+    <div class="sh-grid-bottom">
+      <div class="sh-card">
+        <div class="sh-rail-title">In the Pot · click to peek</div>
+        <div id="sh-pot" class="sh-horiz"></div>
+      </div>
+      <div class="sh-card">
+        <div class="sh-rail-title">The Crew · week leaderboard</div>
+        <div id="sh-crew"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/slumhouse/slumhouse.js"></script>
+  <script>
+    (async () => {
+      const data = await SH.fetchJSON("/slumhouse/api/crib");
+      if (!data) return;
+      const { el } = SH;
+
+      // Banner
+      const b = document.getElementById("sh-banner");
+      b.appendChild(stat("Today's Bag", data.banner.todayBag, "green",
+        data.banner.tradesToday.count > 0
+          ? `${data.banner.tradesToday.wins}W · ${data.banner.tradesToday.losses}L`
+          : "no trades yet"));
+      b.appendChild(stat("Trades Today", String(data.banner.tradesToday.count), null,
+        `${data.banner.tradesToday.wins} wins · ${data.banner.tradesToday.losses} losses`));
+      b.appendChild(stat("Open Right Now", String(data.banner.openNow), null,
+        data.banner.openNow > 0 ? "live positions" : "none open"));
+      b.appendChild(stat("In the Pot", String(data.banner.inPot), "amber", "testing"));
+      b.appendChild(stat(
+        "Kill Switch",
+        data.banner.killSwitch === "green" ? "● Green" : "● Red",
+        data.banner.killSwitch === "green" ? "green" : "red",
+        data.banner.killSwitch === "green" ? "bot running" : "bot halted"
+      ));
+
+      // Discord feed
+      const df = document.getElementById("sh-discord-feed");
+      if (data.discordFeed.length === 0) {
+        df.appendChild(el("div", { class: "sh-feed-meta" }, "Nothing fresh in the queue."));
+      } else {
+        for (const f of data.discordFeed) {
+          df.appendChild(el("div", { class: "sh-feed-item" },
+            el("div", { class: "sh-feed-thumb" }, "📺"),
+            el("div", {},
+              el("div", { class: "sh-feed-name" }, f.name),
+              el("div", { class: "sh-feed-meta" }, `${f.source} · ${f.ageMin}m ago · ${f.status}`),
+            ),
+          ));
+        }
+      }
+
+      // Pot (clickable chips → Recipe page)
+      const pot = document.getElementById("sh-pot");
+      if (data.pot.length === 0) {
+        pot.appendChild(el("div", { class: "sh-chip-meta" }, "Nothing testing right now."));
+      } else {
+        for (const s of data.pot) {
+          pot.appendChild(el("a", { class: "sh-chip", href: `/slumhouse/recipe.html?id=${encodeURIComponent(s.id)}` },
+            el("div", { class: "sh-chip-stage" }, s.stage),
+            el("div", { class: "sh-chip-name" }, s.name),
+            el("div", { class: "sh-chip-pnl" }, s.netPnl),
+            el("div", { class: "sh-chip-meta" }, `${s.tradesCount} plays`),
+          ));
+        }
+      }
+
+      // Crew
+      const crew = document.getElementById("sh-crew");
+      if (data.crew.length === 0) {
+        crew.appendChild(el("div", { class: "sh-feed-meta" }, "No crew yet — operator hasn't mapped anyone."));
+      } else {
+        for (const c of data.crew) {
+          crew.appendChild(el("div", { class: "sh-crew-row" },
+            el("div", { class: "sh-jersey" }, String(c.jersey || "?")),
+            el("div", { class: "sh-crew-name" }, c.displayName),
+            el("div", { class: "sh-crew-pnl" }, c.weekBag),
+          ));
+        }
+      }
+
+      // Anam launcher (placeholder until ANAM session-token endpoint lands)
+      const launch = document.getElementById("sh-anam-launch");
+      launch.addEventListener("click", () => {
+        const PERSONA_ID = "026cacc4-619e-4cec-a144-c4a8dfcb623e";
+        const stage = document.getElementById("sh-anam-stage");
+        const frame = document.createElement("iframe");
+        frame.src = `https://lab.anam.ai/embed/${PERSONA_ID}`;
+        frame.style.cssText = "width:100%;height:340px;border:0;border-radius:12px;background:#000";
+        stage.innerHTML = "";
+        stage.appendChild(frame);
+        launch.style.display = "none";
+      });
+    })();
+
+    function stat(label, val, color, sub) {
+      return SH.el("div", { class: "sh-stat" },
+        SH.el("div", { class: "sh-stat-label" }, label),
+        SH.el("div", { class: "sh-stat-val " + (color || "") }, val),
+        SH.el("div", { class: "sh-stat-sub" }, sub || "")
+      );
+    }
+  </script>
+</body>
+</html>
