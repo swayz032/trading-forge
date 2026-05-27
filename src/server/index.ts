@@ -57,6 +57,7 @@ import { validationCadenceRoutes } from "./routes/validation-cadence.js";
 import { adminRoutes } from "./routes/admin.js";
 import { adminFrozenPolicyOverrideRoutes } from "./routes/admin-frozen-policy-override.js";
 import { slumdawgRoutes } from "./routes/slumdawg.js";
+import { slumhouseRouter, adminMappingRouter as slumhouseAdminMappingRouter } from "./routes/slumhouse/index.js";
 import { dlqRoutes } from "./routes/dlq.js";
 import { metricsRoutes } from "./routes/metrics.js";
 import { n8nTrackingRoutes } from "./routes/n8n-tracking.js";
@@ -501,6 +502,9 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/admin", adminFrozenPolicyOverrideRoutes);
 // Wave 26 Pass G — Slumdawg Analyst (Anam.ai) read-only API surface.
 app.use("/api/admin/slumdawg", slumdawgRoutes);
+// 2026-05-27 — Slumhouse portal (friend-facing read-only, Discord OAuth).
+app.use(slumhouseRouter);
+app.use(slumhouseAdminMappingRouter);
 app.use("/api/dlq", dlqRoutes);
 app.use("/api/metrics", metricsRoutes);
 app.use("/api/n8n", n8nTrackingRoutes);
