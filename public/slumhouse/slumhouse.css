@@ -49,14 +49,14 @@ a { color: inherit; text-decoration: none; }
   color: var(--ink);
 }
 
-.sh-page { padding: 0 32px 40px; max-width: 1340px; margin: 0 auto; }
+.sh-page { padding: 0 24px 28px; max-width: 1280px; margin: 0 auto; }
 .sh-title {
-  font-size: 30px; font-weight: 700;
+  font-size: 26px; font-weight: 700;
   color: var(--ink);
   letter-spacing: -0.025em;
-  margin: 8px 0 4px;
+  margin: 6px 0 2px;
 }
-.sh-sub { font-size: 13px; color: var(--mute); margin: 0 0 26px; letter-spacing: 0.01em; }
+.sh-sub { font-size: 12px; color: var(--mute); margin: 0 0 18px; letter-spacing: 0.01em; }
 
 /* ─── PITCH BLACK FLAT GLASSY CARDS ────────────────────────────────── */
 /* True #000 surface. The "glass" effect is delivered by 3 layers ONLY:
@@ -67,7 +67,7 @@ a { color: inherit; text-decoration: none; }
   background: #000;
   border: 1px solid var(--line);
   border-radius: 14px;
-  padding: 18px;
+  padding: 14px 16px;
   position: relative;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.015);
 }
@@ -97,9 +97,9 @@ a { color: inherit; text-decoration: none; }
   background: #000;
   border: 1px solid var(--line);
   border-radius: 14px;
-  padding: 16px 18px 0;
+  padding: 14px 16px 0;
   position: relative; overflow: hidden;
-  min-height: 168px;
+  min-height: 140px;
   display: flex; flex-direction: column;
   opacity: 0;
   transform: translateY(8px);
@@ -145,7 +145,7 @@ a { color: inherit; text-decoration: none; }
 .sh-stat-trend.flat { background: rgba(255, 255, 255, 0.06); color: var(--dim); }
 
 .sh-stat-val {
-  font-size: 30px; font-weight: 700;
+  font-size: 24px; font-weight: 700;
   color: var(--ink);
   font-family: var(--num-font);
   letter-spacing: -0.025em;
@@ -166,9 +166,9 @@ a { color: inherit; text-decoration: none; }
 /* The chart IS the hero — full-bleed to the card edges, 60% of card height */
 .sh-stat-spark {
   flex: 1;
-  margin: 0 -18px -1px;     /* full-bleed sides + bottom */
-  height: 72px;
-  min-height: 72px;
+  margin: 0 -16px -1px;     /* full-bleed sides + bottom (matches new padding) */
+  height: 58px;
+  min-height: 58px;
   display: block;
 }
 .sh-stat-spark svg { width: 100%; height: 100%; display: block; }
@@ -194,14 +194,14 @@ a { color: inherit; text-decoration: none; }
    RIGHT col: Discord feed + Crew leaderboard underneath (same width).
    Each column is its own vertical stack — no row spans across the full page. */
 /* 2-col × 2-row grid.
-   Row 1 height is set by Anam stage (420px). Discord card (right) stretches
-   to fill the same row height automatically.
-   Row 2 height is set by the taller of Pot or Crew (both grow to row max).
-   minmax(0, 1fr) on columns prevents intrinsic-width content
-   (Pot chips, sparklines) from blowing out either column. */
+   LEFT col is the wide main area (Anam stage + Pot underneath).
+   RIGHT col is a 340px-wide rail (Discord feed + Crew underneath).
+   Row 1 height is set by Anam stage (420px) — Discord card on the right
+   automatically stretches to the same height. Row 2 matches Pot height.
+   minmax(0, 1fr) on the left prevents Pot chips from blowing out width. */
 .sh-main {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 340px;
   grid-auto-rows: auto;
   gap: 12px;
 }
@@ -211,16 +211,16 @@ a { color: inherit; text-decoration: none; }
 .sh-rail-card > div:last-child { flex: 1; min-height: 0; overflow-y: auto; }
 
 .sh-stage {
-  min-height: 420px; position: relative;
+  min-height: 340px; position: relative;
   background: #000;
   display: flex; align-items: center; justify-content: center;
-  flex-direction: column; gap: 18px;
+  flex-direction: column; gap: 14px;
   overflow: hidden;
-  padding: 22px;
+  padding: 18px;
 }
 .sh-anam-host {
   width: 100%; flex: 1;
-  min-height: 320px;
+  min-height: 240px;
   display: flex; align-items: center; justify-content: center;
   color: #444; font-size: 12px;
   position: relative; z-index: 1;
