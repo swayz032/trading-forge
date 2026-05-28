@@ -60,7 +60,12 @@ export interface RecallResult {
   failureReason?: string;
 }
 
-const RECALL_PROMPT = `You previously extracted a trading strategy from a YouTube video transcript. The first-pass extraction often misses details that are buried mid-transcript or stated only once. You are now doing a TARGETED RECALL PASS.
+// Wave 26 Pass L Fix P (2026-05-27) — Operator correction: win_rate + avg_r are
+// OUTPUT metrics measured by the backtester, NOT design targets. CLAUDE.md §1 +
+// feedback_win_rate_is_output_not_target.md. Recall pass now focuses ONLY on
+// STRATEGY MECHANICS gemma misses (time / candle filters, instrument lock).
+// Source-claimed win_rate / avg_r are deliberately not extracted.
+const RECALL_PROMPT = `You previously extracted a trading strategy from a YouTube video transcript. The first-pass extraction often misses MECHANIC details — time-of-day filters, candle-quality filters, instrument-lock notes — that are buried mid-transcript. You are now doing a TARGETED RECALL PASS.
 
 ## First-pass extraction (already captured)
 
@@ -74,20 +79,11 @@ const RECALL_PROMPT = `You previously extracted a trading strategy from a YouTub
 {TRANSCRIPT}
 \`\`\`
 
-## ★ PRE-SCANNED NUMERIC CANDIDATES (read this LAST before answering)
+## Why this pass is mechanic-only
 
-The following PERCENTAGE / R-MULTIPLE phrases were PROGRAMMATICALLY pre-scanned from the transcript above. Q1 (win_rate) and Q2 (avg_r) MUST pick from this list (or set null if no candidate matches).
+Per CLAUDE.md §1: **"Win rate is an OBSERVED output metric — never a target, never a gate."** The backtester measures performance via avg-R / PF / deflated-Sharpe — what the speaker claims doesn't matter. So this recall pass DOES NOT extract win-rate or R-multiple claims; it focuses on the STRATEGY MECHANICS gemma reliably misses.
 
-\`\`\`
-{PRESCAN_CANDIDATES}
-\`\`\`
-
-**Q1/Q2 rule (ABSOLUTE):**
-- If a candidate matches the question (e.g. WIN-RATE-CONTEXT for Q1, RR-RATIO / R-MULTIPLE for Q2) → use the candidate's surrounding context as your quote, and convert its numeric value
-- If NO candidate matches → value AND quote are null. Don't invent.
-- "20 pips" / "30 ticks" / pip distances are NOT R-multiples — only RR-RATIO / R-MULTIPLE candidates qualify for Q2.
-
-## YOUR TASK — answer 5 focused questions
+## YOUR TASK — answer 3 focused questions
 
 For each question: if the SPEAKER says it (even briefly, anywhere in the transcript), capture the value + the EXACT QUOTE. If the speaker does NOT say it, set BOTH to null. NEVER invent. NEVER infer. Only what the speaker explicitly stated.
 
@@ -95,30 +91,15 @@ Return ONLY this JSON shape, nothing else:
 
 \`\`\`json
 {
-  "win_rate":        { "value": <number 0-1 or null>, "quote": <exact transcript quote or null> },
-  "avg_r":           { "value": <number or null>,     "quote": <exact transcript quote or null> },
+  "win_rate":        { "value": null, "quote": null },
+  "avg_r":           { "value": null, "quote": null },
   "time_filter":     { "value": <string description or null>, "quote": <exact transcript quote or null> },
   "candle_filter":   { "value": <string description or null>, "quote": <exact transcript quote or null> },
-  "instrument_lock": { "value": <string or null>,     "quote": <exact transcript quote or null> }
+  "instrument_lock": { "value": <string or null>,             "quote": <exact transcript quote or null> }
 }
 \`\`\`
 
-### Q1: WIN RATE %
-Does the speaker state a win rate ANYWHERE in the transcript?
-- "had a win rate of 52.63%" → value: 0.5263, quote: "had a win rate of 52.63%"
-- "80% win rate" → value: 0.80
-- "hits 70-80% of the time" → value: 0.75 (midpoint), quote: "hits 70-80% of the time"
-- "7 out of 10 trades win" → value: 0.70
-- "82% accuracy" → value: 0.82
-**Title hype DOES NOT count** — title says "80% Win Rate" but speaker never mentions it = value: null.
-
-### Q2: R-MULTIPLE / RISK-REWARD
-Does the speaker state an R-multiple or risk-reward ratio?
-- "we're going for a 1:2 risk to reward" → value: 2.0, quote: "1:2 risk to reward"
-- "minimum 1.5R" → value: 1.5
-- "I aim for 3R per trade" → value: 3.0
-- **"1:2 R/R" means target = 2× stop = avg_r: 2.0 (NOT 1.2).**
-- "I average 2R per trade" → value: 2.0
+**win_rate and avg_r are ALWAYS null in this pass. The backtester measures them — speaker claims don't matter. Leave both null.**
 
 ### Q3: TIME-OF-DAY FILTER
 Does the speaker restrict trades to specific time windows?
@@ -237,14 +218,23 @@ export function extractClaimsDeterministically(transcript: string): Deterministi
   ];
 
   for (const p of winRatePatterns) {
-    const m = transcript.match(p.rx);
-    if (m && m.index !== undefined) {
+    // Use matchAll so we can scan all candidates and skip negated ones.
+    const allMatches = [...transcript.matchAll(new RegExp(p.rx.source, "gi"))];
+    for (const m of allMatches) {
+      if (m.index === undefined) continue;
+      // Wave 26 Pass L Fix O (2026-05-27) — negation detector.
+      // Look back ~40 chars for "not a 100% win rate" / "isn't" / "never" / "no"
+      // → REJECT match. Speaker is negating the claim, not making it.
+      const lookback = transcript.slice(Math.max(0, m.index - 40), m.index).toLowerCase();
+      if (/\b(?:not(?:\s+a)?|isn'?t|wasn'?t|never|hardly|barely|no(?:t)?\s+(?:a\s+)?(?:guaranteed|claim))\b\s*$/.test(lookback)) {
+        continue; // negated — try next match
+      }
       const val = p.extract(m);
       if (val !== null && val >= 0 && val <= 1) {
         const start = Math.max(0, m.index - 20);
         const end = Math.min(transcript.length, m.index + m[0].length + 20);
         result.win_rate = { value: val, quote: transcript.slice(start, end).replace(/\s+/g, " ").trim() };
-        break;
+        return result;
       }
     }
   }
@@ -369,6 +359,25 @@ export async function runRecallPass(
       instrument_lock: normalizeField(parsed.instrument_lock),
     };
 
+    // Wave 26 Pass L Fix O (2026-05-27) — value/quote alignment check on win_rate.
+    // Quote MUST contain a numeric value (digit + % OR "of the time" OR "X out of Y").
+    // Catches the fabrication case where gemma pastes a real-but-unrelated quote
+    // (e.g. "I promise you this video can change your life") with an invented value.
+    if (recall.win_rate.value !== null && typeof recall.win_rate.quote === "string") {
+      const q = recall.win_rate.quote.toLowerCase();
+      const hasNumericClaim =
+        /\d+(?:\.\d+)?\s*%/.test(q) ||                       // "70%"
+        /\d+(?:\.\d+)?\s+(?:percent|percentage)\b/.test(q) ||// "70 percent"
+        /\d+\s+out\s+of\s+\d+/.test(q) ||                    // "7 out of 10"
+        /\b(?:win\s+rate|hit\s+rate|accuracy)\b/.test(q);    // explicit win-rate phrase
+      if (!hasNumericClaim) {
+        (recall as Record<string, unknown>)._rejected = (recall as Record<string, unknown>)._rejected ?? {};
+        ((recall as Record<string, unknown>)._rejected as Record<string, unknown>)["win_rate"] =
+          `quote_has_no_numeric_claim: "${q.slice(0, 80)}" (value ${recall.win_rate.value} not derivable from quote)`;
+        recall.win_rate = { value: null, quote: null };
+      }
+    }
+
     // Wave 26 Pass L Fix M (2026-05-27) — value-sanity check on avg_r.
     // The quote MUST contain explicit R-syntax. "20 pips" is a pip distance, NOT 2R.
     if (recall.avg_r.value !== null && typeof recall.avg_r.quote === "string") {
@@ -415,16 +424,14 @@ export async function runRecallPass(
     };
   }
 
-  // Wave 26 Pass L Fix N — code-side deterministic claim extraction.
-  // For win_rate and avg_r, regex-extract directly from transcript and prefer
-  // the deterministic value over gemma's recall (which keeps missing 52.63%).
-  const det = extractClaimsDeterministically(transcript);
-  if (det.win_rate.value !== null && (recall.win_rate.value === null || recall.win_rate.value === undefined)) {
-    recall.win_rate = det.win_rate;
-  }
-  if (det.avg_r.value !== null && (recall.avg_r.value === null || recall.avg_r.value === undefined)) {
-    recall.avg_r = det.avg_r;
-  }
+  // Wave 26 Pass L Fix P (2026-05-27) — operator correction: win_rate + avg_r
+  // are OUTPUT metrics measured by the backtester, not extraction targets.
+  // Hard-null both fields regardless of what gemma or the deterministic
+  // extractor produced. See feedback_win_rate_is_output_not_target.md +
+  // CLAUDE.md §1. Fix N's extractClaimsDeterministically is kept exported for
+  // backward-compat callers but its output is ignored here.
+  recall.win_rate = { value: null, quote: null };
+  recall.avg_r = { value: null, quote: null };
 
   // Apply patches. ONLY fill NULL primary fields. NEVER overwrite real values.
   const patched: PrimaryStrategyShape = { ...primary };
