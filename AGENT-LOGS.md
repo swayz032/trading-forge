@@ -8851,3 +8851,20 @@ For current operating rules, see `CLAUDE.md`. For subsystem architecture details
 
 **Carry-forward:**
 - If the tunnel drops again, restart `tower-relay-client` first and check the Railway `/__relay/health` endpoint before touching the Slumhouse app.
+
+### Session Log — 2026-05-28 Slumhouse 404 fallback
+
+**Mission:** Stop stale or unknown Slumhouse browser routes from surfacing a raw 404 after sign-in.
+
+**Work completed:**
+- Added a final Slumhouse router fallback in `src/server/routes/slumhouse/index.ts`.
+- Unknown HTML navigation under `/slumhouse/*` now redirects signed-in users to `/slumhouse/crib.html` and anonymous users to `/slumhouse/login.html`.
+- Added a regression test for the fallback behavior.
+
+**Verification:**
+- `cmd /c npx vitest run src/server/__tests__/slumhouse/auth-route.test.ts src/server/__tests__/slumhouse/crib-route.test.ts src/server/__tests__/slumhouse/index-route.test.ts` — 14 tests passed.
+
+**Known-facts updates:** A stale browser route under `/slumhouse/*` can show a raw 404 even when login and the main shell are healthy; the fallback now recovers that case.
+
+**Carry-forward:**
+- If the user still sees a 404, I need the exact URL they land on after Discord returns so I can pin the remaining path.

@@ -9,24 +9,102 @@
  * The admin mapping router is exported separately so the app can mount it at
  * /api/admin/... alongside other operator-only endpoints.
  */
-import { Router } from "express";
+import { Router, type Request, type Response, type NextFunction } from "express";
 import express from "express";
 import path from "node:path";
-import { authRouter } from "./auth.js";
+import { authRouter, handleLaunch } from "./auth.js";
 import { adminMappingRouter } from "./admin-mapping.js";
 import { cribApiRouter } from "./api/crib.js";
 import { kitchenApiRouter } from "./api/kitchen.js";
 import { recipeApiRouter } from "./api/recipe.js";
+import { anamSessionRouter } from "./api/anam-session.js";
+import { verifySession } from "../../lib/slumhouse/session.js";
 
 export const slumhouseRouter = Router();
 
+export function handleSlumhouseFallback(req: Request, res: Response, next: NextFunction): void {
+  if (req.method !== "GET") {
+    next();
+    return;
+  }
+  const accept = String(req.headers.accept ?? "");
+  if (!accept.includes("text/html")) {
+    next();
+    return;
+  }
+  const pathName = String(req.path ?? "");
+  if (!pathName.startsWith("/slumhouse/")) {
+    next();
+    return;
+  }
+  if (pathName.startsWith("/slumhouse/api/")) {
+    next();
+    return;
+  }
+  if (pathName === "/slumhouse/login.html" || pathName === "/slumhouse/launch" || pathName === "/slumhouse/crib.html" || pathName === "/slumhouse/kitchen.html" || pathName === "/slumhouse/recipe.html" || pathName === "/slumhouse/") {
+    next();
+    return;
+  }
+
+  const raw = req.headers.cookie ?? "";
+  const match = raw.match(/(?:^|;\s*)slumhouse_sid=([^;]+)/);
+  if (!match) {
+    res.redirect(302, "/slumhouse/login.html");
+    return;
+  }
+  try {
+    const verified = verifySession(decodeURIComponent(match[1]));
+    if (verified?.discordUserId) {
+      res.redirect(302, "/slumhouse/crib.html");
+      return;
+    }
+  } catch {
+    /* fall through to login */
+  }
+  res.redirect(302, "/slumhouse/login.html");
+}
+
+// PWA launch redirect — must register BEFORE the static handler so /slumhouse/launch
+// hits our smart cookie check instead of falling through to crib.html.
+slumhouseRouter.get("/slumhouse/launch", handleLaunch);
+
 // Auth namespace
 slumhouseRouter.use("/slumhouse/auth", authRouter);
+
+// Pre-static auth gate — protect the authenticated HTML shells from rendering
+// unauthenticated. Without this, iOS PWA tapping /slumhouse/crib.html (the
+// pre-fix cached start_url) shows the shell briefly before the API 401 flips
+// to login. With this, the HTML never lands without a valid session cookie.
+slumhouseRouter.get([
+  "/slumhouse/crib.html",
+  "/slumhouse/kitchen.html",
+  "/slumhouse/recipe.html",
+  "/slumhouse/",
+], (req, res, next) => {
+  const raw = req.headers.cookie ?? "";
+  const match = raw.match(/(?:^|;\s*)slumhouse_sid=([^;]+)/);
+  if (!match) {
+    res.redirect(302, "/slumhouse/login.html");
+    return;
+  }
+  try {
+    const verified = verifySession(decodeURIComponent(match[1]));
+    if (!verified?.discordUserId) {
+      res.redirect(302, "/slumhouse/login.html");
+      return;
+    }
+  } catch {
+    res.redirect(302, "/slumhouse/login.html");
+    return;
+  }
+  next();
+});
 
 // API namespaces (full /slumhouse/api/... paths already declared in each module)
 slumhouseRouter.use(cribApiRouter);
 slumhouseRouter.use(kitchenApiRouter);
 slumhouseRouter.use(recipeApiRouter);
+slumhouseRouter.use(anamSessionRouter);
 
 // Static SPA assets (CSS, JS, HTML, images) — served last so /slumhouse/api/*
 // matches the API routes above first.
@@ -36,6 +114,8 @@ slumhouseRouter.use("/slumhouse", express.static(STATIC_DIR, {
   extensions: ["html"],
   fallthrough: true,
 }));
+
+slumhouseRouter.use(handleSlumhouseFallback);
 
 // Re-export the admin mapping router for the app to mount at /api/admin
 export { adminMappingRouter };
