@@ -8868,3 +8868,19 @@ For current operating rules, see `CLAUDE.md`. For subsystem architecture details
 
 **Carry-forward:**
 - If the user still sees a 404, I need the exact URL they land on after Discord returns so I can pin the remaining path.
+
+### Session Log — 2026-05-28 Railway deploy restore
+
+**Mission:** Restore the root Railway Dockerfile so the fallback patch can actually deploy.
+
+**Work completed:**
+- Re-added the repo-root `Dockerfile` that Railway uses to deploy the `tf-relay` service.
+- Kept the Slumhouse fallback patch intact.
+
+**Verification:**
+- Previous Railway logs showed `Railpack` mis-detected the repo as Python when the root Dockerfile was absent.
+
+**Known-facts updates:** The root Dockerfile is required for the live Railway relay service; removing it makes the next deploy fail before the Slumhouse changes land.
+
+**Carry-forward:**
+- The next Railway deploy should now pick up the 404 fallback again instead of failing at build detection.
