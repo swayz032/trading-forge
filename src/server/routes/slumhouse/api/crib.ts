@@ -7,7 +7,7 @@ import { assembleCribData } from "../../../lib/slumhouse/crib-data.js";
 
 export async function getCrib(req: SlumhouseRequest, res: Response): Promise<void> {
   const user = req.slumhouseUser!;
-  const data = await assembleCribData({ brokerAccountId: String(user.brokerAccountId) });
+  const data = await assembleCribData({ brokerAccountId: user.brokerAccountId ?? null });
   res.json(data);
 }
 

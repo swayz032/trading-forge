@@ -8524,6 +8524,24 @@ Also restored Anam.ai persona during this session:
 - Spec open question #4 (Anam auto-start vs click-to-start) — currently click-to-start (operator-confirmed during brainstorm)
 - Mobile-responsive audit deferred — current layouts assume desktop browser per spec §11 out-of-scope
 
+### Session Log — 2026-05-27 Slumhouse auth hardening
+
+**Mission:** Diagnose the Slumhouse login fallback users were seeing and close the auth/mapping mismatch without changing the portal contract.
+
+**Work completed:**
+- Tightened `src/server/routes/slumhouse/auth.ts` so the OAuth callback treats any row without `brokerAccountId` as unmapped, matching the session gate.
+- Added a regression test for the `brokerAccountId: null` case in `src/server/__tests__/slumhouse/auth-route.test.ts`.
+- Updated the auth-route assertions for the existing login redirect and welcome cookie behavior.
+
+**Verification:**
+- `cmd /c npx vitest run src/server/__tests__/slumhouse/auth-route.test.ts` — 8 tests passed.
+
+**Known-facts updates:** None.
+
+**Carry-forward:**
+- Friends still need a `slumhouse_users` mapping row with a non-null `broker_account_id`; Discord membership alone will still land them on the "Almost in" page.
+- If login complaints continue, the next check is live `slumhouse_users` rows in Railway/Postgres, not the Discord OAuth flow.
+
 ---
 
 ## Known-Facts Pin — Stop Misdiagnosing These
@@ -8706,6 +8724,42 @@ this budget by orders of magnitude.
 
 If you need ML-driven decisions on the execution path, compile a model down to a numpy
 function loaded at boot. The LLM-in-the-loop pattern is the anti-pattern.
+
+### Session Log — 2026-05-28 Slumhouse Discord-only sign-in fix
+
+**Mission:** Remove the broker-mapping gate from initial Slumhouse sign-in so any Discord member can log in, even when their account is not yet linked to a broker account.
+
+**Work completed:**
+- `src/server/routes/slumhouse/auth.ts` now auto-creates a `slumhouse_users` row on first Discord login and always mints the session cookie.
+- `src/server/lib/slumhouse/require-session.ts` now requires only a valid Discord session row, not a non-null `broker_account_id`.
+- `src/server/routes/slumhouse/api/crib.ts` and `src/server/lib/slumhouse/crib-data.ts` now tolerate unmapped users by zeroing account-scoped Crib metrics instead of blocking the page.
+- Updated Slumhouse auth + crib tests to cover first-login row creation and unmapped-session access.
+
+**Verification:**
+- `cmd /c npx vitest run src/server/__tests__/slumhouse/auth-route.test.ts src/server/__tests__/slumhouse/crib-route.test.ts` — 11 tests passed.
+
+**Known-facts updates:** Discord membership alone is sufficient for Slumhouse login now; broker mapping only affects account-scoped data, not access.
+
+**Carry-forward:**
+- The not-mapped page is now effectively a legacy fallback and can be deleted later if nothing else references it.
+- If you want the portal to expose broker-scoped data for a new friend, add their `broker_account_id` later through `/api/admin/slumhouse-users`.
+
+### Session Log — 2026-05-28 Slumhouse legacy page removal
+
+**Mission:** Remove the dead `not-mapped` page and its remaining runtime references so the portal no longer advertises a manual approval screen that will not be used.
+
+**Work completed:**
+- Deleted `public/slumhouse/not-mapped.html`.
+- Updated `public/slumhouse/slumhouse.js` to redirect 403s back to `/slumhouse/login.html` instead of the removed page.
+- Removed stale `not-mapped` wording from the Slumhouse auth route comment and deployment runbook.
+
+**Verification:**
+- `cmd /c npx vitest run src/server/__tests__/slumhouse/auth-route.test.ts src/server/__tests__/slumhouse/crib-route.test.ts` — 11 tests passed.
+
+**Known-facts updates:** None.
+
+**Carry-forward:**
+- `docs/system-topology.generated.json` and `docs/system-subsystem-registry.json` still contain historical generated references; those are generated artifacts, not live runtime paths.
 
 ---
 

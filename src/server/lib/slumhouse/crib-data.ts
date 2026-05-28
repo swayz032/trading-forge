@@ -31,34 +31,40 @@ export interface CribData {
   crew: Array<{ jersey: number; displayName: string; weekBag: string }>;
 }
 
-export async function assembleCribData(args: { brokerAccountId: string }): Promise<CribData> {
+export async function assembleCribData(args: { brokerAccountId: string | null }): Promise<CribData> {
   const { brokerAccountId } = args;
+  const brokerAccountSql = brokerAccountId ? sql`${brokerAccountId}::uuid` : sql`NULL::uuid`;
+  const canReadAccountScopedData = Boolean(brokerAccountId);
 
   // 1. Today's closed P&L + W/L counts for THIS account's assigned strategies
-  const todayRow = await firstRow(db.execute(sql`
-    SELECT
-      COALESCE(SUM(pt.pnl::float), 0)::float AS today_pnl,
-      COUNT(pt.*)::int                       AS trades_today,
-      SUM(CASE WHEN pt.pnl::float > 0 THEN 1 ELSE 0 END)::int AS wins,
-      SUM(CASE WHEN pt.pnl::float <= 0 THEN 1 ELSE 0 END)::int AS losses
-    FROM paper_trades pt
-    JOIN paper_sessions ps ON ps.id = pt.session_id
-    JOIN account_strategy_assignments asa
-      ON asa.strategy_id = ps.strategy_id AND asa.status = 'active'
-    WHERE asa.account_id = ${brokerAccountId}::uuid
-      AND pt.exit_time::date = CURRENT_DATE
-  `).catch(() => [] as any[]));
+  const todayRow = canReadAccountScopedData
+    ? await firstRow(db.execute(sql`
+        SELECT
+          COALESCE(SUM(pt.pnl::float), 0)::float AS today_pnl,
+          COUNT(pt.*)::int                       AS trades_today,
+          SUM(CASE WHEN pt.pnl::float > 0 THEN 1 ELSE 0 END)::int AS wins,
+          SUM(CASE WHEN pt.pnl::float <= 0 THEN 1 ELSE 0 END)::int AS losses
+        FROM paper_trades pt
+        JOIN paper_sessions ps ON ps.id = pt.session_id
+        JOIN account_strategy_assignments asa
+          ON asa.strategy_id = ps.strategy_id AND asa.status = 'active'
+        WHERE asa.account_id = ${brokerAccountSql}
+          AND pt.exit_time::date = CURRENT_DATE
+      `).catch(() => [] as any[]))
+    : null;
 
   // 2. Open positions count for THIS account
-  const openRow = await firstRow(db.execute(sql`
-    SELECT COUNT(pp.*)::int AS open_now
-    FROM paper_positions pp
-    JOIN paper_sessions ps ON ps.id = pp.session_id
-    JOIN account_strategy_assignments asa
-      ON asa.strategy_id = ps.strategy_id AND asa.status = 'active'
-    WHERE asa.account_id = ${brokerAccountId}::uuid
-      AND pp.closed_at IS NULL
-  `).catch(() => [] as any[]));
+  const openRow = canReadAccountScopedData
+    ? await firstRow(db.execute(sql`
+        SELECT COUNT(pp.*)::int AS open_now
+        FROM paper_positions pp
+        JOIN paper_sessions ps ON ps.id = pp.session_id
+        JOIN account_strategy_assignments asa
+          ON asa.strategy_id = ps.strategy_id AND asa.status = 'active'
+        WHERE asa.account_id = ${brokerAccountSql}
+          AND pp.closed_at IS NULL
+      `).catch(() => [] as any[]))
+    : null;
 
   // 3. Global "In the Pot" — strategies in test stages (not account-scoped)
   const potRow = await firstRow(db.execute(sql`
@@ -76,19 +82,21 @@ export async function assembleCribData(args: { brokerAccountId: string }): Promi
     killRow?.value === "false" || killRow?.value === false ? "red" : "green";
 
   // 4b. Sparklines — last 7 trading days
-  const sparkPnlRows = (await db.execute(sql`
-    SELECT (pt.exit_time::date) AS d,
-      COALESCE(SUM(pt.pnl::float), 0)::float AS pnl,
-      COUNT(pt.*)::int AS cnt
-    FROM paper_trades pt
-    JOIN paper_sessions ps ON ps.id = pt.session_id
-    JOIN account_strategy_assignments asa
-      ON asa.strategy_id = ps.strategy_id AND asa.status = 'active'
-    WHERE asa.account_id = ${brokerAccountId}::uuid
-      AND pt.exit_time >= NOW() - INTERVAL '7 days'
-    GROUP BY pt.exit_time::date
-    ORDER BY pt.exit_time::date ASC
-  `).catch(() => [] as any[])) as any[];
+  const sparkPnlRows = canReadAccountScopedData
+    ? ((await db.execute(sql`
+        SELECT (pt.exit_time::date) AS d,
+          COALESCE(SUM(pt.pnl::float), 0)::float AS pnl,
+          COUNT(pt.*)::int AS cnt
+        FROM paper_trades pt
+        JOIN paper_sessions ps ON ps.id = pt.session_id
+        JOIN account_strategy_assignments asa
+          ON asa.strategy_id = ps.strategy_id AND asa.status = 'active'
+        WHERE asa.account_id = ${brokerAccountSql}
+          AND pt.exit_time >= NOW() - INTERVAL '7 days'
+        GROUP BY pt.exit_time::date
+        ORDER BY pt.exit_time::date ASC
+      `).catch(() => [] as any[])) as any[])
+    : [];
   const todayBagSpark = sparkPnlRows.map((r) => Number(r.pnl ?? 0));
   const tradesSpark = sparkPnlRows.map((r) => Number(r.cnt ?? 0));
 

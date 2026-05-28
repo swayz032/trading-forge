@@ -3,9 +3,9 @@
  *
  * Flow:
  *   GET /slumhouse/auth/login    → redirects to discord.com authorize
- *   GET /slumhouse/auth/callback → exchanges code, looks up slumhouse_users
- *                                  mapping, sets HMAC-signed session cookie,
- *                                  redirects to /slumhouse (or /not-mapped.html)
+ *   GET /slumhouse/auth/callback → exchanges code, looks up slumhouse_users,
+ *                                  ensures a session row exists, sets HMAC-signed
+ *                                  session cookie, redirects to /slumhouse
  *   GET /slumhouse/auth/logout   → clears cookie, redirects to /login.html
  *
  * Handler functions are exported individually so tests can call them with
@@ -16,7 +16,7 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { slumhouseUsers, auditLog } from "../../db/schema.js";
 import { exchangeCodeForToken, fetchDiscordUser } from "../../lib/slumhouse/discord-oauth.js";
-import { signSession, COOKIE_NAME } from "../../lib/slumhouse/session.js";
+import { signSession, verifySession, COOKIE_NAME } from "../../lib/slumhouse/session.js";
 import { logger } from "../../lib/logger.js";
 import { insertAuditRowSafe } from "../../lib/audit-log-helper.js";
 
@@ -40,9 +40,21 @@ export async function handleLogin(_req: Request, res: Response): Promise<void> {
 }
 
 export async function handleCallback(req: Request, res: Response): Promise<void> {
+  // User cancelled the Discord OAuth prompt — Discord redirects back with
+  // `?error=access_denied`. Treat as a graceful return to login, not an error.
+  const oauthError = req.query?.error ? String(req.query.error) : "";
+  if (oauthError) {
+    await insertAuditRowSafe({
+      action: "slumhouse.login_cancelled",
+      status: "info",
+      input: { error: oauthError, error_description: String(req.query?.error_description ?? "") },
+    });
+    res.redirect(302, "/slumhouse/login.html");
+    return;
+  }
   const code = String(req.query?.code ?? "");
   if (!code) {
-    res.status(400).send("missing_code");
+    res.redirect(302, "/slumhouse/login.html");
     return;
   }
 
@@ -55,22 +67,23 @@ export async function handleCallback(req: Request, res: Response): Promise<void>
       .from(slumhouseUsers)
       .where(eq(slumhouseUsers.discordUserId, discordUser.id));
 
-    if (rows.length === 0) {
-      await insertAuditRowSafe({
-        action: "slumhouse.login_unmapped_user",
-        status: "warning",
-        input: { discord_user_id: discordUser.id, username: discordUser.username },
-      });
-      res.redirect(302, "/slumhouse/not-mapped.html");
-      return;
+    const user = rows[0];
+    if (!user) {
+      await db.insert(slumhouseUsers).values({
+        discordUserId: discordUser.id,
+        displayName: discordUser.displayName,
+        jerseyNumber: null,
+        brokerAccountId: null,
+        lastSeenAt: sql`NOW()`,
+      }).onConflictDoNothing();
+    } else {
+      // Keep the friendly display name fresh without disturbing manual mapping.
+      db.update(slumhouseUsers)
+        .set({ displayName: discordUser.displayName, lastSeenAt: sql`NOW()` })
+        .where(eq(slumhouseUsers.discordUserId, discordUser.id))
+        .then(() => {})
+        .catch((e: unknown) => logger.warn({ err: e }, "slumhouse_last_seen_update_failed"));
     }
-
-    // Stamp last_seen (best-effort — never blocks login on a DB hiccup)
-    db.update(slumhouseUsers)
-      .set({ lastSeenAt: sql`NOW()` })
-      .where(eq(slumhouseUsers.discordUserId, discordUser.id))
-      .then(() => {})
-      .catch((e: unknown) => logger.warn({ err: e }, "slumhouse_last_seen_update_failed"));
 
     const sid = signSession({ discordUserId: discordUser.id, ttlSec: SESSION_TTL_SEC });
     res.cookie(COOKIE_NAME, sid, {
@@ -78,6 +91,16 @@ export async function handleCallback(req: Request, res: Response): Promise<void>
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       maxAge: SESSION_TTL_SEC * 1000,
+      path: "/slumhouse",
+    });
+
+    // One-shot welcome cookie — Crib reads + clears it on load to fire the
+    // welcome modal. Fires once per login (sign out + back in = fires again).
+    res.cookie("slumhouse_welcome", "1", {
+      httpOnly: false,             // frontend JS reads it
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60_000,              // 1 minute — Crib clears it on first read
       path: "/slumhouse",
     });
 
@@ -104,6 +127,32 @@ export function handleLogout(_req: Request, res: Response): void {
     expires: new Date(0),
     path: "/slumhouse",
   });
+  res.redirect(302, "/slumhouse/login.html");
+}
+
+/**
+ * GET /slumhouse/launch — server-side redirect used as the PWA start_url.
+ * Reads the slumhouse_sid cookie and routes to the Crib (if signed in) or
+ * login (if not), so iPhone/Android home-screen taps land cleanly without
+ * the brief Crib-then-Login flash that happens when the protected HTML
+ * shell renders before the API auth check fires.
+ */
+export function handleLaunch(req: Request, res: Response): void {
+  const raw = req.headers.cookie ?? "";
+  const match = raw.match(/(?:^|;\s*)slumhouse_sid=([^;]+)/);
+  if (!match) {
+    res.redirect(302, "/slumhouse/login.html");
+    return;
+  }
+  try {
+    const verified = verifySession(decodeURIComponent(match[1]));
+    if (verified?.discordUserId) {
+      res.redirect(302, "/slumhouse/crib.html");
+      return;
+    }
+  } catch {
+    /* fall through to login */
+  }
   res.redirect(302, "/slumhouse/login.html");
 }
 

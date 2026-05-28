@@ -47,27 +47,29 @@ describe("crib api route", () => {
     expect(res.statusCode).toBe(401);
   });
 
-  it("returns 403 when user mapped but broker_account_id null", async () => {
+  it("allows a session when user is present but broker_account_id is null", async () => {
     mocks.select.mockResolvedValue([{ discordUserId: "111", brokerAccountId: null, displayName: "Kee" }]);
     const { signSession } = await import("../../lib/slumhouse/session.js");
     const sid = signSession({ discordUserId: "111", ttlSec: 60 });
     const { requireSlumhouseUser } = await import("../../lib/slumhouse/require-session.js");
     const req: any = { headers: { cookie: `slumhouse_sid=${sid}` } };
     const res = mockRes();
-    await requireSlumhouseUser(req, res, () => { throw new Error("next"); });
-    expect(res.statusCode).toBe(403);
-    expect(res.body.error).toBe("user_not_mapped");
+    let nextCalled = false;
+    await requireSlumhouseUser(req, res, () => { nextCalled = true; });
+    expect(res.statusCode).toBe(200);
+    expect(nextCalled).toBe(true);
+    expect(req.slumhouseUser?.brokerAccountId).toBeNull();
   });
 
-  it("calls assembleCribData with brokerAccountId for valid session", async () => {
+  it("calls assembleCribData with null brokerAccountId for unmapped session", async () => {
     const { signSession } = await import("../../lib/slumhouse/session.js");
     const sid = signSession({ discordUserId: "111", ttlSec: 60 });
     const { getCrib } = await import("../../routes/slumhouse/api/crib.js");
-    const req: any = { headers: { cookie: `slumhouse_sid=${sid}` }, slumhouseUser: { discordUserId: "111", brokerAccountId: "00000000-0000-0000-0000-000000000001" } };
+    const req: any = { headers: { cookie: `slumhouse_sid=${sid}` }, slumhouseUser: { discordUserId: "111", brokerAccountId: null } };
     const res = mockRes();
     await getCrib(req, res);
     expect(res.statusCode).toBe(200);
     expect(res.body.banner.todayBag).toBe("+$2,847");
-    expect(mocks.assembleCribData).toHaveBeenCalledWith({ brokerAccountId: "00000000-0000-0000-0000-000000000001" });
+    expect(mocks.assembleCribData).toHaveBeenCalledWith({ brokerAccountId: null });
   });
 });

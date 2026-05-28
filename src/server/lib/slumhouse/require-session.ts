@@ -1,9 +1,9 @@
 /**
- * Express middleware: requires a valid Slumhouse session cookie + a mapped
- * slumhouse_users row with a non-null broker_account_id.
+ * Express middleware: requires a valid Slumhouse session cookie and a
+ * slumhouse_users row for the Discord user.
  *
  * On success, attaches `req.slumhouseUser` (typed as SlumhouseUser).
- * Returns 401 (invalid/missing session) or 403 (Discord OK but no mapping yet).
+ * Returns 401 for missing/invalid sessions and 403 only when the row is absent.
  */
 import type { Request, Response, NextFunction } from "express";
 import { eq } from "drizzle-orm";
@@ -41,7 +41,7 @@ export async function requireSlumhouseUser(
     .catch(() => [] as SlumhouseUser[]);
 
   const user = rows[0];
-  if (!user || !user.brokerAccountId) {
+  if (!user) {
     res.status(403).json({ error: "user_not_mapped" });
     return;
   }

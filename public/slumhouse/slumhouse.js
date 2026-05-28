@@ -1,10 +1,10 @@
 // Slumhouse shared client helpers.
-// Auth: redirects to /login.html on 401, /not-mapped.html on 403.
+// Auth: redirects to /login.html on 401 and 403.
 
 async function fetchJSON(url) {
   const res = await fetch(url, { credentials: "same-origin" });
   if (res.status === 401) { window.location.href = "/slumhouse/login.html"; return null; }
-  if (res.status === 403) { window.location.href = "/slumhouse/not-mapped.html"; return null; }
+  if (res.status === 403) { window.location.href = "/slumhouse/login.html"; return null; }
   if (!res.ok) {
     const txt = await res.text().catch(() => "");
     console.error("slumhouse fetch failed", res.status, txt);
@@ -354,3 +354,65 @@ function potChart(count, opts) {
 }
 
 window.SH = { fetchJSON, el, sparkline, sparkTrend, potChart };
+
+// ─── Inactivity auto-signout ──────────────────────────────────────────
+// Default 30 min idle → /slumhouse/auth/logout. Warning modal at 28 min
+// (2-min grace period). Override via <body data-idle-timeout-min="N">.
+(function initIdleSignout() {
+  // Only on authenticated pages (Crib/Kitchen/Recipe — anything that has
+  // sh-header is post-login). Login + not-mapped pages don't need it.
+  if (!document.querySelector(".sh-header")) return;
+
+  const idleMin = Number(document.body.dataset.idleTimeoutMin || 30);
+  const warnMin = Math.max(0.5, idleMin - 2);
+  let idleTimer = null;
+  let warnTimer = null;
+  let warnEl = null;
+
+  function clearTimers() {
+    if (idleTimer) clearTimeout(idleTimer);
+    if (warnTimer) clearTimeout(warnTimer);
+  }
+
+  function logout() {
+    window.location.href = "/slumhouse/auth/logout";
+  }
+
+  function showWarning() {
+    if (warnEl) return;
+    warnEl = document.createElement("div");
+    warnEl.className = "sw-backdrop";
+    warnEl.style.background = "rgba(0,0,0,0.7)";
+    warnEl.innerHTML = `
+      <div class="sw-card" role="alertdialog" aria-modal="true">
+        <div class="sw-body" style="text-align:center;padding:30px 28px">
+          <div class="sw-eyebrow" style="color:#ffb84d">Inactive</div>
+          <h2 class="sw-title" style="font-size:24px">You still there?</h2>
+          <p class="sw-sub" style="margin-bottom:18px">Signing you out in 2 minutes. Tap below to stay.</p>
+          <button class="sw-cta" id="sw-stay" type="button">Keep me in</button>
+        </div>
+      </div>`;
+    document.body.appendChild(warnEl);
+    warnEl.querySelector("#sw-stay").addEventListener("click", () => {
+      warnEl.remove(); warnEl = null;
+      reset();
+    });
+  }
+
+  function reset() {
+    clearTimers();
+    if (warnEl) { warnEl.remove(); warnEl = null; }
+    warnTimer = setTimeout(showWarning, warnMin * 60_000);
+    idleTimer = setTimeout(logout, idleMin * 60_000);
+  }
+
+  ["mousemove","mousedown","keydown","touchstart","scroll","wheel"].forEach(ev => {
+    document.addEventListener(ev, () => { if (!warnEl) reset(); }, { passive: true });
+  });
+  // Also reset when the page becomes visible again (returning from another tab)
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && !warnEl) reset();
+  });
+
+  reset();
+})();

@@ -27,7 +27,7 @@ SLUMHOUSE_SESSION_SECRET=<openssl rand -hex 32>
 2. **Generate session secret**: `openssl rand -hex 32` → paste into `SLUMHOUSE_SESSION_SECRET`
 3. **Apply migration**: `npm run db:migrate` (applies `0164_slumhouse_users.sql`) — OR rely on boot-migration-runner on next NSSM restart
 4. **Restart TF API** so the new routes load (use HMAC self-restart endpoint per `CLAUDE.md §15a`)
-5. **Map friends manually** (operator-only — one row per friend):
+5. **Map friends manually** for broker-scoped data (operator-only — one row per friend):
    ```bash
    curl -X POST http://localhost:4000/api/admin/slumhouse-users \
      -H "Content-Type: application/json" \
@@ -40,7 +40,7 @@ SLUMHOUSE_SESSION_SECRET=<openssl rand -hex 32>
    ```
    Discord user ID = right-click their handle in Discord → "Copy User ID" (Developer Mode required).
 6. **DM friends** the link: `https://tf-relay-production.up.railway.app/slumhouse`
-7. They click **Sign in with Discord** → if mapped, land on The Crib. If not yet mapped, see "Almost in" page until you POST their mapping.
+7. They click **Sign in with Discord** → any Discord member can sign in. If they are not mapped yet, they still land on The Crib with zeroed account-scoped stats until you POST their mapping.
 
 ## Endpoints
 
@@ -61,7 +61,6 @@ SLUMHOUSE_SESSION_SECRET=<openssl rand -hex 32>
 ## Audit events
 
 - `slumhouse.login_success` — friend successfully signed in
-- `slumhouse.login_unmapped_user` — Discord OK but no `slumhouse_users` row (warning)
 - `slumhouse.login_failed` — OAuth or DB error (failure)
 - `slumhouse.user_mapped` — operator added/updated a mapping (success)
 

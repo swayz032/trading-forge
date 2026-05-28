@@ -5,6 +5,13 @@ const mocks = vi.hoisted(() => ({
   exchangeCodeForToken: vi.fn().mockResolvedValue("tok_123"),
   fetchDiscordUser: vi.fn().mockResolvedValue({ id: "111", username: "kee", displayName: "Kee" }),
   insertAuditRowSafe: vi.fn().mockResolvedValue(true),
+  insertValues: [] as any[],
+  insertFn: vi.fn().mockReturnValue({
+    values: (value: any) => {
+      mocks.insertValues.push(value);
+      return { onConflictDoNothing: () => Promise.resolve() };
+    },
+  }),
   selectFn: vi.fn(),
   updateFn: vi.fn().mockReturnValue({ set: () => ({ where: () => ({ then: (fn: any) => { fn(); return { catch: () => {} }; } }) }) }),
 }));
@@ -20,6 +27,7 @@ vi.mock("../../lib/audit-log-helper.js", () => ({
 
 vi.mock("../../db/index.js", () => ({
   db: {
+    insert: () => mocks.insertFn(),
     select: () => ({ from: () => ({ where: mocks.selectFn }) }),
     update: () => mocks.updateFn(),
   },
@@ -60,6 +68,8 @@ describe("slumhouse auth routes", () => {
     process.env.SLUMHOUSE_SESSION_SECRET = "test-secret-32-chars-min-xxxxxxxxxx";
     mocks.selectFn.mockReset();
     mocks.insertAuditRowSafe.mockClear();
+    mocks.insertFn.mockClear();
+    mocks.insertValues.length = 0;
   });
 
   it("handleLogin redirects 302 to discord authorize URL", async () => {
@@ -88,29 +98,36 @@ describe("slumhouse auth routes", () => {
     await handleCallback(req, res);
     expect(res.statusCode).toBe(302);
     expect(res.redirectTo).toBe("/slumhouse");
-    expect(res.cookies).toHaveLength(1);
+    expect(res.cookies).toHaveLength(2);
     expect(res.cookies[0].name).toBe("slumhouse_sid");
     expect(res.cookies[0].opts.httpOnly).toBe(true);
+    expect(res.cookies[1].name).toBe("slumhouse_welcome");
     expect(mocks.insertAuditRowSafe).toHaveBeenCalledWith(expect.objectContaining({ action: "slumhouse.login_success" }));
   });
 
-  it("handleCallback with unmapped user redirects to /not-mapped + writes audit", async () => {
-    mocks.selectFn.mockResolvedValueOnce([]); // no mapping
+  it("handleCallback creates a row for a new Discord user + logs them in", async () => {
+    mocks.selectFn.mockResolvedValueOnce([]); // first login for this Discord ID
     const { handleCallback } = await import("../../routes/slumhouse/auth.js");
     const req = mockReq({ code: "abc" }); const res = mockRes();
     await handleCallback(req, res);
     expect(res.statusCode).toBe(302);
-    expect(res.redirectTo).toBe("/slumhouse/not-mapped.html");
-    expect(res.cookies).toHaveLength(0); // no session for unmapped
-    expect(mocks.insertAuditRowSafe).toHaveBeenCalledWith(expect.objectContaining({ action: "slumhouse.login_unmapped_user" }));
+    expect(res.redirectTo).toBe("/slumhouse");
+    expect(res.cookies).toHaveLength(2);
+    expect(mocks.insertValues[0]).toMatchObject({
+      discordUserId: "111",
+      displayName: "Kee",
+      brokerAccountId: null,
+      jerseyNumber: null,
+    });
+    expect(mocks.insertAuditRowSafe).toHaveBeenCalledWith(expect.objectContaining({ action: "slumhouse.login_success" }));
   });
 
   it("handleCallback returns 400 when code missing", async () => {
     const { handleCallback } = await import("../../routes/slumhouse/auth.js");
     const req = mockReq({}); const res = mockRes();
     await handleCallback(req, res);
-    expect(res.statusCode).toBe(400);
-    expect(res.body).toBe("missing_code");
+    expect(res.statusCode).toBe(302);
+    expect(res.redirectTo).toBe("/slumhouse/login.html");
   });
 
   it("handleCallback returns 500 when discord token exchange fails", async () => {
