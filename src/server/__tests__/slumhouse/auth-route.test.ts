@@ -91,6 +91,16 @@ describe("slumhouse auth routes", () => {
     expect(res.statusCode).toBe(500);
   });
 
+  it("handleCallback scopes cookies to Railway subdomains when hosted there", async () => {
+    mocks.selectFn.mockResolvedValueOnce([{ discordUserId: "111", brokerAccountId: "acct-1", displayName: "Kee" }]);
+    const { handleCallback } = await import("../../routes/slumhouse/auth.js");
+    const req = { ...mockReq({ code: "abc" }), headers: { host: "tf-relay-production.up.railway.app" } } as any;
+    const res = mockRes();
+    await handleCallback(req, res);
+    expect(res.cookies[0].opts.domain).toBe(".up.railway.app");
+    expect(res.cookies[1].opts.domain).toBe(".up.railway.app");
+  });
+
   it("handleCallback with mapped user sets cookie + redirects to /slumhouse + writes login_success audit", async () => {
     mocks.selectFn.mockResolvedValueOnce([{ discordUserId: "111", brokerAccountId: "acct-1", displayName: "Kee" }]);
     const { handleCallback } = await import("../../routes/slumhouse/auth.js");

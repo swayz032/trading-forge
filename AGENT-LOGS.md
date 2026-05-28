@@ -8761,6 +8761,23 @@ function loaded at boot. The LLM-in-the-loop pattern is the anti-pattern.
 **Carry-forward:**
 - `docs/system-topology.generated.json` and `docs/system-subsystem-registry.json` still contain historical generated references; those are generated artifacts, not live runtime paths.
 
+### Session Log — 2026-05-28 Slumhouse cookie-domain fix
+
+**Mission:** Stop Railway subdomain drift from bouncing signed-in Slumhouse users back to login after Discord OAuth completes.
+
+**Work completed:**
+- Added host-aware cookie scoping in `src/server/routes/slumhouse/auth.ts` so Railway subdomains share the `slumhouse_sid` and welcome cookies.
+- Kept local/dev hosts unchanged; the cookie domain only broadens on `*.up.railway.app`.
+- Added a regression test that asserts the Railway host gets a `.up.railway.app` cookie domain.
+
+**Verification:**
+- `cmd /c npx vitest run src/server/__tests__/slumhouse/auth-route.test.ts src/server/__tests__/slumhouse/crib-route.test.ts` — 12 tests passed.
+
+**Known-facts updates:** Railway subdomain host drift can break a host-only session cookie even when OAuth succeeds.
+
+**Carry-forward:**
+- If the live portal still loops after this deploy, the next check is the actual host shown in Safari plus the OAuth callback URL in Discord developer settings.
+
 ---
 
 ## End of Build Journal

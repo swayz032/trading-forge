@@ -22,6 +22,14 @@ import { insertAuditRowSafe } from "../../lib/audit-log-helper.js";
 
 const SESSION_TTL_SEC = 60 * 60 * 24 * 14; // 14 days
 
+function cookieDomain(req: Request): string | undefined {
+  const host = String(req.headers.host ?? "");
+  if (host.endsWith(".up.railway.app")) {
+    return ".up.railway.app";
+  }
+  return undefined;
+}
+
 export async function handleLogin(_req: Request, res: Response): Promise<void> {
   // Falls back to DISCORD_APPLICATION_ID — same value Discord shows in the dev portal.
   const clientId = process.env.DISCORD_CLIENT_ID ?? process.env.DISCORD_APPLICATION_ID;
@@ -85,14 +93,16 @@ export async function handleCallback(req: Request, res: Response): Promise<void>
         .catch((e: unknown) => logger.warn({ err: e }, "slumhouse_last_seen_update_failed"));
     }
 
-    const sid = signSession({ discordUserId: discordUser.id, ttlSec: SESSION_TTL_SEC });
-    res.cookie(COOKIE_NAME, sid, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: SESSION_TTL_SEC * 1000,
-      path: "/slumhouse",
-    });
+  const sid = signSession({ discordUserId: discordUser.id, ttlSec: SESSION_TTL_SEC });
+  const domain = cookieDomain(req);
+  res.cookie(COOKIE_NAME, sid, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: SESSION_TTL_SEC * 1000,
+    path: "/slumhouse",
+    domain,
+  });
 
     // One-shot welcome cookie — Crib reads + clears it on load to fire the
     // welcome modal. Fires once per login (sign out + back in = fires again).
@@ -102,6 +112,7 @@ export async function handleCallback(req: Request, res: Response): Promise<void>
       secure: process.env.NODE_ENV === "production",
       maxAge: 60_000,              // 1 minute — Crib clears it on first read
       path: "/slumhouse",
+      domain,
     });
 
     await insertAuditRowSafe({
@@ -122,10 +133,12 @@ export async function handleCallback(req: Request, res: Response): Promise<void>
 }
 
 export function handleLogout(_req: Request, res: Response): void {
+  const domain = cookieDomain(_req);
   res.cookie(COOKIE_NAME, "", {
     httpOnly: true,
     expires: new Date(0),
     path: "/slumhouse",
+    domain,
   });
   res.redirect(302, "/slumhouse/login.html");
 }
