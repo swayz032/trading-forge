@@ -8816,3 +8816,19 @@ For current operating rules, see `CLAUDE.md`. For subsystem architecture details
 
 **Carry-forward:**
 - The deployed server should now receive the Slumhouse auth fix; if you want full type safety back later, the repo needs a separate cleanup pass.
+
+### Session Log — 2026-05-28 Railway Railpack override
+
+**Mission:** Stop Railway from auto-detecting the repo as Python and failing the tf-relay deploy with no start command.
+
+**Work completed:**
+- Added a root-level `Dockerfile` so Railway auto-detects Docker instead of Railpack.
+- The Dockerfile installs the relay service from `railway-relay/package.json` and launches `railway-relay/server.js`.
+
+**Verification:**
+- `railway logs --build 1d3d646c-87a1-40fa-9d0a-c8b3dfbdf608 --lines 80` showed the failure was Railpack detection, not the relay app itself.
+
+**Known-facts updates:** Railway will prefer a root `Dockerfile`; without one, it scanned the repo and misclassified this service as Python.
+
+**Carry-forward:**
+- Once the next deploy lands, `tf-relay-production.up.railway.app` should stop failing at build time and use the relay container again.
