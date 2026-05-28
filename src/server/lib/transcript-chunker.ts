@@ -61,8 +61,11 @@ export const DEFAULT_CHUNK_CHARS = 10_000;
 export const DEFAULT_OVERLAP_CHARS = 1_000;
 /** Default per-chunk num_ctx for gemma4:e2b on 8 GB VRAM. */
 export const DEFAULT_CHUNK_NUM_CTX = 12_288;
-/** Transcripts shorter than this skip chunking entirely (use full window). */
-export const CHUNKING_THRESHOLD_CHARS = 14_000;
+/** Transcripts shorter than this skip chunking entirely (use full window).
+ *  Wave 26 Pass L (2026-05-27): lowered 14_000 → 12_000 after FqxEKDxemtI
+ *  (14,000 chars exact — sat right at the boundary) hit OOM on single-pass.
+ *  Videos in the 12-14K band sit on the VRAM edge for gemma4:e2b on 8GB. */
+export const CHUNKING_THRESHOLD_CHARS = 12_000;
 
 export interface ChunkerOptions {
   chunkChars?: number;
