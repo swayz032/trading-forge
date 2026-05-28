@@ -16,6 +16,8 @@ import postgres from "postgres";
 import { YoutubeTranscript } from "youtube-transcript";
 import { callScoutExtractLlm } from "../src/server/services/model-router.js";
 import { coerceDirectionsInPlace } from "../src/server/lib/direction-coercion.js";
+import { checkExtractionQuality } from "../src/server/lib/extraction-quality-gate.js";
+import { runRecallPassOnStrategies } from "../src/server/lib/transcript-extractor-recall.js";
 import {
   extractTranscriptChunked,
   shouldChunk,
@@ -187,6 +189,44 @@ async function main(): Promise<void> {
       if (coercionLog.length > 0) {
         for (const c of coercionLog) {
           console.log(`  >>> POST-VALIDATOR: strategy[${c.index}] direction "${c.originalDirection}" → "both" (matched: "${c.matchedPhrase}")`);
+        }
+      }
+
+      // Wave 26 Pass L Fix K — recall pass (5 laser-focused questions, sequential gemma calls).
+      console.log(`  [recall-pass] firing 5-question recall on ${strategies.length} strategy(ies)...`);
+      const tRecall = Date.now();
+      const recallResults = await runRecallPassOnStrategies(transcript, strategies as any);
+      console.log(`  [recall-pass] ${((Date.now() - tRecall) / 1000).toFixed(1)}s`);
+      for (let i = 0; i < recallResults.length; i++) {
+        const r = recallResults[i];
+        if (r.failed) {
+          console.log(`  [recall-pass] strategy[${i}] FAILED: ${r.failureReason}`);
+          continue;
+        }
+        // Mutate the primary strategies array in place with the patched version
+        (strategies as any[])[i] = r.patched;
+        if (r.appliedChanges.length === 0) {
+          console.log(`  [recall-pass] strategy[${i}] no gaps found by recall`);
+        } else {
+          console.log(`  [recall-pass] strategy[${i}] APPLIED ${r.appliedChanges.length} change(s):`);
+          for (const c of r.appliedChanges) console.log(`    ${c}`);
+        }
+        const rejected = (r.recall as Record<string, unknown>)._rejected;
+        if (rejected && typeof rejected === "object" && Object.keys(rejected).length > 0) {
+          console.log(`  [recall-pass] strategy[${i}] REJECTED ${Object.keys(rejected).length} hallucination(s):`);
+          for (const [field, msg] of Object.entries(rejected)) console.log(`    ✗ ${field}: ${msg}`);
+        }
+      }
+
+      // Wave 26 Pass L Fix J — quality gate scans for trade-example contamination + R-ratio.
+      const qualityReports = checkExtractionQuality(strategies as Array<{ name?: string; entry_sequence?: Array<{action?: string; rationale?: string|null; step?: number}>; source_claim_avg_r?: number|null }>);
+      for (const rep of qualityReports) {
+        if (rep.warnings.length > 0) {
+          console.log(`  >>> QUALITY-GATE: strategy[${rep.strategyIndex}] ${rep.warnings.length} warning(s)${rep.underExtracted ? " — UNDER-EXTRACTED" : ""}`);
+          for (const w of rep.warnings) {
+            console.log(`        [${w.severity.toUpperCase()}] ${w.field}: ${w.message}`);
+            if (w.evidence) console.log(`          evidence: ${w.evidence.slice(0, 150)}`);
+          }
         }
       }
       console.log(`      Extracted ${strategies.length} strategy candidate(s)`);

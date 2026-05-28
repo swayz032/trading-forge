@@ -9,6 +9,63 @@
 
 You extract trading strategies from YouTube video transcripts. Return ONE JSON object matching the schema. Quote the speaker directly when possible. NEVER invent values — if a field is not in the transcript, set it null.
 
+## CRITICAL ANTI-PATTERNS (read FIRST — these are the most common extraction failures)
+
+### A. GENERALIZE — never quote specific trade prices, levels, or instrument numbers as steps
+
+YouTubers walk through live trade examples mid-video ("we go short at 12783", "stop at 1.0925", "+20 pips", "exit at 11028"). These specific numbers are NOT the strategy — they're examples of the strategy applied to one trade on one instrument on one day. **EXTRACT THE RULE, NOT THE NUMBERS.**
+
+❌ **WRONG** (gemma latched onto the example walkthrough):
+```json
+{"step": 1, "action": "Close the candle above the third standard deviation Bollinger band."}
+{"step": 2, "action": "Go short over here."}
+{"step": 3, "action": "Enter to 11028."}
+{"step": 4, "action": "Go for plus 20."}
+```
+
+✓ **RIGHT** (the rules behind the example):
+```json
+{"step": 1, "action": "Add two Bollinger Band sets: 20-period 2σ for inside lines, 20-period 3σ for outside lines."}
+{"step": 2, "action": "Wait for a candle to CLOSE beyond the 3σ band (extreme stretch — short setup if above, long if below)."}
+{"step": 3, "action": "Wait for confirmation: the next candle CLOSES back inside the 2σ band (reversal trigger)."}
+{"step": 4, "action": "Enter on the confirmation candle. Stop 20 pips beyond the swing extreme; target +20 pips OR the basis 20 SMA OR the opposite 2σ band."}
+```
+
+The test: if you can swap the instrument from EUR/USD to MES and the step still applies, it's a rule. If it only makes sense for one specific Friday in April, it's an example — DON'T quote it as a step.
+
+### B. R-RATIO INTERPRETATION — "1:2 R/R" means TARGET is 2× the stop
+
+When the speaker says **"1:2 risk-to-reward"** / **"1 to 2 R/R"** / **"risking 1 to make 2"** / **"two-to-one risk/reward"** — that means the **TARGET IS 2× THE STOP**.
+
+- `source_claim_avg_r: 2.0` ✓ correct
+- `source_claim_avg_r: 1.2` ❌ WRONG (this would mean "1.2R per trade", which is a different claim)
+- `source_claim_avg_r: 0.5` ❌ WRONG (that would be 2:1 against you)
+
+Other R phrasings:
+- "minimum 1.5R" / "go for 1.5R" → `source_claim_avg_r: 1.5`
+- "I aim for 3R per trade" → `source_claim_avg_r: 3.0`
+- "1:3 risk-reward" → `source_claim_avg_r: 3.0`
+
+### C. WIN-RATE — scan AGGRESSIVELY, especially mid-transcript and closing remarks
+
+The win rate often appears ONCE buried in prose: *"had a win rate of 52.63%"*, *"this system hits 70-80% of the time"*, *"82% win rate"*, *"7 out of 10 trades win"*. Speakers rarely repeat it. **SCAN THE FULL TRANSCRIPT, not just the intro.**
+
+- *"win rate of 52.63%"* → `source_claim_win_rate: 0.5263` (or `0.53` rounded)
+- *"around 80%"* → `0.80`
+- *"70-80% of the time"* → `0.75` (midpoint)
+- *"7 out of 10"* → `0.70`
+- *"82% accuracy"* → `0.82`
+
+**Title hype doesn't count** — if "80% Win Rate" only appears in the title/thumbnail and the speaker never says it, set `null`. Capture only what the SPEAKER actually claims.
+
+### D. RICH MIDDLE > END SUMMARY — extract from teaching sections, not just numbered checklists
+
+Many videos have a structured pre-market checklist at the end (numbered list). It's tempting to grab those as steps. Don't. The TEACHING happens in the middle (the rules, the filters, the band-walk patterns, the std-dev probabilities, the stop math). Extract from the TEACHING content. The end checklist is a summary, not the strategy.
+
+If the speaker spends 8 minutes explaining "the 3 standard deviation bands contain 99.7% of price action" and 1 minute reciting a 5-item checklist at the end, your `entry_sequence` MUST reflect the 8-minute teaching, not just the 1-minute summary.
+
+
+
 ## Output shape
 
 ```json
