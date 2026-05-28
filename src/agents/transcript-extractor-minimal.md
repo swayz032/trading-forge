@@ -28,13 +28,59 @@ The chart the speaker uses for direction or bias. One of: `1m`, `5m`, `15m`, `30
 The chart the speaker uses for the entry trigger (e.g. `1m` for entry, `1h` for bias).
 Set null if the strategy uses only one timeframe.
 
-### 3. `entry_rule` — REQUIRED, 1 sentence
-The SPECIFIC trigger that fires the trade, in the speaker's own words.
+### 2b. `direction` — REQUIRED
+Set `"both"` when the speaker explicitly teaches a symmetric long+short setup (e.g. *"if price breaks the HIGH → bullish for the rest of the day; if price breaks the LOW → bearish"*). Set `"long"` or `"short"` only when the speaker is clearly one-sided.
 
-Examples:
-- "Previous 1H candle closes bullish → wait for the 1M pattern to print, then buy"
-- "Wait for a liquidity sweep above prior day high, then short on the next 5M close below the sweep"
-- "When price retests an order block in the killzone, enter on a 5M displacement candle"
+**Default to `"both"` for chart-mechanic strategies** (VWAP retest, EMA bounce, breakout, structure plays — these all work in either direction depending on context). When `direction = both`, each `entry_sequence` step MUST describe BOTH sides explicitly. Example: *"Step 1: For long, wait for break ABOVE 4H candle high. For short, wait for break BELOW 4H candle low."*
+
+**Auto-detect rule (NON-NEGOTIABLE):** If ANY step contains *"or short"*, *"or low"*, *"opposite end"*, *"mirror"*, *"for long entry... or short entry"*, *"for buy... or sell"*, OR describes both sides of a symmetric setup → `direction` MUST be `"both"`. The top-level `direction` field is derived from step content — if your steps reference both sides, the field must say "both" or it contradicts the steps.
+
+**Examples of mandatory "both":**
+- *"break this middle candle's high (for long entry) or the opposite end for short"* → `both`
+- *"if break ABOVE → bullish, if break BELOW → bearish"* → `both`
+- *"buy calls above VWAP, take puts below VWAP"* → `both`
+
+This is non-negotiable per CLAUDE.md §12 (`graduation_bidirectional_completeness` HARD gate). Mirroring sides in the entry_sequence is what makes the graduation pass.
+
+### 3. `entry_sequence[]` — REQUIRED, 1-8 ORDERED steps
+Break the entry trigger into the steps the speaker actually teaches. **Use ONE step for simple strategies.** **Use multiple steps when the speaker teaches a phased setup** — accumulation, manipulation, breakout, rebalance, second entry, etc. Each step is `{step: int, action: string, rationale: string|null}`. Quote the speaker per step when possible. **DO NOT invent steps to look thorough** — a 1-step output is honest when the speaker is simple. **DO NOT compress a 5-phase teaching into 1 step.**
+
+**Simple 1-step example** ("Close above PDH → buy"):
+```json
+[{"step": 1, "action": "When the 1H candle closes above the previous day high, buy the next bar.", "rationale": "PDH break confirms intraday bullish bias."}]
+```
+
+**Phased 5-step example** ("4h candle box continuation"):
+```json
+[
+  {"step": 1, "action": "Wait for the previous 4H candle to close with a big body (avoid wicky/skinny candles).", "rationale": "Body shows directional conviction; wicky candles show indecision."},
+  {"step": 2, "action": "Draw the 4H candle box using high/low of that candle and project the 25%, 50%, 75% Fibonacci levels.", "rationale": "The 25-50% zone is the optimum entry retracement."},
+  {"step": 3, "action": "On the next 4H candle, watch for price to manipulate down into the 25-50% optimum zone.", "rationale": "Manipulation phase taps the hidden level for the entry trigger."},
+  {"step": 4, "action": "Enter long when price breaks back out above the 4H candle box high after the manipulation.", "rationale": "Breakout confirms bias is intact."},
+  {"step": 5, "action": "Optional second entry / scale-in when price rebalances back to the box at the premature level.", "rationale": "Second entry uses the IRS model (impulse/range/sweep) on the 5m for confirmation."}
+]
+```
+
+**Phased 3-step example** (ICT sweep + displacement):
+```json
+[
+  {"step": 1, "action": "Wait for a liquidity sweep above the prior day high during the 09:30-11:00 ET killzone.", "rationale": "Sweep clears stops above PDH."},
+  {"step": 2, "action": "Watch for a 5M displacement candle that closes back below the sweep wick.", "rationale": "Displacement signals reversal intent."},
+  {"step": 3, "action": "Enter short on the next bar's open with stop above the sweep wick.", "rationale": "Sweep wick is the structural invalidation."}
+]
+```
+
+### 3b. `source_claim_win_rate` / `source_claim_avg_r` — REQUIRED, null OR number
+
+**SCAN INSTRUCTION** — actively search the FULL transcript (especially intro and closing minutes) for:
+
+- **Win-rate claims:** `"82% win rate"` / `"80% of the time"` / `"7 out of 10 trades"` / `"hits 70-80%"` / `"82% accuracy"` → convert to 0.0–1.0 (e.g. `0.82`, `0.75` for "70-80%")
+- **Avg R claims:** `"1.5R per trade"` / `"average 2R"` / `"risk-reward ratio of 1.5"` / `"every trade is 1.5R"` → number (e.g. `1.5`, `2.0`)
+- **Hedged phrasing counts** — `"around 80%"`, `"about 1.5R"`, `"like 70-80% of the time"` all count. Use the midpoint for ranges (e.g. `"70-80%"` → `0.75`).
+
+**NEVER invent.** If the speaker only shows daily P&L (e.g. *"made $4,325 today"*) without a win-rate / R-claim, set BOTH fields to `null`. Daily P&L is NOT a win rate.
+
+Set `null` only when the speaker truly never mentions a percentage or R-multiple anywhere. The 82% / 70-80% kinds of claims are the most under-extracted field — be thorough.
 
 ### 4. `preferred_regime` — REQUIRED
 What kind of market the strategy needs. One of: `trending`, `ranging`, `any`. If the speaker uses a more specific term, include it verbatim.

@@ -94,7 +94,22 @@ function isStrictSchemaMode(): boolean {
  * failed on long-form institutional strategy videos. RTX 5060 8 GB VRAM:
  * gemma4:e2b (~5.5 GB) + 32K ctx (~4.8 GB KV cache) FITS but is tight.
  * Operator can lower to 16384 for VRAM relief via TRANSCRIPT_EXTRACTOR_NUM_CTX=16384. */
+//
+// Wave 26 Pass L (2026-05-27) — chunked-path NUM_CTX override.
+// The chunker (src/server/lib/transcript-chunker.ts) sets this transient
+// override before each per-chunk callScoutExtractLlm() invocation and clears
+// it after. Lets the chunked path use a smaller, OOM-safe ctx (default 12288
+// = ~3K tokens transcript chunk + ~3K prompt + 4K output) without disturbing
+// the global TRANSCRIPT_EXTRACTOR_NUM_CTX=32768 that 5 long-form videos
+// already depend on. Pure in-process — no env mutation, no async leakage.
+let _chunkedNumCtxOverride: number | null = null;
+export function setChunkedNumCtxOverride(n: number | null): void {
+  if (n === null) { _chunkedNumCtxOverride = null; return; }
+  if (!Number.isFinite(n) || n < 2048 || n > 131072) return;
+  _chunkedNumCtxOverride = n;
+}
 function getTranscriptOllamaNumCtx(): number {
+  if (_chunkedNumCtxOverride !== null) return _chunkedNumCtxOverride;
   const raw = process.env.TRANSCRIPT_EXTRACTOR_NUM_CTX;
   const parsed = raw ? Number.parseInt(raw, 10) : 32768;
   if (!Number.isFinite(parsed) || parsed < 2048 || parsed > 131072) return 32768;
@@ -304,10 +319,18 @@ const KB_MANIFEST: Record<ModelRole, readonly string[]> = {
     "kb/strategy-schema-snapshot.json",
     "kb/anti-pattern-catalog.md",
   ],
-  transcript_extractor: [
-    "kb/strategy-schema-snapshot.json",
-    "kb/indicator-catalog.md",
-  ],
+  // Wave 26 Pass L (2026-05-27) — KB cards gated on TRANSCRIPT_EXTRACTOR_USE_LEGACY.
+  // Minimal prompt is self-contained (8 fields, flat schema). Injecting the legacy
+  // strategy-schema-snapshot.json on top of the minimal prompt caused gemma4:e2b to
+  // ignore the minimal 8-field shape and output the W23H legacy fields (entry_long,
+  // entry_short, entry_indicator, symbol, max_contracts) because the KB card looks
+  // more authoritative than the prompt. Probe N7uP9V0Iktc confirmed the regression
+  // on 2026-05-27 — gemma returned PLTR / W23H shape even though minimal prompt was
+  // loaded. Fix: legacy flag flips BOTH prompt AND KB cards atomically.
+  transcript_extractor:
+    (process.env.TRANSCRIPT_EXTRACTOR_USE_LEGACY ?? "false").toLowerCase() === "true"
+      ? ["kb/strategy-schema-snapshot.json", "kb/indicator-catalog.md"]
+      : [],
   tournament_prosecutor: [
     "kb/indicator-catalog.md",
     "kb/regime-taxonomy.md",
@@ -2137,7 +2160,21 @@ export function buildGemmaFewShotMessages(
   // ── Step 2: Load few-shot files DIRECTLY as structured objects ──────────────
   // Don't go through loadFewShotExamples() — that formats as "INPUT: ... → OUTPUT: ..."
   // strings which are only useful in flat system prompts. Gemma needs real turns.
-  const fewShotDir = resolve(PROJECT_ROOT, "src/agents/kb/few-shot", roleToDirName(role));
+  //
+  // Wave 26 Pass L (2026-05-27) — transcript_extractor in minimal mode SKIPS few-shot.
+  // The 9 fixture files in src/agents/kb/few-shot/transcript-extractor/ all have
+  // expected_output in the W23H schema (entry_long/entry_short/entry_indicator/...);
+  // few-shot examples are the strongest signal in any prompt, so gemma faithfully
+  // copies the W23H shape regardless of what the minimal system prompt asks for.
+  // Probe N7uP9V0Iktc confirmed this on 2026-05-27. Minimal prompt is self-contained
+  // (8 inline examples per field) and does not need few-shot. Operator escape:
+  // TRANSCRIPT_EXTRACTOR_USE_LEGACY=true restores the W23H few-shot path.
+  const skipFewShotForMinimal =
+    role === "transcript_extractor" &&
+    (process.env.TRANSCRIPT_EXTRACTOR_USE_LEGACY ?? "false").toLowerCase() !== "true";
+  const fewShotDir = skipFewShotForMinimal
+    ? resolve(PROJECT_ROOT, "src/agents/kb/few-shot", "__skip_minimal_mode__")
+    : resolve(PROJECT_ROOT, "src/agents/kb/few-shot", roleToDirName(role));
   type FewShotFile = { input: unknown; expected_output: unknown };
   const examples: FewShotFile[] = [];
   try {
@@ -2393,7 +2430,18 @@ async function callOllamaForTranscriptExtractor(
   // Output parsing: strip everything between <|channel>thought and <channel|>
   // before JSON.parse. The thought content must NOT be returned to the next
   // turn per Google docs.
-  const ENABLE_GEMMA_THINKING = (process.env.TRANSCRIPT_EXTRACTOR_THINKING_MODE ?? "true").toLowerCase() === "true";
+  // Wave 26 Pass L (2026-05-27) — thinking-mode preamble injects a `reasoning_notes`
+  // top-level field instruction that is INCOMPATIBLE with the new minimal schema
+  // (additionalProperties:false). On minimal mode, gemma emits reasoning_notes per
+  // the preamble → schema rejects → "ollama_invalid_json" → fallback → null.
+  // Probe iU8ww5MC2FQ confirmed: direct Ollama (no preamble) works in 49s with
+  // clean JSON; model-router path with preamble fails in 8s. Default thinking OFF
+  // when minimal schema is active. Operator override: TRANSCRIPT_EXTRACTOR_THINKING_MODE=true.
+  const isLegacyMode =
+    (process.env.TRANSCRIPT_EXTRACTOR_USE_LEGACY ?? "false").toLowerCase() === "true";
+  const thinkingDefault = isLegacyMode ? "true" : "false";
+  const ENABLE_GEMMA_THINKING =
+    (process.env.TRANSCRIPT_EXTRACTOR_THINKING_MODE ?? thinkingDefault).toLowerCase() === "true";
 
   // Inject Gemma 4 thinking activation as PLAIN-TEXT instruction at the very
   // top of the first user message. We do NOT inject raw <|turn>... markers

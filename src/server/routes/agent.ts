@@ -14,6 +14,11 @@ import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { eq, desc, and, sql, inArray, countDistinct } from "drizzle-orm";
 import { OllamaClient } from "../services/ollama-client.js";
 import { callOpenAI, callOpenAIOrFallback, callScoutExtractLlm } from "../services/model-router.js";
+import {
+  extractTranscriptChunked,
+  shouldChunk as shouldChunkTranscript,
+  CHUNKING_THRESHOLD_CHARS,
+} from "../lib/transcript-chunker.js";
 import { logger } from "../index.js";
 import { runPythonModule } from "../lib/python-runner.js";
 import { idempotencyMiddleware } from "../middleware/idempotency.js";
@@ -817,6 +822,39 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
         }
       }
       const strategies = Array.isArray(obj.strategies) ? obj.strategies : [];
+
+      // Wave 26 Pass L Fix G (2026-05-27) — Direction post-validator.
+      // Gemma4:e2b consistently picks direction="long" when speaker's first example
+      // is bullish, even when entry_sequence step text explicitly mirrors short-side.
+      // STRICT_SCHEMA=true crashes on RTX 5060 8GB, so we coerce in code instead.
+      try {
+        const { coerceDirectionsInPlace } = await import("../lib/direction-coercion.js");
+        const coerceLog = coerceDirectionsInPlace(
+          strategies as Array<{ direction?: string; entry_sequence?: Array<{action?: string; rationale?: string|null}> }>,
+        );
+        if (coerceLog.length > 0) {
+          logger.info(
+            { sourceUrl, coerced: coerceLog.length, details: coerceLog },
+            "scout-extract: direction post-validator coerced long→both based on step text",
+          );
+          try {
+            await db.insert(auditLog).values({
+              action: "extraction.direction_coerced",
+              entityType: "strategy_candidate",
+              entityId: sourceUrl,
+              input: { coerced_count: coerceLog.length },
+              result: { details: coerceLog },
+              status: "info",
+              correlationId,
+            });
+          } catch (e) {
+            logger.warn({ err: e instanceof Error ? e.message : String(e) }, "extraction.direction_coerced audit insert failed (non-blocking)");
+          }
+        }
+      } catch (e) {
+        logger.warn({ err: e instanceof Error ? e.message : String(e) }, "scout-extract: direction-coercion helper failed (non-blocking)");
+      }
+
       // W23H-postmortem (2026-05-20): strict-schema mode requires free-form
       // object schemas to be JSON-encoded strings. Parse them back to objects
       // here so downstream (graduator, W23H.D evaluator) sees the canonical
@@ -871,9 +909,63 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
     // Token estimate: char_count / 4 (no new deps, rough but sufficient for telemetry).
     const FIRST_PASS_WINDOW = 12_000;
     const CHUNKED_FALLBACK_THRESHOLD = 12_000;
-    let extractionMode: "single_pass" | "chunked_fallback" = "single_pass";
+    let extractionMode: "single_pass" | "chunked_fallback" | "chunked_oom_safe" = "single_pass";
 
-    let strategiesIn = await extractFromChunk(markdown.slice(0, FIRST_PASS_WINDOW));
+    // Wave 26 Pass L (2026-05-27) — OOM-safe chunked path for long transcripts.
+    // RTX 5060 8 GB VRAM OOMs at TRANSCRIPT_EXTRACTOR_NUM_CTX=32768 on
+    // 24K-37K-char transcripts (GGML_ASSERT mem_buffer NULL). The chunker
+    // splits into ~10K overlapping windows at a safer per-chunk ctx (12288)
+    // and merges by concept_name. The 5 short-form videos that currently work
+    // at the global 32K stay on the single-pass path — chunking only fires
+    // above CHUNKING_THRESHOLD_CHARS (default 14000).
+    let strategiesIn: unknown[] | typeof NON_JSON_SENTINEL | null;
+    if (shouldChunkTranscript(markdown.length)) {
+      extractionMode = "chunked_oom_safe";
+      logger.info(
+        { sourceUrl, markdown_length: markdown.length, threshold: CHUNKING_THRESHOLD_CHARS },
+        "scout-extract: routing to OOM-safe chunked path",
+      );
+      try {
+        const { merged, rawChunks } = await extractTranscriptChunked(markdown, {
+          sourceUrl,
+          title: title || sourceUrl,
+          channel: sourceProvider,
+        });
+        // Surface chunk-level diagnostics in the audit_log via the per-chunk durations.
+        logger.info(
+          {
+            sourceUrl,
+            chunk_count: rawChunks.length,
+            chunk_durations_ms: rawChunks.map((c) => c.durationMs),
+            chunk_errors: rawChunks.filter((c) => c.errorReason).map((c) => ({ i: c.chunkIndex, reason: c.errorReason })),
+            merged_strategies: merged.strategies.length,
+          },
+          "scout-extract: chunked extraction complete",
+        );
+        // Capture instrument_classification from the merged result (chunker
+        // already applies "first non-null wins" semantics).
+        if (lastInstrumentClassification === null && merged.instrument_classification) {
+          if (VALID_INSTRUMENT_CLASSIFICATIONS.has(merged.instrument_classification)) {
+            lastInstrumentClassification = merged.instrument_classification;
+          }
+        }
+        if (merged.strategies.length === 0) {
+          const rawReason = typeof merged.empty_reason === "string" ? merged.empty_reason : null;
+          lastEmptyReason = rawReason && VALID_EMPTY_REASONS.has(rawReason) ? rawReason : (rawReason ? "other" : null);
+          lastEmptyReasonDetail = typeof merged.empty_reason_detail === "string" ? merged.empty_reason_detail.slice(0, 500) : null;
+        }
+        strategiesIn = merged.strategies;
+      } catch (chunkErr) {
+        logger.error(
+          { err: chunkErr instanceof Error ? chunkErr.message : String(chunkErr), sourceUrl },
+          "scout-extract: chunked path threw — falling back to single-pass at FIRST_PASS_WINDOW",
+        );
+        extractionMode = "single_pass";
+        strategiesIn = await extractFromChunk(markdown.slice(0, FIRST_PASS_WINDOW));
+      }
+    } else {
+      strategiesIn = await extractFromChunk(markdown.slice(0, FIRST_PASS_WINDOW));
+    }
     if (strategiesIn === null) {
       res.status(200).json({ extracted: false, reason: "model_unavailable", ideas: [] });
       return;
