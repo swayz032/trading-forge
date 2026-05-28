@@ -8884,3 +8884,14 @@ For current operating rules, see `CLAUDE.md`. For subsystem architecture details
 
 **Carry-forward:**
 - The next Railway deploy should now pick up the 404 fallback again instead of failing at build detection.
+
+**2026-05-28 — Slumhouse stale-route recovery loaded**
+
+**Work completed:**
+- Updated `src/server/routes/slumhouse/index.ts` so the fallback uses `req.originalUrl`; this catches stale `/slumhouse/*` requests even after the `/slumhouse` static mount trims the router path.
+- Updated the fallback regression test to reflect the original-URL path handling.
+- Restarted `TradingForgeAPI` through `POST /api/admin/self-restart` with the configured HMAC secret so the new code took effect on the tower.
+
+**Verification:**
+- `cmd /c npx vitest run src/server/__tests__/slumhouse/auth-route.test.ts src/server/__tests__/slumhouse/crib-route.test.ts src/server/__tests__/slumhouse/index-route.test.ts` — 14/14 passed.
+- Live probe: anonymous `/slumhouse/does-not-exist` → `302 /slumhouse/login.html`; signed-in `/slumhouse/does-not-exist` and `/slumhouse/launch` → `302 /slumhouse/crib.html` on both `localhost:4000` and `tf-relay-production.up.railway.app`.

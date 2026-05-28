@@ -32,8 +32,9 @@ export function handleSlumhouseFallback(req: Request, res: Response, next: NextF
     next();
     return;
   }
-  const pathName = String(req.path ?? "");
-  if (!pathName.startsWith("/slumhouse/")) {
+  const rawUrl = String((req.originalUrl ?? req.url ?? req.path) ?? "");
+  const pathName = rawUrl.split("?", 1)[0];
+  if (!(pathName === "/slumhouse" || pathName.startsWith("/slumhouse/"))) {
     next();
     return;
   }

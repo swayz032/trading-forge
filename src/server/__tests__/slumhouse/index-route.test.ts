@@ -49,7 +49,8 @@ describe("slumhouse router fallback", () => {
     const { handleSlumhouseFallback } = await import("../../routes/slumhouse/index.js");
     const req: any = {
       method: "GET",
-      path: "/slumhouse/old-stale-path",
+      path: "/old-stale-path",
+      originalUrl: "/slumhouse/old-stale-path",
       headers: { accept: "text/html", cookie: "slumhouse_sid=good" },
     };
     const res = mockRes();
@@ -64,7 +65,8 @@ describe("slumhouse router fallback", () => {
     const { handleSlumhouseFallback } = await import("../../routes/slumhouse/index.js");
     const req: any = {
       method: "GET",
-      path: "/slumhouse/old-stale-path",
+      path: "/old-stale-path",
+      originalUrl: "/slumhouse/old-stale-path",
       headers: { accept: "text/html" },
     };
     const res = mockRes();
