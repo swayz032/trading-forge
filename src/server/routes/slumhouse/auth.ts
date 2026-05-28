@@ -5,7 +5,7 @@
  *   GET /slumhouse/auth/login    → redirects to discord.com authorize
  *   GET /slumhouse/auth/callback → exchanges code, looks up slumhouse_users,
  *                                  ensures a session row exists, sets HMAC-signed
- *                                  session cookie, redirects to /slumhouse
+ *                                  session cookie, redirects to /slumhouse/launch
  *   GET /slumhouse/auth/logout   → clears cookie, redirects to /login.html
  *
  * Handler functions are exported individually so tests can call them with
@@ -120,7 +120,7 @@ export async function handleCallback(req: Request, res: Response): Promise<void>
       status: "success",
       input: { discord_user_id: discordUser.id },
     });
-    res.redirect(302, "/slumhouse");
+    res.redirect(302, "/slumhouse/launch");
   } catch (err: unknown) {
     logger.error({ err }, "slumhouse_callback_failed");
     await insertAuditRowSafe({

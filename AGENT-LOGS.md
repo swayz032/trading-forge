@@ -8783,3 +8783,20 @@ function loaded at boot. The LLM-in-the-loop pattern is the anti-pattern.
 ## End of Build Journal
 
 For current operating rules, see `CLAUDE.md`. For subsystem architecture details (schemas, file paths, contracts), see `Trading Forge System Map v2.md`. For agent contract (what subagents must do/never do), see `AGENTS.md`. For active plans, see `~/.claude/plans/`. For active task tracking, see TaskList tool.
+
+### Session Log — 2026-05-28 Slumhouse callback landing fix
+
+**Mission:** Remove the last post-login hop that could dump users back onto the login page after Discord OAuth completes.
+
+**Work completed:**
+- Changed `src/server/routes/slumhouse/auth.ts` so the Discord OAuth callback now redirects to `/slumhouse/launch` instead of `/slumhouse`.
+- Kept the server-side launch gate as the first post-login landing point so the cookie is validated before the shell renders.
+- Updated the auth-route regression test expectations to match the new callback target.
+
+**Verification:**
+- `cmd /c npx vitest run src/server/__tests__/slumhouse/auth-route.test.ts src/server/__tests__/slumhouse/crib-route.test.ts` — 12 tests passed.
+
+**Known-facts updates:** The callback should hand control to the launch gate rather than the static app shell.
+
+**Carry-forward:**
+- If users still bounce back to login after this deploy, the remaining cause is likely the browser not storing the cookie, not the redirect target itself.

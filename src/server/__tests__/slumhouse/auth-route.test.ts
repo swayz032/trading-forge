@@ -107,7 +107,7 @@ describe("slumhouse auth routes", () => {
     const req = mockReq({ code: "abc" }); const res = mockRes();
     await handleCallback(req, res);
     expect(res.statusCode).toBe(302);
-    expect(res.redirectTo).toBe("/slumhouse");
+    expect(res.redirectTo).toBe("/slumhouse/launch");
     expect(res.cookies).toHaveLength(2);
     expect(res.cookies[0].name).toBe("slumhouse_sid");
     expect(res.cookies[0].opts.httpOnly).toBe(true);
@@ -121,7 +121,7 @@ describe("slumhouse auth routes", () => {
     const req = mockReq({ code: "abc" }); const res = mockRes();
     await handleCallback(req, res);
     expect(res.statusCode).toBe(302);
-    expect(res.redirectTo).toBe("/slumhouse");
+    expect(res.redirectTo).toBe("/slumhouse/launch");
     expect(res.cookies).toHaveLength(2);
     expect(mocks.insertValues[0]).toMatchObject({
       discordUserId: "111",
