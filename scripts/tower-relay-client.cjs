@@ -104,13 +104,15 @@ function connect() {
     currentWs.close(4001, "superseded");
   }
 
+  const connectUrl = new URL(SERVER);
+  connectUrl.searchParams.set("token", TOKEN);
+
   // Log SERVER only — never log TOKEN or a URL that contains it.
   console.log(`[${new Date().toISOString()}] connecting to ${SERVER}`);
 
-  // Pass the relay token via the WebSocket subprotocol header (Sec-WebSocket-Protocol).
-  // The "ws" library sends whatever is in the protocols array as that header value.
-  // SERVER has NO token in the query string.
-  const ws = new WebSocket(SERVER, [TOKEN], { perMessageDeflate: false });
+  // The live Railway relay currently authenticates via `?token=...`.
+  // Keep the token out of logs, but include it in the upgrade URL.
+  const ws = new WebSocket(connectUrl.toString(), { perMessageDeflate: false });
   currentWs = ws;
 
   ws.on("open", () => {

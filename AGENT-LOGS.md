@@ -8832,3 +8832,22 @@ For current operating rules, see `CLAUDE.md`. For subsystem architecture details
 
 **Carry-forward:**
 - Once the next deploy lands, `tf-relay-production.up.railway.app` should stop failing at build time and use the relay container again.
+
+### Session Log — 2026-05-28 Tower relay recovery
+
+**Mission:** Restore the tower-side relay client so the Railway tunnel stops reporting `tower:false` and Slumhouse comes back online.
+
+**Work completed:**
+- Patched `scripts/tower-relay-client.cjs` to connect using the live relay's `?token=...` auth path.
+- Restarted `tower-relay-client` under `pm2` with the required relay env vars.
+- Verified the relay health endpoint flipped back to `{"ok":true,"tower":true,"pending":0}`.
+- Reverted the mistaken Railway build-only changes (`package.json` build script and root Dockerfile) so the repo matches the actual hosting architecture again.
+
+**Verification:**
+- `pm2 status` — `tower-relay-client` online.
+- `curl.exe -sS https://tf-relay-production.up.railway.app/__relay/health` — `tower:true`.
+
+**Known-facts updates:** Slumhouse is hosted on the local tower behind the Railway relay; Railway itself is just the tunnel edge.
+
+**Carry-forward:**
+- If the tunnel drops again, restart `tower-relay-client` first and check the Railway `/__relay/health` endpoint before touching the Slumhouse app.
