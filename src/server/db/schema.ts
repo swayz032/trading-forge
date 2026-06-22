@@ -2527,8 +2527,12 @@ export const brokerAccounts = pgTable(
     // 2026-06-22 (migration 0167): Topstep voluntary-DLL opt-in flag.
     // When true, Topstep XFA payout caps are DOUBLED (Standard $4K / Consistency $6K
     // on a $50K account). MFFU accounts carry this field but it has no effect —
-    // MFFU cap is always $2,000 (no promo). Default false = base cap (conservative).
-    dllOptedIn: boolean("dll_opted_in").notNull().default(false),
+    // MFFU cap is always $2,000 (no promo). MFFU carries the field with no effect.
+    // Default TRUE (migration 0168, 2026-06-22): operator standing policy is to ALWAYS
+    // add the Topstep voluntary DLL at checkout (free 2x payout cap, and our risk engine
+    // already self-imposes a tighter 67%/95% halt). Nothing to remember/flip per account.
+    // Only real-world dependency: tick the DLL box at Topstep signup — the flag reflects it.
+    dllOptedIn: boolean("dll_opted_in").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
