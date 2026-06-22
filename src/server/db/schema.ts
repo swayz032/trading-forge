@@ -1953,6 +1953,11 @@ export const strategyFirmEligibility = pgTable(
     eligibilityReason: text("eligibility_reason"),  // human-readable pass/fail reason
     complianceCheckResult: jsonb("compliance_check_result"), // full per-firm gate output for audit
     checkedAt: timestamp("checked_at").defaultNow().notNull(),
+    // Migration 0089 (B14 Survival Twin) — additive, all nullable.
+    survivalProbability: numeric("survival_probability"),
+    survivalCurve: jsonb("survival_curve"),
+    survivalEvidenceWeight: integer("survival_evidence_weight"),
+    survivalLastFittedAt: timestamp("survival_last_fitted_at"),
   },
   (table) => [
     // Lookup: "which firms is this strategy eligible for?"
@@ -2693,6 +2698,21 @@ export const scoutDrainSamples = pgTable(
     index("idx_scout_drain_samples_sampled_at").on(table.sampledAt.desc()),
   ],
 );
+
+// ─── Synthetic Regime Bank (migration 0088) ──────────────────────────────────
+export const syntheticRegimeBank = pgTable("synthetic_regime_bank", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  symbol: text("symbol").notNull(),
+  timeframe: text("timeframe").notNull(),
+  regimeLabel: text("regime_label").notNull(),
+  conditioningVectorCompressed: bytea("conditioning_vector_compressed").notNull(),
+  conditioningDim: integer("conditioning_dim").notNull(),
+  s3Path: text("s3_path").notNull(),
+  numBars: integer("num_bars").notNull(),
+  stylizedFactPassed: boolean("stylized_fact_passed").notNull(),
+  generatorModelVersion: text("generator_model_version").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
 
 // ─── Synthetic Black Swan Runs (already in live DB) ──────────────────────────
 export const syntheticBlackSwanRuns = pgTable(
