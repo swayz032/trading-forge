@@ -6,7 +6,8 @@
 > the `## Canonical Values` block below. Drift triggers CI failure.
 >
 > Effective: 2026-01-12 (TopstepX-only platform lockdown).
-> Last reviewed: 2026-05-10.
+> Last reviewed: 2026-06-22.
+> Evidence source: docs/institutional-evidence/firm-rules-freshness-2026-06-22.md
 
 ---
 
@@ -25,7 +26,7 @@
 | Max contracts | `50` micros (or 5 minis — TopstepX 10:1 ratio per scaling plan) |
 | Min trading days | `5` |
 | Min payout days | `5` |
-| Consistency rule | `null` (no consistency rule) |
+| Consistency rule | `0.50` (50% best-day cap at Combine pass-request; XFA Consistency Path uses 40% cap) |
 | Overnight allowed | `false` |
 | Weekend allowed | `false` |
 | Commission per side per contract | `$0.37` |
@@ -50,7 +51,7 @@ trailing: eod
 payout_split: 0.90
 min_payout_days: 5
 min_trading_days: 5
-consistency_rule_pct: null
+consistency_rule_pct: 0.50  # 50% best-day cap enforced at Combine pass-request (eval phase); XFA Consistency Path uses 40%
 daily_loss_limit: 1000
 overnight_ok: false
 weekend_ok: false
@@ -137,6 +138,78 @@ it as enabled by default.
 
 - **Enforcement:** `firm_config.py` `topstep_50k.daily_loss_limit = 1000`
   (always-on Trading Forge default).
+
+### 8. Consistency Rule — 50% Best-Day Cap (Combine Evaluation)
+
+**Effective: 2026 (confirmed by 5 independent sources as of 2026-06-22).**
+
+In the Trading Combine (evaluation phase), no single trading day's profit may
+exceed 50% of total cycle profit. Evaluated at pass-request time as a look-back
+across the full evaluation window.
+
+The XFA (funded account) has a SEPARATE consistency rule only on the
+**Consistency Path**: best day cannot exceed 40% of total payout-window profit.
+The **Standard Path** has no percentage consistency rule (only the 5 winning days
+requirement). The funded stage has no consistency rule on the Standard Path.
+
+- **Enforcement:** `firm_config.py` `topstep_50k.consistency_rule = "topstep_50pct"`.
+  `prop_compliance.py:run_prop_compliance()` now applies `check_tpt_consistency()`
+  to Topstep simulations identically to MFFU (generalized `"50pct"` string match).
+- **Sources:** Vigil 2026-03-21, PropTradingVibes 2026-04-28, Tradecovex 2026-04-09,
+  Backtrex 2026-06-07, TheTraderStack 2026-06-18 (5 corroborating sources).
+
+### 9. XFA Two-Path Split — Effective 2026-02-05
+
+Since February 5, 2026, the Express Funded Account (XFA — the funded stage after
+passing the Combine) offers two payout paths. Operators choose at account activation.
+
+| Path | Winning Days Required | Min P&L per Day | Consistency Cap |
+|---|---|---|---|
+| **Standard Path** | 5 winning days | $150 per day | None |
+| **Consistency Path** | 3 trading days | (any) | ≤ 40% single-day cap |
+
+**Trading Forge default:** Standard Path (5 winning days at $150+). `min_payout_days = 5`
+reflects Standard Path. If operator switches to Consistency Path, update
+`min_payout_days = 3` in `firm_config.py` + `prop_compliance.py` + `firm-config.ts`.
+
+- **Sources:** Tradecovex 2026-04-09 + 2026-04-28, Backtrex 2026-06-07.
+
+### 10. Payout Caps — Reduced April 28, 2026
+
+For accounts created **after April 28, 2026**, payout caps on the 50K plan are:
+
+| Path | Max Payout Per Request |
+|---|---|
+| Standard Path | **$2,000** (down from $5,000 for pre-Apr-28 accounts) |
+| Consistency Path | **$3,000** (down from $6,000 for pre-Apr-28 accounts) |
+
+Accounts created before April 28, 2026 retain the higher $5,000/$6,000 caps.
+Verify your account's creation date to confirm which cap applies.
+
+- **Not codified in CI-checked fields** — payout cap is a withdrawal policy, not
+  a gate enforced at signal time. Document for operator awareness only.
+- **Sources:** Tradecovex 2026-04-28 (single source; treat as informational until
+  a second source corroborates).
+
+### 11. MLL Resets to $0 After Every Payout — CRITICAL Post-Payout Sizing Note
+
+**Effective: current Topstep policy (confirmed 2026-06-22).**
+
+After every payout withdrawal, the Maximum Loss Limit (MLL = trailing drawdown
+floor) **resets to the account starting balance ($0 net profit, i.e. the
+starting account balance** — same as first day of funded trading). The buffer
+earned during the payout window is gone immediately after withdrawal.
+
+**Practical impact on sizing:** immediately after a payout, the bot's effective
+drawdown room is $2,000 (the full MLL). Do NOT assume the pre-payout equity HWM
+is still the drawdown anchor — it resets. The paper engine's `realizedPeakEquity`
+HWM (migration 0075) must be reset to the current account balance after any
+payout event to prevent oversizing in the first session post-payout.
+
+- **Not yet auto-reset in paper engine** — carry-forward. Operator must manually
+  reset `realizedPeakEquity` via `UPDATE paper_sessions SET ...` after each
+  payout until an automated payout-detection hook is wired.
+- **Sources:** Tradecovex 2026-04-28, Backtrex 2026-06-07 (2 corroborating sources).
 
 ---
 

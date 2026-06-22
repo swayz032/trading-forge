@@ -41,7 +41,7 @@ FIRM_CONFIGS = {
         "max_drawdown": 2000,
         "trailing": "eod",
         "locks_at_start": True,
-        "consistency_rule": None,
+        "consistency_rule": "topstep_50pct",   # 50% best-day cap at Combine pass-request (same threshold as MFFU eval)
         "overnight_ok": False,
         "payout_split": 0.90,
         "payout_split_tiers": None,
@@ -310,13 +310,16 @@ def run_prop_compliance(
             )
 
         # Check consistency rules (using net PnLs).
-        # Active rules: MFFU 50%. Topstep has no consistency rule.
-        if firm["consistency_rule"] == "mffu_50pct":
+        # Active rules: any firm whose consistency_rule contains "50pct"
+        # (currently both MFFU "mffu_50pct" and Topstep "topstep_50pct").
+        # The 50% best-day cap is enforced at eval pass-request time for both firms.
+        if isinstance(firm.get("consistency_rule"), str) and "50pct" in firm["consistency_rule"]:
             cons_passed, worst_pct = check_tpt_consistency(net_pnls)
             if not cons_passed:
                 passed = False
+                firm_label = "MFFU" if firm["consistency_rule"] == "mffu_50pct" else "Topstep"
                 failures.append(
-                    f"MFFU 50% consistency violation: "
+                    f"{firm_label} 50% consistency violation: "
                     f"best day = {worst_pct:.0%} of total profit"
                 )
 
@@ -367,7 +370,7 @@ def rank_firms_for_strategy(stats: dict) -> list[dict]:
             continue
         if not firm["overnight_ok"] and stats.get("trades_overnight", False):
             continue
-        if firm["consistency_rule"] == "mffu_50pct" and stats.get("consistency_ratio", 0) > 0.50:
+        if isinstance(firm.get("consistency_rule"), str) and "50pct" in firm["consistency_rule"] and stats.get("consistency_ratio", 0) > 0.50:
             continue
 
         avg_daily = stats["avg_daily_pnl"]

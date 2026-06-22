@@ -103,7 +103,7 @@ FIRM_RULES: dict[str, dict] = {
         "payout_split": 0.90,
         "min_payout_days": 5,
         "min_trading_days": 5,
-        "consistency_rule": None,
+        "consistency_rule": "topstep_50pct",   # 50% best-day cap at Combine pass-request; same threshold as MFFU eval
         "daily_loss_limit": 1000,
         "overnight_ok": False,
         "weekend_ok": False,

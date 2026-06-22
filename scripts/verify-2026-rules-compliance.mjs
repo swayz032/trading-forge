@@ -247,6 +247,35 @@ const FIELD_MAP_TOPSTEP = {
   copy_trades_within_user_allowed:            { py: "copy_trades_within_user_allowed",            ts: "copyTradesWithinUserAllowed" },
 };
 
+// ─── Staleness check (non-fatal WARN) ────────────────────────────────────────
+
+/**
+ * Emit a non-fatal WARN when a doc's "Last reviewed:" date is more than
+ * STALENESS_WARN_DAYS days ago. This does NOT fail CI (exits 0 regardless),
+ * but surfaces future staleness before it becomes a compliance gap.
+ */
+const STALENESS_WARN_DAYS = 30;
+
+function warnIfStale(docPath) {
+  if (!fs.existsSync(docPath)) return; // readCanonicalYaml will catch missing files
+  const md = fs.readFileSync(docPath, "utf8");
+  const m = md.match(/>\s*Last reviewed:\s*(\d{4}-\d{2}-\d{2})/);
+  if (!m) {
+    console.warn(`WARN verify-2026-rules-compliance: no "Last reviewed:" date found in ${path.basename(docPath)}`);
+    return;
+  }
+  const reviewedDate = new Date(m[1]);
+  const ageMs = Date.now() - reviewedDate.getTime();
+  const ageDays = Math.floor(ageMs / (1000 * 60 * 60 * 24));
+  if (ageDays > STALENESS_WARN_DAYS) {
+    console.warn(
+      `WARN verify-2026-rules-compliance: ${path.basename(docPath)} last reviewed ${m[1]} ` +
+      `(${ageDays} days ago — exceeds ${STALENESS_WARN_DAYS}-day staleness threshold). ` +
+      `Re-verify firm rules before next promotion cycle.`,
+    );
+  }
+}
+
 // ─── Comparison ───────────────────────────────────────────────────────────
 
 function compareFirm({ docKey, pyKey, tsKey, firmName, fieldMaps }) {
@@ -310,6 +339,11 @@ function equiv(a, b) {
 // ─── Main ─────────────────────────────────────────────────────────────────
 
 function main() {
+  // Non-fatal staleness warnings — fires before drift checks so they always
+  // surface even when the CI gate itself is green.
+  warnIfStale(MFFU_DOC);
+  warnIfStale(TOPSTEP_DOC);
+
   let drift = [];
 
   drift.push(...compareFirm({
