@@ -9888,9 +9888,26 @@ Also restored Anam.ai persona during this session:
 - To ENABLE autopilot later: deliberate decision to fix F-1/F-3 + bulletproof F-2 (re-run all 9 hard gates at promotion). Until then, manual promotion only.
 - All work on `hardening/phase-0`; branch reconciliation with feature/deep-analysis-pipeline still pending.
 
+### Session Log — 2026-06-22 claude (n8n orchestration integrity + map check)
+
+**Mission:** Check the Trading Forge System Map + audit n8n orchestration to institutional grade.
+
+**Map check:** `system-map:check` = status ok, driftItems [], exit 0 — map IN SYNC. The 17 "blocked" subsystems in system-readiness.generated.json are intentional `manual_gate`s (operator-recovery / operator-approve / ci_gate), NOT bugs.
+
+**n8n audit (LIVE via Railway REST API — MCP was misconfigured to localhost):** 31 active workflows. 29/31 already hardened (errorWorkflow sink + HTTP retryOnFail); 0 SplitInBatches index-0 footguns (clean). 2 gaps fixed live + re-exported (commit 9c8da70):
+- **TF Health Watchdog (n8n auto-restart)** — the recovery workflow itself had NO retry on its 3 HTTP nodes (incl. POST self-restart) + no error sink → a transient self-restart failure would silently leave the backend down. Added retryOnFail+maxTries=2 + errorWorkflow=DGEk1D478xWJClKD (retryOnFail only — left onError/continueOnFail to preserve health→restart branching). NOTE: this n8n watchdog is a SECOND auto-restart layer complementing the in-app dead-mans-heartbeat A-1 self-restart.
+- **Slumdawg Anam Tools Gateway** — 5 HTTP nodes no-retry + no sink → hardened.
+- **Backup reconcile:** repo had 60 export files for 31 live workflows → pruned 28 stale pre-migration orphans (dead IDs from the 2026-05-17 Railway sqlite→Postgres re-create) + added the 2 missing live exports. Repo now mirrors live (32).
+
+**Carry-forward:** n8n MCP `~/.claude.json` N8N_API_URL=localhost:5678 (prod is Railway) — operator should repoint or MCP n8n work fails. 3A-workflow-backup should prune stale exports going forward.
+
 ---
 
 ## Known-Facts Pin — Stop Misdiagnosing These
+
+### n8n is LIVE on Railway, not localhost — MCP is misconfigured (pinned 2026-06-22)
+
+The n8n instance runs on Railway (`N8N_BASE_URL` in .env = https://n8n-production-84ff.up.railway.app). The `n8n-api-mcp` MCP server in `~/.claude.json` is pointed at `localhost:5678` and CANNOT reach prod — `n8n_health_check` returns NO_RESPONSE. To audit/manage live workflows, use the REST API directly: `curl -H "X-N8N-API-KEY: $TF_N8N_API_KEY" $N8N_BASE_URL/api/v1/workflows` (key + base in .env). To UPDATE a workflow, PUT `/api/v1/workflows/{id}` with ONLY {name, nodes, connections, settings} (extra fields like id/active/tags → 400). The hardened-workflow convention: HTTP nodes carry `retryOnFail:true, maxTries:2, onError:continueRegularOutput, continueOnFail:true`; `settings.errorWorkflow:"DGEk1D478xWJClKD"` (0A-health-monitor, the live error sink). The repo `workflows/n8n/*.json` backup accumulates stale orphans across workflow re-creates (the 2026-05-17 migration gave every workflow a new ID) — reconcile by ID against the live list, don't assume file count == live count.
 
 ### Migration drift: journal says applied, table is missing — runner won't re-run (pinned 2026-06-22)
 
