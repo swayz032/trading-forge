@@ -91,6 +91,7 @@ import { consistencyRoutes } from "./routes/consistency.js";
 import { tradeJournalRoutes } from "./routes/trade-journal.js";
 import { compositeHealthRoutes } from "./routes/composite-health.js";
 import { abComparisonRoutes } from "./routes/ab-comparison.js";
+import { liveOrderRoutes } from "./routes/live-order.js";
 import { runPendingMigrations } from "./lib/boot-migration-runner.js";
 
 // ─── Boot migration runner ────────────────────────────────────────
@@ -553,6 +554,11 @@ app.use("/api/composite-health", compositeHealthRoutes);
 
 // W29 Pass D.2: A/B paper sub-account Sharpe comparison — READ-ONLY observability
 app.use("/api/ab-comparison", abComparisonRoutes);
+
+// W1 CORE: TF Order Gateway — the in-process kill-switch + gate layer before every live order.
+// Pine alert → POST /api/live-order → routeOrder() (full gate stack) → TradersPost/broker.
+// Requires LIVE_ORDER_HMAC_SECRET env var (≥32 chars). Fail-CLOSED 503 when unconfigured.
+app.use("/api/live-order", liveOrderRoutes);
 
 // 404 handler for API routes — returns JSON instead of Express default HTML
 app.use("/api", (_req, res) => {
