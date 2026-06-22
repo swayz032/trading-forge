@@ -335,6 +335,47 @@ export async function routeOrder(
     return result;
   }
 
+  // ── Null-firmId guard (Hole 3 fix) ─────────────────────────────────────────
+  // An account with no firmId cannot be compliance-checked — the compliance gate
+  // normalizes firm keys and cannot safely run without an identified firm. An
+  // order from an unidentified firm MUST fail-CLOSED with an audit row so the
+  // bypass is reconstructable. This check must run BEFORE the F-3 enabled-firms
+  // guard to ensure we emit the specific "compliance_null_firm_blocked" audit
+  // action rather than the generic "account_not_found" path.
+  if (!account.firmId) {
+    const nullFirmResult: BrokerResult = {
+      success: false,
+      reason: "compliance_violation",
+      accountId,
+      firmId: undefined,
+      brokerType: account.brokerType,
+      error: "compliance_gate_skipped_null_firm",
+    };
+    logger.error(
+      { accountId, correlationId },
+      "broker-router: BLOCKED — account has null firmId, compliance gate cannot run (fail-CLOSED)",
+    );
+    await db.insert(auditLog).values({
+      action: "broker_router.compliance_null_firm_blocked",
+      entityType: "broker_account",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { accountId, ticker: signal.ticker, action: signal.action } as Record<string, unknown>,
+      result: {
+        blocked: true,
+        reason: "null_firm_id",
+        error: "An account with no firmId cannot be routed — unidentifiable firm bypasses compliance",
+      } as Record<string, unknown>,
+      status: "blocked",
+      correlationId: correlationId ?? null,
+    }).catch((err: unknown) => {
+      logger.error({ err }, "broker-router: null-firm compliance audit_log write failed (non-blocking)");
+    });
+    broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...nullFirmResult, correlationId: correlationId ?? null });
+    await writeAuditLog(accountId, signal, nullFirmResult, correlationId);
+    return nullFirmResult;
+  }
+
   // ── F-3: Enabled-firms enforcement ─────────────────────────────────────────
   // instance_config.enabled_firms controls which firms this deployment allows.
   // A firm not in that list is blocked here — prevents accidental routing to a
@@ -375,11 +416,32 @@ export async function routeOrder(
       return result;
     }
   } catch (enabledFirmsErr) {
-    // Fail-open: log and proceed — read-only config check must not block orders
+    // FIX 8: On exception, apply the canonical fallback list rather than
+    // bypassing the enabled-firms filter entirely. Bypassing silently allows
+    // routing to any firm even if the instance is misconfigured.
     logger.warn(
       { err: enabledFirmsErr, accountId, firmId: account.firmId, correlationId },
-      "broker-router: getEnabledFirms() failed — proceeding (fail-open for config read)",
+      "broker-router: getEnabledFirms() threw — falling back to canonical default list (F-8)",
     );
+    const fallbackFirms = [...ENABLED_FIRMS_FALLBACK];
+    const normalizedFirmId = (account.firmId ?? "").toLowerCase().replace(/_\d+k$/, "");
+    if (!fallbackFirms.includes(account.firmId as never) && !fallbackFirms.includes(normalizedFirmId as never)) {
+      const result: BrokerResult = {
+        success: false,
+        reason: "account_not_found",
+        accountId,
+        firmId: account.firmId,
+        brokerType: account.brokerType,
+        error: `firm ${account.firmId} not in fallback enabled_firms (getEnabledFirms threw)`,
+      };
+      logger.warn(
+        { accountId, firmId: account.firmId, correlationId },
+        "broker-router: firm not in fallback enabled_firms — blocked (F-8)",
+      );
+      broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...result, correlationId: correlationId ?? null });
+      await writeAuditLog(accountId, signal, result, correlationId);
+      return result;
+    }
   }
 
   // ── Wave 10 Task 3C: Route-time safety clamp ─────────────────────────────────
@@ -437,11 +499,23 @@ export async function routeOrder(
   // subset of context available at route time. This catches:
   //   - Quantity exceeding firm contract cap (already clamped above, audited here)
   //   - Automated trading flag (always true at route time)
-  // Checks requiring account balance / open positions / trades_today are richer
-  // upstream in paper-execution-service; this layer adds broker-route audit trail.
-  // Fail-open: if runPythonModule throws, we log and proceed to avoid blocking
-  // all live orders on a transient Python subprocess failure.
-  if (account.firmId) {
+  //
+  // WHAT THIS LAYER DOES NOT CHECK:
+  //   - 2% per-trade rule: NOT checked here. intended_max_loss and account_balance
+  //     are passed as null because neither is available at route time. The 2% rule
+  //     IS enforced by paper-execution-service with real account context. Do NOT
+  //     rely on this layer for 2% enforcement — it is structurally skipped.
+  //   - trades_today / open_positions: likewise null — paper-execution-service owns
+  //     those richer checks.
+  //
+  // Fail-open on subprocess failure: if runPythonModule throws, we log a WARN,
+  // write an audit row, and proceed — broker-router compliance gate is defense-
+  // in-depth; paper-execution-service is the primary gate.
+  //
+  // Fail-CLOSED on null/missing firmId: handled above, before F-3. By the time
+  // we reach this block, account.firmId is guaranteed non-null/non-empty.
+
+  {
     try {
       const { runPythonModule } = await import("../lib/python-runner.js");
       const routeComplianceFirmKey = account.firmId.toLowerCase().replace(/_\d+k$/, "");
@@ -456,18 +530,19 @@ export async function routeOrder(
           action: "check_violation",
           firm: routeComplianceFirmKey,
           // Minimal strategy_state available at route time.
-          // Full context (account_balance, trades_today, open_positions) is
-          // enforced upstream by paper-execution-service — this is defense-in-depth.
+          // NOTE: intended_max_loss and account_balance are intentionally null —
+          // the 2% per-trade rule CANNOT be enforced here because account balance
+          // is not available at route time. The 2% check is enforced upstream by
+          // paper-execution-service with real account context.
+          // This layer checks: automated flag, account_phase, proposed_symbol,
+          // and any firm rules that do not require financial context.
           strategy_state: {
             automated: true,
             account_phase: "pa",
             host: process.env["TF_HOST_TAG"] ?? "local",
             pa_account_count: 1,
-            // Quantity-derived intended_max_loss approximation:
-            // Conservative estimate using firm's per-contract daily loss limit.
-            // Real check done upstream with actual account balance.
-            intended_max_loss: null,
-            account_balance: null,
+            intended_max_loss: null,   // 2% NOT checked here — see paper-execution-service
+            account_balance: null,     // 2% NOT checked here — see paper-execution-service
             trades_today: null,
             open_positions: [],
             proposed_symbol: signal.ticker,
@@ -529,12 +604,35 @@ export async function routeOrder(
         return result;
       }
     } catch (routeComplianceErr) {
-      // Fail-open: log warning, proceed — broker-router compliance gate is
-      // defense-in-depth; upstream paper-execution-service is the primary gate.
+      // Hole 2 fix: subprocess failure previously logged a warn and proceeded with
+      // NO audit row — a blackout-window bypass was completely undetectable post-hoc.
+      // Now we write an audit row so any compliance-gate failure during a live window
+      // is reconstructable. We still proceed (fail-open) because paper-execution-service
+      // is the primary gate; the audit row makes the bypass observable.
       logger.warn(
         { err: routeComplianceErr, accountId, firmId: account.firmId, correlationId },
         "broker-router: compliance gate subprocess failed — proceeding (fail-open, primary gate is paper-execution-service)",
       );
+      db.insert(auditLog).values({
+        action: "broker_router.compliance_gate_failed",
+        entityType: "broker_account",
+        entityId: null,
+        decisionAuthority: "system",
+        input: {
+          accountId,
+          firmId: account.firmId,
+          ticker: signal.ticker,
+        } as Record<string, unknown>,
+        result: {
+          error: routeComplianceErr instanceof Error ? routeComplianceErr.message : String(routeComplianceErr),
+          proceeding: true,
+          note: "fail-open: paper-execution-service is primary compliance gate",
+        } as Record<string, unknown>,
+        status: "failure",
+        correlationId: correlationId ?? null,
+      }).catch((err: unknown) => {
+        logger.error({ err }, "broker-router: compliance-gate-failed audit_log write failed (non-blocking)");
+      });
     }
   }
 

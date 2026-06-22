@@ -311,4 +311,92 @@ describe("broker-router", () => {
     expect(result.error).toMatch(/not in instance enabled_firms/);
     expect(submitWebhookOrder).not.toHaveBeenCalled();
   });
+
+  // ─── Test 11: Null firmId is BLOCKED, not silently passed through ─────────
+  // Hole 3: account.firmId === null previously skipped the compliance gate
+  // entirely because `if (account.firmId)` is falsy for null/undefined.
+  // An unidentified-firm order must NEVER bypass compliance — fail-CLOSED.
+
+  it("F-5-hole-3: null firmId blocks the order and writes compliance_null_firm_blocked audit row", async () => {
+    // Account with no firmId (should never exist in prod, but must be hardened)
+    const nullFirmAccount = { ...TRADERSPOST_ACCOUNT, firmId: null };
+    mockSelectReturning([nullFirmAccount]);
+
+    const valuesMock = vi.fn().mockResolvedValue([{ id: "audit-null-firm" }]);
+    const insertMock = vi.fn().mockReturnValue({ values: valuesMock });
+    // @ts-ignore — partial Drizzle mock
+    vi.mocked(db.insert).mockImplementation(insertMock);
+
+    const result = await routeOrder("test-account-uuid-1234", TEST_SIGNAL, "corr-nullfirm");
+
+    expect(result.success).toBe(false);
+    expect(result.reason).toBe("compliance_violation");
+    expect(submitWebhookOrder).not.toHaveBeenCalled();
+
+    // Must have written a broker_router.compliance_null_firm_blocked audit row
+    const auditCalls: string[] = valuesMock.mock.calls
+      .flat()
+      .map((v: { action?: string }) => v?.action)
+      .filter(Boolean);
+    expect(auditCalls).toContain("broker_router.compliance_null_firm_blocked");
+  });
+
+  // ─── Test 12: Compliance subprocess failure writes an audit row ───────────
+  // Hole 2: the catch block at the compliance gate previously logged a warn and
+  // proceeded with NO audit row — a blackout-window bypass was not reconstructable.
+
+  it("F-5-hole-2: compliance subprocess failure writes compliance_gate_failed audit row", async () => {
+    const { runPythonModule } = await import("../lib/python-runner.js");
+
+    // Make the compliance check throw (subprocess crash / timeout)
+    vi.mocked(runPythonModule).mockRejectedValue(new Error("Python subprocess timed out"));
+
+    const valuesMock = vi.fn().mockResolvedValue([{ id: "audit-gate-failed" }]);
+    const insertMock = vi.fn().mockReturnValue({ values: valuesMock });
+    // @ts-ignore — partial Drizzle mock
+    vi.mocked(db.insert).mockImplementation(insertMock);
+
+    // Route should still proceed (fail-open after audit — paper-execution-service
+    // is the primary gate per documented defense-in-depth contract)
+    const result = await routeOrder("test-account-uuid-1234", TEST_SIGNAL, "corr-gate-fail");
+
+    // Order proceeds despite subprocess failure (fail-open is intentional here)
+    expect(result.success).toBe(true);
+
+    // But an audit row MUST have been written for the subprocess failure
+    const auditCalls: string[] = valuesMock.mock.calls
+      .flat()
+      .map((v: { action?: string }) => v?.action)
+      .filter(Boolean);
+    expect(auditCalls).toContain("broker_router.compliance_gate_failed");
+  });
+
+  // ─── Test 13: 2% check inputs documented truthfully ──────────────────────
+  // Hole 1: intended_max_loss and account_balance are passed as null to
+  // compliance_gate.py — which structurally skips the 2% check.  The correct
+  // fix at this layer is to truthfully document that 2% is NOT enforced here
+  // (it IS enforced by paper-execution-service with real values) and confirm
+  // the compliance call still runs (for other checks like automated flag,
+  // proposed_symbol, etc.).  This test asserts that runPythonModule IS called
+  // even though both balance fields are null — i.e., the gate is attempted and
+  // non-2%-checks fire as intended.
+
+  it("F-5-hole-1: compliance gate is called even with null balance inputs (2% checked upstream by paper-execution-service)", async () => {
+    const { runPythonModule } = await import("../lib/python-runner.js");
+    vi.mocked(runPythonModule).mockResolvedValue({ violation: false, status: "ok", message: "", violations: [] });
+
+    await routeOrder("test-account-uuid-1234", TEST_SIGNAL, "corr-balance-null");
+
+    // The gate must still be invoked — non-2% checks (automated flag,
+    // proposed_symbol, account_phase) run regardless of null balance.
+    expect(runPythonModule).toHaveBeenCalledOnce();
+
+    // Verify that the call is made with null balance fields — this is the
+    // truthful documented contract: 2% is NOT checked at this layer.
+    const callArg = vi.mocked(runPythonModule).mock.calls[0][0] as {
+      config: { strategy_state: { intended_max_loss: unknown; account_balance: unknown } };
+    };
+    expect(callArg.config.strategy_state.intended_max_loss).toBeNull();
+    expect(callArg.config.strategy_state.account_balance).toBeNull();
+  });
 });

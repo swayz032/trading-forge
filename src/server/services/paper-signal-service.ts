@@ -37,6 +37,17 @@ import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { parseEntryWindows, isBarInAnyWindow } from "../lib/entry-windows.js";
 import { evaluateDailyTradeCap, getDailyTradeCapEnvDefault } from "../lib/daily-trade-cap.js";
 import { evaluateLunchBlackoutGate, getLunchBlackoutStartEnvDefault, getLunchBlackoutEndEnvDefault } from "../lib/lunch-blackout-gate.js";
+// FIX A (2026-06-22): Wire consistency gate into the entry-gate sequence.
+// shouldBlockNewEntry is now called AFTER DLL gate + BEFORE position sizing.
+// CONSISTENCY_RULE_FIRMS used to guard the gate to covered firms only.
+// Fail-OPEN: payout-eligibility gate (not a loss gate) — consistent with daily-trade-cap precedent.
+import { shouldBlockNewEntry as consistencyGateShouldBlock, CONSISTENCY_RULE_FIRMS } from "./consistency-tracker-service.js";
+// FIX B (2026-06-22): In-process Tier-1 event window checker for calendar fallback.
+// When the Python calendar_filter subprocess fails, CALENDAR_SAFE_DEFAULT had
+// is_economic_event:false — silently opening FOMC/CPI/NFP windows. The in-process
+// checker runs without Python and fails CLOSED for known Tier-1 event windows.
+export { checkInProcessTier1EventWindow } from "../lib/tier1-event-blackout.js";
+import { checkInProcessTier1EventWindow as _checkInProcessTier1EventWindow } from "../lib/tier1-event-blackout.js";
 import { computePmSizeFactor } from "../lib/pm-size-factor.js";
 // W23H.F: cross-symbol DLL coordinator + pre-market blackout consumption
 import { getAccountSessionCumulativePnL, evaluateCrossSymbolDll, DEFAULT_PERSONAL_DLL_DOLLARS } from "./cross-symbol-pnl.js";
@@ -283,15 +294,35 @@ async function getCachedSignalCalendarStatus(
     signalCalendarCache.set(key, result);
     return result;
   } catch (err) {
-    // F-2: subprocess failed — cache the safe-default for this hour so
-    // subsequent bars don't re-spawn Python until the cache key expires.
+    // FIX B (2026-06-22): Python subprocess failed.
+    // PREVIOUS BEHAVIOR: always returned CALENDAR_SAFE_DEFAULT (is_economic_event:false)
+    //   → FOMC/CPI/NFP windows silently open during outage → MFFU compliance ban.
+    // NEW BEHAVIOR: run the in-process Tier-1 event checker (pure TS, no I/O).
+    //   If bar is inside a known Tier-1 window → fail CLOSED (return blocked entry).
+    //   If bar is outside all known Tier-1 windows → fail OPEN (CALENDAR_SAFE_DEFAULT).
+    //   bypass_news_blackout is NOT passed here; it is handled at the call site
+    //   (evaluateSignals calendar gate block) where per-strategy config is available.
+    const inProcessCheck = _checkInProcessTier1EventWindow(barTimestamp);
+    const entryToCache: SignalCalendarCacheEntry = inProcessCheck.blocked
+      ? {
+          is_holiday: false,
+          is_triple_witching: false,
+          holiday_proximity: 999,
+          is_economic_event: true,
+          economic_event_name: inProcessCheck.eventName,
+          event_window_minutes: inProcessCheck.windowMinutes,
+        }
+      : CALENDAR_SAFE_DEFAULT;
+
     logger.error(
-      { err, barTimestamp, key },
-      "F-2: calendar-filter Python subprocess failed — caching safe-default for this hour",
+      { err, barTimestamp, key, inProcessBlocked: inProcessCheck.blocked, eventType: inProcessCheck.eventType },
+      inProcessCheck.blocked
+        ? "FIX B: calendar-filter Python subprocess failed — in-process Tier-1 check BLOCKED (fail-CLOSED for known economic event window)"
+        : "F-2: calendar-filter Python subprocess failed — no Tier-1 window active, caching safe-default",
     );
     _recordCalendarFailure(err);
-    signalCalendarCache.set(key, CALENDAR_SAFE_DEFAULT);
-    return CALENDAR_SAFE_DEFAULT;
+    signalCalendarCache.set(key, entryToCache);
+    return entryToCache;
   }
 }
 
@@ -695,7 +726,15 @@ function checkGovernor(
     };
   }
 
-  const adjusted = Math.max(1, Math.floor(requestedContracts * mult));
+  const adjusted = Math.max(0, Math.floor(requestedContracts * mult));
+  if (adjusted === 0) {
+    return {
+      allowed: false,
+      adjustedContracts: 0,
+      reason: `governor_size_zero: state=${gov.state}, mult=${mult}, requested=${requestedContracts}`,
+      governorState: gov.state,
+    };
+  }
   return {
     allowed: true,
     adjustedContracts: adjusted,
@@ -2894,6 +2933,91 @@ export async function evaluateSignals(
       }).catch(() => {});
     }
 
+    // ─── FIX A (2026-06-22): Consistency gate — Topstep + MFFU 50% single-day rule ──
+    // Placed AFTER DLL gate, BEFORE position sizing. Checks whether the highest single-day
+    // profit / cycle cumulative profit >= 50% (which would cause payout denial at eval).
+    // Emits warn at 40% and blocks at 50%.
+    //
+    // Scope: only fires for sessions whose firmId is in CONSISTENCY_RULE_FIRMS
+    //   (topstep, mffu). Sessions from unknown/unrelated firms pass through.
+    //
+    // Fail-OPEN policy (consistent with daily-trade-cap precedent): this is a
+    //   payout-eligibility gate, NOT a loss gate. A DB error → emit warn audit but
+    //   do NOT block the entry. Missing a block is not account-fatal.
+    let consistencyBlocked = false;
+    const sessionFirmId = sessionRow.firmId ?? "";
+    if (CONSISTENCY_RULE_FIRMS.includes(sessionFirmId)) {
+      try {
+        const consistencyResult = await consistencyGateShouldBlock(
+          sessionId,                    // used as cache key and audit entityId
+          1.0,                          // projectedTradeProfitR (conservative: 1R)
+          0,                            // currentRiskUsd: 0 at gate time (sizing runs later);
+          //                              the critical check is state.gateState === "block_50"
+          //                              (already blocked at 50%); projected math needs risk $
+          //                              which is not yet computed. Using 0 means wouldTriggerBlock
+          //                              only fires if today's existing profit already >= 50%.
+        );
+        if (consistencyResult.block) {
+          consistencyBlocked = true;
+          span.setAttribute("consistency_gate_blocked", true);
+          span.setAttribute("consistency_gate_reason", consistencyResult.reason);
+          logger.info(
+            { sessionId, symbol, firmId: sessionFirmId, reason: consistencyResult.reason },
+            "FIX A: consistency gate BLOCKED — 50% single-day concentration limit reached",
+          );
+          insertAuditRow({
+            action: "consistency.50pct_blocked",
+            entityType: "paper_session",
+            entityId: sessionId,
+            decisionAuthority: "system",
+            status: "failure",
+            input: { sessionId, symbol, firmId: sessionFirmId } as Record<string, unknown>,
+            result: { blocked: true, reason: consistencyResult.reason } as Record<string, unknown>,
+            correlationId: correlationId ?? null,
+          }).catch(() => {});
+        } else {
+          // Emit gate_cleared or 40pct_warned depending on gate state
+          const auditAction = consistencyResult.reason === "ok"
+            ? "consistency.gate_cleared"
+            : "consistency.40pct_warned";
+          if (auditAction === "consistency.40pct_warned") {
+            logger.warn(
+              { sessionId, symbol, firmId: sessionFirmId, reason: consistencyResult.reason },
+              "FIX A: consistency gate WARN — approaching 40% single-day concentration",
+            );
+          }
+          insertAuditRow({
+            action: auditAction,
+            entityType: "paper_session",
+            entityId: sessionId,
+            decisionAuthority: "system",
+            status: "info",
+            input: { sessionId, symbol, firmId: sessionFirmId } as Record<string, unknown>,
+            result: { blocked: false, reason: consistencyResult.reason } as Record<string, unknown>,
+            correlationId: correlationId ?? null,
+          }).catch(() => {});
+        }
+      } catch (consistencyErr) {
+        // Fail-OPEN: payout-eligibility gate — a DB error does NOT block entry.
+        // Emit visible warn audit so operator can investigate DB issues separately.
+        consistencyBlocked = false;
+        logger.warn(
+          { err: consistencyErr, sessionId, symbol, firmId: sessionFirmId },
+          "FIX A: consistency gate DB error — fail-OPEN, proceeding (payout-eligibility gate, not loss gate)",
+        );
+        insertAuditRow({
+          action: "consistency.gate_failopen",
+          entityType: "paper_session",
+          entityId: sessionId,
+          decisionAuthority: "system",
+          status: "warning",
+          input: { sessionId, symbol, firmId: sessionFirmId, error: String(consistencyErr) } as Record<string, unknown>,
+          result: { blocked: false, reason: "consistency_gate_db_error_fail_open" } as Record<string, unknown>,
+          correlationId: correlationId ?? null,
+        }).catch(() => {});
+      }
+    }
+
     // ─── Tier 5.3: 24-hour lockout gate ─────────────────────────────────
     // Runs BEFORE anti-setup and risk gate. If a strategy lockout is active
     // (written by writeLockoutFromKillEvent on daily_loss_kill), block all
@@ -2901,7 +3025,7 @@ export async function evaluateSignals(
     // Fail-OPEN: lockout query errors return null so trading is not blocked.
     // W23H.H/F: symbol whitelist, pre-market blackout, and DLL halt are treated as
     // early lockouts (same short-circuit pattern — downstream gates all check lockoutBlocked).
-    let lockoutBlocked = symbolWhitelistBlocked || blackoutBlocked || dllHaltBlocked || dailyTradeCapBlocked || lunchBlackoutBlocked;
+    let lockoutBlocked = symbolWhitelistBlocked || blackoutBlocked || dllHaltBlocked || dailyTradeCapBlocked || lunchBlackoutBlocked || consistencyBlocked;
     try {
       const activeLockout = await getActiveLockout(sessionConfig.strategyId);
       if (activeLockout) {

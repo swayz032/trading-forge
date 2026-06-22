@@ -1,9 +1,13 @@
 /**
- * consistency-tracker-service.ts — Wave 26 Pass 6
+ * consistency-tracker-service.ts — Wave 26 Pass 6 / 2026-06-22 FIX A
  *
- * Topstep 50% consistency rule: if highest_single_day_profit / cycle_cumulative_profit > 0.50,
- * payout is silently denied for that cycle. This service computes real-time concentration %
- * per Topstep account, emits 40% daily-digest WARN and 50% entry-block, with a false-positive
+ * Topstep + MFFU 50% consistency rule: if highest_single_day_profit /
+ * cycle_cumulative_profit > 0.50, payout is silently denied for that cycle.
+ * Both Topstep AND MFFU enforce this rule at eval/pass-request time.
+ * (Operator-confirmed 2026-06-22.)
+ *
+ * This service computes real-time concentration % per account on either firm,
+ * emits 40% daily-digest WARN and 50% entry-block, with a false-positive
  * guard for legitimately clean strategies.
  *
  * Gate states:
@@ -16,15 +20,15 @@
  *   consistency.50pct_blocked
  *   consistency.false_positive_suspected
  *   consistency.gate_cleared
+ *   consistency.gate_failopen    (emitted when DB error → fail-open path)
  *
- * Integration contract (future):
- *   paper-signal-service.ts shall call shouldBlockNewEntry() in its entry gate sequence
- *   AFTER the DLL gate and BEFORE position sizing (position X in the gate chain).
- *   The coordination pass owns the actual wiring. This module is ready; it exports
- *   a stable async function that returns { block, reason, audit }.
+ * Integration contract:
+ *   paper-signal-service.ts calls shouldBlockNewEntry() AFTER the DLL gate
+ *   and BEFORE position sizing. Fail-OPEN on DB error (payout-eligibility
+ *   gate, not a loss gate — consistent with daily-trade-cap precedent).
  *
  * Cycle definition:
- *   Topstep cycle = current funded period start to today. Since cycle_start is not yet
+ *   Cycle = current funded period start to today. Since cycle_start is not yet
  *   modeled in DB, defaults to "first day of current calendar month".
  *   TODO: replace with lookup to a cycle_start table when operator opens TopstepX account.
  *
@@ -33,13 +37,22 @@
  */
 
 import { randomUUID } from "crypto";
-import { eq, and, gte, isNull, isNotNull, sql } from "drizzle-orm";
+import { eq, and, gte, isNull, isNotNull, sql, inArray } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { paperPositions, paperSessions, brokerAccounts } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { notifyWarning, notifyCritical } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
+
+// ─── Firm coverage ────────────────────────────────────────────────────────────
+
+/**
+ * Firms that enforce the 50% single-day consistency rule at eval/pass-request.
+ * Operator-confirmed 2026-06-22: both Topstep and MFFU apply this rule.
+ * SQL queries use IN (CONSISTENCY_RULE_FIRMS) — not a hard-coded single firm.
+ */
+export const CONSISTENCY_RULE_FIRMS: string[] = ["topstep", "mffu"];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -128,7 +141,7 @@ function _toDateString(d: Date): string {
  * Computes the consistency state for a Topstep account.
  *
  * Reads:
- *   - paper_positions (via paper_sessions that have firmId='topstep')
+ *   - paper_positions (via paper_sessions with firmId IN CONSISTENCY_RULE_FIRMS)
  *   - closed positions for realized daily P&L bucketed by date
  *   - open positions for unrealized projection on today
  *
@@ -162,6 +175,9 @@ export async function getConsistencyState(
 
   type DailyRow = { day: string; pnl: number };
 
+  // FIX A (2026-06-22): Cover all CONSISTENCY_RULE_FIRMS, not just 'topstep'.
+  // Both Topstep and MFFU enforce the 50% single-day concentration rule.
+  const firmList = CONSISTENCY_RULE_FIRMS.map((f) => `'${f}'`).join(", ");
   const dailyRows = await db.execute<DailyRow>(
     sql`
       SELECT
@@ -170,7 +186,7 @@ export async function getConsistencyState(
       FROM paper_positions pp
       JOIN paper_sessions ps ON ps.id = pp.session_id
       WHERE
-        ps.firm_id = 'topstep'
+        ps.firm_id IN (${sql.raw(firmList)})
         AND pp.closed_at IS NOT NULL
         AND pp.closed_at >= ${cycleStart.toISOString()}::timestamptz
       GROUP BY 1
@@ -188,7 +204,7 @@ export async function getConsistencyState(
       FROM paper_positions pp
       JOIN paper_sessions ps ON ps.id = pp.session_id
       WHERE
-        ps.firm_id = 'topstep'
+        ps.firm_id IN (${sql.raw(firmList)})
         AND pp.closed_at IS NULL
         AND ps.status = 'active'
     `,
@@ -619,8 +635,8 @@ export async function shouldBlockNewEntry(
 // ─── Daily digest helper ───────────────────────────────────────────────────────
 
 /**
- * runConsistencyDailyDigest — iterate all enabled Topstep accounts and send
- * a batched Discord digest for any account at >= 40%.
+ * runConsistencyDailyDigest — iterate all enabled Topstep + MFFU accounts
+ * (CONSISTENCY_RULE_FIRMS) and send a Discord digest for any account at >= 40%.
  *
  * Called by the "consistency-tracker-daily-digest" cron job in scheduler.ts.
  */
@@ -632,13 +648,14 @@ export async function runConsistencyDailyDigest(): Promise<{
   const correlationId = randomUUID();
   logger.info({ correlationId, jobName: "consistency-tracker-daily-digest" }, "cron tick start");
 
-  // Get enabled Topstep accounts
+  // FIX A (2026-06-22): Query both Topstep AND MFFU accounts.
+  // Both firms enforce the 50% single-day consistency rule at eval/pass-request.
   const accounts = await db
     .select({ accountId: brokerAccounts.accountId })
     .from(brokerAccounts)
     .where(
       and(
-        eq(brokerAccounts.firmId, "topstep"),
+        inArray(brokerAccounts.firmId, CONSISTENCY_RULE_FIRMS),
         eq(brokerAccounts.enabled, true),
       ),
     );
