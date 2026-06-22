@@ -10,7 +10,11 @@ import { runPass1VocabularyExtraction } from "../lib/two-pass-vocab-extractor.js
 import { runCoverageGate } from "../lib/extraction-coverage-gate.js";
 import { runRobustnessTest } from "../services/robustness-service.js";
 import { db } from "../db/index.js";
-import { auditLog, strategyPendingBuckets, strategyPendingMentions, systemJournal, strategies } from "../db/schema.js";
+// Wave hardening 2026-06-22: agentJobs is the mutable job-state table.
+// audit_log is append-only (migration 0058 trigger) — UPDATEs/DELETEs on
+// audit_log rows throw "audit_log is append-only". Job lifecycle state now
+// lives in agent_jobs; audit_log receives immutable event rows only.
+import { auditLog, agentJobs, strategyPendingBuckets, strategyPendingMentions, systemJournal, strategies } from "../db/schema.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { eq, desc, and, sql, inArray, countDistinct } from "drizzle-orm";
 import { OllamaClient } from "../services/ollama-client.js";
@@ -1744,47 +1748,79 @@ agentRoutes.post("/robustness", async (req, res) => {
     return;
   }
 
-  // Create audit log entry as job tracker
-  const [job] = await db.insert(auditLog).values({
+  // Wave hardening 2026-06-22: INSERT mutable job row into agent_jobs (NOT
+  // audit_log). audit_log is append-only; UPDATEs against it throw from the
+  // migration-0058 trigger. Also emit an immutable "submitted" event to
+  // audit_log so the audit trail remains complete.
+  const correlationId = req.id ?? null;
+  const [job] = await db.insert(agentJobs).values({
     action: "agent.robustness",
+    strategyId: parsed.data.strategy_id,
+    input: parsed.data as unknown as Record<string, unknown>,
+    status: "pending",
+    correlationId,
+  }).returning();
+
+  // Append-only submission event — audit trail only, never mutated.
+  void db.insert(auditLog).values({
+    action: "agent.robustness.submitted",
     entityType: "strategy",
     entityId: parsed.data.strategy_id,
     input: parsed.data as unknown as Record<string, unknown>,
     status: "pending",
     decisionAuthority: "agent",
-    correlationId: req.id ?? null,
-  }).returning();
+    correlationId,
+  }).catch((err) => {
+    logger.warn({ err, jobId: job.id }, "Failed to write robustness.submitted audit event");
+  });
 
-  // Fire and forget — update the pending audit row when the run finishes so
-  // the job tracker doesn't sit on "pending" forever (P1-9). The robustness
-  // service writes its own audit rows for the actual run; this update closes
-  // out the route's job-tracker row.
+  // Fire and forget — update the mutable agent_jobs row when the run
+  // finishes. These UPDATEs now succeed because agent_jobs has no
+  // append-only trigger.
   const configJson = JSON.stringify(parsed.data.config);
   runRobustnessTest(parsed.data.strategy_id, configJson)
     .then(async (result) => {
-      await db.update(auditLog).set({
+      await db.update(agentJobs).set({
         status: "success",
         result: {
           is_robust: result.robustness?.is_robust ?? null,
           best_score: result.best_score ?? null,
           n_trials: result.n_trials ?? null,
         } as unknown as Record<string, unknown>,
-        decisionAuthority: "agent",
-      }).where(eq(auditLog.id, job.id)).catch((dbErr) => {
-        logger.error({ err: dbErr, jobId: job.id }, "Failed to update robustness job row on success");
+        updatedAt: new Date(),
+      }).where(eq(agentJobs.id, job.id)).catch((dbErr) => {
+        logger.error({ err: dbErr, jobId: job.id }, "Failed to update robustness agent_job row on success");
       });
+      // Immutable terminal event for audit trail.
+      void db.insert(auditLog).values({
+        action: "agent.robustness.completed",
+        entityType: "strategy",
+        entityId: parsed.data.strategy_id,
+        status: "success",
+        decisionAuthority: "agent",
+        correlationId,
+      }).catch(() => undefined);
     })
     .catch(async (err) => {
       logger.error({ err, strategyId: parsed.data.strategy_id, jobId: job.id }, "Fire-and-forget robustness test failed");
       const errorMsg = err instanceof Error ? err.message : String(err);
-      await db.update(auditLog).set({
+      await db.update(agentJobs).set({
         status: "failure",
         result: { error: errorMsg } as unknown as Record<string, unknown>,
-        decisionAuthority: "agent",
         errorMessage: errorMsg,
-      }).where(eq(auditLog.id, job.id)).catch((dbErr) => {
-        logger.error({ err: dbErr, jobId: job.id }, "Failed to update robustness job row on failure");
+        updatedAt: new Date(),
+      }).where(eq(agentJobs.id, job.id)).catch((dbErr) => {
+        logger.error({ err: dbErr, jobId: job.id }, "Failed to update robustness agent_job row on failure");
       });
+      void db.insert(auditLog).values({
+        action: "agent.robustness.failed",
+        entityType: "strategy",
+        entityId: parsed.data.strategy_id,
+        status: "failure",
+        errorMessage: errorMsg,
+        decisionAuthority: "agent",
+        correlationId,
+      }).catch(() => undefined);
     });
 
   res.status(202).json({ job_id: job.id, message: "Robustness test submitted" });
@@ -1801,15 +1837,27 @@ agentRoutes.post("/find-strategies", async (req, res) => {
     return;
   }
 
-  // Create audit log entry as job tracker
-  const [job] = await db.insert(auditLog).values({
+  // Wave hardening 2026-06-22: INSERT mutable job row into agent_jobs (NOT
+  // audit_log). audit_log is append-only (migration-0058 trigger); UPDATEs
+  // against it throw. Also emit an immutable submitted event to audit_log.
+  const findStrategiesCorrelationId = req.id ?? null;
+  const [job] = await db.insert(agentJobs).values({
     action: "agent.find-strategies",
+    input: parsed.data as unknown as Record<string, unknown>,
+    status: "pending",
+    correlationId: findStrategiesCorrelationId,
+  }).returning();
+
+  void db.insert(auditLog).values({
+    action: "agent.find-strategies.submitted",
     entityType: "strategy",
     input: parsed.data as unknown as Record<string, unknown>,
     status: "pending",
     decisionAuthority: "agent",
-    correlationId: req.id ?? null,
-  }).returning();
+    correlationId: findStrategiesCorrelationId,
+  }).catch((err) => {
+    logger.warn({ err, jobId: job.id }, "Failed to write find-strategies.submitted audit event");
+  });
 
   const { symbol, timeframe, start_date, end_date, count } = parsed.data;
 
@@ -1897,35 +1945,50 @@ Output ONLY the DSL JSON object, nothing else.`;
       }
     }
 
-    // Update audit log with results.
-    // If the pipeline is paused, runStrategy returns status "skipped" for every
-    // strategy. Treating that as "failure" produces a false alarm in the job
-    // tracker — surface it as "skipped" instead so operators can distinguish a
-    // paused-pipeline outcome from genuine generation failures.
+    // Wave hardening 2026-06-22: update agent_jobs (mutable) — NOT audit_log
+    // (append-only). If the pipeline is paused, runStrategy returns status
+    // "skipped" for every strategy. Treating that as "failure" produces a false
+    // alarm in the job tracker — surface it as "skipped" instead so operators
+    // can distinguish a paused-pipeline outcome from genuine generation failures.
     const hasCompleted = results.some((r) => r.status === "completed");
     const allSkipped = results.length > 0 && results.every((r) => r.status === "skipped");
     const aggregatedStatus = hasCompleted ? "success" : (allSkipped ? "skipped" : "failure");
-    await db.update(auditLog).set({
+    await db.update(agentJobs).set({
       status: aggregatedStatus,
       result: { strategies: results } as unknown as Record<string, unknown>,
+      updatedAt: new Date(),
+    }).where(eq(agentJobs.id, job.id));
+
+    // Immutable terminal event for audit trail.
+    void db.insert(auditLog).values({
+      action: `agent.find-strategies.${aggregatedStatus === "success" ? "completed" : aggregatedStatus}`,
+      entityType: "strategy",
+      status: aggregatedStatus === "success" ? "success" : "failure",
       decisionAuthority: "agent",
-    }).where(eq(auditLog.id, job.id));
+      correlationId: findStrategiesCorrelationId,
+      result: { strategies: results } as unknown as Record<string, unknown>,
+    }).catch(() => undefined);
 
     logger.info({ jobId: job.id, results }, "find-strategies completed");
   })().catch((err) => {
     logger.error({ err, jobId: job.id }, "find-strategies failed");
-    try {
-      db.update(auditLog).set({
-        status: "failure",
-        result: { error: err instanceof Error ? err.message : String(err) } as unknown as Record<string, unknown>,
-        decisionAuthority: "agent",
-        errorMessage: err instanceof Error ? err.message : String(err),
-      }).where(eq(auditLog.id, job.id)).catch((dbErr) => {
-        logger.error({ err: dbErr, jobId: job.id }, "Failed to update job status after error");
-      });
-    } catch (dbErr) {
-      logger.error({ err: dbErr, jobId: job.id }, "Failed to update job status after error");
-    }
+    const errMsg = err instanceof Error ? err.message : String(err);
+    db.update(agentJobs).set({
+      status: "failure",
+      result: { error: errMsg } as unknown as Record<string, unknown>,
+      errorMessage: errMsg,
+      updatedAt: new Date(),
+    }).where(eq(agentJobs.id, job.id)).catch((dbErr) => {
+      logger.error({ err: dbErr, jobId: job.id }, "Failed to update agent_job status after find-strategies error");
+    });
+    void db.insert(auditLog).values({
+      action: "agent.find-strategies.failed",
+      entityType: "strategy",
+      status: "failure",
+      errorMessage: errMsg,
+      decisionAuthority: "agent",
+      correlationId: findStrategiesCorrelationId,
+    }).catch(() => undefined);
   });
 
   res.status(202).json({ job_id: job.id, message: "Strategy search submitted" });
@@ -3881,7 +3944,10 @@ agentRoutes.get("/failure-patterns", async (req, res) => {
 });
 
 // ─── GET /api/agent/jobs ───────────────────────────────────────────
-// List recent agent jobs from audit_log (paginated)
+// Wave hardening 2026-06-22: list agent jobs from agent_jobs (mutable
+// job-state table), NOT audit_log. audit_log is append-only (migration 0058
+// trigger); querying it for job status always returned "pending" because the
+// completion UPDATEs were silently throwing.
 
 agentRoutes.get("/jobs", async (req, res) => {
   const limit = Math.min(Number(req.query.limit) || 20, 100);
@@ -3889,64 +3955,59 @@ agentRoutes.get("/jobs", async (req, res) => {
   const typeFilter = req.query.type as string | undefined;
   const statusFilter = req.query.status as string | undefined;
 
-  // Map friendly type names to action prefixes
+  // Map friendly type names to action prefixes (same surface as before)
   const typeActionMap: Record<string, string[]> = {
     "trading-quant": ["agent.run-strategy", "agent.run-class-strategy", "agent.batch", "agent.robustness", "agent.analyze-market"],
     "openclaw-scout": ["agent.find-strategies", "agent.scout-ideas"],
     "ollama-analyst": ["agent.critique"],
   };
 
-  // Build conditions — include all entity types that agent actions may use
-  const conditions = [sql`${auditLog.entityType} IN ('strategy', 'backtest', 'agent')` as any];
+  const conditions: ReturnType<typeof eq>[] = [];
   if (statusFilter) {
     // Map "failed" to include "failure" status
     if (statusFilter === "failed") {
-      conditions.push(sql`${auditLog.status} IN ('failed', 'failure')` as any);
+      conditions.push(sql`${agentJobs.status} IN ('failed', 'failure')` as any);
     } else {
-      conditions.push(eq(auditLog.status, statusFilter));
+      conditions.push(eq(agentJobs.status, statusFilter));
     }
   }
 
-  const whereClause = and(...conditions);
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-  // Get total count (before type filtering since type filter is done in-memory)
   const [{ count: rawTotal }] = await db
     .select({ count: sql<number>`count(*)::int` })
-    .from(auditLog)
+    .from(agentJobs)
     .where(whereClause);
 
-  // Fetch more rows than needed to account for action filtering
   const fetchLimit = typeFilter ? Math.max(limit * 5, 200) : limit + offset + 10;
   const rows = await db
     .select()
-    .from(auditLog)
+    .from(agentJobs)
     .where(whereClause)
-    .orderBy(desc(auditLog.createdAt))
+    .orderBy(desc(agentJobs.createdAt))
     .limit(fetchLimit);
 
-  // Filter to agent actions only
-  let filtered = rows.filter((j) => j.action.startsWith("agent."));
-
-  // Apply type filter
+  // Apply type filter (in-memory, same as before)
+  let filtered = rows as typeof rows;
   if (typeFilter && typeActionMap[typeFilter]) {
     const allowedActions = typeActionMap[typeFilter];
     filtered = filtered.filter((j) => allowedActions.includes(j.action));
   }
 
-  const total = typeFilter ? filtered.length : rawTotal; // rawTotal is accurate when no type filter
+  const total = typeFilter ? filtered.length : rawTotal;
   const paginated = filtered.slice(offset, offset + limit);
 
   res.json({ data: paginated, total });
 });
 
 // ─── GET /api/agent/jobs/:id ───────────────────────────────────────
-// Get single job status + results
+// Wave hardening 2026-06-22: query agent_jobs (mutable) not audit_log.
 
 agentRoutes.get("/jobs/:id", async (req, res) => {
   const [job] = await db
     .select()
-    .from(auditLog)
-    .where(eq(auditLog.id, req.params.id));
+    .from(agentJobs)
+    .where(eq(agentJobs.id, req.params.id));
 
   if (!job) {
     res.status(404).json({ error: "Job not found" });
@@ -3956,7 +4017,10 @@ agentRoutes.get("/jobs/:id", async (req, res) => {
   res.json(job);
 });
 
-// DELETE /api/agent/jobs — Purge agent-specific jobs only (not all audit_log)
+// DELETE /api/agent/jobs — Purge agent-specific jobs from agent_jobs (mutable).
+// Wave hardening 2026-06-22: previously deleted from audit_log, which throws
+// "audit_log is append-only" from the migration-0058 trigger. audit_log rows
+// are immutable by design; only the mutable agent_jobs state is purged here.
 agentRoutes.delete("/jobs", async (_req, res) => {
   const agentActions = [
     "agent.run-strategy",
@@ -3967,6 +4031,6 @@ agentRoutes.delete("/jobs", async (_req, res) => {
     "agent.scout-ideas",
     "agent.robustness",
   ];
-  await db.delete(auditLog).where(inArray(auditLog.action, agentActions));
-  res.json({ deleted: true, message: "Agent jobs purged (audit log preserved)" });
+  await db.delete(agentJobs).where(inArray(agentJobs.action, agentActions));
+  res.json({ deleted: true, message: "Agent jobs purged" });
 });

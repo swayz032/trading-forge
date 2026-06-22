@@ -1163,7 +1163,7 @@
       "when": 1750636801000,
       "tag": "0124_compliance_firm_lowercase",
       "breakpoints": true,
-      "_comment_0163_gap": "0163 SKIPPED — broker_accounts allow-paper repair migration was superseded by inline CHECK relaxation in 0159 (commit 4be7a87 production-hardening: migration boot-blockers B3). Original 0163 file deleted because 0159 now handles the constraint relaxation + INSERT atomically. Do NOT reintroduce a 0163 tag — the gap is intentional. Architect Wave A backfill: 0124 / 0150 / 0151 SQL files existed on disk without journal entries — appended idempotent JSONB-only migrations at idx 166-168 (boot-runner applies them in journal-array order on next deploy)."
+      "_comment_0163_gap": "0163 SKIPPED \u00e2\u20ac\u201d broker_accounts allow-paper repair migration was superseded by inline CHECK relaxation in 0159 (commit 4be7a87 production-hardening: migration boot-blockers B3). Original 0163 file deleted because 0159 now handles the constraint relaxation + INSERT atomically. Do NOT reintroduce a 0163 tag \u00e2\u20ac\u201d the gap is intentional. Architect Wave A backfill: 0124 / 0150 / 0151 SQL files existed on disk without journal entries \u00e2\u20ac\u201d appended idempotent JSONB-only migrations at idx 166-168 (boot-runner applies them in journal-array order on next deploy)."
     },
     {
       "idx": 167,
@@ -1177,6 +1177,13 @@
       "version": "7",
       "when": 1750636803000,
       "tag": "0151_bounce_off_level_archetype_reroute",
+      "breakpoints": true
+    },
+    {
+      "idx": 169,
+      "version": "7",
+      "when": 1782162716599,
+      "tag": "0166_agent_jobs",
       "breakpoints": true
     }
   ]

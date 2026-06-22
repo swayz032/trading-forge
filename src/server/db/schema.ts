@@ -3113,3 +3113,42 @@ export const operatorAbsentPeriods = pgTable(
     index("idx_operator_absent_active").on(table.startedAt.desc()),
   ],
 );
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Agent jobs — mutable job-state table (Wave hardening 2026-06-22)
+// ─────────────────────────────────────────────────────────────────────────────
+// audit_log is append-only (migration 0058 trigger). Prior to this table,
+// agent.ts was INSERTing a "pending" audit_log row and then attempting to
+// UPDATE it on completion — those UPDATEs silently threw against the trigger
+// and left every job stuck at "pending" forever in the Agents dashboard.
+//
+// This table holds the mutable lifecycle state. audit_log still receives
+// append-only immutable event rows (submitted / completed / failed) for the
+// audit trail. agent_jobs holds the queryable, updatable job state.
+//
+// NO append-only trigger on this table — mutations are the whole point.
+// Migration: 0166_agent_jobs.sql
+export const agentJobs = pgTable(
+  "agent_jobs",
+  {
+    id:            uuid("id").primaryKey().defaultRandom(),
+    action:        text("action").notNull(),           // mirrors audit_log.action prefix (agent.robustness, agent.find-strategies, …)
+    strategyId:    uuid("strategy_id"),                // nullable — not all agent actions are strategy-scoped
+    status:        text("status").notNull().default("pending"), // pending | success | failure | skipped
+    input:         jsonb("input"),                     // request payload snapshot
+    result:        jsonb("result"),                    // terminal result payload
+    errorMessage:  text("error_message"),
+    correlationId: text("correlation_id"),
+    createdAt:     timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt:     timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("idx_agent_jobs_action").on(table.action),
+    index("idx_agent_jobs_status").on(table.status),
+    index("idx_agent_jobs_created_at_desc").on(table.createdAt.desc()),
+    index("idx_agent_jobs_correlation_id").on(table.correlationId),
+  ],
+);
+
+export type AgentJob = typeof agentJobs.$inferSelect;
+export type NewAgentJob = typeof agentJobs.$inferInsert;

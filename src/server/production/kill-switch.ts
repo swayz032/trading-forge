@@ -443,6 +443,12 @@ class KillSwitch {
     // ── Layer 6: CME outage ──
     // C1 fail-CLOSED: if isExchangeHalted() throws (poller crash, import error),
     // we cannot determine outage status → block entries (Wave 23H Fix 1).
+    //
+    // Wave hardening 2026-06-22, correlation_id traceability: mint a per-evaluation
+    // UUID so the c1_cme_outage_eval_failed audit row can be linked to other rows
+    // emitted by this getKillSwitchStatus() call (mirrors the L7 l7EvalCorrelationId
+    // pattern introduced for firm-suspension traceability).
+    const l6EvalCorrelationId = randomUUID();
     let l6Halted = false;
     try {
       l6Halted = isExchangeHalted("CME");
@@ -462,7 +468,7 @@ class KillSwitch {
         input: { error_message: errMsg, layer: 6 } as Record<string, unknown>,
         result: { l6Halted: true } as Record<string, unknown>,
         status: "failure",
-        correlationId: null,
+        correlationId: l6EvalCorrelationId,
       }).catch((auditErr) =>
         logger.error({ err: auditErr }, "kill-switch L6: audit_log write failed (non-blocking)"),
       );

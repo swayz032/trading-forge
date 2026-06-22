@@ -186,6 +186,24 @@ describe("Wave 23H Fix 1 — C1 CME Outage Layer 6 fail-CLOSED", () => {
     );
   });
 
+  // Wave hardening 2026-06-22: L6 audit row must carry a non-null correlationId so
+  // HALT-class CME eval failures are reconstructable post-hoc (mirrors L7 pattern).
+  it("Layer 6: exception audit_log row has non-null correlationId (MED-1 traceability fix)", async () => {
+    const cmeErr = new Error("exchange-status-service crash");
+    vi.mocked(isExchangeHalted).mockImplementation(() => {
+      throw cmeErr;
+    });
+
+    await killSwitch.getKillSwitchStatus();
+
+    const auditCall = vi.mocked(insertAuditRow).mock.calls.find(
+      ([args]) => args.action === "kill_switch.c1_cme_outage_eval_failed",
+    );
+    expect(auditCall).toBeDefined();
+    expect(auditCall![0].correlationId).toBeTruthy();
+    expect(typeof auditCall![0].correlationId).toBe("string");
+  });
+
   // ── 4. Exception → SSE event broadcast ───────────────────────────────────
   it("Layer 6: exception broadcasts SSE kill_switch:c1_cme_eval_failed", async () => {
     const cmeErr = new Error("isExchangeHalted threw unexpectedly");

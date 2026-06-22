@@ -2143,13 +2143,18 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
     }
   }
 
-  // SSE broadcast always fires if the transaction succeeded — not gated on post-close checks
+  // SSE broadcast always fires if the transaction succeeded — not gated on post-close checks.
+  // Wave hardening 2026-06-22, correlation_id traceability: include correlationId so the
+  // dashboard fill notification can be tied back to the audit row and trade row for
+  // post-hoc reconstruction (correlationId is the same value written to the close
+  // audit row above — paper.trade_close).
   broadcastSSE("paper:trade", {
     trade,
     pnl: netPnl,
     grossPnl,
     commission,
     rollSpreadCost: rollCost.estimatedSpreadCost,
+    correlationId: correlationId ?? null,
   });
   logger.info(
     { positionId, grossPnl, commission, rollSpreadCost: rollCost.estimatedSpreadCost, netPnl, slippage, firmId: sessionForFirm?.firmId },
