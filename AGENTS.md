@@ -35,7 +35,7 @@ Every agent operating in this repo is a **specialist contributor to a futures tr
 - `src/server/services/lifecycle-service.ts` — promotion gate sequencing
 - `src/server/services/paper-signal-service.ts` — bias engine + playbook router + A+ gate
 - `src/server/services/graduated-strategy-auditor.ts` — schema invariants (factory may patch whitelist when sizing types change)
-- `src/engine/performance_gate.py`, `src/engine/regime_survival.py`, `src/engine/scoring/deflated_sharpe.py`
+- `src/engine/performance_gate.py`, `src/engine/regime_survival.py`, `src/engine/risk_metrics.py` (DSR lives here — there is NO `src/engine/scoring/` dir; 2026-06-22 audit corrected the stale path)
 - `src/server/db/schema.ts` paper_sessions.high_water_balance + bias_state writes
 
 **Shared/coordinated:**
