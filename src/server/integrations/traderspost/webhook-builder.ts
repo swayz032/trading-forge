@@ -114,17 +114,73 @@ export function buildWebhookPayload(
   return payload;
 }
 
+// ─── TF Gateway options — Pine static-token path ─────────────────────────────
+
+/**
+ * Options for routing a Pine alert through the TF Order Gateway
+ * instead of directly to TradersPost.
+ *
+ * Pine Script v5 cannot compute per-payload HMAC (no crypto library).
+ * The gateway static-token path accepts the per-account `hmac_secret`
+ * (from account_strategy_assignments) as a bearer token embedded at
+ * export compile-time. The token is long-lived and scoped to the
+ * (account, strategy) pair.
+ *
+ * When gatewayOptions is provided AND a gateway URL is resolvable,
+ * buildPineAlertTemplate emits the TF gateway payload instead of the
+ * direct TradersPost payload. Gate: only active when LIVE_ORDER_GATEWAY_URL
+ * env var is set (or gatewayOptions.gatewayUrl is explicitly provided).
+ */
+export interface PineGatewayOptions {
+  /** Per-account static bearer token — value of account_strategy_assignments.hmac_secret */
+  staticToken: string;
+  /** broker_accounts.account_id UUID for this export recipient */
+  accountId: string;
+  /** Trading Forge strategy UUID */
+  strategyId: string;
+  /**
+   * Override URL for the TF gateway. If omitted, falls back to
+   * LIVE_ORDER_GATEWAY_URL env var. Accepts the full URL including path,
+   * e.g. https://tower.example.com/api/live-order
+   */
+  gatewayUrl?: string;
+}
+
 /**
  * Build a Pine alert payload string (JSON template for TradingView alert body).
  * Used by pine-export-service to generate the Pine script alert() call body.
  *
- * The strategyId is embedded so TradersPost passthrough traces back to Trading Forge.
+ * When gatewayOptions is supplied AND the LIVE_ORDER_GATEWAY_URL env var is set
+ * (or gatewayOptions.gatewayUrl is provided), emits a TF gateway payload with
+ * the per-account static bearer token instead of a direct TradersPost payload.
+ * This routes Pine alerts through the full TF gate stack (kill-switch, compliance,
+ * firm-cap, correlation guard) before reaching the broker.
+ *
+ * SEMANTIC NOTE: The Pine alert JSON body is a string literal embedded in the
+ * exported .pine file. TradingView substitutes {{strategy.order.action}} and
+ * {{strategy.order.contracts}} at alert-fire time. All other fields are baked in
+ * at export time, including the static bearer token. The token is long-lived and
+ * scoped to the (account, strategy) pair — not per-alert. Replay protection is
+ * provided by the gateway's 2-minute timestamp_ms window + bar_timestamp dedup.
+ *
+ * EXPORTABILITY NOTE: The static token is embedded as a plain string literal in
+ * the exported .pine file. Anyone with the .pine file can read the token. The
+ * token is scoped to one (account, strategy) — it cannot be used for other
+ * accounts or strategies. Treat the .pine file as a secret artifact.
+ *
+ * REPAINT NOTE: `{{time}}` in Pine is the bar's OPEN time (not close time) when
+ * evaluated in a strategy script context. The gateway's 2-minute replay window
+ * is calibrated for bar-close alert delivery. Intrabar alerts using `{{time}}`
+ * of the current forming bar may be outside the window if the bar is old. Use
+ * bar-close alert mode (alerts fire on barstate.isconfirmed) — always.
+ *
  * For TopstepX broker_type, returns a Pine comment stub — not yet implemented.
  */
 export function buildPineAlertTemplate(
   ticker: string,
   strategyId: string | undefined,
   brokerType: "traderspost" | "topstepx",
+  gatewayOptions?: PineGatewayOptions,
 ): string {
   if (brokerType === "topstepx") {
     // TopstepX Pine payload is deferred until the operator opens a Topstep account
@@ -133,6 +189,36 @@ export function buildPineAlertTemplate(
     return `// TopstepX webhook payload — not yet implemented. Deferred until TopstepX account configured.`;
   }
 
+  // ── TF Gateway path (Pine static-token mode) ──────────────────────────────
+  // Active when gatewayOptions is provided AND a gateway URL is resolvable.
+  // The static token is the per-(account,strategy) hmac_secret from DB.
+  const gatewayUrl =
+    gatewayOptions?.gatewayUrl ?? process.env.LIVE_ORDER_GATEWAY_URL;
+
+  if (gatewayOptions && gatewayUrl) {
+    // Pine alert body for TF gateway. Fields baked in at export time:
+    //   account_id, strategy_id, ticker, live_order_token.
+    // Fields substituted by TradingView at alert-fire time:
+    //   action ({{strategy.order.action}}), quantity ({{strategy.order.contracts}}),
+    //   timestamp_ms and bar_timestamp ({{time}} — Pine bar open time in Unix millis).
+    //
+    // NOTE: `{{time}}` is Pine's bar open time in ms. For bar-close alerts this
+    // is consistently the same value per bar, providing reliable dedup.
+    // The gateway's 2-minute replay window assumes alerts fire near bar close.
+    return (
+      `{"account_id": "${gatewayOptions.accountId}", ` +
+      `"strategy_id": "${gatewayOptions.strategyId}", ` +
+      `"ticker": "${ticker}", ` +
+      `"action": "{{strategy.order.action}}", ` +
+      `"quantity": {{strategy.order.contracts}}, ` +
+      `"order_type": "market", ` +
+      `"timestamp_ms": {{time}}, ` +
+      `"bar_timestamp": "{{time}}", ` +
+      `"live_order_token": "${gatewayOptions.staticToken}"}`
+    );
+  }
+
+  // ── Direct TradersPost path (legacy / fallback) ───────────────────────────
   // TradersPost Pine alert body template (JSON string literal in Pine).
   const passthrough = strategyId
     ? `, "passthrough": {"trading_forge_strategy_id": "${strategyId}"}`
