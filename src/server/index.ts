@@ -56,6 +56,7 @@ import { healthDashboardRoutes } from "./routes/health-dashboard.js";
 import { validationCadenceRoutes } from "./routes/validation-cadence.js";
 import { adminRoutes } from "./routes/admin.js";
 import { adminFrozenPolicyOverrideRoutes } from "./routes/admin-frozen-policy-override.js";
+import { adminRecoveryRoutes } from "./routes/admin-recovery.js";
 import { slumdawgRoutes } from "./routes/slumdawg.js";
 import { slumhouseRouter, adminMappingRouter as slumhouseAdminMappingRouter } from "./routes/slumhouse/index.js";
 import { dlqRoutes } from "./routes/dlq.js";
@@ -93,6 +94,7 @@ import { compositeHealthRoutes } from "./routes/composite-health.js";
 import { abComparisonRoutes } from "./routes/ab-comparison.js";
 import { liveOrderRoutes } from "./routes/live-order.js";
 import { runPendingMigrations } from "./lib/boot-migration-runner.js";
+import { checkStartupSecrets } from "./lib/startup-config-check.js";
 
 // ─── Boot migration runner ────────────────────────────────────────
 // Apply any pending Drizzle migrations BEFORE app.listen() and BEFORE any
@@ -101,6 +103,12 @@ import { runPendingMigrations } from "./lib/boot-migration-runner.js";
 // Throws on failure to block boot (fail-closed). No-ops when all applied.
 // Controlled by BOOT_MIGRATION_ENABLED env var (default: true).
 await runPendingMigrations();
+
+// ─── Vacation-survival A-8: Boot-time secret validation ──────────
+// Emits WARN log + Discord notify when ADMIN_RESTART_HMAC_SECRET is unset
+// so the operator learns BEFORE leaving that auto-restart is disabled.
+// Never throws — warn-only, never fail boot.
+await checkStartupSecrets();
 
 // ─── Circuit breaker → alert wiring ─────────────────────────────
 // When any circuit breaker trips OPEN, fire a critical alert so the dashboard
@@ -501,6 +509,8 @@ app.use("/api/production", productionStatusRoutes);
 app.use("/api/admin", adminRoutes);
 // Wave 29 Pass B.2: Frozen-policy HMAC override endpoint.
 app.use("/api/admin", adminFrozenPolicyOverrideRoutes);
+// Vacation-survival A-5: HMAC-gated recovery endpoints (clear cache / clear stuck session).
+app.use("/api/admin", adminRecoveryRoutes);
 // Wave 26 Pass G — Slumdawg Analyst (Anam.ai) read-only API surface.
 app.use("/api/admin/slumdawg", slumdawgRoutes);
 // 2026-05-27 — Slumhouse portal (friend-facing read-only, Discord OAuth).
