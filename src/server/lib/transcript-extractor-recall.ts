@@ -40,6 +40,8 @@ export interface RecallAnswer {
   time_filter: RecallField;
   candle_filter: RecallField;
   instrument_lock: RecallField;
+  /** W3.1 — Primary tool & setup construction (Gann box, VWAP anchored bands, etc.) */
+  primary_tool_setup: RecallField;
 }
 
 export interface PrimaryStrategyShape {
@@ -91,11 +93,12 @@ Return ONLY this JSON shape, nothing else:
 
 \`\`\`json
 {
-  "win_rate":        { "value": null, "quote": null },
-  "avg_r":           { "value": null, "quote": null },
-  "time_filter":     { "value": <string description or null>, "quote": <exact transcript quote or null> },
-  "candle_filter":   { "value": <string description or null>, "quote": <exact transcript quote or null> },
-  "instrument_lock": { "value": <string or null>,             "quote": <exact transcript quote or null> }
+  "win_rate":            { "value": null, "quote": null },
+  "avg_r":               { "value": null, "quote": null },
+  "time_filter":         { "value": <string description or null>, "quote": <exact transcript quote or null> },
+  "candle_filter":       { "value": <string description or null>, "quote": <exact transcript quote or null> },
+  "instrument_lock":     { "value": <string or null>,             "quote": <exact transcript quote or null> },
+  "primary_tool_setup":  { "value": <string describing the primary tool + how it is constructed or null>, "quote": <exact transcript quote naming/describing that tool or null> }
 }
 \`\`\`
 
@@ -122,6 +125,16 @@ Does the speaker explicitly say the strategy is INSTRUMENT-SPECIFIC and may not 
 - "this works best on stocks, not futures" → value: "Stocks-specific (speaker preference)"
 - "crypto-only setup using on-chain data" → value: "Crypto-only"
 - If speaker uses futures examples or says "works on any chart" → value: null
+
+### Q6: PRIMARY TOOL & SETUP CONSTRUCTION
+What is the NAMED primary tool or drawing the speaker teaches — and how exactly does the speaker say to construct it?
+Capture the tool name + construction rule (direction, anchor points, divisions, levels) in the speaker's words.
+- "draw the 4H candle box from the low to the high and divide it into 4 zones at 25%, 50%, and 75%" → value: "Gann box drawn low→high over 4H candle; divided at 25/50/75% Fib levels into premature/optimum/overextended zones"
+- "anchor VWAP to the prior swing high and add 1/2/3 standard deviation bands" → value: "anchored VWAP at prior swing high with 1/2/3 SD bands"
+- "mark the open of the London session and draw a horizontal line" → value: "London open horizontal level"
+- "draw a fibonacci retracement from the swing low to the swing high" → value: "Fibonacci retracement swing-low to swing-high"
+- If the speaker names a SPECIFIC drawn tool (box, level, zone, channel, band) → capture it.
+- If the first-pass extraction already captures this fully (entry_sequence step 1 is precise), set both to null.
 
 ## CRITICAL ANTI-HALLUCINATION RULE
 
@@ -357,6 +370,7 @@ export async function runRecallPass(
       time_filter: normalizeField(parsed.time_filter),
       candle_filter: normalizeField(parsed.candle_filter),
       instrument_lock: normalizeField(parsed.instrument_lock),
+      primary_tool_setup: normalizeField((parsed as Partial<RecallAnswer>).primary_tool_setup),
     };
 
     // Wave 26 Pass L Fix O (2026-05-27) — value/quote alignment check on win_rate.
@@ -399,7 +413,7 @@ export async function runRecallPass(
     // Catches both hallucinations AND prompt-example leakage (gemma copying
     // example text from the prompt as if it were a real quote). Bulletproof:
     // any field whose quote substring isn't in the transcript is DISCARDED.
-    const fields: Array<keyof RecallAnswer> = ["win_rate", "avg_r", "time_filter", "candle_filter", "instrument_lock"];
+    const fields: Array<keyof RecallAnswer> = ["win_rate", "avg_r", "time_filter", "candle_filter", "instrument_lock", "primary_tool_setup"];
     for (const f of fields) {
       const field = recall[f];
       if (field.value !== null && field.quote !== null) {
@@ -500,6 +514,40 @@ export async function runRecallPass(
     appliedChanges.push(`+annotation _instrument_lock_note: ${recall.instrument_lock.value} ("${(recall.instrument_lock.quote ?? "").slice(0, 60)}")`);
   }
 
+  // W3.1 — Primary tool/setup construction patch.
+  // Injects the recovered tool description as step 1 of entry_sequence when:
+  //   (a) recall recovered a value, AND
+  //   (b) entry_sequence is empty OR its step 1 is generic (< 30 chars in the action text).
+  // Never overwrites a rich, existing step 1. The step description is stored as
+  // "_recall_primary_tool_note" annotation so the coverage gate and graduator
+  // can reference it when entry_sequence step 1 would otherwise hide the tool.
+  if (recall.primary_tool_setup.value && typeof recall.primary_tool_setup.value === "string") {
+    const toolValue = recall.primary_tool_setup.value;
+    const toolQuote = recall.primary_tool_setup.quote;
+
+    // Store as annotation regardless of whether we inject into entry_sequence
+    (patched as Record<string, unknown>)._recall_primary_tool_note = {
+      value: toolValue,
+      quote: toolQuote,
+    };
+
+    const existingSeq = Array.isArray(primary.entry_sequence) ? primary.entry_sequence : [];
+    const step1Action = existingSeq[0]?.action ?? "";
+    const step1IsThin = step1Action.length < 30;
+
+    if (existingSeq.length === 0 || step1IsThin) {
+      // Prepend recovered tool as step 1; renumber existing steps
+      const rebuilt = [
+        { step: 1, action: toolValue, rationale: toolQuote ?? null },
+        ...existingSeq.map((st, i) => ({ ...st, step: i + 2 })),
+      ];
+      patched.entry_sequence = rebuilt;
+      appliedChanges.push(`entry_sequence step 1 ← primary_tool_setup recall ("${toolValue.slice(0, 80)}")`);
+    } else {
+      appliedChanges.push(`+annotation _recall_primary_tool_note (step 1 already rich — not overwritten): "${toolValue.slice(0, 80)}"`);
+    }
+  }
+
   return { patched, recall, appliedChanges, failed: false };
 }
 
@@ -510,6 +558,7 @@ function emptyRecall(): RecallAnswer {
     time_filter: { value: null, quote: null },
     candle_filter: { value: null, quote: null },
     instrument_lock: { value: null, quote: null },
+    primary_tool_setup: { value: null, quote: null },
   };
 }
 
