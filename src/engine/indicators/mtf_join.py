@@ -1,18 +1,22 @@
 """Multi-Timeframe Join — forward-fill HTF indicator columns into exec-TF DataFrame.
 
 No-Look-Ahead Invariant (HARD RULE):
-    Polars join_asof with strategy='backward' ensures that for any execution-TF
-    bar at timestamp T, the joined HTF column value is from the MOST RECENTLY
-    CLOSED HTF bar whose ts_event <= T.
+    `ts_event` is the HTF bar's OPEN time (Databento standard). The HTF indicator
+    columns hold each bar's FINAL (close-derived) values, known only at the bar's
+    CLOSE. So `forward_fill_htf_to_exec` SHIFTS the HTF value columns +1 HTF bar
+    before the backward-asof join: each exec-TF bar at time T then sees the LAST
+    FULLY CLOSED HTF bar's values, never the still-forming bar it sits inside.
 
-    Example: exec-TF bar at 10:15 ET (15-minute) joins against 4H bars.
-    The active 4H bar at 10:15 is the 10:00-14:00 bar (currently forming).
-    backward strategy selects the 06:00-10:00 bar (ts_event=06:00 <= 10:15).
-    This is CORRECT: 06:00-10:00 bar is fully closed; 10:00-14:00 bar is not.
+    Example: a 15-min exec bar at 09:00 ET sits INSIDE the 06:00-10:00 4H bar
+    (which does not close until 10:00). WITHOUT the shift, backward-asof on the
+    open-stamped ts_event (06:00 <= 09:00) would bind the 06:00-10:00 bar's
+    close-derived EMA/RSI/ATR to the 09:00 exec bar — a look-ahead leak. WITH the
+    +1 shift, the 09:00 exec bar correctly sees the 02:00-06:00 bar (closed 06:00).
 
-    This invariant must never be weakened. If the strategy choice is changed to
-    'forward' or 'nearest', look-ahead bias is introduced and ALL backtests using
-    HTF columns are invalid. Do not change strategy= without a full regression run.
+    This invariant must never be weakened. Removing the +1 shift, or changing
+    strategy= to 'forward'/'nearest', reintroduces look-ahead bias and ALL
+    backtests using HTF columns become invalid. (CRITICAL fix 2026-06-22 — the
+    prior version joined open-stamped ts_event with no shift and leaked.)
 
 Downstream consumers:
     - backtester.py: calls forward_fill_htf_to_exec() before compute_indicators
@@ -69,6 +73,21 @@ def forward_fill_htf_to_exec(
     exec_sorted = exec_df.sort("ts_event")
     htf_select = ["ts_event"] + htf_value_cols
     htf_sorted = htf_df_with_indicators.select(htf_select).sort("ts_event")
+
+    # ── No-look-ahead STRUCTURAL guard (CRITICAL fix, 2026-06-22) ──────────────
+    # Each HTF row's indicator values are that bar's FINAL (close-derived) values,
+    # only known at the bar's CLOSE. But `ts_event` is the bar's OPEN time (Databento
+    # standard, preserved by data_loader). Without a shift, backward-asof binds a
+    # still-FORMING HTF bar's final values to every exec bar INSIDE it (e.g. an exec
+    # bar at 09:00 would see the 06:00-10:00 bar's close-derived EMA/RSI/ATR — a
+    # look-ahead leak that optimistically biases every HTF-filtered backtest).
+    # Shifting the value columns +1 HTF bar makes each exec bar see the LAST FULLY
+    # CLOSED HTF bar's values: at 09:00 it now sees the 02:00-06:00 bar (closed 06:00),
+    # not the forming 06:00-10:00 bar. First HTF row -> null (no prior closed bar).
+    # Verified equivalent to re-stamping ts_event to close-time, and robust to HTF gaps.
+    htf_sorted = htf_sorted.with_columns(
+        [pl.col(c).shift(1).alias(c) for c in htf_value_cols]
+    )
 
     # Ensure compatible datetime types for join_asof.
     # Polars requires both sides to have the same dtype for the join key.

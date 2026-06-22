@@ -235,10 +235,31 @@ class TestJoinNTimeframesToExec:
             join_n_timeframes_to_exec(exec_df, {"4h": bad_htf})
 
     def test_no_lookahead_with_two_htfs(self):
-        """Backward-asof invariant holds for each HTF in the multi-TF join."""
+        """CRITICAL look-ahead fix 2026-06-22 — HTF cols shifted +1; exec sees last CLOSED HTF bar.
+
+        Both HTF timeseries (4h and 1h) have their value columns shifted +1 before the
+        backward-asof join. An exec bar at time T sees the LAST FULLY CLOSED HTF bar of
+        each TF — never the still-forming bar that T sits inside.
+
+        4h bars: ts_event=06:00 → val=10.0 (06:00-10:00 bar, closes at 10:00)
+                 ts_event=10:00 → val=20.0 (10:00-14:00 bar, closes at 14:00)
+
+        1h bars: ts_event=07:00 → val=5.0  (07:00-08:00 bar, closes at 08:00)
+                 ts_event=08:00 → val=6.0  (08:00-09:00 bar, closes at 09:00)
+
+        Post-fix expected values:
+        4h (with +1 shift):
+          exec@07:00 → last 4h ts_event <= 07:00 is 06:00; after shift → null (no prior bar)
+          exec@09:00 → last 4h ts_event <= 09:00 is 06:00; after shift → null (forming bar)
+          exec@11:00 → last 4h ts_event <= 11:00 is 10:00; after shift → 06:00 bar = 10.0
+
+        1h (with +1 shift):
+          exec@07:00 → last 1h ts_event <= 07:00 is 07:00; after shift → null (no prior bar)
+          exec@09:00 → last 1h ts_event <= 09:00 is 08:00; after shift → 07:00 bar = 5.0
+          exec@11:00 → last 1h ts_event <= 11:00 is 08:00; after shift → 07:00 bar = 5.0
+        """
         from src.engine.indicators.mtf_join import join_n_timeframes_to_exec
 
-        # exec bar at 07:00 must NOT see 4H bar opening at 10:00
         exec_df = pl.DataFrame({
             "ts_event": [
                 _ts("2024-01-02 07:00"),
@@ -248,11 +269,15 @@ class TestJoinNTimeframesToExec:
             "close": [100.0, 101.0, 102.0],
         }).with_columns(pl.col("ts_event").cast(pl.Datetime("us", "UTC")))
 
+        # 4h: open-stamped ts_event. Each bar's value is close-derived.
+        # 06:00 bar closes at 10:00 (value=10.0); 10:00 bar closes at 14:00 (value=20.0)
         htf_4h = pl.DataFrame({
             "ts_event": [_ts("2024-01-02 06:00"), _ts("2024-01-02 10:00")],
             "val_4h": [10.0, 20.0],
         }).with_columns(pl.col("ts_event").cast(pl.Datetime("us", "UTC")))
 
+        # 1h: open-stamped ts_event. Each bar's value is close-derived.
+        # 07:00 bar closes at 08:00 (value=5.0); 08:00 bar closes at 09:00 (value=6.0)
         htf_1h = pl.DataFrame({
             "ts_event": [_ts("2024-01-02 07:00"), _ts("2024-01-02 08:00")],
             "val_1h": [5.0, 6.0],
@@ -261,13 +286,55 @@ class TestJoinNTimeframesToExec:
         result = join_n_timeframes_to_exec(exec_df, {"4h": htf_4h, "1h": htf_1h})
         result = result.sort("ts_event")
 
-        # 07:00 exec bar → 4H: most recent <= 07:00 is 06:00 bar (val=10)
+        # ── 4h assertions ─────────────────────────────────────────────────────
+        # CRITICAL look-ahead fix 2026-06-22 — HTF cols shifted +1; exec sees last CLOSED HTF bar.
+        # exec@07:00: inside the forming 06:00-10:00 4h bar; no prior closed bar → null
         val_4h_0700 = result["val_4h"][0]
-        assert val_4h_0700 == 10.0, f"Expected 10.0 (06:00 4H bar), got {val_4h_0700}"
+        assert val_4h_0700 is None, (
+            f"Expected null at 07:00 (inside forming 06:00-10:00 4h bar; no prior closed bar), "
+            f"got {val_4h_0700}. The forming bar's value must NOT be visible."
+        )
 
-        # 11:00 exec bar → 4H: most recent <= 11:00 is 10:00 bar (val=20)
+        # exec@09:00: still inside the forming 06:00-10:00 4h bar → null
+        val_4h_0900 = result["val_4h"][1]
+        assert val_4h_0900 is None, (
+            f"Expected null at 09:00 (still inside forming 06:00-10:00 4h bar), "
+            f"got {val_4h_0900}."
+        )
+
+        # exec@11:00: the 10:00 4h bar is now the last with ts_event <= 11:00.
+        # After +1 shift that row holds the 06:00 bar's value = 10.0.
+        # The 06:00-10:00 bar closed at 10:00; its value is now visible.
         val_4h_1100 = result["val_4h"][2]
-        assert val_4h_1100 == 20.0, f"Expected 20.0 (10:00 4H bar), got {val_4h_1100}"
+        assert val_4h_1100 == 10.0, (
+            f"Expected 10.0 at 11:00 (06:00-10:00 4h bar closed at 10:00; value=10.0), "
+            f"got {val_4h_1100}. The forming 10:00-14:00 bar (20.0) must NOT be visible."
+        )
+
+        # ── 1h assertions ─────────────────────────────────────────────────────
+        # CRITICAL look-ahead fix 2026-06-22 — HTF cols shifted +1; exec sees last CLOSED HTF bar.
+        # exec@07:00: AT the 07:00 1h bar's open; after +1 shift → null (no prior bar)
+        val_1h_0700 = result["val_1h"][0]
+        assert val_1h_0700 is None, (
+            f"Expected null at 07:00 (inside forming 07:00-08:00 1h bar; no prior closed bar), "
+            f"got {val_1h_0700}."
+        )
+
+        # exec@09:00: last 1h ts_event <= 09:00 is 08:00 bar; after +1 shift → 07:00 bar = 5.0
+        # The 07:00-08:00 1h bar closed at 08:00; its close-derived value (5.0) is now visible.
+        val_1h_0900 = result["val_1h"][1]
+        assert val_1h_0900 == 5.0, (
+            f"Expected 5.0 at 09:00 (07:00-08:00 1h bar closed at 08:00; value=5.0), "
+            f"got {val_1h_0900}."
+        )
+
+        # exec@11:00: no more 1h bars after 08:00; still the 08:00 bar matches.
+        # After +1 shift → still the 07:00 bar's value = 5.0.
+        val_1h_1100 = result["val_1h"][2]
+        assert val_1h_1100 == 5.0, (
+            f"Expected 5.0 at 11:00 (no new 1h bar after 08:00; 07:00-08:00 bar value=5.0), "
+            f"got {val_1h_1100}."
+        )
 
 
 # ─── Tests: compute_multi_htf_indicators ──────────────────────────────────────

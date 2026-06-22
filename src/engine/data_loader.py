@@ -81,8 +81,14 @@ CACHE_TTL_SECONDS: float = float(os.environ.get("DATA_CACHE_TTL_SECONDS", str(24
 _cache_busted: bool = False
 
 
-def _cache_path(symbol: str, timeframe: str) -> Path:
-    return CACHE_DIR / symbol / f"{timeframe}.parquet"
+def _cache_path(symbol: str, timeframe: str, adjusted: bool = True) -> Path:
+    # Wave hardening 2026-06-22, data-layer institutional-grade:
+    # HIGH-2(a): cache key is adjusted-aware so raw and ratio-adj can never collide.
+    # raw and ratio_adj data land in separate subdirectories, preventing a
+    # load_ohlcv(adjusted=False) → S3-404 → legacy-raw-fallback → cache-write
+    # from poisoning a subsequent load_ohlcv(adjusted=True) cache hit.
+    subfolder = "ratio_adj" if adjusted else "raw"
+    return CACHE_DIR / symbol / subfolder / f"{timeframe}.parquet"
 
 
 def _is_cache_fresh(cache_file: Path) -> bool:
@@ -348,12 +354,30 @@ def check_zero_volume_trade_critical(
     return True  # Caller should skip this bar
 
 
-def validate_bars(df: pl.DataFrame, symbol: str = "", timeframe: str = "") -> DataQualityReport:
+def validate_bars(
+    df: pl.DataFrame,
+    symbol: str = "",
+    timeframe: str = "",
+    source_duplicate_timestamps: int = 0,
+) -> DataQualityReport:
     """Run comprehensive data quality checks on OHLCV bars.
 
     Returns a DataQualityReport with counts of issues found.
     Sets passed=False if duplicate timestamps or OHLC violations exist.
     Prints warnings to stderr but never raises.
+
+    Args:
+        df: OHLCV DataFrame to validate (may already be deduped).
+        symbol: Symbol name for warnings.
+        timeframe: Timeframe label for warnings.
+        source_duplicate_timestamps: Wave hardening 2026-06-22, data-layer
+            institutional-grade (MED fix): pre-dedup duplicate count from the
+            SOURCE data. ``load_ohlcv`` deduplicates before calling this function,
+            so computing dup_ts from ``df`` after dedup always returns 0, making
+            the hard-gate and telemetry vacuous. Callers should capture the count
+            before deduplication and pass it here so the report reflects what the
+            SOURCE actually contained. The dedup is still correct; only the
+            telemetry was previously untruthful.
     """
     if df.is_empty():
         return DataQualityReport(total_bars=0)
@@ -362,9 +386,12 @@ def validate_bars(df: pl.DataFrame, symbol: str = "", timeframe: str = "") -> Da
     total = len(df)
 
     # ── Duplicate timestamps ──
-    dup_ts = df.filter(pl.col("ts_event").is_duplicated()).height
+    # Wave hardening 2026-06-22: use caller-supplied source count (pre-dedup).
+    # Computing from df here would always return 0 because load_ohlcv deduplicates
+    # before calling this function.
+    dup_ts = source_duplicate_timestamps
     if dup_ts > 0:
-        warn_list.append(f"{dup_ts} duplicate timestamps found")
+        warn_list.append(f"{dup_ts} duplicate timestamps in source data (deduped before validation)")
 
     # ── Duplicate OHLCV rows ──
     dup_rows = int(df.is_duplicated().sum())
@@ -574,7 +601,9 @@ def load_ohlcv(
         source = local_path
         print(f"Loading {data_symbol} {timeframe} from local path", file=sys.stderr)
     else:
-        cache_file = _cache_path(data_symbol, timeframe)
+        # Wave hardening 2026-06-22, data-layer institutional-grade:
+        # HIGH-2(a): pass adjusted so raw and ratio_adj resolve to separate cache paths.
+        cache_file = _cache_path(data_symbol, timeframe, adjusted=adjusted)
         if _is_cache_fresh(cache_file):
             source = str(cache_file)
             print(f"Loading {data_symbol} {timeframe} from local cache ({cache_file})", file=sys.stderr)
@@ -611,6 +640,11 @@ def load_ohlcv(
         if not local_path and not str(source).startswith(str(CACHE_DIR)):
             legacy = _legacy_s3_glob(data_symbol, timeframe, adjusted=adjusted)
             print(f"Falling back to legacy daily files for {data_symbol} {timeframe}", file=sys.stderr)
+            # Wave hardening 2026-06-22, data-layer institutional-grade:
+            # HIGH-2(b): verify adjusted source on legacy fallback BEFORE using/caching.
+            # Previously the guard was only on the primary path; a raw fallback with
+            # adjusted=True would silently serve unadjusted data (and poison the cache).
+            _verify_ratio_adjusted_source(legacy, adjusted, from_cache=False)
             legacy_sql = f"""
                 SELECT ts_event, open, high, low, close, volume
                 FROM read_parquet('{legacy}')
@@ -633,7 +667,9 @@ def load_ohlcv(
     # when stale (>24h) so a fresh nightly S3 sync is picked up automatically.
     # Cache stores ratio_adj consolidated data ONLY (CLAUDE.md §13).
     if not local_path and not str(source).startswith(str(CACHE_DIR)):
-        cache_file = _cache_path(data_symbol, timeframe)
+        # Wave hardening 2026-06-22, data-layer institutional-grade:
+        # HIGH-2(a): pass adjusted so cache write lands in the correct subfolder.
+        cache_file = _cache_path(data_symbol, timeframe, adjusted=adjusted)
         _should_write_cache = not _is_cache_fresh(cache_file)  # Write if missing OR stale
         if _should_write_cache:
             try:
@@ -708,7 +744,10 @@ def load_ohlcv(
     _validate_data_quality(df, symbol, timeframe)
 
     # ─── Comprehensive data quality validation ───────────────
-    quality_report = validate_bars(df, symbol, timeframe)
+    # Wave hardening 2026-06-22, data-layer institutional-grade (MED fix):
+    # Pass the pre-dedup SOURCE duplicate count so the report reflects what the
+    # source data actually contained, not the already-deduped DataFrame.
+    quality_report = validate_bars(df, symbol, timeframe, source_duplicate_timestamps=deduped)
     if quality_report.warnings:
         for w in quality_report.warnings:
             print(f"DATA QUALITY [{symbol} {timeframe}]: {w}", file=sys.stderr)
@@ -949,17 +988,39 @@ def _third_friday(year: int, month: int) -> int:
     return third_friday
 
 
-def _second_thursday_before_third_friday(year: int, month: int) -> "date":  # noqa: F821
-    """Standard CME equity index rollover: 2nd Thursday before 3rd Friday of delivery month.
+def _dl_nth_weekday(year: int, month: int, weekday: int, n: int) -> "date":  # noqa: F821
+    """Return the n-th occurrence (1-based) of weekday (0=Mon, 3=Thu, 4=Fri) in month.
 
-    This is typically 8 days before the 3rd Friday (the Thursday of the prior week).
+    Wave hardening 2026-06-22, data-layer institutional-grade:
+    Mirrors roll_calendar._nth_weekday — kept as a local copy to avoid a
+    circular import (roll_calendar does not import data_loader).
+    roll_calendar._nth_weekday is the CANONICAL implementation; any change
+    there must be reflected here.
     """
     from datetime import date, timedelta
-    tf_day = _third_friday(year, month)
-    third_friday_date = date(year, month, tf_day)
-    # Go back to the Thursday of the previous week (8 days before Friday)
-    rollover = third_friday_date - timedelta(days=8)
-    return rollover
+    first = date(year, month, 1)
+    delta = (weekday - first.weekday()) % 7
+    first_occurrence = first + timedelta(days=delta)
+    return first_occurrence + timedelta(weeks=n - 1)
+
+
+def _second_thursday_before_third_friday(year: int, month: int) -> "date":  # noqa: F821
+    """CME-correct equity index rollover: 2nd Thursday of the delivery month.
+
+    Wave hardening 2026-06-22, data-layer institutional-grade: HIGH-1 fix.
+
+    The old implementation computed ``3rd Friday − 8 days``, which produces
+    the wrong date when the 3rd Friday falls on the 15th of the month.
+    Example: 2024-03 — 3rd Friday = Mar 15; 3rdFri − 8 = Mar 7 (wrong).
+    CME-correct roll day for that quarter = 2nd Thursday = Mar 14, 2024.
+
+    The authoritative formula is in roll_calendar._equity_quarterly_roll_day:
+    ``_nth_weekday(year, month, 3, 2)`` — 2nd Thursday (weekday 3).
+    We delegate to the same formula via the local _dl_nth_weekday copy to
+    avoid a circular import. Parity tested against roll_calendar for all
+    4 quarters of 2023–2029 in test_data_loader.py::TestRolloverDateParity.
+    """
+    return _dl_nth_weekday(year, month, 3, 2)  # weekday 3 = Thursday, 2nd occurrence
 
 
 def _equity_index_rollover_dates(start_year: int, end_year: int) -> list["date"]:  # noqa: F821

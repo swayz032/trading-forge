@@ -205,10 +205,16 @@ class TestMtfStrategyE2E:
         assert "ema_200_4h" in result.columns
 
     def test_mtf_no_lookahead_sanity(self):
-        """Verify that no exec bar has a HTF value from a bar that starts AFTER it.
+        """CRITICAL look-ahead fix 2026-06-22 — HTF cols shifted +1; exec sees last CLOSED HTF bar.
 
-        For each exec bar at time T, the joined ema_50_4h value must come from a
-        4H bar whose ts_event <= T (backward join invariant).
+        For each exec bar at time T, the joined ema_50_4h value must come from the
+        SECOND-TO-LAST HTF bar (i.e., the bar BEFORE the one with the largest
+        ts_event <= T). This is the +1 shift invariant: the bar whose ts_event is
+        <= T but which is still FORMING is skipped; exec only sees bars that have
+        FULLY CLOSED (their close-derived indicator values are final).
+
+        The old (pre-fix) test looped over HTF bars and found `the latest ht <= et`
+        — that was asserting the LOOK-AHEAD behavior we are now PREVENTING.
         """
         from src.engine.config import IndicatorConfig
         from src.engine.indicators.core import compute_htf_indicators
@@ -232,18 +238,33 @@ class TestMtfStrategyE2E:
 
         for i, (et, ev) in enumerate(zip(exec_ts, ema_vals)):
             if ev is None:
-                continue  # null = no HTF bar yet, acceptable
-            # Find which HTF bar this value came from
-            # It should be the latest HTF bar with ts_event <= et
-            expected_htf_bar = None
+                continue  # null = no prior closed HTF bar, acceptable
+
+            # Post-fix invariant: find the latest HTF bar with ts_event <= et,
+            # then take the bar BEFORE it (the +1 shift). That is the last CLOSED bar.
+            latest_idx = None
             for j, ht in enumerate(htf_ts):
                 if ht <= et:
-                    expected_htf_bar = htf_ema[j]
+                    latest_idx = j
                 else:
                     break
-            if expected_htf_bar is not None:
-                assert abs(ev - expected_htf_bar) < 1e-6, (
+
+            # The expected value is the bar BEFORE latest_idx (the shift).
+            # If latest_idx is None or 0, the value should be null (tested above).
+            if latest_idx is None or latest_idx == 0:
+                # Should not reach here (ev is not None); fail explicitly
+                assert ev is None, (
+                    f"At exec bar {i} (ts={et}): expected null (no prior closed HTF bar "
+                    f"at latest_idx={latest_idx}), got {ev}. Look-ahead bias detected."
+                )
+                continue
+
+            expected_val = htf_ema[latest_idx - 1]  # the bar BEFORE the latest
+            if expected_val is not None:
+                assert abs(ev - expected_val) < 1e-6, (
                     f"At exec bar {i} (ts={et}): joined ema_50_4h={ev:.4f} "
-                    f"but expected {expected_htf_bar:.4f} from HTF backward join. "
-                    f"Look-ahead bias detected."
+                    f"but expected {expected_val:.4f} from last CLOSED HTF bar "
+                    f"(htf_ts[{latest_idx - 1}]={htf_ts[latest_idx - 1]}). "
+                    f"CRITICAL look-ahead fix 2026-06-22 — exec must see last CLOSED bar, "
+                    f"not the forming bar at htf_ts[{latest_idx}]={htf_ts[latest_idx]}."
                 )

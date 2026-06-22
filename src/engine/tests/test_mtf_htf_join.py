@@ -76,95 +76,133 @@ class TestForwardFillHtfToExec:
         assert "ema_200_4h" in result.columns
 
     def test_no_lookahead_at_10_15(self):
-        """CORE invariant: exec bar at 10:15 must get the 06:00-10:00 HTF value.
+        """CORE invariant: exec bar at 10:15 must see the LAST CLOSED HTF bar (06:00-10:00).
 
-        The 10:00-14:00 bar opens at 10:00 (same ts). With backward strategy,
-        a bar AT 10:00 joins the 10:00 HTF bar (its own open = completed bar open
-        is a boundary case). A bar AT 10:15 joins the 10:00 bar (most recent <= 10:15).
+        CRITICAL look-ahead fix 2026-06-22 — HTF cols shifted +1; exec sees last CLOSED
+        HTF bar. ts_event is the HTF bar's OPEN time (Databento standard). Each HTF row's
+        indicator value is computed from that bar's CLOSE, only known when the bar closes.
 
-        But the critical case is: a 15-min bar at 10:15 must NOT see the 10:00 4H
-        bar's CLOSING value (which only exists at 14:00). It sees the bar that
-        OPENED at 10:00 — which is the same as the bar at ts_event=10:00.
+        The +1 shift means: for an exec bar at time T, the joined HTF value is from the
+        LAST FULLY CLOSED HTF bar (the bar whose ts_event is <= T, SHIFTED BACK by one
+        HTF bar). The still-forming HTF bar (the one T sits inside) is NOT visible.
 
-        For this test we model the HTF bar as representing its OPEN timestamp.
-        The 06:00 bar = completed 06:00-10:00 4H bar. The 10:00 bar = the
-        currently-forming 10:00-14:00 bar.
+        Setup: HTF bars at 02:00→49, 06:00→50, 10:00→51 (open-stamped ts_event).
+        - exec@09:45: last HTF ts_event <= 09:45 is the 06:00 bar. After +1 shift,
+          that row holds the value from the 02:00 bar = 49.0. The 06:00-10:00 bar
+          is still forming at 09:45, so its close-derived value (50.0) is invisible.
+        - exec@10:15: last HTF ts_event <= 10:15 is the 10:00 bar. After +1 shift,
+          that row holds the value from the 06:00 bar = 50.0. The 06:00-10:00 bar
+          CLOSED at 10:00, so its value (50.0) now becomes visible. The 10:00-14:00
+          bar (ts_event=10:00, still forming at 10:15) is never directly visible.
 
-        The test asserts that a 10:15 exec bar gets the value from the 06:00 bar
-        (ema=50.0), NOT the 10:00 bar (ema=51.0). This is the invariant.
-
-        Note: if the HTF df uses bar CLOSE time as ts_event (bar closes at 10:00,
-        ts_event=10:00), then the 10:00 bar IS the completed bar and the join
-        is correct. The extractor should use close-time for HTF ts_event.
-        This test validates the case where HTF ts_event = bar open time.
+        This is the regression proof for the CRITICAL fix. The OLD behavior (no shift)
+        would have returned 51.0 at 10:15 — leaking the forming bar's final value.
         """
         exec_df = _make_15m_bars([
             "2024-01-02 09:30",
             "2024-01-02 09:45",
             "2024-01-02 10:00",
-            "2024-01-02 10:15",  # <-- this bar must NOT see 10:00 HTF forming bar
+            "2024-01-02 10:15",  # <-- must see 50.0 (last CLOSED bar), NOT 51.0 (forming)
             "2024-01-02 10:30",
         ])
 
-        # HTF bars: 06:00 bar = prior completed 4H; 10:00 bar = currently forming
-        # In real data, HTF ts_event = bar OPEN time.
-        # exec bar at 10:15: most recent HTF bar with ts_event <= 10:15 is 10:00.
-        # This is correct IF the 10:00 bar represents the previously-completed bar.
-        # For the test we set 06:00 bar value = 50.0 (old), 10:00 bar = 51.0 (new).
-        # With backward join: 10:15 exec bar → 10:00 HTF bar (51.0).
-        # The 10:15 bar should get 51.0 (the 10:00 bar is the "most recent" <= 10:15).
-        # This is the CORRECT behavior: if ts_event represents bar OPEN, we pick
-        # the most-recently-opened bar. The engine's note in backtester.py says
-        # to shift(1) HTF columns — that's a separate step for daily/HTF blending.
-        # Here we verify the raw join produces the expected value.
+        # HTF bars with open-stamped ts_event. Values are close-derived indicators.
+        # 02:00 bar closes at 06:00, value=49.0
+        # 06:00 bar closes at 10:00, value=50.0
+        # 10:00 bar closes at 14:00, value=51.0 (forming at 10:15 — must NOT be visible)
         htf_df = _make_4h_bars_with_ema([
-            ("2024-01-02 02:00", 49.0),  # 02:00-06:00 bar
-            ("2024-01-02 06:00", 50.0),  # 06:00-10:00 bar (completed before 10:15)
-            ("2024-01-02 10:00", 51.0),  # 10:00-14:00 bar (open at 10:15, but ts_event=10:00)
+            ("2024-01-02 02:00", 49.0),  # 02:00-06:00 bar — closed at 06:00
+            ("2024-01-02 06:00", 50.0),  # 06:00-10:00 bar — closed at 10:00
+            ("2024-01-02 10:00", 51.0),  # 10:00-14:00 bar — forming at 10:15 (invisible)
         ])
 
         result = forward_fill_htf_to_exec(exec_df, htf_df, ["ema_50_4h"])
         result_sorted = result.sort("ts_event")
 
-        # Bar at 10:15 gets the HTF bar whose ts_event <= 10:15 → 10:00 bar = 51.0
+        # CRITICAL look-ahead fix 2026-06-22 — HTF cols shifted +1; exec sees last CLOSED HTF bar.
+        # Bar at 10:15: last HTF ts_event <= 10:15 is 10:00 bar; after +1 shift → 06:00 bar's
+        # close-derived value = 50.0. The forming 10:00-14:00 bar (51.0) is invisible.
         idx_1015 = 3  # 0-indexed row in sorted result
         val_at_1015 = result_sorted["ema_50_4h"][idx_1015]
-        assert val_at_1015 == 51.0, (
-            f"Expected 51.0 at 10:15 (most recent HTF bar <= 10:15 is 10:00 bar), "
-            f"got {val_at_1015}. Backward join invariant violated."
+        assert val_at_1015 == 50.0, (
+            f"Expected 50.0 at 10:15 (last CLOSED HTF bar is 06:00-10:00, value=50.0), "
+            f"got {val_at_1015}. The forming 10:00-14:00 bar (51.0) must NOT be visible."
         )
 
-        # Bar at 09:45 gets the 06:00 bar value (most recent HTF bar <= 09:45 is 06:00)
+        # Bar at 09:45: last HTF ts_event <= 09:45 is 06:00 bar; after +1 shift → 02:00 bar's
+        # close-derived value = 49.0. The forming 06:00-10:00 bar (50.0) is invisible at 09:45.
         idx_0945 = 1
         val_at_0945 = result_sorted["ema_50_4h"][idx_0945]
-        assert val_at_0945 == 50.0, (
-            f"Expected 50.0 at 09:45 (most recent HTF bar <= 09:45 is 06:00 bar), "
-            f"got {val_at_0945}."
+        assert val_at_0945 == 49.0, (
+            f"Expected 49.0 at 09:45 (last CLOSED HTF bar is 02:00-06:00, value=49.0), "
+            f"got {val_at_0945}. The forming 06:00-10:00 bar (50.0) must NOT be visible."
         )
 
     def test_future_htf_bars_not_visible(self):
-        """Exec bars before the first HTF bar get null (no look-ahead injection)."""
+        """CRITICAL look-ahead fix 2026-06-22 — HTF cols shifted +1; exec sees last CLOSED HTF bar.
+
+        The first HTF bar's close-derived value is NEVER visible until that bar closes
+        (i.e., until the NEXT HTF bar's ts_event). Exec bars inside the first forming
+        HTF bar always get null — there is no prior closed bar to see.
+
+        Setup:
+        - HTF bar 1: ts_event=06:00 → value=55.0 (this is the 06:00-10:00 bar;
+          its close-derived value 55.0 is only known at 10:00)
+        - HTF bar 2: ts_event=10:00 → value=66.0 (added to make bar 1 visible after close)
+
+        Post-fix invariant:
+        - exec@05:00: no HTF bar with ts_event <= 05:00 → null (no data at all)
+        - exec@06:00: HTF bar at 06:00 matches (ts_event <= 06:00). After +1 shift that
+          row is null (no prior bar exists). The forming 06:00-10:00 bar is invisible.
+        - exec@06:15: same as 06:00 — inside the forming bar → null
+        - exec@10:00: HTF bar at 10:00 matches. After +1 shift → the 06:00 bar's value
+          = 55.0. The 06:00-10:00 bar has now CLOSED, so 55.0 finally becomes visible.
+        """
         exec_df = _make_15m_bars([
-            "2024-01-02 05:00",  # before any HTF bar
-            "2024-01-02 06:00",  # at first HTF bar
-            "2024-01-02 06:15",  # after first HTF bar
+            "2024-01-02 05:00",   # before any HTF bar
+            "2024-01-02 06:00",   # at first HTF bar open — forming, still invisible
+            "2024-01-02 06:15",   # inside forming bar — still invisible
+            "2024-01-02 10:00",   # at second HTF bar open — first bar NOW closed, visible
         ])
+        # Two HTF bars so that bar 1's value becomes visible when bar 2 appears
         htf_df = _make_4h_bars_with_ema([
-            ("2024-01-02 06:00", 55.0),
+            ("2024-01-02 06:00", 55.0),   # 06:00-10:00 bar; closes at 10:00
+            ("2024-01-02 10:00", 66.0),   # 10:00-14:00 bar; makes bar 1 visible via shift
         ])
         result = forward_fill_htf_to_exec(exec_df, htf_df, ["ema_50_4h"])
         result_sorted = result.sort("ts_event")
 
-        # Bar before HTF start gets null (no data to fill from)
+        # Bar before HTF start → null (no data at all)
         val_before = result_sorted["ema_50_4h"][0]
         assert val_before is None, (
             f"Expected null before first HTF bar, got {val_before}. "
             f"Look-ahead: future HTF value injected into past exec bar."
         )
 
-        # Bar at or after first HTF bar gets the value
-        val_at = result_sorted["ema_50_4h"][1]
-        assert val_at == 55.0
+        # CRITICAL look-ahead fix 2026-06-22 — HTF cols shifted +1; exec sees last CLOSED HTF bar.
+        # exec@06:00 — AT the forming bar's open. After +1 shift the 06:00 row is null
+        # (no prior bar). The forming bar's value (55.0) must NOT be visible.
+        val_at_0600 = result_sorted["ema_50_4h"][1]
+        assert val_at_0600 is None, (
+            f"Expected null at 06:00 (inside forming 06:00-10:00 HTF bar, no prior closed bar), "
+            f"got {val_at_0600}. The forming bar's close-derived value must NOT be visible."
+        )
+
+        # exec@06:15 — still inside the forming bar → null
+        val_at_0615 = result_sorted["ema_50_4h"][2]
+        assert val_at_0615 is None, (
+            f"Expected null at 06:15 (inside forming 06:00-10:00 HTF bar), "
+            f"got {val_at_0615}."
+        )
+
+        # exec@10:00 — the 10:00 HTF bar is now the last with ts_event <= 10:00.
+        # After +1 shift that row holds the 06:00 bar's value = 55.0.
+        # The 06:00-10:00 bar has now CLOSED; its close-derived value is finally visible.
+        val_at_1000 = result_sorted["ema_50_4h"][3]
+        assert val_at_1000 == 55.0, (
+            f"Expected 55.0 at 10:00 (the 06:00-10:00 HTF bar just closed; its value "
+            f"becomes visible at exactly 10:00), got {val_at_1000}."
+        )
 
     def test_column_count_preserved(self):
         """exec_df row count must be unchanged by the join."""
