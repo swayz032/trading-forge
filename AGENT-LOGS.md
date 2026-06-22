@@ -9844,9 +9844,32 @@ Also restored Anam.ai persona during this session:
 - Wave-B working tree was NOT touched per the hard constraint; the 13 modified + 7 untracked working-tree files are still in-flight for the parallel Wave-B agent.
 - The `_freshness_note` / `_evidence_note` annotation pattern (added to 12 entries this pass) is a non-load-bearing operator-readable comment; if the validator schema ever rejects unknown keys, those will need to move into the audit-log-comment pattern or be stripped.
 
+### Session Log — 2026-06-22 claude (autonomous-readiness — vacation-safe / go-live institutional-grade)
+
+**Mission:** "Make autonomous-readiness institutional grade" — can the bot survive 30+ days unattended? Audit every incident class (auto-remediation OR self-documenting alert), then fix.
+
+**Audit (parent homework + 2 autonomous-readiness agents; all CRITICALs re-verified vs live DB):**
+- **F1 CRITICAL — go-live BOOT-BLOCKER.** Migration 0165 `ALTER TABLE quantum_rl_runs ADD COLUMN seed` but `quantum_rl_runs` doesn't exist in prod (0158 was rewritten after first apply → runner keys idempotency on the journal → never re-runs the corrected 0158). The boot-migration-runner is fail-CLOSED (THROWs to block boot), so this collision would HALT the entire go-live deploy — API won't boot, no migration applies. Also `strategy_health_scores` (0149) missing for the same reason.
+- **A-2 CRITICAL — vacation autopilot broken.** `system_state.operator_absent_since` VERIFIED missing (info_schema count=0) despite 0101 recorded applied → `readSystemState()` throws every 30-min heartbeat tick → the 48h operator-absent auto-detect never engages.
+- **A-1 CRITICAL — bot death unrecoverable.** dead-man heartbeat was ALERT-ONLY (grep confirmed nothing calls self-restart autonomously); a REAL 5.8-day silence sat dead in the live audit_log. 14-day vacation = dead bot for the trip.
+- HIGH/MED: A-3 feed-silence alert-only (open position unmanaged on stale data); A-6 credential jobs (BW/cookie) auto-disable after 5 transient failures; A-4 heartbeat alert not family-grade.
+- Verified-good: cookie/BW crons firing; scheduler per-job isolation; per-account family isolation; HMAC self-restart endpoint works.
+
+**Fixes (commit 1318c70):** 0165 self-contains CREATE TABLE IF NOT EXISTS quantum_rl_runs; new migration 0169 creates strategy_health_scores + adds operator_absent_since (pglite dry-run: clean + idempotent). dead-mans-heartbeat now autonomously HMAC-self-restarts with guard rails (DB-backed per-window dedup, ≤3/24h cap, audit-before-call, escalation+family alert on failure, skip if secret unset). feed-silence auto-closes open positions after >2h silence (close-only/prop-safe). bw-session-refresh + prop-firm-cookie-refresh + heartbeat jobs → NEVER_DISABLE_JOBS. heartbeat alert family-grade. 55 vitest GREEN.
+
+**Carry-forward:** feed-silence entry-block at signal ingress belongs in paper-signal-service.ts (parallel session's file — `lockoutBlocked` pattern vs `_silenceAlertedFor`). Migrations 0165/0169 apply at go-live deploy via boot-migration-runner (or `npm run db:migrate`); verify pg_dump on the tower or set `BOOT_MIGRATION_ALLOW_NO_BACKUP=true`.
+
 ---
 
 ## Known-Facts Pin — Stop Misdiagnosing These
+
+### Migration drift: journal says applied, table is missing — runner won't re-run (pinned 2026-06-22)
+
+The boot-migration-runner keys idempotency on the drizzle JOURNAL (hash/when), NOT on actual schema state. If a migration file is REWRITTEN after it was first applied (e.g. 0158 quantum_rl_runs, 0149 strategy_health_scores, 0101 operator_absent_since), the runner sees it as applied and NEVER re-runs the corrected version — so the prod table/column the new file would create stays MISSING even though `BOOT_MIGRATION_ENABLED=true` and the journal shows it "applied". Worse: the runner is fail-CLOSED (THROWs to block boot on any migration error), so a LATER migration that ALTERs the missing table (0165) collides and HALTS the entire go-live deploy — the API won't boot. NEVER diagnose "table missing but migration applied" as a runner bug — it's file-drift-after-apply. Fix forward: add a NEW migration (or self-contain the CREATE IF NOT EXISTS inside the colliding migration) — never edit an already-applied file expecting it to re-run. Verify go-live migrations with a pglite dry-run (apply twice for idempotency) BEFORE deploy. As of 2026-06-22, 0165+0169 reconcile quantum_rl_runs / strategy_health_scores / system_state.operator_absent_since.
+
+### Dead-man heartbeat now AUTO-restarts — don't revert it to alert-only (pinned 2026-06-22)
+
+`runHeartbeatStaleCheck()` autonomously POSTs the HMAC self-restart on sustained silence (guard rails: DB-backed per-window dedup, ≤3 attempts/24h, audit-before-call, escalation+family alert if the restart itself fails, skip when `ADMIN_RESTART_HMAC_SECRET` unset). This exists because a REAL 5.8-day unattended silence happened in prod with the old alert-only design. Do not "simplify" it back to alert-only — an alert nobody reads during a 14-day vacation is a dead bot for 14 days.
 
 ### audit_log is DB-level APPEND-ONLY — never UPDATE/DELETE it; job state goes in agent_jobs (pinned 2026-06-22)
 
