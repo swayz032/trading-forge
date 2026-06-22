@@ -9195,6 +9195,29 @@ Also restored Anam.ai persona during this session:
 - `stuckSessionIds` is in-memory (resets on restart) — persist to session config + boot reconciliation.
 - This commit landed on `hardening/phase-0` (shared working tree was branch-switched by the parallel session mid-pass; commit followed the tree). Pushed to origin. My earlier execution+parity commits are on `feature/deep-analysis-pipeline`. Branches will need reconciling.
 
+### Session Log — 2026-06-22 claude (Institutional-grade audit → hardening plan → Phase 0)
+
+**Mission:** Operator asked "is Trading Forge + Slumdawg institutional-grade, or institutional-inspired?" → full audit, Slumdawg extraction deep-dive, institutional-grade hardening plan, Phase 0 execution.
+
+**Work completed:**
+- **Institutional-grade audit** (20-agent adversarial workflow, every claim opened in code then independently refuted): verdict **MIXED (~60-70% go-live-ready)**. Genuinely institutional: statistical validation (Bailey/LdP PBO + Deflated Sharpe + BCa MC), risk (fail-closed kill-switch, DLL two layers, micro locked), governance core, autonomous-reliability. Inspired-not-operative: parity enforcement, DEPLOY_READY gate bypass, MFFU/Topstep unwired, CI broken, no DB backup, live-order ungated.
+- **#1 finding verified directly:** in-process gates do NOT sit in front of a live order — `broker-router.routeOrder()` has ZERO production callers (live = Pine→TradersPost, Node not in the loop). → TF Order Gateway (W1).
+- **Slumdawg extraction live probe** (SY2jXlW9bt4, real gemma4:e2b v12): Gann-box-4-zone strategy flattened to generic fragments — null entry_indicator, placeholder `extracted_strategy` name → sha256 junk-bucket collision, long-only on a both-direction strategy, wrong 5m TF, **Gann box + 4 zones + 0.25/0.5/0.75 Fib DROPPED (recall failure, no coverage gate)**. 9 extraction problems catalogued.
+- **Institutional extraction solution designed:** precision (have) + RECALL/coverage gate (missing keystone) + per-aspect decompose + fail-closed quarantine + deterministic identity + lineage. Acceptance test = the Gann-box video must extract as one coherent `gann_box_4h_continuation` → MES/MNQ/MCL.
+- **Plan approved:** `~/.claude/plans/put-a-plan-together-typed-sifakis.md` (6 phases, 13 workstreams, full subagent+skill team mapped).
+- **Phase 0 SHIPPED on branch `hardening/phase-0`** (3 tracks, GREEN): W0.1 off-tower DB backup (`db-backup-service.ts` + cron, S3, 17/17 vitest); W0.3 genuine typecheck (tsc=0 with scripts/ re-included, @ts-ignore 121→38 documented, masked `afterEach` bug fixed — reworked from a suppression-heavy first pass per operator); W0.2 CI hard-gates wired+fail-closed, eslint ERESOLVE fixed (^9.20→^10.5.0), system-map driftItems:[]. `.gitignore` hardened.
+
+**Verification:** tsc=0; 3 CI hard gates GREEN locally; full vitest **6 failed / 6794 passed** (0 new from Phase 0; far below stale ~90 baseline); safety suites 56/56.
+
+**Known-facts updates (memories saved):** pre-live-by-design-not-a-gap; slumdawg-youtube-only-vs-n8n-crosssource; multi-symbol-split-mes-mnq-mcl-by-design.
+
+**Carry-forward:**
+- ⚠️ PARALLEL SESSION on the SHARED working tree — my `git checkout -b hardening/phase-0` switched the shared tree's branch; the other session's commits followed onto it. `feature/deep-analysis-pipeline` vs `hardening/phase-0` need reconciling. COORDINATE before push.
+- Branch protection on `main`: operator runs the handed-off `gh api` command (repo `swayz032/trading-forge`).
+- 6 pre-existing vitest reds: 5 `tradingview-webhook` (in-flight HMAC canonical fix — resolve in W1) + 1 `wave23f-legacy-overlay`.
+- W0.1 live restore-test (dump→scratch DB→row counts) = operational follow-up.
+- Phases 1-5 pending; W1 (TF Order Gateway, keystone) next.
+
 ---
 
 ## Known-Facts Pin — Stop Misdiagnosing These
