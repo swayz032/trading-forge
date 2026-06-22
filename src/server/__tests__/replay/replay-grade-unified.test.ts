@@ -358,8 +358,8 @@ describe("dispatchTool — per-tool route verification via extractToolSummary", 
       n: 2,
     });
     expect(summary.tool).toBe("robustness");
-    // totalB15Rows not a recognised n-field; n=2 is taken directly
-    expect(summary.n).toBe(2);
+    // totalB15Rows IS a recognised n-field (resolved before bare `n` in the chain) → n=4
+    expect(summary.n).toBe(4);
   });
 
   it("test_tool_dispatch_survival-twin: survival-twin result shape normalises correctly", () => {

@@ -130,6 +130,17 @@ vi.mock("../services/notification-service.js", () => ({
   notifyWarning: vi.fn(),
 }));
 
+// Wave hardening 2026-06-22, test isolation: admin.js transitively pulls in
+// index.ts → agent.ts, whose module scope runs `new AgentService()` (agent.ts:85).
+// Under partial mocking AgentService resolves undefined → "is not a constructor"
+// and the whole suite is skipped. Provide a constructable stub so the agent
+// route module loads and the 7 admin-route tests run.
+vi.mock("../services/agent-service.js", () => ({
+  AgentService: class {
+    assertCrossValidatedSource = vi.fn();
+  },
+}));
+
 // ─── Server setup ────────────────────────────────────────────────────────────
 
 let server: Server;

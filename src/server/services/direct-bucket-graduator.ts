@@ -204,6 +204,9 @@ const REQUIRED_PARAMS_BY_INDICATOR_FULL: Record<string, string[]> = {
   event_driven_fade: ["atr_move_threshold", "event_window_minutes"],
   // MA-as-S/R bounce (2026-05-26)
   bounce_off_level: ["ma_period"],
+  // Wave 25 Pass 5 VWAP institutional archetypes (Wave hardening 2026-06-22, CI-trust)
+  vwap_band_reject: ["band_sigma"],
+  anchored_vwap_retest: ["anchor_lookback_bars"],
 };
 import { auditGraduatedConfig, formatAuditResult } from "./graduated-strategy-auditor.js";
 import { computeWideConceptFingerprintHash } from "./strategy-fingerprint.js";
@@ -1732,6 +1735,17 @@ export async function graduateBucketDirectly(opts: {
     ict_2022: { identifier: /ict.2022|mentorship|2022.model/i, context: [/sweep|mss/i, /fvg/i] },
     wyckoff_accumulation: { identifier: /accumulation|spring/i, context: [/secondary.test|sign.of.strength|sos/i] },
     wyckoff_distribution: { identifier: /distribution|upthrust/i, context: [/secondary.test|sign.of.weakness|sow/i] },
+    // Wave hardening 2026-06-22, CI-trust — 6 archetypes added to ARCHETYPE_REGISTRY
+    // without MECHANIC_KEYWORDS entries; adding now to close the coverage gap.
+    // fvg / judas_swing / silver_bullet / breaker_block are W23G.3 short-form aliases
+    // that route to the same engine handlers as their ict_* canonical equivalents.
+    // bounce_off_level / ict_bias_aligned_continuation are Wave 26 Pass G engine impls.
+    fvg: { identifier: /fvg|fair.value.gap/i, context: [/retrace|return|fill|displacement/i] },
+    judas_swing: { identifier: /judas|manipulation|fake.move|fake.breakout/i, context: [/mss|market.structure.shift|reversal/i] },
+    silver_bullet: { identifier: /silver.bullet/i, context: [/sweep|liquidity/i, /fvg|fair.value.gap/i] },
+    breaker_block: { identifier: /breaker|failed.swing|flipped/i, context: [/retest|return/i] },
+    bounce_off_level: { identifier: /bounce|reject|ma.{0,10}support|ma.{0,10}resistance|moving.average.{0,15}(level|zone|touch)|price.{0,10}(test|touch).{0,10}(ema|sma|ma)/i, context: [/support|resistance|level/i] },
+    ict_bias_aligned_continuation: { identifier: /bias|htf.{0,10}(long|short|bull|bear)|continuation/i, context: [/bos|break.of.structure|choch|change.of.character/i, /fvg|fair.value.gap/i] },
   };
 
   let mechanicKeywordErrors: string[] = [];

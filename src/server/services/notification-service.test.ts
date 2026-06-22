@@ -26,6 +26,19 @@ vi.mock("../index.js", () => ({
   },
 }));
 
+// Wave hardening 2026-06-22, test isolation: notification-service now pulls in
+// audit-log-helper.ts which imports ../db/index.js directly (not via index.js),
+// throwing "DATABASE_URL environment variable is required" at collection. Mock
+// the db module so the import chain no-ops.
+vi.mock("../db/index.js", () => ({
+  db: {
+    execute: vi.fn().mockResolvedValue({ rows: [] }),
+    insert: vi.fn().mockReturnValue({ values: vi.fn().mockResolvedValue(undefined) }),
+    select: vi.fn(),
+    update: vi.fn(),
+  },
+}));
+
 import {
   notify,
   notifyCritical,

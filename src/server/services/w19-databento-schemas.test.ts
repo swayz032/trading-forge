@@ -70,7 +70,7 @@ describe("contract-specs-service", () => {
     expect(CONTRACT_SPECS_HARDCODED.NQ.multiplier).toBe(20.0);
     expect(CONTRACT_SPECS_HARDCODED.MES.multiplier).toBe(5.0);
     expect(CONTRACT_SPECS_HARDCODED.MNQ.multiplier).toBe(2.0);
-    expect(CONTRACT_SPECS_HARDCODED.MCL.multiplier).toBe(10.0);
+    expect(CONTRACT_SPECS_HARDCODED.MCL.multiplier).toBe(100.0);
   });
 
   it("hardcoded reference has correct tick sizes", async () => {

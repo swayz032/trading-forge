@@ -16,8 +16,17 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // ─── Mock frankenstein-service to test the decision logic ────────────────────
 
 vi.mock("../services/frankenstein-service.js");
+// Wave hardening 2026-06-22, test isolation: frankenstein-service.ts imports
+// ../index.js which runs runPendingMigrations() (db.execute) at module load.
+// Mock index.js to stop the boot-migration chain at collection time.
+vi.mock("../index.js", () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+}));
 vi.mock("../db/index.js", () => ({
+  // Wave hardening 2026-06-22: add execute() so any boot path that slips
+  // through the index.js mock no-ops instead of throwing.
   db: {
+    execute: vi.fn().mockResolvedValue({ rows: [] }),
     select: vi.fn().mockReturnValue({
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({

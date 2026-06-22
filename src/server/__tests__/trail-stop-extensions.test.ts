@@ -14,8 +14,16 @@
 import { describe, it, expect, vi } from "vitest";
 
 // ─── Mocks (must come before service import) ─────────────────────────────────
+// Wave hardening 2026-06-22, test isolation: the index/route chain runs
+// runPendingMigrations() (db.transaction/db.execute) at module load. Mock
+// index.js to stop the boot-migration chain at collection.
+vi.mock("../index.js", () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+}));
 vi.mock("../db/index.js", () => ({
   db: {
+    execute: vi.fn(() => Promise.resolve({ rows: [] })),
+    transaction: vi.fn((cb: any) => cb({ execute: vi.fn(), select: vi.fn(), insert: vi.fn() })),
     select: vi.fn(() => ({ from: vi.fn(() => ({ where: vi.fn(() => Promise.resolve([])) })) })),
     insert: vi.fn(() => ({ values: vi.fn(() => Promise.resolve()) })),
     update: vi.fn(() => ({ set: vi.fn(() => ({ where: vi.fn(() => Promise.resolve()) })) })),
@@ -30,6 +38,12 @@ vi.mock("../db/schema.js", () => ({
   shadowSignals: {},
   paperTrades: {},
   paperSessionFeedback: {},
+  // Wave hardening 2026-06-22, test isolation: compliance.ts (pulled in via the
+  // index/route chain) references these tables; missing stubs fail collection
+  // with "No <X> export defined on the schema mock".
+  complianceRulesets: {},
+  complianceReviews: {},
+  complianceDriftLog: {},
 }));
 vi.mock("../lib/logger.js", () => ({
   logger: {

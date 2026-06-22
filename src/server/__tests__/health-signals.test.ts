@@ -18,11 +18,16 @@ let baseUrl: string;
 beforeAll(async () => {
   process.env.NODE_ENV = "development";
   delete process.env.API_KEY;
-  // Ensure N8N_BASE_URL is absent so the n8n probe returns "disabled"
-  // (avoids a real outbound HTTP call in unit/CI context)
-  delete process.env.N8N_BASE_URL;
 
   const { app } = await import("../index.js");
+
+  // Wave hardening 2026-06-22, test isolation: importing index.js runs dotenv
+  // config(), which repopulates N8N_BASE_URL from the tower .env file. The
+  // health handler reads process.env.N8N_BASE_URL at REQUEST time (index.ts:347),
+  // so the delete must happen AFTER the import (and after dotenv runs) to ensure
+  // the n8n probe sees it absent and returns "disabled". Deleting before import
+  // was a no-op — dotenv re-set it during the import.
+  delete process.env.N8N_BASE_URL;
 
   await new Promise<void>((resolve) => {
     server = app.listen(0, () => {

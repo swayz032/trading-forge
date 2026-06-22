@@ -206,6 +206,7 @@ describe("pine-export-recipient-service", () => {
       expect.any(Number),  // qty
       expect.stringMatching(/ext.001_mffu/i),  // recipientLabel
       expect.stringMatching(/^[a-f0-9]{64}$/),  // hmacSecret (64-char hex)
+      MOCK_ACCOUNT_ID,  // accountId (9th arg)
     );
   });
 

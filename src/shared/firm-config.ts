@@ -48,16 +48,24 @@ export interface FirmAccountConfig {
   commissionPerSide: number;      // Per-side commission in dollars
   minTradingDays: number;         // Min trading days required to pass eval
   // ── MFFU 2026 compliance fields ──────────────────────────────────────────
-  payoutCycleDays?: number;       // MFFU: 14 (bi-weekly)
-  hftMaxTradesPerDay?: number;    // MFFU: 500 (trades/day ceiling before HFT classification)
+  payoutCycleDays?: number;                    // MFFU: 14 (bi-weekly)
+  hftMaxTradesPerDay?: number;                 // MFFU: 500 (trades/day ceiling before HFT classification)
+  collaborativeTradingBanned?: boolean;        // MFFU: true (multiple accounts same strategy = ban)
+  sameDeviceBanned?: boolean;                  // MFFU: true (family on shared computer = ban)
+  hedgingSameUnderlyingBanned?: boolean;       // MFFU: true (MNQ+NQ simultaneously = violation)
+  twoPercentRulePct?: number;                  // MFFU: 0.02 (max 2% account loss per single trade)
+  baselineSlippageTicksMes?: number;           // MFFU: 2 (slippage floor for MES per Rule 7)
+  tier1EventBlackoutMinutes?: number;          // MFFU: 30 (blackout window around Tier-1 events)
+  simultaneousLimitsAtSamePriceBanned?: boolean; // MFFU: true (Rule 6)
   // ── Topstep 2026 compliance fields ───────────────────────────────────────
-  platformLockdownDate?: string;  // Topstep: "2026-01-12" (TopstepX-only since this date)
-  requiredPlatform?: string;      // Topstep: "topstepx"
-  allowsVps?: boolean;            // Topstep: false (personal device only)
-  allowsVpn?: boolean;            // Topstep: false
-  allowsRemoteDesktop?: boolean;  // Topstep: false
-  multiAccountWithinUserAllowed?: boolean;  // Topstep: true
-  copyTradesWithinUserAllowed?: boolean;    // Topstep: true
+  platformLockdownDate?: string;               // Topstep: "2026-01-12" (TopstepX-only since this date)
+  requiredPlatform?: string;                   // Topstep: "topstepx"
+  allowsVps?: boolean;                         // Topstep: false (personal device only)
+  allowsVpn?: boolean;                         // Topstep: false
+  allowsRemoteDesktop?: boolean;               // Topstep: false
+  allowsCloudFailover?: boolean;               // Topstep: false (VPS/VPN/remote banned = no cloud failover)
+  multiAccountWithinUserAllowed?: boolean;     // Topstep: true
+  copyTradesWithinUserAllowed?: boolean;       // Topstep: true
 }
 
 export interface FirmConfig {
@@ -94,6 +102,20 @@ export const FIRMS: Record<string, FirmConfig> = {
         // 2026-compliance fields (canonical: docs/prop-firm-rules-2026-mffu.md)
         payoutCycleDays: 14,
         hftMaxTradesPerDay: 500,
+        // Rule 2: collaborative trading (2+ accounts same/opposite strategy → ban)
+        collaborativeTradingBanned: true,
+        // Rule 3: same-device ban (family members on shared device → ban)
+        sameDeviceBanned: true,
+        // Rule 4: hedging same underlying (MNQ+NQ simultaneously = violation)
+        hedgingSameUnderlyingBanned: true,
+        // Rule 8: 2% price limit (max 2% account loss per single trade)
+        twoPercentRulePct: 0.02,   // = MFFU_TWO_PERCENT_RULE_PCT (defined below; literal avoids forward-ref)
+        // Rule 7: slippage exploitation prohibited (2-tick MES floor)
+        baselineSlippageTicksMes: 2, // = MFFU_BASELINE_SLIPPAGE_TICKS_MES (literal avoids forward-ref)
+        // Rule 5: Tier-1 economic data blackout (±30 minutes around event)
+        tier1EventBlackoutMinutes: 30,
+        // Rule 6: simultaneous limit orders at same price banned
+        simultaneousLimitsAtSamePriceBanned: true,
       },
     },
   },
@@ -119,6 +141,8 @@ export const FIRMS: Record<string, FirmConfig> = {
         allowsVps: false,
         allowsVpn: false,
         allowsRemoteDesktop: false,
+        // Cloud failover (Railway VPS path) is banned: VPS/VPN/remote desktop all prohibited
+        allowsCloudFailover: false,
         multiAccountWithinUserAllowed: true,
         copyTradesWithinUserAllowed: true,
       },

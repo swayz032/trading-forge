@@ -312,8 +312,8 @@ describe("evaluateMultiFirmEligibility", () => {
     for (const call of mockRunPython.mock.calls) {
       const firmRules = (call[0].config as any).firm_rules;
       expect(firmRules.max_drawdown_limit).toBeGreaterThan(0);
-      // All 50K accounts in firm-config have maxContracts=15
-      expect(firmRules.contract_limits?.MES).toBe(15);
+      // All 50K accounts in firm-config have maxContracts=50 (50 micros = 5 minis × 10:1 ratio)
+      expect(firmRules.contract_limits?.MES).toBe(50);
     }
   });
 

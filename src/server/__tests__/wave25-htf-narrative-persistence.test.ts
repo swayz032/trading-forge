@@ -21,6 +21,24 @@
  */
 
 import { describe, it, expect, vi, afterEach } from "vitest";
+
+// Wave hardening 2026-06-22, test isolation: bias-state-service.ts imports
+// ../db/index.js directly (DATABASE_URL throw) AND transitively pulls index.ts
+// which runs runPendingMigrations() (db.transaction) at module load. Mock both
+// so the import chain no-ops at collection.
+vi.mock("../index.js", () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+}));
+vi.mock("../db/index.js", () => ({
+  db: {
+    execute: vi.fn().mockResolvedValue({ rows: [] }),
+    transaction: vi.fn((cb: any) => cb({ execute: vi.fn(), select: vi.fn(), insert: vi.fn() })),
+    select: vi.fn(),
+    insert: vi.fn(),
+    update: vi.fn(),
+  },
+}));
+
 import {
   type BiasStateForSignal,
   type HtfNarrative,

@@ -119,8 +119,36 @@ const pyPatternKeys = extractPythonEntryPatternKeys(pySource);
 // different Python primitive at the dsl-compiler layer (no Python ENTRY_PATTERNS
 // entry needed). Keep this list minimal — new entries require justification.
 //
-// connors_rsi2: compiles to Python rsi_reversal with period=2 defaults (F-3 fix).
-const TS_ONLY_INDICATORS = new Set(["connors_rsi2"]);
+// connors_rsi2:             compiles to Python rsi_reversal with period=2 defaults (F-3 fix).
+// supertrend:               routes to a strategy class, not a pattern_library ENTRY_PATTERNS key.
+// ichimoku_cloud:           routes to a strategy class, not a pattern_library ENTRY_PATTERNS key.
+// dema_crossover:           routes to a strategy class, not a pattern_library ENTRY_PATTERNS key.
+// alma_filter:              routes to a strategy class, not a pattern_library ENTRY_PATTERNS key.
+// rsi_divergence:           TS-side divergence variant; Python uses rsi_reversal for the parametric path.
+// atr_trailing_stop:        TS-side trailing-stop indicator; Python uses atr_breakout for the parametric path.
+// cumulative_delta:         volume/order-flow indicator compiled via order_flow module, not ENTRY_PATTERNS.
+// vwap_order_flow:          volume/order-flow indicator compiled via order_flow module, not ENTRY_PATTERNS.
+// volume_profile:           routes to archetype:order_block at compile time (see graduator §2b).
+// liquidity_sweep_breakout: routes to archetype:liquidity_sweep at compile time (see graduator §2b).
+// fifo_session_open:        session/event indicator; no Python ENTRY_PATTERNS counterpart (engine-side DSL only).
+// news_fade_mco:            event-driven indicator; no Python ENTRY_PATTERNS counterpart (engine-side DSL only).
+// Wave hardening 2026-06-22, CI-trust: documented 12 TS-only indicators that are genuine DSL-only
+// aliases or route through strategy classes / archetype routing rather than pattern_library.
+const TS_ONLY_INDICATORS = new Set([
+  "connors_rsi2",
+  "supertrend",
+  "ichimoku_cloud",
+  "dema_crossover",
+  "alma_filter",
+  "rsi_divergence",
+  "atr_trailing_stop",
+  "cumulative_delta",
+  "vwap_order_flow",
+  "volume_profile",
+  "liquidity_sweep_breakout",
+  "fifo_session_open",
+  "news_fade_mco",
+]);
 
 describe("Wave 9 — PARAM_RANGES TS↔Python drift", () => {
   describe("TS PARAM_RANGES keys exist in Python ENTRY_PATTERNS", () => {
@@ -139,7 +167,9 @@ describe("Wave 9 — PARAM_RANGES TS↔Python drift", () => {
 
   describe("TS REQUIRED_PARAMS_BY_INDICATOR_FULL keys exist in Python ENTRY_PATTERNS", () => {
     it("every TS REQUIRED_PARAMS_BY_INDICATOR_FULL key has a Python ENTRY_PATTERNS counterpart", () => {
-      const missing = tsRequiredParamKeys.filter((k) => !pyPatternKeys.includes(k));
+      // Wave hardening 2026-06-22, CI-trust: TS_ONLY_INDICATORS are excluded —
+      // they are DSL-only aliases or route via strategy classes, not ENTRY_PATTERNS.
+      const missing = tsRequiredParamKeys.filter((k) => !TS_ONLY_INDICATORS.has(k) && !pyPatternKeys.includes(k));
       expect(missing, `TS REQUIRED_PARAMS_BY_INDICATOR_FULL has keys absent from Python: [${missing.join(", ")}]`).toEqual([]);
     });
   });

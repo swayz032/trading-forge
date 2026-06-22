@@ -40,6 +40,13 @@ vi.mock("../lib/logger.js", () => ({
   },
 }));
 
+// Wave hardening 2026-06-22, test isolation: a transitively-loaded route
+// (sse.ts) imports ../index.js which runs runPendingMigrations() (db.transaction)
+// at module load. Mock index.js to stop the boot-migration chain at collection.
+vi.mock("../index.js", () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+}));
+
 vi.mock("../lib/audit-log-helper.js", () => ({
   insertAuditRowSafe: vi.fn().mockResolvedValue(true),
 }));
@@ -286,13 +293,16 @@ describe("aggregateStrategyHealth — happy path (12 available)", () => {
     expect(evaluatedCall).toBeDefined();
   });
 
-  it("subsystems result array has 12 entries when called", async () => {
+  it("subsystems result array has 13 entries when called", async () => {
+    // Wave hardening 2026-06-22: aggregator grew from 12 → 13 subsystems when
+    // Wave 29 Pass C added the rl_agent slot (documented in CLAUDE.md). Updated
+    // the stale literal to match the intended 13-subsystem composite model.
     process.env.MIN_COMPOSITE_SUBSYSTEMS = "0";
     mockDbSelect.mockReturnValue(buildSelectChain([]));
 
     const result = await aggregateStrategyHealth(STRATEGY_ID);
     expect(result.subsystems).toBeDefined();
-    expect(result.subsystems).toHaveLength(12);
+    expect(result.subsystems).toHaveLength(13);
   });
 });
 

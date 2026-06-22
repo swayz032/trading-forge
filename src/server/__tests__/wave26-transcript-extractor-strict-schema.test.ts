@@ -259,7 +259,7 @@ describe("wave26-transcript-extractor-strict-schema", () => {
   //   - top_k=64: Google default; vocab tail needed for JSON escapes (\", \n, etc.)
   //   - num_predict=2048: HARD CAP prevents unbounded repetition if bug fires
 
-  it("S7: chat options include temperature=0.1, top_p=0.95, top_k=64, num_predict=2048, num_ctx=16384", async () => {
+  it("S7: chat options include temperature=0.1, top_p=0.95, top_k=64, num_predict=4096, num_ctx=32768", async () => {
     __setOllamaHealthyForTests(true);
     delete process.env.TRANSCRIPT_EXTRACTOR_FORCE_CLOUD;
 
@@ -271,8 +271,8 @@ describe("wave26-transcript-extractor-strict-schema", () => {
     expect(options!.temperature).toBe(0.1);
     expect(options!.top_p).toBe(0.95);
     expect(options!.top_k).toBe(64);
-    expect(options!.num_predict).toBe(2048);
-    expect(options!.num_ctx).toBe(16384);
+    expect(options!.num_predict).toBe(4096);
+    expect(options!.num_ctx).toBe(32768);
   });
 
   // ── S8: No `think` field anywhere in request body ────────────────────────────
@@ -316,7 +316,7 @@ describe("wave26-transcript-extractor-strict-schema", () => {
     await callScoutExtractLlm(SAMPLE_TRANSCRIPT_MESSAGES, undefined, CLOUD_NO_OP);
 
     expect(capturedChatBodies.length).toBeGreaterThan(0);
-    expect(capturedChatBodies[0]!.model).toBe("gemma4");
+    expect(capturedChatBodies[0]!.model).toBe("gemma4:e2b");
   });
 
   // ── S11: Default strict schema = true → format is schema object ──────────────

@@ -149,17 +149,17 @@ describe("Wave 23F Track D — symbols[] column emitted on INSERT", () => {
 describe("Wave 23F Track D — empty confluence_factors → legacy_no_confluence", () => {
   it("extraction_provenance flips to legacy_no_confluence when confluence_factors.length === 0", () => {
     const match = src.match(
-      /extraction_provenance:\s*confluenceFactors\.length === 0[\s\S]*?"legacy_no_confluence" as const/
+      /extraction_provenance:\s*finalConfluenceFactors\.length === 0[\s\S]*?"legacy_no_confluence" as const/
     );
     expect(
       match,
-      "extraction_provenance must be legacy_no_confluence when confluenceFactors.length === 0"
+      "extraction_provenance must be legacy_no_confluence when finalConfluenceFactors.length === 0"
     ).toBeTruthy();
   });
 
   it("non-empty confluence_factors delegates to resolveProvenance()", () => {
     const match = src.match(
-      /confluenceFactors\.length === 0[\s\S]*?:\s*resolveProvenance\(bestMention\.scoutLayer/
+      /finalConfluenceFactors\.length === 0[\s\S]*?:\s*resolveProvenance\(bestMention\.scoutLayer/
     );
     expect(
       match,

@@ -40,6 +40,7 @@ vi.mock("../../shared/utils.js", () => ({
 vi.mock("fs", () => ({
   writeFileSync: vi.fn(),
   unlinkSync: vi.fn(),
+  existsSync: vi.fn(() => false),
 }));
 
 vi.mock("os", () => ({

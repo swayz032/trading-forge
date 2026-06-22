@@ -84,14 +84,14 @@ describe("graduated-strategy-auditor", () => {
     expect(r.defects.some((d) => d.code === "E1_REGIME_GATE_DISABLED")).toBe(true);
   });
 
-  it("E1: path-bug guard — config.strategy.regime_gate is IGNORED", () => {
-    const bad = {
+  it("E1: W23F live-fix — config.strategy.regime_gate is now READ (archetype graduation path)", () => {
+    const cfg = {
       ...GOOD_CONFIG,
       regime_gate: undefined,
       strategy: { ...GOOD_CONFIG.strategy, regime_gate: { enabled: true } },
     };
-    const r = auditGraduatedConfig({ conceptName: "x", symbol: "MES", config: bad });
-    expect(r.defects.some((d) => d.code === "E1_REGIME_GATE_DISABLED")).toBe(true);
+    const r = auditGraduatedConfig({ conceptName: "x", symbol: "MES", config: cfg });
+    expect(r.defects.some((d) => d.code === "E1_REGIME_GATE_DISABLED")).toBe(false);
   });
 
   it("POSITION_SIZE_TYPE_WRONG: detects dynamic_atr instead of profit_tier_pyramid", () => {
@@ -100,10 +100,10 @@ describe("graduated-strategy-auditor", () => {
     expect(r.defects.some((d) => d.code === "POSITION_SIZE_TYPE_WRONG")).toBe(true);
   });
 
-  it("B6: detects MES cap > 30 contracts", () => {
+  it("B6: detects MES cap > 100 contracts", () => {
     const bad = {
       ...GOOD_CONFIG,
-      strategy: { ...GOOD_CONFIG.strategy, position_size: { ...GOOD_CONFIG.strategy.position_size, max_contracts: 50 } },
+      strategy: { ...GOOD_CONFIG.strategy, position_size: { ...GOOD_CONFIG.strategy.position_size, max_contracts: 101 } },
     };
     const r = auditGraduatedConfig({ conceptName: "x", symbol: "MES", config: bad });
     expect(r.defects.some((d) => d.code === "B6_MES_CAP_EXCEEDED")).toBe(true);

@@ -76,9 +76,11 @@ describe("Wave 9 — ARCHETYPE_MECHANIC_KEYWORDS full coverage", () => {
     expect(orphans, `MECHANIC_KEYWORDS keys not in ARCHETYPE_REGISTRY: [${orphans.join(", ")}]`).toEqual([]);
   });
 
-  it("counts match: 32 registry entries, 32 mechanic keyword entries", () => {
-    expect(registryKeys.length).toBe(32);
-    expect(mechanicKeys.length).toBe(32);
+  it("counts match: 38 registry entries, 38 mechanic keyword entries", () => {
+    // Wave hardening 2026-06-22, CI-trust: 6 new archetypes (fvg, judas_swing, silver_bullet,
+    // breaker_block, bounce_off_level, ict_bias_aligned_continuation) added to both sides.
+    expect(registryKeys.length).toBe(38);
+    expect(mechanicKeys.length).toBe(38);
   });
 });
 

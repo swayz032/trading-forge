@@ -35,6 +35,18 @@ vi.mock("../lib/logger.js", () => ({
   },
 }));
 
+// Wave hardening 2026-06-22, test isolation: credential-loader.ts imports
+// ../db/index.js directly, which throws "DATABASE_URL environment variable is
+// required" at collection. Mock the db module so the import chain no-ops.
+vi.mock("../db/index.js", () => ({
+  db: {
+    execute: vi.fn().mockResolvedValue({ rows: [] }),
+    select: vi.fn(),
+    insert: vi.fn(),
+    update: vi.fn(),
+  },
+}));
+
 import { execFileSync } from "child_process";
 const execFileSyncMock = vi.mocked(execFileSync);
 

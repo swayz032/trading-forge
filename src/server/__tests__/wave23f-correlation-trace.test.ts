@@ -43,10 +43,15 @@ import { join } from "path";
 import { describe, it, expect } from "vitest";
 
 const ROOT = join(process.cwd(), "src", "server");
+// Wave hardening 2026-06-22, test isolation: normalize CRLF → LF. The
+// postLayerMention test slices the source on the literal "}\n}" delimiter; on
+// Windows the file is CRLF so that indexOf returned -1 and produced a bogus
+// fnBody. Normalizing line endings makes the slice platform-independent
+// (production source is correct — this was a test-only Windows line-ending bug).
 const scoutRunnerSrc = readFileSync(
   join(ROOT, "services", "autonomous-scout-runner.ts"),
   "utf8"
-);
+).replace(/\r\n/g, "\n");
 const agentRouteSrc = readFileSync(
   join(ROOT, "routes", "agent.ts"),
   "utf8"

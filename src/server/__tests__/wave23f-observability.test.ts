@@ -16,7 +16,13 @@
  */
 import { readFileSync } from "fs";
 import { join } from "path";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+// Wave hardening 2026-06-22, test isolation: sse.js imports logger from
+// ../index.js which boots the whole Express app (app.use chain crashes at
+// collection). Mock index.js so FACTORY_EVENTS resolves without bootstrap.
+vi.mock("../index.js", () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+}));
 import { FACTORY_EVENTS } from "../routes/sse.js";
 
 // ─── Load source files for static analysis ─────────────────────────────────

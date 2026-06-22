@@ -28,7 +28,7 @@ describe("Wave 11 — compliance-refresh FIRMS pruned to MFFU + Topstep", () => 
     expect(match, "FIRMS array not found in compliance-refresh-service.ts").toBeTruthy();
     const inside = match![1];
     const firms = Array.from(inside.matchAll(/"([^"]+)"/g)).map((m) => m[1]);
-    expect(firms.sort()).toEqual(["MFFU", "Topstep"].sort());
+    expect(firms.sort()).toEqual(["mffu", "topstep"].sort());
   });
 
   it.each(["TPT", "Apex", "FFN", "Alpha", "Tradeify", "Earn2Trade", "FundingPips"])(

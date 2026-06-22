@@ -55,7 +55,7 @@ describe("Wave 26 Pass D — graduator vocabulary expansion", () => {
     });
 
     it("deriveEntryIndicator accepts llmEntryIndicator parameter", () => {
-      expect(GRADUATOR_SRC).toMatch(/deriveEntryIndicator\(\s*conceptName: string,\s*fallback: string \| null,\s*llmEntryIndicator\?: string \| null,?\s*\): string \| null/);
+      expect(GRADUATOR_SRC).toMatch(/deriveEntryIndicator\(\s*conceptName: string,\s*fallback: string \| null,\s*llmEntryIndicator\?: string \| null,(?:\s*_derivePathOut\?: \{ path\?: string \},)?\s*\): string \| null/);
     });
 
     it("LLM passthrough maps fair_value_gap → archetype:fvg_retrace", () => {

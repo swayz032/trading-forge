@@ -36,6 +36,14 @@ vi.mock("../lib/logger.js", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
+// Wave hardening 2026-06-22, test isolation: a transitively-loaded route
+// (sse.ts) imports ../index.js which runs runPendingMigrations() at module load
+// (boot-migration-runner reads .rows on the db.execute stub). Mock index.js to
+// stop the boot-migration chain at collection.
+vi.mock("../index.js", () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+}));
+
 vi.mock("../services/notification-service.js", () => ({
   notifyCritical: notifyCriticalMock,
   notifyWarning: vi.fn(),

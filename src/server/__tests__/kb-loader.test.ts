@@ -359,7 +359,7 @@ describe("New role configs", () => {
     const cfg = mod.MODEL_CONFIGS.transcript_extractor;
     expect(cfg).toBeTruthy();
     expect(cfg.provider).toBe("ollama");
-    expect(cfg.model).toBe("gemma4");
+    expect(cfg.model).toBe("gemma4:e2b");
     expect(cfg.responseFormat).toBe("json");
     expect(cfg.maxTokens).toBe(8192);
     expect(cfg.fallback?.provider).toBe("openai");
@@ -374,7 +374,7 @@ describe("New role configs", () => {
       "src/agents/dsl-quality-critic.md",
     );
     expect(mod.MODEL_CONFIGS.transcript_extractor.systemPromptPath).toBe(
-      "src/agents/transcript-extractor.md",
+      "src/agents/transcript-extractor-minimal.md",
     );
   });
 });

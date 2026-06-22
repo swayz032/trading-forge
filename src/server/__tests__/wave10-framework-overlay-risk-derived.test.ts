@@ -32,8 +32,8 @@ describe("Wave 10 Task 2: framework-overlay risk_derived_pyramid", () => {
       });
       const ps = result.config.strategy?.position_size as Record<string, unknown>;
       expect(ps.type).toBe("risk_derived_pyramid");
-      expect(ps.base_contracts).toBe(4);
-      expect(ps.tier_increment).toBe(2);
+      expect(ps.base_contracts).toBe(6);
+      expect(ps.tier_increment).toBe(3);
       expect(ps.tier_threshold_dollars).toBe(3000);
       expect(ps.personal_dll_pct).toBe(0.67);
       expect(ps.max_risk_pct_per_trade).toBe(0.02);
@@ -61,14 +61,14 @@ describe("Wave 10 Task 2: framework-overlay risk_derived_pyramid", () => {
       expect("target_risk_dollars" in ps).toBe(false);
     });
 
-    it("MNQ uses base_contracts=1 per framework", () => {
+    it("MNQ uses base_contracts=6 per framework", () => {
       const result = applyFrameworkOverlay({
         compiled: makeMinimalConfig() as Parameters<typeof applyFrameworkOverlay>[0]["compiled"],
         source: "graduated_bucket",
         symbol: "MNQ",
       });
       const ps = result.config.strategy?.position_size as Record<string, unknown>;
-      expect(ps.base_contracts).toBe(1);
+      expect(ps.base_contracts).toBe(6);
     });
   });
 
@@ -125,7 +125,7 @@ describe("Wave 10 Task 2: framework-overlay risk_derived_pyramid", () => {
       expect("target_risk_dollars" in ps).toBe(false);
     });
 
-    it("preserves base_contracts + tier_increment from existing config", () => {
+    it("overrides base_contracts + tier_increment with framework-canonical values (W23F.N — sizing is framework-authoritative)", () => {
       const existing = {
         type: "profit_tier_pyramid",
         base_contracts: 6,
@@ -139,9 +139,9 @@ describe("Wave 10 Task 2: framework-overlay risk_derived_pyramid", () => {
         symbol: "MES",
       });
       const ps = result.config.strategy?.position_size as Record<string, unknown>;
-      expect(ps.base_contracts).toBe(6);  // preserved
-      expect(ps.tier_increment).toBe(4);  // preserved
-      expect(ps.tier_threshold_dollars).toBe(5000);  // preserved
+      expect(ps.base_contracts).toBe(6);  // framework canonical MES=6
+      expect(ps.tier_increment).toBe(3);  // framework canonical increment=3
+      expect(ps.tier_threshold_dollars).toBe(3000);  // framework canonical threshold=3000
     });
   });
 

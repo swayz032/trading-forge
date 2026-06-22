@@ -64,8 +64,16 @@ vi.mock("../production/reconciliation-service.js", () => ({
   })),
 }));
 
+// Wave hardening 2026-06-22, test isolation: a transitively-loaded route
+// (sse.ts) imports ../index.js which runs runPendingMigrations() (db.transaction)
+// at module load. Mock index.js to stop the boot-migration chain at collection.
+vi.mock("../index.js", () => ({
+  logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
+}));
+
 vi.mock("../db/index.js", () => ({
   db: {
+    transaction: vi.fn(async (cb: any) => cb({ execute: vi.fn(), select: vi.fn(), insert: vi.fn() })),
     select: vi.fn(() => ({
       from: vi.fn(() => ({
         where: vi.fn(() => ({
@@ -111,6 +119,12 @@ vi.mock("../db/schema.js", () => ({
   paperSessions: {},
   paperTrades: {},
   complianceRulesets: {},
+  // Wave hardening 2026-06-22, test isolation: compliance.ts (pulled in via the
+  // index/route chain) now references these tables; missing stubs fail collection
+  // with "No <X> export defined on the schema mock".
+  complianceReviews: {},
+  complianceDriftLog: {},
+  skipDecisions: {},
   pilotSessions: {},
   // Tables used by prop-firm-cookie-refresh-service
   // Tables used by dead-mans-heartbeat-service

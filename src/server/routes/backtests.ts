@@ -236,6 +236,22 @@ backtestRoutes.post("/", idempotencyMiddleware, async (req, res) => {
   // validation probes). Without actor="operator", a PAUSED pipeline silently drops the
   // backtest and the caller receives a ghost ID that never appears in GET /api/backtests/:id.
   const correlationId = req.id;
+
+  // Audit-trail invariant: every operator-initiated backtest leaves a trace so
+  // any 90-day-old run can be reconstructed from audit_log alone.
+  db.insert(auditLog).values({
+    action: "backtest.operator_initiated",
+    entityType: "backtest",
+    entityId: backtestId,
+    input: { strategyId },
+    result: {},
+    status: "success",
+    decisionAuthority: "human",
+    correlationId: correlationId ?? null,
+  }).catch((err: unknown) => {
+    req.log.error({ err, backtestId, correlationId }, "Failed to write operator_initiated audit row");
+  });
+
   runBacktest(strategyId, fullConfig, strategyClass, backtestId, correlationId, "operator").then((_result) => {
     // Logged internally by runBacktest
   }).catch((err) => {

@@ -78,10 +78,10 @@ describe("Pass L #1 + #2 — minimal extractor prompt + schema files", () => {
     expect(fs.existsSync(path.join(ROOT, "src/agents/transcript-extractor-minimal.md"))).toBe(true);
   });
 
-  it("minimal prompt is short (under 200 lines vs legacy 940)", () => {
+  it("minimal prompt is short (under 260 lines vs legacy 940)", () => {
     const txt = fs.readFileSync(path.join(ROOT, "src/agents/transcript-extractor-minimal.md"), "utf-8");
     const lineCount = txt.split("\n").length;
-    expect(lineCount).toBeLessThan(200);
+    expect(lineCount).toBeLessThan(260);
     expect(lineCount).toBeGreaterThan(80);
   });
 

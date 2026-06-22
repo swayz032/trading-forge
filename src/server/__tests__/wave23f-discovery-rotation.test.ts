@@ -64,10 +64,16 @@ describe("W23F.E: query template group sizes", () => {
     expect(MCL_QUERY_TEMPLATES.length).toBeGreaterThanOrEqual(5);
   });
 
-  it("getQueryTemplatesForGroup returns correct array for each symbol", () => {
-    expect(getQueryTemplatesForGroup("MES")).toBe(MES_QUERY_TEMPLATES);
-    expect(getQueryTemplatesForGroup("MNQ")).toBe(MNQ_QUERY_TEMPLATES);
-    expect(getQueryTemplatesForGroup("MCL")).toBe(MCL_QUERY_TEMPLATES);
+  it("getQueryTemplatesForGroup returns symbol-specific templates merged with concept queries (W23F.P)", () => {
+    // W23F.P: every group returns [...symbolTemplates, ...ALL_CONCEPT_QUERIES] —
+    // a NEW superset array, no longer the bare symbol-template reference.
+    const mes = getQueryTemplatesForGroup("MES");
+    const mnq = getQueryTemplatesForGroup("MNQ");
+    const mcl = getQueryTemplatesForGroup("MCL");
+    expect(mes.slice(0, MES_QUERY_TEMPLATES.length)).toEqual(MES_QUERY_TEMPLATES);
+    expect(mnq.slice(0, MNQ_QUERY_TEMPLATES.length)).toEqual(MNQ_QUERY_TEMPLATES);
+    expect(mcl.slice(0, MCL_QUERY_TEMPLATES.length)).toEqual(MCL_QUERY_TEMPLATES);
+    expect(mes.length).toBeGreaterThan(MES_QUERY_TEMPLATES.length);
   });
 });
 
@@ -181,9 +187,10 @@ describe("W23F.E: mention tagging with seededSymbol", () => {
     expect(body.__scout_seeded_symbol).toBeUndefined();
   });
 
-  it("getQueryTemplatesForGroup('MNQ') returns same reference as MNQ_QUERY_TEMPLATES", () => {
-    // Ensures no defensive copy slips in — caller should get the real array
+  it("getQueryTemplatesForGroup('MNQ') leads with MNQ_QUERY_TEMPLATES (W23F.P merged superset)", () => {
+    // W23F.P: result is a NEW merged array (symbol templates + concept queries),
+    // so it leads with — but is no longer reference-equal to — MNQ_QUERY_TEMPLATES.
     const result = getQueryTemplatesForGroup("MNQ");
-    expect(result).toBe(MNQ_QUERY_TEMPLATES);
+    expect(result.slice(0, MNQ_QUERY_TEMPLATES.length)).toEqual(MNQ_QUERY_TEMPLATES);
   });
 });

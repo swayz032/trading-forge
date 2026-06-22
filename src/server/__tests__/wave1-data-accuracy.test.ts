@@ -276,10 +276,10 @@ describe("Wave 1 Task 2: commission deduction contract", () => {
     expect(src).toMatch(/net_pnl\s*=\s*gross\s*-\s*slip_cost\s*-\s*comm_cost/);
   });
 
-  it("backtester.py computes comm_cost as commission * size * 2 (round-trip)", () => {
+  it("backtester.py computes comm_cost as commission * int_size * 2 (round-trip)", () => {
     const src = readFileSync(BACKTESTER_PATH, "utf8");
     // The commission formula
-    expect(src).toMatch(/comm_cost\s*=\s*commission\s*\*\s*size\s*\*\s*2/);
+    expect(src).toMatch(/comm_cost\s*=\s*commission\s*\*\s*int_size\s*\*\s*2/);
   });
 
   it("backtester.py does NOT pass fees/slippage to vectorbt from_signals", () => {

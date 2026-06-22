@@ -36,6 +36,11 @@ const callOpenAIOrFallbackMock = vi.fn();
 vi.mock("../services/model-router.js", () => ({
   callOpenAI:           vi.fn(),
   callOpenAIOrFallback: (...args: unknown[]) => callOpenAIOrFallbackMock(...args),
+  // Wave hardening 2026-06-22, test isolation: the scout-extract handler now
+  // calls callScoutExtractLlm (agent.ts:807, W23G.9 transcript_extractor role),
+  // which was absent from this mock → undefined → handler threw 500. Route it to
+  // the same mock the test drives so the LLM response stub flows through.
+  callScoutExtractLlm:  (...args: unknown[]) => callOpenAIOrFallbackMock(...args),
   selectModel:          vi.fn(),
 }));
 

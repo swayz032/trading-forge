@@ -76,6 +76,17 @@ export function computeSpearman(x: number[], y: number[]): { rho: number; pValue
   const n = x.length;
   if (n !== y.length || n < 3) return { rho: 0, pValue: 1.0 };
 
+  // Zero-variance guard: if either array is constant, there is no monotonic
+  // relationship to measure. The standard formula produces a spurious non-zero
+  // rho when one array is constant (all ranks tie → d² from the other array's
+  // spread drives rho away from 0). Return rho=0 / pValue=1.0 to reflect
+  // "no information". (Wave hardening 2026-06-22, CI-trust)
+  const xMin = Math.min(...x);
+  const xMax = Math.max(...x);
+  const yMin = Math.min(...y);
+  const yMax = Math.max(...y);
+  if (xMin === xMax || yMin === yMax) return { rho: 0, pValue: 1.0 };
+
   function rankArray(arr: number[]): number[] {
     const sorted = arr
       .map((v, i) => ({ v, i }))

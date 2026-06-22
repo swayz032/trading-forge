@@ -163,7 +163,12 @@ export interface PatternAggregatorAnalysisResult {
 
 /**
  * Compute Sharpe ratio from PnL array.
- * Annualizes by √252. Returns 0 for < 2 trades or zero std.
+ * Annualizes by √252. Returns 0 for < 2 trades.
+ * When std = 0 (constant PnL series), returns Infinity for positive mean,
+ * -Infinity for negative mean, and 0 for zero mean.
+ * A constant-positive return series has infinite Sharpe — returning 0 was wrong
+ * and caused the pattern-aggregator to misclassify zero-risk-positive-return
+ * strategies as non-performing. (Wave hardening 2026-06-22, CI-trust)
  */
 export function computeSharpe(pnls: number[]): number {
   if (pnls.length < 2) return 0;
@@ -171,7 +176,13 @@ export function computeSharpe(pnls: number[]): number {
   const variance =
     pnls.reduce((a, v) => a + (v - mean) ** 2, 0) / (pnls.length - 1);
   const std = Math.sqrt(variance);
-  if (std === 0) return 0;
+  if (std === 0) {
+    // Zero-risk series: Sharpe is undefined; use signed Infinity to preserve
+    // ordering correctness in downstream Spearman rank correlation.
+    if (mean > 0) return Infinity;
+    if (mean < 0) return -Infinity;
+    return 0;
+  }
   return (mean / std) * Math.sqrt(252);
 }
 
