@@ -89,6 +89,37 @@ def compute_pbo_from_cpcv_paths(
         is_sharpes.append(float(is_val) if is_val is not None else 0.0)
         oos_sharpes.append(float(oos_val) if oos_val is not None else 0.0)
 
+    # FIX 2 — Degenerate IS==OOS guard.
+    #
+    # Previous behavior: when every path has is_sharpe == oos_sharpe (the fallback
+    # case in walk_forward.py where per-path IS Sharpes are unavailable), all IS and
+    # OOS ranks are tied. Tied ranks cause overfit_count == 0 → pbo == 0.0, a
+    # false-clean result that lets every strategy pass the TESTING→SHADOW gate.
+    #
+    # New behavior: detect degenerate inputs (all IS == OOS) and return pbo=None.
+    # The lifecycle gate's pbo_unavailable_legacy path already handles None → PROCEED
+    # with a warn audit. None is correct here: we cannot compute PBO without genuine
+    # IS/OOS divergence. 0.0 was a lie — it signals "no overfitting detected" when
+    # in fact the measurement was not made.
+    #
+    # Detection: all(is_sharpe == oos_sharpe) with float comparison (exact equality
+    # because walk_forward.py assigns them from the same variable).
+    _all_degenerate = all(
+        abs(i - o) < 1e-12 for i, o in zip(is_sharpes, oos_sharpes)
+    )
+    if _all_degenerate:
+        return {
+            "pbo": None,
+            "n_paths": n_paths,
+            "p_value": None,
+            "degenerate": True,
+            "degenerate_reason": (
+                "is_sharpe == oos_sharpe for every path — per-path IS Sharpe "
+                "was unavailable; PBO requires genuine IS/OOS divergence. "
+                "Use None (pbo_unavailable_legacy) rather than false 0.0."
+            ),
+        }
+
     # ── PBO computation (Bailey et al. rank-based formula) ───────────────────
     #
     # For each path j, define:

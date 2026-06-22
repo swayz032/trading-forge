@@ -2,6 +2,11 @@
 
 Wave 8 overhaul:
   - Block bootstrap (stationary) replaces IID for autocorrelation preservation
+    in the trade-resample path.
+  - FIX 1 (2026-06-22): daily-returns path (return_bootstrap) now also uses
+    block bootstrap when lag-1 autocorrelation >= MC_IID_AC_THRESHOLD (default 0.05).
+    IID was being used unconditionally despite the docstring claim; this understated
+    tail drawdown for autocorrelated intraday strategies.
   - Stress testing multipliers (3 severity levels)
   - Synthetic catastrophic trade injection
   - Per-firm survival simulation
@@ -219,6 +224,53 @@ def return_bootstrap(
             file=_sys.stderr,
         )
         n_days = _capped_days
+
+    # FIX 1 — Block bootstrap for autocorrelated daily returns.
+    #
+    # Previous behavior: always IID resampling via rng.integers().
+    # New behavior: detect lag-1 autocorrelation; when |AC| >= IID_AC_THRESHOLD
+    #   (default 0.05, institutional standard), route to arch_stationary_bootstrap
+    #   (block bootstrap). IID is only valid for uncorrelated series.
+    #
+    # Rationale: the docstring claimed "Block bootstrap (stationary) replaces IID"
+    # but the daily-returns path bypassed the autocorr-detection machinery used by
+    # the trade-resample path. For autocorrelated intraday strategies (AR(1) > 0.1),
+    # IID resampling breaks consecutive loss/gain runs and understates tail drawdown —
+    # the exact number protecting against Topstep trailing-DD blowup.
+    #
+    # Block length = optimal_block_length(daily_returns) — same approach as trade path.
+    # IID_AC_THRESHOLD matches the institutional floor: |AC| < 0.05 = effectively IID.
+    #
+    # GPU path falls back to IID (arch_stationary_bootstrap is CPU-only).
+    # Extrapolation guard and PCG64DXSM seeding are preserved exactly.
+    _IID_AC_THRESHOLD = float(_os.environ.get("MC_IID_AC_THRESHOLD", "0.05"))
+    _use_block = False
+
+    if xp is np and len(daily_returns) >= 2:
+        _ac_val, _ac_failed = _safe_autocorrelation(daily_returns)
+        if _ac_failed or abs(_ac_val) >= _IID_AC_THRESHOLD:
+            _use_block = True
+
+    if _use_block:
+        # Route through stationary block bootstrap (preserves autocorrelation structure)
+        _block_len = optimal_block_length(daily_returns)
+        paths = arch_stationary_bootstrap(
+            daily_returns,
+            n_sims=n_sims,
+            seed=seed,
+            block_length=_block_len,
+        )
+        # arch_stationary_bootstrap returns (n_sims, n_trades); we need (n_sims, n_days)
+        # Trim or extend to n_days via resampling rows
+        if paths.shape[1] > n_days:
+            paths = paths[:, :n_days]
+        elif paths.shape[1] < n_days:
+            # Rare: block bootstrap produced fewer steps than requested.
+            # Pad by repeating the last column (conservative — equity stays flat).
+            _pad = np.zeros((n_sims, n_days - paths.shape[1]))
+            _pad[:] = paths[:, -1:]
+            paths = np.concatenate([paths, _pad], axis=1)
+        return paths
 
     returns_xp = xp.asarray(daily_returns)
     # Fix 3: was xp.random.default_rng(seed) unconditionally, which on CPU produces an

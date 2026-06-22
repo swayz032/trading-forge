@@ -115,6 +115,56 @@ from src.engine.strategy_base import BaseStrategy
 # must apply shift(1) to the higher-TF columns BEFORE the merge/join.
 
 
+def _dst_correct_et_hour(utc_dt) -> str:
+    """Convert a UTC datetime to 'HH:MM' ET string, DST-correct.
+
+    FIX 4 (2026-06-22): Replaces the hardcoded UTC-4 arithmetic used in
+    _apply_adaptive_management's inner _bar_et_str closure.
+
+    Previous behavior: `et_hour = (utc_dt.hour - 4) % 24` — always EDT.
+    During EST (Nov–mid-Mar), UTC-5 is correct. This caused a 1-hour drift
+    for pre-lunch (11:30) and time-stop (15:55) checks on winter bars.
+
+    New behavior: Use Python's built-in zoneinfo (3.9+) or pytz fallback
+    for DST-correct America/New_York conversion. Falls back to UTC-4 only
+    when both are unavailable (legacy environments).
+
+    This function is module-level so tests can import and verify it directly.
+    The DSL static-styleC path already handles DST correctly via the ts_et column
+    (lines ~1939-1954); this helper brings the adaptive path to parity.
+    """
+    import datetime as _dt_mod
+
+    if utc_dt is None:
+        return "00:00"
+
+    # Ensure timezone-aware datetime
+    if utc_dt.tzinfo is None:
+        utc_dt = utc_dt.replace(tzinfo=_dt_mod.timezone.utc)
+
+    # Prefer zoneinfo (stdlib, Python 3.9+)
+    try:
+        from zoneinfo import ZoneInfo as _ZoneInfo
+        et_dt = utc_dt.astimezone(_ZoneInfo("America/New_York"))
+        return f"{et_dt.hour:02d}:{et_dt.minute:02d}"
+    except Exception:
+        pass
+
+    # Fallback: pytz (third-party, commonly available)
+    try:
+        import pytz as _pytz
+        et_tz = _pytz.timezone("America/New_York")
+        et_dt = utc_dt.astimezone(et_tz)
+        return f"{et_dt.hour:02d}:{et_dt.minute:02d}"
+    except Exception:
+        pass
+
+    # Last resort: UTC-4 (EDT) arithmetic — imprecise in winter, preserved for
+    # backward-compat on environments without zoneinfo/pytz.
+    et_hour = (utc_dt.hour - 4) % 24
+    return f"{et_hour:02d}:{utc_dt.minute:02d}"
+
+
 def apply_eligibility_gate(
     entry_signals,
     exit_signals,
@@ -1030,15 +1080,19 @@ def _apply_adaptive_management(
             return None
 
     def _bar_et_str(bar_ts_val: _dt) -> str:
-        """Convert UTC datetime to 'HH:MM' ET string for _is_time_stop()."""
+        """Convert UTC datetime to 'HH:MM' ET string for _is_time_stop().
+
+        FIX 4 (2026-06-22): Replaced hardcoded UTC-4 arithmetic with the
+        DST-correct _dst_correct_et_hour() module-level helper.
+        Previous: et_hour = (utc_dt.hour - 4) % 24 → always EDT, wrong in EST.
+        New: zoneinfo/pytz America/New_York → correct in both EDT and EST.
+        """
         try:
             if bar_ts_val.tzinfo is not None:
                 utc_dt = bar_ts_val.astimezone(_tz.utc)
             else:
-                utc_dt = bar_ts_val
-            # EDT = UTC-4; conservative offset
-            et_hour = (utc_dt.hour - 4) % 24
-            return f"{et_hour:02d}:{utc_dt.minute:02d}"
+                utc_dt = bar_ts_val.replace(tzinfo=_tz.utc)
+            return _dst_correct_et_hour(utc_dt)
         except Exception:
             return "00:00"
 
@@ -1065,12 +1119,17 @@ def _apply_adaptive_management(
         stop_p = entry_p + risk_points if is_short else entry_p - risk_points
 
         # ── Compute exit plan once at position open ─────────────────────
+        # FIX 4 (2026-06-22): Pass the strategy's real symbol from spec instead of
+        # hardcoding "MES". MNQ/MCL adaptive strategies were getting MES exit targets
+        # (wrong DOL/TP targets). getattr fallback preserves backward-compat when
+        # spec is None or doesn't have a symbol attribute.
+        _adaptive_symbol = getattr(spec, "symbol", None) or "MES"
         entry_ts = _get_bar_ts(entry_idx) or _dt(2025, 1, 1)
         exit_plan = compute_exit_plan_python(
             entry_price=entry_p,
             stop_price=stop_p,
             direction=direction,
-            symbol="MES",   # symbol not available on spec; use MES as backtest default
+            symbol=_adaptive_symbol,
             bar_ts=entry_ts,
             atr=atr_at_entry,
             regime=regime_default,

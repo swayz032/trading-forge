@@ -442,18 +442,81 @@ def run_walk_forward(
         wf_metadata (mode, n_folds, embargo_pct, purge_window, n_paths for cpcv)
     """
     # ── Walk-forward mode resolution ─────────────────────────────────────────
-    # Priority: explicit wf_mode param > WF_MODE env > "plain"
+    # FIX 3 (2026-06-22): Default changed from "plain" to "cpcv".
+    # 2026 institutional standard is CPCV-by-default (combinatorial purged CV,
+    # C(6,2)=15 paths with purge+embargo). "plain" is now the explicit opt-out.
+    #
+    # Priority: explicit wf_mode param > WF_MODE env > "cpcv" (new default)
+    #
+    # Auto-fallback: when default/cpcv is requested but data is insufficient
+    # for 6 splits (each fold < MIN_CPCV_FOLD_BARS bars), we fall back to "plain"
+    # automatically with a logged reason. This prevents hard-breaking low-data
+    # backtests (e.g. short strategy histories, intraday with few days).
     _VALID_WF_MODES = ("plain", "purged_embargo", "cpcv")
     _resolved_mode = (
         wf_mode
-        or os.environ.get("WF_MODE", "plain")
+        or os.environ.get("WF_MODE", "cpcv")  # FIX 3: default changed plain→cpcv
     ).lower()
     if _resolved_mode not in _VALID_WF_MODES:
         print(
-            f"Walk-forward: unknown WF_MODE={_resolved_mode!r}; defaulting to 'plain'.",
+            f"Walk-forward: unknown WF_MODE={_resolved_mode!r}; defaulting to 'cpcv'.",
             file=sys.stderr,
         )
-        _resolved_mode = "plain"
+        _resolved_mode = "cpcv"
+
+    # FIX 3: CPCV auto-fallback check.
+    # CPCV requires at least 6 folds with meaningful data per fold.
+    # Minimum fold size = MIN_CPCV_FOLD_BARS bars (default: 60 bars = 3 RTH days at 15min).
+    # When data is too short, fall back to plain and emit a structured audit reason.
+    _CPCV_N_SPLITS = 6
+    _MIN_CPCV_FOLD_BARS = int(os.environ.get("MIN_CPCV_FOLD_BARS", "60"))
+    if _resolved_mode == "cpcv":
+        # Check if data is sufficient for CPCV
+        _check_data = data
+        if _check_data is None:
+            try:
+                from src.engine.data_loader import load_ohlcv as _load_ohlcv_check
+                _check_data = _load_ohlcv_check(
+                    request.strategy.symbol, request.strategy.timeframe,
+                    request.start_date, request.end_date,
+                )
+            except Exception:
+                _check_data = None
+
+        _cpcv_feasible = True
+        if _check_data is not None:
+            _fold_size = len(_check_data) // _CPCV_N_SPLITS
+            if _fold_size < _MIN_CPCV_FOLD_BARS:
+                _cpcv_feasible = False
+
+        if not _cpcv_feasible:
+            print(
+                f"[walk_forward] CPCV auto-fallback: data has insufficient bars for "
+                f"{_CPCV_N_SPLITS} folds × {_MIN_CPCV_FOLD_BARS} min bars/fold "
+                f"(fold_size={_fold_size}). Falling back to 'plain'. "
+                f"Set WF_MODE=plain explicitly to suppress this message, or extend "
+                f"the backtest date range. Audit: walk_forward.cpcv_insufficient_data_fallback",
+                file=sys.stderr,
+            )
+            try:
+                from src.engine.audit_writer import write_audit_row_sync as _audit
+                _audit(
+                    action="walk_forward.cpcv_insufficient_data_fallback",
+                    entity_type="walk_forward",
+                    entity_id=getattr(request.strategy, "name", "unknown"),
+                    severity="warn",
+                    payload={
+                        "requested_mode": "cpcv",
+                        "fallback_mode": "plain",
+                        "fold_size": _fold_size if _check_data is not None else None,
+                        "min_fold_bars": _MIN_CPCV_FOLD_BARS,
+                        "n_splits": _CPCV_N_SPLITS,
+                        "reason": "Insufficient data for CPCV; auto-falling back to plain",
+                    },
+                )
+            except Exception:
+                pass  # Audit write must never block WF execution
+            _resolved_mode = "plain"
 
     # Dispatch CPCV to dedicated implementation (Item 10, Wave 24 Pass 1).
     if _resolved_mode == "cpcv":
@@ -951,15 +1014,22 @@ def run_walk_forward(
                     file=sys.stderr,
                 )
             except Exception as _rc_exc:
+                # Wave hardening 2026-06-22 (G2b): classifier CRASH must NOT silently
+                # map to "indeterminate" (warn-and-allow).  A crash on a real strategy is
+                # indistinguishable from a crash on an overfit one, so the institutional-safe
+                # default is to BLOCK.  The TS gate maps "classifier_error" → BLOCK with a
+                # distinct audit action (lifecycle.parameter_drift_classifier_error_block).
+                # "indeterminate" is preserved for genuine ambiguity (no crash); "stable"
+                # is preserved for the non-fragile post-crash fallback.
                 print(
-                    f"  Param stability: regime-context classification failed ({_rc_exc}). "
-                    f"Falling back to binary fragile flag.",
+                    f"  Param stability: regime-context classification EXCEPTION ({_rc_exc}). "
+                    f"Emitting classifier_error — TS gate will BLOCK.",
                     file=sys.stderr,
                 )
-                _rc_classification = "indeterminate" if fragile else "stable"
-                _rc_confidence = 0.5
-                _rc_evidence = {"reason": "classification_error", "error": str(_rc_exc)}
-                _rc_warning = "Regime variance > 30% across windows — likely overfitting" if fragile else None
+                _rc_classification = "classifier_error"
+                _rc_confidence = None
+                _rc_evidence = {"reason": "classifier_exception", "error": str(_rc_exc)}
+                _rc_warning = "Classifier raised an exception; institutional default is to block promotion."
 
             param_stability = {
                 "params": stability,
@@ -1133,8 +1203,21 @@ def run_walk_forward(
                 file=sys.stderr,
             )
     else:
+        # Wave hardening 2026-06-22 (G2a): WF ran but IS Sharpe is non-positive or absent.
+        # We distinguish this from a true legacy backtest (key absent) by emitting an
+        # explicit signal so the TS gate can BLOCK rather than silently grandfather-pass.
+        # Contract:
+        #   wfe_overall = 0.0          → the gate's < WFE_HARD_FLOOR check BLOCKS it
+        #   wfe_status  = "degenerate_is" → TS gate recognises this is NOT a legacy null
+        #
+        # The genuine pre-W27.5 legacy path (key truly absent) keeps wfe_overall=None,
+        # and the TS gate reads key-absent (undefined) as the grandfather pass.
+        wfe_overall = 0.0
+        wfe_status = "degenerate_is"
+        overall_confidence = "LOW"
         print(
-            "  WFE: skipped (IS Sharpe <= 0 or no IS daily P&Ls collected)",
+            "  WFE: IS Sharpe <= 0 or no IS P&Ls collected — emitting wfe_overall=0.0 "
+            "(degenerate_is); TS gate will BLOCK (walk_forward.wfe_degenerate_is_block)",
             file=sys.stderr,
         )
 
