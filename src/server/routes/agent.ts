@@ -7,6 +7,7 @@ import { synthesizeV11FromGemmaProse } from "../lib/gemma-prose-to-v11.js";
 import { extractSpeakerConceptsFromTranscript } from "../lib/transcript-speaker-concepts.js";
 import { classifyMechanicPortability, explainRejectClass } from "../lib/mechanic-portability.js";
 import { runPass1VocabularyExtraction } from "../lib/two-pass-vocab-extractor.js";
+import { runCoverageGate } from "../lib/extraction-coverage-gate.js";
 import { runRobustnessTest } from "../services/robustness-service.js";
 import { db } from "../db/index.js";
 import { auditLog, strategyPendingBuckets, strategyPendingMentions, systemJournal, strategies } from "../db/schema.js";
@@ -1637,10 +1638,63 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       finalClassification = "futures_primary";
     }
 
+    // W3.1 — Coverage gate: enumerate what the speaker taught and cross-check
+    // against the extraction. Non-blocking — coverage failure is emitted as an
+    // observability signal only. W3.2 owns hard-drop / quarantine.
+    // We use the first extracted idea's entry_sequence + confluences as the
+    // representative extraction snapshot (multi-idea videos are rare and the
+    // first idea is always the primary strategy).
+    let coverageVerdictResult: import("../lib/extraction-coverage-gate.js").CoverageVerdict | null = null;
+    try {
+      const firstIdea = ideas[0] as import("../lib/extraction-coverage-gate.js").ExtractionSnapshot | undefined;
+      if (firstIdea) {
+        const { speakerItems, verdict } = await runCoverageGate(markdown, firstIdea);
+        coverageVerdictResult = verdict;
+        // Emit audit row for observability — non-blocking
+        insertAuditRow({
+          action: "extraction.coverage_evaluated",
+          entityType: "scout_extract",
+          entityId: null,
+          status: verdict.verdict === "pass" ? "success" : "info",
+          result: {
+            source_url: sourceUrl,
+            speaker_items_found: speakerItems.length,
+            covered: verdict.covered,
+            missing: verdict.missing,
+            coverage_pct: verdict.coverage_pct,
+            verdict: verdict.verdict,
+          },
+          correlationId,
+        }).catch((auditErr: unknown) => {
+          logger.warn(
+            { err: auditErr instanceof Error ? auditErr.message : String(auditErr), sourceUrl },
+            "scout-extract: coverage_evaluated audit insert failed (non-blocking)",
+          );
+        });
+        if (verdict.verdict === "coverage_failed") {
+          logger.warn(
+            {
+              sourceUrl,
+              missing: verdict.missing,
+              coverage_pct: verdict.coverage_pct,
+              speaker_items: speakerItems.map((i) => `${i.name} [${i.emphasis_level}]`),
+            },
+            "scout-extract W3.1: coverage_failed — primary speaker tool missing from extraction (W3.2 will quarantine)",
+          );
+        }
+      }
+    } catch (coverageErr) {
+      logger.warn(
+        { err: coverageErr instanceof Error ? coverageErr.message : String(coverageErr), sourceUrl },
+        "scout-extract: coverage gate threw unexpectedly (non-blocking — continuing with extraction result)",
+      );
+    }
+
     // W23G.7 + W23G.2 — include telemetry fields in success response.
     // extraction_mode: single_pass | chunked_fallback — for callers to log cycle-level stats.
     // instrument_classification: advisory classification (Pass J: post-override-aware).
     // tokens_estimated: char_count / 4 estimate for budget observability.
+    // W3.1 — coverage_verdict: advisory signal for downstream (W3.2 quarantine).
     res.json({
       extracted: true,
       ideas,
@@ -1648,6 +1702,7 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       instrument_classification: finalClassification,
       mechanic_portable: portability.portable,
       tokens_estimated: Math.ceil(markdown.length / 4),
+      ...(coverageVerdictResult !== null && { coverage_verdict: coverageVerdictResult }),
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
