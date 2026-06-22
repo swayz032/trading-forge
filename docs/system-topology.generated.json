@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-27T06:35:40.323Z",
+  "generatedAt": "2026-06-22T17:16:54.964Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,7 +16,7 @@
   },
   "counts": {
     "routes": 73,
-    "schedulerJobs": 91,
+    "schedulerJobs": 92,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 28,
@@ -123,6 +123,7 @@
     "critic-feedback",
     "data-integrity-suite",
     "databento-weekly-refresh",
+    "db-backup",
     "dd-velocity-cron",
     "decay-monitor",
     "deepar-predict",
@@ -944,6 +945,7 @@
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [
+      "db-backup",
       "mcl-pre-eia-stop-tighten"
     ],
     "missingEngineSubsystems": [],

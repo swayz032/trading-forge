@@ -4,6 +4,124 @@
 
 ---
 
+### Session Log — 2026-06-22 claude (Quantum Stack + Slumdawg Institutional-Grade Hardening — Phase 1 + Phase 2)
+
+**Mission:** Operator asked "is everything production grade with my quantum stack and slumdawg bot quantum" then said "make everything institutional grade". Audit identified 5 verified BLOCKERs that would fire on the next backend boot (`BOOT_MIGRATION_ENABLED=true` was already set in `.env`). Phase 1 fixes the boot-blockers + institutional integrity + observability wiring. Phase 2 writes the missing test coverage.
+
+**Work completed:**
+
+- **Phase 1A — Migration boot-blockers (B1+B3) — dispatched trading-forge-architect:**
+  - `src/server/db/migrations/0152_quantum_rl_runs.sql` renamed → `0158_quantum_rl_runs.sql` (matches journal idx 158). FK type `strategy_id INTEGER → UUID` (matches `strategies.id` UUID PK at `schema.ts:58`). `cpcv_fold_id` left as INTEGER (no FK, genuine integer fold index).
+  - `src/server/db/migrations/0159_broker_accounts_ab_paper_routing.sql` — inlined CHECK relaxation `ALTER TABLE broker_accounts DROP CONSTRAINT IF EXISTS broker_accounts_firm_id_check; ADD CONSTRAINT ... CHECK (firm_id IN ('mffu','topstep','paper'));` BEFORE the seed INSERT. Idempotent.
+  - `src/server/db/migrations/0163_broker_accounts_allow_paper_firm.sql` DELETED (CHECK relaxation now inlined in 0159; 0163 was no-op + journal noise).
+  - `src/server/db/migrations/meta/_journal.json` updated: idx=158 tag rewrite (0152→0158); idx=163 entry removed.
+  - Smoke-script verified 20 most-recent journal entries parse OK, zero duplicate idx, every entry has a matching .sql file.
+  - **Bonus finding (parent-fixed inline):** `0164_slumhouse_users.sql` was ORPHAN on disk with no journal entry → boot-runner would silently skip → Slumhouse portal table would not exist. Added idx=164 entry to `_journal.json`. FK `broker_account_id UUID REFERENCES broker_accounts(account_id)` verified against `0098:22`.
+
+- **Phase 1B — IAE seed + RL fixes + fail-soft (B2 + 5 HIGH) — dispatched quantum-challenger:**
+  - `src/engine/quantum_mc.py:464-503` — `AerSampler(backend_options={'seed_simulator': seed})` + `StatevectorSampler(seed=seed)` + best-effort IBM cloud `options.simulator.seed_simulator`. Closes false-determinism in Wave 27 replay-grading harness.
+  - `src/engine/quantum_rl_agent.py:551` — `VQCConfig.n_actions: int = 3` → `2` per day-trader LONG/FLAT mandate (CLAUDE.md §4). Closes silent `action=2 ("hold")` no-op accumulation.
+  - `src/server/lib/quantum-rl-training-runner.ts` — added `deriveRlTrainingSeed(strategyId)` (SHA-256→UInt32BE); `--seed rlSeed` propagated into Python subprocess args; logged in audit. Same strategy_id → same seed (deterministic per strategy). **Verified:** `quantum_rl_agent.py:2021` already has `parser.add_argument("--seed", type=int, default=42)` — pipeline is end-to-end functional.
+  - `src/server/services/regime-drift-detector-service.ts:220-238` — per-strategy `_evaluateStrategyDrift()` call wrapped in try/catch; on error writes `regime_drift_detector.strategy_lookup_failed` audit + `continue`. One bad row no longer halts the 6PM cron.
+  - `src/server/services/quantum-replay-weekly-service.ts:68-124` — `_readKillSwitch()` re-throws on DB error; new `_readKillSwitchFailClosed()` writes critical audit `quantum_replay.kill_switch_read_failed` and returns `false` (fail-CLOSED). Postgres hiccup now halts the cron.
+  - `src/server/services/backtest-service.ts:1874` — seed logged in `quantum_rl.training_auto_fire_enqueued` audit payload.
+  - New: `src/engine/tests/test_quantum_mc_iae_seed_determinism.py` (2 pytest, skip-gated on qiskit-aer).
+  - New: `src/server/__tests__/wave29-prod-hardening-rl-training-runner-seed.test.ts` (6 vitest GREEN).
+
+- **Phase 1C — Prometheus counters + Discord escalations (B4) — dispatched observability-reliability:**
+  - Wired `.inc()/.set()` on all 9 Wave 29 counters/gauges (previously declared but zero production callers):
+    - `pboBLocksTotal{regime}` at `lifecycle-service.ts` PBO block site (regime label="UNKNOWN" pending follow-up to thread regime from strategy row)
+    - `lifecycleShadowPromotionsTotal{outcome}` at SHADOW→PAPER paths (3 outcomes: passed/blocked_divergence/blocked_insufficient_samples)
+    - `rlKillSwitchTotal{reason}` at `rl-signal-fetcher.ts`
+    - `shadowSignalsTotal{strategy_id, divergence_bucket}` at `paper-signal-service.ts` shadow intercept
+    - `rlTrainingEpochsTotal{regime}` at `backtest-service.ts` RL training completion
+    - `frozenPolicyOverridesTotal` at `admin-frozen-policy-override.ts` (no label — registry is cardinality-1)
+    - `regimeDriftDetectionsTotal{from_regime, to_regime}` at `regime-drift-detector-service.ts:375`
+    - `rlAbSharpeDelta` + `rlAbPnlDelta` (gauges) at `ab-comparison.ts` route
+  - Discord escalations on HARD gate trips: `notifyWarning` on PBO block + shadow divergence block + frozen-policy HMAC override (with `appendFamilyGradePostscript`); `notifyCritical` on quantum-replay circuit breaker open.
+  - New: `src/server/__tests__/wave29-prod-hardening-prom-counters.test.ts` (39 vitest GREEN: 9 counter wires + 4 Discord escalations + 2 registry sanity).
+
+- **Phase 2 — Missing quantum test coverage — dispatched quantum-challenger:**
+  - New: `src/engine/tests/test_quantum_mc.py` — 26 tests (21 pass / 5 skip — DB-dependent paths correctly skip in CI without Postgres).
+  - New: `src/engine/tests/test_quantum_rl_agent.py` — 38 tests (36 pass / 1 skip — PennyLane missing on tower / 1 xfail strict — `quantum_rl.dsr_floor_block` audit emit MISSING in `quantum_rl_agent.py`, documented as carry-forward; will auto-promote PASS when implemented).
+  - New: `src/server/__tests__/wave29-prod-hardening-rl-training-runner.test.ts` — 41 vitest GREEN (off-RTH guard / circuit breaker open+reset+cooldown / SIGKILL timeout / seed plumbing regression anchor).
+  - **Total Phase 2 tests written: 105 new (98 pass / 6 skip / 1 strict-xfail / 0 fail).**
+
+- **Phase 3 — System Map sync + CI gates + this entry:**
+  - `npm run system-map:sync` regenerated `docs/system-readiness.generated.json` + `docs/system-topology.generated.json`.
+  - `npm run check:production-isolation` — CLEAN (0 violations).
+  - `npm run check:2026-compliance` — OK (MFFU + Topstep aligned).
+  - `npm run system-map:check` — 4 PRE-EXISTING drift items (NOT introduced by this session): `slumhouse_frontend` / `slumhouse_routes` / `slumhouse_discord_oauth` missing audit surfaces+actions+telemetry sources (carry-forward from 2026-05-28 sessions); "Registry is missing 2 scheduler job mappings" (unidentified — likely earlier waves).
+
+**Verification:**
+
+- 3 Phase 1 dispatches + 1 Phase 2 dispatch all returned GREEN with stated pass/fail counts.
+- Parent spot-verified all 4 reviewer-claimed BLOCKERs from the upstream audit via direct file Reads BEFORE Phase 1 dispatch (FK type at 0152:31, IAE sampler unseeded at quantum_mc.py:473-483, 0098 CHECK at 0098:30-31, 9 Prom counters declared with zero production callers).
+- Parent verified flagged carry-forward from Phase 1B: Python `--seed` argparse EXISTS at `quantum_rl_agent.py:2021` (Agent 2's flag was a false alarm; pipeline is end-to-end functional).
+- Parent verified flagged carry-forward from Phase 1A: 0164 slumhouse_users orphan — added to journal.
+- Total NEW tests this session: 105 + Phase 1B tests (6 + 2 ≈ 8) + Phase 1C tests (39) = ~152 new tests.
+
+**Known-facts updates:**
+
+- **NEW pinned fact (added to Known-Facts Pin section below):** `BOOT_MIGRATION_ENABLED=true` is LIVE in `.env`. The stale AGENT-LOGS "boot-runner is OFF" narrative is corrected. On next backend restart the boot-migration-runner WILL apply 0146 → 0164 in order. Phase 1A fixes (0158 FK + 0159 inline CHECK + 0164 journal entry) get this back to safe; without those, boot crashed fail-CLOSED.
+- **NEW pinned fact:** `quantum_mc.py` IAE sampler is now SEEDED end-to-end (commits via this session). Two calls with identical `QuantumRunConfig.seed` produce bit-exact `estimated_value` AND bit-exact `reproducibility_hash`. Wave 27 replay-grading harness Sunday verdicts are now genuinely reproducible. Pre-existing replay rows with unseeded hashes are left as-is (backward-compat).
+- **NEW pinned fact:** `pboBLocksTotal` (note: capital L) is the actual export name in `src/server/lib/metrics-registry.ts:274`. Cosmetic-only — variable naming inconsistency with the registry's other counters. Do NOT "fix" the casing without grep-coordinating all consumers (lifecycle-service.ts + wave29-prod-hardening-prom-counters.test.ts already use `pboBLocksTotal`).
+
+**Carry-forward for next session:**
+
+- **operator action required: set `ADMIN_OVERRIDE_HMAC_SECRET` in `.env` AND Railway tf-relay env.** Run `openssl rand -hex 32` → paste. Without this, `POST /api/admin/frozen-policy-override` route short-circuits to 503 in prod.
+- **Open xfail (strict):** `quantum_rl.dsr_floor_block` audit emit is missing in `quantum_rl_agent.py`. `QUANTUM_RL_DSR_FLOOR` env var is wired but never enforced via audit. Wave-30-candidate. Test in `test_quantum_rl_agent.py` will auto-promote PASS when implemented.
+- **`pboBLocksTotal{regime}` label always emits "UNKNOWN"** — lifecycle-service.ts PBO gate call site doesn't have regime available without a DB round-trip. Follow-up: thread `regime_trained_on` from strategy row into gate function signature.
+- **Pre-existing system-map drift NOT addressed:** `slumhouse_frontend`, `slumhouse_routes`, `slumhouse_discord_oauth` need audit surfaces + actions + telemetry sources registered in `docs/system-subsystem-registry.json`. "2 missing scheduler job mappings" (unidentified). Separate-scope cleanup pass needed; system-map:check will continue to report drift until done.
+- **Push status:** Commits authored locally; **push NOT executed.** Pushing will trigger Railway auto-deploy + boot-migration-runner WILL fire on the corrected chain. Recommend: snapshot-test the migration chain against a Railway preview DB before pushing. Operator decides.
+- **Working tree drift (NOT this session's scope):** ~100 other uncommitted files spanning today's morning B14 F1+F2 repair, Wave 26 Pass H/I scripts, Slumhouse 2026-05-28 fixes, etc. Quantum surface area in this session is committed cleanly in isolation; the rest remains for separate triage per §11a.
+
+---
+
+### Session Log — 2026-06-22 paper-parity (Production Hardening F7/F8/F10 — loss gate fail-CLOSED + correlationId rot + zero-size skip)
+
+**Mission:** Fix three paper signal gate findings in `paper-signal-service.ts` only: #7 (cross-symbol DLL + lunch-blackout outer catches fail-CLOSED; daily-trade-cap fail-OPEN preserved + visible warn audit added), #8 (correlationId null rot at 4 audit sites), #10 (baseContracts Math.max(1,0)=1 no longer fires when sizing returns 0).
+
+**Work completed:**
+
+- **Finding #7 — Loss-limiting gates fail-CLOSED on error:**
+  - Cross-symbol DLL outer catch (~line 2732): changed from fail-OPEN to fail-CLOSED. Now sets `dllHaltBlocked = true` + emits `consistency.cross_symbol_dll_failclosed` warn audit (status:"warning") with `correlationId ?? null`. Rationale: unknown combined P&L = assume worst case.
+  - Lunch blackout outer catch (~line 2855): changed from fail-OPEN to fail-CLOSED. Now sets `lunchBlackoutBlocked = true` + emits `consistency.lunch_blackout_failclosed` warn audit. Rationale: cannot verify window is clear = treat as inside blackout.
+  - Daily trade cap catch (~line 2806): **PRESERVED fail-OPEN** per CLAUDE.md §4 documented policy ("let one trade slip rather than silently halt"). Added `consistency.daily_trade_cap_failopen` visible warn audit (status:"warning") so the fail-open is observable in monitoring. The audit was previously invisible (only logger.warn).
+
+- **Finding #8 — correlationId null rot (4 sites fixed):**
+  - `signal.skipped_outside_window` (~line 2046): `correlationId: null` → `correlationId: correlationId ?? null`
+  - `signal.blocked_symbol_not_enabled_for_account` (~line 2571): same fix
+  - `signal.skipped_pre_market_blackout` (~line 2649): same fix
+  - `signal.blocked_position_lock_active` (~line 3174): same fix
+  - Post-fix grep: 0 `correlationId: null` sites remain in the file.
+  - All 3 new #7 audit rows also use `correlationId ?? null`.
+
+- **Finding #10 — baseContracts forced to min 1 on zero sizing:**
+  - `baseContracts = Math.max(1, sizingResult.finalContracts)` at ~line 4153 replaced with:
+    - If `finalContracts === 0`: set `riskGatePassed = false`, emit `signal.skipped_zero_size` info audit (with rejectionReason + accountBalance + drawdownRoom), set span attributes. No position opened.
+    - If `finalContracts > 0`: `baseContracts = sizingResult.finalContracts` (no Math.max needed — helper floors positive fractional results to ≥1 internally).
+  - Parity gap closed: paper now skips on ATR=0 / balance=0 rejections, matching backtester.py behavior.
+
+- **New test file:** `src/server/__tests__/production-hardening-f7-f8-f10-signal-gates.test.ts` — 27 vitest tests.
+
+**Verification:**
+- New test file: `npx vitest run src/server/__tests__/production-hardening-f7-f8-f10-signal-gates.test.ts` → **27/27 PASS**
+- Pre-existing related tests: `wave26-pass-k-lunch-blackout + daily-trade-cap + pm-size-factor + wave10-risk-sizing-pure` → **94/94 PASS** (zero regressions)
+
+**Known-facts updates:**
+- Daily trade cap outer catch is documented fail-OPEN per CLAUDE.md §4. Now has a visible `consistency.daily_trade_cap_failopen` warn audit so it's observable.
+- Cross-symbol DLL + lunch blackout outer catches are now fail-CLOSED: `consistency.cross_symbol_dll_failclosed` and `consistency.lunch_blackout_failclosed`.
+- `signal.skipped_zero_size` is the new audit action for zero-size sizing rejections (paper/backtest parity).
+- `Math.max(1, sizingResult.finalContracts)` pattern in paper-signal-service.ts is eliminated for the risk_derived_pyramid path. The pyramid floor override (healthy account + near-zero risk cap → returns base_contracts) is handled inside `computeRiskDerivedContracts` itself, not at the call site.
+
+**Carry-forward for next session:**
+- No new migration needed (no schema changes).
+- No git commit done — parent handles commit-and-push per §11a HARD RULE.
+- Task scope was strictly `paper-signal-service.ts` + its test files — no other files touched.
+
+---
+
 ### Session Log — 2026-06-22 backtest-core (Production Hardening G2a+G2b — WFE degenerate-IS block + classifier_error block)
 
 **Mission:** Defuse two verified fail-open promotion-gate defects end-to-end (Python producer + TS gate consumer). G2a: degenerate WF IS windows silently passed WFE gate as legacy null. G2b: classifier exception mapped to "indeterminate" (warn-and-allow) instead of blocking.
@@ -8942,6 +9060,28 @@ Also restored Anam.ai persona during this session:
 ---
 
 ## Known-Facts Pin — Stop Misdiagnosing These
+
+### BOOT_MIGRATION_ENABLED=true is LIVE (pinned 2026-06-22 PM)
+
+The repository's `.env` has `BOOT_MIGRATION_ENABLED=true`. On every backend service restart, `src/server/lib/boot-migration-runner.ts` reads `_journal.json`, applies any new migrations (pg_dump backup → transactional apply → fail-CLOSED throw on failure). The OLDER AGENT-LOGS narrative claiming "boot-migration-runner is OFF (0066 collision)" is STALE — that was true at some earlier point but is no longer accurate as of 2026-06-22.
+
+Practical consequences:
+- Any migration file you add to disk AND register in `_journal.json` WILL apply on next deploy without operator intervention.
+- If you add an orphan migration file (.sql on disk but no journal entry, like `0164_slumhouse_users.sql` was for ~1 month), boot-runner SILENTLY skips it — downstream code referencing the table breaks at runtime. Always pair the .sql file with a journal entry in the same commit, or document the orphan deliberately.
+- Before pushing migration changes: snapshot-test against a Railway preview DB. The boot-runner's fail-CLOSED throw blocks all booting if any migration fails.
+- Hand-edited journal entries (without Drizzle hash) are accepted by the runtime today — the runner does not hash-verify entries, only the migration file existence + apply success. Do NOT depend on this; rerun `npm run db:generate` to refresh hashes when convenient.
+
+### Quantum IAE sampler is SEEDED end-to-end as of 2026-06-22 PM (pinned 2026-06-22 PM)
+
+`src/engine/quantum_mc.py:464-503` now threads `seed` from `QuantumRunConfig` into `AerSampler(backend_options={'seed_simulator': seed})` + `StatevectorSampler(seed=seed)` + best-effort IBM cloud `options.simulator.seed_simulator`. Two calls with identical `QuantumRunConfig.seed` produce bit-exact `estimated_value` AND bit-exact `reproducibility_hash`. Wave 27 replay-grading harness Sunday verdicts (SIGNAL/NO_SIGNAL/INCONCLUSIVE) are now genuinely reproducible.
+
+PRE-2026-06-22 PM replay rows (in `quantum_mc_runs` with `governance_labels.replay_mode=true`) have unseeded hashes — leave them as-is for backward-compat. Only NEW replay runs benefit from the seed plumbing.
+
+If you write a test asserting IAE determinism, use `seed=42` + `n_qubits=4` + small `epsilon` for fast CI. Skip with `@pytest.mark.skipif(not AER_SAMPLER_AVAILABLE, ...)` on environments without `qiskit-aer`.
+
+### pboBLocksTotal uses capital L on purpose-ish (pinned 2026-06-22 PM)
+
+`src/server/lib/metrics-registry.ts:274` declares `export const pboBLocksTotal = new Counter({...})` with capital L mid-word. Inconsistent with the registry's other counters (`shadowSignalsTotal`, `frozenPolicyOverridesTotal`, etc., all camelCase-clean), but renaming requires grep-coordinating all consumers (lifecycle-service.ts + wave29-prod-hardening-prom-counters.test.ts). Cosmetic — leave alone unless you do a dedicated naming pass. The Prometheus metric NAME (`tf_pbo_blocks_total`) is correct — only the TS export identifier has the typo.
 
 ### Parallel sessions on the same branch co-mingle via `git add -A` (pinned 2026-06-22)
 
