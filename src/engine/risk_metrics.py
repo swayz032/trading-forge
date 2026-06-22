@@ -78,8 +78,13 @@ def compute_sharpe_distribution(
     excess = daily - daily_rf
     means = np.mean(excess, axis=1)
     stds = np.std(excess, axis=1, ddof=1)
-    stds = np.where(stds == 0, 1e-10, stds)
-    sharpes = means / stds * np.sqrt(periods_per_year)
+    # FIX 8 (2026-06-22): replacing near-zero std with 1e-10 explodes the Sharpe ratio
+    # to astronomically large values for breakeven strategies (e.g. constant daily P&L
+    # paths with std=0 report Sharpe ~2.5e13 instead of 0.0).
+    # Contract: when std < 1e-8, report Sharpe = 0.0 (strategy has no edge signal,
+    # not an infinitely profitable one). Callers receiving per-path Sharpe percentiles
+    # will see more conservative (correct) values for flat/near-flat strategies.
+    sharpes = np.where(stds < 1e-8, 0.0, means / stds * np.sqrt(periods_per_year))
 
     result = {}
     for p in percentiles:

@@ -11,6 +11,7 @@
 
 import cron from "node-cron";
 import { randomUUID } from "crypto";
+import { cronJobsConcurrent } from "./lib/metrics-registry.js";
 import { eq, and, gte, lte, desc, inArray, isNull, isNotNull, min, sql } from "drizzle-orm";
 import { db } from "./db/index.js";
 import { strategies, paperSessions, paperPositions, paperTrades, paperSignalLogs, backtests, systemJournal, skipDecisions, auditLog, dayArchetypes, tournamentResults, macroSnapshots, macroFeatures, macroRegimeStates, lifecycleTransitions, harshRegimePhase } from "./db/schema.js";
@@ -221,8 +222,10 @@ async function withRetry(
     return;
   }
 
+  cronJobsConcurrent.inc();
   let attempt = 0;
   let lastErr: unknown;
+  try {
   while (attempt <= maxRetries) {
     try {
       await fn();
@@ -263,6 +266,9 @@ async function withRetry(
     });
   } catch (dlqErr) {
     logger.error({ err: dlqErr, job: name }, "Failed to capture to DLQ — error suppressed");
+  }
+  } finally {
+    cronJobsConcurrent.dec();
   }
 }
 
@@ -2409,7 +2415,8 @@ except Exception as e:
       hour12: false,
       weekday: "short",
     });
-    if (!etStr.startsWith("Sun") || !etStr.includes("17")) return;
+    const etHour = parseInt(etStr.match(/(\d+)$/)?.[1] ?? "0", 10);
+    if (!etStr.startsWith("Sun") || etHour !== 17) return;
     if (!(await pipelineGate("hmm-regime-weekly-refit"))) return;
     logger.info("Scheduler: HMM regime weekly refit (Sunday 17:00 ET)");
     const t0hmm = Date.now();
@@ -3367,6 +3374,7 @@ except Exception as e:
   // (CLAUDE.md §3) — this wires that promise. NOT pipeline-gated: credential
   // safety signals must fire even when pipeline is paused.
   registerJob("bw-session-refresh", 6 * 60 * 60 * 1000, async () => {
+    const cronCorrelationId = randomUUID();
     const { runBwSessionRefreshCheck } = await import("./services/bitwarden-session-refresh-service.js");
     const t0bw = Date.now();
     let outcome: string;
@@ -3380,7 +3388,7 @@ except Exception as e:
     } catch (err) {
       outcome = "failed";
       error = err instanceof Error ? err.message : String(err);
-      logger.error({ err, jobName: "bw-session-refresh" }, "bw-session-refresh: unexpected throw from runBwSessionRefreshCheck");
+      logger.error({ err, jobName: "bw-session-refresh", cronCorrelationId }, "bw-session-refresh: unexpected throw from runBwSessionRefreshCheck");
       notifyCritical(
         "BW session refresh cron: unexpected error",
         `runBwSessionRefreshCheck threw unexpectedly. Error: ${error}. BW vault access may degrade.`,
@@ -3397,7 +3405,7 @@ except Exception as e:
       input: { job: "bw-session-refresh" } as Record<string, unknown>,
       result: { status: outcome, duration_ms: durationMs, error: error ?? null } as Record<string, unknown>,
       status: outcome === "failed" ? "failed" : "success",
-      correlationId: null,
+      correlationId: cronCorrelationId,
     }).catch((auditErr) => logger.error({ auditErr }, "bw-session-refresh: heartbeat audit row write failed"));
   });
 
@@ -3422,6 +3430,7 @@ except Exception as e:
   // the scheduler. Vacation Mode promises auto-refresh (CLAUDE.md §3). NOT
   // pipeline-gated: C2 evidence integrity is a safety signal.
   registerJob("prop-firm-cookie-refresh", 60 * 60 * 1000, async () => {
+    const cronCorrelationId = randomUUID();
     const { runPropFirmCookieRefresh } = await import("./services/prop-firm-cookie-refresh-service.js");
     const t0cookie = Date.now();
     let report: Awaited<ReturnType<typeof runPropFirmCookieRefresh>> | undefined;
@@ -3430,7 +3439,7 @@ except Exception as e:
       report = await runPropFirmCookieRefresh();
     } catch (err) {
       error = err instanceof Error ? err.message : String(err);
-      logger.error({ err, jobName: "prop-firm-cookie-refresh" }, "prop-firm-cookie-refresh: unexpected throw");
+      logger.error({ err, jobName: "prop-firm-cookie-refresh", cronCorrelationId }, "prop-firm-cookie-refresh: unexpected throw");
       notifyCritical(
         "Prop-firm cookie refresh cron: unexpected error",
         `runPropFirmCookieRefresh threw unexpectedly. Error: ${error}. Firm C2 evidence may be stale.`,
@@ -3456,7 +3465,7 @@ except Exception as e:
         error: error ?? null,
       } as Record<string, unknown>,
       status: outcome === "failed" ? "failed" : "success",
-      correlationId: null,
+      correlationId: cronCorrelationId,
     }).catch((auditErr) => logger.error({ auditErr }, "prop-firm-cookie-refresh: heartbeat audit row write failed"));
   });
 

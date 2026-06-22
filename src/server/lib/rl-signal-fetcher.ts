@@ -62,8 +62,18 @@ interface KillSwitchState {
   reason: string;
 }
 
-/** Threshold: Sharpe gap exceeding 30% triggers kill switch. */
-const RL_KILL_SWITCH_SHARPE_GAP_THRESHOLD = 0.30;
+/**
+ * Threshold: Sharpe gap (as ratio, not percentage) triggering kill switch.
+ *
+ * Read from QUANTUM_RL_KILL_SWITCH_THRESHOLD_PCT env var (default 30.0).
+ * Python module reads the same env var so both sides stay in sync.
+ *
+ * Note: the env var is expressed as a percentage (30.0 = 30%) but this
+ * constant is stored as a ratio (0.30) for the internal comparison logic.
+ */
+const RL_KILL_SWITCH_SHARPE_GAP_THRESHOLD = parseFloat(
+  process.env.QUANTUM_RL_KILL_SWITCH_THRESHOLD_PCT ?? "30.0",
+) / 100.0;
 
 /**
  * Compute kill-switch state from the last N quantum_rl_runs rows for a strategy.

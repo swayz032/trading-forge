@@ -375,10 +375,11 @@ describe("wave27 dryRun — pattern-aggregator-service", () => {
   it("PA-1: dryRun=true → audit_log.insert NOT called", async () => {
     buildInsertMock();
 
-    // kill switch → enabled (value "true"), critiques → 12 rows
+    // FIX (Wave A Critic Finding MED): dryRun=true now SKIPS the kill-switch
+    // DB read entirely — the critiques query is the FIRST select (index 0).
+    // No kill-switch row in the mock sequence for dryRun callers.
     buildSelectSequenceMock([
-      [{ currentValue: "true" }],  // kill switch
-      MOCK_CRITIQUES,               // trade critiques
+      MOCK_CRITIQUES,               // trade critiques (index 0 — kill switch skipped)
     ]);
 
     vi.mocked(callOpenAI).mockResolvedValue("NO_CHANGE");
@@ -415,9 +416,10 @@ describe("wave27 dryRun — pattern-aggregator-service", () => {
   it("PA-3 (bonus): dryRun=true → setAppendixCache still fires (in-memory cache mutated)", async () => {
     buildInsertMock();
 
+    // FIX (Wave A Critic Finding MED): dryRun=true skips kill-switch read.
+    // Critiques query is now index 0. Followed by _storeVersionAndABTest selects.
     buildSelectSequenceMock([
-      [{ currentValue: "true" }],
-      MOCK_CRITIQUES,
+      MOCK_CRITIQUES,              // index 0: critiques (kill switch read skipped)
     ]);
 
     const newAppendix = "## Pattern Notes (dry-run)\n- Use tighter confluence thresholds";

@@ -108,6 +108,7 @@ async function hasSchemaDriftAlertedToday(): Promise<boolean> {
 }
 
 async function recordSchemaDriftAlert(): Promise<void> {
+  const correlationId = randomUUID();
   try {
     const { auditLog } = await import("../db/schema.js");
     await db.insert(auditLog).values({
@@ -118,7 +119,7 @@ async function recordSchemaDriftAlert(): Promise<void> {
       input: { table: HEARTBEAT_TABLE, path: "read", todayEt: todayEtDateString() } as Record<string, unknown>,
       result: { alerted: true } as Record<string, unknown>,
       status: "success",
-      correlationId: null,
+      correlationId,
     });
   } catch (err) {
     logger.warn({ err }, "dead-mans-heartbeat: schema-drift audit row insert failed (non-blocking)");
@@ -414,6 +415,7 @@ async function getLastRefreshHeartbeatAt(action: string): Promise<Date | null> {
  * staleness threshold. Deduplicates per stale window.
  */
 export async function runScheduledRefreshStalenessCheck(): Promise<void> {
+  const cronCorrelationId = randomUUID();
   const now = Date.now();
 
   // ── BW refresh heartbeat check ─────────────────────────────────────────────
@@ -426,7 +428,7 @@ export async function runScheduledRefreshStalenessCheck(): Promise<void> {
         _lastBwAlertAt = new Date();
         const ageHours = (ageMs / (60 * 60 * 1000)).toFixed(1);
         logger.error(
-          { ageHours, lastAt: bwLastAt.toISOString() },
+          { ageHours, lastAt: bwLastAt.toISOString(), cronCorrelationId },
           "dead-mans-heartbeat: BW session refresh cron NOT RUNNING — heartbeat stale",
         );
         await insertAuditRow({
@@ -437,7 +439,7 @@ export async function runScheduledRefreshStalenessCheck(): Promise<void> {
           input: { last_heartbeat_at: bwLastAt.toISOString(), age_hours: ageHours } as Record<string, unknown>,
           result: { alert_fired_at: _lastBwAlertAt.toISOString() } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: cronCorrelationId,
         }).catch((err) => logger.error({ err }, "dead-mans-heartbeat: BW stale audit row failed"));
         notifyCritical(
           "CRITICAL: BW session refresh cron not running",
@@ -466,7 +468,7 @@ export async function runScheduledRefreshStalenessCheck(): Promise<void> {
         _lastCookieAlertAt = new Date();
         const ageHours = (ageMs / (60 * 60 * 1000)).toFixed(1);
         logger.error(
-          { ageHours, lastAt: cookieLastAt.toISOString() },
+          { ageHours, lastAt: cookieLastAt.toISOString(), cronCorrelationId },
           "dead-mans-heartbeat: prop-firm cookie refresh cron NOT RUNNING — heartbeat stale",
         );
         await insertAuditRow({
@@ -477,7 +479,7 @@ export async function runScheduledRefreshStalenessCheck(): Promise<void> {
           input: { last_heartbeat_at: cookieLastAt.toISOString(), age_hours: ageHours } as Record<string, unknown>,
           result: { alert_fired_at: _lastCookieAlertAt.toISOString() } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: cronCorrelationId,
         }).catch((err) => logger.error({ err }, "dead-mans-heartbeat: cookie stale audit row failed"));
         notifyCritical(
           "CRITICAL: Prop-firm cookie refresh cron not running",
@@ -577,6 +579,7 @@ async function readSystemState(): Promise<{
  * Fail-open — any DB error logs a warning and returns without mutating.
  */
 export async function runOperatorAbsenceAutoDetect(): Promise<void> {
+  const cronCorrelationId = randomUUID();
   const state = await readSystemState();
   if (!state) {
     logger.debug("operator-absent-detect: no system_state row — skipping");
@@ -634,7 +637,7 @@ export async function runOperatorAbsenceAutoDetect(): Promise<void> {
         input: { pendingSince: state.operatorAbsentPending.toISOString(), confirmedAt: now.toISOString() } as Record<string, unknown>,
         result: { operatorAbsentSince: now.toISOString(), confirmationHours: Math.round(pendingAgeMs / (60 * 60 * 1000)) } as Record<string, unknown>,
         status: "success",
-        correlationId: null,
+        correlationId: cronCorrelationId,
       }).catch((err) => logger.error({ err }, "operator-absent-detect: audit row failed"));
       notifyCritical(
         "Operator absence auto-detected — vacation autopilot engaged",
@@ -676,7 +679,7 @@ export async function runOperatorAbsenceAutoDetect(): Promise<void> {
     input: { lastActivityAt: lastActivity?.toISOString() ?? null, silenceHours: Number.isFinite(silenceMs) ? Math.round(silenceMs / (60 * 60 * 1000)) : null } as Record<string, unknown>,
     result: { operatorAbsentPending: now.toISOString() } as Record<string, unknown>,
     status: "success",
-    correlationId: null,
+    correlationId: cronCorrelationId,
   }).catch((err) => logger.error({ err }, "operator-absent-detect: pending audit row failed"));
   notifyCritical(
     "Operator absence — confirmation window started",

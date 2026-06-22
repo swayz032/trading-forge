@@ -274,7 +274,9 @@ describe("test_purge_violation_fails_script", () => {
     const violation = checkPurgeViolation("fold-bad", "2023-06-30", "2023-06-29");
     expect(violation).not.toBeNull();
     expect(violation).toContain("fold-bad");
-    expect(violation).toContain("Purge violation");
+    // FIX (Wave A Critic Finding #16): canonical message now uppercase "PURGE VIOLATION"
+    // (previously "Purge violation" from the old quantum-disagreement.ts implementation).
+    expect(violation).toContain("PURGE VIOLATION");
   });
 
   it("detects violation when oos_start = is_end (equal — not strictly after)", () => {

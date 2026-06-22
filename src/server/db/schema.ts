@@ -2942,6 +2942,9 @@ export const quantumRlRuns = pgTable(
     cpcvFoldId:           integer("cpcv_fold_id"),
     // Row creation timestamp
     createdAt:            timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    // RNG seed used for this training run batch (nullable for pre-migration rows).
+    // Added by migration 0165 (Wave A Fix 8). Enables deterministic replay-grading.
+    seed:                 integer("seed"),
   },
   (table) => [
     // Primary lookup: latest RL run per strategy (most-recent-first)

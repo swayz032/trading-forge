@@ -27,7 +27,7 @@
  *   - QUANTUM_RL_CIRCUIT_BREAKER_COOLDOWN_MS (default 3600000 = 1 hour)
  */
 
-import { spawn, type ChildProcess } from "child_process";
+import { spawn, execSync, type ChildProcess } from "child_process";
 import { existsSync } from "fs";
 import { resolve as pathResolve } from "path";
 import { createHash } from "crypto";
@@ -268,10 +268,24 @@ export async function runRlTrainingForStrategy(
     const timer = setTimeout(() => {
       if (settled) return;
       settled = true;
-      try { proc.kill("SIGTERM"); } catch { /* already dead */ }
-      setTimeout(() => {
-        try { proc.kill("SIGKILL"); } catch { /* already dead */ }
-      }, 2000);
+      // Fix 7: Windows SIGTERM does not propagate to grandchildren (Python subprocesses).
+      // Use taskkill /F /T to tree-kill on win32; SIGTERM on other platforms.
+      const pid = proc.pid;
+      if (process.platform === "win32" && pid != null) {
+        try {
+          execSync(`taskkill /F /T /PID ${pid}`, { stdio: "ignore" });
+        } catch (taskkillErr) {
+          logger.warn(
+            { pid, strategyId, err: String(taskkillErr) },
+            "quantum-rl-training-runner: taskkill /F /T failed — process may linger",
+          );
+        }
+      } else {
+        try { proc.kill("SIGTERM"); } catch { /* already dead */ }
+        setTimeout(() => {
+          try { proc.kill("SIGKILL"); } catch { /* already dead */ }
+        }, 2000);
+      }
       _recordRlFailure();
       reject(new Error(`quantum-rl-training-runner timed out after ${timeoutMs}ms for strategyId=${strategyId}`));
     }, timeoutMs);

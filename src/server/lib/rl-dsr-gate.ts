@@ -40,8 +40,18 @@ import { logger } from "./logger.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-/** Default DSR graduation floor per Wave 29 institutional mandate. */
-export const DEFAULT_DSR_THRESHOLD = 0.5;
+/**
+ * Default DSR graduation floor per Wave 29 institutional mandate.
+ *
+ * Read from QUANTUM_RL_DSR_FLOOR env var at module load (default 0.5).
+ * Matches the Python challenger module which documents the same env var
+ * (QUANTUM_RL_DSR_FLOOR in CLAUDE.md §2 / Wave 29 Pass C env var table).
+ * The env-resolved value is used as the default for evaluateRlDsrGate()
+ * so all callers that omit the threshold param pick up the env override.
+ */
+export const DEFAULT_DSR_THRESHOLD = parseFloat(
+  process.env.QUANTUM_RL_DSR_FLOOR ?? "0.5",
+);
 
 /** Minimum n_training_iterations to avoid near-zero denominator instability. */
 export const MIN_TRAINING_ITERATIONS = 2;

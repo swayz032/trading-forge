@@ -373,6 +373,29 @@ export function computeCurveFitCheck(
  *               Caller must have already applied CPCV purge enforcement.
  * @param options - Optional config for embargo, factor weights.
  * @returns ConfluenceAnalysisResult with full statistical breakdown.
+ *
+ * ─── Per-fold vs per-trade contract (Finding MED — Wave A Critic, Fix 5) ───
+ *
+ * ALL IS trades in a fold share the same `mean_confluence_score` (the fold-level
+ * average, computed during data loading in scripts/replay-grade-confluence.ts
+ * and stored as `ConfluenceReplayRow.confluenceScore` for IS rows in that fold).
+ * This is deliberate and CORRECT — it prevents Spearman degrees-of-freedom
+ * inflation by ensuring the library operates at fold-level granularity, not
+ * per-trade granularity.
+ *
+ * The Spearman rank correlation operates on FOLD-LEVEL aggregates:
+ *   isScoreVec  = folds.map(f => f.meanIsConfluenceScore)   // one value per fold
+ *   oosRVec     = folds.map(f => f.meanOosRealizedR)        // one value per fold
+ *
+ * If trades were scored individually at trade-level, the degrees of freedom
+ * would be n_trades (potentially 500+) instead of n_folds (typically 5-20),
+ * which would dramatically overstate statistical significance — inflating p-values
+ * and producing false SIGNAL verdicts from small real signals.
+ *
+ * The fold-level grouping is enforced at the `buildFoldAnalysis()` call site
+ * in this function.  DO NOT change to per-trade Spearman without updating the
+ * sample-size gate, the PRELIMINARY/SIGNAL thresholds, and writing a new
+ * statistical justification in the replay-grade.ts dispatcher docstring.
  */
 export function evaluateConfluenceDisagreement(
   rows: ConfluenceReplayRow[],

@@ -1,9 +1,10 @@
 /**
  * quantum-replay-runner.ts — Fire-and-forget quantum replay invocation helper.
  *
- * Spawns `python -m src.engine.replay.quantum_replay --backtest-id <uuid> --apply --seed 42`
+ * Spawns `python -m src.engine.replay.quantum_replay --backtest-id <uuid> --apply --seed <N>`
  * as a child process with a configurable timeout. Used by backtest-service.ts
  * post-completion auto-fire hook (Wave 27 Pass 1.5).
+ * Fix 9: seed is derived per-backtestId via SHA-256 (not hardcoded "42").
  *
  * Design notes:
  *   - Uses child_process directly (not runPythonModule) because quantum_replay.py
@@ -15,6 +16,10 @@
  *   - Opt-OUT default (QUANTUM_REPLAY_AUTO_FIRE_ENABLED unset or "true" → enabled)
  *     per operator's autonomous-agents-drive-everything mandate.
  *   - 5-minute timeout (env QUANTUM_REPLAY_TIMEOUT_MS, default 300000).
+ *   - Circuit breaker state persisted to system_parameters (Fix 10, Wave A) so
+ *     breaker state survives process restarts; params:
+ *       quantum_replay_circuit_open (0/1)
+ *       quantum_replay_consecutive_failures (integer count)
  *
  * Parity note:
  *   Challenger-only governance applies — quantum replay rows carry
@@ -26,6 +31,10 @@
 import { spawn, type ChildProcess } from "child_process";
 import { existsSync } from "fs";
 import { resolve as pathResolve } from "path";
+import { createHash } from "crypto";
+import { eq } from "drizzle-orm";
+import { db } from "../db/index.js";
+import { systemParameters } from "../db/schema.js";
 import { logger } from "./logger.js";
 import { notifyCritical } from "../services/notification-service.js";
 
@@ -40,17 +49,120 @@ function getPythonCmd(): string {
   return "python3";
 }
 
-// ── Process-level circuit breaker (in-memory, resets on restart) ──────────────
+// ── Process-level circuit breaker (persisted to system_parameters — Fix 10) ───
+//
+// Prior to Fix 10, breaker state was in module-level closure (_consecutiveFailures
+// and _circuitOpen) and reset on every process restart. This meant a repeated-crash
+// pattern could open the breaker, restart the process, and immediately fire again.
+//
+// Fix 10: breaker state is persisted to system_parameters using two parameter rows:
+//   quantum_replay_circuit_open       — "1" when open, "0" when closed
+//   quantum_replay_consecutive_failures — integer failure count
+//
+// On module init (first call to runQuantumReplayForBacktest), the in-memory state
+// is initialised from the DB.  On open/close, the DB rows are updated as
+// fire-and-forget (non-blocking). On DB failure, the in-memory state is still
+// mutated so the current process behaves correctly even if persist fails.
+//
+// Env vars documented here:
+//   QUANTUM_REPLAY_FAILURE_THRESHOLD — failure count before opening (default 5)
+//
+// system_parameters domain: "scheduler" (matches pipeline-control-service.ts pattern)
+
 const _threshold = Math.max(
   1,
   parseInt(process.env.QUANTUM_REPLAY_FAILURE_THRESHOLD ?? "5", 10) || 5,
 );
 let _consecutiveFailures = 0;
 let _circuitOpen = false;
+let _stateLoaded = false; // true once DB init has been attempted
+
+const _PARAM_OPEN = "quantum_replay_circuit_open";
+const _PARAM_FAILURES = "quantum_replay_consecutive_failures";
+
+/** Persist breaker state to system_parameters (fire-and-forget; never throws). */
+async function _persistBreakerState(): Promise<void> {
+  try {
+    const openVal = _circuitOpen ? "1" : "0";
+    const failVal = String(_consecutiveFailures);
+
+    for (const [paramName, val] of [[_PARAM_OPEN, openVal], [_PARAM_FAILURES, failVal]] as const) {
+      const [row] = await db
+        .select({ id: systemParameters.id })
+        .from(systemParameters)
+        .where(eq(systemParameters.paramName, paramName));
+
+      if (row) {
+        await db
+          .update(systemParameters)
+          .set({ currentValue: val, updatedAt: new Date() })
+          .where(eq(systemParameters.paramName, paramName));
+      } else {
+        await db.insert(systemParameters).values({
+          paramName,
+          currentValue: val,
+          domain: "scheduler",
+          description:
+            paramName === _PARAM_OPEN
+              ? "quantum-replay-runner circuit breaker open flag (Fix 10). 0=closed 1=open."
+              : "quantum-replay-runner consecutive failure count (Fix 10). Resets to 0 on success.",
+        });
+      }
+    }
+  } catch (persistErr) {
+    // Non-blocking — log warn and continue; in-memory state is still correct.
+    logger.warn(
+      { err: String(persistErr) },
+      "quantum-replay-runner: circuit breaker DB persist failed (non-blocking)",
+    );
+  }
+}
+
+/**
+ * Load breaker state from system_parameters on first call.
+ * Fire-and-forget (never throws). Populates _consecutiveFailures and _circuitOpen.
+ * Subsequent calls are no-ops.
+ */
+async function _initBreakerStateFromDb(): Promise<void> {
+  if (_stateLoaded) return;
+  _stateLoaded = true;
+  try {
+    const rows = await db
+      .select({ paramName: systemParameters.paramName, currentValue: systemParameters.currentValue })
+      .from(systemParameters)
+      .where(
+        eq(systemParameters.domain, "scheduler"),
+      );
+
+    for (const row of rows) {
+      if (row.paramName === _PARAM_OPEN) {
+        _circuitOpen = row.currentValue === "1";
+      }
+      if (row.paramName === _PARAM_FAILURES) {
+        const n = parseInt(String(row.currentValue), 10);
+        _consecutiveFailures = Number.isFinite(n) ? n : 0;
+      }
+    }
+
+    if (_circuitOpen) {
+      logger.warn(
+        { consecutiveFailures: _consecutiveFailures, threshold: _threshold },
+        "quantum-replay-runner: circuit breaker was OPEN from prior session — auto-fire will be skipped",
+      );
+    }
+  } catch (initErr) {
+    // Non-blocking — start with safe defaults (closed, 0 failures).
+    logger.warn(
+      { err: String(initErr) },
+      "quantum-replay-runner: circuit breaker DB init failed — starting with defaults (non-blocking)",
+    );
+  }
+}
 
 function _recordSuccess(): void {
   _consecutiveFailures = 0;
   _circuitOpen = false;
+  _persistBreakerState().catch(() => { /* already logged inside */ });
 }
 
 function _recordFailure(lastError?: string): boolean {
@@ -59,25 +171,28 @@ function _recordFailure(lastError?: string): boolean {
     _circuitOpen = true;
     logger.error(
       { consecutiveFailures: _consecutiveFailures, threshold: _threshold },
-      "quantum-replay-runner: circuit breaker OPENED — auto-fire disabled for this process lifetime",
+      "quantum-replay-runner: circuit breaker OPENED — auto-fire disabled until manual reset",
     );
     // Wave 29 prod hardening: Discord escalation when circuit breaker opens
     try {
       notifyCritical(
         "Quantum-Replay Circuit Breaker OPEN",
-        `Quantum-replay circuit breaker OPEN after ${_consecutiveFailures} consecutive failures; weekly cron halted until manual reset. Last error: ${lastError ?? "unknown"}`,
+        `Quantum-replay circuit breaker OPEN after ${_consecutiveFailures} consecutive failures; auto-fire halted until manual reset via system_parameters. Last error: ${lastError ?? "unknown"}`,
         { consecutiveFailures: _consecutiveFailures, threshold: _threshold },
       );
     } catch (_discordErr) { /* non-blocking */ }
+    _persistBreakerState().catch(() => { /* already logged inside */ });
     return true; // newly opened
   }
+  _persistBreakerState().catch(() => { /* already logged inside */ });
   return false;
 }
 
-/** Reset circuit state — exposed for tests only. */
+/** Reset circuit state — exposed for tests only. Also persists the reset. */
 export function _resetCircuitBreakerForTests(): void {
   _consecutiveFailures = 0;
   _circuitOpen = false;
+  _stateLoaded = false; // allow re-init from DB in integration tests
 }
 
 /** Read current consecutive failure count — exposed for tests only. */
@@ -113,6 +228,24 @@ export interface QuantumReplayResult {
   durationMs: number;
   /** Raw stdout snippet for audit logging. */
   stdoutSnippet: string;
+}
+
+// ── Per-backtest seed derivation ───────────────────────────────────────────────
+
+/**
+ * Derive a stable 32-bit unsigned integer seed from a backtest ID string.
+ *
+ * SHA-256(backtestId).readUInt32BE(0) — deterministic per backtest, so two
+ * quantum-replay runs on the same backtest produce reproducible Monte Carlo results.
+ *
+ * Mirrors deriveRlTrainingSeed in quantum-rl-training-runner.ts.
+ * The seed is passed to quantum_replay.py via --seed <N> instead of the hardcoded "42".
+ *
+ * Fix 9 (Wave A hardening 2026-06-22).
+ */
+export function deriveReplaySeed(backtestId: string): number {
+  const buf = createHash("sha256").update(String(backtestId)).digest();
+  return buf.readUInt32BE(0);
 }
 
 // ── Summary parser ─────────────────────────────────────────────────────────────
@@ -156,20 +289,27 @@ function _buildPythonEnv(): NodeJS.ProcessEnv {
 // ── Main export ────────────────────────────────────────────────────────────────
 
 /**
- * Spawn `python -m src.engine.replay.quantum_replay --backtest-id <uuid> --apply --seed 42`.
+ * Spawn `python -m src.engine.replay.quantum_replay --backtest-id <uuid> --apply --seed <N>`.
+ *
+ * Fix 9: seed is SHA-256(backtestId).readUInt32BE(0) — deterministic per backtest.
  *
  * Returns a summary object for audit logging. Never throws — caller must handle
  * rejection (fire-and-forget pattern in backtest-service.ts).
  *
  * Circuit breaker: after QUANTUM_REPLAY_FAILURE_THRESHOLD consecutive failures,
  * all subsequent calls reject immediately with a "circuit_open" status and the
- * outer auto-fire hook logs a critical + disables for the process lifetime.
- * Resets on process restart (in-memory only — acceptable per spec).
+ * outer auto-fire hook logs a critical + disables.
+ * Fix 10: breaker state is persisted to system_parameters so it survives process
+ * restarts (quantum_replay_circuit_open + quantum_replay_consecutive_failures).
  */
 export async function runQuantumReplayForBacktest(
   backtestId: string,
   correlationId?: string,
 ): Promise<QuantumReplayResult> {
+  // ── Load persisted breaker state on first call (Fix 10) ───────────────────
+  // fire-and-forget — mutates _circuitOpen/_consecutiveFailures in-place.
+  await _initBreakerStateFromDb();
+
   // ── Circuit breaker check ───────────────────────────────────────────────────
   if (_circuitOpen) {
     logger.warn(
@@ -182,6 +322,11 @@ export async function runQuantumReplayForBacktest(
   const timeoutMs = getTimeoutMs();
   const pythonCmd = getPythonCmd();
 
+  // Fix 9: derive per-backtest seed so two replay runs on the same backtest
+  // produce reproducible results (rather than hardcoded "42" for all).
+  // SHA-256(backtestId).readUInt32BE(0) — deterministic, mirrors deriveRlTrainingSeed.
+  const replaySeed = deriveReplaySeed(backtestId);
+
   const args = [
     "-m",
     "src.engine.replay.quantum_replay",
@@ -189,11 +334,11 @@ export async function runQuantumReplayForBacktest(
     backtestId,
     "--apply",
     "--seed",
-    "42",
+    String(replaySeed),
   ];
 
   logger.info(
-    { backtestId, correlationId, timeoutMs, module: "src.engine.replay.quantum_replay" },
+    { backtestId, correlationId, timeoutMs, replaySeed, module: "src.engine.replay.quantum_replay" },
     "quantum-replay-runner: spawning quantum replay subprocess",
   );
 

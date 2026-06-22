@@ -234,8 +234,14 @@ def _run_walk_forward_cpcv(
             if len(fold_df) > embargo_bars:
                 oos_parts.append(fold_df.slice(embargo_bars, len(fold_df) - embargo_bars))
             else:
-                # Fold too small after purge — skip this fold's contribution.
-                oos_parts.append(fold_df)
+                # FIX 6 (2026-06-22): fold too small after purge — skip entirely.
+                # Previous code appended the raw unembargoed fold, introducing IS→OOS
+                # lookahead leakage across the embargo boundary for short folds.
+                print(
+                    f"  CPCV: fold {ti} too small ({len(fold_df)} bars <= embargo {embargo_bars}) "
+                    f"— skipping to preserve embargo integrity.",
+                    file=sys.stderr,
+                )
 
         if not oos_parts:
             continue
@@ -252,11 +258,13 @@ def _run_walk_forward_cpcv(
         try:
             path_result = run_backtest(_shared_req, data=oos_data, warmup_data=is_data)
         except Exception as _path_exc:
+            # FIX 3 (2026-06-22): do NOT increment n_paths on failure — failed paths
+            # were being counted in the denominator, diluting the PBO overfit signal.
+            # n_paths counts successfully appended paths only (incremented below after append).
             print(
-                f"CPCV path {n_paths+1} failed: {_path_exc!r}. Skipping.",
+                f"CPCV path failed: {_path_exc!r}. Skipping (not counting in n_paths).",
                 file=sys.stderr,
             )
-            n_paths += 1
             continue
 
         path_sharpes.append(float(path_result.get("sharpe_ratio", 0.0)))
@@ -333,8 +341,23 @@ def _run_walk_forward_cpcv(
         )
         _psr = float(sum(1 for s in path_sharpes if s > 0) / max(len(path_sharpes), 1))
         _dsr_val = _dsr_result.get("dsr")
-    except Exception:
-        _dsr_result = {}
+    except Exception as _dsr_exc:
+        # FIX 7 (2026-06-22): emit walk_forward.dsr_computation_failed audit signal
+        # and set dsr_pass=False so TS consumer can block instead of silently proceeding.
+        # Previous code swallowed the exception and returned dsr=None which TS treats
+        # as pass-through (None → no gate applied → overfitted strategy proceeds).
+        print(
+            f"  DSR (CPCV): computation failed ({_dsr_exc!r}) — "
+            f"emitting walk_forward.dsr_computation_failed, dsr_pass=False.",
+            file=sys.stderr,
+        )
+        _dsr_result = {
+            "dsr": None,
+            "dsr_pass": False,
+            "dsr_unavailable": True,
+            "error": str(_dsr_exc),
+            "error_type": type(_dsr_exc).__name__,
+        }
         _psr = None
         _dsr_val = None
 
@@ -400,6 +423,11 @@ def _run_walk_forward_cpcv(
             "n_paths": n_paths,
             "psr": _psr,
             "dsr": _dsr_val,
+            # FIX 7: surface dsr_pass and dsr_unavailable so TS consumer can block.
+            # When DSR computation succeeds, these keys come from _dsr_result.
+            # When DSR computation fails, _dsr_result has dsr_pass=False, dsr_unavailable=True.
+            "dsr_pass": _dsr_result.get("dsr_pass"),
+            "dsr_unavailable": _dsr_result.get("dsr_unavailable", False),
         },
         # Wave 29 Pass A.2 — pbo_overall for TESTING → SHADOW/PAPER lifecycle gate.
         "pbo_overall": _cpcv_pbo_overall,
@@ -858,9 +886,13 @@ def run_walk_forward(
             )
         all_oos_pnl_records.extend(_deduped_records)
 
-        # For daily_pnls (scalar list), rebuild from deduplicated records to stay consistent
+        # For daily_pnls (scalar list), rebuild from deduplicated records to stay consistent.
+        # FIX 5 (2026-06-22): previous logic `_deduped_pnls if _deduped_records else raw`
+        # would fall through to UN-DEDUPED raw data when _deduped_records was empty (all dupes).
+        # An empty _deduped_records means ALL records were duplicates — the correct
+        # result is to add nothing (empty list), not to re-add the raw un-deduped data.
         _deduped_pnls = [r.get("pnl", 0.0) for r in _deduped_records]
-        all_oos_pnls.extend(_deduped_pnls if _deduped_records else oos_result.get("daily_pnls", []))
+        all_oos_pnls.extend(_deduped_pnls if len(_deduped_pnls) > 0 else [])
         all_oos_equity.extend(oos_result.get("equity_curve", []))
         # WF Fix 1: collect raw bar-level equity for accurate intraday max DD.
         # equity_bars is a list[float] of bar-level equity values from the backtest result.
@@ -1090,8 +1122,24 @@ def run_walk_forward(
                         file=sys.stderr,
                     )
         except Exception as _pbo_exc:
-            print(f"  PBO: computation failed ({_pbo_exc}).", file=sys.stderr)
-            pbo_result = {"pbo": None, "pbo_pass": True, "error": str(_pbo_exc)}
+            # FIX 2 (2026-06-22): fail-CLOSED on exception — previous code set
+            # pbo_pass: True (fail-open), allowing overfitted strategies to pass B14.
+            # Conservative-on-error contract: pbo_pass=False, pbo_overall=1.0 (worst case).
+            # The TS pbo-gate.ts treats pbo_pass=False as a hard block; it distinguishes
+            # this from the None/missing legacy case (pbo_unavailable_legacy → proceed).
+            print(
+                f"  PBO: computation failed ({_pbo_exc}) — emitting walk_forward.pbo_computation_failed "
+                f"and setting pbo_pass=False (conservative-on-error).",
+                file=sys.stderr,
+            )
+            pbo_audit_actions.append("walk_forward.pbo_computation_failed")
+            pbo_result = {
+                "pbo": 1.0,        # worst-case: assume fully overfit
+                "pbo_pass": False,  # hard block at TS gate
+                "pbo_threshold": _pbo_threshold,
+                "error": str(_pbo_exc),
+                "error_type": type(_pbo_exc).__name__,
+            }
 
         # ── Wave 29 Pass A.2: pbo_gate.py CPCV-path-based PBO ────────────────
         # Builds CPCV-style path dicts from plain-mode window_results and

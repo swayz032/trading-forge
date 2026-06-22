@@ -1,5 +1,5 @@
 import { spawn, type ChildProcess } from "child_process";
-import { logger } from "../index.js";
+import { logger } from "./logger.js";
 import { parsePythonJson } from "../../shared/utils.js";
 import { resolve as pathResolve } from "path";
 import { writeFileSync, unlinkSync, existsSync } from "fs";

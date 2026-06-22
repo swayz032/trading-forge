@@ -114,11 +114,26 @@ export async function runPatternAggregator(dryRun: boolean = false): Promise<Pat
   };
 
   // ── Step 1: Kill-switch check ──────────────────────────────────────────────
-  const killSwitchValue = await _readKillSwitch();
-  if (killSwitchValue === false) {
-    logger.info("Pattern aggregator: kill switch engaged — skipping");
-    if (!dryRun) await _audit("auto_patch.loop_halted_skip", "success", { reason: "kill_switch" });
-    return { ...empty, status: "halted", durationMs: Date.now() - startTime };
+  // FIX (Finding MED — Wave A Critic): dryRun callers (replay harness) must
+  // be able to produce non-empty analysis even when the operator has halted the
+  // autonomous loop.  Suppressing only "audit_log writes" while still respecting
+  // the kill switch contradicts the docstring at line 96 and makes the replay
+  // harness return {status:"halted"}, which is an empty result useless for
+  // grading.  When dryRun===true we skip the kill-switch gate and log a warn
+  // so the operator knows the bypass occurred.  The non-dryRun production path
+  // retains kill-switch semantics unchanged.
+  if (dryRun) {
+    logger.warn(
+      { killSwitchParam: KILL_SWITCH_PARAM },
+      "pattern-aggregator: dryRun bypasses kill switch",
+    );
+  } else {
+    const killSwitchValue = await _readKillSwitch();
+    if (killSwitchValue === false) {
+      logger.info("Pattern aggregator: kill switch engaged — skipping");
+      await _audit("auto_patch.loop_halted_skip", "success", { reason: "kill_switch" });
+      return { ...empty, status: "halted", durationMs: Date.now() - startTime };
+    }
   }
 
   // ── Step 2: Read recent trade critiques ────────────────────────────────────

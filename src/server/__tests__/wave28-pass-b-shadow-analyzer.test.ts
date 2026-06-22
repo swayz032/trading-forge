@@ -27,6 +27,15 @@ function makeRow(
     shadowDecision: "would_promote" | "would_block" | "NO_OPINION";
     agreement: boolean | null;
     weightsVersionId: string;
+    /**
+     * FIX (Finding #12 — Wave A Critic Fix 1): `shadowAvailability` sets the
+     * `shadow_result.availability` field, which composite-shadow-gate.ts writes
+     * as the primary classification for non-available states.
+     * `verdict` is null for missing/stale/below_threshold rows.
+     * Use this field for new tests; `shadowVerdict` remains for legacy compat.
+     */
+    shadowAvailability: "available" | "stale" | "missing" | "below_threshold";
+    /** @deprecated Legacy backward-compat field.  Prefer shadowAvailability. */
     shadowVerdict: string;
     daysAgo: number;
   }> = {},
@@ -37,6 +46,13 @@ function makeRow(
   const shadowDecision = overrides.shadowDecision ?? "would_promote";
   const isNoOpinion = shadowDecision === "NO_OPINION";
 
+  // Infer availability when not supplied:
+  //   NO_OPINION rows → "missing"  (no shadow data)
+  //   Opinionated rows → "available"
+  const availability: string =
+    (overrides.shadowAvailability as string | undefined) ??
+    (isNoOpinion ? "missing" : "available");
+
   return {
     id: crypto.randomUUID(),
     action: "composite.shadow_evaluation",
@@ -46,7 +62,10 @@ function makeRow(
       hardGateOutcome: overrides.hardGateOutcome ?? "allow",
       shadow_result: {
         shadow_decision: isNoOpinion ? "NO_OPINION" : shadowDecision,
-        verdict: overrides.shadowVerdict ?? "evaluated",
+        // availability is the primary classification key (Fix 1 — Wave A Critic).
+        availability,
+        // verdict is null for non-available states; preserved for legacy compat.
+        verdict: overrides.shadowVerdict ?? null,
       },
       agreement: overrides.agreement ?? (!isNoOpinion),
       weights_version_id: overrides.weightsVersionId ?? "v1",
@@ -380,17 +399,23 @@ describe("analyzeShadowEvidence — per-strategy breakdown", () => {
 });
 
 describe("analyzeShadowEvidence — availability breakdown", () => {
-  it("classifies missing/stale/below_threshold/evaluated correctly", () => {
-    const missingRows = makeRows(3, { shadowDecision: "would_promote", shadowVerdict: "missing" } as Parameters<typeof makeRow>[0]);
-    const staleRows = makeRows(2, { shadowDecision: "would_promote", shadowVerdict: "stale" } as Parameters<typeof makeRow>[0]);
-    const belowRows = makeRows(4, { shadowDecision: "would_promote", shadowVerdict: "below_threshold" } as Parameters<typeof makeRow>[0]);
-    const evalRows = makeRows(5, {
+  it("classifies missing/stale/below_threshold/evaluated correctly via availability field (Fix 1)", () => {
+    // FIX (Finding #12 — Wave A Critic): use `shadowAvailability` to set the primary
+    // classification field.  composite-shadow-gate.ts writes `verdict: null` for
+    // non-available rows and puts the classification in `availability`.
+    // The old test used `shadowVerdict: "missing"/"stale"/"below_threshold"` which
+    // never matched the ShadowVerdict type — those values always fell through to
+    // `availabilityBreakdown.evaluated`, silently misclassifying every non-available row.
+    const missingRows = makeRows(3, { shadowAvailability: "missing" });
+    const staleRows   = makeRows(2, { shadowAvailability: "stale" });
+    const belowRows   = makeRows(4, { shadowAvailability: "below_threshold" });
+    const evalRows    = makeRows(5, {
       hardGateOutcome: "allow",
       shadowDecision: "would_promote",
+      shadowAvailability: "available",
       agreement: true,
     });
 
-    // The missing/stale/below_threshold rows will set shadow_no_opinion because verdict is non-evaluated
     const rows = [...missingRows, ...staleRows, ...belowRows, ...evalRows];
     const result = analyzeShadowEvidence(rows, DEFAULT_OPTS);
 
@@ -398,5 +423,33 @@ describe("analyzeShadowEvidence — availability breakdown", () => {
     expect(result.availabilityBreakdown.stale).toBe(2);
     expect(result.availabilityBreakdown.below_threshold).toBe(4);
     expect(result.availabilityBreakdown.evaluated).toBe(5);
+  });
+
+  it("backward-compat: legacy rows with verdict field (no availability) still classify via verdict", () => {
+    // Legacy rows (pre-Wave-28 Pass B.1) may only have `verdict` and no `availability`.
+    // The backward-compat fallback in the analyzer reads `verdict` for these rows.
+    // Simulate by not setting shadowAvailability (makeRow will infer "available" for
+    // non-NO_OPINION rows, so to test TRUE legacy shape we inject the row directly).
+    const legacyMissingRow: AuditRow = {
+      id: "legacy-1",
+      action: "composite.shadow_evaluation",
+      created_at: BASE_DATE,
+      result: {
+        strategyId: "strat-legacy",
+        hardGateOutcome: "allow",
+        shadow_result: {
+          shadow_decision: "NO_OPINION",
+          // No `availability` key — old format
+          verdict: "missing",
+        },
+        agreement: null,
+        weights_version_id: "v0",
+        computed_from_n_subsystems: 10,
+      },
+    };
+    const result = analyzeShadowEvidence([legacyMissingRow], DEFAULT_OPTS);
+    // The backward-compat path reads verdict="missing" and classifies as missing.
+    expect(result.availabilityBreakdown.missing).toBe(1);
+    expect(result.availabilityBreakdown.evaluated).toBe(0);
   });
 });

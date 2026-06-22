@@ -23,6 +23,26 @@
  * Source: Wave 27 Pass 2, sub-track F2 (paper-parity)
  */
 
+/**
+ * replay-grade-critique.ts correlation-base determinism contract
+ * ───────────────────────────────────────────────────────────────
+ * FIX (Finding MED — Wave A Critic, Finding #4): the previous implementation
+ * set correlationBase = `replay-critique-${new Date().toISOString()}`, which
+ * embeds a wall-clock timestamp and breaks replay determinism — two runs on
+ * the same dataset produce different correlation IDs, making audit trails
+ * diverge and making it impossible to de-duplicate or diff replay runs.
+ *
+ * Fix: correlationBase defaults to sha256(positionIds.sort().join(","))
+ * truncated to 16 hex chars.  This is input-deterministic: identical position
+ * sets produce identical correlation IDs regardless of when the script runs.
+ *
+ * CLI override:
+ *   --correlation-base <string>   Use the given string verbatim as the base.
+ *                                 Useful for tagging a named replay session.
+ *
+ * The per-position suffix (`-${i}`) is still appended to the base so
+ * individual position correlationIds remain unique within a run.
+ */
 import "dotenv/config";
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -38,6 +58,7 @@ import {
   type ParameterHint,
 } from "../src/server/lib/replay/critique-disagreement.js";
 import { runTradeCritique } from "../src/server/services/trade-critique-service.js";
+export { computeCorrelationBase } from "../src/server/lib/replay/correlation-base.js";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -83,6 +104,8 @@ export async function runCritiqueGradeAnalysis(
     limitPositions?: number;
     strategyId?: string;
     lookbackDays?: number;
+    /** Deterministic correlation base. Defaults to sha256(sortedPositionIds). */
+    correlationBase?: string;
   } = {},
 ): Promise<{
   critiqueRows: TradeCritiqueRow[];
@@ -185,7 +208,13 @@ export async function runCritiqueGradeAnalysis(
   // Step 3: Run trade-critique service with dryRun=true for positions that
   // don't already have a critique row.  Collect results in-memory.
   const dryRunResults: TradeCritiqueRow[] = [];
-  const correlationBase = `replay-critique-${new Date().toISOString()}`;
+
+  // FIX (Finding #4 — Wave A Critic): deterministic correlation base.
+  // Use caller-supplied base if provided (e.g. from --correlation-base CLI flag),
+  // otherwise derive from the sorted position IDs (reuse positionIds already built
+  // above for existingCritiques query) so two identical runs on the same dataset
+  // produce the same correlation IDs regardless of wall-clock time.
+  const correlationBase = opts.correlationBase ?? computeCorrelationBase(positionIds);
 
   for (let i = 0; i < positionsQuery.length; i++) {
     const pos = positionsQuery[i];
@@ -300,6 +329,13 @@ export async function runCritiqueGradeAnalysis(
   return { critiqueRows: allCritiques, positionRows: paperPositions, result };
 }
 
+// ─── Correlation base derivation ─────────────────────────────────────────────
+// `computeCorrelationBase` is now a pure function in the replay lib so tests
+// can import it without triggering the Express bootstrap graph.
+// The re-export at the top of this file (`export { computeCorrelationBase }`)
+// forwards it for any callers that import from this script.
+import { computeCorrelationBase } from "../src/server/lib/replay/correlation-base.js";
+
 // ─── Git SHA helper ──────────────────────────────────────────────────────────
 
 function getCritiqueSHA(): string {
@@ -323,6 +359,10 @@ async function main(): Promise<void> {
   const strategyId    = strategyIdx !== -1 ? args[strategyIdx + 1] : undefined;
   const daysIdx       = args.indexOf("--days");
   const lookbackDays  = daysIdx !== -1 ? parseInt(args[daysIdx + 1], 10) : 90;
+  // FIX (Finding #4 — Wave A Critic): --correlation-base CLI flag for deterministic override.
+  // When omitted, runCritiqueGradeAnalysis derives it from sha256(sortedPositionIds).
+  const corrBaseIdx   = args.indexOf("--correlation-base");
+  const correlationBase = corrBaseIdx !== -1 ? args[corrBaseIdx + 1] : undefined;
 
   if (!process.env.DATABASE_URL) {
     console.error("[ERROR] DATABASE_URL environment variable is required.");
@@ -348,7 +388,7 @@ async function main(): Promise<void> {
 
   let analysis: Awaited<ReturnType<typeof runCritiqueGradeAnalysis>>;
   try {
-    analysis = await runCritiqueGradeAnalysis(sql, { limitPositions, strategyId, lookbackDays });
+    analysis = await runCritiqueGradeAnalysis(sql, { limitPositions, strategyId, lookbackDays, correlationBase });
   } catch (err) {
     logger.error({ err }, "replay-grade-critique: DB error during analysis");
     console.error("[ERROR] DB error during analysis:", err);

@@ -1604,7 +1604,9 @@ def run_monte_carlo(
             and len(_daily_pnls_per_symbol) >= 2
         ):
             try:
-                from src.engine.mc_multi_asset import run_multi_asset_correlation_bootstrap
+                from src.engine.mc_multi_asset import (
+                    run_multi_asset_correlation_bootstrap,
+                )
                 computed_block_len = optimal_block_length(trades_arr)
                 _ma_paths_dict, _ma_audit = run_multi_asset_correlation_bootstrap(
                     daily_pnls_per_symbol=_daily_pnls_per_symbol,
@@ -1852,7 +1854,10 @@ def run_monte_carlo(
     # It is removed before return to avoid serializing a (100K × N) array to stdout.
     result["all_paths"] = paths
     try:
-        from src.engine.mc_confidence import compute_all_mc_cis, compute_mc_confidence_intervals
+        from src.engine.mc_confidence import (
+            compute_all_mc_cis,
+            compute_mc_confidence_intervals,
+        )
         if "all_paths" in result and isinstance(result["all_paths"], np.ndarray):
             cis = compute_all_mc_cis(result["all_paths"], seed=request.seed + 500)
             result["bca_confidence_intervals"] = cis
@@ -1911,11 +1916,35 @@ def run_monte_carlo(
                     result["risk_metrics"]["probability_of_ruin_ci"] = _fallback
                     result["bca_confidence_intervals"]["probability_of_ruin_ci"] = _fallback
             else:
-                # No firm models in this MC run — terminal<=0 fallback, tagged for audit
-                _no_firm_ci = dict(cis.get("probability_of_ruin_ci", cis.get("probability_of_ruin", {})))
-                _no_firm_ci["ruin_basis"] = "terminal_negative_no_firm"
-                result["risk_metrics"]["probability_of_ruin_ci"] = _no_firm_ci
-                result["bca_confidence_intervals"]["probability_of_ruin_ci"] = _no_firm_ci
+                # FIX 4 (2026-06-22): No firm models in this MC run.
+                # Do NOT silently write probability_of_ruin_ci with terminal<=0 basis —
+                # the B14 gate reads ci_high and blocks when ci_high > 0.40, but the
+                # terminal<=0 ruin definition is categorically different from firm-breach
+                # ruin and may be materially lower (trading a trending strategy can show
+                # 0% terminal loss while EOD trailing DD already closed the account).
+                # Contract: set ruin_unavailable=True so the TS b14-ci-gate.ts reads
+                # the legacy_ruin_scalar_fallback audit path and explicitly logs the gap.
+                # The terminal<=0 data is preserved as a DIAGNOSTIC key only.
+                _terminal_ci = dict(cis.get("probability_of_ruin_ci", cis.get("probability_of_ruin", {})))
+                _terminal_ci["ruin_basis"] = "terminal_negative_no_firm"
+                result["risk_metrics"]["terminal_negative_ci"] = _terminal_ci
+                # Authoritative key signals unavailability — downstream gate must NOT
+                # treat this as a passing firm-breach ruin estimate.
+                _no_firm_authoritative = {
+                    "ruin_unavailable": True,
+                    "ruin_basis": "terminal_negative_no_firm",
+                    "ruin_basis_note": (
+                        "No prop-firm models were configured for this MC run. "
+                        "Firm-breach ruin CI is unavailable. "
+                        "B14 gate should emit legacy_ruin_scalar_fallback audit and NOT auto-pass."
+                    ),
+                    # Preserve point estimate so TS can display the diagnostic value
+                    "point_estimate": _terminal_ci.get("point_estimate"),
+                    "ci_low": None,
+                    "ci_high": None,
+                }
+                result["risk_metrics"]["probability_of_ruin_ci"] = _no_firm_authoritative
+                result["bca_confidence_intervals"]["probability_of_ruin_ci"] = _no_firm_authoritative
 
         result["rng_metadata"] = {"generator": "PCG64DXSM", "seed": request.seed}
     except Exception as _bca_exc:

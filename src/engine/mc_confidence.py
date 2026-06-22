@@ -91,9 +91,13 @@ def compute_mc_confidence_intervals(
 
     # Wave hardening 2026-06-22: cap bootstrap resample input at BCA_MAX_SAMPLE.
     # Only the CI computation is bounded; point_estimate above uses full data.
+    # FIX 1 (2026-06-22): replace=True is MANDATORY for bootstrap — sampling without
+    # replacement produces a sub-sample, not a bootstrap resample, artificially
+    # narrowing CIs and understating tail risk. B14 ci_high gate was being fed
+    # systematically too-low bounds, allowing undercapitalized strategies to pass.
     n_full = len(data)
     if n_full > BCA_MAX_SAMPLE:
-        boot_data = data[rng.choice(n_full, size=BCA_MAX_SAMPLE, replace=False)]
+        boot_data = data[rng.choice(n_full, size=BCA_MAX_SAMPLE, replace=True)]
     else:
         boot_data = data
     n_effective = len(boot_data)

@@ -13,6 +13,7 @@
  * The system NEVER auto-deploys to TradingView.
  */
 
+import { randomUUID } from "crypto";
 import { eq, and, desc, gte, sql, count } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { strategies, strategyNames, strategyGraveyard, backtests, auditLog, lifecycleTransitions, monteCarloRuns, quantumMcRuns, paperSessions, paperTrades, complianceRulesets, pilotSessions } from "../db/schema.js";
@@ -1545,6 +1546,9 @@ export class LifecycleService {
    */
   async checkAutoPromotions(context?: { correlationId?: string }): Promise<string[]> {
     const correlationId = context?.correlationId ?? null;
+    // FIX 2: Generate a per-tick correlationId so all gate evaluations in this
+    // cron cycle share a single reconstructable trace root.
+    const tickCorrelationId = correlationId ?? randomUUID();
 
     // HIGH #13: killSwitch is the FIRST gate on every lifecycle-mutating entry path.
     // CLAUDE.md §12 mandates this; lifecycle mutations are entry paths.
@@ -1958,6 +1962,170 @@ export class LifecycleService {
           logger.warn({ err, strategyId: s.id }, "checkExportability call failed (non-blocking, promotion continues)");
         }
         if (exportabilityBlocked) continue;
+
+        // FIX 1: B14 CI gate — TESTING→PAPER (mirrors PAPER→DEPLOY_READY pattern)
+        try {
+          const [mcRunForB14Tp] = await db
+            .select({
+              probabilityOfRuin: monteCarloRuns.probabilityOfRuin,
+              riskMetrics: monteCarloRuns.riskMetrics,
+            })
+            .from(monteCarloRuns)
+            .where(
+              and(
+                eq(monteCarloRuns.backtestId, latestBt.id),
+                eq(monteCarloRuns.status, "completed"),
+              ),
+            )
+            .orderBy(desc(monteCarloRuns.createdAt))
+            .limit(1);
+
+          if (mcRunForB14Tp) {
+            const rmTp = (mcRunForB14Tp.riskMetrics as Record<string, unknown> | null) ?? {};
+            const ruinCiTp = (rmTp.probability_of_ruin_ci ?? null) as Record<string, unknown> | null;
+            const pointEstimateTp = mcRunForB14Tp.probabilityOfRuin != null
+              ? Number(mcRunForB14Tp.probabilityOfRuin)
+              : null;
+
+            const b14CiResultTp = evaluateB14CiGate(ruinCiTp, pointEstimateTp);
+
+            await db.insert(auditLog).values({
+              action: "b14.gate_evaluated",
+              entityId: s.id,
+              entityType: "strategy",
+              status: b14CiResultTp.passed ? "success" : "failure",
+              decisionAuthority: "gate",
+              input: { fromState: "TESTING", toState: "PAPER" },
+              result: b14CiResultTp.auditPayload,
+              correlationId: tickCorrelationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate (TESTING→PAPER) audit insert failed (non-blocking)");
+            });
+
+            broadcastSSE("lifecycle:b14_evaluated", {
+              strategyId: s.id,
+              ...b14CiResultTp.auditPayload,
+              passed: b14CiResultTp.passed,
+              reason: b14CiResultTp.reason,
+              legacyFallback: b14CiResultTp.legacyFallback,
+            });
+
+            if (!b14CiResultTp.passed) {
+              logger.warn(
+                { strategyId: s.id, ciHigh: b14CiResultTp.auditPayload.ci_high, transition: "TESTING→PAPER" },
+                "B14 CI gate BLOCKED TESTING→PAPER: probability_of_ruin_ci.ci_high exceeds threshold",
+              );
+              strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+              continue;
+            }
+          }
+        } catch (b14TpErr) {
+          // Fail-open: B14 gate read failure is non-blocking for TESTING→PAPER
+          logger.warn({ strategyId: s.id, err: b14TpErr }, "B14 CI gate (TESTING→PAPER): read failed (non-blocking — promotion continues)");
+        }
+
+        // FIX 1: WFE gate — TESTING→PAPER (mirrors PAPER→DEPLOY_READY pattern)
+        try {
+          const wfResultsTp = (latestBt.walkForwardResults as Record<string, unknown> | null) ?? null;
+          const wfeOverallTp = wfResultsTp?.wfe_overall != null ? Number(wfResultsTp.wfe_overall) : null;
+          const wfeStatusTp = wfResultsTp?.wfe_status != null ? String(wfResultsTp.wfe_status) : null;
+
+          const wfeResultTp = evaluateWfeGate(wfeOverallTp, undefined, undefined, wfeStatusTp);
+
+          broadcastSSE("lifecycle:wfe_evaluated", {
+            strategyId: s.id,
+            wfe_overall: wfeResultTp.wfeOverall,
+            status: wfeResultTp.status,
+            hard_floor: wfeResultTp.hardFloor,
+            warn_floor: wfeResultTp.warnFloor,
+            passed: wfeResultTp.passed,
+          });
+
+          if (wfeResultTp.auditAction) {
+            const isBlockTp = wfeResultTp.status === "blocked";
+            await db.insert(auditLog).values({
+              action: wfeResultTp.auditAction,
+              entityId: s.id,
+              entityType: "strategy",
+              status: isBlockTp ? "failure" : "warning",
+              decisionAuthority: "gate",
+              input: { fromState: "TESTING", toState: "PAPER" },
+              result: {
+                wfe_overall: wfeResultTp.wfeOverall,
+                hard_floor: wfeResultTp.hardFloor,
+                warn_floor: wfeResultTp.warnFloor,
+                status: wfeResultTp.status,
+              },
+              correlationId: tickCorrelationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "WFE gate (TESTING→PAPER) audit insert failed (non-blocking)");
+            });
+
+            if (isBlockTp) {
+              logger.warn(
+                { strategyId: s.id, wfeOverall: wfeResultTp.wfeOverall, transition: "TESTING→PAPER" },
+                "WFE gate BLOCKED TESTING→PAPER: wfe_overall below hard floor",
+              );
+              strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+              continue;
+            }
+          }
+        } catch (wfeTpErr) {
+          // Fail-open: WFE gate read failure is non-blocking
+          logger.warn({ strategyId: s.id, err: wfeTpErr }, "WFE gate (TESTING→PAPER): read failed (non-blocking — promotion continues)");
+        }
+
+        // FIX 1: Parameter drift gate — TESTING→PAPER (mirrors PAPER→DEPLOY_READY pattern)
+        try {
+          const driftWfResultsTp = (latestBt.walkForwardResults as Record<string, unknown> | null) ?? null;
+          const paramStabilityTp = (driftWfResultsTp?.param_stability as Record<string, unknown> | null) ?? null;
+          const driftClassificationTp = (paramStabilityTp?.drift_classification as string | null) ?? null;
+          const driftConfidenceTp = paramStabilityTp?.drift_confidence != null
+            ? Number(paramStabilityTp.drift_confidence)
+            : null;
+
+          const driftResultTp = evaluateParameterDriftGate(driftClassificationTp, driftConfidenceTp);
+
+          broadcastSSE("lifecycle:parameter_drift_evaluated", {
+            strategyId: s.id,
+            classification: driftResultTp.classification,
+            confidence: driftResultTp.confidence,
+            status: driftResultTp.status,
+            passed: driftResultTp.passed,
+          });
+
+          if (driftResultTp.auditAction) {
+            const isBlockDriftTp = driftResultTp.status === "blocked";
+            await db.insert(auditLog).values({
+              action: driftResultTp.auditAction,
+              entityId: s.id,
+              entityType: "strategy",
+              status: isBlockDriftTp ? "failure" : "warning",
+              decisionAuthority: "gate",
+              input: { fromState: "TESTING", toState: "PAPER" },
+              result: {
+                classification: driftResultTp.classification,
+                confidence: driftResultTp.confidence,
+                status: driftResultTp.status,
+              },
+              correlationId: tickCorrelationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "Parameter drift gate (TESTING→PAPER) audit insert failed (non-blocking)");
+            });
+
+            if (isBlockDriftTp) {
+              logger.warn(
+                { strategyId: s.id, classification: driftResultTp.classification, transition: "TESTING→PAPER" },
+                "Parameter drift gate BLOCKED TESTING→PAPER: overfit_drift with high confidence",
+              );
+              strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+              continue;
+            }
+          }
+        } catch (driftTpErr) {
+          // Fail-open: drift gate read failure is non-blocking
+          logger.warn({ strategyId: s.id, err: driftTpErr }, "Parameter drift gate (TESTING→PAPER): read failed (non-blocking — promotion continues)");
+        }
 
         const result = await this.promoteStrategy(s.id, "TESTING", "PAPER", { correlationId: correlationId ?? undefined });
         if (result.success) {
@@ -2428,6 +2596,7 @@ export class LifecycleService {
             }).catch((auditErr) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "A7 audit insert failed (non-blocking)");
             });
+            strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
             continue;
           }
 
@@ -2464,6 +2633,7 @@ export class LifecycleService {
             },
             correlationId,
           }).catch(() => {});
+          strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
           continue;
         }
 
@@ -2552,6 +2722,7 @@ export class LifecycleService {
                 }).catch((auditErr) => {
                   logger.warn({ strategyId: s.id, err: auditErr }, "B14 audit insert failed (non-blocking)");
                 });
+                strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
                 continue;
               }
             }
@@ -2618,6 +2789,7 @@ export class LifecycleService {
                     },
                     "B14 CI gate BLOCKED: probability_of_ruin_ci.ci_high exceeds institutional threshold",
                   );
+                  strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
                   continue;
                 }
 
@@ -2698,6 +2870,7 @@ export class LifecycleService {
                 logger.warn({ strategyId: s.id, err: auditErr }, "B15 audit insert failed (non-blocking)");
               });
               if (b15HardGateEnabled) {
+                strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
                 continue;
               }
             }
@@ -2789,6 +2962,7 @@ export class LifecycleService {
             // Legacy-null path (status="legacy_null") does not block — promotion continues.
 
             if (isBlock) {
+              strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
               continue;
             }
           }
@@ -2872,6 +3046,7 @@ export class LifecycleService {
               logger.warn({ strategyId: s.id, err: auditErr }, "Parameter drift gate audit insert failed (non-blocking)");
             });
             if (isBlock) {
+              strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
               continue;
             }
           }
@@ -2995,6 +3170,7 @@ export class LifecycleService {
                   logger.warn({ strategyId: s.id, gate, err: auditErr }, "Pass E gate_failed audit insert failed (non-blocking)");
                 });
               }
+              strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
               continue;
             }
 

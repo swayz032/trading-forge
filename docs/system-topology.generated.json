@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-22T19:36:16.463Z",
+  "generatedAt": "2026-06-22T20:09:14.001Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -889,11 +889,11 @@
     "autonomousSubsystems": 62,
     "selfEvolvingSubsystems": 9,
     "proofStatusCounts": {
-      "runtime-proven": 37,
+      "runtime-proven": 41,
       "partially-proven": 1,
       "offline-by-design": 0,
       "experimental": 5,
-      "drifted": 26
+      "drifted": 22
     },
     "runtimeStateCounts": {
       "active": 63,
@@ -962,7 +962,9 @@
     "subsystemsMissingRecoveryMode": [],
     "subsystemsMissingProofMode": [],
     "subsystemsMissingFreshnessSignals": [],
-    "subsystemsMissingEvidenceQueries": [],
+    "subsystemsMissingEvidenceQueries": [
+      "wave29_observability_surface"
+    ],
     "subsystemsMissingOwnershipBoundary": [],
     "subsystemsMissingLearningBoundary": [],
     "subsystemsMissingDeploymentAuthority": [],
@@ -973,7 +975,7 @@
       "automationComplete": 57,
       "dataCollectionComplete": 69,
       "auditabilityComplete": 69,
-      "failureVisibilityComplete": 69,
+      "failureVisibilityComplete": 68,
       "authorityCorrect": 69,
       "learningActive": 8,
       "incompleteSubsystems": [
@@ -982,12 +984,9 @@
         "composite_shadow_gate",
         "dd_velocity_gate",
         "exit_engine_ab_harness",
-        "frozen_policy_contract",
         "late_cycle_overheating_regime",
-        "pbo_overfit_gate",
         "phase5_contract_spec_scaffold",
         "quantum_rl_challenger",
-        "regime_drift_detector",
         "replay_grade_confluence",
         "replay_grade_consistency",
         "replay_grade_critique",
@@ -996,7 +995,6 @@
         "replay_grade_survival_twin",
         "replay_grade_unified_dispatcher",
         "replay_harness_engine",
-        "shadow_stage",
         "slumhouse_discord_oauth",
         "slumhouse_frontend",
         "slumhouse_routes",
@@ -1037,11 +1035,14 @@
         "observability_reliability",
         "operator_absent_autopilot",
         "parameter_robustness_gate",
+        "pbo_overfit_gate",
         "pine_export_preparation",
         "pre_market_briefing_service",
         "pre_market_institutional_expansion",
         "quantum_experimental",
+        "regime_drift_detector",
         "research_orchestration",
+        "shadow_stage",
         "signal_correlation_gate",
         "smt_divergence_engine",
         "smt_live_bridge_service",
@@ -1060,11 +1061,9 @@
         "frozen_policy_contract",
         "late_cycle_overheating_regime",
         "pattern_aggregator_service",
-        "pbo_overfit_gate",
         "phase5_contract_spec_scaffold",
         "production_hardening",
         "quantum_rl_challenger",
-        "regime_drift_detector",
         "replay_grade_confluence",
         "replay_grade_consistency",
         "replay_grade_critique",
@@ -1073,7 +1072,6 @@
         "replay_grade_survival_twin",
         "replay_grade_unified_dispatcher",
         "replay_harness_engine",
-        "shadow_stage",
         "slumhouse_discord_oauth",
         "slumhouse_frontend",
         "slumhouse_routes",
@@ -1110,15 +1108,12 @@
         "dd_velocity_gate:manual_gate:operator-only-recovery",
         "exit_engine_ab_harness:invalid-active-proof-mode",
         "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
-        "frozen_policy_contract:invalid-active-proof-mode",
         "frozen_policy_contract:manual_gate:operator_hmac_override",
         "late_cycle_overheating_regime:invalid-active-proof-mode",
         "pattern_aggregator_service:manual_gate:kill_switch",
-        "pbo_overfit_gate:invalid-active-proof-mode",
         "phase5_contract_spec_scaffold:manual_gate:operator-approve",
         "production_hardening:manual_gate:operator-halt-only",
         "quantum_rl_challenger:invalid-active-proof-mode",
-        "regime_drift_detector:invalid-active-proof-mode",
         "replay_grade_confluence:invalid-active-proof-mode",
         "replay_grade_confluence:manual_gate:operator-approve",
         "replay_grade_consistency:invalid-active-proof-mode",
@@ -1135,7 +1130,6 @@
         "replay_grade_unified_dispatcher:manual_gate:operator-approve",
         "replay_harness_engine:invalid-active-proof-mode",
         "replay_harness_engine:manual_gate:operator-approve",
-        "shadow_stage:invalid-active-proof-mode",
         "slumhouse_discord_oauth:invalid-active-proof-mode",
         "slumhouse_frontend:invalid-active-proof-mode",
         "slumhouse_routes:invalid-active-proof-mode",
@@ -1144,7 +1138,7 @@
         "strategy_health_observability:invalid-active-proof-mode",
         "ts_python_parity_ci_gate:invalid-active-proof-mode",
         "ts_python_parity_ci_gate:manual_gate:ci_gate",
-        "wave29_observability_surface:invalid-active-proof-mode",
+        "wave29_observability_surface:missing-evidence-queries",
         "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
         "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
         "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
@@ -1168,17 +1162,14 @@
         "dd_velocity_gate:manual_gate:operator-only-recovery",
         "exit_engine_ab_harness:invalid-active-proof-mode",
         "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
-        "frozen_policy_contract:invalid-active-proof-mode",
         "frozen_policy_contract:manual_gate:operator_hmac_override",
         "late_cycle_overheating_regime:invalid-active-proof-mode",
         "pattern_aggregator_service:manual_gate:kill_switch",
-        "pbo_overfit_gate:invalid-active-proof-mode",
         "phase5_contract_spec_scaffold:manual_gate:operator-approve",
         "production_hardening:manual_gate:operator-halt-only",
         "prop_firm_survival_twin:experimental_governance",
         "quantum_adversarial_stress:experimental_governance",
         "quantum_rl_challenger:invalid-active-proof-mode",
-        "regime_drift_detector:invalid-active-proof-mode",
         "replay_grade_confluence:invalid-active-proof-mode",
         "replay_grade_confluence:manual_gate:operator-approve",
         "replay_grade_consistency:invalid-active-proof-mode",
@@ -1195,7 +1186,6 @@
         "replay_grade_unified_dispatcher:manual_gate:operator-approve",
         "replay_harness_engine:invalid-active-proof-mode",
         "replay_harness_engine:manual_gate:operator-approve",
-        "shadow_stage:invalid-active-proof-mode",
         "slumhouse_discord_oauth:invalid-active-proof-mode",
         "slumhouse_frontend:invalid-active-proof-mode",
         "slumhouse_routes:invalid-active-proof-mode",
@@ -1205,7 +1195,7 @@
         "synthetic_black_swan_survival:experimental_governance",
         "ts_python_parity_ci_gate:invalid-active-proof-mode",
         "ts_python_parity_ci_gate:manual_gate:ci_gate",
-        "wave29_observability_surface:invalid-active-proof-mode",
+        "wave29_observability_surface:missing-evidence-queries",
         "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
         "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
         "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
@@ -1226,13 +1216,11 @@
         "frozen_policy_contract",
         "late_cycle_overheating_regime",
         "pattern_aggregator_service",
-        "pbo_overfit_gate",
         "phase5_contract_spec_scaffold",
         "production_hardening",
         "prop_firm_survival_twin",
         "quantum_adversarial_stress",
         "quantum_rl_challenger",
-        "regime_drift_detector",
         "replay_grade_confluence",
         "replay_grade_consistency",
         "replay_grade_critique",
@@ -1241,7 +1229,6 @@
         "replay_grade_survival_twin",
         "replay_grade_unified_dispatcher",
         "replay_harness_engine",
-        "shadow_stage",
         "slumhouse_discord_oauth",
         "slumhouse_frontend",
         "slumhouse_routes",
@@ -3088,8 +3075,8 @@
         "decisionAuthority": "gate",
         "manualGate": "operator_hmac_override",
         "selfEvolving": false,
-        "proofMode": "audit_log_evidence",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "production",
         "deploymentAuthority": "operator_only",
@@ -3137,9 +3124,8 @@
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
+        "preprodProofStatus": "runtime-proven",
         "productionBlockers": [
-          "invalid-active-proof-mode",
           "manual_gate:operator_hmac_override"
         ],
         "productionCriteria": [
@@ -3175,9 +3161,7 @@
           "SELECT id, frozen_policy_hash, frozen_policy_set_at, frozen_policy_override_count FROM strategies WHERE frozen_policy_hash IS NOT NULL",
           "SELECT * FROM audit_log WHERE action LIKE 'frozen_policy.%' OR action = 'lifecycle.frozen_policy_drift_blocked' ORDER BY created_at DESC LIMIT 20"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "hod_lod_persistence_bridge",
@@ -4267,8 +4251,8 @@
         "decisionAuthority": "gate",
         "manualGate": "none",
         "selfEvolving": false,
-        "proofMode": "audit_log_evidence",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "production",
         "deploymentAuthority": "operator_only",
@@ -4302,17 +4286,15 @@
         "closedLoopStatus": "not_collecting",
         "learningMode": "deterministic_instrumented",
         "operatingClass": "deterministic_instrumented",
-        "launchReady": false,
+        "launchReady": true,
         "automationStatus": "complete",
         "dataCollectionStatus": "complete",
         "auditabilityStatus": "complete",
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
-        "productionBlockers": [
-          "invalid-active-proof-mode"
-        ],
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
         "productionCriteria": [
           "authority boundary remains enforced",
           "data collection stays complete across critical handoffs",
@@ -4340,9 +4322,7 @@
         "evidenceQueries": [
           "SELECT * FROM audit_log WHERE action LIKE 'lifecycle.pbo_%' ORDER BY created_at DESC LIMIT 10"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "phase5_contract_spec_scaffold",
@@ -5211,8 +5191,8 @@
         "decisionAuthority": "system",
         "manualGate": "none",
         "selfEvolving": false,
-        "proofMode": "audit_log_evidence",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "production",
         "deploymentAuthority": "operator_only",
@@ -5252,17 +5232,15 @@
         "closedLoopStatus": "not_collecting",
         "learningMode": "deterministic_instrumented",
         "operatingClass": "deterministic_instrumented",
-        "launchReady": false,
+        "launchReady": true,
         "automationStatus": "complete",
         "dataCollectionStatus": "complete",
         "auditabilityStatus": "complete",
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
-        "productionBlockers": [
-          "invalid-active-proof-mode"
-        ],
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
         "productionCriteria": [
           "authority boundary remains enforced",
           "data collection stays complete across critical handoffs",
@@ -5299,9 +5277,7 @@
           "SELECT * FROM audit_log WHERE action = 'regime_drift_detector.completed' ORDER BY created_at DESC LIMIT 7",
           "SELECT * FROM audit_log WHERE action IN ('strategy.regime_drift_detected','lifecycle.regime_drift_demotion') ORDER BY created_at DESC LIMIT 20"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "replay_grade_confluence",
@@ -6090,8 +6066,8 @@
         "decisionAuthority": "system",
         "manualGate": "none",
         "selfEvolving": false,
-        "proofMode": "audit_log_evidence",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "production",
         "deploymentAuthority": "operator_only",
@@ -6128,17 +6104,15 @@
         "closedLoopStatus": "not_collecting",
         "learningMode": "deterministic_instrumented",
         "operatingClass": "deterministic_instrumented",
-        "launchReady": false,
+        "launchReady": true,
         "automationStatus": "complete",
         "dataCollectionStatus": "complete",
         "auditabilityStatus": "complete",
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
-        "productionBlockers": [
-          "invalid-active-proof-mode"
-        ],
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
         "productionCriteria": [
           "authority boundary remains enforced",
           "data collection stays complete across critical handoffs",
@@ -6172,9 +6146,7 @@
           "SELECT COUNT(*) FROM lifecycle_shadow_signals WHERE created_at > NOW() - INTERVAL '7 days'",
           "SELECT * FROM audit_log WHERE action LIKE 'lifecycle.shadow_%' ORDER BY created_at DESC LIMIT 10"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "signal_correlation_gate",
@@ -7369,7 +7341,7 @@
         "decisionAuthority": "advisory",
         "manualGate": "none",
         "selfEvolving": false,
-        "proofMode": "metrics_surface",
+        "proofMode": "active-runtime",
         "proofStatus": "drifted",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "production",
@@ -7419,12 +7391,12 @@
         "automationStatus": "complete",
         "dataCollectionStatus": "complete",
         "auditabilityStatus": "complete",
-        "failureVisibilityStatus": "complete",
+        "failureVisibilityStatus": "incomplete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
         "preprodProofStatus": "drifted",
         "productionBlockers": [
-          "invalid-active-proof-mode"
+          "missing-evidence-queries"
         ],
         "productionCriteria": [
           "authority boundary remains enforced",
@@ -7463,7 +7435,7 @@
         ],
         "evidenceQueries": [],
         "coverageGaps": [
-          "invalid-active-proof-mode"
+          "missing-evidence-queries"
         ]
       },
       {
@@ -9741,8 +9713,8 @@
       "decisionAuthority": "gate",
       "manualGate": "operator_hmac_override",
       "selfEvolving": false,
-      "proofMode": "audit_log_evidence",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "production",
       "deploymentAuthority": "operator_only",
@@ -9790,9 +9762,8 @@
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
+      "preprodProofStatus": "runtime-proven",
       "productionBlockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator_hmac_override"
       ],
       "productionCriteria": [
@@ -9828,9 +9799,7 @@
         "SELECT id, frozen_policy_hash, frozen_policy_set_at, frozen_policy_override_count FROM strategies WHERE frozen_policy_hash IS NOT NULL",
         "SELECT * FROM audit_log WHERE action LIKE 'frozen_policy.%' OR action = 'lifecycle.frozen_policy_drift_blocked' ORDER BY created_at DESC LIMIT 20"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "hod_lod_persistence_bridge",
@@ -10920,8 +10889,8 @@
       "decisionAuthority": "gate",
       "manualGate": "none",
       "selfEvolving": false,
-      "proofMode": "audit_log_evidence",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "production",
       "deploymentAuthority": "operator_only",
@@ -10955,17 +10924,15 @@
       "closedLoopStatus": "not_collecting",
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
-      "launchReady": false,
+      "launchReady": true,
       "automationStatus": "complete",
       "dataCollectionStatus": "complete",
       "auditabilityStatus": "complete",
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
-      "productionBlockers": [
-        "invalid-active-proof-mode"
-      ],
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
       "productionCriteria": [
         "authority boundary remains enforced",
         "data collection stays complete across critical handoffs",
@@ -10993,9 +10960,7 @@
       "evidenceQueries": [
         "SELECT * FROM audit_log WHERE action LIKE 'lifecycle.pbo_%' ORDER BY created_at DESC LIMIT 10"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "phase5_contract_spec_scaffold",
@@ -11864,8 +11829,8 @@
       "decisionAuthority": "system",
       "manualGate": "none",
       "selfEvolving": false,
-      "proofMode": "audit_log_evidence",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "production",
       "deploymentAuthority": "operator_only",
@@ -11905,17 +11870,15 @@
       "closedLoopStatus": "not_collecting",
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
-      "launchReady": false,
+      "launchReady": true,
       "automationStatus": "complete",
       "dataCollectionStatus": "complete",
       "auditabilityStatus": "complete",
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
-      "productionBlockers": [
-        "invalid-active-proof-mode"
-      ],
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
       "productionCriteria": [
         "authority boundary remains enforced",
         "data collection stays complete across critical handoffs",
@@ -11952,9 +11915,7 @@
         "SELECT * FROM audit_log WHERE action = 'regime_drift_detector.completed' ORDER BY created_at DESC LIMIT 7",
         "SELECT * FROM audit_log WHERE action IN ('strategy.regime_drift_detected','lifecycle.regime_drift_demotion') ORDER BY created_at DESC LIMIT 20"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "replay_grade_confluence",
@@ -12743,8 +12704,8 @@
       "decisionAuthority": "system",
       "manualGate": "none",
       "selfEvolving": false,
-      "proofMode": "audit_log_evidence",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "production",
       "deploymentAuthority": "operator_only",
@@ -12781,17 +12742,15 @@
       "closedLoopStatus": "not_collecting",
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
-      "launchReady": false,
+      "launchReady": true,
       "automationStatus": "complete",
       "dataCollectionStatus": "complete",
       "auditabilityStatus": "complete",
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
-      "productionBlockers": [
-        "invalid-active-proof-mode"
-      ],
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
       "productionCriteria": [
         "authority boundary remains enforced",
         "data collection stays complete across critical handoffs",
@@ -12825,9 +12784,7 @@
         "SELECT COUNT(*) FROM lifecycle_shadow_signals WHERE created_at > NOW() - INTERVAL '7 days'",
         "SELECT * FROM audit_log WHERE action LIKE 'lifecycle.shadow_%' ORDER BY created_at DESC LIMIT 10"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "signal_correlation_gate",
@@ -14022,7 +13979,7 @@
       "decisionAuthority": "advisory",
       "manualGate": "none",
       "selfEvolving": false,
-      "proofMode": "metrics_surface",
+      "proofMode": "active-runtime",
       "proofStatus": "drifted",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "production",
@@ -14072,12 +14029,12 @@
       "automationStatus": "complete",
       "dataCollectionStatus": "complete",
       "auditabilityStatus": "complete",
-      "failureVisibilityStatus": "complete",
+      "failureVisibilityStatus": "incomplete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
       "preprodProofStatus": "drifted",
       "productionBlockers": [
-        "invalid-active-proof-mode"
+        "missing-evidence-queries"
       ],
       "productionCriteria": [
         "authority boundary remains enforced",
@@ -14116,7 +14073,7 @@
       ],
       "evidenceQueries": [],
       "coverageGaps": [
-        "invalid-active-proof-mode"
+        "missing-evidence-queries"
       ]
     },
     {

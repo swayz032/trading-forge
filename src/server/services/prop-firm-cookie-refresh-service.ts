@@ -28,10 +28,12 @@
  * Pipeline-pause guard: BYPASSED (safety signal — matches C1/C2/C8 pattern).
  */
 
+import { randomUUID } from "node:crypto";
 import { db } from "../db/index.js";
 import { auditLog } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { AlertFactory } from "./alert-service.js";
+import { insertAuditRow } from "../lib/audit-log-helper.js";
 
 // ─── F-8: Credential redaction helper ─────────────────────────────────────────
 // Keys whose values must never appear in any log output.
@@ -232,7 +234,8 @@ export interface CookieRefreshReport {
  * Pipeline pause guard BYPASSED (safety signal).
  */
 export async function runPropFirmCookieRefresh(): Promise<CookieRefreshReport> {
-  logger.info("prop-firm-cookie-refresh: starting daily cookie refresh");
+  const sweepCorrelationId = randomUUID();
+  logger.info({ sweepCorrelationId }, "prop-firm-cookie-refresh: starting daily cookie refresh");
 
   const results: FirmRefreshResult[] = [];
 
@@ -251,7 +254,7 @@ export async function runPropFirmCookieRefresh(): Promise<CookieRefreshReport> {
         input: { firmId: firm.firmId } as Record<string, unknown>,
         result: { status: result.status, error: result.error ?? null } as Record<string, unknown>,
         status: result.status === "failed" ? "failed" : "success",
-        correlationId: null,
+        correlationId: sweepCorrelationId,
       }).catch((logErr) => {
         logger.warn({ logErr, firmId: firm.firmId }, "prop-firm-cookie-refresh: audit log write failed");
       });
@@ -263,7 +266,22 @@ export async function runPropFirmCookieRefresh(): Promise<CookieRefreshReport> {
       // Should not reach here (refreshFirmCookies catches internally), but be safe
       const errorMsg = err instanceof Error ? err.message : String(err);
       results.push({ firmId: firm.firmId, status: "failed", error: errorMsg });
-      await AlertFactory.notifyCookieRefreshFailed(firm.firmId, errorMsg).catch(() => {});
+      // Write audit row for the outer-catch path BEFORE notifying, so even if
+      // Discord fails we have a traceable record of the failure.
+      await insertAuditRow({
+        action: "prop_firm_cookie_refresh.outer_catch_notify_failed",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { firmId: firm.firmId, errorMsg } as Record<string, unknown>,
+        result: { caught: "outer_catch" } as Record<string, unknown>,
+        status: "failed",
+        correlationId: sweepCorrelationId,
+      }).catch((auditErr) => logger.error({ auditErr, firmId: firm.firmId }, "prop-firm-cookie-refresh: outer-catch audit row failed"));
+      logger.warn({ firmId: firm.firmId, errorMsg, sweepCorrelationId }, "prop-firm-cookie-refresh: outer catch — Discord alert failed");
+      await AlertFactory.notifyCookieRefreshFailed(firm.firmId, errorMsg).catch((notifyErr: unknown) => {
+        logger.warn({ notifyErr, firmId: firm.firmId, sweepCorrelationId }, "prop-firm-cookie-refresh: outer catch — Discord notify also failed after audit row");
+      });
     }
   }
 

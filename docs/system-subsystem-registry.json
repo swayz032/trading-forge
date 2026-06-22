@@ -3647,29 +3647,59 @@
     "manual_gate": "operator-approve",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 27 Pass 2 carry-forward — replay-grading harness for Stage 2 weighted confluence-score disagreement vs OOS Sharpe degradation. scripts/replay-grade-confluence.ts + src/server/lib/replay/confluence-disagreement.ts (Pearson r, MAD, Mann-Whitney U, Spearman cross-method). Reuses quantum_mc_runs with governance_labels.replay_mode=true marker. 47 vitest GREEN. Advisory-only — no hard-gate wiring.",
-    "data_sources": ["quantum_mc_runs", "walk_forward_windows", "backtests", "backtest_trades"],
-    "reads_from": ["quantum_mc_runs", "walk_forward_windows", "backtests", "backtest_trades"],
+    "automation_scope": "Wave 27 Pass 2 carry-forward \u00e2\u20ac\u201d replay-grading harness for Stage 2 weighted confluence-score disagreement vs OOS Sharpe degradation. scripts/replay-grade-confluence.ts + src/server/lib/replay/confluence-disagreement.ts (Pearson r, MAD, Mann-Whitney U, Spearman cross-method). Reuses quantum_mc_runs with governance_labels.replay_mode=true marker. 47 vitest GREEN. Advisory-only \u00e2\u20ac\u201d no hard-gate wiring.",
+    "data_sources": [
+      "quantum_mc_runs",
+      "walk_forward_windows",
+      "backtests",
+      "backtest_trades"
+    ],
+    "reads_from": [
+      "quantum_mc_runs",
+      "walk_forward_windows",
+      "backtests",
+      "backtest_trades"
+    ],
     "writes_to": [],
-    "audit_tables": ["audit_log"],
-    "audit_actions": ["replay_grade_confluence.signal_detected", "replay_grade_confluence.no_signal", "replay_grade_confluence.inconclusive", "replay_grade_confluence.preliminary"],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "replay_grade_confluence.signal_detected",
+      "replay_grade_confluence.no_signal",
+      "replay_grade_confluence.inconclusive",
+      "replay_grade_confluence.preliminary"
+    ],
     "metrics_surfaces": [],
-    "telemetry_sources": ["stdout-json-summary"],
+    "telemetry_sources": [
+      "stdout-json-summary"
+    ],
     "scheduler_jobs": [],
     "routes": [],
-    "engine_subsystems": ["replay"],
-    "database_tables": ["quantum_mc_runs", "backtests", "backtest_trades", "walk_forward_windows"],
+    "engine_subsystems": [
+      "replay"
+    ],
+    "database_tables": [
+      "quantum_mc_runs",
+      "backtests",
+      "backtest_trades",
+      "walk_forward_windows"
+    ],
     "learning_from": [],
     "learning_assets": [],
     "learning_writes_to": [],
-    "failure_visibility": ["stdout-json-summary"],
+    "failure_visibility": [
+      "stdout-json-summary"
+    ],
     "recovery_mode": "operator-rerun",
     "health_check": "src/server/__tests__/replay/replay-grade-confluence.test.ts",
     "status": "active",
     "self_evolving": false,
     "proof_mode": "static-evidence",
     "freshness_signals": [],
-    "evidence_queries": ["src/server/__tests__/replay/replay-grade-confluence.test.ts"],
+    "evidence_queries": [
+      "src/server/__tests__/replay/replay-grade-confluence.test.ts"
+    ],
     "ownership_boundary": "internal-only",
     "learning_boundary": "engine_only",
     "deployment_authority": "autonomous_pre_deploy",
@@ -3683,29 +3713,56 @@
     "manual_gate": "operator-approve",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 27 Pass 2 carry-forward — replay-grading harness for trade_critique grade signal disagreement. scripts/replay-grade-critique.ts + src/server/lib/replay/critique-disagreement.ts (Mann-Whitney U + parameter hint application tracking). 14 vitest GREEN. Advisory-only.",
-    "data_sources": ["trade_critique", "backtests", "backtest_trades"],
-    "reads_from": ["trade_critique", "backtests", "backtest_trades"],
+    "automation_scope": "Wave 27 Pass 2 carry-forward \u00e2\u20ac\u201d replay-grading harness for trade_critique grade signal disagreement. scripts/replay-grade-critique.ts + src/server/lib/replay/critique-disagreement.ts (Mann-Whitney U + parameter hint application tracking). 14 vitest GREEN. Advisory-only.",
+    "data_sources": [
+      "trade_critique",
+      "backtests",
+      "backtest_trades"
+    ],
+    "reads_from": [
+      "trade_critique",
+      "backtests",
+      "backtest_trades"
+    ],
     "writes_to": [],
-    "audit_tables": ["audit_log"],
-    "audit_actions": ["replay_grade_critique.signal_detected", "replay_grade_critique.no_signal", "replay_grade_critique.inconclusive", "replay_grade_critique.preliminary"],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "replay_grade_critique.signal_detected",
+      "replay_grade_critique.no_signal",
+      "replay_grade_critique.inconclusive",
+      "replay_grade_critique.preliminary"
+    ],
     "metrics_surfaces": [],
-    "telemetry_sources": ["stdout-json-summary"],
+    "telemetry_sources": [
+      "stdout-json-summary"
+    ],
     "scheduler_jobs": [],
     "routes": [],
-    "engine_subsystems": ["replay"],
-    "database_tables": ["trade_critique", "backtests", "backtest_trades"],
+    "engine_subsystems": [
+      "replay"
+    ],
+    "database_tables": [
+      "trade_critique",
+      "backtests",
+      "backtest_trades"
+    ],
     "learning_from": [],
     "learning_assets": [],
     "learning_writes_to": [],
-    "failure_visibility": ["stdout-json-summary"],
+    "failure_visibility": [
+      "stdout-json-summary"
+    ],
     "recovery_mode": "operator-rerun",
     "health_check": "src/server/__tests__/replay/replay-grade-critique.test.ts",
     "status": "active",
     "self_evolving": false,
     "proof_mode": "static-evidence",
     "freshness_signals": [],
-    "evidence_queries": ["src/server/__tests__/replay/replay-grade-critique.test.ts"],
+    "evidence_queries": [
+      "src/server/__tests__/replay/replay-grade-critique.test.ts"
+    ],
     "ownership_boundary": "internal-only",
     "learning_boundary": "engine_only",
     "deployment_authority": "autonomous_pre_deploy",
@@ -3719,29 +3776,55 @@
     "manual_gate": "operator-approve",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 27 Pass 2 carry-forward — replay-grading harness for B15 parameter-robustness battery as OOS failure predictor. scripts/replay-grade-robustness.ts + src/server/lib/replay/robustness-disagreement.ts (confusion matrix + threshold sensitivity sweep). 46 vitest GREEN. Advisory-only.",
-    "data_sources": ["b15_robustness_runs", "backtests", "backtest_trades"],
-    "reads_from": ["b15_robustness_runs", "backtests", "backtest_trades"],
+    "automation_scope": "Wave 27 Pass 2 carry-forward \u00e2\u20ac\u201d replay-grading harness for B15 parameter-robustness battery as OOS failure predictor. scripts/replay-grade-robustness.ts + src/server/lib/replay/robustness-disagreement.ts (confusion matrix + threshold sensitivity sweep). 46 vitest GREEN. Advisory-only.",
+    "data_sources": [
+      "b15_robustness_runs",
+      "backtests",
+      "backtest_trades"
+    ],
+    "reads_from": [
+      "b15_robustness_runs",
+      "backtests",
+      "backtest_trades"
+    ],
     "writes_to": [],
-    "audit_tables": ["audit_log"],
-    "audit_actions": ["replay_grade_robustness.signal_detected", "replay_grade_robustness.no_signal", "replay_grade_robustness.inconclusive", "replay_grade_robustness.preliminary"],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "replay_grade_robustness.signal_detected",
+      "replay_grade_robustness.no_signal",
+      "replay_grade_robustness.inconclusive",
+      "replay_grade_robustness.preliminary"
+    ],
     "metrics_surfaces": [],
-    "telemetry_sources": ["stdout-json-summary"],
+    "telemetry_sources": [
+      "stdout-json-summary"
+    ],
     "scheduler_jobs": [],
     "routes": [],
-    "engine_subsystems": ["replay"],
-    "database_tables": ["backtests", "backtest_trades"],
+    "engine_subsystems": [
+      "replay"
+    ],
+    "database_tables": [
+      "backtests",
+      "backtest_trades"
+    ],
     "learning_from": [],
     "learning_assets": [],
     "learning_writes_to": [],
-    "failure_visibility": ["stdout-json-summary"],
+    "failure_visibility": [
+      "stdout-json-summary"
+    ],
     "recovery_mode": "operator-rerun",
     "health_check": "src/server/__tests__/replay/replay-grade-robustness.test.ts",
     "status": "active",
     "self_evolving": false,
     "proof_mode": "static-evidence",
     "freshness_signals": [],
-    "evidence_queries": ["src/server/__tests__/replay/replay-grade-robustness.test.ts"],
+    "evidence_queries": [
+      "src/server/__tests__/replay/replay-grade-robustness.test.ts"
+    ],
     "ownership_boundary": "internal-only",
     "learning_boundary": "engine_only",
     "deployment_authority": "autonomous_pre_deploy",
@@ -3755,29 +3838,65 @@
     "manual_gate": "operator-approve",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 27 Pass 4 carry-forward — B14 Survival Twin replay-grading harness. Python compute leaf src/engine/replay/survival_twin_replay.py (35 pytest) + TS analysis layer scripts/replay-grade-survival-twin.ts + src/server/lib/replay/survival-twin-disagreement.ts (Pearson r, MAD, Mann-Whitney U per-firm Topstep vs MFFU, Spearman cross-method agreement vs Pass A ci_high). 32 vitest GREEN. survival_scorer.py audit cleared PASS (write-free contract). Reuses quantum_mc_runs with survival_twin=true governance labels. Advisory-only.",
-    "data_sources": ["quantum_mc_runs", "walk_forward_windows", "backtests", "backtest_trades"],
-    "reads_from": ["quantum_mc_runs", "walk_forward_windows", "backtests", "backtest_trades"],
-    "writes_to": ["quantum_mc_runs"],
-    "audit_tables": ["audit_log"],
-    "audit_actions": ["survival_twin_replay.completed", "survival_twin_replay.failed", "replay_grade_survival_twin.signal_detected", "replay_grade_survival_twin.no_signal", "replay_grade_survival_twin.inconclusive", "replay_grade_survival_twin.preliminary"],
+    "automation_scope": "Wave 27 Pass 4 carry-forward \u00e2\u20ac\u201d B14 Survival Twin replay-grading harness. Python compute leaf src/engine/replay/survival_twin_replay.py (35 pytest) + TS analysis layer scripts/replay-grade-survival-twin.ts + src/server/lib/replay/survival-twin-disagreement.ts (Pearson r, MAD, Mann-Whitney U per-firm Topstep vs MFFU, Spearman cross-method agreement vs Pass A ci_high). 32 vitest GREEN. survival_scorer.py audit cleared PASS (write-free contract). Reuses quantum_mc_runs with survival_twin=true governance labels. Advisory-only.",
+    "data_sources": [
+      "quantum_mc_runs",
+      "walk_forward_windows",
+      "backtests",
+      "backtest_trades"
+    ],
+    "reads_from": [
+      "quantum_mc_runs",
+      "walk_forward_windows",
+      "backtests",
+      "backtest_trades"
+    ],
+    "writes_to": [
+      "quantum_mc_runs"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "survival_twin_replay.completed",
+      "survival_twin_replay.failed",
+      "replay_grade_survival_twin.signal_detected",
+      "replay_grade_survival_twin.no_signal",
+      "replay_grade_survival_twin.inconclusive",
+      "replay_grade_survival_twin.preliminary"
+    ],
     "metrics_surfaces": [],
-    "telemetry_sources": ["stdout-json-summary"],
+    "telemetry_sources": [
+      "stdout-json-summary"
+    ],
     "scheduler_jobs": [],
     "routes": [],
-    "engine_subsystems": ["replay", "survival"],
-    "database_tables": ["quantum_mc_runs", "backtests", "backtest_trades", "walk_forward_windows"],
+    "engine_subsystems": [
+      "replay",
+      "survival"
+    ],
+    "database_tables": [
+      "quantum_mc_runs",
+      "backtests",
+      "backtest_trades",
+      "walk_forward_windows"
+    ],
     "learning_from": [],
     "learning_assets": [],
     "learning_writes_to": [],
-    "failure_visibility": ["stdout-json-summary"],
+    "failure_visibility": [
+      "stdout-json-summary"
+    ],
     "recovery_mode": "operator-rerun",
     "health_check": "tests/python/replay/test_survival_twin_replay.py",
     "status": "active",
     "self_evolving": false,
     "proof_mode": "static-evidence",
     "freshness_signals": [],
-    "evidence_queries": ["tests/python/replay/test_survival_twin_replay.py", "src/server/__tests__/replay/replay-grade-survival-twin.test.ts"],
+    "evidence_queries": [
+      "tests/python/replay/test_survival_twin_replay.py",
+      "src/server/__tests__/replay/replay-grade-survival-twin.test.ts"
+    ],
     "ownership_boundary": "internal-only",
     "learning_boundary": "engine_only",
     "deployment_authority": "autonomous_pre_deploy",
@@ -3791,29 +3910,56 @@
     "manual_gate": "operator-approve",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 27 Pass 3 carry-forward — replay-grading harness for Wave 26 pattern-aggregator appendix mutations vs OOS Sharpe delta. scripts/replay-grade-pattern-aggregator.ts + src/server/lib/replay/pattern-aggregator-disagreement.ts + threshold sensitivity sweep. Advisory-only.",
-    "data_sources": ["prompt_versions", "backtests", "backtest_trades"],
-    "reads_from": ["prompt_versions", "backtests", "backtest_trades"],
+    "automation_scope": "Wave 27 Pass 3 carry-forward \u00e2\u20ac\u201d replay-grading harness for Wave 26 pattern-aggregator appendix mutations vs OOS Sharpe delta. scripts/replay-grade-pattern-aggregator.ts + src/server/lib/replay/pattern-aggregator-disagreement.ts + threshold sensitivity sweep. Advisory-only.",
+    "data_sources": [
+      "prompt_versions",
+      "backtests",
+      "backtest_trades"
+    ],
+    "reads_from": [
+      "prompt_versions",
+      "backtests",
+      "backtest_trades"
+    ],
     "writes_to": [],
-    "audit_tables": ["audit_log"],
-    "audit_actions": ["replay_grade_pattern_aggregator.signal_detected", "replay_grade_pattern_aggregator.no_signal", "replay_grade_pattern_aggregator.inconclusive", "replay_grade_pattern_aggregator.preliminary"],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "replay_grade_pattern_aggregator.signal_detected",
+      "replay_grade_pattern_aggregator.no_signal",
+      "replay_grade_pattern_aggregator.inconclusive",
+      "replay_grade_pattern_aggregator.preliminary"
+    ],
     "metrics_surfaces": [],
-    "telemetry_sources": ["stdout-json-summary"],
+    "telemetry_sources": [
+      "stdout-json-summary"
+    ],
     "scheduler_jobs": [],
     "routes": [],
-    "engine_subsystems": ["replay"],
-    "database_tables": ["prompt_versions", "backtests", "backtest_trades"],
+    "engine_subsystems": [
+      "replay"
+    ],
+    "database_tables": [
+      "prompt_versions",
+      "backtests",
+      "backtest_trades"
+    ],
     "learning_from": [],
     "learning_assets": [],
     "learning_writes_to": [],
-    "failure_visibility": ["stdout-json-summary"],
+    "failure_visibility": [
+      "stdout-json-summary"
+    ],
     "recovery_mode": "operator-rerun",
     "health_check": "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts",
     "status": "active",
     "self_evolving": false,
     "proof_mode": "static-evidence",
     "freshness_signals": [],
-    "evidence_queries": ["src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts"],
+    "evidence_queries": [
+      "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts"
+    ],
     "ownership_boundary": "internal-only",
     "learning_boundary": "engine_only",
     "deployment_authority": "autonomous_pre_deploy",
@@ -3827,29 +3973,53 @@
     "manual_gate": "operator-approve",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 27 Pass 3 carry-forward — replay-grading harness for Wave 26 consistency-tracker 40/50% Topstep gates as OOS payout-denial predictor. scripts/replay-grade-consistency.ts + src/server/lib/replay/consistency-disagreement.ts + threshold sensitivity sweep. Advisory-only.",
-    "data_sources": ["backtests", "backtest_trades"],
-    "reads_from": ["backtests", "backtest_trades"],
+    "automation_scope": "Wave 27 Pass 3 carry-forward \u00e2\u20ac\u201d replay-grading harness for Wave 26 consistency-tracker 40/50% Topstep gates as OOS payout-denial predictor. scripts/replay-grade-consistency.ts + src/server/lib/replay/consistency-disagreement.ts + threshold sensitivity sweep. Advisory-only.",
+    "data_sources": [
+      "backtests",
+      "backtest_trades"
+    ],
+    "reads_from": [
+      "backtests",
+      "backtest_trades"
+    ],
     "writes_to": [],
-    "audit_tables": ["audit_log"],
-    "audit_actions": ["replay_grade_consistency.signal_detected", "replay_grade_consistency.no_signal", "replay_grade_consistency.inconclusive", "replay_grade_consistency.preliminary"],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "replay_grade_consistency.signal_detected",
+      "replay_grade_consistency.no_signal",
+      "replay_grade_consistency.inconclusive",
+      "replay_grade_consistency.preliminary"
+    ],
     "metrics_surfaces": [],
-    "telemetry_sources": ["stdout-json-summary"],
+    "telemetry_sources": [
+      "stdout-json-summary"
+    ],
     "scheduler_jobs": [],
     "routes": [],
-    "engine_subsystems": ["replay"],
-    "database_tables": ["backtests", "backtest_trades"],
+    "engine_subsystems": [
+      "replay"
+    ],
+    "database_tables": [
+      "backtests",
+      "backtest_trades"
+    ],
     "learning_from": [],
     "learning_assets": [],
     "learning_writes_to": [],
-    "failure_visibility": ["stdout-json-summary"],
+    "failure_visibility": [
+      "stdout-json-summary"
+    ],
     "recovery_mode": "operator-rerun",
     "health_check": "src/server/__tests__/replay/replay-grade-consistency.test.ts",
     "status": "active",
     "self_evolving": false,
     "proof_mode": "static-evidence",
     "freshness_signals": [],
-    "evidence_queries": ["src/server/__tests__/replay/replay-grade-consistency.test.ts"],
+    "evidence_queries": [
+      "src/server/__tests__/replay/replay-grade-consistency.test.ts"
+    ],
     "ownership_boundary": "internal-only",
     "learning_boundary": "engine_only",
     "deployment_authority": "autonomous_pre_deploy",
@@ -3863,29 +4033,64 @@
     "manual_gate": "operator-approve",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 27 Pass 3 carry-forward — unified replay-grade.ts --tool=<name> dispatcher additive over the 7 individual per-tool harnesses (quantum/confluence/critique/robustness/survival_twin/pattern_aggregator/consistency). harness-base.ts shared infrastructure. --tool=all weekly-roundup mode reads each per-tool latest verdict and aggregates ≥3 SIGNAL → operator-review-candidate. Future Wave 27 Pass 1.5 cron integration replaces --tool=quantum solo with --tool=all.",
-    "data_sources": ["quantum_mc_runs", "trade_critique", "prompt_versions", "backtests", "backtest_trades", "walk_forward_windows"],
-    "reads_from": ["quantum_mc_runs", "trade_critique", "prompt_versions", "backtests", "backtest_trades", "walk_forward_windows"],
+    "automation_scope": "Wave 27 Pass 3 carry-forward \u00e2\u20ac\u201d unified replay-grade.ts --tool=<name> dispatcher additive over the 7 individual per-tool harnesses (quantum/confluence/critique/robustness/survival_twin/pattern_aggregator/consistency). harness-base.ts shared infrastructure. --tool=all weekly-roundup mode reads each per-tool latest verdict and aggregates \u00e2\u2030\u00a53 SIGNAL \u00e2\u2020\u2019 operator-review-candidate. Future Wave 27 Pass 1.5 cron integration replaces --tool=quantum solo with --tool=all.",
+    "data_sources": [
+      "quantum_mc_runs",
+      "trade_critique",
+      "prompt_versions",
+      "backtests",
+      "backtest_trades",
+      "walk_forward_windows"
+    ],
+    "reads_from": [
+      "quantum_mc_runs",
+      "trade_critique",
+      "prompt_versions",
+      "backtests",
+      "backtest_trades",
+      "walk_forward_windows"
+    ],
     "writes_to": [],
-    "audit_tables": ["audit_log"],
-    "audit_actions": ["replay_grade.dispatcher_invoked", "replay_grade.aggregate_verdict_emitted"],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "replay_grade.dispatcher_invoked",
+      "replay_grade.aggregate_verdict_emitted"
+    ],
     "metrics_surfaces": [],
-    "telemetry_sources": ["stdout-json-summary"],
+    "telemetry_sources": [
+      "stdout-json-summary"
+    ],
     "scheduler_jobs": [],
     "routes": [],
-    "engine_subsystems": ["replay"],
-    "database_tables": ["quantum_mc_runs", "trade_critique", "prompt_versions", "backtests", "backtest_trades", "walk_forward_windows"],
+    "engine_subsystems": [
+      "replay"
+    ],
+    "database_tables": [
+      "quantum_mc_runs",
+      "trade_critique",
+      "prompt_versions",
+      "backtests",
+      "backtest_trades",
+      "walk_forward_windows"
+    ],
     "learning_from": [],
     "learning_assets": [],
     "learning_writes_to": [],
-    "failure_visibility": ["stdout-json-summary"],
+    "failure_visibility": [
+      "stdout-json-summary"
+    ],
     "recovery_mode": "operator-rerun",
     "health_check": "scripts/replay-grade.ts",
     "status": "active",
     "self_evolving": false,
     "proof_mode": "static-evidence",
     "freshness_signals": [],
-    "evidence_queries": ["scripts/replay-grade.ts", "src/server/lib/replay/harness-base.ts"],
+    "evidence_queries": [
+      "scripts/replay-grade.ts",
+      "src/server/lib/replay/harness-base.ts"
+    ],
     "ownership_boundary": "internal-only",
     "learning_boundary": "engine_only",
     "deployment_authority": "autonomous_pre_deploy",
@@ -3899,29 +4104,44 @@
     "manual_gate": "operator-approve",
     "runtime_state": "scaffold",
     "decision_authority": "operator",
-    "automation_scope": "Wave 27 Pass 3 carry-forward — Phase 5 true-mini ContractSpec scaffold (ES/NQ/CL) gated by TF_PHASE_5_ENABLED env (default false). resolve_contract_spec() safety helper routes symbols by contract_class with explicit refusal when scaffold is off. Activation gated on operator funded balance ≥ $200K + explicit env flip + per-strategy contract_class='mini' declaration. Prevents 10× silent risk inflation from ambiguous ES/MES symbol routing.",
-    "data_sources": ["strategies"],
-    "reads_from": ["strategies"],
+    "automation_scope": "Wave 27 Pass 3 carry-forward \u00e2\u20ac\u201d Phase 5 true-mini ContractSpec scaffold (ES/NQ/CL) gated by TF_PHASE_5_ENABLED env (default false). resolve_contract_spec() safety helper routes symbols by contract_class with explicit refusal when scaffold is off. Activation gated on operator funded balance \u00e2\u2030\u00a5 $200K + explicit env flip + per-strategy contract_class='mini' declaration. Prevents 10\u00c3\u2014 silent risk inflation from ambiguous ES/MES symbol routing.",
+    "data_sources": [
+      "strategies"
+    ],
+    "reads_from": [
+      "strategies"
+    ],
     "writes_to": [],
-    "audit_tables": ["audit_log"],
-    "audit_actions": ["phase5.contract_spec_resolved", "phase5.contract_spec_refused_disabled"],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "phase5.contract_spec_resolved",
+      "phase5.contract_spec_refused_disabled"
+    ],
     "metrics_surfaces": [],
     "telemetry_sources": [],
     "scheduler_jobs": [],
     "routes": [],
     "engine_subsystems": [],
-    "database_tables": ["strategies"],
+    "database_tables": [
+      "strategies"
+    ],
     "learning_from": [],
     "learning_assets": [],
     "learning_writes_to": [],
-    "failure_visibility": ["stdout-json-summary"],
+    "failure_visibility": [
+      "stdout-json-summary"
+    ],
     "recovery_mode": "operator-revert-env",
     "health_check": "tests/python/test_phase5_contract_spec.py",
     "status": "scaffold",
     "self_evolving": false,
     "proof_mode": "static-evidence",
     "freshness_signals": [],
-    "evidence_queries": ["tests/python/test_phase5_contract_spec.py"],
+    "evidence_queries": [
+      "tests/python/test_phase5_contract_spec.py"
+    ],
     "ownership_boundary": "internal-only",
     "learning_boundary": "engine_only",
     "deployment_authority": "operator_only",
@@ -3935,7 +4155,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 28 Pass A composite-health observability bus + aggregator. PURE OBSERVABILITY MODE — writes one immutable row per strategy per cycle to strategy_health_scores. Composite scores DO NOT GATE promotion; Wave 27.5 hard gates retain independent veto power.",
+    "automation_scope": "Wave 28 Pass A composite-health observability bus + aggregator. PURE OBSERVABILITY MODE \u00e2\u20ac\u201d writes one immutable row per strategy per cycle to strategy_health_scores. Composite scores DO NOT GATE promotion; Wave 27.5 hard gates retain independent veto power.",
     "data_sources": [
       "strategy_health_aggregator",
       "12 canonical subsystems",
@@ -4009,7 +4229,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 28 Pass B SHADOW GATE MODE. Pure-function composite-health shadow gate wired into lifecycle-service.ts alongside Wave 27.5 hard gates. OBSERVABILITY ONLY — never blocks promotion. Reads latest strategy_health_scores row and derives WOULD_PROMOTE/WOULD_WARN/WOULD_BLOCK. Companion Discord router emits P2 disagreement alerts (24h per-strategy×agreement-type dedup). Companion analyzer recommends Pass C activation when ≥85% agreement over 14 days.",
+    "automation_scope": "Wave 28 Pass B SHADOW GATE MODE. Pure-function composite-health shadow gate wired into lifecycle-service.ts alongside Wave 27.5 hard gates. OBSERVABILITY ONLY \u00e2\u20ac\u201d never blocks promotion. Reads latest strategy_health_scores row and derives WOULD_PROMOTE/WOULD_WARN/WOULD_BLOCK. Companion Discord router emits P2 disagreement alerts (24h per-strategy\u00c3\u2014agreement-type dedup). Companion analyzer recommends Pass C activation when \u00e2\u2030\u00a585% agreement over 14 days.",
     "data_sources": [
       "strategy_health_scores",
       "audit_log"
@@ -4135,7 +4355,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 26 Pass G Pass F. 8th institutional regime (7th non-NO_TRADE). Detected when all 4 conditions hold: ATR > 2.5x 30d avg AND volume > 2x 30d avg AND VIX-proxy ATR percentile > 80th pct AND multi-day melt-up > 5% in last 5 sessions. Routes to LATE_CYCLE_MEAN_REVERSION playbook (mean-reversion + reversal strategies ONLY, NOT continuation/breakout). Sizing multiplier 0.5x via confidence_modifier=0.5. Does NOT force NO_TRADE — mean-reversion strategies allowed.",
+    "automation_scope": "Wave 26 Pass G Pass F. 8th institutional regime (7th non-NO_TRADE). Detected when all 4 conditions hold: ATR > 2.5x 30d avg AND volume > 2x 30d avg AND VIX-proxy ATR percentile > 80th pct AND multi-day melt-up > 5% in last 5 sessions. Routes to LATE_CYCLE_MEAN_REVERSION playbook (mean-reversion + reversal strategies ONLY, NOT continuation/breakout). Sizing multiplier 0.5x via confidence_modifier=0.5. Does NOT force NO_TRADE \u00e2\u20ac\u201d mean-reversion strategies allowed.",
     "data_sources": [
       "HTFContext.atr_percentile",
       "OHLCV bars (Polars DataFrame)"
@@ -4194,7 +4414,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 29 Pass C. Quantum RL agent bridge to production state — extends TradingEnv to 25-feature production state vector (5-TF MTF + structure + narrative + killzones + 11-factor confluence + regime + liquidity + optional QCNN noise_score) + LONG/FLAT 2-action enforcement (n_actions=3 raises ValueError) + reward shaping R = realized_R - alpha*max(0, ci_high - 0.40) - beta*drawdown_penalty. Regime-conditioned policy-gradient training loop (4 institutional regimes). Auto-fire fire-and-forget from backtest-service when entry_quality.train_rl_policy=true via quantum-rl-training-runner.ts. Off-RTH hourly cron quantum-rl-training-window ({6,7,8,16,17 ET}, _PIPELINE_GATE_EXEMPT, DST-safe). Writes to NEW quantum_rl_runs namespace (migration 0152) — namespace-separate from quantum_mc_runs to prevent circular IAE-vs-RL feedback. IBM cloud opt-in two-gate (QUANTUM_RL_IBM_CLOUD_OPT_IN=true AND QUANTUM_CLOUD_ENABLED=true AND IBM_QUANTUM_TOKEN). Advisory Sharpe-gap kill switch + DSR>=0.5 floor (QuantBeckman 2025 + arXiv 2512.12924). first-100-trades confidence dampening + first-200-trades static router epsilon-greedy exploration. Composite-health 13th subsystem feeder + A/B paper routing (slumdawg-baseline vs slumdawg-rl-challenger) per migration 0159. CHALLENGER-ONLY governance: NEVER gates promotion — Wave 27.5 + Wave 28 gates retain authoritative veto.",
+    "automation_scope": "Wave 29 Pass C. Quantum RL agent bridge to production state \u00e2\u20ac\u201d extends TradingEnv to 25-feature production state vector (5-TF MTF + structure + narrative + killzones + 11-factor confluence + regime + liquidity + optional QCNN noise_score) + LONG/FLAT 2-action enforcement (n_actions=3 raises ValueError) + reward shaping R = realized_R - alpha*max(0, ci_high - 0.40) - beta*drawdown_penalty. Regime-conditioned policy-gradient training loop (4 institutional regimes). Auto-fire fire-and-forget from backtest-service when entry_quality.train_rl_policy=true via quantum-rl-training-runner.ts. Off-RTH hourly cron quantum-rl-training-window ({6,7,8,16,17 ET}, _PIPELINE_GATE_EXEMPT, DST-safe). Writes to NEW quantum_rl_runs namespace (migration 0152) \u00e2\u20ac\u201d namespace-separate from quantum_mc_runs to prevent circular IAE-vs-RL feedback. IBM cloud opt-in two-gate (QUANTUM_RL_IBM_CLOUD_OPT_IN=true AND QUANTUM_CLOUD_ENABLED=true AND IBM_QUANTUM_TOKEN). Advisory Sharpe-gap kill switch + DSR>=0.5 floor (QuantBeckman 2025 + arXiv 2512.12924). first-100-trades confidence dampening + first-200-trades static router epsilon-greedy exploration. Composite-health 13th subsystem feeder + A/B paper routing (slumdawg-baseline vs slumdawg-rl-challenger) per migration 0159. CHALLENGER-ONLY governance: NEVER gates promotion \u00e2\u20ac\u201d Wave 27.5 + Wave 28 gates retain authoritative veto.",
     "data_sources": [
       "quantum_rl_agent (TradingEnv production state)",
       "backtest_bar_data (CPCV-purged)",
@@ -4290,7 +4510,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "system",
-    "automation_scope": "Wave 29 Pass A.1 + A.3. SHADOW lifecycle stage sits between TESTING and PAPER — TradingView Pine alerts fire but TradersPost webhook is OFF (paper invariant: traderspost_webhook_called=false enforced at lifecycle_shadow_signals table level). paper-signal-service.ts shadow intercept block skips TradersPost + emits lifecycle.shadow_signal_logged + SSE signal:shadow_logged. Shadow-signal divergence checker (shadow-signal-divergence-checker.ts pure function + shadow-signal-divergence-loader.ts DB helper) wired into lifecycle-service.ts at SHADOW -> PAPER (Gate 2.5): >=5% divergence across >=20 signals BLOCKS promotion. Catches training-serving skew — institutional grade #1 failure mode (15-25% of all institutional model failures per AltStreet Quant 2.0 Dec 2025). Fail-soft contract: legacy/missing shadow_signals table -> lifecycle.shadow_divergence_check_unavailable_legacy + PROCEED.",
+    "automation_scope": "Wave 29 Pass A.1 + A.3. SHADOW lifecycle stage sits between TESTING and PAPER \u00e2\u20ac\u201d TradingView Pine alerts fire but TradersPost webhook is OFF (paper invariant: traderspost_webhook_called=false enforced at lifecycle_shadow_signals table level). paper-signal-service.ts shadow intercept block skips TradersPost + emits lifecycle.shadow_signal_logged + SSE signal:shadow_logged. Shadow-signal divergence checker (shadow-signal-divergence-checker.ts pure function + shadow-signal-divergence-loader.ts DB helper) wired into lifecycle-service.ts at SHADOW -> PAPER (Gate 2.5): >=5% divergence across >=20 signals BLOCKS promotion. Catches training-serving skew \u00e2\u20ac\u201d institutional grade #1 failure mode (15-25% of all institutional model failures per AltStreet Quant 2.0 Dec 2025). Fail-soft contract: legacy/missing shadow_signals table -> lifecycle.shadow_divergence_check_unavailable_legacy + PROCEED.",
     "data_sources": [
       "lifecycle_shadow_signals",
       "backtests"
@@ -4343,7 +4563,7 @@
     "health_check": "src/server/__tests__/wave29-pass-a1-shadow-signals.test.ts + wave29-pass-a3-shadow-divergence.test.ts",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "audit_log_evidence",
+    "proof_mode": "active-runtime",
     "freshness_signals": [
       "lifecycle_shadow_signals.created_at",
       "audit_log.lifecycle.shadow_signal_logged"
@@ -4365,7 +4585,7 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "gate",
-    "automation_scope": "Wave 29 Pass A.2. Probability of Backtest Overfitting hard gate at TESTING -> SHADOW and TESTING -> PAPER lifecycle transitions. Bailey et al. rank-based PBO via src/engine/pbo_gate.py (Python pure-functional rank correlation) + src/server/lib/pbo-gate.ts (lifecycle wrapper). Threshold via PBO_OVERFIT_THRESHOLD_PCT (default 0.15 — institutional 2026 standard, stricter than Wave 27.5 PBO_OVERFIT_THRESHOLD=0.5). walk_forward.py extended to emit pbo_overall + pbo_overall_p_value in output dict. Lifecycle blocks promotion when pbo_overall > threshold + emits lifecycle.pbo_overfit_block + lifecycle:pbo_evaluated SSE. Legacy backtests without pbo_overall -> PROCEED + lifecycle.pbo_unavailable_legacy warn (grandfather window).",
+    "automation_scope": "Wave 29 Pass A.2. Probability of Backtest Overfitting hard gate at TESTING -> SHADOW and TESTING -> PAPER lifecycle transitions. Bailey et al. rank-based PBO via src/engine/pbo_gate.py (Python pure-functional rank correlation) + src/server/lib/pbo-gate.ts (lifecycle wrapper). Threshold via PBO_OVERFIT_THRESHOLD_PCT (default 0.15 \u00e2\u20ac\u201d institutional 2026 standard, stricter than Wave 27.5 PBO_OVERFIT_THRESHOLD=0.5). walk_forward.py extended to emit pbo_overall + pbo_overall_p_value in output dict. Lifecycle blocks promotion when pbo_overall > threshold + emits lifecycle.pbo_overfit_block + lifecycle:pbo_evaluated SSE. Legacy backtests without pbo_overall -> PROCEED + lifecycle.pbo_unavailable_legacy warn (grandfather window).",
     "data_sources": [
       "backtests.walk_forward_results"
     ],
@@ -4411,7 +4631,7 @@
     "health_check": "src/engine/tests/test_wave29_pass_a2_pbo_gate.py + src/server/__tests__/wave29-pass-a2-pbo-gate.test.ts",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "audit_log_evidence",
+    "proof_mode": "active-runtime",
     "freshness_signals": [
       "audit_log.walk_forward.pbo_computed"
     ],
@@ -4483,7 +4703,7 @@
     "health_check": "src/server/__tests__/wave29-pass-b2-frozen-policy.test.ts + src/engine/tests/test_wave29_pass_b1_frozen_policy_migration.py",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "audit_log_evidence",
+    "proof_mode": "active-runtime",
     "freshness_signals": [
       "strategies.frozen_policy_set_at",
       "audit_log.frozen_policy.set"
@@ -4559,7 +4779,7 @@
     "health_check": "src/server/__tests__/wave29-pass-b3-regime-drift.test.ts",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "audit_log_evidence",
+    "proof_mode": "active-runtime",
     "freshness_signals": [
       "audit_log.regime_drift_detector.completed",
       "scheduler:regime-drift-detector:21,22-utc"
@@ -4718,7 +4938,7 @@
     "health_check": "src/server/__tests__/wave29-pass-d1-observability.test.ts",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "metrics_surface",
+    "proof_mode": "active-runtime",
     "freshness_signals": [
       "/metrics endpoint reachable",
       "SSE stream open"
@@ -4738,17 +4958,36 @@
     "runtime_state": "active",
     "decision_authority": "operator",
     "automation_scope": "Migration 0164 (2026-05-27). 5-column table mapping discord_user_id PK -> broker_account_id FK to broker_accounts.account_id. Populated manually by operator via POST /api/admin/slumhouse-users; null broker_account_id blocks login at the require-session middleware (returns 403). Append-only mapping table; no DB-side cascade beyond ON DELETE SET NULL on the broker FK.",
-    "data_sources": ["Operator manual entry"],
-    "reads_from": ["broker_accounts"],
-    "writes_to": ["slumhouse_users", "audit_log"],
-    "audit_tables": ["audit_log"],
-    "audit_actions": ["slumhouse.user_mapped"],
+    "data_sources": [
+      "Operator manual entry"
+    ],
+    "reads_from": [
+      "broker_accounts"
+    ],
+    "writes_to": [
+      "slumhouse_users",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "slumhouse.user_mapped"
+    ],
     "metrics_surfaces": [],
     "telemetry_sources": [],
     "scheduler_jobs": [],
-    "routes": ["POST /api/admin/slumhouse-users", "GET /api/admin/slumhouse-users"],
-    "engine_subsystems": ["src/server/db/migrations/0164_slumhouse_users.sql", "src/server/db/schema.ts::slumhouseUsers"],
-    "database_tables": ["slumhouse_users"],
+    "routes": [
+      "POST /api/admin/slumhouse-users",
+      "GET /api/admin/slumhouse-users"
+    ],
+    "engine_subsystems": [
+      "src/server/db/migrations/0164_slumhouse_users.sql",
+      "src/server/db/schema.ts::slumhouseUsers"
+    ],
+    "database_tables": [
+      "slumhouse_users"
+    ],
     "learning_from": [],
     "learning_assets": [],
     "learning_writes_to": [],
@@ -4759,7 +4998,9 @@
     "self_evolving": false,
     "proof_mode": "audit_trail",
     "freshness_signals": [],
-    "evidence_queries": ["SELECT * FROM slumhouse_users ORDER BY created_at DESC LIMIT 50"],
+    "evidence_queries": [
+      "SELECT * FROM slumhouse_users ORDER BY created_at DESC LIMIT 50"
+    ],
     "ownership_boundary": "internal-only",
     "learning_boundary": "production",
     "deployment_authority": "operator_only",
@@ -4773,18 +5014,47 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "agent",
-    "automation_scope": "Discord OAuth 2.0 token exchange + user fetch + HMAC-signed session cookie helpers. Pure auth — no governance writes, no broker calls. Session cookie format: <discord_user_id>:<exp_unix_sec>:<HMAC-SHA256-base64url(secret, payload)>. 14-day TTL. Cookie name: slumhouse_sid. Requires env: DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, DISCORD_REDIRECT_URI, SLUMHOUSE_SESSION_SECRET (>=32 chars).",
-    "data_sources": ["discord.com/api/oauth2/token", "discord.com/api/users/@me"],
-    "reads_from": ["slumhouse_users"],
-    "writes_to": ["slumhouse_users.last_seen_at", "audit_log"],
-    "audit_tables": ["audit_log"],
-    "audit_actions": ["slumhouse.login_success", "slumhouse.login_failed", "slumhouse.login_cancelled"],
+    "automation_scope": "Discord OAuth 2.0 token exchange + user fetch + HMAC-signed session cookie helpers. Pure auth \u00e2\u20ac\u201d no governance writes, no broker calls. Session cookie format: <discord_user_id>:<exp_unix_sec>:<HMAC-SHA256-base64url(secret, payload)>. 14-day TTL. Cookie name: slumhouse_sid. Requires env: DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, DISCORD_REDIRECT_URI, SLUMHOUSE_SESSION_SECRET (>=32 chars).",
+    "data_sources": [
+      "discord.com/api/oauth2/token",
+      "discord.com/api/users/@me"
+    ],
+    "reads_from": [
+      "slumhouse_users"
+    ],
+    "writes_to": [
+      "slumhouse_users.last_seen_at",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "slumhouse.login_success",
+      "slumhouse.login_failed",
+      "slumhouse.login_cancelled"
+    ],
     "metrics_surfaces": [],
-    "telemetry_sources": ["audit_log.slumhouse.login_success", "audit_log.slumhouse.login_failed", "audit_log.slumhouse.login_cancelled"],
+    "telemetry_sources": [
+      "audit_log.slumhouse.login_success",
+      "audit_log.slumhouse.login_failed",
+      "audit_log.slumhouse.login_cancelled"
+    ],
     "scheduler_jobs": [],
-    "routes": ["GET /slumhouse/auth/login", "GET /slumhouse/auth/callback", "GET /slumhouse/auth/logout"],
-    "engine_subsystems": ["src/server/lib/slumhouse/discord-oauth.ts", "src/server/lib/slumhouse/session.ts", "src/server/lib/slumhouse/require-session.ts", "src/server/routes/slumhouse/auth.ts"],
-    "database_tables": ["slumhouse_users"],
+    "routes": [
+      "GET /slumhouse/auth/login",
+      "GET /slumhouse/auth/callback",
+      "GET /slumhouse/auth/logout"
+    ],
+    "engine_subsystems": [
+      "src/server/lib/slumhouse/discord-oauth.ts",
+      "src/server/lib/slumhouse/session.ts",
+      "src/server/lib/slumhouse/require-session.ts",
+      "src/server/routes/slumhouse/auth.ts"
+    ],
+    "database_tables": [
+      "slumhouse_users"
+    ],
     "learning_from": [],
     "learning_assets": [],
     "learning_writes_to": [],
@@ -4795,7 +5065,9 @@
     "self_evolving": false,
     "proof_mode": "audit_trail",
     "freshness_signals": [],
-    "evidence_queries": ["SELECT * FROM audit_log WHERE action LIKE 'slumhouse.login_%' ORDER BY created_at DESC LIMIT 50"],
+    "evidence_queries": [
+      "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.login_%' ORDER BY created_at DESC LIMIT 50"
+    ],
     "ownership_boundary": "internal-only",
     "learning_boundary": "production",
     "deployment_authority": "operator_only",
@@ -4809,17 +5081,57 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "agent",
-    "automation_scope": "Slumhouse portal read-only data routes: /slumhouse/api/crib, /slumhouse/api/kitchen, /slumhouse/api/kitchen/menu, /slumhouse/api/recipe/:id. All gated by requireSlumhouseUser middleware (401 no_session / 401 invalid_session / 403 user_not_mapped). Backend reads only — no broker calls, no lifecycle writes, no kill switch. Data assemblers translate TF jargon (R-multiples, PF, MES) to street language (won big / pays / Mini-S&P) per the Slumdawg jargon table.",
-    "data_sources": ["paper_trades", "paper_positions", "paper_sessions", "strategies", "backtests", "monte_carlo_runs", "lifecycle_shadow_signals", "strategy_health_scores", "trade_critique", "scout_audit", "account_strategy_assignments"],
-    "reads_from": ["paper_trades", "paper_positions", "paper_sessions", "strategies", "backtests", "monte_carlo_runs", "lifecycle_shadow_signals", "strategy_health_scores", "trade_critique", "scout_audit", "account_strategy_assignments", "slumhouse_users", "system_parameters"],
+    "automation_scope": "Slumhouse portal read-only data routes: /slumhouse/api/crib, /slumhouse/api/kitchen, /slumhouse/api/kitchen/menu, /slumhouse/api/recipe/:id. All gated by requireSlumhouseUser middleware (401 no_session / 401 invalid_session / 403 user_not_mapped). Backend reads only \u00e2\u20ac\u201d no broker calls, no lifecycle writes, no kill switch. Data assemblers translate TF jargon (R-multiples, PF, MES) to street language (won big / pays / Mini-S&P) per the Slumdawg jargon table.",
+    "data_sources": [
+      "paper_trades",
+      "paper_positions",
+      "paper_sessions",
+      "strategies",
+      "backtests",
+      "monte_carlo_runs",
+      "lifecycle_shadow_signals",
+      "strategy_health_scores",
+      "trade_critique",
+      "scout_audit",
+      "account_strategy_assignments"
+    ],
+    "reads_from": [
+      "paper_trades",
+      "paper_positions",
+      "paper_sessions",
+      "strategies",
+      "backtests",
+      "monte_carlo_runs",
+      "lifecycle_shadow_signals",
+      "strategy_health_scores",
+      "trade_critique",
+      "scout_audit",
+      "account_strategy_assignments",
+      "slumhouse_users",
+      "system_parameters"
+    ],
     "writes_to": [],
     "audit_tables": [],
     "audit_actions": [],
     "metrics_surfaces": [],
     "telemetry_sources": [],
     "scheduler_jobs": [],
-    "routes": ["GET /slumhouse/api/crib", "GET /slumhouse/api/kitchen", "GET /slumhouse/api/kitchen/menu", "GET /slumhouse/api/recipe/:strategyId"],
-    "engine_subsystems": ["src/server/routes/slumhouse/index.ts", "src/server/routes/slumhouse/api/crib.ts", "src/server/routes/slumhouse/api/kitchen.ts", "src/server/routes/slumhouse/api/recipe.ts", "src/server/lib/slumhouse/crib-data.ts", "src/server/lib/slumhouse/kitchen-data.ts", "src/server/lib/slumhouse/recipe-data.ts", "src/server/lib/slumhouse/translate.ts"],
+    "routes": [
+      "GET /slumhouse/api/crib",
+      "GET /slumhouse/api/kitchen",
+      "GET /slumhouse/api/kitchen/menu",
+      "GET /slumhouse/api/recipe/:strategyId"
+    ],
+    "engine_subsystems": [
+      "src/server/routes/slumhouse/index.ts",
+      "src/server/routes/slumhouse/api/crib.ts",
+      "src/server/routes/slumhouse/api/kitchen.ts",
+      "src/server/routes/slumhouse/api/recipe.ts",
+      "src/server/lib/slumhouse/crib-data.ts",
+      "src/server/lib/slumhouse/kitchen-data.ts",
+      "src/server/lib/slumhouse/recipe-data.ts",
+      "src/server/lib/slumhouse/translate.ts"
+    ],
     "database_tables": [],
     "learning_from": [],
     "learning_assets": [],
@@ -4831,7 +5143,9 @@
     "self_evolving": false,
     "proof_mode": "read_only_api",
     "freshness_signals": [],
-    "evidence_queries": ["SELECT * FROM audit_log WHERE action LIKE 'slumhouse.%' ORDER BY created_at DESC LIMIT 50"],
+    "evidence_queries": [
+      "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.%' ORDER BY created_at DESC LIMIT 50"
+    ],
     "ownership_boundary": "internal-only",
     "learning_boundary": "production",
     "deployment_authority": "operator_only",
@@ -4845,8 +5159,12 @@
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "advisory",
-    "automation_scope": "Static HTML/CSS/JS friend-facing portal at public/slumhouse/. 4 pages (login, crib, kitchen, recipe) + 1 not-mapped fallback. Vanilla JS — no React, no build step. Hydrates from /slumhouse/api/* JSON endpoints. Friends DM'd https://tf-relay-production.up.railway.app/slumhouse to enter. Brand: lime green (#a3ff12) accents on pure black, slim flat glassy cards, top-nav pill.",
-    "data_sources": ["/slumhouse/api/crib", "/slumhouse/api/kitchen", "/slumhouse/api/recipe/:id"],
+    "automation_scope": "Static HTML/CSS/JS friend-facing portal at public/slumhouse/. 4 pages (login, crib, kitchen, recipe) + 1 not-mapped fallback. Vanilla JS \u00e2\u20ac\u201d no React, no build step. Hydrates from /slumhouse/api/* JSON endpoints. Friends DM'd https://tf-relay-production.up.railway.app/slumhouse to enter. Brand: lime green (#a3ff12) accents on pure black, slim flat glassy cards, top-nav pill.",
+    "data_sources": [
+      "/slumhouse/api/crib",
+      "/slumhouse/api/kitchen",
+      "/slumhouse/api/recipe/:id"
+    ],
     "reads_from": [],
     "writes_to": [],
     "audit_tables": [],
@@ -4854,8 +5172,22 @@
     "metrics_surfaces": [],
     "telemetry_sources": [],
     "scheduler_jobs": [],
-    "routes": ["GET /slumhouse (serves crib.html)", "GET /slumhouse/login.html", "GET /slumhouse/kitchen.html", "GET /slumhouse/recipe.html", "GET /slumhouse/not-mapped.html"],
-    "engine_subsystems": ["public/slumhouse/crib.html", "public/slumhouse/kitchen.html", "public/slumhouse/recipe.html", "public/slumhouse/login.html", "public/slumhouse/not-mapped.html", "public/slumhouse/slumhouse.css", "public/slumhouse/slumhouse.js"],
+    "routes": [
+      "GET /slumhouse (serves crib.html)",
+      "GET /slumhouse/login.html",
+      "GET /slumhouse/kitchen.html",
+      "GET /slumhouse/recipe.html",
+      "GET /slumhouse/not-mapped.html"
+    ],
+    "engine_subsystems": [
+      "public/slumhouse/crib.html",
+      "public/slumhouse/kitchen.html",
+      "public/slumhouse/recipe.html",
+      "public/slumhouse/login.html",
+      "public/slumhouse/not-mapped.html",
+      "public/slumhouse/slumhouse.css",
+      "public/slumhouse/slumhouse.js"
+    ],
     "database_tables": [],
     "learning_from": [],
     "learning_assets": [],

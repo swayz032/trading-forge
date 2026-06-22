@@ -7,7 +7,16 @@
  * Consumed by:
  *   - scripts/replay-grade-quantum.ts  (CLI / DB integration layer)
  *   - src/server/__tests__/replay/replay-grade-quantum.test.ts
+ *
+ * CPCV purge contract:
+ *   checkPurgeViolation() now delegates to harness-base.ts::checkCpcvPurge,
+ *   which is the canonical implementation using Date objects with strict `<`.
+ *   See Finding #16 (Wave A Critic) for the boundary-alignment rationale.
  */
+
+// Import canonical purge-check from harness-base (Finding #16 fix).
+// harness-base must NOT import from quantum-disagreement to avoid circular deps.
+import { checkCpcvPurge } from "./harness-base.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -277,7 +286,21 @@ export function selectThresholdFromIS(
 
 /**
  * Enforce CPCV purge contract: oos_start must be strictly after is_end.
- * Text columns compared lexicographically (ISO date strings).
+ *
+ * Delegates to harness-base.ts::checkCpcvPurge, which is the canonical
+ * implementation using Date objects with strict `<` (no string comparison).
+ *
+ * FIX (Finding #16 — Wave A Critic): the prior implementation compared ISO
+ * date STRINGS lexicographically (`oosStart <= isEnd`), which is only correct
+ * for date-only strings ("YYYY-MM-DD").  Sub-day timestamps from Postgres
+ * ("2026-01-15T09:00:00.000Z") compare correctly as strings but the equality
+ * case (oos_start == is_end) was sometimes incorrectly treated as NOT a
+ * violation when the two harnesses used different comparison methods.
+ *
+ * The canonical rule:
+ *   - Equality (oos_start === is_end to the millisecond) IS a violation.
+ *   - Use Date objects, NOT string comparison.
+ *
  * Returns violation description string if violated, null if clean.
  */
 export function checkPurgeViolation(
@@ -285,10 +308,8 @@ export function checkPurgeViolation(
   isEnd: string,
   oosStart: string,
 ): string | null {
-  if (oosStart <= isEnd) {
-    return `Purge violation: fold ${foldId} has oos_start=${oosStart} <= is_end=${isEnd}`;
-  }
-  return null;
+  // Delegate to canonical implementation in harness-base.ts.
+  return checkCpcvPurge(foldId, isEnd, oosStart);
 }
 
 // ─── Embargo ──────────────────────────────────────────────────────────────────

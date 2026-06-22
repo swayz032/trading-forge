@@ -582,7 +582,10 @@ export async function openPosition(sessionId: string, params: {
     weightedScore?: import("./confluence-score.js").WeightedScoreResult;
   };
 }, context?: { correlationId?: string; accountId?: string }) {
-  const correlationId = context?.correlationId ?? null;
+  // FIX 4: generate a per-call correlationId when caller does not supply one.
+  // This ensures every audit row from openPosition has a reconstructable trace root
+  // even for callers that don't thread correlationId (manual opens, automation).
+  const correlationId = context?.correlationId ?? randomUUID();
 
   // ─── Phase 4C: Production-mode halt gate (UNCONDITIONALLY FIRST) ─────────
   // FINDING #3 FIX: This gate MUST execute before any early-return path
@@ -710,6 +713,17 @@ export async function openPosition(sessionId: string, params: {
       { fn: "openPosition", sessionId, symbol: params.symbol, side: params.side },
       "Skipped: pipeline paused",
     );
+    // FIX 5: emit audit row so pipeline-blocked entries are traceable.
+    db.insert(auditLog).values({
+      action: "paper.entry_blocked_pipeline_paused",
+      entityType: "paper_session",
+      entityId: sessionId,
+      decisionAuthority: "system",
+      input: { sessionId, symbol: params.symbol, side: params.side } as Record<string, unknown>,
+      result: { reason: "pipeline_paused", blocked: true } as Record<string, unknown>,
+      status: "success",
+      correlationId,
+    }).catch((err) => logger.error({ err }, "paper-execution: pipeline-paused audit write failed (non-blocking)"));
     return {
       position: null,
       executionResult: {
@@ -2830,6 +2844,12 @@ async function applyExitDecision(
         ? direction * (currentPrice - entryPx) * spec.pointValue * pos.contracts
         : null;
       await closePosition(pos.id, currentPrice, atr);
+      // FIX 6: count time-stop close in paperTradesCounter
+      paperTradesCounter.labels({
+        symbol: pos.symbol,
+        side: pos.side,
+        outcome: "time_stop",
+      }).inc();
       logger.info(
         {
           positionId: pos.id, strategyId, exitStyle, currentPrice, pnlAtFlatten,
@@ -3596,6 +3616,7 @@ export async function forceCloseAllPositions(reason: string): Promise<{ count: n
       id: paperPositions.id,
       sessionId: paperPositions.sessionId,
       symbol: paperPositions.symbol,
+      side: paperPositions.side,
       entryPrice: paperPositions.entryPrice,
       currentPrice: paperPositions.currentPrice,
     })
@@ -3650,6 +3671,12 @@ export async function forceCloseAllPositions(reason: string): Promise<{ count: n
         try {
           await closePosition(pos.id, rawEntry, undefined, { correlationId: batchCorrelationId });
           closedCount++;
+          // FIX 6: count force-close in paperTradesCounter
+          paperTradesCounter.labels({
+            symbol: pos.symbol,
+            side: pos.side ?? "unknown",
+            outcome: "force_close",
+          }).inc();
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           errors.push(`pos:${pos.id} err:${msg}`);
@@ -3705,6 +3732,12 @@ export async function forceCloseAllPositions(reason: string): Promise<{ count: n
       // this close is linkable to the halt event in the audit_log.
       await closePosition(pos.id, rawCurrent, undefined, { correlationId: batchCorrelationId });
       closedCount++;
+      // FIX 6: count force-close in paperTradesCounter
+      paperTradesCounter.labels({
+        symbol: pos.symbol,
+        side: pos.side ?? "unknown",
+        outcome: "force_close",
+      }).inc();
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       errors.push(`pos:${pos.id} err:${msg}`);

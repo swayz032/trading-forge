@@ -211,7 +211,6 @@ export function compareShadowToBacktest(
     }
 
     const bt = backtestExpected[nearestBtIdx];
-    let diverged = false;
 
     // ── Direction: exact match required ──────────────────────────────────────
     if (shadow.direction !== bt.direction) {
@@ -221,11 +220,13 @@ export function compareShadowToBacktest(
         divergence_type: "direction",
         magnitude: 1,
       });
-      diverged = true;
     }
 
-    // ── Size: within 10% tolerance ───────────────────────────────────────────
-    if (!diverged) {
+    // ── Size: within 10% tolerance — evaluated independently of direction ────
+    // FIX 9: Remove !diverged guard so compound faults (bad direction AND bad size)
+    // are both counted. Cap at 2 violations per signal: direction + size.
+    // Timing divergence routes to continue above, so max = 2 per signal.
+    {
       const expectedSize = bt.intended_size;
       if (expectedSize !== 0) {
         const sizeDiffPct = Math.abs(shadow.intended_size - expectedSize) / expectedSize;
@@ -236,7 +237,6 @@ export function compareShadowToBacktest(
             divergence_type: "size",
             magnitude: sizeDiffPct,
           });
-          diverged = true;
         }
       }
     }
@@ -244,7 +244,6 @@ export function compareShadowToBacktest(
     // ── Timing: already confirmed within ±1 bar — no extra violation ────────
     // (timing within barSeconds is a MATCH; we only record it if it was the
     //  sole failure, which is captured by the unmatched branch above.)
-    void diverged; // suppress unused-variable lint
   }
 
   const divergingCount = violations.length;

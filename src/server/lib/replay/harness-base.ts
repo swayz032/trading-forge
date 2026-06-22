@@ -151,15 +151,30 @@ export function buildOutputPath(
 // ─── CPCV purge enforcement ────────────────────────────────────────────────────
 
 /**
- * Shared CPCV purge check.  Fails CLOSED on any violation.
+ * Canonical CPCV purge check — used by all replay harnesses.
+ * Fails CLOSED on any violation, including equality.
  *
- * oos_start must be strictly after is_end (no overlap).
- * Returns a violation message, or null if clean.
+ * oos_start must be STRICTLY after is_end (millisecond-resolution).
+ * Equality (oos_start === is_end to the millisecond) is a purge violation —
+ * the IS and OOS windows share a boundary bar, which constitutes look-ahead.
  *
- * This is a thin wrapper that re-exposes the contract for callers that import
- * from harness-base rather than from quantum-disagreement.ts directly.
- * Individual scripts continue to import from their own pure libraries; this
- * wrapper is for the unified dispatcher layer only.
+ * FIX (Finding #16 — Wave A Critic): the previous implementation used `<=`
+ * which means:
+ *   oosStartDate <= isEndDate  →  violation
+ * This correctly catches overlap but ALSO correctly catches equality.
+ * However, quantum-disagreement.ts::checkPurgeViolation compared ISO date
+ * STRINGS with `<=` (lexicographic), which is only correct when both strings
+ * are the same ISO format (date-only "YYYY-MM-DD").  When the DB returns
+ * sub-day timestamps ("2026-01-15T09:00:00.000Z"), the string comparison
+ * can disagree with the Date-object comparison for the same fence-post value.
+ *
+ * Resolution:
+ *   - THIS function (harness-base.ts::checkCpcvPurge) is CANONICAL and always
+ *     uses Date objects with strict `<` for the pass condition.
+ *   - quantum-disagreement.ts::checkPurgeViolation now delegates here.
+ *   - The equality boundary case IS a violation (strict `<` required).
+ *
+ * Returns a violation description string, or null if clean.
  */
 export function checkCpcvPurge(
   foldId: string,
@@ -168,13 +183,19 @@ export function checkCpcvPurge(
 ): string | null {
   const isEndDate = new Date(isEnd);
   const oosStartDate = new Date(oosStart);
-  if (oosStartDate <= isEndDate) {
+
+  // Strict: oos_start must be STRICTLY after is_end (not equal, not before).
+  // Equality-to-the-millisecond IS a purge violation.
+  if (!(oosStartDate > isEndDate)) {
+    const overlapMs = isEndDate.getTime() - oosStartDate.getTime();
+    const overlapDays = Math.round(overlapMs / 86_400_000);
+    const overlapLabel = overlapMs === 0
+      ? "boundary equality (oos_start == is_end)"
+      : `overlap of ${overlapDays} day(s)`;
     return (
       `PURGE VIOLATION on fold ${foldId}: ` +
       `oos_start (${oosStart}) must be strictly after is_end (${isEnd}). ` +
-      `Detected overlap of ${
-        Math.round((isEndDate.getTime() - oosStartDate.getTime()) / 86_400_000)
-      } day(s).`
+      `Detected ${overlapLabel}.`
     );
   }
   return null;

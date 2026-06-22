@@ -14,6 +14,36 @@
  *   - READS evidence; never mutates promotion logic.
  *   - Challenger outputs are advisory, not authoritative.
  *   - Wave 27.5 hard gates retain independent veto power.
+ *
+ * ─── Finding #12 / Fix 6 — Coordination Item (DO NOT EDIT lifecycle-service.ts) ───
+ *
+ * This module reads `shadow_result.availability` from the `composite.shadow_evaluation`
+ * audit-log rows written by lifecycle-service.ts.  Fix 1 of this wave corrected the
+ * analyzer to read `availability` (not `verdict`) for the availabilityBreakdown
+ * classification.
+ *
+ * The `ShadowResult` interface in composite-shadow-gate.ts carries BOTH fields:
+ *   - `availability: "available" | "stale" | "missing" | "below_threshold"`
+ *   - `verdict: "HEALTHY" | "MARGINAL" | "UNHEALTHY" | "CRITICAL" | null`
+ *
+ * lifecycle-service.ts stores the full `ShadowResult` object at:
+ *   result.shadow_result  (inside `composite.shadow_evaluation` audit row, line 3105)
+ *
+ * The grep-verified shape at lifecycle-service.ts:3095-3107 shows:
+ *   result: { strategy_id, hard_gate_outcome, shadow_result: shadowResult, agreement }
+ * where `shadowResult` is the raw return value of `evaluateCompositeShadow()`, which
+ * ALWAYS includes the `availability` key for every possible shadow state.
+ *
+ * THEREFORE: Fix 1 is safe — `shadow_result.availability` IS persisted.
+ * The backward-compat fallback in the fix (reading `verdict` for legacy rows) covers
+ * any rows written before the composite-shadow-gate.ts Wave 28 Pass B.1 commit.
+ *
+ * Paper-parity coordination: if lifecycle-service.ts is ever refactored to only persist
+ * `shadow_result.verdict` (e.g. to reduce JSONB bloat), this analyzer WILL silently
+ * misclassify all non-available states as `evaluated`.  The paper-parity agent must
+ * preserve the full `ShadowResult` object (including `availability`) in the stored payload.
+ * Do NOT edit lifecycle-service.ts to drop `availability` from the persisted shape
+ * without updating this analyzer to adapt.
  */
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -148,24 +178,73 @@ export function analyzeShadowEvidence(
       weightsVersionIdSet.add(weightsVersionId);
     }
 
-    // Availability breakdown based on shadow verdict
-    if (shadowVerdict === "missing") {
-      availabilityBreakdown.missing++;
-    } else if (shadowVerdict === "stale") {
-      availabilityBreakdown.stale++;
-    } else if (shadowVerdict === "below_threshold") {
-      availabilityBreakdown.below_threshold++;
-    } else {
+    // Availability breakdown.
+    //
+    // FIX (Finding #12 — Wave A Critic): composite-shadow-gate.ts writes
+    // `verdict: null` for non-available rows (missing / stale / below_threshold)
+    // and carries the classification on the `availability` field instead.
+    // The old code compared `shadowVerdict` (the `verdict` key inside
+    // shadow_result) against the strings "missing"/"stale"/"below_threshold",
+    // which never matched — verdict is null for those states.  The result was
+    // that ALL non-evaluated rows were silently counted as "evaluated", inflating
+    // the evaluated counter and suppressing the real breakdown counts.
+    //
+    // Fix: read `availability` from shadow_result when present; fall back to
+    // `verdict` for backward-compat with any legacy rows that stored the
+    // classification on verdict directly.
+    const availability = shadowResult ? extractString(shadowResult, "availability") : null;
+
+    // Determine the canonical availability bucket for this row.
+    const availabilityBucket = (() => {
+      // Prefer the explicit `availability` field (written by composite-shadow-gate.ts).
+      if (availability === "missing") return "missing";
+      if (availability === "stale") return "stale";
+      if (availability === "below_threshold") return "below_threshold";
+      if (availability === "available") return "evaluated";
+
+      // Backward-compat: legacy rows may store the classification on `verdict`.
+      if (shadowVerdict === "missing") return "missing";
+      if (shadowVerdict === "stale") return "stale";
+      if (shadowVerdict === "below_threshold") return "below_threshold";
+
+      // Row has a real verdict (HEALTHY/MARGINAL/UNHEALTHY/CRITICAL) or any
+      // non-null/non-sentinel verdict string — treat as evaluated.
+      if (shadowVerdict !== null && shadowVerdict !== "evaluated") return "evaluated";
+
+      // Default: if verdict is "evaluated" (old sentinel) or we have no
+      // availability + no recognisable verdict, treat as evaluated.
+      return "evaluated";
+    })();
+
+    // Detect malformed rows: availability=available but verdict is null/missing.
+    const isMalformed =
+      (availability === "available" || availability === null) &&
+      shadowVerdict === null &&
+      shadowDecision === null;
+
+    if (isMalformed) {
+      // Count toward evaluated so sample-size math is not silently inflated by
+      // malformed rows, but mark them clearly in the breakdown.
+      // NOTE: malformed rows should NOT contribute to agreement counts below;
+      // the isShadowNoOpinion guard will catch them via shadowDecision===null.
       availabilityBreakdown.evaluated++;
+    } else {
+      switch (availabilityBucket) {
+        case "missing":          availabilityBreakdown.missing++;          break;
+        case "stale":            availabilityBreakdown.stale++;            break;
+        case "below_threshold":  availabilityBreakdown.below_threshold++;  break;
+        default:                 availabilityBreakdown.evaluated++;        break;
+      }
     }
 
     // Shadow decision classification
     const isShadowNoOpinion =
       shadowDecision === "NO_OPINION" ||
       shadowDecision === null ||
-      shadowVerdict === "missing" ||
-      shadowVerdict === "stale" ||
-      shadowVerdict === "below_threshold";
+      availabilityBucket === "missing" ||
+      availabilityBucket === "stale" ||
+      availabilityBucket === "below_threshold" ||
+      isMalformed;
 
     if (isShadowNoOpinion) {
       agreements.shadow_no_opinion++;

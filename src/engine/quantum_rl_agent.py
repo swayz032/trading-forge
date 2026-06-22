@@ -91,6 +91,14 @@ _RL_REWARD_BETA_DEFAULT = 0.3
 _RL_CI_HIGH_THRESHOLD = 0.40  # Must match B14_RUIN_CI_HIGH_THRESHOLD env default
 _RL_DRAWDOWN_WINDOW = 20       # Rolling window for drawdown penalty computation
 
+# ─── Kill-switch dormancy threshold ───────────────────────────────
+# Env var: QUANTUM_RL_KILL_SWITCH_THRESHOLD_PCT (default 30.0)
+# Read at module load so all call sites use the same resolved value.
+# Matches the TS mirror in rl-signal-fetcher.ts (same default, same env var name).
+_DORMANT_GAP_THRESHOLD_PCT: float = float(
+    os.environ.get("QUANTUM_RL_KILL_SWITCH_THRESHOLD_PCT", "30.0")
+)
+
 # ─── Production State Field Definitions ─────────────────────────
 # Canonical 25-field production state vector.
 # Fields marked OPTIONAL degrade gracefully to None on DB miss.
@@ -837,7 +845,13 @@ class TradingEnv:
 class ClassicalAgent:
     """Simple tabular/linear RL agent for baseline comparison."""
 
-    def __init__(self, state_dim: int, n_actions: int = 3, seed: int = 42):
+    def __init__(self, state_dim: int, n_actions: int = 2, seed: int = 42):
+        if n_actions == 3:
+            raise ValueError(
+                "ClassicalAgent: n_actions=3 is forbidden — LONG/FLAT 2-action mandate "
+                "(day-trader-only; same constraint as TradingEnv). "
+                "Pass n_actions=2 explicitly."
+            )
         self.rng = np.random.default_rng(seed)
         self.weights = self.rng.standard_normal((state_dim, n_actions)) * 0.01
         self.n_actions = n_actions
@@ -1306,7 +1320,7 @@ def export_agent_signals(
     state = env.reset()
     signals = []
 
-    action_map = {0: "buy", 1: "sell", 2: "hold"}
+    action_map = {0: "long", 1: "flat"}
 
     for i in range(len(prices) - 1):
         action = agent.select_action(state, epsilon=0.0)
@@ -1347,17 +1361,31 @@ _REGIME_MIN_BARS = 100  # minimum bars per regime to warrant a separate policy
 
 # ─── IBM cloud wiring helper ──────────────────────────────────────────────────
 
-def _build_vqc_policy_ibm(n_qubits: int, n_layers: int) -> tuple:
-    """Build VQC policy routed through IBM SamplerV2 when both gates are open.
+def _build_vqc_policy_ibm(n_qubits: int, n_layers: int, opt_in_cloud: bool) -> tuple:
+    """Build VQC policy routed through IBM SamplerV2 when all three gates are open.
 
-    Gate 1: opt_in_cloud=True (caller-side flag)
-    Gate 2: QUANTUM_CLOUD_ENABLED env != "false"
-    Gate 3: IBM_QUANTUM_TOKEN env is set
+    All three gates must pass before any IBM cloud QPU path is engaged:
+      Gate 1: opt_in_cloud=True  — per-call explicit opt-in (caller must pass explicitly)
+      Gate 2: QUANTUM_CLOUD_ENABLED env != "false"  — system kill-switch
+      Gate 3: IBM_QUANTUM_TOKEN env is set  — credential present
 
+    If any gate is closed, falls through to local PennyLane default.qubit.
     On any IBM API error: logs WARN, falls back to local PennyLane simulator.
     Emits audit 'quantum_rl.cloud_path_engaged' on successful IBM use.
 
-    Returns (circuit, n_params, backend_label).
+    Env vars read (documented for env inventory):
+      QUANTUM_CLOUD_ENABLED   — if "false", cloud is disabled (gate 2)
+      IBM_QUANTUM_TOKEN       — IBM credential (gate 3)
+      IBM_QUANTUM_CHANNEL     — should be "ibm_cloud" (NOT "ibm_quantum")
+
+    Args:
+        n_qubits:      number of qubits for the VQC circuit
+        n_layers:      number of variational layers
+        opt_in_cloud:  caller-supplied explicit opt-in flag (gate 1); no default —
+                       caller must always pass this value to avoid silent cloud routing
+
+    Returns:
+        (circuit, n_params, backend_label)
     """
     if not PENNYLANE_AVAILABLE:
         return None, 0, "unavailable"
@@ -1365,7 +1393,8 @@ def _build_vqc_policy_ibm(n_qubits: int, n_layers: int) -> tuple:
     cloud_enabled = os.environ.get("QUANTUM_CLOUD_ENABLED", "").lower() != "false"
     ibm_token = os.environ.get("IBM_QUANTUM_TOKEN", "")
 
-    if cloud_enabled and ibm_token:
+    # Three-gate AND: all must pass before touching IBM cloud
+    if opt_in_cloud and cloud_enabled and ibm_token:
         try:
             from src.engine.cloud_backend import (
                 CloudBackendConfig,
@@ -1376,7 +1405,7 @@ def _build_vqc_policy_ibm(n_qubits: int, n_layers: int) -> tuple:
             ibm_cfg = CloudBackendConfig(
                 provider="ibm",
                 backend_name="ibm_sherbrooke",
-                opt_in_cloud=True,
+                opt_in_cloud=opt_in_cloud,
             )
             provider_name, _ibm_obj, backend_label = _resolve_ibm_backend(
                 ibm_cfg, problem_size=n_qubits
@@ -1674,10 +1703,13 @@ def train_regime_conditioned_policies(
         # Fallback features for TradingEnv (production states take priority via _production_states)
         features_np = np.zeros((len(prices_arr), 8), dtype=np.float64)
 
-        # Build VQC policy — IBM opt-in path
+        # Build VQC policy — IBM opt-in path.
+        # opt_in_cloud is passed explicitly from QUANTUM_RL_IBM_CLOUD_OPT_IN env (step 4).
+        # All three gates (opt_in_cloud AND cloud_enabled AND ibm_token) are enforced
+        # inside _build_vqc_policy_ibm; passing opt_in_cloud here is mandatory.
         n_qubits = 8
         n_layers = 3
-        _circuit, n_params, backend_label = _build_vqc_policy_ibm(n_qubits, n_layers)
+        _circuit, n_params, backend_label = _build_vqc_policy_ibm(n_qubits, n_layers, opt_in_cloud=opt_in_cloud)
 
         if not cloud_engaged and backend_label not in ("default.qubit", "unavailable", "local"):
             cloud_engaged = True
@@ -1760,8 +1792,8 @@ def train_regime_conditioned_policies(
                                 """
                                 INSERT INTO quantum_rl_runs
                                     (strategy_id, status, method, total_return, sharpe_ratio,
-                                     governance_labels, created_at)
-                                VALUES (%s, 'completed', %s, %s, %s, %s, NOW())
+                                     governance_labels, seed, created_at)
+                                VALUES (%s, 'completed', %s, %s, %s, %s, %s, NOW())
                                 """,
                                 (
                                     strategy_id,
@@ -1776,6 +1808,7 @@ def train_regime_conditioned_policies(
                                         "weights_hash": weights_hash,
                                         "backend_label": backend_label,
                                     }),
+                                    regime_seed,  # Fix 8: persist seed for replay reproducibility
                                 ),
                             )
                         conn.commit()
@@ -1856,7 +1889,7 @@ def compute_rl_kill_switch_state(
             reason: str,
         }
     """
-    _DORMANT_GAP_THRESHOLD_PCT = 30.0
+    # _DORMANT_GAP_THRESHOLD_PCT is the module-level constant (reads QUANTUM_RL_KILL_SWITCH_THRESHOLD_PCT env).
     _INSUFFICIENT_LABEL = "insufficient_samples"
 
     default_result = {

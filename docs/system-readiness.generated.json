@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-22T19:36:16.463Z",
+  "generatedAt": "2026-06-22T20:09:14.001Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -11,15 +11,12 @@
     "dd_velocity_gate:manual_gate:operator-only-recovery",
     "exit_engine_ab_harness:invalid-active-proof-mode",
     "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
-    "frozen_policy_contract:invalid-active-proof-mode",
     "frozen_policy_contract:manual_gate:operator_hmac_override",
     "late_cycle_overheating_regime:invalid-active-proof-mode",
     "pattern_aggregator_service:manual_gate:kill_switch",
-    "pbo_overfit_gate:invalid-active-proof-mode",
     "phase5_contract_spec_scaffold:manual_gate:operator-approve",
     "production_hardening:manual_gate:operator-halt-only",
     "quantum_rl_challenger:invalid-active-proof-mode",
-    "regime_drift_detector:invalid-active-proof-mode",
     "replay_grade_confluence:invalid-active-proof-mode",
     "replay_grade_confluence:manual_gate:operator-approve",
     "replay_grade_consistency:invalid-active-proof-mode",
@@ -36,7 +33,6 @@
     "replay_grade_unified_dispatcher:manual_gate:operator-approve",
     "replay_harness_engine:invalid-active-proof-mode",
     "replay_harness_engine:manual_gate:operator-approve",
-    "shadow_stage:invalid-active-proof-mode",
     "slumhouse_discord_oauth:invalid-active-proof-mode",
     "slumhouse_frontend:invalid-active-proof-mode",
     "slumhouse_routes:invalid-active-proof-mode",
@@ -45,7 +41,7 @@
     "strategy_health_observability:invalid-active-proof-mode",
     "ts_python_parity_ci_gate:invalid-active-proof-mode",
     "ts_python_parity_ci_gate:manual_gate:ci_gate",
-    "wave29_observability_surface:invalid-active-proof-mode",
+    "wave29_observability_surface:missing-evidence-queries",
     "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
     "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
     "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
@@ -57,8 +53,8 @@
   ],
   "subsystemCounts": {
     "total": 69,
-    "ready": 33,
-    "blocked": 29,
+    "ready": 36,
+    "blocked": 26,
     "manualGated": 2,
     "experimental": 5
   },
@@ -515,7 +511,6 @@
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "operator_only",
       "blockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator_hmac_override"
       ],
       "requiredEvidence": [
@@ -797,16 +792,14 @@
     },
     {
       "id": "pbo_overfit_gate",
-      "status": "blocked",
+      "status": "ready",
       "productionTargetState": "production_autonomous",
       "manualGate": "none",
       "selfEvolving": false,
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "operator_only",
-      "blockers": [
-        "invalid-active-proof-mode"
-      ],
+      "blockers": [],
       "requiredEvidence": [
         "audit_log.lifecycle.pbo_*",
         "audit_log.walk_forward.pbo_*",
@@ -1036,16 +1029,14 @@
     },
     {
       "id": "regime_drift_detector",
-      "status": "blocked",
+      "status": "ready",
       "productionTargetState": "production_autonomous",
       "manualGate": "none",
       "selfEvolving": false,
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "operator_only",
-      "blockers": [
-        "invalid-active-proof-mode"
-      ],
+      "blockers": [],
       "requiredEvidence": [
         "audit_log.lifecycle.regime_drift_demotion",
         "audit_log.regime_drift_detector.*",
@@ -1265,16 +1256,14 @@
     },
     {
       "id": "shadow_stage",
-      "status": "blocked",
+      "status": "ready",
       "productionTargetState": "production_autonomous",
       "manualGate": "none",
       "selfEvolving": false,
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "operator_only",
-      "blockers": [
-        "invalid-active-proof-mode"
-      ],
+      "blockers": [],
       "requiredEvidence": [
         "audit_log.lifecycle.shadow_*",
         "audit_log.lifecycle.shadow_signal_logged",
@@ -1587,7 +1576,7 @@
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "operator_only",
       "blockers": [
-        "invalid-active-proof-mode"
+        "missing-evidence-queries"
       ],
       "requiredEvidence": [
         "/metrics endpoint reachable",
