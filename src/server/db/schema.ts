@@ -1557,6 +1557,7 @@ export const lifecycleTransitions = pgTable("lifecycle_transitions", {
   quantumFallbackTriggered: boolean("quantum_fallback_triggered").default(false),
   quantumClassicalDisagreementPct: numeric("quantum_classical_disagreement_pct"),
   cloudQmcRunId: uuid("cloud_qmc_run_id"), // Reserved for W4 cloud_qmc_runs FK
+  correlationId: text("correlation_id"), // Wave 6 Fix 1 (migration 0106) — end-to-end trace
   // F-5 (migration 0126): TIMESTAMPTZ for forensic replay determinism.
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 },
