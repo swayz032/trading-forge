@@ -8929,7 +8929,23 @@ Also restored Anam.ai persona during this session:
 
 ---
 
+### Session Log — 2026-06-22 claude (promotion-gate-chain institutional audit + fixes)
+
+**Mission:** After the MC/B14 repair, audit the PAPER→DEPLOY_READY promotion-gate chain for the B14 bug class (Python→TS key disconnect / fail-open silent-pass / toy-scale-only tests), then fix all issues. Operator clarified 0 backtests / all-CANDIDATE is INTENTIONAL (hardening engine before running strategies) — see memory feedback_engine_hardening_before_running_strategies.
+
+**Audit (3 parallel accuracy-validators; every CRITICAL re-verified vs live code + DB):** B15 robustness gate DEAD (`--b15-battery` never passed; DB 0/0 b15_battery). Composite-shadow queries `strategy_health_scores` which DOESN'T EXIST (0149 unapplied) + int-vs-UUID strategy_id. Shadow-divergence has no backtest side (`expected_signals` never written). Frozen-policy fail-OPEN but doc says fail-CLOSED. WFE silent-pass on degenerate IS; param-drift silent-pass on classifier exception. `wfResults` ingestion drops gate keys. ALL gate tests pure-mock (why disconnects were invisible). DOWNGRADED over-claim "SHADOW→TradersPost leak" (0160 applied, column exists).
+
+**Fixes (commit 04b7c68 + co-mingled into parallel session's eddb081/539fde1/05ead05):** G1 `buildBacktestArgs` passes `--b15-battery` when `B15_BATTERY_ENABLED=true` + wfResults typed keys. G2 walk_forward emits `wfe_status=degenerate_is`/`classifier_error`; gates BLOCK; **parent added the lifecycle `wfe_status` wiring the G2 agent left un-wired (disconnect recreated, caught in verification)**. G3 frozen-policy fail-CLOSED. G4 `strategy_health_scores.strategy_id` INTEGER→UUID (schema + migration 0149 DEFINITION only, unapplied). Integration tests producer→DB→gate (the meta-fix): 16+18+5 + uuid regressions. 120 gate vitest GREEN; production-isolation + 2026-compliance OK. G2 pytest hung on vectorbt-JIT import (environmental).
+
+**Carry-forward:** CLAUDE.md §12/§15 doc reconcile (held to avoid churn vs parallel session); wire `backtests.expected_signals` (deploy-step); apply 0149 + boot-migration-runner at go-live; re-run G2 pytest when JIT-hang resolved.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
+
+### Parallel sessions on the same branch co-mingle via `git add -A` (pinned 2026-06-22)
+
+Multiple Claude sessions run against this repo concurrently (2026-06-22: a "backtest-engine-hardening" session committed WFE/MC/PBO at the same minutes as a promotion-gate-audit session). They commit with `git add -A`, which SWEEPS another session's uncommitted in-flight files into the committing session's commit — your edits can land under someone else's commit message, and a file you're mid-editing can be committed half-done. Defenses: (1) commit YOUR files with explicit paths, NEVER `git add -A`, when a parallel session may be active; (2) `git diff HEAD <file>` to check whether your change was already swept into HEAD before re-committing; (3) `git show HEAD:<file> | grep <marker>` to verify your logic survived a co-mingle; (4) don't run `system-map:sync` on a co-mingled tree. Nothing was lost 2026-06-22, but only because each change was verified present in HEAD post-sweep.
 
 ### B14 ruin CI was NOT actually live before 2026-06-22 (pinned 2026-06-22)
 
