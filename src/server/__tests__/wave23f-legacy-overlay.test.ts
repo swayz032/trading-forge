@@ -75,7 +75,9 @@ describe("Wave 23F Track F — script structural guards", () => {
   });
 
   it("filters by archived_at IS NULL (isNull guard present)", () => {
-    expect(scriptSrc).toContain("isNull(strategies.archivedAt)");
+    // Wave hardening 2026-06-22: tolerate the `(strategies as any)` cast the script uses
+    // because archivedAt isn't typed in the Drizzle schema. The guard's presence is what matters.
+    expect(scriptSrc).toMatch(/isNull\(\(?\s*strategies(?:\s+as\s+any)?\s*\)?\.archivedAt\)/);
   });
 
   it("uses a DB transaction wrapping UPDATE + audit INSERT", () => {
