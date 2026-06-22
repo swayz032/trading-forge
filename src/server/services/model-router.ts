@@ -225,6 +225,89 @@ export async function checkTranscriptExtractorOllamaHealth(): Promise<void> {
 }
 
 /**
+ * recheckOllamaHealth — runtime recheck of the Ollama health state.
+ *
+ * Re-runs the same 2-phase probe as checkTranscriptExtractorOllamaHealth
+ * (Phase 1: /api/tags registry, Phase 2: /api/generate test-inference) and
+ * resets OLLAMA_HEALTHY at runtime.
+ *
+ * Called by POST /api/admin/ollama-health-recheck to recover from the
+ * stuck-false scenario (NSSM respawn or keep_alive:0 unload after boot-time
+ * health check ran). Returns the new value of OLLAMA_HEALTHY so the caller
+ * can surface it in the response.
+ *
+ * Never throws — errors are logged and reflected in the return value.
+ */
+export async function recheckOllamaHealth(): Promise<{ healthy: boolean; reason?: string }> {
+  const ollamaBase = process.env.OLLAMA_HOST ?? process.env.OLLAMA_BASE_URL ?? "http://localhost:11434";
+  const targetModel = getLocalTranscriptModel();
+  try {
+    // Phase 1: tags check
+    const res = await fetch(`${ollamaBase}/api/tags`, {
+      signal: AbortSignal.timeout(5_000),
+    });
+    if (!res.ok) {
+      OLLAMA_HEALTHY = false;
+      logger.warn(
+        { status: res.status, ollamaBase },
+        "model-router: recheckOllamaHealth Phase 1 failed — /api/tags non-OK",
+      );
+      return { healthy: false, reason: `tags_non_ok_${res.status}` };
+    }
+    const data = await res.json() as { models?: Array<{ name: string }> };
+    const models = data.models ?? [];
+    const modelFound = models.some(
+      (m) => m.name === targetModel || m.name.startsWith(targetModel.split(":")[0] ?? ""),
+    );
+    if (!modelFound) {
+      OLLAMA_HEALTHY = false;
+      logger.warn(
+        { targetModel, available: models.map((m) => m.name) },
+        "model-router: recheckOllamaHealth Phase 1 failed — model not found in tags",
+      );
+      return { healthy: false, reason: "model_not_in_tags" };
+    }
+
+    // Phase 2: test-inference probe
+    const probeRes = await fetch(`${ollamaBase}/api/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: targetModel,
+        prompt: '{"ok":true}',
+        format: "json",
+        stream: false,
+      }),
+      signal: AbortSignal.timeout(15_000),
+    });
+    const probeData = await probeRes.json() as { response?: string; error?: string };
+    if (!probeRes.ok || probeData.error) {
+      OLLAMA_HEALTHY = false;
+      logger.warn(
+        { targetModel, ollamaBase, probeError: probeData.error ?? `HTTP ${probeRes.status}` },
+        "model-router: recheckOllamaHealth Phase 2 failed — test-inference probe failed",
+      );
+      return { healthy: false, reason: probeData.error ?? `probe_http_${probeRes.status}` };
+    }
+
+    OLLAMA_HEALTHY = true;
+    logger.info(
+      { targetModel, ollamaBase },
+      "model-router: recheckOllamaHealth succeeded — OLLAMA_HEALTHY reset to true",
+    );
+    return { healthy: true };
+  } catch (err) {
+    OLLAMA_HEALTHY = false;
+    const reason = err instanceof Error ? err.message : String(err ?? "unknown");
+    logger.warn(
+      { err, ollamaBase, targetModel },
+      "model-router: recheckOllamaHealth threw — OLLAMA_HEALTHY set false",
+    );
+    return { healthy: false, reason };
+  }
+}
+
+/**
  * Test helper: override OLLAMA_HEALTHY state.
  * Production code never calls this.
  */
@@ -2577,6 +2660,94 @@ async function callOllamaForTranscriptExtractor(
   return { text: raw, model, durationMs, inputTokens: 0, outputTokens: 0 };
 }
 
+// ─── W3.3 — Fail-Loud: local-LLM-down signal ─────────────────────────────────
+//
+// When OLLAMA_HEALTHY is false AND cloud is also unavailable (budget gate,
+// circuit open, or retries exhausted), the system was about to silently return
+// null. Instead, emit:
+//   1. audit row: extraction.local_llm_down (queryable, structured)
+//   2. Discord critical alert (operator visibility)
+//   3. quarantineExtraction() so the video can be re-extracted later
+//
+// Fire-and-forget — never blocks the extraction return path.
+// Accepts optional `source_url` extracted from the messages payload when
+// available (best-effort; absent on chunked paths where messages are chunks).
+
+interface LocalLlmDownOpts {
+  messages: Array<{ role: string; content: string }>;
+  fallback_reason: string;
+  source_url?: string;
+}
+
+async function emitLocalLlmDownSignal(opts: LocalLlmDownOpts): Promise<void> {
+  const { messages, fallback_reason } = opts;
+
+  // Best-effort: extract source_url from the user message JSON payload.
+  // scout-extract sends { youtube_url, title, channel, transcript_text }.
+  let sourceUrl: string | null = opts.source_url ?? null;
+  if (!sourceUrl) {
+    try {
+      const userMsg = messages.find((m) => m.role === "user");
+      if (userMsg) {
+        const parsed = JSON.parse(userMsg.content) as Record<string, unknown>;
+        if (typeof parsed.youtube_url === "string") sourceUrl = parsed.youtube_url;
+      }
+    } catch { /* best-effort, non-blocking */ }
+  }
+
+  logger.error(
+    { fallback_reason, sourceUrl, OLLAMA_HEALTHY },
+    "extraction.local_llm_down: Ollama is unhealthy and cloud fallback is unavailable — extraction lost",
+  );
+
+  // 1. Audit row (structured, queryable)
+  try {
+    const { db } = await import("../db/index.js");
+    const { auditLog } = await import("../db/schema.js");
+    await db.insert(auditLog).values({
+      action: "extraction.local_llm_down",
+      decisionAuthority: "system",
+      status: "failure",
+      result: {
+        fallback_reason,
+        source_url: sourceUrl,
+        ollama_healthy_flag: OLLAMA_HEALTHY,
+        model: getLocalTranscriptModel(),
+        recommendation: "Run POST /api/admin/ollama-health-recheck to restore local routing",
+      } as Record<string, unknown>,
+    });
+  } catch (err) {
+    logger.debug({ err }, "emitLocalLlmDownSignal: audit insert failed (fire-and-forget)");
+  }
+
+  // 2. Discord critical alert
+  try {
+    const { notifyCritical } = await import("../services/notification-service.js");
+    notifyCritical(
+      "EXTRACTION LOST — local Ollama DOWN + cloud unavailable",
+      `Reason: ${fallback_reason}\nSource: ${sourceUrl ?? "(unknown)"}\nFix: POST /api/admin/ollama-health-recheck to restore local routing`,
+      { fallback_reason, source_url: sourceUrl, ollama_healthy_flag: OLLAMA_HEALTHY },
+    );
+  } catch (err) {
+    logger.debug({ err }, "emitLocalLlmDownSignal: Discord notify failed (fire-and-forget)");
+  }
+
+  // 3. Quarantine so the extraction can be replayed once Ollama recovers
+  try {
+    const { quarantineExtraction } = await import("../lib/quarantine-extraction.js");
+    await quarantineExtraction({
+      concept_name: "local_llm_down_quarantine",
+      source_url: sourceUrl,
+      missing: ["local_llm_unavailable"],
+      coverage_verdict: null,
+      reason: fallback_reason,
+      correlationId: null,
+    });
+  } catch (err) {
+    logger.debug({ err }, "emitLocalLlmDownSignal: quarantineExtraction failed (fire-and-forget)");
+  }
+}
+
 /**
  * callScoutExtractLlm — production entry-point for scout_extract / transcript_extractor
  * LLM calls with exponential-backoff retry and cloud fallback.
@@ -2641,7 +2812,15 @@ export async function callScoutExtractLlm(
     }
 
     if (result.exhausted) {
-      // Cloud retries exhausted — nothing left to try
+      // Cloud retries exhausted — nothing left to try.
+      // When Ollama is unhealthy (not just force-cloud), this is the silent-drop
+      // scenario: local is down AND cloud is also down. Emit fail-loud signals.
+      if (!forceCloud) {
+        void emitLocalLlmDownSignal({
+          messages,
+          fallback_reason: "ollama_unhealthy_cloud_also_exhausted",
+        });
+      }
       void writeTranscriptExtractorAudit({
         model: "gpt-5-mini",
         provider: "openai",
@@ -2655,8 +2834,17 @@ export async function callScoutExtractLlm(
       return null;
     }
 
-    // Budget gate / circuit open / refusal
-    return callOpenAIOrFallback(role, messages, taskContext);
+    // Budget gate / circuit open / refusal — try the openai-or-fallback path.
+    // If that also returns null and Ollama is still the reason for this path,
+    // emit the loud signal so the failure is not silent.
+    const fallbackResult = await callOpenAIOrFallback(role, messages, taskContext);
+    if (fallbackResult === null && !forceCloud) {
+      void emitLocalLlmDownSignal({
+        messages,
+        fallback_reason: "ollama_unhealthy_cloud_budget_or_circuit",
+      });
+    }
+    return fallbackResult;
   }
 
   // ── Path B: Ollama primary — try up to 3 attempts, then fall back to cloud ──

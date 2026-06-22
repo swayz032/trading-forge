@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { randomUUID } from "crypto";
+import { randomUUID, createHash } from "crypto";
 import { AgentService } from "../services/agent-service.js";
 import { analyzeMarket } from "../services/regime-service.js";
 import { synthesizeV11FromGemmaProse } from "../lib/gemma-prose-to-v11.js";
@@ -766,6 +766,29 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
   const { sourceUrl, markdown, sourceProvider, title } = parsed.data;
   const correlationId: string | null = (req as { id?: string }).id ?? null;
 
+  // W3.3 — Extraction lineage key: video_id + transcript_hash + extractor_version.
+  // Stable composite key for replay/audit idempotency. The same video + transcript
+  // content + extractor model version will always produce the same lineage key,
+  // so re-extractions can be correlated across time.
+  //   - video_id: last segment of sourceUrl (YouTube video ID when available,
+  //     URL hash otherwise — deterministic regardless of URL format)
+  //   - transcript_hash: SHA-256(markdown) truncated to 16 hex chars (64-bit)
+  //   - extractor_version: local model name (e.g. "gemma4:e2b")
+  const _extractorVersion = process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4:e2b";
+  const _transcriptHash = createHash("sha256").update(markdown, "utf8").digest("hex").slice(0, 16);
+  const _videoId = (() => {
+    try {
+      const u = new URL(sourceUrl);
+      const v = u.searchParams.get("v");
+      if (v) return v;
+      const seg = u.pathname.split("/").filter(Boolean).pop();
+      return seg ?? createHash("sha256").update(sourceUrl, "utf8").digest("hex").slice(0, 12);
+    } catch {
+      return createHash("sha256").update(sourceUrl, "utf8").digest("hex").slice(0, 12);
+    }
+  })();
+  const extractionLineageKey = `${_videoId}:${_transcriptHash}:${_extractorVersion}`;
+
   // Pass 21 Fix #2: chunked extraction. Many YouTube transcripts (and long
   // articles) ramble for 3-5 minutes before specifics. A single 12K-char window
   // anchored at the start misses the meat. We try the full window first; on
@@ -1011,9 +1034,43 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
     // W23G.7 — per-call telemetry: log extraction_mode + estimated token count.
     const tokensEstimated = Math.ceil(markdown.length / 4);
     logger.info(
-      { sourceUrl, extraction_mode: extractionMode, tokens_estimated: tokensEstimated, markdown_length: markdown.length },
+      {
+        sourceUrl,
+        extraction_mode: extractionMode,
+        tokens_estimated: tokensEstimated,
+        markdown_length: markdown.length,
+        // W3.3: include lineage key in structured log so operators can grep by it
+        lineage_key: extractionLineageKey,
+      },
       "scout-extract telemetry",
     );
+
+    // W3.3 — Extraction lineage audit row.
+    // Emitted once per extraction run. Acts as the anchor for all other audit rows
+    // (coverage_evaluated, config_used, quarantined, etc.) that share correlationId.
+    // Enables idempotent replay: callers can detect duplicate extractions by lineage_key.
+    insertAuditRow({
+      action: "extraction.lineage_emitted",
+      entityType: "scout_extract",
+      entityId: null,
+      status: "success",
+      decisionAuthority: "system",
+      result: {
+        lineage_key: extractionLineageKey,
+        video_id: _videoId,
+        transcript_hash: _transcriptHash,
+        extractor_version: _extractorVersion,
+        source_url: sourceUrl,
+        extraction_mode: extractionMode,
+        markdown_length: markdown.length,
+      },
+      correlationId,
+    }).catch((auditErr: unknown) => {
+      logger.debug(
+        { err: auditErr instanceof Error ? auditErr.message : String(auditErr), sourceUrl },
+        "scout-extract: lineage_emitted audit insert failed (non-blocking)",
+      );
+    });
 
     // W23G.2 — audit event for mixed-instrument keep path.
     // When LLM classifies the transcript as futures_with_forex_illustration,
@@ -1653,6 +1710,7 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
         const { speakerItems, verdict } = await runCoverageGate(markdown, firstIdea);
         coverageVerdictResult = verdict;
         // Emit audit row for observability — non-blocking
+        // W3.3: lineage_key added for replay/idempotency correlation.
         insertAuditRow({
           action: "extraction.coverage_evaluated",
           entityType: "scout_extract",
@@ -1665,6 +1723,10 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
             missing: verdict.missing,
             coverage_pct: verdict.coverage_pct,
             verdict: verdict.verdict,
+            lineage_key: extractionLineageKey,
+            video_id: _videoId,
+            transcript_hash: _transcriptHash,
+            extractor_version: _extractorVersion,
           },
           correlationId,
         }).catch((auditErr: unknown) => {
