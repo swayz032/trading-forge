@@ -2524,6 +2524,11 @@ export const brokerAccounts = pgTable(
     // Prevents accidental correlated-equity drawdown on a Topstep/MFFU Combine
     // where MES+MNQ together can exceed trailing DD in minutes.
     enabledSymbols: text("enabled_symbols").array().notNull().default(sql`ARRAY['MES']`),
+    // 2026-06-22 (migration 0167): Topstep voluntary-DLL opt-in flag.
+    // When true, Topstep XFA payout caps are DOUBLED (Standard $4K / Consistency $6K
+    // on a $50K account). MFFU accounts carry this field but it has no effect —
+    // MFFU cap is always $2,000 (no promo). Default false = base cap (conservative).
+    dllOptedIn: boolean("dll_opted_in").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [

@@ -7,6 +7,7 @@
 >
 > Effective: 2026-01-12 (TopstepX-only platform lockdown).
 > Last reviewed: 2026-06-22.
+> Promo added: 2026-06-02 (voluntary-DLL doubles XFA payout cap).
 > Evidence source: docs/institutional-evidence/firm-rules-freshness-2026-06-22.md
 
 ---
@@ -174,22 +175,42 @@ reflects Standard Path. If operator switches to Consistency Path, update
 
 - **Sources:** Tradecovex 2026-04-09 + 2026-04-28, Backtrex 2026-06-07.
 
-### 10. Payout Caps — Reduced April 28, 2026
+### 10. Payout Caps — Base Caps (Reduced April 28, 2026) + Voluntary-DLL Doubled Caps (June 2, 2026)
 
-For accounts created **after April 28, 2026**, payout caps on the 50K plan are:
+For accounts created **after April 28, 2026**, the **base** payout caps on the $50K plan are:
 
-| Path | Max Payout Per Request |
-|---|---|
-| Standard Path | **$2,000** (down from $5,000 for pre-Apr-28 accounts) |
-| Consistency Path | **$3,000** (down from $6,000 for pre-Apr-28 accounts) |
+| Path | Base Cap | With Voluntary DLL (effective 2026-06-02) |
+|---|---|---|
+| Standard Path | **$2,000** | **$4,000** |
+| Consistency Path | **$3,000** | **$6,000** |
 
-Accounts created before April 28, 2026 retain the higher $5,000/$6,000 caps.
-Verify your account's creation date to confirm which cap applies.
+The doubled cap applies when the account holder elected the voluntary Daily Loss
+Limit (DLL) at Combine checkout **before** June 2, 2026 promo effective date or
+any subsequent re-purchase. Accounts created before April 28, 2026 retain the
+higher pre-Apr-28 base caps ($5,000/$6,000) — the doubling promo applies on top
+of whichever base cap applies to the account's creation date.
+
+**Live Funded Account (LFA): uncapped** regardless of DLL opt-in or account tier.
+
+**MFFU payout cap: $2,000 flat** — this is a Topstep-only promo; MFFU is NOT
+affected and its cap does not double.
+
+**Operator status:** operator IS opting into the voluntary DLL for their Topstep
+account(s). The `dll_opted_in` flag on `broker_accounts` drives which cap the
+system models per account.
+
+**Safety note:** the voluntary DLL dollar amount elected at checkout must be
+**at or above the firm DLL we model** ($1,000 on a $50K account) so that our
+67% halt threshold ($670) fires before Topstep's voluntary DLL. Operator must
+confirm the exact $ amount chosen at Combine checkout.
 
 - **Not codified in CI-checked fields** — payout cap is a withdrawal policy, not
-  a gate enforced at signal time. Document for operator awareness only.
-- **Sources:** Tradecovex 2026-04-28 (single source; treat as informational until
-  a second source corroborates).
+  a gate enforced at signal time. Modeled via `getPayoutCap()` in `firm-config.ts`
+  and `get_payout_cap()` in `firm_config.py` for analytics/reporting. The per-account
+  opt-in is stored in `broker_accounts.dll_opted_in` (migration 0167).
+- **Sources (base cap reduction):** Tradecovex 2026-04-28 (single source; treat as
+  informational until a second source corroborates).
+- **Sources (voluntary-DLL promo):** Operator-authoritative, effective 2026-06-02.
 
 ### 11. MLL Resets to $0 After Every Payout — CRITICAL Post-Payout Sizing Note
 

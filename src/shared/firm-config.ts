@@ -66,6 +66,10 @@ export interface FirmAccountConfig {
   allowsCloudFailover?: boolean;               // Topstep: false (VPS/VPN/remote banned = no cloud failover)
   multiAccountWithinUserAllowed?: boolean;     // Topstep: true
   copyTradesWithinUserAllowed?: boolean;       // Topstep: true
+  // ── Topstep 2026-06-02 voluntary-DLL payout cap promo ────────────────────
+  // XFA payout caps indexed by path: { standard: {base, withDll}, consistency: {base, withDll} }
+  // null for each path = uncapped (LFA). MFFU carries no such field (flat $2K cap).
+  xfaPayoutCaps?: Record<string, { base: number; withDll: number }>;
 }
 
 export interface FirmConfig {
@@ -145,6 +149,13 @@ export const FIRMS: Record<string, FirmConfig> = {
         allowsCloudFailover: false,
         multiAccountWithinUserAllowed: true,
         copyTradesWithinUserAllowed: true,
+        // 2026-06-02 voluntary-DLL promo: opting into DLL at Combine checkout doubles
+        // the XFA per-request payout cap. LFA is uncapped (modeled by getPayoutCap returning null).
+        // IMPORTANT: conservative default for callers is dll_opted_in=false → base cap.
+        xfaPayoutCaps: {
+          standard:    { base: 2000, withDll: 4000 },
+          consistency: { base: 3000, withDll: 6000 },
+        },
       },
     },
   },
@@ -491,3 +502,75 @@ export const TOPSTEPX_API_MONTHLY_FEE_USD = 14.50;
 
 /** Promo code for TopstepX API subscription discount. */
 export const TOPSTEPX_PROMO_CODE = "topstep";
+
+// ─── Payout Cap Model (2026-06-02 Topstep voluntary-DLL promo) ───────────────
+//
+// Topstep XFA (Express Funded Account) payout caps:
+//   Standard Path:    base $2,000 / with voluntary-DLL $4,000
+//   Consistency Path: base $3,000 / with voluntary-DLL $6,000
+//
+// Live Funded Account (LFA) is uncapped regardless of DLL opt-in.
+// MFFU payout cap: $2,000 flat — no promo, dll_opted_in is ignored.
+//
+// Conservative contract: default dll_opted_in=false → base cap.
+// Never assume the doubled cap unless dll_opted_in is explicitly true.
+
+/** Topstep XFA payout caps per path. withDll = cap after voluntary-DLL opt-in. */
+export const TOPSTEP_XFA_PAYOUT_CAPS: Readonly<Record<string, { base: number; withDll: number }>> = {
+  standard:    { base: 2000, withDll: 4000 },
+  consistency: { base: 3000, withDll: 6000 },
+} as const;
+
+/**
+ * Sentinel value for an uncapped payout tier (Topstep LFA).
+ * null means "no cap enforced by policy".
+ */
+export const TOPSTEP_LFA_PAYOUT_CAP: null = null;
+
+/** MFFU flat per-request payout cap. No voluntary-DLL promo applies. */
+export const MFFU_PAYOUT_CAP = 2000;
+
+/**
+ * Return the maximum payout per withdrawal request for a given firm/stage/path combination.
+ *
+ * Topstep XFA: doubles when dll_opted_in=true (2026-06-02 voluntary-DLL promo).
+ * Topstep LFA: uncapped — returns null.
+ * MFFU: always $2,000 regardless of dll_opted_in (promo is Topstep-only).
+ *
+ * Conservative default: dll_opted_in=false → base cap.
+ * Never returns the doubled cap unless dll_opted_in is explicitly true.
+ *
+ * @param firmId       "topstep" | "mffu"
+ * @param accountStage "xfa" | "lfa"
+ * @param payoutPath   "standard" | "consistency"
+ * @param dllOptedIn   Whether the account elected the voluntary DLL at checkout.
+ *                     Default false = base cap (safe conservative default).
+ * @returns            Cap in USD, or null for "uncapped".
+ */
+export function getPayoutCap(
+  firmId: string,
+  accountStage: "xfa" | "lfa",
+  payoutPath: "standard" | "consistency" = "standard",
+  dllOptedIn: boolean = false,
+): number | null {
+  const firm = firmId.toLowerCase();
+
+  if (firm === "topstep") {
+    if (accountStage === "lfa") return TOPSTEP_LFA_PAYOUT_CAP; // null — uncapped
+    // XFA
+    const caps = TOPSTEP_XFA_PAYOUT_CAPS[payoutPath];
+    if (!caps) {
+      throw new Error(
+        `Unknown payoutPath '${payoutPath}' for Topstep XFA. Valid: ${Object.keys(TOPSTEP_XFA_PAYOUT_CAPS).join(", ")}`,
+      );
+    }
+    return dllOptedIn ? caps.withDll : caps.base;
+  }
+
+  if (firm === "mffu") {
+    // dll_opted_in is intentionally ignored — MFFU has no voluntary-DLL promo.
+    return MFFU_PAYOUT_CAP;
+  }
+
+  throw new Error(`Unknown firmId '${firmId}'. Valid: 'topstep', 'mffu'.`);
+}

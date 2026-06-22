@@ -138,6 +138,76 @@ FIRM_RULES: dict[str, dict] = {
 }
 
 
+# ─── Payout Caps (XFA / per-request withdrawal limits) ──────────
+#
+# Topstep XFA payout caps (effective 2026-06-02 voluntary-DLL promo):
+#   Standard Path:    base $2,000 / with-DLL $4,000
+#   Consistency Path: base $3,000 / with-DLL $6,000
+# Caps apply to the Express Funded Account (XFA) only.
+# Live Funded Account (LFA) is uncapped — sentinel value: None.
+# MFFU cap: $2,000 (no doubling — promo is Topstep-only).
+#
+# Conservative default: dll_opted_in=False → base cap (never assume doubled cap).
+
+TOPSTEP_XFA_PAYOUT_CAPS: dict[str, dict[str, int]] = {
+    # Keys: payout path → {base, with_dll}
+    "standard":    {"base": 2000, "with_dll": 4000},
+    "consistency": {"base": 3000, "with_dll": 6000},
+}
+
+# LFA is uncapped; use None as the sentinel for "no cap enforced".
+TOPSTEP_LFA_PAYOUT_CAP: None = None
+
+# MFFU: single flat cap, no promo.
+MFFU_PAYOUT_CAP: int = 2000
+
+
+def get_payout_cap(
+    firm_key: str,
+    account_stage: str,  # "xfa" | "lfa"
+    payout_path: str,    # "standard" | "consistency"
+    dll_opted_in: bool = False,
+) -> int | None:
+    """Return the max payout per withdrawal request for a given account/path combination.
+
+    Args:
+        firm_key:      Firm identifier ("topstep_50k" or "mffu_50k").
+        account_stage: "xfa" (Express Funded Account) or "lfa" (Live Funded Account).
+        payout_path:   "standard" or "consistency" (Topstep XFA paths).
+        dll_opted_in:  Whether the account holder opted into the voluntary DLL at
+                       checkout. Only affects Topstep XFA. Default False = base cap
+                       (conservative — never assume the doubled cap).
+
+    Returns:
+        Maximum payout in USD, or None for "uncapped" (Topstep LFA).
+
+    Raises:
+        ValueError: Unknown firm_key or account_stage.
+    """
+    if firm_key == "topstep_50k":
+        if account_stage == "lfa":
+            return TOPSTEP_LFA_PAYOUT_CAP  # None — uncapped
+        if account_stage == "xfa":
+            caps = TOPSTEP_XFA_PAYOUT_CAPS.get(payout_path)
+            if caps is None:
+                raise ValueError(
+                    f"Unknown payout_path '{payout_path}' for Topstep XFA. "
+                    f"Valid: {sorted(TOPSTEP_XFA_PAYOUT_CAPS.keys())}"
+                )
+            return caps["with_dll"] if dll_opted_in else caps["base"]
+        raise ValueError(
+            f"Unknown account_stage '{account_stage}'. Valid: 'xfa', 'lfa'."
+        )
+
+    if firm_key == "mffu_50k":
+        # MFFU has no voluntary-DLL promo; dll_opted_in is ignored.
+        return MFFU_PAYOUT_CAP
+
+    raise ValueError(
+        f"Unknown firm_key '{firm_key}'. Valid: 'topstep_50k', 'mffu_50k'."
+    )
+
+
 # ─── Public helpers (consumed by backtester.py and others) ────────
 
 def get_commission_per_side(firm_key: str, symbol: str) -> float:
