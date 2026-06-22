@@ -204,6 +204,138 @@ describe("evaluateB14CiGate — audit payload fields", () => {
   });
 });
 
+// ─── Wave hardening 2026-06-22: non-finite ruin guard ────────────────────────
+// Covers the scipy BCa DegenerateDataWarning (NaN ci_high) silent-pass defect.
+
+describe("evaluateB14CiGate — ci_high=NaN with finite scalar below threshold → scalar fallback, passes", () => {
+  it("falls back to scalar and passes when ci_high is NaN and scalar is below threshold", () => {
+    const ruinCi: RuinCiDict = {
+      point_estimate: 0.20,
+      ci_low: 0.05,
+      ci_high: NaN, // scipy BCa DegenerateDataWarning
+      ci_method: "BCa",
+      n_resamples: 9999,
+    };
+    const result = evaluateB14CiGate(ruinCi, 0.25);
+    // ci_high NaN → discarded → falls to scalar 0.25 → 0.25 < 0.40 → passes
+    expect(result.passed).toBe(true);
+    expect(result.reason).toBe("b14.ci_high_within_threshold");
+    expect(result.legacyFallback).toBe(true);
+    expect(result.auditPayload.legacy_ruin_scalar_fallback).toBe(true);
+    expect(result.auditPayload.ci_high).toBe(0.25);
+  });
+});
+
+describe("evaluateB14CiGate — ci_high=NaN with finite scalar above threshold → blocks via scalar", () => {
+  it("blocks when ci_high is NaN and scalar pointEstimate is above threshold", () => {
+    const ruinCi: RuinCiDict = {
+      point_estimate: 0.30,
+      ci_low: 0.10,
+      ci_high: NaN,
+      ci_method: "BCa",
+      n_resamples: 9999,
+    };
+    const result = evaluateB14CiGate(ruinCi, 0.55);
+    // ci_high NaN → discarded → falls to scalar 0.55 → 0.55 > 0.40 → blocks
+    expect(result.passed).toBe(false);
+    expect(result.reason).toBe("b14.ci_high_exceeds_threshold");
+    expect(result.legacyFallback).toBe(true);
+    expect(result.auditPayload.blocked).toBe(true);
+    expect(result.auditPayload.ci_high).toBe(0.55);
+  });
+});
+
+describe("evaluateB14CiGate — ci_high=NaN AND scalar NaN/null → fail-CLOSED", () => {
+  it("fails CLOSED when ci_high is NaN and scalar pointEstimate is also NaN", () => {
+    const ruinCi: RuinCiDict = {
+      point_estimate: 0.15,
+      ci_low: 0.05,
+      ci_high: NaN,
+      ci_method: "BCa",
+      n_resamples: 9999,
+    };
+    const result = evaluateB14CiGate(ruinCi, NaN);
+    // Both NaN → fail-CLOSED (MC ran but ruin estimate is corrupt/degenerate)
+    expect(result.passed).toBe(false);
+    expect(result.reason).toBe("b14.ruin_estimate_non_finite_fail_closed");
+    expect(result.legacyFallback).toBe(true);
+    expect(result.auditPayload.blocked).toBe(true);
+    expect(result.auditPayload.ci_high).toBeNull();
+  });
+
+  it("fails CLOSED when ci_high is NaN and scalar pointEstimate is null", () => {
+    const ruinCi: RuinCiDict = {
+      point_estimate: 0.15,
+      ci_low: 0.05,
+      ci_high: NaN,
+    };
+    const result = evaluateB14CiGate(ruinCi, null);
+    // ci_high NaN → discarded; no scalar → fail-CLOSED
+    expect(result.passed).toBe(false);
+    expect(result.reason).toBe("b14.ruin_estimate_non_finite_fail_closed");
+    expect(result.auditPayload.blocked).toBe(true);
+  });
+
+  it("fails CLOSED when scalar is NaN with no ruinCi (degenerate pre-Pass-A scalar path)", () => {
+    const result = evaluateB14CiGate(null, NaN);
+    // ruinCi absent; scalar NaN → fail-CLOSED
+    expect(result.passed).toBe(false);
+    expect(result.reason).toBe("b14.ruin_estimate_non_finite_fail_closed");
+    expect(result.auditPayload.blocked).toBe(true);
+    expect(result.auditPayload.ci_high).toBeNull();
+  });
+});
+
+describe("evaluateB14CiGate — ci_high=Infinity → treated as non-finite → scalar/fail-CLOSED path", () => {
+  it("fails CLOSED when ci_high is Infinity and scalar is also non-finite", () => {
+    const ruinCi: RuinCiDict = {
+      ci_high: Infinity,
+      ci_low: 0.10,
+      point_estimate: 0.30,
+    };
+    const result = evaluateB14CiGate(ruinCi, NaN);
+    // Infinity treated as non-finite → scalar NaN also non-finite → fail-CLOSED
+    expect(result.passed).toBe(false);
+    expect(result.reason).toBe("b14.ruin_estimate_non_finite_fail_closed");
+    expect(result.auditPayload.blocked).toBe(true);
+  });
+
+  it("falls back to scalar and blocks when ci_high is Infinity and scalar is above threshold", () => {
+    const ruinCi: RuinCiDict = {
+      ci_high: Infinity,
+      ci_low: 0.10,
+      point_estimate: 0.30,
+    };
+    const result = evaluateB14CiGate(ruinCi, 0.50);
+    // Infinity treated as non-finite → scalar 0.50 → 0.50 > 0.40 → blocks
+    expect(result.passed).toBe(false);
+    expect(result.reason).toBe("b14.ci_high_exceeds_threshold");
+    expect(result.legacyFallback).toBe(true);
+    expect(result.auditPayload.ci_high).toBe(0.50);
+    expect(result.auditPayload.blocked).toBe(true);
+  });
+});
+
+describe("evaluateB14CiGate — regression: finite ci_high behaves identically to pre-fix", () => {
+  it("finite ci_high just below 0.40 still passes", () => {
+    const ruinCi: RuinCiDict = { ci_high: 0.399, point_estimate: 0.25 };
+    const result = evaluateB14CiGate(ruinCi, null, 0.40);
+    expect(result.passed).toBe(true);
+    expect(result.reason).toBe("b14.ci_high_within_threshold");
+    expect(result.legacyFallback).toBe(false);
+    expect(result.auditPayload.blocked).toBe(false);
+  });
+
+  it("finite ci_high just above 0.40 still blocks", () => {
+    const ruinCi: RuinCiDict = { ci_high: 0.401, point_estimate: 0.30 };
+    const result = evaluateB14CiGate(ruinCi, null, 0.40);
+    expect(result.passed).toBe(false);
+    expect(result.reason).toBe("b14.ci_high_exceeds_threshold");
+    expect(result.legacyFallback).toBe(false);
+    expect(result.auditPayload.blocked).toBe(true);
+  });
+});
+
 // ─── SSE surface (gate result models every evaluation) ────────────────────────
 
 describe("evaluateB14CiGate — result surface (SSE payload source)", () => {

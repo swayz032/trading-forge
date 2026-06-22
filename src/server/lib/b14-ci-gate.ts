@@ -88,24 +88,78 @@ export function evaluateB14CiGate(
   let nResamples: number | null = null;
   let pointEst: number | null = null;
   let legacyFallback = false;
+  // Wave hardening 2026-06-22, B14 non-finite ruin guard:
+  // Tracks whether MC ran but produced a non-finite estimate (NaN/Infinity from scipy BCa
+  // on degenerate strategies). This is distinct from "no MC run at all" (ruinCi is null).
+  // The distinction drives: corrupt-MC → fail-CLOSED; absent-MC → pass-through.
+  let hadNonFiniteRuinEstimate = false;
+  // Non-finite raw values surfaced in the fail-CLOSED audit payload.
+  let rawNonFiniteCiHigh: number | null = null;
+  let rawNonFiniteScalar: number | null = null;
 
   if (ruinCi != null && typeof ruinCi === "object") {
-    ciHigh = ruinCi.ci_high != null ? Number(ruinCi.ci_high) : null;
+    // Wave hardening 2026-06-22, B14 non-finite ruin guard:
+    // scipy BCa returns NaN for degenerate (near-all-zero) strategies.
+    // NaN != null is true, so the bare != null check silently produced
+    // ciHigh = NaN → NaN > threshold evaluates false → silent PASS.
+    // Treat non-finite as missing so the scalar-fallback branch handles it.
+    const rawCiHigh = ruinCi.ci_high != null ? Number(ruinCi.ci_high) : null;
+    if (rawCiHigh !== null && !Number.isFinite(rawCiHigh)) {
+      hadNonFiniteRuinEstimate = true;
+      rawNonFiniteCiHigh = rawCiHigh;
+    }
+    ciHigh = Number.isFinite(rawCiHigh) ? rawCiHigh : null;
     ciLow = ruinCi.ci_low != null ? Number(ruinCi.ci_low) : null;
     ciMethod = ruinCi.ci_method ?? null;
     nResamples = ruinCi.n_resamples != null ? Number(ruinCi.n_resamples) : null;
-    pointEst = ruinCi.point_estimate != null ? Number(ruinCi.point_estimate) : null;
+    const rawPointEst = ruinCi.point_estimate != null ? Number(ruinCi.point_estimate) : null;
+    pointEst = Number.isFinite(rawPointEst) ? rawPointEst : null;
   }
 
   // Fall back to scalar point estimate when ci_high is unavailable (pre-Pass-A runs).
+  // Also applies when ci_high was non-finite (NaN/Infinity) from scipy BCa on degenerate data.
   if (ciHigh === null) {
     legacyFallback = true;
-    ciHigh = pointEstimate != null ? Number(pointEstimate) : null;
+    // Wave hardening 2026-06-22: also finite-check the scalar fallback — a NaN scalar
+    // must NOT become ciHigh (same silent-pass bug applies to the scalar path).
+    const rawScalar = pointEstimate != null ? Number(pointEstimate) : null;
+    if (rawScalar !== null && !Number.isFinite(rawScalar)) {
+      hadNonFiniteRuinEstimate = true;
+      rawNonFiniteScalar = rawScalar;
+    }
+    ciHigh = Number.isFinite(rawScalar) ? rawScalar : null;
     pointEst = ciHigh;
     logger.warn(
       { pointEstimate: ciHigh, threshold: effectiveThreshold },
       "B14 ci_high unavailable — falling back to scalar probability_of_ruin (b14.legacy_ruin_scalar_fallback)",
     );
+  }
+
+  // Wave hardening 2026-06-22: fail-CLOSED when MC ran but produced only non-finite
+  // ruin estimates (e.g. scipy BCa DegenerateDataWarning returns NaN for ci_high AND scalar
+  // is also NaN or absent). This is NOT the same as "no MC run at all" (handled below).
+  // A corrupt/degenerate ruin estimate from a real MC run is a risk signal that must BLOCK,
+  // not silently pass. The outer B14 gate's "no backtest data" pass-through does not apply.
+  if (ciHigh === null && hadNonFiniteRuinEstimate) {
+    logger.warn(
+      { rawNonFiniteCiHigh, rawNonFiniteScalar, threshold: effectiveThreshold },
+      "B14 ruin estimate non-finite (NaN/Infinity from scipy BCa degenerate strategy) — failing CLOSED per Wave hardening 2026-06-22",
+    );
+    return {
+      passed: false,
+      reason: "b14.ruin_estimate_non_finite_fail_closed",
+      legacyFallback: true,
+      auditPayload: {
+        point_estimate: null,
+        ci_low: null,
+        ci_high: null,
+        threshold: effectiveThreshold,
+        blocked: true,
+        legacy_ruin_scalar_fallback: true,
+        ci_method: ciMethod,
+        n_resamples: nResamples,
+      },
+    };
   }
 
   // If we still have no value (no MC run at all for this backtest), pass through.

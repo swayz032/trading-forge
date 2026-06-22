@@ -4,6 +4,13 @@ Wave 27.5 Pass A.1 — CRITICAL #2: probability_of_ruin now included in full BCa
 bootstrap pipeline (was computed as scalar with no interval, making B14 binary
 pass/fail with no quantified uncertainty).
 
+Wave hardening 2026-06-22, MC BCa scale fix (F1): scipy BCa uses an O(n²)
+jackknife internally, which OOMs at production n_sims (≥15K). Fixed by capping
+the bootstrap *resample input* at BCA_MAX_SAMPLE (default 5000) while keeping
+point_estimate on the FULL sample. Subsampling slightly widens CIs (smaller n)
+= more conservative = institutionally safe. n_effective key records actual
+sample size used for the interval.
+
 Provides statistically rigorous uncertainty bounds on:
 - survival_rate
 - probability_of_ruin (NEW: full BCa CI — B14 can now read ci_low/ci_high)
@@ -12,13 +19,14 @@ Provides statistically rigorous uncertainty bounds on:
 
 Output contract for each metric in `bca_confidence_intervals`:
   {
-    "point_estimate": float,    # raw metric value over full MC sample
+    "point_estimate": float,    # raw metric value over full MC sample (NEVER subsampled)
     "ci_low": float,            # lower bound of confidence interval
     "ci_high": float,           # upper bound of confidence interval
     "confidence_level": float,  # 0.95
     "ci_method": str,           # "BCa" | "percentile" | "percentile_fallback"
     "n_resamples": int,         # bootstrap resamples used (default 9999)
     "standard_error": float,    # bootstrap standard error
+    "n_effective": int,         # actual sample size used for CI (≤ BCA_MAX_SAMPLE when capped)
   }
 
 B14 gate SHOULD read `bca_confidence_intervals.probability_of_ruin.ci_high`
@@ -28,7 +36,15 @@ the CI data so the gate can consume it without blocking MC runs.
 """
 from __future__ import annotations
 
+import os
+
 import numpy as np
+
+# Wave hardening 2026-06-22: cap bootstrap resample input to avoid O(n²) BCa jackknife OOM.
+# At 5000: jackknife allocates 5000 × 4999 × 8 bytes ≈ 200 MB — safe on the 32 GB tower.
+# At 15000: 1.68 GiB OOM; at 100000: ~80 GiB guaranteed OOM.
+# Subsampling widens CIs slightly (conservative = institutionally safe).
+BCA_MAX_SAMPLE: int = int(os.environ.get("MC_BCA_MAX_SAMPLE", "5000"))
 
 try:
     from scipy.stats import bootstrap as scipy_bootstrap
@@ -70,15 +86,25 @@ def compute_mc_confidence_intervals(
         existing consumers that read .method. New consumers should read .ci_method.
     """
     rng = np.random.default_rng(seed)
+    # point_estimate ALWAYS uses the full data — never subsampled.
     point = float(statistic_fn(data, axis=0))
 
+    # Wave hardening 2026-06-22: cap bootstrap resample input at BCA_MAX_SAMPLE.
+    # Only the CI computation is bounded; point_estimate above uses full data.
+    n_full = len(data)
+    if n_full > BCA_MAX_SAMPLE:
+        boot_data = data[rng.choice(n_full, size=BCA_MAX_SAMPLE, replace=False)]
+    else:
+        boot_data = data
+    n_effective = len(boot_data)
+
     if not SCIPY_BOOTSTRAP_AVAILABLE:
-        # Fallback: simple percentile bootstrap
-        n = len(data)
+        # Fallback: simple percentile bootstrap (also capped for memory consistency)
+        n = n_effective
         boot_stats = np.zeros(n_resamples)
         for i in range(n_resamples):
             idx = rng.integers(0, n, size=n)
-            boot_stats[i] = statistic_fn(data[idx], axis=0)
+            boot_stats[i] = statistic_fn(boot_data[idx], axis=0)
         alpha = 1.0 - confidence_level
         ci_low = float(np.percentile(boot_stats, 100 * alpha / 2))
         ci_high = float(np.percentile(boot_stats, 100 * (1 - alpha / 2)))
@@ -92,10 +118,11 @@ def compute_mc_confidence_intervals(
             "method": "percentile_fallback",  # backward compat
             "n_resamples": n_resamples,
             "standard_error": se,
+            "n_effective": n_effective,
         }
 
     result = scipy_bootstrap(
-        (data,),
+        (boot_data,),
         statistic=statistic_fn,
         n_resamples=n_resamples,
         confidence_level=confidence_level,
@@ -112,6 +139,7 @@ def compute_mc_confidence_intervals(
         "method": method,  # backward compat
         "n_resamples": n_resamples,
         "standard_error": float(result.standard_error),
+        "n_effective": n_effective,
     }
 
 

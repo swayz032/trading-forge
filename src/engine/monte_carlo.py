@@ -1788,8 +1788,26 @@ def run_monte_carlo(
             cis = compute_all_mc_cis(result["all_paths"], seed=request.seed + 500)
             result["bca_confidence_intervals"] = cis
         result["rng_metadata"] = {"generator": "PCG64DXSM", "seed": request.seed}
-    except Exception:
-        pass  # CIs are optional — don't block MC output
+    except Exception as _bca_exc:
+        import sys as _sys
+        print(
+            f"[run_monte_carlo WARNING] BCa CI computation failed: {type(_bca_exc).__name__}: {_bca_exc}",
+            file=_sys.stderr,
+        )
+        _bca_err = {"error": str(_bca_exc), "error_type": type(_bca_exc).__name__}
+        result["bca_confidence_intervals_error"] = _bca_err
+        # Best-effort audit write — DB failure must never block MC return.
+        try:
+            from src.engine.audit_writer import write_audit_row_sync
+            write_audit_row_sync(
+                action="monte_carlo.bca_ci_failed",
+                entity_type="monte_carlo",
+                entity_id=request.backtest_id,
+                severity="warning",
+                payload=_bca_err,
+            )
+        except Exception:
+            pass
     finally:
         result.pop("all_paths", None)  # Never serialize raw paths ndarray
 
