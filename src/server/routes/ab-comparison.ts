@@ -42,6 +42,7 @@ import {
   sql,
 } from "drizzle-orm";
 import { logger } from "../lib/logger.js";
+import { rlAbSharpeDelta, rlAbPnlDelta } from "../lib/metrics-registry.js";
 
 export const abComparisonRoutes = Router();
 
@@ -319,6 +320,13 @@ abComparisonRoutes.get(
         pnl_delta: subAccount2.cumulative_pnl - subAccount1.cumulative_pnl,
         drawdown_delta: subAccount2.max_drawdown - subAccount1.max_drawdown,
       };
+
+      // Wave 29 prod hardening: set Prom gauges #8 and #9 (rl_ab_sharpe_delta, rl_ab_pnl_delta)
+      // Gauges are unlabeled per registry declaration — single time series per delta metric.
+      try {
+        rlAbSharpeDelta.set(delta.sharpe_delta);
+        rlAbPnlDelta.set(delta.pnl_delta);
+      } catch (_promErr) { /* non-blocking */ }
 
       const payload: ABComparisonPayload = {
         sub_account_1: subAccount1,

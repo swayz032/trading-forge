@@ -33,6 +33,7 @@ import { db } from "../db/index.js";
 import { strategies, biasState } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
+import { regimeDriftDetectionsTotal } from "../lib/metrics-registry.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { notifyWarning } from "./notification-service.js";
 import { LifecycleService } from "./lifecycle-service.js";
@@ -218,13 +219,33 @@ export async function runRegimeDriftDetector(opts?: {
 
     // ── Step 4-6: Per-strategy evaluation ─────────────────────────────────
     for (const strategy of deployedStrategies) {
-      const result = await _evaluateStrategyDrift(
-        strategy,
-        asOf,
-        dryRun,
-        correlationId,
-        lifecycleService,
-      );
+      const strategy_id = strategy.id;
+      let result: DriftDetectorStrategyResult;
+      try {
+        result = await _evaluateStrategyDrift(
+          strategy,
+          asOf,
+          dryRun,
+          correlationId,
+          lifecycleService,
+        );
+      } catch (err) {
+        logger.error(
+          { strategy_id, err },
+          "regime-drift-detector: per-strategy lookup failed — skipping strategy",
+        );
+        await insertAuditRowSafe({
+          action: "regime_drift_detector.strategy_lookup_failed",
+          entityType: "strategy",
+          entityId: strategy_id,
+          result: { correlationId, error_message: String(err) },
+          status: "warning",
+          decisionAuthority: "system",
+          correlationId,
+        });
+        skippedCount++;
+        continue;
+      }
       strategyResults.push(result);
 
       // "dry_run" is a special skip — drift was detected but suppressed; count as detected.
@@ -389,6 +410,15 @@ async function _evaluateStrategyDrift(
     decisionAuthority: "system",
     correlationId,
   });
+  // Wave 29 prod hardening: Prom counter #7 at this site only (scope: line 375 original)
+  try {
+    // Use most recent observed regime as to_regime; trained regime as from_regime
+    const mostRecentRegime = recentRegimes.length > 0 ? recentRegimes[recentRegimes.length - 1] : "UNKNOWN";
+    regimeDriftDetectionsTotal.labels({
+      from_regime: regimeTrainedOn,
+      to_regime: mostRecentRegime,
+    }).inc();
+  } catch (_promErr) { /* non-blocking */ }
 
   // dryRun: detect but suppress Discord + lifecycle changes
   if (dryRun) {

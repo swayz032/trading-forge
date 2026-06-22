@@ -34,6 +34,9 @@ import { db } from "../db/index.js";
 import { strategies, auditLog } from "../db/schema.js";
 import { computeFrozenPolicyHash } from "../lib/frozen-policy-contract.js";
 import { logger } from "../lib/logger.js";
+import { frozenPolicyOverridesTotal } from "../lib/metrics-registry.js";
+import { notifyWarning } from "../services/notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 export const adminFrozenPolicyOverrideRoutes = Router();
 
@@ -258,6 +261,21 @@ adminFrozenPolicyOverrideRoutes.post("/frozen-policy-override", async (req, res)
     },
     "frozen-policy-override: override applied successfully",
   );
+
+  // Wave 29 prod hardening: Prom counter #6 + Discord escalation
+  // Note: frozenPolicyOverridesTotal has no labelNames in registry (cardinality=1 by design).
+  // Rationale-length bucketing is recorded in audit_log result payload only.
+  try {
+    frozenPolicyOverridesTotal.inc();
+  } catch (_promErr) { /* non-blocking */ }
+  try {
+    const discordBody = appendFamilyGradePostscript(
+      `Frozen-policy HMAC override exercised for strategy ${strategyId} (${strategy.name}); rationale=${rationale.slice(0, 200)}`,
+      "An operator manually bypassed a strategy protection gate. This is an audited action.",
+      "No action needed for family members — the bot will continue operating.",
+    );
+    notifyWarning(`Frozen-Policy Override: strategy ${strategyId}`, discordBody, { strategyId, overrideCount: newOverrideCount });
+  } catch (_discordErr) { /* non-blocking */ }
 
   res.json({
     ok: true,

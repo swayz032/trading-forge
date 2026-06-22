@@ -548,7 +548,7 @@ class VQCConfig(BaseModel):
     n_qubits: int = 8
     n_layers: int = 3
     feature_dim: int = 8  # Must match number of market features
-    n_actions: int = 3    # buy, sell, hold
+    n_actions: int = 2    # Wave 29 Pass C: LONG/FLAT only per day-trader mandate (CLAUDE.md §4)
     learning_rate: float = 0.01
     device: str = "default.qubit"  # default.qubit | lightning.qubit | lightning.gpu | braket.aws.sv1 | braket.aws.ionq
     cloud_config: Optional[dict] = None  # CloudBackendConfig as dict (opt-in only)

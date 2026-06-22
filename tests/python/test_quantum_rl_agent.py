@@ -37,11 +37,12 @@ class TestQuantumRLAgent:
         assert action in (0, 1, 2)
 
     def test_quantum_agent_select_action(self):
+        # VQCConfig now defaults to n_actions=2 per day-trader mandate (LONG/FLAT only)
         config = VQCConfig(n_qubits=4, n_layers=1)
         agent = QuantumAgent(config)
         state = np.random.default_rng(42).standard_normal(6)  # 4 + 2
         action = agent.select_action(state)
-        assert action in (0, 1, 2)
+        assert action in (0, 1)
 
     def test_train_returns_result(self):
         env = self._make_env(50)

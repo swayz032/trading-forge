@@ -33,6 +33,7 @@ import { db } from "../db/index.js";
 import { quantumRlRuns, backtests, monteCarloRuns } from "../db/schema.js";
 import { logger } from "./logger.js";
 import { evaluateRlDsrGate } from "./rl-dsr-gate.js";
+import { rlKillSwitchTotal } from "./metrics-registry.js";
 import { broadcastSSE } from "../routes/sse.js";
 
 // ─── Public Return Type ───────────────────────────────────────────────────────
@@ -215,6 +216,10 @@ export async function fetchRlSignal(strategyId: string): Promise<RlSignalResult>
         sessions_evaluated: killSwitch.sessions_evaluated,
         kill_switch_reason_detail: killSwitch.reason,
       });
+      // Wave 29 prod hardening: increment Prom counter (counter #3)
+      try {
+        rlKillSwitchTotal.labels({ reason: killSwitchReason }).inc();
+      } catch (_promErr) { /* non-blocking */ }
       return {
         confidence: null,
         available: false,

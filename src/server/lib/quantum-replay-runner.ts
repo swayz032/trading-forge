@@ -27,6 +27,7 @@ import { spawn, type ChildProcess } from "child_process";
 import { existsSync } from "fs";
 import { resolve as pathResolve } from "path";
 import { logger } from "./logger.js";
+import { notifyCritical } from "../services/notification-service.js";
 
 const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 
@@ -52,7 +53,7 @@ function _recordSuccess(): void {
   _circuitOpen = false;
 }
 
-function _recordFailure(): boolean {
+function _recordFailure(lastError?: string): boolean {
   _consecutiveFailures++;
   if (!_circuitOpen && _consecutiveFailures >= _threshold) {
     _circuitOpen = true;
@@ -60,6 +61,14 @@ function _recordFailure(): boolean {
       { consecutiveFailures: _consecutiveFailures, threshold: _threshold },
       "quantum-replay-runner: circuit breaker OPENED — auto-fire disabled for this process lifetime",
     );
+    // Wave 29 prod hardening: Discord escalation when circuit breaker opens
+    try {
+      notifyCritical(
+        "Quantum-Replay Circuit Breaker OPEN",
+        `Quantum-replay circuit breaker OPEN after ${_consecutiveFailures} consecutive failures; weekly cron halted until manual reset. Last error: ${lastError ?? "unknown"}`,
+        { consecutiveFailures: _consecutiveFailures, threshold: _threshold },
+      );
+    } catch (_discordErr) { /* non-blocking */ }
     return true; // newly opened
   }
   return false;
@@ -198,7 +207,7 @@ export async function runQuantumReplayForBacktest(
         cwd: PROJECT_ROOT,
       });
     } catch (spawnErr) {
-      _recordFailure();
+      _recordFailure(String(spawnErr));
       reject(spawnErr);
       return;
     }
@@ -214,7 +223,7 @@ export async function runQuantumReplayForBacktest(
       setTimeout(() => {
         try { proc.kill("SIGKILL"); } catch { /* already dead */ }
       }, 2000);
-      _recordFailure();
+      _recordFailure(`timed out after ${timeoutMs}ms`);
       reject(new Error(`quantum-replay-runner timed out after ${timeoutMs}ms for backtestId=${backtestId}`));
     }, timeoutMs);
 
@@ -258,7 +267,7 @@ export async function runQuantumReplayForBacktest(
           { backtestId, correlationId, code, durationMs, errMsg: errMsg.slice(0, 300) },
           "quantum-replay-runner: subprocess exited with non-zero code",
         );
-        _recordFailure();
+        _recordFailure(errMsg.slice(0, 200));
         reject(new Error(`quantum_replay failed (exit ${code}) for backtestId=${backtestId}: ${errMsg.slice(0, 200)}`));
       }
     });
@@ -271,7 +280,7 @@ export async function runQuantumReplayForBacktest(
         { backtestId, correlationId, err },
         "quantum-replay-runner: subprocess spawn error",
       );
-      _recordFailure();
+      _recordFailure(String(err));
       reject(err);
     });
   });

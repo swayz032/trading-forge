@@ -2,11 +2,18 @@
 
 Wave 27.5 Pass A.1 — CRITICAL #2: probability_of_ruin BCa CI.
 
+Wave hardening 2026-06-22, F2 B14 ruin=firm-breach:
+  These tests cover compute_all_mc_cis() in isolation (the no-firm helper path).
+  On the no-firm path, probability_of_ruin is still terminal<=0 — these tests
+  are correct and unchanged by F2. F2 replaces probability_of_ruin_ci in
+  run_monte_carlo's risk_metrics when firm models are present; that is tested
+  separately in test_mc_firm_breach_ruin.py.
+
 Covers:
   - CI bounds are finite and within [0, 1] (probability constraints)
   - CI bounds straddle the point estimate (ci_low <= point <= ci_high)
   - CI shape contract: {point_estimate, ci_low, ci_high, ci_method, n_resamples, standard_error}
-  - probability_of_ruin_ci alias key is present
+  - probability_of_ruin_ci alias key is present (no-firm path only)
   - n_resamples default is 9999
   - BCa CI vs known synthetic distribution (approximate agreement, not exact)
   - Degenerate cases: all ruins, no ruins

@@ -16,7 +16,6 @@ import hashlib
 import json
 import math
 import os
-import sys
 import threading
 import time
 from typing import Any, Optional
@@ -24,19 +23,22 @@ from typing import Any, Optional
 import numpy as np
 from pydantic import BaseModel, Field
 
+from src.engine.hardware_profile import probe_vram, select_backend
 from src.engine.quantum_models import UncertaintyModel
-from src.engine.hardware_profile import select_backend, get_hardware_profile, probe_vram
 
-# Optional Qiskit imports
+# Optional Qiskit imports — F401 noqa: probed for availability via try/except, not direct use
 try:
-    from qiskit import QuantumCircuit
-    from qiskit.circuit.library import LinearAmplitudeFunction
+    from qiskit import QuantumCircuit  # noqa: F401
+    from qiskit.circuit.library import LinearAmplitudeFunction  # noqa: F401
     QISKIT_AVAILABLE = True
 except ImportError:
     QISKIT_AVAILABLE = False
 
 try:
-    from qiskit_algorithms import IterativeAmplitudeEstimation, EstimationProblem
+    from qiskit_algorithms import (  # noqa: F401
+        EstimationProblem,
+        IterativeAmplitudeEstimation,
+    )
     QISKIT_ALGORITHMS_AVAILABLE = True
 except ImportError:
     QISKIT_ALGORITHMS_AVAILABLE = False
@@ -52,18 +54,18 @@ except ImportError:
         AER_SAMPLER_AVAILABLE = False
 
 try:
-    from qiskit_aer import AerSimulator
+    from qiskit_aer import AerSimulator  # noqa: F401
     AER_AVAILABLE = True
 except ImportError:
     AER_AVAILABLE = False
 
 try:
     from src.engine.cloud_backend import (
-        CloudBackendConfig,
-        CloudBudgetTracker,
-        resolve_backend,
-        build_cloud_run_metadata,
+        CloudBackendConfig,  # noqa: F401
+        CloudBudgetTracker,  # noqa: F401
+        build_cloud_run_metadata,  # noqa: F401
         quantum_result_cache,
+        resolve_backend,  # noqa: F401
     )
     CLOUD_BACKEND_AVAILABLE = True
 except ImportError:
@@ -461,10 +463,24 @@ def _run_estimation(
             # IAE requires a Sampler primitive — prefer cloud, then AerSampler, then StatevectorSampler
             if cloud_sampler is not None:
                 sampler = cloud_sampler
+                # IBM SamplerV2: set seed_simulator option for determinism when run config carries a seed.
+                # The IBM Runtime SamplerV2 accepts options via .options.simulator.seed_simulator.
+                # This is best-effort; if the attribute path does not exist, skip silently (noted below).
+                try:
+                    if hasattr(sampler, "options") and hasattr(sampler.options, "simulator"):
+                        sampler.options.simulator.seed_simulator = seed  # type: ignore[assignment]
+                except Exception:
+                    # Cloud IBM sampler does not expose a clean seed_simulator knob in all
+                    # runtime versions — skip without raising. Cloud runs are noted as
+                    # non-deterministic in the evidence provenance metadata.
+                    pass
             elif AER_SAMPLER_AVAILABLE:
                 # Tier 4: GPU AerSampler when env flag + VRAM probe pass.
                 # Falls back to CPU AerSampler when flag is false or VRAM
                 # insufficient — identical output, different backend.
+                # seed_simulator is passed to AerSampler via backend_options so that
+                # identical QuantumRunConfig inputs produce bit-exact IAE estimates
+                # (required by Wave 27 replay-grading harness and Sunday Discord verdict).
                 _required_mb = int(2 ** (n_qubits - 3) + 200)
                 if (
                     _QUANTUM_CUQUANTUM_GPU_ENABLED
@@ -474,13 +490,19 @@ def _run_estimation(
                         backend_options={
                             "device": "GPU",
                             "method": "statevector_gpu",
+                            "seed_simulator": seed,
                         }
                     )
                 else:
-                    sampler = AerSampler()
+                    sampler = AerSampler(
+                        backend_options={
+                            "seed_simulator": seed,
+                        }
+                    )
             else:
                 from qiskit.primitives import StatevectorSampler  # type: ignore[import]
-                sampler = StatevectorSampler()
+                # StatevectorSampler accepts seed as a constructor argument.
+                sampler = StatevectorSampler(seed=seed)
 
             iae = IterativeAmplitudeEstimation(
                 epsilon_target=epsilon,
@@ -562,7 +584,7 @@ def _run_estimation(
             # F-7 (2026-05-21): distinguish iae_watchdog_timeout vs iae_circuit_error vs
             # version_mismatch so downstream records are auditable.
             exc_str = str(exc)
-            exc_type = type(exc).__name__
+            exc_type = type(exc).__name__  # noqa: F841 — reserved for future audit row enrichment (F-7 contract)
             if isinstance(exc, TimeoutError) or "did not complete within" in exc_str:
                 _iae_failure_reason = f"iae_watchdog_timeout:{exc_str}"
             elif "import" in exc_str.lower() or "version" in exc_str.lower() or "no module" in exc_str.lower():

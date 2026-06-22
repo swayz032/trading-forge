@@ -76,11 +76,50 @@ async function _readKillSwitch(): Promise<boolean> {
     if (rows.length === 0) return true; // missing = enabled (fail-open)
     return String(rows[0].currentValue).trim() !== "false";
   } catch (err) {
-    logger.warn(
-      { err },
-      "quantum-replay-weekly: failed to read kill switch — defaulting to enabled",
+    // Fail-CLOSED: if we cannot read the kill switch, treat it as DISENGAGED
+    // (loop halted). Institutional rule: if you can't read the kill switch,
+    // ASSUME it's engaged. This mirrors the Wave 26 pattern-aggregator contract.
+    // The caller (runQuantumReplayWeeklyAnalysis) writes a critical audit row
+    // and returns early — the cron does NOT run through on DB error.
+    throw err;
+  }
+}
+
+/**
+ * Attempt to read the kill switch and write a critical audit row when the DB
+ * read fails. Returns false (kill switch disengaged = halt the cron) on any
+ * read error so the cron fails CLOSED.
+ */
+async function _readKillSwitchFailClosed(correlationId: string): Promise<boolean> {
+  try {
+    return await _readKillSwitch();
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    logger.error(
+      { err, correlationId },
+      "quantum-replay-weekly: kill switch DB read FAILED — failing CLOSED (halt cron)",
     );
-    return true; // fail-open
+    await insertAuditRow({
+      action: "quantum_replay.kill_switch_read_failed",
+      entityType: "quantum_replay_weekly",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { correlationId } as Record<string, unknown>,
+      result: {
+        error_message: errorMsg,
+        resolution: "fail_closed_halt",
+        param: KILL_SWITCH_PARAM,
+        correlation_id: correlationId,
+      } as Record<string, unknown>,
+      status: "failed",
+      correlationId,
+    }).catch((auditErr) =>
+      logger.error(
+        { auditErr, correlationId },
+        "quantum-replay-weekly: CRITICAL — audit row write also failed on kill-switch-read-failed",
+      ),
+    );
+    return false; // false = kill switch disengaged = halt cron
   }
 }
 
@@ -243,7 +282,8 @@ export async function runQuantumReplayWeeklyAnalysis(): Promise<WeeklyAnalysisRe
   const t0 = Date.now();
 
   // ── 1. Kill switch check ──────────────────────────────────────────────────
-  const killSwitchEnabled = await _readKillSwitch();
+  // Fail-CLOSED: if the DB read throws, killSwitchEnabled is false (halt cron).
+  const killSwitchEnabled = await _readKillSwitchFailClosed(correlationId);
   if (!killSwitchEnabled) {
     logger.info(
       { job: "quantum-replay-weekly-analysis", correlationId },

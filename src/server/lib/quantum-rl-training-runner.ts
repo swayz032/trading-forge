@@ -30,6 +30,7 @@
 import { spawn, type ChildProcess } from "child_process";
 import { existsSync } from "fs";
 import { resolve as pathResolve } from "path";
+import { createHash } from "crypto";
 import { logger } from "./logger.js";
 
 const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
@@ -130,6 +131,20 @@ export function _getRlConsecutiveFailuresForTests(): number {
   return _consecutiveFailures;
 }
 
+// ── Deterministic per-strategy seed ──────────────────────────────────────────
+/**
+ * Derive a stable 32-bit unsigned integer seed from the strategy ID string.
+ * SHA-256(strategyId).readUInt32BE(0) — deterministic per strategy, so two
+ * RL training runs on the same strategy produce reproducible results.
+ *
+ * This ensures the Wave 27 replay-grading harness can compare runs across
+ * sessions without silent non-determinism masking real policy drift.
+ */
+export function deriveRlTrainingSeed(strategyId: number | string): number {
+  const buf = createHash("sha256").update(String(strategyId)).digest();
+  return buf.readUInt32BE(0);
+}
+
 // ── Environment ───────────────────────────────────────────────────────────────
 
 function getTrainingTimeoutMs(): number {
@@ -208,6 +223,11 @@ export async function runRlTrainingForStrategy(
 
   const timeoutMs = getTrainingTimeoutMs();
   const pythonCmd = getPythonCmd();
+
+  // Derive deterministic per-strategy seed so two training runs on the same
+  // strategy produce reproducible results (Wave 29 Pass 1 hardening Fix 4).
+  const rlSeed = deriveRlTrainingSeed(strategyId);
+
   const args = [
     "-m",
     "src.engine.quantum_rl_agent",
@@ -217,10 +237,12 @@ export async function runRlTrainingForStrategy(
     String(strategyId),
     "--training-epochs",
     String(trainingEpochs),
+    "--seed",
+    String(rlSeed),
   ];
 
   logger.info(
-    { strategyId, correlationId, timeoutMs, trainingEpochs, etHour },
+    { strategyId, correlationId, timeoutMs, trainingEpochs, etHour, rlSeed },
     "quantum-rl-training-runner: spawning RL training subprocess",
   );
 
