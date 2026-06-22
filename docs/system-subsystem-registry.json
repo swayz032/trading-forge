@@ -811,7 +811,8 @@
       "w19-definition-pull",
       "w19-imbalance-pull",
       "w19-statistics-pull",
-      "hmm-regime-weekly-refit"
+      "hmm-regime-weekly-refit",
+      "mcl-pre-eia-stop-tighten"
     ],
     "routes": [
       "/api/context",
@@ -1090,7 +1091,10 @@
       "production.drift_detection.completed",
       "paper.entry_blocked",
       "paper.force_flatten_all",
-      "drift.weekly_2sigma_halt"
+      "drift.weekly_2sigma_halt",
+      "db_backup.completed",
+      "db_backup.failed",
+      "db_backup.offtower_unconfigured"
     ],
     "metrics_surfaces": [
       "/api/production/status"
@@ -1106,7 +1110,8 @@
     "scheduler_jobs": [
       "daily-reconciliation",
       "weekly-drift-2sigma-check",
-      "weekly-drift-detection"
+      "weekly-drift-detection",
+      "db-backup"
     ],
     "routes": [
       "/api/production"
@@ -4773,9 +4778,9 @@
     "reads_from": ["slumhouse_users"],
     "writes_to": ["slumhouse_users.last_seen_at", "audit_log"],
     "audit_tables": ["audit_log"],
-    "audit_actions": ["slumhouse.login_success", "slumhouse.login_unmapped_user", "slumhouse.login_failed"],
+    "audit_actions": ["slumhouse.login_success", "slumhouse.login_failed", "slumhouse.login_cancelled"],
     "metrics_surfaces": [],
-    "telemetry_sources": [],
+    "telemetry_sources": ["audit_log.slumhouse.login_success", "audit_log.slumhouse.login_failed", "audit_log.slumhouse.login_cancelled"],
     "scheduler_jobs": [],
     "routes": ["GET /slumhouse/auth/login", "GET /slumhouse/auth/callback", "GET /slumhouse/auth/logout"],
     "engine_subsystems": ["src/server/lib/slumhouse/discord-oauth.ts", "src/server/lib/slumhouse/session.ts", "src/server/lib/slumhouse/require-session.ts", "src/server/routes/slumhouse/auth.ts"],
@@ -4800,7 +4805,7 @@
     "id": "slumhouse_routes",
     "domain": "presentation",
     "owner_surface": "node",
-    "automation_mode": "autonomous",
+    "automation_mode": "manual",
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "agent",
@@ -4836,7 +4841,7 @@
     "id": "slumhouse_frontend",
     "domain": "frontend",
     "owner_surface": "node",
-    "automation_mode": "autonomous",
+    "automation_mode": "manual",
     "manual_gate": "none",
     "runtime_state": "active",
     "decision_authority": "advisory",

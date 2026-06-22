@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-22T17:16:54.964Z",
+  "generatedAt": "2026-06-22T19:36:16.463Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -38,15 +38,8 @@
     "replay_harness_engine:manual_gate:operator-approve",
     "shadow_stage:invalid-active-proof-mode",
     "slumhouse_discord_oauth:invalid-active-proof-mode",
-    "slumhouse_discord_oauth:missing-telemetry-sources",
     "slumhouse_frontend:invalid-active-proof-mode",
-    "slumhouse_frontend:missing-audit-actions",
-    "slumhouse_frontend:missing-audit-tables",
-    "slumhouse_frontend:missing-telemetry-sources",
     "slumhouse_routes:invalid-active-proof-mode",
-    "slumhouse_routes:missing-audit-actions",
-    "slumhouse_routes:missing-audit-tables",
-    "slumhouse_routes:missing-telemetry-sources",
     "slumhouse_users_table:invalid-active-proof-mode",
     "slumhouse_users_table:manual_gate:operator",
     "strategy_health_observability:invalid-active-proof-mode",
@@ -923,6 +916,9 @@
       "requiredEvidence": [
         "/api/production/status",
         "daily_reconciliation:recent-entry",
+        "db_backup.completed",
+        "db_backup.failed",
+        "db_backup.offtower_unconfigured",
         "drift-detection-history",
         "drift.weekly_2sigma_halt",
         "paper:entry-blocked-production-halt SSE",
@@ -1325,14 +1321,16 @@
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "operator_only",
       "blockers": [
-        "invalid-active-proof-mode",
-        "missing-telemetry-sources"
+        "invalid-active-proof-mode"
       ],
       "requiredEvidence": [
+        "audit_log.slumhouse.login_cancelled",
+        "audit_log.slumhouse.login_failed",
+        "audit_log.slumhouse.login_success",
         "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.login_%' ORDER BY created_at DESC LIMIT 50",
+        "slumhouse.login_cancelled",
         "slumhouse.login_failed",
-        "slumhouse.login_success",
-        "slumhouse.login_unmapped_user"
+        "slumhouse.login_success"
       ]
     },
     {
@@ -1345,10 +1343,7 @@
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "operator_only",
       "blockers": [
-        "invalid-active-proof-mode",
-        "missing-audit-actions",
-        "missing-audit-tables",
-        "missing-telemetry-sources"
+        "invalid-active-proof-mode"
       ],
       "requiredEvidence": []
     },
@@ -1362,10 +1357,7 @@
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "operator_only",
       "blockers": [
-        "invalid-active-proof-mode",
-        "missing-audit-actions",
-        "missing-audit-tables",
-        "missing-telemetry-sources"
+        "invalid-active-proof-mode"
       ],
       "requiredEvidence": [
         "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.%' ORDER BY created_at DESC LIMIT 50"

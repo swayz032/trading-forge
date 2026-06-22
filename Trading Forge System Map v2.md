@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-06-22T17:16:54.964Z`.
+Updated automatically from the repo on `2026-06-22T19:36:16.463Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -12,12 +12,12 @@ Updated automatically from the repo on `2026-06-22T17:16:54.964Z`.
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `ci_gate, kill_switch, operator, operator_hmac_override, operator_invoke_for_cohort_validation, operator_opt_in_per_strategy, operator-approve, operator-halt-only, operator-only-recovery, tradingview_deploy`
 - API routes tracked: `73`
-- Scheduler jobs tracked: `92`
+- Scheduler jobs tracked: `94`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
 - Engine subsystems tracked: `28`
-- Database tables tracked: `101`
+- Database tables tracked: `103`
 
 ### Subsystem Runtime States
 - `active`: `63`
@@ -55,17 +55,17 @@ Updated automatically from the repo on `2026-06-22T17:16:54.964Z`.
 ### Registry Coverage
 - Registry subsystems tracked: `69`
 - Route coverage: `73/73`
-- Scheduler coverage: `90/92`
+- Scheduler coverage: `94/94`
 - Engine coverage: `28/28`
-- Database coverage: `101/101`
-- Autonomous subsystems with audit coverage: `62/64`
-- Autonomous subsystems with audit actions: `62/64`
-- Autonomous subsystems with telemetry evidence: `61/64`
+- Database coverage: `103/103`
+- Autonomous subsystems with audit coverage: `62/62`
+- Autonomous subsystems with audit actions: `62/62`
+- Autonomous subsystems with telemetry evidence: `62/62`
 - Active-runtime subsystems with freshness signals: `69/69`
 - Runtime/experimental subsystems with evidence queries: `69/69`
 - Self-evolving subsystems with learning inputs: `9/9`
 - Self-evolving subsystems with learning persistence: `9/9`
-- Failure visibility complete: `66/69`
+- Failure visibility complete: `69/69`
 
 ### Proof Status
 - `runtime-proven`: `37`
@@ -76,10 +76,10 @@ Updated automatically from the repo on `2026-06-22T17:16:54.964Z`.
 
 ### Pre-Production Integrity
 - Integrity status: `incomplete`
-- Automation complete: `59/69`
+- Automation complete: `57/69`
 - Data collection complete: `69/69`
-- Auditability complete: `66/69`
-- Failure visibility complete: `66/69`
+- Auditability complete: `69/69`
+- Failure visibility complete: `69/69`
 - Authority correct: `69/69`
 - Learning active: `8/9`
 - Incomplete subsystems: `27`
@@ -179,9 +179,9 @@ Updated automatically from the repo on `2026-06-22T17:16:54.964Z`.
 - `research_orchestration` class=`adaptive` learningMode=`active_learning` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`active` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `shadow_stage` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=none productionBlockers=invalid-active-proof-mode gaps=invalid-active-proof-mode
 - `signal_correlation_gate` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
-- `slumhouse_discord_oauth` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`incomplete` failureVisibility=`incomplete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=none productionBlockers=invalid-active-proof-mode,missing-telemetry-sources gaps=invalid-active-proof-mode,missing-telemetry-sources
-- `slumhouse_frontend` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`incomplete` failureVisibility=`incomplete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=none productionBlockers=invalid-active-proof-mode,missing-audit-actions,missing-audit-tables,missing-telemetry-sources gaps=invalid-active-proof-mode,missing-audit-actions,missing-audit-tables,missing-telemetry-sources
-- `slumhouse_routes` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`incomplete` failureVisibility=`incomplete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=none productionBlockers=invalid-active-proof-mode,missing-audit-actions,missing-audit-tables,missing-telemetry-sources gaps=invalid-active-proof-mode,missing-audit-actions,missing-audit-tables,missing-telemetry-sources
+- `slumhouse_discord_oauth` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=none productionBlockers=invalid-active-proof-mode gaps=invalid-active-proof-mode
+- `slumhouse_frontend` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`incomplete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=none productionBlockers=invalid-active-proof-mode gaps=invalid-active-proof-mode
+- `slumhouse_routes` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`incomplete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=none productionBlockers=invalid-active-proof-mode gaps=invalid-active-proof-mode
 - `slumhouse_users_table` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`incomplete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator productionBlockers=invalid-active-proof-mode,manual_gate:operator gaps=invalid-active-proof-mode
 - `smt_divergence_engine` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `smt_live_bridge_service` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
@@ -323,6 +323,7 @@ Updated automatically from the repo on `2026-06-22T17:16:54.964Z`.
 - `consistency-tracker-daily-digest`
 - `contract-roll-sweep`
 - `critic-feedback`
+- `daily-reconciliation`
 - `data-integrity-suite`
 - `databento-weekly-refresh`
 - `db-backup`
@@ -393,6 +394,7 @@ Updated automatically from the repo on `2026-06-22T17:16:54.964Z`.
 - `wave26-cohort-daily-audit-report`
 - `webhook-latency-check`
 - `weekly-drift-2sigma-check`
+- `weekly-drift-detection`
 
 ### Engine Subsystems
 - `anti_setups`
@@ -506,6 +508,7 @@ Updated automatically from the repo on `2026-06-22T17:16:54.964Z`.
 - `needs_archetype_queue`
 - `nemo_scenario_bank`
 - `opening_auction_imbalance`
+- `operator_absent_periods`
 - `paper_positions`
 - `paper_session_feedback`
 - `paper_sessions`
@@ -545,6 +548,7 @@ Updated automatically from the repo on `2026-06-22T17:16:54.964Z`.
 - `stress_test_runs`
 - `subsystem_metrics`
 - `synthetic_black_swan_runs`
+- `synthetic_regime_bank`
 - `system_journal`
 - `system_parameter_history`
 - `system_parameters`

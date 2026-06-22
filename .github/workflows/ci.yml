@@ -29,8 +29,19 @@ jobs:
           cache: "npm"
 
       - run: npm ci
-      - run: npm run system-map:check
+      - name: System map drift gate
+        run: npm run system-map:check
       - run: npm run lint
+
+      # ─── Hard gates (fail-closed) ──────────────────────────────────────────
+      # These run in the lint job because lint is the upstream dependency of every
+      # other job (test-node / test-python / test-parity all `needs: lint`). A gate
+      # failure here short-circuits the entire pipeline. Each gate script exits
+      # non-zero on a real violation, so no `|| true` / `|| echo` swallow is allowed.
+      - name: Gate — production isolation
+        run: npm run check:production-isolation
+      - name: Gate — 2026 prop-firm rules compliance
+        run: npm run check:2026-compliance
 
   test-node:
     name: Node Tests + Coverage
@@ -123,7 +134,7 @@ jobs:
         run: |
           npm ci
           python -m pip install --upgrade pip
-          pip install -r requirements.txt 2>/dev/null || echo "No requirements.txt found"
+          pip install -r src/engine/requirements.txt
           pip install pytest pytest-cov
 
       - name: Verify system map freshness
@@ -131,7 +142,7 @@ jobs:
 
       - name: Run pytest with coverage
         run: |
-          pytest src/engine/ --cov=src/engine --cov-report=xml --cov-report=html -v 2>/dev/null || echo "No Python tests found yet"
+          pytest src/engine/ --cov=src/engine --cov-report=xml --cov-report=html -v
 
       - name: Upload Python coverage
         uses: actions/upload-artifact@v4
@@ -163,14 +174,14 @@ jobs:
         run: |
           npm ci
           python -m pip install --upgrade pip
-          pip install -r src/engine/requirements.txt 2>/dev/null || true
+          pip install -r src/engine/requirements.txt
           pip install pytest
 
       - name: Run cross-engine parity tests
         run: |
           pytest src/engine/tests/test_cross_engine_parity.py -v \
             --tb=short \
-            -x 2>/dev/null || echo "Parity tests need review — check for divergence"
+            -x
 
   build:
     name: Build Check
@@ -184,6 +195,22 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
+      # The TS<->Python exit-parity gate spawns a Python subprocess that imports
+      # src/engine/exits/adaptive_exits.py. That module is stdlib-only at import
+      # time (no numpy/pandas), so a bare interpreter is sufficient — no engine
+      # requirements install needed here.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
       - run: npm ci
-      - run: npm run system-map:check
-      - run: npx tsc --noEmit
+      - name: System map drift gate
+        run: npm run system-map:check
+      - name: Build — tsc --noEmit
+        run: npx tsc --noEmit
+
+      # ─── Hard gate (fail-closed): TS<->Python exit-engine parity ───────────
+      # Runs after the TS build. The script exits non-zero on any fixture
+      # divergence between adaptive-exit-engine.ts and adaptive_exits.py.
+      - name: Gate — TS/Python exit-engine parity
+        run: npm run check:ts-python-exit-parity

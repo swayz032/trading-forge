@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-22T17:16:54.964Z",
+  "generatedAt": "2026-06-22T19:36:16.463Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,11 +16,11 @@
   },
   "counts": {
     "routes": 73,
-    "schedulerJobs": 92,
+    "schedulerJobs": 94,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 28,
-    "databaseTables": 101,
+    "databaseTables": 103,
     "registrySubsystems": 69
   },
   "routes": [
@@ -121,6 +121,7 @@
     "consistency-tracker-daily-digest",
     "contract-roll-sweep",
     "critic-feedback",
+    "daily-reconciliation",
     "data-integrity-suite",
     "databento-weekly-refresh",
     "db-backup",
@@ -190,7 +191,8 @@
     "w19-statistics-pull",
     "wave26-cohort-daily-audit-report",
     "webhook-latency-check",
-    "weekly-drift-2sigma-check"
+    "weekly-drift-2sigma-check",
+    "weekly-drift-detection"
   ],
   "workflows": [
     "0A_health_monitor_66HEjQavpvirY6g5",
@@ -829,6 +831,7 @@
     "needs_archetype_queue",
     "nemo_scenario_bank",
     "opening_auction_imbalance",
+    "operator_absent_periods",
     "paper_positions",
     "paper_session_feedback",
     "paper_sessions",
@@ -868,6 +871,7 @@
     "stress_test_runs",
     "subsystem_metrics",
     "synthetic_black_swan_runs",
+    "synthetic_regime_bank",
     "system_journal",
     "system_parameter_history",
     "system_parameters",
@@ -882,7 +886,7 @@
   ],
   "registryCoverage": {
     "registryEntries": 69,
-    "autonomousSubsystems": 64,
+    "autonomousSubsystems": 62,
     "selfEvolvingSubsystems": 9,
     "proofStatusCounts": {
       "runtime-proven": 37,
@@ -939,31 +943,18 @@
     ],
     "coveredCounts": {
       "routes": 73,
-      "schedulerJobs": 90,
+      "schedulerJobs": 94,
       "engineSubsystems": 28,
-      "databaseTables": 101
+      "databaseTables": 103
     },
     "missingRoutes": [],
-    "missingSchedulerJobs": [
-      "db-backup",
-      "mcl-pre-eia-stop-tighten"
-    ],
+    "missingSchedulerJobs": [],
     "missingEngineSubsystems": [],
     "missingDatabaseTables": [],
-    "subsystemsMissingAudit": [
-      "slumhouse_frontend",
-      "slumhouse_routes"
-    ],
-    "subsystemsMissingAuditActions": [
-      "slumhouse_frontend",
-      "slumhouse_routes"
-    ],
+    "subsystemsMissingAudit": [],
+    "subsystemsMissingAuditActions": [],
     "subsystemsMissingMetrics": [],
-    "subsystemsMissingTelemetrySources": [
-      "slumhouse_discord_oauth",
-      "slumhouse_frontend",
-      "slumhouse_routes"
-    ],
+    "subsystemsMissingTelemetrySources": [],
     "subsystemsMissingLearning": [],
     "subsystemsMissingLearningPersistence": [],
     "subsystemsMissingDecisionAuthority": [],
@@ -979,10 +970,10 @@
     "manualGateViolations": [],
     "preprodIntegrity": {
       "status": "incomplete",
-      "automationComplete": 59,
+      "automationComplete": 57,
       "dataCollectionComplete": 69,
-      "auditabilityComplete": 66,
-      "failureVisibilityComplete": 66,
+      "auditabilityComplete": 69,
+      "failureVisibilityComplete": 69,
       "authorityCorrect": 69,
       "learningActive": 8,
       "incompleteSubsystems": [
@@ -1146,15 +1137,8 @@
         "replay_harness_engine:manual_gate:operator-approve",
         "shadow_stage:invalid-active-proof-mode",
         "slumhouse_discord_oauth:invalid-active-proof-mode",
-        "slumhouse_discord_oauth:missing-telemetry-sources",
         "slumhouse_frontend:invalid-active-proof-mode",
-        "slumhouse_frontend:missing-audit-actions",
-        "slumhouse_frontend:missing-audit-tables",
-        "slumhouse_frontend:missing-telemetry-sources",
         "slumhouse_routes:invalid-active-proof-mode",
-        "slumhouse_routes:missing-audit-actions",
-        "slumhouse_routes:missing-audit-tables",
-        "slumhouse_routes:missing-telemetry-sources",
         "slumhouse_users_table:invalid-active-proof-mode",
         "slumhouse_users_table:manual_gate:operator",
         "strategy_health_observability:invalid-active-proof-mode",
@@ -1213,15 +1197,8 @@
         "replay_harness_engine:manual_gate:operator-approve",
         "shadow_stage:invalid-active-proof-mode",
         "slumhouse_discord_oauth:invalid-active-proof-mode",
-        "slumhouse_discord_oauth:missing-telemetry-sources",
         "slumhouse_frontend:invalid-active-proof-mode",
-        "slumhouse_frontend:missing-audit-actions",
-        "slumhouse_frontend:missing-audit-tables",
-        "slumhouse_frontend:missing-telemetry-sources",
         "slumhouse_routes:invalid-active-proof-mode",
-        "slumhouse_routes:missing-audit-actions",
-        "slumhouse_routes:missing-audit-tables",
-        "slumhouse_routes:missing-telemetry-sources",
         "slumhouse_users_table:invalid-active-proof-mode",
         "slumhouse_users_table:manual_gate:operator",
         "strategy_health_observability:invalid-active-proof-mode",
@@ -2622,7 +2599,8 @@
           "w19-definition-pull",
           "w19-imbalance-pull",
           "w19-statistics-pull",
-          "hmm-regime-weekly-refit"
+          "hmm-regime-weekly-refit",
+          "mcl-pre-eia-stop-tighten"
         ],
         "healthCheck": "/api/health/dashboard",
         "freshnessSignals": [
@@ -4730,6 +4708,9 @@
         "runtimeEvidence": [
           "/api/production/status",
           "daily_reconciliation:recent-entry",
+          "db_backup.completed",
+          "db_backup.failed",
+          "db_backup.offtower_unconfigured",
           "drift.weekly_2sigma_halt",
           "paper:entry-blocked-production-halt SSE",
           "paper:force-flatten-all SSE",
@@ -4777,6 +4758,9 @@
         "requiredEvidence": [
           "/api/production/status",
           "daily_reconciliation:recent-entry",
+          "db_backup.completed",
+          "db_backup.failed",
+          "db_backup.offtower_unconfigured",
           "drift-detection-history",
           "drift.weekly_2sigma_halt",
           "paper:entry-blocked-production-halt SSE",
@@ -4800,7 +4784,8 @@
         "schedulerJobs": [
           "daily-reconciliation",
           "weekly-drift-2sigma-check",
-          "weekly-drift-detection"
+          "weekly-drift-detection",
+          "db-backup"
         ],
         "healthCheck": "/api/production/status",
         "freshnessSignals": [
@@ -6302,9 +6287,12 @@
           "runtime evidence persisted"
         ],
         "runtimeEvidence": [
+          "audit_log.slumhouse.login_cancelled",
+          "audit_log.slumhouse.login_failed",
+          "audit_log.slumhouse.login_success",
+          "slumhouse.login_cancelled",
           "slumhouse.login_failed",
-          "slumhouse.login_success",
-          "slumhouse.login_unmapped_user"
+          "slumhouse.login_success"
         ],
         "dataCollectionCoverage": [
           "audit_log",
@@ -6319,14 +6307,13 @@
         "launchReady": false,
         "automationStatus": "complete",
         "dataCollectionStatus": "complete",
-        "auditabilityStatus": "incomplete",
-        "failureVisibilityStatus": "incomplete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
         "preprodProofStatus": "drifted",
         "productionBlockers": [
-          "invalid-active-proof-mode",
-          "missing-telemetry-sources"
+          "invalid-active-proof-mode"
         ],
         "productionCriteria": [
           "authority boundary remains enforced",
@@ -6335,10 +6322,13 @@
           "pre-production runtime proof remains stable"
         ],
         "requiredEvidence": [
+          "audit_log.slumhouse.login_cancelled",
+          "audit_log.slumhouse.login_failed",
+          "audit_log.slumhouse.login_success",
           "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.login_%' ORDER BY created_at DESC LIMIT 50",
+          "slumhouse.login_cancelled",
           "slumhouse.login_failed",
-          "slumhouse.login_success",
-          "slumhouse.login_unmapped_user"
+          "slumhouse.login_success"
         ],
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
         "routes": [
@@ -6353,8 +6343,7 @@
           "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.login_%' ORDER BY created_at DESC LIMIT 50"
         ],
         "coverageGaps": [
-          "invalid-active-proof-mode",
-          "missing-telemetry-sources"
+          "invalid-active-proof-mode"
         ]
       },
       {
@@ -6362,7 +6351,7 @@
         "domain": "frontend",
         "ownerSurface": "node",
         "runtimeState": "active",
-        "automationMode": "autonomous",
+        "automationMode": "manual",
         "decisionAuthority": "advisory",
         "manualGate": "none",
         "selfEvolving": false,
@@ -6393,18 +6382,15 @@
         "learningMode": "deterministic_instrumented",
         "operatingClass": "deterministic_instrumented",
         "launchReady": false,
-        "automationStatus": "complete",
+        "automationStatus": "incomplete",
         "dataCollectionStatus": "complete",
-        "auditabilityStatus": "incomplete",
-        "failureVisibilityStatus": "incomplete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
         "preprodProofStatus": "drifted",
         "productionBlockers": [
-          "invalid-active-proof-mode",
-          "missing-audit-actions",
-          "missing-audit-tables",
-          "missing-telemetry-sources"
+          "invalid-active-proof-mode"
         ],
         "productionCriteria": [
           "authority boundary remains enforced",
@@ -6426,10 +6412,7 @@
         "freshnessSignals": [],
         "evidenceQueries": [],
         "coverageGaps": [
-          "invalid-active-proof-mode",
-          "missing-audit-actions",
-          "missing-audit-tables",
-          "missing-telemetry-sources"
+          "invalid-active-proof-mode"
         ]
       },
       {
@@ -6437,7 +6420,7 @@
         "domain": "presentation",
         "ownerSurface": "node",
         "runtimeState": "active",
-        "automationMode": "autonomous",
+        "automationMode": "manual",
         "decisionAuthority": "agent",
         "manualGate": "none",
         "selfEvolving": false,
@@ -6478,18 +6461,15 @@
         "learningMode": "deterministic_instrumented",
         "operatingClass": "deterministic_instrumented",
         "launchReady": false,
-        "automationStatus": "complete",
+        "automationStatus": "incomplete",
         "dataCollectionStatus": "complete",
-        "auditabilityStatus": "incomplete",
-        "failureVisibilityStatus": "incomplete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
         "preprodProofStatus": "drifted",
         "productionBlockers": [
-          "invalid-active-proof-mode",
-          "missing-audit-actions",
-          "missing-audit-tables",
-          "missing-telemetry-sources"
+          "invalid-active-proof-mode"
         ],
         "productionCriteria": [
           "authority boundary remains enforced",
@@ -6514,10 +6494,7 @@
           "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.%' ORDER BY created_at DESC LIMIT 50"
         ],
         "coverageGaps": [
-          "invalid-active-proof-mode",
-          "missing-audit-actions",
-          "missing-audit-tables",
-          "missing-telemetry-sources"
+          "invalid-active-proof-mode"
         ]
       },
       {
@@ -9275,7 +9252,8 @@
         "w19-definition-pull",
         "w19-imbalance-pull",
         "w19-statistics-pull",
-        "hmm-regime-weekly-refit"
+        "hmm-regime-weekly-refit",
+        "mcl-pre-eia-stop-tighten"
       ],
       "healthCheck": "/api/health/dashboard",
       "freshnessSignals": [
@@ -11383,6 +11361,9 @@
       "runtimeEvidence": [
         "/api/production/status",
         "daily_reconciliation:recent-entry",
+        "db_backup.completed",
+        "db_backup.failed",
+        "db_backup.offtower_unconfigured",
         "drift.weekly_2sigma_halt",
         "paper:entry-blocked-production-halt SSE",
         "paper:force-flatten-all SSE",
@@ -11430,6 +11411,9 @@
       "requiredEvidence": [
         "/api/production/status",
         "daily_reconciliation:recent-entry",
+        "db_backup.completed",
+        "db_backup.failed",
+        "db_backup.offtower_unconfigured",
         "drift-detection-history",
         "drift.weekly_2sigma_halt",
         "paper:entry-blocked-production-halt SSE",
@@ -11453,7 +11437,8 @@
       "schedulerJobs": [
         "daily-reconciliation",
         "weekly-drift-2sigma-check",
-        "weekly-drift-detection"
+        "weekly-drift-detection",
+        "db-backup"
       ],
       "healthCheck": "/api/production/status",
       "freshnessSignals": [
@@ -12955,9 +12940,12 @@
         "runtime evidence persisted"
       ],
       "runtimeEvidence": [
+        "audit_log.slumhouse.login_cancelled",
+        "audit_log.slumhouse.login_failed",
+        "audit_log.slumhouse.login_success",
+        "slumhouse.login_cancelled",
         "slumhouse.login_failed",
-        "slumhouse.login_success",
-        "slumhouse.login_unmapped_user"
+        "slumhouse.login_success"
       ],
       "dataCollectionCoverage": [
         "audit_log",
@@ -12972,14 +12960,13 @@
       "launchReady": false,
       "automationStatus": "complete",
       "dataCollectionStatus": "complete",
-      "auditabilityStatus": "incomplete",
-      "failureVisibilityStatus": "incomplete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
       "preprodProofStatus": "drifted",
       "productionBlockers": [
-        "invalid-active-proof-mode",
-        "missing-telemetry-sources"
+        "invalid-active-proof-mode"
       ],
       "productionCriteria": [
         "authority boundary remains enforced",
@@ -12988,10 +12975,13 @@
         "pre-production runtime proof remains stable"
       ],
       "requiredEvidence": [
+        "audit_log.slumhouse.login_cancelled",
+        "audit_log.slumhouse.login_failed",
+        "audit_log.slumhouse.login_success",
         "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.login_%' ORDER BY created_at DESC LIMIT 50",
+        "slumhouse.login_cancelled",
         "slumhouse.login_failed",
-        "slumhouse.login_success",
-        "slumhouse.login_unmapped_user"
+        "slumhouse.login_success"
       ],
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
       "routes": [
@@ -13006,8 +12996,7 @@
         "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.login_%' ORDER BY created_at DESC LIMIT 50"
       ],
       "coverageGaps": [
-        "invalid-active-proof-mode",
-        "missing-telemetry-sources"
+        "invalid-active-proof-mode"
       ]
     },
     {
@@ -13015,7 +13004,7 @@
       "domain": "frontend",
       "ownerSurface": "node",
       "runtimeState": "active",
-      "automationMode": "autonomous",
+      "automationMode": "manual",
       "decisionAuthority": "advisory",
       "manualGate": "none",
       "selfEvolving": false,
@@ -13046,18 +13035,15 @@
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
       "launchReady": false,
-      "automationStatus": "complete",
+      "automationStatus": "incomplete",
       "dataCollectionStatus": "complete",
-      "auditabilityStatus": "incomplete",
-      "failureVisibilityStatus": "incomplete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
       "preprodProofStatus": "drifted",
       "productionBlockers": [
-        "invalid-active-proof-mode",
-        "missing-audit-actions",
-        "missing-audit-tables",
-        "missing-telemetry-sources"
+        "invalid-active-proof-mode"
       ],
       "productionCriteria": [
         "authority boundary remains enforced",
@@ -13079,10 +13065,7 @@
       "freshnessSignals": [],
       "evidenceQueries": [],
       "coverageGaps": [
-        "invalid-active-proof-mode",
-        "missing-audit-actions",
-        "missing-audit-tables",
-        "missing-telemetry-sources"
+        "invalid-active-proof-mode"
       ]
     },
     {
@@ -13090,7 +13073,7 @@
       "domain": "presentation",
       "ownerSurface": "node",
       "runtimeState": "active",
-      "automationMode": "autonomous",
+      "automationMode": "manual",
       "decisionAuthority": "agent",
       "manualGate": "none",
       "selfEvolving": false,
@@ -13131,18 +13114,15 @@
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
       "launchReady": false,
-      "automationStatus": "complete",
+      "automationStatus": "incomplete",
       "dataCollectionStatus": "complete",
-      "auditabilityStatus": "incomplete",
-      "failureVisibilityStatus": "incomplete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
       "preprodProofStatus": "drifted",
       "productionBlockers": [
-        "invalid-active-proof-mode",
-        "missing-audit-actions",
-        "missing-audit-tables",
-        "missing-telemetry-sources"
+        "invalid-active-proof-mode"
       ],
       "productionCriteria": [
         "authority boundary remains enforced",
@@ -13167,10 +13147,7 @@
         "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.%' ORDER BY created_at DESC LIMIT 50"
       ],
       "coverageGaps": [
-        "invalid-active-proof-mode",
-        "missing-audit-actions",
-        "missing-audit-tables",
-        "missing-telemetry-sources"
+        "invalid-active-proof-mode"
       ]
     },
     {
