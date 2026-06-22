@@ -406,6 +406,11 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   // A hardware failure destroys the database regardless of pipeline state.
   // The backup signal is a safety/reliability signal, not a trading research signal.
   "db-backup",                          // W0.1: nightly off-tower DB backup
+  // Phase 4C: daily reconciliation and weekly drift detection are safety signals —
+  // they must run regardless of pipeline pause state to catch stale positions
+  // and live/backtest drift that may have triggered the pause in the first place.
+  "daily-reconciliation",               // Phase 4C: 4:15 PM ET weekdays reconciliation
+  "weekly-drift-detection",             // Phase 4C: Sunday 6:00 PM ET drift detection
 ]);
 
 function _validateAllJobsScheduled(): void {
@@ -4794,6 +4799,86 @@ except Exception as e:
     }
   });
   _scheduledJobs.add("db-backup");
+
+  // ─── Phase 4C: daily reconciliation (4:15 PM ET weekdays) ──────────────────
+  // Safety signal — pipeline-gate-exempt so it fires even when pipeline is PAUSED.
+  // In EDT (UTC-4): 4 PM ET = 20:00 UTC.  In EST (UTC-5): 4 PM ET = 21:00 UTC.
+  // DST-safe double-fire at minutes :15 past hours 20 and 21 UTC; inner ET-hour
+  // guard accepts only etHour === 16 (4 PM ET in 24h).
+  registerJob("daily-reconciliation", 24 * 60 * 60 * 1000, async () => {
+    const { runDailyReconciliation } = await import("./production/reconciliation-service.js");
+    await runDailyReconciliation();
+  });
+  cron.schedule("15 20,21 * * 1-5", async () => {
+    if (!_tryAcquireJobLock("daily-reconciliation")) return;
+    try {
+      const etHour = parseInt(
+        new Date().toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+        10,
+      );
+      if (etHour !== 16) {
+        logger.debug({ etHour }, "Scheduler: daily-reconciliation cron fired but not 4:15 PM ET — skipping");
+        return;
+      }
+      logger.info({ job: "daily-reconciliation" }, "running pipeline-gate-exempt daily reconciliation (4:15 PM ET confirmed)");
+      const t0 = Date.now();
+      try {
+        await withRetry("daily-reconciliation", SCHEDULER_JOBS["daily-reconciliation"].run, 1);
+        markJobRun("daily-reconciliation");
+        emitJobComplete("daily-reconciliation", Date.now() - t0);
+      } catch (err) {
+        logger.error({ err, job: "daily-reconciliation" }, "daily-reconciliation cron failed");
+        notifyCritical("reconciliation-cron-failed", {
+          error: err instanceof Error ? err.message : String(err),
+          job: "daily-reconciliation",
+        });
+      }
+    } finally {
+      _releaseJobLock("daily-reconciliation");
+    }
+  });
+  _scheduledJobs.add("daily-reconciliation");
+
+  // ─── Phase 4C: weekly drift detection (Sunday 6:00 PM ET) ───────────────────
+  // Safety signal — pipeline-gate-exempt so it fires even when pipeline is PAUSED.
+  // In EDT (UTC-4): 6 PM ET = 22:00 UTC.  In EST (UTC-5): 6 PM ET = 23:00 UTC.
+  // DST-safe double-fire at minute :00 of hours 22 and 23 UTC on Sundays; inner
+  // ET-hour guard accepts only etHour === 18 (6 PM ET in 24h) on Sunday.
+  registerJob("weekly-drift-detection", 7 * 24 * 60 * 60 * 1000, async () => {
+    const { runWeeklyDriftDetection } = await import("./production/drift-detector.js");
+    await runWeeklyDriftDetection();
+  });
+  cron.schedule("0 22,23 * * 0", async () => {
+    if (!_tryAcquireJobLock("weekly-drift-detection")) return;
+    try {
+      const etStr = new Date().toLocaleString("en-US", {
+        timeZone: "America/New_York",
+        hour: "numeric",
+        hour12: false,
+      });
+      const etHour = parseInt(etStr, 10);
+      if (etHour !== 18) {
+        logger.debug({ etHour }, "Scheduler: weekly-drift-detection cron fired but not 6:00 PM ET — skipping");
+        return;
+      }
+      logger.info({ job: "weekly-drift-detection" }, "running pipeline-gate-exempt weekly drift detection (6:00 PM ET Sunday confirmed)");
+      const t0 = Date.now();
+      try {
+        await withRetry("weekly-drift-detection", SCHEDULER_JOBS["weekly-drift-detection"].run, 1);
+        markJobRun("weekly-drift-detection");
+        emitJobComplete("weekly-drift-detection", Date.now() - t0);
+      } catch (err) {
+        logger.error({ err, job: "weekly-drift-detection" }, "weekly-drift-detection cron failed");
+        notifyCritical("drift-cron-failed", {
+          error: err instanceof Error ? err.message : String(err),
+          job: "weekly-drift-detection",
+        });
+      }
+    } finally {
+      _releaseJobLock("weekly-drift-detection");
+    }
+  });
+  _scheduledJobs.add("weekly-drift-detection");
 
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every

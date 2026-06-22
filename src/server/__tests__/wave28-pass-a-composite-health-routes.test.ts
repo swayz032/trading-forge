@@ -203,8 +203,11 @@ describe("GET /api/composite-health/:strategyId/latest", () => {
     expect(body.message).toMatch(/awaiting/i);
   });
 
-  it("Test 3a: non-numeric strategyId — 400", async () => {
-    const req = mockReq({ strategyId: "banana" });
+  // Defect G4: strategy_id changed INTEGER → uuid. strategyId is now an opaque
+  // non-empty string; the route no longer enforces positive-integer semantics.
+  // Only an empty/whitespace strategyId is a 400.
+  it("Test 3a: empty strategyId — 400", async () => {
+    const req = mockReq({ strategyId: "   " });
     const res = mockRes();
     await latestHandler(req, res);
 
@@ -213,14 +216,16 @@ describe("GET /api/composite-health/:strategyId/latest", () => {
     expect(body.error).toMatch(/strategyId/i);
   });
 
-  it("Test 3b: zero strategyId — 400", async () => {
-    const req = mockReq({ strategyId: "0" });
+  it("Test 3b: arbitrary string strategyId — 200 (uuid contract, no row)", async () => {
+    mockDbSelect.mockReturnValue(buildChain([]));
+
+    const req = mockReq({ strategyId: "banana" });
     const res = mockRes();
     await latestHandler(req, res);
 
-    expect(res.statusCode).toBe(400);
+    expect(res.statusCode).toBe(200);
     const body = res.body as any;
-    expect(body.error).toMatch(/positive integer/i);
+    expect(body.data).toBeNull();
   });
 });
 

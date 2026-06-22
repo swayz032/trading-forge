@@ -290,7 +290,10 @@ describe("LifecycleService.promoteStrategy — B5 transactional integrity", () =
     const callerTxSelectChain = makeTxChain([makeStrategy("CANDIDATE")]);
     const callerTx = {
       select: vi.fn().mockReturnValue(callerTxSelectChain),
-      update: vi.fn().mockReturnValue(makeTxChain([])),
+      // WHY: writeBlock chains .update().set().where().returning({id}) and treats
+      // an empty returning() as race_blocked (success:false). The update chain
+      // must yield a non-empty id row, so seed makeTxChain with one.
+      update: vi.fn().mockReturnValue(makeTxChain([{ id: "strat-uuid-1" }])),
       insert: vi.fn().mockReturnValue({ values: vi.fn().mockResolvedValue([]) }),
     };
 
@@ -448,10 +451,16 @@ describe("LifecycleService.promoteStrategy — FIX 2: evidence snapshot in audit
     mockDb.select.mockReturnValue(mockDb._selectChain);
     mockDb._txInner.select.mockReturnValue(mockDb._txInner._selectChain);
 
+    // WHY: writeBlock calls .update().set().where().returning({id}). The .where()
+    // mock must return a fluent object exposing .returning() (source chains
+    // .returning() AFTER .where()), not a resolved Promise. Returns a non-empty
+    // id row so writeBlock doesn't treat it as race_blocked (length===0).
     const updateChainDefault = {
       set: vi.fn().mockReturnValue({
-        where: vi.fn().mockResolvedValue([]),
-        returning: vi.fn().mockResolvedValue([{ codename: "FORGE-001" }]),
+        where: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([{ id: "strat-uuid-1", codename: "FORGE-001" }]),
+        }),
+        returning: vi.fn().mockResolvedValue([{ id: "strat-uuid-1", codename: "FORGE-001" }]),
       }),
     };
     mockDb.update.mockReturnValue(updateChainDefault);

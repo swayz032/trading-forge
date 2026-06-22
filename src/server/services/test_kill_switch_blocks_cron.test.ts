@@ -81,7 +81,11 @@ vi.mock("./multi-firm-promotion-service.js", () => ({
 
 import { LifecycleService } from "./lifecycle-service.js";
 import { db } from "../db/index.js";
-import { logger } from "../index.js";
+// WHY: lifecycle-service.ts imports logger from ../lib/logger.js (NOT ../index.js).
+// Asserting against the ../index.js mock inspects a different vi.fn() that the
+// source never calls — the halt-warn was logged to the lib/logger mock.
+// (See feedback_helper_logger_import.md.)
+import { logger } from "../lib/logger.js";
 
 describe("LifecycleService — HIGH #13: killSwitch first gate on auto-check methods", () => {
   let svc: LifecycleService;

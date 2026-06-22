@@ -196,8 +196,9 @@ describe("computeAndPersistDailyVP", () => {
   it("4. writes audit_log row with status=completed on success", async () => {
     await triggerVPCompute("MES", "2026-05-09");
     const auditCalls = mockState.auditInsertCalls;
+    // status is a first-class audit_log column; symbol lives inside result
     const completedRow = auditCalls.find(
-      (c: Record<string, unknown>) => (c.result as Record<string, unknown>)?.status === "completed"
+      (c: Record<string, unknown>) => c.status === "completed"
     );
     expect(completedRow).toBeDefined();
     expect((completedRow?.result as Record<string, unknown>)?.symbol).toBe("MES");
@@ -207,7 +208,7 @@ describe("computeAndPersistDailyVP", () => {
     mockState.pythonShouldThrow = true;
     await expect(triggerVPCompute("MES", "2026-05-09")).rejects.toThrow();
     const failedRow = mockState.auditInsertCalls.find(
-      (c: Record<string, unknown>) => (c.result as Record<string, unknown>)?.status === "failed"
+      (c: Record<string, unknown>) => c.status === "failed"
     );
     expect(failedRow).toBeDefined();
   });

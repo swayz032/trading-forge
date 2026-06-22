@@ -60,6 +60,25 @@ const emptyResult = [] as any;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+// Flatten a Drizzle `sql` template object back to its literal SQL text so the
+// db.execute mock can route by query shape instead of fragile call-order.
+// Drizzle stores literals in `queryChunks[].value` (string[]).
+function sqlText(q: unknown): string {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chunks = (q as any)?.queryChunks;
+  if (!Array.isArray(chunks)) return "";
+  return chunks
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((c: any) => (Array.isArray(c?.value) ? c.value.join("") : ""))
+    .join("");
+}
+function isFirmLookup(q: unknown): boolean {
+  return /firm_id\s+FROM\s+broker_accounts/i.test(sqlText(q));
+}
+function isTradesQuery(q: unknown): boolean {
+  return /FROM\s+paper_trades/i.test(sqlText(q));
+}
+
 function makeTrade(overrides: Record<string, unknown> = {}): Record<string, unknown> {
   return {
     id: crypto.randomUUID(),
@@ -320,12 +339,14 @@ describe("Payout Audit Packet — data faithfulness", () => {
   it("trade count in manifest matches rows returned from DB", async () => {
     const fakeTrades = [makeTrade(), makeTrade(), makeTrade()];
 
-    // Set up execute mock to return trades for the first call (trades query)
-    let callCount = 0;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (mockDb.execute as any).mockImplementation(async () => {
-      callCount++;
-      if (callCount === 1) return fakeTrades;
+    // WHY: gatherTrades() calls resolveFirmIdFromAccountId() FIRST (a
+    // `firm_id FROM broker_accounts` lookup) and bails to [] when it resolves
+    // null. The old mock returned trades on call 1 — but call 1 is the firm
+    // lookup, so firmId came back undefined and trades were dropped. Route by
+    // query shape instead of call order (Promise.all makes order fragile).
+    (mockDb.execute as any).mockImplementation(async (q: unknown) => {
+      if (isFirmLookup(q)) return [{ firm_id: "topstep" }];
+      if (isTradesQuery(q)) return fakeTrades;
       return emptyResult;
     });
 
@@ -348,11 +369,10 @@ describe("Payout Audit Packet — data faithfulness", () => {
       makeTrade({ pnl: "-50.00", symbol: "MNQ" }),
     ];
 
-    let callCount = 0;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (mockDb.execute as any).mockImplementation(async () => {
-      callCount++;
-      if (callCount === 1) return fakeTrades;
+    // WHY: route by query shape — see trade-count test above for rationale.
+    (mockDb.execute as any).mockImplementation(async (q: unknown) => {
+      if (isFirmLookup(q)) return [{ firm_id: "topstep" }];
+      if (isTradesQuery(q)) return fakeTrades;
       return emptyResult;
     });
 

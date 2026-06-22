@@ -9,9 +9,11 @@
  * prep. It must not deactivate n8n workflow intake or OpenClaw monitoring.
  */
 
+import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { systemParameters, auditLog } from "../db/schema.js";
+import { systemParameters } from "../db/schema.js";
+import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
 
@@ -121,15 +123,17 @@ export async function getPipelineStatus(): Promise<{
 export async function setMode(
   mode: PipelineMode,
   reason: string,
-  // correlationId threads the HTTP request id into the pipeline.mode_change audit row
-  // so the caller-side span and the audit row share a reconstruction key.
-  // Optional to keep all existing callers (admin.ts) unmodified.
-  correlationId?: string | null,
+  // correlationId threads the HTTP request id into the pipeline.mode_change audit row.
+  // Pass req.id ?? null from admin routes; internal callers may omit (generates UUID).
+  // Falls back to a generated UUID so the audit row is never null.
+  correlationId: string | null = null,
 ): Promise<{
   previousMode: PipelineMode;
   newMode: PipelineMode;
   n8n: N8nPipelineControlStatus;
 }> {
+  // opCorrelationId ensures the audit row always carries a reconstruction key.
+  const opCorrelationId = correlationId ?? randomUUID();
   if (!VALID_MODES.includes(mode)) {
     throw new Error(`Invalid pipeline mode: ${mode}. Valid: ${VALID_MODES.join(", ")}`);
   }
@@ -176,7 +180,7 @@ export async function setMode(
     `Pipeline mode changed: ${previousMode} -> ${mode}; n8n left running`,
   );
 
-  await db.insert(auditLog).values({
+  await insertAuditRow({
     action: "pipeline.mode_change",
     entityType: "system",
     entityId: null,
@@ -184,7 +188,7 @@ export async function setMode(
     input: { previousMode, newMode: mode, reason } as Record<string, unknown>,
     result: { n8n: n8nResult } as unknown as Record<string, unknown>,
     status: n8nResult.failed === 0 ? "success" : "partial",
-    correlationId: correlationId ?? null,
+    correlationId: opCorrelationId,
   });
 
   broadcastSSE("pipeline:mode-change", {
@@ -237,7 +241,7 @@ async function runPauseResumeReconciliation(
   }
 
   if (goingPaused) {
-    await db.insert(auditLog).values({
+    await insertAuditRow({
       action: "pipeline.pause_snapshot",
       entityType: "system",
       entityId: null,
@@ -248,6 +252,7 @@ async function runPauseResumeReconciliation(
         positions: openPositions as unknown as Record<string, unknown>[],
       } as unknown as Record<string, unknown>,
       status: "success",
+      correlationId: randomUUID(),
     });
     broadcastSSE("pipeline:pause_snapshot", {
       count: openPositions.length,
@@ -260,7 +265,7 @@ async function runPauseResumeReconciliation(
     const staleCutoff = new Date(Date.now() - 5 * 60 * 1000);
     const stale = openPositions.filter((p) => p.openedAt && p.openedAt < staleCutoff);
     if (stale.length > 0) {
-      await db.insert(auditLog).values({
+      await insertAuditRow({
         action: "pipeline.resume_stale_positions",
         entityType: "system",
         entityId: null,
@@ -271,6 +276,7 @@ async function runPauseResumeReconciliation(
           positions: stale as unknown as Record<string, unknown>[],
         } as unknown as Record<string, unknown>,
         status: "success",
+        correlationId: randomUUID(),
       });
       broadcastSSE("pipeline:resume_stale_positions", {
         count: stale.length,

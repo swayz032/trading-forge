@@ -255,7 +255,7 @@ adminRoutes.get("/pipeline/status", async (req, res) => {
 adminRoutes.post("/pipeline/start", async (req, res) => {
   try {
     const reason = (req.body as { reason?: string })?.reason ?? "Manual start";
-    const result = await setMode("ACTIVE", reason);
+    const result = await setMode("ACTIVE", reason, req.id ?? null);
     res.json(result);
   } catch (err) {
     req.log.error({ err }, "Admin: failed to start pipeline");
@@ -387,34 +387,6 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
           ...(extra.gemma_saw_count != null ? { gemma_saw_count: extra.gemma_saw_count } : {}),
         });
         continue;
-      }
-
-      // Wave 26 Pass I v12 (2026-05-26) — Server-side speaker-vocabulary extraction.
-      // Gemma's training prior is stronger than any prompt mandate; it consistently
-      // emits v10 prose shape regardless of v11/v12 instructions. So instead of
-      // relying on Gemma to identify proprietary vocabulary, we scan the transcript
-      // server-side using NLP patterns and ATTACH the speaker_concepts to each idea
-      // BEFORE the route chain forwards them. The gemma-prose-to-v11 synthesizer
-      // then uses these concepts to build entry_sequence / stop_loss / targets /
-      // filters / indicators_used with the speaker's verbatim vocabulary.
-      try {
-        const { extractSpeakerConceptsFromTranscript } = await import("../lib/transcript-speaker-concepts.js");
-        const transcriptConcepts = extractSpeakerConceptsFromTranscript(transcript);
-        if (transcriptConcepts.length > 0) {
-          for (const idea of extractResult.ideas) {
-            // Don't override if Gemma actually emitted speaker_concepts (future-proofing)
-            const existing = (idea as Record<string, unknown>).speaker_concepts;
-            if (!Array.isArray(existing) || existing.length === 0) {
-              (idea as Record<string, unknown>).speaker_concepts = transcriptConcepts;
-            }
-          }
-          req.log?.info?.(
-            { video_id: videoId, concepts_found: transcriptConcepts.length, terms: transcriptConcepts.slice(0, 5).map(c => c.term) },
-            "operator-ingest: server-side speaker concepts attached"
-          );
-        }
-      } catch (conceptErr) {
-        req.log?.warn?.({ err: conceptErr instanceof Error ? conceptErr.message : String(conceptErr) }, "operator-ingest: speaker concept extraction failed (non-blocking)");
       }
 
       // ─── Wave 26 Pass H1 (2026-05-26) Bug 1 — Multi-Layer Archetype Merge ──
@@ -571,6 +543,32 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
         } catch { /* non-blocking */ }
       } else {
         ideasToProcess = extractResult.ideas;
+      }
+
+      // Wave 26 Pass I v12 (2026-05-26) — Server-side speaker-vocabulary extraction.
+      // Moved AFTER ideasToProcess is assigned (Fix 1: null-safety — the original
+      // loop at ~line 404 iterated extractResult.ideas directly, crashing when
+      // extraction returned null ideas after the merge path defined ideasToProcess).
+      // Now iterates ideasToProcess so the speaker-concepts are attached to exactly
+      // the ideas that will be persisted (merged master idea, or raw list).
+      try {
+        const { extractSpeakerConceptsFromTranscript } = await import("../lib/transcript-speaker-concepts.js");
+        const transcriptConcepts = extractSpeakerConceptsFromTranscript(transcript);
+        if (transcriptConcepts.length > 0) {
+          for (const idea of ideasToProcess) {
+            // Don't override if Gemma actually emitted speaker_concepts (future-proofing)
+            const existing = (idea as Record<string, unknown>).speaker_concepts;
+            if (!Array.isArray(existing) || existing.length === 0) {
+              (idea as Record<string, unknown>).speaker_concepts = transcriptConcepts;
+            }
+          }
+          req.log?.info?.(
+            { video_id: videoId, concepts_found: transcriptConcepts.length, terms: transcriptConcepts.slice(0, 5).map(c => c.term) },
+            "operator-ingest: server-side speaker concepts attached"
+          );
+        }
+      } catch (conceptErr) {
+        req.log?.warn?.({ err: conceptErr instanceof Error ? conceptErr.message : String(conceptErr) }, "operator-ingest: speaker concept extraction failed (non-blocking)");
       }
 
       // 4. Persist mentions — write 3 synthetic layers (web + youtube + reddit)
@@ -845,7 +843,7 @@ adminRoutes.post("/scout/run-autonomous-cycle", async (req, res) => {
 adminRoutes.post("/pipeline/pause", async (req, res) => {
   try {
     const reason = (req.body as { reason?: string })?.reason ?? "Manual pause";
-    const result = await setMode("PAUSED", reason);
+    const result = await setMode("PAUSED", reason, req.id ?? null);
     res.json(result);
   } catch (err) {
     req.log.error({ err }, "Admin: failed to pause pipeline");
@@ -857,7 +855,7 @@ adminRoutes.post("/pipeline/pause", async (req, res) => {
 adminRoutes.post("/pipeline/vacation", async (req, res) => {
   try {
     const reason = (req.body as { reason?: string })?.reason ?? "Vacation mode";
-    const result = await setMode("VACATION", reason);
+    const result = await setMode("VACATION", reason, req.id ?? null);
     res.json(result);
   } catch (err) {
     req.log.error({ err }, "Admin: failed to set vacation mode");
@@ -1207,8 +1205,11 @@ adminRoutes.post("/liquidity-map/naked-pocs-batch", async (req, res) => {
     const priceBucketStr = String(priceBucketed);
 
     // Build source_meta from the record
+    // naked_poc_session is the legacy key consumers (wave25-naked-pocs tests) read;
+    // level_session is the newer generalised key. Emit both for backward-compat.
     const sourceMeta: Record<string, unknown> = {
       level_session: sessionDate,
+      naked_poc_session: sessionDate,  // backward-compat alias required by batch-endpoint contract
       source: levelType === "naked_poc" ? "naked_poc_sync_cron" : "hod_lod_sync_cron",
       level_type: levelType,
     };

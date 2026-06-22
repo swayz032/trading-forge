@@ -149,7 +149,9 @@ describe("crib-data", () => {
     mocks.execute.mockRejectedValue(new Error("db down"));
     const { assembleCribData } = await import("../../lib/slumhouse/crib-data.js");
     const data = await assembleCribData({ brokerAccountId: "00000000-0000-0000-0000-000000000002" });
-    expect(data.banner.todayBag).toBe("$0");
+    // WHY: formatBag() prefixes a sign for all values incl. zero (val>=0 → "+");
+    // formatBag(0) === "+$0". Test fixture predated the sign-prefix formatter.
+    expect(data.banner.todayBag).toBe("+$0");
     expect(data.banner.tradesToday.count).toBe(0);
     expect(data.banner.openNow).toBe(0);
     expect(data.banner.killSwitch).toBe("green"); // missing kill row = green default
@@ -171,7 +173,8 @@ describe("crib-data", () => {
     responses.pot = [];
     const { assembleCribData } = await import("../../lib/slumhouse/crib-data.js");
     const data = await assembleCribData({ brokerAccountId: "00000000-0000-0000-0000-000000000004" });
-    expect(data.banner.todayBag).toBe("$0");
+    // WHY: formatBag(0) === "+$0" (sign-prefixed). See note above.
+    expect(data.banner.todayBag).toBe("+$0");
     expect(data.banner.openNow).toBe(0);
     expect(data.banner.inPot).toBe(0);
   });

@@ -57,21 +57,19 @@ vi.mock("../db/index.js", () => {
           })),
         };
       }),
-      // execute() is used by fetchTradingviewMarkerCount (raw SQL for 5th source)
-      execute: vi.fn(async (query: string) => {
-        if (
-          typeof query === "string" &&
-          query.includes("tradingview_markers")
-        ) {
+      // execute() is used by fetchTradingviewMarkerCount (raw SQL for 5th source).
+      // The source passes a drizzle sql`` template (mocked to the TemplateStringsArray),
+      // not a plain string — stringify before substring-matching.
+      execute: vi.fn(async (query: unknown) => {
+        if (String(query).includes("tradingview_markers")) {
           // Return the current marker count from mock state
           if (mockState.tradingviewMarkerCount === null) {
             throw new Error("relation tradingview_markers does not exist");
           }
-          return {
-            rows: [{ cnt: String(mockState.tradingviewMarkerCount) }],
-          };
+          // Source reads result?.[0]?.cnt — array-indexed, not result.rows[0].
+          return [{ cnt: String(mockState.tradingviewMarkerCount) }];
         }
-        return { rows: [] };
+        return [];
       }),
       insert: vi.fn((table: unknown) => {
         const tableName = (table as { tableName?: string })?.tableName ?? "";
