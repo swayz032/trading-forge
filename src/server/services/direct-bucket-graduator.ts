@@ -136,6 +136,17 @@ const ARCHETYPE_REGISTRY: Record<string, { engineSpec: string; strategyClass: st
     strategyClass: "src.engine.strategies.ict_bias_aligned_continuation.ICTBiasAlignedContinuationStrategy",
     description: "BIDIRECTIONAL: HTF bias + 15m BOS/CHoCH + 5m FVG retest inside killzone. LONG on bullish bias + bullish BOS + bullish FVG; SHORT mirror-image. Anti-trend rejects if BOS opposes bias.",
   },
+  // W3.4 (2026-06-22) — Gann box 4H continuation archetype. Engine file:
+  //   src/engine/strategies/gann_box_4h_continuation.py
+  // Source video: SY2jXlW9bt4. Quarantine-escape: video routed to uncatalogued
+  // until this archetype was registered. DO NOT remove — anchor for the
+  // graduation.archetype_route_taken audit and for Gann-box concept routing
+  // in prettifyConcept() below.
+  gann_box_4h_continuation: {
+    engineSpec: "gann_box_4h_continuation",
+    strategyClass: "src.engine.strategies.gann_box_4h_continuation.GannBox4HContinuationStrategy",
+    description: "BIDIRECTIONAL: impulsive 4H candle Gann box → Fib zone optimum (0.50–0.75) retracement entry + FVG/OB confluence. LONG on bullish bias + bullish impulse + optimum retrace; SHORT mirror-image. Stop beyond order block; target prior daily high/low.",
+  },
 };
 
 /**
@@ -462,9 +473,11 @@ const ENTRY_INDICATOR_MAP: Record<string, string> = {
 // archetypes. Add entries here whenever a new archetype ships; the audit
 // event is intentionally narrow (new archetypes only) to avoid audit noise
 // for the dozens of existing ICT/Wyckoff entries already well-tested.
+// W3.4 (2026-06-22): gann_box_4h_continuation added.
 const WAVE26G_AUDIT_ARCHETYPES = new Set<string>([
   "bounce_off_level",
   "ict_bias_aligned_continuation",
+  "gann_box_4h_continuation",
 ]);
 
 // Regex patterns that correspond to each audited archetype, used to populate
@@ -481,6 +494,13 @@ const WAVE26G_ROUTE_PATTERNS: Record<string, RegExp[]> = {
     /bias.aligned|htf.continuation|continuation.with.bias|bias.confirmation.entry/,
     /ict.continuation|smc.continuation|structure.break.continuation/,
     /bos.fvg|choch.fvg|bos.continuation|choch.continuation/,
+  ],
+  // W3.4 (2026-06-22) — Gann box 4H continuation routing patterns.
+  gann_box_4h_continuation: [
+    /gann.{0,6}box|gann.{0,6}(fib|fibonacci|zone|level|square)/,
+    /(4h|4.hour|four.hour).{0,12}(candle|box|impulse|impulsive|continuation)/,
+    /optimum.{0,12}(zone|fib|fibonacci|retrace|entry)/,
+    /premature.{0,12}(zone|fib|entry)|overextended.{0,12}(zone|fib)/,
   ],
 };
 
@@ -1188,6 +1208,18 @@ function prettifyConcept(conceptName: string): string {
   if (/(\d+).{0,4}(ma|ema|sma).{0,12}(ceiling|floor|support|resistance|bounce)/.test(cn)) return "bounce_off_level";
   if (/trendline.bounce|trendline.{0,8}(reject|test|hold|support|resistance)/.test(cn)) return "bounce_off_level";
   if (/(^|_)(\d+)_(ma|ema|sma)(_|$)/.test(cn)) return "bounce_off_level";  // bare "200_ma", "50_sma"
+
+  // ── gann_box_4h_continuation — W3.4 (2026-06-22) ──────────────────────────
+  // Gann box drawn over an impulsive 4H candle, divided by Fib zones (0/0.25/0.5/0.75/1).
+  // Entry in optimum zone (0.50–0.75) on retracement wick + FVG/OB confluence.
+  // Must appear BEFORE the noise-strip fallback so the ARCHETYPE_REGISTRY check fires.
+  // Source video: SY2jXlW9bt4 (quarantine-escape path).
+  if (/gann.{0,6}box|gann.{0,6}(fib|fibonacci|zone|level|square)/.test(cn)) return "gann_box_4h_continuation";
+  if (/(4h|4.hour|four.hour).{0,12}(candle|box|impulse|impulsive|continuation)/.test(cn)) return "gann_box_4h_continuation";
+  if (/(candle|impulse|impulsive).{0,12}(4h|4.hour|four.hour)/.test(cn)) return "gann_box_4h_continuation";
+  if (/(fib|fibonacci).{0,12}(zone|box|optimum|retracement).{0,12}(4h|4.hour|continuation)/.test(cn)) return "gann_box_4h_continuation";
+  if (/optimum.{0,12}(zone|fib|fibonacci|retrace|entry)/.test(cn)) return "gann_box_4h_continuation";
+  if (/premature.{0,12}(zone|fib|entry)|overextended.{0,12}(zone|fib)/.test(cn)) return "gann_box_4h_continuation";
 
   // Noise strip — remove URL/site/forum/tutorial/clickbait words before composing
   const NOISE = /\b(backtest|results|backtested|forums?|forum|uk|com|net|org|www|fr|de|setup|explained|guide|tutorial|the|a|an|how|to|trading|strategy|strategies|trade|trades|trader|traders|indicator|indicators|chartschool|stockcharts|litefinance|finveroo|thinkorswim|trade2win|reddit|youtube|brave|in|of|for|with|and|or|on|by|via|best|top|pro|free|new|understanding|mastering|introducing|short|term|long|that|work|works|your|global|big|small|tight|risk|reward|formula|settings|s)\b/gi;
@@ -1909,6 +1941,8 @@ export async function graduateBucketDirectly(opts: {
     "cisd", "fvg_retrace", "order_block", "liquidity_sweep",
     "wyckoff_accumulation", "wyckoff_distribution", "wyckoff_spring", "wyckoff_upthrust",
     "volume_profile", "cumulative_delta", "vwap_order_flow",
+    // W3.4 (2026-06-22)
+    "gann_box_4h_continuation",
   ]);
 
   // Determine regime from indicator/archetype mapping

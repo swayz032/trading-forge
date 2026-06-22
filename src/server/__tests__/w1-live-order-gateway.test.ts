@@ -1,19 +1,36 @@
 /**
- * w1-live-order-gateway.test.ts — Workstream W1 CORE
+ * w1-live-order-gateway.test.ts — Workstream W1 CORE + W1 Follow-Up (Pine Static-Token)
  *
- * Make-or-break tests for the TF Order Gateway (POST /api/live-order).
+ * Coverage:
+ *  HMAC mode (original W1 core):
+ *    1. HALT blocks live fill: routeOrder → 423, submitWebhookOrder never called
+ *    2. Happy path: valid HMAC → 200 forwarded
+ *    3. Bad HMAC → 401, routeOrder never called
+ *    4. Missing LIVE_ORDER_HMAC_SECRET → 503
+ *    5. Stale timestamp → 401 stale_payload
+ *    6. Invalid payload → 400
+ *    7. Compliance block → 403
+ *    8. routeOrder is the production caller (W1 core invariant)
  *
- * Three mandatory coverage items:
- *  1. HALT blocks live fill: kill-switch in HALT → POST valid-HMAC alert →
- *     response 423 blocked, submitWebhookOrder NEVER called, audit row written.
- *  2. Happy path: no halt → routeOrder runs → forwards once.
- *  3. Bad HMAC → 401, routeOrder never called.
+ *  Static-token mode (W1 follow-up — Pine cannot compute HMAC):
+ *    9.  Valid static token (in body) → 200 forwarded, routeOrder called once
+ *    10. Valid static token (in Authorization: Bearer header) → 200 forwarded
+ *    11. Bad static token → 401 token_invalid, routeOrder never called
+ *    12. Missing strategy_id with static token → 400
+ *    13. Static token with stale timestamp → 401 stale_payload
+ *    14. Duplicate bar_timestamp (same bar_timestamp+action) → 409
+ *    15. HALT still blocks in static-token mode → 423
+ *    16. No auth at all (neither hmac nor token) → 401 no_auth_credential
+ *
+ *  Round-trip:
+ *    17. Token embedded by buildPineAlertTemplate round-trips to gateway acceptance
+ *
+ *  Pine export:
+ *    18. buildPineAlertTemplate with gatewayOptions emits TF gateway URL payload
+ *    19. buildPineAlertTemplate without gatewayOptions emits TradersPost payload (unchanged)
  *
  * Pattern: real Express app + native fetch over an ephemeral port.
- * No supertest dependency — matches codebase convention documented in
- * prop-firm-route-survival.test.ts and quantum-pre-flight.test.ts.
- *
- * These tests confirm routeOrder() now has a real production caller.
+ * No supertest — matches codebase convention in prop-firm-route-survival.test.ts.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -25,19 +42,25 @@ import type { Server } from "http";
 
 const TEST_SECRET = "test-live-order-hmac-secret-must-be-32-chars-long!!";
 const TEST_ACCOUNT_ID = "11111111-1111-1111-1111-111111111111";
+const TEST_STRATEGY_ID = "22222222-2222-2222-2222-222222222222";
 const TEST_TICKER = "MES1!";
 const TEST_ACTION = "enter_long";
+// Static token: reuses hmac_secret from account_strategy_assignments
+const TEST_STATIC_TOKEN = "static-pine-token-per-account-strategy-at-least-32c";
 
 // ─── Hoisted mock state ───────────────────────────────────────────────────────
-// vi.hoisted() is guaranteed to run before any module imports.
 
 const mocks = vi.hoisted(() => ({
   routeOrder: vi.fn(),
   submitWebhookOrder: vi.fn(),
   dbInsert: vi.fn(),
+  // lookupHmacSecret returns the stored per-(account,strategy) secret for token mode.
+  lookupHmacSecret: vi.fn(),
+  // dbExecute handles the dedup INSERT ON CONFLICT DO NOTHING.
+  dbExecute: vi.fn(),
 }));
 
-// ─── Module mocks (hoisted by vitest, executed before imports) ────────────────
+// ─── Module mocks ─────────────────────────────────────────────────────────────
 
 vi.mock("../services/broker-router.js", () => ({
   routeOrder: mocks.routeOrder,
@@ -47,10 +70,14 @@ vi.mock("../integrations/traderspost/client.js", () => ({
   submitWebhookOrder: mocks.submitWebhookOrder,
 }));
 
-// db mock: capture insert().values() calls without touching a real DB.
+vi.mock("../services/tradingview-marker-service.js", () => ({
+  lookupHmacSecret: mocks.lookupHmacSecret,
+}));
+
 vi.mock("../db/index.js", () => ({
   db: {
     insert: () => ({ values: mocks.dbInsert }),
+    execute: mocks.dbExecute,
   },
 }));
 
@@ -67,9 +94,10 @@ vi.mock("../lib/logger.js", () => ({
   },
 }));
 
-// ─── Lazy route import (after mocks are wired) ────────────────────────────────
+// ─── Lazy imports (after mocks are wired) ────────────────────────────────────
 
 const { liveOrderRoutes } = await import("../routes/live-order.js");
+const { buildPineAlertTemplate } = await import("../integrations/traderspost/webhook-builder.js");
 
 // ─── Test helpers ─────────────────────────────────────────────────────────────
 
@@ -83,6 +111,7 @@ function buildApp(): express.Express {
 async function call(
   app: express.Express,
   body: Record<string, unknown>,
+  headers?: Record<string, string>,
 ): Promise<{ status: number; body: Record<string, unknown>; server: Server }> {
   return await new Promise((resolve, reject) => {
     const server = app.listen(0, async () => {
@@ -91,7 +120,10 @@ async function call(
         const port = typeof addr === "object" && addr ? addr.port : 0;
         const res = await fetch(`http://127.0.0.1:${port}/api/live-order`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...headers,
+          },
           body: JSON.stringify(body),
         });
         const responseBody = await res.json() as Record<string, unknown>;
@@ -115,7 +147,8 @@ function signPayload(
   return createHmac("sha256", secret).update(message, "utf8").digest("hex");
 }
 
-function makePayload(overrides: Partial<Record<string, unknown>> = {}): Record<string, unknown> {
+/** Build a valid HMAC-mode payload */
+function makeHmacPayload(overrides: Partial<Record<string, unknown>> = {}): Record<string, unknown> {
   const timestampMs = Date.now();
   const hmac = signPayload(TEST_ACCOUNT_ID, TEST_TICKER, TEST_ACTION, timestampMs, TEST_SECRET);
   return {
@@ -128,29 +161,60 @@ function makePayload(overrides: Partial<Record<string, unknown>> = {}): Record<s
   };
 }
 
+/** Build a valid static-token-mode payload (Pine path) */
+function makeTokenPayload(overrides: Partial<Record<string, unknown>> = {}): Record<string, unknown> {
+  const timestampMs = Date.now();
+  return {
+    account_id: TEST_ACCOUNT_ID,
+    strategy_id: TEST_STRATEGY_ID,
+    ticker: TEST_TICKER,
+    action: TEST_ACTION,
+    timestamp_ms: timestampMs,
+    bar_timestamp: new Date(timestampMs).toISOString(),
+    live_order_token: TEST_STATIC_TOKEN,
+    ...overrides,
+  };
+}
+
+/** Dedup INSERT result: first insert (not a dup) — returns one row */
+function dedupFirstInsert() {
+  mocks.dbExecute.mockResolvedValueOnce({ rows: [{ id: 1 }] });
+}
+
+/** Dedup INSERT result: conflict (dup) — ON CONFLICT DO NOTHING, empty rows */
+function dedupDuplicate() {
+  mocks.dbExecute.mockResolvedValueOnce({ rows: [] });
+}
+
 // ─── Test suite ───────────────────────────────────────────────────────────────
 
-describe("POST /api/live-order — W1 CORE gateway", () => {
+describe("POST /api/live-order — W1 CORE + Pine static-token", () => {
   let server: Server | null = null;
 
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.dbInsert.mockResolvedValue(undefined);
     process.env.LIVE_ORDER_HMAC_SECRET = TEST_SECRET;
+    // Default: lookupHmacSecret returns the test static token
+    mocks.lookupHmacSecret.mockResolvedValue(TEST_STATIC_TOKEN);
+    // Default: dedup INSERT is first (not a dup)
+    mocks.dbExecute.mockResolvedValue({ rows: [{ id: 1 }] });
   });
 
   afterEach(() => {
     delete process.env.LIVE_ORDER_HMAC_SECRET;
+    delete process.env.LIVE_ORDER_GATEWAY_URL;
     if (server) {
       server.close();
       server = null;
     }
   });
 
-  // ── Test 1: HALT blocks live fill ─────────────────────────────────────────
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HMAC MODE — original W1 core tests
+  // ═══════════════════════════════════════════════════════════════════════════
 
-  it("HALT state → 423 blocked, submitWebhookOrder never called, audit row written", async () => {
-    // routeOrder returns a production_halt result (kill-switch FIRST gate fired).
+  it("Test 1: HALT → 423 blocked, submitWebhookOrder never called, audit row written", async () => {
     mocks.routeOrder.mockResolvedValueOnce({
       success: false,
       reason: "production_halt",
@@ -159,43 +223,26 @@ describe("POST /api/live-order — W1 CORE gateway", () => {
     });
 
     const app = buildApp();
-    const res = await call(app, makePayload());
+    const res = await call(app, makeHmacPayload());
     server = res.server;
 
-    // Response must be 423 (unavailable due to policy — HALT).
     expect(res.status).toBe(423);
-    expect(res.body).toMatchObject({
-      blocked: true,
-      reason: "production_halt",
-    });
+    expect(res.body).toMatchObject({ blocked: true, reason: "production_halt" });
 
-    // routeOrder IS called — this is the W1 CORE invariant:
-    // routeOrder now has a real production caller via this gateway.
     expect(mocks.routeOrder).toHaveBeenCalledOnce();
     expect(mocks.routeOrder).toHaveBeenCalledWith(
       TEST_ACCOUNT_ID,
       expect.objectContaining({ ticker: TEST_TICKER, action: TEST_ACTION }),
-      expect.any(String),   // correlationId
-      expect.any(Number),   // timestamp_ms passed as webhookFiredAt
+      expect.any(String),
+      expect.any(Number),
     );
-
-    // submitWebhookOrder MUST NOT be called.
-    // routeOrder's mock returned halt before reaching the broker dispatch path.
-    // The gateway itself never calls submitWebhookOrder — no double-forward.
     expect(mocks.submitWebhookOrder).not.toHaveBeenCalled();
-
-    // Audit row must be written with the blocked action name.
     expect(mocks.dbInsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        action: "live_order.blocked_production_halt",
-        status: "blocked",
-      }),
+      expect.objectContaining({ action: "live_order.blocked_production_halt", status: "blocked" }),
     );
   });
 
-  // ── Test 2: Happy path — no halt → forwards once ──────────────────────────
-
-  it("No halt → routeOrder runs → 200 forwarded", async () => {
+  it("Test 2: No halt (HMAC mode) → routeOrder runs → 200 forwarded", async () => {
     mocks.routeOrder.mockResolvedValueOnce({
       success: true,
       reason: "routed",
@@ -206,47 +253,31 @@ describe("POST /api/live-order — W1 CORE gateway", () => {
     });
 
     const app = buildApp();
-    const res = await call(app, makePayload());
+    const res = await call(app, makeHmacPayload());
     server = res.server;
 
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({
-      forwarded: true,
-      reason: "routed",
-      brokerType: "traderspost",
-    });
-
-    // routeOrder is the production caller — called exactly once.
+    expect(res.body).toMatchObject({ forwarded: true, reason: "routed", brokerType: "traderspost" });
     expect(mocks.routeOrder).toHaveBeenCalledOnce();
-
-    // submitWebhookOrder is called by routeOrder internally, not by this gateway.
-    // Since routeOrder is mocked, submitWebhookOrder is never invoked here —
-    // confirming the gateway does NOT double-forward.
     expect(mocks.submitWebhookOrder).not.toHaveBeenCalled();
   });
 
-  // ── Test 3: Bad HMAC → 401, routeOrder never called ──────────────────────
-
-  it("Bad HMAC → 401, routeOrder never called", async () => {
-    const badHmac = "badhex" + "0".repeat(58); // wrong length and content
+  it("Test 3: Bad HMAC → 401, routeOrder never called", async () => {
+    const badHmac = "badhex" + "0".repeat(58);
     const app = buildApp();
-    const res = await call(app, makePayload({ live_order_hmac: badHmac }));
+    const res = await call(app, makeHmacPayload({ live_order_hmac: badHmac }));
     server = res.server;
 
     expect(res.status).toBe(401);
     expect(res.body).toMatchObject({ error: "hmac_invalid" });
-
-    // routeOrder must not be reached when HMAC fails.
     expect(mocks.routeOrder).not.toHaveBeenCalled();
   });
 
-  // ── Test 4: Missing HMAC secret → 503 ────────────────────────────────────
-
-  it("Missing LIVE_ORDER_HMAC_SECRET → 503 gateway_not_configured", async () => {
+  it("Test 4: Missing LIVE_ORDER_HMAC_SECRET → 503 gateway_not_configured", async () => {
     delete process.env.LIVE_ORDER_HMAC_SECRET;
 
     const app = buildApp();
-    const res = await call(app, makePayload());
+    const res = await call(app, makeHmacPayload());
     server = res.server;
 
     expect(res.status).toBe(503);
@@ -254,14 +285,12 @@ describe("POST /api/live-order — W1 CORE gateway", () => {
     expect(mocks.routeOrder).not.toHaveBeenCalled();
   });
 
-  // ── Test 5: Stale timestamp → 401 stale_payload ─────────────────────────
-
-  it("Stale timestamp (>2 min ago) → 401 stale_payload, routeOrder never called", async () => {
-    const staleMs = Date.now() - 3 * 60 * 1000; // 3 minutes ago
+  it("Test 5: Stale timestamp (>2 min ago, HMAC mode) → 401 stale_payload", async () => {
+    const staleMs = Date.now() - 3 * 60 * 1000;
     const staleHmac = signPayload(TEST_ACCOUNT_ID, TEST_TICKER, TEST_ACTION, staleMs, TEST_SECRET);
 
     const app = buildApp();
-    const res = await call(app, makePayload({ timestamp_ms: staleMs, live_order_hmac: staleHmac }));
+    const res = await call(app, makeHmacPayload({ timestamp_ms: staleMs, live_order_hmac: staleHmac }));
     server = res.server;
 
     expect(res.status).toBe(401);
@@ -269,11 +298,9 @@ describe("POST /api/live-order — W1 CORE gateway", () => {
     expect(mocks.routeOrder).not.toHaveBeenCalled();
   });
 
-  // ── Test 6: Invalid payload → 400 ────────────────────────────────────────
-
-  it("Invalid payload (missing required fields) → 400 invalid_payload", async () => {
+  it("Test 6: Invalid payload (missing required fields) → 400", async () => {
     const app = buildApp();
-    const res = await call(app, { ticker: "MES1!" }); // missing required fields
+    const res = await call(app, { ticker: "MES1!" });
     server = res.server;
 
     expect(res.status).toBe(400);
@@ -281,9 +308,7 @@ describe("POST /api/live-order — W1 CORE gateway", () => {
     expect(mocks.routeOrder).not.toHaveBeenCalled();
   });
 
-  // ── Test 7: Compliance block → 403 ───────────────────────────────────────
-
-  it("Compliance violation from routeOrder → 403 blocked", async () => {
+  it("Test 7: Compliance violation → 403 blocked", async () => {
     mocks.routeOrder.mockResolvedValueOnce({
       success: false,
       reason: "compliance_violation",
@@ -293,36 +318,318 @@ describe("POST /api/live-order — W1 CORE gateway", () => {
     });
 
     const app = buildApp();
-    const res = await call(app, makePayload());
+    const res = await call(app, makeHmacPayload());
     server = res.server;
 
     expect(res.status).toBe(403);
-    expect(res.body).toMatchObject({
-      blocked: true,
-      reason: "compliance_violation",
-    });
+    expect(res.body).toMatchObject({ blocked: true, reason: "compliance_violation" });
     expect(mocks.routeOrder).toHaveBeenCalledOnce();
     expect(mocks.submitWebhookOrder).not.toHaveBeenCalled();
   });
 
-  // ── Test 8: routeOrder is the production caller (import + call assertion) ──
+  it("Test 8: routeOrder is imported and called (W1 production caller proof)", async () => {
+    mocks.routeOrder.mockResolvedValueOnce({ success: true, reason: "routed", accountId: TEST_ACCOUNT_ID });
 
-  it("routeOrder is imported and called from the gateway (W1 production caller proof)", async () => {
-    // This test documents and asserts the W1 CORE invariant:
-    // routeOrder now has a real production caller via the live-order gateway.
+    const app = buildApp();
+    const res = await call(app, makeHmacPayload());
+    server = res.server;
+
+    expect(mocks.routeOrder).toHaveBeenCalled();
+    expect(res.status).toBe(200);
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STATIC-TOKEN MODE — W1 follow-up (Pine cannot compute HMAC)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  it("Test 9: Valid static token (body field) → 200 forwarded, routeOrder called once", async () => {
+    dedupFirstInsert();
     mocks.routeOrder.mockResolvedValueOnce({
       success: true,
       reason: "routed",
       accountId: TEST_ACCOUNT_ID,
+      brokerType: "traderspost",
+      firmId: "topstep",
+      statusCode: 200,
     });
 
     const app = buildApp();
-    const res = await call(app, makePayload());
+    const res = await call(app, makeTokenPayload());
     server = res.server;
 
-    // routeOrder was called → the gateway imports and invokes it.
-    // Without this wiring, routeOrder would have zero production callers.
-    expect(mocks.routeOrder).toHaveBeenCalled();
     expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ forwarded: true, reason: "routed" });
+    expect(mocks.lookupHmacSecret).toHaveBeenCalledWith(TEST_ACCOUNT_ID, TEST_STRATEGY_ID);
+    expect(mocks.routeOrder).toHaveBeenCalledOnce();
+    expect(mocks.routeOrder).toHaveBeenCalledWith(
+      TEST_ACCOUNT_ID,
+      expect.objectContaining({ ticker: TEST_TICKER, action: TEST_ACTION }),
+      expect.any(String),
+      expect.any(Number),
+    );
+    expect(mocks.submitWebhookOrder).not.toHaveBeenCalled();
+  });
+
+  it("Test 10: Valid static token (Authorization: Bearer header) → 200 forwarded", async () => {
+    dedupFirstInsert();
+    mocks.routeOrder.mockResolvedValueOnce({
+      success: true,
+      reason: "routed",
+      accountId: TEST_ACCOUNT_ID,
+      brokerType: "traderspost",
+      firmId: "topstep",
+      statusCode: 200,
+    });
+
+    // Token in header, NOT in body
+    const bodyWithoutToken = {
+      account_id: TEST_ACCOUNT_ID,
+      strategy_id: TEST_STRATEGY_ID,
+      ticker: TEST_TICKER,
+      action: TEST_ACTION,
+      timestamp_ms: Date.now(),
+      bar_timestamp: new Date().toISOString(),
+    };
+
+    const app = buildApp();
+    const res = await call(app, bodyWithoutToken, {
+      "Authorization": `Bearer ${TEST_STATIC_TOKEN}`,
+    });
+    server = res.server;
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ forwarded: true });
+    expect(mocks.routeOrder).toHaveBeenCalledOnce();
+    expect(mocks.submitWebhookOrder).not.toHaveBeenCalled();
+  });
+
+  it("Test 11: Bad static token → 401 token_invalid, routeOrder never called", async () => {
+    const app = buildApp();
+    const res = await call(app, makeTokenPayload({ live_order_token: "wrong-token-that-does-not-match" }));
+    server = res.server;
+
+    expect(res.status).toBe(401);
+    expect(res.body).toMatchObject({ error: "token_invalid" });
+    expect(mocks.routeOrder).not.toHaveBeenCalled();
+  });
+
+  it("Test 12: Static token without strategy_id → 400 (strategy_id required)", async () => {
+    const payload = makeTokenPayload({ strategy_id: undefined });
+    const app = buildApp();
+    const res = await call(app, payload);
+    server = res.server;
+
+    expect(res.status).toBe(400);
+    expect(res.body).toMatchObject({ error: "invalid_payload" });
+    expect(mocks.routeOrder).not.toHaveBeenCalled();
+  });
+
+  it("Test 13: Static token with stale timestamp → 401 stale_payload", async () => {
+    // Token is valid but timestamp is 3 minutes ago
+    const staleMs = Date.now() - 3 * 60 * 1000;
+    const payload = makeTokenPayload({ timestamp_ms: staleMs });
+
+    const app = buildApp();
+    const res = await call(app, payload);
+    server = res.server;
+
+    expect(res.status).toBe(401);
+    expect(res.body).toMatchObject({ error: "stale_payload" });
+    expect(mocks.routeOrder).not.toHaveBeenCalled();
+  });
+
+  it("Test 14: Duplicate bar_timestamp (same bar close, same action) → 409 absorbed", async () => {
+    // Simulate ON CONFLICT DO NOTHING — no rows returned
+    dedupDuplicate();
+
+    const app = buildApp();
+    const res = await call(app, makeTokenPayload());
+    server = res.server;
+
+    expect(res.status).toBe(409);
+    expect(res.body).toMatchObject({ error: "duplicate_pine_alert" });
+    // routeOrder must NOT be called — alert was already processed
+    expect(mocks.routeOrder).not.toHaveBeenCalled();
+  });
+
+  it("Test 15: HALT still blocks in static-token mode → 423", async () => {
+    dedupFirstInsert();
+    mocks.routeOrder.mockResolvedValueOnce({
+      success: false,
+      reason: "production_halt",
+      accountId: TEST_ACCOUNT_ID,
+      error: "killswitch_halt",
+    });
+
+    const app = buildApp();
+    const res = await call(app, makeTokenPayload());
+    server = res.server;
+
+    expect(res.status).toBe(423);
+    expect(res.body).toMatchObject({ blocked: true, reason: "production_halt" });
+    // routeOrder IS called (reaches the gate) but returns halt
+    expect(mocks.routeOrder).toHaveBeenCalledOnce();
+    expect(mocks.submitWebhookOrder).not.toHaveBeenCalled();
+  });
+
+  it("Test 16: No auth at all (neither hmac nor token) → 401 no_auth_credential", async () => {
+    const barePayload = {
+      account_id: TEST_ACCOUNT_ID,
+      ticker: TEST_TICKER,
+      action: TEST_ACTION,
+      timestamp_ms: Date.now(),
+      // no live_order_hmac, no live_order_token, no Authorization header
+    };
+
+    const app = buildApp();
+    const res = await call(app, barePayload);
+    server = res.server;
+
+    expect(res.status).toBe(401);
+    expect(res.body).toMatchObject({ error: "no_auth_credential" });
+    expect(mocks.routeOrder).not.toHaveBeenCalled();
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ROUND-TRIP: token embedded by buildPineAlertTemplate is accepted by gateway
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  it("Test 17: Round-trip — token from buildPineAlertTemplate is accepted by gateway", async () => {
+    // Build the Pine alert JSON template (as the exporter would produce it)
+    const alertTemplate = buildPineAlertTemplate(
+      TEST_TICKER,
+      TEST_STRATEGY_ID,
+      "traderspost",
+      {
+        accountId: TEST_ACCOUNT_ID,
+        strategyId: TEST_STRATEGY_ID,
+        staticToken: TEST_STATIC_TOKEN,
+        gatewayUrl: "https://tower.example.com/api/live-order",
+      },
+    );
+
+    // Verify the template contains the token
+    expect(alertTemplate).toContain(`"live_order_token": "${TEST_STATIC_TOKEN}"`);
+    expect(alertTemplate).toContain(`"account_id": "${TEST_ACCOUNT_ID}"`);
+    expect(alertTemplate).toContain(`"strategy_id": "${TEST_STRATEGY_ID}"`);
+
+    // Simulate what TradingView does at alert-fire time:
+    // substitute Pine variables with actual values
+    const now = Date.now();
+    const barTimestampIso = new Date(now).toISOString();
+    const alertJson = alertTemplate
+      .replace(/\{\{strategy\.order\.action\}\}/g, TEST_ACTION)
+      .replace(/\{\{strategy\.order\.contracts\}\}/g, "6")
+      .replace(/"\{\{time\}\}"/g, `"${barTimestampIso}"`)
+      .replace(/\{\{time\}\}/g, String(now));
+
+    const parsedAlert = JSON.parse(alertJson) as Record<string, unknown>;
+
+    // The gateway must accept this exact payload
+    dedupFirstInsert();
+    mocks.routeOrder.mockResolvedValueOnce({
+      success: true,
+      reason: "routed",
+      accountId: TEST_ACCOUNT_ID,
+      brokerType: "traderspost",
+      firmId: "topstep",
+      statusCode: 200,
+    });
+
+    const app = buildApp();
+    const res = await call(app, parsedAlert);
+    server = res.server;
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ forwarded: true });
+    expect(mocks.lookupHmacSecret).toHaveBeenCalledWith(TEST_ACCOUNT_ID, TEST_STRATEGY_ID);
+    expect(mocks.routeOrder).toHaveBeenCalledOnce();
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PINE EXPORT — buildPineAlertTemplate gateway vs legacy paths
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  it("Test 18: buildPineAlertTemplate with gatewayOptions + LIVE_ORDER_GATEWAY_URL emits TF gateway payload", () => {
+    process.env.LIVE_ORDER_GATEWAY_URL = "https://tower.example.com/api/live-order";
+
+    const result = buildPineAlertTemplate(
+      TEST_TICKER,
+      TEST_STRATEGY_ID,
+      "traderspost",
+      {
+        accountId: TEST_ACCOUNT_ID,
+        strategyId: TEST_STRATEGY_ID,
+        staticToken: TEST_STATIC_TOKEN,
+      },
+    );
+
+    // Must contain gateway-format fields
+    expect(result).toContain(`"account_id": "${TEST_ACCOUNT_ID}"`);
+    expect(result).toContain(`"strategy_id": "${TEST_STRATEGY_ID}"`);
+    expect(result).toContain(`"live_order_token": "${TEST_STATIC_TOKEN}"`);
+    expect(result).toContain(`"timestamp_ms": {{time}}`);
+    expect(result).toContain(`"bar_timestamp": "{{time}}"`);
+    expect(result).toContain(`"action": "{{strategy.order.action}}"`);
+    expect(result).toContain(`"quantity": {{strategy.order.contracts}}`);
+    // Must NOT contain TradersPost-only fields
+    expect(result).not.toContain("apiKey");
+    expect(result).not.toContain("passthrough");
+    expect(result).not.toContain("orderType");
+  });
+
+  it("Test 19: buildPineAlertTemplate without gatewayOptions emits TradersPost payload (unchanged)", () => {
+    const result = buildPineAlertTemplate(TEST_TICKER, TEST_STRATEGY_ID, "traderspost");
+
+    expect(result).toContain(`"action": "{{strategy.order.action}}"`);
+    expect(result).toContain(`"ticker": "${TEST_TICKER}"`);
+    expect(result).toContain(`"quantity": "{{strategy.order.contracts}}"`);
+    expect(result).toContain(`"orderType": "market"`);
+    expect(result).toContain(`"trading_forge_strategy_id": "${TEST_STRATEGY_ID}"`);
+    // Must NOT contain gateway fields
+    expect(result).not.toContain("account_id");
+    expect(result).not.toContain("live_order_token");
+    expect(result).not.toContain("timestamp_ms");
+  });
+
+  it("Test 20: buildPineAlertTemplate with gatewayOptions.gatewayUrl overrides env var", () => {
+    // env var not set
+    delete process.env.LIVE_ORDER_GATEWAY_URL;
+
+    const result = buildPineAlertTemplate(
+      TEST_TICKER,
+      TEST_STRATEGY_ID,
+      "traderspost",
+      {
+        accountId: TEST_ACCOUNT_ID,
+        strategyId: TEST_STRATEGY_ID,
+        staticToken: TEST_STATIC_TOKEN,
+        gatewayUrl: "https://custom-gateway.example.com/api/live-order",
+      },
+    );
+
+    // gatewayUrl override should activate the gateway path
+    expect(result).toContain(`"live_order_token": "${TEST_STATIC_TOKEN}"`);
+    expect(result).toContain(`"account_id": "${TEST_ACCOUNT_ID}"`);
+  });
+
+  it("Test 21: buildPineAlertTemplate with gatewayOptions but no URL falls back to TradersPost", () => {
+    delete process.env.LIVE_ORDER_GATEWAY_URL;
+
+    const result = buildPineAlertTemplate(
+      TEST_TICKER,
+      TEST_STRATEGY_ID,
+      "traderspost",
+      {
+        accountId: TEST_ACCOUNT_ID,
+        strategyId: TEST_STRATEGY_ID,
+        staticToken: TEST_STATIC_TOKEN,
+        // no gatewayUrl, env var also unset
+      },
+    );
+
+    // Falls back to TradersPost path (gateway URL is required to activate gateway path)
+    expect(result).toContain(`"orderType": "market"`);
+    expect(result).not.toContain("live_order_token");
   });
 });

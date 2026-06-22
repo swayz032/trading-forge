@@ -484,6 +484,51 @@ export function computeWideConceptFingerprintHash(input: {
   return createHash("sha256").update(raw, "utf8").digest("hex").slice(0, 32);
 }
 
+/**
+ * W3.2 (2026-06-22) — QUARANTINE fingerprint for failed / placeholder extractions.
+ *
+ * Problem: when gemma fails to name a strategy, it defaults concept_name to
+ * "extracted_strategy". canonicalConceptName("extracted_strategy") strips the
+ * "_strategy" stopword suffix leaving "extracted", producing the same SHA-256
+ * hash for EVERY failed extraction. This lets unrelated failed extractions
+ * accumulate in the same pending_strategy_buckets row as a fake "9-source
+ * strongly cross-validated concept" — all with null entry signals.
+ *
+ * Fix: when concept_name is a placeholder sentinel OR the extraction is
+ * quarantined (fails the compilability gate), derive a fingerprint that
+ * includes the video_id / source_url so two different failed extractions
+ * NEVER collide into one shared bucket.
+ *
+ * Formula: sha256("quarantine:" + sourceId + "|" + canonicalConceptName)
+ *   where sourceId = video_id from YouTube URL, or the full sourceUrl if not YouTube.
+ *
+ * Real named concepts that pass the compilability gate continue to use
+ * computeConceptFingerprintHash() so cross-source convergence is preserved.
+ *
+ * Pure function — deterministic, no I/O.
+ */
+export function computeQuarantineFingerprintHash(input: {
+  concept_name: string;
+  source_url?: string | null;
+}): string {
+  // Extract YouTube video_id when possible for a compact stable identifier.
+  // Falls back to the full URL (normalized to lowercase, trimmed).
+  const sourceId = extractVideoId(input.source_url) ?? (input.source_url ?? "unknown").toLowerCase().trim();
+  const canonical = canonicalConceptName(input.concept_name);
+  const raw = `quarantine:${sourceId}|${canonical}`;
+  return createHash("sha256").update(raw, "utf8").digest("hex").slice(0, 32);
+}
+
+/**
+ * Extract the 11-char YouTube video ID from a URL, or null if not YouTube.
+ * Pattern covers: youtu.be/<id>, youtube.com/watch?v=<id>, youtube.com/embed/<id>
+ */
+export function extractVideoId(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const m = url.match(/(?:v=|youtu\.be\/|\/embed\/)([A-Za-z0-9_-]{11})/);
+  return m?.[1] ?? null;
+}
+
 // ─── Archetype classifier ────────────────────────────────────────────────────
 
 /**

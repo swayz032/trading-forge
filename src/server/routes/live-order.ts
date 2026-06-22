@@ -1,5 +1,5 @@
 /**
- * live-order.ts — Workstream W1 CORE
+ * live-order.ts — Workstream W1 CORE + W1 Follow-Up (Pine Static-Token)
  *
  * POST /api/live-order
  *
@@ -13,45 +13,77 @@
  *   in-process gate. routeOrder() existed with full gate logic but had ZERO
  *   production callers. This endpoint closes that gap.
  *
+ * Auth modes — both supported simultaneously, fail-CLOSED on neither:
+ *
+ *   A) HMAC mode (programmatic callers):
+ *      Payload includes `live_order_hmac` (HMAC-SHA256 over canonical message
+ *      `${account_id}|${ticker}|${action}|${timestamp_ms}` signed with
+ *      LIVE_ORDER_HMAC_SECRET env var). Replay guard: 2-minute timestamp_ms window.
+ *
+ *   B) Static-token mode (Pine / TradingView alert callers):
+ *      Pine Script v5 has no crypto library — per-payload HMAC is physically
+ *      impossible at alert fire time. Instead, the exported Pine script carries
+ *      the per-account `account_strategy_assignments.hmac_secret` value as a
+ *      static bearer token embedded at export compile-time.
+ *      Auth: `Authorization: Bearer <token>` header OR `live_order_token` body field.
+ *      DB lookup: account_strategy_assignments WHERE account_id + strategy_id.
+ *      Replay guard: same 2-minute timestamp_ms window as HMAC mode.
+ *      Dedup guard: bar_timestamp uniqueness on (account_id, strategy_id,
+ *        bar_timestamp, action) via live_order_pine_dedup table — mirrors how
+ *        tradingview-webhook.ts uses ON CONFLICT DO NOTHING.
+ *      Replayability compensated by: 2-min window + DB dedup on bar close timestamp.
+ *      `strategy_id` REQUIRED for static-token path (dedup key + DB lookup).
+ *
+ *   Fail-CLOSED: bad/missing token → 401; LIVE_ORDER_HMAC_SECRET missing → 503
+ *   (HMAC mode); secret not found in DB → 401 (static-token mode).
+ *
  * Security properties:
- *   - HMAC validated with createHmac + timingSafeEqual (no timing oracle).
- *     Uses LIVE_ORDER_HMAC_SECRET env var. Fail-CLOSED 401 on bad/missing.
+ *   - All comparisons via crypto.timingSafeEqual (no timing oracle).
  *   - Kill-switch gate is the FIRST gate inside routeOrder() — HALT returns 423.
  *   - Compliance / firm-cap / correlation guard all run inside routeOrder().
  *   - No double-forward: routeOrder() calls submitWebhookOrder() internally for
  *     traderspost broker_type. This route does NOT call submitWebhookOrder().
  *   - Every block writes a live_order.blocked_* audit_log row.
  *
- * HMAC contract:
- *   Pine alert payload must include:
- *     - `live_order_hmac` (string) — HMAC-SHA256 over the canonical message:
- *       `${account_id}|${ticker}|${action}|${timestamp_ms}`
- *       signed with LIVE_ORDER_HMAC_SECRET (operator-set, ≥32 chars).
- *     - `timestamp_ms` (number) — Unix millis at alert fire time (replay guard).
- *
- * Payload shape (TradingView Pine alert JSON):
+ * Payload shape — HMAC mode (TradingView Pine alert JSON, programmatic):
  * {
- *   "account_id":     "<broker_accounts.account_id UUID>",
- *   "ticker":         "MES1!",
- *   "action":         "enter_long" | "enter_short" | "exit_long" | "exit_short",
- *   "order_type":     "market" | "limit" | "stop" (optional, default market),
- *   "quantity":       6,                (optional — routeOrder clamps to firm cap)
- *   "strategy_id":    "<UUID>",         (optional — for idempotency key)
- *   "bar_timestamp":  "2026-06-22T...", (optional — for idempotency key)
- *   "timestamp_ms":   1750000000000,   (REQUIRED — replay guard)
- *   "live_order_hmac":"<hex>",          (REQUIRED — auth)
- *   "correlation_id": "<UUID>"          (optional — propagate existing trace)
+ *   "account_id":      "<broker_accounts.account_id UUID>",
+ *   "ticker":          "MES1!",
+ *   "action":          "enter_long" | "enter_short" | "exit_long" | "exit_short",
+ *   "order_type":      "market" | "limit" | "stop" (optional),
+ *   "quantity":        6,
+ *   "strategy_id":     "<UUID>",
+ *   "bar_timestamp":   "2026-06-22T...",
+ *   "timestamp_ms":    1750000000000,
+ *   "live_order_hmac": "<hex>",
+ *   "correlation_id":  "<UUID>"
+ * }
+ *
+ * Payload shape — Static-token mode (Pine export alert JSON):
+ * {
+ *   "account_id":      "<broker_accounts.account_id UUID>",
+ *   "ticker":          "MES1!",
+ *   "action":          "enter_long" | "enter_short" | "exit_long" | "exit_short",
+ *   "order_type":      "market",
+ *   "quantity":        6,
+ *   "strategy_id":     "<UUID>",               (REQUIRED for static-token)
+ *   "bar_timestamp":   "{{time}}",             (Pine bar_timestamp for dedup)
+ *   "timestamp_ms":    1750000000000,
+ *   "live_order_token":"<hmac_secret>",        (OR Authorization: Bearer header)
+ *   "correlation_id":  "<UUID>"
  * }
  */
 
 import { Router, type Request, type Response } from "express";
 import { randomUUID, createHmac, timingSafeEqual } from "crypto";
 import { z } from "zod";
+import { sql as drizzleSql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { auditLog } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { routeOrder } from "../services/broker-router.js";
 import type { WebhookSignal } from "../integrations/traderspost/webhook-builder.js";
+import { lookupHmacSecret } from "../services/tradingview-marker-service.js";
 
 export const liveOrderRoutes = Router();
 
@@ -99,20 +131,31 @@ function verifyLiveOrderHmac(
 }
 
 // ─── Request schema ───────────────────────────────────────────────────────────
+// live_order_hmac:  HMAC mode credential (programmatic callers).
+// live_order_token: Static-token mode credential (Pine/TradingView callers).
+//   Both optional in the Zod schema — the handler enforces that at least ONE
+//   is present and valid. This avoids breaking either client class.
+//   Static-token mode also accepts token via Authorization: Bearer <token> header.
+//
+// strategy_id: Optional for HMAC mode (used for idempotency key only).
+//              REQUIRED for static-token mode (DB lookup + dedup key).
+//              Schema keeps it optional; handler enforces the requirement when
+//              live_order_token path is selected.
 
 const liveOrderPayloadSchema = z.object({
-  account_id:      z.string().uuid("account_id must be a UUID"),
-  ticker:          z.string().min(1, "ticker is required"),
-  action:          z.enum(["enter_long", "enter_short", "exit_long", "exit_short", "exit"]),
-  order_type:      z.enum(["market", "limit", "stop", "stop_limit"]).optional(),
-  quantity:        z.number().int().positive().optional(),
-  price:           z.number().optional(),
-  stop_price:      z.number().optional(),
-  strategy_id:     z.string().uuid().optional().nullable(),
-  bar_timestamp:   z.string().optional().nullable(),
-  timestamp_ms:    z.number().int().positive("timestamp_ms must be a positive integer (Unix millis)"),
-  live_order_hmac: z.string().min(1, "live_order_hmac is required"),
-  correlation_id:  z.string().uuid().optional().nullable(),
+  account_id:       z.string().uuid("account_id must be a UUID"),
+  ticker:           z.string().min(1, "ticker is required"),
+  action:           z.enum(["enter_long", "enter_short", "exit_long", "exit_short", "exit"]),
+  order_type:       z.enum(["market", "limit", "stop", "stop_limit"]).optional(),
+  quantity:         z.number().int().positive().optional(),
+  price:            z.number().optional(),
+  stop_price:       z.number().optional(),
+  strategy_id:      z.string().uuid().optional().nullable(),
+  bar_timestamp:    z.string().optional().nullable(),
+  timestamp_ms:     z.number().int().positive("timestamp_ms must be a positive integer (Unix millis)"),
+  live_order_hmac:  z.string().min(1).optional(),   // HMAC mode — programmatic callers
+  live_order_token: z.string().min(1).optional(),   // Static-token mode — Pine callers
+  correlation_id:   z.string().uuid().optional().nullable(),
 });
 
 // ─── Audit helper ─────────────────────────────────────────────────────────────
@@ -150,6 +193,49 @@ async function writeBlockedAuditRow(params: {
   }
 }
 
+// ─── Static-token dedup helper ────────────────────────────────────────────────
+// Pine bars fire once per bar close. The bar_timestamp is the close time of the
+// bar that triggered the alert — structurally unique per (account, strategy, bar, action).
+// We insert a dedup row with ON CONFLICT DO NOTHING, mirroring tradingview-webhook.ts.
+// Returns true iff this is the FIRST time we have seen this combination (not a dup).
+// Table live_order_pine_dedup must exist — created by migration 0163.
+
+async function insertPineDedupRow(
+  accountId: string,
+  strategyId: string,
+  barTimestamp: string,
+  action: string,
+  correlationId: string,
+): Promise<boolean> {
+  try {
+    const result = await db.execute(
+      drizzleSql`INSERT INTO live_order_pine_dedup
+                   (account_id, strategy_id, bar_timestamp, action, correlation_id)
+                 VALUES (
+                   ${accountId}::uuid,
+                   ${strategyId}::uuid,
+                   ${barTimestamp}::timestamptz,
+                   ${action},
+                   ${correlationId}::uuid
+                 )
+                 ON CONFLICT DO NOTHING
+                 RETURNING id`,
+    );
+    const rows = (result as unknown as { rows: Array<{ id: number }> }).rows;
+    // If RETURNING rows is empty, the insert was a no-op (conflict) → duplicate.
+    return (rows?.length ?? 0) > 0;
+  } catch (err) {
+    // If the dedup table doesn't exist yet (pre-migration), fail-open with a warn
+    // rather than hard-blocking all Pine orders. The 2-minute replay window still
+    // provides the primary replay protection in this scenario.
+    logger.warn(
+      { accountId, strategyId, barTimestamp, action, err },
+      "live-order: pine dedup insert failed (table may not exist yet) — allowing through",
+    );
+    return true;
+  }
+}
+
 // ─── POST /api/live-order ─────────────────────────────────────────────────────
 
 liveOrderRoutes.post(
@@ -157,22 +243,10 @@ liveOrderRoutes.post(
   async (req: Request, res: Response): Promise<void> => {
     const startedAt = Date.now();
 
-    // 1. Resolve HMAC secret — fail-CLOSED on missing/short secret.
-    //    503 (not 401) so the caller knows the server is misconfigured, not auth-rejected.
-    const secret = getLiveOrderSecret();
-    if (!secret) {
-      logger.error(
-        {},
-        "live-order: LIVE_ORDER_HMAC_SECRET missing or too short — rejecting all requests until configured",
-      );
-      res.status(503).json({
-        error: "gateway_not_configured",
-        detail: "LIVE_ORDER_HMAC_SECRET is not set or < 32 chars; operator must configure before live orders are accepted",
-      });
-      return;
-    }
-
-    // 2. Parse payload.
+    // 2. Parse payload first — needed to determine auth mode.
+    //    (Auth mode selection depends on parsed fields; step numbering follows
+    //     the HMAC-mode original but static-token mode inserts its DB lookups
+    //     where HMAC secret resolution was.)
     const parsed = liveOrderPayloadSchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: "invalid_payload", details: parsed.error.issues });
@@ -191,58 +265,223 @@ liveOrderRoutes.post(
       bar_timestamp,
       timestamp_ms,
       live_order_hmac,
+      live_order_token,
       correlation_id,
     } = parsed.data;
 
     const correlationId: string = correlation_id ?? randomUUID();
 
-    // 3. Verify HMAC — fail-CLOSED 401 on mismatch.
-    const hmacValid = verifyLiveOrderHmac(
-      account_id,
-      ticker,
-      action,
-      timestamp_ms,
-      live_order_hmac,
-      secret,
-    );
-    if (!hmacValid) {
+    // ── Determine auth mode ────────────────────────────────────────────────────
+    // Extract Bearer token from Authorization header (Pine alert body supports
+    // both the header and the body field for flexibility).
+    const authHeader = req.headers["authorization"];
+    const bearerToken =
+      typeof authHeader === "string" && authHeader.startsWith("Bearer ")
+        ? authHeader.slice(7).trim()
+        : undefined;
+
+    // Static-token mode: live_order_token body field OR Authorization: Bearer header.
+    // HMAC mode: live_order_hmac body field.
+    // Neither → fail-CLOSED 401.
+    const resolvedToken = live_order_token ?? bearerToken;
+    const useStaticToken = resolvedToken !== undefined && resolvedToken.length > 0;
+    const useHmac = !useStaticToken && typeof live_order_hmac === "string" && live_order_hmac.length > 0;
+
+    if (!useStaticToken && !useHmac) {
       logger.warn(
         { accountId: account_id, ticker, correlationId },
-        "live-order: HMAC verification failed — 401",
+        "live-order: neither live_order_hmac nor live_order_token provided — 401",
       );
       await writeBlockedAuditRow({
-        action: "live_order.blocked_hmac_invalid",
+        action: "live_order.blocked_no_auth",
         accountId: account_id,
         ticker,
         correlationId,
-        reason: "hmac_invalid",
+        reason: "no_auth_credential",
         durationMs: Date.now() - startedAt,
       });
-      res.status(401).json({ error: "hmac_invalid" });
+      res.status(401).json({ error: "no_auth_credential", detail: "provide live_order_hmac (HMAC mode) or live_order_token / Authorization: Bearer (Pine static-token mode)" });
       return;
     }
 
-    // 4. Replay guard — reject timestamps outside the 2-minute window.
-    //    Checked AFTER HMAC so we don't leak timing info about secret validity.
-    const nowMs = Date.now();
-    if (Math.abs(nowMs - timestamp_ms) > REPLAY_WINDOW_MS) {
-      logger.warn(
-        { accountId: account_id, ticker, correlationId, timestamp_ms, nowMs, deltaMs: nowMs - timestamp_ms },
-        "live-order: stale payload rejected — timestamp_ms outside 2-minute window",
-      );
-      await writeBlockedAuditRow({
-        action: "live_order.blocked_stale_payload",
-        accountId: account_id,
+    // ── HMAC mode ─────────────────────────────────────────────────────────────
+    if (useHmac) {
+      // 1a. Resolve HMAC secret — fail-CLOSED 503 on missing/short secret.
+      //     503 (not 401) so the caller knows the server is misconfigured.
+      const secret = getLiveOrderSecret();
+      if (!secret) {
+        logger.error(
+          {},
+          "live-order: LIVE_ORDER_HMAC_SECRET missing or too short — rejecting all requests until configured",
+        );
+        res.status(503).json({
+          error: "gateway_not_configured",
+          detail: "LIVE_ORDER_HMAC_SECRET is not set or < 32 chars; operator must configure before live orders are accepted",
+        });
+        return;
+      }
+
+      // 3a. Verify HMAC — fail-CLOSED 401 on mismatch.
+      const hmacValid = verifyLiveOrderHmac(
+        account_id,
         ticker,
-        correlationId,
-        reason: "stale_payload",
-        detail: { timestamp_ms, nowMs, deltaMs: nowMs - timestamp_ms, windowMs: REPLAY_WINDOW_MS },
-        durationMs: Date.now() - startedAt,
-      });
-      res.status(401).json({ error: "stale_payload" });
-      return;
+        action,
+        timestamp_ms,
+        live_order_hmac as string,
+        secret,
+      );
+      if (!hmacValid) {
+        logger.warn(
+          { accountId: account_id, ticker, correlationId },
+          "live-order: HMAC verification failed — 401",
+        );
+        await writeBlockedAuditRow({
+          action: "live_order.blocked_hmac_invalid",
+          accountId: account_id,
+          ticker,
+          correlationId,
+          reason: "hmac_invalid",
+          durationMs: Date.now() - startedAt,
+        });
+        res.status(401).json({ error: "hmac_invalid" });
+        return;
+      }
+
+      // 4a. Replay guard — reject timestamps outside the 2-minute window.
+      //     Checked AFTER HMAC to avoid leaking timing info about secret validity.
+      const nowMs = Date.now();
+      if (Math.abs(nowMs - timestamp_ms) > REPLAY_WINDOW_MS) {
+        logger.warn(
+          { accountId: account_id, ticker, correlationId, timestamp_ms, nowMs, deltaMs: nowMs - timestamp_ms },
+          "live-order: stale payload rejected — timestamp_ms outside 2-minute window",
+        );
+        await writeBlockedAuditRow({
+          action: "live_order.blocked_stale_payload",
+          accountId: account_id,
+          ticker,
+          correlationId,
+          reason: "stale_payload",
+          detail: { timestamp_ms, nowMs, deltaMs: nowMs - timestamp_ms, windowMs: REPLAY_WINDOW_MS },
+          durationMs: Date.now() - startedAt,
+        });
+        res.status(401).json({ error: "stale_payload" });
+        return;
+      }
     }
 
+    // ── Static-token mode ─────────────────────────────────────────────────────
+    if (useStaticToken) {
+      // strategy_id is REQUIRED for static-token path:
+      //   (a) It is the DB lookup key for account_strategy_assignments.hmac_secret.
+      //   (b) It is the dedup key — without it we cannot dedup across strategies.
+      if (!strategy_id) {
+        logger.warn(
+          { accountId: account_id, ticker, correlationId },
+          "live-order: static-token mode requires strategy_id — 400",
+        );
+        res.status(400).json({ error: "invalid_payload", detail: "strategy_id is required when using live_order_token (Pine static-token mode)" });
+        return;
+      }
+
+      // 1b. DB lookup: fetch hmac_secret for (account_id, strategy_id).
+      //     lookupHmacSecret handles F-3 encrypted column fallback.
+      //     Returns null when assignment missing or secret unset.
+      const dbSecret = await lookupHmacSecret(account_id, strategy_id);
+      if (!dbSecret) {
+        logger.warn(
+          { accountId: account_id, strategyId: strategy_id, correlationId },
+          "live-order: no hmac_secret found for account+strategy — 401",
+        );
+        await writeBlockedAuditRow({
+          action: "live_order.blocked_token_secret_missing",
+          accountId: account_id,
+          ticker,
+          correlationId,
+          reason: "token_secret_missing",
+          detail: { strategyId: strategy_id },
+          durationMs: Date.now() - startedAt,
+        });
+        res.status(401).json({ error: "token_invalid" });
+        return;
+      }
+
+      // 3b. Constant-time comparison of provided token vs stored secret.
+      //     timingSafeEqual requires equal-length buffers.
+      let tokenValid = false;
+      try {
+        const a = Buffer.from(dbSecret, "utf8");
+        const b = Buffer.from(resolvedToken as string, "utf8");
+        tokenValid = a.length === b.length && timingSafeEqual(a, b);
+      } catch {
+        tokenValid = false;
+      }
+
+      if (!tokenValid) {
+        logger.warn(
+          { accountId: account_id, strategyId: strategy_id, correlationId },
+          "live-order: static token mismatch — 401",
+        );
+        await writeBlockedAuditRow({
+          action: "live_order.blocked_token_invalid",
+          accountId: account_id,
+          ticker,
+          correlationId,
+          reason: "token_invalid",
+          detail: { strategyId: strategy_id },
+          durationMs: Date.now() - startedAt,
+        });
+        res.status(401).json({ error: "token_invalid" });
+        return;
+      }
+
+      // 4b. Replay guard — same 2-minute window as HMAC mode.
+      //     Checked AFTER token validation to avoid leaking timing info.
+      const nowMs = Date.now();
+      if (Math.abs(nowMs - timestamp_ms) > REPLAY_WINDOW_MS) {
+        logger.warn(
+          { accountId: account_id, ticker, correlationId, timestamp_ms, nowMs, deltaMs: nowMs - timestamp_ms },
+          "live-order: stale Pine payload rejected — timestamp_ms outside 2-minute window",
+        );
+        await writeBlockedAuditRow({
+          action: "live_order.blocked_stale_payload",
+          accountId: account_id,
+          ticker,
+          correlationId,
+          reason: "stale_payload",
+          detail: { timestamp_ms, nowMs, deltaMs: nowMs - timestamp_ms, windowMs: REPLAY_WINDOW_MS, authMode: "static_token" },
+          durationMs: Date.now() - startedAt,
+        });
+        res.status(401).json({ error: "stale_payload" });
+        return;
+      }
+
+      // 4c. Bar-timestamp dedup — reject duplicate bar-close alerts.
+      //     Pine bars fire once per bar close; the bar_timestamp is structurally
+      //     unique per (account, strategy, bar close, action). ON CONFLICT DO NOTHING
+      //     means TradingView retries are absorbed without double-firing routeOrder().
+      //     If bar_timestamp is absent, skip dedup (unusual but tolerated).
+      if (bar_timestamp) {
+        const isFirst = await insertPineDedupRow(
+          account_id,
+          strategy_id,
+          bar_timestamp,
+          action,
+          correlationId,
+        );
+        if (!isFirst) {
+          logger.info(
+            { accountId: account_id, strategyId: strategy_id, barTimestamp: bar_timestamp, action, correlationId },
+            "live-order: duplicate Pine alert (same bar_timestamp + action) — 409 absorbed",
+          );
+          // 409 is returned so caller knows it was a dup and not routed.
+          // TradingView alerts do not retry on 4xx, so this is safe.
+          res.status(409).json({ error: "duplicate_pine_alert", detail: "same bar_timestamp+action already processed for this account+strategy" });
+          return;
+        }
+      }
+    }
+
+    // ── Common path: build signal and call routeOrder() ────────────────────────
     // 5. Build WebhookSignal and call routeOrder().
     //    routeOrder() is the SINGLE SOURCE OF TRUTH per CLAUDE.md §7.
     //    It runs: kill-switch FIRST → pipeline → enabled_firms → compliance → broker dispatch.

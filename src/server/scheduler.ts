@@ -4889,6 +4889,46 @@ except Exception as e:
   });
   _scheduledJobs.add("weekly-drift-detection");
 
+  // ─── W1 go-live blocker #5a: Per-strategy feed silence alarm — every 5 min ──
+  // Detects when a live/paper strategy (PAPER/DEPLOY_READY/PILOT/DEPLOYED) stops
+  // receiving TradingView/Pine signals during RTH. Sources last-received-signal
+  // from paper_signal_logs (most recent row per strategy). Fires Discord CRITICAL
+  // + feed.silence_detected audit row when silent beyond N × bar-interval threshold.
+  // Pipeline-gate-exempt: a feed going silent is a safety signal independent of
+  // research gate state — deployed strategies must be monitored even when PAUSED.
+  // ENV: FEED_SILENCE_THRESHOLD_MULTIPLIER (default 3), FEED_SILENCE_MIN_BAR_INTERVAL_MS,
+  //      FEED_SILENCE_MAX_BAR_INTERVAL_MS.
+  registerJob("feed-silence-check", 5 * 60 * 1000, async () => {
+    const { runFeedSilenceCheck } = await import("./services/feed-silence-service.js");
+    const result = await runFeedSilenceCheck();
+    if (result.alertsFired > 0) {
+      logger.warn(
+        { alertsFired: result.alertsFired, silentStrategies: result.silentStrategies },
+        "feed-silence-check: silence alerts fired",
+      );
+    } else {
+      logger.debug(
+        { strategiesChecked: result.strategiesChecked, rtbGate: result.rtbGate },
+        "feed-silence-check: tick complete — no silence detected",
+      );
+    }
+  });
+
+  _PIPELINE_GATE_EXEMPT.add("feed-silence-check"); // Safety signal — must fire when paused
+
+  cron.schedule("*/5 * * * *", async () => {
+    if (!_tryAcquireJobLock("feed-silence-check")) return;
+    try {
+      const t0 = Date.now();
+      await withRetry("feed-silence-check", SCHEDULER_JOBS["feed-silence-check"].run, 1);
+      markJobRun("feed-silence-check");
+      emitJobComplete("feed-silence-check", Date.now() - t0);
+    } finally {
+      _releaseJobLock("feed-silence-check");
+    }
+  });
+  _scheduledJobs.add("feed-silence-check");
+
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every
   // cron.schedule body). Catches the F-1/F-2 class of bug — a job registered

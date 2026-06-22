@@ -183,6 +183,123 @@ adminRoutes.post("/self-restart", async (req, res) => {
   }
 });
 
+// ─── W3.3: POST /ollama-health-recheck ────────────────────────────────────────
+//
+// Problem: OLLAMA_HEALTHY is set ONCE at boot via checkTranscriptExtractorOllamaHealth.
+// After Ollama unloads (keep_alive:0) or NSSM respawns, the flag stays stuck false →
+// every transcript_extractor call silently routes to cloud (forbidden + unavailable) →
+// returns null → llm_unavailable in 0.0s. This took down the Slumdawg Discord bot
+// mid-Pass-L.
+//
+// Solution: This endpoint re-runs the same 2-phase Ollama health probe (registry +
+// test-inference) at runtime and resets OLLAMA_HEALTHY atomically. HMAC-authenticated
+// (mirrors self-restart pattern) so it cannot be triggered by unauthorized callers.
+//
+// Signature: X-Restart-Signature = HMAC-SHA256(secret, body.timestamp + ":" + body.reason)
+// Replay window: 60s (same as self-restart).
+// Dev/test bypass: when ADMIN_RESTART_HMAC_SECRET is unset and NODE_ENV != "production".
+//
+// Curl example:
+//   TIMESTAMP=$(date +%s)
+//   REASON="ollama_respawn_2026-06-22"
+//   SIG=$(echo -n "${TIMESTAMP}:${REASON}" | openssl dgst -sha256 -hmac "$ADMIN_RESTART_HMAC_SECRET" | awk '{print $2}')
+//   curl -X POST https://<relay>/api/admin/ollama-health-recheck \
+//     -H "Content-Type: application/json" \
+//     -H "X-Restart-Signature: $SIG" \
+//     -d "{\"timestamp\": $TIMESTAMP, \"reason\": \"$REASON\"}"
+
+adminRoutes.post("/ollama-health-recheck", async (req, res) => {
+  const correlationId = randomUUID();
+  const body = (req.body ?? {}) as { timestamp?: number; reason?: string };
+
+  // ── Validate body ──────────────────────────────────────────────────────────
+  if (typeof body.timestamp !== "number") {
+    res.status(400).json({ error: "missing_body_field", field: "timestamp" });
+    return;
+  }
+  if (typeof body.reason !== "string" || body.reason.trim().length === 0) {
+    res.status(400).json({ error: "missing_body_field", field: "reason" });
+    return;
+  }
+
+  // ── Replay protection ──────────────────────────────────────────────────────
+  const nowMs = Date.now();
+  const tsMs = body.timestamp * 1000;
+  const drift = Math.abs(nowMs - tsMs);
+  if (drift > RESTART_TIMESTAMP_DRIFT_MS) {
+    logger.warn({ drift, correlationId }, "ollama-health-recheck: timestamp drift exceeded — replay protection");
+    res.status(401).json({ error: "timestamp_drift_exceeded", drift_ms: drift, max_ms: RESTART_TIMESTAMP_DRIFT_MS });
+    return;
+  }
+
+  // ── HMAC verification ──────────────────────────────────────────────────────
+  const sig = req.header("x-restart-signature");
+  const verified = verifyRestartHmac(sig, body.timestamp, body.reason.trim());
+  if (!verified.ok) {
+    logger.warn({ reason_code: verified.reason_code, correlationId }, "ollama-health-recheck: HMAC verification failed");
+    res.status(401).json({ error: "hmac_verification_failed", reason_code: verified.reason_code });
+    return;
+  }
+
+  const reason = body.reason.trim();
+  logger.info({ correlationId, reason }, "ollama-health-recheck: HMAC verified — running 2-phase Ollama probe");
+
+  // ── Run the 2-phase health probe ───────────────────────────────────────────
+  let recheckResult: { healthy: boolean; reason?: string };
+  try {
+    const { recheckOllamaHealth } = await import("../services/model-router.js");
+    recheckResult = await recheckOllamaHealth();
+  } catch (err) {
+    logger.error({ err, correlationId }, "ollama-health-recheck: recheckOllamaHealth threw unexpectedly");
+    res.status(500).json({ error: "recheck_threw", correlationId });
+    return;
+  }
+
+  const status = recheckResult.healthy ? "success" : "failure";
+
+  // ── Audit row ──────────────────────────────────────────────────────────────
+  await insertAuditRow({
+    action: "system.ollama_health_rechecked",
+    entityType: "system",
+    entityId: null,
+    decisionAuthority: "human",
+    input: { reason, timestamp: body.timestamp } as Record<string, unknown>,
+    result: {
+      healthy: recheckResult.healthy,
+      probe_reason: recheckResult.reason ?? null,
+      correlationId,
+    } as Record<string, unknown>,
+    status,
+    correlationId,
+  }).catch((err) => logger.error({ err }, "ollama-health-recheck: audit row write failed (non-blocking)"));
+
+  // ── Discord notification ───────────────────────────────────────────────────
+  if (recheckResult.healthy) {
+    notifyWarning(
+      "Ollama Health Restored",
+      `OLLAMA_HEALTHY reset to true via runtime recheck. transcript_extractor routing restored to local gemma4:e2b. Reason: ${reason}`,
+      { correlationId },
+    );
+  } else {
+    notifyCritical(
+      "Ollama Health Recheck FAILED",
+      `Runtime recheck returned healthy=false. transcript_extractor will continue routing to cloud. Probe failure: ${recheckResult.reason ?? "unknown"}. Reason: ${reason}`,
+      { correlationId },
+    );
+  }
+
+  // ── Respond ────────────────────────────────────────────────────────────────
+  res.json({
+    status: recheckResult.healthy ? "healthy" : "unhealthy",
+    ollama_healthy: recheckResult.healthy,
+    probe_failure_reason: recheckResult.reason ?? null,
+    correlationId,
+    recommendation: recheckResult.healthy
+      ? "Local Ollama is now active. transcript_extractor routing restored."
+      : "Ollama is still down. Check Ollama service status and retry.",
+  });
+});
+
 // ─── Wave 24 Pass 1.5 Item 6: POST /operator-mark-present ────────────────────
 //
 // Clears system_state.operator_absent_since AND operator_absent_pending

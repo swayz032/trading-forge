@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { randomUUID } from "crypto";
+import { randomUUID, createHash } from "crypto";
 import { AgentService } from "../services/agent-service.js";
 import { analyzeMarket } from "../services/regime-service.js";
 import { synthesizeV11FromGemmaProse } from "../lib/gemma-prose-to-v11.js";
@@ -8,6 +8,7 @@ import { extractSpeakerConceptsFromTranscript } from "../lib/transcript-speaker-
 import { classifyMechanicPortability, explainRejectClass } from "../lib/mechanic-portability.js";
 import { runPass1VocabularyExtraction } from "../lib/two-pass-vocab-extractor.js";
 import { runCoverageGate } from "../lib/extraction-coverage-gate.js";
+import { checkCompilabilityGate } from "../lib/extraction-quality-gate.js";
 import { runRobustnessTest } from "../services/robustness-service.js";
 import { db } from "../db/index.js";
 // Wave hardening 2026-06-22: agentJobs is the mutable job-state table.
@@ -28,7 +29,8 @@ import { logger } from "../index.js";
 import { runPythonModule } from "../lib/python-runner.js";
 import { idempotencyMiddleware } from "../middleware/idempotency.js";
 import { requireLiveN8n } from "../middleware/require-live-n8n.js";
-import { computeFingerprintHash, computeConceptFingerprintHash, normalizeConceptName, extractEntryArchetype, normalizeExitType } from "../services/strategy-fingerprint.js";
+import { computeFingerprintHash, computeConceptFingerprintHash, computeQuarantineFingerprintHash, normalizeConceptName, extractEntryArchetype, normalizeExitType } from "../services/strategy-fingerprint.js";
+import { quarantineExtraction } from "../lib/quarantine-extraction.js";
 import { runParallelDiscovery } from "../services/parallel-broker.js";
 import { runExaDiscovery } from "../services/exa-broker.js";
 import { runBraveDiscovery } from "../services/brave-search-broker.js";
@@ -768,6 +770,29 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
   const { sourceUrl, markdown, sourceProvider, title } = parsed.data;
   const correlationId: string | null = (req as { id?: string }).id ?? null;
 
+  // W3.3 — Extraction lineage key: video_id + transcript_hash + extractor_version.
+  // Stable composite key for replay/audit idempotency. The same video + transcript
+  // content + extractor model version will always produce the same lineage key,
+  // so re-extractions can be correlated across time.
+  //   - video_id: last segment of sourceUrl (YouTube video ID when available,
+  //     URL hash otherwise — deterministic regardless of URL format)
+  //   - transcript_hash: SHA-256(markdown) truncated to 16 hex chars (64-bit)
+  //   - extractor_version: local model name (e.g. "gemma4:e2b")
+  const _extractorVersion = process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4:e2b";
+  const _transcriptHash = createHash("sha256").update(markdown, "utf8").digest("hex").slice(0, 16);
+  const _videoId = (() => {
+    try {
+      const u = new URL(sourceUrl);
+      const v = u.searchParams.get("v");
+      if (v) return v;
+      const seg = u.pathname.split("/").filter(Boolean).pop();
+      return seg ?? createHash("sha256").update(sourceUrl, "utf8").digest("hex").slice(0, 12);
+    } catch {
+      return createHash("sha256").update(sourceUrl, "utf8").digest("hex").slice(0, 12);
+    }
+  })();
+  const extractionLineageKey = `${_videoId}:${_transcriptHash}:${_extractorVersion}`;
+
   // Pass 21 Fix #2: chunked extraction. Many YouTube transcripts (and long
   // articles) ramble for 3-5 minutes before specifics. A single 12K-char window
   // anchored at the start misses the meat. We try the full window first; on
@@ -1013,9 +1038,43 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
     // W23G.7 — per-call telemetry: log extraction_mode + estimated token count.
     const tokensEstimated = Math.ceil(markdown.length / 4);
     logger.info(
-      { sourceUrl, extraction_mode: extractionMode, tokens_estimated: tokensEstimated, markdown_length: markdown.length },
+      {
+        sourceUrl,
+        extraction_mode: extractionMode,
+        tokens_estimated: tokensEstimated,
+        markdown_length: markdown.length,
+        // W3.3: include lineage key in structured log so operators can grep by it
+        lineage_key: extractionLineageKey,
+      },
       "scout-extract telemetry",
     );
+
+    // W3.3 — Extraction lineage audit row.
+    // Emitted once per extraction run. Acts as the anchor for all other audit rows
+    // (coverage_evaluated, config_used, quarantined, etc.) that share correlationId.
+    // Enables idempotent replay: callers can detect duplicate extractions by lineage_key.
+    insertAuditRow({
+      action: "extraction.lineage_emitted",
+      entityType: "scout_extract",
+      entityId: null,
+      status: "success",
+      decisionAuthority: "system",
+      result: {
+        lineage_key: extractionLineageKey,
+        video_id: _videoId,
+        transcript_hash: _transcriptHash,
+        extractor_version: _extractorVersion,
+        source_url: sourceUrl,
+        extraction_mode: extractionMode,
+        markdown_length: markdown.length,
+      },
+      correlationId,
+    }).catch((auditErr: unknown) => {
+      logger.debug(
+        { err: auditErr instanceof Error ? auditErr.message : String(auditErr), sourceUrl },
+        "scout-extract: lineage_emitted audit insert failed (non-blocking)",
+      );
+    });
 
     // W23G.2 — audit event for mixed-instrument keep path.
     // When LLM classifies the transcript as futures_with_forex_illustration,
@@ -1655,6 +1714,7 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
         const { speakerItems, verdict } = await runCoverageGate(markdown, firstIdea);
         coverageVerdictResult = verdict;
         // Emit audit row for observability — non-blocking
+        // W3.3: lineage_key added for replay/idempotency correlation.
         insertAuditRow({
           action: "extraction.coverage_evaluated",
           entityType: "scout_extract",
@@ -1667,6 +1727,10 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
             missing: verdict.missing,
             coverage_pct: verdict.coverage_pct,
             verdict: verdict.verdict,
+            lineage_key: extractionLineageKey,
+            video_id: _videoId,
+            transcript_hash: _transcriptHash,
+            extractor_version: _extractorVersion,
           },
           correlationId,
         }).catch((auditErr: unknown) => {
@@ -1694,11 +1758,81 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       );
     }
 
+    // W3.2 — Compilability gate (fail-closed extraction quarantine).
+    // For each extracted idea, run the compilability gate. Any idea that fails
+    // is routed to needs_archetype_queue and marked quarantined in the response.
+    // The gate is applied per-idea because multi-idea responses can have one
+    // good and one bad extraction in the same response.
+    //
+    // Note: the fingerprint collision fix (computeQuarantineFingerprintHash) is
+    // applied here — quarantined ideas get a unique per-source fingerprint that
+    // NEVER collapses into the same bucket, regardless of their concept_name.
+    let quarantinedCount = 0;
+    const compilabilityResults: Array<{ ideaIndex: number; compilable: boolean; missing: string[]; quarantine_hash?: string }> = [];
+    for (let ideaIdx = 0; ideaIdx < ideas.length; ideaIdx++) {
+      const idea = ideas[ideaIdx] as Record<string, unknown>;
+      const conceptName = typeof idea.concept_name === "string" ? idea.concept_name : "";
+      const entryIndicator = typeof idea.entry_indicator === "string" ? idea.entry_indicator : null;
+      const archetype = typeof idea.archetype === "string" ? idea.archetype : null;
+      const entryParams = idea.entry_params && typeof idea.entry_params === "object" ? (idea.entry_params as Record<string, unknown>) : null;
+      const direction = typeof idea.direction === "string" ? idea.direction : null;
+      const ideaTimeframe = typeof idea.timeframe === "string" ? idea.timeframe : null;
+      const confluenceFactors = Array.isArray(idea.confluences)
+        ? (idea.confluences as Array<{ name?: string }>).map((c) => c.name ?? "").filter((n) => n.length > 0)
+        : (Array.isArray(idea.confluence_factors) ? (idea.confluence_factors as string[]) : []);
+
+      // Only apply coverage_verdict from W3.1 to the FIRST idea (it was computed against ideas[0]).
+      const coverageForIdea = ideaIdx === 0 ? coverageVerdictResult : null;
+
+      const gateResult = checkCompilabilityGate(
+        {
+          entry_indicator: entryIndicator,
+          archetype,
+          entry_params: entryParams,
+          direction,
+          timeframe: ideaTimeframe,
+          confluence_factors: confluenceFactors,
+          coverage_verdict: coverageForIdea,
+        },
+        conceptName,
+      );
+
+      if (!gateResult.compilable) {
+        quarantinedCount++;
+        const quarantineHash = computeQuarantineFingerprintHash({
+          concept_name: conceptName,
+          source_url: sourceUrl,
+        });
+        compilabilityResults.push({ ideaIndex: ideaIdx, compilable: false, missing: gateResult.missing, quarantine_hash: quarantineHash });
+        // Route to quarantine queue — fire-and-forget, non-blocking
+        quarantineExtraction({
+          concept_name: conceptName,
+          source_url: sourceUrl,
+          missing: gateResult.missing,
+          coverage_verdict: coverageForIdea,
+          reason: gateResult.reason,
+          correlationId,
+        }).catch((qErr: unknown) =>
+          logger.warn(
+            { err: qErr instanceof Error ? qErr.message : String(qErr), sourceUrl, conceptName },
+            "W3.2: quarantineExtraction() threw (non-blocking — extraction result still returned)",
+          ),
+        );
+        logger.warn(
+          { sourceUrl, conceptName, missing: gateResult.missing, quarantine_hash: quarantineHash, idea_index: ideaIdx },
+          "W3.2: extraction quarantined — compilability gate failed",
+        );
+      } else {
+        compilabilityResults.push({ ideaIndex: ideaIdx, compilable: true, missing: [] });
+      }
+    }
+
     // W23G.7 + W23G.2 — include telemetry fields in success response.
     // extraction_mode: single_pass | chunked_fallback — for callers to log cycle-level stats.
     // instrument_classification: advisory classification (Pass J: post-override-aware).
     // tokens_estimated: char_count / 4 estimate for budget observability.
     // W3.1 — coverage_verdict: advisory signal for downstream (W3.2 quarantine).
+    // W3.2 — compilability_results: per-idea gate outcomes so n8n can skip quarantined ideas.
     res.json({
       extracted: true,
       ideas,
@@ -1707,6 +1841,8 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       mechanic_portable: portability.portable,
       tokens_estimated: Math.ceil(markdown.length / 4),
       ...(coverageVerdictResult !== null && { coverage_verdict: coverageVerdictResult }),
+      compilability_results: compilabilityResults,
+      quarantined_count: quarantinedCount,
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
