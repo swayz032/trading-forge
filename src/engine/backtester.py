@@ -962,12 +962,18 @@ def _apply_static_styleC_management(
             else:
                 pnl_points = entry_p - bar_low
 
-            # After 1R: move to breakeven
+            # After 1R: move to breakeven + 1 tick (BE+1 tick invariant).
+            # FIX 5 (2026-06-22): Previous code used bare entry_p (BE with no offset).
+            # The adaptive path (line ~1208) and the paper style_d_handler.py both use
+            # entry_p + tick_size (long) / entry_p - tick_size (short).
+            # CLAUDE.md §4 "BE+1 on TP1 fill INVARIANT preserved" requires BE+1 tick.
+            # All three paths must agree: static backtest = adaptive backtest = paper handler.
             if pnl_points >= risk_points:
-                be_stop = entry_p
                 if not is_short:
+                    be_stop = entry_p + tick  # BE+1 tick (long)
                     trail_stop = max(trail_stop, be_stop)
                 else:
+                    be_stop = entry_p - tick  # BE+1 tick (short — stop is below entry)
                     trail_stop = min(trail_stop, be_stop)
 
             # After 2R: trail 1R behind, min breathing room
@@ -2008,9 +2014,29 @@ def _apply_dsl_stop_loss_and_time_stop(
                 # ts_et_timestamps shorter than signal array — defensive fallback
                 is_1555 = "15:55" in ts_str
         else:
-            # Legacy path: ts_et not available, fall back to UTC string search.
-            # This is ambiguous across DST transitions but preserves backward compat.
-            is_1555 = "15:55" in ts_str
+            # Legacy path: ts_et not available.
+            # FIX 6 (2026-06-22): Old code did `"15:55" in ts_str` on the raw UTC
+            # timestamp string. In winter (EST, UTC-5), 15:55 ET = 20:55 UTC, so
+            # the UTC string "20:55" does NOT contain "15:55" → time-stop silently
+            # MISSED on all Nov–mid-Mar bars. Fix: attempt DST-correct ET conversion
+            # via _dst_correct_et_hour(); fall back to the old string-match only if
+            # datetime parsing fails (backward-compat for non-ISO timestamp strings).
+            _legacy_is_1555 = False
+            try:
+                import datetime as _dt_module
+                _raw = ts_str
+                # Support "+00:00" suffix and "Z" suffix
+                _raw_clean = _raw.replace("Z", "+00:00")
+                _utc_dt = _dt_module.datetime.fromisoformat(_raw_clean)
+                if _utc_dt.tzinfo is None:
+                    # Assume UTC for tz-naive timestamps from historical Parquet data
+                    _utc_dt = _utc_dt.replace(tzinfo=_dt_module.timezone.utc)
+                _et_str_converted = _dst_correct_et_hour(_utc_dt)
+                _legacy_is_1555 = "15:55" in _et_str_converted
+            except Exception:
+                # Non-ISO string (e.g. integer nanoseconds) — fall back to raw search
+                _legacy_is_1555 = "15:55" in ts_str
+            is_1555 = _legacy_is_1555
         if is_1555:
             if in_long:
                 exit_long_out[i] = True
@@ -2200,6 +2226,21 @@ def _apply_dll_halt_to_entries(
         # Downstream audit tools can use this to understand that DLL halt counts are
         # conservative approximations — actual P&L-based DLL is enforced by paper/live engine.
         "dll_halt_used_estimate": True,
+        # FIX 9 (2026-06-22): Add reconciliation fields for parity audit.
+        # ASSESSMENT: Structural rearchitecture (switching to post-management realized P&L)
+        # would create a circular dependency — DLL halt gates entries, management runs on
+        # allowed entries. The estimate-before-management approach is correct as an entry
+        # gate. Paper/live engines use actual realized P&L and will fire differently.
+        # These fields make the assumption explicit and auditable:
+        "dll_halt_assumption": (
+            "conservative ATR estimate: loss_per_trade = 1.5 × ATR × size × point_value "
+            "+ commission_per_side × size × 2. Applied as an ENTRY gate (pre-management). "
+            "Paper/live engine uses actual realized P&L post-management and will fire at "
+            "different times. dll_halt_used_estimate=True marks this as an approximation."
+        ),
+        # Per-session cumulative estimated P&L dict: {date_str: estimated_running_pnl}.
+        # Populated progressively during the bar loop; useful for gap analysis vs paper P&L.
+        "dll_halt_estimate_basis": {},
     }
 
     n = len(long_out)
@@ -2260,7 +2301,10 @@ def _apply_dll_halt_to_entries(
 
         # Accumulate estimated P&L impact for entries this bar
         if bool(long_out[i]) or bool(short_out[i]):
-            session_pnl[day_key] = cum_pnl - est_loss
+            new_pnl = cum_pnl - est_loss
+            session_pnl[day_key] = new_pnl
+            # FIX 9: record running estimated P&L for reconciliation audit
+            metadata["dll_halt_estimate_basis"][day_key] = new_pnl
 
     return long_out, short_out, metadata
 
