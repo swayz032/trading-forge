@@ -2,6 +2,7 @@ import { db } from "../db/index.js";
 import { alerts } from "../db/schema.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../index.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 export type AlertSeverity = "info" | "warning" | "critical";
 export type AlertType = "trade_signal" | "drawdown" | "regime_change" | "degradation" | "drift" | "decay" | "system" | "lifecycle";
@@ -164,23 +165,35 @@ export const AlertFactory = {
   // Fires when the backend has been silent for > 2h during RTH and SMS is unavailable.
   // backendRestartedAt (M-8): ISO timestamp of when the backend process started this cycle.
   // Allows operators to correlate a stale alert with a recent restart-and-silent condition.
-  notifyHeartbeatStale: (lastAt: Date | null, minutesSince: number, backendRestartedAt?: string) =>
-    createAlert({
+  //
+  // Wave hardening 2026-06-22, autonomous-readiness A-4:
+  // Added family-grade postscript via appendFamilyGradePostscript so non-technical
+  // family members understand the alert and have a concrete action (power-cycle).
+  notifyHeartbeatStale: (lastAt: Date | null, minutesSince: number, backendRestartedAt?: string) => {
+    const hoursSince = Math.round(minutesSince / 60);
+    const technicalBody =
+      `Backend heartbeat is stale. Last heartbeat: ${lastAt ? lastAt.toISOString() : "never"}. ` +
+      `Silence duration: ${minutesSince} minutes. ` +
+      (backendRestartedAt ? `Backend last restarted: ${backendRestartedAt}. ` : "") +
+      `Auto-restart will be attempted autonomously (see audit_log dead_mans_heartbeat.auto_restart_attempted). ` +
+      `If auto-restart fails, verify the backend process is running on the Skytech tower.`;
+    return createAlert({
       type: "system",
       severity: "critical",
       title: "Dead-man heartbeat: backend silent",
-      message:
-        `Backend heartbeat is stale. Last heartbeat: ${lastAt ? lastAt.toISOString() : "never"}. ` +
-        `Silence duration: ${minutesSince} minutes. ` +
-        (backendRestartedAt ? `Backend last restarted: ${backendRestartedAt}. ` : "") +
-        `Verify the backend process is running on the Skytech tower.`,
+      message: appendFamilyGradePostscript(
+        technicalBody,
+        `The trading bot stopped responding about ${hoursSince > 0 ? `${hoursSince} hour${hoursSince !== 1 ? "s" : ""}` : `${minutesSince} minutes`} ago. We're trying to restart it automatically.`,
+        "If the bot is still offline in 5 minutes, hold the power button on the home computer for 5 seconds to reboot it — the bot restarts on its own after reboot. If you can't reach Tony, this is the safe action.",
+      ),
       metadata: {
         lastHeartbeatAt: lastAt ? lastAt.toISOString() : null,
         minutesSince,
         backendRestartedAt: backendRestartedAt ?? null,
         event: "heartbeat_stale",
       },
-    }),
+    });
+  },
 
   // C6: Bitwarden session expiring soon alert.
   // Fires when the BW_SESSION token will expire within `hoursRemaining` hours.

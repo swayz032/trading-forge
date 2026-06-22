@@ -29,6 +29,7 @@ vi.mock("../db/index.js", () => ({
 
 vi.mock("../routes/sse.js", () => ({ broadcastSSE: vi.fn() }));
 vi.mock("../index.js", () => ({ logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() } }));
+vi.mock("../services/notification-service.js", () => ({ notifyWarning: vi.fn(), notifyCritical: vi.fn() }));
 vi.mock("../services/lifecycle-service.js", () => ({
   LifecycleService: vi.fn().mockImplementation(() => ({
     checkAutoPromotions: vi.fn(() => Promise.resolve([])),
@@ -157,5 +158,73 @@ describe("getSchedulerJobs", () => {
     const jobs = getSchedulerJobs();
     expect(jobs).toHaveProperty("metrics-heartbeat");
     expect(jobs["metrics-heartbeat"].intervalMs).toBe(60 * 1000);
+  });
+});
+
+/**
+ * Wave hardening 2026-06-22, autonomous-readiness A-6:
+ * Credential / safety jobs must NEVER be auto-disabled after 5 consecutive failures.
+ *
+ * Scenario: Bitwarden is down for 12h → 5 cron ticks fail → scheduler must NOT
+ * set health.disabled=true on bw-session-refresh or prop-firm-cookie-refresh.
+ * CRITICAL alert still fires (alerting ≠ disabling).
+ */
+describe("NEVER_DISABLE_JOBS — credential and safety jobs", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+  });
+
+  // Jobs that must never be auto-disabled per A-6 hardening
+  const PROTECTED_JOBS = [
+    "bw-session-refresh",
+    "prop-firm-cookie-refresh",
+    "heartbeat-write",
+    "heartbeat-stale-check",
+    "metrics-heartbeat",
+    "stale-session-check",
+    "disabled-job-probe",
+  ];
+
+  for (const jobName of PROTECTED_JOBS) {
+    it(`does NOT disable "${jobName}" after 5 consecutive failures`, async () => {
+      const { getAllJobHealth, _testOnly } = await import("../scheduler.js");
+
+      // Register the job so the health tracker will populate it on first failure
+      _testOnly.registerJob(jobName, 60_000, async () => { throw new Error("transient"); });
+      _testOnly.resetJobHealth();
+
+      const fakeError = new Error("transient vendor outage");
+      for (let i = 0; i < 5; i++) {
+        _testOnly.recordJobFailure(jobName, fakeError);
+      }
+
+      const healthMap = getAllJobHealth();
+      const health = healthMap.get(jobName);
+
+      expect(health).toBeDefined();
+      expect(health?.consecutiveFailures).toBe(5);
+      // The job must NOT have been disabled despite 5 failures
+      expect(health?.disabled).toBe(false);
+    });
+  }
+
+  it("still disables an unprotected job after 5 consecutive failures", async () => {
+    const { getAllJobHealth, _testOnly } = await import("../scheduler.js");
+    const unprotectedJob = "some-research-job-not-in-never-disable";
+
+    _testOnly.registerJob(unprotectedJob, 60_000, async () => { throw new Error("fail"); });
+    _testOnly.resetJobHealth();
+
+    const fakeError = new Error("research job failure");
+    for (let i = 0; i < 5; i++) {
+      _testOnly.recordJobFailure(unprotectedJob, fakeError);
+    }
+
+    const healthMap = getAllJobHealth();
+    const health = healthMap.get(unprotectedJob);
+
+    expect(health).toBeDefined();
+    expect(health?.disabled).toBe(true);
   });
 });

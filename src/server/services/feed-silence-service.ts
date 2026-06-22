@@ -72,6 +72,16 @@ const DEFAULT_MIN_BAR_INTERVAL_MS = 60_000;
  *  positives on low-frequency strategies that legitimately don't signal for hours). */
 const DEFAULT_MAX_BAR_INTERVAL_MS = 3_600_000;
 
+/**
+ * Wave hardening 2026-06-22, autonomous-readiness A-3:
+ * Hard threshold (ms) beyond which a sustained silence triggers emergency position
+ * close regardless of cron-tick count.  Default: 2 × max-bar-interval cap (2 hours).
+ * A strategy silent for 2 continuous RTH hours with an open position is unmanageable
+ * by any remediation short of flattening.
+ * Env override: FEED_SILENCE_EMERGENCY_CLOSE_THRESHOLD_MS
+ */
+const DEFAULT_EMERGENCY_CLOSE_THRESHOLD_MS = 2 * 3_600_000; // 2 hours
+
 // ─── PostgreSQL schema-drift error code ───────────────────────────────────────
 const PG_RELATION_NOT_FOUND = "42P01";
 
@@ -83,13 +93,20 @@ function isTableMissingError(err: unknown): boolean {
   );
 }
 
-// ─── In-process dedup map ─────────────────────────────────────────────────────
+// ─── In-process dedup maps ────────────────────────────────────────────────────
 // Maps strategyId → ISO timestamp string of the silence window we already alerted for.
 // Resets when the feed recovers (new signal arrives). Prevents alert spam across
 // cron ticks while the silence persists.
 //
+// Wave hardening 2026-06-22, autonomous-readiness A-3:
+// _silenceEmergencyClosedFor tracks strategies whose open positions have already
+// been emergency-closed during the current silence window. Prevents repeated
+// close attempts on every cron tick. Cleared when the feed recovers (same as
+// _silenceAlertedFor).
+//
 // Exported for test inspection only.
 export const _silenceAlertedFor: Map<string, string> = new Map();
+export const _silenceEmergencyClosedFor: Map<string, string> = new Map();
 
 // ─── Env-configurable thresholds (no magic numbers) ──────────────────────────
 
@@ -109,6 +126,13 @@ function getMaxBarIntervalMs(): number {
   const raw = process.env.FEED_SILENCE_MAX_BAR_INTERVAL_MS;
   const val = raw !== undefined ? Number(raw) : NaN;
   return Number.isFinite(val) && val > 0 ? val : DEFAULT_MAX_BAR_INTERVAL_MS;
+}
+
+// Wave hardening 2026-06-22, autonomous-readiness A-3
+function getEmergencyCloseThresholdMs(): number {
+  const raw = process.env.FEED_SILENCE_EMERGENCY_CLOSE_THRESHOLD_MS;
+  const val = raw !== undefined ? Number(raw) : NaN;
+  return Number.isFinite(val) && val > 0 ? val : DEFAULT_EMERGENCY_CLOSE_THRESHOLD_MS;
 }
 
 // ─── Timeframe → ms conversion ───────────────────────────────────────────────
@@ -257,6 +281,155 @@ async function queryActiveStrategiesWithLastSignal(): Promise<
 }
 
 /**
+ * Wave hardening 2026-06-22, autonomous-readiness A-3:
+ * Emergency position close for sustained feed silence.
+ *
+ * PROP-FIRM-SAFE design:
+ *  - ONLY closes existing open positions (NEVER opens, reverses, or flips).
+ *  - Respects kill-switch / production-halt gates via the normal closePosition path.
+ *  - Paper-execution-service.ts is imported lazily (dynamic import) to avoid circular
+ *    dependency and preserve test isolation.
+ *  - Fails open: if close fails the error is logged + audited but the cron continues.
+ *
+ * Sustained silence is detected when _silenceAlertedFor already has an entry for
+ * this strategyId (first alert already fired) AND silenceMs > emergencyCloseThresholdMs.
+ * This avoids an overly-sensitive trigger on the very first silence detection.
+ *
+ * Returns true if at least one position was closed or attempted.
+ */
+async function attemptEmergencyCloseForStrategy(
+  strategyId: string,
+  strategyName: string,
+  silenceMs: number | null,
+  correlationId: string,
+): Promise<boolean> {
+  // Query open positions belonging to paper_sessions for this strategy.
+  // Uses raw SQL to avoid adding a Drizzle schema import here (test isolation).
+  let openPositionRows: Array<{ position_id: string; session_id: string }> = [];
+  try {
+    const rows = await db.execute(sql`
+      SELECT pp.id AS position_id, pp.session_id
+      FROM paper_positions pp
+      JOIN paper_sessions ps ON ps.id = pp.session_id
+      WHERE ps.strategy_id = ${strategyId}
+        AND pp.closed_at IS NULL
+    `);
+    openPositionRows = (rows as unknown as Array<{ position_id: string; session_id: string }>);
+  } catch (queryErr) {
+    logger.error(
+      { err: queryErr, strategyId, strategyName, correlationId },
+      "feed-silence: emergency-close DB query failed (fail-open, positions NOT closed)",
+    );
+    return false;
+  }
+
+  if (openPositionRows.length === 0) {
+    logger.info(
+      { strategyId, strategyName, correlationId },
+      "feed-silence: sustained silence — no open positions to emergency-close",
+    );
+    return false;
+  }
+
+  logger.warn(
+    { strategyId, strategyName, positionCount: openPositionRows.length, silenceMs, correlationId },
+    "feed-silence: SUSTAINED silence — attempting emergency close of open positions",
+  );
+
+  // Lazy import preserves test isolation (mirrors scheduler.ts pattern for dynamic imports).
+  let closePosition: (positionId: string, exitSignalPrice: number, atr?: number, context?: { correlationId?: string }) => Promise<unknown>;
+  try {
+    const execModule = await import("./paper-execution-service.js");
+    closePosition = execModule.closePosition;
+  } catch (importErr) {
+    logger.error(
+      { err: importErr, strategyId, strategyName, correlationId },
+      "feed-silence: emergency-close could not import paper-execution-service (fail-open)",
+    );
+    return false;
+  }
+
+  let closedCount = 0;
+  for (const row of openPositionRows) {
+    try {
+      // closePosition uses the stored currentPrice (mark-to-market) for its exit price.
+      // We pass 0 as exitSignalPrice; closePosition's internal logic uses currentPrice
+      // when the signal price is 0/null (same as the force-flatten fallback path).
+      // The kill-switch / production-halt gates inside closePosition are fully respected.
+      await closePosition(row.position_id, 0, undefined, { correlationId });
+      closedCount++;
+      logger.warn(
+        { positionId: row.position_id, sessionId: row.session_id, strategyId, strategyName, correlationId },
+        "feed-silence: emergency-close: position closed due to sustained feed silence",
+      );
+    } catch (closeErr) {
+      logger.error(
+        { err: closeErr, positionId: row.position_id, strategyId, strategyName, correlationId },
+        "feed-silence: emergency-close: closePosition threw — position may remain open (manual flatten required)",
+      );
+    }
+  }
+
+  // Audit row for the emergency-close batch.
+  await insertAuditRow({
+    action: "feed.silence_emergency_close",
+    entityType: "strategy",
+    entityId: strategyId,
+    decisionAuthority: "system",
+    input: {
+      strategyName,
+      silenceMs,
+      openPositionCount: openPositionRows.length,
+    } as Record<string, unknown>,
+    result: {
+      closedCount,
+      attempted: openPositionRows.length,
+      allClosed: closedCount === openPositionRows.length,
+    } as Record<string, unknown>,
+    status: closedCount === openPositionRows.length ? "success" : "warning",
+    correlationId,
+  }).catch((auditErr) =>
+    logger.error(
+      { auditErr, strategyId, strategyName },
+      "feed-silence: emergency-close audit row write failed (non-blocking)",
+    ),
+  );
+
+  // Alert with full auto-remediation context.
+  const silenceSec = silenceMs !== null ? Math.round(silenceMs / 1000) : null;
+  const operatorBody =
+    `[AUTO-REMEDIATION ATTEMPTED] Strategy **${strategyName}** (id: ${strategyId}) ` +
+    `has been silent for ${silenceSec !== null ? `${silenceSec}s` : "its entire active lifetime"}. ` +
+    `Emergency close attempted on ${openPositionRows.length} open position(s): ${closedCount} closed. ` +
+    (closedCount < openPositionRows.length
+      ? `WARNING: ${openPositionRows.length - closedCount} position(s) could NOT be closed — manual flatten required.`
+      : `All positions closed successfully.`) +
+    ` Correlation ID: ${correlationId}`;
+
+  const fullBody = appendFamilyGradePostscript(
+    operatorBody,
+    `The trading bot "${strategyName}" stopped receiving signals and had open positions. ` +
+    `The system automatically closed ${closedCount} of ${openPositionRows.length} position(s).` +
+    (closedCount < openPositionRows.length ? " Some positions could NOT be closed — call the operator." : ""),
+    closedCount < openPositionRows.length
+      ? "Call the operator immediately — some positions are still open without signal data."
+      : "No action needed — the system closed the positions. The operator will investigate the signal outage.",
+  );
+
+  notifyCritical(`Feed silence emergency close: ${strategyName}`, fullBody, {
+    strategyId,
+    strategyName,
+    silenceMs,
+    openPositions: openPositionRows.length,
+    closedCount,
+    correlationId,
+    autoRemediationAttempted: true,
+  });
+
+  return closedCount > 0;
+}
+
+/**
  * Check a single strategy for feed silence.
  * Returns the status object; fires alert + audit row when silent during RTH.
  */
@@ -329,20 +502,46 @@ async function checkSingleStrategy(
   };
 
   if (!isSilent) {
-    // Feed is healthy — clear any prior dedup entry so it can re-alert if silent again
+    // Feed is healthy — clear all prior dedup entries so they can re-alert if silent again
     _silenceAlertedFor.delete(strategyId);
+    _silenceEmergencyClosedFor.delete(strategyId); // Wave hardening 2026-06-22, A-3
     return status;
   }
 
   // Compute the silence window key for dedup
   const silenceWindowKey = lastSignalAt?.toISOString() ?? "never";
 
-  // Dedup: already alerted for this exact silence window
+  // Dedup: already alerted for this exact silence window.
+  // Wave hardening 2026-06-22, autonomous-readiness A-3:
+  // If the silence is SUSTAINED beyond the emergency-close threshold AND we have not
+  // already attempted an emergency close for this window, attempt one now.
+  // This is prop-firm-safe: only CLOSE (never open/flip), respects kill-switch gates.
   if (_silenceAlertedFor.get(strategyId) === silenceWindowKey) {
-    logger.debug(
-      { strategyId, strategyName, silenceWindowKey },
-      "feed-silence: dedup hit — already alerted for this silence window",
-    );
+    const emergencyThresholdMs = getEmergencyCloseThresholdMs();
+    const sustainedBeyondThreshold =
+      silenceMs !== null && silenceMs > emergencyThresholdMs;
+    const alreadyClosedThisWindow =
+      _silenceEmergencyClosedFor.get(strategyId) === silenceWindowKey;
+
+    if (sustainedBeyondThreshold && !alreadyClosedThisWindow) {
+      logger.warn(
+        { strategyId, strategyName, silenceMs, emergencyThresholdMs, correlationId },
+        "feed-silence: sustained silence beyond emergency threshold — attempting emergency close",
+      );
+      _silenceEmergencyClosedFor.set(strategyId, silenceWindowKey);
+      // Fire-and-forget: failures are logged + audited inside the helper; cron continues.
+      attemptEmergencyCloseForStrategy(strategyId, strategyName, silenceMs, correlationId).catch(
+        (err) => logger.error(
+          { err, strategyId, strategyName, correlationId },
+          "feed-silence: attemptEmergencyCloseForStrategy threw unexpectedly (fail-open)",
+        ),
+      );
+    } else {
+      logger.debug(
+        { strategyId, strategyName, silenceWindowKey, sustainedBeyondThreshold, alreadyClosedThisWindow },
+        "feed-silence: dedup hit — already alerted for this silence window",
+      );
+    }
     return status;
   }
 
@@ -528,11 +727,16 @@ export const __test__ = {
   DEFAULT_THRESHOLD_MULTIPLIER,
   DEFAULT_MIN_BAR_INTERVAL_MS,
   DEFAULT_MAX_BAR_INTERVAL_MS,
+  DEFAULT_EMERGENCY_CLOSE_THRESHOLD_MS, // Wave hardening 2026-06-22, A-3
   RTH_START_ET_HOUR,
   RTH_END_ET_HOUR,
   ACTIVE_LIFECYCLE_STATES,
   timeframeToMs,
   isEtRth,
   checkSingleStrategy,
-  clearDedupMap: () => _silenceAlertedFor.clear(),
+  attemptEmergencyCloseForStrategy, // Wave hardening 2026-06-22, A-3
+  clearDedupMap: () => {
+    _silenceAlertedFor.clear();
+    _silenceEmergencyClosedFor.clear(); // Wave hardening 2026-06-22, A-3
+  },
 };

@@ -66,6 +66,7 @@ async function getModules() {
     timeframeToMs,
     isEtRth,
     _silenceAlertedFor,
+    _silenceEmergencyClosedFor, // Wave hardening 2026-06-22, A-3
     __test__,
   } = await import("../../server/services/feed-silence-service.js");
   return {
@@ -76,6 +77,7 @@ async function getModules() {
     timeframeToMs,
     isEtRth,
     _silenceAlertedFor,
+    _silenceEmergencyClosedFor,
     __test__,
   };
 }
@@ -362,5 +364,194 @@ describe("runFeedSilenceCheck", () => {
     expect(result.rtbGate).toBe(true);
     expect(result.strategiesChecked).toBe(0);
     expect(notifyCritical).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Wave hardening 2026-06-22, autonomous-readiness A-3:
+ * Sustained feed silence triggers emergency position close.
+ *
+ * Design:
+ * - First silence detection: alert fires (existing behaviour — tested above).
+ * - Sustained silence (same silence window, silenceMs > EMERGENCY_CLOSE_THRESHOLD_MS):
+ *   attemptEmergencyCloseForStrategy is called + audit row written +
+ *   emergency-close Discord alert fires.
+ * - Close is prop-firm-safe (only closes, never opens/flips).
+ * - If no open positions: no close attempted, no alert.
+ * - Entry-block: feed recovery clears emergency dedup so re-alert is possible.
+ */
+describe("A-3 sustained feed silence — emergency close", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    vi.useRealTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("does NOT attempt emergency close on first silence detection (dedup not yet set)", async () => {
+    vi.setSystemTime(new Date("2026-06-22T14:00:00.000Z"));
+    const { db, notifyCritical, insertAuditRow, runFeedSilenceCheck, __test__ } = await getModules();
+    __test__.clearDedupMap();
+
+    const lastSignal = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    (db.execute as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      makeStrategyRow({ strategyId: "s-ec1", strategyName: "VWAP-5m", timeframe: "5", lastSignalAt: lastSignal }),
+    );
+
+    await runFeedSilenceCheck();
+
+    // First tick: normal silence alert fires, but no emergency-close audit
+    expect(notifyCritical).toHaveBeenCalledOnce();
+    const auditCalls = (insertAuditRow as ReturnType<typeof vi.fn>).mock.calls;
+    const closeAudit = auditCalls.find(
+      ([arg]: [{ action: string }]) => arg.action === "feed.silence_emergency_close",
+    );
+    expect(closeAudit).toBeUndefined();
+  });
+
+  it("attempts emergency close on sustained silence beyond threshold when dedup key is already set", async () => {
+    vi.setSystemTime(new Date("2026-06-22T14:00:00.000Z"));
+
+    // Import modules ONCE — don't reset between ticks (dedup is module-level state).
+    const { db, insertAuditRow, __test__ } = await getModules();
+    __test__.clearDedupMap();
+
+    // Silence for 3 hours > 2h default emergency threshold
+    const lastSignal = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+
+    const stratRow = makeStrategyRow({
+      strategyId: "s-ec2",
+      strategyName: "EMA-NQ-15m",
+      timeframe: "15",
+      lastSignalAt: lastSignal,
+    });
+
+    // Tick 1 — fires first alert, sets dedup key
+    (db.execute as ReturnType<typeof vi.fn>).mockResolvedValueOnce(stratRow);
+    await (await import("../../server/services/feed-silence-service.js")).runFeedSilenceCheck();
+
+    vi.clearAllMocks();
+
+    // Tick 2 — same silence window, silenceMs > 2h threshold → emergency close triggered.
+    // Strategy query + open positions query both return successfully.
+    (db.execute as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce(stratRow)  // queryActiveStrategiesWithLastSignal
+      .mockResolvedValueOnce([
+        { position_id: "pos-001", session_id: "sess-001" },
+      ]);                               // open positions query inside attemptEmergencyCloseForStrategy
+
+    // paper-execution-service is lazy-imported; closePosition must succeed
+    vi.doMock("../../server/services/paper-execution-service.js", () => ({
+      closePosition: vi.fn().mockResolvedValue(undefined),
+    }));
+
+    await (await import("../../server/services/feed-silence-service.js")).runFeedSilenceCheck();
+
+    // The emergency close is fire-and-forget — drain the microtask queue so the
+    // Promise chain inside attemptEmergencyCloseForStrategy fully resolves before
+    // we assert on the audit calls.
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+    const auditCalls = (insertAuditRow as ReturnType<typeof vi.fn>).mock.calls;
+    const closeAudit = auditCalls.find(
+      ([arg]: [{ action: string }]) => arg.action === "feed.silence_emergency_close",
+    );
+    expect(closeAudit).toBeDefined();
+    expect(closeAudit?.[0]).toMatchObject({
+      action: "feed.silence_emergency_close",
+      entityId: "s-ec2",
+    });
+  });
+
+  it("does NOT attempt emergency close a second time for the same silence window", async () => {
+    vi.setSystemTime(new Date("2026-06-22T14:00:00.000Z"));
+
+    // Use getModules() so all mocks are properly wired in this reset context.
+    const { db, insertAuditRow, _silenceAlertedFor, _silenceEmergencyClosedFor, runFeedSilenceCheck } =
+      await getModules();
+
+    const silenceKey = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+
+    // Pre-seed both dedup maps as if ticks 1 and 2 already ran
+    _silenceAlertedFor.set("s-ec3", silenceKey);
+    _silenceEmergencyClosedFor.set("s-ec3", silenceKey);
+
+    const stratRow = makeStrategyRow({
+      strategyId: "s-ec3",
+      strategyName: "BB-MES-5m",
+      timeframe: "5",
+      lastSignalAt: silenceKey,
+    });
+
+    (db.execute as ReturnType<typeof vi.fn>).mockResolvedValueOnce(stratRow);
+
+    await runFeedSilenceCheck();
+
+    // Drain microtask queue — no async work expected but be safe
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+    // No emergency-close audit on tick 3 — already closed this window
+    const auditCalls = (insertAuditRow as ReturnType<typeof vi.fn>).mock.calls;
+    const closeAudit = auditCalls.find(
+      ([arg]: [{ action: string }]) => arg.action === "feed.silence_emergency_close",
+    );
+    expect(closeAudit).toBeUndefined();
+  });
+
+  it("clears emergency-close dedup when feed recovers", async () => {
+    vi.setSystemTime(new Date("2026-06-22T14:00:00.000Z"));
+
+    const { _silenceAlertedFor, _silenceEmergencyClosedFor, __test__ } =
+      await import("../../server/services/feed-silence-service.js");
+
+    const silenceKey = "2026-06-22T10:00:00.000Z";
+    _silenceAlertedFor.set("s-ec4", silenceKey);
+    _silenceEmergencyClosedFor.set("s-ec4", silenceKey);
+
+    // clearDedupMap should wipe both maps
+    __test__.clearDedupMap();
+
+    expect(_silenceAlertedFor.has("s-ec4")).toBe(false);
+    expect(_silenceEmergencyClosedFor.has("s-ec4")).toBe(false);
+  });
+
+  it("fails open when attemptEmergencyCloseForStrategy DB query throws", async () => {
+    vi.setSystemTime(new Date("2026-06-22T14:00:00.000Z"));
+
+    const { db, __test__, notifyCritical } = await getModules();
+    __test__.clearDedupMap();
+
+    // 3h silence → above emergency threshold
+    const silenceKey = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
+    const stratRow = makeStrategyRow({
+      strategyId: "s-ec5",
+      strategyName: "VWAP-NQ-1m",
+      timeframe: "1",
+      lastSignalAt: silenceKey,
+    });
+
+    // Tick 1 — set dedup
+    (db.execute as ReturnType<typeof vi.fn>).mockResolvedValueOnce(stratRow);
+    await (await import("../../server/services/feed-silence-service.js")).runFeedSilenceCheck();
+    vi.clearAllMocks();
+
+    // Tick 2 — position query throws → fail-open (no throw propagated)
+    (db.execute as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce(stratRow)                    // queryActiveStrategiesWithLastSignal
+      .mockRejectedValueOnce(new Error("positions DB down")); // position query fails
+
+    await expect(
+      (await import("../../server/services/feed-silence-service.js")).runFeedSilenceCheck(),
+    ).resolves.not.toThrow();
+
+    // No emergency-close notifyCritical should have fired (fail-open)
+    const calls = (notifyCritical as ReturnType<typeof vi.fn>).mock.calls;
+    const emergencyCall = calls.find(
+      ([title]: [string]) => title?.includes("emergency close"),
+    );
+    expect(emergencyCall).toBeUndefined();
   });
 });

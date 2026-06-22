@@ -121,8 +121,27 @@ const jobHealthTracker = new Map<string, JobHealth>();
 const FAILURE_WARN_THRESHOLD = 3;
 const FAILURE_DISABLE_THRESHOLD = 5;
 
-/** Jobs that must never be auto-disabled (critical infrastructure) */
-const NEVER_DISABLE_JOBS = new Set(["metrics-heartbeat", "stale-session-check", "disabled-job-probe"]);
+/**
+ * Jobs that must never be auto-disabled (critical infrastructure).
+ *
+ * Wave hardening 2026-06-22, autonomous-readiness A-6:
+ * Credential-safety and dead-man jobs are now included so a transient vendor
+ * outage (e.g. Bitwarden 12h maintenance → 5 failures over 30h) cannot
+ * silently disable them and leave the vault session expired during vacation.
+ * The CRITICAL alert still fires at 5 failures — disabling is suppressed only.
+ */
+const NEVER_DISABLE_JOBS = new Set([
+  // Original dead-man / monitoring infrastructure
+  "metrics-heartbeat",
+  "stale-session-check",
+  "disabled-job-probe",
+  // Heartbeat safety jobs — must fire even if other subsystems are broken
+  "heartbeat-write",
+  "heartbeat-stale-check",
+  // Credential-safety jobs — transient vendor outage must not permanently disable these
+  "bw-session-refresh",
+  "prop-firm-cookie-refresh",
+]);
 
 function getJobHealth(name: string): JobHealth {
   let health = jobHealthTracker.get(name);
@@ -456,6 +475,17 @@ export const _testOnly = {
     for (const key of Object.keys(SCHEDULER_JOBS)) {
       delete SCHEDULER_JOBS[key];
     }
+  },
+  /**
+   * Wave hardening 2026-06-22, autonomous-readiness A-6:
+   * Expose recordJobFailure for unit tests that verify NEVER_DISABLE_JOBS behaviour.
+   */
+  recordJobFailure(name: string, error: unknown): void {
+    recordJobFailure(name, error);
+  },
+  /** Reset the jobHealthTracker for test isolation. */
+  resetJobHealth(): void {
+    jobHealthTracker.clear();
   },
 };
 
