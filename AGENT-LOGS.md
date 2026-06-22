@@ -9861,6 +9861,35 @@ Also restored Anam.ai persona during this session:
 
 ---
 
+### Session Log — 2026-06-22 claude (operator_absent_autopilot audit + vacation-survival nets; auto-promotion left OFF by operator choice)
+
+**Mission:** Operator picked operator_absent_autopilot as next institutional-grade target (highest unattended-capital risk). 3-lens read-only audit (autonomous-readiness + accuracy-validator + observability-reliability), then operator chose "survival nets only" (NOT enabling auto-promotion).
+
+**Headline finding:** the vacation autopilot is currently NON-FUNCTIONAL — and that bug is the only thing protecting live capital. Three independent defects each block auto-promotion: F-1 wrong actor (`"system"` vs `"human_release"`, lifecycle-service.ts:368 → every promote returns success:false, silent); F-3 zero scheduler wiring (runOperatorAbsentAutoPromote never called); F-2 checkAutopilotGates (operator-absent-mode-service.ts:67) bypasses all 9 Wave 27.5/28/29 hard gates (a strategy with 65% ruin CI + 0.45 WFE would pass). No bad strategy has reached live capital — by accident, not design.
+
+**Work completed (survival nets only — commit `5fa51b4`, 18 vitest):**
+- A-5: NEW `src/server/routes/admin-recovery.ts` — HMAC-gated `/api/admin/clear-kill-switch-cache` + `/api/admin/clear-stuck-session` (mirror self-restart HMAC) so operator recovers a stuck Python-compliance block or stuck position from any phone via curl, unattended.
+- A-8: NEW `src/server/lib/startup-config-check.ts` — boot WARN (log + Discord) if `ADMIN_RESTART_HMAC_SECRET` unset (otherwise dead-man auto-restart is silently disabled). Never fails boot.
+- A-2 VERIFIED FALSE-POSITIVE: DLL breach never sets global production_mode=HALT (only per-session dailyLossHaltedAt, already auto-clears at CME 17:00 via prior GAP-1 fix). Global HALT only from drift-detectors. No vacation-lock. 3 invariant tests.
+
+**Known-facts updates:**
+- The vacation autopilot does NOT auto-promote anything today (F-1+F-3 bugs). It is SAFE-by-bug. Enabling it = fixing F-1/F-3 AND F-2 (full 9-gate re-eval at DEPLOY_READY→PILOT) — a deliberate Red-tier operator decision, NOT a casual bugfix. Operator chose to keep it OFF for now.
+- `operator_absent_since` column EXISTS in code (schema.ts:2359, migration 0101) — the audit's "missing in production" = migration-not-applied (boot-runner disabled), not a code gap.
+
+**Carry-forward — handoff to PARALLEL SESSION (alerting/heartbeat lane is theirs — dead-mans-heartbeat-service.ts + feed-silence-service.ts; I did NOT touch those):**
+- GAP-3 (CRITICAL): single-fire alerting — no re-alert cadence. Miss one Discord on a 30-day vacation = permanent blind spot for that incident. Add re-fire-until-resolved for heartbeat-stale, stuck-position, auto-restart-unavailable.
+- GAP-6 (MED): self-heal recoveries are logger.info only — no Discord. Operator can't tell "fixed itself" from "still broken." Notify on recovery.
+- GAP-5 (MED): production-status.ts:323 `bw_session_expires_at` hardcoded null — surface real BW expiry on the phone dashboard.
+- GAP-1 (MED): no external watchdog for the heartbeat-stale-check cron itself (hung-not-disabled is undetected).
+
+**Carry-forward — operator actions (no code can do these):**
+- Set `ADMIN_RESTART_HMAC_SECRET` in production .env BEFORE any vacation (else auto-restart + the new recovery endpoints are disabled; boot now WARNs if unset).
+- Apply pending migrations (operator_absent_since, 0165/0167/0168/0169) — tied to re-enabling the boot-migration-runner.
+- To ENABLE autopilot later: deliberate decision to fix F-1/F-3 + bulletproof F-2 (re-run all 9 hard gates at promotion). Until then, manual promotion only.
+- All work on `hardening/phase-0`; branch reconciliation with feature/deep-analysis-pipeline still pending.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Migration drift: journal says applied, table is missing — runner won't re-run (pinned 2026-06-22)
