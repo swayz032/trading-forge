@@ -33,32 +33,18 @@ YouTubers walk through live trade examples mid-video ("we go short at 12783", "s
 
 The test: if you can swap the instrument from EUR/USD to MES and the step still applies, it's a rule. If it only makes sense for one specific Friday in April, it's an example — DON'T quote it as a step.
 
-### B. R-RATIO INTERPRETATION — "1:2 R/R" means TARGET is 2× the stop
+### B. NEVER EXTRACT WIN RATE OR R-MULTIPLE CLAIMS
 
-When the speaker says **"1:2 risk-to-reward"** / **"1 to 2 R/R"** / **"risking 1 to make 2"** / **"two-to-one risk/reward"** — that means the **TARGET IS 2× THE STOP**.
+Per CLAUDE.md §1 + operator mandate (2026-05-27): **win rate and R-multiple are OUTPUT metrics measured by the backtester, never extraction targets.** The speaker's claimed `52.63% win rate` or `1:2 R/R` is marketing — the backtester will measure these via avg-R / PF / deflated-Sharpe.
 
-- `source_claim_avg_r: 2.0` ✓ correct
-- `source_claim_avg_r: 1.2` ❌ WRONG (this would mean "1.2R per trade", which is a different claim)
-- `source_claim_avg_r: 0.5` ❌ WRONG (that would be 2:1 against you)
+**DO NOT extract any of these fields. Do not include them in the output at all.**
+- `source_claim_win_rate` → NOT in schema; never emit
+- `source_claim_avg_r` → NOT in schema; never emit
+- "82% win rate" / "1:2 risk-reward" / "I aim for 3R" → IGNORE; the strategy gets tested
 
-Other R phrasings:
-- "minimum 1.5R" / "go for 1.5R" → `source_claim_avg_r: 1.5`
-- "I aim for 3R per trade" → `source_claim_avg_r: 3.0`
-- "1:3 risk-reward" → `source_claim_avg_r: 3.0`
+Focus extraction on what the backtester needs to TEST the strategy: entry sequence, confluences, stop placement, time/candle filters, instrument lock. Speaker performance claims are not in scope.
 
-### C. WIN-RATE — scan AGGRESSIVELY, especially mid-transcript and closing remarks
-
-The win rate often appears ONCE buried in prose: *"had a win rate of 52.63%"*, *"this system hits 70-80% of the time"*, *"82% win rate"*, *"7 out of 10 trades win"*. Speakers rarely repeat it. **SCAN THE FULL TRANSCRIPT, not just the intro.**
-
-- *"win rate of 52.63%"* → `source_claim_win_rate: 0.5263` (or `0.53` rounded)
-- *"around 80%"* → `0.80`
-- *"70-80% of the time"* → `0.75` (midpoint)
-- *"7 out of 10"* → `0.70`
-- *"82% accuracy"* → `0.82`
-
-**Title hype doesn't count** — if "80% Win Rate" only appears in the title/thumbnail and the speaker never says it, set `null`. Capture only what the SPEAKER actually claims.
-
-### D. RICH MIDDLE > END SUMMARY — extract from teaching sections, not just numbered checklists
+### C. RICH MIDDLE > END SUMMARY — extract from teaching sections, not just numbered checklists
 
 Many videos have a structured pre-market checklist at the end (numbered list). It's tempting to grab those as steps. Don't. The TEACHING happens in the middle (the rules, the filters, the band-walk patterns, the std-dev probabilities, the stop math). Extract from the TEACHING content. The end checklist is a summary, not the strategy.
 
@@ -126,18 +112,6 @@ Break the entry trigger into the steps the speaker actually teaches. **Use ONE s
   {"step": 3, "action": "Enter short on the next bar's open with stop above the sweep wick.", "rationale": "Sweep wick is the structural invalidation."}
 ]
 ```
-
-### 3b. `source_claim_win_rate` / `source_claim_avg_r` — REQUIRED, null OR number
-
-**SCAN INSTRUCTION** — actively search the FULL transcript (especially intro and closing minutes) for:
-
-- **Win-rate claims:** `"82% win rate"` / `"80% of the time"` / `"7 out of 10 trades"` / `"hits 70-80%"` / `"82% accuracy"` → convert to 0.0–1.0 (e.g. `0.82`, `0.75` for "70-80%")
-- **Avg R claims:** `"1.5R per trade"` / `"average 2R"` / `"risk-reward ratio of 1.5"` / `"every trade is 1.5R"` → number (e.g. `1.5`, `2.0`)
-- **Hedged phrasing counts** — `"around 80%"`, `"about 1.5R"`, `"like 70-80% of the time"` all count. Use the midpoint for ranges (e.g. `"70-80%"` → `0.75`).
-
-**NEVER invent.** If the speaker only shows daily P&L (e.g. *"made $4,325 today"*) without a win-rate / R-claim, set BOTH fields to `null`. Daily P&L is NOT a win rate.
-
-Set `null` only when the speaker truly never mentions a percentage or R-multiple anywhere. The 82% / 70-80% kinds of claims are the most under-extracted field — be thorough.
 
 ### 4. `preferred_regime` — REQUIRED
 What kind of market the strategy needs. One of: `trending`, `ranging`, `any`. If the speaker uses a more specific term, include it verbatim.

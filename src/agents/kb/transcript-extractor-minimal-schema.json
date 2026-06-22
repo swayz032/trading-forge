@@ -59,17 +59,6 @@
               }
             }
           },
-          "source_claim_win_rate": {
-            "type": ["number", "null"],
-            "description": "Win rate the speaker explicitly claims (0.0-1.0). null when not stated. NEVER invent.",
-            "minimum": 0,
-            "maximum": 1
-          },
-          "source_claim_avg_r": {
-            "type": ["number", "null"],
-            "description": "Average R-multiple the speaker claims (e.g. 1.5 for '1.5R per trade'). null when not stated.",
-            "minimum": 0
-          },
           "preferred_regime": {
             "type": "string",
             "description": "trending | ranging | any | speaker's specific term",
