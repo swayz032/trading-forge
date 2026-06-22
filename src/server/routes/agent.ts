@@ -8,6 +8,7 @@ import { extractSpeakerConceptsFromTranscript } from "../lib/transcript-speaker-
 import { classifyMechanicPortability, explainRejectClass } from "../lib/mechanic-portability.js";
 import { runPass1VocabularyExtraction } from "../lib/two-pass-vocab-extractor.js";
 import { runCoverageGate } from "../lib/extraction-coverage-gate.js";
+import { checkCompilabilityGate } from "../lib/extraction-quality-gate.js";
 import { runRobustnessTest } from "../services/robustness-service.js";
 import { db } from "../db/index.js";
 import { auditLog, strategyPendingBuckets, strategyPendingMentions, systemJournal, strategies } from "../db/schema.js";
@@ -24,7 +25,8 @@ import { logger } from "../index.js";
 import { runPythonModule } from "../lib/python-runner.js";
 import { idempotencyMiddleware } from "../middleware/idempotency.js";
 import { requireLiveN8n } from "../middleware/require-live-n8n.js";
-import { computeFingerprintHash, computeConceptFingerprintHash, normalizeConceptName, extractEntryArchetype, normalizeExitType } from "../services/strategy-fingerprint.js";
+import { computeFingerprintHash, computeConceptFingerprintHash, computeQuarantineFingerprintHash, normalizeConceptName, extractEntryArchetype, normalizeExitType } from "../services/strategy-fingerprint.js";
+import { quarantineExtraction } from "../lib/quarantine-extraction.js";
 import { runParallelDiscovery } from "../services/parallel-broker.js";
 import { runExaDiscovery } from "../services/exa-broker.js";
 import { runBraveDiscovery } from "../services/brave-search-broker.js";
@@ -1690,11 +1692,81 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       );
     }
 
+    // W3.2 — Compilability gate (fail-closed extraction quarantine).
+    // For each extracted idea, run the compilability gate. Any idea that fails
+    // is routed to needs_archetype_queue and marked quarantined in the response.
+    // The gate is applied per-idea because multi-idea responses can have one
+    // good and one bad extraction in the same response.
+    //
+    // Note: the fingerprint collision fix (computeQuarantineFingerprintHash) is
+    // applied here — quarantined ideas get a unique per-source fingerprint that
+    // NEVER collapses into the same bucket, regardless of their concept_name.
+    let quarantinedCount = 0;
+    const compilabilityResults: Array<{ ideaIndex: number; compilable: boolean; missing: string[]; quarantine_hash?: string }> = [];
+    for (let ideaIdx = 0; ideaIdx < ideas.length; ideaIdx++) {
+      const idea = ideas[ideaIdx] as Record<string, unknown>;
+      const conceptName = typeof idea.concept_name === "string" ? idea.concept_name : "";
+      const entryIndicator = typeof idea.entry_indicator === "string" ? idea.entry_indicator : null;
+      const archetype = typeof idea.archetype === "string" ? idea.archetype : null;
+      const entryParams = idea.entry_params && typeof idea.entry_params === "object" ? (idea.entry_params as Record<string, unknown>) : null;
+      const direction = typeof idea.direction === "string" ? idea.direction : null;
+      const ideaTimeframe = typeof idea.timeframe === "string" ? idea.timeframe : null;
+      const confluenceFactors = Array.isArray(idea.confluences)
+        ? (idea.confluences as Array<{ name?: string }>).map((c) => c.name ?? "").filter((n) => n.length > 0)
+        : (Array.isArray(idea.confluence_factors) ? (idea.confluence_factors as string[]) : []);
+
+      // Only apply coverage_verdict from W3.1 to the FIRST idea (it was computed against ideas[0]).
+      const coverageForIdea = ideaIdx === 0 ? coverageVerdictResult : null;
+
+      const gateResult = checkCompilabilityGate(
+        {
+          entry_indicator: entryIndicator,
+          archetype,
+          entry_params: entryParams,
+          direction,
+          timeframe: ideaTimeframe,
+          confluence_factors: confluenceFactors,
+          coverage_verdict: coverageForIdea,
+        },
+        conceptName,
+      );
+
+      if (!gateResult.compilable) {
+        quarantinedCount++;
+        const quarantineHash = computeQuarantineFingerprintHash({
+          concept_name: conceptName,
+          source_url: sourceUrl,
+        });
+        compilabilityResults.push({ ideaIndex: ideaIdx, compilable: false, missing: gateResult.missing, quarantine_hash: quarantineHash });
+        // Route to quarantine queue — fire-and-forget, non-blocking
+        quarantineExtraction({
+          concept_name: conceptName,
+          source_url: sourceUrl,
+          missing: gateResult.missing,
+          coverage_verdict: coverageForIdea,
+          reason: gateResult.reason,
+          correlationId,
+        }).catch((qErr: unknown) =>
+          logger.warn(
+            { err: qErr instanceof Error ? qErr.message : String(qErr), sourceUrl, conceptName },
+            "W3.2: quarantineExtraction() threw (non-blocking — extraction result still returned)",
+          ),
+        );
+        logger.warn(
+          { sourceUrl, conceptName, missing: gateResult.missing, quarantine_hash: quarantineHash, idea_index: ideaIdx },
+          "W3.2: extraction quarantined — compilability gate failed",
+        );
+      } else {
+        compilabilityResults.push({ ideaIndex: ideaIdx, compilable: true, missing: [] });
+      }
+    }
+
     // W23G.7 + W23G.2 — include telemetry fields in success response.
     // extraction_mode: single_pass | chunked_fallback — for callers to log cycle-level stats.
     // instrument_classification: advisory classification (Pass J: post-override-aware).
     // tokens_estimated: char_count / 4 estimate for budget observability.
     // W3.1 — coverage_verdict: advisory signal for downstream (W3.2 quarantine).
+    // W3.2 — compilability_results: per-idea gate outcomes so n8n can skip quarantined ideas.
     res.json({
       extracted: true,
       ideas,
@@ -1703,6 +1775,8 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       mechanic_portable: portability.portable,
       tokens_estimated: Math.ceil(markdown.length / 4),
       ...(coverageVerdictResult !== null && { coverage_verdict: coverageVerdictResult }),
+      compilability_results: compilabilityResults,
+      quarantined_count: quarantinedCount,
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

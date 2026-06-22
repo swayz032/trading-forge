@@ -1,5 +1,5 @@
 /**
- * Wave 26 Pass L (2026-05-27) — Extraction quality gate.
+ * Wave 26 Pass L (2026-05-27) + W3.2 (2026-06-22) — Extraction quality gate.
  *
  * Post-extraction validator that flags two known under-extraction patterns
  * the manual transcript audit surfaced:
@@ -106,6 +106,156 @@ function inspectAvgR(avgR: number | null | undefined): QualityWarning | null {
 
 // ============================================================================
 // Main entry point
+// ============================================================================
+
+// ============================================================================
+// W3.2 — Compilability Gate (fail-closed extraction quarantine)
+// ============================================================================
+//
+// An extraction PASSES the compilability gate only if ALL of the following hold:
+//   1. entry_indicator or archetype is non-null
+//   2. entry_params is non-empty (at least one key)
+//   3. direction field is present and non-empty
+//   4. timeframe field is present and non-empty
+//   5. ≥1 real (source-extracted) confluence factor exists
+//   6. coverage_verdict.verdict !== "coverage_failed" (W3.1 signal)
+//
+// When any condition fails → QUARANTINE.
+// Quarantined extractions are routed to needs_archetype_queue for operator
+// review; they do NOT graduate, do NOT pool into shared buckets.
+//
+// This is a pure function — no I/O, no LLM calls. Safe to unit-test.
+
+export interface CompilabilityInput {
+  /** The LLM's entry_indicator field (may be null/empty). */
+  entry_indicator?: string | null;
+  /** The LLM's archetype field (may be null/empty). */
+  archetype?: string | null;
+  /** The LLM's entry_params field. */
+  entry_params?: Record<string, unknown> | null;
+  /** The LLM's direction field. */
+  direction?: string | null;
+  /** The LLM's timeframe field. */
+  timeframe?: string | null;
+  /**
+   * Confluence factors extracted directly by the LLM from the source
+   * (before auto_floor injection). A factor tagged "auto_floor" in
+   * factor_sources is NOT a real extracted factor — it was injected to
+   * meet the ≥2 minimum floor and does not count as evidence here.
+   *
+   * Pass this as the raw LLM-extracted list (before classifyFactorSources).
+   * If unknown, pass the full list — the gate applies a conservative
+   * heuristic (any non-empty list counts).
+   */
+  confluence_factors?: string[] | null;
+  /**
+   * W3.1 coverage verdict — null means the gate did not run (pass through).
+   * "coverage_failed" → quarantine.
+   */
+  coverage_verdict?: { verdict: "pass" | "coverage_failed" } | null;
+}
+
+export interface CompilabilityResult {
+  /** true = extraction passes all gates and may graduate. false = quarantine. */
+  compilable: boolean;
+  /**
+   * Which specific conditions failed. Empty when compilable === true.
+   * Each entry is a machine-readable code that becomes the quarantine reason.
+   */
+  missing: string[];
+  /** Human-readable summary for audit/logging. */
+  reason: string | null;
+}
+
+/**
+ * The placeholder value gemma4:e2b emits when extraction fails to name a strategy.
+ * Any concept_name matching this sentinel causes the entry to be treated as a
+ * failed extraction regardless of other fields.
+ */
+export const PLACEHOLDER_CONCEPT_NAMES = new Set<string>([
+  "extracted_strategy",
+  "extracted strategy",
+  "strategy",
+  "unknown_strategy",
+  "unknown strategy",
+  "trading strategy",
+  "trading_strategy",
+]);
+
+/**
+ * Pure-functional compilability gate. No I/O. No throws.
+ *
+ * Apply this BEFORE the graduation path. If compilable === false, route the
+ * extraction to needs_archetype_queue and do NOT graduate.
+ */
+export function checkCompilabilityGate(
+  input: CompilabilityInput,
+  concept_name?: string | null,
+): CompilabilityResult {
+  const missing: string[] = [];
+
+  // Gate 0: placeholder concept_name → treat as failed extraction
+  if (concept_name && PLACEHOLDER_CONCEPT_NAMES.has(concept_name.trim().toLowerCase())) {
+    missing.push("placeholder_concept_name");
+  }
+
+  // Gate 1: entry_indicator or archetype must be non-null / non-empty
+  const hasEntryIndicator =
+    typeof input.entry_indicator === "string" && input.entry_indicator.trim().length > 0;
+  const hasArchetype =
+    typeof input.archetype === "string" && input.archetype.trim().length > 0;
+  if (!hasEntryIndicator && !hasArchetype) {
+    missing.push("missing_entry_indicator_or_archetype");
+  }
+
+  // Gate 2: entry_params must be non-empty object (at least one key)
+  const params = input.entry_params;
+  const hasParams =
+    params !== null &&
+    params !== undefined &&
+    typeof params === "object" &&
+    Object.keys(params).length > 0;
+  if (!hasParams) {
+    missing.push("empty_entry_params");
+  }
+
+  // Gate 3: direction must be present and non-empty
+  const hasDirection =
+    typeof input.direction === "string" && input.direction.trim().length > 0;
+  if (!hasDirection) {
+    missing.push("missing_direction");
+  }
+
+  // Gate 4: timeframe must be present and non-empty
+  const hasTimeframe =
+    typeof input.timeframe === "string" && input.timeframe.trim().length > 0;
+  if (!hasTimeframe) {
+    missing.push("missing_timeframe");
+  }
+
+  // Gate 5: ≥1 real (source-extracted) confluence factor
+  const factors = input.confluence_factors;
+  const hasFactors =
+    Array.isArray(factors) && factors.filter((f) => typeof f === "string" && f.trim().length > 0).length >= 1;
+  if (!hasFactors) {
+    missing.push("no_real_confluence_factors");
+  }
+
+  // Gate 6: coverage verdict must not be "coverage_failed"
+  if (input.coverage_verdict?.verdict === "coverage_failed") {
+    missing.push("coverage_failed");
+  }
+
+  const compilable = missing.length === 0;
+  const reason = compilable
+    ? null
+    : `Extraction failed compilability gate: [${missing.join(", ")}]`;
+
+  return { compilable, missing, reason };
+}
+
+// ============================================================================
+// Main entry point (original)
 // ============================================================================
 
 export function checkExtractionQuality(strategies: StrategyForQuality[]): QualityReport[] {
