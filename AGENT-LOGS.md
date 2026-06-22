@@ -9059,7 +9059,28 @@ Also restored Anam.ai persona during this session:
 
 ---
 
+### Session Log — 2026-06-22 claude (CI / test-suite trustworthiness audit + sweep)
+
+**Mission:** After MC/B14 + promotion-gate hardening, audit the meta-layer the other session flagged: "green is meaningless at ~90 failures." Operator chose "full sweep to green."
+
+**Audit (full vitest run + 3 parallel triage agents):** 6551 tests, **93 failing across 52 files**. Structural root cause quantified: of 391 test files, **0 hit a real/in-memory DB, 176 (45%) mock it** — green CI is structurally blind to the producer→DB→gate disconnects we keep finding (B14/B15/composite-shadow all shipped green for this reason). 93 failures classified: ~15 real CODE-BUGs, ~15 stale fixtures (false reds), ~13 flaky-env collection crashes (false reds), ~7 IN-FLIGHT (other session).
+
+**Sweep (commit 3f09822, 35 files; collision-safe — skipped schema.ts/admin.ts/agent.ts/scheduler.ts which the parallel session is editing):**
+- Real bugs fixed: wave9 TS↔Python indicator drift (added 2 missing TS entries; 12 TS-only are genuine DSL aliases → documented allowlist, NOT stubbed); 6 archetypes added to ARCHETYPE_MECHANIC_KEYWORDS; firm-config MFFU collaborativeTradingBanned/sameDeviceBanned + Topstep allowsCloudFailover (were undefined → compliance guards fail-open); backtests.operator_initiated audit row; replay computeSharpe/computeSpearman degenerate-input guards.
+- 14 stale fixtures → current canon (gemma4→gemma4:e2b, MES cap 30→100, MNQ base 1→6, MCL multiplier 10→100 [verified correct: $1/tick, $100/pt], num_predict 2048→4096, etc.).
+- 13 flaky-env files: isolated import-chain collection crashes (index.ts→boot-migration-runner→un-mocked db) with test-side db mocks. ~209/212 now green.
+
+**Result: 93→57 failures, 52→23 failing files** (−36 failures cleared). Remaining 57 = other-session execution lane + real bugs in their 4 dirty files + 8 queued residuals.
+
+**Carry-forward (real bugs found, blocked on parallel-session-owned files or queued):** schema.ts missing columns (lifecycleTransitions.correlationId, survivalProbability, syntheticRegimeBank); admin.ts:404 un-patched extractResult.ideas loop + naked_poc_session→level_session divergence; scheduler missing reconciliation cron (15 20,21 * * 1-5); wave7 setMode correlationId wiring (admin.ts); python-runner.ts CF-8 stderr-banner strip (5 tests, clean file — fixable); sse.ts missing 2 exported types (2 tests, clean file — fixable); agent-service source-gate + responses-api-shim + wave23g-llm-retry test contract updates; production-convergence n8n workflow node hardening.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
+
+### Test suite has ZERO DB-integration coverage — green is structurally blind to DB bugs (pinned 2026-06-22)
+
+Of 391 vitest files, NONE exercise a real or in-memory database; 45% mock the DB layer. This is WHY producer→DB→gate disconnects (B14 ruin CI never written to risk_metrics, B15 flag never passed, composite-shadow int-vs-uuid) all shipped with green CI — the suite cannot, by construction, catch a key mismatch, type coercion, or query-returns-0-rows. Also ~13 test files crash at COLLECTION time (0 tests run, counted as "passing" if not checked) because importing a route/service transitively boots `index.ts → boot-migration-runner → un-mocked db`. When triaging "~N failures," always separate: real CODE-BUG vs STALE-FIXTURE (asserts an old canonical value) vs FLAKY-ENV (collection crash / import-chain) vs IN-FLIGHT (another session). A raw failure count is meaningless until classified. The durable fix (not yet done) is a pglite/in-memory-DB integration layer + making app-boot not a module-import side effect.
 
 ### BOOT_MIGRATION_ENABLED=true is LIVE (pinned 2026-06-22 PM)
 
