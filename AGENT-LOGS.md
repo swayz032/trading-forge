@@ -9493,9 +9493,27 @@ Also restored Anam.ai persona during this session:
 - Operator-awareness items flagged in evidence file (not changed): Topstep activation-fee path, MFFU min_trading_days, MFFU 2% rule direct-portal verification, XFA Consistency-Path 40% cap not codified.
 - All this work is on `hardening/phase-0` (shared with the parallel CI-trust session). Branch reconciliation with feature/deep-analysis-pipeline still pending operator/coordination.
 
+### Session Log — 2026-06-22 claude (observability / correlation_id traceability — institutional-grade)
+
+**Mission:** "Make observability institutional grade." Audit end-to-end correlation_id traceability (bar→handler→DB→SSE→audit_log per §2) + audit_log integrity, then fix.
+
+**Audit (parent homework + 2 observability agents; key claims re-verified vs live DB):**
+- **CRITICAL — audit_log misused as a mutable job-tracker.** audit_log is DB-level append-only (migration 0058 trigger; parent VERIFIED active — a test UPDATE was rejected `audit_log is append-only`). But `agent.ts` wrote a `pending` row then `db.update(auditLog).set({status})` (4 sites) → throws against the trigger, swallowed by `.catch` → agent jobs stuck `pending` forever in the dashboard (GET reads audit_log); the `DELETE /api/agent/jobs` purge 500'd while claiming success.
+- **MED — incident-path correlation breaks:** kill-switch Layer 6 (`c1_cme_outage_eval_failed`) hardcoded `correlationId:null` on a HALT-class event; `paper:trade` close SSE omitted correlationId.
+- **Empirical (live DB):** 66% all-time null is dominated by acceptable cron/background nulls; live-trade actions have 0 rows (no trades yet — pre-go-live), so the live chain is code-correct (broker-router/paper-execution/kill-switch setMode+L7 thread it) but empirically untested.
+- **DOWNGRADED an agent's "CRITICAL":** TradingView-webhook decoupled from the bar-fed signal engine is BY DESIGN (§7 — markers are a separate observability stream), not a break.
+
+**Fixes (commit a882e3f):** new mutable `agent_jobs` table (schema + migration 0166, def only — not applied) holds job STATE; audit_log keeps append-only events only (agent.X.submitted/.completed/.failed); GET/DELETE /api/agent/jobs repointed → agent.ts now has ZERO audit_log UPDATE/DELETE. kill-switch L6 mints `l6EvalCorrelationId`; paper:trade SSE carries correlationId. 22 vitest GREEN.
+
+**Carry-forward:** LOW — `llm.gpt5mini_call` cron audit rows still null-correlation (needs a correlationId param threaded through `callOpenAI`/`writeLlmAuditLog` — wider refactor, deferred). Historical null rows (exchange-outage 14.9k, cookie-refresh) can't be backfilled; code now mints UUIDs forward. Migration 0166 applies on next deploy (boot-migration-runner).
+
 ---
 
 ## Known-Facts Pin — Stop Misdiagnosing These
+
+### audit_log is DB-level APPEND-ONLY — never UPDATE/DELETE it; job state goes in agent_jobs (pinned 2026-06-22)
+
+Migration `0058_audit_log_append_only.sql` installs a `BEFORE UPDATE OR DELETE` trigger on `audit_log` that raises `audit_log is append-only` — VERIFIED active on the live DB. ANY `db.update(auditLog)` / `db.delete(auditLog)` throws at runtime. If you see agent jobs stuck "pending" forever or a purge endpoint 500'ing, it's because code tried to mutate the append-only trust spine. Job/mutable STATE belongs in the `agent_jobs` table (added 2026-06-22, migration 0166) — audit_log is for IMMUTABLE event records only (write a new `.completed`/`.failed` row sharing the correlation_id; never mutate the original). Do not "fix" a stuck-pending job by removing the trigger — the trigger is the institutional Trust Spine; fix the caller to use agent_jobs. Also: the 66% audit_log null-correlation rate is mostly cron/background actions (no request context — acceptable); the live-trade paths (broker-router, paper-execution, kill-switch) DO thread correlation_id — don't mistake the cron null-noise for a live-path leak.
 
 ### HTF MTF join: ts_event is OPEN time → needs +1 shift or it look-ahead-leaks (pinned 2026-06-22)
 
