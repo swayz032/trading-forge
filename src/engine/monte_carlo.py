@@ -794,6 +794,11 @@ def simulate_firm_survival(
     }
     max_drawdowns_all = np.zeros(n_sims)
     days_to_pass_list: list[int] = []
+    # Wave hardening 2026-06-22, B14 ruin=firm-breach:
+    # Per-sim account-ending breach mask — True when trailing_dd OR daily_loss_limit
+    # trips the account closed, OR consistency rule denies payout.
+    # This is the CORRECT ruin event for a prop firm (not terminal<=0).
+    breach_mask = np.zeros(n_sims, dtype=np.uint8)
 
     six_months_bars = 126  # ~6 months of trading days (no shortcut for short sims)
 
@@ -987,6 +992,12 @@ def simulate_firm_survival(
 
         if breach_reason:
             breach_reasons[breach_reason] = breach_reasons.get(breach_reason, 0) + 1
+            # Wave hardening 2026-06-22, B14 ruin=firm-breach:
+            # Mark sim as ruined when the account was closed (trailing_dd or daily_loss_limit)
+            # OR payout was denied (consistency violation).
+            # "never_hit_target" is NOT ruin — the account is not closed, just unprofitable.
+            if breach_reason in ("trailing_dd", "daily_loss_limit", "consistency"):
+                breach_mask[sim] = 1
 
     # Drawdown percentiles
     dd_percentiles = {
@@ -1013,6 +1024,12 @@ def simulate_firm_survival(
         "granularity": granularity,
         "commission_per_side": comm_per_side,
         "realtime_trailing": is_realtime,
+        # Wave hardening 2026-06-22, B14 ruin=firm-breach:
+        # Per-sim breach mask (uint8, length n_sims).
+        # True (1) = account closed (trailing_dd or daily_loss_limit) or payout denied (consistency).
+        # "never_hit_target" is excluded — account is not closed, just not profitable.
+        # Additive field — all existing keys above are unchanged.
+        "breach_mask": breach_mask,
     }
 
 
@@ -1783,10 +1800,71 @@ def run_monte_carlo(
     # It is removed before return to avoid serializing a (100K × N) array to stdout.
     result["all_paths"] = paths
     try:
-        from src.engine.mc_confidence import compute_all_mc_cis
+        from src.engine.mc_confidence import compute_all_mc_cis, compute_mc_confidence_intervals
         if "all_paths" in result and isinstance(result["all_paths"], np.ndarray):
             cis = compute_all_mc_cis(result["all_paths"], seed=request.seed + 500)
             result["bca_confidence_intervals"] = cis
+
+            # Wave hardening 2026-06-22, B14 ruin=firm-breach:
+            # Replace the terminal<=0 definition of probability_of_ruin_ci with the
+            # institutionally-correct prop-firm breach event when firm models are present.
+            # The terminal<=0 path gives a false read: cumulative P&L can be positive
+            # while the EOD trailing DD has already triggered account closure.
+            # See: simulate_firm_survival breach_mask (trailing_dd + daily_loss_limit + consistency).
+            #
+            # The breach_mask is {0, 1} uint8 (1 = breached/ruined).
+            # We use np.mean as the statistic (= breach rate = fraction of 1s).
+            # DO NOT use probability_of_ruin_stat (mean(x <= 0)) on a {0,1} mask —
+            # that computes survival rate (fraction of 0s), not breach rate.
+            #
+            # IF firms were simulated: derive ruin CI from the worst-firm breach rate.
+            # IF no firms: fall back to terminal<=0 but tag it so B14 audit can see the basis.
+            def _breach_rate_stat(mask: np.ndarray, axis=0) -> float:
+                """Fraction of breached (=1) paths in the breach mask."""
+                return np.mean(mask, axis=axis)
+
+            if firm_survival:
+                per_firm_ruin_cis: dict[str, dict] = {}
+                worst_firm_key: str | None = None
+                worst_ci: dict | None = None
+                for _fk, _fsurv in firm_survival.items():
+                    _bmask = _fsurv.get("breach_mask")
+                    if _bmask is None or len(_bmask) == 0:
+                        continue
+                    _firm_ruin_ci = compute_mc_confidence_intervals(
+                        _bmask.astype(float),
+                        _breach_rate_stat,
+                        seed=request.seed + 501,
+                    )
+                    _firm_ruin_ci["ruin_basis"] = "firm_breach"
+                    _firm_ruin_ci["ruin_firm"] = _fk
+                    per_firm_ruin_cis[_fk] = _firm_ruin_ci
+                    # Select worst firm = highest breach-rate point estimate (most conservative)
+                    if worst_ci is None or _firm_ruin_ci["point_estimate"] > worst_ci["point_estimate"]:
+                        worst_firm_key = _fk
+                        worst_ci = _firm_ruin_ci
+
+                if worst_ci is not None:
+                    # Preserve old terminal<=0 computation under a separate diagnostic key
+                    result["risk_metrics"]["terminal_negative_ci"] = cis.get("probability_of_ruin_ci", cis.get("probability_of_ruin"))
+                    # Set authoritative ruin CI to worst-firm breach rate
+                    authoritative_ci = dict(worst_ci)
+                    authoritative_ci["per_firm"] = per_firm_ruin_cis
+                    result["risk_metrics"]["probability_of_ruin_ci"] = authoritative_ci
+                    result["bca_confidence_intervals"]["probability_of_ruin_ci"] = authoritative_ci
+                else:
+                    # No breach masks available (edge case: all firms returned errors)
+                    _fallback = dict(cis.get("probability_of_ruin_ci", cis.get("probability_of_ruin", {})))
+                    _fallback["ruin_basis"] = "terminal_negative_no_firm"
+                    result["risk_metrics"]["probability_of_ruin_ci"] = _fallback
+                    result["bca_confidence_intervals"]["probability_of_ruin_ci"] = _fallback
+            else:
+                # No firm models in this MC run — terminal<=0 fallback, tagged for audit
+                _no_firm_ci = dict(cis.get("probability_of_ruin_ci", cis.get("probability_of_ruin", {})))
+                _no_firm_ci["ruin_basis"] = "terminal_negative_no_firm"
+                result["risk_metrics"]["probability_of_ruin_ci"] = _no_firm_ci
+                result["bca_confidence_intervals"]["probability_of_ruin_ci"] = _no_firm_ci
+
         result["rng_metadata"] = {"generator": "PCG64DXSM", "seed": request.seed}
     except Exception as _bca_exc:
         import sys as _sys
@@ -1810,6 +1888,13 @@ def run_monte_carlo(
             pass
     finally:
         result.pop("all_paths", None)  # Never serialize raw paths ndarray
+        # Wave hardening 2026-06-22, B14 ruin=firm-breach:
+        # Strip breach_mask from firm_survival unconditionally (success or failure).
+        # The mask was needed only for CI computation; serializing n_sims uint8 values
+        # per firm would waste JSON bandwidth without downstream value.
+        if firm_survival:
+            for _fk in list(firm_survival.keys()):
+                firm_survival[_fk].pop("breach_mask", None)
 
     return result
 

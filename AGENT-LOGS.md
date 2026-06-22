@@ -4,6 +4,121 @@
 
 ---
 
+### Session Log — 2026-06-22 backtest-core (Production Hardening F2 — B14 ruin=firm-breach)
+
+**Mission:** Replace the incorrect `terminal<=0` ruin definition with the institutionally-correct prop-firm breach event (trailing_dd OR daily_loss_limit closes account, OR consistency rule denies payout) for B14's `probability_of_ruin_ci` gate.
+
+**Work completed:**
+
+- **Step 0 — Key path trace:**
+  - Python: `result["risk_metrics"]` (no CI) + `result["bca_confidence_intervals"]` (has `probability_of_ruin_ci`).
+  - TS: `riskMetrics: result.risk_metrics` is what the DB stores. Lifecycle-service reads `rm.probability_of_ruin_ci` from `riskMetrics`.
+  - **Root cause:** `probability_of_ruin_ci` was NEVER in `risk_metrics` — it only lived in `bca_confidence_intervals`. So B14 was always falling back to the scalar path. F2 fixes this by writing `probability_of_ruin_ci` directly into `risk_metrics` from Python. No TS change needed for the DB write.
+
+- **Step 1 — `src/engine/monte_carlo.py::simulate_firm_survival` — `breach_mask` added:**
+  - Initialized `breach_mask = np.zeros(n_sims, dtype=np.uint8)` before the sim loop.
+  - After each sim's `breach_reason` is determined, set `breach_mask[sim] = 1` for `trailing_dd`, `daily_loss_limit`, `consistency`. NOT for `never_hit_target` (account not closed).
+  - Added `"breach_mask": breach_mask` to return dict. Additive — all existing keys unchanged.
+
+- **Step 2 — `src/engine/monte_carlo.py::run_monte_carlo` — firm-breach CI derivation:**
+  - Added inner `_breach_rate_stat = np.mean` for {0,1} mask. NOT `probability_of_ruin_stat` (that computes `mean(x<=0)` = survival rate on a {0,1} mask, not breach rate).
+  - When `firm_survival` non-empty: loops each firm's `breach_mask`, calls `compute_mc_confidence_intervals(_bmask.astype(float), _breach_rate_stat, ...)` (F1's memory-safe helper). Picks worst firm (highest `point_estimate`). Builds `authoritative_ci` with `ruin_basis="firm_breach"`, `ruin_firm=<key>`, `per_firm={<all firm CIs>}`. Writes to `result["risk_metrics"]["probability_of_ruin_ci"]` and `result["bca_confidence_intervals"]["probability_of_ruin_ci"]`. Preserves old terminal<=0 CI under `result["risk_metrics"]["terminal_negative_ci"]`.
+  - When no firms: tags existing CI `ruin_basis="terminal_negative_no_firm"` (B14 audit can see the weaker proxy).
+  - `breach_mask` stripped from `firm_survival` in `finally` block so it's never JSON-serialized.
+
+- **Step 3 — Tests:**
+  - `src/engine/tests/test_mc_firm_breach_ruin.py` (14 tests, new file):
+    - `simulate_firm_survival` returns `breach_mask` of correct length with {0,1} values.
+    - `breach_mask.sum() == trailing_dd + daily_loss_limit + consistency` counts (not `never_hit_target`).
+    - All existing keys still present (additive field regression).
+    - Unknown firm still returns error dict.
+    - `_breach_rate_stat` (np.mean) gives correct point_estimate = breach rate on {0,1} mask.
+    - Deep-drawdown-but-positive-terminal profile: firm_breach_rate > terminal_ruin_rate + 5pp.
+    - No-firm CI tagged `terminal_negative_no_firm`.
+    - Worst-firm selection picks highest point_estimate.
+    - per_firm sub-map contains all firms.
+    - terminal_negative_ci distinct from firm_breach authoritative CI.
+  - `src/engine/tests/test_mc_ruin_probability_ci.py` — clarifying docstring added; no test changes needed (tests cover `compute_all_mc_cis` directly = no-firm path, still correct).
+
+**Verification:**
+
+- Full MC suite: **161 passed** (147 pre-F2 + 14 new). Zero regressions. Runtime 10.16s.
+- Live probe (n_sims=2000, firm=topstep_50k, balanced profile):
+  - `probability_of_ruin_ci`: `ruin_basis=firm_breach`, `ruin_firm=topstep_50k`, `ci_high=0.0040`, `ci_low=0.0005`, `per_firm` present.
+  - `terminal_negative_ci`: `point_est=0.1095`, `ci_high=0.1236`.
+  - Delta: -0.1196 (terminal<=0 was overstating ruin by 12pp on this profile — the bug was real in reverse too).
+  - On extreme profiles (early-win-then-crash), firm_breach_rate = 99.85% vs terminal=0%. Confirms the two metrics diverge materially.
+
+**Completion checklist:**
+- [x] Replay determinism — `_breach_rate_stat` uses `np.mean` (deterministic); F1 seeded helper unchanged
+- [x] Schema compatibility — `probability_of_ruin_ci` now in `risk_metrics` (previously missing from DB); `terminal_negative_ci` is additive; B14 reads same key name
+- [x] Downstream service assumptions — B14 lifecycle-service reads `rm.probability_of_ruin_ci` from `riskMetrics`; now populated from Python directly; no TS change needed for the key path
+- [x] Metric drift — B14 `ci_high` will shift materially (that's the point — this is the authorized regression per operator mandate); test re-baselined
+- [x] Regression coverage — 14 new tests; 161/161 green
+- [x] No new downstream disconnect — `breach_mask` stripped before serialization; firm_survival other keys unchanged
+
+**Change impact block:**
+- **Previous behavior:** `probability_of_ruin_ci` was computed as `mean(terminal <= 0)` over cumulative P&L paths. This is wrong for prop firms: paths can end positive but have tripped the trailing DD mid-path.
+- **New behavior (firm-MC runs):** `probability_of_ruin_ci` derives from `breach_mask` — the per-sim bool tracking `trailing_dd OR daily_loss_limit OR consistency` breach events. Worst firm's CI is authoritative. `ruin_basis="firm_breach"` tag in the dict for audit. Old computation preserved as `terminal_negative_ci`.
+- **New behavior (no-firm runs):** Old terminal<=0 behavior preserved, tagged `ruin_basis="terminal_negative_no_firm"`.
+- **Risk of metric drift:** HIGH AND EXPECTED. B14 `ci_high` will shift because the ruin definition changed. That's the authorized fix. Strategies with deep early drawdowns followed by terminal recovery will now correctly see higher firm-breach ruin rates.
+- **Affected tests:** `test_mc_firm_breach_ruin.py` (14 new). Existing tests unaffected (test `compute_all_mc_cis` directly = no-firm path).
+- **Expected downstream impact:** B14 gate (`probability_of_ruin_ci.ci_high > 0.40`) will now correctly block strategies that trip trailing DD even when terminal P&L is positive. Previously these passed with zero ruin probability.
+
+**TS-side carry-forward (minimal, parent decides):**
+- TS `MCResult` interface (monte-carlo-service.ts line 41) doesn't include `bca_confidence_intervals` field — not needed since `risk_metrics` now carries `probability_of_ruin_ci` directly from Python.
+- No TS migration needed. B14 reads from `monteCarloRuns.riskMetrics.probability_of_ruin_ci` which is now populated.
+- If parent wants to expose `terminal_negative_ci` in the UI, it's also in `riskMetrics.terminal_negative_ci`.
+
+**Carry-forward for next session:**
+- Parent handles commit-and-push per §11a HARD RULE.
+- F1 + F2 can be committed together as "production-hardening-f1-f2: BCa OOM fix + firm-breach ruin definition".
+
+---
+
+### Session Log — 2026-06-22 backtest-core (Production Hardening F1 — MC BCa scale fix)
+
+**Mission:** Fix the verified-live MC ruin-CI OOM defect: scipy BCa's O(n²) jackknife OOM'd at n ≥ 15K sims, silently swallowed by a bare `except Exception: pass`, making B14 fall back to the legacy scalar with zero observability.
+
+**Work completed:**
+
+- **Fix A — `src/engine/mc_confidence.py` BCa memory cap:**
+  - Added module-level `BCA_MAX_SAMPLE = int(os.environ.get("MC_BCA_MAX_SAMPLE", "5000"))`.
+  - In `compute_mc_confidence_intervals`: `point_estimate` still computed on full data (unchanged). When `len(data) > BCA_MAX_SAMPLE`, draws a deterministic subsample via `rng.choice(n_full, size=BCA_MAX_SAMPLE, replace=False)` using the existing seeded RNG. Bootstrap runs on the subsample only, bounding the BCa jackknife to 5000² × 8 bytes ≈ 200 MB regardless of n_sims.
+  - Same cap applied in the `SCIPY_BOOTSTRAP_AVAILABLE=False` percentile-fallback branch for consistency.
+  - New `"n_effective"` key added to all returned CI dicts, recording the actual sample size used for the interval.
+
+- **Fix B — `src/engine/monte_carlo.py` silent swallow killed:**
+  - Replaced bare `except Exception: pass` in the BCa CI block with an explicit handler that: (1) prints to stderr, (2) sets `result["bca_confidence_intervals_error"] = {"error": str(e), "error_type": ...}`, (3) best-effort calls `write_audit_row_sync(action="monte_carlo.bca_ci_failed", severity="warning", ...)` wrapped in its own try/except. `finally: result.pop("all_paths", None)` preserved.
+
+- **Fix C — `src/engine/tests/test_mc_bca_scale.py` (new file, 6 tests):**
+  - `TestBcaScaleNoOOM`: asserts `(12000, 80)` and `(20000, 80)` paths return finite `ci_high` without MemoryError.
+  - `TestBcaScaleCapContract`: asserts `n_effective ≤ BCA_MAX_SAMPLE`; `n_effective == n_sims` when below cap; `point_estimate` exactly equals full-sample `mean(terminal <= 0)`; all four metric dicts carry `n_effective` key.
+
+**Verification:**
+
+- Full MC test suite: **147 passed** (141 pre-existing + 6 new). Zero regressions. Runtime: 14.41s.
+- Live probe `(20000, 80)` paths: `ci_high = 0.677600` (finite), `n_effective = 5000` (capped from 20000), `point_estimate = 0.671550` (matches full-sample). Previously OOM'd at 2.98 GiB.
+
+**Completion checklist:**
+- [x] Replay determinism — subsample uses seeded `rng.choice`; same inputs → same subsample → same CI
+- [x] Schema compatibility — `n_effective` is ADDITIVE; existing consumers unaffected
+- [x] Downstream service assumptions — B14 reads `ci_high`; cap widens CI slightly (conservative = tighter gate, not looser)
+- [x] Metric drift — point_estimate unchanged; ci bounds widen ~1-3 pp at production scale (institutionally safe)
+- [x] Regression coverage — 6 new tests
+- [x] No new downstream disconnect
+
+**Known-facts updates:**
+- `BCA_MAX_SAMPLE=5000` bounds BCa jackknife memory to ~200 MB. Override via `MC_BCA_MAX_SAMPLE` env var.
+- New audit action: `monte_carlo.bca_ci_failed` (severity=warning).
+- `result["bca_confidence_intervals_error"]` key signals CI failure; parent commit handles commit-and-push.
+
+**Carry-forward for next session:**
+- F2 (ruin definition fix) is parent's next task; this session was F1 only.
+- Parent handles commit-and-push per §11a HARD RULE.
+
+---
+
 ### Session Log — 2026-05-26 claude (Wave 26 Pass K — 1-2 trades/day hard gate + 11:30-13:30 ET lunch blackout + PM size taper)
 
 **Mission:** Operator asked "we do 1-2 trades a day and we have a 12pm cutoff time is this info in claude md and in our files?" Audit revealed: NO — neither rule codified. Operator authorized "executr and we eill run test at the end" + "research 2026 if we need to let a institional bot run after 12pm or exit the market". Build 1-2 trade gate AND institutional-research-validate the 12 PM cutoff design.
@@ -8544,7 +8659,59 @@ Also restored Anam.ai persona during this session:
 
 ---
 
+### Session Log — 2026-06-22 B14 non-finite ruin guard (production-hardening fix F3)
+
+**Mission:** Fix the B14 CI gate silent-PASS defect where a scipy BCa DegenerateDataWarning NaN for `ci_high` was silently treated as "passed" due to `NaN != null` evaluating true.
+
+**Work completed:**
+- `src/server/lib/b14-ci-gate.ts`: Added `Number.isFinite()` guards at two read sites (ci_high from ruinCi dict; scalar fallback from pointEstimate). Added `hadNonFiniteRuinEstimate` tracker flag to distinguish "MC ran but produced corrupt/degenerate data" from "no MC run at all." Added fail-CLOSED branch (`b14.ruin_estimate_non_finite_fail_closed`, `passed:false`, `blocked:true`) when both ci_high and scalar fallback are non-finite and at least one non-finite value was observed. Preserves exact existing behavior for all finite-value paths.
+- `src/server/__tests__/wave27-5-pass-b-b14-ci-gate.test.ts`: Added 10 new test cases covering: `ci_high=NaN + finite scalar below threshold → scalar fallback passes`; `ci_high=NaN + finite scalar above threshold → scalar fallback blocks`; `ci_high=NaN + scalar NaN → fail-CLOSED`; `ci_high=NaN + scalar null → fail-CLOSED`; `scalar NaN alone (no ruinCi) → fail-CLOSED`; `ci_high=Infinity + scalar NaN → fail-CLOSED`; `ci_high=Infinity + finite scalar above threshold → blocks via scalar`; regression: finite ci_high below/above 0.40 behaves identically to pre-fix.
+
+**Verification:** `npx vitest run src/server/__tests__/wave27-5-pass-b-b14-ci-gate.test.ts` — **26 tests pass (16 pre-existing + 10 new), 0 failures, 7ms**.
+
+**Known-facts updates:** None.
+
+**Carry-forward for next session:** None from this fix. Parity assumption: `b14.ruin_estimate_non_finite_fail_closed` is a NEW reason string — any audit_log consumer that maps B14 reason strings should handle it. The existing `lifecycle.b14.gate_evaluated` audit in `lifecycle-service.ts` spreads the full `auditPayload` and does not hard-code reason strings, so no caller change is needed.
+
+---
+
+### Session Log — 2026-06-22 claude (Monte Carlo institutional-grade audit + B14 ruin-CI repair)
+
+**Mission:** Operator: "is monte carlo institutional grade use engine" — audit whether MC is genuinely institutional-grade and verify by exercising the actual engine, not trusting the Wave 27.5 "closed" claims. Operator authorized fixing all findings (F1+F3+F2).
+
+**Audit verdict (verified live, numpy 2.3.5 / scipy 1.17.1):** MC *methodology* is institutional-grade (IID/block/stationary bootstrap, data-driven optimal block length, BCa CIs, firm-rule-version drift fail-closed, extrapolation hard-fail, DSR + Bonferroni, autocorr NaN guard, real per-firm survival sim). But the flagship Wave 27.5 Pass A "CRITICAL #2 — full BCa ruin CI for B14" was **green in tests, dead in production** for THREE independent reasons, all proven by running the engine:
+1. **Scale OOM + silent swallow.** scipy BCa jackknife is O(n_sims²) mem. Measured: works at 10k (7.8s), `MemoryError` at ≥15k (1.68 GiB), ~80 GiB at the 100k Python default. `run_monte_carlo` wrapped the CI block in a bare `except Exception: pass` → `bca_confidence_intervals` silently absent on every prod-scale run. Tests only ever used n≤500.
+2. **Key-path disconnect.** B14 reads `monteCarloRuns.riskMetrics.probability_of_ruin_ci` (`lifecycle-service.ts:2543`), but Python only ever wrote the CI into `result["bca_confidence_intervals"]`, NEVER into `risk_metrics` → B14 always saw null → fell back to the legacy scalar.
+3. **Wrong ruin event.** `probability_of_ruin = mean(terminal ≤ 0)` on `cumsum(sampled)` = "ended net-negative", NOT prop-firm trailing-DD breach (the real ban event — you get closed on peak-to-trough while cumulative P&L is still positive). Plus a latent NaN-ci_high silent-PASS in `b14-ci-gate.ts` (`NaN > 0.40 = false`).
+
+**Work completed (3 fixes, multi-pass per §11; commits `dc50bf6` Pass 1 + Pass 3 close):**
+- **F1 (backtest-core, Python):** `mc_confidence.py` caps BCa resample input via `MC_BCA_MAX_SAMPLE` (default 5000; point_estimate stays full-sample; `n_effective` recorded; same cap in percentile-fallback). `monte_carlo.py:1791` bare `except: pass` → explicit catch that sets `bca_confidence_intervals_error` + writes `monte_carlo.bca_ci_failed` audit row. New `test_mc_bca_scale.py`.
+- **F3 (paper-parity, TS):** `b14-ci-gate.ts` finite-checks `ci_high` and the scalar fallback; non-finite both → fail-CLOSED `b14.ruin_estimate_non_finite_fail_closed` (was silent PASS). +10 vitest.
+- **F2 (backtest-core, Python):** `simulate_firm_survival` exposes additive per-path `breach_mask` (trailing_dd ∨ daily_loss_limit ∨ consistency). `run_monte_carlo` derives `probability_of_ruin_ci` from the worst firm's breach_mask, tags `ruin_basis="firm_breach"` + `ruin_firm` + `per_firm`, preserves old value as `terminal_negative_ci`, and — critically — writes `probability_of_ruin_ci` into `risk_metrics` (closing disconnect #2). No-firm runs fall back tagged `terminal_negative_no_firm`. `breach_mask` stripped before JSON serialize. New `test_mc_firm_breach_ruin.py` (14). No TS change needed (Python now writes the key B14 already reads).
+
+**Verification (all independently re-run by parent, not trusting subagent self-reports):**
+- Full MC pytest suite **209 passed** (was 141 pre-session; +6 F1, +14 F2, rest pre-existing). F3 vitest 26/26.
+- Live OOM probe: pre-fix `compute_all_mc_cis` on (20000,80) raised `_ArrayMemoryError`; post-fix returns finite `ci_high` with `n_effective=5000`.
+- Live firm-breach probe: a deep-drawdown/positive-terminal profile shows firm_breach ruin ≈99.85% while terminal_negative ruin = 0% — the old gate would have passed near-certain account closure.
+- CI gates: `check:production-isolation` CLEAN, `check:2026-compliance` OK. `system-map:check` = drift (4 items) but ALL pre-existing Slumhouse carry-forwards (`slumhouse_frontend/routes/discord_oauth` + 1 scheduler mapping) — MC work added ZERO new drift.
+
+**Known-facts updates:** Pinned below — "B14 ruin CI was NOT actually live before 2026-06-22".
+
+**Carry-forward for next session:**
+- 4 pre-existing system-map drift items are Slumhouse-track-owned (not MC) — left for that track; entangled with unreviewed uncommitted Slumhouse working-tree changes.
+- Working tree carries large uncommitted prior-session work (Slumhouse, slumdawg, System Map v2.md) — NOT swept into the MC commits (operator unreviewed). Flag for the operator.
+- Optional follow-up (paper-parity): surface `monte_carlo.degenerate_data_warning` as a structured audit on the Python side for correlation_id traceability, and consider surfacing `terminal_negative_ci` + `ruin_basis` in the UI/B14 audit payload.
+- F2 shifts B14 pass/fail (ruin basis changed) — re-baseline any strategy currently sitting near the 0.40 ci_high boundary; expect firm_breach ruin to differ from the old terminal-negative number in both directions.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
+
+### B14 ruin CI was NOT actually live before 2026-06-22 (pinned 2026-06-22)
+
+CLAUDE.md long claimed "every fresh MC run since 2026-05-25 emits the `_ci` key" and that B14 gates on the BCa `probability_of_ruin_ci.ci_high`. **Both were false in production until 2026-06-22.** B14 silently fell back to the legacy scalar `probability_of_ruin` on every prod-scale run for two independent reasons: (1) scipy BCa OOM'd at ≥15k sims and the failure was swallowed by a bare `except: pass`; (2) Python wrote the CI only into `result["bca_confidence_intervals"]`, never into `result["risk_metrics"]` — and B14 reads `riskMetrics.probability_of_ruin_ci`. If you see B14 emitting `b14.legacy_ruin_scalar_fallback`, that is NOT a "pre-W27.5 grandfather" row as the old comment claimed — investigate `monte_carlo.bca_ci_failed` audits and confirm `risk_metrics.probability_of_ruin_ci` is populated. Also: MC "probability of ruin" now means **prop-firm breach** (trailing-DD ∨ DLL ∨ consistency, via `simulate_firm_survival.breach_mask`), NOT `terminal ≤ 0`. The terminal-negative number is diagnostic-only under `terminal_negative_ci`. Do not "fix" a low ruin number by reverting to terminal-sign — terminal-positive accounts get closed by trailing DD all the time.
+
+
 
 ### Truthiness harness — invariants always present (pinned 2026-05-19, Pass C)
 
