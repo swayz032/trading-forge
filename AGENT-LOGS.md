@@ -9167,6 +9167,36 @@ Also restored Anam.ai persona during this session:
 
 ---
 
+### Session Log — 2026-06-22 claude (Risk / kill-switch / sizing layer institutional-grade audit + 5 account-fatal fixes)
+
+**Mission:** Operator: "what is the next system to make institutional grade" → chose risk/kill-switch/sizing (highest capital-at-risk — one breach blows a funded account). 3-agent read-only audit (accuracy-validator + paper-parity + institutional-edge-researcher) then fix the unambiguous account-fatal findings.
+
+**Audit verdict:** NOT institutional grade — real account-blowup holes. Strong parts: micro point values locked (no mini leakage), `isHaltedForProduction()` fail-closed, EOD `realizedPeakEquity` trailing math correct when HWM supplied, CME trading-day boundary consistent, per-account isolation.
+
+**Work completed (5 account-fatal fixes, commit `d25ffad` on hardening/phase-0, 47 vitest):**
+- F-1 (CRITICAL): `paper-risk-gate.ts` live entry gate halted DLL at raw 100% (no DLL_HALT_PCT) — paper-signal calls THIS gate not the kill-switch, leaving the \$670-\$1000 daily-loss window unprotected. Now halts at firm_dll × 0.67. MFFU (null DLL — no daily loss limit, only EOD trailing) correctly unaffected.
+- F-2 (CRITICAL): `risk-sizing.ts` Topstep HWM silently defaulted to current accountBalance → overstated EOD trailing buffer up to 4× on losing days. Now conservative HWM=max(balance,startingFloor) + hwm_defaulted flag + warn.
+- F-4 (HIGH): `risk-sizing.ts` early-return pyramid-floor path omitted drawdownRoomCap from min() (could place 6 contracts on \$100 DD room). Now included.
+- GAP-1 (HIGH): `paper-execution-service.ts` D6 DLL halt was NOT sticky — un-halted when a winner recovered P&L below 67%. Now sticky per session (config.dailyLossHaltedAt) until CME 17:00 ET reset.
+- GAP-2 (MED-HIGH): force-flatten silently left positions open on null price. Now entry-price fallback → else CRITICAL `paper.force_flatten_stuck` + blocks session re-entry.
+
+**Verification:** 47 new/updated vitest GREEN (12 sizing/DLL + 33 sticky/force-flatten, 35 confirmed in re-run); full vitest 50 fail (down from ~57 baseline, zero new). Co-mingle-safe: foreign-token scanned all files clean, committed only my 7 files by explicit path.
+
+**Operator correction absorbed (2026-06-22):** BOTH Topstep and MFFU use EOD trailing drawdown (not intraday). Overrode the institutional-edge-researcher's "Topstep Combine = intraday trailing" claim. Validates the realizedPeakEquity (EOD closed-equity peak) model — pinned to memory `project_topstep_mffu_both_eod_drawdown`.
+
+**Known-facts updates:**
+- Risk-layer DLL personal-halt (67%) was enforced in kill-switch Layer 2 but NOT in `paper-risk-gate.ts` (the gate paper-signal actually calls) until this fix. When auditing thresholds, check WHICH gate the live path invokes, not just the canonical one.
+- Both firms = EOD trailing DD; never propose intraday-trailing logic (see memory).
+
+**Carry-forward / spec-questions for operator (NOT fixed — need decision):**
+- Resting CME exchange stop orders as kill-switch Layer 4 (survives CME reserved state) — needs TopstepX API (deferred).
+- Consistency-rule (Topstep 50%) live wiring into the entry gate — built (Wave 26 Pass 6) but not wired.
+- CME Rule 575 isAutomated tagging + confirm Topstep orders never route from Railway (VPS ban) — verify when TopstepX activates.
+- `stuckSessionIds` is in-memory (resets on restart) — persist to session config + boot reconciliation.
+- This commit landed on `hardening/phase-0` (shared working tree was branch-switched by the parallel session mid-pass; commit followed the tree). Pushed to origin. My earlier execution+parity commits are on `feature/deep-analysis-pipeline`. Branches will need reconciling.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Parallel session switched the SHARED working tree to branch `hardening/phase-0` (pinned 2026-06-22)
