@@ -571,20 +571,13 @@ class TestDsrFloorBlock:
             f"Expected QUANTUM_RL_DSR_FLOOR=0.5, got {raw}"
         )
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "PRE-EXISTING GAP (2026-06-22): 'quantum_rl.dsr_floor_block' audit action is "
-            "not yet implemented in quantum_rl_agent.py. The DSR floor env var is wired but "
-            "the audit emit call is missing. Tracked as Wave 29 follow-up item."
-        ),
-    )
     def test_dsr_floor_audit_action_in_source(self):
         """'quantum_rl.dsr_floor_block' audit action must exist in quantum_rl_agent.py.
 
-        This test is marked xfail to document a pre-existing implementation gap.
-        When 'quantum_rl.dsr_floor_block' is added to the source, change strict=True
-        so the test promotes itself from xfail to pass.
+        Wave B carry-forward closed 2026-06-22: DSR audit emit implemented in
+        train_regime_conditioned_policies() after final_sharpe computation.
+        governance_labels.dsr_passed stamped per regime; AUDIT_LOG_JSON sentinel emitted
+        to stderr for both dsr_floor_block (below floor) and dsr_passed (above floor).
         """
         source_path = pathlib.Path(
             "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/quantum_rl_agent.py"

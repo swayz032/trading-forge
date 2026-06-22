@@ -56,6 +56,7 @@ import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import {
   computeComposite as libComputeComposite,
   computeWeightsVersionId as libComputeWeightsVersionId,
+  EQUAL_WEIGHTS_VERSION_ID as LIB_EQUAL_WEIGHTS_VERSION_ID,
   verdictFromComposite,
   EQUAL_WEIGHTS as LIB_EQUAL_WEIGHTS,
   type SubsystemName,
@@ -852,7 +853,12 @@ export async function aggregateStrategyHealth(strategyId: string): Promise<Aggre
     const composite = computeComposite(subsystems, EQUAL_WEIGHTS);
 
     // ── Step 4: Compute weights_version_id ─────────────────────────────────
-    const weightsVersionId = computeWeightsVersionId(EQUAL_WEIGHTS);
+    // Wave B LOW-2 fix: use the module-level memoized constant for EQUAL_WEIGHTS
+    // instead of calling computeWeightsVersionId() per-cycle (which was hashing
+    // an immutable constant on every aggregator run). The 16-char slice is
+    // preserved: LIB_EQUAL_WEIGHTS_VERSION_ID is 64 chars; slice(0,16) keeps
+    // the existing column-width contract documented in Wave 28 Pass A.
+    const weightsVersionId = LIB_EQUAL_WEIGHTS_VERSION_ID.slice(0, 16);
 
     // ── Step 5: Staleness ───────────────────────────────────────────────────
     const oldest = _oldestComputedAt(subsystems);

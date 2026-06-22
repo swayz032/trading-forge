@@ -217,10 +217,22 @@ def apply_eligibility_gate(
     if len(signal_indices) == 0:
         return filtered, exit_signals, gate_stats
 
-    # Pre-extract numpy arrays for speed
+    # Pre-extract numpy arrays for speed.
+    # NOTE (Wave B LOW fix 2026-06-22): high_np / low_np are intentionally NOT
+    # extracted here.  apply_eligibility_gate is a SIGNAL FILTER — it evaluates
+    # whether an entry signal should be kept or discarded.  Entry price = close
+    # of the signal bar (consistent with the next-bar-fill convention in the
+    # np.roll() shift above), and all sub-functions (compute_session_context,
+    # compute_location_score, compute_structural_stop, compute_targets) receive
+    # the Polars `df` directly and perform their own column accesses.
+    # Intrabar high/low detection belongs in _apply_static_styleC_management
+    # and _apply_adaptive_management — both already use high_np / low_np
+    # correctly for stop-hit and TP-hit detection (lines ~887-888, ~1178-1179).
+    # Two discarded ternary expressions that previously appeared here were
+    # dead code: the result was never assigned to a variable.  Removing them
+    # eliminates the linter noise and the misleading "pre-extract for speed"
+    # comment that implied the arrays were in use.
     close_np = df["close"].to_numpy()
-    df["high"].to_numpy() if "high" in df.columns else close_np
-    df["low"].to_numpy() if "low" in df.columns else close_np
     ts_col = "ts_event"
     has_ts = ts_col in df.columns
 
@@ -788,11 +800,15 @@ def _apply_static_styleC_management(
     Returns list of managed trade dicts with updated exit_price, exit_idx, exit_reason.
     """
     from src.engine.context.structural_targets import compute_single_tp
+
     # W27.5 P-D.5 (architect close-out): wire check_zero_volume_trade_critical()
     # into entry/exit candidate paths. Closes the M1 (Pass D.3 — Round 1) hand-off
     # gap: Pass D.3 created the helper but did not wire it into the trade-management
     # loop. Env-gated by BACKTEST_ZERO_VOLUME_TRADE_CRITICAL_FAIL_LOUD (default true).
-    from src.engine.data_loader import check_zero_volume_trade_critical, ZeroVolumeOnTradeCriticalBar  # noqa: E501
+    from src.engine.data_loader import (  # noqa: E501
+        ZeroVolumeOnTradeCriticalBar,
+        check_zero_volume_trade_critical,
+    )
 
     managed_trades = []
     ts_col = "ts_event"

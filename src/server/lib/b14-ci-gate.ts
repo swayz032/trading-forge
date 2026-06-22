@@ -18,6 +18,194 @@
 
 import { logger } from "./logger.js";
 
+// ── DSR walk-forward gate ─────────────────────────────────────────────────────
+
+/**
+ * Input shape for evaluateDsrWalkForwardGate.
+ *
+ * Fields come from backtests.walk_forward_results.wf_metadata (written by
+ * walk_forward.py FIX 7 / Wave A, 2026-06-22).
+ *
+ * Naming mirrors the Python side exactly:
+ *   wf_metadata.dsr_pass        — Boolean | null (None when computation failed)
+ *   wf_metadata.dsr_unavailable — Boolean (true when DSR computation threw)
+ *   wf_metadata.dsr             — float | null (the raw DSR value, informational)
+ */
+export interface WalkForwardDsrInput {
+  dsr_pass?: boolean | null;
+  dsr_unavailable?: boolean | null;
+  dsr?: number | null;
+}
+
+/**
+ * Result shape returned by evaluateDsrWalkForwardGate.
+ *
+ * Four terminal states:
+ *   "pass"            — dsr_pass=true; gate allows promotion.
+ *   "blocked_dsr_unavailable" — dsr_unavailable=true AND dsr_pass=false;
+ *                       Python DSR computation threw; fail-closed.
+ *   "blocked_dsr_floor"       — dsr_pass=false (without dsr_unavailable);
+ *                       DSR computed but below floor.
+ *   "legacy_proceed"  — dsr_pass undefined/null; pre-Wave-A backtest;
+ *                       grandfather window; one-time warn.
+ */
+export type DsrGateStatus =
+  | "pass"
+  | "blocked_dsr_unavailable"
+  | "blocked_dsr_floor"
+  | "legacy_proceed";
+
+export interface DsrWalkForwardGateResult {
+  /** True when the gate allows promotion; false when it blocks. */
+  passed: boolean;
+  /** Terminal state string. */
+  status: DsrGateStatus;
+  /** Canonical audit action name to write to audit_log. */
+  auditAction:
+    | "lifecycle.dsr_unavailable_block"
+    | "lifecycle.dsr_floor_block"
+    | "lifecycle.dsr_unavailable_legacy"
+    | null;
+  /** Human-readable reason string (mirrors the audit action). */
+  reason: string;
+  /** Full audit payload — merge into the audit_log result field. */
+  auditPayload: {
+    dsr_pass: boolean | null;
+    dsr_unavailable: boolean;
+    dsr: number | null;
+    status: DsrGateStatus;
+    blocked: boolean;
+  };
+}
+
+/**
+ * Evaluate the DSR walk-forward gate.
+ *
+ * Gate semantics (in priority order):
+ *
+ * 1. dsr_unavailable=true AND dsr_pass=false
+ *    → BLOCK with status "blocked_dsr_unavailable"
+ *    → audit "lifecycle.dsr_unavailable_block"
+ *    (Python DSR computation threw; we cannot trust the strategy survived
+ *     multiple-testing correction. Fail-closed per Wave A mandate.)
+ *
+ * 2. dsr_pass=false (dsr_unavailable falsy or absent)
+ *    → BLOCK with status "blocked_dsr_floor"
+ *    → audit "lifecycle.dsr_floor_block"
+ *    (DSR computed and below the honest-SR floor. Strategy does not survive
+ *     multiple-testing correction.)
+ *
+ * 3. dsr_pass=undefined | null
+ *    → PROCEED with status "legacy_proceed"
+ *    → audit "lifecycle.dsr_unavailable_legacy" (INFO warn; grandfather)
+ *    (Pre-Wave-A backtest that never emitted dsr_pass. Grandfather window:
+ *     every fresh WF run since 2026-06-22 emits the field.)
+ *
+ * 4. dsr_pass=true
+ *    → PROCEED with status "pass"
+ *    → no audit action (caller emits gate-passed row if desired)
+ *
+ * @param wfMetadata  Object with dsr_pass, dsr_unavailable, dsr from wf_metadata.
+ *                    Pass null/undefined for pre-Wave-A backtests.
+ */
+export function evaluateDsrWalkForwardGate(
+  wfMetadata: WalkForwardDsrInput | null | undefined,
+): DsrWalkForwardGateResult {
+  // Normalise nullish metadata to an empty object so field reads are uniform.
+  const meta: WalkForwardDsrInput = wfMetadata ?? {};
+
+  const dsrPass = meta.dsr_pass;
+  const dsrUnavailable = meta.dsr_unavailable === true;
+  const dsrValue = meta.dsr != null ? Number(meta.dsr) : null;
+
+  // ── 1. Legacy path: dsr_pass not present (pre-Wave-A backtest) ─────────────
+  // Distinct from "dsr_unavailable": legacy means the field was never emitted
+  // by an older walk_forward.py, not that computation failed on a new run.
+  if (dsrPass === undefined || dsrPass === null) {
+    logger.warn(
+      { dsr: dsrValue, dsrUnavailable },
+      "DSR gate: dsr_pass absent — pre-Wave-A backtest; proceeding with legacy warn (lifecycle.dsr_unavailable_legacy)",
+    );
+    return {
+      passed: true,
+      status: "legacy_proceed",
+      auditAction: "lifecycle.dsr_unavailable_legacy",
+      reason: "lifecycle.dsr_unavailable_legacy",
+      auditPayload: {
+        dsr_pass: null,
+        dsr_unavailable: dsrUnavailable,
+        dsr: dsrValue,
+        status: "legacy_proceed",
+        blocked: false,
+      },
+    };
+  }
+
+  // ── 2. DSR pass: computation succeeded AND honest SR passed ────────────────
+  if (dsrPass === true) {
+    return {
+      passed: true,
+      status: "pass",
+      auditAction: null,
+      reason: "lifecycle.dsr_pass",
+      auditPayload: {
+        dsr_pass: true,
+        dsr_unavailable: dsrUnavailable,
+        dsr: dsrValue,
+        status: "pass",
+        blocked: false,
+      },
+    };
+  }
+
+  // dsrPass === false beyond this point.
+
+  // ── 3. DSR unavailable: Python threw during computation ────────────────────
+  // Priority: dsr_unavailable check comes BEFORE the bare dsr_pass=false path
+  // because the cause matters for operator triage (computation failure vs. a
+  // strategy that genuinely failed the honest-SR test).
+  if (dsrUnavailable) {
+    logger.warn(
+      { dsr: dsrValue },
+      "DSR gate: BLOCKED — dsr_unavailable=true AND dsr_pass=false (Python DSR computation failed; fail-closed per Wave A mandate) — lifecycle.dsr_unavailable_block",
+    );
+    return {
+      passed: false,
+      status: "blocked_dsr_unavailable",
+      auditAction: "lifecycle.dsr_unavailable_block",
+      reason: "lifecycle.dsr_unavailable_block",
+      auditPayload: {
+        dsr_pass: false,
+        dsr_unavailable: true,
+        dsr: dsrValue,
+        status: "blocked_dsr_unavailable",
+        blocked: true,
+      },
+    };
+  }
+
+  // ── 4. DSR floor: computation succeeded but SR is below honest floor ────────
+  logger.warn(
+    { dsr: dsrValue },
+    "DSR gate: BLOCKED — dsr_pass=false (strategy did not survive multiple-testing correction) — lifecycle.dsr_floor_block",
+  );
+  return {
+    passed: false,
+    status: "blocked_dsr_floor",
+    auditAction: "lifecycle.dsr_floor_block",
+    reason: "lifecycle.dsr_floor_block",
+    auditPayload: {
+      dsr_pass: false,
+      dsr_unavailable: false,
+      dsr: dsrValue,
+      status: "blocked_dsr_floor",
+      blocked: true,
+    },
+  };
+}
+
+// ── B14 ruin-CI gate ──────────────────────────────────────────────────────────
+
 export interface RuinCiDict {
   point_estimate?: number | null;
   ci_low?: number | null;

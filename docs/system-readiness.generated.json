@@ -1,47 +1,25 @@
 {
-  "generatedAt": "2026-06-22T20:09:14.001Z",
+  "generatedAt": "2026-06-22T21:41:04.312Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
-    "ab_comparison:invalid-active-proof-mode",
-    "adaptive_exit_engine:invalid-active-proof-mode",
     "adaptive_exit_engine:manual_gate:operator_opt_in_per_strategy",
-    "composite_shadow_gate:invalid-active-proof-mode",
-    "dd_velocity_gate:invalid-active-proof-mode",
     "dd_velocity_gate:manual_gate:operator-only-recovery",
-    "exit_engine_ab_harness:invalid-active-proof-mode",
     "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
     "frozen_policy_contract:manual_gate:operator_hmac_override",
-    "late_cycle_overheating_regime:invalid-active-proof-mode",
     "pattern_aggregator_service:manual_gate:kill_switch",
     "phase5_contract_spec_scaffold:manual_gate:operator-approve",
     "production_hardening:manual_gate:operator-halt-only",
-    "quantum_rl_challenger:invalid-active-proof-mode",
-    "replay_grade_confluence:invalid-active-proof-mode",
     "replay_grade_confluence:manual_gate:operator-approve",
-    "replay_grade_consistency:invalid-active-proof-mode",
     "replay_grade_consistency:manual_gate:operator-approve",
-    "replay_grade_critique:invalid-active-proof-mode",
     "replay_grade_critique:manual_gate:operator-approve",
-    "replay_grade_pattern_aggregator:invalid-active-proof-mode",
     "replay_grade_pattern_aggregator:manual_gate:operator-approve",
-    "replay_grade_robustness:invalid-active-proof-mode",
     "replay_grade_robustness:manual_gate:operator-approve",
-    "replay_grade_survival_twin:invalid-active-proof-mode",
     "replay_grade_survival_twin:manual_gate:operator-approve",
-    "replay_grade_unified_dispatcher:invalid-active-proof-mode",
     "replay_grade_unified_dispatcher:manual_gate:operator-approve",
-    "replay_harness_engine:invalid-active-proof-mode",
     "replay_harness_engine:manual_gate:operator-approve",
-    "slumhouse_discord_oauth:invalid-active-proof-mode",
-    "slumhouse_frontend:invalid-active-proof-mode",
-    "slumhouse_routes:invalid-active-proof-mode",
-    "slumhouse_users_table:invalid-active-proof-mode",
     "slumhouse_users_table:manual_gate:operator",
-    "strategy_health_observability:invalid-active-proof-mode",
-    "ts_python_parity_ci_gate:invalid-active-proof-mode",
     "ts_python_parity_ci_gate:manual_gate:ci_gate",
-    "wave29_observability_surface:missing-evidence-queries",
     "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
     "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
     "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
@@ -53,8 +31,8 @@
   ],
   "subsystemCounts": {
     "total": 69,
-    "ready": 36,
-    "blocked": 26,
+    "ready": 45,
+    "blocked": 17,
     "manualGated": 2,
     "experimental": 5
   },
@@ -101,16 +79,14 @@
     },
     {
       "id": "ab_comparison",
-      "status": "blocked",
+      "status": "ready",
       "productionTargetState": "production_autonomous",
       "manualGate": "none",
       "selfEvolving": false,
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "operator_only",
-      "blockers": [
-        "invalid-active-proof-mode"
-      ],
+      "blockers": [],
       "requiredEvidence": [
         "/api/ab-comparison/recent",
         "ab_comparison_digest.completed",
@@ -135,7 +111,6 @@
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "production",
       "blockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator_opt_in_per_strategy"
       ],
       "requiredEvidence": [
@@ -195,13 +170,18 @@
       "requiredEvidence": [
         "/api/health/dashboard",
         "audit_log:broker.order_routed",
+        "audit_log:live_order.routed",
         "broker_accounts:recent-write",
         "broker-credentials-loaded-audit",
         "broker-order-routing-audit",
         "broker:order_routed SSE",
         "broker.credentials_loaded",
         "broker.error_budget_breach",
-        "broker.order_routed"
+        "broker.order_routed",
+        "live_order.blocked_hmac_invalid",
+        "live_order.blocked_kill_switch",
+        "live_order.blocked_replay",
+        "live_order.routed"
       ]
     },
     {
@@ -274,16 +254,14 @@
     },
     {
       "id": "composite_shadow_gate",
-      "status": "blocked",
+      "status": "ready",
       "productionTargetState": "production_autonomous",
       "manualGate": "none",
       "selfEvolving": false,
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "operator_only",
-      "blockers": [
-        "invalid-active-proof-mode"
-      ],
+      "blockers": [],
       "requiredEvidence": [
         "audit_log.composite.shadow_evaluation",
         "audit_log.shadow_analysis.completed",
@@ -422,7 +400,6 @@
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "operator_only",
       "blockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator-only-recovery"
       ],
       "requiredEvidence": [
@@ -469,7 +446,6 @@
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "production",
       "blockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator_invoke_for_cohort_validation"
       ],
       "requiredEvidence": [
@@ -583,16 +559,14 @@
     },
     {
       "id": "late_cycle_overheating_regime",
-      "status": "blocked",
+      "status": "ready",
       "productionTargetState": "production_autonomous",
       "manualGate": "none",
       "selfEvolving": false,
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "operator_only",
-      "blockers": [
-        "invalid-active-proof-mode"
-      ],
+      "blockers": [],
       "requiredEvidence": [
         "audit_log.regime.late_cycle_overheating_detected",
         "regime.late_cycle_overheating_detected",
@@ -995,16 +969,14 @@
     },
     {
       "id": "quantum_rl_challenger",
-      "status": "blocked",
+      "status": "ready",
       "productionTargetState": "production_autonomous",
       "manualGate": "none",
       "selfEvolving": true,
       "learningMode": "active_learning",
       "operatingClass": "adaptive",
       "deploymentAuthority": "operator_only",
-      "blockers": [
-        "invalid-active-proof-mode"
-      ],
+      "blockers": [],
       "requiredEvidence": [
         "audit_log.quantum_rl.*",
         "audit_log.quantum_rl.training_auto_fire_enqueued",
@@ -1064,10 +1036,13 @@
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "autonomous_pre_deploy",
       "blockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator-approve"
       ],
       "requiredEvidence": [
+        "audit_log:replay_grade_confluence.inconclusive",
+        "audit_log:replay_grade_confluence.no_signal",
+        "audit_log:replay_grade_confluence.preliminary",
+        "audit_log:replay_grade_confluence.signal_detected",
         "replay_grade_confluence.inconclusive",
         "replay_grade_confluence.no_signal",
         "replay_grade_confluence.preliminary",
@@ -1086,10 +1061,13 @@
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "autonomous_pre_deploy",
       "blockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator-approve"
       ],
       "requiredEvidence": [
+        "audit_log:replay_grade_consistency.inconclusive",
+        "audit_log:replay_grade_consistency.no_signal",
+        "audit_log:replay_grade_consistency.preliminary",
+        "audit_log:replay_grade_consistency.signal_detected",
         "replay_grade_consistency.inconclusive",
         "replay_grade_consistency.no_signal",
         "replay_grade_consistency.preliminary",
@@ -1108,10 +1086,13 @@
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "autonomous_pre_deploy",
       "blockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator-approve"
       ],
       "requiredEvidence": [
+        "audit_log:replay_grade_critique.inconclusive",
+        "audit_log:replay_grade_critique.no_signal",
+        "audit_log:replay_grade_critique.preliminary",
+        "audit_log:replay_grade_critique.signal_detected",
         "replay_grade_critique.inconclusive",
         "replay_grade_critique.no_signal",
         "replay_grade_critique.preliminary",
@@ -1130,10 +1111,13 @@
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "autonomous_pre_deploy",
       "blockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator-approve"
       ],
       "requiredEvidence": [
+        "audit_log:replay_grade_pattern_aggregator.inconclusive",
+        "audit_log:replay_grade_pattern_aggregator.no_signal",
+        "audit_log:replay_grade_pattern_aggregator.preliminary",
+        "audit_log:replay_grade_pattern_aggregator.signal_detected",
         "replay_grade_pattern_aggregator.inconclusive",
         "replay_grade_pattern_aggregator.no_signal",
         "replay_grade_pattern_aggregator.preliminary",
@@ -1152,10 +1136,13 @@
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "autonomous_pre_deploy",
       "blockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator-approve"
       ],
       "requiredEvidence": [
+        "audit_log:replay_grade_robustness.inconclusive",
+        "audit_log:replay_grade_robustness.no_signal",
+        "audit_log:replay_grade_robustness.preliminary",
+        "audit_log:replay_grade_robustness.signal_detected",
         "replay_grade_robustness.inconclusive",
         "replay_grade_robustness.no_signal",
         "replay_grade_robustness.preliminary",
@@ -1174,10 +1161,15 @@
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "autonomous_pre_deploy",
       "blockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator-approve"
       ],
       "requiredEvidence": [
+        "audit_log:replay_grade_survival_twin.inconclusive",
+        "audit_log:replay_grade_survival_twin.no_signal",
+        "audit_log:replay_grade_survival_twin.preliminary",
+        "audit_log:replay_grade_survival_twin.signal_detected",
+        "audit_log:survival_twin_replay.completed",
+        "audit_log:survival_twin_replay.failed",
         "replay_grade_survival_twin.inconclusive",
         "replay_grade_survival_twin.no_signal",
         "replay_grade_survival_twin.preliminary",
@@ -1199,10 +1191,11 @@
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "autonomous_pre_deploy",
       "blockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator-approve"
       ],
       "requiredEvidence": [
+        "audit_log:replay_grade.aggregate_verdict_emitted",
+        "audit_log:replay_grade.dispatcher_invoked",
         "replay_grade.aggregate_verdict_emitted",
         "replay_grade.dispatcher_invoked",
         "scripts/replay-grade.ts",
@@ -1220,10 +1213,10 @@
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "autonomous_pre_deploy",
       "blockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator-approve"
       ],
       "requiredEvidence": [
+        "audit_log:replay.harness_executed",
         "replay.harness_executed",
         "stdout-json-summary",
         "tests/python/replay/test_quantum_replay.py"
@@ -1302,17 +1295,18 @@
     },
     {
       "id": "slumhouse_discord_oauth",
-      "status": "blocked",
+      "status": "ready",
       "productionTargetState": "production_autonomous",
       "manualGate": "none",
       "selfEvolving": false,
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "operator_only",
-      "blockers": [
-        "invalid-active-proof-mode"
-      ],
+      "blockers": [],
       "requiredEvidence": [
+        "audit_log:slumhouse.login_cancelled",
+        "audit_log:slumhouse.login_failed",
+        "audit_log:slumhouse.login_success",
         "audit_log.slumhouse.login_cancelled",
         "audit_log.slumhouse.login_failed",
         "audit_log.slumhouse.login_success",
@@ -1324,32 +1318,34 @@
     },
     {
       "id": "slumhouse_frontend",
-      "status": "blocked",
+      "status": "ready",
       "productionTargetState": "production_autonomous",
       "manualGate": "none",
       "selfEvolving": false,
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "operator_only",
-      "blockers": [
-        "invalid-active-proof-mode"
-      ],
-      "requiredEvidence": []
+      "blockers": [],
+      "requiredEvidence": [
+        "audit_log:slumhouse.login_success",
+        "SELECT COUNT(*) FROM slumhouse_users WHERE last_seen_at > NOW() - INTERVAL '7 days'",
+        "slumhouse_users:last_seen_at"
+      ]
     },
     {
       "id": "slumhouse_routes",
-      "status": "blocked",
+      "status": "ready",
       "productionTargetState": "production_autonomous",
       "manualGate": "none",
       "selfEvolving": false,
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "operator_only",
-      "blockers": [
-        "invalid-active-proof-mode"
-      ],
+      "blockers": [],
       "requiredEvidence": [
-        "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.%' ORDER BY created_at DESC LIMIT 50"
+        "audit_log:slumhouse.login_success",
+        "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.%' ORDER BY created_at DESC LIMIT 50",
+        "slumhouse_users:last_seen_at"
       ]
     },
     {
@@ -1362,11 +1358,12 @@
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "operator_only",
       "blockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator"
       ],
       "requiredEvidence": [
+        "audit_log:slumhouse.user_mapped",
         "SELECT * FROM slumhouse_users ORDER BY created_at DESC LIMIT 50",
+        "slumhouse_users:recent-write",
         "slumhouse.user_mapped"
       ]
     },
@@ -1408,16 +1405,14 @@
     },
     {
       "id": "strategy_health_observability",
-      "status": "blocked",
+      "status": "ready",
       "productionTargetState": "production_autonomous",
       "manualGate": "none",
       "selfEvolving": false,
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "operator_only",
-      "blockers": [
-        "invalid-active-proof-mode"
-      ],
+      "blockers": [],
       "requiredEvidence": [
         "/api/composite-health",
         "composite_health.aggregator_uncaught_error",
@@ -1537,7 +1532,6 @@
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "production",
       "blockers": [
-        "invalid-active-proof-mode",
         "manual_gate:ci_gate"
       ],
       "requiredEvidence": [
@@ -1568,16 +1562,14 @@
     },
     {
       "id": "wave29_observability_surface",
-      "status": "blocked",
+      "status": "ready",
       "productionTargetState": "production_autonomous",
       "manualGate": "none",
       "selfEvolving": false,
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
       "deploymentAuthority": "operator_only",
-      "blockers": [
-        "missing-evidence-queries"
-      ],
+      "blockers": [],
       "requiredEvidence": [
         "/metrics endpoint reachable",
         "/metrics tf_frozen_policy_overrides_total",
@@ -1589,6 +1581,9 @@
         "/metrics tf_rl_kill_switch_total",
         "/metrics tf_rl_training_epochs_total",
         "/metrics tf_shadow_signals_total",
+        "audit_log:wave29_observability.metrics_emitted",
+        "GET /metrics | grep -E 'tf_(pbo|shadow|rl|frozen_policy|regime_drift|lifecycle_shadow)_'",
+        "SELECT * FROM audit_log WHERE action LIKE 'wave29_observability.%' ORDER BY created_at DESC LIMIT 20",
         "SSE lifecycle:pbo_evaluated",
         "SSE lifecycle:shadow_divergence_evaluated",
         "SSE quantum_rl:kill_switch_engaged",

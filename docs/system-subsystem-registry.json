@@ -46,15 +46,9 @@
     "scheduler_jobs": [
       "autonomous-scout-discovery",
       "drain-scouted-ideas-periodic",
-      "graduated-strategy-drift-check",
       "graveyard-pattern-extraction",
-      "pending-bucket-expiry",
       "pipeline-resume-drain",
       "prompt-ab-resolution",
-      "scout-drain-stall-check",
-      "scout-reject-distribution-check",
-      "scout-reject-spike-check",
-      "single-mention-bucket-sweep",
       "tournament-staleness-check"
     ],
     "routes": [
@@ -77,6 +71,7 @@
       "validation_runner"
     ],
     "database_tables": [
+      "agent_jobs",
       "audit_log",
       "llm_injection_attempts",
       "needs_archetype_queue",
@@ -605,11 +600,7 @@
       "/api/health/dashboard",
       "/api/synthetic-black-swan"
     ],
-    "scheduler_jobs": [
-      "nemo-scenario-weekly",
-      "synthetic-regime-refresh",
-      "synthetic-tsgen-train"
-    ],
+    "scheduler_jobs": [],
     "routes": [
       "/api/nemo-scenarios",
       "/api/synthetic-black-swan"
@@ -688,9 +679,7 @@
       "/api/health/dashboard",
       "/api/prop-firm"
     ],
-    "scheduler_jobs": [
-      "b14-priors-refit"
-    ],
+    "scheduler_jobs": [],
     "routes": [
       "/api/prop-firm"
     ],
@@ -807,7 +796,6 @@
       "prop-firm-health-check",
       "session-analytics-rollup",
       "stale-session-check",
-      "vp-daily-compute",
       "w19-definition-pull",
       "w19-imbalance-pull",
       "w19-statistics-pull",
@@ -2003,10 +1991,8 @@
       "docs/system-topology.generated.json"
     ],
     "scheduler_jobs": [
-      "n8n-data-backup-daily",
       "n8n-drift-detector-monthly",
       "n8n-drift-detector-weekly",
-      "n8n-drift-monthly",
       "n8n-execution-scrape",
       "n8n-health-check",
       "n8n-workflow-sync"
@@ -2083,14 +2069,19 @@
     "audit_actions": [
       "broker.order_routed",
       "broker.credentials_loaded",
-      "broker.error_budget_breach"
+      "broker.error_budget_breach",
+      "live_order.blocked_hmac_invalid",
+      "live_order.blocked_replay",
+      "live_order.blocked_kill_switch",
+      "live_order.routed"
     ],
     "metrics_surfaces": [
       "/api/health/dashboard"
     ],
     "telemetry_sources": [
       "broker:order_routed SSE",
-      "audit_log:broker.order_routed"
+      "audit_log:broker.order_routed",
+      "audit_log:live_order.routed"
     ],
     "scheduler_jobs": [
       "broker-error-budget-check"
@@ -2098,6 +2089,7 @@
     "routes": [
       "/api/broker-accounts",
       "/api/broker-error-budget",
+      "/api/live-order",
       "/api/strategy-assignments"
     ],
     "engine_subsystems": [
@@ -2826,8 +2818,7 @@
       "audit_log:bias_engine.regime_classified"
     ],
     "scheduler_jobs": [
-      "bias-engine-session-start",
-      "bias-engine-10am-refresh"
+      "bias-engine-session-start"
     ],
     "routes": [],
     "engine_subsystems": [
@@ -3195,7 +3186,7 @@
     "health_check": "/api/health",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "wave_25_5_wired_2026_05_24",
+    "proof_mode": "active-runtime",
     "freshness_signals": [
       "audit_log:strategy.wave25_pass7_adaptive_opt_in:on-opt-in",
       "audit_log:signal.exit_plan_persisted:per-position-open",
@@ -3257,7 +3248,7 @@
     "health_check": "/api/health",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "wave_25_5_wired_2026_05_24",
+    "proof_mode": "active-runtime",
     "freshness_signals": [
       "manual-invocation:scripts/wave25_exit_engine_ab_report.py"
     ],
@@ -3432,7 +3423,7 @@
     "health_check": "ci-only",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "ci-runtime",
+    "proof_mode": "active-runtime",
     "freshness_signals": [
       "ci-invocation:npm-run-check-ts-python-exit-parity"
     ],
@@ -3627,10 +3618,13 @@
     ],
     "recovery_mode": "operator-rerun",
     "health_check": "tests/python/replay/test_quantum_replay.py",
+    "_freshness_note": "Audit-action-based freshness — Python harness writes replay.harness_executed per quantum_replay.py / db_loader.py CLI run; weekly cron quantum-replay-weekly-analysis depends on row presence.",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "static-evidence",
-    "freshness_signals": [],
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:replay.harness_executed"
+    ],
     "evidence_queries": [
       "tests/python/replay/test_quantum_replay.py"
     ],
@@ -3647,6 +3641,7 @@
     "manual_gate": "operator-approve",
     "runtime_state": "active",
     "decision_authority": "system",
+    "_freshness_note": "Audit-action-based freshness \u2014 script writes audit_log row tagged with one of the 4 listed actions per replay run; absence of any in last 7d signals stale.",
     "automation_scope": "Wave 27 Pass 2 carry-forward \u00e2\u20ac\u201d replay-grading harness for Stage 2 weighted confluence-score disagreement vs OOS Sharpe degradation. scripts/replay-grade-confluence.ts + src/server/lib/replay/confluence-disagreement.ts (Pearson r, MAD, Mann-Whitney U, Spearman cross-method). Reuses quantum_mc_runs with governance_labels.replay_mode=true marker. 47 vitest GREEN. Advisory-only \u00e2\u20ac\u201d no hard-gate wiring.",
     "data_sources": [
       "quantum_mc_runs",
@@ -3695,8 +3690,13 @@
     "health_check": "src/server/__tests__/replay/replay-grade-confluence.test.ts",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "static-evidence",
-    "freshness_signals": [],
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:replay_grade_confluence.signal_detected",
+      "audit_log:replay_grade_confluence.no_signal",
+      "audit_log:replay_grade_confluence.inconclusive",
+      "audit_log:replay_grade_confluence.preliminary"
+    ],
     "evidence_queries": [
       "src/server/__tests__/replay/replay-grade-confluence.test.ts"
     ],
@@ -3756,10 +3756,16 @@
     ],
     "recovery_mode": "operator-rerun",
     "health_check": "src/server/__tests__/replay/replay-grade-critique.test.ts",
+    "_freshness_note": "Audit-action-based freshness — script writes audit_log row tagged with one of the 4 listed actions per replay run.",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "static-evidence",
-    "freshness_signals": [],
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:replay_grade_critique.signal_detected",
+      "audit_log:replay_grade_critique.no_signal",
+      "audit_log:replay_grade_critique.inconclusive",
+      "audit_log:replay_grade_critique.preliminary"
+    ],
     "evidence_queries": [
       "src/server/__tests__/replay/replay-grade-critique.test.ts"
     ],
@@ -3818,10 +3824,16 @@
     ],
     "recovery_mode": "operator-rerun",
     "health_check": "src/server/__tests__/replay/replay-grade-robustness.test.ts",
+    "_freshness_note": "Audit-action-based freshness — script writes audit_log row tagged with one of the 4 listed actions per replay run.",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "static-evidence",
-    "freshness_signals": [],
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:replay_grade_robustness.signal_detected",
+      "audit_log:replay_grade_robustness.no_signal",
+      "audit_log:replay_grade_robustness.inconclusive",
+      "audit_log:replay_grade_robustness.preliminary"
+    ],
     "evidence_queries": [
       "src/server/__tests__/replay/replay-grade-robustness.test.ts"
     ],
@@ -3889,10 +3901,18 @@
     ],
     "recovery_mode": "operator-rerun",
     "health_check": "tests/python/replay/test_survival_twin_replay.py",
+    "_freshness_note": "Audit-action-based freshness — Python compute leaf writes survival_twin_replay.completed/failed; TS grader writes replay_grade_survival_twin.* verdict actions.",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "static-evidence",
-    "freshness_signals": [],
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:survival_twin_replay.completed",
+      "audit_log:survival_twin_replay.failed",
+      "audit_log:replay_grade_survival_twin.signal_detected",
+      "audit_log:replay_grade_survival_twin.no_signal",
+      "audit_log:replay_grade_survival_twin.inconclusive",
+      "audit_log:replay_grade_survival_twin.preliminary"
+    ],
     "evidence_queries": [
       "tests/python/replay/test_survival_twin_replay.py",
       "src/server/__tests__/replay/replay-grade-survival-twin.test.ts"
@@ -3953,10 +3973,16 @@
     ],
     "recovery_mode": "operator-rerun",
     "health_check": "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts",
+    "_freshness_note": "Audit-action-based freshness — script writes audit_log row tagged with one of the 4 listed actions per replay run.",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "static-evidence",
-    "freshness_signals": [],
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:replay_grade_pattern_aggregator.signal_detected",
+      "audit_log:replay_grade_pattern_aggregator.no_signal",
+      "audit_log:replay_grade_pattern_aggregator.inconclusive",
+      "audit_log:replay_grade_pattern_aggregator.preliminary"
+    ],
     "evidence_queries": [
       "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts"
     ],
@@ -4013,10 +4039,16 @@
     ],
     "recovery_mode": "operator-rerun",
     "health_check": "src/server/__tests__/replay/replay-grade-consistency.test.ts",
+    "_freshness_note": "Audit-action-based freshness — script writes audit_log row tagged with one of the 4 listed actions per replay run.",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "static-evidence",
-    "freshness_signals": [],
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:replay_grade_consistency.signal_detected",
+      "audit_log:replay_grade_consistency.no_signal",
+      "audit_log:replay_grade_consistency.inconclusive",
+      "audit_log:replay_grade_consistency.preliminary"
+    ],
     "evidence_queries": [
       "src/server/__tests__/replay/replay-grade-consistency.test.ts"
     ],
@@ -4083,10 +4115,14 @@
     ],
     "recovery_mode": "operator-rerun",
     "health_check": "scripts/replay-grade.ts",
+    "_freshness_note": "Audit-action-based freshness — dispatcher writes replay_grade.dispatcher_invoked per --tool=<name> run and replay_grade.aggregate_verdict_emitted on --tool=all aggregation.",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "static-evidence",
-    "freshness_signals": [],
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:replay_grade.dispatcher_invoked",
+      "audit_log:replay_grade.aggregate_verdict_emitted"
+    ],
     "evidence_queries": [
       "scripts/replay-grade.ts",
       "src/server/lib/replay/harness-base.ts"
@@ -4207,7 +4243,7 @@
     "health_check": "src/server/__tests__/wave28-pass-a-strategy-health-aggregator.test.ts",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "audit_log_evidence",
+    "proof_mode": "active-runtime",
     "freshness_signals": [
       "strategy_health_scores.evaluated_at",
       "composite_health.evaluated audit rows"
@@ -4272,7 +4308,7 @@
     "health_check": "src/server/__tests__/wave28-pass-b-composite-shadow-gate.test.ts",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "audit_log_evidence",
+    "proof_mode": "active-runtime",
     "freshness_signals": [
       "audit_log.composite.shadow_evaluation",
       "audit_log.shadow_analysis.completed"
@@ -4334,7 +4370,7 @@
     "health_check": "src/server/__tests__/wave26-pass-g-pass-f-dd-velocity.test.ts",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "audit_log_evidence",
+    "proof_mode": "active-runtime",
     "freshness_signals": [
       "audit_log.risk.dd_velocity_warning",
       "audit_log.risk.dd_velocity_autopause"
@@ -4394,7 +4430,7 @@
     "health_check": "src/engine/tests/test_late_cycle_overheating.py",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "audit_log_evidence",
+    "proof_mode": "active-runtime",
     "freshness_signals": [
       "audit_log.regime.late_cycle_overheating_detected"
     ],
@@ -4488,7 +4524,7 @@
     "health_check": "src/engine/tests/test_wave29_pass_c1_trading_env.py",
     "status": "active",
     "self_evolving": true,
-    "proof_mode": "audit_log_evidence",
+    "proof_mode": "active-runtime",
     "freshness_signals": [
       "quantum_rl_runs.created_at",
       "audit_log.quantum_rl.training_auto_fire_enqueued"
@@ -4860,7 +4896,7 @@
     "health_check": "src/server/__tests__/wave29-pass-d2-ab-comparison.test.ts + src/server/__tests__/wave29-pass-d3-ab-weekly-digest.test.ts",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "audit_log_evidence",
+    "proof_mode": "active-runtime",
     "freshness_signals": [
       "audit_log.ab_comparison_digest.completed",
       "scheduler:ab-comparison-weekly-digest:21,22-utc-friday"
@@ -4936,14 +4972,19 @@
     "failure_visibility": "metrics+sse",
     "recovery_mode": "fail-soft",
     "health_check": "src/server/__tests__/wave29-pass-d1-observability.test.ts",
+    "_evidence_note": "Read-side evidence is the /metrics scrape itself plus an audit-log sanity query for the 2 native broadcast actions; counter cardinality + recent broadcast presence is the only meaningful evidence.",
     "status": "active",
     "self_evolving": false,
     "proof_mode": "active-runtime",
     "freshness_signals": [
       "/metrics endpoint reachable",
-      "SSE stream open"
+      "SSE stream open",
+      "audit_log:wave29_observability.metrics_emitted"
     ],
-    "evidence_queries": [],
+    "evidence_queries": [
+      "GET /metrics | grep -E 'tf_(pbo|shadow|rl|frozen_policy|regime_drift|lifecycle_shadow)_'",
+      "SELECT * FROM audit_log WHERE action LIKE 'wave29_observability.%' ORDER BY created_at DESC LIMIT 20"
+    ],
     "ownership_boundary": "internal-only",
     "learning_boundary": "production",
     "deployment_authority": "operator_only",
@@ -4994,10 +5035,14 @@
     "failure_visibility": "audit_log",
     "recovery_mode": "fail-soft",
     "health_check": "src/server/__tests__/slumhouse/admin-mapping-route.test.ts",
+    "_freshness_note": "Mapping-row + audit-action freshness — operator-driven mapping writes emit slumhouse.user_mapped; table writes are the canonical observable.",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "audit_trail",
-    "freshness_signals": [],
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:slumhouse.user_mapped",
+      "slumhouse_users:recent-write"
+    ],
     "evidence_queries": [
       "SELECT * FROM slumhouse_users ORDER BY created_at DESC LIMIT 50"
     ],
@@ -5061,10 +5106,15 @@
     "failure_visibility": "audit_log",
     "recovery_mode": "fail-soft",
     "health_check": "src/server/__tests__/slumhouse/discord-oauth.test.ts",
+    "_freshness_note": "Audit-action-based freshness — OAuth callback writes one of the 3 slumhouse.login_* actions per login attempt.",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "audit_trail",
-    "freshness_signals": [],
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:slumhouse.login_success",
+      "audit_log:slumhouse.login_failed",
+      "audit_log:slumhouse.login_cancelled"
+    ],
     "evidence_queries": [
       "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.login_%' ORDER BY created_at DESC LIMIT 50"
     ],
@@ -5139,10 +5189,14 @@
     "failure_visibility": "audit_log",
     "recovery_mode": "fail-soft",
     "health_check": "src/server/__tests__/slumhouse/",
+    "_freshness_note": "Read-only data routes do not emit their own audit rows; freshness is upstream — login success (slumhouse_discord_oauth) and last_seen_at writes update slumhouse_users every time a friend hits any /slumhouse/api/* endpoint. Indirect-by-design.",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "read_only_api",
-    "freshness_signals": [],
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:slumhouse.login_success",
+      "slumhouse_users:last_seen_at"
+    ],
     "evidence_queries": [
       "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.%' ORDER BY created_at DESC LIMIT 50"
     ],
@@ -5195,11 +5249,17 @@
     "failure_visibility": "browser_console",
     "recovery_mode": "fail-soft",
     "health_check": "GET /slumhouse/crib.html returns 200",
+    "_freshness_note": "Pure-static vanilla-JS frontend: emits NO backend signal of its own. Indirect freshness = upstream auth (slumhouse.login_success) + last_seen_at writes triggered by every /slumhouse/api/* hit. Evidence is the data-route response surface, queried indirectly via the slumhouse_users mapping table the page depends on for hydration.",
     "status": "active",
     "self_evolving": false,
-    "proof_mode": "static_assets",
-    "freshness_signals": [],
-    "evidence_queries": [],
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:slumhouse.login_success",
+      "slumhouse_users:last_seen_at"
+    ],
+    "evidence_queries": [
+      "SELECT COUNT(*) FROM slumhouse_users WHERE last_seen_at > NOW() - INTERVAL '7 days'"
+    ],
     "ownership_boundary": "internal-only",
     "learning_boundary": "production",
     "deployment_authority": "operator_only",

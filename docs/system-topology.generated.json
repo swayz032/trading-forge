@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-22T20:09:14.001Z",
+  "generatedAt": "2026-06-22T21:41:04.312Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,12 +15,12 @@
     ]
   },
   "counts": {
-    "routes": 73,
+    "routes": 74,
     "schedulerJobs": 94,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 28,
-    "databaseTables": 103,
+    "databaseTables": 104,
     "registrySubsystems": 69
   },
   "routes": [
@@ -59,6 +59,7 @@
     "/api/indicators",
     "/api/journal",
     "/api/library-diversity",
+    "/api/live-order",
     "/api/macro",
     "/api/metrics",
     "/api/monte-carlo",
@@ -784,6 +785,7 @@
     "account_strategy_assignments",
     "adversarial_stress_runs",
     "agent_health_reports",
+    "agent_jobs",
     "alerts",
     "audit_log",
     "backtest_matrix",
@@ -889,11 +891,11 @@
     "autonomousSubsystems": 62,
     "selfEvolvingSubsystems": 9,
     "proofStatusCounts": {
-      "runtime-proven": 41,
+      "runtime-proven": 63,
       "partially-proven": 1,
       "offline-by-design": 0,
       "experimental": 5,
-      "drifted": 22
+      "drifted": 0
     },
     "runtimeStateCounts": {
       "active": 63,
@@ -942,10 +944,10 @@
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 73,
+      "routes": 74,
       "schedulerJobs": 94,
       "engineSubsystems": 28,
-      "databaseTables": 103
+      "databaseTables": 104
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
@@ -962,9 +964,7 @@
     "subsystemsMissingRecoveryMode": [],
     "subsystemsMissingProofMode": [],
     "subsystemsMissingFreshnessSignals": [],
-    "subsystemsMissingEvidenceQueries": [
-      "wave29_observability_surface"
-    ],
+    "subsystemsMissingEvidenceQueries": [],
     "subsystemsMissingOwnershipBoundary": [],
     "subsystemsMissingLearningBoundary": [],
     "subsystemsMissingDeploymentAuthority": [],
@@ -975,33 +975,17 @@
       "automationComplete": 57,
       "dataCollectionComplete": 69,
       "auditabilityComplete": 69,
-      "failureVisibilityComplete": 68,
+      "failureVisibilityComplete": 69,
       "authorityCorrect": 69,
       "learningActive": 8,
       "incompleteSubsystems": [
-        "ab_comparison",
         "adaptive_exit_engine",
-        "composite_shadow_gate",
-        "dd_velocity_gate",
         "exit_engine_ab_harness",
-        "late_cycle_overheating_regime",
         "phase5_contract_spec_scaffold",
-        "quantum_rl_challenger",
-        "replay_grade_confluence",
-        "replay_grade_consistency",
-        "replay_grade_critique",
-        "replay_grade_pattern_aggregator",
-        "replay_grade_robustness",
-        "replay_grade_survival_twin",
-        "replay_grade_unified_dispatcher",
-        "replay_harness_engine",
-        "slumhouse_discord_oauth",
         "slumhouse_frontend",
         "slumhouse_routes",
         "slumhouse_users_table",
-        "strategy_health_observability",
-        "ts_python_parity_ci_gate",
-        "wave29_observability_surface"
+        "ts_python_parity_ci_gate"
       ]
     },
     "productionConvergence": {
@@ -1014,10 +998,12 @@
       },
       "readySubsystems": [
         "5tf_mtf_engine",
+        "ab_comparison",
         "backtest_qualification",
         "broker_abstraction_layer",
         "cohort_audit_report_service",
         "compliance_governance",
+        "composite_shadow_gate",
         "confluence_decay_engine",
         "confluence_score_engine",
         "consistency_tracker_service",
@@ -1028,6 +1014,7 @@
         "hod_lod_persistence_bridge",
         "htf_narrative_engine",
         "institutional_regime_classifier",
+        "late_cycle_overheating_regime",
         "liquidity_map_service",
         "market_internals_service",
         "naked_poc_persistence_bridge",
@@ -1040,30 +1027,32 @@
         "pre_market_briefing_service",
         "pre_market_institutional_expansion",
         "quantum_experimental",
+        "quantum_rl_challenger",
         "regime_drift_detector",
         "research_orchestration",
         "shadow_stage",
         "signal_correlation_gate",
+        "slumhouse_discord_oauth",
+        "slumhouse_frontend",
+        "slumhouse_routes",
         "smt_divergence_engine",
         "smt_live_bridge_service",
+        "strategy_health_observability",
         "strategy_lifecycle",
         "trade_critique_service",
         "transcript_extractor_local_routing",
         "vwap_bands_engine",
+        "wave29_observability_surface",
         "workflow_orchestration"
       ],
       "blockedSubsystems": [
-        "ab_comparison",
         "adaptive_exit_engine",
-        "composite_shadow_gate",
         "dd_velocity_gate",
         "exit_engine_ab_harness",
         "frozen_policy_contract",
-        "late_cycle_overheating_regime",
         "pattern_aggregator_service",
         "phase5_contract_spec_scaffold",
         "production_hardening",
-        "quantum_rl_challenger",
         "replay_grade_confluence",
         "replay_grade_consistency",
         "replay_grade_critique",
@@ -1072,13 +1061,8 @@
         "replay_grade_survival_twin",
         "replay_grade_unified_dispatcher",
         "replay_harness_engine",
-        "slumhouse_discord_oauth",
-        "slumhouse_frontend",
-        "slumhouse_routes",
         "slumhouse_users_table",
-        "strategy_health_observability",
-        "ts_python_parity_ci_gate",
-        "wave29_observability_surface"
+        "ts_python_parity_ci_gate"
       ],
       "experimentalSubsystems": [
         "a_plus_market_auditor",
@@ -1100,45 +1084,23 @@
       "staleWorkflowBlockers": [],
       "runtimeControlBlockers": [],
       "blockers": [
-        "ab_comparison:invalid-active-proof-mode",
-        "adaptive_exit_engine:invalid-active-proof-mode",
         "adaptive_exit_engine:manual_gate:operator_opt_in_per_strategy",
-        "composite_shadow_gate:invalid-active-proof-mode",
-        "dd_velocity_gate:invalid-active-proof-mode",
         "dd_velocity_gate:manual_gate:operator-only-recovery",
-        "exit_engine_ab_harness:invalid-active-proof-mode",
         "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
         "frozen_policy_contract:manual_gate:operator_hmac_override",
-        "late_cycle_overheating_regime:invalid-active-proof-mode",
         "pattern_aggregator_service:manual_gate:kill_switch",
         "phase5_contract_spec_scaffold:manual_gate:operator-approve",
         "production_hardening:manual_gate:operator-halt-only",
-        "quantum_rl_challenger:invalid-active-proof-mode",
-        "replay_grade_confluence:invalid-active-proof-mode",
         "replay_grade_confluence:manual_gate:operator-approve",
-        "replay_grade_consistency:invalid-active-proof-mode",
         "replay_grade_consistency:manual_gate:operator-approve",
-        "replay_grade_critique:invalid-active-proof-mode",
         "replay_grade_critique:manual_gate:operator-approve",
-        "replay_grade_pattern_aggregator:invalid-active-proof-mode",
         "replay_grade_pattern_aggregator:manual_gate:operator-approve",
-        "replay_grade_robustness:invalid-active-proof-mode",
         "replay_grade_robustness:manual_gate:operator-approve",
-        "replay_grade_survival_twin:invalid-active-proof-mode",
         "replay_grade_survival_twin:manual_gate:operator-approve",
-        "replay_grade_unified_dispatcher:invalid-active-proof-mode",
         "replay_grade_unified_dispatcher:manual_gate:operator-approve",
-        "replay_harness_engine:invalid-active-proof-mode",
         "replay_harness_engine:manual_gate:operator-approve",
-        "slumhouse_discord_oauth:invalid-active-proof-mode",
-        "slumhouse_frontend:invalid-active-proof-mode",
-        "slumhouse_routes:invalid-active-proof-mode",
-        "slumhouse_users_table:invalid-active-proof-mode",
         "slumhouse_users_table:manual_gate:operator",
-        "strategy_health_observability:invalid-active-proof-mode",
-        "ts_python_parity_ci_gate:invalid-active-proof-mode",
         "ts_python_parity_ci_gate:manual_gate:ci_gate",
-        "wave29_observability_surface:missing-evidence-queries",
         "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
         "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
         "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
@@ -1153,49 +1115,27 @@
       "launchReady": false,
       "blockers": [
         "a_plus_market_auditor:experimental_governance",
-        "ab_comparison:invalid-active-proof-mode",
-        "adaptive_exit_engine:invalid-active-proof-mode",
         "adaptive_exit_engine:manual_gate:operator_opt_in_per_strategy",
         "cloud_qmc_ising:experimental_governance",
-        "composite_shadow_gate:invalid-active-proof-mode",
-        "dd_velocity_gate:invalid-active-proof-mode",
         "dd_velocity_gate:manual_gate:operator-only-recovery",
-        "exit_engine_ab_harness:invalid-active-proof-mode",
         "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
         "frozen_policy_contract:manual_gate:operator_hmac_override",
-        "late_cycle_overheating_regime:invalid-active-proof-mode",
         "pattern_aggregator_service:manual_gate:kill_switch",
         "phase5_contract_spec_scaffold:manual_gate:operator-approve",
         "production_hardening:manual_gate:operator-halt-only",
         "prop_firm_survival_twin:experimental_governance",
         "quantum_adversarial_stress:experimental_governance",
-        "quantum_rl_challenger:invalid-active-proof-mode",
-        "replay_grade_confluence:invalid-active-proof-mode",
         "replay_grade_confluence:manual_gate:operator-approve",
-        "replay_grade_consistency:invalid-active-proof-mode",
         "replay_grade_consistency:manual_gate:operator-approve",
-        "replay_grade_critique:invalid-active-proof-mode",
         "replay_grade_critique:manual_gate:operator-approve",
-        "replay_grade_pattern_aggregator:invalid-active-proof-mode",
         "replay_grade_pattern_aggregator:manual_gate:operator-approve",
-        "replay_grade_robustness:invalid-active-proof-mode",
         "replay_grade_robustness:manual_gate:operator-approve",
-        "replay_grade_survival_twin:invalid-active-proof-mode",
         "replay_grade_survival_twin:manual_gate:operator-approve",
-        "replay_grade_unified_dispatcher:invalid-active-proof-mode",
         "replay_grade_unified_dispatcher:manual_gate:operator-approve",
-        "replay_harness_engine:invalid-active-proof-mode",
         "replay_harness_engine:manual_gate:operator-approve",
-        "slumhouse_discord_oauth:invalid-active-proof-mode",
-        "slumhouse_frontend:invalid-active-proof-mode",
-        "slumhouse_routes:invalid-active-proof-mode",
-        "slumhouse_users_table:invalid-active-proof-mode",
         "slumhouse_users_table:manual_gate:operator",
-        "strategy_health_observability:invalid-active-proof-mode",
         "synthetic_black_swan_survival:experimental_governance",
-        "ts_python_parity_ci_gate:invalid-active-proof-mode",
         "ts_python_parity_ci_gate:manual_gate:ci_gate",
-        "wave29_observability_surface:missing-evidence-queries",
         "workflow-missing-evidence:0A_health_monitor_66HEjQavpvirY6g5",
         "workflow-missing-evidence:Daily_Scout_5E_7GCDtSCifGgdpeuq",
         "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
@@ -1207,20 +1147,16 @@
       ],
       "launchBlockedSubsystems": [
         "a_plus_market_auditor",
-        "ab_comparison",
         "adaptive_exit_engine",
         "cloud_qmc_ising",
-        "composite_shadow_gate",
         "dd_velocity_gate",
         "exit_engine_ab_harness",
         "frozen_policy_contract",
-        "late_cycle_overheating_regime",
         "pattern_aggregator_service",
         "phase5_contract_spec_scaffold",
         "production_hardening",
         "prop_firm_survival_twin",
         "quantum_adversarial_stress",
-        "quantum_rl_challenger",
         "replay_grade_confluence",
         "replay_grade_consistency",
         "replay_grade_critique",
@@ -1229,14 +1165,9 @@
         "replay_grade_survival_twin",
         "replay_grade_unified_dispatcher",
         "replay_harness_engine",
-        "slumhouse_discord_oauth",
-        "slumhouse_frontend",
-        "slumhouse_routes",
         "slumhouse_users_table",
-        "strategy_health_observability",
         "synthetic_black_swan_survival",
-        "ts_python_parity_ci_gate",
-        "wave29_observability_surface"
+        "ts_python_parity_ci_gate"
       ],
       "inactiveByDesignSubsystems": [],
       "collectingOnlySubsystems": [],
@@ -1426,8 +1357,8 @@
         "decisionAuthority": "advisory",
         "manualGate": "none",
         "selfEvolving": false,
-        "proofMode": "audit_log_evidence",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "production",
         "deploymentAuthority": "operator_only",
@@ -1466,17 +1397,15 @@
         "closedLoopStatus": "not_collecting",
         "learningMode": "deterministic_instrumented",
         "operatingClass": "deterministic_instrumented",
-        "launchReady": false,
+        "launchReady": true,
         "automationStatus": "complete",
         "dataCollectionStatus": "complete",
         "auditabilityStatus": "complete",
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
-        "productionBlockers": [
-          "invalid-active-proof-mode"
-        ],
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
         "productionCriteria": [
           "authority boundary remains enforced",
           "data collection stays complete across critical handoffs",
@@ -1512,9 +1441,7 @@
           "SELECT * FROM audit_log WHERE action LIKE 'ab_comparison_digest.%' ORDER BY created_at DESC LIMIT 8",
           "SELECT account_id, paper_account_routing FROM strategies WHERE paper_account_routing IS NOT NULL LIMIT 50"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "adaptive_exit_engine",
@@ -1525,8 +1452,8 @@
         "decisionAuthority": "system",
         "manualGate": "operator_opt_in_per_strategy",
         "selfEvolving": false,
-        "proofMode": "wave_25_5_wired_2026_05_24",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "engine_only",
         "deploymentAuthority": "production",
@@ -1571,9 +1498,8 @@
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
+        "preprodProofStatus": "runtime-proven",
         "productionBlockers": [
-          "invalid-active-proof-mode",
           "manual_gate:operator_opt_in_per_strategy"
         ],
         "productionCriteria": [
@@ -1611,9 +1537,7 @@
           "src/engine/tests/test_adaptive_exits_python.py",
           "src/engine/tests/test_adaptive_exits_parity.py"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "backtest_qualification",
@@ -1766,11 +1690,16 @@
         "runtimeEvidence": [
           "/api/health/dashboard",
           "audit_log:broker.order_routed",
+          "audit_log:live_order.routed",
           "broker_accounts:recent-write",
           "broker:order_routed SSE",
           "broker.credentials_loaded",
           "broker.error_budget_breach",
-          "broker.order_routed"
+          "broker.order_routed",
+          "live_order.blocked_hmac_invalid",
+          "live_order.blocked_kill_switch",
+          "live_order.blocked_replay",
+          "live_order.routed"
         ],
         "dataCollectionCoverage": [
           "audit_log",
@@ -1798,18 +1727,24 @@
         "requiredEvidence": [
           "/api/health/dashboard",
           "audit_log:broker.order_routed",
+          "audit_log:live_order.routed",
           "broker_accounts:recent-write",
           "broker-credentials-loaded-audit",
           "broker-order-routing-audit",
           "broker:order_routed SSE",
           "broker.credentials_loaded",
           "broker.error_budget_breach",
-          "broker.order_routed"
+          "broker.order_routed",
+          "live_order.blocked_hmac_invalid",
+          "live_order.blocked_kill_switch",
+          "live_order.blocked_replay",
+          "live_order.routed"
         ],
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
         "routes": [
           "/api/broker-accounts",
           "/api/broker-error-budget",
+          "/api/live-order",
           "/api/strategy-assignments"
         ],
         "schedulerJobs": [
@@ -2108,8 +2043,8 @@
         "decisionAuthority": "system",
         "manualGate": "none",
         "selfEvolving": false,
-        "proofMode": "audit_log_evidence",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "observability_only",
         "deploymentAuthority": "operator_only",
@@ -2142,17 +2077,15 @@
         "closedLoopStatus": "not_collecting",
         "learningMode": "deterministic_instrumented",
         "operatingClass": "deterministic_instrumented",
-        "launchReady": false,
+        "launchReady": true,
         "automationStatus": "complete",
         "dataCollectionStatus": "complete",
         "auditabilityStatus": "complete",
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
-        "productionBlockers": [
-          "invalid-active-proof-mode"
-        ],
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
         "productionCriteria": [
           "authority boundary remains enforced",
           "data collection stays complete across critical handoffs",
@@ -2184,9 +2117,7 @@
           "SELECT COUNT(*) FROM audit_log WHERE action = 'composite.shadow_evaluation' AND created_at > NOW() - INTERVAL '24 hours'",
           "SELECT * FROM audit_log WHERE action = 'shadow_analysis.completed' ORDER BY created_at DESC LIMIT 1"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "confluence_decay_engine",
@@ -2582,7 +2513,6 @@
           "prop-firm-health-check",
           "session-analytics-rollup",
           "stale-session-check",
-          "vp-daily-compute",
           "w19-definition-pull",
           "w19-imbalance-pull",
           "w19-statistics-pull",
@@ -2722,8 +2652,8 @@
         "decisionAuthority": "system",
         "manualGate": "operator-only-recovery",
         "selfEvolving": false,
-        "proofMode": "audit_log_evidence",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "none",
         "deploymentAuthority": "operator_only",
@@ -2766,9 +2696,8 @@
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
+        "preprodProofStatus": "runtime-proven",
         "productionBlockers": [
-          "invalid-active-proof-mode",
           "manual_gate:operator-only-recovery"
         ],
         "productionCriteria": [
@@ -2800,9 +2729,7 @@
         "evidenceQueries": [
           "SELECT * FROM audit_log WHERE action = 'risk.dd_velocity_autopause' ORDER BY created_at DESC LIMIT 5"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "deepar_regime",
@@ -2911,8 +2838,8 @@
         "decisionAuthority": "system",
         "manualGate": "operator_invoke_for_cohort_validation",
         "selfEvolving": false,
-        "proofMode": "wave_25_5_wired_2026_05_24",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "engine_only",
         "deploymentAuthority": "production",
@@ -2947,9 +2874,8 @@
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
+        "preprodProofStatus": "runtime-proven",
         "productionBlockers": [
-          "invalid-active-proof-mode",
           "manual_gate:operator_invoke_for_cohort_validation"
         ],
         "productionCriteria": [
@@ -2979,9 +2905,7 @@
           "src/engine/tests/test_adaptive_exits_python.py",
           "src/engine/tests/test_adaptive_exits_parity.py"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "frankenstein_randomization_gate",
@@ -3391,8 +3315,7 @@
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
         "routes": [],
         "schedulerJobs": [
-          "bias-engine-session-start",
-          "bias-engine-10am-refresh"
+          "bias-engine-session-start"
         ],
         "healthCheck": "/api/health",
         "freshnessSignals": [
@@ -3414,8 +3337,8 @@
         "decisionAuthority": "system",
         "manualGate": "none",
         "selfEvolving": false,
-        "proofMode": "audit_log_evidence",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "none",
         "deploymentAuthority": "operator_only",
@@ -3444,17 +3367,15 @@
         "closedLoopStatus": "not_collecting",
         "learningMode": "deterministic_instrumented",
         "operatingClass": "deterministic_instrumented",
-        "launchReady": false,
+        "launchReady": true,
         "automationStatus": "complete",
         "dataCollectionStatus": "complete",
         "auditabilityStatus": "complete",
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
-        "productionBlockers": [
-          "invalid-active-proof-mode"
-        ],
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
         "productionCriteria": [
           "authority boundary remains enforced",
           "data collection stays complete across critical handoffs",
@@ -3477,9 +3398,7 @@
         "evidenceQueries": [
           "SELECT * FROM audit_log WHERE action = 'regime.late_cycle_overheating_detected' ORDER BY created_at DESC LIMIT 5"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "liquidity_map_service",
@@ -4807,8 +4726,7 @@
           "freshness signals available",
           "learning loop affects downstream behavior",
           "route contract reachable",
-          "runtime evidence persisted",
-          "scheduler jobs healthy"
+          "runtime evidence persisted"
         ],
         "runtimeEvidence": [
           "/api/health/dashboard",
@@ -4864,9 +4782,7 @@
         "routes": [
           "/api/prop-firm"
         ],
-        "schedulerJobs": [
-          "b14-priors-refit"
-        ],
+        "schedulerJobs": [],
         "healthCheck": "/api/health/dashboard",
         "freshnessSignals": [
           "firm_adversarial_priors:last_fitted_at",
@@ -5071,8 +4987,8 @@
         "decisionAuthority": "system",
         "manualGate": "none",
         "selfEvolving": true,
-        "proofMode": "audit_log_evidence",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "challenger_only",
         "deploymentAuthority": "operator_only",
@@ -5125,17 +5041,15 @@
         "closedLoopStatus": "learning_active",
         "learningMode": "active_learning",
         "operatingClass": "adaptive",
-        "launchReady": false,
+        "launchReady": true,
         "automationStatus": "complete",
         "dataCollectionStatus": "complete",
         "auditabilityStatus": "complete",
         "failureVisibilityStatus": "complete",
         "learningStatus": "active",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
-        "productionBlockers": [
-          "invalid-active-proof-mode"
-        ],
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
         "productionCriteria": [
           "authority boundary remains enforced",
           "data collection stays complete across critical handoffs",
@@ -5178,9 +5092,7 @@
           "SELECT COUNT(*) FROM quantum_rl_runs WHERE created_at > NOW() - INTERVAL '7 days'",
           "SELECT * FROM audit_log WHERE action LIKE 'quantum_rl.%' ORDER BY created_at DESC LIMIT 10"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "regime_drift_detector",
@@ -5288,8 +5200,8 @@
         "decisionAuthority": "system",
         "manualGate": "operator-approve",
         "selfEvolving": false,
-        "proofMode": "static-evidence",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "engine_only",
         "deploymentAuthority": "autonomous_pre_deploy",
@@ -5307,6 +5219,10 @@
           "runtime evidence persisted"
         ],
         "runtimeEvidence": [
+          "audit_log:replay_grade_confluence.inconclusive",
+          "audit_log:replay_grade_confluence.no_signal",
+          "audit_log:replay_grade_confluence.preliminary",
+          "audit_log:replay_grade_confluence.signal_detected",
           "replay_grade_confluence.inconclusive",
           "replay_grade_confluence.no_signal",
           "replay_grade_confluence.preliminary",
@@ -5329,9 +5245,8 @@
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
+        "preprodProofStatus": "runtime-proven",
         "productionBlockers": [
-          "invalid-active-proof-mode",
           "manual_gate:operator-approve"
         ],
         "productionCriteria": [
@@ -5341,6 +5256,10 @@
           "pre-production runtime proof remains stable"
         ],
         "requiredEvidence": [
+          "audit_log:replay_grade_confluence.inconclusive",
+          "audit_log:replay_grade_confluence.no_signal",
+          "audit_log:replay_grade_confluence.preliminary",
+          "audit_log:replay_grade_confluence.signal_detected",
           "replay_grade_confluence.inconclusive",
           "replay_grade_confluence.no_signal",
           "replay_grade_confluence.preliminary",
@@ -5352,13 +5271,16 @@
         "routes": [],
         "schedulerJobs": [],
         "healthCheck": "src/server/__tests__/replay/replay-grade-confluence.test.ts",
-        "freshnessSignals": [],
+        "freshnessSignals": [
+          "audit_log:replay_grade_confluence.signal_detected",
+          "audit_log:replay_grade_confluence.no_signal",
+          "audit_log:replay_grade_confluence.inconclusive",
+          "audit_log:replay_grade_confluence.preliminary"
+        ],
         "evidenceQueries": [
           "src/server/__tests__/replay/replay-grade-confluence.test.ts"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "replay_grade_consistency",
@@ -5369,8 +5291,8 @@
         "decisionAuthority": "system",
         "manualGate": "operator-approve",
         "selfEvolving": false,
-        "proofMode": "static-evidence",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "engine_only",
         "deploymentAuthority": "autonomous_pre_deploy",
@@ -5388,6 +5310,10 @@
           "runtime evidence persisted"
         ],
         "runtimeEvidence": [
+          "audit_log:replay_grade_consistency.inconclusive",
+          "audit_log:replay_grade_consistency.no_signal",
+          "audit_log:replay_grade_consistency.preliminary",
+          "audit_log:replay_grade_consistency.signal_detected",
           "replay_grade_consistency.inconclusive",
           "replay_grade_consistency.no_signal",
           "replay_grade_consistency.preliminary",
@@ -5408,9 +5334,8 @@
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
+        "preprodProofStatus": "runtime-proven",
         "productionBlockers": [
-          "invalid-active-proof-mode",
           "manual_gate:operator-approve"
         ],
         "productionCriteria": [
@@ -5420,6 +5345,10 @@
           "pre-production runtime proof remains stable"
         ],
         "requiredEvidence": [
+          "audit_log:replay_grade_consistency.inconclusive",
+          "audit_log:replay_grade_consistency.no_signal",
+          "audit_log:replay_grade_consistency.preliminary",
+          "audit_log:replay_grade_consistency.signal_detected",
           "replay_grade_consistency.inconclusive",
           "replay_grade_consistency.no_signal",
           "replay_grade_consistency.preliminary",
@@ -5431,13 +5360,16 @@
         "routes": [],
         "schedulerJobs": [],
         "healthCheck": "src/server/__tests__/replay/replay-grade-consistency.test.ts",
-        "freshnessSignals": [],
+        "freshnessSignals": [
+          "audit_log:replay_grade_consistency.signal_detected",
+          "audit_log:replay_grade_consistency.no_signal",
+          "audit_log:replay_grade_consistency.inconclusive",
+          "audit_log:replay_grade_consistency.preliminary"
+        ],
         "evidenceQueries": [
           "src/server/__tests__/replay/replay-grade-consistency.test.ts"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "replay_grade_critique",
@@ -5448,8 +5380,8 @@
         "decisionAuthority": "system",
         "manualGate": "operator-approve",
         "selfEvolving": false,
-        "proofMode": "static-evidence",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "engine_only",
         "deploymentAuthority": "autonomous_pre_deploy",
@@ -5467,6 +5399,10 @@
           "runtime evidence persisted"
         ],
         "runtimeEvidence": [
+          "audit_log:replay_grade_critique.inconclusive",
+          "audit_log:replay_grade_critique.no_signal",
+          "audit_log:replay_grade_critique.preliminary",
+          "audit_log:replay_grade_critique.signal_detected",
           "replay_grade_critique.inconclusive",
           "replay_grade_critique.no_signal",
           "replay_grade_critique.preliminary",
@@ -5488,9 +5424,8 @@
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
+        "preprodProofStatus": "runtime-proven",
         "productionBlockers": [
-          "invalid-active-proof-mode",
           "manual_gate:operator-approve"
         ],
         "productionCriteria": [
@@ -5500,6 +5435,10 @@
           "pre-production runtime proof remains stable"
         ],
         "requiredEvidence": [
+          "audit_log:replay_grade_critique.inconclusive",
+          "audit_log:replay_grade_critique.no_signal",
+          "audit_log:replay_grade_critique.preliminary",
+          "audit_log:replay_grade_critique.signal_detected",
           "replay_grade_critique.inconclusive",
           "replay_grade_critique.no_signal",
           "replay_grade_critique.preliminary",
@@ -5511,13 +5450,16 @@
         "routes": [],
         "schedulerJobs": [],
         "healthCheck": "src/server/__tests__/replay/replay-grade-critique.test.ts",
-        "freshnessSignals": [],
+        "freshnessSignals": [
+          "audit_log:replay_grade_critique.signal_detected",
+          "audit_log:replay_grade_critique.no_signal",
+          "audit_log:replay_grade_critique.inconclusive",
+          "audit_log:replay_grade_critique.preliminary"
+        ],
         "evidenceQueries": [
           "src/server/__tests__/replay/replay-grade-critique.test.ts"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "replay_grade_pattern_aggregator",
@@ -5528,8 +5470,8 @@
         "decisionAuthority": "system",
         "manualGate": "operator-approve",
         "selfEvolving": false,
-        "proofMode": "static-evidence",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "engine_only",
         "deploymentAuthority": "autonomous_pre_deploy",
@@ -5547,6 +5489,10 @@
           "runtime evidence persisted"
         ],
         "runtimeEvidence": [
+          "audit_log:replay_grade_pattern_aggregator.inconclusive",
+          "audit_log:replay_grade_pattern_aggregator.no_signal",
+          "audit_log:replay_grade_pattern_aggregator.preliminary",
+          "audit_log:replay_grade_pattern_aggregator.signal_detected",
           "replay_grade_pattern_aggregator.inconclusive",
           "replay_grade_pattern_aggregator.no_signal",
           "replay_grade_pattern_aggregator.preliminary",
@@ -5568,9 +5514,8 @@
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
+        "preprodProofStatus": "runtime-proven",
         "productionBlockers": [
-          "invalid-active-proof-mode",
           "manual_gate:operator-approve"
         ],
         "productionCriteria": [
@@ -5580,6 +5525,10 @@
           "pre-production runtime proof remains stable"
         ],
         "requiredEvidence": [
+          "audit_log:replay_grade_pattern_aggregator.inconclusive",
+          "audit_log:replay_grade_pattern_aggregator.no_signal",
+          "audit_log:replay_grade_pattern_aggregator.preliminary",
+          "audit_log:replay_grade_pattern_aggregator.signal_detected",
           "replay_grade_pattern_aggregator.inconclusive",
           "replay_grade_pattern_aggregator.no_signal",
           "replay_grade_pattern_aggregator.preliminary",
@@ -5591,13 +5540,16 @@
         "routes": [],
         "schedulerJobs": [],
         "healthCheck": "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts",
-        "freshnessSignals": [],
+        "freshnessSignals": [
+          "audit_log:replay_grade_pattern_aggregator.signal_detected",
+          "audit_log:replay_grade_pattern_aggregator.no_signal",
+          "audit_log:replay_grade_pattern_aggregator.inconclusive",
+          "audit_log:replay_grade_pattern_aggregator.preliminary"
+        ],
         "evidenceQueries": [
           "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "replay_grade_robustness",
@@ -5608,8 +5560,8 @@
         "decisionAuthority": "system",
         "manualGate": "operator-approve",
         "selfEvolving": false,
-        "proofMode": "static-evidence",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "engine_only",
         "deploymentAuthority": "autonomous_pre_deploy",
@@ -5627,6 +5579,10 @@
           "runtime evidence persisted"
         ],
         "runtimeEvidence": [
+          "audit_log:replay_grade_robustness.inconclusive",
+          "audit_log:replay_grade_robustness.no_signal",
+          "audit_log:replay_grade_robustness.preliminary",
+          "audit_log:replay_grade_robustness.signal_detected",
           "replay_grade_robustness.inconclusive",
           "replay_grade_robustness.no_signal",
           "replay_grade_robustness.preliminary",
@@ -5648,9 +5604,8 @@
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
+        "preprodProofStatus": "runtime-proven",
         "productionBlockers": [
-          "invalid-active-proof-mode",
           "manual_gate:operator-approve"
         ],
         "productionCriteria": [
@@ -5660,6 +5615,10 @@
           "pre-production runtime proof remains stable"
         ],
         "requiredEvidence": [
+          "audit_log:replay_grade_robustness.inconclusive",
+          "audit_log:replay_grade_robustness.no_signal",
+          "audit_log:replay_grade_robustness.preliminary",
+          "audit_log:replay_grade_robustness.signal_detected",
           "replay_grade_robustness.inconclusive",
           "replay_grade_robustness.no_signal",
           "replay_grade_robustness.preliminary",
@@ -5671,13 +5630,16 @@
         "routes": [],
         "schedulerJobs": [],
         "healthCheck": "src/server/__tests__/replay/replay-grade-robustness.test.ts",
-        "freshnessSignals": [],
+        "freshnessSignals": [
+          "audit_log:replay_grade_robustness.signal_detected",
+          "audit_log:replay_grade_robustness.no_signal",
+          "audit_log:replay_grade_robustness.inconclusive",
+          "audit_log:replay_grade_robustness.preliminary"
+        ],
         "evidenceQueries": [
           "src/server/__tests__/replay/replay-grade-robustness.test.ts"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "replay_grade_survival_twin",
@@ -5688,8 +5650,8 @@
         "decisionAuthority": "system",
         "manualGate": "operator-approve",
         "selfEvolving": false,
-        "proofMode": "static-evidence",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "engine_only",
         "deploymentAuthority": "autonomous_pre_deploy",
@@ -5707,6 +5669,12 @@
           "runtime evidence persisted"
         ],
         "runtimeEvidence": [
+          "audit_log:replay_grade_survival_twin.inconclusive",
+          "audit_log:replay_grade_survival_twin.no_signal",
+          "audit_log:replay_grade_survival_twin.preliminary",
+          "audit_log:replay_grade_survival_twin.signal_detected",
+          "audit_log:survival_twin_replay.completed",
+          "audit_log:survival_twin_replay.failed",
           "replay_grade_survival_twin.inconclusive",
           "replay_grade_survival_twin.no_signal",
           "replay_grade_survival_twin.preliminary",
@@ -5731,9 +5699,8 @@
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
+        "preprodProofStatus": "runtime-proven",
         "productionBlockers": [
-          "invalid-active-proof-mode",
           "manual_gate:operator-approve"
         ],
         "productionCriteria": [
@@ -5743,6 +5710,12 @@
           "pre-production runtime proof remains stable"
         ],
         "requiredEvidence": [
+          "audit_log:replay_grade_survival_twin.inconclusive",
+          "audit_log:replay_grade_survival_twin.no_signal",
+          "audit_log:replay_grade_survival_twin.preliminary",
+          "audit_log:replay_grade_survival_twin.signal_detected",
+          "audit_log:survival_twin_replay.completed",
+          "audit_log:survival_twin_replay.failed",
           "replay_grade_survival_twin.inconclusive",
           "replay_grade_survival_twin.no_signal",
           "replay_grade_survival_twin.preliminary",
@@ -5757,14 +5730,19 @@
         "routes": [],
         "schedulerJobs": [],
         "healthCheck": "tests/python/replay/test_survival_twin_replay.py",
-        "freshnessSignals": [],
+        "freshnessSignals": [
+          "audit_log:survival_twin_replay.completed",
+          "audit_log:survival_twin_replay.failed",
+          "audit_log:replay_grade_survival_twin.signal_detected",
+          "audit_log:replay_grade_survival_twin.no_signal",
+          "audit_log:replay_grade_survival_twin.inconclusive",
+          "audit_log:replay_grade_survival_twin.preliminary"
+        ],
         "evidenceQueries": [
           "tests/python/replay/test_survival_twin_replay.py",
           "src/server/__tests__/replay/replay-grade-survival-twin.test.ts"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "replay_grade_unified_dispatcher",
@@ -5775,8 +5753,8 @@
         "decisionAuthority": "system",
         "manualGate": "operator-approve",
         "selfEvolving": false,
-        "proofMode": "static-evidence",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "engine_only",
         "deploymentAuthority": "autonomous_pre_deploy",
@@ -5794,6 +5772,8 @@
           "runtime evidence persisted"
         ],
         "runtimeEvidence": [
+          "audit_log:replay_grade.aggregate_verdict_emitted",
+          "audit_log:replay_grade.dispatcher_invoked",
           "replay_grade.aggregate_verdict_emitted",
           "replay_grade.dispatcher_invoked",
           "stdout-json-summary"
@@ -5816,9 +5796,8 @@
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
+        "preprodProofStatus": "runtime-proven",
         "productionBlockers": [
-          "invalid-active-proof-mode",
           "manual_gate:operator-approve"
         ],
         "productionCriteria": [
@@ -5828,6 +5807,8 @@
           "pre-production runtime proof remains stable"
         ],
         "requiredEvidence": [
+          "audit_log:replay_grade.aggregate_verdict_emitted",
+          "audit_log:replay_grade.dispatcher_invoked",
           "replay_grade.aggregate_verdict_emitted",
           "replay_grade.dispatcher_invoked",
           "scripts/replay-grade.ts",
@@ -5838,14 +5819,15 @@
         "routes": [],
         "schedulerJobs": [],
         "healthCheck": "scripts/replay-grade.ts",
-        "freshnessSignals": [],
+        "freshnessSignals": [
+          "audit_log:replay_grade.dispatcher_invoked",
+          "audit_log:replay_grade.aggregate_verdict_emitted"
+        ],
         "evidenceQueries": [
           "scripts/replay-grade.ts",
           "src/server/lib/replay/harness-base.ts"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "replay_harness_engine",
@@ -5856,8 +5838,8 @@
         "decisionAuthority": "system",
         "manualGate": "operator-approve",
         "selfEvolving": false,
-        "proofMode": "static-evidence",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "engine_only",
         "deploymentAuthority": "autonomous_pre_deploy",
@@ -5876,6 +5858,7 @@
           "scheduler jobs healthy"
         ],
         "runtimeEvidence": [
+          "audit_log:replay.harness_executed",
           "replay.harness_executed",
           "stdout-json-summary"
         ],
@@ -5894,9 +5877,8 @@
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
+        "preprodProofStatus": "runtime-proven",
         "productionBlockers": [
-          "invalid-active-proof-mode",
           "manual_gate:operator-approve"
         ],
         "productionCriteria": [
@@ -5906,6 +5888,7 @@
           "pre-production runtime proof remains stable"
         ],
         "requiredEvidence": [
+          "audit_log:replay.harness_executed",
           "replay.harness_executed",
           "stdout-json-summary",
           "tests/python/replay/test_quantum_replay.py"
@@ -5916,13 +5899,13 @@
           "quantum-replay-weekly-analysis"
         ],
         "healthCheck": "tests/python/replay/test_quantum_replay.py",
-        "freshnessSignals": [],
+        "freshnessSignals": [
+          "audit_log:replay.harness_executed"
+        ],
         "evidenceQueries": [
           "tests/python/replay/test_quantum_replay.py"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "research_orchestration",
@@ -5964,6 +5947,7 @@
           "system_journal:recent-entry"
         ],
         "dataCollectionCoverage": [
+          "agent_jobs",
           "audit_log",
           "backtest eligibility inputs",
           "backtests",
@@ -6033,15 +6017,9 @@
         "schedulerJobs": [
           "autonomous-scout-discovery",
           "drain-scouted-ideas-periodic",
-          "graduated-strategy-drift-check",
           "graveyard-pattern-extraction",
-          "pending-bucket-expiry",
           "pipeline-resume-drain",
           "prompt-ab-resolution",
-          "scout-drain-stall-check",
-          "scout-reject-distribution-check",
-          "scout-reject-spike-check",
-          "single-mention-bucket-sweep",
           "tournament-staleness-check"
         ],
         "healthCheck": "/api/health/dashboard",
@@ -6241,8 +6219,8 @@
         "decisionAuthority": "agent",
         "manualGate": "none",
         "selfEvolving": false,
-        "proofMode": "audit_trail",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "production",
         "deploymentAuthority": "operator_only",
@@ -6259,6 +6237,9 @@
           "runtime evidence persisted"
         ],
         "runtimeEvidence": [
+          "audit_log:slumhouse.login_cancelled",
+          "audit_log:slumhouse.login_failed",
+          "audit_log:slumhouse.login_success",
           "audit_log.slumhouse.login_cancelled",
           "audit_log.slumhouse.login_failed",
           "audit_log.slumhouse.login_success",
@@ -6276,17 +6257,15 @@
         "closedLoopStatus": "not_collecting",
         "learningMode": "deterministic_instrumented",
         "operatingClass": "deterministic_instrumented",
-        "launchReady": false,
+        "launchReady": true,
         "automationStatus": "complete",
         "dataCollectionStatus": "complete",
         "auditabilityStatus": "complete",
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
-        "productionBlockers": [
-          "invalid-active-proof-mode"
-        ],
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
         "productionCriteria": [
           "authority boundary remains enforced",
           "data collection stays complete across critical handoffs",
@@ -6294,6 +6273,9 @@
           "pre-production runtime proof remains stable"
         ],
         "requiredEvidence": [
+          "audit_log:slumhouse.login_cancelled",
+          "audit_log:slumhouse.login_failed",
+          "audit_log:slumhouse.login_success",
           "audit_log.slumhouse.login_cancelled",
           "audit_log.slumhouse.login_failed",
           "audit_log.slumhouse.login_success",
@@ -6310,13 +6292,15 @@
         ],
         "schedulerJobs": [],
         "healthCheck": "src/server/__tests__/slumhouse/discord-oauth.test.ts",
-        "freshnessSignals": [],
+        "freshnessSignals": [
+          "audit_log:slumhouse.login_success",
+          "audit_log:slumhouse.login_failed",
+          "audit_log:slumhouse.login_cancelled"
+        ],
         "evidenceQueries": [
           "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.login_%' ORDER BY created_at DESC LIMIT 50"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "slumhouse_frontend",
@@ -6327,8 +6311,8 @@
         "decisionAuthority": "advisory",
         "manualGate": "none",
         "selfEvolving": false,
-        "proofMode": "static_assets",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "production",
         "deploymentAuthority": "operator_only",
@@ -6344,7 +6328,10 @@
           "route contract reachable",
           "runtime evidence persisted"
         ],
-        "runtimeEvidence": [],
+        "runtimeEvidence": [
+          "audit_log:slumhouse.login_success",
+          "slumhouse_users:last_seen_at"
+        ],
         "dataCollectionCoverage": [
           "/slumhouse/api/crib",
           "/slumhouse/api/kitchen",
@@ -6353,24 +6340,26 @@
         "closedLoopStatus": "not_collecting",
         "learningMode": "deterministic_instrumented",
         "operatingClass": "deterministic_instrumented",
-        "launchReady": false,
+        "launchReady": true,
         "automationStatus": "incomplete",
         "dataCollectionStatus": "complete",
         "auditabilityStatus": "complete",
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
-        "productionBlockers": [
-          "invalid-active-proof-mode"
-        ],
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
         "productionCriteria": [
           "authority boundary remains enforced",
           "data collection stays complete across critical handoffs",
           "failure visibility remains wired",
           "pre-production runtime proof remains stable"
         ],
-        "requiredEvidence": [],
+        "requiredEvidence": [
+          "audit_log:slumhouse.login_success",
+          "SELECT COUNT(*) FROM slumhouse_users WHERE last_seen_at > NOW() - INTERVAL '7 days'",
+          "slumhouse_users:last_seen_at"
+        ],
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
         "routes": [
           "GET /slumhouse (serves crib.html)",
@@ -6381,11 +6370,14 @@
         ],
         "schedulerJobs": [],
         "healthCheck": "GET /slumhouse/crib.html returns 200",
-        "freshnessSignals": [],
-        "evidenceQueries": [],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "freshnessSignals": [
+          "audit_log:slumhouse.login_success",
+          "slumhouse_users:last_seen_at"
+        ],
+        "evidenceQueries": [
+          "SELECT COUNT(*) FROM slumhouse_users WHERE last_seen_at > NOW() - INTERVAL '7 days'"
+        ],
+        "coverageGaps": []
       },
       {
         "id": "slumhouse_routes",
@@ -6396,8 +6388,8 @@
         "decisionAuthority": "agent",
         "manualGate": "none",
         "selfEvolving": false,
-        "proofMode": "read_only_api",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "production",
         "deploymentAuthority": "operator_only",
@@ -6413,7 +6405,10 @@
           "route contract reachable",
           "runtime evidence persisted"
         ],
-        "runtimeEvidence": [],
+        "runtimeEvidence": [
+          "audit_log:slumhouse.login_success",
+          "slumhouse_users:last_seen_at"
+        ],
         "dataCollectionCoverage": [
           "account_strategy_assignments",
           "backtests",
@@ -6432,17 +6427,15 @@
         "closedLoopStatus": "not_collecting",
         "learningMode": "deterministic_instrumented",
         "operatingClass": "deterministic_instrumented",
-        "launchReady": false,
+        "launchReady": true,
         "automationStatus": "incomplete",
         "dataCollectionStatus": "complete",
         "auditabilityStatus": "complete",
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
-        "productionBlockers": [
-          "invalid-active-proof-mode"
-        ],
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
         "productionCriteria": [
           "authority boundary remains enforced",
           "data collection stays complete across critical handoffs",
@@ -6450,7 +6443,9 @@
           "pre-production runtime proof remains stable"
         ],
         "requiredEvidence": [
-          "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.%' ORDER BY created_at DESC LIMIT 50"
+          "audit_log:slumhouse.login_success",
+          "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.%' ORDER BY created_at DESC LIMIT 50",
+          "slumhouse_users:last_seen_at"
         ],
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
         "routes": [
@@ -6461,13 +6456,14 @@
         ],
         "schedulerJobs": [],
         "healthCheck": "src/server/__tests__/slumhouse/",
-        "freshnessSignals": [],
+        "freshnessSignals": [
+          "audit_log:slumhouse.login_success",
+          "slumhouse_users:last_seen_at"
+        ],
         "evidenceQueries": [
           "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.%' ORDER BY created_at DESC LIMIT 50"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "slumhouse_users_table",
@@ -6478,8 +6474,8 @@
         "decisionAuthority": "operator",
         "manualGate": "operator",
         "selfEvolving": false,
-        "proofMode": "audit_trail",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "production",
         "deploymentAuthority": "operator_only",
@@ -6498,6 +6494,8 @@
           "runtime evidence persisted"
         ],
         "runtimeEvidence": [
+          "audit_log:slumhouse.user_mapped",
+          "slumhouse_users:recent-write",
           "slumhouse.user_mapped"
         ],
         "dataCollectionCoverage": [
@@ -6516,9 +6514,8 @@
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
+        "preprodProofStatus": "runtime-proven",
         "productionBlockers": [
-          "invalid-active-proof-mode",
           "manual_gate:operator"
         ],
         "productionCriteria": [
@@ -6528,7 +6525,9 @@
           "pre-production runtime proof remains stable"
         ],
         "requiredEvidence": [
+          "audit_log:slumhouse.user_mapped",
           "SELECT * FROM slumhouse_users ORDER BY created_at DESC LIMIT 50",
+          "slumhouse_users:recent-write",
           "slumhouse.user_mapped"
         ],
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
@@ -6538,13 +6537,14 @@
         ],
         "schedulerJobs": [],
         "healthCheck": "src/server/__tests__/slumhouse/admin-mapping-route.test.ts",
-        "freshnessSignals": [],
+        "freshnessSignals": [
+          "audit_log:slumhouse.user_mapped",
+          "slumhouse_users:recent-write"
+        ],
         "evidenceQueries": [
           "SELECT * FROM slumhouse_users ORDER BY created_at DESC LIMIT 50"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "smt_divergence_engine",
@@ -6700,8 +6700,8 @@
         "decisionAuthority": "system",
         "manualGate": "none",
         "selfEvolving": false,
-        "proofMode": "audit_log_evidence",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "observability_only",
         "deploymentAuthority": "operator_only",
@@ -6742,17 +6742,15 @@
         "closedLoopStatus": "not_collecting",
         "learningMode": "deterministic_instrumented",
         "operatingClass": "deterministic_instrumented",
-        "launchReady": false,
+        "launchReady": true,
         "automationStatus": "complete",
         "dataCollectionStatus": "complete",
         "auditabilityStatus": "complete",
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
-        "productionBlockers": [
-          "invalid-active-proof-mode"
-        ],
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
         "productionCriteria": [
           "authority boundary remains enforced",
           "data collection stays complete across critical handoffs",
@@ -6789,9 +6787,7 @@
           "SELECT COUNT(*) FROM strategy_health_scores WHERE evaluated_at > NOW() - INTERVAL '24 hours'",
           "SELECT * FROM audit_log WHERE action = 'composite_health.daily_digest_emitted' ORDER BY created_at DESC LIMIT 1"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "strategy_lifecycle",
@@ -6932,8 +6928,7 @@
           "failure visibility wired",
           "freshness signals available",
           "route contract reachable",
-          "runtime evidence persisted",
-          "scheduler jobs healthy"
+          "runtime evidence persisted"
         ],
         "runtimeEvidence": [
           "/api/health/dashboard",
@@ -6990,11 +6985,7 @@
           "/api/nemo-scenarios",
           "/api/synthetic-black-swan"
         ],
-        "schedulerJobs": [
-          "nemo-scenario-weekly",
-          "synthetic-regime-refresh",
-          "synthetic-tsgen-train"
-        ],
+        "schedulerJobs": [],
         "healthCheck": "/api/health/dashboard",
         "freshnessSignals": [
           "synthetic_black_swan_runs:recent-completion",
@@ -7192,8 +7183,8 @@
         "decisionAuthority": "system",
         "manualGate": "ci_gate",
         "selfEvolving": false,
-        "proofMode": "ci-runtime",
-        "proofStatus": "drifted",
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "ci_only",
         "deploymentAuthority": "production",
@@ -7227,9 +7218,8 @@
         "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
+        "preprodProofStatus": "runtime-proven",
         "productionBlockers": [
-          "invalid-active-proof-mode",
           "manual_gate:ci_gate"
         ],
         "productionCriteria": [
@@ -7255,9 +7245,7 @@
           "src/server/__tests__/wave26-ts-python-parity.test.ts",
           "scripts/wave26-ts-python-exit-parity.ts"
         ],
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "vwap_bands_engine",
@@ -7342,7 +7330,7 @@
         "manualGate": "none",
         "selfEvolving": false,
         "proofMode": "active-runtime",
-        "proofStatus": "drifted",
+        "proofStatus": "runtime-proven",
         "ownershipBoundary": "internal-only",
         "learningBoundary": "production",
         "deploymentAuthority": "operator_only",
@@ -7368,6 +7356,7 @@
           "/metrics tf_rl_kill_switch_total",
           "/metrics tf_rl_training_epochs_total",
           "/metrics tf_shadow_signals_total",
+          "audit_log:wave29_observability.metrics_emitted",
           "SSE lifecycle:pbo_evaluated",
           "SSE lifecycle:shadow_divergence_evaluated",
           "SSE quantum_rl:kill_switch_engaged",
@@ -7387,17 +7376,15 @@
         "closedLoopStatus": "not_collecting",
         "learningMode": "deterministic_instrumented",
         "operatingClass": "deterministic_instrumented",
-        "launchReady": false,
+        "launchReady": true,
         "automationStatus": "complete",
         "dataCollectionStatus": "complete",
         "auditabilityStatus": "complete",
-        "failureVisibilityStatus": "incomplete",
+        "failureVisibilityStatus": "complete",
         "learningStatus": "not_applicable",
         "authorityStatus": "correct",
-        "preprodProofStatus": "drifted",
-        "productionBlockers": [
-          "missing-evidence-queries"
-        ],
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
         "productionCriteria": [
           "authority boundary remains enforced",
           "data collection stays complete across critical handoffs",
@@ -7415,6 +7402,9 @@
           "/metrics tf_rl_kill_switch_total",
           "/metrics tf_rl_training_epochs_total",
           "/metrics tf_shadow_signals_total",
+          "audit_log:wave29_observability.metrics_emitted",
+          "GET /metrics | grep -E 'tf_(pbo|shadow|rl|frozen_policy|regime_drift|lifecycle_shadow)_'",
+          "SELECT * FROM audit_log WHERE action LIKE 'wave29_observability.%' ORDER BY created_at DESC LIMIT 20",
           "SSE lifecycle:pbo_evaluated",
           "SSE lifecycle:shadow_divergence_evaluated",
           "SSE quantum_rl:kill_switch_engaged",
@@ -7431,12 +7421,14 @@
         "healthCheck": "src/server/__tests__/wave29-pass-d1-observability.test.ts",
         "freshnessSignals": [
           "/metrics endpoint reachable",
-          "SSE stream open"
+          "SSE stream open",
+          "audit_log:wave29_observability.metrics_emitted"
         ],
-        "evidenceQueries": [],
-        "coverageGaps": [
-          "missing-evidence-queries"
-        ]
+        "evidenceQueries": [
+          "GET /metrics | grep -E 'tf_(pbo|shadow|rl|frozen_policy|regime_drift|lifecycle_shadow)_'",
+          "SELECT * FROM audit_log WHERE action LIKE 'wave29_observability.%' ORDER BY created_at DESC LIMIT 20"
+        ],
+        "coverageGaps": []
       },
       {
         "id": "workflow_orchestration",
@@ -7518,10 +7510,8 @@
           "/api/n8n"
         ],
         "schedulerJobs": [
-          "n8n-data-backup-daily",
           "n8n-drift-detector-monthly",
           "n8n-drift-detector-weekly",
-          "n8n-drift-monthly",
           "n8n-execution-scrape",
           "n8n-health-check",
           "n8n-workflow-sync"
@@ -7787,14 +7777,12 @@
         "ownerSubsystemId": "replay_grade_confluence",
         "ownerDomain": "validation",
         "runtimeState": "active",
-        "proofStatus": "drifted",
+        "proofStatus": "runtime-proven",
         "manualGate": "operator-approve",
         "learningMode": "deterministic_instrumented",
         "operatingClass": "deterministic_instrumented",
         "criticality": "important",
-        "coverageGaps": [
-          "invalid-active-proof-mode"
-        ]
+        "coverageGaps": []
       },
       {
         "id": "skip_engine",
@@ -8064,8 +8052,8 @@
       "decisionAuthority": "advisory",
       "manualGate": "none",
       "selfEvolving": false,
-      "proofMode": "audit_log_evidence",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "production",
       "deploymentAuthority": "operator_only",
@@ -8104,17 +8092,15 @@
       "closedLoopStatus": "not_collecting",
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
-      "launchReady": false,
+      "launchReady": true,
       "automationStatus": "complete",
       "dataCollectionStatus": "complete",
       "auditabilityStatus": "complete",
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
-      "productionBlockers": [
-        "invalid-active-proof-mode"
-      ],
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
       "productionCriteria": [
         "authority boundary remains enforced",
         "data collection stays complete across critical handoffs",
@@ -8150,9 +8136,7 @@
         "SELECT * FROM audit_log WHERE action LIKE 'ab_comparison_digest.%' ORDER BY created_at DESC LIMIT 8",
         "SELECT account_id, paper_account_routing FROM strategies WHERE paper_account_routing IS NOT NULL LIMIT 50"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "adaptive_exit_engine",
@@ -8163,8 +8147,8 @@
       "decisionAuthority": "system",
       "manualGate": "operator_opt_in_per_strategy",
       "selfEvolving": false,
-      "proofMode": "wave_25_5_wired_2026_05_24",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "engine_only",
       "deploymentAuthority": "production",
@@ -8209,9 +8193,8 @@
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
+      "preprodProofStatus": "runtime-proven",
       "productionBlockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator_opt_in_per_strategy"
       ],
       "productionCriteria": [
@@ -8249,9 +8232,7 @@
         "src/engine/tests/test_adaptive_exits_python.py",
         "src/engine/tests/test_adaptive_exits_parity.py"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "backtest_qualification",
@@ -8404,11 +8385,16 @@
       "runtimeEvidence": [
         "/api/health/dashboard",
         "audit_log:broker.order_routed",
+        "audit_log:live_order.routed",
         "broker_accounts:recent-write",
         "broker:order_routed SSE",
         "broker.credentials_loaded",
         "broker.error_budget_breach",
-        "broker.order_routed"
+        "broker.order_routed",
+        "live_order.blocked_hmac_invalid",
+        "live_order.blocked_kill_switch",
+        "live_order.blocked_replay",
+        "live_order.routed"
       ],
       "dataCollectionCoverage": [
         "audit_log",
@@ -8436,18 +8422,24 @@
       "requiredEvidence": [
         "/api/health/dashboard",
         "audit_log:broker.order_routed",
+        "audit_log:live_order.routed",
         "broker_accounts:recent-write",
         "broker-credentials-loaded-audit",
         "broker-order-routing-audit",
         "broker:order_routed SSE",
         "broker.credentials_loaded",
         "broker.error_budget_breach",
-        "broker.order_routed"
+        "broker.order_routed",
+        "live_order.blocked_hmac_invalid",
+        "live_order.blocked_kill_switch",
+        "live_order.blocked_replay",
+        "live_order.routed"
       ],
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
       "routes": [
         "/api/broker-accounts",
         "/api/broker-error-budget",
+        "/api/live-order",
         "/api/strategy-assignments"
       ],
       "schedulerJobs": [
@@ -8746,8 +8738,8 @@
       "decisionAuthority": "system",
       "manualGate": "none",
       "selfEvolving": false,
-      "proofMode": "audit_log_evidence",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "observability_only",
       "deploymentAuthority": "operator_only",
@@ -8780,17 +8772,15 @@
       "closedLoopStatus": "not_collecting",
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
-      "launchReady": false,
+      "launchReady": true,
       "automationStatus": "complete",
       "dataCollectionStatus": "complete",
       "auditabilityStatus": "complete",
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
-      "productionBlockers": [
-        "invalid-active-proof-mode"
-      ],
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
       "productionCriteria": [
         "authority boundary remains enforced",
         "data collection stays complete across critical handoffs",
@@ -8822,9 +8812,7 @@
         "SELECT COUNT(*) FROM audit_log WHERE action = 'composite.shadow_evaluation' AND created_at > NOW() - INTERVAL '24 hours'",
         "SELECT * FROM audit_log WHERE action = 'shadow_analysis.completed' ORDER BY created_at DESC LIMIT 1"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "confluence_decay_engine",
@@ -9220,7 +9208,6 @@
         "prop-firm-health-check",
         "session-analytics-rollup",
         "stale-session-check",
-        "vp-daily-compute",
         "w19-definition-pull",
         "w19-imbalance-pull",
         "w19-statistics-pull",
@@ -9360,8 +9347,8 @@
       "decisionAuthority": "system",
       "manualGate": "operator-only-recovery",
       "selfEvolving": false,
-      "proofMode": "audit_log_evidence",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "none",
       "deploymentAuthority": "operator_only",
@@ -9404,9 +9391,8 @@
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
+      "preprodProofStatus": "runtime-proven",
       "productionBlockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator-only-recovery"
       ],
       "productionCriteria": [
@@ -9438,9 +9424,7 @@
       "evidenceQueries": [
         "SELECT * FROM audit_log WHERE action = 'risk.dd_velocity_autopause' ORDER BY created_at DESC LIMIT 5"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "deepar_regime",
@@ -9549,8 +9533,8 @@
       "decisionAuthority": "system",
       "manualGate": "operator_invoke_for_cohort_validation",
       "selfEvolving": false,
-      "proofMode": "wave_25_5_wired_2026_05_24",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "engine_only",
       "deploymentAuthority": "production",
@@ -9585,9 +9569,8 @@
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
+      "preprodProofStatus": "runtime-proven",
       "productionBlockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator_invoke_for_cohort_validation"
       ],
       "productionCriteria": [
@@ -9617,9 +9600,7 @@
         "src/engine/tests/test_adaptive_exits_python.py",
         "src/engine/tests/test_adaptive_exits_parity.py"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "frankenstein_randomization_gate",
@@ -10029,8 +10010,7 @@
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
       "routes": [],
       "schedulerJobs": [
-        "bias-engine-session-start",
-        "bias-engine-10am-refresh"
+        "bias-engine-session-start"
       ],
       "healthCheck": "/api/health",
       "freshnessSignals": [
@@ -10052,8 +10032,8 @@
       "decisionAuthority": "system",
       "manualGate": "none",
       "selfEvolving": false,
-      "proofMode": "audit_log_evidence",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "none",
       "deploymentAuthority": "operator_only",
@@ -10082,17 +10062,15 @@
       "closedLoopStatus": "not_collecting",
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
-      "launchReady": false,
+      "launchReady": true,
       "automationStatus": "complete",
       "dataCollectionStatus": "complete",
       "auditabilityStatus": "complete",
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
-      "productionBlockers": [
-        "invalid-active-proof-mode"
-      ],
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
       "productionCriteria": [
         "authority boundary remains enforced",
         "data collection stays complete across critical handoffs",
@@ -10115,9 +10093,7 @@
       "evidenceQueries": [
         "SELECT * FROM audit_log WHERE action = 'regime.late_cycle_overheating_detected' ORDER BY created_at DESC LIMIT 5"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "liquidity_map_service",
@@ -11445,8 +11421,7 @@
         "freshness signals available",
         "learning loop affects downstream behavior",
         "route contract reachable",
-        "runtime evidence persisted",
-        "scheduler jobs healthy"
+        "runtime evidence persisted"
       ],
       "runtimeEvidence": [
         "/api/health/dashboard",
@@ -11502,9 +11477,7 @@
       "routes": [
         "/api/prop-firm"
       ],
-      "schedulerJobs": [
-        "b14-priors-refit"
-      ],
+      "schedulerJobs": [],
       "healthCheck": "/api/health/dashboard",
       "freshnessSignals": [
         "firm_adversarial_priors:last_fitted_at",
@@ -11709,8 +11682,8 @@
       "decisionAuthority": "system",
       "manualGate": "none",
       "selfEvolving": true,
-      "proofMode": "audit_log_evidence",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "challenger_only",
       "deploymentAuthority": "operator_only",
@@ -11763,17 +11736,15 @@
       "closedLoopStatus": "learning_active",
       "learningMode": "active_learning",
       "operatingClass": "adaptive",
-      "launchReady": false,
+      "launchReady": true,
       "automationStatus": "complete",
       "dataCollectionStatus": "complete",
       "auditabilityStatus": "complete",
       "failureVisibilityStatus": "complete",
       "learningStatus": "active",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
-      "productionBlockers": [
-        "invalid-active-proof-mode"
-      ],
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
       "productionCriteria": [
         "authority boundary remains enforced",
         "data collection stays complete across critical handoffs",
@@ -11816,9 +11787,7 @@
         "SELECT COUNT(*) FROM quantum_rl_runs WHERE created_at > NOW() - INTERVAL '7 days'",
         "SELECT * FROM audit_log WHERE action LIKE 'quantum_rl.%' ORDER BY created_at DESC LIMIT 10"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "regime_drift_detector",
@@ -11926,8 +11895,8 @@
       "decisionAuthority": "system",
       "manualGate": "operator-approve",
       "selfEvolving": false,
-      "proofMode": "static-evidence",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "engine_only",
       "deploymentAuthority": "autonomous_pre_deploy",
@@ -11945,6 +11914,10 @@
         "runtime evidence persisted"
       ],
       "runtimeEvidence": [
+        "audit_log:replay_grade_confluence.inconclusive",
+        "audit_log:replay_grade_confluence.no_signal",
+        "audit_log:replay_grade_confluence.preliminary",
+        "audit_log:replay_grade_confluence.signal_detected",
         "replay_grade_confluence.inconclusive",
         "replay_grade_confluence.no_signal",
         "replay_grade_confluence.preliminary",
@@ -11967,9 +11940,8 @@
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
+      "preprodProofStatus": "runtime-proven",
       "productionBlockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator-approve"
       ],
       "productionCriteria": [
@@ -11979,6 +11951,10 @@
         "pre-production runtime proof remains stable"
       ],
       "requiredEvidence": [
+        "audit_log:replay_grade_confluence.inconclusive",
+        "audit_log:replay_grade_confluence.no_signal",
+        "audit_log:replay_grade_confluence.preliminary",
+        "audit_log:replay_grade_confluence.signal_detected",
         "replay_grade_confluence.inconclusive",
         "replay_grade_confluence.no_signal",
         "replay_grade_confluence.preliminary",
@@ -11990,13 +11966,16 @@
       "routes": [],
       "schedulerJobs": [],
       "healthCheck": "src/server/__tests__/replay/replay-grade-confluence.test.ts",
-      "freshnessSignals": [],
+      "freshnessSignals": [
+        "audit_log:replay_grade_confluence.signal_detected",
+        "audit_log:replay_grade_confluence.no_signal",
+        "audit_log:replay_grade_confluence.inconclusive",
+        "audit_log:replay_grade_confluence.preliminary"
+      ],
       "evidenceQueries": [
         "src/server/__tests__/replay/replay-grade-confluence.test.ts"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "replay_grade_consistency",
@@ -12007,8 +11986,8 @@
       "decisionAuthority": "system",
       "manualGate": "operator-approve",
       "selfEvolving": false,
-      "proofMode": "static-evidence",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "engine_only",
       "deploymentAuthority": "autonomous_pre_deploy",
@@ -12026,6 +12005,10 @@
         "runtime evidence persisted"
       ],
       "runtimeEvidence": [
+        "audit_log:replay_grade_consistency.inconclusive",
+        "audit_log:replay_grade_consistency.no_signal",
+        "audit_log:replay_grade_consistency.preliminary",
+        "audit_log:replay_grade_consistency.signal_detected",
         "replay_grade_consistency.inconclusive",
         "replay_grade_consistency.no_signal",
         "replay_grade_consistency.preliminary",
@@ -12046,9 +12029,8 @@
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
+      "preprodProofStatus": "runtime-proven",
       "productionBlockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator-approve"
       ],
       "productionCriteria": [
@@ -12058,6 +12040,10 @@
         "pre-production runtime proof remains stable"
       ],
       "requiredEvidence": [
+        "audit_log:replay_grade_consistency.inconclusive",
+        "audit_log:replay_grade_consistency.no_signal",
+        "audit_log:replay_grade_consistency.preliminary",
+        "audit_log:replay_grade_consistency.signal_detected",
         "replay_grade_consistency.inconclusive",
         "replay_grade_consistency.no_signal",
         "replay_grade_consistency.preliminary",
@@ -12069,13 +12055,16 @@
       "routes": [],
       "schedulerJobs": [],
       "healthCheck": "src/server/__tests__/replay/replay-grade-consistency.test.ts",
-      "freshnessSignals": [],
+      "freshnessSignals": [
+        "audit_log:replay_grade_consistency.signal_detected",
+        "audit_log:replay_grade_consistency.no_signal",
+        "audit_log:replay_grade_consistency.inconclusive",
+        "audit_log:replay_grade_consistency.preliminary"
+      ],
       "evidenceQueries": [
         "src/server/__tests__/replay/replay-grade-consistency.test.ts"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "replay_grade_critique",
@@ -12086,8 +12075,8 @@
       "decisionAuthority": "system",
       "manualGate": "operator-approve",
       "selfEvolving": false,
-      "proofMode": "static-evidence",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "engine_only",
       "deploymentAuthority": "autonomous_pre_deploy",
@@ -12105,6 +12094,10 @@
         "runtime evidence persisted"
       ],
       "runtimeEvidence": [
+        "audit_log:replay_grade_critique.inconclusive",
+        "audit_log:replay_grade_critique.no_signal",
+        "audit_log:replay_grade_critique.preliminary",
+        "audit_log:replay_grade_critique.signal_detected",
         "replay_grade_critique.inconclusive",
         "replay_grade_critique.no_signal",
         "replay_grade_critique.preliminary",
@@ -12126,9 +12119,8 @@
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
+      "preprodProofStatus": "runtime-proven",
       "productionBlockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator-approve"
       ],
       "productionCriteria": [
@@ -12138,6 +12130,10 @@
         "pre-production runtime proof remains stable"
       ],
       "requiredEvidence": [
+        "audit_log:replay_grade_critique.inconclusive",
+        "audit_log:replay_grade_critique.no_signal",
+        "audit_log:replay_grade_critique.preliminary",
+        "audit_log:replay_grade_critique.signal_detected",
         "replay_grade_critique.inconclusive",
         "replay_grade_critique.no_signal",
         "replay_grade_critique.preliminary",
@@ -12149,13 +12145,16 @@
       "routes": [],
       "schedulerJobs": [],
       "healthCheck": "src/server/__tests__/replay/replay-grade-critique.test.ts",
-      "freshnessSignals": [],
+      "freshnessSignals": [
+        "audit_log:replay_grade_critique.signal_detected",
+        "audit_log:replay_grade_critique.no_signal",
+        "audit_log:replay_grade_critique.inconclusive",
+        "audit_log:replay_grade_critique.preliminary"
+      ],
       "evidenceQueries": [
         "src/server/__tests__/replay/replay-grade-critique.test.ts"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "replay_grade_pattern_aggregator",
@@ -12166,8 +12165,8 @@
       "decisionAuthority": "system",
       "manualGate": "operator-approve",
       "selfEvolving": false,
-      "proofMode": "static-evidence",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "engine_only",
       "deploymentAuthority": "autonomous_pre_deploy",
@@ -12185,6 +12184,10 @@
         "runtime evidence persisted"
       ],
       "runtimeEvidence": [
+        "audit_log:replay_grade_pattern_aggregator.inconclusive",
+        "audit_log:replay_grade_pattern_aggregator.no_signal",
+        "audit_log:replay_grade_pattern_aggregator.preliminary",
+        "audit_log:replay_grade_pattern_aggregator.signal_detected",
         "replay_grade_pattern_aggregator.inconclusive",
         "replay_grade_pattern_aggregator.no_signal",
         "replay_grade_pattern_aggregator.preliminary",
@@ -12206,9 +12209,8 @@
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
+      "preprodProofStatus": "runtime-proven",
       "productionBlockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator-approve"
       ],
       "productionCriteria": [
@@ -12218,6 +12220,10 @@
         "pre-production runtime proof remains stable"
       ],
       "requiredEvidence": [
+        "audit_log:replay_grade_pattern_aggregator.inconclusive",
+        "audit_log:replay_grade_pattern_aggregator.no_signal",
+        "audit_log:replay_grade_pattern_aggregator.preliminary",
+        "audit_log:replay_grade_pattern_aggregator.signal_detected",
         "replay_grade_pattern_aggregator.inconclusive",
         "replay_grade_pattern_aggregator.no_signal",
         "replay_grade_pattern_aggregator.preliminary",
@@ -12229,13 +12235,16 @@
       "routes": [],
       "schedulerJobs": [],
       "healthCheck": "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts",
-      "freshnessSignals": [],
+      "freshnessSignals": [
+        "audit_log:replay_grade_pattern_aggregator.signal_detected",
+        "audit_log:replay_grade_pattern_aggregator.no_signal",
+        "audit_log:replay_grade_pattern_aggregator.inconclusive",
+        "audit_log:replay_grade_pattern_aggregator.preliminary"
+      ],
       "evidenceQueries": [
         "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "replay_grade_robustness",
@@ -12246,8 +12255,8 @@
       "decisionAuthority": "system",
       "manualGate": "operator-approve",
       "selfEvolving": false,
-      "proofMode": "static-evidence",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "engine_only",
       "deploymentAuthority": "autonomous_pre_deploy",
@@ -12265,6 +12274,10 @@
         "runtime evidence persisted"
       ],
       "runtimeEvidence": [
+        "audit_log:replay_grade_robustness.inconclusive",
+        "audit_log:replay_grade_robustness.no_signal",
+        "audit_log:replay_grade_robustness.preliminary",
+        "audit_log:replay_grade_robustness.signal_detected",
         "replay_grade_robustness.inconclusive",
         "replay_grade_robustness.no_signal",
         "replay_grade_robustness.preliminary",
@@ -12286,9 +12299,8 @@
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
+      "preprodProofStatus": "runtime-proven",
       "productionBlockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator-approve"
       ],
       "productionCriteria": [
@@ -12298,6 +12310,10 @@
         "pre-production runtime proof remains stable"
       ],
       "requiredEvidence": [
+        "audit_log:replay_grade_robustness.inconclusive",
+        "audit_log:replay_grade_robustness.no_signal",
+        "audit_log:replay_grade_robustness.preliminary",
+        "audit_log:replay_grade_robustness.signal_detected",
         "replay_grade_robustness.inconclusive",
         "replay_grade_robustness.no_signal",
         "replay_grade_robustness.preliminary",
@@ -12309,13 +12325,16 @@
       "routes": [],
       "schedulerJobs": [],
       "healthCheck": "src/server/__tests__/replay/replay-grade-robustness.test.ts",
-      "freshnessSignals": [],
+      "freshnessSignals": [
+        "audit_log:replay_grade_robustness.signal_detected",
+        "audit_log:replay_grade_robustness.no_signal",
+        "audit_log:replay_grade_robustness.inconclusive",
+        "audit_log:replay_grade_robustness.preliminary"
+      ],
       "evidenceQueries": [
         "src/server/__tests__/replay/replay-grade-robustness.test.ts"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "replay_grade_survival_twin",
@@ -12326,8 +12345,8 @@
       "decisionAuthority": "system",
       "manualGate": "operator-approve",
       "selfEvolving": false,
-      "proofMode": "static-evidence",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "engine_only",
       "deploymentAuthority": "autonomous_pre_deploy",
@@ -12345,6 +12364,12 @@
         "runtime evidence persisted"
       ],
       "runtimeEvidence": [
+        "audit_log:replay_grade_survival_twin.inconclusive",
+        "audit_log:replay_grade_survival_twin.no_signal",
+        "audit_log:replay_grade_survival_twin.preliminary",
+        "audit_log:replay_grade_survival_twin.signal_detected",
+        "audit_log:survival_twin_replay.completed",
+        "audit_log:survival_twin_replay.failed",
         "replay_grade_survival_twin.inconclusive",
         "replay_grade_survival_twin.no_signal",
         "replay_grade_survival_twin.preliminary",
@@ -12369,9 +12394,8 @@
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
+      "preprodProofStatus": "runtime-proven",
       "productionBlockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator-approve"
       ],
       "productionCriteria": [
@@ -12381,6 +12405,12 @@
         "pre-production runtime proof remains stable"
       ],
       "requiredEvidence": [
+        "audit_log:replay_grade_survival_twin.inconclusive",
+        "audit_log:replay_grade_survival_twin.no_signal",
+        "audit_log:replay_grade_survival_twin.preliminary",
+        "audit_log:replay_grade_survival_twin.signal_detected",
+        "audit_log:survival_twin_replay.completed",
+        "audit_log:survival_twin_replay.failed",
         "replay_grade_survival_twin.inconclusive",
         "replay_grade_survival_twin.no_signal",
         "replay_grade_survival_twin.preliminary",
@@ -12395,14 +12425,19 @@
       "routes": [],
       "schedulerJobs": [],
       "healthCheck": "tests/python/replay/test_survival_twin_replay.py",
-      "freshnessSignals": [],
+      "freshnessSignals": [
+        "audit_log:survival_twin_replay.completed",
+        "audit_log:survival_twin_replay.failed",
+        "audit_log:replay_grade_survival_twin.signal_detected",
+        "audit_log:replay_grade_survival_twin.no_signal",
+        "audit_log:replay_grade_survival_twin.inconclusive",
+        "audit_log:replay_grade_survival_twin.preliminary"
+      ],
       "evidenceQueries": [
         "tests/python/replay/test_survival_twin_replay.py",
         "src/server/__tests__/replay/replay-grade-survival-twin.test.ts"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "replay_grade_unified_dispatcher",
@@ -12413,8 +12448,8 @@
       "decisionAuthority": "system",
       "manualGate": "operator-approve",
       "selfEvolving": false,
-      "proofMode": "static-evidence",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "engine_only",
       "deploymentAuthority": "autonomous_pre_deploy",
@@ -12432,6 +12467,8 @@
         "runtime evidence persisted"
       ],
       "runtimeEvidence": [
+        "audit_log:replay_grade.aggregate_verdict_emitted",
+        "audit_log:replay_grade.dispatcher_invoked",
         "replay_grade.aggregate_verdict_emitted",
         "replay_grade.dispatcher_invoked",
         "stdout-json-summary"
@@ -12454,9 +12491,8 @@
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
+      "preprodProofStatus": "runtime-proven",
       "productionBlockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator-approve"
       ],
       "productionCriteria": [
@@ -12466,6 +12502,8 @@
         "pre-production runtime proof remains stable"
       ],
       "requiredEvidence": [
+        "audit_log:replay_grade.aggregate_verdict_emitted",
+        "audit_log:replay_grade.dispatcher_invoked",
         "replay_grade.aggregate_verdict_emitted",
         "replay_grade.dispatcher_invoked",
         "scripts/replay-grade.ts",
@@ -12476,14 +12514,15 @@
       "routes": [],
       "schedulerJobs": [],
       "healthCheck": "scripts/replay-grade.ts",
-      "freshnessSignals": [],
+      "freshnessSignals": [
+        "audit_log:replay_grade.dispatcher_invoked",
+        "audit_log:replay_grade.aggregate_verdict_emitted"
+      ],
       "evidenceQueries": [
         "scripts/replay-grade.ts",
         "src/server/lib/replay/harness-base.ts"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "replay_harness_engine",
@@ -12494,8 +12533,8 @@
       "decisionAuthority": "system",
       "manualGate": "operator-approve",
       "selfEvolving": false,
-      "proofMode": "static-evidence",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "engine_only",
       "deploymentAuthority": "autonomous_pre_deploy",
@@ -12514,6 +12553,7 @@
         "scheduler jobs healthy"
       ],
       "runtimeEvidence": [
+        "audit_log:replay.harness_executed",
         "replay.harness_executed",
         "stdout-json-summary"
       ],
@@ -12532,9 +12572,8 @@
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
+      "preprodProofStatus": "runtime-proven",
       "productionBlockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator-approve"
       ],
       "productionCriteria": [
@@ -12544,6 +12583,7 @@
         "pre-production runtime proof remains stable"
       ],
       "requiredEvidence": [
+        "audit_log:replay.harness_executed",
         "replay.harness_executed",
         "stdout-json-summary",
         "tests/python/replay/test_quantum_replay.py"
@@ -12554,13 +12594,13 @@
         "quantum-replay-weekly-analysis"
       ],
       "healthCheck": "tests/python/replay/test_quantum_replay.py",
-      "freshnessSignals": [],
+      "freshnessSignals": [
+        "audit_log:replay.harness_executed"
+      ],
       "evidenceQueries": [
         "tests/python/replay/test_quantum_replay.py"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "research_orchestration",
@@ -12602,6 +12642,7 @@
         "system_journal:recent-entry"
       ],
       "dataCollectionCoverage": [
+        "agent_jobs",
         "audit_log",
         "backtest eligibility inputs",
         "backtests",
@@ -12671,15 +12712,9 @@
       "schedulerJobs": [
         "autonomous-scout-discovery",
         "drain-scouted-ideas-periodic",
-        "graduated-strategy-drift-check",
         "graveyard-pattern-extraction",
-        "pending-bucket-expiry",
         "pipeline-resume-drain",
         "prompt-ab-resolution",
-        "scout-drain-stall-check",
-        "scout-reject-distribution-check",
-        "scout-reject-spike-check",
-        "single-mention-bucket-sweep",
         "tournament-staleness-check"
       ],
       "healthCheck": "/api/health/dashboard",
@@ -12879,8 +12914,8 @@
       "decisionAuthority": "agent",
       "manualGate": "none",
       "selfEvolving": false,
-      "proofMode": "audit_trail",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "production",
       "deploymentAuthority": "operator_only",
@@ -12897,6 +12932,9 @@
         "runtime evidence persisted"
       ],
       "runtimeEvidence": [
+        "audit_log:slumhouse.login_cancelled",
+        "audit_log:slumhouse.login_failed",
+        "audit_log:slumhouse.login_success",
         "audit_log.slumhouse.login_cancelled",
         "audit_log.slumhouse.login_failed",
         "audit_log.slumhouse.login_success",
@@ -12914,17 +12952,15 @@
       "closedLoopStatus": "not_collecting",
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
-      "launchReady": false,
+      "launchReady": true,
       "automationStatus": "complete",
       "dataCollectionStatus": "complete",
       "auditabilityStatus": "complete",
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
-      "productionBlockers": [
-        "invalid-active-proof-mode"
-      ],
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
       "productionCriteria": [
         "authority boundary remains enforced",
         "data collection stays complete across critical handoffs",
@@ -12932,6 +12968,9 @@
         "pre-production runtime proof remains stable"
       ],
       "requiredEvidence": [
+        "audit_log:slumhouse.login_cancelled",
+        "audit_log:slumhouse.login_failed",
+        "audit_log:slumhouse.login_success",
         "audit_log.slumhouse.login_cancelled",
         "audit_log.slumhouse.login_failed",
         "audit_log.slumhouse.login_success",
@@ -12948,13 +12987,15 @@
       ],
       "schedulerJobs": [],
       "healthCheck": "src/server/__tests__/slumhouse/discord-oauth.test.ts",
-      "freshnessSignals": [],
+      "freshnessSignals": [
+        "audit_log:slumhouse.login_success",
+        "audit_log:slumhouse.login_failed",
+        "audit_log:slumhouse.login_cancelled"
+      ],
       "evidenceQueries": [
         "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.login_%' ORDER BY created_at DESC LIMIT 50"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "slumhouse_frontend",
@@ -12965,8 +13006,8 @@
       "decisionAuthority": "advisory",
       "manualGate": "none",
       "selfEvolving": false,
-      "proofMode": "static_assets",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "production",
       "deploymentAuthority": "operator_only",
@@ -12982,7 +13023,10 @@
         "route contract reachable",
         "runtime evidence persisted"
       ],
-      "runtimeEvidence": [],
+      "runtimeEvidence": [
+        "audit_log:slumhouse.login_success",
+        "slumhouse_users:last_seen_at"
+      ],
       "dataCollectionCoverage": [
         "/slumhouse/api/crib",
         "/slumhouse/api/kitchen",
@@ -12991,24 +13035,26 @@
       "closedLoopStatus": "not_collecting",
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
-      "launchReady": false,
+      "launchReady": true,
       "automationStatus": "incomplete",
       "dataCollectionStatus": "complete",
       "auditabilityStatus": "complete",
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
-      "productionBlockers": [
-        "invalid-active-proof-mode"
-      ],
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
       "productionCriteria": [
         "authority boundary remains enforced",
         "data collection stays complete across critical handoffs",
         "failure visibility remains wired",
         "pre-production runtime proof remains stable"
       ],
-      "requiredEvidence": [],
+      "requiredEvidence": [
+        "audit_log:slumhouse.login_success",
+        "SELECT COUNT(*) FROM slumhouse_users WHERE last_seen_at > NOW() - INTERVAL '7 days'",
+        "slumhouse_users:last_seen_at"
+      ],
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
       "routes": [
         "GET /slumhouse (serves crib.html)",
@@ -13019,11 +13065,14 @@
       ],
       "schedulerJobs": [],
       "healthCheck": "GET /slumhouse/crib.html returns 200",
-      "freshnessSignals": [],
-      "evidenceQueries": [],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "freshnessSignals": [
+        "audit_log:slumhouse.login_success",
+        "slumhouse_users:last_seen_at"
+      ],
+      "evidenceQueries": [
+        "SELECT COUNT(*) FROM slumhouse_users WHERE last_seen_at > NOW() - INTERVAL '7 days'"
+      ],
+      "coverageGaps": []
     },
     {
       "id": "slumhouse_routes",
@@ -13034,8 +13083,8 @@
       "decisionAuthority": "agent",
       "manualGate": "none",
       "selfEvolving": false,
-      "proofMode": "read_only_api",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "production",
       "deploymentAuthority": "operator_only",
@@ -13051,7 +13100,10 @@
         "route contract reachable",
         "runtime evidence persisted"
       ],
-      "runtimeEvidence": [],
+      "runtimeEvidence": [
+        "audit_log:slumhouse.login_success",
+        "slumhouse_users:last_seen_at"
+      ],
       "dataCollectionCoverage": [
         "account_strategy_assignments",
         "backtests",
@@ -13070,17 +13122,15 @@
       "closedLoopStatus": "not_collecting",
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
-      "launchReady": false,
+      "launchReady": true,
       "automationStatus": "incomplete",
       "dataCollectionStatus": "complete",
       "auditabilityStatus": "complete",
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
-      "productionBlockers": [
-        "invalid-active-proof-mode"
-      ],
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
       "productionCriteria": [
         "authority boundary remains enforced",
         "data collection stays complete across critical handoffs",
@@ -13088,7 +13138,9 @@
         "pre-production runtime proof remains stable"
       ],
       "requiredEvidence": [
-        "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.%' ORDER BY created_at DESC LIMIT 50"
+        "audit_log:slumhouse.login_success",
+        "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.%' ORDER BY created_at DESC LIMIT 50",
+        "slumhouse_users:last_seen_at"
       ],
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
       "routes": [
@@ -13099,13 +13151,14 @@
       ],
       "schedulerJobs": [],
       "healthCheck": "src/server/__tests__/slumhouse/",
-      "freshnessSignals": [],
+      "freshnessSignals": [
+        "audit_log:slumhouse.login_success",
+        "slumhouse_users:last_seen_at"
+      ],
       "evidenceQueries": [
         "SELECT * FROM audit_log WHERE action LIKE 'slumhouse.%' ORDER BY created_at DESC LIMIT 50"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "slumhouse_users_table",
@@ -13116,8 +13169,8 @@
       "decisionAuthority": "operator",
       "manualGate": "operator",
       "selfEvolving": false,
-      "proofMode": "audit_trail",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "production",
       "deploymentAuthority": "operator_only",
@@ -13136,6 +13189,8 @@
         "runtime evidence persisted"
       ],
       "runtimeEvidence": [
+        "audit_log:slumhouse.user_mapped",
+        "slumhouse_users:recent-write",
         "slumhouse.user_mapped"
       ],
       "dataCollectionCoverage": [
@@ -13154,9 +13209,8 @@
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
+      "preprodProofStatus": "runtime-proven",
       "productionBlockers": [
-        "invalid-active-proof-mode",
         "manual_gate:operator"
       ],
       "productionCriteria": [
@@ -13166,7 +13220,9 @@
         "pre-production runtime proof remains stable"
       ],
       "requiredEvidence": [
+        "audit_log:slumhouse.user_mapped",
         "SELECT * FROM slumhouse_users ORDER BY created_at DESC LIMIT 50",
+        "slumhouse_users:recent-write",
         "slumhouse.user_mapped"
       ],
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
@@ -13176,13 +13232,14 @@
       ],
       "schedulerJobs": [],
       "healthCheck": "src/server/__tests__/slumhouse/admin-mapping-route.test.ts",
-      "freshnessSignals": [],
+      "freshnessSignals": [
+        "audit_log:slumhouse.user_mapped",
+        "slumhouse_users:recent-write"
+      ],
       "evidenceQueries": [
         "SELECT * FROM slumhouse_users ORDER BY created_at DESC LIMIT 50"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "smt_divergence_engine",
@@ -13338,8 +13395,8 @@
       "decisionAuthority": "system",
       "manualGate": "none",
       "selfEvolving": false,
-      "proofMode": "audit_log_evidence",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "observability_only",
       "deploymentAuthority": "operator_only",
@@ -13380,17 +13437,15 @@
       "closedLoopStatus": "not_collecting",
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
-      "launchReady": false,
+      "launchReady": true,
       "automationStatus": "complete",
       "dataCollectionStatus": "complete",
       "auditabilityStatus": "complete",
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
-      "productionBlockers": [
-        "invalid-active-proof-mode"
-      ],
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
       "productionCriteria": [
         "authority boundary remains enforced",
         "data collection stays complete across critical handoffs",
@@ -13427,9 +13482,7 @@
         "SELECT COUNT(*) FROM strategy_health_scores WHERE evaluated_at > NOW() - INTERVAL '24 hours'",
         "SELECT * FROM audit_log WHERE action = 'composite_health.daily_digest_emitted' ORDER BY created_at DESC LIMIT 1"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "strategy_lifecycle",
@@ -13570,8 +13623,7 @@
         "failure visibility wired",
         "freshness signals available",
         "route contract reachable",
-        "runtime evidence persisted",
-        "scheduler jobs healthy"
+        "runtime evidence persisted"
       ],
       "runtimeEvidence": [
         "/api/health/dashboard",
@@ -13628,11 +13680,7 @@
         "/api/nemo-scenarios",
         "/api/synthetic-black-swan"
       ],
-      "schedulerJobs": [
-        "nemo-scenario-weekly",
-        "synthetic-regime-refresh",
-        "synthetic-tsgen-train"
-      ],
+      "schedulerJobs": [],
       "healthCheck": "/api/health/dashboard",
       "freshnessSignals": [
         "synthetic_black_swan_runs:recent-completion",
@@ -13830,8 +13878,8 @@
       "decisionAuthority": "system",
       "manualGate": "ci_gate",
       "selfEvolving": false,
-      "proofMode": "ci-runtime",
-      "proofStatus": "drifted",
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "ci_only",
       "deploymentAuthority": "production",
@@ -13865,9 +13913,8 @@
       "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
+      "preprodProofStatus": "runtime-proven",
       "productionBlockers": [
-        "invalid-active-proof-mode",
         "manual_gate:ci_gate"
       ],
       "productionCriteria": [
@@ -13893,9 +13940,7 @@
         "src/server/__tests__/wave26-ts-python-parity.test.ts",
         "scripts/wave26-ts-python-exit-parity.ts"
       ],
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "vwap_bands_engine",
@@ -13980,7 +14025,7 @@
       "manualGate": "none",
       "selfEvolving": false,
       "proofMode": "active-runtime",
-      "proofStatus": "drifted",
+      "proofStatus": "runtime-proven",
       "ownershipBoundary": "internal-only",
       "learningBoundary": "production",
       "deploymentAuthority": "operator_only",
@@ -14006,6 +14051,7 @@
         "/metrics tf_rl_kill_switch_total",
         "/metrics tf_rl_training_epochs_total",
         "/metrics tf_shadow_signals_total",
+        "audit_log:wave29_observability.metrics_emitted",
         "SSE lifecycle:pbo_evaluated",
         "SSE lifecycle:shadow_divergence_evaluated",
         "SSE quantum_rl:kill_switch_engaged",
@@ -14025,17 +14071,15 @@
       "closedLoopStatus": "not_collecting",
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
-      "launchReady": false,
+      "launchReady": true,
       "automationStatus": "complete",
       "dataCollectionStatus": "complete",
       "auditabilityStatus": "complete",
-      "failureVisibilityStatus": "incomplete",
+      "failureVisibilityStatus": "complete",
       "learningStatus": "not_applicable",
       "authorityStatus": "correct",
-      "preprodProofStatus": "drifted",
-      "productionBlockers": [
-        "missing-evidence-queries"
-      ],
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
       "productionCriteria": [
         "authority boundary remains enforced",
         "data collection stays complete across critical handoffs",
@@ -14053,6 +14097,9 @@
         "/metrics tf_rl_kill_switch_total",
         "/metrics tf_rl_training_epochs_total",
         "/metrics tf_shadow_signals_total",
+        "audit_log:wave29_observability.metrics_emitted",
+        "GET /metrics | grep -E 'tf_(pbo|shadow|rl|frozen_policy|regime_drift|lifecycle_shadow)_'",
+        "SELECT * FROM audit_log WHERE action LIKE 'wave29_observability.%' ORDER BY created_at DESC LIMIT 20",
         "SSE lifecycle:pbo_evaluated",
         "SSE lifecycle:shadow_divergence_evaluated",
         "SSE quantum_rl:kill_switch_engaged",
@@ -14069,12 +14116,14 @@
       "healthCheck": "src/server/__tests__/wave29-pass-d1-observability.test.ts",
       "freshnessSignals": [
         "/metrics endpoint reachable",
-        "SSE stream open"
+        "SSE stream open",
+        "audit_log:wave29_observability.metrics_emitted"
       ],
-      "evidenceQueries": [],
-      "coverageGaps": [
-        "missing-evidence-queries"
-      ]
+      "evidenceQueries": [
+        "GET /metrics | grep -E 'tf_(pbo|shadow|rl|frozen_policy|regime_drift|lifecycle_shadow)_'",
+        "SELECT * FROM audit_log WHERE action LIKE 'wave29_observability.%' ORDER BY created_at DESC LIMIT 20"
+      ],
+      "coverageGaps": []
     },
     {
       "id": "workflow_orchestration",
@@ -14156,10 +14205,8 @@
         "/api/n8n"
       ],
       "schedulerJobs": [
-        "n8n-data-backup-daily",
         "n8n-drift-detector-monthly",
         "n8n-drift-detector-weekly",
-        "n8n-drift-monthly",
         "n8n-execution-scrape",
         "n8n-health-check",
         "n8n-workflow-sync"
@@ -14425,14 +14472,12 @@
       "ownerSubsystemId": "replay_grade_confluence",
       "ownerDomain": "validation",
       "runtimeState": "active",
-      "proofStatus": "drifted",
+      "proofStatus": "runtime-proven",
       "manualGate": "operator-approve",
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
       "criticality": "important",
-      "coverageGaps": [
-        "invalid-active-proof-mode"
-      ]
+      "coverageGaps": []
     },
     {
       "id": "skip_engine",

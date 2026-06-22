@@ -90,10 +90,23 @@ export function computeSpearman(x: number[], y: number[]): { rho: number; pValue
   // rho when one array is constant (all ranks tie → d² from the other array's
   // spread drives rho away from 0). Return rho=0 / pValue=1.0 to reflect
   // "no information". (Wave hardening 2026-06-22, CI-trust)
-  const xMin = Math.min(...x);
-  const xMax = Math.max(...x);
-  const yMin = Math.min(...y);
-  const yMax = Math.max(...y);
+  //
+  // NOTE: Math.min(...x) / Math.max(...x) spread syntax throws
+  //   RangeError: Maximum call stack size exceeded
+  // for arrays > ~10k elements (V8 stack limit). Use for-loops instead.
+  // Fix: Wave B LOW-1 (2026-06-22).
+  let xMin = x[0];
+  let xMax = x[0];
+  for (let i = 1; i < x.length; i++) {
+    if (x[i] < xMin) xMin = x[i];
+    if (x[i] > xMax) xMax = x[i];
+  }
+  let yMin = y[0];
+  let yMax = y[0];
+  for (let i = 1; i < y.length; i++) {
+    if (y[i] < yMin) yMin = y[i];
+    if (y[i] > yMax) yMax = y[i];
+  }
   if (xMin === xMax || yMin === yMax) return { rho: 0, pValue: 1.0 };
 
   function rankArray(arr: number[]): number[] {

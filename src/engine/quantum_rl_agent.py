@@ -1828,11 +1828,56 @@ def train_regime_conditioned_policies(
 
         weights_hash = hashlib.sha256(params.tobytes()).hexdigest()[:16] if n_params > 0 else "no_params"
 
+        # ── DSR floor gate ────────────────────────────────────────────────────
+        # Compare final_sharpe against QUANTUM_RL_DSR_FLOOR (default 0.5).
+        # Authority boundary: advisory only — this sets governance_labels.dsr_passed
+        # and emits an audit sentinel.  It NEVER gates lifecycle or promotion.
+        # The TS-side rl-dsr-gate.ts re-reads the governance_labels from
+        # quantum_rl_runs; we stamp the value here so the TS gate has an authoritative
+        # per-regime signal to consume.
+        _dsr_floor: float = float(os.environ.get("QUANTUM_RL_DSR_FLOOR", "0.5"))
+        _dsr_passed: bool = final_sharpe >= _dsr_floor
+
+        _dsr_audit_action = "quantum_rl.dsr_passed" if _dsr_passed else "quantum_rl.dsr_floor_block"
+        _dsr_audit_status = "info" if _dsr_passed else "warning"
+        _dsr_audit_payload: dict = {
+            "action": _dsr_audit_action,
+            "status": _dsr_audit_status,
+            "strategy_id": strategy_id,
+            "dsr_value": final_sharpe,
+            "dsr_floor": _dsr_floor,
+            "regime": regime,
+            "dsr_passed": _dsr_passed,
+            "governance_labels": {**RL_RUNS_GOVERNANCE, "dsr_passed": _dsr_passed},
+        }
+
+        # Stderr sentinel — parsed by python-runner.ts AUDIT_LOG_JSON handler
+        # and by test harness stderr capture.
+        print(f"AUDIT_LOG_JSON {json.dumps(_dsr_audit_payload)}", file=sys.stderr)
+
+        # DB audit row (fail-soft — same pattern as _emit_audit_row)
+        _emit_audit_row(
+            action=_dsr_audit_action,
+            entity_type="strategy",
+            entity_id=str(strategy_id),
+            status=_dsr_audit_status,
+            result=_dsr_audit_payload,
+        )
+
+        if not _dsr_passed:
+            _rl_logger.warning(
+                "train_regime_conditioned_policies: DSR floor block — "
+                "regime=%s final_sharpe=%.4f < dsr_floor=%.4f; "
+                "governance_labels.dsr_passed=False",
+                regime, final_sharpe, _dsr_floor,
+            )
+
         results[regime] = {
             "trained_epochs": training_epochs,
             "final_sharpe": final_sharpe,
             "final_reward": final_reward,
             "weights_hash": weights_hash,
+            "dsr_passed": _dsr_passed,
         }
 
         _emit_audit_row(
@@ -1847,7 +1892,9 @@ def train_regime_conditioned_policies(
                 "final_sharpe": final_sharpe,
                 "weights_hash": weights_hash,
                 "backend_label": backend_label,
-                "governance_labels": RL_RUNS_GOVERNANCE,
+                "dsr_passed": _dsr_passed,
+                "dsr_floor": _dsr_floor,
+                "governance_labels": {**RL_RUNS_GOVERNANCE, "dsr_passed": _dsr_passed},
             },
         )
 

@@ -35,7 +35,7 @@ import { tracer } from "../lib/tracing.js";
 import { strategyPromotions, pboBLocksTotal, lifecycleShadowPromotionsTotal } from "../lib/metrics-registry.js";
 import { evaluateMultiFirmEligibility } from "./multi-firm-promotion-service.js";
 import { killSwitch } from "../production/kill-switch.js";
-import { evaluateB14CiGate } from "../lib/b14-ci-gate.js";
+import { evaluateB14CiGate, evaluateDsrWalkForwardGate } from "../lib/b14-ci-gate.js";
 import { evaluateWfeGate } from "../lib/wfe-gate.js";
 import { evaluateParameterDriftGate } from "../lib/parameter-drift-gate.js";
 import { evaluateCompositeShadow } from "../lib/composite-shadow-gate.js";
@@ -950,8 +950,11 @@ export class LifecycleService {
             });
             // Wave 29 prod hardening: increment Prom counter + Discord escalation
             try {
-              // Derive regime for label from biasState if available; fall back to "UNKNOWN"
-              const regimeLabel = "UNKNOWN"; // regime not available at this call site
+              // Wave B Fix 2: use strategy.regimeTrainedOn for the Prom label.
+              // s.regimeTrainedOn is available here because testingStrategies uses
+              // db.select() which loads all columns. Lowercase "unknown" is distinct
+              // from the old placeholder "UNKNOWN" so both states remain grep-able.
+              const regimeLabel = s.regimeTrainedOn ?? "unknown";
               pboBLocksTotal.labels({ regime: regimeLabel }).inc();
             } catch (_promErr) { /* non-blocking */ }
             try {
@@ -2127,6 +2130,62 @@ export class LifecycleService {
           logger.warn({ strategyId: s.id, err: driftTpErr }, "Parameter drift gate (TESTING→PAPER): read failed (non-blocking — promotion continues)");
         }
 
+        // ── Wave B Fix 1: DSR walk-forward gate (TESTING → PAPER) ────────────
+        // Reads backtests.walk_forward_results.wf_metadata.{dsr_pass, dsr_unavailable, dsr}
+        // (emitted by walk_forward.py FIX 7 / Wave A, 2026-06-22).
+        //
+        // Gate fires AFTER all existing Wave 27.5 hard gates (B14 ci_high, WFE,
+        // parameter drift) are evaluated — DSR is ADDITIVE, never replaces them.
+        //
+        // Three block/pass states:
+        //   dsr_unavailable=true AND dsr_pass=false → blocked_dsr_unavailable (fail-closed)
+        //   dsr_pass=false                          → blocked_dsr_floor (honest SR failed)
+        //   dsr_pass undefined/null                 → legacy_proceed + warn (grandfather)
+        //   dsr_pass=true                           → pass clean
+        try {
+          const wfMetaTp = (latestBt.walkForwardResults as Record<string, unknown> | null) ?? null;
+          const wfMetaObjTp = (wfMetaTp?.wf_metadata as Record<string, unknown> | null) ?? null;
+
+          const dsrGateResultTp = evaluateDsrWalkForwardGate(
+            wfMetaObjTp as { dsr_pass?: boolean | null; dsr_unavailable?: boolean | null; dsr?: number | null } | null,
+          );
+
+          if (dsrGateResultTp.auditAction) {
+            const isBlockTp = !dsrGateResultTp.passed;
+            await db.insert(auditLog).values({
+              action: dsrGateResultTp.auditAction,
+              entityId: s.id,
+              entityType: "strategy",
+              status: isBlockTp ? "failure" : "warning",
+              decisionAuthority: "gate",
+              input: { fromState: "TESTING", toState: "PAPER" } as Record<string, unknown>,
+              result: dsrGateResultTp.auditPayload as Record<string, unknown>,
+              correlationId: tickCorrelationId,
+            }).catch((auditErr: unknown) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "DSR gate (TESTING→PAPER) audit insert failed (non-blocking)");
+            });
+          }
+
+          if (!dsrGateResultTp.passed) {
+            logger.warn(
+              {
+                strategyId: s.id,
+                status: dsrGateResultTp.status,
+                dsr: dsrGateResultTp.auditPayload.dsr,
+                transition: "TESTING→PAPER",
+              },
+              `DSR gate BLOCKED TESTING→PAPER: ${dsrGateResultTp.reason}`,
+            );
+            strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+            continue;
+          }
+        } catch (dsrTpErr) {
+          // Fail-open: DSR gate read failure is non-blocking for TESTING→PAPER.
+          // The gate failing to evaluate is distinct from dsr_pass=false — we
+          // cannot block on infrastructure failures alone.
+          logger.warn({ strategyId: s.id, err: dsrTpErr }, "DSR gate (TESTING→PAPER): read failed (non-blocking — promotion continues)");
+        }
+
         const result = await this.promoteStrategy(s.id, "TESTING", "PAPER", { correlationId: correlationId ?? undefined });
         if (result.success) {
           promoted.push(s.id);
@@ -3055,6 +3114,73 @@ export class LifecycleService {
           logger.warn(
             { strategyId: s.id, err: driftErr },
             "Parameter drift gate: read failed (non-blocking — promotion continues)",
+          );
+        }
+
+        // ── Wave B Fix 1: DSR walk-forward gate (PAPER → DEPLOY_READY) ──────────
+        // Reads backtests.walk_forward_results.wf_metadata.{dsr_pass, dsr_unavailable, dsr}
+        // (emitted by walk_forward.py FIX 7 / Wave A, 2026-06-22).
+        //
+        // This gate runs AFTER all Wave 27.5 hard gates clear (B14 ci_high, WFE,
+        // parameter drift) and BEFORE the Wave 26 Pass G E orchestrator — DSR is
+        // ADDITIVE, never replaces existing gates.
+        //
+        // Fail-closed on Python DSR computation failure (dsr_unavailable=true);
+        // legacy grandfather for pre-Wave-A backtests (dsr_pass absent).
+        try {
+          const [latestBtForDsr] = await db
+            .select({ walkForwardResults: backtests.walkForwardResults })
+            .from(backtests)
+            .where(
+              and(
+                eq(backtests.strategyId, s.id),
+                eq(backtests.status, "completed"),
+              ),
+            )
+            .orderBy(desc(backtests.createdAt))
+            .limit(1);
+
+          const wfResultsDsr = (latestBtForDsr?.walkForwardResults as Record<string, unknown> | null) ?? null;
+          const wfMetaDsr = (wfResultsDsr?.wf_metadata as Record<string, unknown> | null) ?? null;
+
+          const dsrGateResult = evaluateDsrWalkForwardGate(
+            wfMetaDsr as { dsr_pass?: boolean | null; dsr_unavailable?: boolean | null; dsr?: number | null } | null,
+          );
+
+          if (dsrGateResult.auditAction) {
+            const isBlockDsr = !dsrGateResult.passed;
+            await db.insert(auditLog).values({
+              action: dsrGateResult.auditAction,
+              entityId: s.id,
+              entityType: "strategy",
+              status: isBlockDsr ? "failure" : "warning",
+              decisionAuthority: "gate",
+              input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+              result: dsrGateResult.auditPayload,
+              correlationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "DSR gate (PAPER→DEPLOY_READY) audit insert failed (non-blocking)");
+            });
+
+            if (isBlockDsr) {
+              logger.warn(
+                {
+                  strategyId: s.id,
+                  status: dsrGateResult.status,
+                  dsr: dsrGateResult.auditPayload.dsr,
+                  transition: "PAPER→DEPLOY_READY",
+                },
+                `DSR gate BLOCKED PAPER→DEPLOY_READY: ${dsrGateResult.reason}`,
+              );
+              strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+              continue;
+            }
+          }
+        } catch (dsrPdrErr) {
+          // Fail-open: DSR gate infrastructure failure is non-blocking.
+          logger.warn(
+            { strategyId: s.id, err: dsrPdrErr },
+            "DSR gate (PAPER→DEPLOY_READY): read failed (non-blocking — promotion continues)",
           );
         }
 

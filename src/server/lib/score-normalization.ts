@@ -479,11 +479,33 @@ function sortedKeyReplacer(_key: string, value: unknown): unknown {
  *
  * @param weights  The weight map to fingerprint.
  * @returns        Lowercase SHA-256 hex string (64 chars).
+ *
+ * @warning ALIASING RISK — The aggregator stores only the first 16 chars of
+ * this hash (`.slice(0,16)`) for row compactness.  A 16-char hex prefix has
+ * 2^64 ≈ 1.8×10^19 possible values, making accidental aliasing between two
+ * distinct weight maps theoretically possible though astronomically unlikely
+ * in practice.  New consumers that need collision resistance for audit lineage
+ * MUST use the full 64-character hash returned by this function.  Do NOT slice
+ * to fewer than 16 chars.  The memoized constant `EQUAL_WEIGHTS_VERSION_ID`
+ * (below) exposes the full 64-char hash for the immutable EQUAL_WEIGHTS map.
  */
 export function computeWeightsVersionId(weights: Readonly<Record<string, number>>): string {
   const canonical = canonicalJson(weights as Record<string, unknown>);
   return createHash("sha256").update(canonical, "utf8").digest("hex");
 }
+
+/**
+ * Module-level memoized SHA-256 fingerprint for the immutable EQUAL_WEIGHTS
+ * constant.  Computed once at module-load time — avoids repeated O(n) hashing
+ * on every aggregator cycle.
+ *
+ * This is the full 64-character hex string.  The aggregator stores
+ * `.slice(0,16)` for compactness; see the aliasing-risk warning on
+ * `computeWeightsVersionId` above before slicing further.
+ *
+ * Fix: Wave B LOW-2 (2026-06-22).
+ */
+export const EQUAL_WEIGHTS_VERSION_ID: string = computeWeightsVersionId(EQUAL_WEIGHTS);
 
 // ─── Verdict classification ───────────────────────────────────────────────────
 

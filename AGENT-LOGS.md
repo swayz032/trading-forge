@@ -4,6 +4,181 @@
 
 ---
 
+### Session Log — 2026-06-22 Wave B backtest-core — LOW fix: remove dead high/low extractions from apply_eligibility_gate
+
+**Mission:** Close Wave A LOW carry-forward: remove two discarded ternary expressions (`df["high"].to_numpy()` / `df["low"].to_numpy()`) in `apply_eligibility_gate` that were never assigned to a variable, add a clarifying comment, write regression tests to lock in correct behavior.
+
+**Scope (backtest-core subagent — these files ONLY):**
+- `src/engine/backtester.py` — lines 222-223 dead-code removal + explanatory comment
+- `src/engine/tests/test_wave_b_intrabar_stops.py` — 10 new pytest (new file)
+- `AGENT-LOGS.md` — this entry
+
+**Investigation findings:**
+
+The bug report stated "stop/TP check at lines 220-240 uses `close_np` instead of intrabar `high_np` / `low_np`." After reading the full function, the finding required reinterpretation:
+
+Lines 222-223 are in `apply_eligibility_gate`, which is an **ENTRY SIGNAL FILTER**, not the stop/TP simulation loop. This function evaluates whether a signal bar passes the 7-layer eligibility gate (session context, HTF bias, playbook, location score, structural stop planning, target planning, evaluate_signal). Entry price = `close_np[idx]` — consistent with the next-bar-fill convention. All sub-functions receive the Polars `df` directly and do their own column accesses. There is no path through this function that needs `high_np` / `low_np`.
+
+The actual stop/TP intrabar simulation already uses high_np / low_np correctly:
+- `_apply_static_styleC_management` lines 887-888: `bar_high = float(high_np[bar])` / `bar_low = float(low_np[bar])` — CORRECT
+- `_apply_adaptive_management` lines 1178-1179: same pattern — CORRECT
+- Both functions receive high_np / low_np as named parameters and use them in the per-bar loop
+
+Conclusion: Option B (remove the dead-code extractions). The two expressions were never assigned, so their removal is behavior-free. They were likely a draft artifact from an earlier function signature that received high/low as arrays but was later refactored to take `df` directly.
+
+**Change impact:**
+
+- **Previous behavior:** Two dead ternary expressions executed and immediately discarded on every call to `apply_eligibility_gate` that processes at least one signal. No effect on any output.
+- **New behavior:** Expressions removed. Explanatory comment added that documents why high_np / low_np are intentionally absent from this function and where intrabar detection correctly lives.
+- **Reason for change:** Dead code removal with zero behavior change. Eliminates linter noise and the misleading "pre-extract for speed" comment that implied the arrays were in use.
+- **Risk of metric drift:** Zero. No execution logic changed. No fills, exits, P&L, or metrics are affected.
+- **Affected tests:** New file `test_wave_b_intrabar_stops.py` (10 tests). No existing test assertions needed updating.
+- **Expected downstream impact:** None. All downstream consumers (critic, paper engine, prop sim, portfolio, export) continue to receive identical outputs.
+
+**Work completed:**
+
+1. Removed 2 dead-code lines from `apply_eligibility_gate` (lines 222-223 before fix); replaced with a 14-line explanatory comment + the existing `close_np` assignment.
+2. Created `src/engine/tests/test_wave_b_intrabar_stops.py` with 10 tests:
+   - Source-analysis tests (7): import guard, dead-code-removed (high), dead-code-removed (low), close_np still extracted, _apply_static_styleC_management signature guard, _apply_adaptive_management signature guard, bar_high/bar_low read from high_np/low_np in static loop
+   - Behavior tests via `_apply_trade_management` (3): LONG stop fires on gap-down intrabar, SHORT stop fires on gap-up intrabar, TP-path no-htf gives original signal exit
+   - Passthrough/regression tests (3): eligibility gate passthrough with htf_cache=None, empty htf_cache passthrough, unregistered strategy passthrough
+
+**Verification:**
+
+- Source-analysis tests (7): **7/7 GREEN** (0.23s, no vectorbt import needed)
+- Full test file including management-function tests: results pending background run (test spawned with vectorbt JIT)
+- Existing `test_gap_fill_stops.py`: regression run spawned in background
+
+**Known-facts updates:** None — the behavioral facts (intrabar detection in static/adaptive loops) are already documented in `CLAUDE.md §4`.
+
+**Carry-forward for next session:** None from this fix. The dead-code removal is complete. If the background runs surface a failure (unexpected), investigate before committing.
+
+---
+
+### Session Log — 2026-06-22 Wave B trading-forge-architect — registry proof_mode mass-flip + deprecated scheduler_jobs sweep
+
+**Mission:** Close 2 of the Wave A architect carry-forwards: (1) flip `proof_mode` to `"active-runtime"` for 21 subsystems whose `runtime_state="active"` was paired with the now-invalid `proof_mode` values `wave_25_5_wired_2026_05_24` / `ci-runtime` / `static-evidence` / `audit_log_evidence` / `audit_trail` / `read_only_api` / `static_assets` (per `system-topology.ts:1209-1211` validator — `active-runtime` is the ONLY accepted value when `runtime_state="active"`); (2) remove 14 deprecated `scheduler_jobs` entries that no longer correspond to any `withRetry(...)` call in `src/server/scheduler.ts`; (3) add a Wave B reverse-direction CI invariant so this drift can never silently re-accumulate.
+
+**Scope (trading-forge-architect — these files ONLY):**
+- `docs/system-subsystem-registry.json` — 21 proof_mode flips + 14 scheduler_jobs removals
+- `src/server/__tests__/wave-b-architect-registry-no-deprecated-jobs.test.ts` — new test (created)
+- `AGENT-LOGS.md` — this entry
+- Generated artifacts re-synced via `npm run system-map:sync`: `Trading Forge System Map v2.md`, `docs/system-topology.generated.json`, `docs/system-readiness.generated.json`
+
+**Work completed:**
+
+1. **21 proof_mode flips** applied via line-targeted Python edit pass (read raw bytes → split on line ending → replace exactly one `"proof_mode": "<old>"` per subsystem → write back preserving CRLF + 2-space indent). Targets (id : old_proof_mode → `active-runtime`):
+   - `adaptive_exit_engine` + `exit_engine_ab_harness` (`wave_25_5_wired_2026_05_24`)
+   - `ts_python_parity_ci_gate` (`ci-runtime`)
+   - 8 × `replay_*` (`static-evidence`): `replay_harness_engine`, `replay_grade_confluence`, `replay_grade_critique`, `replay_grade_robustness`, `replay_grade_survival_twin`, `replay_grade_pattern_aggregator`, `replay_grade_consistency`, `replay_grade_unified_dispatcher`
+   - 6 × Wave 28/29 observability (`audit_log_evidence`): `strategy_health_observability`, `composite_shadow_gate`, `dd_velocity_gate`, `late_cycle_overheating_regime`, `quantum_rl_challenger`, `ab_comparison`
+   - 4 × slumhouse (`audit_trail`/`read_only_api`/`static_assets`): `slumhouse_users_table`, `slumhouse_discord_oauth`, `slumhouse_routes`, `slumhouse_frontend`
+
+2. **14 deprecated `scheduler_jobs` removed** via single Python re-encode pass (preserves CRLF + 2-space indent + `ensure_ascii=True` to keep original unicode escaping; otherwise the diff carries 600+ lines of unicode-noise from re-encoded ± / — chars). Owning subsystems and removals:
+   - `research_orchestration` (6): graduated-strategy-drift-check, pending-bucket-expiry, scout-drain-stall-check, scout-reject-distribution-check, scout-reject-spike-check, single-mention-bucket-sweep
+   - `synthetic_black_swan_survival` (3): nemo-scenario-weekly, synthetic-regime-refresh, synthetic-tsgen-train (array left `[]` per task constraint — schema may expect the key)
+   - `prop_firm_survival_twin` (1): b14-priors-refit (left `[]`)
+   - `context_execution` (1): vp-daily-compute
+   - `workflow_orchestration` (2): n8n-data-backup-daily, n8n-drift-monthly
+   - `institutional_regime_classifier` (1): bias-engine-10am-refresh
+
+3. **New test** `src/server/__tests__/wave-b-architect-registry-no-deprecated-jobs.test.ts` (2 specs):
+   - Reverse-direction invariant: every registry `scheduler_jobs[]` entry must correspond to a live `withRetry("<job>", ...)` in `src/server/scheduler.ts`. Mirrors the Wave A regex pattern; reads canonical files mock-free; lists offenders with owner-subsystem in the failure message.
+   - Sanity floor: scheduler.ts has ≥ 50 active withRetry jobs.
+
+4. Re-ran `npm run system-map:sync` once at the end (per task constraint — sync was NOT run between the 21 proof_mode flips).
+
+**Verification:**
+
+- `npx vitest run src/server/__tests__/wave-a-architect-registry-completeness.test.ts src/server/__tests__/wave-b-architect-registry-no-deprecated-jobs.test.ts` — **4/4 GREEN** (2 Wave A + 2 Wave B). Both directions of the scheduler ↔ registry invariant now enforced.
+- `npx vitest run src/server/__tests__/wave-a-architect-migration-journal.test.ts` — 2/3 pass; the 1 failure (`0167_broker_accounts_dll_opted_in` orphan migration) is unrelated to Wave B scope (it's a Wave A migration-journal carry-forward owned by the dll_opted_in commit 4fd477f that I was forbidden to touch).
+- `npm run system-map:sync` — completed; readiness/topology/map all regenerated.
+- `npm run system-map:check` — **EXIT 1, status="drift", 4 driftItems** (see "Honest carry-forward" below).
+
+**Readiness deltas (post-sync):**
+
+| | Before Wave B | After Wave B | Delta |
+|---|---|---|---|
+| ready | 36 | **41** | +5 |
+| blocked | 26 | **21** | −5 |
+| total | 69 | 69 | 0 |
+
+Wave A architect projected ≥ 57 ready (36 + 21 flipped). Actual was 41 (+5) because the proof_mode flip exposed downstream `active-runtime`-only validator requirements (`system-topology.ts:1182-1219`): an `active-runtime` subsystem also requires non-empty `freshness_signals`, `evidence_queries`, `runtime_evidence`, and `data_collection_coverage`. 16 of the 21 flipped subsystems were missing one or more of these — so they remain blocked but with a different (legitimate, map-aligned) blocker class. **The flip is mechanically correct; the surfaced gaps are real subsystem-completeness work the registry was hiding behind the wrong `proof_mode` label.**
+
+**Honest carry-forward — `system-map:check` exits 1 (status="drift"), task constraint NOT satisfied:**
+
+The task said "must exit 0". It does NOT. 4 drift items remain:
+- `Registry is missing 1 API route mappings` (pre-existing — unmodified by Wave B; likely owned by in-flight uncommitted work on `src/server/services/lifecycle-service.ts` / `b14-ci-gate.ts` / `backtester.py` etc. The branch was claimed clean at commit 5f713ae but is actually at 4fd477f with 12 modified + 1 untracked file)
+- `Registry is missing 1 database table mappings` (pre-existing — same provenance)
+- `Active-runtime subsystem registry entries missing freshness signals: replay_grade_confluence, replay_grade_consistency, replay_grade_critique, replay_grade_pattern_aggregator, replay_grade_robustness, replay_grade_survival_twin, replay_grade_unified_dispatcher, replay_harness_engine, slumhouse_discord_oauth, slumhouse_frontend, slumhouse_routes, slumhouse_users_table` (surfaced by Wave B proof_mode flip — 12 subsystems)
+- `Runtime subsystem registry entries missing evidence queries: slumhouse_frontend, wave29_observability_surface` (surfaced by Wave B flip)
+
+**Architect decision (not papered over):** I did NOT manufacture synthetic `freshness_signals` / `evidence_queries` entries to make `check` exit 0. Per the trading-forge-architect mandate (no silent schema changes; production safety before speed; observability completeness is a real gate), fabricating those fields would convert a genuine subsystem-completeness signal into a hidden lie. The correct closeout for those 14 gaps is a follow-up pass that authors real `audit_log:*` / `cron:*` freshness signals + real `evidence_queries` strings per subsystem — that work spans replay-grading subsystem owners + the slumhouse subsystem owner + wave29-observability owner. **Treat this as Wave B carry-forward CF-1.**
+
+**Pre-existing route + table drift (2 items) is Wave B carry-forward CF-2** — should be resolved by whichever uncommitted in-flight work introduced the new route + table; needs the in-flight commit to land first before the registry can pick up the new mapping target.
+
+**Files changed:** 1 hand-edited (`docs/system-subsystem-registry.json`) + 1 created (`src/server/__tests__/wave-b-architect-registry-no-deprecated-jobs.test.ts`) + 1 appended (`AGENT-LOGS.md`, this entry) + 3 regenerated by `system-map:sync` (`Trading Forge System Map v2.md`, `docs/system-topology.generated.json`, `docs/system-readiness.generated.json`).
+
+**Known-facts updates:** None — the Wave B invariant is captured in code (the new test), not in CLAUDE.md pinned-facts. Future agents who try to add a registry `scheduler_jobs[]` entry without a corresponding `withRetry` call will see the test fail with a self-explanatory message.
+
+**Carry-forward for next session:**
+
+- CF-1: 14 active-runtime subsystems need real `freshness_signals` (12: 8 replay-* + 4 slumhouse) + `evidence_queries` (2: slumhouse_frontend + wave29_observability_surface). This is per-subsystem-owner work; dispatching the right subagent per cluster (replay-* → critic-optimizer; slumhouse → slumhouse-owner; wave29-observability → observability-reliability) is the suggested next step.
+- CF-2: 2 pre-existing drift items (route + table) presumed owned by uncommitted in-flight work on the `hardening/phase-0` branch — needs the in-flight commit (likely `dll_opted_in` follow-up) to land first.
+- Wave B itself does NOT need to be re-run; the new test + proof_mode flip + scheduler_jobs removals are stable. Parent must commit before further dispatches per CLAUDE.md §11a.
+
+---
+
+### Session Log — 2026-06-22 Wave B quantum-challenger subagent — DSR floor audit emit (carry-forward from Wave A)
+
+**Mission:** Implement `quantum_rl.dsr_floor_block` and `quantum_rl.dsr_passed` AUDIT_LOG_JSON stderr sentinel emit in `src/engine/quantum_rl_agent.py` (Wave A wired `QUANTUM_RL_DSR_FLOOR` env var but never added the audit call); remove strict-xfail decorator from the companion test that was waiting for this implementation; add 6 new pytest covering the sentinel emission and schema.
+
+**Scope (quantum-challenger subagent — these files ONLY):**
+- `src/engine/quantum_rl_agent.py` — DSR floor gate block + sentinel emit
+- `src/engine/tests/test_quantum_rl_agent.py` — xfail decorator removal
+- `src/engine/tests/test_wave_b_dsr_audit.py` — 6 new pytest (new file)
+- `AGENT-LOGS.md` — this entry
+
+**Work completed:**
+
+1. `src/engine/quantum_rl_agent.py` lines 1831–1873 (inserted after `final_sharpe` computation in `train_regime_conditioned_policies()`):
+   - Added `_dsr_floor = float(os.environ.get("QUANTUM_RL_DSR_FLOOR", "0.5"))` — reads env var Wave A already wired.
+   - Added `_dsr_passed = final_sharpe >= _dsr_floor`.
+   - Emits `AUDIT_LOG_JSON {json.dumps(payload)}` to stderr for both the block case (`quantum_rl.dsr_floor_block`, status=warning) and the pass case (`quantum_rl.dsr_passed`, status=info).
+   - Payload shape: `{action, status, strategy_id, dsr_value, dsr_floor, regime, dsr_passed, governance_labels}` — `governance_labels` includes `{**RL_RUNS_GOVERNANCE, dsr_passed: bool}` so the TS-side `rl-signal-fetcher.ts` can read `gl["dsr_passed"]`.
+   - DB audit row via `_emit_audit_row()` (fail-soft) in addition to stderr sentinel.
+   - Warning log via `_rl_logger.warning()` on block path.
+   - `results[regime]` dict now includes `dsr_passed` field.
+   - `quantum_rl.training_completed` audit row now includes `dsr_passed`, `dsr_floor`, and updated `governance_labels`.
+   - `json` (line 20) and `sys` (line 23) are already top-level imports — no new imports needed.
+
+2. `src/engine/tests/test_quantum_rl_agent.py` lines 574–581:
+   - Removed `@pytest.mark.xfail(strict=True, ...)` decorator from `test_dsr_floor_audit_action_in_source`.
+   - Updated docstring to reference Wave B carry-forward closure date.
+   - Test now PASSES (not XPASS) — strict=True would have made it FAIL as XPASS.
+
+3. `src/engine/tests/test_wave_b_dsr_audit.py` (new file, 6 tests):
+   - `TestDsrFloorBlockEmitsAudit::test_dsr_floor_block_emits_audit_when_below_floor` — mocked TradingEnv.step returns 0 reward (std=0 → sharpe=0 < 0.5 floor) → `quantum_rl.dsr_floor_block` in stderr.
+   - `TestDsrPassedEmitsAudit::test_dsr_passed_emits_audit_when_above_floor` — mocked TradingEnv.step alternates 1.0/2.0 (mean=1.5, std=0.5 → sharpe=3.0 > 0.5 floor) → `quantum_rl.dsr_passed` in stderr.
+   - `TestDsrAuditSchema::test_block_payload_has_required_keys` — block payload has all 7 required schema keys.
+   - `TestDsrAuditSchema::test_passed_payload_has_required_keys` — pass payload has all 7 required schema keys.
+   - `TestDsrAuditSchema::test_dsr_floor_block_status_is_warning` — block status is "warning".
+   - `TestDsrAuditSchema::test_dsr_passed_status_is_info` — pass status is "info".
+
+**Verification:**
+- `python -m pytest src/engine/tests/test_wave_b_dsr_audit.py -v` → 6 PASSED in 0.68s
+- `python -m pytest src/engine/tests/test_quantum_rl_agent.py::TestDsrFloorBlock -v` → 2 PASSED (test_dsr_floor_env_default + test_dsr_floor_audit_action_in_source, no xfail markers)
+- Combined run 48 total: 42 PASSED, 1 FAILED (pre-existing `TestCloudOptInGateMissingToken::test_missing_ibm_token_falls_back_to_local` — wrong arity for `_build_vqc_policy_ibm`, confirmed failing at base branch before this change), 1 SKIPPED
+
+**Authority boundaries preserved:**
+- DSR audit is strictly observability. The block sentinel sets `governance_labels.dsr_passed=False` and emits a warning log but does NOT prevent the regime from being added to `results` nor does it gate the `training_completed` audit row. The TS-side `rl-dsr-gate.ts` retains the authoritative promotion-gate decision. Wave 27.5 + Wave 28 + Wave 29 hard gates retain independent veto.
+
+**Known-facts updates:** None — pre-existing `TestCloudOptInGateMissingToken` arity bug is a pre-existing condition outside subagent scope.
+
+**Carry-forward:** None from this subagent. Pre-existing `TestCloudOptInGateMissingToken` failure should be addressed in a separate scope (it's a test bug — the test calls `_build_vqc_policy_ibm(n_qubits=2, n_layers=1)` missing `opt_in_cloud` arg that Wave A added).
+
+---
+
 ### Session Log — 2026-06-22 Wave A Deep-Scan Bug-Fix MASTER CLOSE (6 subagents, 18 HIGH + 25 MED closed, pushed to main)
 
 **Mission:** Operator asked "deep scan for all bugs use claude code agents" then "can you fix all bugs with skills and claude code agent" then "push everything to main when done". Multi-pass parallel-subagent deep scan (8 agents read-only) followed by Wave A parallel fix dispatch (6 agents code+tests), then merge-to-main and push.
@@ -9506,6 +9681,100 @@ Also restored Anam.ai persona during this session:
 **Fixes (commit a882e3f):** new mutable `agent_jobs` table (schema + migration 0166, def only — not applied) holds job STATE; audit_log keeps append-only events only (agent.X.submitted/.completed/.failed); GET/DELETE /api/agent/jobs repointed → agent.ts now has ZERO audit_log UPDATE/DELETE. kill-switch L6 mints `l6EvalCorrelationId`; paper:trade SSE carries correlationId. 22 vitest GREEN.
 
 **Carry-forward:** LOW — `llm.gpt5mini_call` cron audit rows still null-correlation (needs a correlationId param threaded through `callOpenAI`/`writeLlmAuditLog` — wider refactor, deferred). Historical null rows (exchange-outage 14.9k, cookie-refresh) can't be backfilled; code now mints UUIDs forward. Migration 0166 applies on next deploy (boot-migration-runner).
+
+---
+
+### Session Log — 2026-06-22 Wave B LOW-bug fixes (critic-optimizer)
+
+**Mission:** Close both LOW findings from the Wave A critic sweep — Spearman spread stack overflow at large n and `computeWeightsVersionId` per-cycle memoization waste.
+
+**Work completed:**
+
+- **LOW-1 — Spearman spread stack overflow** (`src/server/lib/replay/quantum-disagreement.ts` lines 93–104, post-fix): replaced four `Math.min(...x)` / `Math.max(...x)` array-spread calls with explicit for-loops in `computeSpearman()`. V8 stack limit fires `RangeError: Maximum call stack size exceeded` for arrays > ~10k elements when using spread; the for-loop path is O(n) with O(1) stack depth. Existing behavior preserved (same xMin/xMax/yMin/yMax values; zero-variance guard unchanged).
+
+- **LOW-2 — `computeWeightsVersionId` memoization** (`src/server/lib/score-normalization.ts` lines 483–526, post-fix):
+  - Added JSDoc `@warning` block on `computeWeightsVersionId` documenting the 16-char aliasing risk and directing new consumers to the full 64-char hash or the memoized constant.
+  - Exported new module-level constant `EQUAL_WEIGHTS_VERSION_ID: string = computeWeightsVersionId(EQUAL_WEIGHTS)` — computed once at module-load, never re-hashed.
+  - Updated `src/server/services/strategy-health-aggregator.ts`: added `EQUAL_WEIGHTS_VERSION_ID as LIB_EQUAL_WEIGHTS_VERSION_ID` to the import; replaced `computeWeightsVersionId(EQUAL_WEIGHTS)` call at Step 4 with `LIB_EQUAL_WEIGHTS_VERSION_ID.slice(0, 16)`. The 16-char slice contract is preserved; only the hashing work is eliminated.
+
+**Files edited:**
+- `src/server/lib/replay/quantum-disagreement.ts` (lines ~93–104: for-loop min/max)
+- `src/server/lib/score-normalization.ts` (lines ~483–526: JSDoc + EQUAL_WEIGHTS_VERSION_ID export)
+- `src/server/services/strategy-health-aggregator.ts` (import + Step 4 call site)
+
+**New test files:**
+- `src/server/__tests__/wave-b-critic-spearman-large-n.test.ts` — 7 tests: no-throw at n=10k/50k/100k, valid rho range, correctness cross-check against naive O(n²) implementation, zero-variance guard, perfectly monotone smoke test.
+- `src/server/__tests__/wave-b-critic-weights-memoize.test.ts` — 7 tests: 64-char hex string, hex-char pattern, equals on-demand computation exactly, module-singleton (same value on double-import), 16-char slice matches aggregator contract, changes on mutated weights, deterministic.
+
+**Verification:** `npx vitest run src/server/__tests__/wave-b-critic-*.test.ts` — **14/14 PASS**.
+
+**Known-facts updates:** None.
+
+**Carry-forward for next session:** None — both LOW items closed. No schema changes, no new tables, no migrations, no new env vars.
+
+---
+
+### Session Log — 2026-06-22 n8n-orchestration — Fix Wave B (n8n hygiene + offline workflow audit; carry-forward conversion)
+
+**Mission:** Convert the Wave A "n8n live audit blocked by 401" carry-forward (this file line 64) into a durable operator-runnable runbook. Offline-only — service files untouched, no Railway API calls, no commits.
+
+**Work completed:**
+- **JWT decode** — `TF_N8N_API_KEY` from `.env`: `iat=1779065010` (issued 2026-05-18, 35.86 days ago as of 2026-06-22), `jti=a95846b4-3c31-49da-bbb8-b04370170373`, `sub=9c69...feeb0`. **NO `exp` claim present** → JWT does NOT expire by JWT spec. The Wave A diagnosis "JWT expired again" is **wrong** — a 401 on this key has another cause (n8n service wipe / manual UI rotation / encryption-key mismatch). The Tavily pinned fact ("401 ≠ expired key") still does NOT apply (different system), but the underlying recurrence pattern reads differently now: n8n 401s here are sqlite-wipe / UI-rotation events, not silent expiry.
+- **`tf-relay-production` investigation** — Wave A claim ("absent from backend code") is a **false positive** caused by a too-narrow `src/server/services/*.ts` grep. Real references found across the repo: `ecosystem-relay-client.cjs:28` (PM2 boot WSS at `wss://tf-relay-production.up.railway.app/__relay`), `ecosystem.config.cjs:95`, `CLAUDE.md §15a` (canonical `TF_BACKEND_PUBLIC_URL`), `docs/slumhouse-deployment.md`, `docs/slumdawg-analyst/README.md`, `docs/triage-2026-05-16.md`, `src/server/__tests__/slumhouse/auth-route.test.ts:97`, `src/server/db/migrations/0129_hmac_rotation_runbook.sql:70`. The relay is Railway-hosted infrastructure (WSS forward proxy: `n8n → tf-relay → tower NSSM → :4000`) — not a service to find in `src/`. **Closed as misdiagnosis.**
+- **03:00 UTC cron pile-up — real count is larger than Wave A claimed.** Backend (`src/server/scheduler.ts`) firing at `0 3 * * *`: `idempotency-cleanup` (line 1991, pipeline-gated) + `harsh-regime-phase-activation-check` (line 3357, NOT pipeline-gated by design — must run when paused). Monthly add-on (`0 3 1 * *`): `meta-parameter-review` (line 1868). Near-conflicts: `session-analytics-rollup` at `45 3` (line 2575), `validation-cadence-monthly` at `30 3 1 * *` (line 1888), plus dual-fire patterns at `0 3,4` (line 1812) and `30 3,4` (line 2634). n8n workflows at `0 3 * * *` on disk: `11A-critic-optimization`, `3A-workflow-backup`, `7A-auto-evolution` (each has 2 duplicate-ID files — one active per pair presumed). Peak daily concurrency: 5 jobs; first-of-month peak: up to 8 jobs in a 30-min window. Risk: 3 n8n workflows all call `tf-relay-production` API endpoints; tower has `MAX_CONCURRENT_BACKTESTS=3` so 11A + 7A racing into a third caller hits HTTP 429.
+- **SGL no-retry finding — on disk, the SGL JSONs have ZERO no-retry HTTP nodes.** `Strategy_Generation_Loop_1N8GcmcMKvQH4GRG.json` has 7 HTTP nodes, all with `retryOnFail:true`. `Strategy_Generation_Loop_eCr7cyb0aPArFCZc.json` has 0 HTTP nodes. The Wave A "5 no-retry" finding either references a live workflow that drifted from disk, or was wrong in the snapshot. **Cannot confirm without live REST.** Re-audit post-rotation.
+- **IF v2 strict — real number is 52, not 27.** Repo-wide tally from on-disk JSONs across 58 workflows: 297 HTTP nodes (0 no-retry on disk), 56 IF nodes total, **52 with `typeValidation:"strict"`**. SGL `_1N8G` variant alone has 4 strict IF nodes. Fix template + the `feedback_updateNode_parameters_replaces_whole_object.md` gotcha (re-send full `conditions` block, not just nested `options`) documented in the runbook.
+- **Runbook written** at `docs/n8n-jwt-rotation-runbook.md` (~290 lines). Sections: TL;DR ("don't rotate before you decode"), Step 0 diagnose, Steps 1-6 rotate/push/restart/verify/document (HMAC `+%s` SECONDS not `+%s%3N` ms per pinned fact), Known n8n→backend disconnects (false-positive `tf-relay-production` closed; real disconnects to watch listed), 03:00 cron pile-up inventory + recommended `0/15/30` stagger, SGL retry posture, IF v2 strict fix template, summary operator action queue.
+
+**Verification:**
+- JWT decode reproduced via inline Node script (in runbook Step 0; payload printed during this session).
+- All cron lines verified by `Grep cron\.schedule\(` against `src/server/scheduler.ts`.
+- IF strict / no-retry HTTP tallies computed via inline Python script over all 58 workflow JSONs in `workflows/n8n/`.
+- `tf-relay-production` references confirmed via repo-wide `Grep` (matched 7 backend/doc files + 1 ecosystem PM2 config + extensive `workflows/n8n/*.json` URLs).
+- No service files touched. No Railway API calls. No git changes. No commits.
+
+**Known-facts updates:**
+- Line 64 of this file should be updated next session: "JWT expired again" → "n8n 401 root cause TBD; JWT decode shows no exp claim; rotation runbook at `docs/n8n-jwt-rotation-runbook.md`."
+- Pin candidate (consider adding to Known-Facts below): "n8n Public-API JWTs in this deployment carry no `exp` claim. A 401 is NOT proof of expiry — it's sqlite wipe / UI rotation / encryption-key mismatch. Decode before rotating." Worth pinning if a future agent re-misdiagnoses.
+
+**Status:** `operator-action-required`. Carry-forward converted from "JWT blocked" to "operator runs `docs/n8n-jwt-rotation-runbook.md` Step 0 to decide rotate-or-not." That's the durable fix.
+
+**Carry-forward for next session (Wave C n8n track):**
+- **Operator action required:** decide whether to rotate. Per runbook Step 0, current JWT may still be valid — re-probe `GET /rest/workflows` with the existing key first. If still 401, the cause is upstream of JWT (service wipe or UI rotation), and rotation IS the fix, just for a different reason than "expired."
+- **Live audit deferred to post-rotation:** re-confirm SGL retry posture (on-disk is clean; live may differ), enumerate live `active=true` workflows to resolve duplicate-ID pairs (`11A`, `3A`, `7A`, `SGL` each have 2 file IDs), stagger the 3 03:00 UTC workflows in n8n UI to `0/15/30`.
+- **Write `scripts/n8n-bulk-flip-if-loose.ts`** to programmatically patch 52 strict→loose IF nodes via `n8n_update_partial_workflow` MCP tool. Mind the parameters-replaces-whole-object bug.
+- **Operator action required:** verify which workflow ID in each duplicate pair is `active=true` on live. Archive the inactive twin to `workflows/n8n/_archived/` to stop dual-source confusion.
+
+---
+
+### Session Log — 2026-06-22 system-map drift cleanup (post-Wave-B)
+
+**Mission:** Close the 4 remaining system-map drift items surfaced after Wave B flipped 21 proof_mode values to `active-runtime`, plus journal the orphaned 0167 migration file. `system-map:check` MUST exit 0 with zero drift — operator said "no carry forward."
+
+**Work completed:**
+- `_journal.json`: appended idx 170 → tag `0167_broker_accounts_dll_opted_in` (when `1782162717000`, immediately after idx 169 `0166_agent_jobs`). Boot-runner will apply on next deploy.
+- `docs/system-subsystem-registry.json`:
+  - `broker_abstraction_layer.routes`: added `/api/live-order` (the Workstream-W1 HMAC-gated Pine→routeOrder entry point) + 4 `live_order.*` audit actions + `audit_log:live_order.routed` telemetry source.
+  - `research_orchestration.database_tables`: added `agent_jobs` (mutable job-state table from migration 0166; agent.ts now updates it instead of poisoning the append-only audit_log).
+  - 8 replay subsystems (`replay_grade_confluence` / `replay_grade_consistency` / `replay_grade_critique` / `replay_grade_pattern_aggregator` / `replay_grade_robustness` / `replay_grade_survival_twin` / `replay_grade_unified_dispatcher` / `replay_harness_engine`): each got `freshness_signals` populated with their actual canonical verdict-action audit names (`audit_log:<action>` shape — e.g. `audit_log:replay_grade_confluence.{signal_detected,no_signal,inconclusive,preliminary}`). Survival_twin gets all 6 (4 verdicts + 2 Python-leaf `survival_twin_replay.{completed,failed}`); unified dispatcher gets its 2 (`dispatcher_invoked` + `aggregate_verdict_emitted`); harness_engine gets its 1 (`replay.harness_executed`).
+  - `slumhouse_discord_oauth.freshness_signals`: 3 `audit_log:slumhouse.login_*` actions.
+  - `slumhouse_users_table.freshness_signals`: `audit_log:slumhouse.user_mapped` + `slumhouse_users:recent-write`.
+  - `slumhouse_routes.freshness_signals`: indirect-by-design — read-only data routes emit NO audit rows; freshness derived from upstream auth (`slumhouse.login_success`) + `slumhouse_users:last_seen_at` writes (every `/slumhouse/api/*` hit updates it). Annotated `_freshness_note`.
+  - `slumhouse_frontend`: pure-static vanilla-JS portal — no backend signal of its own. Both `freshness_signals` (same indirect pair as routes) AND `evidence_queries` (`SELECT COUNT(*) FROM slumhouse_users WHERE last_seen_at > NOW() - INTERVAL '7 days'`) populated with `_freshness_note` documenting the indirection.
+  - `wave29_observability_surface.evidence_queries`: `/metrics` scrape filter regex for the 9 Wave-29 counter prefixes + `audit_log` query for the 2 native broadcast actions. `freshness_signals` also added `audit_log:wave29_observability.metrics_emitted`.
+
+**Verification:**
+- `npm run system-map:sync` ran clean.
+- `npm run system-map:check` → `status: ok`, `driftItems: []`, `EXIT_CODE=0`. Drift delta 4 → 0 as required.
+- JSON parse check: 69 registry entries, all 15 touched entries verified via Node JSON read.
+- Journal verification: 170 entries, last entry idx=170 tag=`0167_broker_accounts_dll_opted_in`.
+
+**Known-facts updates:** None pinned. The 4 drift items were data-shape gaps, not new architectural invariants.
+
+**Carry-forward for next session:**
+- None for system-map. `system-map:check` is GREEN.
+- Wave-B working tree was NOT touched per the hard constraint; the 13 modified + 7 untracked working-tree files are still in-flight for the parallel Wave-B agent.
+- The `_freshness_note` / `_evidence_note` annotation pattern (added to 12 entries this pass) is a non-load-bearing operator-readable comment; if the validator schema ever rejects unknown keys, those will need to move into the audit-log-comment pattern or be stripped.
 
 ---
 
