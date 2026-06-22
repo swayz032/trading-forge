@@ -491,8 +491,22 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
 
   // Topstep-specific trailing state (resolved with sensible defaults)
   const trailingDD = input.trailingDD ?? 2000;                          // 50K Topstep default
-  const highWaterBalance = input.highWaterBalance ?? input.accountBalance; // first day: HWM = current
   const accountStartingFloor = input.accountStartingFloor ?? 50_000;    // 50K Topstep default
+
+  // F-2 Fix: for Topstep, when highWaterBalance is omitted we must default
+  // CONSERVATIVELY so the trailing-DD buffer is never overstated.
+  // Old: HWM = accountBalance → on a losing day where balance < startingFloor,
+  //   buffer = balance - (balance - trailingDD) = trailingDD (e.g. $2000 at $48K) — WRONG.
+  // New: HWM = max(accountBalance, accountStartingFloor) → the trailing floor is computed
+  //   using the highest defensible peak (at minimum the starting floor), so the resulting
+  //   buffer = accountBalance - max(accountBalance, startingFloor - trailingDD)
+  //   is never larger than real room. When balance < startingFloor buffer approaches 0.
+  // For MFFU the highWaterBalance field is unused (different riskDollars branch) so
+  // the default path does not matter, but we keep the same conservative expression.
+  const hwmProvided = input.highWaterBalance !== undefined;
+  const highWaterBalance = hwmProvided
+    ? input.highWaterBalance!
+    : Math.max(input.accountBalance, accountStartingFloor); // conservative: never below starting floor
 
   let trailingFloor: number | null = null;
   let buffer: number | null = null;
@@ -525,6 +539,7 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
           highWaterBalance,
           trailingDD,
           accountStartingFloor,
+          hwm_defaulted: !hwmProvided,  // F-2: visibility flag for conservative HWM default
           pyramidTier,
           riskDerivedCap: 0,
           firmCap: null,
@@ -579,26 +594,35 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
         typeof cfg.topstep_account_cap_override === "number"
           ? cfg.topstep_account_cap_override
           : (input.firmContractCap ?? null);
+      // F-4 Fix: include drawdownRoomCap in the early-return floor min().
+      // The main path (line ~705) already applies drawdownRoomCap in the min();
+      // this early-return path previously omitted it, allowing base_contracts to
+      // be returned even when DD room is too tight to support that many contracts.
+      // drawdownRoomCap OVERRIDES the pyramid floor — consistent with line ~730 note.
       const flooredCandidates: number[] = [cfg.base_contracts, liquidityCap];
       if (effectiveFirmCapForFloor !== null) flooredCandidates.push(effectiveFirmCapForFloor);
+      if (drawdownRoomCap !== null && drawdownRoomCap >= 0) flooredCandidates.push(drawdownRoomCap);
       const flooredContracts = Math.min(...flooredCandidates);
       const firmCapAppliedAtFloor =
         effectiveFirmCapForFloor !== null && effectiveFirmCapForFloor === flooredContracts &&
         effectiveFirmCapForFloor < cfg.base_contracts;
+      // drawdownRoomCap binding when it was the actual constraining element
+      const earlyReturnDrawdownRoomCapBinding =
+        drawdownRoomCap !== null && drawdownRoomCap >= 0 && drawdownRoomCap === flooredContracts;
       return {
         finalContracts: flooredContracts,
         pyramidTier,
         riskDerivedCap,
         firmCap: effectiveFirmCapForFloor,
         liquidityCap,
-        rejectionReason: null,  // not a rejection — floor overrides
+        rejectionReason: null,  // not a rejection — floor overrides (or DD room cap)
         firm,
         riskCapMethod,
         firmCapApplied: firmCapAppliedAtFloor,
-        pyramidFloorApplied: true,
+        pyramidFloorApplied: !earlyReturnDrawdownRoomCapBinding,
         accountHealthRatio,
         drawdownRoomCap,
-        drawdownRoomCapBinding: false,
+        drawdownRoomCapBinding: earlyReturnDrawdownRoomCapBinding,
         evidence: {
           accountBalance: input.accountBalance,
           atrPoints: input.atrPoints,
@@ -606,7 +630,10 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
           pointDollarValue: input.pointDollarValue,
           stopDollarsPerContract,
           riskDollars,
-          ...(firm === "topstep" ? { trailingFloor, buffer, highWaterBalance, trailingDD, accountStartingFloor } : {}),
+          ...(firm === "topstep" ? {
+            trailingFloor, buffer, highWaterBalance, trailingDD, accountStartingFloor,
+            hwm_defaulted: !hwmProvided,  // F-2: visibility flag for conservative HWM default
+          } : {}),
           pyramidTier,
           riskDerivedCap,
           firmCap: effectiveFirmCapForFloor,
@@ -616,8 +643,8 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
           rejectionReason: null,
           firm,
           accountHealthRatio,
-          pyramidFloorApplied: true,
-          bindingCap: "pyramid_floor_override",
+          pyramidFloorApplied: !earlyReturnDrawdownRoomCapBinding,
+          bindingCap: earlyReturnDrawdownRoomCapBinding ? "drawdown_room" : "pyramid_floor_override",
           base_contracts: cfg.base_contracts,
           riskCapMethod,
           confluenceCount,
@@ -628,7 +655,7 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
           multiplier,
           contracts_before: pyramidTier,
           contracts_after: flooredContracts,
-          binding_constraint: "pyramid_floor_override",
+          binding_constraint: earlyReturnDrawdownRoomCapBinding ? "drawdown_room" : "pyramid_floor_override",
         },
       };
     }
@@ -653,7 +680,10 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
         pointDollarValue: input.pointDollarValue,
         stopDollarsPerContract,
         riskDollars,
-        ...(firm === "topstep" ? { trailingFloor, buffer, highWaterBalance, trailingDD, accountStartingFloor } : {}),
+        ...(firm === "topstep" ? {
+          trailingFloor, buffer, highWaterBalance, trailingDD, accountStartingFloor,
+          hwm_defaulted: !hwmProvided,  // F-2: visibility flag
+        } : {}),
         pyramidTier,
         riskDerivedCap,
         firmCap: null,
@@ -769,7 +799,10 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
       pointDollarValue: input.pointDollarValue,
       stopDollarsPerContract,
       riskDollars,
-      ...(firm === "topstep" ? { trailingFloor, buffer, highWaterBalance, trailingDD, accountStartingFloor } : {}),
+      ...(firm === "topstep" ? {
+        trailingFloor, buffer, highWaterBalance, trailingDD, accountStartingFloor,
+        hwm_defaulted: !hwmProvided,  // F-2: visibility flag for conservative HWM default
+      } : {}),
       pyramidTier,
       pyramidTierMultiplied,
       riskDerivedCap,

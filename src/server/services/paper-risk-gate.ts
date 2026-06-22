@@ -5,6 +5,14 @@ import { logger } from "../index.js";
 import { getFirmAccount, getTightestDrawdown, type FirmAccountConfig } from "../../shared/firm-config.js";
 import { tracer } from "../lib/tracing.js";
 import { isUsDst } from "../lib/dst-utils.js";
+
+// ── F-1 Fix: halt new entries at DLL_HALT_PCT × firmDLL (matching kill-switch Layer 2) ──
+// CLAUDE.md §4: "HALT new entries at 67% (env: DLL_HALT_PCT)"
+// kill-switch.ts:347 correctly halts at DLL_HALT_PCT * dll.
+// paper-risk-gate previously compared todayLoss >= firmDLL (100%) — allowing
+// entries between 67% and 100% that kill-switch.ts would block on the same path.
+// Fix: use the same DLL_HALT_PCT env var so both gates halt at the same threshold.
+const DLL_HALT_PCT = parseFloat(process.env.DLL_HALT_PCT ?? "0.67");
 // isUsDst is imported from the shared dst-utils utility.
 // The inline implementation has been removed; the canonical version
 // lives in src/server/lib/dst-utils.ts and is the same algorithm.
@@ -228,6 +236,9 @@ export async function checkRiskGate(
   }
 
   // ── d) Daily loss limit (firm-specific) ────────────────────
+  // F-1 Fix: halt at DLL_HALT_PCT × firmDLL (default 67%), not at 100% of firmDLL.
+  // kill-switch.ts Layer 2 already halts at DLL_HALT_PCT * dll; this gate must match.
+  // Firms with dailyLossLimit=null (MFFU has NO daily loss limit) skip this gate.
   if (firmConfig?.dailyLossLimit) {
     // Use CME futures trading-day key to match dailyPnlBreakdown entries.
     // Trades closed 17:00–23:59 ET belong to the NEXT trading day (5pm ET cutoff).
@@ -236,11 +247,17 @@ export async function checkRiskGate(
     const todayPnl = breakdown[today] ?? 0;
     const todayLoss = todayPnl < 0 ? Math.abs(todayPnl) : 0;
 
-    if (todayLoss >= firmConfig.dailyLossLimit) {
-      logger.warn({ sessionId, todayLoss, dailyLossLimit: firmConfig.dailyLossLimit }, "Risk gate: daily loss limit hit");
+    // Halt threshold = DLL_HALT_PCT × firm DLL (e.g. 0.67 × $1000 = $670 for Topstep)
+    const dllHaltThreshold = firmConfig.dailyLossLimit * DLL_HALT_PCT;
+
+    if (todayLoss >= dllHaltThreshold) {
+      logger.warn(
+        { sessionId, todayLoss, dllHaltThreshold, dailyLossLimit: firmConfig.dailyLossLimit, DLL_HALT_PCT },
+        "Risk gate: daily loss halt threshold hit",
+      );
       return {
         allowed: false,
-        reason: `Daily loss limit reached ($${todayLoss.toFixed(2)} today vs $${firmConfig.dailyLossLimit} limit for ${session.firmId})`,
+        reason: `Daily loss halt threshold reached ($${todayLoss.toFixed(2)} today vs $${dllHaltThreshold.toFixed(2)} halt limit [${Math.round(DLL_HALT_PCT * 100)}% of $${firmConfig.dailyLossLimit} for ${session.firmId}])`,
         check: "daily_loss_limit",
       };
     }

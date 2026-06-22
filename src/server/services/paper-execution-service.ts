@@ -198,6 +198,27 @@ export function clearKillSwitchCache(): void {
   killSwitchCache.clear();
 }
 
+// ─── GAP-2 FIX: Session-level stuck-position registry ────────────────────────
+// When forceCloseAllPositions cannot close a position (no currentPrice AND no
+// entryPrice fallback), the session is added here. Subsequent openPosition calls
+// on that session are blocked until the operator resolves the stuck position.
+//
+// This is an in-memory Set (not persisted to DB) because:
+//   (a) stuck positions require immediate manual intervention — they do NOT
+//       survive a process restart (restarted service re-reads open positions
+//       and will immediately attempt another force-flatten on the next bar).
+//   (b) the primary signal is the CRITICAL audit row + alert — this Set is
+//       the enforcement mechanism for the current process lifetime only.
+//
+// sessionId is added on first force-flatten failure; it is NOT automatically
+// cleared by this service (operator must resolve + call clearStuckSessionId).
+const stuckSessionIds = new Set<string>();
+
+/** Test/admin hook — clear a stuck session so entries can resume. */
+export function clearStuckSessionId(sessionId: string): void {
+  stuckSessionIds.delete(sessionId);
+}
+
 // ─── Compliance Gate cache (B4.4 / C5) ──────────────────────────
 // Cache the FRESHNESS check result per firm for 60s so we don't spawn a
 // Python subprocess on every bar / signal.  The cache key is firmId;
@@ -868,6 +889,101 @@ export async function openPosition(sessionId: string, params: {
     || session.firmId
     || "unknown";
 
+  // ─── GAP-1 FIX: DLL halt sticky check ───────────────────────────────────────
+  // Once a session crosses 67% DLL in a CME trading day, the halt is PERMANENT
+  // for that day regardless of subsequent P&L recovery. This prevents a closed
+  // profitable position from temporarily pulling P&L back below 67% and allowing
+  // fresh entries before the next CME day boundary (17:00 ET).
+  //
+  // The sticky flag is stored in session.config.dailyLossHaltedAt (CME day key,
+  // same format as dailyPnlBreakdown keys). It is cleared automatically when the
+  // CME day key changes (5pm ET cutoff). No explicit clear is needed.
+  //
+  // This check runs BEFORE the Python subprocess call so that:
+  //   (a) we save the ~100ms Python invocation on already-halted sessions, and
+  //   (b) recovery P&L can never sneak through the 5s cache gap.
+  {
+    const todayKey = toFuturesTradingDayString();
+    const haltedAt = typeof sessionConfig.dailyLossHaltedAt === "string"
+      ? sessionConfig.dailyLossHaltedAt
+      : null;
+
+    if (haltedAt === todayKey) {
+      // Sticky halt is active for today — block immediately, no Python call needed.
+      logger.warn(
+        { sessionId, symbol: params.symbol, haltedAt, todayKey },
+        "Kill switch (GAP-1): DLL halt sticky flag is set for today — blocking entry without Python re-check",
+      );
+      dbConn.insert(auditLog).values({
+        action: "kill_switch.dll_halt_sticky_blocked",
+        entityType: "paper_session",
+        entityId: sessionId,
+        decisionAuthority: "system",
+        input: { sessionId, symbol: params.symbol, side: params.side, haltedAt } as Record<string, unknown>,
+        result: { reason: "dll_halt_sticky", halted_at: haltedAt, blocked: true } as Record<string, unknown>,
+        status: "success",
+        correlationId,
+      }).catch((err: unknown) => logger.error({ err }, "kill_switch.dll_halt_sticky_blocked audit write failed (non-blocking)"));
+      openSpan.setAttribute("kill_switch_tripped", true);
+      openSpan.setAttribute("kill_switch_reason", "dll_halt_sticky");
+      openSpan.end();
+      return {
+        position: null,
+        executionResult: {
+          positionId: "",
+          entryPrice: 0,
+          contracts: params.contracts,
+          slippage: 0,
+          expectedPrice: arrivalPrice,
+          actualPrice: 0,
+          arrivalPrice,
+          implementationShortfall: 0,
+          fillRatio: 0,
+          filled: false,
+        } satisfies ExecutionResult,
+      };
+    }
+  }
+
+  // ─── GAP-2 FIX: Block entry when a stuck position exists for this session ──
+  // If forceCloseAllPositions could not close a position (no price at all),
+  // that session is added to stuckSessionIds. Subsequent openPosition on that
+  // session is blocked until the operator manually resolves the stuck position.
+  if (stuckSessionIds.has(sessionId)) {
+    logger.error(
+      { sessionId, symbol: params.symbol },
+      "paper-execution: session has unresolved stuck position from force-flatten — blocking new entry",
+    );
+    dbConn.insert(auditLog).values({
+      action: "paper.entry_blocked",
+      entityType: "paper_session",
+      entityId: sessionId,
+      decisionAuthority: "system",
+      input: { sessionId, symbol: params.symbol, side: params.side } as Record<string, unknown>,
+      result: { reason: "stuck_position", blocked: true } as Record<string, unknown>,
+      status: "error",
+      correlationId,
+    }).catch((err: unknown) => logger.error({ err }, "paper.entry_blocked (stuck_position) audit write failed (non-blocking)"));
+    openSpan.setAttribute("kill_switch_tripped", true);
+    openSpan.setAttribute("kill_switch_reason", "stuck_position");
+    openSpan.end();
+    return {
+      position: null,
+      executionResult: {
+        positionId: "",
+        entryPrice: 0,
+        contracts: params.contracts,
+        slippage: 0,
+        expectedPrice: arrivalPrice,
+        actualPrice: 0,
+        arrivalPrice,
+        implementationShortfall: 0,
+        fillRatio: 0,
+        filled: false,
+      } satisfies ExecutionResult,
+    };
+  }
+
   // ─── D6: Kill switch — runs BEFORE every order, before compliance gate ──
   // Fail-CLOSED: subprocess failure → block order + alert (see cache comment above).
   // Cache TTL is 5s (not 60s like compliance) because P&L state changes every bar.
@@ -1063,6 +1179,44 @@ export async function openPosition(sessionId: string, params: {
                 message: `New entries blocked: daily loss reached ${((killResult.halt_pct_used ?? _effectiveHaltPct) * 100).toFixed(0)}% of firm DLL. Existing positions held. Force-close triggers at ${((_effectiveForceClosePct) * 100).toFixed(0)}%.`,
               });
             }
+
+            // ─── GAP-1 FIX: Persist sticky DLL halt flag to session config ────────
+            // When the kill switch trips at the 67% halt threshold (not force-close),
+            // write dailyLossHaltedAt = CME trading day key into session.config JSONB.
+            // Future openPosition calls check this flag BEFORE calling Python, so
+            // any P&L recovery below 67% cannot silently re-enable trading for the day.
+            // Force-close (95%) sessions already have positions flattened; the sticky
+            // flag provides defense-in-depth but the primary protection is forceClose.
+            if (!killResult.force_close) {
+              const todayKeyForSticky = toFuturesTradingDayString();
+              try {
+                await dbConn.update(paperSessions).set({
+                  config: sql`jsonb_set(
+                    COALESCE(${paperSessions.config}, '{}'::jsonb),
+                    '{dailyLossHaltedAt}',
+                    ${JSON.stringify(todayKeyForSticky)}::jsonb
+                  )`,
+                }).where(eq(paperSessions.id, sessionId));
+                dbConn.insert(auditLog).values({
+                  action: "kill_switch.dll_halt_sticky_engaged",
+                  entityType: "paper_session",
+                  entityId: sessionId,
+                  decisionAuthority: "system",
+                  input: { sessionId, daily_pnl_pct: killResult.daily_pnl_pct, halt_pct: killResult.halt_pct_used ?? _effectiveHaltPct } as Record<string, unknown>,
+                  result: { halted_at: todayKeyForSticky, daily_pnl_pct: killResult.daily_pnl_pct } as Record<string, unknown>,
+                  status: "success",
+                  correlationId,
+                }).catch((err: unknown) => logger.error({ err }, "kill_switch.dll_halt_sticky_engaged audit write failed (non-blocking)"));
+              } catch (stickyErr) {
+                // Non-blocking — the kill switch already blocks the entry above.
+                // Log the failure but do not re-throw; the session is still halted this call.
+                logger.error(
+                  { sessionId, err: stickyErr },
+                  "Kill switch (GAP-1): failed to persist sticky halt flag to session config (non-blocking — halt still active this call)",
+                );
+              }
+            }
+
             openSpan.setAttribute("kill_switch_tripped", true);
             openSpan.setAttribute("kill_switch_reason", killResult.reason ?? "");
             openSpan.end();
@@ -3432,7 +3586,7 @@ export async function runSessionEndRollSweep(context?: { correlationId?: string 
 // Callers: kill-switch.ts:setMode('HALT') only. Do NOT call from openPosition
 // or any hot path — this is a rare, operator-triggered emergency action.
 //
-export async function forceCloseAllPositions(reason: string): Promise<{ count: number }> {
+export async function forceCloseAllPositions(reason: string): Promise<{ count: number; closed: number; stuck: number }> {
   // FINDING #8 FIX: generate a single batch correlationId that links the batch
   // audit row to every per-position closePosition call in this flatten sweep.
   const batchCorrelationId = randomUUID();
@@ -3458,6 +3612,8 @@ export async function forceCloseAllPositions(reason: string): Promise<{ count: n
 
   const errors: string[] = [];
   const skipped: string[] = [];
+  let closedCount = 0;
+  let stuckCount = 0;
 
   for (const pos of openPositions) {
     // FINDING #1 FIX: use currentPrice (mark-to-market), not entryPrice.
@@ -3466,26 +3622,81 @@ export async function forceCloseAllPositions(reason: string): Promise<{ count: n
     const rawCurrent = Number(pos.currentPrice ?? 0);
 
     if (!rawCurrent || !isFinite(rawCurrent)) {
-      // No current price available — fail loud, skip this position rather than
-      // silently booking $0 P&L which would corrupt session equity and promotion inputs.
-      const skipMsg = `pos:${pos.id} symbol:${pos.symbol} — no currentPrice available; skipping force-flatten (manual close required)`;
-      skipped.push(skipMsg);
+      // GAP-2 FIX: currentPrice is null/zero — attempt entryPrice as fallback before giving up.
+      // Using entryPrice closes the position at $0 realized P&L (entry == exit), which is
+      // suboptimal for analytics but is FAR better than leaving the position open during a halt.
+      // We emit a distinct WARN audit to make the fallback visible for post-incident review.
+      const rawEntry = Number(pos.entryPrice ?? 0);
+
+      if (rawEntry && isFinite(rawEntry)) {
+        // Fallback: close at entryPrice ($0 realized P&L). Emit WARN audit so analytics
+        // pipelines can identify and flag this trade for manual review.
+        logger.warn(
+          { positionId: pos.id, symbol: pos.symbol, reason, batchCorrelationId,
+            entryPrice: pos.entryPrice, currentPrice: pos.currentPrice },
+          "paper-execution.force-flatten: currentPrice missing — using entryPrice as fallback (closes at $0 P&L; position is closed)",
+        );
+        db.insert(auditLog).values({
+          action: "paper.force_flatten_fallback_entry_price",
+          entityType: "paper_position",
+          entityId: pos.id,
+          decisionAuthority: "system",
+          input: { reason, positionId: pos.id, symbol: pos.symbol, entryPrice: pos.entryPrice, fallbackPrice: rawEntry } as Record<string, unknown>,
+          result: { reason: "no_current_price_fallback_to_entry", batchCorrelationId, pnl_impact: 0 } as Record<string, unknown>,
+          status: "warning",
+          correlationId: batchCorrelationId,
+        }).catch((err) => logger.error({ err }, "paper-execution.force-flatten: fallback audit write failed (non-blocking)"));
+
+        try {
+          await closePosition(pos.id, rawEntry, undefined, { correlationId: batchCorrelationId });
+          closedCount++;
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          errors.push(`pos:${pos.id} err:${msg}`);
+          logger.error({ err, positionId: pos.id, reason, batchCorrelationId }, "paper-execution.force-flatten: closePosition (entryPrice fallback) failed (continuing)");
+        }
+        continue;
+      }
+
+      // GAP-2 FIX: Both currentPrice AND entryPrice are unavailable.
+      // This is a CRITICAL failure — the position CANNOT be closed automatically.
+      // Escalate: CRITICAL alert + distinct stuck audit + register session in stuckSessionIds.
+      stuckCount++;
+      const stuckMsg = `pos:${pos.id} symbol:${pos.symbol} — no currentPrice OR entryPrice; position STUCK (manual close required)`;
+      skipped.push(stuckMsg);
       logger.error(
         { positionId: pos.id, symbol: pos.symbol, reason, batchCorrelationId,
           entryPrice: pos.entryPrice, currentPrice: pos.currentPrice },
-        "paper-execution.force-flatten: currentPrice missing — SKIPPING position (manual close required, NOT booking $0)",
+        "paper-execution.force-flatten: CRITICAL — no price available, position STUCK open after halt. Manual close required.",
       );
-      // Write a skipped-position audit row so the operator can reconstruct what happened
+
+      // Fire a CRITICAL alert — this is not a soft skip, it is a material breach risk.
+      AlertFactory.criticalAlert("force-flatten-stuck-position", {
+        positionId: pos.id,
+        sessionId: pos.sessionId,
+        symbol: pos.symbol,
+        reason,
+        batchCorrelationId,
+        message: `CRITICAL: Force-flatten could not close position ${pos.id} (${pos.symbol}) — no price available. Manual close required immediately.`,
+      });
+
+      // Write the CRITICAL stuck audit (distinct from the old soft paper.force_flatten_position_skipped)
       db.insert(auditLog).values({
-        action: "paper.force_flatten_position_skipped",
+        action: "paper.force_flatten_stuck",
         entityType: "paper_position",
         entityId: pos.id,
         decisionAuthority: "system",
-        input: { reason, positionId: pos.id, symbol: pos.symbol, entryPrice: pos.entryPrice } as Record<string, unknown>,
-        result: { reason: "no_current_price", batchCorrelationId } as Record<string, unknown>,
+        input: { reason, positionId: pos.id, symbol: pos.symbol, entryPrice: pos.entryPrice, currentPrice: pos.currentPrice } as Record<string, unknown>,
+        result: { reason: "no_price_position_stuck", batchCorrelationId } as Record<string, unknown>,
         status: "error",
         correlationId: batchCorrelationId,
-      }).catch((err) => logger.error({ err }, "paper-execution.force-flatten: skip audit write failed (non-blocking)"));
+      }).catch((err) => logger.error({ err }, "paper-execution.force-flatten: stuck audit write failed (non-blocking)"));
+
+      // Register this session as having a stuck position so openPosition is blocked
+      // until the operator manually resolves it (see stuckSessionIds Set above).
+      if (pos.sessionId) {
+        stuckSessionIds.add(pos.sessionId);
+      }
       continue;
     }
 
@@ -3493,6 +3704,7 @@ export async function forceCloseAllPositions(reason: string): Promise<{ count: n
       // Close at mark-to-market (currentPrice). Thread the batchCorrelationId so
       // this close is linkable to the halt event in the audit_log.
       await closePosition(pos.id, rawCurrent, undefined, { correlationId: batchCorrelationId });
+      closedCount++;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       errors.push(`pos:${pos.id} err:${msg}`);
@@ -3507,12 +3719,12 @@ export async function forceCloseAllPositions(reason: string): Promise<{ count: n
     entityId: null,
     decisionAuthority: "system",
     input: { reason } as Record<string, unknown>,
-    result: { reason, count, errors, skipped } as Record<string, unknown>,
-    status: errors.length === 0 && skipped.length === 0 ? "success" : "partial_failure",
+    result: { reason, count, closed: closedCount, stuck: stuckCount, errors, skipped } as Record<string, unknown>,
+    status: errors.length === 0 && stuckCount === 0 ? "success" : "partial_failure",
     correlationId: batchCorrelationId,
   }).catch((err) => logger.error({ err }, "paper-execution.force-flatten: audit_log write failed (non-blocking)"));
 
-  broadcastSSE("paper:force-flatten-all", { reason, count, errors: errors.length, skipped: skipped.length });
+  broadcastSSE("paper:force-flatten-all", { reason, count, closed: closedCount, stuck: stuckCount, errors: errors.length, skipped: skipped.length });
 
-  return { count };
+  return { count, closed: closedCount, stuck: stuckCount };
 }

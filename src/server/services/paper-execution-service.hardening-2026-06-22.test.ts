@@ -342,25 +342,25 @@ describe("FINDING #1 — forceCloseAllPositions: mark-to-market, not $0", () => 
     expect(batchCorrId.length).toBeGreaterThan(8);
   });
 
-  it("does NOT skip positions with valid currentPrice — only skips those with null/zero currentPrice", async () => {
-    // Verify that a position WITH a valid currentPrice is attempted (not skipped).
-    // Positions with null/zero currentPrice go into the `skipped` array.
-    // Positions with valid currentPrice go into closePosition (may error in mock env
-    // due to mock incompleteness, but they are NOT in the `skipped` array).
+  it("does NOT skip positions with valid currentPrice — null currentPrice uses entryPrice fallback (GAP-2 fix)", async () => {
+    // GAP-2 FIX UPDATE: positions with null currentPrice are NO LONGER soft-skipped.
+    // - null currentPrice + valid entryPrice → fallback close at $0 P&L + paper.force_flatten_fallback_entry_price WARN audit
+    // - null currentPrice + null entryPrice → CRITICAL stuck + paper.force_flatten_stuck audit + AlertFactory.criticalAlert
+    // The old paper.force_flatten_position_skipped soft-skip behavior is REMOVED.
     openPositionRows = [
       {
         id: "pos-valid-price",
         sessionId: "sess-1",
         symbol: "MES",
         entryPrice: "5000",
-        currentPrice: "4800",  // valid — should NOT be skipped
+        currentPrice: "4800",  // valid — goes through closePosition normally
       },
       {
         id: "pos-no-price",
         sessionId: "sess-1",
         symbol: "MNQ",
-        entryPrice: "18000",
-        currentPrice: null,  // null — should be skipped with audit row
+        entryPrice: "18000",  // valid entryPrice — fallback close at $0 P&L
+        currentPrice: null,   // null currentPrice → fallback path (not stuck, not skipped)
       },
     ];
 
@@ -372,22 +372,24 @@ describe("FINDING #1 — forceCloseAllPositions: mark-to-market, not $0", () => 
     expect(batchAudit).toBeDefined();
     const batchResult = batchAudit!["result"] as Record<string, unknown>;
 
-    // The null-price position must appear in the `skipped` array, NOT errors
-    const skipped = batchResult["skipped"] as string[];
-    expect(Array.isArray(skipped)).toBe(true);
-    expect(skipped.some((s: string) => s.includes("pos-no-price"))).toBe(true);
+    // GAP-2 FIX: null-currentPrice + valid-entryPrice must use fallback, NOT appear in skipped or stuck
+    const stuck = (batchResult["stuck"] as number) ?? 0;
+    expect(stuck).toBe(0);  // not stuck — entryPrice fallback resolved it
 
-    // The null-price position must NOT be in the errors array
-    const errors = batchResult["errors"] as string[];
-    expect(errors.every((e: string) => !e.includes("pos-no-price"))).toBe(true);
+    // A fallback audit row must have been written for the null-price position
+    const fallbackAudit = auditRows.find(r =>
+      r["action"] === "paper.force_flatten_fallback_entry_price" &&
+      r["entityId"] === "pos-no-price"
+    );
+    expect(fallbackAudit).toBeDefined();
+    expect(fallbackAudit!["correlationId"]).not.toBeNull();
 
-    // A skip audit row should have been written for the null-price position
-    const skipAudit = auditRows.find(r =>
+    // The old paper.force_flatten_position_skipped behavior is REMOVED — must NOT appear
+    const softSkipAudit = auditRows.find(r =>
       r["action"] === "paper.force_flatten_position_skipped" &&
       r["entityId"] === "pos-no-price"
     );
-    expect(skipAudit).toBeDefined();
-    expect(skipAudit!["correlationId"]).not.toBeNull();
+    expect(softSkipAudit).toBeUndefined();
   });
 });
 
