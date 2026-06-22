@@ -9076,6 +9076,30 @@ Also restored Anam.ai persona during this session:
 
 ---
 
+### Session Log — 2026-06-22 claude (Execution + parity engine institutional-grade audit + 10-fix hardening pass)
+
+**Mission:** Operator: "whats the next system we need to make institutional grade" → chose Execution + parity engine → "full pass". 3-agent read-only audit (paper-parity + accuracy-validator + observability-reliability) then fix every confirmed finding. (This is the "other-session execution lane" the parallel CI-trust sweep deliberately carved out — clean file separation by design.)
+
+**Audit verdict:** execution core strong (kill-switch supremacy in broker-router, fail-closed posture, sizing-math parity, DST-correct signal path, SHADOW broker discipline, TopstepX safe loud-stub) but real capital-at-risk gaps. Resolved a stale fact: PM-size-factor parity is FINE — `src/engine/pm_size_factor.py` + `sizing.py:1158-1208` mirror the TS taper; the 2026-05-26 "TS-only, no Python mirror" carry-forward was WRONG.
+
+**Work completed (10 findings, 2 commits):**
+- Commit `738b43a` (Python parity, 14 pytest): #5 static Style C now BE+1 tick (was bare BE) matching adaptive + style_d_handler + documented invariant; #6 outer DSL 15:55 time-stop legacy path (ts_et None) now DST-correct via `_dst_correct_et_hour` (was UTC string-match missing EST winter bars); #9 DLL `dll_halt_assumption` + `dll_halt_estimate_basis` reconciliation metadata (ATR-estimate-vs-actual is an accepted backtest-entry-gate limitation — DLL runs before trade mgmt, actual P&L unavailable without circular dep).
+- Commit `8223e5c` (TS execution, 49 vitest): #1 force-flatten marks to CURRENT market price (was entry price → \$0 P&L corruption of equity/Sharpe/DLL; null-price = loud skip); #3 `killSwitch.isHaltedForProduction()` now unconditionally FIRST in openPosition (was after assignment early-return); #2 deterministic bar-scoped SHA-256 idempotency key (was UUID-per-request → TradingView retry double-fire); #4 half-open circuit breaker on TradersPost + Discord critical + `broker:degraded` SSE (was silent outage); #7 cross-symbol DLL + lunch-blackout fail-CLOSED (daily-trade-cap keeps documented fail-open + visible audit); #10 sizing==0 → NO-TRADE (was Math.max(1,…) 1-contract floor, paper more active than backtest under stress); #8 correlationId rot threaded across paper-execution (6 sites incl. batch-linked force-flatten) + paper-signal (4) + kill-switch (setMode HALT + Layer7).
+
+**Verification:** Python parity 14/14 pytest GREEN; TS hardening 49/49 vitest GREEN (3 suites). Co-mingle safety: scanned all my modified files for foreign tokens (clean); `backtester.py` last-commit was mine; committed ONLY my 15 files via explicit `git add` paths (tree had 158 uncommitted files from parallel CI-trust session — never `git add -A`). Both commits pushed to origin.
+
+**Known-facts updates:**
+- PM-size-factor backtest↔paper parity is INTACT (Python mirror exists at `pm_size_factor.py` + `sizing.py:1158-1208`); the 2026-05-26 "TS-only" carry-forward was stale/wrong.
+- `routeOrder()` in broker-router.ts has NO live production caller (only def + comment + stub) — today's live order path is TradingView Pine alert → TradersPost directly, bypassing the TS broker abstraction. The broker-router (idempotency + circuit breaker) hardens the FUTURE TopstepX-direct/automation path, not today's hot path.
+
+**Carry-forward for next session:**
+- **GAP-5 (architectural):** wire the live execution→`routeOrder()` path so bar→marker→signal→broker is one traceable transaction; only then does the new bar-scoped idempotency key engage end-to-end (it's in place + safe-fallback today, just not on a live caller). `tradingview-webhook.ts` stores a marker but does not call routeOrder.
+- DLL #9 is a documented accepted limitation (estimate basis surfaced), not a full fix — revisit if a faithful actual-P&L backtest DLL becomes feasible.
+- Circuit-breaker state is in-memory (resets on restart) and `CircuitBreakerRegistry.setOnStateChange` is single-listener — upgrade to multi-listener if a second breaker needs callbacks.
+- force-flatten skips positions with null currentPrice — ensure `updatePositionPrices` runs before `forceCloseAllPositions` in the halt sequence (or add broker last-price fallback).
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Test suite has ZERO DB-integration coverage — green is structurally blind to DB bugs (pinned 2026-06-22)
