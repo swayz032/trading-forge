@@ -17,7 +17,7 @@
  *     mock_pattern_paper_risk_gate.md memory).
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // ─── Infrastructure mocks (must precede SUT imports) ─────────────────────────
 
@@ -196,6 +196,16 @@ function wireDbMocks(posRow: Record<string, unknown>) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Wave hardening 2026-06-22: closePosition uses `new Date()` for closedAt, so these
+  // roll-window tests are time-dependent. Pin the clock to 2026-03-15 (the close date
+  // the suite already mocks via toEasternDateString) so a 2026-03-10 entry crosses
+  // exactly the 2026-03-12 roll (cost 2), not every roll up to the real current date.
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date("2026-03-15T16:00:00Z"));
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 // ─── Test 1: roll cost deducted from netPnl ───────────────────────────────────
@@ -234,8 +244,12 @@ describe("closePosition — roll spread cost applied", () => {
     expect(capturedTradeValues!["rollSpreadCost"]).toBe("2");
     // pnl = grossPnl - 0 commission - 2 rollSpreadCost
     // grossPnl is whatever slippage produces; we only care that the roll deduction is applied.
+    // Wave hardening 2026-06-22: netPnl = grossPnl - commission - rollSpreadCost.
+    // Read the real per-trade commission (MES default $0.62/side => $1.24 RT) from the
+    // captured row rather than assuming commission=0.
     const grossPnlFromTrade = Number(capturedTradeValues!["grossPnl"]);
-    expect(Number(capturedTradeValues!["pnl"])).toBeCloseTo(grossPnlFromTrade - 2, 2);
+    const commissionFromTrade = Number(capturedTradeValues!["commission"]);
+    expect(Number(capturedTradeValues!["pnl"])).toBeCloseTo(grossPnlFromTrade - commissionFromTrade - 2, 2);
   });
 });
 
@@ -268,9 +282,10 @@ describe("closePosition — no roll in hold window", () => {
 
     expect(capturedTradeValues).not.toBeNull();
     expect(capturedTradeValues!["rollSpreadCost"]).toBe("0");
-    // netPnl = grossPnl - 0 commission - 0 roll cost = gross (no roll deduction)
+    // netPnl = grossPnl - commission - 0 roll cost (no roll deduction this window).
     const grossPnlFromTrade = Number(capturedTradeValues!["grossPnl"]);
-    expect(Number(capturedTradeValues!["pnl"])).toBeCloseTo(grossPnlFromTrade, 2);
+    const commissionFromTrade = Number(capturedTradeValues!["commission"]);
+    expect(Number(capturedTradeValues!["pnl"])).toBeCloseTo(grossPnlFromTrade - commissionFromTrade, 2);
   });
 });
 
