@@ -9218,9 +9218,28 @@ Also restored Anam.ai persona during this session:
 - W0.1 live restore-test (dump→scratch DB→row counts) = operational follow-up.
 - Phases 1-5 pending; W1 (TF Order Gateway, keystone) next.
 
+### Session Log — 2026-06-22 claude (CI suite driven to FULL GREEN)
+
+**Mission:** "MAKE GREEN" — drive the vitest suite from 93 failures to 0, then keep closing the residuals the operator pointed at.
+
+**Result: vitest FULL GREEN — 393 files passed / 5 skipped, 6800 tests passed / 41 skipped, 0 failures** (from a 52-file / 93-test failing baseline at session start).
+
+**How (collision-safe in the shared `hardening/phase-0` tree; scoped commits, never `git add -A`):**
+- Schema drift (durably, once the parallel session moved off schema.ts): `lifecycleTransitions.correlationId`, `strategyFirmEligibility` 4 survival columns, `syntheticRegimeBank` table (reused existing `bytea` customType). De-brittled the wave6 journal-idx test (idx legitimately drifts from migration file numbers).
+- admin.ts:404 null-crash loop → `ideasToProcess`; missing reconciliation + weekly-drift crons registered; `setMode` correlationId threading.
+- ~15 stale fixtures (gemma4→gemma4:e2b, MES cap 30→100, MCL 10→100, etc.); ~13 flaky-env import-chain collection crashes isolated with test-side db mocks; pglite real-DB layer + 2 integration exemplars.
+- **tradingview-webhook** (parallel session's F-1 dual-proof auth): aligned the test to the V2 fixed-field HMAC canonical + fresh `bar_timestamp`; test 3 → 401 fail-closed; route docstring clarified. Contract was decided + fail-closed all along (relayed by operator).
+- **roll-spread**: pinned clock + real-commission netPnl assertion.
+
+**Carry-forward:** durable enforceability still wants more tables in pglite CORE_DDL + migrating key mock-DB gate tests onto it, so green can be a hard CI gate.
+
 ---
 
 ## Known-Facts Pin — Stop Misdiagnosing These
+
+### Time-dependent tests break as the real date advances (pinned 2026-06-22)
+
+Several tests hardcoded timestamps/assumptions tied to "now" and silently went red once the real clock passed 2026-06-22 — NOT logic regressions. Two confirmed this session: (1) `paper-execution-service.roll-spread` — a position held from a hardcoded entry to `new Date()` close now crosses TWO contract rolls instead of one (cost 4 vs 2); fix = pin the clock (`vi.setSystemTime`) or set an explicit close time. (2) `tradingview-webhook` — a hardcoded `bar_timestamp: 2026-05-10` is now outside the F-2 10-minute replay window → `stale_payload` 401 (NOT an auth failure — diagnose by logging `res.body`, the error string tells you which gate); fix = sign a FRESH `bar_timestamp`. When a previously-green test starts failing with an off-by-a-fixed-amount number or a window/staleness rejection, suspect real-time drift before suspecting a code bug. Also: tradingview-webhook auth uses the F-7 V2 fixed-field HMAC canonical `strategy|account|bar_ts|signal` (`buildWebhookCanonical`), NOT sorted-JSON — tests must sign that form.
 
 ### Parallel session switched the SHARED working tree to branch `hardening/phase-0` (pinned 2026-06-22)
 
