@@ -229,9 +229,9 @@ describe("LifecycleService — CRITICAL #6: resultExtras invariant gate at TESTI
 
     // insertAuditRow should have been called with invariant_blocked action
     const auditCalls = (insertAuditRow as ReturnType<typeof vi.fn>).mock.calls;
-    const invariantAudit = auditCalls.find(([row]: [{ action: string }]) => row.action === "lifecycle.invariant_blocked");
+    const invariantAudit = auditCalls.find((args: unknown[]) => (args[0] as { action: string }).action === "lifecycle.invariant_blocked");
     expect(invariantAudit).toBeDefined();
-    expect(invariantAudit[0].result.critical_failures).toContain("sharpe_stability_failed");
+    expect(((invariantAudit![0] as Record<string, unknown>)["result"] as Record<string, unknown>)["critical_failures"]).toContain("sharpe_stability_failed");
   });
 
   it("allows TESTING→PAPER when invariants.overall_passed=true", async () => {
@@ -258,9 +258,9 @@ describe("LifecycleService — CRITICAL #6: resultExtras invariant gate at TESTI
 
     // Advisory audit row written
     const auditCalls = (insertAuditRow as ReturnType<typeof vi.fn>).mock.calls;
-    const parityAudit = auditCalls.find(([row]: [{ action: string }]) => row.action === "lifecycle.parity_shadow_warn");
+    const parityAudit = auditCalls.find((args: unknown[]) => (args[0] as { action: string }).action === "lifecycle.parity_shadow_warn");
     expect(parityAudit).toBeDefined();
-    expect(parityAudit[0].status).toBe("success");  // advisory = not blocked
+    expect((parityAudit![0] as Record<string, unknown>)["status"]).toBe("success");  // advisory = not blocked
   });
 
   it("allows promotion when resultExtras is null (legacy backtest without invariants)", async () => {

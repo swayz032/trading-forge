@@ -125,7 +125,7 @@ async function buildStrategyComplianceInput(
     const paperMetrics = await db
       .select({
         sessionId: paperSessions.id,
-        dailyPnl: paperSessions.dailyPnl,
+        dailyPnlBreakdown: paperSessions.dailyPnlBreakdown,
         peakEquity: paperSessions.peakEquity,
         currentEquity: paperSessions.currentEquity,
       })
@@ -140,9 +140,10 @@ async function buildStrategyComplianceInput(
       .limit(30);
 
     if (paperMetrics.length > 0) {
+      // Approximate worst daily loss using session equity delta (currentEquity - peakEquity proxy)
       const dailyPnls = paperMetrics
-        .map((s) => (s.dailyPnl ? Number(s.dailyPnl) : 0))
-        .filter((v) => v < 0); // Only losing days
+        .map((s) => Number(s.currentEquity ?? 0) - Number(s.peakEquity ?? 0))
+        .filter((v) => v < 0); // Only losing sessions
 
       const worstDailyLoss = dailyPnls.length > 0
         ? Math.abs(Math.min(...dailyPnls))
@@ -343,7 +344,7 @@ export async function evaluateMultiFirmEligibility(
         firmId: r.firmId,
         eligible: r.eligible,
         eligibilityReason: r.eligibilityReason,
-        complianceCheckResult: r.complianceCheckResult as Record<string, unknown>,
+        complianceCheckResult: r.complianceCheckResult as unknown as Record<string, unknown>,
         checkedAt: evaluatedAt,
       })),
     );

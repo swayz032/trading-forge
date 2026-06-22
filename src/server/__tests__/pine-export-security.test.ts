@@ -1,4 +1,4 @@
-/**
+﻿/**
  * pine-export-security.test.ts — Pass 5 / Track D security hardening tests
  *
  * Tests for 4 critical security fixes:
@@ -21,6 +21,7 @@ describe("F-1: Artifact download ownership check", () => {
     const artifactId = "cccccccc-cccc-cccc-cccc-cccccccccccc";
 
     // The check: artifact.exportId must equal the :id URL param
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     const shouldReject = artifactExportId !== exportId;
     expect(shouldReject).toBe(true); // ownership mismatch → must reject
 

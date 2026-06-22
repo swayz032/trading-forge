@@ -63,7 +63,7 @@ brokerAccountRoutes.get("/", async (_req: Request, res: Response) => {
 
 // ─── GET /api/broker-accounts/:id ────────────────────────────────────────────
 brokerAccountRoutes.get("/:id", async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = req.params["id"] as string;
   try {
     const [account] = await db
       .select()
@@ -84,7 +84,7 @@ brokerAccountRoutes.get("/:id", async (req: Request, res: Response) => {
 
 // ─── PATCH /api/broker-accounts/:id/symbols ───────────────────────────────────
 brokerAccountRoutes.patch("/:id/symbols", async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = req.params["id"] as string;
 
   const parsed = updateSymbolsBodySchema.safeParse(req.body);
   if (!parsed.success) {

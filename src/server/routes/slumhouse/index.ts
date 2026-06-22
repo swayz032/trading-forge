@@ -55,7 +55,7 @@ export function handleSlumhouseFallback(req: Request, res: Response, next: NextF
   }
   try {
     const verified = verifySession(decodeURIComponent(match[1]));
-    if (verified?.discordUserId) {
+    if (verified?.ok && verified.discordUserId) {
       res.redirect(302, "/slumhouse/crib.html");
       return;
     }
@@ -90,7 +90,7 @@ slumhouseRouter.get([
   }
   try {
     const verified = verifySession(decodeURIComponent(match[1]));
-    if (!verified?.discordUserId) {
+    if (!verified?.ok || !verified.discordUserId) {
       res.redirect(302, "/slumhouse/login.html");
       return;
     }

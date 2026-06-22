@@ -91,7 +91,7 @@ scoutHealthRoutes.get("/health", async (req, res) => {
     );
 
     // ─── pipelineMode ────────────────────────────────────────────────
-    let pipelineMode: "ACTIVE" | "PAUSED" | "VACATION" = "ACTIVE";
+    let pipelineMode: string = "ACTIVE";
     try {
       pipelineMode = await getMode();
     } catch (err) {

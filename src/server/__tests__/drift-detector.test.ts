@@ -1,4 +1,4 @@
-/**
+﻿/**
  * drift-detector.test.ts — Track 4 Phase 4B
  *
  * Tests:
@@ -184,9 +184,7 @@ describe("DriftDetector — runWeeklyDriftDetection", () => {
     // Both live and expected Sharpe are nearly identical → delta < 1σ
     // execute() returns 30 days of daily P&L with low variance
     const { db } = await import("../db/index.js");
-    vi.mocked(db.execute).mockResolvedValue({
-      rows: makeDailyPnlRows(30, 100, 5),
-    } as Awaited<ReturnType<typeof db.execute>>);
+    vi.mocked(db.execute).mockResolvedValue(Object.assign(makeDailyPnlRows(30, 100, 5), { count: 0 }) as unknown as Awaited<ReturnType<typeof db.execute>>);
 
     const report = await driftModule.runWeeklyDriftDetection(new Date("2026-05-05"));
     // With identical data returned for both live and expected queries,
@@ -203,14 +201,15 @@ describe("DriftDetector — runWeeklyDriftDetection", () => {
     // we produce different values on the two calls by changing the mock between calls.
     const { db } = await import("../db/index.js");
     let callIdx = 0;
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     vi.mocked(db.execute).mockImplementation(async () => {
       callIdx++;
       if (callIdx === 1) {
         // Live: Sharpe ~1 (low)
-        return { rows: makeDailyPnlRows(30, 50, 40) };
+        return Object.assign(makeDailyPnlRows(30, 50, 40), { count: 0 }) as unknown as Awaited<ReturnType<typeof db.execute>>;
       }
       // Expected: Sharpe ~4 (high) — large delta
-      return { rows: makeDailyPnlRows(30, 200, 10) };
+      return Object.assign(makeDailyPnlRows(30, 200, 10), { count: 0 }) as unknown as Awaited<ReturnType<typeof db.execute>>;
     });
 
     const report = await driftModule.runWeeklyDriftDetection(new Date("2026-05-05"));
@@ -244,6 +243,7 @@ describe("DriftDetector — runWeeklyDriftDetection", () => {
   // ── Test 4: weekly_drift_reports row written ────────────────────────────
   it("calls db.insert with report_week for the weekly_drift_reports row", async () => {
     const { db } = await import("../db/index.js");
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     vi.mocked(db.execute).mockResolvedValue({ rows: [] } as Awaited<ReturnType<typeof db.execute>>);
 
     await driftModule.runWeeklyDriftDetection(new Date("2026-05-05"));
@@ -256,10 +256,11 @@ describe("DriftDetector — runWeeklyDriftDetection", () => {
     const { db } = await import("../db/index.js");
     // Force yellow by producing insufficient data for one source
     let n = 0;
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     vi.mocked(db.execute).mockImplementation(async () => {
       n++;
-      if (n === 1) return { rows: makeDailyPnlRows(30, 50, 30) };
-      return { rows: makeDailyPnlRows(30, 300, 5) };
+      if (n === 1) return Object.assign(makeDailyPnlRows(30, 50, 30), { count: 0 }) as unknown as Awaited<ReturnType<typeof db.execute>>;
+      return Object.assign(makeDailyPnlRows(30, 300, 5), { count: 0 }) as unknown as Awaited<ReturnType<typeof db.execute>>;
     });
 
     const report = await driftModule.runWeeklyDriftDetection(new Date("2026-05-05"));
@@ -284,6 +285,7 @@ describe("DriftDetector — runWeeklyDriftDetection", () => {
   // ── Test 7: Audit_log row on every run ─────────────────────────────────
   it("calls db.insert for audit_log on every run (success and failure paths)", async () => {
     const { db } = await import("../db/index.js");
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     vi.mocked(db.execute).mockResolvedValue({ rows: [] } as Awaited<ReturnType<typeof db.execute>>);
 
     await driftModule.runWeeklyDriftDetection(new Date("2026-05-05"));
@@ -307,6 +309,7 @@ describe("DriftDetector — runWeeklyDriftDetection", () => {
   // ── Test 9: Idempotent — onConflictDoUpdate called ─────────────────────
   it("uses onConflictDoUpdate for upsert idempotency on same report_week", async () => {
     const { db } = await import("../db/index.js");
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     vi.mocked(db.execute).mockResolvedValue({ rows: [] } as Awaited<ReturnType<typeof db.execute>>);
 
     // Run twice for same week

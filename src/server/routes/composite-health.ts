@@ -44,7 +44,7 @@ export type HealthVerdict = "HEALTHY" | "MARGINAL" | "UNHEALTHY" | "CRITICAL" | 
 /** Single-strategy latest health snapshot */
 export interface LatestHealthPayload {
   id: string;                        // bigint serialised as string
-  strategyId: number;
+  strategyId: string;                // UUID (changed from INTEGER in schema migration, Defect G4 fix)
   evaluatedAt: string;               // ISO-8601
   compositeScore: number | null;
   verdict: HealthVerdict | null;
@@ -78,11 +78,10 @@ const ACTIVE_STATES: string[] = ["DEPLOYED", "PILOT", "PAPER", "DEPLOY_READY"];
 compositeHealthRoutes.get(
   "/:strategyId/latest",
   async (req: Request, res: Response): Promise<void> => {
-    const rawId = req.params["strategyId"] as string | undefined;
-    const strategyId = parseInt(rawId ?? "", 10);
+    const strategyId = req.params["strategyId"] as string | undefined;
 
-    if (Number.isNaN(strategyId) || strategyId <= 0) {
-      res.status(400).json({ error: "strategyId must be a positive integer" });
+    if (!strategyId || strategyId.trim() === "") {
+      res.status(400).json({ error: "strategyId is required" });
       return;
     }
 

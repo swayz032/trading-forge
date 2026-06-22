@@ -1,4 +1,4 @@
-/**
+﻿/**
  * W23G.12 — Bidirectional strategy backfill tests.
  *
  * Pure-function tests against computePromotion() and classifyIndicator()
@@ -28,6 +28,7 @@ import {
   SYMMETRIC_INDICATORS,
   ASYMMETRIC_INDICATORS,
   type BackfillRow,
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
 } from "../../../scripts/backfill-bidirectional-strategies.js";
 import { audit } from "../../../scripts/audit-graduated-strategy-dsls.js";
 

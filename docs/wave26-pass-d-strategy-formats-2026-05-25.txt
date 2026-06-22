@@ -1,0 +1,783 @@
+╔══════════════════════════════════════════════════════════════════╗
+║  18 STRATEGIES GRADUATED FROM OPERATOR'S 29-URL BATCH        ║
+╚══════════════════════════════════════════════════════════════════╝
+
+┌──── [1/18]  4h_pattern_entry_model_mes_1m  ────────────────────
+│ id              : ff2e5e31-d4e8-4974-974c-0971e47e62f1
+│ lifecycle_state : CANDIDATE
+│ symbol / symbols: MES  /  [MES]
+│ tags            : [cross-validated, web-confirmed, youtube-confirmed, reddit-confirmed, dsl-compiled, 3-source-consensus]
+├──── ENTRY ─────────────────────────────────────────────────────
+│ entry_indicator : archetype:fvg_retrace
+│ entry_long      : 
+│ entry_params    : {"gap_period":"15m","confirmation_trigger":"candle_body_close","confirmation_indicator":"inversion_fvg"}
+├──── MTF / BIAS  ───────────────────────────────────────────────
+│ exec timeframe  : 1m
+│ daily_tf        : (2-TF mode)
+│ htf_tf          : (2-TF mode)
+│ itf_tf          : (2-TF mode)
+│ trigger_tf      : (2-TF mode)
+│ bias_timeframe  : (none)
+│ bias_condition  : 
+├──── REGIMES ───────────────────────────────────────────────────
+│ preferred_regime: TRENDING_UP
+│ preferred_regimes[]: [TRENDING_UP, TRENDING_DOWN, RANGE_BOUND]
+├──── CONFLUENCES (Wave 25 weighted scoring) ────────────────────
+│ use_weighted_scoring   : false
+│ confluence_score_thr   : (default 0.72)
+│ confluence_factors[]   : [structural_setup, volume_confirmation]
+│ confirming_indicators[]: []
+│ min_factors_satisfied  : 3
+│ extraction_provenance  : youtube_transcript
+│ source_claim_win_rate  : (unstated)
+│ source_claim_avg_r     : (unstated)
+├──── EXITS (Style C default; opt-in adaptive) ──────────────────
+│ exit_style      : static_styleC (Wave 23 default)
+│ tp1             : 33% @ +1.0R (framework default)
+│ tp2             : 33% @ +2.0R (framework default)
+│ runner_trail    : developing_session_poc (Style C)
+│ stop_loss       : {}
+│ time_stop       : [object Object]
+├──── SIZING (Wave 23 risk-derived pyramid) ─────────────────────
+│ position_size   : {}
+├──── PROVENANCE ────────────────────────────────────────────────
+│ source          : graduated_bucket
+│ created_at      : 2026-05-25 07:26:16.106536
+└────────────────────────────────────────────────────────────────
+
+┌──── [2/18]  one_candle_setup_nasdaq_mes_5m  ────────────────────
+│ id              : ba6ff27b-10e6-4e64-97fb-e4fb8a6d29f3
+│ lifecycle_state : CANDIDATE
+│ symbol / symbols: MES  /  [MES]
+│ tags            : [cross-validated, web-confirmed, youtube-confirmed, reddit-confirmed, dsl-compiled, 3-source-consensus]
+├──── ENTRY ─────────────────────────────────────────────────────
+│ entry_indicator : session_open_breakout
+│ entry_long      : 
+│ entry_params    : {"buffer_ticks":3,"range_minutes":5}
+├──── MTF / BIAS  ───────────────────────────────────────────────
+│ exec timeframe  : 5m
+│ daily_tf        : (2-TF mode)
+│ htf_tf          : (2-TF mode)
+│ itf_tf          : (2-TF mode)
+│ trigger_tf      : (2-TF mode)
+│ bias_timeframe  : (none)
+│ bias_condition  : 
+├──── REGIMES ───────────────────────────────────────────────────
+│ preferred_regime: TRENDING_UP
+│ preferred_regimes[]: [TRENDING_UP, TRENDING_DOWN, RANGE_BOUND]
+├──── CONFLUENCES (Wave 25 weighted scoring) ────────────────────
+│ use_weighted_scoring   : false
+│ confluence_score_thr   : (default 0.72)
+│ confluence_factors[]   : [structural_setup, volume_confirmation]
+│ confirming_indicators[]: []
+│ min_factors_satisfied  : 2
+│ extraction_provenance  : youtube_transcript
+│ source_claim_win_rate  : (unstated)
+│ source_claim_avg_r     : (unstated)
+├──── EXITS (Style C default; opt-in adaptive) ──────────────────
+│ exit_style      : static_styleC (Wave 23 default)
+│ tp1             : 33% @ +1.0R (framework default)
+│ tp2             : 33% @ +2.0R (framework default)
+│ runner_trail    : developing_session_poc (Style C)
+│ stop_loss       : {}
+│ time_stop       : [object Object]
+├──── SIZING (Wave 23 risk-derived pyramid) ─────────────────────
+│ position_size   : {}
+├──── PROVENANCE ────────────────────────────────────────────────
+│ source          : graduated_bucket
+│ created_at      : 2026-05-25 07:26:06.492262
+└────────────────────────────────────────────────────────────────
+
+┌──── [3/18]  multi_confluence_short_setup_mes_5m  ────────────────────
+│ id              : e80fe4a7-f446-464b-8d50-bc5b16325d26
+│ lifecycle_state : CANDIDATE
+│ symbol / symbols: MES  /  [MES]
+│ tags            : [cross-validated, web-confirmed, youtube-confirmed, reddit-confirmed, dsl-compiled, 3-source-consensus]
+├──── ENTRY ─────────────────────────────────────────────────────
+│ entry_indicator : ema_crossover
+│ entry_long      : 
+│ entry_params    : {"fib_level":0.5,"fast_period":9,"slow_period":21,"confluence_bars":1,"liquidity_target":"high_takeout"}
+├──── MTF / BIAS  ───────────────────────────────────────────────
+│ exec timeframe  : 5m
+│ daily_tf        : (2-TF mode)
+│ htf_tf          : (2-TF mode)
+│ itf_tf          : (2-TF mode)
+│ trigger_tf      : (2-TF mode)
+│ bias_timeframe  : (none)
+│ bias_condition  : 
+├──── REGIMES ───────────────────────────────────────────────────
+│ preferred_regime: TRENDING_UP
+│ preferred_regimes[]: [TRENDING_UP, TRENDING_DOWN]
+├──── CONFLUENCES (Wave 25 weighted scoring) ────────────────────
+│ use_weighted_scoring   : false
+│ confluence_score_thr   : (default 0.72)
+│ confluence_factors[]   : [structural_setup, regime_match]
+│ confirming_indicators[]: []
+│ min_factors_satisfied  : 4
+│ extraction_provenance  : youtube_transcript
+│ source_claim_win_rate  : (unstated)
+│ source_claim_avg_r     : (unstated)
+├──── EXITS (Style C default; opt-in adaptive) ──────────────────
+│ exit_style      : static_styleC (Wave 23 default)
+│ tp1             : 33% @ +1.0R (framework default)
+│ tp2             : 33% @ +2.0R (framework default)
+│ runner_trail    : developing_session_poc (Style C)
+│ stop_loss       : {}
+│ time_stop       : [object Object]
+├──── SIZING (Wave 23 risk-derived pyramid) ─────────────────────
+│ position_size   : {}
+├──── PROVENANCE ────────────────────────────────────────────────
+│ source          : graduated_bucket
+│ created_at      : 2026-05-25 07:26:00.338592
+└────────────────────────────────────────────────────────────────
+
+┌──── [4/18]  trendline_bounce_setup_mes_4h  ────────────────────
+│ id              : 68804b84-42f8-4079-9323-58b3c34fbab6
+│ lifecycle_state : CANDIDATE
+│ symbol / symbols: MES  /  [MES]
+│ tags            : [cross-validated, web-confirmed, youtube-confirmed, reddit-confirmed, dsl-compiled, 3-source-consensus]
+├──── ENTRY ─────────────────────────────────────────────────────
+│ entry_indicator : ema_crossover
+│ entry_long      : 
+│ entry_params    : {"line_type":"support_resistance","fast_period":9,"slow_period":21,"touch_points_required":2}
+├──── MTF / BIAS  ───────────────────────────────────────────────
+│ exec timeframe  : 4h
+│ daily_tf        : (2-TF mode)
+│ htf_tf          : (2-TF mode)
+│ itf_tf          : (2-TF mode)
+│ trigger_tf      : (2-TF mode)
+│ bias_timeframe  : (none)
+│ bias_condition  : 
+├──── REGIMES ───────────────────────────────────────────────────
+│ preferred_regime: TRENDING_UP
+│ preferred_regimes[]: [TRENDING_UP, TRENDING_DOWN]
+├──── CONFLUENCES (Wave 25 weighted scoring) ────────────────────
+│ use_weighted_scoring   : false
+│ confluence_score_thr   : (default 0.72)
+│ confluence_factors[]   : [structural_setup]
+│ confirming_indicators[]: []
+│ min_factors_satisfied  : 2
+│ extraction_provenance  : youtube_transcript
+│ source_claim_win_rate  : (unstated)
+│ source_claim_avg_r     : (unstated)
+├──── EXITS (Style C default; opt-in adaptive) ──────────────────
+│ exit_style      : static_styleC (Wave 23 default)
+│ tp1             : 33% @ +1.0R (framework default)
+│ tp2             : 33% @ +2.0R (framework default)
+│ runner_trail    : developing_session_poc (Style C)
+│ stop_loss       : {}
+│ time_stop       : [object Object]
+├──── SIZING (Wave 23 risk-derived pyramid) ─────────────────────
+│ position_size   : {}
+├──── PROVENANCE ────────────────────────────────────────────────
+│ source          : graduated_bucket
+│ created_at      : 2026-05-25 07:25:40.694348
+└────────────────────────────────────────────────────────────────
+
+┌──── [5/18]  break_and_retest_strategy_mes_1m  ────────────────────
+│ id              : bbfab0b9-0e73-4d1b-aae5-4d7efe969911
+│ lifecycle_state : CANDIDATE
+│ symbol / symbols: MES  /  [MES]
+│ tags            : [cross-validated, web-confirmed, youtube-confirmed, reddit-confirmed, dsl-compiled, 3-source-consensus]
+├──── ENTRY ─────────────────────────────────────────────────────
+│ entry_indicator : session_open_breakout
+│ entry_long      : 
+│ entry_params    : {"buffer_ticks":3,"range_minutes":15,"confirmation_bars":1,"timeframe_for_zone":["1h","4h"],"confirmation_close_type":"body_close"}
+├──── MTF / BIAS  ───────────────────────────────────────────────
+│ exec timeframe  : 1m
+│ daily_tf        : (2-TF mode)
+│ htf_tf          : (2-TF mode)
+│ itf_tf          : (2-TF mode)
+│ trigger_tf      : (2-TF mode)
+│ bias_timeframe  : (none)
+│ bias_condition  : 
+├──── REGIMES ───────────────────────────────────────────────────
+│ preferred_regime: TRENDING_UP
+│ preferred_regimes[]: [TRENDING_UP, TRENDING_DOWN, RANGE_BOUND]
+├──── CONFLUENCES (Wave 25 weighted scoring) ────────────────────
+│ use_weighted_scoring   : false
+│ confluence_score_thr   : (default 0.72)
+│ confluence_factors[]   : [structural_setup, regime_match]
+│ confirming_indicators[]: []
+│ min_factors_satisfied  : 3
+│ extraction_provenance  : youtube_transcript
+│ source_claim_win_rate  : (unstated)
+│ source_claim_avg_r     : (unstated)
+├──── EXITS (Style C default; opt-in adaptive) ──────────────────
+│ exit_style      : static_styleC (Wave 23 default)
+│ tp1             : 33% @ +1.0R (framework default)
+│ tp2             : 33% @ +2.0R (framework default)
+│ runner_trail    : developing_session_poc (Style C)
+│ stop_loss       : {}
+│ time_stop       : [object Object]
+├──── SIZING (Wave 23 risk-derived pyramid) ─────────────────────
+│ position_size   : {}
+├──── PROVENANCE ────────────────────────────────────────────────
+│ source          : graduated_bucket
+│ created_at      : 2026-05-25 07:25:35.552137
+└────────────────────────────────────────────────────────────────
+
+┌──── [6/18]  orb_mes_15m  ────────────────────
+│ id              : 7d9db82d-31f2-4480-ad45-6117afbe5d88
+│ lifecycle_state : CANDIDATE
+│ symbol / symbols: MES  /  [MES]
+│ tags            : [cross-validated, web-confirmed, youtube-confirmed, reddit-confirmed, dsl-compiled, 3-source-consensus]
+├──── ENTRY ─────────────────────────────────────────────────────
+│ entry_indicator : session_open_breakout
+│ entry_long      : 
+│ entry_params    : {"end_time":"8:15 AM EST","start_time":"8:00 AM EST","buffer_ticks":3,"range_minutes":15}
+├──── MTF / BIAS  ───────────────────────────────────────────────
+│ exec timeframe  : 15m
+│ daily_tf        : (2-TF mode)
+│ htf_tf          : (2-TF mode)
+│ itf_tf          : (2-TF mode)
+│ trigger_tf      : (2-TF mode)
+│ bias_timeframe  : (none)
+│ bias_condition  : 
+├──── REGIMES ───────────────────────────────────────────────────
+│ preferred_regime: TRENDING_UP
+│ preferred_regimes[]: [TRENDING_UP, TRENDING_DOWN, RANGE_BOUND]
+├──── CONFLUENCES (Wave 25 weighted scoring) ────────────────────
+│ use_weighted_scoring   : false
+│ confluence_score_thr   : (default 0.72)
+│ confluence_factors[]   : [structural_setup, volume_confirmation]
+│ confirming_indicators[]: []
+│ min_factors_satisfied  : 2
+│ extraction_provenance  : youtube_transcript
+│ source_claim_win_rate  : (unstated)
+│ source_claim_avg_r     : (unstated)
+├──── EXITS (Style C default; opt-in adaptive) ──────────────────
+│ exit_style      : static_styleC (Wave 23 default)
+│ tp1             : 33% @ +1.0R (framework default)
+│ tp2             : 33% @ +2.0R (framework default)
+│ runner_trail    : developing_session_poc (Style C)
+│ stop_loss       : {}
+│ time_stop       : [object Object]
+├──── SIZING (Wave 23 risk-derived pyramid) ─────────────────────
+│ position_size   : {}
+├──── PROVENANCE ────────────────────────────────────────────────
+│ source          : graduated_bucket
+│ created_at      : 2026-05-25 07:25:19.748474
+└────────────────────────────────────────────────────────────────
+
+┌──── [7/18]  extreme_band_reversal_strategy_mes_15m  ────────────────────
+│ id              : f590c5dc-e6ea-40ce-8251-db47845b374f
+│ lifecycle_state : CANDIDATE
+│ symbol / symbols: MES  /  [MES]
+│ tags            : [cross-validated, web-confirmed, youtube-confirmed, reddit-confirmed, dsl-compiled, 3-source-consensus]
+├──── ENTRY ─────────────────────────────────────────────────────
+│ entry_indicator : bollinger_breakout
+│ entry_long      : 
+│ entry_params    : {"period":20,"std_dev":2,"bb_period":20,"bb_std_dev_multiplier":3,"confirmation_band_multiplier":2}
+├──── MTF / BIAS  ───────────────────────────────────────────────
+│ exec timeframe  : 15m
+│ daily_tf        : (2-TF mode)
+│ htf_tf          : (2-TF mode)
+│ itf_tf          : (2-TF mode)
+│ trigger_tf      : (2-TF mode)
+│ bias_timeframe  : (none)
+│ bias_condition  : 
+├──── REGIMES ───────────────────────────────────────────────────
+│ preferred_regime: TRENDING_UP
+│ preferred_regimes[]: [TRENDING_UP, TRENDING_DOWN, RANGE_BOUND]
+├──── CONFLUENCES (Wave 25 weighted scoring) ────────────────────
+│ use_weighted_scoring   : false
+│ confluence_score_thr   : (default 0.72)
+│ confluence_factors[]   : [structural_setup]
+│ confirming_indicators[]: []
+│ min_factors_satisfied  : 2
+│ extraction_provenance  : youtube_transcript
+│ source_claim_win_rate  : 0.8
+│ source_claim_avg_r     : (unstated)
+├──── EXITS (Style C default; opt-in adaptive) ──────────────────
+│ exit_style      : static_styleC (Wave 23 default)
+│ tp1             : 33% @ +1.0R (framework default)
+│ tp2             : 33% @ +2.0R (framework default)
+│ runner_trail    : developing_session_poc (Style C)
+│ stop_loss       : {}
+│ time_stop       : [object Object]
+├──── SIZING (Wave 23 risk-derived pyramid) ─────────────────────
+│ position_size   : {}
+├──── PROVENANCE ────────────────────────────────────────────────
+│ source          : graduated_bucket
+│ created_at      : 2026-05-25 07:25:14.416609
+└────────────────────────────────────────────────────────────────
+
+┌──── [8/18]  orb_mes_15m  ────────────────────
+│ id              : d3481678-3e9b-492e-a535-98a5f35003d9
+│ lifecycle_state : CANDIDATE
+│ symbol / symbols: MES  /  [MES]
+│ tags            : [cross-validated, web-confirmed, youtube-confirmed, reddit-confirmed, dsl-compiled, 3-source-consensus]
+├──── ENTRY ─────────────────────────────────────────────────────
+│ entry_indicator : session_open_breakout
+│ entry_long      : 
+│ entry_params    : {"buffer_ticks":3,"range_minutes":15}
+├──── MTF / BIAS  ───────────────────────────────────────────────
+│ exec timeframe  : 15m
+│ daily_tf        : (2-TF mode)
+│ htf_tf          : (2-TF mode)
+│ itf_tf          : (2-TF mode)
+│ trigger_tf      : (2-TF mode)
+│ bias_timeframe  : (none)
+│ bias_condition  : 
+├──── REGIMES ───────────────────────────────────────────────────
+│ preferred_regime: TRENDING_UP
+│ preferred_regimes[]: [TRENDING_UP, TRENDING_DOWN, RANGE_BOUND]
+├──── CONFLUENCES (Wave 25 weighted scoring) ────────────────────
+│ use_weighted_scoring   : false
+│ confluence_score_thr   : (default 0.72)
+│ confluence_factors[]   : [structural_setup, regime_match]
+│ confirming_indicators[]: []
+│ min_factors_satisfied  : 3
+│ extraction_provenance  : youtube_transcript
+│ source_claim_win_rate  : (unstated)
+│ source_claim_avg_r     : (unstated)
+├──── EXITS (Style C default; opt-in adaptive) ──────────────────
+│ exit_style      : static_styleC (Wave 23 default)
+│ tp1             : 33% @ +1.0R (framework default)
+│ tp2             : 33% @ +2.0R (framework default)
+│ runner_trail    : developing_session_poc (Style C)
+│ stop_loss       : {}
+│ time_stop       : [object Object]
+├──── SIZING (Wave 23 risk-derived pyramid) ─────────────────────
+│ position_size   : {}
+├──── PROVENANCE ────────────────────────────────────────────────
+│ source          : graduated_bucket
+│ created_at      : 2026-05-25 07:25:11.027705
+└────────────────────────────────────────────────────────────────
+
+┌──── [9/18]  top_down_trendline_breakout_mes_15m  ────────────────────
+│ id              : cc83fe99-b62f-4397-ac35-f228d97376ea
+│ lifecycle_state : CANDIDATE
+│ symbol / symbols: MES  /  [MES]
+│ tags            : [cross-validated, web-confirmed, youtube-confirmed, reddit-confirmed, dsl-compiled, 3-source-consensus]
+├──── ENTRY ─────────────────────────────────────────────────────
+│ entry_indicator : session_open_breakout
+│ entry_long      : 
+│ entry_params    : {"buffer_ticks":3,"range_minutes":15,"analysis_method":"top_down","min_timeframe_steps":3}
+├──── MTF / BIAS  ───────────────────────────────────────────────
+│ exec timeframe  : 15m
+│ daily_tf        : (2-TF mode)
+│ htf_tf          : (2-TF mode)
+│ itf_tf          : (2-TF mode)
+│ trigger_tf      : (2-TF mode)
+│ bias_timeframe  : (none)
+│ bias_condition  : 
+├──── REGIMES ───────────────────────────────────────────────────
+│ preferred_regime: TRENDING_UP
+│ preferred_regimes[]: [TRENDING_UP, TRENDING_DOWN, RANGE_BOUND]
+├──── CONFLUENCES (Wave 25 weighted scoring) ────────────────────
+│ use_weighted_scoring   : false
+│ confluence_score_thr   : (default 0.72)
+│ confluence_factors[]   : [structural_setup, regime_match]
+│ confirming_indicators[]: []
+│ min_factors_satisfied  : 3
+│ extraction_provenance  : youtube_transcript
+│ source_claim_win_rate  : (unstated)
+│ source_claim_avg_r     : (unstated)
+├──── EXITS (Style C default; opt-in adaptive) ──────────────────
+│ exit_style      : static_styleC (Wave 23 default)
+│ tp1             : 33% @ +1.0R (framework default)
+│ tp2             : 33% @ +2.0R (framework default)
+│ runner_trail    : developing_session_poc (Style C)
+│ stop_loss       : {}
+│ time_stop       : [object Object]
+├──── SIZING (Wave 23 risk-derived pyramid) ─────────────────────
+│ position_size   : {}
+├──── PROVENANCE ────────────────────────────────────────────────
+│ source          : graduated_bucket
+│ created_at      : 2026-05-25 07:25:04.671325
+└────────────────────────────────────────────────────────────────
+
+┌──── [10/18]  ma_trend_following_20_mes_1h  ────────────────────
+│ id              : d865c68a-c9b9-47e8-bcfb-7e748ca7dbda
+│ lifecycle_state : CANDIDATE
+│ symbol / symbols: MES  /  [MES]
+│ tags            : [cross-validated, web-confirmed, youtube-confirmed, reddit-confirmed, dsl-compiled, 3-source-consensus]
+├──── ENTRY ─────────────────────────────────────────────────────
+│ entry_indicator : ema_crossover
+│ entry_long      : 
+│ entry_params    : {"period":20,"fast_period":9,"slow_period":21,"trend_confirmation":true}
+├──── MTF / BIAS  ───────────────────────────────────────────────
+│ exec timeframe  : 1h
+│ daily_tf        : (2-TF mode)
+│ htf_tf          : (2-TF mode)
+│ itf_tf          : (2-TF mode)
+│ trigger_tf      : (2-TF mode)
+│ bias_timeframe  : (none)
+│ bias_condition  : 
+├──── REGIMES ───────────────────────────────────────────────────
+│ preferred_regime: TRENDING_UP
+│ preferred_regimes[]: [TRENDING_UP, TRENDING_DOWN]
+├──── CONFLUENCES (Wave 25 weighted scoring) ────────────────────
+│ use_weighted_scoring   : false
+│ confluence_score_thr   : (default 0.72)
+│ confluence_factors[]   : [structural_setup]
+│ confirming_indicators[]: []
+│ min_factors_satisfied  : 1
+│ extraction_provenance  : youtube_transcript
+│ source_claim_win_rate  : (unstated)
+│ source_claim_avg_r     : (unstated)
+├──── EXITS (Style C default; opt-in adaptive) ──────────────────
+│ exit_style      : static_styleC (Wave 23 default)
+│ tp1             : 33% @ +1.0R (framework default)
+│ tp2             : 33% @ +2.0R (framework default)
+│ runner_trail    : developing_session_poc (Style C)
+│ stop_loss       : {}
+│ time_stop       : [object Object]
+├──── SIZING (Wave 23 risk-derived pyramid) ─────────────────────
+│ position_size   : {}
+├──── PROVENANCE ────────────────────────────────────────────────
+│ source          : graduated_bucket
+│ created_at      : 2026-05-25 07:25:00.206352
+└────────────────────────────────────────────────────────────────
+
+┌──── [11/18]  first_candle_rule_nasdaq_mes_15m  ────────────────────
+│ id              : edee9c56-c2c7-4573-ad0d-6495f5606194
+│ lifecycle_state : CANDIDATE
+│ symbol / symbols: MES  /  [MES]
+│ tags            : [cross-validated, web-confirmed, youtube-confirmed, reddit-confirmed, dsl-compiled, 3-source-consensus]
+├──── ENTRY ─────────────────────────────────────────────────────
+│ entry_indicator : session_open_breakout
+│ entry_long      : 
+│ entry_params    : {"range_minutes":15,"risk_reward_ratio":2,"confirmation_period":"5m","time_window_minutes":15,"confirmation_indicator":"fair_value_gap"}
+├──── MTF / BIAS  ───────────────────────────────────────────────
+│ exec timeframe  : 15m
+│ daily_tf        : (2-TF mode)
+│ htf_tf          : (2-TF mode)
+│ itf_tf          : (2-TF mode)
+│ trigger_tf      : (2-TF mode)
+│ bias_timeframe  : (none)
+│ bias_condition  : 
+├──── REGIMES ───────────────────────────────────────────────────
+│ preferred_regime: TRENDING_UP
+│ preferred_regimes[]: [TRENDING_UP, TRENDING_DOWN, RANGE_BOUND]
+├──── CONFLUENCES (Wave 25 weighted scoring) ────────────────────
+│ use_weighted_scoring   : false
+│ confluence_score_thr   : (default 0.72)
+│ confluence_factors[]   : [structural_setup, volume_confirmation]
+│ confirming_indicators[]: []
+│ min_factors_satisfied  : 3
+│ extraction_provenance  : youtube_transcript
+│ source_claim_win_rate  : 0.81
+│ source_claim_avg_r     : (unstated)
+├──── EXITS (Style C default; opt-in adaptive) ──────────────────
+│ exit_style      : static_styleC (Wave 23 default)
+│ tp1             : 33% @ +1.0R (framework default)
+│ tp2             : 33% @ +2.0R (framework default)
+│ runner_trail    : developing_session_poc (Style C)
+│ stop_loss       : {}
+│ time_stop       : [object Object]
+├──── SIZING (Wave 23 risk-derived pyramid) ─────────────────────
+│ position_size   : {}
+├──── PROVENANCE ────────────────────────────────────────────────
+│ source          : graduated_bucket
+│ created_at      : 2026-05-25 06:14:18.908501
+└────────────────────────────────────────────────────────────────
+
+┌──── [12/18]  orb_mes_5m  ────────────────────
+│ id              : 0dc8028c-f329-43d3-9003-bd90ccc00605
+│ lifecycle_state : CANDIDATE
+│ symbol / symbols: MES  /  [MES]
+│ tags            : [cross-validated, web-confirmed, youtube-confirmed, reddit-confirmed, dsl-compiled, 3-source-consensus]
+├──── ENTRY ─────────────────────────────────────────────────────
+│ entry_indicator : session_open_breakout
+│ entry_long      : 
+│ entry_params    : {"time_window":"9:30-10:00 AM NY","range_minutes":30}
+├──── MTF / BIAS  ───────────────────────────────────────────────
+│ exec timeframe  : 5m
+│ daily_tf        : (2-TF mode)
+│ htf_tf          : (2-TF mode)
+│ itf_tf          : (2-TF mode)
+│ trigger_tf      : (2-TF mode)
+│ bias_timeframe  : (none)
+│ bias_condition  : 
+├──── REGIMES ───────────────────────────────────────────────────
+│ preferred_regime: TRENDING_UP
+│ preferred_regimes[]: [TRENDING_UP, TRENDING_DOWN, RANGE_BOUND]
+├──── CONFLUENCES (Wave 25 weighted scoring) ────────────────────
+│ use_weighted_scoring   : false
+│ confluence_score_thr   : (default 0.72)
+│ confluence_factors[]   : [regime_match, structural_setup]
+│ confirming_indicators[]: []
+│ min_factors_satisfied  : 2
+│ extraction_provenance  : youtube_transcript
+│ source_claim_win_rate  : (unstated)
+│ source_claim_avg_r     : (unstated)
+├──── EXITS (Style C default; opt-in adaptive) ──────────────────
+│ exit_style      : static_styleC (Wave 23 default)
+│ tp1             : 33% @ +1.0R (framework default)
+│ tp2             : 33% @ +2.0R (framework default)
+│ runner_trail    : developing_session_poc (Style C)
+│ stop_loss       : {}
+│ time_stop       : [object Object]
+├──── SIZING (Wave 23 risk-derived pyramid) ─────────────────────
+│ position_size   : {}
+├──── PROVENANCE ────────────────────────────────────────────────
+│ source          : graduated_bucket
+│ created_at      : 2026-05-25 06:13:31.771916
+└────────────────────────────────────────────────────────────────
+
+┌──── [13/18]  vwap_institutional_anchor_mes_15m  ────────────────────
+│ id              : 3667977c-6c13-416d-bd33-9e77aeac8ffa
+│ lifecycle_state : CANDIDATE
+│ symbol / symbols: MES  /  [MES]
+│ tags            : [cross-validated, web-confirmed, youtube-confirmed, reddit-confirmed, dsl-compiled, 3-source-consensus]
+├──── ENTRY ─────────────────────────────────────────────────────
+│ entry_indicator : vwap_fade
+│ entry_long      : 
+│ entry_params    : {"daily_vwap":true,"weekly_vwap":true,"monthly_vwap":true,"atr_extension_threshold":1}
+├──── MTF / BIAS  ───────────────────────────────────────────────
+│ exec timeframe  : 15m
+│ daily_tf        : (2-TF mode)
+│ htf_tf          : (2-TF mode)
+│ itf_tf          : (2-TF mode)
+│ trigger_tf      : (2-TF mode)
+│ bias_timeframe  : (none)
+│ bias_condition  : 
+├──── REGIMES ───────────────────────────────────────────────────
+│ preferred_regime: RANGE_BOUND
+│ preferred_regimes[]: [RANGE_BOUND]
+├──── CONFLUENCES (Wave 25 weighted scoring) ────────────────────
+│ use_weighted_scoring   : false
+│ confluence_score_thr   : (default 0.72)
+│ confluence_factors[]   : [structural_setup, volume_confirmation, regime_match]
+│ confirming_indicators[]: []
+│ min_factors_satisfied  : 3
+│ extraction_provenance  : youtube_transcript
+│ source_claim_win_rate  : (unstated)
+│ source_claim_avg_r     : (unstated)
+├──── EXITS (Style C default; opt-in adaptive) ──────────────────
+│ exit_style      : static_styleC (Wave 23 default)
+│ tp1             : 33% @ +1.0R (framework default)
+│ tp2             : 33% @ +2.0R (framework default)
+│ runner_trail    : developing_session_poc (Style C)
+│ stop_loss       : {}
+│ time_stop       : [object Object]
+├──── SIZING (Wave 23 risk-derived pyramid) ─────────────────────
+│ position_size   : {}
+├──── PROVENANCE ────────────────────────────────────────────────
+│ source          : graduated_bucket
+│ created_at      : 2026-05-25 06:12:51.293313
+└────────────────────────────────────────────────────────────────
+
+┌──── [14/18]  vwap_magnet_principle_mes_5m  ────────────────────
+│ id              : 49cb661b-f732-4e18-ac61-534a8d8e63e7
+│ lifecycle_state : CANDIDATE
+│ symbol / symbols: MES  /  [MES]
+│ tags            : [cross-validated, web-confirmed, youtube-confirmed, reddit-confirmed, dsl-compiled, 3-source-consensus]
+├──── ENTRY ─────────────────────────────────────────────────────
+│ entry_indicator : vwap_fade
+│ entry_long      : 
+│ entry_params    : {"confirmation_bars":1,"deviation_threshold":1,"atr_extension_threshold":1}
+├──── MTF / BIAS  ───────────────────────────────────────────────
+│ exec timeframe  : 5m
+│ daily_tf        : (2-TF mode)
+│ htf_tf          : (2-TF mode)
+│ itf_tf          : (2-TF mode)
+│ trigger_tf      : (2-TF mode)
+│ bias_timeframe  : (none)
+│ bias_condition  : 
+├──── REGIMES ───────────────────────────────────────────────────
+│ preferred_regime: RANGE_BOUND
+│ preferred_regimes[]: [RANGE_BOUND]
+├──── CONFLUENCES (Wave 25 weighted scoring) ────────────────────
+│ use_weighted_scoring   : false
+│ confluence_score_thr   : (default 0.72)
+│ confluence_factors[]   : [structural_setup]
+│ confirming_indicators[]: []
+│ min_factors_satisfied  : 2
+│ extraction_provenance  : youtube_transcript
+│ source_claim_win_rate  : (unstated)
+│ source_claim_avg_r     : (unstated)
+├──── EXITS (Style C default; opt-in adaptive) ──────────────────
+│ exit_style      : static_styleC (Wave 23 default)
+│ tp1             : 33% @ +1.0R (framework default)
+│ tp2             : 33% @ +2.0R (framework default)
+│ runner_trail    : developing_session_poc (Style C)
+│ stop_loss       : {}
+│ time_stop       : [object Object]
+├──── SIZING (Wave 23 risk-derived pyramid) ─────────────────────
+│ position_size   : {}
+├──── PROVENANCE ────────────────────────────────────────────────
+│ source          : graduated_bucket
+│ created_at      : 2026-05-25 06:12:00.305214
+└────────────────────────────────────────────────────────────────
+
+┌──── [15/18]  break_and_bounce_scalping_mes_5m  ────────────────────
+│ id              : 01ea33a4-f0ae-48dd-9fc7-3bf4401ac144
+│ lifecycle_state : CANDIDATE
+│ symbol / symbols: MES  /  [MES]
+│ tags            : [cross-validated, web-confirmed, youtube-confirmed, reddit-confirmed, dsl-compiled, 3-source-consensus]
+├──── ENTRY ─────────────────────────────────────────────────────
+│ entry_indicator : session_open_breakout
+│ entry_long      : 
+│ entry_params    : {"range_minutes":15,"time_window_minutes":150,"confirmation_candles":1}
+├──── MTF / BIAS  ───────────────────────────────────────────────
+│ exec timeframe  : 5m
+│ daily_tf        : (2-TF mode)
+│ htf_tf          : (2-TF mode)
+│ itf_tf          : (2-TF mode)
+│ trigger_tf      : (2-TF mode)
+│ bias_timeframe  : (none)
+│ bias_condition  : 
+├──── REGIMES ───────────────────────────────────────────────────
+│ preferred_regime: TRENDING_UP
+│ preferred_regimes[]: [TRENDING_UP, TRENDING_DOWN, RANGE_BOUND]
+├──── CONFLUENCES (Wave 25 weighted scoring) ────────────────────
+│ use_weighted_scoring   : false
+│ confluence_score_thr   : (default 0.72)
+│ confluence_factors[]   : [structural_setup, volume_confirmation]
+│ confirming_indicators[]: []
+│ min_factors_satisfied  : 3
+│ extraction_provenance  : youtube_transcript
+│ source_claim_win_rate  : 0.7
+│ source_claim_avg_r     : (unstated)
+├──── EXITS (Style C default; opt-in adaptive) ──────────────────
+│ exit_style      : static_styleC (Wave 23 default)
+│ tp1             : 33% @ +1.0R (framework default)
+│ tp2             : 33% @ +2.0R (framework default)
+│ runner_trail    : developing_session_poc (Style C)
+│ stop_loss       : {}
+│ time_stop       : [object Object]
+├──── SIZING (Wave 23 risk-derived pyramid) ─────────────────────
+│ position_size   : {}
+├──── PROVENANCE ────────────────────────────────────────────────
+│ source          : graduated_bucket
+│ created_at      : 2026-05-25 06:05:51.467135
+└────────────────────────────────────────────────────────────────
+
+┌──── [16/18]  first_15_min_open_mes_5m  ────────────────────
+│ id              : ec487d7f-1ab0-4159-930a-bd4773686f84
+│ lifecycle_state : CANDIDATE
+│ symbol / symbols: MES  /  [MES]
+│ tags            : [cross-validated, web-confirmed, youtube-confirmed, reddit-confirmed, dsl-compiled, 3-source-consensus]
+├──── ENTRY ─────────────────────────────────────────────────────
+│ entry_indicator : session_open_breakout
+│ entry_long      : 
+│ entry_params    : {"range_minutes":15,"confirmation_candles":1,"range_extension_minutes":90}
+├──── MTF / BIAS  ───────────────────────────────────────────────
+│ exec timeframe  : 5m
+│ daily_tf        : (2-TF mode)
+│ htf_tf          : (2-TF mode)
+│ itf_tf          : (2-TF mode)
+│ trigger_tf      : (2-TF mode)
+│ bias_timeframe  : (none)
+│ bias_condition  : 
+├──── REGIMES ───────────────────────────────────────────────────
+│ preferred_regime: TRENDING_UP
+│ preferred_regimes[]: [TRENDING_UP, TRENDING_DOWN, RANGE_BOUND]
+├──── CONFLUENCES (Wave 25 weighted scoring) ────────────────────
+│ use_weighted_scoring   : false
+│ confluence_score_thr   : (default 0.72)
+│ confluence_factors[]   : [structural_setup]
+│ confirming_indicators[]: []
+│ min_factors_satisfied  : 2
+│ extraction_provenance  : youtube_transcript
+│ source_claim_win_rate  : (unstated)
+│ source_claim_avg_r     : (unstated)
+├──── EXITS (Style C default; opt-in adaptive) ──────────────────
+│ exit_style      : static_styleC (Wave 23 default)
+│ tp1             : 33% @ +1.0R (framework default)
+│ tp2             : 33% @ +2.0R (framework default)
+│ runner_trail    : developing_session_poc (Style C)
+│ stop_loss       : {}
+│ time_stop       : [object Object]
+├──── SIZING (Wave 23 risk-derived pyramid) ─────────────────────
+│ position_size   : {}
+├──── PROVENANCE ────────────────────────────────────────────────
+│ source          : graduated_bucket
+│ created_at      : 2026-05-25 06:03:31.316896
+└────────────────────────────────────────────────────────────────
+
+┌──── [17/18]  4h_5m_bias_entry_mes_5m  ────────────────────
+│ id              : da21f735-1848-4ff3-93b0-426f1c0324db
+│ lifecycle_state : CANDIDATE
+│ symbol / symbols: MES  /  [MES]
+│ tags            : [cross-validated, web-confirmed, youtube-confirmed, reddit-confirmed, dsl-compiled, 3-source-consensus]
+├──── ENTRY ─────────────────────────────────────────────────────
+│ entry_indicator : ema_crossover
+│ entry_long      : 
+│ entry_params    : {"fast_period":9,"slow_period":21,"bias_timeframe":"4h","entry_timeframe":"5m","key_candle_times":["6:00","10:00","14:00"],"confirmation_bars":1}
+├──── MTF / BIAS  ───────────────────────────────────────────────
+│ exec timeframe  : 5m
+│ daily_tf        : (2-TF mode)
+│ htf_tf          : (2-TF mode)
+│ itf_tf          : (2-TF mode)
+│ trigger_tf      : (2-TF mode)
+│ bias_timeframe  : (none)
+│ bias_condition  : 
+├──── REGIMES ───────────────────────────────────────────────────
+│ preferred_regime: TRENDING_UP
+│ preferred_regimes[]: [TRENDING_UP, TRENDING_DOWN]
+├──── CONFLUENCES (Wave 25 weighted scoring) ────────────────────
+│ use_weighted_scoring   : false
+│ confluence_score_thr   : (default 0.72)
+│ confluence_factors[]   : [structural_setup, volume_confirmation]
+│ confirming_indicators[]: []
+│ min_factors_satisfied  : 2
+│ extraction_provenance  : youtube_transcript
+│ source_claim_win_rate  : (unstated)
+│ source_claim_avg_r     : (unstated)
+├──── EXITS (Style C default; opt-in adaptive) ──────────────────
+│ exit_style      : static_styleC (Wave 23 default)
+│ tp1             : 33% @ +1.0R (framework default)
+│ tp2             : 33% @ +2.0R (framework default)
+│ runner_trail    : developing_session_poc (Style C)
+│ stop_loss       : {}
+│ time_stop       : [object Object]
+├──── SIZING (Wave 23 risk-derived pyramid) ─────────────────────
+│ position_size   : {}
+├──── PROVENANCE ────────────────────────────────────────────────
+│ source          : graduated_bucket
+│ created_at      : 2026-05-25 06:02:37.809147
+└────────────────────────────────────────────────────────────────
+
+┌──── [18/18]  ema_crossover_4h_retrace_mes_4h  ────────────────────
+│ id              : ffc4b0d3-4be8-42f9-8efc-0f6a76ac9596
+│ lifecycle_state : CANDIDATE
+│ symbol / symbols: MES  /  [MES]
+│ tags            : [cross-validated, web-confirmed, youtube-confirmed, reddit-confirmed, dsl-compiled, 3-source-consensus]
+├──── ENTRY ─────────────────────────────────────────────────────
+│ entry_indicator : ema_crossover
+│ entry_long      : 
+│ entry_params    : {"fast_period":5,"slow_period":50,"confirmation_bars":1}
+├──── MTF / BIAS  ───────────────────────────────────────────────
+│ exec timeframe  : 4h
+│ daily_tf        : (2-TF mode)
+│ htf_tf          : (2-TF mode)
+│ itf_tf          : (2-TF mode)
+│ trigger_tf      : (2-TF mode)
+│ bias_timeframe  : (none)
+│ bias_condition  : 
+├──── REGIMES ───────────────────────────────────────────────────
+│ preferred_regime: TRENDING_UP
+│ preferred_regimes[]: [TRENDING_UP, TRENDING_DOWN]
+├──── CONFLUENCES (Wave 25 weighted scoring) ────────────────────
+│ use_weighted_scoring   : false
+│ confluence_score_thr   : (default 0.72)
+│ confluence_factors[]   : [structural_setup, regime_match]
+│ confirming_indicators[]: []
+│ min_factors_satisfied  : 2
+│ extraction_provenance  : youtube_transcript
+│ source_claim_win_rate  : 0.85
+│ source_claim_avg_r     : (unstated)
+├──── EXITS (Style C default; opt-in adaptive) ──────────────────
+│ exit_style      : static_styleC (Wave 23 default)
+│ tp1             : 33% @ +1.0R (framework default)
+│ tp2             : 33% @ +2.0R (framework default)
+│ runner_trail    : developing_session_poc (Style C)
+│ stop_loss       : {}
+│ time_stop       : [object Object]
+├──── SIZING (Wave 23 risk-derived pyramid) ─────────────────────
+│ position_size   : {}
+├──── PROVENANCE ────────────────────────────────────────────────
+│ source          : graduated_bucket
+│ created_at      : 2026-05-25 06:01:04.753446
+└────────────────────────────────────────────────────────────────
+
+npm notice
+npm notice New minor version of npm available! 11.6.2 -> 11.15.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.15.0
+npm notice To update run: npm install -g npm@11.15.0
+npm notice

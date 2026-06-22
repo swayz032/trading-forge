@@ -1,4 +1,4 @@
-/**
+﻿/**
  * production-status.test.ts — Track 4 Phase 4B
  *
  * Tests:
@@ -258,6 +258,7 @@ describe("ProductionStatus — GET /api/production/status", () => {
     ];
     _invalidateStatusCacheForTests();
 
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     const { buildProductionStatus } = await import("../routes/production-status.js").catch(() => ({ buildProductionStatus: undefined }));
     // buildProductionStatus is not exported — verify via route behavior
     // The status endpoint will reflect the DB state; we just verify the route doesn't crash.

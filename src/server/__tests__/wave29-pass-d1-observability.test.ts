@@ -1,4 +1,4 @@
-/**
+﻿/**
  * wave29-pass-d1-observability.test.ts — Wave 29 Pass D.1
  *
  * Verifies:
@@ -376,6 +376,7 @@ describe("Wave 29 D.1 — WAVE29_EVENTS SSE event name constants", () => {
 
   it("all WAVE29_EVENTS values follow {subsystem}:{event_name} pattern", () => {
     for (const [key, value] of Object.entries(WAVE29_EVENTS)) {
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
       expect(value).toMatch(/^[a-z0-9_]+:[a-z0-9_]+$/, `${key} = "${value}" must match {subsystem}:{event_name}`);
     }
   });

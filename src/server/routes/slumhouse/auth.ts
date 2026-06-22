@@ -159,7 +159,7 @@ export function handleLaunch(req: Request, res: Response): void {
   }
   try {
     const verified = verifySession(decodeURIComponent(match[1]));
-    if (verified?.discordUserId) {
+    if (verified?.ok && verified.discordUserId) {
       res.redirect(302, "/slumhouse/crib.html");
       return;
     }

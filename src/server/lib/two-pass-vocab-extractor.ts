@@ -137,9 +137,9 @@ async function callPass1Chunk(transcript: string, model: string): Promise<Pass1R
   // Use string "json" format (basic coercion only) — NOT GBNF schema object.
   // Per institutional research: GBNF crashes on long context + open-vocab arrays.
   // Validate-and-retry handles the residual ~5-11% non-compliance.
-  const formatArg: string | Record<string, unknown> = "json";
+  // format=true → Ollama JSON enforcement (body.format="json"); not GBNF schema
   try {
-    const res = await ollama.chat(model, messages, samplingOptions, formatArg, "30m");
+    const res = await ollama.chat(model, messages, samplingOptions, true, "30m");
     const raw = res?.message?.content ?? "";
     if (!raw || raw.trim().length === 0) return null;
     // Extract JSON from raw response — handle fences and balanced substrings

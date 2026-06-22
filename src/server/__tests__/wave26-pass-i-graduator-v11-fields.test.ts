@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Wave 26 Pass I — Graduator v11 field stamping tests (2026-05-26)
  *
  * Verifies that direct-bucket-graduator.ts correctly:
@@ -467,6 +467,7 @@ describe("Wave 26 Pass I — buildV11ConfigAdditions stamping", () => {
   it("v10 additions do NOT introduce any extra keys beyond bias_timeframe", () => {
     const v11 = extractV11Fields(LEGACY_V10_ONLY as Record<string, unknown>);
     const additions = buildV11ConfigAdditions(v11, "4h");
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     const additionKeys = Object.keys(additions).filter((k) => additions[k] !== undefined);
     // Only bias_timeframe (always written)
     expect(additionKeys).toEqual(["bias_timeframe"]);

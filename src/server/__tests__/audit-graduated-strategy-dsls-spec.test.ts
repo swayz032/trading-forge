@@ -1,4 +1,4 @@
-/**
+﻿/**
  * W23G.1 — Audit logic spec tests.
  *
  * Verifies the audit() function from scripts/audit-graduated-strategy-dsls.ts
@@ -32,6 +32,7 @@
  */
 
 import { describe, it, expect } from "vitest";
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
 import { audit } from "../../../scripts/audit-graduated-strategy-dsls.js";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────

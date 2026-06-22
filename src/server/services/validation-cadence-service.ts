@@ -145,7 +145,7 @@ export async function getStrategiesTestedEndToEndThisMonth(): Promise<Strategies
       ),
     );
 
-  const strategyIds = rows.map((r) => r.strategyId);
+  const strategyIds = rows.map((r) => r.strategyId).filter((id): id is string => id !== null);
 
   return {
     count: strategyIds.length,

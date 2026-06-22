@@ -81,7 +81,7 @@ router.post("/start", idempotencyMiddleware, async (req, res) => {
 
     const [session] = await db
       .insert(paperSessions)
-      .values({ strategyId, startingCapital, currentEquity: startingCapital, config, mode, firmId: firmId ?? null })
+      .values({ strategyId, startingCapital, currentEquity: startingCapital, config: config as import("../db/jsonb-shapes.js").PaperSessionConfigShape, mode, firmId: firmId ?? null })
       .returning();
 
     // Look up strategy symbol(s) and start the Massive WS stream

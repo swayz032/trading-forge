@@ -16,7 +16,7 @@ import { agentHealthReports, dataIntegrityFindings, liquidityLevels, strategies 
 import { AgentService } from "../services/agent-service.js";
 import { getPhaseRecord, setPhaseOverride, type PhaseValue } from "../services/harsh-regime-phase-service.js";
 import { notifyCritical, notifyWarning } from "../services/notification-service.js";
-import { insertAuditRow } from "../lib/audit-log-helper.js";
+import { insertAuditRow, insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { logger } from "../lib/logger.js";
 import { getStrategySourceUrls } from "../lib/strategy-source-resolver.js";
 
@@ -541,7 +541,7 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
         const auditAction = isSingleIdeaRoute
           ? "scout.single_idea_sub_layer_rerouted"
           : "scout.ideas_merged_under_archetype";
-        db.insert(await import("../db/schema.js").then(m => m.auditLog)).values({
+        void insertAuditRowSafe({
           action: auditAction,
           entityType: "scout_extract",
           entityId: null,
@@ -555,9 +555,7 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
           status: "success",
           decisionAuthority: "system",
           correlationId,
-        } as Record<string, unknown>).catch((auditErr: unknown) =>
-          logger.warn({ auditErr }, `${auditAction} audit write failed`)
-        );
+        });
 
         // Discord NOTE (not WARN — this is expected behavior for multi-layer ICT videos)
         // notifyInfo/notifyWarning return void; no .catch() needed
@@ -745,7 +743,7 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
       }
 
       // 5. Audit
-      db.insert(await import("../db/schema.js").then(m => m.auditLog)).values({
+      void insertAuditRowSafe({
         action: "scout.operator_ingested",
         entityType: "scout_extract",
         entityId: null,
@@ -754,9 +752,7 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
         status: "success",
         decisionAuthority: "human",
         correlationId,
-      } as Record<string, unknown>).catch((auditErr: unknown) =>
-        req.log.warn({ auditErr }, "operator-ingest: audit write failed")
-      );
+      });
 
       results.push({
         url,
@@ -797,7 +793,6 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
               htfTf: strategies.htfTf,
               itfTf: strategies.itfTf,
               triggerTf: strategies.triggerTf,
-              entryQuality: strategies.entryQuality,
             })
             .from(strategies)
             .where(sql`${strategies.createdAt} > NOW() - INTERVAL '5 minutes'`)

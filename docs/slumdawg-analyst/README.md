@@ -64,7 +64,9 @@ curl http://localhost:4000/api/admin/slumdawg/activity-today | jq .baby_jargon_s
 
 ### Step 3 — Configure Anam.ai (5 minutes)
 
-Open https://lab.anam.ai/build/afb9ea0a-82e6-4339-9709-6c6e76d05814 (your Slumdawg Analyst persona).
+Open https://lab.anam.ai/build/026cacc4-619e-4cec-a144-c4a8dfcb623e (your Slumdawg Analyst persona — labeled "Slumdawg UpTOP" in Anam after the 2026-05-27 re-create).
+
+**Tip:** instead of manually pasting prompt + greeting, run `npx tsx scripts/restore-slumdawg-anam.ts` (override the default persona ID via `ANAM_PERSONA_ID=<new-id>` if Anam ever wipes the persona again). The script PUTs `systemPrompt` + `initialMessage` from `01-system-prompt.md` + Option A of `02-greeting.md`. Idempotent.
 
 1. **PROMPT → SYSTEM PROMPT** — replace with contents of `01-system-prompt.md` (everything below the front-matter)
 2. **PROMPT → 02 FIRST GREETING** — paste Option A from `02-greeting.md`

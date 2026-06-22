@@ -25,6 +25,11 @@ export interface RecipeData {
     winningDays: number;
     tradesCount: number;
     equityCurve: number[];
+    winRatePct: number;          // 0–100, integer
+    sharpeRatio: number;         // raw float, 2dp on the wire
+    riskReward: number;          // avg_win / |avg_loss|, 2dp on the wire
+    profitFactor: number;        // 2dp on the wire
+    maxDrawdownPct: number;      // 0–100
   };
   monteCarlo: {
     blowUpOdds: string;
@@ -33,8 +38,13 @@ export interface RecipeData {
     medianYear: string;
     verdictGreen: boolean;
     survivalScore: number;
+    worstYearRaw: number;          // raw $ for chart math
+    bestYearRaw: number;
+    medianYearRaw: number;
+    distribution: number[];        // up to ~1000 final-year P&Ls; empty if MC didn't expose it (then UI reconstructs a bell from the 3 percentiles)
+    ruinPct: number;               // 0–100, used to size the "blew up" tail visually
   };
-  calendar: Array<{ date: string; pnl: number }>;
+  calendar: Array<{ date: string; pnl: number; trades: number }>;
   otherTests: Array<{ name: string; sentence: string; status: "pass" | "warn" | "fail" }>;
 }
 
@@ -96,9 +106,25 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
   const totalPnl = Number(bt?.total_pnl ?? 0);
   const trades = Number(bt?.trade_count ?? 0);
 
+  // Quant metrics from result_extras (backtests stamp these on completion;
+  // older rows may omit some — every read is defensive with sane fallbacks).
+  const winRateRaw = Number(extras?.win_rate ?? extras?.winrate ?? 0);
+  const winRatePct = winRateRaw <= 1 ? Math.round(winRateRaw * 100) : Math.round(winRateRaw);
+  const sharpeRatio = round2(Number(extras?.sharpe_ratio ?? extras?.sharpe ?? 0));
+  const profitFactor = round2(Number(extras?.profit_factor ?? extras?.pf ?? 0));
+  const avgWin = Number(extras?.avg_win ?? extras?.average_win ?? 0);
+  const avgLoss = Math.abs(Number(extras?.avg_loss ?? extras?.average_loss ?? 0));
+  const riskReward = round2(avgLoss > 0 ? avgWin / avgLoss : 0);
+  const ddRaw = Number(extras?.max_drawdown ?? extras?.max_dd ?? 0);
+  const maxDrawdownPct = ddRaw <= 1 && ddRaw > 0 ? Math.round(ddRaw * 100) : Math.round(Math.abs(ddRaw));
+
   // Compute daily aggregates (used by both Backtest panel + Calendar)
-  const dailyList: Array<{ date: string; pnl: number }> = Array.isArray(dailyPnls)
-    ? dailyPnls.map((d: any) => ({ date: String(d.date ?? d.day ?? ""), pnl: Number(d.pnl ?? d.value ?? 0) }))
+  const dailyList: Array<{ date: string; pnl: number; trades: number }> = Array.isArray(dailyPnls)
+    ? dailyPnls.map((d: any) => ({
+        date: String(d.date ?? d.day ?? ""),
+        pnl: Number(d.pnl ?? d.value ?? 0),
+        trades: Number(d.trades ?? d.trade_count ?? d.n_trades ?? 0),
+      }))
     : [];
   const worstDay = dailyList.length > 0 ? Math.min(...dailyList.map((d) => d.pnl)) : 0;
   const winningDays = dailyList.filter((d) => d.pnl > 0).length;
@@ -112,6 +138,18 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
   const worstYear = Number(mcOut?.percentile_5 ?? mcOut?.worst_year ?? 0);
   const bestYear = Number(mcOut?.percentile_95 ?? mcOut?.best_year ?? 0);
   const medianYear = Number(mcOut?.percentile_50 ?? mcOut?.median_year ?? 0);
+
+  // Extract distribution if MC emitted one (different engine versions use
+  // different keys — we try the common shapes, fall back to empty so the UI
+  // synthesizes a bell from worst/median/best).
+  let distribution: number[] = [];
+  for (const key of ["final_pnl_distribution", "outcome_distribution", "pnl_distribution", "year_end_pnls", "paths", "samples"]) {
+    const v = (mcOut as any)?.[key];
+    if (Array.isArray(v) && v.length > 0) {
+      distribution = v.map((x: any) => Number(x)).filter((x: number) => Number.isFinite(x));
+      if (distribution.length > 0) break;
+    }
+  }
 
   // Slumdawg score — Wave 28 composite normalized to 0-100
   const compositeRaw = Number(health?.composite_score ?? 0);
@@ -186,6 +224,11 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
       winningDays,
       tradesCount: trades,
       equityCurve: Array.isArray(equityCurve) ? equityCurve.map(Number) : [],
+      winRatePct,
+      sharpeRatio,
+      riskReward,
+      profitFactor,
+      maxDrawdownPct,
     },
     monteCarlo: {
       blowUpOdds: oddsOuttaHundred(ciHigh),
@@ -194,10 +237,20 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
       medianYear: formatBag(medianYear),
       verdictGreen: ciHigh < 0.40,
       survivalScore: Math.round((1 - Math.min(1, Math.max(0, ciHigh))) * 100),
+      worstYearRaw: worstYear,
+      bestYearRaw: bestYear,
+      medianYearRaw: medianYear,
+      distribution,
+      ruinPct: Math.round(Math.min(1, Math.max(0, ciHigh)) * 100),
     },
     calendar: dailyList,
     otherTests,
   };
+}
+
+function round2(n: number): number {
+  if (!Number.isFinite(n)) return 0;
+  return Math.round(n * 100) / 100;
 }
 
 function parseJSON(v: unknown): any {

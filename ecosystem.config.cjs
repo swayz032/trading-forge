@@ -83,5 +83,29 @@ module.exports = {
       out_file: path.join(PROJECT_DIR, "logs/openclaw-out.log"),
       merge_logs: true,
     },
+
+    // ─── Tower Relay Client (Railway Reverse Tunnel) ────────
+    {
+      name: "tower-relay-client",
+      script: "scripts/tower-relay-client.cjs",
+      cwd: PROJECT_DIR,
+      interpreter: "node",
+      windowsHide: true,
+      env: {
+        RELAY_SERVER: process.env.RELAY_SERVER || "wss://tf-relay-production.up.railway.app/__relay",
+        RELAY_TOKEN: process.env.RELAY_TOKEN || "oeLdOMZOmgc0KqrVh1GjwgQD0uw4i3AhUVTMJZD2",
+        RELAY_BACKEND: process.env.RELAY_BACKEND || "http://localhost:4000",
+      },
+      autorestart: true,
+      max_restarts: 999,
+      min_uptime: "10s",
+      restart_delay: 2000,
+      exp_backoff_restart_delay: 1000,
+      max_memory_restart: "256M",
+      log_date_format: "YYYY-MM-DD HH:mm:ss",
+      error_file: path.join(PROJECT_DIR, "logs/relay-error.log"),
+      out_file: path.join(PROJECT_DIR, "logs/relay-out.log"),
+      merge_logs: true,
+    },
   ],
 };

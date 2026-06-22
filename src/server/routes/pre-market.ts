@@ -24,7 +24,7 @@ export const preMarketRoutes = Router();
 // ─── GET /api/pre-market/today/:symbol ───────────────────────────────────────
 
 preMarketRoutes.get("/today/:symbol", async (req: Request, res: Response) => {
-  const { symbol } = req.params;
+  const symbol = req.params["symbol"] as string;
   const todayStr = new Date().toISOString().slice(0, 10);
 
   try {
@@ -68,7 +68,7 @@ preMarketRoutes.get("/today/:symbol", async (req: Request, res: Response) => {
 // ─── GET /api/pre-market/history/:symbol?limit=N ────────────────────────────
 
 preMarketRoutes.get("/history/:symbol", async (req: Request, res: Response) => {
-  const { symbol } = req.params;
+  const symbol = req.params["symbol"] as string;
   const rawLimit = parseInt(String(req.query.limit ?? "30"), 10);
   const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 90) : 30;
 

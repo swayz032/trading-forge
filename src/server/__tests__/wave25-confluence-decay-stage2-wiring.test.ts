@@ -1,4 +1,4 @@
-/**
+﻿/**
  * wave25-confluence-decay-stage2-wiring.test.ts — Wave 25 Pass 4, W25.7
  *
  * Stage 2 wiring tests for decay integration in evaluateWeightedConfluence().
@@ -132,6 +132,7 @@ describe("Stage 2 decay wiring", () => {
   describe("Anti-double-decay: NO_DECAY_FACTORS have decay_confidence=null", () => {
     it("liquidity_target_clear has decay_confidence=null (not double-decayed)", () => {
       const result = evaluateWeightedConfluence(makeStrategy(), makeContext({
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
         liquidityNearestAbove: [{
           level_type: "pdh",
           price: 4220,

@@ -591,7 +591,7 @@ export async function computeExitPlan(opts: ExitPlanInput): Promise<ExitPlan> {
     action: "signal.exit_plan_computed",
     entityId: strategy.id,
     entityType: "strategy",
-    metadata: {
+    result: {
       tp1_source: tp1.source,
       tp1_level_type: tp1.level_type ?? null,
       tp2_source: tp2.source,
@@ -603,7 +603,7 @@ export async function computeExitPlan(opts: ExitPlanInput): Promise<ExitPlan> {
       },
     },
     correlationId: correlationId ?? null,
-    severity: "info",
+    status: "success",
   }).catch((err) => logger.warn({ err }, "adaptive-exit-engine: audit signal.exit_plan_computed failed (non-blocking)"));
 
   // ─ Audit: signal.scaling_schedule_selected ─
@@ -611,7 +611,7 @@ export async function computeExitPlan(opts: ExitPlanInput): Promise<ExitPlan> {
     action: "signal.scaling_schedule_selected",
     entityId: strategy.id,
     entityType: "strategy",
-    metadata: {
+    result: {
       regime,
       tp1_pct: scaling.tp1_pct,
       tp2_pct: scaling.tp2_pct,
@@ -619,7 +619,7 @@ export async function computeExitPlan(opts: ExitPlanInput): Promise<ExitPlan> {
       source: scaling.schedule_source,
     },
     correlationId: correlationId ?? null,
-    severity: "info",
+    status: "success",
   }).catch((err) => logger.warn({ err }, "adaptive-exit-engine: audit signal.scaling_schedule_selected failed (non-blocking)"));
 
   // ─ Audit: signal.runner_trail_method_selected ─
@@ -627,13 +627,13 @@ export async function computeExitPlan(opts: ExitPlanInput): Promise<ExitPlan> {
     action: "signal.runner_trail_method_selected",
     entityId: strategy.id,
     entityType: "strategy",
-    metadata: {
+    result: {
       regime,
       method: trailMethod,
       source: methodSource,
     },
     correlationId: correlationId ?? null,
-    severity: "info",
+    status: "success",
   }).catch((err) => logger.warn({ err }, "adaptive-exit-engine: audit signal.runner_trail_method_selected failed (non-blocking)"));
 
   return {
@@ -670,14 +670,14 @@ export async function auditDeltaDivEarlyExit(params: {
     action: "signal.early_partial_exit_triggered",
     entityId: params.strategyId,
     entityType: "strategy",
-    metadata: {
+    result: {
       reason: "delta_divergence",
       delta_score: params.deltaDivDecision.delta_score,
       threshold: params.deltaDivDecision.threshold,
       partial_pct: params.deltaDivDecision.partial_pct,
     },
     correlationId: params.correlationId ?? null,
-    severity: "info",
+    status: "success",
   });
 }
 
@@ -694,13 +694,13 @@ export async function auditPreLunchExit(params: {
     action: "signal.pre_lunch_partial_exit",
     entityId: params.strategyId,
     entityType: "strategy",
-    metadata: {
+    result: {
       regime: params.decision.regime,
       time_et: params.decision.time_et,
       profit_r: params.decision.profit_r,
       partial_pct: params.decision.partial_pct,
     },
     correlationId: params.correlationId ?? null,
-    severity: "info",
+    status: "success",
   });
 }

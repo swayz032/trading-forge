@@ -94,7 +94,7 @@ biasDecisionsRoutes.get("/recent", async (_req: Request, res: Response) => {
       ORDER BY decision_timestamp DESC
       LIMIT 50
     `);
-    res.json({ success: true, data: rows.rows });
+    res.json({ success: true, data: Array.from(rows) });
   } catch (err) {
     logger.error({ err }, "bias-decisions/recent: query error");
     res.status(500).json({ success: false, error: "query_error" });

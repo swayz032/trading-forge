@@ -15,6 +15,23 @@
 }
 
 * { box-sizing: border-box; }
+
+/* ─── Invisible scrollbars across Slumhouse (all pages incl. login) ──── */
+html, body, .sh-page, .sh-rail-card > div:last-child, .sh-pot-grid,
+.r-panel, .r-bot > .r-panel:last-child {
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* IE / old Edge */
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+.sh-page::-webkit-scrollbar,
+.sh-rail-card > div:last-child::-webkit-scrollbar,
+.sh-pot-grid::-webkit-scrollbar,
+.r-panel::-webkit-scrollbar,
+.r-bot > .r-panel:last-child::-webkit-scrollbar {
+  width: 0; height: 0; display: none; /* WebKit (Chrome/Safari/new Edge) */
+}
+
 html, body {
   margin: 0; padding: 0;
   background: #000;
@@ -36,7 +53,29 @@ a { color: inherit; text-decoration: none; }
   max-width: 1280px;
   margin: 0 auto;
 }
-.sh-header-spacer { width: 1px; height: 1px; }
+.sh-header-spacer { display: flex; justify-content: flex-end; align-items: center; min-width: 110px; }
+.sh-signout {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.78);
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 7px 13px;
+  border-radius: 999px;
+  transition: color 0.15s, border-color 0.15s, background 0.15s, transform 0.15s;
+}
+.sh-signout:hover {
+  color: #fff;
+  border-color: rgba(255, 80, 80, 0.55);
+  background: rgba(40, 0, 0, 0.55);
+  transform: translateY(-1px);
+}
+.sh-signout svg { color: rgba(255, 120, 120, 0.85); }
 
 /* Logo block */
 .sh-logo {
@@ -316,6 +355,13 @@ a { color: inherit; text-decoration: none; }
     inset 0 0 0 1px rgba(163, 255, 18, 0.06),
     inset 0 -80px 100px rgba(0, 0, 0, 0.6),
     inset 0 0 80px rgba(0, 0, 0, 0.35);
+  /* Force a stable composited layer — iOS Safari otherwise drops the bg-image
+     during scroll repaints, causing the cover to blank out. */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform;
 }
 /* Glassy black-and-green action pill — sits over the cover image and
    IS the launch button (replaces the old separate lime button). */
@@ -359,6 +405,35 @@ a { color: inherit; text-decoration: none; }
   font-weight: 800;
   text-shadow: 0 0 10px rgba(163, 255, 18, 0.45);
 }
+.sh-anam-hangup {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 80, 80, 0.5);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background 0.15s;
+}
+.sh-anam-hangup:hover {
+  border-color: rgba(255, 80, 80, 0.9);
+  background: rgba(20, 0, 0, 0.78);
+  box-shadow: 0 0 22px rgba(255, 80, 80, 0.35);
+  transform: translateY(-1px);
+}
+.sh-anam-hangup svg { color: #ff5050; }
 .sh-btn {
   padding: 10px 22px; border-radius: 999px;
   background: var(--lime);
@@ -668,10 +743,18 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ─── LOGIN PAGE ───────────────────────────────────────────────────── */
-.lg-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #000; }
+.lg-wrap {
+  min-height: 100vh;
+  min-height: 100dvh;             /* dynamic viewport — accounts for mobile URL bar */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  padding: 24px 8px;
+}
 .lg-card {
   display: grid; grid-template-columns: 1fr 1fr;
-  max-width: 940px; width: 92%;
+  max-width: 940px; width: 96%;
   background: #000;
   border: 1px solid rgba(163, 255, 18, 0.35);
   border-radius: 18px;
@@ -699,4 +782,349 @@ a { color: inherit; text-decoration: none; }
   background-image: url('/slumhouse/images/slumdawg-showcase.png');
   background-size: cover; background-position: right center;
   min-height: 560px;
+}
+/* Mobile login — keep the art panel on top and shift focus to where the
+   Slumdawg bot lives in the showcase image (right side, slightly upper). */
+@media (max-width: 720px) {
+  .lg-card { grid-template-columns: minmax(0, 1fr); }
+  .lg-art {
+    order: -1;
+    min-height: 240px;
+    background-size: cover;
+    background-position: 78% 32%;
+  }
+}
+@media (max-width: 480px) {
+  .lg-art { min-height: 200px; background-position: 82% 30%; }
+}
+
+/* ─── WELCOME MODAL ───────────────────────────────────────────────────── */
+.sw-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: sw-fade-in 0.2s ease both;
+}
+@keyframes sw-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.sw-card {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  background: #000;
+  border: 1px solid rgba(163, 255, 18, 0.4);
+  border-radius: 20px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+    0 0 60px rgba(163, 255, 18, 0.28),
+    0 30px 80px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  animation: sw-pop-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes sw-pop-in {
+  from { opacity: 0; transform: scale(0.96) translateY(6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.sw-hero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-image: url('/slumhouse/images/slumdawg-welcome.png');
+  background-size: cover;
+  background-position: center;
+}
+.sw-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0.85) 100%);
+  pointer-events: none;
+}
+.sw-body { padding: 22px 26px 24px; position: relative; }
+.sw-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--lime);
+  text-transform: uppercase;
+  font-weight: 800;
+  text-shadow: 0 0 12px rgba(163, 255, 18, 0.4);
+  margin-bottom: 8px;
+}
+.sw-title {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0 0 18px;
+  line-height: 1.1;
+}
+.sw-title b {
+  color: var(--lime);
+  text-shadow: 0 0 18px rgba(163, 255, 18, 0.55);
+  display: inline-block;
+}
+.sw-sub {
+  font-size: 13px;
+  color: var(--dim);
+  font-style: italic;
+  margin: 0 0 18px;
+}
+.sw-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
+.sw-chip {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(163, 255, 18, 0.06);
+  border: 1px solid rgba(163, 255, 18, 0.22);
+  color: var(--lime);
+  font-variant-numeric: tabular-nums;
+}
+.sw-chip.dim { background: rgba(255, 255, 255, 0.02); border-color: rgba(255, 255, 255, 0.08); color: var(--dim); }
+.sw-chip.red { background: rgba(255, 99, 99, 0.06); border-color: rgba(255, 99, 99, 0.25); color: var(--red); }
+.sw-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 13px 22px;
+  border-radius: 999px;
+  background: var(--lime);
+  color: #000;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 0 24px rgba(163, 255, 18, 0.4);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.sw-cta:hover { transform: translateY(-1px); box-shadow: 0 0 32px rgba(163, 255, 18, 0.65); }
+.sw-cta:active { transform: translateY(0); }
+.sw-skip {
+  display: block;
+  text-align: center;
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--mute);
+  text-decoration: none;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  width: 100%;
+}
+.sw-skip:hover { color: var(--dim); }
+
+/* Auto-dismiss progress line */
+.sw-progress {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--lime), #34d399);
+  box-shadow: 0 0 10px rgba(163, 255, 18, 0.7);
+  transform-origin: left center;
+  animation: sw-progress 8s linear forwards;
+}
+@keyframes sw-progress {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+/* Close X in top-right */
+.sw-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  font-size: 16px;
+  line-height: 1;
+  transition: border-color 0.15s, background 0.15s;
+}
+.sw-close:hover { border-color: rgba(163, 255, 18, 0.55); background: rgba(0, 0, 0, 0.75); }
+
+/* Mobile + laptop optimization for the modal */
+@media (max-width: 640px) {
+  .sw-backdrop { padding: 12px; }
+  .sw-card { max-width: 100%; border-radius: 16px; }
+  .sw-body { padding: 18px 18px 20px; }
+  .sw-title { font-size: 24px; margin-bottom: 14px; }
+  .sw-sub { font-size: 12px; margin-bottom: 14px; }
+  .sw-eyebrow { font-size: 9px; letter-spacing: 0.18em; }
+  .sw-cta { padding: 12px 18px; font-size: 12px; }
+  .sw-chips { margin-bottom: 14px; }
+  .sw-chip { font-size: 9px; padding: 4px 8px; }
+}
+@media (max-width: 380px) {
+  .sw-title { font-size: 21px; }
+  .sw-hero { aspect-ratio: 4 / 3; }
+}
+
+/* ─── RESPONSIVE — laptop, tablet, mobile ─────────────────────────────── */
+/* Theme + treatment unchanged; only column counts + sizes adapt.          */
+
+/* Laptop (≤ 1280px) — tighten outer padding so cards breathe */
+@media (max-width: 1280px) {
+  .sh-page { padding: 0 18px 24px; }
+}
+
+/* Small laptop / large tablet (≤ 1100px) — Crib's 340px rail can't keep
+   its width without crowding the Anam stage; collapse the rail. */
+@media (max-width: 1100px) {
+  .sh-main { grid-template-columns: minmax(0, 1fr); }
+  .sh-rail-card > div:last-child { max-height: 320px; }
+  .r-bot { grid-template-columns: minmax(0, 1fr); }
+  .r-bot > .r-panel:last-child { max-height: 420px; overflow-y: auto; }
+}
+
+/* Tablet (≤ 900px) — banner 5→3, Recipe panels 2→1, Kitchen 6→3, hero stacks */
+@media (max-width: 900px) {
+  .sh-banner { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .r-grid { grid-template-columns: minmax(0, 1fr); }
+  .kv-pipeline { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .kv-hero { grid-template-columns: minmax(0, 1fr); }
+  .kv-hero-art { min-height: 180px; }
+  .r-hero { grid-template-columns: minmax(0, 1fr) 140px; padding: 22px 22px; }
+  .r-hero-name { font-size: 22px; }
+  .r-quant-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .r-quant-chip { padding: 10px 11px; }
+  .r-quant-chip-val { font-size: 18px; }
+  .r-mc-tags { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .r-mc-tag { padding: 9px 10px; }
+  .r-mc-tag-val { font-size: 15px; }
+  /* Calendar — shrink day cells so 8 columns still fit */
+  .r-cal-cell, .r-cal-weektot { min-height: 76px; padding: 6px 7px; }
+  .r-cal-cell-pnl { font-size: 14px; }
+  .r-cal-weektot-val { font-size: 15px; }
+  /* MC card — drop the perpetual tilt at this size (looks weird narrower) */
+  .r-panel.r-panel-mc { transform: rotateX(2deg); }
+  .r-panel.r-panel-mc:hover { transform: rotateX(2deg) translateY(-1px); }
+}
+
+/* Mobile (≤ 640px) — full stack, header tucks, calendar gets compact */
+@media (max-width: 640px) {
+  /* Header: shrink logo subtext, hide "/ TRADERS" tag, compact spacer */
+  .sh-page { padding: 0 12px 20px; }
+  /* Tight centered cluster on mobile — logo · nav · sign-out sit close together
+     instead of being edge-spread by a grid layout. */
+  .sh-header { padding: 14px 10px 10px; display: flex; justify-content: center; align-items: center; gap: 8px; }
+  .sh-logo svg { width: 30px; height: 26px; }
+  .sh-logo-text { display: none; }
+  .sh-nav { gap: 3px; flex-wrap: nowrap; }
+  .sh-pill { padding: 5px 9px; font-size: 10px; letter-spacing: 0; }
+  .sh-header-spacer { min-width: 0; }
+  /* Sign-out collapses to icon-only on phones */
+  .sh-signout { padding: 7px 9px; font-size: 0; gap: 0; }
+  .sh-signout svg { width: 14px; height: 14px; }
+
+  .sh-title { font-size: 22px; }
+  .sh-sub { font-size: 12px; }
+
+  /* Crib banner: 4 cards (kill switch dropped on mobile), 2×2 grid */
+  .sh-banner { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .sh-stat { min-height: 150px; }
+  .sh-stat-spark { height: 86px; }
+  #sh-banner > .sh-stat:nth-child(5) { display: none; }
+
+  /* Crib main: Anam stage shorter, rail under */
+  .sh-stage { min-height: 280px; }
+  .sh-anam-host { min-height: 280px; }
+  .sh-anam-pill { font-size: 12px; padding: 9px 14px; }
+
+  /* Pot chips horizontal scroller still works — just smaller */
+  .sh-pot-grid { grid-auto-columns: 160px; }
+
+  /* Crew leaderboard rows: tighter */
+  .sh-crew-row { grid-template-columns: 28px 1fr 80px; padding: 9px 0; }
+
+  /* Kitchen */
+  .kv-pipeline { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kv-stage { min-height: 170px; padding: 14px 12px 0; }
+  .kv-stage-num { font-size: 26px; }
+  .kv-stage-visual { height: 68px; }
+  .kv-hero-body { padding: 22px 22px; }
+  .kv-hero-h { font-size: 18px; }
+  .kv-menu { padding: 24px 18px 28px; }
+  .kv-menu-h { font-size: 22px; }
+  .kv-menu-empty-headline { font-size: 28px; }
+  .kv-menu-empty-sub { font-size: 16px; }
+
+  /* Recipe hero — drop ring to small size, name wraps cleanly */
+  .r-hero { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 20px 18px; }
+  .r-hero-score { flex-direction: row; align-items: center; gap: 12px; }
+  .r-ring { width: 76px; height: 76px; }
+  .r-ring span { font-size: 22px; }
+  .r-hero-name { font-size: 20px; }
+  .r-hero-badge { display: inline-block; margin: 6px 0 0; }
+
+  /* Recipe quant chips + MC tags: 1 column on phones */
+  .r-quant-row { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .r-mc-tags { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+
+  /* MC verdict pill stacks vertically */
+  .r-mc-verdict { flex-direction: column; align-items: stretch; gap: 10px; padding: 12px 14px; }
+  .r-mc-verdict > div:first-child,
+  .r-mc-verdict > div:last-child { min-width: 0; text-align: left; }
+
+  /* Calendar: drop the Week Total column on phones (still in footer summary),
+     keep 7 day columns flush so each cell is finger-tappable */
+  .r-cal-month { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  .r-cal-dow.week-total, .r-cal-weektot { display: none; }
+  .r-cal-cell { min-height: 60px; padding: 5px 6px; }
+  .r-cal-cell-pnl { font-size: 12px; }
+  .r-cal-cell-trades { font-size: 8px; }
+  .r-cal-header { padding: 14px 14px 12px; flex-wrap: wrap; gap: 10px; }
+  .r-cal-header-title { font-size: 13px; }
+  .r-cal-select { font-size: 12px; padding: 7px 28px 7px 12px; }
+  .r-cal-footer { padding: 12px 14px; flex-wrap: wrap; gap: 10px; }
+  .r-cal-footer-val { font-size: 16px; }
+  .r-cal-footer-stats { gap: 14px; }
+
+  /* MC card — remove permanent tilt on small screens (looks off when narrow) */
+  .r-panel.r-panel-mc { transform: none; }
+  .r-panel.r-panel-mc:hover { transform: translateY(-1px); }
+  .r-mc-chart-stage svg { height: 160px; }
+}
+
+/* Very small phones (≤ 380px) — extra compaction so nothing horizontally scrolls */
+@media (max-width: 380px) {
+  .sh-banner { grid-template-columns: minmax(0, 1fr); }
+  .kv-pipeline { grid-template-columns: minmax(0, 1fr); }
+  .r-cal-cell { min-height: 52px; }
+  .r-cal-cell-d { font-size: 10px; }
+  .r-cal-cell-pnl { font-size: 11px; }
+  .r-cal-cell-trades { display: none; }
+}
+
+/* Touch devices — disable hover-tilt transforms that don't feel right on tap */
+@media (hover: none) {
+  .sh-stat:hover, .kv-stage:hover, .r-panel:hover { transform: none; }
+  .r-cal-cell:not(.empty):hover { transform: none; }
 }

@@ -57,6 +57,7 @@ interface MarketBar {
   symbol: string;
   close: number;
   atr14: number | null;
+  [key: string]: unknown;  // index signature required by db.execute<T> constraint
 }
 
 /**
@@ -174,16 +175,16 @@ export async function runMclPreEiaStopTighten(): Promise<PreEiaTightenSummary> {
         id: paperPositions.id,
         sessionId: paperPositions.sessionId,
         symbol: paperPositions.symbol,
-        direction: paperPositions.direction,
+        direction: paperPositions.side,    // schema uses 'side', not 'direction'
         entryPrice: paperPositions.entryPrice,
-        currentStop: paperPositions.stopLoss,
+        currentStop: paperPositions.trailHwm, // nearest stop approximation; no stop_loss column
         contracts: paperPositions.contracts,
         highWaterPnl: sql<string | null>`COALESCE(${paperPositions.unrealizedPnl}::text, '0')`,
       })
       .from(paperPositions)
       .where(
         and(
-          eq(paperPositions.status, "open"),
+          sql`${paperPositions.closedAt} IS NULL`, // open = not yet closed
           eq(paperPositions.symbol, "MCL"),
         ),
       );
@@ -269,10 +270,10 @@ export async function runMclPreEiaStopTighten(): Promise<PreEiaTightenSummary> {
         continue;
       }
 
-      // Apply the tighter stop
+      // Apply the tighter stop — schema uses trailHwm as the persistent stop level
       await db
         .update(paperPositions)
-        .set({ stopLoss: String(decision.newStop) })
+        .set({ trailHwm: String(decision.newStop) })
         .where(eq(paperPositions.id, pos.id));
 
       summary.positionsTightened += 1;

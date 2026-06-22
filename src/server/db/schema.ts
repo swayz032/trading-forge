@@ -94,7 +94,7 @@ export const strategies = pgTable("strategies", {
   // NULL → exit_style defaults to "static_styleC" (backward-compat for pre-Wave-25 strategies).
   // New strategies get exit_style="adaptive" via framework-overlay (Pass 7 default).
   // Migration: 0144_strategies_adaptive_exits.sql, idx 146.
-  exitPlanConfig: jsonb("exit_plan_config").$type<ExitPlanConfig>().default(undefined),
+  exitPlanConfig: jsonb("exit_plan_config").$type<ExitPlanConfig>(),
   // Wave 29 Pass C.3: A/B paper routing. 'baseline' → Sub-Account 1 (slumdawg-baseline);
   // 'rl-challenger' → Sub-Account 2 (slumdawg-rl-challenger). Default 'baseline' for all
   // pre-C.3 strategies (backward-compat). Migration: 0159_broker_accounts_ab_paper_routing.sql
@@ -118,6 +118,12 @@ export const strategies = pgTable("strategies", {
   regimeTrainedOn: text("regime_trained_on"),
   // Incremented per successful HMAC override.  NOT NULL DEFAULT 0.  Observability signal.
   frozenPolicyOverrideCount: integer("frozen_policy_override_count").notNull().default(0),
+  // Wave 25 Pass 2 W25.4: 5-TF institutional hierarchy (migration 0138_strategies_5tf_hierarchy.sql)
+  // All nullable — strategies without these columns continue 2-TF operation (backward-compat).
+  dailyTf: text("daily_tf"),       // Dealing range + bias narrative (e.g. "1d")
+  htfTf: text("htf_tf"),           // Structure — BOS/CHoCH/MSS reference (e.g. "4h")
+  itfTf: text("itf_tf"),           // Execution narrative — institutional middle layer (e.g. "1h")
+  triggerTf: text("trigger_tf"),   // Fine entry trigger (e.g. "1m"|"5m")
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 },
@@ -3065,3 +3071,21 @@ export const slumhouseUsers = pgTable(
 
 export type SlumhouseUser = typeof slumhouseUsers.$inferSelect;
 export type NewSlumhouseUser = typeof slumhouseUsers.$inferInsert;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Operator absent periods (migration 0101_autopilot_tables.sql)
+// ─────────────────────────────────────────────────────────────────────────────
+// Tracks operator-absent windows so auto-promotion audit trail is queryable.
+export const operatorAbsentPeriods = pgTable(
+  "operator_absent_periods",
+  {
+    id:        bigserial("id", { mode: "number" }).primaryKey(),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    endedAt:   timestamp("ended_at", { withTimezone: true }),   // NULL = currently absent
+    reason:    text("reason"),
+    endedBy:   text("ended_by"),  // 'env_unset' | 'manual_api' | 'system_restart'
+  },
+  (table) => [
+    index("idx_operator_absent_active").on(table.startedAt.desc()),
+  ],
+);

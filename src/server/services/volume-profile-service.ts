@@ -191,7 +191,7 @@ async function computeAndPersistDailyVP(symbol: string, sessionDate: string): Pr
       poc: String(pyOutput.poc),
       vah: String(pyOutput.vah),
       val: String(pyOutput.val),
-      nakedPocs: (pyOutput.naked_pocs ?? []) as Record<string, unknown>[],
+      nakedPocs: (pyOutput.naked_pocs ?? []) as unknown as Record<string, unknown>[],
       profileShape: pyOutput.shape,
       shapeConfidence: String(pyOutput.shape_confidence),
       ibHigh: pyOutput.ib_high != null ? String(pyOutput.ib_high) : null,
@@ -205,7 +205,7 @@ async function computeAndPersistDailyVP(symbol: string, sessionDate: string): Pr
         poc: String(pyOutput.poc),
         vah: String(pyOutput.vah),
         val: String(pyOutput.val),
-        nakedPocs: (pyOutput.naked_pocs ?? []) as Record<string, unknown>[],
+        nakedPocs: (pyOutput.naked_pocs ?? []) as unknown as Record<string, unknown>[],
         profileShape: pyOutput.shape,
         shapeConfidence: String(pyOutput.shape_confidence),
         ibHigh: pyOutput.ib_high != null ? String(pyOutput.ib_high) : null,
@@ -244,8 +244,9 @@ async function _writeAuditLog(
     await db.insert(auditLog).values({
       action: "vp_compute",
       entityType: "volume_profile",
-      entityId: `${symbol}:${sessionDate}`,
-      result: { symbol, sessionDate, status, errorMsg, durationMs } as Record<string, unknown>,
+      entityId: null,
+      status,
+      result: { symbol, sessionDate, errorMsg, durationMs } as Record<string, unknown>,
       decisionAuthority: "system",
     });
   } catch (auditErr) {
@@ -439,7 +440,7 @@ function _rowToVPLevels(row: VPRow): VPLevels {
     poc: parseFloat(row.poc),
     vah: parseFloat(row.vah),
     val: parseFloat(row.val),
-    nakedPocs: (row.nakedPocs as NakedPoc[]) ?? [],
+    nakedPocs: (row.nakedPocs as unknown as NakedPoc[]) ?? [],
     profileShape: row.profileShape,
     shapeConfidence: parseFloat(row.shapeConfidence),
     ibHigh: row.ibHigh != null ? parseFloat(row.ibHigh) : null,

@@ -166,7 +166,7 @@ export function makeProductionDeps(
           ${action},
           'system',
           NULL,
-          ${sql.json(result)},
+          ${sql.json(result as unknown as import("postgres").JSONValue)},
           'success',
           'system'
         )

@@ -5,40 +5,273 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Slumhouse · The Kitchen</title>
   <link rel="stylesheet" href="/slumhouse/slumhouse.css">
+  <link rel="icon" type="image/png" sizes="32x32" href="/slumhouse/icons/slumdawg-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/slumhouse/icons/slumdawg-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/slumhouse/icons/slumdawg-180.png">
+  <link rel="manifest" href="/slumhouse/manifest.webmanifest">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Slumdawg">
   <style>
-    .kv-hero { background:#080808; border:1px solid var(--line); border-radius:16px; overflow:hidden; margin-bottom:24px; display:grid; grid-template-columns:360px 1fr; min-height:230px; }
-    .kv-hero-art { background-image:url('/slumhouse/images/slumdawg-kitchen.png'); background-size:cover; background-position:center; }
-    .kv-hero-body { padding:26px 32px; display:flex; flex-direction:column; justify-content:center; }
-    .kv-hero-eyebrow { font-size:10px; color:var(--lime); text-transform:uppercase; letter-spacing:0.14em; margin-bottom:10px; }
-    .kv-hero-h { font-size:22px; font-weight:700; color:var(--ink); line-height:1.3; letter-spacing:-0.01em; }
-    .kv-hero-p { font-size:13px; color:var(--dim); margin-top:10px; line-height:1.6; }
-    .kv-section-label { font-size:11px; color:var(--mute); text-transform:uppercase; letter-spacing:0.12em; margin-bottom:14px; }
-    .kv-pipeline { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:28px; }
-    .kv-stage { background:#080808; border:1px solid var(--line); border-radius:14px; padding:18px 16px; min-height:148px; display:flex; flex-direction:column; justify-content:space-between; }
-    .kv-stage-name { font-size:13px; font-weight:600; color:var(--ink); }
-    .kv-stage-real { font-size:10px; color:var(--mute); text-transform:uppercase; letter-spacing:0.06em; margin-top:3px; }
-    .kv-stage-num { font-size:30px; font-weight:700; color:var(--ink); letter-spacing:-0.02em; }
-    .kv-stage-num-lbl { font-size:10px; color:var(--mute); margin-top:-2px; }
-    .kv-menu { background:#080808; border:1px solid var(--line); border-radius:18px; padding:32px 38px; }
-    .kv-menu-mark { font-size:11px; color:var(--lime); letter-spacing:0.28em; text-transform:uppercase; text-align:center; }
-    .kv-menu-h { text-align:center; font-size:26px; font-weight:700; color:var(--ink); margin:8px 0 4px; }
-    .kv-menu-cap { text-align:center; font-size:12px; color:var(--mute); margin-bottom:28px; font-style:italic; }
-    .kv-dish { display:grid; grid-template-columns:38px 1fr 130px; gap:24px; align-items:center; padding:22px 0; border-top:1px dashed var(--line); }
-    .kv-dish:first-of-type { border-top:none; padding-top:6px; }
-    .kv-dish-num-c { font-size:18px; color:var(--lime); font-weight:700; text-align:center; }
-    .kv-dish-name { font-size:17px; font-weight:600; color:var(--ink); letter-spacing:-0.01em; }
-    .kv-dish-note { font-size:11px; color:var(--warm); margin-top:8px; font-style:italic; }
-    .kv-dish-stat-big { font-size:22px; font-weight:700; color:var(--lime); letter-spacing:-0.02em; text-align:right; }
-    .kv-dish-stat-cap { font-size:10px; color:var(--mute); text-transform:uppercase; letter-spacing:0.08em; text-align:right; margin-top:2px; }
-    .kv-dish-stat-sub { font-size:11px; color:var(--dim); margin-top:8px; text-align:right; }
+    /* ─── Kitchen hero (the talking-bulldog cauldron banner) ─────────── */
+    .kv-hero {
+      position: relative;
+      background: #000;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.015), 0 12px 40px rgba(0, 0, 0, 0.6);
+      border-radius: 18px;
+      overflow: hidden;
+      margin-bottom: 28px;
+      display: grid;
+      grid-template-columns: 360px minmax(0, 1fr);
+      min-height: 240px;
+    }
+    .kv-hero-art {
+      background-image: url('/slumhouse/images/slumdawg-kitchen.png');
+      background-size: cover;
+      background-position: center;
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .kv-hero-body { padding: 28px 34px; display: flex; flex-direction: column; justify-content: center; }
+    .kv-hero-eyebrow { font-size: 10px; color: var(--lime); text-transform: uppercase; letter-spacing: 0.16em; margin-bottom: 12px; text-shadow: 0 0 14px rgba(163, 255, 18, 0.35); }
+    .kv-hero-h { font-size: 22px; font-weight: 700; color: var(--ink); line-height: 1.3; letter-spacing: -0.01em; }
+    .kv-hero-p { font-size: 13px; color: var(--dim); margin-top: 10px; line-height: 1.6; }
+
+    .kv-section-label { font-size: 11px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 14px; }
+
+    /* ─── Pipeline stations: pitch-black glassy 3D ───────────────────── */
+    .kv-pipeline { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin-bottom: 32px; }
+    .kv-stage {
+      position: relative;
+      background: #000;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.015),
+        0 8px 28px rgba(0, 0, 0, 0.55);
+      border-radius: 16px;
+      padding: 16px 14px 0;
+      min-height: 196px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transform-style: preserve-3d;
+      transition: transform 0.25s ease, border-color 0.2s, box-shadow 0.25s;
+      cursor: default;
+    }
+    .kv-stage:hover {
+      transform: perspective(900px) rotateX(2deg) translateY(-2px);
+      border-color: rgba(163, 255, 18, 0.22);
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+        0 18px 44px rgba(0, 0, 0, 0.7),
+        0 0 32px rgba(163, 255, 18, 0.08);
+    }
+    .kv-stage-head { display: flex; flex-direction: column; gap: 2px; }
+    .kv-stage-name { font-size: 13px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; }
+    .kv-stage-real { font-size: 9px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
+    .kv-stage-mid { margin-top: 10px; }
+    .kv-stage-num { font-size: 30px; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+    .kv-stage-num-lbl { font-size: 9px; color: var(--mute); margin-top: -2px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .kv-stage-visual {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 84px;
+      pointer-events: none;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      opacity: 0.95;
+    }
+    .kv-stage-visual svg { width: 100%; height: 100%; display: block; }
+
+    /* ─── "Today's Menu" — 3D chalkboard restaurant menu ─────────────── */
+    .kv-menu {
+      position: relative;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(163, 255, 18, 0.04), transparent 60%),
+        #000;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.015),
+        0 14px 44px rgba(0, 0, 0, 0.65);
+      border-radius: 20px;
+      padding: 34px 40px 38px;
+      overflow: hidden;
+    }
+    .kv-menu-mark { font-size: 11px; color: var(--lime); letter-spacing: 0.32em; text-transform: uppercase; text-align: center; text-shadow: 0 0 12px rgba(163, 255, 18, 0.4); }
+    .kv-menu-h { text-align: center; font-size: 28px; font-weight: 800; color: var(--ink); margin: 10px 0 6px; letter-spacing: -0.02em; }
+    .kv-menu-cap { text-align: center; font-size: 12px; color: var(--mute); margin-bottom: 28px; font-style: italic; }
+
+    /* Empty-state chalkboard menu */
+    .kv-menu-empty {
+      position: relative;
+      margin: 0 auto;
+      max-width: 560px;
+      aspect-ratio: 16 / 9;
+      transform-style: preserve-3d;
+      perspective: 1200px;
+    }
+    .kv-menu-empty-board {
+      position: absolute; inset: 0;
+      border-radius: 14px;
+      background:
+        radial-gradient(ellipse at 30% 25%, rgba(40, 60, 30, 0.55), transparent 70%),
+        linear-gradient(160deg, #0d1208, #060806);
+      border: 6px solid #2a1d10;
+      box-shadow:
+        inset 0 0 50px rgba(0, 0, 0, 0.85),
+        inset 0 0 0 2px rgba(120, 80, 40, 0.4),
+        0 18px 42px rgba(0, 0, 0, 0.7);
+      transform: rotateX(3deg);
+      overflow: hidden;
+    }
+    .kv-menu-empty-board::before {
+      content: ""; position: absolute; inset: 0;
+      background-image:
+        repeating-linear-gradient(105deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 3px),
+        repeating-linear-gradient(-15deg, rgba(255, 255, 255, 0.012) 0 1px, transparent 1px 5px);
+      pointer-events: none;
+    }
+    .kv-menu-empty-inner {
+      position: relative;
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 14px;
+      font-family: 'Caveat', 'Brush Script MT', cursive;
+      color: rgba(245, 255, 230, 0.92);
+      text-shadow: 0 0 14px rgba(163, 255, 18, 0.45), 0 1px 0 rgba(0, 0, 0, 0.4);
+    }
+    .kv-menu-empty-headline { font-size: 38px; letter-spacing: 0.04em; font-weight: 700; line-height: 1; }
+    .kv-menu-empty-divider {
+      width: 64%; height: 0;
+      border-top: 1.5px dashed rgba(163, 255, 18, 0.5);
+      filter: drop-shadow(0 0 6px rgba(163, 255, 18, 0.4));
+    }
+    .kv-menu-empty-sub { font-size: 20px; font-style: italic; opacity: 0.85; letter-spacing: 0.03em; }
+    .kv-menu-empty-stamp {
+      position: absolute; bottom: 14px; right: 16px;
+      font-family: inherit;
+      font-size: 12px;
+      color: rgba(255, 200, 120, 0.55);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    /* Populated dish rows (kept from prior design) */
+    .kv-dish { display: grid; grid-template-columns: 38px minmax(0, 1fr) 140px; gap: 24px; align-items: center; padding: 22px 0; border-top: 1px dashed rgba(255, 255, 255, 0.06); text-decoration: none; transition: background 0.15s; }
+    .kv-dish:hover { background: rgba(163, 255, 18, 0.025); }
+    .kv-dish:first-of-type { border-top: none; padding-top: 6px; }
+    .kv-dish-num-c { font-size: 18px; color: var(--lime); font-weight: 700; text-align: center; }
+    .kv-dish-name { font-size: 17px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
+    .kv-dish-note { font-size: 11px; color: var(--warm); margin-top: 8px; font-style: italic; }
+    .kv-dish-stat-big { font-size: 22px; font-weight: 700; color: var(--lime); letter-spacing: -0.02em; text-align: right; }
+    .kv-dish-stat-cap { font-size: 10px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.08em; text-align: right; margin-top: 2px; }
+    .kv-dish-stat-sub { font-size: 11px; color: var(--dim); margin-top: 8px; text-align: right; }
+
+    /* ─── Kitchen responsive (must live here so it beats source-order cascade) ─ */
+    @media (max-width: 900px) {
+      .kv-pipeline { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .kv-hero { grid-template-columns: minmax(0, 1fr); }
+      .kv-hero-art { min-height: 180px; border-right: none; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+      .kv-hero-body { padding: 22px 24px; }
+    }
+    @media (max-width: 640px) {
+      .kv-hero { margin-bottom: 20px; }
+      .kv-hero-art { min-height: 150px; background-position: center 40%; }
+      .kv-hero-body { padding: 18px 18px 22px; }
+      .kv-hero-h { font-size: 17px; }
+      .kv-hero-p { font-size: 12px; line-height: 1.55; }
+      .kv-hero-eyebrow { font-size: 9px; letter-spacing: 0.18em; }
+
+      .kv-section-label { font-size: 10px; margin-bottom: 12px; }
+      .kv-pipeline { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 24px; }
+      .kv-stage { min-height: 168px; padding: 14px 12px 0; border-radius: 14px; }
+      .kv-stage-name { font-size: 12px; }
+      .kv-stage-real { font-size: 8px; }
+      .kv-stage-num { font-size: 26px; }
+      .kv-stage-num-lbl { font-size: 8px; }
+      .kv-stage-visual { height: 68px; }
+
+      .kv-menu { padding: 22px 16px 26px; border-radius: 16px; }
+      .kv-menu-mark { font-size: 10px; letter-spacing: 0.24em; }
+      .kv-menu-h { font-size: 22px; }
+      .kv-menu-cap { font-size: 11px; margin-bottom: 22px; }
+      .kv-menu-empty { max-width: 100%; }
+      .kv-menu-empty-board { border-width: 4px; }
+      .kv-menu-empty-headline { font-size: 26px; }
+      .kv-menu-empty-sub { font-size: 14px; }
+      .kv-menu-empty-stamp { font-size: 10px; bottom: 10px; right: 12px; }
+      .kv-menu-empty-divider { width: 78%; }
+
+      /* Populated dish rows stack the stat column under the name */
+      .kv-dish { grid-template-columns: 28px minmax(0, 1fr); gap: 14px; padding: 16px 0; }
+      .kv-dish-num-c { font-size: 14px; }
+      .kv-dish-name { font-size: 14px; }
+      .kv-dish-note { font-size: 10px; margin-top: 6px; }
+      .kv-dish-stat-big { font-size: 18px; text-align: left; }
+      .kv-dish-stat-cap, .kv-dish-stat-sub { text-align: left; }
+      .kv-dish > div:last-child { grid-column: 2; margin-top: 6px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+      .kv-dish-stat-cap { margin-top: 0; }
+      .kv-dish-stat-sub { margin-top: 0; }
+    }
+    @media (max-width: 380px) {
+      .kv-pipeline { grid-template-columns: minmax(0, 1fr); }
+      .kv-stage { min-height: 140px; }
+      .kv-stage-visual { height: 58px; }
+    }
+    @media (hover: none) {
+      .kv-stage:hover { transform: none; }
+    }
   </style>
 </head>
 <body>
-  <nav class="sh-nav">
-    <a class="sh-pill" href="/slumhouse/crib.html">The Crib</a>
-    <a class="sh-pill active" href="/slumhouse/kitchen.html">The Kitchen</a>
-    <a class="sh-pill" href="/slumhouse/recipe.html">The Recipe</a>
-  </nav>
+  <header class="sh-header">
+    <a class="sh-logo" href="/slumhouse/crib.html" aria-label="Slumhouse">
+      <svg viewBox="0 0 64 56" width="38" height="34" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="kt-bull-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#c5ff5f"/>
+            <stop offset="100%" stop-color="#a3ff12"/>
+          </linearGradient>
+          <filter id="kt-bull-glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="1.2" result="g"/>
+            <feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <g filter="url(#kt-bull-glow)">
+          <path d="M14 14 L17 4 L25 16 Z" fill="url(#kt-bull-grad)"/>
+          <path d="M50 14 L47 4 L39 16 Z" fill="url(#kt-bull-grad)"/>
+          <path d="M16 14 C 16 8, 24 4, 32 4 C 40 4, 48 8, 48 14 L 52 26 C 52 36, 48 42, 44 44 L 41 50 C 37 52, 27 52, 23 50 L 20 44 C 16 42, 12 36, 12 26 Z" fill="url(#kt-bull-grad)"/>
+        </g>
+        <path d="M20 18 Q32 14 44 18" stroke="#000" stroke-width="1.4" fill="none" opacity="0.55"/>
+        <rect x="20" y="22" width="6" height="4" rx="1" fill="#000"/>
+        <rect x="38" y="22" width="6" height="4" rx="1" fill="#000"/>
+        <circle cx="24" cy="23" r="0.7" fill="#fff" opacity="0.9"/>
+        <circle cx="42" cy="23" r="0.7" fill="#fff" opacity="0.9"/>
+        <path d="M27 32 Q32 30 37 32 Q37 36 32 36 Q27 36 27 32 Z" fill="#000"/>
+        <path d="M24 41 Q32 39 40 41" stroke="#000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M28.5 41.2 L28.5 44.2 L30 42.5 Z" fill="#fff" opacity="0.95"/>
+        <path d="M35.5 41.2 L35.5 44.2 L34 42.5 Z" fill="#fff" opacity="0.95"/>
+      </svg>
+      <div class="sh-logo-text">
+        <span class="sh-logo-name">SLUMHOUSE</span>
+        <span class="sh-logo-sub">/ TRADERS</span>
+      </div>
+    </a>
+    <nav class="sh-nav">
+      <a class="sh-pill" href="/slumhouse/crib.html">The Crib</a>
+      <a class="sh-pill active" href="/slumhouse/kitchen.html">The Kitchen</a>
+      <a class="sh-pill" href="/slumhouse/recipe.html">The Recipe</a>
+    </nav>
+    <div class="sh-header-spacer">
+      <a class="sh-signout" href="/slumhouse/auth/logout" title="Sign out of Slumhouse">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign out
+      </a>
+    </div>
+  </header>
 
   <div class="sh-page">
     <h1 class="sh-title">The Kitchen</h1>
@@ -66,6 +299,135 @@
 
   <script src="/slumhouse/slumhouse.js"></script>
   <script>
+    // ─── Per-station 3D kitchen visual (SVG) ────────────────────────────
+    function kitchenVisual(stageName) {
+      const name = (stageName || "").toLowerCase();
+      // Each returns a full SVG (viewBox 0 0 200 84) drawn at bottom of card.
+      if (name.includes("ingredient")) return `
+        <svg viewBox="0 0 200 84" preserveAspectRatio="xMidYEnd meet">
+          <defs>
+            <linearGradient id="vi-board" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#3a2818"/><stop offset="1" stop-color="#1c1208"/>
+            </linearGradient>
+            <radialGradient id="vi-onion" cx="0.5" cy="0.4" r="0.6">
+              <stop offset="0" stop-color="#e8f5d2"/><stop offset="1" stop-color="#7a9648"/>
+            </radialGradient>
+            <radialGradient id="vi-tom" cx="0.4" cy="0.4" r="0.6">
+              <stop offset="0" stop-color="#ff6b4a"/><stop offset="1" stop-color="#8a1f0e"/>
+            </radialGradient>
+          </defs>
+          <ellipse cx="100" cy="78" rx="80" ry="5" fill="#000" opacity="0.55"/>
+          <rect x="30" y="58" width="140" height="14" rx="2" fill="url(#vi-board)"/>
+          <rect x="30" y="58" width="140" height="2" fill="#5a3e22" opacity="0.6"/>
+          <ellipse cx="78" cy="56" rx="13" ry="11" fill="url(#vi-onion)"/>
+          <path d="M78 45 L80 48 L76 48 Z" fill="#5d7a2a"/>
+          <ellipse cx="112" cy="56" rx="11" ry="10" fill="url(#vi-tom)"/>
+          <path d="M112 47 L114 50 L110 50 Z" fill="#5d7a2a"/>
+          <rect x="138" y="40" width="4" height="22" rx="1" fill="#c9d96a" opacity="0.85"/>
+          <path d="M140 40 Q137 36 142 34 Q139 30 144 30" stroke="#a3ff12" stroke-width="1.4" fill="none" stroke-linecap="round" opacity="0.7"/>
+        </svg>`;
+      if (name.includes("prep")) return `
+        <svg viewBox="0 0 200 84" preserveAspectRatio="xMidYEnd meet">
+          <defs>
+            <linearGradient id="vp-bowl" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#2a2a2a"/><stop offset="1" stop-color="#0a0a0a"/>
+            </linearGradient>
+            <radialGradient id="vp-bowl-inner" cx="0.5" cy="0.35" r="0.6">
+              <stop offset="0" stop-color="#c5ff5f" stop-opacity="0.85"/><stop offset="1" stop-color="#3a5a18" stop-opacity="0.95"/>
+            </radialGradient>
+          </defs>
+          <ellipse cx="100" cy="78" rx="70" ry="4" fill="#000" opacity="0.6"/>
+          <ellipse cx="100" cy="56" rx="46" ry="9" fill="url(#vp-bowl-inner)"/>
+          <path d="M54 56 Q54 78 100 78 Q146 78 146 56" fill="url(#vp-bowl)" stroke="#1a1a1a" stroke-width="0.8"/>
+          <ellipse cx="100" cy="55" rx="46" ry="3" fill="#0a0a0a"/>
+          <path d="M118 30 Q124 38 128 50 Q126 52 122 50 Q120 38 114 32 Z" fill="#9aa1a8" stroke="#3a3a3a" stroke-width="0.6"/>
+          <path d="M122 36 L130 28" stroke="#c0c4cc" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>`;
+      if (name.includes("stove")) return `
+        <svg viewBox="0 0 200 84" preserveAspectRatio="xMidYEnd meet">
+          <defs>
+            <radialGradient id="vs-flame" cx="0.5" cy="1" r="0.9">
+              <stop offset="0" stop-color="#fff7c0"/>
+              <stop offset="0.35" stop-color="#a3ff12"/>
+              <stop offset="0.75" stop-color="#3aa810" stop-opacity="0.7"/>
+              <stop offset="1" stop-color="#0a3300" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="vs-pan" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#2a2a2a"/><stop offset="1" stop-color="#0a0a0a"/>
+            </linearGradient>
+            <filter id="vs-blur"><feGaussianBlur stdDeviation="2"/></filter>
+          </defs>
+          <ellipse cx="100" cy="78" rx="80" ry="4" fill="#000" opacity="0.6"/>
+          <path d="M70 70 Q60 50 76 38 Q72 56 86 46 Q82 60 100 36 Q104 56 116 46 Q126 58 122 38 Q138 50 130 70 Z" fill="url(#vs-flame)" filter="url(#vs-blur)" opacity="0.95"/>
+          <path d="M76 68 Q70 56 82 48 Q80 60 92 52 Q92 62 100 48 Q108 62 108 52 Q120 60 118 48 Q130 56 124 68 Z" fill="url(#vs-flame)"/>
+          <ellipse cx="100" cy="70" rx="40" ry="5" fill="url(#vs-pan)"/>
+          <path d="M60 70 Q60 78 100 78 Q140 78 140 70" fill="url(#vs-pan)" stroke="#1a1a1a" stroke-width="0.8"/>
+          <rect x="138" y="68" width="22" height="3" rx="1.5" fill="#1a1a1a"/>
+        </svg>`;
+      if (name.includes("taste")) return `
+        <svg viewBox="0 0 200 84" preserveAspectRatio="xMidYEnd meet">
+          <defs>
+            <linearGradient id="vt-spoon" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#e6ecf2"/><stop offset="1" stop-color="#7a838e"/>
+            </linearGradient>
+            <radialGradient id="vt-drop" cx="0.5" cy="0.4" r="0.6">
+              <stop offset="0" stop-color="#c5ff5f"/><stop offset="1" stop-color="#3a7a08"/>
+            </radialGradient>
+          </defs>
+          <ellipse cx="100" cy="78" rx="70" ry="4" fill="#000" opacity="0.55"/>
+          <rect x="48" y="60" width="80" height="4" rx="2" fill="url(#vt-spoon)" transform="rotate(-12 88 62)"/>
+          <ellipse cx="138" cy="44" rx="16" ry="11" fill="url(#vt-spoon)" transform="rotate(-12 138 44)"/>
+          <ellipse cx="136" cy="44" rx="11" ry="6" fill="url(#vt-drop)" transform="rotate(-12 136 44)"/>
+          <circle cx="120" cy="32" r="3" fill="#a3ff12" opacity="0.8"/>
+          <circle cx="128" cy="24" r="2" fill="#c5ff5f" opacity="0.7"/>
+          <circle cx="148" cy="30" r="2.4" fill="#a3ff12" opacity="0.6"/>
+        </svg>`;
+      if (name.includes("small")) return `
+        <svg viewBox="0 0 200 84" preserveAspectRatio="xMidYEnd meet">
+          <defs>
+            <radialGradient id="vsp-plate" cx="0.5" cy="0.4" r="0.6">
+              <stop offset="0" stop-color="#f5f7fa"/><stop offset="0.7" stop-color="#cdd3da"/><stop offset="1" stop-color="#6a7280"/>
+            </radialGradient>
+            <radialGradient id="vsp-food" cx="0.5" cy="0.4" r="0.6">
+              <stop offset="0" stop-color="#c5ff5f"/><stop offset="1" stop-color="#3a7a08"/>
+            </radialGradient>
+          </defs>
+          <ellipse cx="100" cy="78" rx="70" ry="4" fill="#000" opacity="0.55"/>
+          <ellipse cx="65" cy="62" rx="22" ry="6" fill="url(#vsp-plate)"/>
+          <ellipse cx="65" cy="60" rx="16" ry="4" fill="#1a1a1a"/>
+          <ellipse cx="65" cy="58" rx="9" ry="3" fill="url(#vsp-food)"/>
+          <ellipse cx="135" cy="62" rx="22" ry="6" fill="url(#vsp-plate)"/>
+          <ellipse cx="135" cy="60" rx="16" ry="4" fill="#1a1a1a"/>
+          <ellipse cx="135" cy="58" rx="9" ry="3" fill="url(#vsp-food)"/>
+          <ellipse cx="100" cy="44" rx="24" ry="6" fill="url(#vsp-plate)"/>
+          <ellipse cx="100" cy="42" rx="18" ry="4" fill="#1a1a1a"/>
+          <ellipse cx="100" cy="40" rx="11" ry="3" fill="url(#vsp-food)"/>
+        </svg>`;
+      // "On the Menu" — chef's hat + plated dish
+      return `
+        <svg viewBox="0 0 200 84" preserveAspectRatio="xMidYEnd meet">
+          <defs>
+            <radialGradient id="vm-plate" cx="0.5" cy="0.4" r="0.6">
+              <stop offset="0" stop-color="#fff"/><stop offset="0.7" stop-color="#d8dfe6"/><stop offset="1" stop-color="#5a6470"/>
+            </radialGradient>
+            <radialGradient id="vm-food" cx="0.5" cy="0.4" r="0.6">
+              <stop offset="0" stop-color="#c5ff5f"/><stop offset="1" stop-color="#3a7a08"/>
+            </radialGradient>
+            <linearGradient id="vm-hat" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#fdfdff"/><stop offset="1" stop-color="#b8c0c8"/>
+            </linearGradient>
+          </defs>
+          <ellipse cx="100" cy="78" rx="80" ry="5" fill="#000" opacity="0.6"/>
+          <ellipse cx="100" cy="70" rx="56" ry="7" fill="url(#vm-plate)"/>
+          <ellipse cx="100" cy="68" rx="44" ry="5" fill="#0e0e0e"/>
+          <ellipse cx="100" cy="65" rx="26" ry="5" fill="url(#vm-food)"/>
+          <ellipse cx="86" cy="62" rx="5" ry="2.5" fill="#a3ff12" opacity="0.8"/>
+          <ellipse cx="114" cy="62" rx="5" ry="2.5" fill="#a3ff12" opacity="0.8"/>
+          <path d="M70 40 Q60 24 80 22 Q78 14 100 14 Q122 14 120 22 Q140 24 130 40 L130 50 L70 50 Z" fill="url(#vm-hat)"/>
+          <rect x="70" y="48" width="60" height="4" rx="1" fill="#e8edf2"/>
+        </svg>`;
+    }
+
     (async () => {
       const k = await SH.fetchJSON("/slumhouse/api/kitchen");
       const m = await SH.fetchJSON("/slumhouse/api/kitchen/menu");
@@ -77,21 +439,36 @@
 
       const pipe = document.getElementById("kv-pipeline");
       for (const s of k.stages) {
-        pipe.appendChild(SH.el("div", { class: "kv-stage" },
-          SH.el("div", {},
+        const card = SH.el("div", { class: "kv-stage" },
+          SH.el("div", { class: "kv-stage-head" },
             SH.el("div", { class: "kv-stage-name" }, s.name),
             SH.el("div", { class: "kv-stage-real" }, s.subtitle)
           ),
-          SH.el("div", {},
+          SH.el("div", { class: "kv-stage-mid" },
             SH.el("div", { class: "kv-stage-num" }, String(s.count)),
             SH.el("div", { class: "kv-stage-num-lbl" }, s.countLabel)
           )
-        ));
+        );
+        const visual = document.createElement("div");
+        visual.className = "kv-stage-visual";
+        visual.innerHTML = kitchenVisual(s.name);
+        card.appendChild(visual);
+        pipe.appendChild(card);
       }
 
       const rows = document.getElementById("kv-menu-rows");
       if (m.dishes.length === 0) {
-        rows.appendChild(SH.el("p", { class: "kv-dish-note" }, "Nothing on the menu yet. Kitchen's still cooking."));
+        rows.innerHTML = `
+          <div class="kv-menu-empty">
+            <div class="kv-menu-empty-board">
+              <div class="kv-menu-empty-inner">
+                <div class="kv-menu-empty-headline">Today's Menu</div>
+                <div class="kv-menu-empty-divider"></div>
+                <div class="kv-menu-empty-sub">Kitchen's still cooking…</div>
+              </div>
+              <div class="kv-menu-empty-stamp">Slumdawg ☆ Kitchen</div>
+            </div>
+          </div>`;
       } else {
         m.dishes.forEach((d, i) => {
           rows.appendChild(SH.el("a", { class: "kv-dish", href: `/slumhouse/recipe.html?id=${encodeURIComponent(d.id)}` },

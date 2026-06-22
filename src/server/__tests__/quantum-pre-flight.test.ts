@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tier 6 — Quantum Pre-Flight Route Tests
  *
  * Pre-flight is CACHE-READ-ONLY. It NEVER spawns quantum compute.
@@ -62,6 +62,7 @@ async function buildApp(): Promise<express.Express> {
   const app = express();
   app.use(express.json());
   app.use((req, _res, next) => {
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     (req as express.Request & { log: unknown; id: string }).log = {
       error: vi.fn(),
       info: vi.fn(),

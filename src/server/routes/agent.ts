@@ -761,6 +761,7 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
   }
 
   const { sourceUrl, markdown, sourceProvider, title } = parsed.data;
+  const correlationId: string | null = (req as { id?: string }).id ?? null;
 
   // Pass 21 Fix #2: chunked extraction. Many YouTube transcripts (and long
   // articles) ramble for 3-5 minutes before specifics. A single 12K-char window

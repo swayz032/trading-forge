@@ -326,6 +326,7 @@ class TestH1TimestopETSafe:
         exit_short = np.zeros(n, dtype=bool)
         high_np = np.array([4400.0, 4405.0, 4403.0])
         low_np = np.array([4395.0, 4398.0, 4398.0])
+        close_np = np.array([4398.0, 4402.0, 4401.0])  # C3 FIX: close_np required
         atr_np = np.full(n, 2.0)
         timestamps = ["2024-01-01 14:30", "2024-01-01 15:00", "2024-01-01 15:55"]
         ts_et = ["2024-01-01 14:30", "2024-01-01 15:00", "2024-01-01 15:55"]
@@ -334,6 +335,7 @@ class TestH1TimestopETSafe:
             entry_long, exit_long, entry_short, exit_short,
             high_np, low_np, atr_np, timestamps,
             stop_multiplier=1.5, symbol="MES",
+            close_np=close_np,
             ts_et_timestamps=ts_et,
         )
         assert exl[2], "Time-stop should fire at 15:55 ET bar"
@@ -352,12 +354,14 @@ class TestH1TimestopETSafe:
             exit_short = np.zeros(n, dtype=bool)
             high_np = np.array([4400.0, 4405.0])
             low_np = np.array([4395.0, 4398.0])
+            close_np = np.array([4398.0, 4402.0])  # C3 FIX: close_np required
             atr_np = np.full(n, 2.0)
 
             _, exl, _, _, meta = _apply_dsl_stop_loss_and_time_stop(
                 entry_long, exit_long, entry_short, exit_short,
                 high_np, low_np, atr_np, ["t0", "t1"],
                 stop_multiplier=1.5, symbol="MES",
+                close_np=close_np,
                 ts_et_timestamps=["2024-01-15 14:00", ts_et_str],
             )
             assert exl[1], f"Time-stop should fire for ts_et={ts_et_str}"

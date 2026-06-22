@@ -236,10 +236,10 @@ describe("LifecycleService — HIGH #14: backtest staleness gate", () => {
     expect(result.error).toMatch(/lifecycle.backtest_stale/);
 
     const auditCalls = (insertAuditRow as ReturnType<typeof vi.fn>).mock.calls;
-    const staleAudit = auditCalls.find(([row]: [{ action: string }]) => row.action === "lifecycle.backtest_stale");
+    const staleAudit = auditCalls.find((args: unknown[]) => (args[0] as { action: string }).action === "lifecycle.backtest_stale");
     expect(staleAudit).toBeDefined();
-    expect(staleAudit[0].result.reason).toBe("backtest_too_old");
-    expect(staleAudit[0].result.limit_days).toBe(30);
+    expect((staleAudit![0] as Record<string, unknown>)["result"] && ((staleAudit![0] as Record<string, unknown>)["result"] as Record<string, unknown>)["reason"]).toBe("backtest_too_old");
+    expect((staleAudit![0] as Record<string, unknown>)["result"] && ((staleAudit![0] as Record<string, unknown>)["result"] as Record<string, unknown>)["limit_days"]).toBe(30);
   });
 
   it("allows promotion when backtest is 29 days old (within default limit)", async () => {
@@ -249,7 +249,7 @@ describe("LifecycleService — HIGH #14: backtest staleness gate", () => {
 
     // May fail for other reasons (no MC run etc.) but NOT for staleness
     const auditCalls = (insertAuditRow as ReturnType<typeof vi.fn>).mock.calls;
-    const staleAudit = auditCalls.find(([row]: [{ action: string }]) => row.action === "lifecycle.backtest_stale");
+    const staleAudit = auditCalls.find((args: unknown[]) => (args[0] as { action: string }).action === "lifecycle.backtest_stale");
     expect(staleAudit).toBeUndefined();
   });
 
@@ -263,9 +263,9 @@ describe("LifecycleService — HIGH #14: backtest staleness gate", () => {
     expect(result.error).toMatch(/lifecycle.backtest_stale/);
 
     const auditCalls = (insertAuditRow as ReturnType<typeof vi.fn>).mock.calls;
-    const staleAudit = auditCalls.find(([row]: [{ action: string }]) => row.action === "lifecycle.backtest_stale");
+    const staleAudit = auditCalls.find((args: unknown[]) => (args[0] as { action: string }).action === "lifecycle.backtest_stale");
     expect(staleAudit).toBeDefined();
-    expect(staleAudit[0].result.limit_days).toBe(7);
+    expect((staleAudit![0] as Record<string, unknown>)["result"] && ((staleAudit![0] as Record<string, unknown>)["result"] as Record<string, unknown>)["limit_days"]).toBe(7);
   });
 
   it("respects BACKTEST_STALENESS_DAYS=7 env override — allows 6-day-old backtest", async () => {
@@ -273,7 +273,7 @@ describe("LifecycleService — HIGH #14: backtest staleness gate", () => {
     wireSelectsWithBacktestAge(mockDb, 6);
 
     const auditCalls = (insertAuditRow as ReturnType<typeof vi.fn>).mock.calls;
-    const staleAudit = auditCalls.find(([row]: [{ action: string }]) => row.action === "lifecycle.backtest_stale");
+    const staleAudit = auditCalls.find((args: unknown[]) => (args[0] as { action: string }).action === "lifecycle.backtest_stale");
     expect(staleAudit).toBeUndefined();
   });
 });

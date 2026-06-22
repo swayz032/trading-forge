@@ -170,6 +170,61 @@ export interface ExitPlanWithRuntimeState {
   runtime_state: ExitPlanRuntimeState;
 }
 
+// ─── Backtest Result Extras Shape (Wave 23 F-4) ──────────────────────────────
+
+/**
+ * Shape of backtests.result_extras JSONB column.
+ *
+ * Populated by backtest-service.ts::buildResultExtras() from Python backtester output.
+ * Python writer stamps schema_version = "v2_truthiness" on current runs.
+ * All fields optional — Python only emits what it computed.
+ */
+export interface BacktestResultExtrasShape {
+  schema_version?: string;           // "v2_truthiness" | "v1" | undefined
+  governor?: Record<string, unknown>;
+  analytics?: Record<string, unknown>;
+  long_short_split?: Record<string, unknown>;
+  bootstrap_ci_95?: Record<string, unknown>;
+  deflated_sharpe?: number | null;
+  recency_analysis?: Record<string, unknown>;
+  statistical_warnings?: string[] | Record<string, unknown>;
+  confidence_intervals?: Record<string, unknown>;
+  // B-1 / B-2 truthiness harness fields
+  parity_shadow?: Record<string, unknown>;
+  invariants?: Record<string, unknown>;
+  // Wave 27.5 Pass B — WFE and PBO fields surfaced via result_extras
+  wfe_overall?: number | null;
+  pbo_overall?: number | null;
+  pbo_overall_p_value?: number | null;
+  // B14 / B15 gate inputs
+  b14_ruin_ci?: Record<string, unknown>;
+  b15_passed?: boolean;
+  b10_pass?: boolean;
+  frankenstein_pass?: boolean;
+  compliance_pass_rate?: number;
+  a14_severity?: string;
+  [key: string]: unknown;            // forward-compat: accept new Python fields
+}
+
+// ─── Paper Session Governor State Shape (Wave 23 F-4) ────────────────────────
+
+/**
+ * Shape of paper_sessions.governor_state JSONB column.
+ *
+ * The session-level DLL governor persists its state machine here so server restarts
+ * don't reset the loss-limit tracking mid-session.
+ *
+ * Comment from schema.ts: { state, consecutiveLosses, sessionLossPct, lastUpdatedAt }
+ */
+export interface PaperSessionGovernorStateShape {
+  state?: "active" | "warning" | "halted" | "force_closing";
+  consecutiveLosses?: number;
+  consecutiveWins?: number;          // wave-23 governor tracks consecutive wins for reset logic
+  sessionLossPct?: number;
+  lastUpdatedAt?: string;            // ISO 8601 UTC
+  [key: string]: unknown;            // forward-compat
+}
+
 export interface ExitPlanConfig {
   /**
    * Which exit engine to use for this strategy.

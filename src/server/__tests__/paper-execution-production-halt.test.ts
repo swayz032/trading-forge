@@ -1,4 +1,4 @@
-/**
+﻿/**
  * paper-execution-production-halt.test.ts — Track 4 Phase 4C
  *
  * Tests for the production-halt gate and forceCloseAllPositions in
@@ -64,6 +64,7 @@ vi.mock("../db/schema.js", () => ({
   pilotSessions: {},
   backtests: {},
   systemParameters: {},
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
   complianceRulesets: {},
   complianceDriftLog: {},
   strategyMemory: {},

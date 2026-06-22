@@ -13,10 +13,11 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
+    "noEmitOnError": true,
     "paths": {
       "@/*": ["./src/*"]
     }
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "src/engine", "src/dashboard"]
+  "exclude": ["node_modules", "dist", "src/engine", "src/dashboard", "src/server/db/migrations", "scripts"]
 }

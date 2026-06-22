@@ -371,8 +371,8 @@ export async function runRecallPass(
         /\d+\s+out\s+of\s+\d+/.test(q) ||                    // "7 out of 10"
         /\b(?:win\s+rate|hit\s+rate|accuracy)\b/.test(q);    // explicit win-rate phrase
       if (!hasNumericClaim) {
-        (recall as Record<string, unknown>)._rejected = (recall as Record<string, unknown>)._rejected ?? {};
-        ((recall as Record<string, unknown>)._rejected as Record<string, unknown>)["win_rate"] =
+        (recall as unknown as Record<string, unknown>)["_rejected"] = (recall as unknown as Record<string, unknown>)["_rejected"] ?? {};
+        ((recall as unknown as Record<string, unknown>)["_rejected"] as Record<string, unknown>)["win_rate"] =
           `quote_has_no_numeric_claim: "${q.slice(0, 80)}" (value ${recall.win_rate.value} not derivable from quote)`;
         recall.win_rate = { value: null, quote: null };
       }
@@ -389,8 +389,8 @@ export async function runRecallPass(
         /\brisking?\s+\d+.+(?:make|gain|profit)\s+\d+/i.test(q);
       if (!hasRSyntax) {
         recall.avg_r = { value: null, quote: null };
-        (recall as Record<string, unknown>)._rejected = (recall as Record<string, unknown>)._rejected ?? {};
-        ((recall as Record<string, unknown>)._rejected as Record<string, unknown>)["avg_r"] =
+        (recall as unknown as Record<string, unknown>)["_rejected"] = (recall as unknown as Record<string, unknown>)["_rejected"] ?? {};
+        ((recall as unknown as Record<string, unknown>)["_rejected"] as Record<string, unknown>)["avg_r"] =
           `quote_lacks_R_syntax: "${q.slice(0, 80)}" (pip distances are not R-multiples)`;
       }
     }
@@ -408,8 +408,8 @@ export async function runRecallPass(
           // Discard the unverified field — it's hallucinated or example-leaked.
           recall[f] = { value: null, quote: null };
           // Push an audit-style change entry so caller can log the rejection.
-          (recall as Record<string, unknown>)._rejected = (recall as Record<string, unknown>)._rejected ?? {};
-          ((recall as Record<string, unknown>)._rejected as Record<string, unknown>)[f] =
+          (recall as unknown as Record<string, unknown>)["_rejected"] = (recall as unknown as Record<string, unknown>)["_rejected"] ?? {};
+          ((recall as unknown as Record<string, unknown>)["_rejected"] as Record<string, unknown>)[f] =
             `quote_not_in_transcript: "${field.quote.slice(0, 80)}"`;
         }
       }

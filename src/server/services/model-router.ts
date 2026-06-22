@@ -1745,10 +1745,12 @@ async function recordCallTelemetry(
   },
 ): Promise<void> {
   try {
-    const { recordLlmCall } = await import("./cost-tracker.js");
-    await recordLlmCall({ role, ...payload });
+    const costTracker = await import("./cost-tracker.js") as Record<string, unknown>;
+    if (typeof costTracker["recordLlmCall"] === "function") {
+      await (costTracker["recordLlmCall"] as (v: Record<string, unknown>) => Promise<void>)({ role, ...payload } as Record<string, unknown>);
+    }
   } catch (err) {
-    logger.debug({ err, role }, "cost-tracker.recordLlmCall failed (fire-and-forget)");
+    logger.debug({ err, role }, "cost-tracker.recordLlmCall not available (fire-and-forget)");
   }
 }
 
@@ -2529,17 +2531,17 @@ async function callOllamaForTranscriptExtractor(
         input: { model, role } as Record<string, unknown>,
         result: {
           under_extracted_count: underExtracted.length,
-          strategy_names: underExtracted.map((s) => (s as Record<string, unknown>).name),
+          strategy_names: underExtracted.map((s) => (s as Record<string, unknown>)["name"]),
           missing_fields: underExtracted.map((s) => ({
-            name: (s as Record<string, unknown>).name,
-            has_entry_sequence: Array.isArray((s as Record<string, unknown>).entry_sequence) && ((s as Record<string, unknown>).entry_sequence as unknown[]).length >= 2,
-            has_stop_loss_structured: (s as Record<string, unknown>).stop_loss_structured != null,
-            has_targets: Array.isArray((s as Record<string, unknown>).targets) && ((s as Record<string, unknown>).targets as unknown[]).length >= 1,
+            name: (s as Record<string, unknown>)["name"],
+            has_entry_sequence: Array.isArray((s as Record<string, unknown>)["entry_sequence"]) && ((s as Record<string, unknown>)["entry_sequence"] as unknown[]).length >= 2,
+            has_stop_loss_structured: (s as Record<string, unknown>)["stop_loss_structured"] != null,
+            has_targets: Array.isArray((s as Record<string, unknown>)["targets"]) && ((s as Record<string, unknown>)["targets"] as unknown[]).length >= 1,
           })),
         } as Record<string, unknown>,
-        status: "warn",
+        status: "failure",
         decisionAuthority: "system",
-      } as Record<string, unknown>).catch(() => { /* non-blocking */ });
+      }).catch(() => { /* non-blocking */ });
     }
   } catch { /* non-blocking — never fail extraction on audit error */ }
 
@@ -2569,7 +2571,7 @@ async function callOllamaForTranscriptExtractor(
       } as Record<string, unknown>,
       status: "success",
       decisionAuthority: "system",
-    } as Record<string, unknown>).catch(() => { /* non-blocking */ });
+    }).catch(() => { /* non-blocking */ });
   } catch { /* non-blocking */ }
 
   return { text: raw, model, durationMs, inputTokens: 0, outputTokens: 0 };

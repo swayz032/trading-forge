@@ -284,7 +284,7 @@ async function buildAlertingStatus(): Promise<AlertingStatus> {
       sql`SELECT created_at FROM alerts ORDER BY created_at DESC LIMIT 1`
     );
 
-    if (rows.rows.length === 0) {
+    if (rows.length === 0) {
       return {
         lastAlertFiredAt: null,
         minutesSinceLastAlert: null,
@@ -292,7 +292,7 @@ async function buildAlertingStatus(): Promise<AlertingStatus> {
       };
     }
 
-    const lastAt = new Date(rows.rows[0].created_at);
+    const lastAt = new Date(rows[0].created_at);
     const minutesSinceLastAlert = Math.round((Date.now() - lastAt.getTime()) / 60_000);
 
     return {

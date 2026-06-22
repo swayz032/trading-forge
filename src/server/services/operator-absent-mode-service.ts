@@ -219,7 +219,7 @@ export async function runOperatorAbsentAutoPromote(correlationId?: string): Prom
       const { LifecycleService } = await import("./lifecycle-service.js");
       const lifecycle = new LifecycleService();
       const promoteResult = await lifecycle.promoteStrategy(strategy.id, "DEPLOY_READY", "PILOT", {
-        actor: "operator_absent_mode",
+        actor: "system",
         reason: `Operator-absent auto-promotion: Tier 1, rolling_sharpe=${rollingSharpeSince.toFixed(2)}`,
       });
 
@@ -259,7 +259,7 @@ export async function runOperatorAbsentAutoPromote(correlationId?: string): Prom
       });
 
       // Discord
-      await AlertFactory.notifyOperatorAbsentTier1Promotion(strategy.id, rollingSharpeSince);
+      await AlertFactory.deployReady(strategy.id, `Operator-absent Tier 1 auto-promoted DEPLOY_READY → PILOT (rolling_sharpe=${rollingSharpeSince.toFixed(2)})`);
 
       logger.info(
         { strategyId: strategy.id, name: strategy.name, sharpe: rollingSharpeSince },

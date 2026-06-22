@@ -1,0 +1,12 @@
+import "dotenv/config";
+import { db } from "../src/server/db/index.js";
+import { sql } from "drizzle-orm";
+const r1: any = await db.execute(sql`SELECT id, name, archived_at FROM strategies WHERE id::text LIKE 'cf8a9552%' OR id::text LIKE '66ad5518%' OR id::text LIKE 'ae1ecf9f%'`);
+console.log("STRATS:", JSON.stringify(r1, null, 2));
+const r2: any = await db.execute(sql`SELECT id, concept_name, graduated_strategy_id FROM strategy_pending_buckets WHERE id::text = '080520be-5a07-44b5-8fee-5ad5a0930e25'`);
+console.log("BUCKET:", JSON.stringify(r2, null, 2));
+const r3: any = await db.execute(sql`SELECT id, source_url, bucket_id::text as bid FROM strategy_pending_mentions WHERE source_url LIKE '%dE4lPhAWke8%'`);
+console.log("MENTIONS:", JSON.stringify(r3, null, 2));
+const r4: any = await db.execute(sql`SELECT id, name, config->>'source_url' as src FROM strategies WHERE config->>'source_url' LIKE '%dE4lPhAWke8%'`);
+console.log("STRATS BY SRC:", JSON.stringify(r4, null, 2));
+process.exit(0);

@@ -109,8 +109,8 @@ describe("LifecycleService — HIGH #13: killSwitch first gate on auto-check met
       await svc.checkAutoPromotions({ correlationId: "test-cid" });
 
       const warnCalls = (logger.warn as ReturnType<typeof vi.fn>).mock.calls;
-      const haltedLog = warnCalls.find(([_, msg]: [unknown, string]) =>
-        typeof msg === "string" && msg.includes("killSwitch halted"),
+      const haltedLog = warnCalls.find((args: unknown[]) =>
+        typeof args[1] === "string" && (args[1] as string).includes("killSwitch halted"),
       );
       expect(haltedLog).toBeDefined();
     });

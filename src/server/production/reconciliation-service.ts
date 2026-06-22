@@ -278,14 +278,12 @@ async function fetchTradingviewMarkerCount(date: Date): Promise<number | null> {
   try {
     // Use raw SQL to be resilient if the table hasn't been migrated yet.
     const result = await db.execute<{ cnt: string }>(
-      `SELECT COUNT(*) AS cnt
-         FROM tradingview_markers
-        WHERE bar_timestamp >= $1
-          AND bar_timestamp < $2`,
-      [dayStart.toISOString(), dayEnd.toISOString()]
+      sql`SELECT COUNT(*) AS cnt
+          FROM tradingview_markers
+          WHERE bar_timestamp >= ${dayStart.toISOString()}
+            AND bar_timestamp < ${dayEnd.toISOString()}`
     );
-    const rows = (result as unknown as { rows: Array<{ cnt: string }> }).rows;
-    return Number(rows?.[0]?.cnt ?? 0);
+    return Number(result?.[0]?.cnt ?? 0);
   } catch (err) {
     // Table likely doesn't exist yet — skip this comparison gracefully.
     logger.debug(

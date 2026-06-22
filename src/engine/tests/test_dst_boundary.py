@@ -36,11 +36,13 @@ def _make_equity_around_dst(spring_forward: bool = True) -> tuple[np.ndarray, li
         # Nov 2 + Nov 3 (fall-back at 02:00 ET)
         transition_date = date(2024, 11, 3)
 
-    # Generate UTC timestamps covering the full 3-day window at 15-min resolution
+    # Generate UTC timestamps spanning 2 calendar days (enough to guarantee >= 2 ET dates).
+    # Start at 13:00 UTC on transition_date-1 (08:00 ET / 09:00 ET) and run for 24 hours
+    # so bars cross midnight ET (transition_date) — ensuring >= 2 unique ET calendar dates.
     start_utc = datetime(transition_date.year, transition_date.month, transition_date.day - 1, 13, 0)
     timestamps_utc: list[datetime] = []
     t = start_utc
-    for _ in range(12 * 3):  # 3 days × 12 bars/hour × several hours
+    for _ in range(4 * 24):  # 24 hours at 15-min resolution = 96 bars — crosses midnight ET
         timestamps_utc.append(t)
         t += timedelta(minutes=15)
 

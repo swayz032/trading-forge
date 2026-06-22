@@ -114,27 +114,27 @@ async function computeLiveMetrics(lookbackDays: number): Promise<LiveMetrics> {
     `
   );
 
-  if (dailyRows.rows.length < 2) {
+  if (dailyRows.length < 2) {
     // Insufficient data for Sharpe computation
     return { sharpe: null, winRate: null, avgSlippage: null };
   }
 
-  const dailyPnls = dailyRows.rows.map((r) => Number(r.daily_pnl ?? 0));
+  const dailyPnls = dailyRows.map((r: { trade_date: string; daily_pnl: string; trade_count: string; slippage_avg: string }) => Number(r.daily_pnl ?? 0));
   const n = dailyPnls.length;
-  const mean = dailyPnls.reduce((a, b) => a + b, 0) / n;
-  const variance = dailyPnls.reduce((s, x) => s + (x - mean) ** 2, 0) / (n - 1);
+  const mean = dailyPnls.reduce((a: number, b: number) => a + b, 0) / n;
+  const variance = dailyPnls.reduce((s: number, x: number) => s + (x - mean) ** 2, 0) / (n - 1);
   const stdDev = Math.sqrt(variance);
 
   const sharpe = stdDev > 0
     ? (mean / stdDev) * Math.sqrt(DRIFT_CONFIG.ANNUAL_FACTOR)
     : null;
 
-  const winDays = dailyPnls.filter((p) => p > 0).length;
+  const winDays = dailyPnls.filter((p: number) => p > 0).length;
   const winRate = n > 0 ? winDays / n : null;
 
-  const slippageValues = dailyRows.rows
-    .map((r) => Number(r.slippage_avg ?? 0))
-    .filter((v) => !isNaN(v));
+  const slippageValues = dailyRows
+    .map((r: { trade_date: string; daily_pnl: string; trade_count: string; slippage_avg: string }) => Number(r.slippage_avg ?? 0))
+    .filter((v: number) => !isNaN(v));
   const avgSlippage = slippageValues.length > 0
     ? slippageValues.reduce((a, b) => a + b, 0) / slippageValues.length
     : null;
@@ -167,14 +167,14 @@ async function fetchBacktestExpectedSharpe(): Promise<number | null> {
     `
   );
 
-  if (dailyRows.rows.length < 2) {
+  if (dailyRows.length < 2) {
     return null;
   }
 
-  const dailyPnls = dailyRows.rows.map((r) => Number(r.daily_pnl ?? 0));
+  const dailyPnls = dailyRows.map((r: { trade_date: string; daily_pnl: string }) => Number(r.daily_pnl ?? 0));
   const n = dailyPnls.length;
-  const mean = dailyPnls.reduce((a, b) => a + b, 0) / n;
-  const variance = dailyPnls.reduce((s, x) => s + (x - mean) ** 2, 0) / (n - 1);
+  const mean = dailyPnls.reduce((a: number, b: number) => a + b, 0) / n;
+  const variance = dailyPnls.reduce((s: number, x: number) => s + (x - mean) ** 2, 0) / (n - 1);
   const stdDev = Math.sqrt(variance);
 
   return stdDev > 0

@@ -31,7 +31,7 @@ import { broadcastSSE } from "../routes/sse.js";
 import { compileDualPineExport } from "./pine-export-service.js";
 import { agentCoordinator } from "./agent-coordinator-service.js";
 import { tracer } from "../lib/tracing.js";
-import { strategyPromotions } from "../lib/metrics-registry.js";
+import { strategyPromotions, pboBLocksTotal, lifecycleShadowPromotionsTotal } from "../lib/metrics-registry.js";
 import { evaluateMultiFirmEligibility } from "./multi-firm-promotion-service.js";
 import { killSwitch } from "../production/kill-switch.js";
 import { evaluateB14CiGate } from "../lib/b14-ci-gate.js";
@@ -39,6 +39,8 @@ import { evaluateWfeGate } from "../lib/wfe-gate.js";
 import { evaluateParameterDriftGate } from "../lib/parameter-drift-gate.js";
 import { evaluateCompositeShadow } from "../lib/composite-shadow-gate.js";
 import { routeShadowDisagreementAlert } from "../lib/composite-shadow-discord-router.js";
+import { notifyWarning } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { evaluatePromotionGates, getWfePromotionFloor, getCpcvMinPaths } from "../lib/promotion-gate-orchestrator.js";
 // Wave 29 Pass A.2 — PBO lifecycle gate (TESTING → SHADOW/PAPER hard gate).
 // PBO_OVERFIT_THRESHOLD_PCT (default 0.15) — stricter than W27.5 PBO_OVERFIT_THRESHOLD (0.5).
@@ -945,6 +947,20 @@ export class LifecycleService {
               threshold: pboGateResult.threshold,
               blocked: true,
             });
+            // Wave 29 prod hardening: increment Prom counter + Discord escalation
+            try {
+              // Derive regime for label from biasState if available; fall back to "UNKNOWN"
+              const regimeLabel = "UNKNOWN"; // regime not available at this call site
+              pboBLocksTotal.labels({ regime: regimeLabel }).inc();
+            } catch (_promErr) { /* non-blocking */ }
+            try {
+              const discordBody = appendFamilyGradePostscript(
+                `PBO ${(pboGateResult.pbo ?? 0).toFixed(4)} > threshold ${pboGateResult.threshold} blocked strategy ${id} from ${fromState}→${toState}. Re-run backtest with more CPCV folds or narrower parameter search.`,
+                "The bot detected that this trading strategy may have been over-tuned to historical data. Promotion was blocked to protect your account.",
+                "No action needed — the bot will retry after the next backtest run.",
+              );
+              notifyWarning(`PBO Block: strategy ${id} ${fromState}→${toState}`, discordBody, { strategyId: id, fromState, toState, pbo: pboGateResult.pbo });
+            } catch (_discordErr) { /* non-blocking */ }
             return { success: false, error: pboError };
           }
 
@@ -2053,6 +2069,25 @@ export class LifecycleService {
               sample_size: divergenceResult.sample_size,
               reason: divergenceResult.reason,
             });
+            // Wave 29 prod hardening: Prom counter + Discord escalation on hard block
+            if (!isInsufficientSamples) {
+              try {
+                lifecycleShadowPromotionsTotal.labels({ outcome: "blocked_divergence" }).inc();
+              } catch (_promErr) { /* non-blocking */ }
+              const thresholdPct = parseFloat(process.env.SHADOW_DIVERGENCE_THRESHOLD_PCT ?? "0.05");
+              try {
+                const discordBody = appendFamilyGradePostscript(
+                  `Shadow divergence ${((divergenceResult.divergence_pct ?? 0) * 100).toFixed(2)}% >= threshold ${(thresholdPct * 100).toFixed(0)}% blocked strategy ${s.id} SHADOW→PAPER (samples=${divergenceResult.sample_size ?? 0}).`,
+                  "The bot found that this strategy is behaving differently in shadow mode vs its backtest. Promotion to live paper trading was blocked.",
+                  "No action needed — the bot will re-check when more shadow signals accumulate.",
+                );
+                notifyWarning(`Shadow Divergence Block: strategy ${s.id}`, discordBody, { strategyId: s.id, divergence_pct: divergenceResult.divergence_pct, sample_size: divergenceResult.sample_size });
+              } catch (_discordErr) { /* non-blocking */ }
+            } else {
+              try {
+                lifecycleShadowPromotionsTotal.labels({ outcome: "blocked_insufficient_samples" }).inc();
+              } catch (_promErr) { /* non-blocking */ }
+            }
 
             continue; // BLOCK SHADOW → PAPER
           }
@@ -2091,6 +2126,10 @@ export class LifecycleService {
             divergence_pct: divergenceResult.divergence_pct,
             sample_size: divergenceResult.sample_size,
           });
+          // Wave 29 prod hardening: increment Prom counter for promoted outcome
+          try {
+            lifecycleShadowPromotionsTotal.labels({ outcome: "passed" }).inc();
+          } catch (_promErr) { /* non-blocking */ }
 
           const shadowResult = await this.promoteStrategy(s.id, "SHADOW", "PAPER", { correlationId: correlationId ?? undefined });
           if (shadowResult.success) {

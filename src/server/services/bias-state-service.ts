@@ -423,6 +423,7 @@ export async function getOrComputeBiasStateForDay(
   // for persistence into bias_state.regime_evidence JSONB (migration 0142) + audit emit.
   let regimeEvidenceJson: Record<string, unknown> | null = null;
   let institutionalRegimeLabel: string | null = null;
+  let previousInstitutionalRegime: string | undefined = undefined;
   const computedAt = new Date().toISOString();
   const isRefresh = forceRefresh;
 
@@ -556,7 +557,7 @@ try:
 
     # Load daily Parquet from S3 cache path (same as backtester.py)
     data_root = os.environ.get("DATA_ROOT", "data")
-    symbol = os.environ.get("BIAS_SYMBOL", "MES")
+    symbol = "${sym}"  # inlined at call time by Node template literal (PythonRunnerOptions has no env field)
     parquet_path = os.path.join(data_root, "ratio_adj", f"{symbol}_daily.parquet")
 
     if not os.path.exists(parquet_path):
@@ -722,7 +723,7 @@ except Exception as primary_err:
 
     fallback_regime = "UNKNOWN"
     fallback_playbook = "NO_TRADE"
-    fallback_evidence = {"fallback": True, "primary_error": str(primary_err)[:120], "symbol": os.environ.get("BIAS_SYMBOL", "MES")}
+    fallback_evidence = {"fallback": True, "primary_error": str(primary_err)[:120], "symbol": "${sym}"}
 
     try:
         req = _req2.Request(
@@ -755,7 +756,6 @@ except Exception as primary_err:
         source="rest_fallback",
     )
 `,
-      env: { BIAS_SYMBOL: sym },
       timeoutMs: 30_000,  // longer timeout: loads Parquet from disk
       componentName: isRefresh ? "bias-engine-10am-refresh" : "bias-engine-session-start",
       correlationId,
@@ -829,7 +829,7 @@ except Exception as primary_err:
       const priorRows = await db.execute(
         sql`SELECT regime_label FROM bias_state WHERE symbol = ${sym} AND session_date < ${sessionDate}::date ORDER BY session_date DESC LIMIT 1`
       );
-      const priorRegime: string | null = (priorRows.rows?.[0] as any)?.regime_label ?? null;
+      const priorRegime: string | null = (priorRows?.[0] as Record<string, unknown> | undefined)?.["regime_label"] as string ?? null;
       if (priorRegime !== "RANGE_BOUND") {
         // Only 1 consecutive RANGE day → await confirmation, route NO_TRADE
         logger.info(
@@ -1138,8 +1138,7 @@ except Exception as e:
   if (institutionalRegimeLabel != null) {
     try {
       const { regimeTransitionTotal } = await import("../lib/metrics-registry.js");
-      const previousRegime = (biasResult as Record<string, unknown>).previous_institutional_regime as string | undefined;
-      const fromLabel = previousRegime ?? "unknown";
+      const fromLabel = previousInstitutionalRegime ?? "unknown";
       if (fromLabel !== institutionalRegimeLabel) {
         regimeTransitionTotal.labels({ from: fromLabel, to: institutionalRegimeLabel }).inc();
       }

@@ -5,61 +5,591 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Slumhouse · The Recipe</title>
   <link rel="stylesheet" href="/slumhouse/slumhouse.css">
+  <link rel="icon" type="image/png" sizes="32x32" href="/slumhouse/icons/slumdawg-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/slumhouse/icons/slumdawg-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/slumhouse/icons/slumdawg-180.png">
+  <link rel="manifest" href="/slumhouse/manifest.webmanifest">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Slumdawg">
   <style>
-    .r-hero { background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.85) 100%), url('/slumhouse/images/slumdawg-command.png'); background-size: cover; background-position: center 30%; border:1px solid var(--line); border-radius:16px; padding:28px 32px; margin-bottom:14px; display:grid; grid-template-columns:1fr 220px; gap:22px; align-items:center; min-height:200px; }
-    .r-hero-name { font-size:28px; font-weight:800; color:var(--ink); letter-spacing:-0.02em; text-shadow:0 2px 16px rgba(0,0,0,0.7); }
-    .r-hero-badge { font-size:10px; padding:4px 10px; border-radius:999px; background:rgba(163,255,18,0.18); color:var(--lime); text-transform:uppercase; letter-spacing:0.12em; font-weight:700; border:1px solid rgba(163,255,18,0.4); margin-left:12px; }
-    .r-hero-caveat { font-size:11px; color:#bbb; margin-top:14px; text-shadow:0 2px 12px rgba(0,0,0,0.8); }
+    /* ─── Recipe page (Crib-grade pitch-black glassy 3D) ───────────── */
+    .r-back { color: var(--lime); font-size: 12px; display: inline-block; margin-bottom: 14px; text-decoration: none; opacity: 0.85; }
+    .r-back:hover { opacity: 1; text-shadow: 0 0 10px rgba(163,255,18,0.5); }
+
+    /* Hero card */
+    .r-hero {
+      position: relative;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.88) 100%),
+        url('/slumhouse/images/slumdawg-command.png');
+      background-size: cover;
+      background-position: center 30%;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.015), 0 12px 40px rgba(0, 0, 0, 0.6);
+      border-radius: 18px;
+      padding: 30px 34px;
+      margin-bottom: 14px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 220px;
+      gap: 22px;
+      align-items: center;
+      min-height: 210px;
+      overflow: hidden;
+    }
+    .r-hero-name { font-size: 28px; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; text-shadow: 0 2px 16px rgba(0, 0, 0, 0.7); }
+    .r-hero-badge { font-size: 10px; padding: 4px 10px; border-radius: 999px; background: rgba(163, 255, 18, 0.18); color: var(--lime); text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700; border: 1px solid rgba(163, 255, 18, 0.4); margin-left: 12px; }
+    .r-hero-caveat { font-size: 12px; color: #bbb; margin-top: 14px; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8); line-height: 1.55; }
     .r-hero-caveat b { color: var(--lime); }
-    .r-hero-score { display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
-    .r-ring { width:96px; height:96px; border-radius:50%; display:flex; align-items:center; justify-content:center; position:relative; box-shadow:0 0 30px rgba(163,255,18,0.25); }
-    .r-ring::before { content:""; position:absolute; inset:6px; border-radius:50%; background:rgba(0,0,0,0.85); }
-    .r-ring span { position:relative; font-size:26px; font-weight:800; color:var(--lime); }
-    .r-ring-lbl { font-size:10px; color:#bbb; text-transform:uppercase; letter-spacing:0.1em; text-shadow:0 2px 12px rgba(0,0,0,0.8); }
-    .r-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
-    .r-panel { background:#080808; border:1px solid var(--line); border-radius:14px; padding:22px 24px; }
-    .r-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-    .r-h { font-size:15px; font-weight:700; color:var(--ink); display:flex; align-items:center; gap:10px; }
-    .src { font-size:9px; padding:3px 8px; border-radius:999px; letter-spacing:0.08em; text-transform:uppercase; font-weight:700; }
-    .src.replay { background:rgba(96,165,250,0.14); color:var(--blue); }
-    .src.whatif { background:rgba(255,184,77,0.14); color:var(--warm); }
-    .r-cap { font-size:11px; color:var(--dim); margin-bottom:18px; line-height:1.5; }
-    .r-cap b { color:var(--ink); }
-    .r-bt-stats { display:grid; grid-template-columns:repeat(2,1fr); gap:16px 24px; margin-bottom:18px; }
-    .r-bt-big { font-size:24px; font-weight:700; letter-spacing:-0.02em; }
-    .r-bt-big.green { color:var(--lime); }
-    .r-bt-big.red { color:var(--red); }
-    .r-bt-cap { font-size:10px; color:var(--mute); text-transform:uppercase; letter-spacing:0.08em; margin-top:2px; }
-    .r-mc-row { display:flex; justify-content:space-between; padding:11px 0; border-bottom:1px solid var(--line); font-size:13px; }
-    .r-mc-row:last-child { border:none; }
-    .r-mc-val.green { color:var(--lime); font-weight:600; }
-    .r-mc-val.red { color:var(--red); font-weight:600; }
-    .r-mc-bar { margin-top:14px; height:6px; background:#1a1a1a; border-radius:3px; overflow:hidden; }
-    .r-mc-fill { height:100%; background:linear-gradient(90deg, var(--lime), #34d399); border-radius:3px; }
-    .r-bot { display:grid; grid-template-columns:1fr 340px; gap:12px; }
-    .r-cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
-    .r-cal-day { aspect-ratio:1/1; background:#0d0d0d; border-radius:4px; padding:4px 5px; font-size:9px; color:var(--mute); display:flex; flex-direction:column; justify-content:space-between; }
-    .r-cal-day.green { background:rgba(163,255,18,0.22); color:var(--ink); }
-    .r-cal-day.red { background:rgba(255,99,99,0.18); color:#ffaaaa; }
-    .r-feed-row { display:grid; grid-template-columns:22px 1fr; gap:10px; padding:11px 0; border-bottom:1px solid var(--line); }
-    .r-feed-row:last-child { border:none; }
-    .r-feed-light { width:10px; height:10px; border-radius:50%; margin-top:5px; }
-    .r-feed-light.pass { background:var(--lime); box-shadow:0 0 10px var(--lime); }
-    .r-feed-light.warn { background:var(--warm); }
-    .r-feed-light.fail { background:var(--red); }
-    .r-feed-name { font-size:12px; font-weight:700; color:var(--ink); }
-    .r-feed-desc { font-size:11px; color:var(--dim); margin-top:2px; line-height:1.45; }
+    .r-hero-score { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+    .r-ring { width: 96px; height: 96px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; box-shadow: 0 0 36px rgba(163, 255, 18, 0.3); }
+    .r-ring::before { content: ""; position: absolute; inset: 6px; border-radius: 50%; background: rgba(0, 0, 0, 0.88); }
+    .r-ring span { position: relative; font-size: 26px; font-weight: 800; color: var(--lime); }
+    .r-ring-lbl { font-size: 10px; color: #ddd; text-transform: uppercase; letter-spacing: 0.12em; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8); }
+
+    /* Panel base (Crib-style pitch-black glassy 3D) */
+    .r-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-bottom: 14px; perspective: 1600px; }
+    .r-panel {
+      position: relative;
+      background: #000;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.015), 0 8px 28px rgba(0, 0, 0, 0.55);
+      border-radius: 16px;
+      padding: 22px 24px;
+      overflow: hidden;
+      transition: transform 0.25s ease, border-color 0.2s, box-shadow 0.25s;
+      transform-style: preserve-3d;
+    }
+    .r-panel:hover {
+      transform: perspective(900px) rotateX(1.5deg) translateY(-1px);
+      border-color: rgba(163, 255, 18, 0.18);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 18px 40px rgba(0, 0, 0, 0.7), 0 0 28px rgba(163, 255, 18, 0.08);
+    }
+    /* The Monte Carlo panel as a whole sits at a permanent 3D tilt — bars + meter
+       ride with the card so the chart-inside-flat-card mismatch is gone. */
+    .r-panel.r-panel-mc {
+      transform: rotateX(4deg);
+      transform-origin: center top;
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.015),
+        0 26px 50px rgba(0, 0, 0, 0.7),
+        0 0 60px rgba(163, 255, 18, 0.05);
+    }
+    .r-panel.r-panel-mc:hover {
+      transform: rotateX(4deg) translateY(-2px);
+      border-color: rgba(163, 255, 18, 0.22);
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+        0 32px 60px rgba(0, 0, 0, 0.75),
+        0 0 70px rgba(163, 255, 18, 0.12);
+    }
+
+    /* Empty state — chart still animates, just dimmer + with overlay label */
+    .r-mc-chart-3d.empty .mc-bar-front,
+    .r-mc-chart-3d.empty .mc-bar-side,
+    .r-mc-chart-3d.empty .mc-bar-top { opacity: 0.4; }
+    .r-mc-chart-3d.empty::after {
+      content: "WAITING FOR FIRST BACKTEST";
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      color: rgba(255, 255, 255, 0.65);
+      text-shadow: 0 0 14px rgba(163, 255, 18, 0.35), 0 0 30px rgba(0,0,0,0.9);
+      pointer-events: none;
+      animation: mc-empty-glow 2.6s ease-in-out infinite;
+    }
+    @keyframes mc-empty-glow {
+      0%, 100% { text-shadow: 0 0 14px rgba(163, 255, 18, 0.25), 0 0 30px rgba(0,0,0,0.9); opacity: 0.85; }
+      50%      { text-shadow: 0 0 22px rgba(163, 255, 18, 0.65), 0 0 30px rgba(0,0,0,0.9); opacity: 1; }
+    }
+
+    /* Empty-state meter — keep the sweep + pulse running on a muted track */
+    .r-mc-verdict.pending {
+      border-color: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .r-mc-verdict.pending .r-mc-verdict-lbl { color: rgba(255, 255, 255, 0.55); }
+    .r-mc-verdict.pending .r-mc-verdict-fill {
+      background: linear-gradient(90deg,
+        rgba(200, 200, 200, 0.15) 0%,
+        rgba(220, 220, 220, 0.55) 40%,
+        #ffffff 50%,
+        rgba(220, 220, 220, 0.55) 60%,
+        rgba(200, 200, 200, 0.15) 100%);
+      background-size: 220% 100%;
+      animation:
+        mc-meter-sweep 2.6s linear infinite,
+        mc-empty-meter-pulse 2.4s ease-in-out infinite;
+    }
+    @keyframes mc-empty-meter-pulse {
+      0%, 100% { box-shadow: 0 0 8px rgba(255, 255, 255, 0.18); }
+      50%      { box-shadow: 0 0 18px rgba(255, 255, 255, 0.4); }
+    }
+    .r-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .r-h { font-size: 15px; font-weight: 800; color: var(--ink); display: flex; align-items: center; gap: 10px; letter-spacing: -0.01em; }
+    .src { font-size: 9px; padding: 3px 8px; border-radius: 999px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; }
+    .src.replay { background: rgba(96, 165, 250, 0.14); color: var(--blue); }
+    .src.whatif { background: rgba(255, 184, 77, 0.14); color: var(--warm); }
+    .r-cap { font-size: 11px; color: var(--dim); margin-bottom: 18px; line-height: 1.5; }
+    .r-cap b { color: var(--ink); }
+
+    /* Backtest KPI tiles — now 6 cells (Total / Per play / Worst day / Win days / Win Rate / Sharpe / RR) */
+    .r-bt-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 26px; margin-bottom: 8px; }
+    .r-bt-big { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+    .r-bt-big.green { color: var(--lime); text-shadow: 0 0 18px rgba(163,255,18,0.35); }
+    .r-bt-big.red { color: var(--red); }
+    .r-bt-big.warm { color: var(--warm); }
+    .r-bt-cap { font-size: 10px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; font-weight: 700; }
+    .r-bt-sub { font-size: 11px; color: var(--dim); margin-top: 4px; }
+
+    /* Quant chips — small horizontal row for Win Rate / Sharpe / RR */
+    .r-quant-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 22px; padding-top: 18px; border-top: 1px dashed rgba(255,255,255,0.06); }
+    .r-quant-chip {
+      background: rgba(163, 255, 18, 0.04);
+      border: 1px solid rgba(163, 255, 18, 0.18);
+      border-radius: 12px;
+      padding: 12px 14px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.015), 0 4px 14px rgba(0,0,0,0.45);
+    }
+    .r-quant-chip-lbl { font-size: 9px; color: var(--lime); text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700; }
+    .r-quant-chip-val { font-size: 22px; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; margin-top: 4px; }
+    .r-quant-chip-sub { font-size: 10px; color: var(--dim); margin-top: 2px; }
+
+    /* MC — 3D bar chart of "fake years" (panel itself tilts; inner is flat) */
+    .r-mc-chart-3d {
+      position: relative;
+      margin-top: 4px;
+      padding: 14px 10px 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.015) 0%, rgba(0,0,0,0) 60%);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 14px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.015), 0 12px 30px rgba(0,0,0,0.55);
+      overflow: hidden;
+    }
+    .r-mc-chart-3d::before {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 38px;
+      background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 100%);
+      pointer-events: none;
+    }
+    .r-mc-chart-stage svg { width: 100%; height: 200px; display: block; overflow: visible; filter: drop-shadow(0 6px 8px rgba(0,0,0,0.55)); }
+
+    /* Bar grow-in motion — staggered via CSS variable --i set per bar */
+    @keyframes mc-bar-rise {
+      0%   { transform: scaleY(0); opacity: 0; }
+      60%  { opacity: 1; }
+      100% { transform: scaleY(1); opacity: 1; }
+    }
+    @keyframes mc-bar-breathe {
+      0%, 100% { transform: scaleY(1); }
+      50%      { transform: scaleY(1.025); }
+    }
+    .mc-bar-front, .mc-bar-side, .mc-bar-top {
+      transform-origin: bottom;
+      animation:
+        mc-bar-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) backwards,
+        mc-bar-breathe 4s ease-in-out infinite;
+      animation-delay: calc(var(--i, 0) * 28ms), calc(900ms + var(--i, 0) * 80ms);
+    }
+
+    /* Subtle ambient float on the whole chart stage */
+    @keyframes mc-stage-float {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-2px); }
+    }
+    .r-mc-chart-stage { animation: mc-stage-float 6s ease-in-out infinite; }
+
+    /* Survival meter — animated gradient sweep + fill on load */
+    @keyframes mc-meter-fill {
+      from { width: 0%; }
+    }
+    @keyframes mc-meter-sweep {
+      0%   { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    @keyframes mc-meter-pulse {
+      0%, 100% { box-shadow: 0 0 10px rgba(163,255,18,0.45); }
+      50%      { box-shadow: 0 0 22px rgba(163,255,18,0.85); }
+    }
+    .r-mc-verdict-fill {
+      background: linear-gradient(90deg,
+        rgba(163,255,18,0.7) 0%,
+        #c5ff5f 40%,
+        #ffffff 50%,
+        #c5ff5f 60%,
+        rgba(163,255,18,0.7) 100%);
+      background-size: 220% 100%;
+      animation:
+        mc-meter-fill 1.2s cubic-bezier(0.22, 1, 0.36, 1) backwards,
+        mc-meter-sweep 3.4s linear infinite,
+        mc-meter-pulse 2.4s ease-in-out infinite;
+    }
+    .r-mc-verdict.bad .r-mc-verdict-fill {
+      background: linear-gradient(90deg,
+        rgba(255,99,99,0.7) 0%,
+        #ff6b6b 40%,
+        #ffffff 50%,
+        #ff6b6b 60%,
+        rgba(255,99,99,0.7) 100%);
+      background-size: 220% 100%;
+      animation:
+        mc-meter-fill 1.2s cubic-bezier(0.22, 1, 0.36, 1) backwards,
+        mc-meter-sweep 3.4s linear infinite,
+        mc-meter-pulse 2.4s ease-in-out infinite;
+    }
+    .r-mc-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; font-size: 10px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; align-items: center; }
+    .r-mc-legend-sq { width: 11px; height: 11px; border-radius: 2px; }
+    .r-mc-legend-sq.lime { background: var(--lime); box-shadow: 0 0 8px rgba(163,255,18,0.5); }
+    .r-mc-legend-sq.red { background: var(--red); box-shadow: 0 0 8px rgba(255,99,99,0.5); }
+    .r-mc-legend-sq.blew { background: repeating-linear-gradient(45deg, rgba(255,40,40,0.6) 0 3px, rgba(0,0,0,0.6) 3px 6px); }
+    .r-mc-tags { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+    .r-mc-tag {
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .r-mc-tag.bad { border-color: rgba(255, 99, 99, 0.25); background: rgba(255,99,99,0.04); }
+    .r-mc-tag.likely { border-color: rgba(163, 255, 18, 0.25); background: rgba(163,255,18,0.04); }
+    .r-mc-tag.hot { border-color: rgba(163, 255, 18, 0.35); background: rgba(163,255,18,0.06); }
+    .r-mc-tag-lbl { font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 800; color: var(--mute); }
+    .r-mc-tag.bad .r-mc-tag-lbl { color: var(--red); }
+    .r-mc-tag.likely .r-mc-tag-lbl, .r-mc-tag.hot .r-mc-tag-lbl { color: var(--lime); }
+    .r-mc-tag-val { font-size: 17px; font-weight: 800; color: var(--ink); margin-top: 4px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+    .r-mc-tag-sub { font-size: 10px; color: var(--dim); margin-top: 2px; }
+
+    .r-mc-verdict {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 14px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(163, 255, 18, 0.25);
+      background: rgba(163, 255, 18, 0.05);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.015);
+    }
+    .r-mc-verdict.bad { border-color: rgba(255, 99, 99, 0.3); background: rgba(255,99,99,0.06); }
+    .r-mc-verdict-lbl { font-size: 10px; color: var(--lime); text-transform: uppercase; letter-spacing: 0.14em; font-weight: 800; }
+    .r-mc-verdict.bad .r-mc-verdict-lbl { color: var(--red); }
+    .r-mc-verdict-val { font-size: 16px; font-weight: 800; color: var(--ink); letter-spacing: -0.01em; }
+    .r-mc-verdict-bar { flex: 1; height: 6px; background: #1a1a1a; border-radius: 3px; overflow: hidden; }
+    .r-mc-verdict-fill { height: 100%; background: linear-gradient(90deg, var(--lime), #34d399); border-radius: 3px; box-shadow: 0 0 10px rgba(163,255,18,0.5); }
+
+    /* 3D Slumdawg Calendar — full-month grid with Week-Total column */
+    .r-bot { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 12px; }
+
+    .r-cal-toolbar { display: flex; gap: 10px; margin: 14px 0 16px; align-items: center; }
+    .r-cal-toolbar-label { font-size: 10px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.14em; font-weight: 700; }
+    .r-cal-select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: #0a0a0a;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      border: 1px solid rgba(163, 255, 18, 0.25);
+      border-radius: 10px;
+      padding: 8px 32px 8px 14px;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%23a3ff12' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.015), 0 0 14px rgba(163, 255, 18, 0.06);
+    }
+    .r-cal-select:hover { border-color: rgba(163, 255, 18, 0.5); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.015), 0 0 22px rgba(163, 255, 18, 0.15); }
+    .r-cal-select:focus { outline: none; border-color: rgba(163, 255, 18, 0.7); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.015), 0 0 24px rgba(163, 255, 18, 0.25); }
+    .r-cal-select option { background: #0a0a0a; color: var(--ink); }
+
+    /* Calendar panel = ONLY the calendar. No outer cap/title rows. */
+    .r-panel.r-cal-panel { padding: 0; overflow: hidden; }
+    .r-panel.r-cal-panel:hover { transform: none; }
+
+    .r-cal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .r-cal-header-title { font-size: 15px; font-weight: 800; color: var(--ink); display: flex; align-items: center; gap: 10px; letter-spacing: -0.01em; }
+    .r-cal-header-controls { display: flex; align-items: center; gap: 8px; }
+    .r-cal-board { padding: 0; background: transparent; border: none; box-shadow: none; }
+
+    .r-cal-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 22px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      gap: 20px;
+    }
+    .r-cal-footer-lbl { font-size: 11px; color: var(--lime); text-transform: uppercase; letter-spacing: 0.18em; font-weight: 800; }
+    .r-cal-footer.red .r-cal-footer-lbl { color: var(--red); }
+    .r-cal-footer-stats { display: flex; align-items: center; gap: 22px; }
+    .r-cal-footer-val { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: var(--lime); text-shadow: 0 0 12px rgba(163,255,18,0.45); }
+    .r-cal-footer.red .r-cal-footer-val { color: var(--red); text-shadow: 0 0 12px rgba(255,99,99,0.45); }
+    .r-cal-footer-val.flat { color: var(--mute); text-shadow: none; }
+    .r-cal-footer-mini { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+    .r-cal-footer-mini-v { font-size: 13px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+    .r-cal-footer-mini-l { font-size: 9px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; }
+
+    /* 8-column grid: Sun Mon Tue Wed Thu Fri Sat + Week Total — flush, no gaps */
+    .r-cal-month {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr)) 1.2fr;
+      gap: 0;
+    }
+    .r-cal-dow {
+      font-size: 9px;
+      color: var(--mute);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-weight: 800;
+      padding: 8px 4px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.025);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .r-cal-dow.week-total { color: var(--lime); background: rgba(163, 255, 18, 0.06); }
+
+    .r-cal-cell {
+      min-height: 92px;
+      background: #050505;
+      border-right: 1px solid rgba(255, 255, 255, 0.04);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      padding: 8px 10px 8px 11px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      transition: background 0.12s ease, box-shadow 0.12s ease;
+      overflow: hidden;
+    }
+    /* The week-total column sits in the 8th column — no right-border on it */
+    .r-cal-month > *:nth-child(8n) { border-right: none; }
+    .r-cal-cell.empty { background: #050505; }
+    .r-cal-cell:not(.empty):hover {
+      background: #0a0a0a;
+      box-shadow: inset 0 0 0 2px rgba(163, 255, 18, 0.4), 0 0 24px rgba(163, 255, 18, 0.15);
+      z-index: 4;
+    }
+
+    .r-cal-cell-d { font-size: 12px; color: var(--dim); font-weight: 700; letter-spacing: 0.04em; }
+    .r-cal-cell-pnl { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+    .r-cal-cell-pnl.green { color: var(--lime); text-shadow: 0 0 12px rgba(163, 255, 18, 0.5); }
+    .r-cal-cell-pnl.red { color: var(--red); text-shadow: 0 0 12px rgba(255, 99, 99, 0.45); }
+    .r-cal-cell-pnl.flat { color: var(--mute); }
+    .r-cal-cell-trades { font-size: 10px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+
+    /* Heat tints — subtle so the day numbers stay readable */
+    .r-cal-cell.g1 { background: rgba(163, 255, 18, 0.06); }
+    .r-cal-cell.g2 { background: rgba(163, 255, 18, 0.11); }
+    .r-cal-cell.g3 { background: rgba(163, 255, 18, 0.17); box-shadow: inset 0 0 24px rgba(163, 255, 18, 0.06); }
+    .r-cal-cell.g4 { background: rgba(163, 255, 18, 0.22); box-shadow: inset 0 0 32px rgba(163, 255, 18, 0.1); }
+    .r-cal-cell.r1 { background: rgba(255, 99, 99, 0.06); }
+    .r-cal-cell.r2 { background: rgba(255, 99, 99, 0.11); }
+    .r-cal-cell.r3 { background: rgba(255, 99, 99, 0.17); box-shadow: inset 0 0 24px rgba(255, 99, 99, 0.06); }
+    .r-cal-cell.r4 { background: rgba(255, 99, 99, 0.22); box-shadow: inset 0 0 32px rgba(255, 99, 99, 0.1); }
+
+    /* Weekly total cell — sits in the 8th column, lime-tinted, no gaps */
+    .r-cal-weektot {
+      min-height: 92px;
+      background: rgba(163, 255, 18, 0.06);
+      border-bottom: 1px solid rgba(163, 255, 18, 0.15);
+      border-left: 1px solid rgba(163, 255, 18, 0.18);
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .r-cal-weektot.red { background: rgba(255, 99, 99, 0.06); border-bottom-color: rgba(255, 99, 99, 0.18); border-left-color: rgba(255, 99, 99, 0.2); }
+    .r-cal-weektot-lbl { font-size: 9px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.14em; font-weight: 800; }
+    .r-cal-weektot-val { font-size: 17px; font-weight: 800; letter-spacing: -0.02em; color: var(--lime); font-variant-numeric: tabular-nums; text-shadow: 0 0 12px rgba(163,255,18,0.5); }
+    .r-cal-weektot.red .r-cal-weektot-val { color: var(--red); text-shadow: 0 0 12px rgba(255,99,99,0.45); }
+    .r-cal-weektot-sub { font-size: 9px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    /* Month total banner */
+    .r-cal-monthtot {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto auto;
+      gap: 20px;
+      align-items: center;
+      margin-top: 18px;
+      padding: 16px 20px;
+      background: rgba(163, 255, 18, 0.05);
+      border: 1px solid rgba(163, 255, 18, 0.22);
+      border-radius: 12px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.015), 0 0 26px rgba(163,255,18,0.08);
+    }
+    .r-cal-monthtot.red { background: rgba(255,99,99,0.05); border-color: rgba(255,99,99,0.22); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.015), 0 0 26px rgba(255,99,99,0.08); }
+    .r-cal-monthtot-lbl { font-size: 10px; color: var(--lime); text-transform: uppercase; letter-spacing: 0.18em; font-weight: 700; }
+    .r-cal-monthtot.red .r-cal-monthtot-lbl { color: var(--red); }
+    .r-cal-monthtot-val { font-size: 26px; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+    .r-cal-monthtot-mini { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+    .r-cal-monthtot-mini-v { font-size: 14px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+    .r-cal-monthtot-mini-l { font-size: 9px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; }
+
+    .r-cal-empty { text-align: center; font-size: 12px; color: var(--mute); padding: 40px 0; font-style: italic; }
+
+    /* Other tests feed */
+    .r-feed-row { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .r-feed-row:last-child { border: none; }
+    .r-feed-light { width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; }
+    .r-feed-light.pass { background: var(--lime); box-shadow: 0 0 10px var(--lime); }
+    .r-feed-light.warn { background: var(--warm); }
+    .r-feed-light.fail { background: var(--red); }
+    .r-feed-name { font-size: 12px; font-weight: 700; color: var(--ink); }
+    .r-feed-desc { font-size: 11px; color: var(--dim); margin-top: 2px; line-height: 1.45; }
+
+    /* ─── Recipe responsive (must live here so it beats source-order cascade) ─ */
+    @media (max-width: 1100px) {
+      .r-bot { grid-template-columns: minmax(0, 1fr); }
+    }
+    @media (max-width: 900px) {
+      .r-grid { grid-template-columns: minmax(0, 1fr); }
+      .r-hero { grid-template-columns: minmax(0, 1fr) 140px; padding: 22px; }
+      .r-hero-name { font-size: 22px; }
+      .r-quant-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+      .r-quant-chip { padding: 10px 11px; }
+      .r-quant-chip-val { font-size: 18px; }
+      .r-mc-tags { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+      .r-mc-tag { padding: 9px 10px; }
+      .r-mc-tag-val { font-size: 15px; }
+      .r-cal-cell, .r-cal-weektot { min-height: 76px; padding: 6px 7px; }
+      .r-cal-cell-pnl { font-size: 14px; }
+      .r-cal-weektot-val { font-size: 15px; }
+      .r-panel.r-panel-mc { transform: rotateX(2deg); }
+      .r-panel.r-panel-mc:hover { transform: rotateX(2deg) translateY(-1px); }
+    }
+    @media (max-width: 640px) {
+      .r-hero {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
+        padding: 18px 16px;
+        background-position: center 30%;
+      }
+      .r-hero-name { font-size: 18px; line-height: 1.25; }
+      .r-hero-badge { display: inline-block; margin: 8px 0 0; font-size: 9px; padding: 3px 8px; }
+      .r-hero-score { flex-direction: row; align-items: center; gap: 12px; }
+      .r-ring { width: 68px; height: 68px; box-shadow: 0 0 22px rgba(163,255,18,0.28); }
+      .r-ring span { font-size: 20px; }
+      .r-ring-lbl { font-size: 9px; }
+      .r-hero-caveat { font-size: 11px; }
+
+      .r-panel { padding: 16px 14px; border-radius: 14px; }
+      .r-h { font-size: 13px; }
+      .r-cap { font-size: 11px; margin-bottom: 14px; }
+
+      .r-bt-stats { gap: 14px 16px; }
+      .r-bt-big { font-size: 20px; }
+      .r-bt-sub { font-size: 10px; }
+      .r-quant-row { grid-template-columns: minmax(0, 1fr); gap: 8px; padding-top: 14px; margin-top: 14px; }
+
+      .r-mc-tags { grid-template-columns: minmax(0, 1fr); gap: 8px; margin-top: 12px; }
+      .r-mc-tag-val { font-size: 16px; }
+      .r-mc-verdict { flex-direction: column; align-items: stretch; gap: 10px; padding: 12px 14px; }
+      .r-mc-verdict > div:first-child,
+      .r-mc-verdict > div:last-child { min-width: 0; text-align: left; }
+      .r-mc-verdict-val { font-size: 14px; }
+      .r-panel.r-panel-mc { transform: none; }
+      .r-panel.r-panel-mc:hover { transform: translateY(-1px); }
+      .r-mc-chart-stage svg { height: 150px; }
+      .r-mc-chart-3d { padding: 10px 6px 8px; }
+
+      /* Calendar — drop Week Total column, smaller flush cells (touch-friendly) */
+      .r-cal-month { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+      .r-cal-dow.week-total, .r-cal-weektot { display: none; }
+      .r-cal-cell { min-height: 56px; padding: 5px 6px; }
+      .r-cal-cell-d { font-size: 10px; }
+      .r-cal-cell-pnl { font-size: 11px; }
+      .r-cal-cell-trades { font-size: 8px; }
+      .r-cal-header { padding: 12px 14px 10px; flex-wrap: wrap; gap: 10px; }
+      .r-cal-header-title { font-size: 13px; }
+      .r-cal-select { font-size: 12px; padding: 7px 28px 7px 12px; }
+      .r-cal-footer { padding: 12px 14px; flex-wrap: wrap; gap: 10px; }
+      .r-cal-footer-lbl { font-size: 10px; letter-spacing: 0.14em; }
+      .r-cal-footer-val { font-size: 16px; }
+      .r-cal-footer-stats { gap: 14px; }
+
+      .r-feed-row { padding: 9px 0; }
+      .r-feed-name { font-size: 12px; }
+      .r-feed-desc { font-size: 10px; }
+    }
+    @media (max-width: 380px) {
+      .r-cal-cell { min-height: 50px; }
+      .r-cal-cell-pnl { font-size: 10px; }
+      .r-cal-cell-trades { display: none; }
+      .r-bt-stats { grid-template-columns: minmax(0, 1fr); }
+    }
+    @media (hover: none) {
+      .r-panel:hover { transform: none; }
+      .r-panel.r-panel-mc:hover { transform: rotateX(4deg); }
+      .r-cal-cell:not(.empty):hover { transform: none; }
+    }
   </style>
 </head>
 <body>
-  <nav class="sh-nav">
-    <a class="sh-pill" href="/slumhouse/crib.html">The Crib</a>
-    <a class="sh-pill" href="/slumhouse/kitchen.html">The Kitchen</a>
-    <a class="sh-pill active" href="/slumhouse/recipe.html">The Recipe</a>
-  </nav>
+  <header class="sh-header">
+    <a class="sh-logo" href="/slumhouse/crib.html" aria-label="Slumhouse">
+      <svg viewBox="0 0 64 56" width="38" height="34" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="rp-bull-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#c5ff5f"/>
+            <stop offset="100%" stop-color="#a3ff12"/>
+          </linearGradient>
+          <filter id="rp-bull-glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="1.2" result="g"/>
+            <feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <g filter="url(#rp-bull-glow)">
+          <path d="M14 14 L17 4 L25 16 Z" fill="url(#rp-bull-grad)"/>
+          <path d="M50 14 L47 4 L39 16 Z" fill="url(#rp-bull-grad)"/>
+          <path d="M16 14 C 16 8, 24 4, 32 4 C 40 4, 48 8, 48 14 L 52 26 C 52 36, 48 42, 44 44 L 41 50 C 37 52, 27 52, 23 50 L 20 44 C 16 42, 12 36, 12 26 Z" fill="url(#rp-bull-grad)"/>
+        </g>
+        <path d="M20 18 Q32 14 44 18" stroke="#000" stroke-width="1.4" fill="none" opacity="0.55"/>
+        <rect x="20" y="22" width="6" height="4" rx="1" fill="#000"/>
+        <rect x="38" y="22" width="6" height="4" rx="1" fill="#000"/>
+        <circle cx="24" cy="23" r="0.7" fill="#fff" opacity="0.9"/>
+        <circle cx="42" cy="23" r="0.7" fill="#fff" opacity="0.9"/>
+        <path d="M27 32 Q32 30 37 32 Q37 36 32 36 Q27 36 27 32 Z" fill="#000"/>
+        <path d="M24 41 Q32 39 40 41" stroke="#000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <path d="M28.5 41.2 L28.5 44.2 L30 42.5 Z" fill="#fff" opacity="0.95"/>
+        <path d="M35.5 41.2 L35.5 44.2 L34 42.5 Z" fill="#fff" opacity="0.95"/>
+      </svg>
+      <div class="sh-logo-text">
+        <span class="sh-logo-name">SLUMHOUSE</span>
+        <span class="sh-logo-sub">/ TRADERS</span>
+      </div>
+    </a>
+    <nav class="sh-nav">
+      <a class="sh-pill" href="/slumhouse/crib.html">The Crib</a>
+      <a class="sh-pill" href="/slumhouse/kitchen.html">The Kitchen</a>
+      <a class="sh-pill active" href="/slumhouse/recipe.html">The Recipe</a>
+    </nav>
+    <div class="sh-header-spacer">
+      <a class="sh-signout" href="/slumhouse/auth/logout" title="Sign out of Slumhouse">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign out
+      </a>
+    </div>
+  </header>
 
   <div class="sh-page">
-    <a class="sh-feed-meta" href="/slumhouse/kitchen.html" style="color:var(--lime);font-size:12px;display:block;margin-bottom:10px">← Back to The Kitchen</a>
+    <a class="r-back" href="/slumhouse/kitchen.html">← Back to The Kitchen</a>
     <div id="r-app">Loading…</div>
   </div>
 
@@ -77,6 +607,9 @@
       render(r);
     })();
 
+    const HISTORICAL_FIRST_YEAR = 2015;
+    const HISTORICAL_LAST_YEAR = 2026;
+
     function render(r) {
       const { el } = SH;
       const app = document.getElementById("r-app");
@@ -85,7 +618,7 @@
       // HERO
       const ringStyle = `background: conic-gradient(var(--lime) 0% ${r.slumdawgScore}%, rgba(255,255,255,0.1) ${r.slumdawgScore}% 100%);`;
       app.appendChild(el("div", { class: "r-hero" },
-        el("div", {},
+        el("div", { style: "min-width:0" },
           el("div", { class: "r-hero-name" },
             r.identity.name,
             el("span", { class: "r-hero-badge" }, "● " + r.identity.stationStreet),
@@ -102,13 +635,13 @@
         ),
       ));
 
-      // 2-col: Backtest + Monte Carlo
+      // 2-col: Backtest + Monte Carlo (both pitch-black glassy 3D)
       const grid = el("div", { class: "r-grid" });
       grid.appendChild(renderBacktest(r));
       grid.appendChild(renderMC(r));
       app.appendChild(grid);
 
-      // Bottom: Calendar + Other Tests
+      // Bottom: 3D multi-year calendar + Other tests
       const bot = el("div", { class: "r-bot" });
       bot.appendChild(renderCalendar(r));
       bot.appendChild(renderFeed(r));
@@ -117,6 +650,7 @@
 
     function renderBacktest(r) {
       const { el } = SH;
+      const bt = r.backtest || {};
       return el("div", { class: "r-panel" },
         el("div", { class: "r-head" },
           el("div", { class: "r-h" }, "Backtest", el("span", { class: "src replay" }, "📼 Replay")),
@@ -127,10 +661,15 @@
           " of real market data, here's what would've happened. None of it actually did.",
         ),
         el("div", { class: "r-bt-stats" },
-          kpi("Total made", r.backtest.totalMade || "$0", "green", `across ${r.backtest.tradesCount} plays`),
-          kpi("Per play", r.backtest.perPlay || "$0", null, "average win-or-lose"),
-          kpi("Worst day", r.backtest.worstDay || "$0", "red", "single rough session"),
-          kpi("Winning days", String(r.backtest.winningDays || 0), null, "of trading days"),
+          kpi("Total made", bt.totalMade || "$0", "green", `across ${bt.tradesCount || 0} plays`),
+          kpi("Per play", bt.perPlay || "$0", null, "average win-or-lose"),
+          kpi("Worst day", bt.worstDay || "$0", "red", "single rough session"),
+          kpi("Winning days", String(bt.winningDays || 0), null, "of trading days"),
+        ),
+        el("div", { class: "r-quant-row" },
+          quantChip("Win Rate", (bt.winRatePct ?? 0) + "%", winRateSub(bt.winRatePct)),
+          quantChip("Sharpe", fmt2(bt.sharpeRatio), sharpeSub(bt.sharpeRatio)),
+          quantChip("R:R", fmt2(bt.riskReward) + "x", rrSub(bt.riskReward)),
         ),
       );
     }
@@ -138,49 +677,410 @@
     function renderMC(r) {
       const { el } = SH;
       const mc = r.monteCarlo || {};
-      return el("div", { class: "r-panel" },
+      const panel = el("div", { class: "r-panel r-panel-mc" },
         el("div", { class: "r-head" },
           el("div", { class: "r-h" }, "Monte Carlo", el("span", { class: "src whatif" }, "🧪 What-if")),
         ),
         el("div", { class: "r-cap" },
-          "We ran ",
-          el("b", {}, "1,000 fake years"),
-          " using the bot's playstyle. None of these actually happened — it's a stress test for what could happen.",
+          "We made the bot play the same year ",
+          el("b", {}, "1,000 different times"),
+          ". Here's where the money landed:",
         ),
-        mcRow("Chance the account blows up this year", mc.blowUpOdds || "—", "green"),
-        mcRow("Bad year — money lost", mc.worstYear || "—", "red"),
-        mcRow("Good year — money made", mc.bestYear || "—", "green"),
-        mcRow("Most likely year", mc.medianYear || "—", "green"),
-        mcRow("Verdict", mc.verdictGreen ? "Survives ✓" : "Risky", mc.verdictGreen ? "green" : "red"),
-        el("div", { class: "r-mc-bar" }, el("div", { class: "r-mc-fill", style: `width:${mc.survivalScore || 0}%` })),
       );
+
+      // Empty state: no real MC data — chart still animates with synthesized
+      // demo bars + a "WAITING FOR FIRST BACKTEST" overlay.
+      const hasMCData = (Array.isArray(mc.distribution) && mc.distribution.length > 0)
+        || mc.worstYearRaw || mc.medianYearRaw || mc.bestYearRaw;
+
+      // 3D chart stage
+      const chart3d = el("div", { class: "r-mc-chart-3d" + (hasMCData ? "" : " empty") },
+        el("div", { class: "r-mc-chart-stage" }),
+      );
+      chart3d.querySelector(".r-mc-chart-stage").innerHTML = buildMCHistogram(mc);
+      panel.appendChild(chart3d);
+
+      panel.appendChild(el("div", { class: "r-mc-legend" },
+        el("div", { class: "r-mc-legend-sq lime" }),
+        el("span", {}, "Made money"),
+        el("div", { class: "r-mc-legend-sq red" }),
+        el("span", {}, "Lost money"),
+        el("div", { class: "r-mc-legend-sq blew" }),
+        el("span", {}, "Account died"),
+      ));
+
+      // Three plain-English tag chips
+      panel.appendChild(el("div", { class: "r-mc-tags" },
+        el("div", { class: "r-mc-tag bad" },
+          el("div", { class: "r-mc-tag-lbl" }, "Bad year"),
+          el("div", { class: "r-mc-tag-val" }, mc.worstYear || "—"),
+          el("div", { class: "r-mc-tag-sub" }, "if everything went wrong"),
+        ),
+        el("div", { class: "r-mc-tag likely" },
+          el("div", { class: "r-mc-tag-lbl" }, "Normal year"),
+          el("div", { class: "r-mc-tag-val" }, mc.medianYear || "—"),
+          el("div", { class: "r-mc-tag-sub" }, "what usually happens"),
+        ),
+        el("div", { class: "r-mc-tag hot" },
+          el("div", { class: "r-mc-tag-lbl" }, "Good year"),
+          el("div", { class: "r-mc-tag-val" }, mc.bestYear || "—"),
+          el("div", { class: "r-mc-tag-sub" }, "if everything went right"),
+        ),
+      ));
+
+      // Verdict + survival bar
+      const verdictCls = !hasMCData ? " pending" : (mc.verdictGreen ? "" : " bad");
+      const verdictLbl = !hasMCData ? "Still cooking" : "Bot stays alive?";
+      const verdictVal = !hasMCData ? "Not tested yet" : (mc.verdictGreen ? "Yes ✓" : "Risky ✗");
+      const blowupLbl = !hasMCData ? "Chance it dies" : "Chance it dies";
+      const blowupVal = !hasMCData ? "—" : (mc.blowUpOdds || "—");
+      const meterWidth = hasMCData ? (mc.survivalScore || 0) : 100;
+      panel.appendChild(el("div", { class: "r-mc-verdict" + verdictCls },
+        el("div", { style: "display:flex;flex-direction:column;gap:2px;min-width:140px" },
+          el("div", { class: "r-mc-verdict-lbl" }, verdictLbl),
+          el("div", { class: "r-mc-verdict-val" }, verdictVal),
+        ),
+        el("div", { class: "r-mc-verdict-bar" },
+          el("div", { class: "r-mc-verdict-fill", style: `width:${meterWidth}%` }),
+        ),
+        el("div", { style: "min-width:120px;text-align:right" },
+          el("div", { class: "r-mc-verdict-lbl" }, blowupLbl),
+          el("div", { class: "r-mc-verdict-val" }, blowupVal),
+        ),
+      ));
+
+      return panel;
     }
+
+    // ─── MC histogram (SVG, plain-English labels, 3D bars) ───────────────
+    function buildMCHistogram(mc) {
+      const W = 540, H = 200, padL = 8, padR = 8, padT = 10, padB = 30;
+      const innerW = W - padL - padR;
+      const innerH = H - padT - padB;
+
+      // 1) Get a sample of final-year P&Ls — real if we have it, synthesized otherwise
+      let samples = Array.isArray(mc.distribution) ? mc.distribution.slice() : [];
+      if (samples.length < 30) {
+        // Synthesize ~1000 from worst/median/best — asymmetric "bell-ish"
+        samples = synthesizeBell(mc.worstYearRaw, mc.medianYearRaw, mc.bestYearRaw, 1000);
+      }
+      if (samples.length === 0) {
+        return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><text x="${W/2}" y="${H/2}" text-anchor="middle" fill="#666" font-size="12" font-family="inherit">no fake years yet</text></svg>`;
+      }
+
+      // 2) Build buckets
+      const minV = Math.min(...samples);
+      const maxV = Math.max(...samples);
+      const range = Math.max(1, maxV - minV);
+      const N_BUCKETS = 26;
+      const buckets = new Array(N_BUCKETS).fill(0);
+      for (const v of samples) {
+        let idx = Math.floor(((v - minV) / range) * N_BUCKETS);
+        if (idx >= N_BUCKETS) idx = N_BUCKETS - 1;
+        if (idx < 0) idx = 0;
+        buckets[idx]++;
+      }
+      const maxCount = Math.max(...buckets);
+      const bucketW = innerW / N_BUCKETS;
+
+      // 3) Where's $0 on the X axis?
+      const zeroX = padL + ((0 - minV) / range) * innerW;
+      // Where's the "blew up" threshold? Treat anything below worstYearRaw * 1.5 as ruin tail
+      const ruinThreshold = mc.worstYearRaw < 0 ? mc.worstYearRaw * 1.3 : -Math.abs(range) * 0.4;
+      const ruinX = padL + Math.max(0, Math.min(innerW, ((ruinThreshold - minV) / range) * innerW));
+
+      // 4) Marker positions
+      const markerX = (v) => padL + Math.max(0, Math.min(innerW, ((v - minV) / range) * innerW));
+      const worstX = markerX(mc.worstYearRaw || minV);
+      const medianX = markerX(mc.medianYearRaw || ((minV + maxV) / 2));
+      const bestX = markerX(mc.bestYearRaw || maxV);
+
+      // 5) SVG bars with faux-3D side faces
+      let bars = "";
+      const depth = 4; // px slant for side face
+      for (let i = 0; i < N_BUCKETS; i++) {
+        const bucketCenter = minV + ((i + 0.5) / N_BUCKETS) * range;
+        const h = (buckets[i] / maxCount) * innerH;
+        if (h < 1) continue;
+        const x = padL + i * bucketW;
+        const y = padT + innerH - h;
+        const inRuin = bucketCenter < ruinThreshold;
+        const topFill = inRuin ? "#ff2828" : bucketCenter < 0 ? "#ff8a8a" : "#c5ff5f";
+        const frontFill = inRuin ? "url(#mc-blew)" : bucketCenter < 0 ? "url(#mc-red)" : "url(#mc-lime)";
+        const sideFill = inRuin ? "#3a0606" : bucketCenter < 0 ? "#5e1414" : "#2d5208";
+        const bw = bucketW - 1.4;
+        const styleVar = `style="--i:${i};transform-origin:${(x + bw/2).toFixed(1)}px ${(padT+innerH).toFixed(1)}px"`;
+        // Right side face (parallelogram giving the 3D feel)
+        bars += `<polygon class="mc-bar-side" ${styleVar} points="${(x+bw).toFixed(1)},${y.toFixed(1)} ${(x+bw+depth).toFixed(1)},${(y-depth).toFixed(1)} ${(x+bw+depth).toFixed(1)},${(padT+innerH-depth).toFixed(1)} ${(x+bw).toFixed(1)},${(padT+innerH).toFixed(1)}" fill="${sideFill}" opacity="0.9"/>`;
+        // Top cap (thin parallelogram across the top)
+        bars += `<polygon class="mc-bar-top" ${styleVar} points="${x.toFixed(1)},${y.toFixed(1)} ${(x+depth).toFixed(1)},${(y-depth).toFixed(1)} ${(x+bw+depth).toFixed(1)},${(y-depth).toFixed(1)} ${(x+bw).toFixed(1)},${y.toFixed(1)}" fill="${topFill}" opacity="0.95"/>`;
+        // Front face (main rect, gradient-filled)
+        bars += `<rect class="mc-bar-front" ${styleVar} x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" fill="${frontFill}" rx="1"/>`;
+      }
+
+      // 6) Markers (plain English, no jargon)
+      const markerLine = (x, color, label) => `
+        <line x1="${x}" x2="${x}" y1="${padT}" y2="${padT + innerH}" stroke="${color}" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.85"/>
+        <text x="${x}" y="12" text-anchor="middle" fill="${color}" font-size="9" font-family="inherit" font-weight="800" letter-spacing="0.06em">${label}</text>
+      `;
+
+      // 7) $0 break-even line
+      const zeroLine = `<line x1="${zeroX}" x2="${zeroX}" y1="${padT}" y2="${padT + innerH}" stroke="rgba(255,255,255,0.4)" stroke-width="1.4"/>
+        <text x="${zeroX}" y="${padT + innerH + 18}" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="9" font-family="inherit" font-weight="800" letter-spacing="0.06em">BROKE EVEN</text>`;
+
+      // 8) Floor shelf to ground the 3D bars
+      const shelf = `<rect x="${padL - 2}" y="${padT + innerH}" width="${innerW + 4}" height="3" fill="rgba(255,255,255,0.06)"/>`;
+
+      return `
+        <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="mc-lime" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#c5ff5f"/>
+              <stop offset="0.5" stop-color="#9aef10"/>
+              <stop offset="1" stop-color="#3a7a08"/>
+            </linearGradient>
+            <linearGradient id="mc-red" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#ff7878"/>
+              <stop offset="0.5" stop-color="#e64545"/>
+              <stop offset="1" stop-color="#5e1414"/>
+            </linearGradient>
+            <pattern id="mc-blew" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+              <rect width="6" height="6" fill="#5a0c0c"/>
+              <line x1="0" y1="0" x2="0" y2="6" stroke="#ff2828" stroke-width="2" opacity="0.85"/>
+            </pattern>
+          </defs>
+          ${ruinX > padL ? `<rect x="${padL}" y="${padT}" width="${ruinX - padL}" height="${innerH}" fill="rgba(255,40,40,0.1)" />` : ""}
+          ${bars}
+          ${shelf}
+          ${zeroLine}
+          ${markerLine(worstX, "#ff7878", "BAD")}
+          ${markerLine(medianX, "#a3ff12", "NORMAL")}
+          ${markerLine(bestX, "#c5ff5f", "GOOD")}
+        </svg>
+      `;
+    }
+
+    // Synthesize ~N samples from worst/median/best to approximate a bell when
+    // the MC engine didn't ship the full distribution. Skewed normal-ish.
+    function synthesizeBell(worst, median, best, n) {
+      const out = [];
+      const w = Number(worst) || -5000;
+      const m = Number(median) || 0;
+      const b = Number(best) || 5000;
+      const sigmaL = Math.max(1, (m - w) / 1.645);
+      const sigmaR = Math.max(1, (b - m) / 1.645);
+      for (let i = 0; i < n; i++) {
+        // Box-Muller normal
+        const u1 = Math.max(1e-9, Math.random());
+        const u2 = Math.random();
+        const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+        const v = m + z * (z < 0 ? sigmaL : sigmaR);
+        out.push(v);
+      }
+      return out;
+    }
+
+    // ─── 3D Slumdawg Calendar — monthly grid with weekly + monthly totals ─
+    const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    const MONTH_SHORT = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
 
     function renderCalendar(r) {
       const { el } = SH;
-      const panel = el("div", { class: "r-panel" },
-        el("div", { class: "r-head" },
-          el("div", { class: "r-h" }, "Backtest Calendar", el("span", { class: "src replay" }, "📼 Replay")),
-        ),
-        el("div", { class: "r-cap" },
-          "Day-by-day P&L from the backtest. Green = profitable, red = loss. ",
-          el("b", {}, "None of these are real trades.")
-        ),
-      );
-      const grid = el("div", { class: "r-cal-grid" });
-      const last30 = (r.calendar || []).slice(-30);
-      for (const d of last30) {
-        const cls = d.pnl > 0 ? "green" : d.pnl < 0 ? "red" : "";
-        grid.appendChild(el("div", { class: "r-cal-day " + cls },
-          el("div", {}, d.date ? d.date.slice(-2) : ""),
-          el("div", {}, d.pnl !== 0 ? (d.pnl > 0 ? "+" : "−") + "$" + Math.abs(Math.round(d.pnl)) : ""),
+      const all = Array.isArray(r.calendar) ? r.calendar.filter(d => d && d.date) : [];
+
+      // Index every traded day so the grid + totals can resolve fast.
+      const byDate = new Map();
+      const yearsWithData = new Set();
+      const monthsWithData = new Set(); // "YYYY-MM"
+      for (const d of all) {
+        const iso = String(d.date).slice(0, 10);
+        if (iso.length !== 10) continue;
+        byDate.set(iso, { pnl: Number(d.pnl) || 0, trades: Number(d.trades) || 0 });
+        yearsWithData.add(Number(iso.slice(0, 4)));
+        monthsWithData.add(iso.slice(0, 7));
+      }
+
+      // Most recent month w/ data (or current month) is the default
+      const latestMonthKey = monthsWithData.size > 0
+        ? Array.from(monthsWithData).sort().pop()
+        : `${HISTORICAL_LAST_YEAR}-01`;
+      let activeYear = Number(latestMonthKey.slice(0, 4));
+      let activeMonth = Number(latestMonthKey.slice(5, 7)) - 1; // 0-indexed
+
+      const panel = el("div", { class: "r-panel r-cal-panel" });
+
+      // Header row: title (left) + dropdowns (right)
+      const header = el("div", { class: "r-cal-header" });
+      header.appendChild(el("div", { class: "r-cal-header-title" },
+        "Slumdawg Calendar",
+        el("span", { class: "src replay" }, "📼 Replay"),
+      ));
+      const controls = el("div", { class: "r-cal-header-controls" });
+
+      const yearSel = document.createElement("select");
+      yearSel.className = "r-cal-select";
+      yearSel.setAttribute("aria-label", "Calendar year");
+      for (let y = HISTORICAL_FIRST_YEAR; y <= HISTORICAL_LAST_YEAR; y++) {
+        const opt = document.createElement("option");
+        opt.value = String(y);
+        opt.textContent = String(y) + (yearsWithData.has(y) ? " ●" : "");
+        if (y === activeYear) opt.selected = true;
+        yearSel.appendChild(opt);
+      }
+      yearSel.addEventListener("change", () => {
+        activeYear = Number(yearSel.value);
+        rebuildMonthDropdown();
+        draw();
+      });
+      controls.appendChild(yearSel);
+
+      const monthSel = document.createElement("select");
+      monthSel.className = "r-cal-select";
+      monthSel.setAttribute("aria-label", "Calendar month");
+      function rebuildMonthDropdown() {
+        monthSel.innerHTML = "";
+        for (let m = 0; m < 12; m++) {
+          const key = `${activeYear}-${String(m+1).padStart(2,"0")}`;
+          const has = monthsWithData.has(key);
+          const opt = document.createElement("option");
+          opt.value = String(m);
+          opt.textContent = MONTH_NAMES[m] + (has ? " ●" : "");
+          if (m === activeMonth) opt.selected = true;
+          monthSel.appendChild(opt);
+        }
+      }
+      rebuildMonthDropdown();
+      monthSel.addEventListener("change", () => {
+        activeMonth = Number(monthSel.value);
+        draw();
+      });
+      controls.appendChild(monthSel);
+
+      header.appendChild(controls);
+      panel.appendChild(header);
+
+      // Grid board
+      const board = el("div", { class: "r-cal-board" });
+      panel.appendChild(board);
+
+      // Footer row (inline month total)
+      const monthTotalEl = el("div", { class: "r-cal-footer" });
+      panel.appendChild(monthTotalEl);
+
+      function draw() {
+        board.innerHTML = "";
+        const month = el("div", { class: "r-cal-month" });
+        const dow = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+        dow.forEach(d => month.appendChild(el("div", { class: "r-cal-dow" }, d)));
+        month.appendChild(el("div", { class: "r-cal-dow week-total" }, "Wk P&L"));
+
+        const firstDay = new Date(Date.UTC(activeYear, activeMonth, 1));
+        const daysInMonth = new Date(Date.UTC(activeYear, activeMonth + 1, 0)).getUTCDate();
+        const startDow = firstDay.getUTCDay(); // 0=Sun
+
+        // Build cells in row-major order: row by row, Sun..Sat + Week Total.
+        let monthTotal = 0;
+        let monthTradedDays = 0, monthTradesCount = 0;
+        let bestDay = { iso: "", pnl: 0 }, worstDay = { iso: "", pnl: 0 };
+
+        // We'll write all 7 day cells of the current week into a buffer,
+        // then append cells + the week-total. Cursor advances day-by-day.
+        let weekBuf = [];
+        let weekPnl = 0, weekTradedDays = 0;
+
+        function flushWeek() {
+          for (const c of weekBuf) month.appendChild(c);
+          const wkCls = weekPnl < 0 ? "red" : "";
+          const wkTotEl = el("div", { class: "r-cal-weektot " + wkCls },
+            el("div", { class: "r-cal-weektot-lbl" }, "Week"),
+            el("div", { class: "r-cal-weektot-val" }, weekTradedDays > 0
+              ? (weekPnl >= 0 ? "+$" : "−$") + Math.abs(Math.round(weekPnl))
+              : "—"),
+            el("div", { class: "r-cal-weektot-sub" }, weekTradedDays > 0 ? `${weekTradedDays} day${weekTradedDays === 1 ? "" : "s"}` : "no trades"),
+          );
+          month.appendChild(wkTotEl);
+          weekBuf = []; weekPnl = 0; weekTradedDays = 0;
+        }
+
+        // Pad leading cells before day 1
+        for (let i = 0; i < startDow; i++) {
+          weekBuf.push(el("div", { class: "r-cal-cell empty" }));
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const iso = `${activeYear}-${String(activeMonth+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+          const rec = byDate.get(iso);
+          const pnl = rec ? rec.pnl : null;
+          const trades = rec ? rec.trades : 0;
+
+          let cls = "";
+          let pnlCls = "flat";
+          let pnlText = "—";
+          let tradesText = pnl === null ? "" : (trades > 0 ? `${trades} trade${trades === 1 ? "" : "s"}` : "no trades");
+
+          if (pnl !== null && pnl !== 0) {
+            cls = (pnl > 0 ? "g" : "r") + heatLevelN(Math.abs(pnl));
+            pnlCls = pnl > 0 ? "green" : "red";
+            pnlText = (pnl > 0 ? "+$" : "−$") + Math.abs(Math.round(pnl));
+
+            monthTotal += pnl;
+            monthTradedDays++;
+            monthTradesCount += trades;
+            weekPnl += pnl;
+            weekTradedDays++;
+            if (pnl > bestDay.pnl) bestDay = { iso, pnl };
+            if (pnl < worstDay.pnl) worstDay = { iso, pnl };
+          }
+
+          const cell = el("div", { class: "r-cal-cell " + cls, title: iso + (pnl != null ? ` · ${pnlText}` + (trades ? ` · ${trades} trades` : "") : "") },
+            el("div", { class: "r-cal-cell-d" }, String(day)),
+            el("div", { class: "r-cal-cell-pnl " + pnlCls }, pnlText),
+            el("div", { class: "r-cal-cell-trades" }, tradesText),
+          );
+          weekBuf.push(cell);
+
+          const dowToday = (startDow + day - 1) % 7;
+          if (dowToday === 6) flushWeek(); // Saturday — close out week
+        }
+
+        // Trailing pad + final week flush
+        if (weekBuf.length > 0) {
+          while (weekBuf.length < 7) weekBuf.push(el("div", { class: "r-cal-cell empty" }));
+          flushWeek();
+        }
+
+        board.appendChild(month);
+
+        // Inline footer row: "MAY 2026 TOTAL" + value + mini stats
+        monthTotalEl.innerHTML = "";
+        monthTotalEl.classList.toggle("red", monthTotal < 0);
+        const monthLabel = `${MONTH_NAMES[activeMonth].toUpperCase()} ${activeYear} TOTAL`;
+        monthTotalEl.appendChild(el("div", { class: "r-cal-footer-lbl" }, monthLabel));
+        const stats = el("div", { class: "r-cal-footer-stats" });
+        stats.appendChild(el("div", { class: "r-cal-footer-val" + (monthTradedDays === 0 ? " flat" : "") },
+          monthTradedDays > 0 ? (monthTotal >= 0 ? "+$" : "−$") + Math.abs(Math.round(monthTotal)).toLocaleString() : "—"
         ));
+        stats.appendChild(el("div", { class: "r-cal-footer-mini" },
+          el("div", { class: "r-cal-footer-mini-v" }, String(monthTradedDays)),
+          el("div", { class: "r-cal-footer-mini-l" }, "traded days"),
+        ));
+        stats.appendChild(el("div", { class: "r-cal-footer-mini" },
+          el("div", { class: "r-cal-footer-mini-v" }, String(monthTradesCount)),
+          el("div", { class: "r-cal-footer-mini-l" }, "trades"),
+        ));
+        monthTotalEl.appendChild(stats);
       }
-      if (last30.length === 0) {
-        grid.appendChild(el("p", { class: "r-cap" }, "No backtest calendar yet."));
-      }
-      panel.appendChild(grid);
+
+      draw();
       return panel;
+    }
+
+    function heatLevelN(abs) {
+      // 4-step tint (1 lightest → 4 strongest) tuned to dollar magnitude
+      if (abs >= 1000) return "4";
+      if (abs >= 400) return "3";
+      if (abs >= 150) return "2";
+      return "1";
     }
 
     function renderFeed(r) {
@@ -201,19 +1101,52 @@
       return panel;
     }
 
+    // ─── Helpers ────────────────────────────────────────────────────
     function kpi(cap, big, color, sub) {
       return SH.el("div", {},
         SH.el("div", { class: "r-bt-big " + (color || "") }, big),
         SH.el("div", { class: "r-bt-cap" }, cap),
-        SH.el("div", { class: "r-bt-cap", style: "color:var(--dim);text-transform:none" }, sub),
+        SH.el("div", { class: "r-bt-sub" }, sub),
       );
     }
-
+    function quantChip(label, value, sub) {
+      return SH.el("div", { class: "r-quant-chip" },
+        SH.el("div", { class: "r-quant-chip-lbl" }, label),
+        SH.el("div", { class: "r-quant-chip-val" }, value),
+        SH.el("div", { class: "r-quant-chip-sub" }, sub || ""),
+      );
+    }
     function mcRow(label, val, color) {
       return SH.el("div", { class: "r-mc-row" },
         SH.el("div", { style: "color:var(--dim)" }, label),
         SH.el("div", { class: "r-mc-val " + (color || "") }, val),
       );
+    }
+    function fmt2(n) {
+      if (!Number.isFinite(n)) return "—";
+      return (Math.round(n * 100) / 100).toFixed(2);
+    }
+    function winRateSub(pct) {
+      if (!pct) return "no plays yet";
+      if (pct >= 60) return "strong hit rate";
+      if (pct >= 50) return "above coin-flip";
+      if (pct >= 40) return "below coin-flip";
+      return "low hit rate — relies on R:R";
+    }
+    function sharpeSub(s) {
+      if (!s) return "not enough data";
+      if (s >= 2.0) return "elite quality";
+      if (s >= 1.5) return "institutional grade";
+      if (s >= 1.0) return "respectable";
+      if (s >= 0.5) return "thin edge";
+      return "noise";
+    }
+    function rrSub(rr) {
+      if (!rr) return "not enough data";
+      if (rr >= 2.5) return "fat tail winners";
+      if (rr >= 1.5) return "healthy payout";
+      if (rr >= 1.0) return "balanced";
+      return "tight winners";
     }
   </script>
 </body>

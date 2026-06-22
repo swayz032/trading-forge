@@ -1851,7 +1851,7 @@ async function createChildStrategy(
       "CANDIDATE",
       "TESTING",
       { actor: "system", reason: "critic-replay-survivor" },
-      tx as typeof db,
+      tx as unknown as typeof db,
     );
     if (!promoteResult.success) {
       throw new Error(`Child promotion failed: ${promoteResult.error}`);

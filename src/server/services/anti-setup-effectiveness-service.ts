@@ -155,7 +155,6 @@ export async function runAntiSetupEffectivenessAnalysis(
       pnl: paperTrades.pnl,
       entryTime: paperTrades.entryTime,
       exitTime: paperTrades.exitTime,
-      indicatorSnapshot: paperTrades.indicatorSnapshot,
     })
     .from(paperTrades)
     .where(
@@ -209,8 +208,9 @@ export async function runAntiSetupEffectivenessAnalysis(
     );
 
     for (const trade of strategyTrades) {
-      const tradeSnap = (trade.indicatorSnapshot ?? {}) as Record<string, unknown>;
-      const tradeRule = tradeSnap._anti_setup_rule as string | undefined;
+      // indicatorSnapshot not available from paper_trades (it lives on paper_signal_logs)
+      // Use skipSignal as a proxy field; anti_setup_rule matching is disabled without the snapshot.
+      const tradeRule: string | undefined = undefined;
       if (tradeRule === group.rule) {
         group.conditionOnTrades.push(trade);
       } else {

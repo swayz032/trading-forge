@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Wave 6 Fixes 3 + 4 — Backtest route integration tests
  *
  * Fix 3 — Stderr banner sentinel:
@@ -105,6 +105,7 @@ async function buildApp(): Promise<express.Express> {
   // Attach req.id + req.log so route handlers don't crash
   app.use((req, _res, next) => {
     (req as express.Request & { id: string }).id = "test-correlation-id";
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     (req as express.Request & { log: Record<string, unknown> }).log = {
       error: vi.fn(),
       info: vi.fn(),

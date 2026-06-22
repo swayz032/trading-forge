@@ -213,7 +213,9 @@ export async function evaluateMacroGates(
       action: "macro_gate.blocked",
       entityType: "strategy",
       entityId: strategyId,
-      details: {
+      status: "blocked" as string,
+      decisionAuthority: "system",
+      result: {
         instrument,
         direction,
         gateReason,
@@ -222,9 +224,8 @@ export async function evaluateMacroGates(
         crisisGateTriggered,
         fomcDayProximity,
         macroReleaseDay,
-      },
-      severity: severity as string,
-      source: "macro-gate-service",
+        severity,
+      } as Record<string, unknown>,
     }).catch((err) => {
       logger.warn({ err }, "C11 macro gate audit log write failed");
     });

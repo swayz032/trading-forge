@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Wave 23D Carry-Forward — Harsh-Regime Phase Activation Tests
  *
  * Tests the full activation path for the harsh-regime gate upgrade:
@@ -237,6 +237,7 @@ describe("W23D: Operator override audit trail", () => {
   it("setPhaseOverride: flipped=true when changing advisory → hard", () => {
     const previousPhase: PhaseValue = "advisory";
     const newPhase: PhaseValue = "hard";
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     const flipped = previousPhase !== newPhase;
     expect(flipped).toBe(true);
     // In production: audit_log row inserted with action=harsh_regime_phase.manual_override

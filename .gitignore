@@ -38,3 +38,11 @@ data_cache/
 backups/
 logs/
 models/
+
+# Ephemeral cache / scratch / brainstorm artifacts — never commit (Phase 0 hardening 2026-06-22)
+%TEMP%/
+tmp/
+.superpowers/
+CTemp*
+npm-cache-tf/
+*.pid

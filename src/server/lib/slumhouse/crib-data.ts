@@ -4,31 +4,179 @@
  * The data path through TF schema:
  *   slumhouse_users.broker_account_id
  *     → account_strategy_assignments.account_id (status='active')
- *     → strategies referenced by paper_sessions
- *     → paper_trades (closed P&L) + paper_positions (open positions)
- *
- * Every section fails-soft to empty/zero — Slumhouse is read-only and a DB
- * hiccup must not break the friend's portal experience.
+ *     → paper_sessions.strategy_id (all sessions for assigned strategies)
+ *     → paper_trades.session_id (all trades for those sessions)
  */
 import { sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
-import { formatBag } from "./translate.js";
 
-export interface CribData {
+export type CribData = {
   banner: {
     todayBag: string;
-    todayBagRaw: number;             // signed dollars (for trend arrow + animation)
-    todayBagSpark: number[];         // last 7 trading days net P&L
+    todayBagRaw: number;
+    todayBagSpark: number[];
     tradesToday: { count: number; wins: number; losses: number };
-    tradesSpark: number[];           // last 7 days trade count
+    tradesSpark: number[];
     openNow: number;
     inPot: number;
-    inPotSpark: number[];            // last 7 days in-pot count (rough)
+    inPotSpark: number[];
     killSwitch: "green" | "red";
   };
-  discordFeed: Array<{ name: string; source: string; status: string; ageMin: number }>;
-  pot: Array<{ id: string; name: string; stage: string; netPnl: string; tradesCount: number }>;
-  crew: Array<{ jersey: number; displayName: string; weekBag: string }>;
+  discordFeed: Array<{
+    name: string;
+    source: string;
+    status: string;
+    ageMin: number;
+  }>;
+  pot: Array<{
+    id: string;
+    name: string;
+    stage: string;
+    netPnl: string;
+    tradesCount: number;
+  }>;
+  crew: Array<{
+    jersey: number;
+    displayName: string;
+    weekBag: string;
+  }>;
+};
+
+const FRESH_DISCORD_FEED_STATUSES = new Set([
+  "queued",
+  "extracting",
+  "scouted",
+  "accepted",
+  "success",
+  "graduated",
+  "pending",
+]);
+
+const SLUMDAWG_FEED_CHANNEL_ID =
+  process.env.DISCORD_CH_SLUMDAWG_FEED || "1482571931222937642";
+const DISCORD_API_BASE_URL = "https://discord.com/api/v10";
+
+type SlumdawgFeedRow = {
+  name: string;
+  source: string;
+  status: string;
+  ageMin: number;
+  sortAt: string;
+};
+
+type DiscordMessage = {
+  id?: string;
+  author?: { bot?: boolean | null } | null;
+  content?: string | null;
+  embeds?: Array<any> | null;
+  referenced_message?: DiscordMessage | null;
+  timestamp?: string | null;
+  edited_timestamp?: string | null;
+};
+
+function extractVideoTitleFromEmbed(embed: any): string {
+  const fields = Array.isArray(embed?.fields) ? embed.fields : [];
+  const videoField = fields.find((field: any) => String(field?.name ?? "").toLowerCase().includes("video"));
+  if (videoField?.value) {
+    const match = String(videoField.value).match(/\*\*(.+?)\*\*/);
+    if (match?.[1]) return match[1].trim();
+  }
+  return "";
+}
+
+function determineFeedSource(message: DiscordMessage): string {
+  const referenced = message.referenced_message?.embeds?.[0];
+  const provider = String(referenced?.provider?.name ?? "").toLowerCase();
+  if (provider.includes("youtube")) return "youtube";
+
+  const embed = message.embeds?.[0];
+  const sourceText = [
+    message.referenced_message?.content ?? "",
+    String(embed?.title ?? ""),
+    String(embed?.description ?? ""),
+    ...(Array.isArray(embed?.fields)
+      ? embed.fields.map((field: any) => `${field?.name ?? ""} ${field?.value ?? ""}`)
+      : []),
+  ].join(" ").toLowerCase();
+
+  if (sourceText.includes("youtube.com") || sourceText.includes("youtu.be")) return "youtube";
+  if (sourceText.includes("discord")) return "discord";
+  return "discord";
+}
+
+function parseSlumdawgFeedRow(message: DiscordMessage): SlumdawgFeedRow | null {
+  if (!message.author?.bot) return null;
+  const embed = message.embeds?.[0];
+  if (!embed) return null;
+  if (!/slumdawg cooked it/i.test(String(embed.title ?? ""))) return null;
+
+  const referenced = message.referenced_message?.embeds?.[0];
+  const name =
+    String(referenced?.title ?? "").trim() ||
+    extractVideoTitleFromEmbed(embed) ||
+    String(embed.title ?? "").replace(/^.*?—\s*/, "").trim() ||
+    "unknown";
+  const ts =
+    message.timestamp ||
+    message.edited_timestamp ||
+    String(embed.timestamp ?? "") ||
+    new Date().toISOString();
+  const ageMin = Math.max(0, Math.floor((Date.now() - new Date(ts).getTime()) / 60_000));
+
+  return {
+    name,
+    source: determineFeedSource(message),
+    status: "graduated",
+    ageMin,
+    sortAt: ts,
+  };
+}
+
+async function fetchDiscordChannelFeedRows(limit = 20): Promise<SlumdawgFeedRow[]> {
+  const token = process.env.DISCORD_BOT_TOKEN?.trim();
+  if (!token) {
+    console.warn("[crib-data] DISCORD_BOT_TOKEN missing — live feed skipped");
+    return [];
+  }
+
+  const url = `${DISCORD_API_BASE_URL}/channels/${SLUMDAWG_FEED_CHANNEL_ID}/messages?limit=${encodeURIComponent(String(limit))}`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bot ${token}` },
+    signal: AbortSignal.timeout(4000),
+  }).catch((err) => {
+    console.error("[crib-data] Discord fetch failed", err);
+    return null;
+  });
+  if (!res) return [];
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    console.warn("[crib-data] Discord API error", res.status, txt);
+    return [];
+  }
+
+  const messages = (await res.json().catch(() => [])) as DiscordMessage[];
+  if (!Array.isArray(messages)) return [];
+
+  return messages
+    .map(parseSlumdawgFeedRow)
+    .filter((row): row is SlumdawgFeedRow => Boolean(row))
+    .sort((a, b) => new Date(b.sortAt).getTime() - new Date(a.sortAt).getTime())
+    .slice(0, 4);
+}
+
+async function fetchSlumdawgFeedRows(limit = 20): Promise<SlumdawgFeedRow[]> {
+  const directRows = await fetchDiscordChannelFeedRows(limit).catch(() => []);
+  if (directRows.length > 0) return directRows;
+
+  const proxyUrl =
+    process.env.SLUMDAWG_FEED_PROXY_URL ||
+    `http://127.0.0.1:${process.env.DISCORD_ALERT_PORT || 4100}/slumdawg/feed`;
+  const url = `${proxyUrl}?limit=${encodeURIComponent(String(limit))}`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(2000) }).catch(() => null);
+  if (!res || !res.ok) return [];
+  const payload = (await res.json().catch(() => null)) as { rows?: SlumdawgFeedRow[] } | SlumdawgFeedRow[] | null;
+  const rows = Array.isArray(payload) ? payload : Array.isArray(payload?.rows) ? payload.rows : [];
+  return rows.slice(0, 4);
 }
 
 export async function assembleCribData(args: { brokerAccountId: string | null }): Promise<CribData> {
@@ -105,14 +253,27 @@ export async function assembleCribData(args: { brokerAccountId: string | null })
   const inPotValue = Number((potRow as any)?.in_pot ?? 0);
   const inPotSpark = [inPotValue, inPotValue, inPotValue, inPotValue, inPotValue, inPotValue, inPotValue];
 
-  // 5. Discord feed — recent scout ingest rows (graceful fallback if scout_audit absent)
-  const discordRows = (await db.execute(sql`
-    SELECT name, source, status,
-      EXTRACT(EPOCH FROM (NOW() - created_at))::int / 60 AS age_min
-    FROM scout_audit
-    WHERE status IN ('queued','extracting','graduated')
-    ORDER BY created_at DESC LIMIT 4
-  `).catch(() => [] as any[])) as any[];
+  // 5. Discord feed — read the live Slumdawg feed channel directly when the
+  // bot token is available. Keep the proxy/DB fallbacks only for local tests
+  // or env misconfiguration.
+  const liveDiscordRows = await fetchSlumdawgFeedRows().catch(() => []);
+  const dbRowsRaw = (liveDiscordRows.length > 0 ? liveDiscordRows : (await db.execute(sql`
+    SELECT concept_name AS name, 'discord' AS source, status, first_seen_at AS sort_at,
+      EXTRACT(EPOCH FROM (NOW() - first_seen_at))::int / 60 AS age_min
+    FROM strategy_pending_buckets
+    ORDER BY first_seen_at DESC LIMIT 50
+  `).catch(() => [] as any[])) as any);
+
+  const dbRows = Array.isArray(dbRowsRaw) ? dbRowsRaw : Array.isArray(dbRowsRaw?.rows) ? dbRowsRaw.rows : [];
+  
+  const freshDiscordRows = dbRows
+    .filter((r: Record<string, unknown>) => FRESH_DISCORD_FEED_STATUSES.has(String(r["status"] ?? "").toLowerCase()))
+    .sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
+      const aTime = new Date((a["sortAt"] ?? a["sort_at"] ?? a["first_seen_at"] ?? 0) as string | number).getTime();
+      const bTime = new Date((b["sortAt"] ?? b["sort_at"] ?? b["first_seen_at"] ?? 0) as string | number).getTime();
+      return bTime - aTime;
+    })
+    .slice(0, 4);
 
   // 6. Pot horizontal feed — strategies currently in testing stages with recent P&L
   const potRows = (await db.execute(sql`
@@ -139,8 +300,6 @@ export async function assembleCribData(args: { brokerAccountId: string | null })
   `).catch(() => [] as any[])) as any[];
 
   // 7. Crew leaderboard — every mapped friend, ordered by week P&L.
-  //    Friends without a broker_account_id yet still appear (week_pnl = 0)
-  //    so the crew feels populated even when an account is pending.
   const crewRows = (await db.execute(sql`
     SELECT u.jersey_number AS jersey, u.display_name,
       COALESCE(
@@ -175,11 +334,11 @@ export async function assembleCribData(args: { brokerAccountId: string | null })
       inPotSpark,
       killSwitch,
     },
-    discordFeed: discordRows.map((r) => ({
-      name: String(r.name ?? "unknown"),
-      source: String(r.source ?? "?"),
-      status: String(r.status ?? "?"),
-      ageMin: Number(r.age_min ?? 0),
+    discordFeed: freshDiscordRows.map((r: Record<string, unknown>) => ({
+      name: String(r["name"] ?? "unknown"),
+      source: String(r["source"] ?? "?"),
+      status: String(r["status"] ?? "?"),
+      ageMin: Number(r["ageMin"] ?? r["age_min"] ?? 0),
     })),
     pot: potRows.map((r) => ({
       id: String(r.id),
@@ -202,4 +361,9 @@ async function firstRow(p: Promise<unknown>): Promise<any> {
   // pg drizzle returns { rows: [...] } sometimes
   if (rows?.rows && Array.isArray(rows.rows)) return rows.rows[0] ?? {};
   return {};
+}
+
+function formatBag(val: number): string {
+  const sign = val >= 0 ? "+" : "−"; // Using special minus sign for aesthetics
+  return `${sign}$${Math.abs(Math.round(val)).toLocaleString()}`;
 }

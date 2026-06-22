@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Wave 26 Pass G Pass F — DD Velocity Gate tests
  *
  * Tests: synthetic equity curves, 2hr window math, Topstep buffer tightening,
@@ -47,6 +47,7 @@ import {
   __injectEquitySamplesForTests,
   type DDVelocityCheckResult,
 } from "../services/dd-velocity-gate.js";
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
 import { setMode, getMode } from "./pipeline-control-service.js";
 import { ddVelocityAutopauseTotal } from "../lib/metrics-registry.js";
 

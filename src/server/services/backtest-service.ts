@@ -24,7 +24,7 @@ import { captureToDLQ } from "../lib/dlq-service.js";
 import { db } from "../db/index.js";
 import { tracer } from "../lib/tracing.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
-import { backtestRuns, backtestScoredTotal } from "../lib/metrics-registry.js";
+import { backtestRuns, backtestScoredTotal, rlTrainingEpochsTotal } from "../lib/metrics-registry.js";
 import { recordCost, completeCost } from "../lib/quantum-cost-tracker.js";
 import { computeResultHash, computeDataHash, computeStrategyHash } from "../lib/result-hasher.js";
 // Track A F-6: insertAuditRowSafe added. Remaining db.insert(auditLog) call
@@ -248,6 +248,7 @@ interface BacktestResult {
   wfe_status?: string | null;
   pbo_overall?: number | null;
   pbo_overall_p_value?: number | null;
+  information_ratio?: number | null;         // A13: Information Ratio (vs benchmark); null when benchmark data insufficient
   prop_compliance?: Record<string, unknown>;
   crisis_results?: Record<string, unknown>;
   decay_analysis?: Record<string, unknown>;
@@ -440,10 +441,10 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     // Operator runs: ADAPTIVE_WIRED=true python -m scripts.wave25_exit_engine_ab_report
     //   --days 30 --strategies silver_bullet,power_of_3
     // to validate the A/B harness produces non-zero deltas.
-    const exitEngine = (config as Record<string, unknown>)["exit_engine"];
-    if (exitEngine === "adaptive" && !(config as Record<string, unknown>)["adaptive_exit_context"]) {
-      const exitPlanConfig = (config.strategy as Record<string, unknown>)?.["exit_plan_config"] as Record<string, unknown> | null | undefined;
-      (config as Record<string, unknown>)["adaptive_exit_context"] = {
+    const exitEngine = (config as unknown as Record<string, unknown>)["exit_engine"];
+    if (exitEngine === "adaptive" && !(config as unknown as Record<string, unknown>)["adaptive_exit_context"]) {
+      const exitPlanConfig = ((config as unknown as Record<string, unknown>)["strategy"] as Record<string, unknown> | null | undefined)?.["exit_plan_config"] as Record<string, unknown> | null | undefined;
+      (config as unknown as Record<string, unknown>)["adaptive_exit_context"] = {
         liquidity_snapshot: [],  // TODO W26: fill from getNearestLiquidity()
         regime_at_entry: null,   // Python backtester uses per-bar classify_institutional_regime
         pre_lunch_threshold_r: (exitPlanConfig?.["pre_lunch_threshold_r"] as number | null) ?? 0.3,
@@ -1866,12 +1867,13 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     // Circuit breaker: 5 consecutive failures → 1h cooldown.
     // governance: challenger_only, training_mode=true, never blocks lifecycle.
     {
-      const entryQuality = (config as Record<string, unknown>).entry_quality as Record<string, unknown> | undefined;
+      const entryQuality = (config as unknown as Record<string, unknown>)["entry_quality"] as Record<string, unknown> | undefined;
       const trainRlPolicy = entryQuality?.train_rl_policy === true;
       if (!config.suppressAutoPromote && trainRlPolicy && result.tier && result.tier !== "REJECTED") {
         void (async () => {
           try {
-            const { runRlTrainingForStrategy, _getRlConsecutiveFailuresForTests } = await import("../lib/quantum-rl-training-runner.js");
+            const { runRlTrainingForStrategy, deriveRlTrainingSeed, _getRlConsecutiveFailuresForTests } = await import("../lib/quantum-rl-training-runner.js");
+            const rlSeed = deriveRlTrainingSeed(strategyId);
             const rlTrainingResult = await runRlTrainingForStrategy(strategyId, 200, correlationId);
             await db.insert(auditLog).values({
               action: "quantum_rl.training_auto_fire_enqueued",
@@ -1883,6 +1885,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
                 trigger: "post_backtest_auto_fire",
                 backtest_id: backtestId,
                 strategy_id: strategyId,
+                seed: rlSeed,
                 regimes_trained: rlTrainingResult.regimesTrained,
                 duration_ms: rlTrainingResult.durationMs,
                 training_status: rlTrainingResult.status,
@@ -1897,6 +1900,15 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
                 duration_ms: rlTrainingResult.durationMs,
                 correlation_id: correlationId ?? null,
               });
+              // Wave 29 prod hardening: increment Prom counter #5 — regimesTrained is a count, not an array
+              try {
+                const nRegimes = rlTrainingResult.regimesTrained ?? 0;
+                if (nRegimes > 0) {
+                  rlTrainingEpochsTotal.labels({ regime: "combined" }).inc(
+                    parseInt(process.env.QUANTUM_RL_TRAINING_EPOCHS ?? "200", 10) || 200
+                  );
+                }
+              } catch (_promErr) { /* non-blocking */ }
             }
           } catch (rlTrainErr) {
             logger.error({ err: rlTrainErr, strategyId, correlationId }, "RL training auto-fire failed (non-blocking)");
@@ -2473,7 +2485,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
               backtestId,
               tier: result.tier,
               forge_score: result.forge_score,
-            },
+            } as import("../db/jsonb-shapes.js").PaperSessionConfigShape,
           }).returning();
 
           paperSessionId = paperSession.id;

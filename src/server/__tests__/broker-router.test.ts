@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Broker Router Tests (Track 4 — Pass 2)
  *
  * 8 tests covering:
@@ -138,6 +138,7 @@ const TEST_SIGNAL = {
 // ─── Helper: set up db.select chain to return a specific account ──────────────
 
 function mockSelectReturning(accounts: unknown[]) {
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
   vi.mocked(db.select).mockReturnValue({
     from: vi.fn().mockReturnValue({
       where: vi.fn().mockReturnValue({
@@ -157,6 +158,7 @@ describe("broker-router", () => {
     vi.mocked(killSwitch.isHaltedForProduction).mockResolvedValue(false);
     vi.mocked(getEnabledFirms).mockResolvedValue(["mffu", "topstep"]);
     mockSelectReturning([TRADERSPOST_ACCOUNT]);
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     vi.mocked(db.insert).mockReturnValue({
       values: vi.fn().mockResolvedValue([{ id: "test-audit-id" }]),
     } as ReturnType<typeof db.insert>);

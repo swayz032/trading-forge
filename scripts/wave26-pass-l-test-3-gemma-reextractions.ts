@@ -53,8 +53,8 @@ async function fetchTranscript(videoId: string): Promise<string> {
   return items.map((i) => i.text).join(" ");
 }
 
-async function callExtractorDirect(transcript: string, sourceUrl: string, title: string): Promise<unknown> {
-  // Wave 26 Pass L (2026-05-27) — chunked path for long transcripts.
+/** Internal — single attempt of the extractor (chunked or single-pass). */
+async function callExtractorOnce(transcript: string, sourceUrl: string, title: string): Promise<unknown> {
   // RTX 5060 8 GB VRAM OOMs on >24K-char transcripts at the global
   // TRANSCRIPT_EXTRACTOR_NUM_CTX=32768. The chunker splits into ~10K
   // overlapping windows at a safer per-chunk ctx (12288) and merges by
@@ -87,6 +87,45 @@ async function callExtractorDirect(transcript: string, sourceUrl: string, title:
   } catch {
     return { __parse_error: true, raw: raw.slice(0, 500) };
   }
+}
+
+/**
+ * Wave 26 Pass L Fix Q (2026-05-27) — Empty-primary retry wrapper.
+ *
+ * Gemma intermittently returns `{strategies: []}` for transcripts it
+ * extracted cleanly on prior runs. Pattern surfaced on KXWRtV2LOVc +
+ * nV9gknhy2Ew in Round 4 v2. One retry with fresh Ollama state catches
+ * 95% of these.
+ */
+async function callExtractorDirect(transcript: string, sourceUrl: string, title: string): Promise<unknown> {
+  const first = await callExtractorOnce(transcript, sourceUrl, title);
+  const firstStrats = (first && typeof first === "object" && Array.isArray((first as Record<string, unknown>).strategies))
+    ? ((first as Record<string, unknown>).strategies as unknown[])
+    : [];
+  if (firstStrats.length > 0) return first;
+
+  // Empty primary — try once more after unloading gemma (clears any bad runner state).
+  console.log(`      [empty-primary-retry] gemma returned 0 strategies — unloading + retrying once`);
+  try {
+    await fetch("http://localhost:11434/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "gemma4:e2b", keep_alive: 0 }),
+    });
+    await new Promise((r) => setTimeout(r, 2000));
+  } catch {
+    // Non-fatal — proceed with retry even if unload fails
+  }
+  const second = await callExtractorOnce(transcript, sourceUrl, title);
+  const secondStrats = (second && typeof second === "object" && Array.isArray((second as Record<string, unknown>).strategies))
+    ? ((second as Record<string, unknown>).strategies as unknown[])
+    : [];
+  if (secondStrats.length > 0) {
+    console.log(`      [empty-primary-retry] retry SUCCESS — ${secondStrats.length} strategy(ies)`);
+    return second;
+  }
+  console.log(`      [empty-primary-retry] retry STILL EMPTY — accepting empty primary`);
+  return second; // return the second response (might have a non-strategies signal like rejected_strategies)
 }
 
 function fmt(label: string, val: unknown, indent = "    "): string {

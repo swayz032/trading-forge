@@ -118,9 +118,11 @@ function connect() {
   ws.on("open", () => {
     console.log(`[${new Date().toISOString()}] connected`);
     backoffMs = 1000;
+    heartbeat(ws);
   });
 
   ws.on("message", (data) => {
+    heartbeat(ws);
     let msg;
     try { msg = JSON.parse(data.toString()); } catch (e) { return; }
     if (msg.type !== "request") return;
@@ -128,6 +130,7 @@ function connect() {
   });
 
   ws.on("close", (code, reason) => {
+    if (ws.heartbeatTimer) clearTimeout(ws.heartbeatTimer);
     // F-7: Code 4001 = this connection was superseded by a newer call to connect().
     // Do NOT schedule a reconnect — the newer connection owns the session.
     if (code === 4001) {
@@ -143,7 +146,24 @@ function connect() {
     console.error(`[${new Date().toISOString()}] ws error: ${e.message}`);
   });
 
-  ws.on("ping", () => { try { ws.pong(); } catch (_) {} });
+  ws.on("ping", () => { 
+    heartbeat(ws);
+    try { ws.pong(); } catch (_) {} 
+  });
+  
+  ws.on("pong", () => {
+    heartbeat(ws);
+  });
+}
+
+function heartbeat(ws) {
+  if (ws.heartbeatTimer) clearTimeout(ws.heartbeatTimer);
+  // If we don't hear from the server for 60s, close the connection.
+  // The server pings every 25s, so we should never hit this if healthy.
+  ws.heartbeatTimer = setTimeout(() => {
+    console.warn(`[${new Date().toISOString()}] heartbeat timeout — terminating connection`);
+    ws.terminate();
+  }, 60000);
 }
 
 function proxyRequest(ws, msg) {

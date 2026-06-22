@@ -1,4 +1,4 @@
-/**
+﻿/**
  * wave23h-pre-market-cron.test.ts — W23H.2 Pre-Market Cron Logic
  *
  * Tests the scheduler-level cron logic for pre-market-routine:
@@ -288,6 +288,7 @@ describe("W23H.2 runPreMarketRoutine via DAL: 3-symbol sequential", () => {
     });
 
     function makeDalForSymbol(): PreMarketDataAccessLayer {
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
       return {
         getDailyBars: vi.fn().mockResolvedValue([
           { date: "2026-05-20", open: 5840, high: 5860, low: 5820, close: 5850 },

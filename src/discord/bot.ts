@@ -512,6 +512,82 @@ const CHANNEL_MAP: Record<string, string> = {
   "critical-alerts": process.env.DISCORD_CH_CRITICAL_ALERTS || "",
 };
 
+type SlumdawgFeedRow = {
+  name: string;
+  source: string;
+  status: "graduated";
+  ageMin: number;
+  sortAt: string;
+};
+
+function extractVideoTitleFromEmbed(embed: any): string {
+  const videoField = Array.isArray(embed?.fields)
+    ? embed.fields.find((field: any) => String(field?.name ?? "").toLowerCase().includes("video"))
+    : null;
+  if (videoField?.value) {
+    const match = String(videoField.value).match(/\*\*(.+?)\*\*/);
+    if (match?.[1]) return match[1].trim();
+  }
+  return "";
+}
+
+function determineFeedSource(message: any): string {
+  const referenced = message?.referenced_message?.embeds?.[0];
+  const provider = String(referenced?.provider?.name ?? "").toLowerCase();
+  if (provider.includes("youtube")) return "youtube";
+
+  const sourceText = [
+    message?.referenced_message?.content ?? "",
+    message?.embeds?.[0]?.title ?? "",
+    message?.embeds?.[0]?.description ?? "",
+    ...(Array.isArray(message?.embeds?.[0]?.fields)
+      ? message.embeds[0].fields.map((field: any) => `${field?.name ?? ""} ${field?.value ?? ""}`)
+      : []),
+  ].join(" ").toLowerCase();
+
+  if (sourceText.includes("youtube.com") || sourceText.includes("youtu.be")) return "youtube";
+  if (sourceText.includes("discord")) return "discord";
+  return "discord";
+}
+
+async function readLiveSlumdawgFeed(limit = 20): Promise<SlumdawgFeedRow[]> {
+  if (!client.isReady()) return [];
+
+  const channel = await client.channels.fetch(SLUMDAWG_FEED_CHANNEL_ID).catch(() => null);
+  if (!channel || !("messages" in channel) || !channel.isTextBased()) return [];
+
+  const messages = await channel.messages.fetch({ limit }).catch(() => null);
+  if (!messages) return [];
+
+  const rows: SlumdawgFeedRow[] = [];
+  for (const message of messages.values()) {
+    const msg = message as any;
+    if (!msg.author?.bot) continue;
+    const embed = msg.embeds?.[0];
+    if (!embed) continue;
+    if (!/slumdawg cooked it/i.test(String(embed.title ?? ""))) continue;
+
+    const referenced = msg.referenced_message?.embeds?.[0];
+    const name =
+      referenced?.title?.trim() ||
+      extractVideoTitleFromEmbed(embed) ||
+      String(embed.title ?? "").replace(/^.*?—\s*/, "").trim() ||
+      "unknown";
+    const ts = msg.createdAt?.toISOString?.() ?? embed.timestamp ?? new Date().toISOString();
+    const ageMin = Math.max(0, Math.floor((Date.now() - new Date(ts).getTime()) / 60_000));
+
+    rows.push({
+      name,
+      source: determineFeedSource(msg),
+      status: "graduated",
+      ageMin,
+      sortAt: ts,
+    });
+  }
+
+  return rows;
+}
+
 // ─── Typed payload contracts (OpenClaw structured reporting) ───
 // These four channels reject any payload that does not match the schema.
 // Free-form messages would put OpenClaw back into "off-topic chatter" mode.
@@ -771,6 +847,17 @@ alertApp.get("/health", (_req, res) => {
     service: "trading-forge-discord",
     connected: client.isReady(),
   });
+});
+
+alertApp.get("/slumdawg/feed", async (req, res) => {
+  try {
+    const limit = Math.max(1, Math.min(20, Number(req.query.limit ?? 20) || 20));
+    const rows = await readLiveSlumdawgFeed(limit);
+    res.json({ rows });
+  } catch (err: any) {
+    log.error({ err }, "Failed to read Slumdawg feed");
+    res.status(503).json({ error: err.message, rows: [] });
+  }
 });
 
 // ─── Register slash commands ────────────────────────────────

@@ -66,6 +66,8 @@ import { isOffRthTrainingWindow } from "./lib/quantum-rl-training-runner.js";
 import { runRegimeDriftDetector } from "./services/regime-drift-detector-service.js";
 // W29 Pass D.3: A/B comparison weekly digest — Friday 17:00 ET
 import { runAbComparisonWeeklyDigest } from "./services/ab-comparison-weekly-digest-service.js";
+// W0.1: Nightly off-tower database backup (hardware-failure safety net)
+import { runDbBackup } from "./services/db-backup-service.js";
 
 let initialized = false;
 
@@ -400,6 +402,10 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   // whether the research pipeline is paused — pausing research does not stop
   // the paper accounts from accumulating evidence.
   "ab-comparison-weekly-digest",        // W29D.3: weekly A/B paper routing digest
+  // W0.1: Nightly DB backup must fire even when pipeline is paused.
+  // A hardware failure destroys the database regardless of pipeline state.
+  // The backup signal is a safety/reliability signal, not a trading research signal.
+  "db-backup",                          // W0.1: nightly off-tower DB backup
 ]);
 
 function _validateAllJobsScheduled(): void {
@@ -766,7 +772,6 @@ export function initScheduler() {
     logger.info(
       {
         totalBlocked: report.totalTradesBlocked,
-        totalHypotheticalPnl: report.totalHypotheticalPnl,
         suspectCount: report.suspectRules.length,
       },
       "Anti-setup effectiveness analysis complete",
@@ -4243,7 +4248,7 @@ except Exception as e:
       try {
         // Load the latest bias_state row for this session+symbol to get htfNarrative + structureState
         const { getOrComputeBiasStateForDay } = await import("./services/bias-state-service.js");
-        const biasData = await getOrComputeBiasStateForDay(nowUtc, symbol);
+        const biasData = await getOrComputeBiasStateForDay(nowUtc.toISOString(), symbol);
 
         const htfNarrative = biasData.htfNarrative;
         const structureState = biasData.structureState;
@@ -4746,6 +4751,49 @@ except Exception as e:
     }
   });
   _scheduledJobs.add("ab-comparison-weekly-digest");
+
+  // ─── W0.1: Nightly DB backup — 02:00 ET daily ─────────────────────────────
+  // CRITICAL GAP: the only existing backup is a one-shot pre-migration snapshot
+  // (~54 days old). The tower has experienced NVIDIA-TDR/power freezes. A total
+  // hardware loss = total state loss for the entire audit trail and governance
+  // state. This cron closes that gap with a nightly pg_dump → S3 pipeline.
+  //
+  // Cadence: nightly at 02:00 ET (off-RTH, low activity).
+  //   EDT (UTC-4): 06:00 UTC
+  //   EST (UTC-5): 07:00 UTC
+  // DST-safe double-fire: cron fires at 0 6,7 UTC; ET-hour guard confirms 2 AM ET.
+  //
+  // Pipeline-gate EXEMPT: hardware failure can happen regardless of pipeline
+  // state. A paused pipeline does not protect the database.
+  registerJob("db-backup", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "db-backup" }, "cron tick start");
+    await runDbBackup();
+  });
+
+  cron.schedule("0 6,7 * * *", async () => {
+    if (!_tryAcquireJobLock("db-backup")) return;
+    try {
+      const now = new Date();
+      const etHour = parseInt(
+        now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+        10,
+      );
+      if (etHour !== 2) {
+        logger.debug({ etHour }, "Scheduler: db-backup cron fired but not 02:00 ET — skipping");
+        return;
+      }
+      // NOT pipeline-gated — safety signal (in _PIPELINE_GATE_EXEMPT)
+      logger.info("Scheduler: db-backup (02:00 AM ET confirmed)");
+      const t0db = Date.now();
+      await withRetry("db-backup", SCHEDULER_JOBS["db-backup"].run, 1);
+      markJobRun("db-backup");
+      emitJobComplete("db-backup", Date.now() - t0db);
+    } finally {
+      _releaseJobLock("db-backup");
+    }
+  });
+  _scheduledJobs.add("db-backup");
 
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every

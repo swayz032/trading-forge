@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Wave 24 Pass 2 Item #22 — Pre-vacation preflight orchestrator tests.
  *
  * Dependency-injected (PreflightDeps) — no DB / HTTP / sc.exe / pm2 / FS.
@@ -24,6 +24,7 @@ import {
   N8N_GLOBAL_ERROR_WORKFLOW,
   type PreflightDeps,
   type CheckResult,
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
 } from "../../../scripts/pre-vacation-preflight.js";
 
 const NOW = new Date("2026-05-23T18:00:00.000Z").getTime();

@@ -121,6 +121,10 @@ export async function getPipelineStatus(): Promise<{
 export async function setMode(
   mode: PipelineMode,
   reason: string,
+  // correlationId threads the HTTP request id into the pipeline.mode_change audit row
+  // so the caller-side span and the audit row share a reconstruction key.
+  // Optional to keep all existing callers (admin.ts) unmodified.
+  correlationId?: string | null,
 ): Promise<{
   previousMode: PipelineMode;
   newMode: PipelineMode;
@@ -180,6 +184,7 @@ export async function setMode(
     input: { previousMode, newMode: mode, reason } as Record<string, unknown>,
     result: { n8n: n8nResult } as unknown as Record<string, unknown>,
     status: n8nResult.failed === 0 ? "success" : "partial",
+    correlationId: correlationId ?? null,
   });
 
   broadcastSSE("pipeline:mode-change", {

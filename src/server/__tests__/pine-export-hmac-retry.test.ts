@@ -1,4 +1,4 @@
-/**
+﻿/**
  * pine-export-hmac-retry.test.ts — Wave 4 Pine HMAC persist retry tests
  *
  * Tests the 3-attempt backoff added to getOrCreateHmacSecret in
@@ -167,6 +167,7 @@ describe("HMAC persist retry — Wave 4", () => {
       try {
         await dbMod.db.execute(
           `UPDATE account_strategy_assignments SET hmac_secret = $1 WHERE account_id = $2 AND strategy_id = $3`,
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
           ["fakesecret", "acct-1", "strat-1"],
         );
         secret = "fakesecret";
@@ -204,6 +205,7 @@ describe("HMAC persist retry — Wave 4", () => {
       try {
         await dbMod.db.execute(
           `UPDATE account_strategy_assignments SET hmac_secret = $1 WHERE account_id = $2 AND strategy_id = $3`,
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
           ["fakesecret", "acct-2", "strat-2"],
         );
         break;
@@ -290,6 +292,7 @@ describe("HMAC persist retry — Wave 4", () => {
       try {
         await dbMod.db.execute(
           `UPDATE account_strategy_assignments SET hmac_secret = $1 WHERE account_id = $2 AND strategy_id = $3`,
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
           [secret, "acct-3", "strat-3"],
         );
         returned = secret;
@@ -322,6 +325,7 @@ describe("HMAC persist retry — Wave 4", () => {
       try {
         await dbMod.db.execute(
           `UPDATE account_strategy_assignments SET hmac_secret = $1 WHERE account_id = $2 AND strategy_id = $3`,
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
           ["fakesecret", "acct-4", "strat-4"],
         );
         succeeded = true;

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * W23H.B (2026-05-20) — Multi-regime strategies schema tests.
  *
  * Tests:
@@ -29,6 +29,7 @@ const MIGRATION_PATH = join(
 describe("W23H.B migration 0120: idempotent DDL", () => {
   let sql: string;
 
+    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
   beforeAll(() => {
     sql = readFileSync(MIGRATION_PATH, "utf-8");
   });

@@ -124,10 +124,10 @@ export async function fitCalibration(windowDays: number = BIAS_HARNESS_CONFIG.de
     intercept = meanY - slope * meanX;
 
     // Brier score = mean((calibrated_prob - label)^2)
-    const brierSum = pairs.reduce(([, label]) => {
+    const brierSum = pairs.reduce((sum: number, [, label]: [number, number]) => {
       const calibrated = Math.max(0, Math.min(1, slope * 0.5 + intercept));
-      return (calibrated - label) ** 2;
-    }, 0 as number);
+      return sum + (calibrated - label) ** 2;
+    }, 0);
     reliabilityScore = Math.round((brierSum / n) * 10000) / 10000;
   }
 
@@ -148,8 +148,9 @@ export async function fitCalibration(windowDays: number = BIAS_HARNESS_CONFIG.de
   await db.insert(auditLog).values({
     action: "bias_engine.calibration_fit",
     entityType: "bias_engine",
-    entityId: "calibration",
-    actor: "bias_calibration_harness",
+    entityId: null,
+    decisionAuthority: "bias_calibration_harness",
+    status: "success",
     result: {
       windowDays,
       sampleSize,
@@ -157,8 +158,8 @@ export async function fitCalibration(windowDays: number = BIAS_HARNESS_CONFIG.de
       curveParams,
       reliabilityScore,
       version: BIAS_HARNESS_CONFIG.calibrationVersion,
-    },
-  } as typeof auditLog.$inferInsert);
+    } as Record<string, unknown>,
+  });
 
   console.log(`[bias:fit-calibration] Done. Persisted curve to bias_calibration_curves.`);
 
@@ -337,10 +338,11 @@ export async function computePbo(): Promise<number> {
   await db.insert(auditLog).values({
     action: "bias_engine.pbo_computed",
     entityType: "bias_engine",
-    entityId: "pbo",
-    actor: "bias_calibration_harness",
-    result: { pbo, nFolds: N_FOLDS, sampleSize: rows.length },
-  } as typeof auditLog.$inferInsert);
+    entityId: null,
+    decisionAuthority: "bias_calibration_harness",
+    status: "success",
+    result: { pbo, nFolds: N_FOLDS, sampleSize: rows.length } as Record<string, unknown>,
+  });
 
   return pbo;
 }
@@ -364,14 +366,15 @@ async function _persistAblation(result: AblationResult): Promise<void> {
   await db.insert(auditLog).values({
     action: "bias_engine.ablation_run",
     entityType: "bias_engine",
-    entityId: "ablation",
-    actor: "bias_calibration_harness",
+    entityId: null,
+    decisionAuthority: "bias_calibration_harness",
+    status: "success",
     result: {
       ...result,
       modeOffSharpe: result.modeOffSharpe,
       modeGatedSharpe: result.modeGatedSharpe,
-    },
-  } as typeof auditLog.$inferInsert);
+    } as Record<string, unknown>,
+  });
 
   console.log(`[bias:ablation] Persisted to bias_ablation_results.`);
 }
