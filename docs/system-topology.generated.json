@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-22T21:41:04.312Z",
+  "generatedAt": "2026-06-22T21:45:15.258Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,7 +16,7 @@
   },
   "counts": {
     "routes": 74,
-    "schedulerJobs": 94,
+    "schedulerJobs": 95,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 28,
@@ -136,6 +136,7 @@
     "dlq-escalation",
     "dlq-retry",
     "drain-scouted-ideas-periodic",
+    "feed-silence-check",
     "funnel-snapshot",
     "graveyard-pattern-extraction",
     "harsh-regime-phase-activation-check",
@@ -945,7 +946,7 @@
     ],
     "coveredCounts": {
       "routes": 74,
-      "schedulerJobs": 94,
+      "schedulerJobs": 95,
       "engineSubsystems": 28,
       "databaseTables": 104
     },
@@ -3844,7 +3845,8 @@
           "stale-pending-sweeper",
           "system-map-drift",
           "validation-cadence-monthly",
-          "webhook-latency-check"
+          "webhook-latency-check",
+          "feed-silence-check"
         ],
         "healthCheck": "/api/health/dashboard",
         "freshnessSignals": [
@@ -10539,7 +10541,8 @@
         "stale-pending-sweeper",
         "system-map-drift",
         "validation-cadence-monthly",
-        "webhook-latency-check"
+        "webhook-latency-check",
+        "feed-silence-check"
       ],
       "healthCheck": "/api/health/dashboard",
       "freshnessSignals": [

@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-06-22T21:41:04.312Z`.
+Updated automatically from the repo on `2026-06-22T21:45:15.258Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -12,7 +12,7 @@ Updated automatically from the repo on `2026-06-22T21:41:04.312Z`.
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `ci_gate, kill_switch, operator, operator_hmac_override, operator_invoke_for_cohort_validation, operator_opt_in_per_strategy, operator-approve, operator-halt-only, operator-only-recovery, tradingview_deploy`
 - API routes tracked: `74`
-- Scheduler jobs tracked: `94`
+- Scheduler jobs tracked: `95`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
@@ -55,7 +55,7 @@ Updated automatically from the repo on `2026-06-22T21:41:04.312Z`.
 ### Registry Coverage
 - Registry subsystems tracked: `69`
 - Route coverage: `74/74`
-- Scheduler coverage: `94/94`
+- Scheduler coverage: `95/95`
 - Engine coverage: `28/28`
 - Database coverage: `104/104`
 - Autonomous subsystems with audit coverage: `62/62`
@@ -338,6 +338,7 @@ Updated automatically from the repo on `2026-06-22T21:41:04.312Z`.
 - `dlq-escalation`
 - `dlq-retry`
 - `drain-scouted-ideas-periodic`
+- `feed-silence-check`
 - `funnel-snapshot`
 - `graveyard-pattern-extraction`
 - `harsh-regime-phase-activation-check`
