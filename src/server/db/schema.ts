@@ -3008,7 +3008,11 @@ export const strategyHealthScores = pgTable(
     // Surrogate key — bigserial for high-volume append workload
     id:                        bigserial("id", { mode: "bigint" }).primaryKey(),
     // FK to the strategy being evaluated. Cascade on strategy deletion.
-    strategyId:                integer("strategy_id")
+    // Wave hardening 2026-06-22: fixed INTEGER → UUID to match strategies.id (uuid column).
+    // The original INTEGER declaration was a schema defect (Defect G4) — uuid string values
+    // cannot round-trip through a Postgres INTEGER column; the gate would silently return
+    // 0 rows and stay permanently NO_OPINION.
+    strategyId:                uuid("strategy_id")
                                  .notNull()
                                  .references(() => strategies.id, { onDelete: "cascade" }),
     // When the aggregator produced this row (wall-clock UTC)

@@ -886,11 +886,10 @@ export async function aggregateStrategyHealth(strategyId: string): Promise<Aggre
 
     try {
       // Typed Drizzle insert — column-name + type-checked at compile time.
-      // strategyId column is INTEGER per schema; the orchestrator's
-      // strategyId parameter is the caller-supplied value (numeric or UUID
-      // string depending on call-site convention). Drizzle passes through.
+      // Wave hardening 2026-06-22 (Defect G4): strategyId column is now UUID in schema.ts
+      // and migration 0149 (corrected from INTEGER). Pass the UUID string directly — no cast.
       await db.insert(strategyHealthScores).values({
-        strategyId: strategyId as unknown as number,
+        strategyId: strategyId,
         evaluatedAt: startedAt,
         compositeScore: composite,
         verdict: verdict,

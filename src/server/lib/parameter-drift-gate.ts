@@ -6,15 +6,23 @@
  * Pass B.1 (backtest-core) emits two fields into
  * `backtests.walk_forward_metadata`:
  *   - parameter_drift_classification: "overfit_drift" | "indeterminate" |
- *                                     "regime_driven" | "stable" | null
+ *                                     "regime_driven" | "stable" | "classifier_error" | null
  *   - parameter_drift_confidence: float [0, 1] | null
  *
  * Gate logic (from spec):
  *   classification == "overfit_drift" AND confidence >= 0.70 → BLOCK
  *   classification == "overfit_drift" AND confidence < 0.70  → WARN (allow)
  *   classification == "indeterminate"                         → WARN (allow)
+ *   classification == "classifier_error"                     → BLOCK (G2b hardening 2026-06-22)
  *   classification == "regime_driven" OR "stable"            → pass, no action
  *   classification == null (legacy or no regime data)        → allow + audit
+ *
+ * Wave hardening 2026-06-22 (G2b): "classifier_error" is DISTINCT from
+ * "indeterminate".  A classifier CRASH on a real (possibly overfit) strategy
+ * is indistinguishable from a crash on any other strategy, so the institutional-
+ * safe default is to BLOCK.  "indeterminate" retains its genuine-ambiguity /
+ * warn-and-allow semantics.  The forward-compat unknown-value fall-through MUST
+ * NOT apply to "classifier_error" — it is a known, explicit, fail-closed value.
  *
  * Exported pure functions have no DB access or side effects.
  */
@@ -24,14 +32,16 @@ export type ParameterDriftClassification =
   | "indeterminate"
   | "regime_driven"
   | "stable"
-  | (string & {}); // forward-compat for Pass B.1 values
+  | "classifier_error"  // G2b hardening 2026-06-22: classifier raised an exception
+  | (string & {});      // forward-compat for future Pass B.1 values
 
 export type ParameterDriftGateStatus =
-  | "blocked"              // overfit_drift + confidence >= 0.70
-  | "warned_overfit"       // overfit_drift + confidence < 0.70
-  | "warned_indeterminate" // indeterminate classification
-  | "passed"               // regime_driven | stable
-  | "legacy_null";         // null classification (pre-Pass-B.1)
+  | "blocked"                    // overfit_drift + confidence >= 0.70
+  | "blocked_classifier_error"   // classifier_error (G2b hardening 2026-06-22)
+  | "warned_overfit"             // overfit_drift + confidence < 0.70
+  | "warned_indeterminate"       // indeterminate classification
+  | "passed"                     // regime_driven | stable
+  | "legacy_null";               // null classification (pre-Pass-B.1)
 
 export interface ParameterDriftGateResult {
   status: ParameterDriftGateStatus;
@@ -42,6 +52,7 @@ export interface ParameterDriftGateResult {
   /** Audit action name to emit. Null when no audit action is needed. */
   auditAction:
     | "lifecycle.parameter_overfit_drift_block"
+    | "lifecycle.parameter_drift_classifier_error_block"  // G2b hardening 2026-06-22
     | "lifecycle.parameter_drift_indeterminate_warn"
     | "lifecycle.parameter_drift_overfit_low_confidence_warn"
     | "lifecycle.parameter_drift_unavailable"
@@ -111,7 +122,23 @@ export function evaluateParameterDriftGate(
     };
   }
 
-  // "regime_driven" | "stable" | any future safe classification
+  // Wave hardening 2026-06-22 (G2b): classifier exception in walk_forward.py emits
+  // "classifier_error".  The institutional-safe default is to BLOCK — a crash on a
+  // real (possibly overfit) strategy is indistinguishable from any other crash.
+  // This check is BEFORE the forward-compat fall-through so unknown-value pass-through
+  // can never absorb "classifier_error" into a silent allow.
+  if (classification === "classifier_error") {
+    return {
+      status: "blocked_classifier_error",
+      passed: false,
+      classification,
+      confidence: conf,
+      auditAction: "lifecycle.parameter_drift_classifier_error_block",
+    };
+  }
+
+  // "regime_driven" | "stable" | any future safe classification (forward-compat pass)
+  // NOTE: "classifier_error" is explicitly handled above and MUST NOT reach here.
   return {
     status: "passed",
     passed: true,

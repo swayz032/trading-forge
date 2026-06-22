@@ -19,7 +19,9 @@ CREATE TABLE IF NOT EXISTS strategy_health_scores (
 
     -- FK to the strategy being evaluated. ON DELETE CASCADE: health rows
     -- are meaningless without the parent strategy.
-    strategy_id                 INTEGER NOT NULL REFERENCES strategies(id) ON DELETE CASCADE,
+    -- Wave hardening 2026-06-22: corrected INTEGER → UUID to match strategies.id (uuid PRIMARY KEY).
+    -- Convention verified against migrations 0019, 0066, 0068, 0074, 0076 — all use `uuid REFERENCES strategies(id)`.
+    strategy_id                 UUID NOT NULL REFERENCES strategies(id) ON DELETE CASCADE,
 
     -- When the aggregator produced this composite score row (wall-clock UTC).
     evaluated_at                TIMESTAMPTZ NOT NULL DEFAULT NOW(),

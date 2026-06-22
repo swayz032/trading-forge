@@ -138,15 +138,15 @@ function verdictFromScore(score: number): string {
  * rather than propagating the error to the lifecycle gate chain.
  */
 export async function evaluateCompositeShadow(
-  strategyId: string | number,
+  strategyId: string,
 ): Promise<ShadowResult> {
   const maxAgeHours = getCompositeMaxAgeHours();
 
-  // Cast to number mirrors strategy-health-aggregator.ts line 841 pattern:
-  // strategy_health_scores.strategy_id is INTEGER in schema (migration 0149)
-  // but the lifecycle-service loop holds the UUID string from strategies.id.
-  const idForQuery = strategyId as unknown as number;
-
+  // Wave hardening 2026-06-22 (Defect G4): strategy_health_scores.strategy_id is now
+  // UUID (fixed from INTEGER in schema.ts + migration 0149). Pass the UUID string directly —
+  // no cast needed or safe. The old `as unknown as number` cast was a runtime bug: a UUID
+  // string passed into a Postgres INTEGER column produces a type error on insert and 0-row
+  // selects on read, leaving the gate permanently NO_OPINION.
   const rows = await db
     .select({
       compositeScore: strategyHealthScores.compositeScore,
@@ -157,7 +157,7 @@ export async function evaluateCompositeShadow(
       computedFromNSubsystems: strategyHealthScores.computedFromNSubsystems,
     })
     .from(strategyHealthScores)
-    .where(eq(strategyHealthScores.strategyId, idForQuery))
+    .where(eq(strategyHealthScores.strategyId, strategyId))
     .orderBy(desc(strategyHealthScores.evaluatedAt))
     .limit(1);
 

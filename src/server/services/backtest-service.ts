@@ -36,6 +36,10 @@ import { notifyCritical } from "./notification-service.js";
 import { computeFirmRulesVersion } from "../lib/firm-rules-version.js";
 // Wave 27.5 Pass C.2 — compliance gate enforcement mode env knob
 import { resolveComplianceMode, isResearchBacktest } from "../lib/compliance-mode.js";
+// Wave hardening 2026-06-22 (G1a) — buildBacktestArgs extracted so tests can
+// import it without the full service chain. Re-exported for backward compat.
+import { buildBacktestArgs } from "../lib/backtest-args.js";
+export { buildBacktestArgs };
 
 /**
  * Normalize gate_result from Python into a stable JSONB shape.
@@ -237,6 +241,13 @@ interface BacktestResult {
   tier?: string;
   forge_score?: number;
   walk_forward_results?: Record<string, unknown>;
+  // Wave hardening 2026-06-22 (G1b): WFE + PBO keys emitted at top level when
+  // Python uses the oos_metrics branch (walk_forward.py:1252). Previously absent
+  // from this interface — a rename would have silently dropped them from wfResults.
+  wfe_overall?: number | null;
+  wfe_status?: string | null;
+  pbo_overall?: number | null;
+  pbo_overall_p_value?: number | null;
   prop_compliance?: Record<string, unknown>;
   crisis_results?: Record<string, unknown>;
   decay_analysis?: Record<string, unknown>;
@@ -443,11 +454,9 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     const result = await CircuitBreakerRegistry.get("python-backtest").call(() =>
       runPythonModule<BacktestResult>({
         module: "src.engine.backtester",
-        args: [
-          "--backtest-id", backtestId,
-          "--mode", mode,
-          ...(strategyClass ? ["--strategy-class", strategyClass] : []),
-        ],
+        // Wave hardening 2026-06-22 (G1a): use buildBacktestArgs so --b15-battery
+        // is conditionally appended based on B15_BATTERY_ENABLED env flag.
+        args: buildBacktestArgs({ backtestId, mode, strategyClass }),
         config: config as unknown as Record<string, unknown>,
         timeoutMs: BACKTEST_TIMEOUT_MS,
         componentName: "backtest-engine",
@@ -475,10 +484,40 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
 
     // Walk-forward returns metrics nested under oos_metrics — unwrap for DB storage
     const metrics = result.oos_metrics ?? result;
-    // Store full walk-forward structure (windows, confidence, param_stability) separately
-    const wfResults: { confidence?: string; windows?: Array<Record<string, unknown>>; n_splits?: number; param_stability?: Record<string, unknown> } | null = result.oos_metrics
-      ? { confidence: result.confidence, windows: result.windows as Array<Record<string, unknown>>, n_splits: result.n_splits, param_stability: result.param_stability }
-      : (result.walk_forward_results as { confidence?: string; windows?: Array<Record<string, unknown>>; n_splits?: number; param_stability?: Record<string, unknown> } ?? null);
+    // Store full walk-forward structure (windows, confidence, param_stability) separately.
+    //
+    // Wave hardening 2026-06-22 (G1b): explicitly include wfe_overall, wfe_status,
+    // pbo_overall, pbo_overall_p_value in the type so the WFE + Wave 29 PBO lifecycle
+    // gates have a compile-checked contract to read from. These keys are emitted at
+    // walk_forward.py:1252 and were previously only surviving by accidental runtime
+    // object spread — a Python rename would have silently dropped them with no TS error.
+    type WfResultsShape = {
+      confidence?: string;
+      windows?: Array<Record<string, unknown>>;
+      n_splits?: number;
+      param_stability?: Record<string, unknown>;
+      // Wave 27.5 Pass B — WFE gate inputs (walk_forward.py:1252)
+      wfe_overall?: number | null;
+      wfe_status?: string | null;
+      // Wave 29 Pass A.2 — PBO gate inputs (walk_forward.py:1272)
+      pbo_overall?: number | null;
+      pbo_overall_p_value?: number | null;
+    };
+    const wfResults: WfResultsShape | null = result.oos_metrics
+      ? {
+          confidence: result.confidence,
+          windows: result.windows as Array<Record<string, unknown>>,
+          n_splits: result.n_splits,
+          param_stability: result.param_stability,
+          wfe_overall: result.wfe_overall as number | null | undefined,
+          wfe_status: result.wfe_status as string | null | undefined,
+          pbo_overall: result.pbo_overall as number | null | undefined,
+          pbo_overall_p_value: result.pbo_overall_p_value as number | null | undefined,
+        }
+      : (() => {
+          const wfr = result.walk_forward_results as WfResultsShape | null | undefined;
+          return wfr ?? null;
+        })();
 
     // ─── Pre-compute trade rows (pure computation — outside the transaction) ───
     const trades = result.trades ?? [];

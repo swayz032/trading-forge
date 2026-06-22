@@ -61,8 +61,19 @@ vi.mock("../db/index.js", () => ({
   },
 }));
 
-// Schema mock — just needs to export the table references
+// Schema mock — plain-object column stubs for all tables accessed by the aggregator
+// and all tables referenced by route files loaded transitively via index.ts
+// (compliance.ts needs complianceRulesets/complianceReviews/complianceDriftLog;
+// skip.ts needs skipDecisions). Missing stubs cause "No X export defined on schema mock"
+// collection failures. Fixed as part of Wave hardening 2026-06-22 G4 scope.
 vi.mock("../db/schema.js", () => ({
+  // ── Compliance route tables (compliance.ts via index.ts) ─────────────────
+  complianceRulesets: { id: "id", firm: "firm", accountType: "account_type" },
+  complianceReviews: { id: "id", strategyId: "strategy_id", firm: "firm" },
+  complianceDriftLog: { id: "id", firm: "firm", detectedAt: "detected_at" },
+  // ── Skip route table (skip.ts via index.ts) ───────────────────────────────
+  skipDecisions: { id: "id", strategyId: "strategy_id", decisionDate: "decision_date" },
+  // ── Core tables used by aggregator ───────────────────────────────────────
   strategies: { id: "id", symbol: "symbol" },
   backtests: { id: "id", strategyId: "strategy_id", status: "status", createdAt: "created_at",
     walkForwardResults: "walk_forward_results", b15Battery: "b15_battery",
@@ -80,6 +91,7 @@ vi.mock("../db/schema.js", () => ({
   auditLog: { action: "action", entityType: "entity_type", entityId: "entity_id",
     result: "result", status: "status", correlationId: "correlation_id" },
   // Wave 28 Pass A architect-close reconciliation: typed Drizzle insert target.
+  // Wave hardening 2026-06-22 (G4): strategyId column stub consistent with uuid fix.
   strategyHealthScores: {
     id: "id", strategyId: "strategy_id", evaluatedAt: "evaluated_at",
     compositeScore: "composite_score", verdict: "verdict",
@@ -354,6 +366,46 @@ describe("aggregateStrategyHealth — subsystem error isolation", () => {
     // The key invariant: no exception thrown
     expect(result).toBeDefined();
     expect(result.written === false || result.written === true).toBe(true);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// G4 regression: aggregator writes UUID string as strategy_id (not a number)
+// Wave hardening 2026-06-22: before the fix the insert used
+// `strategyId as unknown as number`, meaning the UUID string value was cast to
+// the Drizzle `integer` column type — which would produce a Postgres type error
+// on insert.  After the fix, strategy_id is `uuid` in schema.ts and the value
+// passes through the insert unmodified.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("aggregateStrategyHealth — G4 strategy_id UUID regression (Wave hardening 2026-06-22)", () => {
+  it("writes the UUID string as strategy_id — not a coerced number", async () => {
+    process.env.MIN_COMPOSITE_SUBSYSTEMS = "0";
+
+    // Capture what .values() receives from the db.insert(strategyHealthScores).values({...}) call
+    const capturedValues: Record<string, unknown>[] = [];
+    mockDbInsert.mockReturnValue({
+      values: vi.fn().mockImplementation((row: Record<string, unknown>) => {
+        capturedValues.push(row);
+        return Promise.resolve([{ id: 1n }]);
+      }),
+    });
+
+    mockDbSelect.mockReturnValue(buildSelectChain([]));
+
+    await aggregateStrategyHealth(STRATEGY_ID);
+
+    // The insert must have been called
+    expect(capturedValues.length).toBeGreaterThan(0);
+    const insertedRow = capturedValues[0]!;
+
+    // strategyId in the insert payload MUST be the UUID string — not a number
+    expect(typeof insertedRow.strategyId).toBe("string");
+    expect(insertedRow.strategyId).toBe(STRATEGY_ID);
+    // Guard: STRATEGY_ID must look like a UUID (prevents test using a bare integer disguised as string)
+    expect(STRATEGY_ID).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+    );
   });
 });
 
