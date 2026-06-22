@@ -5,7 +5,7 @@ import { describe, it, expect } from "vitest";
 describe("Fix 4: correlationId generation in openPosition", () => {
   it("generates a UUID-shaped correlationId when context is undefined", () => {
     const { randomUUID } = require("crypto");
-    const context: { correlationId?: string } | undefined = undefined;
+    const context = undefined as { correlationId?: string } | undefined;
     const correlationId = context?.correlationId ?? randomUUID();
     expect(typeof correlationId).toBe("string");
     expect(correlationId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);

@@ -337,7 +337,7 @@ describe("broker-router", () => {
     const auditCalls: string[] = valuesMock.mock.calls
       .flat()
       .map((v: { action?: string }) => v?.action)
-      .filter(Boolean);
+      .filter((a): a is string => Boolean(a));
     expect(auditCalls).toContain("broker_router.compliance_null_firm_blocked");
   });
 
@@ -367,7 +367,7 @@ describe("broker-router", () => {
     const auditCalls: string[] = valuesMock.mock.calls
       .flat()
       .map((v: { action?: string }) => v?.action)
-      .filter(Boolean);
+      .filter((a): a is string => Boolean(a));
     expect(auditCalls).toContain("broker_router.compliance_gate_failed");
   });
 
