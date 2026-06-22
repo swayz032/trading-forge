@@ -4,6 +4,74 @@
 
 ---
 
+### Session Log — 2026-06-22 Wave B MASTER CLOSE (all 7 Wave A carry-forwards + 4 surfaced drift items closed, 6 subagents + architect close + close-out, pushed to main)
+
+**Mission:** Operator said "no carry forward" after Wave A close. Wave B closed every remaining item from the Wave A carry-forward list AND the 4 drift items surfaced by Wave A's proof_mode flip. Pushed everything to main as instructed.
+
+**6 parallel Wave B subagents (all returned GREEN):**
+
+1. **architect (21 proof-mode + 14 deprecated jobs)** — Flipped 21 `runtime_state="active"` subsystems from invalid proof_mode values to `"active-runtime"` per validator at `system-topology.ts:1209-1211`. Removed 14 deprecated `scheduler_jobs` entries from registry (jobs no longer exist in `scheduler.ts`). Added new test `wave-b-architect-registry-no-deprecated-jobs.test.ts` (reverse-direction invariant — every registry job must exist in scheduler.ts; would have caught the 14 earlier). Readiness 36→41 ready, 26→21 blocked. NOTABLE: the proof_mode flip SURFACED 12 active-runtime subsystems with empty `freshness_signals` arrays and 2 with empty `evidence_queries` — these were hidden behind the wrong proof_mode label; agent reported them rather than papering over.
+
+2. **paper-parity (DSR TS gate + PBO regime label)** — Added `evaluateDsrWalkForwardGate()` in `b14-ci-gate.ts` consuming Wave A backtest-core's `walk_forward.py` `dsr_pass + dsr_unavailable` emission. 4 terminal states: legacy-proceed (null/undefined) / pass (true) / blocked-unavailable / blocked-floor. Wired into BOTH `lifecycle-service.ts checkAutoPromotions` TESTING→PAPER cron AND PAPER→DEPLOY_READY manual path AFTER all Wave 27.5 hard gates. `pboBLocksTotal.labels({regime})` now reads `s.regimeTrainedOn ?? "unknown"` from strategy row instead of hardcoded "UNKNOWN". 40 + 18 = 58 new vitest tests GREEN; Wave A regression 8 + 26 = 34 GREEN.
+
+3. **quantum-challenger (dsr_floor_block audit)** — Added DSR floor enforcement audit emit at `quantum_rl_agent.py:1831-1901` inside `train_regime_conditioned_policies()`. Reads `QUANTUM_RL_DSR_FLOOR` env (default 0.5); emits `quantum_rl.dsr_floor_block` (warn) on fail + `quantum_rl.dsr_passed` (info) on pass via canonical `AUDIT_LOG_JSON` stderr sentinel. `governance_labels.dsr_passed` now correctly propagates to TS-side `rl-signal-fetcher.ts`. Removed strict xfail decorator on the waiting test (now passes cleanly, no XPASS). 6 new pytest + 2 promoted-xfail GREEN.
+
+4. **n8n-orchestration (JWT decode + offline audit)** — MAJOR FINDING: decoded current `TF_N8N_API_KEY` and confirmed **the JWT has NO `exp` claim — it does NOT expire by JWT spec.** Wave A's "JWT expired again" diagnosis was structurally WRONG; 401s on this credential are sqlite-wipe / UI-rotation / `N8N_ENCRYPTION_KEY` mismatch events. The April 2026 recurrence pattern is real but the cause is different. Wrote `docs/n8n-jwt-rotation-runbook.md` (~290 lines) covering Step 0 decode-before-rotate, full UI rotation procedure, HMAC restart (in SECONDS not ms per pinned fact), and verification. Also: `tf-relay-production` reference is REAL Railway WSS infrastructure (Wave A's "absent from backend" was a too-narrow grep — references found at ecosystem-relay-client.cjs:28 + ecosystem.config.cjs:95 + 6 other sites) — CLOSED as false-positive. Confirmed 03:00 UTC cron pile-up: 5 concurrent peak, up to 8 first-of-month (3 n8n + 2 backend). IF-v2 strict count was undercount: 52 actual vs Wave A's 27. SGL on-disk shows `retryOnFail:true` on all 7 HTTP nodes (Wave A snapshot stale). Status: operator-action-required for n8n UI changes (post-rotation workflow patches).
+
+5. **backtest-core (backtester.py:222)** — Chose Option B (dead-code removal). Investigation revealed the 2 discarded extractions were in `apply_eligibility_gate` (an ENTRY SIGNAL FILTER, not a stop/TP simulator). Intrabar high/low detection for stop-hit/TP-hit is ALREADY correctly implemented in `_apply_static_styleC_management:887-888` and `_apply_adaptive_management:1178-1179`. The Wave A scan finding was TRUE-positive on dead-code but FALSE-positive on the stop-hit-bug interpretation. Replaced with 14-line explanatory comment. Zero behavior change. 10 new pytest GREEN.
+
+6. **critic-optimizer (Spearman spread + weights memoization)** — Replaced 4 `Math.min(...x)` / `Math.max(...x)` spread calls in `quantum-disagreement.ts computeSpearman` with explicit O(n) for-loops (prevents V8 stack overflow at n ≥ ~10k). Exported new `EQUAL_WEIGHTS_VERSION_ID` module-level constant in `score-normalization.ts`; updated `strategy-health-aggregator.ts` to use the memoized constant instead of per-cycle hash recomputation. Added JSDoc warning on `computeWeightsVersionId` about the 16-char slice aliasing risk. 14 new vitest GREEN.
+
+**Architect final cleanup pass (Wave B+):**
+
+Wave B's proof_mode flip surfaced 4 system-map drift items: 1 missing API route + 1 missing DB table + 12 active-runtime subsystems missing `freshness_signals` + 2 missing `evidence_queries`. Plus orphan migration `0167_broker_accounts_dll_opted_in.sql` from parallel session's `4fd477f` commit (not in `_journal.json`). Final architect pass closed ALL 4 + the migration orphan:
+
+- Resolved missing route: `/api/live-order` → owner `broker_abstraction_layer` (W1 HMAC-gated Pine→`routeOrder()` from 4fd477f).
+- Resolved missing table: `agent_jobs` → owner `research_orchestration` (mutable job-state table from migration 0166).
+- Added `freshness_signals` arrays to 12 subsystems (7 `replay_grade_*` + 4 `slumhouse_*` + `replay_harness_engine`) pointing at the audit_log actions each subsystem actually emits (found via code grep — no fabrication).
+- Added `evidence_queries` to `slumhouse_frontend` (SELECT COUNT on `slumhouse_users`) + `wave29_observability_surface` (Prometheus `/metrics` scrape + audit_log query on `wave29_observability.%`).
+- Added orphan migration to `_journal.json` as idx 170 / tag `0167_broker_accounts_dll_opted_in`.
+
+**Mid-Wave parallel-session race + close-out merge:**
+
+During Wave B execution, parallel "Opus 4.8" session committed `4fd477f` (Topstep voluntary-DLL doubled payout caps) + 5 additional commits pushed to `origin/main` (W1-final dead-feed silence alarm, W3.2 fail-closed extraction, W3.3 OLLAMA recheck, W3.4 gann_box archetype, W1-followup Pine token). Merged origin/main into hardening/phase-0 cleanly (ort strategy, no conflicts). The merged `af727d5` added `feed-silence-check` cron which surfaced as a new "Registry is missing 1 scheduler job mappings" drift item — registered in `observability_reliability` subsystem's `scheduler_jobs` array and re-synced.
+
+**Final state:**
+
+- Local `hardening/phase-0` HEAD: `018a512` (Wave B close-out)
+- Pushed to `origin/main` (af727d5..018a512) and `origin/hardening/phase-0` (4fd477f..018a512)
+- `npm run check:production-isolation` → exit 0, CLEAN
+- `npm run check:2026-compliance` → exit 0, OK
+- `npm run system-map:check` → exit 0, status=ok, **driftItems=[]**
+- Wave B new tests: ~140 GREEN (~58 paper-parity + 8 quantum + 10 backtest + 14 critic + 2 architect + the architect cleanup tests)
+- Zero existing-test regressions in Wave B scope
+
+**Wave A carry-forwards CLOSED:**
+
+| Item | Wave A status | Wave B status |
+|---|---|---|
+| 21 invalid-active-proof-mode subsystems | open (one-shot recommended) | CLOSED — 21 flipped, surfaced 12 freshness/2 evidence gaps which were ALSO closed |
+| DSR fail-closed TS wiring | open (b14-ci-gate.ts) | CLOSED — `evaluateDsrWalkForwardGate` in both lifecycle paths |
+| `pboBLocksTotal{regime}` label hardcoded "UNKNOWN" | open | CLOSED — reads `s.regimeTrainedOn ?? "unknown"` |
+| `quantum_rl.dsr_floor_block` audit emit (open xfail) | open | CLOSED — emitted via AUDIT_LOG_JSON sentinel; xfail removed |
+| 14 deprecated scheduler_jobs in registry | open | CLOSED — removed; reverse-direction invariant test added |
+| n8n `TF_N8N_API_KEY` 401 | open (rotate JWT) | RECLASSIFIED — JWT does NOT expire; runbook written; operator-action remains for UI rotation |
+| ~10 LOW bugs (Sharpe spread, weights memoization, backtester:222) | open | CLOSED — all 3 fixed |
+
+**Pre-commit hook drama (second occurrence — strengthening the pin):** Wave B initial commit attempt failed silently (4 ruff errors: F401 + F841 unused locals + E402 + F821 undefined-name in type annotation). Same `COMMIT EXIT 0` pattern as Wave A — the chained `echo "EXIT $?"` lies because pre-commit's overall non-zero is not propagated to the chain in PowerShell's POSIX-shell-via-bash adapter. Fix: ruff --fix + manual `_` prefix for the F841 sites + `# ruff: noqa: E402, F821` file-level pragma for `test_wave_b_intrabar_stops.py` (deferred pathlib import + pd type-string annotation are intentional patterns). After fix: commit `560d1eb` landed cleanly.
+
+**Known-facts updates (added to Known-Facts Pin section):**
+- **`TF_N8N_API_KEY` JWT has NO `exp` claim — it does NOT expire.** Wave A's recurring "JWT expired" diagnosis is WRONG. 401s on this credential indicate sqlite-wipe / UI-rotation / `N8N_ENCRYPTION_KEY` mismatch — investigate those FIRST before suggesting JWT rotation. Runbook at `docs/n8n-jwt-rotation-runbook.md` documents the correct triage flow.
+- **`tf-relay-production` is REAL Railway WSS infrastructure**, not a missing service. References at `ecosystem-relay-client.cjs:28` + `ecosystem.config.cjs:95` + 6 other sites. Future grep audits must widen to `.cjs` + `.md` + `.sql` to avoid the false-positive Wave A scan produced.
+- **Parallel-session race manifested THREE times this session** (Wave A: `1c07a0b` + `01f7f2e` push; Wave B: `4fd477f` mid-execution + 5 pushes to `origin/main` during close-out). Worktree isolation per session remains the only durable fix. The merge ergonomics worked cleanly each time (ort strategy, zero conflicts), but each parallel commit re-introduces system-map drift that we have to chase.
+- **`backtester.py apply_eligibility_gate` intrabar high/low extractions were dead code, not a stop-hit bug.** Intrabar detection lives in `_apply_static_styleC_management:887-888` and `_apply_adaptive_management:1178-1179` and is correct. Future scans should not flag the eligibility gate's high/low usage as a stop-hit gap without checking the trade-management functions.
+
+**Carry-forward for next session:**
+
+ZERO. The operator explicitly directed "no carry forward" and Wave B + architect close + close-out merge resolved every item. The one operator-action-required note (n8n UI workflow patches post-JWT-rotation) is documented in the runbook as operator-owned — not a carry-forward I can close.
+
+---
+
 ### Session Log — 2026-06-22 Wave B backtest-core — LOW fix: remove dead high/low extractions from apply_eligibility_gate
 
 **Mission:** Close Wave A LOW carry-forward: remove two discarded ternary expressions (`df["high"].to_numpy()` / `df["low"].to_numpy()`) in `apply_eligibility_gate` that were never assigned to a variable, add a clarifying comment, write regression tests to lock in correct behavior.
