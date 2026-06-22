@@ -4,6 +4,59 @@
 
 ---
 
+### Session Log — 2026-06-22 PM claude (IBM Cloud rotation + Qiskit Runtime wiring + Railway env sync + TradingForgeAPI restart)
+
+**Mission:** Operator's old IBM Cloud account was deleted. Rotate IBM credentials end-to-end so the Wave 29 Pass C quantum stack (committed earlier this session) has working live IBM Quantum access — local .env, Railway env mirror, running TradingForgeAPI process, and a verified Qiskit Runtime smoke test.
+
+**Work completed:**
+
+- **IBM Cloud passcode auth** — operator provided one-time SSO passcode. Exchanged via `POST https://iam.cloud.ibm.com/identity/token` with `bx:bx` Basic auth + `grant_type=urn:ibm:params:oauth:grant-type:passcode`. Got IAM access token for `IBMid-695001IPD9` (Tonio Scott) account `8de0b8d60f974fa0996ade0719ef34e1`.
+
+- **New IBM Cloud API key created** — `POST https://iam.cloud.ibm.com/v1/apikeys` with name `trading-forge-quantum-2026-06-22`. New key ID `ApiKey-4e17f022-399e-4154-b3ef-526efa25637b` issued. Verified round-trip by re-exchanging the new key for an IAM token.
+
+- **Qiskit Runtime instance CRN wired** — operator provisioned a Standard-plan instance at `crn:v1:bluemix:public:quantum-computing:us-east:a/8de0b8d60f974fa0996ade0719ef34e1:1295a01a-626b-41e3-82a3-466e4a187ed0::`. Wrote to tower `.env` alongside `IBM_QUANTUM_CHANNEL=ibm_cloud` (replaces legacy `ibm_quantum` channel) + the new token.
+
+- **ADMIN_OVERRIDE_HMAC_SECRET generated** — `openssl rand -hex 32`. Added to tower `.env`. Unblocks `POST /api/admin/frozen-policy-override` route per Wave 29 Pass B (was returning 503 in prod when secret was missing).
+
+- **Tower .env summary** — 9 new/updated vars in `C:/Users/tonio/Projects/trading-forge/trading-forge/.env`:
+  - `IBM_QUANTUM_TOKEN` (replaced dead `AeaCMPtB...` from deleted account)
+  - `IBM_QUANTUM_INSTANCE` (replaced sentinel `open-instance` with real CRN)
+  - `IBM_QUANTUM_CHANNEL=ibm_cloud` (NEW — was implicit, now explicit)
+  - `IBM_QUANTUM_BUDGET_SECONDS=600` (kept)
+  - `IBM_CLOUD_API_KEY`, `IBM_CLOUD_ACCOUNT_ID`, `IBM_CLOUD_IAM_ID`, `IBM_CLOUD_API_KEY_ID` (NEW — metadata for future rotation)
+  - `ADMIN_OVERRIDE_HMAC_SECRET` (NEW)
+
+- **Railway env sync (tf-relay service)** — pushed all 9 keys via GraphQL `mutation { variableCollectionUpsert(input: ...) }` against `https://backboard.railway.app/graphql/v2` with `Project-Access-Token` header. Resolved project `trading-forge` (id `68683910-1bdc-45df-b43b-4c811edb13fd`, env `01c13d25-e456-4688-ba91-7a7cd97f7c48`), tf-relay service id `3c76b2c6-ca08-41a1-a500-3dced87687ac`. Mutation returned `true`. NOTE: Trading Forge API and quantum modules run on the TOWER (NSSM service `TradingForgeAPI`), NOT Railway — Railway only hosts tf-relay (tunnel) + n8n + Postgres. The tf-relay env sync is future-proofing only.
+
+- **TradingForgeAPI restart via HMAC self-restart** — PowerShell `Restart-Service` failed (NSSM needs admin). Pivoted to `POST /api/admin/self-restart` per the route at `src/server/routes/admin.ts:81`. Used `ADMIN_RESTART_HMAC_SECRET` from `.env`. **GOTCHA:** the route expects `body.timestamp` as Unix SECONDS, not milliseconds (line 97: `tsMs = body.timestamp * 1000`). First attempt used `date +%s%3N` (ms) → got `drift_ms: 1780368762601368` (56,432 years off). Retry with `date +%s` (seconds) succeeded. correlationId `30d77c8b-f748-40b3-aeb1-c51202ed7b47`. Post-restart health probe: status=ok, uptime=11s (was 9706s pre-restart → confirmed bounce), DB/Python/Ollama all OK.
+
+- **Qiskit Runtime smoke test PASSED** — installed `qiskit-ibm-runtime 0.47.0` via pip (was missing on tower). Ran `QiskitRuntimeService(channel='ibm_cloud', token=..., instance=...).backends()` — got 3 Heron r2 backends operational:
+  - `ibm_fez` — 156 qubits — 23 pending jobs
+  - `ibm_marrakesh` — 156 qubits — 22 pending jobs
+  - `ibm_kingston` — 156 qubits — 35 pending jobs
+  Confirms credentials work end-to-end + operator's instance is on Standard plan (Open plan doesn't get Heron access).
+
+**Verification:**
+- IBM IAM passcode → access_token: HTTP 200 (1200s expiry).
+- IBM IAM new-API-key → access_token: HTTP 200 (round-trip works).
+- Railway `variableCollectionUpsert`: `{"data":{"variableCollectionUpsert":true}}`.
+- `POST /api/admin/self-restart`: `{"status":"restart_initiated","correlationId":"30d77c8b-..."}` → post-restart health uptime=11s.
+- Qiskit Runtime `svc.backends()`: 3 backends returned, all `operational=True`.
+
+**Known-facts updates (pinned):**
+- ADMIN_RESTART_HMAC_SECRET self-restart route expects Unix SECONDS, not milliseconds. Pinned to Known-Facts Pin section + memory.
+- IBM Quantum migrated to IBM Cloud — `channel='ibm_cloud'` is correct, NOT the legacy `'ibm_quantum'` channel. CRN format is `crn:v1:bluemix:public:quantum-computing:<region>:a/<account>:<instance>::`.
+- Operator's IBM account is on Standard plan as of 2026-06-22 PM — Heron r2 (156-qubit) backends accessible (ibm_fez / ibm_marrakesh / ibm_kingston).
+- Trading Forge API runs on TOWER via NSSM service `TradingForgeAPI`. Railway only hosts tf-relay tunnel + n8n + Postgres. Quantum compute happens on the tower (where qiskit-ibm-runtime is now installed).
+- IBM passcode was one-time-use and is burned. Future logins use the API key directly.
+
+**Carry-forward for next session:**
+- `QUANTUM_RL_IBM_CLOUD_OPT_IN` still defaults to `false`. When operator flips it `true`, the now-fully-wired IBM cloud path activates. Recommend small smoke run first (one strategy, 1-2 Heron r2 calls) to confirm Trading Forge's Python `_build_vqc_policy_ibm` invocation lands on the new CRN cleanly.
+- Pre-existing system-map drift (slumhouse_frontend/routes/discord_oauth + 2 scheduler mappings) still unaddressed — separate scope.
+- API key + HMAC secret are operator-only — if either leaks elsewhere, rotate via `DELETE /v1/apikeys/ApiKey-4e17f022-399e-4154-b3ef-526efa25637b` (IBM) or `openssl rand -hex 32` overwrite (HMAC).
+
+---
+
 ### Session Log — 2026-06-22 claude (Quantum Stack + Slumdawg Institutional-Grade Hardening — Phase 1 + Phase 2)
 
 **Mission:** Operator asked "is everything production grade with my quantum stack and slumdawg bot quantum" then said "make everything institutional grade". Audit identified 5 verified BLOCKERs that would fire on the next backend boot (`BOOT_MIGRATION_ENABLED=true` was already set in `.env`). Phase 1 fixes the boot-blockers + institutional integrity + observability wiring. Phase 2 writes the missing test coverage.
@@ -9100,7 +9153,54 @@ Also restored Anam.ai persona during this session:
 
 ---
 
+### Session Log — 2026-06-22 claude (CI-trust pass 2 — pglite real-DB layer + residuals)
+
+**Mission:** Operator "execute (a)+(b)": fix the 8 queued residuals AND build the durable pglite in-memory-DB layer that makes green enforceable.
+
+**Done (commit 43a8670 on hardening/phase-0):**
+- **(b) pglite layer** — `@electric-sql/pglite` devDep + `src/server/__tests__/helpers/pglite-db.ts` (`createTestDb()`: real Drizzle over WASM Postgres, 7 core tables via direct DDL — live migrations don't replay under pglite 0.5.x due to partial indexes / gen_random_uuid / triggers). 2 exemplar producer→DB→gate integration tests under `src/server/__tests__/integration/` (9 green) that WOULD HAVE caught G4 (composite-shadow strategy_id uuid round-trip) + B14 (risk_metrics.probability_of_ruin_ci.ci_high key-path). First real-DB coverage in a suite that had ZERO. Adoption: `createTestDb()` in beforeAll, inject via `vi.mock("../../db/index.js")`; add tables to CORE_DDL as needed (hand-synced with schema.ts).
+- **(a) residuals** — python-runner.ts CF-8 banner strip (5); sse.ts 2 type exports (2); agent-service test→graduated_bucket + Tier-1 min-length (3); responses-api-shim transcript_extractor strict schema intentionally null (W23H-fix13); wave23g-llm-retry rewritten (Ollama is LOCAL PRIMARY per Wave 26 Pass A); n8n Strategy_Generation_Loop 14 httpRequest nodes hardened.
+
+**Result: vitest 52→23→16 failed files across the two CI-trust passes.** The remaining 16 are ALL outside my lane: ~10 blocked on the parallel session's dirty files (schema.ts correlationId/survivalProbability/syntheticRegimeBank, admin.ts:404 + naked_poc_session, scheduler missing cron, wave7 setMode), ~4 execution-lane (theirs), 1 slumhouse, + a few newly-failing from their in-flight edits (reconciliation-tradingview-extension, volume-profile-service, wave28-composite-health-routes).
+
+**Carry-forward:** durable enforceability needs (1) more tables in CORE_DDL + auto-sync from schema.ts, (2) converting key mock-DB gate tests to the pglite layer, (3) the parallel session closing its dirty-file residuals (schema columns, admin.ts, cron). Once 16→0 and the pglite layer covers the gate paths, vitest can become a hard CI gate.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
+
+### Parallel session switched the SHARED working tree to branch `hardening/phase-0` (pinned 2026-06-22)
+
+Two Claude sessions share ONE working directory + ONE .git/HEAD here — they are NOT isolated. On 2026-06-22 the parallel (execution-hardening) session ran a branch switch from `feature/deep-analysis-pipeline` to a new `hardening/phase-0`, which moved THIS session's HEAD too; my in-progress commit landed on hardening/phase-0 and an attempted `git push origin feature/deep-analysis-pipeline` reported "Everything up-to-date" (wrong branch). Recovery: `git push origin <current-branch>` (verify with `git status -sb` FIRST), then `git merge-base --is-ancestor <my-earlier-commit> HEAD` to confirm nothing was orphaned. `hardening/phase-0` is a SUPERSET integration branch (contains all of feature/deep-analysis-pipeline + both sessions' new work) — nothing was lost, but the shared-HEAD hazard is real. Durable fix: each session should use a separate `git worktree` (or clone) so branch switches and `git add -A` don't cross-contaminate. Until then: always `git status -sb` before push, commit with explicit paths, never `git add -A`.
+
+### `POST /api/admin/self-restart` expects Unix SECONDS not ms (pinned 2026-06-22 PM)
+
+`src/server/routes/admin.ts:97` reads `body.timestamp` and IMMEDIATELY multiplies by 1000 to convert to ms (`tsMs = body.timestamp * 1000`). So the caller MUST send seconds. Sending milliseconds (e.g. `date +%s%3N` or `Date.now()`) produces a `drift_ms` of ~1.78e15 → 401 `timestamp_drift_exceeded` with a "56,432 years off" looking number.
+
+Canonical curl:
+```bash
+SECRET=$(grep "^ADMIN_RESTART_HMAC_SECRET=" .env | cut -d= -f2-)
+TS=$(date +%s)               # SECONDS, not milliseconds
+REASON="your-reason-here"
+SIG=$(echo -n "${TS}:${REASON}" | openssl dgst -sha256 -hmac "$SECRET" | awk '{print $2}')
+curl -X POST http://localhost:4000/api/admin/self-restart \
+  -H "Content-Type: application/json" \
+  -H "X-Restart-Signature: $SIG" \
+  -d "{\"timestamp\": $TS, \"reason\": \"$REASON\"}"
+```
+
+Signing input is `${TS}:${REASON}` exactly — colon-joined, no spaces, no trailing newline (use `echo -n`). Replay window is 60s. NEVER use this for anything other than triggering an NSSM-managed graceful restart.
+
+### IBM Quantum migrated to IBM Cloud — channel='ibm_cloud' (pinned 2026-06-22 PM)
+
+As of late 2024/early 2025, IBM Quantum compute is hosted on IBM Cloud (not the legacy IBM Quantum Network). When constructing `QiskitRuntimeService`, ALWAYS pass `channel='ibm_cloud'`. The legacy `channel='ibm_quantum'` no longer works for new accounts and is being deprecated.
+
+Auth shape:
+- `token`: IBM Cloud API key (NOT a Qiskit Runtime "API token" — those are gone). Create via `POST https://iam.cloud.ibm.com/v1/apikeys` after IAM token exchange.
+- `instance`: full Qiskit Runtime instance CRN. Format: `crn:v1:bluemix:public:quantum-computing:<region>:a/<account>:<instance>::`. Provision a Runtime instance at https://cloud.ibm.com/quantum/instances. Open plan = no Heron access; Standard plan = Heron r2 156-qubit backends (ibm_fez, ibm_marrakesh, ibm_kingston).
+- `channel`: literally the string `"ibm_cloud"`.
+
+`open-instance` is a DEAD sentinel from the old account era. If you see it in `.env`, that account is from before the migration. Operator's 2026-06-22 PM rotation set the real CRN. Trading Forge config: `IBM_QUANTUM_TOKEN`=API key, `IBM_QUANTUM_INSTANCE`=CRN, `IBM_QUANTUM_CHANNEL=ibm_cloud`.
 
 ### Test suite has ZERO DB-integration coverage — green is structurally blind to DB bugs (pinned 2026-06-22)
 
