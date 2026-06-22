@@ -4,6 +4,130 @@
 
 ---
 
+### Session Log — 2026-06-22 Backtest Core — Wave A 8-Fix Statistical Integrity Pass
+
+**Mission:** Apply all 8 HIGH/MED findings from the deep-scan audit of the MC/WF statistical integrity layer. Scope: `mc_confidence.py`, `monte_carlo.py`, `walk_forward.py`, `risk_metrics.py`, and new test files under `src/engine/tests/test_wave_a_*.py`.
+
+**Work completed:**
+
+- **FIX 1 (HIGH) — `mc_confidence.py:96` `replace=False`→`replace=True`:** Standard bootstrap requires sampling WITH replacement. `replace=False` produced sub-samples, artificially narrowing CIs and allowing undercapitalized strategies to pass B14 `ci_high` gate. Changed `rng.choice(..., replace=False)` → `replace=True`. `point_estimate` is unaffected (still on full sample). Docstring updated with rationale.
+
+- **FIX 2 (HIGH) — `walk_forward.py:1092-1094` PBO exception fail-open→fail-CLOSED:** Previous `except` block set `pbo_pass: True` — overfitted strategies could pass when PBO raised. Now: `pbo_pass=False`, `pbo=1.0` (worst case), `pbo_audit_actions.append("walk_forward.pbo_computation_failed")`. Docstring conservative-on-error contract documented.
+
+- **FIX 3 (HIGH) — `walk_forward.py:259` CPCV `n_paths` before `continue`:** Failed paths were incrementing the denominator before skipping — diluting the PBO overfit signal. Removed `n_paths += 1` from the `except` block; counter is now only incremented after `path_sharpes.append()` (successful path).
+
+- **FIX 4 (HIGH) — `monte_carlo.py:1913-1918` no-firms ruin CI silently reverts:** When no firm models configured, `probability_of_ruin_ci` was aliased from terminal<=0 — categorically different from firm-breach ruin, silently passing B14. Now: `ruin_unavailable=True`, `ci_high=None`, `ci_low=None`. Terminal<=0 data preserved in `terminal_negative_ci` as diagnostic only. B14 gate sees `ci_high=None` and routes to `legacy_ruin_scalar_fallback` audit path.
+
+- **FIX 5 (MED) — `walk_forward.py:863` dedup logic inversion:** `_deduped_pnls if _deduped_records else raw` fell back to un-deduped data when all records were duplicates. Changed to `_deduped_pnls if len(_deduped_pnls) > 0 else []` — never falls back to raw.
+
+- **FIX 6 (MED) — `walk_forward.py:238` short CPCV folds appended raw:** When fold ≤ `embargo_bars`, the raw unembargoed fold was appended — IS→OOS lookahead leakage. Changed to `pass` (skip) with a stderr warning.
+
+- **FIX 7 (MED) — `walk_forward.py:336-339` DSR exception swallowed:** CPCV DSR `except` block returned `dsr=None` (TS treats None as pass-through). Now: emits `walk_forward.dsr_computation_failed` stderr signal and `_dsr_result = {dsr: None, dsr_pass: False, dsr_unavailable: True, ...}`. Surfaced `dsr_pass` and `dsr_unavailable` in `wf_metadata` return dict.
+
+- **FIX 8 (MED) — `risk_metrics.py:81` zero-std Sharpe explosion:** `np.where(stds == 0, 1e-10, stds)` then divide — produced Sharpe ≈ 2.5e13 for breakeven strategies. Changed to `np.where(stds < 1e-8, 0.0, means / stds * sqrt(252))` — near-flat strategies now report 0.0 Sharpe.
+
+**Verification:**
+
+- 41 new wave-A tests: ALL PASS (`test_wave_a_bca_replace_true.py` 5/5, `test_wave_a_pbo_fail_closed.py` 5/5, `test_wave_a_cpcv_npaths_dedup.py` 7/7, `test_wave_a_mc_no_firm_ruin.py` 11/11, `test_wave_a_dsr_sharpe_fixes.py` 13/13).
+- `test_monte_carlo.py`: 76/76 PASS (no regressions).
+- `test_mc_bca_scale.py` + `test_mc_firm_breach_ruin.py` + `test_mc_ruin_probability_ci.py`: 37/37 PASS.
+- `test_risk_metrics.py`: 35/35 PASS.
+- `test_walk_forward*.py`: HANGING — pre-existing env trait (vectorbt JIT hangs on integration tests; documented in pinned env memory `feedback_vectorbt_import_hang.md`). These tests call `run_backtest()` which triggers vectorbt; they were not passing in this env before our changes either.
+- `test_risk_metrics_properties.py`: SKIP — requires `hypothesis` package not installed.
+- No changes to export logic, prop-firm rules, critic optimizer, or paper engine semantics.
+
+**Known-facts updates:** FIX 1 changes CI width for any strategy whose MC run hits the `BCA_MAX_SAMPLE` cap (n_sims > 5000). CIs will widen slightly — this is intentional (correct bootstrap semantics). Strategies near the B14 `ci_high=0.40` threshold may now block where they previously passed. This is not metric drift — it is correctness.
+
+**Carry-forward:** `dsr_pass` / `dsr_unavailable` are now emitted in CPCV `wf_metadata`. TS `b14-ci-gate.ts` / lifecycle gates should be updated to read `wf_metadata.dsr_pass === false` as a block signal (currently they read `dsr === null` as pass-through). This is a Wave B carry-forward.
+
+---
+
+### Session Log — 2026-06-22 Wave A observability-reliability (DST guard + corr-null + cronJobsConcurrent + notify-swallow)
+
+**Mission:** Close 6 HIGH/MED observability findings: DST-fragile hmm-regime-weekly-refit guard, 5 `correlationId: null` writes in dead-mans-heartbeat-service, swallowed Discord failure in prop-firm-cookie-refresh outer catch, and unconnected `cronJobsConcurrent` Prometheus gauge in metrics-registry.
+
+**Work completed:**
+
+- **Fix 1 — scheduler.ts:2412 DST guard (HIGH):** Replaced `etStr.includes("17")` substring match with numeric hour extraction: `const etHour = parseInt(etStr.match(/(\d+)$/)?.[1] ?? "0", 10); if (!etStr.startsWith("Sun") || etHour !== 17) return;` — matches the canonical pattern from lines 4040/4443/4741.
+
+- **Fix 2 — dead-mans-heartbeat-service.ts 5 corr-null sites (HIGH):** Generated `randomUUID()` at the top of each entry function and threaded into every `insertAuditRow` call:
+  - `recordSchemaDriftAlert()` — fresh `correlationId = randomUUID()` per call
+  - `runScheduledRefreshStalenessCheck()` — `cronCorrelationId = randomUUID()` covers both BW + cookie stale audit rows
+  - `runOperatorAbsenceAutoDetect()` — `cronCorrelationId = randomUUID()` covers both `operator_absence.auto_detected` and `operator_absence.pending_detected` rows
+
+- **Fix 3 — prop-firm-cookie-refresh-service.ts:266 (HIGH):** Outer catch was `.catch(() => {})` (silent swallow). Now: writes `prop_firm_cookie_refresh.outer_catch_notify_failed` audit row BEFORE notifying Discord + `logger.warn` with `{firmId, errorMsg, sweepCorrelationId}` + named `.catch((notifyErr) => logger.warn(...))` on the Discord call. Also added `sweepCorrelationId = randomUUID()` at function entry and threaded through per-firm `prop_firm.cookie_refreshed` audit rows. Added `randomUUID` and `insertAuditRow` imports.
+
+- **Fix 4 — metrics-registry.ts:156 cronJobsConcurrent (HIGH):** Wired the previously-declared-but-never-incremented Gauge: imported `cronJobsConcurrent` at the top of `scheduler.ts`, then in `withRetry` added `cronJobsConcurrent.inc()` before the retry loop and `} finally { cronJobsConcurrent.dec(); }` after the DLQ capture block. The `finally` guarantees dec() runs on all exit paths (early-success return, all-retries-exhausted fall-through, and any thrown exception).
+
+- **Fix 5 — scheduler.ts:3400,3459 two corr-null audit rows (MED):** Added `const cronCorrelationId = randomUUID()` at the top of both `bw-session-refresh` and `prop-firm-cookie-refresh` `registerJob` handler functions. Threaded into the heartbeat audit rows. Also added `cronCorrelationId` to the `logger.error` call in each handler's catch block for traceability.
+
+- **Fix 6 — bonus corr-null sweep (MED):** Confirmed via grep — no remaining `correlationId: null` literals in any of the 4 scoped files.
+
+**Verification:** 27 new vitest tests — all GREEN. 3 parallel regression test files also GREEN (scheduler-retry, metrics-aggregator, audit-log-helper — 33 tests). Zero changes to lifecycle-service.ts, paper-signal-service.ts, paper-execution-service.ts. `git diff HEAD --name-only` confirms only the 3 scoped files + 3 new test files were touched.
+
+**Known-facts updates:** None.
+
+**Carry-forward for next session:** None from this pass. `cronJobsConcurrent` is now live but unlabeled (no `job_name` label) — matches the declaration in metrics-registry.ts which has no `labelNames`; adding labels would require a schema migration, so leave as-is until operator requests per-job visibility.
+
+---
+
+### Session Log — 2026-06-22 Critic Optimizer — Wave A Fix Wave (Findings #12, #16, and 4 MED)
+
+**Mission:** Apply 6 targeted fixes to the critic-loop subsystem from a hardening scan. Scope: shadow-evidence-analyzer, harness-base, quantum-disagreement, pattern-aggregator-service, confluence-disagreement (docstring), and replay-grade-critique script. Write test coverage for all 6 fixes.
+
+**Hard constraints:** Do NOT touch `lifecycle-service.ts` (owned by parallel paper-parity agent). No commits. No pushes. Preserve kill-switch semantics, verdict thresholds, 14-day shadow accumulation contract.
+
+**Work completed:**
+
+- **Fix 1 (HIGH — Finding #12) — `shadow-evidence-analyzer.ts`:** Fixed misclassification of `ShadowResult` availability. Before: analyzer matched `verdict` string against `"missing"/"stale"/"below_threshold"` — impossible since `verdict` is `"HEALTHY"|"MARGINAL"|"UNHEALTHY"|"CRITICAL"|null`. The bug caused 100% of non-available rows to be miscounted as `evaluated`. Fix: read `availability` field first (`r.shadow_result?.availability`), fall back to `verdict` for legacy rows that lack the field. New `availabilityBreakdown.{missing,stale,below_threshold,evaluated}` counters are now accurate.
+
+- **Fix 2 (HIGH — Finding #16) — `harness-base.ts` + `quantum-disagreement.ts`:** Canonical CPCV purge check `checkCpcvPurge` in `harness-base.ts` already used Date objects with strict `>` (equality IS a violation). `checkPurgeViolation` in `quantum-disagreement.ts` used string comparison `oosStart <= isEnd` (only correct for date-only strings). Eliminated divergence by importing `checkCpcvPurge` into `quantum-disagreement.ts` and having `checkPurgeViolation` delegate to it. One canonical implementation, zero divergence. Message format changed from `"Purge violation: fold..."` (lowercase) to `"PURGE VIOLATION on fold..."` (uppercase, canonical).
+
+- **Fix 3 (MED) — `pattern-aggregator-service.ts`:** `dryRun=true` callers (replay harness) were blocked by the kill-switch, returning `{status:"halted"}` — an empty result useless for grading. Fix: when `dryRun===true`, skip the kill-switch gate entirely and emit `logger.warn({killSwitchParam}, "pattern-aggregator: dryRun bypasses kill switch")`. Non-dryRun production path retains unchanged semantics.
+
+- **Fix 4 (MED) — `scripts/replay-grade-critique.ts` + new `src/server/lib/replay/correlation-base.ts`:** `correlationBase` was `\`replay-critique-\${new Date().toISOString()}\`` — wall-clock embedded, breaking replay determinism. Fix: `computeCorrelationBase(positionIds)` = `sha256(positionIds.sort().join(",")).slice(0,16)` — purely input-derived. Extracted into pure-functional `correlation-base.ts` (no DB, no I/O, node:crypto only) so tests can import it without triggering the Express bootstrap graph. Script re-exports from lib. Removed duplicate `const positionIds` redeclaration.
+
+- **Fix 5 (MED) — `src/server/lib/replay/confluence-disagreement.ts`:** Added docstring clarifying the per-fold-vs-per-trade Spearman contract: `isScoreVec = folds.map(f => f.meanIsConfluenceScore)`, not per-trade. `validFolds` counts folds (5–20), not trades (500+). No logic change — documentation only.
+
+- **Fix 6 (MED) — `shadow-evidence-analyzer.ts` module docstring:** Added coordination note warning paper-parity agent that `availability` must NOT be dropped from persisted `shadow_result` JSONB payload (Finding #12 cross-subsystem note).
+
+**New test files:**
+- `wave-a-critic-shadow-analyzer.test.ts` — 16 tests: availability classification, backward-compat legacy rows, pre-fix regression guards.
+- `wave-a-critic-cpcv-purge.test.ts` — 11 tests: equality boundary, sub-day overlap, timezone equivalence, delegation parity.
+- `wave-a-critic-correlation-base.test.ts` — 8 tests: determinism, order-independence, hex length, no wall-clock embedding.
+- `wave-a-critic-confluence-fold-contract.test.ts` — 3 tests: fold-level aggregation, IS-trade-count independence of Spearman rho, validFolds vs trade count.
+- `wave-a-critic-pattern-aggregator.test.ts` — 5 tests: dryRun/kill-switch interaction triplet + E audit-emission test.
+
+**Verification:**
+- 46 new wave-A critic tests: ALL PASS (5 files).
+- Pre-existing regression suite — 8 affected test files, 215 tests: ALL PASS (wave26-pattern-aggregator, wave27-dry-run-side-effects, wave27-pass1-5-weekly-replay-cron, wave28-pass-b-shadow-analyzer, replay-grade-unified, replay-grade-pattern-aggregator, replay-grade-confluence, replay-grade-quantum).
+- Incidental fixes to 3 pre-existing tests: `replay-grade-quantum.test.ts:209` and `replay-grade-confluence.test.ts:277` — updated `"Purge violation"` → `"PURGE VIOLATION"` to match canonical message (expected regression from Fix 2 message format change). `wave27-dry-run-side-effects.test.ts` PA-1/PA-3 mock sequences updated to remove kill-switch DB read from dryRun=true path (expected from Fix 3).
+
+**Files modified:**
+- `src/server/lib/replay/shadow-evidence-analyzer.ts` (Fix 1 + Fix 6)
+- `src/server/lib/replay/harness-base.ts` (Fix 2 canonical, already correct — exported `checkCpcvPurge`)
+- `src/server/lib/replay/quantum-disagreement.ts` (Fix 2 delegation)
+- `src/server/services/pattern-aggregator-service.ts` (Fix 3)
+- `scripts/replay-grade-critique.ts` (Fix 4 — removed local `computeCorrelationBase`, re-exports from lib, removed duplicate `positionIds`)
+- `src/server/lib/replay/confluence-disagreement.ts` (Fix 5 docstring)
+- `src/server/lib/replay/correlation-base.ts` (NEW — pure-functional lib for Fix 4)
+- `src/server/__tests__/wave-a-critic-shadow-analyzer.test.ts` (NEW)
+- `src/server/__tests__/wave-a-critic-cpcv-purge.test.ts` (NEW)
+- `src/server/__tests__/wave-a-critic-correlation-base.test.ts` (NEW)
+- `src/server/__tests__/wave-a-critic-confluence-fold-contract.test.ts` (NEW)
+- `src/server/__tests__/wave-a-critic-pattern-aggregator.test.ts` (NEW)
+- `src/server/__tests__/replay/replay-grade-quantum.test.ts` (updated purge message assertion)
+- `src/server/__tests__/replay/replay-grade-confluence.test.ts` (updated purge message assertion)
+- `src/server/__tests__/wave27-dry-run-side-effects.test.ts` (updated PA-1/PA-3 mock sequences)
+
+**Coordination note (Finding #12):** Paper-parity agent must not drop `availability` from persisted `shadow_result` JSONB payload. The `shadow-evidence-analyzer.ts` module docstring now carries this warning.
+
+**Known-facts updates:** `checkPurgeViolation` in `quantum-disagreement.ts` now delegates to `checkCpcvPurge` (canonical). The message format changed. Any code asserting `"Purge violation"` (lowercase) must be updated to `"PURGE VIOLATION"`. `computeCorrelationBase` is now in `src/server/lib/replay/correlation-base.ts` — import from there, not from the script.
+
+**Carry-forward:** None from this pass.
+
+---
+
 ### Session Log — 2026-06-22 PM claude (IBM Cloud rotation + Qiskit Runtime wiring + Railway env sync + TradingForgeAPI restart)
 
 **Mission:** Operator's old IBM Cloud account was deleted. Rotate IBM credentials end-to-end so the Wave 29 Pass C quantum stack (committed earlier this session) has working live IBM Quantum access — local .env, Railway env mirror, running TradingForgeAPI process, and a verified Qiskit Runtime smoke test.
@@ -9235,7 +9359,55 @@ Also restored Anam.ai persona during this session:
 
 ---
 
+### Session Log — 2026-06-22 Wave A Quantum Challenger Hardening
+
+**Mission:** Close 10 governance/reproducibility/safety findings in the quantum challenger RL layer (scope: 6 files only, branch hardening/phase-0).
+
+**Work completed:**
+- **Fix 1 (HIGH)** — `_build_vqc_policy_ibm` in `quantum_rl_agent.py`: added required `opt_in_cloud: bool` parameter (no default — caller must be explicit); changed IBM gate condition from `if cloud_enabled and ibm_token:` to `if opt_in_cloud and cloud_enabled and ibm_token:`; `CloudBackendConfig(opt_in_cloud=True)` → `CloudBackendConfig(opt_in_cloud=opt_in_cloud)`; call site in `train_regime_conditioned_policies` now passes `opt_in_cloud=opt_in_cloud` explicitly.
+- **Fix 2 (MED)** — `ClassicalAgent.__init__` default changed from `n_actions=3` to `n_actions=2`; added `ValueError` guard when `n_actions == 3` with message referencing LONG/FLAT day-trader mandate.
+- **Fix 3 (MED)** — `action_map = {0: "buy", 1: "sell", 2: "hold"}` replaced with `{0: "long", 1: "flat"}`.
+- **Fix 4 (MED)** — `_DORMANT_GAP_THRESHOLD_PCT` moved from local variable inside `compute_rl_kill_switch_state` to module-level constant reading `QUANTUM_RL_KILL_SWITCH_THRESHOLD_PCT` env (default 30.0) at import time.
+- **Fix 5 (MED)** — `rl-signal-fetcher.ts`: `RL_KILL_SWITCH_SHARPE_GAP_THRESHOLD` now reads `parseFloat(process.env.QUANTUM_RL_KILL_SWITCH_THRESHOLD_PCT ?? "30.0") / 100.0`. Python uses percentage scale; TS uses ratio scale; same env var.
+- **Fix 6 (MED)** — `rl-dsr-gate.ts`: `DEFAULT_DSR_THRESHOLD` now reads `parseFloat(process.env.QUANTUM_RL_DSR_FLOOR ?? "0.5")` at module load. All callers that omit threshold pick up env override automatically.
+- **Fix 7 (MED)** — `quantum-rl-training-runner.ts`: added `execSync` import; timeout handler now branches on `process.platform === 'win32'` — uses `execSync('taskkill /F /T /PID ' + pid)` with try/catch + `logger.warn` on failure; non-Windows path unchanged (SIGTERM → 2s → SIGKILL).
+- **Fix 8 (LOW)** — `quantum_rl_agent.py`: `seed` column added to `quantum_rl_runs` INSERT (column name + `regime_seed` value). Migration `0165_quantum_rl_runs_seed.sql` created (idx 165, `ADD COLUMN IF NOT EXISTS seed INTEGER`, idempotent). Journal entry added to `meta/_journal.json`. `schema.ts` `quantumRlRuns` table definition updated with nullable `seed: integer("seed")`.
+- **Fix 9 (LOW)** — `quantum-replay-runner.ts`: added `import { createHash } from "crypto"`; new exported `deriveReplaySeed(backtestId)` function (SHA-256(backtestId).readUInt32BE(0)); hardcoded `"42"` replaced with `String(deriveReplaySeed(backtestId))`; seed included in the subprocess spawn log.
+- **Fix 10 (LOW)** — `quantum-replay-runner.ts`: circuit breaker state persisted to `system_parameters` table via two rows (`quantum_replay_circuit_open`, `quantum_replay_consecutive_failures`). DB imports (`drizzle-orm eq`, `db`, `systemParameters schema`) added. `_persistBreakerState()` fire-and-forget async helper writes on every state change. `_initBreakerStateFromDb()` loads state from DB on first call to `runQuantumReplayForBacktest`. `_resetCircuitBreakerForTests()` now also resets `_stateLoaded` flag. Warning on circuit open updated to say "until manual reset" (not "process lifetime").
+
+**Verification:**
+- Pytest: 19/19 new tests GREEN (`src/engine/tests/test_wave_a_quantum_rl_agent.py`)
+- Vitest: 23/23 new tests GREEN (`src/server/__tests__/wave-a-quantum-fixes.test.ts`)
+- Regression: 58 existing quantum/RL vitest tests GREEN (wave27-pass1-5-quantum-replay-auto-fire + wave29-prod-hardening-rl-training-runner + wave29-prod-hardening-rl-training-runner-seed)
+- `ibm_cloud` channel string NOT regressed (no `ibm_quantum` introduced in any edited file)
+- CHALLENGER-ONLY governance verified: no RL output routed to execution or promotion paths; `RL_RUNS_GOVERNANCE.authoritative=False` confirmed by test
+
+**Known-facts updates:** None new — all findings were pre-documented.
+
+**Carry-forward for next session:**
+- Pre-existing INSERT schema mismatch in `quantum_rl_agent.py` (columns `status`, `method`, `total_return`, `sharpe_ratio` in the INSERT do not exist in migration 0158 schema) — out-of-scope for this wave, operator should decide whether to align or remove the training-loop INSERT or add those columns in a future migration.
+- `cloud_backend.py` and `hardware_profile.py` use `channel="ibm_quantum_platform"` — those files were out of scope for this wave but should be addressed before cloud QPU is activated.
+- No commit/push done — parent does that per mandate.
+
+### Session Log — 2026-06-22 claude (data layer made institutional-grade — CRITICAL look-ahead fix)
+
+**Mission:** "Make the data layer institutional grade." Read-only adversarial audit (3 parallel agents: MTF-join look-ahead, indicator look-ahead, ratio-adjustment/gap/DST) then fix all (CRITICAL + HIGH + MED).
+
+**Audit + independent verification (commit 4495dee → rebased 11fccd6):**
+- **CRITICAL — MTF higher-timeframe LOOK-AHEAD LEAK.** `forward_fill_htf_to_exec` (mtf_join.py) backward-asof-joined HTF indicator columns on `ts_event`, which is the HTF bar's OPEN time (Databento). Each HTF row holds that bar's FINAL close-derived value (known only at close), so every exec bar INSIDE a still-forming HTF bar got that bar's close-derived EMA/RSI/ATR → every HTF-filtered backtest optimistically biased. **Two of three audit agents declared it SAFE without probing; my own live probe (exec @09:00 → forming-bar value 200, not last-closed 100) proved the LEAK** — re-verify, don't trust. The intended guard `shift_higher_tf_columns()` existed in backtester.py:1353 but was NEVER called. Fix: shift HTF value cols +1 HTF bar inside the join function (structural — can't be forgotten by callers); rewrote 4 tests that had asserted the leak as "correct". No live-capital impact (0 backtests in DB by design — exactly why pre-go-live hardening matters).
+- **HIGH — data_loader.py:** equity-index rollover formula (3rd-Fri − 8d) diverged from CME-correct roll_calendar (2nd Thursday) in ~15% of quarters → now delegates to the canonical formula; cache-poison vector (adjusted=False + consolidated 404 → raw cached under ratio_adj key → served as adjusted) → adjusted-aware cache key + ratio-adj guard on the legacy fallback.
+- **MED:** DataQualityReport.duplicate_timestamps was always 0 (dedup before validate) → now reports true source dup count.
+- Indicator layer (core.py / market_structure / volume_profile / smt) confirmed CAUSAL by truncation-invariance probes — clean. LOW design notes (detect_swings center=True fragility, resample_daily_to_weekly intraday-misuse caution, ADX uses EWM not Wilder) left as advisories.
+
+**Verification:** 149 pytest green (mtf + data_loader + roll_calendar + 46 new hardening tests). Live look-ahead probe flips LEAK→SAFE post-fix.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
+
+### HTF MTF join: ts_event is OPEN time → needs +1 shift or it look-ahead-leaks (pinned 2026-06-22)
+
+`forward_fill_htf_to_exec` / `join_n_timeframes_to_exec` join higher-TF indicator columns onto exec bars via Polars `join_asof(strategy="backward")` on `ts_event`. `ts_event` is the bar's OPEN time (Databento standard, preserved by data_loader) — NOT close time. Each HTF row's indicator value is the bar's FINAL close-derived value. Therefore the HTF value columns MUST be shifted +1 HTF bar before the join (now done structurally inside `forward_fill_htf_to_exec`, 2026-06-22) so an exec bar sees the LAST FULLY CLOSED HTF bar, never the forming one. `backward`-asof being "causal" is NOT sufficient by itself — that was the trap that made two audit agents wave it through. Do NOT remove the +1 shift, do NOT change strategy= to forward/nearest, and do NOT "optimize" the shift away: any of those reintroduces a look-ahead leak that optimistically biases EVERY HTF-filtered backtest (inflated Sharpe/WFE, understated ruin). The dead `shift_higher_tf_columns()` in backtester.py:1353 is now redundant (the join function handles it). When auditing a "backward asof is safe" claim, ALWAYS probe an exec bar that sits INSIDE a forming HTF bar — that's where the leak hides.
 
 ### Time-dependent tests break as the real date advances (pinned 2026-06-22)
 
