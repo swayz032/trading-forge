@@ -282,6 +282,32 @@ export const FACTORY_EVENTS = {
 
 export type FactoryEventName = (typeof FACTORY_EVENTS)[keyof typeof FACTORY_EVENTS];
 
+// Wave hardening 2026-06-22: payload type exports for factory:graduation_entry_quality
+// and factory:multi_market_bucket SSE events.  Shapes derived from the actual
+// broadcastSSE() call sites in direct-bucket-graduator.ts (lines ~2968 and ~3003).
+export interface FactoryGraduationEntryQualityPayload {
+  strategy_id: number;
+  name: string;
+  symbols: string[];
+  confluence_factor_count: number;
+  extraction_provenance: string;
+  has_source_claim_win_rate: boolean;
+  has_source_claim_avg_r: boolean;
+  correlation_id: string | null;
+}
+
+export interface FactoryMultiMarketBucketPayload {
+  bucket_fingerprint: string;
+  concept_name: string;
+  symbols: string[];
+  layer_coverage: {
+    web: boolean;
+    youtube: boolean;
+    reddit: boolean;
+  };
+  correlation_id: string | null;
+}
+
 // ─── Wave 29 Pass D.1 SSE Event Names ────────────────────────────────────────
 //
 // Centralized event-name constants for Wave 29 lifecycle, signal, and RL events.

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+﻿import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock dependencies before import
 vi.mock("../db/index.js", () => ({
@@ -105,9 +105,13 @@ describe("AgentService", () => {
         timeframe: "15min",
         start_date: "2024-01-01",
         end_date: "2024-12-31",
-        source: "ollama" as const,
+        // assertCrossValidatedSource() (agent-service.ts:419) hard-rejects any
+        // source except graduated_bucket / cross-validated tag — exercise the
+        // real happy path with the allowed canonical source.
+        source: "graduated_bucket" as const,
       };
 
+      // @ts-ignore — W0.3 RunStrategyInput type mismatch; test uses partial input shape
       const result = await service.runStrategy(input);
 
       // Verify strategy was inserted
@@ -149,9 +153,11 @@ describe("AgentService", () => {
         params: {},
         symbol: "MES" as const,
         timeframe: "15min",
-        source: "ollama" as const,
+        // graduated_bucket is the only source assertCrossValidatedSource allows.
+        source: "graduated_bucket" as const,
       };
 
+      // @ts-ignore — W0.3 RunStrategyInput type mismatch; test uses partial input shape
       await service.runStrategy(input);
 
       // Prevalidator must be called — this closes the orphan-in-process gap
@@ -302,14 +308,29 @@ describe("AgentService", () => {
       const mockFrom = vi.fn().mockReturnValue({ where: mockWhere });
       (db.select as ReturnType<typeof vi.fn>).mockReturnValue({ from: mockFrom });
 
-      // Mock insert chain
+      // Mock insert chain. scoutIdeas has TWO insert shapes:
+      //   - audit-log writes: `.values({...}).catch(...)` (fire-and-forget thenable)
+      //   - systemJournal write: `.values({...}).returning()`
+      // so values() must return an object that is BOTH a resolved promise (has
+      // .catch/.then) AND carries a .returning() method.
       const mockReturning = vi.fn().mockResolvedValue([{ id: "idea-1" }]);
-      const mockValues = vi.fn().mockReturnValue({ returning: mockReturning });
+      const mockValues = vi.fn().mockImplementation(() => {
+        const thenable = Promise.resolve([{ id: "idea-1" }]) as Promise<unknown> & {
+          returning: typeof mockReturning;
+        };
+        thenable.returning = mockReturning;
+        return thenable;
+      });
       (db.insert as ReturnType<typeof vi.fn>).mockReturnValue({ values: mockValues });
 
+      // Descriptions MUST be >= 80 chars or the Wave 26 Pass H Tier-1 regex
+      // pre-filter (scout-formatter.ts:48 description_too_short) drops both
+      // ideas before the dedup phase ever runs.
+      const rsiDescription =
+        "Buy when RSI crosses below 30 on the 15-minute MES chart and exit when RSI returns above 50; structural stop below the swing low.";
       const ideas = [
-        { source: "openclaw", title: "RSI Strategy", description: "Buy when RSI < 30" },
-        { source: "openclaw", title: "RSI Strategy", description: "Buy when RSI < 30" }, // duplicate
+        { source: "openclaw", title: "RSI Strategy", description: rsiDescription },
+        { source: "openclaw", title: "RSI Strategy", description: rsiDescription }, // duplicate
       ];
 
       const result = await service.scoutIdeas(ideas);

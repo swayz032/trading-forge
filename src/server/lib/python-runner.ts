@@ -374,7 +374,30 @@ export async function runPythonModule<T = Record<string, unknown>>(
             reject(new Error(`Failed to parse ${componentName} output: ${err instanceof Error ? err.message : String(err)}`));
           }
         } else {
-          const errorMsg = stderr.trim() || `Exit code ${code}`;
+          // Wave hardening 2026-06-22 (CF-8): strip startup-banner lines from stderr
+          // before forming the error reason so the banner never becomes the reported
+          // failure cause.  Pattern: "All N context layers imported and callable[.]"
+          const BANNER_RE = /^All \d+ context layers imported and callable\.?\s*$/m;
+          const stderrTrimmed = stderr.trim();
+          const bannerOnlyStderr = BANNER_RE.test(stderrTrimmed) &&
+            stderrTrimmed.split("\n").every(l => BANNER_RE.test(l.trim()) || l.trim() === "");
+          let errorMsg: string;
+          if (bannerOnlyStderr || stderrTrimmed === "") {
+            // No real traceback — include the raw banner as diagnostic context so
+            // operators can distinguish "banner-only crash" from "empty stderr crash".
+            const rawContext = stderrTrimmed
+              ? ` (stderr contained only startup banner; raw: ${stderrTrimmed})`
+              : "";
+            errorMsg = `Exit code ${code}${rawContext}`;
+          } else {
+            // Real traceback present — strip any leading banner line(s) and keep the rest.
+            const stripped = stderrTrimmed
+              .split("\n")
+              .filter(l => !BANNER_RE.test(l.trim()))
+              .join("\n")
+              .trim();
+            errorMsg = stripped || `Exit code ${code}`;
+          }
           reject(new Error(`${componentName} failed: ${errorMsg}`));
         }
       });

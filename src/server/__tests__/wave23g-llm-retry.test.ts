@@ -24,6 +24,7 @@ import {
   withScoutExtractRetry,
   classifyLlmError,
   callScoutExtractLlm,
+  __setOllamaHealthyForTests,
   type LlmRetryReason,
   type ScoutExtractRetryResult,
 } from "../services/model-router.js";
@@ -81,9 +82,12 @@ vi.mock("../lib/circuit-breaker.js", () => ({
   },
 }));
 
-// OllamaClient mock — used by callScoutExtractLlm on retry exhaustion
+// OllamaClient mock — callScoutExtractLlm's Ollama-PRIMARY path (Wave 26 Pass A)
+// invokes ollama.chat(...) and reads res.message.content (model-router.ts:2468).
+// Provide chat() (the real method used) returning the {message:{content}} shape.
 vi.mock("../services/ollama-client.js", () => ({
   OllamaClient: vi.fn().mockImplementation(() => ({
+    chat: vi.fn().mockResolvedValue({ message: { content: '{"strategies":[]}' } }),
     generate: vi.fn().mockResolvedValue({ response: '{"strategies":[]}' }),
   })),
 }));
@@ -355,6 +359,11 @@ describe("withScoutExtractRetry", () => {
 describe("callScoutExtractLlm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Deterministic baseline: cloud-primary path (Path A). Most tests here
+    // assert the cloud retry contract. Previously this relied on the async
+    // boot health-check having flipped OLLAMA_HEALTHY=false by suite run time
+    // (a race). Pin it explicitly; test 9 opts into Ollama-primary itself.
+    __setOllamaHealthyForTests(false);
   });
 
   it("test 8: success first try → returns text, no Ollama invoked", async () => {
@@ -376,25 +385,34 @@ describe("callScoutExtractLlm", () => {
     );
   });
 
-  it("test 9: 3× exhaustion → Ollama fallback invoked (mocked OllamaClient)", async () => {
-    const err429 = Object.assign(new Error("429"), { status: 429 });
-    const mockCallFn = vi.fn().mockRejectedValue(err429);
+  it("test 9: Ollama healthy → Ollama is PRIMARY, cloud callFn never reached", async () => {
+    // Wave 26 Pass A inverted the chain: gemma4:e2b (Ollama) is the LOCAL
+    // PRIMARY for transcript_extractor; cloud gpt-5-mini is the FALLBACK
+    // (model-router.ts:2662 "Path B"). The old assertion (cloud-primary →
+    // Ollama-fallback after 3× 429) tested a chain that no longer exists.
+    // With Ollama healthy, the mocked OllamaClient resolves on the first
+    // attempt and cloud callFn is never invoked.
+    __setOllamaHealthyForTests(true);
+    try {
+      const err429 = Object.assign(new Error("429"), { status: 429 });
+      const mockCallFn = vi.fn().mockRejectedValue(err429);
 
-    // The OllamaClient mock is set up at module level (vi.mock at top of file).
-    // We just verify the result comes from the Ollama path (non-null).
-    // Pass noSleep to avoid real 1s+4s+15s delays in unit tests.
-    const result = await callScoutExtractLlm(
-      [{ role: "user", content: "extract strategies" }],
-      undefined,
-      mockCallFn,
-      noSleep,
-    );
+      const result = await callScoutExtractLlm(
+        [{ role: "user", content: "extract strategies" }],
+        undefined,
+        mockCallFn,
+        noSleep,
+      );
 
-    // OllamaClient.generate mock returns '{"strategies":[]}' → callScoutExtractLlm
-    // returns that string (non-null). If Ollama fallback was not invoked, result
-    // would be null.
-    expect(result).toBeTruthy();
-    expect(mockCallFn).toHaveBeenCalledTimes(3);
+      // OllamaClient.generate mock returns '{"strategies":[]}' → primary path
+      // returns that string (non-null) without ever touching cloud callFn.
+      expect(result).toBeTruthy();
+      expect(mockCallFn).not.toHaveBeenCalled();
+    } finally {
+      // Restore default so sibling tests (which assume cloud-primary Path A)
+      // are unaffected.
+      __setOllamaHealthyForTests(false);
+    }
   });
 
   it("test 10: clean null from callFn (budget gate) → NOT retried, callFn called exactly once", async () => {

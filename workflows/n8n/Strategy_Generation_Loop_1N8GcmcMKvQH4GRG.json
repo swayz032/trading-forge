@@ -106,7 +106,11 @@
         1768,
         568
       ],
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -138,7 +142,11 @@
         2216,
         568
       ],
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -192,7 +200,11 @@
         2664,
         160
       ],
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -571,7 +583,8 @@
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 3000,
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -604,7 +617,8 @@
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 3000,
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "parameters": {
@@ -691,7 +705,12 @@
         "options": {
           "timeout": 15000
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "d75d2649-cfac-4b7d-8af6-67b529688c40",
@@ -711,7 +730,12 @@
         "options": {
           "timeout": 10000
         }
-      }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput",
+      "continueOnFail": true
     },
     {
       "id": "6492e69d-ccdb-4795-8793-840f6db1107a",
@@ -1280,7 +1304,11 @@
           1768,
           568
         ],
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 3000,
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -1312,7 +1340,11 @@
           2216,
           568
         ],
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 3000,
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -1366,7 +1398,11 @@
           2664,
           160
         ],
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 3000,
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -1745,7 +1781,8 @@
         "retryOnFail": true,
         "maxTries": 2,
         "waitBetweenTries": 3000,
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -1778,7 +1815,8 @@
         "retryOnFail": true,
         "maxTries": 2,
         "waitBetweenTries": 3000,
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "parameters": {
@@ -1865,7 +1903,12 @@
           "options": {
             "timeout": 15000
           }
-        }
+        },
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 3000,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "id": "d75d2649-cfac-4b7d-8af6-67b529688c40",
@@ -1885,7 +1928,12 @@
           "options": {
             "timeout": 10000
           }
-        }
+        },
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 3000,
+        "onError": "continueRegularOutput",
+        "continueOnFail": true
       },
       {
         "id": "6492e69d-ccdb-4795-8793-840f6db1107a",

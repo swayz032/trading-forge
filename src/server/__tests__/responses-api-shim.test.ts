@@ -260,9 +260,13 @@ describe("loadStrictSchemaForRole", () => {
     expect(typeof s).toBe("object");
   });
 
-  it("returns the strategy schema snapshot for transcript_extractor (same source)", async () => {
-    const s = (await loadStrictSchemaForRole("transcript_extractor")) as any;
-    expect(s).toBeTruthy();
+  it("returns null for transcript_extractor (W23H-postmortem-fix13 reverted to json_object)", async () => {
+    // 2026-05-21: transcript_extractor was reverted to json_object mode — the
+    // 35-required-field strict schema made GPT-5-mini emit `strategies: []`
+    // rather than try to satisfy it (model-router.ts:1129). The role no longer
+    // shares the strategy snapshot; loadStrictSchemaForRole MUST return null so
+    // callOpenAI falls back to json_object mode.
+    expect(await loadStrictSchemaForRole("transcript_extractor")).toBeNull();
   });
 
   it("returns null for critic_evaluator (variable shape)", async () => {
