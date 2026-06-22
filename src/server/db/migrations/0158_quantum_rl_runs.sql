@@ -28,7 +28,11 @@ CREATE TABLE IF NOT EXISTS quantum_rl_runs (
 
     -- FK to the strategy being evaluated. ON DELETE CASCADE: RL rows are
     -- meaningless without the parent strategy.
-    strategy_id             INTEGER NOT NULL REFERENCES strategies(id) ON DELETE CASCADE,
+    -- Wave hardening 2026-06-22: corrected INTEGER -> UUID to match strategies.id
+    -- (uuid PRIMARY KEY in src/server/db/schema.ts:58). Boot-migration-runner
+    -- would have crashed fail-CLOSED at first apply with a type-mismatch error.
+    -- Convention verified against migrations 0019, 0066, 0068, 0074, 0076, 0149.
+    strategy_id             UUID NOT NULL REFERENCES strategies(id) ON DELETE CASCADE,
 
     -- When this RL decision was produced (wall-clock UTC).
     evaluated_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
