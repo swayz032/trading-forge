@@ -21,12 +21,14 @@
  * firm is a risk event that should surface regardless of trading state.
  */
 
+import { randomUUID } from "node:crypto";
 import { db } from "../db/index.js";
-import { propFirmHealthChecks, auditLog } from "../db/schema.js";
+import { propFirmHealthChecks } from "../db/schema.js";
 import { desc, eq } from "drizzle-orm";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
 import { AlertFactory } from "./alert-service.js";
+import { insertAuditRow } from "../lib/audit-log-helper.js";
 
 // ─── Firm suspension state (process-local) ────────────────────────────────────
 // Track which firms are currently suspended so paper engine can gate new orders.
@@ -198,6 +200,7 @@ async function probeFirm(config: FirmProbeConfig): Promise<FirmHealthResult> {
 // ─── Main poll function (called by scheduler every 15 min) ───────────────────
 
 export async function pollPropFirmHealth(): Promise<FirmHealthResult[]> {
+  const cronCorrelationId = randomUUID();
   const results: FirmHealthResult[] = [];
 
   for (const config of FIRM_PROBES) {
@@ -260,7 +263,7 @@ export async function pollPropFirmHealth(): Promise<FirmHealthResult[]> {
       }
 
       // Audit log
-      await db.insert(auditLog).values({
+      await insertAuditRow({
         action: "prop_firm.suspension_detected",
         entityType: "system",
         entityId: null,
@@ -268,7 +271,7 @@ export async function pollPropFirmHealth(): Promise<FirmHealthResult[]> {
         input: { firmId: result.firmId, status: result.status, responseCode: result.responseCode } as Record<string, unknown>,
         result: { ordersBlocked: true, alertFired: true } as Record<string, unknown>,
         status: "success",
-        correlationId: null,
+        correlationId: cronCorrelationId,
       }).catch((err) => logger.error({ err }, "prop-firm-health: audit log write failed (non-blocking)"));
 
     } else if (result.status === "healthy" && wasSuspended) {
@@ -287,7 +290,7 @@ export async function pollPropFirmHealth(): Promise<FirmHealthResult[]> {
         }
       }
 
-      await db.insert(auditLog).values({
+      await insertAuditRow({
         action: "prop_firm.suspension_cleared",
         entityType: "system",
         entityId: null,
@@ -295,7 +298,7 @@ export async function pollPropFirmHealth(): Promise<FirmHealthResult[]> {
         input: { firmId: result.firmId } as Record<string, unknown>,
         result: { ordersBlocked: false } as Record<string, unknown>,
         status: "success",
-        correlationId: null,
+        correlationId: cronCorrelationId,
       }).catch((err) => logger.error({ err }, "prop-firm-health: audit log write failed (non-blocking)"));
     }
   }
@@ -365,7 +368,7 @@ export async function simulateSuspension(firmId: string): Promise<void> {
     await _onSuspensionChange(firmId, true).catch((err) => logger.error({ err }, "simulateSuspension engine callback failed"));
   }
 
-  await db.insert(auditLog).values({
+  await insertAuditRow({
     action: "prop_firm.suspension_simulated",
     entityType: "system",
     entityId: null,
@@ -373,7 +376,7 @@ export async function simulateSuspension(firmId: string): Promise<void> {
     input: { firmId } as Record<string, unknown>,
     result: { ordersBlocked: true } as Record<string, unknown>,
     status: "success",
-    correlationId: null,
+    correlationId: randomUUID(),
   }).catch(() => {});
 }
 

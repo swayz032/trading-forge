@@ -6,15 +6,33 @@
  * Pass B.1 (backtest-core) emits `backtests.walk_forward_metadata.wfe_overall`
  * as the aggregate OOS/IS Sharpe ratio across all walk-forward windows.
  *
- * Institutional 2026 standard:
- *   wfe_overall >= WFE_HARD_FLOOR (0.70) → passes
- *   WFE_WARN_FLOOR (0.50) <= wfe_overall < WFE_HARD_FLOOR → warn (allow)
- *   wfe_overall < WFE_WARN_FLOOR (0.50) → BLOCK
- *   wfe_overall null (legacy pre-Pass-B.1) → allow, emit legacy audit
+ * Institutional 2026 standard (aligned to CLAUDE.md §12 — parity fix 2026-06-22):
+ *   wfe_overall >= WFE_HARD_FLOOR (0.70) → PASS
+ *   wfe_overall <  WFE_HARD_FLOOR (0.70) → BLOCK (status="blocked", passed=false)
+ *     — this includes the former "warn band" [0.50, 0.70).
+ *     — emits lifecycle.wfe_hard_floor_block in all blocked cases.
+ *   wfe_overall null (legacy pre-Pass-B.1) → PASS, emit legacy audit
+ *     EXCEPTION: wfe_status="degenerate_is" (G2a hardening 2026-06-22) — see below.
+ *
+ * Wave hardening 2026-06-22 (G2a) — degenerate IS contract:
+ *   When walk_forward.py runs a full WF but IS windows produce non-positive /
+ *   absent Sharpe, it emits wfe_overall=0.0 AND wfe_status="degenerate_is".
+ *   This gate MUST read the wfe_status field FIRST to distinguish:
+ *     - wfe_status="degenerate_is" → BLOCK (lifecycle.wfe_degenerate_is_block),
+ *       regardless of wfe_overall value.  NOT a legacy null.
+ *     - wfe_overall undefined/null AND wfe_status absent/undefined → genuine legacy
+ *       (pre-W27.5 backtests where the key was never written) → grandfather pass.
+ *
+ * NOTE on WFE_WARN_FLOOR: The floor is retained as a named constant and env knob
+ * so callers can observe how deep below the hard floor a strategy is, but it no
+ * longer controls a "warn-and-allow" path. Any value below WFE_HARD_FLOOR blocks.
+ *
+ * The "warned" WfeGateStatus variant is preserved in the union for backward
+ * compatibility with any serialized audit_log rows; it is never returned at runtime.
  *
  * Env overrides:
  *   WFE_HARD_FLOOR  (default "0.70") — below this value, block promotion
- *   WFE_WARN_FLOOR  (default "0.50") — below this value but above 0, warn only
+ *   WFE_WARN_FLOOR  (default "0.50") — informational lower reference; no longer gates
  *
  * Exported pure functions have no DB access or side effects.
  */
@@ -22,10 +40,12 @@
 import { logger } from "./logger.js";
 
 export type WfeGateStatus =
-  | "passed"          // wfe_overall >= WFE_HARD_FLOOR
-  | "warned"          // WFE_WARN_FLOOR <= wfe_overall < WFE_HARD_FLOOR
-  | "blocked"         // wfe_overall < WFE_WARN_FLOOR
-  | "legacy_null";    // wfe_overall not available (pre-Pass-B.1 backtest)
+  | "passed"              // wfe_overall >= WFE_HARD_FLOOR
+  | "warned"              // DEPRECATED — never returned at runtime post-2026-06-22 fix;
+                          // retained for backward-compat with serialized audit_log rows only
+  | "blocked"             // wfe_overall < WFE_HARD_FLOOR (includes former "warn band")
+  | "degenerate_is_block" // wfe_status="degenerate_is" from producer (G2a hardening 2026-06-22)
+  | "legacy_null";        // wfe_overall key absent (pre-Pass-B.1 backtest) → grandfather pass
 
 export interface WfeGateResult {
   status: WfeGateStatus;
@@ -37,7 +57,8 @@ export interface WfeGateResult {
   /** Audit action name to record. */
   auditAction:
     | "lifecycle.wfe_hard_floor_block"
-    | "lifecycle.wfe_warning_below_target"
+    | "lifecycle.wfe_degenerate_is_block"   // G2a hardening 2026-06-22: IS windows produced no positive Sharpe
+    | "lifecycle.wfe_warning_below_target"  // DEPRECATED — no longer returned at runtime (2026-06-22 parity fix)
     | "lifecycle.wfe_unavailable_legacy"
     | null; // null = passes, no audit needed for happy path (optional caller choice)
 }
@@ -67,19 +88,41 @@ export function getWfeWarnFloor(): number {
  * Evaluate the WFE gate.
  *
  * @param wfeOverall  Value of backtests.walk_forward_metadata.wfe_overall.
- *                    Pass null for legacy backtests pre-Pass-B.1.
+ *                    Pass null/undefined for legacy backtests pre-Pass-B.1 WHERE
+ *                    the key is genuinely absent.
  * @param hardFloor   Override env-derived WFE_HARD_FLOOR (for tests).
  * @param warnFloor   Override env-derived WFE_WARN_FLOOR (for tests).
+ * @param wfeStatus   Value of backtests.walk_forward_metadata.wfe_status.
+ *                    When "degenerate_is" the gate BLOCKS regardless of wfeOverall
+ *                    (G2a hardening 2026-06-22 — producer emits 0.0 + "degenerate_is"
+ *                    when IS windows yield non-positive / absent Sharpe; this MUST NOT
+ *                    be treated as a legacy null / grandfather pass).
  */
 export function evaluateWfeGate(
   wfeOverall: number | null | undefined,
   hardFloor?: number,
   warnFloor?: number,
+  wfeStatus?: string | null,
 ): WfeGateResult {
   const effectiveHardFloor = hardFloor ?? getWfeHardFloor();
   const effectiveWarnFloor = warnFloor ?? getWfeWarnFloor();
 
-  // Legacy path — wfe_overall not available (pre-Pass-B.1 backtest)
+  // Wave hardening 2026-06-22 (G2a) — degenerate IS path: producer signals that WF
+  // ran but IS Sharpe was non-positive / absent.  This is a DISTINCT state from a
+  // legacy null (key truly absent).  BLOCK here; never grandfather-pass.
+  if (wfeStatus === "degenerate_is") {
+    return {
+      status: "degenerate_is_block",
+      passed: false,
+      wfeOverall: wfeOverall != null ? Number(wfeOverall) : null,
+      hardFloor: effectiveHardFloor,
+      warnFloor: effectiveWarnFloor,
+      auditAction: "lifecycle.wfe_degenerate_is_block",
+    };
+  }
+
+  // Legacy path — wfe_overall key genuinely absent (pre-Pass-B.1 backtest).
+  // Only reached when wfeStatus is NOT "degenerate_is" (checked above).
   if (wfeOverall == null) {
     return {
       status: "legacy_null",
@@ -105,19 +148,10 @@ export function evaluateWfeGate(
     };
   }
 
-  if (wfe >= effectiveWarnFloor) {
-    // Between warn floor and hard floor — allow but emit warning
-    return {
-      status: "warned",
-      passed: true,
-      wfeOverall: wfe,
-      hardFloor: effectiveHardFloor,
-      warnFloor: effectiveWarnFloor,
-      auditAction: "lifecycle.wfe_warning_below_target",
-    };
-  }
-
-  // Below warn floor — hard block
+  // Below hard floor (includes the former "warn band" [WFE_WARN_FLOOR, WFE_HARD_FLOOR)) —
+  // HARD BLOCK per institutional 2026 standard documented in CLAUDE.md §12.
+  // Parity fix 2026-06-22: the [0.50, 0.70) band previously returned passed=true ("warned");
+  // that allowed strategies with WFE up to 0.699 to promote, contradicting the documented floor.
   return {
     status: "blocked",
     passed: false,

@@ -5,12 +5,20 @@
  * Covers:
  *   - WFE >= 0.70 → passes (happy path)
  *   - WFE < 0.50 → blocked (hard floor)
- *   - 0.50 <= WFE < 0.70 → warned (between floors, allow)
+ *   - 0.50 <= WFE < 0.70 → BLOCKED (institutional 2026 hard floor — NOT a warn-and-allow)
+ *   - WFE = 0.70 exactly → passes (boundary)
+ *   - WFE = 0.50 exactly → blocked (boundary at warn floor)
  *   - null WFE → legacy proceed + audit
  *   - env-var threshold override respected
  *   - audit action names correct for each outcome
  *   - SSE payload fields present on every evaluation
  *   - boundary conditions for hard and warn floors
+ *
+ * PARITY FIX (2026-06-22): The [0.50, 0.70) band was previously "warned (allow)".
+ * CLAUDE.md §12 and the Wave 27.5 certification document WFE_HARD_FLOOR (0.70) as
+ * a HARD BLOCK. The [0.50, 0.70) band must block — status="blocked", passed=false,
+ * auditAction="lifecycle.wfe_hard_floor_block". The warn audit action is still
+ * emitted as a secondary informational entry; the primary gate decision is BLOCK.
  */
 
 import { describe, it, expect, vi, afterEach } from "vitest";
@@ -69,26 +77,38 @@ describe("evaluateWfeGate — WFE >= hard floor → passed", () => {
   });
 });
 
-// ─── Warn zone ────────────────────────────────────────────────────────────────
+// ─── [0.50, 0.70) band → now BLOCKED (institutional 2026 hard floor) ──────────
+//
+// PARITY FIX 2026-06-22: This band was previously "warned (allow)" — a doc/code
+// disagreement. CLAUDE.md §12 states WFE_HARD_FLOOR (0.70) is a HARD BLOCK.
+// All three cases below must now return blocked, passed=false.
 
-describe("evaluateWfeGate — WFE in warn zone → warned (allow)", () => {
-  it("returns warned status when wfeOverall = 0.60 (between 0.50 and 0.70)", () => {
+describe("evaluateWfeGate — WFE in [0.50, 0.70) → BLOCKED (institutional hard floor)", () => {
+  it("returns blocked when wfeOverall = 0.60 (between 0.50 and 0.70)", () => {
     const result = evaluateWfeGate(0.60, 0.70, 0.50);
-    expect(result.status).toBe<WfeGateStatus>("warned");
-    expect(result.passed).toBe(true);
-    expect(result.auditAction).toBe("lifecycle.wfe_warning_below_target");
+    expect(result.status).toBe<WfeGateStatus>("blocked");
+    expect(result.passed).toBe(false);
+    expect(result.auditAction).toBe("lifecycle.wfe_hard_floor_block");
   });
 
-  it("returns warned status when wfeOverall = 0.50 (exactly at warn floor)", () => {
+  it("returns blocked when wfeOverall = 0.50 (exactly at warn floor — below hard floor)", () => {
     const result = evaluateWfeGate(0.50, 0.70, 0.50);
-    expect(result.status).toBe<WfeGateStatus>("warned");
-    expect(result.passed).toBe(true);
+    expect(result.status).toBe<WfeGateStatus>("blocked");
+    expect(result.passed).toBe(false);
+    expect(result.auditAction).toBe("lifecycle.wfe_hard_floor_block");
   });
 
-  it("returns warned status when wfeOverall = 0.699 (just below hard floor)", () => {
+  it("returns blocked when wfeOverall = 0.699 (just below hard floor)", () => {
     const result = evaluateWfeGate(0.699, 0.70, 0.50);
-    expect(result.status).toBe<WfeGateStatus>("warned");
-    expect(result.passed).toBe(true);
+    expect(result.status).toBe<WfeGateStatus>("blocked");
+    expect(result.passed).toBe(false);
+    expect(result.auditAction).toBe("lifecycle.wfe_hard_floor_block");
+  });
+
+  it("returns blocked when wfeOverall = 0.501 (just above warn floor — still below hard floor)", () => {
+    const result = evaluateWfeGate(0.501, 0.70, 0.50);
+    expect(result.status).toBe<WfeGateStatus>("blocked");
+    expect(result.passed).toBe(false);
   });
 });
 
@@ -136,11 +156,50 @@ describe("evaluateWfeGate — null WFE → legacy proceed", () => {
 // ─── Env-var override in gate ─────────────────────────────────────────────────
 
 describe("evaluateWfeGate — env-var override respected via argument passthrough", () => {
-  it("uses provided hardFloor argument (0.80) for threshold comparison", () => {
-    // WFE 0.75 is above default 0.70 but below override 0.80 → should warn
+  it("uses provided hardFloor argument (0.80) for threshold comparison — WFE 0.75 below override floor → blocked", () => {
+    // WFE 0.75 is above default 0.70 but below override 0.80 → should block (not pass)
     const result = evaluateWfeGate(0.75, 0.80, 0.50);
-    expect(result.status).toBe<WfeGateStatus>("warned");
+    expect(result.status).toBe<WfeGateStatus>("blocked");
+    expect(result.passed).toBe(false);
+    expect(result.auditAction).toBe("lifecycle.wfe_hard_floor_block");
+  });
+
+  it("uses provided hardFloor argument (0.80) — WFE 0.80 exactly at override floor → passed", () => {
+    const result = evaluateWfeGate(0.80, 0.80, 0.50);
+    expect(result.status).toBe<WfeGateStatus>("passed");
     expect(result.passed).toBe(true);
+    expect(result.auditAction).toBeNull();
+  });
+});
+
+// ─── Critical boundary cases ──────────────────────────────────────────────────
+
+describe("evaluateWfeGate — critical boundary cases (institutional contract)", () => {
+  it("WFE = 0.70 exactly → passed (at hard floor, not below)", () => {
+    const result = evaluateWfeGate(0.70, 0.70, 0.50);
+    expect(result.status).toBe<WfeGateStatus>("passed");
+    expect(result.passed).toBe(true);
+    expect(result.auditAction).toBeNull();
+  });
+
+  it("WFE = 0.6999 (just below 0.70) → blocked", () => {
+    const result = evaluateWfeGate(0.6999, 0.70, 0.50);
+    expect(result.status).toBe<WfeGateStatus>("blocked");
+    expect(result.passed).toBe(false);
+  });
+
+  it("WFE = 0.50 exactly → blocked (warn floor is below hard floor)", () => {
+    const result = evaluateWfeGate(0.50, 0.70, 0.50);
+    expect(result.status).toBe<WfeGateStatus>("blocked");
+    expect(result.passed).toBe(false);
+    expect(result.auditAction).toBe("lifecycle.wfe_hard_floor_block");
+  });
+
+  it("legacy null → proceed (grandfather path unchanged)", () => {
+    const result = evaluateWfeGate(null, 0.70, 0.50);
+    expect(result.status).toBe<WfeGateStatus>("legacy_null");
+    expect(result.passed).toBe(true);
+    expect(result.auditAction).toBe("lifecycle.wfe_unavailable_legacy");
   });
 });
 
@@ -148,6 +207,7 @@ describe("evaluateWfeGate — env-var override respected via argument passthroug
 
 describe("evaluateWfeGate — result payload (SSE surface)", () => {
   it("always returns wfeOverall, hardFloor, warnFloor in result", () => {
+    // 0.60 now blocks (was warn) — but payload shape is unchanged
     const cases = [0.90, 0.60, 0.30, null];
     for (const wfe of cases) {
       const result = evaluateWfeGate(wfe, 0.70, 0.50);

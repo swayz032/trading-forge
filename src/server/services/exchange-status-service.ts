@@ -27,12 +27,14 @@
  * because outage state is a safety signal, not a trading signal.
  */
 
+import { randomUUID } from "node:crypto";
 import { db } from "../db/index.js";
-import { exchangeOutages, auditLog } from "../db/schema.js";
+import { exchangeOutages } from "../db/schema.js";
 import { eq, isNull, and } from "drizzle-orm";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
 import { AlertFactory } from "./alert-service.js";
+import { insertAuditRow } from "../lib/audit-log-helper.js";
 
 // ─── CME outage state (process-local) ────────────────────────────────────────
 // Track active outage IDs per exchange so we can close them on resume.
@@ -193,6 +195,7 @@ export async function checkCmeStatus(): Promise<ExchangeStatusResult> {
  * because failing to detect an outage is worse than a false positive.
  */
 export async function pollCmeStatus(): Promise<void> {
+  const cronCorrelationId = randomUUID();
   const result = await checkCmeStatus();
   const isOutageActive = activeOutageIds.has("CME");
 
@@ -242,7 +245,7 @@ export async function pollCmeStatus(): Promise<void> {
     }
 
     // Audit log
-    await db.insert(auditLog).values({
+    await insertAuditRow({
       action: "exchange.outage_detected",
       entityType: "system",
       entityId: null,
@@ -250,7 +253,7 @@ export async function pollCmeStatus(): Promise<void> {
       input: { exchange: "CME", reason: result.reason, fetchError: result.fetchError } as Record<string, unknown>,
       result: { outageId, responseTaken: engineResponse } as Record<string, unknown>,
       status: "success",
-      correlationId: null,
+      correlationId: cronCorrelationId,
     }).catch((err) => logger.error({ err }, "exchange-status: audit log write failed (non-blocking)"));
 
     // SSE broadcast
@@ -299,7 +302,7 @@ export async function pollCmeStatus(): Promise<void> {
     }
 
     // Audit log
-    await db.insert(auditLog).values({
+    await insertAuditRow({
       action: "exchange.outage_resolved",
       entityType: "system",
       entityId: null,
@@ -307,7 +310,7 @@ export async function pollCmeStatus(): Promise<void> {
       input: { exchange: "CME", outageId } as Record<string, unknown>,
       result: { endedAt: new Date().toISOString(), auto_reissue: false } as Record<string, unknown>,
       status: "success",
-      correlationId: null,
+      correlationId: cronCorrelationId,
     }).catch((err) => logger.error({ err }, "exchange-status: audit log write failed (non-blocking)"));
 
     // SSE broadcast
@@ -389,7 +392,7 @@ export async function simulateOutage(exchange: string, reason: string, affectedS
     outageId,
   });
 
-  await db.insert(auditLog).values({
+  await insertAuditRow({
     action: "exchange.outage_simulated",
     entityType: "system",
     entityId: null,
@@ -397,7 +400,7 @@ export async function simulateOutage(exchange: string, reason: string, affectedS
     input: { exchange, reason, affectedSymbols } as Record<string, unknown>,
     result: { outageId } as Record<string, unknown>,
     status: "success",
-    correlationId: null,
+    correlationId: randomUUID(),
   }).catch((err) => logger.error({ err }, "exchange-status: audit log write failed (non-blocking)"));
 
   return { outageId };
@@ -434,7 +437,7 @@ export async function resolveOutage(exchange: string): Promise<{ resolved: boole
     note: "Manually resolved. Open positions held. Orders NOT auto-reissued.",
   });
 
-  await db.insert(auditLog).values({
+  await insertAuditRow({
     action: "exchange.outage_resolved",
     entityType: "system",
     entityId: null,
@@ -442,7 +445,7 @@ export async function resolveOutage(exchange: string): Promise<{ resolved: boole
     input: { exchange, outageId } as Record<string, unknown>,
     result: { endedAt: new Date().toISOString(), auto_reissue: false } as Record<string, unknown>,
     status: "success",
-    correlationId: null,
+    correlationId: randomUUID(),
   }).catch((err) => logger.error({ err }, "exchange-status: audit log write failed (non-blocking)"));
 
   return { resolved: true };

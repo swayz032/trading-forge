@@ -2692,8 +2692,11 @@ export class LifecycleService {
 
           const wfResults = (latestBtForWfe?.walkForwardResults as Record<string, unknown> | null) ?? null;
           const wfeOverall = wfResults?.wfe_overall != null ? Number(wfResults.wfe_overall) : null;
+          // Wave hardening 2026-06-22 (G2a wiring): pass wfe_status so the gate can
+          // distinguish a degenerate-IS run (block) from a true legacy null (grandfather).
+          const wfeStatus = wfResults?.wfe_status != null ? String(wfResults.wfe_status) : null;
 
-          const wfeResult = evaluateWfeGate(wfeOverall);
+          const wfeResult = evaluateWfeGate(wfeOverall, undefined, undefined, wfeStatus);
 
           broadcastSSE("lifecycle:wfe_evaluated", {
             strategyId: s.id,
@@ -2705,6 +2708,10 @@ export class LifecycleService {
           });
 
           if (wfeResult.auditAction) {
+            // Parity fix 2026-06-22: wfe-gate.ts now blocks ALL values below WFE_HARD_FLOOR
+            // (including the former "warn band" [0.50, 0.70)). isBlock is true whenever
+            // auditAction is not null and status is "blocked"; the only non-blocking
+            // auditAction is "lifecycle.wfe_unavailable_legacy" (legacy_null path).
             const isBlock = wfeResult.status === "blocked";
             logger[isBlock ? "warn" : "info"](
               {
@@ -2716,9 +2723,7 @@ export class LifecycleService {
                 transition: "PAPER→DEPLOY_READY",
               },
               isBlock
-                ? "WFE gate BLOCKED PAPER→DEPLOY_READY: wfe_overall below hard floor"
-                : wfeResult.status === "warned"
-                ? "WFE gate ADVISORY: wfe_overall below target (0.70) — promotion continues"
+                ? "WFE gate BLOCKED PAPER→DEPLOY_READY: wfe_overall below hard floor (0.70)"
                 : "WFE gate: wfe_overall unavailable (legacy backtest) — promotion continues",
             );
             await db.insert(auditLog).values({
@@ -2739,44 +2744,10 @@ export class LifecycleService {
               logger.warn({ strategyId: s.id, err: auditErr }, "WFE gate audit insert failed (non-blocking)");
             });
 
-            // Wave 27.5 Pass D.3 — WFE warn-floor Discord WARN (carry-forward from Pass B).
-            // When WFE is in the warn band [WFE_WARN_FLOOR, WFE_HARD_FLOOR) the promotion
-            // continues but the operator should see a phone notification. Block path already
-            // uses continue above; this fires only for the "warned" status.
-            if (wfeResult.status === "warned") {
-              const wfeVal = wfeResult.wfeOverall != null ? wfeResult.wfeOverall.toFixed(2) : "N/A";
-              const operatorBody =
-                `[WARN] Walk-Forward Efficiency below institutional target\n` +
-                `Strategy: ${s.name}\n` +
-                `WFE: ${wfeVal} (warn floor: ${wfeResult.warnFloor.toFixed(2)}, hard floor: ${wfeResult.hardFloor.toFixed(2)})\n` +
-                `Promotion ALLOWED but flagged for operator review`;
-              const plainWhat =
-                "A strategy passed all gates but the bot's out-of-sample performance was " +
-                "lower than the institutional target. Tony will review.";
-              const plainAction = "No action needed.";
-              // Dynamic import keeps lifecycle-service.ts free of a hard notification-service dep
-              // (consistent with backtest-service.ts pattern — avoids circular boot graph).
-              Promise.all([
-                import("./notification-service.js"),
-                import("../lib/notification-helpers.js"),
-              ]).then(([{ notifyWarning }, { appendFamilyGradePostscript }]) => {
-                notifyWarning(
-                  `WFE below target: ${s.name} (${wfeVal})`,
-                  appendFamilyGradePostscript(operatorBody, plainWhat, plainAction),
-                  {
-                    strategyId: s.id,
-                    strategyName: s.name,
-                    wfe_overall: wfeResult.wfeOverall,
-                    warn_floor: wfeResult.warnFloor,
-                    hard_floor: wfeResult.hardFloor,
-                    transition: "PAPER→DEPLOY_READY",
-                    correlationId,
-                  },
-                );
-              }).catch((notifyErr) => {
-                logger.warn({ strategyId: s.id, err: notifyErr }, "WFE warn-floor Discord notify failed (non-blocking)");
-              });
-            }
+            // NOTE: The "warned" Discord notification branch that previously fired for the
+            // [0.50, 0.70) warn-and-allow path has been removed (parity fix 2026-06-22).
+            // That band now blocks and the `continue` below handles it.
+            // Legacy-null path (status="legacy_null") does not block — promotion continues.
 
             if (isBlock) {
               continue;
@@ -3203,9 +3174,10 @@ export class LifecycleService {
           }
 
           if (driftResult.ok && driftResult.frozenHash === null) {
-            // First-time freeze: stamp the policy hash + regime. Fire-and-forget.
-            // Determine the current institutional_regime from bias_state (regimeLabel field).
-            // Fail-soft: if regime is unavailable, use "UNKNOWN" — never block on it.
+            // First-time freeze: stamp the policy hash + regime. AWAITED — a persistent
+            // freeze failure means the hash was never stamped and we cannot verify policy
+            // integrity. Block this cycle; the strategy retries next cron pass once the
+            // DB write succeeds. (Wave hardening 2026-06-22, frozen-policy fail-CLOSED per CLAUDE.md §12)
             let currentRegime = "UNKNOWN";
             try {
               const { biasState: biasStateTable } = await import("../db/schema.js");
@@ -3218,30 +3190,48 @@ export class LifecycleService {
                 currentRegime = biasStateRows[0].regimeLabel;
               }
             } catch {
-              // Regime lookup error is non-fatal.
+              // Regime lookup error is non-fatal — UNKNOWN is a valid regime label.
             }
 
-            freezePolicyForStrategy(s.id, currentRegime).catch((freezeErr) => {
-              logger.warn({ strategyId: s.id, err: freezeErr }, "frozen_policy first-time freeze failed (non-blocking — promotion proceeds)");
-            });
-
-            logger.info(
-              { strategyId: s.id, regime: currentRegime },
-              "Frozen-policy first-time freeze: hash will be stamped (fire-and-forget)",
-            );
+            try {
+              await freezePolicyForStrategy(s.id, currentRegime);
+              logger.info(
+                { strategyId: s.id, regime: currentRegime },
+                "Frozen-policy first-time freeze: hash stamped successfully",
+              );
+            } catch (freezeErr) {
+              // Hash was not stamped — cannot verify policy integrity this cycle. Block.
+              frozenPolicyBlocked = true;
+              const freezeMsg = freezeErr instanceof Error ? freezeErr.message : String(freezeErr);
+              logger.warn({ strategyId: s.id, err: freezeErr }, "frozen_policy first-time freeze failed — blocking promotion until hash is stamped (fail-CLOSED per CLAUDE.md §12)");
+              await db.insert(auditLog).values({
+                action: "frozen_policy.hash_compute_failed",
+                entityId: s.id,
+                entityType: "strategy",
+                status: "blocked",
+                decisionAuthority: "gate",
+                input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+                result: { error: freezeMsg, note: "first-time freeze write failed — promotion blocked; retries next cron cycle" },
+                correlationId,
+              }).catch(() => {});
+              continue;
+            }
           }
         } catch (frozenPolicyErr) {
-          // Fail-soft: hash compute error NEVER blocks real lifecycle.
+          // Wave hardening 2026-06-22, frozen-policy fail-CLOSED per CLAUDE.md §12:
+          // hash compute exceptions block promotion; strategy stays in PAPER and retries
+          // next cycle once the underlying error is fixed.
+          frozenPolicyBlocked = true;
           const msg = frozenPolicyErr instanceof Error ? frozenPolicyErr.message : String(frozenPolicyErr);
-          logger.warn({ strategyId: s.id, err: frozenPolicyErr }, "frozen_policy gate threw — emitting warn audit, promotion proceeds (fail-soft)");
+          logger.warn({ strategyId: s.id, err: frozenPolicyErr }, "frozen_policy gate threw — blocking promotion (fail-CLOSED per CLAUDE.md §12)");
           await db.insert(auditLog).values({
             action: "frozen_policy.hash_compute_failed",
             entityId: s.id,
             entityType: "strategy",
-            status: "warning",
+            status: "blocked",
             decisionAuthority: "gate",
             input: { fromState: "PAPER", toState: "DEPLOY_READY" },
-            result: { error: msg, note: "hash compute error — promotion proceeds" },
+            result: { error: msg, note: "hash compute exception — promotion blocked until manual investigation" },
             correlationId,
           }).catch(() => {});
         }
