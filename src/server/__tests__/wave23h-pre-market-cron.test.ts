@@ -288,7 +288,7 @@ describe("W23H.2 runPreMarketRoutine via DAL: 3-symbol sequential", () => {
     });
 
     function makeDalForSymbol(): PreMarketDataAccessLayer {
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — partial PreMarketDataAccessLayer mock object; may not satisfy all interface members (W0.3 2026-06-22)
       return {
         getDailyBars: vi.fn().mockResolvedValue([
           { date: "2026-05-20", open: 5840, high: 5860, low: 5820, close: 5850 },

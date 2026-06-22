@@ -169,7 +169,8 @@ export async function runRobustnessAnalysis(
   const outcomes: LifecycleOutcomeRow[] = [];
 
   // Group transitions by strategy
-  const transitionsByStrategy = new Map<string, typeof rawTransitions>();
+  type RawTransition = { strategy_id: string; from_state: string; to_state: string; created_at: Date };
+  const transitionsByStrategy = new Map<string, RawTransition[]>();
   for (const t of rawTransitions) {
     if (!transitionsByStrategy.has(t.strategy_id)) {
       transitionsByStrategy.set(t.strategy_id, []);

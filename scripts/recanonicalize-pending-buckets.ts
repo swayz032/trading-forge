@@ -88,7 +88,8 @@ async function main() {
     }
     const newHash = computeConceptFingerprintHash({ market: winner.market, concept_name: canonical });
 
-    await sql.begin(async (tx) => {
+    await sql.begin(async (txRaw) => {
+      const tx = txRaw as unknown as typeof sql;
       for (const loser of losers) {
         await tx`UPDATE strategy_pending_mentions SET bucket_id = ${winner.id} WHERE bucket_id = ${loser.id}`;
         await tx`DELETE FROM strategy_pending_buckets WHERE id = ${loser.id}`;

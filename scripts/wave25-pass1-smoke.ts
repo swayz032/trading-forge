@@ -259,7 +259,7 @@ try {
       'strategy',
       ${testEntityId},
       'system',
-      ${{ score: 0.85, threshold: 0.72, passed: true, weights_source: "code_default", smoke_test: true }}::jsonb,
+      ${sql.json({ score: 0.85, threshold: 0.72, passed: true, weights_source: "code_default", smoke_test: true })}::jsonb,
       'success',
       ${testCorrelationId}
     )
@@ -296,7 +296,7 @@ try {
       'strategy',
       ${testEntityId},
       'system',
-      ${{ score: 0.45, threshold: 0.72, passed: false, hard_block: false, smoke_test: true }}::jsonb,
+      ${sql.json({ score: 0.45, threshold: 0.72, passed: false, hard_block: false, smoke_test: true })}::jsonb,
       'success',
       ${testCorrelationId}
     )
@@ -325,7 +325,7 @@ try {
       'strategy',
       ${testEntityId},
       'system',
-      ${{ score: 0, hard_block: true, smoke_test: true }}::jsonb,
+      ${sql.json({ score: 0, hard_block: true, smoke_test: true })}::jsonb,
       'success',
       ${testCorrelationId}
     )
@@ -354,7 +354,7 @@ try {
       'strategy',
       ${testEntityId},
       'system',
-      ${{ factor: "market_structure_aligned", reason: "structure_engine_unavailable", smoke_test: true }}::jsonb,
+      ${sql.json({ factor: "market_structure_aligned", reason: "structure_engine_unavailable", smoke_test: true })}::jsonb,
       'info',
       ${testCorrelationId}
     )
@@ -383,7 +383,7 @@ try {
       'paper_session',
       '2026-05-24-MES-smoke',
       'system',
-      ${{ bos_recent: true, choch_recent: false, mss_recent: false, smoke_test: true }}::jsonb,
+      ${sql.json({ bos_recent: true, choch_recent: false, mss_recent: false, smoke_test: true })}::jsonb,
       'success',
       ${testCorrelationId}
     )

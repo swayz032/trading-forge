@@ -105,7 +105,7 @@ async function buildApp(): Promise<express.Express> {
   // Attach req.id + req.log so route handlers don't crash
   app.use((req, _res, next) => {
     (req as express.Request & { id: string }).id = "test-correlation-id";
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — test-only: pino BaseLogger requires level/fatal/trace/silent/msgPrefix; mock only needs error/info/warn (W0.3 2026-06-22)
     (req as express.Request & { log: Record<string, unknown> }).log = {
       error: vi.fn(),
       info: vi.fn(),

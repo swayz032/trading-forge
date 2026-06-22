@@ -49,7 +49,7 @@ async function main() {
       and(
         eq(backtests.status, "completed"),
         isNotNull(backtests.errorMessage),
-        like(backtests.errorMessage as unknown as string, "%All % context layers imported and callable%"),
+        like(backtests.errorMessage, "%All % context layers imported and callable%"),
       ),
     );
 

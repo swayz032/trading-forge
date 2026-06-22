@@ -250,7 +250,7 @@ async function main(): Promise<void> {
           console.log(`  [recall-pass] strategy[${i}] APPLIED ${r.appliedChanges.length} change(s):`);
           for (const c of r.appliedChanges) console.log(`    ${c}`);
         }
-        const rejected = (r.recall as Record<string, unknown>)._rejected;
+        const rejected = (r.recall as unknown as Record<string, unknown>)._rejected;
         if (rejected && typeof rejected === "object" && Object.keys(rejected).length > 0) {
           console.log(`  [recall-pass] strategy[${i}] REJECTED ${Object.keys(rejected).length} hallucination(s):`);
           for (const [field, msg] of Object.entries(rejected)) console.log(`    ✗ ${field}: ${msg}`);

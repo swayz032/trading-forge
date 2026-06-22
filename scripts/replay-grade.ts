@@ -364,7 +364,6 @@ async function runConsistencyTool(opts: ToolDispatchOpts): Promise<ToolSummary> 
   let mod: any;
 
   try {
-    // @ts-expect-error — consistency script lands in Pass 3.G1; not yet present
     mod = await import("./replay-grade-consistency.js");
   } catch {
     logger.warn("replay-grade: consistency script not found (Pass 3.G1 pending)");

@@ -201,7 +201,7 @@ describe("DriftDetector — runWeeklyDriftDetection", () => {
     // we produce different values on the two calls by changing the mock between calls.
     const { db } = await import("../db/index.js");
     let callIdx = 0;
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — db.execute mock: async callback returns RowList shape; PgRaw return type can't be satisfied without full PgRaw object (W0.3 2026-06-22)
     vi.mocked(db.execute).mockImplementation(async () => {
       callIdx++;
       if (callIdx === 1) {
@@ -243,7 +243,7 @@ describe("DriftDetector — runWeeklyDriftDetection", () => {
   // ── Test 4: weekly_drift_reports row written ────────────────────────────
   it("calls db.insert with report_week for the weekly_drift_reports row", async () => {
     const { db } = await import("../db/index.js");
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — db.execute mock: async callback returns RowList shape; PgRaw return type can't be satisfied without full PgRaw object (W0.3 2026-06-22)
     vi.mocked(db.execute).mockResolvedValue({ rows: [] } as Awaited<ReturnType<typeof db.execute>>);
 
     await driftModule.runWeeklyDriftDetection(new Date("2026-05-05"));
@@ -256,7 +256,7 @@ describe("DriftDetector — runWeeklyDriftDetection", () => {
     const { db } = await import("../db/index.js");
     // Force yellow by producing insufficient data for one source
     let n = 0;
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — db.execute mock: async callback returns RowList shape; PgRaw return type can't be satisfied without full PgRaw object (W0.3 2026-06-22)
     vi.mocked(db.execute).mockImplementation(async () => {
       n++;
       if (n === 1) return Object.assign(makeDailyPnlRows(30, 50, 30), { count: 0 }) as unknown as Awaited<ReturnType<typeof db.execute>>;
@@ -285,7 +285,7 @@ describe("DriftDetector — runWeeklyDriftDetection", () => {
   // ── Test 7: Audit_log row on every run ─────────────────────────────────
   it("calls db.insert for audit_log on every run (success and failure paths)", async () => {
     const { db } = await import("../db/index.js");
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — db.execute mock: async callback returns RowList shape; PgRaw return type can't be satisfied without full PgRaw object (W0.3 2026-06-22)
     vi.mocked(db.execute).mockResolvedValue({ rows: [] } as Awaited<ReturnType<typeof db.execute>>);
 
     await driftModule.runWeeklyDriftDetection(new Date("2026-05-05"));
@@ -309,7 +309,7 @@ describe("DriftDetector — runWeeklyDriftDetection", () => {
   // ── Test 9: Idempotent — onConflictDoUpdate called ─────────────────────
   it("uses onConflictDoUpdate for upsert idempotency on same report_week", async () => {
     const { db } = await import("../db/index.js");
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — db.execute mock: async callback returns RowList shape; PgRaw return type can't be satisfied without full PgRaw object (W0.3 2026-06-22)
     vi.mocked(db.execute).mockResolvedValue({ rows: [] } as Awaited<ReturnType<typeof db.execute>>);
 
     // Run twice for same week

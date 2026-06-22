@@ -63,7 +63,8 @@ async function getConsistencyServiceFn(): Promise<ConsistencyStateGetter> {
   const mod = await import(
     "../src/server/services/consistency-tracker-service.js"
   );
-  return mod.getConsistencyState;
+  // Cast through unknown: the service returns ConsistencyState (superset of our getter shape)
+  return mod.getConsistencyState as unknown as ConsistencyStateGetter;
 }
 
 // ─── Payout denial proxy ──────────────────────────────────────────────────────
@@ -164,7 +165,7 @@ export async function runConsistencyAnalysis(
   }
 
   // Deduplicate and optionally limit
-  let dayAccountPairs = rawDays;
+  let dayAccountPairs: Array<{ session_id: string; trading_date: string }> = rawDays;
   if (limitObservations != null) {
     dayAccountPairs = dayAccountPairs.slice(0, limitObservations);
   }

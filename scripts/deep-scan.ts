@@ -214,7 +214,7 @@ async function probeRuntime(): Promise<RuntimeProbe> {
   }
 
   const wf = await probeJson(`${n8nBase}/api/v1/workflows?limit=250`, {
-    "X-N8N-API-KEY": n8nKey,
+    "X-N8N-API-KEY": n8nKey ?? "",
     "Content-Type": "application/json",
   });
   if (!wf.ok) {

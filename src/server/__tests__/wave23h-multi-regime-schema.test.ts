@@ -15,7 +15,7 @@
  * Pure function tests — no DB connection.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -29,7 +29,6 @@ const MIGRATION_PATH = join(
 describe("W23H.B migration 0120: idempotent DDL", () => {
   let sql: string;
 
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
   beforeAll(() => {
     sql = readFileSync(MIGRATION_PATH, "utf-8");
   });

@@ -18,7 +18,8 @@ async function main() {
     action: "system_map.synced",
     entityType: "wave",
     entityId: "23F",
-    evidence: {
+    status: "success",
+    result: {
       wave: "23F",
       tracks_completed: ["A", "B", "C", "D", "E", "F", "G", "G-hotfix", "H"],
       vitest_delta: "+222 approximate (2680 → ~2902)",

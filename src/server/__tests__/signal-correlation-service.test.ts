@@ -238,7 +238,7 @@ describe("checkSignalCorrelationGate", () => {
   // 6. No vector → blocked
   it("blocks when no signal vector exists for the candidate (fail-closed)", async () => {
     // Mock loadLatestSignalVector to return null
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — db.select mock: chained fluent builder object can't satisfy full Drizzle SelectQueryBuilder return type; double-cast not possible on mockReturnValue (W0.3 2026-06-22)
     vi.mocked(db.select).mockReturnValue({
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({

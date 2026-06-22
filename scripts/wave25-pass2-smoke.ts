@@ -257,7 +257,7 @@ try {
       'TRENDING_UP',
       'TREND_CONTINUATION_LONG',
       ${testCorrelationId},
-      ${{ source: "wave25_pass2_smoke_test" }}::jsonb,
+      ${sql.json({ source: "wave25_pass2_smoke_test" })}::jsonb,
       ${sql.json(syntheticHtfNarrative)},
       NOW(),
       NOW()

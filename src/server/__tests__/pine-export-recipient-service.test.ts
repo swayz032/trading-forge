@@ -71,10 +71,8 @@ const MOCK_ACCOUNT_ID  = "22222222-2222-2222-2222-222222222222";
 
 function setupMockStrategy(overrides: Record<string, unknown> = {}) {
   vi.mocked(db.select).mockReturnThis();
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
-  vi.mocked(db.from).mockReturnThis();
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
-  vi.mocked(db.where).mockResolvedValue([
+  vi.mocked((db as unknown as Record<string, ReturnType<typeof vi.fn>>)["from"]).mockReturnThis();
+  vi.mocked((db as unknown as Record<string, ReturnType<typeof vi.fn>>)["where"]).mockResolvedValue([
     {
       id: MOCK_STRATEGY_ID,
       name: "SMA Crossover MES",
@@ -107,7 +105,7 @@ function extractQueryText(sqlArg: unknown): string {
 }
 
 function setupMockBrokerAccount(firmId = "mffu") {
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — db.execute mock: async callback returns RowList shape; PgRaw return type can't be satisfied without full PgRaw object (W0.3 2026-06-22)
   vi.mocked(db.execute).mockImplementation(async (sql: unknown) => {
     // Support both raw SQL strings (legacy) and drizzleSql template objects (new form).
     const query = extractQueryText(sql);
@@ -180,10 +178,8 @@ describe("pine-export-recipient-service", () => {
 
     // Mock audit_log insert
     vi.mocked(db.insert).mockReturnThis();
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
-    vi.mocked(db.values).mockReturnThis();
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
-    vi.mocked(db.returning).mockResolvedValue([{ id: "audit-row-id" }]);
+    vi.mocked((db as unknown as Record<string, ReturnType<typeof vi.fn>>)["values"]).mockReturnThis();
+    vi.mocked((db as unknown as Record<string, ReturnType<typeof vi.fn>>)["returning"]).mockResolvedValue([{ id: "audit-row-id" }]);
   });
 
   // ── Test 1: Happy path ───────────────────────────────────────────────────
@@ -259,9 +255,7 @@ describe("pine-export-recipient-service", () => {
     const auditInsertCall = insertCalls.find(() => true);  // at least one insert was made
     expect(auditInsertCall).toBeTruthy();
 
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
-    const valuesCalls = vi.mocked(db.values).mock.calls;
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    const valuesCalls = vi.mocked((db as unknown as Record<string, ReturnType<typeof vi.fn>>)["values"]).mock.calls;
     const auditRow = valuesCalls.find((args) => {
       const arg = args[0] as Record<string, unknown>;
       return typeof arg === "object" && "action" in arg;
@@ -280,7 +274,7 @@ describe("pine-export-recipient-service", () => {
 
   it("rejects account_id with legacy firm (not mffu or topstep)", async () => {
     // Simulate broker_accounts returning no rows (account not found).
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — db.execute mock: async callback returns RowList shape; PgRaw return type can't be satisfied without full PgRaw object (W0.3 2026-06-22)
     vi.mocked(db.execute).mockImplementation(async (sql: unknown) => {
       const query = extractQueryText(sql);
       if (query.includes("broker_accounts")) {

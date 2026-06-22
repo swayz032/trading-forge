@@ -15,6 +15,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type postgres from "postgres";
 import {
   run,
   countDependentRows,
@@ -23,7 +24,6 @@ import {
   type ProtectedStrategy,
   type ActiveFamilyAssignment,
   type WipeCounts,
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
 } from "../../../scripts/wipe-strategy-bucket-fresh-start.js";
 
 // ─── Mock sql factory ─────────────────────────────────────────────────────────
@@ -52,14 +52,12 @@ interface MockState {
   };
 }
 
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
-function makeSql(state: MockState) {
+function makeSql(state: MockState): postgres.Sql & { _calls: string[] } {
   const calls: string[] = [];
   let beginCallback: ((tx: ReturnType<typeof makeSql>) => Promise<void>) | null = null;
 
   // Query routing: match on the raw string fragments joined from the tagged template
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
-  const sqlFn = vi.fn(async (...args: unknown[]) => {
+  const sqlFn = vi.fn(async (...args: unknown[]): Promise<any> => {
     // Tagged template: first arg is TemplateStringsArray, rest are interpolated values
     const fragments = args[0] as TemplateStringsArray;
     const query = Array.from(fragments).join(" ??PARAM?? ").replace(/\s+/g, " ").trim();
@@ -104,7 +102,7 @@ function makeSql(state: MockState) {
     }
     // DELETE / TRUNCATE / INSERT → no return needed (return empty array)
     return [];
-  }) as unknown as ReturnType<typeof makeSql>;
+  });
 
   // begin() simulates a transaction: invokes callback with the same sql mock
   (sqlFn as unknown as { begin: (cb: (tx: unknown) => Promise<void>) => Promise<void> }).begin = vi.fn(async (cb: (tx: unknown) => Promise<void>) => {
@@ -116,7 +114,6 @@ function makeSql(state: MockState) {
 
   (sqlFn as unknown as { _calls: string[] })._calls = calls;
 
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
   return sqlFn as unknown as postgres.Sql & { _calls: string[] };
 }
 
@@ -156,7 +153,6 @@ describe("W23H.7 — wipe script safety guards", () => {
     });
     const sql = makeSql(state);
 
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     await expect(run(sql as unknown as postgres.Sql, false)).rejects.toThrow();
   });
 
@@ -168,7 +164,6 @@ describe("W23H.7 — wipe script safety guards", () => {
     });
     const sql = makeSql(state);
 
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     await expect(run(sql as unknown as postgres.Sql, false)).rejects.toThrow();
   });
 
@@ -184,7 +179,6 @@ describe("W23H.7 — wipe script safety guards", () => {
     });
     const sql = makeSql(state);
 
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     await expect(run(sql as unknown as postgres.Sql, false)).rejects.toThrow();
   });
 });
@@ -207,7 +201,6 @@ describe("W23H.7 — dry-run mode", () => {
     const state = makeBaseState();
     const sql = makeSql(state);
 
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     const counts = await run(sql as unknown as postgres.Sql, false /* dry-run */);
 
     expect(counts.strategies).toBe(2);
@@ -217,7 +210,6 @@ describe("W23H.7 — dry-run mode", () => {
 
     // No DELETE / TRUNCATE / INSERT should appear in the call log
     const deleteCalls = sql._calls.filter(
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
       (q) => q.includes("DELETE") || q.includes("TRUNCATE") || q.includes("INSERT"),
     );
     expect(deleteCalls).toHaveLength(0);
@@ -229,11 +221,9 @@ describe("W23H.7 — apply mode", () => {
     const state = makeBaseState();
     const sql = makeSql(state);
 
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     await run(sql as unknown as postgres.Sql, true /* apply */);
 
     const writeCalls = sql._calls.filter(
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
       (q) => q.includes("DELETE") || q.includes("TRUNCATE") || q.includes("INSERT"),
     );
 
@@ -250,11 +240,9 @@ describe("W23H.7 — apply mode", () => {
     const state = makeBaseState();
     const sql = makeSql(state);
 
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     await run(sql as unknown as postgres.Sql, true /* apply */);
 
     const auditDeleteCalls = sql._calls.filter(
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
       (q) => (q.includes("DELETE") || q.includes("UPDATE")) && q.includes("audit_log"),
     );
     expect(auditDeleteCalls).toHaveLength(0);
@@ -264,11 +252,9 @@ describe("W23H.7 — apply mode", () => {
     const state = makeBaseState();
     const sql = makeSql(state);
 
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     await run(sql as unknown as postgres.Sql, true);
 
     const truncateCalls = sql._calls.filter(
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
       (q) => q.includes("TRUNCATE") && q.includes("strategy_pending_buckets"),
     );
     expect(truncateCalls.length).toBeGreaterThanOrEqual(1);
@@ -282,14 +268,12 @@ describe("W23H.7 — idempotency", () => {
     });
     const sql = makeSql(state);
 
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     const counts = await run(sql as unknown as postgres.Sql, true /* apply */);
 
     expect(counts.strategies).toBe(0);
 
     // A bulk_strategy_wipe.completed INSERT must still be emitted
     const auditInsertCalls = sql._calls.filter(
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
       (q) => q.includes("INSERT") && q.includes("audit_log"),
     );
     expect(auditInsertCalls.length).toBeGreaterThanOrEqual(1);

@@ -14,9 +14,20 @@
     "sourceMap": true,
     "noEmitOnError": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     }
   },
-  "include": ["src/**/*.ts", "scripts/**/*.ts"],
-  "exclude": ["node_modules", "dist", "src/engine", "src/dashboard", "src/server/db/migrations"]
+  "include": [
+    "src/**/*.ts",
+    "scripts/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/engine",
+    "src/dashboard",
+    "src/server/db/migrations"
+  ]
 }

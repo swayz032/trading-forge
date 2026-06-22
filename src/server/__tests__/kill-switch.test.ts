@@ -154,7 +154,7 @@ function mockProductionMode(mode: string, killReason: string = "test") {
     setBy: "test",
     setAt: new Date("2026-05-09T00:00:00Z"),
   };
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — db.select mock: thenable+limit chain shape does not satisfy full Drizzle SelectQueryBuilder return type; cast via ReturnType<typeof db.select> is the closest achievable (W0.3 2026-06-22)
   vi.mocked(db.select).mockReturnValue({
     from: vi.fn().mockReturnValue({
       where: vi.fn().mockReturnValue({
@@ -175,7 +175,7 @@ function mockProductionMode(mode: string, killReason: string = "test") {
 
 /** Override the DB select mock to throw a DB error */
 function mockDbError() {
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — db.select mock: thenable+limit chain shape does not satisfy full Drizzle SelectQueryBuilder return type; cast via ReturnType<typeof db.select> is the closest achievable (W0.3 2026-06-22)
   vi.mocked(db.select).mockReturnValue({
     from: vi.fn().mockReturnValue({
       where: vi.fn().mockReturnValue({
@@ -255,7 +255,7 @@ describe("KillSwitch — Phase 4A Production Hardening", () => {
     mockProductionMode("LIVE");
 
     // setMode invalidates cache
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — test passes legacy mode string "LIVE"/"PAPER"; ProductionMode = "ACTIVE"|"PAUSED"|"HALT" (W0.3 2026-06-22)
     await killSwitch.setMode("LIVE", "test_reason", "operator");
 
     // Next getCurrentState() should call DB again
@@ -265,7 +265,7 @@ describe("KillSwitch — Phase 4A Production Hardening", () => {
 
   // ── Test 6: setMode() updates system_state ────────────────────────────────
   it("setMode() calls db.update on system_state with the new mode", async () => {
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — test passes legacy mode string "LIVE"/"PAPER"; ProductionMode = "ACTIVE"|"PAUSED"|"HALT" (W0.3 2026-06-22)
     await killSwitch.setMode("PAPER", "starting_paper_trading", "operator");
     expect(vi.mocked(db.update)).toHaveBeenCalled();
     const setCall = vi.mocked(db.update).mock.results[0].value.set;
@@ -276,7 +276,7 @@ describe("KillSwitch — Phase 4A Production Hardening", () => {
 
   // ── Test 7: setMode() writes audit_log row ────────────────────────────────
   it("setMode() inserts an audit_log row with action=production.mode_changed", async () => {
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — test passes legacy mode string "LIVE"/"PAPER"; ProductionMode = "ACTIVE"|"PAUSED"|"HALT" (W0.3 2026-06-22)
     await killSwitch.setMode("PAPER", "test_reason", "system");
 
     // audit_log insert is fire-and-forget; check db.insert was called
@@ -289,7 +289,7 @@ describe("KillSwitch — Phase 4A Production Hardening", () => {
 
   // ── Test 8: setMode() broadcasts SSE event ────────────────────────────────
   it("setMode() broadcasts SSE event production:mode-changed", async () => {
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — test passes legacy mode string "LIVE"/"PAPER"; ProductionMode = "ACTIVE"|"PAUSED"|"HALT" (W0.3 2026-06-22)
     await killSwitch.setMode("PAPER", "test_reason", "operator");
 
     expect(vi.mocked(broadcastSSE)).toHaveBeenCalledWith(
@@ -336,7 +336,7 @@ describe("KillSwitch — Phase 4A Production Hardening", () => {
     // so isFirmSuspended() is actually called.
     vi.mocked(isFirmSuspended).mockReturnValue(true);
     // Override db.select so broker_accounts returns one enabled firm ("mffu")
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — db.select mock: thenable+limit chain shape does not satisfy full Drizzle SelectQueryBuilder return type; cast via ReturnType<typeof db.select> is the closest achievable (W0.3 2026-06-22)
     vi.mocked(db.select).mockReturnValue({
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({

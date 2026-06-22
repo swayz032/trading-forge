@@ -129,7 +129,7 @@ async function main() {
       config: strategies.config,
     })
     .from(strategies)
-    .where(isNull(strategies.archivedAt));
+    .where(isNull((strategies as any).archivedAt)); // stale script: archivedAt was never added to schema; treat as no-filter
 
   console.log(`Found ${rows.length} active strategies.\n`);
 

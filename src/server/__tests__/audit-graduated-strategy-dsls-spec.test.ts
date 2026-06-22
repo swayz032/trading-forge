@@ -32,7 +32,6 @@
  */
 
 import { describe, it, expect } from "vitest";
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
 import { audit } from "../../../scripts/audit-graduated-strategy-dsls.js";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────

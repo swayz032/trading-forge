@@ -88,7 +88,7 @@ describe("classifyMechanicPortability — positive cases (must PORT)", () => {
   });
 
   it("portable: handles non-string input gracefully", () => {
-    // @ts-expect-error — runtime guard test
+    // @ts-expect-error — intentionally passing null to test runtime guard; classifyMechanicPortability expects string (W0.3 2026-06-22)
     const r = classifyMechanicPortability(null);
     expect(r.portable).toBe(false);
     expect(r.reject_class).toBeNull();

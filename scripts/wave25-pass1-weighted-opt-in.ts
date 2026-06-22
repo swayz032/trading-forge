@@ -78,7 +78,7 @@ async function main(): Promise<void> {
   const colCheck = await db.execute(
     sql`SELECT column_name FROM information_schema.columns WHERE table_name = 'strategies' AND column_name IN ('use_weighted_scoring','confluence_score_threshold','confluence_score_weights')`,
   );
-  const presentCols = new Set((colCheck.rows ?? []).map((r) => String((r as { column_name: string }).column_name)));
+  const presentCols = new Set([...colCheck].map((r) => String((r as { column_name: string }).column_name)));
   const required = ["use_weighted_scoring", "confluence_score_threshold", "confluence_score_weights"];
   const missingCols = required.filter((c) => !presentCols.has(c));
   if (missingCols.length > 0) {

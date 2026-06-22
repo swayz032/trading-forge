@@ -408,10 +408,8 @@ describe("wave26-transcript-extractor-strict-schema", () => {
     expect(stratProps.min_factors_satisfied).toBeDefined();
 
     // Symbol enum includes only the 3 allowed values
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
-    const symbolProp = (stratProps.symbol as { enum?: string[] }) | undefined;
+    const symbolProp = stratProps.symbol as ({ enum?: string[] } | undefined);
     if (symbolProp) {
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
       expect(symbolProp.enum).toEqual(expect.arrayContaining(["MES", "MNQ", "MCL"]));
     }
   });

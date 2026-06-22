@@ -112,8 +112,7 @@ describe("Wave 9 P2E: critic budget exhaustion — fail-CLOSED", () => {
     for (let i = 0; i < 100; i++) {
       await runDslQualityCritic(TEST_PAYLOAD, `journal-${i}`, mockOpenAI);
     }
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
-    mockInsertAuditRow.mockClear();
+    vi.mocked(mockInsertAuditRow).mockClear();
 
     await runDslQualityCritic(TEST_PAYLOAD, "journal-exhausted", mockOpenAI);
 
@@ -171,8 +170,7 @@ describe("Wave 9 P2E: Ollama fallback path", () => {
     for (let i = 0; i < 100; i++) {
       await runDslQualityCritic(TEST_PAYLOAD, `journal-${i}`, mockOpenAI);
     }
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
-    mockInsertAuditRow.mockClear();
+    vi.mocked(mockInsertAuditRow).mockClear();
 
     await runDslQualityCritic(TEST_PAYLOAD, "journal-ollama-audit", mockOpenAI);
 

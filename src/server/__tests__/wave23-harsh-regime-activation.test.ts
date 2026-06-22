@@ -237,7 +237,7 @@ describe("W23D: Operator override audit trail", () => {
   it("setPhaseOverride: flipped=true when changing advisory → hard", () => {
     const previousPhase: PhaseValue = "advisory";
     const newPhase: PhaseValue = "hard";
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — intentional literal comparison of PhaseValue const strings to verify phase-flip detection logic; tsc flags this as always-true (W0.3 2026-06-22)
     const flipped = previousPhase !== newPhase;
     expect(flipped).toBe(true);
     // In production: audit_log row inserted with action=harsh_regime_phase.manual_override

@@ -15,7 +15,7 @@ async function main() {
     ORDER BY 3 DESC
   `);
   console.log("=== DISTRIBUTION (raw JSONB + text extract) ===");
-  console.log(JSON.stringify(r1.rows, null, 2));
+  console.log(JSON.stringify([...r1], null, 2));
 
   const r2 = await db.execute(sql`
     SELECT
@@ -27,7 +27,7 @@ async function main() {
     WHERE archived_at IS NULL
   `);
   console.log("=== STAMPING ===");
-  console.log(JSON.stringify(r2.rows, null, 2));
+  console.log(JSON.stringify([...r2], null, 2));
 
   const r3 = await db.execute(sql`
     SELECT config->>'entry_indicator' as ei, COUNT(*) as n
@@ -38,13 +38,13 @@ async function main() {
     ORDER BY 2 DESC
   `);
   console.log("=== THIN BREAKDOWN by entry_indicator ===");
-  console.log(JSON.stringify(r3.rows, null, 2));
+  console.log(JSON.stringify([...r3], null, 2));
 
   const r4 = await db.execute(sql`
     SELECT key, value FROM system_parameters WHERE key='pipeline_mode'
   `);
   console.log("=== PIPELINE_MODE ===");
-  console.log(JSON.stringify(r4.rows, null, 2));
+  console.log(JSON.stringify([...r4], null, 2));
 
   process.exit(0);
 }

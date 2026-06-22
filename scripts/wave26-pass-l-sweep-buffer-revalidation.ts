@@ -27,7 +27,7 @@ import "../src/server/load-env.js";
 import { db } from "../src/server/db/index.js";
 import { sql } from "drizzle-orm";
 
-interface StopReasonRow {
+interface StopReasonRow extends Record<string, unknown> {
   symbol: string;
   stop_reason: string;
   count: number;
@@ -63,7 +63,7 @@ async function main() {
     GROUP BY 1, 2
     ORDER BY 1, 3 DESC
   `);
-  const data = (rows as { rows?: StopReasonRow[] }).rows ?? (rows as unknown as StopReasonRow[]);
+  const data = [...rows];
 
   const bySymbol = new Map<string, Record<string, number>>();
   for (const row of data) {

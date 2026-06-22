@@ -4828,10 +4828,10 @@ except Exception as e:
         emitJobComplete("daily-reconciliation", Date.now() - t0);
       } catch (err) {
         logger.error({ err, job: "daily-reconciliation" }, "daily-reconciliation cron failed");
-        notifyCritical("reconciliation-cron-failed", {
+        notifyCritical("reconciliation-cron-failed", JSON.stringify({
           error: err instanceof Error ? err.message : String(err),
           job: "daily-reconciliation",
-        });
+        }));
       }
     } finally {
       _releaseJobLock("daily-reconciliation");
@@ -4869,10 +4869,10 @@ except Exception as e:
         emitJobComplete("weekly-drift-detection", Date.now() - t0);
       } catch (err) {
         logger.error({ err, job: "weekly-drift-detection" }, "weekly-drift-detection cron failed");
-        notifyCritical("drift-cron-failed", {
+        notifyCritical("drift-cron-failed", JSON.stringify({
           error: err instanceof Error ? err.message : String(err),
           job: "weekly-drift-detection",
-        });
+        }));
       }
     } finally {
       _releaseJobLock("weekly-drift-detection");

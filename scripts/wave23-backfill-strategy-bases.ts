@@ -63,7 +63,8 @@ async function main(): Promise<void> {
 
   for (const strategy of allStrategies) {
     const config = strategy.config as Record<string, unknown>;
-    const positionSize = config?.strategy?.position_size ?? config?.position_size as Record<string, unknown> | undefined;
+    const strategyBlock = config?.strategy as Record<string, unknown> | undefined;
+    const positionSize = strategyBlock?.position_size ?? config?.position_size as Record<string, unknown> | undefined;
 
     if (!positionSize) {
       console.log(`  SKIP ${strategy.name} (${strategy.symbol}): no position_size config`);

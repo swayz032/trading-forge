@@ -111,9 +111,9 @@ import { compileDualPineExport } from "../services/pine-export-service.js";
 
 const STRAT_DEPLOYED = { id: "strat-deployed-1", lifecycleState: "DEPLOYED", name: "Strategy One", config: { symbol: "MES", max_contracts: 4 } };
 const STRAT_DEPLOYED_2 = { id: "strat-deployed-2", lifecycleState: "DEPLOYED", name: "Strategy Two", config: { symbol: "MNQ", max_contracts: 4 } };
-const STRAT_RETIRED = { id: "strat-retired", lifecycleState: "RETIRED", name: "Retired Strategy", config: {} };
-const STRAT_GRAVEYARD = { id: "strat-graveyard", lifecycleState: "GRAVEYARD", name: "Graveyard", config: {} };
-const STRAT_TESTING = { id: "strat-testing", lifecycleState: "TESTING", name: "Testing Strategy", config: {} };
+const STRAT_RETIRED = { id: "strat-retired", lifecycleState: "RETIRED", name: "Retired Strategy", config: { symbol: "MES", max_contracts: 6 } };
+const STRAT_GRAVEYARD = { id: "strat-graveyard", lifecycleState: "GRAVEYARD", name: "Graveyard", config: { symbol: "MES", max_contracts: 6 } };
+const STRAT_TESTING = { id: "strat-testing", lifecycleState: "TESTING", name: "Testing Strategy", config: { symbol: "MES", max_contracts: 6 } };
 
 const ACCT_MFFU_OPERATOR = { accountId: "acct-mffu-operator", firmId: "mffu", enabled: true, brokerType: "traderspost" };
 const ACCT_MFFU_ALICE = { accountId: "acct-mffu-alice", firmId: "mffu", enabled: true, brokerType: "traderspost" };
@@ -150,8 +150,7 @@ function makeAssignmentRow(accountId: string, strategyId: string, opts: Partial<
 
 /** Mock db.select to return rows for any .from().where()...limit() chain. */
 function mockSelect(rows: unknown[]) {
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
-  (vi.mocked(db.select) as any).mockReturnValue({
+  vi.mocked(db.select).mockReturnValue({
     from: vi.fn().mockReturnValue({
       where: vi.fn().mockReturnValue({
         limit: vi.fn().mockResolvedValue(rows),
@@ -165,7 +164,7 @@ function mockSelect(rows: unknown[]) {
         where: vi.fn().mockResolvedValue([]),
       }),
     }),
-  } as ReturnType<typeof db.select>);
+  } as unknown as ReturnType<typeof db.select>);
 }
 
 /**
@@ -177,7 +176,6 @@ function mockSelectSequence(sequence: Array<unknown[]>) {
   vi.mocked(db.select).mockImplementation(() => {
     const rows = sequence[callIndex] ?? [];
     callIndex++;
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     return {
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({
@@ -192,7 +190,7 @@ function mockSelectSequence(sequence: Array<unknown[]>) {
           where: vi.fn().mockResolvedValue([]),
         }),
       }),
-    } as ReturnType<typeof db.select>;
+    } as unknown as ReturnType<typeof db.select>;
   });
 }
 
@@ -233,7 +231,6 @@ function mockSelectForAssign(opts: {
       where: vi.fn().mockResolvedValue(existingOnMffu),
     };
 
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     return {
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({
@@ -246,14 +243,13 @@ function mockSelectForAssign(opts: {
         then: (resolve: (v: unknown) => void) => Promise.resolve(rows).then(resolve),
         innerJoin: vi.fn().mockReturnValue(innerJoinResult),
       }),
-    } as ReturnType<typeof db.select>;
+    } as unknown as ReturnType<typeof db.select>;
   });
 }
 
 /** Mock db.insert to capture audit inserts and return a given assignment row. */
 function mockInsertReturning(assignmentRow: unknown) {
   const auditRows: unknown[] = [];
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
   vi.mocked(db.insert).mockImplementation((_table: unknown) => ({
     values: vi.fn((v: Record<string, unknown>) => {
       if (v.action) {
@@ -265,14 +261,13 @@ function mockInsertReturning(assignmentRow: unknown) {
         returning: vi.fn().mockResolvedValue([assignmentRow]),
       };
     }),
-  } as ReturnType<typeof db.insert>));
+  } as unknown as ReturnType<typeof db.insert>));
   return auditRows;
 }
 
 /** Mock db.insert to capture ALL inserts (audit + assignment). */
 function mockInsertCapture() {
   const allInserts: unknown[] = [];
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
   vi.mocked(db.insert).mockImplementation((_table: unknown) => ({
     values: vi.fn((v: Record<string, unknown>) => {
       allInserts.push(v);
@@ -281,20 +276,19 @@ function mockInsertCapture() {
         returning: vi.fn().mockResolvedValue([v]),
       };
     }),
-  } as ReturnType<typeof db.insert>));
+  } as unknown as ReturnType<typeof db.insert>));
   return allInserts;
 }
 
 /** Mock db.update().set().where().returning() */
 function mockUpdateReturning(updatedRow: unknown) {
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
   vi.mocked(db.update).mockReturnValue({
     set: vi.fn().mockReturnValue({
       where: vi.fn().mockReturnValue({
         returning: vi.fn().mockResolvedValue([updatedRow]),
       }),
     }),
-  } as ReturnType<typeof db.update>);
+  } as unknown as ReturnType<typeof db.update>);
 }
 
 // ─── Tests: refactored shadow → real-service (12 tests) ──────────────────────
@@ -313,8 +307,7 @@ describe("strategy-assignment-service (real-service)", () => {
     const newRow = makeAssignmentRow("acct-mffu-operator", "strat-deployed-1", { assignedBy: "operator" });
     mockSelectForAssign({ strategy: STRAT_DEPLOYED, account: ACCT_MFFU_OPERATOR });
     mockInsertReturning(newRow);
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
-    vi.mocked(db.update).mockReturnValue({ set: vi.fn() } as ReturnType<typeof db.update>);
+    vi.mocked(db.update).mockReturnValue({ set: vi.fn() } as unknown as ReturnType<typeof db.update>);
 
     const result = await assignStrategyToAccount("acct-mffu-operator", "strat-deployed-1", { assignedBy: "operator" });
 
@@ -416,14 +409,13 @@ describe("strategy-assignment-service (real-service)", () => {
     const newRow = makeAssignmentRow("acct-mffu-operator", "strat-deployed-1");
     mockSelectForAssign({ strategy: STRAT_DEPLOYED, account: ACCT_MFFU_OPERATOR });
     const allInserts = mockInsertCapture();
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     vi.mocked(db.insert).mockImplementation((_table: unknown) => ({
       values: vi.fn((v: Record<string, unknown>) => {
         allInserts.push(v);
         if (v.action) return Promise.resolve();
         return { returning: vi.fn().mockResolvedValue([newRow]) };
       }),
-    } as ReturnType<typeof db.insert>));
+    } as unknown as ReturnType<typeof db.insert>));
     mockUpdateReturning(newRow);
 
     await assignStrategyToAccount("acct-mffu-operator", "strat-deployed-1");
@@ -458,14 +450,13 @@ describe("strategy-assignment-service (real-service)", () => {
       existingOnMffu,
     });
     const allInserts: unknown[] = [];
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     vi.mocked(db.insert).mockImplementation((_table: unknown) => ({
       values: vi.fn((v: Record<string, unknown>) => {
         allInserts.push(v);
         if (v.action) return Promise.resolve();
         return { returning: vi.fn().mockResolvedValue([aliceRow]) };
       }),
-    } as ReturnType<typeof db.insert>));
+    } as unknown as ReturnType<typeof db.insert>));
 
     vi.mocked(broadcastSSE as ReturnType<typeof vi.fn>).mockClear();
 
@@ -482,13 +473,12 @@ describe("strategy-assignment-service (real-service)", () => {
     const topstep1Row = makeAssignmentRow("acct-topstep-1", "strat-deployed-1");
     // Topstep: detectCollaborativeTradingRisk returns null immediately (no DB call needed)
     mockSelectForAssign({ strategy: STRAT_DEPLOYED, account: ACCT_TOPSTEP_2, existingOnMffu: [] });
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     vi.mocked(db.insert).mockImplementation((_table: unknown) => ({
       values: vi.fn((v: Record<string, unknown>) => {
         if (v.action) return Promise.resolve();
         return { returning: vi.fn().mockResolvedValue([topstep1Row]) };
       }),
-    } as ReturnType<typeof db.insert>));
+    } as unknown as ReturnType<typeof db.insert>));
 
     vi.mocked(broadcastSSE as ReturnType<typeof vi.fn>).mockClear();
 
@@ -507,13 +497,12 @@ describe("strategy-assignment-service (real-service)", () => {
     const archivedRow = { ...newRow, status: "archived" };
 
     mockSelectForAssign({ strategy: STRAT_DEPLOYED, account: ACCT_MFFU_OPERATOR });
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     vi.mocked(db.insert).mockImplementation((_table: unknown) => ({
       values: vi.fn((v: Record<string, unknown>) => {
         if (v.action) return Promise.resolve();
         return { returning: vi.fn().mockResolvedValue([newRow]) };
       }),
-    } as ReturnType<typeof db.insert>));
+    } as unknown as ReturnType<typeof db.insert>));
     vi.mocked(broadcastSSE as ReturnType<typeof vi.fn>).mockClear();
 
     await assignStrategyToAccount("acct-mffu-operator", "strat-deployed-1");
@@ -523,10 +512,9 @@ describe("strategy-assignment-service (real-service)", () => {
     // Release
     mockSelectSequence([[newRow]]);
     mockUpdateReturning(releasedRow);
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     vi.mocked(db.insert).mockImplementation((_table: unknown) => ({
       values: vi.fn((v: Record<string, unknown>) => { if (v.action) return Promise.resolve(); return { returning: vi.fn().mockResolvedValue([releasedRow]) }; }),
-    } as ReturnType<typeof db.insert>));
+    } as unknown as ReturnType<typeof db.insert>));
 
     await releaseStrategyToFamily(77, true, "Operator");
     const allSSEAfterRelease = (vi.mocked(broadcastSSE as ReturnType<typeof vi.fn>).mock.calls as Array<[string, unknown]>).map(([e]) => e);
@@ -535,10 +523,9 @@ describe("strategy-assignment-service (real-service)", () => {
     // Unassign
     mockSelectSequence([[newRow]]);
     mockUpdateReturning(archivedRow);
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     vi.mocked(db.insert).mockImplementation((_table: unknown) => ({
       values: vi.fn((v: Record<string, unknown>) => { if (v.action) return Promise.resolve(); return { returning: vi.fn().mockResolvedValue([archivedRow]) }; }),
-    } as ReturnType<typeof db.insert>));
+    } as unknown as ReturnType<typeof db.insert>));
 
     await unassignStrategy(77);
     const allSSEAfterUnassign = (vi.mocked(broadcastSSE as ReturnType<typeof vi.fn>).mock.calls as Array<[string, unknown]>).map(([e]) => e);
@@ -560,13 +547,12 @@ describe("strategy-assignment: new real-service coverage (4 tests)", () => {
   it("13. Topstep multi-account: notifyCritical NOT called for Topstep same-strategy", async () => {
     const newRow = makeAssignmentRow("acct-topstep-2", "strat-deployed-1");
     mockSelectForAssign({ strategy: STRAT_DEPLOYED, account: ACCT_TOPSTEP_2, existingOnMffu: [] });
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     vi.mocked(db.insert).mockImplementation((_table: unknown) => ({
       values: vi.fn((v: Record<string, unknown>) => {
         if (v.action) return Promise.resolve();
         return { returning: vi.fn().mockResolvedValue([newRow]) };
       }),
-    } as ReturnType<typeof db.insert>));
+    } as unknown as ReturnType<typeof db.insert>));
 
     await assignStrategyToAccount("acct-topstep-2", "strat-deployed-1", { familyMemberLabel: "Topstep2" });
 
@@ -578,13 +564,12 @@ describe("strategy-assignment: new real-service coverage (4 tests)", () => {
     const existingRow = makeAssignmentRow("acct-mffu-operator", "strat-deployed-1", { id: 99 });
     mockSelectForAssign({ strategy: STRAT_DEPLOYED, account: ACCT_MFFU_OPERATOR, existingAssignment: [existingRow] });
     const insertCalls: unknown[] = [];
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     vi.mocked(db.insert).mockImplementation((_table: unknown) => ({
       values: vi.fn((v: Record<string, unknown>) => {
         insertCalls.push(v);
         return Promise.resolve();
       }),
-    } as ReturnType<typeof db.insert>));
+    } as unknown as ReturnType<typeof db.insert>));
 
     const result = await assignStrategyToAccount("acct-mffu-operator", "strat-deployed-1");
 
@@ -596,7 +581,6 @@ describe("strategy-assignment: new real-service coverage (4 tests)", () => {
 
   // Test 15: Archived strategy rejection
   it("15. archived strategy rejection: RETIRED strategy throws", async () => {
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     mockSelectForAssign({ strategy: STRAT_RETIRED, account: ACCT_MFFU_OPERATOR });
 
     await expect(
@@ -605,7 +589,6 @@ describe("strategy-assignment: new real-service coverage (4 tests)", () => {
   });
 
   it("15b. archived strategy rejection: GRAVEYARD strategy throws", async () => {
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     mockSelectForAssign({ strategy: STRAT_GRAVEYARD, account: ACCT_MFFU_OPERATOR });
 
     await expect(
@@ -637,21 +620,18 @@ describe("broker-router: real-service coverage (3 tests)", () => {
 
   // Test 17: account.enabled=false returns account_not_found
   it("17. disabled account returns account_not_found reason (security mask)", async () => {
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
-    (vi.mocked(db.select) as any).mockReturnValue({
+    vi.mocked(db.select).mockReturnValue({
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({
           limit: vi.fn().mockResolvedValue([ACCT_DISABLED]),
         }),
       }),
-    } as ReturnType<typeof db.select>);
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    } as unknown as ReturnType<typeof db.select>);
     vi.mocked(db.insert).mockReturnValue({
       values: vi.fn().mockResolvedValue([]),
-    } as ReturnType<typeof db.insert>);
+    } as unknown as ReturnType<typeof db.insert>);
 
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
-    const result = await routeOrder("acct-disabled", { ticker: "MES", action: "buy", orderType: "market" });
+    const result = await routeOrder("acct-disabled", { ticker: "MES", action: "enter_long" as const, orderType: "market" });
 
     expect(result.success).toBe(false);
     expect(result.reason).toBe("account_not_found");
@@ -660,27 +640,23 @@ describe("broker-router: real-service coverage (3 tests)", () => {
   // Test 18: concurrent routeOrder calls both write audit rows
   it("18. concurrent routeOrder calls both write audit rows (no corruption)", async () => {
     const auditRows: unknown[] = [];
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
-    (vi.mocked(db.select) as any).mockReturnValue({
+    vi.mocked(db.select).mockReturnValue({
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({
           limit: vi.fn().mockResolvedValue([ACCT_MFFU_OPERATOR]),
         }),
       }),
-    } as ReturnType<typeof db.select>);
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    } as unknown as ReturnType<typeof db.select>);
     vi.mocked(db.insert).mockImplementation((_table: unknown) => ({
       values: vi.fn((v: unknown) => {
         auditRows.push(v);
         return Promise.resolve([]);
       }),
-    } as ReturnType<typeof db.insert>));
-    const signal = { ticker: "MES", action: "buy" as const, orderType: "market" as const };
+    } as unknown as ReturnType<typeof db.insert>));
+    const signal = { ticker: "MES", action: "enter_long" as const, orderType: "market" as const };
 
     await Promise.all([
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
       routeOrder("acct-mffu-operator", signal),
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
       routeOrder("acct-mffu-operator", signal),
     ]);
 
@@ -689,22 +665,19 @@ describe("broker-router: real-service coverage (3 tests)", () => {
 
   // Test 19: DB failure path returns internal_error + audit row
   it("19. DB select failure returns internal_error reason and audit row still written", async () => {
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
-    (vi.mocked(db.select) as any).mockReturnValue({
+    vi.mocked(db.select).mockReturnValue({
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({
           limit: vi.fn().mockRejectedValue(new Error("DB connection failure")),
         }),
       }),
-    } as ReturnType<typeof db.select>);
+    } as unknown as ReturnType<typeof db.select>);
     const auditRows: unknown[] = [];
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     vi.mocked(db.insert).mockImplementation((_table: unknown) => ({
       values: vi.fn((v: unknown) => { auditRows.push(v); return Promise.resolve([]); }),
-    } as ReturnType<typeof db.insert>));
+    } as unknown as ReturnType<typeof db.insert>));
 
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
-    const result = await routeOrder("acct-mffu-operator", { ticker: "MES", action: "buy", orderType: "market" });
+    const result = await routeOrder("acct-mffu-operator", { ticker: "MES", action: "enter_long" as const, orderType: "market" });
 
     expect(result.success).toBe(false);
     expect(result.reason).toBe("internal_error");
@@ -726,8 +699,7 @@ describe("pine-export-recipient-service: real-service coverage (3 tests)", () =>
   // Test 21: qtyOverride passes qty to compileDualPineExport
   it("21. qtyOverride=7 passes qty=7 to compileDualPineExport", async () => {
     // Strategy lookup
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
-    (vi.mocked(db.select) as any).mockReturnValue({
+    vi.mocked(db.select).mockReturnValue({
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({
           then: (resolve: (v: unknown) => void) => Promise.resolve([
@@ -738,17 +710,15 @@ describe("pine-export-recipient-service: real-service coverage (3 tests)", () =>
           ]),
         }),
       }),
-    } as ReturnType<typeof db.select>);
+    } as unknown as ReturnType<typeof db.select>);
     // broker account lookup via execute()
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     vi.mocked(db.execute).mockResolvedValue({
       rows: [{ firm_id: "mffu", broker_type: "traderspost", account_id_external: "EXT-123" }],
-    } as unknown as ReturnType<typeof db.execute>);
+    } as unknown as Awaited<ReturnType<typeof db.execute>>);
     const auditRows: unknown[] = [];
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     vi.mocked(db.insert).mockImplementation((_table: unknown) => ({
       values: vi.fn((v: unknown) => { auditRows.push(v); return Promise.resolve(); }),
-    } as ReturnType<typeof db.insert>));
+    } as unknown as ReturnType<typeof db.insert>));
 
     const result = await generateRecipientExport({
       strategyId: "strat-for-export",
@@ -764,8 +734,7 @@ describe("pine-export-recipient-service: real-service coverage (3 tests)", () =>
 
   // Test 22: audit_log row written on export
   it("22. audit_log row with pine-export action written on generateRecipientExport", async () => {
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
-    (vi.mocked(db.select) as any).mockReturnValue({
+    vi.mocked(db.select).mockReturnValue({
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({
           then: (resolve: (v: unknown) => void) => Promise.resolve([
@@ -776,16 +745,14 @@ describe("pine-export-recipient-service: real-service coverage (3 tests)", () =>
           ]),
         }),
       }),
-    } as ReturnType<typeof db.select>);
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    } as unknown as ReturnType<typeof db.select>);
     vi.mocked(db.execute).mockResolvedValue({
       rows: [{ firm_id: "mffu", broker_type: "traderspost", account_id_external: "EXT-123" }],
-    } as unknown as ReturnType<typeof db.execute>);
+    } as unknown as Awaited<ReturnType<typeof db.execute>>);
     const auditRows: unknown[] = [];
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     vi.mocked(db.insert).mockImplementation((_table: unknown) => ({
       values: vi.fn((v: unknown) => { auditRows.push(v); return Promise.resolve(); }),
-    } as ReturnType<typeof db.insert>));
+    } as unknown as ReturnType<typeof db.insert>));
 
     await generateRecipientExport({
       strategyId: "strat-for-export",
@@ -810,7 +777,6 @@ describe("Pass 1 Track 1: mini guard contract tests (2 tests)", () => {
 
   // Test 23: TESTING strategy rejection
   it("23. TESTING strategy rejected — only DEPLOYED strategies can be assigned", async () => {
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     mockSelectForAssign({ strategy: STRAT_TESTING, account: ACCT_MFFU_OPERATOR });
 
     await expect(
@@ -821,15 +787,14 @@ describe("Pass 1 Track 1: mini guard contract tests (2 tests)", () => {
   // Test 24: Missing strategy throws
   it("24. missing strategy throws not-found error", async () => {
     // Strategy lookup returns empty
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
-    (vi.mocked(db.select) as any).mockReturnValue({
+    vi.mocked(db.select).mockReturnValue({
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({
           then: (resolve: (v: unknown) => void) => Promise.resolve([]).then(resolve),
           limit: vi.fn().mockResolvedValue([]),
         }),
       }),
-    } as ReturnType<typeof db.select>);
+    } as unknown as ReturnType<typeof db.select>);
 
     await expect(
       assignStrategyToAccount("acct-mffu-operator", "strat-nonexistent")
@@ -852,13 +817,12 @@ describe("cross-cutting real-service tests (4 tests)", () => {
       { accountId: "acct-mffu-alice", familyMemberLabel: "Alice", firmId: "mffu" },
     ];
     mockSelectForAssign({ strategy: STRAT_DEPLOYED, account: ACCT_MFFU_BOB, existingOnMffu });
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     vi.mocked(db.insert).mockImplementation((_table: unknown) => ({
       values: vi.fn((v: Record<string, unknown>) => {
         if (v.action) return Promise.resolve();
         return { returning: vi.fn().mockResolvedValue([newRow]) };
       }),
-    } as ReturnType<typeof db.insert>));
+    } as unknown as ReturnType<typeof db.insert>));
 
     await assignStrategyToAccount("acct-mffu-bob", "strat-deployed-1", { familyMemberLabel: "Bob" });
 
@@ -873,13 +837,12 @@ describe("cross-cutting real-service tests (4 tests)", () => {
     __resetEnabledFirmsCache();
     const mffuRow = makeAssignmentRow("acct-mffu-operator", "strat-deployed-1");
     mockSelectForAssign({ strategy: STRAT_DEPLOYED, account: ACCT_MFFU_OPERATOR, instanceConfig: [{ enabledFirms: ["mffu"] }] });
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     vi.mocked(db.insert).mockImplementation((_table: unknown) => ({
       values: vi.fn((v: Record<string, unknown>) => {
         if (v.action) return Promise.resolve();
         return { returning: vi.fn().mockResolvedValue([mffuRow]) };
       }),
-    } as ReturnType<typeof db.insert>));
+    } as unknown as ReturnType<typeof db.insert>));
 
     await expect(
       assignStrategyToAccount("acct-mffu-operator", "strat-deployed-1")
@@ -910,14 +873,13 @@ describe("cross-cutting real-service tests (4 tests)", () => {
     ];
     mockSelectForAssign({ strategy: STRAT_DEPLOYED, account: ACCT_MFFU_BOB, existingOnMffu });
     const auditRows: unknown[] = [];
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     vi.mocked(db.insert).mockImplementation((_table: unknown) => ({
       values: vi.fn((v: Record<string, unknown>) => {
         auditRows.push(v);
         if (v.action) return Promise.resolve();
         return { returning: vi.fn().mockResolvedValue([newRow]) };
       }),
-    } as ReturnType<typeof db.insert>));
+    } as unknown as ReturnType<typeof db.insert>));
 
     await assignStrategyToAccount("acct-mffu-bob", "strat-deployed-1", { familyMemberLabel: "Bob" });
 
@@ -932,13 +894,11 @@ describe("cross-cutting real-service tests (4 tests)", () => {
   // Test 29: broker-router pipeline_paused when pipeline is paused
   it("29. broker-router returns pipeline_paused reason when pipeline is paused", async () => {
     vi.mocked(isPipelineActive).mockResolvedValue(false);
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
     vi.mocked(db.insert).mockReturnValue({
       values: vi.fn().mockResolvedValue([]),
-    } as ReturnType<typeof db.insert>);
+    } as unknown as ReturnType<typeof db.insert>);
 
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
-    const result = await routeOrder("acct-mffu-operator", { ticker: "MES", action: "buy", orderType: "market" });
+    const result = await routeOrder("acct-mffu-operator", { ticker: "MES", action: "enter_long" as const, orderType: "market" });
 
     expect(result.success).toBe(false);
     expect(result.reason).toBe("pipeline_paused");

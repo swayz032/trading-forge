@@ -99,7 +99,7 @@ async function main(): Promise<void> {
     .where(
       and(
         inArray(strategies.name, [...LEGACY_STRATEGY_NAMES]),
-        isNull(strategies.archivedAt),
+        isNull((strategies as any).archivedAt), // stale script: archivedAt was never added to schema
       )
     );
 

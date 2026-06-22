@@ -23,7 +23,6 @@ import {
   WAVE23H_MARKER_ACTIONS,
   type HeadstartDeps,
   type FinalStats,
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
 } from "../../../scripts/headstart-populate-bucket.js";
 
 // ─── Deps stub factory ────────────────────────────────────────────────────────

@@ -21,7 +21,7 @@ async function main() {
       source: r.source as any,
       symbol: r.symbol as "MES" | "MNQ" | "MCL",
     });
-    await sql`UPDATE strategies SET config = ${sql.json(result.config)} WHERE id = ${r.id}`;
+    await sql`UPDATE strategies SET config = ${sql.json(result.config as unknown as import("postgres").JSONValue)} WHERE id = ${r.id}`;
     console.log(`  ${r.name}: ${result.appliedRules.length} rules applied`);
     for (const rule of result.appliedRules) console.log(`    - ${rule}`);
     if (result.warnings.length) for (const w of result.warnings) console.log(`    [warn] ${w}`);

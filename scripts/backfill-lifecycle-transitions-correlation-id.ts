@@ -40,13 +40,13 @@ const WINDOW_SECONDS = 10;
 // so each backfill invocation is queryable as its own entity.
 const RUN_ID = randomUUID();
 
-interface BackfillCandidate {
+interface BackfillCandidate extends Record<string, unknown> {
   id: string;
   strategy_id: string;
   created_at: Date;
 }
 
-interface AuditMatch {
+interface AuditMatch extends Record<string, unknown> {
   correlation_id: string;
 }
 
@@ -72,7 +72,7 @@ async function backfillBatch(candidates: BackfillCandidate[]): Promise<number> {
       LIMIT 1
     `);
 
-    const match = matches.rows?.[0] ?? (matches as unknown as AuditMatch[])[0];
+    const match = [...matches][0];
     if (!match?.correlation_id) continue;
 
     await db.execute(sql`
@@ -98,7 +98,7 @@ async function main(): Promise<void> {
     WHERE correlation_id IS NULL
   `);
   const totalNullRows =
-    parseInt((totalResult.rows?.[0] ?? (totalResult as unknown as { count: string }[])[0])?.count ?? "0", 10);
+    parseInt(([...totalResult][0])?.count ?? "0", 10);
 
   console.log(`[backfill] Rows with NULL correlation_id: ${totalNullRows}`);
 
@@ -136,9 +136,7 @@ async function main(): Promise<void> {
       OFFSET ${offset}
     `);
 
-    const candidates: BackfillCandidate[] =
-      (batchResult.rows as BackfillCandidate[]) ??
-      (batchResult as unknown as BackfillCandidate[]);
+    const candidates: BackfillCandidate[] = [...batchResult];
 
     if (!candidates || candidates.length === 0) break;
 
@@ -168,7 +166,7 @@ async function main(): Promise<void> {
     WHERE correlation_id IS NULL
   `);
   const remainingNull =
-    parseInt((remainingResult.rows?.[0] ?? (remainingResult as unknown as { count: string }[])[0])?.count ?? "0", 10);
+    parseInt(([...remainingResult][0])?.count ?? "0", 10);
 
   console.log(`[backfill] Complete.`);
   console.log(`  Rows backfilled:  ${totalBackfilled}`);

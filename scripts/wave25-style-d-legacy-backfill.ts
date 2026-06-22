@@ -81,7 +81,7 @@ async function main(): Promise<void> {
         eq(paperPositions.currentExitStyle, "D"),
         lt(paperPositions.entryTime, new Date(STYLE_D_DEPRECATION_DATE)),
       ),
-    ) as LegacyPosition[];
+    ) as unknown as LegacyPosition[];
 
   if (rows.length === 0) {
     console.log("No legacy Style D positions found. Nothing to migrate.");

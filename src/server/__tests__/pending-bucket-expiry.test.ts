@@ -133,7 +133,7 @@ async function runExpiryLogic(staleMentions: StaleMention[]): Promise<void> {
 
   const { db } = await import("../db/index.js");
   const { broadcastSSE } = await import("../routes/sse.js");
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — pendingBucketExpiredMentionsTotal not yet in metrics-registry; test-only placeholder (W0.3 2026-06-22)
   const { pendingBucketExpiredMentionsTotal } = await import("../lib/metrics-registry.js");
 
   if (staleMentions.length === 0) return;

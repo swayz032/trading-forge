@@ -315,7 +315,7 @@ describe("Finding #10 — Sizing returns 0 → NO-TRADE (matches backtest skip b
     let riskGatePassed = true;
     let baseContracts = 0;
 
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — intentional const comparison; test-only: verifies gate logic against literal 0 (W0.3 2026-06-22)
     if (sizingFinalContracts === 0) {
       riskGatePassed = false;
     } else {

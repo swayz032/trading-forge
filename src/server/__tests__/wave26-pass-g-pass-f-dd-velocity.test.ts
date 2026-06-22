@@ -47,7 +47,7 @@ import {
   __injectEquitySamplesForTests,
   type DDVelocityCheckResult,
 } from "../services/dd-velocity-gate.js";
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+// @ts-ignore — module resolves as ./pipeline-control-service.js relative to __tests__; TS cannot find it but vitest resolves via moduleNameMapper at runtime (W0.3 2026-06-22)
 import { setMode, getMode } from "./pipeline-control-service.js";
 import { ddVelocityAutopauseTotal } from "../lib/metrics-registry.js";
 

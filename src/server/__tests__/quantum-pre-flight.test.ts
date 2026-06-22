@@ -62,7 +62,7 @@ async function buildApp(): Promise<express.Express> {
   const app = express();
   app.use(express.json());
   app.use((req, _res, next) => {
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — test-only: pino BaseLogger requires level/fatal/trace/silent/msgPrefix; mock only needs error/info/warn/debug (W0.3 2026-06-22)
     (req as express.Request & { log: unknown; id: string }).log = {
       error: vi.fn(),
       info: vi.fn(),

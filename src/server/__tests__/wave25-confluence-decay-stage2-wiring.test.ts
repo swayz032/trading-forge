@@ -132,7 +132,7 @@ describe("Stage 2 decay wiring", () => {
   describe("Anti-double-decay: NO_DECAY_FACTORS have decay_confidence=null", () => {
     it("liquidity_target_clear has decay_confidence=null (not double-decayed)", () => {
       const result = evaluateWeightedConfluence(makeStrategy(), makeContext({
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — liquidityNearestAbove fixture object may not satisfy the full LiquidityLevel union type; partial test object is intentional (W0.3 2026-06-22)
         liquidityNearestAbove: [{
           level_type: "pdh",
           price: 4220,

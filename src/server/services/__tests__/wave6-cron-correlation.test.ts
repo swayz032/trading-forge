@@ -14,7 +14,7 @@
  *         cronCorrelationId is properly threaded.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // ── Shared mocks ──────────────────────────────────────────────────────────────
 
@@ -110,7 +110,6 @@ describe("Wave 6 cron correlation_id — bitwarden-session-refresh-service", () 
     process.env["BW_SESSION"] = "eyJ0ZXN0IjoieWVzIn0.test.sig";
   });
 
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
   afterEach(() => {
     delete process.env["BW_SESSION"];
     delete process.env["BW_VAULT_PASSPHRASE"];

@@ -376,7 +376,7 @@ describe("Wave 29 D.1 — WAVE29_EVENTS SSE event name constants", () => {
 
   it("all WAVE29_EVENTS values follow {subsystem}:{event_name} pattern", () => {
     for (const [key, value] of Object.entries(WAVE29_EVENTS)) {
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — vitest toMatch() only accepts 1 arg; 2nd string arg (custom error message) is not in the type signature (W0.3 2026-06-22)
       expect(value).toMatch(/^[a-z0-9_]+:[a-z0-9_]+$/, `${key} = "${value}" must match {subsystem}:{event_name}`);
     }
   });

@@ -238,28 +238,27 @@ export async function run(
   // ── APPLY: execute wipe inside a single transaction ────────────────────────
   console.log("\nExecuting wipe transaction...");
 
-  await sql.begin(async (tx) => {
+  await sql.begin(async (txRaw) => {
+    // postgres.js TransactionSql strips the call signature via Omit<Sql, ...>.
+    // Cast once at the top of the transaction body so all tagged-template calls compile.
+    const tx = txRaw as unknown as typeof sql;
+
     // Delete in FK-respecting order
 
     // 1+2. TRUNCATE mentions + buckets together (PostgreSQL requires combined TRUNCATE
     //      because strategy_pending_mentions has an FK to strategy_pending_buckets).
-    // @ts-ignore — W0.3 postgres.js TransactionSql template literal; tx IS callable
     await tx`TRUNCATE strategy_pending_mentions, strategy_pending_buckets`;
 
     // 3. strategy_export_artifacts
     // Schema-truthful: strategy_export_artifacts joins via export_id → strategy_exports.
     // Delete artifacts first, THEN the parent strategy_exports rows (FK order).
-    // @ts-ignore — W0.3 postgres.js TransactionSql template literal; tx IS callable
     await tx`DELETE FROM strategy_export_artifacts WHERE export_id IN (SELECT id FROM strategy_exports WHERE strategy_id = ANY(${strategyIds}::uuid[]))`;
-    // @ts-ignore — W0.3 postgres.js TransactionSql template literal; tx IS callable
     await tx`DELETE FROM strategy_exports WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
 
     // 4. account_strategy_assignments
-    // @ts-ignore — W0.3 postgres.js TransactionSql template literal; tx IS callable
     await tx`DELETE FROM account_strategy_assignments WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
 
     // 5. lifecycle_transitions
-    // @ts-ignore — W0.3 postgres.js TransactionSql template literal; tx IS callable
     await tx`DELETE FROM lifecycle_transitions WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
 
     // 6a. Clean NO_ACTION (RESTRICT) backtest-dependent tables BEFORE backtests deletion.
@@ -269,51 +268,36 @@ export async function run(
     //     Since all wiped strategies are non-PILOT/non-DEPLOYED and we delete all
     //     associated backtests, we can scope by backtest_id IN (SELECT id FROM backtests WHERE strategy_id...).
     const backtestIdSubquery = sql`SELECT id FROM backtests WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
-    // @ts-ignore — W0.3 postgres.js TransactionSql template literal; tx IS callable
-    await tx`DELETE FROM backtest_provenance WHERE backtest_id IN (${backtestIdSubquery})`;
-    // @ts-ignore — W0.3 postgres.js TransactionSql template literal; tx IS callable
-    await tx`DELETE FROM adversarial_stress_runs WHERE backtest_id IN (${backtestIdSubquery})`;
-    // @ts-ignore — W0.3 postgres.js TransactionSql template literal; tx IS callable
-    await tx`DELETE FROM cloud_qmc_runs WHERE backtest_id IN (${backtestIdSubquery})`;
-    // @ts-ignore — W0.3 postgres.js TransactionSql template literal; tx IS callable
-    await tx`DELETE FROM frankenstein_test_runs WHERE backtest_id IN (${backtestIdSubquery})`;
-    // @ts-ignore — W0.3 postgres.js TransactionSql template literal; tx IS callable
-    await tx`DELETE FROM strategy_signal_vectors WHERE backtest_id IN (${backtestIdSubquery})`;
-    // @ts-ignore — W0.3 postgres.js TransactionSql template literal; tx IS callable
-    await tx`DELETE FROM shadow_rerun_findings WHERE backtest_id IN (${backtestIdSubquery})`;
+await tx`DELETE FROM backtest_provenance WHERE backtest_id IN (${backtestIdSubquery})`;
+await tx`DELETE FROM adversarial_stress_runs WHERE backtest_id IN (${backtestIdSubquery})`;
+await tx`DELETE FROM cloud_qmc_runs WHERE backtest_id IN (${backtestIdSubquery})`;
+await tx`DELETE FROM frankenstein_test_runs WHERE backtest_id IN (${backtestIdSubquery})`;
+await tx`DELETE FROM strategy_signal_vectors WHERE backtest_id IN (${backtestIdSubquery})`;
+await tx`DELETE FROM shadow_rerun_findings WHERE backtest_id IN (${backtestIdSubquery})`;
 
     // 6b. walk_forward_windows (CASCADE on FK, but explicit for clarity + count parity)
-    // @ts-ignore — W0.3 postgres.js TransactionSql template literal; tx IS callable
-    await tx`DELETE FROM walk_forward_windows WHERE backtest_id IN (SELECT id FROM backtests WHERE strategy_id = ANY(${strategyIds}::uuid[]))`;
+await tx`DELETE FROM walk_forward_windows WHERE backtest_id IN (SELECT id FROM backtests WHERE strategy_id = ANY(${strategyIds}::uuid[]))`;
 
     // 7. backtests (now safe — CASCADE handles backtest_trades, monte_carlo_runs, etc.)
-    // @ts-ignore — W0.3 postgres.js TransactionSql template literal; tx IS callable
-    await tx`DELETE FROM backtests WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
+await tx`DELETE FROM backtests WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
 
     // 7b. Clean NO_ACTION strategies-dependent tables BEFORE strategies deletion.
     //     Verified 2026-05-20: 4 additional tables with confdeltype='a' that don't
     //     overlap with the backtest cleanup above (strategy_lockouts, strategy_firm_eligibility,
     //     strategy_dsl_features, tradingview_markers). strategy_pending_buckets already TRUNCATEd.
-    // @ts-ignore — W0.3 postgres.js TransactionSql template literal; tx IS callable
-    await tx`DELETE FROM strategy_lockouts WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
-    // @ts-ignore — W0.3 postgres.js TransactionSql template literal; tx IS callable
-    await tx`DELETE FROM strategy_firm_eligibility WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
-    // @ts-ignore — W0.3 postgres.js TransactionSql template literal; tx IS callable
-    await tx`DELETE FROM strategy_dsl_features WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
-    // @ts-ignore — W0.3 postgres.js TransactionSql template literal; tx IS callable
-    await tx`DELETE FROM tradingview_markers WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
+await tx`DELETE FROM strategy_lockouts WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
+await tx`DELETE FROM strategy_firm_eligibility WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
+await tx`DELETE FROM strategy_dsl_features WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
+await tx`DELETE FROM tradingview_markers WHERE strategy_id = ANY(${strategyIds}::uuid[])`;
 
     // 8. bias_state rows referencing wiped strategies
-    // @ts-ignore — W0.3 postgres.js TransactionSql template literal; tx IS callable
-    await tx`DELETE FROM bias_state WHERE active_strategy_id = ANY(${strategyIds}::uuid[])`;
+await tx`DELETE FROM bias_state WHERE active_strategy_id = ANY(${strategyIds}::uuid[])`;
 
     // 9. strategies (root table — last)
-    // @ts-ignore — W0.3 postgres.js TransactionSql template literal; tx IS callable
-    await tx`DELETE FROM strategies WHERE id = ANY(${strategyIds}::uuid[])`;
+await tx`DELETE FROM strategies WHERE id = ANY(${strategyIds}::uuid[])`;
 
     // 10. Final audit INSERT (audit_log is append-only — no UPDATE/DELETE)
-    // @ts-ignore — W0.3 postgres.js TransactionSql template literal; tx IS callable
-    await tx`
+await tx`
       INSERT INTO audit_log (action, entity_type, entity_id, result, status, decision_authority)
       VALUES (
         'bulk_strategy_wipe.completed',

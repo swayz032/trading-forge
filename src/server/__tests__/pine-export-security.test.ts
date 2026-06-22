@@ -21,7 +21,7 @@ describe("F-1: Artifact download ownership check", () => {
     const artifactId = "cccccccc-cccc-cccc-cccc-cccccccccccc";
 
     // The check: artifact.exportId must equal the :id URL param
-    // @ts-ignore — W0.3 mock cast; vitest mock object does not structurally match Drizzle builder return type
+    // @ts-ignore — intentional literal comparison of const strings to verify ownership logic (W0.3 2026-06-22)
     const shouldReject = artifactExportId !== exportId;
     expect(shouldReject).toBe(true); // ownership mismatch → must reject
 
