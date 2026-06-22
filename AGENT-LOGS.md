@@ -4,6 +4,69 @@
 
 ---
 
+### Session Log — 2026-06-22 Wave A Deep-Scan Bug-Fix MASTER CLOSE (6 subagents, 18 HIGH + 25 MED closed, pushed to main)
+
+**Mission:** Operator asked "deep scan for all bugs use claude code agents" then "can you fix all bugs with skills and claude code agent" then "push everything to main when done". Multi-pass parallel-subagent deep scan (8 agents read-only) followed by Wave A parallel fix dispatch (6 agents code+tests), then merge-to-main and push.
+
+**Scan phase — 8 read-only agents:**
+- backtest-core, paper-parity, observability-reliability, trading-forge-architect, accuracy-validator, quantum-challenger, n8n-orchestration, critic-optimizer. Reports synthesized into a single master finding list: 18 HIGH + ~25 MED + ~10 LOW. Notable surfaced items:
+  - Auto-promotion cron silently bypassed ALL Wave 27.5 hard gates (B14 ci_high, WFE, parameter-drift) — only the manual `/api/lifecycle/promote` route invoked them.
+  - `mc_confidence.py` BCa bootstrap used `replace=False` (systematically narrowed CIs — B14 was under-blocking).
+  - `walk_forward.py` PBO + DSR exceptions failed OPEN; CPCV failed paths counted in PBO denominator.
+  - `monte_carlo.py` no-firms B14 fallback silently aliased to terminal-negative `probability_of_ruin` (the 2026-06-22 firm-breach fix didn't bite when MC had no `firms` configured).
+  - `quantum_rl_agent.py:1365-1379` `_build_vqc_policy_ibm` hardcoded `opt_in_cloud=True` inside the function constructor — `QUANTUM_RL_IBM_CLOUD_OPT_IN` env var was read at the outer caller but never threaded in.
+  - `system-readiness.generated.json` actually showed `overall: blocked` with 51 blockers despite CLAUDE.md's "GREEN at master close" claims.
+  - `.env.example` was 0 bytes; ~150 env vars undocumented.
+  - `python-runner.ts:2` violated the helper-logger import convention.
+  - Registry was missing 26 scheduler jobs (carry-forward had been understating as "2").
+  - `shadow-evidence-analyzer.ts` read `verdict` but stale/missing rows write `verdict: null` (string lives on `availability`) — could prematurely fire `ACTIVATE_PASS_C`.
+
+**Fix wave — 6 parallel subagents (Wave A):**
+
+Each agent owned a non-overlapping file scope (per the dispatching-parallel-agents skill). All agents returned GREEN; total ~207 new tests across 25 new test files; zero existing-test regressions vs pre-Wave-A baselines.
+
+- **paper-parity** (8 new test files, 46 tests): Wired B14/WFE/parameter-drift gates into `lifecycle-service.ts:checkAutoPromotions` TESTING→PAPER cron loop (Finding #1 — highest single risk in the report); per-tick `tickCorrelationId = correlationId ?? randomUUID()` threaded into every gate audit row; `Math.max(1, x)` governor zero replaced with `signal.skipped_governor_size_zero` rejection; `paper-execution-service.ts:openPosition` generates `randomUUID()` when context null; pipeline-pause writes `paper.entry_blocked_pipeline_paused` audit; `paperTradesCounter` wired on force_close + DLL-halt + time-stop outcomes; `strategyPromotions` counter wired on 11 gate-block paths; `broker-router.ts` uses `ENABLED_FIRMS_FALLBACK` on `getEnabledFirms()` exception (was bypassing the filter); `shadow-signal-divergence-checker.ts` compound-fault counting fixed.
+
+- **backtest-core** (5 new test files, 41 tests): `mc_confidence.py` BCa `replace=True` (point_estimate still on full sample, only interval is subsampled); `walk_forward.py` PBO exception now fails CLOSED (`pbo_pass=False, pbo_overall=1.0`, audit `walk_forward.pbo_computation_failed`); CPCV `n_paths` only increments after path appended (no longer dilutes by failed paths); short folds (`len <= embargo`) skipped entirely; `monte_carlo.py` no-firms branch emits `ruin_unavailable=true, ci_high=None` (B14 now routes to `legacy_ruin_scalar_fallback` so the gap is visible instead of silently passing); dedup inversion fixed; DSR exception emits `dsr_pass=False + dsr_unavailable=true`; `risk_metrics.py` Sharpe std `< 1e-8` returns 0.0.
+
+- **quantum-challenger** (2 new test files, 42 tests = 19 pytest + 23 vitest): `_build_vqc_policy_ibm` requires explicit `opt_in_cloud` param (three-gate AND: OPT_IN + CLOUD_ENABLED + TOKEN); `ClassicalAgent` default `n_actions=2`; `action_map = {0:long, 1:flat}`; `QUANTUM_RL_KILL_SWITCH_THRESHOLD_PCT` and `QUANTUM_RL_DSR_FLOOR` env vars actually read; Windows `quantum-rl-training-runner.ts` uses `taskkill /F /T` to tree-kill grandchildren; per-backtest seed via `sha256(backtestId)` in `quantum-replay-runner.ts`; circuit breaker state persisted to `system_parameters`; new migration `0165_quantum_rl_runs_seed.sql` adds INTEGER `seed` column to `quantum_rl_runs`.
+
+- **observability-reliability** (3 new test files, 27 tests): `scheduler.ts:2412` `hmm-regime-weekly-refit` DST guard converted from `etStr.includes("17")` fragile substring to numeric `etHour` parse; `dead-mans-heartbeat-service.ts` 5 `correlationId: null` sites at 121/440/480/637/679 threaded per-sweep `randomUUID()`; `prop-firm-cookie-refresh-service.ts:266` outer-catch notify-swallow now writes `prop_firm_cookie_refresh.outer_catch_notify_failed` audit + structured log; `cronJobsConcurrent` gauge wired with `.inc()` + `.dec()` in `withRetry`; `scheduler.ts:3400/3459` cron-side corr-null sites threaded.
+
+- **trading-forge-architect** (2 new test files, 5 tests): `python-runner.ts:2` logger import flipped from `../index.js` to `./logger.js`; 3 orphan migrations (0124, 0150, 0151) added to `_journal.json` as idx 166/167/168 with `_comment_0163_gap` documenting intentional skip; `0058_*.down.sql` moved to `migrations/rollbacks/`; `.env.example` regenerated from grep — 282 env vars across 17 categories; 5 `invalid-active-proof-mode` subsystems (shadow_stage, pbo_overfit_gate, frozen_policy_contract, regime_drift_detector, wave29_observability_surface) flipped to `active-runtime`. Readiness delta: ready 33→36, blocked 29→26. The "26 missing scheduler jobs" claim from the scan turned out to be stale — all 26 were already mapped (verified via Python cross-check + new completeness test as a permanent invariant guard).
+
+- **critic-optimizer** (5 new test files, 46 tests): `shadow-evidence-analyzer.ts` now reads `availability` + `verdict` together (was reading only `verdict` for stale/missing rows where it's null on the string-shaped `availability` field — fixes the premature `ACTIVATE_PASS_C` path); `quantum-disagreement.ts:checkPurgeViolation` delegates to canonical `harness-base.ts:checkCpcvPurge` (unified Date-based `<` boundary — equality-to-the-millisecond now triggers a purge violation); `pattern-aggregator-service.ts` `dryRun=true` bypasses the `auto_patch_loop_enabled` kill-switch check (replay grading no longer silently halts when operator halts autonomous loops); `replay-grade-critique.ts` correlationBase deterministic via new `src/server/lib/replay/correlation-base.ts` pure-functional helper (was `new Date().toISOString()`); `confluence-disagreement.ts` fold-level Spearman contract documented in module docstring.
+
+**Pre-commit hook drama (worth pinning):** First commit attempt reported `COMMIT EXIT 0` but the commit silently didn't create a SHA. Root cause: ruff exits 1 on F401/F841 lint failures (unused imports / unused locals) even though it prints to stderr — the hook's `Passed` line was the LAST hook (metric-snapshot-fast), not the FIRST (ruff). Pre-commit's overall exit was non-zero but my chained `echo "COMMIT EXIT $?"` captured the wrong status because the chain itself eats it. Fix: prefixed unused test-fixture locals with `_` (4 sites), added `# ruff: noqa: E402` to test files that mock vectorbt before engine imports, and ran `ruff check --fix` on `monte_carlo.py` to organize the 2 inline-import blocks. After fixes commit `82639b0` landed cleanly.
+
+**Push to main:** User instructed "push everything to main when done". Local `main` was checked out in a sibling worktree at `tf-deep-scan/`, blocking `git checkout main` in this tree. Worked around with refspec push `git push origin hardening/phase-0:main`. First attempt rejected as non-FF — `origin/main` had a divergent commit `01f7f2e phase3(W3.1) extraction recall/coverage gate` from a parallel "Opus 4.8" session. Merged `origin/main` into `hardening/phase-0` (clean ort merge — no conflicts), then pushed:
+- `01f7f2e..d457766 hardening/phase-0 -> main` (merge commit `d457766` includes Wave A + 01f7f2e)
+- `1c07a0b..d457766 hardening/phase-0 -> hardening/phase-0`
+
+**Verification:**
+- `npm run check:production-isolation` — CLEAN, 4 files checked, 0 violations.
+- `npm run check:2026-compliance` — OK, MFFU + Topstep aligned.
+- `npm run system-map:check` — exit 0, driftItems empty.
+- Wave A new tests: ~207 GREEN (46 paper-parity + 41 backtest-core + 42 quantum-challenger + 27 observability + 5 architect + 46 critic-optimizer).
+- Pre-existing test baselines preserved (105 + 148 + 58 + 33 + 215). Zero regressions reported by any agent.
+- Commit SHA on local: `82639b0`; merge commit pushed to origin/main: `d457766`.
+
+**Known-facts updates (added to Known-Facts Pin section):**
+- Pre-commit ruff exit 1 on F401/F841 silently aborts `git commit` even when chained `echo "EXIT $?"` reports 0 — always verify a new SHA with `git log -1` after commit, never trust the chained exit code alone.
+- Parallel-session race manifested again: my commit was racing the Opus-4.8 session's `1c07a0b` commit + their `01f7f2e` push to `origin/main`. The pinned-2026-06-22 "shared HEAD" fact is still load-bearing. Worktree isolation remains the durable fix.
+
+**Carry-forward for next session (Wave B candidates):**
+- 21 additional `invalid-active-proof-mode` subsystems (one-shot Python fix per architect's recommendation). Will move readiness from 36→57 ready.
+- DSR `dsr_pass=False` + `dsr_unavailable=true` are now emitted by `walk_forward.py` but `b14-ci-gate.ts` doesn't read them — TS-side wiring needed to actually block on DSR fail-closed.
+- 14 deprecated scheduler_jobs in the registry no longer exist in `scheduler.ts` — cleanup pass needed.
+- DSR floor audit emit (`quantum_rl.dsr_floor_block`) still missing in `quantum_rl_agent.py` — open xfail test exists.
+- `pboBLocksTotal{regime}` label still hardcoded `"UNKNOWN"` — thread regime from strategy row into PBO gate signature.
+- n8n live audit was blocked by 401 (`TF_N8N_API_KEY` JWT expired again, matching the April 2026 recurrence pattern). Snapshot-based findings stand: SGL has 5 no-retry HTTP nodes; 03:00 cron pile-up; `tf-relay-production` referenced by 7 nodes but absent from backend code; 27 IF v2 nodes pinned to `typeValidation: strict`. Rotate JWT and re-audit.
+- Pre-existing vectorbt-JIT pytest collection hang (mock vectorbt in any new engine test that imports backtester transitively).
+- ~25 MED bugs from the scan were closed in Wave A; ~10 LOW bugs not addressed (Sharpe `Math.min(...x)` spread stack overflow at n≥10k, score-normalization weights-version-id memoization, `backtester.py:222` unused high/low extraction, etc.) — defer to Wave C.
+
+---
+
 ### Session Log — 2026-06-22 Backtest Core — Wave A 8-Fix Statistical Integrity Pass
 
 **Mission:** Apply all 8 HIGH/MED findings from the deep-scan audit of the MC/WF statistical integrity layer. Scope: `mc_confidence.py`, `monte_carlo.py`, `walk_forward.py`, `risk_metrics.py`, and new test files under `src/engine/tests/test_wave_a_*.py`.
