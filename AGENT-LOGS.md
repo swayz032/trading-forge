@@ -9403,6 +9403,35 @@ Also restored Anam.ai persona during this session:
 
 ---
 
+### Session Log — 2026-06-22 claude (compliance_governance institutional-grade audit + rule-freshness + 6 fixes)
+
+**Mission:** Operator: "do we have all the up-to-date 2026 rules? how do we make compliance institutional grade?" → 3-lens read-only audit (institutional-edge-researcher rule-freshness diff + accuracy-validator + paper-parity runtime enforcement) → fix.
+
+**Audit answers:**
+- **Rules NOT fully current** (docs last-reviewed 2026-05-10, 43 days stale). Fresh sources found: Topstep Combine DOES enforce 50% consistency (our code said None — WRONG); MFFU plan ambiguity (Core $1,500 vs Pro $2,000 DD); 3 missing Topstep changes (payout caps cut 2026-04-28, XFA two-path split 2026-02-05, MLL resets to $0 after payout).
+- **Compliance was documented but largely unenforced live:** consistency gate was DEAD CODE (zero callers) + wrong firm; news blackout fail-OPEN on subprocess failure; MFFU collaborative/same-device bans doc-only; broker-router null-firmId skipped compliance + fail-open with no audit.
+
+**Operator-confirmed (2026-06-22):** Topstep DOES enforce 50% consistency (Combine) → both firms have it. MFFU plan = Pro 50K, $2,000 DD is correct.
+
+**Work completed (6 fixes, 2 commits `dd91bc8` + `a87a8bc`, 82 tests):**
+- Rule-truth: Topstep `consistency_rule` None→50pct (firm_config.py + prop_compliance.py + firm-config.ts + docs); `run_prop_compliance` consistency check generalized to apply to Topstep too (was mffu-only); 3 missing Topstep 2026 changes added to docs; both docs Last reviewed→2026-06-22; staleness CI WARN (>30 days) added to verify-2026-rules-compliance.mjs. `check:2026-compliance` exits 0. 17 pytest.
+- Enforcement: consistency-tracker now covers BOTH topstep+mffu; `shouldBlockNewEntry()` WIRED into paper-signal-service.ts entry gate (was dead code); NEW `tier1-event-blackout.ts` in-process FOMC/CPI/NFP fail-CLOSED fallback (blocks Tier-1 windows even when calendar Python subprocess is down); broker-router null-firmId now fail-CLOSED + `compliance_null_firm_blocked` audit + `compliance_gate_failed` audit on subprocess failure (was silent) + truthful 2% comment. 65 vitest.
+
+**Verification:** check:2026-compliance exit 0; 17 pytest + 65 vitest GREEN; all files foreign-token-clean; committed only my 15 files by explicit path on hardening/phase-0 (contains my earlier feature/deep-analysis-pipeline execution+parity commits — no divergence). Pushed.
+
+**Known-facts updates:**
+- BOTH Topstep AND MFFU enforce a 50% single-day consistency rule (eval/pass-request). Topstep code previously had it as None — corrected. The consistency gate now applies to both firms.
+- `check:2026-compliance` only verifies code↔docs, NOT docs↔live-firm-policy — docs can rot silently. Staleness WARN now flags >30-day-old reviews; live re-verification is still a manual/researcher cadence.
+
+**Carry-forward for next session (operator-awareness + scoped follow-ups):**
+- **MLL resets to $0 after every Topstep payout** — documented (topstep doc §11) but NOT enforced: `realizedPeakEquity` doesn't auto-reset post-payout → oversizing risk in first post-payout session. Needs a payout-detection hook. (Operator manual reset until then.)
+- **MFFU collaborative-trading + same-device bans remain doc-only** (firm-config flags exist, no runtime enforcement). Collaborative (same strategy on 2+ MFFU accounts) is detectable at signal time via account_strategy_assignments — build a cross-account guard. Same-device is an onboarding/infra control, not signal-time. Instant-ban risk for family distribution (Phase 1+).
+- **TIER1_EVENTS in tier1-event-blackout.ts is a static TS mirror of economic_calendar.py (through 2027)** — no auto-sync; add a lint asserting parity, update annually.
+- Operator-awareness items flagged in evidence file (not changed): Topstep activation-fee path, MFFU min_trading_days, MFFU 2% rule direct-portal verification, XFA Consistency-Path 40% cap not codified.
+- All this work is on `hardening/phase-0` (shared with the parallel CI-trust session). Branch reconciliation with feature/deep-analysis-pipeline still pending operator/coordination.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### HTF MTF join: ts_event is OPEN time → needs +1 shift or it look-ahead-leaks (pinned 2026-06-22)
