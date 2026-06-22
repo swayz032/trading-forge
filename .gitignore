@@ -46,3 +46,4 @@ tmp/
 CTemp*
 npm-cache-tf/
 *.pid
+*.bak
