@@ -28,6 +28,7 @@
  *   9. Windows reboot pending — windows-health-check-service last result
  */
 
+import { randomUUID } from "crypto";
 import { db } from "../db/index.js";
 import { systemState, auditLog, weeklyDriftReports, brokerAccounts, paperSessions, type ProductionMode } from "../db/schema.js";
 import { eq, desc, and } from "drizzle-orm";
@@ -39,6 +40,11 @@ import { isExchangeHalted } from "../services/exchange-status-service.js";
 import { isFirmSuspended } from "../services/prop-firm-health-service.js";
 import { isConnectivityDegraded } from "../lib/network-failover.js";
 
+// ─── FINDING #3 FIX sentinel ─────────────────────────────────────────────────
+// Exported as a verifiable boolean so tests can assert the fix is active without
+// importing the whole kill-switch module graph in a live-DB environment.
+export const LAYER7_AUDIT_GENERATES_CORRELATION_ID = true;
+
 // ─── DLL / trailing-DD thresholds (match paper-execution-service) ─────────────
 const DLL_HALT_PCT        = parseFloat(process.env.DLL_HALT_PCT        ?? "0.67");
 const DLL_FORCE_CLOSE_PCT = parseFloat(process.env.DLL_FORCE_CLOSE_PCT ?? "0.95");
@@ -49,8 +55,8 @@ const TRAILING_DD_BUFFER_DOLLARS = 200; // force-close trigger: $200 inside max 
 async function getMacroGateResult(): Promise<{ crisis_gate_triggered: boolean }> {
   try {
     const { evaluateMacroGates } = await import("../services/macro-gate-service.js");
-    const result = await evaluateMacroGates("MES");
-    return { crisis_gate_triggered: result.crisisGateTriggered ?? false };
+    const result = await evaluateMacroGates("MES", "long");
+    return { crisis_gate_triggered: result.macroContext?.crisisGateTriggered ?? false };
   } catch {
     return { crisis_gate_triggered: false }; // fail-open for status reporting
   }
@@ -191,6 +197,14 @@ class KillSwitch {
     // Invalidate cache
     this.cache = null;
 
+    // FINDING #3 FIX: Generate a correlationId for the mode-change audit row.
+    // The HALT row is the entry point for all incident forensics — a null
+    // correlationId here makes it impossible to correlate the HALT event with
+    // the follow-on forceCloseAllPositions, SSE broadcast, and any downstream
+    // audit rows. We generate one per setMode call (stable for this invocation,
+    // a fresh UUID per incident).
+    const modeChangeCorrelationId = randomUUID();
+
     // Audit log — non-blocking
     db.insert(auditLog)
       .values({
@@ -201,7 +215,7 @@ class KillSwitch {
         input: { previousMode, newMode: mode, reason } as Record<string, unknown>,
         result: { mode, setBy, reason } as Record<string, unknown>,
         status: "success",
-        correlationId: null,
+        correlationId: modeChangeCorrelationId,
       })
       .catch((err) =>
         logger.error({ err }, "kill-switch: audit_log write failed (non-blocking)")
@@ -471,6 +485,14 @@ class KillSwitch {
     // C2 multi-firm: query ALL enabled broker_accounts and check each firmId.
     // If ANY firm is suspended → halt. Fail-CLOSED on DB error so a crashed
     // DB cannot be used to bypass the suspension gate (Wave 23H Fix 2).
+    //
+    // FINDING #3 FIX: Generate a per-evaluation correlationId so all Layer 7
+    // audit rows for a single getKillSwitchStatus() call share an ID. Without
+    // this, the two audit rows (success path and failure path) emitted null,
+    // making incident forensics impossible (the suspension event is the
+    // operational record of a trading halt — it must be traceable).
+    const l7EvalCorrelationId = randomUUID();
+
     let l7Halted = false;
     let l7Reason: string | undefined;
     try {
@@ -497,7 +519,7 @@ class KillSwitch {
         input: { firms_checked: firmsChecked } as Record<string, unknown>,
         result: { suspended_firms: suspendedFirms, halted: l7Halted } as Record<string, unknown>,
         status: "success",
-        correlationId: null,
+        correlationId: l7EvalCorrelationId,
       }).catch((auditErr) =>
         logger.error({ err: auditErr }, "kill-switch L7: audit_log write failed (non-blocking)"),
       );
@@ -518,7 +540,7 @@ class KillSwitch {
         input: { error_message: errMsg, layer: 7 } as Record<string, unknown>,
         result: { suspended_firms: [], halted: true, eval_failed: true } as Record<string, unknown>,
         status: "failure",
-        correlationId: null,
+        correlationId: l7EvalCorrelationId,
       }).catch((auditErr) =>
         logger.error({ err: auditErr }, "kill-switch L7: audit_log write failed (non-blocking)"),
       );

@@ -34,6 +34,15 @@ export interface WebhookSignal {
 
   /** Trading Forge strategy ID for traceability */
   strategyId?: string;
+
+  /**
+   * ISO-8601 bar timestamp from the originating TradingView alert.
+   * Used to build the deterministic X-Idempotency-Key in the TradersPost client
+   * (FINDING #2 FIX): a retry of the same bar produces the same key so
+   * TradersPost deduplicates server-side and no duplicate live order fires.
+   * Optional — when absent the client falls back to strategyId-ticker-action.
+   */
+  barTimestamp?: string;
 }
 
 // ─── Action mapping ───────────────────────────────────────────────────────────

@@ -11,6 +11,7 @@
  * in plain text outside of debug level.
  */
 
+import { createHash } from "crypto";
 import { logger } from "../../lib/logger.js";
 import type { TradersPostWebhookPayload, TradersPostSubmitResult } from "./types.js";
 
@@ -21,32 +22,71 @@ const TRADERSPOST_WEBHOOK_BASE_URL =
 
 const SUBMIT_TIMEOUT_MS = 10_000; // 10 s — broker webhook must respond promptly
 
+// ─── Deterministic idempotency key ───────────────────────────────────────────
+
+/**
+ * Inputs required to compute a bar-scoped idempotency key.
+ * All five fields identify a unique bar-signal event on a specific account.
+ */
+export interface IdempotencyKeyInputs {
+  accountId: string;
+  strategyId: string;
+  ticker: string;
+  action: string;
+  barTs: string; // ISO-8601 or millis-as-string — must be stable per bar
+}
+
+/**
+ * Build a deterministic, bar-scoped idempotency key.
+ *
+ * FINDING #2 FIX: The old code used `correlationId ?? strategyId-ticker-action`
+ * as the X-Idempotency-Key. Because correlationId was a fresh UUID per HTTP
+ * request, a TradingView retry of the SAME bar+signal generated a different key,
+ * causing TradersPost to fire a second live order (double exposure).
+ *
+ * The key is now SHA-256(accountId|strategyId|ticker|action|barTs) — deterministic
+ * on the bar-event tuple. A retry of the same bar produces the same key; TradersPost
+ * deduplicates on it server-side. The correlationId remains available for tracing
+ * but is NOT used in the idempotency key.
+ */
+export function buildDeterministicIdempotencyKey(inputs: IdempotencyKeyInputs): string {
+  const raw = [inputs.accountId, inputs.strategyId, inputs.ticker, inputs.action, inputs.barTs].join("|");
+  return createHash("sha256").update(raw, "utf8").digest("hex");
+}
+
 // ─── Submission function ─────────────────────────────────────────────────────
 
 /**
  * Submit a webhook order to TradersPost.
  *
  * @param payload       - Complete webhook payload (apiKey must be included).
- * @param correlationId - Optional trace ID propagated from the caller. Used to
- *                        construct the X-Idempotency-Key header so duplicate
- *                        submissions (retries, network blips) are deduplicated
- *                        by TradersPost. Falls back to strategyId+ticker+action
- *                        when correlationId is not provided.
+ * @param correlationId - Optional trace ID propagated from the caller (for
+ *                        structured logging and audit_log correlation only).
+ *                        NOT used to build the idempotency key — see
+ *                        idempotencyInputs below.
+ * @param idempotencyInputs - Bar-scoped inputs for the deterministic
+ *                        X-Idempotency-Key header. When provided, the key is
+ *                        SHA-256(accountId|strategyId|ticker|action|barTs).
+ *                        When omitted, falls back to strategyId-ticker-action
+ *                        (legacy behaviour, bar-timestamp-less — avoid when
+ *                        barTs is available).
  * @returns TradersPostSubmitResult — success flag + raw response info.
  */
 export async function submitWebhookOrder(
   payload: TradersPostWebhookPayload,
   correlationId?: string | null,
+  idempotencyInputs?: IdempotencyKeyInputs | null,
 ): Promise<TradersPostSubmitResult> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), SUBMIT_TIMEOUT_MS);
 
-  // F-6: Idempotency key — prevents duplicate fills on retry/network blips.
-  // Prefer correlationId (trace-safe, globally unique per bar-signal pair).
-  // Fallback: strategyId-ticker-action (stable for same signal, no timestamp drift).
-  const idempotencyKey =
-    correlationId ??
-    [payload.strategyId ?? "tf", payload.ticker, payload.action].join("-");
+  // FINDING #2 FIX: Idempotency key is bar-scoped (SHA-256 over the five-field
+  // bar-event tuple), not correlationId-based. A TradingView retry of the same
+  // bar+signal will produce the same key, preventing a duplicate live order.
+  // Fallback to legacy non-timestamp key only when bar_ts is unavailable.
+  const idempotencyKey = idempotencyInputs
+    ? buildDeterministicIdempotencyKey(idempotencyInputs)
+    : [payload.strategyId ?? "tf", payload.ticker, payload.action].join("-");
 
   try {
     logger.debug(

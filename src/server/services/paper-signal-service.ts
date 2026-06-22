@@ -49,6 +49,7 @@ import { getDecayTelemetryThreshold } from "../lib/confluence-decay.js";
 // error — null result → factor falls back to "liquidity_map_unavailable".
 import { getNearestLiquidity } from "./liquidity-map-service.js";
 import { notifyCritical } from "./notification-service.js";
+import { shadowSignalsTotal } from "../lib/metrics-registry.js";
 // Wave 26 Group B Task 3: SMT live bridge — wires Python compute_smt_divergence()
 // into Path C SignalContext. Fail-soft: returns null snapshot on any error →
 // evalSmtConfirmation returns reason="smt_unavailable" (same fail-open as before).
@@ -664,7 +665,7 @@ export function updateGovernorOnTrade(
     lastUpdatedAt: new Date().toISOString(),
   };
   db.update(paperSessions)
-    .set({ governorState: governorSnapshot })
+    .set({ governorState: governorSnapshot as unknown as import("../db/jsonb-shapes.js").PaperSessionGovernorStateShape })
     .where(eq(paperSessions.id, sessionId))
     .catch((err: unknown) =>
       logger.warn({ err, sessionId, governorState: gov.state }, "Failed to persist governor state to DB (non-blocking)"),
@@ -2042,7 +2043,7 @@ export async function evaluateSignals(
           input: { sessionId, symbol, barTimestamp: bar.timestamp, windowsConfigured: windowSpecs } as Record<string, unknown>,
           result: { blocked: true, reason: "outside_allowed_entry_windows" } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: correlationId ?? null,
         }).catch((err: unknown) => logger.warn({ err, sessionId }, "audit_log insert failed for signal.skipped_outside_window"));
       }
     }
@@ -2567,7 +2568,7 @@ export async function evaluateSignals(
               input: { sessionId, symbol, firmId } as Record<string, unknown>,
               result: { blocked: true, reason: "symbol_not_in_firm_account_whitelist" } as Record<string, unknown>,
               status: "success",
-              correlationId: null,
+              correlationId: correlationId ?? null,
             }).catch((err: unknown) => logger.warn({ err, sessionId }, "audit_log insert failed for signal.blocked_symbol_not_enabled_for_account"));
           }
         }
@@ -2645,7 +2646,7 @@ export async function evaluateSignals(
               } as Record<string, unknown>,
               result: { blocked: true, reason: "pre_market_blackout_window" } as Record<string, unknown>,
               status: "success",
-              correlationId: null,
+              correlationId: correlationId ?? null,
             }).catch((err: unknown) => logger.warn({ err, sessionId }, "audit_log insert failed for signal.skipped_pre_market_blackout"));
           }
         }
@@ -2729,8 +2730,20 @@ export async function evaluateSignals(
           }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist DLL halt log"));
         }
       } catch (dllErr) {
-        // Fail-open: never block trading due to DLL query errors
-        logger.warn({ err: dllErr, sessionId, symbol }, "W23H.F: cross-symbol DLL gate error — fail-open, proceeding");
+        // Fail-CLOSED: loss-throttling gate must not allow entry when data is unavailable.
+        // Institutional standard: unknown combined P&L = assume worst case and block.
+        dllHaltBlocked = true;
+        logger.error({ err: dllErr, sessionId, symbol }, "W23H.F: cross-symbol DLL gate error — fail-CLOSED, blocking entry");
+        insertAuditRow({
+          action: "consistency.cross_symbol_dll_failclosed",
+          entityType: "paper_session",
+          entityId: sessionId,
+          decisionAuthority: "system",
+          status: "warning",
+          input: { sessionId, symbol, error: String(dllErr) } as Record<string, unknown>,
+          result: { blocked: true, reason: "cross_symbol_dll_gate_error" } as Record<string, unknown>,
+          correlationId: correlationId ?? null,
+        }).catch(() => {});
       }
     }
 
@@ -2791,7 +2804,19 @@ export async function evaluateSignals(
         }).catch(() => {});
       }
     } catch (capErr) {
+      // Fail-OPEN per CLAUDE.md §4 documented policy: let trade slip rather than
+      // silently halt. Emit a visible warn audit so the fail-open is observable.
       logger.warn({ err: capErr, sessionId, symbol }, "Wave 26 Pass K: daily trade cap query error — fail-open, proceeding");
+      insertAuditRow({
+        action: "consistency.daily_trade_cap_failopen",
+        entityType: "paper_session",
+        entityId: sessionId,
+        decisionAuthority: "system",
+        status: "warning",
+        input: { sessionId, symbol, error: String(capErr) } as Record<string, unknown>,
+        result: { allowed: true, reason: "daily_trade_cap_db_error_fail_open" } as Record<string, unknown>,
+        correlationId: correlationId ?? null,
+      }).catch(() => {});
     }
 
     // ─── Wave 26 Pass K Phase 2 (2026-05-26) — Lunch Blackout Gate (11:30-13:30 ET) ──
@@ -2852,10 +2877,21 @@ export async function evaluateSignals(
         }).catch(() => {});
       }
     } catch (lunchErr) {
-      // Lunch gate is fail-CLOSED on config error (handled inside the lib); this
-      // catch only fires on unexpected JS errors. Log and proceed (fail-open here
-      // because we don't want a thrown JS exception to halt all trading).
-      logger.warn({ err: lunchErr, sessionId, symbol }, "Wave 26 Pass K: lunch blackout gate unexpected error — fail-open, proceeding");
+      // Fail-CLOSED: the lunch blackout gate guards a known-bad time window. An
+      // unexpected JS error means we cannot verify the window is clear — treat it
+      // as "inside blackout" per institutional standard for loss-throttling gates.
+      lunchBlackoutBlocked = true;
+      logger.error({ err: lunchErr, sessionId, symbol }, "Wave 26 Pass K: lunch blackout gate unexpected error — fail-CLOSED, blocking entry");
+      insertAuditRow({
+        action: "consistency.lunch_blackout_failclosed",
+        entityType: "paper_session",
+        entityId: sessionId,
+        decisionAuthority: "system",
+        status: "warning",
+        input: { sessionId, symbol, error: String(lunchErr) } as Record<string, unknown>,
+        result: { blocked: true, reason: "lunch_blackout_gate_unexpected_error" } as Record<string, unknown>,
+        correlationId: correlationId ?? null,
+      }).catch(() => {});
     }
 
     // ─── Tier 5.3: 24-hour lockout gate ─────────────────────────────────
@@ -3170,7 +3206,7 @@ export async function evaluateSignals(
               } as Record<string, unknown>,
               result: { blocked: true, reason: "prior_strategy_has_open_position" } as Record<string, unknown>,
               status: "success",
-              correlationId: null,
+              correlationId: correlationId ?? null,
             }).catch((err: unknown) => logger.warn({ err, sessionId }, "audit_log insert failed for signal.blocked_position_lock_active"));
           }
           // else: no open positions on prior strategy → lock condition already cleared;
@@ -4081,7 +4117,7 @@ export async function evaluateSignals(
       // Per-strategy confluence_size_multiplier_map from config (set by framework-overlay W23H.4)
       const confluenceSizeMultiplierMap = (rawPositionSize?.confluence_size_multiplier as Record<number, number> | undefined) ?? undefined;
 
-      let baseContracts: number;
+      let baseContracts: number = 1; // initialized; each branch below overwrites this
 
       if (rawPositionSize?.type === "risk_derived_pyramid") {
         // Full risk-derived path: build positionSizeConfig from the compiled strategy config.
@@ -4149,7 +4185,34 @@ export async function evaluateSignals(
         };
 
         const sizingResult = computeRiskDerivedContracts(sizingInputs);
-        baseContracts = Math.max(1, sizingResult.finalContracts);
+        // Finding #10 fix (2026-06-22): when sizing returns 0, the backtest engine
+        // SKIPS the trade entirely (zero-buffer rejection, trailing-floor binding,
+        // drawdown-room cap at zero). Paper MUST match — placing 1 contract here
+        // makes paper MORE active than backtest exactly when the account is most
+        // stressed and poisons promotion-gate inputs.
+        // Legitimate positive fractional results (e.g. 0.7 → 1 via floor) are still
+        // floored to 1 by computeRiskDerivedContracts itself — only a true 0 means skip.
+        if (sizingResult.finalContracts === 0) {
+          riskGatePassed = false;
+          span.setAttribute("signal_skipped_zero_size", true);
+          span.setAttribute("sizing_rejection_reason", sizingResult.rejectionReason ?? "zero_contracts");
+          logger.info(
+            { sessionId, symbol, rejectionReason: sizingResult.rejectionReason },
+            "Finding #10: sizing returned 0 contracts — skipping entry (matches backtest skip behavior)",
+          );
+          insertAuditRow({
+            action: "signal.skipped_zero_size",
+            entityType: "strategy",
+            entityId: sessionConfig.strategyId ?? "unknown",
+            decisionAuthority: "system",
+            status: "info",
+            input: { sessionId, symbol, accountBalance, drawdownRoom: sizingInputs.currentDrawdownRoom } as Record<string, unknown>,
+            result: { finalContracts: 0, rejectionReason: sizingResult.rejectionReason ?? "zero_contracts" } as Record<string, unknown>,
+            correlationId: correlationId ?? null,
+          }).catch(() => {});
+        } else {
+          baseContracts = sizingResult.finalContracts;
+        }
 
         // W23H.4: emit confluence multiplier audit row (best-effort, non-blocking)
         if (sizingResult.confluenceAudit) {
@@ -4519,6 +4582,17 @@ export async function evaluateSignals(
               barTimestamp: bar.timestamp,
               correlationId: shadowCorrelationId,
             });
+
+            // Wave 29 prod hardening: increment Prom counter #4 (shadow signals)
+            try {
+              const direction = config.side as string | undefined;
+              // strategy_id must be numeric string; divergence_bucket defaults to
+              // "pre_check" at shadow signal time (full divergence computed separately).
+              shadowSignalsTotal.labels({
+                strategy_id: String(sessionConfig.strategyId),
+                divergence_bucket: "pre_check",
+              }).inc();
+            } catch (_promErr) { /* non-blocking */ }
 
             // RETURN EARLY — do NOT add to pendingEntryQueue, do NOT call TradersPost.
             previousIndicators.set(prevKey, indicators);

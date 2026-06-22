@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { db } from "../db/index.js";
 import { paperSessions, paperPositions, paperTrades, strategies, shadowSignals, auditLog, macroSnapshots, skipDecisions, complianceRulesets, contractRolls } from "../db/schema.js";
 import { writeLockoutFromKillEvent } from "./strategy-lockout-service.js";
@@ -86,7 +87,7 @@ registerOutageChangeCallback(async (exchange: string, isActive: boolean, affecte
           autoReissue: false,
         } as Record<string, unknown>,
         status: "success",
-        correlationId: null, // TODO: correlation_id not threaded here
+        correlationId: randomUUID(), // FINDING #8 FIX: non-null correlationId for 90-day reconstruction
       });
     } catch (err) {
       logger.error({ err, exchange }, "C1 outage callback: failed to log open positions");
@@ -105,7 +106,7 @@ registerOutageChangeCallback(async (exchange: string, isActive: boolean, affecte
       input: { exchange, affectedSymbols } as Record<string, unknown>,
       result: { action: "entry_block_lifted", autoReissue: false } as Record<string, unknown>,
       status: "success",
-      correlationId: null,
+      correlationId: randomUUID(), // FINDING #8 FIX: non-null correlationId for 90-day reconstruction
     }).catch((err) => logger.error({ err }, "C1 outage resolved audit log failed (non-blocking)"));
   }
 });
@@ -562,45 +563,10 @@ export async function openPosition(sessionId: string, params: {
 }, context?: { correlationId?: string; accountId?: string }) {
   const correlationId = context?.correlationId ?? null;
 
-  // ─── Track 5: Strategy assignment check ─────────────────────────────────
-  // If an accountId is provided, verify an active strategy assignment exists
-  // for that account before proceeding. Log debug and skip (return null) if
-  // no active assignment is found — this is not an error condition, it means
-  // the operator has not yet assigned a strategy to this account.
-  if (context?.accountId) {
-    try {
-      const assignment = await getActiveAssignment(context.accountId);
-      if (!assignment) {
-        logger.debug(
-          { fn: "openPosition", sessionId, accountId: context.accountId, symbol: params.symbol },
-          "paper-execution.no-assignment: no active strategy assignment for account — skipping signal",
-        );
-        return {
-          position: null,
-          executionResult: {
-            positionId: "",
-            entryPrice: 0,
-            contracts: params.contracts,
-            slippage: 0,
-            expectedPrice: params.signalPrice,
-            actualPrice: 0,
-            arrivalPrice: params.signalPrice,
-            implementationShortfall: 0,
-            fillRatio: 0,
-            filled: false,
-          } satisfies ExecutionResult,
-        };
-      }
-    } catch (err) {
-      // Assignment check failure is non-fatal — log and continue (fail-open for this optional check)
-      logger.warn(
-        { err, fn: "openPosition", sessionId, accountId: context.accountId },
-        "paper-execution: assignment check failed — proceeding without assignment gate (fail-open)",
-      );
-    }
-  }
-
-  // ─── Phase 4C: Production-mode halt gate (MUST BE FIRST) ────────────────
+  // ─── Phase 4C: Production-mode halt gate (UNCONDITIONALLY FIRST) ─────────
+  // FINDING #3 FIX: This gate MUST execute before any early-return path
+  // (including the assignment check below). A halted system MUST NOT open
+  // positions regardless of assignment state or any other condition.
   // Fail-CLOSED: DB error → isHaltedForProduction() returns true → block order.
   // This gate supersedes every other gate including the pipeline pause guard.
   // production_mode='HALT' means the operator has explicitly halted all
@@ -671,6 +637,46 @@ export async function openPosition(sessionId: string, params: {
         filled: false,
       } satisfies ExecutionResult,
     };
+  }
+
+  // ─── Track 5: Strategy assignment check ─────────────────────────────────
+  // If an accountId is provided, verify an active strategy assignment exists
+  // for that account before proceeding. Log debug and skip (return null) if
+  // no active assignment is found — this is not an error condition, it means
+  // the operator has not yet assigned a strategy to this account.
+  // NOTE: This check intentionally runs AFTER the kill-switch gate above,
+  // so that a halted system is always blocked first (FINDING #3 fix).
+  if (context?.accountId) {
+    try {
+      const assignment = await getActiveAssignment(context.accountId);
+      if (!assignment) {
+        logger.debug(
+          { fn: "openPosition", sessionId, accountId: context.accountId, symbol: params.symbol },
+          "paper-execution.no-assignment: no active strategy assignment for account — skipping signal",
+        );
+        return {
+          position: null,
+          executionResult: {
+            positionId: "",
+            entryPrice: 0,
+            contracts: params.contracts,
+            slippage: 0,
+            expectedPrice: params.signalPrice,
+            actualPrice: 0,
+            arrivalPrice: params.signalPrice,
+            implementationShortfall: 0,
+            fillRatio: 0,
+            filled: false,
+          } satisfies ExecutionResult,
+        };
+      }
+    } catch (err) {
+      // Assignment check failure is non-fatal — log and continue (fail-open for this optional check)
+      logger.warn(
+        { err, fn: "openPosition", sessionId, accountId: context.accountId },
+        "paper-execution: assignment check failed — proceeding without assignment gate (fail-open)",
+      );
+    }
   }
 
   // ─── Pipeline pause guard ─────────────────────────────────────
@@ -954,7 +960,7 @@ export async function openPosition(sessionId: string, params: {
                 description: "Personal DLL = 67% of firm DLL. Force-close at 95% instead of 100%.",
               } as Record<string, unknown>,
               status: "success",
-              correlationId: null,
+              correlationId: randomUUID(), // FINDING #8 FIX: non-null correlationId for incident reconstruction
             }).catch((err) => logger.warn({ err }, "kill_switch.threshold_changed audit write failed (non-blocking)"));
           }
 
@@ -2256,7 +2262,7 @@ function _exitCbCheckAutoClose(): void {
         input: {} as Record<string, unknown>,
         result: { reason: "cooldown_elapsed", cooldownMs: EXIT_HANDLER_CB_COOLDOWN_MS } as Record<string, unknown>,
         status: "success",
-        correlationId: null,
+        correlationId: randomUUID(), // FINDING #8 FIX: non-null correlationId for incident reconstruction
       }).catch((err) => logger.warn({ err }, "exit_handler CB close audit write failed (non-blocking)"));
     }
   }
@@ -2281,7 +2287,7 @@ function _exitCbRecordFailure(): void {
       input: { failuresInWindow: exitHandlerCb.failTimestamps.length, windowMs: EXIT_HANDLER_CB_WINDOW_MS } as Record<string, unknown>,
       result: { reason: "failure_threshold_reached", cooldownMs: EXIT_HANDLER_CB_COOLDOWN_MS } as Record<string, unknown>,
       status: "success",
-      correlationId: null,
+      correlationId: randomUUID(), // FINDING #8 FIX: non-null correlationId for incident reconstruction
     }).catch((err) => logger.warn({ err }, "exit_handler CB open audit write failed (non-blocking)"));
   }
 }
@@ -3408,20 +3414,36 @@ export async function runSessionEndRollSweep(context?: { correlationId?: string 
 // circular module dependency:
 //   kill-switch.ts (production/) → paper-execution-service.ts (services/)
 //
-// Closes every open paper position using the current mid-price (signalPrice=0
-// triggers the closePosition fallback to last-known price). Each close writes
-// its own audit_log + SSE via the normal closePosition path.
+// Closes every open paper position at the CURRENT MARKET PRICE (mark-to-market).
+// Each close writes its own audit_log + SSE via the normal closePosition path.
+//
+// FINDING #1 FIX: Previously used entryPrice as the exit price, booking $0
+// realized P&L on every force-flatten. That silently corrupted session equity,
+// Sharpe, realized-DLL checks, and promotion analytics at the worst moment (a
+// halt). Fix: select currentPrice from the position row and use it as the close
+// price. If currentPrice is null/zero for a position, fail loud with an audit
+// row and SKIP that position (do not silently book $0).
+//
+// FINDING #8 FIX: Generate ONE batch correlationId at the top of this function.
+// Use it for the batch audit row AND thread it into every per-position
+// closePosition call, so the halt→flatten→per-position chain is linkable in
+// the audit_log for 90-day reconstruction.
 //
 // Callers: kill-switch.ts:setMode('HALT') only. Do NOT call from openPosition
 // or any hot path — this is a rare, operator-triggered emergency action.
 //
 export async function forceCloseAllPositions(reason: string): Promise<{ count: number }> {
+  // FINDING #8 FIX: generate a single batch correlationId that links the batch
+  // audit row to every per-position closePosition call in this flatten sweep.
+  const batchCorrelationId = randomUUID();
+
   const openPositions = await db
     .select({
       id: paperPositions.id,
       sessionId: paperPositions.sessionId,
       symbol: paperPositions.symbol,
       entryPrice: paperPositions.entryPrice,
+      currentPrice: paperPositions.currentPrice,
     })
     .from(paperPositions)
     .where(isNull(paperPositions.closedAt));
@@ -3429,38 +3451,68 @@ export async function forceCloseAllPositions(reason: string): Promise<{ count: n
   const count = openPositions.length;
 
   if (count === 0) {
-    logger.info({ reason }, "paper-execution.force-flatten: no open positions to close");
+    logger.info({ reason, batchCorrelationId }, "paper-execution.force-flatten: no open positions to close");
   } else {
-    logger.warn({ reason, count }, "paper-execution.force-flatten: closing all open positions due to production halt");
+    logger.warn({ reason, count, batchCorrelationId }, "paper-execution.force-flatten: closing all open positions due to production halt");
   }
 
   const errors: string[] = [];
+  const skipped: string[] = [];
+
   for (const pos of openPositions) {
+    // FINDING #1 FIX: use currentPrice (mark-to-market), not entryPrice.
+    // currentPrice is updated by updatePositionPrices on every bar tick and
+    // reflects the last known market price for the position's symbol.
+    const rawCurrent = Number(pos.currentPrice ?? 0);
+
+    if (!rawCurrent || !isFinite(rawCurrent)) {
+      // No current price available — fail loud, skip this position rather than
+      // silently booking $0 P&L which would corrupt session equity and promotion inputs.
+      const skipMsg = `pos:${pos.id} symbol:${pos.symbol} — no currentPrice available; skipping force-flatten (manual close required)`;
+      skipped.push(skipMsg);
+      logger.error(
+        { positionId: pos.id, symbol: pos.symbol, reason, batchCorrelationId,
+          entryPrice: pos.entryPrice, currentPrice: pos.currentPrice },
+        "paper-execution.force-flatten: currentPrice missing — SKIPPING position (manual close required, NOT booking $0)",
+      );
+      // Write a skipped-position audit row so the operator can reconstruct what happened
+      db.insert(auditLog).values({
+        action: "paper.force_flatten_position_skipped",
+        entityType: "paper_position",
+        entityId: pos.id,
+        decisionAuthority: "system",
+        input: { reason, positionId: pos.id, symbol: pos.symbol, entryPrice: pos.entryPrice } as Record<string, unknown>,
+        result: { reason: "no_current_price", batchCorrelationId } as Record<string, unknown>,
+        status: "error",
+        correlationId: batchCorrelationId,
+      }).catch((err) => logger.error({ err }, "paper-execution.force-flatten: skip audit write failed (non-blocking)"));
+      continue;
+    }
+
     try {
-      // Use entryPrice as the exit price proxy when no live price is available.
-      // This is conservative (no P&L distortion) and acceptable for a force-flatten
-      // that occurs because of a halt — the operator reviews the result manually.
-      await closePosition(pos.id, Number(pos.entryPrice) ?? 0, undefined, { correlationId: null as unknown as string | undefined });
+      // Close at mark-to-market (currentPrice). Thread the batchCorrelationId so
+      // this close is linkable to the halt event in the audit_log.
+      await closePosition(pos.id, rawCurrent, undefined, { correlationId: batchCorrelationId });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       errors.push(`pos:${pos.id} err:${msg}`);
-      logger.error({ err, positionId: pos.id, reason }, "paper-execution.force-flatten: closePosition failed for one position (continuing)");
+      logger.error({ err, positionId: pos.id, reason, batchCorrelationId }, "paper-execution.force-flatten: closePosition failed for one position (continuing)");
     }
   }
 
-  // Audit log the batch flatten event
+  // Audit log the batch flatten event (FINDING #8 FIX: non-null correlationId)
   db.insert(auditLog).values({
     action: "paper.force_flatten_all",
     entityType: "system",
     entityId: null,
     decisionAuthority: "system",
     input: { reason } as Record<string, unknown>,
-    result: { reason, count, errors } as Record<string, unknown>,
-    status: errors.length === 0 ? "success" : "partial_failure",
-    correlationId: null,
+    result: { reason, count, errors, skipped } as Record<string, unknown>,
+    status: errors.length === 0 && skipped.length === 0 ? "success" : "partial_failure",
+    correlationId: batchCorrelationId,
   }).catch((err) => logger.error({ err }, "paper-execution.force-flatten: audit_log write failed (non-blocking)"));
 
-  broadcastSSE("paper:force-flatten-all", { reason, count, errors: errors.length });
+  broadcastSSE("paper:force-flatten-all", { reason, count, errors: errors.length, skipped: skipped.length });
 
   return { count };
 }

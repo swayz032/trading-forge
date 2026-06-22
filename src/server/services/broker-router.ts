@@ -27,12 +27,86 @@ import { broadcastSSE } from "../routes/sse.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { loadBrokerCredentials } from "../lib/credential-loader.js";
 import { submitWebhookOrder } from "../integrations/traderspost/client.js";
+import type { IdempotencyKeyInputs } from "../integrations/traderspost/client.js";
 import { buildWebhookPayload } from "../integrations/traderspost/webhook-builder.js";
 import type { WebhookSignal } from "../integrations/traderspost/webhook-builder.js";
 import { notifyCritical } from "./notification-service.js";
 import { killSwitch } from "../production/kill-switch.js";
 import { getEnabledFirms } from "./strategy-assignment-service.js";
 import { getFirmLimit, CONTRACT_CAP_MAX } from "../../shared/firm-config.js";
+import { CircuitBreakerRegistry, CircuitOpenError } from "../lib/circuit-breaker.js";
+
+// ─── FINDING #4: TradersPost circuit breaker ─────────────────────────────────
+// Wraps all TradersPost HTTP submissions. On N consecutive failures (default 3
+// per TRADERSPOST_CB_FAILURE_THRESHOLD), opens the breaker for
+// TRADERSPOST_CB_COOLDOWN_MS (default 30 s). While open, all submission
+// attempts fast-fail with reason "traderspost_circuit_open" and write an audit
+// row — no live order is sent, operator gets a clear signal.
+//
+// Discord critical fires ONCE on the CLOSED → OPEN transition (not per order).
+// SSE "broker:degraded" fires on the same transition.
+// Recovery (OPEN → HALF_OPEN → CLOSED) emits no Discord noise — the absence of
+// further critical alerts signals restoration.
+
+export const TRADERSPOST_CIRCUIT_BREAKER_KEY = "traderspost-webhook";
+export const TRADERSPOST_CIRCUIT_OPEN_REASON = "traderspost_circuit_open" as const;
+
+const _tpCbFailureThreshold = Math.max(
+  1,
+  parseInt(process.env.TRADERSPOST_CB_FAILURE_THRESHOLD ?? "3", 10) || 3,
+);
+const _tpCbCooldownMs = Math.max(
+  5_000,
+  parseInt(process.env.TRADERSPOST_CB_COOLDOWN_MS ?? "30000", 10) || 30_000,
+);
+
+// Obtain (or create) the singleton breaker for TradersPost.
+const _traderspostBreaker = CircuitBreakerRegistry.get(TRADERSPOST_CIRCUIT_BREAKER_KEY, {
+  failureThreshold: _tpCbFailureThreshold,
+  cooldownMs: _tpCbCooldownMs,
+});
+
+// Track whether we've already fired the critical alert for this open window.
+// Resets when the breaker returns to CLOSED so the next open window fires again.
+let _tpBreacherAlertedOpen = false;
+
+// State-change hook: fires once per transition.
+CircuitBreakerRegistry.setOnStateChange((name, _from, to) => {
+  if (name !== TRADERSPOST_CIRCUIT_BREAKER_KEY) return;
+
+  if (to === "OPEN" && !_tpBreacherAlertedOpen) {
+    _tpBreacherAlertedOpen = true;
+    // Discord critical — operator must investigate.
+    notifyCritical(
+      "TradersPost Webhook Degraded",
+      `TradersPost circuit breaker OPENED after ${_tpCbFailureThreshold} consecutive ` +
+        `failures. All order routing for TradersPost accounts is fast-failing until the ` +
+        `breaker half-opens (~${Math.round(_tpCbCooldownMs / 1000)}s). ` +
+        `Check TradersPost status page and inspect audit_log for broker_router.traderspost_submission_failed rows.`,
+      { circuitBreaker: TRADERSPOST_CIRCUIT_BREAKER_KEY, failureThreshold: _tpCbFailureThreshold },
+    );
+    // SSE so the dashboard surfaces the degradation immediately.
+    broadcastSSE("broker:degraded", {
+      broker: "traderspost",
+      reason: "circuit_breaker_open",
+      failureThreshold: _tpCbFailureThreshold,
+      cooldownMs: _tpCbCooldownMs,
+      timestamp: new Date().toISOString(),
+    });
+    logger.error(
+      { breaker: TRADERSPOST_CIRCUIT_BREAKER_KEY, threshold: _tpCbFailureThreshold },
+      "broker-router: TradersPost circuit breaker OPENED — fast-failing all orders",
+    );
+  }
+
+  if (to === "CLOSED") {
+    _tpBreacherAlertedOpen = false;
+    logger.info(
+      { breaker: TRADERSPOST_CIRCUIT_BREAKER_KEY },
+      "broker-router: TradersPost circuit breaker CLOSED — order routing restored",
+    );
+  }
+});
 
 // ─── F-5: killSwitch import verification (module-load time) ───────────────────
 // killSwitch is exported as a named `const killSwitch = new KillSwitch()` from
@@ -73,6 +147,7 @@ export type BrokerResultReason =
   | "production_halt"
   | "compliance_violation"
   | "topstepx_not_configured"
+  | "traderspost_circuit_open"
   | "internal_error"
   | "routed";
 
@@ -497,8 +572,82 @@ export async function routeOrder(
 
     // ── Build + submit webhook ────────────────────────────────────────────────
     const payload = buildWebhookPayload(apiKey, signal);
-    // F-6: pass correlationId so client can build a stable idempotency key
-    const submitResult = await submitWebhookOrder(payload, correlationId);
+
+    // FINDING #2 FIX: Pass bar-scoped idempotency inputs so the HTTP client
+    // derives a deterministic key from (accountId, strategyId, ticker, action,
+    // barTs). A TradingView retry of the same bar produces the same key →
+    // TradersPost deduplicates server-side → no duplicate live order.
+    // correlationId is still passed for tracing/audit linkage only.
+    const idempotencyInputs: IdempotencyKeyInputs | null =
+      signal.barTimestamp
+        ? {
+            accountId,
+            strategyId: payload.strategyId ?? signal.strategyId ?? "tf",
+            ticker: signal.ticker,
+            action: signal.action,
+            barTs: signal.barTimestamp,
+          }
+        : null;
+
+    // FINDING #4 FIX: Wrap the HTTP submission in the TradersPost circuit
+    // breaker. CircuitOpenError fast-fails here; the catch block below converts
+    // it to a structured BrokerResult with reason "traderspost_circuit_open"
+    // and writes an audit row without contacting TradersPost at all.
+    let submitResult: Awaited<ReturnType<typeof submitWebhookOrder>>;
+    try {
+      submitResult = await _traderspostBreaker.call(() =>
+        submitWebhookOrder(payload, correlationId, idempotencyInputs)
+      );
+    } catch (brekerErr) {
+      if (brekerErr instanceof CircuitOpenError) {
+        const cbResult: BrokerResult = {
+          success: false,
+          reason: TRADERSPOST_CIRCUIT_OPEN_REASON,
+          accountId,
+          firmId: account.firmId,
+          brokerType: account.brokerType,
+          error: `traderspost_circuit_open: ${brekerErr.message}`,
+        };
+        logger.warn(
+          { accountId, firmId: account.firmId, correlationId, reopensAt: brekerErr.reopensAt.toISOString() },
+          "broker-router: TradersPost circuit OPEN — fast-failing order (no broker contact)",
+        );
+        // Audit row for every open-circuit fast-fail (operator can count them)
+        db.insert(auditLog)
+          .values({
+            action: "broker_router.traderspost_circuit_open",
+            entityType: "broker_account",
+            entityId: null,
+            decisionAuthority: "system",
+            input: { accountId, ticker: signal.ticker, action: signal.action } as Record<string, unknown>,
+            result: {
+              reason: TRADERSPOST_CIRCUIT_OPEN_REASON,
+              reopensAt: brekerErr.reopensAt.toISOString(),
+            } as Record<string, unknown>,
+            status: "failure",
+            correlationId: correlationId ?? null,
+          })
+          .catch((err: unknown) =>
+            logger.error({ err }, "broker-router: circuit-open audit write failed (non-blocking)")
+          );
+        broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...cbResult, correlationId: correlationId ?? null });
+        return cbResult;
+      }
+      // Non-CircuitOpenError from the breaker.call wrapper — should not happen
+      // (submitWebhookOrder is fail-CLOSED and never throws), but guard anyway.
+      const fallbackResult: BrokerResult = {
+        success: false,
+        reason: "internal_error",
+        accountId,
+        firmId: account.firmId,
+        brokerType: account.brokerType,
+        error: brekerErr instanceof Error ? brekerErr.message : String(brekerErr),
+      };
+      logger.error({ err: brekerErr, accountId, correlationId }, "broker-router: unexpected error from breaker.call");
+      broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...fallbackResult, correlationId: correlationId ?? null });
+      await writeAuditLog(accountId, signal, fallbackResult, correlationId);
+      return fallbackResult;
+    }
 
     const result: BrokerResult = {
       success: submitResult.success,
