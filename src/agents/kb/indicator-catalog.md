@@ -545,6 +545,87 @@ the archetype's detector path handles the actual signal — not a DSL expression
   `4h_bias_structure_fvg`, `ict_3_layer_model`, `ict_multi_timeframe_continuation`,
   `htf_bias_sfp_displacement_fvg_continuation`.
 
+### `gann_box_4h_continuation`
+**Description.** BIDIRECTIONAL by default. Identifies an IMPULSIVE 4H candle (full body,
+minimal wicks), draws a Gann box from the candle's low to its high, divides it into four
+Fibonacci zones, and enters when price retraces a wick into the OPTIMUM zone (0.50–0.75
+from the base) with FVG or order-block confluence.
+
+**Fib zone definitions (both directions):**
+```
+Zone         Fib range (from base)  Action
+premature    0.00–0.25              Skip — retracement too shallow / faded fast
+mid_gap      0.25–0.50              Neutral — not acted on
+optimum      0.50–0.75              ENTRY ZONE — high-probability institutional fill
+overextended 0.75–1.00              Skip — setup invalidated (too deep)
+```
+For LONG: base = candle low (Fib 0), top = candle high (Fib 1).
+For SHORT: inverted — base = candle high (Fib 0), top = candle low (Fib 1).
+
+**Impulsive candle filter:** body / (high - low) >= 0.70 (default). Excludes doji,
+spinning tops, and candles with dominant wicks. Only high-conviction directional candles
+qualify to anchor the Gann box.
+
+**Signal sequence (both directions):**
+```
+LONG:  Bullish trend bias (price above EMA)
+       + bullish impulsive 4H candle detected
+       + price retraces wick into optimum zone (0.50–0.75 from candle low)
+       + FVG or order-block confluence inside the optimum zone
+       → entry long; target: prior daily high
+
+SHORT: Bearish trend bias (price below EMA)
+       + bearish impulsive 4H candle detected
+       + price retraces wick into optimum zone (0.50–0.75 from candle high, inverted)
+       + FVG or order-block confluence inside the optimum zone
+       → entry short; target: prior daily low
+```
+
+**Stop placement:** Beyond the order block that created the FVG. Engine records the
+structural stop via ATR floor (1.5×ATR) / ceiling (14pt MES); framework-overlay owns
+final sizing. Do NOT compute futures P&L in the archetype — framework handles it.
+
+**Key distinctions:**
+- vs `ict_bias_aligned_continuation`: that archetype requires killzone timing + BOS/CHoCH.
+  This archetype fires purely on the 4H candle Gann box retrace — no killzone gate.
+- vs `ict_ote`: `ict_ote` uses a fixed 62–79% OTE retracement after a swing BOS.
+  This archetype draws the Gann box OVER A SINGLE 4H CANDLE, not a swing range.
+- vs `bounce_off_level`: `bounce_off_level` uses an MA as the level. Gann box is price-
+  structure-derived from the candle range, not a moving average.
+
+**Direction contract (critical for Gemma):**
+- Source video (SY2jXlW9bt4) may demonstrate only one direction. The archetype is
+  SYMMETRIC — always emit `direction: "both"` regardless of which direction the
+  tutorial shows.
+
+**DSL fields to emit:**
+```json
+{
+  "entry_indicator": "archetype:gann_box_4h_continuation",
+  "direction": "both",
+  "entry_long": "high < low",
+  "entry_short": "high < low"
+}
+```
+Both `entry_long` / `entry_short` are the never-true sentinel `"high < low"` — the
+archetype's detector handles the actual signal, not a DSL expression.
+
+**Required params:** None — the archetype uses structural detection internally.
+**Best regime:** `TRENDING_UP` (for longs), `TRENDING_DOWN` (for shorts).
+**Worst regime:** `RANGE_BOUND` — no sustained directional impulse candles; Gann boxes
+form and immediately re-enter, making the optimum zone meaningless.
+**Gotchas:**
+- The impulsive-candle filter is the gating condition. If the video describes "any 4H
+  candle" without emphasizing a strong directional candle, Gann box still applies — the
+  filter will handle the selection internally.
+- Gann box must be anchored to THE 4H TIMEFRAME candle, not the 1m or 5m. If the source
+  describes a shorter-timeframe box, still route to `gann_box_4h_continuation` — the
+  operator confirmed 4H as canonical for this pattern class.
+- Concept names that map here: `gann_box_fib_zone_entry`, `4h_candle_box_continuation`,
+  `fib_zone_optimum_retracement`, `gann_box_4h_retrace`, `impulsive_candle_gann_entry`,
+  `4h_impulse_retrace_fib`, `candle_box_fib_zone`, `optimum_zone_fib_entry`,
+  `4h_continuation_fib_zones`.
+
 ---
 
 ## v11 Entry Sequence Vocabulary — Canonical Names for Rule Extraction
