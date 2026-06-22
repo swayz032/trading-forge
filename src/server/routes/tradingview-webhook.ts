@@ -90,7 +90,11 @@ setInterval(() => {
 // Old contract required runtime `hmac` field signed over canonical bar payload —
 // impossible from Pine. New contract:
 //   - `hmac` is OPTIONAL (legacy clients still validated when present).
-//   - `secret_check` is REQUIRED — export-time signature emitted by pine_compiler
+//   - AUTH CONTRACT (clarified 2026-06-22): at least ONE of `hmac` (legacy) or
+//     `secret_check` (preferred) must be present AND valid; a request with neither
+//     is rejected 401 hmac_invalid (fail-closed). Both Zod-optional by design — you
+//     cannot make either mandatory without breaking one client class.
+//   - `secret_check` is the REQUIRED mechanism for Pine clients — export-time signature emitted by pine_compiler
 //     proving the Pine file came from a trusted artifact. Computed over a FIXED
 //     payload at compile-time (e.g. "{strategy_id}|{account_id}|export") and
 //     embedded as a Pine string literal. The backend re-computes the same

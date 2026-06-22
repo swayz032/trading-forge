@@ -43,9 +43,9 @@ vi.mock("../services/tradingview-marker-service.js", () => ({
   validateHmac: vi.fn(
     (payload: Record<string, unknown>, providedHmac: string, secret: string) => {
       const { createHmac: ch, timingSafeEqual } = require("crypto");
-      const body = { ...payload };
-      delete body["hmac"];
-      const serialized = JSON.stringify(body, Object.keys(body).sort());
+      // Wave hardening 2026-06-22: production validateHmac uses the F-7 V2 fixed-field
+      // canonical (buildWebhookCanonical) — strategy|account|bar_ts|signal — not sorted JSON.
+      const serialized = `${String(payload["strategy_id"] ?? "")}|${String(payload["account_id"] ?? "")}|${String(payload["bar_timestamp"] ?? "")}|${Number(payload["signal"] ?? 0)}`;
       const expected = ch("sha256", secret).update(serialized, "utf8").digest("hex");
       const expBuf = Buffer.from(expected, "utf8");
       const provBuf = Buffer.from(providedHmac, "utf8");
@@ -108,11 +108,16 @@ function buildPayload(
   const base: Record<string, unknown> = {
     strategy_id: "00000000-0000-0000-0000-000000000001",
     account_id: "00000000-0000-0000-0000-000000000002",
-    bar_timestamp: "2026-05-10T14:00:00.000Z",
+    // Wave hardening 2026-06-22: fresh bar_timestamp so the F-2 replay window (10 min)
+    // doesn't reject it as stale_payload — the old hardcoded 2026-05-10 broke once real
+    // time advanced past it. Override per-test for explicit stale-payload cases.
+    bar_timestamp: new Date().toISOString(),
     signal: 1,
     ...overrides,
   };
-  const serialized = JSON.stringify(base, Object.keys(base).sort());
+  // Wave hardening 2026-06-22: sign with the F-7 V2 fixed-field canonical that production
+  // validateHmac expects (strategy|account|bar_ts|signal), not legacy sorted-JSON.
+  const serialized = `${String(base["strategy_id"])}|${String(base["account_id"])}|${String(base["bar_timestamp"])}|${Number(base["signal"])}`;
   const hmac = createHmac("sha256", secret).update(serialized, "utf8").digest("hex");
   return { ...base, hmac };
 }
@@ -242,19 +247,22 @@ describe("POST /api/tradingview/marker — route handler", () => {
 
   // ── Test 3: Missing HMAC → 400 ──────────────────────────────────────────
 
-  it("3. rejects payload with missing hmac field with 400 (Zod validation)", async () => {
+  // Wave hardening 2026-06-22: F-1 dual-proof — hmac + secret_check both Zod-optional, but
+  // the auth layer requires AT LEAST ONE valid proof. Neither present => 401 hmac_invalid
+  // (fail-closed), not 400 Zod. Encodes the dual-proof contract row "neither present".
+  it("3. rejects payload with neither hmac nor secret_check with 401 (fail-closed)", async () => {
     const payload = {
       strategy_id: "00000000-0000-0000-0000-000000000001",
       account_id: "00000000-0000-0000-0000-000000000002",
       bar_timestamp: "2026-05-10T14:00:00.000Z",
       signal: 1,
-      // hmac omitted deliberately
+      // neither hmac nor secret_check provided
     };
 
     const res = await callMarkerRoute(payload);
 
-    expect(res.statusCode).toBe(400);
-    expect(res.body["error"]).toBe("invalid_payload");
+    expect(res.statusCode).toBe(401);
+    expect(res.body["error"]).toBe("hmac_invalid");
   });
 
   // ── Test 4: Per-account rate limit ──────────────────────────────────────
