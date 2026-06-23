@@ -1,12 +1,16 @@
 /**
  * wave26-gemma4-smoke-test.ts
  *
- * Smoke test for Wave 26 gemma4:e2b / qwen2.5-coder:7b primary routing for transcript_extractor.
+ * Smoke test for Wave 26 gemma4:e2b primary routing for transcript_extractor.
  * Extended for Wave 26 Pass G: 5-fixture parity test validating:
  *   - ≥3 confluence factors per ICT/SMC/archetype strategy
  *   - direction='both' for bidirectional strategies
  *   - correct entry_indicator routing (archetype:* vs parametric)
  *   - no placeholder fallbacks (empty entry_long when entry_short is real)
+ *
+ * Extended for Pass 8 Track C (v12 parity mandate):
+ *   - ≥5 speaker_concepts per strategy (v12 SPEAKER-VOCABULARY MANDATE)
+ *   - Each speaker_concept must have: role, verbatim_description, transcript_quote
  *
  * Validates:
  *   1. callScoutExtractLlm routes to local Ollama when TRANSCRIPT_EXTRACTOR_FORCE_CLOUD=false
@@ -14,7 +18,8 @@
  *      (bias_timeframe, confirming_indicators, preferred_regimes)
  *   3. Response is valid JSON
  *   4. 5-fixture parity test: factor depth + direction + archetype routing
- *   5. Exits 0 on success, 1 on failure
+ *   5. v12: speaker_concepts ≥5 per strategy with role/verbatim_description/transcript_quote
+ *   6. Exits 0 on success, 1 on failure
  *
  * Usage:
  *   npx tsx scripts/wave26-gemma4-smoke-test.ts
@@ -77,6 +82,8 @@ interface ParityFixture {
     expected_entry_indicator_prefix: string; // "archetype:" or specific name
     expected_confirming_indicators_min: number;
     bias_timeframe_required: boolean;
+    // v12 mandate (Pass 8 Track C)
+    min_speaker_concepts: number; // ≥5 per v12 SPEAKER-VOCABULARY MANDATE
   };
 }
 
@@ -91,6 +98,7 @@ const PARITY_FIXTURES: ParityFixture[] = [
       expected_entry_indicator_prefix: "archetype:ict_silver_bullet",
       expected_confirming_indicators_min: 3,
       bias_timeframe_required: true,
+      min_speaker_concepts: 5,
     },
   },
   {
@@ -103,6 +111,7 @@ const PARITY_FIXTURES: ParityFixture[] = [
       expected_entry_indicator_prefix: "archetype:ict_power_of_3",
       expected_confirming_indicators_min: 3,
       bias_timeframe_required: true,
+      min_speaker_concepts: 5,
     },
   },
   {
@@ -115,6 +124,7 @@ const PARITY_FIXTURES: ParityFixture[] = [
       expected_entry_indicator_prefix: "archetype:bounce_off_level",
       expected_confirming_indicators_min: 2,
       bias_timeframe_required: true,
+      min_speaker_concepts: 5,
     },
   },
   {
@@ -127,6 +137,7 @@ const PARITY_FIXTURES: ParityFixture[] = [
       expected_entry_indicator_prefix: "ema_crossover",
       expected_confirming_indicators_min: 1,
       bias_timeframe_required: false,
+      min_speaker_concepts: 5,
     },
   },
   {
@@ -139,6 +150,7 @@ const PARITY_FIXTURES: ParityFixture[] = [
       expected_entry_indicator_prefix: "archetype:ict_bias_aligned_continuation",
       expected_confirming_indicators_min: 4,
       bias_timeframe_required: true,
+      min_speaker_concepts: 5,
     },
   },
   {
@@ -151,6 +163,7 @@ const PARITY_FIXTURES: ParityFixture[] = [
       expected_entry_indicator_prefix: "archetype:ict_bias_aligned_continuation",
       expected_confirming_indicators_min: 3,
       bias_timeframe_required: true,
+      min_speaker_concepts: 5,
     },
   },
 ];
@@ -266,7 +279,91 @@ function validateParityFixtureOutput(
     if (incompleteBidirectionalBug) result.pass = false;
   }
 
+  // Check 7: v12 speaker_concepts (Pass 8 Track C mandate)
+  const minSpeakerConcepts = fixture.requirements.min_speaker_concepts ?? 5;
+  const v12 = checkV12SpeakerConcepts(s, minSpeakerConcepts);
+  result.checks.push({
+    check: "v12_speaker_concepts_count",
+    pass: v12.min_count_met,
+    actual: `${v12.speaker_concepts_count} concepts`,
+    expected: `≥${minSpeakerConcepts} speaker_concepts`,
+  });
+  if (!v12.min_count_met) result.pass = false;
+
+  result.checks.push({
+    check: "v12_speaker_concepts_shape",
+    pass: v12.pass,
+    actual: v12.failures.length > 0 ? v12.failures.join("; ") : `all ${v12.speaker_concepts_count} concepts have role+verbatim_description+transcript_quote`,
+    expected: "every speaker_concept has role + verbatim_description + transcript_quote",
+  });
+  if (!v12.pass) result.pass = false;
+
   return result;
+}
+
+// ─── v12 speaker_concepts check (Pass 8 Track C) ─────────────────────────────
+// Validates that a strategy object contains the v12 SPEAKER-VOCABULARY MANDATE fields:
+// speaker_concepts array with ≥5 entries, each having role + verbatim_description + transcript_quote.
+
+interface V12SpeakerConceptCheck {
+  has_speaker_concepts: boolean;
+  speaker_concepts_count: number;
+  concepts_with_role: number;
+  concepts_with_verbatim_description: number;
+  concepts_with_transcript_quote: number;
+  min_count_met: boolean;
+  all_have_role: boolean;
+  all_have_verbatim_description: boolean;
+  all_have_transcript_quote: boolean;
+  pass: boolean;
+  failures: string[];
+}
+
+function checkV12SpeakerConcepts(
+  strategy: Record<string, unknown>,
+  minConcepts = 5,
+): V12SpeakerConceptCheck {
+  const speakerConcepts = Array.isArray(strategy["speaker_concepts"])
+    ? (strategy["speaker_concepts"] as Array<Record<string, unknown>>)
+    : [];
+
+  const hasField = speakerConcepts.length > 0;
+  const countMet = speakerConcepts.length >= minConcepts;
+
+  const withRole = speakerConcepts.filter(
+    (c) => typeof c["role"] === "string" && c["role"].trim().length > 0,
+  ).length;
+  const withVerbatim = speakerConcepts.filter(
+    (c) => typeof c["verbatim_description"] === "string" && c["verbatim_description"].trim().length > 0,
+  ).length;
+  const withQuote = speakerConcepts.filter(
+    (c) => typeof c["transcript_quote"] === "string" && c["transcript_quote"].trim().length > 0,
+  ).length;
+
+  const allRole = speakerConcepts.length > 0 && withRole === speakerConcepts.length;
+  const allVerbatim = speakerConcepts.length > 0 && withVerbatim === speakerConcepts.length;
+  const allQuote = speakerConcepts.length > 0 && withQuote === speakerConcepts.length;
+
+  const failures: string[] = [];
+  if (!hasField) failures.push("speaker_concepts field missing or empty");
+  if (!countMet) failures.push(`speaker_concepts count ${speakerConcepts.length} < ${minConcepts}`);
+  if (!allRole) failures.push(`${speakerConcepts.length - withRole} concepts missing 'role' field`);
+  if (!allVerbatim) failures.push(`${speakerConcepts.length - withVerbatim} concepts missing 'verbatim_description'`);
+  if (!allQuote) failures.push(`${speakerConcepts.length - withQuote} concepts missing 'transcript_quote'`);
+
+  return {
+    has_speaker_concepts: hasField,
+    speaker_concepts_count: speakerConcepts.length,
+    concepts_with_role: withRole,
+    concepts_with_verbatim_description: withVerbatim,
+    concepts_with_transcript_quote: withQuote,
+    min_count_met: countMet,
+    all_have_role: allRole,
+    all_have_verbatim_description: allVerbatim,
+    all_have_transcript_quote: allQuote,
+    pass: hasField && countMet && allRole && allVerbatim && allQuote,
+    failures,
+  };
 }
 
 // ─── Parity test runner (static — validates fixtures against new prompt spec) ──
@@ -320,11 +417,12 @@ function checkV11Depth(strategy: Record<string, unknown>, minEntrySteps = 2): V1
 
 function runStaticParityTests(): boolean {
   console.log("\n─────────────────────────────────────────────────────");
-  console.log("WAVE 26 PASS I — 5-FIXTURE PARITY TEST v11 (STATIC SPEC VALIDATION)");
+  console.log("PASS 8 TRACK C — 5-FIXTURE PARITY TEST v12 (STATIC SPEC VALIDATION)");
   console.log("─────────────────────────────────────────────────────");
-  console.log("This test validates the v11 prompt SPECIFICATION against fixtures.");
-  console.log("v11 checks: entry_sequence ≥ 2 steps, stop_loss_structured non-null,");
-  console.log("           targets ≥ 1, filters ≥ 1 — on top of v10 direction/archetype checks.");
+  console.log("This test validates the v12 prompt SPECIFICATION against few-shot fixtures.");
+  console.log("v10 checks: direction=both, archetype prefix, confluence/confirming indicators.");
+  console.log("v11 checks: entry_sequence ≥ 2 steps, stop_loss_structured, targets ≥ 1, filters ≥ 1.");
+  console.log("v12 checks: speaker_concepts ≥ 5 per strategy, each with role + verbatim_description + transcript_quote.");
   console.log("Running against the few-shot fixtures in kb/few-shot/transcript-extractor/");
   console.log();
 
@@ -386,8 +484,22 @@ function runStaticParityTests(): boolean {
           console.log(`    [v11] has_indicators_used=${v11.has_indicators_used}`);
         }
 
-        const allChecksPass = v10Checks.every(Boolean) && (!isV11Fixture || v11.pass);
-        console.log(`  ${allChecksPass ? "PASS" : "FAIL"}: ${fixtureFile}`);
+        // v12 speaker_concepts check (Pass 8 Track C mandate — ALL fixtures)
+        const v12 = checkV12SpeakerConcepts(s, 5);
+        console.log(`    [v12] speaker_concepts.length=${v12.speaker_concepts_count}  (expected: ≥5)  ${v12.min_count_met ? "OK" : "FAIL"}`);
+        if (v12.speaker_concepts_count > 0) {
+          console.log(`    [v12] concepts with role=${v12.concepts_with_role}/${v12.speaker_concepts_count}  ${v12.all_have_role ? "OK" : "FAIL"}`);
+          console.log(`    [v12] concepts with verbatim_description=${v12.concepts_with_verbatim_description}/${v12.speaker_concepts_count}  ${v12.all_have_verbatim_description ? "OK" : "FAIL"}`);
+          console.log(`    [v12] concepts with transcript_quote=${v12.concepts_with_transcript_quote}/${v12.speaker_concepts_count}  ${v12.all_have_transcript_quote ? "OK" : "FAIL"}`);
+        }
+        if (v12.failures.length > 0) {
+          for (const f of v12.failures) console.log(`    [v12] FAIL: ${f}`);
+        }
+
+        const v10V11Pass = v10Checks.every(Boolean) && (!isV11Fixture || v11.pass);
+        const v12Pass = v12.pass;
+        const allChecksPass = v10V11Pass && v12Pass;
+        console.log(`  v10/v11: ${v10V11Pass ? "PASS" : "FAIL"}  v12: ${v12Pass ? "PASS" : "FAIL"}  overall: ${allChecksPass ? "PASS" : "FAIL"} — ${fixtureFile}`);
         if (!allChecksPass) allPass = false;
       }
     } catch (err) {
@@ -446,8 +558,13 @@ function runStaticParityTests(): boolean {
   }
 
   console.log("─────────────────────────────────────────────────────");
-  console.log(`PARITY SPEC VALIDATION v11: ${allPass ? "PASS" : "FAIL"}`);
-  console.log("v11 PASS = fixtures 04, 05, 07, 08 all have correct v10+v11 fields");
+  console.log(`PARITY SPEC VALIDATION v12: ${allPass ? "PASS" : "FAIL"}`);
+  console.log("v12 PASS = fixtures 04, 05, 07, 08 all have correct v10+v11+v12 fields");
+  console.log("v12 requires ≥5 speaker_concepts per strategy, each with role + verbatim_description + transcript_quote");
+  if (!allPass) {
+    console.log("v12 FAIL = one or more fixtures missing speaker_concepts or have incomplete shape");
+    console.log("OPERATOR ACTION: add speaker_concepts to failing fixtures, OR accept FAIL as documented in verdict doc");
+  }
   console.log("─────────────────────────────────────────────────────");
 
   return allPass;
@@ -534,6 +651,25 @@ async function runLiveLlmParityTest(): Promise<boolean> {
           console.log(`  [v11] PASS: deep-extraction requirements met`);
         }
       }
+
+      // v12 speaker_concepts check for ALL strategies (Pass 8 Track C)
+      const minConcepts = fixture.requirements.min_speaker_concepts ?? 5;
+      const v12 = checkV12SpeakerConcepts(s, minConcepts);
+      console.log(`  [v12] speaker_concepts: ${v12.speaker_concepts_count} (need ≥${minConcepts}) — ${v12.min_count_met ? "OK" : "FAIL"}`);
+      if (v12.speaker_concepts_count > 0) {
+        console.log(`  [v12] role field: ${v12.concepts_with_role}/${v12.speaker_concepts_count} — ${v12.all_have_role ? "OK" : "FAIL"}`);
+        console.log(`  [v12] verbatim_description: ${v12.concepts_with_verbatim_description}/${v12.speaker_concepts_count} — ${v12.all_have_verbatim_description ? "OK" : "FAIL"}`);
+        console.log(`  [v12] transcript_quote: ${v12.concepts_with_transcript_quote}/${v12.speaker_concepts_count} — ${v12.all_have_transcript_quote ? "OK" : "FAIL"}`);
+      }
+      if (!v12.pass) {
+        console.log(`  [v12] FAIL: v12 speaker_concepts requirements not met`);
+        if (v12.failures.length > 0) {
+          for (const f of v12.failures) console.log(`    [v12] reason: ${f}`);
+        }
+        allFixturesPass = false;
+      } else {
+        console.log(`  [v12] PASS: speaker_concepts requirements met`);
+      }
     }
 
     console.log(`  [${fixture.id}] ${parityResult.pass ? "PASS" : "FAIL"}: ${fixture.name}`);
@@ -562,11 +698,40 @@ function loadSampleTranscript(): string {
   }
 }
 
+// ─── Audit stamp helper (Pass 8 Track C) ─────────────────────────────────────
+// Emits a prompt.v12_parity_verified audit row via the DB.
+// Fails silently if the DB is unavailable (non-fatal for CI run).
+
+async function emitV12ParityAudit(pass: boolean): Promise<void> {
+  const status = pass ? "success" : "warn";
+  const action = "prompt.v12_parity_verified";
+  try {
+    const { db } = await import("../src/server/db/index.js");
+    const { auditLog } = await import("../src/server/db/schema.js");
+    await db.insert(auditLog).values({
+      action,
+      status,
+      details: {
+        version: "v12",
+        runner: "pass8_track_c",
+        speaker_concepts_check: pass ? "all_fixtures_passed" : "fixtures_missing_speaker_concepts",
+        timestamp: new Date().toISOString(),
+      },
+    });
+    console.log(`[audit] ${action} written (status=${status})`);
+  } catch (err) {
+    // Non-fatal — audit write failure does not block CI
+    console.warn(`[audit] Could not write ${action} audit row (non-fatal):`, (err as Error).message ?? err);
+  }
+}
+
 async function runSmoke(): Promise<void> {
   // Always run static parity spec test first
   const paritySpecPass = runStaticParityTests();
 
   if (PARITY_ONLY) {
+    // Emit audit stamp for v12 parity result (non-blocking)
+    await emitV12ParityAudit(paritySpecPass);
     process.exit(paritySpecPass ? 0 : 1);
   }
 
