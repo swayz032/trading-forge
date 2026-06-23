@@ -545,11 +545,11 @@ liveOrderRoutes.post(
     if (action === "archetype_signal") {
       // Pass 4.5 Track D: emit signal-received SSE immediately (fire-and-forget)
       emitArchetypeSignalReceived({
-        strategy_id: strategy_id ?? null,
+        strategy_id: strategy_id ?? "unknown",
         archetype: archetype ?? "<missing>",
         account_id,
         correlation_id: correlationId,
-        bar_timestamp: bar_timestamp ?? null,
+        bar_timestamp: bar_timestamp ?? "unknown",
       });
 
       // Validate archetype field is present
@@ -635,7 +635,7 @@ liveOrderRoutes.post(
         } catch { /* non-blocking */ }
         // Pass 4.5 Track D: emit evaluator-failed SSE + Prom counter
         emitArchetypeEvaluatorFailed({
-          strategy_id: strategy_id ?? null,
+          strategy_id: strategy_id ?? "unknown",
           archetype: archetypeKey,
           error_class: errClass,
           correlation_id: correlationId,
@@ -646,7 +646,7 @@ liveOrderRoutes.post(
 
       // Pass 4.5 Track D: emit signal-resolved SSE + Prom counter with the resolved action
       emitArchetypeSignalResolved({
-        strategy_id: strategy_id ?? null,
+        strategy_id: strategy_id ?? "unknown",
         archetype: archetypeKey,
         resolved_action: evaluatorResult.action as "enter_long" | "enter_short" | "exit_long" | "exit_short" | "hold",
         account_id,

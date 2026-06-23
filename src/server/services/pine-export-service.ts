@@ -380,7 +380,7 @@ export async function compileDualPineExport(
           input: { strategyId, blockedAt: "compileDualPineExport" } as Record<string, unknown>,
           result: {
             strategy_id: strategyId,
-            lifecycle_state: err.lifecycleState,
+            lifecycle_state: err.lifecycleState ?? "unknown",
             shadow_mode_enabled: err.shadowModeEnabled,
             blocked_at: "compileDualPineExport",
           } as Record<string, unknown>,
@@ -402,7 +402,7 @@ export async function compileDualPineExport(
       );
       emitPineShadowRefused({
         strategy_id: strategyId,
-        lifecycle_state: err.lifecycleState,
+        lifecycle_state: err.lifecycleState ?? "unknown",
         shadow_mode_enabled: err.shadowModeEnabled,
         blocked_at: "compileDualPineExport",
         correlation_id: correlationId ?? null,
@@ -845,7 +845,7 @@ export async function compilePineExport(
           input: { strategyId, blockedAt: "compilePineExport" } as Record<string, unknown>,
           result: {
             strategy_id: strategyId,
-            lifecycle_state: err.lifecycleState,
+            lifecycle_state: err.lifecycleState ?? "unknown",
             shadow_mode_enabled: err.shadowModeEnabled,
             blocked_at: "compilePineExport",
           } as Record<string, unknown>,
@@ -866,7 +866,7 @@ export async function compilePineExport(
       );
       emitPineShadowRefused({
         strategy_id: strategyId,
-        lifecycle_state: err.lifecycleState,
+        lifecycle_state: err.lifecycleState ?? "unknown",
         shadow_mode_enabled: err.shadowModeEnabled,
         blocked_at: "compilePineExport",
         correlation_id: correlationId ?? null,

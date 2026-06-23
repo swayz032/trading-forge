@@ -301,7 +301,7 @@ pineExportRoutes.get("/:id/artifacts/:artifactId/download", injectApiKeyForSameO
       );
       emitPineShadowRefused({
         strategy_id: parentExport.strategyId,
-        lifecycle_state: err.lifecycleState,
+        lifecycle_state: err.lifecycleState ?? "unknown",
         shadow_mode_enabled: err.shadowModeEnabled,
         blocked_at: "artifact_download",
         correlation_id: null,

@@ -112,7 +112,7 @@ async function queryLifecycleDistribution(): Promise<LifecycleRow[]> {
         GROUP BY lifecycle_state
         ORDER BY COUNT(*) DESC`
   );
-  return rows.rows.map((r) => ({
+  return rows.map((r: { lifecycle_state: string; count: string }) => ({
     state: r.lifecycle_state,
     count: parseInt(r.count, 10),
   }));
@@ -129,7 +129,7 @@ async function queryFactorQualityHistogram(): Promise<FactorQualityHistogram> {
   );
 
   const histogram: FactorQualityHistogram = { rich: 0, thin: 0, fallback_only: 0, null: 0 };
-  for (const row of rows.rows) {
+  for (const row of rows) {
     const fq = row.factor_quality;
     if (fq === "rich") {
       histogram.rich += parseInt(row.count, 10);
@@ -153,7 +153,7 @@ async function queryArchetypeHistogram(): Promise<ArchetypeHistogram> {
 
   const histogram: ArchetypeHistogram = {};
 
-  for (const row of rows.rows) {
+  for (const row of rows) {
     const ei = row.entry_indicator;
     let category: string;
 
@@ -183,7 +183,7 @@ async function queryNeedsArchetypeQueue(): Promise<NeedsArchetypeQueueResult> {
         FROM needs_archetype_queue
         WHERE status = 'pending'`
   );
-  const pendingCount = parseInt(countRows.rows[0]?.count ?? "0", 10);
+  const pendingCount = parseInt(countRows[0]?.count ?? "0", 10);
 
   // Top 10 pending by extraction_count DESC
   const top10Rows = await db.execute<{
@@ -197,11 +197,13 @@ async function queryNeedsArchetypeQueue(): Promise<NeedsArchetypeQueueResult> {
         LIMIT 10`
   );
 
-  const top10: QueueEntry[] = top10Rows.rows.map((r) => ({
-    speakerTerm: r.speaker_term,
-    extractionCount: parseInt(r.extraction_count, 10),
-    ready: parseInt(r.extraction_count, 10) >= 3,
-  }));
+  const top10: QueueEntry[] = top10Rows.map(
+    (r: { speaker_term: string; extraction_count: string }) => ({
+      speakerTerm: r.speaker_term,
+      extractionCount: parseInt(r.extraction_count, 10),
+      ready: parseInt(r.extraction_count, 10) >= 3,
+    }),
+  );
 
   return { pendingCount, top10 };
 }

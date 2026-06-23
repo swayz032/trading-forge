@@ -40,7 +40,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 // const variables hit TDZ errors. Use vi.hoisted() to pre-declare mock fns.
 
 const { mockRouteOrder, mockDbInsert, mockDbInsertValues } = vi.hoisted(() => {
-  const mockDbInsertValues = vi.fn(() => Promise.resolve());
+  const mockDbInsertValues = vi.fn((_values?: unknown) => Promise.resolve());
   const mockDbInsert = vi.fn(() => ({ values: mockDbInsertValues }));
   const mockRouteOrder = vi.fn();
   return { mockRouteOrder, mockDbInsert, mockDbInsertValues };
@@ -348,7 +348,7 @@ describe("routeLiveEntry — fail-CLOSED", () => {
     expect(result.routed).toBe(false);
     expect(result.needsReconcile).toBe(true);
     expect(mockDbInsert).toHaveBeenCalled();
-    const insertArg = mockDbInsertValues.mock.calls[0]?.[0] as { action: string; status: string };
+    const insertArg = mockDbInsertValues.mock.calls[0]?.[0] as unknown as { action: string; status: string };
     expect(insertArg.action).toBe("server_mediated.order_routing_failed");
     expect(insertArg.status).toBe("needs_reconcile");
   });
@@ -359,7 +359,7 @@ describe("routeLiveEntry — fail-CLOSED", () => {
     const result = await routeLiveEntry({ ctx, symbol: "MES", side: "long", quantity: 6 });
     expect(result.routed).toBe(true);
     expect(result.needsReconcile).toBe(false);
-    const insertArg = mockDbInsertValues.mock.calls[0]?.[0] as { action: string; status: string };
+    const insertArg = mockDbInsertValues.mock.calls[0]?.[0] as unknown as { action: string; status: string };
     expect(insertArg.action).toBe("server_mediated.order_routed");
     expect(insertArg.status).toBe("success");
   });
@@ -371,7 +371,7 @@ describe("routeLiveEntry — fail-CLOSED", () => {
     expect(result.routed).toBe(false);
     expect(result.needsReconcile).toBe(true);
     expect(mockDbInsert).toHaveBeenCalled();
-    const insertArg = mockDbInsertValues.mock.calls[0]?.[0] as { action: string; status: string };
+    const insertArg = mockDbInsertValues.mock.calls[0]?.[0] as unknown as { action: string; status: string };
     expect(insertArg.action).toBe("server_mediated.order_routing_failed");
     expect(insertArg.status).toBe("needs_reconcile");
   });
@@ -525,7 +525,7 @@ describe("routeLiveFlatten — time-stop + force-close", () => {
     expect(result.routed).toBe(false);
     expect(result.needsReconcile).toBe(true);
     expect(mockDbInsert).toHaveBeenCalled();
-    const insertArg = mockDbInsertValues.mock.calls[0]?.[0] as { action: string; status: string };
+    const insertArg = mockDbInsertValues.mock.calls[0]?.[0] as unknown as { action: string; status: string };
     expect(insertArg.action).toBe("server_mediated.exit_routing_failed");
     expect(insertArg.status).toBe("needs_reconcile");
   });

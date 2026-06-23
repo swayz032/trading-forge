@@ -465,7 +465,7 @@ async function attemptAutoRestart(
       "The backend heartbeat is stale but autonomous restart is disabled because " +
         "ADMIN_RESTART_HMAC_SECRET is not configured. Manual intervention required.",
       { parentCorrelationId, reason: "secret_not_configured" },
-    ).catch(() => {});
+    );
     return;
   }
 
@@ -632,7 +632,7 @@ async function attemptAutoRestart(
         error: errMsg,
         parentCorrelationId,
       },
-    ).catch(() => {});
+    );
   }
 }
 

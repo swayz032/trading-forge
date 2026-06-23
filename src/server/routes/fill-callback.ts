@@ -57,9 +57,9 @@ import {
   ingestFillEvent,
   clearAccountReconcileBlock,
   FILL_SOURCES,
-  isServerMediatedExecutionEnabled,
   type FillEvent,
 } from "../services/fill-reconciliation-service.js";
+import { isServerMediatedExecutionEnabled } from "../services/server-mediated-executor.js";
 
 export const fillCallbackRoutes = Router();
 
@@ -296,7 +296,7 @@ fillCallbackRoutes.post("/", async (req: Request, res: Response) => {
 
   logger.info({ result, correlationId }, "fill-callback: fill ingestion complete");
 
-  return res.status(200).json({ outcome: result.outcome, correlationId, ...result });
+  return res.status(200).json({ correlationId, ...result });
 });
 
 // ─── POST /api/broker/fill-callback/reconcile-clear ──────────────────────────

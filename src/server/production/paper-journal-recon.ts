@@ -538,7 +538,7 @@ async function writeAuditRow(params: {
 
 function fireCriticalAlert(
   reconDateStr: string,
-  mismatchedResults: Array<{ strategyId?: string; symbol?: string; error?: string; [key: string]: unknown }>
+  mismatchedResults: ReadonlyArray<{ strategyId?: string; symbol?: string; error?: string }>
 ): void {
   const count = mismatchedResults.length;
   const strategyList = mismatchedResults

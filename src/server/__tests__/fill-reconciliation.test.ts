@@ -352,7 +352,7 @@ describe("fill-reconciliation-service — order state persistence", () => {
           brokerType: "traderspost",
           firmId: "firm-1",
           responseBody: { orderId: "tp-order-123" },
-        } as Parameters<typeof updateOrderToAcked>[0]["brokerResult"],
+        } as unknown as Parameters<typeof updateOrderToAcked>[0]["brokerResult"],
         correlationId: "corr-1",
       })
     ).resolves.not.toThrow();

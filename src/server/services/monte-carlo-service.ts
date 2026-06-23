@@ -461,7 +461,7 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {},
                 try {
                   await db.update(strategyExports)
                     .set({ exportType: "alert_only" })
-                    .where(eq(strategyExports.id, pineResult.id));
+                    .where(eq(strategyExports.id, pineResult.id ?? ""));
                 } catch (patchErr) {
                   logger.warn(
                     { exportId: pineResult.id, err: patchErr },

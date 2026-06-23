@@ -711,7 +711,7 @@ async function emitV12ParityAudit(pass: boolean): Promise<void> {
     await db.insert(auditLog).values({
       action,
       status,
-      details: {
+      result: {
         version: "v12",
         runner: "pass8_track_c",
         speaker_concepts_check: pass ? "all_fixtures_passed" : "fixtures_missing_speaker_concepts",

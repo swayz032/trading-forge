@@ -7,7 +7,7 @@
  * POST /pipeline/vacation — set engine mode to VACATION; n8n remains always-on
  */
 
-import { Router } from "express";
+import { Router, type Request, type Response } from "express";
 import { randomUUID, createHmac, timingSafeEqual } from "crypto";
 import { desc, eq, and, sql, count, gte } from "drizzle-orm";
 import { getMode, setMode } from "../services/pipeline-control-service.js";

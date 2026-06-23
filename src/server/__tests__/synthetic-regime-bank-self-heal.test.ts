@@ -33,7 +33,11 @@ const dbMocks = vi.hoisted(() => {
 });
 
 const auditMocks = vi.hoisted(() => ({
-  insertAuditRowSafe: vi.fn().mockResolvedValue(undefined),
+  // Typed with the real single-argument call signature so `.mock.calls` is a
+  // 1-tuple array (`[any][]`). Without the explicit signature, a bare `vi.fn()`
+  // infers a zero-arg mock whose `.mock.calls` is `[][]` (empty tuples), which
+  // makes the `.find(([args]: [any]) => ...)` destructuring fail TS2769.
+  insertAuditRowSafe: vi.fn<(args: any) => Promise<boolean>>().mockResolvedValue(true),
 }));
 
 const populateMocks = vi.hoisted(() => ({
@@ -117,7 +121,7 @@ describe("ensureRegimeBankPopulated", () => {
     // Restore default mock implementations
     dbMocks.fromMock.mockImplementation(async () => dbMocks.selectResult.rows);
     dbMocks.selectMock.mockImplementation(() => ({ from: dbMocks.fromMock }));
-    auditMocks.insertAuditRowSafe.mockResolvedValue(undefined);
+    auditMocks.insertAuditRowSafe.mockResolvedValue(true);
   });
 
   // ────────────────────────────────────────────────────────────────────────────

@@ -490,7 +490,7 @@ export async function generateRecipientExport(
           input: { strategyId, accountId, blockedAt: "generateRecipientExport" } as Record<string, unknown>,
           result: {
             strategy_id: strategyId,
-            lifecycle_state: err.lifecycleState,
+            lifecycle_state: err.lifecycleState ?? "unknown",
             shadow_mode_enabled: err.shadowModeEnabled,
             blocked_at: "generateRecipientExport",
           } as Record<string, unknown>,
@@ -511,7 +511,7 @@ export async function generateRecipientExport(
       );
       emitPineShadowRefused({
         strategy_id: strategyId,
-        lifecycle_state: err.lifecycleState,
+        lifecycle_state: err.lifecycleState ?? "unknown",
         shadow_mode_enabled: err.shadowModeEnabled,
         blocked_at: "recipient_build",
         correlation_id: correlationId ?? null,

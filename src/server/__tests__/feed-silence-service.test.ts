@@ -405,7 +405,9 @@ describe("A-3 sustained feed silence — emergency close", () => {
 
     // First tick: normal silence alert fires, but no emergency-close audit
     expect(notifyCritical).toHaveBeenCalledOnce();
-    const auditCalls = (insertAuditRow as ReturnType<typeof vi.fn>).mock.calls;
+    const auditCalls = (insertAuditRow as ReturnType<typeof vi.fn>).mock.calls as unknown as Array<
+      [{ action: string }]
+    >;
     const closeAudit = auditCalls.find(
       ([arg]: [{ action: string }]) => arg.action === "feed.silence_emergency_close",
     );
@@ -455,7 +457,9 @@ describe("A-3 sustained feed silence — emergency close", () => {
     // we assert on the audit calls.
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
 
-    const auditCalls = (insertAuditRow as ReturnType<typeof vi.fn>).mock.calls;
+    const auditCalls = (insertAuditRow as ReturnType<typeof vi.fn>).mock.calls as unknown as Array<
+      [{ action: string }]
+    >;
     const closeAudit = auditCalls.find(
       ([arg]: [{ action: string }]) => arg.action === "feed.silence_emergency_close",
     );
@@ -494,7 +498,9 @@ describe("A-3 sustained feed silence — emergency close", () => {
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
 
     // No emergency-close audit on tick 3 — already closed this window
-    const auditCalls = (insertAuditRow as ReturnType<typeof vi.fn>).mock.calls;
+    const auditCalls = (insertAuditRow as ReturnType<typeof vi.fn>).mock.calls as unknown as Array<
+      [{ action: string }]
+    >;
     const closeAudit = auditCalls.find(
       ([arg]: [{ action: string }]) => arg.action === "feed.silence_emergency_close",
     );
@@ -548,7 +554,9 @@ describe("A-3 sustained feed silence — emergency close", () => {
     ).resolves.not.toThrow();
 
     // No emergency-close notifyCritical should have fired (fail-open)
-    const calls = (notifyCritical as ReturnType<typeof vi.fn>).mock.calls;
+    const calls = (notifyCritical as ReturnType<typeof vi.fn>).mock.calls as unknown as Array<
+      [string]
+    >;
     const emergencyCall = calls.find(
       ([title]: [string]) => title?.includes("emergency close"),
     );
