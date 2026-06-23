@@ -24,9 +24,11 @@ describe("news-policy — firm-aware Tier-1 behavior (Phase 2)", () => {
       expect(resolveNewsAction("topstep_50k", true).action).toBe("reduce_size");
     });
 
-    it("MFFU (Rapid restricted) in a T1 window → block", () => {
-      expect(resolveNewsAction("mffu", true).action).toBe("block");
-      expect(resolveNewsAction("mffu_50k", true).action).toBe("block");
+    it("MFFU (Builder — news allowed) in a T1 window → reduce_size (caution, never block)", () => {
+      // Operator's MFFU account is the BUILDER plan, which ALLOWS news trading (eval + sim).
+      // Treated like Topstep: caution/reduce-size, never a hard block. (Rapid/Pro would block.)
+      expect(resolveNewsAction("mffu", true).action).toBe("reduce_size");
+      expect(resolveNewsAction("mffu_50k", true).action).toBe("reduce_size");
     });
 
     it("unknown / missing firm → fail-safe block (never assume permissive)", () => {

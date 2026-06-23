@@ -11,9 +11,10 @@
  *     caution. Topstep's own guidance: "cut your position size, use limit orders, or
  *     avoid trading the event." → the bot AUTO-REDUCES size in the window, never blocks.
  *
- *   • MFFU 50k Rapid (secondary, RESTRICTED account): T1 trading is PROHIBITED. Rapid
- *     Sim Funded / Pro Sim Funded are restricted accounts where T1 trading is not
- *     allowed at all. → the bot HARD-BLOCKS entries in the window.
+ *   • MFFU 50k BUILDER (secondary): news trading is ALLOWED (eval + sim funded). Builder
+ *     is NOT a T1-restricted plan → caution like Topstep: AUTO-REDUCE size, never block.
+ *     (MFFU Rapid Sim Funded / Pro Sim Funded ARE T1-restricted — if the operator ever
+ *     switches to those plans, restore a HARD BLOCK for those plan keys.)
  *
  * Unknown/missing firm → BLOCK (fail-safe — never assume a permissive firm policy).
  *
@@ -124,8 +125,15 @@ export function resolveNewsAction(
     return { action: "reduce_size", sizeFactor: getNewsReduceSizeFactor() };
   }
 
-  // MFFU (incl. Rapid restricted) + unknown/missing → fail-safe HARD BLOCK.
-  // The operator's MFFU account is a 50k Rapid plan = restricted (T1 prohibited).
+  // MFFU (BUILDER plan): news trading is ALLOWED (eval + sim funded) — Builder is NOT a
+  // T1-restricted plan (unlike Rapid/Pro Sim Funded). Treat like Topstep: caution, reduce
+  // size in the window, never block. (If the operator ever switches to MFFU Rapid/Pro, those
+  // ARE T1-prohibited — restore a hard block for those plan keys.)
+  if (firm === "mffu") {
+    return { action: "reduce_size", sizeFactor: getNewsReduceSizeFactor() };
+  }
+
+  // Unknown/missing firm → fail-safe HARD BLOCK (we don't know the plan's news rules).
   return { action: "block", sizeFactor: 1 };
 }
 

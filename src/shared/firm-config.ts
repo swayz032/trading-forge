@@ -98,17 +98,18 @@ export const FIRMS: Record<string, FirmConfig> = {
     macro_blackout_mode: "strict",
     accountTypes: {
       "50k": {
-        // 2026-06-23: operator chose the MFFU PRO plan. Pro Sim Funded = EOD trailing (Max
-        // Loss EOD $2,000; after first payout MLL static at $50,100), 80/20 split, payouts after
-        // 14 days + $2,100 buffer, consistency EVAL-ONLY, no DLL, NO T1 news. ⚠️ Pro caps MICROS
-        // at 5 (mini-oriented; pending operator confirm it's not a typo) — binds our micro sizing.
+        // 2026-06-23: operator chose the MFFU BUILDER plan. Builder = EOD trailing (Max EOD
+        // Drawdown $2,000; eval floor $48,000; LIVE MLL static once it reaches $0) + 40 micros
+        // (room for our pyramid, unlike Pro's 5) + $1,000 SOFT-pause DLL (account survives) +
+        // news ALLOWED. 80/20 split; consistency 50% at the SIM-FUNDED payout stage only (NONE
+        // eval, NONE live); $500 min payout; 5 sim payouts → real live broker (Blue Row Capital).
         accountSize: 50_000, monthlyFee: 77, activationFee: 0, ongoingMonthlyFee: 0,
-        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 5, trailing: "eod",
-        payoutSplit: 0.80, minPayoutDays: 14, consistencyRule: 0.50, // Python: "mffu_50pct_eval_only"
-        dailyLossLimit: null, overnightOk: false, weekendOk: false, commissionPerSide: 0.62,
-        minTradingDays: 2,
+        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 40, trailing: "eod",
+        payoutSplit: 0.80, minPayoutDays: 2, consistencyRule: 0.50, // Python: "mffu_50pct_sim_payout"
+        dailyLossLimit: 1000, overnightOk: false, weekendOk: false, commissionPerSide: 0.62,
+        minTradingDays: 1,
         // 2026-compliance fields (canonical: docs/prop-firm-rules-2026-mffu.md)
-        payoutCycleDays: 14,
+        payoutCycleDays: 2,
         hftMaxTradesPerDay: 500,
         // Rule 2: collaborative trading (2+ accounts same/opposite strategy → ban)
         collaborativeTradingBanned: true,

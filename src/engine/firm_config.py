@@ -54,10 +54,8 @@ FIRM_COMMISSIONS: dict[str, dict[str, float]] = {
 
 FIRM_CONTRACT_CAPS: dict[str, dict[str, int]] = {
     "topstep_50k": {"MES": 50, "MNQ": 50, "MCL": 50},
-    # ⚠️ MFFU PRO 50K = 5 micros (Pro is mini-oriented; 10× tighter than Rapid's 50). Set
-    # conservatively to 5 pending operator confirmation it's not a typo — this BINDS our micro
-    # sizing below the pyramid base (6 MES / 18 MCL).
-    "mffu_50k":    {"MES": 5, "MNQ": 5, "MCL": 5},
+    # MFFU BUILDER 50K = 40 micros (4 minis / 40 micros). Room for our pyramid base (6/6/18).
+    "mffu_50k":    {"MES": 40, "MNQ": 40, "MCL": 40},
 }
 
 # Hard bounds: min 0, max 60 (MFFU Pro). ATR sizing is clamped to this range.
@@ -87,7 +85,7 @@ SCALING_PLANS: dict[str, list[dict]] = {
 # ─── Initial Contract Caps (starting limits before scaling) ──────
 INITIAL_CONTRACT_CAPS: dict[str, int] = {
     "topstep_50k": 50,  # 50 micros at $50K Combine + Funded
-    "mffu_50k": 5,      # ⚠️ PRO 50K = 5 micros (mini-oriented; pending operator confirm — binds micro sizing)
+    "mffu_50k": 40,     # MFFU BUILDER 50K = 40 micros (4 minis / 40 micros)
 }
 
 
@@ -129,29 +127,26 @@ FIRM_RULES: dict[str, dict] = {
         "ongoing_monthly_fee": 0,
         "profit_target": 3000,
         "max_drawdown": 2000,
-        # ⚠️ MFFU PRO 50K caps MICROS at 5 (5 mini / 5 micro per the Pro plan doc). This is 10×
-        # tighter than Rapid/Builder (50 micro) and BELOW our pyramid base (6 MES / 18 MCL) —
-        # Pro is mini-oriented. Set conservatively to 5 (breach-safe) PENDING operator
-        # confirmation it's not a typo. If real, the firm cap (5) binds our micro sizing.
-        "max_contracts": 5,
-        # 2026-06-23: operator chose the MFFU PRO plan. Pro Sim Funded = EOD trailing drawdown
-        # (Max Loss EOD $2,000) — matches Topstep's basis + our existing realizedPeakEquity model
-        # (NO intraday-trailing build needed). After the FIRST payout the MLL moves to $50,100
-        # ($100 above the $50K start) and stays STATIC (stops trailing).
+        # 2026-06-23: operator chose the MFFU BUILDER plan. Builder = EOD trailing + 40 micros
+        # (room for our pyramid, unlike Pro's 5) — best fit for the micro bot.
+        "max_contracts": 40,  # Builder: 4 minis / 40 micros (eval + sim funded)
+        # Builder Sim Funded = EOD trailing drawdown (Max EOD Drawdown / MLL $2,000; eval starting
+        # floor $48,000) — matches Topstep basis + our realizedPeakEquity model (NO intraday build).
+        # LIVE account: $2,000 EOD trailing, MLL STATIC once it reaches $0. NEWS TRADING ALLOWED.
         "trailing": "eod",
-        "post_payout_static_mll": 50_100,  # MLL static at start+$100 after first payout
-        "payout_split": 0.80,          # Pro is 80/20 (Rapid is 90/10)
-        "min_payout_days": 14,         # Pro: 14 calendar days from first trade + buffer cleared
-        "payout_buffer": 2100,         # $2,100 realized profit before first payout (50K)
-        "min_payout": 1000,            # Pro min payout request $1,000
-        "min_trading_days": 2,         # Pro eval passable in as little as 2 days
-        "consistency_rule": "mffu_50pct_eval_only",  # 50% — EVAL ONLY; NONE in Pro Sim Funded
-        "daily_loss_limit": None,      # No DLL in Pro eval or sim funded
+        "starting_floor": 48_000,      # Builder eval starting floor ($50K − $2K)
+        "payout_split": 0.80,          # Builder 80/20 (eval + sim + live)
+        "min_payout_days": 2,          # Builder: 2 qualifying days/cycle; pays every 48h after buffer
+        "payout_buffer": 2100,         # $2,100 buffer cleared before first payout
+        "min_payout": 500,             # Builder min payout $500 (max $2,000/cycle, 5 sim payouts → live)
+        "min_trading_days": 1,         # Builder eval 1-day minimum
+        "consistency_rule": "mffu_50pct_sim_payout",  # 50% at the SIM-FUNDED payout stage only; NONE eval, NONE live
+        "daily_loss_limit": 1000,      # Builder $1,000 DLL — SOFT pause (account survives, not a breach)
         "overnight_ok": False,
         "weekend_ok": False,
-        # T1 news trading NOT allowed on Pro sim funded (news-policy MFFU hard-block already enforces).
+        # Builder: news trading ALLOWED (eval + sim funded) — news-policy MFFU should NOT hard-block.
         # 2026-compliance (canonical: docs/prop-firm-rules-2026-mffu.md)
-        "payout_cycle_days": 14,  # Pro: 14-day buffer-cleared payout cadence
+        "payout_cycle_days": 2,  # Builder: every 48h after buffer cleared (5 sim payouts → live)
     },
 }
 

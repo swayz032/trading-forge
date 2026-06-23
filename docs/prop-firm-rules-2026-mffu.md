@@ -21,23 +21,25 @@
 | Ongoing monthly fee (post-funded) | `$0` |
 | Profit target | `$3,000` |
 | Max drawdown (also serves as buffer) | `$2,000` |
-> **The operator's MFFU account is the PRO plan** (chosen 2026-06-23 — EOD trailing matches our
-> risk model + no funded consistency). The values below are MFFU **PRO 50K**.
+> **The operator's MFFU account is the BUILDER plan** (chosen 2026-06-23 — EOD trailing matches
+> our risk model + 40-micro room (vs Pro's 5) + cheapest + path to a real live broker). Values
+> below are MFFU **BUILDER 50K (Default)**.
 
-| Trailing type | `eod` — **PRO Sim Funded** EOD trailing (Max Loss EOD $2,000). After the FIRST payout the MLL moves to **$50,100 and stays STATIC** (stops trailing). Matches Topstep basis + our `realizedPeakEquity` model — no intraday build needed. |
-| Daily loss limit | `null` (no DLL in Pro eval or sim funded) |
-| Max contracts | ⚠️ `5` micros (Pro is `5 mini / 5 micro` — mini-oriented; **10× tighter than Rapid's 50**, BELOW our base 6 MES / 18 MCL). Pending operator confirm it's not a typo. |
-| Min trading days | `2` (Pro eval, passable in as little as 2 days) |
-| Min payout days | `14` (Pro: 14 calendar days from first trade + buffer cleared) |
-| Payout buffer | `$2,100` realized profit (50K) before first payout. One-time pre-buffer withdrawal: up to 60% of profit, min $1,000. |
-| Min payout request | `$1,000` (Pro); Max payout `$100,000`/user |
-| Consistency rule | `50%` best-day cap — **EVAL ONLY** (none in Pro Sim Funded) |
+| Trailing type | `eod` — **Builder** EOD trailing (Max EOD Drawdown / MLL $2,000; eval starting floor $48,000). **LIVE** account: $2,000 EOD trailing, MLL **static once it reaches $0**. Matches Topstep basis + our `realizedPeakEquity` model — no intraday build. |
+| Daily loss limit | `$1,000` — **SOFT pause** (hit it and trading pauses for the day; the account SURVIVES, not a hard breach). |
+| Max contracts | `40` micros (Builder = `4 mini / 40 micro`) — room for our pyramid base (6 MES / 6 MNQ / 18 MCL). |
+| Min trading days | `1` (Builder eval 1-day minimum) |
+| Min payout days | `2` qualifying days/cycle; Builder pays **every 48h** after buffer cleared |
+| Payout buffer | `$2,100` (Default) / `$1,600` (Add-On) cleared before first payout |
+| Payout amounts | min `$500`, **max $2,000/cycle**, **5 sim payouts** then → live transition |
+| Consistency rule | `50%` — **SIM-FUNDED payout stage ONLY** (NONE in eval, NONE on the live account) |
 | Overnight allowed | `false` |
 | Weekend allowed | `false` |
 | Commission per side per contract | `$0.62` |
-| Payout split | `0.80` (80/20 — Pro) |
-| Payout schedule | after 14 days + $2,100 buffer cleared |
-| T1 news trading | **NOT allowed** on Pro Sim Funded (news-policy MFFU hard-block enforces) |
+| Payout split | `0.80` (80/20 — eval + sim + live) |
+| Live transition | after the **5th approved sim payout** → real brokerage account (Blue Row Capital), daily payouts, no consistency |
+| News trading | **ALLOWED** (eval + sim funded) — Builder is NOT a T1-restricted plan |
+| Active accounts | `1` Builder account per user |
 
 ## Canonical Values
 
@@ -53,17 +55,17 @@ activation_fee: 0
 ongoing_monthly_fee: 0
 profit_target: 3000
 max_drawdown: 2000
-max_contracts: 5  # ⚠️ PRO 50K = 5 micros (5 mini / 5 micro — mini-oriented; 10x tighter than Rapid). Pending operator confirm (not a typo). Binds micro sizing.
-trailing: eod  # PRO Sim Funded = EOD trailing (Max Loss EOD $2,000); after first payout MLL static at $50,100
-payout_split: 0.80  # Pro is 80/20 (Rapid is 90/10)
-min_payout_days: 14  # Pro: 14 calendar days from first trade + $2,100 buffer cleared
-min_trading_days: 2  # Pro eval passable in as little as 2 days
-consistency_rule_pct: 0.50  # EVAL ONLY — none in Pro Sim Funded
-daily_loss_limit: null
+max_contracts: 40  # BUILDER 50K = 40 micros (4 mini / 40 micro) — room for our pyramid base
+trailing: eod  # BUILDER = EOD trailing (Max EOD Drawdown $2,000; eval floor $48,000); LIVE MLL static once it reaches $0
+payout_split: 0.80  # Builder 80/20 (eval + sim + live)
+min_payout_days: 2  # Builder: 2 qualifying days/cycle; pays every 48h after buffer
+min_trading_days: 1  # Builder eval 1-day minimum
+consistency_rule_pct: 0.50  # 50% at the SIM-FUNDED payout stage only — NONE eval, NONE live
+daily_loss_limit: 1000  # Builder $1,000 DLL — SOFT pause (account survives, not a breach)
 overnight_ok: false
 weekend_ok: false
 commission_per_side: 0.62
-payout_cycle_days: 14
+payout_cycle_days: 2
 ```
 
 ---
