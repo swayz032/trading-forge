@@ -4,7 +4,71 @@
 
 ---
 
-### Session Log — 2026-06-23 Paper-Trade Readiness Hardening Plan, Pass 6 MASTER CLOSE (Reconciliation + A/B Routing + DB-Integration Tests + Correlation_id Stitching, 4 parallel subagents, 77 new tests GREEN)
+### Session Log — 2026-06-23 Paper-Trade Readiness Hardening Plan, Pass 7 MASTER CLOSE (Observability + Autonomy Hardening, 3 subagents, 81 new tests GREEN, 4+ audit findings closed)
+
+**Mission:** Pass 7 — close audit observability + autonomy gaps: tradingview_markers UNIQUE INDEX dedup (Real Bug #3), composite gate evidence-completeness tracker (Observability Gap #4), PILOT→DEPLOYED Pine compile retry + paper.ts session hygiene (Observability Gap #6 + #8), cron jitter framework (Autonomy Gap #4), TP-Link Kasa remote power-cycle escape valve (Autonomy Gap #3), strategy library status CLI + needs_archetype_queue dashboard tile (Observability Gap #5 + #7).
+
+**3 subagents (Combined A+C + Track B + Track D — both touch disjoint files):**
+
+1. **observability-reliability (Combined Tracks A+C — dedup + gate tracker + Pine retry + paper hygiene)** — agent `a8f67892ea32bc65d`. **A.1** NEW migration `0173_tradingview_markers_unique.sql` registered at journal idx 176 — `CREATE UNIQUE INDEX IF NOT EXISTS idx_tradingview_markers_dedup ON tradingview_markers (account_id, strategy_id, bar_timestamp, signal)`. `tradingview-webhook.ts:381-394` INSERT updated to targeted `ON CONFLICT (account_id, strategy_id, bar_timestamp, signal) DO NOTHING RETURNING id`. **A.2** Composite evidence-completeness tracker in `lifecycle-service.ts:2817-3349` PAPER→DEPLOY_READY gate sweep — `gateEvidenceStatuses: string[]` accumulates status tokens across all 8 gates; when `incompleteCount >= 3` (legacy_proceed/data_unavailable/legacy_unavailable/legacy_null), BLOCK with `lifecycle.promotion_evidence_incomplete` (warn) + Discord WARN + family-grade postscript. `composite_evidence_score = 1.0 - (incomplete/total)` persisted into `lifecycle_transitions.result` JSONB. **C.1** Fixed `lifecycle-service.ts:4003` positional-argument bug (`correlationId` was passed as `firmKey` — now `undefined, undefined, true, correlationId`). Retry-with-backoff wrapper `[30s, 2m, 10m]` for `compileDualPineExport` call. On exhaustion: audit `lifecycle.deployed_pine_compile_failed` (warn) + Discord WARN with family-grade postscript. NEW cron `deployed-pine-artifact-check` daily 5 AM ET (`_PIPELINE_GATE_EXEMPT`) lists DEPLOYED strategies missing strategy_export_artifacts in last 24h. **C.2** `paper.ts:88-106` now uses `pg_try_advisory_lock` before stream start (lock derived from UUID→BigInt deterministic hash). Lock collision → 409 + `paper.session_advisory_lock_collision` audit. Stream startup failure → `paper.session_stream_failed` audit + Discord WARN + session marked `failed_to_stream` (no more stale `active` rows surviving past `MASSIVE_API_KEY` unset error). **26 new vitest GREEN.** 194/194 existing regression GREEN (lifecycle-service + tradingview-webhook + paper-execution).
+
+2. **autonomous-readiness (Track B — Cron jitter + Kasa remote power-cycle)** — agent `aec019507e5564cf6`. Cron jitter applied to the `0 21,22 * * *` cluster: consistency-tracker-daily-digest → `7 21,22`, composite-health-daily-digest → `13 21,22`, regime-drift-detector → `23 21,22`. ET-hour guards + `_tryAcquireJobLock` + `withRetry` + `_PIPELINE_GATE_EXEMPT` patterns ALL untouched. **TP-Link Kasa escape valve (decision LOCKED 2026-06-22):** NEW `scripts/remote-power-cycle.ps1` PowerShell script uses Kasa LOCAL LAN API (port 9999, XOR cipher — works without cloud internet). OFF→30s wait→ON sequence. Appends to `C:\Users\tonio\bin\kasa-cycle.log`. NEW `src/server/services/remote-power-cycle-service.ts` Node service spawns the script + writes `recovery.remote_power_cycle_triggered` audit (critical) BEFORE touching hardware + Discord CRITICAL with family-grade postscript ("wait 10 minutes, call Tony if still down"). `dead-mans-heartbeat-service.ts:482-537` extended: when `restartAttempts >= 3` AND `KASA_DEVICE_IP` is set, invokes `triggerRemotePowerCycle()` instead of just emitting the "hold the power button" Discord. When KASA env unset, preserves existing terminal-action message (zero behavior change). Three new env vars added to `.env.example` Admin/HMAC section: `KASA_DEVICE_IP`, `KASA_USERNAME`, `KASA_PASSWORD`. `startup-config-check.ts` warns on partial config; logs "KASA remote power-cycle escape valve is ACTIVE" when all three present. CLAUDE.md §15a documents the hardware setup + env wiring. **10 new vitest GREEN.**
+
+3. **observability-reliability (Track D — Strategy library status CLI + needs_archetype_queue tile)** — agent `ace475e09aabbf4cb`. NEW `scripts/strategy-library-status.ts` (532 lines, read-only) computes lifecycle distribution + factor_quality histogram + archetype histogram + needs_archetype_queue depth + per-strategy 4-bit composite promotion-readiness ranking (0-15 score from has_backtest, has_passing_frankenstein, factor_quality='rich', is_archetype_pine_implementable). Pretty markdown to stdout + timestamped JSON to `docs/strategy-library-status.json`. Flags `--top N` and `--json-only`. Operator daily-glance answer to "which CANDIDATE should I promote first?". NEW `GET /api/admin/needs-archetype-queue/summary` route returning `{ok, total, top:[{term, extractionCount}], readyCount}` scoped to `status='pending'`. **NEW frontend tile** `ArchetypeQueueTile` added to `ProductionStatusPanel.tsx` (~140 lines), polls every 60s, ready-threshold (count ≥3) highlighting, loading/error/empty/populated states. **45 new tests GREEN** (33 backend + 12 frontend).
+
+**Architect close (this commit):**
+- Added `deployed-pine-artifact-check` to `observability_reliability` registry scheduler_jobs (closing the system-map drift Track A+C's new cron introduced).
+- `npm run system-map:sync` regenerated topology files. `driftItems=[]`.
+
+**Verification:**
+- All Pass 7 vitest: 69/69 GREEN (`pass7-tracks-a-c` + `pass7-remote-power-cycle` + `strategy-library-status` + `ArchetypeQueueTile`). The agents reported 81 (26 + 10 + 33 + 12); current 69 reflects backend-only run; frontend `ArchetypeQueueTile.test.tsx` runs in the frontend test suite separately.
+- 3 CI hard gates GREEN: production-isolation + 2026-compliance + system-map:check (`driftItems: []`).
+- Regressions: 194/194 backend (lifecycle-service + tradingview-webhook + paper-execution-service) + 44/52 scheduler (8 pre-existing failures in scheduler-phase4c-crons confirmed identical pre/post via git stash).
+
+**Files changed (Pass 7 only, ~17 total):**
+- A `src/server/db/migrations/0173_tradingview_markers_unique.sql`
+- M `src/server/db/migrations/meta/_journal.json` (idx 176 registered)
+- M `src/server/routes/tradingview-webhook.ts` (targeted ON CONFLICT)
+- M `src/server/services/lifecycle-service.ts` (gateEvidenceStatuses, composite_evidence_score, Pine retry, positional-arg fix)
+- M `src/server/scheduler.ts` (cron jitter on 3 jobs + deployed-pine-artifact-check registered)
+- M `src/server/routes/paper.ts` (pg_advisory_lock + stream-failure rollback)
+- A `scripts/remote-power-cycle.ps1` (Kasa local LAN API)
+- A `src/server/services/remote-power-cycle-service.ts` (Node wrapper + audit + Discord)
+- M `src/server/services/dead-mans-heartbeat-service.ts` (Kasa trigger on 4th attempt)
+- M `src/server/lib/startup-config-check.ts` (KASA env warn)
+- M `.env.example` (3 KASA env vars + docs comment)
+- M `CLAUDE.md` (§15a remote power-cycle subsection)
+- A `scripts/strategy-library-status.ts`
+- M `src/server/routes/admin.ts` (GET /api/admin/needs-archetype-queue/summary)
+- M `Trading_forge_frontend/.../src/components/forge/ProductionStatusPanel.tsx` (ArchetypeQueueTile)
+- A 4 vitest files
+- M `docs/system-subsystem-registry.json` (deployed-pine-artifact-check)
+- M generated system-map trio
+
+**Audit findings closed by this pass (6 of 50):**
+- Real Bug #3: tradingview_markers ON CONFLICT silently allows duplicates. **CLOSED.**
+- Observability Gap #4: PAPER→DEPLOY_READY gates fail-OPEN on missing data. **CLOSED** (composite_evidence_score + ≥3 block).
+- Observability Gap #6: PILOT→DEPLOYED Pine compile fire-and-forget + positional-arg bug. **CLOSED** (retry-with-backoff + fixed args + daily artifact-check cron).
+- Observability Gap #8: paper.ts startup-failure leaves stale active session. **CLOSED** (pg_advisory_lock + rollback).
+- Autonomy Gap #4: cron pile-up at 21:00/22:00 UTC. **CLOSED** (minute offsets 7/13/23).
+- Autonomy Gap #3: no remote power-cycle when 24h auto-restart cap hit. **CLOSED** (TP-Link Kasa escape valve, operator action items documented).
+- Observability Gap #5 + #7: no library status snapshot + needs_archetype_queue depth unobserved. **CLOSED** (CLI + dashboard tile).
+
+**New env vars / audit actions:**
+- Env: `KASA_DEVICE_IP`, `KASA_USERNAME`, `KASA_PASSWORD` (all optional).
+- Audit: `lifecycle.promotion_evidence_incomplete`, `lifecycle.deployed_pine_compile_failed`, `deployed_pine_artifact_check.evaluated`, `paper.session_advisory_lock_collision`, `paper.session_stream_failed`, `recovery.remote_power_cycle_triggered`.
+- Cron: `deployed-pine-artifact-check` (daily 5 AM ET).
+
+**Carry-forward for next session:**
+- **Pass 8 (Bug Sweep + FIRST PAPER TRADE Smoke Test)** — last pass per plan. Real-bug closures (seed-slumhouse-crew.ts orphan FK; lifecycle-service.ts checkExportability fail-CLOSED conversion); n8n MCP wiring; v12 prompt parity verdict; FIRST PAPER TRADE end-to-end with one parametric strategy (sma_crossover/bollinger_breakout) on MES 5m.
+- **Operator action items:**
+  - Set `ADMIN_PROMOTE_HMAC_SECRET` to ≥32-char random in production .env (carry-forward from Pass 5).
+  - Purchase TP-Link Kasa HS103/HS105/HS110 (~$10-20); plug Skytech tower into it; configure Wi-Fi via Kasa app; assign static IP via router DHCP reservation; set `KASA_DEVICE_IP` + `KASA_USERNAME` + `KASA_PASSWORD` in tower .env; restart backend and verify startup log shows "KASA remote power-cycle escape valve is ACTIVE".
+- **Autonomy debt surfaced (NOT closed by Pass 7, by design):** `deployed-pine-artifact-check` alerts but doesn't auto-recompile; `failed_to_stream` sessions have no auto-retry watchdog; evidence-incomplete gate fires every cycle for same strategy with no backtest auto-enqueue. Tracked as Pass 8 candidates.
+
+---
+
+### Session Log — 2026-06-23 Paper-Trade Readiness Hardening Plan, Pass 6 MASTER CLOSE (Reconciliation + A/B Routing + DB-Integration Tests + Correlation_id Stitching, 4 parallel subagents, 77 new tests GREEN) (Reconciliation + A/B Routing + DB-Integration Tests + Correlation_id Stitching, 4 parallel subagents, 77 new tests GREEN)
 
 **Mission:** Pass 6 — close 4 audit findings: (1) High-Priority Wiring #3 paper_trades vs TradersPost broker tape reconciliation missing; (2) High-Priority Wiring #5 A/B paper routing is observability theatre — slumdawg-rl-challenger never receives real orders; (3) Observability Gap "no DB-integration coverage for Style C state machine"; (4) Observability + Autonomy Gap correlation_id stitching across auto-restart events.
 

@@ -31,6 +31,7 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
+  Tag,
 } from "lucide-react";
 import { api } from "@/lib/api-client";
 
@@ -277,6 +278,168 @@ function OverallBadge({ overall, mode }: { overall: OverallSeverity; mode: strin
   );
 }
 
+// ─── Archetype Queue tile (Pass 7 Track D) ────────────────────────────────────
+
+interface ArchetypeQueueSummary {
+  ok: boolean;
+  total: number;
+  top: Array<{ term: string; extractionCount: number }>;
+  readyCount: number;
+}
+
+/** READY_THRESHOLD: extraction_count >= 3 means the term has appeared across
+ *  enough different transcripts to justify creating a new canonical archetype. */
+const READY_THRESHOLD = 3;
+
+export function ArchetypeQueueTile() {
+  const [data, setData] = useState<ArchetypeQueueSummary | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchSummary() {
+      try {
+        const res = await api.get<ArchetypeQueueSummary>(
+          "/admin/needs-archetype-queue/summary",
+        );
+        if (!cancelled) {
+          setData(res);
+          setError(null);
+        }
+      } catch (err) {
+        if (!cancelled)
+          setError(err instanceof Error ? err.message : String(err));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    fetchSummary();
+    // Refresh every 60 seconds — queue depth changes slowly.
+    const iv = setInterval(fetchSummary, 60_000);
+    return () => {
+      cancelled = true;
+      clearInterval(iv);
+    };
+  }, []);
+
+  if (loading && !data) {
+    return (
+      <div
+        className="forge-card p-4 border border-text-muted/20"
+        data-testid="archetype-queue-tile"
+        data-state="loading"
+      >
+        <div className="flex items-center gap-2 text-text-muted">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span className="text-sm">Loading archetype queue…</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div
+        className="forge-card p-4 border border-loss/30"
+        data-testid="archetype-queue-tile"
+        data-state="error"
+      >
+        <div className="flex items-center gap-2 text-loss">
+          <AlertTriangle className="w-4 h-4" />
+          <span className="text-sm">
+            Archetype queue unavailable: {error ?? "no data"}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  const isEmpty = data.total === 0;
+
+  return (
+    <div
+      className="forge-card p-4 border border-text-muted/20 space-y-3"
+      data-testid="archetype-queue-tile"
+      data-total={data.total}
+      data-ready-count={data.readyCount}
+    >
+      {/* Header row */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Tag className="w-4 h-4 text-primary" />
+          <h3 className="text-sm font-semibold text-text-primary">
+            Archetype Queue
+          </h3>
+        </div>
+        <div className="flex items-center gap-2">
+          {data.readyCount > 0 && (
+            <span
+              className="text-xs font-semibold px-2 py-0.5 rounded-full bg-profit/15 text-profit border border-profit/30"
+              data-testid="archetype-queue-ready-badge"
+            >
+              {data.readyCount} ready
+            </span>
+          )}
+          <span className="text-xs text-text-muted">
+            {data.total} pending
+          </span>
+        </div>
+      </div>
+
+      {/* Content */}
+      {isEmpty ? (
+        <p
+          className="text-sm text-text-muted italic"
+          data-testid="archetype-queue-empty"
+        >
+          No items pending
+        </p>
+      ) : (
+        <div className="space-y-1" data-testid="archetype-queue-list">
+          {data.top.map((item) => {
+            const isReady = item.extractionCount >= READY_THRESHOLD;
+            return (
+              <div
+                key={item.term}
+                className={`flex items-center justify-between px-2 py-1 rounded text-xs ${
+                  isReady
+                    ? "bg-profit/8 border border-profit/20 text-text-primary"
+                    : "bg-transparent text-text-muted"
+                }`}
+                data-testid="archetype-queue-item"
+                data-term={item.term}
+                data-ready={isReady ? "true" : "false"}
+              >
+                <span className="font-mono truncate max-w-[70%]">
+                  {item.term}
+                </span>
+                <span
+                  className={`font-semibold ${isReady ? "text-profit" : "text-text-muted"}`}
+                >
+                  {item.extractionCount}×
+                  {isReady && (
+                    <span className="ml-1 text-profit/80">ready</span>
+                  )}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Footer hint */}
+      {data.readyCount > 0 && (
+        <p className="text-xs text-text-muted">
+          Terms with {READY_THRESHOLD}+ extractions are ready for archetype
+          creation.
+        </p>
+      )}
+    </div>
+  );
+}
+
 // ─── Main panel ───────────────────────────────────────────────────────────────
 
 /** Threshold (ms) beyond which the last-successful payload is considered stale
@@ -430,6 +593,9 @@ export function ProductionStatusPanel() {
 
       {/* A/B Paper Trade Comparison tile — READ-ONLY, W29 D.2 */}
       <AbSharpeComparisonTile />
+
+      {/* Archetype Queue tile — Pass 7 Track D: factory self-maintenance loop visibility */}
+      <ArchetypeQueueTile />
 
       {/* 6 Questions — 2-column grid on wide, 1-column on narrow.
           Each card gets a subtle amber ring when stale, so the staleness cue

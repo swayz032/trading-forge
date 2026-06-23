@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-23T17:07:44.732Z",
+  "generatedAt": "2026-06-23T17:46:41.438Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,7 +16,7 @@
   },
   "counts": {
     "routes": 75,
-    "schedulerJobs": 99,
+    "schedulerJobs": 100,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 29,
@@ -132,6 +132,7 @@
     "deepar-predict",
     "deepar-train",
     "deepar-validate",
+    "deployed-pine-artifact-check",
     "deployed-strategy-starvation-check",
     "disabled-job-probe",
     "discord-fanout-audit-30min",
@@ -979,7 +980,7 @@
     ],
     "coveredCounts": {
       "routes": 75,
-      "schedulerJobs": 99,
+      "schedulerJobs": 100,
       "engineSubsystems": 29,
       "databaseTables": 106
     },
@@ -3942,6 +3943,7 @@
         "schedulerJobs": [
           "agent-health-sweep",
           "data-integrity-suite",
+          "deployed-pine-artifact-check",
           "deployed-strategy-starvation-check",
           "disabled-job-probe",
           "discord-fanout-audit-30min",
@@ -10659,6 +10661,7 @@
       "schedulerJobs": [
         "agent-health-sweep",
         "data-integrity-suite",
+        "deployed-pine-artifact-check",
         "deployed-strategy-starvation-check",
         "disabled-job-probe",
         "discord-fanout-audit-30min",

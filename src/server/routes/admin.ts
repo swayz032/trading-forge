@@ -9,10 +9,10 @@
 
 import { Router } from "express";
 import { randomUUID, createHmac, timingSafeEqual } from "crypto";
-import { desc, eq, and, sql } from "drizzle-orm";
+import { desc, eq, and, sql, count, gte } from "drizzle-orm";
 import { getMode, setMode } from "../services/pipeline-control-service.js";
 import { db } from "../db/index.js";
-import { agentHealthReports, dataIntegrityFindings, liquidityLevels, strategies } from "../db/schema.js";
+import { agentHealthReports, dataIntegrityFindings, liquidityLevels, needsArchetypeQueue, strategies } from "../db/schema.js";
 import { AgentService } from "../services/agent-service.js";
 import { getPhaseRecord, setPhaseOverride, type PhaseValue } from "../services/harsh-regime-phase-service.js";
 import { notifyCritical, notifyWarning } from "../services/notification-service.js";
@@ -1576,3 +1576,79 @@ function deriveSuggestedAction(
   }
   return "Review strategy config";
 }
+
+// ─── GET /needs-archetype-queue/summary ─────────────────────────────────────
+//
+// Returns a summary of the needs_archetype_queue table for the Archetype Queue
+// dashboard tile. All counts are scoped to status='pending' rows only.
+//
+// Response shape:
+// {
+//   ok: true,
+//   total: number,                               // total pending terms
+//   top: Array<{ term: string, extractionCount: number }>,  // top 10 by count
+//   readyCount: number                           // pending rows with count >= 3
+// }
+//
+// Read-only — no mutations. No auth beyond the standard /api/* auth middleware.
+
+adminRoutes.get(
+  "/needs-archetype-queue/summary",
+  async (_req: Request, res: Response): Promise<void> => {
+    const correlationId = randomUUID();
+
+    try {
+      const [totalRow] = await db
+        .select({ value: count() })
+        .from(needsArchetypeQueue)
+        .where(eq(needsArchetypeQueue.status, "pending"));
+
+      const total = Number(totalRow?.value ?? 0);
+
+      const topRows = await db
+        .select({
+          term: needsArchetypeQueue.speakerTerm,
+          extractionCount: needsArchetypeQueue.extractionCount,
+        })
+        .from(needsArchetypeQueue)
+        .where(eq(needsArchetypeQueue.status, "pending"))
+        .orderBy(desc(needsArchetypeQueue.extractionCount))
+        .limit(10);
+
+      const [readyRow] = await db
+        .select({ value: count() })
+        .from(needsArchetypeQueue)
+        .where(
+          and(
+            eq(needsArchetypeQueue.status, "pending"),
+            gte(needsArchetypeQueue.extractionCount, 3),
+          ),
+        );
+
+      const readyCount = Number(readyRow?.value ?? 0);
+
+      logger.info(
+        { correlationId, total, readyCount },
+        "admin: needs-archetype-queue summary complete",
+      );
+
+      res.json({
+        ok: true,
+        total,
+        top: topRows.map((r) => ({
+          term: r.term,
+          extractionCount: r.extractionCount,
+        })),
+        readyCount,
+      });
+    } catch (err) {
+      logger.error(
+        { err, correlationId },
+        "admin: needs-archetype-queue summary failed",
+      );
+      res
+        .status(500)
+        .json({ error: "needs_archetype_queue_summary_failed", correlationId });
+    }
+  },
+);

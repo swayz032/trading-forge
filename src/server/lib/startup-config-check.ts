@@ -227,6 +227,68 @@ export async function checkStartupSecrets(): Promise<{ warnings: string[] }> {
     }
   }
 
+  // ── KASA_* remote power-cycle escape valve (Pass 7 Track B) ──────────────
+  // Optional feature: TP-Link Kasa smart-plug power-cycle when the dead-man's
+  // heartbeat 24h auto-restart cap is reached. All three vars must be set
+  // together. Partial config (only some set) is worse than none because it
+  // creates a false impression that the escape valve is active when the service
+  // will actually fail at invocation time.
+  {
+    const kasaIp       = process.env["KASA_DEVICE_IP"];
+    const kasaUser     = process.env["KASA_USERNAME"];
+    const kasaPassword = process.env["KASA_PASSWORD"];
+
+    const kasaVarsSet = [
+      kasaIp       ? "KASA_DEVICE_IP"  : null,
+      kasaUser     ? "KASA_USERNAME"   : null,
+      kasaPassword ? "KASA_PASSWORD"   : null,
+    ].filter(Boolean) as string[];
+
+    const kasaVarsMissing = [
+      kasaIp       ? null : "KASA_DEVICE_IP",
+      kasaUser     ? null : "KASA_USERNAME",
+      kasaPassword ? null : "KASA_PASSWORD",
+    ].filter(Boolean) as string[];
+
+    if (kasaVarsSet.length > 0 && kasaVarsMissing.length > 0) {
+      // Partial config — this is the dangerous case.
+      const msg =
+        `KASA remote power-cycle is PARTIALLY configured. ` +
+        `Set: [${kasaVarsSet.join(", ")}]. ` +
+        `Missing: [${kasaVarsMissing.join(", ")}]. ` +
+        `The escape valve will FAIL at invocation time (dead-man's heartbeat 4th-attempt) ` +
+        `because the script requires all three vars. ` +
+        `Either set ALL three (KASA_DEVICE_IP, KASA_USERNAME, KASA_PASSWORD) to enable ` +
+        `the escape valve, or leave all three unset to preserve the existing terminal-action alert.`;
+
+      logger.warn(
+        {
+          kasa_vars_set: kasaVarsSet,
+          kasa_vars_missing: kasaVarsMissing,
+        },
+        `[STARTUP WARN] ${msg}`,
+      );
+      warnings.push("KASA_PARTIAL_CONFIG");
+
+      try {
+        const { notifyWarning } = await import("../services/notification-service.js");
+        notifyWarning(
+          "KASA remote power-cycle partially configured — escape valve will fail",
+          msg + "\n\nTo fix: set all three KASA_* vars in .env and restart the backend.",
+          { kasa_vars_set: kasaVarsSet, kasa_vars_missing: kasaVarsMissing },
+        );
+      } catch (notifyErr) {
+        logger.warn({ err: notifyErr }, "startup-config-check: Discord notify failed (non-blocking)");
+      }
+    } else if (kasaVarsSet.length === 3) {
+      logger.info(
+        { kasa_device_ip: kasaIp },
+        "startup-config-check: KASA remote power-cycle escape valve is ACTIVE",
+      );
+    }
+    // kasaVarsSet.length === 0 → escape valve disabled intentionally (no warning needed)
+  }
+
   if (warnings.length === 0) {
     logger.info(
       {
@@ -237,6 +299,7 @@ export async function checkStartupSecrets(): Promise<{ warnings: string[] }> {
           "TRADING_FORGE_PUBLIC_URL",
           "SLUMDAWG_WEBHOOK_SECRET",
           "ADMIN_PROMOTE_HMAC_SECRET",
+          "KASA_DEVICE_IP/KASA_USERNAME/KASA_PASSWORD",
         ],
       },
       "startup-config-check: all required secrets configured",

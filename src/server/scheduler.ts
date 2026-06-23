@@ -14,7 +14,7 @@ import { randomUUID } from "crypto";
 import { cronJobsConcurrent } from "./lib/metrics-registry.js";
 import { eq, and, gte, lte, desc, inArray, isNull, isNotNull, min, sql } from "drizzle-orm";
 import { db } from "./db/index.js";
-import { strategies, paperSessions, paperPositions, paperTrades, paperSignalLogs, backtests, systemJournal, skipDecisions, auditLog, dayArchetypes, tournamentResults, macroSnapshots, macroFeatures, macroRegimeStates, lifecycleTransitions, harshRegimePhase } from "./db/schema.js";
+import { strategies, paperSessions, paperPositions, paperTrades, paperSignalLogs, backtests, systemJournal, skipDecisions, auditLog, dayArchetypes, tournamentResults, macroSnapshots, macroFeatures, macroRegimeStates, lifecycleTransitions, harshRegimePhase, strategyExports, strategyExportArtifacts } from "./db/schema.js";
 import { broadcastSSE } from "./routes/sse.js";
 import { logger } from "./lib/logger.js";
 import { LifecycleService } from "./services/lifecycle-service.js";
@@ -28,6 +28,7 @@ import { runAgentHealthSweep } from "./services/agent-audit-service.js";
 import { runPortfolioCorrelationCheck } from "./services/portfolio-optimizer-service.js";
 import { runMetaParameterReview } from "./services/meta-optimizer-service.js";
 import { notifyWarning, notifyCritical } from "./services/notification-service.js";
+import { appendFamilyGradePostscript } from "./lib/notification-helpers.js";
 import { insertAuditRow } from "./lib/audit-log-helper.js";
 import { runAntiSetupEffectivenessAnalysis } from "./services/anti-setup-effectiveness-service.js";
 import { invalidateAntiSetupCache } from "./services/anti-setup-gate-service.js";
@@ -452,6 +453,11 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   // so that the A14 black-swan evaluator can produce non-null survival rates the
   // moment the pipeline resumes. Regime generation has no financial impact.
   "synthetic-regime-bank-populate",     // A14: advisory challenger-only regime generation
+  // Pass 7 Track C.1: DEPLOYED strategy Pine artifact daily reconciliation.
+  // Must fire even when pipeline is paused — a DEPLOYED strategy lacking a Pine
+  // artifact is a silent ops gap that affects live TradingView alerting regardless
+  // of whether the research pipeline is actively promoting new strategies.
+  "deployed-pine-artifact-check",       // P7C1: DEPLOYED strategy Pine artifact reconciliation
 ]);
 
 function _validateAllJobsScheduled(): void {
@@ -4092,7 +4098,9 @@ except Exception as e:
   });
 
   // 17:00 ET = 21:00 UTC (EDT, UTC-4) or 22:00 UTC (EST, UTC-5)
-  cron.schedule("0 21,22 * * *", async () => {
+  // Pass 7 Track B cron jitter: offset to :07 to avoid pile-up with
+  // composite-health-daily-digest (:13) and regime-drift-detector (:23).
+  cron.schedule("7 21,22 * * *", async () => {
     if (!_tryAcquireJobLock("consistency-tracker-daily-digest")) return;
     try {
       const now = new Date();
@@ -4494,7 +4502,9 @@ except Exception as e:
   });
 
   // 17:00 ET = 21:00 UTC (EDT, UTC-4) or 22:00 UTC (EST, UTC-5)
-  cron.schedule("0 21,22 * * *", async () => {
+  // Pass 7 Track B cron jitter: offset to :13 to avoid pile-up with
+  // consistency-tracker-daily-digest (:07) and regime-drift-detector (:23).
+  cron.schedule("13 21,22 * * *", async () => {
     if (!_tryAcquireJobLock("composite-health-daily-digest")) return;
     try {
       const now = new Date();
@@ -4695,7 +4705,9 @@ except Exception as e:
   });
 
   // 18:00 ET = 22:00 UTC (EST, UTC-5) or 21:00 UTC (EDT, UTC-4)
-  cron.schedule("0 21,22 * * *", async () => {
+  // Pass 7 Track B cron jitter: offset to :23 to avoid pile-up with
+  // consistency-tracker-daily-digest (:07) and composite-health-daily-digest (:13).
+  cron.schedule("23 21,22 * * *", async () => {
     if (!_tryAcquireJobLock("regime-drift-detector")) return;
     try {
       const now = new Date();
@@ -5117,6 +5129,125 @@ except Exception as e:
     }
   });
   _scheduledJobs.add("synthetic-regime-bank-populate");
+
+  // ─── Pass 7 Track C.1: DEPLOYED Pine artifact daily reconciliation ───────
+  // Queries all DEPLOYED strategies and checks whether each has a Pine export
+  // artifact (strategy_export_artifacts) created in the last 24 hours. Writes
+  // a deployed_pine_artifact_check.evaluated audit row listing missing ones.
+  // Fires at 9:00 UTC (EDT 5 AM ET) and 10:00 UTC (EST 5 AM ET) — DST-safe
+  // double-fire; ET-hour guard confirms 5 AM ET before running.
+  // _PIPELINE_GATE_EXEMPT: DEPLOYED strategy artifact health is an ops safety
+  // signal that must fire regardless of research pipeline pause state.
+  registerJob("deployed-pine-artifact-check", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    const jobName = "deployed-pine-artifact-check";
+    logger.info({ correlationId, job: jobName }, "deployed-pine-artifact-check: querying DEPLOYED strategies");
+
+    // Find all DEPLOYED strategies
+    const deployedStrategies = await db
+      .select({ id: strategies.id, name: strategies.name })
+      .from(strategies)
+      .where(eq(strategies.lifecycleState, "DEPLOYED"));
+
+    const missing: Array<{ strategyId: string; strategyName: string }> = [];
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours ago
+
+    for (const strat of deployedStrategies) {
+      // Check for a recent completed export artifact
+      const [latestExport] = await db
+        .select({ id: strategyExports.id })
+        .from(strategyExports)
+        .where(
+          and(
+            eq(strategyExports.strategyId, strat.id),
+            eq(strategyExports.status, "completed"),
+          ),
+        )
+        .orderBy(desc(strategyExports.createdAt))
+        .limit(1);
+
+      if (!latestExport) {
+        missing.push({ strategyId: strat.id, strategyName: strat.name });
+        continue;
+      }
+
+      const [recentArtifact] = await db
+        .select({ id: strategyExportArtifacts.id })
+        .from(strategyExportArtifacts)
+        .where(
+          and(
+            eq(strategyExportArtifacts.exportId, latestExport.id),
+            gte(strategyExportArtifacts.createdAt, cutoff),
+          ),
+        )
+        .limit(1);
+
+      if (!recentArtifact) {
+        missing.push({ strategyId: strat.id, strategyName: strat.name });
+      }
+    }
+
+    await db.insert(auditLog).values({
+      action: "deployed_pine_artifact_check.evaluated",
+      entityType: "system",
+      status: missing.length === 0 ? "success" : "warning",
+      decisionAuthority: "system",
+      input: { deployed_count: deployedStrategies.length, cutoff_hours: 24 },
+      result: {
+        missing_count: missing.length,
+        missing_strategies: missing.map((m) => ({ id: m.strategyId, name: m.strategyName })),
+      },
+      correlationId,
+    }).catch((auditErr: unknown) => {
+      logger.warn({ err: auditErr }, "deployed-pine-artifact-check: audit insert failed (non-blocking)");
+    });
+
+    if (missing.length > 0) {
+      const names = missing.map((m) => `\`${m.strategyName}\``).join(", ");
+      notifyWarning(
+        `Pine Artifacts Missing: ${missing.length} DEPLOYED strategy/strategies lack TradingView artifact`,
+        appendFamilyGradePostscript(
+          `${missing.length} DEPLOYED strategy/strategies missing Pine artifacts (>24h old): ` +
+          `${names}. Re-run Pine compile to restore TradingView alerting.`,
+          "One or more live strategies are missing their TradingView chart files (>24 hours old).",
+          "Go to the strategy library and re-trigger Pine compile for the listed strategies.",
+        ),
+      );
+    }
+
+    logger.info(
+      { correlationId, deployed: deployedStrategies.length, missing: missing.length },
+      "deployed-pine-artifact-check: complete",
+    );
+  });
+
+  // Fires at 09:00 UTC and 10:00 UTC — DST-safe double-fire for 5 AM ET.
+  // ET-hour guard inside the handler confirms 5 AM ET before running.
+  cron.schedule("0 9,10 * * *", async () => {
+    if (!_tryAcquireJobLock("deployed-pine-artifact-check")) return;
+    try {
+      const now = new Date();
+      const etHour = parseInt(
+        now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+        10,
+      );
+      if (etHour !== 5) {
+        logger.debug(
+          { etHour, utcHour: now.getUTCHours() },
+          "Scheduler: deployed-pine-artifact-check cron fired but not 5 AM ET — skipping",
+        );
+        return;
+      }
+      logger.info({ job: "deployed-pine-artifact-check" }, "running deployed-pine-artifact-check (5 AM ET confirmed)");
+      const t0dpac = Date.now();
+      await withRetry("deployed-pine-artifact-check", SCHEDULER_JOBS["deployed-pine-artifact-check"].run, 1);
+      markJobRun("deployed-pine-artifact-check");
+      emitJobComplete("deployed-pine-artifact-check", Date.now() - t0dpac);
+    } finally {
+      _releaseJobLock("deployed-pine-artifact-check");
+    }
+  });
+  _scheduledJobs.add("deployed-pine-artifact-check");
 
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every

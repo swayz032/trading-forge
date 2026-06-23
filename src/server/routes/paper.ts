@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { db } from "../db/index.js";
 import { paperSessions, paperPositions, paperTrades, paperSignalLogs, paperSessionFeedback, strategies, backtests, monteCarloRuns, auditLog } from "../db/schema.js";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql as drizzleSql } from "drizzle-orm";
 import { broadcastSSE } from "./sse.js";
 import { openPosition, closePosition, updatePositionPrices, getExecutionQuality, getTcaReport, getRollingMetrics } from "../services/paper-execution-service.js";
 import { computeAndPersistSessionFeedback } from "../services/paper-session-feedback-service.js";
@@ -12,6 +12,8 @@ import { startStream, stopStream, stopAllStreams, getActiveStreams, isStreaming,
 import { logShadowSignal } from "../services/shadow-service.js";
 import { cleanupSession } from "../services/paper-signal-service.js";
 import { idempotencyMiddleware } from "../middleware/idempotency.js";
+import { notifyWarning } from "../services/notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 const router = Router();
 
@@ -107,6 +109,36 @@ router.post("/start", idempotencyMiddleware, async (req, res) => {
       .values({ strategyId, startingCapital, currentEquity: startingCapital, config: config as import("../db/jsonb-shapes.js").PaperSessionConfigShape, mode, firmId: firmId ?? null })
       .returning();
 
+    // Track C.2: advisory lock — guard against concurrent stream startups for the
+    // same session (e.g. double-tap or retry race). Uses PostgreSQL session-level
+    // advisory lock with a hash of the session UUID. Fail-closed: return 409.
+    {
+      const lockKey = BigInt("0x" + session.id.replace(/-/g, "").slice(0, 16));
+      const [lockResult] = await db.execute(
+        drizzleSql`SELECT pg_try_advisory_lock(${lockKey}::bigint) AS acquired`,
+      );
+
+      if (!(lockResult as any)?.acquired) {
+        req.log.warn({ sessionId: session.id }, "Track C.2: advisory lock collision — concurrent session start detected");
+        await db.insert(auditLog).values({
+          action: "paper.session_advisory_lock_collision",
+          entityType: "paper_session",
+          entityId: session.id,
+          input: { strategyId, sessionId: session.id },
+          result: { note: "concurrent session start rejected via pg_advisory_lock" },
+          status: "warning",
+          decisionAuthority: "system",
+          correlationId: req.id ?? null,
+        }).catch(() => {});
+        res.status(409).json({
+          error: "paper_session_start_collision",
+          message: "A concurrent session start was detected for this session. Retry in a moment.",
+          sessionId: session.id,
+        });
+        return;
+      }
+    }
+
     // Look up strategy symbol(s) and start the Massive WS stream
     try {
       const [strat] = await db.select().from(strategies).where(eq(strategies.id, strategyId));
@@ -124,8 +156,35 @@ router.post("/start", idempotencyMiddleware, async (req, res) => {
         req.log.warn({ sessionId: session.id, strategyId }, "No symbols found — stream not started");
       }
     } catch (streamErr) {
-      // Non-fatal: session created even if stream fails (e.g. no MASSIVE_API_KEY)
-      req.log.error(streamErr, "Failed to start paper stream — session created without live data");
+      // Track C.2: stream startup failure — write audit + Discord WARN + mark session failed_to_stream.
+      const errMsg = streamErr instanceof Error ? streamErr.message : String(streamErr);
+      req.log.error(streamErr, "Failed to start paper stream — writing paper.session_stream_failed audit");
+      await db.insert(auditLog).values({
+        action: "paper.session_stream_failed",
+        entityType: "paper_session",
+        entityId: session.id,
+        input: { strategyId, sessionId: session.id },
+        result: { error: errMsg, note: "Stream startup failed; session marked failed_to_stream" },
+        status: "failure",
+        decisionAuthority: "system",
+        correlationId: req.id ?? null,
+      }).catch(() => {});
+      notifyWarning(
+        `Paper Stream Failed: session ${session.id.slice(0, 8)} could not start live data`,
+        appendFamilyGradePostscript(
+          `Paper session \`${session.id.slice(0, 8)}\` for strategy \`${strategyId.slice(0, 8)}\` ` +
+          `failed to start stream. Session marked \`failed_to_stream\`. ` +
+          `Error: ${errMsg.slice(0, 200)}`,
+          "A paper trading session started but live market data feed failed to connect.",
+          "Stop and restart the paper session. If this keeps happening, check your MASSIVE_API_KEY in the .env file.",
+        ),
+      );
+      await db
+        .update(paperSessions)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .set({ status: "failed_to_stream" as any })
+        .where(eq(paperSessions.id, session.id))
+        .catch(() => {});
     }
 
     // Audit trail — paper session lifecycle

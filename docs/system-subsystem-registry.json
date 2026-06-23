@@ -1889,6 +1889,7 @@
     "scheduler_jobs": [
       "agent-health-sweep",
       "data-integrity-suite",
+      "deployed-pine-artifact-check",
       "deployed-strategy-starvation-check",
       "disabled-job-probe",
       "discord-fanout-audit-30min",

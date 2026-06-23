@@ -917,6 +917,47 @@ Replay protection: timestamp drift > 60s → 401. NSSM respawns automatically to
 - Relay singleton — second client connection force-closes the older one
 - `RELAY_TOKEN` must match between Railway env and tower client env
 
+### Remote power-cycle escape valve (Pass 7 Track B)
+
+When the dead-man's heartbeat fires 3 auto-restart attempts in 24h and all fail, the
+4th-attempt code path checks `KASA_DEVICE_IP`. If set, it invokes
+`scripts/remote-power-cycle.ps1` (via `remote-power-cycle-service.ts`) to cut power
+to the Skytech tower for 30 seconds and then restore it. NSSM auto-respawns
+TradingForgeAPI on power-up. This is the vacation-mode escape valve that replaces the
+terminal "hold the power button for 5 seconds" alert with an autonomous recovery.
+
+**Operator setup (one-time):**
+1. Purchase a TP-Link Kasa HS103, HS105, or HS110 smart plug (~$10-20).
+2. Plug the Skytech tower's power cable into the smart plug.
+3. Connect the smart plug to your home Wi-Fi using the Kasa app.
+4. In your router's DHCP reservation table, assign a **static IP** to the plug's
+   MAC address so the IP never changes.
+5. Set the three env vars below in your tower `.env` and restart the backend.
+
+**Required env vars (all three or none):**
+```
+KASA_DEVICE_IP=192.168.1.42    # IPv4 of the smart plug (static LAN IP)
+KASA_USERNAME=you@example.com  # Kasa cloud account email
+KASA_PASSWORD=yourpassword     # Kasa cloud account password
+```
+
+**What happens when triggered:**
+1. `remote-power-cycle-service.ts` writes a `recovery.remote_power_cycle_triggered`
+   audit row with `correlationId` before touching the plug.
+2. `scripts/remote-power-cycle.ps1` sends OFF→30s→ON via the local LAN API (port 9999,
+   no cloud round-trip — works even during internet outages).
+3. Script appends to `C:\Users\tonio\bin\kasa-cycle.log`.
+4. Discord CRITICAL fires with operator-version (full technical + audit ID) AND
+   family-grade postscript ("wait 10 minutes, check heartbeat, call Tony if still down").
+5. NSSM auto-restarts TradingForgeAPI once power is restored.
+
+**Partial config guard:** `startup-config-check.ts` warns at boot if only SOME of the
+three vars are set. Partial config is worse than none — it creates a false impression
+the escape valve is active when it will fail at invocation time.
+
+**When KASA vars are absent:** behavior is unchanged. The terminal Discord CRITICAL
+with "hold the power button for 5 seconds" fires as before.
+
 ---
 
 > **Living rules end here.** For build history, see `AGENT-LOGS.md`. For subsystem architecture, see `Trading Forge System Map v2.md`. For agent contract, see `AGENTS.md`.

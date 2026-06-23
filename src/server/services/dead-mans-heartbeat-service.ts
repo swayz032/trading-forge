@@ -486,16 +486,53 @@ async function attemptAutoRestart(
       { attemptsLast24h, cap: AUTO_RESTART_CAP_PER_24H, parentCorrelationId },
       "dead-mans-heartbeat: auto-restart 24h cap reached — not attempting again this window",
     );
-    await notifyCritical(
-      "Heartbeat stale — auto-restart cap reached",
-      appendFamilyGradePostscript(
-        `Auto-restart has been attempted ${attemptsLast24h} times in the last 24h (cap: ${AUTO_RESTART_CAP_PER_24H}). ` +
-          "Manual intervention required. Check: pm2 logs / NSSM event log on the Skytech tower.",
-        `The trading bot has been trying to restart itself but keeps failing — this is the ${attemptsLast24h + 1}th time today.`,
-        "Call Tony. If you can't reach him, hold the power button on the home computer for 5 seconds to reboot it — the bot restarts automatically.",
-      ),
-      { attemptsLast24h, cap: AUTO_RESTART_CAP_PER_24H, parentCorrelationId },
-    ).catch(() => {});
+
+    // Pass 7 Track B — remote power-cycle escape valve.
+    // When KASA_DEVICE_IP is configured, try to power-cycle the Skytech tower
+    // via the TP-Link Kasa smart plug instead of just emitting a terminal alert.
+    const kasaIp = process.env["KASA_DEVICE_IP"];
+    if (kasaIp) {
+      logger.warn(
+        { kasaIp, attemptsLast24h, parentCorrelationId },
+        "dead-mans-heartbeat: KASA_DEVICE_IP is set — attempting remote power-cycle instead of terminal alert",
+      );
+      try {
+        const { triggerRemotePowerCycle } = await import("./remote-power-cycle-service.js");
+        await triggerRemotePowerCycle(
+          `heartbeat_stale_auto_restart_cap_reached_attempt_${attemptsLast24h + 1}`,
+          parentCorrelationId,
+        );
+      } catch (kasaErr) {
+        logger.error(
+          { kasaErr, parentCorrelationId },
+          "dead-mans-heartbeat: remote-power-cycle-service threw — falling through to terminal alert",
+        );
+        // Fall through to the terminal alert below.
+        notifyCritical(
+          "Heartbeat stale — auto-restart cap reached; remote power-cycle threw",
+          appendFamilyGradePostscript(
+            `Auto-restart has been attempted ${attemptsLast24h} times in the last 24h (cap: ${AUTO_RESTART_CAP_PER_24H}). ` +
+              `Remote power-cycle via Kasa plug at ${kasaIp} threw an error. ` +
+              "Manual intervention required. Check: pm2 logs / NSSM event log on the Skytech tower.",
+            `The trading bot has been trying to restart itself but keeps failing — this is the ${attemptsLast24h + 1}th time today. The remote restart also failed.`,
+            "Call Tony immediately. If you cannot reach him, hold the power button on the home computer for 5 seconds to reboot it — the bot restarts automatically.",
+          ),
+          { attemptsLast24h, cap: AUTO_RESTART_CAP_PER_24H, parentCorrelationId, kasaIp },
+        );
+      }
+    } else {
+      // No Kasa plug configured — emit the classic terminal-action alert.
+      notifyCritical(
+        "Heartbeat stale — auto-restart cap reached",
+        appendFamilyGradePostscript(
+          `Auto-restart has been attempted ${attemptsLast24h} times in the last 24h (cap: ${AUTO_RESTART_CAP_PER_24H}). ` +
+            "Manual intervention required. Check: pm2 logs / NSSM event log on the Skytech tower.",
+          `The trading bot has been trying to restart itself but keeps failing — this is the ${attemptsLast24h + 1}th time today.`,
+          "Call Tony. If you can't reach him, hold the power button on the home computer for 5 seconds to reboot it — the bot restarts automatically.",
+        ),
+        { attemptsLast24h, cap: AUTO_RESTART_CAP_PER_24H, parentCorrelationId },
+      );
+    }
     return;
   }
 

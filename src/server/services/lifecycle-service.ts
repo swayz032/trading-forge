@@ -2696,6 +2696,14 @@ export class LifecycleService {
 
       const rollingSharpe = s.rollingSharpe30d ? parseFloat(String(s.rollingSharpe30d)) : 0;
       if (tradingDays >= 30 && rollingSharpe >= 1.5) {
+        // Track A.2: composite evidence-completeness tracker.
+        // Records whether each major gate had complete data or fell back to a
+        // legacy/unavailable status. Used after all gates pass to compute
+        // composite_evidence_score = 1.0 - (incomplete_count / 8.0).
+        // If incomplete_count >= 3: write lifecycle.promotion_evidence_incomplete
+        // audit (status=warn) + Discord WARN + block promotion this cycle.
+        const gateEvidenceStatuses: string[] = [];
+
         // P0-1: Compliance-drift gate at PAPER → DEPLOY_READY. DEPLOY_READY is the
         // gate to deployment authorization — promoting a strategy whose firm rules
         // are stale would let the human approve a deployment based on a ruleset
@@ -3030,6 +3038,10 @@ export class LifecycleService {
                 continue;
               }
             }
+            // Track A.2: B14 survival twin gate evidence
+            // If we reach this point without continuing, the survival twin either passed
+            // or there was no data (legacy). Push the appropriate evidence status.
+            gateEvidenceStatuses.push(latestBtForB14?.gateResult ? "complete" : "legacy_unavailable");
             // No gateResult or survival_twin data → log advisory, allow through
             // (legacy backtests pre-B14 don't have this data).
 
@@ -3104,7 +3116,15 @@ export class LifecycleService {
                     { strategyId: s.id },
                     "B14 CI gate: using legacy scalar fallback (pre-Pass-A MC run — upgrade to get BCa CI)",
                   );
+                  // Track A.2: legacy fallback = incomplete evidence
+                  gateEvidenceStatuses.push("legacy_null");
+                } else {
+                  // Track A.2: real CI data present = complete
+                  gateEvidenceStatuses.push("complete");
                 }
+              } else {
+                // No MC run — evidence incomplete
+                gateEvidenceStatuses.push("data_unavailable");
               }
               // No MC run at all for this backtest → evaluateB14CiGate(null,null) blocks
               // fail-CLOSED per hardening 2026-06-22 (F-1). No fall-through needed.
@@ -3136,6 +3156,8 @@ export class LifecycleService {
             { strategyId: s.id },
             "B14 Survival Twin HARD gate DISABLED via B14_HARD_GATE_ENABLED=false — advisory only",
           );
+          // Track A.2: B14 disabled — evidence incomplete for both survival twin and CI gates
+          gateEvidenceStatuses.push("legacy_proceed", "legacy_proceed");
         }
 
         // ── Wave 25 Item 5: B15 Parameter Robustness Battery gate: PAPER → DEPLOY_READY ──
@@ -3287,6 +3309,11 @@ export class LifecycleService {
               strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
               continue;
             }
+            // Track A.2: push WFE status
+            gateEvidenceStatuses.push(wfeResult.status ?? "legacy_null");
+          } else {
+            // No auditAction means wfe_overall >= hard floor → complete evidence
+            gateEvidenceStatuses.push("complete");
           }
         } catch (wfeErr) {
           // Fail-open: WFE gate read failure is non-blocking.
@@ -3294,6 +3321,7 @@ export class LifecycleService {
             { strategyId: s.id, err: wfeErr },
             "WFE gate: read failed (non-blocking — promotion continues)",
           );
+          gateEvidenceStatuses.push("data_unavailable");
         }
 
         // ── Wave 27.5 Pass B.2 Gate #3: Parameter drift classification: PAPER → DEPLOY_READY ──
@@ -3371,6 +3399,11 @@ export class LifecycleService {
               strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
               continue;
             }
+            // Track A.2: push parameter drift status
+            gateEvidenceStatuses.push(driftResult.status ?? "legacy_null");
+          } else {
+            // No auditAction means no drift classification needed (stable/regime_driven)
+            gateEvidenceStatuses.push("complete");
           }
         } catch (driftErr) {
           // Fail-open: drift gate read failure is non-blocking.
@@ -3378,6 +3411,7 @@ export class LifecycleService {
             { strategyId: s.id, err: driftErr },
             "Parameter drift gate: read failed (non-blocking — promotion continues)",
           );
+          gateEvidenceStatuses.push("data_unavailable");
         }
 
         // ── Wave B Fix 1: DSR walk-forward gate (PAPER → DEPLOY_READY) ──────────
@@ -3438,6 +3472,11 @@ export class LifecycleService {
               strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
               continue;
             }
+            // Track A.2: push DSR status
+            gateEvidenceStatuses.push(dsrGateResult.status ?? "legacy_proceed");
+          } else {
+            // No auditAction = DSR available and passed
+            gateEvidenceStatuses.push("complete");
           }
         } catch (dsrPdrErr) {
           // Fail-open: DSR gate infrastructure failure is non-blocking.
@@ -3445,6 +3484,7 @@ export class LifecycleService {
             { strategyId: s.id, err: dsrPdrErr },
             "DSR gate (PAPER→DEPLOY_READY): read failed (non-blocking — promotion continues)",
           );
+          gateEvidenceStatuses.push("data_unavailable");
         }
 
         // ── Wave 26 Pass G Pass E Gate Stack: WFE-0.80 + CPCV-15 + WRC + SPA ─
@@ -3597,6 +3637,12 @@ export class LifecycleService {
             }).catch((auditErr) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "Pass E gates_cleared audit insert failed (non-blocking)");
             });
+            // Track A.2: check orchestrator data availability for evidence scoring
+            const orchDataAvailable = gatesToEvaluate.every((g) => orchResult.gate_results[g].data_available !== false);
+            gateEvidenceStatuses.push(orchDataAvailable ? "complete" : "legacy_proceed");
+          } else {
+            // No backtest data for orchestrator — evidence unavailable
+            gateEvidenceStatuses.push("data_unavailable");
           }
         } catch (orchErr) {
           // Fail-open: orchestrator read failure is non-blocking (same pattern as other gates).
@@ -3604,6 +3650,7 @@ export class LifecycleService {
             { strategyId: s.id, err: orchErr },
             "Wave 26 Pass G Pass E gate orchestrator: read failed (non-blocking — promotion continues)",
           );
+          gateEvidenceStatuses.push("data_unavailable");
         }
 
         // ── Wave 28 Pass B.1: Composite shadow gate (OBSERVABILITY ONLY) ─────
@@ -3726,6 +3773,9 @@ export class LifecycleService {
               correlationId,
             }).catch(() => {});
           }
+          // Track A.2: composite shadow gate is observability-only and always runs —
+          // evidence is always "complete" (the evaluator itself handles missing data).
+          gateEvidenceStatuses.push("complete");
         }
         // ── End Wave 28 Pass B.1 composite shadow gate ───────────────────────
 
@@ -3843,6 +3893,66 @@ export class LifecycleService {
         if (frozenPolicyBlocked) continue; // already continued above; guard for clarity
         // ── End Wave 29 Pass B.2 frozen-policy drift gate ────────────────────
 
+        // Track A.2: frozen-policy gate completed with data (strategy has a config hash)
+        gateEvidenceStatuses.push(s.frozenPolicyHash != null ? "complete" : "legacy_proceed");
+
+        // ── Track A.2: Evidence completeness gate ─────────────────────────────
+        // Count incomplete gate evidence (legacy fallbacks or unavailable data).
+        // If >= 3 of the 8 tracked gates lack institutional-quality data, write
+        // a lifecycle.promotion_evidence_incomplete audit row + Discord WARN and
+        // block promotion this cycle (strategy retries next cron pass).
+        {
+          const incompleteCount = gateEvidenceStatuses.filter(
+            (st) => st.includes("legacy") || st === "data_unavailable",
+          ).length;
+          if (incompleteCount >= 3) {
+            logger.warn(
+              {
+                strategyId: s.id,
+                incompleteCount,
+                gateEvidenceStatuses,
+                transition: "PAPER→DEPLOY_READY",
+              },
+              "lifecycle.promotion_evidence_incomplete: too many gates lack institutional data — blocking promotion this cycle",
+            );
+            await db.insert(auditLog).values({
+              action: "lifecycle.promotion_evidence_incomplete",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "warn",
+              decisionAuthority: "gate",
+              input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+              result: {
+                incomplete_count: incompleteCount,
+                total_gates: gateEvidenceStatuses.length,
+                gate_evidence_statuses: gateEvidenceStatuses,
+                note: "Strategy must complete institutional-grade backtests before promotion proceeds",
+              },
+              correlationId: correlationId ?? null,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "promotion_evidence_incomplete audit insert failed (non-blocking)");
+            });
+            notifyWarning(
+              `Evidence Incomplete: strategy ${s.name} blocked from PAPER→DEPLOY_READY`,
+              appendFamilyGradePostscript(
+                `Strategy \`${s.name}\` (${s.id.slice(0, 8)}) blocked from PAPER→DEPLOY_READY: ` +
+                `${incompleteCount}/${gateEvidenceStatuses.length} gates lack institutional data. ` +
+                `Run a full backtest to unlock promotion.`,
+                "The bot can't verify this strategy has been tested properly because some quality checks lack data.",
+                "No action needed — re-run a full backtest on this strategy and the bot will retry.",
+              ),
+            );
+            continue;
+          }
+          // Evidence is adequate — compute composite score and proceed.
+          // Score is persisted into lifecycle_transitions.result after successful promotion.
+          const compositeEvidenceScore = 1.0 - (incompleteCount / 8.0);
+          logger.info(
+            { strategyId: s.id, compositeEvidenceScore, incompleteCount, total: gateEvidenceStatuses.length },
+            "Track A.2: composite_evidence_score computed — promotion proceeding",
+          );
+        }
+
         const result = await this.promoteStrategy(s.id, "PAPER", "DEPLOY_READY", { correlationId: correlationId ?? undefined });
         if (result.success) {
           promoted.push(s.id);
@@ -3885,6 +3995,33 @@ export class LifecycleService {
               "B5 multi-firm eligibility check failed after DEPLOY_READY promotion (non-blocking)",
             );
           });
+
+          // Track A.2: persist composite_evidence_score into lifecycle_transitions.result JSONB.
+          // Fire-and-forget — must never block the promotion success path.
+          {
+            const incompleteCountFinal = gateEvidenceStatuses.filter(
+              (st) => st.includes("legacy") || st === "data_unavailable",
+            ).length;
+            const compositeEvidenceScoreFinal = 1.0 - (incompleteCountFinal / 8.0);
+            db.execute(
+              sql`UPDATE lifecycle_transitions
+                SET result = jsonb_set(
+                  COALESCE(result, '{}'::jsonb),
+                  '{composite_evidence_score}',
+                  ${JSON.stringify(compositeEvidenceScoreFinal)}::jsonb
+                )
+                WHERE id = (
+                  SELECT id FROM lifecycle_transitions
+                  WHERE strategy_id = ${s.id}
+                    AND from_state = 'PAPER'
+                    AND to_state = 'DEPLOY_READY'
+                  ORDER BY created_at DESC
+                  LIMIT 1
+                )`,
+            ).catch((updateErr: unknown) => {
+              logger.warn({ strategyId: s.id, err: updateErr }, "Track A.2: composite_evidence_score persist failed (non-blocking)");
+            });
+          }
         }
       } else if (tradingDays >= 30 && rollingSharpe < 1.5) {
         logger.warn({ id: s.id, rollingSharpe, tradingDays }, "DEPLOY_READY blocked: rolling Sharpe < 1.5");
@@ -4263,8 +4400,59 @@ export class LifecycleService {
               lastRollingSharpe: lastSession?.rollingSharpeFinal,
             });
             // Compile Pine on promotion to DEPLOYED (same as DEPLOY_READY → DEPLOYED path)
-            compileDualPineExport(s.id, correlationId ?? undefined).catch((pineErr) => {
-              logger.warn({ strategyId: s.id, err: pineErr }, "PILOT auto-promote: Pine export failed (non-blocking)");
+            // Track C.1 fix: pass undefined for firmKey (2nd arg) so correlationId reaches
+            // the correct 5th positional argument, not the firmKey slot.
+            // Wrapped in retry-with-backoff: 3 attempts at 30s / 2m / 10m delays.
+            // On persistent failure: lifecycle.deployed_pine_compile_failed audit + Discord WARN.
+            (async () => {
+              const PINE_RETRY_DELAYS_MS = [30_000, 120_000, 600_000];
+              let lastPineErr: unknown = null;
+              let pineSuccess = false;
+              for (let attempt = 0; attempt < 3; attempt++) {
+                if (attempt > 0) {
+                  await new Promise((resolve) => setTimeout(resolve, PINE_RETRY_DELAYS_MS[attempt - 1]));
+                }
+                try {
+                  await compileDualPineExport(s.id, undefined, undefined, true, correlationId ?? undefined);
+                  pineSuccess = true;
+                  break;
+                } catch (pineErr) {
+                  lastPineErr = pineErr;
+                  logger.warn(
+                    { strategyId: s.id, attempt: attempt + 1, err: pineErr },
+                    "PILOT auto-promote: Pine export attempt failed (will retry)",
+                  );
+                }
+              }
+              if (!pineSuccess) {
+                const errMsg = lastPineErr instanceof Error ? lastPineErr.message : String(lastPineErr);
+                logger.warn(
+                  { strategyId: s.id, err: lastPineErr },
+                  "PILOT auto-promote: Pine export failed after 3 attempts — writing deployed_pine_compile_failed audit",
+                );
+                await db.insert(auditLog).values({
+                  action: "lifecycle.deployed_pine_compile_failed",
+                  entityId: s.id,
+                  entityType: "strategy",
+                  status: "warning",
+                  decisionAuthority: "system",
+                  input: { fromState: "PILOT", toState: "DEPLOYED" },
+                  result: { error: errMsg, attempts: 3, note: "Pine compile failed after 3 retries (30s/2m/10m)" },
+                  correlationId: correlationId ?? null,
+                }).catch(() => {});
+                notifyWarning(
+                  `Pine Compile Failed: strategy ${s.name} DEPLOYED but no TradingView artifact`,
+                  appendFamilyGradePostscript(
+                    `Strategy \`${s.name}\` (${s.id.slice(0, 8)}) DEPLOYED but Pine compile failed after 3 retries. ` +
+                    `TradingView artifact unavailable — check \`lifecycle.deployed_pine_compile_failed\` in audit_log.\n` +
+                    `Error: ${errMsg.slice(0, 200)}`,
+                    "The bot's trading strategy was promoted to live but the TradingView chart file failed to generate.",
+                    "Check the audit log for lifecycle.deployed_pine_compile_failed and re-trigger Pine compile from the admin panel.",
+                  ),
+                );
+              }
+            })().catch((err) => {
+              logger.error({ strategyId: s.id, err }, "PILOT auto-promote: Pine export retry wrapper threw unexpectedly");
             });
           } else {
             logger.warn({ strategyId: s.id, error: promoteResult.error }, "PILOT auto-promote failed");
