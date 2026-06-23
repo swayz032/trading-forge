@@ -255,11 +255,23 @@ class NeMoScenarioDesigner:
     ) -> GenerationResult:
         """Call Data Designer API and map rows → ScenarioSpec objects."""
         alias = self._resolve_nvidia_model_alias()
+        import sys as _sys
+        import contextlib as _contextlib
+        # Windows console (cp1252) can't encode Data Designer's emoji INFO logs
+        # (🔎/🛑/🎲) → UnicodeEncodeError crashes generation. Force UTF-8 on the
+        # streams, and route DD's chatter to stderr so the JSON stdout contract
+        # (read by runPythonModule / populate_regime_bank) stays clean.
+        for _stream in (_sys.stdout, _sys.stderr):
+            try:
+                _stream.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined]
+            except Exception:
+                pass
         try:
             cb = self._build_config(count=count, seed=seed)
             dd = _DD_INTERFACE()
             num_records = max(count, 8)  # always request at least the 8 archetypes
-            preview = dd.preview(cb, num_records=num_records)
+            with _contextlib.redirect_stdout(_sys.stderr):
+                preview = dd.preview(cb, num_records=num_records)
             df = preview.dataset
             if df is None or len(df) == 0:
                 raise ValueError("DataDesigner returned an empty dataset")
