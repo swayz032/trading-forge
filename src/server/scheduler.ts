@@ -4929,6 +4929,53 @@ except Exception as e:
   });
   _scheduledJobs.add("feed-silence-check");
 
+  // ─── Ollama keep-warm watchdog (every 4 min, ALL hours, no RTH gate) ──────
+  // Probes Ollama every 4 minutes with keep_alive:-1 to both verify liveness
+  // AND pin gemma4:e2b in VRAM — preventing the cold-load spiral (2026-06-23).
+  //
+  // When DEGRADED or DOWN, runs a 3-step recovery ladder:
+  //   Step A: patient warm-load (keep_alive:-1, 300s timeout)
+  //   Step B: model reset (unload keep_alive:0 then immediate pin keep_alive:-1)
+  //   Step C: set OLLAMA_HEALTHY=false (cloud fallback), emit deduped CRITICAL alert
+  //
+  // PIPELINE_GATE_EXEMPT: this is infrastructure-level observability + self-healing,
+  // not a trading research signal. Must fire regardless of pipeline pause state so
+  // extraction never silently fails during operator vacation.
+  //
+  // Env: OLLAMA_WATCHDOG_ENABLED (default true), OLLAMA_WATCHDOG_PROBE_MS (120000)
+  registerJob("ollama-keepwarm-watchdog", 4 * 60 * 1000, async () => {
+    const { runOllamaKeepaliveWatchdogTick } = await import("./services/ollama-keepwarm-watchdog-service.js");
+    await runOllamaKeepaliveWatchdogTick();
+  });
+
+  _PIPELINE_GATE_EXEMPT.add("ollama-keepwarm-watchdog");
+  _PIPELINE_GATE_EXEMPT.add("ollama-keepwarm-watchdog"); // idempotent; belt-and-suspenders
+
+  cron.schedule("*/4 * * * *", async () => {
+    if (!_tryAcquireJobLock("ollama-keepwarm-watchdog")) {
+      // Lock contention — previous tick still in-flight (model cold-load takes time)
+      const { insertAuditRowSafe } = await import("./lib/audit-log-helper.js");
+      await insertAuditRowSafe({
+        action: "ollama_watchdog.skipped_lock_contention",
+        entityType: "system",
+        entityId: "ollama",
+        decisionAuthority: "system",
+        status: "info",
+        result: { reason: "previous_tick_in_flight" } as Record<string, unknown>,
+      }).catch(() => {}); // never let audit write block cron
+      return;
+    }
+    try {
+      const t0 = Date.now();
+      await withRetry("ollama-keepwarm-watchdog", SCHEDULER_JOBS["ollama-keepwarm-watchdog"].run, 1);
+      markJobRun("ollama-keepwarm-watchdog");
+      emitJobComplete("ollama-keepwarm-watchdog", Date.now() - t0);
+    } finally {
+      _releaseJobLock("ollama-keepwarm-watchdog");
+    }
+  });
+  _scheduledJobs.add("ollama-keepwarm-watchdog");
+
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every
   // cron.schedule body). Catches the F-1/F-2 class of bug — a job registered

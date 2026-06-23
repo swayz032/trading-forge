@@ -8,6 +8,7 @@ import { extractSpeakerConceptsFromTranscript } from "../lib/transcript-speaker-
 import { classifyMechanicPortability, explainRejectClass } from "../lib/mechanic-portability.js";
 import { runPass1VocabularyExtraction } from "../lib/two-pass-vocab-extractor.js";
 import { runCoverageGate } from "../lib/extraction-coverage-gate.js";
+import { recoverConfluences } from "../lib/confluence-recovery.js";
 import { runRecallPass } from "../lib/transcript-extractor-recall.js";
 import { runCoverageRepairLoop } from "../lib/extraction-coverage-repair.js";
 import { checkCompilabilityGate } from "../lib/extraction-quality-gate.js";
@@ -743,6 +744,17 @@ function containsForbiddenOptionsContent(text: string): { blocked: boolean; matc
 }
 
 agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
+  // The multi-pass extraction pipeline (windowed-enum → recall → depth-coverage → bounded
+  // repair → name/route) issues 10-15 sequential local-gemma calls; on the 8GB tower GPU a
+  // single video can run 5-20 min. The server's default socket timeout (index.ts:618,
+  // server.timeout = 5 min) destroys the connection mid-pipeline because no bytes flow while
+  // gemma is generating — surfacing client-side as the bare "fetch failed" / RemoteDisconnected
+  // we chased. Opt THIS request's socket out of the 5-min default (mirrors the SSE route's
+  // req.setTimeout(0) at index.ts:615-617). 25-min bound, not 0, so a truly-hung pipeline
+  // still releases the socket eventually rather than leaking it.
+  req.setTimeout(25 * 60 * 1000);
+  res.setTimeout(25 * 60 * 1000);
+
   const parsed = scoutExtractSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
@@ -959,11 +971,34 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
         "scout-extract: routing to OOM-safe chunked path",
       );
       try {
-        const { merged, rawChunks } = await extractTranscriptChunked(markdown, {
-          sourceUrl,
-          title: title || sourceUrl,
-          channel: sourceProvider,
-        });
+        // E-CHUNK-RETRY (5-URL audit run-4, 2026-06-23): the OOM-safe chunker is empirically
+        // NON-DETERMINISTIC on heavy (>12K) transcripts — the SAME 35K SY2 transcript yielded
+        // merged_strategies=4 on one run and =0 on the next (a transient empty per-chunk LLM
+        // call zeroes the merge). Retry up to 3× when the merge is empty before giving up to the
+        // sparse fallback — mirrors the enumerator's retry-once-on-0-items (FIX 11). Cheap
+        // insurance: only fires on the empty path, and a single recovered attempt saves the video.
+        const CHUNK_MAX_ATTEMPTS = 3;
+        let merged!: Awaited<ReturnType<typeof extractTranscriptChunked>>["merged"];
+        let rawChunks!: Awaited<ReturnType<typeof extractTranscriptChunked>>["rawChunks"];
+        for (let attempt = 1; attempt <= CHUNK_MAX_ATTEMPTS; attempt++) {
+          ({ merged, rawChunks } = await extractTranscriptChunked(markdown, {
+            sourceUrl,
+            title: title || sourceUrl,
+            channel: sourceProvider,
+          }));
+          if (merged.strategies.length > 0) {
+            if (attempt > 1) {
+              logger.info({ sourceUrl, attempt }, "scout-extract: chunked extraction recovered on retry");
+            }
+            break;
+          }
+          if (attempt < CHUNK_MAX_ATTEMPTS) {
+            logger.warn(
+              { sourceUrl, attempt, max: CHUNK_MAX_ATTEMPTS },
+              "scout-extract: chunked extraction returned 0 strategies — retrying (non-deterministic heavy-video path)",
+            );
+          }
+        }
         // Surface chunk-level diagnostics in the audit_log via the per-chunk durations.
         logger.info(
           {
@@ -1016,11 +1051,15 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
     // when a short transcript genuinely contains no strategy.
     if ((strategiesIn as unknown[]).length === 0 && markdown.length > CHUNKED_FALLBACK_THRESHOLD) {
       extractionMode = "chunked_fallback";
-      const chunks = [
-        markdown.slice(0, 4000),
-        markdown.slice(Math.floor(markdown.length / 2) - 2000, Math.floor(markdown.length / 2) + 2000),
-        markdown.slice(Math.max(0, markdown.length - 4000)),
-      ];
+      // E-CHUNK-DENSE (5-URL audit run-4, 2026-06-23): cover the FULL transcript in overlapping
+      // 4K windows, not just start/mid/end. The old 3-sample missed ~23K of a 35K transcript, so
+      // a strategy taught in the un-sampled middle (SY2 Gann box) produced 0 strategies. 1K
+      // overlap avoids splitting a rule across a window boundary; cap bounds LLM calls.
+      const FB_WIN = 4000, FB_STEP = 3000, FB_MAX_WINDOWS = 12;
+      const chunks: string[] = [];
+      for (let off = 0; off < markdown.length && chunks.length < FB_MAX_WINDOWS; off += FB_STEP) {
+        chunks.push(markdown.slice(off, off + FB_WIN));
+      }
       const merged: unknown[] = [];
       const seenConcepts = new Set<string>();
       for (const c of chunks) {
@@ -1259,6 +1298,101 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
     // inside the loop body, which silently aborted the response. Reason fields
     // never reached the caller.)
     const portability = classifyMechanicPortability(markdown);
+    // ─── CHUNK-FRAGMENT SYNTHESIS (2026-06-23) ──────────────────────────────────
+    // The OOM-safe chunker emits ONE fragment per transcript window. For a single video that
+    // teaches ONE coherent strategy, those fragments must be SYNTHESIZED into a single rich
+    // strategy — NOT left as N thin ideas where the entire recall/coverage/repair pipeline grades
+    // ideas[0] (often a generic 3-step fragment) and IGNORES the rich fragment sitting at ideas[2].
+    // SY2 (Gann box, 35K) produced 4 fragments [3,4,5,4 steps]; only one had a specific
+    // concept_name and the gate graded the generic one → false "thin extraction". Union them:
+    // most-specific concept_name wins, steps + confluences are unioned (dedup), best non-null
+    // entry_indicator carried. Fires ONLY on chunked modes with >1 fragment — single-pass
+    // extractions (rf_/Fqx/75DJ, <12K) are untouched, so passing videos can't regress.
+    if (
+      (extractionMode === "chunked_oom_safe" || extractionMode === "chunked_fallback") &&
+      Array.isArray(strategiesIn) &&
+      (strategiesIn as unknown[]).length > 1
+    ) {
+      const frags = strategiesIn as Array<Record<string, unknown>>;
+      const isGeneric = (n: unknown): boolean =>
+        typeof n !== "string" || n.trim().length === 0 || /^extracted(_strategy)?$/i.test(n.trim());
+      const nameOf = (f: Record<string, unknown>): string =>
+        (typeof f.concept_name === "string" && f.concept_name) || (typeof f.name === "string" && f.name) || "";
+      const specificNames = frags.map(nameOf).filter((n) => n && !isGeneric(n)).sort((a, b) => b.length - a.length);
+      const conceptName = specificNames[0] ?? frags.map(nameOf).find((n) => n.length > 0) ?? "extracted_strategy";
+      const seenAct = new Set<string>();
+      const steps: Array<Record<string, unknown>> = [];
+      for (const f of frags) {
+        for (const st of (Array.isArray(f.entry_sequence) ? f.entry_sequence : []) as Array<Record<string, unknown>>) {
+          const a = String(st?.action ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+          if (!a || seenAct.has(a)) continue;
+          seenAct.add(a);
+          steps.push({ ...st, step: steps.length + 1 });
+        }
+      }
+      // Union confluences from BOTH representations a fragment may use: `confluences` (objects
+      // {name,description}, what the coverage gate's depth check reads) AND `confluence_factors`
+      // (canonical strings, what the A+ transform reads). The chunker often emits only one of the
+      // two per fragment; reading just `confluences` dropped SY2's lone factor → 0 confluences →
+      // coverage self-evident path (which needs >=1) failed. Convert strings → objects so the
+      // synthesized strategy carries confluences the gate can count, and preserve the string list.
+      const seenConf = new Set<string>();
+      const confluences: Array<Record<string, unknown>> = [];
+      const confluenceFactors: string[] = [];
+      for (const f of frags) {
+        for (const c of (Array.isArray(f.confluences) ? f.confluences : []) as Array<Record<string, unknown>>) {
+          const nm = String((c && typeof c === "object" ? c.name : c) ?? "").trim();
+          const k = nm.toLowerCase();
+          if (!k || seenConf.has(k)) continue;
+          seenConf.add(k);
+          confluences.push(c);
+        }
+        for (const cf of (Array.isArray(f.confluence_factors) ? f.confluence_factors : []) as unknown[]) {
+          const nm = String(cf ?? "").trim();
+          const k = nm.toLowerCase();
+          if (!k || seenConf.has(k)) continue;
+          seenConf.add(k);
+          confluences.push({ name: nm, description: "" });
+          confluenceFactors.push(nm);
+        }
+      }
+      const firstNonNull = (key: string): unknown =>
+        frags.map((f) => f[key]).find((v) => v != null && v !== "" && !(typeof v === "string" && /^(unknown|none|null)$/i.test(v.trim())));
+      const base =
+        [...frags].sort(
+          (a, b) =>
+            (Array.isArray(b.entry_sequence) ? b.entry_sequence.length : 0) -
+            (Array.isArray(a.entry_sequence) ? a.entry_sequence.length : 0),
+        )[0] ?? {};
+      const mergedFactors = Array.from(
+        new Set([
+          ...(Array.isArray(base.confluence_factors) ? (base.confluence_factors as unknown[]).map(String) : []),
+          ...confluenceFactors,
+        ]),
+      );
+      const synthesized: Record<string, unknown> = {
+        ...base,
+        concept_name: conceptName,
+        name: conceptName,
+        entry_sequence: steps,
+        confluences,
+        ...(mergedFactors.length > 0 && { confluence_factors: mergedFactors }),
+        entry_indicator: firstNonNull("entry_indicator") ?? base.entry_indicator ?? null,
+        direction: frags.some((f) => f.direction === "both") ? "both" : (firstNonNull("direction") ?? base.direction ?? "both"),
+      };
+      logger.info(
+        {
+          sourceUrl,
+          fragments: frags.length,
+          synthesized_steps: steps.length,
+          synthesized_confluences: confluences.length,
+          concept_name: conceptName,
+        },
+        "scout-extract: synthesized chunked fragments into single strategy",
+      );
+      strategiesIn = [synthesized];
+    }
+
     const rawStrategyCount = Array.isArray(strategiesIn) ? (strategiesIn as unknown[]).length : 0;
     const rawStrategyNames = Array.isArray(strategiesIn)
       ? (strategiesIn as Array<Record<string, unknown>>)
@@ -1735,15 +1869,54 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       );
     }
 
+    // Layer 1.5 (CONFLUENCE RECOVERY 2026-06-23): the local model often files confirmations under
+    // entry_sequence (procedural channel) instead of confluence_factors (evaluation channel). The
+    // dual-score diagnostic PROVED this is representational — SY2/gdd/ktkqq/75DJ carry 3-6 distinct
+    // confluence families in their step text while reporting 0 explicit; rf_/Fqx/iU8/z3Qn unchanged;
+    // truly-thin N7uP stays at 1. This pass AUGMENTS (never replaces) ideas[0]'s confluences by
+    // reading distinct categories from steps (family-deduped, provenance-tagged step_inferred vs
+    // explicit). The gate is UNTOUCHED — it still requires real confluences; we read them from the
+    // field the model used. Runs BEFORE coverage so FIX-13 + compilability both see the recovery.
+    try {
+      const recoveryTarget = ideas[0] as import("../lib/confluence-recovery.js").IdeaLike | undefined;
+      if (recoveryTarget) {
+        const rep = recoverConfluences(recoveryTarget);
+        if (rep.recovered.length > 0) {
+          insertAuditRow({
+            action: "extraction.confluence_recovered",
+            entityType: "scout_extract",
+            entityId: null,
+            status: "info",
+            result: {
+              source_url: sourceUrl,
+              explicit_count: rep.explicit_count,
+              recovered_count: rep.recovered.length,
+              recovered: rep.recovered.map((r) => ({ category: r.category, canonical: r.name, step: r.evidence_step })),
+              lineage_key: extractionLineageKey,
+              video_id: _videoId,
+            },
+            correlationId,
+          }).catch(() => {});
+        }
+      }
+    } catch (recoveryErr) {
+      logger.warn(
+        { err: recoveryErr instanceof Error ? recoveryErr.message : String(recoveryErr), sourceUrl },
+        "scout-extract: confluence recovery threw (non-blocking — continuing)",
+      );
+    }
+
     // W3.1 — Coverage gate: enumerate what the speaker taught and cross-check
     // against the extraction. Layer 3 (E-REPAIR) runs the bounded repair loop on a
     // coverage_failed verdict BEFORE W3.2's quarantine. We use the first extracted
     // idea's entry_sequence + confluences as the representative extraction snapshot.
     let coverageVerdictResult: import("../lib/extraction-coverage-gate.js").CoverageVerdict | null = null;
+    let coverageSpeakerItems: import("../lib/extraction-coverage-gate.js").SpeakerItem[] = [];
     try {
       const firstIdea = ideas[0] as import("../lib/extraction-coverage-gate.js").ExtractionSnapshot | undefined;
       if (firstIdea) {
         const { speakerItems, verdict } = await runCoverageGate(markdown, firstIdea);
+        coverageSpeakerItems = speakerItems; // exposed below for cached fast-grade iteration
         let finalVerdict = verdict;
         let repairRounds = 0;
         let repairedItems: string[] = [];
@@ -1987,6 +2160,7 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       mechanic_portable: portability.portable,
       tokens_estimated: Math.ceil(markdown.length / 4),
       ...(coverageVerdictResult !== null && { coverage_verdict: coverageVerdictResult }),
+      _coverage_speaker_items: coverageSpeakerItems, // debug: raw enum output for cached fast-grade
       compilability_results: compilabilityResults,
       quarantined_count: quarantinedCount,
     });

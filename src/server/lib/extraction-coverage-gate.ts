@@ -313,10 +313,50 @@ export async function runCoverageEnumeration(transcript: string): Promise<Speake
  * not-covered). "mention" items are reported but never cause coverage_failed.
  * coverage_failed when ANY PRIMARY item is missing OR shallow.
  */
+// E-PRECISION (5-URL audit run-4, 2026-06-23): denominator hygiene for the enumerator. The
+// windowed enumerator over-enumerates three classes of NON-DISTINCT items that inflate the
+// coverage denominator and FALSELY fail genuinely-complete extractions:
+//   (1) strategy DESCRIPTORS — the speaker naming his own strategy ("Forex specific trading
+//       strategy", "15-minute chart trading strategy"); not a tool.
+//   (2) umbrella/brand NAMES — the strategy's overall name ("three brains framework",
+//       "VWAP Wave System"); not a component.
+//   (3) indicator SUB-ANATOMY — parts of an indicator already enumerated as its own item
+//       ("MACD line" / "signal line" / "histogram" / "zero line" under "MACD indicator";
+//       "upper/lower/middle band" / "basis" under a Bollinger/VWAP band). The "Nth standard
+//       deviation Bollinger band" form is KEPT — the 2σ-vs-3σ distinction IS the mechanic.
+// Plus MIRROR references (swing high ↔ swing low) are the long/short halves of ONE rule — if
+// one side is covered the mirror is satisfied. None of these are independent strategy
+// components, so none should count toward coverage. This is PRECISION (denominator hygiene),
+// NOT relaxation: a genuinely-dropped primary tool (e.g. the Gann box) still fails as before.
+const META_DESCRIPTOR_RE = /\b(trading|chart)\s+strateg|\bframework\b|\bwave\s+system\b/i;
+const INDICATOR_ANATOMY_RE =
+  /^(the\s+)?histogram$|^(macd\s+)?signal\s+line$|^macd\s+line$|^zero\s+line$|^(upper|lower|middle)\s+band$|^basis$/i;
+const MIRROR_PARTNER = new Map<string, string>([["swing high", "swing low"]]);
+
+function selectDistinctItems(items: SpeakerItem[]): SpeakerItem[] {
+  const kept: SpeakerItem[] = [];
+  const keptLower = new Set<string>();
+  for (const it of items) {
+    const n = (it.name ?? "").trim();
+    if (!n) continue;
+    if (META_DESCRIPTOR_RE.test(n)) continue; // (1)+(2) strategy descriptors / umbrella names
+    if (INDICATOR_ANATOMY_RE.test(n)) continue; // (3) sub-parts of an enumerated indicator
+    keptLower.add(n.toLowerCase());
+    kept.push(it);
+  }
+  // mirror fold: if both halves of a long/short pair survive, drop the secondary half so the
+  // single rule is counted once (the surviving half carries the coverage verdict).
+  return kept.filter((it) => {
+    const partner = MIRROR_PARTNER.get((it.name ?? "").trim().toLowerCase());
+    return !(partner && keptLower.has(partner));
+  });
+}
+
 export function computeCoverageVerdict(
-  speakerItems: SpeakerItem[],
+  rawSpeakerItems: SpeakerItem[],
   extraction: ExtractionSnapshot,
 ): CoverageVerdict {
+  const speakerItems = selectDistinctItems(rawSpeakerItems);
   // FIX 12 (5-URL audit run-3): build per-UNIT normalized text (each entry step + each
   // confluence + the recall note). Depth is measured against the EXTRACTION's own description
   // of an item — NOT the enumeration's independently-paraphrased quote (which caused false

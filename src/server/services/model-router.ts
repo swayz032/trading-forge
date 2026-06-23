@@ -40,8 +40,22 @@ let OLLAMA_HEALTHY = true;
 // forbidden cloud → null (the live-test root cause). This shared helper warm-loads the model
 // (keep_alive HOLDS it in VRAM so the subsequent extraction calls are warm), uses a 60s
 // timeout, and retries once. Used by both the boot probe and the runtime recheck.
-const BOOT_PROBE_MS = Number(process.env.TRANSCRIPT_EXTRACTOR_BOOT_PROBE_MS) || 60_000;
-const PROBE_KEEP_ALIVE = process.env.TRANSCRIPT_EXTRACTOR_KEEP_ALIVE || "30m";
+// 2026-06-23 cold-load-spiral fix: gemma4:e2b's FULL cold-load (5.1B + 514906-merge tokenizer)
+// can exceed 60s on the 8GB tower. A probe that aborts mid-load makes Ollama abort the load
+// ("client connection closed before llama-server finished loading") → the next request cold-loads
+// again → infinite OLLAMA_HEALTHY=false + circuit-breaker-OPEN spiral. Two defenses:
+//   (1) 180s probe budget so the boot probe WAITS for a cold-load instead of aborting it.
+//   (2) keep_alive=-1 so the probe PINS the model in VRAM — once loaded it never idles out,
+//       so subsequent extraction calls are always warm (no cold-load under a request, ever).
+// Both are also enforced daemon-side via OLLAMA_KEEP_ALIVE=-1; this is defence-in-depth for the
+// per-request path and for any Ollama whose daemon env wasn't set.
+const BOOT_PROBE_MS = Number(process.env.TRANSCRIPT_EXTRACTOR_BOOT_PROBE_MS) || 180_000;
+// Ollama keep_alive: the NUMBER -1 means "pin in VRAM forever"; a duration string needs a unit
+// ("30m"). The string "-1" is INVALID — Ollama's duration parser rejects it ("missing unit in
+// duration -1"), which silently fails the health probe → OLLAMA_HEALTHY stuck false. So emit the
+// numeric -1 when the env says "-1"/unset; otherwise pass the duration string through verbatim.
+const _kaEnv = process.env.TRANSCRIPT_EXTRACTOR_KEEP_ALIVE || "-1";
+const PROBE_KEEP_ALIVE: string | number = _kaEnv === "-1" ? -1 : _kaEnv;
 
 async function runTestInferenceProbe(
   ollamaBase: string,
@@ -49,23 +63,42 @@ async function runTestInferenceProbe(
 ): Promise<{ ok: boolean; error?: string }> {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const probeRes = await fetch(`${ollamaBase}/api/generate`, {
+      // 2026-06-23 false-negative fix: probe the SAME endpoint the extractor uses — /api/chat,
+      // NOT /api/generate. On this tower gemma4:e2b returns empty/invalid on /api/generate while
+      // /api/chat works fine; a /api/generate probe therefore false-negatives → OLLAMA_HEALTHY
+      // stuck false → extractions wrongly route to the (forbidden) cloud fallback. The health
+      // probe MUST exercise the production code path or it isn't a health check.
+      // NO `format` constraint on the probe: gemma4:e2b returns EMPTY under generic
+      // `format:"json"` (Ollama #15260 grammar bug) even though it executes fine. The probe only
+      // needs to confirm the model loads + emits text; the extractor's own `format:<schema>`
+      // (specific GBNF) is a different, working path. A health check that triggers a known
+      // empty-output bug is worse than no check — it false-negatives every boot.
+      const probeRes = await fetch(`${ollamaBase}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: targetModel,
-          prompt: '{"ok":true}',
-          format: "json",
+          messages: [{ role: "user", content: "Reply with the single word: ready" }],
           stream: false,
           keep_alive: PROBE_KEEP_ALIVE,
-          options: { num_predict: 8 },
+          options: { num_predict: 16 },
         }),
         signal: AbortSignal.timeout(BOOT_PROBE_MS),
       });
-      const probeData = (await probeRes.json()) as { response?: string; error?: string };
-      if (!probeRes.ok || probeData.error) {
+      const probeData = (await probeRes.json()) as {
+        message?: { content?: string };
+        eval_count?: number;
+        error?: string;
+      };
+      // Healthy = HTTP ok, no error, AND the model actually GENERATED tokens (eval_count > 0).
+      // We do NOT require non-empty content text: gemma4:e2b can emit leading whitespace and hit
+      // the num_predict cap (done_reason="length") with blank visible content while still
+      // executing perfectly — checking content-emptiness false-negatives that. The real failure
+      // mode (the cold-load spiral) is a HANG/timeout or HTTP error, which eval_count>0 excludes.
+      const executed = typeof probeData.eval_count === "number" && probeData.eval_count > 0;
+      if (!probeRes.ok || probeData.error || !executed) {
         if (attempt === 0) continue; // one retry
-        return { ok: false, error: probeData.error ?? `HTTP ${probeRes.status}` };
+        return { ok: false, error: probeData.error ?? (!executed ? "no_tokens_generated" : `HTTP ${probeRes.status}`) };
       }
       return { ok: true };
     } catch (e) {
@@ -328,8 +361,22 @@ export async function recheckOllamaHealth(): Promise<{ healthy: boolean; reason?
 }
 
 /**
+ * Production setter: force OLLAMA_HEALTHY to false so extraction routes to
+ * the cloud fallback. Used by the ollama-keepwarm-watchdog after recovery
+ * ladder exhaustion (Step C). Does NOT affect the circuit breaker — callers
+ * should call recheckOllamaHealth() on recovery to re-enable local routing.
+ */
+export function setOllamaUnhealthy(reason: string): void {
+  OLLAMA_HEALTHY = false;
+  logger.warn(
+    { reason },
+    "model-router: OLLAMA_HEALTHY set false by production caller — cloud fallback active",
+  );
+}
+
+/**
  * Test helper: override OLLAMA_HEALTHY state.
- * Production code never calls this.
+ * Production code should use setOllamaUnhealthy() instead.
  */
 export function __setOllamaHealthyForTests(healthy: boolean): void {
   OLLAMA_HEALTHY = healthy;

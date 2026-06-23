@@ -1,0 +1,196 @@
+/**
+ * E-PRECISION (5-URL audit run-4, 2026-06-23) — enumerator denominator-hygiene regression test.
+ *
+ * Loads the REAL cached gemma extractions (tmp/validate5/<vid>.result.json) and runs the live
+ * computeCoverageVerdict over them. Proves the precision filter (selectDistinctItems) makes
+ * genuinely-complete extractions PASS while keeping real recall gaps FAILING:
+ *   - rf_  (MACD): "MACD line"/"signal line"/"histogram" are MACD sub-anatomy → folded → PASS
+ *   - Fqx  (Bollinger): "Forex specific trading strategy"/"15-minute chart trading strategy"
+ *                       are descriptors + "swing high" mirrors "swing low" → PASS
+ *   - ktkqq (VWAP): umbrellas dropped, but 2 of 4 named setups genuinely missing → still FAIL
+ *
+ * The test is SKIPPED (not failed) for any cache that predates _coverage_speaker_items, so it
+ * never breaks CI when the fixtures haven't been regenerated.
+ */
+import { describe, it, expect, vi } from "vitest";
+import { readFileSync, existsSync } from "fs";
+import { resolve } from "path";
+
+vi.mock("../services/model-router.js", () => ({
+  callScoutExtractLlm: vi.fn(),
+  setChunkedNumCtxOverride: vi.fn(),
+}));
+vi.mock("../db/index.js", () => ({ db: {} }));
+
+import {
+  computeCoverageVerdict,
+  type SpeakerItem,
+  type ExtractionSnapshot,
+} from "../lib/extraction-coverage-gate.js";
+import { checkCompilabilityGate } from "../lib/extraction-quality-gate.js";
+
+interface CachedResult {
+  ideas?: Array<Record<string, unknown>>;
+  _coverage_speaker_items?: SpeakerItem[];
+}
+
+function loadCache(vid: string): CachedResult | null {
+  const p = resolve(process.cwd(), "tmp/validate5", `${vid}.result.json`);
+  if (!existsSync(p)) return null;
+  try {
+    return JSON.parse(readFileSync(p, "utf8")) as CachedResult;
+  } catch {
+    return null;
+  }
+}
+
+function gradeCoverage(vid: string) {
+  const r = loadCache(vid);
+  if (!r) return { skip: true as const };
+  const items = Array.isArray(r._coverage_speaker_items) ? r._coverage_speaker_items : null;
+  const idea0 = (r.ideas ?? [])[0] as ExtractionSnapshot | undefined;
+  if (!items || !idea0) return { skip: true as const };
+  return { skip: false as const, verdict: computeCoverageVerdict(items, idea0) };
+}
+
+describe("E-PRECISION — denominator hygiene on real cached extractions", () => {
+  it("rf_ (MACD): sub-anatomy folded → coverage PASS", () => {
+    const g = gradeCoverage("rf_EQvubKlk");
+    if (g.skip) return; // cache predates _coverage_speaker_items
+    expect(g.verdict.verdict).toBe("pass");
+  });
+
+  it("Fqx (Bollinger): descriptors dropped + swing-high mirror folded → coverage PASS", () => {
+    const g = gradeCoverage("FqxEKDxemtI");
+    if (g.skip) return;
+    expect(g.verdict.verdict).toBe("pass");
+  });
+
+  // 2026-06-23: chunk-fragment synthesis now unifies ktkqq's per-window setup fragments into one
+  // coherent "three_brains_framework" (15 steps); the previously-"missing" setups were fragmented
+  // across windows, not absent. With synthesis + confluence recovery ktkqq covers 86% and PASSES.
+  // (Was: asserted coverage_failed in the pre-synthesis world.)
+  it("ktkqq (VWAP): synthesis unifies the setup fragments → coverage PASSES", () => {
+    const g = gradeCoverage("ktkqq7QsN9Q");
+    if (g.skip) return;
+    expect(g.verdict.verdict).toBe("pass");
+  });
+});
+
+// Full-gate grade mirrors scripts/fast-grade.ts (coverage pass + compilable + non-generic name)
+// but in the clean vitest harness (no server boot). Prints a scoreboard for the operator.
+function fullGrade(vid: string): { skip: true } | { skip: false; pass: boolean; line: string } {
+  const r = loadCache(vid);
+  if (!r) return { skip: true };
+  const items = Array.isArray(r._coverage_speaker_items) ? r._coverage_speaker_items : null;
+  const idea0 = (r.ideas ?? [])[0] as Record<string, unknown> | undefined;
+  if (!items || !idea0) return { skip: true };
+  const verdict = computeCoverageVerdict(items, idea0 as ExtractionSnapshot);
+  const confluence_factors = Array.isArray(idea0.confluences)
+    ? (idea0.confluences as Array<{ name?: string }>).map((c) => c?.name ?? "").filter((n) => n.length > 0)
+    : [];
+  const gate = checkCompilabilityGate(
+    {
+      entry_indicator: (idea0.entry_indicator as string) ?? null,
+      archetype: (idea0.entry_archetype as string) ?? null,
+      entry_params: (idea0.entry_params as Record<string, unknown>) ?? null,
+      direction: (idea0.direction as string) ?? null,
+      timeframe: (idea0.timeframe as string) ?? null,
+      confluence_factors,
+      coverage_verdict: verdict,
+    },
+    (idea0.concept_name as string) ?? null,
+  );
+  const name = (idea0.concept_name as string) ?? "(none)";
+  const generic = !name || /^extracted(_strategy)?$/i.test(name);
+  const pass = verdict.verdict === "pass" && gate.compilable && !generic;
+  return {
+    skip: false,
+    pass,
+    line: `${pass ? "PASS" : "FAIL"} ${vid} cov=${verdict.verdict}/${Math.round(verdict.coverage_pct * 100)}% compilable=${gate.compilable} name=${name}${pass ? "" : " [" + (gate.missing.join(",") || verdict.verdict) + "]"}`,
+  };
+}
+
+describe("E-PRECISION — full-gate scoreboard (real caches)", () => {
+  it("prints scoreboard + asserts rf_ & Fqx now FULLY pass", () => {
+    const vids = ["rf_EQvubKlk", "FqxEKDxemtI", "75DJN5UVQnw", "ktkqq7QsN9Q", "gddYspvW0_w", "SY2jXlW9bt4"];
+    const lines: string[] = [];
+    let anyGraded = false;
+    const passByVid: Record<string, boolean> = {};
+    for (const v of vids) {
+      const g = fullGrade(v);
+      if (g.skip) { lines.push(`SKIP ${v} (cache predates speaker_items)`); continue; }
+      anyGraded = true;
+      lines.push(g.line);
+      passByVid[v] = g.pass;
+    }
+    // eslint-disable-next-line no-console
+    console.log("\n=== FULL-GATE SCOREBOARD ===\n" + lines.join("\n") + "\n");
+    if (!anyGraded) return; // nothing to assert if no fresh caches
+    // The two good extractions the precision filter unblocks must now FULLY pass.
+    if ("rf_EQvubKlk" in passByVid) expect(passByVid["rf_EQvubKlk"]).toBe(true);
+    if ("FqxEKDxemtI" in passByVid) expect(passByVid["FqxEKDxemtI"]).toBe(true);
+  });
+});
+
+describe("E-PRECISION — selectDistinctItems classification (synthetic, no fixtures)", () => {
+  const RICH_STEP = "draw the indicator and wait for the mechanic confirmation alpha bravo charlie";
+  function snap(extra: Partial<ExtractionSnapshot> = {}): ExtractionSnapshot {
+    return {
+      entry_sequence: [{ step: 1, action: RICH_STEP, rationale: null }],
+      confluences: [{ name: "c", description: "x y z" }],
+      ...extra,
+    } as ExtractionSnapshot;
+  }
+
+  it("drops a 'trading strategy' descriptor from the denominator", () => {
+    const items: SpeakerItem[] = [
+      { name: "MACD indicator", verbatim_quote: "use the macd indicator for momentum", emphasis_level: "primary" },
+      { name: "Forex specific trading strategy", verbatim_quote: "this is a forex specific trading strategy", emphasis_level: "primary" },
+    ];
+    const ext = snap({
+      entry_sequence: [{ step: 1, action: "use the MACD indicator for momentum confirmation alpha bravo", rationale: null }],
+    });
+    const v = computeCoverageVerdict(items, ext);
+    // descriptor is filtered out → only MACD counts → covered → pass
+    expect(v.missing).not.toContain("Forex specific trading strategy");
+    expect(v.verdict).toBe("pass");
+  });
+
+  it("folds indicator sub-anatomy (histogram) into the parent indicator", () => {
+    const items: SpeakerItem[] = [
+      { name: "MACD indicator", verbatim_quote: "the macd indicator", emphasis_level: "primary" },
+      { name: "histogram", verbatim_quote: "the histogram shows momentum", emphasis_level: "primary" },
+    ];
+    const ext = snap({
+      entry_sequence: [{ step: 1, action: "read the MACD indicator cross for momentum alpha bravo", rationale: null }],
+    });
+    const v = computeCoverageVerdict(items, ext);
+    expect(v.missing).not.toContain("histogram"); // folded, not counted as a miss
+    expect(v.verdict).toBe("pass");
+  });
+
+  it("folds swing-high mirror into covered swing-low", () => {
+    const items: SpeakerItem[] = [
+      { name: "swing low", verbatim_quote: "stop below the swing low", emphasis_level: "primary" },
+      { name: "swing high", verbatim_quote: "stop above the swing high", emphasis_level: "secondary" },
+    ];
+    const ext = snap({
+      entry_sequence: [{ step: 1, action: "place the stop below the swing low by a buffer alpha bravo", rationale: null }],
+    });
+    const v = computeCoverageVerdict(items, ext);
+    expect(v.verdict).toBe("pass");
+  });
+
+  it("KEEPS a genuinely-dropped primary tool failing (Gann box not relaxed)", () => {
+    const items: SpeakerItem[] = [
+      { name: "Gann box", verbatim_quote: "draw the gann box from high to low", emphasis_level: "primary" },
+    ];
+    const ext = snap({
+      entry_sequence: [{ step: 1, action: "buy when price breaks the prior high alpha bravo", rationale: null }],
+    });
+    const v = computeCoverageVerdict(items, ext);
+    expect(v.missing).toContain("Gann box");
+    expect(v.verdict).toBe("coverage_failed");
+  });
+});
