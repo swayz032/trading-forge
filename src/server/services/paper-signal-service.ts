@@ -56,6 +56,10 @@ import { resolveNewsAction } from "../lib/news-policy.js";
 // synced), replacing the hardcoded/projected Python list. Covers FOMC/FOMC_MINUTES/CPI/NFP +
 // EIA, product-scoped, hardcoded fail-safe fallback.
 import { getT1ReleaseWindow } from "../lib/economic-calendar-loader.js";
+// Topstep Prohibited Conduct (2026-06-23): cross-account hedging (opposite positions across
+// the operator's multiple accounts) + holding within 2% of a product's price-lock limit.
+import { checkCrossAccountHedge, symbolToUnderlying } from "../lib/cross-account-hedge-gate.js";
+import { checkPriceLockLimit } from "../lib/price-lock-limit-gate.js";
 // W23H.F: cross-symbol DLL coordinator + pre-market blackout consumption
 import { getAccountSessionCumulativePnL, evaluateCrossSymbolDll, DEFAULT_PERSONAL_DLL_DOLLARS } from "./cross-symbol-pnl.js";
 import { toFuturesTradingDayString } from "./paper-risk-gate.js";
@@ -3213,7 +3217,74 @@ export async function evaluateSignals(
 
     // ─���─ Anti-setup gate: check if known bad pattern blocks entry ──
     // Anti-setup gate short-circuits if lockout or correlated position guard is already active
-    let antiSetupBlocked = lockoutBlocked || correlatedBlocked;
+    // ─── Tier 5.3.2: Cross-account hedge gate (Topstep Prohibited Conduct) ──
+    // Topstep bans holding OPPOSITE positions across your multiple accounts (single-user
+    // cross-account hedging). Block a new entry that would be opposite to an open position on
+    // the SAME UNDERLYING in another account of this firm. Fail-OPEN on DB error.
+    let crossAccountHedgeBlocked = lockoutBlocked || correlatedBlocked;
+    if (!crossAccountHedgeBlocked) {
+      const hedge = await checkCrossAccountHedge(sessionRow.firmId, symbol, config.side, sessionId);
+      if (hedge.blocked) {
+        crossAccountHedgeBlocked = true;
+        span.setAttribute("cross_account_hedge_blocked", true);
+        span.setAttribute("cross_account_hedge_underlying", hedge.conflictUnderlying ?? "");
+        logger.info(
+          { sessionId, symbol, firmId: sessionRow.firmId, conflictUnderlying: hedge.conflictUnderlying, conflictSide: hedge.conflictSide, conflictSessionId: hedge.conflictSessionId },
+          "Tier 5.3.2: entry blocked — cross-account hedge (Topstep prohibited conduct: opposite positions across accounts)",
+        );
+        db.insert(paperSignalLogs).values({
+          sessionId, symbol, direction: config.side, signalType: "cross_account_hedge_blocked",
+          price: String(bar.close),
+          indicatorSnapshot: { ...indicators, _hedge_underlying: hedge.conflictUnderlying, _hedge_conflict_side: hedge.conflictSide, _hedge_conflict_session: hedge.conflictSessionId },
+          acted: false,
+          reason: `cross_account_hedge_blocked: open ${hedge.conflictSide} on ${hedge.conflictUnderlying} in another account`,
+        }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist cross-account hedge block log"));
+        insertAuditRow({
+          action: "compliance.cross_account_hedge_blocked",
+          entityType: "paper_session", entityId: sessionId, decisionAuthority: "system", status: "blocked",
+          input: { sessionId, symbol, firmId: sessionRow.firmId, side: config.side } as Record<string, unknown>,
+          result: { blocked: true, conflictUnderlying: hedge.conflictUnderlying, conflictSide: hedge.conflictSide } as Record<string, unknown>,
+          correlationId: correlationId ?? null,
+        }).catch(() => {});
+      }
+    }
+
+    // ─── Tier 5.3.3: Price-lock limit gate (Topstep Prohibited Conduct) ──────
+    // Topstep bans holding a position within 2% of a product's daily price-lock limit. The
+    // reference (prior settlement) is best-effort; FAIL-OPEN when unavailable — intraday
+    // structural trades are essentially never within 2% of a ±7% limit, so a missing reference
+    // must not halt trading. TODO: wire the daily settlement feed for full enforcement.
+    let priceLockBlocked = lockoutBlocked || correlatedBlocked || crossAccountHedgeBlocked;
+    if (!priceLockBlocked) {
+      const refSettlement = (indicators["prior_settlement"] ?? indicators["daily_reference"] ?? null) as number | null;
+      const lock = checkPriceLockLimit(symbolToUnderlying(symbol), bar.close, refSettlement);
+      if (lock.blocked) {
+        priceLockBlocked = true;
+        span.setAttribute("price_lock_limit_blocked", true);
+        span.setAttribute("price_lock_reason", lock.reason ?? "");
+        logger.info(
+          { sessionId, symbol, price: bar.close, reason: lock.reason, limitUp: lock.limitUp, limitDown: lock.limitDown },
+          "Tier 5.3.3: entry blocked — within 2% of price-lock limit (Topstep prohibited conduct)",
+        );
+        db.insert(paperSignalLogs).values({
+          sessionId, symbol, direction: config.side, signalType: "price_lock_limit_blocked",
+          price: String(bar.close),
+          indicatorSnapshot: { ...indicators, _price_lock_reason: lock.reason, _limit_up: lock.limitUp, _limit_down: lock.limitDown },
+          acted: false,
+          reason: `price_lock_limit_blocked: ${lock.reason} (price ${bar.close})`,
+        }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist price-lock block log"));
+        insertAuditRow({
+          action: "compliance.price_lock_limit_blocked",
+          entityType: "paper_session", entityId: sessionId, decisionAuthority: "system", status: "blocked",
+          input: { sessionId, symbol, price: bar.close } as Record<string, unknown>,
+          result: { blocked: true, reason: lock.reason } as Record<string, unknown>,
+          correlationId: correlationId ?? null,
+        }).catch(() => {});
+      }
+    }
+
+    // ─── Anti-setup gate: check if known bad pattern blocks entry ──
+    let antiSetupBlocked = lockoutBlocked || correlatedBlocked || crossAccountHedgeBlocked || priceLockBlocked;
     let antiSetupResult: AntiSetupGateResult | null = null;
     try {
       antiSetupResult = await checkAntiSetupGate(

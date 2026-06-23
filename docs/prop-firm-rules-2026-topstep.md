@@ -234,6 +234,33 @@ payout event to prevent oversizing in the first session post-payout.
 
 ---
 
+## Prohibited Conduct (2026 — coverage map)
+
+Topstep's Prohibited Conduct list applies at every level. Responses range from a warning to
+permanent account closure / payout denial, case-by-case on severity + history. Below is each
+item mapped to how Trading Forge handles it. Two new enforced gates were added 2026-06-23.
+
+| Prohibited conduct | Bot handling |
+|---|---|
+| **Cross-account hedging (single-user)** — opposite positions across your accounts | **ENFORCED (2026-06-23):** `cross-account-hedge-gate.ts` blocks an entry that would be opposite to an open position on the same underlying in another account of this firm. Wired at the paper-signal entry cluster (Tier 5.3.2). `compliance.cross_account_hedge_blocked`. Critical on the multi-account scaling path (§5 lever 3). |
+| **Holding within 2% of a product's price-lock limit** | **ENFORCED (2026-06-23):** `price-lock-limit-gate.ts` blocks an entry within 2% of the ±7% daily limit (Tier 5.3.3). Distinct from the MFFU "2% account loss" rule. Reference = prior settlement; FAIL-OPEN when unavailable (intraday structural trades are never near ±7%). `compliance.price_lock_limit_blocked`. TODO: wire the daily settlement feed for full enforcement. |
+| **Coordinated trading** — same/opposite strategy in concert with others | Covered by family distribution rules: each member runs a DIFFERENT strategy (`account_strategy_assignments` UNIQUE), separate device + instance (§9). |
+| **Use of VPN / proxy / TOR / geo-obfuscation** | ENFORCED: `vps_prohibited` compliance rule (§2 above) — host must be `local`. Both firms ban it. |
+| **Circumventing geographical/technical restrictions** | Same as VPN ban — local host only, no obfuscation. |
+| **Account stacking** (repeat max-loss then switch accounts) | The 67% personal DLL halt + 95% force-close (CLAUDE.md §4) prevents the high-risk-blowup mechanic; the rest is account-management behavior, not bot logic. |
+| **Trading outside best bid/offer** | Posture: orders are stop-LIMIT (CLAUDE.md "Don't use stop-market"), placed at structural levels — never outside BBO by design. |
+| **Unfair tech / AI / ultra-high-speed / mass data entry** | Posture: the bot is **1–2 A+ trades/day** (`TF_MAX_TRADES_PER_DAY=2`), standard automation via TradersPost (Topstep-sanctioned) — NOT HFT, NOT mass-entry. |
+| **Disruptive practices / spoofing** | Posture: the bot never places-and-cancels to manipulate; it sends a single entry + bracket. |
+| **Price exploitation / external or slow data feed** | Posture: trades fire on standard closed-bar signals; no latency-arbitrage, no exploiting feed delays. |
+| **Trading on behalf of others / sharing incentives** | N/A: operator trades own accounts; family run their own independent stacks (§9). |
+| **Excessive Combine/Reset purchases** | Operator/account-level, not bot logic. |
+
+**Enforcement code:** `src/server/lib/cross-account-hedge-gate.ts`, `src/server/lib/price-lock-limit-gate.ts`,
+wired in `paper-signal-service.ts` (Tier 5.3.2 / 5.3.3). New env: `NEWS_REDUCE_SIZE_FACTOR` (unrelated),
+`PRICE_LOCK_LIMIT_PCT_<UNDERLYING>` (per-underlying limit % override, default 0.07).
+
+---
+
 ## Constants Used By Code
 
 ```
