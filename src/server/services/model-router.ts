@@ -2472,6 +2472,14 @@ function buildPromptWithoutFewShot(
 async function callOllamaForTranscriptExtractor(
   messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
   taskContext?: PromptTaskContext,
+  // 2026-06-23 enumerator-debt fix: secondary gemma callers (coverage enumeration, recall) need a
+  // DIFFERENT output shape than the strategies extractor. Without this, the enum prompt asking for
+  // `{speaker_items:[...]}` was GBNF-locked to the strategies schema + fed extractor few-shot →
+  // gemma returned `{strategies:[...]}` → parseSpeakerItems found no speaker_items → empty enum →
+  // coverage silently fell to the self-evident path (which can't detect missing speaker items).
+  // schemaOverride: pass a custom GBNF JSON schema (locks gemma to the CORRECT shape).
+  // skipFewShot: send the prompt verbatim with NO extractor few-shot / KB injection.
+  opts?: { schemaOverride?: Record<string, unknown> | null; skipFewShot?: boolean },
 ): Promise<{ text: string; model: string; durationMs: number; inputTokens: number; outputTokens: number }> {
   const role = "transcript_extractor" as const;
   const model = getLocalTranscriptModel();
@@ -2491,8 +2499,10 @@ async function callOllamaForTranscriptExtractor(
   const ollama = new OllamaClient(undefined, timeoutMs);
 
   // Determine schema first — needed for buildGemmaFewShotMessages AND for formatArg.
+  // A schemaOverride (enum/recall) takes precedence over the strategies schema.
   const strictSchema = isStrictSchemaMode();
-  const schema = strictSchema ? loadTranscriptOutputSchema() : null;
+  const schema =
+    opts && "schemaOverride" in opts ? (opts.schemaOverride ?? null) : strictSchema ? loadTranscriptOutputSchema() : null;
 
   // Extract transcript payload from incoming messages (non-system content).
   const userPayload = messages
@@ -2504,7 +2514,11 @@ async function callOllamaForTranscriptExtractor(
   // NO system role — rules + KB injected into first user turn.
   // Few-shot examples as alternating user/assistant turns.
   // Schema re-stated in final user turn for long-range awareness.
-  const chatMessages = buildGemmaFewShotMessages(role, taskContext, userPayload, schema);
+  // skipFewShot (enum/recall): send the self-contained prompt verbatim — NO extractor few-shot or
+  // KB, which would bias gemma toward strategy extraction and the wrong output shape.
+  const chatMessages = opts?.skipFewShot
+    ? [{ role: "user" as const, content: userPayload }]
+    : buildGemmaFewShotMessages(role, taskContext, userPayload, schema);
 
   // GEMMA 4 PROPER SAMPLING (per Google AI docs + Unsloth Gemma 3 fine-tune guide
   // + Ollama issue #15502 workaround):
@@ -2849,6 +2863,9 @@ export async function callScoutExtractLlm(
   taskContext?: PromptTaskContext,
   callFn: typeof callOpenAI = callOpenAI,
   sleepFn?: (ms: number) => Promise<void>,
+  // 2026-06-23: enum/recall pass a custom output schema + skip the extractor few-shot so gemma
+  // returns their shape (e.g. {speaker_items:[...]}) instead of being GBNF-locked to strategies.
+  opts?: { schemaOverride?: Record<string, unknown> | null; skipFewShot?: boolean },
 ): Promise<string | null> {
   const role = "transcript_extractor" as const;
   const forceCloud = isForceCloud();
@@ -2921,7 +2938,7 @@ export async function callScoutExtractLlm(
 
   for (let attempt = 0; attempt < MAX_SCOUT_ATTEMPTS; attempt++) {
     try {
-      const res = await callOllamaForTranscriptExtractor(messages, taskContext);
+      const res = await callOllamaForTranscriptExtractor(messages, taskContext, opts);
       ollamaText = res.text;
       ollama_durationMs = res.durationMs;
       logger.info(

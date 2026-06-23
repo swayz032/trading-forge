@@ -158,6 +158,30 @@ function canonicalNameKey(name: string): string {
 
 // ─── Prompt for LLM enumeration ───────────────────────────────────────────────
 
+// GBNF schema that locks gemma to the ENUM output shape. Without this the enum reused the
+// strategies-extractor schema and gemma returned {strategies:[...]} → 0 speaker_items → the
+// long-transcript-enumeration "debt" (2026-06-23 root cause). additionalProperties:false keeps it tight.
+const SPEAKER_ITEMS_SCHEMA: Record<string, unknown> = {
+  type: "object",
+  additionalProperties: false,
+  required: ["speaker_items"],
+  properties: {
+    speaker_items: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["name", "verbatim_quote", "emphasis_level"],
+        properties: {
+          name: { type: "string" },
+          verbatim_quote: { type: "string" },
+          emphasis_level: { type: "string", enum: ["primary", "secondary", "mention"] },
+        },
+      },
+    },
+  },
+};
+
 const COVERAGE_ENUM_PROMPT = `You are a transcript auditor. A trading educator recorded a video and a SEGMENT of their transcript is below. Your ONLY job is to enumerate every NAMED tool, indicator, drawing, zone, or level that the speaker explicitly teaches in THIS segment — regardless of what market they trade. We care about the MECHANIC, not the instrument.
 
 ## TRANSCRIPT SEGMENT
@@ -257,7 +281,11 @@ async function enumerateWindowsOnce(windows: string[], transcript: string): Prom
     const prompt = COVERAGE_ENUM_PROMPT.replace("{TRANSCRIPT}", window);
     let raw: string | null = null;
     try {
-      raw = await callScoutExtractLlm([{ role: "user", content: prompt }]);
+      // NOTE: opts is the 5th param (after callFn + sleepFn) — must pass all four leading args.
+      raw = await callScoutExtractLlm([{ role: "user", content: prompt }], undefined, undefined, undefined, {
+        schemaOverride: SPEAKER_ITEMS_SCHEMA,
+        skipFewShot: true,
+      });
     } catch (e) {
       logger.warn(
         { err: (e as Error).message },
