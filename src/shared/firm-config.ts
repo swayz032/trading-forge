@@ -36,7 +36,7 @@ export interface FirmAccountConfig {
   maxDrawdown: number;            // Also serves as buffer amount
   /** Max MICRO contracts at $50K (50 = 5 minis × 10:1 ratio). */
   maxContracts: number;
-  trailing: "eod" | "realtime";
+  trailing: "eod" | "intraday";
   payoutSplit: number;            // Initial split
   payoutSplitTiers?: { threshold: number; split: number }[];
   payoutCountTiers?: { payoutNumber: number; split: number }[];  // Alpha: count-based tiers
@@ -98,11 +98,15 @@ export const FIRMS: Record<string, FirmConfig> = {
     macro_blackout_mode: "strict",
     accountTypes: {
       "50k": {
+        // 2026-06-23: operator's MFFU account is the RAPID plan. Rapid Sim Funded =
+        // INTRADAY trailing drawdown (trails intraday EQUITY HWM incl. unrealized,
+        // $2,000, locks at $100), 90/10 split, daily payouts after a $2,100 buffer, 2-day eval,
+        // consistency EVAL-ONLY. (Risk MODEL intraday-trailing wiring is a separate build.)
         accountSize: 50_000, monthlyFee: 77, activationFee: 0, ongoingMonthlyFee: 0,
-        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 50, trailing: "eod",
-        payoutSplit: 0.80, minPayoutDays: 5, consistencyRule: 0.50, // Python: "mffu_50pct"
+        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 50, trailing: "intraday",
+        payoutSplit: 0.90, minPayoutDays: 1, consistencyRule: 0.50, // Python: "mffu_50pct_eval_only"
         dailyLossLimit: null, overnightOk: false, weekendOk: false, commissionPerSide: 0.62,
-        minTradingDays: 5,
+        minTradingDays: 2,
         // 2026-compliance fields (canonical: docs/prop-firm-rules-2026-mffu.md)
         payoutCycleDays: 14,
         hftMaxTradesPerDay: 500,
@@ -365,7 +369,7 @@ export function getFirmAccount(firmName: string, accountType: string = "50k"): F
 export function getFirmLimit(
   firmName: string,
   _accountType: string = "50k",
-): { maxDrawdown: number; maxContracts: number; dailyLossLimit: number | null; trailing: "eod" | "realtime" } | null {
+): { maxDrawdown: number; maxContracts: number; dailyLossLimit: number | null; trailing: "eod" | "intraday" } | null {
   const acct = getFirmAccount(firmName, "50k");
   if (!acct) return null;
   return {

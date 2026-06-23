@@ -21,17 +21,19 @@
 | Ongoing monthly fee (post-funded) | `$0` |
 | Profit target | `$3,000` |
 | Max drawdown (also serves as buffer) | `$2,000` |
-| Trailing type | `eod` |
+| Trailing type | `intraday` ← **RAPID Sim Funded** trails the intraday EQUITY HWM (incl. unrealized), $2,000, **locks at $100**. (Rapid EVAL is EOD.) |
 | Daily loss limit | `null` (no separate DLL — drawdown is the cap) |
-| Max contracts | `50` micros (or 5 minis — Core/Flex/Rapid plans; Pro plan is 60 micros) |
-| Min trading days | `5` |
-| Min payout days | `5` |
-| Consistency rule | `mffu_50pct` (best-day cannot exceed 50% of total P&L) |
+| Max contracts | `50` micros **TOTAL** (5 minis OR 50-micro equivalent, combined — exceeding can breach) |
+| Min trading days | `2` (Rapid eval) |
+| Min payout days | `1` (Rapid Sim Funded = DAILY payouts, 24h, after the $2,100 buffer) |
+| Payout buffer | `$2,100` realized profit required before any payout |
+| Consistency rule | `50%` best-day cap — **EVAL ONLY** (none in Rapid Sim Funded) |
 | Overnight allowed | `false` |
 | Weekend allowed | `false` |
 | Commission per side per contract | `$0.62` |
-| Payout split (initial) | `0.80` (80% to trader) |
-| Payout schedule | bi-weekly (every 14 days) |
+| Payout split (initial) | `0.90` (90/10 — Rapid; Core/Flex are 80/20) |
+| Payout schedule | **daily** (every 24h, after the $2,100 buffer) |
+| No T1 news trading | on Rapid **Sim Funded** (eval allows T1) |
 
 ## Canonical Values
 
@@ -47,12 +49,12 @@ activation_fee: 0
 ongoing_monthly_fee: 0
 profit_target: 3000
 max_drawdown: 2000
-max_contracts: 50  # micros at $50K Core/Flex/Rapid (5 minis × 10:1)
-trailing: eod
-payout_split: 0.80
-min_payout_days: 5
-min_trading_days: 5
-consistency_rule_pct: 0.50
+max_contracts: 50  # micros TOTAL at $50K Rapid (5 minis OR 50-micro equivalent — combined cap)
+trailing: intraday  # RAPID Sim Funded = INTRADAY trailing (equity HWM incl. unrealized, $2k, locks at $100); eval is EOD
+payout_split: 0.90  # Rapid is 90/10 (Core/Flex are 80/20)
+min_payout_days: 1  # Rapid Sim Funded payouts are DAILY (24h) after the $2,100 buffer
+min_trading_days: 2  # Rapid eval minimum is 2 days
+consistency_rule_pct: 0.50  # EVAL ONLY — none in Rapid Sim Funded
 daily_loss_limit: null
 overnight_ok: false
 weekend_ok: false

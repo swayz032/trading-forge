@@ -126,12 +126,20 @@ FIRM_RULES: dict[str, dict] = {
         "ongoing_monthly_fee": 0,
         "profit_target": 3000,
         "max_drawdown": 2000,
-        "max_contracts": 50,  # 50 micros (10:1 mini ratio) at $50K
-        "trailing": "eod",
-        "payout_split": 0.80,
-        "min_payout_days": 5,
-        "min_trading_days": 5,
-        "consistency_rule": "mffu_50pct",
+        "max_contracts": 50,  # 50 micros TOTAL (5 minis or 50-micro equivalent) at $50K Rapid
+        # 2026-06-23 CORRECTION (operator-confirmed): the operator's MFFU account is the RAPID
+        # plan. MFFU Rapid SIM FUNDED uses INTRADAY trailing drawdown — Max Loss trails the
+        # intraday EQUITY high-water mark (incl. unrealized), $2,000 below, and LOCKS at a $100
+        # floor once HWM hits ~$2,100 profit. (The Rapid EVAL is EOD; only Sim Funded is
+        # intraday.) This is the HARSH type vs Topstep's EOD. The risk MODEL (risk-sizing.ts +
+        # kill switch) must trail the intraday equity peak for MFFU, not the EOD/closed peak.
+        "trailing": "intraday",
+        "trailing_lock_floor": 100,   # Max Loss locks at $100 once it trails up to it
+        "payout_split": 0.90,         # Rapid is 90/10 (NOT the 80/20 of Core/Flex)
+        "min_payout_days": 1,         # Sim Funded payouts are DAILY (24h) after the $2,100 buffer
+        "payout_buffer": 2100,        # build $2,100 realized profit before any payout
+        "min_trading_days": 2,        # Rapid eval minimum is 2 days
+        "consistency_rule": "mffu_50pct_eval_only",  # 50% best-day cap — EVAL ONLY; none in Sim Funded
         "daily_loss_limit": None,
         "overnight_ok": False,
         "weekend_ok": False,
