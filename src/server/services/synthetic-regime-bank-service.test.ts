@@ -341,10 +341,14 @@ describe("runSyntheticRegimeBankPopulate", () => {
       (c) => (c[0] as { action: string }).action === "synthetic_regime_bank.populated",
     );
     expect(auditCall).toBeDefined();
-    const details = (auditCall![0] as { details: Record<string, unknown> }).details;
-    expect(details.inserted).toBe(1);
-    expect(details.skipped).toBe(0);
-    expect(details.seed).toBe(42);
+    // 2026-06-23 fix: audit row uses real audit_log columns — `result` (JSONB) +
+    // required `status` — not the non-existent `details` column.
+    const row = auditCall![0] as { status: string; result: Record<string, unknown> };
+    expect(row.status).toBe("success");
+    const result = row.result;
+    expect(result.inserted).toBe(1);
+    expect(result.skipped).toBe(0);
+    expect(result.seed).toBe(42);
   });
 
   it("9. multiple regimes — all inserted on happy path", async () => {
