@@ -376,6 +376,33 @@ export const warningSeverityDiscordRoutedTotal = new Counter({
   registers: [promRegistry],
 });
 
+// ─── Pass 4 Track C — TradersPost per-call rejection counter (2026-06-23) ─────
+//
+// tf_broker_router_traderspost_rejects_total{status_code, signal_action}
+//   Incremented by broker-router.ts at the submitResult.success===false branch —
+//   i.e. every time TradersPost returns a 4xx/5xx or the submission times out —
+//   BEFORE the circuit breaker opens. Once the breaker opens (3 consecutive
+//   failures) the notifyCritical fires; this counter captures every per-call slip
+//   whether the breaker is open or not.
+//
+//   Labels:
+//     status_code   — HTTP status code as string, or "unknown" when null/undefined
+//                     (timeout, connection-refused, etc.)
+//     signal_action — the signal.action string (e.g. "enter_long", "exit_long")
+//                     or "unknown" when absent
+//
+//   Cardinality: ~5 status codes × ~4 actions = ~20 time series — safe.
+//
+//   Operational question answered: "Are per-call TradersPost rejections
+//   concentrated on a specific action or status code?" — useful for diagnosing
+//   payload shape errors (400) vs server-side TradersPost outages (503+).
+export const traderspostRejectsTotal = new Counter({
+  name: "tf_broker_router_traderspost_rejects_total",
+  help: "Total per-call TradersPost webhook submission failures (4xx/5xx/timeout) before circuit-breaker threshold",
+  labelNames: ["status_code", "signal_action"] as const,
+  registers: [promRegistry],
+});
+
 // ─── Pass 3 Track D — Pine Export SHADOW refusal counter (2026-06-22) ─────────
 //
 // tf_pine_shadow_refusals_total{blocked_at}

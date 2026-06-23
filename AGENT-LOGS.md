@@ -4,6 +4,61 @@
 
 ---
 
+### Session Log — 2026-06-23 Paper-Trade Readiness Hardening Plan, Pass 4 PARTIAL CLOSE (Path B canonical flip — parametric path closed, archetype path is CRITICAL CARRY-FORWARD F-2, 78 new tests GREEN, accuracy-validator caught 2 CRITICAL findings)
+
+**Mission:** Pass 4 — flip canonical Pine alert path from "direct to traderspost.io" (bypasses kill-switch + compliance + firm-cap + circuit breaker) to "TF gateway → `routeOrder()` → TradersPost".
+
+**Source audit:** `wf_06574188-392` High-Priority Wiring #1 (Path A bypasses all safety gates).
+
+**4 parallel subagents + mandatory accuracy-validator close-out (highest live-trading-risk pass per plan):**
+
+1. **pine-export (Track A — `_build_strategy_webhook_alerts` gateway_mode branch)** — agent `a710e9bb44cbb8329`. Extended `pine_compiler.py` with `gateway_mode='tf_gateway'` branch emitting payload `{account_id, strategy_id, live_order_token, timestamp_ms, bar_timestamp, action, ticker}`. New `TF_GATEWAY_PAYLOAD_FIELDS` constant. Backward-compat: `None`/`'direct'` byte-identical to pre-Pass-4 output. ValueError on invalid mode. **49 pytest GREEN.** Track A flagged the archetype coordination gap explicitly — see F-2.
+
+2. **paper-parity (Track B — `pine-export-service.ts` gatewayOptions threading)** — agent `abfed907a61563a90`. NEW `src/server/lib/pine-gateway-options.ts` pure helper. Threaded `gatewayOptions` through `compileDualPineExport` + `compilePineExport`. Default: `tf_gateway` when `LIVE_ORDER_GATEWAY_URL` set; fallback to `direct` with audit `pine_export.fallback_direct_path` (status=warn) + Discord WARN + family-grade postscript (accuracy-validator verified LOUD). Critical correction: injects `gateway_mode` at NESTED `strategy.config.gateway_mode` (matches Track A's Python read). **21 vitest GREEN** (agent claimed 30; accuracy-validator confirmed 21 actual).
+
+3. **observability-reliability (Track C — broker-router non-success Discord)** — agent `a2b085a0befea05d4`. `broker-router.ts:779-806` `submitResult.success===false` branch now fires `notifyWarning` with family-grade postscript + new Prom counter `tf_broker_router_traderspost_rejects_total{status_code, signal_action}`. Body truncated ≤200 chars. Distinguished from credential-load failures at `:659` (notifyCritical, Pass 1). **8 vitest GREEN.** 28 existing broker-router tests GREEN.
+
+4. **paper-parity (Track D — runbook + env workflow)** — agent `a9ab28388894235bb`. NEW section `B.1a Set LIVE_ORDER_GATEWAY_URL` + rewrote B.2.3 as "Path B (canonical, recommended)". Path A preserved as legacy subsection with 2 "DO NOT use for new strategies" warnings + 7-row Path A vs Path B comparison table. NEW `scripts/lint-first-strategy-launch-runbook.ts` (9 assertions, exit 0).
+
+**Mandatory accuracy-validator close-out** — agent `a9969d6c34f6ddd34` — caught 2 CRITICAL findings:
+
+- **F-1 (CRITICAL — documentation drift):** The plan's acceptance criteria documented audit-action names `live_order.received → broker_router.kill_switch_evaluated → broker_router.compliance_evaluated → broker_router.firm_cap_evaluated → broker_router.submitted` — **zero of these 5 names exist in the codebase**. Real happy-path sequence: `broker_router.route_order` (route entry, line 185) → `webhook.broker_ack` (TradersPost success, line 817). Failure variants: `broker_router.route_rejected` / `broker_router.compliance_rejected` / `broker_router.compliance_gate_failed` / `broker_router.quantity_clamp_drift` (only when quantity changed) / `broker_router.traderspost_circuit_open`. Plan was written speculatively before implementation; action names evolved during coding and were never synced back. **No code change required — correlation_id threading IS sound across all real audit rows.** Documentation fix only.
+
+- **F-2 (CRITICAL — SILENT SAFETY BYPASS, CARRY-FORWARD to Pass 4.5):** **Archetype strategies (39 of them — Wave 26 Pass G ICT/SMC/Wyckoff) STILL bypass `routeOrder()` after Pass 4.** Root cause: `_build_pine_indicator_var` at `pine_compiler.py:230` intercepts `archetype:*` and returns `ARCHETYPE_PINE_RECIPE[key]` directly — early-returns BEFORE `_build_strategy_webhook_alerts` (where `gateway_mode` is read, line 2193) is ever called. Track B's TS-side `gateway_mode` injection works for parametric strategies but is silently ignored for archetype recipes. **When an archetype strategy reaches PAPER and the operator configures TradingView alerts, those alerts fire directly to whatever URL is set — they continue to bypass routeOrder() / kill-switch / compliance / firm-cap / TradersPost circuit breaker.** Pass 4 closes the gap for parametric strategies only.
+
+- **Track B test count discrepancy:** agent claimed 30 vitest, actual is 21 (9 short). Documentation-only.
+
+- **Verified PASS:** fallback loudness (audit + notifyWarning + family-grade postscript present), Track C wiring, backward-compat parity (gateway_mode=None byte-identical to 'direct'), linter trust (9/9 assertions PASS), Track A pytest count (49 actual = 49 claimed), Track C vitest count (8 actual = 8 claimed).
+
+**Architect close (this commit by parent claude):**
+- Added 2 registry entries closing parallel-session drift: `economic-calendar-sync` (observability_reliability) + `synthetic` engine subsystem (synthetic_black_swan_survival). Both from another session's Tier-1 calendar work that landed without registry updates.
+- `npm run system-map:sync` regenerated `docs/system-topology.generated.json` + `docs/system-readiness.generated.json` + `Trading Forge System Map v2.md`. driftItems=[].
+- **DID NOT FIX F-2 INLINE** — closing the archetype gateway_mode gap is non-trivial: archetype Pine alerts emit generic `action:"signal"` (Python engine owns entry/exit), but TF-gateway `/api/live-order` expects directional actions (`enter_long` etc.). Routing requires either (a) new `/api/archetype-signal` endpoint that triggers Python engine to evaluate + route server-side, or (b) extending live-order to accept `action:"archetype_signal"` dispatched to a Python evaluator. Both are architectural changes outside Pass 4's scope. **Tracked as F-2 CRITICAL carry-forward — MUST close in Pass 4.5 BEFORE any archetype strategy reaches PAPER state.**
+
+**Verification:**
+- pytest **49/49**, vitest **21+8=29**, lint **9/9 assertions PASS** = **78 new tests/assertions + 9 lint assertions**.
+- 3 CI hard gates GREEN: production-isolation + 2026-compliance + system-map:check (`driftItems=[]`).
+- Existing regression suites: archetype-pytest 372/372 GREEN, broker-router 28/28 GREEN.
+
+**Files changed (Pass 4 only, 11 total):**
+- M `src/engine/pine_compiler.py`, `src/server/services/pine-export-service.ts`, `src/server/services/broker-router.ts`, `src/server/lib/metrics-registry.ts`, `docs/first-strategy-launch-runbook.md`, `docs/system-subsystem-registry.json`, `docs/system-topology.generated.json`, `docs/system-readiness.generated.json`, `Trading Forge System Map v2.md`
+- A `src/engine/tests/test_pine_compiler_gateway_mode.py`, `src/server/lib/pine-gateway-options.ts`, `src/server/services/__tests__/pine-export-gateway-options.test.ts`, `src/server/services/__tests__/broker-router-non-success-discord.test.ts`, `scripts/lint-first-strategy-launch-runbook.ts`
+
+**Audit findings closed by this pass (1 of 50, PARTIAL):**
+- `High-Priority Wiring #1` Path A bypasses safety stack. **PARTIAL CLOSE.** Parametric strategies route through Path B → routeOrder() → full safety stack. **Archetype strategies (39) still bypass — F-2 CARRY-FORWARD.**
+
+**Known-facts pin candidates (HIGH priority):**
+- **F-1**: Plan's acceptance-criteria audit-action names were FICTITIOUS. Real names enumerated above. Anyone querying `audit_log WHERE action='live_order.received'` will get zero rows and incorrectly conclude correlation_id tracing is broken — IT IS NOT. Threading is sound; plan documentation was wrong.
+- **F-2**: Archetype strategies (39) bypass `gateway_mode` entirely. `_build_pine_indicator_var:230` intercepts `archetype:*` BEFORE `_build_strategy_webhook_alerts` (where `gateway_mode` is read) is ever called. TS injection has zero effect for archetype strategies until Pass 4.5 closes the gap. **Operator MUST NOT promote any archetype strategy to PAPER until Pass 4.5 lands.**
+
+**Carry-forward for next session:**
+- **Pass 4.5 (CRITICAL, must close before archetype strategies reach PAPER)** — Two options: (a) NEW `/api/archetype-signal` route → Python engine evaluates + routes server-side; (b) extend `/api/live-order` to accept `action:"archetype_signal"` dispatched to Python evaluator. Plus extend `_build_archetype_alert_pine` to emit TF-gateway-compatible payload. Plus lifecycle gate: BLOCK archetype promotion to PAPER when `gateway_mode='tf_gateway'` but archetype recipe lacks canonical payload (fail-CLOSED).
+- **F-1 documentation fix (low priority)** — update plan file Pass 4 acceptance criteria with real audit-action names. Cosmetic.
+- **Operator action items:** Set `LIVE_ORDER_GATEWAY_URL` in production `.env` (Pass 4 Track D documented). Set `LIVE_ORDER_HMAC_SECRET` ≥32-char random if not done. Restart API via HMAC self-restart (Unix seconds).
+- **Pass 5 (Lifecycle Gate Coverage + Engine Authority)** — M-effort, next after Pass 4.5.
+
+---
+
 ### Session Log — 2026-06-23 Paper-Trade Readiness Hardening Plan, Pass 3 MASTER CLOSE (Pine Distribution UI + SHADOW guard, 3 parallel subagents, 61 new tests GREEN)
 
 **Mission:** Execute Pass 3 — wire the missing `Download .pine` UI on-ramp (`PineDistributionPanel.tsx` was orphan, only rendered a README button), propagate `downloadUrl` from the recipient route, add `assertNotShadow` guard at all 4 Pine export entry points to preserve the Wave 29 Pass A.1 `traderspost_webhook_called=false` invariant, and emit observability (SSE + Prometheus) for SHADOW refusals.

@@ -605,7 +605,9 @@
       "/api/nemo-scenarios",
       "/api/synthetic-black-swan"
     ],
-    "engine_subsystems": [],
+    "engine_subsystems": [
+      "synthetic"
+    ],
     "database_tables": [
       "nemo_scenario_bank",
       "synthetic_black_swan_runs",
@@ -1889,6 +1891,7 @@
       "discord-fanout-audit-30min",
       "dlq-escalation",
       "dlq-retry",
+      "economic-calendar-sync",
       "idempotency-cleanup",
       "metrics-collector",
       "metrics-heartbeat",

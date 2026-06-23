@@ -1306,34 +1306,144 @@ alertcondition(
 """
 
 
-def _build_strategy_webhook_alerts(strategy_name: str, symbol: str, strategy_id: str, hmac_input_var: Optional[str] = None) -> str:
+# ─── TF-Gateway Payload Contract ─────────────────────────────────────────────
+#
+# Pass 4 Track A — canonical field order for gateway_mode='tf_gateway'.
+#
+# When gateway_mode='tf_gateway', Pine alerts fire at /api/live-order (the TF
+# Order Gateway) instead of directly at traderspost.io.  This routes every
+# alert through routeOrder() and the full gate stack (kill-switch → compliance
+# → firm-cap → circuit breaker).
+#
+# Field contract matches live-order.ts liveOrderPayloadSchema (static-token mode):
+#   account_id       — broker_accounts.account_id UUID (supplied by operator at deploy time)
+#   strategy_id      — strategies.id UUID (embedded at compile time)
+#   live_order_token — account_strategy_assignments.hmac_secret static bearer (per-recipient secret)
+#   timestamp_ms     — Pine {{timenow}} placeholder (milliseconds, Unix epoch)
+#   bar_timestamp    — Pine {{time}} placeholder (bar-close epoch millis for dedup)
+#   action           — "enter_long" | "enter_short" | "exit_long" | "exit_short"
+#   ticker           — TradingView continuous contract symbol (e.g. "MES1!")
+#
+# These MUST stay in sync with live-order.ts liveOrderPayloadSchema.  Any field
+# addition here requires a matching Zod schema extension in live-order.ts.
+#
+# Pine cannot compute HMAC at alert-fire time — static-token mode (per live-order.ts
+# §Auth mode B) is the only viable path.  The live_order_token is embedded at
+# compile time (operator pastes via TradingView Settings panel, same UX as HMAC secret).
+# Dedup guard: bar_timestamp + action uniqueness via live_order_pine_dedup table
+# (migration 0170) prevents duplicate alerts from the same bar close.
+TF_GATEWAY_PAYLOAD_FIELDS: tuple[str, ...] = (
+    "account_id",
+    "strategy_id",
+    "live_order_token",
+    "timestamp_ms",
+    "bar_timestamp",
+    "action",
+    "ticker",
+)
+
+# Supported gateway_mode values — any other value raises ValueError at compile time.
+_VALID_GATEWAY_MODES: frozenset[str] = frozenset({"tf_gateway", "direct"})
+
+
+def _build_strategy_webhook_alerts(
+    strategy_name: str,
+    symbol: str,
+    strategy_id: str,
+    hmac_input_var: Optional[str] = None,
+    gateway_mode: Optional[str] = None,
+) -> str:
     """Pine alertcondition() block for STRATEGY artifact.
 
-    Alert messages are TradersPost JSON webhook payloads — routed automatically
-    to broker without manual approval.
+    gateway_mode controls alert payload destination:
 
-    TradersPost payload spec (https://traderspost.io/docs/webhooks):
-      action: "buy" | "sell" | "exit" | "cancel"
-      symbol: TradingView continuous contract ticker (e.g., "MES1!")
-      quantity: integer contracts (omit to use TradersPost account default)
-      price: optional limit price
-      stopLoss: stop price
-      takeProfit: target price
+      gateway_mode='tf_gateway' (Pass 4 canonical):
+        Emits TF-gateway JSON payload routed to POST /api/live-order.
+        Every alert hits routeOrder() → kill-switch → compliance → firm-cap →
+        circuit breaker — NO safety gates are bypassed.
+        Payload shape: TF_GATEWAY_PAYLOAD_FIELDS (see constant above).
+        account_id and live_order_token are operator-supplied at chart load
+        via TradingView input.string() panels (same UX as HMAC secret).
+        Requires LIVE_ORDER_GATEWAY_URL in .env (set by operator before going live).
 
-    Timing: bar-close alerts only.  Configure TradingView alert as
-    "Once Per Bar Close" to prevent intrabar premature fills.
+      gateway_mode='direct' OR None (backward-compat, legacy):
+        Emits TradersPost JSON webhook payload routed directly to traderspost.io.
+        WARNING: bypasses kill-switch, compliance gate, firm-cap clamp, and
+        TradersPost circuit breaker.  Legacy strategies use this path; new
+        strategies should migrate to 'tf_gateway'.
 
-    Semantic note: TradersPost routes "buy" -> broker long entry, "sell" ->
-    broker short entry, "exit" -> flatten position.  This maps 1:1 to our
-    strategy.entry/exit() calls in the strategy block below.
+      gateway_mode=<invalid>:
+        Raises ValueError immediately — no silent fall-through.
 
-    BUG-3 fix: HMAC is injected at GENERATION TIME via hmac_input_var parameter
-    (a Pine variable name, e.g. "hmac_input"), not via post-hoc string replacement.
-    Pine v5 string concatenation with + is used directly in the message expression.
-    This produces valid Pine v5 syntax — no double-backslash escaping required.
-    When hmac_input_var is None (non-recipient compiles), alerts are unchanged.
+    Alert messages are JSON webhook payloads — configured in TradingView alert
+    as "Once Per Bar Close" with the exact JSON shown in each alertcondition().
+
+    Timing: bar-close only.  Repaint risk: NONE — all signals are computed at
+    bar close (barstate.isconfirmed guards entry/exit alertconditions).
+
+    BUG-3 fix (direct path): HMAC is injected at GENERATION TIME via
+    hmac_input_var (a Pine variable name, e.g. "hmac_input"), not via post-hoc
+    string replacement.  Only used for direct path — tf_gateway uses
+    live_order_token input instead.
     """
+    if gateway_mode is not None and gateway_mode not in _VALID_GATEWAY_MODES:
+        raise ValueError(
+            f"Invalid gateway_mode '{gateway_mode}'. "
+            f"Must be one of: {sorted(_VALID_GATEWAY_MODES)} or None (defaults to 'direct'). "
+            "Set config.gateway_mode='tf_gateway' for the canonical Pass 4 path."
+        )
+
     tv_symbol = _TV_SYMBOL_MAP.get(symbol, f"{symbol}1!")
+
+    # Pass 4 Track A — TF-gateway path.
+    # When gateway_mode='tf_gateway', emit TF-gateway JSON payload routed to
+    # POST /api/live-order instead of directly to traderspost.io.
+    # Operator supplies account_id and live_order_token via TradingView
+    # input.string() panels at chart-load time (same UX as HMAC secret).
+    # Pine {{timenow}} and {{time}} are TradingView placeholders resolved at
+    # alert-fire time — NOT Pine variables. Do NOT use str.tostring() here.
+    if gateway_mode == "tf_gateway":
+        return f"""
+// ─── Webhook Alerts (STRATEGY path — TF Gateway, Pass 4 canonical) ─
+// Route: Pine alert → POST /api/live-order → routeOrder() → TradersPost
+// EVERY alert passes through: kill-switch → compliance → firm-cap → circuit breaker.
+// REQUIRED: Configure each alert with "Once Per Bar Close" + TF gateway webhook URL.
+// REQUIRED: Paste your account_id and live_order_token into the Settings panel.
+//
+// TF_GATEWAY_PAYLOAD_FIELDS (canonical order): {list(TF_GATEWAY_PAYLOAD_FIELDS)}
+// Field contract: live-order.ts liveOrderPayloadSchema (static-token mode).
+// {{{{timenow}}}} and {{{{time}}}} are TradingView alert-message placeholders —
+//   timenow = alert-fire Unix millis (timestamp_ms replay guard)
+//   time    = bar-close Unix millis (bar_timestamp dedup key via live_order_pine_dedup)
+// live_order_token: static bearer = account_strategy_assignments.hmac_secret
+//   Operator pastes token into TradingView Settings panel (never embedded in .pine).
+//   Backend validates via DB lookup + constant-time compare (live-order.ts §Auth B).
+// DEGRADATION: Pine cannot compute per-bar HMAC — static-token mode is the only
+//   viable Pine auth path. Replay guard: 2-min timestamp_ms window + bar-close dedup.
+account_id_input = input.string("", title="Account ID (UUID from operator)", confirm=true)
+live_order_token_input = input.string("", title="Live Order Token (from operator)", confirm=true)
+
+alertcondition(strategy.position_size == 0 and long_signal and regime_match and not event_blackout and not anti_setup_blocked, title="TFG Long Entry",
+    message='{{"account_id":"' + account_id_input + '","strategy_id":"{strategy_id}","live_order_token":"' + live_order_token_input + '","timestamp_ms":"{{{{timenow}}}}","bar_timestamp":"{{{{time}}}}","action":"enter_long","ticker":"{tv_symbol}"}}')
+alertcondition(strategy.position_size == 0 and short_signal and regime_match and not event_blackout and not anti_setup_blocked, title="TFG Short Entry",
+    message='{{"account_id":"' + account_id_input + '","strategy_id":"{strategy_id}","live_order_token":"' + live_order_token_input + '","timestamp_ms":"{{{{timenow}}}}","bar_timestamp":"{{{{time}}}}","action":"enter_short","ticker":"{tv_symbol}"}}')
+// PARITY NOTE: Exit alertconditions guarded with barstate.isconfirmed so they fire at
+// bar close — matching INDICATOR artifact state-machine exit timing.
+alertcondition(barstate.isconfirmed and strategy.position_size > 0 and (low <= strategy.position_avg_price - stop_distance or (use_target and high >= strategy.position_avg_price + target_distance)), title="TFG Long Exit",
+    message='{{"account_id":"' + account_id_input + '","strategy_id":"{strategy_id}","live_order_token":"' + live_order_token_input + '","timestamp_ms":"{{{{timenow}}}}","bar_timestamp":"{{{{time}}}}","action":"exit_long","ticker":"{tv_symbol}"}}')
+alertcondition(barstate.isconfirmed and strategy.position_size < 0 and (high >= strategy.position_avg_price + stop_distance or (use_target and low <= strategy.position_avg_price - target_distance)), title="TFG Short Exit",
+    message='{{"account_id":"' + account_id_input + '","strategy_id":"{strategy_id}","live_order_token":"' + live_order_token_input + '","timestamp_ms":"{{{{timenow}}}}","bar_timestamp":"{{{{time}}}}","action":"exit_short","ticker":"{tv_symbol}"}}')
+// Risk lockout and time-stop: exit_long/exit_short based on current position direction.
+alertcondition(risk_lockout and not risk_lockout[1] and strategy.position_size != 0, title="TFG Risk Lockout",
+    message='{{"account_id":"' + account_id_input + '","strategy_id":"{strategy_id}","live_order_token":"' + live_order_token_input + '","timestamp_ms":"{{{{timenow}}}}","bar_timestamp":"{{{{time}}}}","action":strategy.position_size > 0 ? "exit_long" : "exit_short","ticker":"{tv_symbol}"}}')
+// F-1: Time-stop alert (15:55 ET) — gateway exit.
+alertcondition(time_to_close and strategy.position_size != 0, title="TFG Time Stop 15:55 ET",
+    message='{{"account_id":"' + account_id_input + '","strategy_id":"{strategy_id}","live_order_token":"' + live_order_token_input + '","timestamp_ms":"{{{{timenow}}}}","bar_timestamp":"{{{{time}}}}","action":strategy.position_size > 0 ? "exit_long" : "exit_short","ticker":"{tv_symbol}"}}')
+"""
+
+    # Direct path (backward-compat): emit TradersPost JSON payload routed directly
+    # to traderspost.io. WARNING: bypasses kill-switch, compliance gate, firm-cap
+    # clamp, and TradersPost circuit breaker. Legacy path — migrate to tf_gateway.
 
     # BUG-3 fix: build the HMAC suffix inline at generation time.
     # When hmac_input_var is set (e.g. "hmac_input"), entry alerts append:
@@ -1355,6 +1465,8 @@ def _build_strategy_webhook_alerts(strategy_name: str, symbol: str, strategy_id:
 // Configure each alert with "Once Per Bar Close" + webhook URL.
 // TradersPost routes directly to your broker — NO manual approval.
 // REQUIRED: Set alert message to exactly this JSON (do not modify).
+// WARNING (Pass 4): direct path bypasses TF kill-switch + compliance gate +
+// firm-cap clamp + TradersPost circuit breaker. Migrate to gateway_mode='tf_gateway'.
 // FIX 2: alertcondition predicates include all three gates —
 // regime_match, not event_blackout, not anti_setup_blocked.
 // F-12: quantity now carries str.tostring(qty_final) — dynamic ATR-scaled / recipient-
@@ -1733,6 +1845,7 @@ def _build_strategy_artifact(
     use_target: bool,
     manual_approval_firm: bool = False,
     hmac_input_var: Optional[str] = None,
+    gateway_mode: Optional[str] = None,
 ) -> str:
     """Wrap shared logic in strategy() declaration for ATS firms.
 
@@ -1835,7 +1948,7 @@ if risk_lockout and strategy.position_size != 0
         + _build_strategy_risk_tracking()
         + entry_exit_block
         + _build_strategy_time_stop_close()          # F-1: 15:55 ET hard flatten
-        + _build_strategy_webhook_alerts(strategy_name, symbol, strategy_id, hmac_input_var=hmac_input_var)
+        + _build_strategy_webhook_alerts(strategy_name, symbol, strategy_id, hmac_input_var=hmac_input_var, gateway_mode=gateway_mode)
         + _build_visualization()
     )
 
@@ -2071,6 +2184,14 @@ qty_final := {recipient_qty}
     # When hmac_secret is present, alert messages reference `hmac_input` directly via Pine + concat.
     _hmac_input_var_name: Optional[str] = "hmac_input" if hmac_secret else None
 
+    # Pass 4 Track A — gateway_mode resolution.
+    # Read from strategy.config.gateway_mode (sub-dict on the strategy DSL object).
+    # 'tf_gateway'  → emit TF-gateway payload routed through /api/live-order (canonical).
+    # 'direct'/None → emit TradersPost direct payload (backward-compat, legacy path).
+    # Invalid value  → ValueError raised inside _build_strategy_webhook_alerts.
+    _strategy_config: dict = strategy.get("config", {}) if isinstance(strategy.get("config"), dict) else {}
+    _gateway_mode: Optional[str] = _strategy_config.get("gateway_mode")
+
     strategy_code = _build_strategy_artifact(
         strategy_name=strategy_name,
         symbol=symbol,
@@ -2082,6 +2203,7 @@ qty_final := {recipient_qty}
         use_target=use_target,
         manual_approval_firm=manual_approval_firm,
         hmac_input_var=_hmac_input_var_name,
+        gateway_mode=_gateway_mode,
     )
     # T6: Inject recipient metadata and qty override into strategy artifact
     if _recip_comments:

@@ -30,12 +30,13 @@ import { submitWebhookOrder } from "../integrations/traderspost/client.js";
 import type { IdempotencyKeyInputs } from "../integrations/traderspost/client.js";
 import { buildWebhookPayload } from "../integrations/traderspost/webhook-builder.js";
 import type { WebhookSignal } from "../integrations/traderspost/webhook-builder.js";
-import { notifyCritical } from "./notification-service.js";
+import { notifyCritical, notifyWarning } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { killSwitch } from "../production/kill-switch.js";
 import { getEnabledFirms } from "./strategy-assignment-service.js";
 import { getFirmLimit, CONTRACT_CAP_MAX } from "../../shared/firm-config.js";
 import { CircuitBreakerRegistry, CircuitOpenError } from "../lib/circuit-breaker.js";
+import { traderspostRejectsTotal } from "../lib/metrics-registry.js";
 
 // ─── FINDING #4: TradersPost circuit breaker ─────────────────────────────────
 // Wraps all TradersPost HTTP submissions. On N consecutive failures (default 3
@@ -769,6 +770,40 @@ export async function routeOrder(
 
     broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...result, correlationId: correlationId ?? null });
     await writeAuditLog(accountId, signal, result, correlationId);
+
+    // ── Pass 4 Track C: per-call TradersPost rejection Discord + Prom ────────
+    // Fires AFTER audit+SSE so observability is preserved even if the
+    // notification helper throws. Distinct from the credential-vault failure at
+    // line 664 (which uses notifyCritical because it is systemic) — this is a
+    // per-call non-success (4xx/5xx/timeout) which is WARNING severity.
+    if (!submitResult.success) {
+      const statusCodeStr = submitResult.statusCode != null ? String(submitResult.statusCode) : "unknown";
+      const signalActionStr = signal.action ?? "unknown";
+      // Increment Prometheus counter before the Discord call (Discord is
+      // fire-and-forget void; counter should survive Discord helper failure).
+      traderspostRejectsTotal.labels({ status_code: statusCodeStr, signal_action: signalActionStr }).inc();
+      const truncatedBody =
+        typeof submitResult.responseBody === "string"
+          ? submitResult.responseBody.slice(0, 200)
+          : submitResult.responseBody != null
+            ? JSON.stringify(submitResult.responseBody).slice(0, 200)
+            : "";
+      notifyWarning(
+        `TradersPost reject for ${signal.ticker ?? "unknown"}`,
+        appendFamilyGradePostscript(
+          `Account ${accountId} on ${signalActionStr}: HTTP ${statusCodeStr}, body=${truncatedBody}`,
+          "TradersPost rejected an order. The order did NOT reach the broker.",
+          "Tell Tony: 'A TradersPost order was rejected.' If you cannot reach him, no action is required — the broker did not receive the order.",
+        ),
+        {
+          correlationId: correlationId ?? null,
+          accountId,
+          firmId: account.firmId,
+          statusCode: submitResult.statusCode ?? null,
+          signalAction: signal.action ?? null,
+        },
+      );
+    }
 
     // ── webhook.broker_ack latency emitter (Wave 25 CF#1) ────────────────────
     // Only on SUCCESSFUL broker ack. Rejection events have their own audit rows.

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-23T04:03:39.604Z",
+  "generatedAt": "2026-06-23T05:03:47.734Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,10 +16,10 @@
   },
   "counts": {
     "routes": 75,
-    "schedulerJobs": 96,
+    "schedulerJobs": 97,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
-    "engineSubsystems": 28,
+    "engineSubsystems": 29,
     "databaseTables": 106,
     "registrySubsystems": 69
   },
@@ -138,6 +138,7 @@
     "dlq-escalation",
     "dlq-retry",
     "drain-scouted-ideas-periodic",
+    "economic-calendar-sync",
     "feed-silence-check",
     "funnel-snapshot",
     "graveyard-pattern-extraction",
@@ -804,6 +805,7 @@
     "statistics",
     "strategy_memory",
     "survival",
+    "synthetic",
     "validation",
     "validation_runner",
     "walk_forward"
@@ -975,8 +977,8 @@
     ],
     "coveredCounts": {
       "routes": 75,
-      "schedulerJobs": 96,
-      "engineSubsystems": 28,
+      "schedulerJobs": 97,
+      "engineSubsystems": 29,
       "databaseTables": 106
     },
     "missingRoutes": [],
@@ -3943,6 +3945,7 @@
           "discord-fanout-audit-30min",
           "dlq-escalation",
           "dlq-retry",
+          "economic-calendar-sync",
           "idempotency-cleanup",
           "metrics-collector",
           "metrics-heartbeat",
@@ -7943,6 +7946,18 @@
         "coverageGaps": []
       },
       {
+        "id": "synthetic",
+        "ownerSubsystemId": "synthetic_black_swan_survival",
+        "ownerDomain": "qualification",
+        "runtimeState": "experimental",
+        "proofStatus": "experimental",
+        "manualGate": "none",
+        "learningMode": "shadow_experimental",
+        "operatingClass": "deterministic_instrumented",
+        "criticality": "important",
+        "coverageGaps": []
+      },
+      {
         "id": "validation",
         "ownerSubsystemId": "research_orchestration",
         "ownerDomain": "research",
@@ -10643,6 +10658,7 @@
         "discord-fanout-audit-30min",
         "dlq-escalation",
         "dlq-retry",
+        "economic-calendar-sync",
         "idempotency-cleanup",
         "metrics-collector",
         "metrics-heartbeat",
@@ -14640,6 +14656,18 @@
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
       "criticality": "critical",
+      "coverageGaps": []
+    },
+    {
+      "id": "synthetic",
+      "ownerSubsystemId": "synthetic_black_swan_survival",
+      "ownerDomain": "qualification",
+      "runtimeState": "experimental",
+      "proofStatus": "experimental",
+      "manualGate": "none",
+      "learningMode": "shadow_experimental",
+      "operatingClass": "deterministic_instrumented",
+      "criticality": "important",
       "coverageGaps": []
     },
     {

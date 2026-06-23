@@ -14,6 +14,11 @@ import { assertNotShadow, PineExportShadowError } from "../lib/pine-export-shado
 import { emitPineShadowRefused } from "../lib/pine-shadow-observability.js";
 import { notifyWarning } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
+// Pass 4 Track B: pure gateway-options helper — isolated from DB module for testability
+import { deriveGatewayOptions, type GatewayOptions } from "../lib/pine-gateway-options.js";
+// Re-export so callers that previously imported from this module continue to work
+export type { GatewayOptions };
+export { deriveGatewayOptions };
 
 const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 
@@ -356,6 +361,7 @@ export async function compileDualPineExport(
   recipientLabel?: string,
   hmacSecret?: string,
   accountId?: string,
+  gatewayOptions?: GatewayOptions,
 ) {
   // C2/C3 (Pass 3 Track C): SHADOW guard — must be first gate.
   // Prevents Pine artifacts from leaking out of SHADOW strategies, which would
@@ -541,6 +547,57 @@ export async function compileDualPineExport(
       }
     }
 
+    // Pass 4 Track B: gateway options — controls Pine alert webhook payload shape.
+    //
+    // Pine compiler (Track A) reads gateway_mode from strategy["config"]["gateway_mode"]
+    // (i.e. input_json.strategy.config.gateway_mode).  We inject into the nested
+    // strategy.config sub-dict — creating it if absent — so the Python compiler
+    // finds the key at the expected path without a separate top-level key.
+    //
+    // snake_case keys (gateway_mode, gateway_url) match pine_compiler.py exactly.
+    {
+      const { opts: gwOpts, shouldAuditFallback } = deriveGatewayOptions(strategyId, gatewayOptions);
+      const strategyObj = config["strategy"] as Record<string, unknown>;
+      const innerConfig = (typeof strategyObj["config"] === "object" && strategyObj["config"] !== null
+        ? strategyObj["config"]
+        : {}) as Record<string, unknown>;
+      innerConfig["gateway_mode"] = gwOpts.mode;
+      if (gwOpts.gatewayUrl) {
+        innerConfig["gateway_url"] = gwOpts.gatewayUrl;
+      }
+      strategyObj["config"] = innerConfig;
+      if (shouldAuditFallback) {
+        // LOUD audit — operator MUST know Path A (direct) is in use
+        try {
+          await db.insert(auditLog).values({
+            action: "pine_export.fallback_direct_path",
+            entityType: "strategy",
+            entityId: strategyId,
+            decisionAuthority: "system",
+            input: { strategyId, correlationId: correlationId ?? null } as Record<string, unknown>,
+            result: {
+              strategy_id: strategyId,
+              reason: "LIVE_ORDER_GATEWAY_URL_unset",
+              gateway_mode: "direct",
+            } as Record<string, unknown>,
+            status: "warn",
+            correlationId: correlationId ?? null,
+          });
+        } catch (auditErr) {
+          logger.error({ auditErr, strategyId }, "pine-export-gateway-fallback: audit write failed");
+        }
+        notifyWarning(
+          `Pine export: falling back to direct TradersPost path for strategy ${strategyId}`,
+          appendFamilyGradePostscript(
+            `LIVE_ORDER_GATEWAY_URL is not set — Pine alert will post DIRECTLY to TradersPost, bypassing the TF gateway. This skips the kill-switch, compliance gate, firm-cap clamp, and circuit breaker.`,
+            "The Pine export is using the legacy direct path because LIVE_ORDER_GATEWAY_URL is missing.",
+            "Set LIVE_ORDER_GATEWAY_URL in your production .env to enable the institutional Path B gateway.",
+          ),
+          { strategyId, reason: "LIVE_ORDER_GATEWAY_URL_unset", gatewayMode: "direct" },
+        );
+      }
+    }
+
     const tmpPath = pathResolve(tmpdir(), `pine-dual-config-${strategyId.slice(0, 8)}.json`);
     writeFileSync(tmpPath, JSON.stringify(config));
 
@@ -713,6 +770,7 @@ export async function compilePineExport(
   exportType: string = "pine_indicator",
   injectedRiskIntelligence?: Record<string, number | string | null> | null,
   correlationId?: string,
+  gatewayOptions?: GatewayOptions,
 ) {
   // C2/C3 (Pass 3 Track C): SHADOW guard — must be first gate.
   try {
@@ -861,7 +919,7 @@ export async function compilePineExport(
 
     // 4. Build config and write to temp file
     const strategyConfig = strategy.config as Record<string, unknown>;
-    const config = {
+    const config: Record<string, unknown> = {
       strategy: {
         ...strategyConfig,
         export_type: exportType,
@@ -869,6 +927,57 @@ export async function compilePineExport(
       firm_key: firmKey,
       ...(riskIntelligence != null ? { risk_intelligence: riskIntelligence } : {}),
     };
+
+    // Pass 4 Track B: gateway options — controls Pine alert webhook payload shape.
+    //
+    // Pine compiler (Track A) reads gateway_mode from strategy["config"]["gateway_mode"]
+    // (i.e. input_json.strategy.config.gateway_mode).  We inject into the nested
+    // strategy.config sub-dict — creating it if absent — so the Python compiler
+    // finds the key at the expected path without a separate top-level key.
+    //
+    // snake_case keys (gateway_mode, gateway_url) match pine_compiler.py exactly.
+    {
+      const { opts: gwOpts, shouldAuditFallback } = deriveGatewayOptions(strategyId, gatewayOptions);
+      const strategyObj = config["strategy"] as Record<string, unknown>;
+      const innerConfig = (typeof strategyObj["config"] === "object" && strategyObj["config"] !== null
+        ? strategyObj["config"]
+        : {}) as Record<string, unknown>;
+      innerConfig["gateway_mode"] = gwOpts.mode;
+      if (gwOpts.gatewayUrl) {
+        innerConfig["gateway_url"] = gwOpts.gatewayUrl;
+      }
+      strategyObj["config"] = innerConfig;
+      if (shouldAuditFallback) {
+        // LOUD audit — operator MUST know Path A (direct) is in use
+        try {
+          await db.insert(auditLog).values({
+            action: "pine_export.fallback_direct_path",
+            entityType: "strategy",
+            entityId: strategyId,
+            decisionAuthority: "system",
+            input: { strategyId, correlationId: correlationId ?? null } as Record<string, unknown>,
+            result: {
+              strategy_id: strategyId,
+              reason: "LIVE_ORDER_GATEWAY_URL_unset",
+              gateway_mode: "direct",
+            } as Record<string, unknown>,
+            status: "warn",
+            correlationId: correlationId ?? null,
+          });
+        } catch (auditErr) {
+          logger.error({ auditErr, strategyId }, "pine-export-gateway-fallback: audit write failed");
+        }
+        notifyWarning(
+          `Pine export: falling back to direct TradersPost path for strategy ${strategyId}`,
+          appendFamilyGradePostscript(
+            `LIVE_ORDER_GATEWAY_URL is not set — Pine alert will post DIRECTLY to TradersPost, bypassing the TF gateway. This skips the kill-switch, compliance gate, firm-cap clamp, and circuit breaker.`,
+            "The Pine export is using the legacy direct path because LIVE_ORDER_GATEWAY_URL is missing.",
+            "Set LIVE_ORDER_GATEWAY_URL in your production .env to enable the institutional Path B gateway.",
+          ),
+          { strategyId, reason: "LIVE_ORDER_GATEWAY_URL_unset", gatewayMode: "direct" },
+        );
+      }
+    }
 
     const tmpPath = pathResolve(tmpdir(), `pine-config-${randomUUID()}.json`);
     writeFileSync(tmpPath, JSON.stringify(config));

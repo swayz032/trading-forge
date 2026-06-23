@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-06-23T04:03:39.604Z`.
+Updated automatically from the repo on `2026-06-23T05:03:47.734Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -12,11 +12,11 @@ Updated automatically from the repo on `2026-06-23T04:03:39.604Z`.
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `ci_gate, kill_switch, operator, operator_hmac_override, operator_invoke_for_cohort_validation, operator_opt_in_per_strategy, operator-approve, operator-halt-only, operator-only-recovery, tradingview_deploy`
 - API routes tracked: `75`
-- Scheduler jobs tracked: `96`
+- Scheduler jobs tracked: `97`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
-- Engine subsystems tracked: `28`
+- Engine subsystems tracked: `29`
 - Database tables tracked: `106`
 
 ### Subsystem Runtime States
@@ -55,8 +55,8 @@ Updated automatically from the repo on `2026-06-23T04:03:39.604Z`.
 ### Registry Coverage
 - Registry subsystems tracked: `69`
 - Route coverage: `75/75`
-- Scheduler coverage: `96/96`
-- Engine coverage: `28/28`
+- Scheduler coverage: `97/97`
+- Engine coverage: `29/29`
 - Database coverage: `106/106`
 - Autonomous subsystems with audit coverage: `62/62`
 - Autonomous subsystems with audit actions: `62/62`
@@ -221,6 +221,7 @@ Updated automatically from the repo on `2026-06-23T04:03:39.604Z`.
 - `statistics` owner=`strategy_lifecycle` status=`runtime-proven` state=`active` gaps=none
 - `strategy_memory` owner=`research_orchestration` status=`runtime-proven` state=`active` gaps=none
 - `survival` owner=`backtest_qualification` status=`runtime-proven` state=`active` gaps=none
+- `synthetic` owner=`synthetic_black_swan_survival` status=`experimental` state=`experimental` gaps=none
 - `validation` owner=`research_orchestration` status=`runtime-proven` state=`active` gaps=none
 - `validation_runner` owner=`research_orchestration` status=`runtime-proven` state=`active` gaps=none
 - `walk_forward` owner=`backtest_qualification` status=`runtime-proven` state=`active` gaps=none
@@ -340,6 +341,7 @@ Updated automatically from the repo on `2026-06-23T04:03:39.604Z`.
 - `dlq-escalation`
 - `dlq-retry`
 - `drain-scouted-ideas-periodic`
+- `economic-calendar-sync`
 - `feed-silence-check`
 - `funnel-snapshot`
 - `graveyard-pattern-extraction`
@@ -426,6 +428,7 @@ Updated automatically from the repo on `2026-06-23T04:03:39.604Z`.
 - `statistics`
 - `strategy_memory`
 - `survival`
+- `synthetic`
 - `validation`
 - `validation_runner`
 - `walk_forward`

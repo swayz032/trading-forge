@@ -28,6 +28,34 @@ Run this checklist once. Each item ends with the command to verify.
 - [ ] **Pipeline ACTIVE.** Verify: `curl http://localhost:4000/api/admin/pipeline/status` returns `"mode":"ACTIVE"`. Wave 5 unpaused this on 2026-05-16; re-pause is operator-only.
 - [ ] **Validation Cadence panel state captured.** Take a screenshot of the panel today (Wave 0 found it RED). Wave 5 completion is the remediation; you'll re-screenshot at end of B.6.
 
+## B.1a Set LIVE_ORDER_GATEWAY_URL (one-time, before first deploy)
+
+This must be done BEFORE step B.2. Path B (the canonical webhook path) requires the TF gateway URL to be wired in production `.env`.
+
+1. **Set the env var in production `.env`:**
+   ```env
+   LIVE_ORDER_GATEWAY_URL=https://tf-relay.up.railway.app/api/live-order
+   ```
+   Adjust the hostname to match your actual `tf-relay` Railway service URL.
+
+2. **Restart the API** after setting (use the HMAC self-restart per Pass 1 docs):
+   ```bash
+   TIMESTAMP=$(date +%s)
+   REASON="set-live-order-gateway-url"
+   SIG=$(echo -n "${TIMESTAMP}:${REASON}" | openssl dgst -sha256 -hmac "$ADMIN_RESTART_HMAC_SECRET" | awk '{print $2}')
+   curl -X POST https://<relay>/api/admin/self-restart \
+     -H "Content-Type: application/json" \
+     -H "X-Restart-Signature: $SIG" \
+     -d "{\"timestamp\": $TIMESTAMP, \"reason\": \"$REASON\"}"
+   ```
+   Note: `date +%s` produces Unix seconds (not milliseconds). The endpoint multiplies internally.
+
+3. **Also set `LIVE_ORDER_HMAC_SECRET`** to a ≥32-character random value (Pass 1 already documented this; see `.env.example` Admin/HMAC section). This is the shared secret used to validate inbound Pine alerts at the TF gateway.
+
+4. **Verify at startup:** `npm run dev` will emit a startup warning `LIVE_ORDER_GATEWAY_URL_NOT_SET` if the var is missing. A clean boot with no such warning confirms the var is present.
+
+---
+
 ## B.2 Pine compile + deploy to TradingView (one time)
 
 Strategy is in CANDIDATE state today. Once it completes its first successful backtest (in progress at end of Wave 5 session — verify by `SELECT id, status FROM backtests WHERE strategy_id='3e6e94d6-…' ORDER BY created_at DESC LIMIT 1` returning `status='completed'`), the auto-promotion cron will move it to TESTING within 1 hour.
@@ -50,13 +78,45 @@ Once it reaches PAPER:
    - Pine Editor → Open → New Strategy → paste the `.pine` contents.
    - Add to chart → Strategy() panel appears with entry triangles + exit X marks once enough bars elapse.
 
-3. **Configure alert webhook → TradersPost:**
+3. **Configure alert webhook — Path B (canonical, recommended):**
    - Alert dropdown → New Alert.
    - Condition: `trend_mes_ema921_pullback` strategy → Order fills only.
    - Frequency: **Once Per Bar Close** (critical — not "Every bar" or "Only Once").
-   - Webhook URL: TradersPost paper webhook from `bw get item "TradersPost - Paper - MFFU"`.
-   - Message: leave default Pine-generated payload (HMAC signature is embedded).
+   - Webhook URL: paste the value of `LIVE_ORDER_GATEWAY_URL` from production `.env`
+     (e.g., `https://tf-relay.up.railway.app/api/live-order`).
+     This is ONE URL for all strategies — you never need to look up a per-strategy TradersPost URL.
+   - Message: leave default Pine-generated payload (HMAC signature is embedded; the TF gateway
+     validates it before forwarding to TradersPost via `routeOrder()`).
    - Save.
+
+   Path B routes every alert through the full safety stack in this order:
+   kill-switch → compliance gate → firm-cap clamp → TradersPost circuit breaker → TradersPost.
+   All safety gates share one `correlation_id` traceable end-to-end in `audit_log`.
+
+   ### Path A (legacy — bypasses safety stack)
+
+   DO NOT use Path A for new strategies. Path A exists only to support legacy strategies
+   that were exported before `gateway_mode='tf_gateway'` was the default.
+
+   In Path A the operator pastes the per-strategy TradersPost webhook URL directly into the
+   TradingView alert webhook field (retrieved from `bw get item "TradersPost - Paper - MFFU"`).
+   Every alert goes straight to TradersPost with no kill-switch, no compliance gate, no
+   firm-cap clamp, and no TradersPost circuit breaker applied.
+
+   **DO NOT use Path A for new strategies. Path A bypasses kill-switch, compliance gate,
+   firm-cap clamp, and TradersPost circuit breaker.**
+
+   ### Path A vs Path B comparison
+
+   | Aspect | Path A (legacy) | Path B (canonical) |
+   |---|---|---|
+   | Webhook URL | per-strategy traderspost.io URL | `LIVE_ORDER_GATEWAY_URL` (one URL for all) |
+   | Kill-switch | bypassed | enforced |
+   | Compliance gate | bypassed | enforced |
+   | Firm-cap clamp | bypassed | enforced |
+   | TradersPost circuit breaker | bypassed | enforced |
+   | HMAC validation | not enforced | enforced via `LIVE_ORDER_HMAC_SECRET` |
+   | Per-account routing | manual | via `account_strategy_assignments` |
 
 4. **Verify TradersPost wired to PAPER account, NOT funded.** In TradersPost dashboard, the strategy mapping should point to `MFFU Paper 50k` not `MFFU Funded 50k`. Funded routing in B.5 only.
 
