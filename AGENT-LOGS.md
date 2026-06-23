@@ -4,6 +4,54 @@
 
 ---
 
+### Session Log — 2026-06-23 Deep-scan production-blocker audit + B4/B5 dispatch (parent wrap-up)
+
+**Mission:** Operator requested "DEEP SCAN AND CHECK FOR ALL WIRING AND BUGS THAT BLOCKS US FOR GOING PRODUCTION AND PRODUCTION GRADE" on the just-closed 8-pass paper-trade readiness wave (master close at top of this journal).
+
+**Method:** 5 specialist subagents in parallel, all read-only — accuracy-validator (false-green hunt across the wave), trading-forge-architect (cross-system contract drift), paper-parity (end-to-end live signal flow), observability-reliability (audit chain / cron health / correlation_id propagation), autonomous-readiness (vacation-mode + family-grade alerts).
+
+**Findings — 6 capital-risk BLOCKERs hiding under green tests + green CI:**
+- **B1** — A/B routing `routeOrder()` has no lifecycle gate (`paper-signal-service.ts:5069`) — pre-PAPER strategies with `paper_account_routing='rl-challenger'` would fire real TradersPost orders. Confirmed by 2 agents independently.
+- **B2** — SHADOW intercept gated on `shadowModeEnabled` flag, not `lifecycle_state==='SHADOW'` (`paper-signal-service.ts:4800-4941`) — table-level `traderspost_webhook_called=false` invariant bypassable.
+- **B3** — F-2 archetype gateway gate is a dead-letter when `LIVE_ORDER_GATEWAY_URL` env unset (`lifecycle-service.ts:1358`). Operator hasn't set the env yet → every archetype strategy promoted to PAPER right now bypasses kill-switch/compliance/firm-cap. **AGENT-LOGS Pass 4.5 "F-2 CLOSED" claim was FALSE-GREEN in current prod env.**
+- **B4** — PBO gate NaN bypass (`pbo-gate.ts:140-180`) — `NaN > 0.15 → false → PASS`. Walk-forward with <4 CPCV paths silently clears the institutional 0.15 HARD gate.
+- **B5** — `resumeActivePaperSessions()` resurrects internal Massive-WS streams for PAPER+ on restart (`scheduler.ts:5466-5499`) — dual-stream P&L drift across restarts breaks Pass 5 Engine Authority Option B.
+- **B6** — TESTING→PAPER `stopStream()` is fire-and-forget (`lifecycle-service.ts:1694-1721`) — race window emits internal fills under PAPER state.
+
+Plus 7 HIGH (Pine placeholder substitution missing, correlation_id null on live paper path, pending-entry queue skips kill-switch re-check at N+1, TradersPost 5xx no retry, audit INSERT outside transaction, kill-switch Layers 2-9 not on signal path, journal idx 174 wrong `when` epoch); ~15 MED (divergence baseline never UPDATEd, schema/migration drift on tradingview_markers unique index, SHADOW state may not be in lifecycle_state CHECK constraint, firm-rules TS/Python no parity gate, frontend hard-coded BASE, 5+ alert sites missing family-grade postscripts, SSE catalog gaps); 4 LOW.
+
+**Verified-clean (false-green hunt RESULTS):** checkExportability fail-CLOSED, paper-journal-recon cron + tolerance, tradingview_markers ON CONFLICT dedup, evidence-completeness ≥3 blocks, Pine retry [30s/2m/10m], `/api/paper/start` rejects PAPER state, Style C pglite integration test exists, smoke-test framework + runbook exist.
+
+**Collision-safe dispatch (shared `hardening/phase-0` tree with parallel SHADOW-gate session):**
+- B2 → CLOSED by other session in commit `08a6751` (capital-safety cache invalidation + graduation-baseline persistence — their F-1 + F-2)
+- B1 → relayed to other session (same file, bundle with their SHADOW commit)
+- B3, B6 → deferred (lifecycle-service.ts collision risk)
+- B4 → backtest-core subagent → commit `661c029` (11 vitest GREEN)
+- B5 → paper-parity subagent → commit `0be72c4` (9 vitest GREEN)
+
+**Work completed (this session):**
+- 5-agent parallel deep-scan dispatched + synthesized into tiered punch list
+- B4 (PBO NaN bypass) shipped via backtest-core subagent — `pbo-gate.ts:152-171` Number.isFinite guard returns ok:false with `lifecycle.pbo_sample_size_guard` BEFORE the > comparison. Python (`walk_forward.py:1383-1386`) already guards NaN → None on the wire; TS fix is defense-in-depth.
+- B5 (stream resurrection) shipped via paper-parity subagent — `scheduler.ts` PAPER_PLUS_STATES guard in resumeActivePaperSessions() reads existing strategy row (no extra round-trip), skips + emits `paper.session_resume_skipped_paper_plus` audit, boot-log shows skipCount + skippedSessionIds. NULL lifecycleState → fail-open.
+
+**Verification:**
+- B4: 11 vitest GREEN; all 3 CI gates clean; commit `661c029` pushed to `origin/hardening/phase-0`.
+- B5: 9 vitest GREEN; commit `0be72c4` pushed.
+- Working tree clean at session end (only untracked `docs/scaling-validation/scaling-smoke-2026-06-23.md` from parallel session — left alone).
+
+**Known-facts updates (new pinned facts worth adding to the bottom Known-Facts section — left to next session to formalize):**
+- **"AGENT-LOGS wave-master-close claims need independent HEAD verification."** Pass 4.5 F-2 was claimed CLOSED but the gate is a dead-letter when `LIVE_ORDER_GATEWAY_URL` env is unset (which it is in current prod). The 8-pass wave shipped 27 of 50 audit findings — at least 6 of the "closed" or "out-of-scope" surfaces have live capital-risk bypasses (B1-B6). Trust the audit row + actual file diff, not the claim.
+- **"Test suite has zero DB-integration coverage" (already pinned 2026-06-22) directly enabled all 6 BLOCKERs to ship green.** 391 vitest files, 45% mock the DB; NONE of the BLOCKERs above would have failed a unit test as currently structured. pglite integration tests (Pass 6 Track C) are the right pattern — expand coverage to every lifecycle gate + every kill switch + every routeOrder path.
+
+**Carry-forward for next session:**
+- **B1 (relayed)** — confirm with operator that other session bundled the A/B routing lifecycle guard into their SHADOW commit; if not, take it directly (`paper-signal-service.ts:5069`, ~5 lines).
+- **B3** — decouple `lifecycle-service.ts:1358` archetype gateway gate from `process.env.LIVE_ORDER_GATEWAY_URL` so it verifies Pine markers unconditionally OR fails CLOSED when env is absent. Operator-coordinate first: is the env about to be set, or do we need the gate to work without it?
+- **B6** — await `stopStream()` in TESTING→PAPER transition (`lifecycle-service.ts:1694-1721`). B5 closed the post-restart symptom; B6 closes the in-transition race window.
+- **7 HIGH findings + 15 MED + 4 LOW** — full punch list above. Next session should triage: priority order = H1 Pine placeholder substitution, H2 correlation_id null on live path, H6 kill-switch Layers 2-9 wiring.
+- **Operator action items unchanged** from wave master close — set `ADMIN_PROMOTE_HMAC_SECRET`, `LIVE_ORDER_GATEWAY_URL`, `LIVE_ORDER_HMAC_SECRET`, KASA env vars; run `tsx scripts/first-paper-trade-smoke.ts --operator-fire` once B1+B3+B6 close. B3 is gated on `LIVE_ORDER_GATEWAY_URL` being set anyway — operator decision unblocks both.
+
+---
+
 ### Session Log — 2026-06-23 scheduler-b5: Skip internal-stream resume for PAPER+ sessions
 
 **Mission:** Fix BLOCKER — `resumeActivePaperSessions()` resurrected a Massive-WS internal simulator for every `paper_sessions` row with `status='active'`, including strategies already in PAPER/DEPLOY_READY/PILOT/DEPLOYED where TradersPost is the canonical journal. Post-restart dual-stream caused P&L drift.
