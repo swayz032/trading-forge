@@ -9903,6 +9903,32 @@ Also restored Anam.ai persona during this session:
 
 ---
 
+### Session Log — 2026-06-22 claude (Pine export semantic-equivalence audit → server-mediated execution Phase 0 + fail-loud export)
+
+**Mission:** Operator picked pine_export_preparation as next institutional-grade target. 3-lens read-only audit (pine-export + accuracy-validator + paper-parity) → operator chose "server-mediated execution" → built Phase 0 + the fail-loud export safety net.
+
+**HEADLINE FINDING (most significant of the session):** the exported Pine is NOT the validated strategy. The live path (Pine→TradersPost→broker, CLAUDE.md §7) and the server (where ALL validation + this session's hardening lives) are TWO SEPARATE EXECUTION SYSTEMS sharing only the entry indicator + session window. Absent from the live Pine: Style C 33/33/34 exits + the runner (the profit engine) + BE+1, the 11-factor confluence gate, multi-TF/regime/bias gating, daily-trade-cap, consistency, news blackout beyond hardcoded FOMC/CPI/NFP, DLL-vs-real-equity, kill-switch — i.e. ~2/3 of the gates and a different exit model. Export was FAIL-OPEN (a Style-C/confluence strategy scored "90/100 clean" and shipped degraded). So promotion gates approve a strategy that never goes live; the thing trading real money has little relation to the validated P&L. Also explains GAP-5 (routeOrder had no live caller — the server was built to drive execution but never wired).
+
+**Operator decision:** server-mediated execution — the SERVER fires live orders through the hardened broker-router so every gate + Style C exits + DLL + compliance apply live; Pine becomes visual-only.
+
+**Work completed (Phase 0, 2 commits, 22 pytest + 91 vitest):**
+- `833379a` fail-loud export: `exportability.py` now scores EXIT semantics (Style C partials/runner/BE+1/adaptive) + GATING (use_weighted_scoring/min_factors/regime_required/multi-TF daily-htf-itf) → `faithful=false` → `exportable=false` with specific reason; `checkExportability` (G6.3) requires exportable AND faithful. Simple plain strategies still export. Stops shipping degraded Pine.
+- `a6e7341` server-mediated-execution Phase 0 (flag `SERVER_MEDIATED_EXECUTION_ENABLED`, DEFAULT OFF): NEW `server-mediated-executor.ts` (routeLiveEntry/ExitPartial/ExitModify/Flatten); paper-signal-service entry routing + paper-execution-service exit routing at all 5 legs (TP1/TP2 partials, BE+1, runner trail, 15:55 flatten) via routeOrder (broker-router). SHADOW never routes (checked before flag). Fail-CLOSED on routeOrder error (needsReconcile + audit, never silently filled). Reuses broker-router idempotency + circuit breaker + kill-switch supremacy. Default-off = byte-identical no-op (proven).
+
+**Verification:** 22 pytest + 91 vitest GREEN (45 new for these tracks + 46 existing); additive diffs (paper-signal +60/-0, paper-execution +167/-1); foreign-token clean; flag-off no-op proven. Pushed.
+
+**Known-facts updates:**
+- The live Pine→TradersPost path BYPASSES the entire server gate stack + Style C exits. Server-side hardening only protects the SERVER paper path, not live Pine. This is the core architectural reality — "paper validated" ≠ "what trades live" until server-mediated execution is flipped on.
+- `routeOrder()` (broker-router) now HAS a caller (server-mediated-executor), but only when `SERVER_MEDIATED_EXECUTION_ENABLED=true` (default false).
+
+**Carry-forward (Phase 1 — the next critical step before ANY live capital):**
+- **Broker fill reconciliation** — Phase 0 fires routeOrder but never feeds actual fills (price/partial/rejection) back to the server position; paper position + live broker can diverge post-fill. Build TradersPost-webhook/TopstepX-callback → reconcile fills vs intended. Every Phase-0 routed order writes `server_mediated.order_routed`/`exit_routed` audit for replay.
+- BE/trail = cancel-replace (TradersPost has no native stop-modify) — needs order-ID tracking (Phase 1 dep).
+- Then: operator validates on a real account, flips `SERVER_MEDIATED_EXECUTION_ENABLED=true` (Phase 0/1 graduation).
+- All on `hardening/phase-0`; branch reconciliation with feature/deep-analysis-pipeline still pending.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### audit_log has NO `payload` column — use `input`/`result`, and `status` is NOT NULL (pinned 2026-06-22)
