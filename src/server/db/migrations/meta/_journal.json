@@ -1234,6 +1234,13 @@
       "when": 1782200000000,
       "tag": "0173_tradingview_markers_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 177,
+      "version": "7",
+      "when": 1782288000000,
+      "tag": "0174_paper_sessions_proven_trades",
+      "breakpoints": true
     }
   ]
 }

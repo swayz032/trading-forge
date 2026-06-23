@@ -210,6 +210,22 @@ export interface RiskSizingInputs {
    * null/undefined → no PM scaling (backward compat — pre-Pass-K call sites unchanged).
    */
   pmSizeFactor?: number | null;
+
+  /**
+   * Scaling-plan-baby-mode (2026-06-23) — Proven-trades ramp mode.
+   *
+   * When provided: tier = floor(provenTrades / proven_trades_per_tier)
+   *   replaces the dollar-based tier formula.
+   * When absent: falls back to dollar mode (backward-compat; byte-identical behavior).
+   *
+   * Definition: cumulative count of closed WINNING trades (net realized P&L > 0),
+   * monotonic, survives withdrawals. Produced by the live paper/execution layer;
+   * sizing only CONSUMES the value — never computes it.
+   *
+   * The config knob `proven_trades_per_tier` defaults from env
+   * PROVEN_TRADES_PER_TIER (default "10").
+   */
+  provenTrades?: number | null;
 }
 
 /**
@@ -254,6 +270,15 @@ export interface RiskSizingResult {
   drawdownRoomCap: number | null;
   /** True when drawdownRoomCap was the binding constraint. */
   drawdownRoomCapBinding: boolean;
+  // Scaling-plan-baby-mode (2026-06-23): proven-trades ramp observability
+  /**
+   * Which tier-ramp mode was used to compute pyramidTier.
+   * "proven_trades" — provenTrades input was present; tier = floor(provenTrades / proven_trades_per_tier).
+   * "dollar_fallback" — provenTrades absent; tier = floor(cumulativeProfit / tier_threshold_dollars).
+   */
+  scalingMode: "proven_trades" | "dollar_fallback";
+  /** Tier count used in pyramidTier computation. Audit/observability only. */
+  scalingTier: number;
 }
 
 // ── Wave 24 env-configurable scaling params ───────────────────────────────────
@@ -264,11 +289,25 @@ const RISK_VOL_SCALE_MAX = parseFloat(process.env.RISK_VOL_SCALE_MAX ?? "1.5");
 
 // ── Wave 25 Pass 2 Inst-10 env var ────────────────────────────────────────────
 // Fraction of current drawdown room to risk per trade (Topstep trailing-DD only).
-// Default 0.01 = 1% per 2026 funded-trader consensus:
-//   traderssecondbrain, proptradingvibes, propfirmmatch all converge on 1% rule.
-// Operator can halve to 0.005 for more conservative DD protection.
-// Env: DRAWDOWN_ROOM_RISK_PCT (default 0.01)
-const DRAWDOWN_ROOM_RISK_PCT = parseFloat(process.env.DRAWDOWN_ROOM_RISK_PCT ?? "0.01");
+// Default 0.08 = 8% of remaining drawdown buffer per NexusFi 2026-05 thread:
+//   "8-12% of remaining drawdown buffer per trade" is the institutional range for
+//   futures prop accounts. The prior default of 0.01 (1%) produced ~$20/trade on a
+//   fresh $2K Topstep buffer → 0 contracts via floor(20 / stop_dollars), which
+//   completely strangled sizing on a healthy new combine. 8% of a $2K buffer = $160,
+//   which at 1.5×4pt ATR stop on MES ($30/contract) yields floor(160/30) = 5
+//   contracts — meaningful Phase 1 sizing consistent with base 9.
+// The secondary 2%-of-balance cap (max_risk_pct_per_trade) remains unchanged and
+// continues to serve as the hard ceiling when the account grows large.
+// Operator can tighten: DRAWDOWN_ROOM_RISK_PCT=0.04 for more conservative protection.
+// Env: DRAWDOWN_ROOM_RISK_PCT (default 0.08)
+const DRAWDOWN_ROOM_RISK_PCT = parseFloat(process.env.DRAWDOWN_ROOM_RISK_PCT ?? "0.08");
+
+// ── Scaling-plan-baby-mode (2026-06-23): Proven-trades ramp config ────────────
+// Number of proven winning trades required per pyramid tier step.
+// When RiskSizingInputs.provenTrades is provided, tier = floor(provenTrades / PROVEN_TRADES_PER_TIER).
+// When absent, falls back to dollar-based tier (backward compat).
+// Env: PROVEN_TRADES_PER_TIER (default 10)
+const PROVEN_TRADES_PER_TIER = parseInt(process.env.PROVEN_TRADES_PER_TIER ?? "10", 10);
 
 /**
  * Wave 24 Item 16 — VIX-driven vol scale on max_risk_pct_per_trade.
@@ -383,8 +422,20 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
   const drawdownRoomInput = hasDrawdownRoomInput ? (input.currentDrawdownRoom as number) : null;
 
   // Pyramid tier (slow ramp-up)
-  const profitFloor = Math.max(0, input.cumulativeProfit);
-  const tiers = Math.floor(profitFloor / cfg.tier_threshold_dollars);
+  // Scaling-plan-baby-mode (2026-06-23): proven-trades mode takes priority when
+  // provenTrades is present. Backward-compat: absent provenTrades = dollar mode,
+  // byte-identical to pre-baby-mode behavior.
+  let tiers: number;
+  let scalingMode: "proven_trades" | "dollar_fallback";
+  if (input.provenTrades != null && Number.isFinite(input.provenTrades)) {
+    const ptPerTier = PROVEN_TRADES_PER_TIER > 0 ? PROVEN_TRADES_PER_TIER : 10;
+    tiers = Math.floor(Math.max(0, input.provenTrades) / ptPerTier);
+    scalingMode = "proven_trades";
+  } else {
+    const profitFloor = Math.max(0, input.cumulativeProfit);
+    tiers = Math.floor(profitFloor / cfg.tier_threshold_dollars);
+    scalingMode = "dollar_fallback";
+  }
   const pyramidTierRaw = cfg.base_contracts + cfg.tier_increment * tiers;
 
   // Wave 26 Pass K Phase 2 (2026-05-26) — Apply PM session size factor BEFORE
@@ -423,6 +474,8 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
       accountHealthRatio,
       drawdownRoomCap: null,
       drawdownRoomCapBinding: false,
+      scalingMode,
+      scalingTier: tiers,
       evidence: {
         accountBalance: input.accountBalance,
         atrPoints: input.atrPoints,
@@ -462,6 +515,8 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
       accountHealthRatio,
       drawdownRoomCap: null,
       drawdownRoomCapBinding: false,
+      scalingMode,
+      scalingTier: tiers,
       evidence: {
         accountBalance: input.accountBalance,
         atrPoints: input.atrPoints,
@@ -532,6 +587,8 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
         accountHealthRatio,
         drawdownRoomCap: null,
         drawdownRoomCapBinding: false,
+        scalingMode,
+        scalingTier: tiers,
         evidence: {
           accountBalance: input.accountBalance,
           trailingFloor,
@@ -623,6 +680,8 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
         accountHealthRatio,
         drawdownRoomCap,
         drawdownRoomCapBinding: earlyReturnDrawdownRoomCapBinding,
+        scalingMode,
+        scalingTier: tiers,
         evidence: {
           accountBalance: input.accountBalance,
           atrPoints: input.atrPoints,
@@ -673,6 +732,8 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
       accountHealthRatio,
       drawdownRoomCap,
       drawdownRoomCapBinding: false,
+      scalingMode,
+      scalingTier: tiers,
       evidence: {
         accountBalance: input.accountBalance,
         atrPoints: input.atrPoints,
@@ -791,6 +852,8 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
     accountHealthRatio,
     drawdownRoomCap,
     drawdownRoomCapBinding,
+    scalingMode,
+    scalingTier: tiers,
     evidence: {
       accountBalance: input.accountBalance,
       cumulativeProfit: input.cumulativeProfit,
@@ -826,6 +889,8 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
       current_top3_depth: input.currentTop3Depth ?? null,
       baseline_top3_depth: input.baseline20dMedianTop3Depth ?? null,
       tiers_earned: tiers,
+      scaling_mode: scalingMode,
+      scaling_tier: tiers,
       firm,
       riskCapMethod,
       accountHealthRatio,

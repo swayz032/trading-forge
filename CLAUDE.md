@@ -12,7 +12,7 @@ Trading Forge is a production-grade, family-distributable futures trading bot in
 
 **Target:** scale ONE robustly-validated strategy (avg-R ≥ 2.0R, PF ≥ 1.7, deflated Sharpe ≥ 1.5, max 1-2 A+ trades/day) from a $250/day baseline to **$1,000–5,000+/day** via four scaling levers. Win rate is an OBSERVED output metric — never a target, never a gate, never specified as a band.
 
-1. **Contract pyramid** — single account, profit-tier scaling on one strategy (base 6 MES / 6 MNQ / 18 MCL → risk-cap-bounded ceiling, +3 per +$3K cumulative profit)
+1. **Contract pyramid** — single account, profit-tier scaling on one strategy (base 9 MES / 9 MNQ / 18 MCL → risk-cap-bounded ceiling, 50-micro final cap; +3 per tier via proven-trades ramp live / +$3K dollar fallback in backtests). Growth is primarily HORIZONTAL (multiple Topstep accounts + copy-trade), not maxing one account — see `docs/scaling-plan-baby-mode.md`.
 2. **Multi-account same firm** — Topstep allows multiple accounts per user (single TopstepX subscription covers all)
 3. **Multi-firm parallel** — Topstep + MFFU running DIFFERENT strategies per firm (MFFU collaborative-trading compliance)
 4. **Family copy distribution** — each family member runs a DIFFERENT DEPLOYED strategy on their own TradingView + TradersPost + own MFFU/Topstep account
@@ -103,7 +103,7 @@ All build phases are done. **No new subsystems for 90 days.** The only work is p
 
 > **PRODUCTION-VERIFIED 2026-05-19:** Cycle 4 produced first organic W23F-shaped strategy (`orb_mnq_15m` with `entry_quality.confluence_factors=["structural_setup","vp_shape"]`, `extraction_provenance: youtube_transcript`). Pipeline runs end-to-end: MES → MNQ → MCL rotation, LLM extracts confluence factors + symbols, graduator emits entry_quality block, DSL critic accepts with W23F.L convention pre-filter, auditor accepts risk_derived_pyramid sizing. See AGENT-LOGS Wave 23F entry for full bug catalog + fixes.
 
-The scout pipeline runs `autonomous-scout-discovery` cron every 4 hours via in-process `src/server/services/autonomous-scout-runner.ts`. Every compiled strategy passes through `src/server/services/framework-overlay.ts` which REPLACES the scout's risk-management with framework defaults (W23F.N: **Style C 33/33/33** default — TP1 33%@1R / TP2 33%@2R / runner 34% trails developing_session_poc with Chandelier(14,2) fallback; stop floor 1.5×ATR + ceiling 14pt MES / 40pt MNQ / 25 tick MCL; 15:55 ET hard time-stop; 67% personal DLL; pyramid base 6 MES / 6 MNQ / 18 MCL with +3 increments per +$3K; max_risk 2%; per-symbol liquidity caps 100/50/30) while PRESERVING the entry signal. Style D is DEAD — see W23F.N AGENT-LOGS entry.
+The scout pipeline runs `autonomous-scout-discovery` cron every 4 hours via in-process `src/server/services/autonomous-scout-runner.ts`. Every compiled strategy passes through `src/server/services/framework-overlay.ts` which REPLACES the scout's risk-management with framework defaults (W23F.N: **Style C 33/33/33** default — TP1 33%@1R / TP2 33%@2R / runner 34% trails developing_session_poc with Chandelier(14,2) fallback; stop floor 1.5×ATR + ceiling 14pt MES / 40pt MNQ / 25 tick MCL; 15:55 ET hard time-stop; 67% personal DLL; pyramid base 9 MES / 9 MNQ / 18 MCL with +3 increments (proven-trades ramp live / +$3K backtest fallback); max_risk 2%; per-symbol liquidity caps 100/50/30) while PRESERVING the entry signal. Style D is DEAD — see W23F.N AGENT-LOGS entry.
 
 ### Two-stage DSL philosophy
 
@@ -301,11 +301,18 @@ When `exit_style="adaptive"`:
 ### Sizing — Risk-Derived Pyramid (W23F.N — Wave 23 canonical)
 Sizing is **risk-management-bounded, not contract-count-bounded**. Pyramid is the SLOW-RAMP floor; risk math is the CEILING. Lowest wins.
 
-**Pyramid ramp (time progression):**
+**Pyramid ramp (2026-06-23 — base 9 + proven-trades ramp):**
 ```
-Base:      6 MES / 6 MNQ / 18 MCL
-Increment: +3 contracts per +$3,000 cumulative profit
+Base:      9 MES / 9 MNQ / 18 MCL   (was 6/6/18; 9÷3 keeps Style C clean; MCL unchanged)
+Final cap: 50 micros (Topstep firm cap) — the ceiling the ramp climbs TO
+Increment: +3 contracts per tier.
+  LIVE (paper/funded): tier = floor(provenTrades / proven_trades_per_tier)   ← survives payouts
+  BACKTEST fallback:   tier = floor(max(0, cumulativeProfit) / tier_threshold_dollars)
 ```
+The LIVE ramp climbs on PROVEN WINNING TRADES (`paper_sessions.proven_trades_count`, monotonic) so
+taking a payout never drags size down. Backtests (no proven-trades input) keep the dollar fallback —
+byte-identical to pre-2026-06-23 behavior. Growth is primarily HORIZONTAL (multiple Topstep accounts
++ copy-trade at moderate size), NOT maxing one account to 50 — see `docs/scaling-plan-baby-mode.md`.
 
 **Risk-derived ceiling (computed every signal):**
 ```
@@ -316,9 +323,13 @@ finalContracts = min(
   firmContractCap,                                        // Topstep/MFFU tier
   liquidity_comfort_cap,                                  // book-depth ceiling
   floor(currentDrawdownRoom × DRAWDOWN_ROOM_RISK_PCT      // Topstep ONLY (W25P2 Inst-10)
-        ÷ (stop_multiplier × ATR_points × point_dollar_value))    //   env DRAWDOWN_ROOM_RISK_PCT=0.01
+        ÷ (stop_multiplier × ATR_points × point_dollar_value))    //   env DRAWDOWN_ROOM_RISK_PCT=0.08
 )
 ```
+**DRAWDOWN_ROOM_RISK_PCT recalibrated 0.01 → 0.08 (2026-06-23).** The 1% rule produced ~$20/trade =
+**0 contracts** on a fresh $2K Topstep buffer — it strangled sizing (the bot couldn't trade base size).
+8% of remaining buffer is the institutional 2026 sweet spot (NexusFi 2026-05, "8-12% of buffer"); the
+2%-of-balance cap remains the secondary ceiling. See `docs/scaling-plan-baby-mode.md`.
 
 **Per-symbol liquidity comfort caps (W23F.N):**
 | Symbol | Cap | Rationale |
@@ -328,9 +339,12 @@ finalContracts = min(
 | MCL | 30 | 20-80 contracts at touch (retail flow); cap prevents 1-2 tick slippage |
 
 **Sizing parameters:**
-- `max_risk_pct_per_trade: 0.02` — 2% of risk base per trade
+- `max_risk_pct_per_trade: 0.02` — 2% of risk base per trade (secondary ceiling)
 - `personal_dll_pct: 0.67` — Personal DLL = 67% of firm DLL
-- `tier_threshold_dollars: 3000` — pyramid steps every +$3K profit
+- `tier_threshold_dollars: 3000` — DOLLAR FALLBACK only (backtests): pyramid steps every +$3K profit
+- `proven_trades_per_tier` — env `PROVEN_TRADES_PER_TIER` (default 10) — LIVE ramp: +1 tier per N cumulative winning trades (`paper_sessions.proven_trades_count`, migration 0174, monotonic, survives payouts)
+- `DRAWDOWN_ROOM_RISK_PCT: 0.08` — 8% of Topstep drawdown buffer per trade (recalibrated from 0.01 — see above)
+- **Scaling validation:** `scripts/validate-scaling-schedule.py` proves per-tier firm-breach risk < `SCALING_BREACH_GATE_PCT` (default 0.05) via `simulate_firm_survival` on real data (fail-closed). Bar-by-bar pyramid replay across WF folds is a documented follow-up.
 
 **Concrete examples (1.5×ATR stop, ATR=4pts on MES, MFFU 2% rule):**
 - $50K eval funded:   $1,000 risk / $30/contract = 33 contracts ceiling

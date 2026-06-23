@@ -746,6 +746,10 @@ export const paperSessions = pgTable(
     dailyPnlBreakdown: jsonb("daily_pnl_breakdown").default({}), // Gap 4: consistency tracking
     metricsSnapshot: jsonb("metrics_snapshot").default({}),       // Gap 5: rolling Sharpe
     totalTrades: integer("total_trades").notNull().default(0),    // H3: trade counter for promotion inputs
+    // Balanced scaling plan (migration 0174): monotonic count of closed WINNING trades
+    // (net realized P&L > 0). Consumed by computeRiskDerivedContracts() for proven-trades ramp.
+    // Never decreases — only incremented in closePosition when netPnl > 0.
+    provenTradesCount: integer("proven_trades_count").notNull().default(0),
     // F-4 (migration 0125): TS-level shape via PaperSessionGovernorStateShape.
     governorState: jsonb("governor_state").$type<PaperSessionGovernorStateShape>(),                        // P0-4: persisted governor state — { state, consecutiveLosses, sessionLossPct, lastUpdatedAt }
     createdAt: timestamp("created_at").defaultNow().notNull(),

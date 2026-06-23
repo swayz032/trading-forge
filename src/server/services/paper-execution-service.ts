@@ -2127,6 +2127,40 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
     logger.warn({ positionId, tradeId: trade.id, err: auditErr }, "Audit log write failed for paper.trade_close (non-blocking)");
   }
 
+  // ─── Proven-trades counter (fail-soft, never blocks close) ─────────────────
+  // Monotonic invariant: only increments, never decrements. Counter survives
+  // withdrawals because it is per-session, not per-equity-level.
+  // Only winning trades (net realized P&L strictly > 0) are counted.
+  // Uses atomic SQL increment to avoid read-modify-write races.
+  if (netPnl > 0) {
+    try {
+      const [updatedSession] = await dbConn
+        .update(paperSessions)
+        .set({
+          provenTradesCount: sql`${paperSessions.provenTradesCount} + 1`,
+        })
+        .where(eq(paperSessions.id, pos.sessionId))
+        .returning({ provenTradesCount: paperSessions.provenTradesCount });
+
+      logger.info(
+        {
+          sessionId: pos.sessionId,
+          positionId,
+          netPnl,
+          provenTradesCount: updatedSession?.provenTradesCount ?? "unknown",
+        },
+        "sizing.proven_trade_recorded: winning close incremented proven_trades_count",
+      );
+    } catch (provenTradeErr) {
+      // Fail-soft: counter update failure must NOT block the close.
+      // The trade is already committed; this is a best-effort side-effect.
+      logger.error(
+        { sessionId: pos.sessionId, positionId, netPnl, err: provenTradeErr },
+        "proven_trades_count increment failed (non-blocking) — close proceeds",
+      );
+    }
+  }
+
   // Re-read session after atomic update for downstream logic
   const [session] = await dbConn.select().from(paperSessions).where(eq(paperSessions.id, pos.sessionId));
   if (session) {
