@@ -67,7 +67,10 @@ import polars as pl
 # run_backtest() accepts `data: Optional[pl.DataFrame]` as a clean injection
 # point. Passing data= bypasses load_ohlcv() entirely. This is the canonical
 # injection pattern — no monkey-patching required.
-from src.engine.backtester import run_backtest
+#
+# For archetype strategies (entry_indicator='archetype:<key>'), we call
+# run_class_backtest() instead — which is the class-based equivalent.
+from src.engine.backtester import run_backtest, run_class_backtest
 from src.engine.config import (
     BacktestRequest,
     IndicatorConfig,
@@ -75,6 +78,66 @@ from src.engine.config import (
     StopConfig,
     StrategyConfig,
 )
+
+# ─── Archetype → Python class path map ───────────────────────────────────────
+# Maps archetype key (from entry_indicator='archetype:<key>') to dotted
+# Python module path for _load_strategy_class().
+# Maintained in sync with ARCHETYPE_PINE_RECIPE in pine_compiler.py.
+# Only keys that have a corresponding Python class in src/engine/strategies/
+# are listed. Keys without a Python class fall through to DSL fallback.
+_ARCHETYPE_TO_CLASS_PATH: dict[str, str] = {
+    # ICT time-window archetypes
+    "ict_silver_bullet_ny_am":       "src.engine.strategies.silver_bullet.SilverBulletStrategy",
+    "ict_silver_bullet_london":      "src.engine.strategies.silver_bullet.SilverBulletStrategy",
+    "ict_silver_bullet_ny_pm":       "src.engine.strategies.silver_bullet.SilverBulletStrategy",
+    "ict_judas_swing":               "src.engine.strategies.judas_swing.JudasSwingStrategy",
+    "ict_ny_lunch_reversal":         "src.engine.strategies.ny_lunch_reversal.NYLunchReversalStrategy",
+    "ict_midnight_open":             "src.engine.strategies.midnight_open.MidnightOpenStrategy",
+    "ict_london_raid":               "src.engine.strategies.london_raid.LondonRaidStrategy",
+    "ict_turtle_soup":               "src.engine.strategies.turtle_soup.TurtleSoupStrategy",
+    "ict_ote":                       "src.engine.strategies.ote_strategy.OTEStrategy",
+    "ict_power_of_3":                "src.engine.strategies.power_of_3.PowerOf3Strategy",
+    "ict_unicorn":                   "src.engine.strategies.unicorn.UnicornStrategy",
+    "ict_breaker":                   "src.engine.strategies.breaker.BreakerStrategy",
+    "ict_mitigation":                "src.engine.strategies.mitigation.MitigationStrategy",
+    "ict_iofed":                     "src.engine.strategies.iofed.IOFEDStrategy",
+    # SMC + Scalp/Swing
+    "smt_reversal":                  "src.engine.strategies.smt_reversal.SMTReversalStrategy",
+    "ict_quarterly_swing":           "src.engine.strategies.quarterly_swing.QuarterlySwingStrategy",
+    "ict_propulsion":                "src.engine.strategies.propulsion.PropulsionStrategy",
+    "ict_eqhl_raid":                 "src.engine.strategies.eqhl_raid.EqhlRaidStrategy",
+    "ict_scalp":                     "src.engine.strategies.ict_scalp.ICTScalpStrategy",
+    "ict_swing":                     "src.engine.strategies.ict_swing.ICTSwingStrategy",
+    "ict_2022":                      "src.engine.strategies.ict_2022.ICT2022Strategy",
+    # Short-form aliases (same classes)
+    "judas_swing":                   "src.engine.strategies.judas_swing.JudasSwingStrategy",
+    "silver_bullet":                 "src.engine.strategies.silver_bullet.SilverBulletStrategy",
+    "breaker_block":                 "src.engine.strategies.breaker.BreakerStrategy",
+    # Wave 26 archetypes
+    "bounce_off_level":              "src.engine.strategies.bounce_off_level.BounceOffLevelStrategy",
+    "ict_bias_aligned_continuation": "src.engine.strategies.ict_bias_aligned_continuation.ICTBiasAlignedContinuationStrategy",
+    "gann_box_4h_continuation":      "src.engine.strategies.gann_box_4h_continuation.GannBox4HContinuationStrategy",
+    # Structural primitives (no Python class yet — fall through to DSL)
+    # "break_of_structure": None,
+    # "fvg_retrace": None,
+}
+
+_KNOWN_DSL_FALLBACK_ARCHETYPES = {
+    # These archetype keys have no Python class; evaluator uses generic SMA DSL.
+    # They produce a WARN log so they can be audited.
+    "break_of_structure",
+    "change_of_character",
+    "market_structure_shift",
+    "cisd",
+    "fvg_retrace",
+    "fvg",
+    "order_block",
+    "liquidity_sweep",
+    "wyckoff_spring",
+    "wyckoff_upthrust",
+    "wyckoff_accumulation",
+    "wyckoff_distribution",
+}
 
 logger = logging.getLogger(__name__)
 
@@ -197,8 +260,20 @@ def _fetch_ohlcv_from_s3(s3_path: str) -> pl.DataFrame:
 def _build_backtest_request(
     strategy_config: dict,
     regime: RegimeRecord,
-) -> BacktestRequest:
-    """Build a BacktestRequest from a strategy DSL dict and a regime record.
+) -> tuple[BacktestRequest, Optional[Any]]:
+    """Build a BacktestRequest (and optional strategy instance) from config + regime.
+
+    Archetype routing (A14 gap fix):
+        When strategy_config["entry_indicator"] starts with "archetype:", this
+        function looks up the archetype key in _ARCHETYPE_TO_CLASS_PATH and
+        returns a (BacktestRequest, strategy_instance) tuple.  evaluate_strategy()
+        will call run_class_backtest(strategy_instance, data=ohlcv) instead of the
+        generic run_backtest(request, data=ohlcv) fallback.
+
+        For archetype keys NOT in _ARCHETYPE_TO_CLASS_PATH (structural primitives
+        with no Python class), a WARNING is logged and the generic SMA DSL
+        fallback is returned (strategy_instance=None).  This is a known gap,
+        logged for future remediation.
 
     Uses the regime's date range derived from the OHLCV data to set start/end.
     The actual OHLCV is injected via data= in run_backtest, so start/end are
@@ -210,7 +285,8 @@ def _build_backtest_request(
         regime: RegimeRecord with loaded ohlcv.
 
     Returns:
-        BacktestRequest ready for run_backtest().
+        (BacktestRequest, strategy_instance_or_None)
+        strategy_instance is non-None when archetype routing is active.
     """
     # Extract date range from the ohlcv data for the request fields
     ohlcv = regime.ohlcv
@@ -272,11 +348,62 @@ def _build_backtest_request(
         fixed_contracts=int(ps.get("fixed_contracts", 1)),
     )
 
+    # ── Archetype routing (A14 gap fix) ──────────────────────────────────────
+    # Detect archetype strategies by entry_indicator prefix "archetype:<key>".
+    # Route them to their Python class via _ARCHETYPE_TO_CLASS_PATH.
+    entry_indicator = strategy_config.get("entry_indicator", "")
+    archetype_strategy_instance = None
+
+    if entry_indicator.startswith("archetype:"):
+        archetype_key = entry_indicator[len("archetype:"):]
+        class_path = _ARCHETYPE_TO_CLASS_PATH.get(archetype_key)
+
+        if class_path is not None:
+            # Load and instantiate the Python archetype class
+            try:
+                from src.engine.backtester import _load_strategy_class
+                archetype_strategy_instance = _load_strategy_class(class_path)
+                # Wire symbol + timeframe from regime (strategy defaults may differ)
+                if hasattr(archetype_strategy_instance, "symbol"):
+                    archetype_strategy_instance.symbol = regime.symbol
+                if hasattr(archetype_strategy_instance, "timeframe"):
+                    archetype_strategy_instance.timeframe = regime.timeframe
+                logger.debug(
+                    "_build_backtest_request: archetype=%s → class=%s",
+                    archetype_key, class_path,
+                )
+            except Exception as exc:
+                logger.warning(
+                    "_build_backtest_request: failed to load archetype class %s: %s; "
+                    "falling back to DSL SMA placeholder",
+                    class_path, exc,
+                )
+                archetype_strategy_instance = None
+        elif archetype_key in _KNOWN_DSL_FALLBACK_ARCHETYPES:
+            logger.warning(
+                "_build_backtest_request: archetype=%s has no Python class "
+                "(structural primitive — no backtestable signals); "
+                "using generic SMA DSL fallback. This is a known gap: "
+                "results will NOT reflect actual archetype behavior.",
+                archetype_key,
+            )
+        else:
+            logger.warning(
+                "_build_backtest_request: unrecognized archetype key=%s "
+                "(not in _ARCHETYPE_TO_CLASS_PATH and not in _KNOWN_DSL_FALLBACK_ARCHETYPES). "
+                "Using generic SMA DSL fallback.",
+                archetype_key,
+            )
+
     strategy = StrategyConfig(
         name=strategy_config.get("name", "BlackSwanEval"),
         symbol=regime.symbol,
         timeframe=regime.timeframe,
         indicators=indicator_configs,
+        # For archetype strategies, entry_long/entry_short/exit are PLACEHOLDERS.
+        # evaluate_strategy() will use run_class_backtest() with archetype_strategy_instance
+        # instead — the DSL strings below are never evaluated for archetypes.
+        # For DSL strategies, these are the real conditions.
         entry_long=strategy_config.get("entry_long", "close crosses_above sma_10"),
         entry_short=strategy_config.get("entry_short", "close crosses_below sma_10"),
         exit=strategy_config.get("exit", "close crosses_below sma_10"),
@@ -292,7 +419,7 @@ def _build_backtest_request(
         end_date=end_date,
         commission_per_side=float(strategy_config.get("commission_per_side", 0.62)),
         slippage_ticks=float(strategy_config.get("slippage_ticks", 1.0)),
-    )
+    ), archetype_strategy_instance
 
 
 # ─── Core Evaluator (pure function) ──────────────────────────────────────────
@@ -373,12 +500,30 @@ def evaluate_strategy(
                 })
                 continue
 
-        # Build request + run backtest
+        # Build request + optional archetype strategy instance
         try:
-            request = _build_backtest_request(strategy_config, regime)
-            # CRITICAL: pass data= to bypass load_ohlcv(). This is the clean
-            # injection point documented in backtester.py:run_backtest().
-            result = run_backtest(request, data=ohlcv)
+            request, archetype_instance = _build_backtest_request(strategy_config, regime)
+
+            # ── Archetype routing (A14 gap fix) ───────────────────────────────
+            # When archetype_instance is non-None, use run_class_backtest() —
+            # which dispatches through the strategy's compute() method rather
+            # than evaluating a generic SMA DSL expression.  This ensures that
+            # bounce_off_level, ict_breaker, etc. are tested with their ACTUAL
+            # signal logic, not a placeholder "close crosses_above sma_10".
+            if archetype_instance is not None:
+                result = run_class_backtest(
+                    strategy=archetype_instance,
+                    start_date=request.start_date,
+                    end_date=request.end_date,
+                    slippage_ticks=request.slippage_ticks,
+                    commission_per_side=request.commission_per_side,
+                    data=ohlcv,
+                )
+            else:
+                # DSL strategy path (original): pass data= to bypass load_ohlcv().
+                # This is the canonical injection point from backtester.py.
+                result = run_backtest(request, data=ohlcv)
+
             max_dd = float(result.get("max_drawdown", 0.0))
             survived = score_survival(max_dd, prop_firm_cap_dollars)
             per_regime.append({

@@ -17,6 +17,8 @@ Design contract:
 from __future__ import annotations
 
 import json
+import sys
+import types
 import uuid
 from datetime import datetime, timedelta
 from typing import Any
@@ -24,6 +26,14 @@ from unittest.mock import MagicMock, patch
 
 import polars as pl
 import pytest
+
+# Guard against vectorbt JIT compile hang during pytest collection.
+# backtester.py (imported by black_swan_evaluator) pulls vectorbt at module
+# level which triggers Numba/Cython JIT on Windows — hangs forever under
+# pytest. This mock must be registered BEFORE the src.engine.* imports below.
+_vbt_mock = types.ModuleType("vectorbt")
+_vbt_mock.Portfolio = MagicMock()
+sys.modules.setdefault("vectorbt", _vbt_mock)
 
 from src.engine.black_swan_evaluator import (
     BLACK_SWAN_TOP_K,
@@ -731,3 +741,195 @@ class TestF1RegimeBankAdvisoryDegradation:
         assert isinstance(vec.extras, dict)
         assert vec.extras.get("source") == "nemo"
         assert vec.extras.get("severity") == "extreme"
+
+
+# ─── A14 Archetype Routing Tests (gap fix) ────────────────────────────────────
+
+
+class TestArchetypeRouting:
+    """A14 gap fix: archetype strategies must route to Python class, not SMA DSL.
+
+    Pre-fix behavior: entry_indicator='archetype:bounce_off_level' fell through
+    to entry_long='close crosses_above sma_10' — testing a completely wrong strategy.
+
+    Post-fix behavior: archetype strategies call run_class_backtest() with the
+    instantiated Python class (BounceOffLevelStrategy, etc.).
+    """
+
+    def _make_archetype_config(self, archetype_key: str) -> dict:
+        return {
+            "name": f"ArchetypeTest_{archetype_key}",
+            "symbol": "MES",
+            "timeframe": "daily",
+            "entry_indicator": f"archetype:{archetype_key}",
+            "indicators": [{"type": "atr", "period": 14}],
+            # No entry_long/entry_short — archetype routing should NOT use these
+            "stop_loss": {"type": "atr", "multiplier": 2.0},
+            "position_size": {"type": "dynamic_atr", "target_risk_dollars": 500},
+        }
+
+    def _mock_class_backtest_result(self, max_drawdown: float = 800.0) -> dict:
+        return {
+            "max_drawdown": max_drawdown,
+            "total_return": 300.0,
+            "sharpe_ratio": 0.9,
+            "win_rate": 0.52,
+            "profit_factor": 1.4,
+            "total_trades": 8,
+            "equity_curve": [50000.0],
+            "trades": [],
+            "daily_pnls": [],
+            "execution_time_ms": 15,
+        }
+
+    def test_archetype_strategy_calls_run_class_backtest_not_dsl(self):
+        """evaluate_strategy must call run_class_backtest (not run_backtest)
+        when entry_indicator='archetype:bounce_off_level'."""
+        ohlcv = _make_ohlcv(n=100)
+        regime = _make_regime_record(ohlcv=ohlcv)
+        strategy_config = self._make_archetype_config("bounce_off_level")
+
+        class_backtest_calls = []
+        dsl_backtest_calls = []
+
+        def mock_class_run(strategy, start_date, end_date, data=None, **kw):
+            class_backtest_calls.append({"strategy": strategy, "data": data})
+            return self._mock_class_backtest_result()
+
+        def mock_dsl_run(request, data=None, **kw):
+            dsl_backtest_calls.append({"request": request, "data": data})
+            return self._mock_class_backtest_result()
+
+        with patch("src.engine.black_swan_evaluator.run_class_backtest", side_effect=mock_class_run):
+            with patch("src.engine.black_swan_evaluator.run_backtest", side_effect=mock_dsl_run):
+                result = evaluate_strategy(
+                    strategy_config=strategy_config,
+                    regime_records=[regime],
+                    prop_firm_cap_dollars=2000.0,
+                )
+
+        # run_class_backtest must have been called (archetype routing)
+        assert len(class_backtest_calls) == 1, (
+            f"Expected run_class_backtest to be called for archetype, got {len(class_backtest_calls)} calls"
+        )
+        # run_backtest (DSL) must NOT have been called
+        assert len(dsl_backtest_calls) == 0, (
+            f"run_backtest (DSL) must NOT be called for archetype strategies, "
+            f"got {len(dsl_backtest_calls)} calls"
+        )
+
+    def test_archetype_routing_passes_correct_data(self):
+        """run_class_backtest must receive the regime OHLCV as data=."""
+        ohlcv = _make_ohlcv(n=100)
+        regime = _make_regime_record(ohlcv=ohlcv)
+        strategy_config = self._make_archetype_config("ict_breaker")
+
+        captured = {}
+
+        def mock_class_run(strategy, start_date, end_date, data=None, **kw):
+            captured["data"] = data
+            return self._mock_class_backtest_result()
+
+        with patch("src.engine.black_swan_evaluator.run_class_backtest", side_effect=mock_class_run):
+            with patch("src.engine.black_swan_evaluator.run_backtest", return_value=self._mock_class_backtest_result()):
+                evaluate_strategy(
+                    strategy_config=strategy_config,
+                    regime_records=[regime],
+                    prop_firm_cap_dollars=2000.0,
+                )
+
+        assert captured.get("data") is not None, "run_class_backtest must receive data="
+        assert len(captured["data"]) == 100, "data must be the regime OHLCV (100 bars)"
+
+    def test_dsl_fallback_for_known_structural_archetypes(self):
+        """Known structural archetypes without Python classes use DSL fallback."""
+        # 'break_of_structure' is in _KNOWN_DSL_FALLBACK_ARCHETYPES — no Python class
+        ohlcv = _make_ohlcv(n=60)
+        regime = _make_regime_record(ohlcv=ohlcv)
+        strategy_config = self._make_archetype_config("break_of_structure")
+
+        class_backtest_calls = []
+        dsl_backtest_calls = []
+
+        def mock_class_run(strategy, start_date, end_date, data=None, **kw):
+            class_backtest_calls.append(True)
+            return self._mock_class_backtest_result()
+
+        def mock_dsl_run(request, data=None, **kw):
+            dsl_backtest_calls.append(True)
+            return self._mock_class_backtest_result()
+
+        with patch("src.engine.black_swan_evaluator.run_class_backtest", side_effect=mock_class_run):
+            with patch("src.engine.black_swan_evaluator.run_backtest", side_effect=mock_dsl_run):
+                result = evaluate_strategy(
+                    strategy_config=strategy_config,
+                    regime_records=[regime],
+                    prop_firm_cap_dollars=2000.0,
+                )
+
+        # Should have fallen through to DSL backtest
+        assert len(dsl_backtest_calls) == 1, (
+            "break_of_structure (no Python class) must use DSL fallback"
+        )
+        assert len(class_backtest_calls) == 0, (
+            "run_class_backtest must not be called for structural primitives"
+        )
+
+    def test_non_archetype_strategy_still_uses_dsl(self):
+        """Non-archetype strategies (no entry_indicator='archetype:...') still use DSL."""
+        ohlcv = _make_ohlcv(n=60)
+        regime = _make_regime_record(ohlcv=ohlcv)
+        strategy_config = _make_strategy_config()  # plain DSL config, no entry_indicator
+
+        class_backtest_calls = []
+        dsl_backtest_calls = []
+
+        def mock_class_run(strategy, start_date, end_date, data=None, **kw):
+            class_backtest_calls.append(True)
+            return self._mock_class_backtest_result()
+
+        def mock_dsl_run(request, data=None, **kw):
+            dsl_backtest_calls.append(True)
+            return self._mock_class_backtest_result()
+
+        with patch("src.engine.black_swan_evaluator.run_class_backtest", side_effect=mock_class_run):
+            with patch("src.engine.black_swan_evaluator.run_backtest", side_effect=mock_dsl_run):
+                evaluate_strategy(
+                    strategy_config=strategy_config,
+                    regime_records=[regime],
+                    prop_firm_cap_dollars=2000.0,
+                )
+
+        assert len(dsl_backtest_calls) == 1, "DSL strategy must use run_backtest"
+        assert len(class_backtest_calls) == 0, "DSL strategy must not call run_class_backtest"
+
+    def test_archetype_map_has_all_python_class_archetypes(self):
+        """_ARCHETYPE_TO_CLASS_PATH must contain all archetypes that have Python classes."""
+        from src.engine.black_swan_evaluator import _ARCHETYPE_TO_CLASS_PATH, _KNOWN_DSL_FALLBACK_ARCHETYPES
+        # All Python class paths must be unique (no accidentally sharing one path)
+        class_paths = list(_ARCHETYPE_TO_CLASS_PATH.values())
+        # At minimum, these known archetypes must be routed
+        required_archetypes = {
+            "bounce_off_level",
+            "ict_breaker",
+            "judas_swing",
+            "silver_bullet",
+            "ict_bias_aligned_continuation",
+        }
+        missing = required_archetypes - set(_ARCHETYPE_TO_CLASS_PATH.keys())
+        assert not missing, (
+            f"Required archetypes missing from _ARCHETYPE_TO_CLASS_PATH: {missing}"
+        )
+
+    def test_archetype_class_path_strings_are_valid_python_module_paths(self):
+        """All class paths in _ARCHETYPE_TO_CLASS_PATH must be importable dotted paths."""
+        from src.engine.black_swan_evaluator import _ARCHETYPE_TO_CLASS_PATH
+        for key, path in _ARCHETYPE_TO_CLASS_PATH.items():
+            # Must have format 'module.path.ClassName'
+            parts = path.split(".")
+            assert len(parts) >= 3, f"Archetype {key}: class path too short: {path}"
+            assert parts[0] == "src", f"Archetype {key}: must start with 'src': {path}"
+            # Last part must start with uppercase (ClassName convention)
+            assert parts[-1][0].isupper(), (
+                f"Archetype {key}: class name must be uppercase: {parts[-1]}"
+            )
