@@ -1622,6 +1622,42 @@ export class LifecycleService {
     // Everything below this line runs ONLY after the transaction commits
     // successfully. SSE/fire-and-forget burial NEVER fires on rollback.
 
+    // F-1 Capital Safety Fix: Invalidate the in-memory paper-session cache for
+    // this strategy whenever shadow_mode_enabled changes.
+    //
+    // The sessionCache in paper-signal-service.ts has no TTL and is keyed by
+    // sessionId.  If an active session was cached BEFORE this transition, it
+    // carries a stale CachedSession.shadowModeEnabled value:
+    //   • Stale false after →SHADOW  → next signal executes as a real TradersPost
+    //     order instead of being shadow-intercepted.  CAPITAL SAFETY BUG.
+    //   • Stale true after SHADOW→   → next signal is intercepted after the
+    //     strategy left SHADOW.  Missed trade; operator confusion.
+    //
+    // Eviction forces a DB reload of shadowModeEnabled on the next signal.
+    //
+    // Fail-soft: a cache-eviction error must NEVER block/abort the lifecycle
+    // transition — it is wrapped in try/catch and only logged as a warning.
+    //
+    // Dynamic import avoids a static top-level import of paper-signal-service.ts
+    // from lifecycle-service.ts, which would create a circular dependency risk at
+    // production boot (paper-signal-service.ts already depends on lifecycle logic
+    // indirectly through schema + audit helpers).
+    if (toState === "SHADOW" || fromState === "SHADOW") {
+      try {
+        const { invalidateSessionCacheForStrategy } = await import("./paper-signal-service.js");
+        invalidateSessionCacheForStrategy(id);
+        logger.info(
+          { strategyId: id, fromState, toState },
+          "F-1: shadow_mode_enabled changed — paper session cache invalidated for strategy",
+        );
+      } catch (cacheInvalidateErr) {
+        logger.warn(
+          { strategyId: id, fromState, toState, err: cacheInvalidateErr },
+          "F-1: paper session cache invalidation failed (fail-soft — lifecycle transition already committed)",
+        );
+      }
+    }
+
     if (retiredCodename) {
       logger.info({ strategyId: id, codename: retiredCodename }, "Forge name retired with strategy");
     }

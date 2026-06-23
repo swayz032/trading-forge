@@ -4462,8 +4462,83 @@ def run_backtest(
     return result
 
 
+def _build_expected_signals_from_trades(trades_list: list[dict], max_signals: int = 500) -> list[dict]:
+    """Derive expected_signals from the backtester's executed trade list.
+
+    Wave 29 Pass A.3 fix: the shadow-signal divergence gate (SHADOW→PAPER) compares
+    live shadow signals against backtests.resultExtras.expected_signals as the baseline.
+    Before this fix the field was never populated, so the loader always returned []
+    and every shadow signal was "unmatched" → 100% divergence → gate permanently blocked.
+
+    Shape contract (matches shadow-signal-divergence-checker.ts::ExpectedSignal):
+        signal_ts    int     Unix epoch seconds of bar entry
+        direction    str     "long" | "short"
+        entry_price  float   entry price (informational; NOT used for matching by checker)
+        intended_size int    contract count (must be ≥1)
+
+    Bounded to max_signals (default 500) to prevent JSONB bloat. The divergence gate
+    needs ≥20 signals to evaluate; 500 gives ample headroom for window-filtered queries.
+    Ordering: ascending by signal_ts (chronological), ties broken by entry_price.
+
+    Fail-safe: any conversion error per trade silently skips that trade — callers must
+    not raise on malformed individual entries. An empty list is a valid result.
+    """
+    signals: list[dict] = []
+    # Slice BEFORE conversion to avoid O(n) work on large trade lists
+    bounded = trades_list[:max_signals]
+
+    for trade in bounded:
+        try:
+            # ── Entry timestamp → Unix epoch seconds ─────────────────────────
+            # Primary: "Entry Timestamp" is a pandas Timestamp or ISO string
+            # emitted by vectorbt. "Entry Idx" is the integer bar index (fallback
+            # when timestamp unavailable — yields 0, which the gate's window filter
+            # will exclude as out-of-range so it's safe).
+            signal_ts: int = 0
+            raw_ts = trade.get("Entry Timestamp")
+            if raw_ts is not None and raw_ts != "":
+                ts_str = str(raw_ts)
+                if len(ts_str) >= 10:
+                    # Parse ISO 8601 or pandas Timestamp repr: e.g. "2026-01-15T10:00:00"
+                    import datetime as _dt
+                    try:
+                        # Strip fractional seconds + timezone if present for portability
+                        _parsed = _dt.datetime.fromisoformat(ts_str[:19])
+                        signal_ts = int(_parsed.replace(tzinfo=_dt.timezone.utc).timestamp())
+                    except ValueError:
+                        pass  # leave signal_ts = 0; window filter will exclude it
+
+            # ── Direction → "long" | "short" ─────────────────────────────────
+            # vectorbt emits "Long 1x" / "Short 1x"; managed-trade dicts use
+            # "Long" / "Short". Normalize to lowercase "long" / "short".
+            raw_dir = str(trade.get("direction", trade.get("Direction", "")) or "")
+            direction = "short" if "short" in raw_dir.lower() else "long"
+
+            # ── Entry price ───────────────────────────────────────────────────
+            entry_price = float(trade.get("entry_price", trade.get("Avg Entry Price", 0)) or 0)
+
+            # ── Intended size → int ≥ 1 ───────────────────────────────────────
+            raw_size = trade.get("size", trade.get("Size", 1))
+            intended_size = max(1, int(float(raw_size or 1)))
+
+            signals.append({
+                "signal_ts": signal_ts,
+                "direction": direction,
+                "entry_price": round(entry_price, 4),
+                "intended_size": intended_size,
+            })
+        except Exception:
+            # Silent skip — never let a single malformed trade crash the result
+            continue
+
+    # Stable sort: ascending by signal_ts (chronological), ties by entry_price
+    signals.sort(key=lambda s: (s["signal_ts"], s["entry_price"]))
+    return signals
+
+
 def _emit_validated_result(result: dict) -> None:
-    """Stamp result_extras with Pydantic-validated JSONB contract.
+    """Stamp result_extras with Pydantic-validated JSONB contract and populate
+    result["expected_signals"] for the SHADOW→PAPER divergence gate.
 
     Called from run_backtest() (all direct callers including WF workers) AND
     from main() after the truthiness/invariant hooks so that CLI output also
@@ -4473,10 +4548,29 @@ def _emit_validated_result(result: dict) -> None:
     C-1 FIX: Previously this validation only ran inside main(), so the
     BacktestResultExtras B-2 truthiness gate was dead for every WF-promoted
     strategy (walk_forward.py workers call run_backtest() directly, never main()).
+
+    Wave 29 Pass A.3 FIX: Populates result["expected_signals"] from result["trades"].
+    The TS bridge (buildResultExtras in backtest-service.ts) includes this key in
+    resultExtras JSONB. The loader (shadow-signal-divergence-loader.ts) reads
+    resultExtras.expected_signals as the baseline for the SHADOW→PAPER gate. Without
+    this population the field was always null → loader returned [] → 100% divergence
+    → gate permanently blocked. Fail-closed semantics preserved: old backtests without
+    this field still return [] → gate blocks (never silently passes).
     """
     # Already stamped — skip (CLI path calls both run_backtest and main)
     if result.get("result_extras") is not None:
         return
+
+    # ── Wave 29 Pass A.3 FIX: populate expected_signals at top-level ─────────
+    # Idempotent: only set when not already present (future callers may pre-populate).
+    # Derives from result["trades"] — the final executed entry list after all gates,
+    # eligibility filters, and fill-model application. This is the CORRECT baseline
+    # for the divergence gate: it represents what the strategy *actually* did in the
+    # backtest period, not raw unfiltered signals.
+    if "expected_signals" not in result or result.get("expected_signals") is None:
+        trades_for_signals = result.get("trades") or []
+        result["expected_signals"] = _build_expected_signals_from_trades(trades_for_signals)
+
     try:
         from src.engine.jsonb_contracts import (
             RESULT_EXTRAS_VERSION,

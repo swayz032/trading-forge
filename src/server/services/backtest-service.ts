@@ -82,6 +82,15 @@ function buildResultExtras(result: BacktestResult): Record<string, unknown> | nu
     // B-1 parity shadow + B-2 invariant harness truthiness fields
     "parity_shadow",
     "invariants",
+    // Wave 29 Pass A.3 FIX: SHADOW→PAPER divergence gate baseline.
+    // The Python backtester now populates result["expected_signals"] via
+    // _build_expected_signals_from_trades() inside _emit_validated_result().
+    // The loader (shadow-signal-divergence-loader.ts) reads this from
+    // resultExtras.expected_signals to compute the divergence comparison.
+    // Without this key the loader always returned [] → 100% divergence →
+    // gate permanently blocked. Fail-closed preserved: old backtests without
+    // this field continue to return [] (gate blocks).
+    "expected_signals",
   ] as const;
   let hasAny = false;
   for (const key of extraKeys) {

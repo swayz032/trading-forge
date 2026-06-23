@@ -901,6 +901,36 @@ export function invalidateSessionCache(sessionId: string): void {
   sessionCache.delete(sessionId);
 }
 
+/**
+ * F-1 Capital Safety Fix — shadow_mode_enabled cache invalidation by strategy.
+ *
+ * When lifecycle-service.ts atomically sets shadow_mode_enabled in the DB
+ * (entering or leaving SHADOW), the in-memory sessionCache may hold a stale
+ * CachedSession.shadowModeEnabled value for any active session belonging to
+ * this strategy.  A stale false → signals execute as real broker orders instead
+ * of being shadow-intercepted.  A stale true → signals are shadow-intercepted
+ * after the strategy exits SHADOW.
+ *
+ * This function evicts ALL sessionCache entries whose .strategyId matches the
+ * given strategyId.  The next signal for the affected session(s) will reload
+ * the fresh shadowModeEnabled flag from the DB.
+ *
+ * Safe by design:
+ *   - The cache is keyed by sessionId (not strategyId); we must iterate.
+ *   - Map.delete() on a missing key is always a no-op (never throws).
+ *   - An empty cache or zero-match case is fully safe.
+ *   - Called from lifecycle-service.ts post-commit, wrapped in try/catch
+ *     there, so any unexpected error here is absorbed and logged — it NEVER
+ *     blocks or aborts the lifecycle transition itself.
+ */
+export function invalidateSessionCacheForStrategy(strategyId: string): void {
+  for (const [sessionId, entry] of sessionCache.entries()) {
+    if (entry.strategyId === strategyId) {
+      sessionCache.delete(sessionId);
+    }
+  }
+}
+
 export function clearSessionCache(): void {
   sessionCache.clear();
 }
@@ -1738,6 +1768,10 @@ export async function evaluateSignals(
     currentEquity: paperSessions.currentEquity,
     // W23H.4: needed for cumulativeProfit and accountStartingFloor
     startingCapital: paperSessions.startingCapital,
+    // Balanced scaling plan: monotonic winning-trade count for proven-trades ramp.
+    // Read here so live sizing reflects the ramp while backtests (which don't pass it)
+    // keep the dollar-profit fallback in computeRiskDerivedContracts.
+    provenTradesCount: paperSessions.provenTradesCount,
   }).from(paperSessions).where(eq(paperSessions.id, sessionId));
 
   // Skip if session doesn't exist or is paused/stopped
@@ -4515,6 +4549,12 @@ export async function evaluateSignals(
           // T1 news window (caution = cut size; MFFU would have hard-blocked above instead).
           pmSizeFactor:
             computePmSizeFactor({ barTsUtc: new Date(bar.timestamp) }).factor * newsReduceSizeFactor,
+          // Balanced scaling plan: pass proven-trades count so live sizing can apply
+          // the proven-trades ramp gate. Backtests do not pass this field and keep
+          // the dollar-profit fallback inside computeRiskDerivedContracts.
+          provenTrades: typeof sessionRow.provenTradesCount === "number"
+            ? sessionRow.provenTradesCount
+            : (sessionRow.provenTradesCount != null ? Number(sessionRow.provenTradesCount) : 0),
         };
         if (newsReduceSizeFactor < 1) {
           span.setAttribute("news_caution_size_applied", newsReduceSizeFactor);
