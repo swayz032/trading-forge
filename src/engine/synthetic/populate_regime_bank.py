@@ -450,13 +450,18 @@ def main(argv: Optional[list[str]] = None) -> int:
     _emit_output(result, args.output_json)
 
     # ── Exit code logic ───────────────────────────────────────────────────────
-    if result["stored"] == 0 and result["generated"] > 0:
-        return 1  # generated but nothing stored (all failed calibration)
+    # NOTE: runPythonModule (the TS caller) THROWS on ANY non-zero exit, so reserve
+    # non-zero strictly for "nothing usable was stored". A PARTIAL run (some scenarios
+    # failed strict 7-test calibration but others passed + stored) is a SUCCESS for the
+    # bank — exit 0 so the caller inserts the regimes that passed. Per-scenario
+    # calibration rejections are normal and reported in result["errors"]/counts, not
+    # via the exit code. (2026-06-23 fix: was `return 1` on partial → service dropped
+    # all stored regimes and the bank stayed empty.)
     if result["generated"] == 0:
-        return 2  # nothing generated at all
-    if result["errors"]:
-        return 1  # partial failure
-    return 0
+        return 2  # nothing generated at all (total failure)
+    if result["stored"] == 0:
+        return 2  # generated but nothing passed calibration → nothing usable
+    return 0  # stored > 0 → usable bank fill (full or partial)
 
 
 def _emit_output(result: dict, output_file: Optional[str]) -> None:

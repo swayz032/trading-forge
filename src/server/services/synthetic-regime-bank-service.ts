@@ -292,7 +292,8 @@ export async function runSyntheticRegimeBankPopulate(
       entityType: "regime_bank",
       entityId: correlationId,
       correlationId,
-      details: {
+      status: "failure",
+      result: {
         error: errMsg,
         durationMs: Date.now() - startedAt,
       },
@@ -429,7 +430,8 @@ export async function runSyntheticRegimeBankPopulate(
     entityType: "regime_bank",
     entityId: correlationId,
     correlationId,
-    details: {
+    status: status === "populated" ? "success" : status === "partial" ? "warning" : "failure",
+    result: {
       generated: pythonResult.generated,
       calibrated_passed: pythonResult.calibrated_passed,
       calibrated_failed: pythonResult.calibrated_failed,
@@ -538,7 +540,8 @@ export async function ensureRegimeBankPopulated(
         entityType: "regime_bank",
         entityId: correlationId,
         correlationId,
-        details: {
+        status: "warning",
+        input: {
           bankCount,
           stalenessWindowDays: REGIME_BANK_STALENESS_DAYS,
           triggeredBy: "boot_self_heal",
@@ -570,7 +573,8 @@ export async function ensureRegimeBankPopulated(
       entityType: "regime_bank",
       entityId: correlationId,
       correlationId,
-      details: {
+      status: "success",
+      input: {
         bankCount,
         stalenessWindowDays: REGIME_BANK_STALENESS_DAYS,
       },
