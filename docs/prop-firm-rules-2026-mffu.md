@@ -21,19 +21,23 @@
 | Ongoing monthly fee (post-funded) | `$0` |
 | Profit target | `$3,000` |
 | Max drawdown (also serves as buffer) | `$2,000` |
-| Trailing type | `intraday` ← **RAPID Sim Funded** trails the intraday EQUITY HWM (incl. unrealized), $2,000, **locks at $100**. (Rapid EVAL is EOD.) |
-| Daily loss limit | `null` (no separate DLL — drawdown is the cap) |
-| Max contracts | `50` micros **TOTAL** (5 minis OR 50-micro equivalent, combined — exceeding can breach) |
-| Min trading days | `2` (Rapid eval) |
-| Min payout days | `1` (Rapid Sim Funded = DAILY payouts, 24h, after the $2,100 buffer) |
-| Payout buffer | `$2,100` realized profit required before any payout |
-| Consistency rule | `50%` best-day cap — **EVAL ONLY** (none in Rapid Sim Funded) |
+> **The operator's MFFU account is the PRO plan** (chosen 2026-06-23 — EOD trailing matches our
+> risk model + no funded consistency). The values below are MFFU **PRO 50K**.
+
+| Trailing type | `eod` — **PRO Sim Funded** EOD trailing (Max Loss EOD $2,000). After the FIRST payout the MLL moves to **$50,100 and stays STATIC** (stops trailing). Matches Topstep basis + our `realizedPeakEquity` model — no intraday build needed. |
+| Daily loss limit | `null` (no DLL in Pro eval or sim funded) |
+| Max contracts | ⚠️ `5` micros (Pro is `5 mini / 5 micro` — mini-oriented; **10× tighter than Rapid's 50**, BELOW our base 6 MES / 18 MCL). Pending operator confirm it's not a typo. |
+| Min trading days | `2` (Pro eval, passable in as little as 2 days) |
+| Min payout days | `14` (Pro: 14 calendar days from first trade + buffer cleared) |
+| Payout buffer | `$2,100` realized profit (50K) before first payout. One-time pre-buffer withdrawal: up to 60% of profit, min $1,000. |
+| Min payout request | `$1,000` (Pro); Max payout `$100,000`/user |
+| Consistency rule | `50%` best-day cap — **EVAL ONLY** (none in Pro Sim Funded) |
 | Overnight allowed | `false` |
 | Weekend allowed | `false` |
 | Commission per side per contract | `$0.62` |
-| Payout split (initial) | `0.90` (90/10 — Rapid; Core/Flex are 80/20) |
-| Payout schedule | **daily** (every 24h, after the $2,100 buffer) |
-| No T1 news trading | on Rapid **Sim Funded** (eval allows T1) |
+| Payout split | `0.80` (80/20 — Pro) |
+| Payout schedule | after 14 days + $2,100 buffer cleared |
+| T1 news trading | **NOT allowed** on Pro Sim Funded (news-policy MFFU hard-block enforces) |
 
 ## Canonical Values
 
@@ -49,12 +53,12 @@ activation_fee: 0
 ongoing_monthly_fee: 0
 profit_target: 3000
 max_drawdown: 2000
-max_contracts: 50  # micros TOTAL at $50K Rapid (5 minis OR 50-micro equivalent — combined cap)
-trailing: intraday  # RAPID Sim Funded = INTRADAY trailing (equity HWM incl. unrealized, $2k, locks at $100); eval is EOD
-payout_split: 0.90  # Rapid is 90/10 (Core/Flex are 80/20)
-min_payout_days: 1  # Rapid Sim Funded payouts are DAILY (24h) after the $2,100 buffer
-min_trading_days: 2  # Rapid eval minimum is 2 days
-consistency_rule_pct: 0.50  # EVAL ONLY — none in Rapid Sim Funded
+max_contracts: 5  # ⚠️ PRO 50K = 5 micros (5 mini / 5 micro — mini-oriented; 10x tighter than Rapid). Pending operator confirm (not a typo). Binds micro sizing.
+trailing: eod  # PRO Sim Funded = EOD trailing (Max Loss EOD $2,000); after first payout MLL static at $50,100
+payout_split: 0.80  # Pro is 80/20 (Rapid is 90/10)
+min_payout_days: 14  # Pro: 14 calendar days from first trade + $2,100 buffer cleared
+min_trading_days: 2  # Pro eval passable in as little as 2 days
+consistency_rule_pct: 0.50  # EVAL ONLY — none in Pro Sim Funded
 daily_loss_limit: null
 overnight_ok: false
 weekend_ok: false

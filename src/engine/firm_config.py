@@ -54,7 +54,10 @@ FIRM_COMMISSIONS: dict[str, dict[str, float]] = {
 
 FIRM_CONTRACT_CAPS: dict[str, dict[str, int]] = {
     "topstep_50k": {"MES": 50, "MNQ": 50, "MCL": 50},
-    "mffu_50k":    {"MES": 50, "MNQ": 50, "MCL": 50},
+    # ⚠️ MFFU PRO 50K = 5 micros (Pro is mini-oriented; 10× tighter than Rapid's 50). Set
+    # conservatively to 5 pending operator confirmation it's not a typo — this BINDS our micro
+    # sizing below the pyramid base (6 MES / 18 MCL).
+    "mffu_50k":    {"MES": 5, "MNQ": 5, "MCL": 5},
 }
 
 # Hard bounds: min 0, max 60 (MFFU Pro). ATR sizing is clamped to this range.
@@ -84,7 +87,7 @@ SCALING_PLANS: dict[str, list[dict]] = {
 # ─── Initial Contract Caps (starting limits before scaling) ──────
 INITIAL_CONTRACT_CAPS: dict[str, int] = {
     "topstep_50k": 50,  # 50 micros at $50K Combine + Funded
-    "mffu_50k": 50,     # 50 micros at $50K Core/Flex/Rapid
+    "mffu_50k": 5,      # ⚠️ PRO 50K = 5 micros (mini-oriented; pending operator confirm — binds micro sizing)
 }
 
 
@@ -126,25 +129,29 @@ FIRM_RULES: dict[str, dict] = {
         "ongoing_monthly_fee": 0,
         "profit_target": 3000,
         "max_drawdown": 2000,
-        "max_contracts": 50,  # 50 micros TOTAL (5 minis or 50-micro equivalent) at $50K Rapid
-        # 2026-06-23 CORRECTION (operator-confirmed): the operator's MFFU account is the RAPID
-        # plan. MFFU Rapid SIM FUNDED uses INTRADAY trailing drawdown — Max Loss trails the
-        # intraday EQUITY high-water mark (incl. unrealized), $2,000 below, and LOCKS at a $100
-        # floor once HWM hits ~$2,100 profit. (The Rapid EVAL is EOD; only Sim Funded is
-        # intraday.) This is the HARSH type vs Topstep's EOD. The risk MODEL (risk-sizing.ts +
-        # kill switch) must trail the intraday equity peak for MFFU, not the EOD/closed peak.
-        "trailing": "intraday",
-        "trailing_lock_floor": 100,   # Max Loss locks at $100 once it trails up to it
-        "payout_split": 0.90,         # Rapid is 90/10 (NOT the 80/20 of Core/Flex)
-        "min_payout_days": 1,         # Sim Funded payouts are DAILY (24h) after the $2,100 buffer
-        "payout_buffer": 2100,        # build $2,100 realized profit before any payout
-        "min_trading_days": 2,        # Rapid eval minimum is 2 days
-        "consistency_rule": "mffu_50pct_eval_only",  # 50% best-day cap — EVAL ONLY; none in Sim Funded
-        "daily_loss_limit": None,
+        # ⚠️ MFFU PRO 50K caps MICROS at 5 (5 mini / 5 micro per the Pro plan doc). This is 10×
+        # tighter than Rapid/Builder (50 micro) and BELOW our pyramid base (6 MES / 18 MCL) —
+        # Pro is mini-oriented. Set conservatively to 5 (breach-safe) PENDING operator
+        # confirmation it's not a typo. If real, the firm cap (5) binds our micro sizing.
+        "max_contracts": 5,
+        # 2026-06-23: operator chose the MFFU PRO plan. Pro Sim Funded = EOD trailing drawdown
+        # (Max Loss EOD $2,000) — matches Topstep's basis + our existing realizedPeakEquity model
+        # (NO intraday-trailing build needed). After the FIRST payout the MLL moves to $50,100
+        # ($100 above the $50K start) and stays STATIC (stops trailing).
+        "trailing": "eod",
+        "post_payout_static_mll": 50_100,  # MLL static at start+$100 after first payout
+        "payout_split": 0.80,          # Pro is 80/20 (Rapid is 90/10)
+        "min_payout_days": 14,         # Pro: 14 calendar days from first trade + buffer cleared
+        "payout_buffer": 2100,         # $2,100 realized profit before first payout (50K)
+        "min_payout": 1000,            # Pro min payout request $1,000
+        "min_trading_days": 2,         # Pro eval passable in as little as 2 days
+        "consistency_rule": "mffu_50pct_eval_only",  # 50% — EVAL ONLY; NONE in Pro Sim Funded
+        "daily_loss_limit": None,      # No DLL in Pro eval or sim funded
         "overnight_ok": False,
         "weekend_ok": False,
+        # T1 news trading NOT allowed on Pro sim funded (news-policy MFFU hard-block already enforces).
         # 2026-compliance (canonical: docs/prop-firm-rules-2026-mffu.md)
-        "payout_cycle_days": 14,  # Bi-weekly payouts every 14 days
+        "payout_cycle_days": 14,  # Pro: 14-day buffer-cleared payout cadence
     },
 }
 

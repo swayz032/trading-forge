@@ -98,13 +98,13 @@ export const FIRMS: Record<string, FirmConfig> = {
     macro_blackout_mode: "strict",
     accountTypes: {
       "50k": {
-        // 2026-06-23: operator's MFFU account is the RAPID plan. Rapid Sim Funded =
-        // INTRADAY trailing drawdown (trails intraday EQUITY HWM incl. unrealized,
-        // $2,000, locks at $100), 90/10 split, daily payouts after a $2,100 buffer, 2-day eval,
-        // consistency EVAL-ONLY. (Risk MODEL intraday-trailing wiring is a separate build.)
+        // 2026-06-23: operator chose the MFFU PRO plan. Pro Sim Funded = EOD trailing (Max
+        // Loss EOD $2,000; after first payout MLL static at $50,100), 80/20 split, payouts after
+        // 14 days + $2,100 buffer, consistency EVAL-ONLY, no DLL, NO T1 news. ⚠️ Pro caps MICROS
+        // at 5 (mini-oriented; pending operator confirm it's not a typo) — binds our micro sizing.
         accountSize: 50_000, monthlyFee: 77, activationFee: 0, ongoingMonthlyFee: 0,
-        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 50, trailing: "intraday",
-        payoutSplit: 0.90, minPayoutDays: 1, consistencyRule: 0.50, // Python: "mffu_50pct_eval_only"
+        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 5, trailing: "eod",
+        payoutSplit: 0.80, minPayoutDays: 14, consistencyRule: 0.50, // Python: "mffu_50pct_eval_only"
         dailyLossLimit: null, overnightOk: false, weekendOk: false, commissionPerSide: 0.62,
         minTradingDays: 2,
         // 2026-compliance fields (canonical: docs/prop-firm-rules-2026-mffu.md)
