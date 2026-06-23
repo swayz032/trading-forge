@@ -115,7 +115,15 @@ export interface CoverageVerdict {
 // ─── Shared normalization ─────────────────────────────────────────────────────
 
 function normalize(s: string): string {
-  return s.toLowerCase().replace(/[-_]/g, " ").replace(/\s+/g, " ").trim();
+  return s
+    .toLowerCase()
+    .replace(/[-_]/g, " ")
+    // FIX 8 (5-URL audit): split digit-letter boundaries so "4hour" matches "4-hour"/"4 hour"
+    // (iU8's core "4hour candle box strategy" was falsely MISSING on this mismatch).
+    .replace(/(\d)([a-z])/g, "$1 $2")
+    .replace(/([a-z])(\d)/g, "$1 $2")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function emphasisRank(e: SpeakerItem["emphasis_level"]): number {
@@ -242,17 +250,9 @@ function parseSpeakerItems(raw: string | null, fullTranscript: string): SpeakerI
  * Sequential per window (single GPU, no parallel Ollama). Per-window failures are
  * tolerated (that window contributes nothing). @throws never — returns [] on total failure.
  */
-export async function runCoverageEnumeration(transcript: string): Promise<SpeakerItem[]> {
-  if (!transcript || transcript.length === 0) return [];
-
-  const windows = chunkTranscript(transcript, {
-    chunkChars: COVERAGE_ENUM_WINDOW_CHARS,
-    overlapChars: COVERAGE_ENUM_OVERLAP_CHARS,
-  });
-
-  // UNION by normalized name, keeping the highest-emphasis instance.
+async function enumerateWindowsOnce(windows: string[], transcript: string): Promise<SpeakerItem[]> {
+  // UNION by canonical name, keeping the highest-emphasis instance.
   const byName = new Map<string, SpeakerItem>();
-
   for (const window of windows) {
     const prompt = COVERAGE_ENUM_PROMPT.replace("{TRANSCRIPT}", window);
     let raw: string | null = null;
@@ -274,12 +274,27 @@ export async function runCoverageEnumeration(transcript: string): Promise<Speake
       }
     }
   }
-
   // Cap by emphasis priority (primary first) so the most important items survive the cap.
-  const all = [...byName.values()].sort(
-    (a, b) => emphasisRank(b.emphasis_level) - emphasisRank(a.emphasis_level),
-  );
-  return all.slice(0, COVERAGE_ENUM_MAX_ITEMS);
+  return [...byName.values()]
+    .sort((a, b) => emphasisRank(b.emphasis_level) - emphasisRank(a.emphasis_level))
+    .slice(0, COVERAGE_ENUM_MAX_ITEMS);
+}
+
+export async function runCoverageEnumeration(transcript: string): Promise<SpeakerItem[]> {
+  if (!transcript || transcript.length === 0) return [];
+  const windows = chunkTranscript(transcript, {
+    chunkChars: COVERAGE_ENUM_WINDOW_CHARS,
+    overlapChars: COVERAGE_ENUM_OVERLAP_CHARS,
+  });
+  let items = await enumerateWindowsOnce(windows, transcript);
+  // FIX 11 (5-URL audit): 0 items is almost always a gemma flake on the windowed enum (the
+  // SAME transcript yielded items on a prior run). A non-trivial strategy always names tools —
+  // retry the whole pass once before the 0-item floor fails it.
+  if (items.length === 0) {
+    logger.warn("coverage-gate: enumeration returned 0 items — retrying once (flake guard)");
+    items = await enumerateWindowsOnce(windows, transcript);
+  }
+  return items;
 }
 
 // ─── Pure-Functional Comparator (Layer 2 — depth-aware) ──────────────────────
@@ -358,16 +373,11 @@ export function computeCoverageVerdict(
       ? 1.0
       : (countable.length - notCoveredCountable.length) / countable.length;
 
-  // FIX 5 (vacuous-pass floor): 0 enumerated countable items is an HONEST pass only if the
-  // extraction is genuinely rich. A thin extraction (few steps, no confluences) with 0 items
-  // is enumeration failure, not completeness — fail it so repair/quarantine engage.
-  const entryStepCount = Array.isArray(extraction.entry_sequence) ? extraction.entry_sequence.length : 0;
-  const confluenceCount = Array.isArray(extraction.confluences) ? extraction.confluences.length : 0;
-  const extractionIsThin = entryStepCount < 3 || confluenceCount === 0;
+  // FIX 5 + FIX 10 (5-URL audit): 0 enumerated countable items cannot verify completeness.
+  // A real strategy always names tools, so 0 items = enumeration FAILURE (gemma flake, even
+  // after the FIX 11 retry) — NEVER a free pass. Fail so quarantine / re-run engage.
   if (countable.length === 0) {
-    return extractionIsThin
-      ? { covered, shallow, missing, coverage_pct: 0, verdict: "coverage_failed" }
-      : { covered, shallow, missing, coverage_pct: 1.0, verdict: "pass" };
+    return { covered, shallow, missing, coverage_pct: 0, verdict: "coverage_failed" };
   }
 
   // FIX 4 (threshold verdict): pass when EITHER all primary items are covered (strict) OR

@@ -177,12 +177,12 @@ describe("5-URL audit fixes (2026-06-22)", () => {
     expect(v.coverage_pct).toBe(0);
   });
 
-  it("FIX 5: 0 items + RICH extraction still passes (enumeration empty but extraction substantial)", () => {
+  it("FIX 10: 0 items ALWAYS fails — enum failure can't verify completeness, even on a rich extraction", () => {
     const rich: ExtractionSnapshot = {
       entry_sequence: [1, 2, 3, 4].map((s) => ({ step: s, action: `step ${s} action`, rationale: null })),
       confluences: [{ name: "a", description: "x" }, { name: "b", description: "y" }],
     };
     const v = computeCoverageVerdict([], rich);
-    expect(v.verdict).toBe("pass");
+    expect(v.verdict).toBe("coverage_failed");
   });
 });

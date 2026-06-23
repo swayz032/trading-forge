@@ -208,14 +208,18 @@ export function checkCompilabilityGate(
     missing.push("missing_entry_indicator_or_archetype");
   }
 
-  // Gate 2: entry_params must be non-empty object (at least one key)
+  // Gate 2: entry_params non-empty — REQUIRED ONLY when there is no entry_indicator/archetype.
+  // FIX 7 (5-URL audit 2026-06-22): a named entry_indicator/archetype carries the entry logic;
+  // the archetype handler + framework-overlay supply parameters. Requiring entry_params here
+  // quarantined good archetype extractions (e.g. z3Qn volume_profile cleared coverage but failed
+  // ONLY on empty params). entry_params is a fallback signal when no indicator/archetype exists.
   const params = input.entry_params;
   const hasParams =
     params !== null &&
     params !== undefined &&
     typeof params === "object" &&
     Object.keys(params).length > 0;
-  if (!hasParams) {
+  if (!hasParams && !hasEntryIndicator && !hasArchetype) {
     missing.push("empty_entry_params");
   }
 
