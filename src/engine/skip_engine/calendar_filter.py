@@ -3,6 +3,19 @@
 Per CLAUDE.md: Don't trade through FOMC/CPI/NFP without explicit event handling —
 default is SIT_OUT ±30 min.  This module is the paper-engine's real-time check;
 it is called once per bar via the python-runner bridge and must be fast.
+
+Wave hardening 2026-06-22, macro-blackout MFFU §5 extension — GDP/ISM/PPI:
+  MFFU prop-firm-rules-2026-mffu.md §5 restricts trading ±30 min around 6 Tier-1
+  events: FOMC, CPI, NFP, GDP, ISM, PPI.  calendar_filter.py previously only
+  covered FOMC/CPI/NFP.  GDP/ISM/PPI dates are imported directly from
+  economic_calendar.py::STATIC_EVENTS (the canonical single source of truth)
+  to eliminate calendar drift between the two modules.  A parity test (see
+  src/engine/tests/test_calendar_filter_blackout.py + vitest counterpart) guards
+  this drift permanently.
+
+  Retail Sales: MFFU §5 also lists Retail Sales.  economic_calendar.py does NOT
+  have confirmed Retail Sales dates (it tracks PCE which is a different BEA
+  release).  Retail Sales dates must NOT be invented; see TODO below.
 """
 
 from __future__ import annotations
@@ -10,6 +23,13 @@ from __future__ import annotations
 import warnings
 from datetime import date, datetime, timedelta, timezone
 from functools import lru_cache
+
+# Wave hardening 2026-06-22, macro-blackout MFFU §5 extension — GDP/ISM/PPI:
+# Import STATIC_EVENTS from economic_calendar.py (the authoritative date source)
+# so that calendar_filter stays in sync without maintaining a 4th hardcoded list.
+# economic_calendar.py is pure data (no vectorbt / polars side-effects at import
+# time) so the @lru_cache performance contract of this module is unaffected.
+from src.engine.economic_calendar import STATIC_EVENTS as _EC_STATIC_EVENTS
 
 
 # ─── D5: Dynamic Holiday Calendar ────────────────────────────────────────────
@@ -183,10 +203,14 @@ def is_holiday(date_str: str) -> bool:
 # Roll week = Monday-Friday of the week containing the 3rd Friday of a roll month
 ROLL_MONTHS = {3, 6, 9, 12}
 
-# ─── High-Impact Economic Events (FOMC / CPI / NFP) ──────────────
+# ─── High-Impact Economic Events (FOMC / CPI / NFP / GDP / ISM / PPI) ──────
 # All event times are in US Eastern Time (ET).
 # Paper engine sits out ±EVENT_BLACKOUT_MINUTES around each event.
 # Dates cover the current and forward-planning horizon (2026-2027).
+# Wave hardening 2026-06-22, macro-blackout MFFU §5 extension:
+#   FOMC/CPI/NFP are listed inline below.  GDP/ISM/PPI are appended
+#   after this list from economic_calendar.py::STATIC_EVENTS (see
+#   _build_extended_events() below).  Retail Sales is TODO (see that block).
 
 EVENT_BLACKOUT_MINUTES: int = 30  # default ±30 min blackout window
 
@@ -268,6 +292,42 @@ _ECONOMIC_EVENTS: list[tuple[str, str, str]] = [
     ("2027-11-05", "08:30", "NFP"),
     ("2027-12-03", "08:30", "NFP"),
 ]
+
+# ─── Wave hardening 2026-06-22: MFFU §5 extension — GDP / ISM / PPI ─────────
+# Sourced from economic_calendar.py::STATIC_EVENTS (the single authoritative list).
+# Times: GDP 08:30, ISM 10:00, PPI 08:30 ET — compliance-exact per MFFU §5.
+# ±30 min window is inherited from EVENT_BLACKOUT_MINUTES = 30.
+#
+# TODO (Retail Sales): MFFU §5 also restricts Retail Sales (BLS Census release,
+#   typically 3rd Wednesday of the month, 08:30 ET).  economic_calendar.py does
+#   NOT have confirmed Retail Sales dates — PCE and Retail Sales are separate
+#   releases.  DO NOT invent Retail Sales dates.  When confirmed BLS/Census dates
+#   are available for 2026-2027, add them to economic_calendar.py::STATIC_EVENTS
+#   under key "RETAIL_SALES" and extend this block accordingly.
+#   Audit note: live bot is currently exposed on Retail Sales days; an operator
+#   must manually review and apply dates once sourced from the official calendar.
+
+def _build_extended_events() -> list[tuple[str, str, str]]:
+    """Build GDP + ISM + PPI entries for 2026-2027 from STATIC_EVENTS.
+
+    Only includes 2026-2027 dates (the live blackout horizon).  Entries that
+    would duplicate already-present FOMC/CPI/NFP dates in _ECONOMIC_EVENTS are
+    not a problem — _build_event_date_index() merges by date key.
+    """
+    extended: list[tuple[str, str, str]] = []
+    for event_type in ("GDP", "ISM", "PPI"):
+        events = _EC_STATIC_EVENTS.get(event_type, [])
+        for evt in events:
+            yr = evt["date"][:4]
+            if yr in ("2026", "2027"):
+                extended.append((evt["date"], evt["time_et"], event_type))
+    return extended
+
+
+# Append to the static list so _build_event_date_index picks them up.
+# This is done at module level (not inside a function) so it runs once at
+# import time and the result is captured by _STATIC_YEARS and _EVENT_INDEX.
+_ECONOMIC_EVENTS = _ECONOMIC_EVENTS + _build_extended_events()
 
 # ─── Rule-Based Economic Event Generator (2028+) ─────────────────────────────
 # The explicit list above covers 2026-2027. For 2028 and beyond, rules generate
@@ -536,8 +596,8 @@ def calendar_check(
             "is_quarter_end": bool,
             "day_of_week": str,  # Monday-Friday
             "day_of_week_num": int,  # 0=Mon, 4=Fri
-            "is_economic_event": bool,  # True if within ±blackout_minutes of FOMC/CPI/NFP
-            "economic_event_name": str,  # "FOMC" | "CPI" | "NFP" | ""
+            "is_economic_event": bool,  # True if within ±blackout_minutes of FOMC/CPI/NFP/GDP/ISM/PPI
+            "economic_event_name": str,  # "FOMC" | "CPI" | "NFP" | "GDP" | "ISM" | "PPI" | ""
             "event_window_minutes": int,  # configured blackout half-width
         }
     """

@@ -7,8 +7,20 @@
  *
  * This module provides a conservative in-process fallback that runs WITHOUT
  * spawning Python. It mirrors the STATIC_EVENTS list from
- * src/engine/economic_calendar.py for the three MFFU-restricted Tier-1 events:
- * FOMC, CPI, NFP.
+ * src/engine/economic_calendar.py for the six MFFU-restricted Tier-1 events:
+ * FOMC, CPI, NFP, GDP, ISM, PPI.
+ *
+ * Wave hardening 2026-06-22, macro-blackout MFFU §5 extension — GDP/ISM/PPI:
+ *   GDP, ISM, PPI added to TIER1_EVENTS to match the extension made to
+ *   calendar_filter.py._ECONOMIC_EVENTS.  Dates are copied from
+ *   src/engine/economic_calendar.py::STATIC_EVENTS[2026-2027] (TS cannot
+ *   import Python at runtime).  A parity gate (check:ts-python-tier1-parity)
+ *   asserts exact date/time agreement between this file and STATIC_EVENTS to
+ *   prevent silent calendar drift.
+ *
+ * Retail Sales gap (TODO): MFFU §5 also restricts Retail Sales.
+ *   economic_calendar.py has no confirmed Retail Sales dates.  Do NOT add
+ *   invented dates.  Wire when BLS/Census 2026-2027 dates are confirmed.
  *
  * The blackout window is ±30 minutes around each event release time (matching
  * calendar_filter.py EVENT_BLACKOUT_MINUTES default).
@@ -21,7 +33,8 @@
  * Correctness contract:
  *   - Times are in ET (Eastern Time: EST UTC-5 / EDT UTC-4).
  *   - DST switches in 2026: spring-forward Mar 8 02:00, fall-back Nov 1 02:00.
- *   - All FOMC/CPI dates through 2027 are present (matching economic_calendar.py).
+ *   - All FOMC/CPI/GDP/ISM/PPI dates through 2027 are present (matching
+ *     economic_calendar.py STATIC_EVENTS).
  *   - NFP is the first Friday of each month at 08:30 ET — computed dynamically.
  *   - Window: [event_time - 30min, event_time + 30min].
  */
@@ -34,7 +47,7 @@ export const TIER1_BLACKOUT_MINUTES = 30;
 export interface Tier1Event {
   date: string;       // "YYYY-MM-DD"
   time_et: string;    // "HH:MM"
-  event_type: string; // "FOMC" | "CPI" | "NFP"
+  event_type: string; // "FOMC" | "CPI" | "NFP" | "GDP" | "ISM" | "PPI"
 }
 
 // ─── FOMC 2025-2027 (matching economic_calendar.py STATIC_EVENTS["FOMC"]) ────
@@ -104,13 +117,13 @@ const CPI_EVENTS: Tier1Event[] = [
   { date: "2027-03-10", time_et: "08:30", event_type: "CPI" },
   { date: "2027-04-13", time_et: "08:30", event_type: "CPI" },
   { date: "2027-05-12", time_et: "08:30", event_type: "CPI" },
-  { date: "2027-06-09", time_et: "08:30", event_type: "CPI" },
-  { date: "2027-07-14", time_et: "08:30", event_type: "CPI" },
+  { date: "2027-06-10", time_et: "08:30", event_type: "CPI" },
+  { date: "2027-07-13", time_et: "08:30", event_type: "CPI" },
   { date: "2027-08-11", time_et: "08:30", event_type: "CPI" },
-  { date: "2027-09-15", time_et: "08:30", event_type: "CPI" },
+  { date: "2027-09-14", time_et: "08:30", event_type: "CPI" },
   { date: "2027-10-13", time_et: "08:30", event_type: "CPI" },
   { date: "2027-11-10", time_et: "08:30", event_type: "CPI" },
-  { date: "2027-12-08", time_et: "08:30", event_type: "CPI" },
+  { date: "2027-12-10", time_et: "08:30", event_type: "CPI" },
 ];
 
 // ─── NFP — first Friday of each month at 08:30 ET ────────────────────────────
@@ -154,12 +167,134 @@ export function buildNfpEvents(startYear: number, endYear: number): Tier1Event[]
 // Pre-build NFP for 2025-2027 at module load (pure, no I/O).
 const NFP_EVENTS: Tier1Event[] = buildNfpEvents(2025, 2027);
 
+// ─── GDP 2025-2027 (matching economic_calendar.py STATIC_EVENTS["GDP"]) ──────
+// Wave hardening 2026-06-22, macro-blackout MFFU §5 extension — GDP.
+// Quarterly advance BEA estimate, 08:30 ET. Dates copied from STATIC_EVENTS.
+// Parity gate: check:ts-python-tier1-parity asserts exact agreement.
+
+const GDP_EVENTS: Tier1Event[] = [
+  // 2025
+  { date: "2025-01-30", time_et: "08:30", event_type: "GDP" },
+  { date: "2025-04-30", time_et: "08:30", event_type: "GDP" },
+  { date: "2025-07-30", time_et: "08:30", event_type: "GDP" },
+  { date: "2025-10-29", time_et: "08:30", event_type: "GDP" },
+  // 2026 (projected — TODO: confirm from BEA when released)
+  { date: "2026-01-29", time_et: "08:30", event_type: "GDP" },
+  { date: "2026-04-29", time_et: "08:30", event_type: "GDP" },
+  { date: "2026-07-29", time_et: "08:30", event_type: "GDP" },
+  { date: "2026-10-28", time_et: "08:30", event_type: "GDP" },
+  // 2027 (projected — TODO: confirm from BEA when released)
+  { date: "2027-01-28", time_et: "08:30", event_type: "GDP" },
+  { date: "2027-04-28", time_et: "08:30", event_type: "GDP" },
+  { date: "2027-07-28", time_et: "08:30", event_type: "GDP" },
+  { date: "2027-10-27", time_et: "08:30", event_type: "GDP" },
+];
+
+// ─── ISM 2025-2027 (matching economic_calendar.py STATIC_EVENTS["ISM"]) ──────
+// Wave hardening 2026-06-22, macro-blackout MFFU §5 extension — ISM.
+// ISM Manufacturing PMI — first business day of the month, 10:00 ET.
+// Parity gate: check:ts-python-tier1-parity asserts exact agreement.
+
+const ISM_EVENTS: Tier1Event[] = [
+  // 2025
+  { date: "2025-01-02", time_et: "10:00", event_type: "ISM" },
+  { date: "2025-02-03", time_et: "10:00", event_type: "ISM" },
+  { date: "2025-03-03", time_et: "10:00", event_type: "ISM" },
+  { date: "2025-04-01", time_et: "10:00", event_type: "ISM" },
+  { date: "2025-05-01", time_et: "10:00", event_type: "ISM" },
+  { date: "2025-06-02", time_et: "10:00", event_type: "ISM" },
+  { date: "2025-07-01", time_et: "10:00", event_type: "ISM" },
+  { date: "2025-08-01", time_et: "10:00", event_type: "ISM" },
+  { date: "2025-09-02", time_et: "10:00", event_type: "ISM" },
+  { date: "2025-10-01", time_et: "10:00", event_type: "ISM" },
+  { date: "2025-11-03", time_et: "10:00", event_type: "ISM" },
+  { date: "2025-12-01", time_et: "10:00", event_type: "ISM" },
+  // 2026 (projected — first business day of month)
+  { date: "2026-01-02", time_et: "10:00", event_type: "ISM" },
+  { date: "2026-02-02", time_et: "10:00", event_type: "ISM" },
+  { date: "2026-03-02", time_et: "10:00", event_type: "ISM" },
+  { date: "2026-04-01", time_et: "10:00", event_type: "ISM" },
+  { date: "2026-05-01", time_et: "10:00", event_type: "ISM" },
+  { date: "2026-06-01", time_et: "10:00", event_type: "ISM" },
+  { date: "2026-07-01", time_et: "10:00", event_type: "ISM" },
+  { date: "2026-08-03", time_et: "10:00", event_type: "ISM" },
+  { date: "2026-09-01", time_et: "10:00", event_type: "ISM" },
+  { date: "2026-10-01", time_et: "10:00", event_type: "ISM" },
+  { date: "2026-11-02", time_et: "10:00", event_type: "ISM" },
+  { date: "2026-12-01", time_et: "10:00", event_type: "ISM" },
+  // 2027 (projected — first business day of month)
+  { date: "2027-01-04", time_et: "10:00", event_type: "ISM" },
+  { date: "2027-02-01", time_et: "10:00", event_type: "ISM" },
+  { date: "2027-03-01", time_et: "10:00", event_type: "ISM" },
+  { date: "2027-04-01", time_et: "10:00", event_type: "ISM" },
+  { date: "2027-05-03", time_et: "10:00", event_type: "ISM" },
+  { date: "2027-06-01", time_et: "10:00", event_type: "ISM" },
+  { date: "2027-07-01", time_et: "10:00", event_type: "ISM" },
+  { date: "2027-08-02", time_et: "10:00", event_type: "ISM" },
+  { date: "2027-09-01", time_et: "10:00", event_type: "ISM" },
+  { date: "2027-10-01", time_et: "10:00", event_type: "ISM" },
+  { date: "2027-11-01", time_et: "10:00", event_type: "ISM" },
+  { date: "2027-12-01", time_et: "10:00", event_type: "ISM" },
+];
+
+// ─── PPI 2025-2027 (matching economic_calendar.py STATIC_EVENTS["PPI"]) ──────
+// Wave hardening 2026-06-22, macro-blackout MFFU §5 extension — PPI.
+// Producer Price Index — typically 2nd Tuesday of month, 08:30 ET.
+// Parity gate: check:ts-python-tier1-parity asserts exact agreement.
+
+const PPI_EVENTS: Tier1Event[] = [
+  // 2025 (BLS published schedule)
+  { date: "2025-01-14", time_et: "08:30", event_type: "PPI" },
+  { date: "2025-02-13", time_et: "08:30", event_type: "PPI" },
+  { date: "2025-03-13", time_et: "08:30", event_type: "PPI" },
+  { date: "2025-04-11", time_et: "08:30", event_type: "PPI" },
+  { date: "2025-05-15", time_et: "08:30", event_type: "PPI" },
+  { date: "2025-06-12", time_et: "08:30", event_type: "PPI" },
+  { date: "2025-07-15", time_et: "08:30", event_type: "PPI" },
+  { date: "2025-08-14", time_et: "08:30", event_type: "PPI" },
+  { date: "2025-09-11", time_et: "08:30", event_type: "PPI" },
+  { date: "2025-10-14", time_et: "08:30", event_type: "PPI" },
+  { date: "2025-11-13", time_et: "08:30", event_type: "PPI" },
+  { date: "2025-12-11", time_et: "08:30", event_type: "PPI" },
+  // 2026 (projected — day after CPI release, typically)
+  { date: "2026-01-15", time_et: "08:30", event_type: "PPI" },
+  { date: "2026-02-12", time_et: "08:30", event_type: "PPI" },
+  { date: "2026-03-12", time_et: "08:30", event_type: "PPI" },
+  { date: "2026-04-15", time_et: "08:30", event_type: "PPI" },
+  { date: "2026-05-13", time_et: "08:30", event_type: "PPI" },
+  { date: "2026-06-11", time_et: "08:30", event_type: "PPI" },
+  { date: "2026-07-15", time_et: "08:30", event_type: "PPI" },
+  { date: "2026-08-13", time_et: "08:30", event_type: "PPI" },
+  { date: "2026-09-16", time_et: "08:30", event_type: "PPI" },
+  { date: "2026-10-14", time_et: "08:30", event_type: "PPI" },
+  { date: "2026-11-11", time_et: "08:30", event_type: "PPI" },
+  { date: "2026-12-11", time_et: "08:30", event_type: "PPI" },
+  // 2027 (projected — TODO: confirm from BLS when released)
+  { date: "2027-01-14", time_et: "08:30", event_type: "PPI" },
+  { date: "2027-02-11", time_et: "08:30", event_type: "PPI" },
+  { date: "2027-03-11", time_et: "08:30", event_type: "PPI" },
+  { date: "2027-04-14", time_et: "08:30", event_type: "PPI" },
+  { date: "2027-05-13", time_et: "08:30", event_type: "PPI" },
+  { date: "2027-06-11", time_et: "08:30", event_type: "PPI" },
+  { date: "2027-07-14", time_et: "08:30", event_type: "PPI" },
+  { date: "2027-08-12", time_et: "08:30", event_type: "PPI" },
+  { date: "2027-09-15", time_et: "08:30", event_type: "PPI" },
+  { date: "2027-10-14", time_et: "08:30", event_type: "PPI" },
+  { date: "2027-11-11", time_et: "08:30", event_type: "PPI" },
+  { date: "2027-12-09", time_et: "08:30", event_type: "PPI" },
+];
+
 // ─── Combined Tier-1 event list ───────────────────────────────────────────────
+// Wave hardening 2026-06-22: GDP_EVENTS + ISM_EVENTS + PPI_EVENTS added.
+// Parity with Python STATIC_EVENTS enforced via check:ts-python-tier1-parity.
 
 export const TIER1_EVENTS: Tier1Event[] = [
   ...FOMC_EVENTS,
   ...CPI_EVENTS,
   ...NFP_EVENTS,
+  ...GDP_EVENTS,
+  ...ISM_EVENTS,
+  ...PPI_EVENTS,
 ];
 
 // ─── Core checker ─────────────────────────────────────────────────────────────
