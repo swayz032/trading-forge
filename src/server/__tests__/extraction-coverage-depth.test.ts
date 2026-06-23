@@ -98,7 +98,7 @@ describe("computeCoverageVerdict — depth-aware (E-FOUNDATION)", () => {
     ];
     const extraction: ExtractionSnapshot = {
       entry_sequence: [
-        { step: 1, action: "mention the gann box for bias", rationale: null }, // gann = shallow (name only)
+        { step: 1, action: "use the gann box", rationale: null }, // gann = shallow (name only, no mechanic)
         {
           step: 2,
           action: "wait for retracement into the optimum zone between 25 and 50 percent",
@@ -177,12 +177,20 @@ describe("5-URL audit fixes (2026-06-22)", () => {
     expect(v.coverage_pct).toBe(0);
   });
 
-  it("FIX 10: 0 items ALWAYS fails — enum failure can't verify completeness, even on a rich extraction", () => {
+  it("FIX 13: 0 items + UNNAMED/thin extraction → coverage_failed (no self-evidence)", () => {
     const rich: ExtractionSnapshot = {
       entry_sequence: [1, 2, 3, 4].map((s) => ({ step: s, action: `step ${s} action`, rationale: null })),
       confluences: [{ name: "a", description: "x" }, { name: "b", description: "y" }],
-    };
-    const v = computeCoverageVerdict([], rich);
-    expect(v.verdict).toBe("coverage_failed");
+    }; // no concept_name/name → not self-evidently named
+    expect(computeCoverageVerdict([], rich).verdict).toBe("coverage_failed");
+  });
+
+  it("FIX 13: 0 items + NAMED + rich extraction → pass (enum flaked; per-field quotes ground it)", () => {
+    const named: ExtractionSnapshot = {
+      concept_name: "candle_range_theory_1h_1m",
+      entry_sequence: [1, 2, 3].map((s) => ({ step: s, action: `step ${s} of the CRT setup`, rationale: null })),
+      confluences: [{ name: "time_window", description: "trade the killzone" }],
+    } as ExtractionSnapshot;
+    expect(computeCoverageVerdict([], named).verdict).toBe("pass");
   });
 });

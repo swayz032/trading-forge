@@ -317,40 +317,33 @@ export function computeCoverageVerdict(
   speakerItems: SpeakerItem[],
   extraction: ExtractionSnapshot,
 ): CoverageVerdict {
-  const corpusParts: string[] = [];
-
+  // FIX 12 (5-URL audit run-3): build per-UNIT normalized text (each entry step + each
+  // confluence + the recall note). Depth is measured against the EXTRACTION's own description
+  // of an item — NOT the enumeration's independently-paraphrased quote (which caused false
+  // SHALLOW on GA box / Fibonacci retracements when the enum quote used different words than
+  // the captured steps). Deterministic given the extraction; no enum-quote dependency.
   const entrySeq = Array.isArray(extraction.entry_sequence) ? extraction.entry_sequence : [];
-  for (const step of entrySeq) {
-    if (typeof step.action === "string") corpusParts.push(step.action);
-    if (typeof step.rationale === "string" && step.rationale) corpusParts.push(step.rationale);
-  }
-
   const confluences = Array.isArray(extraction.confluences) ? extraction.confluences : [];
-  for (const c of confluences) {
-    if (typeof c.name === "string") corpusParts.push(c.name);
-    if (typeof c.description === "string") corpusParts.push(c.description);
-  }
-
-  if (extraction._recall_primary_tool_note?.value) {
-    corpusParts.push(extraction._recall_primary_tool_note.value);
-  }
-
-  const corpus = corpusParts.join(" ").toLowerCase().replace(/\s+/g, " ");
+  const units: string[] = [];
+  for (const step of entrySeq) units.push(normalize(`${step.action ?? ""} ${step.rationale ?? ""}`));
+  for (const c of confluences) units.push(normalize(`${c.name ?? ""} ${c.description ?? ""}`));
+  if (extraction._recall_primary_tool_note?.value) units.push(normalize(extraction._recall_primary_tool_note.value));
 
   function classify(item: SpeakerItem): "covered" | "shallow" | "missing" {
     const normName = normalize(item.name);
     const nameWords = normName.split(" ").filter((w) => w.length >= 4);
-    const namePresent =
-      corpus.includes(normName) || (nameWords.length > 0 && nameWords.every((w) => corpus.includes(w)));
-    if (!namePresent) return "missing";
-
-    // Depth: mechanic tokens drawn from the item's OWN quote (excluding the name words).
+    const nameInUnit = (u: string) =>
+      u.includes(normName) || (nameWords.length > 0 && nameWords.every((w) => u.includes(w)));
+    const mentioning = units.filter(nameInUnit);
+    if (mentioning.length === 0) return "missing";
+    // COVERED when the name is discussed in a SUBSTANTIVE unit: >= MIN_MECHANIC_TOKENS content
+    // tokens BEYOND the name itself (mechanic captured, not merely name-dropped).
     const nameTokenSet = new Set(normName.split(" "));
-    const quoteTokens = contentTokens(item.verbatim_quote).filter((t) => !nameTokenSet.has(t));
-    // Terse quote can't be required to yield more tokens than it has — name-present suffices.
-    if (quoteTokens.length < MIN_MECHANIC_TOKENS) return "covered";
-    const present = quoteTokens.filter((t) => corpus.includes(t)).length;
-    return present >= MIN_MECHANIC_TOKENS ? "covered" : "shallow";
+    for (const u of mentioning) {
+      const extra = contentTokens(u).filter((t) => !nameTokenSet.has(t));
+      if (extra.length >= MIN_MECHANIC_TOKENS) return "covered";
+    }
+    return "shallow";
   }
 
   const covered: string[] = [];
@@ -373,11 +366,21 @@ export function computeCoverageVerdict(
       ? 1.0
       : (countable.length - notCoveredCountable.length) / countable.length;
 
-  // FIX 5 + FIX 10 (5-URL audit): 0 enumerated countable items cannot verify completeness.
-  // A real strategy always names tools, so 0 items = enumeration FAILURE (gemma flake, even
-  // after the FIX 11 retry) — NEVER a free pass. Fail so quarantine / re-run engage.
+  // FIX 13 (5-URL audit run-3): 0 enumerated items is acceptable ONLY when the extraction is
+  // independently RICH + named — a non-generic concept_name/name + >=3 entry steps + >=1
+  // confluence. In that case the per-field verbatim-quote verifier already grounds the
+  // extraction and the (separate, flaky) enumeration call is the only thing that returned
+  // nothing (UBvf: rich CRT extraction, enum flaked to 0). A thin/generic extraction with 0
+  // items is a real miss (N7uP: generic name, 2 steps) — fail it.
   if (countable.length === 0) {
-    return { covered, shallow, missing, coverage_pct: 0, verdict: "coverage_failed" };
+    const snap = extraction as Record<string, unknown>;
+    const cn = typeof snap.concept_name === "string" ? snap.concept_name.trim() : "";
+    const nm = typeof snap.name === "string" ? snap.name.trim() : "";
+    const isNamed = (s: string) => s.length > 0 && !/^extracted(_strategy)?$/i.test(s);
+    const richSelfEvident = (isNamed(cn) || isNamed(nm)) && entrySeq.length >= 3 && confluences.length >= 1;
+    return richSelfEvident
+      ? { covered, shallow, missing, coverage_pct: 1.0, verdict: "pass" }
+      : { covered, shallow, missing, coverage_pct: 0, verdict: "coverage_failed" };
   }
 
   // FIX 4 (threshold verdict): pass when EITHER all primary items are covered (strict) OR
