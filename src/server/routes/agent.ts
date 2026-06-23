@@ -1792,6 +1792,54 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
           }
         }
 
+        // Layer 4 (E-NAMING 2026-06-22): on the COMPLETED (post-repair) extraction, replace a
+        // generic concept_name with one synthesized from the top PRIMARY speaker item so the
+        // graduator's deriveEntryIndicator routes it to a real archetype (e.g.
+        // gann_box_4h_continuation) instead of pooling into the sha256("extracted") junk bucket.
+        try {
+          if (speakerItems.length > 0) {
+            const idea0 = ideas[0] as Record<string, unknown>;
+            const currentConcept = typeof idea0.concept_name === "string" ? idea0.concept_name : "";
+            const currentName = typeof idea0.name === "string" ? idea0.name : "";
+            const isGeneric = (s: string) => !s || /^extracted(_strategy)?$/i.test(s);
+            if (isGeneric(currentConcept) && isGeneric(currentName)) {
+              const topPrimary = speakerItems.find((i) => i.emphasis_level === "primary") ?? speakerItems[0];
+              const slug = topPrimary.name
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "_")
+                .replace(/^_+|_+$/g, "")
+                .slice(0, 48);
+              if (slug.length >= 3) {
+                idea0.concept_name = slug;
+                idea0.name = slug;
+                // ensure entry_indicator non-null so the compilability gate + deriveEntryIndicator can route
+                const ei = typeof idea0.entry_indicator === "string" ? idea0.entry_indicator : "";
+                if (!ei) idea0.entry_indicator = slug;
+                insertAuditRow({
+                  action: "extraction.concept_named",
+                  entityType: "scout_extract",
+                  entityId: null,
+                  status: "info",
+                  result: {
+                    source_url: sourceUrl,
+                    synthesized_concept: slug,
+                    from_speaker_item: topPrimary.name,
+                    emphasis: topPrimary.emphasis_level,
+                    lineage_key: extractionLineageKey,
+                    video_id: _videoId,
+                  },
+                  correlationId,
+                }).catch(() => {});
+              }
+            }
+          }
+        } catch (nameErr) {
+          logger.warn(
+            { err: nameErr instanceof Error ? nameErr.message : String(nameErr), sourceUrl },
+            "scout-extract: Layer 4 naming threw (non-blocking — keeping prior concept_name)",
+          );
+        }
+
         coverageVerdictResult = finalVerdict;
         // Emit audit row for observability — non-blocking. Reflects the FINAL (post-repair) verdict.
         // W3.3: lineage_key added for replay/idempotency correlation.
