@@ -10020,6 +10020,26 @@ Also restored Anam.ai persona during this session:
 
 ---
 
+### Session Log — 2026-06-22 claude (server-mediated execution Phase 1 — broker fill reconciliation)
+
+**Mission:** Operator: "fix this make institutional grade" on the Phase-1 carry-forward (broker fill reconciliation — the gate to live capital through server-mediated execution).
+
+**Built (commit `2be159a`, 38 vitest):** the loop that makes the server learn the ACTUAL broker fill instead of trusting the intended order (Phase 0 fired blind).
+- NEW `fill-reconciliation-service.ts`: `BrokerFillSource` abstraction (TradersPostFillSource live, TopstepXFillSource stub); order-state lifecycle on `server_mediated_orders` (migration 0171) routed→acked→filled/partially_filled/rejected/needs_reconcile; `ingestFillEvent` (match by broker_order_ref/idempotency_key, overwrite intended→ACTUAL qty/price, partial-fill accumulation, idempotent dedup on broker_fill_id); `checkPositionDrift` (drift→needs_reconcile + Discord critical); `isAccountBlockedForReconcile` fail-CLOSED.
+- NEW route `fill-callback.ts`: HMAC-gated `POST /api/broker/fill-callback` + `/reconcile-clear` (`BROKER_FILL_HMAC_SECRET`, 60s replay). server-mediated-executor persists order-state on route + blocks live entries while needs_reconcile. Feeds reconciliation-service's Phase-4C fill-ID hooks. Flag-gated default OFF.
+
+**CONVERGENCE WITH PARALLEL SESSION (reconciled clean):** the parallel session independently built Phase 1 too — its commit `0a8096a` ("paper-trade readiness Pass 1") committed the `0171_server_mediated_orders.sql` migration + journal idx 174 (authored by MY agent, committed by THEM atomically to keep journal+SQL consistent). They did NOT build a fill-recon service/route — mine is the only one. Verified my `schema.ts serverMediatedOrders` matches the committed `0171.sql` column-for-column; no conflict markers; index.ts additive. No duplication.
+
+**Verification:** 38 vitest GREEN; schema↔migration column parity verified; journal integrity (174 entries, no duplicate idx); committed only my 6 uncommitted files (NOT the already-committed 0171.sql/journal); foreign-token clean; flag-off no-op.
+
+**Carry-forward — go-live gate (operator + Phase-2 work before live capital):**
+- **LIVE-FEED VALIDATION REQUIRED:** `TradersPostFillSource.normalizeFillEvent()` uses documented field names (orderId/filledQty/avgFillPrice/fillId) but the real TradersPost callback shape must be confirmed against a live feed; `checkPositionDrift` needs a real broker-position snapshot source wired (Playwright/MFFU or TopstepX REST) + a cron. TopstepXFillSource is a stub.
+- Operator: set `BROKER_FILL_HMAC_SECRET` (≥32 chars) before enabling; add it to startup-config-check warn (agent suggested, not yet done).
+- Then Phase 0/1 graduation: validate live → flip `SERVER_MEDIATED_EXECUTION_ENABLED=true`.
+- **Shared-tree/index race with the parallel session is ACTIVE** — both sessions building on `hardening/phase-0`; commit with explicit paths only, never `git add -A`; branch reconciliation with feature/deep-analysis-pipeline still pending.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Macro-event blackout = THREE calendars that must agree; the only hard-block (pinned 2026-06-22)
