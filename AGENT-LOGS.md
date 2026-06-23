@@ -10174,6 +10174,16 @@ Also restored Anam.ai persona during this session:
 
 **Operator-awareness — promotion is now STRICTER (intended):** B14 blocks at ruin CI > 0.20 (was 0.40) and B15 is now hard → FEWER strategies reach DEPLOY_READY (institutional direction). Relax via env with rationale if needed. Lower-priority carry-forward: `firm_profiles.py` Topstep `consistency_threshold` (survival SCORER, not the gate) still None. All on `hardening/phase-0`; branch reconciliation pending.
 
+### Session Log — 2026-06-22/23 claude (authoritative economic-calendar sync — FRED/Fed/EIA)
+
+**Mission:** operator asked "I thought we had real calendars/dates" + "we had FRED api and other ones" — stop hardcoding/projecting macro dates; use the authoritative APIs.
+
+**Finding:** the Tier-1 blackout dates were hardcoded static lists, several PROJECTED by shifting the prior year forward and WRONG. Verified vs the Fed's published calendar: code FOMC 2026 had May 6/Nov 4/Dec 16 vs the real Apr 29/Oct 28/Dec 9. CPI also off by days (FRED Sep-2026 = 09-11 vs hardcoded 09-15). And we had `FRED_API_KEY`/`BLS_API_KEY`/`EIA_API_KEY` in .env the whole time, unused.
+
+**Shipped (commit 38f4121):** `economic-calendar-sync-service.ts` + migration 0172 `economic_release_dates`. Pulls REAL dates: FRED `/fred/release/dates` (NFP=50, CPI=10, PPI=46, GDP=53), Fed-published FOMC (verified) + FOMC_MINUTES (+21 days), EIA (generated, product-scoped). Monthly + boot cron, pipeline-gate-exempt, fail-safe (per-source try/catch, UPSERT never DELETE). **VERIFIED LIVE against prod: 128 rows; FOMC H2-2026 now 07-29/09-16/10-28/12-09 (authoritative, the wrong 11-04/12-16 gone); NFP from FRED.** 5 vitest GREEN. Migration 0172 already applied to prod DB.
+
+**Carry-forward (the remaining step):** the live blackout consumers still READ hardcoded lists (`calendar_filter.py` / `tier1-event-blackout.ts` / `eia-dates.ts`) — which we now know have errors. Build `economic-calendar-loader.ts` (cached read of `economic_release_dates`, hardcoded fallback) + swap the paper-signal universal T1 check + EIA check to read it (keep the Python call for HOLIDAYS only). That makes FOMC/CPI/NFP authoritative on the LIVE path, not just in the DB. Until then the live blackout uses the (wrong) hardcoded dates — do NOT hand-patch them (whack-a-mole); wire the DB. Also: wire the EIA release-schedule API (EIA_API_KEY) to replace the generated EIA list. SHARED-TREE/INDEX RACE still active — `git commit --only <paths>`.
+
 ---
 
 ## Known-Facts Pin — Stop Misdiagnosing These
