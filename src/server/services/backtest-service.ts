@@ -2080,12 +2080,15 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           logger.warn({ err }, "Graveyard check failed, proceeding anyway");
         }
 
-        // ─── FIX 2 — CANDIDATE→PAPER fast-track must enforce the same three
-        // gates that lifecycle-service.checkAutoPromotions enforces on the
-        // standard TESTING→PAPER path. Without them, a strategy with high
-        // tier+forgeScore but poor survivability/exportability/compliance
-        // bypasses the safety net and lands in PAPER.
+        // ─── FIX 2 — CANDIDATE→SHADOW fast-track: entry-quality gates before SHADOW entry.
+        // F-3 fix (2026-06-23): fast-track now routes CANDIDATE→SHADOW (not CANDIDATE→PAPER).
+        // No strategy may reach PAPER (real TradersPost creds, paper capital) without SHADOW
+        // skew measurement. SHADOW→PAPER is gated by the A.3 divergence check in
+        // checkAutoPromotions (≥20 signals, <5% divergence). TESTING is still skippable —
+        // SHADOW is the mandatory skew measurement layer for training-serving parity.
         //
+        // The 4 entry-quality gates still run here BEFORE entering SHADOW — they are
+        // appropriate entry-quality gates regardless of the destination state.
         // Gate order (fail fast on cheap checks, expensive MC last):
         //   2a. raw_survival_score >= 60 (cheap; reads gateResult JSONB on `result`)
         //   2b. compliance ruleset drift gate (cheap; per-firm DB read)
@@ -2107,13 +2110,13 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             if (rawSurvivalScore !== null && rawSurvivalScore < 60) {
               logger.warn(
                 { strategyId, backtestId, rawSurvivalScore },
-                "CANDIDATE→PAPER fast-track blocked: survival-score-below-threshold",
+                "CANDIDATE→SHADOW fast-track blocked: survival-score-below-threshold",
               );
               await db.insert(auditLog).values({
                 action: "strategy.fast-track.survival-score-blocked",
                 entityType: "strategy",
                 entityId: strategyId,
-                input: { backtestId, fromState: "CANDIDATE", toState: "PAPER" },
+                input: { backtestId, fromState: "CANDIDATE", toState: "SHADOW" },
                 result: {
                   reason: "survival-score-below-threshold",
                   survival_score: rawSurvivalScore,
@@ -2131,7 +2134,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           // Gate read failure is informational, not a strategy failure
           logger.warn(
             { strategyId, err: gateErr },
-            "CANDIDATE→PAPER fast-track: survival-score gate read failed (proceeding)",
+            "CANDIDATE→SHADOW fast-track: survival-score gate read failed (proceeding)",
           );
         }
 
@@ -2147,13 +2150,13 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             if (driftFirms.length > 0) {
               logger.warn(
                 { strategyId, backtestId, driftFirms },
-                "CANDIDATE→PAPER fast-track blocked: compliance ruleset drift detected",
+                "CANDIDATE→SHADOW fast-track blocked: compliance ruleset drift detected",
               );
               await db.insert(auditLog).values({
                 action: "strategy.fast-track.compliance-drift-blocked",
                 entityType: "strategy",
                 entityId: strategyId,
-                input: { backtestId, fromState: "CANDIDATE", toState: "PAPER" },
+                input: { backtestId, fromState: "CANDIDATE", toState: "SHADOW" },
                 result: {
                   firms_with_drift: driftFirms,
                   qualifying_firms: passingFirmNames,
@@ -2171,7 +2174,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           // Drift gate infra failure is informational — do not block promotion on infra errors
           logger.warn(
             { strategyId, err: driftErr },
-            "CANDIDATE→PAPER fast-track: compliance drift gate read failed (proceeding)",
+            "CANDIDATE→SHADOW fast-track: compliance drift gate read failed (proceeding)",
           );
         }
 
@@ -2190,13 +2193,13 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             if (firmsFailing.length > 0) {
               logger.warn(
                 { strategyId, backtestId, firmsFailing, details },
-                "CANDIDATE→PAPER fast-track blocked: compliance gate (freshness) failed",
+                "CANDIDATE→SHADOW fast-track blocked: compliance gate (freshness) failed",
               );
               await db.insert(auditLog).values({
                 action: "strategy.fast-track.compliance_blocked",
                 entityType: "strategy",
                 entityId: strategyId,
-                input: { backtestId, fromState: "CANDIDATE", toState: "PAPER" },
+                input: { backtestId, fromState: "CANDIDATE", toState: "SHADOW" },
                 result: {
                   firms_failing: firmsFailing,
                   qualifying_firms: passingFirmNames,
@@ -2210,7 +2213,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
               broadcastSSE("strategy:compliance_blocked", {
                 strategyId,
                 fromState: "CANDIDATE",
-                toState: "PAPER",
+                toState: "SHADOW",
                 firmsFailing,
                 details,
               });
@@ -2224,7 +2227,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           // something at the dynamic-import or aggregation layer broke.
           logger.warn(
             { strategyId, err: complianceGateErr },
-            "CANDIDATE→PAPER fast-track: compliance gate wrapper threw (proceeding — per-firm fail-closed still applies inside the helper)",
+            "CANDIDATE→SHADOW fast-track: compliance gate wrapper threw (proceeding — per-firm fail-closed still applies inside the helper)",
           );
         }
 
@@ -2243,13 +2246,13 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
                 band: exportCheck.band,
                 deductions: exportCheck.deductions,
               },
-              "CANDIDATE→PAPER fast-track blocked: Pine exportability issues",
+              "CANDIDATE→SHADOW fast-track blocked: Pine exportability issues",
             );
             await db.insert(auditLog).values({
               action: "strategy.fast-track.exportability-blocked",
               entityType: "strategy",
               entityId: strategyId,
-              input: { backtestId, fromState: "CANDIDATE", toState: "PAPER" },
+              input: { backtestId, fromState: "CANDIDATE", toState: "SHADOW" },
               result: {
                 reasons: (exportCheck as Record<string, unknown>).reasons ?? null,
                 score: exportCheck.score,
@@ -2263,7 +2266,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             broadcastSSE("strategy:exportability_blocked", {
               strategyId,
               fromState: "CANDIDATE",
-              toState: "PAPER",
+              toState: "SHADOW",
               score: exportCheck.score,
               band: exportCheck.band,
               reasons: (exportCheck as Record<string, unknown>).reasons ?? null,
@@ -2274,7 +2277,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           // checkExportability infra failure is informational — do not block on infra errors
           logger.warn(
             { strategyId, err: exportErr },
-            "CANDIDATE→PAPER fast-track: exportability check failed (proceeding)",
+            "CANDIDATE→SHADOW fast-track: exportability check failed (proceeding)",
           );
         }
 
@@ -2371,12 +2374,14 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           return 2000;
         })();
 
-        let paperSessionId: string;
+        // paperSessionId is NOT created here (F-3 fix: SHADOW entry, not PAPER).
+        // Paper session is created when SHADOW→PAPER divergence gate clears.
         let promotionSucceeded = false;
         let promotionError: string | undefined;
 
-        // All promotion writes are transactional: lifecycle state + paper session + audit log.
-        // If any write fails, none persist — strategy stays in its prior state.
+        // All promotion writes are transactional: lifecycle state (SHADOW) + audit log.
+        // No paper session is created here (F-3 fix) — session created at SHADOW→PAPER.
+        // If any write fails, none persist — strategy stays in CANDIDATE.
         // Lifecycle write goes through LifecycleService.promoteStrategy() so there is
         // ONE path to lifecycle state changes — closes the dual-promotion bypass.
         const { LifecycleService } = await import("./lifecycle-service.js");
@@ -2452,55 +2457,41 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             }).where(eq(strategies.id, strategyId));
           }
 
-          // ── Single path lifecycle write: CANDIDATE → PAPER via LifecycleService ──
-          // Passes the existing tx so the lifecycle update + audit row stay atomic
-          // with the paper session creation and Forge name claim above.
+          // ── Single path lifecycle write: CANDIDATE → SHADOW via LifecycleService ──
+          // F-3 fix (2026-06-23): routes to SHADOW (not PAPER). No paper session is
+          // created here — paper sessions are created when SHADOW→PAPER fires via the
+          // A.3 divergence gate in checkAutoPromotions (≥20 signals, <5% divergence).
+          // The lifecycle write atomically sets shadow_mode_enabled=true so the signal
+          // interceptor (paper-signal-service) begins capturing signals immediately.
           // Cast tx to typeof db — Drizzle's PgTransaction is structurally compatible
           // with the db handle for query/insert/update/select but lacks `$client`.
           // This matches the pattern used in src/server/lib/db-locks.ts.
           const promoteResult = await lifecycle.promoteStrategy(
             strategyId,
             "CANDIDATE",
-            "PAPER",
-            { actor: "system", reason: "tier-qualified-auto-promote" },
+            "SHADOW",
+            { actor: "system", reason: "tier-qualified-shadow-entry" },
             tx as unknown as typeof db,
           );
           if (!promoteResult.success) {
             promotionError = promoteResult.error;
-            // Throwing inside tx triggers rollback — paper session insert + Forge name claim
-            // both revert so we don't end up with a paper session for a non-PAPER strategy.
+            // Throwing inside tx triggers rollback — Forge name claim reverts so we
+            // don't end up with a claimed name for a non-SHADOW strategy.
             throw new Error(`Lifecycle promotion failed: ${promoteResult.error}`);
           }
-
-          // Create paper trading session
-          const [paperSession] = await tx.insert(paperSessions).values({
-            strategyId,
-            startingCapital: "50000",
-            currentEquity: "50000",
-            config: {
-              preferred_sessions: ["NY_RTH"],
-              max_concurrent_positions: 1,
-              cooldown_bars: 4,
-              daily_loss_limit: dailyLossLimit,
-              backtestId,
-              tier: result.tier,
-              forge_score: result.forge_score,
-            } as import("../db/jsonb-shapes.js").PaperSessionConfigShape,
-          }).returning();
-
-          paperSessionId = paperSession.id;
 
           // Auto-promote context audit row — captures backtest+MC+tier metadata so
           // observers can join lifecycle audit row to its triggering backtest. The
           // canonical "strategy.lifecycle" audit row is written by promoteStrategy()
           // above; this is the supplementary context, NOT the lifecycle event itself.
+          // NOTE: No paperSessionId here — paper session is created at SHADOW→PAPER.
           await tx.insert(auditLog).values({
             action: "strategy.auto-promote-context",
             entityType: "strategy",
             entityId: strategyId,
             input: { backtestId, tier: result.tier },
             result: {
-              paperSessionId: paperSession.id,
+              toState: "SHADOW",
               mcSurvivalRate,
               forgeScore: result.forge_score,
             },
@@ -2512,37 +2503,35 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           promotionSucceeded = true;
         });
 
-        // If the tx rolled back, surface the error and bail before stream/SSE
+        // If the tx rolled back, surface the error and bail before SSE
         if (!promotionSucceeded) {
           logger.warn(
             { strategyId, backtestId, error: promotionError },
-            "Auto-promote transaction rolled back — strategy not promoted",
+            "Auto-promote transaction rolled back — strategy not promoted to SHADOW",
           );
           return { id: backtestId, status: "completed", ...result };
         }
 
-        // Start live stream outside the transaction (I/O side-effect, not DB)
-        try {
-          startStream(paperSessionId!, [config.strategy.symbol]);
-        } catch (streamErr) {
-          logger.warn(streamErr, "Auto-promoted session created but stream failed to start");
-        }
+        // NOTE (F-3): No stream start here. Streams are started when SHADOW→PAPER
+        // fires via the A.3 divergence gate in checkAutoPromotions. In SHADOW state
+        // the signal interceptor captures signals but does NOT open TradersPost orders.
 
-        // Broadcast promotion event (outside transaction — SSE is best-effort)
+        // Broadcast SHADOW entry event (outside transaction — SSE is best-effort)
         broadcastSSE("strategy:promoted", {
           strategyId,
           tier: result.tier,
           forgeScore: result.forge_score,
-          paperSessionId: paperSessionId!,
+          toState: "SHADOW",
+          // paperSessionId not yet set — created at SHADOW→PAPER divergence gate
         });
 
         logger.info({
           strategyId,
           tier: result.tier,
-          paperSessionId: paperSessionId!,
-        }, "Strategy auto-promoted to paper trading");
+          toState: "SHADOW",
+        }, "Strategy fast-tracked to SHADOW — skew measurement begins (F-3)");
       } catch (promoErr) {
-        logger.error(promoErr, "Failed to auto-promote strategy to paper trading");
+        logger.error(promoErr, "Failed to fast-track strategy to SHADOW");
       }
     }
 

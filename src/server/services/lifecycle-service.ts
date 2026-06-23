@@ -2,11 +2,13 @@
  * Strategy Lifecycle Service — state machine for strategy pipeline.
  *
  * Valid transitions:
- * CANDIDATE → TESTING → PAPER → DEPLOY_READY → DEPLOYED → DECLINING → RETIRED → GRAVEYARD
+ * CANDIDATE → TESTING → SHADOW → PAPER → DEPLOY_READY → DEPLOYED → DECLINING → RETIRED → GRAVEYARD
+ * CANDIDATE → SHADOW (fast-track; skips TESTING for tier-qualified strategies)
  * DECLINING → TESTING (retry)
  * TESTING → DECLINING (catastrophic failure)
  * PAPER → DECLINING (drift demotion)
  * Every state → GRAVEYARD (terminal burial)
+ * Note: CANDIDATE→PAPER is INVALID (F-3 fix 2026-06-23). All paths to PAPER require SHADOW first.
  *
  * DEPLOY_READY is the "strategy library" — strategies that passed paper trading
  * and are ready for human review. Only manual approval moves them to DEPLOYED.
@@ -89,14 +91,15 @@ interface PromoteStrategyOptions {
 }
 
 const VALID_TRANSITIONS: Record<LifecycleState, LifecycleState[]> = {
-  // F-3 Decision 2026-06-23: CANDIDATE→PAPER is PRESERVED (not removed).
-  // backtest-service.ts line ~2461 calls promoteStrategy("CANDIDATE","PAPER") as a tier-qualified
-  // fast-track after 4 explicit gates (survival score, compliance drift, exportability, graveyard).
-  // Removing it would break the backtest auto-promote path for TIER_1/TIER_2/TIER_3 strategies.
-  // The fast-track skips SHADOW because backtest gates provide equivalent evidence.
-  // This transition is intentionally NOT guarded by shadow evidence in _promoteStrategyInner —
-  // that is by design for the fast-track caller (backtest-service.ts).
-  CANDIDATE: ["TESTING", "PAPER", "GRAVEYARD"],  // PAPER is fast-track for tier-qualified strategies (backtest-service.ts F-3)
+  // F-3 Fix 2026-06-23: CANDIDATE→PAPER is REMOVED. No strategy may reach PAPER
+  // (real TradersPost creds, paper capital) without SHADOW skew measurement first.
+  // The backtest fast-track (backtest-service.ts) now promotes CANDIDATE→SHADOW after its
+  // 4 entry-quality gates (survival score, compliance drift, exportability, MC ruin).
+  // SHADOW→PAPER is still gated by the A.3 divergence check (≥20 signals, <5% divergence).
+  // TESTING is still skippable (tier-qualified fast-track; SHADOW is the mandatory skew layer).
+  // A manual PATCH /:id/lifecycle {from:CANDIDATE,to:PAPER} is now correctly REJECTED as
+  // an invalid transition — fail-closed by design (gate to real money).
+  CANDIDATE: ["TESTING", "SHADOW", "GRAVEYARD"],  // SHADOW is the fast-track for tier-qualified strategies (backtest-service.ts F-3)
   // Wave 29 Pass A.1: TESTING can go to SHADOW (new path) OR directly to PAPER (legacy path preserved).
   // Both routes are valid depending on whether shadow_mode_enabled=true on the strategy.
   TESTING: ["SHADOW", "PAPER", "DECLINING", "GRAVEYARD"],
@@ -1193,7 +1196,7 @@ export class LifecycleService {
       }
     }
 
-    // ── A4 Frankenstein Gate: TESTING → PAPER and CANDIDATE → PAPER hard block ─
+    // ── A4 Frankenstein Gate: TESTING → PAPER hard block ─
     // The Frankenstein test detects lookahead / future-data bugs by checking
     // whether the strategy shows edge on shuffled/GBM data. If it does, the
     // backtester has a structural bug that invalidates all metrics.
@@ -1208,11 +1211,11 @@ export class LifecycleService {
     // message asking the operator to run the Frankenstein test first.
     // This forces the test to be run before any strategy can enter paper trading.
     //
-    // F-12 FIX: Gate applies to CANDIDATE → PAPER as well as TESTING → PAPER.
-    // CANDIDATE → PAPER is a valid fast-track (VALID_TRANSITIONS allows it) but
-    // MUST still pass A4 — the fast-track bypasses TESTING iteration, not the
-    // structural integrity test. Without this, a CANDIDATE with a lookahead bug
-    // could skip directly into live paper trading.
+    // F-3 context: CANDIDATE→PAPER is now INVALID (removed from VALID_TRANSITIONS).
+    // CANDIDATE fast-track routes to SHADOW via backtest-service.ts, not directly
+    // to PAPER. The `fromState === "CANDIDATE"` arm below is now dead code but
+    // is preserved as defense-in-depth — if VALID_TRANSITIONS ever re-adds
+    // CANDIDATE→PAPER, the Frankenstein gate would still apply.
     if ((fromState === "TESTING" || fromState === "CANDIDATE") && toState === "PAPER") {
       if (promotionEvidence.backtestId) {
         try {
@@ -1458,12 +1461,27 @@ export class LifecycleService {
       // Two concurrent callers (cron + manual API) can both pass the pre-tx state read
       // and both attempt to UPDATE. With the state guard, only the first writer succeeds;
       // the second gets back an empty RETURNING array and we roll back with a conflict error.
+      // F-3 Anti-orphan: shadow_mode_enabled must be set atomically with the lifecycle state
+      // to prevent a window where the strategy is in SHADOW state but the signal interceptor
+      // (paper-signal-service.ts) still routes to TradersPost (because it checks shadowModeEnabled,
+      // not lifecycleState, for interception decisions).
+      //   • toState === "SHADOW" → set shadowModeEnabled: true  (enables intercept)
+      //   • fromState === "SHADOW" (exiting) → set shadowModeEnabled: false (clears intercept)
+      //   • all other transitions → leave shadowModeEnabled unchanged (no explicit set)
+      const shadowModeUpdate: Partial<{ shadowModeEnabled: boolean }> =
+        toState === "SHADOW"
+          ? { shadowModeEnabled: true }
+          : fromState === "SHADOW"
+            ? { shadowModeEnabled: false }
+            : {};
+
       const updatedRows = await txCtx
         .update(strategies)
         .set({
           lifecycleState: toState,
           lifecycleChangedAt: new Date(),
           updatedAt: new Date(),
+          ...shadowModeUpdate,
         })
         .where(and(eq(strategies.id, id), eq(strategies.lifecycleState, fromState)))
         .returning({ id: strategies.id });

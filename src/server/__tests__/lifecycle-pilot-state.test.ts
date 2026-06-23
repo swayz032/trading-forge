@@ -21,8 +21,8 @@ const PILOT_MIN_SHARPE = 1.0;
 // ─── Transition table (mirrors VALID_TRANSITIONS in lifecycle-service.ts) ──────
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
-  CANDIDATE: ["TESTING", "PAPER", "GRAVEYARD"],
-  TESTING: ["PAPER", "DECLINING", "GRAVEYARD"],
+  CANDIDATE: ["TESTING", "SHADOW", "GRAVEYARD"],  // F-3 fix: CANDIDATE→PAPER removed; routes through SHADOW
+  TESTING: ["SHADOW", "PAPER", "DECLINING", "GRAVEYARD"],  // SHADOW added (Wave 29 Pass A.1)
   PAPER: ["DEPLOY_READY", "DECLINING", "GRAVEYARD"],
   DEPLOY_READY: ["PILOT", "DEPLOYED", "PAPER", "GRAVEYARD"],
   PILOT: ["DEPLOYED", "GRAVEYARD"],

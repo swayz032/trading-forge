@@ -116,37 +116,51 @@ describe("F-2b — SHADOW→PAPER cron grandfather window — ABORT not promote"
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// F-3: CANDIDATE→PAPER — production caller documented, decision recorded
+// F-3: CANDIDATE→SHADOW — fast-track routes through SHADOW, not PAPER (2026-06-23 fix)
+// NO strategy may reach PAPER without SHADOW skew measurement.
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe("F-3 — CANDIDATE→PAPER transition decision", () => {
-  it("VALID_TRANSITIONS still allows CANDIDATE→PAPER (backtest fast-track caller preserved)", () => {
+describe("F-3 — CANDIDATE→SHADOW (fast-track routes through shadow, not paper)", () => {
+  it("VALID_TRANSITIONS CANDIDATE does NOT allow CANDIDATE→PAPER (fail-closed, real money gate)", () => {
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
-    // The CANDIDATE allowed transitions block includes "PAPER"
-    const candidateIdx = src.indexOf('CANDIDATE: ["TESTING"');
+    const candidateIdx = src.indexOf('CANDIDATE: [');
     expect(candidateIdx).toBeGreaterThan(-1);
-    const candidateBlock = src.slice(candidateIdx, candidateIdx + 200);
-    expect(candidateBlock).toContain('"PAPER"');
+    const lineEnd = src.indexOf(']', candidateIdx);
+    const candidateLine = src.slice(candidateIdx, lineEnd + 1);
+    // PAPER must NOT appear as a direct CANDIDATE target
+    expect(candidateLine).not.toContain('"PAPER"');
   });
 
-  it("backtest-service.ts documents CANDIDATE→PAPER fast-track caller", () => {
+  it("VALID_TRANSITIONS CANDIDATE allows CANDIDATE→SHADOW (fast-track skew measurement entry)", () => {
+    const src = readFileSync(LIFECYCLE_PATH, "utf8");
+    const candidateIdx = src.indexOf('CANDIDATE: [');
+    expect(candidateIdx).toBeGreaterThan(-1);
+    const lineEnd = src.indexOf(']', candidateIdx);
+    const candidateLine = src.slice(candidateIdx, lineEnd + 1);
+    expect(candidateLine).toContain('"SHADOW"');
+  });
+
+  it("backtest-service.ts fast-track calls promoteStrategy with SHADOW target (not PAPER)", () => {
     const backtestSrc = readFileSync(
       resolve(process.cwd(), "src/server/services/backtest-service.ts"),
       "utf8",
     );
-    // Should still have the single path lifecycle write call
+    // The fast-track must call promoteStrategy targeting SHADOW
     expect(backtestSrc).toContain("CANDIDATE");
-    expect(backtestSrc).toContain("PAPER");
+    expect(backtestSrc).toContain('"SHADOW"');
     expect(backtestSrc).toContain("promoteStrategy");
+    // The literal fast-track promote call must not say "CANDIDATE", "PAPER"
+    expect(backtestSrc).not.toMatch(/promoteStrategy\s*\(\s*\n\s*strategyId\s*,\s*\n\s*"CANDIDATE"\s*,\s*\n\s*"PAPER"/);
   });
 
-  it("lifecycle-service.ts documents F-3 decision rationale", () => {
+  it("lifecycle-service.ts documents F-3 fix rationale (CANDIDATE→SHADOW route)", () => {
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
     // A comment documenting the F-3 decision must exist near VALID_TRANSITIONS
     const candidateIdx = src.indexOf('CANDIDATE: [');
     expect(candidateIdx).toBeGreaterThan(-1);
-    const surroundingBlock = src.slice(Math.max(0, candidateIdx - 500), candidateIdx + 300);
+    const surroundingBlock = src.slice(Math.max(0, candidateIdx - 800), candidateIdx + 300);
     expect(surroundingBlock).toContain("F-3");
+    expect(surroundingBlock).toContain("SHADOW");
   });
 });
 
