@@ -106,111 +106,62 @@ describe("FIX B — checkInProcessTier1EventWindow (pure fn, zero dependencies)"
     expect(types.has("NFP")).toBe(true);
   });
 
-  // ─── Wave hardening 2026-06-22: GDP / ISM / PPI extension ─────────────────
+  // ─── Wave hardening 2026-06-22 Phase 1: MFFU Feb-2026 News Policy — correct T1 set ──
+  // GDP/ISM/PPI REMOVED (not T1); FOMC_MINUTES added (T1 all products, 14:00 ET).
+  // EIA is product-scoped (MCL) + firm-aware → Phase 2, NOT in this universal backup.
 
-  it("B-14: GDP in TIER1_EVENTS has 08:30 time and covers 2026-2027", () => {
-    const gdp = TIER1_EVENTS.filter((e) => e.event_type === "GDP");
-    expect(gdp.length).toBeGreaterThan(0);
-    gdp.forEach((e) => expect(e.time_et).toBe("08:30"));
-    const years = new Set(gdp.map((e) => e.date.slice(0, 4)));
+  it("B-14: FOMC_MINUTES in TIER1_EVENTS has 14:00 time and covers 2026-2027", () => {
+    const fm = TIER1_EVENTS.filter((e) => e.event_type === "FOMC_MINUTES");
+    expect(fm.length).toBeGreaterThan(0);
+    fm.forEach((e) => expect(e.time_et).toBe("14:00"));
+    const years = new Set(fm.map((e) => e.date.slice(0, 4)));
     expect(years.has("2026")).toBe(true);
     expect(years.has("2027")).toBe(true);
   });
 
-  it("B-15: ISM in TIER1_EVENTS has 10:00 time and covers 2026-2027", () => {
-    const ism = TIER1_EVENTS.filter((e) => e.event_type === "ISM");
-    expect(ism.length).toBeGreaterThan(0);
-    ism.forEach((e) => expect(e.time_et).toBe("10:00"));
-    const years = new Set(ism.map((e) => e.date.slice(0, 4)));
-    expect(years.has("2026")).toBe(true);
-    expect(years.has("2027")).toBe(true);
-  });
-
-  it("B-16: PPI in TIER1_EVENTS has 08:30 time and covers 2026-2027", () => {
-    const ppi = TIER1_EVENTS.filter((e) => e.event_type === "PPI");
-    expect(ppi.length).toBeGreaterThan(0);
-    ppi.forEach((e) => expect(e.time_et).toBe("08:30"));
-    const years = new Set(ppi.map((e) => e.date.slice(0, 4)));
-    expect(years.has("2026")).toBe(true);
-    expect(years.has("2027")).toBe(true);
-  });
-
-  it("B-17: TIER1_EVENTS now contains all 6 MFFU Tier-1 event types", () => {
+  it("B-15: TIER1_EVENTS universal set = FOMC/FOMC_MINUTES/CPI/NFP (GDP/ISM/PPI removed)", () => {
     const types = new Set(TIER1_EVENTS.map((e) => e.event_type));
     expect(types.has("FOMC")).toBe(true);
+    expect(types.has("FOMC_MINUTES")).toBe(true);
     expect(types.has("CPI")).toBe(true);
     expect(types.has("NFP")).toBe(true);
-    expect(types.has("GDP")).toBe(true);
-    expect(types.has("ISM")).toBe(true);
-    expect(types.has("PPI")).toBe(true);
+    // Removed — not T1 per current MFFU policy:
+    expect(types.has("GDP")).toBe(false);
+    expect(types.has("ISM")).toBe(false);
+    expect(types.has("PPI")).toBe(false);
+    // EIA is product-scoped (MCL) + firm-aware → Phase 2, never in the universal backup:
+    expect(types.has("EIA")).toBe(false);
   });
 
-  it("B-18: inside GDP window (2026-01-29 08:30 ET, EST) → blocked=true", () => {
-    // GDP 2026-01-29 at 08:30 ET (EST=UTC-5). Bar at 08:45 ET = 13:45 UTC.
-    const result = checkInProcessTier1EventWindow("2026-01-29T13:45:00.000Z");
+  it("B-16: inside FOMC_MINUTES window (2026-02-18 14:00 ET, EST) → blocked=true", () => {
+    // FOMC Minutes 2026-02-18 at 14:00 ET (EST=UTC-5). Bar at 13:45 ET = 18:45 UTC.
+    const result = checkInProcessTier1EventWindow("2026-02-18T18:45:00.000Z");
     expect(result.blocked).toBe(true);
-    expect(result.eventType).toBe("GDP");
+    expect(result.eventType).toBe("FOMC_MINUTES");
     expect(result.windowMinutes).toBe(TIER1_BLACKOUT_MINUTES);
   });
 
-  it("B-19: 35 min before GDP window (2026-01-29 07:55 ET) → blocked=false", () => {
-    // 07:55 ET (EST=UTC-5) = 12:55 UTC — 35 min before GDP 08:30 → outside ±30min.
-    const result = checkInProcessTier1EventWindow("2026-01-29T12:55:00.000Z");
+  it("B-17: former GDP date (2026-01-29 08:30 ET) → blocked=false (removed)", () => {
+    // GDP is NOT T1 (MFFU Feb-2026). Bar at 08:30 ET = 13:30 UTC must NOT block.
+    const result = checkInProcessTier1EventWindow("2026-01-29T13:30:00.000Z");
     expect(result.blocked).toBe(false);
   });
 
-  it("B-20: inside ISM window (2026-02-02 10:00 ET, EST) → blocked=true", () => {
-    // ISM 2026-02-02 at 10:00 ET (EST=UTC-5). Bar at 09:45 ET = 14:45 UTC.
-    const result = checkInProcessTier1EventWindow("2026-02-02T14:45:00.000Z");
-    expect(result.blocked).toBe(true);
-    expect(result.eventType).toBe("ISM");
-  });
-
-  it("B-21: 35 min after ISM window (2026-02-02 10:35 ET) → blocked=false", () => {
-    // 10:35 ET (EST=UTC-5) = 15:35 UTC — 35 min after ISM 10:00 → outside ±30min.
-    const result = checkInProcessTier1EventWindow("2026-02-02T15:35:00.000Z");
+  it("B-18: former ISM date (2026-02-02 10:00 ET) → blocked=false (removed)", () => {
+    const result = checkInProcessTier1EventWindow("2026-02-02T15:00:00.000Z");
     expect(result.blocked).toBe(false);
   });
 
-  it("B-22: inside PPI window (2026-01-15 08:30 ET, EST) → blocked=true", () => {
-    // PPI 2026-01-15 at 08:30 ET (EST=UTC-5). Bar at 08:15 ET = 13:15 UTC.
-    const result = checkInProcessTier1EventWindow("2026-01-15T13:15:00.000Z");
-    expect(result.blocked).toBe(true);
-    expect(result.eventType).toBe("PPI");
-  });
-
-  it("B-23: inside PPI window in summer (2026-06-11 08:30 EDT) → blocked=true", () => {
-    // PPI 2026-06-11 at 08:30 ET (EDT=UTC-4). Bar at 08:30 ET = 12:30 UTC.
-    const result = checkInProcessTier1EventWindow("2026-06-11T12:30:00.000Z");
-    expect(result.blocked).toBe(true);
-    expect(result.eventType).toBe("PPI");
-  });
-
-  it("B-24: 35 min before PPI (2026-01-15 07:55 ET) → blocked=false", () => {
-    // 07:55 ET (EST=UTC-5) = 12:55 UTC — 35 min before PPI 08:30 → outside window.
-    const result = checkInProcessTier1EventWindow("2026-01-15T12:55:00.000Z");
+  it("B-19: former PPI date (2026-01-15 08:30 ET) → blocked=false (removed)", () => {
+    const result = checkInProcessTier1EventWindow("2026-01-15T13:30:00.000Z");
     expect(result.blocked).toBe(false);
   });
 
-  it("B-25: GDP 2026 has exactly 4 dates in TIER1_EVENTS", () => {
-    const gdp2026 = TIER1_EVENTS.filter(
-      (e) => e.event_type === "GDP" && e.date.startsWith("2026"),
+  it("B-20: FOMC_MINUTES 2026 has exactly 7 dates in TIER1_EVENTS", () => {
+    const fm2026 = TIER1_EVENTS.filter(
+      (e) => e.event_type === "FOMC_MINUTES" && e.date.startsWith("2026"),
     );
-    expect(gdp2026).toHaveLength(4);
-  });
-
-  it("B-26: ISM 2026 has exactly 12 dates in TIER1_EVENTS", () => {
-    const ism2026 = TIER1_EVENTS.filter(
-      (e) => e.event_type === "ISM" && e.date.startsWith("2026"),
-    );
-    expect(ism2026).toHaveLength(12);
-  });
-
-  it("B-27: PPI 2026 has exactly 12 dates in TIER1_EVENTS", () => {
-    const ppi2026 = TIER1_EVENTS.filter(
-      (e) => e.event_type === "PPI" && e.date.startsWith("2026"),
-    );
-    expect(ppi2026).toHaveLength(12);
+    expect(fm2026).toHaveLength(7);
   });
 });
 

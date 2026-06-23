@@ -38,15 +38,16 @@
 import { spawnSync } from "node:child_process";
 import { TIER1_EVENTS } from "../src/server/lib/tier1-event-blackout.js";
 
-// Event types we gate on: FOMC + CPI (static arrays) + GDP + ISM + PPI.
-// NFP is excluded because TS uses buildNfpEvents() (dynamic) and Python uses
-// estimated static dates — discrepancies are expected and acceptable at the
-// day level for a ±30min blackout window.  NFP correctness is covered by the
-// separate Python pytest (test_calendar_filter_blackout.py).
-const PARITY_TYPES = ["FOMC", "CPI", "GDP", "ISM", "PPI"] as const;
+// Event types we gate on: the UNIVERSAL (all-product, firm-agnostic) Tier-1 set =
+// FOMC + FOMC_MINUTES + CPI (static arrays in TS).  Phase 1 (MFFU Feb-2026 policy):
+// GDP/ISM/PPI were REMOVED (not T1); EIA is product-scoped to MCL + firm-aware and
+// handled in Phase 2 (NOT in the universal TS backup).  NFP is excluded because TS
+// uses buildNfpEvents() (dynamic) and Python uses estimated static dates — day-level
+// discrepancies are acceptable; NFP correctness is covered by the Python pytest.
+const PARITY_TYPES = ["FOMC", "FOMC_MINUTES", "CPI"] as const;
 
-// Year range for the parity check.  NFP is excluded per above note.
-// GDP/ISM/PPI 2025-2027; FOMC/CPI 2025-2027 (matching TS constant).
+// Year range for the parity check.  NFP excluded (dynamic).  FOMC/CPI 2025-2027;
+// FOMC_MINUTES 2026-2027 (matching the TS constant).
 const PARITY_YEARS = ["2025", "2026", "2027"];
 
 // ─── Step 1: export STATIC_EVENTS from Python ────────────────────────────────
@@ -135,7 +136,7 @@ for (const evt of TIER1_EVENTS) {
 // ─── Step 4: report ──────────────────────────────────────────────────────────
 
 if (pass) {
-  console.log(`[PARITY GATE] PASS — ${checked} events match exactly across FOMC/CPI/GDP/ISM/PPI (2025-2027).`);
+  console.log(`[PARITY GATE] PASS — ${checked} events match exactly across FOMC/FOMC_MINUTES/CPI (universal T1 set; GDP/ISM/PPI removed, EIA product-scoped Phase 2).`);
   process.exit(0);
 } else {
   console.error(`[PARITY GATE] FAIL — ${drifts.length} drift(s) found (${checked} total events checked):`);

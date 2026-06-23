@@ -4,18 +4,24 @@ Per CLAUDE.md: Don't trade through FOMC/CPI/NFP without explicit event handling 
 default is SIT_OUT ±30 min.  This module is the paper-engine's real-time check;
 it is called once per bar via the python-runner bridge and must be fast.
 
-Wave hardening 2026-06-22, macro-blackout MFFU §5 extension — GDP/ISM/PPI:
-  MFFU prop-firm-rules-2026-mffu.md §5 restricts trading ±30 min around 6 Tier-1
-  events: FOMC, CPI, NFP, GDP, ISM, PPI.  calendar_filter.py previously only
-  covered FOMC/CPI/NFP.  GDP/ISM/PPI dates are imported directly from
-  economic_calendar.py::STATIC_EVENTS (the canonical single source of truth)
-  to eliminate calendar drift between the two modules.  A parity test (see
-  src/engine/tests/test_calendar_filter_blackout.py + vitest counterpart) guards
-  this drift permanently.
+Wave hardening 2026-06-22 Phase 1, MFFU Feb-2026 policy — correct T1 set:
+  REMOVE GDP/ISM/PPI from the live blackout (_ECONOMIC_EVENTS): they are NOT
+  Tier-1 per the current MFFU Feb-2026 policy.  Data for these events remains in
+  economic_calendar.py::STATIC_EVENTS for non-blackout consumers (backtest
+  slippage, event-context features) but the live calendar_filter no longer blocks
+  on them.
+
+  ADD FOMC_MINUTES and EIA to _ECONOMIC_EVENTS:
+    FOMC_MINUTES: ~3 weeks after each FOMC meeting, 14:00 ET.  T1 for all traders.
+    EIA: Crude Oil Inventories, Wednesday 10:30 ET (Thursday 11:00 ET on weeks
+      with a Monday US federal holiday).  T1 for energy traders (CL/MCL) only.
+
+  Both are sourced from economic_calendar.py::STATIC_EVENTS via
+  _build_extended_t1_events() to keep a single source of truth.  A parity test
+  (src/engine/tests/test_calendar_filter_blackout.py) guards this drift.
 
   Retail Sales: MFFU §5 also lists Retail Sales.  economic_calendar.py does NOT
-  have confirmed Retail Sales dates (it tracks PCE which is a different BEA
-  release).  Retail Sales dates must NOT be invented; see TODO below.
+  have confirmed Retail Sales dates.  DO NOT invent them; see TODO below.
 """
 
 from __future__ import annotations
@@ -293,29 +299,32 @@ _ECONOMIC_EVENTS: list[tuple[str, str, str]] = [
     ("2027-12-03", "08:30", "NFP"),
 ]
 
-# ─── Wave hardening 2026-06-22: MFFU §5 extension — GDP / ISM / PPI ─────────
-# Sourced from economic_calendar.py::STATIC_EVENTS (the single authoritative list).
-# Times: GDP 08:30, ISM 10:00, PPI 08:30 ET — compliance-exact per MFFU §5.
-# ±30 min window is inherited from EVENT_BLACKOUT_MINUTES = 30.
+# ─── Wave hardening 2026-06-22 Phase 1: MFFU Feb-2026 News Policy — correct T1 set ──
+# CORRECTION: a prior commit added GDP/ISM/PPI from a STALE doc. The CURRENT MFFU
+# News Policy (Feb 2026) Tier-1 set is: FOMC, FOMC Minutes, Employment Report (NFP),
+# CPI [all products] + EIA [energy/MCL ONLY] + Agricultural [ag, not our products].
+# GDP/ISM/PPI are NOT T1 — REMOVED from the live blackout. They remain in
+# economic_calendar.py STATIC_EVENTS as data for non-blackout consumers.
 #
-# TODO (Retail Sales): MFFU §5 also restricts Retail Sales (BLS Census release,
-#   typically 3rd Wednesday of the month, 08:30 ET).  economic_calendar.py does
-#   NOT have confirmed Retail Sales dates — PCE and Retail Sales are separate
-#   releases.  DO NOT invent Retail Sales dates.  When confirmed BLS/Census dates
-#   are available for 2026-2027, add them to economic_calendar.py::STATIC_EVENTS
-#   under key "RETAIL_SALES" and extend this block accordingly.
-#   Audit note: live bot is currently exposed on Retail Sales days; an operator
-#   must manually review and apply dates once sourced from the official calendar.
+# Phase 1 (this change) adds FOMC_MINUTES (all products, 14:00 ET) to the universal
+# live blackout alongside the inline FOMC/CPI/NFP. EIA is product-scoped to CL/MCL
+# ONLY — adding it to this firm+product-AGNOSTIC universal set would wrongly block
+# MES/MNQ at 10:30 Wed. EIA is staged in STATIC_EVENTS["EIA"] and wired product-aware
+# + firm-aware in Phase 2 (Topstep=size-reduce / MFFU-Rapid=hard-block; EIA→MCL only).
+#
+# TODO (Retail Sales): MFFU §5 also lists Retail Sales — no confirmed BLS/Census dates;
+#   DO NOT invent. Add to STATIC_EVENTS["RETAIL_SALES"] when sourced.
 
 def _build_extended_events() -> list[tuple[str, str, str]]:
-    """Build GDP + ISM + PPI entries for 2026-2027 from STATIC_EVENTS.
+    """Build FOMC_MINUTES entries for 2026-2027 from STATIC_EVENTS.
 
-    Only includes 2026-2027 dates (the live blackout horizon).  Entries that
-    would duplicate already-present FOMC/CPI/NFP dates in _ECONOMIC_EVENTS are
-    not a problem — _build_event_date_index() merges by date key.
+    FOMC Minutes (14:00 ET, ~3 weeks after each FOMC) are T1 for all products per the
+    MFFU Feb-2026 policy. GDP/ISM/PPI are intentionally EXCLUDED (not T1). EIA is
+    excluded here too (product-scoped to MCL in Phase 2). Duplicate dates are merged by
+    _build_event_date_index() by date key.
     """
     extended: list[tuple[str, str, str]] = []
-    for event_type in ("GDP", "ISM", "PPI"):
+    for event_type in ("FOMC_MINUTES",):
         events = _EC_STATIC_EVENTS.get(event_type, [])
         for evt in events:
             yr = evt["date"][:4]

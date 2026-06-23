@@ -40,8 +40,14 @@ class TestStaticCalendar:
         assert len(fomc_2024) == 8
 
     def test_all_event_types_present(self):
-        """All 7 event types are in the static calendar (F-4 fix: added ISM + PPI)."""
-        assert set(STATIC_EVENTS.keys()) == {"FOMC", "CPI", "NFP", "GDP", "PCE", "ISM", "PPI"}
+        """All event types present. FOMC_MINUTES + EIA added 2026-06-22 (MFFU Feb-2026).
+
+        GDP/PCE/ISM/PPI remain as DATA here (non-blackout consumers) even though removed
+        from the live calendar_filter blackout — they are not T1 per the current policy.
+        """
+        assert set(STATIC_EVENTS.keys()) == {
+            "FOMC", "FOMC_MINUTES", "CPI", "NFP", "GDP", "PCE", "ISM", "PPI", "EIA",
+        }
 
     def test_fomc_always_at_2pm(self):
         """All FOMC events are at 2:00 PM ET."""

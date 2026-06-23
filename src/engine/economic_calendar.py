@@ -7,21 +7,182 @@ F-4/F-8 fix (2026-05-20): Added 2025 CPI/NFP/GDP/PCE; extended GDP/PCE to
 2027; added ISM Manufacturing and PPI as new event types. Dates sourced from
 BLS/Fed published calendars. 2027 estimates are based on historical patterns —
 mark TODO below if exact dates were projected rather than confirmed.
+
+Wave hardening 2026-06-22 Phase 1 — MFFU Feb-2026 policy — correct T1 set:
+  Added FOMC_MINUTES and EIA to STATIC_EVENTS.
+  FOMC_MINUTES: released approximately 3 weeks after each FOMC meeting.
+    Dates are the "~3 weeks after FOMC" approximation and MUST be verified by the
+    operator against the Fed's published Minutes release calendar before live use.
+    TODO: operator confirm exact dates from https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+  EIA: Crude Oil Inventories, every Wednesday 10:30 ET.
+    Holiday-adjusted: when a Monday US federal holiday falls in that week,
+    the EIA petroleum report shifts to Thursday 11:00 ET.
+    Dates generated via generate_eia_dates_for_year() — operator MUST verify
+    against the official EIA 2026 schedule (image in MFFU policy doc §5).
+    Product scope: EIA affects CL/MCL ONLY (crude-energy traders per MFFU Feb-2026).
+
+EVENT_PRODUCT_SCOPE: separate dict keyed by event_type listing affected_products.
+  Chosen over adding a 4th element to _ECONOMIC_EVENTS tuples because the
+  existing tuple shape (date, time_et, name) is unpacked in multiple consumers;
+  a separate map is non-invasive and allows future product-aware filtering without
+  touching all existing call sites.
 """
 
 from __future__ import annotations
 
 import sys
-from datetime import datetime, timedelta
+from datetime import date as _date, datetime, timedelta
 from typing import Literal
 
 import numpy as np
 import polars as pl
 
 
+# ─── Product scope map ────────────────────────────────────────────
+# Wave hardening 2026-06-22 Phase 1, MFFU Feb-2026 policy — correct T1 set.
+# Keyed by event_type. Empty list = affects all products (no filter applied).
+# Separate from STATIC_EVENTS tuples to avoid breaking existing (date, time_et)
+# unpack consumers.
+#
+# EIA: crude-energy-only per MFFU Feb-2026 policy §5 ("For energy traders: EIA").
+# FOMC / FOMC_MINUTES / CPI / NFP: all products (all traders).
+# GDP / PCE / ISM / PPI: historical data only (NOT T1 per Feb-2026 policy);
+#   listed as empty list so non-blackout consumers can still query them.
+EVENT_PRODUCT_SCOPE: dict[str, list[str]] = {
+    "FOMC":         [],             # all products
+    "FOMC_MINUTES": [],             # all products
+    "CPI":          [],             # all products
+    "NFP":          [],             # all products
+    "EIA":          ["MCL", "CL"],  # crude-energy only (MFFU §5 energy-trader clause)
+    "GDP":          [],             # NOT T1 per Feb-2026; kept for non-blackout reference
+    "PCE":          [],             # NOT T1 per Feb-2026; kept for non-blackout reference
+    "ISM":          [],             # NOT T1 per Feb-2026; kept for non-blackout reference
+    "PPI":          [],             # NOT T1 per Feb-2026; kept for non-blackout reference
+}
+
+
+# ─── EIA petroleum report date generator ─────────────────────────
+# Wave hardening 2026-06-22 Phase 1, MFFU Feb-2026 policy — EIA.
+# Standard schedule: every Wednesday at 10:30 ET.
+# Holiday shift rule: when a Monday US federal holiday falls in that week,
+#   EIA shifts to Thursday 11:00 ET.
+# US federal Monday holidays 2026: MLK (Jan 19), Presidents (Feb 16),
+#   Memorial (May 25), Labor (Sep 7), Columbus (Oct 12).
+# US federal Monday holidays 2027: MLK (Jan 18), Presidents (Feb 15),
+#   Memorial (May 31 → affects Wed Jun 2), Labor (Sep 6), Columbus (Oct 11).
+#
+# IMPORTANT: Operator MUST verify these dates against the official EIA 2026-2027
+# petroleum status report release calendar:
+#   https://www.eia.gov/petroleum/supply/weekly/
+# The MFFU policy doc §5 contains the authoritative image of the EIA schedule.
+
+def _federal_monday_holidays(year: int) -> set[_date]:
+    """Return the set of Monday federal holidays for the given year.
+
+    Only returns Monday-specific holidays (not all NYSE holidays).
+    These are the ones that trigger an EIA Wednesday→Thursday shift.
+    """
+    from calendar import MONDAY
+    def nth_weekday(y: int, month: int, weekday: int, n: int) -> _date:
+        """nth occurrence (1-based) of weekday in month."""
+        first = _date(y, month, 1)
+        delta = (weekday - first.weekday()) % 7
+        return first + timedelta(days=delta + (n - 1) * 7)
+
+    def last_monday(y: int, month: int) -> _date:
+        if month == 12:
+            last_day = _date(y + 1, 1, 1) - timedelta(days=1)
+        else:
+            last_day = _date(y, month + 1, 1) - timedelta(days=1)
+        delta = (last_day.weekday() - MONDAY) % 7
+        return last_day - timedelta(days=delta)
+
+    def observed(h: _date) -> _date:
+        dow = h.weekday()
+        if dow == 5:
+            return h - timedelta(days=1)
+        if dow == 6:
+            return h + timedelta(days=1)
+        return h
+
+    monday_holidays: set[_date] = set()
+
+    # MLK Day — 3rd Monday of January
+    mlk = nth_weekday(year, 1, MONDAY, 3)
+    if mlk.weekday() == MONDAY:
+        monday_holidays.add(mlk)
+
+    # Presidents' Day — 3rd Monday of February
+    pres = nth_weekday(year, 2, MONDAY, 3)
+    if pres.weekday() == MONDAY:
+        monday_holidays.add(pres)
+
+    # Memorial Day — last Monday of May
+    mem = last_monday(year, 5)
+    if mem.weekday() == MONDAY:
+        monday_holidays.add(mem)
+
+    # Labor Day — 1st Monday of September
+    labor = nth_weekday(year, 9, MONDAY, 1)
+    if labor.weekday() == MONDAY:
+        monday_holidays.add(labor)
+
+    # Columbus Day — 2nd Monday of October
+    columbus = nth_weekday(year, 10, MONDAY, 2)
+    if columbus.weekday() == MONDAY:
+        monday_holidays.add(columbus)
+
+    return monday_holidays
+
+
+def generate_eia_dates_for_year(year: int) -> list[dict]:
+    """Generate EIA Crude Oil Inventory release dates for a calendar year.
+
+    Standard schedule: every Wednesday at 10:30 ET.
+    Holiday shift: when the Monday of that week is a US federal holiday,
+      the report shifts to Thursday 11:00 ET.
+
+    Returns list of dicts: {date: "YYYY-MM-DD", time_et: "HH:MM"}.
+
+    NOTE: These are algorithmically derived. The operator MUST verify against
+    the official EIA release calendar for 2026-2027 before live use.
+    """
+    from calendar import WEDNESDAY, THURSDAY
+    monday_holidays = _federal_monday_holidays(year)
+    results = []
+
+    # Iterate over every week in the year
+    # Start from the first Wednesday of the year
+    d = _date(year, 1, 1)
+    # Advance to first Wednesday
+    while d.weekday() != WEDNESDAY:
+        d += timedelta(days=1)
+
+    while d.year == year:
+        # Find the Monday of this week (3 days before Wednesday)
+        week_monday = d - timedelta(days=2)  # Wednesday - 2 = Monday
+        if week_monday in monday_holidays:
+            # Holiday shift: report moves to Thursday 11:00 ET
+            thursday = d + timedelta(days=1)
+            if thursday.year == year:
+                results.append({"date": thursday.isoformat(), "time_et": "11:00"})
+        else:
+            results.append({"date": d.isoformat(), "time_et": "10:30"})
+        d += timedelta(weeks=1)
+
+    return results
+
+
+# Pre-generate EIA for 2026-2027 (the live blackout horizon).
+# Stored in STATIC_EVENTS["EIA"] so all downstream consumers use a single source.
+_EIA_2026 = generate_eia_dates_for_year(2026)
+_EIA_2027 = generate_eia_dates_for_year(2027)
+
+
 # ─── Static Event Calendar (2023-2027) ───────────────────────────
 # All times in ET. Only high-impact events that move futures.
-# MFFU 2026 restricted events: FOMC, CPI, NFP, GDP, ISM, PPI (§6 CLAUDE.md).
+# T1 per MFFU Feb-2026 policy: FOMC, FOMC_MINUTES, CPI, NFP, EIA (energy).
+# Historical reference (non-T1 per Feb-2026): GDP, PCE, ISM, PPI.
 
 STATIC_EVENTS: dict[str, list[dict]] = {
     "FOMC": [
@@ -372,6 +533,68 @@ STATIC_EVENTS: dict[str, list[dict]] = {
         {"date": "2027-11-11", "time_et": "08:30"},
         {"date": "2027-12-09", "time_et": "08:30"},
     ],
+
+    # ─── FOMC Minutes (14:00 ET, ~3 weeks after each FOMC meeting) ───────────
+    # Wave hardening 2026-06-22 Phase 1, MFFU Feb-2026 policy — FOMC_MINUTES.
+    # T1 event for ALL traders per MFFU Feb-2026 policy.
+    # Dates are the "~3 weeks after FOMC" approximation (21 calendar days).
+    # TODO: Operator MUST verify exact release dates against the Fed's published
+    # Minutes calendar: https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+    # The Fed typically releases Minutes at 2:00 PM ET on the specified date.
+    # These approximate dates may shift by 1-3 days from the computed "+21 days".
+    "FOMC_MINUTES": [
+        # 2026 — computed as FOMC date + 21 calendar days
+        # FOMC 2026-01-28 + 21 = 2026-02-18 (Wednesday)
+        {"date": "2026-02-18", "time_et": "14:00"},
+        # FOMC 2026-03-18 + 21 = 2026-04-08 (Wednesday)
+        {"date": "2026-04-08", "time_et": "14:00"},
+        # FOMC 2026-05-06 + 21 = 2026-05-27 (Wednesday)
+        {"date": "2026-05-27", "time_et": "14:00"},
+        # FOMC 2026-06-17 + 21 = 2026-07-08 (Wednesday)
+        {"date": "2026-07-08", "time_et": "14:00"},
+        # FOMC 2026-07-29 + 21 = 2026-08-19 (Wednesday)
+        {"date": "2026-08-19", "time_et": "14:00"},
+        # FOMC 2026-09-16 + 21 = 2026-10-07 (Wednesday)
+        {"date": "2026-10-07", "time_et": "14:00"},
+        # FOMC 2026-11-04 + 21 = 2026-11-25 (Wednesday)
+        {"date": "2026-11-25", "time_et": "14:00"},
+        # FOMC 2026-12-16 + 21 = 2027-01-06 (Wednesday, falls in 2027)
+        {"date": "2027-01-06", "time_et": "14:00"},
+        # 2027 — computed as FOMC date + 21 calendar days
+        # FOMC 2027-01-27 + 21 = 2027-02-17 (Wednesday)
+        {"date": "2027-02-17", "time_et": "14:00"},
+        # FOMC 2027-03-17 + 21 = 2027-04-07 (Wednesday)
+        {"date": "2027-04-07", "time_et": "14:00"},
+        # FOMC 2027-05-05 + 21 = 2027-05-26 (Wednesday)
+        {"date": "2027-05-26", "time_et": "14:00"},
+        # FOMC 2027-06-16 + 21 = 2027-07-07 (Wednesday)
+        {"date": "2027-07-07", "time_et": "14:00"},
+        # FOMC 2027-07-28 + 21 = 2027-08-18 (Wednesday)
+        {"date": "2027-08-18", "time_et": "14:00"},
+        # FOMC 2027-09-22 + 21 = 2027-10-13 (Wednesday)
+        {"date": "2027-10-13", "time_et": "14:00"},
+        # FOMC 2027-11-03 + 21 = 2027-11-24 (Wednesday)
+        {"date": "2027-11-24", "time_et": "14:00"},
+        # FOMC 2027-12-15 + 21 = 2028-01-05 (Wednesday, falls in 2028 — omitted)
+    ],
+
+    # ─── EIA Crude Oil Inventories (Wed 10:30 ET; Thu 11:00 ET on Mon-holiday weeks) ─
+    # Wave hardening 2026-06-22 Phase 1, MFFU Feb-2026 policy — EIA.
+    # T1 event for energy traders (CL/MCL) per MFFU Feb-2026 policy §5.
+    # Product scope: see EVENT_PRODUCT_SCOPE["EIA"] = ["MCL", "CL"].
+    # Generated via generate_eia_dates_for_year() — see function docstring.
+    # TODO: Operator MUST verify these dates against the official EIA weekly
+    # petroleum status report schedule:
+    #   https://www.eia.gov/petroleum/supply/weekly/
+    # The MFFU policy doc §5 image is the authoritative calendar for 2026.
+    # Holiday shift: Monday US federal holiday in that week → report moves to
+    #   Thursday 11:00 ET. Affected 2026 weeks: Jan 19 (MLK→Jan 21→Thu Jan 22),
+    #   Feb 16 (Presidents→Feb 18→Thu Feb 19), May 25 (Memorial→May 27→Thu May 28),
+    #   Sep 7 (Labor→Sep 9→Thu Sep 10), Oct 12 (Columbus→Oct 14→Thu Oct 15).
+    #   Affected 2027 weeks: Jan 18 (MLK→Jan 20→Thu Jan 21),
+    #   Feb 15 (Presidents→Feb 17→Thu Feb 18), May 31 (Memorial→Jun 2→Thu Jun 3),
+    #   Sep 6 (Labor→Sep 8→Thu Sep 9), Oct 11 (Columbus→Oct 13→Thu Oct 14).
+    "EIA": _EIA_2026 + _EIA_2027,
 }
 
 

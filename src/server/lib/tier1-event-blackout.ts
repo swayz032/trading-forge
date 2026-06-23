@@ -167,134 +167,47 @@ export function buildNfpEvents(startYear: number, endYear: number): Tier1Event[]
 // Pre-build NFP for 2025-2027 at module load (pure, no I/O).
 const NFP_EVENTS: Tier1Event[] = buildNfpEvents(2025, 2027);
 
-// ─── GDP 2025-2027 (matching economic_calendar.py STATIC_EVENTS["GDP"]) ──────
-// Wave hardening 2026-06-22, macro-blackout MFFU §5 extension — GDP.
-// Quarterly advance BEA estimate, 08:30 ET. Dates copied from STATIC_EVENTS.
-// Parity gate: check:ts-python-tier1-parity asserts exact agreement.
+// ─── FOMC Minutes 2026-2027 (matching economic_calendar.py STATIC_EVENTS["FOMC_MINUTES"]) ──
+// Wave hardening 2026-06-22 Phase 1, MFFU Feb-2026 News Policy.
+// FOMC Minutes — T1 for ALL products, 14:00 ET, released ~3 weeks after each FOMC meeting.
+//
+// CORRECTION: GDP/ISM/PPI were REMOVED — they are NOT T1 per the current MFFU policy
+// (a prior commit added them from a stale doc). EIA (Crude Oil Inventories) is T1 for
+// ENERGY/MCL ONLY and is staged in economic_calendar.py STATIC_EVENTS["EIA"]; it is
+// intentionally NOT in this firm+product-AGNOSTIC in-process backup, because adding it
+// here would wrongly block MES/MNQ at 10:30 Wed. EIA is wired product-aware + firm-aware
+// in Phase 2 (Topstep=size-reduce / MFFU-Rapid=hard-block; EIA→MCL only).
+// Parity gate: check:ts-python-tier1-parity asserts exact agreement with STATIC_EVENTS.
 
-const GDP_EVENTS: Tier1Event[] = [
-  // 2025
-  { date: "2025-01-30", time_et: "08:30", event_type: "GDP" },
-  { date: "2025-04-30", time_et: "08:30", event_type: "GDP" },
-  { date: "2025-07-30", time_et: "08:30", event_type: "GDP" },
-  { date: "2025-10-29", time_et: "08:30", event_type: "GDP" },
-  // 2026 (projected — TODO: confirm from BEA when released)
-  { date: "2026-01-29", time_et: "08:30", event_type: "GDP" },
-  { date: "2026-04-29", time_et: "08:30", event_type: "GDP" },
-  { date: "2026-07-29", time_et: "08:30", event_type: "GDP" },
-  { date: "2026-10-28", time_et: "08:30", event_type: "GDP" },
-  // 2027 (projected — TODO: confirm from BEA when released)
-  { date: "2027-01-28", time_et: "08:30", event_type: "GDP" },
-  { date: "2027-04-28", time_et: "08:30", event_type: "GDP" },
-  { date: "2027-07-28", time_et: "08:30", event_type: "GDP" },
-  { date: "2027-10-27", time_et: "08:30", event_type: "GDP" },
-];
-
-// ─── ISM 2025-2027 (matching economic_calendar.py STATIC_EVENTS["ISM"]) ──────
-// Wave hardening 2026-06-22, macro-blackout MFFU §5 extension — ISM.
-// ISM Manufacturing PMI — first business day of the month, 10:00 ET.
-// Parity gate: check:ts-python-tier1-parity asserts exact agreement.
-
-const ISM_EVENTS: Tier1Event[] = [
-  // 2025
-  { date: "2025-01-02", time_et: "10:00", event_type: "ISM" },
-  { date: "2025-02-03", time_et: "10:00", event_type: "ISM" },
-  { date: "2025-03-03", time_et: "10:00", event_type: "ISM" },
-  { date: "2025-04-01", time_et: "10:00", event_type: "ISM" },
-  { date: "2025-05-01", time_et: "10:00", event_type: "ISM" },
-  { date: "2025-06-02", time_et: "10:00", event_type: "ISM" },
-  { date: "2025-07-01", time_et: "10:00", event_type: "ISM" },
-  { date: "2025-08-01", time_et: "10:00", event_type: "ISM" },
-  { date: "2025-09-02", time_et: "10:00", event_type: "ISM" },
-  { date: "2025-10-01", time_et: "10:00", event_type: "ISM" },
-  { date: "2025-11-03", time_et: "10:00", event_type: "ISM" },
-  { date: "2025-12-01", time_et: "10:00", event_type: "ISM" },
-  // 2026 (projected — first business day of month)
-  { date: "2026-01-02", time_et: "10:00", event_type: "ISM" },
-  { date: "2026-02-02", time_et: "10:00", event_type: "ISM" },
-  { date: "2026-03-02", time_et: "10:00", event_type: "ISM" },
-  { date: "2026-04-01", time_et: "10:00", event_type: "ISM" },
-  { date: "2026-05-01", time_et: "10:00", event_type: "ISM" },
-  { date: "2026-06-01", time_et: "10:00", event_type: "ISM" },
-  { date: "2026-07-01", time_et: "10:00", event_type: "ISM" },
-  { date: "2026-08-03", time_et: "10:00", event_type: "ISM" },
-  { date: "2026-09-01", time_et: "10:00", event_type: "ISM" },
-  { date: "2026-10-01", time_et: "10:00", event_type: "ISM" },
-  { date: "2026-11-02", time_et: "10:00", event_type: "ISM" },
-  { date: "2026-12-01", time_et: "10:00", event_type: "ISM" },
-  // 2027 (projected — first business day of month)
-  { date: "2027-01-04", time_et: "10:00", event_type: "ISM" },
-  { date: "2027-02-01", time_et: "10:00", event_type: "ISM" },
-  { date: "2027-03-01", time_et: "10:00", event_type: "ISM" },
-  { date: "2027-04-01", time_et: "10:00", event_type: "ISM" },
-  { date: "2027-05-03", time_et: "10:00", event_type: "ISM" },
-  { date: "2027-06-01", time_et: "10:00", event_type: "ISM" },
-  { date: "2027-07-01", time_et: "10:00", event_type: "ISM" },
-  { date: "2027-08-02", time_et: "10:00", event_type: "ISM" },
-  { date: "2027-09-01", time_et: "10:00", event_type: "ISM" },
-  { date: "2027-10-01", time_et: "10:00", event_type: "ISM" },
-  { date: "2027-11-01", time_et: "10:00", event_type: "ISM" },
-  { date: "2027-12-01", time_et: "10:00", event_type: "ISM" },
-];
-
-// ─── PPI 2025-2027 (matching economic_calendar.py STATIC_EVENTS["PPI"]) ──────
-// Wave hardening 2026-06-22, macro-blackout MFFU §5 extension — PPI.
-// Producer Price Index — typically 2nd Tuesday of month, 08:30 ET.
-// Parity gate: check:ts-python-tier1-parity asserts exact agreement.
-
-const PPI_EVENTS: Tier1Event[] = [
-  // 2025 (BLS published schedule)
-  { date: "2025-01-14", time_et: "08:30", event_type: "PPI" },
-  { date: "2025-02-13", time_et: "08:30", event_type: "PPI" },
-  { date: "2025-03-13", time_et: "08:30", event_type: "PPI" },
-  { date: "2025-04-11", time_et: "08:30", event_type: "PPI" },
-  { date: "2025-05-15", time_et: "08:30", event_type: "PPI" },
-  { date: "2025-06-12", time_et: "08:30", event_type: "PPI" },
-  { date: "2025-07-15", time_et: "08:30", event_type: "PPI" },
-  { date: "2025-08-14", time_et: "08:30", event_type: "PPI" },
-  { date: "2025-09-11", time_et: "08:30", event_type: "PPI" },
-  { date: "2025-10-14", time_et: "08:30", event_type: "PPI" },
-  { date: "2025-11-13", time_et: "08:30", event_type: "PPI" },
-  { date: "2025-12-11", time_et: "08:30", event_type: "PPI" },
-  // 2026 (projected — day after CPI release, typically)
-  { date: "2026-01-15", time_et: "08:30", event_type: "PPI" },
-  { date: "2026-02-12", time_et: "08:30", event_type: "PPI" },
-  { date: "2026-03-12", time_et: "08:30", event_type: "PPI" },
-  { date: "2026-04-15", time_et: "08:30", event_type: "PPI" },
-  { date: "2026-05-13", time_et: "08:30", event_type: "PPI" },
-  { date: "2026-06-11", time_et: "08:30", event_type: "PPI" },
-  { date: "2026-07-15", time_et: "08:30", event_type: "PPI" },
-  { date: "2026-08-13", time_et: "08:30", event_type: "PPI" },
-  { date: "2026-09-16", time_et: "08:30", event_type: "PPI" },
-  { date: "2026-10-14", time_et: "08:30", event_type: "PPI" },
-  { date: "2026-11-11", time_et: "08:30", event_type: "PPI" },
-  { date: "2026-12-11", time_et: "08:30", event_type: "PPI" },
-  // 2027 (projected — TODO: confirm from BLS when released)
-  { date: "2027-01-14", time_et: "08:30", event_type: "PPI" },
-  { date: "2027-02-11", time_et: "08:30", event_type: "PPI" },
-  { date: "2027-03-11", time_et: "08:30", event_type: "PPI" },
-  { date: "2027-04-14", time_et: "08:30", event_type: "PPI" },
-  { date: "2027-05-13", time_et: "08:30", event_type: "PPI" },
-  { date: "2027-06-11", time_et: "08:30", event_type: "PPI" },
-  { date: "2027-07-14", time_et: "08:30", event_type: "PPI" },
-  { date: "2027-08-12", time_et: "08:30", event_type: "PPI" },
-  { date: "2027-09-15", time_et: "08:30", event_type: "PPI" },
-  { date: "2027-10-14", time_et: "08:30", event_type: "PPI" },
-  { date: "2027-11-11", time_et: "08:30", event_type: "PPI" },
-  { date: "2027-12-09", time_et: "08:30", event_type: "PPI" },
+const FOMC_MINUTES_EVENTS: Tier1Event[] = [
+  { date: "2026-02-18", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2026-04-08", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2026-05-27", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2026-07-08", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2026-08-19", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2026-10-07", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2026-11-25", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2027-01-06", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2027-02-17", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2027-04-07", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2027-05-26", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2027-07-07", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2027-08-18", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2027-10-13", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2027-11-24", time_et: "14:00", event_type: "FOMC_MINUTES" },
 ];
 
 // ─── Combined Tier-1 event list ───────────────────────────────────────────────
-// Wave hardening 2026-06-22: GDP_EVENTS + ISM_EVENTS + PPI_EVENTS added.
+// Wave hardening 2026-06-22 Phase 1: universal in-process T1 backup =
+// FOMC + FOMC_MINUTES + CPI + NFP (all-product events). EIA is product-scoped (MCL) +
+// firm-aware and handled in Phase 2 — NOT in this universal set. GDP/ISM/PPI removed.
 // Parity with Python STATIC_EVENTS enforced via check:ts-python-tier1-parity.
 
 export const TIER1_EVENTS: Tier1Event[] = [
   ...FOMC_EVENTS,
+  ...FOMC_MINUTES_EVENTS,
   ...CPI_EVENTS,
   ...NFP_EVENTS,
-  ...GDP_EVENTS,
-  ...ISM_EVENTS,
-  ...PPI_EVENTS,
 ];
 
 // ─── Core checker ─────────────────────────────────────────────────────────────

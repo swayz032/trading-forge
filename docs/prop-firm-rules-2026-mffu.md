@@ -112,16 +112,42 @@ NQ. Same applies to MES↔ES and MCL↔CL.
   micros (NQ/ES/CL minis are deferred), the matrix is pre-loaded with
   these pairs so future graduation does not require a code change.
 
-### 5. Tier-1 Economic Data Trading — Restricted
+### 5. Tier-1 News Trading — Restricted (current policy: MFFU Feb-2026)
 
-MFFU's tier-1 events are FOMC, CPI, NFP, GDP, Retail Sales, ISM, PPI.
-Trading during the ±30-minute blackout around these events is restricted.
+> CORRECTION 2026-06-22: this section previously listed the T1 set as
+> "FOMC, CPI, NFP, GDP, Retail Sales, ISM, PPI" with a ±30-min window. That was
+> STALE and caused an over-block (GDP/ISM/PPI are NOT T1). The current MFFU News
+> Policy (Feb 22, 2026) is below.
 
-- **Enforcement:** `calendar_filter.py:check_economic_event` — already
-  covers FOMC, CPI, NFP. **Extension required:** GDP, Retail Sales, ISM,
-  PPI added to `_ECONOMIC_EVENTS` for 2026-2027.
-- **Override:** strategies may set `bypass_news_blackout: true` (W14 / B11)
-  to opt into trading during the window. Holidays still block.
+**Tier-1 (T1) events:**
+- **All traders:** FOMC Meetings, **FOMC Minutes**, Employment Report (NFP), CPI
+- **Energy traders:** **EIA** (Crude Oil Inventories — Wed 10:30 ET, holiday-adjusted;
+  shifts to Thu 11:00 ET on Monday-holiday weeks). Affects CL/MCL only.
+- **Agricultural traders:** Agricultural Reports (not our products — skip)
+
+**Window:** **±2 minutes** flatten (NOT ±30). No position/order open T−2:00 → T+2:00
+(e.g. news at 8:30 → flat by 8:28:00, may reopen after 8:32:00). The bot uses a safety
+buffer: no NEW entry T−5 → T+2, flatten by T−2.
+
+**Account types:**
+- **Restricted (T1 trading PROHIBITED):** Rapid Sim Funded, Pro Sim Funded.
+  *(The operator's MFFU account is a 50k Rapid plan → T1 hard-block.)*
+- **Unrestricted (T1 allowed with ±2min flatten):** all evaluations, 25k/50k Flex Plans.
+
+**NOT T1 (removed from blackout):** GDP, ISM, PPI, Retail Sales (no confirmed dates),
+PCE. These trade normally.
+
+- **Enforcement (Phase 1, 2026-06-22):** `calendar_filter.py` universal blackout =
+  FOMC, FOMC_MINUTES, CPI, NFP (GDP/ISM/PPI removed). EIA staged in
+  `economic_calendar.py::STATIC_EVENTS["EIA"]`, product-scoped (MCL) + firm-aware in
+  Phase 2. Parity enforced by `npm run check:ts-python-tier1-parity`.
+- **Phase 2 (pending):** firm-aware behavior — Topstep (PRIMARY/first-choice) =
+  auto-reduce size (caution); MFFU Rapid (restricted) = hard-block T1. EIA product-scoped
+  to MCL. Asymmetric T−5/−2/+2 window.
+- **Override:** strategies may set `bypass_news_blackout: true` (W14 / B11). Holidays
+  still block.
+- **Prohibited (all news, all accounts):** straddles/strangles exploiting news bursts;
+  masking news trades as standard strategies.
 
 ### 6. Simultaneous Limits at Same Price — Prohibited
 
