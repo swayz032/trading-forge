@@ -10324,7 +10324,27 @@ Also restored Anam.ai persona during this session:
 
 ---
 
+### Session Log — 2026-06-23 claude (real NeMo Data Designer wired + shared-index commit-sweep incident)
+
+**Mission:** Operator: "we downloaded nemo already the real one." Investigate + wire real NVIDIA NeMo Data Designer into the A14 black-swan scenario designer (operator chose NVIDIA Build endpoint).
+
+**Findings + work (commit `b6de45a`):**
+- Operator meant NeMo DATA DESIGNER (`pip install data-designer`, import `data_designer`) — an LLM-orchestration framework that calls an API endpoint (NVIDIA Build / OpenAI), NOT a local GPU model (so the RTX-5060 VRAM concern was moot). It was NOT actually installed (I'd checked the wrong package name `nemo_curator` first). Installed `data-designer 0.6.1` to user site-packages (`--user --no-cache-dir`; first attempt MemoryError'd — transient under two-session memory pressure; lean retry succeeded). Engine python reads user site-packages (python-runner.ts:283).
+- Fixed the wrong-package bug (`nemo_curator` → `data_designer`) and wired `nemo_scenario_designer.py::generate_scenarios()` to use `DataDesigner().preview()` (CATEGORY archetype + Gaussian numeric + LLM narrative columns) → maps rows to `ScenarioSpec` consumed by the stochastic renderer. FAIL-CLOSED to the 8 stochastic NAMED_SCENARIOS when data_designer/NVIDIA_API_KEY/API unavailable (verified live: no-key → path_used=fallback). Architecture: NeMo designs scenarios (API, no GPU) → stochastic stack renders OHLCV → calibration → bank → evaluator. 89 pytest GREEN (designer+bridge+evaluator).
+
+**⚠️ INCIDENT — shared-index commit sweep:** I ran `git add <my 3 nemo files>` then `git commit`, but the SHARED git index already held the parallel session's STAGED archetype-evaluator feature → my commit `b6de45a` swept in 16 of THEIR files (archetype_evaluator.py + tests, pine_compiler archetype gateway, live-order.ts, archetype-routing-observability, lifecycle archetype gate, metrics/sse). Verified NOT lost + NOT broken (their suites green: 38 pytest + 75 vitest). Did NOT amend (pushed, shared branch, other session live). The parallel session's archetype work IS committed in `b6de45a` (just under a NeMo-titled message).
+
+**Known-facts updates:** see the pinned `git add + git commit is UNSAFE on the shared index` fact below.
+
+**Carry-forward (operator action):** set `NVIDIA_API_KEY=nvapi-...` (build.nvidia.com, free eval tier) in `.env` to activate the NeMo Data Designer path; until then black-swan runs the stochastic 8-scenario fallback (fully functional). `data-designer 0.6.1` installed in user site-packages. Branch reconciliation with feature/deep-analysis-pipeline still pending; two sessions still co-building on hardening/phase-0.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
+
+### `git add <paths>` + `git commit` is UNSAFE on the shared index — use `git commit -- <paths>` (pinned 2026-06-23)
+
+Two Claude sessions share the working tree + git INDEX on `hardening/phase-0`. If the other session has files STAGED (`git add`) when you run a bare `git commit`, your commit sweeps in THEIR staged files too (commit = whole index, not just what you just added). This happened in commit `b6de45a` (NeMo commit swept in the parallel session's 16-file archetype feature — safe + tested, but mis-attributed). RULE: commit ONLY your files by explicit path — `git commit -- <path1> <path2> ...` (or `git commit --only <paths>`), which commits just those paths regardless of what else is staged. NEVER `git add` + bare `git commit` while a parallel session is active. Also never `git add -A`. Verify with `git show <hash> --stat` after committing.
 
 ### Tier-1 news handling is FIRM-AWARE + product-scoped (pinned 2026-06-22 — supersedes prior ±30/6-event fact)
 
