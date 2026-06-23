@@ -37,6 +37,7 @@
 
 import { spawnSync } from "node:child_process";
 import { TIER1_EVENTS } from "../src/server/lib/tier1-event-blackout.js";
+import { EIA_EVENTS } from "../src/server/lib/eia-dates.js";
 
 // Event types we gate on: the UNIVERSAL (all-product, firm-agnostic) Tier-1 set =
 // FOMC + FOMC_MINUTES + CPI (static arrays in TS).  Phase 1 (MFFU Feb-2026 policy):
@@ -44,7 +45,9 @@ import { TIER1_EVENTS } from "../src/server/lib/tier1-event-blackout.js";
 // handled in Phase 2 (NOT in the universal TS backup).  NFP is excluded because TS
 // uses buildNfpEvents() (dynamic) and Python uses estimated static dates — day-level
 // discrepancies are acceptable; NFP correctness is covered by the Python pytest.
-const PARITY_TYPES = ["FOMC", "FOMC_MINUTES", "CPI"] as const;
+// EIA (crude-only, product-scoped) lives in eia-dates.ts, not TIER1_EVENTS — merged into
+// the TS lookup below. It is parity-checked too so the generated EIA list can't drift.
+const PARITY_TYPES = ["FOMC", "FOMC_MINUTES", "CPI", "EIA"] as const;
 
 // Year range for the parity check.  NFP excluded (dynamic).  FOMC/CPI 2025-2027;
 // FOMC_MINUTES 2026-2027 (matching the TS constant).
@@ -95,6 +98,10 @@ for (const evt of TIER1_EVENTS) {
     const key: EventKey = `${evt.event_type}::${evt.date}`;
     tsLookup.set(key, evt.time_et);
   }
+}
+// EIA is product-scoped (crude-only) and lives in eia-dates.ts — merge it in.
+for (const evt of EIA_EVENTS) {
+  tsLookup.set(`EIA::${evt.date}`, evt.time_et);
 }
 
 // ─── Step 3: compare ─────────────────────────────────────────────────────────

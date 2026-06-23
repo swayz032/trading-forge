@@ -21,7 +21,63 @@
  * already-detected event window state; this maps it to allow / reduce_size / block.
  */
 
+import { isUsDst } from "./dst-utils.js";
+import { EIA_EVENTS } from "./eia-dates.js";
+
 export type NewsAction = "allow" | "reduce_size" | "block";
+
+// Asymmetric entry-block window per the operator's choice (MFFU ±2min flatten + safety
+// buffer): no new entry from T−5 to T+2 around a Tier-1 release.
+export const NEWS_ENTRY_BLOCK_BEFORE_MIN = 5;
+export const NEWS_ENTRY_BLOCK_AFTER_MIN = 2;
+
+// EIA Crude Oil Inventories is a Tier-1 event for CRUDE products only (MCL/CL/QM).
+// It is NOT in the universal Python calendar_filter set (which would wrongly block
+// MES/MNQ at 10:30) — it is detected here, product-scoped.
+const CRUDE_SYMBOLS_EIA = new Set(["MCL", "CL", "QM"]);
+
+/**
+ * Is the given bar inside an EIA release window for a CRUDE symbol?
+ *
+ * EIA releases Wednesday 10:30 ET (holiday weeks shift to Thursday 11:00 ET — baked into
+ * EIA_EVENTS, generated from the Python source). Window is the asymmetric entry block
+ * [T−5min, T+2min]. Returns false for non-crude symbols (product scope).
+ */
+export function isEiaWindow(symbol: string, barTimestampUtc: string): boolean {
+  if (!CRUDE_SYMBOLS_EIA.has((symbol || "").toUpperCase())) return false;
+
+  let barDate: Date;
+  try {
+    barDate = new Date(barTimestampUtc);
+    if (Number.isNaN(barDate.getTime())) return false;
+  } catch {
+    return false;
+  }
+
+  const etOffsetMs = (isUsDst(barDate) ? -4 : -5) * 3_600_000;
+  const barEtDateStr = new Date(barDate.getTime() + etOffsetMs).toISOString().slice(0, 10);
+
+  for (const evt of EIA_EVENTS) {
+    if (evt.date !== barEtDateStr) continue;
+    const [hh, mm] = evt.time_et.split(":").map(Number);
+    if (hh === undefined || mm === undefined) continue;
+    const evtEtMidnightUtcMs =
+      Date.UTC(
+        parseInt(evt.date.slice(0, 4)),
+        parseInt(evt.date.slice(5, 7)) - 1,
+        parseInt(evt.date.slice(8, 10)),
+      ) - etOffsetMs;
+    const evtUtcMs = evtEtMidnightUtcMs + (hh * 3_600_000 + mm * 60_000);
+    const diffMs = barDate.getTime() - evtUtcMs;
+    if (
+      diffMs >= -NEWS_ENTRY_BLOCK_BEFORE_MIN * 60_000 &&
+      diffMs <= NEWS_ENTRY_BLOCK_AFTER_MIN * 60_000
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
 
 /**
  * Topstep-side caution size factor — multiplies position size in a T1 window.

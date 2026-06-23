@@ -51,7 +51,7 @@ import { checkInProcessTier1EventWindow as _checkInProcessTier1EventWindow } fro
 import { computePmSizeFactor } from "../lib/pm-size-factor.js";
 // Phase 2 (2026-06-22) — firm-aware Tier-1 news behavior: Topstep (PRIMARY) reduces
 // size in the window (caution); MFFU Rapid (restricted) hard-blocks. Product-scoped.
-import { resolveNewsAction, eventAffectsSymbol } from "../lib/news-policy.js";
+import { resolveNewsAction, eventAffectsSymbol, isEiaWindow } from "../lib/news-policy.js";
 // W23H.F: cross-symbol DLL coordinator + pre-market blackout consumption
 import { getAccountSessionCumulativePnL, evaluateCrossSymbolDll, DEFAULT_PERSONAL_DLL_DOLLARS } from "./cross-symbol-pnl.js";
 import { toFuturesTradingDayString } from "./paper-risk-gate.js";
@@ -2194,6 +2194,33 @@ export async function evaluateSignals(
       timestamp: bar.timestamp,
     });
     span.setAttribute("calendar_guard_down", true);
+  }
+
+  // Phase 2B (2026-06-22) — EIA Crude Oil Inventory window (CRUDE/MCL only). EIA is a
+  // Tier-1 event for energy products and is NOT in the universal Python calendar (which
+  // would wrongly block MES/MNQ at 10:30). Detected here, product-scoped to crude, with
+  // the asymmetric T−5/+2 entry window. Same firm-aware behavior: Topstep reduces size,
+  // MFFU Rapid (restricted) hard-blocks. Holidays already handled by the universal check.
+  if (!calendarBlocked && newsReduceSizeFactor === 1 && isEiaWindow(symbol, bar.timestamp)) {
+    const { action, sizeFactor } = resolveNewsAction(sessionRow.firmId, true, bypassNewsBlackout);
+    if (action === "reduce_size") {
+      newsReduceSizeFactor = sizeFactor;
+      newsReduceEvent = "EIA";
+      logger.info(
+        { sessionId, symbol, firm: sessionRow.firmId, sizeFactor, timestamp: bar.timestamp },
+        `Calendar filter: EIA crude-inventory window — Topstep CAUTION, reducing size ×${sizeFactor} (not blocking)`,
+      );
+      span.setAttribute("news_reduce_size_factor", sizeFactor);
+      span.setAttribute("news_reduce_event", "EIA");
+    } else if (action === "block") {
+      calendarBlocked = true;
+      calendarBlockReason = "EIA";
+      logger.info(
+        { sessionId, symbol, firm: sessionRow.firmId, timestamp: bar.timestamp },
+        `Calendar filter: EIA crude-inventory window — ${sessionRow.firmId ?? "unknown-firm"} HARD-BLOCK, skipping signals`,
+      );
+      span.setAttribute("calendar_block_event", "EIA");
+    }
   }
 
   if (calendarBlocked) {

@@ -4,6 +4,7 @@ import {
   eventAffectsSymbol,
   getNewsReduceSizeFactor,
   normalizeFirmKey,
+  isEiaWindow,
 } from "../lib/news-policy.js";
 
 describe("news-policy — firm-aware Tier-1 behavior (Phase 2)", () => {
@@ -81,6 +82,37 @@ describe("news-policy — firm-aware Tier-1 behavior (Phase 2)", () => {
       expect(eventAffectsSymbol("EIA", "CL")).toBe(true);
       expect(eventAffectsSymbol("EIA", "MES")).toBe(false);
       expect(eventAffectsSymbol("EIA", "MNQ")).toBe(false);
+    });
+  });
+
+  describe("isEiaWindow — crude-only, T−5/+2 window (Phase 2B)", () => {
+    // EIA 2026-01-07 at 10:30 ET (EST=UTC-5) → 15:30 UTC. Window [T−5, T+2] = 15:25–15:32 UTC.
+    it("MCL exactly at EIA release (10:30 ET) → in window", () => {
+      expect(isEiaWindow("MCL", "2026-01-07T15:30:00.000Z")).toBe(true);
+    });
+    it("MCL at T−2 (10:28 ET) → in window", () => {
+      expect(isEiaWindow("MCL", "2026-01-07T15:28:00.000Z")).toBe(true);
+    });
+    it("MCL at T−6 (10:24 ET) → NOT in window (before T−5)", () => {
+      expect(isEiaWindow("MCL", "2026-01-07T15:24:00.000Z")).toBe(false);
+    });
+    it("MCL at T+3 (10:33 ET) → NOT in window (after T+2)", () => {
+      expect(isEiaWindow("MCL", "2026-01-07T15:33:00.000Z")).toBe(false);
+    });
+    it("CL (mini crude) is also covered", () => {
+      expect(isEiaWindow("CL", "2026-01-07T15:30:00.000Z")).toBe(true);
+    });
+    it("MES / MNQ are NEVER in an EIA window (product scope)", () => {
+      expect(isEiaWindow("MES", "2026-01-07T15:30:00.000Z")).toBe(false);
+      expect(isEiaWindow("MNQ", "2026-01-07T15:30:00.000Z")).toBe(false);
+    });
+    it("holiday-shifted EIA (2026-01-22 Thu 11:00 ET = 16:00 UTC) → in window for MCL", () => {
+      expect(isEiaWindow("MCL", "2026-01-22T16:00:00.000Z")).toBe(true);
+      // and the normal Wednesday that week is NOT an EIA day (shifted)
+      expect(isEiaWindow("MCL", "2026-01-21T15:30:00.000Z")).toBe(false);
+    });
+    it("a non-EIA day → not in window", () => {
+      expect(isEiaWindow("MCL", "2026-01-08T15:30:00.000Z")).toBe(false);
     });
   });
 
