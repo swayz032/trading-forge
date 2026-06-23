@@ -2224,8 +2224,64 @@ export class LifecycleService {
             exportabilityBlocked = true;
           }
         } catch (err) {
-          // checkExportability infra failure is informational (not a strategy failure) — do not block on infra errors
-          logger.warn({ err, strategyId: s.id }, "checkExportability call failed (non-blocking, promotion continues)");
+          // Pass 8 Track A (2026-06-23): Convert fail-OPEN to fail-CLOSED.
+          // Previously this catch only logged a warn and let the strategy proceed —
+          // a dynamic import failure, invalid s.id, or non-Error throw could silently
+          // promote an unexportable strategy to PAPER.
+          //
+          // New behavior: set exportabilityBlocked=true so the calling loop SKIPS
+          // this strategy for the cycle, write a durable audit row, emit SSE, and
+          // fire a Discord WARN so the operator knows there is an infra problem to
+          // diagnose.  The strategy is NOT permanently blocked — it will be re-tried
+          // on the next cron sweep once the infra issue is resolved.
+          const infraErrMsg = err instanceof Error ? err.message : String(err);
+          logger.warn(
+            { err, strategyId: s.id, correlationId },
+            "checkExportability infra error — strategy skipped this cycle (fail-CLOSED)",
+          );
+
+          // Durable audit row so the infra error is queryable and replayable
+          db.insert(auditLog).values({
+            action: "strategy.lifecycle.exportability_infra_error",
+            entityType: "strategy",
+            entityId: s.id,
+            decisionAuthority: "gate",
+            input: { fromState: "TESTING", toState: "PAPER" },
+            result: {
+              reason: "infra_failure_in_outer_catch",
+              errorMessage: infraErrMsg,
+            } as Record<string, unknown>,
+            status: "warn",
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ auditErr, strategyId: s.id }, "exportability_infra_error audit insert failed (non-blocking)");
+          });
+
+          // SSE so the dashboard/operator can surface the infra error
+          broadcastSSE("strategy:exportability_infra_error", {
+            strategyId: s.id,
+            name: s.name,
+            reason: "infra_failure_in_outer_catch",
+            errorMessage: infraErrMsg,
+            correlationId,
+          });
+
+          // Discord WARN with family-grade postscript
+          try {
+            const discordBody = appendFamilyGradePostscript(
+              `checkExportability infra error for strategy ${s.id} (${s.name ?? "unnamed"}): ${infraErrMsg}. ` +
+              "Strategy skipped this promotion cycle. Check logs for dynamic-import or subprocess errors.",
+              "The bot encountered an infrastructure error while checking if a strategy is ready for trading. The strategy was skipped for now.",
+              "No action needed — the bot will retry automatically on the next cycle.",
+            );
+            notifyWarning(
+              `Exportability Infra Error: strategy ${s.id}`,
+              discordBody,
+              { strategyId: s.id, correlationId, errorMessage: infraErrMsg },
+            );
+          } catch (_discordErr) { /* non-blocking */ }
+
+          exportabilityBlocked = true;
         }
         if (exportabilityBlocked) continue;
 
