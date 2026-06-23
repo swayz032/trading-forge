@@ -4,6 +4,22 @@
 
 ---
 
+### Session Log — 2026-06-23 Firm-Rules Reconciliation + Baby-Mode Scaling Rails (commit 8760d18)
+
+**Mission:** Reconcile Topstep + MFFU firm rules from operator-provided 2026 docs, then build a balanced, data-backed contract-scaling plan and ship its rails institutional-grade.
+
+**Work completed:**
+- **Firm rules (earlier passes this session):** TopstepX API integration spec captured; Topstep commissions FIXED ($0.37→authoritative $0.62/$0.77); ProjectX volatility position-limit restrictions captured; MFFU switched Pro→Rapid→**Builder** (operator's final choice) — EOD trailing, 40 micros, $1K soft-pause DLL, news-allowed (news-policy MFFU block→reduce_size); MFFU intra-account hedging gate (§5) ENFORCED (`checkIntraAccountHedge`, was a declared-but-toothless flag); MFFU commissions FIXED ($0.62 flat→$0.95 MES/MNQ / $0.58 MCL). Both firms now EOD → realizedPeakEquity model correct for both; NO intraday build needed.
+- **Scaling rails (this close):** plan `docs/scaling-plan-baby-mode.md` + web evidence `docs/institutional-evidence/prop-firm-scaling-2026.md`. 3-track Team-Mode dispatch: (1) base 6→9 + DRAWDOWN_ROOM_RISK_PCT 0.01→0.08 [the 1% rule = 0 contracts on fresh $2K buffer, a real bug] + proven-trades ramp TS/Python parity; (2) migration 0174 `paper_sessions.proven_trades_count` + atomic winning-close increment + thread into live sizing; (3) `scripts/validate-scaling-schedule.py` per-tier firm-breach gate (<5%) on real data, fail-closed.
+
+**Verification:** 116 new tests GREEN (45 vitest + 71 pytest); zero new failures; typecheck + `verify-2026-rules-compliance` + `system-map:check` (driftItems:[]) GREEN. Harness smoke proved fail-closed: weak synthetic edge breaches 88% even at base 9.
+
+**Known-facts updates:** MFFU = BUILDER (EOD, 40 micros, news-allowed, sim-payout-stage consistency only); both firms EOD; 50 micros = FINAL cap not start; growth HORIZONTAL (multi-account copy-trade).
+
+**Carry-forward:** (a) bar-by-bar pyramid WF carry-forward replay (so a backtest plays the ramp out) — documented, not built; (b) strategy EDGE still unproven (pre-go-live) — rails scale a winner, can't fix a loser; prove via harness on real Slumdawg P&L + paper; (c) tune PROVEN_TRADES_PER_TIER=10 / 8% / 5%-gate on real data; (d) 60%-DLL reduce-size band (planned, not yet built); (e) confirm operator on Builder Default ($2,000 MLL) — yes, confirmed.
+
+---
+
 ### Session Log — 2026-06-23 Paper-Trade Readiness Hardening Plan, WAVE-LEVEL MASTER CLOSE (8 passes + Pass 4.5 = 9 closes, ~2,150 new tests GREEN, 27 of 50 audit findings closed, FIRST PAPER TRADE smoke-test framework READY)
 
 **Mission:** Execute the 8-pass paper-trade readiness hardening plan + Pass 4.5 carry-forward (`C:/Users/tonio/.claude/plans/i-want-you-to-giggly-naur.md`) to take Trading Forge from "weeks_away" to "operator runs smoke-test today" readiness for the first TradingView paper trade.
