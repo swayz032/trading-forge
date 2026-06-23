@@ -175,6 +175,9 @@ def generate_eia_dates_for_year(year: int) -> list[dict]:
 
 # Pre-generate EIA for 2026-2027 (the live blackout horizon).
 # Stored in STATIC_EVENTS["EIA"] so all downstream consumers use a single source.
+# 2024-2025 included so backtests on historical data have EIA windows too.
+_EIA_2024 = generate_eia_dates_for_year(2024)
+_EIA_2025 = generate_eia_dates_for_year(2025)
 _EIA_2026 = generate_eia_dates_for_year(2026)
 _EIA_2027 = generate_eia_dates_for_year(2027)
 
@@ -594,7 +597,7 @@ STATIC_EVENTS: dict[str, list[dict]] = {
     #   Affected 2027 weeks: Jan 18 (MLK→Jan 20→Thu Jan 21),
     #   Feb 15 (Presidents→Feb 17→Thu Feb 18), May 31 (Memorial→Jun 2→Thu Jun 3),
     #   Sep 6 (Labor→Sep 8→Thu Sep 9), Oct 11 (Columbus→Oct 13→Thu Oct 14).
-    "EIA": _EIA_2026 + _EIA_2027,
+    "EIA": _EIA_2024 + _EIA_2025 + _EIA_2026 + _EIA_2027,
 }
 
 
@@ -618,20 +621,72 @@ def _parse_event_datetime(event: dict) -> datetime:
     return dt.replace(hour=h, minute=m)
 
 
+# ─── Authoritative synced calendar (backtest/live parity, 2026-06-23) ──────────
+# The backtest event mask previously read the hardcoded STATIC_EVENTS, several of which
+# were projected/WRONG (FOMC 2026 May 6/Nov 4/Dec 16 vs the Fed's Apr 29/Oct 28/Dec 9).
+# economic-calendar-sync-service.ts syncs authoritative dates (FRED/Fed/EIA) into the
+# `economic_release_dates` table (which the live TS gate reads) AND writes a JSON snapshot
+# at src/engine/economic_release_dates.json. We read that JSON here — no DB driver needed
+# (the tower Python has no psycopg2) — so backtest dates == live dates. FAIL-SAFE: missing/
+# unreadable JSON falls back to the hardcoded STATIC_EVENTS.
+_AUTH_EVENTS_CACHE: dict | None = None
+_AUTH_EVENTS_LOADED = False
+
+
+def _load_authoritative_events() -> dict | None:
+    """Load synced release dates from the JSON snapshot. None on any failure (→ STATIC_EVENTS)."""
+    global _AUTH_EVENTS_CACHE, _AUTH_EVENTS_LOADED
+    if _AUTH_EVENTS_LOADED:
+        return _AUTH_EVENTS_CACHE
+    _AUTH_EVENTS_LOADED = True  # attempt at most once per process
+    try:
+        import os
+        import json
+        # JSON lives next to this module: src/engine/economic_release_dates.json
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "economic_release_dates.json")
+        if not os.path.exists(path):
+            return None
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+        # Expected shape: {"events": [{"event_type","date","time_et"}, ...]}
+        rows = data.get("events", []) if isinstance(data, dict) else []
+        if not rows:
+            return None
+        out: dict[str, list[dict]] = {}
+        for r in rows:
+            et = r.get("event_type")
+            if not et:
+                continue
+            out.setdefault(et, []).append({"date": r["date"], "time_et": r["time_et"]})
+        _AUTH_EVENTS_CACHE = out
+        return out
+    except Exception:
+        return None  # fail-safe → hardcoded STATIC_EVENTS
+
+
+def _events_for_type(event_type: str) -> list[dict]:
+    """Authoritative events for a type: synced JSON (FRED/Fed/EIA) if available, else hardcoded."""
+    auth = _load_authoritative_events()
+    if auth is not None and event_type in auth:
+        return auth[event_type]
+    return STATIC_EVENTS.get(event_type, [])
+
+
 def _get_events_for_policies(
     policies: list[dict],
 ) -> list[tuple[datetime, str, str, int]]:
-    """Build flat list of (event_dt_et, event_type, action, window_min)."""
+    """Build flat list of (event_dt_et, event_type, action, window_min).
+
+    Reads authoritative DB dates (economic_release_dates) per event type, falling back to
+    the hardcoded STATIC_EVENTS — so backtest dates match the live gate.
+    """
     events = []
     for policy in policies:
         event_type = policy["event_type"]
         action = policy.get("action", "SIT_OUT")
         window = policy.get("window_minutes", 30)
 
-        if event_type not in STATIC_EVENTS:
-            continue
-
-        for evt in STATIC_EVENTS[event_type]:
+        for evt in _events_for_type(event_type):
             dt = _parse_event_datetime(evt)
             events.append((dt, event_type, action, window))
 

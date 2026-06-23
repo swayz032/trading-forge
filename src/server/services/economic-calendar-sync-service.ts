@@ -41,6 +41,12 @@ const FRED_RELEASES: Array<{ releaseId: number; eventType: string; timeEt: strin
 // Verified against the Fed's official calendar 2026-06-22. 14:00 ET. Stable (published 2yr
 // ahead) — these are AUTHORITATIVE, not projected. FOMC_MINUTES are computed as +21 days.
 export const FOMC_ANNOUNCE_DATES: string[] = [
+  // 2024 (historical — verified vs federalreserve.gov; backtests need history)
+  "2024-01-31", "2024-03-20", "2024-05-01", "2024-06-12",
+  "2024-07-31", "2024-09-18", "2024-11-07", "2024-12-18",
+  // 2025 (historical — verified)
+  "2025-01-29", "2025-03-19", "2025-05-07", "2025-06-18",
+  "2025-07-30", "2025-09-17", "2025-10-29", "2025-12-10",
   // 2026
   "2026-01-28", "2026-03-18", "2026-04-29", "2026-06-17",
   "2026-07-29", "2026-09-16", "2026-10-28", "2026-12-09",
@@ -48,6 +54,11 @@ export const FOMC_ANNOUNCE_DATES: string[] = [
   "2027-01-27", "2027-03-17", "2027-04-28", "2027-06-09",
   "2027-07-28", "2027-09-15", "2027-10-27", "2027-12-08",
 ];
+
+// Historical anchor — sync from here forward so the DB has past dates for BACKTESTS
+// (which run on history) as well as future dates for the live gate. FRED returns
+// historical release dates; FOMC history is the hardcoded verified set above.
+const HISTORICAL_ANCHOR = "2024-01-01";
 
 interface ReleaseRow {
   eventType: string;
@@ -102,7 +113,7 @@ export async function runEconomicCalendarSync(opts?: {
   nowMs?: number;
 }): Promise<{ upserted: number; bySource: Record<string, number>; sources: string[] }> {
   const nowMs = opts?.nowMs ?? Date.now();
-  const startDate = opts?.startDate ?? new Date(nowMs).toISOString().slice(0, 10);
+  const startDate = opts?.startDate ?? HISTORICAL_ANCHOR; // history for backtests + future for live
   const endDate = opts?.endDate ?? new Date(nowMs + 550 * 86_400_000).toISOString().slice(0, 10); // ~18 mo
 
   const rows: ReleaseRow[] = [];
@@ -169,6 +180,27 @@ export async function runEconomicCalendarSync(opts?: {
     } catch (err) {
       logger.error({ err, row: r }, "economic_release_dates upsert failed for one row");
     }
+  }
+
+  // Write a JSON snapshot for the Python BACKTEST path (the tower Python has no psycopg2,
+  // so it can't read the DB). economic_calendar.py reads this file (hardcoded fallback if
+  // missing) → backtest dates == live dates. Best-effort; failure does not fail the sync.
+  try {
+    const { writeFileSync } = await import("fs");
+    writeFileSync(
+      "src/engine/economic_release_dates.json",
+      JSON.stringify(
+        {
+          generatedHorizon: { startDate, endDate },
+          sources: sourcesOk,
+          events: rows.map((r) => ({ event_type: r.eventType, date: r.releaseDate, time_et: r.timeEt })),
+        },
+        null,
+        0,
+      ),
+    );
+  } catch (err) {
+    logger.warn({ err }, "failed to write economic_release_dates.json snapshot — backtest uses hardcoded fallback");
   }
 
   await insertAuditRowSafe({
