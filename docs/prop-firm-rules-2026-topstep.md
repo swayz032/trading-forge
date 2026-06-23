@@ -349,6 +349,37 @@ xfa_scaling_tier(balance))`. NOT needed on MFFU (different rules) and NOT for ME
 
 ---
 
+## Commissions & Fees (TopstepX / ProjectX — authoritative 2026-06-23)
+
+Round-turn (RT) cost = both sides; per-side = RT ÷ 2. Each RT = exchange fee + NFA regulatory
+($0.04) + commission. Auto-deducted per trade. **These are all-in** (the backtester applies
+`commission_per_side × size × 2` with NO separate exchange/NFA add — `firm_config.py` values
+MUST be the full per-side cost).
+
+| Product | RT | Per-side (used in `firm_config.py`) |
+|---|---|---|
+| **MES / MNQ** (our micros) | **$1.24** | **$0.62** |
+| **MCL** (our micro crude) | **$1.54** | **$0.77** |
+| M2K / MYM | $1.24 | $0.62 |
+| MGC (micro gold) | $1.74 | $0.87 |
+| MNG (micro nat gas) | $1.74 | $0.87 |
+| ES / NQ / RTY / YM (minis, Phase 5) | $3.80 | $1.90 |
+| CL (mini crude, Phase 5) | $4.04 | $2.02 |
+| QM | $3.44 | $1.72 |
+| GC (gold) | $4.24 | $2.12 |
+
+**★ CORRECTION 2026-06-23:** `firm_config.py::FIRM_COMMISSIONS["topstep_50k"]` previously had
+**$0.37/side** for all micros — too LOW, which UNDER-COSTED every Topstep backtest (strategies
+looked more profitable than reality). Fixed to the authoritative TopstepX schedule: MES/MNQ
+$0.62, MCL $0.77; minis ES/NQ $1.90, CL $2.02 (minis are ~3× micros, NOT the old 10× assumption).
+The TS `contract-class.ts` mirror was fixed too (class-based, so MCL is slightly under-estimated
+live-side; the backtest is exact per-symbol). Changing `FIRM_COMMISSIONS` re-hashes
+`firm_rules_version` — old backtests will trip `monte_carlo.firm_rule_version_mismatch` on MC
+re-run (correct: they were graded against wrong fees; re-run them). MFFU rates unchanged
+(separate schedule). Source: operator-provided TopstepX Commissions & Fees doc.
+
+---
+
 ## Constants Used By Code
 
 ```

@@ -5,28 +5,31 @@ Legacy firms (TPT, Apex, FFN, Alpha, Tradeify, Earn2Trade, Top One, YRM Prop,
 FundingPips) were removed from production scope on 2026-05-10 (DB migration
 0097) and stripped from runtime config on 2026-05-19.
 
-Don't use gross P&L for performance gates — use net P&L per firm
-(Topstep $0.37/side, MFFU $0.62/side).
+Don't use gross P&L for performance gates — use net P&L per firm.
 Don't ignore firm contract caps in backtests.
+
+VALUES ARE ALL-IN PER-SIDE (commission + exchange + NFA regulatory) = round-turn ÷ 2.
+The backtester applies `commission_per_side × size × 2` with NO separate exchange/NFA add —
+so these MUST be the full all-in per-side cost, not the commission component alone.
 """
 
 from __future__ import annotations
 
-# ─── Per-Firm Commissions (per side, per contract) ───────────────
-# Source: each firm's fee schedule for 50K accounts.
+# ─── Per-Firm Commissions (ALL-IN per side, per contract) ───────────────
+# Source: each firm's official 2026 fee schedule (all-in round-turn ÷ 2).
 
 FIRM_COMMISSIONS: dict[str, dict[str, float]] = {
-    # Wave 27.5 Pass D.2: micro AND mini rates per firm.
-    # Micros (MES/MNQ/MCL): active in production today.
-    # Minis  (ES/NQ/CL):    Phase 5 only — deferred until single-account funded
-    #                       balance ≥ $200K per CLAUDE.md §5.
-    # Mini rates = 10× micro rates (10:1 contract ratio, same notional exposure).
-    # Verified 2026-05-25 against Topstep + MFFU 2026 published fee schedules.
+    # 2026-06-23 CORRECTION: Topstep rates were $0.37/side (too low — under-costed every
+    # Topstep backtest). Replaced with the AUTHORITATIVE TopstepX/ProjectX fee schedule
+    # (all-in round-turn ÷ 2). Micros (MES/MNQ/MCL) are active. Minis (ES/NQ/CL) are Phase 5
+    # (≥$200K, CLAUDE.md §5) — note minis are ~3× micros, NOT 10× (commissions don't scale
+    # with notional; the old 10×-micro assumption was wrong).
+    # TopstepX round-turn (RT): MES/MNQ $1.24, MCL $1.54, ES/NQ $3.80, CL $4.04.
     "topstep_50k": {
-        # Micros
-        "MES": 0.37, "MNQ": 0.37, "MCL": 0.37,
-        # Minis (Phase 5)
-        "ES": 3.70, "NQ": 3.70, "CL": 3.70,
+        # Micros (RT ÷ 2)
+        "MES": 0.62, "MNQ": 0.62, "MCL": 0.77,
+        # Minis (Phase 5) — ES/NQ $3.80 RT, CL $4.04 RT
+        "ES": 1.90, "NQ": 1.90, "CL": 2.02,
     },
     "mffu_50k": {
         # Micros
