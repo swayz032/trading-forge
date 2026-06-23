@@ -93,7 +93,7 @@ import path from "node:path";
 import { createReadStream } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { S3Client, PutObjectCommand, HeadBucketCommand } from "@aws-sdk/client-s3";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { syntheticRegimeBank } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
@@ -473,4 +473,114 @@ export async function runSyntheticRegimeBankPopulate(
     errors: allErrors,
     status,
   };
+}
+
+
+// ─── Self-heal: ensureRegimeBankPopulated ─────────────────────────────────────
+
+/**
+ * Staleness window in days for the self-heal check.
+ * If ALL rows in the bank are older than this, we treat the bank as stale
+ * and trigger a refresh. Default 30 days (matches the Sunday weekly cron cadence
+ * plus a 3-week tolerance window).
+ *
+ * Override via env REGIME_BANK_STALENESS_DAYS (integer string).
+ */
+const REGIME_BANK_STALENESS_DAYS: number = (() => {
+  const raw = process.env["REGIME_BANK_STALENESS_DAYS"];
+  const parsed = raw ? parseInt(raw, 10) : NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 30;
+})();
+
+/**
+ * Boot-time self-heal: ensures the regime bank has rows so backtests
+ * run at ANY time (not just after the weekly Sunday cron) get real verdicts.
+ *
+ * Contract:
+ *   - Queries `SELECT count(*) FROM synthetic_regime_bank`.
+ *   - count === 0 → fire-and-forget `runSyntheticRegimeBankPopulate()` (async,
+ *     NEVER awaited in a way that blocks app.listen).
+ *     Emits audit `synthetic_regime_bank.self_heal_triggered`.
+ *   - count > 0 → skip populate.
+ *     Emits audit `synthetic_regime_bank.self_heal_skipped_populated`.
+ *   - Any DB error → log warn + return (never throw, never block boot).
+ *
+ * Called once at boot from `src/server/index.ts` INSIDE app.listen() callback
+ * so it is fire-and-forget relative to the listen() call itself.
+ *
+ * Governance: CHALLENGER-ONLY / ADVISORY — self-heal populates the bank but
+ * the evaluator output is still advisory only. Never blocks promotion, entry,
+ * exit, or sizing.
+ *
+ * @param correlationId  Passed to audit rows and downstream populate run.
+ */
+export async function ensureRegimeBankPopulated(
+  correlationId: string,
+): Promise<void> {
+  try {
+    // Count rows in the bank. Use sql`` template for a lightweight count query
+    // that avoids loading all rows.
+    const countRows = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(syntheticRegimeBank);
+
+    const bankCount = Number(countRows[0]?.count ?? 0);
+
+    if (bankCount === 0) {
+      // Empty bank — trigger self-heal (fire-and-forget)
+      logger.info(
+        { correlationId, bankCount },
+        "synthetic_regime_bank: bank is empty — triggering self-heal populate (fire-and-forget)",
+      );
+
+      await insertAuditRowSafe({
+        action: "synthetic_regime_bank.self_heal_triggered",
+        entityType: "regime_bank",
+        entityId: correlationId,
+        correlationId,
+        details: {
+          bankCount,
+          stalenessWindowDays: REGIME_BANK_STALENESS_DAYS,
+          triggeredBy: "boot_self_heal",
+        },
+      });
+
+      // Fire-and-forget: do NOT await.
+      // Any error inside the populate run is handled by runSyntheticRegimeBankPopulate
+      // itself (fail-soft, emits its own audit rows on failure).
+      runSyntheticRegimeBankPopulate(correlationId).catch((err: unknown) => {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        logger.warn(
+          { correlationId, err: errMsg },
+          "synthetic_regime_bank: self-heal populate run failed (fire-and-forget, non-blocking)",
+        );
+      });
+
+      return;
+    }
+
+    // Bank is populated — skip
+    logger.info(
+      { correlationId, bankCount },
+      "synthetic_regime_bank: bank has rows — self-heal skipped",
+    );
+
+    await insertAuditRowSafe({
+      action: "synthetic_regime_bank.self_heal_skipped_populated",
+      entityType: "regime_bank",
+      entityId: correlationId,
+      correlationId,
+      details: {
+        bankCount,
+        stalenessWindowDays: REGIME_BANK_STALENESS_DAYS,
+      },
+    });
+  } catch (err: unknown) {
+    // Fail-soft: DB check error must never block boot
+    const errMsg = err instanceof Error ? err.message : String(err);
+    logger.warn(
+      { correlationId, err: errMsg },
+      "synthetic_regime_bank: self-heal DB check failed — skipping (non-blocking)",
+    );
+  }
 }

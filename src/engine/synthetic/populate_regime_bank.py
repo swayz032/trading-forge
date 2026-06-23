@@ -14,7 +14,11 @@ Config JSON schema:
         "output_dir": "data/regime_bank",   # local output directory
         "max_batches": 1,           # batches per (symbol, timeframe, scenario)
         "severity_check": true,     # whether to run severity validation
-        "dry_run": false            # if true: generate + calibrate but skip write
+        "dry_run": false,           # if true: generate + calibrate but skip write
+        "use_nemo": false           # if true: source specs from NeMoScenarioDesigner
+                                    #   (real NeMo API when NVIDIA_API_KEY set,
+                                    #    else already falls back to NAMED_SCENARIOS);
+                                    #   default false so offline/CI runs are safe
     }
 
 Output JSON (stdout):
@@ -33,7 +37,8 @@ Output JSON (stdout):
                 "generator_model_version": "stochastic_v1.0",
                 "stylized_fact_passed": true,
                 "severity_passed": true,
-                "calibration_stats": {...}
+                "calibration_stats": {...},
+                "scenario_source": "nemo_data_designer" | "stochastic_fallback"
             }
         ],
         "errors": ["scenario=X: calibration failed: T1_excess_kurtosis..."]
@@ -71,6 +76,11 @@ from src.engine.synthetic.stochastic_regime_generator import (
     StochasticRegimeGenerator,
 )
 
+# NeMo designer import — imported at module scope so tests can patch it.
+# The designer already handles its own fallback internally; we import here
+# so run_populate can conditionally instantiate it when use_nemo=True.
+from src.engine.nemo_scenario_designer import NeMoScenarioDesigner
+
 
 # ─── Default config ───────────────────────────────────────────────────────────
 
@@ -83,6 +93,10 @@ _DEFAULT_CONFIG: dict = {
     "max_batches": 1,
     "severity_check": True,
     "dry_run": False,
+    # use_nemo=False by default: offline/CI safe.
+    # Set True to source scenario specs from NeMoScenarioDesigner (falls back
+    # to NAMED_SCENARIOS automatically when NVIDIA_API_KEY is absent).
+    "use_nemo": False,
 }
 
 
@@ -99,8 +113,15 @@ def _make_result_record(
     calibration_stats: dict,
     batch_index: int,
     seed: int,
+    scenario_source: str = "stochastic_fallback",
 ) -> dict:
-    """Build one regime record for the output JSON."""
+    """Build one regime record for the output JSON.
+
+    Args:
+        scenario_source: Which generation path produced this regime spec.
+            "nemo_data_designer" — NeMoScenarioDesigner (data_designer API path).
+            "stochastic_fallback" — the 8 NAMED_SCENARIOS battery (default).
+    """
     return {
         "symbol": symbol,
         "timeframe": timeframe,
@@ -114,6 +135,7 @@ def _make_result_record(
         "batch_index": batch_index,
         "seed": seed,
         "calibration_stats": calibration_stats,
+        "scenario_source": scenario_source,
     }
 
 
@@ -136,14 +158,74 @@ def run_populate(config: dict) -> dict:
     max_batches = int(config.get("max_batches", _DEFAULT_CONFIG["max_batches"]))
     run_severity_check = bool(config.get("severity_check", True))
     dry_run     = bool(config.get("dry_run", False))
+    use_nemo    = bool(config.get("use_nemo", _DEFAULT_CONFIG["use_nemo"]))
 
-    # Validate scenarios
+    # Validate scenarios against NAMED_SCENARIOS (the 8 canonical names).
+    # This check is intentional even when use_nemo=True: NeMo specs are mapped
+    # by archetype but the requested scenario *subset* must still be valid names.
     unknown = [s for s in scenarios if s not in NAMED_SCENARIOS]
     if unknown:
         raise ValueError(
             f"Unknown scenarios in config: {unknown}. "
             f"Valid: {sorted(NAMED_SCENARIOS.keys())}"
         )
+
+    # ── NeMo scenario source resolution ──────────────────────────────────────
+    # When use_nemo=True, source ScenarioSpec objects from NeMoScenarioDesigner.
+    # The designer already fails-closed to NAMED_SCENARIOS internally when
+    # NVIDIA_API_KEY is absent, so no extra fallback logic is needed here.
+    # We propagate which path was taken as scenario_source on each record.
+    #
+    # When use_nemo=False (default), use NAMED_SCENARIOS directly (safe offline).
+    #
+    # Either way, the stochastic renderer (StochasticRegimeGenerator) does the
+    # actual OHLCV generation — scenario specs only parametrise the renderer.
+    scenario_source: str = "stochastic_fallback"
+    _nemo_spec_map: dict = {}  # scenario_name → ScenarioSpec (populated below)
+
+    if use_nemo:
+        try:
+            designer = NeMoScenarioDesigner()
+            nemo_result = designer.generate_scenarios(
+                count=len(scenarios) * max_batches,
+                seed=seed,
+            )
+            scenario_source = (
+                "nemo_data_designer"
+                if nemo_result.path_used == "data_designer"
+                else "stochastic_fallback"
+            )
+            # Build a map from spec.name → spec for fast lookup.
+            # NeMo specs are keyed by archetype label which may not 1-to-1 match
+            # the NAMED_SCENARIOS keys; fall back to NAMED_SCENARIOS for any
+            # scenario not found in the designer result.
+            for spec in nemo_result.specs:
+                # Map archetype label back to a NAMED_SCENARIOS key if possible
+                # (e.g. "crash" → "COVID_crash" via first match).
+                # For NeMo data_designer path the spec.name IS the archetype label,
+                # not the full scenario name — prefer exact match then fuzzy.
+                if spec.name in NAMED_SCENARIOS:
+                    _nemo_spec_map[spec.name] = spec
+                else:
+                    # fuzzy: if archetype label is a prefix/substring of a named key
+                    for named_key in NAMED_SCENARIOS:
+                        if spec.name in named_key or named_key.startswith(spec.name):
+                            if named_key not in _nemo_spec_map:
+                                _nemo_spec_map[named_key] = spec
+            logger.info(
+                "populate_regime_bank: use_nemo=True, path_used=%s, "
+                "scenario_source=%s, mapped_specs=%d",
+                nemo_result.path_used, scenario_source, len(_nemo_spec_map),
+            )
+        except Exception as exc:
+            # Fail-soft: any NeMo error falls back to NAMED_SCENARIOS
+            logger.warning(
+                "populate_regime_bank: NeMoScenarioDesigner failed (%s: %s) — "
+                "falling back to NAMED_SCENARIOS.",
+                type(exc).__name__, exc,
+            )
+            scenario_source = "stochastic_fallback"
+            _nemo_spec_map = {}
 
     out_path = Path(output_dir)
     if not dry_run:
@@ -175,8 +257,22 @@ def run_populate(config: dict) -> dict:
                         seed=batch_seed,
                     )
 
+                    # If NeMo produced a spec for this scenario, inject it so the
+                    # renderer uses NeMo parameters instead of hardcoded defaults.
+                    # Falls back to NAMED_SCENARIOS spec if no NeMo spec available.
+                    nemo_spec = _nemo_spec_map.get(scenario_name)
+
                     try:
-                        bars_df = batch_gen.generate(scenario_name)
+                        if nemo_spec is not None:
+                            # Inject NeMo spec as scenario_override so the renderer
+                            # uses NeMo parameters instead of hardcoded NAMED_SCENARIOS
+                            # defaults. The scenario_name is still passed to satisfy
+                            # the renderer's logging / naming contract.
+                            bars_df = batch_gen.generate(
+                                scenario_name, scenario_override=nemo_spec
+                            )
+                        else:
+                            bars_df = batch_gen.generate(scenario_name)
                         generated += 1
                     except Exception as exc:
                         msg = f"scenario={scenario_name} symbol={symbol} tf={timeframe} batch={batch_idx}: generate() failed: {exc}"
@@ -268,6 +364,7 @@ def run_populate(config: dict) -> dict:
                         calibration_stats=cal_stats,
                         batch_index=batch_idx,
                         seed=batch_seed,
+                        scenario_source=scenario_source,
                     ))
 
     return {

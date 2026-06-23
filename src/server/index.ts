@@ -760,6 +760,20 @@ export const server = app.listen(port, () => {
     logger.warn({ err }, "discord-fanout-audit import failed at boot (non-blocking)");
   });
 
+  // ─── A14: Regime-bank self-heal (boot-time, fire-and-forget) ────────────────
+  // Ensures the synthetic_regime_bank has rows so backtests run at ANY time
+  // (not just after the weekly Sunday cron) get real B14 survival verdicts
+  // instead of null. If bank is empty → triggers populate run async (20 min max).
+  // If bank is populated → logs + emits skipped audit. Never blocks app.listen.
+  // Governance: CHALLENGER-ONLY / ADVISORY — populate output is advisory only.
+  import("./services/synthetic-regime-bank-service.js").then(({ ensureRegimeBankPopulated }) => {
+    ensureRegimeBankPopulated(`boot-${Date.now()}`).catch((err: unknown) => {
+      logger.warn({ err }, "synthetic_regime_bank: boot self-heal failed (non-blocking)");
+    });
+  }).catch((err: unknown) => {
+    logger.warn({ err }, "synthetic-regime-bank-service import failed at boot (non-blocking)");
+  });
+
   // Start scheduled jobs (rolling Sharpe, pre-market prep, drift checks)
   import("./scheduler.js").then(({ initScheduler }) => {
     initScheduler();
