@@ -10436,6 +10436,22 @@ Also restored Anam.ai persona during this session:
 
 ---
 
+### Session Log — 2026-06-23 claude (NeMo live + regime bank FILLED — A14 black-swan now real for random backtests)
+
+**Mission:** Operator set `NVIDIA_API_KEY` + asked how A14 works for continuously/randomly-run backtests (not just the Sunday cron).
+
+**Answer + work:** The regime bank is PERSISTENT — populate once, every backtest (any day) READS it; the weekly cron just refreshes. The bank was empty (0 rows) so every random backtest returned null. Fixed end-to-end:
+- NeMo Data Designer LIVE: NVIDIA key set in `.env` (gitignored); live test reached `nvidia/nemotron-3-nano-30b-a3b`, generated diverse specs. Windows fix: `_generate_via_data_designer` reconfigures stdout/stderr UTF-8 + redirects DD's emoji logs to stderr (cp1252 `UnicodeEncodeError` was crashing it). `nemo_scenario_designer.py` commit f1dacfd.
+- NeMo→bank feed + boot self-heal (commit c6cbe9c): `populate_regime_bank` sources from NeMo (use_nemo flag, fallback NAMED_SCENARIOS); `ensureRegimeBankPopulated` fires populate async at boot if bank empty → random backtests never null regardless of Sunday.
+- Two bugs blocking the fill (commit 5718e0e + test ab9cbe5): (1) `populate_regime_bank` returned exit 1 on PARTIAL (some scenarios fail strict calibration) → runPythonModule throws on non-zero → service inserted 0. Now exit 0 when stored>0, 2 only when nothing usable. (2) bank-service's 4 `insertAuditRowSafe` calls used `details:` (not a column) + omitted `status:` (NOT NULL) → audit rows dropped (same class as the 0151 audit_log bug). Fixed: status + result/input.
+- **BANK NOW FILLED: 23 regimes across all 8 scenarios × MES/MNQ/MCL, NeMo-generated, uploaded to S3** (`s3://trading-forge-data/regime-bank/...`). A14 black-swan returns real survival verdicts for ANY backtest now.
+
+**Known-facts updates:** only ONE LLM key needed for NeMo = NVIDIA (NeMo Data Designer is API-orchestration via build.nvidia.com, NOT a local GPU model — VRAM irrelevant; the local stochastic stack does the rendering free). OpenAI key is unrelated (scout/extraction). NeMo emoji logs crash on Windows cp1252 → force UTF-8 for any Data Designer call.
+
+**Carry-forward:** rotate the NVIDIA key eventually (pasted in chat); `runSyntheticRegimeBankPopulate` passes use_nemo=true (NeMo) — confirm the weekly cron config does too; self-heal currently empty-only (staleness branch is count==0). Branch reconciliation with feature/deep-analysis-pipeline still pending.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### `git add <paths>` + `git commit` is UNSAFE on the shared index — use `git commit -- <paths>` (pinned 2026-06-23)
