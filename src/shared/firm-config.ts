@@ -106,7 +106,7 @@ export const FIRMS: Record<string, FirmConfig> = {
         accountSize: 50_000, monthlyFee: 77, activationFee: 0, ongoingMonthlyFee: 0,
         profitTarget: 3000, maxDrawdown: 2000, maxContracts: 40, trailing: "eod",
         payoutSplit: 0.80, minPayoutDays: 2, consistencyRule: 0.50, // Python: "mffu_50pct_sim_payout"
-        dailyLossLimit: 1000, overnightOk: false, weekendOk: false, commissionPerSide: 0.62,
+        dailyLossLimit: 1000, overnightOk: false, weekendOk: false, commissionPerSide: 0.95, // MFFU MES/MNQ $1.90 RT; MCL $0.58 exact in firm_config per-symbol
         minTradingDays: 1,
         // 2026-compliance fields (canonical: docs/prop-firm-rules-2026-mffu.md)
         payoutCycleDays: 2,

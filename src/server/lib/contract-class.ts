@@ -114,9 +114,12 @@ const COMMISSION_RATES_BY_CLASS: Record<string, number> = {
   // authoritative for real fills). TODO: per-symbol override if MCL estimation precision matters.
   "topstep.micro": 0.62,
   "topstep.mini":  1.90,  // ES/NQ $3.80 RT ÷ 2 (NOT 10× micro — commissions ~3× not 10×)
-  // MFFU — standard $0.62/side for micros, $6.20/side for minis
-  "mffu.micro":    0.62,
-  "mffu.mini":     6.20,
+  // MFFU — AUTHORITATIVE MFFU instrument list all-in round-turn ÷ 2 (2026-06-23 correction;
+  // was a flat $0.62 = TopstepX's value, wrong for MFFU). MES/MNQ = $0.95/side ($1.90 RT).
+  // Class-based, so MCL ($0.58/side, $1.16 RT) is slightly over-estimated here — the BACKTEST
+  // (firm_config.py) has the exact per-symbol value; this TS rate is live/paper estimation.
+  "mffu.micro":    0.95,
+  "mffu.mini":     2.34,  // ES/NQ $4.68 RT ÷ 2 (CL is $2.46 — see firm_config per-symbol)
 } as const;
 
 // ─── Audit callback type ──────────────────────────────────────────────────────

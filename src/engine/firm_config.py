@@ -32,10 +32,14 @@ FIRM_COMMISSIONS: dict[str, dict[str, float]] = {
         "ES": 1.90, "NQ": 1.90, "CL": 2.02,
     },
     "mffu_50k": {
-        # Micros
-        "MES": 0.62, "MNQ": 0.62, "MCL": 0.62,
-        # Minis (Phase 5)
-        "ES": 6.20, "NQ": 6.20, "CL": 6.20,
+        # 2026-06-23 CORRECTION: MFFU rates were a flat $0.62 (wrong — that's TopstepX's MES
+        # value, not MFFU's). Replaced with MFFU's authoritative instrument list (all-in
+        # round-turn ÷ 2): MES/MNQ $1.90 RT, MCL $1.16 RT, ES/NQ $4.68 RT, CL $4.92 RT.
+        # Note MFFU MES/MNQ ($0.95) are PRICIER than TopstepX ($0.62) but MCL ($0.58) is cheaper.
+        # Micros (RT ÷ 2)
+        "MES": 0.95, "MNQ": 0.95, "MCL": 0.58,
+        # Minis (Phase 5) — ES/NQ $4.68 RT, CL $4.92 RT
+        "ES": 2.34, "NQ": 2.34, "CL": 2.46,
     },
 }
 

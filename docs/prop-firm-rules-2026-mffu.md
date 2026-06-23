@@ -35,7 +35,7 @@
 | Consistency rule | `50%` — **SIM-FUNDED payout stage ONLY** (NONE in eval, NONE on the live account) |
 | Overnight allowed | `false` |
 | Weekend allowed | `false` |
-| Commission per side per contract | `$0.62` |
+| Commission per side per contract | MES/MNQ `$0.95` ($1.90 RT) · MCL `$0.58` ($1.16 RT) — per-symbol exact in `firm_config.py`; single firm value `$0.95` |
 | Payout split | `0.80` (80/20 — eval + sim + live) |
 | Live transition | after the **5th approved sim payout** → real brokerage account (Blue Row Capital), daily payouts, no consistency |
 | News trading | **ALLOWED** (eval + sim funded) — Builder is NOT a T1-restricted plan |
@@ -64,7 +64,7 @@ consistency_rule_pct: 0.50  # 50% at the SIM-FUNDED payout stage only — NONE e
 daily_loss_limit: 1000  # Builder $1,000 DLL — SOFT pause (account survives, not a breach)
 overnight_ok: false
 weekend_ok: false
-commission_per_side: 0.62
+commission_per_side: 0.95  # MFFU MES/MNQ $1.90 RT ÷ 2; MCL is $0.58 ($1.16 RT) — exact per-symbol in firm_config.py
 payout_cycle_days: 2
 ```
 
@@ -238,6 +238,9 @@ news trading on Builder via per-strategy `bypass_news_blackout=true`.
 | **Live post-breach 21-day cooldown** | A LIVE breach → 21 calendar days: no sim trading, no new evals/resets. Our kill-switch (67% DLL halt / 95% force-close) exists to never breach. |
 | **1 sim account per user** | Only one active Builder sim account; after a breach, a new one only the following trading day. |
 | **50% consistency @ payout** | Single largest profit day ≤ 50% of cycle total, checked AT payout request, **resets after each approved payout**. Sim-funded stage only (none eval, none live). Opt-in lane during sim-funded phase. |
+| **Trading hours** | MFFU: **18:00 → 16:10 ET** (6:00pm–4:10pm EST). Our RTH window (09:30–11:30) + 15:55 ET flatten sit well inside. |
+| **Restricted products (temp, Feb 7)** | GC, SI, HG, PL, NG, QG (metals + nat gas) restricted; metals micros capped (50K → 5). **Our products MES/MNQ/MCL are NOT restricted** — no impact. |
+| **Commissions (all-in RT ÷ 2)** | MES/MNQ **$0.95** ($1.90 RT) · MCL **$0.58** ($1.16 RT). Per-symbol exact in `firm_config.py` (was wrongly a flat $0.62). |
 
 ---
 
