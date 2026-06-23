@@ -9927,9 +9927,25 @@ Also restored Anam.ai persona during this session:
 - Then: operator validates on a real account, flips `SERVER_MEDIATED_EXECUTION_ENABLED=true` (Phase 0/1 graduation).
 - All on `hardening/phase-0`; branch reconciliation with feature/deep-analysis-pipeline still pending.
 
+### Session Log — 2026-06-22 claude (macro-event blackout — institutional grade)
+
+**Mission:** Deep-scan the subsystem registry/codebase to find what genuinely needs institutional-grade work, then fix it.
+
+**Deep scan:** registry labels are unreliable (`5tf_mtf_engine` is `status: ready` yet I found a CRITICAL look-ahead leak in it this arc). Self-evolution layer (critic/pattern-aggregator/prompt-evolution) is already governed (bounded candidates→gates, A/B prompt_versions, isPipelineActive). Codebase debt-marker + grep scan pointed at the macro-event blackout.
+
+**Finding (compliance-CRITICAL, firm-doc confirmed):** the `macro_alignment` factor is the ONLY hard-block in the confluence engine (forces score=0). It covered only 3 of MFFU's 6 restricted Tier-1 events. `docs/prop-firm-rules-2026-mffu.md` §5 lists FOMC/CPI/NFP/GDP/ISM/PPI and explicitly says "Extension required: GDP, Retail Sales, ISM, PPI added to _ECONOMIC_EVENTS" — never done. The live bot (`calendar_filter.py`) AND the in-process fail-closed backup (`tier1-event-blackout.ts`) both traded through GDP/ISM/PPI = MFFU compliance-violation risk on funded capital. Also found THREE independently-maintained hardcoded calendars (calendar_filter.py / economic_calendar.py / tier1-event-blackout.ts) with no parity enforcement.
+
+**Fixes (commit bc70d05):** calendar_filter.py now covers all 6, sourcing GDP/ISM/PPI from economic_calendar.py STATIC_EVENTS (single Python source of truth). tier1-event-blackout.ts backup extended to all 6. NEW parity gate `scripts/check-ts-python-tier1-parity.ts` (npm check:ts-python-tier1-parity) asserts TS == Python across all 6 types 2025-2027, fail-CLOSED — first run caught a REAL pre-existing CPI-2027 drift (4 dates), reconciled to canonical. Verified: parity PASS (144 events), 38 TS + 63 Python GREEN, live ISM window blocks.
+
+**Carry-forward:** (1) MFFU §5 also lists **Retail Sales** — no confirmed BLS/Census dates exist; TODO-flagged in both layers; live bot still exposed on Retail Sales days until dates are sourced into economic_calendar.py STATIC_EVENTS["RETAIL_SALES"]. (2) npm-script line for the parity gate is in package.json (parallel session owns that file's commit). (3) SHARED-TREE/INDEX RACE with the parallel session is active — use `git commit --only <paths>` to commit just your files; never `git add -A`.
+
 ---
 
 ## Known-Facts Pin — Stop Misdiagnosing These
+
+### Macro-event blackout = THREE calendars that must agree; the only hard-block (pinned 2026-06-22)
+
+The `macro_alignment` factor is the ONLY hard-block in the confluence engine (forces score=0; "never trade through Tier-1 events"). MFFU restricts SIX Tier-1 events (FOMC/CPI/NFP/GDP/ISM/PPI + Retail Sales per §5), each a ±30min blackout. The blackout is enforced by THREE independently-maintained hardcoded calendars that MUST stay in parity: (1) `src/engine/skip_engine/calendar_filter.py::_ECONOMIC_EVENTS` = the LIVE blackout (paper-signal calls it → `is_economic_event`); (2) `src/engine/economic_calendar.py::STATIC_EVENTS` = the BACKTEST calendar + the designated SOURCE OF TRUTH for dates (calendar_filter now imports from it); (3) `src/server/lib/tier1-event-blackout.ts::TIER1_EVENTS` = the in-process fail-CLOSED backup used when the Python worker is down. The CI gate `npm run check:ts-python-tier1-parity` asserts TS == economic_calendar.py and is fail-CLOSED — if it fails, reconcile the TS list to the Python source (do NOT edit economic_calendar.py to match TS unless the TS dates are the confirmed ones). 2027 dates are PROJECTED (unconfirmed BLS/BEA) — consistency across the 3 calendars matters more than which projection. Retail Sales is still MISSING from all three (no confirmed dates) — the live bot is exposed on Retail Sales days; that's a known TODO, not a bug to re-diagnose.
 
 ### audit_log has NO `payload` column — use `input`/`result`, and `status` is NOT NULL (pinned 2026-06-22)
 
