@@ -71,6 +71,9 @@ import { runAbComparisonWeeklyDigest } from "./services/ab-comparison-weekly-dig
 import { runDbBackup } from "./services/db-backup-service.js";
 // Pass 1 Track D: Discord fanout audit — keeps _webhookHealth in sync every 30 min
 import { runDiscordFanoutAudit } from "./services/discord-fanout-audit-service.js";
+// A14 regime-bank population — fills synthetic_regime_bank so black-swan evaluator
+// returns real survival rates instead of null (CHALLENGER-ONLY / ADVISORY).
+import { runSyntheticRegimeBankPopulate } from "./services/synthetic-regime-bank-service.js";
 
 let initialized = false;
 
@@ -444,6 +447,11 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   // production-status.ts; silencing it during a pause would cause false "not_configured"
   // reports to the operator.
   "discord-fanout-audit-30min",         // Pass 1 Track D: Discord webhook health probe
+  // A14 regime-bank population is research / data-generation work — it runs even when
+  // the pipeline is paused because a paused pipeline still needs the bank populated
+  // so that the A14 black-swan evaluator can produce non-null survival rates the
+  // moment the pipeline resumes. Regime generation has no financial impact.
+  "synthetic-regime-bank-populate",     // A14: advisory challenger-only regime generation
 ]);
 
 function _validateAllJobsScheduled(): void {
@@ -4994,6 +5002,63 @@ except Exception as e:
     }
   });
   _scheduledJobs.add("discord-fanout-audit-30min");
+
+  // ─── A14: Synthetic Regime Bank — population cron (Sunday off-RTH) ────────────
+  //
+  // Fills synthetic_regime_bank with stochastic regime scenarios produced by the
+  // Python generator (src/engine/synthetic/populate_regime_bank). Once the bank
+  // has rows, black_swan_evaluator.py returns real survival rates instead of null.
+  //
+  // ADVISORY / CHALLENGER-ONLY — never gates capital. Additive cron only.
+  //
+  // Schedule: Sunday 03:00 ET (well off-RTH, low-competition with other jobs).
+  //   EDT (UTC-4): Sun 07:00 UTC
+  //   EST (UTC-5): Sun 08:00 UTC
+  // DST-safe double-fire: cron fires at 7,8 UTC Sundays; ET-hour guard confirms
+  // hour=3 (03:00 ET). Pattern mirrors db-backup-service DST handling.
+  //
+  // PIPELINE_GATE_EXEMPT: regime generation is research / data work — must run
+  // even when the trading pipeline is paused so the bank stays populated.
+  registerJob("synthetic-regime-bank-populate", 7 * 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "synthetic-regime-bank-populate" }, "cron tick start");
+    await runSyntheticRegimeBankPopulate(correlationId);
+  });
+
+  // Fire Sunday at 07:00 UTC (03:00 ET EDT) and 08:00 UTC (03:00 ET EST).
+  // ET-hour guard inside the handler confirms Sunday 03:00 ET only.
+  cron.schedule("0 7,8 * * 0", async () => {
+    if (!_tryAcquireJobLock("synthetic-regime-bank-populate")) return;
+    try {
+      const now = new Date();
+      const etStr = now.toLocaleString("en-US", {
+        timeZone: "America/New_York",
+        weekday: "short",
+        hour: "numeric",
+        hour12: false,
+      });
+      // Must be Sunday at 03:00 ET
+      if (!etStr.includes("Sun") || !etStr.includes("3")) {
+        logger.debug(
+          { etStr, utcHour: now.getUTCHours(), utcDay: now.getUTCDay() },
+          "Scheduler: synthetic-regime-bank-populate cron fired but not Sunday 03:00 ET — skipping",
+        );
+        return;
+      }
+      // NOT pipeline-gated — in _PIPELINE_GATE_EXEMPT (research / data generation)
+      logger.info(
+        { job: "synthetic-regime-bank-populate" },
+        "running pipeline-gate-exempt synthetic regime bank populate (Sunday 03:00 ET confirmed)",
+      );
+      const t0srb = Date.now();
+      await withRetry("synthetic-regime-bank-populate", SCHEDULER_JOBS["synthetic-regime-bank-populate"].run, 1);
+      markJobRun("synthetic-regime-bank-populate");
+      emitJobComplete("synthetic-regime-bank-populate", Date.now() - t0srb);
+    } finally {
+      _releaseJobLock("synthetic-regime-bank-populate");
+    }
+  });
+  _scheduledJobs.add("synthetic-regime-bank-populate");
 
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every
