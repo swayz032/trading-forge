@@ -209,16 +209,35 @@ model realistic execution and don't exploit the sim fill engine).
 | **§2 No multi-limit-at-same-price fill manipulation** | We place single structural entries (stop-limit), never stacked limits at one price to game fills. ✅ by-design |
 | **§2 No gapped/illiquid isolated-fill profiteering** | Zero-volume / trade-critical-bar guard (`BACKTEST_ZERO_VOLUME_TRADE_CRITICAL_FAIL_LOUD`); per-symbol liquidity caps; partial-fill model on thin bars. ✅ |
 | **§2 No slippage-absence / tight-bracket exploit** | We compute P&L manually with modeled slippage + symmetric exit slippage (never the sim's zero-slippage); structural stops, not tight brackets. ✅ by-design |
-| **§2 T1 economic data RESTRICTED** | Firm-agnostic T1 entry-block window (T−5/+2) via `economic-calendar-loader.ts`; `macro_alignment` hard-block; news-policy MFFU = **reduce_size** (Builder allows news but T1 stays cautious — entries near T1 are still blocked by the window). ✅ |
+| **§2 T1 economic data** (firm-wide Fair Play) | **OVERRIDDEN on Builder** — the Builder Plan doc makes news FULLY UNRESTRICTED (see note below). Our T−5/+2 window + `macro_alignment` hard-block + news-policy `reduce_size` are kept as a **prudent risk default of ours**, not an MFFU requirement. ✅ |
 | **§2 / §4 Collaborative trading ban** | `correlation_matrix.yaml` + collaborative-trading compliance; family runs DIFFERENT strategies per firm; per-account strategy assignment unique. ✅ |
 | **§4 Own device / no copy-trading** | `compliance_gate` `vps_prohibited` + same-device ban (host must be local/personal-device); family onboarding = own device each. ✅ operational |
 | **§5 Hedging ban (same underlying, opposite side, same time — incl. MNQ+NQ)** | **NOW ENFORCED both ways:** cross-account (`checkCrossAccountHedge`) + **intra-account** (`checkIntraAccountHedge`, NEW 2026-06-23 — `hedgingSameUnderlyingBanned` flag now has teeth) via `symbolToUnderlying` collision at the entry gate (`paper-signal-service.ts` Tier 5.3.2 / 5.3.2b). Audit `compliance.intra_account_hedge_blocked`. ✅ |
 | **§3 Termination / profit confiscation** | Consequence policy (informational) — our job is to never trigger §1-§5. |
 
-**Note on §2 T1 + Builder:** Builder's plan sheet says "News Trading: Allowed", but this firm-wide
-Fair Play doc still lists T1 economic data as **restricted**. We reconcile by: general news →
-allowed (reduce_size caution), but T1 windows (FOMC/CPI/NFP/EIA) keep the firm-agnostic T−5/+2
-entry block + `macro_alignment` hard-block. So the bot never enters right around T1 on MFFU.
+**Note on §2 T1 + Builder (CORRECTED 2026-06-23):** the **Builder Plan doc explicitly OVERRIDES**
+the firm-wide Fair Play "T1 restricted" line — for Builder, **news trading is FULLY UNRESTRICTED**
+(eval + sim funded): "You may open and hold positions through any scheduled news event without
+limitation." So T1 is **NOT a compliance restriction on Builder.** Our bot's news caution
+(news-policy MFFU = `reduce_size`; `macro_alignment` hard-block; T−5/+2 entry window) is therefore
+a **prudent RISK-MANAGEMENT default of OURS, not an MFFU requirement** — institutional desks avoid
+FOMC, and the operator's 09:30–11:30 window dodges most T1 anyway. A strategy may opt into full
+news trading on Builder via per-strategy `bypass_news_blackout=true`.
+
+---
+
+## Builder Operational Rules (2026-06-23 comprehensive guide)
+
+| Rule | Detail / our handling |
+|---|---|
+| **EOD trailing lock** | MLL trails EOD highs ($2,000 distance), never moves down, **locks permanently once it reaches $100 above the starting balance** (sim funded: locks at breakeven). Our `realizedPeakEquity` EOD model + floor-lock. Open-equity losses count at session close. |
+| **Two MLL options** | **Default = $2,000 MLL / $48,000 floor** (configured) · Add-On = $1,500 MLL / $48,500 floor (cheaper, tighter). Everything else identical. ⚠️ confirm operator uses Default. |
+| **$1,000 soft-pause DLL** | All 3 stages (eval/sim/live). Soft = pause for the day, account survives (not a breach). `daily_loss_limit=1000`. |
+| **No overnight** | All positions auto-closed at session end (platform-enforced). Matches our **15:55 ET hard flatten**. `overnight_ok=false`. |
+| **7-day inactivity (sim funded)** | No trade in 7 consecutive calendar days → sim account CLOSED. ⚠️ **Vacation-mode note:** autopilot must place ≥1 MFFU trade per 7 days, else the sim account closes. (Bot trades 1-2/day, so safe while running.) |
+| **Live post-breach 21-day cooldown** | A LIVE breach → 21 calendar days: no sim trading, no new evals/resets. Our kill-switch (67% DLL halt / 95% force-close) exists to never breach. |
+| **1 sim account per user** | Only one active Builder sim account; after a breach, a new one only the following trading day. |
+| **50% consistency @ payout** | Single largest profit day ≤ 50% of cycle total, checked AT payout request, **resets after each approved payout**. Sim-funded stage only (none eval, none live). Opt-in lane during sim-funded phase. |
 
 ---
 
