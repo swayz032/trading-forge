@@ -10100,13 +10100,36 @@ Also restored Anam.ai persona during this session:
 - Then Phase 0/1 graduation: validate live → flip `SERVER_MEDIATED_EXECUTION_ENABLED=true`.
 - **Shared-tree/index race with the parallel session is ACTIVE** — both sessions building on `hardening/phase-0`; commit with explicit paths only, never `git add -A`; branch reconciliation with feature/deep-analysis-pipeline still pending.
 
+### Session Log — 2026-06-22 claude (Tier-1 news — firm-aware, Phase 1 + Phase 2)
+
+**Mission:** Correct the macro-news handling to the REAL firm policies (operator provided Topstep + MFFU Feb-2026 news docs mid-session).
+
+**Root cause:** the prior macro-blackout fix built from a STALE `prop-firm-rules-2026-mffu.md` §5 (listed T1 as FOMC/CPI/NFP/GDP/ISM/PPI, ±30min, firm-agnostic hard-block). The current policies are different on both firms.
+
+**Phase 1 (commit 7fc173c):** corrected the T1 EVENT SET. Removed GDP/ISM/PPI (NOT T1), added FOMC_MINUTES + EIA (data). Live calendar_filter + TS backup universal set = FOMC/FOMC_MINUTES/CPI/NFP. Stale doc §5 rewritten. 48 pytest + 31 vitest GREEN.
+
+**Phase 2A (commit 65c1438):** firm-aware BEHAVIOR. `news-policy.ts::resolveNewsAction` — Topstep (PRIMARY/first-choice) trades news with CAUTION (reduce size ×0.5, never block); MFFU 50k Rapid (RESTRICTED — T1 prohibited) + unknown firm → fail-safe hard-block. `eventAffectsSymbol` product scope (CPI/NFP→index only, not crude). Wired into paper-signal is_economic_event branch (Topstep → pmSizeFactor×newsReduceFactor; MFFU → block).
+
+**Phase 2B (commit c349137):** EIA crude-inventory window (MCL/CL only — the ONE T1 that lands in the operator's 9:30-11:30 window). `eia-dates.ts` (104 dates GENERATED from Python, holiday shifts baked in, parity-gated) + `isEiaWindow` (crude-only, T−5/+2). Topstep reduces / MFFU blocks on EIA for crude. Parity gate extended to EIA (179 events). 21 news-policy vitest GREEN.
+
+**Carry-forward:** (1) Retail Sales (MFFU T1) still has no confirmed dates — not enforced. (2) 2027 dates projected — operator verify EIA/FOMC_MINUTES vs official schedules. (3) MFFU restricted-vs-unrestricted is currently firm-level (MFFU→block); a per-account `plan_type` would let unrestricted MFFU (evals/Flex) use ±2min flatten instead of full block. (4) The asymmetric T−5/+2 window is applied to EIA; the universal events still use the Python ±30 (harmless — out-of-window). (5) SHARED-TREE/INDEX RACE active — commit with `git commit --only <paths>`, never `git add -A`.
+
 ---
 
 ## Known-Facts Pin — Stop Misdiagnosing These
 
-### Macro-event blackout = THREE calendars that must agree; the only hard-block (pinned 2026-06-22)
+### Tier-1 news handling is FIRM-AWARE + product-scoped (pinned 2026-06-22 — supersedes prior ±30/6-event fact)
 
-The `macro_alignment` factor is the ONLY hard-block in the confluence engine (forces score=0; "never trade through Tier-1 events"). MFFU restricts SIX Tier-1 events (FOMC/CPI/NFP/GDP/ISM/PPI + Retail Sales per §5), each a ±30min blackout. The blackout is enforced by THREE independently-maintained hardcoded calendars that MUST stay in parity: (1) `src/engine/skip_engine/calendar_filter.py::_ECONOMIC_EVENTS` = the LIVE blackout (paper-signal calls it → `is_economic_event`); (2) `src/engine/economic_calendar.py::STATIC_EVENTS` = the BACKTEST calendar + the designated SOURCE OF TRUTH for dates (calendar_filter now imports from it); (3) `src/server/lib/tier1-event-blackout.ts::TIER1_EVENTS` = the in-process fail-CLOSED backup used when the Python worker is down. The CI gate `npm run check:ts-python-tier1-parity` asserts TS == economic_calendar.py and is fail-CLOSED — if it fails, reconcile the TS list to the Python source (do NOT edit economic_calendar.py to match TS unless the TS dates are the confirmed ones). 2027 dates are PROJECTED (unconfirmed BLS/BEA) — consistency across the 3 calendars matters more than which projection. Retail Sales is still MISSING from all three (no confirmed dates) — the live bot is exposed on Retail Sales days; that's a known TODO, not a bug to re-diagnose.
+The two approved firms have OPPOSITE news policies — the handling is firm-aware, NOT a blanket hard-block:
+- **Topstep (PRIMARY / bot's first choice):** trading news is ALLOWED with caution. The bot AUTO-REDUCES size (`NEWS_REDUCE_SIZE_FACTOR`, default 0.5) in the window — NEVER blocks.
+- **MFFU 50k Rapid (secondary, RESTRICTED account):** T1 trading is PROHIBITED → hard-block. Unknown/missing firm also hard-blocks (fail-safe).
+Resolver: `src/server/lib/news-policy.ts::resolveNewsAction(firm, inWindow, bypass)`.
+
+**T1 event set (MFFU Feb-2026 policy — NOT the old stale list):** FOMC, **FOMC Minutes**, Employment Report (NFP), CPI [all products] + **EIA** (Crude Oil Inventories — Wed 10:30 ET, holiday→Thu 11:00) [CRUDE/MCL ONLY] + Agricultural [ag, not our products]. **GDP/ISM/PPI are NOT T1** (removed — do not re-add). Retail Sales is T1 but has no confirmed dates yet (not enforced).
+
+**Product scope** (`eventAffectsSymbol`): FOMC/FOMC_MINUTES → all; CPI/NFP → equity index (MES/MNQ) only; EIA → crude (MCL/CL) only. The operator's 9:30-11:30 ET window dodges all T1 EXCEPT EIA (10:30, MCL).
+
+**Three calendars still must agree** (parity-gated by `npm run check:ts-python-tier1-parity`, now 179 events incl. EIA): (1) `calendar_filter.py::_ECONOMIC_EVENTS` = live universal blackout (FOMC/FOMC_MINUTES/CPI/NFP); (2) `economic_calendar.py::STATIC_EVENTS` = SOURCE OF TRUTH for dates (also has GDP/ISM/PPI/PCE as non-blackout DATA + EIA); (3) `tier1-event-blackout.ts::TIER1_EVENTS` (universal backup) + `eia-dates.ts::EIA_EVENTS` (generated from Python). EIA is product-scoped — NOT in the universal set (would wrongly block MES/MNQ at 10:30).
 
 ### audit_log has NO `payload` column — use `input`/`result`, and `status` is NOT NULL (pinned 2026-06-22)
 
