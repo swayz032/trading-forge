@@ -259,6 +259,28 @@ item mapped to how Trading Forge handles it. Two new enforced gates were added 2
 wired in `paper-signal-service.ts` (Tier 5.3.2 / 5.3.3). New env: `NEWS_REDUCE_SIZE_FACTOR` (unrelated),
 `PRICE_LOCK_LIMIT_PCT_<UNDERLYING>` (per-underlying limit % override, default 0.07).
 
+### Prohibited Trading Strategies (SIM exploitation + news) — coverage
+
+Topstep's "Prohibited Trading Strategies" doc targets SIM-fill abuse and full-size news trades.
+**Trading Forge is on the right side of all of these BY DESIGN** — the abuse pattern Topstep
+describes ("hundreds or thousands of trades per day, durations in seconds") is the polar
+opposite of our **1–2 A+ trades/day, structural holds (minutes–hours)** architecture.
+
+| Prohibited strategy | Bot handling |
+|---|---|
+| **Scalping algos / hundreds of rapid trades for SIM queue position** | ENFORCED: `daily-trade-cap.ts` HARD-caps `TF_MAX_TRADES_PER_DAY=2` per account (all firms). The 3rd signal of the day is rejected. We are structurally incapable of the "hundreds of trades/day" pattern. |
+| **Durations in seconds / scalping** | By design: structural entries with Style C / adaptive exits hold for the move (minutes–hours), not seconds. No sub-minute scalping. |
+| **Reckless trades in gapped markets for stray fills** | Guarded: `check_zero_volume_trade_critical()` (holiday/gap bars fail loud), backtest partial-fill + vol-scaled slippage models — fills are modeled realistically, not idealized. |
+| **Exploiting SIM lack-of-slippage for impossible stop execution** | By design: backtest computes P&L manually with vol/session-dependent slippage (never idealized); stop-LIMIT orders, structural stops. |
+| **Tight brackets / auto-breakeven to farm favorable SIM fills** | Legitimate use only: BE+1 stop fires AFTER a real +1R move (TP1 fill over minutes) — risk management, not a sub-second SIM-fill farm. |
+| **Trading MAXIMUM position size into a scheduled major news event** | ENFORCED for NEW entries: the firm-aware news gate reduces Topstep size to `NEWS_REDUCE_SIZE_FACTOR=0.5` (never max) in the T−5/+2 window (`news-policy.ts` + `economic-calendar-loader.ts`). **Residual:** a position OPENED before the window and HELD into the event stays at full size — narrow (only EIA/MCL lands in the 9:30–11:30 window; FOMC/CPI/NFP are outside it). Candidate refinement: taper/flag open positions held into a major event. |
+| **Intentionally depleting a Live Funded Account** | N/A: the bot maximizes risk-adjusted return; it never intentionally draws down. The 67% DLL halt + 95% force-close are the only loss mechanics. |
+| **Account stacking** | The 67% personal DLL halt prevents the high-risk-blowup mechanic; switching accounts to repeat is operator behavior, not bot logic. |
+
+**Net:** no new enforcement code required — the daily-trade-cap (2/day) + structural-hold
+architecture + realistic fill modeling + news size-reduction already satisfy this list. The
+single narrow residual is full-size positions HELD into a major news event (vs new entries).
+
 ---
 
 ## Constants Used By Code
