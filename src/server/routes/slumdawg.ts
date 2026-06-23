@@ -378,7 +378,21 @@ slumdawgRoutes.post("/ingest-youtube", async (req, res) => {
       body: JSON.stringify({ url }),
       signal: AbortSignal.timeout(180_000),
     });
-    const result = await ingest.json() as { results?: Array<{ url: string; video_id?: string; status?: string; title?: string; idea_count?: number; ideas?: Array<{ idea_name?: string; entry_indicator?: string }> }> };
+    const result = await ingest.json() as {
+      results?: Array<{ url: string; video_id?: string; status?: string; title?: string; idea_count?: number; ideas?: Array<{ idea_name?: string; concept_name?: string; preferred_regime?: string; entry_indicator?: string; confluence_factors?: string[] }> }>;
+      drain?: { scanned: number; drained: number; failed: number } | null;
+      graduated_strategies?: Array<{
+        id: string;
+        name: string;
+        symbols: string[];
+        lifecycleState: string;
+        useWeightedScoring: boolean | null;
+        exitPlanConfig: { exit_style?: string } | null;
+        preferredRegimes: string[] | null;
+        dailyTf: string | null; htfTf: string | null; itfTf: string | null; triggerTf: string | null;
+        entryQuality: { confluence_factors?: string[]; min_factors_satisfied?: number } | null;
+      }>;
+    };
     const r = result.results?.[0];
 
     if (!r) {
@@ -407,7 +421,12 @@ slumdawgRoutes.post("/ingest-youtube", async (req, res) => {
         baby_jargon_summary = `Ingest status: ${r.status ?? "unknown"}. That's a state I don't have a plain-English line for yet.`;
     }
 
-    res.json({ ingest_result: r, baby_jargon_summary });
+    res.json({
+      ingest_result: r,
+      baby_jargon_summary,
+      drain: result.drain ?? null,
+      graduated_strategies: result.graduated_strategies ?? [],
+    });
   } catch (err) {
     logger.error({ err }, "slumdawg ingest-youtube failed");
     res.status(500).json({ error: "internal_error", baby_jargon_summary: "The ingest pipeline broke mid-extraction. Tower API might be down — check with the operator." });

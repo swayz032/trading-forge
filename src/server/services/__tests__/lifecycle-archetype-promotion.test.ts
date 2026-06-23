@@ -452,12 +452,9 @@ describe("Pass 2 Track C — exportability gate decision contract", () => {
   // ──────────────────────────────────────────────────────────────────────────
   describe("INFRA FAILURE: checkExportability() throws → non-blocking per lifecycle contract", () => {
     it("lifecycle-service.ts outer catch does NOT set exportabilityBlocked on exception", () => {
-      // The lifecycle-service.ts:1963-1966 catch block only logs a warn and does NOT
-      // set exportabilityBlocked=true. This means infra failures (Python down,
-      // timeout, import error) are fail-OPEN for the exportability gate.
-      //
-      // We verify this by confirming the catch block around checkExportability has
-      // the correct non-blocking contract (logs warn, does not set blocked flag).
+      // The catch block around checkExportability is now FAIL-CLOSED (hardened prior session).
+      // Infra failures set exportabilityBlocked=true and skip the strategy this cycle.
+      // This test was updated from the old fail-OPEN contract to match current behavior.
       const lifecycleServicePath = resolve(
         process.cwd(),
         "src/server/services/lifecycle-service.ts",
@@ -466,20 +463,16 @@ describe("Pass 2 Track C — exportability gate decision contract", () => {
 
       const source = readFileSync(lifecycleServicePath, "utf8");
 
-      // The non-blocking warn message must be present in the file
-      expect(source).toContain("checkExportability call failed (non-blocking, promotion continues)");
+      // The fail-CLOSED infra error message must be present in the file
+      expect(source).toContain("checkExportability infra error — strategy skipped this cycle (fail-CLOSED)");
 
-      // The "if (exportabilityBlocked) continue;" must appear AFTER the catch block ends
-      // — meaning the catch block never sets exportabilityBlocked = true
-      const catchBlockStart = source.indexOf("// checkExportability infra failure is informational");
+      // exportabilityBlocked = true must exist in the source (catch sets it to block)
+      const exportBlockIdx = source.indexOf("exportabilityBlocked = true");
+      expect(exportBlockIdx).toBeGreaterThan(-1);
+
+      // The "if (exportabilityBlocked) continue;" must exist after the exportabilityBlocked = true
       const continueStart = source.indexOf("if (exportabilityBlocked) continue;");
-      expect(catchBlockStart).toBeGreaterThan(0);
-      expect(continueStart).toBeGreaterThan(catchBlockStart);
-
-      // Extract the text between the catch comment and the continue statement
-      // — confirm exportabilityBlocked = true is NOT in this region
-      const catchRegion = source.slice(catchBlockStart, continueStart);
-      expect(catchRegion).not.toContain("exportabilityBlocked = true");
+      expect(continueStart).toBeGreaterThan(exportBlockIdx);
     });
 
     it("lifecycle-service.ts uses dynamic import for checkExportability (lazy load)", () => {
@@ -768,20 +761,19 @@ describe("Pass 2 Track C — lifecycle-service.ts gate block source contract", (
     expect(source).toContain("strategy:exportability_blocked");
   });
 
-  it("catch block does NOT set exportabilityBlocked=true (fail-OPEN on infra error)", () => {
-    // The catch block around the checkExportability dynamic import must be non-blocking:
-    // it logs a warn and does NOT set exportabilityBlocked = true.
-    // Verify by finding the region between the infra-failure comment and the continue statement.
-    expect(source).toContain("checkExportability call failed (non-blocking, promotion continues)");
+  it("catch block sets exportabilityBlocked=true (fail-CLOSED on infra error — hardened prior session)", () => {
+    // The catch block around the checkExportability dynamic import is now FAIL-CLOSED:
+    // it sets exportabilityBlocked=true so the strategy is skipped this cycle.
+    // Test was updated from old fail-OPEN contract to match current production behavior.
+    expect(source).toContain("checkExportability infra error — strategy skipped this cycle (fail-CLOSED)");
 
-    const catchRegionStart = source.indexOf("// checkExportability infra failure is informational");
+    // exportabilityBlocked = true must appear in the source
+    const exportBlockIdx = source.indexOf("exportabilityBlocked = true");
+    expect(exportBlockIdx).toBeGreaterThan(-1);
+
+    // The continue statement appears after the blocked flag is set
     const continueIdx = source.indexOf("if (exportabilityBlocked) continue;");
-    expect(catchRegionStart).toBeGreaterThan(0);
-    expect(continueIdx).toBeGreaterThan(catchRegionStart);
-
-    const catchRegion = source.slice(catchRegionStart, continueIdx);
-    // Catch region must NOT contain exportabilityBlocked = true — infra errors are fail-OPEN
-    expect(catchRegion).not.toContain("exportabilityBlocked = true");
+    expect(continueIdx).toBeGreaterThan(exportBlockIdx);
   });
 });
 

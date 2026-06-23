@@ -44,6 +44,21 @@ const WRC_P_THRESHOLD = 0.05;
 /** SPA spa_consistent_p threshold (default 0.05). */
 const SPA_P_THRESHOLD = 0.05;
 
+/**
+ * F-4 Hardening 2026-06-23: PROMOTION_GRANDFATHER_PRE_PASS_E opt-in flag.
+ *
+ * When NOT set (default "false"), null-datum gate paths fail-CLOSED: a strategy
+ * with no CPCV/WRC/SPA/B14 data CANNOT reach DEPLOY_READY.
+ * This is the institutional-grade default — missing evidence = blocked.
+ *
+ * Set PROMOTION_GRANDFATHER_PRE_PASS_E="true" ONLY for pre-Pass-E strategies
+ * that legitimately have no WRC/SPA/CPCV data and need a grandfather window.
+ * This flag requires explicit operator opt-in and is NOT the default.
+ */
+function isGrandfatherEnabled(): boolean {
+  return (process.env.PROMOTION_GRANDFATHER_PRE_PASS_E ?? "false") === "true";
+}
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export type GateName = "b14_ci_high" | "wfe_floor" | "cpcv_n_paths" | "wrc_p" | "spa_p";
@@ -127,11 +142,16 @@ function evaluateB14Gate(data: StrategyPromotionData): GateResult {
   const ciHigh = data.ruinCi?.ci_high ?? data.ruinPointEstimate ?? null;
 
   if (ciHigh === null) {
+    // F-4 Hardening 2026-06-23: fail-CLOSED by default when no MC data.
+    // Opt-in to legacy fail-open behavior via PROMOTION_GRANDFATHER_PRE_PASS_E="true".
+    const grandfather = isGrandfatherEnabled();
     return {
-      passed: true,  // fail-open for legacy compatibility
+      passed: grandfather,
       value: null,
       threshold: 0.40,
-      reason: "b14.ci_high_unavailable — no MC run, fail-open",
+      reason: grandfather
+        ? "b14.ci_high_unavailable — no MC run, fail-open (PROMOTION_GRANDFATHER_PRE_PASS_E=true)"
+        : "b14.ci_high_unavailable — no MC run, fail-closed (missing evidence blocks promotion)",
       data_available: false,
     };
   }
@@ -178,12 +198,16 @@ function evaluateCpcvGate(data: StrategyPromotionData): GateResult {
   const nPaths = data.cpcvNPaths ?? null;
 
   if (nPaths === null) {
-    // No CPCV run yet — fail-open (strategy stays at CANDIDATE/PAPER, does not reject)
+    // F-4 Hardening 2026-06-23: fail-CLOSED by default when no CPCV data.
+    // Opt-in to legacy fail-open behavior via PROMOTION_GRANDFATHER_PRE_PASS_E="true".
+    const grandfather = isGrandfatherEnabled();
     return {
-      passed: true,
+      passed: grandfather,
       value: null,
       threshold: minPaths,
-      reason: "cpcv.no_run — no CPCV data yet, fail-open",
+      reason: grandfather
+        ? "cpcv.no_run — no CPCV data yet, fail-open (PROMOTION_GRANDFATHER_PRE_PASS_E=true)"
+        : "cpcv.no_run — no CPCV data yet, fail-closed (missing evidence blocks promotion)",
       data_available: false,
     };
   }
@@ -206,11 +230,16 @@ function evaluateWrcGate(data: StrategyPromotionData): GateResult {
   const pValue = data.wrcPValue ?? null;
 
   if (pValue === null) {
+    // F-4 Hardening 2026-06-23: fail-CLOSED by default when no WRC data.
+    // Opt-in to legacy fail-open behavior via PROMOTION_GRANDFATHER_PRE_PASS_E="true".
+    const grandfather = isGrandfatherEnabled();
     return {
-      passed: true,  // fail-open for pre-Pass-E backtests
+      passed: grandfather,
       value: null,
       threshold: WRC_P_THRESHOLD,
-      reason: "wrc.unavailable — no WRC data, fail-open",
+      reason: grandfather
+        ? "wrc.unavailable — no WRC data, fail-open (PROMOTION_GRANDFATHER_PRE_PASS_E=true)"
+        : "wrc.unavailable — no WRC data, fail-closed (missing evidence blocks promotion)",
       data_available: false,
     };
   }
@@ -233,11 +262,16 @@ function evaluateSpaGate(data: StrategyPromotionData): GateResult {
   const spaP = data.spaConsistentP ?? null;
 
   if (spaP === null) {
+    // F-4 Hardening 2026-06-23: fail-CLOSED by default when no SPA data.
+    // Opt-in to legacy fail-open behavior via PROMOTION_GRANDFATHER_PRE_PASS_E="true".
+    const grandfather = isGrandfatherEnabled();
     return {
-      passed: true,  // fail-open for pre-Pass-E backtests
+      passed: grandfather,
       value: null,
       threshold: SPA_P_THRESHOLD,
-      reason: "spa.unavailable — no SPA data, fail-open",
+      reason: grandfather
+        ? "spa.unavailable — no SPA data, fail-open (PROMOTION_GRANDFATHER_PRE_PASS_E=true)"
+        : "spa.unavailable — no SPA data, fail-closed (missing evidence blocks promotion)",
       data_available: false,
     };
   }
@@ -286,15 +320,22 @@ export function evaluatePromotionGates(
   const b14Result = evaluateB14Gate(strategyData);
 
   // WFE gate — use override floor
+  // F-4 Hardening 2026-06-23: null WFE fails-CLOSED by default.
+  // Opt-in to legacy fail-open via PROMOTION_GRANDFATHER_PRE_PASS_E="true".
   const wfe = strategyData.wfeOverall ?? null;
   const wfeResult: GateResult = wfe === null
-    ? {
-        passed: true,
-        value: null,
-        threshold: effectiveWfeFloor,
-        reason: "wfe.unavailable_legacy — no WFE data, fail-open",
-        data_available: false,
-      }
+    ? (() => {
+        const grandfather = isGrandfatherEnabled();
+        return {
+          passed: grandfather,
+          value: null,
+          threshold: effectiveWfeFloor,
+          reason: grandfather
+            ? "wfe.unavailable_legacy — no WFE data, fail-open (PROMOTION_GRANDFATHER_PRE_PASS_E=true)"
+            : "wfe.unavailable_legacy — no WFE data, fail-closed (missing evidence blocks promotion)",
+          data_available: false,
+        };
+      })()
     : (() => {
         const numWfe = Number(wfe);
         const passed = numWfe >= effectiveWfeFloor;
@@ -310,15 +351,22 @@ export function evaluatePromotionGates(
       })();
 
   // CPCV gate — use override min
+  // F-4 Hardening 2026-06-23: null CPCV fails-CLOSED by default.
+  // Opt-in to legacy fail-open via PROMOTION_GRANDFATHER_PRE_PASS_E="true".
   const nPaths = strategyData.cpcvNPaths ?? null;
   const cpcvResult: GateResult = nPaths === null
-    ? {
-        passed: true,
-        value: null,
-        threshold: effectiveCpcvMin,
-        reason: "cpcv.no_run — no CPCV data yet, fail-open",
-        data_available: false,
-      }
+    ? (() => {
+        const grandfather = isGrandfatherEnabled();
+        return {
+          passed: grandfather,
+          value: null,
+          threshold: effectiveCpcvMin,
+          reason: grandfather
+            ? "cpcv.no_run — no CPCV data yet, fail-open (PROMOTION_GRANDFATHER_PRE_PASS_E=true)"
+            : "cpcv.no_run — no CPCV data yet, fail-closed (missing evidence blocks promotion)",
+          data_available: false,
+        };
+      })()
     : (() => {
         const numPaths = Number(nPaths);
         const passed = numPaths >= effectiveCpcvMin;

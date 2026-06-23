@@ -46,12 +46,17 @@ describe("Pass 5 Track C — SHADOW→PAPER evaluator wiring in lifecycle-servic
     expect(src).toContain("lifecycle:shadow_to_paper_blocked");
   });
 
-  it("fail-open on infrastructure errors (try/catch around evaluator)", () => {
+  it("fail-CLOSED on infrastructure errors (catch (shadowGateErr) returns { success: false })", () => {
+    // F-2a Hardening 2026-06-23: catch now fail-CLOSED (not fail-open)
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
     const idx = src.indexOf("shadow-to-paper-gate.js");
     const afterCall = src.slice(idx, idx + 2000);
     expect(afterCall).toContain("catch (shadowGateErr)");
-    expect(afterCall).toContain("fail-open");
+    // Must return fail-closed (use 700 chars to capture return statement)
+    const catchIdx = src.indexOf("catch (shadowGateErr)");
+    const catchBlock = src.slice(catchIdx, catchIdx + 700);
+    expect(catchBlock).toContain("return { success: false");
+    expect(catchBlock).toContain("shadow_to_paper_gate_evaluator_error");
   });
 
   it("loads divergence inputs via loadDivergenceInputs", () => {

@@ -181,14 +181,17 @@ describe("Pass 5 Track C — PAPER→DEPLOY_READY evaluator wiring parity", () =
     expect(block).toContain("strategyPromotions.labels");
   });
 
-  it("wraps evaluator call in try/catch with fail-open comment", () => {
+  it("wraps evaluator call in try/catch with fail-CLOSED behavior (F-1 hardening 2026-06-23)", () => {
+    // F-1 changed catch from fail-open to fail-closed — test updated to reflect new contract.
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
-    // Search from pdrInput — within 6000 chars of the catch block
     const pdrInputIdx = src.indexOf("const pdrInput:");
     expect(pdrInputIdx).toBeGreaterThan(-1);
     const block = src.slice(pdrInputIdx, pdrInputIdx + 6000);
     expect(block).toContain("catch (pdrGateErr)");
-    expect(block).toContain("fail-open");
+    // Must return fail-closed on error
+    const catchIdx = src.indexOf("catch (pdrGateErr)");
+    const catchBlock = src.slice(catchIdx, catchIdx + 700);
+    expect(catchBlock).toContain("paper_to_deploy_ready_gate_evaluator_error");
   });
 });
 
@@ -233,12 +236,16 @@ describe("Pass 5 Track C — SHADOW→PAPER evaluator wiring parity", () => {
     expect(src).toContain("lifecycle:shadow_to_paper_blocked");
   });
 
-  it("wraps evaluator call in try/catch with fail-open comment", () => {
+  it("wraps evaluator call in try/catch with fail-CLOSED behavior (F-2a hardening 2026-06-23)", () => {
+    // F-2a changed catch from fail-open to fail-closed — test updated to reflect new contract.
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
     const idx = src.indexOf("evaluateShadowToPaperGate");
     const block = src.slice(idx, idx + 2000);
     expect(block).toContain("catch (shadowGateErr)");
-    expect(block).toContain("fail-open");
+    // Must return fail-closed on error
+    const catchIdx = src.indexOf("catch (shadowGateErr)");
+    const catchBlock = src.slice(catchIdx, catchIdx + 700);
+    expect(catchBlock).toContain("shadow_to_paper_gate_evaluator_error");
   });
 });
 

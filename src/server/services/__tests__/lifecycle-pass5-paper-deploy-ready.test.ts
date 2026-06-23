@@ -58,13 +58,18 @@ describe("Pass 5 Track C — PAPER→DEPLOY_READY evaluator wiring in lifecycle-
     expect(src.slice(pdrInputIdx, pdrInputIdx + 4000)).toContain("strategyPromotions.labels");
   });
 
-  it("fail-open on infrastructure errors (try/catch around evaluator)", () => {
+  it("fail-CLOSED on infrastructure errors (catch (pdrGateErr) returns { success: false })", () => {
+    // F-1 Hardening 2026-06-23: catch now fail-CLOSED (not fail-open)
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
     const pdrInputIdx = src.indexOf("const pdrInput:");
     expect(pdrInputIdx).toBeGreaterThan(-1);
     const block = src.slice(pdrInputIdx, pdrInputIdx + 6000);
     expect(block).toContain("catch (pdrGateErr)");
-    expect(block).toContain("fail-open");
+    // Must return fail-closed (use 700 chars to capture return statement)
+    const catchIdx = src.indexOf("catch (pdrGateErr)");
+    const catchBlock = src.slice(catchIdx, catchIdx + 700);
+    expect(catchBlock).toContain("return { success: false");
+    expect(catchBlock).toContain("paper_to_deploy_ready_gate_evaluator_error");
   });
 
   it("loads latestBtP2D, latestMcP2D, frozenShadowRow as gate inputs", () => {

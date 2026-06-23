@@ -89,7 +89,14 @@ interface PromoteStrategyOptions {
 }
 
 const VALID_TRANSITIONS: Record<LifecycleState, LifecycleState[]> = {
-  CANDIDATE: ["TESTING", "PAPER", "GRAVEYARD"],  // PAPER is fast-track for tier-qualified strategies (Wave B1)
+  // F-3 Decision 2026-06-23: CANDIDATE→PAPER is PRESERVED (not removed).
+  // backtest-service.ts line ~2461 calls promoteStrategy("CANDIDATE","PAPER") as a tier-qualified
+  // fast-track after 4 explicit gates (survival score, compliance drift, exportability, graveyard).
+  // Removing it would break the backtest auto-promote path for TIER_1/TIER_2/TIER_3 strategies.
+  // The fast-track skips SHADOW because backtest gates provide equivalent evidence.
+  // This transition is intentionally NOT guarded by shadow evidence in _promoteStrategyInner —
+  // that is by design for the fast-track caller (backtest-service.ts).
+  CANDIDATE: ["TESTING", "PAPER", "GRAVEYARD"],  // PAPER is fast-track for tier-qualified strategies (backtest-service.ts F-3)
   // Wave 29 Pass A.1: TESTING can go to SHADOW (new path) OR directly to PAPER (legacy path preserved).
   // Both routes are valid depending on whether shadow_mode_enabled=true on the strategy.
   TESTING: ["SHADOW", "PAPER", "DECLINING", "GRAVEYARD"],
@@ -485,8 +492,12 @@ export class LifecycleService {
           return { success: false, error: gatePdrResult.reason ?? "PAPER→DEPLOY_READY gate failed" };
         }
       } catch (pdrGateErr) {
-        // Fail-open on infrastructure errors only (DB failure to load inputs)
-        logger.warn({ strategyId: id, err: pdrGateErr }, "PAPER→DEPLOY_READY evaluator: infrastructure error (fail-open — promotion continues via legacy gates)");
+        // F-1 Hardening 2026-06-23: Fail-CLOSED on infrastructure errors.
+        // The "legacy gates" comment was misleading — no fallback gate stack exists.
+        // An evaluator that cannot run must block promotion, not silently allow it.
+        const pdrErrMsg = pdrGateErr instanceof Error ? pdrGateErr.message : String(pdrGateErr);
+        logger.warn({ strategyId: id, err: pdrGateErr }, "PAPER→DEPLOY_READY evaluator: infrastructure error — blocking promotion (fail-closed)");
+        return { success: false, error: `paper_to_deploy_ready_gate_evaluator_error: ${pdrErrMsg}` };
       }
     }
 
@@ -517,8 +528,11 @@ export class LifecycleService {
           return { success: false, error: shadowGateResult.reason ?? "SHADOW→PAPER gate failed" };
         }
       } catch (shadowGateErr) {
-        // Fail-open on infrastructure errors only
-        logger.warn({ strategyId: id, err: shadowGateErr }, "SHADOW→PAPER evaluator: infrastructure error (fail-open — promotion continues)");
+        // F-2a Hardening 2026-06-23: Fail-CLOSED on infrastructure errors.
+        // SHADOW→PAPER is a trust boundary; a broken evaluator must block, not allow.
+        const shadowErrMsg = shadowGateErr instanceof Error ? shadowGateErr.message : String(shadowGateErr);
+        logger.warn({ strategyId: id, err: shadowGateErr }, "SHADOW→PAPER evaluator: infrastructure error — blocking promotion (fail-closed)");
+        return { success: false, error: `shadow_to_paper_gate_evaluator_error: ${shadowErrMsg}` };
       }
     }
 
@@ -2343,8 +2357,29 @@ export class LifecycleService {
             }
           }
         } catch (b14TpErr) {
-          // Fail-open: B14 gate read failure is non-blocking for TESTING→PAPER
-          logger.warn({ strategyId: s.id, err: b14TpErr }, "B14 CI gate (TESTING→PAPER): read failed (non-blocking — promotion continues)");
+          // F-6 Hardening 2026-06-23: Fail-CLOSED on B14 CI gate infrastructure error.
+          // B14 CI is a hard gate protecting against high ruin probability. A gate that
+          // cannot run must block promotion, not silently allow it.
+          const b14TpErrMsg = b14TpErr instanceof Error ? b14TpErr.message : String(b14TpErr);
+          logger.warn({ strategyId: s.id, err: b14TpErr }, "B14 CI gate (TESTING→PAPER): read failed — blocking promotion (fail-closed)");
+          await db.insert(auditLog).values({
+            action: "b14.gate_error_fail_closed",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "failure",
+            decisionAuthority: "gate",
+            input: { fromState: "TESTING", toState: "PAPER" },
+            result: {
+              reason: "b14.gate_error_fail_closed",
+              error: b14TpErrMsg,
+              note: "B14 CI gate threw on TESTING→PAPER path — promotion blocked; retries next cron cycle",
+            },
+            correlationId: tickCorrelationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "B14 fail-closed audit insert (TESTING→PAPER) failed (non-blocking)");
+          });
+          strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+          continue;
         }
 
         // FIX 1: WFE gate — TESTING→PAPER (mirrors PAPER→DEPLOY_READY pattern)
@@ -2684,33 +2719,36 @@ export class LifecycleService {
             logger.info({ strategyId: s.id }, "Auto-promoted SHADOW → PAPER");
           }
         } catch (shadowStratErr: unknown) {
-          // Fail-soft: shadow_signals table missing or query throws →
-          // grandfather window for pre-Wave-29 strategies.
+          // F-2b Hardening 2026-06-23: Fail-CLOSED — grandfather window removed.
+          // If shadow divergence check throws (shadow_signals table missing, DB error,
+          // etc.), we CANNOT verify shadow evidence. Promotion is blocked this cycle;
+          // the strategy retries next cron pass once the underlying issue is resolved.
+          // Emits lifecycle.shadow_divergence_unavailable_blocked (not "legacy warn + PROCEED").
           logger.warn(
             { strategyId: s.id, err: shadowStratErr },
-            "SHADOW → PAPER divergence check threw — emitting unavailable legacy warn + PROCEED",
+            "SHADOW → PAPER divergence check threw — blocking promotion (fail-closed; lifecycle.shadow_divergence_unavailable_blocked)",
           );
 
           await db.insert(auditLog).values({
-            action: "lifecycle.shadow_divergence_check_unavailable_legacy",
+            action: "lifecycle.shadow_divergence_unavailable_blocked",
             entityType: "strategy",
             entityId: s.id,
-            status: "warning",
+            status: "failure",
             decisionAuthority: "gate",
             input: { fromState: "SHADOW", toState: "PAPER" },
             result: {
-              note: "shadow_divergence_check threw (legacy grandfather window) — promotion proceeds via classical gates",
+              note: "shadow_divergence_check threw — promotion blocked (fail-closed); retries next cron cycle",
               error: String(shadowStratErr),
             },
             correlationId,
-          }).catch(() => {});
+          }).catch((auditErr: unknown) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "shadow_divergence_unavailable_blocked audit insert failed (non-blocking)");
+          });
 
-          // Proceed: classical gates still apply via promoteStrategy
-          const legacyResult = await this.promoteStrategy(s.id, "SHADOW", "PAPER", { correlationId: correlationId ?? undefined });
-          if (legacyResult.success) {
-            promoted.push(s.id);
-            logger.info({ strategyId: s.id }, "SHADOW → PAPER: proceeded via legacy fallback (grandfather window)");
-          }
+          // No promoteStrategy call — strategy stays in SHADOW and retries next cycle.
+          try {
+            lifecycleShadowPromotionsTotal.labels({ outcome: "blocked_unavailable" }).inc();
+          } catch (_promErr) { /* non-blocking */ }
         }
       }
     } catch (shadowGateErr: unknown) {
@@ -3284,102 +3322,19 @@ export class LifecycleService {
           );
         }
 
-        // ── Wave 27.5 Pass B.2 Gate #2: WFE hard floor: PAPER → DEPLOY_READY ──
-        // Reads backtests.walk_forward_results.wfe_overall (written by Pass B.1
-        // walk_forward.py — embedded in existing walkForwardResults JSONB column).
-        // WFE < WFE_WARN_FLOOR (default 0.50) → HARD block (likely overfit).
-        // WFE_WARN_FLOOR ≤ WFE < WFE_HARD_FLOOR (default 0.70) → WARN + allow.
-        // Null WFE (pre-Pass-B.1 backtest or non-WF backtest) → fail-open for legacy compat.
-        try {
-          const [latestBtForWfe] = await db
-            .select({ walkForwardResults: backtests.walkForwardResults })
-            .from(backtests)
-            .where(
-              and(
-                eq(backtests.strategyId, s.id),
-                eq(backtests.status, "completed"),
-              ),
-            )
-            .orderBy(desc(backtests.createdAt))
-            .limit(1);
-
-          const wfResults = (latestBtForWfe?.walkForwardResults as Record<string, unknown> | null) ?? null;
-          const wfeOverall = wfResults?.wfe_overall != null ? Number(wfResults.wfe_overall) : null;
-          // Wave hardening 2026-06-22 (G2a wiring): pass wfe_status so the gate can
-          // distinguish a degenerate-IS run (block) from a true legacy null (grandfather).
-          const wfeStatus = wfResults?.wfe_status != null ? String(wfResults.wfe_status) : null;
-
-          const wfeResult = evaluateWfeGate(wfeOverall, undefined, undefined, wfeStatus);
-
-          broadcastSSE("lifecycle:wfe_evaluated", {
-            strategyId: s.id,
-            wfe_overall: wfeResult.wfeOverall,
-            status: wfeResult.status,
-            hard_floor: wfeResult.hardFloor,
-            warn_floor: wfeResult.warnFloor,
-            passed: wfeResult.passed,
-          });
-
-          if (wfeResult.auditAction) {
-            // Parity fix 2026-06-22: wfe-gate.ts now blocks ALL values below WFE_HARD_FLOOR
-            // (including the former "warn band" [0.50, 0.70)). isBlock is true whenever
-            // auditAction is not null and status is "blocked"; the only non-blocking
-            // auditAction is "lifecycle.wfe_unavailable_legacy" (legacy_null path).
-            const isBlock = wfeResult.status === "blocked";
-            logger[isBlock ? "warn" : "info"](
-              {
-                strategyId: s.id,
-                wfeOverall: wfeResult.wfeOverall,
-                hardFloor: wfeResult.hardFloor,
-                warnFloor: wfeResult.warnFloor,
-                status: wfeResult.status,
-                transition: "PAPER→DEPLOY_READY",
-              },
-              isBlock
-                ? "WFE gate BLOCKED PAPER→DEPLOY_READY: wfe_overall below hard floor (0.70)"
-                : "WFE gate: wfe_overall unavailable (legacy backtest) — promotion continues",
-            );
-            await db.insert(auditLog).values({
-              action: wfeResult.auditAction,
-              entityId: s.id,
-              entityType: "strategy",
-              status: isBlock ? "failure" : "warning",
-              decisionAuthority: "gate",
-              input: { fromState: "PAPER", toState: "DEPLOY_READY" },
-              result: {
-                wfe_overall: wfeResult.wfeOverall,
-                hard_floor: wfeResult.hardFloor,
-                warn_floor: wfeResult.warnFloor,
-                status: wfeResult.status,
-              },
-              correlationId,
-            }).catch((auditErr) => {
-              logger.warn({ strategyId: s.id, err: auditErr }, "WFE gate audit insert failed (non-blocking)");
-            });
-
-            // NOTE: The "warned" Discord notification branch that previously fired for the
-            // [0.50, 0.70) warn-and-allow path has been removed (parity fix 2026-06-22).
-            // That band now blocks and the `continue` below handles it.
-            // Legacy-null path (status="legacy_null") does not block — promotion continues.
-
-            if (isBlock) {
-              strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
-              continue;
-            }
-            // Track A.2: push WFE status
-            gateEvidenceStatuses.push(wfeResult.status ?? "legacy_null");
-          } else {
-            // No auditAction means wfe_overall >= hard floor → complete evidence
-            gateEvidenceStatuses.push("complete");
-          }
-        } catch (wfeErr) {
-          // Fail-open: WFE gate read failure is non-blocking.
-          logger.warn(
-            { strategyId: s.id, err: wfeErr },
-            "WFE gate: read failed (non-blocking — promotion continues)",
-          );
-          gateEvidenceStatuses.push("data_unavailable");
-        }
+        // F-5 Hardening 2026-06-23: REMOVED redundant standalone WFE gate (floor 0.70, evaluateWfeGate).
+        // This block used WFE_HARD_FLOOR (0.70 via wfe-gate.ts) while the orchestrator below
+        // evaluates WFE at WFE_PROMOTION_FLOOR (0.80 via promotion-gate-orchestrator.ts).
+        // Running both created a double-evaluation with different floors and created confusion
+        // about which gate governed — a strategy could pass the 0.70 standalone check but be
+        // blocked by the 0.80 orchestrator check, producing redundant audit rows.
+        //
+        // Resolution: the orchestrator's 0.80 floor is authoritative for PAPER→DEPLOY_READY.
+        // The standalone 0.70 call is removed. WFE tracking for gateEvidenceStatuses is now
+        // handled by the orchestrator result below (wfe_floor gate).
+        //
+        // The standalone evaluateWfeGate call is still active for TESTING→PAPER (a different
+        // transition with a separate floor) — that call is unaffected.
 
         // ── Wave 27.5 Pass B.2 Gate #3: Parameter drift classification: PAPER → DEPLOY_READY ──
         // Reads backtests.walk_forward_results.param_stability.drift_classification (Pass B.1).
@@ -3702,12 +3657,32 @@ export class LifecycleService {
             gateEvidenceStatuses.push("data_unavailable");
           }
         } catch (orchErr) {
-          // Fail-open: orchestrator read failure is non-blocking (same pattern as other gates).
+          // F-4 Hardening 2026-06-23: Fail-CLOSED on orchestrator infrastructure error.
+          // The orchestrator evaluates WFE-0.80, CPCV-15, WRC, and SPA — all institutional gates.
+          // An orchestrator that cannot run must BLOCK promotion, not silently allow it.
+          const orchErrMsg = orchErr instanceof Error ? orchErr.message : String(orchErr);
           logger.warn(
             { strategyId: s.id, err: orchErr },
-            "Wave 26 Pass G Pass E gate orchestrator: read failed (non-blocking — promotion continues)",
+            "Wave 26 Pass G Pass E gate orchestrator: read failed — blocking promotion (fail-closed)",
           );
-          gateEvidenceStatuses.push("data_unavailable");
+          await db.insert(auditLog).values({
+            action: "promotion.orchestrator_error_fail_closed",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "failure",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: {
+              reason: "orchestrator_infrastructure_error",
+              error: orchErrMsg,
+              note: "Pass E orchestrator threw — promotion blocked (fail-closed); retries next cron cycle",
+            },
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "orchestrator fail-closed audit insert failed (non-blocking)");
+          });
+          strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+          continue;
         }
 
         // ── Wave 28 Pass B.1: Composite shadow gate (OBSERVABILITY ONLY) ─────

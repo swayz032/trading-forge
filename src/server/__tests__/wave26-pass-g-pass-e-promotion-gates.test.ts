@@ -151,11 +151,33 @@ describe("WFE floor (0.80 institutional standard)", () => {
     expect(result.gate_results.wfe_floor.threshold).toBe(0.80);
   });
 
-  it("null WFE fails-open (legacy backward compat)", () => {
-    const data: StrategyPromotionData = { ...allPassData(), wfeOverall: null };
-    const result = evaluatePromotionGates(data, 0.80);
-    expect(result.gate_results.wfe_floor.passed).toBe(true);
-    expect(result.gate_results.wfe_floor.data_available).toBe(false);
+  it("null WFE fails-CLOSED by default (F-4 hardening)", () => {
+    const orig = process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    delete process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    try {
+      const data: StrategyPromotionData = { ...allPassData(), wfeOverall: null };
+      const result = evaluatePromotionGates(data, 0.80);
+      expect(result.gate_results.wfe_floor.passed).toBe(false);
+      expect(result.gate_results.wfe_floor.data_available).toBe(false);
+      expect(result.gate_results.wfe_floor.reason).toContain("fail-closed");
+    } finally {
+      if (orig === undefined) delete process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+      else process.env.PROMOTION_GRANDFATHER_PRE_PASS_E = orig;
+    }
+  });
+
+  it("null WFE fails-open when PROMOTION_GRANDFATHER_PRE_PASS_E=true (grandfather opt-in)", () => {
+    const orig = process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    process.env.PROMOTION_GRANDFATHER_PRE_PASS_E = "true";
+    try {
+      const data: StrategyPromotionData = { ...allPassData(), wfeOverall: null };
+      const result = evaluatePromotionGates(data, 0.80);
+      expect(result.gate_results.wfe_floor.passed).toBe(true);
+      expect(result.gate_results.wfe_floor.data_available).toBe(false);
+    } finally {
+      if (orig === undefined) delete process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+      else process.env.PROMOTION_GRANDFATHER_PRE_PASS_E = orig;
+    }
   });
 
   it("audit reason contains gate.wfe_floor_failed when WFE fails", () => {
@@ -187,12 +209,33 @@ describe("CPCV n_paths floor (15 institutional standard)", () => {
     expect(result.gate_results.cpcv_n_paths.passed).toBe(true);
   });
 
-  it("null n_paths fails-open (no CPCV run yet)", () => {
-    const data: StrategyPromotionData = { ...allPassData(), cpcvNPaths: null };
-    const result = evaluatePromotionGates(data, undefined, 15);
-    expect(result.gate_results.cpcv_n_paths.passed).toBe(true);
-    expect(result.gate_results.cpcv_n_paths.data_available).toBe(false);
-    expect(result.gate_results.cpcv_n_paths.reason).toContain("no_run");
+  it("null n_paths fails-CLOSED by default (F-4 hardening)", () => {
+    const orig = process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    delete process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    try {
+      const data: StrategyPromotionData = { ...allPassData(), cpcvNPaths: null };
+      const result = evaluatePromotionGates(data, undefined, 15);
+      expect(result.gate_results.cpcv_n_paths.passed).toBe(false);
+      expect(result.gate_results.cpcv_n_paths.data_available).toBe(false);
+      expect(result.gate_results.cpcv_n_paths.reason).toContain("no_run");
+    } finally {
+      if (orig === undefined) delete process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+      else process.env.PROMOTION_GRANDFATHER_PRE_PASS_E = orig;
+    }
+  });
+
+  it("null n_paths fails-open when PROMOTION_GRANDFATHER_PRE_PASS_E=true (grandfather opt-in)", () => {
+    const orig = process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    process.env.PROMOTION_GRANDFATHER_PRE_PASS_E = "true";
+    try {
+      const data: StrategyPromotionData = { ...allPassData(), cpcvNPaths: null };
+      const result = evaluatePromotionGates(data, undefined, 15);
+      expect(result.gate_results.cpcv_n_paths.passed).toBe(true);
+      expect(result.gate_results.cpcv_n_paths.data_available).toBe(false);
+    } finally {
+      if (orig === undefined) delete process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+      else process.env.PROMOTION_GRANDFATHER_PRE_PASS_E = orig;
+    }
   });
 });
 
@@ -224,11 +267,32 @@ describe("WRC p-value gate", () => {
     expect(result.gate_results.wrc_p.reason).toContain("not_significant");
   });
 
-  it("null wrcPValue fails-open (pre-Pass-E backtest)", () => {
-    const data: StrategyPromotionData = { ...allPassData(), wrcPValue: null };
-    const result = evaluatePromotionGates(data);
-    expect(result.gate_results.wrc_p.passed).toBe(true);
-    expect(result.gate_results.wrc_p.data_available).toBe(false);
+  it("null wrcPValue fails-CLOSED by default (F-4 hardening)", () => {
+    const orig = process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    delete process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    try {
+      const data: StrategyPromotionData = { ...allPassData(), wrcPValue: null };
+      const result = evaluatePromotionGates(data);
+      expect(result.gate_results.wrc_p.passed).toBe(false);
+      expect(result.gate_results.wrc_p.data_available).toBe(false);
+    } finally {
+      if (orig === undefined) delete process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+      else process.env.PROMOTION_GRANDFATHER_PRE_PASS_E = orig;
+    }
+  });
+
+  it("null wrcPValue fails-open when PROMOTION_GRANDFATHER_PRE_PASS_E=true", () => {
+    const orig = process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    process.env.PROMOTION_GRANDFATHER_PRE_PASS_E = "true";
+    try {
+      const data: StrategyPromotionData = { ...allPassData(), wrcPValue: null };
+      const result = evaluatePromotionGates(data);
+      expect(result.gate_results.wrc_p.passed).toBe(true);
+      expect(result.gate_results.wrc_p.data_available).toBe(false);
+    } finally {
+      if (orig === undefined) delete process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+      else process.env.PROMOTION_GRANDFATHER_PRE_PASS_E = orig;
+    }
   });
 });
 
@@ -253,11 +317,32 @@ describe("SPA spa_consistent_p gate", () => {
     expect(result.gate_results.spa_p.passed).toBe(true);
   });
 
-  it("null spaConsistentP fails-open", () => {
-    const data: StrategyPromotionData = { ...allPassData(), spaConsistentP: null };
-    const result = evaluatePromotionGates(data);
-    expect(result.gate_results.spa_p.passed).toBe(true);
-    expect(result.gate_results.spa_p.data_available).toBe(false);
+  it("null spaConsistentP fails-CLOSED by default (F-4 hardening)", () => {
+    const orig = process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    delete process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    try {
+      const data: StrategyPromotionData = { ...allPassData(), spaConsistentP: null };
+      const result = evaluatePromotionGates(data);
+      expect(result.gate_results.spa_p.passed).toBe(false);
+      expect(result.gate_results.spa_p.data_available).toBe(false);
+    } finally {
+      if (orig === undefined) delete process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+      else process.env.PROMOTION_GRANDFATHER_PRE_PASS_E = orig;
+    }
+  });
+
+  it("null spaConsistentP fails-open when PROMOTION_GRANDFATHER_PRE_PASS_E=true", () => {
+    const orig = process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    process.env.PROMOTION_GRANDFATHER_PRE_PASS_E = "true";
+    try {
+      const data: StrategyPromotionData = { ...allPassData(), spaConsistentP: null };
+      const result = evaluatePromotionGates(data);
+      expect(result.gate_results.spa_p.passed).toBe(true);
+      expect(result.gate_results.spa_p.data_available).toBe(false);
+    } finally {
+      if (orig === undefined) delete process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+      else process.env.PROMOTION_GRANDFATHER_PRE_PASS_E = orig;
+    }
   });
 });
 
@@ -282,15 +367,40 @@ describe("B14 ci_high gate (delegated to evaluateB14CiGate)", () => {
     expect(result.gate_results.b14_ci_high.passed).toBe(false);
   });
 
-  it("null ruinCi fails-open (no MC run)", () => {
-    const data: StrategyPromotionData = {
-      ...allPassData(),
-      ruinCi: null,
-      ruinPointEstimate: null,
-    };
-    const result = evaluatePromotionGates(data);
-    expect(result.gate_results.b14_ci_high.passed).toBe(true);
-    expect(result.gate_results.b14_ci_high.data_available).toBe(false);
+  it("null ruinCi fails-CLOSED by default (F-4 hardening)", () => {
+    const orig = process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    delete process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    try {
+      const data: StrategyPromotionData = {
+        ...allPassData(),
+        ruinCi: null,
+        ruinPointEstimate: null,
+      };
+      const result = evaluatePromotionGates(data);
+      expect(result.gate_results.b14_ci_high.passed).toBe(false);
+      expect(result.gate_results.b14_ci_high.data_available).toBe(false);
+    } finally {
+      if (orig === undefined) delete process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+      else process.env.PROMOTION_GRANDFATHER_PRE_PASS_E = orig;
+    }
+  });
+
+  it("null ruinCi fails-open when PROMOTION_GRANDFATHER_PRE_PASS_E=true (grandfather opt-in)", () => {
+    const orig = process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    process.env.PROMOTION_GRANDFATHER_PRE_PASS_E = "true";
+    try {
+      const data: StrategyPromotionData = {
+        ...allPassData(),
+        ruinCi: null,
+        ruinPointEstimate: null,
+      };
+      const result = evaluatePromotionGates(data);
+      expect(result.gate_results.b14_ci_high.passed).toBe(true);
+      expect(result.gate_results.b14_ci_high.data_available).toBe(false);
+    } finally {
+      if (orig === undefined) delete process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+      else process.env.PROMOTION_GRANDFATHER_PRE_PASS_E = orig;
+    }
   });
 });
 
@@ -363,15 +473,41 @@ describe("failing_gates list accuracy", () => {
 // ── Backward compatibility ────────────────────────────────────────────────────
 
 describe("Backward compatibility — all null data", () => {
-  it("empty data fails-open on all gates (legacy backtest)", () => {
-    const data: StrategyPromotionData = {};
-    const result = evaluatePromotionGates(data, 0.80, 15);
-    // All gates fail-open → can_promote = true (pipeline was pausable, not demoting)
-    expect(result.can_promote).toBe(true);
-    expect(result.n_gates_failed).toBe(0);
-    for (const gateRes of Object.values(result.gate_results)) {
-      expect(gateRes.passed).toBe(true);
-      expect(gateRes.data_available).toBe(false);
+  it("empty data fails-CLOSED on all null gates (F-4 hardening, default)", () => {
+    const orig = process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    delete process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    try {
+      const data: StrategyPromotionData = {};
+      const result = evaluatePromotionGates(data, 0.80, 15);
+      // All gates fail-closed → can_promote = false
+      expect(result.can_promote).toBe(false);
+      for (const gateRes of Object.values(result.gate_results)) {
+        expect(gateRes.data_available).toBe(false);
+        // Each null gate should fail-closed
+        expect(gateRes.passed).toBe(false);
+      }
+    } finally {
+      if (orig === undefined) delete process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+      else process.env.PROMOTION_GRANDFATHER_PRE_PASS_E = orig;
+    }
+  });
+
+  it("empty data fails-open on all gates when PROMOTION_GRANDFATHER_PRE_PASS_E=true (legacy backtest opt-in)", () => {
+    const orig = process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    process.env.PROMOTION_GRANDFATHER_PRE_PASS_E = "true";
+    try {
+      const data: StrategyPromotionData = {};
+      const result = evaluatePromotionGates(data, 0.80, 15);
+      // All gates fail-open → can_promote = true (grandfather window active)
+      expect(result.can_promote).toBe(true);
+      expect(result.n_gates_failed).toBe(0);
+      for (const gateRes of Object.values(result.gate_results)) {
+        expect(gateRes.passed).toBe(true);
+        expect(gateRes.data_available).toBe(false);
+      }
+    } finally {
+      if (orig === undefined) delete process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+      else process.env.PROMOTION_GRANDFATHER_PRE_PASS_E = orig;
     }
   });
 });
