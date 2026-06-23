@@ -20,6 +20,7 @@ import PropFirmSimulator from "@/pages/PropFirmSimulator";
 import Journal from "@/pages/Journal";
 import Compliance from "@/pages/Compliance";
 import DecayDashboard from "@/pages/DecayDashboard";
+import PineExport from "@/pages/PineExport";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -56,6 +57,7 @@ const App = () => (
               <Route path="/compliance" element={<ErrorBoundary><Compliance /></ErrorBoundary>} />
               <Route path="/decay" element={<ErrorBoundary><DecayDashboard /></ErrorBoundary>} />
               <Route path="/settings" element={<ErrorBoundary><Settings /></ErrorBoundary>} />
+              <Route path="/pine-export" element={<ErrorBoundary><PineExport /></ErrorBoundary>} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

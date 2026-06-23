@@ -375,3 +375,30 @@ export const warningSeverityDiscordRoutedTotal = new Counter({
   labelNames: ["severity"] as const,
   registers: [promRegistry],
 });
+
+// ─── Pass 3 Track D — Pine Export SHADOW refusal counter (2026-06-22) ─────────
+//
+// tf_pine_shadow_refusals_total{blocked_at}
+//   Incremented by pine-shadow-observability.ts::emitPineShadowRefused() on every
+//   Pine export request blocked because the strategy is in SHADOW state or has
+//   shadow_mode_enabled=true.
+//
+//   blocked_at label (closed set — mirrors PINE_EVENTS comment in sse.ts):
+//     "compileDualPineExport" — pine-export-service.ts compileDualPineExport() entry
+//     "compilePineExport"     — pine-export-service.ts compilePineExport() entry
+//     "recipient_build"       — pine-export-recipient-service.ts build path
+//     "artifact_download"     — GET artifact-download route (pine-export.ts)
+//
+//   Cardinality: 4 label values = 4 time series — safe.
+//   Declared at registry init so Prometheus sees zero values from first scrape
+//   (no "no data" gaps in Grafana even before the first refusal fires).
+//
+//   Operational question answered: "Which Pine export entry point generates the
+//   most SHADOW refusals?" — useful for targeting operator education or guarding
+//   against SHADOW-strategy Pine leak at the busiest call site.
+export const pineShadowRefusalsTotal = new Counter({
+  name: "tf_pine_shadow_refusals_total",
+  help: "Total Pine export requests refused because the strategy is in SHADOW state or shadow_mode_enabled=true, labelled by call-site",
+  labelNames: ["blocked_at"] as const,
+  registers: [promRegistry],
+});

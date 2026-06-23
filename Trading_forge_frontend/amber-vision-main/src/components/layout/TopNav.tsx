@@ -20,6 +20,7 @@ import {
   Activity,
   Settings,
   Boxes,
+  FileCode2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -72,6 +73,7 @@ const NAV_GROUPS: NavGroup[] = [
       { title: "Paper Trading", url: "/paper", icon: Play },
       { title: "Prop Firm", url: "/prop-firm", icon: Building2 },
       { title: "Compliance", url: "/compliance", icon: Shield },
+      { title: "Pine Distribution", url: "/pine-export", icon: FileCode2 },
     ],
   },
   {

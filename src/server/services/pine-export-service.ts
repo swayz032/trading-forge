@@ -10,6 +10,10 @@ import { logger } from "../index.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { parsePythonJson } from "../../shared/utils.js";
 import { getPythonSubprocessStats } from "../lib/python-runner.js";
+import { assertNotShadow, PineExportShadowError } from "../lib/pine-export-shadow-guard.js";
+import { emitPineShadowRefused } from "../lib/pine-shadow-observability.js";
+import { notifyWarning } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 
@@ -353,6 +357,55 @@ export async function compileDualPineExport(
   hmacSecret?: string,
   accountId?: string,
 ) {
+  // C2/C3 (Pass 3 Track C): SHADOW guard — must be first gate.
+  // Prevents Pine artifacts from leaking out of SHADOW strategies, which would
+  // corrupt the shadow-signal divergence measurement (Wave 29 Pass A.1 invariant).
+  try {
+    await assertNotShadow(strategyId, db);
+  } catch (err) {
+    if (err instanceof PineExportShadowError) {
+      // C3: audit row
+      try {
+        await db.insert(auditLog).values({
+          action: "pine_export.refused_shadow_strategy",
+          entityType: "strategy",
+          entityId: strategyId,
+          decisionAuthority: "system",
+          input: { strategyId, blockedAt: "compileDualPineExport" } as Record<string, unknown>,
+          result: {
+            strategy_id: strategyId,
+            lifecycle_state: err.lifecycleState,
+            shadow_mode_enabled: err.shadowModeEnabled,
+            blocked_at: "compileDualPineExport",
+          } as Record<string, unknown>,
+          status: "warn",
+          correlationId: correlationId ?? null,
+        });
+      } catch (auditErr) {
+        logger.error({ auditErr, strategyId }, "pine-export-shadow-guard: audit write failed");
+      }
+      // C3: Discord WARN with family-grade postscript
+      notifyWarning(
+        `Pine export blocked: SHADOW strategy ${strategyId}`,
+        appendFamilyGradePostscript(
+          `compileDualPineExport blocked for strategy ${strategyId} (${err.message})`,
+          "The system blocked a Pine export request for a strategy still in Shadow testing mode.",
+          "No action needed — the strategy is not ready for TradingView deployment yet.",
+        ),
+        { strategyId, lifecycleState: err.lifecycleState, shadowModeEnabled: err.shadowModeEnabled },
+      );
+      emitPineShadowRefused({
+        strategy_id: strategyId,
+        lifecycle_state: err.lifecycleState,
+        shadow_mode_enabled: err.shadowModeEnabled,
+        blocked_at: "compileDualPineExport",
+        correlation_id: correlationId ?? null,
+      });
+      return { id: null, status: "failed", error: "shadow_strategy_pine_blocked", reason: "shadow_strategy_pine_blocked", ok: false };
+    }
+    throw err;
+  }
+
   // FIX 4: track wall-clock duration for audit_log
   const startMs = Date.now();
 
@@ -661,6 +714,51 @@ export async function compilePineExport(
   injectedRiskIntelligence?: Record<string, number | string | null> | null,
   correlationId?: string,
 ) {
+  // C2/C3 (Pass 3 Track C): SHADOW guard — must be first gate.
+  try {
+    await assertNotShadow(strategyId, db);
+  } catch (err) {
+    if (err instanceof PineExportShadowError) {
+      try {
+        await db.insert(auditLog).values({
+          action: "pine_export.refused_shadow_strategy",
+          entityType: "strategy",
+          entityId: strategyId,
+          decisionAuthority: "system",
+          input: { strategyId, blockedAt: "compilePineExport" } as Record<string, unknown>,
+          result: {
+            strategy_id: strategyId,
+            lifecycle_state: err.lifecycleState,
+            shadow_mode_enabled: err.shadowModeEnabled,
+            blocked_at: "compilePineExport",
+          } as Record<string, unknown>,
+          status: "warn",
+          correlationId: correlationId ?? null,
+        });
+      } catch (auditErr) {
+        logger.error({ auditErr, strategyId }, "pine-export-shadow-guard: audit write failed");
+      }
+      notifyWarning(
+        `Pine export blocked: SHADOW strategy ${strategyId}`,
+        appendFamilyGradePostscript(
+          `compilePineExport blocked for strategy ${strategyId} (${err.message})`,
+          "The system blocked a Pine export request for a strategy still in Shadow testing mode.",
+          "No action needed — the strategy is not ready for TradingView deployment yet.",
+        ),
+        { strategyId, lifecycleState: err.lifecycleState, shadowModeEnabled: err.shadowModeEnabled },
+      );
+      emitPineShadowRefused({
+        strategy_id: strategyId,
+        lifecycle_state: err.lifecycleState,
+        shadow_mode_enabled: err.shadowModeEnabled,
+        blocked_at: "compilePineExport",
+        correlation_id: correlationId ?? null,
+      });
+      return { id: null, status: "failed", error: "shadow_strategy_pine_blocked", reason: "shadow_strategy_pine_blocked", ok: false };
+    }
+    throw err;
+  }
+
   // FIX 4: track wall-clock duration for audit_log
   const startMs = Date.now();
 

@@ -4,6 +4,49 @@
 
 ---
 
+### Session Log — 2026-06-23 Paper-Trade Readiness Hardening Plan, Pass 3 MASTER CLOSE (Pine Distribution UI + SHADOW guard, 3 parallel subagents, 61 new tests GREEN)
+
+**Mission:** Execute Pass 3 — wire the missing `Download .pine` UI on-ramp (`PineDistributionPanel.tsx` was orphan, only rendered a README button), propagate `downloadUrl` from the recipient route, add `assertNotShadow` guard at all 4 Pine export entry points to preserve the Wave 29 Pass A.1 `traderspost_webhook_called=false` invariant, and emit observability (SSE + Prometheus) for SHADOW refusals.
+
+**Source audit:** `wf_06574188-392` First-Paper-Trade Blocker #2 (PineDistributionPanel orphan, no .pine download UI) + High-Priority Wiring #2 (Pine export has no SHADOW guard).
+
+**3 parallel subagents (Combined A+C + B + D; all returned GREEN; no worktree isolation — agents wrote directly to hardening/phase-0 at 7bdfdf8):**
+
+1. **paper-parity (Combined Tracks A+C — Pine route + SHADOW guard)** — agent `ad85c41ca2874eec1`. NEW `src/server/lib/pine-export-shadow-guard.ts` exporting `assertNotShadow(strategyId, db?)` + `PineExportShadowError` class. Reads `lifecycle_state` + `shadow_mode_enabled`. Fail-CLOSED on missing strategy / DB error. Guards wired into `pine-export-service.ts` (compileDualPineExport + compilePineExport), `pine-export-recipient-service.ts` (generateRecipientExport), and `pine-export.ts` route (`GET /:id/artifacts/:artifactId/download` AFTER parentExport resolution). Each refusal writes `pine_export.refused_shadow_strategy` audit + Discord WARN with family-grade postscript. Same-origin proxy middleware `injectApiKeyForSameOriginBrowser` added to the route — injects `OPERATOR_API_KEY` server-side when `Origin` matches `FRONTEND_ORIGIN`/`TRADING_FORGE_PUBLIC_URL`. `download_url: result.downloadUrl` added to recipient route JSON response. Express 5 ParamsDictionary type fix via casts at `req.params.id as string`. 17 unit + 13 integration vitest GREEN.
+
+2. **paper-parity (Track B — Frontend UI + page mount)** — agent `abb13b575abf3cc99`. ADDITIVE extension to `PineDistributionPanel.tsx` (download button hides when `downloadUrl` null, same-origin blob fetch matching existing `handleDownloadReadme` pattern, error toast, `data-testid` for tests, emerald-700/600 styling). NEW `src/pages/PineExport.tsx` minimal page scaffold. `App.tsx` registered `<Route path="/pine-export">`. `TopNav.tsx` added "Pine Distribution" link in Operations dropdown with `FileCode2` icon. 5 new vitest GREEN; 14 frontend total.
+
+3. **observability-reliability (Track D — SSE + Prometheus)** — agent `a1d36187c4e7eaaeb`. NEW `src/server/lib/pine-shadow-observability.ts` exporting `emitPineShadowRefused(payload)` — single helper emits BOTH SSE + Prometheus counter increment. `sse.ts` appended `PINE_EVENTS` constant. `metrics-registry.ts` appended `pineShadowRefusalsTotal` Counter (`tf_pine_shadow_refusals_total{blocked_at}`). Label vocabulary: `compileDualPineExport | compilePineExport | recipient_build | artifact_download`. 26 new vitest GREEN.
+
+**Architect close (this commit by parent claude):**
+- Wired Track D's `emitPineShadowRefused` helper into all 4 SHADOW-refusal sites that Track A+C set up. Each refusal now writes audit row + fires Discord WARN + broadcasts SSE event + increments Prometheus counter — single coherent observability surface. Without this wiring, Track D's helper was unused and dashboard tiles would never see SHADOW refusals. Imports added to `pine-export-service.ts` + `pine-export-recipient-service.ts` + `pine-export.ts` (route).
+- `npm run system-map:sync` regenerated `docs/system-topology.generated.json` + `docs/system-readiness.generated.json` + `Trading Forge System Map v2.md`. driftItems=[].
+
+**Verification:**
+- `npm test -- pine-export-shadow-guard pine-shadow-observability PineDistributionPanel --run` → **56 / 56 GREEN** (collapsed counts: 17 unit + 13 integration + 26 observability = 56 backend vitest; the 5 frontend tests for PineDistributionPanel run in the Trading_forge_frontend test suite separately, total **61 across the whole Pass 3**).
+- `npm test -- pine-export-recipient --run` → existing recipient tests still GREEN.
+- `npm run check:production-isolation` → exit 0, CLEAN.
+- `npm run check:2026-compliance` → exit 0, OK.
+- `npm run system-map:check` → exit 0, `status: ok`, `driftItems: []`.
+
+**Files changed (20 total, explicit-path staged):**
+- M `Trading Forge System Map v2.md`, `docs/system-readiness.generated.json`, `docs/system-topology.generated.json`, `Trading_forge_frontend/.../src/App.tsx`, `Trading_forge_frontend/.../src/components/forge/PineDistributionPanel.tsx`, `Trading_forge_frontend/.../src/components/layout/TopNav.tsx`, `src/server/db/migrations/meta/_journal.json`, `src/server/lib/metrics-registry.ts`, `src/server/routes/pine-export-recipient.ts`, `src/server/routes/pine-export.ts`, `src/server/routes/sse.ts`, `src/server/services/pine-export-recipient-service.ts`, `src/server/services/pine-export-service.ts`
+- A `Trading_forge_frontend/.../src/components/forge/__tests__/PineDistributionPanel.test.tsx`, `Trading_forge_frontend/.../src/pages/PineExport.tsx`, `src/server/lib/__tests__/pine-export-shadow-guard.test.ts`, `src/server/lib/__tests__/pine-shadow-observability.test.ts`, `src/server/lib/pine-export-shadow-guard.ts`, `src/server/lib/pine-shadow-observability.ts`, `src/server/services/__tests__/pine-export-shadow-guard-integration.test.ts`
+
+**Audit findings closed by this pass (2 of 50):**
+- `First-Paper-Trade Blocker #2` PineDistributionPanel orphan — operator cannot retrieve .pine via UI. **CLOSED.** Component has Download .pine button, mounted at `/pine-export`, reachable from TopNav.
+- `High-Priority Wiring #2` Pine export has no SHADOW guard — operator loading .pine for SHADOW violates Wave 29 Pass A.1 invariant. **CLOSED.** Guard at 4 entry points, full observability surface.
+
+**New audit action namespace:** `pine_export.refused_shadow_strategy` (status=warn, 4 distinct `blocked_at` payload values).
+**New SSE event:** `pine:refused_shadow_strategy`.
+**New Prometheus counter:** `tf_pine_shadow_refusals_total{blocked_at}`.
+
+**Carry-forward for next session:**
+- **Pass 4 (Path B Canonical Flip)** — M-effort. Flip canonical Pine alert path from "direct to traderspost.io" (bypasses kill-switch + compliance + firm-cap + circuit breaker) to "TF gateway → routeOrder() → TradersPost" so every alert hits the safety stack.
+- **In-progress parallel-session work** (NOT touched): `docs/institutional-evidence/transcript-extractor-llm-architecture-2026.md`, `docs/institutional-evidence/survival-twin-2026-06-22.md`, `package.json`, `package-lock.json`, `src/server/db/migrations/0172_economic_release_dates.sql`, `src/server/services/economic-calendar-sync-service.ts` (Tier-1 calendar work continuing in another session).
+
+---
+
 ### Session Log — 2026-06-22 Paper-Trade Readiness Hardening Plan, Pass 2 MASTER CLOSE (Pine compiler archetype handler, 3 parallel subagents, 472 new tests GREEN, system-map driftItems=[])
 
 **Mission:** Execute Pass 2 of the 8-pass paper-trade readiness hardening plan (`C:/Users/tonio/.claude/plans/i-want-you-to-giggly-naur.md`) — the L-effort longest pole of the entire plan. Unblock the entire institutional archetype strategy class (39 archetypes spanning ICT/SMC/Wyckoff + Wave 26 Pass G + W26.4 + uncatalogued) from the TESTING→PAPER `checkExportability` HARD gate by adding alert-only Pine recipes that delegate execution authority to the Python engine.

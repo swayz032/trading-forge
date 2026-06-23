@@ -346,3 +346,34 @@ export const WAVE29_EVENTS = {
 } as const;
 
 export type Wave29EventName = (typeof WAVE29_EVENTS)[keyof typeof WAVE29_EVENTS];
+
+// ─── Pass 3 Track D — Pine Export SHADOW refusal SSE events (2026-06-22) ──────
+//
+// Emitted by pine-shadow-observability.ts::emitPineShadowRefused() whenever a
+// Pine export request is blocked because the strategy is in SHADOW lifecycle
+// state or has shadow_mode_enabled=true.
+//
+// Consumer: Dashboard tiles subscribe to "pine:refused_shadow_strategy" to show
+//   the SHADOW-refusal rate without querying audit_log.
+//
+// Payload shape:
+//   {
+//     strategy_id:          string  — strategy UUID from the strategies table
+//     lifecycle_state:      string  — current lifecycle state (e.g. "SHADOW")
+//     shadow_mode_enabled:  boolean — value of strategies.shadow_mode_enabled
+//     blocked_at:           string  — call-site name enum (see below)
+//     correlation_id:       string | null
+//   }
+//
+// blocked_at closed enum (mirrors tf_pine_shadow_refusals_total label):
+//   "compileDualPineExport"   — pine-export-service.ts compileDualPineExport() entry
+//   "compilePineExport"       — pine-export-service.ts compilePineExport() entry
+//   "recipient_build"         — pine-export-recipient-service.ts build path
+//   "artifact_download"       — GET artifact-download route (pine-export.ts)
+export const PINE_EVENTS = {
+  // Pass 3 Track C calls emitPineShadowRefused() from the four refusal sites;
+  // Track D (this file) registers the SSE constant so Track C can import it.
+  REFUSED_SHADOW_STRATEGY: "pine:refused_shadow_strategy",
+} as const;
+
+export type PineEventName = (typeof PINE_EVENTS)[keyof typeof PINE_EVENTS];

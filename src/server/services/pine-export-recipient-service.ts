@@ -32,6 +32,9 @@ import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { logger } from "../lib/logger.js";  // F-5: leaf module import — never ../index.js
 import { broadcastSSE } from "../routes/sse.js";
 import { notifyWarning, notifyCritical } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
+import { assertNotShadow, PineExportShadowError } from "../lib/pine-export-shadow-guard.js";
+import { emitPineShadowRefused } from "../lib/pine-shadow-observability.js";
 import { spawn } from "child_process";
 import { resolve as pathResolve } from "path";
 
@@ -469,6 +472,53 @@ export async function generateRecipientExport(
       timestamp: new Date().toISOString(),
     });
     throw Object.assign(new Error("pipeline_paused"), { pipelinePaused: true });
+  }
+
+  // ── 1b. SHADOW guard (Pass 3 Track C) ───────────────────────────────────
+  // Must run before any strategy load or artifact generation.
+  // A SHADOW strategy must NEVER produce Pine artifacts (Wave 29 Pass A.1 invariant).
+  try {
+    await assertNotShadow(strategyId, db);
+  } catch (err) {
+    if (err instanceof PineExportShadowError) {
+      try {
+        await db.insert(auditLog).values({
+          action: "pine_export.refused_shadow_strategy",
+          entityType: "strategy",
+          entityId: strategyId,
+          decisionAuthority: "system",
+          input: { strategyId, accountId, blockedAt: "generateRecipientExport" } as Record<string, unknown>,
+          result: {
+            strategy_id: strategyId,
+            lifecycle_state: err.lifecycleState,
+            shadow_mode_enabled: err.shadowModeEnabled,
+            blocked_at: "generateRecipientExport",
+          } as Record<string, unknown>,
+          status: "warn",
+          correlationId: correlationId ?? null,
+        });
+      } catch (auditErr) {
+        logger.error({ auditErr, strategyId }, "pine-export-shadow-guard: audit write failed in recipient service");
+      }
+      notifyWarning(
+        `Pine export blocked: SHADOW strategy ${strategyId}`,
+        appendFamilyGradePostscript(
+          `generateRecipientExport blocked for strategy ${strategyId} (${err.message})`,
+          "The system blocked a Pine export request for a strategy still in Shadow testing mode.",
+          "No action needed — the strategy is not ready for TradingView deployment yet.",
+        ),
+        { strategyId, accountId, lifecycleState: err.lifecycleState, shadowModeEnabled: err.shadowModeEnabled },
+      );
+      emitPineShadowRefused({
+        strategy_id: strategyId,
+        lifecycle_state: err.lifecycleState,
+        shadow_mode_enabled: err.shadowModeEnabled,
+        blocked_at: "recipient_build",
+        correlation_id: correlationId ?? null,
+      });
+      throw Object.assign(err, { shadowStrategyBlocked: true });
+    }
+    throw err;
   }
 
   // ── 2. Load strategy ────────────────────────────────────────────────────
