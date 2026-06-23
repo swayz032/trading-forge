@@ -49,6 +49,9 @@ import { shouldBlockNewEntry as consistencyGateShouldBlock, CONSISTENCY_RULE_FIR
 export { checkInProcessTier1EventWindow } from "../lib/tier1-event-blackout.js";
 import { checkInProcessTier1EventWindow as _checkInProcessTier1EventWindow } from "../lib/tier1-event-blackout.js";
 import { computePmSizeFactor } from "../lib/pm-size-factor.js";
+// Phase 2 (2026-06-22) — firm-aware Tier-1 news behavior: Topstep (PRIMARY) reduces
+// size in the window (caution); MFFU Rapid (restricted) hard-blocks. Product-scoped.
+import { resolveNewsAction, eventAffectsSymbol } from "../lib/news-policy.js";
 // W23H.F: cross-symbol DLL coordinator + pre-market blackout consumption
 import { getAccountSessionCumulativePnL, evaluateCrossSymbolDll, DEFAULT_PERSONAL_DLL_DOLLARS } from "./cross-symbol-pnl.js";
 import { toFuturesTradingDayString } from "./paper-risk-gate.js";
@@ -2109,6 +2112,12 @@ export async function evaluateSignals(
 
   let calendarBlocked = false;
   let calendarBlockReason = "";
+  // Phase 2 (2026-06-22) — firm-aware news caution. When a T1 event affects this product
+  // and the firm is Topstep (PRIMARY, caution-not-block), we DON'T block; we carry a
+  // size-reduction factor down to the sizing call instead. 1 = no reduction. Applied
+  // multiplicatively alongside the PM size factor at computeRiskDerivedContracts.
+  let newsReduceSizeFactor = 1;
+  let newsReduceEvent = "";
   try {
     const calResult = await getCachedSignalCalendarStatus(bar.timestamp);
 
@@ -2131,17 +2140,42 @@ export async function evaluateSignals(
         );
         span.setAttribute("calendar_news_bypass", true);
         span.setAttribute("calendar_block_event", calResult.economic_event_name);
-      } else {
-        calendarBlocked = true;
-        calendarBlockReason = calResult.economic_event_name;
+      } else if (!eventAffectsSymbol(calResult.economic_event_name, symbol)) {
+        // Phase 2 product scope: this T1 event does not affect this product
+        // (e.g. CPI/NFP do not blackout crude/MCL). Trade normally.
         logger.info(
-          {
-            sessionId, symbol, event: calResult.economic_event_name,
-            windowMinutes: calResult.event_window_minutes, timestamp: bar.timestamp,
-          },
-          `Calendar filter: ${calResult.economic_event_name} ±${calResult.event_window_minutes}min blackout — skipping signals`,
+          { sessionId, symbol, event: calResult.economic_event_name, timestamp: bar.timestamp },
+          `Calendar filter: ${calResult.economic_event_name} does not affect ${symbol} — not blocking (product scope)`,
         );
-        span.setAttribute("calendar_block_event", calResult.economic_event_name);
+        span.setAttribute("calendar_event_product_scoped_out", calResult.economic_event_name);
+      } else {
+        // Phase 2 firm-aware behavior: Topstep (PRIMARY) trades news with caution
+        // (reduce size, never block); MFFU Rapid (restricted) + unknown firm → hard-block.
+        const { action, sizeFactor } = resolveNewsAction(sessionRow.firmId, true, false);
+        if (action === "reduce_size") {
+          newsReduceSizeFactor = sizeFactor;
+          newsReduceEvent = calResult.economic_event_name;
+          logger.info(
+            {
+              sessionId, symbol, firm: sessionRow.firmId, event: calResult.economic_event_name,
+              sizeFactor, timestamp: bar.timestamp,
+            },
+            `Calendar filter: ${calResult.economic_event_name} window — Topstep CAUTION, reducing size ×${sizeFactor} (not blocking)`,
+          );
+          span.setAttribute("news_reduce_size_factor", sizeFactor);
+          span.setAttribute("news_reduce_event", calResult.economic_event_name);
+        } else {
+          calendarBlocked = true;
+          calendarBlockReason = calResult.economic_event_name;
+          logger.info(
+            {
+              sessionId, symbol, firm: sessionRow.firmId, event: calResult.economic_event_name,
+              windowMinutes: calResult.event_window_minutes, timestamp: bar.timestamp,
+            },
+            `Calendar filter: ${calResult.economic_event_name} ±${calResult.event_window_minutes}min blackout — ${sessionRow.firmId ?? "unknown-firm"} HARD-BLOCK, skipping signals`,
+          );
+          span.setAttribute("calendar_block_event", calResult.economic_event_name);
+        }
       }
     }
   } catch (calErr) {
@@ -4365,8 +4399,16 @@ export async function evaluateSignals(
           // Default: 1.0 AM, 0.50 at 13:30 ET decaying linearly to 0.25 by 15:00 ET,
           // 0.0 after 15:30 ET (no new entries). Configurable via PM_SIZE_FACTOR_AT_13_30
           // / PM_SIZE_FACTOR_AT_15_00 env vars.
-          pmSizeFactor: computePmSizeFactor({ barTsUtc: new Date(bar.timestamp) }).factor,
+          // Phase 2 (2026-06-22): PM session factor × firm-aware news-caution factor.
+          // newsReduceSizeFactor is < 1 only when a Topstep account fires a signal inside a
+          // T1 news window (caution = cut size; MFFU would have hard-blocked above instead).
+          pmSizeFactor:
+            computePmSizeFactor({ barTsUtc: new Date(bar.timestamp) }).factor * newsReduceSizeFactor,
         };
+        if (newsReduceSizeFactor < 1) {
+          span.setAttribute("news_caution_size_applied", newsReduceSizeFactor);
+          span.setAttribute("news_caution_event", newsReduceEvent);
+        }
 
         const sizingResult = computeRiskDerivedContracts(sizingInputs);
         // Finding #10 fix (2026-06-22): when sizing returns 0, the backtest engine
