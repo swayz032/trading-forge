@@ -10245,6 +10245,28 @@ Also restored Anam.ai persona during this session:
 
 ---
 
+### Session Log — 2026-06-23 claude (A14 black-swan / NEMO rebuilt — stochastic stack, real end-to-end)
+
+**Mission:** Operator: "deep scan ... what about nemo and black swan?" → 3-lens audit → operator chose "rebuild right: stochastic stack."
+
+**Audit verdict:** A14 black-swan was a FAÇADE. Every backtest fired `runBlackSwanTest` → queried an EMPTY `synthetic_regime_bank` → returned `survival_rate=null` forever (composite health absorbed a permanent 0.5 neutral). No trained VAE model, no NEMO→bank cron, `torch` unpinned, "NeMo" branding cosmetic (template cycling). AND the Conv-VAE was the WRONG tool — its KL term SUPPRESSES the fat tails black-swan needs, conditioning was cosmetic noise-scaling. CLAUDE.md §12 "A14 gate" claim was false (fires, reports completed, writes null — indistinguishable from never-ran).
+
+**Rebuild (2 commits, 125 tests):**
+- `db26759` Python core (106 pytest): REPLACED Conv-VAE with a stochastic stack — `stochastic_regime_generator.py` (GBM + GARCH(1,1) via `arch` + Student-t innovations dof<6 via scipy + HMM regime switching via `hmmlearn`); NO GPU, deterministic (MD5-seeded), real fat tails by construction. 8 named reproducible scenarios (COVID_crash/rate_shock_2022/vol_spike_2018/credit_crisis_2008/flash_crash_1987/slow_bleed_grind/flash_recovery/prop_consistency_breach_stress). 7-test stylized-fact HARD calibration gate (excess kurtosis≥3, GARCH a+b≥0.90, Student-t dof<6, ACF(r²)>0.20, |ACF(r)|<0.05, MMD<5e-3, leverage<0) — rejects uncalibrated batches (was lenient 0.3/0.0). Severity-vs-history validation. `populate_regime_bank.py` CLI. Fixed `black_swan_evaluator` archetype-entry gap (was evaluating archetypes on an SMA-crossover stub → now routes via run_class_backtest).
+- `51fba36` TS wire (19 vitest): `synthetic-regime-bank-service.ts` runs the CLI → uploads parquet to S3 (fail-soft local: fallback) → inserts `synthetic_regime_bank` rows; weekly Sunday off-RTH cron `synthetic-regime-bank-populate` (_PIPELINE_GATE_EXEMPT + _tryAcquireJobLock); idempotent; fail-soft. A14 survival_rate now transitions null → real [0,1] after first cron run.
+
+**Governance:** CHALLENGER-ONLY / ADVISORY — never gates capital (deliberate). Complements B14 (B14 = survives resampled history; A14 = survives novel catastrophes). VAE left as dead legacy path (not deleted).
+
+**Verification:** 106 pytest + 19 vitest GREEN; deps already present (numpy/scipy/arch/hmmlearn — no install, no GPU); additive scheduler edit (+65/-0), co-mingle clean; committed only my files.
+
+**Known-facts updates:**
+- A14 black-swan is now REAL but its VAE predecessor was a never-run façade — if anyone references the Conv-VAE path, it's dead legacy; the live path is the stochastic stack.
+- Stochastic regime gen needs NO GPU + NO new deps (arch/hmmlearn/scipy already in requirements). The "needs a GPU training job" framing applied to the OLD VAE only.
+
+**Carry-forward:** (a) first cron run (or manual `runSyntheticRegimeBankPopulate`) needed to populate the bank before A14 returns non-null — runs automatically Sunday off-RTH. (b) `conditioning_vector_compressed` written as zero-byte sentinel (evaluator samples by regime_label, not vector — fine). (c) S3 `local:` fallback rows need manual push if tower offline during cron. (d) severity baseline uses a stats param when S3 history unreachable — verify against real history at leisure. (e) shared-tree race with parallel session still active; branch reconciliation pending.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Tier-1 news handling is FIRM-AWARE + product-scoped (pinned 2026-06-22 — supersedes prior ±30/6-event fact)
