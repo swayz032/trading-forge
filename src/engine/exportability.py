@@ -5,6 +5,28 @@ Score bands:
   70-89:  Pine possible with reductions
   50-69:  Alert-only export recommended
   <50:    Do not export
+
+Semantic-fidelity model (2026-06-22 FAIL-LOUD mandate):
+  The scorer now distinguishes between "exportable" (can produce a Pine script
+  that runs) and "faithful" (the Pine script faithfully reproduces the validated
+  strategy logic).  Three classes of features are NOT expressible in Pine:
+
+  1. Style C / Adaptive Exits — partials (33/33/34), runner trail, BE+1, adaptive
+     exit styles.  Pine emits a single strategy.exit() with one stop and one target.
+
+  2. Weighted Confluence Gating — 11-factor weighted scoring (use_weighted_scoring=True)
+     or min_factors_satisfied requirements.  Pine fires on the raw indicator alone.
+
+  3. Multi-TF Gating — daily_tf / htf_tf / itf_tf declared on the strategy.  Pine
+     renders on a single chart timeframe; HTF bias alignment is not reproduced.
+
+  When any of these are detected, the result has faithful=False AND exportable=False.
+  The refusal includes a human-readable reason noting that DEPLOYED strategies execute
+  server-side via broker-router (server-mediated execution) and Pine is a visual-only
+  aid for those — so the refusal is by design, not a defect.
+
+  Simple strategies (plain indicator entry + simple stop/TP, none of the above) still
+  receive faithful=True and can export cleanly.
 """
 from __future__ import annotations
 import json
@@ -52,6 +74,13 @@ class ExportabilityResult(BaseModel):
     deductions: list[str] = Field(default_factory=list)
     recommendations: list[str] = Field(default_factory=list)
     exportable: bool = True
+    # Semantic-fidelity flag (2026-06-22 FAIL-LOUD mandate).
+    # faithful=True  → the exported Pine faithfully reproduces the validated strategy logic.
+    # faithful=False → one or more features (Style C exits / confluence gating / multi-TF)
+    #                  cannot be expressed in Pine.  The strategy executes server-side
+    #                  via broker-router (server-mediated execution); Pine is visual-only.
+    #                  faithful=False always implies exportable=False.
+    faithful: bool = True
 
 
 def score_exportability(strategy_config: dict) -> ExportabilityResult:
@@ -181,7 +210,126 @@ def score_exportability(strategy_config: dict) -> ExportabilityResult:
         score -= 5
         recommendations.append(f"Session filter '{session}' needs Pine time() checks")
 
-    # Clamp
+    # ─── 6. Semantic-fidelity checks (FAIL-LOUD mandate 2026-06-22) ──────────────
+    #
+    # These checks detect validated strategy logic that Pine cannot express.
+    # When any of these trigger, the result is faithful=False AND exportable=False,
+    # regardless of the indicator score above.
+    #
+    # DEPLOYED strategies execute server-side via broker-router (server-mediated
+    # execution).  Pine is a visual-only aid for DEPLOYED strategies — the refusal
+    # below is by design, not a defect.  Simple strategies (plain indicator entry +
+    # simple stop/TP) still export cleanly with faithful=True.
+    #
+    # Detection is intentionally liberal: if the field exists at all (even empty
+    # partials array), we treat it as "this strategy was designed with partials in
+    # mind" and refuse.  Conservative direction: when in doubt, refuse.
+
+    _faithful = True  # will be set to False if any inexpressible feature is found
+
+    # 6a. Exit semantics — Style C partials, runner trail, BE+1, adaptive exits.
+    #
+    # The Pine compiler emits a single strategy.exit() call with one stop/target.
+    # It cannot express:
+    #   - 33/33/34 partial closes at different R-multiples
+    #   - Trailing runner (developing_session_poc / Chandelier / anchored VWAP)
+    #   - BE+1 tick breakeven move on TP1 fill
+    #   - Adaptive exit routing (regime-dependent scaling, delta-divergence early-exit)
+    exit_params = strategy_config.get("exit_params", {}) or {}
+    exit_plan_config = strategy_config.get("exit_plan_config", {}) or {}
+
+    _inexpressible_exit = False
+
+    # Style C via explicit exit_params.style
+    if exit_params.get("style") in ("c", "C", "style_c", "styleC"):
+        _inexpressible_exit = True
+
+    # Partials array presence (even with 1 element implies partial-close design)
+    if exit_params.get("partials"):
+        _inexpressible_exit = True
+
+    # Runner trail explicit field
+    if exit_params.get("runner_trail") is True:
+        _inexpressible_exit = True
+
+    # BE+1 / breakeven move
+    if exit_params.get("move_stop_to_be") is True:
+        _inexpressible_exit = True
+
+    # Adaptive exit style (Wave 25.5)
+    if exit_plan_config.get("exit_style") == "adaptive":
+        _inexpressible_exit = True
+
+    if _inexpressible_exit:
+        _faithful = False
+        score = 0.0  # force score to 0 — not expressible at all
+        deductions.append(
+            "Exit semantics not expressible in Pine: Style C 33/33/34 partial closes, "
+            "runner trail, and/or BE+1 breakeven mechanics cannot be reproduced by "
+            "strategy.exit() — Pine emits a single all-or-nothing stop/target. "
+            "This strategy executes server-side via broker-router (server-mediated "
+            "execution); Pine export is a visual-only aid for DEPLOYED strategies."
+        )
+
+    # 6b. Confluence gating — 11-factor weighted scoring.
+    #
+    # Pine fires on the raw indicator signal alone.  A strategy that requires
+    # weighted confluence (use_weighted_scoring=True) or a minimum satisfied-factor
+    # count (min_factors_satisfied) is materially different from the exported Pine.
+    entry_quality = strategy_config.get("entry_quality", {}) or {}
+
+    _inexpressible_confluence = False
+
+    if entry_quality.get("use_weighted_scoring") is True:
+        _inexpressible_confluence = True
+
+    # min_factors_satisfied > 0 means the signal is gated on factor count even
+    # without weighted scoring — Pine cannot reproduce this gate.
+    min_factors = entry_quality.get("min_factors_satisfied")
+    if isinstance(min_factors, (int, float)) and min_factors > 0:
+        _inexpressible_confluence = True
+
+    # Explicit regime_required flag
+    if entry_quality.get("regime_required") is True:
+        _inexpressible_confluence = True
+
+    if _inexpressible_confluence:
+        _faithful = False
+        score = 0.0  # force to 0
+        deductions.append(
+            "Confluence gating not expressible in Pine: this strategy requires "
+            "11-factor weighted scoring and/or minimum factor satisfaction "
+            "(entry_quality.use_weighted_scoring / min_factors_satisfied / regime_required) "
+            "that Pine cannot reproduce — Pine fires on the raw indicator alone. "
+            "This strategy executes server-side via broker-router (server-mediated "
+            "execution); Pine export is a visual-only aid for DEPLOYED strategies."
+        )
+
+    # 6c. Multi-TF gating — daily_tf / htf_tf / itf_tf declared.
+    #
+    # The Pine compiler produces a single-timeframe indicator.  Strategies with
+    # declared HTF alignment (daily_tf, htf_tf, itf_tf) require top-down multi-TF
+    # AND-gating that the Pine output does not reproduce.
+    _tf_fields = [
+        tf_key for tf_key in ("daily_tf", "htf_tf", "itf_tf")
+        if strategy_config.get(tf_key)  # non-null, non-empty
+    ]
+
+    if _tf_fields:
+        _faithful = False
+        score = 0.0  # force to 0
+        # Emit a single combined deduction regardless of how many TF fields are set
+        tf_list = ", ".join(f"{k}={strategy_config[k]!r}" for k in _tf_fields)
+        deductions.append(
+            f"Multi-TF gating not expressible in Pine: strategy declares HTF alignment "
+            f"fields ({tf_list}) that require top-down timeframe AND-gating — "
+            "Pine renders on the single chart timeframe and cannot reproduce multi-TF "
+            "bias alignment (daily_tf / htf_tf / itf_tf). "
+            "This strategy executes server-side via broker-router (server-mediated "
+            "execution); Pine export is a visual-only aid for DEPLOYED strategies."
+        )
+
+    # ─── Clamp ────────────────────────────────────────────────────────────────────
     score = max(0.0, min(100.0, score))
 
     # Determine band
@@ -195,13 +343,17 @@ def score_exportability(strategy_config: dict) -> ExportabilityResult:
     else:
         band = "do_not_export"
 
+    # exportable=False when score < 50 OR when semantic fidelity check failed
+    _exportable = (score >= 50) and _faithful
+
     return ExportabilityResult(
         score=score,
         band=band,
         indicator_scores=indicator_scores,
         deductions=deductions,
         recommendations=recommendations,
-        exportable=score >= 50,
+        exportable=_exportable,
+        faithful=_faithful,
     )
 
 

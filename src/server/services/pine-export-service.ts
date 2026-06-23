@@ -58,6 +58,11 @@ interface CompilerOutput {
     deductions: string[];
     recommendations: string[];
     exportable: boolean;
+    // Semantic-fidelity flag (2026-06-22 FAIL-LOUD mandate).
+    // faithful=false means the exported Pine omits validated logic (Style C exits /
+    // confluence gating / multi-TF alignment).  Always present on compiler output
+    // ≥2026-06-22; absent on old compiler output (treated as true for backward-compat).
+    faithful?: boolean;
   };
   artifacts: Array<{
     artifact_type: string;
@@ -78,13 +83,25 @@ interface CompilerOutput {
  * Lifecycle service can use this as a hard gate before writing PAPER state.
  *
  * Returns { ok, score, band, deductions, recommendations }. `ok` is true iff
- * the strategy compiles AND the compiler's `exportable` flag is set.
+ * the strategy compiles AND BOTH the compiler's `exportable` AND `faithful`
+ * flags are set.
+ *
+ * Semantic-fidelity model (2026-06-22 FAIL-LOUD mandate):
+ *   ok=true  → the exported Pine faithfully reproduces the validated strategy logic.
+ *   ok=false → one or more features (Style C exits / confluence gating / multi-TF
+ *               alignment) cannot be expressed in Pine.  The strategy executes
+ *               server-side via broker-router (server-mediated execution); Pine is
+ *               a visual-only aid for DEPLOYED strategies — the refusal is by design.
+ *
+ * faithful defaults to true when absent in compiler output (backward-compat with
+ * compiler versions prior to 2026-06-22).
  *
  * NOTE: This is a thin wrapper over the existing compiler — it does not
  * yet perform full semantic-equivalence checking (running the strategy in
  * Python AND a Pine simulator and asserting trades match within tolerance).
  * That is documented as the next G6.3 iteration; today's check catches the
- * "strategy can't be expressed in Pine at all" failure mode.
+ * "strategy can't be expressed in Pine at all" AND "strategy exports a
+ * lossy degraded Pine that omits validated logic" failure modes.
  */
 export async function checkExportability(strategyId: string): Promise<{
   ok: boolean;
@@ -102,8 +119,14 @@ export async function checkExportability(strategyId: string): Promise<{
     // Dry-run: run the dual compiler with persist=false — only inspect
     // exportability metadata. No DB rows are written.
     const result = await compileDualPineExport(strategyId, undefined, undefined, false);
+
+    const exportable = !!result?.exportability?.exportable;
+    // faithful defaults to true when absent (backward-compat — pre-2026-06-22 compiler output
+    // does not have this field; treat those as faithful to avoid blocking existing pipelines).
+    const faithful = result?.exportability?.faithful !== false;
+
     return {
-      ok: !!result?.exportability?.exportable,
+      ok: exportable && faithful,
       score: result?.exportability?.score ?? null,
       band: result?.exportability?.band ?? null,
       deductions: result?.exportability?.deductions ?? [],
@@ -130,6 +153,11 @@ interface DualCompilerOutput {
     deductions: string[];
     recommendations: string[];
     exportable: boolean;
+    // Semantic-fidelity flag (2026-06-22 FAIL-LOUD mandate).
+    // faithful=false means the exported Pine omits validated logic (Style C exits /
+    // confluence gating / multi-TF alignment).  Always present on compiler output
+    // ≥2026-06-22; absent on old compiler output (treated as true for backward-compat).
+    faithful?: boolean;
   };
   strategy_name: string;
   pine_version: string;
