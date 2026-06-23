@@ -1206,6 +1206,114 @@ export class LifecycleService {
       }
     }
 
+    // Pass 4.5 Track B — Archetype gateway-mode bypass gate (TESTING → PAPER).
+    // If the strategy uses an archetype: entry_indicator AND the server is configured
+    // for Path B (LIVE_ORDER_GATEWAY_URL set), the strategy's compiled Pine output
+    // MUST carry the canonical TF-gateway payload markers to prove the alert will be
+    // routed through /api/live-order with action:"archetype_signal".
+    // If the markers are absent, block promotion — the strategy would bypass the
+    // in-process gate stack and fire directly to the broker without kill-switch,
+    // compliance, or firm-cap protection.
+    // Fail-CLOSED: if compileDualPineExport throws, block promotion.
+    if (fromState === "TESTING" && toState === "PAPER") {
+      const stratCfg = (strategy.config ?? {}) as Record<string, unknown>;
+      const entryIndicator = typeof stratCfg.entry_indicator === "string" ? stratCfg.entry_indicator : "";
+      if (entryIndicator.startsWith("archetype:") && process.env.LIVE_ORDER_GATEWAY_URL) {
+        logger.info(
+          { strategyId: id, entryIndicator, fromState, toState },
+          "lifecycle: archetype gateway-mode bypass gate — compiling Pine to verify TF-gateway markers",
+        );
+        try {
+          const { compileDualPineExport } = await import("./pine-export-service.js");
+          // Pass gatewayOptions with literal union to satisfy GatewayOptions type.
+          // The { mode: string } assertion is NOT used — GatewayOptions requires literal.
+          const compileResult = (await compileDualPineExport(
+            id,
+            undefined,          // firmKey
+            undefined,          // injectedRiskIntelligence
+            false,              // persist=false (dry-run)
+            options.correlationId,
+            undefined,          // recipientQty
+            undefined,          // recipientLabel
+            undefined,          // hmacSecret
+            undefined,          // accountId
+            { mode: "tf_gateway" },
+          )) as Record<string, unknown>;
+
+          // Inspect combined Pine artifact content for canonical TF-gateway markers.
+          // The raw DualCompilerOutput (available in memory for persist=false) carries
+          // indicator_artifact.content and strategy_artifact.content. We access via
+          // Record<string, unknown> cast since compileDualPineExport's TS return type
+          // reshapes the success case — the compile result is cast for content inspection.
+          const indicatorArtifact = compileResult?.indicator_artifact as Record<string, unknown> | null | undefined;
+          const strategyArtifact = compileResult?.strategy_artifact as Record<string, unknown> | null | undefined;
+          const indicatorContent = typeof indicatorArtifact?.content === "string" ? indicatorArtifact.content : "";
+          const strategyContent = typeof strategyArtifact?.content === "string" ? strategyArtifact.content : "";
+          const allContent = indicatorContent + "\n" + strategyContent;
+
+          const hasActionMarker = allContent.includes('"action":"archetype_signal"');
+          const archetypeKey = entryIndicator.slice("archetype:".length);
+          const hasArchetypeMarker = allContent.includes(`"archetype":"${archetypeKey}"`);
+
+          if (!hasActionMarker || !hasArchetypeMarker) {
+            const missingMarkers: string[] = [];
+            if (!hasActionMarker) missingMarkers.push('"action":"archetype_signal"');
+            if (!hasArchetypeMarker) missingMarkers.push(`"archetype":"${archetypeKey}"`);
+            const blockReason =
+              `archetype strategy (${entryIndicator}) compiled Pine is missing TF-gateway markers: ${missingMarkers.join(", ")}. ` +
+              "Promotion blocked to prevent gateway bypass — the alert would fire directly to the broker " +
+              "without kill-switch, compliance, or firm-cap protection.";
+            logger.warn({ strategyId: id, entryIndicator, fromState, toState, missingMarkers }, blockReason);
+            insertAuditRow({
+              action: "lifecycle.archetype_gateway_bypass_blocked",
+              entityType: "strategy",
+              entityId: id,
+              decisionAuthority: "gate",
+              status: "warn",
+              input: { fromState, toState, entryIndicator } as Record<string, unknown>,
+              result: { missingMarkers, reason: blockReason } as Record<string, unknown>,
+              correlationId: options.correlationId ?? null,
+            }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "archetype_gateway_bypass_blocked audit row write failed"));
+            try {
+              const discordBody = appendFamilyGradePostscript(
+                `Strategy ${id} (${entryIndicator}) blocked from PAPER promotion — compiled Pine is missing TF-gateway markers: ${missingMarkers.join(", ")}. ` +
+                "Track A (pine_compiler.py) must ship _build_archetype_alert_pine before this strategy can be promoted.",
+                "No action needed — the bot will retry when the compiler is updated.",
+                "No action needed — the bot blocked a potentially unsafe promotion automatically.",
+              );
+              notifyWarning(
+                `Archetype Gateway Bypass Blocked: ${id}`,
+                discordBody,
+                { strategyId: id, entryIndicator, missingMarkers, fromState, toState, correlationId: options.correlationId },
+              );
+            } catch { /* non-blocking */ }
+            return { success: false, error: blockReason };
+          }
+
+          logger.info(
+            { strategyId: id, entryIndicator, fromState, toState },
+            "lifecycle: archetype gateway-mode bypass gate PASSED — Pine markers present",
+          );
+        } catch (gateErr) {
+          // Fail-CLOSED: if compilation fails, block promotion
+          const errMsg = gateErr instanceof Error ? gateErr.message : String(gateErr);
+          const blockReason = `archetype gateway-mode bypass gate: compilation failed (fail-closed). Error: ${errMsg}`;
+          logger.warn({ strategyId: id, entryIndicator, fromState, toState, err: gateErr }, blockReason);
+          insertAuditRow({
+            action: "lifecycle.archetype_gateway_bypass_blocked",
+            entityType: "strategy",
+            entityId: id,
+            decisionAuthority: "gate",
+            status: "warn",
+            input: { fromState, toState, entryIndicator } as Record<string, unknown>,
+            result: { reason: blockReason, error: errMsg } as Record<string, unknown>,
+            correlationId: options.correlationId ?? null,
+          }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "archetype_gateway_bypass_blocked audit row write failed (compile error path)"));
+          return { success: false, error: blockReason };
+        }
+      }
+    }
+
     // Atomic write block: state update + (optional) name retire + audit rows.
     // If a caller provided a tx we run inline against it (caller owns commit/rollback);
     // otherwise we open a fresh db.transaction() for these writes.

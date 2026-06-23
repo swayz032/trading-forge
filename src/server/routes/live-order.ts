@@ -84,6 +84,13 @@ import { logger } from "../lib/logger.js";
 import { routeOrder } from "../services/broker-router.js";
 import type { WebhookSignal } from "../integrations/traderspost/webhook-builder.js";
 import { lookupHmacSecret } from "../services/tradingview-marker-service.js";
+import { runPythonModule } from "../lib/python-runner.js";
+import { notifyWarning } from "../services/notification-service.js";
+import {
+  emitArchetypeSignalReceived,
+  emitArchetypeSignalResolved,
+  emitArchetypeEvaluatorFailed,
+} from "../lib/archetype-routing-observability.js";
 
 export const liveOrderRoutes = Router();
 
@@ -142,10 +149,56 @@ function verifyLiveOrderHmac(
 //              Schema keeps it optional; handler enforces the requirement when
 //              live_order_token path is selected.
 
+// ─── Archetype registry ───────────────────────────────────────────────────────
+// Hard-coded list of known archetype keys. Keep in sync with
+// ARCHETYPE_REGISTRY in direct-bucket-graduator.ts.
+// TODO: add CI lint to detect drift between this array and ARCHETYPE_REGISTRY.
+const ARCHETYPE_REGISTRY_KEYS: ReadonlySet<string> = new Set([
+  "ict_silver_bullet_ny_am",
+  "ict_silver_bullet_london",
+  "ict_silver_bullet_ny_pm",
+  "ict_judas_swing",
+  "ict_ny_lunch_reversal",
+  "ict_midnight_open",
+  "ict_london_raid",
+  "ict_turtle_soup",
+  "ict_ote",
+  "ict_power_of_3",
+  "ict_unicorn",
+  "ict_breaker",
+  "ict_mitigation",
+  "ict_iofed",
+  "smt_reversal",
+  "ict_quarterly_swing",
+  "ict_propulsion",
+  "ict_eqhl_raid",
+  "ict_scalp",
+  "ict_swing",
+  "ict_2022",
+  "break_of_structure",
+  "change_of_character",
+  "market_structure_shift",
+  "cisd",
+  "fvg_retrace",
+  "fvg",
+  "judas_swing",
+  "silver_bullet",
+  "breaker_block",
+  "order_block",
+  "liquidity_sweep",
+  "wyckoff_spring",
+  "wyckoff_upthrust",
+  "wyckoff_accumulation",
+  "wyckoff_distribution",
+  "bounce_off_level",
+  "ict_bias_aligned_continuation",
+  "gann_box_4h_continuation",
+]);
+
 const liveOrderPayloadSchema = z.object({
   account_id:       z.string().uuid("account_id must be a UUID"),
   ticker:           z.string().min(1, "ticker is required"),
-  action:           z.enum(["enter_long", "enter_short", "exit_long", "exit_short", "exit"]),
+  action:           z.enum(["enter_long", "enter_short", "exit_long", "exit_short", "exit", "archetype_signal"]),
   order_type:       z.enum(["market", "limit", "stop", "stop_limit"]).optional(),
   quantity:         z.number().int().positive().optional(),
   price:            z.number().optional(),
@@ -156,6 +209,7 @@ const liveOrderPayloadSchema = z.object({
   live_order_hmac:  z.string().min(1).optional(),   // HMAC mode — programmatic callers
   live_order_token: z.string().min(1).optional(),   // Static-token mode — Pine callers
   correlation_id:   z.string().uuid().optional().nullable(),
+  archetype:        z.string().optional(),          // archetype_signal mode — archetype key
 });
 
 // ─── Audit helper ─────────────────────────────────────────────────────────────
@@ -257,6 +311,7 @@ liveOrderRoutes.post(
       account_id,
       ticker,
       action,
+      archetype,
       order_type,
       quantity,
       price,
@@ -479,6 +534,254 @@ liveOrderRoutes.post(
           return;
         }
       }
+    }
+
+    // ── Archetype-signal dispatch ─────────────────────────────────────────────
+    // action="archetype_signal": invoke src.engine.archetype_evaluator to resolve
+    // the archetype to a direction (enter_long/enter_short/exit_long/exit_short/hold),
+    // then continue via the common routeOrder() path with the resolved direction.
+    // Fail-CLOSED: evaluator error or timeout → 503 + audit.
+    // Hold: 200 with status:"held" and NO routeOrder() call.
+    if (action === "archetype_signal") {
+      // Pass 4.5 Track D: emit signal-received SSE immediately (fire-and-forget)
+      emitArchetypeSignalReceived({
+        strategy_id: strategy_id ?? null,
+        archetype: archetype ?? "<missing>",
+        account_id,
+        correlation_id: correlationId,
+        bar_timestamp: bar_timestamp ?? null,
+      });
+
+      // Validate archetype field is present
+      if (!archetype || archetype.trim().length === 0) {
+        logger.warn(
+          { accountId: account_id, ticker, correlationId, action },
+          "live-order: archetype_signal action requires archetype field — 400",
+        );
+        await writeBlockedAuditRow({
+          action: "live_order.blocked_missing_archetype",
+          accountId: account_id,
+          ticker,
+          correlationId,
+          reason: "missing_archetype_field",
+          durationMs: Date.now() - startedAt,
+        });
+        res.status(400).json({ error: "invalid_payload", detail: "archetype field is required when action=archetype_signal" });
+        return;
+      }
+
+      // Validate archetype key is registered
+      const archetypeKey = archetype.trim();
+      if (!ARCHETYPE_REGISTRY_KEYS.has(archetypeKey)) {
+        logger.warn(
+          { accountId: account_id, ticker, correlationId, archetypeKey },
+          "live-order: unknown archetype key — 400",
+        );
+        await writeBlockedAuditRow({
+          action: "live_order.blocked_unknown_archetype",
+          accountId: account_id,
+          ticker,
+          correlationId,
+          reason: "unknown_archetype",
+          detail: { archetypeKey, knownCount: ARCHETYPE_REGISTRY_KEYS.size },
+          durationMs: Date.now() - startedAt,
+        });
+        res.status(400).json({
+          error: "invalid_payload",
+          detail: `unknown archetype key: ${archetypeKey}. Valid keys: see ARCHETYPE_REGISTRY in direct-bucket-graduator.ts`,
+        });
+        return;
+      }
+
+      // Invoke Python archetype evaluator
+      let evaluatorResult: { action: string; reason: string };
+      try {
+        evaluatorResult = await runPythonModule<{ action: string; reason: string }>({
+          module: "src.engine.archetype_evaluator",
+          args: [
+            "--archetype", archetypeKey,
+            "--strategy-id", strategy_id ?? "",
+            "--bar-timestamp", bar_timestamp ?? "",
+            "--symbol", ticker,
+            "--account-id", account_id,
+            "--correlation-id", correlationId,
+          ],
+          timeoutMs: 10_000,
+          componentName: "archetype-evaluator",
+          correlationId,
+        });
+      } catch (evalErr) {
+        const errMsg = evalErr instanceof Error ? evalErr.message : String(evalErr);
+        const errClass = evalErr instanceof Error ? evalErr.constructor.name : "unknown";
+        logger.error(
+          { accountId: account_id, ticker, correlationId, archetypeKey, err: evalErr },
+          "live-order: archetype evaluator failed",
+        );
+        await writeBlockedAuditRow({
+          action: "live_order.archetype_evaluator_failed",
+          accountId: account_id,
+          ticker,
+          correlationId,
+          reason: "evaluator_error",
+          detail: { archetypeKey, error: errMsg },
+          durationMs: Date.now() - startedAt,
+        });
+        try {
+          await notifyWarning(
+            `Archetype evaluator FAILED: ${archetypeKey} / ${ticker}`,
+            `Evaluator error for account ${account_id}: ${errMsg}`,
+            { archetypeKey, ticker, accountId: account_id, correlationId },
+          );
+        } catch { /* non-blocking */ }
+        // Pass 4.5 Track D: emit evaluator-failed SSE + Prom counter
+        emitArchetypeEvaluatorFailed({
+          strategy_id: strategy_id ?? null,
+          archetype: archetypeKey,
+          error_class: errClass,
+          correlation_id: correlationId,
+        });
+        res.status(503).json({ error: "archetype_evaluator_failed", detail: errMsg, correlationId });
+        return;
+      }
+
+      // Pass 4.5 Track D: emit signal-resolved SSE + Prom counter with the resolved action
+      emitArchetypeSignalResolved({
+        strategy_id: strategy_id ?? null,
+        archetype: archetypeKey,
+        resolved_action: evaluatorResult.action as "enter_long" | "enter_short" | "exit_long" | "exit_short" | "hold",
+        account_id,
+        correlation_id: correlationId,
+        reason: evaluatorResult.reason,
+      });
+
+      // Handle hold — evaluator says no trade, return 200 without routing
+      if (evaluatorResult.action === "hold") {
+        logger.info(
+          { accountId: account_id, ticker, correlationId, archetypeKey, reason: evaluatorResult.reason },
+          "live-order: archetype evaluator returned hold — not routing",
+        );
+        try {
+          await db.insert(auditLog).values({
+            action: "live_order.archetype_held_no_signal",
+            entityType: "live_order",
+            entityId: null,
+            decisionAuthority: "system",
+            input: { accountId: account_id, ticker, archetypeKey } as Record<string, unknown>,
+            result: { held: true, reason: evaluatorResult.reason } as Record<string, unknown>,
+            status: "success",
+            durationMs: Date.now() - startedAt,
+            correlationId,
+          });
+        } catch (auditErr) {
+          logger.error({ err: auditErr }, "live-order: archetype_held audit row write failed (non-blocking)");
+        }
+        res.status(200).json({ status: "held", reason: evaluatorResult.reason, correlationId });
+        return;
+      }
+
+      // Directional action — validate it is a known trade action before routing
+      const DIRECTIONAL_ACTIONS = new Set(["enter_long", "enter_short", "exit_long", "exit_short"]);
+      if (!DIRECTIONAL_ACTIONS.has(evaluatorResult.action)) {
+        const errDetail = `archetype evaluator returned unexpected action: ${evaluatorResult.action}`;
+        logger.warn({ accountId: account_id, ticker, correlationId, archetypeKey, evaluatorAction: evaluatorResult.action }, errDetail);
+        await writeBlockedAuditRow({
+          action: "live_order.archetype_evaluator_failed",
+          accountId: account_id,
+          ticker,
+          correlationId,
+          reason: "unexpected_evaluator_action",
+          detail: { archetypeKey, evaluatorAction: evaluatorResult.action },
+          durationMs: Date.now() - startedAt,
+        });
+        res.status(503).json({ error: "archetype_evaluator_failed", detail: errDetail, correlationId });
+        return;
+      }
+
+      // Directional — fall through to common path with resolved action
+      // Re-bind action to the resolved directional value for routeOrder()
+      const resolvedAction = evaluatorResult.action as "enter_long" | "enter_short" | "exit_long" | "exit_short";
+      logger.info(
+        { accountId: account_id, ticker, correlationId, archetypeKey, resolvedAction },
+        "live-order: archetype evaluator resolved direction — routing",
+      );
+
+      // Build signal and route immediately (skip the common path signal build below)
+      const archetypeSignal: WebhookSignal = {
+        action: resolvedAction,
+        ticker,
+        ...(quantity !== undefined ? { quantity } : {}),
+        ...(price !== undefined ? { price } : {}),
+        ...(stop_price !== undefined ? { stopPrice: stop_price } : {}),
+        ...(order_type !== undefined ? { orderType: order_type } : {}),
+        ...(strategy_id ? { strategyId: strategy_id } : {}),
+        ...(bar_timestamp ? { barTimestamp: bar_timestamp } : {}),
+      };
+
+      const archetypeResult = await routeOrder(account_id, archetypeSignal, correlationId, timestamp_ms);
+      const archetypeDurationMs = Date.now() - startedAt;
+
+      if (!archetypeResult.success) {
+        const isHalt = archetypeResult.reason === "production_halt";
+        const isFirmOrCompliance =
+          archetypeResult.reason === "compliance_violation" ||
+          archetypeResult.reason === "account_not_found";
+
+        await writeBlockedAuditRow({
+          action: isHalt ? "live_order.blocked_production_halt" : `live_order.blocked_${archetypeResult.reason}`,
+          accountId: account_id,
+          ticker,
+          correlationId,
+          reason: archetypeResult.reason,
+          detail: {
+            brokerType: archetypeResult.brokerType,
+            firmId: archetypeResult.firmId,
+            error: archetypeResult.error,
+            archetypeKey,
+            resolvedAction,
+          },
+          durationMs: archetypeDurationMs,
+        });
+
+        logger.warn(
+          { accountId: account_id, ticker, correlationId, reason: archetypeResult.reason, archetypeKey, archetypeDurationMs },
+          "live-order: archetype order blocked by gate",
+        );
+
+        const statusCode = isHalt ? 423 : isFirmOrCompliance ? 403 : 503;
+        res.status(statusCode).json({
+          blocked: true,
+          reason: archetypeResult.reason,
+          correlationId,
+          error: archetypeResult.error,
+        });
+        return;
+      }
+
+      logger.info(
+        {
+          accountId: account_id,
+          ticker,
+          correlationId,
+          archetypeKey,
+          resolvedAction,
+          brokerType: archetypeResult.brokerType,
+          firmId: archetypeResult.firmId,
+          archetypeDurationMs,
+        },
+        "live-order: archetype order forwarded via routeOrder()",
+      );
+
+      res.status(200).json({
+        forwarded: true,
+        reason: archetypeResult.reason,
+        correlationId,
+        brokerType: archetypeResult.brokerType,
+        firmId: archetypeResult.firmId,
+        statusCode: archetypeResult.statusCode,
+        archetypeKey,
+        resolvedAction,
+      });
+      return;
     }
 
     // ── Common path: build signal and call routeOrder() ────────────────────────

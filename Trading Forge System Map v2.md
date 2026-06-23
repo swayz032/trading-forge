@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-06-23T05:03:47.734Z`.
+Updated automatically from the repo on `2026-06-23T12:20:57.345Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -12,7 +12,7 @@ Updated automatically from the repo on `2026-06-23T05:03:47.734Z`.
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `ci_gate, kill_switch, operator, operator_hmac_override, operator_invoke_for_cohort_validation, operator_opt_in_per_strategy, operator-approve, operator-halt-only, operator-only-recovery, tradingview_deploy`
 - API routes tracked: `75`
-- Scheduler jobs tracked: `97`
+- Scheduler jobs tracked: `98`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
@@ -55,7 +55,7 @@ Updated automatically from the repo on `2026-06-23T05:03:47.734Z`.
 ### Registry Coverage
 - Registry subsystems tracked: `69`
 - Route coverage: `75/75`
-- Scheduler coverage: `97/97`
+- Scheduler coverage: `98/98`
 - Engine coverage: `29/29`
 - Database coverage: `106/106`
 - Autonomous subsystems with audit coverage: `62/62`
@@ -391,6 +391,7 @@ Updated automatically from the repo on `2026-06-23T05:03:47.734Z`.
 - `stale-pending-sweeper`
 - `stale-session-check`
 - `strategy-stale-detector`
+- `synthetic-regime-bank-populate`
 - `system-map-drift`
 - `tournament-staleness-check`
 - `validation-cadence-monthly`

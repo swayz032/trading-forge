@@ -77,15 +77,22 @@ INDICATOR_MAP: dict[str, str] = {
 # Alert-only band: exportability score 60 (band='alert_only') — exportable=True,
 # but operator must understand Pine is a visual aid, not the execution engine.
 
+# Valid gateway_mode values for the archetype path.
+# Any other value raises ValueError at compile time — no silent fall-through.
+_VALID_ARCHETYPE_GATEWAY_MODES: frozenset[str] = frozenset({"tf_gateway", "direct"})
 
-def _build_archetype_alert_pine(key: str, display_name: str) -> str:
+
+def _build_archetype_alert_pine(
+    key: str,
+    display_name: str,
+    gateway_mode: Optional[str] = None,
+) -> str:
     """Build a minimal alert-only Pine v5 script for a structural archetype.
 
     The emitted Pine:
       - Declares indicator() in overlay mode with the archetype display name.
       - Sets archetype_active = true on every bar (passive always-on marker).
-      - Emits alertcondition() with strategyId/archetype/bar_timestamp/action
-        placeholders that downstream TradersPost / TF-gateway consumers parse.
+      - Emits alertcondition() with payload determined by gateway_mode.
       - Plots a shape at the bottom of the chart so the operator can confirm
         the indicator is loaded and the archetype key is correct.
 
@@ -94,6 +101,18 @@ def _build_archetype_alert_pine(key: str, display_name: str) -> str:
                       the alert JSON payload and Pine variable names.
         display_name: Human-readable title (e.g. 'Ict Silver Bullet Ny Am')
                       used in indicator() title and plotshape text.
+        gateway_mode: Controls alert payload destination.
+                      'tf_gateway' — emit TF-gateway payload routed to
+                        POST /api/live-order → routeOrder() → full safety stack.
+                        action is always "archetype_signal" (locked contract per F-2).
+                        Python engine (archetype_evaluator.py, Track C) resolves
+                        direction server-side.
+                        Placeholders <account-id-placeholder> and
+                        <live-order-token-placeholder> are operator-substituted
+                        at TradingView alert-message-field deploy time.
+                      None / 'direct' — emit the EXISTING generic-signal payload
+                        (byte-identical to pre-Pass-4.5 output).
+                      Any other value — raises ValueError immediately.
 
     Returns:
         Complete Pine Script v5 source string, ready for TradingView import.
@@ -102,7 +121,51 @@ def _build_archetype_alert_pine(key: str, display_name: str) -> str:
     Bar-close timing: alert fires once per bar close when 'Once Per Bar Close'
                       is selected in TradingView alert settings.
     State persistence: None — stateless passive marker.
+
+    Raises:
+        ValueError: When gateway_mode is not None, 'direct', or 'tf_gateway'.
     """
+    # Validate gateway_mode early — no silent fall-through on invalid values.
+    if gateway_mode is not None and gateway_mode not in _VALID_ARCHETYPE_GATEWAY_MODES:
+        raise ValueError(
+            f"Invalid gateway_mode '{gateway_mode}' for archetype '{key}'. "
+            f"Must be one of: {sorted(_VALID_ARCHETYPE_GATEWAY_MODES)} or None (defaults to generic-signal). "
+            "Pass 4.5 Track A: use 'tf_gateway' for the canonical TF-gateway path."
+        )
+
+    if gateway_mode == "tf_gateway":
+        # Pass 4.5 Track A — TF-gateway payload.
+        # action is ALWAYS "archetype_signal" (locked F-2 contract).
+        # Python engine resolves direction server-side (Track C archetype_evaluator.py).
+        # Placeholders are operator-substituted at TradingView alert-message-field
+        # deploy time — same convention as Wave 26 Pass G recipes.
+        # Pine {{timenow}} and {{time}} are TradingView alert placeholders resolved
+        # at alert-fire time — NOT Pine variables.
+        return f"""//@version=5
+indicator("TF Archetype [GW]: {display_name}", overlay=true)
+
+// Alert-only Pine — TF-gateway mode (Pass 4.5 / F-2).
+// Python engine at src/engine/strategies/<inferred_class>.py owns entry/exit.
+// Pine is a passive wake-up signal; Python engine resolves direction server-side.
+// Archetype key: {key}
+// gateway_mode: tf_gateway → POST /api/live-order → routeOrder() → full safety stack.
+// action="archetype_signal" is LOCKED — Track B /api/live-order dispatches to archetype_evaluator.py.
+// Placeholders: operator substitutes <account-id-placeholder> and <live-order-token-placeholder>
+//   at TradingView alert-message-field deploy time (Settings panel, same UX as HMAC secret).
+
+archetype_active = true
+
+// REQUIRED: paste your account_id and live_order_token into the alert message field below.
+// Do NOT put these into input.string() — they must live in the alert message so each
+// TradingView alert carries the correct per-account credentials.
+alertcondition(archetype_active, title="{display_name} [TF-GW]", message='{{"account_id":"<account-id-placeholder>","strategy_id":"{{{{strategy.id}}}}","live_order_token":"<live-order-token-placeholder>","timestamp_ms":"{{{{timenow}}}}","bar_timestamp":"{{{{time}}}}","action":"archetype_signal","archetype":"{key}","ticker":"{{{{ticker}}}}"}}')
+
+plotshape(archetype_active, location=location.bottom, color=color.purple, style=shape.labeldown, text="{display_name}")
+"""
+
+    # Default path: gateway_mode=None or 'direct'.
+    # Byte-identical to pre-Pass-4.5 generic-signal payload — preserves backward-compat
+    # for all callers that do not pass gateway_mode.
     return f"""//@version=5
 indicator("TF Archetype: {display_name}", overlay=true)
 
@@ -193,6 +256,26 @@ ARCHETYPE_PINE_RECIPE: dict[str, str] = {
     for key, display_name in _ARCHETYPE_ENTRIES
 }
 
+# ─── ARCHETYPE_PINE_RECIPE_TF_GATEWAY ────────────────────────────────────────
+#
+# Pass 4.5 Track A — TF-gateway variant of each archetype recipe.
+# Every entry in ARCHETYPE_PINE_RECIPE has a matching TF-gateway entry here.
+#
+# Key contract:
+#   - action is ALWAYS "archetype_signal" (locked per F-2 close design).
+#   - The Pine alert is a "wake up" signal; Python engine (Track C
+#     archetype_evaluator.py) resolves direction server-side.
+#   - Placeholders <account-id-placeholder> and <live-order-token-placeholder>
+#     are operator-substituted at TradingView alert-message-field deploy time.
+#   - Count MUST equal len(ARCHETYPE_PINE_RECIPE) — verified by CI import check.
+#
+# Do NOT call this map directly from callers — use _build_pine_indicator_var()
+# which reads gateway_mode from strategy config and selects the correct map.
+ARCHETYPE_PINE_RECIPE_TF_GATEWAY: dict[str, str] = {
+    key: _build_archetype_alert_pine(key, display_name, gateway_mode="tf_gateway")
+    for key, display_name in _ARCHETYPE_ENTRIES
+}
+
 
 class PineArtifact(BaseModel):
     artifact_type: str  # indicator | strategy_shell | prop_overlay | alerts_json
@@ -209,26 +292,58 @@ class CompilerResult(BaseModel):
     content_hash: str = ""  # SHA-256 of all artifacts
 
 
-def _build_pine_indicator_var(ind_type: str, params: dict, idx: int) -> tuple[str, str]:
+def _build_pine_indicator_var(
+    ind_type: str,
+    params: dict,
+    idx: int,
+    strategy: Optional[dict] = None,
+) -> tuple[str, str]:
     """Build Pine variable declaration for an indicator.
 
     Returns (var_name, pine_code_line).
 
     Lookup priority:
-      0. 'archetype:<key>' prefix → ARCHETYPE_PINE_RECIPE lookup (alert-only Pine).
+      0. 'archetype:<key>' prefix → gateway_mode-aware recipe lookup.
+         Reads gateway_mode from strategy.config.gateway_mode (injected by
+         pine-export-service.ts Track B).  When gateway_mode='tf_gateway',
+         selects ARCHETYPE_PINE_RECIPE_TF_GATEWAY (Pass 4.5 / F-2).  Default
+         (None/'direct') selects ARCHETYPE_PINE_RECIPE (pre-Pass-4.5 backward-compat).
          The returned pine_code_line IS the full Pine script (not a single var line).
          var_name is 'archetype_<key>' for downstream tracking.
       0b.'uncatalogued:<term>' prefix → _build_archetype_alert_pine with the term
-         as display name.  Same alert-only contract.
+         as display name and gateway_mode threaded through.  Same alert-only contract.
       1. Full ind_type in INDICATOR_MAP (catches multi-word names like volume_profile, order_block).
          If mapped to None → placeholder comment, no raise.
       2. base_type (first segment before '_') in INDICATOR_MAP for suffix variants
          (e.g. sma_crossover → sma).  If mapped to None → placeholder comment.
       3. Neither found → ValueError (genuinely unknown — caller must add to INDICATOR_MAP).
+
+    Args:
+        ind_type:  DSL indicator type string.
+        params:    Indicator parameter dict.
+        idx:       Index within the indicator list (for var_name uniqueness).
+        strategy:  Full strategy config dict.  When provided, reads
+                   strategy.get('config', {}).get('gateway_mode') for archetype routing.
+                   When None (legacy callers), defaults to generic-signal path.
     """
+    # Resolve gateway_mode from strategy config (injected by pine-export-service.ts).
+    # None = default/backward-compat (generic-signal payload).
+    gateway_mode: Optional[str] = None
+    if strategy is not None:
+        gateway_mode = strategy.get("config", {}).get("gateway_mode")
+
     # Priority 0: archetype prefix — structural engine archetype, alert-only Pine.
     if ind_type.startswith("archetype:"):
         key = ind_type[len("archetype:"):]
+        if gateway_mode == "tf_gateway":
+            if key not in ARCHETYPE_PINE_RECIPE_TF_GATEWAY:
+                raise ValueError(
+                    f"Unknown archetype key '{key}' for tf_gateway mode. "
+                    "Add to ARCHETYPE_PINE_RECIPE_TF_GATEWAY / ARCHETYPE_REGISTRY before exporting."
+                )
+            var_name = f"archetype_{key}"
+            return var_name, ARCHETYPE_PINE_RECIPE_TF_GATEWAY[key]
+        # Default path: None / 'direct' — pre-Pass-4.5 backward-compat.
         if key not in ARCHETYPE_PINE_RECIPE:
             raise ValueError(
                 f"Unknown archetype key '{key}'. "
@@ -243,7 +358,7 @@ def _build_pine_indicator_var(ind_type: str, params: dict, idx: int) -> tuple[st
         display_name = term.replace("_", " ").title()
         synthetic_key = f"uncatalogued_{term}"
         var_name = f"uncatalogued_{term}"
-        return var_name, _build_archetype_alert_pine(synthetic_key, display_name)
+        return var_name, _build_archetype_alert_pine(synthetic_key, display_name, gateway_mode=gateway_mode)
 
     base_type = ind_type.split("_")[0] if "_" in ind_type else ind_type
     var_name = f"ind_{base_type}_{idx}"
@@ -887,7 +1002,7 @@ def compile_strategy(
         ind_type = ind.get("type", "") if isinstance(ind, dict) else str(ind)
         params = ind if isinstance(ind, dict) else {}
         try:
-            var_name, pine_line = _build_pine_indicator_var(ind_type, params, idx)
+            var_name, pine_line = _build_pine_indicator_var(ind_type, params, idx, strategy=strategy)
         except ValueError:
             unsupported_in_compile.append(ind_type)
             continue
@@ -2039,6 +2154,11 @@ def compile_dual_artifacts(
     unsupported_ind_types = []
     for _ind in indicators:
         _ind_type = _ind.get("type", "") if isinstance(_ind, dict) else str(_ind)
+        # archetype: and uncatalogued: prefixes are handled by _build_pine_indicator_var
+        # via ARCHETYPE_PINE_RECIPE / ARCHETYPE_PINE_RECIPE_TF_GATEWAY — NOT by INDICATOR_MAP.
+        # Skip the INDICATOR_MAP check for these prefixes to avoid false unsupported reports.
+        if _ind_type.startswith("archetype:") or _ind_type.startswith("uncatalogued:"):
+            continue
         _base_type = _ind_type.split("_")[0] if "_" in _ind_type else _ind_type
         if _base_type not in INDICATOR_MAP and _ind_type not in INDICATOR_MAP:
             unsupported_ind_types.append(_ind_type)
@@ -2064,7 +2184,7 @@ def compile_dual_artifacts(
         for idx, ind in enumerate(indicators):
             ind_type = ind.get("type", "") if isinstance(ind, dict) else str(ind)
             params = ind if isinstance(ind, dict) else {}
-            var_name, pine_line = _build_pine_indicator_var(ind_type, params, idx)
+            var_name, pine_line = _build_pine_indicator_var(ind_type, params, idx, strategy=strategy)
             indicator_vars[var_name] = ind_type
             indicator_lines.append(pine_line)
     except ValueError as build_err:

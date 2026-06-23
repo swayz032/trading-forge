@@ -347,6 +347,36 @@ export const WAVE29_EVENTS = {
 
 export type Wave29EventName = (typeof WAVE29_EVENTS)[keyof typeof WAVE29_EVENTS];
 
+// ─── Pass 4.5 Track D — Archetype routing observability SSE events (2026-06-23) ─
+//
+// Emitted by archetype-routing-observability.ts helpers on every stage of the
+// /api/live-order archetype_signal handler lifecycle. Track B calls these helpers
+// directly — no SSE logic lives in the route itself.
+//
+// Payload shapes:
+//   SIGNAL_RECEIVED   { strategy_id, archetype, account_id, correlation_id, bar_timestamp }
+//   SIGNAL_RESOLVED   { strategy_id, archetype, resolved_action, account_id, correlation_id, reason }
+//   EVALUATOR_FAILED  { strategy_id, archetype, error_class, correlation_id }
+//
+// resolved_action closed enum (mirrors tf_archetype_signals_routed_total labels):
+//   enter_long | enter_short | exit_long | exit_short | hold | evaluator_failed
+//
+// error_class is a string — typically the constructor name of the thrown error
+//   (e.g. "TimeoutError", "SubprocessError") so dashboards can group failure modes.
+export const ARCHETYPE_ROUTING_EVENTS = {
+  // Fired when /api/live-order accepts an action:"archetype_signal" request
+  // and before the Python evaluator subprocess is dispatched.
+  SIGNAL_RECEIVED: "archetype:signal_received",
+  // Fired after the archetype_evaluator returns a verdict. Carries the resolved
+  // direction and reason from the evaluator response.
+  SIGNAL_RESOLVED: "archetype:signal_resolved",
+  // Fired when the Python evaluator subprocess fails or times out.
+  EVALUATOR_FAILED: "archetype:evaluator_failed",
+} as const;
+
+export type ArchetypeRoutingEventName =
+  (typeof ARCHETYPE_ROUTING_EVENTS)[keyof typeof ARCHETYPE_ROUTING_EVENTS];
+
 // ─── Pass 3 Track D — Pine Export SHADOW refusal SSE events (2026-06-22) ──────
 //
 // Emitted by pine-shadow-observability.ts::emitPineShadowRefused() whenever a

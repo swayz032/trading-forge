@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-23T05:03:47.734Z",
+  "generatedAt": "2026-06-23T12:20:57.345Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,7 +16,7 @@
   },
   "counts": {
     "routes": 75,
-    "schedulerJobs": 97,
+    "schedulerJobs": 98,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 29,
@@ -188,6 +188,7 @@
     "stale-pending-sweeper",
     "stale-session-check",
     "strategy-stale-detector",
+    "synthetic-regime-bank-populate",
     "system-map-drift",
     "tournament-staleness-check",
     "validation-cadence-monthly",
@@ -977,7 +978,7 @@
     ],
     "coveredCounts": {
       "routes": 75,
-      "schedulerJobs": 97,
+      "schedulerJobs": 98,
       "engineSubsystems": 29,
       "databaseTables": 106
     },
@@ -7041,7 +7042,8 @@
           "failure visibility wired",
           "freshness signals available",
           "route contract reachable",
-          "runtime evidence persisted"
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
         ],
         "runtimeEvidence": [
           "/api/health/dashboard",
@@ -7098,7 +7100,9 @@
           "/api/nemo-scenarios",
           "/api/synthetic-black-swan"
         ],
-        "schedulerJobs": [],
+        "schedulerJobs": [
+          "synthetic-regime-bank-populate"
+        ],
         "healthCheck": "/api/health/dashboard",
         "freshnessSignals": [
           "synthetic_black_swan_runs:recent-completion",
@@ -13754,7 +13758,8 @@
         "failure visibility wired",
         "freshness signals available",
         "route contract reachable",
-        "runtime evidence persisted"
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
       ],
       "runtimeEvidence": [
         "/api/health/dashboard",
@@ -13811,7 +13816,9 @@
         "/api/nemo-scenarios",
         "/api/synthetic-black-swan"
       ],
-      "schedulerJobs": [],
+      "schedulerJobs": [
+        "synthetic-regime-bank-populate"
+      ],
       "healthCheck": "/api/health/dashboard",
       "freshnessSignals": [
         "synthetic_black_swan_runs:recent-completion",

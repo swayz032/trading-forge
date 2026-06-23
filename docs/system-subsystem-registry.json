@@ -600,7 +600,9 @@
       "/api/health/dashboard",
       "/api/synthetic-black-swan"
     ],
-    "scheduler_jobs": [],
+    "scheduler_jobs": [
+      "synthetic-regime-bank-populate"
+    ],
     "routes": [
       "/api/nemo-scenarios",
       "/api/synthetic-black-swan"

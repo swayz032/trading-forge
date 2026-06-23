@@ -403,6 +403,34 @@ export const traderspostRejectsTotal = new Counter({
   registers: [promRegistry],
 });
 
+// ─── Pass 4.5 Track D — Archetype routing observability counter (2026-06-23) ───
+//
+// tf_archetype_signals_routed_total{archetype, resolved_action}
+//   Incremented by archetype-routing-observability.ts on every archetype signal
+//   resolution at /api/live-order. Emitted by:
+//     - emitArchetypeSignalResolved()  → resolved_action = direction from evaluator
+//     - emitArchetypeEvaluatorFailed() → resolved_action = "evaluator_failed"
+//
+//   Labels:
+//     archetype       — ARCHETYPE_REGISTRY key (e.g. "bounce_off_level",
+//                       "ict_bias_aligned_continuation", etc.) — up to 39+ values
+//     resolved_action — closed set:
+//                       enter_long | enter_short | exit_long | exit_short |
+//                       hold | evaluator_failed
+//
+//   Cardinality: ~40 archetypes × 6 actions = ~240 time series — safe.
+//   Declared at registry init so Prometheus sees zero values from first scrape
+//   (no "no data" gaps in Grafana before the first live-order archetype signal).
+//
+//   Operational question answered: "Which archetypes are most active and do any
+//   show elevated evaluator_failed rates indicating subprocess fragility?"
+export const archetypeSignalsRoutedTotal = new Counter({
+  name: "tf_archetype_signals_routed_total",
+  help: "Total archetype signals routed through /api/live-order, labelled by archetype and resolved action",
+  labelNames: ["archetype", "resolved_action"] as const,
+  registers: [promRegistry],
+});
+
 // ─── Pass 3 Track D — Pine Export SHADOW refusal counter (2026-06-22) ─────────
 //
 // tf_pine_shadow_refusals_total{blocked_at}
