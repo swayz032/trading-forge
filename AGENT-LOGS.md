@@ -4,6 +4,28 @@
 
 ---
 
+### Session Log — 2026-06-23 Paper-Trade Readiness Hardening Plan, Pass 8 Track A CLOSE (FK orphan + fail-CLOSED exportability gate, 14 new tests GREEN, commit bd0f848)
+
+**Mission:** Pass 8 Track A — Close 2 real W6/F audit findings (backtest-core subagent).
+
+**Bug 1 — `scripts/seed-slumhouse-crew.ts` orphan FK fix:**
+- **BEFORE:** Hardcoded `broker_account_id: "2f4ca594-…-f447925abf07"` for Slumdawg Mazi. UUID references no migration row → FK violation on fresh DBs.
+- **AFTER:** Dynamic `SELECT account_id FROM broker_accounts WHERE account_id_external='mazi-topstep-50k' LIMIT 1`. Miss → null (no FK violation) + `console.warn` + audit row `action=seed.slumhouse_orphan_broker_skipped` (non-blocking).
+
+**Bug 2 — `lifecycle-service.ts` `checkExportability` outer catch fail-CLOSED conversion:**
+- **BEFORE (fail-OPEN):** Outer catch only logged a warn and continued — silent promotion of unexportable strategies on infra failures.
+- **AFTER (fail-CLOSED):** Outer catch writes audit `strategy.lifecycle.exportability_infra_error` (status=warn), emits SSE `strategy:exportability_infra_error`, fires Discord WARN via `notifyWarning` + `appendFamilyGradePostscript`, sets `exportabilityBlocked=true` to skip the strategy this cycle.
+
+**Tests:** 14 new tests, 2 files.
+- `pass8-exportability-infra-error.test.ts` — 7 cases (ok=true regression, ok=false preserved, Error throw, SyntaxError/dynamic-import, non-Error stringified, db audit insert shape, source-contract check).
+- `pass8-seed-slumhouse-crew.test.ts` — 7 cases (row found, row missing + warn + audit, other crew always null, FK nullable schema, audit action name, non-blocking audit, source UUID removal check).
+
+**CI gates:** check:production-isolation CLEAN, check:2026-compliance OK. Lifecycle-service regression: 29/29 GREEN. `tsc --noEmit` clean on changed files.
+
+**Commit:** `bd0f848` on `hardening/phase-0` — pushed.
+
+---
+
 ### Session Log — 2026-06-23 Paper-Trade Readiness Hardening Plan, Pass 7 MASTER CLOSE (Observability + Autonomy Hardening, 3 subagents, 81 new tests GREEN, 4+ audit findings closed)
 
 **Mission:** Pass 7 — close audit observability + autonomy gaps: tradingview_markers UNIQUE INDEX dedup (Real Bug #3), composite gate evidence-completeness tracker (Observability Gap #4), PILOT→DEPLOYED Pine compile retry + paper.ts session hygiene (Observability Gap #6 + #8), cron jitter framework (Autonomy Gap #4), TP-Link Kasa remote power-cycle escape valve (Autonomy Gap #3), strategy library status CLI + needs_archetype_queue dashboard tile (Observability Gap #5 + #7).
