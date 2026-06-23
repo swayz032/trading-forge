@@ -60,20 +60,23 @@ describe("E-PRECISION — denominator hygiene on real cached extractions", () =>
     expect(g.verdict.verdict).toBe("pass");
   });
 
-  it("Fqx (Bollinger): descriptors dropped + swing-high mirror folded → coverage PASS", () => {
+  // 2026-06-23 ENUMERATOR-FIX REALITY: once the windowed enumerator was fixed (was silently
+  // returning 0 items → self-evident pass), Fqx grades against its REAL Bollinger components and
+  // genuinely fails at ~75% — the extraction misses "upper/lower bands", "20 SMA", "3rd-σ band".
+  // This is the honest measurement, not a regression: the gate can now SEE the incompleteness the
+  // self-evident heuristic hid. (Was asserting "pass" in the broken-enum era.)
+  it("Fqx (Bollinger): real enumerated grading exposes missing band components → coverage_failed", () => {
     const g = gradeCoverage("FqxEKDxemtI");
     if (g.skip) return;
-    expect(g.verdict.verdict).toBe("pass");
+    expect(g.verdict.verdict).toBe("coverage_failed");
   });
 
-  // 2026-06-23: chunk-fragment synthesis now unifies ktkqq's per-window setup fragments into one
-  // coherent "three_brains_framework" (15 steps); the previously-"missing" setups were fragmented
-  // across windows, not absent. With synthesis + confluence recovery ktkqq covers 86% and PASSES.
-  // (Was: asserted coverage_failed in the pre-synthesis world.)
-  it("ktkqq (VWAP): synthesis unifies the setup fragments → coverage PASSES", () => {
+  // Same enumerator-fix reality: ktkqq grades against the real VWAP-Wave-System items and fails at
+  // ~67% — misses the 3-brains decomposition + "VWAP break and reclaim". Honest, not regression.
+  it("ktkqq (VWAP): real enumerated grading exposes missing setups → coverage_failed", () => {
     const g = gradeCoverage("ktkqq7QsN9Q");
     if (g.skip) return;
-    expect(g.verdict.verdict).toBe("pass");
+    expect(g.verdict.verdict).toBe("coverage_failed");
   });
 });
 
@@ -112,7 +115,7 @@ function fullGrade(vid: string): { skip: true } | { skip: false; pass: boolean; 
 }
 
 describe("E-PRECISION — full-gate scoreboard (real caches)", () => {
-  it("prints scoreboard + asserts rf_ & Fqx now FULLY pass", () => {
+  it("prints scoreboard + asserts rf_ FULLY passes under real enumerated grading", () => {
     const vids = ["rf_EQvubKlk", "FqxEKDxemtI", "75DJN5UVQnw", "ktkqq7QsN9Q", "gddYspvW0_w", "SY2jXlW9bt4"];
     const lines: string[] = [];
     let anyGraded = false;
@@ -127,9 +130,10 @@ describe("E-PRECISION — full-gate scoreboard (real caches)", () => {
     // eslint-disable-next-line no-console
     console.log("\n=== FULL-GATE SCOREBOARD ===\n" + lines.join("\n") + "\n");
     if (!anyGraded) return; // nothing to assert if no fresh caches
-    // The two good extractions the precision filter unblocks must now FULLY pass.
+    // rf_ is a genuinely-complete extraction (100% enumerated coverage) — it must FULLY pass.
+    // Fqx is NO LONGER asserted to pass: under real enumerated grading it's ~75% (missing band
+    // components), correctly coverage_failed. The scoreboard line documents its true state.
     if ("rf_EQvubKlk" in passByVid) expect(passByVid["rf_EQvubKlk"]).toBe(true);
-    if ("FqxEKDxemtI" in passByVid) expect(passByVid["FqxEKDxemtI"]).toBe(true);
   });
 });
 

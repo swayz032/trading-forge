@@ -361,6 +361,22 @@ const INDICATOR_ANATOMY_RE =
   /^(the\s+)?histogram$|^(macd\s+)?signal\s+line$|^macd\s+line$|^zero\s+line$|^(upper|lower|middle)\s+band$|^basis$/i;
 const MIRROR_PARTNER = new Map<string, string>([["swing high", "swing low"]]);
 
+// 2026-06-23 ENUMERATOR PRECISION (miss-category audit): the enumerator was counting NON-mechanic
+// items as speaker_items, inflating the denominator + creating false "misses". Per the operator's
+// mandate ("we don't care WHAT they trade, we care about the strategy"), instrument/symbol names
+// are never strategy components — D1Ipi8 scored a false 18% almost entirely on missing instrument
+// names (S&P/NASDAQ/MNQ). External software platforms (bookmap, NinjaTrader) are tools, not the
+// mechanic. Aux/meta artifacts (watchlist, PDF, course, flowchart, "the tool") are not strategy
+// either. Dropping these makes coverage a real STRATEGY-MECHANIC recall metric. NOT relaxation —
+// a genuinely-dropped mechanic (Gann box, the reversal-zone prerequisite) still fails as before.
+const INSTRUMENT_RE =
+  /\b(s\s*&\s*p\s*500|s&p\s*futures|s and p|nasdaq\s*futures|nasdaq|dow\s*jones|russell\s*2000|e-?mini|micro\s+(s&p|nasdaq|es|nq|crude|gold)|\bmes\b|\bmnq\b|\bmcl\b|\bme+s\b|\bnq\b|\bes\b|\bspy\b|\bqqq\b|\biwm\b|bitcoin|ethereum|eur\/?usd|gbp\/?usd)\b/i;
+const INSTRUMENT_BARE_RE = /^(the\s+)?(futures|stocks?|crypto|forex|indices|currencies|equities)$/i;
+const EXTERNAL_TOOL_RE =
+  /\b(bookmap|depth\s*of\s*market|\bdom\b|ninja\s*trader|trading\s*view|think\s*or\s*swim|thinkorswim|tradovate|topstep|webull|robinhood|schwab|telegram|discord)\b/i;
+const AUX_META_RE =
+  /^(the\s+|a\s+|my\s+)?(tool|risk[\s-]?reward\s*tool|position\s*sizing\s*tool|flowchart|watch\s*list|pdf|guide|course|ebook|disclaimer|notifications?)$/i;
+
 function selectDistinctItems(items: SpeakerItem[]): SpeakerItem[] {
   const kept: SpeakerItem[] = [];
   const keptLower = new Set<string>();
@@ -369,6 +385,9 @@ function selectDistinctItems(items: SpeakerItem[]): SpeakerItem[] {
     if (!n) continue;
     if (META_DESCRIPTOR_RE.test(n)) continue; // (1)+(2) strategy descriptors / umbrella names
     if (INDICATOR_ANATOMY_RE.test(n)) continue; // (3) sub-parts of an enumerated indicator
+    if (INSTRUMENT_RE.test(n) || INSTRUMENT_BARE_RE.test(n)) continue; // (4) instrument/symbol — mechanic-agnostic
+    if (EXTERNAL_TOOL_RE.test(n)) continue; // (5) external software/platform — not the mechanic
+    if (AUX_META_RE.test(n)) continue; // (6) aux/meta artifact (watchlist, PDF, sizing tool, flowchart)
     keptLower.add(n.toLowerCase());
     kept.push(it);
   }
