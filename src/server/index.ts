@@ -93,6 +93,7 @@ import { tradeJournalRoutes } from "./routes/trade-journal.js";
 import { compositeHealthRoutes } from "./routes/composite-health.js";
 import { abComparisonRoutes } from "./routes/ab-comparison.js";
 import { liveOrderRoutes } from "./routes/live-order.js";
+import { fillCallbackRoutes } from "./routes/fill-callback.js";
 import { runPendingMigrations } from "./lib/boot-migration-runner.js";
 import { checkStartupSecrets } from "./lib/startup-config-check.js";
 
@@ -569,6 +570,12 @@ app.use("/api/ab-comparison", abComparisonRoutes);
 // Pine alert → POST /api/live-order → routeOrder() (full gate stack) → TradersPost/broker.
 // Requires LIVE_ORDER_HMAC_SECRET env var (≥32 chars). Fail-CLOSED 503 when unconfigured.
 app.use("/api/live-order", liveOrderRoutes);
+
+// Phase 1 Fill Reconciliation: broker fill callback + admin reconcile-clear.
+// POST /api/broker/fill-callback — HMAC-gated; requires BROKER_FILL_HMAC_SECRET.
+// POST /api/broker/fill-callback/reconcile-clear — admin clear of needs_reconcile block.
+// Flag-gated: SERVER_MEDIATED_EXECUTION_ENABLED=true (default OFF).
+app.use("/api/broker/fill-callback", fillCallbackRoutes);
 
 // 404 handler for API routes — returns JSON instead of Express default HTML
 app.use("/api", (_req, res) => {

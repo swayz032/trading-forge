@@ -2412,6 +2412,62 @@ export const productionTrades = pgTable(
   ],
 );
 
+// ─── Server-Mediated Orders (Fill Reconciliation Phase 1 — migration 0171, journal idx 173) ───
+//
+// One row per order dispatched through server-mediated-executor.ts → broker-router.
+// Lifecycle: routed → acked → filled | partially_filled | rejected | needs_reconcile → reconciled.
+//
+// A position with status='needs_reconcile' BLOCKS new server-mediated entries for that account
+// until the operator clears it (via admin endpoint or successful auto-reconciliation).
+//
+// broker_fill_id dedup: re-ingesting the same broker_fill_id is a no-op (unique index).
+export const serverMediatedOrders = pgTable(
+  "server_mediated_orders",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    idempotencyKey:     text("idempotency_key").notNull(),    // bar-scoped key from broker-router
+    accountId:          uuid("account_id").notNull(),
+    strategyId:         uuid("strategy_id").notNull(),
+    sessionId:          uuid("session_id").notNull(),
+    correlationId:      uuid("correlation_id"),
+
+    // Intended order (what was dispatched)
+    intendedAction:     text("intended_action").notNull(),
+    intendedSymbol:     text("intended_symbol").notNull(),
+    intendedQty:        integer("intended_qty").notNull(),
+    intendedOrderType:  text("intended_order_type").notNull().default("market"),
+    intendedLimitPrice: numeric("intended_limit_price"),
+    intendedStopPrice:  numeric("intended_stop_price"),
+
+    // Broker references
+    brokerOrderRef:     text("broker_order_ref"),             // from TradersPost responseBody
+    brokerFillId:       text("broker_fill_id"),               // from fill callback (dedup key)
+
+    // Lifecycle state (see migration 0171 for valid values)
+    status:             text("status").notNull().default("routed"),
+
+    // Actual fill (updated by fill-reconciliation-service on fill callback)
+    filledQty:          integer("filled_qty").notNull().default(0),
+    filledAvgPrice:     numeric("filled_avg_price"),
+    filledAt:           timestamp("filled_at", { withTimezone: true }),
+
+    // Timestamps
+    createdAt:          timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt:          timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+
+    // JSON blobs
+    brokerResponse:     jsonb("broker_response"),             // full TradersPost responseBody
+    fillEvents:         jsonb("fill_events").notNull().default(sql`'[]'::jsonb`),
+  },
+  (table) => [
+    uniqueIndex("smo_idempotency_key_uq").on(table.idempotencyKey),
+    uniqueIndex("smo_broker_fill_id_uq").on(table.brokerFillId).where(sql`broker_fill_id IS NOT NULL`),
+    index("smo_broker_order_ref_idx").on(table.brokerOrderRef).where(sql`broker_order_ref IS NOT NULL`),
+    index("smo_account_needs_reconcile_idx").on(table.accountId, table.status).where(sql`status = 'needs_reconcile'`),
+    index("smo_account_created_idx").on(table.accountId, table.createdAt),
+  ],
+);
+
 // ─── Daily Reconciliation ─────────────────────────────────────────────────────
 export const dailyReconciliation = pgTable(
   "daily_reconciliation",

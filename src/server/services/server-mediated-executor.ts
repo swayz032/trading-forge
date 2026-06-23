@@ -51,6 +51,13 @@ import { auditLog } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { routeOrder } from "./broker-router.js";
 import type { WebhookSignal } from "../integrations/traderspost/webhook-builder.js";
+import { buildDeterministicIdempotencyKey } from "../integrations/traderspost/client.js";
+import {
+  persistOrderAtRouted,
+  updateOrderToAcked,
+  updateOrderToNeedsReconcile,
+  isAccountBlockedForReconcile,
+} from "./fill-reconciliation-service.js";
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
@@ -164,6 +171,10 @@ async function writeRoutingAudit(
 /**
  * Calls routeOrder(), writes an audit row, and returns a RoutingOutcome.
  *
+ * Phase 1 additions:
+ *   - INSERT server_mediated_orders row at 'routed' BEFORE calling routeOrder()
+ *   - UPDATE to 'acked' on success, 'needs_reconcile' on failure
+ *
  * Fail-CLOSED contract:
  *   - routeOrder returns { success: false } → status=needs_reconcile, routed=false
  *   - routeOrder throws → treated as failure, status=needs_reconcile, routed=false
@@ -175,6 +186,41 @@ async function dispatchRouteOrder(
   auditAction: { success: string; failure: string },
   meta: Record<string, unknown>,
 ): Promise<RoutingOutcome> {
+  // ── Phase 1: Persist order row at 'routed' BEFORE dispatching ──────────────
+  // Build the same idempotency key that broker-router / TradersPost client uses
+  // so fill callbacks can match back to this row via idempotency_key.
+  const idempotencyKey = signal.barTimestamp
+    ? buildDeterministicIdempotencyKey({
+        accountId: ctx.accountId,
+        strategyId: ctx.strategyId,
+        ticker: signal.ticker,
+        action: signal.action,
+        barTs: signal.barTimestamp,
+      })
+    : // Fallback when no barTimestamp (e.g. stop-modify signals): use contextual key
+      buildDeterministicIdempotencyKey({
+        accountId: ctx.accountId,
+        strategyId: ctx.strategyId,
+        ticker: signal.ticker,
+        action: signal.action,
+        barTs: new Date().toISOString(),
+      });
+
+  const orderId = await persistOrderAtRouted({
+    idempotencyKey,
+    accountId: ctx.accountId,
+    strategyId: ctx.strategyId,
+    sessionId: ctx.sessionId,
+    correlationId: ctx.correlationId,
+    intendedAction: signal.action,
+    intendedSymbol: signal.ticker,
+    intendedQty: signal.quantity ?? 1,
+    intendedOrderType: signal.orderType ?? "market",
+    intendedLimitPrice: signal.price ?? null,
+    intendedStopPrice: signal.stopPrice ?? null,
+  });
+
+  // ── Dispatch to broker ─────────────────────────────────────────────────────
   let brokerResult;
 
   try {
@@ -186,6 +232,13 @@ async function dispatchRouteOrder(
       { err: routeErr, ctx, signal },
       "server-mediated-executor: routeOrder threw unexpectedly — treating as routing failure",
     );
+    if (orderId) {
+      await updateOrderToNeedsReconcile({
+        orderId,
+        reason: routeErr instanceof Error ? routeErr.message : "route_threw_unexpectedly",
+        correlationId: ctx.correlationId,
+      });
+    }
     await writeRoutingAudit(
       auditAction.failure,
       ctx,
@@ -210,6 +263,9 @@ async function dispatchRouteOrder(
       },
       "server-mediated-executor: order routed successfully",
     );
+    if (orderId) {
+      await updateOrderToAcked({ orderId, brokerResult, correlationId: ctx.correlationId });
+    }
     await writeRoutingAudit(
       auditAction.success,
       ctx,
@@ -235,6 +291,13 @@ async function dispatchRouteOrder(
       },
       "server-mediated-executor: routeOrder returned failure — needs_reconcile (Phase 1 fill-sync required)",
     );
+    if (orderId) {
+      await updateOrderToNeedsReconcile({
+        orderId,
+        reason: brokerResult.reason ?? "route_returned_failure",
+        correlationId: ctx.correlationId,
+      });
+    }
     await writeRoutingAudit(
       auditAction.failure,
       ctx,
@@ -289,6 +352,15 @@ export async function routeLiveEntry(params: {
       );
     }
     return { routed: false, reason: skipReason };
+  }
+
+  // ── Phase 1: Fail-CLOSED reconciliation gate ──────────────────────────────
+  // If the account has any open needs_reconcile orders, block new entries.
+  // Exits (TP1, TP2, flatten) are NOT blocked — you must always be able to
+  // close a position even when reconciliation is pending.
+  const blocked = await isAccountBlockedForReconcile(ctx.accountId, ctx.correlationId);
+  if (blocked) {
+    return { routed: false, reason: "account_needs_reconcile_block", needsReconcile: true };
   }
 
   const signal: WebhookSignal = {
