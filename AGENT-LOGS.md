@@ -4,6 +4,51 @@
 
 ---
 
+### Session Log — 2026-06-23 Paper-Trade Readiness Hardening Plan, Pass 4.5 MASTER CLOSE (F-2 archetype gateway bypass — CLOSED, 946 new tests GREEN across 4 parallel subagents + architect close)
+
+**Mission:** Close Pass 4's F-2 CRITICAL carry-forward — 39 archetype strategies were silently bypassing `routeOrder()` because `_build_pine_indicator_var:230` intercepts `archetype:*` BEFORE `_build_strategy_webhook_alerts` (where gateway_mode is read). Pass 4.5 wires the archetype path through the safety stack via `action:"archetype_signal"` dispatching to a Python evaluator that resolves direction, then routes via `routeOrder()`.
+
+**Design choice LOCKED:** Action vocab is `"archetype_signal"` (NOT directional `enter_long` etc.). Archetypes are Python-engine-driven; Pine alert is a "wake up" signal; Python evaluator resolves direction server-side. Reuses existing live-order route (HMAC + dedup + routeOrder safety stack) — smallest surface area.
+
+**4 parallel subagents + mandatory accuracy-validator + architect close:**
+
+1. **pine-export (Track A — Archetype TF-gateway payload)** — agent `aae54e2815e97130b`. Extended `_build_archetype_alert_pine(key, display_name, gateway_mode=None)` with `gateway_mode='tf_gateway'` branch emitting canonical TF-gateway payload `{account_id, strategy_id, live_order_token, timestamp_ms, bar_timestamp, archetype, action:"archetype_signal", ticker}`. Backward-compat: None/'direct' byte-identical to pre-Pass-4.5 generic-signal payload. NEW `ARCHETYPE_PINE_RECIPE_TF_GATEWAY` map populated for all 39 archetypes via same `_ARCHETYPE_ENTRIES` comprehension. `_VALID_ARCHETYPE_GATEWAY_MODES = frozenset({"tf_gateway", "direct"})`. `_build_pine_indicator_var` archetype intercept now reads `strategy.config.gateway_mode` (matches Pass 4 Track B's TS-side injection path) and routes to correct recipe map. Uncatalogued prefix also threads gateway_mode through. Pre-check at compile_dual_artifacts skips INDICATOR_MAP lookup for `archetype:*` and `uncatalogued:*` prefixes (was incorrectly flagging as unsupported). **817 new pytest GREEN** + 421 backward-compat tests still GREEN.
+
+2. **paper-parity (Track B — /api/live-order archetype_signal + lifecycle gate)** — agent `a7ff2204079028e32`. Extended `liveOrderPayloadSchema` Zod: action enum gains `"archetype_signal"`, new optional `archetype` field. NEW `ARCHETYPE_REGISTRY_KEYS: ReadonlySet<string>` (39-entry TODO-CI-lint set mirroring direct-bucket-graduator.ts). Archetype dispatch branch: validates archetype field + registry membership → `runPythonModule("src.engine.archetype_evaluator", ...)` with 10s timeout → handles `hold` (200 + `live_order.archetype_held_no_signal` audit, no routeOrder) / directional (routes via routeOrder with resolved action — full safety stack fires) / error (503 + `live_order.archetype_evaluator_failed` audit + Discord WARN). NEW lifecycle gate inserted AFTER Frankenstein gate, BEFORE writeBlock: when entry_indicator starts with `archetype:` AND `LIVE_ORDER_GATEWAY_URL` set, dry-runs `compileDualPineExport({mode:'tf_gateway'})` and inspects Pine for canonical markers (`"action":"archetype_signal"` + `"archetype":"<key>"`). Missing markers → `lifecycle.archetype_gateway_bypass_blocked` audit + Discord WARN + return success=false (gate fail-CLOSED). 5 new audit actions: `live_order.archetype_held_no_signal`, `live_order.archetype_evaluator_failed`, `live_order.blocked_missing_archetype`, `live_order.blocked_unknown_archetype`, `lifecycle.archetype_gateway_bypass_blocked`. **52 new vitest GREEN** (16 + 36). All 21 W1 live-order-gateway regression tests + 43 lifecycle-archetype-promotion regression tests GREEN.
+
+3. **backtest-core (Track C — Python archetype-evaluator CLI)** — agent `a0a7f3073941d5330`. NEW `src/engine/archetype_evaluator.py` reads stdin JSON `{archetype, strategy_id, bar:{timestamp,symbol,close,high,low,open,volume}, position:{side,size}, bias_state:{regime,...}}`, dispatches to `ARCHETYPE_CLASS_MAP[archetype]` (mirrors ARCHETYPE_REGISTRY), instantiates strategy class, returns `{action: enter_long|enter_short|exit_long|exit_short|hold, reason, archetype}` JSON to stdout. Strict action-vocabulary validation before emit. Replay-deterministic (no RNG, no Date.now(), no I/O beyond stdin/stdout). Fail-CLOSED on error (exit 1 + `{status:"error", reason}` JSON). **38 archetypes wired directly** (no adapter needed). **1 archetype carry-forward: smt_reversal** — its `compute_multi()` requires two DataFrames (ES + NQ) simultaneously; single-bar stdin payload cannot supply both; evaluator returns `hold` with documented carry-forward reason until Track B passes a dual-instrument payload. **38 new pytest GREEN**. 205 existing strategy unit tests GREEN.
+
+4. **observability-reliability (Track D — Archetype routing observability)** — agent `aacf120cd9a0af80e`. NEW `src/server/lib/archetype-routing-observability.ts` exporting THREE fail-soft emit helpers: `emitArchetypeSignalReceived` (Stage 1, SSE only), `emitArchetypeSignalResolved` (Stage 2, SSE + Prom counter with `resolved_action` label), `emitArchetypeEvaluatorFailed` (Stage 3, SSE + Prom counter with `resolved_action:"evaluator_failed"`). Three SSE events: `archetype:signal_received`, `archetype:signal_resolved`, `archetype:evaluator_failed`. NEW Prom counter `tf_archetype_signals_routed_total{archetype, resolved_action}`. All helpers fail-soft (catch errors, warn-log — never block live-order path). **39 new vitest GREEN**. 26 pine-shadow-observability regression GREEN.
+
+**Architect close (this commit):**
+- **Wired Track D's 3 emit helpers into Track B's /api/live-order archetype dispatch** — Track B finished without the import. Added the import block + 3 emit call sites at Stage 1 (after action check, before validation), Stage 2 (after evaluator returns directional verdict, before hold branch), Stage 3 (in evaluator catch block, before 503 return). Without this wiring Track D's helpers were unused and dashboard tiles would have been blind to archetype routing.
+- **Test mock fix**: Track B's `live-order-archetype-signal.test.ts` mocked `db/schema.js` with only `auditLog`. My import of `archetype-routing-observability.js` transitively pulled in `sse.ts → audit-log-helper.ts → compliance.ts` which uses concrete schema column references (`complianceRulesets.id` etc.) — Symbol/Proxy mocks crash on `.id` access; real-schema importOriginal pulls in `index.ts → boot-migration-runner` which reads a BOM-tagged file. Solution: stub `archetype-routing-observability.js` at module boundary so the test does NOT load sse.ts. Test fix is additive and non-fragile.
+- **Registry drift closure**: parallel-session work added `synthetic-regime-bank-populate` cron without registry entry. Added it under `synthetic_black_swan_survival` to close `system-map:check` drift.
+- `npm run system-map:sync` regenerated topology files. driftItems=[].
+
+**Verification:**
+- Pass 4.5 vitest: **91 / 91 GREEN** (16 + 36 + 39 from the 3 vitest files combined; verified post-mock-fix).
+- Pass 4.5 pytest: **855 / 855 GREEN** (817 archetype TF-gateway + 38 archetype evaluator).
+- **Pass 4.5 grand total: 946 new tests GREEN** + zero regressions.
+- 3 CI hard gates GREEN: production-isolation + 2026-compliance + system-map:check (`driftItems=[]`).
+
+**Files changed (Pass 4.5 only, 11 total):**
+- M `src/engine/pine_compiler.py`, `src/server/routes/live-order.ts`, `src/server/services/lifecycle-service.ts`, `src/server/routes/sse.ts`, `src/server/lib/metrics-registry.ts`, `docs/system-subsystem-registry.json`, generated system-map trio
+- A `src/engine/archetype_evaluator.py`, `src/engine/tests/test_pine_compiler_archetypes_tf_gateway.py`, `src/engine/tests/test_archetype_evaluator.py`, `src/server/lib/archetype-routing-observability.ts`, `src/server/lib/__tests__/archetype-routing-observability.test.ts`, `src/server/__tests__/live-order-archetype-signal.test.ts`, `src/server/services/__tests__/lifecycle-archetype-gateway-gate.test.ts`
+
+**F-2 STATUS: CLOSED.** Archetype strategies now route through routeOrder() when `LIVE_ORDER_GATEWAY_URL` is set: Pine alert (TF-gateway payload) → /api/live-order accepts archetype_signal → Python evaluator resolves direction → routeOrder() with directional action → kill-switch FIRST → compliance → firm-cap → TradersPost circuit breaker → broker. Lifecycle gate fail-CLOSED blocks promotion of any archetype strategy whose Pine recipe lacks the canonical TF-gateway markers.
+
+**Known-facts pin candidate:**
+- **smt_reversal archetype CARRY-FORWARD**: requires dual-instrument bar context (ES + NQ DataFrames simultaneously). Current single-bar stdin payload returns `hold` for smt_reversal. To activate: Track B must pass dual-instrument payload AND archetype_evaluator stdin schema must accept multi-symbol bar dict. Pass 4.5 punted; no current production strategy uses smt_reversal (verified via direct-bucket-graduator.ts — it's in the registry but not yet seeded onto a deployed strategy).
+
+**Carry-forward for next session:**
+- **smt_reversal dual-instrument adapter** — small follow-up. Required before any smt_reversal-archetype strategy can reach PAPER.
+- **Operator action item:** Set `LIVE_ORDER_GATEWAY_URL` in production `.env` (Pass 4 Track D documented). Without this env, the lifecycle gate is SKIPPED (Path A legacy compatible).
+- **Pass 5 (Lifecycle Gate Coverage + Engine Authority)** — M-effort, next in plan now that F-2 is closed.
+- **In-progress parallel-session work** (NOT touched): Tier-1 macro-news calendar work continuing in another session.
+
+---
+
 ### Session Log — 2026-06-23 Paper-Trade Readiness Hardening Plan, Pass 4 PARTIAL CLOSE (Path B canonical flip — parametric path closed, archetype path is CRITICAL CARRY-FORWARD F-2, 78 new tests GREEN, accuracy-validator caught 2 CRITICAL findings)
 
 **Mission:** Pass 4 — flip canonical Pine alert path from "direct to traderspost.io" (bypasses kill-switch + compliance + firm-cap + circuit breaker) to "TF gateway → `routeOrder()` → TradersPost".
@@ -10264,6 +10309,18 @@ Also restored Anam.ai persona during this session:
 - Stochastic regime gen needs NO GPU + NO new deps (arch/hmmlearn/scipy already in requirements). The "needs a GPU training job" framing applied to the OLD VAE only.
 
 **Carry-forward:** (a) first cron run (or manual `runSyntheticRegimeBankPopulate`) needed to populate the bank before A14 returns non-null — runs automatically Sunday off-RTH. (b) `conditioning_vector_compressed` written as zero-byte sentinel (evaluator samples by regime_label, not vector — fine). (c) S3 `local:` fallback rows need manual push if tower offline during cron. (d) severity baseline uses a stats param when S3 history unreachable — verify against real history at leisure. (e) shared-tree race with parallel session still active; branch reconciliation pending.
+
+### Session Log — 2026-06-23 claude (Topstep Prohibited Conduct gates)
+
+**Mission:** review Topstep's Prohibited Conduct list — add what's a real enforceable gap.
+
+**Gap analysis:** most of the list is already covered (VPN→vps_prohibited, copy-trades-allowed documented, within-account hedging→hedgingSameUnderlivingBanned, DD/DLL/consistency→compliance_gate) or is operator-behavior (excessive resets, account stacking, trading-on-behalf). Two real enforceable gaps + posture items.
+
+**Shipped (commit 1d124b3):** (1) `cross-account-hedge-gate.ts` — blocks an entry that would open an OPPOSITE position on the same underlying in ANOTHER account of the firm (single-user cross-account hedging — Topstep-prohibited; our prior hedging rule was within-account only). `symbolToUnderlying()` collapses micro+mini. THE standout gap — on the multi-account scaling path (§5 lever 3). (2) `price-lock-limit-gate.ts` — blocks holding within 2% of a product's ±7% daily price-lock limit (distinct from MFFU 2%-account-loss); FAIL-OPEN when no settlement reference. Both wired into paper-signal entry cluster (Tier 5.3.2 / 5.3.3), folded into antiSetupBlocked short-circuit. Audit `compliance.cross_account_hedge_blocked` / `compliance.price_lock_limit_blocked`. Full Prohibited-Conduct coverage map added to `docs/prop-firm-rules-2026-topstep.md` (posture: 1-2 trades/day not HFT, stop-limit only, no spoof). 14 vitest GREEN; typecheck clean.
+
+**Test gotcha pinned:** vitest flags a mock's REJECTED promise as an unhandled rejection even when the code awaits+catches it (test fails despite correct behavior). To exercise a fail-open catch block, make the mock return a malformed (non-iterable) value so the `for...of` throws SYNCHRONOUSLY inside the try — no promise for the runner to flag. (Saw this on cross-account-hedge-gate fail-open test.)
+
+**Carry-forward:** price-lock gate reads `indicators.prior_settlement` / `daily_reference` — neither is populated yet, so it FAIL-OPENs (no-op) until the daily settlement feed is wired. Cross-account hedge gate is fully live. Shared-tree race with parallel session still active — `git commit --only <paths>`.
 
 ---
 
