@@ -42,6 +42,7 @@ import { evaluateLunchBlackoutGate, getLunchBlackoutStartEnvDefault, getLunchBla
 // CONSISTENCY_RULE_FIRMS used to guard the gate to covered firms only.
 // Fail-OPEN: payout-eligibility gate (not a loss gate) — consistent with daily-trade-cap precedent.
 import { shouldBlockNewEntry as consistencyGateShouldBlock, CONSISTENCY_RULE_FIRMS } from "./consistency-tracker-service.js";
+import { resolveConsistencyEnforced } from "../lib/consistency-lane.js";
 // FIX B (2026-06-22): In-process Tier-1 event window checker for calendar fallback.
 // When the Python calendar_filter subprocess fails, CALENDAR_SAFE_DEFAULT had
 // is_economic_event:false — silently opening FOMC/CPI/NFP windows. The in-process
@@ -3044,7 +3045,13 @@ export async function evaluateSignals(
     //   do NOT block the entry. Missing a block is not account-fatal.
     let consistencyBlocked = false;
     const sessionFirmId = sessionRow.firmId ?? "";
-    if (CONSISTENCY_RULE_FIRMS.includes(sessionFirmId)) {
+    // 2026-06-23: the single-day consistency rule is an EVAL / Consistency-payout-lane rule —
+    // NOT the funded Standard lane (operator's choice). Default OFF; opt-in per-account/env for
+    // the eval phase or the Consistency lane. See consistency-lane.ts.
+    const consistencyEnforced = resolveConsistencyEnforced(
+      sessionConfig.config as unknown as Record<string, unknown>,
+    );
+    if (CONSISTENCY_RULE_FIRMS.includes(sessionFirmId) && consistencyEnforced) {
       try {
         const consistencyResult = await consistencyGateShouldBlock(
           sessionId,                    // used as cache key and audit entityId

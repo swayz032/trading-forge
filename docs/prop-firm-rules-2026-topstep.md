@@ -158,6 +158,15 @@ requirement). The funded stage has no consistency rule on the Standard Path.
   to Topstep simulations identically to MFFU (generalized `"50pct"` string match).
 - **Sources:** Vigil 2026-03-21, PropTradingVibes 2026-04-28, Tradecovex 2026-04-09,
   Backtrex 2026-06-07, TheTraderStack 2026-06-18 (5 corroborating sources).
+- **Live entry-gate behavior (2026-06-23 — operator decision):** the consistency entry-gate
+  (`consistency-tracker-service.ts` 50%-block / 40%-warn) is now **OPT-IN**, default **OFF**.
+  The operator runs the **Standard payout lane** in funded accounts, where there is **no
+  day-size cap** — so the gate must NOT throttle big winning days. It only enforces when the
+  account is in the **eval phase** or on the **Consistency lane**. Enable per-account via
+  `paper_sessions.config.consistency_rule_enforced=true` (or `consistency_lane:"eval"`/`"consistency"`),
+  or globally for an eval run via env `TOPSTEP_CONSISTENCY_RULE_ENFORCED=true`. Resolver:
+  `src/server/lib/consistency-lane.ts`. The daily 40% digest (informational, never blocks)
+  is unchanged. Same opt-in applies to MFFU (re-enable per-account if a plan requires it).
 
 ### 9. XFA Two-Path Split — Effective 2026-02-05
 
