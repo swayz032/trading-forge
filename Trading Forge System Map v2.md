@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-06-22T21:45:15.258Z`.
+Updated automatically from the repo on `2026-06-23T01:59:09.182Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -93,7 +93,7 @@ Updated automatically from the repo on `2026-06-22T21:45:15.258Z`.
 - Inactive workflow candidates: `0`
 - Broken workflow blockers: `0`
 - Failing workflow blockers: `0`
-- Source-missing workflow blockers: `3`
+- Source-missing workflow blockers: `28`
 - Awaiting redeploy workflow blockers: `0`
 - Stale workflow blockers: `0`
 - Runtime control blockers: `0`

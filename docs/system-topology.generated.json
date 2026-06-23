@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-22T21:45:15.258Z",
+  "generatedAt": "2026-06-23T01:59:09.182Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -248,12 +248,13 @@
         "failureCount": 1,
         "lastSuccessAt": null,
         "lastFailureAt": "2026-03-22T17:45:31.359Z",
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
           "No successful execution found in recent n8n execution history.",
-          "No live success timestamp is available for this active workflow."
+          "No live success timestamp is available for this active workflow.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -267,11 +268,12 @@
         "failureCount": 1,
         "lastSuccessAt": "2026-04-03T09:00:00.476Z",
         "lastFailureAt": "2026-04-03T09:00:00.435Z",
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -285,11 +287,12 @@
         "failureCount": 0,
         "lastSuccessAt": "2026-04-03T07:00:00.347Z",
         "lastFailureAt": null,
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -303,11 +306,12 @@
         "failureCount": 0,
         "lastSuccessAt": "2026-04-03T07:00:02.218Z",
         "lastFailureAt": null,
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -321,11 +325,12 @@
         "failureCount": 0,
         "lastSuccessAt": "2026-03-22T23:00:05.306Z",
         "lastFailureAt": null,
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -339,11 +344,12 @@
         "failureCount": 1,
         "lastSuccessAt": "2026-04-02T22:00:53.486Z",
         "lastFailureAt": "2026-03-21T22:00:17.476Z",
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -357,11 +363,12 @@
         "failureCount": 1,
         "lastSuccessAt": "2026-04-03T06:19:39.025Z",
         "lastFailureAt": "2026-03-26T22:30:06.037Z",
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -394,11 +401,12 @@
         "failureCount": 1,
         "lastSuccessAt": "2026-04-03T08:00:00.333Z",
         "lastFailureAt": "2026-03-23T08:00:00.559Z",
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -412,11 +420,12 @@
         "failureCount": 1,
         "lastSuccessAt": "2026-04-03T07:00:00.310Z",
         "lastFailureAt": "2026-03-23T07:00:00.345Z",
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -430,11 +439,12 @@
         "failureCount": 0,
         "lastSuccessAt": "2026-04-02T23:32:03.238Z",
         "lastFailureAt": null,
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -448,11 +458,12 @@
         "failureCount": 1,
         "lastSuccessAt": "2026-04-03T06:19:42.296Z",
         "lastFailureAt": "2026-04-03T06:12:00.644Z",
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -466,11 +477,12 @@
         "failureCount": 0,
         "lastSuccessAt": "2026-04-03T06:00:52.869Z",
         "lastFailureAt": null,
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -484,11 +496,12 @@
         "failureCount": 1,
         "lastSuccessAt": "2026-04-01T07:00:00.752Z",
         "lastFailureAt": "2026-04-01T07:00:00.523Z",
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -502,11 +515,12 @@
         "failureCount": 1,
         "lastSuccessAt": "2026-04-02T13:00:00.326Z",
         "lastFailureAt": "2026-03-20T13:00:06.022Z",
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -520,11 +534,12 @@
         "failureCount": 1,
         "lastSuccessAt": "2026-04-02T21:00:01.147Z",
         "lastFailureAt": "2026-03-23T21:00:00.758Z",
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -558,11 +573,12 @@
         "failureCount": 1,
         "lastSuccessAt": "2026-04-02T23:00:17.868Z",
         "lastFailureAt": "2026-03-31T23:02:55.957Z",
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -576,12 +592,13 @@
         "failureCount": 0,
         "lastSuccessAt": null,
         "lastFailureAt": null,
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
           "No successful execution found in recent n8n execution history.",
-          "No live success timestamp is available for this active workflow."
+          "No live success timestamp is available for this active workflow.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -595,11 +612,12 @@
         "failureCount": 1,
         "lastSuccessAt": "2026-04-01T06:22:42.196Z",
         "lastFailureAt": "2026-04-03T06:00:12.848Z",
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -613,11 +631,12 @@
         "failureCount": 1,
         "lastSuccessAt": "2026-04-02T21:30:05.623Z",
         "lastFailureAt": "2026-04-02T21:30:05.270Z",
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -631,11 +650,12 @@
         "failureCount": 1,
         "lastSuccessAt": "2026-04-02T13:15:06.730Z",
         "lastFailureAt": "2026-04-02T13:15:06.441Z",
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -649,11 +669,12 @@
         "failureCount": 1,
         "lastSuccessAt": "2026-04-02T13:00:06.080Z",
         "lastFailureAt": "2026-04-02T13:00:05.475Z",
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -667,12 +688,13 @@
         "failureCount": 0,
         "lastSuccessAt": null,
         "lastFailureAt": null,
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
           "No successful execution found in recent n8n execution history.",
-          "No live success timestamp is available for this active workflow."
+          "No live success timestamp is available for this active workflow.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -686,11 +708,12 @@
         "failureCount": 0,
         "lastSuccessAt": "2026-04-03T10:00:06.116Z",
         "lastFailureAt": null,
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -704,11 +727,12 @@
         "failureCount": 0,
         "lastSuccessAt": "2026-03-23T00:00:00.536Z",
         "lastFailureAt": null,
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       },
       {
@@ -742,11 +766,12 @@
         "failureCount": 1,
         "lastSuccessAt": "2026-03-21T13:01:32.840Z",
         "lastFailureAt": "2026-03-21T13:01:32.412Z",
-        "sourceStatus": "valid",
+        "sourceStatus": "missing",
         "sourceValidationErrors": [],
-        "liveSyncStatus": "live-aligned",
+        "liveSyncStatus": "source-missing",
         "notes": [
-          "Workflow health inferred from live success timestamp."
+          "Workflow health inferred from live success timestamp.",
+          "Workflow export is missing from workflows/n8n."
         ]
       }
     ]
@@ -1077,9 +1102,34 @@
       "brokenWorkflowBlockers": [],
       "failingWorkflowBlockers": [],
       "sourceMissingWorkflowBlockers": [
+        "0A_health_monitor_66HEjQavpvirY6g5",
+        "10A_master_orchestration_8HKXzNmo9KF59SBu",
+        "11A_critic_optimization_pVT6svNTljjBoQbW",
+        "3A_workflow_backup_J0p8oYkONmN7pYn6",
+        "5A_weekly_tournament_2rVOEn4LnMAubTmW",
+        "5G_brave_search_scout_z2c7zJmSx5dNle6P",
+        "5H_reddit_scout_ZMgHYjcTq4YTRQXh",
         "5I_tavily_scout_TMT3g7HenJ5etiwv",
+        "6D_compliance_gate_RumAJUp4iS1TYlNm",
+        "7A_auto_evolution_MIIxmilbgZv3SUBh",
+        "8A_idea_to_strategy_vlCaiWM7F0AH1RRY",
+        "8B_source_quality_review_LQtqeWAcNOlkqROH",
+        "9A_nightly_self_critique_26ruSYvIjqHGOhsd",
+        "Anti_Setup_Refresh_PHcD2tFZpzr7kQGF",
+        "Daily_Compliance_Check_WT9sVMzG83rg1L29",
+        "Daily_Portfolio_Monitor_u0RcmfuClgRinXAX",
         "Daily_Scout_5E_7GCDtSCifGgdpeuq",
-        "Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
+        "Macro_Data_Sync_X2IjKuYseGukxKDj",
+        "Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
+        "Nightly_Strategy_Research_Loop_Z4NcOCDbet8KzjDd",
+        "Post_Session_Skip_Review_LayXj1mbHh4aGSM9",
+        "Pre_Session_Compliance_Gate_gFwNlA3eCHbSb7en",
+        "Pre_Session_Skip_Check_eaq72MwKwCjv7g7F",
+        "Strategy_Generation_Loop_eCr7cyb0aPArFCZc",
+        "Strategy_Tournament_hPXhUaSC3ScznZE9",
+        "Weekly_Compliance_Re_Parse_YuDGQkuej7qybPAB",
+        "Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg",
+        "Weekly_Strategy_Hunt_sAIrnCVB4iOsodsy"
       ],
       "redeployWorkflowBlockers": [],
       "staleWorkflowBlockers": [],
@@ -1107,9 +1157,34 @@
         "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
         "workflow-missing-evidence:Strategy_Generation_Loop_eCr7cyb0aPArFCZc",
         "workflow-missing-evidence:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg",
+        "workflow-source-missing:0A_health_monitor_66HEjQavpvirY6g5",
+        "workflow-source-missing:10A_master_orchestration_8HKXzNmo9KF59SBu",
+        "workflow-source-missing:11A_critic_optimization_pVT6svNTljjBoQbW",
+        "workflow-source-missing:3A_workflow_backup_J0p8oYkONmN7pYn6",
+        "workflow-source-missing:5A_weekly_tournament_2rVOEn4LnMAubTmW",
+        "workflow-source-missing:5G_brave_search_scout_z2c7zJmSx5dNle6P",
+        "workflow-source-missing:5H_reddit_scout_ZMgHYjcTq4YTRQXh",
         "workflow-source-missing:5I_tavily_scout_TMT3g7HenJ5etiwv",
+        "workflow-source-missing:6D_compliance_gate_RumAJUp4iS1TYlNm",
+        "workflow-source-missing:7A_auto_evolution_MIIxmilbgZv3SUBh",
+        "workflow-source-missing:8A_idea_to_strategy_vlCaiWM7F0AH1RRY",
+        "workflow-source-missing:8B_source_quality_review_LQtqeWAcNOlkqROH",
+        "workflow-source-missing:9A_nightly_self_critique_26ruSYvIjqHGOhsd",
+        "workflow-source-missing:Anti_Setup_Refresh_PHcD2tFZpzr7kQGF",
+        "workflow-source-missing:Daily_Compliance_Check_WT9sVMzG83rg1L29",
+        "workflow-source-missing:Daily_Portfolio_Monitor_u0RcmfuClgRinXAX",
         "workflow-source-missing:Daily_Scout_5E_7GCDtSCifGgdpeuq",
-        "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
+        "workflow-source-missing:Macro_Data_Sync_X2IjKuYseGukxKDj",
+        "workflow-source-missing:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
+        "workflow-source-missing:Nightly_Strategy_Research_Loop_Z4NcOCDbet8KzjDd",
+        "workflow-source-missing:Post_Session_Skip_Review_LayXj1mbHh4aGSM9",
+        "workflow-source-missing:Pre_Session_Compliance_Gate_gFwNlA3eCHbSb7en",
+        "workflow-source-missing:Pre_Session_Skip_Check_eaq72MwKwCjv7g7F",
+        "workflow-source-missing:Strategy_Generation_Loop_eCr7cyb0aPArFCZc",
+        "workflow-source-missing:Strategy_Tournament_hPXhUaSC3ScznZE9",
+        "workflow-source-missing:Weekly_Compliance_Re_Parse_YuDGQkuej7qybPAB",
+        "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg",
+        "workflow-source-missing:Weekly_Strategy_Hunt_sAIrnCVB4iOsodsy"
       ]
     },
     "readiness": {
@@ -1142,9 +1217,34 @@
         "workflow-missing-evidence:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
         "workflow-missing-evidence:Strategy_Generation_Loop_eCr7cyb0aPArFCZc",
         "workflow-missing-evidence:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg",
+        "workflow-source-missing:0A_health_monitor_66HEjQavpvirY6g5",
+        "workflow-source-missing:10A_master_orchestration_8HKXzNmo9KF59SBu",
+        "workflow-source-missing:11A_critic_optimization_pVT6svNTljjBoQbW",
+        "workflow-source-missing:3A_workflow_backup_J0p8oYkONmN7pYn6",
+        "workflow-source-missing:5A_weekly_tournament_2rVOEn4LnMAubTmW",
+        "workflow-source-missing:5G_brave_search_scout_z2c7zJmSx5dNle6P",
+        "workflow-source-missing:5H_reddit_scout_ZMgHYjcTq4YTRQXh",
         "workflow-source-missing:5I_tavily_scout_TMT3g7HenJ5etiwv",
+        "workflow-source-missing:6D_compliance_gate_RumAJUp4iS1TYlNm",
+        "workflow-source-missing:7A_auto_evolution_MIIxmilbgZv3SUBh",
+        "workflow-source-missing:8A_idea_to_strategy_vlCaiWM7F0AH1RRY",
+        "workflow-source-missing:8B_source_quality_review_LQtqeWAcNOlkqROH",
+        "workflow-source-missing:9A_nightly_self_critique_26ruSYvIjqHGOhsd",
+        "workflow-source-missing:Anti_Setup_Refresh_PHcD2tFZpzr7kQGF",
+        "workflow-source-missing:Daily_Compliance_Check_WT9sVMzG83rg1L29",
+        "workflow-source-missing:Daily_Portfolio_Monitor_u0RcmfuClgRinXAX",
         "workflow-source-missing:Daily_Scout_5E_7GCDtSCifGgdpeuq",
-        "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg"
+        "workflow-source-missing:Macro_Data_Sync_X2IjKuYseGukxKDj",
+        "workflow-source-missing:Monthly_Robustness_Check_m6aD7X4ioWfhWaS9",
+        "workflow-source-missing:Nightly_Strategy_Research_Loop_Z4NcOCDbet8KzjDd",
+        "workflow-source-missing:Post_Session_Skip_Review_LayXj1mbHh4aGSM9",
+        "workflow-source-missing:Pre_Session_Compliance_Gate_gFwNlA3eCHbSb7en",
+        "workflow-source-missing:Pre_Session_Skip_Check_eaq72MwKwCjv7g7F",
+        "workflow-source-missing:Strategy_Generation_Loop_eCr7cyb0aPArFCZc",
+        "workflow-source-missing:Strategy_Tournament_hPXhUaSC3ScznZE9",
+        "workflow-source-missing:Weekly_Compliance_Re_Parse_YuDGQkuej7qybPAB",
+        "workflow-source-missing:Weekly_Deep_Research_5F_zmjj1mqjSbeVcWZg",
+        "workflow-source-missing:Weekly_Strategy_Hunt_sAIrnCVB4iOsodsy"
       ],
       "launchBlockedSubsystems": [
         "a_plus_market_auditor",
