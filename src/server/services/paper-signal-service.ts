@@ -51,7 +51,11 @@ import { checkInProcessTier1EventWindow as _checkInProcessTier1EventWindow } fro
 import { computePmSizeFactor } from "../lib/pm-size-factor.js";
 // Phase 2 (2026-06-22) — firm-aware Tier-1 news behavior: Topstep (PRIMARY) reduces
 // size in the window (caution); MFFU Rapid (restricted) hard-blocks. Product-scoped.
-import { resolveNewsAction, eventAffectsSymbol, isEiaWindow } from "../lib/news-policy.js";
+import { resolveNewsAction } from "../lib/news-policy.js";
+// Phase 3 (2026-06-23) — authoritative T1 calendar from economic_release_dates (FRED/Fed/EIA
+// synced), replacing the hardcoded/projected Python list. Covers FOMC/FOMC_MINUTES/CPI/NFP +
+// EIA, product-scoped, hardcoded fail-safe fallback.
+import { getT1ReleaseWindow } from "../lib/economic-calendar-loader.js";
 // W23H.F: cross-symbol DLL coordinator + pre-market blackout consumption
 import { getAccountSessionCumulativePnL, evaluateCrossSymbolDll, DEFAULT_PERSONAL_DLL_DOLLARS } from "./cross-symbol-pnl.js";
 import { toFuturesTradingDayString } from "./paper-risk-gate.js";
@@ -2127,54 +2131,46 @@ export async function evaluateSignals(
       calendarBlocked = true;
       calendarBlockReason = "holiday";
       logger.info({ sessionId, symbol, date: bar.timestamp }, "Calendar filter: holiday — skipping signals");
-    } else if (calResult.is_economic_event === true) {
-      if (bypassNewsBlackout) {
-        // Event-driven strategy with explicit bypass — log the decision and allow through
-        logger.info(
-          {
-            sessionId, symbol, event: calResult.economic_event_name,
-            windowMinutes: calResult.event_window_minutes, timestamp: bar.timestamp,
-            bypass: true,
-          },
-          `Calendar filter: ${calResult.economic_event_name} ±${calResult.event_window_minutes}min blackout — BYPASSED (bypass_news_blackout=true, event-driven strategy)`,
-        );
-        span.setAttribute("calendar_news_bypass", true);
-        span.setAttribute("calendar_block_event", calResult.economic_event_name);
-      } else if (!eventAffectsSymbol(calResult.economic_event_name, symbol)) {
-        // Phase 2 product scope: this T1 event does not affect this product
-        // (e.g. CPI/NFP do not blackout crude/MCL). Trade normally.
-        logger.info(
-          { sessionId, symbol, event: calResult.economic_event_name, timestamp: bar.timestamp },
-          `Calendar filter: ${calResult.economic_event_name} does not affect ${symbol} — not blocking (product scope)`,
-        );
-        span.setAttribute("calendar_event_product_scoped_out", calResult.economic_event_name);
-      } else {
-        // Phase 2 firm-aware behavior: Topstep (PRIMARY) trades news with caution
-        // (reduce size, never block); MFFU Rapid (restricted) + unknown firm → hard-block.
-        const { action, sizeFactor } = resolveNewsAction(sessionRow.firmId, true, false);
-        if (action === "reduce_size") {
-          newsReduceSizeFactor = sizeFactor;
-          newsReduceEvent = calResult.economic_event_name;
+    } else {
+      // AUTHORITATIVE T1 window check (Phase 3, 2026-06-23). Reads economic_release_dates
+      // (FRED/Fed/EIA-synced; hardcoded fail-safe fallback) instead of the Python hardcoded
+      // list, which had projected/WRONG dates (FOMC 2026 May 6/Nov 4/Dec 16 vs the Fed's
+      // Apr 29/Oct 28/Dec 9; CPI off by days). Covers FOMC/FOMC_MINUTES/CPI/NFP (all/index)
+      // + EIA (crude), product-scoped, T−5/+2 window. Holidays handled above (Python is
+      // authoritative for CME closures). calResult.is_economic_event is intentionally NOT
+      // used anymore — its dates were unreliable.
+      const t1 = await getT1ReleaseWindow(symbol, bar.timestamp);
+      if (t1.inWindow) {
+        if (bypassNewsBlackout) {
           logger.info(
-            {
-              sessionId, symbol, firm: sessionRow.firmId, event: calResult.economic_event_name,
-              sizeFactor, timestamp: bar.timestamp,
-            },
-            `Calendar filter: ${calResult.economic_event_name} window — Topstep CAUTION, reducing size ×${sizeFactor} (not blocking)`,
+            { sessionId, symbol, event: t1.eventType, source: t1.source, timestamp: bar.timestamp, bypass: true },
+            `Calendar filter: ${t1.eventType} T1 window — BYPASSED (bypass_news_blackout=true, event-driven strategy)`,
           );
-          span.setAttribute("news_reduce_size_factor", sizeFactor);
-          span.setAttribute("news_reduce_event", calResult.economic_event_name);
+          span.setAttribute("calendar_news_bypass", true);
+          span.setAttribute("calendar_block_event", t1.eventType);
         } else {
-          calendarBlocked = true;
-          calendarBlockReason = calResult.economic_event_name;
-          logger.info(
-            {
-              sessionId, symbol, firm: sessionRow.firmId, event: calResult.economic_event_name,
-              windowMinutes: calResult.event_window_minutes, timestamp: bar.timestamp,
-            },
-            `Calendar filter: ${calResult.economic_event_name} ±${calResult.event_window_minutes}min blackout — ${sessionRow.firmId ?? "unknown-firm"} HARD-BLOCK, skipping signals`,
-          );
-          span.setAttribute("calendar_block_event", calResult.economic_event_name);
+          // Firm-aware: Topstep (PRIMARY) trades with caution (reduce size, never block);
+          // MFFU Rapid (restricted) + unknown firm → hard-block.
+          const { action, sizeFactor } = resolveNewsAction(sessionRow.firmId, true, false);
+          if (action === "reduce_size") {
+            newsReduceSizeFactor = sizeFactor;
+            newsReduceEvent = t1.eventType;
+            logger.info(
+              { sessionId, symbol, firm: sessionRow.firmId, event: t1.eventType, sizeFactor, source: t1.source, timestamp: bar.timestamp },
+              `Calendar filter: ${t1.eventType} T1 window — Topstep CAUTION, reducing size ×${sizeFactor} (not blocking)`,
+            );
+            span.setAttribute("news_reduce_size_factor", sizeFactor);
+            span.setAttribute("news_reduce_event", t1.eventType);
+          } else {
+            calendarBlocked = true;
+            calendarBlockReason = t1.eventType;
+            logger.info(
+              { sessionId, symbol, firm: sessionRow.firmId, event: t1.eventType, source: t1.source, timestamp: bar.timestamp },
+              `Calendar filter: ${t1.eventType} T1 window — ${sessionRow.firmId ?? "unknown-firm"} HARD-BLOCK, skipping signals`,
+            );
+            span.setAttribute("calendar_block_event", t1.eventType);
+            span.setAttribute("calendar_block_source", t1.source);
+          }
         }
       }
     }
@@ -2196,32 +2192,9 @@ export async function evaluateSignals(
     span.setAttribute("calendar_guard_down", true);
   }
 
-  // Phase 2B (2026-06-22) — EIA Crude Oil Inventory window (CRUDE/MCL only). EIA is a
-  // Tier-1 event for energy products and is NOT in the universal Python calendar (which
-  // would wrongly block MES/MNQ at 10:30). Detected here, product-scoped to crude, with
-  // the asymmetric T−5/+2 entry window. Same firm-aware behavior: Topstep reduces size,
-  // MFFU Rapid (restricted) hard-blocks. Holidays already handled by the universal check.
-  if (!calendarBlocked && newsReduceSizeFactor === 1 && isEiaWindow(symbol, bar.timestamp)) {
-    const { action, sizeFactor } = resolveNewsAction(sessionRow.firmId, true, bypassNewsBlackout);
-    if (action === "reduce_size") {
-      newsReduceSizeFactor = sizeFactor;
-      newsReduceEvent = "EIA";
-      logger.info(
-        { sessionId, symbol, firm: sessionRow.firmId, sizeFactor, timestamp: bar.timestamp },
-        `Calendar filter: EIA crude-inventory window — Topstep CAUTION, reducing size ×${sizeFactor} (not blocking)`,
-      );
-      span.setAttribute("news_reduce_size_factor", sizeFactor);
-      span.setAttribute("news_reduce_event", "EIA");
-    } else if (action === "block") {
-      calendarBlocked = true;
-      calendarBlockReason = "EIA";
-      logger.info(
-        { sessionId, symbol, firm: sessionRow.firmId, timestamp: bar.timestamp },
-        `Calendar filter: EIA crude-inventory window — ${sessionRow.firmId ?? "unknown-firm"} HARD-BLOCK, skipping signals`,
-      );
-      span.setAttribute("calendar_block_event", "EIA");
-    }
-  }
+  // (Phase 3: EIA is now handled inside getT1ReleaseWindow above — product-scoped to crude
+  // from the same authoritative economic_release_dates source. The standalone EIA block was
+  // removed to avoid a second, divergent calendar check.)
 
   if (calendarBlocked) {
     // M5: Log calendar block to DB so it leaves a traceable record for post-session
