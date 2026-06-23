@@ -94,7 +94,15 @@ const REJECT_PATTERNS: RejectPattern[] = [
   // self-attribution. Bare "swing trading" without self-attribution is now CLEAR.
   // Negation guard (`evaluateLunchBlackoutGate`-style) suppresses matches when
   // "don't/not/never/no/instead of/against/avoid" appears within 25 chars before.
-  { class: "swing_multi_day", pattern: /\b(?:I(?:'m| am)? a swing trader|we(?:'re| are) swing traders?|I swing trade|we swing trade|my swing trades?|our swing trades?|swing trades? (?:I|we) take)\b/i, hard: true },
+  // 2026-06-23 false-positive fix (W7nln manual audit): the bare possessive "my/our swing trades"
+  // was REMOVED. It matched an incidental channel plug ("I'll be posting my watch list setups, my
+  // swing trades and so much more") inside an otherwise clearly-intraday strategy (NY session +
+  // 5-min entries + same-day exits), false-rejecting a valid day-trade — while the IDENTICAL
+  // overnight-range-break-retest mechanic (D1Ipi8) passed. A possessive noun-phrase is NOT a
+  // statement that the TAUGHT strategy is swing. Genuine swing still trips the verb/identity forms
+  // here + the hold-behavior patterns below ("I hold overnight/for days") which require the speaker
+  // to actually DO the multi-day hold.
+  { class: "swing_multi_day", pattern: /\b(?:I(?:'m| am)? a swing trader|we(?:'re| are) swing traders?|I swing trade|we swing trade|swing trades? (?:I|we) take)\b/i, hard: true },
   { class: "swing_multi_day", pattern: /\b(?:I(?:'m| am)? a position trader|we(?:'re| are) position traders?|I position trade|we position trade)\b/i, hard: true },
   // First-person overnight/multi-day action — speaker DOES it
   { class: "swing_multi_day", pattern: /\b(?:I|we) (?:hold (?:for )?(?:days?|weeks?|months?)|hold(?:ing)? overnight|carry (?:positions? )?over(?:night)?)\b/i, hard: true },
