@@ -59,7 +59,7 @@ import { resolveNewsAction } from "../lib/news-policy.js";
 import { getT1ReleaseWindow } from "../lib/economic-calendar-loader.js";
 // Topstep Prohibited Conduct (2026-06-23): cross-account hedging (opposite positions across
 // the operator's multiple accounts) + holding within 2% of a product's price-lock limit.
-import { checkCrossAccountHedge, symbolToUnderlying } from "../lib/cross-account-hedge-gate.js";
+import { checkCrossAccountHedge, checkIntraAccountHedge, symbolToUnderlying } from "../lib/cross-account-hedge-gate.js";
 import { checkPriceLockLimit } from "../lib/price-lock-limit-gate.js";
 // W23H.F: cross-symbol DLL coordinator + pre-market blackout consumption
 import { getAccountSessionCumulativePnL, evaluateCrossSymbolDll, DEFAULT_PERSONAL_DLL_DOLLARS } from "./cross-symbol-pnl.js";
@@ -3251,6 +3251,39 @@ export async function evaluateSignals(
           entityType: "paper_session", entityId: sessionId, decisionAuthority: "system", status: "blocked",
           input: { sessionId, symbol, firmId: sessionRow.firmId, side: config.side } as Record<string, unknown>,
           result: { blocked: true, conflictUnderlying: hedge.conflictUnderlying, conflictSide: hedge.conflictSide } as Record<string, unknown>,
+          correlationId: correlationId ?? null,
+        }).catch(() => {});
+      }
+    }
+
+    // ─── Tier 5.3.2b: Intra-account hedge gate (MFFU Fair Play §5 / hedgingSameUnderlyingBanned) ──
+    // MFFU bans hedging = buy + sell on the SAME UNDERLYING at the same time within ONE account
+    // (their example: MNQ + NQ share underlying NQ). The cross-account gate above excludes the
+    // current session; this catches an opposite-side open position on the same underlying in the
+    // SAME account (e.g. one strategy long MNQ while another is short NQ). Firm-agnostic defense —
+    // a same-underlying opposite-side pair is never a real position for our day-trade bot. Fail-OPEN.
+    if (!crossAccountHedgeBlocked) {
+      const intra = await checkIntraAccountHedge(sessionId, symbol, config.side);
+      if (intra.blocked) {
+        crossAccountHedgeBlocked = true;
+        span.setAttribute("intra_account_hedge_blocked", true);
+        span.setAttribute("intra_account_hedge_underlying", intra.conflictUnderlying ?? "");
+        logger.info(
+          { sessionId, symbol, firmId: sessionRow.firmId, conflictUnderlying: intra.conflictUnderlying, conflictSide: intra.conflictSide },
+          "Tier 5.3.2b: entry blocked — intra-account hedge (MFFU §5: buy+sell same underlying, one account)",
+        );
+        db.insert(paperSignalLogs).values({
+          sessionId, symbol, direction: config.side, signalType: "intra_account_hedge_blocked",
+          price: String(bar.close),
+          indicatorSnapshot: { ...indicators, _hedge_underlying: intra.conflictUnderlying, _hedge_conflict_side: intra.conflictSide },
+          acted: false,
+          reason: `intra_account_hedge_blocked: open ${intra.conflictSide} on ${intra.conflictUnderlying} in same account`,
+        }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist intra-account hedge block log"));
+        insertAuditRow({
+          action: "compliance.intra_account_hedge_blocked",
+          entityType: "paper_session", entityId: sessionId, decisionAuthority: "system", status: "blocked",
+          input: { sessionId, symbol, firmId: sessionRow.firmId, side: config.side } as Record<string, unknown>,
+          result: { blocked: true, conflictUnderlying: intra.conflictUnderlying, conflictSide: intra.conflictSide } as Record<string, unknown>,
           correlationId: correlationId ?? null,
         }).catch(() => {});
       }

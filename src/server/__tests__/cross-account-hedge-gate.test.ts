@@ -6,7 +6,7 @@ vi.mock("../lib/logger.js", () => ({
   logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
 
-const { checkCrossAccountHedge, symbolToUnderlying } = await import("../lib/cross-account-hedge-gate.js");
+const { checkCrossAccountHedge, checkIntraAccountHedge, symbolToUnderlying } = await import("../lib/cross-account-hedge-gate.js");
 
 describe("cross-account-hedge-gate (Topstep Prohibited Conduct)", () => {
   beforeEach(() => mockExecute.mockReset());
@@ -62,6 +62,39 @@ describe("cross-account-hedge-gate (Topstep Prohibited Conduct)", () => {
       // rejected promise for the test runner's unhandled-rejection tracker.
       mockExecute.mockResolvedValue(null as unknown as never);
       const r = await checkCrossAccountHedge("topstep", "MES", "long", "s1");
+      expect(r.blocked).toBe(false);
+    });
+  });
+
+  describe("checkIntraAccountHedge (MFFU Fair Play §5 — one account, same underlying)", () => {
+    it("BLOCKS opening long MNQ when the SAME account holds short NQ (same underlying NQ)", async () => {
+      mockExecute.mockResolvedValue([{ side: "short", symbol: "NQ", session_id: "s1" }] as unknown as never);
+      const r = await checkIntraAccountHedge("s1", "MNQ", "long");
+      expect(r.blocked).toBe(true);
+      expect(r.conflictUnderlying).toBe("NQ");
+      expect(r.conflictSide).toBe("short");
+    });
+
+    it("ALLOWS same-side in the same account (MNQ long + MNQ long — not a hedge)", async () => {
+      mockExecute.mockResolvedValue([{ side: "long", symbol: "MNQ", session_id: "s1" }] as unknown as never);
+      const r = await checkIntraAccountHedge("s1", "MNQ", "long");
+      expect(r.blocked).toBe(false);
+    });
+
+    it("ALLOWS opposite on a DIFFERENT underlying in one account (MNQ long + MCL short)", async () => {
+      mockExecute.mockResolvedValue([{ side: "short", symbol: "MCL", session_id: "s1" }] as unknown as never);
+      const r = await checkIntraAccountHedge("s1", "MNQ", "long");
+      expect(r.blocked).toBe(false);
+    });
+
+    it("no session → not blocked", async () => {
+      const r = await checkIntraAccountHedge(null, "MNQ", "long");
+      expect(r.blocked).toBe(false);
+    });
+
+    it("FAIL-OPEN on DB read error", async () => {
+      mockExecute.mockResolvedValue(null as unknown as never);
+      const r = await checkIntraAccountHedge("s1", "MNQ", "long");
       expect(r.blocked).toBe(false);
     });
   });

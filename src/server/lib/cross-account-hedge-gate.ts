@@ -98,3 +98,54 @@ export async function checkCrossAccountHedge(
     return { blocked: false };
   }
 }
+
+/**
+ * INTRA-account hedge (MFFU Fair Play §5 + `hedgingSameUnderlyingBanned`): hedging is entering
+ * BOTH a buy and a sell on the SAME UNDERLYING at the same time WITHIN ONE account — MFFU's own
+ * example is "E-Mini NQ and Micro NQ have the same underlying NQ". The cross-account gate above
+ * excludes the current session; this one checks the SAME session for an OPEN opposite-side
+ * position on the same underlying (e.g. one strategy long MNQ while another is short NQ in the
+ * same account). Symmetric with the cross-account gate (symbolToUnderlying collision; fail-open).
+ *
+ * @param sessionId the current paper session (the one account being traded)
+ * @param symbol    the symbol about to be traded
+ * @param side      "long" | "short" — the side about to be opened
+ */
+export async function checkIntraAccountHedge(
+  sessionId: string | null | undefined,
+  symbol: string,
+  side: string,
+): Promise<CrossAccountHedgeResult> {
+  if (!sessionId) return { blocked: false };
+  const underlying = symbolToUnderlying(symbol);
+  const opposite = side === "long" ? "short" : side === "short" ? "long" : null;
+  if (!opposite) return { blocked: false };
+
+  try {
+    const rows = (await db.execute(sql`
+      SELECT pp.side AS side, pp.symbol AS symbol, pp.session_id AS session_id
+      FROM paper_positions pp
+      WHERE pp.closed_at IS NULL
+        AND pp.session_id = ${sessionId}
+    `)) as unknown as Array<{ side: string; symbol: string; session_id: string }>;
+
+    for (const r of rows) {
+      if (symbolToUnderlying(r.symbol) !== underlying) continue;
+      if (r.side === opposite) {
+        return {
+          blocked: true,
+          conflictUnderlying: underlying,
+          conflictSide: r.side,
+          conflictSessionId: r.session_id,
+        };
+      }
+    }
+    return { blocked: false };
+  } catch (err) {
+    logger.error(
+      { err, sessionId, symbol, side },
+      "intra-account-hedge gate DB read failed — fail-open (firm risk desk is the backstop)",
+    );
+    return { blocked: false };
+  }
+}

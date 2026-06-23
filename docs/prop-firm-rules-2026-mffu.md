@@ -197,6 +197,31 @@ Same as Rule 4 — listed twice in MFFU's policy text. The
 
 ---
 
+## Fair Play & Prohibited Trading Practices (MFFU, 2025-11-24) — Coverage Map
+
+How each MFFU prohibited practice maps to our enforcement. Most are compliant-by-design (we
+model realistic execution and don't exploit the sim fill engine).
+
+| MFFU rule | Our coverage |
+|---|---|
+| **§1 No HFT** | `hftMaxTradesPerDay` cap (firm-config) + operator's **1-2 A+ trades/day** mandate (`TF_MAX_TRADES_PER_DAY`) — orders of magnitude under any HFT threshold. ✅ |
+| **§1 Automation allowed (no sim-fill exploit)** | The whole system is automated; we **model** realistic fills (slippage as f(vol, session); partial fills `fill_model.py`; commissions) — we do NOT exploit favorable sim fills. ✅ compliant-by-design |
+| **§2 No multi-limit-at-same-price fill manipulation** | We place single structural entries (stop-limit), never stacked limits at one price to game fills. ✅ by-design |
+| **§2 No gapped/illiquid isolated-fill profiteering** | Zero-volume / trade-critical-bar guard (`BACKTEST_ZERO_VOLUME_TRADE_CRITICAL_FAIL_LOUD`); per-symbol liquidity caps; partial-fill model on thin bars. ✅ |
+| **§2 No slippage-absence / tight-bracket exploit** | We compute P&L manually with modeled slippage + symmetric exit slippage (never the sim's zero-slippage); structural stops, not tight brackets. ✅ by-design |
+| **§2 T1 economic data RESTRICTED** | Firm-agnostic T1 entry-block window (T−5/+2) via `economic-calendar-loader.ts`; `macro_alignment` hard-block; news-policy MFFU = **reduce_size** (Builder allows news but T1 stays cautious — entries near T1 are still blocked by the window). ✅ |
+| **§2 / §4 Collaborative trading ban** | `correlation_matrix.yaml` + collaborative-trading compliance; family runs DIFFERENT strategies per firm; per-account strategy assignment unique. ✅ |
+| **§4 Own device / no copy-trading** | `compliance_gate` `vps_prohibited` + same-device ban (host must be local/personal-device); family onboarding = own device each. ✅ operational |
+| **§5 Hedging ban (same underlying, opposite side, same time — incl. MNQ+NQ)** | **NOW ENFORCED both ways:** cross-account (`checkCrossAccountHedge`) + **intra-account** (`checkIntraAccountHedge`, NEW 2026-06-23 — `hedgingSameUnderlyingBanned` flag now has teeth) via `symbolToUnderlying` collision at the entry gate (`paper-signal-service.ts` Tier 5.3.2 / 5.3.2b). Audit `compliance.intra_account_hedge_blocked`. ✅ |
+| **§3 Termination / profit confiscation** | Consequence policy (informational) — our job is to never trigger §1-§5. |
+
+**Note on §2 T1 + Builder:** Builder's plan sheet says "News Trading: Allowed", but this firm-wide
+Fair Play doc still lists T1 economic data as **restricted**. We reconcile by: general news →
+allowed (reduce_size caution), but T1 windows (FOMC/CPI/NFP/EIA) keep the firm-agnostic T−5/+2
+entry block + `macro_alignment` hard-block. So the bot never enters right around T1 on MFFU.
+
+---
+
 ## Constants Used By Code
 
 These names are referenced from `compliance_gate.py` and the lint script.
