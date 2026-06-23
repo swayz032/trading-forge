@@ -396,6 +396,7 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   // infrastructure safety signal — the pipeline pause does not protect against it.
   "n8n-drift-detector-weekly",           // A-2: n8n drift detection — safety signal
   "n8n-drift-detector-monthly",          // A-2: n8n drift detection — defense-in-depth
+  "economic-calendar-sync",              // authoritative macro release-date refresh (FRED/Fed/EIA)
   // W25.5d: pre-market briefing must fire even when pipeline is paused.
   // Operator wants the bias on phone before market open regardless of pipeline state.
   // Closes "trading without written bias" failure mode (Steenbarger/Topstep 2025 podcast).
@@ -628,6 +629,14 @@ export function initScheduler() {
 
   // Register all jobs for missed-run detection
   registerJob("rolling-sharpe", 4 * 60 * 60 * 1000, updateRollingSharpe);
+  // Economic calendar sync (2026-06-22): pull authoritative macro release dates from
+  // FRED + Fed + EIA into economic_release_dates monthly + at boot. Pipeline-gate-exempt
+  // (a data refresh, must run even when the pipeline is paused). Self-correcting — replaces
+  // the hardcoded/projected blackout dates.
+  registerJob("economic-calendar-sync", 30 * 24 * 60 * 60 * 1000, async () => {
+    const { runEconomicCalendarSync } = await import("./services/economic-calendar-sync-service.js");
+    await runEconomicCalendarSync();
+  });
   registerJob("pre-market-prep", 24 * 60 * 60 * 1000, preMarketPrep);
   registerJob("paper-vs-backtest", 60 * 60 * 1000, comparePaperToBacktest);
   registerJob("decay-monitor", 24 * 60 * 60 * 1000, runDailyDecayMonitor);
