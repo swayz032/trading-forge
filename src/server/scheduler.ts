@@ -29,7 +29,7 @@ import { runPortfolioCorrelationCheck } from "./services/portfolio-optimizer-ser
 import { runMetaParameterReview } from "./services/meta-optimizer-service.js";
 import { notifyWarning, notifyCritical } from "./services/notification-service.js";
 import { appendFamilyGradePostscript } from "./lib/notification-helpers.js";
-import { insertAuditRow } from "./lib/audit-log-helper.js";
+import { insertAuditRow, insertAuditRowSafe } from "./lib/audit-log-helper.js";
 import { runAntiSetupEffectivenessAnalysis } from "./services/anti-setup-effectiveness-service.js";
 import { invalidateAntiSetupCache } from "./services/anti-setup-gate-service.js";
 import { isActive as isPipelineActive, getMode as getPipelineMode } from "./services/pipeline-control-service.js";
@@ -509,6 +509,12 @@ export const _testOnly = {
   resetJobHealth(): void {
     jobHealthTracker.clear();
   },
+  /**
+   * B5 — scheduler-b5: Expose resumeActivePaperSessions for unit tests.
+   * Tests can call this directly to verify PAPER+ skip behaviour without
+   * requiring a server boot or cron tick.
+   */
+  resumeActivePaperSessions,
 };
 
 export async function reconcileMissedRuns() {
@@ -5462,7 +5468,26 @@ async function checkTournamentStaleness(): Promise<void> {
  * I3: Resume active paper trading sessions after server restart.
  * Queries DB for active sessions, reconnects WebSocket streams,
  * and restores in-memory position state (trail HWM, bars held).
+ *
+ * PAPER-ENGINE AUTHORITY (B5 — scheduler-b5):
+ * For strategies in PAPER+ state (PAPER, DEPLOY_READY, PILOT, DEPLOYED), the
+ * canonical journal is TradersPost's broker tape — NOT the internal Massive-WS
+ * simulator. The internal simulator is pre-PAPER only (CANDIDATE/TESTING).
+ * On TESTING→PAPER, stopStream() is called in-process but never persists
+ * `paper_sessions.status='stopped'` to the DB, leaving stale 'active' rows.
+ * Without this guard, every server restart would resurrect a fresh internal-
+ * simulator stream for PAPER+ strategies while TradersPost is simultaneously
+ * firing real paper orders — causing dual-stream P&L drift.
+ *
+ * Fix: skip stream resume for any session whose associated strategy is in
+ * PAPER / DEPLOY_READY / PILOT / DEPLOYED lifecycle state. Emit an info audit
+ * row before skipping so the boot log surface shows exactly which stale rows
+ * exist and how many. Do NOT write paper_sessions.status — that is B6 deferred.
  */
+
+/** Lifecycle states for which the internal simulator must NEVER be resurrected. */
+const PAPER_PLUS_STATES = new Set(["PAPER", "DEPLOY_READY", "PILOT", "DEPLOYED"]);
+
 async function resumeActivePaperSessions(): Promise<void> {
   const activeSessions = await db
     .select()
@@ -5476,12 +5501,50 @@ async function resumeActivePaperSessions(): Promise<void> {
 
   logger.info({ count: activeSessions.length }, "Resuming active paper sessions after restart");
 
+  let resumeCount = 0;
+  let skipCount = 0;
+  const skippedSessionIds: string[] = [];
+
   for (const session of activeSessions) {
     try {
-      // Resolve symbol list from strategy config
+      // Resolve symbol list from strategy config.
+      // NOTE: strategy row also used below for lifecycle_state check (B5).
       const strat = session.strategyId
         ? await db.select().from(strategies).where(eq(strategies.id, session.strategyId)).limit(1)
         : [];
+
+      // ── B5: PAPER-ENGINE AUTHORITY GUARD ─────────────────────────────────
+      // If the strategy is in PAPER+ state, the internal simulator must not
+      // run. TradersPost owns the canonical journal from PAPER onward.
+      // NULL lifecycleState (orphaned / legacy session with no strategy FK)
+      // is treated as pre-PAPER (safe to resume) — fail-open on missing FK.
+      const lifecycleState = strat[0]?.lifecycleState ?? null;
+      if (lifecycleState !== null && PAPER_PLUS_STATES.has(lifecycleState)) {
+        skipCount++;
+        skippedSessionIds.push(session.id);
+        logger.info(
+          {
+            sessionId: session.id,
+            strategyId: session.strategyId,
+            lifecycleState,
+          },
+          "B5: skipping internal-stream resume for PAPER+ strategy — TradersPost owns canonical journal",
+        );
+        await insertAuditRowSafe({
+          action: "paper.session_resume_skipped_paper_plus",
+          entityType: "paper_session",
+          entityId: session.id as `${string}-${string}-${string}-${string}-${string}`,
+          status: "success",
+          decisionAuthority: "scheduler",
+          result: {
+            lifecycleState,
+            strategyId: session.strategyId,
+            reason: "internal-simulator must not run for PAPER+ strategies; TradersPost is canonical journal",
+          },
+        });
+        continue;
+      }
+      // ── END B5 GUARD ─────────────────────────────────────────────────────
 
       const symbols: string[] = [];
       if (strat[0]?.symbol) symbols.push(strat[0].symbol);
@@ -5497,6 +5560,7 @@ async function resumeActivePaperSessions(): Promise<void> {
 
       // Reconnect WebSocket stream
       startStream(session.id, symbols);
+      resumeCount++;
 
       // Restore in-memory position state from DB
       const openPositions = await db
@@ -5540,6 +5604,16 @@ async function resumeActivePaperSessions(): Promise<void> {
     } catch (err) {
       logger.error({ err, sessionId: session.id }, "Failed to resume paper session");
     }
+  }
+
+  // B5: Boot-log summary — surfaces stale PAPER+ rows so operator knows they exist.
+  if (skipCount > 0) {
+    logger.info(
+      { resumeCount, skipCount, skippedSessionIds },
+      "B5: resumeActivePaperSessions complete — skipped PAPER+ sessions (stale status='active' rows; recon cron will sweep). Only pre-PAPER sessions get internal streams.",
+    );
+  } else {
+    logger.info({ resumeCount }, "resumeActivePaperSessions complete — all resumed sessions are pre-PAPER");
   }
 }
 

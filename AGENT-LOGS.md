@@ -4,6 +4,37 @@
 
 ---
 
+### Session Log — 2026-06-23 scheduler-b5: Skip internal-stream resume for PAPER+ sessions
+
+**Mission:** Fix BLOCKER — `resumeActivePaperSessions()` resurrected a Massive-WS internal simulator for every `paper_sessions` row with `status='active'`, including strategies already in PAPER/DEPLOY_READY/PILOT/DEPLOYED where TradersPost is the canonical journal. Post-restart dual-stream caused P&L drift.
+
+**Work completed:**
+- `src/server/scheduler.ts`: Added `PAPER_PLUS_STATES` set constant; inserted B5 guard inside `resumeActivePaperSessions()` loop — after fetching the strategy row (already done for symbol resolution), checks `lifecycleState`; if PAPER+ → logs info, fires `insertAuditRowSafe` with `paper.session_resume_skipped_paper_plus`, continues (skips `startStream`). NULL lifecycle_state (orphaned session, no FK) treated as pre-PAPER (fail-open). Added `resumeCount`/`skipCount`/`skippedSessionIds` counters + boot-log summary. Exposed `resumeActivePaperSessions` via `_testOnly` seam for direct unit-test access. Added `insertAuditRowSafe` to the audit-log-helper import.
+- `src/server/__tests__/scheduler-resume-paper-plus-skip.test.ts` (new): 9 tests — PAPER skip (no startStream), audit row emitted, parametric DEPLOY_READY/PILOT/DEPLOYED, CANDIDATE/TESTING regression, NULL FK regression, mixed-batch correctness.
+
+**Verification:** 9/9 vitest GREEN; all 3 CI gates GREEN (`system-map:check` driftItems:[] / 2026-compliance OK / production-isolation CLEAN).
+
+**Parity impact:** Closes post-restart dual-stream P&L drift. Internal simulator is now strictly pre-PAPER only. TradersPost broker tape remains the canonical journal for PAPER+ strategies on restart. `paper_sessions.status` DB column untouched (that's B6, deferred — recon cron sweeps stale rows).
+
+**Carry-forward:** B6 — persist `status='stopped'` on TESTING→PAPER in lifecycle-service.ts so stale rows are eliminated at source (deferred; collision with SHADOW work in other session).
+
+---
+
+### Session Log — 2026-06-23 PBO Gate B4: fail-CLOSED on NaN sample-size-guard (commit 661c029)
+
+**Mission:** Close BLOCKER bug where a walk-forward with <4 CPCV paths silently cleared the 0.15 hard gate at TESTING→SHADOW/PAPER because `NaN > 0.15 === false` in JS.
+
+**Work completed:**
+- `src/server/lib/pbo-gate.ts`: inserted `if (!Number.isFinite(pbo)) return { ok: false, reason: "lifecycle.pbo_sample_size_guard" }` before the `pbo > threshold` comparison. Returns `pbo: null`, `blocked: true`, `legacy_null: false`. Preserves the existing legacy-null (pre-Wave-29) PROCEED path unchanged.
+- `src/server/__tests__/pbo-gate-nan-bypass-fix.test.ts` (new): 11 tests covering NaN block, +Infinity block, -Infinity block, p_value carry-through, threshold-override in auditPayload, legacy-null PROCEED preserved, standard BLOCK/PASS regressions.
+- Python `pbo_gate.py` confirmed untouched: Python's NaN guard at `walk_forward.py:1161-1162` already converts `float('nan')` → `None` on the CPCV wire path; the TS fix is the defense on the TS receiver side.
+
+**Verification:** 11/11 vitest GREEN; all 3 CI gates GREEN (system-map:check `driftItems:[]` / 2026-compliance OK / production-isolation CLEAN).
+
+**Carry-forward:** None. Bug is fully closed. lifecycle-service.ts audit emission path uses the reason string verbatim — no switch/lookup changes needed.
+
+---
+
 ### Session Log — 2026-06-23 Firm-Rules Reconciliation + Baby-Mode Scaling Rails (commit 8760d18)
 
 **Mission:** Reconcile Topstep + MFFU firm rules from operator-provided 2026 docs, then build a balanced, data-backed contract-scaling plan and ship its rails institutional-grade.
