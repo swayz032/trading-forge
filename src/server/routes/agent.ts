@@ -1833,6 +1833,19 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
               }
             }
           }
+
+          // FIX 6 (5-URL audit 2026-06-22): ensure entry_indicator is non-null even when the
+          // concept is already well-named (e.g. "4h_candle_box_continuation", "volume_profile").
+          // A null entry_indicator was quarantining good extractions + blocking archetype routing;
+          // deriveEntryIndicator maps the concept -> archetype downstream.
+          const eiIdea = ideas[0] as Record<string, unknown>;
+          const eiVal = typeof eiIdea.entry_indicator === "string" ? eiIdea.entry_indicator : "";
+          const eiConcept = typeof eiIdea.concept_name === "string"
+            ? eiIdea.concept_name
+            : (typeof eiIdea.name === "string" ? eiIdea.name : "");
+          if (!eiVal && eiConcept && !/^extracted(_strategy)?$/i.test(eiConcept)) {
+            eiIdea.entry_indicator = eiConcept;
+          }
         } catch (nameErr) {
           logger.warn(
             { err: nameErr instanceof Error ? nameErr.message : String(nameErr), sourceUrl },

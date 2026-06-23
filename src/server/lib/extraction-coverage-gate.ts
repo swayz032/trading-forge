@@ -46,6 +46,10 @@ const COVERAGE_ENUM_PER_WINDOW_CAP = Number(process.env.COVERAGE_ENUM_PER_WINDOW
  * Tunable down to 1 if depth proves too strict on terse-but-correct captures.
  */
 const MIN_MECHANIC_TOKENS = Number(process.env.COVERAGE_MIN_MECHANIC_TOKENS) || 2;
+/** FIX 4 (5-URL audit): coverage_pct at/above this passes even if a peripheral item is
+ *  mis-labeled primary — the core strategy is captured. Strict "all primary covered" is the
+ *  other (sufficient) pass path. Default 0.85 (institutional completeness bar). */
+const COVERAGE_PASS_PCT = Number(process.env.COVERAGE_PASS_PCT) || 0.85;
 
 /** Generic English fillers (len>=4) excluded from mechanic-token counting so they
  *  can't satisfy the depth check. Domain terms (box/zone/optimum/sweep/...) are NOT here. */
@@ -118,13 +122,30 @@ function emphasisRank(e: SpeakerItem["emphasis_level"]): number {
   return e === "primary" ? 3 : e === "secondary" ? 2 : 1;
 }
 
-/** Distinct content tokens (len>=4, not a stopword) from a string, normalized. */
+/** Distinct content tokens from a string, normalized.
+ *  FIX 1 (5-URL audit 2026-06-22): NUMBERS are load-bearing mechanic tokens for Fib/zone
+ *  strategies (25/50/75 levels, % ratios). Keep any token containing a digit (len>=2),
+ *  plus normal words len>=4. Without this, "25 50 75 levels" was falsely SHALLOW even
+ *  though the extraction captured "Fibonacci retracements (25%, 50%, 75%)". */
 function contentTokens(s: string): string[] {
   const seen = new Set<string>();
   for (const w of normalize(s).split(" ")) {
-    if (w.length >= 4 && !STOPWORDS.has(w)) seen.add(w);
+    const isNumeric = /\d/.test(w);
+    if (((w.length >= 4) || (isNumeric && w.length >= 2)) && !STOPWORDS.has(w)) seen.add(w);
   }
   return [...seen];
+}
+
+/** FIX 2 (5-URL audit): canonical key for UNION dedup of spelling/alias variants the speaker
+ *  uses interchangeably (e.g. "GA box" / "GAN box" / "Gann box"; "FVG" / "fair value gap").
+ *  Used ONLY as the dedup key — the item keeps its ORIGINAL name for corpus matching. */
+function canonicalNameKey(name: string): string {
+  let n = normalize(name);
+  n = n.replace(/\bga(n{0,2}) box\b/g, "gann box"); // ga box / gan box / gann box
+  n = n.replace(/\b(fvg|fair value gap[s]?|f value gap[s]?|fgs)\b/g, "fvg");
+  n = n.replace(/\b(ob|order block[s]?)\b/g, "order block");
+  n = n.replace(/\b(poc|point of control)\b/g, "point of control");
+  return n.replace(/\s+/g, " ").trim();
 }
 
 // ─── Prompt for LLM enumeration ───────────────────────────────────────────────
@@ -141,14 +162,18 @@ const COVERAGE_ENUM_PROMPT = `You are a transcript auditor. A trading educator r
 Enumerate every item the speaker NAMES and TEACHES in this segment. For each:
 - name: the speaker's exact term (e.g. "Gann box", "fair value gap", "optimum zone", "VWAP", "order block")
 - verbatim_quote: copy ONE exact phrase from the segment that proves the speaker named/taught it (10–120 chars)
-- emphasis_level: "primary" if it's the core tool without which the setup cannot be replicated; "secondary" if it's a supporting filter/condition; "mention" if it's just named but not constructed
+- emphasis_level:
+    * "primary"   — a CORE tool of THIS setup; the trade cannot be taken without it (usually only 1-3 items).
+    * "secondary" — a supporting filter/condition the speaker actually APPLIES in the setup.
+    * "mention"   — named but NOT part of executing this setup: an ALTERNATIVE for other days ("on choppy days use CRT instead"), a related concept named in passing ("price seeks FVGs and order blocks"), a comparison, or background theory. When in doubt, use "mention" — over-calling "primary" wrongly fails the strategy.
 
 RULES:
 1. Only include items the speaker NAMES. Do not generalize ("support level" is too vague unless the speaker says those exact words).
 2. verbatim_quote MUST be a real substring of the segment above (case-insensitive). Do not paraphrase.
 3. DO NOT invent items not present in the segment.
 4. Empty array is honest — use it when the segment teaches no named tools.
-5. Maximum 12 items.
+5. A tool the speaker offers as an ALTERNATIVE or names in PASSING (not used in the step-by-step setup) is "mention", NEVER "primary"/"secondary".
+6. Maximum 12 items.
 
 Return ONLY valid JSON in this shape:
 { "speaker_items": [ { "name": "...", "verbatim_quote": "...", "emphasis_level": "primary"|"secondary"|"mention" } ] }`;
@@ -242,7 +267,7 @@ export async function runCoverageEnumeration(transcript: string): Promise<Speake
     }
     const items = parseSpeakerItems(raw, transcript);
     for (const it of items) {
-      const key = normalize(it.name);
+      const key = canonicalNameKey(it.name); // FIX 2: fold spelling/alias variants
       const existing = byName.get(key);
       if (!existing || emphasisRank(it.emphasis_level) > emphasisRank(existing.emphasis_level)) {
         byName.set(key, it);
@@ -333,12 +358,28 @@ export function computeCoverageVerdict(
       ? 1.0
       : (countable.length - notCoveredCountable.length) / countable.length;
 
-  // coverage_failed when ANY primary item is missing OR shallow (mechanic not captured).
+  // FIX 5 (vacuous-pass floor): 0 enumerated countable items is an HONEST pass only if the
+  // extraction is genuinely rich. A thin extraction (few steps, no confluences) with 0 items
+  // is enumeration failure, not completeness — fail it so repair/quarantine engage.
+  const entryStepCount = Array.isArray(extraction.entry_sequence) ? extraction.entry_sequence.length : 0;
+  const confluenceCount = Array.isArray(extraction.confluences) ? extraction.confluences.length : 0;
+  const extractionIsThin = entryStepCount < 3 || confluenceCount === 0;
+  if (countable.length === 0) {
+    return extractionIsThin
+      ? { covered, shallow, missing, coverage_pct: 0, verdict: "coverage_failed" }
+      : { covered, shallow, missing, coverage_pct: 1.0, verdict: "pass" };
+  }
+
+  // FIX 4 (threshold verdict): pass when EITHER all primary items are covered (strict) OR
+  // coverage_pct clears COVERAGE_PASS_PCT — the latter tolerates 1-2 mis-classified peripheral
+  // mentions inflating the denominator while the core strategy is fully captured.
   const primaryNotCovered = [...missing, ...shallow].filter(
     (name) => speakerItems.find((i) => i.name === name)?.emphasis_level === "primary",
   );
+  const passByStrict = primaryNotCovered.length === 0;
+  const passByThreshold = coverage_pct >= COVERAGE_PASS_PCT;
   const verdict: CoverageVerdict["verdict"] =
-    primaryNotCovered.length > 0 ? "coverage_failed" : "pass";
+    passByStrict || passByThreshold ? "pass" : "coverage_failed";
 
   return { covered, shallow, missing, coverage_pct, verdict };
 }
