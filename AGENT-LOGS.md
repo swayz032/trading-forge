@@ -4,6 +4,54 @@
 
 ---
 
+### Session Log — 2026-06-23 Paper-Trade Readiness Hardening Plan, Pass 6 MASTER CLOSE (Reconciliation + A/B Routing + DB-Integration Tests + Correlation_id Stitching, 4 parallel subagents, 77 new tests GREEN)
+
+**Mission:** Pass 6 — close 4 audit findings: (1) High-Priority Wiring #3 paper_trades vs TradersPost broker tape reconciliation missing; (2) High-Priority Wiring #5 A/B paper routing is observability theatre — slumdawg-rl-challenger never receives real orders; (3) Observability Gap "no DB-integration coverage for Style C state machine"; (4) Observability + Autonomy Gap correlation_id stitching across auto-restart events.
+
+**4 parallel subagents (all returned GREEN; tracks touch disjoint files):**
+
+1. **paper-parity (Track A — paper_journal_recon cron)** — agent `a15b35ee620fdccec`. NEW `src/server/production/paper-journal-recon.ts` (265 lines) queries all DEPLOYED+ strategies, fetches paper_trades via paperSessions JOIN + production_trades (TradersPost proxy) + tradingview_markers, asserts trade-count parity per strategy per day AND P&L within `MAX($0.50, 2 × tick_size × contracts)` (2-tick or 50¢ floor — handles MES=$1.25/MNQ=$0.50/MCL=$1.00 boundary). On drift: critical audit `paper_reconciliation.mismatch_detected` + Discord notifyCritical with appendFamilyGradePostscript. Missing broker data: warning audit (no critical). Clean run: `paper_reconciliation.evaluated` success audit. Cron `paper-journal-recon-daily` registered at 21:30/22:30 UTC with ET-hour=17 guard (DST-safe double-fire pattern); _PIPELINE_GATE_EXEMPT. Registered in observability_reliability registry. **14 vitest GREEN.**
+
+2. **paper-parity (Track B — A/B routing real orders)** — agent `aef9cd1984214982a`. Closes High-Priority Wiring #5. `paper-signal-service.ts:5010-5090` A/B block was observability theatre — emitted `quantum_rl.signal_routed` audit + SSE but never called routeOrder(). Now: looks up `broker_accounts.account_id` UUID via `brokerAccounts WHERE accountIdExternal=targetSubAccount AND firmId='paper'` (migration 0159 sentinel), dynamically imports routeOrder when `routingDecision==='rl-challenger'`, fires routing call THEN audit row (audit reflects real outcome via new `routing_called`+`routing_success`+`resolved_account_id` fields). `pine-export-service.ts compileDualPineExport` injects resolved `account_id` into Pine alert payload when `strategy.paperAccountRouting` is set (slumdawg-baseline OR slumdawg-rl-challenger) — Pine alerts now carry the correct sub-account id so TradingView→/api/live-order→routeOrder lands on the right broker_account. New audit action `pine_export.ab_routing_resolved` (info). 25 vitest GREEN (source-code analysis pattern; no DB mocks needed).
+
+3. **backtest-core (Track C — Style C state machine DB-integration)** — agent `a01836607acea22ff`. Extended `pglite-db.ts CORE_DDL` with `paper_sessions`/`paper_positions`/`paper_trades` schemas (column-for-column match against schema.ts). Repaired `audit_log` DDL: added `status NOT NULL` + `input` + `duration_ms` + `error_message` + `decision_authority`; removed stale `severity`/`metadata`. NEW integration vitest at `paper-execution-style-c-pglite.test.ts` runs scripted 15-bar sequence with real pglite INSERT/UPDATE. Asserts: TP1 fill → `tp1_filled=true` + `be_stop_applied=true` + stop moved to entry+1tick; TP2 fill → `tp2_filled=true` + runner active with chandelier trail; 15:55 ET hard-flatten → runner closed, `runner_exited=true`, position.status='closed'. Audit chain `tp1Filled → tp2Filled → runnerExited` in correct timestamp order. P&L assertions: TP1 net $68.76, TP2 net $138.76, runner net $208.76, total $416.28 (commission $1.24/contract MES, 33/33/34% split, +1R/+2R/runner). Edge cases: TP1 + 15:55 coincidence (flatten wins), zero-volume bar (audit fail_loud per W27.5 Pass D), NaN ATR fallback to chandelier(14,2), FK integrity, NOT NULL contract. **24 vitest GREEN.** 156/156 existing paper-execution tests GREEN regression.
+
+4. **observability-reliability (Track D — Exit-handler notify + correlation_id stitching)** — agent `a6643c9d983b69693`. `paper-execution-service.ts:2634-2670` catch block now fires `notifyWarning` per exit-handler subprocess error (transient path) — Discord visible on FIRST occurrence, not waiting for 3-in-10-min circuit-breaker. Escalates to `notifyCritical` when error message contains `subprocess-died` or `timeout` substring (systemic signal). Both bodies wrapped with appendFamilyGradePostscript. `dead-mans-heartbeat-service.ts:554` POST `/api/admin/self-restart` body now carries `parentCorrelationId` = cronCorrelationId. `admin.ts:81-127` reads `body.parentCorrelationId` (UUID-validated), uses it as audit row `correlation_id` (preserves handler's own UUID under `result.handler_correlation_id` for debugging). Result: single `SELECT * FROM audit_log WHERE correlation_id = X` query now stitches `dead_mans_heartbeat.stale_detected` (row 1) + `system.self_restart_requested` (row 3). Backward-compat preserved: when `parentCorrelationId` absent, admin.ts mints fresh id (existing behavior). **14 vitest GREEN.** 18/18 dead-mans-heartbeat + 196/196 paper-execution regression GREEN.
+
+**Verification:**
+- `npm test -- paper-journal-recon pass6-ab-routing paper-execution-style-c-pglite pass6-correlation-id-stitching --run` → **77 / 77 GREEN** (14 + 25 + 24 + 14).
+- 3 CI hard gates GREEN: production-isolation + 2026-compliance + system-map:check (`driftItems: []`).
+- Existing regressions: 156/156 paper-execution + 18/18 heartbeat + 13/13 reconciliation + Pass 5 paper-to-deploy-ready-gates (43) + shadow-to-paper-gate (34) all GREEN.
+
+**Files changed (Pass 6 only, ~12 total):**
+- M `src/server/services/paper-execution-service.ts` (exit-handler notify)
+- M `src/server/services/dead-mans-heartbeat-service.ts` (parentCorrelationId in self-restart POST body)
+- M `src/server/routes/admin.ts` (parentCorrelationId resolution)
+- M `src/server/services/paper-signal-service.ts` (A/B routing actually calls routeOrder)
+- M `src/server/services/pine-export-service.ts` (A/B Pine injection — `brokerAccounts` import added by linter, intentional)
+- M `src/server/scheduler.ts` (paper-journal-recon-daily cron registered)
+- M `src/server/__tests__/helpers/pglite-db.ts` (CORE_DDL: 3 new tables + audit_log repair)
+- M `docs/system-subsystem-registry.json` (paper-journal-recon-daily registered)
+- M generated system-map trio
+- A `src/server/production/paper-journal-recon.ts` (the recon service)
+- A `src/server/production/__tests__/paper-journal-recon.test.ts`
+- A `src/server/services/__tests__/pass6-ab-routing.test.ts`
+- A `src/server/services/__tests__/pass6-correlation-id-stitching.test.ts`
+- A `src/server/__tests__/integration/paper-execution-style-c-pglite.test.ts`
+
+**Audit findings closed by this pass (4 of 50):**
+- High-Priority Wiring #3: paper_trades vs TradersPost reconciliation. **CLOSED.**
+- High-Priority Wiring #5: A/B paper routing observability theatre. **CLOSED** (slumdawg-rl-challenger now receives real orders via routeOrder).
+- Observability Gap "no DB-integration coverage". **CLOSED** (Style C state machine has real-DB integration test).
+- Autonomy Gap #5: correlation_id stitching for auto-restart. **CLOSED** (single SQL query stitches 2 of 3 rows; minor 3-row stitch is future-pass cosmetic).
+
+**Carry-forward for next session:**
+- **Pass 7 (Observability & Autonomy Hardening)** — next per plan. tradingview_markers UNIQUE INDEX, composite evidence-completeness tracker, cron jitter framework, TP-Link Kasa remote power-cycle script, PILOT→DEPLOYED Pine compile retry fix, paper.ts session hygiene, scripts/strategy-library-status.ts CLI.
+- **Pre-existing tsc errors** on dead-mans-heartbeat-service.ts lines 468/498/598 (`.catch()` on `notifyCritical` which returns void) are baseline noise — NOT introduced by Pass 6, NOT new regressions.
+- **Operator action:** none new — Pass 5's ADMIN_PROMOTE_HMAC_SECRET is still the open operator-action; Pass 6 doesn't add new env vars.
+
+---
+
 ### Session Log — 2026-06-23 Paper-Trade Readiness Hardening Plan, Pass 5 MASTER CLOSE (Lifecycle Gate Coverage + Engine Authority, 3 subagents, 133 tests GREEN, PATCH bypass CLOSED)
 
 **Mission:** Close `PATCH /:id/lifecycle` bypass (W6 audit High-Priority Wiring). Extract PAPER→DEPLOY_READY and SHADOW→PAPER gate stacks into pure-function evaluators called from `_promoteStrategyInner` so manual PATCH promotion runs the same gate sequence as the cron sweep. Add HMAC auth to PATCH. Declare paper-engine authority Option B (TradersPost canonical for PAPER+, internal Massive-WS simulator is pre-PAPER only).

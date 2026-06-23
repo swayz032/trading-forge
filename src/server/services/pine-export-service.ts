@@ -3,9 +3,9 @@ import { resolve as pathResolve } from "path";
 import { writeFileSync, unlinkSync } from "fs";
 import { tmpdir } from "os";
 import { randomUUID } from "crypto";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { strategies, strategyExports, strategyExportArtifacts, auditLog, backtests, monteCarloRuns, quantumMcRuns } from "../db/schema.js";
+import { strategies, strategyExports, strategyExportArtifacts, auditLog, backtests, monteCarloRuns, quantumMcRuns, brokerAccounts } from "../db/schema.js";
 import { logger } from "../index.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { parsePythonJson } from "../../shared/utils.js";
@@ -595,6 +595,65 @@ export async function compileDualPineExport(
           ),
           { strategyId, reason: "LIVE_ORDER_GATEWAY_URL_unset", gatewayMode: "direct" },
         );
+      }
+    }
+
+    // Pass 6 Track B: A/B routing account_id injection.
+    // When a strategy has paper_account_routing set (baseline or rl-challenger),
+    // resolve the broker_accounts UUID for the target sub-account and inject it
+    // into the Pine alert payload as config.account_id. This allows the TradingView
+    // alert to embed the correct account_id so POST /api/live-order → routeOrder()
+    // routes to the right slumdawg sub-account.
+    //
+    // Canonical path: Pine alert → /api/live-order → routeOrder(resolvedAccountId, signal)
+    // Pine compiler reads config.account_id to embed in the alertcondition block.
+    //
+    // Only inject when accountId was NOT already passed in (caller may override).
+    {
+      const strategyPaperRouting = (strategy as unknown as { paperAccountRouting?: string }).paperAccountRouting
+        ?? "baseline";
+      if (!config.account_id) {
+        const targetExternal = strategyPaperRouting === "rl-challenger"
+          ? "slumdawg-rl-challenger"
+          : "slumdawg-baseline";
+        try {
+          const subAccRows = await db
+            .select({ accountId: brokerAccounts.accountId })
+            .from(brokerAccounts)
+            .where(
+              and(
+                eq(brokerAccounts.accountIdExternal, targetExternal),
+                eq(brokerAccounts.firmId, "paper"),
+              ),
+            )
+            .limit(1);
+          const resolvedId = subAccRows[0]?.accountId ?? null;
+          if (resolvedId) {
+            config.account_id = resolvedId;
+            // Audit: pine_export.ab_routing_resolved (info)
+            await db.insert(auditLog).values({
+              action: "pine_export.ab_routing_resolved",
+              entityType: "strategy",
+              entityId: strategyId,
+              decisionAuthority: "system",
+              input: { strategyId, paper_account_routing: strategyPaperRouting } as Record<string, unknown>,
+              result: {
+                strategy_id: strategyId,
+                paper_account_routing: strategyPaperRouting,
+                resolved_account_id: resolvedId,
+                sub_account: targetExternal,
+              } as Record<string, unknown>,
+              status: "info",
+              correlationId: correlationId ?? null,
+            });
+          }
+        } catch (abInjectErr) {
+          // Fail-soft: A/B injection failure does not block the export
+          logger.warn(
+            { strategyId, err: abInjectErr },
+            "pine-export: A/B routing account_id injection failed (non-blocking)",
+          );
+        }
       }
     }
 

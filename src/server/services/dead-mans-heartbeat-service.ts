@@ -551,7 +551,11 @@ async function attemptAutoRestart(
         "Content-Type": "application/json",
         "X-Restart-Signature": sig,
       },
-      body: JSON.stringify({ timestamp, reason }),
+      // Pass 6 Track D: plumb cronCorrelationId as parentCorrelationId so the
+      // admin handler can reuse it as the audit row's correlation_id, linking
+      // the stale-detected row, the auto_restart_attempted row, and the
+      // self_restart_requested row under a single trace key.
+      body: JSON.stringify({ timestamp, reason, parentCorrelationId }),
       signal: AbortSignal.timeout(AUTO_RESTART_FETCH_TIMEOUT_MS),
     });
 

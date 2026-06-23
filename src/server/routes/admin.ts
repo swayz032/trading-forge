@@ -78,9 +78,12 @@ function verifyRestartHmac(
   }
 }
 
+// Pass 6 Track D: RFC 4122 UUID validation regex for parentCorrelationId stitching.
+const UUID_V4_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 adminRoutes.post("/self-restart", async (req, res) => {
-  const correlationId = randomUUID();
-  const body = (req.body ?? {}) as { timestamp?: number; reason?: string };
+  const handlerCorrelationId = randomUUID(); // always mint a fresh handler id
+  const body = (req.body ?? {}) as { timestamp?: number; reason?: string; parentCorrelationId?: string };
 
   // ── Validate body ─────────────────────────────────────────────────────────
   if (typeof body.timestamp !== "number") {
@@ -97,7 +100,7 @@ adminRoutes.post("/self-restart", async (req, res) => {
   const tsMs = body.timestamp * 1000; // body.timestamp is Unix seconds
   const drift = Math.abs(nowMs - tsMs);
   if (drift > RESTART_TIMESTAMP_DRIFT_MS) {
-    req.log?.warn({ drift, correlationId }, "self-restart: timestamp drift exceeded — replay protection");
+    req.log?.warn({ drift, correlationId: handlerCorrelationId }, "self-restart: timestamp drift exceeded — replay protection");
     res.status(401).json({ error: "timestamp_drift_exceeded", drift_ms: drift, max_ms: RESTART_TIMESTAMP_DRIFT_MS });
     return;
   }
@@ -106,13 +109,29 @@ adminRoutes.post("/self-restart", async (req, res) => {
   const sig = req.header("x-restart-signature");
   const verified = verifyRestartHmac(sig, body.timestamp, body.reason.trim());
   if (!verified.ok) {
-    req.log?.warn({ reason_code: verified.reason_code, correlationId }, "self-restart: HMAC verification failed");
+    req.log?.warn({ reason_code: verified.reason_code, correlationId: handlerCorrelationId }, "self-restart: HMAC verification failed");
     res.status(401).json({ error: "hmac_verification_failed", reason_code: verified.reason_code });
     return;
   }
 
   const reason = body.reason.trim();
-  logger.info({ correlationId, reason }, "self-restart: HMAC verified — initiating graceful restart");
+
+  // ── Pass 6 Track D: correlation_id stitching ──────────────────────────────
+  // When the dead-man's heartbeat service triggers an auto-restart it plumbs
+  // its cronCorrelationId as `body.parentCorrelationId`. Using it as the audit
+  // row's correlation_id lets a single SQL WHERE clause reconstruct all three
+  // rows (stale_detected → auto_restart_attempted → self_restart_requested).
+  // When parentCorrelationId is absent or malformed (manual curl invocation),
+  // fall back to the freshly-minted handlerCorrelationId.
+  const parentId = typeof body.parentCorrelationId === "string" && UUID_V4_RE.test(body.parentCorrelationId)
+    ? body.parentCorrelationId
+    : null;
+  const correlationId = parentId ?? handlerCorrelationId;
+
+  logger.info(
+    { correlationId, handlerCorrelationId, parentCorrelationId: parentId, reason },
+    "self-restart: HMAC verified — initiating graceful restart",
+  );
 
   // ── Audit row ─────────────────────────────────────────────────────────────
   await insertAuditRow({
@@ -121,7 +140,13 @@ adminRoutes.post("/self-restart", async (req, res) => {
     entityId: null,
     decisionAuthority: "human",
     input: { reason, timestamp: body.timestamp } as Record<string, unknown>,
-    result: { correlationId } as Record<string, unknown>,
+    // Preserve the handler's own UUID in metadata for debugging even when
+    // we're using the parent's UUID as the correlation_id.
+    result: {
+      correlationId,
+      handler_correlation_id: handlerCorrelationId,
+      parent_correlation_id: parentId,
+    } as Record<string, unknown>,
     status: "success",
     correlationId,
   }).catch((err) => logger.error({ err }, "self-restart: audit row write failed (non-blocking)"));
@@ -130,7 +155,7 @@ adminRoutes.post("/self-restart", async (req, res) => {
   notifyCritical(
     "Self-Restart Initiated",
     `Backend process is restarting via HMAC-authenticated endpoint. Reason: ${reason}. NSSM will respawn automatically.`,
-    { reason, correlationId },
+    { reason, correlationId, parentCorrelationId: parentId },
   );
 
   // ── Respond before exiting ────────────────────────────────────────────────

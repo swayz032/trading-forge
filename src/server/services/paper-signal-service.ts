@@ -5007,6 +5007,50 @@ export async function evaluateSignals(
             ? "slumdawg-rl-challenger"
             : "slumdawg-baseline";
 
+          // ── Pass 6 Track B: resolve broker_account_id for the target sub-account ──
+          // Look up the UUID assigned by migration 0159 to the paper sub-account row.
+          // This UUID is required by routeOrder() — it's the broker_accounts PK.
+          let resolvedAccountId: string | null = null;
+          let routingCalled = false;
+          let routingSuccess: boolean | null = null;
+
+          const subAccountRows = await db
+            .select({ accountId: brokerAccounts.accountId })
+            .from(brokerAccounts)
+            .where(
+              and(
+                eq(brokerAccounts.accountIdExternal, targetSubAccount),
+                eq(brokerAccounts.firmId, "paper"),
+              ),
+            )
+            .limit(1);
+          resolvedAccountId = subAccountRows[0]?.accountId ?? null;
+
+          // Only call routeOrder when explicitly set to rl-challenger
+          // (baseline is the default — observability-only for most strategies).
+          // The canonical path for PAPER+ strategies is:
+          //   Pine alert → /api/live-order → routeOrder() (wired in Pass 4 Track B)
+          // For CANDIDATE/TESTING in the internal bar-evaluation loop, we call
+          // routeOrder() directly here when paper_account_routing is set.
+          // SHADOW strategies are gated out earlier (SHADOW intercept block above).
+          if (routingDecision === "rl-challenger" && resolvedAccountId !== null) {
+            routingCalled = true;
+            const { routeOrder } = await import("./broker-router.js");
+            const signal = {
+              action: (config.side === "short" ? "enter_short" : "enter_long") as
+                "enter_long" | "enter_short" | "exit_long" | "exit_short" | "exit",
+              ticker: symbol,
+              quantity: contextContracts,
+              strategyId: sessionConfig.strategyId,
+              barTimestamp: typeof bar.timestamp === "number"
+                ? new Date(bar.timestamp).toISOString()
+                : typeof bar.timestamp === "string" ? bar.timestamp : undefined,
+            };
+            const routeResult = await routeOrder(resolvedAccountId, signal, correlationId ?? null);
+            routingSuccess = routeResult.success;
+          }
+
+          // ── Audit row fires AFTER routing (not before — closes observability illusion) ──
           insertAuditRow({
             action: "quantum_rl.signal_routed",
             entityType: "strategy",
@@ -5015,6 +5059,9 @@ export async function evaluateSignals(
             result: {
               paper_account_routing: routingDecision,
               target_sub_account: targetSubAccount,
+              resolved_account_id: resolvedAccountId,
+              routing_called: routingCalled,
+              routing_success: routingSuccess,
               symbol,
               side: config.side,
               contracts: contextContracts,
@@ -5034,6 +5081,9 @@ export async function evaluateSignals(
             symbol,
             routing: routingDecision,
             targetSubAccount,
+            resolvedAccountId,
+            routingCalled,
+            routingSuccess,
             side: config.side,
             contracts: contextContracts,
             signalBar: bar.timestamp,

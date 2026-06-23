@@ -1103,7 +1103,8 @@
       "daily-reconciliation",
       "weekly-drift-2sigma-check",
       "weekly-drift-detection",
-      "db-backup"
+      "db-backup",
+      "paper-journal-recon-daily"
     ],
     "routes": [
       "/api/production"

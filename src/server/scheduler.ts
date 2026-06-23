@@ -4943,6 +4943,64 @@ except Exception as e:
   });
   _scheduledJobs.add("weekly-drift-detection");
 
+  // ─── Pass 6 Track A: paper_journal_recon — daily 17:30 ET (22:30 UTC) ────────
+  //
+  // 6th reconciliation source: joins paper_trades vs TradersPost broker tape
+  // (production_trades proxy) and tradingview_markers per strategy per day.
+  // Asserts trade-count parity and per-trade P&L within 2-tick tolerance for all
+  // DEPLOYED+ strategies. Closes Wiring #3 (audit finding: CLAUDE.md §8 "match
+  // within 1-2 ticks" — previously no paper_trades references in reconciliation).
+  //
+  // On drift: audit paper_reconciliation.mismatch_detected (critical) + Discord
+  //   CRITICAL with appendFamilyGradePostscript.
+  // On missing broker row: audit paper_reconciliation.missing_broker_data (warn).
+  // On clean: audit paper_reconciliation.evaluated (success).
+  //
+  // Runs AFTER the 4:15 PM ET daily-reconciliation cron (22:30 UTC offset avoids
+  // collision with the 20:15/21:15 UTC daily-reconciliation fire).
+  //
+  // DST-safe double-fire: 17:30 ET
+  //   EDT (UTC-4): 21:30 UTC → cron fires at "30 21,22 * * *", ET guard = 17
+  //   EST (UTC-5): 22:30 UTC → cron fires at "30 21,22 * * *", ET guard = 17
+  //
+  // Pipeline-gate EXEMPT: paper journal reconciliation is a safety signal —
+  // must fire even when the research pipeline is paused.
+  _PIPELINE_GATE_EXEMPT.add("paper-journal-recon-daily");
+  registerJob("paper-journal-recon-daily", 24 * 60 * 60 * 1000, async () => {
+    const { runPaperJournalRecon } = await import("./production/paper-journal-recon.js");
+    await runPaperJournalRecon();
+  });
+  cron.schedule("30 21,22 * * *", async () => {
+    if (!_tryAcquireJobLock("paper-journal-recon-daily")) return;
+    try {
+      const now = new Date();
+      const etHour = parseInt(
+        now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+        10,
+      );
+      if (etHour !== 17) {
+        logger.debug({ etHour }, "Scheduler: paper-journal-recon-daily cron fired but not 17:30 ET — skipping (DST guard)");
+        return;
+      }
+      // NOT pipeline-gated — safety signal (in _PIPELINE_GATE_EXEMPT)
+      logger.info({ job: "paper-journal-recon-daily" }, "Scheduler: paper-journal-recon-daily (17:30 ET confirmed)");
+      const t0pjr = Date.now();
+      await withRetry("paper-journal-recon-daily", SCHEDULER_JOBS["paper-journal-recon-daily"].run, 1);
+      markJobRun("paper-journal-recon-daily");
+      emitJobComplete("paper-journal-recon-daily", Date.now() - t0pjr);
+    } catch (err) {
+      logger.error({ err, job: "paper-journal-recon-daily" }, "paper-journal-recon-daily cron failed");
+      const { notifyCritical: nc } = await import("./services/notification-service.js");
+      nc("paper-journal-recon-cron-failed", JSON.stringify({
+        error: err instanceof Error ? err.message : String(err),
+        job: "paper-journal-recon-daily",
+      }));
+    } finally {
+      _releaseJobLock("paper-journal-recon-daily");
+    }
+  });
+  _scheduledJobs.add("paper-journal-recon-daily");
+
   // ─── W1 go-live blocker #5a: Per-strategy feed silence alarm — every 5 min ──
   // Detects when a live/paper strategy (PAPER/DEPLOY_READY/PILOT/DEPLOYED) stops
   // receiving TradingView/Pine signals during RTH. Sources last-received-signal

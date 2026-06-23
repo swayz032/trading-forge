@@ -37,6 +37,9 @@ import { getActiveAssignment } from "./strategy-assignment-service.js";
 // Wave 25.5 Track 1: adaptive exit plan wiring
 import { computeExitPlan, type ExitPlan } from "./adaptive-exit-engine.js";
 import type { ExitPlanWithRuntimeState } from "../db/jsonb-shapes.js";
+// Pass 6 Track D: per-call exit-handler Discord visibility
+import { notifyWarning, notifyCritical } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 export { CONTRACT_SPECS };
 
 // ─── C1: Register CME outage callback on module init ─────────────────────────
@@ -2660,6 +2663,32 @@ async function callExitHandler(
       exit_style: exitStyle,
       correlation_id: correlationId ?? null,
     });
+
+    // Pass 6 Track D: per-call Discord visibility — don't wait until circuit-breaker
+    // fires at 3/10-min. Surface every handler error immediately.
+    // Escalate to CRITICAL for systemic failure signals (subprocess-died or timeout).
+    {
+      const isSystemic = errMsg.includes("subprocess-died") || errMsg.includes("timeout");
+      const discordBody = appendFamilyGradePostscript(
+        `Exit handler subprocess error for position ${pos.id} (style: ${exitStyle}, module: ${module}). ` +
+          `Error: ${errMsg}. Decision: HOLD (fail-CLOSED). CorrelationId: ${correlationId ?? "none"}.`,
+        "The trading bot's exit logic hit an error and safely chose to hold the position.",
+        "This is a single error and the bot is protecting your trade. If you see many of these, tell Tony.",
+      );
+      if (isSystemic) {
+        notifyCritical(
+          `Exit handler SYSTEMIC error — style ${exitStyle}`,
+          discordBody,
+          { positionId: pos.id, strategyId, exitStyle, module, correlationId: correlationId ?? null, errorType: "systemic" },
+        );
+      } else {
+        notifyWarning(
+          `Exit handler error — style ${exitStyle}`,
+          discordBody,
+          { positionId: pos.id, strategyId, exitStyle, module, correlationId: correlationId ?? null },
+        );
+      }
+    }
 
     return {
       decision: "HOLD",
