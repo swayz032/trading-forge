@@ -1,0 +1,47 @@
+{
+  "schema_version": "v1",
+  "name": "ICT Silver Bullet NY AM MES",
+  "description": "10-11 AM ET Silver Bullet — displacement FVG entry within the NY AM killzone. Price sweeps a prior high/low, creates a Fair Value Gap on the displacement candle, then retraces into the FVG for entry. Targets prior dealing range extreme.",
+  "symbol": "MES",
+  "timeframe": "5m",
+  "direction": "long",
+  "entry_type": "structural_archetype",
+  "entry_indicator": "archetype:silver_bullet",
+  "entry_params": {
+    "time_window": "10:00-11:00 ET",
+    "killzone": "ny_am",
+    "sweep_type": "prior_high_low",
+    "fvg_min_size_ticks": 2
+  },
+  "entry_condition": "Within 10-11 AM ET window: price sweeps a prior high or low, forms a displacement candle with a Fair Value Gap, then retraces 50% or more back into the FVG for entry.",
+  "exit_type": "style_c",
+  "exit_params": {
+    "tp1_r": 1.0,
+    "tp2_r": 2.0,
+    "tp1_pct": 0.33,
+    "tp2_pct": 0.33,
+    "runner_pct": 0.34,
+    "be_on_tp1": true,
+    "time_stop_et": "15:55"
+  },
+  "stop_loss_atr_multiple": 1.5,
+  "stop_loss_ceiling_pts": 14,
+  "max_contracts": 6,
+  "preferred_regime": "TRENDING",
+  "session_filter": "RTH_ONLY",
+  "source": "archetype_registry",
+  "tags": [
+    "ict",
+    "silver_bullet",
+    "ny_am",
+    "fvg",
+    "structural",
+    "mes",
+    "archetype"
+  ],
+  "profit_scaling_tier": {
+    "increment": 3,
+    "threshold": 3000
+  },
+  "sizing_method": "risk_derived_pyramid"
+}

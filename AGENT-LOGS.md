@@ -4,6 +4,68 @@
 
 ---
 
+### Session Log — 2026-06-22 Paper-Trade Readiness Hardening Plan, Pass 2 MASTER CLOSE (Pine compiler archetype handler, 3 parallel subagents, 472 new tests GREEN, system-map driftItems=[])
+
+**Mission:** Execute Pass 2 of the 8-pass paper-trade readiness hardening plan (`C:/Users/tonio/.claude/plans/i-want-you-to-giggly-naur.md`) — the L-effort longest pole of the entire plan. Unblock the entire institutional archetype strategy class (39 archetypes spanning ICT/SMC/Wyckoff + Wave 26 Pass G + W26.4 + uncatalogued) from the TESTING→PAPER `checkExportability` HARD gate by adding alert-only Pine recipes that delegate execution authority to the Python engine.
+
+**Source audit:** `wf_06574188-392` First-Paper-Trade Blocker #1 (Pine compiler has no `archetype:<name>` handler — ALL archetype strategies fail exportability and are HARD-blocked at TESTING→PAPER). Resolved by Pass 2.
+
+**3 parallel subagents dispatched (all returned GREEN, no worktree isolation because the harness CWD was outside the git repo this session — agents worked directly on `hardening/phase-0`):**
+
+1. **pine-export (Combined Tracks A+B — pine_compiler.py + exportability.py)** — agent `af05dc4c85e27c7e8`
+   - NEW `_build_archetype_alert_pine(key, display_name) -> str` factory in `src/engine/pine_compiler.py`. Renders ONE canonical Pine v5 alert-only template parameterized by archetype key + display name: `indicator(...)` overlay scaffold + `alertcondition()` firing the canonical TradingView webhook payload with `{{strategy.id}}`/`{{time}}` placeholders + `plotshape()` so operator sees archetype-active on chart + header comment naming the archetype and noting "Python engine owns entry/exit".
+   - NEW `ARCHETYPE_PINE_RECIPE: dict[str, str]` module-level constant with **39 entries** (live ARCHETYPE_REGISTRY had grown beyond the audit's 28-count estimate). Populated via `_ARCHETYPE_ENTRIES` tuple list + comprehension — single canonical template, parameterized — NOT 39 hand-authored strings.
+   - Priority 0 + 0b interception in `_build_pine_indicator_var()` BEFORE the `_` split: `archetype:<key>` looks up the recipe (raises ValueError on unknown key), `uncatalogued:<term>` delegates to `_build_archetype_alert_pine(f"uncatalogued_{term}", term.replace("_"," ").title())`.
+   - `src/engine/exportability.py` — prefix recognition added: `archetype:*` and `uncatalogued:*` fast-path to `band='alert_only'`, `score=60.0`, `ok=True`, `faithful=True`. `ICT_NO_PINE_INDICATORS` raw-indicator deduction reduced from `-30` to `-5` (these raw indicators were the old reason archetypes couldn't export; now they're the canonical Pine-routable form).
+   - NEW `src/engine/tests/test_pine_compiler_archetypes.py` — parameterized over all 39 archetypes, asserts each renders non-empty Pine containing `indicator(`/`alertcondition(`/`plotshape(`, no merge markers, no f-string artifacts. Plus 3 spot-checks on `ict_silver_bullet_ny_am`/`bounce_off_level`/`ict_bias_aligned_continuation`. Plus dispatch correctness + uncatalogued path + ValueError on unknown key.
+   - NEW `src/engine/tests/test_exportability_archetype_prefixes.py` — archetype + uncatalogued + parametric regression + `-30 → -5` deduction reduction + `faithful=True` flag + result-shape contracts.
+   - Combined pytest count: **404 GREEN** (parameterized × 39 archetypes drives most of the count).
+
+2. **backtest-core (Track C — lifecycle integration + DSL fixtures)** — agent `a4533486b60913740`
+   - NEW `src/server/services/__tests__/lifecycle-archetype-promotion.test.ts` — 43 tests covering: 4-case gate decision matrix (`archetype:silver_bullet` proceeds, `archetype:bounce_off_level` proceeds — proving migration 0151's 6 backfilled strategies now promote, `uncatalogued:fake_speaker_term` clears, `archetype:nonexistent_key` correctly hard-blocks via the Pine compiler's ValueError); 4 DSL fixture shape contracts; infra-failure non-blocking contract; pglite audit row INSERT/SELECT round-trip; source-contract structural checks on `lifecycle-service.ts:1916-1967`; 7-case promotion eligibility matrix.
+   - NEW DSL fixtures in `src/engine/strategies/dsl_fixtures/`: `archetype_silver_bullet.json`, `archetype_bounce_off_level.json`, `archetype_gann_box_4h_continuation.json`, `uncatalogued_fake_speaker_term.json` — minimal valid DSL JSON per existing fixture conventions.
+   - **Key technical finding (added to Known-Facts):** The pglite `CORE_DDL` `audit_log` table is a simplified subset of the Drizzle `auditLog` schema. Future tests that need `audit_log` DB operations on pglite MUST use `ctx.pg.query<RowType>(sql, params)` raw SQL, NOT `ctx.db.insert(auditLog).values({...})` — the ORM insert silently fails when columns don't align. Discovered while authoring this test.
+
+3. **pine-export (Track D — graduator audit + docs)** — agent `ab668397f0845734b`
+   - `src/server/services/direct-bucket-graduator.ts` — TWO new audit row emissions added:
+     - `graduation.archetype_pine_recipe_assigned` (status=info, entityType=strategy, entityId=inserted.id) after the leader strategy INSERT inside `if (isArchetype && archetypeName)` guard. Payload: `{archetype_key, pine_band: 'alert_only', recipe_source: 'ARCHETYPE_PINE_RECIPE'}`.
+     - `graduation.uncatalogued_pine_recipe_assigned` (status=info, entityType=strategy_pending_bucket, entityId=bucketId) inside the `startsWith("uncatalogued:")` block. Payload: `{speaker_term, pine_band: 'alert_only', recipe_source: 'UNCATALOGUED_SPEAKER_TERM'}`.
+   - NEW `src/server/services/__tests__/graduator-archetype-audit.test.ts` — 25 tests, 3 suites (archetype audit, uncatalogued audit, parametric path emits NEITHER — preserves signal-to-noise).
+   - NEW `docs/pine-export-architecture.md` — minimal doc file with "Alert-only Pine band contract (Pass 2, 2026-06-22)" section documenting WHAT (indicator scaffold + alertcondition + plotshape, NOT a `strategy()` script), WHY (structural ICT/SMC archetypes cannot be expressed in Pine without massive complexity loss; alert-only delegates to canonical Python), WHERE (pine_compiler.py + exportability.py + direct-bucket-graduator.ts).
+   - 7 existing graduator regression suites all GREEN, zero regressions.
+
+**Architect close (this commit by parent claude):**
+- All 3 subagents worked on the shared `hardening/phase-0` tree (no worktree merge required this pass — the harness CWD was outside the git repo so `isolation: worktree` couldn't initialize; agents wrote files directly to disk).
+- `docs/system-subsystem-registry.json` — registered missing registry entries surfaced by the parallel session's `0171_server_mediated_orders` migration that landed in Pass 1: route `/api/broker/fill-callback` + table `server_mediated_orders`, both under `broker_abstraction_layer`. This closes the registry drift the parallel session left behind without requiring them to do a separate sync commit.
+- `npm run system-map:sync` regenerated `docs/system-topology.generated.json` + `docs/system-readiness.generated.json` + `Trading Forge System Map v2.md`.
+
+**Verification:**
+- `pytest test_pine_compiler_archetypes.py test_exportability_archetype_prefixes.py -v` → **404 / 404 GREEN**.
+- `npm test -- lifecycle-archetype-promotion graduator-archetype-audit --run` → **68 / 68 GREEN** (43 + 25).
+- `python -c "from src.engine.pine_compiler import ARCHETYPE_PINE_RECIPE; print(len(ARCHETYPE_PINE_RECIPE))"` → **39 archetypes**.
+- `npm run check:production-isolation` → exit 0, CLEAN.
+- `npm run check:2026-compliance` → exit 0, OK.
+- `npm run system-map:check` → exit 0, `status: ok`, `driftItems: []`.
+- 7 existing graduator regression suites GREEN. Zero existing-test regressions in Pass 2 scope.
+
+**Pass 2 grand total: 472 new tests GREEN** (404 pytest + 68 vitest).
+
+**Files changed (16 total, explicit-path staged):**
+- M `Trading Forge System Map v2.md`, `docs/system-readiness.generated.json`, `docs/system-subsystem-registry.json`, `docs/system-topology.generated.json`, `src/engine/exportability.py`, `src/engine/pine_compiler.py`, `src/server/services/direct-bucket-graduator.ts`
+- A `docs/pine-export-architecture.md`, `src/engine/strategies/dsl_fixtures/archetype_bounce_off_level.json`, `src/engine/strategies/dsl_fixtures/archetype_gann_box_4h_continuation.json`, `src/engine/strategies/dsl_fixtures/archetype_silver_bullet.json`, `src/engine/strategies/dsl_fixtures/uncatalogued_fake_speaker_term.json`, `src/engine/tests/test_exportability_archetype_prefixes.py`, `src/engine/tests/test_pine_compiler_archetypes.py`, `src/server/services/__tests__/graduator-archetype-audit.test.ts`, `src/server/services/__tests__/lifecycle-archetype-promotion.test.ts`
+
+**Audit findings closed by this pass (1 of 50 — but the largest one):**
+- `First-Paper-Trade Blocker #1` Pine compiler has NO handler for `archetype:<name>` entry_indicator sentinel — every archetype strategy fails exportability and is BLOCKED at TESTING→PAPER. **CLOSED.** All 39 archetypes now route through alert-only Pine; the entire institutional ICT/SMC/Wyckoff strategy class is unblocked at the lifecycle gate.
+
+**Known-facts updates:**
+- **pglite `audit_log` DDL is a simplified subset of Drizzle `auditLog` schema.** Tests on pglite that need audit_log DB operations MUST use `ctx.pg.query<RowType>(sql, params)` raw SQL, NOT `ctx.db.insert(auditLog).values({...})` — the ORM insert silently fails when columns don't align. Discovered while authoring `lifecycle-archetype-promotion.test.ts`. Pin candidate for AGENT-LOGS Known-Facts section.
+
+**Carry-forward for next session:**
+- **Pass 3 (Pine Distribution UI + SHADOW Guard)** — M-effort, ~1 day. Wire `Download .pine` button into `PineDistributionPanel.tsx` (currently orphan + only renders README), propagate `downloadUrl` through `pine-export-recipient` route, mount component on a real page, add `assertNotShadow` guard at all Pine export entry points so SHADOW-state strategies cannot leak Pine artifacts (preserves Wave 29 Pass A.1 `traderspost_webhook_called=false` invariant).
+- **In-progress parallel-session work** (NOT touched by this pass, intentionally preserved in working tree): `docs/institutional-evidence/transcript-extractor-llm-architecture-2026.md`, `docs/prop-firm-rules-2026-mffu.md`, `package.json`, `package-lock.json`, `scripts/check-ts-python-tier1-parity.ts`, `src/engine/economic_calendar.py`, `src/engine/skip_engine/calendar_filter.py`, `src/engine/tests/test_calendar_filter_blackout.py`, `src/engine/tests/test_economic_calendar.py`, `src/server/__tests__/hardening-2026-06-22-consistency-news-blackout.test.ts`, `src/server/lib/tier1-event-blackout.ts`. All Tier-1 economic event / news blackout work from a parallel session — left exactly as found.
+
+---
+
 ### Session Log — 2026-06-22 Paper-Trade Readiness Hardening Plan, Pass 1 MASTER CLOSE (security + cleanup sanity, 4 parallel subagents, 66 new vitest GREEN, system-map driftItems=[])
 
 **Mission:** Execute Pass 1 of the 8-pass paper-trade readiness hardening plan (`C:/Users/tonio/.claude/plans/i-want-you-to-giggly-naur.md`) closing the two live production HMAC bypasses, disambiguating PM2 vs NSSM, shipping migration 0170, completing `.env.example`, and wiring runDiscordFanoutAudit at boot.

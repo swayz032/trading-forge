@@ -1,0 +1,44 @@
+{
+  "schema_version": "v1",
+  "name": "Fake Speaker Term MES",
+  "description": "Synthetic fixture representing a strategy extracted from a YouTube video where the speaker used a proprietary term ('fake_speaker_term') not yet registered in the ARCHETYPE_REGISTRY. This routes to the uncatalogued: prefix so the Pine compiler emits an alert-only scaffold using the speaker's verbatim term as the display name. Pass 2 Track B handles the uncatalogued: prefix handler in both pine_compiler.py and exportability.py.",
+  "symbol": "MES",
+  "timeframe": "5m",
+  "direction": "long",
+  "entry_type": "structural_archetype",
+  "entry_indicator": "uncatalogued:fake_speaker_term",
+  "entry_params": {
+    "speaker_concept": "fake_speaker_term",
+    "verbatim_description": "When price forms a 'fake speaker term' pattern at a key level with volume confirmation, enter on the close of the confirmation candle."
+  },
+  "entry_condition": "Speaker-specific concept: price forms the 'fake speaker term' pattern at a prior swing high/low with above-average volume, confirmed by a strong close in the trade direction.",
+  "exit_type": "style_c",
+  "exit_params": {
+    "tp1_r": 1.0,
+    "tp2_r": 2.0,
+    "tp1_pct": 0.33,
+    "tp2_pct": 0.33,
+    "runner_pct": 0.34,
+    "be_on_tp1": true,
+    "time_stop_et": "15:55"
+  },
+  "stop_loss_atr_multiple": 1.5,
+  "stop_loss_ceiling_pts": 14,
+  "max_contracts": 6,
+  "preferred_regime": "TRENDING",
+  "session_filter": "RTH_ONLY",
+  "source": "youtube_transcript",
+  "extraction_provenance": "youtube_transcript",
+  "needs_archetype_queue": true,
+  "tags": [
+    "uncatalogued",
+    "fake_speaker_term",
+    "mes",
+    "needs_archetype_mapping"
+  ],
+  "profit_scaling_tier": {
+    "increment": 3,
+    "threshold": 3000
+  },
+  "sizing_method": "risk_derived_pyramid"
+}

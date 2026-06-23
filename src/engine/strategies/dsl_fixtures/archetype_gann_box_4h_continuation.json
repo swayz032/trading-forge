@@ -1,0 +1,51 @@
+{
+  "schema_version": "v1",
+  "name": "Gann Box 4H Continuation MES",
+  "description": "BIDIRECTIONAL: impulsive 4H candle Gann box → Fibonacci optimum zone (0.50–0.75) retracement entry with FVG/OB confluence. LONG on bullish bias + bullish 4H impulse + retracement into optimum zone; SHORT mirror-image. Stop beyond the order block; target prior daily high/low. W3.4 (2026-06-22) — quarantine-escape: video SY2jXlW9bt4 routed to uncatalogued until this archetype was registered in ARCHETYPE_REGISTRY.",
+  "symbol": "MES",
+  "timeframe": "15m",
+  "direction": "both",
+  "entry_type": "structural_archetype",
+  "entry_indicator": "archetype:gann_box_4h_continuation",
+  "entry_params": {
+    "htf_timeframe": "4h",
+    "fib_zone_low": 0.50,
+    "fib_zone_high": 0.75,
+    "require_fvg_confluence": true,
+    "require_ob_confluence": false
+  },
+  "entry_condition": "Identify an impulsive 4H candle that creates a Gann box. Wait for price to retrace into the 50-75% Fibonacci optimum zone of the impulse. Enter on confirmation of FVG or OB confluence within the zone. Target is the origin of the impulse or prior daily high/low.",
+  "exit_type": "style_c",
+  "exit_params": {
+    "tp1_r": 1.0,
+    "tp2_r": 2.0,
+    "tp1_pct": 0.33,
+    "tp2_pct": 0.33,
+    "runner_pct": 0.34,
+    "be_on_tp1": true,
+    "time_stop_et": "15:55"
+  },
+  "stop_loss_atr_multiple": 1.5,
+  "stop_loss_ceiling_pts": 14,
+  "max_contracts": 6,
+  "preferred_regime": "TRENDING",
+  "session_filter": "RTH_ONLY",
+  "source": "archetype_registry",
+  "tags": [
+    "gann",
+    "gann_box",
+    "4h_continuation",
+    "fibonacci",
+    "optimum_zone",
+    "fvg",
+    "structural",
+    "mes",
+    "archetype",
+    "w3_4"
+  ],
+  "profit_scaling_tier": {
+    "increment": 3,
+    "threshold": 3000
+  },
+  "sizing_method": "risk_derived_pyramid"
+}

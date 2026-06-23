@@ -2091,6 +2091,7 @@
     "routes": [
       "/api/broker-accounts",
       "/api/broker-error-budget",
+      "/api/broker/fill-callback",
       "/api/live-order",
       "/api/strategy-assignments"
     ],
@@ -2103,7 +2104,8 @@
       "broker_accounts",
       "instance_config",
       "audit_log",
-      "live_order_pine_dedup"
+      "live_order_pine_dedup",
+      "server_mediated_orders"
     ],
     "learning_from": [],
     "learning_assets": [],

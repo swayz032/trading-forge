@@ -29,9 +29,9 @@ Semantic-fidelity model (2026-06-22 FAIL-LOUD mandate):
   receive faithful=True and can export cleanly.
 """
 from __future__ import annotations
+
 import json
-import sys
-from typing import Optional
+
 from pydantic import BaseModel, Field
 
 # Indicators that have direct Pine v5 equivalents
@@ -91,7 +91,47 @@ def score_exportability(strategy_config: dict) -> ExportabilityResult:
 
     Returns:
         ExportabilityResult with score, band, and details
+
+    Prefix fast-path (added Pass 2 Track B, 2026-06-22):
+        entry_indicator starting with 'archetype:' or 'uncatalogued:' receives a
+        structural band='alert_only' score of 60 immediately.  The per-indicator
+        score loop is SKIPPED for these prefixes — the band is structural, not
+        per-indicator.  ICT_NO_PINE_INDICATORS deduction does NOT apply because
+        the archetype form ('archetype:order_block') always has an alert-only
+        recipe regardless of whether the raw indicator name is in that set.
     """
+    # ─── Prefix fast-path: archetype: / uncatalogued: ────────────────────────
+    # These entry_indicator values denote structural archetypes whose entry/exit
+    # logic lives in the Python engine (src/engine/strategies/*.py).  Pine is a
+    # passive marker + alert emitter for these — alert_only band is correct by
+    # contract, score=60, exportable=True.
+    #
+    # Detection uses entry_indicator (canonical DSL field) OR the first element
+    # of indicators[] when entry_indicator is absent.
+    _entry_indicator_raw = strategy_config.get("entry_indicator", "")
+    if not _entry_indicator_raw:
+        # Fall back to indicators[0].type for callers that build from indicators list
+        _inds_raw = strategy_config.get("indicators", [])
+        if _inds_raw:
+            _first = _inds_raw[0]
+            _entry_indicator_raw = (_first.get("type", "") if isinstance(_first, dict) else str(_first))
+
+    if _entry_indicator_raw.startswith("archetype:") or _entry_indicator_raw.startswith("uncatalogued:"):
+        prefix_label = "archetype" if _entry_indicator_raw.startswith("archetype:") else "uncatalogued"
+        return ExportabilityResult(
+            score=60.0,
+            band="alert_only",
+            indicator_scores={_entry_indicator_raw: 60.0},
+            deductions=[],
+            recommendations=[
+                f"'{_entry_indicator_raw}' is a structural {prefix_label} — "
+                "alert-only Pine recipe assigned (passive marker + alertcondition). "
+                "Python engine at src/engine/strategies/<class>.py owns entry/exit."
+            ],
+            exportable=True,
+            faithful=True,
+        )
+
     score = 100.0
     deductions = []
     recommendations = []
@@ -113,21 +153,21 @@ def score_exportability(strategy_config: dict) -> ExportabilityResult:
         if base_type in NATIVE_PINE_INDICATORS:
             indicator_scores[ind_type] = 100.0
         elif ind_type in ICT_NO_PINE_INDICATORS:
-            # Match on full ind_type, not base_type: ICT names are multi-word (order_block,
-            # breaker_block, liquidity_sweep) so base_type stripping would truncate them to
-            # "order", "breaker", "liquidity" — none of which are in the set. We intentionally
-            # bypass the base_type normalisation here.
-            # -30 per ICT indicator: one ICT indicator scores 70 (alert_only band, exportable=True
-            # but strongly warned). Two ICT indicators score 40 (do_not_export, exportable=False).
-            # This matches the compiler's actual behaviour: _build_pine_indicator_var raises
-            # ValueError for these types, so compile_dual_artifacts produces zero artifacts.
-            # Score must be strictly < 50 for exportable=False (threshold: score >= 50).
-            # Using -25 would land exactly at 50 (True) with two indicators — that still lies.
-            indicator_scores[ind_type] = 0.0
-            score -= 30
-            deductions.append(
-                f"'{ind_type}' has no Pine equivalent — strategy will not produce a Pine artifact. "
-                "Consider non-ICT entry conditions for export."
+            # ICT structural indicators used in raw form (e.g. 'order_block', not 'archetype:order_block').
+            # These now have alert-only Pine recipes via ARCHETYPE_PINE_RECIPE — the raw name maps to
+            # an archetype alias in the registry (order_block→breaker, fvg→silver_bullet, etc.).
+            # The -30 deduction that previously forced do_not_export on 2+ ICT indicators is REMOVED
+            # (Pass 2 Track B, 2026-06-22) because ARCHETYPE_PINE_RECIPE provides a valid alert-only
+            # output for all these names.  A gentle advisory deduction remains so callers know to
+            # prefer the canonical 'archetype:<key>' form.
+            #
+            # NOTE: The fast-path above already handles 'archetype:order_block' etc. cleanly.
+            # This branch only fires when the raw name is used directly (legacy graduation rows).
+            indicator_scores[ind_type] = 60.0
+            score -= 5
+            recommendations.append(
+                f"'{ind_type}' is an ICT structural indicator — alert-only Pine recipe available "
+                "via ARCHETYPE_PINE_RECIPE. Prefer 'archetype:{ind_type}' form for canonical export."
             )
         elif ind_type in NONE_MAPPED_INDICATORS or base_type in NONE_MAPPED_INDICATORS:
             # Explicitly mapped to None in INDICATOR_MAP: the compiler produces a placeholder

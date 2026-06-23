@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-06-23T02:37:46.891Z`.
+Updated automatically from the repo on `2026-06-23T03:29:56.271Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -11,13 +11,13 @@ Updated automatically from the repo on `2026-06-23T02:37:46.891Z`.
 
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `ci_gate, kill_switch, operator, operator_hmac_override, operator_invoke_for_cohort_validation, operator_opt_in_per_strategy, operator-approve, operator-halt-only, operator-only-recovery, tradingview_deploy`
-- API routes tracked: `74`
+- API routes tracked: `75`
 - Scheduler jobs tracked: `96`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
 - Engine subsystems tracked: `28`
-- Database tables tracked: `105`
+- Database tables tracked: `106`
 
 ### Subsystem Runtime States
 - `active`: `63`
@@ -54,10 +54,10 @@ Updated automatically from the repo on `2026-06-23T02:37:46.891Z`.
 
 ### Registry Coverage
 - Registry subsystems tracked: `69`
-- Route coverage: `74/74`
+- Route coverage: `75/75`
 - Scheduler coverage: `96/96`
 - Engine coverage: `28/28`
-- Database coverage: `105/105`
+- Database coverage: `106/106`
 - Autonomous subsystems with audit coverage: `62/62`
 - Autonomous subsystems with audit actions: `62/62`
 - Autonomous subsystems with telemetry evidence: `62/62`
@@ -242,6 +242,7 @@ Updated automatically from the repo on `2026-06-23T02:37:46.891Z`.
 - `/api/bias-state`
 - `/api/broker-accounts`
 - `/api/broker-error-budget`
+- `/api/broker/fill-callback`
 - `/api/cloud-qmc`
 - `/api/compiler`
 - `/api/compliance`
@@ -533,6 +534,7 @@ Updated automatically from the repo on `2026-06-23T02:37:46.891Z`.
 - `regime_hmm_models`
 - `rl_training_runs`
 - `scout_drain_samples`
+- `server_mediated_orders`
 - `shadow_rerun_findings`
 - `shadow_signals`
 - `skip_decisions`

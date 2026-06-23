@@ -30,18 +30,20 @@ Usage:
 """
 from __future__ import annotations
 
-import json
-import sys
 import hashlib
+import json
 from typing import Optional
+
 from pydantic import BaseModel, Field
 
-from src.engine.exportability import score_exportability, ExportabilityResult
+from src.engine.exportability import ExportabilityResult, score_exportability
 from src.engine.firm_config import FIRM_COMMISSIONS, FIRM_CONTRACT_CAPS, FIRM_RULES
+
 # F-10: canonical marker HMAC strings — single source of truth for the
 # Pine→backend contract. TypeScript mirror at src/shared/marker-contract.ts.
-from src.engine.marker_contract import build_export_canonical as _marker_build_export_canonical
-
+from src.engine.marker_contract import (
+    build_export_canonical as _marker_build_export_canonical,
+)
 
 # ─── DSL → Pine Indicator Mapping ──────────────────────────────────
 INDICATOR_MAP: dict[str, str] = {
@@ -59,6 +61,136 @@ INDICATOR_MAP: dict[str, str] = {
     "fvg": None,
     "breaker_block": None,
     "liquidity_sweep": None,
+}
+
+
+# ─── Archetype Alert-Only Pine Factory ──────────────────────────────────────
+#
+# Archetypes (entry_indicator='archetype:<key>') are structural ICT/SMC/Wyckoff
+# patterns whose entry/exit logic lives entirely in the Python engine at
+# src/engine/strategies/<class>.py.  Pine is a PASSIVE MARKER + ALERT EMITTER
+# only — it does not replicate the Python engine's structural detection.
+#
+# Uncatalogued entries (entry_indicator='uncatalogued:<term>') use the same
+# template with the speaker_term as the display name.
+#
+# Alert-only band: exportability score 60 (band='alert_only') — exportable=True,
+# but operator must understand Pine is a visual aid, not the execution engine.
+
+
+def _build_archetype_alert_pine(key: str, display_name: str) -> str:
+    """Build a minimal alert-only Pine v5 script for a structural archetype.
+
+    The emitted Pine:
+      - Declares indicator() in overlay mode with the archetype display name.
+      - Sets archetype_active = true on every bar (passive always-on marker).
+      - Emits alertcondition() with strategyId/archetype/bar_timestamp/action
+        placeholders that downstream TradersPost / TF-gateway consumers parse.
+      - Plots a shape at the bottom of the chart so the operator can confirm
+        the indicator is loaded and the archetype key is correct.
+
+    Args:
+        key:          Archetype key (e.g. 'ict_silver_bullet_ny_am') used in
+                      the alert JSON payload and Pine variable names.
+        display_name: Human-readable title (e.g. 'Ict Silver Bullet Ny Am')
+                      used in indicator() title and plotshape text.
+
+    Returns:
+        Complete Pine Script v5 source string, ready for TradingView import.
+
+    Repaint risk:  None — archetype_active is always true; no series lookback.
+    Bar-close timing: alert fires once per bar close when 'Once Per Bar Close'
+                      is selected in TradingView alert settings.
+    State persistence: None — stateless passive marker.
+    """
+    return f"""//@version=5
+indicator("TF Archetype: {display_name}", overlay=true)
+
+// Alert-only Pine — Python engine at src/engine/strategies/<inferred_class>.py owns entry/exit.
+// Pine is a passive marker + alert emitter.
+// Archetype key: {key}
+
+archetype_active = true
+
+alertcondition(archetype_active, title="{display_name}", message='{{"strategyId":"{{{{strategy.id}}}}","archetype":"{key}","bar_timestamp":"{{{{time}}}}","action":"signal"}}')
+
+plotshape(archetype_active, location=location.bottom, color=color.aqua, style=shape.labeldown, text="{display_name}")
+"""
+
+
+# ─── ARCHETYPE_PINE_RECIPE ───────────────────────────────────────────────────
+#
+# One entry per key in ARCHETYPE_REGISTRY (direct-bucket-graduator.ts:53-150).
+# The list below must stay in sync with that registry.
+# Display names are Title Case conversions of the underscore-separated keys.
+#
+# Keys confirmed from ARCHETYPE_REGISTRY as of 2026-06-22 (39 entries):
+#   ICT time-window (14): ict_silver_bullet_ny_am, ict_silver_bullet_london,
+#     ict_silver_bullet_ny_pm, ict_judas_swing, ict_ny_lunch_reversal,
+#     ict_midnight_open, ict_london_raid, ict_turtle_soup, ict_ote,
+#     ict_power_of_3, ict_unicorn, ict_breaker, ict_mitigation, ict_iofed
+#   SMC + Scalp/Swing (7): smt_reversal, ict_quarterly_swing, ict_propulsion,
+#     ict_eqhl_raid, ict_scalp, ict_swing, ict_2022
+#   Structural primitives (6): break_of_structure, change_of_character,
+#     market_structure_shift, cisd, fvg_retrace
+#   W23G.3 short-form aliases (6): fvg, judas_swing, silver_bullet,
+#     breaker_block, order_block, liquidity_sweep
+#   Wyckoff (4): wyckoff_spring, wyckoff_upthrust, wyckoff_accumulation,
+#     wyckoff_distribution
+#   Wave 26 Pass G + W26.4 (3): bounce_off_level, ict_bias_aligned_continuation,
+#     gann_box_4h_continuation
+
+_ARCHETYPE_ENTRIES: list[tuple[str, str]] = [
+    # ICT time-window archetypes
+    ("ict_silver_bullet_ny_am",          "Ict Silver Bullet Ny Am"),
+    ("ict_silver_bullet_london",         "Ict Silver Bullet London"),
+    ("ict_silver_bullet_ny_pm",          "Ict Silver Bullet Ny Pm"),
+    ("ict_judas_swing",                  "Ict Judas Swing"),
+    ("ict_ny_lunch_reversal",            "Ict Ny Lunch Reversal"),
+    ("ict_midnight_open",                "Ict Midnight Open"),
+    ("ict_london_raid",                  "Ict London Raid"),
+    ("ict_turtle_soup",                  "Ict Turtle Soup"),
+    ("ict_ote",                          "Ict Ote"),
+    ("ict_power_of_3",                   "Ict Power Of 3"),
+    ("ict_unicorn",                      "Ict Unicorn"),
+    ("ict_breaker",                      "Ict Breaker"),
+    ("ict_mitigation",                   "Ict Mitigation"),
+    ("ict_iofed",                        "Ict Iofed"),
+    # SMC + Scalp/Swing
+    ("smt_reversal",                     "Smt Reversal"),
+    ("ict_quarterly_swing",              "Ict Quarterly Swing"),
+    ("ict_propulsion",                   "Ict Propulsion"),
+    ("ict_eqhl_raid",                    "Ict Eqhl Raid"),
+    ("ict_scalp",                        "Ict Scalp"),
+    ("ict_swing",                        "Ict Swing"),
+    ("ict_2022",                         "Ict 2022"),
+    # Structural primitives
+    ("break_of_structure",               "Break Of Structure"),
+    ("change_of_character",              "Change Of Character"),
+    ("market_structure_shift",           "Market Structure Shift"),
+    ("cisd",                             "Cisd"),
+    ("fvg_retrace",                      "Fvg Retrace"),
+    # W23G.3 short-form aliases
+    ("fvg",                              "Fvg"),
+    ("judas_swing",                      "Judas Swing"),
+    ("silver_bullet",                    "Silver Bullet"),
+    ("breaker_block",                    "Breaker Block"),
+    ("order_block",                      "Order Block"),
+    ("liquidity_sweep",                  "Liquidity Sweep"),
+    # Wyckoff
+    ("wyckoff_spring",                   "Wyckoff Spring"),
+    ("wyckoff_upthrust",                 "Wyckoff Upthrust"),
+    ("wyckoff_accumulation",             "Wyckoff Accumulation"),
+    ("wyckoff_distribution",             "Wyckoff Distribution"),
+    # Wave 26 Pass G + W26.4
+    ("bounce_off_level",                 "Bounce Off Level"),
+    ("ict_bias_aligned_continuation",    "Ict Bias Aligned Continuation"),
+    ("gann_box_4h_continuation",         "Gann Box 4H Continuation"),
+]
+
+ARCHETYPE_PINE_RECIPE: dict[str, str] = {
+    key: _build_archetype_alert_pine(key, display_name)
+    for key, display_name in _ARCHETYPE_ENTRIES
 }
 
 
@@ -83,12 +215,36 @@ def _build_pine_indicator_var(ind_type: str, params: dict, idx: int) -> tuple[st
     Returns (var_name, pine_code_line).
 
     Lookup priority:
+      0. 'archetype:<key>' prefix → ARCHETYPE_PINE_RECIPE lookup (alert-only Pine).
+         The returned pine_code_line IS the full Pine script (not a single var line).
+         var_name is 'archetype_<key>' for downstream tracking.
+      0b.'uncatalogued:<term>' prefix → _build_archetype_alert_pine with the term
+         as display name.  Same alert-only contract.
       1. Full ind_type in INDICATOR_MAP (catches multi-word names like volume_profile, order_block).
          If mapped to None → placeholder comment, no raise.
       2. base_type (first segment before '_') in INDICATOR_MAP for suffix variants
          (e.g. sma_crossover → sma).  If mapped to None → placeholder comment.
       3. Neither found → ValueError (genuinely unknown — caller must add to INDICATOR_MAP).
     """
+    # Priority 0: archetype prefix — structural engine archetype, alert-only Pine.
+    if ind_type.startswith("archetype:"):
+        key = ind_type[len("archetype:"):]
+        if key not in ARCHETYPE_PINE_RECIPE:
+            raise ValueError(
+                f"Unknown archetype key '{key}'. "
+                "Add to ARCHETYPE_PINE_RECIPE / ARCHETYPE_REGISTRY before exporting."
+            )
+        var_name = f"archetype_{key}"
+        return var_name, ARCHETYPE_PINE_RECIPE[key]
+
+    # Priority 0b: uncatalogued prefix — speaker-coined term with no catalog entry yet.
+    if ind_type.startswith("uncatalogued:"):
+        term = ind_type[len("uncatalogued:"):]
+        display_name = term.replace("_", " ").title()
+        synthetic_key = f"uncatalogued_{term}"
+        var_name = f"uncatalogued_{term}"
+        return var_name, _build_archetype_alert_pine(synthetic_key, display_name)
+
     base_type = ind_type.split("_")[0] if "_" in ind_type else ind_type
     var_name = f"ind_{base_type}_{idx}"
 
@@ -143,7 +299,7 @@ def _build_pine_indicator_var(ind_type: str, params: dict, idx: int) -> tuple[st
 
 def _build_entry_condition(strategy: dict, indicator_vars: dict[str, str]) -> tuple[str, str]:
     """Generate Pine entry conditions (long_signal, short_signal) from DSL."""
-    entry_type = strategy.get("entry_type", "trend_follow")
+    _entry_type = strategy.get("entry_type", "trend_follow")
     entry_indicator = strategy.get("entry_indicator", "")
     direction = strategy.get("direction", "both")
 
@@ -816,7 +972,7 @@ def compile_strategy(
     if recipient_qty is not None:
         _recipient_header += f"// RecipientQty: {recipient_qty} contracts (profit-tier-aware override)\n"
     if hmac_secret:
-        _recipient_header += f"// HMACSecretRef: present (embedded in webhook payload — do not share)\n"
+        _recipient_header += "// HMACSecretRef: present (embedded in webhook payload — do not share)\n"
 
     pine_code = f"""//@version=5
 indicator("{strategy_name}", overlay=true, max_labels_count=500)
@@ -885,7 +1041,7 @@ target_distance = {tp_distance}
 qty_final := {recipient_qty}  // recipient-specific contract count
 """
         if hmac_secret:
-            pine_code += f"""
+            pine_code += """
 // HMAC secret is embedded in the alert JSON payload (see alert conditions below).
 // Do not modify or share this value — it is used by Track 8 marker collection for
 // webhook authentication. Regenerate via /api/pine-export/recipient if rotated.
@@ -1731,10 +1887,12 @@ def compile_dual_artifacts(
 
     strategy_name = strategy.get("name", "Unnamed Strategy")
     symbol = strategy.get("symbol", "MES")
-    timeframe = strategy.get("timeframe", "5m")
+    _timeframe = strategy.get("timeframe", "5m")
     safe_name = strategy_name.lower().replace(" ", "_").replace("-", "_")
 
     result = DualArtifactResult(
+
+
         exportability=exportability,
         strategy_name=strategy_name,
     )
@@ -1865,7 +2023,7 @@ def compile_dual_artifacts(
     if recipient_qty is not None:
         _recip_comments += f"// Recipient Qty  : {recipient_qty} contracts (profit-tier-aware)\n"
     if hmac_secret:
-        _recip_comments += f"// HMAC           : present — embedded in strategy webhook payload\n"
+        _recip_comments += "// HMAC           : present — embedded in strategy webhook payload\n"
 
     # T6: Per-recipient qty override block appended to shared preamble for both artifacts.
     # F-2: qty_final is declared as `var int qty_final = 0` in _build_atr_qty_block above,
@@ -1879,7 +2037,7 @@ def compile_dual_artifacts(
 qty_final := {recipient_qty}
 """
         if hmac_secret:
-            _recip_qty_block += f"""// HMAC embedded in TradersPost webhook action payload (see alertcondition below).
+            _recip_qty_block += """// HMAC embedded in TradersPost webhook action payload (see alertcondition below).
 """
 
     # Stage 7a: INDICATOR artifact

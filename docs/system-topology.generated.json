@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-23T02:37:46.891Z",
+  "generatedAt": "2026-06-23T03:29:56.271Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,12 +15,12 @@
     ]
   },
   "counts": {
-    "routes": 74,
+    "routes": 75,
     "schedulerJobs": 96,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 28,
-    "databaseTables": 105,
+    "databaseTables": 106,
     "registrySubsystems": 69
   },
   "routes": [
@@ -40,6 +40,7 @@
     "/api/bias-state",
     "/api/broker-accounts",
     "/api/broker-error-budget",
+    "/api/broker/fill-callback",
     "/api/cloud-qmc",
     "/api/compiler",
     "/api/compliance",
@@ -881,6 +882,7 @@
     "regime_hmm_models",
     "rl_training_runs",
     "scout_drain_samples",
+    "server_mediated_orders",
     "shadow_rerun_findings",
     "shadow_signals",
     "skip_decisions",
@@ -972,10 +974,10 @@
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 74,
+      "routes": 75,
       "schedulerJobs": 96,
       "engineSubsystems": 28,
-      "databaseTables": 105
+      "databaseTables": 106
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
@@ -1808,7 +1810,8 @@
           "audit_log",
           "broker_accounts",
           "instance_config",
-          "live_order_pine_dedup"
+          "live_order_pine_dedup",
+          "server_mediated_orders"
         ],
         "closedLoopStatus": "not_collecting",
         "learningMode": "deterministic_instrumented",
@@ -1848,6 +1851,7 @@
         "routes": [
           "/api/broker-accounts",
           "/api/broker-error-budget",
+          "/api/broker/fill-callback",
           "/api/live-order",
           "/api/strategy-assignments"
         ],
@@ -8506,7 +8510,8 @@
         "audit_log",
         "broker_accounts",
         "instance_config",
-        "live_order_pine_dedup"
+        "live_order_pine_dedup",
+        "server_mediated_orders"
       ],
       "closedLoopStatus": "not_collecting",
       "learningMode": "deterministic_instrumented",
@@ -8546,6 +8551,7 @@
       "routes": [
         "/api/broker-accounts",
         "/api/broker-error-budget",
+        "/api/broker/fill-callback",
         "/api/live-order",
         "/api/strategy-assignments"
       ],
