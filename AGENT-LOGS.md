@@ -10650,6 +10650,26 @@ Also restored Anam.ai persona during this session:
 
 ---
 
+### Session Log — 2026-06-23 claude (consolidation: land ~11 systems to main + strategy_lifecycle hardening)
+
+**Mission:** operator: "clean up GitHub then execute the plan" (harden strategy_lifecycle).
+
+**Consolidation (landed to main):**
+- Merged `origin/main` (11 extraction-100 commits) into `hardening/phase-0` — only 3 textual conflicts (index.ts boot hooks kept + main's TF_DISABLE_SCHEDULER; lifecycle regimeLabel kept HEAD's DB-fetch; AGENT-LOGS unioned).
+- Full `tsc` build was NEVER green on hardening/phase-0 (both sessions verified via vitest, which skips type-checking). 40 errors / 15 files fixed (4 parallel agents: null-coalesce observability labels, express Request/Response imports, dead `.catch` on void, porsager RowList has no `.rows`, audit_log `result` not `details`, typed test mocks). `npm run build` now exits 0.
+- Landed to `main` via fast-forward (PR #2 MERGED). Deleted 3 stale merged remote branches; kept `extraction/100pct-evidence` (4 unmerged commits).
+
+**strategy_lifecycle hardening (the gate to live capital — accuracy-validator audit found the cron path was fail-closed but the DIRECT path `_promoteStrategyInner` was fail-OPEN):**
+- F-1 PAPER→DEPLOY_READY evaluator catch → fail-CLOSED. F-2a SHADOW→PAPER direct → fail-CLOSED. F-2b cron SHADOW→PAPER grandfather (auto-promoted on MISSING shadow data) → removed, stays in SHADOW + audit. F-4 orchestrator B14/CPCV/WRC/SPA null-datum → fail-CLOSED by default, legacy escape behind `PROMOTION_GRANDFATHER_PRE_PASS_E` (default false). F-5 removed redundant standalone WFE 0.70 (orchestrator 0.80 governs). F-6 TESTING→PAPER B14 → fail-CLOSED. 239 lifecycle tests GREEN (36 new).
+
+**Known-facts updates / carry-forwards:**
+- `git add -A` SLIP: while the lifecycle agent ran, the shared index held the parallel session's pre-staged slumdawg/discord/railway work + a deletion of 3 `.claude/agents/*.md`. My `git add -A` swept them into the lifecycle commit (c502c93). The slumdawg/discord work is legit + retained on main; restored the 3 agent files (26fa5e5). REINFORCED: never `git add -A` — even when you think you're the sole session, the index can hold foreign staged content.
+- **F-3 NOT fully closed:** CANDIDATE→PAPER fast-track still skips SHADOW divergence (real caller backtest-service tier-qualified path w/ 4 gates). Preserved + documented; operator decision whether to add a mandatory shadow-evidence gate.
+- **PROMOTION_GRANDFATHER_PRE_PASS_E=false (default) now BLOCKS promotion of any strategy lacking CPCV/WRC/SPA/B14 data** — correct institutional posture, but when promotions begin, strategies must carry that evidence OR set the flag during migration. Document in .env.example.
+- F-7 (race audit pollution) deferred.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### `git add <paths>` + `git commit` is UNSAFE on the shared index — use `git commit -- <paths>` (pinned 2026-06-23)
