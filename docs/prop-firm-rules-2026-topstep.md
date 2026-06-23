@@ -311,6 +311,44 @@ single narrow residual is full-size positions HELD into a major news event (vs n
 
 ---
 
+## Risk Adjustments — Volatility Position Limits + Restricted-Symbol Scaling (ProjectX)
+
+During extreme volatility (expanding price limits, Velocity Logic halts, historic ranges,
+rapid sustained moves), Topstep **temporarily tightens position limits** on affected products
+(or halts mini+ contracts). Temporary, product-specific, Risk-Team-monitored; notified via
+email + dashboard banner + @AskTopstep on X. Lifted when volatility normalizes.
+
+**Current restricted limits** (by account size 50K / 100K / 150K):
+
+| Product | Combine / Express Funded / Pro | Live Funded (LFA) |
+|---|---|---|
+| Crude Oil (CL), QM, RB, HO | 3 / 6 / 9 | 3 / 6 / 9 |
+| **Micro Crude (MCL)** | **30 / 60 / 90** | **3 / 6 / 9** ← LFA much tighter |
+| Gold (GC) | 3 / 6 / 9 | 3 / 6 / 9 |
+| Micro Gold (MGC) | 30 / 60 / 90 | 5 / 10 / 15 |
+| Micro Silver (SIL), Micro Copper (MHG) | 2 / 4 / 6 | 2 / 4 / 6 |
+| Silver (SI), Copper (HG), Platinum (PL) | 0 (no trade) | 0 (no trade) |
+
+**Express Funded Scaling Plan (applies INDEPENDENTLY — actual limit = MIN(ceiling, balance tier))**
+for restricted symbols CL / QM / MCL / HO / RB / GC / MGC:
+
+| Account | Balance → contracts |
+|---|---|
+| 50K XFA | <$1,500 = 1 · $1,500 = 1 · $2,000 = 3 · $3,000 = 6 · $4,500 = 9 |
+| 100K XFA | <$1,500 = 1 · $1,500 = 2 · $2,000 = 3 · $3,000 = 6 |
+| 150K XFA | <$1,500 = 1 · $1,500 = 2 · $2,000 = 3 · $3,000 = 6 · $4,500 = 9 |
+
+**★ IMPACT ON OUR SIZING:** **MCL is the operator's only product on this restricted list**
+(MES/MNQ are equity-index — not restricted). Our pyramid base is **18 MCL** (CLAUDE.md §4),
+but on a Topstep XFA the restricted MCL cap + balance-scaling can be far lower — e.g. a fresh
+50K XFA below $1,500 balance is capped at **1 MCL**, and an LFA is capped at **3/6/9**. When
+the operator goes live on Topstep, `computeRiskDerivedContracts()` must add a Topstep
+restricted-symbol cap: `min(existing sizing, restricted_ceiling[symbol][accountSize],
+xfa_scaling_tier(balance))`. NOT needed on MFFU (different rules) and NOT for MES/MNQ.
+**Carry-forward — wire when the Topstep account opens** (deferred with the TopstepX connector).
+
+---
+
 ## Constants Used By Code
 
 ```
