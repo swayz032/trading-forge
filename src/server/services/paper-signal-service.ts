@@ -2268,6 +2268,66 @@ export async function evaluateSignals(
         { sessionId, symbol, side: pendingEntry.side, executionPrice: bar.close, contracts: pendingEntry.contracts },
         "FIX 1: Deferred entry filled — position opened at bar N+1 close",
       );
+
+      // ─── Server-Mediated Execution: Phase 0 entry routing ────────────────────
+      // Fire live order when SERVER_MEDIATED_EXECUTION_ENABLED=true and strategy
+      // is DEPLOYED or PILOT. Fire-and-forget: routing failure NEVER prevents
+      // paper position from persisting. Fill reconciliation = Phase 1.
+      // SHADOW guard enforced inside routeLiveEntry — this call is safe for all states.
+      {
+        const _smeLifecycleState = sessionConfig.lifecycleState ?? "";
+        const _smeFirmId = sessionRow.firmId ?? "";
+        const _smeContracts = deferredResult.position.contracts;
+        const _smeBarTs = typeof pendingEntry.signalBarTimestamp === "number"
+          ? new Date(pendingEntry.signalBarTimestamp).toISOString()
+          : typeof pendingEntry.signalBarTimestamp === "string"
+            ? pendingEntry.signalBarTimestamp
+            : undefined;
+        const _smeCorrelationId = pendingEntry.correlationId ?? null;
+        const _smeStrategyId = sessionConfig.strategyId ?? "";
+
+        import("./server-mediated-executor.js").then(async ({ routeLiveEntry, isServerMediatedExecutionEnabled }) => {
+          if (!isServerMediatedExecutionEnabled()) return; // fast-path: flag off
+
+          // Resolve broker accountId from firmId (first enabled account for this firm)
+          let _smeAccountId = "";
+          try {
+            const [_acct] = await db
+              .select({ accountId: brokerAccounts.accountId })
+              .from(brokerAccounts)
+              .where(and(eq(brokerAccounts.firmId, _smeFirmId), eq(brokerAccounts.enabled, true)))
+              .limit(1);
+            _smeAccountId = _acct?.accountId ?? "";
+          } catch (acctErr) {
+            logger.warn({ acctErr, sessionId, firmId: _smeFirmId }, "SME: broker account lookup failed (routing skipped)");
+            return;
+          }
+          if (!_smeAccountId) {
+            logger.warn({ sessionId, firmId: _smeFirmId }, "SME: no enabled broker account for firm (routing skipped)");
+            return;
+          }
+
+          return routeLiveEntry({
+            ctx: {
+              accountId: _smeAccountId,
+              lifecycleState: _smeLifecycleState,
+              sessionId,
+              strategyId: _smeStrategyId,
+              correlationId: _smeCorrelationId,
+            },
+            symbol,
+            side: pendingEntry.side as "long" | "short",
+            quantity: _smeContracts,
+            barTimestamp: _smeBarTs,
+          });
+        }).catch((smeErr: unknown) => {
+          logger.error(
+            { err: smeErr, sessionId, symbol, lifecycleState: sessionConfig.lifecycleState },
+            "SME: routeLiveEntry threw — paper position already open (isolated failure, no action required)",
+          );
+        });
+      }
+      // ─── End SME entry routing ────────────────────────────────────────────────
     } else {
       fillMiss = true;
       db.insert(paperSignalLogs).values({

@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { db } from "../db/index.js";
-import { paperSessions, paperPositions, paperTrades, strategies, shadowSignals, auditLog, macroSnapshots, skipDecisions, complianceRulesets, contractRolls } from "../db/schema.js";
+import { paperSessions, paperPositions, paperTrades, strategies, shadowSignals, auditLog, macroSnapshots, skipDecisions, complianceRulesets, contractRolls, brokerAccounts } from "../db/schema.js";
 import { writeLockoutFromKillEvent } from "./strategy-lockout-service.js";
 import { eq, and, isNull, desc, sql, inArray } from "drizzle-orm";
 import { broadcastSSE, PAPER_EXIT_EVENTS } from "../routes/sse.js";
@@ -2670,6 +2670,62 @@ async function callExitHandler(
   }
 }
 
+// ─── Server-Mediated Execution: context resolver (Phase 0) ───────────────────
+//
+// Resolves LiveExecutionContext from a paper position's sessionId.
+// Used by exit injection points in applyExitDecision().
+// Fail-soft: returns null when flag is off, state is non-live, or DB lookup fails.
+// All errors are swallowed — this must never affect paper simulation.
+async function _resolveSmeContextForExit(
+  sessionId: string,
+  positionId: string,
+): Promise<import("./server-mediated-executor.js").LiveExecutionContext | null> {
+  try {
+    const { isServerMediatedExecutionEnabled } = await import("./server-mediated-executor.js");
+    if (!isServerMediatedExecutionEnabled()) return null; // fast-path: flag off
+
+    // sessionId → firmId + strategyId
+    const [sess] = await db
+      .select({ strategyId: paperSessions.strategyId, firmId: paperSessions.firmId })
+      .from(paperSessions)
+      .where(eq(paperSessions.id, sessionId))
+      .limit(1);
+    if (!sess?.strategyId) return null;
+
+    // strategyId → lifecycleState
+    const [strat] = await db
+      .select({ lifecycleState: strategies.lifecycleState })
+      .from(strategies)
+      .where(eq(strategies.id, sess.strategyId))
+      .limit(1);
+    if (!strat) return null;
+
+    // firmId → accountId (first enabled broker account for this firm)
+    const firmId = sess.firmId ?? "";
+    if (!firmId) return null;
+    const [acct] = await db
+      .select({ accountId: brokerAccounts.accountId })
+      .from(brokerAccounts)
+      .where(and(eq(brokerAccounts.firmId, firmId), eq(brokerAccounts.enabled, true)))
+      .limit(1);
+    if (!acct?.accountId) return null;
+
+    return {
+      accountId: acct.accountId,
+      lifecycleState: strat.lifecycleState,
+      sessionId,
+      strategyId: sess.strategyId,
+      correlationId: null, // exit decisions don't carry a correlationId from signal chain
+    };
+  } catch (err) {
+    logger.warn(
+      { err, sessionId, positionId },
+      "SME: context resolution failed for exit routing (fail-soft, paper sim unaffected)",
+    );
+    return null;
+  }
+}
+
 /**
  * Apply an ExitDecision to an open position. Mutates DB state.
  * Returns true if the position was fully closed (TIME_STOP_FLATTEN).
@@ -2738,6 +2794,21 @@ async function applyExitDecision(
           "style_exit: TP1 filled — partial close executed",
         );
         broadcastSSE(PAPER_EXIT_EVENTS.TP1_FILLED, exitPayloadBase);
+        // SME Phase 0: fire live TP1 partial exit (fire-and-forget, isolated)
+        _resolveSmeContextForExit(pos.sessionId, pos.id).then((smeCtx) => {
+          if (!smeCtx) return;
+          return import("./server-mediated-executor.js").then(({ routeLiveExitPartial }) =>
+            routeLiveExitPartial({
+              ctx: smeCtx,
+              symbol: pos.symbol,
+              side: pos.side as "long" | "short",
+              quantity: contractsToClose,
+              exitType: "TP1",
+            })
+          );
+        }).catch((err: unknown) =>
+          logger.error({ err, positionId: pos.id }, "SME: TP1 exit routing failed (paper sim unaffected)")
+        );
       } else {
         // Fully closes (e.g. 1-contract position — close whole thing)
         await closePosition(pos.id, currentPrice, atr);
@@ -2749,6 +2820,21 @@ async function applyExitDecision(
           "style_exit: TP1 filled — full position closed",
         );
         broadcastSSE(PAPER_EXIT_EVENTS.TP1_FILLED, exitPayloadBase);
+        // SME Phase 0: full close = flatten
+        _resolveSmeContextForExit(pos.sessionId, pos.id).then((smeCtx) => {
+          if (!smeCtx) return;
+          return import("./server-mediated-executor.js").then(({ routeLiveFlatten }) =>
+            routeLiveFlatten({
+              ctx: smeCtx,
+              symbol: pos.symbol,
+              side: pos.side as "long" | "short",
+              quantity: contractsToClose,
+              flattenReason: "TP1_FULL_CLOSE",
+            })
+          );
+        }).catch((err: unknown) =>
+          logger.error({ err, positionId: pos.id }, "SME: TP1 full-close flatten routing failed (paper sim unaffected)")
+        );
         return true;
       }
       break;
@@ -2776,6 +2862,21 @@ async function applyExitDecision(
           "style_exit: TP2 filled — partial close executed (Style C runner remains)",
         );
         broadcastSSE(PAPER_EXIT_EVENTS.TP2_FILLED, exitPayloadBase);
+        // SME Phase 0: fire live TP2 partial exit (fire-and-forget, isolated)
+        _resolveSmeContextForExit(pos.sessionId, pos.id).then((smeCtx) => {
+          if (!smeCtx) return;
+          return import("./server-mediated-executor.js").then(({ routeLiveExitPartial }) =>
+            routeLiveExitPartial({
+              ctx: smeCtx,
+              symbol: pos.symbol,
+              side: pos.side as "long" | "short",
+              quantity: contractsToClose,
+              exitType: "TP2",
+            })
+          );
+        }).catch((err: unknown) =>
+          logger.error({ err, positionId: pos.id }, "SME: TP2 exit routing failed (paper sim unaffected)")
+        );
       } else {
         await closePosition(pos.id, currentPrice, atr);
         logger.info(
@@ -2786,6 +2887,21 @@ async function applyExitDecision(
           "style_exit: TP2 filled — full position closed",
         );
         broadcastSSE(PAPER_EXIT_EVENTS.TP2_FILLED, exitPayloadBase);
+        // SME Phase 0: full close = flatten
+        _resolveSmeContextForExit(pos.sessionId, pos.id).then((smeCtx) => {
+          if (!smeCtx) return;
+          return import("./server-mediated-executor.js").then(({ routeLiveFlatten }) =>
+            routeLiveFlatten({
+              ctx: smeCtx,
+              symbol: pos.symbol,
+              side: pos.side as "long" | "short",
+              quantity: contractsToClose,
+              flattenReason: "TP2_FULL_CLOSE",
+            })
+          );
+        }).catch((err: unknown) =>
+          logger.error({ err, positionId: pos.id }, "SME: TP2 full-close flatten routing failed (paper sim unaffected)")
+        );
         return true;
       }
       break;
@@ -2810,6 +2926,23 @@ async function applyExitDecision(
         "style_exit: BE stop applied — stop moved to break-even",
       );
       broadcastSSE(PAPER_EXIT_EVENTS.BE_STOP_MOVED, exitPayloadBase);
+      // SME Phase 0: fire live BE stop move (fire-and-forget, isolated)
+      if (new_stop != null) {
+        _resolveSmeContextForExit(pos.sessionId, pos.id).then((smeCtx) => {
+          if (!smeCtx) return;
+          return import("./server-mediated-executor.js").then(({ routeLiveExitModify }) =>
+            routeLiveExitModify({
+              ctx: smeCtx,
+              symbol: pos.symbol,
+              side: pos.side as "long" | "short",
+              newStopPrice: new_stop,
+              modifyType: "BE_MOVE",
+            })
+          );
+        }).catch((err: unknown) =>
+          logger.error({ err, positionId: pos.id }, "SME: BE_MOVE routing failed (paper sim unaffected)")
+        );
+      }
       break;
     }
 
@@ -2836,6 +2969,21 @@ async function applyExitDecision(
           "style_exit: trail tightened",
         );
         broadcastSSE(PAPER_EXIT_EVENTS.TRAIL_TIGHTENED, exitPayloadBase);
+        // SME Phase 0: fire live trail update (fire-and-forget, isolated)
+        _resolveSmeContextForExit(pos.sessionId, pos.id).then((smeCtx) => {
+          if (!smeCtx) return;
+          return import("./server-mediated-executor.js").then(({ routeLiveExitModify }) =>
+            routeLiveExitModify({
+              ctx: smeCtx,
+              symbol: pos.symbol,
+              side: pos.side as "long" | "short",
+              newStopPrice: new_stop,
+              modifyType: "TRAIL",
+            })
+          );
+        }).catch((err: unknown) =>
+          logger.error({ err, positionId: pos.id }, "SME: TRAIL update routing failed (paper sim unaffected)")
+        );
       }
       break;
     }
@@ -2863,6 +3011,24 @@ async function applyExitDecision(
         "style_exit: time-stop flatten executed at 15:55 ET",
       );
       broadcastSSE(PAPER_EXIT_EVENTS.TIME_STOP_FLATTENED, exitPayloadBase);
+      // SME Phase 0: fire live 15:55 flatten (fire-and-forget; closePosition already ran paper sim)
+      {
+        const _smeContractsAtFlatten = pos.contracts; // capture before close mutates
+        _resolveSmeContextForExit(pos.sessionId, pos.id).then((smeCtx) => {
+          if (!smeCtx) return;
+          return import("./server-mediated-executor.js").then(({ routeLiveFlatten }) =>
+            routeLiveFlatten({
+              ctx: smeCtx,
+              symbol: pos.symbol,
+              side: pos.side as "long" | "short",
+              quantity: _smeContractsAtFlatten,
+              flattenReason: "TIME_STOP_1555",
+            })
+          );
+        }).catch((err: unknown) =>
+          logger.error({ err, positionId: pos.id }, "SME: TIME_STOP_FLATTEN routing failed (paper sim unaffected)")
+        );
+      }
       return true;
     }
 
