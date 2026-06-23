@@ -2729,39 +2729,22 @@ export class LifecycleService {
               // survival_twin.passed=false → HARD block.
               const survivalTwin = b14Gate.survival_twin as Record<string, unknown> | undefined;
 
-              // 40% single-day consistency cap check (Topstep documented rule).
-              // If any single backtest day's P&L > 40% of payout-window total P&L → violation.
-              let consistencyViolation = false;
-              if (latestBtForB14.resultExtras) {
-                const extras = latestBtForB14.resultExtras as Record<string, unknown>;
-                const dailyPnls = (extras.daily_pnls ?? extras.daily_pnl_series) as Record<string, number> | number[] | undefined;
-                if (dailyPnls) {
-                  const pnlValues = Array.isArray(dailyPnls)
-                    ? dailyPnls
-                    : Object.values(dailyPnls as Record<string, number>);
-                  const positiveDays = pnlValues.filter((v) => v > 0);
-                  const windowTotal = positiveDays.reduce((a, b) => a + b, 0);
-                  if (windowTotal > 0) {
-                    const maxDay = Math.max(...positiveDays);
-                    const maxDayPct = maxDay / windowTotal;
-                    if (maxDayPct > 0.40) {
-                      consistencyViolation = true;
-                      logger.warn(
-                        { strategyId: s.id, maxDayPct: maxDayPct.toFixed(3), windowTotal },
-                        "B14: 40% single-day consistency violation detected",
-                      );
-                    }
-                  }
-                }
-              }
+              // Hardening 2026-06-22 (F-4): REMOVED the full-history daily-P&L consistency
+              // reimplementation (max/sum over entire backtest history). That check used the
+              // wrong denominator (aggregate not per-payout-cycle) and was redundant with the
+              // authoritative consistency_fail_rate that Python now exposes per-firm in
+              // probability_of_ruin_ci.per_firm (sliding-window, MC-simulated, firm-rule-aware).
+              //
+              // The payout-denial check is now enforced by evaluateB14CiGate() reading
+              // per_firm.*.consistency_fail_rate from riskMetrics.probability_of_ruin_ci.per_firm
+              // and blocking when worst-firm rate > B14_PAYOUT_DENIAL_THRESHOLD (default 0.10).
+              // That check runs in the CI gate block below, which is always evaluated.
 
-              const b14Failed = (survivalTwin && survivalTwin.passed === false) || consistencyViolation;
+              const b14Failed = (survivalTwin && survivalTwin.passed === false);
               if (b14Failed) {
-                const blockReason = consistencyViolation
-                  ? "b14_consistency_40pct_violation"
-                  : "b14_survival_twin_failed";
+                const blockReason = "b14_survival_twin_failed";
                 logger.warn(
-                  { strategyId: s.id, blockReason, survivalTwin, consistencyViolation, transition: "PAPER→DEPLOY_READY" },
+                  { strategyId: s.id, blockReason, survivalTwin, transition: "PAPER→DEPLOY_READY" },
                   "B14 Survival Twin HARD gate BLOCKED PAPER→DEPLOY_READY promotion",
                 );
                 await db.insert(auditLog).values({
@@ -2774,7 +2757,6 @@ export class LifecycleService {
                   result: {
                     reason: blockReason,
                     survival_twin: survivalTwin ?? null,
-                    consistency_violation: consistencyViolation,
                     b14_hard_gate_enabled: true,
                   },
                   correlationId,
@@ -2789,8 +2771,10 @@ export class LifecycleService {
             // (legacy backtests pre-B14 don't have this data).
 
             // ── Wave 27.5 Pass B.2: B14 CI gate (probability_of_ruin_ci.ci_high) ──
-            // Reads the latest MC run for this backtest and evaluates ci_high against
-            // the institutional 0.40 threshold. Falls back to scalar for pre-Pass-A runs.
+            // Hardening 2026-06-22: threshold tightened 0.40 → 0.20; no-MC path now blocks
+            // fail-CLOSED (F-1); payout-denial from per_firm.consistency_fail_rate (F-4/E).
+            // Reads the latest MC run for this backtest and evaluates ci_high against threshold.
+            // Falls back to scalar for pre-Pass-A runs (scalar also fails-CLOSED if absent).
             if (latestBtForB14?.id) {
               const [latestMcForB14] = await db
                 .select({
@@ -2859,15 +2843,30 @@ export class LifecycleService {
                   );
                 }
               }
-              // No MC run at all for this backtest → fail-open (pre-MC strategies).
+              // No MC run at all for this backtest → evaluateB14CiGate(null,null) blocks
+              // fail-CLOSED per hardening 2026-06-22 (F-1). No fall-through needed.
             }
           } catch (b14Err) {
-            // Fail-open: B14 gate read failure is non-blocking (survival_twin is
-            // computed post-backtest; early strategies may not have the data yet).
+            // Hardening 2026-06-22 (F-2): DB hiccup in B14 gate must BLOCK promotion,
+            // not fall through silently. Pattern matches A7 signal-correlation gate catch.
             logger.warn(
               { strategyId: s.id, err: b14Err },
-              "B14 Survival Twin gate: read failed (non-blocking — promotion continues)",
+              "B14 Survival Twin gate: infrastructure error — blocking promotion (fail-closed)",
             );
+            await db.insert(auditLog).values({
+              action: "b14.gate_error_fail_closed",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "failure",
+              decisionAuthority: "gate",
+              input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+              result: { reason: "b14.gate_error_fail_closed", error: String(b14Err) },
+              correlationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "B14 fail-closed audit insert failed (non-blocking)");
+            });
+            strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+            continue;
           }
         } else {
           logger.warn(
@@ -2877,10 +2876,11 @@ export class LifecycleService {
         }
 
         // ── Wave 25 Item 5: B15 Parameter Robustness Battery gate: PAPER → DEPLOY_READY ──
-        // Advisory-only for 30 days (B15_BATTERY_ENABLED=false default).
+        // Hardening 2026-06-22 (F-5): default flipped from "false" → "true" (hard gate).
+        // Docs claimed HARD and operator requires institutional-grade. Env-overridable for rollback.
         // When B15_BATTERY_ENABLED=true, strategies that ran the battery and FAILED are HARD-blocked.
         // Strategies WITHOUT b15_battery data (pre-B15 backtests) are NEVER blocked — backward compat.
-        const b15HardGateEnabled = (process.env.B15_BATTERY_ENABLED ?? "false") === "true";
+        const b15HardGateEnabled = (process.env.B15_BATTERY_ENABLED ?? "true") === "true";
         try {
           const [latestBtForB15] = await db
             .select({ b15Battery: backtests.b15Battery })
