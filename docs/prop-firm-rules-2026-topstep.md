@@ -80,6 +80,25 @@ execution paths. **TopstepX API is the only permitted execution platform.**
   `required_platform = "topstepx"`. The broker router (B6 in Pass 2 Track 4)
   rejects any non-TopstepX execution attempt for Topstep accounts.
 
+**Integration spec for the direct-execution connector (DEFERRED until operator opens
+account; this is the build sheet for `broker-router.ts` TopstepX path, currently a stub):**
+- **Powered by ProjectX.** API Access is provisioned via ProjectX (dashboard.projectx.com),
+  billed separately from the Topstep subscription. Billing appears as **"Sim2Funded Solutions"**.
+- **Auth = OAuth with API key + username.** Generate the API key inside TopstepX (Settings ⚙️ →
+  API tab → Add API Key, which routes through ProjectX). Authenticate every request with the
+  **API key + your TopstepX username** (both required). Store the key in the Bitwarden vault
+  (`broker_accounts.api_key_vault_ref`), NEVER in code/.env-plaintext.
+- **Transport:** REST + WebSocket. Pull live + historical market data; place/execute orders.
+- **⚠️ Orders are FINAL** — no review, adjustment, or reversal. Reinforces our existing
+  contract: every order MUST flow through `routeOrder()` with the `killSwitch.isHaltedForProduction()`
+  FIRST-gate + idempotency (no duplicate sends) + the compliance gates already in this doc. A
+  buggy send is irreversible capital loss — fail-CLOSED on any uncertainty.
+- **No Topstep support** for API/coding/troubleshooting — refs: ProjectX Developer Docs,
+  Topstep Discord `#api-trading`, `dashboardapi@topstep.com`.
+- **Hedging note:** Topstep flags that API access affects hedging potential — our
+  `cross-account-hedge-gate.ts` (Tier 5.3.2) is the enforcement for the single-user
+  cross-account hedging prohibition this raises.
+
 ### 2. Personal Device Only — No VPS / VPN / Remote Desktop
 
 Topstep prohibits orders originating from cloud or remote infrastructure.
