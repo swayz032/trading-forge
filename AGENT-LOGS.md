@@ -4,6 +4,85 @@
 
 ---
 
+### Session Log — 2026-06-22 Paper-Trade Readiness Hardening Plan, Pass 1 MASTER CLOSE (security + cleanup sanity, 4 parallel subagents, 66 new vitest GREEN, system-map driftItems=[])
+
+**Mission:** Execute Pass 1 of the 8-pass paper-trade readiness hardening plan (`C:/Users/tonio/.claude/plans/i-want-you-to-giggly-naur.md`) closing the two live production HMAC bypasses, disambiguating PM2 vs NSSM, shipping migration 0170, completing `.env.example`, and wiring runDiscordFanoutAudit at boot.
+
+**Source audit:** `wf_06574188-392` deep audit of 13 dimensions / 65 candidate gaps → 50 confirmed/partial. Pass 1 closes 8 of those findings as ordered Sequence Step 1 + 2 + 3 + 7 in parallel.
+
+**4 parallel Wave-B-style subagents dispatched with `isolation: worktree` (all returned GREEN):**
+
+1. **paper-parity (Track A — Slumdawg HMAC)** — `agent-adc0f278e5a447771`
+   - NEW `src/server/slumdawg-hmac.ts` (4785B) — shared HMAC helper exporting `signSlumdawgRequest`, `verifySlumdawgHmac`, `isUnconfiguredSlumdawgSecret`, `SLUMDAWG_PLACEHOLDER_SECRET`. Canonical scheme: `HMAC-SHA256(secret, "${ts}:${path}") → hex`.
+   - `src/server/routes/slumdawg.ts` — dev-bypass at lines 29-35 REMOVED. Replaced with hard 503 mirroring `admin-frozen-policy-override.ts:99-107` (Wave 29 Pass B.2 pattern). Hard 503 fires when secret is unset OR equals the documented placeholder `slumdawg-rotate-me-after-first-deploy-2026-05-25`. NO `NODE_ENV` guard — same 503 in dev and prod. Audit row `slumdawg.webhook_secret_unconfigured` (warn) emitted non-blocking.
+   - `src/discord/bot.ts:917-919` — broken `createHash('sha256').update('${ts}.${body}.${secret}')` replaced with `signSlumdawgRequest(ts, '/ingest-youtube', secret)` from shared helper. Express mount strips `/api/admin/slumdawg`, so `req.path` is `/ingest-youtube`.
+   - NEW `src/server/routes/__tests__/slumdawg-hmac-parity.test.ts` — 21 tests covering: signer/validator round-trip parity, divergence from old broken scheme, placeholder rejection, timing-safe comparison, determinism, 503 response shape contract. All GREEN.
+   - `.env.example:463` — one-line comment added documenting rotation requirement and no-NODE_ENV bypass policy.
+
+2. **autonomous-readiness (Track B — PM2/NSSM disambiguation + RELAY_TOKEN scrub)** — `agent-ac7f82f06a87a33c1`
+   - **Decision LOCKED 2026-06-22:** NSSM canonical supervisor for `trading-forge-api` / `discord-bot` / `tower-relay-client`. PM2 retained ONLY for `openclaw-gateway`. Decision-lock comment added at top of `ecosystem.config.cjs`.
+   - `ecosystem.config.cjs` — GUTTED to only the `openclaw-gateway` block. Removed 4 PM2 app blocks (trading-forge-api, discord-bot, tower-relay-client, + duplicate). Hardcoded `RELAY_TOKEN` at former line 96 disappeared with the tower-relay-client block.
+   - `scripts/wave19-finalize-v2.ps1:15` — plaintext token `oeLdOMZOmgc0KqrVh1GjwgQD0uw4i3AhUVTMJZD2` scrubbed; replaced with `(Get-Content 'C:\Users\tonio\bin\relay-token.txt').Trim()`.
+   - `ecosystem-relay-client.cjs` — confirmed has exactly 1 tower-relay-client block (canonical) — no deletion needed (audit was a false-positive on "duplicate").
+   - `start-forge.bat` — line 12: stripped defunct `docker start docker-n8n-1 / docker-n8n-db-1 / docker-grafana-1` (n8n on Railway, Grafana gone). Line 29: removed `pm2 resurrect 2>nul || pm2 start ecosystem.config.cjs` resurrection trap. Line 55: replaced `localhost:5678/healthz` probe with Railway URL.
+   - `scripts/pre-vacation-preflight.ts:342` — `bin/install-nssm` (nonexistent) → `bin/nssm/win64/nssm.exe` in remediation text.
+   - `infra/credential-vault-setup.md` — updated PM2 startup notes to `--only openclaw-gateway` with NSSM clarification.
+   - **Operator action items (deferred — NOT this session's job):** (a) `pm2 delete trading-forge-api discord-bot tower-relay-client && pm2 save` on live tower AFTER confirming NSSM services running; (b) rotate RELAY_TOKEN end-to-end on Railway `tf-relay-production` env + `C:\Users\tonio\bin\relay-token.txt` + NSSM `AppEnvironmentExtra` for TowerRelayClient; (c) `pm2 restart openclaw-gateway && pm2 save` to reload pruned config.
+
+3. **backtest-core (Track C — Migration 0170 + .env.example + startup-config-check)** — `agent-a1cad2df5eba5955d`
+   - NEW migration `src/server/db/migrations/0170_live_order_pine_dedup.sql` — `CREATE TABLE IF NOT EXISTS live_order_pine_dedup (account_id uuid, strategy_id uuid, bar_timestamp timestamptz, action text, created_at timestamptz DEFAULT now())` + `UNIQUE INDEX idx_live_order_pine_dedup_key`. Closes the audit's blocker B3 (migration 0163 missing — live-order.ts:201 references a non-existent table; dedup helper fails-OPEN with `return true`). Idempotent via IF NOT EXISTS. New journal idx 173 in `_journal.json` (operator's branch HEAD had advanced beyond agent's worktree base; merged manually with conflict resolution preserving both branches' migrations 0168 + 0169).
+   - `src/server/db/schema.ts` — `liveOrderPineDedup` table definition appended with drizzle-orm types + uniqueIndex + index.
+   - `src/server/routes/live-order.ts:201` — docstring updated from "migration 0163" to "migration 0170" so future agents don't misdiagnose the gap as the audit caller did.
+   - `.env.example` — `TRADERSPOST_WEBHOOK_URL=your-url-here` placeholder REPLACED with commented block explaining Path A (per-strategy URL at TradingView alert) vs Path B (TF gateway URL). Added 3 new entries to Admin/HMAC section: `LIVE_ORDER_HMAC_SECRET`, `LIVE_ORDER_GATEWAY_URL`, `TRADING_FORGE_PUBLIC_URL` with documentation comments.
+   - `src/server/lib/startup-config-check.ts` — extended `checkStartupSecrets()` with 4 new checks: LIVE_ORDER_HMAC_SECRET (warn if unset/<32 chars), LIVE_ORDER_GATEWAY_URL (warn if unset, Path B fall-back to Path A), TRADING_FORGE_PUBLIC_URL (warn if unset), SLUMDAWG_WEBHOOK_SECRET (warn if unset/placeholder/<32 chars).
+   - NEW `src/server/lib/__tests__/startup-config-check-pass1.test.ts` — 21 tests covering each warn condition + valid values + placeholder Slumdawg secret. All GREEN.
+   - NEW `src/server/db/__tests__/migration-0170-smoke.test.ts` — 10 tests applying migration on pglite + inserting/selecting + unique index enforcement. All GREEN.
+
+4. **observability-reliability (Track D — Discord visibility)** — `agent-ac48d0558ca7cf803`
+   - `src/server/index.ts` — awaited fire-and-forget `runDiscordFanoutAudit()` call wired into boot sequence with `.catch(err => logger.warn(...))`. Production-status tile will now reflect real `discord_webhook_health` from boot, not the perpetual `'not_configured'` stale default.
+   - `src/server/scheduler.ts` — NEW cron `discord-fanout-audit-30min` registered (every 30 min, `_PIPELINE_GATE_EXEMPT`, lock-acquisition pattern, audit row per tick).
+   - `src/server/services/alert-service.ts:29-46` — `createAlert()` now routes warning-severity through `notification-service.notifyWarning` and info-severity through `notifyInfo` IN ADDITION TO the existing alerts-table INSERT + SSE broadcast. Warning + info bodies wrapped with `appendFamilyGradePostscript`. Critical-severity Discord path UNCHANGED.
+   - `src/server/services/broker-router.ts:80-86` (TradersPost circuit OPEN) + `:659-665` (credential-vault failure) `notifyCritical` bodies wrapped with `appendFamilyGradePostscript` — family-grade language "Tell Tony: ..." / "do nothing — orders are safely blocked, not silently mis-routed".
+   - `src/server/lib/metrics-registry.ts` — NEW Prometheus counter `tf_warning_severity_discord_routed_total{severity}` for Discord routing rate observability.
+   - NEW `src/server/services/__tests__/pass1-discord-visibility.test.ts` — 14 tests covering: createAlert warning/info routing, family-grade postscript content, critical-path isolation, Prometheus counter export, runDiscordFanoutAudit export + 3 states (not_configured, healthy, unreachable). All GREEN.
+
+**Architect close (this commit by parent claude):**
+- Merged 4 worktree branches back into `hardening/phase-0` via `git apply --3way` from worktree `git diff HEAD` patches. 1 conflict resolved manually in `_journal.json` (both branches added migrations after `0167`; agent's `0170` re-indexed to idx 173 above hardening/phase-0's 0168 + 0169). 1 conflict resolved manually in `alert-service.ts` imports (3-way merge kept both branches' `appendFamilyGradePostscript` + agent's `notifyWarning/notifyInfo/warningSeverityDiscordRoutedTotal`).
+- `docs/system-subsystem-registry.json` — registered new scheduler job `discord-fanout-audit-30min` under `observability_reliability` + new database table `live_order_pine_dedup` under `broker_abstraction_layer`. Closed both registry drift items.
+- `npm run system-map:sync` → re-generated `docs/system-topology.generated.json` + `docs/system-readiness.generated.json` + `Trading Forge System Map v2.md`.
+
+**Verification:**
+- `npm test -- slumdawg-hmac-parity startup-config-check-pass1 pass1-discord-visibility migration-0170-smoke --run` → **66 / 66 GREEN** across 4 new test files (21 + 21 + 14 + 10).
+- `npm run check:production-isolation` → exit 0, CLEAN.
+- `npm run check:2026-compliance` → exit 0, OK.
+- `npm run system-map:check` → exit 0, `status: ok`, `driftItems: []`.
+- Zero vitest regressions from new test files; pre-existing tsc errors on `lifecycle-service.ts` + `wave-b-paper-parity-pbo-regime-label.test.ts` (Wave B baseline) NOT touched by this pass.
+
+**Files changed (27 total, explicit-path staged, NEVER `-A`):**
+- M `.env.example`, `Trading Forge System Map v2.md`, `docs/system-readiness.generated.json`, `docs/system-subsystem-registry.json`, `docs/system-topology.generated.json`, `ecosystem.config.cjs`, `infra/credential-vault-setup.md`, `scripts/pre-vacation-preflight.ts`, `scripts/wave19-finalize-v2.ps1`, `src/discord/bot.ts`, `src/server/db/migrations/meta/_journal.json`, `src/server/db/schema.ts`, `src/server/index.ts`, `src/server/lib/metrics-registry.ts`, `src/server/lib/startup-config-check.ts`, `src/server/routes/live-order.ts`, `src/server/routes/slumdawg.ts`, `src/server/scheduler.ts`, `src/server/services/alert-service.ts`, `src/server/services/broker-router.ts`, `start-forge.bat`
+- A `src/server/db/__tests__/migration-0170-smoke.test.ts`, `src/server/db/migrations/0170_live_order_pine_dedup.sql`, `src/server/lib/__tests__/startup-config-check-pass1.test.ts`, `src/server/routes/__tests__/slumdawg-hmac-parity.test.ts`, `src/server/services/__tests__/pass1-discord-visibility.test.ts`, `src/server/slumdawg-hmac.ts`
+
+**Audit findings closed by this pass (8 of 50):**
+- `Real Bug #1` SLUMDAWG_WEBHOOK_SECRET dev-bypass active in production — CLOSED
+- `Real Bug #2` Discord-bot HMAC scheme DIFFERS from slumdawg.ts route validator — CLOSED
+- `Autonomy Gap #1` pm2 + NSSM duplicate supervision of trading-forge-api still live — CLOSED (code-side; operator action items remain for live-tower `pm2 delete`)
+- `Autonomy Gap #2` ecosystem.config.cjs PM2 resurrection trap reachable from start-forge.bat — CLOSED
+- `First-paper-trade Blocker #3` Migration 0163 missing — CLOSED (re-indexed to 0170)
+- `First-paper-trade Blocker #4` .env.example missing LIVE_ORDER_HMAC_SECRET / LIVE_ORDER_GATEWAY_URL / TRADING_FORGE_PUBLIC_URL + TRADERSPOST_WEBHOOK_URL placeholder rot — CLOSED
+- `High-Priority Wiring #7` runDiscordFanoutAudit defined but never invoked — CLOSED
+- `Observability Gap #1` Warning-severity alerts never reach Discord — CLOSED
+
+**Carry-forward for next session:**
+- **Operator action items** (not code carry-forward — these are live-tower changes the operator owns):
+  - Rotate `SLUMDAWG_WEBHOOK_SECRET` to ≥32-char random in tower `.env` + Railway tf-relay env + n8n credential. HMAC self-restart with new value per canonical curl (Unix seconds).
+  - Rotate `RELAY_TOKEN` end-to-end (Railway `tf-relay-production` env + `C:\Users\tonio\bin\relay-token.txt` + NSSM `AppEnvironmentExtra` for TowerRelayClient). The leaked value `oeLdOMZOmgc0KqrVh1GjwgQD0uw4i3AhUVTMJZD2` is now a dead credential — anyone could read it from git history.
+  - Run `pm2 delete trading-forge-api discord-bot tower-relay-client && pm2 save` on the live tower AFTER confirming NSSM services running (`sc query TradingForgeAPI TradingForgeDiscordBot TowerRelayClient` all RUNNING).
+  - Run `pm2 restart openclaw-gateway && pm2 save` to reload pruned ecosystem.config.cjs.
+- **Pass 2 (Pine Compiler Archetype Handler)** — L-effort, 3 calendar days. This is the next pass per the plan.
+- **In-progress parallel-session work** (NOT touched by this pass, intentionally preserved in working tree): `docs/institutional-evidence/transcript-extractor-llm-architecture-2026.md`, `package.json`, `package-lock.json`, `src/engine/skip_engine/calendar_filter.py`, `src/engine/tests/test_calendar_filter_blackout.py`, `src/engine/tests/test_economic_calendar.py`, `src/server/__tests__/hardening-2026-06-22-consistency-news-blackout.test.ts`, `src/server/lib/tier1-event-blackout.ts`, `scripts/check-ts-python-tier1-parity.ts`, `docs/extraction-100pct-evidence-plan-2026-06-22.md`. All Tier-1 economic event / news blackout work from a parallel session — left exactly as found.
+
+---
+
 ### Session Log — 2026-06-22 Wave B MASTER CLOSE (all 7 Wave A carry-forwards + 4 surfaced drift items closed, 6 subagents + architect close + close-out, pushed to main)
 
 **Mission:** Operator said "no carry forward" after Wave A close. Wave B closed every remaining item from the Wave A carry-forward list AND the 4 drift items surfaced by Wave A's proof_mode flip. Pushed everything to main as instructed.

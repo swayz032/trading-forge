@@ -339,7 +339,7 @@ async function checkNssmServiceRunning(deps: PreflightDeps): Promise<CheckResult
         status: "FAIL",
         detail: "sc.exe query failed (service not installed or permission denied).",
         remediation:
-          "Install / reinstall the NSSM TradingForgeAPI service (see ecosystem.config.cjs + bin/install-nssm).",
+          "Install / reinstall the NSSM TradingForgeAPI service (see bin/nssm/win64/nssm.exe — run nssm install TradingForgeAPI from admin shell).",
       };
     }
     if (!res.running) {

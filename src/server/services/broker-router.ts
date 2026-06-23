@@ -31,6 +31,7 @@ import type { IdempotencyKeyInputs } from "../integrations/traderspost/client.js
 import { buildWebhookPayload } from "../integrations/traderspost/webhook-builder.js";
 import type { WebhookSignal } from "../integrations/traderspost/webhook-builder.js";
 import { notifyCritical } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { killSwitch } from "../production/kill-switch.js";
 import { getEnabledFirms } from "./strategy-assignment-service.js";
 import { getFirmLimit, CONTRACT_CAP_MAX } from "../../shared/firm-config.js";
@@ -79,10 +80,14 @@ CircuitBreakerRegistry.setOnStateChange((name, _from, to) => {
     // Discord critical — operator must investigate.
     notifyCritical(
       "TradersPost Webhook Degraded",
-      `TradersPost circuit breaker OPENED after ${_tpCbFailureThreshold} consecutive ` +
-        `failures. All order routing for TradersPost accounts is fast-failing until the ` +
-        `breaker half-opens (~${Math.round(_tpCbCooldownMs / 1000)}s). ` +
-        `Check TradersPost status page and inspect audit_log for broker_router.traderspost_submission_failed rows.`,
+      appendFamilyGradePostscript(
+        `TradersPost circuit breaker OPENED after ${_tpCbFailureThreshold} consecutive ` +
+          `failures. All order routing for TradersPost accounts is fast-failing until the ` +
+          `breaker half-opens (~${Math.round(_tpCbCooldownMs / 1000)}s). ` +
+          `Check TradersPost status page and inspect audit_log for broker_router.traderspost_submission_failed rows.`,
+        "The TradersPost circuit is OPEN — orders are safely blocked.",
+        "Tell Tony: 'TradersPost is unreachable from the bot.' If you cannot reach him, do nothing — orders are safely blocked, not silently mis-routed.",
+      ),
       { circuitBreaker: TRADERSPOST_CIRCUIT_BREAKER_KEY, failureThreshold: _tpCbFailureThreshold },
     );
     // SSE so the dashboard surfaces the degradation immediately.
@@ -658,9 +663,13 @@ export async function routeOrder(
       // Payout-affecting: orders silently drop until vault is restored.
       notifyCritical(
         "Broker Credential Vault Failure",
-        `Credential load failed for account ${accountId} (firm: ${account.firmId}). ` +
-          `All order routing is BLOCKED for this account until the vault is restored. ` +
-          `Error: ${errorMsg}`,
+        appendFamilyGradePostscript(
+          `Credential load failed for account ${accountId} (firm: ${account.firmId}). ` +
+            `All order routing is BLOCKED for this account until the vault is restored. ` +
+            `Error: ${errorMsg}`,
+          "The trading account vault is locked — orders are safely blocked.",
+          "Tell Tony: 'The vault is locked.' If you cannot reach him, do nothing — orders are safely blocked, not silently mis-routed.",
+        ),
         { accountId, firmId: account.firmId, correlationId: correlationId ?? null },
       );
       broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...result, correlationId: correlationId ?? null });

@@ -9,10 +9,11 @@ Write-Host ""
 
 # [1] Set TowerRelayClient env vars (RELAY_SERVER, RELAY_TOKEN, RELAY_BACKEND)
 Write-Host "[1/5] Setting TowerRelayClient env vars..."
+$relayToken = (Get-Content 'C:\Users\tonio\bin\relay-token.txt').Trim()
 & $nssm set TowerRelayClient AppEnvironmentExtra `
     "NODE_ENV=production" `
     "RELAY_SERVER=wss://tf-relay-production.up.railway.app/__relay" `
-    "RELAY_TOKEN=oeLdOMZOmgc0KqrVh1GjwgQD0uw4i3AhUVTMJZD2" `
+    "RELAY_TOKEN=$relayToken" `
     "RELAY_BACKEND=http://localhost:4000" 2>&1 | Out-String | ForEach-Object { $_.TrimEnd() }
 Write-Host "  [OK]" -ForegroundColor Green
 

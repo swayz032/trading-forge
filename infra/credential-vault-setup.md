@@ -71,8 +71,8 @@ bw list folders | ConvertFrom-Json | Where-Object { $_.name -eq "TradingForge" }
 `$env:BW_SESSION = $(bw unlock --raw)` when the server needs to be restarted. The
 BW_SESSION can be set in the shell before launching Trading Forge via PM2/npm.
 
-**For PM2 startup:** set BW_SESSION in the shell before `pm2 start` or use
-`ecosystem.config.cjs` env block (never commit the token — rotate after session ends).
+**For PM2 startup:** set BW_SESSION in the shell before `pm2 start --only openclaw-gateway` or use
+`ecosystem.config.cjs` env block (PM2 manages openclaw-gateway ONLY — API/Discord/Relay run under NSSM; never commit secrets).
 
 ---
 
@@ -189,7 +189,7 @@ $env:BW_SESSION = $(bw unlock --raw)
 # Start Trading Forge — vault loads automatically
 npm start
 # or
-pm2 start ecosystem.config.cjs
+pm2 start ecosystem.config.cjs --only openclaw-gateway
 ```
 
 **Verify vault is active:**

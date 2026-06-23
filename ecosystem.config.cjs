@@ -1,7 +1,7 @@
 // PM2 Ecosystem Config — Trading Forge Auto-Pilot
-// Manages: API server, Discord bot, OpenClaw gateway
-// All services auto-restart on crash with exponential backoff.
-// Usage: pm2 start ecosystem.config.cjs && pm2 save
+// API/Discord/Relay are NSSM services — do not add to PM2 (decision locked 2026-06-22 per audit wf_06574188-392).
+// PM2 manages ONLY: openclaw-gateway
+// Usage: pm2 start ecosystem.config.cjs --only openclaw-gateway && pm2 save
 
 const path = require("path");
 
@@ -9,55 +9,6 @@ const PROJECT_DIR = "C:\\Users\\tonio\\Projects\\trading-forge\\trading-forge";
 
 module.exports = {
   apps: [
-    // ─── Trading Forge API (port 4000) ──────────────────────
-    {
-      name: "trading-forge-api",
-      script: "node_modules/tsx/dist/cli.mjs",
-      args: "src/server/index.ts",
-      cwd: PROJECT_DIR,
-      interpreter: "node",
-      windowsHide: true,
-      env: {
-        NODE_ENV: process.env.NODE_ENV || "production",
-        PORT: process.env.PORT || "4000",
-      },
-      // Restart policy
-      autorestart: true,
-      max_restarts: 20,
-      min_uptime: "10s",
-      restart_delay: 2000,         // 2s base delay
-      exp_backoff_restart_delay: 1000, // Exponential backoff starting at 1s
-      max_memory_restart: "1G",
-      // Logging
-      log_date_format: "YYYY-MM-DD HH:mm:ss",
-      error_file: path.join(PROJECT_DIR, "logs/api-error.log"),
-      out_file: path.join(PROJECT_DIR, "logs/api-out.log"),
-      merge_logs: true,
-    },
-
-    // ─── Discord Bot (port 4100) ────────────────────────────
-    {
-      name: "discord-bot",
-      script: "node_modules/tsx/dist/cli.mjs",
-      args: "src/discord/bot.ts",
-      cwd: PROJECT_DIR,
-      interpreter: "node",
-      windowsHide: true,
-      env: {
-        NODE_ENV: process.env.NODE_ENV || "production",
-      },
-      autorestart: true,
-      max_restarts: 20,
-      min_uptime: "10s",
-      restart_delay: 3000,
-      exp_backoff_restart_delay: 1500,
-      max_memory_restart: "512M",
-      log_date_format: "YYYY-MM-DD HH:mm:ss",
-      error_file: path.join(PROJECT_DIR, "logs/discord-error.log"),
-      out_file: path.join(PROJECT_DIR, "logs/discord-out.log"),
-      merge_logs: true,
-    },
-
     // ─── OpenClaw Gateway (port 18789) ──────────────────────
     {
       name: "openclaw-gateway",
@@ -81,30 +32,6 @@ module.exports = {
       log_date_format: "YYYY-MM-DD HH:mm:ss",
       error_file: path.join(PROJECT_DIR, "logs/openclaw-error.log"),
       out_file: path.join(PROJECT_DIR, "logs/openclaw-out.log"),
-      merge_logs: true,
-    },
-
-    // ─── Tower Relay Client (Railway Reverse Tunnel) ────────
-    {
-      name: "tower-relay-client",
-      script: "scripts/tower-relay-client.cjs",
-      cwd: PROJECT_DIR,
-      interpreter: "node",
-      windowsHide: true,
-      env: {
-        RELAY_SERVER: process.env.RELAY_SERVER || "wss://tf-relay-production.up.railway.app/__relay",
-        RELAY_TOKEN: process.env.RELAY_TOKEN || "oeLdOMZOmgc0KqrVh1GjwgQD0uw4i3AhUVTMJZD2",
-        RELAY_BACKEND: process.env.RELAY_BACKEND || "http://localhost:4000",
-      },
-      autorestart: true,
-      max_restarts: 999,
-      min_uptime: "10s",
-      restart_delay: 2000,
-      exp_backoff_restart_delay: 1000,
-      max_memory_restart: "256M",
-      log_date_format: "YYYY-MM-DD HH:mm:ss",
-      error_file: path.join(PROJECT_DIR, "logs/relay-error.log"),
-      out_file: path.join(PROJECT_DIR, "logs/relay-out.log"),
       merge_logs: true,
     },
   ],

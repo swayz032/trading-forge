@@ -366,3 +366,12 @@ export const lifecycleShadowPromotionsTotal = new Counter({
   labelNames: ["outcome"] as const,
   registers: [promRegistry],
 });
+
+// Pass 1 Track D: counts warning-severity alerts routed to Discord via notification-service.
+// Answers "how many non-critical alerts reached Discord?" on the observability dashboard.
+export const warningSeverityDiscordRoutedTotal = new Counter({
+  name: "tf_warning_severity_discord_routed_total",
+  help: "Total warning/info-severity createAlert() calls routed through notification-service to Discord",
+  labelNames: ["severity"] as const,
+  registers: [promRegistry],
+});

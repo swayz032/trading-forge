@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-06-23T01:59:09.182Z`.
+Updated automatically from the repo on `2026-06-23T02:37:46.891Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -12,12 +12,12 @@ Updated automatically from the repo on `2026-06-23T01:59:09.182Z`.
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `ci_gate, kill_switch, operator, operator_hmac_override, operator_invoke_for_cohort_validation, operator_opt_in_per_strategy, operator-approve, operator-halt-only, operator-only-recovery, tradingview_deploy`
 - API routes tracked: `74`
-- Scheduler jobs tracked: `95`
+- Scheduler jobs tracked: `96`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
 - Engine subsystems tracked: `28`
-- Database tables tracked: `104`
+- Database tables tracked: `105`
 
 ### Subsystem Runtime States
 - `active`: `63`
@@ -55,9 +55,9 @@ Updated automatically from the repo on `2026-06-23T01:59:09.182Z`.
 ### Registry Coverage
 - Registry subsystems tracked: `69`
 - Route coverage: `74/74`
-- Scheduler coverage: `95/95`
+- Scheduler coverage: `96/96`
 - Engine coverage: `28/28`
-- Database coverage: `104/104`
+- Database coverage: `105/105`
 - Autonomous subsystems with audit coverage: `62/62`
 - Autonomous subsystems with audit actions: `62/62`
 - Autonomous subsystems with telemetry evidence: `62/62`
@@ -335,6 +335,7 @@ Updated automatically from the repo on `2026-06-23T01:59:09.182Z`.
 - `deepar-validate`
 - `deployed-strategy-starvation-check`
 - `disabled-job-probe`
+- `discord-fanout-audit-30min`
 - `dlq-escalation`
 - `dlq-retry`
 - `drain-scouted-ideas-periodic`
@@ -501,6 +502,7 @@ Updated automatically from the repo on `2026-06-23T01:59:09.182Z`.
 - `lifecycle_shadow_signals`
 - `lifecycle_transitions`
 - `liquidity_levels`
+- `live_order_pine_dedup`
 - `llm_injection_attempts`
 - `macro_features`
 - `macro_regime_states`

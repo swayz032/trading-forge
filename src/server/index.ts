@@ -740,6 +740,19 @@ export const server = app.listen(port, () => {
     logger.info({ err }, "model-router import failed during appendix warm — non-blocking");
   });
 
+  // ─── Discord fanout audit boot probe (Pass 1 Track D) ────────────────────────
+  // Probes all configured Discord webhooks so production-status.ts reads
+  // "discord_webhook_health: healthy" instead of the false "not_configured"
+  // that appears when this function is never called. Fire-and-forget: any
+  // failure is logged as WARN but never blocks boot.
+  import("./services/discord-fanout-audit-service.js").then(({ runDiscordFanoutAudit }) => {
+    runDiscordFanoutAudit().catch((err) => {
+      logger.warn({ err }, "discord_fanout_audit_boot_failed");
+    });
+  }).catch((err) => {
+    logger.warn({ err }, "discord-fanout-audit import failed at boot (non-blocking)");
+  });
+
   // Start scheduled jobs (rolling Sharpe, pre-market prep, drift checks)
   import("./scheduler.js").then(({ initScheduler }) => {
     initScheduler();

@@ -69,6 +69,8 @@ import { runRegimeDriftDetector } from "./services/regime-drift-detector-service
 import { runAbComparisonWeeklyDigest } from "./services/ab-comparison-weekly-digest-service.js";
 // W0.1: Nightly off-tower database backup (hardware-failure safety net)
 import { runDbBackup } from "./services/db-backup-service.js";
+// Pass 1 Track D: Discord fanout audit — keeps _webhookHealth in sync every 30 min
+import { runDiscordFanoutAudit } from "./services/discord-fanout-audit-service.js";
 
 let initialized = false;
 
@@ -436,6 +438,11 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   // and live/backtest drift that may have triggered the pause in the first place.
   "daily-reconciliation",               // Phase 4C: 4:15 PM ET weekdays reconciliation
   "weekly-drift-detection",             // Phase 4C: Sunday 6:00 PM ET drift detection
+  // Pass 1 Track D: Discord fanout audit is observability — must probe webhooks even
+  // when the trading pipeline is paused. The health state it writes is read by
+  // production-status.ts; silencing it during a pause would cause false "not_configured"
+  // reports to the operator.
+  "discord-fanout-audit-30min",         // Pass 1 Track D: Discord webhook health probe
 ]);
 
 function _validateAllJobsScheduled(): void {
@@ -4958,6 +4965,26 @@ except Exception as e:
     }
   });
   _scheduledJobs.add("feed-silence-check");
+
+  // ─── Pass 1 Track D: Discord fanout audit every 30 min ─────────────────────
+  // Keeps _webhookHealth in production-status.ts accurate. Without this cron,
+  // the boot probe is the only read — health state goes stale after the first
+  // 30-minute window. Exempt from pipeline gate (observability, not trading).
+  registerJob("discord-fanout-audit-30min", 30 * 60 * 1000, async () => {
+    await runDiscordFanoutAudit();
+  });
+  cron.schedule("*/30 * * * *", async () => {
+    if (!_tryAcquireJobLock("discord-fanout-audit-30min")) return;
+    try {
+      const t0 = Date.now();
+      await withRetry("discord-fanout-audit-30min", SCHEDULER_JOBS["discord-fanout-audit-30min"].run, 1);
+      markJobRun("discord-fanout-audit-30min");
+      emitJobComplete("discord-fanout-audit-30min", Date.now() - t0);
+    } finally {
+      _releaseJobLock("discord-fanout-audit-30min");
+    }
+  });
+  _scheduledJobs.add("discord-fanout-audit-30min");
 
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every

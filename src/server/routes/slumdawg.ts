@@ -18,21 +18,66 @@
  * Wave 26 Pass G (2026-05-25) — Slumdawg Analyst integration.
  */
 import { Router, type Request, type Response, type NextFunction } from "express";
-import { createHmac, timingSafeEqual } from "crypto";
+import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
 import { db } from "../db/index.js";
+import { auditLog } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
+import {
+  isUnconfiguredSlumdawgSecret,
+  verifySlumdawgHmac,
+} from "../slumdawg-hmac.js";
 
 export const slumdawgRoutes = Router();
 
 // ─── HMAC auth gate ──────────────────────────────────────────────────────
-function requireSlumdawgAuth(req: Request, res: Response, next: NextFunction): void {
+//
+// SECURITY: No NODE_ENV bypass. The secret must be rotated before first use.
+// When SLUMDAWG_WEBHOOK_SECRET is unset or equals the documented placeholder,
+// every request returns HTTP 503 — in dev AND in prod. This is the only safe
+// default because the live tower .env shipped with the placeholder value.
+//
+// Pattern mirrors admin-frozen-policy-override.ts (Wave 29 Pass B.2) but
+// deliberately omits the `&& NODE_ENV === "production"` guard that file uses,
+// because the slumdawg route had an active bypass in the wild.
+async function requireSlumdawgAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   const secret = process.env.SLUMDAWG_WEBHOOK_SECRET;
-  if (!secret || secret === "slumdawg-rotate-me-after-first-deploy-2026-05-25") {
-    // Local-dev/first-boot escape: log loudly but pass through so operator can smoke test.
-    logger.warn({ route: req.path }, "SLUMDAWG_WEBHOOK_SECRET unset or default — auth bypassed for dev. ROTATE IT.");
-    return next();
+
+  // ── 503: Secret not configured or equals placeholder ──────────────────
+  if (isUnconfiguredSlumdawgSecret(secret)) {
+    const correlationId = randomUUID();
+    logger.warn(
+      { route: req.path, correlationId },
+      "SLUMDAWG_WEBHOOK_SECRET unset or equals placeholder — returning 503. Rotate the secret before use.",
+    );
+    // Audit row (non-blocking — must not prevent the 503 from returning)
+    db.insert(auditLog)
+      .values({
+        action: "slumdawg.webhook_secret_unconfigured",
+        entityType: "paper_session",
+        status: "warning",
+        decisionAuthority: "system",
+        result: {
+          route: req.path,
+          detail: "SLUMDAWG_WEBHOOK_SECRET is unset or equals the placeholder. Rotate it per .env.example instructions.",
+          correlation_id: correlationId,
+        },
+        correlationId,
+      })
+      .catch((err) => {
+        logger.warn({ err, correlationId }, "slumdawg: webhook_secret_unconfigured audit insert failed (non-blocking)");
+      });
+    res.status(503).json({
+      error: "webhook_secret_unconfigured",
+      detail:
+        "SLUMDAWG_WEBHOOK_SECRET must be set to a ≥32-char random value before use. " +
+        "See .env.example for instructions. No NODE_ENV bypass exists — rotate the secret.",
+      correlationId,
+    });
+    return;
   }
+
+  // ── HMAC validation ───────────────────────────────────────────────────
   const sig = String(req.headers["x-slumdawg-signature"] ?? "");
   const ts  = String(req.headers["x-slumdawg-timestamp"] ?? "");
   if (!sig || !ts) {
@@ -44,8 +89,8 @@ function requireSlumdawgAuth(req: Request, res: Response, next: NextFunction): v
     res.status(401).json({ error: "timestamp_drift_exceeds_5min" });
     return;
   }
-  const expected = createHmac("sha256", secret).update(`${ts}:${req.path}`).digest("hex");
-  if (sig.length !== expected.length || !timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) {
+  const verified = verifySlumdawgHmac(sig, ts, req.path, secret!);
+  if (!verified.ok) {
     res.status(401).json({ error: "signature_mismatch" });
     return;
   }

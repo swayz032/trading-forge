@@ -9,7 +9,7 @@ echo.
 
 REM ─── Step 1: Ensure Docker containers are running ──────────────
 echo [1/4] Starting Docker containers...
-docker start docker-n8n-1 docker-n8n-db-1 forge-pgvector docker-grafana-1 2>nul
+docker start forge-pgvector 2>nul
 REM Ensure forge-pgvector is on n8n's network (for vector store access)
 docker network connect docker_default forge-pgvector 2>nul
 timeout /t 5 /nobreak >nul
@@ -26,7 +26,7 @@ echo.
 REM ─── Step 3: Resurrect PM2 services ───────────────────────────
 echo [3/4] Starting PM2 services...
 cd /d C:\Users\tonio\Projects\trading-forge\trading-forge
-pm2 resurrect 2>nul || pm2 start ecosystem.config.cjs
+pm2 resurrect 2>nul || (echo WARN: pm2 dump missing -- start openclaw-gateway via 'pm2 start ecosystem.config.cjs --only openclaw-gateway')
 timeout /t 8 /nobreak >nul
 echo       PM2 services started.
 echo.
@@ -52,7 +52,7 @@ curl -s -o nul -w "       Discord Bot (4100):         %%{http_code}" http://loca
 echo.
 
 REM n8n
-curl -s -o nul -w "       n8n (5678):                 %%{http_code}" http://localhost:5678/healthz
+curl -s -o nul -w "       n8n (Railway):              %%{http_code}" https://n8n-production-84ff.up.railway.app/healthz
 echo.
 
 echo.

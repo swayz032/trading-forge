@@ -1886,6 +1886,7 @@
       "data-integrity-suite",
       "deployed-strategy-starvation-check",
       "disabled-job-probe",
+      "discord-fanout-audit-30min",
       "dlq-escalation",
       "dlq-retry",
       "idempotency-cleanup",
@@ -2101,7 +2102,8 @@
     "database_tables": [
       "broker_accounts",
       "instance_config",
-      "audit_log"
+      "audit_log",
+      "live_order_pine_dedup"
     ],
     "learning_from": [],
     "learning_assets": [],

@@ -14,7 +14,8 @@ import { dirname } from "path";
 import express from "express";
 import pino from "pino";
 import { z } from "zod";
-import { createHash } from "crypto";
+import { createHash } from "node:crypto";
+import { signSlumdawgRequest } from "../server/slumdawg-hmac.js";
 import { commands, handleCommand } from "./commands.js";
 
 const log = pino({
@@ -911,12 +912,13 @@ client.on("messageCreate", async (msg) => {
     const ack = await msg.reply(slumdawgAck());
 
     // HMAC sign + POST to local ingest proxy (same box, same secret)
+    // Formula: HMAC-SHA256(key=secret, msg="${ts}:/ingest-youtube") → hex
+    // Path "/ingest-youtube" is what Express req.path sees after stripping the
+    // "/api/admin/slumdawg" mount prefix. Must match slumdawg.ts validator exactly.
     const secret = process.env.SLUMDAWG_WEBHOOK_SECRET || "";
     const ts = String(Math.floor(Date.now() / 1000));
     const body = JSON.stringify({ url });
-    const sig = secret
-      ? createHash("sha256").update(`${ts}.${body}.${secret}`).digest("hex")
-      : "";
+    const sig = signSlumdawgRequest(ts, "/ingest-youtube", secret);
 
     const resp = await fetch(`${FORGE_API}/api/admin/slumdawg/ingest-youtube`, {
       method: "POST",

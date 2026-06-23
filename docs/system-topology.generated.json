@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-23T01:59:09.182Z",
+  "generatedAt": "2026-06-23T02:37:46.891Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,11 +16,11 @@
   },
   "counts": {
     "routes": 74,
-    "schedulerJobs": 95,
+    "schedulerJobs": 96,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 28,
-    "databaseTables": 104,
+    "databaseTables": 105,
     "registrySubsystems": 69
   },
   "routes": [
@@ -133,6 +133,7 @@
     "deepar-validate",
     "deployed-strategy-starvation-check",
     "disabled-job-probe",
+    "discord-fanout-audit-30min",
     "dlq-escalation",
     "dlq-retry",
     "drain-scouted-ideas-periodic",
@@ -849,6 +850,7 @@
     "lifecycle_shadow_signals",
     "lifecycle_transitions",
     "liquidity_levels",
+    "live_order_pine_dedup",
     "llm_injection_attempts",
     "macro_features",
     "macro_regime_states",
@@ -971,9 +973,9 @@
     ],
     "coveredCounts": {
       "routes": 74,
-      "schedulerJobs": 95,
+      "schedulerJobs": 96,
       "engineSubsystems": 28,
-      "databaseTables": 104
+      "databaseTables": 105
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
@@ -1805,7 +1807,8 @@
         "dataCollectionCoverage": [
           "audit_log",
           "broker_accounts",
-          "instance_config"
+          "instance_config",
+          "live_order_pine_dedup"
         ],
         "closedLoopStatus": "not_collecting",
         "learningMode": "deterministic_instrumented",
@@ -3933,6 +3936,7 @@
           "data-integrity-suite",
           "deployed-strategy-starvation-check",
           "disabled-job-probe",
+          "discord-fanout-audit-30min",
           "dlq-escalation",
           "dlq-retry",
           "idempotency-cleanup",
@@ -8501,7 +8505,8 @@
       "dataCollectionCoverage": [
         "audit_log",
         "broker_accounts",
-        "instance_config"
+        "instance_config",
+        "live_order_pine_dedup"
       ],
       "closedLoopStatus": "not_collecting",
       "learningMode": "deterministic_instrumented",
@@ -10629,6 +10634,7 @@
         "data-integrity-suite",
         "deployed-strategy-starvation-check",
         "disabled-job-probe",
+        "discord-fanout-audit-30min",
         "dlq-escalation",
         "dlq-retry",
         "idempotency-cleanup",

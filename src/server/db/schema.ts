@@ -3161,3 +3161,39 @@ export const agentJobs = pgTable(
 
 export type AgentJob = typeof agentJobs.$inferSelect;
 export type NewAgentJob = typeof agentJobs.$inferInsert;
+
+// ─── live_order_pine_dedup ─────────────────────────────────────────────────────
+// Dedup table for Pine bar-close alerts arriving at live-order.ts.
+// Backed by migration 0170 (Pass 1 Track C, 2026-06-22).
+// The unique index on (account_id, strategy_id, bar_timestamp, action) lets the
+// route use INSERT … ON CONFLICT DO NOTHING + RETURNING id to distinguish a
+// first-seen alert from a replay without a SELECT-then-INSERT race.
+export const liveOrderPineDedup = pgTable(
+  "live_order_pine_dedup",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    accountId: uuid("account_id").notNull(),
+    strategyId: uuid("strategy_id").notNull(),
+    barTimestamp: timestamp("bar_timestamp", { withTimezone: true }).notNull(),
+    action: text("action").notNull(),
+    correlationId: uuid("correlation_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    // Unique key used by ON CONFLICT DO NOTHING in insertPineDedupRow().
+    dedupKey: uniqueIndex("idx_live_order_pine_dedup_key").on(
+      t.accountId,
+      t.strategyId,
+      t.barTimestamp,
+      t.action,
+    ),
+    // Fast lookup by account for cleanup / audit queries.
+    accountCreatedIdx: index("idx_live_order_pine_dedup_account").on(
+      t.accountId,
+      t.createdAt,
+    ),
+  }),
+);
+
+export type LiveOrderPineDedup = typeof liveOrderPineDedup.$inferSelect;
+export type NewLiveOrderPineDedup = typeof liveOrderPineDedup.$inferInsert;

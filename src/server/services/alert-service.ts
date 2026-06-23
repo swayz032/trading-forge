@@ -2,7 +2,9 @@ import { db } from "../db/index.js";
 import { alerts } from "../db/schema.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../index.js";
+import { notifyWarning, notifyInfo } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
+import { warningSeverityDiscordRoutedTotal } from "../lib/metrics-registry.js";
 
 export type AlertSeverity = "info" | "warning" | "critical";
 export type AlertType = "trade_signal" | "drawdown" | "regime_change" | "degradation" | "drift" | "decay" | "system" | "lifecycle";
@@ -41,8 +43,34 @@ export async function createAlert(params: {
       const isAbort = e instanceof Error && (e.name === "AbortError" || e.name === "TimeoutError");
       logger.warn({ err: e, timeout: isAbort }, "Failed to send Discord alert");
     }
+  } else if (params.severity === "warning") {
+    logger.warn({ alertId: alert.id, type: params.type }, `Alert (warning): ${params.title}`);
+    // Route warning-severity alerts through notification-service (batched Discord delivery).
+    // appendFamilyGradePostscript appends a plain-English block for non-technical family members.
+    notifyWarning(
+      params.title,
+      appendFamilyGradePostscript(
+        params.message,
+        `A warning was triggered: "${params.title}". The system detected an issue that needs attention but is not yet critical.`,
+        "Tell Tony: 'There is a warning alert in the trading system.' If you cannot reach him, the system is still safe — no orders are affected by a warning.",
+      ),
+      params.metadata,
+    );
+    warningSeverityDiscordRoutedTotal.inc({ severity: "warning" });
   } else {
+    // severity === "info"
     logger.info({ alertId: alert.id, type: params.type }, `Alert: ${params.title}`);
+    // Route info-severity alerts through notification-service (immediate delivery).
+    notifyInfo(
+      params.title,
+      appendFamilyGradePostscript(
+        params.message,
+        `An informational update was triggered: "${params.title}". This is for operator awareness only.`,
+        "No action needed. This is just an update.",
+      ),
+      params.metadata,
+    );
+    warningSeverityDiscordRoutedTotal.inc({ severity: "info" });
   }
 
   return alert;

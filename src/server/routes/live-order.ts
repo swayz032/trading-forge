@@ -198,7 +198,7 @@ async function writeBlockedAuditRow(params: {
 // bar that triggered the alert — structurally unique per (account, strategy, bar, action).
 // We insert a dedup row with ON CONFLICT DO NOTHING, mirroring tradingview-webhook.ts.
 // Returns true iff this is the FIRST time we have seen this combination (not a dup).
-// Table live_order_pine_dedup must exist — created by migration 0163.
+// Table live_order_pine_dedup must exist — created by migration 0170.
 
 async function insertPineDedupRow(
   accountId: string,
