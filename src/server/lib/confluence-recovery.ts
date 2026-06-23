@@ -26,7 +26,11 @@ export interface RecoveredConfluence {
 // Small, STABLE recovery vocabulary (operator-specified). Each family is ONE unit regardless of
 // how many steps cite it — category-dedup prevents verbose strategies from inflating their score.
 const CATEGORY_PATTERNS: Array<{ category: string; canonical: string; rx: RegExp }> = [
-  { category: "fib_zone",        canonical: "vp_level_proximity",       rx: /\bfib|fibonacci|optimum zone|golden pocket|0\.?25\b|0\.?50\b|0\.?75\b|0\.?618|\b25%|\b50%|\b75%|\b61\.8|retrace/i },
+  // NOTE: bare "retrace"/"retracement" is DELIBERATELY excluded — it over-matches MA-pullback
+  // strategies (e.g. gdd: "price retraces into the 20 MA") that explicitly use NO Fibonacci.
+  // Require real Fib markers or explicit fractional zone levels (the 25/50/75% Gann quadrants
+  // SY2 actually teaches). Manual transcript audit 2026-06-23 caught the false positive.
+  { category: "fib_zone",        canonical: "vp_level_proximity",       rx: /\bfibonacci\b|\bfib\b|golden pocket|optimum zone|\b0\.?618\b|\b61\.8|\b0\.?382\b|\b38\.2|\b25%|\b50%|\b75%|0\.25 ?(-| to )?0\.75/i },
   { category: "liquidity",       canonical: "liquidity_target_clear",   rx: /liquidit|sweep|stop run|stop hunt|\braid\b|inducement/i },
   { category: "prior_level",     canonical: "liquidity_target_clear",   rx: /prior (day|daily|session|week)|\bpdh\b|\bpdl\b|\bpwh\b|\bpwl\b|naked poc|untouched|previous (day|session).{0,12}(high|low)/i },
   { category: "structure",       canonical: "market_structure_aligned", rx: /\bbos\b|choch|\bmss\b|break of structure|market structure|structural|trend(line| line)|higher (high|low)|lower (high|low)/i },
@@ -118,9 +122,34 @@ export function recoverConfluences(idea: IdeaLike): {
   }
   idea.confluence_factors = mergedFactors;
 
+  // IDENTITY DERIVATION (2026-06-23): when the (chunk-synthesized) concept_name is still generic —
+  // every fragment was "extracted_strategy" so synthesis had no specific name to pick (N7uP: a
+  // clearly VWAP+EMA strategy left unnamed → null entry_indicator → gate fails on identity even
+  // though content recovered to 9 steps) — derive a descriptive name from the dominant INDICATOR
+  // categories present. This is "capture in the speaker's words"-faithful (the name reflects the
+  // actual indicators taught) and routes downstream to the uncatalogued-archetype queue (W3.4),
+  // exactly like SY2's impulse_range_sweep / Gann box. NOT a gate change — the strategy still must
+  // be named + carry confluences; we're deriving the identity the model encoded in its steps.
+  const currentName = String(idea.concept_name ?? idea.name ?? "").trim();
+  const stillGeneric = !currentName || /^extracted(_strategy)?$/i.test(currentName);
+  if (stillGeneric) {
+    // Indicator-like families that legitimately NAME a strategy (ordered most→least defining).
+    const NAMERS = ["vwap", "moving_average", "macd", "bollinger", "vp_node", "order_block", "fib_zone"];
+    const presentNamers = NAMERS.filter((n) => seenCategories.has(n));
+    if (presentNamers.length > 0) {
+      const derived = presentNamers.slice(0, 3).join("_");
+      idea.concept_name = derived;
+      idea.name = derived;
+      if (!idea.entry_indicator || /^(unknown|null)?$/i.test(String(idea.entry_indicator).trim())) {
+        idea.entry_indicator = derived;
+      }
+    }
+  }
+
   return {
     recovered,
     explicit_count: explicitConfl.length,
     effective_count: (idea.confluences as unknown[]).length,
+    derived_name: stillGeneric ? String(idea.concept_name ?? "") : undefined,
   };
 }

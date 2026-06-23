@@ -1046,10 +1046,25 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       return;
     }
 
-    // W23G.7 — Chunked fallback: only when first pass is empty AND source is
-    // longer than the first-pass window. This prevents wasting 3 extra LLM calls
-    // when a short transcript genuinely contains no strategy.
-    if ((strategiesIn as unknown[]).length === 0 && markdown.length > CHUNKED_FALLBACK_THRESHOLD) {
+    // W23G.7 + THIN-RECHUNK (2026-06-23): escalate single-pass → chunked when the result is EMPTY
+    // *or THIN* on a substantial transcript. N7uP (11.5K, fit in one 12K window so NOT truncated)
+    // still produced a generic 2-step result — a single-pass attention failure on a genuinely rich
+    // VWAP+EMA+pre-market strategy. Chunking into overlapping 4K windows forces per-section
+    // attention + synthesis recovers the full step set. "Thin" = every candidate is generic-named
+    // OR <3 steps. Size guard (6K) preserves the original intent: don't burn extra LLM calls
+    // re-chunking a genuinely-short clip that simply contains no strategy.
+    const THIN_RECHUNK_MIN = 6_000;
+    const isThinResult = (arr: unknown[]): boolean => {
+      if (arr.length === 0) return true;
+      return arr.every((s) => {
+        const x = s as { concept_name?: string; name?: string; entry_sequence?: unknown[] };
+        const cn = (x.concept_name || x.name || "").trim();
+        const generic = !cn || /^extracted(_strategy)?$/i.test(cn);
+        const steps = Array.isArray(x.entry_sequence) ? x.entry_sequence.length : 0;
+        return generic || steps < 3;
+      });
+    };
+    if (isThinResult(strategiesIn as unknown[]) && markdown.length > THIN_RECHUNK_MIN) {
       extractionMode = "chunked_fallback";
       // E-CHUNK-DENSE (5-URL audit run-4, 2026-06-23): cover the FULL transcript in overlapping
       // 4K windows, not just start/mid/end. The old 3-sample missed ~23K of a 35K transcript, so
@@ -1066,9 +1081,14 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
         const res2 = await extractFromChunk(c);
         if (!res2 || res2 === NON_JSON_SENTINEL) continue;
         for (const s of (res2 as unknown[])) {
-          const cn = (s as { concept_name?: string }).concept_name || (s as { name?: string }).name || "";
-          if (seenConcepts.has(cn)) continue;
-          seenConcepts.add(cn);
+          const cn = ((s as { concept_name?: string }).concept_name || (s as { name?: string }).name || "").trim();
+          // Only dedup SPECIFIC concept names. Generic "extracted_strategy" fragments from different
+          // windows carry DIFFERENT content (different sections of the strategy) under the same
+          // label — collapsing them by name would discard the very fragments synthesis must union
+          // (the N7uP failure mode: all windows → "extracted_strategy" → deduped to 1 → no union).
+          const generic = !cn || /^extracted(_strategy)?$/i.test(cn);
+          if (!generic && seenConcepts.has(cn)) continue;
+          if (!generic) seenConcepts.add(cn);
           merged.push(s);
         }
       }
