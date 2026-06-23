@@ -954,7 +954,7 @@ export class LifecycleService {
               // s.regimeTrainedOn is available here because testingStrategies uses
               // db.select() which loads all columns. Lowercase "unknown" is distinct
               // from the old placeholder "UNKNOWN" so both states remain grep-able.
-              const regimeLabel = s.regimeTrainedOn ?? "unknown";
+              const regimeLabel = strategy.regimeTrainedOn ?? "unknown";
               pboBLocksTotal.labels({ regime: regimeLabel }).inc();
             } catch (_promErr) { /* non-blocking */ }
             try {

@@ -96,7 +96,7 @@ describe("PBO regime label — null and undefined fallback", () => {
     // in metrics history; uppercase "UNKNOWN" identifies pre-fix rows.
     expect(deriveRegimeLabel(null)).toBe("unknown");
     expect("unknown").not.toBe("UNKNOWN");
-    expect("unknown" === "UNKNOWN").toBe(false);
+    expect(("unknown" as string) === "UNKNOWN").toBe(false);
   });
 });
 
