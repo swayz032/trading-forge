@@ -774,16 +774,24 @@ export const server = app.listen(port, () => {
     logger.warn({ err }, "synthetic-regime-bank-service import failed at boot (non-blocking)");
   });
 
-  // Start scheduled jobs (rolling Sharpe, pre-market prep, drift checks)
-  import("./scheduler.js").then(({ initScheduler }) => {
-    initScheduler();
-    logger.info("Scheduler initialized");
-    // Wire typed agent event bus AFTER scheduler so cross-domain handlers
-    // can subscribe to lifecycle/risk/compliance/health events.
+  // Start scheduled jobs (rolling Sharpe, pre-market prep, drift checks).
+  // TF_DISABLE_SCHEDULER=true runs an API-only instance with NO crons — for an isolated
+  // second instance (e.g. extraction validation on a throwaway port) that must not
+  // double-fire the primary tower's scheduled jobs.
+  if (process.env.TF_DISABLE_SCHEDULER === "true") {
+    logger.warn("TF_DISABLE_SCHEDULER=true — scheduler NOT started (crons run on the primary instance only)");
     initAgentCoordination();
-  }).catch((err) => {
-    logger.warn({ err }, "Scheduler failed to initialize — cron jobs disabled");
-  });
+  } else {
+    import("./scheduler.js").then(({ initScheduler }) => {
+      initScheduler();
+      logger.info("Scheduler initialized");
+      // Wire typed agent event bus AFTER scheduler so cross-domain handlers
+      // can subscribe to lifecycle/risk/compliance/health events.
+      initAgentCoordination();
+    }).catch((err) => {
+      logger.warn({ err }, "Scheduler failed to initialize — cron jobs disabled");
+    });
+  }
 
   // ─── Track 3 completion audit record (written once, idempotent guard) ────────
   // trading-forge-architect signed off Track 3 — Stop/TP/Sizing Framework as

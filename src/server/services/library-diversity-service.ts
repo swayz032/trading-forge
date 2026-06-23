@@ -46,6 +46,11 @@ export interface LibraryDiversity {
   total: Partial<Record<School, number>>;
   /** ICT_HANDCODED share of DEPLOYED strategies (0–1). Should drop over time. */
   ictPct: number;
+  /** Total strategy ROWS — each concept fans to MES/MNQ/MCL, so this over-counts. */
+  totalRows: number;
+  /** Distinct strategy CONCEPTS (base name, symbol suffix stripped). The HONEST library size:
+   *  e.g. 40 concepts × 3 symbols ≈ 117 rows. Display this as the headline, rows as the subtitle. */
+  uniqueConcepts: number;
 }
 
 /**
@@ -196,13 +201,20 @@ export async function computeLibraryDiversity(): Promise<LibraryDiversity> {
     const rows = await db.select({
       lifecycleState: strategies.lifecycleState,
       config: strategies.config,
+      name: strategies.name,
     }).from(strategies);
 
     const byStage: Partial<Record<LifecycleStage, Partial<Record<School, number>>>> = {};
     const total: Partial<Record<School, number>> = {};
+    // E-COUNT (2026-06-22): distinct base-concept (symbol suffix stripped) — the honest
+    // library size. Each concept fans to MES/MNQ/MCL so raw row count over-counts ~3x.
+    const baseConcepts = new Set<string>();
 
     for (const row of rows) {
       const stage = row.lifecycleState as LifecycleStage;
+      if (typeof row.name === "string" && row.name.length > 0 && stage !== "GRAVEYARD" && stage !== "RETIRED") {
+        baseConcepts.add(row.name.toLowerCase().replace(/_(mes|mnq|mcl)_?/gi, "_"));
+      }
       // entry_indicator lives in config JSONB
       const cfg = row.config as Record<string, unknown> | null;
       const entryIndicator = typeof cfg?.entry_indicator === "string"
@@ -227,10 +239,10 @@ export async function computeLibraryDiversity(): Promise<LibraryDiversity> {
     const ictDeployed = deployedBucket["ICT_HANDCODED"] ?? 0;
     const ictPct = deployedTotal > 0 ? ictDeployed / deployedTotal : 0;
 
-    return { byStage, total, ictPct };
+    return { byStage, total, ictPct, totalRows: rows.length, uniqueConcepts: baseConcepts.size };
   } catch (err) {
     logger.error({ err }, "library-diversity-service: failed to compute diversity");
-    return { byStage: {}, total: {}, ictPct: 0 };
+    return { byStage: {}, total: {}, ictPct: 0, totalRows: 0, uniqueConcepts: 0 };
   }
 }
 

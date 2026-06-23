@@ -55,7 +55,7 @@ describe("Fix 1: Auto-promotion TESTING→PAPER gate bypass", () => {
       passed: true,
       reason: "ci_high within threshold",
       legacyFallback: false,
-      auditPayload: { ci_high: 0.3, threshold: 0.4 },
+      auditPayload: { point_estimate: 0.25, ci_low: 0.2, ci_high: 0.3, threshold: 0.4, blocked: false, legacy_ruin_scalar_fallback: false, ci_method: "BCa", n_resamples: 5000 },
     });
     const result = evaluateB14CiGate({ ci_high: 0.3 }, 0.25);
     expect(result.passed).toBe(true);
@@ -68,7 +68,7 @@ describe("Fix 1: Auto-promotion TESTING→PAPER gate bypass", () => {
       passed: false,
       reason: "ci_high exceeds threshold",
       legacyFallback: false,
-      auditPayload: { ci_high: 0.5, threshold: 0.4 },
+      auditPayload: { point_estimate: 0.45, ci_low: 0.4, ci_high: 0.5, threshold: 0.4, blocked: true, legacy_ruin_scalar_fallback: false, ci_method: "BCa", n_resamples: 5000 },
     });
 
     const result = evaluateB14CiGate({ ci_high: 0.5 }, 0.45);
@@ -149,7 +149,7 @@ describe("Fix 1: Auto-promotion TESTING→PAPER gate bypass", () => {
 
   it("all three gates pass when results are favorable", () => {
     vi.mocked(evaluateB14CiGate).mockReturnValue({
-      passed: true, reason: "ok", legacyFallback: false, auditPayload: { ci_high: 0.2 },
+      passed: true, reason: "ok", legacyFallback: false, auditPayload: { point_estimate: 0.15, ci_low: 0.1, ci_high: 0.2, threshold: 0.4, blocked: false, legacy_ruin_scalar_fallback: false, ci_method: "BCa", n_resamples: 5000 },
     });
     vi.mocked(evaluateWfeGate).mockReturnValue({
       passed: true, status: "passed", wfeOverall: 0.8, hardFloor: 0.70, warnFloor: 0.50, auditAction: null,

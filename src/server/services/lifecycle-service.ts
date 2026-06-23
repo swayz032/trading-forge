@@ -1069,8 +1069,9 @@ export class LifecycleService {
             // Wave 29 prod hardening: increment Prom counter + Discord escalation
             try {
               // Wave B Fix 2: label PBO block by regime.
-              // In _promoteStrategyInner we operate on strategy `id` only (no row preloaded).
-              // Fetch regimeTrainedOn from DB; fail-open to "unknown" to keep the counter non-blocking.
+              // In _promoteStrategyInner we operate on strategy `id` only (no row preloaded),
+              // so fetch regimeTrainedOn from DB (main's `strategy.regimeTrainedOn` is not in
+              // scope in this function). Fail-open to "unknown" to keep the counter non-blocking.
               let regimeLabel = "unknown";
               try {
                 const [stratRow] = await db.select({ regimeTrainedOn: strategies.regimeTrainedOn }).from(strategies).where(eq(strategies.id, id)).limit(1);

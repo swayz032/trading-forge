@@ -124,10 +124,10 @@ describe("Fix 2 — CPCV purge boundary alignment (Finding #16)", () => {
         const canonical = checkCpcvPurge(foldId, isEnd, oosStart);
         const delegate  = checkPurgeViolation(foldId, isEnd, oosStart);
         // Both should agree on violation/clean — content may differ in message format
-        expect(Boolean(delegate)).toBe(
-          Boolean(canonical),
+        expect(
+          Boolean(delegate),
           `Mismatch on foldId=${foldId}, isEnd=${isEnd}, oosStart=${oosStart}`,
-        );
+        ).toBe(Boolean(canonical));
       }
     });
   });

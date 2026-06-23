@@ -34,6 +34,48 @@ const PROJECT_ROOT = resolve(import.meta.dirname ?? ".", "../../..");
 // is not found in tags list.
 let OLLAMA_HEALTHY = true;
 
+// E-BOOT (2026-06-22): the test-inference probe was a single 15s call with NO keep_alive —
+// cold-loading a 7GB gemma4:e2b on 8GB VRAM during a busy boot (migrations + disk I/O)
+// routinely exceeds 15s, leaving OLLAMA_HEALTHY stuck false and routing extraction to the
+// forbidden cloud → null (the live-test root cause). This shared helper warm-loads the model
+// (keep_alive HOLDS it in VRAM so the subsequent extraction calls are warm), uses a 60s
+// timeout, and retries once. Used by both the boot probe and the runtime recheck.
+const BOOT_PROBE_MS = Number(process.env.TRANSCRIPT_EXTRACTOR_BOOT_PROBE_MS) || 60_000;
+const PROBE_KEEP_ALIVE = process.env.TRANSCRIPT_EXTRACTOR_KEEP_ALIVE || "30m";
+
+async function runTestInferenceProbe(
+  ollamaBase: string,
+  targetModel: string,
+): Promise<{ ok: boolean; error?: string }> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const probeRes = await fetch(`${ollamaBase}/api/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: targetModel,
+          prompt: '{"ok":true}',
+          format: "json",
+          stream: false,
+          keep_alive: PROBE_KEEP_ALIVE,
+          options: { num_predict: 8 },
+        }),
+        signal: AbortSignal.timeout(BOOT_PROBE_MS),
+      });
+      const probeData = (await probeRes.json()) as { response?: string; error?: string };
+      if (!probeRes.ok || probeData.error) {
+        if (attempt === 0) continue; // one retry
+        return { ok: false, error: probeData.error ?? `HTTP ${probeRes.status}` };
+      }
+      return { ok: true };
+    } catch (e) {
+      if (attempt === 0) continue; // one retry (e.g. first-call cold-load timeout)
+      return { ok: false, error: (e as Error).message };
+    }
+  }
+  return { ok: false, error: "probe_exhausted" };
+}
+
 /**
  * Whether TRANSCRIPT_EXTRACTOR_FORCE_CLOUD=true is set in the environment.
  * Operator panic-revert: flips primary back to gpt-5-mini without code change.
@@ -189,22 +231,11 @@ export async function checkTranscriptExtractorOllamaHealth(): Promise<void> {
     // Catches "memory layout cannot be allocated" errors that occur with older Ollama
     // versions (< 0.4.x) that list Gemma 4 in tags but cannot execute it.
     // 15s timeout — model cold-start can be slow but should not exceed 15s for a 2-token response.
-    const probeRes = await fetch(`${ollamaBase}/api/generate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: targetModel,
-        prompt: '{"ok":true}',
-        format: "json",
-        stream: false,
-      }),
-      signal: AbortSignal.timeout(15_000),
-    });
-    const probeData = await probeRes.json() as { response?: string; error?: string };
-    if (!probeRes.ok || probeData.error) {
+    const probe = await runTestInferenceProbe(ollamaBase, targetModel);
+    if (!probe.ok) {
       OLLAMA_HEALTHY = false;
       logger.warn(
-        { targetModel, ollamaBase, probeError: probeData.error ?? `HTTP ${probeRes.status}` },
+        { targetModel, ollamaBase, probeError: probe.error },
         "model-router: Ollama test-inference probe failed — transcript_extractor routing to cloud fallback (model cannot execute; check Ollama version ≥ 0.4.x for gemma4 support)",
       );
       return;
@@ -269,25 +300,14 @@ export async function recheckOllamaHealth(): Promise<{ healthy: boolean; reason?
     }
 
     // Phase 2: test-inference probe
-    const probeRes = await fetch(`${ollamaBase}/api/generate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: targetModel,
-        prompt: '{"ok":true}',
-        format: "json",
-        stream: false,
-      }),
-      signal: AbortSignal.timeout(15_000),
-    });
-    const probeData = await probeRes.json() as { response?: string; error?: string };
-    if (!probeRes.ok || probeData.error) {
+    const probe = await runTestInferenceProbe(ollamaBase, targetModel);
+    if (!probe.ok) {
       OLLAMA_HEALTHY = false;
       logger.warn(
-        { targetModel, ollamaBase, probeError: probeData.error ?? `HTTP ${probeRes.status}` },
+        { targetModel, ollamaBase, probeError: probe.error },
         "model-router: recheckOllamaHealth Phase 2 failed — test-inference probe failed",
       );
-      return { healthy: false, reason: probeData.error ?? `probe_http_${probeRes.status}` };
+      return { healthy: false, reason: probe.error ?? "probe_failed" };
     }
 
     OLLAMA_HEALTHY = true;

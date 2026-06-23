@@ -8,6 +8,8 @@ import { extractSpeakerConceptsFromTranscript } from "../lib/transcript-speaker-
 import { classifyMechanicPortability, explainRejectClass } from "../lib/mechanic-portability.js";
 import { runPass1VocabularyExtraction } from "../lib/two-pass-vocab-extractor.js";
 import { runCoverageGate } from "../lib/extraction-coverage-gate.js";
+import { runRecallPass } from "../lib/transcript-extractor-recall.js";
+import { runCoverageRepairLoop } from "../lib/extraction-coverage-repair.js";
 import { checkCompilabilityGate } from "../lib/extraction-quality-gate.js";
 import { runRobustnessTest } from "../services/robustness-service.js";
 import { db } from "../db/index.js";
@@ -1701,32 +1703,161 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       finalClassification = "futures_primary";
     }
 
+    // Layer 1 (E-RECALL 2026-06-22): wire the previously test-only recall tier into
+    // production. Gap-fill ideas[0] (primary_tool_setup via Q6, time/candle/instrument)
+    // BEFORE the coverage gate so the comparator sees the enriched extraction and the
+    // _recall_primary_tool_note annotation populates. Sequential, single GPU. Non-blocking.
+    try {
+      const recallTarget = ideas[0] as import("../lib/transcript-extractor-recall.js").PrimaryStrategyShape | undefined;
+      if (recallTarget) {
+        const recallRes = await runRecallPass(markdown, recallTarget);
+        if (!recallRes.failed && recallRes.appliedChanges.length > 0) {
+          ideas[0] = recallRes.patched as typeof ideas[0];
+          insertAuditRow({
+            action: "extraction.recall_applied",
+            entityType: "scout_extract",
+            entityId: null,
+            status: "info",
+            result: {
+              source_url: sourceUrl,
+              applied_changes: recallRes.appliedChanges,
+              lineage_key: extractionLineageKey,
+              video_id: _videoId,
+            },
+            correlationId,
+          }).catch(() => {});
+        }
+      }
+    } catch (recallErr) {
+      logger.warn(
+        { err: recallErr instanceof Error ? recallErr.message : String(recallErr), sourceUrl },
+        "scout-extract: recall pass threw (non-blocking — continuing without gap-fill)",
+      );
+    }
+
     // W3.1 — Coverage gate: enumerate what the speaker taught and cross-check
-    // against the extraction. Non-blocking — coverage failure is emitted as an
-    // observability signal only. W3.2 owns hard-drop / quarantine.
-    // We use the first extracted idea's entry_sequence + confluences as the
-    // representative extraction snapshot (multi-idea videos are rare and the
-    // first idea is always the primary strategy).
+    // against the extraction. Layer 3 (E-REPAIR) runs the bounded repair loop on a
+    // coverage_failed verdict BEFORE W3.2's quarantine. We use the first extracted
+    // idea's entry_sequence + confluences as the representative extraction snapshot.
     let coverageVerdictResult: import("../lib/extraction-coverage-gate.js").CoverageVerdict | null = null;
     try {
       const firstIdea = ideas[0] as import("../lib/extraction-coverage-gate.js").ExtractionSnapshot | undefined;
       if (firstIdea) {
         const { speakerItems, verdict } = await runCoverageGate(markdown, firstIdea);
-        coverageVerdictResult = verdict;
-        // Emit audit row for observability — non-blocking
+        let finalVerdict = verdict;
+        let repairRounds = 0;
+        let repairedItems: string[] = [];
+
+        // Layer 3 (E-REPAIR): if a PRIMARY speaker item is missing/shallow, run the bounded
+        // quote-grounded repair loop — feed the missing items + their verbatim quotes back to
+        // gemma, gap-fill merge, re-verify (free, same speakerItems). Residual misses fall
+        // through to the W3.2 quarantine below. Convergence is monotone + round-bounded.
+        if (verdict.verdict !== "pass") {
+          try {
+            const repair = await runCoverageRepairLoop({
+              transcript: markdown,
+              extraction: firstIdea,
+              speakerItems,
+              verdict,
+            });
+            finalVerdict = repair.verdict;
+            repairRounds = repair.rounds;
+            repairedItems = repair.repaired;
+            if (repair.rounds > 0) {
+              ideas[0] = repair.extraction as typeof ideas[0]; // repaired extraction flows downstream
+              insertAuditRow({
+                action: "extraction.coverage_repair_round",
+                entityType: "scout_extract",
+                entityId: null,
+                status: finalVerdict.verdict === "pass" ? "success" : "info",
+                result: {
+                  source_url: sourceUrl,
+                  rounds: repair.rounds,
+                  repaired: repair.repaired,
+                  coverage_pct_before: verdict.coverage_pct,
+                  coverage_pct_after: finalVerdict.coverage_pct,
+                  still_missing: finalVerdict.missing,
+                  still_shallow: finalVerdict.shallow,
+                  lineage_key: extractionLineageKey,
+                  video_id: _videoId,
+                },
+                correlationId,
+              }).catch(() => {});
+            }
+          } catch (repairErr) {
+            logger.warn(
+              { err: repairErr instanceof Error ? repairErr.message : String(repairErr), sourceUrl },
+              "scout-extract: coverage repair loop threw (non-blocking — using pre-repair verdict)",
+            );
+          }
+        }
+
+        // Layer 4 (E-NAMING 2026-06-22): on the COMPLETED (post-repair) extraction, replace a
+        // generic concept_name with one synthesized from the top PRIMARY speaker item so the
+        // graduator's deriveEntryIndicator routes it to a real archetype (e.g.
+        // gann_box_4h_continuation) instead of pooling into the sha256("extracted") junk bucket.
+        try {
+          if (speakerItems.length > 0) {
+            const idea0 = ideas[0] as Record<string, unknown>;
+            const currentConcept = typeof idea0.concept_name === "string" ? idea0.concept_name : "";
+            const currentName = typeof idea0.name === "string" ? idea0.name : "";
+            const isGeneric = (s: string) => !s || /^extracted(_strategy)?$/i.test(s);
+            if (isGeneric(currentConcept) && isGeneric(currentName)) {
+              const topPrimary = speakerItems.find((i) => i.emphasis_level === "primary") ?? speakerItems[0];
+              const slug = topPrimary.name
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "_")
+                .replace(/^_+|_+$/g, "")
+                .slice(0, 48);
+              if (slug.length >= 3) {
+                idea0.concept_name = slug;
+                idea0.name = slug;
+                // ensure entry_indicator non-null so the compilability gate + deriveEntryIndicator can route
+                const ei = typeof idea0.entry_indicator === "string" ? idea0.entry_indicator : "";
+                if (!ei) idea0.entry_indicator = slug;
+                insertAuditRow({
+                  action: "extraction.concept_named",
+                  entityType: "scout_extract",
+                  entityId: null,
+                  status: "info",
+                  result: {
+                    source_url: sourceUrl,
+                    synthesized_concept: slug,
+                    from_speaker_item: topPrimary.name,
+                    emphasis: topPrimary.emphasis_level,
+                    lineage_key: extractionLineageKey,
+                    video_id: _videoId,
+                  },
+                  correlationId,
+                }).catch(() => {});
+              }
+            }
+          }
+        } catch (nameErr) {
+          logger.warn(
+            { err: nameErr instanceof Error ? nameErr.message : String(nameErr), sourceUrl },
+            "scout-extract: Layer 4 naming threw (non-blocking — keeping prior concept_name)",
+          );
+        }
+
+        coverageVerdictResult = finalVerdict;
+        // Emit audit row for observability — non-blocking. Reflects the FINAL (post-repair) verdict.
         // W3.3: lineage_key added for replay/idempotency correlation.
         insertAuditRow({
           action: "extraction.coverage_evaluated",
           entityType: "scout_extract",
           entityId: null,
-          status: verdict.verdict === "pass" ? "success" : "info",
+          status: finalVerdict.verdict === "pass" ? "success" : "info",
           result: {
             source_url: sourceUrl,
             speaker_items_found: speakerItems.length,
-            covered: verdict.covered,
-            missing: verdict.missing,
-            coverage_pct: verdict.coverage_pct,
-            verdict: verdict.verdict,
+            covered: finalVerdict.covered,
+            shallow: finalVerdict.shallow,
+            missing: finalVerdict.missing,
+            coverage_pct: finalVerdict.coverage_pct,
+            verdict: finalVerdict.verdict,
+            repair_rounds: repairRounds,
+            repaired_items: repairedItems,
             lineage_key: extractionLineageKey,
             video_id: _videoId,
             transcript_hash: _transcriptHash,
@@ -1739,15 +1870,17 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
             "scout-extract: coverage_evaluated audit insert failed (non-blocking)",
           );
         });
-        if (verdict.verdict === "coverage_failed") {
+        if (finalVerdict.verdict === "coverage_failed") {
           logger.warn(
             {
               sourceUrl,
-              missing: verdict.missing,
-              coverage_pct: verdict.coverage_pct,
+              missing: finalVerdict.missing,
+              shallow: finalVerdict.shallow,
+              coverage_pct: finalVerdict.coverage_pct,
+              repair_rounds: repairRounds,
               speaker_items: speakerItems.map((i) => `${i.name} [${i.emphasis_level}]`),
             },
-            "scout-extract W3.1: coverage_failed — primary speaker tool missing from extraction (W3.2 will quarantine)",
+            "scout-extract: coverage_failed AFTER repair — primary speaker tool still missing (W3.2 will quarantine)",
           );
         }
       }

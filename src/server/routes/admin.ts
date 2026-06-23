@@ -492,7 +492,7 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
       }
 
       // 3. Run through scout-extract (same pipeline as autonomous cron uses)
-      let extractResult: { extracted?: boolean; ideas?: Array<Record<string, unknown>>; reason?: string; gemma_saw?: string[]; gemma_saw_count?: number };
+      let extractResult: { extracted?: boolean; ideas?: Array<Record<string, unknown>>; reason?: string; gemma_saw?: string[]; gemma_saw_count?: number; compilability_results?: Array<{ ideaIndex: number; compilable: boolean }> };
       try {
         const resp = await fetch(`${BACKEND_URL}/api/agent/scout-extract`, {
           method: "POST",
@@ -529,6 +529,33 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
           ...(extra.gemma_saw_count != null ? { gemma_saw_count: extra.gemma_saw_count } : {}),
         });
         continue;
+      }
+
+      // ─── E-INGEST-GATE (2026-06-22) — compilability gate on the persist path ──
+      // The operator-ingest path previously persisted EVERY extracted idea into a bucket,
+      // in parallel with scout-extract's W3.2 quarantine — so incomplete/quarantined
+      // extractions still pooled into the sha256("extracted")=c25828a8 junk bucket.
+      // Drop ideas that failed the scout-extract compilability gate BEFORE the merge/persist
+      // (indices align with the pre-merge ideas array). Layer 4 naming already gives compilable
+      // ideas a real concept_name so their fingerprint no longer collides into c25828a8.
+      {
+        const compResults = extractResult.compilability_results;
+        if (Array.isArray(compResults) && compResults.length > 0) {
+          const compilableIdx = new Set(compResults.filter((c) => c.compilable).map((c) => c.ideaIndex));
+          const before = extractResult.ideas?.length ?? 0;
+          extractResult.ideas = (extractResult.ideas ?? []).filter((_, i) => compilableIdx.has(i));
+          const dropped = before - extractResult.ideas.length;
+          if (dropped > 0) {
+            req.log?.warn?.(
+              { video_id: videoId, dropped, kept: extractResult.ideas.length },
+              "operator-ingest: dropped non-compilable ideas — not persisted (W3.2 quarantine owns them)",
+            );
+          }
+          if (extractResult.ideas.length === 0) {
+            results.push({ url, video_id: videoId, title, status: "quarantined", reason: "all_ideas_failed_compilability" });
+            continue;
+          }
+        }
       }
 
       // ─── Wave 26 Pass H1 (2026-05-26) Bug 1 — Multi-Layer Archetype Merge ──

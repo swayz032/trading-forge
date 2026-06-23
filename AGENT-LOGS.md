@@ -10625,6 +10625,28 @@ Also restored Anam.ai persona during this session:
 **Known-facts updates:** only ONE LLM key needed for NeMo = NVIDIA (NeMo Data Designer is API-orchestration via build.nvidia.com, NOT a local GPU model — VRAM irrelevant; the local stochastic stack does the rendering free). OpenAI key is unrelated (scout/extraction). NeMo emoji logs crash on Windows cp1252 → force UTF-8 for any Data Designer call.
 
 **Carry-forward:** rotate the NVIDIA key eventually (pasted in chat); `runSyntheticRegimeBankPopulate` passes use_nemo=true (NeMo) — confirm the weekly cron config does too; self-heal currently empty-only (staleness branch is count==0). Branch reconciliation with feature/deep-analysis-pipeline still pending.
+### Session Log — 2026-06-22 claude (W1 live-order gateway + W3 extraction overhaul + build fix)
+
+**Mission:** Execute the institutional-grade hardening plan in team mode (this session, separate from the parallel "Wave A/B" agent which owns gates/MC/compliance). My lane per `feedback_strategy_factory_ownership`: the live-order gateway + the Slumdawg extraction factory.
+
+**Work completed (all merged to `main`, all GREEN):**
+- **Phase 0** (earlier this session): W0.1 off-tower DB backup (S3 cron, 17/17), W0.2 CI hard-gates wired + eslint ERESOLVE fixed + system-map driftItems:[], W0.3 genuine typecheck floor (tsc=0, scripts re-included, @ts-ignore 121→38).
+- **W1 — TF Order Gateway (the #1 critical fix):** `src/server/routes/live-order.ts` (`POST /api/live-order`) makes `routeOrder()` a real production caller — kill-switch HALT provably blocks a live fill (8/8 e2e). + static-token auth (Pine can't HMAC per-payload) + Pine-URL emission (`webhook-builder` emits gateway URL when `LIVE_ORDER_GATEWAY_URL` set) + dead-feed silence alarm (`feed-silence-service.ts` cron).
+- **W3 — Slumdawg extraction overhaul:** W3.1 recall/coverage gate (`extraction-coverage-gate.ts` — catches the silently-dropped Gann box; new recall Q6 primary-tool), W3.2 fail-closed quarantine + deterministic identity (`computeQuarantineFingerprintHash` kills the `sha256("extracted")` = c25828a8 junk-bucket collision), W3.3 OLLAMA runtime re-check (`POST /api/admin/ollama-health-recheck` + fail-loud→quarantine + extraction lineage key), W3.4 `gann_box_4h_continuation` engine archetype (SY2jXlW9bt4 now routes to a real archetype, not quarantine).
+- **Build fix:** resolved 7 tsc errors the parallel Wave A left in its test files (broker-router/wave-a-* test-type-only) that broke `npm run build` under noEmitOnError. tsc=0, build EXIT 0.
+
+**Verification:** On `main` (0c1ce0d): tsc=0, `npm run build` EXIT 0, production-isolation CLEAN, 2026-compliance OK, system-map `driftItems:[]` exit 0. Per-workstream vitest all GREEN (W1 8+21+16, W3.1 24, W3.2 28, W3.3 20, W3.4 27 pytest+33 vitest).
+
+**Coordination:** Ran every workstream in isolated git worktrees → merged to `main` (collision-safe with the parallel agent sharing the working tree). Stayed strictly off the parallel session's files (broker-router/scheduler/firm_config/mc_*/compliance/migrations). The parallel session completed the OTHER lane on `main`: W2.2 (consistency both firms + news blackout + MFFU correlation), W2.1 (auto-promo-gates), W4.1 (migrations), W5 (MC/PBO/DSR), plus an 18-HIGH+25-MED bug sweep + MTF look-ahead fix.
+
+**Known-facts updates (memories saved):** pre-live-by-design-not-a-gap; slumdawg-youtube-only-vs-n8n-crosssource; multi-symbol-split-mes-mnq-mcl-by-design.
+
+**Carry-forward (operator actions):**
+- Set `LIVE_ORDER_GATEWAY_URL` + `LIVE_ORDER_HMAC_SECRET` in prod `.env`; re-point exported Pine alerts at the gateway before live use.
+- Migration for `live_order_pine_dedup` table (W1 dedup is fail-open until it exists).
+- Branch protection on `main` (gh api command in W0.2 commit).
+- W4.2 single-supervisor (delete pm2 configs, keep NSSM) — operational, operator-run.
+- W0.1 live restore-test (dump→scratch DB→row counts).
 
 ---
 
