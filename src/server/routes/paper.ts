@@ -79,6 +79,29 @@ router.post("/start", idempotencyMiddleware, async (req, res) => {
       return;
     }
 
+    // Pass 5 Track D.3: PAPER+ strategies must use TradersPost (paper-engine authority)
+    // The internal Massive-WS simulator is pre-PAPER only (CANDIDATE/TESTING)
+    const PAPER_PLUS_STATES = ["PAPER", "DEPLOY_READY", "PILOT", "DEPLOYED"];
+    if (PAPER_PLUS_STATES.includes(stratRow.lifecycleState)) {
+      await db.insert(auditLog).values({
+        action: "paper.start_refused_paper_state",
+        entityType: "strategy",
+        entityId: strategyId,
+        input: { strategyId, mode, lifecycleState: stratRow.lifecycleState, blocked_at: "POST /api/paper/start" },
+        result: { reason: "PAPER+ strategies use TradersPost as canonical journal — internal simulator is pre-PAPER only" },
+        status: "warn",
+        decisionAuthority: "system",
+        correlationId: req.id ?? null,
+      });
+      res.status(409).json({
+        error: "paper_start_refused_paper_state",
+        message: `Strategy is in ${stratRow.lifecycleState} state. PAPER+ strategies use TradersPost as the canonical paper journal. The internal simulator is for CANDIDATE/TESTING only.`,
+        lifecycleState: stratRow.lifecycleState,
+        blocked_at: "POST /api/paper/start",
+      });
+      return;
+    }
+
     const [session] = await db
       .insert(paperSessions)
       .values({ strategyId, startingCapital, currentEquity: startingCapital, config: config as import("../db/jsonb-shapes.js").PaperSessionConfigShape, mode, firmId: firmId ?? null })

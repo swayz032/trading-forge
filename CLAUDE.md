@@ -429,6 +429,8 @@ Topstep account (direct, no TradersPost middleware)
 
 ## §8. Paper Testing — TradingView is the Bot's Eye
 
+**Paper-engine authority (Pass 5, 2026-06-23):** For strategies in PAPER state or higher (PAPER → DEPLOY_READY → PILOT → DEPLOYED), the canonical paper-trade journal is TradersPost's broker tape — NOT the internal Massive-WS simulator. The internal simulator is pre-PAPER only (CANDIDATE/TESTING). On TESTING→PAPER transition, the internal stream is stopped via `stopStream(session.id)`. `POST /api/paper/start` rejects PAPER-state strategies with `paper.start_refused_paper_state` audit. This eliminates the dual-stream P&L drift the audit identified.
+
 Every new strategy paper-trades through TradingView's Strategy() panel for 3-5 days before going live.
 
 **Paper-trading workflow:**

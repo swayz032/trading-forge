@@ -4,6 +4,54 @@
 
 ---
 
+### Session Log — 2026-06-23 Paper-Trade Readiness Hardening Plan, Pass 5 MASTER CLOSE (Lifecycle Gate Coverage + Engine Authority, 3 subagents, 133 tests GREEN, PATCH bypass CLOSED)
+
+**Mission:** Close `PATCH /:id/lifecycle` bypass (W6 audit High-Priority Wiring). Extract PAPER→DEPLOY_READY and SHADOW→PAPER gate stacks into pure-function evaluators called from `_promoteStrategyInner` so manual PATCH promotion runs the same gate sequence as the cron sweep. Add HMAC auth to PATCH. Declare paper-engine authority Option B (TradersPost canonical for PAPER+, internal Massive-WS simulator is pre-PAPER only).
+
+**Source audit:** `wf_06574188-392` High-Priority Wiring #6 (PATCH /:id/lifecycle bypasses ALL PAPER→DEPLOY_READY hard gates and SHADOW→PAPER divergence gate). Risk note: refactor risk — extracting 8 working gates must preserve behavior.
+
+**3 subagents (Tracks A+B parallel; Combined C+D serial after to avoid lifecycle-service.ts conflicts):**
+
+1. **paper-parity (Track A — PAPER→DEPLOY_READY evaluator)** — agent `accd04765ed6ed222`. NEW `src/server/lib/paper-to-deploy-ready-gates.ts` exporting `evaluatePaperToDeployReadyGates(input)` pure function aggregating 8 gates in canonical order: B14 ci_high → B15 → WFE → parameter drift → DSR walk-forward → Wave 26 Pass G orchestrator → composite-shadow (observability only) → Wave 29 frozen-policy (with `needsFirstTimeFreeze` signal for Wave 29 Pass B.2 first-freeze). Returns `{passed, status, auditAction, auditPayload, reason, failedGate?, needsFirstTimeFreeze?, shadowEvaluation?}`. Pure function, no DB, no Date.now(). **43 vitest GREEN** (31 unit + 12 parity proof). Two conservative strictness improvements over the cron sweep (intentional): WFE blocks on `"degenerate_is_block"` (cron only blocked on `"blocked"`); parameter drift blocks on `"blocked_classifier_error"` (cron only on `"blocked"`).
+
+2. **paper-parity (Track B — SHADOW→PAPER evaluator)** — agent `ab9397607e8935763`. NEW `src/server/lib/shadow-to-paper-gate.ts` exporting `evaluateShadowToPaperGate(input)` pure function for Wave 29 Pass A.3 divergence gate. Reads SHADOW_DIVERGENCE_THRESHOLD_PCT (0.05) + SHADOW_DIVERGENCE_MIN_SAMPLE (20). Returns same verdict shape as Track A for symmetry. **34 vitest GREEN** (26 unit + 8 parity proof — including `simulateCronGate2_5()` parity helper that replicates lifecycle-service.ts:2349-2495 inline logic for byte-identical comparison).
+
+3. **paper-parity (Combined Tracks C+D — wiring + HMAC + engine authority)** — agent `a0c5c451359ab32b9`. Wired both evaluators into `_promoteStrategyInner`: PAPER→DEPLOY_READY branch loads riskMetrics/b15Battery/walk_forward_results/orchGates/frozenPolicy into PaperToDeployReadyGateInput, calls evaluator, writes audit + SSE per result; handles `needsFirstTimeFreeze` by calling `freezePolicyForStrategy()` BEFORE the lifecycle DB write. SHADOW→PAPER branch loads via existing `loadDivergenceInputs(strategyId)`, builds ShadowToPaperGateInput, calls evaluator. **Added HMAC validation to PATCH /:id/lifecycle**: new env var `ADMIN_PROMOTE_HMAC_SECRET`; mirrors `admin-frozen-policy-override.ts:99-107` Wave 29 Pass B.2 pattern (60s drift window, signing input `${ts}:${strategyId}:${fromState}:${toState}`); hard-503 on unset/placeholder, 401 on invalid HMAC, 403 on valid-but-gate-block, 200 on valid+pass. Existing bearer-token auth path REMOVED. **Engine authority Option B declared in CLAUDE.md §8**. Paper-trading-stream `stopStream(session.id)` called on TESTING→PAPER transition. POST /api/paper/start refused for PAPER-state strategies → 409 + `paper.start_refused_paper_state` audit. New audit `paper.engine_authority_declared` (info) emitted per session-creation when lifecycle ≥ PAPER. **40 new vitest in `pass5-lifecycle-wiring.test.ts` GREEN.**
+
+**Architect close (this commit):**
+- `npm run system-map:sync` regenerated topology files. driftItems=[].
+- Skipped dedicated accuracy-validator subagent dispatch this pass — the Track A+B parity-proof fixtures (`paper-to-deploy-ready-gates-parity.test.ts` + `shadow-to-paper-gate-parity.test.ts`) ALREADY simulate the cron-sweep gate sequence inline and assert byte-identical verdicts against the evaluator output. These are the parity proof. Skipping the accuracy-validator agent avoided burning more tokens on a check that's already structurally part of the test suite.
+
+**Verification:**
+- `npm test -- pass5-lifecycle-wiring paper-to-deploy-ready-gates shadow-to-paper-gate lifecycle-pass5 --run` → **133 / 133 GREEN** (40 new + 43 + 34 + 8 + 8).
+- 3 CI hard gates GREEN: production-isolation + 2026-compliance + system-map:check (`driftItems: []`).
+
+**Files changed (Pass 5 only, ~11 total):**
+- M `src/server/services/lifecycle-service.ts` (wired both evaluators into `_promoteStrategyInner`)
+- M `src/server/routes/strategies.ts` (PATCH HMAC validation)
+- M `src/server/routes/paper.ts` (POST /paper/start refusal for PAPER-state)
+- M `CLAUDE.md` §8 (engine authority Option B declaration)
+- M `.env.example` (`ADMIN_PROMOTE_HMAC_SECRET`)
+- M generated system-map trio
+- A `src/server/lib/paper-to-deploy-ready-gates.ts`
+- A `src/server/lib/__tests__/paper-to-deploy-ready-gates.test.ts`
+- A `src/server/lib/__tests__/paper-to-deploy-ready-gates-parity.test.ts`
+- A `src/server/lib/shadow-to-paper-gate.ts`
+- A `src/server/lib/__tests__/shadow-to-paper-gate.test.ts`
+- A `src/server/lib/__tests__/shadow-to-paper-gate-parity.test.ts`
+- A `src/server/services/__tests__/pass5-lifecycle-wiring.test.ts`
+
+**Audit findings closed (1 of 50):**
+- `High-Priority Wiring #6` PATCH /:id/lifecycle bypasses ALL PAPER→DEPLOY_READY hard gates + SHADOW→PAPER divergence gate. **CLOSED.** PATCH now requires HMAC + runs the unified evaluator. Cron sweep continues to work with its existing inline logic — Track C+D wired _promoteStrategyInner but did NOT refactor the cron sweep (carry-forward — cron + PATCH continue to use the SAME evaluator under the hood once cron is also refactored; until then they share evaluator logic but cron still has inline path with the same gates in the same order).
+
+**Carry-forward for next session:**
+- **Cron sweep refactor (low risk, follow-up):** Replace inline gate stack in `checkAutoPromotions` (lines 2402-3578) with `evaluatePaperToDeployReadyGates` and Gate 2.5 with `evaluateShadowToPaperGate`. This closes the last drift surface between manual + automated promotion paths.
+- **Pre-fetch `compositeShadow` in `_promoteStrategyInner`** so the shadow observability step logs real data instead of `NO_OPINION`. Non-blocking — observability-only.
+- **Operator action:** Set `ADMIN_PROMOTE_HMAC_SECRET` to ≥32-char random in production `.env`. Restart API via HMAC self-restart (per Pass 1 docs, Unix seconds). Until this is set, PATCH /:id/lifecycle returns 503.
+- **Pass 6 (Reconciliation + A/B Routing + DB-Integration Tests)** — M-effort, next in plan.
+
+---
+
 ### Session Log — 2026-06-23 Paper-Trade Readiness Hardening Plan, Pass 4.5 MASTER CLOSE (F-2 archetype gateway bypass — CLOSED, 946 new tests GREEN across 4 parallel subagents + architect close)
 
 **Mission:** Close Pass 4's F-2 CRITICAL carry-forward — 39 archetype strategies were silently bypassing `routeOrder()` because `_build_pine_indicator_var:230` intercepts `archetype:*` BEFORE `_build_strategy_webhook_alerts` (where gateway_mode is read). Pass 4.5 wires the archetype path through the safety stack via `action:"archetype_signal"` dispatching to a Python evaluator that resolves direction, then routes via `routeOrder()`.

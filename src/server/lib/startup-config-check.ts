@@ -209,6 +209,24 @@ export async function checkStartupSecrets(): Promise<{ warnings: string[] }> {
     }
   }
 
+  // ── ADMIN_PROMOTE_HMAC_SECRET (Pass 5 Track C) ────────────────────────────
+  // Required by PATCH /api/strategies/:id/lifecycle HMAC validation.
+  // Missing → route returns 401 on every manual lifecycle transition attempt.
+  {
+    const promoteSecret = process.env.ADMIN_PROMOTE_HMAC_SECRET;
+    if (!promoteSecret || promoteSecret.trim().length === 0) {
+      const msg =
+        "ADMIN_PROMOTE_HMAC_SECRET is NOT SET. " +
+        "PATCH /api/strategies/:id/lifecycle will reject all calls with HTTP 401. " +
+        "Set ADMIN_PROMOTE_HMAC_SECRET (≥32 random chars) in .env to enable manual lifecycle transitions.";
+      logger.warn({ env_var: "ADMIN_PROMOTE_HMAC_SECRET", affected_endpoints: ["PATCH /api/strategies/:id/lifecycle"] }, `[STARTUP WARN] ${msg}`);
+      warnings.push("ADMIN_PROMOTE_HMAC_SECRET_NOT_SET");
+    } else if (promoteSecret.trim().length < MIN_SECRET_LENGTH) {
+      logger.warn({ env_var: "ADMIN_PROMOTE_HMAC_SECRET", length: promoteSecret.trim().length }, `[STARTUP WARN] ADMIN_PROMOTE_HMAC_SECRET is set but shorter than recommended (${promoteSecret.trim().length} < ${MIN_SECRET_LENGTH}).`);
+      warnings.push("ADMIN_PROMOTE_HMAC_SECRET_TOO_SHORT");
+    }
+  }
+
   if (warnings.length === 0) {
     logger.info(
       {
@@ -218,6 +236,7 @@ export async function checkStartupSecrets(): Promise<{ warnings: string[] }> {
           "LIVE_ORDER_GATEWAY_URL",
           "TRADING_FORGE_PUBLIC_URL",
           "SLUMDAWG_WEBHOOK_SECRET",
+          "ADMIN_PROMOTE_HMAC_SECRET",
         ],
       },
       "startup-config-check: all required secrets configured",

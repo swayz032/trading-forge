@@ -404,6 +404,124 @@ export class LifecycleService {
       };
     }
 
+    // Pass 5 Track C: PAPER → DEPLOY_READY evaluator in _promoteStrategyInner
+    if (fromState === "PAPER" && toState === "DEPLOY_READY") {
+      try {
+        const { evaluatePaperToDeployReadyGates } = await import("../lib/paper-to-deploy-ready-gates.js");
+        // Load gate inputs
+        const correlationId = options.correlationId ?? randomUUID();
+        const [latestBtP2D] = await db.select({
+          id: backtests.id, walkForwardResults: backtests.walkForwardResults,
+          gateResult: backtests.gateResult, b15Battery: backtests.b15Battery,
+          wrcResult: backtests.wrcResult, spaResult: backtests.spaResult,
+        }).from(backtests).where(and(eq(backtests.strategyId, id), eq(backtests.status, "completed"))).orderBy(desc(backtests.createdAt)).limit(1);
+
+        const [latestMcP2D] = latestBtP2D ? await db.select({
+          probabilityOfRuin: monteCarloRuns.probabilityOfRuin,
+          riskMetrics: monteCarloRuns.riskMetrics,
+        }).from(monteCarloRuns).where(and(eq(monteCarloRuns.backtestId, latestBtP2D.id), eq(monteCarloRuns.status, "completed"))).orderBy(desc(monteCarloRuns.createdAt)).limit(1) : [undefined];
+
+        const [frozenShadowRow] = await db.select({
+          id: strategies.id, config: strategies.config, frozenPolicyHash: strategies.frozenPolicyHash,
+        }).from(strategies).where(eq(strategies.id, id));
+
+        // Map DB rows to the flat PaperToDeployReadyGateInput required by the evaluator.
+        // The evaluator is a pure function — caller is responsible for all DB access and mapping.
+        const wfResults = latestBtP2D?.walkForwardResults as Record<string, unknown> | null | undefined;
+        const gateResultBlob = latestBtP2D?.gateResult as Record<string, unknown> | null | undefined;
+        const survivalTwin = gateResultBlob?.survival_twin as { passed?: boolean } | null | undefined;
+        const mcRm = (latestMcP2D?.riskMetrics as Record<string, unknown> | null) ?? {};
+        const ruinCi = (mcRm.probability_of_ruin_ci ?? null) as Record<string, unknown> | null;
+        const wrcResult = latestBtP2D?.wrcResult as Record<string, unknown> | null | undefined;
+        const spaResult = latestBtP2D?.spaResult as Record<string, unknown> | null | undefined;
+
+        // Build the flat evaluator input from the pre-fetched DB rows.
+        // Each cast is safe: the evaluator accepts `Record<string,unknown> | null` at its
+        // inner union leaf (RuinCiDict, WalkForwardDsrInput etc.) — we pass the same JSON
+        // blobs the cron sweep passes, just extracted one level earlier.
+        const pdrInput: import("../lib/paper-to-deploy-ready-gates.js").PaperToDeployReadyGateInput = {
+          strategyId: id,
+          correlationId,
+          b14SurvivalTwin: { survival_twin: (survivalTwin ?? null) as import("../lib/paper-to-deploy-ready-gates.js").B14SurvivalTwinInput["survival_twin"] },
+          mcRuinCi: {
+            probability_of_ruin_ci: ruinCi as import("../lib/b14-ci-gate.js").RuinCiDict | null,
+            probability_of_ruin: latestMcP2D?.probabilityOfRuin != null ? Number(latestMcP2D.probabilityOfRuin) : null,
+          },
+          b14McDataAvailable: latestMcP2D != null,
+          b15Battery: (latestBtP2D?.b15Battery ?? null) as import("../lib/paper-to-deploy-ready-gates.js").B15BatteryInput | null,
+          walkForwardResults: wfResults
+            ? {
+                wfe_overall: (wfResults.wfe_overall as number | null | undefined) ?? null,
+                wfe_status: (wfResults.wfe_status as string | null | undefined) ?? null,
+                param_stability: (wfResults.param_stability as { drift_classification?: string | null; drift_confidence?: number | null } | null | undefined) ?? null,
+                wf_metadata: ((wfResults.wf_metadata as Record<string, unknown> | null) ?? null) as import("../lib/b14-ci-gate.js").WalkForwardDsrInput | null,
+                wf_metadata_mode: ((wfResults.wf_metadata as Record<string, unknown> | null)?.mode as string | null) ?? null,
+                wf_metadata_n_paths: ((wfResults.wf_metadata as Record<string, unknown> | null)?.n_paths as number | null) ?? null,
+              }
+            : null,
+          orchGates: {
+            wrcPValue: (wrcResult?.p_value as number | null | undefined) ?? null,
+            spaConsistentP: (spaResult?.spa_consistent_p as number | null | undefined) ?? null,
+          },
+          compositeShadow: null,  // _promoteStrategyInner does not pre-fetch composite shadow; observability only
+          frozenPolicy: {
+            id: frozenShadowRow?.id ?? id,
+            config: frozenShadowRow?.config ?? null,
+            frozenPolicyHash: frozenShadowRow?.frozenPolicyHash ?? null,
+          },
+        };
+        const gatePdrResult = await evaluatePaperToDeployReadyGates(pdrInput);
+
+        if (!gatePdrResult.passed) {
+          logger.warn({ strategyId: id, reason: gatePdrResult.reason, fromState, toState }, "PAPER→DEPLOY_READY blocked by evaluatePaperToDeployReadyGates");
+          await db.insert(auditLog).values({
+            action: gatePdrResult.auditAction ?? "lifecycle.paper_to_deploy_ready_blocked",
+            entityId: id, entityType: "strategy", status: "failure", decisionAuthority: "gate",
+            input: { fromState, toState }, result: gatePdrResult.auditPayload ?? { reason: gatePdrResult.reason },
+            correlationId,
+          }).catch((e) => { logger.warn({ err: e }, "PAPER→DEPLOY_READY evaluator audit failed (non-blocking)"); });
+          broadcastSSE("lifecycle:paper_to_deploy_ready_blocked", { strategyId: id, reason: gatePdrResult.reason, passed: false });
+          strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+          return { success: false, error: gatePdrResult.reason ?? "PAPER→DEPLOY_READY gate failed" };
+        }
+      } catch (pdrGateErr) {
+        // Fail-open on infrastructure errors only (DB failure to load inputs)
+        logger.warn({ strategyId: id, err: pdrGateErr }, "PAPER→DEPLOY_READY evaluator: infrastructure error (fail-open — promotion continues via legacy gates)");
+      }
+    }
+
+    // Pass 5 Track C: SHADOW → PAPER evaluator in _promoteStrategyInner
+    if (fromState === "SHADOW" && toState === "PAPER") {
+      try {
+        const { evaluateShadowToPaperGate } = await import("../lib/shadow-to-paper-gate.js");
+        const correlationId = options.correlationId ?? randomUUID();
+        const { loadDivergenceInputs: loadDiv } = await import("../lib/shadow-signal-divergence-loader.js");
+        const divInputs = await loadDiv(id);
+        const shadowGateResult = await evaluateShadowToPaperGate({
+          strategyId: id,
+          shadowSignals: divInputs.shadowSignals,
+          backtestExpected: divInputs.backtestExpected,
+          backtestExpectedCount: divInputs.backtestExpected.length,
+          correlationId,
+        });
+
+        if (!shadowGateResult.passed) {
+          logger.warn({ strategyId: id, reason: shadowGateResult.reason }, "SHADOW→PAPER blocked by evaluateShadowToPaperGate");
+          await db.insert(auditLog).values({
+            action: shadowGateResult.auditAction ?? "lifecycle.shadow_to_paper_blocked",
+            entityId: id, entityType: "strategy", status: "failure", decisionAuthority: "gate",
+            input: { fromState, toState }, result: shadowGateResult.auditPayload ?? { reason: shadowGateResult.reason },
+            correlationId,
+          }).catch((e) => { logger.warn({ err: e }, "SHADOW→PAPER evaluator audit failed (non-blocking)"); });
+          broadcastSSE("lifecycle:shadow_to_paper_blocked", { strategyId: id, reason: shadowGateResult.reason, passed: false });
+          return { success: false, error: shadowGateResult.reason ?? "SHADOW→PAPER gate failed" };
+        }
+      } catch (shadowGateErr) {
+        // Fail-open on infrastructure errors only
+        logger.warn({ strategyId: id, err: shadowGateErr }, "SHADOW→PAPER evaluator: infrastructure error (fail-open — promotion continues)");
+      }
+    }
+
     // Captured for post-commit side effects (SSE, fire-and-forget burial).
     // Populated INSIDE the tx, consumed AFTER commit.
     let retiredCodename: string | null = null;
@@ -950,11 +1068,14 @@ export class LifecycleService {
             });
             // Wave 29 prod hardening: increment Prom counter + Discord escalation
             try {
-              // Wave B Fix 2: use strategy.regimeTrainedOn for the Prom label.
-              // s.regimeTrainedOn is available here because testingStrategies uses
-              // db.select() which loads all columns. Lowercase "unknown" is distinct
-              // from the old placeholder "UNKNOWN" so both states remain grep-able.
-              const regimeLabel = s.regimeTrainedOn ?? "unknown";
+              // Wave B Fix 2: label PBO block by regime.
+              // In _promoteStrategyInner we operate on strategy `id` only (no row preloaded).
+              // Fetch regimeTrainedOn from DB; fail-open to "unknown" to keep the counter non-blocking.
+              let regimeLabel = "unknown";
+              try {
+                const [stratRow] = await db.select({ regimeTrainedOn: strategies.regimeTrainedOn }).from(strategies).where(eq(strategies.id, id)).limit(1);
+                regimeLabel = stratRow?.regimeTrainedOn ?? "unknown";
+              } catch { /* non-blocking — keep "unknown" */ }
               pboBLocksTotal.labels({ regime: regimeLabel }).inc();
             } catch (_promErr) { /* non-blocking */ }
             try {
@@ -1533,6 +1654,40 @@ export class LifecycleService {
           "cloud-qmc: QUANTUM_CLOUD_ENABLED=false — IBM enrichment skipped, promotion unaffected",
         );
       }
+    }
+
+    // Pass 5 Track D.2: Stop internal stream on TESTING→PAPER (paper-engine authority)
+    // The canonical paper-trade journal for PAPER+ strategies is TradersPost's broker tape.
+    // The internal Massive-WS simulator is pre-PAPER only (CANDIDATE/TESTING).
+    // Fire-and-forget, non-blocking.
+    if (fromState === "TESTING" && toState === "PAPER") {
+      (async () => {
+        try {
+          const { stopStream } = await import("./paper-trading-stream.js");
+          // Find any active session for this strategy
+          const [activeSess] = await db.select({ id: paperSessions.id })
+            .from(paperSessions)
+            .where(and(eq(paperSessions.strategyId, id), eq(paperSessions.status as unknown as typeof paperSessions.status, "active" as any)))
+            .limit(1)
+            .catch(() => [] as { id: string }[]);
+
+          if (activeSess?.id) {
+            stopStream(activeSess.id);
+            logger.info({ strategyId: id, sessionId: activeSess.id }, "TESTING→PAPER: stopped internal stream (paper-engine authority declared)");
+          }
+
+          await db.insert(auditLog).values({
+            action: "paper.engine_authority_declared",
+            entityId: id, entityType: "strategy", status: "info",
+            decisionAuthority: "system",
+            input: { fromState, toState },
+            result: { strategyId: id, transitioned_to: "PAPER", stream_stopped: !!activeSess?.id, session_id: activeSess?.id ?? null },
+            correlationId: options.correlationId ?? null,
+          }).catch((e) => { logger.warn({ err: e }, "paper.engine_authority_declared audit failed (non-blocking)"); });
+        } catch (streamStopErr) {
+          logger.warn({ strategyId: id, err: streamStopErr }, "TESTING→PAPER: stream stop failed (non-blocking)");
+        }
+      })();
     }
 
     strategyPromotions.labels({
