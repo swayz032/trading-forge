@@ -129,6 +129,20 @@ function checkRoutingGuard(ctx: LiveExecutionContext): string | null {
   if (!LIVE_EXECUTION_STATES.has(ctx.lifecycleState)) {
     return "not_live_state";
   }
+  // Phase 1 go-live prerequisite (FAIL-CLOSED, forget-proof): server-mediated
+  // execution must NOT route live orders unless broker fill reconciliation is
+  // configured — otherwise the server fires live and never learns the actual
+  // fill (blind position drift). BROKER_FILL_HMAC_SECRET authenticates the
+  // /api/broker/fill-callback ingestion endpoint; without it, reconciliation
+  // cannot run, so we refuse to route live. See
+  // docs/go-live-server-mediated-execution.md for the full go-live checklist.
+  if (!process.env.BROKER_FILL_HMAC_SECRET || process.env.BROKER_FILL_HMAC_SECRET.length < 32) {
+    logger.error(
+      { sessionId: ctx.sessionId, strategyId: ctx.strategyId },
+      "server-mediated-executor: SERVER_MEDIATED_EXECUTION_ENABLED=true but BROKER_FILL_HMAC_SECRET is unset/<32 chars — REFUSING to route live (fill reconciliation not configured). Set BROKER_FILL_HMAC_SECRET (>=32 chars) before going live. See docs/go-live-server-mediated-execution.md.",
+    );
+    return "fill_recon_not_configured";
+  }
   return null; // proceed
 }
 

@@ -90,6 +90,18 @@ vi.mock("../lib/credential-loader.js", () => ({
 
 vi.mock("../integrations/traderspost/client.js", () => ({
   submitWebhookOrder: vi.fn(),
+  // Phase 1: dispatchRouteOrder builds a bar-scoped idempotency key before routing.
+  buildDeterministicIdempotencyKey: vi.fn(() => "test-idempotency-key"),
+}));
+
+// Phase 1: server-mediated-executor calls fill-reconciliation-service for order-state
+// persistence + the needs_reconcile entry gate. Mock it so routing-path tests exercise
+// the route (real impl queries the DB and would block routing under the db mock).
+vi.mock("../services/fill-reconciliation-service.js", () => ({
+  persistOrderAtRouted: vi.fn().mockResolvedValue("order-id-test"),
+  updateOrderToAcked: vi.fn().mockResolvedValue(undefined),
+  updateOrderToNeedsReconcile: vi.fn().mockResolvedValue(undefined),
+  isAccountBlockedForReconcile: vi.fn().mockResolvedValue(false),
 }));
 
 vi.mock("../integrations/traderspost/webhook-builder.js", () => ({
@@ -192,10 +204,15 @@ function makeFailBrokerResult() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Phase 1 go-live prerequisite: live routing now requires BROKER_FILL_HMAC_SECRET
+  // (fail-closed without it). Set a valid test secret so the routing-path tests
+  // exercise the route; the dedicated "fill-recon not configured" test unsets it.
+  process.env.BROKER_FILL_HMAC_SECRET = "test-broker-fill-hmac-secret-32chars-min-xx";
 });
 
 afterEach(() => {
   delete process.env.SERVER_MEDIATED_EXECUTION_ENABLED;
+  delete process.env.BROKER_FILL_HMAC_SECRET;
 });
 
 // ─── Test block 1: routeLiveEntry — flag OFF ──────────────────────────────────
@@ -219,11 +236,39 @@ describe("routeLiveEntry — flag OFF (no-op proof)", () => {
   });
 });
 
+// ─── Test block 1b: fail-CLOSED when fill reconciliation not configured ──────
+
+describe("routeLiveEntry — fail-CLOSED: BROKER_FILL_HMAC_SECRET not configured", () => {
+  beforeEach(() => {
+    process.env.SERVER_MEDIATED_EXECUTION_ENABLED = "true";
+    mockRouteOrder.mockResolvedValue(makeSuccessBrokerResult());
+  });
+
+  it("1b-1. REFUSES to route live when BROKER_FILL_HMAC_SECRET is unset", async () => {
+    delete process.env.BROKER_FILL_HMAC_SECRET;
+    const ctx = makeLiveContext({ lifecycleState: "DEPLOYED" });
+    const result = await routeLiveEntry({ ctx, symbol: "MES", side: "long", quantity: 6 });
+    expect(mockRouteOrder).not.toHaveBeenCalled();
+    expect(result.routed).toBe(false);
+    expect(result.reason).toBe("fill_recon_not_configured");
+  });
+
+  it("1b-2. REFUSES to route live when BROKER_FILL_HMAC_SECRET is < 32 chars", async () => {
+    process.env.BROKER_FILL_HMAC_SECRET = "tooshort";
+    const ctx = makeLiveContext({ lifecycleState: "PILOT" });
+    const result = await routeLiveEntry({ ctx, symbol: "MNQ", side: "long", quantity: 1 });
+    expect(mockRouteOrder).not.toHaveBeenCalled();
+    expect(result.routed).toBe(false);
+    expect(result.reason).toBe("fill_recon_not_configured");
+  });
+});
+
 // ─── Test block 2: routeLiveEntry — flag ON + LIVE states ────────────────────
 
 describe("routeLiveEntry — flag ON + LIVE states", () => {
   beforeEach(() => {
     process.env.SERVER_MEDIATED_EXECUTION_ENABLED = "true";
+    process.env.BROKER_FILL_HMAC_SECRET = "test-broker-fill-hmac-secret-32chars-min-xx";
     mockRouteOrder.mockResolvedValue(makeSuccessBrokerResult());
   });
 
