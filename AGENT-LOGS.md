@@ -10116,6 +10116,23 @@ Also restored Anam.ai persona during this session:
 
 ---
 
+### Session Log — 2026-06-22 claude (B14 Survival Twin hardening — Topstep consistency + fail-closed gate + 0.20 threshold)
+
+**Mission:** Operator: "after do survival twin system." 3-lens read-only audit (backtest-core + accuracy-validator + institutional-edge-researcher) → harden. B14 = the gate that predicts whether a strategy survives prop-firm rules before live capital.
+
+**Audit verdict:** NOT trustworthy as a hard gate — 6 fail-OPEN/optimistic paths could greenlight an account-killing strategy. Fixed (commit `fa6666f`, 51 vitest + 110 pytest):
+- **CRITICAL:** `monte_carlo.py::simulate_firm_survival` `_consistency_map` was MISSING `topstep_50pct` → every Topstep survival sim silently skipped the 50% consistency rule → monster-day strategy passed B14, then Topstep denies every payout. Added `topstep_50pct=0.50`; `consistency_fail_rate` now real for Topstep. (MFFU already sound.)
+- `b14-ci-gate.ts` fail-CLOSED: ci_high null / `ruin_unavailable` / no-MC-run now BLOCK (was `passed:true` + equity≤0 scalar fallback). Preserved parallel session's BCa non-finite fail-closed.
+- `lifecycle-service.ts` B14 catch → `continue` (was fall-through = silent promotion on DB error).
+- consistency gate reads MC per-firm sliding-window `consistency_fail_rate`, not full-history max/sum.
+- `B14_RUIN_CI_HIGH_THRESHOLD` 0.40 → **0.20** + new `B14_PAYOUT_DENIAL_THRESHOLD=0.10`; `B15_BATTERY_ENABLED` default → **true** (hard). Env-overridable.
+
+**CONVERGENCE:** parallel session repaired B14's BCa ruin-CI plumbing earlier today (memory `project_mc_b14_ruin_ci_repair_2026_06_22`). My work complementary (Topstep consistency + gate fail-closed + threshold); BCa logic preserved through the b14-ci-gate rewrite (verified). Ruin basis = firm-rule breach not equity≤0; backtest-service confirmed passing firms:[topstep_50k,mffu_50k].
+
+**Operator-awareness — promotion is now STRICTER (intended):** B14 blocks at ruin CI > 0.20 (was 0.40) and B15 is now hard → FEWER strategies reach DEPLOY_READY (institutional direction). Relax via env with rationale if needed. Lower-priority carry-forward: `firm_profiles.py` Topstep `consistency_threshold` (survival SCORER, not the gate) still None. All on `hardening/phase-0`; branch reconciliation pending.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Tier-1 news handling is FIRM-AWARE + product-scoped (pinned 2026-06-22 — supersedes prior ±30/6-event fact)
