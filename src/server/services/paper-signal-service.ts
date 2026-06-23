@@ -2834,6 +2834,9 @@ export async function evaluateSignals(
     // Fail-open: query errors return zero P&L so trading is never blocked.
     let dllHaltBlocked = blackoutBlocked;   // short-circuit if already blackout-blocked
     let dllForceCloseTriggered = false;
+    // 60%-DLL reduce-size band: when in the soft band (below the 67% halt), new entries are
+    // sized DOWN by this factor (NOT blocked). 1 = no reduction. Applied at the sizing site.
+    let dllReduceSizeFactor = 1;
     if (!blackoutBlocked) {
       try {
         const firmId = sessionRow.firmId ?? "default";
@@ -2900,6 +2903,26 @@ export async function evaluateSignals(
             acted: false,
             reason: `cross_symbol_dll_halt_triggered: combined_pnl=${dllResult.combinedPnL.toFixed(2)} dll_pct=${(dllResult.dllPct * 100).toFixed(1)}%`,
           }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist DLL halt log"));
+        } else if (dllResult.action === "reduce_size") {
+          // SOFT 60% band — do NOT block; size the new entry DOWN to absorb the losing streak
+          // before the hard 67% halt. Applied at the sizing site via dllReduceSizeFactor.
+          dllReduceSizeFactor = dllResult.reduceSizeFactor;
+          span.setAttribute("dll_reduce_size_band", true);
+          span.setAttribute("dll_reduce_size_factor", dllResult.reduceSizeFactor);
+          span.setAttribute("cross_symbol_dll_pct", dllResult.dllPct);
+          logger.warn(
+            { sessionId, symbol, firmId, combinedPnL: dllResult.combinedPnL, dllPct: dllResult.dllPct, reduceFactor: dllResult.reduceSizeFactor },
+            "60%-DLL band — sizing new entry DOWN (soft throttle before the 67% halt)",
+          );
+          insertAuditRow({
+            action: "sizing.dll_reduce_size_band_entered",
+            entityType: "paper_session",
+            entityId: sessionId,
+            decisionAuthority: "system",
+            status: "warning",
+            input: { firmId, sessionDate, combinedPnL: dllResult.combinedPnL } as Record<string, unknown>,
+            result: { dll_pct: dllResult.dllPct, reduce_factor: dllResult.reduceSizeFactor, reduce_threshold: dllResult.reduceThreshold } as Record<string, unknown>,
+          }).catch(() => {});
         }
       } catch (dllErr) {
         // Fail-CLOSED: loss-throttling gate must not allow entry when data is unavailable.
@@ -4653,6 +4676,23 @@ export async function evaluateSignals(
       } else {
         // Fixed contracts or unknown position_size type — clamp to firm cap
         baseContracts = Math.min(config.contracts, firmCap);
+      }
+
+      // 60%-DLL reduce-size band (soft throttle BELOW the 67% halt): when the cross-symbol DLL
+      // evaluation above put us in the reduce_size band, shrink whatever size the sizing path
+      // produced. Floored to ≥1 — the reduce band sizes DOWN, it never zeroes (the 67% halt does).
+      if (dllReduceSizeFactor < 1) {
+        const preReduceContracts = baseContracts;
+        baseContracts = Math.max(1, Math.floor(baseContracts * dllReduceSizeFactor));
+        if (baseContracts < preReduceContracts) {
+          span.setAttribute("dll_reduce_size_applied", true);
+          insertAuditRow({
+            action: "sizing.dll_reduce_size_applied",
+            entityType: "paper_session", entityId: sessionId, decisionAuthority: "system", status: "warning",
+            input: { sessionId, symbol, preReduceContracts, factor: dllReduceSizeFactor } as Record<string, unknown>,
+            result: { contracts: baseContracts } as Record<string, unknown>,
+          }).catch(() => {});
+        }
       }
 
       let contextContracts = skipReduce

@@ -355,13 +355,19 @@ finalContracts = min(
 
 **Mini→micro contract conversion:** scout-extract's `remapMarket()` scales contracts 10× when remapping ES→MES, NQ→MNQ, CL→MCL. Transcript "trade 3 ES" becomes "trade 30 MES" — same dollar-risk exposure post-conversion.
 
-### Daily Loss Limit — kill switch
+### Daily Loss Limit — 4-band escalation ladder
 ```
 Personal DLL = 67% of firm DLL
-HALT new entries at 67% (env: DLL_HALT_PCT)
-FORCE-CLOSE all positions at 95% (env: DLL_FORCE_CLOSE_PCT)
+REDUCE new-entry size ×0.50 at 60% (env: DLL_REDUCE_SIZE_PCT / DLL_REDUCE_SIZE_FACTOR)  ← soft, 2026-06-23
+HALT new entries           at 67% (env: DLL_HALT_PCT)
+FORCE-CLOSE all positions  at 95% (env: DLL_FORCE_CLOSE_PCT)
 Reset at session boundary
 ```
+The 60% band (NexusFi Operations Manual 2026-06 institutional ladder) sizes new entries DOWN
+(never zeroes — floored ≥1; the 67% halt is the zero path) to absorb a losing streak before the
+hard halt. Lives in `cross-symbol-pnl.ts::evaluateCrossSymbolDll` (action `reduce_size`), applied
+at the `paper-signal-service.ts` sizing site. Audit: `sizing.dll_reduce_size_band_entered` +
+`sizing.dll_reduce_size_applied`. Ordering: force_close > halt > reduce_size > none.
 
 ### Daily Trade Cap — 1-2 A+ trades/day mandate (Wave 26 Pass K Phase 1)
 ```
