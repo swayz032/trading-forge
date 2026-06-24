@@ -28,6 +28,7 @@ import {
 } from "../../lib/slumhouse/admin-session.js";
 import { insertAuditRowSafe } from "../../lib/audit-log-helper.js";
 import { logger } from "../../lib/logger.js";
+import { getMode, setMode } from "../../services/pipeline-control-service.js";
 
 export const adminOfficeRouter = Router();
 
@@ -159,4 +160,62 @@ adminOfficeRouter.post("/slumhouse/admin/auth", async (req: Request, res: Respon
 adminOfficeRouter.post("/slumhouse/admin/logout", (req: Request, res: Response) => {
   res.clearCookie(ADMIN_COOKIE_NAME, { path: "/slumhouse" });
   res.json({ ok: true });
+});
+
+// ─── The Office switches (Pass 4) ───────────────────────────────────────────
+// Operator-only (admin session required). Pass 4 wires Bot Power (the master
+// pause/resume) to the live pipeline; the others render but are not wired yet.
+function requireAdminSession(req: Request, res: Response): boolean {
+  if (!adminSessionFromCookie(req.headers.cookie)) {
+    res.status(401).json({ ok: false, error: "locked" });
+    return false;
+  }
+  return true;
+}
+
+adminOfficeRouter.get("/slumhouse/admin/switches", async (req: Request, res: Response) => {
+  if (!requireAdminSession(req, res)) return;
+  let mode: string | null = null;
+  try { mode = await getMode(); } catch { mode = null; }
+  const botOn = mode === "ACTIVE";
+  res.json({
+    switches: {
+      bot_power:      { on: botOn, wired: true,  dangerOff: true,  status: botOn ? "RUNNING" : "PAUSED" },
+      learning_loop:  { on: false, wired: false, status: "COMING SOON" },
+      vacation_mode:  { on: false, wired: false, status: "COMING SOON" },
+      recovery:       { on: false, wired: false, status: "COMING SOON" },
+      live_execution: { on: false, wired: false, needsSetup: true, status: "NEEDS SETUP" },
+    },
+  });
+});
+
+adminOfficeRouter.post("/slumhouse/admin/switch", async (req: Request, res: Response) => {
+  if (!requireAdminSession(req, res)) return;
+  const id = typeof req.body?.id === "string" ? req.body.id : "";
+  const on = req.body?.on === true;
+
+  if (id === "bot_power") {
+    const newMode = on ? "ACTIVE" : "PAUSED";
+    try {
+      await setMode(newMode, "slumhouse Office operator toggle", null);
+    } catch (err) {
+      logger.error({ err }, "slumhouse Office: bot_power toggle failed");
+      res.status(500).json({ ok: false, error: "toggle_failed" });
+      return;
+    }
+    await insertAuditRowSafe({
+      action: "slumhouse_admin.switch_toggled",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "human",
+      input: { switch: id, on } as Record<string, unknown>,
+      result: { mode: newMode } as Record<string, unknown>,
+      status: "success",
+      correlationId: null,
+    });
+    res.json({ ok: true, id, on, status: on ? "RUNNING" : "PAUSED" });
+    return;
+  }
+
+  res.status(501).json({ ok: false, error: "not_wired_yet", id });
 });

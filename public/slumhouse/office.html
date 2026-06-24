@@ -134,6 +134,23 @@
       font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mute);
     }
     .of-card-slot .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--mute); }
+    /* Pass 4: the switch (lime pill toggle) */
+    .of-toggle-row { margin-top: auto; display: flex; align-items: center; gap: 18px; }
+    .of-toggle {
+      position: relative; width: 78px; height: 38px; border-radius: 999px; flex-shrink: 0;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.14);
+      cursor: pointer; transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
+    }
+    .of-knob {
+      position: absolute; top: 3px; left: 3px; width: 30px; height: 30px; border-radius: 50%;
+      background: #6d6d6d; transition: transform 0.28s cubic-bezier(0.2,0.7,0.2,1), background 0.25s, box-shadow 0.25s;
+    }
+    .of-toggle.on { background: rgba(163,255,18,0.20); border-color: rgba(163,255,18,0.55); box-shadow: 0 0 18px rgba(163,255,18,0.18); }
+    .of-toggle.on .of-knob { transform: translateX(40px); background: var(--lime); box-shadow: 0 0 16px var(--lime); }
+    .of-toggle.disabled { opacity: 0.4; cursor: not-allowed; }
+    .of-status { font-family: var(--num-font); font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute); }
+    .of-status.on { color: var(--lime); }
+    .of-status.off { color: var(--red); }
     .of-card3d.is-active {
       transform: translate(-50%, -50%) translateZ(60px) scale(1) rotateY(0deg); opacity: 1; z-index: 5;
       border-color: rgba(163,255,18,0.6);
@@ -144,9 +161,10 @@
         0 0 64px rgba(163,255,18,0.24);
       cursor: default;
     }
-    .of-card3d.is-prev { transform: translate(-50%, -50%) translateX(-66%) translateZ(-90px) rotateY(48deg) scale(0.9); opacity: 0.95; z-index: 3; }
-    .of-card3d.is-next { transform: translate(-50%, -50%) translateX(66%) translateZ(-90px) rotateY(-48deg) scale(0.9); opacity: 0.95; z-index: 3; }
-    .of-card3d.is-far  { transform: translate(-50%, -50%) translateZ(-260px) scale(0.7); opacity: 0; z-index: 1; pointer-events: none; }
+    /* single-card mode: only the active card shows; others fade out (no side peek) */
+    .of-card3d.is-prev,
+    .of-card3d.is-next,
+    .of-card3d.is-far { transform: translate(-50%, -50%) scale(0.94); opacity: 0; z-index: 1; pointer-events: none; }
     .of-arrow {
       position: relative; z-index: 20;
       flex-shrink: 0; width: 42px; height: 42px; border-radius: 50%;
@@ -261,15 +279,15 @@
 
       // ── Pass 3: floating 3D switch-card carousel (empty shells, no switches yet) ──
       var OF_CARDS = [
-        { eyebrow: 'Main switch', title: 'Bot Power',      sub: 'Turn the whole bot on or off. Off = it stops making any trades.' },
-        { eyebrow: 'Smart mode',  title: 'Learning Loop',  sub: 'Let the bot study its own trades and get smarter over time.' },
-        { eyebrow: 'Away',        title: 'Vacation Mode',  sub: 'Keeps things safe and running by itself while you are away.' },
-        { eyebrow: 'Fix it',      title: 'Recovery',       sub: 'If the bot stopped itself for safety, this starts it back up.' },
-        { eyebrow: 'Real money',  title: 'Live Execution', sub: 'Trade with real money. Not on yet — needs setup first.' }
+        { id: 'bot_power',      eyebrow: 'Main switch', title: 'Bot Power',      sub: 'Turn the whole bot on or off. Off = it stops making any trades.' },
+        { id: 'learning_loop',  eyebrow: 'Smart mode',  title: 'Learning Loop',  sub: 'Let the bot study its own trades and get smarter over time.' },
+        { id: 'vacation_mode',  eyebrow: 'Away',        title: 'Vacation Mode',  sub: 'Keeps things safe and running by itself while you are away.' },
+        { id: 'recovery',       eyebrow: 'Fix it',      title: 'Recovery',       sub: 'If the bot stopped itself for safety, this starts it back up.' },
+        { id: 'live_execution', eyebrow: 'Real money',  title: 'Live Execution', sub: 'Trade with real money. Not on yet — needs setup first.' }
       ];
       var ofTrack = document.getElementById('of-track');
       var ofDots = document.getElementById('of-dots');
-      var ofCur = 0, ofInited = false;
+      var ofCur = 0, ofInited = false, ofSwitches = {};
 
       function ofLayout() {
         var cards = ofTrack.children;
@@ -300,8 +318,10 @@
             '<div class="of-card-eyebrow">' + cd.eyebrow + '</div>' +
             '<div class="of-card-title">' + cd.title + '</div>' +
             '<div class="of-card-sub">' + cd.sub + '</div>' +
-            '<div class="of-card-slot"><span class="dot"></span>switch — next pass</div>';
+            '<div class="of-toggle-row"><div class="of-toggle" data-toggle></div><span class="of-status" data-status>—</span></div>';
           el.addEventListener('click', function () { if (i !== ofCur) ofGo(i); });
+          var tg = el.querySelector('[data-toggle]');
+          tg.addEventListener('click', function (e) { e.stopPropagation(); onToggle(cd); });
           ofTrack.appendChild(el);
           var dot = document.createElement('button');
           dot.className = 'of-dot'; dot.type = 'button';
@@ -313,6 +333,47 @@
         if (prev) prev.addEventListener('click', function () { ofGo(ofCur - 1); });
         if (next) next.addEventListener('click', function () { ofGo(ofCur + 1); });
         ofLayout();
+        loadSwitches();
+      }
+
+      function loadSwitches() {
+        fetch('/slumhouse/admin/switches', { credentials: 'same-origin' })
+          .then(function (r) { return r.json(); })
+          .then(function (d) { ofSwitches = (d && d.switches) || {}; applySwitches(); })
+          .catch(function () {});
+      }
+      function applySwitches() {
+        OF_CARDS.forEach(function (cd, i) {
+          var el = ofTrack.children[i]; if (!el) return;
+          var s = ofSwitches[cd.id] || {};
+          var tg = el.querySelector('[data-toggle]');
+          var st = el.querySelector('[data-status]');
+          if (s.on) tg.classList.add('on'); else tg.classList.remove('on');
+          if (s.wired) tg.classList.remove('disabled'); else tg.classList.add('disabled');
+          st.textContent = s.status || (s.on ? 'ON' : 'OFF');
+          st.className = 'of-status' + (s.on ? ' on' : (s.wired ? ' off' : ''));
+        });
+      }
+      function onToggle(cd) {
+        var s = ofSwitches[cd.id] || {};
+        if (!s.wired) return;                                  // not wired yet
+        var willBe = !s.on;
+        if (s.dangerOff && s.on) {                             // turning a dangerous switch OFF
+          if (!window.confirm('Turn OFF ' + cd.title + '?\n\nThis stops the bot from making any trades.')) return;
+        }
+        fetch('/slumhouse/admin/switch', {
+          method: 'POST', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: cd.id, on: willBe })
+        })
+          .then(function (r) { return r.json().then(function (j) { return { status: r.status, body: j }; }); })
+          .then(function (res) {
+            if (res.status === 200 && res.body && res.body.ok) {
+              ofSwitches[cd.id] = Object.assign({}, s, { on: res.body.on, status: res.body.status });
+              applySwitches();
+            } else if (res.status === 401) { showLocked(); }
+          })
+          .catch(function () {});
       }
 
       function showUnlocked() {
