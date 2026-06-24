@@ -251,6 +251,13 @@
           .then(function () { showLocked(); setMsg('Locked.', ''); })
           .catch(function () { showLocked(); });
       });
+
+      // Lock-on-exit: the instant the operator leaves the Office (nav away, close,
+      // refresh), clear the admin session so returning ALWAYS re-prompts for the
+      // passcode. sendBeacon fires reliably during page teardown.
+      window.addEventListener('pagehide', function () {
+        try { navigator.sendBeacon('/slumhouse/admin/logout'); } catch (e) { /* noop */ }
+      });
     })();
   </script>
 </body>
