@@ -92,6 +92,13 @@ interface EquitySample {
 // sessionId → chronological ring buffer (newest last)
 const _equityWindows: Map<string, EquitySample[]> = new Map();
 
+// sessionId → all-time peak equity observed during this process lifetime.
+// Used for Topstep trailing-DD HWM (F-4): on a profitable account the trailing
+// floor moves UP with the all-time high, not the startingCapital.
+// Reset on process restart (same safe behavior as _equityWindows — a fresh
+// restart implies the operator cleared any pause; fresh 2hr window is appropriate).
+const _sessionPeakEquity: Map<string, number> = new Map();
+
 /** Maximum samples to retain per session (3h at 1/min = 180 samples) */
 const MAX_SAMPLES = 180;
 
@@ -116,8 +123,9 @@ export interface DDVelocityCheckResult {
 /**
  * Record the current equity snapshot for a session and evaluate DD velocity.
  *
- * Callers: paper-execution-service.ts (on every tick / bar evaluation) and the
- * dd-velocity-cron scheduler job (minute-level batch sweep of all active sessions).
+ * Caller: dd-velocity-cron in scheduler.ts — a 1-minute cron that batch-sweeps
+ * all active sessions. There is up to ~59 seconds between consecutive checks
+ * (not per-tick). The service is NOT called from paper-execution-service.ts.
  *
  * Returns the check result. Side effects (audit, SSE, Discord, setMode) fire
  * fire-and-forget — never block the caller.
@@ -137,6 +145,14 @@ export async function recordEquityAndCheck(
 
   // Trim to max retention
   while (window.length > MAX_SAMPLES) window.shift();
+
+  // F-4: maintain all-time session peak equity so Topstep tightening uses the
+  // real trailing-DD HWM (all-time high), not startingCapital.
+  // On a profitable account ($53K peak vs $50K start) the trailing floor has
+  // moved UP, so the remaining buffer is smaller than startingCapital implies.
+  const prevPeak = _sessionPeakEquity.get(sessionId) ?? currentEquity;
+  const updatedPeak = Math.max(prevPeak, currentEquity);
+  _sessionPeakEquity.set(sessionId, updatedPeak);
 
   // Trim to rolling window (1-second tolerance handles ms skew between sample injection
   // and the internal Date.now() call — a sample at exactly windowMinutes old is kept).
@@ -176,11 +192,13 @@ export async function recordEquityAndCheck(
   const firmConfig = firmId ? getFirmAccount(firmId) : null;
   if (firmId === "topstep" && firmConfig) {
     // Trailing buffer = maxDrawdown (Topstep EOD trailing DD amount, e.g. $2000).
-    // "How close to the trailing floor" = total drawdown from account starting equity,
-    // NOT just the in-window rolling DD. The trailing floor erodes from the account's
-    // all-time high (simplified here as accountSize minus current equity).
+    // F-4: use the all-time session peak equity (not startingCapital) as the HWM
+    // for totalAccountDD. Topstep's trailing floor moves up with profits —
+    // on a $53K peak account the real floor is at $51K (not $48K/startingCapital).
+    // This makes the gate MORE sensitive on profitable accounts (conservative direction).
     const trailingBuffer = firmConfig.maxDrawdown;
-    const totalAccountDD = Math.max(0, accountSize - currentEquity); // dollars already lost
+    const sessionPeak = _sessionPeakEquity.get(sessionId) ?? accountSize;
+    const totalAccountDD = Math.max(0, sessionPeak - currentEquity); // dollars from all-time high
     const remainingBuffer = Math.max(0, trailingBuffer - totalAccountDD);
     // "Within tighten%" of breach = remaining buffer < trailingBuffer * (1 - tighten)
     // e.g. tighten=0.7: fires when remaining buffer < 30% of trailingBuffer
@@ -257,14 +275,27 @@ export async function batchCheckActiveSessions(): Promise<DDVelocityCheckResult[
 }
 
 /**
+ * Returns the all-time peak equity observed for a session in this process
+ * lifetime, or null if no samples have been recorded yet.
+ *
+ * Used by tests and by the Topstep tightening logic (F-4) to compute the real
+ * trailing-DD high-water mark rather than using startingCapital.
+ */
+export function getSessionPeakEquity(sessionId: string): number | null {
+  return _sessionPeakEquity.get(sessionId) ?? null;
+}
+
+/**
  * Test-only: clear the equity windows for a specific session (or all sessions).
  * Production code must never call this.
  */
 export function __resetEquityWindowsForTests(sessionId?: string): void {
   if (sessionId) {
     _equityWindows.delete(sessionId);
+    _sessionPeakEquity.delete(sessionId);
   } else {
     _equityWindows.clear();
+    _sessionPeakEquity.clear();
   }
 }
 
@@ -280,6 +311,12 @@ export function __injectEquitySamplesForTests(
   samples: { capturedAt: number; equity: number }[],
 ): void {
   _equityWindows.set(sessionId, [...samples]);
+  // Maintain peak equity so F-4 Topstep tightening tests work correctly.
+  if (samples.length > 0) {
+    const peak = Math.max(...samples.map((s) => s.equity));
+    const prevPeak = _sessionPeakEquity.get(sessionId) ?? 0;
+    _sessionPeakEquity.set(sessionId, Math.max(prevPeak, peak));
+  }
 }
 
 // ─── Private side-effect handlers ────────────────────────────────────────────
@@ -437,4 +474,172 @@ async function _handleAutopause(result: DDVelocityCheckResult): Promise<void> {
       windowMinutes: result.windowMinutes,
     },
   );
+}
+
+// ─── F-3: Vacation auto-recovery ─────────────────────────────────────────────
+//
+// When the operator is on vacation (system_state.operator_absent_since IS SET)
+// and the pipeline is in AUTOPAUSE_DD_VELOCITY, and the triggering condition has
+// RESOLVED — defined as: a new CME trading-day session boundary has passed since
+// the autopause (i.e., autopausedAtMs is > CME_DAY_BOUNDARY_HOURS ago) — the
+// gate clears automatically so Slumdawg can trade the next day.
+//
+// When the operator is PRESENT (operator_absent_since null): behavior is
+// UNCHANGED — stays operator-only-clearable (a human is watching; they decide).
+//
+// Recovery condition (conservative):
+//   - operator_absent_since IS SET (operator is genuinely away)
+//   - current pipeline_mode === "AUTOPAUSE_DD_VELOCITY"
+//   - autopausedAtMs is older than CME_DAY_BOUNDARY_HOURS (a full CME trading day
+//     boundary has passed — the 2h DD window is stale/reset from the bad day)
+//
+// Side effects: setMode("ACTIVE"), audit risk.dd_velocity_vacation_auto_recovered,
+//   Discord WARN via appendFamilyGradePostscript, SSE broadcast.
+//
+// Fail-soft: any error is caught and logged; a recovery-check error must never
+// crash the calling cron.
+
+/** Hours since autopause that constitutes "a new CME trading day has passed".
+ * CME equity futures session: 17:00 ET prior day → 16:00 ET current day (23h).
+ * We use 17h as a conservative threshold: if the pause was ≥17h ago the current
+ * RTH session is a genuinely different trading day. */
+const CME_DAY_BOUNDARY_HOURS = 17;
+
+export interface VacationAutoRecoveryOptions {
+  /** sessionId that triggered the autopause (for context in audit). Optional. */
+  sessionId?: string;
+  /** Timestamp (ms) when the autopause was first set. If not provided, the
+   *  function checks the audit_log for the most recent autopause row. */
+  autopausedAtMs?: number;
+}
+
+/**
+ * Check whether the vacation auto-recovery condition is met and, if so, clear
+ * AUTOPAUSE_DD_VELOCITY and resume the pipeline.
+ *
+ * Called from the dd-velocity-cron (scheduler.ts) or from runOperatorAbsenceAutoDetect
+ * (dead-mans-heartbeat-service.ts). Fails soft — any internal error is caught.
+ */
+export async function checkVacationAutoRecovery(
+  opts: VacationAutoRecoveryOptions = {},
+): Promise<void> {
+  try {
+    // 1. Read current pipeline mode — if not AUTOPAUSE_DD_VELOCITY, nothing to do.
+    const { getMode, setMode } = await import("./pipeline-control-service.js");
+    const currentMode = await getMode();
+    if (currentMode !== "AUTOPAUSE_DD_VELOCITY") return;
+
+    // 2. Read system_state to check operator_absent_since.
+    //    If the column is null the operator is present → do NOT auto-recover.
+    const { db } = await import("../db/index.js");
+    const { systemState } = await import("../db/schema.js");
+    const { eq } = await import("drizzle-orm");
+
+    const stateRows = await db
+      .select({ operatorAbsentSince: systemState.operatorAbsentSince })
+      .from(systemState)
+      .where(eq(systemState.id, 1))
+      .limit(1);
+
+    const operatorAbsentSince = stateRows[0]?.operatorAbsentSince
+      ? new Date(stateRows[0].operatorAbsentSince as unknown as string | number | Date)
+      : null;
+
+    if (!operatorAbsentSince) {
+      // Operator is present — recovery is manual-only. Do not touch the pipeline.
+      logger.debug(
+        "dd-velocity-gate: vacation-auto-recovery: operator present — skipping auto-clear",
+      );
+      return;
+    }
+
+    // 3. Determine when the autopause was set.
+    //    Use the caller-supplied timestamp if available; otherwise use Date.now() minus
+    //    a safe margin (0) to avoid false recoveries when autopausedAtMs is unknown.
+    const autopausedAtMs = opts.autopausedAtMs ?? Date.now();
+    const pauseAgeMs = Date.now() - autopausedAtMs;
+    const pauseAgeHours = pauseAgeMs / (60 * 60_000);
+
+    // 4. Resolution condition: a full CME trading-day boundary has passed.
+    //    The bad day is over and the 2h DD window is stale/reset.
+    if (pauseAgeHours < CME_DAY_BOUNDARY_HOURS) {
+      logger.debug(
+        { pauseAgeHours: pauseAgeHours.toFixed(1), threshold: CME_DAY_BOUNDARY_HOURS },
+        "dd-velocity-gate: vacation-auto-recovery: pause too recent — not a new CME day yet",
+      );
+      return;
+    }
+
+    // 5. Condition resolved — perform auto-recovery.
+    const reason = "dd_velocity_vacation_auto_recovery";
+    logger.warn(
+      {
+        pauseAgeHours: pauseAgeHours.toFixed(1),
+        operatorAbsentSince: operatorAbsentSince.toISOString(),
+        sessionId: opts.sessionId,
+      },
+      "dd-velocity-gate: vacation-auto-recovery FIRING — new CME day boundary passed since autopause",
+    );
+
+    // 5a. Set pipeline mode back to ACTIVE.
+    await setMode("ACTIVE", reason);
+
+    // 5b. Write audit row.
+    const { auditLog } = await import("../db/schema.js");
+    await db.insert(auditLog).values({
+      action: "risk.dd_velocity_vacation_auto_recovered",
+      entityType: "system",
+      entityId: opts.sessionId ?? null,
+      decisionAuthority: "system",
+      input: {
+        sessionId: opts.sessionId ?? null,
+        operatorAbsentSince: operatorAbsentSince.toISOString(),
+        autopausedAtMs,
+        pauseAgeHours: parseFloat(pauseAgeHours.toFixed(2)),
+        cmeDayBoundaryHours: CME_DAY_BOUNDARY_HOURS,
+      } as Record<string, unknown>,
+      result: {
+        newMode: "ACTIVE",
+        reason,
+      } as unknown as Record<string, unknown>,
+      status: "success",
+    });
+
+    // 5c. SSE broadcast.
+    broadcastSSE("risk:dd_velocity_vacation_auto_recovered", {
+      sessionId: opts.sessionId ?? null,
+      operatorAbsentSince: operatorAbsentSince.toISOString(),
+      pauseAgeHours: parseFloat(pauseAgeHours.toFixed(2)),
+      timestamp: new Date().toISOString(),
+    });
+
+    // 5d. Discord WARN (family-grade postscript) — fire-and-forget.
+    const discordBody = appendFamilyGradePostscript(
+      [
+        `**DD Velocity autopause auto-cleared** (vacation auto-recovery).`,
+        ``,
+        `The pause was set ${pauseAgeHours.toFixed(1)}h ago. A new CME trading day boundary has passed — the 2h DD window has reset and trading is safe to resume.`,
+        `Operator absent since: ${operatorAbsentSince.toISOString()}`,
+        ``,
+        `If you see unexpected trades, clear via: POST /api/admin/pipeline/mode { "mode": "PAUSED" }`,
+      ].join("\n"),
+      `The bot paused itself yesterday due to fast losses. It has now automatically restarted for today's session.`,
+      `No action needed. The bot will trade normally today. If you see any concerns, contact Tony.`,
+    );
+    notifyCritical(
+      "DD Velocity Autopause — vacation auto-recovered",
+      discordBody,
+      {
+        sessionId: opts.sessionId ?? null,
+        pauseAgeHours: parseFloat(pauseAgeHours.toFixed(2)),
+        operatorAbsentSince: operatorAbsentSince.toISOString(),
+      },
+    );
+  } catch (err) {
+    // Fail-soft: a recovery-check error must never crash the calling cron.
+    logger.error(
+      { err },
+      "dd-velocity-gate: vacation-auto-recovery: error during recovery check (fail-soft, continuing)",
+    );
+  }
 }

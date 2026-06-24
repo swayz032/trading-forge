@@ -210,11 +210,18 @@ describe("DDVelocityGate — Topstep buffer tightening", () => {
     // Remaining buffer = 2000 - 1401 = 599. roomFraction = 599/2000 ≈ 0.30.
     // effectiveAutopausePct ≈ 0.03 × 0.30 = 0.009.
     // A 1% session drop should now AUTOPAUSE (> 0.9% effective threshold).
+    //
+    // F-4 note: we seed the session peak at ACCOUNT_SIZE by including a sample at the
+    // start-of-session high. This simulates an account that opened at $50K and has since
+    // drawn down $1,401 — the trailing-DD HWM is correctly $50K, not the recent window peak.
     const SESSION = "sess-topstep-tight";
     const ACCOUNT_SIZE = 50_000;
     const EXISTING_DD = 1_401;  // already near trailing floor
     const now = Date.now();
     const samples: { capturedAt: number; equity: number }[] = [
+      // Start-of-session sample at ACCOUNT_SIZE to seed the all-time session peak.
+      // This represents the account's highest equity before the drawdown began.
+      { capturedAt: now - 3 * 60 * 60_000, equity: ACCOUNT_SIZE },
       { capturedAt: now - 60 * 60_000, equity: ACCOUNT_SIZE - EXISTING_DD + 500 },
       { capturedAt: now, equity: ACCOUNT_SIZE - EXISTING_DD - 0 },  // +500 more within window
     ];

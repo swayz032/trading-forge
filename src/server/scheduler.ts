@@ -4661,17 +4661,22 @@ except Exception as e:
   // Sweeps all active paper sessions every minute, records equity samples,
   // and evaluates rolling 2-hour drawdown velocity.
   //
-  // Pipeline-gate: NOT EXEMPT (same gate as paper execution). If pipeline is
-  // AUTOPAUSE_DD_VELOCITY or PAUSED, the gate blocks correctly — the job exits
-  // without firing new autopause events (idempotent when already paused).
+  // F-2 (2026-06-24): PIPELINE-GATE EXEMPT. After AUTOPAUSE_DD_VELOCITY fires the
+  // cron must KEEP running so it can:
+  //   (a) continue collecting equity samples (data needed for F-3 recovery check)
+  //   (b) drive the vacation auto-recovery check (checkVacationAutoRecovery)
+  // The existing alreadyPaused idempotency guard in _handleAutopause prevents
+  // duplicate autopause fires, so exempting this job is safe.
   //
-  // Schedule: "* * * * *" = every minute.
-  // This is the batch-level sweep; fine-grained check also happens per-tick
-  // from paper-execution-service.ts (fire-and-forget, non-blocking).
+  // Schedule: "* * * * *" = every minute (1-minute cron, NOT per-tick).
+  // The gate is a cron-only monitor; paper-execution-service.ts does NOT call it.
+
+  _PIPELINE_GATE_EXEMPT.add("dd-velocity-cron");
+
   registerJob("dd-velocity-cron", 60_000, async () => {
     const correlationId = randomUUID();
     logger.debug({ correlationId, jobName: "dd-velocity-cron" }, "cron tick start");
-    const { batchCheckActiveSessions } = await import("./services/dd-velocity-gate.js");
+    const { batchCheckActiveSessions, checkVacationAutoRecovery } = await import("./services/dd-velocity-gate.js");
     const results = await batchCheckActiveSessions();
     const autopaused = results.filter((r) => r.level === "autopause");
     const warned = results.filter((r) => r.level === "warning");
@@ -4681,12 +4686,15 @@ except Exception as e:
         "dd-velocity-cron: velocity events fired",
       );
     }
+    // F-3: Check whether vacation auto-recovery should clear AUTOPAUSE_DD_VELOCITY.
+    // Fail-soft — any error inside is caught by checkVacationAutoRecovery itself.
+    await checkVacationAutoRecovery();
   });
 
   cron.schedule("* * * * *", async () => {
     if (!_tryAcquireJobLock("dd-velocity-cron")) return;
     try {
-      if (!(await pipelineGate("dd-velocity-cron"))) return;
+      // NOT pipeline-gated — safety/monitoring signal (in _PIPELINE_GATE_EXEMPT)
       const t0dv = Date.now();
       await withRetry("dd-velocity-cron", SCHEDULER_JOBS["dd-velocity-cron"].run, 1);
       markJobRun("dd-velocity-cron");
