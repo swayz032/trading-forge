@@ -1357,7 +1357,44 @@ export class LifecycleService {
     if (fromState === "TESTING" && toState === "PAPER") {
       const stratCfg = (strategy.config ?? {}) as Record<string, unknown>;
       const entryIndicator = typeof stratCfg.entry_indicator === "string" ? stratCfg.entry_indicator : "";
-      if (entryIndicator.startsWith("archetype:") && process.env.LIVE_ORDER_GATEWAY_URL) {
+      if (entryIndicator.startsWith("archetype:") && !process.env.LIVE_ORDER_GATEWAY_URL) {
+        // B3 FIX — fail-CLOSED when LIVE_ORDER_GATEWAY_URL is unset.
+        // An archetype strategy reaching PAPER without the live-order gateway configured
+        // is a deploy-misconfiguration: if Pine alerts fire, they would hit /api/live-order
+        // without TF-gateway markers, bypassing kill-switch/compliance/firm-cap.
+        // Block until operator sets LIVE_ORDER_GATEWAY_URL.
+        const blockReason =
+          `archetype strategy (${entryIndicator}) cannot be promoted to PAPER: ` +
+          "LIVE_ORDER_GATEWAY_URL is not configured. " +
+          "Set LIVE_ORDER_GATEWAY_URL to the TF gateway endpoint before promoting archetype strategies. " +
+          "Without it, Pine alerts would reach /api/live-order without TF-gateway markers and bypass kill-switch/compliance/firm-cap protection.";
+        logger.warn({ strategyId: id, entryIndicator, fromState, toState }, blockReason);
+        insertAuditRow({
+          action: "lifecycle.archetype_gateway_env_missing",
+          entityType: "strategy",
+          entityId: id,
+          decisionAuthority: "gate",
+          status: "warn",
+          input: { fromState, toState, entryIndicator } as Record<string, unknown>,
+          result: { reason: blockReason, missingEnv: "LIVE_ORDER_GATEWAY_URL" } as Record<string, unknown>,
+          correlationId: options.correlationId ?? null,
+        }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "archetype_gateway_env_missing audit row write failed"));
+        try {
+          const discordBody = appendFamilyGradePostscript(
+            `Strategy ${id} (${entryIndicator}) blocked from PAPER promotion — LIVE_ORDER_GATEWAY_URL is not set. ` +
+            "Without the gateway URL, Pine alerts would bypass kill-switch/compliance/firm-cap protection. " +
+            "Set LIVE_ORDER_GATEWAY_URL and retry the promotion.",
+            "No action needed — the bot will retry when the gateway URL is configured.",
+            "No action needed — the bot blocked a deploy-misconfiguration automatically.",
+          );
+          notifyWarning(
+            `Archetype Gateway Env Missing: ${id}`,
+            discordBody,
+            { strategyId: id, entryIndicator, fromState, toState, correlationId: options.correlationId, missingEnv: "LIVE_ORDER_GATEWAY_URL" },
+          );
+        } catch { /* non-blocking */ }
+        return { success: false, error: blockReason };
+      } else if (entryIndicator.startsWith("archetype:") && process.env.LIVE_ORDER_GATEWAY_URL) {
         logger.info(
           { strategyId: id, entryIndicator, fromState, toState },
           "lifecycle: archetype gateway-mode bypass gate — compiling Pine to verify TF-gateway markers",
@@ -1725,38 +1762,66 @@ export class LifecycleService {
       }
     }
 
-    // Pass 5 Track D.2: Stop internal stream on TESTING→PAPER (paper-engine authority)
+    // B6 FIX — Pass 5 Track D.2: Stop internal stream on TESTING→PAPER (paper-engine authority)
     // The canonical paper-trade journal for PAPER+ strategies is TradersPost's broker tape.
     // The internal Massive-WS simulator is pre-PAPER only (CANDIDATE/TESTING).
-    // Fire-and-forget, non-blocking.
+    //
+    // RACE FIX (B6): stopStream MUST complete before transitionState() returns.
+    // The old fire-and-forget IIFE let a bar arrive between DB-commit and stream-stop,
+    // emitting internal-simulator fills under a now-PAPER-state strategy → dual-stream
+    // corruption with TradersPost. B5 (scheduler resume guard) prevents the stream from
+    // restarting, but the gap before stop was still live.
+    //
+    // Contract post-B6:
+    //   1. await stopStream — synchronous in the transition path, guarantees no new fills
+    //   2. Audit + Discord notifications fire AFTER stop (observability, not state)
+    //   3. If stopStream throws → audit paper.stop_stream_failed_on_transition (warn) but
+    //      DO NOT block the transition — strategy IS in PAPER state in DB; the stream
+    //      not stopping is smaller than dual-stream corruption from not awaiting.
     if (fromState === "TESTING" && toState === "PAPER") {
-      (async () => {
-        try {
-          const { stopStream } = await import("./paper-trading-stream.js");
-          // Find any active session for this strategy
-          const [activeSess] = await db.select({ id: paperSessions.id })
-            .from(paperSessions)
-            .where(and(eq(paperSessions.strategyId, id), eq(paperSessions.status as unknown as typeof paperSessions.status, "active" as any)))
-            .limit(1)
-            .catch(() => [] as { id: string }[]);
+      let activeSessId: string | null = null;
+      let streamStopped = false;
+      try {
+        const { stopStream } = await import("./paper-trading-stream.js");
+        // Find any active session for this strategy
+        const [activeSess] = await db.select({ id: paperSessions.id })
+          .from(paperSessions)
+          .where(and(eq(paperSessions.strategyId, id), eq(paperSessions.status as unknown as typeof paperSessions.status, "active" as any)))
+          .limit(1)
+          .catch(() => [] as { id: string }[]);
 
-          if (activeSess?.id) {
-            stopStream(activeSess.id);
-            logger.info({ strategyId: id, sessionId: activeSess.id }, "TESTING→PAPER: stopped internal stream (paper-engine authority declared)");
-          }
-
-          await db.insert(auditLog).values({
-            action: "paper.engine_authority_declared",
-            entityId: id, entityType: "strategy", status: "info",
-            decisionAuthority: "system",
-            input: { fromState, toState },
-            result: { strategyId: id, transitioned_to: "PAPER", stream_stopped: !!activeSess?.id, session_id: activeSess?.id ?? null },
-            correlationId: options.correlationId ?? null,
-          }).catch((e) => { logger.warn({ err: e }, "paper.engine_authority_declared audit failed (non-blocking)"); });
-        } catch (streamStopErr) {
-          logger.warn({ strategyId: id, err: streamStopErr }, "TESTING→PAPER: stream stop failed (non-blocking)");
+        activeSessId = activeSess?.id ?? null;
+        if (activeSessId) {
+          // B6: await stopStream — must complete before returning to caller
+          await stopStream(activeSessId);
+          streamStopped = true;
+          logger.info({ strategyId: id, sessionId: activeSessId }, "TESTING→PAPER: stopped internal stream (paper-engine authority declared)");
         }
-      })();
+      } catch (streamStopErr) {
+        // B6: swallow stop failure but audit it — strategy IS already PAPER in DB.
+        // Dual-stream may still occur if the simulator is alive, but this is a smaller
+        // risk than blocking the lifecycle transition for the caller.
+        const stopErrMsg = streamStopErr instanceof Error ? streamStopErr.message : String(streamStopErr);
+        logger.warn({ strategyId: id, sessionId: activeSessId, err: streamStopErr }, "TESTING→PAPER: stopStream threw — stream may still be running (paper.stop_stream_failed_on_transition)");
+        // Audit write is fire-and-forget (observability only)
+        db.insert(auditLog).values({
+          action: "paper.stop_stream_failed_on_transition",
+          entityId: id, entityType: "strategy", status: "warn",
+          decisionAuthority: "system",
+          input: { fromState, toState, sessionId: activeSessId },
+          result: { error: stopErrMsg, transitioned_to: "PAPER", stream_stopped: false },
+          correlationId: options.correlationId ?? null,
+        }).catch((e) => { logger.warn({ err: e }, "paper.stop_stream_failed_on_transition audit failed (non-blocking)"); });
+      }
+      // Audit + observability notifications are fire-and-forget (after stopStream completes)
+      db.insert(auditLog).values({
+        action: "paper.engine_authority_declared",
+        entityId: id, entityType: "strategy", status: "info",
+        decisionAuthority: "system",
+        input: { fromState, toState },
+        result: { strategyId: id, transitioned_to: "PAPER", stream_stopped: streamStopped, session_id: activeSessId },
+        correlationId: options.correlationId ?? null,
+      }).catch((e) => { logger.warn({ err: e }, "paper.engine_authority_declared audit failed (non-blocking)"); });
     }
 
     strategyPromotions.labels({
