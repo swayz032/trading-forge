@@ -4,6 +4,55 @@
 
 ---
 
+### Session Log — 2026-06-23 Deep-scan production-blocker WAVE CLOSE (12 of 13 findings closed; 1 verified-already-correct)
+
+**Mission:** Operator directive "execute all remaining tasks and carry forward tasks" after the deep-scan parent wrap-up identified 6 BLOCKERs + 7 HIGH + 15 MED + 4 LOW. Close everything actionable in parallel; defer only what collides with other session's in-flight work.
+
+**Method:** 5 parallel background subagents on disjoint file scopes + 1 sequential follow-up agent (H3) after H6 unblocked the layered kill-switch API. Strict explicit-path commits per the shared-tree pinned fact.
+
+**Closed this session (10 of 13 findings shipped + 2 closed by parallel session + 1 verified-already-correct):**
+
+| ID | Commit | File | Closure |
+|----|--------|------|---------|
+| B1 | `7a21dc0` | paper-signal-service.ts:5069 | A/B routing lifecycle gate (parallel session) |
+| B2 | `08a6751` | paper-signal-service.ts + backtest-service.ts | SHADOW intercept cache + expected_signals baseline (parallel session) |
+| B3 | `945ef15` | lifecycle-service.ts:1360 | Archetype gateway fail-CLOSED when LIVE_ORDER_GATEWAY_URL unset |
+| B4 | `661c029` | pbo-gate.ts:152 | Number.isFinite guard → fail-CLOSED on NaN sample-size-guard |
+| B5 | `0be72c4` | scheduler.ts | PAPER_PLUS_STATES guard in resumeActivePaperSessions |
+| B6 | `945ef15` | lifecycle-service.ts:1728 | await stopStream() in TESTING→PAPER (eliminates race) |
+| H1 | `ea92fc3` | pine_compiler.py + pine-export-service.ts | Compile-time substitution of archetype Pine placeholders + post-compile assertion (Python + TS defense-in-depth) |
+| H2 | `8718d37` | paper-trading-stream.ts | correlation_id minted at processSessionBar + threaded through evaluateSignals |
+| H3 | `456b716` | paper-signal-service.ts | 6-gate re-check (kill-switch/lunch/FOMC/DLL/daily-cap/news) at pending-entry fill using FILL bar timestamp |
+| H4 | `55c5807` | traderspost/client.ts | 2x retry with jitter on 5xx; X-Idempotency-Key preserved across retries; audit exhaustion |
+| H5 | `ccef527` | paper-execution-service.ts | paper.trade_close audit INSERT moved INSIDE transaction; rollback on failure + paper.trade_close_audit_failed out-of-tx |
+| H6 | `0871a0e` | kill-switch.ts | Full layered rewrite: 9 per-layer predicates + evaluateAllKillSwitchLayers() + 1s LRU cache + 100ms timeout fail-OPEN. ALL_LAYERS_ENFORCED_ON_SIGNAL_PATH sentinel for CI. |
+| H7 | `559aa5f` | _journal.json idx 174 | Renormalized when-timestamp into 2026 monotonic series (parallel session — boot-runner was silently skipping the migration) |
+
+**Verification:** 129 new vitest/pytest GREEN this session (11+9+15+7+11+33+14+29). Zero new regressions. All 3 CI gates GREEN at each commit.
+
+**Capital-risk surface changes:**
+- PBO gate fail-CLOSED on degenerate samples (was silently passing every <4-path walk-forward through institutional 0.15 hard gate)
+- Engine Authority Option B holds across server restarts (B5)
+- TESTING→PAPER race window eliminated (B6)
+- Archetype strategies cannot reach PAPER without live-order gateway env (B3 — fail-CLOSED)
+- Kill-switch Layers 2-9 enforced on signal path (H6 — DLL/trailing-DD/CME outage/firm suspension/macro crisis/Windows reboot now auto-block)
+- Pending-entry queue cannot cross blackout windows / kill-switch flips (H3)
+- TradersPost 5xx no longer silently drops orders (H4)
+- paper.trade_close orphan trades eliminated (H5)
+- correlation_id end-to-end on live paper signal path (H2)
+- Archetype Pine alerts no longer ship literal placeholder strings (H1)
+
+**Carry-forward (MED + LOW not closed this session):** divergence_vs_backtest UPDATE writer; tradingview_markers schema index; SHADOW in lifecycle_state CHECK; firm-rules TS/Python parity gate; Pine gatewayOptions thread-through for archetype; frontend `VITE_API_BASE`; 5+ alert sites missing appendFamilyGradePostscript; W27.5 SSE catalog gaps; quantum replay correlation_id inheritance; paper-journal-recon scope expansion (shadow/quantum/A-B); Kasa partial-config guard; pboBLocksTotal typo; WAVE29_EVENTS JSDoc rot; auto_patch_loop_enabled audit; broker-router notifyCritical escalation when H4 exhausts; openPosition→isHaltedForProduction correlationId plumbing; H3 Topstep reduce_size news re-application at fill.
+
+**Known-facts updates worth pinning by next session:**
+- "Test suite has zero DB-integration coverage" (pinned 2026-06-22) directly enabled most of the 6 BLOCKERs to ship green. Expand pglite integration coverage to every lifecycle gate + every kill-switch layer + every routeOrder path.
+- Parallel-session coordination this session succeeded because of EXPLICIT path commits + `git fetch` before each push. Zero collisions despite 6 agents working in the shared tree simultaneously. Validates the pinned `git commit -- <paths>` rule at production scale.
+- H7 was timing-dependent (audit found broken state, parallel session fixed it between audit and verification). Lesson: deep-scan findings must be re-verified at the moment of closing, not at the moment of dispatch.
+
+**Operator action items** unchanged from prior wave master close — set `ADMIN_PROMOTE_HMAC_SECRET`, `LIVE_ORDER_GATEWAY_URL`, `LIVE_ORDER_HMAC_SECRET`, KASA env vars; run `tsx scripts/first-paper-trade-smoke.ts --operator-fire`. **B3's fail-CLOSED behavior means the operator MUST set `LIVE_ORDER_GATEWAY_URL` before any archetype strategy can be promoted to PAPER** — this is now enforced at the lifecycle gate. Parametric (non-archetype) strategies are unaffected.
+
+---
+
 ### Session Log — 2026-06-23 H3: pending-entry fill-gate re-check (paper-parity)
 
 **Mission:** Close HIGH capital-safety gap — signal-time gates (kill-switch, lunch-blackout, FOMC/CPI/NFP macro, DLL, daily-trade-cap, news-policy) evaluated only at bar N (queue); pending-entry fill at bar N+1 ran NO re-check.
