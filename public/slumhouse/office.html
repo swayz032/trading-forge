@@ -158,27 +158,33 @@
       box-shadow: 0 4px 9px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.5), inset 0 -3px 4px rgba(0,0,0,0.45);
       transition: transform 0.38s cubic-bezier(0.2,0.8,0.2,1), background 0.3s, box-shadow 0.3s;
     }
-    /* GREEN — running (knob slides right, pulses green) */
-    .of-toggle.on { background: linear-gradient(rgba(163,255,18,0.16), rgba(70,120,8,0.10)); border-color: rgba(163,255,18,0.5); }
+    /* GREEN — running (knob slides right; whole pill pulses green) */
+    .of-toggle.on {
+      background: linear-gradient(rgba(163,255,18,0.20), rgba(70,120,8,0.12)); border-color: rgba(163,255,18,0.6);
+      animation: ofPulseGreen 1.8s ease-in-out infinite;
+    }
     .of-toggle.on .of-knob {
       transform: translateX(52px);
       background: radial-gradient(circle at 35% 28%, #e6ffae, var(--lime) 62%, #7cbf0c);
-      animation: ofPulseGreen 2.2s ease-in-out infinite;
+      box-shadow: 0 4px 9px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.6), 0 0 14px rgba(163,255,18,0.8);
     }
-    /* RED — safety halt / alert (knob stays left, pulses red) */
-    .of-toggle.alert { background: linear-gradient(rgba(255,80,80,0.16), rgba(130,18,18,0.10)); border-color: rgba(255,99,99,0.5); }
+    /* RED — paused / halted (knob left; whole pill pulses red) */
+    .of-toggle.alert {
+      background: linear-gradient(rgba(255,80,80,0.20), rgba(130,18,18,0.12)); border-color: rgba(255,99,99,0.6);
+      animation: ofPulseRed 1.4s ease-in-out infinite;
+    }
     .of-toggle.alert .of-knob {
       background: radial-gradient(circle at 35% 28%, #ffbfbf, #ff5757 62%, #c01e1e);
-      animation: ofPulseRed 1.1s ease-in-out infinite;
+      box-shadow: 0 4px 9px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.5), 0 0 14px rgba(255,90,90,0.8);
     }
-    .of-toggle.disabled { opacity: 0.45; cursor: not-allowed; }
+    .of-toggle.disabled { opacity: 0.45; cursor: not-allowed; animation: none; }
     @keyframes ofPulseGreen {
-      0%,100% { box-shadow: 0 4px 9px rgba(0,0,0,0.55), inset 0 1px 1px rgba(255,255,255,0.6), 0 0 16px rgba(163,255,18,0.65); }
-      50%     { box-shadow: 0 4px 9px rgba(0,0,0,0.55), inset 0 1px 1px rgba(255,255,255,0.6), 0 0 32px rgba(163,255,18,1); }
+      0%,100% { box-shadow: inset 0 2px 8px rgba(0,0,0,0.6), 0 0 14px rgba(163,255,18,0.45); border-color: rgba(163,255,18,0.45); }
+      50%     { box-shadow: inset 0 2px 8px rgba(0,0,0,0.6), 0 0 44px rgba(163,255,18,0.95); border-color: rgba(163,255,18,0.9); }
     }
     @keyframes ofPulseRed {
-      0%,100% { box-shadow: 0 4px 9px rgba(0,0,0,0.55), inset 0 1px 1px rgba(255,255,255,0.5), 0 0 16px rgba(255,90,90,0.65); }
-      50%     { box-shadow: 0 4px 9px rgba(0,0,0,0.55), inset 0 1px 1px rgba(255,255,255,0.5), 0 0 32px rgba(255,90,90,1); }
+      0%,100% { box-shadow: inset 0 2px 8px rgba(0,0,0,0.6), 0 0 14px rgba(255,90,90,0.45); border-color: rgba(255,99,99,0.45); }
+      50%     { box-shadow: inset 0 2px 8px rgba(0,0,0,0.6), 0 0 44px rgba(255,90,90,0.95); border-color: rgba(255,99,99,0.9); }
     }
     .of-status { font-family: var(--num-font); font-size: 24px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); }
     .of-status.on    { color: var(--lime); text-shadow: 0 0 16px rgba(163,255,18,0.45); }
@@ -413,7 +419,7 @@
           .then(function (r) { return r.json().then(function (j) { return { status: r.status, body: j }; }); })
           .then(function (res) {
             if (res.status === 200 && res.body && res.body.ok) {
-              ofSwitches[cd.id] = Object.assign({}, s, { on: res.body.on, status: res.body.status });
+              ofSwitches[cd.id] = Object.assign({}, s, { on: res.body.on, state: res.body.state, status: res.body.status });
               applySwitches();
             } else if (res.status === 401) { showLocked(); }
           })

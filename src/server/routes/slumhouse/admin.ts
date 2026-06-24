@@ -217,7 +217,7 @@ adminOfficeRouter.post("/slumhouse/admin/switch", async (req: Request, res: Resp
       status: "success",
       correlationId: null,
     });
-    res.json({ ok: true, id, on, status: on ? "RUNNING" : "PAUSED" });
+    res.json({ ok: true, id, on, state: on ? "running" : "paused", status: on ? "RUNNING" : "PAUSED" });
     return;
   }
 
