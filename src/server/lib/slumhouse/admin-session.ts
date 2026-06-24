@@ -37,7 +37,10 @@ function sessionSecret(): string {
  */
 export function isAdminConfigured(): boolean {
   const p = process.env.SLUMHOUSE_ADMIN_PASSCODE;
-  return typeof p === "string" && p.length >= 6;
+  // Min 4 chars supports a numeric PIN (operator's choice). Brute-force is bounded
+  // by the 5-attempt / 15-min lockout in admin.ts, so a short PIN stays safe enough
+  // for this personal, passcode-gated operator page.
+  return typeof p === "string" && p.length >= 4;
 }
 
 /**
