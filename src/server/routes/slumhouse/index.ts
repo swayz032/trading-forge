@@ -14,6 +14,7 @@ import express from "express";
 import path from "node:path";
 import { authRouter, handleLaunch } from "./auth.js";
 import { adminMappingRouter } from "./admin-mapping.js";
+import { adminOfficeRouter } from "./admin.js";
 import { cribApiRouter } from "./api/crib.js";
 import { kitchenApiRouter } from "./api/kitchen.js";
 import { recipeApiRouter } from "./api/recipe.js";
@@ -42,7 +43,11 @@ export function handleSlumhouseFallback(req: Request, res: Response, next: NextF
     next();
     return;
   }
-  if (pathName === "/slumhouse/login.html" || pathName === "/slumhouse/launch" || pathName === "/slumhouse/crib.html" || pathName === "/slumhouse/kitchen.html" || pathName === "/slumhouse/recipe.html" || pathName === "/slumhouse/") {
+  if (pathName === "/slumhouse/login.html" || pathName === "/slumhouse/launch" || pathName === "/slumhouse/crib.html" || pathName === "/slumhouse/kitchen.html" || pathName === "/slumhouse/recipe.html" || pathName === "/slumhouse/" || pathName === "/slumhouse/office.html") {
+    // office.html is the operator-only Office — gated by its OWN passcode
+    // (slumhouse_admin_sid), NOT the friend Discord session. Allow the HTML to
+    // load so its passcode lock screen can render; sensitive admin endpoints
+    // remain behind the admin cookie.
     next();
     return;
   }
@@ -106,6 +111,9 @@ slumhouseRouter.use(cribApiRouter);
 slumhouseRouter.use(kitchenApiRouter);
 slumhouseRouter.use(recipeApiRouter);
 slumhouseRouter.use(anamSessionRouter);
+
+// The Office — operator-only passcode-gated admin endpoints (auth/status/logout).
+slumhouseRouter.use(adminOfficeRouter);
 
 // Static SPA assets (CSS, JS, HTML, images) — served last so /slumhouse/api/*
 // matches the API routes above first.
