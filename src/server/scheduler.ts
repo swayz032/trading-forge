@@ -175,7 +175,11 @@ function recordJobFailure(name: string, error: unknown): void {
   if (health.consecutiveFailures === FAILURE_WARN_THRESHOLD) {
     notifyWarning(
       `Scheduler: ${name} failing repeatedly`,
-      `Job "${name}" has failed ${health.consecutiveFailures} times in a row. Last error: ${error instanceof Error ? error.message : String(error)}`,
+      appendFamilyGradePostscript(
+        `Job "${name}" has failed ${health.consecutiveFailures} times in a row. Last error: ${error instanceof Error ? error.message : String(error)}`,
+        `A background maintenance job (${name}) has failed ${health.consecutiveFailures} times in a row. The system is still running but this job may need attention.`,
+        "No action needed right now. Tony will be alerted if the problem continues. The bot continues trading normally.",
+      ),
       { job: name, consecutiveFailures: health.consecutiveFailures },
     );
   }
@@ -187,7 +191,11 @@ function recordJobFailure(name: string, error: unknown): void {
 
     notifyCritical(
       `Scheduler: ${name} AUTO-DISABLED`,
-      `Job "${name}" disabled after ${health.consecutiveFailures} consecutive failures.\nLast error: ${error instanceof Error ? error.message : String(error)}\nUse POST /api/admin/scheduler/jobs/${name}/enable to re-enable.`,
+      appendFamilyGradePostscript(
+        `Job "${name}" disabled after ${health.consecutiveFailures} consecutive failures.\nLast error: ${error instanceof Error ? error.message : String(error)}\nUse POST /api/admin/scheduler/jobs/${name}/enable to re-enable.`,
+        `A background maintenance job (${name}) has been automatically disabled after failing too many times. The bot continues trading, but this maintenance function is paused.`,
+        "No immediate action needed. Tell Tony: 'A scheduler job was auto-disabled.' He will re-enable it when ready.",
+      ),
       { job: name, consecutiveFailures: health.consecutiveFailures },
     );
 
@@ -749,7 +757,11 @@ export function initScheduler() {
     if (demoted.length > 0) {
       notifyWarning(
         `System health degraded: ${demoted.length} strategy demotion(s)`,
-        `${demoted.length} strategy/strategies were automatically demoted during the lifecycle check. Review the dashboard for details on which strategies are now in DECLINING state.`,
+        appendFamilyGradePostscript(
+          `${demoted.length} strategy/strategies were automatically demoted during the lifecycle check. Review the dashboard for details on which strategies are now in DECLINING state.`,
+          `${demoted.length} trading strategy${demoted.length > 1 ? "s were" : " was"} automatically moved to a lower stage because ${demoted.length > 1 ? "they are" : "it is"} not performing well enough. No live trading is affected — this is a research/test phase update.`,
+          "No action needed. This is normal. Tony is aware and will review the strategies on the dashboard.",
+        ),
         { demotedCount: demoted.length, promotedCount: promoted.length, demotedIds: demoted },
       );
     }
@@ -1795,7 +1807,7 @@ export function initScheduler() {
   // ─── Tier 3.3: A+ Market Auditor — daily at 8:00 AM ET (DST-aware) ─────────
   // Scores MES, MNQ, MCL via quantum MC + entropy filter + cross-market VQC.
   // Picks today's highest-edge market; emits OBSERVATION_MODE if none qualifies.
-  // Gated by QUANTUM_AMARKET_AUDITOR_ENABLED (default false) — shadow mode.
+  // Gated by QUANTUM_AMARKET_AUDITOR_ENABLED (now true — advisory-only, cannot block signals).
   // isActive() guard: early-exit when pipeline is not ACTIVE.
   // Compliance: lead_market field is signal-only; Tier 5.3.1 (W5b) enforces
   // correlated-position guard.
@@ -1808,15 +1820,21 @@ export function initScheduler() {
       return;
     }
     const { runAuditScan } = await import("./services/a-plus-auditor-service.js");
+    // F-4 fix: ATR is enriched inside runAuditScan via enrichWithRealAtr() which
+    // queries pre_market_sessions for real overnight_range_points per symbol.
+    // The values below are per-symbol fallback defaults used ONLY when no
+    // pre_market_sessions row exists. They differ per-symbol so the atr_ratio
+    // is not identical across markets even in the pure-fallback path.
+    // F-5 fix: p_target_hit is enriched inside runAuditScan via enrichWithPTargetHit()
+    // which derives a data-driven classical estimate per market from pre_market_sessions
+    // (atr_percentile + cross_asset_aligned + overnight_range_points).
+    // TODO(go-live enrichment): wire Databento pre-market ATR for 8-year rolling avg.
     const result = await runAuditScan(
       {
-        // Production: these values should come from pre-market data snapshot
-        // (Databento ATR, VIX feed, etc.). For now, defaults are injected.
-        // TODO(W4+): wire Databento pre-market ATR fetch here.
         marketInputs: {
-          MES: { atr_5m: 2.5, atr_8yr_avg: 2.5, vix: 18.0, gap_atr: 0.2, spread: 0.05 },
-          MNQ: { atr_5m: 4.0, atr_8yr_avg: 4.0, vix: 18.0, gap_atr: 0.3, spread: 0.04 },
-          MCL: { atr_5m: 0.3, atr_8yr_avg: 0.3, vix: 18.0, gap_atr: 0.1, spread: 0.10 },
+          MES: { atr_5m: 2.8, atr_8yr_avg: 2.8, vix: 18.0, gap_atr: 0.2, spread: 0.05 },
+          MNQ: { atr_5m: 4.5, atr_8yr_avg: 4.5, vix: 18.0, gap_atr: 0.3, spread: 0.04 },
+          MCL: { atr_5m: 0.35, atr_8yr_avg: 0.35, vix: 18.0, gap_atr: 0.1, spread: 0.10 },
         },
       },
       correlationId,
@@ -2312,7 +2330,11 @@ export function initScheduler() {
     if (drift.driftItems && drift.driftItems.length > 0) {
       notifyWarning(
         "System Map Drift Detected",
-        `Drift items:\n${drift.driftItems.join("\n")}`,
+        appendFamilyGradePostscript(
+          `Drift items:\n${drift.driftItems.join("\n")}`,
+          "The system's internal catalog of components is out of date. This is a developer maintenance issue and does not affect trading.",
+          "No action needed. Tell Tony if this keeps appearing. The bot continues trading normally.",
+        ),
       );
       logger.warn({ driftItems: drift.driftItems }, "System map drift detected");
     } else {
@@ -3431,7 +3453,11 @@ except Exception as e:
       // Critical Discord alert — this is an irreversible gate hardening event
       notifyCritical(
         "Harsh-Regime Gate: ACTIVATED (HARD phase)",
-        `The harsh-regime survival gate has been automatically hardened to HARD phase after ${ageDays} days of PAPER activation.\n\nFrom now on, strategies that fail regime survival checks at TESTING→PAPER gate will be BLOCKED (not just warned).\n\nFirst PAPER activation: ${earliestPaperActivation.toISOString()}\nStrategy: ${firstStrategyId}\n\nTo roll back (operator only): POST /api/admin/harsh-regime-phase { "phase": "advisory", "reason": "<explanation>" }`,
+        appendFamilyGradePostscript(
+          `The harsh-regime survival gate has been automatically hardened to HARD phase after ${ageDays} days of PAPER activation.\n\nFrom now on, strategies that fail regime survival checks at TESTING→PAPER gate will be BLOCKED (not just warned).\n\nFirst PAPER activation: ${earliestPaperActivation.toISOString()}\nStrategy: ${firstStrategyId}\n\nTo roll back (operator only): POST /api/admin/harsh-regime-phase { "phase": "advisory", "reason": "<explanation>" }`,
+          `The system has tightened its strategy approval requirements after ${ageDays} days of operation. Strategies now have to pass stricter market-regime tests before they can trade. This is expected and good — it means the system is maturing.`,
+          "No action needed. This is an automatic milestone. Tony is aware.",
+        ),
         { ageDays, firstStrategyId, activatedAt: new Date().toISOString(), correlationId },
       );
 
@@ -3496,7 +3522,11 @@ except Exception as e:
       logger.error({ err, jobName: "bw-session-refresh", cronCorrelationId }, "bw-session-refresh: unexpected throw from runBwSessionRefreshCheck");
       notifyCritical(
         "BW session refresh cron: unexpected error",
-        `runBwSessionRefreshCheck threw unexpectedly. Error: ${error}. BW vault access may degrade.`,
+        appendFamilyGradePostscript(
+          `runBwSessionRefreshCheck threw unexpectedly. Error: ${error}. BW vault access may degrade.`,
+          "The bot failed to refresh its credential vault. If this keeps happening, the bot may lose access to its secure passwords.",
+          "Tell Tony: 'The credential refresh job failed.' He will investigate when available.",
+        ),
         { error },
       );
     }
@@ -3547,7 +3577,11 @@ except Exception as e:
       logger.error({ err, jobName: "prop-firm-cookie-refresh", cronCorrelationId }, "prop-firm-cookie-refresh: unexpected throw");
       notifyCritical(
         "Prop-firm cookie refresh cron: unexpected error",
-        `runPropFirmCookieRefresh threw unexpectedly. Error: ${error}. Firm C2 evidence may be stale.`,
+        appendFamilyGradePostscript(
+          `runPropFirmCookieRefresh threw unexpectedly. Error: ${error}. Firm C2 evidence may be stale.`,
+          "The bot failed to refresh its prop firm login session. If this keeps happening, compliance monitoring for the trading account may become stale.",
+          "Tell Tony: 'The prop firm session refresh failed.' He will look into it when available.",
+        ),
         { error },
       );
     }
@@ -4948,10 +4982,15 @@ except Exception as e:
         emitJobComplete("daily-reconciliation", Date.now() - t0);
       } catch (err) {
         logger.error({ err, job: "daily-reconciliation" }, "daily-reconciliation cron failed");
-        notifyCritical("reconciliation-cron-failed", JSON.stringify({
-          error: err instanceof Error ? err.message : String(err),
-          job: "daily-reconciliation",
-        }));
+        notifyCritical(
+          "reconciliation-cron-failed",
+          appendFamilyGradePostscript(
+            `The daily reconciliation job failed. Error: ${err instanceof Error ? err.message : String(err)}. Job: daily-reconciliation.`,
+            "The end-of-day trade reconciliation job failed to run. This means today's trade records may not have been fully verified yet.",
+            "No immediate action needed. Tony will investigate. The bot continues trading normally.",
+          ),
+          { error: err instanceof Error ? err.message : String(err), job: "daily-reconciliation" },
+        );
       }
     } finally {
       _releaseJobLock("daily-reconciliation");
@@ -4989,10 +5028,15 @@ except Exception as e:
         emitJobComplete("weekly-drift-detection", Date.now() - t0);
       } catch (err) {
         logger.error({ err, job: "weekly-drift-detection" }, "weekly-drift-detection cron failed");
-        notifyCritical("drift-cron-failed", JSON.stringify({
-          error: err instanceof Error ? err.message : String(err),
-          job: "weekly-drift-detection",
-        }));
+        notifyCritical(
+          "drift-cron-failed",
+          appendFamilyGradePostscript(
+            `The weekly drift detection job failed. Error: ${err instanceof Error ? err.message : String(err)}. Job: weekly-drift-detection.`,
+            "The weekly strategy performance drift check failed to run. This is a monitoring job — the bot continues trading normally.",
+            "No immediate action needed. Tell Tony if this happens multiple weeks in a row.",
+          ),
+          { error: err instanceof Error ? err.message : String(err), job: "weekly-drift-detection" },
+        );
       }
     } finally {
       _releaseJobLock("weekly-drift-detection");
@@ -5048,10 +5092,15 @@ except Exception as e:
     } catch (err) {
       logger.error({ err, job: "paper-journal-recon-daily" }, "paper-journal-recon-daily cron failed");
       const { notifyCritical: nc } = await import("./services/notification-service.js");
-      nc("paper-journal-recon-cron-failed", JSON.stringify({
-        error: err instanceof Error ? err.message : String(err),
-        job: "paper-journal-recon-daily",
-      }));
+      nc(
+        "paper-journal-recon-cron-failed",
+        appendFamilyGradePostscript(
+          `The paper journal reconciliation job failed. Error: ${err instanceof Error ? err.message : String(err)}. Job: paper-journal-recon-daily.`,
+          "The daily paper trade audit job failed to complete. The bot continues trading, but today's paper trade records have not been fully cross-checked.",
+          "No immediate action needed. Tony will be alerted and will check when available.",
+        ),
+        { error: err instanceof Error ? err.message : String(err), job: "paper-journal-recon-daily" },
+      );
     } finally {
       _releaseJobLock("paper-journal-recon-daily");
     }
@@ -5410,10 +5459,14 @@ async function _runN8nDriftAudit(jobName: string): Promise<void> {
       }).catch((err) => logger.error({ err }, "n8n-drift-audit: audit row write failed (timeout)"));
       notifyCritical(
         "n8n drift detector TIMED OUT",
-        `The n8n drift check (${jobName}) did not complete within 5 minutes. ` +
-          `This may indicate n8n API is unreachable or the audit script hung. ` +
-          `Run \`npm run audit:n8n\` from the Skytech tower to investigate. ` +
-          `Stderr tail: ${stderrSummary || "(empty)"}`,
+        appendFamilyGradePostscript(
+          `The n8n drift check (${jobName}) did not complete within 5 minutes. ` +
+            `This may indicate n8n API is unreachable or the audit script hung. ` +
+            `Run \`npm run audit:n8n\` from the Skytech tower to investigate. ` +
+            `Stderr tail: ${stderrSummary || "(empty)"}`,
+          "A background health check for the strategy automation system timed out and could not finish.",
+          "Tell Tony: 'The n8n drift check timed out.' He will investigate when available. No trading is affected.",
+        ),
         { jobName, correlationId, timeoutMs: TIMEOUT_MS },
       );
     } else {
@@ -5430,11 +5483,15 @@ async function _runN8nDriftAudit(jobName: string): Promise<void> {
       }).catch((err) => logger.error({ err }, "n8n-drift-audit: audit row write failed (drift)"));
       notifyCritical(
         "n8n workflow drift detected",
-        `n8n drift check (${jobName}) exited with code ${resolvedExitCode} — one or more workflows ` +
-          `are missing errorWorkflow, retry config, or idempotency headers. ` +
-          `Review and re-attach errorWorkflow (DGEk1D478xWJClKD) as needed. ` +
-          `Run \`npm run audit:n8n\` from the Skytech tower to see the full drift report. ` +
-          `Stdout: ${stdoutSummary || "(empty)"}`,
+        appendFamilyGradePostscript(
+          `n8n drift check (${jobName}) exited with code ${resolvedExitCode} — one or more workflows ` +
+            `are missing errorWorkflow, retry config, or idempotency headers. ` +
+            `Review and re-attach errorWorkflow (DGEk1D478xWJClKD) as needed. ` +
+            `Run \`npm run audit:n8n\` from the Skytech tower to see the full drift report. ` +
+            `Stdout: ${stdoutSummary || "(empty)"}`,
+          "The background automation system has workflows that are missing safety configurations. This does not affect live trading but could slow down strategy discovery.",
+          "Tell Tony: 'The n8n workflow check found a problem.' He will fix it when available. Check back tomorrow.",
+        ),
         { jobName, correlationId, exitCode: resolvedExitCode, stderrSummary },
       );
     }
@@ -6375,7 +6432,11 @@ async function detectStalePaperSessions(): Promise<void> {
 
           notifyCritical(
             "Paper Session Recovery Failed",
-            `Session ${session.id.slice(0, 8)} failed to recover after ${MAX_RECOVERY_ATTEMPTS} attempts and was auto-stopped.`,
+            appendFamilyGradePostscript(
+              `Session ${session.id.slice(0, 8)} failed to recover after ${MAX_RECOVERY_ATTEMPTS} attempts and was auto-stopped.`,
+              "A paper trading session failed to restart after repeated attempts. The strategy has been stopped and will need to be restarted manually.",
+              "Tell Tony: 'A paper trading session auto-stopped and could not recover.' He will restart it when available.",
+            ),
             { sessionId: session.id, strategyId: session.strategyId },
           );
 

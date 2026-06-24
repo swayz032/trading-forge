@@ -2743,9 +2743,14 @@ async function emitLocalLlmDownSignal(opts: LocalLlmDownOpts): Promise<void> {
   // 2. Discord critical alert
   try {
     const { notifyCritical } = await import("../services/notification-service.js");
+    const { appendFamilyGradePostscript } = await import("../lib/notification-helpers.js");
     notifyCritical(
       "EXTRACTION LOST — local Ollama DOWN + cloud unavailable",
-      `Reason: ${fallback_reason}\nSource: ${sourceUrl ?? "(unknown)"}\nFix: POST /api/admin/ollama-health-recheck to restore local routing`,
+      appendFamilyGradePostscript(
+        `Reason: ${fallback_reason}\nSource: ${sourceUrl ?? "(unknown)"}\nFix: POST /api/admin/ollama-health-recheck to restore local routing`,
+        "The strategy-research bot cannot extract new trading strategies right now — the local AI model is down and the cloud backup is also unavailable.",
+        "No action needed today. Check back tomorrow. Tony will be alerted automatically and can restore the system via the admin panel.",
+      ),
       { fallback_reason, source_url: sourceUrl, ollama_healthy_flag: OLLAMA_HEALTHY },
     );
   } catch (err) {
