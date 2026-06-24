@@ -384,13 +384,14 @@
           var tg = el.querySelector('[data-toggle]');
           var st = el.querySelector('[data-status]');
           var bd = el.querySelector('[data-badge]');
-          var state = s.state || (s.on ? 'running' : 'paused');  // running=green, alert=red, paused=blank
+          var state = s.state || (s.on ? 'running' : 'paused');
           tg.classList.remove('on', 'alert');
-          if (state === 'running') tg.classList.add('on');
-          else if (state === 'alert') tg.classList.add('alert');
+          if (state === 'running') tg.classList.add('on');     // GREEN + green pulse
+          else if (s.wired) tg.classList.add('alert');         // RED + red pulse (paused/halted on a LIVE switch)
+          // not-yet-wired switches stay neutral gray (disabled)
           if (s.wired) tg.classList.remove('disabled'); else tg.classList.add('disabled');
           st.textContent = s.status || (s.on ? 'ON' : 'OFF');
-          st.className = 'of-status ' + (state === 'running' ? 'on' : (state === 'alert' ? 'alert' : 'paused'));
+          st.className = 'of-status ' + (state === 'running' ? 'on' : (s.wired ? 'alert' : 'paused'));
           if (bd) {
             bd.textContent = s.wired ? 'LIVE' : (s.needsSetup ? 'SETUP' : 'SOON');
             bd.className = 'of-card-badge' + (s.wired ? ' on' : '');
