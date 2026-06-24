@@ -38,15 +38,18 @@ describe("L1 — metrics-registry pboBlocksTotal rename", () => {
     expect(typeof registry.pboBlocksTotal.labels).toBe("function");
   });
 
-  it("deprecated alias pboBLocksTotal still exports for backward compat", async () => {
+  it("deprecated alias pboBLocksTotal still exports for backward compat (other test files not yet migrated)", async () => {
     const registry = await import("../lib/metrics-registry.js");
-    // Alias must exist and must be the SAME object as the canonical export so
-    // existing lifecycle-service.ts callers still increment the same series.
+    // cf1 (2026-06-24): lifecycle-service.ts has been migrated to pboBlocksTotal.
+    // Alias retained because wave29-prod-hardening-prom-counters.test.ts,
+    // wave29-pass-d1-observability.test.ts, wave-a-paper-parity-*.test.ts, and
+    // wave-b-paper-parity-pbo-regime-label.test.ts still import the old name
+    // (not in cf1 owned-file list).  Remove alias once those files are updated.
     expect(registry.pboBLocksTotal).toBeDefined();
     expect(registry.pboBLocksTotal).toBe(registry.pboBlocksTotal);
   });
 
-  it("pboBlocksTotal and pboBLocksTotal increment the same Prometheus series", async () => {
+  it("pboBlocksTotal and pboBLocksTotal increment the same Prometheus series (alias parity)", async () => {
     const { pboBlocksTotal, pboBLocksTotal, promRegistry } = await import(
       "../lib/metrics-registry.js"
     );
@@ -56,7 +59,8 @@ describe("L1 — metrics-registry pboBlocksTotal rename", () => {
       ?.values as Array<{ labels: { regime: string }; value: number }>)
       ?.find((v) => v.labels.regime === "RANGE_BOUND")?.value ?? 0;
 
-    // Increment via the deprecated alias (as lifecycle-service.ts currently does)
+    // cf1: lifecycle-service.ts now increments via pboBlocksTotal directly.
+    // Verify alias still forwards to the same counter (for other callers not yet migrated).
     pboBLocksTotal.labels({ regime: "RANGE_BOUND" }).inc();
 
     const updatedMetrics = await promRegistry.getMetricsAsJSON();
@@ -88,6 +92,26 @@ describe("L1 — metrics-registry pboBlocksTotal rename", () => {
     const src = readSrc("src/server/lib/metrics-registry.ts");
     expect(src).toContain("@deprecated");
     expect(src).toContain("pboBlocksTotal");
+  });
+
+  // cf1 (2026-06-24): lifecycle-service.ts migrated away from deprecated alias
+  it("lifecycle-service.ts imports pboBlocksTotal (canonical) not deprecated pboBLocksTotal", () => {
+    const src = readSrc("src/server/services/lifecycle-service.ts");
+    // Import line must use the canonical name
+    expect(src).toContain("pboBlocksTotal");
+    // Must NOT import the deprecated alias by name from the registry
+    // (the deprecated alias export itself still exists for other test files)
+    const importLine = src.split("\n").find((l) => l.includes("metrics-registry"));
+    expect(importLine).toBeDefined();
+    expect(importLine).toContain("pboBlocksTotal");
+    expect(importLine).not.toContain("pboBLocksTotal");
+  });
+
+  it("lifecycle-service.ts call site uses pboBlocksTotal.labels().inc() not pboBLocksTotal", () => {
+    const src = readSrc("src/server/services/lifecycle-service.ts");
+    // The call site that increments the PBO counter
+    expect(src).toContain("pboBlocksTotal.labels({ regime: regimeLabel }).inc()");
+    expect(src).not.toContain("pboBLocksTotal.labels");
   });
 });
 

@@ -34,7 +34,7 @@ import { broadcastSSE, LIFECYCLE_GATE_EVENTS } from "../routes/sse.js";
 import { compileDualPineExport } from "./pine-export-service.js";
 import { agentCoordinator } from "./agent-coordinator-service.js";
 import { tracer } from "../lib/tracing.js";
-import { strategyPromotions, pboBLocksTotal, lifecycleShadowPromotionsTotal } from "../lib/metrics-registry.js";
+import { strategyPromotions, pboBlocksTotal, lifecycleShadowPromotionsTotal } from "../lib/metrics-registry.js";
 import { evaluateMultiFirmEligibility } from "./multi-firm-promotion-service.js";
 import { killSwitch } from "../production/kill-switch.js";
 import { evaluateB14CiGate, evaluateDsrWalkForwardGate } from "../lib/b14-ci-gate.js";
@@ -1100,7 +1100,7 @@ export class LifecycleService {
                 const [stratRow] = await db.select({ regimeTrainedOn: strategies.regimeTrainedOn }).from(strategies).where(eq(strategies.id, id)).limit(1);
                 regimeLabel = stratRow?.regimeTrainedOn ?? "unknown";
               } catch { /* non-blocking — keep "unknown" */ }
-              pboBLocksTotal.labels({ regime: regimeLabel }).inc();
+              pboBlocksTotal.labels({ regime: regimeLabel }).inc();
             } catch (_promErr) { /* non-blocking */ }
             try {
               const discordBody = appendFamilyGradePostscript(
@@ -4383,7 +4383,17 @@ export class LifecycleService {
     // from the same underlying signal logic.  compileDualPineExport writes two separate
     // artifact rows into strategy_export_artifacts (artifact_type = dual_indicator |
     // dual_strategy | dual_alerts_json).  No DB schema change required.
-    const result = await compileDualPineExport(strategyId, firmKey, riskIntelligence);
+    //
+    // CF3: thread gatewayOptions explicitly so compileDualPineExport does not fall through
+    // to env-only resolution for archetype strategies with paper_account_routing set.
+    // When paperAccountRouting is non-null the strategy is A/B routed — pass explicit
+    // { mode: "tf_gateway" } to suppress pine_export.gateway_options_missing audit warn
+    // and make the routing intent auditable.  Fall through to undefined for legacy rows.
+    const stratPaperRouting = (strategy as unknown as { paperAccountRouting?: string | null }).paperAccountRouting;
+    const gatewayOptionsForCompile = (stratPaperRouting != null && stratPaperRouting !== "")
+      ? ({ mode: "tf_gateway" } as const)
+      : undefined;
+    const result = await compileDualPineExport(strategyId, firmKey, riskIntelligence, true, undefined, undefined, undefined, undefined, undefined, gatewayOptionsForCompile);
     logger.info(
       {
         strategyId,
@@ -4693,7 +4703,12 @@ export class LifecycleService {
                   await new Promise((resolve) => setTimeout(resolve, PINE_RETRY_DELAYS_MS[attempt - 1]));
                 }
                 try {
-                  await compileDualPineExport(s.id, undefined, undefined, true, correlationId ?? undefined);
+                  // CF3: thread gatewayOptions when paperAccountRouting is set (A/B routed strategies).
+                  const sPaperRouting = (s as unknown as { paperAccountRouting?: string | null }).paperAccountRouting;
+                  const sGatewayOpts = (sPaperRouting != null && sPaperRouting !== "")
+                    ? ({ mode: "tf_gateway" } as const)
+                    : undefined;
+                  await compileDualPineExport(s.id, undefined, undefined, true, correlationId ?? undefined, undefined, undefined, undefined, undefined, sGatewayOpts);
                   pineSuccess = true;
                   break;
                 } catch (pineErr) {

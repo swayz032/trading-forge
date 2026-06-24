@@ -623,6 +623,14 @@ export async function generateRecipientExport(
   // BUG-1 fix: pass accountId so the Python subprocess injects it into compile_dual_artifacts,
   // enabling the marker alertcondition block (Track 8) to be emitted when both account_id
   // and hmac_secret are present. Previously account_id was never forwarded to the compiler.
+  //
+  // CF3: thread gatewayOptions explicitly when strategy has paper_account_routing set
+  // (A/B routed strategies).  Suppresses pine_export.gateway_options_missing audit warn
+  // and makes routing intent auditable.  Falls through to undefined for legacy rows.
+  const recipientPaperRouting = (strategy as unknown as { paperAccountRouting?: string | null }).paperAccountRouting;
+  const recipientGatewayOpts = (recipientPaperRouting != null && recipientPaperRouting !== "")
+    ? ({ mode: "tf_gateway" } as const)
+    : undefined;
   const exportResult = await compileDualPineExport(
     strategyId,
     firmKey,
@@ -633,6 +641,7 @@ export async function generateRecipientExport(
     recipientLabel,
     hmacSecret,
     accountId,
+    recipientGatewayOpts,
   );
 
   if (exportResult.status === "failed") {

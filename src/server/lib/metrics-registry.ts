@@ -278,10 +278,13 @@ export const pboBlocksTotal = new Counter({
   registers: [promRegistry],
 });
 /**
- * @deprecated Use `pboBlocksTotal` (corrected camelCase). Alias retained for
- * backward-compat with lifecycle-service.ts which is managed by another agent
- * in the same hardening pass. Remove this alias once lifecycle-service.ts is
- * updated to the canonical name.
+ * @deprecated Use `pboBlocksTotal` (corrected camelCase). lifecycle-service.ts has been
+ * updated (cf1, 2026-06-24) to use the canonical name directly.
+ * Sub-carry-forward: wave29-prod-hardening-prom-counters.test.ts, wave29-pass-d1-observability.test.ts,
+ * wave-a-paper-parity-trades-counter.test.ts, wave-a-paper-parity-promotions-counter.test.ts,
+ * wave-a-paper-parity-auto-promo-gates.test.ts, and wave-b-paper-parity-pbo-regime-label.test.ts
+ * still import this alias and are not in the cf1 owned-file list.
+ * Remove this alias once those test files are updated to import pboBlocksTotal.
  */
 export const pboBLocksTotal = pboBlocksTotal;
 
