@@ -1171,6 +1171,7 @@ export async function openPosition(sessionId: string, params: {
                     strategyId: session.strategyId,
                     killAuditId: rows[0]?.id ?? null,
                     reason: killResult.reason ?? "daily_loss_kill",
+                    correlationId,
                   });
                 }
               })
@@ -1308,6 +1309,7 @@ export async function openPosition(sessionId: string, params: {
                 strategyId: session.strategyId,
                 killAuditId: rows[0]?.id ?? null,
                 reason: "kill_switch_down",
+                correlationId,
               });
             }
           })

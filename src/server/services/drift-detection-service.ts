@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { db } from "../db/index.js";
 import { backtests, paperTrades, complianceReviews, paperSessions, strategies } from "../db/schema.js";
 import { eq, desc, and, isNull, inArray } from "drizzle-orm";
@@ -25,6 +26,8 @@ function stdDev(values: number[]): number {
 
 // Compare live paper trading metrics against backtest expectations
 export async function detectDrift(strategyId: string, sessionId: string): Promise<DriftReport[]> {
+  const correlationId = randomUUID();
+
   // Get latest completed backtest for this strategy
   const [backtest] = await db.select().from(backtests)
     .where(and(eq(backtests.strategyId, strategyId), eq(backtests.status, "completed")))
@@ -42,7 +45,11 @@ export async function detectDrift(strategyId: string, sessionId: string): Promis
 
   const reports: DriftReport[] = [];
 
-  // Compare win rate
+  // OBSERVABILITY-ONLY: win rate is logged for visibility but MUST NOT drive a gate
+  // or auto-demotion. Project mandate (CLAUDE.md \u00A71 + win-rate-is-output rule):
+  // "Win rate is an OBSERVED output metric \u2014 never a target, never a gate."
+  // Severity is capped at "investigate" \u2014 it will NEVER be "alert", so it is
+  // excluded from the alerts[] filter below that triggers PAPER \u2192 DECLINING demotion.
   const liveWins = trades.filter(t => Number(t.pnl) > 0).length;
   const liveWinRate = liveWins / trades.length;
   const backtestWinRate = Number(backtest.winRate ?? 0);
@@ -58,9 +65,12 @@ export async function detectDrift(strategyId: string, sessionId: string): Promis
       backtestValue: backtestWinRate,
       liveValue: liveWinRate,
       deviationStdDevs: Math.round(deviationStdDevs * 100) / 100,
-      severity: deviationStdDevs > 2 ? "alert" : deviationStdDevs > 1 ? "investigate" : "ok",
+      // Severity capped at "investigate" \u2014 NEVER "alert". Win rate deviation alone
+      // must NOT trigger the auto-demotion path below. R-expectancy / avg-trade-PnL /
+      // drawdown metrics (which follow) are the authoritative demotion signals.
+      severity: deviationStdDevs > 1 ? "investigate" : "ok",
       message: deviationStdDevs > 2
-        ? `Win rate drifted ${deviationStdDevs.toFixed(1)}\u03C3 from backtest (${(backtestWinRate * 100).toFixed(0)}% \u2192 ${(liveWinRate * 100).toFixed(0)}%)`
+        ? `Win rate drifted ${deviationStdDevs.toFixed(1)}\u03C3 from backtest (${(backtestWinRate * 100).toFixed(0)}% \u2192 ${(liveWinRate * 100).toFixed(0)}%) [observability only \u2014 not a gate]`
         : `Win rate within expected range`,
     });
   }
@@ -114,23 +124,28 @@ export async function detectDrift(strategyId: string, sessionId: string): Promis
     });
   }
 
-  // Broadcast alerts for any high-severity drift
+  // Broadcast alerts for any high-severity drift.
+  // NOTE: winRate is capped at "investigate" above — it cannot reach "alert" here,
+  // so win-rate-only deviations are excluded from the auto-demotion path per mandate.
+  // Only R-expectancy / avg-trade-PnL / drawdown alerts trigger demotion.
   const alerts = reports.filter(r => r.severity === "alert");
   if (alerts.length > 0) {
-    broadcastSSE("drift:alert", { strategyId, sessionId, alerts });
-    logger.warn({ strategyId, alerts }, "Drift detected in paper trading");
+    broadcastSSE("drift:alert", { strategyId, sessionId, alerts, correlationId });
+    logger.warn({ strategyId, alerts, correlationId }, "Drift detected in paper trading");
 
-    // Auto-demote from PAPER to DECLINING if any metric exceeds 2σ
+    // Auto-demote from PAPER to DECLINING if any GATED metric (NOT winRate) exceeds 2σ.
+    // maxDrift is derived from alerts[] which can only contain avgTradePnl and maxDrawdown
+    // after the winRate severity cap above.
     const maxDrift = Math.max(...alerts.map(a => a.deviationStdDevs));
     if (maxDrift > 2.0) {
       try {
         const { LifecycleService } = await import("./lifecycle-service.js");
         const lifecycle = new LifecycleService();
         await lifecycle.promoteStrategy(strategyId, "PAPER", "DECLINING");
-        broadcastSSE("strategy:drift-demotion", { strategyId, driftSeverity: maxDrift });
-        logger.warn({ strategyId, driftSeverity: maxDrift }, "Strategy auto-demoted due to drift > 2σ");
+        broadcastSSE("strategy:drift-demotion", { strategyId, driftSeverity: maxDrift, correlationId, trigger: alerts.map(a => a.metric) });
+        logger.warn({ strategyId, driftSeverity: maxDrift, correlationId, trigger: alerts.map(a => a.metric) }, "Strategy auto-demoted due to drift > 2σ in expectancy/drawdown metrics");
       } catch (demoteErr) {
-        logger.error({ strategyId, err: demoteErr }, "Auto-demotion from drift failed");
+        logger.error({ strategyId, err: demoteErr, correlationId }, "Auto-demotion from drift failed");
       }
     }
   }

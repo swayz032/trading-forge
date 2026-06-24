@@ -26,6 +26,7 @@ import { db } from "../db/index.js";
 import { strategyLockouts } from "../db/schema.js";
 import { eq, and, gt, desc } from "drizzle-orm";
 import { logger } from "../lib/logger.js";
+import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -46,6 +47,7 @@ export interface WriteLockoutParams {
   strategyId: string;
   killAuditId: string | null;  // audit_log.id — null for manual lockouts
   reason: string;               // daily_loss_kill | manual | etc
+  correlationId?: string | null; // propagated from the kill event handler
 }
 
 // ─── Write lockout on kill event ─────────────────────────────────────────────
@@ -60,7 +62,7 @@ export interface WriteLockoutParams {
  * already stops the current session. The lockout row gates the NEXT session.
  */
 export async function writeLockoutFromKillEvent(params: WriteLockoutParams): Promise<void> {
-  const { strategyId, killAuditId, reason } = params;
+  const { strategyId, killAuditId, reason, correlationId } = params;
   const lockedUntil = new Date(Date.now() + LOCKOUT_DURATION_HOURS * 60 * 60 * 1000);
 
   try {
@@ -72,15 +74,48 @@ export async function writeLockoutFromKillEvent(params: WriteLockoutParams): Pro
     });
 
     logger.info(
-      { strategyId, lockedUntil: lockedUntil.toISOString(), reason, killAuditId },
+      { strategyId, lockedUntil: lockedUntil.toISOString(), reason, killAuditId, correlationId },
       "Tier 5.3: strategy lockout written — 24h trading pause after compliance kill",
     );
+
+    // Emit audit row AFTER the lockout insert succeeds so the audit reflects the
+    // committed state.  Fail-soft: audit failure must never block the lockout write
+    // (kill switch already active; lockout row is belt-and-suspenders for next session).
+    await insertAuditRowSafe({
+      action: "strategy.lockout_written",
+      entityType: "strategy",
+      entityId: strategyId,
+      decisionAuthority: "system",
+      status: "warning",
+      input: { reason, triggeredByKillId: killAuditId } as Record<string, unknown>,
+      result: {
+        lockedUntil: lockedUntil.toISOString(),
+        lockoutDurationHours: LOCKOUT_DURATION_HOURS,
+        triggeredByKillId: killAuditId,
+      } as Record<string, unknown>,
+      correlationId: correlationId ?? null,
+    });
   } catch (err) {
     // Non-fatal: kill switch is already active. Log error for investigation.
     logger.error(
-      { err, strategyId, reason, killAuditId },
+      { err, strategyId, reason, killAuditId, correlationId },
       "Tier 5.3: failed to write strategy lockout row — current kill switch still active",
     );
+    // Attempt a fail-soft audit row for the failure path so the 24h pause is still
+    // visible in audit_log even when the lockout write itself failed.
+    await insertAuditRowSafe({
+      action: "strategy.lockout_write_failed",
+      entityType: "strategy",
+      entityId: strategyId,
+      decisionAuthority: "system",
+      status: "error",
+      input: { reason, triggeredByKillId: killAuditId } as Record<string, unknown>,
+      result: {
+        error: err instanceof Error ? err.message : String(err),
+        note: "lockout row write failed; kill switch still active for current session",
+      } as Record<string, unknown>,
+      correlationId: correlationId ?? null,
+    });
   }
 }
 

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { db } from "../db/index.js";
 import { paperSessions, paperPositions, paperTrades, paperSignalLogs, paperSessionFeedback, strategies, backtests, monteCarloRuns, auditLog } from "../db/schema.js";
@@ -480,6 +481,10 @@ router.post("/execute/open", async (req, res) => {
 
     if (sessionRow?.mode === "shadow" && result.executionResult.actualPrice != null) {
       const actualPrice = result.executionResult.actualPrice;
+      // Propagate a per-request correlationId so the shadow signal is
+      // linkable end-to-end: HTTP request → shadow_signals row → audit_log.
+      const shadowCorrelationId = (req as unknown as Record<string, unknown>).correlationId as string | undefined
+        ?? randomUUID();
       await logShadowSignal({
         sessionId,
         signalTime: new Date(),
@@ -487,6 +492,7 @@ router.post("/execute/open", async (req, res) => {
         expectedEntry: parseFloat(signalPrice),
         actualMarketPrice: actualPrice,
         modelSlippage: Math.abs(parseFloat(signalPrice) - actualPrice),
+        correlationId: shadowCorrelationId,
       });
     }
 

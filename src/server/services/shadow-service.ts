@@ -7,6 +7,8 @@
 import { db } from "../db/index.js";
 import { shadowSignals } from "../db/schema.js";
 import { eq, desc } from "drizzle-orm";
+import { logger } from "../lib/logger.js";
+import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 
 interface ShadowSignalInput {
   sessionId: string;
@@ -19,25 +21,75 @@ interface ShadowSignalInput {
   theoreticalPnl?: number;
   modelSlippage?: number;
   actualSlippage?: number;
+  correlationId?: string | null; // propagated from the signal evaluation path
 }
 
-export async function logShadowSignal(input: ShadowSignalInput) {
+export async function logShadowSignal(input: ShadowSignalInput): Promise<void> {
   const wouldFill = input.actualMarketPrice != null && input.expectedEntry != null
     ? Math.abs(input.actualMarketPrice - input.expectedEntry) / input.expectedEntry < 0.005
     : null;
 
-  await db.insert(shadowSignals).values({
-    sessionId: input.sessionId,
-    signalTime: input.signalTime,
-    direction: input.direction,
-    expectedEntry: String(input.expectedEntry),
-    expectedExit: input.expectedExit != null ? String(input.expectedExit) : null,
-    actualMarketPrice: input.actualMarketPrice != null ? String(input.actualMarketPrice) : null,
-    wouldHaveFilled: input.wouldHaveFilled ?? wouldFill,
-    theoreticalPnl: input.theoreticalPnl != null ? String(input.theoreticalPnl) : null,
-    modelSlippage: input.modelSlippage != null ? String(input.modelSlippage) : null,
-    actualSlippage: input.actualSlippage != null ? String(input.actualSlippage) : null,
-  });
+  try {
+    await db.insert(shadowSignals).values({
+      sessionId: input.sessionId,
+      signalTime: input.signalTime,
+      direction: input.direction,
+      expectedEntry: String(input.expectedEntry),
+      expectedExit: input.expectedExit != null ? String(input.expectedExit) : null,
+      actualMarketPrice: input.actualMarketPrice != null ? String(input.actualMarketPrice) : null,
+      // SHADOW invariant: traderspost_webhook_called must NEVER be true in shadow rows.
+      // wouldHaveFilled reflects fill probability analysis only — not actual execution.
+      wouldHaveFilled: input.wouldHaveFilled ?? wouldFill,
+      theoreticalPnl: input.theoreticalPnl != null ? String(input.theoreticalPnl) : null,
+      modelSlippage: input.modelSlippage != null ? String(input.modelSlippage) : null,
+      actualSlippage: input.actualSlippage != null ? String(input.actualSlippage) : null,
+    });
+
+    // Emit success audit row so the shadow signal is visible in audit_log with correlationId.
+    await insertAuditRowSafe({
+      action: "signal.shadow_logged",
+      entityType: "paper_session",
+      entityId: input.sessionId,
+      decisionAuthority: "system",
+      status: "info",
+      input: {
+        direction: input.direction,
+        expectedEntry: input.expectedEntry,
+        signalTime: input.signalTime.toISOString(),
+      } as Record<string, unknown>,
+      result: {
+        wouldHaveFilled: input.wouldHaveFilled ?? wouldFill,
+        traderspost_webhook_called: false, // SHADOW invariant
+      } as Record<string, unknown>,
+      correlationId: input.correlationId ?? null,
+    });
+  } catch (err) {
+    // Fail-soft: DB error must NOT throw into the signal-evaluation caller.
+    // Log the error and emit an audit row for the failure path so the gap is visible.
+    logger.error(
+      { err, sessionId: input.sessionId, direction: input.direction, correlationId: input.correlationId },
+      "shadow-service: logShadowSignal insert failed — fail-soft, caller not thrown",
+    );
+
+    // Fire-and-forget audit for the failure: insertAuditRowSafe is already fail-soft.
+    await insertAuditRowSafe({
+      action: "lifecycle.shadow_signal_log_failed",
+      entityType: "paper_session",
+      entityId: input.sessionId,
+      decisionAuthority: "system",
+      status: "error",
+      input: {
+        direction: input.direction,
+        expectedEntry: input.expectedEntry,
+        signalTime: input.signalTime.toISOString(),
+      } as Record<string, unknown>,
+      result: {
+        error: err instanceof Error ? err.message : String(err),
+        traderspost_webhook_called: false, // SHADOW invariant preserved even on failure
+      } as Record<string, unknown>,
+      correlationId: input.correlationId ?? null,
+    });
+  }
 }
 
 export async function getShadowReport(sessionId: string) {
