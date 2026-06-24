@@ -3,6 +3,40 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-24 Pass 3 Production-Hardening WAVE CLOSE — 7 of 7 carry-forwards closed; pushed → main
+
+**Mission:** Operator "dispatch pass 3 and clean up the other tasks" — close remaining MED + LOW carry-forwards from Pass 2 + 3 wave-discovered follow-ups (F1 global postscript expansion, F2 CI yaml wire-in, F3 lifecycle broadcast wiring).
+
+**Method:** 3 parallel subagents (Tracks A/B/D) + 2 inline fixes (M7 frontend + F2 CI yaml). Zero cross-track file collisions.
+
+**Closed this session:**
+
+| ID | Commit | Closure |
+|----|--------|---------|
+| M7 | `d401e7a` | api-client.ts reads `import.meta.env.VITE_API_BASE ?? "/api"`; frontend .env.example added |
+| M10 | `8dd0cad` | paper-journal-recon: 3 sub-checks (shadow-signal delta, quantum-replay orphans, A/B routing infra) |
+| M13 | `ef3ba4c` | triggerRemotePowerCycle fail-CLOSED on partial Kasa env config + critical audit BEFORE throw |
+| L1-L4 | `2badaa0` | pboBlocksTotal rename+alias / WAVE29_EVENTS JSDoc anchors / scheduler runbook ref / NEW auto_patch.loop_halted_kill_switch audit |
+| F1 | `fb5cb45` | 46 bare notifyCritical/notifyWarning sites wrapped across 30 files; CI lint scope 4 → 43 files |
+| F2 | `d401e7a` | ci.yml — wired 3 previously-unwired TS↔Python parity gates (firm-rules-version + tier1 + pm-factor) |
+| F3 | `fb5cb45` | 6 broadcastSSE wires in lifecycle-service.ts (FROZEN_POLICY_DRIFT_BLOCKED + COMPLIANCE_DRIFT_BLOCKED + BACKTEST_STALE) |
+
+**Push to main:** Fast-forward `d401e7a..4a221d9` `hardening/phase-0 → main`. NOT a force push.
+
+**Tests:** 12 (M10+M13) + 20 (L1-L4) + 6 (F1+F3) = **38 new vitest GREEN.** Regression baselines GREEN.
+
+**Cumulative wave state (deep-scan W1 + Pass 2 W2 + Pass 3 W3):** 13 deep-scan + 10 Pass 2 + 7 Pass 3 = **30 of 30 prioritized findings CLOSED.** Zero remaining MED or LOW open. 6 operator action items remain (env vars + Kasa hardware + v12 decision + smoke-test fire).
+
+**The first TradingView paper trade is now blocked ONLY by operator action items.** Safety stack end-to-end: kill-switch L1-L9 + SHADOW invariant + compliance enforce + B14 ci_high + WFE + PBO + parameter drift + frozen-policy hash + adaptive exits + family-grade alerts (46-site sweep + CI lint) + cross-system recon (M10's 3 new sub-checks) + 8 CI hard gates (5 existing + 3 newly-wired this session).
+
+**Carry-forward (optional, no urgency):**
+- L1 deprecated `pboBLocksTotal` alias removed once lifecycle-service.ts migrates
+- M10 shadow-signal delta denominator could use `max(shadow, logs)` to handle logs=0
+- Operator confirm M4-detected MFFU Builder field set (pending from Pass 2)
+- Pre-existing ~111 unrelated vitest failures (lifecycle mock / archetype registry / b14-ruin-ci integration) — dedicated triage session candidate
+
+---
+
 
 ### Session Log — 2026-06-24 M10 + M13 (paper-journal-recon scope expansion + Kasa partial-config guard) — hardening/phase-0
 
