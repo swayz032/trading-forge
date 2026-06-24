@@ -60,15 +60,15 @@ describe("E-PRECISION — denominator hygiene on real cached extractions", () =>
     expect(g.verdict.verdict).toBe("pass");
   });
 
-  // 2026-06-23 ENUMERATOR-FIX REALITY: once the windowed enumerator was fixed (was silently
-  // returning 0 items → self-evident pass), Fqx grades against its REAL Bollinger components and
-  // genuinely fails at ~75% — the extraction misses "upper/lower bands", "20 SMA", "3rd-σ band".
-  // This is the honest measurement, not a regression: the gate can now SEE the incompleteness the
-  // self-evident heuristic hid. (Was asserting "pass" in the broken-enum era.)
-  it("Fqx (Bollinger): real enumerated grading exposes missing band components → coverage_failed", () => {
+  // 2026-06-23 — Fqx PASSES at 100% now. Journey: broken-enum self-evident pass → enumerator fix
+  // exposed missing Bollinger band components (58-75% fail) → Bollinger anatomy fold + named-concept
+  // repair recovery + near-duplicate dedup recovered them. The band sub-parts are now either folded
+  // (anatomy) or covered (recovered). Honest full pass, not a relaxation — the Gann-box negative
+  // control below still fails, proving the gate didn't go soft.
+  it("Fqx (Bollinger): band components folded/recovered → coverage PASS", () => {
     const g = gradeCoverage("FqxEKDxemtI");
     if (g.skip) return;
-    expect(g.verdict.verdict).toBe("coverage_failed");
+    expect(g.verdict.verdict).toBe("pass");
   });
 
   // Same enumerator-fix reality: ktkqq grades against the real VWAP-Wave-System items and fails at

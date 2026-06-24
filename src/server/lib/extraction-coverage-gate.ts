@@ -377,9 +377,31 @@ const EXTERNAL_TOOL_RE =
 const AUX_META_RE =
   /^(the\s+|a\s+|my\s+)?(tool|risk[\s-]?reward\s*tool|position\s*sizing\s*tool|flowchart|watch\s*list|pdf|guide|course|ebook|disclaimer|notifications?)$/i;
 
+// 2026-06-23 Experiment A (SY2/D1Ipi8 regression diff): near-duplicate + garble folding. The
+// enumerator surfaces the SAME underlying concept multiple times due to transcription noise or
+// granularity — "Fibonacci retracement strategy" vs "Fibonacci retracements", "0.25.5.75.0.100%
+// zones" (a garbled Fib-level enumeration that duplicates the covered GAN box / fib zones),
+// "bullish candlesticks" / "bearish candle closes" (duplicate the covered "candle anatomy"). Each
+// extra copy inflates the denominator + creates a false miss. Same class as the Bollinger anatomy
+// fold; comparator-side only (no extraction change).
+const GARBLED_NUMERIC_ZONE_RE = /^[\s\d.,%/-]+(zones?|levels?)?$/i; // "0.25.5.75.0.100% zones"
+const CANDLE_DESCRIPTOR_RE = /^(bullish|bearish)\s+candle(stick)?s?(\s+closes?)?$/i; // generic candle anatomy
+// Strip generic trailing/structural words + plurals so "X strategy" and "X" collapse to one key.
+const _GENERIC_TOKEN_RE = /\b(strategy|strategies|setup|setups|system|model|theory|framework|method|approach|concept|zones?|levels?|trading)\b/gi;
+function normalizeForDedup(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(_GENERIC_TOKEN_RE, " ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\b(\w+?)s\b/g, "$1") // crude singularize
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function selectDistinctItems(items: SpeakerItem[]): SpeakerItem[] {
   const kept: SpeakerItem[] = [];
   const keptLower = new Set<string>();
+  const keptNorm = new Set<string>(); // near-duplicate dedup keys
   for (const it of items) {
     const n = (it.name ?? "").trim();
     if (!n) continue;
@@ -388,6 +410,11 @@ function selectDistinctItems(items: SpeakerItem[]): SpeakerItem[] {
     if (INSTRUMENT_RE.test(n) || INSTRUMENT_BARE_RE.test(n)) continue; // (4) instrument/symbol — mechanic-agnostic
     if (EXTERNAL_TOOL_RE.test(n)) continue; // (5) external software/platform — not the mechanic
     if (AUX_META_RE.test(n)) continue; // (6) aux/meta artifact (watchlist, PDF, sizing tool, flowchart)
+    if (GARBLED_NUMERIC_ZONE_RE.test(n)) continue; // (7) garbled numeric-zone enumeration
+    if (CANDLE_DESCRIPTOR_RE.test(n)) continue; // (8) generic bullish/bearish candle descriptor
+    const norm = normalizeForDedup(n); // (9) near-duplicate fold ("X strategy" ↔ "X", plurals)
+    if (norm.length > 0 && keptNorm.has(norm)) continue;
+    keptNorm.add(norm);
     keptLower.add(n.toLowerCase());
     kept.push(it);
   }
