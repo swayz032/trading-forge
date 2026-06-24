@@ -11315,6 +11315,35 @@ Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal
 
 ---
 
+### Session Log — 2026-06-24 CF1+CF3 pboBlocksTotal rename + gatewayOptions threading
+
+**Mission:** Close two carry-forward cleanups on branch `hardening/phase-0` touching `lifecycle-service.ts`: CF1 (pboBLocksTotal typo → pboBlocksTotal canonical rename) and CF3 (caller-side gatewayOptions threading into compileDualPineExport for M5 carry-forward).
+
+**Work completed:**
+- CF1: `lifecycle-service.ts` import and call site migrated from `pboBLocksTotal` to `pboBlocksTotal`
+- CF1: `metrics-registry.ts` deprecated alias retained (6 external test files not in owned-file list still import it); alias JSDoc updated to name all 6 blocking files as sub-carry-forward
+- CF1: `l1-l4-cosmetic-batch.test.ts` updated with 2 new source-text assertions proving the migration happened
+- CF3: `lifecycle-service.ts::triggerPineCompile` — derives `gatewayOptionsForCompile` from `strategy.paperAccountRouting`, passes as 10th arg to `compileDualPineExport`
+- CF3: `lifecycle-service.ts` PILOT auto-promote retry loop — derives `sGatewayOpts` from `s.paperAccountRouting`, passes as 10th arg
+- CF3: `pine-export-recipient-service.ts::generateRecipientExport` — derives `recipientGatewayOpts` from `strategy.paperAccountRouting`, passes as 10th arg
+- CF3: Leave-alone callers unchanged: archetype gateway gate (~1412, already passes `{ mode: "tf_gateway" }`), `checkExportability` (dry-run, 4 args), `routes/pine-export.ts` (admin path, no strategy row in scope)
+- New test file: `src/server/__tests__/cf1-cf3-pbo-rename-and-gateway-threading.test.ts` (16 source-text assertion tests)
+
+**Verification:** 80 tests GREEN (16 new + 22 L1-L4 + 30 pine-export-gateway-options + 12 M5); pre-existing `lifecycle-archetype-gateway-gate.test.ts` failure (1/36) confirmed pre-dates this change (same failure on clean base branch via git stash test).
+
+**Known-facts updates:**
+- `lifecycle-archetype-gateway-gate.test.ts` has 1 pre-existing failure at `successFalseIdx > blockIdx` ordering assertion — `indexOf("return { success: false, error: blockReason }")` returns the first occurrence in the file, which is before the `lifecycle.archetype_gateway_bypass_blocked` string. This test was already failing before CF1/CF3 work (confirmed via git stash).
+- `GatewayOptions` type in `pine-gateway-options.ts` is `{ mode: "tf_gateway" | "direct"; gatewayUrl?: string }` — NO `accountIdExternal` field. The spec description was descriptive, not the actual type shape.
+- `paperAccountRouting` column (`strategies.paper_account_routing TEXT DEFAULT 'baseline'`, migration 0159) is the A/B routing discriminator. Non-null/non-empty → pass `{ mode: "tf_gateway" } as const`; null → pass `undefined` (env fallback via `deriveGatewayOptions`).
+
+**Carry-forward for next session:**
+- CF1 sub-carry-forward: 6 test files still import `pboBLocksTotal` alias (wave29-prod-hardening-prom-counters.test.ts, wave29-pass-d1-observability.test.ts, wave-a-paper-parity-trades-counter.test.ts, wave-a-paper-parity-promotions-counter.test.ts, wave-a-paper-parity-auto-promo-gates.test.ts, wave-b-paper-parity-pbo-regime-label.test.ts). Update these to import `pboBlocksTotal` and delete the deprecated alias from `metrics-registry.ts`.
+- Fix pre-existing `lifecycle-archetype-gateway-gate.test.ts` ordering assertion: use `lastIndexOf` for `successFalseIdx` or scope the search window.
+
+**Commit:** `ed08fa4` — pushed to `hardening/phase-0`
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### `git add <paths>` + `git commit` is UNSAFE on the shared index — use `git commit -- <paths>` (pinned 2026-06-23)
