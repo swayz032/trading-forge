@@ -600,7 +600,7 @@ export async function openPosition(sessionId: string, params: {
   // paper trading activity — no new positions may be opened until they set
   // production_mode back to 'PAPER' or 'LIVE'.
   try {
-    if (await killSwitch.isHaltedForProduction()) {
+    if (await killSwitch.isHaltedForProduction({ correlationId })) {
       logger.warn(
         { fn: "openPosition", sessionId, symbol: params.symbol, side: params.side, reason: "production_mode_halt" },
         "paper-execution.production-halted: new entry blocked by production kill switch",

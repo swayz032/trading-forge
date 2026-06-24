@@ -79,6 +79,9 @@ import { shadowSignalsTotal } from "../lib/metrics-registry.js";
 import { getSmtLiveSnapshot } from "./smt-live-service.js";
 // H3 (2026-06-23): kill switch needed at pending-entry fill site (bar N+1)
 import { killSwitch } from "../production/kill-switch.js";
+// M2 (2026-06-23): divergence_vs_backtest inline writer — updates the shadow signal row
+// immediately after INSERT so the SHADOW→PAPER gate has a fresh value.
+import { writeShadowDivergence } from "../lib/shadow-divergence-writer.js";
 const FAIL_CLOSED_EXECUTION = process.env.TF_FAIL_CLOSED_EXECUTION !== "0";
 
 // ─── Wave 23.C: A+ gate constants ────────────────────────────────────────────
@@ -5124,28 +5127,46 @@ export async function evaluateSignals(
 
             // INSERT lifecycle_shadow_signals row.
             // traderspost_webhook_called MUST be false — invariant enforced here.
+            // M2 (2026-06-23): use .returning({ id }) so we can immediately compute and
+            // UPDATE divergence_vs_backtest on the same row (inline write — no cron needed).
             const shadowCorrelationId = correlationId ?? randomUUID();
-            db.insert(lifecycleShadowSignals).values({
-              strategyId: sessionConfig.strategyId,
-              signalTs: bar.timestamp ? new Date(bar.timestamp) : new Date(),
-              direction: config.side,
-              entryPrice: bar.close,
-              intendedSize: contextContracts,
-              killzone: detectedKillzone,
-              regime: (biasState as Record<string, unknown> | null)?.regimeLabel as string | undefined ?? null,
-              confluenceScore: shadowConfluenceScore,
-              lifecycleState: "SHADOW",
-              divergenceVsBacktest: null,  // filled by A.3 divergence checker
-              sourceCorrelationId: shadowCorrelationId,
-              traderspostWebhookCalled: false,  // INVARIANT: always false
-            }).catch((err: unknown) => {
-              // Fail-soft: shadow INSERT failure logs error but STILL skips TradersPost.
-              // The shadow invariant (never route) takes precedence over observability.
-              logger.error(
-                { err, sessionId, strategyId: sessionConfig.strategyId, symbol },
-                "Wave 29 Pass A.1: lifecycle_shadow_signals INSERT failed — still skipping TradersPost (invariant preserved)",
-              );
-            });
+            db.insert(lifecycleShadowSignals)
+              .values({
+                strategyId: sessionConfig.strategyId,
+                signalTs: bar.timestamp ? new Date(bar.timestamp) : new Date(),
+                direction: config.side,
+                entryPrice: bar.close,
+                intendedSize: contextContracts,
+                killzone: detectedKillzone,
+                regime: (biasState as Record<string, unknown> | null)?.regimeLabel as string | undefined ?? null,
+                confluenceScore: shadowConfluenceScore,
+                lifecycleState: "SHADOW",
+                divergenceVsBacktest: null,  // set by writeShadowDivergence below
+                sourceCorrelationId: shadowCorrelationId,
+                traderspostWebhookCalled: false,  // INVARIANT: always false
+              })
+              .returning({ id: lifecycleShadowSignals.id })
+              .then(([row]) => {
+                if (!row?.id) return;
+                // M2: compute + persist divergence_vs_backtest inline.
+                // Fire-and-forget — shadow invariant (never route to TradersPost) must
+                // not be blocked by a slow divergence computation.
+                writeShadowDivergence(row.id as bigint, sessionConfig.strategyId, shadowCorrelationId)
+                  .catch((err: unknown) =>
+                    logger.warn(
+                      { err, sessionId, strategyId: sessionConfig.strategyId },
+                      "M2: writeShadowDivergence failed (non-blocking — shadow invariant preserved)",
+                    ),
+                  );
+              })
+              .catch((err: unknown) => {
+                // Fail-soft: shadow INSERT failure logs error but STILL skips TradersPost.
+                // The shadow invariant (never route) takes precedence over observability.
+                logger.error(
+                  { err, sessionId, strategyId: sessionConfig.strategyId, symbol },
+                  "Wave 29 Pass A.1: lifecycle_shadow_signals INSERT failed — still skipping TradersPost (invariant preserved)",
+                );
+              });
 
             // Emit audit row: lifecycle.shadow_signal_logged
             insertAuditRow({
