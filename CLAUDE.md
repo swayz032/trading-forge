@@ -712,6 +712,7 @@ Skipping commit-and-push is **fail-CLOSED**, same severity as skipping `system-m
 ### Architecture
 - Don't add Supabase or complex auth — single operator, no SaaS
 - Don't over-engineer — MVP each phase, iterate
+- **Ship gates STRICT, then loosen with DATA — not fear (2026-06-24).** The system stacks many entry gates (11-factor confluence@0.72, macro/lunch blackout, PM taper, DLL bands, daily-trade-cap, structural-stop ceiling, B15/PBO/WFE) — each REDUCES trade count; stacked, they can strangle the edge ("death by a thousand filters" → a bot that can't lose but can't win). The operator trades BIG MOVES (14-24pt Style C 2R+, NOT scalps), so a gate blocking a big-move A+ setup is the EXPENSIVE error. Diagnose with `src/engine/gate_block_analyzer.py` — for every gate-BLOCKED signal (`paper_signal_logs` acted=false) it replays the FAITHFUL counterfactual (real per-symbol framework stop 14/40/0.25pt + Style C exit + same fill model on real forward bars) and verdicts each gate COSTING (blocked big-move winners) vs SAVING (blocked losers). Run: `python -m src.engine.gate_block_analyzer <name> --since <iso>`. Loosen only the gates the DATA shows are blocking winners. Env: `GATE_BLOCK_BIG_MOVE_POINTS_<SYM>`, `STOP_CEILING_PTS_<SYM>`. Fail-closed (INDETERMINATE on missing forward bars, never fabricated); needs paper/backtest block data to verdict.
 - Don't generate complex strategies — max 5 parameters
 - Don't optimize parameters to find "the best" — test robustness across a wide range
 - Don't add backwards-compat hacks unless explicitly required
