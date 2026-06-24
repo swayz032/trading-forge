@@ -31,6 +31,21 @@ const mocks = vi.hoisted(() => ({
 
 vi.stubGlobal("fetch", mocks.fetch);
 
+// DB mock — client.ts now imports db for audit writes; mock to avoid DATABASE_URL requirement
+vi.mock("../db/index.js", () => ({
+  db: {
+    insert: vi.fn(() => ({
+      values: vi.fn(() => ({
+        catch: vi.fn(),
+      })),
+    })),
+  },
+}));
+
+vi.mock("../db/schema.js", () => ({
+  auditLog: "audit_log_table_symbol",
+}));
+
 vi.mock("../../lib/logger.js", () => ({
   logger: {
     info: vi.fn(),
