@@ -138,9 +138,13 @@ function _warnConsecFailures(strikes: number): void {
   try {
     notifyWarning(
       "Pattern Aggregator — 3 Consecutive Failures",
-      `The pattern aggregator has failed ${strikes} times in a row. ` +
-      `Check OPENAI_API_KEY, Ollama connectivity, and model availability. ` +
-      `Trading Forge continues to operate normally — pattern aggregation is advisory.`,
+      appendFamilyGradePostscript(
+        `The pattern aggregator has failed ${strikes} times in a row. ` +
+        `Check OPENAI_API_KEY, Ollama connectivity, and model availability. ` +
+        `Trading Forge continues to operate normally — pattern aggregation is advisory.`,
+        "The bot's self-improvement feature has been having trouble — it's trying to review trade patterns but keeps running into errors.",
+        "No action needed. The bot is still trading normally. Tell Tony if this alert keeps appearing.",
+      ),
       {
         strikes,
         param: KILL_SWITCH_PARAM,

@@ -86,6 +86,12 @@ const OWNED_FILES_RELATIVE: string[] = [
   "services/windows-health-check-service.ts",
   // Lifecycle (F1 + F3)
   "services/lifecycle-service.ts",
+  // CF5 final sweep (2026-06-24): 5 deferred files now scoped (scheduler.ts already in M11 scope)
+  "services/paper-signal-service.ts",
+  "production/paper-journal-recon.ts",
+  "services/quantum-replay-weekly-service.ts",
+  "services/pattern-aggregator-service.ts",
+  "services/remote-power-cycle-service.ts",
 ];
 
 // The canonical wrapper function name

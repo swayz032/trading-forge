@@ -72,6 +72,7 @@ import { getDecayTelemetryThreshold } from "../lib/confluence-decay.js";
 // error — null result → factor falls back to "liquidity_map_unavailable".
 import { getNearestLiquidity } from "./liquidity-map-service.js";
 import { notifyCritical } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { shadowSignalsTotal } from "../lib/metrics-registry.js";
 // Wave 26 Group B Task 3: SMT live bridge — wires Python compute_smt_divergence()
 // into Path C SignalContext. Fail-soft: returns null snapshot on any error →
@@ -2376,6 +2377,16 @@ export async function evaluateSignals(
       }
 
       // Gate 4: FOMC/CPI/NFP macro blackout — use FILL timestamp
+      //
+      // CF4 (2026-06-24): When action === "reduce_size" (Topstep/MFFU caution), multiply
+      // pendingEntry.contracts by the sizeFactor (default 0.5). If the result rounds down
+      // to 0 contracts, DROP the entry with audit pending_entry.dropped_news_size_reduced_to_zero
+      // (info severity — correct capital-safety behavior). Otherwise emit
+      // pending_entry.contracts_reduced_news_window info audit with original + reduced counts.
+      //
+      // NOTE: we modify pendingEntry.contracts in-place here so the subsequent openPosition
+      // call uses the reduced count transparently. The original count is captured first for
+      // the audit trail.
       if (!pendingDropReason) {
         try {
           const bypassNewsBlackout =
@@ -2383,12 +2394,53 @@ export async function evaluateSignals(
           if (!bypassNewsBlackout) {
             const t1Check = await getT1ReleaseWindow(symbol, bar.timestamp);
             if (t1Check.inWindow) {
-              const { action } = resolveNewsAction(sessionRow.firmId, true, false);
-              if (action === "block") {
+              const { action: newsAction, sizeFactor } = resolveNewsAction(sessionRow.firmId, true, false);
+              if (newsAction === "block") {
                 pendingDropReason = "macro_blackout";
+              } else if (newsAction === "reduce_size") {
+                // CF4: Apply NEWS_REDUCE_SIZE_FACTOR at fill time (signal queued outside window).
+                const originalContracts = pendingEntry.contracts;
+                const reducedContracts = Math.floor(originalContracts * sizeFactor);
+                if (reducedContracts <= 0) {
+                  // Sizing reduced to zero — drop the entry (correct capital-safety behavior).
+                  // The generic pendingDropReason handler below emits pending_entry.dropped_news_size_reduced_to_zero.
+                  pendingDropReason = "news_size_reduced_to_zero";
+                } else {
+                  // Apply the reduction and allow through.
+                  pendingEntry.contracts = reducedContracts;
+                  span.setAttribute("news_reduce_size_factor_at_fill", sizeFactor);
+                  span.setAttribute("news_reduced_contracts_original", originalContracts);
+                  span.setAttribute("news_reduced_contracts_fill", reducedContracts);
+                  insertAuditRow({
+                    action: "pending_entry.contracts_reduced_news_window",
+                    entityType: "paper_session",
+                    entityId: sessionId,
+                    decisionAuthority: "system",
+                    status: "info",
+                    input: {
+                      sessionId,
+                      symbol,
+                      side: pendingEntry.side,
+                      originalContracts,
+                      sizeFactor,
+                    } as Record<string, unknown>,
+                    result: { reducedContracts } as Record<string, unknown>,
+                    correlationId: fillCorrelationId,
+                  }).catch(() => {});
+                  logger.info(
+                    {
+                      sessionId,
+                      symbol,
+                      originalContracts,
+                      reducedContracts,
+                      sizeFactor,
+                      correlationId: fillCorrelationId,
+                    },
+                    "CF4: Pending entry contracts reduced at fill time due to T1 news window (reduce_size action)",
+                  );
+                }
               }
-              // action === "reduce_size" (Topstep caution): allow through — sizing
-              // was set at signal time; fill proceeds. Not a drop reason.
+              // action === "allow": fill proceeds unchanged — no modification.
             }
           }
         } catch (_macroErr) {
@@ -2452,7 +2504,8 @@ export async function evaluateSignals(
         const dropSeverity: "info" | "warning" =
           (pendingDropReason === "lunch_blackout" ||
            pendingDropReason === "session_boundary_crossed" ||
-           pendingDropReason === "daily_trade_cap")
+           pendingDropReason === "daily_trade_cap" ||
+           pendingDropReason === "news_size_reduced_to_zero")
             ? "info" : "warning";
 
         const logPayload = {
@@ -4163,7 +4216,11 @@ export async function evaluateSignals(
               }).catch((auditErr: unknown) => logger.warn({ err: auditErr, sessionId }, "path_c_error audit write failed"));
               notifyCritical(
                 "Path C evaluation failed",
-                `evaluateWeightedConfluence threw for strategy ${sessionConfig.strategyId}: ${pathCErrMsg}. Falling back to Path B.`,
+                appendFamilyGradePostscript(
+                  `evaluateWeightedConfluence threw for strategy ${sessionConfig.strategyId}: ${pathCErrMsg}. Falling back to Path B.`,
+                  "The bot's signal-scoring engine had an internal error and switched to a simpler backup method.",
+                  "No action needed — the bot is still trading safely using a backup signal check.",
+                ),
                 { strategyId: sessionConfig.strategyId, sessionId, correlationId: correlationId ?? null },
               );
               broadcastSSE("alert:path_c_error", {

@@ -5359,8 +5359,12 @@ except Exception as e:
 
           notifyWarning(
             `Pine Artifact Auto-Recompiled: ${strat.strategyName}`,
-            `DEPLOYED strategy \`${strat.strategyName}\` was missing its Pine artifact. ` +
-            `Auto-recompile succeeded. TradingView alerting has been restored. (correlationId: ${correlationId})`,
+            appendFamilyGradePostscript(
+              `DEPLOYED strategy \`${strat.strategyName}\` was missing its Pine artifact. ` +
+              `Auto-recompile succeeded. TradingView alerting has been restored. (correlationId: ${correlationId})`,
+              `A live strategy's TradingView chart file was missing and was automatically rebuilt.`,
+              `No action needed — TradingView signals are working again. Ask Tony if you want more details.`,
+            ),
           );
 
           logger.info(
