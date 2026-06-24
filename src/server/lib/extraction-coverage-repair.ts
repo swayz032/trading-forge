@@ -204,6 +204,12 @@ ${transcript.slice(0, 16_000)}
 3. Capture the MECHANIC (how to draw/construct/use it), not just the name.
 4. recovered_steps = ordered actions for the setup; recovered_confluences = supporting conditions/filters.
 5. If you genuinely cannot find an item, omit it (do not fabricate).
+6. ★ For EACH item in ITEMS TO RECOVER that you find in the transcript, you MUST emit a
+   recovered_confluence whose "name" is the item's name copied VERBATIM (exact characters — this
+   is how we confirm the named concept is now captured), with "description" = the mechanic and
+   "evidence_quote" = the verbatim transcript substring. You may ALSO emit recovered_steps for
+   procedural detail, but the verbatim-named confluence per recovered item is REQUIRED. Do NOT
+   rename the concept (e.g. do not turn "break block" into "Candle Anatomy") — copy the name as-is.
 
 Return ONLY valid JSON:
 { "recovered_steps": [ { "action": "...", "rationale": "...", "evidence_quote": "..." } ],
