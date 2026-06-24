@@ -32,6 +32,37 @@ import {
 } from "./extraction-coverage-gate.js";
 import { logger } from "./logger.js";
 
+// 2026-06-23: GBNF schema locking gemma to the REPAIR output shape. Without it the repair call
+// reused the strategies-extractor schema (callScoutExtractLlm default) → gemma returned
+// {strategies:[...]} → parsed.recovered_steps was always undefined → repair recovered NOTHING →
+// the enumerated named-concept misses (GA box, break block, etc.) were never recovered, so coverage
+// never improved. Same root cause + fix as the coverage enumerator.
+const REPAIR_SCHEMA: Record<string, unknown> = {
+  type: "object",
+  additionalProperties: false,
+  required: ["recovered_steps", "recovered_confluences"],
+  properties: {
+    recovered_steps: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["action", "evidence_quote"],
+        properties: { action: { type: "string" }, rationale: { type: "string" }, evidence_quote: { type: "string" } },
+      },
+    },
+    recovered_confluences: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["name", "evidence_quote"],
+        properties: { name: { type: "string" }, description: { type: "string" }, evidence_quote: { type: "string" } },
+      },
+    },
+  },
+};
+
 const REPAIR_MAX_ROUNDS = Number(process.env.COVERAGE_REPAIR_MAX_ROUNDS) || 2;
 const REPAIR_ACCEPT_PCT = Number(process.env.COVERAGE_REPAIR_ACCEPT_PCT) || 0.95;
 const REPAIR_MAX_TARGETS = Number(process.env.COVERAGE_REPAIR_MAX_TARGETS) || 6;
@@ -193,7 +224,11 @@ export async function runCoverageTargetedRecall(
 
   let raw: string | null = null;
   try {
-    raw = await callScoutExtractLlm([{ role: "user", content: prompt }]);
+    // opts is the 5th param (after callFn + sleepFn) — pass all four leading args, then opts.
+    raw = await callScoutExtractLlm([{ role: "user", content: prompt }], undefined, undefined, undefined, {
+      schemaOverride: REPAIR_SCHEMA,
+      skipFewShot: true,
+    });
   } catch (e) {
     logger.warn({ err: (e as Error).message }, "coverage-repair: targeted recall LLM threw");
     return { steps: [], confluences: [] };
