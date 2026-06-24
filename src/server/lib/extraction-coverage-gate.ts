@@ -358,7 +358,7 @@ export async function runCoverageEnumeration(transcript: string): Promise<Speake
 // NOT relaxation: a genuinely-dropped primary tool (e.g. the Gann box) still fails as before.
 const META_DESCRIPTOR_RE = /\b(trading|chart)\s+strateg|\bframework\b|\bwave\s+system\b/i;
 const INDICATOR_ANATOMY_RE =
-  /^(the\s+)?histogram$|^(macd\s+)?signal\s+line$|^macd\s+line$|^zero\s+line$|^(upper|lower|middle)\s+band$|^basis$/i;
+  /^(the\s+)?histogram$|^(macd\s+)?signal\s+line$|^macd\s+line$|^zero\s+line$|^(upper|lower|middle)\s+bands?$|^basis$|^middle\s+line$|^upper\s+and\s+lower\s+bands?$|^(upper|lower)\s+bands?$/i;
 const MIRROR_PARTNER = new Map<string, string>([["swing high", "swing low"]]);
 
 // 2026-06-23 ENUMERATOR PRECISION (miss-category audit): the enumerator was counting NON-mechanic
