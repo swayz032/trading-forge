@@ -67,6 +67,22 @@ interface Journal {
   entries: JournalEntry[];
 }
 
+/**
+ * Read a UTF-8 text file and strip a leading byte-order-mark (BOM) if present.
+ *
+ * WHY: PowerShell (the operator's primary shell) writes files as UTF-8/UTF-16
+ * WITH a BOM by default. A BOM (U+FEFF) at the start of _journal.json makes
+ * JSON.parse throw ("Unexpected token ï»¿"), and a BOM at the start of a
+ * migration .sql makes Postgres reject the first statement — either one
+ * fail-closes the boot-migration-runner and takes the WHOLE API offline
+ * (2026-06-24 production-down incident). Stripping the BOM on read makes the
+ * boot path robust to this entire class of file-encoding corruption.
+ */
+function readUtf8StripBom(filePath: string): string {
+  const raw = fs.readFileSync(filePath, "utf8");
+  return raw.charCodeAt(0) === 0xfeff ? raw.slice(1) : raw;
+}
+
 // ─── Path resolution ──────────────────────────────────────────────────────────
 
 // Works in both ESM (tsx) and compiled-to-dist contexts.
@@ -263,7 +279,7 @@ export async function runPendingMigrations(): Promise<void> {
     return;
   }
 
-  const journal: Journal = JSON.parse(fs.readFileSync(journalPath, "utf8"));
+  const journal: Journal = JSON.parse(readUtf8StripBom(journalPath));
 
   // ─── Bootstrap __drizzle_migrations table ───────────────────────────────────
   // First deploy may not have the tracking table yet (drizzle creates it on
@@ -353,7 +369,7 @@ export async function runPendingMigrations(): Promise<void> {
       continue;
     }
 
-    const migrationSql = fs.readFileSync(sqlFilePath, "utf8");
+    const migrationSql = readUtf8StripBom(sqlFilePath);
     const hash = crypto.createHash("sha256").update(migrationSql).digest("hex");
 
     // Split on Drizzle statement-breakpoint markers (matches apply-missing-migrations.mjs)
