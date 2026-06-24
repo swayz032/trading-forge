@@ -10765,6 +10765,124 @@ Also restored Anam.ai persona during this session:
 
 ---
 
+### Session Log — 2026-06-23 lifecycle-b3-b6 archetype gate + stopStream race
+
+**Mission:** Fix two BLOCKERs in lifecycle-service.ts — B3 (archetype gateway gate skipped when LIVE_ORDER_GATEWAY_URL unset) and B6 (TESTING→PAPER stopStream fire-and-forget race).
+
+**Work completed:**
+- B3 FIX: split the archetype gateway conditional into two explicit branches. `!LIVE_ORDER_GATEWAY_URL` now BLOCKS with `lifecycle.archetype_gateway_env_missing` audit + Discord WARN. `LIVE_ORDER_GATEWAY_URL` set runs the existing marker verification unchanged. Non-archetype strategies pass through untouched.
+- B6 FIX: removed IIFE wrapper from stopStream call in the TESTING→PAPER post-transition block. `await stopStream(sessionId)` now executes synchronously before `return { success: true }`. If stopStream throws, `paper.stop_stream_failed_on_transition` warn audit fires (non-blocking) but transition is not reversed. Audit/Discord notifications fire after stop (observability, not state).
+- New test file: `src/server/__tests__/lifecycle-b3-b6-archetype-gate-stop-race.test.ts` — 15 tests, source-code inspection pattern.
+
+**Verification:** 15/15 new tests GREEN. 99/99 existing lifecycle regression tests GREEN (gauntlet-hardening + f1-shadow-cache + f3-shadow-route + pilot-state). `system-map:check` exits 0 (`driftItems: []`). Rebased onto 559aa5f (remote had moved). Committed 945ef15, pushed to origin/hardening/phase-0.
+
+**Carry-forward:** No new carry-forwards. Both blockers fully closed.
+
+---
+
+### Session Log — 2026-06-23 traderspost-h4: 5xx retry + audit exhaustion
+
+**Mission:** Fix HIGH-severity silent order drop in `submitWebhookOrder()` — any TradersPost 5xx during RTH discarded immediately with no retry, operator only saw a low-priority notifyWarning.
+
+**Work completed:**
+- `src/server/integrations/traderspost/client.ts`: Added `RETRY_MAX_ATTEMPTS_5XX=2` / `RETRY_BASE_DELAY_MS=500` / `RETRY_JITTER_MAX_MS=200` constants; replaced single-shot fetch with retry loop (3 total attempts max); per-attempt fresh `AbortController` (a consumed signal cannot be reused); 5xx-only retry policy; X-Idempotency-Key computed once before the loop and held constant across all attempts (prevents TradersPost double-fills); jitter backoff at ~500–700 ms and ~1000–1200 ms; `traderspost.webhook_5xx_exhausted` fire-and-forget audit row on exhaustion with `attemptCount` + `lastStatusCode` + `responseBody`; comment at exhaustion return site flagging callers should escalate to `notifyCritical` when `retryAttempt >= RETRY_MAX_ATTEMPTS_5XX`; added `db` + `auditLog` imports (no existing DB coupling in this file)
+- `src/server/integrations/traderspost/types.ts`: Added optional `retryAttempt` field to `TradersPostSubmitResult` with JSDoc explaining escalation semantics; 4xx and network errors also carry `retryAttempt: 0` for uniform shape
+- `src/server/__tests__/traderspost-5xx-retry.test.ts`: 7 new vitest tests covering 502×2→200 success, 503×3 exhaustion + audit row, 4xx no-retry, network/timeout no-retry, idempotency key constant across retries, first-attempt 200 regression, jitter delay bounds; `vi.useFakeTimers()` + `vi.runAllTimersAsync()` for non-flaky timer assertions
+- `src/server/__tests__/traderspost-idempotency-fallback.test.ts`: Added `../db/index.js` + `../db/schema.js` mocks so existing F-3 tests stay GREEN after `client.ts` gained DB imports
+
+**Verification:** 7 new tests GREEN + 6 F-3 regression tests GREEN = 13/13. Commit `55c5807` pushed to `hardening/phase-0`.
+
+**Known-facts updates:** None new.
+
+**Carry-forward:** None. Scope was `traderspost/client.ts` only — no other files modified. Callers of `submitWebhookOrder` in `broker-router.ts` and `paper-execution-service.ts` should be updated to escalate `notifyWarning → notifyCritical` when `result.retryAttempt >= 2` (caller territory per spec — not in this commit scope).
+
+---
+
+### Session Log — 2026-06-23 H2+H5: Live paper signal correlationId + trade-close audit atomicity
+
+**Mission:** Fix two HIGH-severity observability gaps on `hardening/phase-0` — (H2) correlationId was null on every live paper-signal audit row from the Massive-WS bar path, and (H5) the paper.trade_close audit INSERT ran outside its transaction, making it possible to commit a trade with no audit trail.
+
+**Work completed:**
+- **H2 (`paper-trading-stream.ts`):** Added `import { randomUUID } from "crypto"` and minted `const correlationId = randomUUID()` at the top of `processSessionBar`. Passed `{ correlationId }` as the 5th argument to `evaluateSignals` (which already accepted `context?: { correlationId?: string }`). Propagated correlationId into error log calls. `paper-signal-service.ts` required zero changes — it already threads the context to all downstream call sites.
+- **H5 (`paper-execution-service.ts`):** Moved the `audit_log` INSERT for `paper.trade_close` inside the `dbConn.transaction()` block (via the `tx` handle). Refactored outer variable to `let trade` with a `try/catch` around the whole transaction. On rollback: `logger.error` (was `warn`); separate out-of-transaction `paper.trade_close_audit_failed` INSERT (best-effort); `notifyCritical` with `appendFamilyGradePostscript` (3-line operator + family-grade text); rethrows.
+- **Tests H2:** `src/server/__tests__/paper-trading-stream-correlation-id.test.ts` — 7 vitest (UUID shape, non-null threading, per-bar freshness, backward-compat, collision resistance, round-trip identity).
+- **Tests H5:** `src/server/__tests__/paper-execution-trade-close-audit-tx.test.ts` — 4 vitest (happy-path atomic commit, rollback removes trade row, out-of-tx observability row, notifyCritical + postscript).
+- H2 committed `8718d37`, H5 committed `ccef527`; pushed to `origin/hardening/phase-0`.
+- Did NOT touch `lifecycle-service.ts`, `pine_compiler.py`, or any file from the concurrent session.
+
+**Verification:** 11/11 new tests GREEN. 39/39 existing paper-execution + correlation-id regression tests GREEN. `tsc --noEmit` clean on changed files (one pre-existing unrelated error untouched). Two commits pushed without conflict.
+
+**Known-facts updates:** None — no new system facts to pin.
+
+**Carry-forward:** Downstream functions that don't accept correlationId (e.g., `evaluateWeightedConfluence`, `checkRiskGate`) were not plumbed — deferred per task spec. `paper.trade_close_audit_failed` audit action not yet registered in system-map (low-priority carry-forward).
+
+---
+
+## Session Log — 2026-06-23 — pine-h1: archetype Pine placeholder substitution (hardening/phase-0)
+
+**Agent:** pine-export
+**Branch:** hardening/phase-0
+**Scope:** HIGH-severity compile-time placeholder substitution bug in archetype Pine tf_gateway path
+
+**Root cause:** `ARCHETYPE_PINE_RECIPE_TF_GATEWAY` was a module-level constant dict built at import time with literal `<account-id-placeholder>` and `<live-order-token-placeholder>` strings. `_build_pine_indicator_var()` returned the pre-built dict entry verbatim — no substitution ever occurred. If the operator skipped the manual TradingView text-replace step, `/api/live-order` received literal placeholder strings → silent order drop.
+
+**Changes made:**
+- `src/engine/pine_compiler.py`: Added `PineCompileError` exception class. Extended `_build_archetype_alert_pine()` with `account_id` + `live_order_token` params — substitutes at compile time when provided. Added `live_order_token` param to `compile_dual_artifacts()`. Injected both credentials into `strategy["config"]` before indicator dispatch so `_build_pine_indicator_var()` reads them dynamically. Added post-compile assertion: raises `PineCompileError` when credentials were provided but placeholders survive in artifact content. Updated `__main__` block to read `live_order_token` from config JSON.
+- `src/server/services/pine-export-service.ts`: Added `accountStrategyAssignments` to DB schema imports. Added `live_order_token` lookup block (queries `account_strategy_assignments.hmac_secret` for resolved `account_id` when `gateway_mode=tf_gateway`). Added TS-side post-compile assertion (defense-in-depth) that fires before artifact persistence if placeholders survive despite `gatewayOptions` being set.
+
+**Tests:** 4 new pytest + 10 new vitest. 1265 pytest GREEN / 57 vitest GREEN. Zero regressions.
+
+**Known-facts updates:** None.
+
+**Carry-forward:** None.
+
+---
+
+## Session Log — kill-switch H6 fix (2026-06-23)
+
+**Branch:** `hardening/phase-0`
+**Commit:** `0871a0e`
+**Pushed to:** `origin/hardening/phase-0`
+
+### Problem
+`isHaltedForProduction()` — the first gate on `openPosition` and signal evaluation — only checked Layer 1 (`production_mode === 'HALT'`). Layers 2-9 (DLL breach, trailing-DD, connectivity, drift, CME outage, firm suspension, macro crisis, Windows reboot) were only evaluated inside `getKillSwitchStatus()`, a dashboard-only GET endpoint never invoked on the live signal path. A DLL breach or CME outage would not block new entries without a manual operator HALT.
+
+### Fix (Option A)
+- Extracted 9 per-layer pure predicate functions, shared by both `evaluateAllKillSwitchLayers()` (signal path) and `getKillSwitchStatus()` (dashboard). Zero logic duplication.
+- `evaluateAllKillSwitchLayers()` evaluates in priority order; first halting layer short-circuits.
+- `isHaltedForProduction()` is now a backward-compatible boolean wrapper over `evaluateAllKillSwitchLayers()`. All existing callers unchanged.
+- 1s module-level `Map<number, LayerCacheEntry>` amortizes DB/service cost at signal-bar rates.
+- 100ms `Promise.race()` timeout per layer: on expiry, fires fire-and-forget `insertAuditRow` then resolves `{halted:false}` (fail-OPEN for L4/L5/L8/L9; L2/L3 fail-CLOSED on DB error).
+- `_setLayerCacheForTests()` injection seam for unit test isolation.
+- Exported `ALL_LAYERS_ENFORCED_ON_SIGNAL_PATH = true` sentinel.
+
+### Signals Added
+- `kill_switch.layer_N_halted` audit row (N = 1-9) on block
+- `kill_switch.layer_N_timeout` audit row on per-layer timeout
+- `kill_switch:layer_halted` SSE event broadcast on block
+
+### Files Changed
+- `src/server/production/kill-switch.ts` — full rewrite
+- `src/server/__tests__/kill-switch-layered-signal-path.test.ts` — NEW, 16 tests
+- `src/server/__tests__/kill-switch.test.ts` — updated: `paperSessions` schema mock + `firm-config` mock + L2-9 cache seed in 2 PAPER/LIVE regression tests
+
+### Test Results
+- 16 new layered-signal-path tests: GREEN
+- 17 existing regression tests: GREEN (was 2 failing post-rewrite, fixed by adding missing schema mocks)
+- Total: 33/33 GREEN
+
+### CI Gates
+- `check:production-isolation` — CLEAN (0 violations)
+- `check:2026-compliance` — OK
+- `system-map:check` — 1 pre-existing drift item ("Registry is missing 1 scheduler job mappings") not caused by this change; topology drift cleared via `system-map:sync`
+
+### Carry-forward
+Caller-side correlationId threading into `isHaltedForProduction(opts)` is explicitly out of scope for H6.
+
+**Known-facts updates:** `kill-switch.test.ts` requires `paperSessions` in its schema mock and `../../shared/firm-config.js` mock whenever L2/L3 checks run. Tests asserting `isHaltedForProduction() returns false` must seed L2-9 via `_setLayerCacheForTests()` to avoid real layer logic in L1 regression tests.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### `git add <paths>` + `git commit` is UNSAFE on the shared index — use `git commit -- <paths>` (pinned 2026-06-23)

@@ -64,6 +64,22 @@ INDICATOR_MAP: dict[str, str] = {
 }
 
 
+# ─── Compile-time error — raised on placeholder substitution failure ──────────
+class PineCompileError(Exception):
+    """Raised when a Pine compile-time invariant is violated.
+
+    Currently used exclusively for placeholder substitution failures in the
+    tf_gateway archetype path: when gatewayOptions (account_id + live_order_token)
+    are provided but the compiled Pine artifact still contains the literal
+    placeholder strings.  This is a fail-CLOSED guard — it is better to raise
+    here than to silently emit an artifact that routes to <account-id-placeholder>.
+
+    Legacy operator-manual path (gatewayOptions not provided): literal placeholders
+    survive in the artifact intentionally — the operator substitutes them manually
+    in the TradingView alert-message field at deploy time.  No error is raised.
+    """
+
+
 # ─── Archetype Alert-Only Pine Factory ──────────────────────────────────────
 #
 # Archetypes (entry_indicator='archetype:<key>') are structural ICT/SMC/Wyckoff
@@ -86,6 +102,8 @@ def _build_archetype_alert_pine(
     key: str,
     display_name: str,
     gateway_mode: Optional[str] = None,
+    account_id: Optional[str] = None,
+    live_order_token: Optional[str] = None,
 ) -> str:
     """Build a minimal alert-only Pine v5 script for a structural archetype.
 
@@ -97,22 +115,34 @@ def _build_archetype_alert_pine(
         the indicator is loaded and the archetype key is correct.
 
     Args:
-        key:          Archetype key (e.g. 'ict_silver_bullet_ny_am') used in
-                      the alert JSON payload and Pine variable names.
-        display_name: Human-readable title (e.g. 'Ict Silver Bullet Ny Am')
-                      used in indicator() title and plotshape text.
-        gateway_mode: Controls alert payload destination.
-                      'tf_gateway' — emit TF-gateway payload routed to
-                        POST /api/live-order → routeOrder() → full safety stack.
-                        action is always "archetype_signal" (locked contract per F-2).
-                        Python engine (archetype_evaluator.py, Track C) resolves
-                        direction server-side.
-                        Placeholders <account-id-placeholder> and
-                        <live-order-token-placeholder> are operator-substituted
-                        at TradingView alert-message-field deploy time.
-                      None / 'direct' — emit the EXISTING generic-signal payload
-                        (byte-identical to pre-Pass-4.5 output).
-                      Any other value — raises ValueError immediately.
+        key:              Archetype key (e.g. 'ict_silver_bullet_ny_am') used in
+                          the alert JSON payload and Pine variable names.
+        display_name:     Human-readable title (e.g. 'Ict Silver Bullet Ny Am')
+                          used in indicator() title and plotshape text.
+        gateway_mode:     Controls alert payload destination.
+                          'tf_gateway' — emit TF-gateway payload routed to
+                            POST /api/live-order → routeOrder() → full safety stack.
+                            action is always "archetype_signal" (locked contract per F-2).
+                            Python engine (archetype_evaluator.py, Track C) resolves
+                            direction server-side.
+                            When account_id and live_order_token are provided,
+                            they are substituted at compile time (preferred path).
+                            When they are None, literal placeholders survive for
+                            operator-manual substitution at TradingView deploy time.
+                          None / 'direct' — emit the EXISTING generic-signal payload
+                            (byte-identical to pre-Pass-4.5 output).
+                          Any other value — raises ValueError immediately.
+        account_id:       When provided with gateway_mode='tf_gateway', substituted
+                          at compile time in place of <account-id-placeholder>.
+                          When None, the literal placeholder is preserved for
+                          operator-manual substitution (legacy path).
+        live_order_token: When provided with gateway_mode='tf_gateway', substituted
+                          at compile time in place of <live-order-token-placeholder>.
+                          This is account_strategy_assignments.hmac_secret — the
+                          per-account static bearer token validated by /api/live-order
+                          in static-token auth mode B.
+                          When None, the literal placeholder is preserved for
+                          operator-manual substitution (legacy path).
 
     Returns:
         Complete Pine Script v5 source string, ready for TradingView import.
@@ -137,10 +167,26 @@ def _build_archetype_alert_pine(
         # Pass 4.5 Track A — TF-gateway payload.
         # action is ALWAYS "archetype_signal" (locked F-2 contract).
         # Python engine resolves direction server-side (Track C archetype_evaluator.py).
-        # Placeholders are operator-substituted at TradingView alert-message-field
-        # deploy time — same convention as Wave 26 Pass G recipes.
         # Pine {{timenow}} and {{time}} are TradingView alert placeholders resolved
         # at alert-fire time — NOT Pine variables.
+        #
+        # Compile-time substitution (preferred path — hardening/phase-0):
+        # When account_id and live_order_token are supplied, substitute them
+        # directly into the alertcondition message so the emitted Pine contains
+        # the real credentials and the operator never needs to text-replace in TV.
+        #
+        # Legacy operator-manual path:
+        # When account_id / live_order_token are None, literal placeholders survive.
+        # Operator substitutes <account-id-placeholder> and <live-order-token-placeholder>
+        # at TradingView alert-message-field deploy time (Settings panel).
+        _acct_val = account_id if account_id is not None else "<account-id-placeholder>"
+        _token_val = live_order_token if live_order_token is not None else "<live-order-token-placeholder>"
+        # Determine whether credentials were compile-time substituted for the header comment.
+        _cred_note = (
+            "COMPILE-TIME SUBSTITUTED — credentials embedded by Trading Forge at export time."
+            if (account_id is not None and live_order_token is not None)
+            else "OPERATOR-MANUAL — substitute <account-id-placeholder> and <live-order-token-placeholder>\n//   at TradingView alert-message-field deploy time (Settings panel, same UX as HMAC secret)."
+        )
         return f"""//@version=5
 indicator("TF Archetype [GW]: {display_name}", overlay=true)
 
@@ -150,15 +196,11 @@ indicator("TF Archetype [GW]: {display_name}", overlay=true)
 // Archetype key: {key}
 // gateway_mode: tf_gateway → POST /api/live-order → routeOrder() → full safety stack.
 // action="archetype_signal" is LOCKED — Track B /api/live-order dispatches to archetype_evaluator.py.
-// Placeholders: operator substitutes <account-id-placeholder> and <live-order-token-placeholder>
-//   at TradingView alert-message-field deploy time (Settings panel, same UX as HMAC secret).
+// Credentials: {_cred_note}
 
 archetype_active = true
 
-// REQUIRED: paste your account_id and live_order_token into the alert message field below.
-// Do NOT put these into input.string() — they must live in the alert message so each
-// TradingView alert carries the correct per-account credentials.
-alertcondition(archetype_active, title="{display_name} [TF-GW]", message='{{"account_id":"<account-id-placeholder>","strategy_id":"{{{{strategy.id}}}}","live_order_token":"<live-order-token-placeholder>","timestamp_ms":"{{{{timenow}}}}","bar_timestamp":"{{{{time}}}}","action":"archetype_signal","archetype":"{key}","ticker":"{{{{ticker}}}}"}}')
+alertcondition(archetype_active, title="{display_name} [TF-GW]", message='{{"account_id":"{_acct_val}","strategy_id":"{{{{strategy.id}}}}","live_order_token":"{_token_val}","timestamp_ms":"{{{{timenow}}}}","bar_timestamp":"{{{{time}}}}","action":"archetype_signal","archetype":"{key}","ticker":"{{{{ticker}}}}"}}')
 
 plotshape(archetype_active, location=location.bottom, color=color.purple, style=shape.labeldown, text="{display_name}")
 """
@@ -332,9 +374,22 @@ def _build_pine_indicator_var(
     if strategy is not None:
         gateway_mode = strategy.get("config", {}).get("gateway_mode")
 
+    # Resolve compile-time credentials from strategy config (injected by pine-export-service.ts).
+    # These are used for the archetype tf_gateway path only.  When present, they are
+    # substituted into the alertcondition message at compile time so the emitted Pine
+    # contains real credentials.  When absent, literal placeholders survive for the
+    # operator-manual substitution path (legacy).
+    _compile_account_id: Optional[str] = None
+    _compile_live_order_token: Optional[str] = None
+    if strategy is not None:
+        _config = strategy.get("config", {}) if isinstance(strategy.get("config"), dict) else {}
+        _compile_account_id = _config.get("account_id") or None
+        _compile_live_order_token = _config.get("live_order_token") or None
+
     # Priority 0: archetype prefix — structural engine archetype, alert-only Pine.
     if ind_type.startswith("archetype:"):
         key = ind_type[len("archetype:"):]
+        display_name_from_key = " ".join(w.capitalize() for w in key.split("_"))
         if gateway_mode == "tf_gateway":
             if key not in ARCHETYPE_PINE_RECIPE_TF_GATEWAY:
                 raise ValueError(
@@ -342,6 +397,19 @@ def _build_pine_indicator_var(
                     "Add to ARCHETYPE_PINE_RECIPE_TF_GATEWAY / ARCHETYPE_REGISTRY before exporting."
                 )
             var_name = f"archetype_{key}"
+            # Compile-time substitution path: when credentials are available,
+            # call _build_archetype_alert_pine() dynamically so the emitted Pine
+            # contains real account_id / live_order_token values.
+            # Legacy path: when credentials are absent, fall back to the pre-built
+            # ARCHETYPE_PINE_RECIPE_TF_GATEWAY entry (operator-manual substitution).
+            if _compile_account_id and _compile_live_order_token:
+                return var_name, _build_archetype_alert_pine(
+                    key,
+                    display_name_from_key,
+                    gateway_mode="tf_gateway",
+                    account_id=_compile_account_id,
+                    live_order_token=_compile_live_order_token,
+                )
             return var_name, ARCHETYPE_PINE_RECIPE_TF_GATEWAY[key]
         # Default path: None / 'direct' — pre-Pass-4.5 backward-compat.
         if key not in ARCHETYPE_PINE_RECIPE:
@@ -358,7 +426,13 @@ def _build_pine_indicator_var(
         display_name = term.replace("_", " ").title()
         synthetic_key = f"uncatalogued_{term}"
         var_name = f"uncatalogued_{term}"
-        return var_name, _build_archetype_alert_pine(synthetic_key, display_name, gateway_mode=gateway_mode)
+        return var_name, _build_archetype_alert_pine(
+            synthetic_key,
+            display_name,
+            gateway_mode=gateway_mode,
+            account_id=_compile_account_id if gateway_mode == "tf_gateway" else None,
+            live_order_token=_compile_live_order_token if gateway_mode == "tf_gateway" else None,
+        )
 
     base_type = ind_type.split("_")[0] if "_" in ind_type else ind_type
     var_name = f"ind_{base_type}_{idx}"
@@ -2077,6 +2151,7 @@ def compile_dual_artifacts(
     recipient_label: Optional[str] = None,
     hmac_secret: Optional[str] = None,
     account_id: Optional[str] = None,
+    live_order_token: Optional[str] = None,
 ) -> DualArtifactResult:
     """Compile a StrategyDSL to BOTH Pine artifacts from the same logic.
 
@@ -2134,6 +2209,28 @@ def compile_dual_artifacts(
 
     # Stable ID for webhook payloads — caller should pass the DB strategy UUID
     sid = strategy_id or hashlib.sha256(strategy_name.encode()).hexdigest()[:16]
+
+    # Compile-time credential injection — hardening/phase-0 fix.
+    # When account_id and live_order_token are provided, inject them into
+    # strategy["config"] so that _build_pine_indicator_var() can read them
+    # and pass them to _build_archetype_alert_pine() for compile-time substitution.
+    # This ensures the tf_gateway archetype path emits real credentials instead of
+    # literal placeholders, eliminating the operator-manual text-replace step that
+    # caused silent order drops when skipped.
+    # The config sub-dict is mutated on a local copy only — the caller's strategy
+    # dict is not modified (strategy is already a plain dict at this point, having
+    # been normalized from Pydantic above).
+    if account_id or live_order_token:
+        _existing_config = strategy.get("config", {})
+        if not isinstance(_existing_config, dict):
+            _existing_config = {}
+        _merged_config = dict(_existing_config)
+        if account_id:
+            _merged_config["account_id"] = account_id
+        if live_order_token:
+            _merged_config["live_order_token"] = live_order_token
+        strategy = dict(strategy)
+        strategy["config"] = _merged_config
 
     # Stage 2: Build indicator declarations (shared)
     # F4: Pre-check all indicators against INDICATOR_MAP before attempting to compile.
@@ -2492,6 +2589,35 @@ qty_final := {recipient_qty}
         "guard, so live TradersPost execution is parity-correct."
     )
 
+    # Post-compile assertion — fail-CLOSED placeholder substitution guard.
+    # When account_id AND live_order_token were provided (compile-time substitution
+    # path), the emitted Pine MUST NOT contain the literal placeholder strings.
+    # If either placeholder survives, the credential injection silently failed and
+    # the artifact would route to /api/live-order with literal placeholder values —
+    # causing a silent order drop.
+    #
+    # When neither credential was provided (legacy operator-manual path), literal
+    # placeholders survive intentionally — operator substitutes at TV deploy time.
+    # No assertion is raised in that case.
+    if account_id and live_order_token:
+        _check_pine = (
+            (result.indicator_artifact.content if result.indicator_artifact else "")
+            + (result.strategy_artifact.content if result.strategy_artifact else "")
+        )
+        _unsubstituted = []
+        if "<account-id-placeholder>" in _check_pine:
+            _unsubstituted.append("account_id (<account-id-placeholder>)")
+        if "<live-order-token-placeholder>" in _check_pine:
+            _unsubstituted.append("live_order_token (<live-order-token-placeholder>)")
+        if _unsubstituted:
+            raise PineCompileError(
+                f"placeholder substitution failed for: {', '.join(_unsubstituted)}. "
+                "gatewayOptions were provided but the compiled Pine artifact still contains "
+                "literal placeholder strings. This would cause silent order drops via "
+                "/api/live-order. Check that strategy.config.account_id and "
+                "strategy.config.live_order_token were injected before indicator dispatch."
+            )
+
     return result
 
 
@@ -2524,6 +2650,9 @@ if __name__ == "__main__":
     hmac_secret: Optional[str] = config.get("hmac_secret")
     # BUG-1 fix: read account_id from config so marker alertcondition block is emitted
     account_id: Optional[str] = config.get("account_id")
+    # hardening/phase-0: read live_order_token from config (injected by pine-export-service.ts)
+    # for compile-time substitution in tf_gateway archetype Pine artifacts.
+    live_order_token: Optional[str] = config.get("live_order_token")
 
     if args.dual:
         dual_result = compile_dual_artifacts(
@@ -2534,6 +2663,7 @@ if __name__ == "__main__":
             recipient_label=recipient_label,
             hmac_secret=hmac_secret,
             account_id=account_id,
+            live_order_token=live_order_token,
         )
         output = dual_result.model_dump()
         # BUG-10 fix: truncation is CLI/print-summary only — NEVER applied to the default

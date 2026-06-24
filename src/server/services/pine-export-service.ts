@@ -5,7 +5,7 @@ import { tmpdir } from "os";
 import { randomUUID } from "crypto";
 import { eq, desc, and } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { strategies, strategyExports, strategyExportArtifacts, auditLog, backtests, monteCarloRuns, quantumMcRuns, brokerAccounts } from "../db/schema.js";
+import { strategies, strategyExports, strategyExportArtifacts, auditLog, backtests, monteCarloRuns, quantumMcRuns, brokerAccounts, accountStrategyAssignments } from "../db/schema.js";
 import { logger } from "../index.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { parsePythonJson } from "../../shared/utils.js";
@@ -657,6 +657,57 @@ export async function compileDualPineExport(
       }
     }
 
+    // hardening/phase-0: live_order_token injection for tf_gateway archetype Pine.
+    // When gateway_mode='tf_gateway' and an account_id was resolved (either from caller
+    // or A/B routing above), look up the per-account static bearer token from
+    // account_strategy_assignments.hmac_secret.  This token is what /api/live-order
+    // validates in static-token auth mode B (field name: live_order_token in payload body).
+    //
+    // Injecting it here means the Pine compiler substitutes it at compile time into
+    // the archetype alertcondition message, eliminating the operator-manual text-replace
+    // step that caused silent order drops when skipped (the literal placeholder bug).
+    //
+    // Fail-soft: if the lookup fails or returns no row, we log a warning and proceed
+    // without the token — the artifact will contain the literal placeholder (legacy path),
+    // and the operator must substitute manually. We do NOT block the export.
+    {
+      const strategyObj = config["strategy"] as Record<string, unknown>;
+      const innerConfig = (typeof strategyObj?.["config"] === "object" && strategyObj["config"] !== null
+        ? strategyObj["config"]
+        : {}) as Record<string, unknown>;
+      const resolvedGatewayMode = innerConfig["gateway_mode"];
+      const resolvedAccountId: string | undefined = config.account_id as string | undefined;
+      if (resolvedGatewayMode === "tf_gateway" && resolvedAccountId && !config.live_order_token) {
+        try {
+          const assignmentRows = await db
+            .select({ hmacSecret: accountStrategyAssignments.hmacSecret })
+            .from(accountStrategyAssignments)
+            .where(
+              and(
+                eq(accountStrategyAssignments.accountId, resolvedAccountId),
+                eq(accountStrategyAssignments.strategyId, strategyId),
+              ),
+            )
+            .limit(1);
+          const resolvedToken = assignmentRows[0]?.hmacSecret ?? null;
+          if (resolvedToken) {
+            config.live_order_token = resolvedToken;
+          } else {
+            logger.warn(
+              { strategyId, resolvedAccountId },
+              "pine-export: no account_strategy_assignments row for account+strategy — live_order_token will be literal placeholder (operator must substitute manually)",
+            );
+          }
+        } catch (tokenErr) {
+          // Fail-soft — do not block the export
+          logger.warn(
+            { strategyId, resolvedAccountId, err: tokenErr },
+            "pine-export: live_order_token lookup failed (non-blocking) — artifact will contain literal placeholder",
+          );
+        }
+      }
+    }
+
     const tmpPath = pathResolve(tmpdir(), `pine-dual-config-${strategyId.slice(0, 8)}.json`);
     writeFileSync(tmpPath, JSON.stringify(config));
 
@@ -666,6 +717,35 @@ export async function compileDualPineExport(
       result = await runDualPineCompiler(tmpPath, strategyId, correlationId);
     } finally {
       try { unlinkSync(tmpPath); } catch { /* ignore */ }
+    }
+
+    // hardening/phase-0: TS-side post-compile assertion (defense-in-depth).
+    // Python raises PineCompileError when credentials were provided but placeholders
+    // survive.  This TS guard is a second layer — it catches the case where Python
+    // does not raise (e.g., Python is a different version, or the config was not
+    // wired correctly) but the artifact still contains literal placeholder strings.
+    // When gatewayOptions was populated AND an account_id was resolved, both
+    // placeholder strings must be absent from every returned artifact content.
+    if (gatewayOptions && config.account_id && config.live_order_token) {
+      const artifactsToCheck = [
+        result.indicator_artifact,
+        result.strategy_artifact,
+      ].filter(Boolean) as NonNullable<DualCompilerOutput["indicator_artifact"]>[];
+      const placeholder_account = "<account-id-placeholder>";
+      const placeholder_token = "<live-order-token-placeholder>";
+      for (const art of artifactsToCheck) {
+        if (art.content.includes(placeholder_account) || art.content.includes(placeholder_token)) {
+          const which = [
+            art.content.includes(placeholder_account) ? "account_id (<account-id-placeholder>)" : null,
+            art.content.includes(placeholder_token) ? "live_order_token (<live-order-token-placeholder>)" : null,
+          ].filter(Boolean).join(", ");
+          throw new Error(
+            `pine-export: post-compile assertion failed — artifact '${art.file_name}' still contains literal placeholder(s): ${which}. ` +
+            "This would cause silent order drops via /api/live-order. " +
+            "gatewayOptions was set and credentials were resolved but substitution did not occur.",
+          );
+        }
+      }
     }
 
     const durationMs = Date.now() - startMs;
