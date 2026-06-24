@@ -377,6 +377,56 @@ export const ARCHETYPE_ROUTING_EVENTS = {
 export type ArchetypeRoutingEventName =
   (typeof ARCHETYPE_ROUTING_EVENTS)[keyof typeof ARCHETYPE_ROUTING_EVENTS];
 
+// ─── Lifecycle Gate SSE Event Names ─────────────────────────────────────────
+//
+// Centralized event-name constants for W27.5 lifecycle gate broadcasts emitted
+// from lifecycle-service.ts, plus the Pass 7 evidence-completeness block event.
+//
+// All names follow the `lifecycle:{gate_name}` convention. Importing these
+// constants instead of raw strings prevents silent magic-string drift when gate
+// names need to change.
+//
+// Emission sites (stable function/method anchors — NOT line numbers):
+//   WFE_EVALUATED            — evaluateWfeGate() call sites inside
+//                               checkAndAdvanceLifecycleState() PAPER→DEPLOY_READY path
+//   B14_EVALUATED            — evaluateB14CiGate() call sites in both the
+//                               TESTING→PAPER and PAPER→DEPLOY_READY paths
+//   PARAMETER_DRIFT_EVALUATED — evaluateParameterDriftGate() call sites in both paths
+//   FROZEN_POLICY_DRIFT_BLOCKED — evaluateFrozenPolicyDriftAtPromotion() block path
+//   COMPLIANCE_DRIFT_BLOCKED — findFirmsWithComplianceDrift() block path
+//   BACKTEST_STALE           — stale-backtest staleness check block path
+//   PROMOTION_EVIDENCE_INCOMPLETE — Track A.2 evidence-completeness gate block path
+//
+// Data shapes:
+//   WFE_EVALUATED            { strategyId, wfe_overall, status, passed, correlation_id }
+//   B14_EVALUATED            { strategyId, ci_high, threshold, passed, correlation_id }
+//   PARAMETER_DRIFT_EVALUATED { strategyId, classification, confidence, passed, correlation_id }
+//   FROZEN_POLICY_DRIFT_BLOCKED { strategyId, current_hash, frozen_hash, correlation_id }
+//   COMPLIANCE_DRIFT_BLOCKED { strategyId, drift_firms, correlation_id }
+//   BACKTEST_STALE           { strategyId, age_days, limit_days, correlation_id }
+//   PROMOTION_EVIDENCE_INCOMPLETE { strategyId, incomplete_count, total_gates,
+//                                   gate_evidence_statuses, correlation_id }
+export const LIFECYCLE_GATE_EVENTS = {
+  // W27.5 Pass B — WFE gate evaluated at PAPER → DEPLOY_READY
+  WFE_EVALUATED: "lifecycle:wfe_evaluated",
+  // W27.5 Pass B — B14 Survival Twin CI gate evaluated
+  B14_EVALUATED: "lifecycle:b14_evaluated",
+  // W27.5 Pass B — parameter drift gate evaluated at PAPER → DEPLOY_READY
+  PARAMETER_DRIFT_EVALUATED: "lifecycle:parameter_drift_evaluated",
+  // Wave 29 Pass B — frozen-policy hash drift gate blocked promotion
+  FROZEN_POLICY_DRIFT_BLOCKED: "lifecycle:frozen_policy_drift_blocked",
+  // PAPER → DEPLOY_READY — compliance ruleset drift gate blocked promotion
+  COMPLIANCE_DRIFT_BLOCKED: "lifecycle:compliance_drift_blocked",
+  // PAPER / TESTING → PAPER — backtest staleness gate blocked promotion
+  BACKTEST_STALE: "lifecycle:backtest_stale",
+  // Pass 7 Track A.2 — evidence completeness gate blocked promotion
+  // (>= 3 of 8 tracked gates lack institutional-quality data)
+  PROMOTION_EVIDENCE_INCOMPLETE: "lifecycle:promotion_evidence_incomplete",
+} as const;
+
+export type LifecycleGateEventName =
+  (typeof LIFECYCLE_GATE_EVENTS)[keyof typeof LIFECYCLE_GATE_EVENTS];
+
 // ─── Pass 3 Track D — Pine Export SHADOW refusal SSE events (2026-06-22) ──────
 //
 // Emitted by pine-shadow-observability.ts::emitPineShadowRefused() whenever a

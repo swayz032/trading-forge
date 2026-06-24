@@ -30,7 +30,7 @@ import { logger } from "../lib/logger.js";
 import { insertAuditRow, insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { evolveStrategy } from "./evolution-service.js";
 import { AlertFactory } from "./alert-service.js";
-import { broadcastSSE } from "../routes/sse.js";
+import { broadcastSSE, LIFECYCLE_GATE_EVENTS } from "../routes/sse.js";
 import { compileDualPineExport } from "./pine-export-service.js";
 import { agentCoordinator } from "./agent-coordinator-service.js";
 import { tracer } from "../lib/tracing.js";
@@ -2458,7 +2458,7 @@ export class LifecycleService {
               logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate (TESTING→PAPER) audit insert failed (non-blocking)");
             });
 
-            broadcastSSE("lifecycle:b14_evaluated", {
+            broadcastSSE(LIFECYCLE_GATE_EVENTS.B14_EVALUATED, {
               strategyId: s.id,
               ...b14CiResultTp.auditPayload,
               passed: b14CiResultTp.passed,
@@ -2509,7 +2509,7 @@ export class LifecycleService {
 
           const wfeResultTp = evaluateWfeGate(wfeOverallTp, undefined, undefined, wfeStatusTp);
 
-          broadcastSSE("lifecycle:wfe_evaluated", {
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.WFE_EVALUATED, {
             strategyId: s.id,
             wfe_overall: wfeResultTp.wfeOverall,
             status: wfeResultTp.status,
@@ -2563,7 +2563,7 @@ export class LifecycleService {
 
           const driftResultTp = evaluateParameterDriftGate(driftClassificationTp, driftConfidenceTp);
 
-          broadcastSSE("lifecycle:parameter_drift_evaluated", {
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.PARAMETER_DRIFT_EVALUATED, {
             strategyId: s.id,
             classification: driftResultTp.classification,
             confidence: driftResultTp.confidence,
@@ -3303,7 +3303,7 @@ export class LifecycleService {
                   logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate audit insert failed (non-blocking)");
                 });
 
-                broadcastSSE("lifecycle:b14_evaluated", {
+                broadcastSSE(LIFECYCLE_GATE_EVENTS.B14_EVALUATED, {
                   strategyId: s.id,
                   ...b14CiResult.auditPayload,
                   passed: b14CiResult.passed,
@@ -3488,7 +3488,7 @@ export class LifecycleService {
 
           const driftResult = evaluateParameterDriftGate(driftClassification, driftConfidence);
 
-          broadcastSSE("lifecycle:parameter_drift_evaluated", {
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.PARAMETER_DRIFT_EVALUATED, {
             strategyId: s.id,
             classification: driftResult.classification,
             confidence: driftResult.confidence,
@@ -4093,6 +4093,17 @@ export class LifecycleService {
                 "No action needed — re-run a full backtest on this strategy and the bot will retry.",
               ),
             );
+            // M8: SSE broadcast so dashboard consumers can surface evidence-incomplete
+            // blocks without polling audit_log. Uses catalog constant to prevent
+            // magic-string drift. Mirrors the pattern of other lifecycle gate broadcasts.
+            broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTION_EVIDENCE_INCOMPLETE, {
+              strategyId: s.id,
+              strategy_name: s.name,
+              incomplete_count: incompleteCount,
+              total_gates: gateEvidenceStatuses.length,
+              gate_evidence_statuses: gateEvidenceStatuses,
+              correlation_id: correlationId ?? null,
+            });
             continue;
           }
           // Evidence is adequate — compute composite score and proceed.
