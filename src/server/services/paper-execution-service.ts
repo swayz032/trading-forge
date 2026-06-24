@@ -2049,82 +2049,128 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
   // fillProbability — read from position row (written at open time)
   const fillProbabilityStr = pos.fillProbability ?? null;
 
-  const [trade] = await dbConn.transaction(async (tx) => {
-    // 1. Insert closed trade — pnl column holds NET P&L; grossPnl and commission stored for audit/analytics
-    const [tradeRow] = await tx.insert(paperTrades).values({
-      sessionId: pos.sessionId,
-      symbol: pos.symbol,
-      side: pos.side,
-      entryPrice: pos.entryPrice,
-      exitPrice: String(actualExit),
-      pnl: String(netPnl),
-      grossPnl: String(grossPnl),
-      commission: String(commission),
-      contracts: pos.contracts,
-      entryTime: pos.entryTime,
-      exitTime: closedAt,
-      slippage: String(slippage),
-      // Phase 1.1 enrichment columns
-      mae: pos.mae,           // Accumulated per-bar watermark from paper_positions row
-      mfe: pos.mfe,           // Accumulated per-bar watermark from paper_positions row
-      holdDurationMs,
-      hourOfDay,
-      dayOfWeek,
-      sessionType,
-      macroRegime,
-      eventActive,
-      skipSignal,
-      fillProbability: fillProbabilityStr,
-      // Roll spread cost: non-null when cost > 0 (roll crossed), null when no roll crossed.
-      // Persisted even when cost is 0 (distinguishes "evaluated, no roll" from "pre-migration null").
-      rollSpreadCost: String(rollCost.estimatedSpreadCost),
-    }).returning();
-
-    // 2. Mark position as closed — unrealizedPnl resets to 0 (realized P&L lives in paperTrades)
-    await tx.update(paperPositions).set({
-      closedAt,
-      currentPrice: String(actualExit),
-      unrealizedPnl: "0",
-    }).where(eq(paperPositions.id, positionId));
-
-    // 3. Update session equity atomically using NET P&L — prevents read-modify-write race on
-    //    concurrent closes. totalTrades is incremented here so it always matches trade rows.
-    //
-    // W12 Bug #2 fix: realizedPeakEquity is the authoritative trailing-DD HWM per
-    // Topstep/Apex EOD spec — updated from CLOSED equity only (never from MTM).
-    // peakEquity is retained as a UI display column (MTM HWM for the dashboard).
-    // Trailing-DD compliance reads realizedPeakEquity, not peakEquity.
-    await tx.update(paperSessions).set({
-      currentEquity: sql`${paperSessions.currentEquity}::numeric + ${netPnl}`,
-      peakEquity: sql`GREATEST(${paperSessions.peakEquity}::numeric, ${paperSessions.currentEquity}::numeric + ${netPnl})`,
-      realizedPeakEquity: sql`GREATEST(${paperSessions.realizedPeakEquity}::numeric, ${paperSessions.currentEquity}::numeric + ${netPnl})`,
-      totalTrades: sql`COALESCE(${paperSessions.totalTrades}, 0) + 1`,
-    }).where(eq(paperSessions.id, pos.sessionId));
-
-    return [tradeRow];
-  });
-
-  // Audit trail — paper trade close (written immediately after the transaction commits)
+  // H5 fix (2026-06-23): audit INSERT moved INSIDE the transaction so the trade
+  // close and its audit row commit atomically.  If the audit INSERT fails, the
+  // entire transaction rolls back (fail-CLOSED: better to retry the close than
+  // to commit a trade with no audit record → orphan).
+  //
+  // On transaction rollback we emit a SEPARATE out-of-transaction
+  // paper.trade_close_audit_failed row + notifyCritical Discord so the operator
+  // can identify and manually reconcile the open position.
+  let trade: typeof paperTrades.$inferSelect;
   try {
-    await dbConn.insert(auditLog).values({
-      action: "paper.trade_close",
-      entityType: "paper_trade",
-      entityId: trade.id,
-      input: { positionId },
-      result: {
-        exitPrice: actualExit,
-        netPnl,
-        grossPnl,
-        commission,
-        rollSpreadCost: rollCost.estimatedSpreadCost,
-        rollDates: rollCost.rollDates,
-      },
-      status: "success",
-      decisionAuthority: "agent",
-      correlationId,
+    const [tradeRow] = await dbConn.transaction(async (tx) => {
+      // 1. Insert closed trade — pnl column holds NET P&L; grossPnl and commission stored for audit/analytics
+      const [insertedTrade] = await tx.insert(paperTrades).values({
+        sessionId: pos.sessionId,
+        symbol: pos.symbol,
+        side: pos.side,
+        entryPrice: pos.entryPrice,
+        exitPrice: String(actualExit),
+        pnl: String(netPnl),
+        grossPnl: String(grossPnl),
+        commission: String(commission),
+        contracts: pos.contracts,
+        entryTime: pos.entryTime,
+        exitTime: closedAt,
+        slippage: String(slippage),
+        // Phase 1.1 enrichment columns
+        mae: pos.mae,           // Accumulated per-bar watermark from paper_positions row
+        mfe: pos.mfe,           // Accumulated per-bar watermark from paper_positions row
+        holdDurationMs,
+        hourOfDay,
+        dayOfWeek,
+        sessionType,
+        macroRegime,
+        eventActive,
+        skipSignal,
+        fillProbability: fillProbabilityStr,
+        // Roll spread cost: non-null when cost > 0 (roll crossed), null when no roll crossed.
+        // Persisted even when cost is 0 (distinguishes "evaluated, no roll" from "pre-migration null").
+        rollSpreadCost: String(rollCost.estimatedSpreadCost),
+      }).returning();
+
+      // 2. Mark position as closed — unrealizedPnl resets to 0 (realized P&L lives in paperTrades)
+      await tx.update(paperPositions).set({
+        closedAt,
+        currentPrice: String(actualExit),
+        unrealizedPnl: "0",
+      }).where(eq(paperPositions.id, positionId));
+
+      // 3. Update session equity atomically using NET P&L — prevents read-modify-write race on
+      //    concurrent closes. totalTrades is incremented here so it always matches trade rows.
+      //
+      // W12 Bug #2 fix: realizedPeakEquity is the authoritative trailing-DD HWM per
+      // Topstep/Apex EOD spec — updated from CLOSED equity only (never from MTM).
+      // peakEquity is retained as a UI display column (MTM HWM for the dashboard).
+      // Trailing-DD compliance reads realizedPeakEquity, not peakEquity.
+      await tx.update(paperSessions).set({
+        currentEquity: sql`${paperSessions.currentEquity}::numeric + ${netPnl}`,
+        peakEquity: sql`GREATEST(${paperSessions.peakEquity}::numeric, ${paperSessions.currentEquity}::numeric + ${netPnl})`,
+        realizedPeakEquity: sql`GREATEST(${paperSessions.realizedPeakEquity}::numeric, ${paperSessions.currentEquity}::numeric + ${netPnl})`,
+        totalTrades: sql`COALESCE(${paperSessions.totalTrades}, 0) + 1`,
+      }).where(eq(paperSessions.id, pos.sessionId));
+
+      // 4. Audit trail — INSIDE transaction so trade close + audit are atomic.
+      //    If this INSERT fails the whole transaction rolls back (fail-CLOSED).
+      await tx.insert(auditLog).values({
+        action: "paper.trade_close",
+        entityType: "paper_trade",
+        entityId: insertedTrade.id,
+        input: { positionId },
+        result: {
+          exitPrice: actualExit,
+          netPnl,
+          grossPnl,
+          commission,
+          rollSpreadCost: rollCost.estimatedSpreadCost,
+          rollDates: rollCost.rollDates,
+        },
+        status: "success",
+        decisionAuthority: "agent",
+        correlationId,
+      });
+
+      return [insertedTrade];
     });
-  } catch (auditErr) {
-    logger.warn({ positionId, tradeId: trade.id, err: auditErr }, "Audit log write failed for paper.trade_close (non-blocking)");
+    trade = tradeRow;
+  } catch (txErr) {
+    // Transaction rolled back — trade close and audit both failed atomically.
+    // Emit a SEPARATE observability row (out-of-transaction, best-effort) so the
+    // operator can identify the orphaned open position that needs manual reconciliation.
+    logger.error(
+      { positionId, err: txErr, correlationId },
+      "H5: paper.trade_close transaction rolled back (trade close + audit both failed) — position may still be open",
+    );
+    try {
+      await dbConn.insert(auditLog).values({
+        action: "paper.trade_close_audit_failed",
+        entityType: "paper_position",
+        entityId: positionId,
+        input: { positionId, correlationId },
+        result: { err: txErr instanceof Error ? txErr.message : String(txErr) },
+        status: "failure",
+        decisionAuthority: "agent",
+        correlationId,
+      });
+    } catch (observabilityErr) {
+      logger.error(
+        { positionId, err: observabilityErr, correlationId },
+        "H5: failed to write paper.trade_close_audit_failed observability row",
+      );
+    }
+    // Fire Discord CRITICAL — operator must manually reconcile the position.
+    const discordBody = appendFamilyGradePostscript(
+      `Bot tried to close a trade but the audit record failed. Position ${positionId} may still be open. CorrelationId: ${correlationId ?? "none"}.`,
+      "Tony needs to check this — the trade may need manual reconciliation.",
+      "Check the dashboard for any open paper_trades that should be closed.",
+    );
+    notifyCritical(
+      "paper.trade_close transaction failed — position may be open",
+      discordBody,
+      { positionId, correlationId: correlationId ?? null, errorType: "trade_close_tx_rollback" },
+    );
+    throw txErr;
   }
 
   // ─── Proven-trades counter (fail-soft, never blocks close) ─────────────────
