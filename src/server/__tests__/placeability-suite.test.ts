@@ -13,6 +13,7 @@ import { describe, it, expect, beforeAll } from "vitest";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { scorePlaceability, type PlaceabilityFailureReason } from "../lib/placeability-score.js";
+import { extractSessionFromTranscript } from "../lib/session-filter.js";
 import { computeCoverageVerdict, type SpeakerItem, type ExtractionSnapshot } from "../lib/extraction-coverage-gate.js";
 
 const CACHE_DIR = join(process.cwd(), "tmp", "validate5");
@@ -67,6 +68,10 @@ describe("PLACEABILITY regression suite — Coverage vs Placeability vs Compilab
         (i.entry_indicator as string) ?? null,
       );
       const cov = computeCoverageVerdict(items, idea0);
+      // Layer 3A: recover the structured session from the transcript (the extractor left it null).
+      const tPath = join(CACHE_DIR, `${vid}.transcript.txt`);
+      const transcript = existsSync(tPath) ? readFileSync(tPath, "utf8") : "";
+      const sessionWindow = extractSessionFromTranscript(transcript);
       const verdict = scorePlaceability({
         direction: (i.direction as string) ?? null,
         entry_indicator: (i.entry_indicator as string) ?? null,
@@ -78,6 +83,7 @@ describe("PLACEABILITY regression suite — Coverage vs Placeability vs Compilab
         entry_sequence: (i.entry_sequence as Array<{ action?: string; rationale?: string | null }>) ?? null,
         confluences: (i.confluences as Array<{ name?: string; description?: string }>) ?? null,
         session_filter: (i.session_filter as string) ?? null,
+        session_window: sessionWindow,
         risk_rules: (i.risk_rules as string) ?? null,
       });
 
@@ -109,12 +115,16 @@ describe("PLACEABILITY regression suite — Coverage vs Placeability vs Compilab
     expect(graded).toBe(14);
     // INVARIANT (trigger hard-fail): a trigger-failure reason can NEVER coexist with placeable=true.
     expect(triggerFailButPlaceable).toBe(0);
-    // Layer 2 baseline (deterministic, field-completeness): the universal gaps are session + direction.
-    expect(failureHist["SESSION_MISSING"]).toBe(14); // session is NEVER extracted today → Layer 3 priority
-    expect(failureHist["DIRECTION_AMBIGUOUS"]).toBe(14); // all direction:both → needs the 5-direction model
-    // Documented current state (deterministic field-completeness only — the LLM grader is stricter
-    // because it knows session-anchored strategies are NOT placeable without the session). Bump
-    // deliberately as Layer 3 lands.
+    // Layer 3A landed: session recovered from transcripts (was 14/14 SESSION_MISSING at Layer 2
+    // baseline; now ≤2 — rf_/75DJ carry no clear session cue). This is the deterministic proof that
+    // structured session extraction closes the universal session gap.
+    expect(failureHist["SESSION_MISSING"]).toBeLessThanOrEqual(2);
+    // Layer 3B NOT done yet — every extraction is still direction:both (the universal direction gap).
+    expect(failureHist["DIRECTION_AMBIGUOUS"]).toBe(14);
+    // Placeable count is unchanged from Layer 2 (5): the session-recovered videos are now blocked by
+    // the TRIGGER hard-fail (params_required / uncatalogued — Layer 3C), not session. The layers are
+    // independent; session was necessary but trigger is the binding constraint for the count. Bump as
+    // Layer 3B/3C land.
     expect(placeableCount).toBe(5);
   });
 });

@@ -19,6 +19,7 @@
  */
 
 import { entryIndicatorResolvesToArchetype } from "./archetype-registry-keys.js";
+import type { SessionFilter } from "./session-filter.js";
 
 export const PLACEABILITY_WEIGHTS = {
   trigger: 30,
@@ -62,6 +63,8 @@ export interface PlaceabilityInput {
   entry_sequence?: Array<{ action?: string; rationale?: string | null }> | null;
   confluences?: Array<{ name?: string; description?: string }> | null;
   session_filter?: string | null;
+  /** Structured session (Layer 3A) — authoritative when present; falls back to session_filter string. */
+  session_window?: SessionFilter | null;
   /** Any structural stop/invalidation signal the extraction carries (risk_rules text or a stop field). */
   risk_rules?: string | null;
   stop?: unknown;
@@ -179,8 +182,12 @@ export function scorePlaceability(input: PlaceabilityInput): PlaceabilityVerdict
     failure_reasons.push("ENTRY_METHOD_MISSING");
   }
 
-  // SESSION (10)
-  if (nonEmptyStr(input.session_filter)) {
+  // SESSION (10) — structured session_window (Layer 3A) is authoritative; a non-empty session_filter
+  // string also satisfies it (backward-compat). A structured window needs a region OR a start time.
+  const hasStructuredSession =
+    input.session_window != null &&
+    (nonEmptyStr(input.session_window.region) || nonEmptyStr(input.session_window.start));
+  if (hasStructuredSession || nonEmptyStr(input.session_filter)) {
     field_scores.session = PLACEABILITY_WEIGHTS.session;
   } else {
     missing_fields.push("session_filter");

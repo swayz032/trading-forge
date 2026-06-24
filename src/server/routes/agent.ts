@@ -13,6 +13,7 @@ import { runRecallPass } from "../lib/transcript-extractor-recall.js";
 import { runCoverageRepairLoop } from "../lib/extraction-coverage-repair.js";
 import { checkCompilabilityGate } from "../lib/extraction-quality-gate.js";
 import { deriveEntryIndicator } from "../services/direct-bucket-graduator.js";
+import { extractSessionFromTranscript, sessionFilterLabel } from "../lib/session-filter.js";
 import { runRobustnessTest } from "../services/robustness-service.js";
 import { db } from "../db/index.js";
 // Wave hardening 2026-06-22: agentJobs is the mutable job-state table.
@@ -1564,7 +1565,13 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       const extractionConfidence = typeof s.extraction_confidence === "number" ? s.extraction_confidence : 0.5;
       const entryType = typeof s.entry_type === "string" ? s.entry_type : null;
       const entryArchetype = typeof s.entry_archetype === "string" ? s.entry_archetype : null;
-      const sessionFilter = typeof s.session_filter === "string" ? s.session_filter : null;
+      const llmSessionFilter = typeof s.session_filter === "string" && s.session_filter.trim().length > 0 ? s.session_filter : null;
+      // Layer 3A (2026-06-24): session is strategy IDENTITY, not metadata. When the LLM left it null,
+      // recover a STRUCTURED session from the transcript (temporal normalization → ET-anchored window).
+      const sessionWindow = llmSessionFilter ? null : extractSessionFromTranscript(markdown);
+      // session_filter stays a string for backward-compat consumers (gemma-prose-to-v11, Pine export,
+      // scout runner); populate it with the canonical label when we recovered a structured window.
+      const sessionFilter = llmSessionFilter ?? sessionFilterLabel(sessionWindow);
       const exitParamsObj = s.exit_params && typeof s.exit_params === "object" ? s.exit_params as Record<string, unknown> : {};
       const extractedName = typeof s.name === "string" ? s.name : null;
 
@@ -1742,6 +1749,7 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
         take_profit_atr_multiple:   tpAtr,
         preferred_regime:           regime,
         session_filter:             sessionFilter,
+        session_window:             sessionWindow, // Layer 3A structured session (null when LLM gave a string)
         extraction_confidence:      extractionConfidence,
         // Sizing fields (scaled via mini→micro remap above)
         max_contracts:              effectiveMaxContracts,
