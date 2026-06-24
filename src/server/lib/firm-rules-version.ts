@@ -30,6 +30,9 @@ import { createHash } from "node:crypto";
 // This is the single source of truth for the TypeScript side of firm config.
 // Keep in sync with prop_compliance.py::FIRM_CONFIGS.
 // Only Topstep + MFFU per CLAUDE.md §6.
+// M4 2026-06-23: aligned to src/engine/prop_compliance.py::FIRM_CONFIGS exactly.
+// Any field added/removed/changed here MUST be mirrored to Python in the SAME
+// commit; CI gate `npm run check:ts-python-firm-rules-version` enforces parity.
 export const FIRM_CONFIGS_TS = {
   topstep_50k: {
     name: "Topstep 50K",
@@ -39,7 +42,7 @@ export const FIRM_CONFIGS_TS = {
     max_drawdown: 2000,
     trailing: "eod",
     locks_at_start: true,
-    consistency_rule: null,
+    consistency_rule: "topstep_50pct", // 50% best-day cap at Combine pass-request
     overnight_ok: false,
     payout_split: 0.90,
     payout_split_tiers: null,
@@ -64,11 +67,15 @@ export const FIRM_CONFIGS_TS = {
     daily_loss_limit: null,
     min_payout_days: 5,
     min_trading_days: 5,
-    payout_cycle_days: 14,
   },
 } as const;
 
 // ─── FIRM_RULES canonical snapshot (mirrors src/engine/firm_config.py) ────────
+// M4 2026-06-23: aligned to src/engine/firm_config.py::FIRM_RULES exactly.
+// MFFU = BUILDER plan per operator's 2026-06-23 choice (EOD trailing + 40 micros,
+// $1K soft-pause DLL, news ALLOWED, 50% consistency at SIM-funded payout only).
+// Any field added/removed/changed here MUST be mirrored to Python in the SAME
+// commit; CI gate `npm run check:ts-python-firm-rules-version` enforces parity.
 export const FIRM_RULES_TS = {
   topstep_50k: {
     account_size: 50000,
@@ -77,12 +84,12 @@ export const FIRM_RULES_TS = {
     ongoing_monthly_fee: 0,
     profit_target: 3000,
     max_drawdown: 2000,
-    max_contracts: 50,
+    max_contracts: 50, // 50 micros (10:1 mini ratio) at $50K
     trailing: "eod",
     payout_split: 0.90,
     min_payout_days: 5,
     min_trading_days: 5,
-    consistency_rule: null,
+    consistency_rule: "topstep_50pct", // 50% best-day cap at Combine pass-request
     daily_loss_limit: 1000,
     overnight_ok: false,
     weekend_ok: false,
@@ -101,16 +108,24 @@ export const FIRM_RULES_TS = {
     ongoing_monthly_fee: 0,
     profit_target: 3000,
     max_drawdown: 2000,
-    max_contracts: 50,
+    // MFFU Builder: 4 minis / 40 micros (eval + sim funded). NOT 50.
+    max_contracts: 40,
     trailing: "eod",
-    payout_split: 0.80,
-    min_payout_days: 5,
-    min_trading_days: 5,
-    consistency_rule: "mffu_50pct",
-    daily_loss_limit: null,
+    starting_floor: 48000, // Builder eval starting floor ($50K − $2K)
+    payout_split: 0.80, // Builder 80/20 (eval + sim + live)
+    // Builder: 2 qualifying days/cycle; pays every 48h after buffer
+    min_payout_days: 2,
+    payout_buffer: 2100, // $2,100 buffer cleared before first payout
+    min_payout: 500, // Builder min payout $500
+    min_trading_days: 1, // Builder eval 1-day minimum
+    // 50% at the SIM-FUNDED payout stage only; NONE eval, NONE live
+    consistency_rule: "mffu_50pct_sim_payout",
+    // Builder $1,000 DLL — SOFT pause (account survives, not a breach)
+    daily_loss_limit: 1000,
     overnight_ok: false,
     weekend_ok: false,
-    payout_cycle_days: 14,
+    // Builder: every 48h after buffer cleared (5 sim payouts → live)
+    payout_cycle_days: 2,
   },
 } as const;
 

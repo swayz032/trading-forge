@@ -11028,6 +11028,104 @@ Caller-side correlationId threading into `isHaltedForProduction(opts)` is explic
 
 ---
 
+### Session Log — 2026-06-23 M3 + M4 infrastructure hardening (architect track)
+
+**Mission:** Close two infrastructure MED fixes against `hardening/phase-0`:
+M3 verify SHADOW is in `strategies.lifecycle_state` constraint set, and M4 ship
+a new CI parity gate for the TS<->Python firm-rules-version SHA-256 hash.
+
+**Work completed:**
+- **M3 — VERIFIED-CORRECT (no migration needed).** grep-audit of every
+  migration touching `lifecycle_state` plus the schema.ts declaration confirmed
+  the column is plain TEXT with no CHECK constraint or enum-backed type. Migration
+  0077 lines 17-25 explicitly document the design intent: "state is enforced at
+  application layer...no DDL change needed on the column itself." Wave 29 Pass A's
+  addition of `'SHADOW'` to `VALID_STATES` in `lifecycle-service.ts` is sufficient.
+  - Shipped `docs/m3-lifecycle-state-shadow-verification.md` (audit trail + future-agent
+    guidance on the application-layer-as-authoritative-gate invariant)
+  - Shipped `src/server/__tests__/m3-lifecycle-state-shadow-pglite.test.ts`
+    (15 tests, PGlite real-DB) — UPDATE round-trip for SHADOW + matrix sweep over
+    all 12 VALID_STATES values. Catches any future CHECK-constraint regression at
+    PR time, not at production-rollout time.
+- **M4 — CI parity gate shipped + REAL DRIFT DETECTED AND REPAIRED.**
+  - Shipped `scripts/check-ts-python-firm-rules-version.ts` (pattern mirrors
+    `scripts/check-ts-python-tier1-parity.ts`): spawns Python subprocess, reads
+    both `compute_firm_rules_version()` outputs, exits 1 with a full canonical-JSON
+    diagnostic on hash mismatch.
+  - **First run against HEAD: FAILED** — discovered REAL pre-existing drift between
+    `firm-rules-version.ts` TS-side mirror and `firm_config.py` + `prop_compliance.py`
+    Python source. 7 fields out of sync (Topstep `consistency_rule` `null`→`"topstep_50pct"`,
+    MFFU `consistency_rule` `"mffu_50pct"`→`"mffu_50pct_sim_payout"`, MFFU `daily_loss_limit`
+    `null`→`1000`, MFFU `max_contracts` `50`→`40`, MFFU `payout_cycle_days` `14`→`2`,
+    MFFU FIRM_RULES missing `starting_floor`/`payout_buffer`/`min_payout` entirely).
+    Updated `src/server/lib/firm-rules-version.ts` to match Python exactly. Re-ran the
+    gate: PASS (hash `e60fa215d4055d3d`). The MED gate did its job on first invocation.
+  - Shipped `src/server/__tests__/m4-firm-rules-version-parity-gate.test.ts` (3 tests):
+    asserts script exits 0 against HEAD, exits 1 with diagnostic when drift simulated
+    via PYTHONPATH-shadowed engine module in a tempdir sandbox, and `package.json`
+    registers the script in the `check:*` namespace.
+  - Shipped `docs/ci-hard-gates.md` (single-page canonical reference for all 7 CI
+    hard gates; operator-wire instructions for the 3 not yet in `.github/workflows/ci.yml`).
+  - Wired script into `package.json` scripts (additive — Track 2's
+    `check:family-grade-postscript` line was preserved during the parallel edit).
+
+**Verification:**
+- M3 test: 15/15 GREEN (vitest --pool=forks --singleFork) in 3.09s
+- M4 test: 3/3 GREEN in 1.72s
+- M4 parity script against HEAD: `[FIRM RULES PARITY GATE] PASS — TS and Python
+  firm_rules_version match (e60fa215d4055d3d)`
+- Regression check: `wave27-5-firm-rules-version-parity.test.ts` 19/19 GREEN,
+  `wave27-5-mc-version-drift-detection.test.ts` 14/14 GREEN, no consumers of
+  `FIRM_CONFIGS_TS`/`FIRM_RULES_TS` outside the test layer (confirmed via grep).
+- CI gates: `check:production-isolation` CLEAN, `check:2026-compliance` OK,
+  `system-map:check` 1 pre-existing scheduler-job drift (NOT introduced by this track).
+
+**Known-facts updates:** None new (the M3 application-layer-as-gate fact was already
+documented in migration 0077 from prior wave; this session just verified it remains
+true under Wave 29 Pass A's SHADOW addition).
+
+**Carry-forward for next session:**
+- `.github/workflows/ci.yml` wire-in for `check:ts-python-firm-rules-version`
+  (along with `check:ts-python-tier1-parity` + `check:ts-python-pm-factor-parity`
+  which are also defined-but-unwired per `docs/ci-hard-gates.md`).
+- Verify with operator that the M4-detected MFFU Builder field set (`starting_floor`,
+  `payout_buffer`, `min_payout`, `payout_cycle_days=2`, `min_payout_days=2`,
+  `min_trading_days=1`, `max_contracts=40`) is the actual production choice — the
+  TS update assumed Python is canonical. If operator wants the OLD TS values
+  (Core plan: 50 contracts / 14-day cycle / 5-day payout), reverse the alignment.
+- Pre-existing `system-map:check` scheduler-job mapping drift (1 item) — not
+  introduced by this track; operator may want a follow-up sweep.
+
+---
+
+### Session Log — 2026-06-23 M11 + M1 (broker-router H4 escalation + family-grade postscript audit)
+
+**Mission:** Wire retry-exhaustion escalation in broker-router (M11) and sweep all notifyCritical/notifyWarning call sites in owned files to wrap with appendFamilyGradePostscript (M1); add CI lint gate.
+
+**Work completed:**
+- M11: `broker-router.ts` now splits the `!submitResult.success` path — `retryAttempt >= 2` escalates to `notifyCritical` with family-grade postscript ("The bot tried 3 times... order NOT placed"), non-exhaustion stays at `notifyWarning`
+- M1 sweep: 12+ sites wrapped across `model-router.ts`, `scout-watchdog-service.ts`, `scheduler.ts` (job failure / auto-disable / demotion / BW refresh / cookie refresh / harsh-regime / n8n-drift / reconciliation / paper-journal-recon / paper-session-recovery / system-map drift)
+- CI lint: `scripts/check-family-grade-postscript.ts` + `check:family-grade-postscript` npm script + `.github/workflows/ci.yml` 4th hard gate added
+- Tests: `src/server/__tests__/m11-broker-router-h4-escalation.test.ts` (4 tests GREEN) + `src/server/__tests__/check-family-grade-postscript-lint.test.ts` (4 tests GREEN)
+- Two explicit-path commits: `e983641` (M11) + `a11107e` (M1) on `hardening/phase-0`
+
+**Verification:**
+- `npx vitest run m11-broker-router-h4-escalation.test.ts` → 4/4 GREEN
+- `npx vitest run check-family-grade-postscript-lint.test.ts` → 4/4 GREEN
+- `npx tsx scripts/check-family-grade-postscript.ts` → exits 0 (PASS)
+- Both commits pushed to `hardening/phase-0`
+
+**Known-facts updates:**
+- CI lint script scopes to M11+M1 owned files only (73 legacy sites elsewhere are future work — separate "global M1 audit" session needed)
+- `CircuitBreakerRegistry.get()` is the correct static method (not `getOrCreate`) — broker-router test mock must use `get`
+- Indirect `const body = appendFamilyGradePostscript(...)` pattern requires BACKWARD lookback (10 lines before the notify call), not just forward lookahead
+
+**Carry-forward for next session:**
+- Global M1 audit: 73 unwrapped sites remain in `src/server/` outside owned scope (admin.ts, lifecycle-service.ts, paper-execution-service.ts, pine-delivery-service.ts, dead-mans-heartbeat-service.ts, and ~20 others) — future sweep session
+- `OWNED_FILES_RELATIVE` in lint script should be extended as each module gets swept
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### `git add <paths>` + `git commit` is UNSAFE on the shared index — use `git commit -- <paths>` (pinned 2026-06-23)
