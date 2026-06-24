@@ -41,6 +41,56 @@ export async function triggerRemotePowerCycle(
   reason: string,
   correlationId: string,
 ): Promise<boolean> {
+  // ─── M13: Partial-config guard ─────────────────────────────────────────────
+  // All three KASA env vars must be set or all absent. A partial config creates
+  // a false impression the escape valve is active when it will fail at invocation.
+  const kasaIpSet   = Boolean(process.env["KASA_DEVICE_IP"]);
+  const kasaUserSet = Boolean(process.env["KASA_USERNAME"]);
+  const kasaPassSet = Boolean(process.env["KASA_PASSWORD"]);
+  const allSet  = kasaIpSet && kasaUserSet && kasaPassSet;
+  const noneSet = !kasaIpSet && !kasaUserSet && !kasaPassSet;
+
+  if (!allSet && !noneSet) {
+    // Partial config — emit audit BEFORE throw so it's DB-visible even if caller doesn't catch.
+    const missingVars = [
+      !kasaIpSet   ? "KASA_DEVICE_IP"  : null,
+      !kasaUserSet ? "KASA_USERNAME"   : null,
+      !kasaPassSet ? "KASA_PASSWORD"   : null,
+    ].filter(Boolean);
+
+    const guardCorrelationId = randomUUID();
+
+    try {
+      const { auditLog } = await import("../db/schema.js");
+      const { db }       = await import("../db/index.js");
+      await db.insert(auditLog).values({
+        action: "recovery.remote_power_cycle_partial_config",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { reason, parentCorrelationId: correlationId, missingVars } as Record<string, unknown>,
+        result: { status: "partial_config_rejected", guardCorrelationId } as Record<string, unknown>,
+        status: "failure",
+        correlationId: guardCorrelationId,
+      });
+    } catch (auditErr) {
+      logger.error(
+        { auditErr, guardCorrelationId },
+        "remote-power-cycle: partial-config audit write failed",
+      );
+    }
+
+    logger.error(
+      { missingVars, reason, correlationId: guardCorrelationId },
+      "remote-power-cycle: partial Kasa config — all 3 env vars must be set or all absent",
+    );
+
+    throw new Error(
+      `remote_power_cycle_partial_config: KASA_DEVICE_IP/USERNAME/PASSWORD must all be set or all absent. ` +
+      `Missing: ${missingVars.join(", ")}`,
+    );
+  }
+
   const cycleCorrelationId = randomUUID();
   const scriptPath = pathResolve(PROJECT_ROOT, "scripts", "remote-power-cycle.ps1");
 
