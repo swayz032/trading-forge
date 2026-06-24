@@ -290,10 +290,11 @@ async function runShadowSignalRecon(
       };
     }
 
-    // Compute delta
-    const deltaPct = totalSignalLogs === 0
-      ? 0
-      : Math.abs(totalShadowSignals - totalSignalLogs) / totalSignalLogs;
+    // Compute delta — denominator is max(shadow, logs) so that totalSignalLogs=0
+    // with non-zero totalShadowSignals (or vice versa) yields delta=1.0 (max divergence),
+    // not silent delta=0. totalSample (== denom) is already guaranteed >= SHADOW_SIGNAL_MIN_SAMPLE
+    // by the early return above, so divide-by-zero is impossible at this point.
+    const deltaPct = Math.abs(totalShadowSignals - totalSignalLogs) / totalSample;
 
     const deltaExceedsThreshold = deltaPct > PAPER_RECON_CONFIG.SHADOW_SIGNAL_DELTA_THRESHOLD_PCT;
 
