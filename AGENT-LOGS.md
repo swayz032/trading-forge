@@ -10983,6 +10983,29 @@ Caller-side correlationId threading into `isHaltedForProduction(opts)` is explic
 
 ---
 
+### Session Log — 2026-06-23 M6+M8+M9 Observability Contracts
+
+**Mission:** Three MED observability fixes on disjoint owned files: uniqueIndex schema.ts (M6), LIFECYCLE_GATE_EVENTS SSE catalog + promotion_evidence_incomplete broadcast (M8), parentCorrelationId in quantum replay audit row (M9).
+
+**Work completed:**
+- M6: `src/server/db/schema.ts` — added `uniqueIndex("idx_tradingview_markers_dedup")` on `(accountId, strategyId, barTimestamp, signal)` to `tradingviewMarkers` table. `uniqueIndex` was already imported. Mirrors migration 0173_tradingview_markers_unique.sql; previously invisible to Drizzle and schema readers.
+- M8: `src/server/routes/sse.ts` — exported `LIFECYCLE_GATE_EVENTS` catalog (7 constants: WFE_EVALUATED, B14_EVALUATED, PARAMETER_DRIFT_EVALUATED, FROZEN_POLICY_DRIFT_BLOCKED, COMPLIANCE_DRIFT_BLOCKED, BACKTEST_STALE, PROMOTION_EVIDENCE_INCOMPLETE). Also exported `LifecycleGateEventName` type.
+- M8: `src/server/services/lifecycle-service.ts` — imported `LIFECYCLE_GATE_EVENTS` from sse.ts; replaced 5 magic-string `broadcastSSE()` calls (2× b14_evaluated, 1× wfe_evaluated, 2× parameter_drift_evaluated) with catalog constants. Added new `broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTION_EVIDENCE_INCOMPLETE, ...)` at the Track A.2 evidence-completeness block (was audit-only, no SSE). Zero logic changes — pure import-line + constant-replacement.
+- M9: `src/server/services/backtest-service.ts` — added `parentCorrelationId: correlationId ?? null` to the `result` JSONB of the `quantum_replay.auto_fire_enqueued` audit row. Added comment documenting the cross-system trace query: `WHERE correlation_id=$backtestId OR result->>'parentCorrelationId'=$backtestId`. No changes to `quantum-replay-runner.ts` itself (it already receives and logs `correlationId`; the audit row is written by the call site).
+- Tests: `src/server/__tests__/m6-m8-m9-observability-contracts.test.ts` — 12 new vitest covering Drizzle uniqueIndex runtime inspection (via ExtraConfigBuilder symbol), source-level text checks, SSE catalog count/values, magic-string elimination, LIFECYCLE_GATE_EVENTS import verification, promotion_evidence_incomplete broadcast, parentCorrelationId field presence, cross-system query comment, backward-compat.
+
+**Verification:** 12/12 vitest GREEN. 4 commits pushed to `hardening/phase-0`: `28e2e58` (M6), `9812102` (M8), `586f01b` (M9), `803dfa0` (tests).
+
+**Known-facts updates:**
+- Drizzle pgTable index metadata is NOT accessible via JSON.stringify on symbol values (circular refs). Use the `drizzle:ExtraConfigBuilder` symbol — it's a function that takes the `drizzle:ExtraConfigColumns` map and returns `Array<{ config: { name, unique, columns } }>`. This is how Drizzle's own plumbing resolves index definitions at build time.
+- `broadcastSSE("lifecycle:wfe_evaluated", ...)` and the 4 sibling magic strings no longer appear in lifecycle-service.ts. All use `LIFECYCLE_GATE_EVENTS.*` constants imported from sse.ts.
+
+**Carry-forward for next session:**
+- `LIFECYCLE_GATE_EVENTS.FROZEN_POLICY_DRIFT_BLOCKED`, `COMPLIANCE_DRIFT_BLOCKED`, and `BACKTEST_STALE` are declared in the catalog but lifecycle-service.ts still uses audit action strings (not SSE broadcasts) for those paths — the task spec only required the catalog declaration for those 3, not wiring. Future pass can add broadcasts at those block sites.
+- Frontend docs carry-forward: no `lifecycle-gate-sse-events.md` front-end doc exists; create in a future pass if dashboard consumers need canonical SSE shape docs.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### `git add <paths>` + `git commit` is UNSAFE on the shared index — use `git commit -- <paths>` (pinned 2026-06-23)
