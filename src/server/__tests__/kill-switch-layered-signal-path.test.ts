@@ -383,7 +383,14 @@ describe("KillSwitch — H6 Fix: Layers 2-9 enforced on signal path", () => {
     killSwitch._setLayerCacheForTests(8, { halted: false });
 
     const { runPreTradingDayHealthCheck } = await import("../services/windows-health-check-service.js");
-    vi.mocked(runPreTradingDayHealthCheck).mockResolvedValue({ status: "unhealthy" } as Awaited<ReturnType<typeof runPreTradingDayHealthCheck>>);
+    vi.mocked(runPreTradingDayHealthCheck).mockResolvedValue({
+      exitCode: 1,
+      status: "pending_reboot",
+      reason: "windows_reboot_required",
+      durationMs: 50,
+      payload: null,
+      pipelinePaused: false,
+    } satisfies Awaited<ReturnType<typeof runPreTradingDayHealthCheck>>);
 
     const decision = await killSwitch.evaluateAllKillSwitchLayers();
     expect(decision.halted).toBe(true);

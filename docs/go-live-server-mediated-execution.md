@@ -30,20 +30,36 @@ It is **OFF by default.** Nothing changes until you complete this checklist and 
    `TradersPostFillSource.normalizeFillEvent()` in `fill-reconciliation-service.ts`.
    Adjust the field mapping if TradersPost uses different names.
 
-3. **Wire the position-drift snapshot source to a cron.** `checkPositionDrift()` compares
-   the server's position vs the broker's reported position and blocks trading on drift.
-   It needs a real broker-position read (Playwright/MFFU snapshot, or TopstepX REST when
-   that account exists) wired to a periodic cron. This is the one piece that genuinely
-   needs a live account to finalize.
+3. **Connect the broker-position snapshot adapter.** The position-drift detection is
+   now FULLY WIRED (2026-06-23, F-4): the `position-drift-reconcile` cron runs every 5 min
+   (pipeline-exempt, fail-soft) → `runPositionDriftReconciliation()` → `checkPositionDrift()`.
+   The ONE remaining go-live piece is `getBrokerPositionSnapshot(accountId, symbol)` in
+   `fill-reconciliation-service.ts` — it currently returns `null` (drift sweep skips, never
+   fabricates a position) and emits a one-time `fill_reconciliation.broker_snapshot_source_unconfigured`
+   warn. Implement it to read the real broker position: **TopstepX** `GET /v2/positions?accountId={id}`
+   (filter by symbol → `{qty, avgPrice}`) or **MFFU** Playwright snapshot of the position table.
+   Return `{qty, avgPrice}` on success, `null` on broker error (sweep handles it safely).
+
+4. **Seed the live `broker_accounts` rows (F-5).** Today `broker_accounts` has only paper-firm
+   rows. Before flipping the flag, insert the real Topstep/MFFU account rows (account_id →
+   firm_id + broker_type + Bitwarden vault ref). Without them `routeOrder()` can't resolve an
+   account and fails closed — safe, but no orders route.
 
 ## Safety guarantees already in place
 
 - **Default OFF** — zero behavior change until you flip the flag.
 - **Fail-closed** — bot refuses to route live without `BROKER_FILL_HMAC_SECRET`.
+- **Lifecycle-gated on BOTH entry paths (B1 + F-1, 2026-06-23)** — `routeOrder()` only fires
+  for PAPER+ states. The internal A/B path (`paper-signal-service.ts`) and the external
+  `/api/live-order` route both reject CANDIDATE/TESTING/SHADOW (fail-closed on lookup error).
 - **SHADOW never routes** — strategies in SHADOW state never touch the broker.
 - **needs_reconcile blocks entries** — any position whose fill is unknown/diverged
   blocks new live entries on that account until resolved + fires a Discord critical.
-- **Idempotent** — duplicate fills don't double-count.
+- **Idempotent** — duplicate fills don't double-count (UUID fallback when bar-timestamp
+  absent, F-3, so distinct entries are never collapsed).
+- **Migrations apply at boot (F-2 fixed 2026-06-23)** — `0170`+`0171` (live_order_pine_dedup,
+  server_mediated_orders) journal timestamps corrected; the boot-migration-runner applies
+  them on next deploy (they were previously skipped due to a backdated `when`).
 
 ## How to turn it OFF in an emergency
 

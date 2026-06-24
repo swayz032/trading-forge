@@ -993,3 +993,202 @@ export async function clearAccountReconcileBlock(
 
   return { cleared };
 }
+
+// ─── Periodic drift sweep ─────────────────────────────────────────────────────
+
+/**
+ * getBrokerPositionSnapshot — GO-LIVE PLUG.
+ *
+ * Returns the broker's current position for an (accountId, symbol) pair,
+ * or null when the snapshot source is not yet configured.
+ *
+ * ── What a real implementation must return ─────────────────────────────────
+ *   { qty: number; avgPrice: number | null }
+ *
+ *   qty        — net contracts the broker currently holds for this account+symbol.
+ *                Positive = long, 0 = flat, negative = short.
+ *                MUST come from a live broker API (TopstepX REST or MFFU
+ *                Playwright screen-scrape) — never a cached server estimate.
+ *   avgPrice   — broker's average cost basis in points (null when qty === 0).
+ *
+ * ── Broker integration notes ───────────────────────────────────────────────
+ *   TopstepX:  GET /v2/positions?accountId={id} → filter by symbol → map qty + avgPrice
+ *   MFFU:      Playwright snapshot of the position table → parse qty + avgPrice
+ *
+ * ── Current status ────────────────────────────────────────────────────────
+ *   Returns null (no-op). Drift detection is WIRED but INERT until this
+ *   function is connected to a real broker-position source at go-live.
+ *   The audit row below is emitted ONCE per process startup to make this
+ *   visible in logs — not per-account to avoid alert noise.
+ *
+ *   At go-live, replace this function body with the broker REST/Playwright call.
+ */
+let _brokerSnapshotWarnEmitted = false;
+
+export async function getBrokerPositionSnapshot(
+  _accountId: string,
+  _symbol: string,
+): Promise<{ qty: number; avgPrice: number | null } | null> {
+  if (!_brokerSnapshotWarnEmitted) {
+    _brokerSnapshotWarnEmitted = true;
+    // ONE-TIME audit at process level — not per account, never spams
+    await writeAudit(
+      "fill_reconciliation.broker_snapshot_source_unconfigured",
+      {
+        note: "getBrokerPositionSnapshot is the go-live plug. Drift detection is wired but inert. " +
+              "Connect a real broker-position source (TopstepX REST / MFFU Playwright) to activate.",
+        goLiveInstructions: [
+          "TopstepX: GET /v2/positions?accountId={id}, filter by symbol, map qty+avgPrice",
+          "MFFU: Playwright snapshot of position table → parse qty+avgPrice",
+          "Return { qty: number; avgPrice: number | null } or throw on broker error",
+        ],
+      },
+      { snapshotSource: "unconfigured", action: "skipping_drift_check" },
+      "warning",
+      null,
+    );
+    logger.warn(
+      "fill-reconciliation: getBrokerPositionSnapshot is the go-live plug — " +
+      "drift detection is wired but inert until a real broker-position source is connected. " +
+      "See getBrokerPositionSnapshot JSDoc for the integration contract.",
+    );
+  }
+  return null;
+}
+
+/**
+ * DriftSweepResult — returned by runPositionDriftReconciliation.
+ */
+export interface DriftSweepResult {
+  /** Number of (account, symbol) pairs where checkPositionDrift was actually called. */
+  checked: number;
+  /** Number of pairs where drift was detected (driftDetected === true). */
+  drifted: number;
+  /**
+   * Reason why the sweep was skipped or partially skipped.
+   * "flag_disabled" — SERVER_MEDIATED_EXECUTION_ENABLED is false (the norm today).
+   * "none"           — no orders in scope (all accounts are flat or no SME orders).
+   * "<count>_null_snapshots" — some pairs were skipped because getBrokerPositionSnapshot returned null.
+   */
+  skipped: string;
+}
+
+/**
+ * runPositionDriftReconciliation — periodic drift sweep called by the scheduler cron.
+ *
+ * 1. Flag OFF → clean no-op, no DB calls, no audit noise.
+ * 2. Queries DISTINCT active (accountId, symbol) pairs from server_mediated_orders.
+ * 3. For each pair: fetches broker snapshot via getBrokerPositionSnapshot.
+ *    - null snapshot → SKIP (do NOT call checkPositionDrift with guessed/fake data).
+ *    - real snapshot → call checkPositionDrift, accumulate counts.
+ * 4. Per-account errors are fail-SOFT: log, continue, do not abort the sweep.
+ * 5. Emits fill_reconciliation.drift_sweep_completed audit on completion.
+ *
+ * Capital-safety invariant: NEVER fabricate a broker position.
+ * A null snapshot means "we don't know" — skipping is always safer than
+ * calling checkPositionDrift with qty=0 which would falsely flag every open position.
+ */
+export async function runPositionDriftReconciliation(
+  correlationId?: string,
+): Promise<DriftSweepResult> {
+  // ── Flag OFF: the norm today ──────────────────────────────────────────────
+  if (!isServerMediatedExecutionEnabled()) {
+    return { checked: 0, drifted: 0, skipped: "flag_disabled" };
+  }
+
+  // ── Query active (accountId, symbol) pairs ────────────────────────────────
+  // "Active" = orders in filled / partially_filled / acked state (positions the
+  // server believes are currently open with the broker).
+  let activePairs: Array<{ accountId: string; symbol: string }>;
+  try {
+    const rows = await db
+      .select({
+        accountId: serverMediatedOrders.accountId,
+        symbol: serverMediatedOrders.intendedSymbol,
+      })
+      .from(serverMediatedOrders)
+      .where(sql`status IN ('filled', 'partially_filled', 'acked')`);
+
+    // Deduplicate by (accountId, symbol)
+    const seen = new Set<string>();
+    activePairs = [];
+    for (const row of rows) {
+      const key = `${row.accountId}:${row.symbol}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        activePairs.push({ accountId: row.accountId, symbol: row.symbol });
+      }
+    }
+  } catch (queryErr) {
+    logger.error(
+      { err: queryErr },
+      "fill-reconciliation: runPositionDriftReconciliation — DB query for active pairs failed; aborting sweep",
+    );
+    return { checked: 0, drifted: 0, skipped: "query_error" };
+  }
+
+  if (activePairs.length === 0) {
+    await writeAudit(
+      "fill_reconciliation.drift_sweep_completed",
+      { correlationId: correlationId ?? null },
+      { checked: 0, drifted: 0, skipped: "none" },
+      "success",
+      correlationId,
+    );
+    return { checked: 0, drifted: 0, skipped: "none" };
+  }
+
+  // ── Per-pair drift check ──────────────────────────────────────────────────
+  let checked = 0;
+  let drifted = 0;
+  let nullSnapshots = 0;
+
+  for (const { accountId, symbol } of activePairs) {
+    try {
+      const snapshot = await getBrokerPositionSnapshot(accountId, symbol);
+
+      // CAPITAL-SAFETY INVARIANT: null snapshot → skip.
+      // Never fabricate a broker position (qty=0 would falsely flag every open position).
+      if (snapshot === null) {
+        nullSnapshots++;
+        continue;
+      }
+
+      const result = await checkPositionDrift({
+        accountId,
+        symbol,
+        brokerPositionQty: snapshot.qty,
+        brokerAvgPrice: snapshot.avgPrice,
+        correlationId: correlationId ?? null,
+      });
+
+      checked++;
+      if (result.driftDetected) {
+        drifted++;
+      }
+    } catch (pairErr) {
+      // Fail-SOFT: one account's error must not abort the sweep
+      logger.warn(
+        { err: pairErr, accountId, symbol },
+        "fill-reconciliation: drift sweep — per-pair error (fail-soft, continuing)",
+      );
+    }
+  }
+
+  const skipped = nullSnapshots > 0 ? `${nullSnapshots}_null_snapshots` : "none";
+
+  await writeAudit(
+    "fill_reconciliation.drift_sweep_completed",
+    { activePairsCount: activePairs.length, correlationId: correlationId ?? null },
+    { checked, drifted, skipped },
+    "success",
+    correlationId,
+  );
+
+  logger.info(
+    { checked, drifted, skipped, activePairsCount: activePairs.length },
+    "fill-reconciliation: drift sweep completed",
+  );
+
+  return { checked, drifted, skipped };
+}

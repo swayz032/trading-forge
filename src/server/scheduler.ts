@@ -458,6 +458,12 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   // artifact is a silent ops gap that affects live TradingView alerting regardless
   // of whether the research pipeline is actively promoting new strategies.
   "deployed-pine-artifact-check",       // P7C1: DEPLOYED strategy Pine artifact reconciliation
+  // F-4: Position-drift reconciliation is a capital-safety signal — it must fire
+  // even when the pipeline is paused. A drift detected while the pipeline is paused
+  // may be the very reason the operator paused; silencing drift detection during the
+  // pause would hide the event that needs operator attention most urgently.
+  // Flag-gated: returns no-op when SERVER_MEDIATED_EXECUTION_ENABLED=false (the default).
+  "position-drift-reconcile",           // F-4: server position vs broker drift detection
 ]);
 
 function _validateAllJobsScheduled(): void {
@@ -996,6 +1002,39 @@ export function initScheduler() {
     }
   });
   _scheduledJobs.add("n8n-execution-scrape");
+
+  // ─── F-4: Position-drift reconciliation every 5 min ──────────
+  // Closes audit finding F-4: checkPositionDrift() had no caller — dormant.
+  // This cron is the periodic driver that wires drift detection into production.
+  //
+  // FLAG-GATED: runPositionDriftReconciliation() returns {checked:0,skipped:"flag_disabled"}
+  // when SERVER_MEDIATED_EXECUTION_ENABLED=false (the default today — no live strategies).
+  // The cron fires regardless so wiring is verified before go-live; the inner function
+  // is the no-op guard, not the cron.
+  //
+  // PIPELINE-GATE-EXEMPT: position drift is a capital-safety signal that must fire
+  // even when the trading pipeline is paused (see _PIPELINE_GATE_EXEMPT comment above).
+  //
+  // GO-LIVE PLUG: getBrokerPositionSnapshot() currently returns null (inert until a
+  // real broker-position source — TopstepX REST / MFFU Playwright — is connected).
+  // See its JSDoc for the integration contract.
+  registerJob("position-drift-reconcile", 5 * 60 * 1000, async () => {
+    const { runPositionDriftReconciliation } = await import("./services/fill-reconciliation-service.js");
+    const correlationId = randomUUID();
+    await runPositionDriftReconciliation(correlationId);
+  });
+  cron.schedule("*/5 * * * *", async () => {
+    if (!_tryAcquireJobLock("position-drift-reconcile")) return;
+    try {
+      const t0 = Date.now();
+      await withRetry("position-drift-reconcile", SCHEDULER_JOBS["position-drift-reconcile"].run, 1);
+      markJobRun("position-drift-reconcile");
+      emitJobComplete("position-drift-reconcile", Date.now() - t0);
+    } finally {
+      _releaseJobLock("position-drift-reconcile");
+    }
+  });
+  _scheduledJobs.add("position-drift-reconcile");
 
   // ─── Phase 1.4: Metrics heartbeat every 60s ───────────────
   // Broadcasts rolling session metrics snapshot over SSE so the live
