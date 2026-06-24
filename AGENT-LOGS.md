@@ -4,6 +4,24 @@
 
 ---
 
+### Session Log — 2026-06-23 H3: pending-entry fill-gate re-check (paper-parity)
+
+**Mission:** Close HIGH capital-safety gap — signal-time gates (kill-switch, lunch-blackout, FOMC/CPI/NFP macro, DLL, daily-trade-cap, news-policy) evaluated only at bar N (queue); pending-entry fill at bar N+1 ran NO re-check.
+
+**Work completed:**
+- Added `import { killSwitch }` to `paper-signal-service.ts` (was not imported there before — existing use at `openPosition` was inside `paper-execution-service.ts`)
+- Inserted H3 gate re-check block between `pendingEntryQueue.delete(pendingKey)` and `openPosition(...)` call (lines ~2308–2499 post-edit). 6 gates in priority order: (1) kill-switch fail-CLOSED, (2) session-day boundary, (3) lunch blackout, (4) FOMC/CPI/NFP macro, (5) DLL halt/force-close, (6) daily trade cap
+- Each drop emits `pending_entry.dropped_<reason>` audit row inheriting original correlationId from queued signal; severity info/warning by gate type
+- Topstep `reduce_size` news action NOT a drop reason (only `block` firms halt)
+- DLL catch block is fail-CLOSED; lunch blackout catch block is fail-CLOSED; daily-cap catch block is fail-OPEN (matches signal-time policies)
+- New test file: `src/server/__tests__/pending-entry-queue-fill-gate-recheck.test.ts` — 29 tests (structural source-analysis + pure-function gate evaluators)
+
+**Verification:** 29/29 new tests GREEN; baseline 94 failing tests → 76 (net -18 fails = new tests converted from 0 to green); zero new regressions; `npx tsc --noEmit --skipLibCheck` clean. Commit `456b716` pushed to `hardening/phase-0`.
+
+**Carry-forward:** None for this fix. Remaining hardening list per deep-scan audit: B3 (archetype gateway dead-letter when LIVE_ORDER_GATEWAY_URL unset), B6 (stopStream race in TESTING→PAPER), plus 7 HIGH and 15 MED findings.
+
+---
+
 ### Session Log — 2026-06-23 Deep-scan production-blocker audit + B4/B5 dispatch (parent wrap-up)
 
 **Mission:** Operator requested "DEEP SCAN AND CHECK FOR ALL WIRING AND BUGS THAT BLOCKS US FOR GOING PRODUCTION AND PRODUCTION GRADE" on the just-closed 8-pass paper-trade readiness wave (master close at top of this journal).
