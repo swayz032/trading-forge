@@ -82,7 +82,10 @@ function clearFails(key: string): void {
 function setAdminCookie(res: Response, token: string): void {
   res.cookie(ADMIN_COOKIE_NAME, token, {
     httpOnly: true,
-    secure: true,
+    // Match the working Discord session cookie (auth.ts) — a hardcoded `secure:true`
+    // prevented the browser from persisting the admin session in this tower/relay
+    // setup, so the Office re-prompted for the passcode on every return.
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     maxAge: ADMIN_SESSION_TTL_SEC * 1000,
     path: "/slumhouse",
