@@ -20,6 +20,7 @@
 
 import { entryIndicatorResolvesToArchetype } from "./archetype-registry-keys.js";
 import type { SessionFilter } from "./session-filter.js";
+import type { DirectionMetadata, DirectionClass } from "./direction-parity.js";
 
 export const PLACEABILITY_WEIGHTS = {
   trigger: 30,
@@ -41,8 +42,9 @@ export type PlaceabilityFailureReason =
   | "SETUP_MISSING"
   | "ENTRY_METHOD_MISSING"
   | "SESSION_MISSING"
-  | "DIRECTION_MISSING"
-  | "DIRECTION_AMBIGUOUS";
+  // Layer 3B (replaces the catch-all DIRECTION_AMBIGUOUS):
+  | "NO_DIRECTION_EVIDENCE" // no directional language taught at all
+  | "INSUFFICIENT_DIRECTIONAL_PARITY"; // direction claimed (esp. "both") but long/short parity unresolved
 
 /**
  * Coarse deterministic direction label. The full 5-class model (LONG_ONLY / SHORT_ONLY /
@@ -53,6 +55,9 @@ export type DirectionLabel = "LONG_ONLY" | "SHORT_ONLY" | "BIDIRECTIONAL_OR_IMPL
 
 export interface PlaceabilityInput {
   direction?: string | null;
+  /** Layer 3B evidence-based directionality (from classifyDirectionFromTranscript). Authoritative
+   *  when present; falls back to the coarse `direction` string field otherwise. */
+  direction_evidence?: DirectionMetadata | null;
   entry_indicator?: string | null;
   archetype?: string | null;
   /** deriveEntryIndicator() output, if the caller computed it (sharpens trigger classification). */
@@ -76,7 +81,10 @@ export interface PlaceabilityVerdict {
   field_scores: Record<keyof typeof PLACEABILITY_WEIGHTS, number>;
   failure_reasons: PlaceabilityFailureReason[];
   missing_fields: string[];
+  /** Coarse field-derived label (kept for backward-compat). */
   direction_label: DirectionLabel;
+  /** Layer 3B evidence-based 5-class directionality when direction_evidence was supplied. */
+  direction_class?: DirectionClass;
 }
 
 function nonEmptyStr(v: unknown): v is string {
@@ -140,16 +148,33 @@ export function scorePlaceability(input: PlaceabilityInput): PlaceabilityVerdict
     if (trig.reason) failure_reasons.push(trig.reason);
   }
 
-  // DIRECTION (15)
+  // DIRECTION (15) — Layer 3B evidence-based when direction_evidence supplied, else field fallback.
   const dirLabel = directionLabel(input.direction);
-  if (dirLabel === "UNSPECIFIED") {
-    missing_fields.push("direction");
-    failure_reasons.push("DIRECTION_MISSING");
+  let direction_class: DirectionClass | undefined;
+  const ev = input.direction_evidence;
+  if (ev) {
+    direction_class = ev.class;
+    if (ev.class === "NO_DIRECTION_EVIDENCE") {
+      missing_fields.push("direction");
+      failure_reasons.push("NO_DIRECTION_EVIDENCE");
+    } else {
+      field_scores.direction = PLACEABILITY_WEIGHTS.direction;
+      // The extraction claims "both" but transcript evidence does NOT show explicit both-sides →
+      // parity unresolved (the "both" is an assumption, possibly a dropped explicit short — W7nln).
+      const claimsBoth = nonEmptyStr(input.direction) && input.direction.trim().toLowerCase() === "both";
+      if (claimsBoth && ev.class !== "BIDIRECTIONAL_EXPLICIT") {
+        failure_reasons.push("INSUFFICIENT_DIRECTIONAL_PARITY");
+      }
+    }
   } else {
-    field_scores.direction = PLACEABILITY_WEIGHTS.direction;
-    // direction:both cannot be confirmed bidirectional vs implied-mirror from the field alone —
-    // flag for grader validation per the W7nln lesson (dropped explicit short → "vice versa").
-    if (dirLabel === "BIDIRECTIONAL_OR_IMPLIED") failure_reasons.push("DIRECTION_AMBIGUOUS");
+    // Fallback (no transcript evidence): coarse field-based label.
+    if (dirLabel === "UNSPECIFIED") {
+      missing_fields.push("direction");
+      failure_reasons.push("NO_DIRECTION_EVIDENCE");
+    } else {
+      field_scores.direction = PLACEABILITY_WEIGHTS.direction;
+      if (dirLabel === "BIDIRECTIONAL_OR_IMPLIED") failure_reasons.push("INSUFFICIENT_DIRECTIONAL_PARITY");
+    }
   }
 
   // SETUP (15) — market-structure / setup construction described
@@ -205,5 +230,5 @@ export function scorePlaceability(input: PlaceabilityInput): PlaceabilityVerdict
   // Hard-fail without a trigger, regardless of score.
   const placeable = trig.present && placeability_score >= PLACEABILITY_PASS_SCORE;
 
-  return { placeable, placeability_score, field_scores, failure_reasons, missing_fields, direction_label: dirLabel };
+  return { placeable, placeability_score, field_scores, failure_reasons, missing_fields, direction_label: dirLabel, direction_class };
 }

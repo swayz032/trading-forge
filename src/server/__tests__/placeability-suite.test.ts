@@ -14,6 +14,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { scorePlaceability, type PlaceabilityFailureReason } from "../lib/placeability-score.js";
 import { extractSessionFromTranscript } from "../lib/session-filter.js";
+import { classifyDirectionFromTranscript } from "../lib/direction-parity.js";
 import { computeCoverageVerdict, type SpeakerItem, type ExtractionSnapshot } from "../lib/extraction-coverage-gate.js";
 
 const CACHE_DIR = join(process.cwd(), "tmp", "validate5");
@@ -72,8 +73,10 @@ describe("PLACEABILITY regression suite — Coverage vs Placeability vs Compilab
       const tPath = join(CACHE_DIR, `${vid}.transcript.txt`);
       const transcript = existsSync(tPath) ? readFileSync(tPath, "utf8") : "";
       const sessionWindow = extractSessionFromTranscript(transcript);
+      const directionEvidence = classifyDirectionFromTranscript(transcript); // Layer 3B
       const verdict = scorePlaceability({
         direction: (i.direction as string) ?? null,
+        direction_evidence: directionEvidence,
         entry_indicator: (i.entry_indicator as string) ?? null,
         archetype: (i.entry_archetype as string) ?? null,
         resolved_entry_indicator: resolved,
@@ -90,13 +93,13 @@ describe("PLACEABILITY regression suite — Coverage vs Placeability vs Compilab
       if (verdict.placeable) placeableCount++;
       if (verdict.placeable && verdict.failure_reasons.some((r) => TRIGGER_FAIL.includes(r))) triggerFailButPlaceable++;
       for (const reason of verdict.failure_reasons) failureHist[reason] = (failureHist[reason] ?? 0) + 1;
-      dirHist[verdict.direction_label] = (dirHist[verdict.direction_label] ?? 0) + 1;
+      dirHist[verdict.direction_class ?? verdict.direction_label] = (dirHist[verdict.direction_class ?? verdict.direction_label] ?? 0) + 1;
 
       rows.push(
         `${verdict.placeable ? "PLACEABLE  " : "NOT-PLACE  "} ${vid.padEnd(13)} ` +
           `cov=${Math.round(cov.coverage_pct * 100)}%`.padEnd(8) +
           ` place=${String(verdict.placeability_score).padStart(3)}/100 ` +
-          `dir=${verdict.direction_label.padEnd(24)} ` +
+          `dir=${(verdict.direction_class ?? "—").padEnd(26)} ` +
           `[${verdict.failure_reasons.join(",") || "—"}]`,
       );
     }
@@ -119,8 +122,12 @@ describe("PLACEABILITY regression suite — Coverage vs Placeability vs Compilab
     // baseline; now ≤2 — rf_/75DJ carry no clear session cue). This is the deterministic proof that
     // structured session extraction closes the universal session gap.
     expect(failureHist["SESSION_MISSING"]).toBeLessThanOrEqual(2);
-    // Layer 3B NOT done yet — every extraction is still direction:both (the universal direction gap).
-    expect(failureHist["DIRECTION_AMBIGUOUS"]).toBe(14);
+    // Layer 3B landed: evidence-based direction replaced the 14/14 DIRECTION_AMBIGUOUS catch-all.
+    // The residual is now split into the two precise enums; the unresolved-parity count is bounded
+    // well below the Layer-2 baseline of 14 (operator escalation rule: revisit prompt only if >25%).
+    expect(failureHist["DIRECTION_AMBIGUOUS"] ?? 0).toBe(0); // old catch-all is gone
+    const dirResidual = (failureHist["INSUFFICIENT_DIRECTIONAL_PARITY"] ?? 0) + (failureHist["NO_DIRECTION_EVIDENCE"] ?? 0);
+    expect(dirResidual).toBeLessThanOrEqual(7); // < 50% — deterministic 3B resolved the majority
     // Placeable count is unchanged from Layer 2 (5): the session-recovered videos are now blocked by
     // the TRIGGER hard-fail (params_required / uncatalogued — Layer 3C), not session. The layers are
     // independent; session was necessary but trigger is the binding constraint for the count. Bump as

@@ -14,6 +14,7 @@ import { runCoverageRepairLoop } from "../lib/extraction-coverage-repair.js";
 import { checkCompilabilityGate } from "../lib/extraction-quality-gate.js";
 import { deriveEntryIndicator } from "../services/direct-bucket-graduator.js";
 import { extractSessionFromTranscript, sessionFilterLabel } from "../lib/session-filter.js";
+import { classifyDirectionFromTranscript } from "../lib/direction-parity.js";
 import { runRobustnessTest } from "../services/robustness-service.js";
 import { db } from "../db/index.js";
 // Wave hardening 2026-06-22: agentJobs is the mutable job-state table.
@@ -1572,6 +1573,9 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       // session_filter stays a string for backward-compat consumers (gemma-prose-to-v11, Pine export,
       // scout runner); populate it with the canonical label when we recovered a structured window.
       const sessionFilter = llmSessionFilter ?? sessionFilterLabel(sessionWindow);
+      // Layer 3B (2026-06-24): classify directionality from TAUGHT transcript evidence (5-class model),
+      // not the lossy "all strategies are both" assumption. Postprocessing only — no prompt change.
+      const directionMeta = classifyDirectionFromTranscript(markdown);
       const exitParamsObj = s.exit_params && typeof s.exit_params === "object" ? s.exit_params as Record<string, unknown> : {};
       const extractedName = typeof s.name === "string" ? s.name : null;
 
@@ -1750,6 +1754,9 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
         preferred_regime:           regime,
         session_filter:             sessionFilter,
         session_window:             sessionWindow, // Layer 3A structured session (null when LLM gave a string)
+        direction_class:            directionMeta.class, // Layer 3B evidence-based 5-class directionality
+        direction_confidence:       directionMeta.confidence,
+        direction_evidence:         directionMeta.evidence,
         extraction_confidence:      extractionConfidence,
         // Sizing fields (scaled via mini→micro remap above)
         max_contracts:              effectiveMaxContracts,

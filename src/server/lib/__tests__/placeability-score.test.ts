@@ -79,18 +79,60 @@ describe("scorePlaceability", () => {
     expect(v.missing_fields).toContain("session_filter");
   });
 
-  it("direction:both flags DIRECTION_AMBIGUOUS (needs grader to confirm bidirectional vs implied mirror)", () => {
+  it("fallback (no evidence): direction:both flags INSUFFICIENT_DIRECTIONAL_PARITY", () => {
     const v = scorePlaceability({ ...FULL, direction: "both" });
     expect(v.direction_label).toBe("BIDIRECTIONAL_OR_IMPLIED");
-    expect(v.failure_reasons).toContain("DIRECTION_AMBIGUOUS");
-    // ambiguity is a flag, not a hard-fail — direction field still scores its weight
+    expect(v.failure_reasons).toContain("INSUFFICIENT_DIRECTIONAL_PARITY");
+    // flag, not a hard-fail — direction field still scores its weight
     expect(v.field_scores.direction).toBe(PLACEABILITY_WEIGHTS.direction);
   });
 
-  it("missing direction → DIRECTION_MISSING + UNSPECIFIED label", () => {
+  it("fallback: missing direction → NO_DIRECTION_EVIDENCE + UNSPECIFIED label", () => {
     const v = scorePlaceability({ ...FULL, direction: null });
     expect(v.direction_label).toBe("UNSPECIFIED");
-    expect(v.failure_reasons).toContain("DIRECTION_MISSING");
+    expect(v.failure_reasons).toContain("NO_DIRECTION_EVIDENCE");
+  });
+
+  // ─── Layer 3B evidence-based direction ───────────────────────────────────────
+  it("evidence BIDIRECTIONAL_EXPLICIT + claims both → RESOLVED (no direction failure)", () => {
+    const v = scorePlaceability({
+      ...FULL,
+      direction: "both",
+      direction_evidence: { class: "BIDIRECTIONAL_EXPLICIT", confidence: 0.95, evidence: [] },
+    });
+    expect(v.direction_class).toBe("BIDIRECTIONAL_EXPLICIT");
+    expect(v.failure_reasons).not.toContain("INSUFFICIENT_DIRECTIONAL_PARITY");
+    expect(v.failure_reasons).not.toContain("NO_DIRECTION_EVIDENCE");
+  });
+
+  it("evidence LONG_WITH_IMPLIED_MIRROR + claims both → INSUFFICIENT_DIRECTIONAL_PARITY (W7nln class)", () => {
+    const v = scorePlaceability({
+      ...FULL,
+      direction: "both",
+      direction_evidence: { class: "LONG_WITH_IMPLIED_MIRROR", confidence: 0.6, evidence: [] },
+    });
+    expect(v.failure_reasons).toContain("INSUFFICIENT_DIRECTIONAL_PARITY");
+    expect(v.field_scores.direction).toBe(PLACEABILITY_WEIGHTS.direction); // still scored
+  });
+
+  it("evidence NO_DIRECTION_EVIDENCE → NO_DIRECTION_EVIDENCE + no direction score (symmetric-indicator video)", () => {
+    const v = scorePlaceability({
+      ...FULL,
+      direction: "both",
+      direction_evidence: { class: "NO_DIRECTION_EVIDENCE", confidence: 0.3, evidence: [] },
+    });
+    expect(v.failure_reasons).toContain("NO_DIRECTION_EVIDENCE");
+    expect(v.field_scores.direction).toBe(0);
+  });
+
+  it("evidence LONG_ONLY + extraction direction long → RESOLVED", () => {
+    const v = scorePlaceability({
+      ...FULL,
+      direction: "long",
+      direction_evidence: { class: "LONG_ONLY", confidence: 0.85, evidence: [] },
+    });
+    expect(v.direction_class).toBe("LONG_ONLY");
+    expect(v.failure_reasons).not.toContain("INSUFFICIENT_DIRECTIONAL_PARITY");
   });
 
   it("trigger weight dominates (30) per operator spec", () => {
