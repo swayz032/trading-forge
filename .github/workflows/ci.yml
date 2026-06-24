@@ -211,8 +211,16 @@ jobs:
       - name: Build — tsc --noEmit
         run: npx tsc --noEmit
 
-      # ─── Hard gate (fail-closed): TS<->Python exit-engine parity ───────────
-      # Runs after the TS build. The script exits non-zero on any fixture
-      # divergence between adaptive-exit-engine.ts and adaptive_exits.py.
+      # ─── Hard gates (fail-closed): TS<->Python parity ──────────────────────
+      # Each script exits non-zero on a real divergence between TS and Python
+      # surfaces. Engine-parity uses fixture-based comparison; the rules/version
+      # gates compute SHA-256 over canonical-sorted JSON of TS+Python config
+      # mirrors and refuse to ship when they disagree.
       - name: Gate — TS/Python exit-engine parity
         run: npm run check:ts-python-exit-parity
+      - name: Gate — TS/Python firm-rules version
+        run: npm run check:ts-python-firm-rules-version
+      - name: Gate — TS/Python Tier 1 macro calendar parity
+        run: npm run check:ts-python-tier1-parity
+      - name: Gate — TS/Python PM size-factor parity
+        run: npm run check:ts-python-pm-factor-parity
