@@ -719,14 +719,66 @@ export async function compileDualPineExport(
       try { unlinkSync(tmpPath); } catch { /* ignore */ }
     }
 
+    // hardening/phase-0 M5: audit warn when archetype strategy caller forgot gatewayOptions.
+    // If the strategy is archetype-typed, has paper_account_routing set, but the caller
+    // passed gatewayOptions=undefined — the function still resolves correctly via env fallback
+    // (deriveGatewayOptions picks up LIVE_ORDER_GATEWAY_URL), but the explicit caller-side
+    // threading is missing. Log as warn (not throw) — the export is not blocked.
+    if (!gatewayOptions) {
+      const stratCfgForGuard = (strategy.config ?? {}) as Record<string, unknown>;
+      const entryIndicatorForGuard = typeof stratCfgForGuard.entry_indicator === "string"
+        ? stratCfgForGuard.entry_indicator
+        : "";
+      const routingForGuard = (strategy as unknown as { paperAccountRouting?: string }).paperAccountRouting;
+      const hasProductionContext = entryIndicatorForGuard.startsWith("archetype:")
+        && routingForGuard != null
+        && routingForGuard !== "";
+      if (hasProductionContext) {
+        logger.warn(
+          { strategyId, entryIndicator: entryIndicatorForGuard, paperAccountRouting: routingForGuard },
+          "pine_export.gateway_options_missing: archetype strategy with paper_account_routing set but caller did not thread gatewayOptions — " +
+          "using env-derived gateway_mode fallback (correct when LIVE_ORDER_GATEWAY_URL is set). " +
+          "Thread gatewayOptions explicitly from this caller to make the override intent auditable.",
+        );
+        try {
+          await db.insert(auditLog).values({
+            action: "pine_export.gateway_options_missing",
+            entityType: "strategy",
+            entityId: strategyId,
+            decisionAuthority: "system",
+            input: {
+              strategyId,
+              entryIndicator: entryIndicatorForGuard,
+              paperAccountRouting: routingForGuard,
+              callerPassedGatewayOptions: false,
+            } as Record<string, unknown>,
+            result: {
+              strategy_id: strategyId,
+              reason: "archetype_strategy_caller_missing_gateway_options",
+              env_fallback_mode: process.env["LIVE_ORDER_GATEWAY_URL"] ? "tf_gateway" : "direct",
+            } as Record<string, unknown>,
+            status: "warn",
+            correlationId: correlationId ?? null,
+          });
+        } catch (auditMissingErr) {
+          logger.error(
+            { auditMissingErr, strategyId },
+            "pine-export: gateway_options_missing audit write failed (non-blocking)",
+          );
+        }
+      }
+    }
+
     // hardening/phase-0: TS-side post-compile assertion (defense-in-depth).
     // Python raises PineCompileError when credentials were provided but placeholders
     // survive.  This TS guard is a second layer — it catches the case where Python
     // does not raise (e.g., Python is a different version, or the config was not
     // wired correctly) but the artifact still contains literal placeholder strings.
-    // When gatewayOptions was populated AND an account_id was resolved, both
-    // placeholder strings must be absent from every returned artifact content.
-    if (gatewayOptions && config.account_id && config.live_order_token) {
+    // M5 fix: assertion fires whenever credentials were resolved (account_id + live_order_token
+    // both present in config), regardless of whether the caller explicitly passed gatewayOptions.
+    // Previously gated on `gatewayOptions &&` which created a blind spot when callers passed
+    // undefined but the internal A/B routing + env fallback resolved full credentials.
+    if (config.account_id && config.live_order_token) {
       const artifactsToCheck = [
         result.indicator_artifact,
         result.strategy_artifact,
@@ -742,7 +794,7 @@ export async function compileDualPineExport(
           throw new Error(
             `pine-export: post-compile assertion failed — artifact '${art.file_name}' still contains literal placeholder(s): ${which}. ` +
             "This would cause silent order drops via /api/live-order. " +
-            "gatewayOptions was set and credentials were resolved but substitution did not occur.",
+            "Credentials were resolved (account_id + live_order_token present) but substitution did not occur.",
           );
         }
       }
