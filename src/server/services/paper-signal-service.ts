@@ -5143,24 +5143,45 @@ export async function evaluateSignals(
           // (baseline is the default — observability-only for most strategies).
           // The canonical path for PAPER+ strategies is:
           //   Pine alert → /api/live-order → routeOrder() (wired in Pass 4 Track B)
-          // For CANDIDATE/TESTING in the internal bar-evaluation loop, we call
-          // routeOrder() directly here when paper_account_routing is set.
           // SHADOW strategies are gated out earlier (SHADOW intercept block above).
+          //
+          // B1 capital-safety guard (2026-06-23): routeOrder() places an EXTERNAL
+          // broker order (TradersPost). Per §8 paper-engine authority, ONLY PAPER+
+          // strategies (PAPER / DEPLOY_READY / PILOT / DEPLOYED) interact with the
+          // broker — CANDIDATE / TESTING use the internal simulator ONLY. Before this
+          // guard, the A/B rl-challenger branch fired routeOrder() for pre-PAPER states
+          // (the old comment here even said "For CANDIDATE/TESTING ... we call
+          // routeOrder() directly here"), publishing a real broker order from a wrong
+          // lifecycle state. Skip (not throw) so the bar-eval loop + audit row continue.
+          const PAPER_PLUS_STATES = ["PAPER", "DEPLOY_READY", "PILOT", "DEPLOYED"];
+          const lcStateForRouting = sessionConfig.lifecycleState ?? "";
           if (routingDecision === "rl-challenger" && resolvedAccountId !== null) {
-            routingCalled = true;
-            const { routeOrder } = await import("./broker-router.js");
-            const signal = {
-              action: (config.side === "short" ? "enter_short" : "enter_long") as
-                "enter_long" | "enter_short" | "exit_long" | "exit_short" | "exit",
-              ticker: symbol,
-              quantity: contextContracts,
-              strategyId: sessionConfig.strategyId,
-              barTimestamp: typeof bar.timestamp === "number"
-                ? new Date(bar.timestamp).toISOString()
-                : typeof bar.timestamp === "string" ? bar.timestamp : undefined,
-            };
-            const routeResult = await routeOrder(resolvedAccountId, signal, correlationId ?? null);
-            routingSuccess = routeResult.success;
+            if (!PAPER_PLUS_STATES.includes(lcStateForRouting)) {
+              logger.warn(
+                {
+                  strategyId: sessionConfig.strategyId,
+                  lifecycleState: lcStateForRouting,
+                  symbol,
+                  correlationId: correlationId ?? null,
+                },
+                "B1: routeOrder skipped — non-PAPER+ lifecycle state may not place external broker orders (capital safety)",
+              );
+            } else {
+              routingCalled = true;
+              const { routeOrder } = await import("./broker-router.js");
+              const signal = {
+                action: (config.side === "short" ? "enter_short" : "enter_long") as
+                  "enter_long" | "enter_short" | "exit_long" | "exit_short" | "exit",
+                ticker: symbol,
+                quantity: contextContracts,
+                strategyId: sessionConfig.strategyId,
+                barTimestamp: typeof bar.timestamp === "number"
+                  ? new Date(bar.timestamp).toISOString()
+                  : typeof bar.timestamp === "string" ? bar.timestamp : undefined,
+              };
+              const routeResult = await routeOrder(resolvedAccountId, signal, correlationId ?? null);
+              routingSuccess = routeResult.success;
+            }
           }
 
           // ── Audit row fires AFTER routing (not before — closes observability illusion) ──

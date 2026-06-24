@@ -11,7 +11,7 @@
  * in plain text outside of debug level.
  */
 
-import { createHash } from "crypto";
+import { createHash, randomUUID } from "crypto";
 import { logger } from "../../lib/logger.js";
 import type { TradersPostWebhookPayload, TradersPostSubmitResult } from "./types.js";
 
@@ -80,13 +80,15 @@ export async function submitWebhookOrder(
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), SUBMIT_TIMEOUT_MS);
 
-  // FINDING #2 FIX: Idempotency key is bar-scoped (SHA-256 over the five-field
+  // F-3 FIX: Idempotency key is bar-scoped (SHA-256 over the five-field
   // bar-event tuple), not correlationId-based. A TradingView retry of the same
   // bar+signal will produce the same key, preventing a duplicate live order.
-  // Fallback to legacy non-timestamp key only when bar_ts is unavailable.
+  // Fallback: when barTs is unavailable, append a randomUUID() so each call is
+  // unique — the previous static "strategyId-ticker-action" key caused TradersPost
+  // to treat every same-direction entry as a duplicate after the first submission.
   const idempotencyKey = idempotencyInputs
     ? buildDeterministicIdempotencyKey(idempotencyInputs)
-    : [payload.strategyId ?? "tf", payload.ticker, payload.action].join("-");
+    : `${payload.strategyId ?? "tf"}-${payload.ticker}-${payload.action}-${randomUUID()}`;
 
   try {
     logger.debug(

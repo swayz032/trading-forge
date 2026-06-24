@@ -77,15 +77,16 @@
 import { Router, type Request, type Response } from "express";
 import { randomUUID, createHmac, timingSafeEqual } from "crypto";
 import { z } from "zod";
-import { sql as drizzleSql } from "drizzle-orm";
+import { sql as drizzleSql, eq } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { auditLog } from "../db/schema.js";
+import { auditLog, strategies } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { routeOrder } from "../services/broker-router.js";
 import type { WebhookSignal } from "../integrations/traderspost/webhook-builder.js";
 import { lookupHmacSecret } from "../services/tradingview-marker-service.js";
 import { runPythonModule } from "../lib/python-runner.js";
 import { notifyWarning } from "../services/notification-service.js";
+import { LIVE_EXECUTION_STATES } from "../services/server-mediated-executor.js";
 import {
   emitArchetypeSignalReceived,
   emitArchetypeSignalResolved,
@@ -533,6 +534,62 @@ liveOrderRoutes.post(
           res.status(409).json({ error: "duplicate_pine_alert", detail: "same bar_timestamp+action already processed for this account+strategy" });
           return;
         }
+      }
+    }
+
+    // ── F-1: Lifecycle gate ────────────────────────────────────────────────────
+    // CRITICAL CAPITAL-SAFETY GATE: if a strategy_id is present, verify it is in
+    // LIVE_EXECUTION_STATES (DEPLOYED or PILOT) before allowing ANY routeOrder() call.
+    // Fail-CLOSED: DB error OR no row found → REJECT (never fall through to routeOrder).
+    // Strategies in CANDIDATE/TESTING/SHADOW/PAPER/DEPLOY_READY/DECLINING/RETIRED/GRAVEYARD
+    // are NOT eligible for live capital — reject 409.
+    // Strategies without a strategy_id (programmatic HMAC callers) are exempt from this
+    // gate because they have no lifecycle row to look up (backward-compat).
+    if (strategy_id) {
+      let lifecycleGatePassed = false;
+      let lifecycleState: string | null = null;
+      try {
+        const rows = await db
+          .select({ lifecycleState: strategies.lifecycleState })
+          .from(strategies)
+          .where(eq(strategies.id, strategy_id))
+          .limit(1);
+        lifecycleState = rows[0]?.lifecycleState ?? null;
+        lifecycleGatePassed = lifecycleState !== null && LIVE_EXECUTION_STATES.has(lifecycleState);
+      } catch (gateErr) {
+        logger.error(
+          { accountId: account_id, strategyId: strategy_id, correlationId, err: gateErr },
+          "live-order: lifecycle gate DB lookup failed — fail-closed",
+        );
+        lifecycleGatePassed = false;
+      }
+
+      if (!lifecycleGatePassed) {
+        logger.warn(
+          { accountId: account_id, strategyId: strategy_id, correlationId, lifecycleState },
+          "live-order: strategy not in LIVE_EXECUTION_STATES — rejected 409",
+        );
+        try {
+          await db.insert(auditLog).values({
+            action: "live_order.rejected_non_live_state",
+            entityType: "live_order",
+            entityId: null,
+            decisionAuthority: "system",
+            input: { accountId: account_id, strategyId: strategy_id, ticker, lifecycleState } as Record<string, unknown>,
+            result: { rejected: true, reason: "non_live_state" } as Record<string, unknown>,
+            status: "rejected",
+            durationMs: Date.now() - startedAt,
+            correlationId,
+          });
+        } catch (auditErr) {
+          logger.error({ err: auditErr }, "live-order: lifecycle gate audit row write failed (non-blocking)");
+        }
+        res.status(409).json({
+          error: "non_live_state",
+          detail: `Strategy ${strategy_id} is in state '${lifecycleState ?? "NOT_FOUND"}' — only DEPLOYED/PILOT strategies may route live orders`,
+          correlationId,
+        });
+        return;
       }
     }
 
