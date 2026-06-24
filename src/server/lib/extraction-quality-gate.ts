@@ -268,10 +268,27 @@ export function checkCompilabilityGate(
 
   // A deterministic trigger exists iff: structural archetype (detector carries it) OR concrete
   // params OR an explicit entry_condition. Concept-echoes / uncatalogued / parametric-without-params
-  // carry NO trigger → null_entry_trigger → quarantine / needs-structure.
+  // carry NO trigger → quarantine / needs-structure.
+  // 2026-06-24 Layer 2: emit a PRECISE reason (per operator) so failure histograms scope Layer 3:
+  //   uncatalogued_indicator — resolved to "uncatalogued:*" (no engine handler exists)
+  //   params_required        — resolved to a real parametric engine indicator but params are empty
+  //   no_trigger             — nothing resolves at all (no archetype, no params, no condition)
   const hasDeterministicTrigger = isStructuralArchetype || hasParams || hasCondition;
   if (!hasDeterministicTrigger) {
-    missing.push("null_entry_trigger");
+    const resolvedLower = typeof resolved === "string" ? resolved.trim().toLowerCase() : "";
+    const isUncatalogued = resolvedLower.startsWith("uncatalogued:");
+    // A parametric indicator is present if EITHER the resolver returned a bare engine indicator name
+    // (not archetype:/uncatalogued:) or the raw entry_indicator/archetype field is a non-empty string.
+    const resolvedIsParametric =
+      resolvedLower.length > 0 && !resolvedLower.startsWith("archetype:") && !isUncatalogued;
+    const hasNamedIndicator = hasEntryIndicator || hasArchetype || resolvedIsParametric;
+    if (isUncatalogued) {
+      missing.push("uncatalogued_indicator");
+    } else if (hasNamedIndicator) {
+      missing.push("params_required");
+    } else {
+      missing.push("no_trigger");
+    }
   }
 
   // Gate 3: direction must be present and non-empty

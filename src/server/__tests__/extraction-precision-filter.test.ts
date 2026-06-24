@@ -150,7 +150,8 @@ describe("E-PRECISION — full-gate scoreboard (real caches)", () => {
     // whose entry_indicator is a concept-echo (resolves to no structural archetype) does NOT carry
     // a deterministic trigger → not compilable. This is the Layer 1 shipping-integrity fix: high
     // coverage no longer implies a shippable, executable strategy.
-    if ("rf_EQvubKlk" in rows && rows["rf_EQvubKlk"].missing.includes("null_entry_trigger")) {
+    const TRIGGER_FAIL = ["no_trigger", "params_required", "uncatalogued_indicator"];
+    if ("rf_EQvubKlk" in rows && rows["rf_EQvubKlk"].missing.some((m) => TRIGGER_FAIL.includes(m))) {
       expect(rows["rf_EQvubKlk"].compilable).toBe(false);
     }
   });
