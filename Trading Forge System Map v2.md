@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-06-23T23:26:46.742Z`.
+Updated automatically from the repo on `2026-06-24T00:25:16.531Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -12,7 +12,7 @@ Updated automatically from the repo on `2026-06-23T23:26:46.742Z`.
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `ci_gate, kill_switch, operator, operator_hmac_override, operator_invoke_for_cohort_validation, operator_opt_in_per_strategy, operator-approve, operator-halt-only, operator-only-recovery, tradingview_deploy`
 - API routes tracked: `75`
-- Scheduler jobs tracked: `100`
+- Scheduler jobs tracked: `101`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
@@ -55,7 +55,7 @@ Updated automatically from the repo on `2026-06-23T23:26:46.742Z`.
 ### Registry Coverage
 - Registry subsystems tracked: `69`
 - Route coverage: `75/75`
-- Scheduler coverage: `100/100`
+- Scheduler coverage: `100/101`
 - Engine coverage: `29/29`
 - Database coverage: `106/106`
 - Autonomous subsystems with audit coverage: `62/62`
@@ -371,6 +371,7 @@ Updated automatically from the repo on `2026-06-23T23:26:46.742Z`.
 - `pattern-aggregator`
 - `pipeline-resume-drain`
 - `portfolio-correlation`
+- `position-drift-reconcile`
 - `pre-market-briefing-discord`
 - `pre-market-prep`
 - `pre-market-routine`

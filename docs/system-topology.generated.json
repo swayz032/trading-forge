@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-23T23:26:46.742Z",
+  "generatedAt": "2026-06-24T00:25:16.531Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,7 +16,7 @@
   },
   "counts": {
     "routes": 75,
-    "schedulerJobs": 100,
+    "schedulerJobs": 101,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 29,
@@ -168,6 +168,7 @@
     "pattern-aggregator",
     "pipeline-resume-drain",
     "portfolio-correlation",
+    "position-drift-reconcile",
     "pre-market-briefing-discord",
     "pre-market-prep",
     "pre-market-routine",
@@ -985,7 +986,9 @@
       "databaseTables": 106
     },
     "missingRoutes": [],
-    "missingSchedulerJobs": [],
+    "missingSchedulerJobs": [
+      "position-drift-reconcile"
+    ],
     "missingEngineSubsystems": [],
     "missingDatabaseTables": [],
     "subsystemsMissingAudit": [],
