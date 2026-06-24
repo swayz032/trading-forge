@@ -771,11 +771,16 @@ export async function routeOrder(
     broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...result, correlationId: correlationId ?? null });
     await writeAuditLog(accountId, signal, result, correlationId);
 
-    // ── Pass 4 Track C: per-call TradersPost rejection Discord + Prom ────────
+    // ── Pass 4 Track C / M11: per-call TradersPost rejection Discord + Prom ───
     // Fires AFTER audit+SSE so observability is preserved even if the
     // notification helper throws. Distinct from the credential-vault failure at
-    // line 664 (which uses notifyCritical because it is systemic) — this is a
-    // per-call non-success (4xx/5xx/timeout) which is WARNING severity.
+    // line 664 (which uses notifyCritical because it is systemic).
+    //
+    // M11 ESCALATION (hardening/phase-0): When H4 retry budget is fully exhausted
+    // (retryAttempt >= 2, meaning 3 total attempts all failed 5xx), escalate from
+    // notifyWarning → notifyCritical. A retry-exhausted result means the order was
+    // silently dropped despite the retry safety net — this is a capital-safety event.
+    // All other failures (4xx, first-attempt 5xx, network) keep notifyWarning.
     if (!submitResult.success) {
       const statusCodeStr = submitResult.statusCode != null ? String(submitResult.statusCode) : "unknown";
       const signalActionStr = signal.action ?? "unknown";
@@ -788,21 +793,45 @@ export async function routeOrder(
           : submitResult.responseBody != null
             ? JSON.stringify(submitResult.responseBody).slice(0, 200)
             : "";
-      notifyWarning(
-        `TradersPost reject for ${signal.ticker ?? "unknown"}`,
-        appendFamilyGradePostscript(
-          `Account ${accountId} on ${signalActionStr}: HTTP ${statusCodeStr}, body=${truncatedBody}`,
-          "TradersPost rejected an order. The order did NOT reach the broker.",
-          "Tell Tony: 'A TradersPost order was rejected.' If you cannot reach him, no action is required — the broker did not receive the order.",
-        ),
-        {
-          correlationId: correlationId ?? null,
-          accountId,
-          firmId: account.firmId,
-          statusCode: submitResult.statusCode ?? null,
-          signalAction: signal.action ?? null,
-        },
-      );
+      const retryExhausted = (submitResult.retryAttempt ?? 0) >= 2;
+      if (retryExhausted) {
+        // M11: Full retry budget consumed — order was silently dropped after 3 attempts.
+        // This is a capital-safety event: the broker never received the order.
+        notifyCritical(
+          `TradersPost 5xx retry EXHAUSTED for ${signal.ticker ?? "unknown"} — ORDER DROPPED`,
+          appendFamilyGradePostscript(
+            `Account ${accountId} on ${signalActionStr}: HTTP ${statusCodeStr} after ${(submitResult.retryAttempt ?? 0) + 1} attempts. ` +
+              `Body=${truncatedBody}. The broker is not responding and the retry budget is fully consumed. ` +
+              `The order was NOT placed.`,
+            "The bot tried 3 times to submit an order to the broker and the broker is not responding. The order was NOT placed.",
+            "Check the dashboard for the affected strategy. Tony may need to investigate the broker connection.",
+          ),
+          {
+            correlationId: correlationId ?? null,
+            accountId,
+            firmId: account.firmId,
+            statusCode: submitResult.statusCode ?? null,
+            signalAction: signal.action ?? null,
+            retryAttempt: submitResult.retryAttempt ?? null,
+          },
+        );
+      } else {
+        notifyWarning(
+          `TradersPost reject for ${signal.ticker ?? "unknown"}`,
+          appendFamilyGradePostscript(
+            `Account ${accountId} on ${signalActionStr}: HTTP ${statusCodeStr}, body=${truncatedBody}`,
+            "TradersPost rejected an order. The order did NOT reach the broker.",
+            "Tell Tony: 'A TradersPost order was rejected.' If you cannot reach him, no action is required — the broker did not receive the order.",
+          ),
+          {
+            correlationId: correlationId ?? null,
+            accountId,
+            firmId: account.firmId,
+            statusCode: submitResult.statusCode ?? null,
+            signalAction: signal.action ?? null,
+          },
+        );
+      }
     }
 
     // ── webhook.broker_ack latency emitter (Wave 25 CF#1) ────────────────────
