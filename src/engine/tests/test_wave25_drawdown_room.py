@@ -9,13 +9,15 @@ Math reference (ATR=4pt, stop_mult=1.5, MES=$5/pt):
 Drawdown room cap formula (Topstep only):
   drawdown_room_cap = floor(current_drawdown_room × DRAWDOWN_ROOM_RISK_PCT / stop_dollars_per_contract)
 
-At 1% (default _DRAWDOWN_ROOM_RISK_PCT):
-  $4,500 room: cap = floor(4500 × 0.01 / 30) = floor(1.5) = 1
+At 8% (default _DRAWDOWN_ROOM_RISK_PCT as of 2026-06-23 scaling-plan-baby-mode update):
+  $4,500 room: cap = floor(4500 × 0.08 / 30) = floor(12.0) = 12
   $0 room:     cap = 0 → finalContracts = 0
-  $9,000 room: cap = floor(9000 × 0.01 / 30) = 3
+  $9,000 room: cap = floor(9000 × 0.08 / 30) = 24
 
-Rationale (2026 funded-trader consensus):
-  "Risk 1% of CURRENT DRAWDOWN ROOM, not 2% of balance."
+Rationale (NexusFi 2026-05):
+  "8-12% of remaining drawdown buffer per trade" is institutional standard.
+  Prior 1% default produced ~$20/trade on fresh $2K Topstep buffer →
+  floor(20 / 30) = 0 contracts. 8% of $2K = $160 → floor(160/30) = 5 contracts.
   Parity guard: Python and TypeScript must return identical values.
 """
 
@@ -96,8 +98,8 @@ class TestDrawdownRoomZero:
 
 
 class TestDrawdownRoomPositive:
-    def test_topstep_4500_room_gives_cap_1(self):
-        """Topstep with $4,500 DD room → drawdown_room_cap = 1 (floor of 1.5)."""
+    def test_topstep_4500_room_gives_cap(self):
+        """Topstep with $4,500 DD room → drawdown_room_cap = floor(4500 × 0.08 / 30) = 12."""
         result = compute_risk_derived_contracts(
             **make_topstep_input(
                 account_balance=54_500.0,
@@ -109,10 +111,10 @@ class TestDrawdownRoomPositive:
             )
         )
 
-        # drawdown_room_cap = floor(4500 × 0.01 / 30) = floor(1.5) = 1
+        # drawdown_room_cap = floor(4500 × 0.08 / 30) = floor(12.0) = 12
         expected_cap = math.floor(4_500.0 * _DRAWDOWN_ROOM_RISK_PCT / STOP_DOLLARS)
         assert result.drawdown_room_cap == expected_cap
-        assert result.drawdown_room_cap == 1
+        assert result.drawdown_room_cap == math.floor(4_500.0 * 0.08 / STOP_DOLLARS)
 
     def test_topstep_drawdown_room_cap_binding(self):
         """Topstep: large account, small DD room → drawdown_room_cap is the binding constraint."""
@@ -128,12 +130,12 @@ class TestDrawdownRoomPositive:
             )
         )
 
-        # drawdown_room_cap = floor(9000 × 0.01 / 30) = 3
+        # drawdown_room_cap = floor(9000 × 0.08 / 30) = 24
         expected_cap = math.floor(9_000.0 * _DRAWDOWN_ROOM_RISK_PCT / STOP_DOLLARS)
         assert result.drawdown_room_cap == expected_cap
-        assert result.drawdown_room_cap == 3
+        assert result.drawdown_room_cap == math.floor(9_000.0 * 0.08 / STOP_DOLLARS)
         assert result.drawdown_room_cap_binding is True
-        assert result.final_contracts == 3
+        assert result.final_contracts == math.floor(9_000.0 * 0.08 / STOP_DOLLARS)
         assert result.evidence["binding_cap"] == "drawdown_room"
 
 
@@ -213,7 +215,7 @@ class TestNoCap:
             )
         )
 
-        # cap = floor(100000 × 0.01 / 30) = 33 (not binding)
+        # cap = floor(100000 × 0.08 / 30) = 266 (not binding)
         assert result.drawdown_room_cap == math.floor(
             100_000.0 * _DRAWDOWN_ROOM_RISK_PCT / STOP_DOLLARS
         )
@@ -230,18 +232,21 @@ class TestParityWithTypescript:
     @pytest.mark.parametrize(
         "room,expected_cap",
         [
+            # Expected caps computed using default 8% (scaling-plan-baby-mode 2026-06-23).
+            # Formula: floor(room × 0.08 / 30)
             (0.0, 0),
-            (4_500.0, 1),  # floor(1.5) = 1
-            (6_000.0, 2),  # floor(2.0) = 2
-            (9_000.0, 3),
-            (15_000.0, 5),
-            (30_000.0, 10),
+            (4_500.0, 12),   # floor(4500 × 0.08 / 30) = floor(12.0) = 12
+            (6_000.0, 16),   # floor(6000 × 0.08 / 30) = floor(16.0) = 16
+            (9_000.0, 24),   # floor(9000 × 0.08 / 30) = floor(24.0) = 24
+            (15_000.0, 40),  # floor(15000 × 0.08 / 30) = floor(40.0) = 40
+            (30_000.0, 80),  # floor(30000 × 0.08 / 30) = floor(80.0) = 80
         ],
     )
     def test_drawdown_room_cap_matches_typescript_formula(self, room, expected_cap):
-        """Python formula floor(room × 0.01 / 30) must match TypeScript for all room values."""
+        """Python formula floor(room × 0.08 / 30) must match TypeScript for all room values."""
         computed = math.floor(room * _DRAWDOWN_ROOM_RISK_PCT / STOP_DOLLARS)
         assert computed == expected_cap, (
             f"room={room}: Python cap={computed} expected={expected_cap}. "
-            f"Parity mismatch — TypeScript and Python must agree."
+            f"Parity mismatch — TypeScript and Python must agree. "
+            f"Default DRAWDOWN_ROOM_RISK_PCT={_DRAWDOWN_ROOM_RISK_PCT} (expected 0.08)."
         )

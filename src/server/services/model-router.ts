@@ -800,12 +800,26 @@ const _appendixCache = new Map<string, string>();
  * after each successful aggregation run. Also called by warmAppendixCache() at boot.
  *
  * Thread-safe: JavaScript single-threaded; Map.set() is atomic.
+ *
+ * F-4 fix (Wave B): also invalidates every promptCache entry whose key starts
+ * with the same promptType prefix so the NEXT loadSystemPrompt() call rebuilds
+ * with the freshly injected appendix instead of serving a stale 60-second TTL hit.
+ * The __clearPromptCacheForTests export remains intact.
  */
 export function setAppendixCache(promptType: string, content: string): void {
   _appendixCache.set(promptType, content);
+
+  // Invalidate any cached prompt that was built with the old appendix value.
+  // cacheKey() produces "<role>::<ctx-json>" — exact role match covers all contexts.
+  for (const key of promptCache.keys()) {
+    if (key.startsWith(`${promptType}::`)) {
+      promptCache.delete(key);
+    }
+  }
+
   logger.info(
     { promptType, contentLength: content.length },
-    "model-router: appendix cache updated",
+    "model-router: appendix cache updated + promptCache entries invalidated",
   );
 }
 
@@ -2804,9 +2818,14 @@ async function emitLocalLlmDownSignal(opts: LocalLlmDownOpts): Promise<void> {
   // 2. Discord critical alert
   try {
     const { notifyCritical } = await import("../services/notification-service.js");
+    const { appendFamilyGradePostscript } = await import("../lib/notification-helpers.js");
     notifyCritical(
       "EXTRACTION LOST — local Ollama DOWN + cloud unavailable",
-      `Reason: ${fallback_reason}\nSource: ${sourceUrl ?? "(unknown)"}\nFix: POST /api/admin/ollama-health-recheck to restore local routing`,
+      appendFamilyGradePostscript(
+        `Reason: ${fallback_reason}\nSource: ${sourceUrl ?? "(unknown)"}\nFix: POST /api/admin/ollama-health-recheck to restore local routing`,
+        "The strategy-research bot cannot extract new trading strategies right now — the local AI model is down and the cloud backup is also unavailable.",
+        "No action needed today. Check back tomorrow. Tony will be alerted automatically and can restore the system via the admin panel.",
+      ),
       { fallback_reason, source_url: sourceUrl, ollama_healthy_flag: OLLAMA_HEALTHY },
     );
   } catch (err) {

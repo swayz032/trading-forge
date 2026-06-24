@@ -11,8 +11,18 @@
  * payload construction.  It is intentionally free of DB access and side effects
  * so that tests can cover every branch without a DB connection.
  *
- * Institutional default: block when ci_high > 0.40.
- * Env override: B14_RUIN_CI_HIGH_THRESHOLD (float string, default "0.40").
+ * Hardening 2026-06-22 (production audit):
+ *   - Threshold default tightened 0.40 → 0.20 (institutional/practitioner ceiling
+ *     for funded-account trading; operator is risk-averse). Env-overridable.
+ *   - Fail-CLOSED when ci_high===null (no firm-breach ruin, no scalar) instead
+ *     of the previous silent-PASS. Reason: "b14.firm_breach_ruin_unavailable_fail_closed".
+ *   - Fail-CLOSED when ruinCi.ruin_unavailable===true (Python signals no firm
+ *     models were configured, so the terminal<=0 basis is categorically wrong).
+ *   - Payout-denial rate gate: if per_firm[*].consistency_fail_rate is present in
+ *     the ruinCi dict, block when worst-firm rate > B14_PAYOUT_DENIAL_THRESHOLD
+ *     (default 0.10, env-overridable via B14_PAYOUT_DENIAL_THRESHOLD).
+ *
+ * Env override: B14_RUIN_CI_HIGH_THRESHOLD (float string, default "0.20").
  * Convention: strict > (not ≥) — ci_high exactly equal to threshold is NOT blocked.
  */
 
@@ -92,7 +102,7 @@ export interface DsrWalkForwardGateResult {
  * 2. dsr_pass=false (dsr_unavailable falsy or absent)
  *    → BLOCK with status "blocked_dsr_floor"
  *    → audit "lifecycle.dsr_floor_block"
- *    (DSR computed and below the honest-SR floor. Strategy does not survive
+ *    (DSR computed and below floor. Strategy does not survive
  *     multiple-testing correction.)
  *
  * 3. dsr_pass=undefined | null
@@ -232,23 +242,55 @@ export interface B14CiGateResult {
     legacy_ruin_scalar_fallback: boolean;
     ci_method: string | null;
     n_resamples: number | null;
+    // Payout-denial fields (present only when per_firm data available)
+    worst_consistency_fail_rate?: number | null;
+    payout_denial_threshold?: number | null;
   };
 }
 
 /**
- * Read B14_RUIN_CI_HIGH_THRESHOLD from env, defaulting to 0.40.
+ * Read B14_RUIN_CI_HIGH_THRESHOLD from env.
+ *
+ * Hardening 2026-06-22: default tightened 0.40 → 0.20.
+ * 0.20 is the institutional/practitioner ceiling for funded-account trading
+ * (the operator is risk-averse and uses EOD trailing drawdown).
+ *
  * Exported so tests can verify the env-override path without side effects.
  */
 export function getB14CiHighThreshold(): number {
   const raw = process.env.B14_RUIN_CI_HIGH_THRESHOLD;
-  if (raw === undefined || raw === "") return 0.40;
+  // Hardening 2026-06-22: default changed from 0.40 → 0.20.
+  if (raw === undefined || raw === "") return 0.20;
   const parsed = parseFloat(raw);
   if (isNaN(parsed) || parsed < 0 || parsed > 1) {
     logger.warn(
-      { raw, defaulted: 0.40 },
-      "B14_RUIN_CI_HIGH_THRESHOLD is invalid — using default 0.40",
+      { raw, defaulted: 0.20 },
+      "B14_RUIN_CI_HIGH_THRESHOLD is invalid — using default 0.20",
     );
-    return 0.40;
+    return 0.20;
+  }
+  return parsed;
+}
+
+/**
+ * Read B14_PAYOUT_DENIAL_THRESHOLD from env, defaulting to 0.10.
+ *
+ * When the MC firm_survival output includes per-firm consistency_fail_rate,
+ * B14 gates on this too (Topstep documents payout-denial for consistency
+ * violations; 10% is a conservative bound for funded-account risk aversion).
+ *
+ * Exported for tests.
+ */
+export function getB14PayoutDenialThreshold(): number {
+  const raw = process.env.B14_PAYOUT_DENIAL_THRESHOLD;
+  if (raw === undefined || raw === "") return 0.10;
+  const parsed = parseFloat(raw);
+  if (isNaN(parsed) || parsed < 0 || parsed > 1) {
+    logger.warn(
+      { raw, defaulted: 0.10 },
+      "B14_PAYOUT_DENIAL_THRESHOLD is invalid — using default 0.10",
+    );
+    return 0.10;
   }
   return parsed;
 }
@@ -256,12 +298,38 @@ export function getB14CiHighThreshold(): number {
 /**
  * Evaluate the B14 CI gate.
  *
- * @param ruinCi   The probability_of_ruin_ci dict from MC risk_metrics.
- *                 Pass null for legacy MC runs that pre-date Pass A.
- * @param pointEstimate  The scalar probability_of_ruin (pre-Pass-A fallback).
- *                       Used when ruinCi is null or lacks ci_high.
- * @param threshold  Override the env-derived threshold (for tests).
- *                   When undefined, reads from env.
+ * Priority order (first match wins):
+ *
+ * 0. ruin_unavailable=true in ruinCi
+ *    → BLOCK "b14.firm_breach_ruin_unavailable_fail_closed"
+ *    (Python signalled that no firm models were configured, so the
+ *     terminal<=0 basis is categorically wrong for funded-account trading.)
+ *
+ * 1. Non-finite ci_high AND non-finite/absent scalar
+ *    → BLOCK "b14.ruin_estimate_non_finite_fail_closed"
+ *    (scipy BCa DegenerateDataWarning: MC ran but ruin estimate is corrupt.)
+ *
+ * 2. ci_high === null (no firm-breach ruin available, including no MC run)
+ *    → BLOCK "b14.firm_breach_ruin_unavailable_fail_closed"
+ *    (Hardening 2026-06-22: previously returned passed:true. When survival
+ *     cannot be proven, we block. Any legacy/pre-MC grandfather must be an
+ *     explicit, dated, operator-visible allow at the CALLER, not here.)
+ *
+ * 3. ci_high > threshold
+ *    → BLOCK "b14.ci_high_exceeds_threshold"
+ *
+ * 4. per_firm consistency_fail_rate > payout-denial threshold
+ *    → BLOCK "b14.payout_denial_rate_exceeds_threshold"
+ *
+ * 5. ci_high <= threshold AND payout-denial ok (or absent)
+ *    → PASS "b14.ci_high_within_threshold"
+ *
+ * @param ruinCi        The probability_of_ruin_ci dict from MC risk_metrics.
+ *                      Pass null for legacy MC runs that pre-date Pass A.
+ * @param pointEstimate The scalar probability_of_ruin (pre-Pass-A fallback).
+ *                      Used when ruinCi is null or lacks ci_high.
+ * @param threshold     Override the env-derived ci_high threshold (for tests).
+ *                      When undefined, reads from env.
  */
 export function evaluateB14CiGate(
   ruinCi: RuinCiDict | null | undefined,
@@ -269,6 +337,7 @@ export function evaluateB14CiGate(
   threshold?: number,
 ): B14CiGateResult {
   const effectiveThreshold = threshold ?? getB14CiHighThreshold();
+  const payoutDenialThreshold = getB14PayoutDenialThreshold();
 
   let ciHigh: number | null = null;
   let ciLow: number | null = null;
@@ -279,11 +348,42 @@ export function evaluateB14CiGate(
   // Wave hardening 2026-06-22, B14 non-finite ruin guard:
   // Tracks whether MC ran but produced a non-finite estimate (NaN/Infinity from scipy BCa
   // on degenerate strategies). This is distinct from "no MC run at all" (ruinCi is null).
-  // The distinction drives: corrupt-MC → fail-CLOSED; absent-MC → pass-through.
+  // The distinction drives: corrupt-MC → fail-CLOSED; absent-MC → also fail-CLOSED (Fix F-1).
   let hadNonFiniteRuinEstimate = false;
   // Non-finite raw values surfaced in the fail-CLOSED audit payload.
   let rawNonFiniteCiHigh: number | null = null;
   let rawNonFiniteScalar: number | null = null;
+
+  // ── Priority 0: ruin_unavailable=true (Python no-firm authoritative signal) ──
+  // When Python sets ruin_unavailable=true, it means no firm models were configured
+  // and the probability_of_ruin_ci has only a terminal<=0 basis. That basis is
+  // categorically wrong for funded-account trading (EOD trailing DD can close the
+  // account while cumulative P&L is positive). Fail-CLOSED immediately.
+  if (ruinCi != null && typeof ruinCi === "object") {
+    const ruinUnavailable = (ruinCi as Record<string, unknown>).ruin_unavailable;
+    if (ruinUnavailable === true) {
+      logger.warn(
+        { threshold: effectiveThreshold },
+        "B14: ruin_unavailable=true in probability_of_ruin_ci (no firm models configured) — " +
+        "firm-breach ruin CI unavailable; failing CLOSED (b14.firm_breach_ruin_unavailable_fail_closed)",
+      );
+      return {
+        passed: false,
+        reason: "b14.firm_breach_ruin_unavailable_fail_closed",
+        legacyFallback: true,
+        auditPayload: {
+          point_estimate: null,
+          ci_low: null,
+          ci_high: null,
+          threshold: effectiveThreshold,
+          blocked: true,
+          legacy_ruin_scalar_fallback: true,
+          ci_method: null,
+          n_resamples: null,
+        },
+      };
+    }
+  }
 
   if (ruinCi != null && typeof ruinCi === "object") {
     // Wave hardening 2026-06-22, B14 non-finite ruin guard:
@@ -317,10 +417,13 @@ export function evaluateB14CiGate(
     }
     ciHigh = Number.isFinite(rawScalar) ? rawScalar : null;
     pointEst = ciHigh;
-    logger.warn(
-      { pointEstimate: ciHigh, threshold: effectiveThreshold },
-      "B14 ci_high unavailable — falling back to scalar probability_of_ruin (b14.legacy_ruin_scalar_fallback)",
-    );
+    if (ciHigh !== null) {
+      // Only log the scalar-fallback warning when we actually have a scalar to use.
+      logger.warn(
+        { pointEstimate: ciHigh, threshold: effectiveThreshold },
+        "B14 ci_high unavailable — falling back to scalar probability_of_ruin (b14.legacy_ruin_scalar_fallback)",
+      );
+    }
   }
 
   // Wave hardening 2026-06-22: fail-CLOSED when MC ran but produced only non-finite
@@ -350,20 +453,28 @@ export function evaluateB14CiGate(
     };
   }
 
-  // If we still have no value (no MC run at all for this backtest), pass through.
-  // The outer B14 gate already handles "no backtest data" cases; this helper
-  // only runs when the caller has confirmed a backtest row exists.
+  // ── F-1 hardening 2026-06-22: fail-CLOSED when no ruin value is available ──
+  // Previously returned passed:true with reason "b14.ci_high_unavailable_no_mc_run".
+  // That was wrong: when survival cannot be proven, we BLOCK.
+  // Any legacy/pre-MC grandfather must be an explicit, dated, operator-visible allow
+  // at the CALLER (lifecycle-service.ts), NOT an unconditional pass in this helper.
   if (ciHigh === null) {
+    logger.warn(
+      { threshold: effectiveThreshold },
+      "B14: no firm-breach ruin CI available and no finite scalar fallback — " +
+      "failing CLOSED (b14.firm_breach_ruin_unavailable_fail_closed). " +
+      "Ensure MC is run with firms=['topstep_50k','mffu_50k'] before promoting.",
+    );
     return {
-      passed: true,
-      reason: "b14.ci_high_unavailable_no_mc_run",
+      passed: false,
+      reason: "b14.firm_breach_ruin_unavailable_fail_closed",
       legacyFallback: true,
       auditPayload: {
         point_estimate: null,
         ci_low: null,
         ci_high: null,
         threshold: effectiveThreshold,
-        blocked: false,
+        blocked: true,
         legacy_ruin_scalar_fallback: true,
         ci_method: null,
         n_resamples: null,
@@ -371,20 +482,88 @@ export function evaluateB14CiGate(
     };
   }
 
+  // ── Ruin CI threshold check ─────────────────────────────────────────────────
   // Strict >  (not >=): ci_high exactly equal to threshold is NOT blocked.
-  // Institutional convention: 0.40 means "reject strategies with GREATER THAN 40% ruin CI".
+  // Institutional convention: 0.20 means "reject strategies with GREATER THAN 20% ruin CI".
   const blocked = ciHigh > effectiveThreshold;
 
+  if (blocked) {
+    return {
+      passed: false,
+      reason: "b14.ci_high_exceeds_threshold",
+      legacyFallback,
+      auditPayload: {
+        point_estimate: pointEst,
+        ci_low: ciLow,
+        ci_high: ciHigh,
+        threshold: effectiveThreshold,
+        blocked: true,
+        legacy_ruin_scalar_fallback: legacyFallback,
+        ci_method: ciMethod,
+        n_resamples: nResamples,
+      },
+    };
+  }
+
+  // ── Payout-denial rate check (E — hardening 2026-06-22) ───────────────────
+  // When the MC output includes per_firm.*.consistency_fail_rate, gate on the
+  // worst-firm value. Topstep documents payout-denial bans for consistency
+  // violations (single-day concentration > 40% of payout-window P&L).
+  // consistency_fail_rate is the MC-simulated frequency of such violations.
+  const perFirm = ruinCi != null && typeof ruinCi === "object"
+    ? ((ruinCi as Record<string, unknown>).per_firm as Record<string, Record<string, unknown>> | null | undefined) ?? null
+    : null;
+
+  if (perFirm != null && typeof perFirm === "object") {
+    let worstConsistencyFailRate: number | null = null;
+    for (const firmData of Object.values(perFirm)) {
+      if (firmData && typeof firmData === "object") {
+        const rate = (firmData as Record<string, unknown>).consistency_fail_rate;
+        if (rate != null && typeof rate === "number" && Number.isFinite(rate)) {
+          if (worstConsistencyFailRate === null || rate > worstConsistencyFailRate) {
+            worstConsistencyFailRate = rate;
+          }
+        }
+      }
+    }
+
+    if (worstConsistencyFailRate !== null && worstConsistencyFailRate > payoutDenialThreshold) {
+      logger.warn(
+        { worstConsistencyFailRate, payoutDenialThreshold, threshold: effectiveThreshold },
+        "B14 payout-denial gate BLOCKED: worst-firm consistency_fail_rate exceeds threshold " +
+        "(b14.payout_denial_rate_exceeds_threshold)",
+      );
+      return {
+        passed: false,
+        reason: "b14.payout_denial_rate_exceeds_threshold",
+        legacyFallback,
+        auditPayload: {
+          point_estimate: pointEst,
+          ci_low: ciLow,
+          ci_high: ciHigh,
+          threshold: effectiveThreshold,
+          blocked: true,
+          legacy_ruin_scalar_fallback: legacyFallback,
+          ci_method: ciMethod,
+          n_resamples: nResamples,
+          worst_consistency_fail_rate: worstConsistencyFailRate,
+          payout_denial_threshold: payoutDenialThreshold,
+        },
+      };
+    }
+  }
+
+  // ── All checks passed ───────────────────────────────────────────────────────
   return {
-    passed: !blocked,
-    reason: blocked ? "b14.ci_high_exceeds_threshold" : "b14.ci_high_within_threshold",
+    passed: true,
+    reason: "b14.ci_high_within_threshold",
     legacyFallback,
     auditPayload: {
       point_estimate: pointEst,
       ci_low: ciLow,
       ci_high: ciHigh,
       threshold: effectiveThreshold,
-      blocked,
+      blocked: false,
       legacy_ruin_scalar_fallback: legacyFallback,
       ci_method: ciMethod,
       n_resamples: nResamples,

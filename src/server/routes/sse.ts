@@ -315,13 +315,14 @@ export interface FactoryMultiMarketBucketPayload {
 // These constants are declared here so consumers can import a stable name
 // rather than embed magic strings that may drift.
 //
-// Emission sites (as of Wave 29 Pass A + B + C close):
-//   SHADOW_LOGGED             — paper-signal-service.ts:4375   (Pass A.1)
-//   PBO_EVALUATED             — lifecycle-service.ts:940/965   (Pass A.2)
-//   SHADOW_DIVERGENCE_EVALUATED — lifecycle-service.ts:2049/2088 (Pass A.3)
-//   RL_AB_ROUTED              — paper-signal-service.ts:4520   (Pass C.3)
-//   RL_TRAINING_COMPLETED     — quantum-rl-training-runner.ts post-completion callers
-//   RL_KILL_SWITCH_ENGAGED    — rl-signal-fetcher.ts kill-switch path callers
+// Emission sites (as of Wave 29 Pass A + B + C close — use function anchors, not line
+// numbers, as line numbers drift immediately after any insertion or deletion):
+//   SHADOW_LOGGED             — paper-signal-service.ts::evaluateSignals() shadow-intercept block (Pass A.1)
+//   PBO_EVALUATED             — lifecycle-service.ts::LifecycleService._promoteStrategyInner() PBO gate (Pass A.2)
+//   SHADOW_DIVERGENCE_EVALUATED — lifecycle-service.ts::LifecycleService._promoteStrategyInner() SHADOW→PAPER gate (Pass A.3)
+//   RL_AB_ROUTED              — paper-signal-service.ts::evaluateSignals() A/B paper routing branch (Pass C.3)
+//   RL_TRAINING_COMPLETED     — quantum-rl-training-runner.ts post-subprocess-completion emit path
+//   RL_KILL_SWITCH_ENGAGED    — rl-signal-fetcher.ts::fetchRlSignalForStrategy() kill-switch branch
 //
 // Data shapes:
 //   SHADOW_LOGGED             { strategy_id, signal_ts, direction, regime, correlation_id }
@@ -346,3 +347,114 @@ export const WAVE29_EVENTS = {
 } as const;
 
 export type Wave29EventName = (typeof WAVE29_EVENTS)[keyof typeof WAVE29_EVENTS];
+
+// ─── Pass 4.5 Track D — Archetype routing observability SSE events (2026-06-23) ─
+//
+// Emitted by archetype-routing-observability.ts helpers on every stage of the
+// /api/live-order archetype_signal handler lifecycle. Track B calls these helpers
+// directly — no SSE logic lives in the route itself.
+//
+// Payload shapes:
+//   SIGNAL_RECEIVED   { strategy_id, archetype, account_id, correlation_id, bar_timestamp }
+//   SIGNAL_RESOLVED   { strategy_id, archetype, resolved_action, account_id, correlation_id, reason }
+//   EVALUATOR_FAILED  { strategy_id, archetype, error_class, correlation_id }
+//
+// resolved_action closed enum (mirrors tf_archetype_signals_routed_total labels):
+//   enter_long | enter_short | exit_long | exit_short | hold | evaluator_failed
+//
+// error_class is a string — typically the constructor name of the thrown error
+//   (e.g. "TimeoutError", "SubprocessError") so dashboards can group failure modes.
+export const ARCHETYPE_ROUTING_EVENTS = {
+  // Fired when /api/live-order accepts an action:"archetype_signal" request
+  // and before the Python evaluator subprocess is dispatched.
+  SIGNAL_RECEIVED: "archetype:signal_received",
+  // Fired after the archetype_evaluator returns a verdict. Carries the resolved
+  // direction and reason from the evaluator response.
+  SIGNAL_RESOLVED: "archetype:signal_resolved",
+  // Fired when the Python evaluator subprocess fails or times out.
+  EVALUATOR_FAILED: "archetype:evaluator_failed",
+} as const;
+
+export type ArchetypeRoutingEventName =
+  (typeof ARCHETYPE_ROUTING_EVENTS)[keyof typeof ARCHETYPE_ROUTING_EVENTS];
+
+// ─── Lifecycle Gate SSE Event Names ─────────────────────────────────────────
+//
+// Centralized event-name constants for W27.5 lifecycle gate broadcasts emitted
+// from lifecycle-service.ts, plus the Pass 7 evidence-completeness block event.
+//
+// All names follow the `lifecycle:{gate_name}` convention. Importing these
+// constants instead of raw strings prevents silent magic-string drift when gate
+// names need to change.
+//
+// Emission sites (stable function/method anchors — NOT line numbers):
+//   WFE_EVALUATED            — evaluateWfeGate() call sites inside
+//                               checkAndAdvanceLifecycleState() PAPER→DEPLOY_READY path
+//   B14_EVALUATED            — evaluateB14CiGate() call sites in both the
+//                               TESTING→PAPER and PAPER→DEPLOY_READY paths
+//   PARAMETER_DRIFT_EVALUATED — evaluateParameterDriftGate() call sites in both paths
+//   FROZEN_POLICY_DRIFT_BLOCKED — evaluateFrozenPolicyDriftAtPromotion() block path
+//   COMPLIANCE_DRIFT_BLOCKED — findFirmsWithComplianceDrift() block path
+//   BACKTEST_STALE           — stale-backtest staleness check block path
+//   PROMOTION_EVIDENCE_INCOMPLETE — Track A.2 evidence-completeness gate block path
+//
+// Data shapes:
+//   WFE_EVALUATED            { strategyId, wfe_overall, status, passed, correlation_id }
+//   B14_EVALUATED            { strategyId, ci_high, threshold, passed, correlation_id }
+//   PARAMETER_DRIFT_EVALUATED { strategyId, classification, confidence, passed, correlation_id }
+//   FROZEN_POLICY_DRIFT_BLOCKED { strategyId, current_hash, frozen_hash, correlation_id }
+//   COMPLIANCE_DRIFT_BLOCKED { strategyId, drift_firms, correlation_id }
+//   BACKTEST_STALE           { strategyId, age_days, limit_days, correlation_id }
+//   PROMOTION_EVIDENCE_INCOMPLETE { strategyId, incomplete_count, total_gates,
+//                                   gate_evidence_statuses, correlation_id }
+export const LIFECYCLE_GATE_EVENTS = {
+  // W27.5 Pass B — WFE gate evaluated at PAPER → DEPLOY_READY
+  WFE_EVALUATED: "lifecycle:wfe_evaluated",
+  // W27.5 Pass B — B14 Survival Twin CI gate evaluated
+  B14_EVALUATED: "lifecycle:b14_evaluated",
+  // W27.5 Pass B — parameter drift gate evaluated at PAPER → DEPLOY_READY
+  PARAMETER_DRIFT_EVALUATED: "lifecycle:parameter_drift_evaluated",
+  // Wave 29 Pass B — frozen-policy hash drift gate blocked promotion
+  FROZEN_POLICY_DRIFT_BLOCKED: "lifecycle:frozen_policy_drift_blocked",
+  // PAPER → DEPLOY_READY — compliance ruleset drift gate blocked promotion
+  COMPLIANCE_DRIFT_BLOCKED: "lifecycle:compliance_drift_blocked",
+  // PAPER / TESTING → PAPER — backtest staleness gate blocked promotion
+  BACKTEST_STALE: "lifecycle:backtest_stale",
+  // Pass 7 Track A.2 — evidence completeness gate blocked promotion
+  // (>= 3 of 8 tracked gates lack institutional-quality data)
+  PROMOTION_EVIDENCE_INCOMPLETE: "lifecycle:promotion_evidence_incomplete",
+} as const;
+
+export type LifecycleGateEventName =
+  (typeof LIFECYCLE_GATE_EVENTS)[keyof typeof LIFECYCLE_GATE_EVENTS];
+
+// ─── Pass 3 Track D — Pine Export SHADOW refusal SSE events (2026-06-22) ──────
+//
+// Emitted by pine-shadow-observability.ts::emitPineShadowRefused() whenever a
+// Pine export request is blocked because the strategy is in SHADOW lifecycle
+// state or has shadow_mode_enabled=true.
+//
+// Consumer: Dashboard tiles subscribe to "pine:refused_shadow_strategy" to show
+//   the SHADOW-refusal rate without querying audit_log.
+//
+// Payload shape:
+//   {
+//     strategy_id:          string  — strategy UUID from the strategies table
+//     lifecycle_state:      string  — current lifecycle state (e.g. "SHADOW")
+//     shadow_mode_enabled:  boolean — value of strategies.shadow_mode_enabled
+//     blocked_at:           string  — call-site name enum (see below)
+//     correlation_id:       string | null
+//   }
+//
+// blocked_at closed enum (mirrors tf_pine_shadow_refusals_total label):
+//   "compileDualPineExport"   — pine-export-service.ts compileDualPineExport() entry
+//   "compilePineExport"       — pine-export-service.ts compilePineExport() entry
+//   "recipient_build"         — pine-export-recipient-service.ts build path
+//   "artifact_download"       — GET artifact-download route (pine-export.ts)
+export const PINE_EVENTS = {
+  // Pass 3 Track C calls emitPineShadowRefused() from the four refusal sites;
+  // Track D (this file) registers the SSE constant so Track C can import it.
+  REFUSED_SHADOW_STRATEGY: "pine:refused_shadow_strategy",
+} as const;
+
+export type PineEventName = (typeof PINE_EVENTS)[keyof typeof PINE_EVENTS];

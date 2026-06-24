@@ -1,5 +1,5 @@
 /**
- * PineDistributionPanel — Track 6 / Pass 2
+ * PineDistributionPanel — Track 6 / Pass 2 (updated Pass 3 Track B)
  *
  * Operator-side UI for per-recipient Pine export distribution.
  *
@@ -8,12 +8,19 @@
  *   - "Generate Pine for [Family Member]" button per assignment
  *   - Last delivery timestamp per assignment
  *   - Download bundle button (triggers /api/pine-export/recipient)
+ *   - Download .pine button (GETs /api/pine-export/:exportId/artifacts/:artifactId/download)
  *
  * Visual identity: emerald (#10B981) on near-black, glassy floating card, top-nav pill style.
  * No marketing copy. No sidebar.
+ *
+ * Pass 3 Track B additions:
+ *   - downloadUrl prop on RecipientExportButton (propagated by Track A route)
+ *   - Download .pine button: same-origin blob fetch + URL.createObjectURL trigger
+ *   - Loading state during download + error toast on failure
  */
 
 import { useState } from "react";
+import { toast } from "@/hooks/use-toast";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -31,10 +38,13 @@ interface GenerateResult {
   artifact_path: string;
   artifact_hash: string;
   export_id: string | null;
+  artifact_id?: string | null;
   recipient_label: string;
   qty: number;
   setup_readme: string;
   presigned_url: string | null;
+  /** Populated by Track A route propagation — null until Track A merges */
+  downloadUrl?: string | null;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -64,6 +74,7 @@ function RecipientExportButton({ assignment, apiBase }: {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<GenerateResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pineDownloading, setPineDownloading] = useState(false);
 
   async function handleGenerate() {
     setLoading(true);
@@ -113,6 +124,41 @@ function RecipientExportButton({ assignment, apiBase }: {
     URL.revokeObjectURL(url);
   }
 
+  /**
+   * Download the .pine artifact from the server.
+   *
+   * Uses the downloadUrl propagated by Track A route. The URL is a same-origin
+   * proxy path that injects OPERATOR_API_KEY server-side — no Authorization
+   * header needed from the browser.
+   *
+   * Pattern: blob fetch + URL.createObjectURL (mirrors handleDownloadReadme above).
+   */
+  async function handleDownloadPine() {
+    if (!result?.downloadUrl) return;
+    setPineDownloading(true);
+    try {
+      const resp = await fetch(result.downloadUrl);
+      if (!resp.ok) {
+        const body = await resp.json().catch(() => ({})) as { error?: string };
+        const msg = body.error ?? `HTTP ${resp.status}`;
+        toast({ title: "Download failed", description: msg, variant: "destructive" });
+        return;
+      }
+      const blob = await resp.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = `${result.recipient_label}.pine`;
+      a.click();
+      URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Network error";
+      toast({ title: "Download failed", description: msg, variant: "destructive" });
+    } finally {
+      setPineDownloading(false);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-1.5">
       <button
@@ -147,6 +193,23 @@ function RecipientExportButton({ assignment, apiBase }: {
             >
               Download README
             </button>
+            {/* Download .pine button — enabled only when downloadUrl is non-null (Track A propagation) */}
+            {result.downloadUrl != null && (
+              <button
+                onClick={handleDownloadPine}
+                disabled={pineDownloading}
+                aria-label="Download .pine file"
+                data-testid="download-pine-btn"
+                className={[
+                  "px-2 py-0.5 rounded text-xs font-semibold transition-all",
+                  pineDownloading
+                    ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                    : "bg-emerald-700 hover:bg-emerald-600 text-white",
+                ].join(" ")}
+              >
+                {pineDownloading ? "Downloading…" : "Download .pine"}
+              </button>
+            )}
           </div>
           <p className="text-xs text-gray-500">
             Bundle saved to server — hand-deliver via secure messaging.

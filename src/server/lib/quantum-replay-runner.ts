@@ -37,6 +37,7 @@ import { db } from "../db/index.js";
 import { systemParameters } from "../db/schema.js";
 import { logger } from "./logger.js";
 import { notifyCritical } from "../services/notification-service.js";
+import { appendFamilyGradePostscript } from "./notification-helpers.js";
 
 const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 
@@ -177,7 +178,11 @@ function _recordFailure(lastError?: string): boolean {
     try {
       notifyCritical(
         "Quantum-Replay Circuit Breaker OPEN",
-        `Quantum-replay circuit breaker OPEN after ${_consecutiveFailures} consecutive failures; auto-fire halted until manual reset via system_parameters. Last error: ${lastError ?? "unknown"}`,
+        appendFamilyGradePostscript(
+          `Quantum-replay circuit breaker OPEN after ${_consecutiveFailures} consecutive failures; auto-fire halted until manual reset via system_parameters. Last error: ${lastError ?? "unknown"}`,
+          "The quantum analysis background job stopped after repeated failures.",
+          "No action needed — the bot will keep trading normally. Call Tony if this persists more than 24 hours.",
+        ),
         { consecutiveFailures: _consecutiveFailures, threshold: _threshold },
       );
     } catch (_discordErr) { /* non-blocking */ }

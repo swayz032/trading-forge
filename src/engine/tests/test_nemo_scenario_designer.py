@@ -1,32 +1,32 @@
 """Tests for NeMo Scenario Designer — Track 1 (Challenger-Only, Phase 0).
 
+Updated for v2 API (GenerationResult / ScenarioSpec).  The old NeMoScenario
+template-based API was removed in the data_designer wiring pass.
+
 Covers:
-  1.  Schema conformance: NeMoScenario dataclass fields all present
-  2.  Conditioning translation: nemo_to_a14_conditioning maps fields correctly
-  3.  GPU detection: select_quantum_device respected (no crash when unavailable)
-  4.  VRAM cap-aware fallback: probe_vram returns False -> CPU path
-  5.  Fail-CLOSED: missing model -> structured error (graceful failure)
-  6.  Fail-CLOSED: invalid output -> structured error
-  7.  Determinism: same seed -> same scenarios
-  8.  Severity distribution: count >= 100 -> all 4 severities present
-  9.  generator_version stamp on every scenario
-  10. Stylized-fact integration: generate 1 A14 conditioning vector (bridge only,
-      not full A14 run — A14 smoke test in deliverables)
-  11. Backwards compatibility: A14ConditioningVector works without NeMo (regime_label-only)
-  12. Edge case: count=0 -> empty list
-  13. Edge case: count=1 -> exactly 1 scenario
-  14. Edge case: count=10000 -> performance budget (< 30s)
-  15. Governance labels correct on every scenario
-  16. Bridge: extras dict contains all required NeMo metadata fields
-  17. Bridge: to_a14_config() includes mode="generate" and regime_label
-  18. Authority boundary: no lifecycle decision fields in output
-  19. Batch translation: batch_nemo_to_a14 length matches input
+  1.  Governance labels: GOVERNANCE_LABELS has authoritative=False, challenger_only
+  2.  Count validation: count < 0 → ValueError; count > 10000 → ValueError
+  3.  Count=0: fallback returns 8 named scenarios (fallback always returns all 8)
+  4.  GenerationResult schema: .specs, .path_used, .provenance, .count all present
+  5.  GenerationResult.__len__ and iteration work
+  6.  Fallback path: path_used='fallback' when no NVIDIA_API_KEY
+  7.  Fallback provenance marks path='fallback'
+  8.  Determinism: same seed → same run_id
+  9.  NeMoScenario dataclass still importable (kept for nemo_a14_bridge backward-compat)
+  10. A14 bridge: A14ConditioningVector.to_a14_config() still works
+  11. A14 bridge backwards compat: works without NeMo extras
+  12. A14 bridge extras completeness
+  13. A14 bridge to_a14_config merges base config
+  14. Authority boundary: GenerationResult provenance has no lifecycle-decision fields
+  15. NeMoScenarioDesigner init with device='auto' or device='cpu' doesn't crash
+  16. ScenarioSpec fields present on fallback specs
+  17. populate_regime_bank import check (module exists)
 """
 from __future__ import annotations
 
-import dataclasses
+import os
 import time
-from typing import get_type_hints
+from typing import Any
 
 import pytest
 
@@ -35,7 +35,7 @@ from src.engine.nemo_scenario_designer import (
     NEMO_GENERATOR_VERSION,
     NeMoScenario,
     NeMoScenarioDesigner,
-    _SCENARIO_TEMPLATES,
+    GenerationResult,
 )
 from src.engine.nemo_a14_bridge import (
     A14ConditioningVector,
@@ -53,115 +53,23 @@ def designer() -> NeMoScenarioDesigner:
 
 
 @pytest.fixture
-def single_scenario(designer: NeMoScenarioDesigner) -> NeMoScenario:
-    scenarios = designer.generate_scenarios(count=1, seed=42)
-    assert len(scenarios) == 1
-    return scenarios[0]
+def fallback_result(designer: NeMoScenarioDesigner, monkeypatch) -> GenerationResult:
+    """A result from the fallback path (no API key)."""
+    monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+    return designer.generate_scenarios(count=8, seed=42)
 
 
-# ─── Test 1: Schema conformance ───────────────────────────────────────────────
+# ─── Test 1: Governance labels ────────────────────────────────────────────────
 
 
-def test_schema_conformance_all_fields_present(single_scenario: NeMoScenario) -> None:
-    """All NeMoScenario dataclass fields must be present and non-None (except seed)."""
-    required_fields = [
-        "scenario_label",
-        "severity",
-        "duration_days",
-        "target_vol",
-        "target_trend",
-        "target_gap_profile",
-        "narrative",
-        "macro_links",
-        "generator_version",
-        "run_id",
-    ]
-    d = single_scenario.to_dict()
-    for field in required_fields:
-        assert field in d, f"Missing field: {field}"
-        if field != "seed":
-            assert d[field] is not None, f"Field {field} must not be None"
+def test_governance_labels_correct() -> None:
+    """GOVERNANCE_LABELS must have authoritative=False and decision_role=challenger_only."""
+    assert GOVERNANCE_LABELS["authoritative"] is False
+    assert GOVERNANCE_LABELS["experimental"] is True
+    assert GOVERNANCE_LABELS["decision_role"] == "challenger_only"
 
 
-def test_schema_severity_valid(designer: NeMoScenarioDesigner) -> None:
-    """Severity must be one of the four valid literals."""
-    valid = {"mild", "moderate", "severe", "extreme"}
-    scenarios = designer.generate_scenarios(count=20, seed=0)
-    for s in scenarios:
-        assert s.severity in valid, f"Invalid severity: {s.severity!r}"
-
-
-def test_schema_target_vol_range(designer: NeMoScenarioDesigner) -> None:
-    """target_vol must be > 0 and <= 1.5 (accounting for perturbation)."""
-    scenarios = designer.generate_scenarios(count=20, seed=0)
-    for s in scenarios:
-        assert 0 < s.target_vol <= 1.5, f"target_vol out of range: {s.target_vol}"
-
-
-def test_schema_target_trend_range(designer: NeMoScenarioDesigner) -> None:
-    """target_trend must be in [-1, 1]."""
-    scenarios = designer.generate_scenarios(count=20, seed=0)
-    for s in scenarios:
-        assert -1.0 <= s.target_trend <= 1.0, f"target_trend out of range: {s.target_trend}"
-
-
-# ─── Test 2: Conditioning translation ────────────────────────────────────────
-
-
-def test_conditioning_translation_fields(single_scenario: NeMoScenario) -> None:
-    """nemo_to_a14_conditioning maps all required fields."""
-    cv = nemo_to_a14_conditioning(single_scenario)
-    assert cv.regime_label == single_scenario.scenario_label
-    assert cv.target_vol == single_scenario.target_vol
-    assert cv.target_trend == single_scenario.target_trend
-    assert cv.target_gap_profile == single_scenario.target_gap_profile
-
-
-def test_conditioning_translation_extras_complete(single_scenario: NeMoScenario) -> None:
-    """extras dict must contain all NeMo metadata fields."""
-    cv = nemo_to_a14_conditioning(single_scenario)
-    for key in ("narrative", "severity", "duration_days", "macro_links", "source", "generator_version", "run_id"):
-        assert key in cv.extras, f"extras missing key: {key}"
-    assert cv.extras["source"] == "nemo"
-
-
-# ─── Test 3: GPU detection does not crash ─────────────────────────────────────
-
-
-def test_gpu_detection_no_crash() -> None:
-    """NeMoScenarioDesigner init with device='auto' must not raise."""
-    try:
-        d = NeMoScenarioDesigner(device="auto")
-        assert d._device in ("cpu", "lightning.gpu", "default.qubit")
-    except Exception as exc:
-        pytest.fail(f"GPU detection raised: {exc}")
-
-
-# ─── Test 4: VRAM cap-aware fallback ─────────────────────────────────────────
-
-
-def test_vram_cap_fallback_to_cpu() -> None:
-    """When probe_vram returns False, device resolves to cpu-compatible name."""
-    designer = NeMoScenarioDesigner(device="cpu")
-    assert designer._device == "cpu"
-    # Generate a small batch — must succeed on CPU
-    scenarios = designer.generate_scenarios(count=5, seed=1)
-    assert len(scenarios) == 5
-
-
-# ─── Test 5: Fail-CLOSED: missing model ───────────────────────────────────────
-
-
-def test_fail_closed_unsupported_model_path() -> None:
-    """NeMoScenarioDesigner with a nonexistent model path must still initialize
-    (template mode does not require model file) but should not produce garbage."""
-    d = NeMoScenarioDesigner(model_path="/nonexistent/model.nemo", device="cpu")
-    scenarios = d.generate_scenarios(count=2, seed=42)
-    # Should still work in template mode
-    assert len(scenarios) == 2
-
-
-# ─── Test 6: Fail-CLOSED: count validation ───────────────────────────────────
+# ─── Test 2: Count validation ─────────────────────────────────────────────────
 
 
 def test_fail_closed_negative_count(designer: NeMoScenarioDesigner) -> None:
@@ -176,70 +84,168 @@ def test_fail_closed_excessive_count(designer: NeMoScenarioDesigner) -> None:
         designer.generate_scenarios(count=10001)
 
 
-# ─── Test 7: Determinism ─────────────────────────────────────────────────────
+# ─── Test 3: count=0 returns fallback specs ───────────────────────────────────
 
 
-def test_determinism_same_seed(designer: NeMoScenarioDesigner) -> None:
-    """Same seed -> identical scenario labels and values."""
-    a = designer.generate_scenarios(count=20, seed=777)
-    b = designer.generate_scenarios(count=20, seed=777)
-    assert len(a) == len(b)
-    for i, (sa, sb) in enumerate(zip(a, b)):
-        assert sa.scenario_label == sb.scenario_label, f"Label mismatch at {i}"
-        assert sa.target_vol == sb.target_vol, f"Vol mismatch at {i}"
-        assert sa.target_trend == sb.target_trend, f"Trend mismatch at {i}"
+def test_edge_count_zero_returns_fallback(designer: NeMoScenarioDesigner, monkeypatch) -> None:
+    """count=0 must return fallback (8 named scenarios) without error."""
+    monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+    result = designer.generate_scenarios(count=0, seed=0)
+    # Fallback always returns all 8 NAMED_SCENARIOS.
+    # Use structural check rather than isinstance() to avoid cross-test-module
+    # class-identity issues when run in combined pytest sessions.
+    assert hasattr(result, "path_used"), "result lacks path_used attribute"
+    assert hasattr(result, "specs"), "result lacks specs attribute"
+    assert result.path_used == "fallback"
+    assert len(result.specs) == 8
 
 
-def test_determinism_different_seeds_differ(designer: NeMoScenarioDesigner) -> None:
-    """Different seeds -> different output (probabilistically)."""
-    a = designer.generate_scenarios(count=50, seed=1)
-    b = designer.generate_scenarios(count=50, seed=2)
-    labels_a = [s.scenario_label for s in a]
-    labels_b = [s.scenario_label for s in b]
-    # At least some labels must differ (order or labels differ on different seeds)
-    assert labels_a != labels_b
+# ─── Test 4: GenerationResult schema ─────────────────────────────────────────
 
 
-# ─── Test 8: Severity distribution ───────────────────────────────────────────
+def test_generation_result_has_required_attributes(fallback_result: GenerationResult) -> None:
+    """GenerationResult must have .specs, .path_used, .provenance, .count."""
+    assert hasattr(fallback_result, "specs")
+    assert hasattr(fallback_result, "path_used")
+    assert hasattr(fallback_result, "provenance")
+    assert hasattr(fallback_result, "count")
+    assert fallback_result.count == len(fallback_result.specs)
 
 
-def test_severity_distribution_all_four_present(designer: NeMoScenarioDesigner) -> None:
-    """count >= 100 must produce at least 1 scenario per severity."""
-    scenarios = designer.generate_scenarios(count=100, seed=0)
-    severities = {s.severity for s in scenarios}
-    assert severities == {"mild", "moderate", "severe", "extreme"}, \
-        f"Not all severities present: {severities}"
+def test_generation_result_specs_are_scenario_specs(fallback_result: GenerationResult) -> None:
+    """Every spec in .specs must have the renderer-required fields."""
+    required_fields = [
+        "name", "vol_annual", "drift_annual", "dof",
+        "n_bars", "jump_intensity", "jump_scale_sigma",
+        "hmm_states", "low_vol_scale", "high_vol_scale",
+        "transition_lo_to_hi", "transition_hi_to_lo",
+        "severity_description",
+    ]
+    for spec in fallback_result.specs:
+        for f in required_fields:
+            assert hasattr(spec, f), f"ScenarioSpec missing field: {f}"
 
 
-def test_severity_distribution_count_100_correct_total(designer: NeMoScenarioDesigner) -> None:
-    """Total count matches requested count."""
-    scenarios = designer.generate_scenarios(count=100, seed=42)
-    assert len(scenarios) == 100
+# ─── Test 5: GenerationResult iteration ───────────────────────────────────────
 
 
-# ─── Test 9: generator_version stamp ─────────────────────────────────────────
+def test_generation_result_len(fallback_result: GenerationResult) -> None:
+    """len(result) must return the spec count."""
+    assert len(fallback_result) == fallback_result.count
 
 
-def test_generator_version_on_every_scenario(designer: NeMoScenarioDesigner) -> None:
-    """Every scenario must have generator_version set."""
-    scenarios = designer.generate_scenarios(count=10, seed=0)
-    for s in scenarios:
-        assert s.generator_version == NEMO_GENERATOR_VERSION
+def test_generation_result_iteration(fallback_result: GenerationResult) -> None:
+    """for spec in result must iterate over .specs."""
+    specs_via_iter = list(fallback_result)
+    assert specs_via_iter == fallback_result.specs
 
 
-# ─── Test 10: Stylized-fact integration (bridge only) ────────────────────────
+# ─── Test 6: Fallback path ────────────────────────────────────────────────────
 
 
-def test_a14_conditioning_vector_to_dict_has_mode(single_scenario: NeMoScenario) -> None:
+def test_fallback_when_nvidia_key_absent(designer: NeMoScenarioDesigner, monkeypatch) -> None:
+    """No NVIDIA_API_KEY → path_used='fallback'."""
+    monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+    result = designer.generate_scenarios(count=8, seed=42)
+    assert result.path_used == "fallback"
+    assert len(result) == 8
+
+
+def test_fallback_specs_count_is_always_8(designer: NeMoScenarioDesigner, monkeypatch) -> None:
+    """Fallback always returns 8 named scenarios regardless of count."""
+    monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+    for count in [0, 1, 4, 100]:
+        result = designer.generate_scenarios(count=count, seed=0)
+        assert len(result.specs) == 8, f"Expected 8 fallback specs for count={count}"
+
+
+# ─── Test 7: Fallback provenance ──────────────────────────────────────────────
+
+
+def test_fallback_provenance_marks_path(designer: NeMoScenarioDesigner, monkeypatch) -> None:
+    """Fallback provenance must mark path='fallback'."""
+    monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+    result = designer.generate_scenarios(count=8, seed=42)
+    assert result.provenance.get("path") == "fallback"
+
+
+def test_fallback_provenance_has_run_id(designer: NeMoScenarioDesigner, monkeypatch) -> None:
+    """Fallback provenance must include a run_id."""
+    monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+    result = designer.generate_scenarios(count=8, seed=42)
+    assert "run_id" in result.provenance
+    assert result.provenance["run_id"]  # non-empty
+
+
+# ─── Test 8: Determinism ──────────────────────────────────────────────────────
+
+
+def test_same_seed_same_run_id(designer: NeMoScenarioDesigner, monkeypatch) -> None:
+    """Same seed + count → same run_id (deterministic hash)."""
+    monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+    r1 = designer.generate_scenarios(count=8, seed=42)
+    r2 = designer.generate_scenarios(count=8, seed=42)
+    assert r1.provenance["run_id"] == r2.provenance["run_id"]
+
+
+def test_different_seeds_different_run_ids(designer: NeMoScenarioDesigner, monkeypatch) -> None:
+    """Different seeds → different run_ids."""
+    monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+    r1 = designer.generate_scenarios(count=8, seed=1)
+    r2 = designer.generate_scenarios(count=8, seed=2)
+    assert r1.provenance["run_id"] != r2.provenance["run_id"]
+
+
+# ─── Test 9: NeMoScenario backward-compat ────────────────────────────────────
+
+
+def test_nemo_scenario_still_importable() -> None:
+    """NeMoScenario dataclass must remain importable for nemo_a14_bridge compat."""
+    from src.engine.nemo_scenario_designer import NeMoScenario
+    scenario = NeMoScenario(
+        scenario_label="crash",
+        severity="extreme",
+        duration_days=30,
+        target_vol=0.80,
+        target_trend=-0.50,
+        target_gap_profile={"mean_gap_pct": 0.05, "gap_direction": "down"},
+        narrative="Test crash scenario.",
+        macro_links={"equity_index": "down"},
+        generator_version=NEMO_GENERATOR_VERSION,
+        run_id="test123",
+        seed=42,
+    )
+    assert scenario.scenario_label == "crash"
+    d = scenario.to_dict()
+    assert "scenario_label" in d
+    assert "severity" in d
+
+
+# ─── Test 10: A14 bridge conditioning vector ──────────────────────────────────
+
+
+def test_a14_conditioning_vector_to_config_has_mode() -> None:
     """A14ConditioningVector.to_a14_config() includes mode='generate' and regime_label."""
-    cv = nemo_to_a14_conditioning(single_scenario)
+    scenario = NeMoScenario(
+        scenario_label="vol_spike",
+        severity="severe",
+        duration_days=5,
+        target_vol=0.60,
+        target_trend=0.0,
+        target_gap_profile={"mean_gap_pct": 0.02, "gap_direction": "neutral"},
+        narrative="Vol spike scenario.",
+        macro_links={},
+        generator_version=NEMO_GENERATOR_VERSION,
+        run_id="test-run",
+    )
+    cv = nemo_to_a14_conditioning(scenario)
     cfg = cv.to_a14_config()
     assert cfg["mode"] == "generate"
-    assert cfg["regime_label"] == single_scenario.scenario_label
+    assert cfg["regime_label"] == scenario.scenario_label
     assert "_nemo_extras" in cfg
 
 
-# ─── Test 11: Backwards compatibility ────────────────────────────────────────
+# ─── Test 11: A14 bridge backwards compat ────────────────────────────────────
 
 
 def test_backwards_compat_a14_without_nemo() -> None:
@@ -256,89 +262,118 @@ def test_backwards_compat_a14_without_nemo() -> None:
     assert cfg["_nemo_extras"] == {}  # empty extras, not missing
 
 
-# ─── Test 12: Edge case count=0 ──────────────────────────────────────────────
+# ─── Test 12: Bridge extras completeness ──────────────────────────────────────
 
 
-def test_edge_count_zero(designer: NeMoScenarioDesigner) -> None:
-    """count=0 must return empty list without error."""
-    scenarios = designer.generate_scenarios(count=0, seed=0)
-    assert scenarios == []
-
-
-# ─── Test 13: Edge case count=1 ──────────────────────────────────────────────
-
-
-def test_edge_count_one(designer: NeMoScenarioDesigner) -> None:
-    """count=1 must return exactly 1 scenario."""
-    scenarios = designer.generate_scenarios(count=1, seed=0)
-    assert len(scenarios) == 1
-    assert scenarios[0].generator_version == NEMO_GENERATOR_VERSION
-
-
-# ─── Test 14: Performance budget (count=10000) ───────────────────────────────
-
-
-def test_edge_count_large_perf_budget(designer: NeMoScenarioDesigner) -> None:
-    """count=10000 must complete in < 30 seconds on CPU."""
-    t0 = time.time()
-    scenarios = designer.generate_scenarios(count=10000, seed=0)
-    elapsed = time.time() - t0
-    assert len(scenarios) == 10000
-    assert elapsed < 30.0, f"10000 scenarios took {elapsed:.1f}s — over 30s budget"
-
-
-# ─── Test 15: Governance labels ───────────────────────────────────────────────
-
-
-def test_governance_labels_correct() -> None:
-    """GOVERNANCE_LABELS must have authoritative=False and decision_role=challenger_only."""
-    assert GOVERNANCE_LABELS["authoritative"] is False
-    assert GOVERNANCE_LABELS["experimental"] is True
-    assert GOVERNANCE_LABELS["decision_role"] == "challenger_only"
-
-
-# ─── Test 16: Bridge extras completeness ─────────────────────────────────────
-
-
-def test_bridge_extras_all_keys(single_scenario: NeMoScenario) -> None:
+def test_bridge_extras_all_keys() -> None:
     """extras dict must contain narrative, severity, duration_days, macro_links, source."""
-    cv = nemo_to_a14_conditioning(single_scenario)
+    scenario = NeMoScenario(
+        scenario_label="rate_shock",
+        severity="moderate",
+        duration_days=15,
+        target_vol=0.40,
+        target_trend=-0.20,
+        target_gap_profile={"mean_gap_pct": 0.01, "gap_direction": "down"},
+        narrative="Rate shock scenario.",
+        macro_links={"bonds": "up", "equities": "down"},
+        generator_version=NEMO_GENERATOR_VERSION,
+        run_id="extras-test",
+    )
+    cv = nemo_to_a14_conditioning(scenario)
     required_extras = ["narrative", "severity", "duration_days", "macro_links", "source", "generator_version"]
     for key in required_extras:
         assert key in cv.extras, f"extras missing: {key}"
+    assert cv.extras["source"] == "nemo"
 
 
-# ─── Test 17: to_a14_config merge ────────────────────────────────────────────
+# ─── Test 13: to_a14_config merges base ───────────────────────────────────────
 
 
-def test_to_a14_config_merges_base(single_scenario: NeMoScenario) -> None:
+def test_to_a14_config_merges_base_config() -> None:
     """to_a14_config(base_config) merges and NeMo fields override base."""
-    cv = nemo_to_a14_conditioning(single_scenario)
+    scenario = NeMoScenario(
+        scenario_label="flash_crash",
+        severity="extreme",
+        duration_days=1,
+        target_vol=1.20,
+        target_trend=-0.80,
+        target_gap_profile={"mean_gap_pct": 0.10, "gap_direction": "down"},
+        narrative="Flash crash scenario.",
+        macro_links={},
+        generator_version=NEMO_GENERATOR_VERSION,
+        run_id="merge-test",
+    )
+    cv = nemo_to_a14_conditioning(scenario)
     base = {"symbols": ["MES"], "seq_len": 60, "regime_label": "OVERRIDE_ME"}
     cfg = cv.to_a14_config(base_config=base)
     assert cfg["symbols"] == ["MES"]
     assert cfg["seq_len"] == 60
-    assert cfg["regime_label"] == single_scenario.scenario_label  # NeMo overrides
+    assert cfg["regime_label"] == scenario.scenario_label  # NeMo overrides
 
 
-# ─── Test 18: Authority boundary — no lifecycle fields ───────────────────────
+# ─── Test 14: Authority boundary ─────────────────────────────────────────────
 
 
-def test_no_lifecycle_authority_fields(single_scenario: NeMoScenario) -> None:
-    """NeMoScenario dict must NOT contain any lifecycle-decision fields."""
-    d = single_scenario.to_dict()
+def test_no_lifecycle_authority_in_result(designer: NeMoScenarioDesigner, monkeypatch) -> None:
+    """GenerationResult provenance must NOT contain lifecycle-decision fields."""
+    monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+    result = designer.generate_scenarios(count=8, seed=0)
+    prov = result.provenance
     forbidden = ["authoritative_decision", "promote", "entry_signal", "exit_signal", "lifecycle_action"]
     for key in forbidden:
-        assert key not in d, f"Forbidden lifecycle field found: {key}"
+        assert key not in prov, f"Forbidden lifecycle field found in provenance: {key}"
 
 
-# ─── Test 19: Batch translation length ───────────────────────────────────────
+# ─── Test 15: Initialization doesn't crash ───────────────────────────────────
 
 
-def test_batch_nemo_to_a14_length(designer: NeMoScenarioDesigner) -> None:
+def test_init_device_auto_no_crash() -> None:
+    """NeMoScenarioDesigner init with device='auto' must not raise."""
+    try:
+        d = NeMoScenarioDesigner(device="auto")
+        assert d._device in ("cpu", "lightning.gpu", "default.qubit", "auto")
+    except Exception as exc:
+        pytest.fail(f"device='auto' init raised: {exc}")
+
+
+def test_init_device_cpu_no_crash() -> None:
+    """NeMoScenarioDesigner init with device='cpu' must not raise."""
+    d = NeMoScenarioDesigner(device="cpu")
+    assert d._device == "cpu"
+
+
+# ─── Test 16: Fallback specs have vol_annual > 0 ─────────────────────────────
+
+
+def test_fallback_specs_vol_annual_positive(designer: NeMoScenarioDesigner, monkeypatch) -> None:
+    """All fallback ScenarioSpec objects must have vol_annual > 0."""
+    monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
+    result = designer.generate_scenarios(count=8, seed=0)
+    for spec in result.specs:
+        assert spec.vol_annual > 0, f"vol_annual <= 0 for spec {spec.name}"
+
+
+# ─── Test 17: batch_nemo_to_a14 length ───────────────────────────────────────
+
+
+def test_batch_nemo_to_a14_length() -> None:
     """batch_nemo_to_a14 must return same number of vectors as input scenarios."""
-    scenarios = designer.generate_scenarios(count=15, seed=5)
+    scenarios = [
+        NeMoScenario(
+            scenario_label=f"scenario_{i}",
+            severity="moderate",
+            duration_days=10,
+            target_vol=0.40,
+            target_trend=-0.10,
+            target_gap_profile={"mean_gap_pct": 0.01, "gap_direction": "down"},
+            narrative=f"Scenario {i}.",
+            macro_links={},
+            generator_version=NEMO_GENERATOR_VERSION,
+            run_id=f"batch-test-{i}",
+        )
+        for i in range(5)
+    ]
     vectors = batch_nemo_to_a14(scenarios)
-    assert len(vectors) == len(scenarios) == 15
+    assert len(vectors) == len(scenarios) == 5
     for v in vectors:
         assert isinstance(v, A14ConditioningVector)

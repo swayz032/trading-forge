@@ -24,7 +24,7 @@ import { createHash } from "crypto";
 import { eq, gte, and, sql, desc } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { systemJournal, systemParameters, auditLog, promptVersions, promptAbTests } from "../db/schema.js";
-import { callOpenAI, getFallback, loadSystemPrompt } from "./model-router.js";
+import { callOpenAI, getFallback, loadSystemPrompt, setAppendixCache } from "./model-router.js";
 import { OllamaClient } from "./ollama-client.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
@@ -445,12 +445,15 @@ async function storeVersionAndManageAbTest(promptType: string, content: string):
   }).returning();
 
   if (currentActive.length === 0) {
-    // No active version — this is the first one; activate it directly
+    // No active version — this is the first one; activate it directly.
     await db
       .update(promptVersions)
       .set({ isActive: true })
       .where(eq(promptVersions.id, newVersion.id));
-    logger.info({ promptType, version: nextVersion }, "Prompt evolution: first version — activated directly");
+    // F-2/F-3 fix (Wave B): update the appendix cache immediately so buildPromptSync
+    // sees this first-ever version without a server restart.
+    setAppendixCache(promptType, content);
+    logger.info({ promptType, version: nextVersion }, "Prompt evolution: first version — activated directly + cache updated");
     return;
   }
 
@@ -593,6 +596,15 @@ async function concludeTest(
 
   if (winnerContent.length > 0) {
     await legacyPersist(winnerContent[0].content);
+
+    // F-2 fix (Wave B): update the in-memory appendix cache immediately so
+    // buildPromptSync() sees the winner without waiting for a server restart.
+    // This closes the loop between A/B resolution and live strategy generation.
+    setAppendixCache(test.promptType, winnerContent[0].content);
+    logger.info(
+      { promptType: test.promptType, winner, contentLength: winnerContent[0].content.length },
+      "Prompt A/B test: appendix cache updated with winner content",
+    );
   }
 
   // Audit log

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { eq, sql, desc, asc, and, ilike } from "drizzle-orm";
+import { createHmac, timingSafeEqual, randomUUID } from "node:crypto";
 import { db } from "../db/index.js";
 import { strategies, backtests, backtestTrades, monteCarloRuns, stressTestRuns, backtestMatrix, systemJournal, complianceReviews, paperSessions, skipDecisions, strategyGraveyard, auditLog, strategyExports, strategyExportArtifacts, strategyPendingBuckets, strategyPendingMentions } from "../db/schema.js";
 import { inArray } from "drizzle-orm";
@@ -568,25 +569,52 @@ strategyRoutes.patch("/:id", async (req, res) => {
 
 // Transition lifecycle state
 strategyRoutes.patch("/:id/lifecycle", async (req, res) => {
-  const { fromState, toState } = req.body;
+  const { fromState, toState, timestamp, signature } = req.body;
+  const strategyId = req.params.id;
+
+  // Pass 5 Track C: HMAC verification — no NODE_ENV bypass.
+  // 503 when secret is unset or still the placeholder value — operator config required.
+  // This is a service-configuration failure, not an auth failure, so 503 (not 401).
+  const promoteSecret = process.env.ADMIN_PROMOTE_HMAC_SECRET;
+  if (!promoteSecret || promoteSecret.length === 0 || promoteSecret === "your-secret-here") {
+    res.status(503).json({ error: "admin_promote_hmac_not_configured", message: "ADMIN_PROMOTE_HMAC_SECRET must be set to a non-placeholder value before lifecycle transitions are allowed" });
+    return;
+  }
+  if (typeof timestamp !== "number" || typeof signature !== "string") {
+    res.status(401).json({ error: "hmac_required", message: "timestamp (number) and signature (string) required" });
+    return;
+  }
+  const drift = Math.abs(Date.now() - timestamp * 1000);
+  if (drift > 60_000) {
+    res.status(401).json({ error: "timestamp_drift_exceeded", drift_ms: drift });
+    return;
+  }
+  const payload = `${timestamp}:${strategyId}:${fromState}:${toState}`;
+  const expected = createHmac("sha256", promoteSecret).update(payload, "utf8").digest("hex");
+  let hmacOk = false;
+  try {
+    hmacOk = signature.length === expected.length && timingSafeEqual(Buffer.from(signature, "hex"), Buffer.from(expected, "hex"));
+  } catch { hmacOk = false; }
+  if (!hmacOk) {
+    res.status(401).json({ error: "hmac_verification_failed" });
+    return;
+  }
+
   if (!fromState || !toState) {
     res.status(400).json({ error: "fromState and toState required" });
     return;
   }
-
   if (fromState === "DEPLOY_READY" && toState === "DEPLOYED") {
-    res.status(400).json({
-      error: "Use /api/strategies/:id/deploy for manual TradingView deployment approval.",
-    });
+    res.status(400).json({ error: "Use /api/strategies/:id/deploy for manual TradingView deployment approval." });
     return;
   }
-
   const result = await lifecycleService.promoteStrategy(req.params.id, fromState, toState);
   if (!result.success) {
-    res.status(400).json({ error: result.error });
+    // 403 (gate-blocked) — the request was authenticated but a promotion gate refused it.
+    // This is distinct from a 400 (bad request payload).
+    res.status(403).json({ error: result.error });
     return;
   }
-
   res.json({ success: true, id: req.params.id, newState: toState });
 });
 

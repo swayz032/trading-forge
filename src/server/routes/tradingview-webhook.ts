@@ -390,8 +390,7 @@ tradingViewWebhookRoutes.post(
                      true,
                      ${correlationId}::uuid
                    )
-                   ON CONFLICT DO NOTHING
-                   RETURNING id`
+                   ON CONFLICT (account_id, strategy_id, bar_timestamp, signal) DO NOTHING RETURNING id`
       );
       const rows = (result as unknown as { rows: Array<{ id: number }> }).rows;
       markerId = rows?.[0]?.id ?? null;

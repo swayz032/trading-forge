@@ -11,11 +11,20 @@
  *   Deduplicated: repeated stale cycles only alert once per stale window.
  *   Resets on backend restart.
  *
+ *   Wave hardening 2026-06-22, autonomous-readiness A-1:
+ *   After the stale alert fires, autonomously attempts self-restart via the
+ *   HMAC-signed POST /api/admin/self-restart endpoint. Guard rails:
+ *     (a) DB-backed attempt dedup — one attempt per stale window (survives restarts)
+ *     (b) 3-attempt cap per 24h via audit_log count
+ *     (c) Audit row written BEFORE the fetch with correlationId
+ *     (d) Escalation alert if fetch fails (family-grade: power-cycle the tower)
+ *
  * Pipeline pause guard: BYPASSED (safety signal — same pattern as C1/C2/C8).
  *
  * Env vars:
  *   TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM, TWILIO_TO
  *   DISCORD_ALERT_PORT or DISCORD_WEBHOOK_URL (fallback when Twilio absent)
+ *   ADMIN_RESTART_HMAC_SECRET — required for autonomous self-restart
  */
 
 import { randomUUID } from "node:crypto";
@@ -195,7 +204,11 @@ export async function writeHeartbeat(): Promise<void> {
       );
       await notifyCritical(
         "Heartbeat schema drift",
-        `Table "${HEARTBEAT_TABLE}" is missing. The dead-man's heartbeat cannot write. Apply the pending migration immediately.`,
+        appendFamilyGradePostscript(
+          `Table "${HEARTBEAT_TABLE}" is missing. The dead-man's heartbeat cannot write. Apply the pending migration immediately.`,
+          "The trading bot's safety heartbeat is broken — a missing database table needs to be created.",
+          "Call Tony immediately — the bot cannot confirm it is running safely.",
+        ),
         { table: HEARTBEAT_TABLE, error_code: PG_RELATION_NOT_FOUND },
       );
       return; // Do not throw — schema drift is operator-actionable, not a crash
@@ -249,8 +262,12 @@ export async function getLastHeartbeatAt(): Promise<Date | null> {
           await recordSchemaDriftAlert();
           notifyCritical(
             "Heartbeat schema drift (read-path)",
-            `Table "${HEARTBEAT_TABLE}" is missing during the stale heartbeat check. ` +
-              `The dead-man's heartbeat cannot verify backend liveness. Apply the pending migration immediately.`,
+            appendFamilyGradePostscript(
+              `Table "${HEARTBEAT_TABLE}" is missing during the stale heartbeat check. ` +
+                `The dead-man's heartbeat cannot verify backend liveness. Apply the pending migration immediately.`,
+              "The trading bot cannot check its own health — a missing database table needs to be created.",
+              "Call Tony immediately — the bot's self-check system is broken.",
+            ),
             { table: HEARTBEAT_TABLE, error_code: PG_RELATION_NOT_FOUND, path: "read" },
           );
         }
@@ -362,6 +379,273 @@ export async function runHeartbeatStaleCheck(): Promise<void> {
       logger.error({ err }, "dead-mans-heartbeat: Discord alert also failed");
     });
   }
+
+  // Wave hardening 2026-06-22, autonomous-readiness A-1:
+  // After the stale alert fires, autonomously attempt self-restart so a hung
+  // backend heals without operator intervention during a 14-day vacation.
+  await attemptAutoRestart(lastAt, minutesSince, cronCorrelationId);
+}
+
+// ─── Auto-restart constants (A-1) ────────────────────────────────────────────
+
+const AUTO_RESTART_CAP_PER_24H = 3; // max auto-restart attempts within any 24h window
+const AUTO_RESTART_FETCH_TIMEOUT_MS = 8_000; // 8s timeout for the self-restart HTTP call
+
+/**
+ * DB-backed count of auto-restart attempts in the last 24h.
+ * Returns 0 on error (fail-open: better to attempt one extra restart than to
+ * skip recovery because the audit query itself is broken).
+ */
+async function countAutoRestartAttemptsLast24h(): Promise<number> {
+  try {
+    const { auditLog } = await import("../db/schema.js");
+    const { and, eq, gte, count } = await import("drizzle-orm");
+    const windowStart = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const rows = await db
+      .select({ n: count() })
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.action, "dead_mans_heartbeat.auto_restart_attempted"),
+          gte(auditLog.createdAt, windowStart),
+        ),
+      );
+    return Number(rows[0]?.n ?? 0);
+  } catch (err) {
+    logger.warn({ err }, "dead-mans-heartbeat: auto-restart count query failed (fail-open)");
+    return 0;
+  }
+}
+
+/**
+ * DB-backed check: has an auto-restart already been attempted for the current
+ * stale window (identified by the original lastAt heartbeat timestamp)?
+ * Returns false on error (fail-open: same rationale as countAutoRestartAttemptsLast24h).
+ */
+async function hasAutoRestartAttemptedForWindow(lastAt: Date): Promise<boolean> {
+  try {
+    const { auditLog } = await import("../db/schema.js");
+    const { and, eq, gte } = await import("drizzle-orm");
+    // Consider anything written after the stale heartbeat timestamp as being
+    // for this same stale window (only one attempt per staleness window).
+    const rows = await db
+      .select({ id: auditLog.id })
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.action, "dead_mans_heartbeat.auto_restart_attempted"),
+          gte(auditLog.createdAt, lastAt),
+        ),
+      )
+      .limit(1);
+    return rows.length > 0;
+  } catch (err) {
+    logger.warn({ err }, "dead-mans-heartbeat: auto-restart dedup query failed (fail-open)");
+    return false;
+  }
+}
+
+/**
+ * Autonomous self-restart attempt (A-1).
+ *
+ * Guard rails enforced:
+ *   (a) DB-backed per-window dedup — one attempt per stale window.
+ *   (b) 3-attempt cap per 24h — tracked via audit_log count query.
+ *   (c) Audit row written BEFORE the fetch with correlationId.
+ *   (d) Escalation alert if fetch fails with family-grade action.
+ *
+ * Skips gracefully when ADMIN_RESTART_HMAC_SECRET is absent.
+ */
+async function attemptAutoRestart(
+  lastAt: Date,
+  minutesSince: number,
+  parentCorrelationId: string,
+): Promise<void> {
+  const secret = process.env["ADMIN_RESTART_HMAC_SECRET"];
+  if (!secret) {
+    logger.warn(
+      { parentCorrelationId },
+      "dead-mans-heartbeat: ADMIN_RESTART_HMAC_SECRET not set — auto-restart unavailable; " +
+        "set env var to enable autonomous recovery (A-1)",
+    );
+    await notifyCritical(
+      "Heartbeat stale — auto-restart unavailable",
+      appendFamilyGradePostscript(
+        "The backend heartbeat is stale but autonomous restart is disabled because " +
+          "ADMIN_RESTART_HMAC_SECRET is not configured. Manual intervention required.",
+        "The trading bot stopped responding and cannot restart itself — a security key is missing.",
+        "Call Tony immediately — the bot needs to be restarted manually.",
+      ),
+      { parentCorrelationId, reason: "secret_not_configured" },
+    );
+    return;
+  }
+
+  // (a) Per-window dedup — only one auto-restart attempt per stale heartbeat window.
+  const alreadyAttempted = await hasAutoRestartAttemptedForWindow(lastAt);
+  if (alreadyAttempted) {
+    logger.debug(
+      { lastAt: lastAt.toISOString(), parentCorrelationId },
+      "dead-mans-heartbeat: auto-restart already attempted for this stale window — skipping",
+    );
+    return;
+  }
+
+  // (b) 24h cap — block the 4th+ attempt within any 24h window.
+  const attemptsLast24h = await countAutoRestartAttemptsLast24h();
+  if (attemptsLast24h >= AUTO_RESTART_CAP_PER_24H) {
+    logger.warn(
+      { attemptsLast24h, cap: AUTO_RESTART_CAP_PER_24H, parentCorrelationId },
+      "dead-mans-heartbeat: auto-restart 24h cap reached — not attempting again this window",
+    );
+
+    // Pass 7 Track B — remote power-cycle escape valve.
+    // When KASA_DEVICE_IP is configured, try to power-cycle the Skytech tower
+    // via the TP-Link Kasa smart plug instead of just emitting a terminal alert.
+    const kasaIp = process.env["KASA_DEVICE_IP"];
+    if (kasaIp) {
+      logger.warn(
+        { kasaIp, attemptsLast24h, parentCorrelationId },
+        "dead-mans-heartbeat: KASA_DEVICE_IP is set — attempting remote power-cycle instead of terminal alert",
+      );
+      try {
+        const { triggerRemotePowerCycle } = await import("./remote-power-cycle-service.js");
+        await triggerRemotePowerCycle(
+          `heartbeat_stale_auto_restart_cap_reached_attempt_${attemptsLast24h + 1}`,
+          parentCorrelationId,
+        );
+      } catch (kasaErr) {
+        logger.error(
+          { kasaErr, parentCorrelationId },
+          "dead-mans-heartbeat: remote-power-cycle-service threw — falling through to terminal alert",
+        );
+        // Fall through to the terminal alert below.
+        notifyCritical(
+          "Heartbeat stale — auto-restart cap reached; remote power-cycle threw",
+          appendFamilyGradePostscript(
+            `Auto-restart has been attempted ${attemptsLast24h} times in the last 24h (cap: ${AUTO_RESTART_CAP_PER_24H}). ` +
+              `Remote power-cycle via Kasa plug at ${kasaIp} threw an error. ` +
+              "Manual intervention required. Check: pm2 logs / NSSM event log on the Skytech tower.",
+            `The trading bot has been trying to restart itself but keeps failing — this is the ${attemptsLast24h + 1}th time today. The remote restart also failed.`,
+            "Call Tony immediately. If you cannot reach him, hold the power button on the home computer for 5 seconds to reboot it — the bot restarts automatically.",
+          ),
+          { attemptsLast24h, cap: AUTO_RESTART_CAP_PER_24H, parentCorrelationId, kasaIp },
+        );
+      }
+    } else {
+      // No Kasa plug configured — emit the classic terminal-action alert.
+      notifyCritical(
+        "Heartbeat stale — auto-restart cap reached",
+        appendFamilyGradePostscript(
+          `Auto-restart has been attempted ${attemptsLast24h} times in the last 24h (cap: ${AUTO_RESTART_CAP_PER_24H}). ` +
+            "Manual intervention required. Check: pm2 logs / NSSM event log on the Skytech tower.",
+          `The trading bot has been trying to restart itself but keeps failing — this is the ${attemptsLast24h + 1}th time today.`,
+          "Call Tony. If you can't reach him, hold the power button on the home computer for 5 seconds to reboot it — the bot restarts automatically.",
+        ),
+        { attemptsLast24h, cap: AUTO_RESTART_CAP_PER_24H, parentCorrelationId },
+      );
+    }
+    return;
+  }
+
+  // (c) Write audit row BEFORE the fetch so the attempt is DB-visible even if
+  // the process dies during the HTTP call.
+  const autoRestartCorrelationId = randomUUID();
+  const timestamp = Math.floor(Date.now() / 1000); // Unix seconds for HMAC
+  const reason = "auto_restart_heartbeat_stale";
+
+  try {
+    const { auditLog } = await import("../db/schema.js");
+    await db.insert(auditLog).values({
+      action: "dead_mans_heartbeat.auto_restart_attempted",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: {
+        lastHeartbeatAt: lastAt.toISOString(),
+        minutesSince,
+        attempt: attemptsLast24h + 1,
+        cap: AUTO_RESTART_CAP_PER_24H,
+        parentCorrelationId,
+      } as Record<string, unknown>,
+      result: { status: "pending", correlationId: autoRestartCorrelationId } as Record<string, unknown>,
+      status: "success",
+      correlationId: autoRestartCorrelationId,
+    });
+  } catch (auditErr) {
+    logger.warn({ auditErr }, "dead-mans-heartbeat: auto-restart audit row insert failed (non-blocking)");
+    // Do NOT abort — the audit row failing should not prevent the restart attempt.
+    // The attempt will be de-duped-as-missing on next tick (fail-open).
+  }
+
+  logger.warn(
+    { minutesSince, lastAt: lastAt.toISOString(), correlationId: autoRestartCorrelationId, attempt: attemptsLast24h + 1 },
+    "dead-mans-heartbeat: AUTO-RESTART attempting — heartbeat stale, backend may be hung",
+  );
+
+  // Compute HMAC signature: HMAC-SHA256(secret, "${timestamp}:${reason}")
+  // Matches the contract in admin.ts verifyRestartHmac().
+  const { createHmac } = await import("node:crypto");
+  const sig = createHmac("sha256", secret)
+    .update(`${timestamp}:${reason}`, "utf8")
+    .digest("hex");
+
+  const port = process.env["PORT"] ?? "4000";
+  const selfRestartUrl = `http://localhost:${port}/api/admin/self-restart`;
+
+  try {
+    const resp = await fetch(selfRestartUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Restart-Signature": sig,
+      },
+      // Pass 6 Track D: plumb cronCorrelationId as parentCorrelationId so the
+      // admin handler can reuse it as the audit row's correlation_id, linking
+      // the stale-detected row, the auto_restart_attempted row, and the
+      // self_restart_requested row under a single trace key.
+      body: JSON.stringify({ timestamp, reason, parentCorrelationId }),
+      signal: AbortSignal.timeout(AUTO_RESTART_FETCH_TIMEOUT_MS),
+    });
+
+    if (resp.ok) {
+      logger.warn(
+        { status: resp.status, correlationId: autoRestartCorrelationId },
+        "dead-mans-heartbeat: auto-restart request accepted — NSSM will respawn backend",
+      );
+      // Success: NSSM will respawn. No further alert needed; post-restart heartbeat
+      // writes will clear the stale state within ~15 min.
+    } else {
+      const body = await resp.text().catch(() => "<unreadable>");
+      throw new Error(`Self-restart endpoint returned HTTP ${resp.status}: ${body}`);
+    }
+  } catch (fetchErr) {
+    // (d) Fetch failed — port unreachable (truly dead) or HTTP error.
+    // Escalate with family-grade action.
+    const errMsg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+    logger.error(
+      { err: fetchErr, correlationId: autoRestartCorrelationId },
+      "dead-mans-heartbeat: AUTO-RESTART FAILED — process may be unreachable; escalating",
+    );
+    await notifyCritical(
+      "CRITICAL: Heartbeat stale — auto-restart FAILED",
+      appendFamilyGradePostscript(
+        `Backend heartbeat has been stale for ${minutesSince} minutes. ` +
+          `Auto-restart was attempted (correlationId: ${autoRestartCorrelationId}) but FAILED: ${errMsg}. ` +
+          "The backend process may be unreachable. Manual intervention required: " +
+          "check NSSM status on the Skytech tower or power-cycle the machine.",
+        `The trading bot has been silent for ${Math.round(minutesSince / 60)} hours. We tried to restart it automatically, but that also failed.`,
+        "Hold the power button on the home computer for 5 seconds to force a reboot. The bot restarts automatically within 2 minutes. If the bot stays offline after reboot, call Tony.",
+      ),
+      {
+        lastHeartbeatAt: lastAt.toISOString(),
+        minutesSince,
+        autoRestartCorrelationId,
+        error: errMsg,
+        parentCorrelationId,
+      },
+    );
+  }
 }
 
 // ─── Accessors for production-status panel ───────────────────────────────────
@@ -443,10 +727,14 @@ export async function runScheduledRefreshStalenessCheck(): Promise<void> {
         }).catch((err) => logger.error({ err }, "dead-mans-heartbeat: BW stale audit row failed"));
         notifyCritical(
           "CRITICAL: BW session refresh cron not running",
-          `Bitwarden session refresh heartbeat is ${ageHours}h stale (last: ${bwLastAt.toISOString()}). ` +
-            `The bw-session-refresh scheduled job may be disabled or throwing. ` +
-            `BW vault access will degrade if BW_SESSION expires. ` +
-            `Check: POST /api/admin/scheduler/jobs/bw-session-refresh/enable`,
+          appendFamilyGradePostscript(
+            `Bitwarden session refresh heartbeat is ${ageHours}h stale (last: ${bwLastAt.toISOString()}). ` +
+              `The bw-session-refresh scheduled job may be disabled or throwing. ` +
+              `BW vault access will degrade if BW_SESSION expires. ` +
+              `Check: POST /api/admin/scheduler/jobs/bw-session-refresh/enable`,
+            "The bot's password vault auto-refresh stopped working — trading credentials may expire soon.",
+            "No action needed yet — call Tony if the alert persists for more than an hour.",
+          ),
           { lastHeartbeatAt: bwLastAt.toISOString(), ageHours, thresholdHours: "13" },
         );
       }
@@ -483,9 +771,13 @@ export async function runScheduledRefreshStalenessCheck(): Promise<void> {
         }).catch((err) => logger.error({ err }, "dead-mans-heartbeat: cookie stale audit row failed"));
         notifyCritical(
           "CRITICAL: Prop-firm cookie refresh cron not running",
-          `Cookie refresh heartbeat is ${ageHours}h stale (last: ${cookieLastAt.toISOString()}). ` +
-            `C2 evidence captures may be failing. ` +
-            `Check: POST /api/admin/scheduler/jobs/prop-firm-cookie-refresh/enable`,
+          appendFamilyGradePostscript(
+            `Cookie refresh heartbeat is ${ageHours}h stale (last: ${cookieLastAt.toISOString()}). ` +
+              `C2 evidence captures may be failing. ` +
+              `Check: POST /api/admin/scheduler/jobs/prop-firm-cookie-refresh/enable`,
+            "The bot's prop firm session refresh stopped working — the trading account may lose access.",
+            "Call Tony — if this persists more than 2.5 hours, the bot may get locked out of the prop firm.",
+          ),
           { lastHeartbeatAt: cookieLastAt.toISOString(), ageHours, thresholdHours: "2.5" },
         );
       }

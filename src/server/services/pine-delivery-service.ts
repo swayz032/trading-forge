@@ -25,6 +25,7 @@ import { resolve as pathResolve, join as pathJoin } from "path";
 import { logger } from "../index.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { notifyWarning } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { db } from "../db/index.js";
 import { auditLog } from "../db/schema.js";
 
@@ -131,8 +132,12 @@ async function deliverToDiscord(bundle: DeliveryBundle): Promise<DeliveryResult>
       logger.warn({ recipientLabel: bundle.recipientLabel, status: resp.status }, "pine-delivery: Discord webhook returned non-OK");
       notifyWarning(
         "Pine Bundle Discord Delivery Failed",
-        `Discord notification for recipient ${bundle.recipientLabel} failed (HTTP ${resp.status}). ` +
-          `Bundle is available on filesystem — manual delivery required.`,
+        appendFamilyGradePostscript(
+          `Discord notification for recipient ${bundle.recipientLabel} failed (HTTP ${resp.status}). ` +
+            `Bundle is available on filesystem — manual delivery required.`,
+          "There was an issue delivering a trading script to a family member's account.",
+          "No action needed — the bot will retry. Call Tony if trading doesn't start for the family member within an hour.",
+        ),
         { recipientLabel: bundle.recipientLabel, status: resp.status },
       );
       return {
@@ -154,8 +159,12 @@ async function deliverToDiscord(bundle: DeliveryBundle): Promise<DeliveryResult>
     logger.warn({ recipientLabel: bundle.recipientLabel, err }, "pine-delivery: Discord webhook request failed");
     notifyWarning(
       "Pine Bundle Discord Delivery Error",
-      `Discord notification for recipient ${bundle.recipientLabel} threw an error: ${errorMsg}. ` +
-        `Bundle is available on filesystem — manual delivery required.`,
+      appendFamilyGradePostscript(
+        `Discord notification for recipient ${bundle.recipientLabel} threw an error: ${errorMsg}. ` +
+          `Bundle is available on filesystem — manual delivery required.`,
+        "There was an issue delivering a trading script to a family member's account.",
+        "No action needed — the bot will retry. Call Tony if trading doesn't start for the family member within an hour.",
+      ),
       { recipientLabel: bundle.recipientLabel },
     );
     return { channel: "discord", bundlePath: null, delivered: false, error: errorMsg };

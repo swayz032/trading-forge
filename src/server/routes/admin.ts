@@ -7,15 +7,16 @@
  * POST /pipeline/vacation — set engine mode to VACATION; n8n remains always-on
  */
 
-import { Router } from "express";
+import { Router, type Request, type Response } from "express";
 import { randomUUID, createHmac, timingSafeEqual } from "crypto";
-import { desc, eq, and, sql } from "drizzle-orm";
+import { desc, eq, and, sql, count, gte } from "drizzle-orm";
 import { getMode, setMode } from "../services/pipeline-control-service.js";
 import { db } from "../db/index.js";
-import { agentHealthReports, dataIntegrityFindings, liquidityLevels, strategies } from "../db/schema.js";
+import { agentHealthReports, dataIntegrityFindings, liquidityLevels, needsArchetypeQueue, strategies } from "../db/schema.js";
 import { AgentService } from "../services/agent-service.js";
 import { getPhaseRecord, setPhaseOverride, type PhaseValue } from "../services/harsh-regime-phase-service.js";
 import { notifyCritical, notifyWarning } from "../services/notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { insertAuditRow, insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { logger } from "../lib/logger.js";
 import { getStrategySourceUrls } from "../lib/strategy-source-resolver.js";
@@ -78,9 +79,12 @@ function verifyRestartHmac(
   }
 }
 
+// Pass 6 Track D: RFC 4122 UUID validation regex for parentCorrelationId stitching.
+const UUID_V4_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 adminRoutes.post("/self-restart", async (req, res) => {
-  const correlationId = randomUUID();
-  const body = (req.body ?? {}) as { timestamp?: number; reason?: string };
+  const handlerCorrelationId = randomUUID(); // always mint a fresh handler id
+  const body = (req.body ?? {}) as { timestamp?: number; reason?: string; parentCorrelationId?: string };
 
   // ── Validate body ─────────────────────────────────────────────────────────
   if (typeof body.timestamp !== "number") {
@@ -97,7 +101,7 @@ adminRoutes.post("/self-restart", async (req, res) => {
   const tsMs = body.timestamp * 1000; // body.timestamp is Unix seconds
   const drift = Math.abs(nowMs - tsMs);
   if (drift > RESTART_TIMESTAMP_DRIFT_MS) {
-    req.log?.warn({ drift, correlationId }, "self-restart: timestamp drift exceeded — replay protection");
+    req.log?.warn({ drift, correlationId: handlerCorrelationId }, "self-restart: timestamp drift exceeded — replay protection");
     res.status(401).json({ error: "timestamp_drift_exceeded", drift_ms: drift, max_ms: RESTART_TIMESTAMP_DRIFT_MS });
     return;
   }
@@ -106,13 +110,29 @@ adminRoutes.post("/self-restart", async (req, res) => {
   const sig = req.header("x-restart-signature");
   const verified = verifyRestartHmac(sig, body.timestamp, body.reason.trim());
   if (!verified.ok) {
-    req.log?.warn({ reason_code: verified.reason_code, correlationId }, "self-restart: HMAC verification failed");
+    req.log?.warn({ reason_code: verified.reason_code, correlationId: handlerCorrelationId }, "self-restart: HMAC verification failed");
     res.status(401).json({ error: "hmac_verification_failed", reason_code: verified.reason_code });
     return;
   }
 
   const reason = body.reason.trim();
-  logger.info({ correlationId, reason }, "self-restart: HMAC verified — initiating graceful restart");
+
+  // ── Pass 6 Track D: correlation_id stitching ──────────────────────────────
+  // When the dead-man's heartbeat service triggers an auto-restart it plumbs
+  // its cronCorrelationId as `body.parentCorrelationId`. Using it as the audit
+  // row's correlation_id lets a single SQL WHERE clause reconstruct all three
+  // rows (stale_detected → auto_restart_attempted → self_restart_requested).
+  // When parentCorrelationId is absent or malformed (manual curl invocation),
+  // fall back to the freshly-minted handlerCorrelationId.
+  const parentId = typeof body.parentCorrelationId === "string" && UUID_V4_RE.test(body.parentCorrelationId)
+    ? body.parentCorrelationId
+    : null;
+  const correlationId = parentId ?? handlerCorrelationId;
+
+  logger.info(
+    { correlationId, handlerCorrelationId, parentCorrelationId: parentId, reason },
+    "self-restart: HMAC verified — initiating graceful restart",
+  );
 
   // ── Audit row ─────────────────────────────────────────────────────────────
   await insertAuditRow({
@@ -121,7 +141,13 @@ adminRoutes.post("/self-restart", async (req, res) => {
     entityId: null,
     decisionAuthority: "human",
     input: { reason, timestamp: body.timestamp } as Record<string, unknown>,
-    result: { correlationId } as Record<string, unknown>,
+    // Preserve the handler's own UUID in metadata for debugging even when
+    // we're using the parent's UUID as the correlation_id.
+    result: {
+      correlationId,
+      handler_correlation_id: handlerCorrelationId,
+      parent_correlation_id: parentId,
+    } as Record<string, unknown>,
     status: "success",
     correlationId,
   }).catch((err) => logger.error({ err }, "self-restart: audit row write failed (non-blocking)"));
@@ -129,8 +155,12 @@ adminRoutes.post("/self-restart", async (req, res) => {
   // ── Discord notification ───────────────────────────────────────────────────
   notifyCritical(
     "Self-Restart Initiated",
-    `Backend process is restarting via HMAC-authenticated endpoint. Reason: ${reason}. NSSM will respawn automatically.`,
-    { reason, correlationId },
+    appendFamilyGradePostscript(
+      `Backend process is restarting via HMAC-authenticated endpoint. Reason: ${reason}. NSSM will respawn automatically.`,
+      "The trading bot restarted itself automatically.",
+      "No action needed — the bot will be back online in 30 seconds.",
+    ),
+    { reason, correlationId, parentCorrelationId: parentId },
   );
 
   // ── Respond before exiting ────────────────────────────────────────────────
@@ -277,13 +307,21 @@ adminRoutes.post("/ollama-health-recheck", async (req, res) => {
   if (recheckResult.healthy) {
     notifyWarning(
       "Ollama Health Restored",
-      `OLLAMA_HEALTHY reset to true via runtime recheck. transcript_extractor routing restored to local gemma4:e2b. Reason: ${reason}`,
+      appendFamilyGradePostscript(
+        `OLLAMA_HEALTHY reset to true via runtime recheck. transcript_extractor routing restored to local gemma4:e2b. Reason: ${reason}`,
+        "The local AI model is working again.",
+        "No action needed — the bot's AI features are restored.",
+      ),
       { correlationId },
     );
   } else {
     notifyCritical(
       "Ollama Health Recheck FAILED",
-      `Runtime recheck returned healthy=false. transcript_extractor will continue routing to cloud. Probe failure: ${recheckResult.reason ?? "unknown"}. Reason: ${reason}`,
+      appendFamilyGradePostscript(
+        `Runtime recheck returned healthy=false. transcript_extractor will continue routing to cloud. Probe failure: ${recheckResult.reason ?? "unknown"}. Reason: ${reason}`,
+        "The local AI is still down — using cloud backup.",
+        "No action needed — the bot is using its cloud backup. Call Tony if this persists for more than 2 hours.",
+      ),
       { correlationId },
     );
   }
@@ -332,8 +370,12 @@ adminRoutes.post("/operator-mark-present", async (req, res) => {
     if (clearedSince || clearedPending) {
       notifyWarning(
         "Operator presence confirmed — vacation autopilot disengaged",
-        `Operator manually cleared absence markers. clearedSince=${clearedSince?.toISOString() ?? "null"}, ` +
-          `clearedPending=${clearedPending?.toISOString() ?? "null"}.`,
+        appendFamilyGradePostscript(
+          `Operator manually cleared absence markers. clearedSince=${clearedSince?.toISOString() ?? "null"}, ` +
+            `clearedPending=${clearedPending?.toISOString() ?? "null"}.`,
+          "Tony confirmed he's back — vacation mode is off.",
+          "No action needed — trading is back to normal operator supervision.",
+        ),
         { correlationId },
       );
     }
@@ -1175,13 +1217,21 @@ adminRoutes.post("/harsh-regime-phase", async (req, res) => {
     if (newPhase === "hard") {
       notifyCritical(
         "Harsh-Regime Gate: MANUALLY ACTIVATED (HARD phase)",
-        `Operator override: gate manually hardened to HARD phase.\n\nReason: ${reason}\nOperator: ${operator}\nPrevious phase: ${result.previousPhase}\n\nFrom now on, strategies that fail regime survival checks at TESTING→PAPER will be BLOCKED.`,
+        appendFamilyGradePostscript(
+          `Operator override: gate manually hardened to HARD phase.\n\nReason: ${reason}\nOperator: ${operator}\nPrevious phase: ${result.previousPhase}\n\nFrom now on, strategies that fail regime survival checks at TESTING→PAPER will be BLOCKED.`,
+          "Tony manually tightened the strategy quality gates.",
+          "No action needed — Tony is managing the trading filters.",
+        ),
         { operator, reason, previousPhase: result.previousPhase, correlationId },
       );
     } else if (newPhase === "advisory" && result.previousPhase === "hard") {
       notifyWarning(
         "Harsh-Regime Gate: Rolled back to ADVISORY",
-        `Operator override: gate rolled back from HARD to advisory.\n\nReason: ${reason}\nOperator: ${operator}\n\nThe 90-day auto-activation clock has been reset. The cron will re-trigger automatically if conditions are met again.`,
+        appendFamilyGradePostscript(
+          `Operator override: gate rolled back from HARD to advisory.\n\nReason: ${reason}\nOperator: ${operator}\n\nThe 90-day auto-activation clock has been reset. The cron will re-trigger automatically if conditions are met again.`,
+          "Tony relaxed the strategy quality gates back to normal.",
+          "No action needed — trading is running under standard filters.",
+        ),
         { operator, reason, previousPhase: result.previousPhase, correlationId },
       );
     }
@@ -1578,3 +1628,79 @@ function deriveSuggestedAction(
   }
   return "Review strategy config";
 }
+
+// ─── GET /needs-archetype-queue/summary ─────────────────────────────────────
+//
+// Returns a summary of the needs_archetype_queue table for the Archetype Queue
+// dashboard tile. All counts are scoped to status='pending' rows only.
+//
+// Response shape:
+// {
+//   ok: true,
+//   total: number,                               // total pending terms
+//   top: Array<{ term: string, extractionCount: number }>,  // top 10 by count
+//   readyCount: number                           // pending rows with count >= 3
+// }
+//
+// Read-only — no mutations. No auth beyond the standard /api/* auth middleware.
+
+adminRoutes.get(
+  "/needs-archetype-queue/summary",
+  async (_req: Request, res: Response): Promise<void> => {
+    const correlationId = randomUUID();
+
+    try {
+      const [totalRow] = await db
+        .select({ value: count() })
+        .from(needsArchetypeQueue)
+        .where(eq(needsArchetypeQueue.status, "pending"));
+
+      const total = Number(totalRow?.value ?? 0);
+
+      const topRows = await db
+        .select({
+          term: needsArchetypeQueue.speakerTerm,
+          extractionCount: needsArchetypeQueue.extractionCount,
+        })
+        .from(needsArchetypeQueue)
+        .where(eq(needsArchetypeQueue.status, "pending"))
+        .orderBy(desc(needsArchetypeQueue.extractionCount))
+        .limit(10);
+
+      const [readyRow] = await db
+        .select({ value: count() })
+        .from(needsArchetypeQueue)
+        .where(
+          and(
+            eq(needsArchetypeQueue.status, "pending"),
+            gte(needsArchetypeQueue.extractionCount, 3),
+          ),
+        );
+
+      const readyCount = Number(readyRow?.value ?? 0);
+
+      logger.info(
+        { correlationId, total, readyCount },
+        "admin: needs-archetype-queue summary complete",
+      );
+
+      res.json({
+        ok: true,
+        total,
+        top: topRows.map((r) => ({
+          term: r.term,
+          extractionCount: r.extractionCount,
+        })),
+        readyCount,
+      });
+    } catch (err) {
+      logger.error(
+        { err, correlationId },
+        "admin: needs-archetype-queue summary failed",
+      );
+      res
+        .status(500)
+        .json({ error: "needs_archetype_queue_summary_failed", correlationId });
+    }
+  },
+);

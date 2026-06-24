@@ -180,12 +180,54 @@ describe("W23H.F — cross-symbol DLL coordinator", () => {
       sessionDate: "2026-05-20",
       realizedPnL: -500,
       openPnLMtm: 0,
-      totalPnL: -500,  // 50% of $1000 → below 67% halt
+      totalPnL: -500,  // 50% of $1000 → below 60% reduce + below 67% halt
       pnLBySymbol: { MES: -500 },
     };
 
     const result = evaluateCrossSymbolDll(pnl, 1000);
     expect(result.action).toBe("none");
+  });
+
+  // ── 60%-DLL reduce-size band (soft throttle below the 67% halt) ──
+  it("7. DLL at 63% (between 60% and 67%) → reduce_size, NOT halt", () => {
+    const pnl: AccountSessionPnL = {
+      firmId: "topstep", sessionDate: "2026-06-23",
+      realizedPnL: -630, openPnLMtm: 0, totalPnL: -630,  // 63% of $1000
+      pnLBySymbol: { MES: -630 },
+    };
+    const result = evaluateCrossSymbolDll(pnl, 1000);
+    expect(result.action).toBe("reduce_size");
+    expect(result.reduceSizeFactor).toBe(0.50);      // default half
+    expect(result.reduceThreshold).toBeCloseTo(600, 2);  // 60% × $1000
+    expect(result.dllPct).toBeCloseTo(0.63, 2);
+  });
+
+  it("8. DLL exactly at 60% reduce threshold → reduce_size (boundary: >= reduce)", () => {
+    const pnl: AccountSessionPnL = {
+      firmId: "topstep", sessionDate: "2026-06-23",
+      realizedPnL: -600, openPnLMtm: 0, totalPnL: -600,  // exactly 60%
+      pnLBySymbol: { MES: -600 },
+    };
+    expect(evaluateCrossSymbolDll(pnl, 1000).action).toBe("reduce_size");
+  });
+
+  it("9. DLL at 59% (just below reduce band) → none", () => {
+    const pnl: AccountSessionPnL = {
+      firmId: "topstep", sessionDate: "2026-06-23",
+      realizedPnL: -590, openPnLMtm: 0, totalPnL: -590,  // 59% < 60%
+      pnLBySymbol: { MES: -590 },
+    };
+    expect(evaluateCrossSymbolDll(pnl, 1000).action).toBe("none");
+  });
+
+  it("10. Escalation ladder ordering: 60%→reduce_size, 67%→halt, 95%→force_close", () => {
+    const mk = (loss: number): AccountSessionPnL => ({
+      firmId: "topstep", sessionDate: "2026-06-23",
+      realizedPnL: -loss, openPnLMtm: 0, totalPnL: -loss, pnLBySymbol: { MES: -loss },
+    });
+    expect(evaluateCrossSymbolDll(mk(600), 1000).action).toBe("reduce_size");
+    expect(evaluateCrossSymbolDll(mk(670), 1000).action).toBe("halt");
+    expect(evaluateCrossSymbolDll(mk(950), 1000).action).toBe("force_close");
   });
 });
 

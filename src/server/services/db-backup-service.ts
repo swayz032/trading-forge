@@ -57,6 +57,7 @@ import { S3Client, PutObjectCommand, HeadBucketCommand } from "@aws-sdk/client-s
 import { logger } from "../lib/logger.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { notifyCritical } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -293,7 +294,11 @@ export async function runDbBackup(): Promise<DbBackupResult> {
     await _emitFailedAudit(correlationId, error, t0);
     notifyCritical(
       "DB Backup FAILED: directory creation failed",
-      `Cannot create backup directory ${localDir}. Error: ${error}. Database is NOT being backed up.`,
+      appendFamilyGradePostscript(
+        `Cannot create backup directory ${localDir}. Error: ${error}. Database is NOT being backed up.`,
+        "The automated backup of trading data failed — the backup folder could not be created.",
+        "No action needed for now — the bot will retry. Call Tony if this persists for more than 24 hours.",
+      ),
       { correlationId, localDir, error },
     );
     return { status: "failed", error, durationMs: Date.now() - t0 };
@@ -307,7 +312,11 @@ export async function runDbBackup(): Promise<DbBackupResult> {
     await _emitFailedAudit(correlationId, error, t0);
     notifyCritical(
       "DB Backup FAILED: pg_dump not available",
-      `pg_dump is not on PATH. Database is NOT being backed up. Install PostgreSQL client tools. Error: ${error}`,
+      appendFamilyGradePostscript(
+        `pg_dump is not on PATH. Database is NOT being backed up. Install PostgreSQL client tools. Error: ${error}`,
+        "The automated backup of trading data failed — the backup tool is not installed.",
+        "No action needed for now — the bot will retry. Call Tony if this persists for more than 24 hours.",
+      ),
       { correlationId, error },
     );
     return { status: "failed", error, durationMs: Date.now() - t0 };
@@ -321,7 +330,11 @@ export async function runDbBackup(): Promise<DbBackupResult> {
     await _emitFailedAudit(correlationId, error, t0);
     notifyCritical(
       "DB Backup FAILED: DATABASE_URL missing",
-      `DATABASE_URL is not configured. Database is NOT being backed up. Error: ${error}`,
+      appendFamilyGradePostscript(
+        `DATABASE_URL is not configured. Database is NOT being backed up. Error: ${error}`,
+        "The automated backup of trading data failed — the database connection is not configured.",
+        "No action needed for now — the bot will retry. Call Tony if this persists for more than 24 hours.",
+      ),
       { correlationId, error },
     );
     return { status: "failed", error, durationMs: Date.now() - t0 };
@@ -345,7 +358,11 @@ export async function runDbBackup(): Promise<DbBackupResult> {
     await _emitFailedAudit(correlationId, error, t0);
     notifyCritical(
       "DB Backup FAILED: pg_dump execution error",
-      `pg_dump execution failed. Database state is NOT backed up. Error: ${error}`,
+      appendFamilyGradePostscript(
+        `pg_dump execution failed. Database state is NOT backed up. Error: ${error}`,
+        "The automated backup of trading data failed — the backup process encountered an error.",
+        "No action needed for now — the bot will retry. Call Tony if this persists for more than 24 hours.",
+      ),
       { correlationId, dumpPath, error },
     );
     return { status: "failed", error, durationMs: Date.now() - t0 };
@@ -365,9 +382,13 @@ export async function runDbBackup(): Promise<DbBackupResult> {
     );
     notifyCritical(
       "DB Backup WARNING: off-tower push unconfigured",
-      `Database dump written locally to ${dumpResult.filePath} (${Math.round(dumpResult.sizeBytes / 1024)} KB) but NO off-tower backup target is configured.\n\n` +
-      `Set S3_BUCKET + AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY in .env to enable S3 off-tower backup.\n\n` +
-      `A tower hardware failure WILL destroy this backup.`,
+      appendFamilyGradePostscript(
+        `Database dump written locally to ${dumpResult.filePath} (${Math.round(dumpResult.sizeBytes / 1024)} KB) but NO off-tower backup target is configured.\n\n` +
+        `Set S3_BUCKET + AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY in .env to enable S3 off-tower backup.\n\n` +
+        `A tower hardware failure WILL destroy this backup.`,
+        "The automated backup of trading data was saved locally but not sent off-site — if the computer fails the backup would be lost.",
+        "No action needed for now — the bot will retry. Call Tony if this persists for more than 24 hours.",
+      ),
       { correlationId, filePath: dumpResult.filePath },
     );
     await insertAuditRowSafe({
@@ -399,9 +420,13 @@ export async function runDbBackup(): Promise<DbBackupResult> {
       // Emit critical but do NOT discard the local dump — it was written successfully.
       notifyCritical(
         "DB Backup FAILED: S3 push failed",
-        `Database dump written locally to ${dumpResult.filePath} (${Math.round(dumpResult.sizeBytes / 1024)} KB) but S3 push FAILED.\n\n` +
-        `Error: ${pushError}\n\n` +
-        `Local dump exists on the tower only — investigate S3 credentials and retry.`,
+        appendFamilyGradePostscript(
+          `Database dump written locally to ${dumpResult.filePath} (${Math.round(dumpResult.sizeBytes / 1024)} KB) but S3 push FAILED.\n\n` +
+          `Error: ${pushError}\n\n` +
+          `Local dump exists on the tower only — investigate S3 credentials and retry.`,
+          "The automated backup of trading data was saved locally but failed to upload off-site.",
+          "No action needed for now — the bot will retry. Call Tony if this persists for more than 24 hours.",
+        ),
         { correlationId, filePath: dumpResult.filePath, bucket, error: pushError },
       );
       await _emitFailedAudit(correlationId, `S3 push failed: ${pushError}`, t0);

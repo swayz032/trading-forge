@@ -139,6 +139,37 @@ export function evaluatePboGate(
 
   const pbo = Number(pboRaw);
 
+  // ── Sample-size guard (degenerate / non-finite PBO) ───────────────────────
+  // Python pbo_gate.py returns float('nan') when n_paths < PBO_MIN_PATHS=4.
+  // In some wire paths this survives as JS NaN (e.g. Python json.dumps(nan)
+  // produces "NaN" which JS JSON.parse rejects, but defensive coding is cheap).
+  // NaN > 0.15 === false in JS, which would silently PASS the gate — that is the
+  // documented BLOCKER bug (hardening/phase-0).
+  // +Infinity / -Infinity are equally degenerate.
+  // VERDICT: fail-CLOSED on any non-finite PBO. The degenerate case must block,
+  // not grandfather. Legacy null (pre-Wave-29 missing field) grandfathers via the
+  // pboRaw==null branch above; degenerate-computed ≠ missing-field.
+  if (!Number.isFinite(pbo)) {
+    logger.warn(
+      { pboRaw, threshold: effectiveThreshold },
+      "PBO gate: BLOCKED — pbo_overall is non-finite (sample-size guard or computation failure); fail-CLOSED (lifecycle.pbo_sample_size_guard)",
+    );
+    return {
+      ok: false,
+      pbo: null,
+      threshold: effectiveThreshold,
+      reason: "lifecycle.pbo_sample_size_guard",
+      legacyNull: false,
+      auditPayload: {
+        pbo: null,
+        pbo_p_value: pValueRaw,
+        threshold: effectiveThreshold,
+        blocked: true,
+        legacy_null: false,
+      },
+    };
+  }
+
   // ── Block path ─────────────────────────────────────────────────────────────
   // PBO > threshold = strategy is more likely to be overfit than not.
   // Strict >: PBO === threshold is NOT blocked (institutional convention).

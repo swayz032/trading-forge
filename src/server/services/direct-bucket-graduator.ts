@@ -1605,6 +1605,29 @@ export async function graduateBucketDirectly(opts: {
       decisionAuthority: "system",
       correlationId: correlationId ?? null,
     }).catch((auditErr: unknown) => logger.warn({ err: auditErr }, "audit_log write failed (non-blocking)"));
+
+    // ─── Pass 2 Track D (2026-06-22) — UNCATALOGUED PINE RECIPE AUDIT ────────
+    // Emit a dedicated audit row so the operator can trace every uncatalogued
+    // speaker term that entered the `needs_archetype_queue`. The existing
+    // `graduation.queued_for_archetype` row records queue state; this row
+    // records the Pine export contract (alert_only band) so the export pipeline
+    // can distinguish "queued but no pine recipe" from "queued with alert_only".
+    await insertAuditRowSafe({
+      action: "graduation.uncatalogued_pine_recipe_assigned",
+      entityType: "strategy_pending_bucket",
+      entityId: bucketId,
+      input: { bucket_id: bucketId, concept_name: conceptName } as Record<string, unknown>,
+      result: {
+        speaker_term: speakerTerm,
+        pine_band: "alert_only",
+        recipe_source: "UNCATALOGUED_SPEAKER_TERM",
+        strategy_name: strategyName,
+      } as Record<string, unknown>,
+      status: "info",
+      decisionAuthority: "system",
+      correlationId: correlationId ?? null,
+    });
+
     return {
       strategyId: null,
       strategyName,
@@ -2811,6 +2834,31 @@ export async function graduateBucketDirectly(opts: {
       });
     } catch (helperErr: unknown) {
       logger.warn({ err: String(helperErr), strategyId: inserted.id, strategyName }, "Gate2: emitFactorQualityClassified helper failed (non-blocking)");
+    }
+
+    // ─── Pass 2 Track D (2026-06-22) — ARCHETYPE PINE RECIPE AUDIT ───────────
+    // When the graduator stamps entry_indicator = "archetype:<key>", emit a
+    // dedicated audit row so the export pipeline can trace which pine_band was
+    // assigned and which ARCHETYPE_PINE_RECIPE template applies. The alert_only
+    // band signals that Pine emits an indicator-pane scaffold + alertcondition()
+    // only — the Python engine at src/engine/strategies/<class>.py owns all
+    // entry/exit decisions. Never emitted for parametric strategies.
+    if (isArchetype && archetypeName) {
+      await insertAuditRowSafe({
+        action: "graduation.archetype_pine_recipe_assigned",
+        entityType: "strategy",
+        entityId: inserted.id,
+        input: { bucket_id: bucketId, concept_name: conceptName } as Record<string, unknown>,
+        result: {
+          archetype_key: archetypeName,
+          pine_band: "alert_only",
+          recipe_source: "ARCHETYPE_PINE_RECIPE",
+          strategy_name: strategyName,
+        } as Record<string, unknown>,
+        status: "info",
+        decisionAuthority: "system",
+        correlationId: correlationId ?? null,
+      });
     }
 
     // ─── Wave 26 Pass F (2026-05-25) — per-market fan-out ────────────────

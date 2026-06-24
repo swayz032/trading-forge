@@ -39,7 +39,7 @@
 import { randomUUID } from "crypto";
 import { eq, and, gte, isNull, isNotNull, sql, inArray } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { paperPositions, paperSessions, brokerAccounts } from "../db/schema.js";
+import { paperPositions, paperSessions, paperTrades, brokerAccounts } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { notifyWarning, notifyCritical } from "./notification-service.js";
@@ -168,27 +168,39 @@ export async function getConsistencyState(
   // Cycle day = number of calendar days from cycle start to today (1-based)
   const cycleDay = Math.floor((asOf.getTime() - cycleStart.getTime()) / 86_400_000) + 1;
 
-  // ─── Query closed positions in cycle ─────────────────────────────────────────
-  // paper_sessions with firmId='topstep' that started on or after cycleStart
-  // Join paper_positions where closedAt IS NOT NULL
-  // Group by date(closedAt) to get per-day P&L
+  // ─── Query closed trades in cycle — REALIZED P&L from paper_trades ─────────
+  //
+  // BUG FIX (2026-06-24): The prior query read SUM(COALESCE(pp.unrealized_pnl, 0))
+  // from paper_positions WHERE closedAt IS NOT NULL. paper-execution-service.ts
+  // resets unrealized_pnl = '0' on position close (the realized P&L lands in
+  // paper_trades.pnl). So the prior aggregation was always summing zeros — making
+  // highestDayProfit / cycleCumulativeProfit / currentConcentrationPct permanently
+  // zero, and the Topstep/MFFU 50% single-day concentration gate was invisible.
+  //
+  // Fix: source realized P&L from paper_trades (the canonical realized journal),
+  // grouped by DATE(exit_time AT TIME ZONE 'America/New_York') to match the
+  // trading-day boundary convention used by daily-trade-cap.ts and closePosition().
+  //
+  // NOTE: This gate is opt-in / default-OFF today (shouldBlockNewEntry not yet
+  // wired into paper-signal-service.ts). The data source must be correct before
+  // enable — this fix ensures it is.
+  //
+  // FIX A (2026-06-22): Cover all CONSISTENCY_RULE_FIRMS, not just 'topstep'.
+  // Both Topstep and MFFU enforce the 50% single-day concentration rule.
 
   type DailyRow = { day: string; pnl: number };
 
-  // FIX A (2026-06-22): Cover all CONSISTENCY_RULE_FIRMS, not just 'topstep'.
-  // Both Topstep and MFFU enforce the 50% single-day concentration rule.
   const firmList = CONSISTENCY_RULE_FIRMS.map((f) => `'${f}'`).join(", ");
   const dailyRows = await db.execute<DailyRow>(
     sql`
       SELECT
-        DATE(pp.closed_at AT TIME ZONE 'America/New_York') AS day,
-        SUM(COALESCE(pp.unrealized_pnl, 0)) AS pnl
-      FROM paper_positions pp
-      JOIN paper_sessions ps ON ps.id = pp.session_id
+        DATE(pt.exit_time AT TIME ZONE 'America/New_York') AS day,
+        SUM(pt.pnl::numeric) AS pnl
+      FROM paper_trades pt
+      JOIN paper_sessions ps ON ps.id = pt.session_id
       WHERE
         ps.firm_id IN (${sql.raw(firmList)})
-        AND pp.closed_at IS NOT NULL
-        AND pp.closed_at >= ${cycleStart.toISOString()}::timestamptz
+        AND pt.exit_time >= ${cycleStart.toISOString()}::timestamptz
       GROUP BY 1
       ORDER BY 1
     `,

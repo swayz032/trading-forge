@@ -2,6 +2,9 @@ import { db } from "../db/index.js";
 import { alerts } from "../db/schema.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../index.js";
+import { notifyWarning, notifyInfo } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
+import { warningSeverityDiscordRoutedTotal } from "../lib/metrics-registry.js";
 
 export type AlertSeverity = "info" | "warning" | "critical";
 export type AlertType = "trade_signal" | "drawdown" | "regime_change" | "degradation" | "drift" | "decay" | "system" | "lifecycle";
@@ -40,8 +43,34 @@ export async function createAlert(params: {
       const isAbort = e instanceof Error && (e.name === "AbortError" || e.name === "TimeoutError");
       logger.warn({ err: e, timeout: isAbort }, "Failed to send Discord alert");
     }
+  } else if (params.severity === "warning") {
+    logger.warn({ alertId: alert.id, type: params.type }, `Alert (warning): ${params.title}`);
+    // Route warning-severity alerts through notification-service (batched Discord delivery).
+    // appendFamilyGradePostscript appends a plain-English block for non-technical family members.
+    notifyWarning(
+      params.title,
+      appendFamilyGradePostscript(
+        params.message,
+        `A warning was triggered: "${params.title}". The system detected an issue that needs attention but is not yet critical.`,
+        "Tell Tony: 'There is a warning alert in the trading system.' If you cannot reach him, the system is still safe — no orders are affected by a warning.",
+      ),
+      params.metadata,
+    );
+    warningSeverityDiscordRoutedTotal.inc({ severity: "warning" });
   } else {
+    // severity === "info"
     logger.info({ alertId: alert.id, type: params.type }, `Alert: ${params.title}`);
+    // Route info-severity alerts through notification-service (immediate delivery).
+    notifyInfo(
+      params.title,
+      appendFamilyGradePostscript(
+        params.message,
+        `An informational update was triggered: "${params.title}". This is for operator awareness only.`,
+        "No action needed. This is just an update.",
+      ),
+      params.metadata,
+    );
+    warningSeverityDiscordRoutedTotal.inc({ severity: "info" });
   }
 
   return alert;
@@ -164,23 +193,35 @@ export const AlertFactory = {
   // Fires when the backend has been silent for > 2h during RTH and SMS is unavailable.
   // backendRestartedAt (M-8): ISO timestamp of when the backend process started this cycle.
   // Allows operators to correlate a stale alert with a recent restart-and-silent condition.
-  notifyHeartbeatStale: (lastAt: Date | null, minutesSince: number, backendRestartedAt?: string) =>
-    createAlert({
+  //
+  // Wave hardening 2026-06-22, autonomous-readiness A-4:
+  // Added family-grade postscript via appendFamilyGradePostscript so non-technical
+  // family members understand the alert and have a concrete action (power-cycle).
+  notifyHeartbeatStale: (lastAt: Date | null, minutesSince: number, backendRestartedAt?: string) => {
+    const hoursSince = Math.round(minutesSince / 60);
+    const technicalBody =
+      `Backend heartbeat is stale. Last heartbeat: ${lastAt ? lastAt.toISOString() : "never"}. ` +
+      `Silence duration: ${minutesSince} minutes. ` +
+      (backendRestartedAt ? `Backend last restarted: ${backendRestartedAt}. ` : "") +
+      `Auto-restart will be attempted autonomously (see audit_log dead_mans_heartbeat.auto_restart_attempted). ` +
+      `If auto-restart fails, verify the backend process is running on the Skytech tower.`;
+    return createAlert({
       type: "system",
       severity: "critical",
       title: "Dead-man heartbeat: backend silent",
-      message:
-        `Backend heartbeat is stale. Last heartbeat: ${lastAt ? lastAt.toISOString() : "never"}. ` +
-        `Silence duration: ${minutesSince} minutes. ` +
-        (backendRestartedAt ? `Backend last restarted: ${backendRestartedAt}. ` : "") +
-        `Verify the backend process is running on the Skytech tower.`,
+      message: appendFamilyGradePostscript(
+        technicalBody,
+        `The trading bot stopped responding about ${hoursSince > 0 ? `${hoursSince} hour${hoursSince !== 1 ? "s" : ""}` : `${minutesSince} minutes`} ago. We're trying to restart it automatically.`,
+        "If the bot is still offline in 5 minutes, hold the power button on the home computer for 5 seconds to reboot it — the bot restarts on its own after reboot. If you can't reach Tony, this is the safe action.",
+      ),
       metadata: {
         lastHeartbeatAt: lastAt ? lastAt.toISOString() : null,
         minutesSince,
         backendRestartedAt: backendRestartedAt ?? null,
         event: "heartbeat_stale",
       },
-    }),
+    });
+  },
 
   // C6: Bitwarden session expiring soon alert.
   // Fires when the BW_SESSION token will expire within `hoursRemaining` hours.
@@ -202,15 +243,23 @@ export const AlertFactory = {
   // Track 7: Prop-firm cookie refresh failed alert.
   // Fires when automated Playwright cookie refresh fails for a firm, meaning session cookies
   // will go stale and the dashboard snapshot / login sequence will break.
+  //
+  // FIX 4 (DEBT-4) 2026-06-24: wrapped with appendFamilyGradePostscript so family members
+  // receive plain-English context (mirrors heartbeat/BW alert pattern). The cookie failure
+  // only affects dashboard snapshots — live trading continues safely — so the family action
+  // is low-urgency (tell Tony, don't panic).
   notifyCookieRefreshFailed: (firmId: string, error: string) =>
     createAlert({
       type: "system",
       severity: "critical",
       title: `Cookie refresh failed: ${firmId}`,
-      message:
+      message: appendFamilyGradePostscript(
         `Automated session cookie refresh for firm "${firmId}" failed. ` +
         `Dashboard snapshots and authenticated actions for this firm will degrade until cookies are renewed. ` +
         `Error: ${error}`,
+        `The bot's connection to the ${firmId} dashboard expired and could not renew automatically.`,
+        `Tell Tony: '${firmId} cookies failed to refresh.' The bot is still trading safely — this only affects dashboard snapshots.`,
+      ),
       metadata: {
         firmId,
         error,

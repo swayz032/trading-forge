@@ -67,12 +67,29 @@ const server = http.createServer((req, res) => {
   req.on("error", (e) => { console.error("inbound err:", e.message); });
 });
 
-const wss = new WebSocketServer({ noServer: true });
+// Accept whatever subprotocol the client offered so the client-side `ws`
+// library does not reject the handshake. Auth is enforced separately in the
+// upgrade handler below; this callback only echoes the negotiated protocol.
+const wss = new WebSocketServer({
+  noServer: true,
+  handleProtocols: (protocols /* Set<string> */) => {
+    for (const p of protocols) return p;
+    return false;
+  },
+});
 
 server.on("upgrade", (req, socket, head) => {
   const u = new URL(req.url, "http://x");
   if (u.pathname !== "/__relay") { socket.destroy(); return; }
-  if (u.searchParams.get("token") !== TOKEN) { socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n"); socket.destroy(); return; }
+  // F-1: token transmitted via Sec-WebSocket-Protocol (primary) — keeps it
+  // out of URLs / access logs. ?token= remains as transition fallback.
+  const subprotocolHeader = req.headers["sec-websocket-protocol"];
+  const subprotocolToken = subprotocolHeader
+    ? String(subprotocolHeader).split(",")[0].trim()
+    : null;
+  const queryToken = u.searchParams.get("token");
+  const presented = subprotocolToken || queryToken;
+  if (presented !== TOKEN) { socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n"); socket.destroy(); return; }
   wss.handleUpgrade(req, socket, head, (ws) => wss.emit("connection", ws, req));
 });
 

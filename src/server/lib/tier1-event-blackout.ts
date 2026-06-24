@@ -7,8 +7,20 @@
  *
  * This module provides a conservative in-process fallback that runs WITHOUT
  * spawning Python. It mirrors the STATIC_EVENTS list from
- * src/engine/economic_calendar.py for the three MFFU-restricted Tier-1 events:
- * FOMC, CPI, NFP.
+ * src/engine/economic_calendar.py for the six MFFU-restricted Tier-1 events:
+ * FOMC, CPI, NFP, GDP, ISM, PPI.
+ *
+ * Wave hardening 2026-06-22, macro-blackout MFFU §5 extension — GDP/ISM/PPI:
+ *   GDP, ISM, PPI added to TIER1_EVENTS to match the extension made to
+ *   calendar_filter.py._ECONOMIC_EVENTS.  Dates are copied from
+ *   src/engine/economic_calendar.py::STATIC_EVENTS[2026-2027] (TS cannot
+ *   import Python at runtime).  A parity gate (check:ts-python-tier1-parity)
+ *   asserts exact date/time agreement between this file and STATIC_EVENTS to
+ *   prevent silent calendar drift.
+ *
+ * Retail Sales gap (TODO): MFFU §5 also restricts Retail Sales.
+ *   economic_calendar.py has no confirmed Retail Sales dates.  Do NOT add
+ *   invented dates.  Wire when BLS/Census 2026-2027 dates are confirmed.
  *
  * The blackout window is ±30 minutes around each event release time (matching
  * calendar_filter.py EVENT_BLACKOUT_MINUTES default).
@@ -21,7 +33,8 @@
  * Correctness contract:
  *   - Times are in ET (Eastern Time: EST UTC-5 / EDT UTC-4).
  *   - DST switches in 2026: spring-forward Mar 8 02:00, fall-back Nov 1 02:00.
- *   - All FOMC/CPI dates through 2027 are present (matching economic_calendar.py).
+ *   - All FOMC/CPI/GDP/ISM/PPI dates through 2027 are present (matching
+ *     economic_calendar.py STATIC_EVENTS).
  *   - NFP is the first Friday of each month at 08:30 ET — computed dynamically.
  *   - Window: [event_time - 30min, event_time + 30min].
  */
@@ -34,7 +47,7 @@ export const TIER1_BLACKOUT_MINUTES = 30;
 export interface Tier1Event {
   date: string;       // "YYYY-MM-DD"
   time_et: string;    // "HH:MM"
-  event_type: string; // "FOMC" | "CPI" | "NFP"
+  event_type: string; // "FOMC" | "CPI" | "NFP" | "GDP" | "ISM" | "PPI"
 }
 
 // ─── FOMC 2025-2027 (matching economic_calendar.py STATIC_EVENTS["FOMC"]) ────
@@ -104,13 +117,13 @@ const CPI_EVENTS: Tier1Event[] = [
   { date: "2027-03-10", time_et: "08:30", event_type: "CPI" },
   { date: "2027-04-13", time_et: "08:30", event_type: "CPI" },
   { date: "2027-05-12", time_et: "08:30", event_type: "CPI" },
-  { date: "2027-06-09", time_et: "08:30", event_type: "CPI" },
-  { date: "2027-07-14", time_et: "08:30", event_type: "CPI" },
+  { date: "2027-06-10", time_et: "08:30", event_type: "CPI" },
+  { date: "2027-07-13", time_et: "08:30", event_type: "CPI" },
   { date: "2027-08-11", time_et: "08:30", event_type: "CPI" },
-  { date: "2027-09-15", time_et: "08:30", event_type: "CPI" },
+  { date: "2027-09-14", time_et: "08:30", event_type: "CPI" },
   { date: "2027-10-13", time_et: "08:30", event_type: "CPI" },
   { date: "2027-11-10", time_et: "08:30", event_type: "CPI" },
-  { date: "2027-12-08", time_et: "08:30", event_type: "CPI" },
+  { date: "2027-12-10", time_et: "08:30", event_type: "CPI" },
 ];
 
 // ─── NFP — first Friday of each month at 08:30 ET ────────────────────────────
@@ -154,10 +167,45 @@ export function buildNfpEvents(startYear: number, endYear: number): Tier1Event[]
 // Pre-build NFP for 2025-2027 at module load (pure, no I/O).
 const NFP_EVENTS: Tier1Event[] = buildNfpEvents(2025, 2027);
 
+// ─── FOMC Minutes 2026-2027 (matching economic_calendar.py STATIC_EVENTS["FOMC_MINUTES"]) ──
+// Wave hardening 2026-06-22 Phase 1, MFFU Feb-2026 News Policy.
+// FOMC Minutes — T1 for ALL products, 14:00 ET, released ~3 weeks after each FOMC meeting.
+//
+// CORRECTION: GDP/ISM/PPI were REMOVED — they are NOT T1 per the current MFFU policy
+// (a prior commit added them from a stale doc). EIA (Crude Oil Inventories) is T1 for
+// ENERGY/MCL ONLY and is staged in economic_calendar.py STATIC_EVENTS["EIA"]; it is
+// intentionally NOT in this firm+product-AGNOSTIC in-process backup, because adding it
+// here would wrongly block MES/MNQ at 10:30 Wed. EIA is wired product-aware + firm-aware
+// in Phase 2 (Topstep=size-reduce / MFFU-Rapid=hard-block; EIA→MCL only).
+// Parity gate: check:ts-python-tier1-parity asserts exact agreement with STATIC_EVENTS.
+
+const FOMC_MINUTES_EVENTS: Tier1Event[] = [
+  { date: "2026-02-18", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2026-04-08", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2026-05-27", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2026-07-08", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2026-08-19", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2026-10-07", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2026-11-25", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2027-01-06", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2027-02-17", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2027-04-07", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2027-05-26", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2027-07-07", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2027-08-18", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2027-10-13", time_et: "14:00", event_type: "FOMC_MINUTES" },
+  { date: "2027-11-24", time_et: "14:00", event_type: "FOMC_MINUTES" },
+];
+
 // ─── Combined Tier-1 event list ───────────────────────────────────────────────
+// Wave hardening 2026-06-22 Phase 1: universal in-process T1 backup =
+// FOMC + FOMC_MINUTES + CPI + NFP (all-product events). EIA is product-scoped (MCL) +
+// firm-aware and handled in Phase 2 — NOT in this universal set. GDP/ISM/PPI removed.
+// Parity with Python STATIC_EVENTS enforced via check:ts-python-tier1-parity.
 
 export const TIER1_EVENTS: Tier1Event[] = [
   ...FOMC_EVENTS,
+  ...FOMC_MINUTES_EVENTS,
   ...CPI_EVENTS,
   ...NFP_EVENTS,
 ];

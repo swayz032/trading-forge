@@ -56,6 +56,7 @@ import { healthDashboardRoutes } from "./routes/health-dashboard.js";
 import { validationCadenceRoutes } from "./routes/validation-cadence.js";
 import { adminRoutes } from "./routes/admin.js";
 import { adminFrozenPolicyOverrideRoutes } from "./routes/admin-frozen-policy-override.js";
+import { adminRecoveryRoutes } from "./routes/admin-recovery.js";
 import { slumdawgRoutes } from "./routes/slumdawg.js";
 import { slumhouseRouter, adminMappingRouter as slumhouseAdminMappingRouter } from "./routes/slumhouse/index.js";
 import { dlqRoutes } from "./routes/dlq.js";
@@ -92,7 +93,9 @@ import { tradeJournalRoutes } from "./routes/trade-journal.js";
 import { compositeHealthRoutes } from "./routes/composite-health.js";
 import { abComparisonRoutes } from "./routes/ab-comparison.js";
 import { liveOrderRoutes } from "./routes/live-order.js";
+import { fillCallbackRoutes } from "./routes/fill-callback.js";
 import { runPendingMigrations } from "./lib/boot-migration-runner.js";
+import { checkStartupSecrets } from "./lib/startup-config-check.js";
 
 // ─── Boot migration runner ────────────────────────────────────────
 // Apply any pending Drizzle migrations BEFORE app.listen() and BEFORE any
@@ -101,6 +104,12 @@ import { runPendingMigrations } from "./lib/boot-migration-runner.js";
 // Throws on failure to block boot (fail-closed). No-ops when all applied.
 // Controlled by BOOT_MIGRATION_ENABLED env var (default: true).
 await runPendingMigrations();
+
+// ─── Vacation-survival A-8: Boot-time secret validation ──────────
+// Emits WARN log + Discord notify when ADMIN_RESTART_HMAC_SECRET is unset
+// so the operator learns BEFORE leaving that auto-restart is disabled.
+// Never throws — warn-only, never fail boot.
+await checkStartupSecrets();
 
 // ─── Circuit breaker → alert wiring ─────────────────────────────
 // When any circuit breaker trips OPEN, fire a critical alert so the dashboard
@@ -501,6 +510,8 @@ app.use("/api/production", productionStatusRoutes);
 app.use("/api/admin", adminRoutes);
 // Wave 29 Pass B.2: Frozen-policy HMAC override endpoint.
 app.use("/api/admin", adminFrozenPolicyOverrideRoutes);
+// Vacation-survival A-5: HMAC-gated recovery endpoints (clear cache / clear stuck session).
+app.use("/api/admin", adminRecoveryRoutes);
 // Wave 26 Pass G — Slumdawg Analyst (Anam.ai) read-only API surface.
 app.use("/api/admin/slumdawg", slumdawgRoutes);
 // 2026-05-27 — Slumhouse portal (friend-facing read-only, Discord OAuth).
@@ -559,6 +570,12 @@ app.use("/api/ab-comparison", abComparisonRoutes);
 // Pine alert → POST /api/live-order → routeOrder() (full gate stack) → TradersPost/broker.
 // Requires LIVE_ORDER_HMAC_SECRET env var (≥32 chars). Fail-CLOSED 503 when unconfigured.
 app.use("/api/live-order", liveOrderRoutes);
+
+// Phase 1 Fill Reconciliation: broker fill callback + admin reconcile-clear.
+// POST /api/broker/fill-callback — HMAC-gated; requires BROKER_FILL_HMAC_SECRET.
+// POST /api/broker/fill-callback/reconcile-clear — admin clear of needs_reconcile block.
+// Flag-gated: SERVER_MEDIATED_EXECUTION_ENABLED=true (default OFF).
+app.use("/api/broker/fill-callback", fillCallbackRoutes);
 
 // 404 handler for API routes — returns JSON instead of Express default HTML
 app.use("/api", (_req, res) => {
@@ -728,6 +745,33 @@ export const server = app.listen(port, () => {
     });
   }).catch((err) => {
     logger.info({ err }, "model-router import failed during appendix warm — non-blocking");
+  });
+
+  // ─── Discord fanout audit boot probe (Pass 1 Track D) ────────────────────────
+  // Probes all configured Discord webhooks so production-status.ts reads
+  // "discord_webhook_health: healthy" instead of the false "not_configured"
+  // that appears when this function is never called. Fire-and-forget: any
+  // failure is logged as WARN but never blocks boot.
+  import("./services/discord-fanout-audit-service.js").then(({ runDiscordFanoutAudit }) => {
+    runDiscordFanoutAudit().catch((err) => {
+      logger.warn({ err }, "discord_fanout_audit_boot_failed");
+    });
+  }).catch((err) => {
+    logger.warn({ err }, "discord-fanout-audit import failed at boot (non-blocking)");
+  });
+
+  // ─── A14: Regime-bank self-heal (boot-time, fire-and-forget) ────────────────
+  // Ensures the synthetic_regime_bank has rows so backtests run at ANY time
+  // (not just after the weekly Sunday cron) get real B14 survival verdicts
+  // instead of null. If bank is empty → triggers populate run async (20 min max).
+  // If bank is populated → logs + emits skipped audit. Never blocks app.listen.
+  // Governance: CHALLENGER-ONLY / ADVISORY — populate output is advisory only.
+  import("./services/synthetic-regime-bank-service.js").then(({ ensureRegimeBankPopulated }) => {
+    ensureRegimeBankPopulated(`boot-${Date.now()}`).catch((err: unknown) => {
+      logger.warn({ err }, "synthetic_regime_bank: boot self-heal failed (non-blocking)");
+    });
+  }).catch((err: unknown) => {
+    logger.warn({ err }, "synthetic-regime-bank-service import failed at boot (non-blocking)");
   });
 
   // Start scheduled jobs (rolling Sharpe, pre-market prep, drift checks).

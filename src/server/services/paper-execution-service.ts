@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { db } from "../db/index.js";
-import { paperSessions, paperPositions, paperTrades, strategies, shadowSignals, auditLog, macroSnapshots, skipDecisions, complianceRulesets, contractRolls } from "../db/schema.js";
+import { paperSessions, paperPositions, paperTrades, strategies, shadowSignals, auditLog, macroSnapshots, skipDecisions, complianceRulesets, contractRolls, brokerAccounts } from "../db/schema.js";
 import { writeLockoutFromKillEvent } from "./strategy-lockout-service.js";
 import { eq, and, isNull, desc, sql, inArray } from "drizzle-orm";
 import { broadcastSSE, PAPER_EXIT_EVENTS } from "../routes/sse.js";
@@ -37,6 +37,9 @@ import { getActiveAssignment } from "./strategy-assignment-service.js";
 // Wave 25.5 Track 1: adaptive exit plan wiring
 import { computeExitPlan, type ExitPlan } from "./adaptive-exit-engine.js";
 import type { ExitPlanWithRuntimeState } from "../db/jsonb-shapes.js";
+// Pass 6 Track D: per-call exit-handler Discord visibility
+import { notifyWarning, notifyCritical } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 export { CONTRACT_SPECS };
 
 // ─── C1: Register CME outage callback on module init ─────────────────────────
@@ -190,7 +193,13 @@ interface KillSwitchCacheEntry {
   force_close_pct_used: number;
   cachedAt: number;
 }
-const KILL_SWITCH_CACHE_TTL_MS = 5_000;
+// Capital-decision staleness gate: how OLD a cached kill-switch verdict may be
+// before we re-spawn the Python evaluator. Env-overridable; invalid (NaN / ≤0)
+// falls back to the 5_000 ms default (behavior unchanged unless an operator tunes it).
+const KILL_SWITCH_CACHE_TTL_MS = ((): number => {
+  const v = parseInt(process.env.KILL_SWITCH_CACHE_TTL_MS ?? "5000", 10);
+  return Number.isFinite(v) && v > 0 ? v : 5_000;
+})();
 const killSwitchCache = new Map<string, KillSwitchCacheEntry>();
 
 /** Test/admin hook — clear kill switch cache (force re-evaluation). */
@@ -240,7 +249,13 @@ interface ComplianceCacheEntry {
   rulesetPayload: Record<string, unknown>;
   cachedAt: number;
 }
-const COMPLIANCE_CACHE_TTL_MS = 60_000;
+// Capital-decision staleness gate: how OLD a cached compliance-freshness verdict
+// may be before re-evaluation. Env-overridable; invalid (NaN / ≤0) falls back to
+// the 60_000 ms default (behavior unchanged unless an operator tunes it).
+const COMPLIANCE_CACHE_TTL_MS = ((): number => {
+  const v = parseInt(process.env.COMPLIANCE_CACHE_TTL_MS ?? "60000", 10);
+  return Number.isFinite(v) && v > 0 ? v : 60_000;
+})();
 const complianceCache = new Map<string, ComplianceCacheEntry>();
 
 /** Test/admin hook — clear the in-memory cache (force re-evaluation). */
@@ -287,8 +302,18 @@ interface CalendarFailureTracker {
   windowStart: number;  // epoch ms
   alertFired: boolean;
 }
-const CALENDAR_FAILURE_WINDOW_MS = 10 * 60_000; // 10 minutes
-const CALENDAR_FAILURE_THRESHOLD = 3;
+// Capital-decision staleness gate: rolling window + consecutive-failure count that
+// decide when the calendar guard is declared persistently down. Env-overridable;
+// invalid (NaN / ≤0) falls back to the 10-minute / 3-failure defaults (behavior
+// unchanged unless an operator tunes them).
+const CALENDAR_FAILURE_WINDOW_MS = ((): number => {
+  const v = parseInt(process.env.CALENDAR_FAILURE_WINDOW_MS ?? "600000", 10);
+  return Number.isFinite(v) && v > 0 ? v : 10 * 60_000;
+})();
+const CALENDAR_FAILURE_THRESHOLD = ((): number => {
+  const v = parseInt(process.env.CALENDAR_FAILURE_THRESHOLD ?? "3", 10);
+  return Number.isFinite(v) && v > 0 ? v : 3;
+})();
 const calendarFailureTracker: CalendarFailureTracker = {
   count: 0,
   windowStart: Date.now(),
@@ -597,7 +622,7 @@ export async function openPosition(sessionId: string, params: {
   // paper trading activity — no new positions may be opened until they set
   // production_mode back to 'PAPER' or 'LIVE'.
   try {
-    if (await killSwitch.isHaltedForProduction()) {
+    if (await killSwitch.isHaltedForProduction({ correlationId })) {
       logger.warn(
         { fn: "openPosition", sessionId, symbol: params.symbol, side: params.side, reason: "production_mode_halt" },
         "paper-execution.production-halted: new entry blocked by production kill switch",
@@ -1168,6 +1193,7 @@ export async function openPosition(sessionId: string, params: {
                     strategyId: session.strategyId,
                     killAuditId: rows[0]?.id ?? null,
                     reason: killResult.reason ?? "daily_loss_kill",
+                    correlationId,
                   });
                 }
               })
@@ -1305,6 +1331,7 @@ export async function openPosition(sessionId: string, params: {
                 strategyId: session.strategyId,
                 killAuditId: rows[0]?.id ?? null,
                 reason: "kill_switch_down",
+                correlationId,
               });
             }
           })
@@ -2046,82 +2073,162 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
   // fillProbability — read from position row (written at open time)
   const fillProbabilityStr = pos.fillProbability ?? null;
 
-  const [trade] = await dbConn.transaction(async (tx) => {
-    // 1. Insert closed trade — pnl column holds NET P&L; grossPnl and commission stored for audit/analytics
-    const [tradeRow] = await tx.insert(paperTrades).values({
-      sessionId: pos.sessionId,
-      symbol: pos.symbol,
-      side: pos.side,
-      entryPrice: pos.entryPrice,
-      exitPrice: String(actualExit),
-      pnl: String(netPnl),
-      grossPnl: String(grossPnl),
-      commission: String(commission),
-      contracts: pos.contracts,
-      entryTime: pos.entryTime,
-      exitTime: closedAt,
-      slippage: String(slippage),
-      // Phase 1.1 enrichment columns
-      mae: pos.mae,           // Accumulated per-bar watermark from paper_positions row
-      mfe: pos.mfe,           // Accumulated per-bar watermark from paper_positions row
-      holdDurationMs,
-      hourOfDay,
-      dayOfWeek,
-      sessionType,
-      macroRegime,
-      eventActive,
-      skipSignal,
-      fillProbability: fillProbabilityStr,
-      // Roll spread cost: non-null when cost > 0 (roll crossed), null when no roll crossed.
-      // Persisted even when cost is 0 (distinguishes "evaluated, no roll" from "pre-migration null").
-      rollSpreadCost: String(rollCost.estimatedSpreadCost),
-    }).returning();
-
-    // 2. Mark position as closed — unrealizedPnl resets to 0 (realized P&L lives in paperTrades)
-    await tx.update(paperPositions).set({
-      closedAt,
-      currentPrice: String(actualExit),
-      unrealizedPnl: "0",
-    }).where(eq(paperPositions.id, positionId));
-
-    // 3. Update session equity atomically using NET P&L — prevents read-modify-write race on
-    //    concurrent closes. totalTrades is incremented here so it always matches trade rows.
-    //
-    // W12 Bug #2 fix: realizedPeakEquity is the authoritative trailing-DD HWM per
-    // Topstep/Apex EOD spec — updated from CLOSED equity only (never from MTM).
-    // peakEquity is retained as a UI display column (MTM HWM for the dashboard).
-    // Trailing-DD compliance reads realizedPeakEquity, not peakEquity.
-    await tx.update(paperSessions).set({
-      currentEquity: sql`${paperSessions.currentEquity}::numeric + ${netPnl}`,
-      peakEquity: sql`GREATEST(${paperSessions.peakEquity}::numeric, ${paperSessions.currentEquity}::numeric + ${netPnl})`,
-      realizedPeakEquity: sql`GREATEST(${paperSessions.realizedPeakEquity}::numeric, ${paperSessions.currentEquity}::numeric + ${netPnl})`,
-      totalTrades: sql`COALESCE(${paperSessions.totalTrades}, 0) + 1`,
-    }).where(eq(paperSessions.id, pos.sessionId));
-
-    return [tradeRow];
-  });
-
-  // Audit trail — paper trade close (written immediately after the transaction commits)
+  // H5 fix (2026-06-23): audit INSERT moved INSIDE the transaction so the trade
+  // close and its audit row commit atomically.  If the audit INSERT fails, the
+  // entire transaction rolls back (fail-CLOSED: better to retry the close than
+  // to commit a trade with no audit record → orphan).
+  //
+  // On transaction rollback we emit a SEPARATE out-of-transaction
+  // paper.trade_close_audit_failed row + notifyCritical Discord so the operator
+  // can identify and manually reconcile the open position.
+  let trade: typeof paperTrades.$inferSelect;
   try {
-    await dbConn.insert(auditLog).values({
-      action: "paper.trade_close",
-      entityType: "paper_trade",
-      entityId: trade.id,
-      input: { positionId },
-      result: {
-        exitPrice: actualExit,
-        netPnl,
-        grossPnl,
-        commission,
-        rollSpreadCost: rollCost.estimatedSpreadCost,
-        rollDates: rollCost.rollDates,
-      },
-      status: "success",
-      decisionAuthority: "agent",
-      correlationId,
+    const [tradeRow] = await dbConn.transaction(async (tx) => {
+      // 1. Insert closed trade — pnl column holds NET P&L; grossPnl and commission stored for audit/analytics
+      const [insertedTrade] = await tx.insert(paperTrades).values({
+        sessionId: pos.sessionId,
+        symbol: pos.symbol,
+        side: pos.side,
+        entryPrice: pos.entryPrice,
+        exitPrice: String(actualExit),
+        pnl: String(netPnl),
+        grossPnl: String(grossPnl),
+        commission: String(commission),
+        contracts: pos.contracts,
+        entryTime: pos.entryTime,
+        exitTime: closedAt,
+        slippage: String(slippage),
+        // Phase 1.1 enrichment columns
+        mae: pos.mae,           // Accumulated per-bar watermark from paper_positions row
+        mfe: pos.mfe,           // Accumulated per-bar watermark from paper_positions row
+        holdDurationMs,
+        hourOfDay,
+        dayOfWeek,
+        sessionType,
+        macroRegime,
+        eventActive,
+        skipSignal,
+        fillProbability: fillProbabilityStr,
+        // Roll spread cost: non-null when cost > 0 (roll crossed), null when no roll crossed.
+        // Persisted even when cost is 0 (distinguishes "evaluated, no roll" from "pre-migration null").
+        rollSpreadCost: String(rollCost.estimatedSpreadCost),
+      }).returning();
+
+      // 2. Mark position as closed — unrealizedPnl resets to 0 (realized P&L lives in paperTrades)
+      await tx.update(paperPositions).set({
+        closedAt,
+        currentPrice: String(actualExit),
+        unrealizedPnl: "0",
+      }).where(eq(paperPositions.id, positionId));
+
+      // 3. Update session equity atomically using NET P&L — prevents read-modify-write race on
+      //    concurrent closes. totalTrades is incremented here so it always matches trade rows.
+      //
+      // W12 Bug #2 fix: realizedPeakEquity is the authoritative trailing-DD HWM per
+      // Topstep/Apex EOD spec — updated from CLOSED equity only (never from MTM).
+      // peakEquity is retained as a UI display column (MTM HWM for the dashboard).
+      // Trailing-DD compliance reads realizedPeakEquity, not peakEquity.
+      await tx.update(paperSessions).set({
+        currentEquity: sql`${paperSessions.currentEquity}::numeric + ${netPnl}`,
+        peakEquity: sql`GREATEST(${paperSessions.peakEquity}::numeric, ${paperSessions.currentEquity}::numeric + ${netPnl})`,
+        realizedPeakEquity: sql`GREATEST(${paperSessions.realizedPeakEquity}::numeric, ${paperSessions.currentEquity}::numeric + ${netPnl})`,
+        totalTrades: sql`COALESCE(${paperSessions.totalTrades}, 0) + 1`,
+      }).where(eq(paperSessions.id, pos.sessionId));
+
+      // 4. Audit trail — INSIDE transaction so trade close + audit are atomic.
+      //    If this INSERT fails the whole transaction rolls back (fail-CLOSED).
+      await tx.insert(auditLog).values({
+        action: "paper.trade_close",
+        entityType: "paper_trade",
+        entityId: insertedTrade.id,
+        input: { positionId },
+        result: {
+          exitPrice: actualExit,
+          netPnl,
+          grossPnl,
+          commission,
+          rollSpreadCost: rollCost.estimatedSpreadCost,
+          rollDates: rollCost.rollDates,
+        },
+        status: "success",
+        decisionAuthority: "agent",
+        correlationId,
+      });
+
+      return [insertedTrade];
     });
-  } catch (auditErr) {
-    logger.warn({ positionId, tradeId: trade.id, err: auditErr }, "Audit log write failed for paper.trade_close (non-blocking)");
+    trade = tradeRow;
+  } catch (txErr) {
+    // Transaction rolled back — trade close and audit both failed atomically.
+    // Emit a SEPARATE observability row (out-of-transaction, best-effort) so the
+    // operator can identify the orphaned open position that needs manual reconciliation.
+    logger.error(
+      { positionId, err: txErr, correlationId },
+      "H5: paper.trade_close transaction rolled back (trade close + audit both failed) — position may still be open",
+    );
+    try {
+      await dbConn.insert(auditLog).values({
+        action: "paper.trade_close_audit_failed",
+        entityType: "paper_position",
+        entityId: positionId,
+        input: { positionId, correlationId },
+        result: { err: txErr instanceof Error ? txErr.message : String(txErr) },
+        status: "failure",
+        decisionAuthority: "agent",
+        correlationId,
+      });
+    } catch (observabilityErr) {
+      logger.error(
+        { positionId, err: observabilityErr, correlationId },
+        "H5: failed to write paper.trade_close_audit_failed observability row",
+      );
+    }
+    // Fire Discord CRITICAL — operator must manually reconcile the position.
+    const discordBody = appendFamilyGradePostscript(
+      `Bot tried to close a trade but the audit record failed. Position ${positionId} may still be open. CorrelationId: ${correlationId ?? "none"}.`,
+      "Tony needs to check this — the trade may need manual reconciliation.",
+      "Check the dashboard for any open paper_trades that should be closed.",
+    );
+    notifyCritical(
+      "paper.trade_close transaction failed — position may be open",
+      discordBody,
+      { positionId, correlationId: correlationId ?? null, errorType: "trade_close_tx_rollback" },
+    );
+    throw txErr;
+  }
+
+  // ─── Proven-trades counter (fail-soft, never blocks close) ─────────────────
+  // Monotonic invariant: only increments, never decrements. Counter survives
+  // withdrawals because it is per-session, not per-equity-level.
+  // Only winning trades (net realized P&L strictly > 0) are counted.
+  // Uses atomic SQL increment to avoid read-modify-write races.
+  if (netPnl > 0) {
+    try {
+      const [updatedSession] = await dbConn
+        .update(paperSessions)
+        .set({
+          provenTradesCount: sql`${paperSessions.provenTradesCount} + 1`,
+        })
+        .where(eq(paperSessions.id, pos.sessionId))
+        .returning({ provenTradesCount: paperSessions.provenTradesCount });
+
+      logger.info(
+        {
+          sessionId: pos.sessionId,
+          positionId,
+          netPnl,
+          provenTradesCount: updatedSession?.provenTradesCount ?? "unknown",
+        },
+        "sizing.proven_trade_recorded: winning close incremented proven_trades_count",
+      );
+    } catch (provenTradeErr) {
+      // Fail-soft: counter update failure must NOT block the close.
+      // The trade is already committed; this is a best-effort side-effect.
+      logger.error(
+        { sessionId: pos.sessionId, positionId, netPnl, err: provenTradeErr },
+        "proven_trades_count increment failed (non-blocking) — close proceeds",
+      );
+    }
   }
 
   // Re-read session after atomic update for downstream logic
@@ -2661,12 +2768,94 @@ async function callExitHandler(
       correlation_id: correlationId ?? null,
     });
 
+    // Pass 6 Track D: per-call Discord visibility — don't wait until circuit-breaker
+    // fires at 3/10-min. Surface every handler error immediately.
+    // Escalate to CRITICAL for systemic failure signals (subprocess-died or timeout).
+    {
+      const isSystemic = errMsg.includes("subprocess-died") || errMsg.includes("timeout");
+      const discordBody = appendFamilyGradePostscript(
+        `Exit handler subprocess error for position ${pos.id} (style: ${exitStyle}, module: ${module}). ` +
+          `Error: ${errMsg}. Decision: HOLD (fail-CLOSED). CorrelationId: ${correlationId ?? "none"}.`,
+        "The trading bot's exit logic hit an error and safely chose to hold the position.",
+        "This is a single error and the bot is protecting your trade. If you see many of these, tell Tony.",
+      );
+      if (isSystemic) {
+        notifyCritical(
+          `Exit handler SYSTEMIC error — style ${exitStyle}`,
+          discordBody,
+          { positionId: pos.id, strategyId, exitStyle, module, correlationId: correlationId ?? null, errorType: "systemic" },
+        );
+      } else {
+        notifyWarning(
+          `Exit handler error — style ${exitStyle}`,
+          discordBody,
+          { positionId: pos.id, strategyId, exitStyle, module, correlationId: correlationId ?? null },
+        );
+      }
+    }
+
     return {
       decision: "HOLD",
       new_stop: null,
       evidence: { error: errMsg },
       handler_version: `style_${exitStyle.toLowerCase()}_handler_error`,
     };
+  }
+}
+
+// ─── Server-Mediated Execution: context resolver (Phase 0) ───────────────────
+//
+// Resolves LiveExecutionContext from a paper position's sessionId.
+// Used by exit injection points in applyExitDecision().
+// Fail-soft: returns null when flag is off, state is non-live, or DB lookup fails.
+// All errors are swallowed — this must never affect paper simulation.
+async function _resolveSmeContextForExit(
+  sessionId: string,
+  positionId: string,
+): Promise<import("./server-mediated-executor.js").LiveExecutionContext | null> {
+  try {
+    const { isServerMediatedExecutionEnabled } = await import("./server-mediated-executor.js");
+    if (!isServerMediatedExecutionEnabled()) return null; // fast-path: flag off
+
+    // sessionId → firmId + strategyId
+    const [sess] = await db
+      .select({ strategyId: paperSessions.strategyId, firmId: paperSessions.firmId })
+      .from(paperSessions)
+      .where(eq(paperSessions.id, sessionId))
+      .limit(1);
+    if (!sess?.strategyId) return null;
+
+    // strategyId → lifecycleState
+    const [strat] = await db
+      .select({ lifecycleState: strategies.lifecycleState })
+      .from(strategies)
+      .where(eq(strategies.id, sess.strategyId))
+      .limit(1);
+    if (!strat) return null;
+
+    // firmId → accountId (first enabled broker account for this firm)
+    const firmId = sess.firmId ?? "";
+    if (!firmId) return null;
+    const [acct] = await db
+      .select({ accountId: brokerAccounts.accountId })
+      .from(brokerAccounts)
+      .where(and(eq(brokerAccounts.firmId, firmId), eq(brokerAccounts.enabled, true)))
+      .limit(1);
+    if (!acct?.accountId) return null;
+
+    return {
+      accountId: acct.accountId,
+      lifecycleState: strat.lifecycleState,
+      sessionId,
+      strategyId: sess.strategyId,
+      correlationId: null, // exit decisions don't carry a correlationId from signal chain
+    };
+  } catch (err) {
+    logger.warn(
+      { err, sessionId, positionId },
+      "SME: context resolution failed for exit routing (fail-soft, paper sim unaffected)",
+    );
+    return null;
   }
 }
 
@@ -2738,6 +2927,21 @@ async function applyExitDecision(
           "style_exit: TP1 filled — partial close executed",
         );
         broadcastSSE(PAPER_EXIT_EVENTS.TP1_FILLED, exitPayloadBase);
+        // SME Phase 0: fire live TP1 partial exit (fire-and-forget, isolated)
+        _resolveSmeContextForExit(pos.sessionId, pos.id).then((smeCtx) => {
+          if (!smeCtx) return;
+          return import("./server-mediated-executor.js").then(({ routeLiveExitPartial }) =>
+            routeLiveExitPartial({
+              ctx: smeCtx,
+              symbol: pos.symbol,
+              side: pos.side as "long" | "short",
+              quantity: contractsToClose,
+              exitType: "TP1",
+            })
+          );
+        }).catch((err: unknown) =>
+          logger.error({ err, positionId: pos.id }, "SME: TP1 exit routing failed (paper sim unaffected)")
+        );
       } else {
         // Fully closes (e.g. 1-contract position — close whole thing)
         await closePosition(pos.id, currentPrice, atr);
@@ -2749,6 +2953,21 @@ async function applyExitDecision(
           "style_exit: TP1 filled — full position closed",
         );
         broadcastSSE(PAPER_EXIT_EVENTS.TP1_FILLED, exitPayloadBase);
+        // SME Phase 0: full close = flatten
+        _resolveSmeContextForExit(pos.sessionId, pos.id).then((smeCtx) => {
+          if (!smeCtx) return;
+          return import("./server-mediated-executor.js").then(({ routeLiveFlatten }) =>
+            routeLiveFlatten({
+              ctx: smeCtx,
+              symbol: pos.symbol,
+              side: pos.side as "long" | "short",
+              quantity: contractsToClose,
+              flattenReason: "TP1_FULL_CLOSE",
+            })
+          );
+        }).catch((err: unknown) =>
+          logger.error({ err, positionId: pos.id }, "SME: TP1 full-close flatten routing failed (paper sim unaffected)")
+        );
         return true;
       }
       break;
@@ -2776,6 +2995,21 @@ async function applyExitDecision(
           "style_exit: TP2 filled — partial close executed (Style C runner remains)",
         );
         broadcastSSE(PAPER_EXIT_EVENTS.TP2_FILLED, exitPayloadBase);
+        // SME Phase 0: fire live TP2 partial exit (fire-and-forget, isolated)
+        _resolveSmeContextForExit(pos.sessionId, pos.id).then((smeCtx) => {
+          if (!smeCtx) return;
+          return import("./server-mediated-executor.js").then(({ routeLiveExitPartial }) =>
+            routeLiveExitPartial({
+              ctx: smeCtx,
+              symbol: pos.symbol,
+              side: pos.side as "long" | "short",
+              quantity: contractsToClose,
+              exitType: "TP2",
+            })
+          );
+        }).catch((err: unknown) =>
+          logger.error({ err, positionId: pos.id }, "SME: TP2 exit routing failed (paper sim unaffected)")
+        );
       } else {
         await closePosition(pos.id, currentPrice, atr);
         logger.info(
@@ -2786,6 +3020,21 @@ async function applyExitDecision(
           "style_exit: TP2 filled — full position closed",
         );
         broadcastSSE(PAPER_EXIT_EVENTS.TP2_FILLED, exitPayloadBase);
+        // SME Phase 0: full close = flatten
+        _resolveSmeContextForExit(pos.sessionId, pos.id).then((smeCtx) => {
+          if (!smeCtx) return;
+          return import("./server-mediated-executor.js").then(({ routeLiveFlatten }) =>
+            routeLiveFlatten({
+              ctx: smeCtx,
+              symbol: pos.symbol,
+              side: pos.side as "long" | "short",
+              quantity: contractsToClose,
+              flattenReason: "TP2_FULL_CLOSE",
+            })
+          );
+        }).catch((err: unknown) =>
+          logger.error({ err, positionId: pos.id }, "SME: TP2 full-close flatten routing failed (paper sim unaffected)")
+        );
         return true;
       }
       break;
@@ -2810,6 +3059,23 @@ async function applyExitDecision(
         "style_exit: BE stop applied — stop moved to break-even",
       );
       broadcastSSE(PAPER_EXIT_EVENTS.BE_STOP_MOVED, exitPayloadBase);
+      // SME Phase 0: fire live BE stop move (fire-and-forget, isolated)
+      if (new_stop != null) {
+        _resolveSmeContextForExit(pos.sessionId, pos.id).then((smeCtx) => {
+          if (!smeCtx) return;
+          return import("./server-mediated-executor.js").then(({ routeLiveExitModify }) =>
+            routeLiveExitModify({
+              ctx: smeCtx,
+              symbol: pos.symbol,
+              side: pos.side as "long" | "short",
+              newStopPrice: new_stop,
+              modifyType: "BE_MOVE",
+            })
+          );
+        }).catch((err: unknown) =>
+          logger.error({ err, positionId: pos.id }, "SME: BE_MOVE routing failed (paper sim unaffected)")
+        );
+      }
       break;
     }
 
@@ -2836,6 +3102,21 @@ async function applyExitDecision(
           "style_exit: trail tightened",
         );
         broadcastSSE(PAPER_EXIT_EVENTS.TRAIL_TIGHTENED, exitPayloadBase);
+        // SME Phase 0: fire live trail update (fire-and-forget, isolated)
+        _resolveSmeContextForExit(pos.sessionId, pos.id).then((smeCtx) => {
+          if (!smeCtx) return;
+          return import("./server-mediated-executor.js").then(({ routeLiveExitModify }) =>
+            routeLiveExitModify({
+              ctx: smeCtx,
+              symbol: pos.symbol,
+              side: pos.side as "long" | "short",
+              newStopPrice: new_stop,
+              modifyType: "TRAIL",
+            })
+          );
+        }).catch((err: unknown) =>
+          logger.error({ err, positionId: pos.id }, "SME: TRAIL update routing failed (paper sim unaffected)")
+        );
       }
       break;
     }
@@ -2863,6 +3144,24 @@ async function applyExitDecision(
         "style_exit: time-stop flatten executed at 15:55 ET",
       );
       broadcastSSE(PAPER_EXIT_EVENTS.TIME_STOP_FLATTENED, exitPayloadBase);
+      // SME Phase 0: fire live 15:55 flatten (fire-and-forget; closePosition already ran paper sim)
+      {
+        const _smeContractsAtFlatten = pos.contracts; // capture before close mutates
+        _resolveSmeContextForExit(pos.sessionId, pos.id).then((smeCtx) => {
+          if (!smeCtx) return;
+          return import("./server-mediated-executor.js").then(({ routeLiveFlatten }) =>
+            routeLiveFlatten({
+              ctx: smeCtx,
+              symbol: pos.symbol,
+              side: pos.side as "long" | "short",
+              quantity: _smeContractsAtFlatten,
+              flattenReason: "TIME_STOP_1555",
+            })
+          );
+        }).catch((err: unknown) =>
+          logger.error({ err, positionId: pos.id }, "SME: TIME_STOP_FLATTEN routing failed (paper sim unaffected)")
+        );
+      }
       return true;
     }
 

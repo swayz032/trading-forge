@@ -14,7 +14,7 @@ import { randomUUID } from "crypto";
 import { cronJobsConcurrent } from "./lib/metrics-registry.js";
 import { eq, and, gte, lte, desc, inArray, isNull, isNotNull, min, sql } from "drizzle-orm";
 import { db } from "./db/index.js";
-import { strategies, paperSessions, paperPositions, paperTrades, paperSignalLogs, backtests, systemJournal, skipDecisions, auditLog, dayArchetypes, tournamentResults, macroSnapshots, macroFeatures, macroRegimeStates, lifecycleTransitions, harshRegimePhase } from "./db/schema.js";
+import { strategies, paperSessions, paperPositions, paperTrades, paperSignalLogs, backtests, systemJournal, skipDecisions, auditLog, dayArchetypes, tournamentResults, macroSnapshots, macroFeatures, macroRegimeStates, lifecycleTransitions, harshRegimePhase, strategyExports, strategyExportArtifacts } from "./db/schema.js";
 import { broadcastSSE } from "./routes/sse.js";
 import { logger } from "./lib/logger.js";
 import { LifecycleService } from "./services/lifecycle-service.js";
@@ -28,7 +28,8 @@ import { runAgentHealthSweep } from "./services/agent-audit-service.js";
 import { runPortfolioCorrelationCheck } from "./services/portfolio-optimizer-service.js";
 import { runMetaParameterReview } from "./services/meta-optimizer-service.js";
 import { notifyWarning, notifyCritical } from "./services/notification-service.js";
-import { insertAuditRow } from "./lib/audit-log-helper.js";
+import { appendFamilyGradePostscript } from "./lib/notification-helpers.js";
+import { insertAuditRow, insertAuditRowSafe } from "./lib/audit-log-helper.js";
 import { runAntiSetupEffectivenessAnalysis } from "./services/anti-setup-effectiveness-service.js";
 import { invalidateAntiSetupCache } from "./services/anti-setup-gate-service.js";
 import { isActive as isPipelineActive, getMode as getPipelineMode } from "./services/pipeline-control-service.js";
@@ -69,6 +70,11 @@ import { runRegimeDriftDetector } from "./services/regime-drift-detector-service
 import { runAbComparisonWeeklyDigest } from "./services/ab-comparison-weekly-digest-service.js";
 // W0.1: Nightly off-tower database backup (hardware-failure safety net)
 import { runDbBackup } from "./services/db-backup-service.js";
+// Pass 1 Track D: Discord fanout audit — keeps _webhookHealth in sync every 30 min
+import { runDiscordFanoutAudit } from "./services/discord-fanout-audit-service.js";
+// A14 regime-bank population — fills synthetic_regime_bank so black-swan evaluator
+// returns real survival rates instead of null (CHALLENGER-ONLY / ADVISORY).
+import { runSyntheticRegimeBankPopulate } from "./services/synthetic-regime-bank-service.js";
 
 let initialized = false;
 
@@ -121,8 +127,27 @@ const jobHealthTracker = new Map<string, JobHealth>();
 const FAILURE_WARN_THRESHOLD = 3;
 const FAILURE_DISABLE_THRESHOLD = 5;
 
-/** Jobs that must never be auto-disabled (critical infrastructure) */
-const NEVER_DISABLE_JOBS = new Set(["metrics-heartbeat", "stale-session-check", "disabled-job-probe"]);
+/**
+ * Jobs that must never be auto-disabled (critical infrastructure).
+ *
+ * Wave hardening 2026-06-22, autonomous-readiness A-6:
+ * Credential-safety and dead-man jobs are now included so a transient vendor
+ * outage (e.g. Bitwarden 12h maintenance → 5 failures over 30h) cannot
+ * silently disable them and leave the vault session expired during vacation.
+ * The CRITICAL alert still fires at 5 failures — disabling is suppressed only.
+ */
+const NEVER_DISABLE_JOBS = new Set([
+  // Original dead-man / monitoring infrastructure
+  "metrics-heartbeat",
+  "stale-session-check",
+  "disabled-job-probe",
+  // Heartbeat safety jobs — must fire even if other subsystems are broken
+  "heartbeat-write",
+  "heartbeat-stale-check",
+  // Credential-safety jobs — transient vendor outage must not permanently disable these
+  "bw-session-refresh",
+  "prop-firm-cookie-refresh",
+]);
 
 function getJobHealth(name: string): JobHealth {
   let health = jobHealthTracker.get(name);
@@ -150,7 +175,11 @@ function recordJobFailure(name: string, error: unknown): void {
   if (health.consecutiveFailures === FAILURE_WARN_THRESHOLD) {
     notifyWarning(
       `Scheduler: ${name} failing repeatedly`,
-      `Job "${name}" has failed ${health.consecutiveFailures} times in a row. Last error: ${error instanceof Error ? error.message : String(error)}`,
+      appendFamilyGradePostscript(
+        `Job "${name}" has failed ${health.consecutiveFailures} times in a row. Last error: ${error instanceof Error ? error.message : String(error)}`,
+        `A background maintenance job (${name}) has failed ${health.consecutiveFailures} times in a row. The system is still running but this job may need attention.`,
+        "No action needed right now. Tony will be alerted if the problem continues. The bot continues trading normally.",
+      ),
       { job: name, consecutiveFailures: health.consecutiveFailures },
     );
   }
@@ -162,7 +191,11 @@ function recordJobFailure(name: string, error: unknown): void {
 
     notifyCritical(
       `Scheduler: ${name} AUTO-DISABLED`,
-      `Job "${name}" disabled after ${health.consecutiveFailures} consecutive failures.\nLast error: ${error instanceof Error ? error.message : String(error)}\nUse POST /api/admin/scheduler/jobs/${name}/enable to re-enable.`,
+      appendFamilyGradePostscript(
+        `Job "${name}" disabled after ${health.consecutiveFailures} consecutive failures.\nLast error: ${error instanceof Error ? error.message : String(error)}\nTo re-enable: see docs/admin-runbook.md#scheduler-re-enable`,
+        `A background maintenance job (${name}) has been automatically disabled after failing too many times. The bot continues trading, but this maintenance function is paused.`,
+        "No immediate action needed. Tell Tony: 'A scheduler job was auto-disabled.' He will re-enable it when ready.",
+      ),
       { job: name, consecutiveFailures: health.consecutiveFailures },
     );
 
@@ -375,6 +408,7 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   // infrastructure safety signal — the pipeline pause does not protect against it.
   "n8n-drift-detector-weekly",           // A-2: n8n drift detection — safety signal
   "n8n-drift-detector-monthly",          // A-2: n8n drift detection — defense-in-depth
+  "economic-calendar-sync",              // authoritative macro release-date refresh (FRED/Fed/EIA)
   // W25.5d: pre-market briefing must fire even when pipeline is paused.
   // Operator wants the bias on phone before market open regardless of pipeline state.
   // Closes "trading without written bias" failure mode (Steenbarger/Topstep 2025 podcast).
@@ -417,6 +451,27 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   // and live/backtest drift that may have triggered the pause in the first place.
   "daily-reconciliation",               // Phase 4C: 4:15 PM ET weekdays reconciliation
   "weekly-drift-detection",             // Phase 4C: Sunday 6:00 PM ET drift detection
+  // Pass 1 Track D: Discord fanout audit is observability — must probe webhooks even
+  // when the trading pipeline is paused. The health state it writes is read by
+  // production-status.ts; silencing it during a pause would cause false "not_configured"
+  // reports to the operator.
+  "discord-fanout-audit-30min",         // Pass 1 Track D: Discord webhook health probe
+  // A14 regime-bank population is research / data-generation work — it runs even when
+  // the pipeline is paused because a paused pipeline still needs the bank populated
+  // so that the A14 black-swan evaluator can produce non-null survival rates the
+  // moment the pipeline resumes. Regime generation has no financial impact.
+  "synthetic-regime-bank-populate",     // A14: advisory challenger-only regime generation
+  // Pass 7 Track C.1: DEPLOYED strategy Pine artifact daily reconciliation.
+  // Must fire even when pipeline is paused — a DEPLOYED strategy lacking a Pine
+  // artifact is a silent ops gap that affects live TradingView alerting regardless
+  // of whether the research pipeline is actively promoting new strategies.
+  "deployed-pine-artifact-check",       // P7C1: DEPLOYED strategy Pine artifact reconciliation
+  // F-4: Position-drift reconciliation is a capital-safety signal — it must fire
+  // even when the pipeline is paused. A drift detected while the pipeline is paused
+  // may be the very reason the operator paused; silencing drift detection during the
+  // pause would hide the event that needs operator attention most urgently.
+  // Flag-gated: returns no-op when SERVER_MEDIATED_EXECUTION_ENABLED=false (the default).
+  "position-drift-reconcile",           // F-4: server position vs broker drift detection
 ]);
 
 function _validateAllJobsScheduled(): void {
@@ -457,6 +512,23 @@ export const _testOnly = {
       delete SCHEDULER_JOBS[key];
     }
   },
+  /**
+   * Wave hardening 2026-06-22, autonomous-readiness A-6:
+   * Expose recordJobFailure for unit tests that verify NEVER_DISABLE_JOBS behaviour.
+   */
+  recordJobFailure(name: string, error: unknown): void {
+    recordJobFailure(name, error);
+  },
+  /** Reset the jobHealthTracker for test isolation. */
+  resetJobHealth(): void {
+    jobHealthTracker.clear();
+  },
+  /**
+   * B5 — scheduler-b5: Expose resumeActivePaperSessions for unit tests.
+   * Tests can call this directly to verify PAPER+ skip behaviour without
+   * requiring a server boot or cron tick.
+   */
+  resumeActivePaperSessions,
 };
 
 export async function reconcileMissedRuns() {
@@ -591,6 +663,14 @@ export function initScheduler() {
 
   // Register all jobs for missed-run detection
   registerJob("rolling-sharpe", 4 * 60 * 60 * 1000, updateRollingSharpe);
+  // Economic calendar sync (2026-06-22): pull authoritative macro release dates from
+  // FRED + Fed + EIA into economic_release_dates monthly + at boot. Pipeline-gate-exempt
+  // (a data refresh, must run even when the pipeline is paused). Self-correcting — replaces
+  // the hardcoded/projected blackout dates.
+  registerJob("economic-calendar-sync", 30 * 24 * 60 * 60 * 1000, async () => {
+    const { runEconomicCalendarSync } = await import("./services/economic-calendar-sync-service.js");
+    await runEconomicCalendarSync();
+  });
   registerJob("pre-market-prep", 24 * 60 * 60 * 1000, preMarketPrep);
   registerJob("paper-vs-backtest", 60 * 60 * 1000, comparePaperToBacktest);
   registerJob("decay-monitor", 24 * 60 * 60 * 1000, runDailyDecayMonitor);
@@ -677,7 +757,11 @@ export function initScheduler() {
     if (demoted.length > 0) {
       notifyWarning(
         `System health degraded: ${demoted.length} strategy demotion(s)`,
-        `${demoted.length} strategy/strategies were automatically demoted during the lifecycle check. Review the dashboard for details on which strategies are now in DECLINING state.`,
+        appendFamilyGradePostscript(
+          `${demoted.length} strategy/strategies were automatically demoted during the lifecycle check. Review the dashboard for details on which strategies are now in DECLINING state.`,
+          `${demoted.length} trading strategy${demoted.length > 1 ? "s were" : " was"} automatically moved to a lower stage because ${demoted.length > 1 ? "they are" : "it is"} not performing well enough. No live trading is affected — this is a research/test phase update.`,
+          "No action needed. This is normal. Tony is aware and will review the strategies on the dashboard.",
+        ),
         { demotedCount: demoted.length, promotedCount: promoted.length, demotedIds: demoted },
       );
     }
@@ -930,6 +1014,39 @@ export function initScheduler() {
     }
   });
   _scheduledJobs.add("n8n-execution-scrape");
+
+  // ─── F-4: Position-drift reconciliation every 5 min ──────────
+  // Closes audit finding F-4: checkPositionDrift() had no caller — dormant.
+  // This cron is the periodic driver that wires drift detection into production.
+  //
+  // FLAG-GATED: runPositionDriftReconciliation() returns {checked:0,skipped:"flag_disabled"}
+  // when SERVER_MEDIATED_EXECUTION_ENABLED=false (the default today — no live strategies).
+  // The cron fires regardless so wiring is verified before go-live; the inner function
+  // is the no-op guard, not the cron.
+  //
+  // PIPELINE-GATE-EXEMPT: position drift is a capital-safety signal that must fire
+  // even when the trading pipeline is paused (see _PIPELINE_GATE_EXEMPT comment above).
+  //
+  // GO-LIVE PLUG: getBrokerPositionSnapshot() currently returns null (inert until a
+  // real broker-position source — TopstepX REST / MFFU Playwright — is connected).
+  // See its JSDoc for the integration contract.
+  registerJob("position-drift-reconcile", 5 * 60 * 1000, async () => {
+    const { runPositionDriftReconciliation } = await import("./services/fill-reconciliation-service.js");
+    const correlationId = randomUUID();
+    await runPositionDriftReconciliation(correlationId);
+  });
+  cron.schedule("*/5 * * * *", async () => {
+    if (!_tryAcquireJobLock("position-drift-reconcile")) return;
+    try {
+      const t0 = Date.now();
+      await withRetry("position-drift-reconcile", SCHEDULER_JOBS["position-drift-reconcile"].run, 1);
+      markJobRun("position-drift-reconcile");
+      emitJobComplete("position-drift-reconcile", Date.now() - t0);
+    } finally {
+      _releaseJobLock("position-drift-reconcile");
+    }
+  });
+  _scheduledJobs.add("position-drift-reconcile");
 
   // ─── Phase 1.4: Metrics heartbeat every 60s ───────────────
   // Broadcasts rolling session metrics snapshot over SSE so the live
@@ -1690,7 +1807,7 @@ export function initScheduler() {
   // ─── Tier 3.3: A+ Market Auditor — daily at 8:00 AM ET (DST-aware) ─────────
   // Scores MES, MNQ, MCL via quantum MC + entropy filter + cross-market VQC.
   // Picks today's highest-edge market; emits OBSERVATION_MODE if none qualifies.
-  // Gated by QUANTUM_AMARKET_AUDITOR_ENABLED (default false) — shadow mode.
+  // Gated by QUANTUM_AMARKET_AUDITOR_ENABLED (now true — advisory-only, cannot block signals).
   // isActive() guard: early-exit when pipeline is not ACTIVE.
   // Compliance: lead_market field is signal-only; Tier 5.3.1 (W5b) enforces
   // correlated-position guard.
@@ -1703,15 +1820,21 @@ export function initScheduler() {
       return;
     }
     const { runAuditScan } = await import("./services/a-plus-auditor-service.js");
+    // F-4 fix: ATR is enriched inside runAuditScan via enrichWithRealAtr() which
+    // queries pre_market_sessions for real overnight_range_points per symbol.
+    // The values below are per-symbol fallback defaults used ONLY when no
+    // pre_market_sessions row exists. They differ per-symbol so the atr_ratio
+    // is not identical across markets even in the pure-fallback path.
+    // F-5 fix: p_target_hit is enriched inside runAuditScan via enrichWithPTargetHit()
+    // which derives a data-driven classical estimate per market from pre_market_sessions
+    // (atr_percentile + cross_asset_aligned + overnight_range_points).
+    // TODO(go-live enrichment): wire Databento pre-market ATR for 8-year rolling avg.
     const result = await runAuditScan(
       {
-        // Production: these values should come from pre-market data snapshot
-        // (Databento ATR, VIX feed, etc.). For now, defaults are injected.
-        // TODO(W4+): wire Databento pre-market ATR fetch here.
         marketInputs: {
-          MES: { atr_5m: 2.5, atr_8yr_avg: 2.5, vix: 18.0, gap_atr: 0.2, spread: 0.05 },
-          MNQ: { atr_5m: 4.0, atr_8yr_avg: 4.0, vix: 18.0, gap_atr: 0.3, spread: 0.04 },
-          MCL: { atr_5m: 0.3, atr_8yr_avg: 0.3, vix: 18.0, gap_atr: 0.1, spread: 0.10 },
+          MES: { atr_5m: 2.8, atr_8yr_avg: 2.8, vix: 18.0, gap_atr: 0.2, spread: 0.05 },
+          MNQ: { atr_5m: 4.5, atr_8yr_avg: 4.5, vix: 18.0, gap_atr: 0.3, spread: 0.04 },
+          MCL: { atr_5m: 0.35, atr_8yr_avg: 0.35, vix: 18.0, gap_atr: 0.1, spread: 0.10 },
         },
       },
       correlationId,
@@ -2207,7 +2330,11 @@ export function initScheduler() {
     if (drift.driftItems && drift.driftItems.length > 0) {
       notifyWarning(
         "System Map Drift Detected",
-        `Drift items:\n${drift.driftItems.join("\n")}`,
+        appendFamilyGradePostscript(
+          `Drift items:\n${drift.driftItems.join("\n")}`,
+          "The system's internal catalog of components is out of date. This is a developer maintenance issue and does not affect trading.",
+          "No action needed. Tell Tony if this keeps appearing. The bot continues trading normally.",
+        ),
       );
       logger.warn({ driftItems: drift.driftItems }, "System map drift detected");
     } else {
@@ -3326,7 +3453,11 @@ except Exception as e:
       // Critical Discord alert — this is an irreversible gate hardening event
       notifyCritical(
         "Harsh-Regime Gate: ACTIVATED (HARD phase)",
-        `The harsh-regime survival gate has been automatically hardened to HARD phase after ${ageDays} days of PAPER activation.\n\nFrom now on, strategies that fail regime survival checks at TESTING→PAPER gate will be BLOCKED (not just warned).\n\nFirst PAPER activation: ${earliestPaperActivation.toISOString()}\nStrategy: ${firstStrategyId}\n\nTo roll back (operator only): POST /api/admin/harsh-regime-phase { "phase": "advisory", "reason": "<explanation>" }`,
+        appendFamilyGradePostscript(
+          `The harsh-regime survival gate has been automatically hardened to HARD phase after ${ageDays} days of PAPER activation.\n\nFrom now on, strategies that fail regime survival checks at TESTING→PAPER gate will be BLOCKED (not just warned).\n\nFirst PAPER activation: ${earliestPaperActivation.toISOString()}\nStrategy: ${firstStrategyId}\n\nTo roll back (operator only): POST /api/admin/harsh-regime-phase { "phase": "advisory", "reason": "<explanation>" }`,
+          `The system has tightened its strategy approval requirements after ${ageDays} days of operation. Strategies now have to pass stricter market-regime tests before they can trade. This is expected and good — it means the system is maturing.`,
+          "No action needed. This is an automatic milestone. Tony is aware.",
+        ),
         { ageDays, firstStrategyId, activatedAt: new Date().toISOString(), correlationId },
       );
 
@@ -3391,7 +3522,11 @@ except Exception as e:
       logger.error({ err, jobName: "bw-session-refresh", cronCorrelationId }, "bw-session-refresh: unexpected throw from runBwSessionRefreshCheck");
       notifyCritical(
         "BW session refresh cron: unexpected error",
-        `runBwSessionRefreshCheck threw unexpectedly. Error: ${error}. BW vault access may degrade.`,
+        appendFamilyGradePostscript(
+          `runBwSessionRefreshCheck threw unexpectedly. Error: ${error}. BW vault access may degrade.`,
+          "The bot failed to refresh its credential vault. If this keeps happening, the bot may lose access to its secure passwords.",
+          "Tell Tony: 'The credential refresh job failed.' He will investigate when available.",
+        ),
         { error },
       );
     }
@@ -3442,7 +3577,11 @@ except Exception as e:
       logger.error({ err, jobName: "prop-firm-cookie-refresh", cronCorrelationId }, "prop-firm-cookie-refresh: unexpected throw");
       notifyCritical(
         "Prop-firm cookie refresh cron: unexpected error",
-        `runPropFirmCookieRefresh threw unexpectedly. Error: ${error}. Firm C2 evidence may be stale.`,
+        appendFamilyGradePostscript(
+          `runPropFirmCookieRefresh threw unexpectedly. Error: ${error}. Firm C2 evidence may be stale.`,
+          "The bot failed to refresh its prop firm login session. If this keeps happening, compliance monitoring for the trading account may become stale.",
+          "Tell Tony: 'The prop firm session refresh failed.' He will look into it when available.",
+        ),
         { error },
       );
     }
@@ -4038,7 +4177,9 @@ except Exception as e:
   });
 
   // 17:00 ET = 21:00 UTC (EDT, UTC-4) or 22:00 UTC (EST, UTC-5)
-  cron.schedule("0 21,22 * * *", async () => {
+  // Pass 7 Track B cron jitter: offset to :07 to avoid pile-up with
+  // composite-health-daily-digest (:13) and regime-drift-detector (:23).
+  cron.schedule("7 21,22 * * *", async () => {
     if (!_tryAcquireJobLock("consistency-tracker-daily-digest")) return;
     try {
       const now = new Date();
@@ -4440,7 +4581,9 @@ except Exception as e:
   });
 
   // 17:00 ET = 21:00 UTC (EDT, UTC-4) or 22:00 UTC (EST, UTC-5)
-  cron.schedule("0 21,22 * * *", async () => {
+  // Pass 7 Track B cron jitter: offset to :13 to avoid pile-up with
+  // consistency-tracker-daily-digest (:07) and regime-drift-detector (:23).
+  cron.schedule("13 21,22 * * *", async () => {
     if (!_tryAcquireJobLock("composite-health-daily-digest")) return;
     try {
       const now = new Date();
@@ -4518,17 +4661,22 @@ except Exception as e:
   // Sweeps all active paper sessions every minute, records equity samples,
   // and evaluates rolling 2-hour drawdown velocity.
   //
-  // Pipeline-gate: NOT EXEMPT (same gate as paper execution). If pipeline is
-  // AUTOPAUSE_DD_VELOCITY or PAUSED, the gate blocks correctly — the job exits
-  // without firing new autopause events (idempotent when already paused).
+  // F-2 (2026-06-24): PIPELINE-GATE EXEMPT. After AUTOPAUSE_DD_VELOCITY fires the
+  // cron must KEEP running so it can:
+  //   (a) continue collecting equity samples (data needed for F-3 recovery check)
+  //   (b) drive the vacation auto-recovery check (checkVacationAutoRecovery)
+  // The existing alreadyPaused idempotency guard in _handleAutopause prevents
+  // duplicate autopause fires, so exempting this job is safe.
   //
-  // Schedule: "* * * * *" = every minute.
-  // This is the batch-level sweep; fine-grained check also happens per-tick
-  // from paper-execution-service.ts (fire-and-forget, non-blocking).
+  // Schedule: "* * * * *" = every minute (1-minute cron, NOT per-tick).
+  // The gate is a cron-only monitor; paper-execution-service.ts does NOT call it.
+
+  _PIPELINE_GATE_EXEMPT.add("dd-velocity-cron");
+
   registerJob("dd-velocity-cron", 60_000, async () => {
     const correlationId = randomUUID();
     logger.debug({ correlationId, jobName: "dd-velocity-cron" }, "cron tick start");
-    const { batchCheckActiveSessions } = await import("./services/dd-velocity-gate.js");
+    const { batchCheckActiveSessions, checkVacationAutoRecovery } = await import("./services/dd-velocity-gate.js");
     const results = await batchCheckActiveSessions();
     const autopaused = results.filter((r) => r.level === "autopause");
     const warned = results.filter((r) => r.level === "warning");
@@ -4538,12 +4686,15 @@ except Exception as e:
         "dd-velocity-cron: velocity events fired",
       );
     }
+    // F-3: Check whether vacation auto-recovery should clear AUTOPAUSE_DD_VELOCITY.
+    // Fail-soft — any error inside is caught by checkVacationAutoRecovery itself.
+    await checkVacationAutoRecovery();
   });
 
   cron.schedule("* * * * *", async () => {
     if (!_tryAcquireJobLock("dd-velocity-cron")) return;
     try {
-      if (!(await pipelineGate("dd-velocity-cron"))) return;
+      // NOT pipeline-gated — safety/monitoring signal (in _PIPELINE_GATE_EXEMPT)
       const t0dv = Date.now();
       await withRetry("dd-velocity-cron", SCHEDULER_JOBS["dd-velocity-cron"].run, 1);
       markJobRun("dd-velocity-cron");
@@ -4641,7 +4792,9 @@ except Exception as e:
   });
 
   // 18:00 ET = 22:00 UTC (EST, UTC-5) or 21:00 UTC (EDT, UTC-4)
-  cron.schedule("0 21,22 * * *", async () => {
+  // Pass 7 Track B cron jitter: offset to :23 to avoid pile-up with
+  // consistency-tracker-daily-digest (:07) and composite-health-daily-digest (:13).
+  cron.schedule("23 21,22 * * *", async () => {
     if (!_tryAcquireJobLock("regime-drift-detector")) return;
     try {
       const now = new Date();
@@ -4837,10 +4990,15 @@ except Exception as e:
         emitJobComplete("daily-reconciliation", Date.now() - t0);
       } catch (err) {
         logger.error({ err, job: "daily-reconciliation" }, "daily-reconciliation cron failed");
-        notifyCritical("reconciliation-cron-failed", JSON.stringify({
-          error: err instanceof Error ? err.message : String(err),
-          job: "daily-reconciliation",
-        }));
+        notifyCritical(
+          "reconciliation-cron-failed",
+          appendFamilyGradePostscript(
+            `The daily reconciliation job failed. Error: ${err instanceof Error ? err.message : String(err)}. Job: daily-reconciliation.`,
+            "The end-of-day trade reconciliation job failed to run. This means today's trade records may not have been fully verified yet.",
+            "No immediate action needed. Tony will investigate. The bot continues trading normally.",
+          ),
+          { error: err instanceof Error ? err.message : String(err), job: "daily-reconciliation" },
+        );
       }
     } finally {
       _releaseJobLock("daily-reconciliation");
@@ -4878,16 +5036,84 @@ except Exception as e:
         emitJobComplete("weekly-drift-detection", Date.now() - t0);
       } catch (err) {
         logger.error({ err, job: "weekly-drift-detection" }, "weekly-drift-detection cron failed");
-        notifyCritical("drift-cron-failed", JSON.stringify({
-          error: err instanceof Error ? err.message : String(err),
-          job: "weekly-drift-detection",
-        }));
+        notifyCritical(
+          "drift-cron-failed",
+          appendFamilyGradePostscript(
+            `The weekly drift detection job failed. Error: ${err instanceof Error ? err.message : String(err)}. Job: weekly-drift-detection.`,
+            "The weekly strategy performance drift check failed to run. This is a monitoring job — the bot continues trading normally.",
+            "No immediate action needed. Tell Tony if this happens multiple weeks in a row.",
+          ),
+          { error: err instanceof Error ? err.message : String(err), job: "weekly-drift-detection" },
+        );
       }
     } finally {
       _releaseJobLock("weekly-drift-detection");
     }
   });
   _scheduledJobs.add("weekly-drift-detection");
+
+  // ─── Pass 6 Track A: paper_journal_recon — daily 17:30 ET (22:30 UTC) ────────
+  //
+  // 6th reconciliation source: joins paper_trades vs TradersPost broker tape
+  // (production_trades proxy) and tradingview_markers per strategy per day.
+  // Asserts trade-count parity and per-trade P&L within 2-tick tolerance for all
+  // DEPLOYED+ strategies. Closes Wiring #3 (audit finding: CLAUDE.md §8 "match
+  // within 1-2 ticks" — previously no paper_trades references in reconciliation).
+  //
+  // On drift: audit paper_reconciliation.mismatch_detected (critical) + Discord
+  //   CRITICAL with appendFamilyGradePostscript.
+  // On missing broker row: audit paper_reconciliation.missing_broker_data (warn).
+  // On clean: audit paper_reconciliation.evaluated (success).
+  //
+  // Runs AFTER the 4:15 PM ET daily-reconciliation cron (22:30 UTC offset avoids
+  // collision with the 20:15/21:15 UTC daily-reconciliation fire).
+  //
+  // DST-safe double-fire: 17:30 ET
+  //   EDT (UTC-4): 21:30 UTC → cron fires at "30 21,22 * * *", ET guard = 17
+  //   EST (UTC-5): 22:30 UTC → cron fires at "30 21,22 * * *", ET guard = 17
+  //
+  // Pipeline-gate EXEMPT: paper journal reconciliation is a safety signal —
+  // must fire even when the research pipeline is paused.
+  _PIPELINE_GATE_EXEMPT.add("paper-journal-recon-daily");
+  registerJob("paper-journal-recon-daily", 24 * 60 * 60 * 1000, async () => {
+    const { runPaperJournalRecon } = await import("./production/paper-journal-recon.js");
+    await runPaperJournalRecon();
+  });
+  cron.schedule("30 21,22 * * *", async () => {
+    if (!_tryAcquireJobLock("paper-journal-recon-daily")) return;
+    try {
+      const now = new Date();
+      const etHour = parseInt(
+        now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+        10,
+      );
+      if (etHour !== 17) {
+        logger.debug({ etHour }, "Scheduler: paper-journal-recon-daily cron fired but not 17:30 ET — skipping (DST guard)");
+        return;
+      }
+      // NOT pipeline-gated — safety signal (in _PIPELINE_GATE_EXEMPT)
+      logger.info({ job: "paper-journal-recon-daily" }, "Scheduler: paper-journal-recon-daily (17:30 ET confirmed)");
+      const t0pjr = Date.now();
+      await withRetry("paper-journal-recon-daily", SCHEDULER_JOBS["paper-journal-recon-daily"].run, 1);
+      markJobRun("paper-journal-recon-daily");
+      emitJobComplete("paper-journal-recon-daily", Date.now() - t0pjr);
+    } catch (err) {
+      logger.error({ err, job: "paper-journal-recon-daily" }, "paper-journal-recon-daily cron failed");
+      const { notifyCritical: nc } = await import("./services/notification-service.js");
+      nc(
+        "paper-journal-recon-cron-failed",
+        appendFamilyGradePostscript(
+          `The paper journal reconciliation job failed. Error: ${err instanceof Error ? err.message : String(err)}. Job: paper-journal-recon-daily.`,
+          "The daily paper trade audit job failed to complete. The bot continues trading, but today's paper trade records have not been fully cross-checked.",
+          "No immediate action needed. Tony will be alerted and will check when available.",
+        ),
+        { error: err instanceof Error ? err.message : String(err), job: "paper-journal-recon-daily" },
+      );
+    } finally {
+      _releaseJobLock("paper-journal-recon-daily");
+    }
+  });
+  _scheduledJobs.add("paper-journal-recon-daily");
 
   // ─── W1 go-live blocker #5a: Per-strategy feed silence alarm — every 5 min ──
   // Detects when a live/paper strategy (PAPER/DEPLOY_READY/PILOT/DEPLOYED) stops
@@ -4975,6 +5201,307 @@ except Exception as e:
     }
   });
   _scheduledJobs.add("ollama-keepwarm-watchdog");
+
+  // ─── Pass 1 Track D: Discord fanout audit every 30 min ─────────────────────
+  // Keeps _webhookHealth in production-status.ts accurate. Without this cron,
+  // the boot probe is the only read — health state goes stale after the first
+  // 30-minute window. Exempt from pipeline gate (observability, not trading).
+  registerJob("discord-fanout-audit-30min", 30 * 60 * 1000, async () => {
+    await runDiscordFanoutAudit();
+  });
+  cron.schedule("*/30 * * * *", async () => {
+    if (!_tryAcquireJobLock("discord-fanout-audit-30min")) return;
+    try {
+      const t0 = Date.now();
+      await withRetry("discord-fanout-audit-30min", SCHEDULER_JOBS["discord-fanout-audit-30min"].run, 1);
+      markJobRun("discord-fanout-audit-30min");
+      emitJobComplete("discord-fanout-audit-30min", Date.now() - t0);
+    } finally {
+      _releaseJobLock("discord-fanout-audit-30min");
+    }
+  });
+  _scheduledJobs.add("discord-fanout-audit-30min");
+
+  // ─── A14: Synthetic Regime Bank — population cron (Sunday off-RTH) ────────────
+  //
+  // Fills synthetic_regime_bank with stochastic regime scenarios produced by the
+  // Python generator (src/engine/synthetic/populate_regime_bank). Once the bank
+  // has rows, black_swan_evaluator.py returns real survival rates instead of null.
+  //
+  // ADVISORY / CHALLENGER-ONLY — never gates capital. Additive cron only.
+  //
+  // Schedule: Sunday 03:00 ET (well off-RTH, low-competition with other jobs).
+  //   EDT (UTC-4): Sun 07:00 UTC
+  //   EST (UTC-5): Sun 08:00 UTC
+  // DST-safe double-fire: cron fires at 7,8 UTC Sundays; ET-hour guard confirms
+  // hour=3 (03:00 ET). Pattern mirrors db-backup-service DST handling.
+  //
+  // PIPELINE_GATE_EXEMPT: regime generation is research / data work — must run
+  // even when the trading pipeline is paused so the bank stays populated.
+  registerJob("synthetic-regime-bank-populate", 7 * 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "synthetic-regime-bank-populate" }, "cron tick start");
+    await runSyntheticRegimeBankPopulate(correlationId);
+  });
+
+  // Fire Sunday at 07:00 UTC (03:00 ET EDT) and 08:00 UTC (03:00 ET EST).
+  // ET-hour guard inside the handler confirms Sunday 03:00 ET only.
+  cron.schedule("0 7,8 * * 0", async () => {
+    if (!_tryAcquireJobLock("synthetic-regime-bank-populate")) return;
+    try {
+      const now = new Date();
+      const etStr = now.toLocaleString("en-US", {
+        timeZone: "America/New_York",
+        weekday: "short",
+        hour: "numeric",
+        hour12: false,
+      });
+      // Must be Sunday at 03:00 ET
+      if (!etStr.includes("Sun") || !etStr.includes("3")) {
+        logger.debug(
+          { etStr, utcHour: now.getUTCHours(), utcDay: now.getUTCDay() },
+          "Scheduler: synthetic-regime-bank-populate cron fired but not Sunday 03:00 ET — skipping",
+        );
+        return;
+      }
+      // NOT pipeline-gated — in _PIPELINE_GATE_EXEMPT (research / data generation)
+      logger.info(
+        { job: "synthetic-regime-bank-populate" },
+        "running pipeline-gate-exempt synthetic regime bank populate (Sunday 03:00 ET confirmed)",
+      );
+      const t0srb = Date.now();
+      await withRetry("synthetic-regime-bank-populate", SCHEDULER_JOBS["synthetic-regime-bank-populate"].run, 1);
+      markJobRun("synthetic-regime-bank-populate");
+      emitJobComplete("synthetic-regime-bank-populate", Date.now() - t0srb);
+    } finally {
+      _releaseJobLock("synthetic-regime-bank-populate");
+    }
+  });
+  _scheduledJobs.add("synthetic-regime-bank-populate");
+
+  // ─── Pass 7 Track C.1: DEPLOYED Pine artifact daily reconciliation ───────
+  // Queries all DEPLOYED strategies and checks whether each has a Pine export
+  // artifact (strategy_export_artifacts) created in the last 24 hours. Writes
+  // a deployed_pine_artifact_check.evaluated audit row listing missing ones.
+  // Fires at 9:00 UTC (EDT 5 AM ET) and 10:00 UTC (EST 5 AM ET) — DST-safe
+  // double-fire; ET-hour guard confirms 5 AM ET before running.
+  // _PIPELINE_GATE_EXEMPT: DEPLOYED strategy artifact health is an ops safety
+  // signal that must fire regardless of research pipeline pause state.
+  registerJob("deployed-pine-artifact-check", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    const jobName = "deployed-pine-artifact-check";
+    logger.info({ correlationId, job: jobName }, "deployed-pine-artifact-check: querying DEPLOYED strategies");
+
+    // Find all DEPLOYED strategies
+    const deployedStrategies = await db
+      .select({ id: strategies.id, name: strategies.name })
+      .from(strategies)
+      .where(eq(strategies.lifecycleState, "DEPLOYED"));
+
+    const missing: Array<{ strategyId: string; strategyName: string }> = [];
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours ago
+
+    for (const strat of deployedStrategies) {
+      // Check for a recent completed export artifact
+      const [latestExport] = await db
+        .select({ id: strategyExports.id })
+        .from(strategyExports)
+        .where(
+          and(
+            eq(strategyExports.strategyId, strat.id),
+            eq(strategyExports.status, "completed"),
+          ),
+        )
+        .orderBy(desc(strategyExports.createdAt))
+        .limit(1);
+
+      if (!latestExport) {
+        missing.push({ strategyId: strat.id, strategyName: strat.name });
+        continue;
+      }
+
+      const [recentArtifact] = await db
+        .select({ id: strategyExportArtifacts.id })
+        .from(strategyExportArtifacts)
+        .where(
+          and(
+            eq(strategyExportArtifacts.exportId, latestExport.id),
+            gte(strategyExportArtifacts.createdAt, cutoff),
+          ),
+        )
+        .limit(1);
+
+      if (!recentArtifact) {
+        missing.push({ strategyId: strat.id, strategyName: strat.name });
+      }
+    }
+
+    await db.insert(auditLog).values({
+      action: "deployed_pine_artifact_check.evaluated",
+      entityType: "system",
+      status: missing.length === 0 ? "success" : "warning",
+      decisionAuthority: "system",
+      input: { deployed_count: deployedStrategies.length, cutoff_hours: 24 },
+      result: {
+        missing_count: missing.length,
+        missing_strategies: missing.map((m) => ({ id: m.strategyId, name: m.strategyName })),
+      },
+      correlationId,
+    }).catch((auditErr: unknown) => {
+      logger.warn({ err: auditErr }, "deployed-pine-artifact-check: audit insert failed (non-blocking)");
+    });
+
+    if (missing.length > 0) {
+      // ─── FIX 2 (DEBT-1) 2026-06-24: auto-recompile missing Pine artifacts ────
+      // When a DEPLOYED strategy is missing its artifact, autonomously attempt to
+      // recompile. Cap: 1 auto-export per strategy per 24h (audit_log count).
+      // On success: audit `pine.artifact_auto_recompiled` + Discord INFO.
+      // On failure: audit `pine.artifact_auto_recompile_failed` + Discord CRITICAL + family postscript.
+      const PINE_RECOMPILE_CAP_PER_24H = 1;
+      const twentyFourHoursAgo2 = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+      const { compilePineExport } = await import("./services/pine-export-service.js");
+
+      for (const strat of missing) {
+        try {
+          // Check 24h cap: count auto-recompile attempts for this strategy today
+          const recentRecompiles = await db
+            .select({ id: auditLog.id })
+            .from(auditLog)
+            .where(
+              and(
+                inArray(auditLog.action, ["pine.artifact_auto_recompiled", "pine.artifact_auto_recompile_failed"]),
+                eq(auditLog.entityId, strat.strategyId),
+                gte(auditLog.createdAt, twentyFourHoursAgo2),
+              ),
+            );
+
+          if (recentRecompiles.length >= PINE_RECOMPILE_CAP_PER_24H) {
+            logger.debug(
+              { strategyId: strat.strategyId, recentCount: recentRecompiles.length, cap: PINE_RECOMPILE_CAP_PER_24H },
+              "FIX-2: deployed-pine-artifact-check: auto-recompile cap reached for this strategy today, skipping",
+            );
+            continue;
+          }
+
+          logger.info(
+            { strategyId: strat.strategyId, strategyName: strat.strategyName, correlationId },
+            "FIX-2: auto-recompiling Pine artifact for DEPLOYED strategy",
+          );
+
+          await compilePineExport(strat.strategyId, undefined, "pine_indicator", null, correlationId);
+
+          await db.insert(auditLog).values({
+            action: "pine.artifact_auto_recompiled",
+            entityType: "strategy",
+            entityId: strat.strategyId,
+            status: "success",
+            decisionAuthority: "scheduler",
+            input: { strategyName: strat.strategyName },
+            result: { note: "Auto-recompiled by deployed-pine-artifact-check cron" },
+            correlationId,
+          }).catch((auditErr: unknown) => {
+            logger.warn({ err: auditErr, strategyId: strat.strategyId }, "FIX-2: pine.artifact_auto_recompiled audit write failed");
+          });
+
+          notifyWarning(
+            `Pine Artifact Auto-Recompiled: ${strat.strategyName}`,
+            appendFamilyGradePostscript(
+              `DEPLOYED strategy \`${strat.strategyName}\` was missing its Pine artifact. ` +
+              `Auto-recompile succeeded. TradingView alerting has been restored. (correlationId: ${correlationId})`,
+              `A live strategy's TradingView chart file was missing and was automatically rebuilt.`,
+              `No action needed — TradingView signals are working again. Ask Tony if you want more details.`,
+            ),
+          );
+
+          logger.info(
+            { strategyId: strat.strategyId, strategyName: strat.strategyName },
+            "FIX-2: Pine artifact auto-recompile succeeded",
+          );
+        } catch (recompileErr) {
+          logger.error(
+            { strategyId: strat.strategyId, strategyName: strat.strategyName, err: recompileErr },
+            "FIX-2: Pine artifact auto-recompile FAILED",
+          );
+
+          await db.insert(auditLog).values({
+            action: "pine.artifact_auto_recompile_failed",
+            entityType: "strategy",
+            entityId: strat.strategyId,
+            status: "failure",
+            decisionAuthority: "scheduler",
+            input: { strategyName: strat.strategyName },
+            result: {
+              error: recompileErr instanceof Error ? recompileErr.message : String(recompileErr),
+              note: "Auto-recompile failed — TradingView alerting degraded",
+            },
+            correlationId,
+          }).catch((auditErr: unknown) => {
+            logger.warn({ err: auditErr, strategyId: strat.strategyId }, "FIX-2: pine.artifact_auto_recompile_failed audit write failed");
+          });
+
+          notifyCritical(
+            `Pine Artifact Auto-Recompile FAILED: ${strat.strategyName}`,
+            appendFamilyGradePostscript(
+              `Auto-recompile of Pine artifact for DEPLOYED strategy \`${strat.strategyName}\` FAILED. ` +
+              `TradingView alerting is degraded — no new signals will be sent until the Pine file is rebuilt. ` +
+              `Error: ${recompileErr instanceof Error ? recompileErr.message : String(recompileErr)}`,
+              `A live strategy's TradingView chart file failed to rebuild automatically.`,
+              `Tell Tony: '${strat.strategyName} Pine artifact failed to recompile.' ` +
+              `The bot is still running safely, but TradingView will not get new signals until Tony fixes this.`,
+            ),
+            { strategyId: strat.strategyId, strategyName: strat.strategyName },
+          );
+        }
+      }
+      // ─── End FIX 2 ────────────────────────────────────────────
+
+      // Original warn for operator log/dashboard visibility (kept after auto-recompile attempts)
+      const names = missing.map((m) => `\`${m.strategyName}\``).join(", ");
+      notifyWarning(
+        `Pine Artifacts Missing: ${missing.length} DEPLOYED strategy/strategies lack TradingView artifact`,
+        appendFamilyGradePostscript(
+          `${missing.length} DEPLOYED strategy/strategies missing Pine artifacts (>24h old): ` +
+          `${names}. Auto-recompile attempted (see audit log for results).`,
+          "One or more live strategies were missing their TradingView chart files — auto-rebuild was attempted.",
+          "Check the Trading Forge dashboard or ask Tony if TradingView signals are working.",
+        ),
+      );
+    }
+
+    logger.info(
+      { correlationId, deployed: deployedStrategies.length, missing: missing.length },
+      "deployed-pine-artifact-check: complete",
+    );
+  });
+
+  // Fires at 09:00 UTC and 10:00 UTC — DST-safe double-fire for 5 AM ET.
+  // ET-hour guard inside the handler confirms 5 AM ET before running.
+  cron.schedule("0 9,10 * * *", async () => {
+    if (!_tryAcquireJobLock("deployed-pine-artifact-check")) return;
+    try {
+      const now = new Date();
+      const etHour = parseInt(
+        now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+        10,
+      );
+      if (etHour !== 5) {
+        logger.debug(
+          { etHour, utcHour: now.getUTCHours() },
+          "Scheduler: deployed-pine-artifact-check cron fired but not 5 AM ET — skipping",
+        );
+        return;
+      }
+      logger.info({ job: "deployed-pine-artifact-check" }, "running deployed-pine-artifact-check (5 AM ET confirmed)");
+      const t0dpac = Date.now();
+      await withRetry("deployed-pine-artifact-check", SCHEDULER_JOBS["deployed-pine-artifact-check"].run, 1);
+      markJobRun("deployed-pine-artifact-check");
+      emitJobComplete("deployed-pine-artifact-check", Date.now() - t0dpac);
+    } finally {
+      _releaseJobLock("deployed-pine-artifact-check");
+    }
+  });
+  _scheduledJobs.add("deployed-pine-artifact-check");
 
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every
@@ -5092,10 +5619,14 @@ async function _runN8nDriftAudit(jobName: string): Promise<void> {
       }).catch((err) => logger.error({ err }, "n8n-drift-audit: audit row write failed (timeout)"));
       notifyCritical(
         "n8n drift detector TIMED OUT",
-        `The n8n drift check (${jobName}) did not complete within 5 minutes. ` +
-          `This may indicate n8n API is unreachable or the audit script hung. ` +
-          `Run \`npm run audit:n8n\` from the Skytech tower to investigate. ` +
-          `Stderr tail: ${stderrSummary || "(empty)"}`,
+        appendFamilyGradePostscript(
+          `The n8n drift check (${jobName}) did not complete within 5 minutes. ` +
+            `This may indicate n8n API is unreachable or the audit script hung. ` +
+            `Run \`npm run audit:n8n\` from the Skytech tower to investigate. ` +
+            `Stderr tail: ${stderrSummary || "(empty)"}`,
+          "A background health check for the strategy automation system timed out and could not finish.",
+          "Tell Tony: 'The n8n drift check timed out.' He will investigate when available. No trading is affected.",
+        ),
         { jobName, correlationId, timeoutMs: TIMEOUT_MS },
       );
     } else {
@@ -5112,11 +5643,15 @@ async function _runN8nDriftAudit(jobName: string): Promise<void> {
       }).catch((err) => logger.error({ err }, "n8n-drift-audit: audit row write failed (drift)"));
       notifyCritical(
         "n8n workflow drift detected",
-        `n8n drift check (${jobName}) exited with code ${resolvedExitCode} — one or more workflows ` +
-          `are missing errorWorkflow, retry config, or idempotency headers. ` +
-          `Review and re-attach errorWorkflow (DGEk1D478xWJClKD) as needed. ` +
-          `Run \`npm run audit:n8n\` from the Skytech tower to see the full drift report. ` +
-          `Stdout: ${stdoutSummary || "(empty)"}`,
+        appendFamilyGradePostscript(
+          `n8n drift check (${jobName}) exited with code ${resolvedExitCode} — one or more workflows ` +
+            `are missing errorWorkflow, retry config, or idempotency headers. ` +
+            `Review and re-attach errorWorkflow (DGEk1D478xWJClKD) as needed. ` +
+            `Run \`npm run audit:n8n\` from the Skytech tower to see the full drift report. ` +
+            `Stdout: ${stdoutSummary || "(empty)"}`,
+          "The background automation system has workflows that are missing safety configurations. This does not affect live trading but could slow down strategy discovery.",
+          "Tell Tony: 'The n8n workflow check found a problem.' He will fix it when available. Check back tomorrow.",
+        ),
         { jobName, correlationId, exitCode: resolvedExitCode, stderrSummary },
       );
     }
@@ -5189,7 +5724,26 @@ async function checkTournamentStaleness(): Promise<void> {
  * I3: Resume active paper trading sessions after server restart.
  * Queries DB for active sessions, reconnects WebSocket streams,
  * and restores in-memory position state (trail HWM, bars held).
+ *
+ * PAPER-ENGINE AUTHORITY (B5 — scheduler-b5):
+ * For strategies in PAPER+ state (PAPER, DEPLOY_READY, PILOT, DEPLOYED), the
+ * canonical journal is TradersPost's broker tape — NOT the internal Massive-WS
+ * simulator. The internal simulator is pre-PAPER only (CANDIDATE/TESTING).
+ * On TESTING→PAPER, stopStream() is called in-process but never persists
+ * `paper_sessions.status='stopped'` to the DB, leaving stale 'active' rows.
+ * Without this guard, every server restart would resurrect a fresh internal-
+ * simulator stream for PAPER+ strategies while TradersPost is simultaneously
+ * firing real paper orders — causing dual-stream P&L drift.
+ *
+ * Fix: skip stream resume for any session whose associated strategy is in
+ * PAPER / DEPLOY_READY / PILOT / DEPLOYED lifecycle state. Emit an info audit
+ * row before skipping so the boot log surface shows exactly which stale rows
+ * exist and how many. Do NOT write paper_sessions.status — that is B6 deferred.
  */
+
+/** Lifecycle states for which the internal simulator must NEVER be resurrected. */
+const PAPER_PLUS_STATES = new Set(["PAPER", "DEPLOY_READY", "PILOT", "DEPLOYED"]);
+
 async function resumeActivePaperSessions(): Promise<void> {
   const activeSessions = await db
     .select()
@@ -5203,12 +5757,50 @@ async function resumeActivePaperSessions(): Promise<void> {
 
   logger.info({ count: activeSessions.length }, "Resuming active paper sessions after restart");
 
+  let resumeCount = 0;
+  let skipCount = 0;
+  const skippedSessionIds: string[] = [];
+
   for (const session of activeSessions) {
     try {
-      // Resolve symbol list from strategy config
+      // Resolve symbol list from strategy config.
+      // NOTE: strategy row also used below for lifecycle_state check (B5).
       const strat = session.strategyId
         ? await db.select().from(strategies).where(eq(strategies.id, session.strategyId)).limit(1)
         : [];
+
+      // ── B5: PAPER-ENGINE AUTHORITY GUARD ─────────────────────────────────
+      // If the strategy is in PAPER+ state, the internal simulator must not
+      // run. TradersPost owns the canonical journal from PAPER onward.
+      // NULL lifecycleState (orphaned / legacy session with no strategy FK)
+      // is treated as pre-PAPER (safe to resume) — fail-open on missing FK.
+      const lifecycleState = strat[0]?.lifecycleState ?? null;
+      if (lifecycleState !== null && PAPER_PLUS_STATES.has(lifecycleState)) {
+        skipCount++;
+        skippedSessionIds.push(session.id);
+        logger.info(
+          {
+            sessionId: session.id,
+            strategyId: session.strategyId,
+            lifecycleState,
+          },
+          "B5: skipping internal-stream resume for PAPER+ strategy — TradersPost owns canonical journal",
+        );
+        await insertAuditRowSafe({
+          action: "paper.session_resume_skipped_paper_plus",
+          entityType: "paper_session",
+          entityId: session.id as `${string}-${string}-${string}-${string}-${string}`,
+          status: "success",
+          decisionAuthority: "scheduler",
+          result: {
+            lifecycleState,
+            strategyId: session.strategyId,
+            reason: "internal-simulator must not run for PAPER+ strategies; TradersPost is canonical journal",
+          },
+        });
+        continue;
+      }
+      // ── END B5 GUARD ─────────────────────────────────────────────────────
 
       const symbols: string[] = [];
       if (strat[0]?.symbol) symbols.push(strat[0].symbol);
@@ -5224,6 +5816,7 @@ async function resumeActivePaperSessions(): Promise<void> {
 
       // Reconnect WebSocket stream
       startStream(session.id, symbols);
+      resumeCount++;
 
       // Restore in-memory position state from DB
       const openPositions = await db
@@ -5267,6 +5860,16 @@ async function resumeActivePaperSessions(): Promise<void> {
     } catch (err) {
       logger.error({ err, sessionId: session.id }, "Failed to resume paper session");
     }
+  }
+
+  // B5: Boot-log summary — surfaces stale PAPER+ rows so operator knows they exist.
+  if (skipCount > 0) {
+    logger.info(
+      { resumeCount, skipCount, skippedSessionIds },
+      "B5: resumeActivePaperSessions complete — skipped PAPER+ sessions (stale status='active' rows; recon cron will sweep). Only pre-PAPER sessions get internal streams.",
+    );
+  } else {
+    logger.info({ resumeCount }, "resumeActivePaperSessions complete — all resumed sessions are pre-PAPER");
   }
 }
 
@@ -5940,6 +6543,170 @@ async function detectStalePaperSessions(): Promise<void> {
   const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
   const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
 
+  // ─── FIX 1 (DEBT-2) 2026-06-24: auto-restart failed_to_stream sessions ────
+  // Sessions in `failed_to_stream` are terminal today — stream died at startup,
+  // Discord WARN fired, and nothing fixed them. For vacation / family-distribution
+  // mode we need autonomous recovery. Pattern mirrors heartbeat N-strikes auto-restart:
+  //   - Count `paper.session_auto_restarted` rows in last 24h via audit_log
+  //   - Cap at PAPER_STREAM_RESTART_CAP_PER_24H (3)
+  //   - On cap hit: Discord CRITICAL + family-grade postscript + audit `paper.session_auto_restart_exhausted`
+  const PAPER_STREAM_RESTART_CAP_PER_24H = 3;
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  const failedToStreamSessions = await db
+    .select({
+      id: paperSessions.id,
+      strategyId: paperSessions.strategyId,
+      startedAt: paperSessions.startedAt,
+      startingCapital: paperSessions.startingCapital,
+      config: paperSessions.config,
+      mode: paperSessions.mode,
+      firmId: paperSessions.firmId,
+    })
+    .from(paperSessions)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .where(eq(paperSessions.status, "failed_to_stream" as any));
+
+  for (const session of failedToStreamSessions) {
+    try {
+      // Count how many times we've already attempted for this session in the last 24h
+      const recentRestarts = await db
+        .select({ id: auditLog.id })
+        .from(auditLog)
+        .where(
+          and(
+            eq(auditLog.action, "paper.session_auto_restarted"),
+            eq(auditLog.entityId, session.id),
+            gte(auditLog.createdAt, twentyFourHoursAgo),
+          ),
+        );
+
+      const restartCount = recentRestarts.length;
+
+      if (restartCount >= PAPER_STREAM_RESTART_CAP_PER_24H) {
+        // Cap hit — check if we already wrote the exhaustion audit today
+        const exhaustedToday = await db
+          .select({ id: auditLog.id })
+          .from(auditLog)
+          .where(
+            and(
+              eq(auditLog.action, "paper.session_auto_restart_exhausted"),
+              eq(auditLog.entityId, session.id),
+              gte(auditLog.createdAt, twentyFourHoursAgo),
+            ),
+          );
+
+        if (exhaustedToday.length === 0) {
+          // First time hitting the cap today — fire CRITICAL + write exhaustion audit
+          await db.insert(auditLog).values({
+            action: "paper.session_auto_restart_exhausted",
+            entityType: "paper_session",
+            entityId: session.id,
+            status: "failure",
+            decisionAuthority: "scheduler",
+            input: {
+              strategyId: session.strategyId,
+              restart_count: restartCount,
+              cap: PAPER_STREAM_RESTART_CAP_PER_24H,
+            },
+            result: { note: "Auto-restart cap hit — operator intervention required" },
+            correlationId,
+          }).catch((auditErr: unknown) => {
+            logger.warn({ err: auditErr, sessionId: session.id }, "paper.session_auto_restart_exhausted: audit write failed");
+          });
+
+          notifyCritical(
+            `Paper session stream keeps crashing: session ${session.id.slice(0, 8)}`,
+            appendFamilyGradePostscript(
+              `Paper session \`${session.id.slice(0, 8)}\` (strategy ${session.strategyId?.slice(0, 8) ?? "unknown"}) ` +
+              `has failed to restart ${restartCount} times in the last 24h. Manual intervention required. ` +
+              `Check MASSIVE_API_KEY and data feed connectivity.`,
+              "The paper trading session keeps crashing and has run out of automatic restart attempts.",
+              "Tell Tony: 'The paper session keeps crashing — tell Tony to check the data connection.' He will restart it when available.",
+            ),
+            { sessionId: session.id, strategyId: session.strategyId, restartCount, cap: PAPER_STREAM_RESTART_CAP_PER_24H },
+          );
+
+          broadcastSSE("paper:auto_restart_exhausted", {
+            sessionId: session.id,
+            strategyId: session.strategyId,
+            restartCount,
+          });
+        }
+        continue;
+      }
+
+      // ─── Attempt restart ────────────────────────────────────────
+      // Resolve strategy symbols (mirrors POST /api/paper/start symbol resolution)
+      const strat = session.strategyId
+        ? await db.select({ symbol: strategies.symbol, config: strategies.config })
+            .from(strategies)
+            .where(eq(strategies.id, session.strategyId))
+            .limit(1)
+        : [];
+
+      const symbols: string[] = [];
+      if (strat[0]?.symbol) symbols.push(strat[0].symbol);
+      const stratConfig = strat[0]?.config as Record<string, unknown> | undefined;
+      if (stratConfig?.symbol && !symbols.includes(String(stratConfig.symbol))) {
+        symbols.push(String(stratConfig.symbol));
+      }
+
+      if (symbols.length === 0) {
+        logger.warn({ sessionId: session.id, strategyId: session.strategyId }, "FIX-1: cannot auto-restart failed_to_stream session — no symbol found");
+        continue;
+      }
+
+      logger.info(
+        { sessionId: session.id, strategyId: session.strategyId, symbols, restartAttempt: restartCount + 1 },
+        "FIX-1: auto-restarting failed_to_stream paper session",
+      );
+
+      // Write the attempt audit BEFORE starting stream (mirrors heartbeat pattern)
+      await db.insert(auditLog).values({
+        action: "paper.session_auto_restarted",
+        entityType: "paper_session",
+        entityId: session.id,
+        status: "pending",
+        decisionAuthority: "scheduler",
+        input: {
+          strategyId: session.strategyId,
+          symbols,
+          restart_attempt: restartCount + 1,
+          cap: PAPER_STREAM_RESTART_CAP_PER_24H,
+        },
+        result: null,
+        correlationId,
+      }).catch((auditErr: unknown) => {
+        logger.warn({ err: auditErr, sessionId: session.id }, "paper.session_auto_restarted: pre-attempt audit write failed");
+      });
+
+      // Reset status to `active` so startStream + paper signal flow can process it
+      await db
+        .update(paperSessions)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .set({ status: "active" as any })
+        .where(eq(paperSessions.id, session.id));
+
+      startStream(session.id, symbols);
+
+      logger.info(
+        { sessionId: session.id, symbols, restartAttempt: restartCount + 1 },
+        "FIX-1: paper session stream restarted successfully",
+      );
+
+      broadcastSSE("paper:auto_restarted", {
+        sessionId: session.id,
+        strategyId: session.strategyId,
+        restartAttempt: restartCount + 1,
+        symbols,
+      });
+    } catch (restartErr) {
+      logger.error({ sessionId: session.id, err: restartErr }, "FIX-1: failed_to_stream auto-restart threw unexpectedly");
+    }
+  }
+  // ─── End FIX 1 ────────────────────────────────────────────────
+
   const activeSessions = await db
     .select({
       id: paperSessions.id,
@@ -5989,7 +6756,11 @@ async function detectStalePaperSessions(): Promise<void> {
 
           notifyCritical(
             "Paper Session Recovery Failed",
-            `Session ${session.id.slice(0, 8)} failed to recover after ${MAX_RECOVERY_ATTEMPTS} attempts and was auto-stopped.`,
+            appendFamilyGradePostscript(
+              `Session ${session.id.slice(0, 8)} failed to recover after ${MAX_RECOVERY_ATTEMPTS} attempts and was auto-stopped.`,
+              "A paper trading session failed to restart after repeated attempts. The strategy has been stopped and will need to be restarted manually.",
+              "Tell Tony: 'A paper trading session auto-stopped and could not recover.' He will restart it when available.",
+            ),
             { sessionId: session.id, strategyId: session.strategyId },
           );
 

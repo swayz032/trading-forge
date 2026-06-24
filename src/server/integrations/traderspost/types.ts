@@ -63,4 +63,14 @@ export interface TradersPostSubmitResult {
   statusCode?: number;
   responseBody?: unknown;
   error?: string;
+  /**
+   * Present when this result followed one or more 5xx retries.
+   * - 0  → first attempt succeeded (or a non-5xx failure — no retry was made)
+   * - 1  → first attempt failed 5xx; second attempt produced this result
+   * - 2  → first two attempts failed 5xx; third attempt produced this result
+   *
+   * Callers that receive `success: false` AND `retryAttempt >= RETRY_MAX_ATTEMPTS_5XX`
+   * should escalate from notifyWarning to notifyCritical — all retry budget was consumed.
+   */
+  retryAttempt?: number;
 }

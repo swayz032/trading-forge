@@ -165,11 +165,8 @@ function humanizeLifecycle(s: string): string {
 type IngestResult = {
   baby_jargon_summary?: string;
   error?: string;
-  // Wave 26 Pass K Phase 7 (2026-05-27) — gemma_saw + gemma_saw_count fields
-  // carry partial-extraction info so the bot can render the "almost had it"
-  // embed when gemma extracted a strategy name but ideas[] ended up empty.
-  results?: Array<{ status?: string; title?: string; idea_count?: number; reason?: string; video_id?: string; gemma_saw?: string[]; gemma_saw_count?: number; ideas?: Array<{ idea_name?: string; concept_name?: string; preferred_regime?: string; entry_indicator?: string; confluence_factors?: string[] }> }>;
-  ingest_result?: { status?: string; title?: string; idea_count?: number; reason?: string; video_id?: string; gemma_saw?: string[]; gemma_saw_count?: number; ideas?: Array<{ idea_name?: string; concept_name?: string; preferred_regime?: string; entry_indicator?: string; confluence_factors?: string[] }> };
+  results?: Array<{ status?: string; title?: string; idea_count?: number; reason?: string; video_id?: string; ideas?: Array<{ idea_name?: string; concept_name?: string; preferred_regime?: string; entry_indicator?: string; confluence_factors?: string[] }> }>;
+  ingest_result?: { status?: string; title?: string; idea_count?: number; reason?: string; video_id?: string; ideas?: Array<{ idea_name?: string; concept_name?: string; preferred_regime?: string; entry_indicator?: string; confluence_factors?: string[] }> };
   drain?: { scanned: number; drained: number; failed: number } | null;
   graduated_strategies?: Array<{
     id: string;
@@ -198,296 +195,125 @@ const SLUMDAWG_COLOR = {
   info:    0x3b82f6,  // blue — processing/info
 };
 
-// ET wall-clock formatter — operator + family are intraday traders, ET is the
-// only timezone that matters (CME open 09:30, lunch dead zone 11:30-13:30,
-// flatten 15:55). Discord's default setTimestamp() renders local browser time
-// which is useless for "was this an AM trade or PM trade?" debugging.
-function nowEtFooter(): string {
-  const fmt = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/New_York",
-    weekday: "short", hour: "numeric", minute: "2-digit", hour12: true,
-  });
-  const t = fmt.format(new Date()); // "Tue, 9:42 PM"
-  return `Slumdawg Kitchen · ${t} ET`;
-}
-
-// Compact video header — title only, no quoted/italic block (cleaner stack).
-function videoHeaderField(title: string | undefined): { name: string; value: string; inline: false } | null {
-  if (!title) return null;
-  return { name: "🎬 Video", value: `**${title.slice(0, 200).trim()}**`, inline: false };
-}
-
 // Build the rich verdict embed — replaces plain text reply.
-// Voice: Slumdawg — slang TONE + PHRASING ("Yo fam", "Slumdawg passed on this one",
-// "send me", "no fluff") but PLAIN ENGLISH WORDS. Members are non-technical rookies
-// to trading — NEVER use trading jargon (theta, Greeks, carry trade, dividend capture,
-// trailing drawdown, intraday, indicator-as-noun, structural setup). When a concept
-// must be mentioned (futures, swing, options), explain it in one short clause.
 function buildSlumdawgVerdictEmbed(result: IngestResult, sourceUrl: string): EmbedBuilder {
   const e = new EmbedBuilder()
-    .setTimestamp()                             // machine-readable; UI also renders our human footer below
-    .setFooter({ text: nowEtFooter() });        // human-readable: "Slumdawg Kitchen · Tue, 9:42 PM ET"
+    .setTimestamp()
+    .setFooter({ text: "Slumdawg Kitchen · Trading Forge" });
+  // BIG image (not thumbnail) — Slumdawg pot renders full-width at bottom of embed
   if (SLUMDAWG_THUMB_AVAILABLE) e.setImage(`attachment://${SLUMDAWG_THUMB_NAME}`);
 
   // ─── Error path ─────────────────────────────────────────
   if (result.error) {
     e.setColor(SLUMDAWG_COLOR.error).setTitle("⚠️ System hiccup");
     if (/invalid_url/i.test(result.error)) {
-      e.setDescription("Yo fam, that's not a YouTube link. Send me a `youtube.com` or `youtu.be` link.");
+      e.setDescription("Yo that ain't a YouTube link. Drop me a `youtube.com` or `youtu.be` link.");
     } else {
-      e.setDescription(`Slumdawg hit a snag on the back end — \`${result.error.replace(/_/g, " ")}\`.\nWait a minute and try again, or message the operator if it keeps happening.`);
+      e.setDescription(`Pipeline tripped — \`${result.error.replace(/_/g, " ")}\`. Try again in a sec or hit the operator.`);
     }
     return e;
   }
 
   const r = result.ingest_result ?? result.results?.[0];
   if (!r) {
-    return e
-      .setColor(SLUMDAWG_COLOR.error)
-      .setTitle("⚠️ Empty pipeline")
-      .setDescription("Came back with nothing. Try again.");
+    return e.setColor(SLUMDAWG_COLOR.error).setTitle("⚠️ Empty pipeline").setDescription("Came back with nothing. Try again.");
   }
 
-  // ─── Strategy extracted (the win) ───────────────────────
+  // ─── Strategy extracted (the win) ─ COMMUNITY-FRIENDLY copy, no DSL jargon ──
   if ((r.idea_count ?? 0) > 0 && (r.status === "ingested" || r.status === "graduated" || r.status === "extracted" || r.status === "ok")) {
     const firstIdea = r.ideas?.[0];
     const grads = result.graduated_strategies ?? [];
     const stratCount = grads.length;
 
+    // Plain English "Slumdawg's Take" — built from the extracted idea fields
     const moodLine = humanizeRegime(firstIdea?.preferred_regime);
     const triggerLine = humanizeTrigger(firstIdea?.entry_indicator);
-    const confluences = firstIdea?.confluence_factors ?? [];
-
-    // Wave 26 Pass L (2026-05-27) — Recipe-format Slumdawg's Take.
-    // Operator-approved single-numbered-list format (Option A). Confluences
-    // become numbered steps blended with the entry trigger — reads like a
-    // recipe. Removed the redundant "what he waits for" / "what needs to
-    // line up first" split (members were confused by the overlap).
-    // Stop + Target shown separately so the member sees the full trade.
-    const recipeSteps: string[] = [];
-
-    // Build the numbered steps from the strategy's actual fields.
-    // Each confluence factor becomes a CHECK step; the entry trigger is the ACTION step.
-    if (confluences.length > 0) {
-      for (const c of confluences.slice(0, 4)) {
-        recipeSteps.push(humanizeFactor(c));
-      }
-    }
-    // Final ACTION step — the entry trigger
-    if (triggerLine && triggerLine !== "—") {
-      recipeSteps.push(`Take the trade when **${triggerLine}** lines up`);
-    } else {
-      recipeSteps.push(`Take the trade once the conditions above are confirmed`);
-    }
-
-    const numberedRecipe = recipeSteps
-      .map((step, i) => `   ${i + 1}. ${step}`)
-      .join("\n");
-
-    const takeLines: string[] = [
-      `📈 Best when the market is: **${moodLine}**`,
-      ``,
-      `🎯 **How to take the trade**`,
-      numberedRecipe,
-      ``,
-      `🛑 **Stop:** framework default — adaptive (1.5× ATR with structural ceiling, never fixed-point)`,
-      `💰 **Target:** minimum 1.5R, then move stop to break-even on the first partial fill`,
-    ];
+    const factorBullets = (firstIdea?.confluence_factors ?? []).slice(0, 4).map(f => `  • ${humanizeFactor(f)}`).join("\n") || "  • —";
+    const takeLines: string[] = [];
+    takeLines.push(`Looking for a market that's **${moodLine}**.`);
+    if (firstIdea?.entry_indicator) takeLines.push(`Slumdawg waits for **${triggerLine}** before he pulls the trigger.`);
+    takeLines.push(`What needs to check off first:\n${factorBullets}`);
 
     e.setColor(SLUMDAWG_COLOR.success)
       .setTitle(stratCount > 0
         ? `🔥 Slumdawg cooked it — ${stratCount} ${stratCount === 1 ? "play" : "plays"} in the kitchen`
         : `🔥 Slumdawg cooked it — play extracted`)
       .setDescription(
-        `Yo fam, Slumdawg pulled real rules out of this one.\n` +
+        (r.title ? `*"${r.title.slice(0, 200)}"*\n\n` : "") +
+        `Yo fam, Slumdawg pulled real rules out of this one. ` +
         (stratCount > 0
-          ? `Got **${stratCount}** ${stratCount === 1 ? "play" : "plays"} in the kitchen right now — each one running on a different market.\nEach one is gonna get stress-tested against the worst trading days in history. We'll know in about a day if they hold up with real money.`
-          : `Kitchen picks it up on the next cycle (about 10 minutes).`)
-      );
-
-    const vh = videoHeaderField(r.title);
-    if (vh) e.addFields(vh);
-    e.addFields({ name: "📊 Slumdawg's Take", value: takeLines.join("\n"), inline: false });
+          ? `Got **${stratCount}** ${stratCount === 1 ? "play" : "plays"} cooking in the kitchen — each one running on a different market. Verdict from the engine in about a day.`
+          : `Kitchen picks it up on the next cycle (~10 min).`)
+      )
+      .addFields({ name: "📊 Slumdawg's Take", value: takeLines.join("\n"), inline: false });
 
     if (stratCount > 0) {
+      // Plain-English per-market lineup
       const playLines = grads.slice(0, 6).map((s) => {
         const symHuman = (s.symbols ?? []).map(humanizeSymbol).join(" / ") || "—";
-        return `• **${symHuman}** — ${humanizeLifecycle(s.lifecycleState)}`;
+        return `**${symHuman}** — ${humanizeLifecycle(s.lifecycleState)}`;
       }).join("\n");
       e.addFields({ name: `🍳 The Plays`, value: playLines, inline: false });
+
+      // What's Next (plain English)
       e.addFields({
         name: "🏆 What's Next",
-        value: "Stress test first — Slumdawg makes sure each play survives the worst trading days in history before it ever sees real money. Then a 30-day backtest. Verdict comes back in about a day.",
+        value: "First up: the **stress test** — Slumdawg makes sure each play survives the worst-case scenarios before it ever sees real money. Then a 30-day backtest. We'll know which ones earn their keep in about a day.",
         inline: false,
       });
-    } else {
+    } else if (result.drain || !stratCount) {
       e.addFields({
-        name: "🍳 What's Next",
-        value: "Kitchen's about to fan this out into 3 plays — one for the **Mini S&P 500**, one for the **Mini Nasdaq 100**, one for **Mini Crude Oil**. Each one runs through the stress test plus a 30-day backtest. Check back in about an hour.",
+        name: "🍳 What happens next",
+        value: "Kitchen's about to graduate it into 3 plays — one for **Mini S&P**, one for **Mini Nasdaq**, one for **Mini Crude**. Each goes through the stress test + 30-day backtest. Check back in about an hour.",
         inline: false,
       });
     }
-    return e;
-  }
-
-  // ─── Wave 26 Pass K Phase 7 (2026-05-27) — Under-extracted (gemma almost had it) ──
-  // Different from "no strategy content" — gemma DID see a strategy in the
-  // transcript and even named it, but the symbol-remap or schema filter
-  // dropped it (most common cause: forex/stock demo symbol, or under-filled
-  // entry_sequence/targets/stop_loss). User-facing message should be honest:
-  // "almost had it" not "mostly talk".
-  if (r.reason === "extracted_under_filled") {
-    const rExtra = r as { gemma_saw?: string[]; gemma_saw_count?: number };
-    const seenList = (rExtra.gemma_saw ?? []).slice(0, 2).join(" / ") || "a setup";
-    e.setColor(SLUMDAWG_COLOR.hype)
-      .setTitle("🎯 Slumdawg almost had it")
-      .setDescription(
-        `Yo fam, Slumdawg **did** see a strategy in this video (looked like **${seenList}**) — but he couldn't pull all the details out of it.\n\n` +
-        `Usually means the speaker was talking too fast, skipping the specifics, or jumping around between charts.\n\n` +
-        `Try one of these:\n` +
-        `• Find another video from the same trader where they walk through it slower\n` +
-        `• Look for a video titled "explained" or "step by step" from the same channel\n` +
-        `• Drop the link in the operator chat and we'll re-run it manually`
-      );
-    const vh = videoHeaderField(r.title);
-    if (vh) e.addFields(vh);
-    return e;
-  }
-
-  // ─── Status-based: transcript_unavailable / transcript_too_short ────────
-  // Wave 26 Pass K Phase 7 fix: status field carries this, not reason. Operator-
-  // ingest emits {status: "transcript_unavailable", error: "..."} with NO reason
-  // field — the old regex check on r.reason was missing this entirely.
-  if (r.status === "transcript_unavailable") {
-    e.setColor(SLUMDAWG_COLOR.swing)
-      .setTitle("📭 Can't read that video")
-      .setDescription(
-        "Couldn't pull the captions on that one. Might be private, age-restricted, or the creator turned captions off.\n\n" +
-        "Try a different video — one where YouTube shows a transcript when you click the **\"...\"** menu under the video."
-      );
-    const vh = videoHeaderField(r.title);
-    if (vh) e.addFields(vh);
-    return e;
-  }
-  if (r.status === "transcript_too_short") {
-    e.setColor(SLUMDAWG_COLOR.swing)
-      .setTitle("📭 Video's too short")
-      .setDescription("That video's too short to pull real trading rules out of — probably a TikTok-style clip.\nSend me a longer one where the trader actually walks through the strategy.");
-    const vh = videoHeaderField(r.title);
-    if (vh) e.addFields(vh);
     return e;
   }
 
   // ─── Hype / no real rules ───────────────────────────────
   if (r.reason && /no_strategy_content|no_rules|too_vague|hype/i.test(r.reason)) {
-    e.setColor(SLUMDAWG_COLOR.hype)
+    return e.setColor(SLUMDAWG_COLOR.hype)
       .setTitle("🚧 Mostly talk, not enough rules")
-      .setDescription(
-        "Yo, the speaker hyped it up but never actually told us **how to trade it**.\n\n" +
-        "A real strategy needs to say:\n" +
-        "• **when to buy or sell**\n" +
-        "• **when to close the trade**\n" +
-        "• **what chart he's looking at** (5-minute? 15-minute?)\n\n" +
-        "Send me a video where the trader walks through it step by step, no fluff."
+      .setDescription("Speaker talked the talk but didn't drop the actual plays. Find me one where dude says **when to enter, when to exit, what timeframe** — step-by-step type beat.")
+      .addFields(
+        r.title ? { name: "Video", value: `*"${r.title.slice(0, 200)}"*`, inline: false } : { name: "​", value: "​", inline: false },
+        { name: "Why skipped", value: `\`${r.reason.replace(/_/g, " ")}\``, inline: true },
       );
-    const vh = videoHeaderField(r.title);
-    if (vh) e.addFields(vh);
-    return e;
   }
 
   // ─── Swing / multi-day reject ───────────────────────────
   if (r.status === "rejected_swing_or_screenshot" || (r.reason && /swing|multi_day|overnight|screenshot|recap/i.test(r.reason))) {
-    e.setColor(SLUMDAWG_COLOR.swing)
-      .setTitle("🌙 Swing trade — we close every day")
-      .setDescription(
-        "Yo fam, that one's a **swing trade** — meaning the speaker holds the trade for days or weeks.\n\n" +
-        "We can't do that. Our prop firm rules say every trade has to close **before the market shuts down each day** (by **3:55 PM Eastern**). Holding overnight will get the account shut down.\n\n" +
-        "Send me a video where the trader takes the trade and closes it the **same day** — quick in, quick out."
+    return e.setColor(SLUMDAWG_COLOR.swing)
+      .setTitle("🌙 Swing or recap content — day-only over here")
+      .setDescription("EOD trailing drawdown don't let us hold overnight. Drop me an **intraday** breakdown — we close every position by three fifty five Eastern.")
+      .addFields(
+        r.title ? { name: "Video", value: `*"${r.title.slice(0, 200)}"*`, inline: false } : { name: "​", value: "​", inline: false },
       );
-    const vh = videoHeaderField(r.title);
-    if (vh) e.addFields(vh);
-    return e;
   }
 
   // ─── Transcript unavailable / too short ─────────────────
   if (r.reason && /transcript_unavailable|no.*caption|transcript_too_short|too short/i.test(r.reason)) {
-    e.setColor(SLUMDAWG_COLOR.swing)
-      .setTitle("📭 Can't read that one");
-    if (/too short/i.test(r.reason)) {
-      e.setDescription("That video's too short to pull real trading rules out of — probably a TikTok-style clip.\nSend me a longer one where the trader actually walks through the strategy.");
-    } else {
-      e.setDescription("Couldn't pull the captions on that video. Might be private, age-restricted, or just missing a transcript.\nTry a different one.");
-    }
-    const vh = videoHeaderField(r.title);
-    if (vh) e.addFields(vh);
-    return e;
-  }
-
-  // ─── Wave 26 Pass J — mechanic-class rejects (rookie-friendly, no jargon) ──
-  if (r.reason === "options_derivative") {
-    e.setColor(SLUMDAWG_COLOR.swing)
-      .setTitle("📊 That's options trading — different game")
+    return e.setColor(SLUMDAWG_COLOR.swing)
+      .setTitle("📭 Couldn't read that one")
       .setDescription(
-        "Yo, that one's about **options trading** — a totally different game from what we play.\n\n" +
-        "We trade **futures**, which means we're just betting on whether a price will go up or down. Options have a bunch of extra moving parts (time decay, strike prices, all that) that don't apply to us.\n\n" +
-        "Send me a video where the trader is just **reading a price chart** and saying \"when this happens, I buy\" — that's the kind I can use."
+        /too short/i.test(r.reason)
+          ? "Video too short to pull real rules out of — probably a Short or a clip. Find a longer breakdown."
+          : "No captions available — private, age-gated, or no transcript. Try a different video."
       );
-    const vh = videoHeaderField(r.title);
-    if (vh) e.addFields(vh);
-    return e;
-  }
-  if (r.reason === "forex_specific_mechanics") {
-    e.setColor(SLUMDAWG_COLOR.swing)
-      .setTitle("💱 That's a currency-trading strategy")
-      .setDescription(
-        "Yo fam, that strategy is built for **currency trading (forex)** — like betting on the Euro vs the Dollar.\n\n" +
-        "The way they're making money in this one only works in currency markets, not the ones we trade.\n\n" +
-        "If the same person has another video where they're **just reading a price chart**, send me that one — it'll probably work."
-      );
-    const vh = videoHeaderField(r.title);
-    if (vh) e.addFields(vh);
-    return e;
-  }
-  if (r.reason === "stock_specific_mechanics") {
-    e.setColor(SLUMDAWG_COLOR.swing)
-      .setTitle("📈 That's an individual-stock strategy")
-      .setDescription(
-        "Yo, that one's about trading **individual stocks** like Apple, Tesla, or GameStop.\n\n" +
-        "The moves they're trying to catch (earnings announcements, dividend payments, short squeezes) only happen with stocks — they don't exist in the markets we trade.\n\n" +
-        "If they have a video where they're **just reading a price chart** with no mention of company news, send me that one."
-      );
-    const vh = videoHeaderField(r.title);
-    if (vh) e.addFields(vh);
-    return e;
-  }
-  if (r.reason === "crypto_specific_mechanics") {
-    e.setColor(SLUMDAWG_COLOR.swing)
-      .setTitle("🪙 That's a crypto-only strategy")
-      .setDescription(
-        "Yo fam, that strategy only works in **crypto markets** (Bitcoin, Ethereum, that whole world).\n\n" +
-        "They're using stuff that's specific to crypto — blockchain data, the Bitcoin halving, 24/7 trading. Our markets work different.\n\n" +
-        "If the same speaker has a video where they're **just reading a price chart**, send me that one. That one works."
-      );
-    const vh = videoHeaderField(r.title);
-    if (vh) e.addFields(vh);
-    return e;
   }
 
   // ─── Generic reject ─────────────────────────────────────
   if (r.reason) {
-    e.setColor(SLUMDAWG_COLOR.hype)
-      .setTitle("🤔 Slumdawg passed on this one")
-      .setDescription(`Reason: \`${r.reason.replace(/_/g, " ")}\`.\nSend me a different video.`);
-    const vh = videoHeaderField(r.title);
-    if (vh) e.addFields(vh);
-    return e;
+    return e.setColor(SLUMDAWG_COLOR.hype)
+      .setTitle("🤔 Slumdawg passed on that one")
+      .setDescription(`Reason: \`${r.reason.replace(/_/g, " ")}\`. Try a different video.`);
   }
 
   // ─── Fallback ───────────────────────────────────────────
-  return e
-    .setColor(SLUMDAWG_COLOR.info)
+  return e.setColor(SLUMDAWG_COLOR.info)
     .setTitle("📊 Result")
-    .setDescription(result.baby_jargon_summary ?? `Got back status \`${r.status ?? "unknown"}\`.\nCheck the dashboard library.`);
+    .setDescription(result.baby_jargon_summary ?? `Got back status \`${r.status ?? "unknown"}\`. Check the dashboard library.`);
 }
 
 const FORGE_API = `http://localhost:${process.env.PORT || 4000}`;
@@ -511,82 +337,6 @@ const CHANNEL_MAP: Record<string, string> = {
   "workflow-errors": process.env.DISCORD_CH_WORKFLOW_ERRORS || "",
   "critical-alerts": process.env.DISCORD_CH_CRITICAL_ALERTS || "",
 };
-
-type SlumdawgFeedRow = {
-  name: string;
-  source: string;
-  status: "graduated";
-  ageMin: number;
-  sortAt: string;
-};
-
-function extractVideoTitleFromEmbed(embed: any): string {
-  const videoField = Array.isArray(embed?.fields)
-    ? embed.fields.find((field: any) => String(field?.name ?? "").toLowerCase().includes("video"))
-    : null;
-  if (videoField?.value) {
-    const match = String(videoField.value).match(/\*\*(.+?)\*\*/);
-    if (match?.[1]) return match[1].trim();
-  }
-  return "";
-}
-
-function determineFeedSource(message: any): string {
-  const referenced = message?.referenced_message?.embeds?.[0];
-  const provider = String(referenced?.provider?.name ?? "").toLowerCase();
-  if (provider.includes("youtube")) return "youtube";
-
-  const sourceText = [
-    message?.referenced_message?.content ?? "",
-    message?.embeds?.[0]?.title ?? "",
-    message?.embeds?.[0]?.description ?? "",
-    ...(Array.isArray(message?.embeds?.[0]?.fields)
-      ? message.embeds[0].fields.map((field: any) => `${field?.name ?? ""} ${field?.value ?? ""}`)
-      : []),
-  ].join(" ").toLowerCase();
-
-  if (sourceText.includes("youtube.com") || sourceText.includes("youtu.be")) return "youtube";
-  if (sourceText.includes("discord")) return "discord";
-  return "discord";
-}
-
-async function readLiveSlumdawgFeed(limit = 20): Promise<SlumdawgFeedRow[]> {
-  if (!client.isReady()) return [];
-
-  const channel = await client.channels.fetch(SLUMDAWG_FEED_CHANNEL_ID).catch(() => null);
-  if (!channel || !("messages" in channel) || !channel.isTextBased()) return [];
-
-  const messages = await channel.messages.fetch({ limit }).catch(() => null);
-  if (!messages) return [];
-
-  const rows: SlumdawgFeedRow[] = [];
-  for (const message of messages.values()) {
-    const msg = message as any;
-    if (!msg.author?.bot) continue;
-    const embed = msg.embeds?.[0];
-    if (!embed) continue;
-    if (!/slumdawg cooked it/i.test(String(embed.title ?? ""))) continue;
-
-    const referenced = msg.referenced_message?.embeds?.[0];
-    const name =
-      referenced?.title?.trim() ||
-      extractVideoTitleFromEmbed(embed) ||
-      String(embed.title ?? "").replace(/^.*?—\s*/, "").trim() ||
-      "unknown";
-    const ts = msg.createdAt?.toISOString?.() ?? embed.timestamp ?? new Date().toISOString();
-    const ageMin = Math.max(0, Math.floor((Date.now() - new Date(ts).getTime()) / 60_000));
-
-    rows.push({
-      name,
-      source: determineFeedSource(msg),
-      status: "graduated",
-      ageMin,
-      sortAt: ts,
-    });
-  }
-
-  return rows;
-}
 
 // ─── Typed payload contracts (OpenClaw structured reporting) ───
 // These four channels reject any payload that does not match the schema.
@@ -847,17 +597,6 @@ alertApp.get("/health", (_req, res) => {
     service: "trading-forge-discord",
     connected: client.isReady(),
   });
-});
-
-alertApp.get("/slumdawg/feed", async (req, res) => {
-  try {
-    const limit = Math.max(1, Math.min(20, Number(req.query.limit ?? 20) || 20));
-    const rows = await readLiveSlumdawgFeed(limit);
-    res.json({ rows });
-  } catch (err: any) {
-    log.error({ err }, "Failed to read Slumdawg feed");
-    res.status(503).json({ error: err.message, rows: [] });
-  }
 });
 
 // ─── Register slash commands ────────────────────────────────

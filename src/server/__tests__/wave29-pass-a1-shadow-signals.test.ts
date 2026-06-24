@@ -36,7 +36,7 @@ const VALID_STATES = [
 type LifecycleState = (typeof VALID_STATES)[number];
 
 const VALID_TRANSITIONS: Record<LifecycleState, LifecycleState[]> = {
-  CANDIDATE:    ["TESTING", "PAPER", "GRAVEYARD"],
+  CANDIDATE:    ["TESTING", "SHADOW", "GRAVEYARD"],  // F-3 fix: CANDIDATE→PAPER removed; fast-track now routes CANDIDATE→SHADOW
   TESTING:      ["SHADOW", "PAPER", "DECLINING", "GRAVEYARD"],
   SHADOW:       ["PAPER", "DECLINING", "GRAVEYARD"],
   PAPER:        ["DEPLOY_READY", "DECLINING", "GRAVEYARD"],

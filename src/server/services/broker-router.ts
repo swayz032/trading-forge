@@ -30,11 +30,13 @@ import { submitWebhookOrder } from "../integrations/traderspost/client.js";
 import type { IdempotencyKeyInputs } from "../integrations/traderspost/client.js";
 import { buildWebhookPayload } from "../integrations/traderspost/webhook-builder.js";
 import type { WebhookSignal } from "../integrations/traderspost/webhook-builder.js";
-import { notifyCritical } from "./notification-service.js";
+import { notifyCritical, notifyWarning } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { killSwitch } from "../production/kill-switch.js";
 import { getEnabledFirms } from "./strategy-assignment-service.js";
 import { getFirmLimit, CONTRACT_CAP_MAX } from "../../shared/firm-config.js";
 import { CircuitBreakerRegistry, CircuitOpenError } from "../lib/circuit-breaker.js";
+import { traderspostRejectsTotal } from "../lib/metrics-registry.js";
 
 // ─── FINDING #4: TradersPost circuit breaker ─────────────────────────────────
 // Wraps all TradersPost HTTP submissions. On N consecutive failures (default 3
@@ -79,10 +81,14 @@ CircuitBreakerRegistry.setOnStateChange((name, _from, to) => {
     // Discord critical — operator must investigate.
     notifyCritical(
       "TradersPost Webhook Degraded",
-      `TradersPost circuit breaker OPENED after ${_tpCbFailureThreshold} consecutive ` +
-        `failures. All order routing for TradersPost accounts is fast-failing until the ` +
-        `breaker half-opens (~${Math.round(_tpCbCooldownMs / 1000)}s). ` +
-        `Check TradersPost status page and inspect audit_log for broker_router.traderspost_submission_failed rows.`,
+      appendFamilyGradePostscript(
+        `TradersPost circuit breaker OPENED after ${_tpCbFailureThreshold} consecutive ` +
+          `failures. All order routing for TradersPost accounts is fast-failing until the ` +
+          `breaker half-opens (~${Math.round(_tpCbCooldownMs / 1000)}s). ` +
+          `Check TradersPost status page and inspect audit_log for broker_router.traderspost_submission_failed rows.`,
+        "The TradersPost circuit is OPEN — orders are safely blocked.",
+        "Tell Tony: 'TradersPost is unreachable from the bot.' If you cannot reach him, do nothing — orders are safely blocked, not silently mis-routed.",
+      ),
       { circuitBreaker: TRADERSPOST_CIRCUIT_BREAKER_KEY, failureThreshold: _tpCbFailureThreshold },
     );
     // SSE so the dashboard surfaces the degradation immediately.
@@ -658,9 +664,13 @@ export async function routeOrder(
       // Payout-affecting: orders silently drop until vault is restored.
       notifyCritical(
         "Broker Credential Vault Failure",
-        `Credential load failed for account ${accountId} (firm: ${account.firmId}). ` +
-          `All order routing is BLOCKED for this account until the vault is restored. ` +
-          `Error: ${errorMsg}`,
+        appendFamilyGradePostscript(
+          `Credential load failed for account ${accountId} (firm: ${account.firmId}). ` +
+            `All order routing is BLOCKED for this account until the vault is restored. ` +
+            `Error: ${errorMsg}`,
+          "The trading account vault is locked — orders are safely blocked.",
+          "Tell Tony: 'The vault is locked.' If you cannot reach him, do nothing — orders are safely blocked, not silently mis-routed.",
+        ),
         { accountId, firmId: account.firmId, correlationId: correlationId ?? null },
       );
       broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...result, correlationId: correlationId ?? null });
@@ -760,6 +770,69 @@ export async function routeOrder(
 
     broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...result, correlationId: correlationId ?? null });
     await writeAuditLog(accountId, signal, result, correlationId);
+
+    // ── Pass 4 Track C / M11: per-call TradersPost rejection Discord + Prom ───
+    // Fires AFTER audit+SSE so observability is preserved even if the
+    // notification helper throws. Distinct from the credential-vault failure at
+    // line 664 (which uses notifyCritical because it is systemic).
+    //
+    // M11 ESCALATION (hardening/phase-0): When H4 retry budget is fully exhausted
+    // (retryAttempt >= 2, meaning 3 total attempts all failed 5xx), escalate from
+    // notifyWarning → notifyCritical. A retry-exhausted result means the order was
+    // silently dropped despite the retry safety net — this is a capital-safety event.
+    // All other failures (4xx, first-attempt 5xx, network) keep notifyWarning.
+    if (!submitResult.success) {
+      const statusCodeStr = submitResult.statusCode != null ? String(submitResult.statusCode) : "unknown";
+      const signalActionStr = signal.action ?? "unknown";
+      // Increment Prometheus counter before the Discord call (Discord is
+      // fire-and-forget void; counter should survive Discord helper failure).
+      traderspostRejectsTotal.labels({ status_code: statusCodeStr, signal_action: signalActionStr }).inc();
+      const truncatedBody =
+        typeof submitResult.responseBody === "string"
+          ? submitResult.responseBody.slice(0, 200)
+          : submitResult.responseBody != null
+            ? JSON.stringify(submitResult.responseBody).slice(0, 200)
+            : "";
+      const retryExhausted = (submitResult.retryAttempt ?? 0) >= 2;
+      if (retryExhausted) {
+        // M11: Full retry budget consumed — order was silently dropped after 3 attempts.
+        // This is a capital-safety event: the broker never received the order.
+        notifyCritical(
+          `TradersPost 5xx retry EXHAUSTED for ${signal.ticker ?? "unknown"} — ORDER DROPPED`,
+          appendFamilyGradePostscript(
+            `Account ${accountId} on ${signalActionStr}: HTTP ${statusCodeStr} after ${(submitResult.retryAttempt ?? 0) + 1} attempts. ` +
+              `Body=${truncatedBody}. The broker is not responding and the retry budget is fully consumed. ` +
+              `The order was NOT placed.`,
+            "The bot tried 3 times to submit an order to the broker and the broker is not responding. The order was NOT placed.",
+            "Check the dashboard for the affected strategy. Tony may need to investigate the broker connection.",
+          ),
+          {
+            correlationId: correlationId ?? null,
+            accountId,
+            firmId: account.firmId,
+            statusCode: submitResult.statusCode ?? null,
+            signalAction: signal.action ?? null,
+            retryAttempt: submitResult.retryAttempt ?? null,
+          },
+        );
+      } else {
+        notifyWarning(
+          `TradersPost reject for ${signal.ticker ?? "unknown"}`,
+          appendFamilyGradePostscript(
+            `Account ${accountId} on ${signalActionStr}: HTTP ${statusCodeStr}, body=${truncatedBody}`,
+            "TradersPost rejected an order. The order did NOT reach the broker.",
+            "Tell Tony: 'A TradersPost order was rejected.' If you cannot reach him, no action is required — the broker did not receive the order.",
+          ),
+          {
+            correlationId: correlationId ?? null,
+            accountId,
+            firmId: account.firmId,
+            statusCode: submitResult.statusCode ?? null,
+            signalAction: signal.action ?? null,
+          },
+        );
+      }
+    }
 
     // ── webhook.broker_ack latency emitter (Wave 25 CF#1) ────────────────────
     // Only on SUCCESSFUL broker ack. Rejection events have their own audit rows.

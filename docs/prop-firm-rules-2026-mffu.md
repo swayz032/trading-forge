@@ -21,17 +21,25 @@
 | Ongoing monthly fee (post-funded) | `$0` |
 | Profit target | `$3,000` |
 | Max drawdown (also serves as buffer) | `$2,000` |
-| Trailing type | `eod` |
-| Daily loss limit | `null` (no separate DLL — drawdown is the cap) |
-| Max contracts | `50` micros (or 5 minis — Core/Flex/Rapid plans; Pro plan is 60 micros) |
-| Min trading days | `5` |
-| Min payout days | `5` |
-| Consistency rule | `mffu_50pct` (best-day cannot exceed 50% of total P&L) |
+> **The operator's MFFU account is the BUILDER plan** (chosen 2026-06-23 — EOD trailing matches
+> our risk model + 40-micro room (vs Pro's 5) + cheapest + path to a real live broker). Values
+> below are MFFU **BUILDER 50K (Default)**.
+
+| Trailing type | `eod` — **Builder** EOD trailing (Max EOD Drawdown / MLL $2,000; eval starting floor $48,000). **LIVE** account: $2,000 EOD trailing, MLL **static once it reaches $0**. Matches Topstep basis + our `realizedPeakEquity` model — no intraday build. |
+| Daily loss limit | `$1,000` — **SOFT pause** (hit it and trading pauses for the day; the account SURVIVES, not a hard breach). |
+| Max contracts | `40` micros (Builder = `4 mini / 40 micro`) — room for our pyramid base (6 MES / 6 MNQ / 18 MCL). |
+| Min trading days | `1` (Builder eval 1-day minimum) |
+| Min payout days | `2` qualifying days/cycle; Builder pays **every 48h** after buffer cleared |
+| Payout buffer | `$2,100` (Default) / `$1,600` (Add-On) cleared before first payout |
+| Payout amounts | min `$500`, **max $2,000/cycle**, **5 sim payouts** then → live transition |
+| Consistency rule | `50%` — **SIM-FUNDED payout stage ONLY** (NONE in eval, NONE on the live account) |
 | Overnight allowed | `false` |
 | Weekend allowed | `false` |
-| Commission per side per contract | `$0.62` |
-| Payout split (initial) | `0.80` (80% to trader) |
-| Payout schedule | bi-weekly (every 14 days) |
+| Commission per side per contract | MES/MNQ `$0.95` ($1.90 RT) · MCL `$0.58` ($1.16 RT) — per-symbol exact in `firm_config.py`; single firm value `$0.95` |
+| Payout split | `0.80` (80/20 — eval + sim + live) |
+| Live transition | after the **5th approved sim payout** → real brokerage account (Blue Row Capital), daily payouts, no consistency |
+| News trading | **ALLOWED** (eval + sim funded) — Builder is NOT a T1-restricted plan |
+| Active accounts | `1` Builder account per user |
 
 ## Canonical Values
 
@@ -47,17 +55,17 @@ activation_fee: 0
 ongoing_monthly_fee: 0
 profit_target: 3000
 max_drawdown: 2000
-max_contracts: 50  # micros at $50K Core/Flex/Rapid (5 minis × 10:1)
-trailing: eod
-payout_split: 0.80
-min_payout_days: 5
-min_trading_days: 5
-consistency_rule_pct: 0.50
-daily_loss_limit: null
+max_contracts: 40  # BUILDER 50K = 40 micros (4 mini / 40 micro) — room for our pyramid base
+trailing: eod  # BUILDER = EOD trailing (Max EOD Drawdown $2,000; eval floor $48,000); LIVE MLL static once it reaches $0
+payout_split: 0.80  # Builder 80/20 (eval + sim + live)
+min_payout_days: 2  # Builder: 2 qualifying days/cycle; pays every 48h after buffer
+min_trading_days: 1  # Builder eval 1-day minimum
+consistency_rule_pct: 0.50  # 50% at the SIM-FUNDED payout stage only — NONE eval, NONE live
+daily_loss_limit: 1000  # Builder $1,000 DLL — SOFT pause (account survives, not a breach)
 overnight_ok: false
 weekend_ok: false
-commission_per_side: 0.62
-payout_cycle_days: 14
+commission_per_side: 0.95  # MFFU MES/MNQ $1.90 RT ÷ 2; MCL is $0.58 ($1.16 RT) — exact per-symbol in firm_config.py
+payout_cycle_days: 2
 ```
 
 ---
@@ -112,16 +120,42 @@ NQ. Same applies to MES↔ES and MCL↔CL.
   micros (NQ/ES/CL minis are deferred), the matrix is pre-loaded with
   these pairs so future graduation does not require a code change.
 
-### 5. Tier-1 Economic Data Trading — Restricted
+### 5. Tier-1 News Trading — Restricted (current policy: MFFU Feb-2026)
 
-MFFU's tier-1 events are FOMC, CPI, NFP, GDP, Retail Sales, ISM, PPI.
-Trading during the ±30-minute blackout around these events is restricted.
+> CORRECTION 2026-06-22: this section previously listed the T1 set as
+> "FOMC, CPI, NFP, GDP, Retail Sales, ISM, PPI" with a ±30-min window. That was
+> STALE and caused an over-block (GDP/ISM/PPI are NOT T1). The current MFFU News
+> Policy (Feb 22, 2026) is below.
 
-- **Enforcement:** `calendar_filter.py:check_economic_event` — already
-  covers FOMC, CPI, NFP. **Extension required:** GDP, Retail Sales, ISM,
-  PPI added to `_ECONOMIC_EVENTS` for 2026-2027.
-- **Override:** strategies may set `bypass_news_blackout: true` (W14 / B11)
-  to opt into trading during the window. Holidays still block.
+**Tier-1 (T1) events:**
+- **All traders:** FOMC Meetings, **FOMC Minutes**, Employment Report (NFP), CPI
+- **Energy traders:** **EIA** (Crude Oil Inventories — Wed 10:30 ET, holiday-adjusted;
+  shifts to Thu 11:00 ET on Monday-holiday weeks). Affects CL/MCL only.
+- **Agricultural traders:** Agricultural Reports (not our products — skip)
+
+**Window:** **±2 minutes** flatten (NOT ±30). No position/order open T−2:00 → T+2:00
+(e.g. news at 8:30 → flat by 8:28:00, may reopen after 8:32:00). The bot uses a safety
+buffer: no NEW entry T−5 → T+2, flatten by T−2.
+
+**Account types:**
+- **Restricted (T1 trading PROHIBITED):** Rapid Sim Funded, Pro Sim Funded.
+  *(The operator's MFFU account is a 50k Rapid plan → T1 hard-block.)*
+- **Unrestricted (T1 allowed with ±2min flatten):** all evaluations, 25k/50k Flex Plans.
+
+**NOT T1 (removed from blackout):** GDP, ISM, PPI, Retail Sales (no confirmed dates),
+PCE. These trade normally.
+
+- **Enforcement (Phase 1, 2026-06-22):** `calendar_filter.py` universal blackout =
+  FOMC, FOMC_MINUTES, CPI, NFP (GDP/ISM/PPI removed). EIA staged in
+  `economic_calendar.py::STATIC_EVENTS["EIA"]`, product-scoped (MCL) + firm-aware in
+  Phase 2. Parity enforced by `npm run check:ts-python-tier1-parity`.
+- **Phase 2 (pending):** firm-aware behavior — Topstep (PRIMARY/first-choice) =
+  auto-reduce size (caution); MFFU Rapid (restricted) = hard-block T1. EIA product-scoped
+  to MCL. Asymmetric T−5/−2/+2 window.
+- **Override:** strategies may set `bypass_news_blackout: true` (W14 / B11). Holidays
+  still block.
+- **Prohibited (all news, all accounts):** straddles/strangles exploiting news bursts;
+  masking news trades as standard strategies.
 
 ### 6. Simultaneous Limits at Same Price — Prohibited
 
@@ -160,6 +194,53 @@ MFFU pays out every 14 days at an 80% / 20% split (operator / firm).
 
 Same as Rule 4 — listed twice in MFFU's policy text. The
 `correlation_matrix.yaml` enforcement is the single source of truth.
+
+---
+
+## Fair Play & Prohibited Trading Practices (MFFU, 2025-11-24) — Coverage Map
+
+How each MFFU prohibited practice maps to our enforcement. Most are compliant-by-design (we
+model realistic execution and don't exploit the sim fill engine).
+
+| MFFU rule | Our coverage |
+|---|---|
+| **§1 No HFT** | `hftMaxTradesPerDay` cap (firm-config) + operator's **1-2 A+ trades/day** mandate (`TF_MAX_TRADES_PER_DAY`) — orders of magnitude under any HFT threshold. ✅ |
+| **§1 Automation allowed (no sim-fill exploit)** | The whole system is automated; we **model** realistic fills (slippage as f(vol, session); partial fills `fill_model.py`; commissions) — we do NOT exploit favorable sim fills. ✅ compliant-by-design |
+| **§2 No multi-limit-at-same-price fill manipulation** | We place single structural entries (stop-limit), never stacked limits at one price to game fills. ✅ by-design |
+| **§2 No gapped/illiquid isolated-fill profiteering** | Zero-volume / trade-critical-bar guard (`BACKTEST_ZERO_VOLUME_TRADE_CRITICAL_FAIL_LOUD`); per-symbol liquidity caps; partial-fill model on thin bars. ✅ |
+| **§2 No slippage-absence / tight-bracket exploit** | We compute P&L manually with modeled slippage + symmetric exit slippage (never the sim's zero-slippage); structural stops, not tight brackets. ✅ by-design |
+| **§2 T1 economic data** (firm-wide Fair Play) | **OVERRIDDEN on Builder** — the Builder Plan doc makes news FULLY UNRESTRICTED (see note below). Our T−5/+2 window + `macro_alignment` hard-block + news-policy `reduce_size` are kept as a **prudent risk default of ours**, not an MFFU requirement. ✅ |
+| **§2 / §4 Collaborative trading ban** | `correlation_matrix.yaml` + collaborative-trading compliance; family runs DIFFERENT strategies per firm; per-account strategy assignment unique. ✅ |
+| **§4 Own device / no copy-trading** | `compliance_gate` `vps_prohibited` + same-device ban (host must be local/personal-device); family onboarding = own device each. ✅ operational |
+| **§5 Hedging ban (same underlying, opposite side, same time — incl. MNQ+NQ)** | **NOW ENFORCED both ways:** cross-account (`checkCrossAccountHedge`) + **intra-account** (`checkIntraAccountHedge`, NEW 2026-06-23 — `hedgingSameUnderlyingBanned` flag now has teeth) via `symbolToUnderlying` collision at the entry gate (`paper-signal-service.ts` Tier 5.3.2 / 5.3.2b). Audit `compliance.intra_account_hedge_blocked`. ✅ |
+| **§3 Termination / profit confiscation** | Consequence policy (informational) — our job is to never trigger §1-§5. |
+
+**Note on §2 T1 + Builder (CORRECTED 2026-06-23):** the **Builder Plan doc explicitly OVERRIDES**
+the firm-wide Fair Play "T1 restricted" line — for Builder, **news trading is FULLY UNRESTRICTED**
+(eval + sim funded): "You may open and hold positions through any scheduled news event without
+limitation." So T1 is **NOT a compliance restriction on Builder.** Our bot's news caution
+(news-policy MFFU = `reduce_size`; `macro_alignment` hard-block; T−5/+2 entry window) is therefore
+a **prudent RISK-MANAGEMENT default of OURS, not an MFFU requirement** — institutional desks avoid
+FOMC, and the operator's 09:30–11:30 window dodges most T1 anyway. A strategy may opt into full
+news trading on Builder via per-strategy `bypass_news_blackout=true`.
+
+---
+
+## Builder Operational Rules (2026-06-23 comprehensive guide)
+
+| Rule | Detail / our handling |
+|---|---|
+| **EOD trailing lock** | MLL trails EOD highs ($2,000 distance), never moves down, **locks permanently once it reaches $100 above the starting balance** (sim funded: locks at breakeven). Our `realizedPeakEquity` EOD model + floor-lock. Open-equity losses count at session close. |
+| **Two MLL options** | **Default = $2,000 MLL / $48,000 floor** (configured) · Add-On = $1,500 MLL / $48,500 floor (cheaper, tighter). Everything else identical. ⚠️ confirm operator uses Default. |
+| **$1,000 soft-pause DLL** | All 3 stages (eval/sim/live). Soft = pause for the day, account survives (not a breach). `daily_loss_limit=1000`. |
+| **No overnight** | All positions auto-closed at session end (platform-enforced). Matches our **15:55 ET hard flatten**. `overnight_ok=false`. |
+| **7-day inactivity (sim funded)** | No trade in 7 consecutive calendar days → sim account CLOSED. ⚠️ **Vacation-mode note:** autopilot must place ≥1 MFFU trade per 7 days, else the sim account closes. (Bot trades 1-2/day, so safe while running.) |
+| **Live post-breach 21-day cooldown** | A LIVE breach → 21 calendar days: no sim trading, no new evals/resets. Our kill-switch (67% DLL halt / 95% force-close) exists to never breach. |
+| **1 sim account per user** | Only one active Builder sim account; after a breach, a new one only the following trading day. |
+| **50% consistency @ payout** | Single largest profit day ≤ 50% of cycle total, checked AT payout request, **resets after each approved payout**. Sim-funded stage only (none eval, none live). Opt-in lane during sim-funded phase. |
+| **Trading hours** | MFFU: **18:00 → 16:10 ET** (6:00pm–4:10pm EST). Our RTH window (09:30–11:30) + 15:55 ET flatten sit well inside. |
+| **Restricted products (temp, Feb 7)** | GC, SI, HG, PL, NG, QG (metals + nat gas) restricted; metals micros capped (50K → 5). **Our products MES/MNQ/MCL are NOT restricted** — no impact. |
+| **Commissions (all-in RT ÷ 2)** | MES/MNQ **$0.95** ($1.90 RT) · MCL **$0.58** ($1.16 RT). Per-symbol exact in `firm_config.py` (was wrongly a flat $0.62). |
 
 ---
 

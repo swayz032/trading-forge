@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-06-22T21:45:15.258Z`.
+Updated automatically from the repo on `2026-06-24T19:45:33.529Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -11,13 +11,13 @@ Updated automatically from the repo on `2026-06-22T21:45:15.258Z`.
 
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `ci_gate, kill_switch, operator, operator_hmac_override, operator_invoke_for_cohort_validation, operator_opt_in_per_strategy, operator-approve, operator-halt-only, operator-only-recovery, tradingview_deploy`
-- API routes tracked: `74`
-- Scheduler jobs tracked: `95`
+- API routes tracked: `75`
+- Scheduler jobs tracked: `102`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
-- Engine subsystems tracked: `28`
-- Database tables tracked: `104`
+- Engine subsystems tracked: `29`
+- Database tables tracked: `106`
 
 ### Subsystem Runtime States
 - `active`: `63`
@@ -54,10 +54,10 @@ Updated automatically from the repo on `2026-06-22T21:45:15.258Z`.
 
 ### Registry Coverage
 - Registry subsystems tracked: `69`
-- Route coverage: `74/74`
-- Scheduler coverage: `95/95`
-- Engine coverage: `28/28`
-- Database coverage: `104/104`
+- Route coverage: `75/75`
+- Scheduler coverage: `102/102`
+- Engine coverage: `29/29`
+- Database coverage: `106/106`
 - Autonomous subsystems with audit coverage: `62/62`
 - Autonomous subsystems with audit actions: `62/62`
 - Autonomous subsystems with telemetry evidence: `62/62`
@@ -93,7 +93,7 @@ Updated automatically from the repo on `2026-06-22T21:45:15.258Z`.
 - Inactive workflow candidates: `0`
 - Broken workflow blockers: `0`
 - Failing workflow blockers: `0`
-- Source-missing workflow blockers: `3`
+- Source-missing workflow blockers: `28`
 - Awaiting redeploy workflow blockers: `0`
 - Stale workflow blockers: `0`
 - Runtime control blockers: `0`
@@ -221,6 +221,7 @@ Updated automatically from the repo on `2026-06-22T21:45:15.258Z`.
 - `statistics` owner=`strategy_lifecycle` status=`runtime-proven` state=`active` gaps=none
 - `strategy_memory` owner=`research_orchestration` status=`runtime-proven` state=`active` gaps=none
 - `survival` owner=`backtest_qualification` status=`runtime-proven` state=`active` gaps=none
+- `synthetic` owner=`synthetic_black_swan_survival` status=`experimental` state=`experimental` gaps=none
 - `validation` owner=`research_orchestration` status=`runtime-proven` state=`active` gaps=none
 - `validation_runner` owner=`research_orchestration` status=`runtime-proven` state=`active` gaps=none
 - `walk_forward` owner=`backtest_qualification` status=`runtime-proven` state=`active` gaps=none
@@ -242,6 +243,7 @@ Updated automatically from the repo on `2026-06-22T21:45:15.258Z`.
 - `/api/bias-state`
 - `/api/broker-accounts`
 - `/api/broker-error-budget`
+- `/api/broker/fill-callback`
 - `/api/cloud-qmc`
 - `/api/compiler`
 - `/api/compliance`
@@ -333,11 +335,14 @@ Updated automatically from the repo on `2026-06-22T21:45:15.258Z`.
 - `deepar-predict`
 - `deepar-train`
 - `deepar-validate`
+- `deployed-pine-artifact-check`
 - `deployed-strategy-starvation-check`
 - `disabled-job-probe`
+- `discord-fanout-audit-30min`
 - `dlq-escalation`
 - `dlq-retry`
 - `drain-scouted-ideas-periodic`
+- `economic-calendar-sync`
 - `feed-silence-check`
 - `funnel-snapshot`
 - `graveyard-pattern-extraction`
@@ -361,10 +366,13 @@ Updated automatically from the repo on `2026-06-22T21:45:15.258Z`.
 - `naked-poc-sync-daily`
 - `narrative-state-tracker`
 - `nightly-critique`
+- `ollama-keepwarm-watchdog`
+- `paper-journal-recon-daily`
 - `paper-vs-backtest`
 - `pattern-aggregator`
 - `pipeline-resume-drain`
 - `portfolio-correlation`
+- `position-drift-reconcile`
 - `pre-market-briefing-discord`
 - `pre-market-prep`
 - `pre-market-routine`
@@ -387,6 +395,7 @@ Updated automatically from the repo on `2026-06-22T21:45:15.258Z`.
 - `stale-pending-sweeper`
 - `stale-session-check`
 - `strategy-stale-detector`
+- `synthetic-regime-bank-populate`
 - `system-map-drift`
 - `tournament-staleness-check`
 - `validation-cadence-monthly`
@@ -424,6 +433,7 @@ Updated automatically from the repo on `2026-06-22T21:45:15.258Z`.
 - `statistics`
 - `strategy_memory`
 - `survival`
+- `synthetic`
 - `validation`
 - `validation_runner`
 - `walk_forward`
@@ -501,6 +511,7 @@ Updated automatically from the repo on `2026-06-22T21:45:15.258Z`.
 - `lifecycle_shadow_signals`
 - `lifecycle_transitions`
 - `liquidity_levels`
+- `live_order_pine_dedup`
 - `llm_injection_attempts`
 - `macro_features`
 - `macro_regime_states`
@@ -531,6 +542,7 @@ Updated automatically from the repo on `2026-06-22T21:45:15.258Z`.
 - `regime_hmm_models`
 - `rl_training_runs`
 - `scout_drain_samples`
+- `server_mediated_orders`
 - `shadow_rerun_findings`
 - `shadow_signals`
 - `skip_decisions`

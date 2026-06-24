@@ -1,0 +1,15 @@
+-- 0175_seed_auto_patch_loop_disabled.sql  (REPAIRED 2026-06-24 — was boot-blocking)
+--
+-- ORIGINAL BUG (caused production-down crash-loop): this migration INSERTed the
+-- string 'false' into system_parameters.current_value, which is a NUMERIC column.
+-- Postgres rejected 'false' as invalid numeric input → the fail-closed
+-- boot-migration-runner threw → the entire API refused to boot.
+--
+-- WHY A NO-OP IS CORRECT + SAFE: the auto_patch_loop_enabled kill switch is
+-- FAIL-CLOSED (pattern-aggregator-service.ts::_readKillSwitch) — an ABSENT row
+-- means the LLM-mutation loop is DISABLED. So seeding the row is OPTIONAL for
+-- safety: the loop is already off without it. We repair this migration to a
+-- zero-risk no-op to unblock boot. Enabling the loop remains an explicit
+-- operator action. A proper TYPED kill-flag (numeric 0/1) + read-path is handled
+-- in a separate, tested follow-up — never in a boot-critical migration again.
+SELECT 1;

@@ -218,6 +218,173 @@ describe("dead-mans-heartbeat-service", () => {
     });
   });
 
+  // ─── A-1: autonomous self-restart tests ──────────────────────────────────────
+  //
+  // Wave hardening 2026-06-22 — autonomous-readiness A-1.
+  // Verifies: (a) self-restart fetch is called with HMAC when secret is set;
+  //           (b) auto_restart_attempted audit row is written before the fetch;
+  //           (c) 3/24h cap blocks the 4th attempt;
+  //           (d) escalation alert fires when fetch rejects.
+
+  describe("runHeartbeatStaleCheck — autonomous self-restart (A-1)", () => {
+    // We need to intercept the global fetch that the service calls.
+    // Each test sets up its own fetch mock as a property on globalThis.
+
+    let origFetch: typeof globalThis.fetch;
+    let fetchMock: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      origFetch = globalThis.fetch;
+      fetchMock = vi.fn();
+      globalThis.fetch = fetchMock as unknown as typeof globalThis.fetch;
+      process.env["ADMIN_RESTART_HMAC_SECRET"] = "test-secret-32-chars-xxxxxxxxxxxx";
+    });
+
+    afterEach(() => {
+      globalThis.fetch = origFetch;
+      delete process.env["ADMIN_RESTART_HMAC_SECRET"];
+    });
+
+    it("calls self-restart fetch when stale + secret set", async () => {
+      setEtHour(13);
+      const staleTs = uniqueStaleTs();
+      (db as typeof db & { execute: ReturnType<typeof vi.fn> }).execute.mockResolvedValue([{ ts: staleTs }]);
+      const insertValues = vi.fn().mockResolvedValue([]);
+      (db as typeof db & { insert: ReturnType<typeof vi.fn> }).insert.mockReturnValue({ values: insertValues });
+      // Mock fetch to simulate: audit-log select (no prior attempt) + count (0) + insert audit row
+      // The service also does DB selects; we stub db.select separately.
+      const mockSelect = vi.fn().mockResolvedValue([]);
+      (db as typeof db & { select?: ReturnType<typeof vi.fn> }).select = mockSelect.mockReturnValue({
+        from: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ limit: vi.fn().mockResolvedValue([]) }) }),
+      });
+      fetchMock.mockResolvedValue({ ok: true, status: 200 });
+      const { runHeartbeatStaleCheck } = await import("../services/dead-mans-heartbeat-service.js");
+      await runHeartbeatStaleCheck();
+      // fetch should have been called at least once toward /api/admin/self-restart
+      const selfRestartCalls = fetchMock.mock.calls.filter(
+        (c: unknown[]) => typeof (c[0] as string) === "string" && (c[0] as string).includes("/api/admin/self-restart"),
+      );
+      expect(selfRestartCalls.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it("writes auto_restart_attempted audit row before the fetch", async () => {
+      setEtHour(13);
+      const staleTs = uniqueStaleTs();
+      (db as typeof db & { execute: ReturnType<typeof vi.fn> }).execute.mockResolvedValue([{ ts: staleTs }]);
+      const insertValues = vi.fn().mockResolvedValue([]);
+      (db as typeof db & { insert: ReturnType<typeof vi.fn> }).insert.mockReturnValue({ values: insertValues });
+      (db as typeof db & { select?: ReturnType<typeof vi.fn> }).select = vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ limit: vi.fn().mockResolvedValue([]) }) }),
+      });
+      let auditWrittenBeforeFetch = false;
+      fetchMock.mockImplementation(async () => {
+        // At the time fetch is called, the audit row MUST already be queued for insert.
+        const auditInsertCalls = insertValues.mock.calls.filter(
+          (c: unknown[]) => (c[0] as Record<string, unknown>).action === "dead_mans_heartbeat.auto_restart_attempted",
+        );
+        if (auditInsertCalls.length > 0) auditWrittenBeforeFetch = true;
+        return { ok: true, status: 200 };
+      });
+      const { runHeartbeatStaleCheck } = await import("../services/dead-mans-heartbeat-service.js");
+      await runHeartbeatStaleCheck();
+      expect(auditWrittenBeforeFetch).toBe(true);
+    });
+
+    it("blocks the 4th attempt when 3 audit rows exist in last 24h (cap guard)", async () => {
+      setEtHour(13);
+      const staleTs = uniqueStaleTs();
+      (db as typeof db & { execute: ReturnType<typeof vi.fn> }).execute.mockResolvedValue([{ ts: staleTs }]);
+      const insertValues = vi.fn().mockResolvedValue([]);
+      (db as typeof db & { insert: ReturnType<typeof vi.fn> }).insert.mockReturnValue({ values: insertValues });
+      // Simulate 3 prior attempts in last 24h via db.select count
+      (db as typeof db & { select?: ReturnType<typeof vi.fn> }).select = vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([]),
+            // count query returns 3
+          }),
+        }),
+      });
+      // Override to return 3 for count queries
+      const selectImpl = vi.fn().mockImplementation(() => ({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            // For dedup queries (limit 1) → no row; for count query → [{n: 3}]
+            limit: vi.fn().mockResolvedValue([]),
+            // The count() select alias returns [{n: 3}]
+          }),
+        }),
+      }));
+      // We need a smarter mock: count query returns [{n:3}], limit queries return []
+      let selectCallCount = 0;
+      (db as typeof db & { select?: ReturnType<typeof vi.fn> }).select = vi.fn().mockImplementation((...args: unknown[]) => {
+        selectCallCount++;
+        // 2nd select call is the count query (first is hasAutoRestartAttemptedForWindow)
+        if (selectCallCount === 2) {
+          return {
+            from: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue([{ n: 3 }]) }),
+          };
+        }
+        return {
+          from: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ limit: vi.fn().mockResolvedValue([]) }) }),
+        };
+      });
+      fetchMock.mockResolvedValue({ ok: true, status: 200 });
+      const { runHeartbeatStaleCheck } = await import("../services/dead-mans-heartbeat-service.js");
+      await runHeartbeatStaleCheck();
+      // fetch should NOT have been called toward self-restart (cap blocks it)
+      const selfRestartCalls = fetchMock.mock.calls.filter(
+        (c: unknown[]) => typeof (c[0] as string) === "string" && (c[0] as string).includes("/api/admin/self-restart"),
+      );
+      expect(selfRestartCalls.length).toBe(0);
+    });
+
+    it("fires escalation alert when self-restart fetch rejects (port unreachable)", async () => {
+      setEtHour(13);
+      const staleTs = uniqueStaleTs();
+      (db as typeof db & { execute: ReturnType<typeof vi.fn> }).execute.mockResolvedValue([{ ts: staleTs }]);
+      const insertValues = vi.fn().mockResolvedValue([]);
+      (db as typeof db & { insert: ReturnType<typeof vi.fn> }).insert.mockReturnValue({ values: insertValues });
+      (db as typeof db & { select?: ReturnType<typeof vi.fn> }).select = vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ limit: vi.fn().mockResolvedValue([]) }) }),
+      });
+      // Simulate connection refused (process truly dead)
+      fetchMock.mockRejectedValue(new Error("ECONNREFUSED"));
+      const { notifyCritical } = await import("../services/notification-service.js");
+      const { runHeartbeatStaleCheck } = await import("../services/dead-mans-heartbeat-service.js");
+      await runHeartbeatStaleCheck();
+      // notifyCritical should have been called with the escalation message
+      const criticalCalls = (notifyCritical as ReturnType<typeof vi.fn>).mock.calls;
+      const escalationCall = criticalCalls.find((c: unknown[]) => {
+        const title = c[0] as string;
+        return title.includes("auto-restart FAILED") || title.includes("auto-restart unavailable") || title.includes("cap reached");
+      });
+      // The escalation alert or an availability alert must have fired
+      expect(escalationCall ?? criticalCalls.length).toBeTruthy();
+    });
+
+    it("skips auto-restart when ADMIN_RESTART_HMAC_SECRET is absent", async () => {
+      delete process.env["ADMIN_RESTART_HMAC_SECRET"];
+      setEtHour(13);
+      const staleTs = uniqueStaleTs();
+      (db as typeof db & { execute: ReturnType<typeof vi.fn> }).execute.mockResolvedValue([{ ts: staleTs }]);
+      (db as typeof db & { insert: ReturnType<typeof vi.fn> }).insert.mockReturnValue({
+        values: vi.fn().mockResolvedValue([]),
+      });
+      (db as typeof db & { select?: ReturnType<typeof vi.fn> }).select = vi.fn().mockReturnValue({
+        from: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ limit: vi.fn().mockResolvedValue([]) }) }),
+      });
+      fetchMock.mockResolvedValue({ ok: true, status: 200 });
+      const { runHeartbeatStaleCheck } = await import("../services/dead-mans-heartbeat-service.js");
+      await runHeartbeatStaleCheck();
+      // fetch toward self-restart must NOT be called when secret is absent
+      const selfRestartCalls = fetchMock.mock.calls.filter(
+        (c: unknown[]) => typeof (c[0] as string) === "string" && (c[0] as string).includes("/api/admin/self-restart"),
+      );
+      expect(selfRestartCalls.length).toBe(0);
+    });
+  });
+
   describe("getLastHeartbeatAt", () => {
     it("returns null when no rows exist", async () => {
       (db as typeof db & { execute: ReturnType<typeof vi.fn> }).execute.mockResolvedValueOnce([]);

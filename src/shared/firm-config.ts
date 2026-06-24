@@ -36,7 +36,7 @@ export interface FirmAccountConfig {
   maxDrawdown: number;            // Also serves as buffer amount
   /** Max MICRO contracts at $50K (50 = 5 minis × 10:1 ratio). */
   maxContracts: number;
-  trailing: "eod" | "realtime";
+  trailing: "eod" | "intraday";
   payoutSplit: number;            // Initial split
   payoutSplitTiers?: { threshold: number; split: number }[];
   payoutCountTiers?: { payoutNumber: number; split: number }[];  // Alpha: count-based tiers
@@ -98,13 +98,18 @@ export const FIRMS: Record<string, FirmConfig> = {
     macro_blackout_mode: "strict",
     accountTypes: {
       "50k": {
+        // 2026-06-23: operator chose the MFFU BUILDER plan. Builder = EOD trailing (Max EOD
+        // Drawdown $2,000; eval floor $48,000; LIVE MLL static once it reaches $0) + 40 micros
+        // (room for our pyramid, unlike Pro's 5) + $1,000 SOFT-pause DLL (account survives) +
+        // news ALLOWED. 80/20 split; consistency 50% at the SIM-FUNDED payout stage only (NONE
+        // eval, NONE live); $500 min payout; 5 sim payouts → real live broker (Blue Row Capital).
         accountSize: 50_000, monthlyFee: 77, activationFee: 0, ongoingMonthlyFee: 0,
-        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 50, trailing: "eod",
-        payoutSplit: 0.80, minPayoutDays: 5, consistencyRule: 0.50, // Python: "mffu_50pct"
-        dailyLossLimit: null, overnightOk: false, weekendOk: false, commissionPerSide: 0.62,
-        minTradingDays: 5,
+        profitTarget: 3000, maxDrawdown: 2000, maxContracts: 40, trailing: "eod",
+        payoutSplit: 0.80, minPayoutDays: 2, consistencyRule: 0.50, // Python: "mffu_50pct_sim_payout"
+        dailyLossLimit: 1000, overnightOk: false, weekendOk: false, commissionPerSide: 0.95, // MFFU MES/MNQ $1.90 RT; MCL $0.58 exact in firm_config per-symbol
+        minTradingDays: 1,
         // 2026-compliance fields (canonical: docs/prop-firm-rules-2026-mffu.md)
-        payoutCycleDays: 14,
+        payoutCycleDays: 2,
         hftMaxTradesPerDay: 500,
         // Rule 2: collaborative trading (2+ accounts same/opposite strategy → ban)
         collaborativeTradingBanned: true,
@@ -365,7 +370,7 @@ export function getFirmAccount(firmName: string, accountType: string = "50k"): F
 export function getFirmLimit(
   firmName: string,
   _accountType: string = "50k",
-): { maxDrawdown: number; maxContracts: number; dailyLossLimit: number | null; trailing: "eod" | "realtime" } | null {
+): { maxDrawdown: number; maxContracts: number; dailyLossLimit: number | null; trailing: "eod" | "intraday" } | null {
   const acct = getFirmAccount(firmName, "50k");
   if (!acct) return null;
   return {

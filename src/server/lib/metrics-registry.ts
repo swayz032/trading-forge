@@ -271,12 +271,22 @@ export const regimeTransitionTotal = new Counter({
 //   audit fires (Pass A.2 gate at TESTING → SHADOW / TESTING → PAPER).
 //   regime label = institutional regime at the time of block evaluation.
 //   Cardinality: 6 regime values × 1 counter = 6 time series max.
-export const pboBLocksTotal = new Counter({
+export const pboBlocksTotal = new Counter({
   name: "tf_pbo_blocks_total",
   help: "Total PBO overfit blocks at TESTING lifecycle gate, labelled by institutional regime",
   labelNames: ["regime"] as const,
   registers: [promRegistry],
 });
+/**
+ * @deprecated Use `pboBlocksTotal` (corrected camelCase). lifecycle-service.ts has been
+ * updated (cf1, 2026-06-24) to use the canonical name directly.
+ * Sub-carry-forward: wave29-prod-hardening-prom-counters.test.ts, wave29-pass-d1-observability.test.ts,
+ * wave-a-paper-parity-trades-counter.test.ts, wave-a-paper-parity-promotions-counter.test.ts,
+ * wave-a-paper-parity-auto-promo-gates.test.ts, and wave-b-paper-parity-pbo-regime-label.test.ts
+ * still import this alias and are not in the cf1 owned-file list.
+ * Remove this alias once those test files are updated to import pboBlocksTotal.
+ */
+export const pboBLocksTotal = pboBlocksTotal;
 
 // tf_shadow_signals_total{strategy_id, divergence_bucket}
 //   Incremented on each shadow signal write (lifecycle.shadow_signal_logged audit).
@@ -364,5 +374,96 @@ export const lifecycleShadowPromotionsTotal = new Counter({
   name: "tf_lifecycle_shadow_promotions_total",
   help: "Total SHADOW → PAPER gate evaluations, labelled by outcome",
   labelNames: ["outcome"] as const,
+  registers: [promRegistry],
+});
+
+// Pass 1 Track D: counts warning-severity alerts routed to Discord via notification-service.
+// Answers "how many non-critical alerts reached Discord?" on the observability dashboard.
+export const warningSeverityDiscordRoutedTotal = new Counter({
+  name: "tf_warning_severity_discord_routed_total",
+  help: "Total warning/info-severity createAlert() calls routed through notification-service to Discord",
+  labelNames: ["severity"] as const,
+  registers: [promRegistry],
+});
+
+// ─── Pass 4 Track C — TradersPost per-call rejection counter (2026-06-23) ─────
+//
+// tf_broker_router_traderspost_rejects_total{status_code, signal_action}
+//   Incremented by broker-router.ts at the submitResult.success===false branch —
+//   i.e. every time TradersPost returns a 4xx/5xx or the submission times out —
+//   BEFORE the circuit breaker opens. Once the breaker opens (3 consecutive
+//   failures) the notifyCritical fires; this counter captures every per-call slip
+//   whether the breaker is open or not.
+//
+//   Labels:
+//     status_code   — HTTP status code as string, or "unknown" when null/undefined
+//                     (timeout, connection-refused, etc.)
+//     signal_action — the signal.action string (e.g. "enter_long", "exit_long")
+//                     or "unknown" when absent
+//
+//   Cardinality: ~5 status codes × ~4 actions = ~20 time series — safe.
+//
+//   Operational question answered: "Are per-call TradersPost rejections
+//   concentrated on a specific action or status code?" — useful for diagnosing
+//   payload shape errors (400) vs server-side TradersPost outages (503+).
+export const traderspostRejectsTotal = new Counter({
+  name: "tf_broker_router_traderspost_rejects_total",
+  help: "Total per-call TradersPost webhook submission failures (4xx/5xx/timeout) before circuit-breaker threshold",
+  labelNames: ["status_code", "signal_action"] as const,
+  registers: [promRegistry],
+});
+
+// ─── Pass 4.5 Track D — Archetype routing observability counter (2026-06-23) ───
+//
+// tf_archetype_signals_routed_total{archetype, resolved_action}
+//   Incremented by archetype-routing-observability.ts on every archetype signal
+//   resolution at /api/live-order. Emitted by:
+//     - emitArchetypeSignalResolved()  → resolved_action = direction from evaluator
+//     - emitArchetypeEvaluatorFailed() → resolved_action = "evaluator_failed"
+//
+//   Labels:
+//     archetype       — ARCHETYPE_REGISTRY key (e.g. "bounce_off_level",
+//                       "ict_bias_aligned_continuation", etc.) — up to 39+ values
+//     resolved_action — closed set:
+//                       enter_long | enter_short | exit_long | exit_short |
+//                       hold | evaluator_failed
+//
+//   Cardinality: ~40 archetypes × 6 actions = ~240 time series — safe.
+//   Declared at registry init so Prometheus sees zero values from first scrape
+//   (no "no data" gaps in Grafana before the first live-order archetype signal).
+//
+//   Operational question answered: "Which archetypes are most active and do any
+//   show elevated evaluator_failed rates indicating subprocess fragility?"
+export const archetypeSignalsRoutedTotal = new Counter({
+  name: "tf_archetype_signals_routed_total",
+  help: "Total archetype signals routed through /api/live-order, labelled by archetype and resolved action",
+  labelNames: ["archetype", "resolved_action"] as const,
+  registers: [promRegistry],
+});
+
+// ─── Pass 3 Track D — Pine Export SHADOW refusal counter (2026-06-22) ─────────
+//
+// tf_pine_shadow_refusals_total{blocked_at}
+//   Incremented by pine-shadow-observability.ts::emitPineShadowRefused() on every
+//   Pine export request blocked because the strategy is in SHADOW state or has
+//   shadow_mode_enabled=true.
+//
+//   blocked_at label (closed set — mirrors PINE_EVENTS comment in sse.ts):
+//     "compileDualPineExport" — pine-export-service.ts compileDualPineExport() entry
+//     "compilePineExport"     — pine-export-service.ts compilePineExport() entry
+//     "recipient_build"       — pine-export-recipient-service.ts build path
+//     "artifact_download"     — GET artifact-download route (pine-export.ts)
+//
+//   Cardinality: 4 label values = 4 time series — safe.
+//   Declared at registry init so Prometheus sees zero values from first scrape
+//   (no "no data" gaps in Grafana even before the first refusal fires).
+//
+//   Operational question answered: "Which Pine export entry point generates the
+//   most SHADOW refusals?" — useful for targeting operator education or guarding
+//   against SHADOW-strategy Pine leak at the busiest call site.
+export const pineShadowRefusalsTotal = new Counter({
+  name: "tf_pine_shadow_refusals_total",
+  help: "Total Pine export requests refused because the strategy is in SHADOW state or shadow_mode_enabled=true, labelled by call-site",
+  labelNames: ["blocked_at"] as const,
   registers: [promRegistry],
 });

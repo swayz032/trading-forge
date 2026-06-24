@@ -1,0 +1,47 @@
+{
+  "schema_version": "v1",
+  "name": "MA Bounce Off Level MES",
+  "description": "Moving average rejection bounce — price tests a significant MA (20/50/200 EMA) acting as dynamic support or resistance, then rejects with a confirmed reversal candle. Entry on the rejection close candle. Wave 26 Pass G A1 archetype (migration 0151 backfilled 6 MA-as-S/R strategies to this archetype).",
+  "symbol": "MES",
+  "timeframe": "5m",
+  "direction": "both",
+  "entry_type": "structural_archetype",
+  "entry_indicator": "archetype:bounce_off_level",
+  "entry_params": {
+    "ma_period": 20,
+    "ma_type": "ema",
+    "min_rejection_size_ticks": 3,
+    "confirmation_candle": true
+  },
+  "entry_condition": "Price tests the 20 EMA (or 50/200 EMA) as dynamic S/R, prints a rejection candle (hammer/engulfing pattern) away from the MA, entry on close of rejection candle. Stop below/above the rejection wick.",
+  "exit_type": "style_c",
+  "exit_params": {
+    "tp1_r": 1.0,
+    "tp2_r": 2.0,
+    "tp1_pct": 0.33,
+    "tp2_pct": 0.33,
+    "runner_pct": 0.34,
+    "be_on_tp1": true,
+    "time_stop_et": "15:55"
+  },
+  "stop_loss_atr_multiple": 1.5,
+  "stop_loss_ceiling_pts": 14,
+  "max_contracts": 6,
+  "preferred_regime": "RANGE_BOUND",
+  "session_filter": "RTH_ONLY",
+  "source": "archetype_registry",
+  "tags": [
+    "bounce",
+    "ma_support",
+    "dynamic_level",
+    "rejection",
+    "mes",
+    "archetype",
+    "wave26g"
+  ],
+  "profit_scaling_tier": {
+    "increment": 3,
+    "threshold": 3000
+  },
+  "sizing_method": "risk_derived_pyramid"
+}

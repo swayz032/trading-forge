@@ -105,6 +105,64 @@ describe("FIX B — checkInProcessTier1EventWindow (pure fn, zero dependencies)"
     expect(types.has("CPI")).toBe(true);
     expect(types.has("NFP")).toBe(true);
   });
+
+  // ─── Wave hardening 2026-06-22 Phase 1: MFFU Feb-2026 News Policy — correct T1 set ──
+  // GDP/ISM/PPI REMOVED (not T1); FOMC_MINUTES added (T1 all products, 14:00 ET).
+  // EIA is product-scoped (MCL) + firm-aware → Phase 2, NOT in this universal backup.
+
+  it("B-14: FOMC_MINUTES in TIER1_EVENTS has 14:00 time and covers 2026-2027", () => {
+    const fm = TIER1_EVENTS.filter((e) => e.event_type === "FOMC_MINUTES");
+    expect(fm.length).toBeGreaterThan(0);
+    fm.forEach((e) => expect(e.time_et).toBe("14:00"));
+    const years = new Set(fm.map((e) => e.date.slice(0, 4)));
+    expect(years.has("2026")).toBe(true);
+    expect(years.has("2027")).toBe(true);
+  });
+
+  it("B-15: TIER1_EVENTS universal set = FOMC/FOMC_MINUTES/CPI/NFP (GDP/ISM/PPI removed)", () => {
+    const types = new Set(TIER1_EVENTS.map((e) => e.event_type));
+    expect(types.has("FOMC")).toBe(true);
+    expect(types.has("FOMC_MINUTES")).toBe(true);
+    expect(types.has("CPI")).toBe(true);
+    expect(types.has("NFP")).toBe(true);
+    // Removed — not T1 per current MFFU policy:
+    expect(types.has("GDP")).toBe(false);
+    expect(types.has("ISM")).toBe(false);
+    expect(types.has("PPI")).toBe(false);
+    // EIA is product-scoped (MCL) + firm-aware → Phase 2, never in the universal backup:
+    expect(types.has("EIA")).toBe(false);
+  });
+
+  it("B-16: inside FOMC_MINUTES window (2026-02-18 14:00 ET, EST) → blocked=true", () => {
+    // FOMC Minutes 2026-02-18 at 14:00 ET (EST=UTC-5). Bar at 13:45 ET = 18:45 UTC.
+    const result = checkInProcessTier1EventWindow("2026-02-18T18:45:00.000Z");
+    expect(result.blocked).toBe(true);
+    expect(result.eventType).toBe("FOMC_MINUTES");
+    expect(result.windowMinutes).toBe(TIER1_BLACKOUT_MINUTES);
+  });
+
+  it("B-17: former GDP date (2026-01-29 08:30 ET) → blocked=false (removed)", () => {
+    // GDP is NOT T1 (MFFU Feb-2026). Bar at 08:30 ET = 13:30 UTC must NOT block.
+    const result = checkInProcessTier1EventWindow("2026-01-29T13:30:00.000Z");
+    expect(result.blocked).toBe(false);
+  });
+
+  it("B-18: former ISM date (2026-02-02 10:00 ET) → blocked=false (removed)", () => {
+    const result = checkInProcessTier1EventWindow("2026-02-02T15:00:00.000Z");
+    expect(result.blocked).toBe(false);
+  });
+
+  it("B-19: former PPI date (2026-01-15 08:30 ET) → blocked=false (removed)", () => {
+    const result = checkInProcessTier1EventWindow("2026-01-15T13:30:00.000Z");
+    expect(result.blocked).toBe(false);
+  });
+
+  it("B-20: FOMC_MINUTES 2026 has exactly 7 dates in TIER1_EVENTS", () => {
+    const fm2026 = TIER1_EVENTS.filter(
+      (e) => e.event_type === "FOMC_MINUTES" && e.date.startsWith("2026"),
+    );
+    expect(fm2026).toHaveLength(7);
+  });
 });
 
 // ─── FIX A mocks ─────────────────────────────────────────────────────────────

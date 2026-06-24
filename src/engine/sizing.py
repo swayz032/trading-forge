@@ -100,7 +100,20 @@ _RISK_VOL_SCALE_MAX = float(os.environ.get("RISK_VOL_SCALE_MAX", "1.5"))
 
 # Wave 25 Pass 2 Inst-10: Drawdown-room risk fraction (Topstep only).
 # Mirror of TypeScript DRAWDOWN_ROOM_RISK_PCT constant in risk-sizing.ts.
-_DRAWDOWN_ROOM_RISK_PCT = float(os.environ.get("DRAWDOWN_ROOM_RISK_PCT", "0.01"))
+# Default 0.08 = 8% of remaining drawdown buffer per NexusFi 2026-05 thread:
+#   "8-12% of remaining drawdown buffer per trade" is the institutional standard.
+#   Prior default of 0.01 (1%) produced ~$20/trade on a fresh $2K Topstep buffer →
+#   floor(20 / stop_dollars) = 0 contracts, strangling sizing completely.
+#   8% of $2K = $160; at 1.5×4pt ATR stop on MES ($30/contract) → floor(160/30) = 5.
+# Scaling-plan-baby-mode update (2026-06-23): aligned with risk-sizing.ts.
+_DRAWDOWN_ROOM_RISK_PCT = float(os.environ.get("DRAWDOWN_ROOM_RISK_PCT", "0.08"))
+
+# ── Scaling-plan-baby-mode (2026-06-23): Proven-trades ramp config ────────────
+# Number of proven winning trades required per pyramid tier step.
+# When proven_trades is provided to compute_risk_derived_contracts(), tier is computed
+# as floor(proven_trades / _PROVEN_TRADES_PER_TIER) instead of the dollar formula.
+# Mirror of TypeScript PROVEN_TRADES_PER_TIER constant in risk-sizing.ts.
+_PROVEN_TRADES_PER_TIER = max(1, int(os.environ.get("PROVEN_TRADES_PER_TIER", "10")))
 
 
 def compute_vol_scale(vix_now: Optional[float]) -> float:
@@ -174,6 +187,11 @@ class RiskSizingResult:
     drawdown_room_cap_binding: bool = (
         False  # True when drawdownRoomCap was the binding constraint.
     )
+    # Scaling-plan-baby-mode (2026-06-23): proven-trades ramp observability
+    # "proven_trades" — provenTrades input present; tier = floor(proven_trades / proven_trades_per_tier).
+    # "dollar_fallback" — proven_trades absent; tier = floor(cumulativeProfit / tier_threshold_dollars).
+    scaling_mode: str = "dollar_fallback"  # "proven_trades" | "dollar_fallback"
+    scaling_tier: int = 0  # tier count used in pyramidTier computation (audit)
 
 
 def _compute_topstep_trailing_floor(
@@ -216,6 +234,13 @@ def compute_risk_derived_contracts(
     current_drawdown_room: Optional[float] = None,
     # ── Wave 26 Pass K Phase 3: PM session size factor ──────────────────────
     pm_size_factor: Optional[float] = None,
+    # ── Scaling-plan-baby-mode (2026-06-23): Proven-trades ramp ─────────────
+    # When provided: tier = floor(proven_trades / _PROVEN_TRADES_PER_TIER).
+    # When None: falls back to dollar mode (backward-compat, byte-identical).
+    # Cumulative count of closed WINNING trades (net realized P&L > 0), monotonic,
+    # survives withdrawals. Produced by the live paper layer; this function only
+    # CONSUMES the value, never computes it.
+    proven_trades: Optional[int] = None,
 ) -> RiskSizingResult:
     """Compute risk-derived contract count at signal time.
 
@@ -271,13 +296,22 @@ def compute_risk_derived_contracts(
         high_water_balance if high_water_balance is not None else account_balance
     )
 
-    # Pyramid tier (slow ramp-up — identical to TS: floor(max(0, cumulativeProfit) / threshold))
-    profit_floor = max(0.0, cumulative_profit)
-    tiers = (
-        math.floor(profit_floor / tier_threshold_dollars)
-        if tier_threshold_dollars > 0
-        else 0
-    )
+    # Pyramid tier (slow ramp-up)
+    # Scaling-plan-baby-mode (2026-06-23): proven-trades mode takes priority when
+    # proven_trades is provided. Parity with risk-sizing.ts: same formula, same edge cases.
+    # Backward-compat: proven_trades=None → dollar mode, byte-identical to prior behavior.
+    if proven_trades is not None and isinstance(proven_trades, (int, float)) and math.isfinite(float(proven_trades)):
+        _pt_per_tier = _PROVEN_TRADES_PER_TIER if _PROVEN_TRADES_PER_TIER > 0 else 10
+        tiers = math.floor(max(0, int(proven_trades)) / _pt_per_tier)
+        scaling_mode = "proven_trades"
+    else:
+        profit_floor = max(0.0, cumulative_profit)
+        tiers = (
+            math.floor(profit_floor / tier_threshold_dollars)
+            if tier_threshold_dollars > 0
+            else 0
+        )
+        scaling_mode = "dollar_fallback"
     pyramid_tier_raw = base_contracts + tier_increment * tiers
 
     # ── Wave 26 Pass K Phase 3 (2026-05-26) — Apply PM session size factor ──
@@ -324,6 +358,8 @@ def compute_risk_derived_contracts(
             firm_cap_applied=False,
             pyramid_floor_applied=False,
             account_health_ratio=account_health_ratio,
+            scaling_mode=scaling_mode,
+            scaling_tier=tiers,
             evidence={
                 "account_balance": account_balance,
                 "atr_points": atr_points,
@@ -353,6 +389,8 @@ def compute_risk_derived_contracts(
             firm_cap_applied=False,
             pyramid_floor_applied=False,
             account_health_ratio=account_health_ratio,
+            scaling_mode=scaling_mode,
+            scaling_tier=tiers,
             evidence={
                 "account_balance": account_balance,
                 "atr_points": atr_points,
@@ -394,6 +432,8 @@ def compute_risk_derived_contracts(
                 firm_cap_applied=False,
                 pyramid_floor_applied=False,
                 account_health_ratio=account_health_ratio,
+                scaling_mode=scaling_mode,
+                scaling_tier=tiers,
                 evidence={
                     "account_balance": account_balance,
                     "trailing_floor": trailing_floor,
@@ -514,6 +554,8 @@ def compute_risk_derived_contracts(
                 firm_cap_applied=floor_firm_cap_applied,  # F-7: true if firm cap constrained floor
                 pyramid_floor_applied=True,
                 account_health_ratio=account_health_ratio,
+                scaling_mode=scaling_mode,
+                scaling_tier=tiers,
                 evidence=ev_floor,
             )
 
@@ -556,6 +598,8 @@ def compute_risk_derived_contracts(
             firm_cap_applied=False,
             pyramid_floor_applied=False,
             account_health_ratio=account_health_ratio,
+            scaling_mode=scaling_mode,
+            scaling_tier=tiers,
             evidence=ev,
         )
 
@@ -656,6 +700,8 @@ def compute_risk_derived_contracts(
         "tier_threshold_dollars": tier_threshold_dollars,
         "max_risk_pct_per_trade": max_risk_pct_per_trade,
         "tiers_earned": tiers,
+        "scaling_mode": scaling_mode,
+        "scaling_tier": tiers,
         "firm": firm,
         "risk_cap_method": risk_cap_method,
         "account_health_ratio": account_health_ratio,
@@ -687,6 +733,8 @@ def compute_risk_derived_contracts(
         evidence=ev_full,
         drawdown_room_cap=drawdown_room_cap,
         drawdown_room_cap_binding=drawdown_room_cap_binding,
+        scaling_mode=scaling_mode,
+        scaling_tier=tiers,
     )
 
 

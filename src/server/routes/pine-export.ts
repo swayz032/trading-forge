@@ -14,8 +14,61 @@ import { pineCompileRequestSchema } from "../lib/pine-artifact-schema.js";
 import { db } from "../db/index.js";
 import { auditLog } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
+import { assertNotShadow, PineExportShadowError } from "../lib/pine-export-shadow-guard.js";
+import { emitPineShadowRefused } from "../lib/pine-shadow-observability.js";
+import { notifyWarning } from "../services/notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 export const pineExportRoutes = Router();
+
+// ─── A3 (Pass 3 Track A): Same-origin proxy middleware ───────────────────────
+//
+// Browser-originated GETs to the artifact-download endpoint cannot carry an
+// Authorization header (browsers strip it on cross-origin requests, and the
+// OPERATOR_API_KEY is a server-side secret the browser never has).
+//
+// For requests whose Origin header matches FRONTEND_ORIGIN (or
+// TRADING_FORGE_PUBLIC_URL), we inject the OPERATOR_API_KEY server-side into
+// the Authorization header so that requireOperatorApiKey below can validate it
+// normally.  Requests from any other origin are left untouched — if they lack a
+// valid Authorization header they will receive 401 from requireOperatorApiKey.
+//
+// SECURITY NOTE: only inject for the download sub-route to minimise surface area.
+// The injection is done on a cloned request header object — it does NOT mutate
+// the original req.headers for logging purposes.
+function injectApiKeyForSameOriginBrowser(req: Request, _res: Response, next: NextFunction): void {
+  const frontendOrigin =
+    process.env.FRONTEND_ORIGIN ?? process.env.TRADING_FORGE_PUBLIC_URL ?? "";
+  // req.headers["origin"] is string | string[] | undefined; normalize to string.
+  const rawOrigin = req.headers["origin"];
+  const requestOrigin = Array.isArray(rawOrigin) ? rawOrigin[0] ?? "" : rawOrigin ?? "";
+
+  // Only inject when Origin matches AND no Authorization header is already set.
+  if (
+    frontendOrigin &&
+    requestOrigin &&
+    requestOrigin === frontendOrigin &&
+    !req.headers["authorization"]
+  ) {
+    const apiKey = process.env.OPERATOR_API_KEY;
+    if (apiKey && apiKey.length >= 16) {
+      // Mutate the incoming header map so requireOperatorApiKey sees a valid bearer.
+      // Safe: Express parses headers once; we modify before the next middleware runs.
+      (req.headers as Record<string, string>)["authorization"] = `Bearer ${apiKey}`;
+    } else {
+      // API key not configured on server — 403, not 401, because the Origin is
+      // correct but server is misconfigured.
+      logger.error(
+        { requestOrigin },
+        "pine-export: same-origin proxy: OPERATOR_API_KEY not set, rejecting browser download",
+      );
+      _res.status(403).json({ error: "operator_api_key_not_configured_for_proxy" });
+      return;
+    }
+  }
+
+  next();
+}
 
 // F-2 (Pass 6 / Track A 2026-05-20): operator API-key gate.
 // Previous code derived `principal` from `req.headers.authorization ? "operator" : "unauthenticated"`
@@ -146,9 +199,17 @@ pineExportRoutes.get("/:id/artifacts", async (req, res) => {
 // guessing/enumerating artifact UUIDs, bypassing the export-level access boundary.
 // Mismatch → 403 (not 404 — avoids leaking whether the artifact exists at all).
 // Every download (success AND rejection) is written to audit_log.
-pineExportRoutes.get("/:id/artifacts/:artifactId/download", async (req, res) => {
-  const exportId = req.params.id;
-  const artifactId = req.params.artifactId;
+//
+// A3 (Pass 3 Track A): same-origin proxy middleware injects OPERATOR_API_KEY
+// for browser-originated requests before requireOperatorApiKey validates.
+//
+// C2 (Pass 3 Track C): SHADOW guard runs BEFORE ownership + content checks.
+pineExportRoutes.get("/:id/artifacts/:artifactId/download", injectApiKeyForSameOriginBrowser, async (req, res) => {
+  // Cast to string: @types/express-serve-static-core ParamsDictionary indexes to
+  // string | string[] (Express 5 type). URL params are always single strings —
+  // only query-string and header values can be string[].
+  const exportId = req.params.id as string;
+  const artifactId = req.params.artifactId as string;
   // F-2: principal is "operator" — requireOperatorApiKey middleware already
   // validated the bearer token in constant time, so any request reaching here
   // is authenticated.
@@ -200,6 +261,57 @@ pineExportRoutes.get("/:id/artifacts/:artifactId/download", async (req, res) => 
       "pine-export: parent export not found for artifact — possible orphan",
     );
     res.status(404).json({ error: "Export not found" });
+    return;
+  }
+
+  // 3b. C2 (Pass 3 Track C): SHADOW guard — block artifact download for SHADOW strategies.
+  // Runs after ownership + parent-export checks so we have the strategyId from parentExport.
+  // Returns 403 with pine_export.refused_shadow_strategy audit row on violation.
+  try {
+    await assertNotShadow(parentExport.strategyId, db);
+  } catch (err) {
+    if (err instanceof PineExportShadowError) {
+      try {
+        await db.insert(auditLog).values({
+          action: "pine_export.refused_shadow_strategy",
+          entityType: "strategy_export_artifact",
+          entityId: artifactId,
+          decisionAuthority: "system",
+          input: { exportId, artifactId, principal, strategyId: parentExport.strategyId, blockedAt: "GET artifact-download" } as Record<string, unknown>,
+          result: {
+            strategy_id: parentExport.strategyId,
+            lifecycle_state: err.lifecycleState,
+            shadow_mode_enabled: err.shadowModeEnabled,
+            blocked_at: "GET artifact-download",
+          } as Record<string, unknown>,
+          status: "warn",
+          correlationId: null,
+        });
+      } catch (auditErr) {
+        logger.error({ auditErr, artifactId, exportId }, "pine-export: shadow-guard audit write failed");
+      }
+      notifyWarning(
+        `Pine artifact download blocked: SHADOW strategy ${parentExport.strategyId}`,
+        appendFamilyGradePostscript(
+          `Artifact download blocked for strategy ${parentExport.strategyId} (${err.message})`,
+          "The system blocked a Pine file download for a strategy still in Shadow testing mode.",
+          "No action needed — the strategy is not ready for TradingView deployment yet.",
+        ),
+        { strategyId: parentExport.strategyId, exportId, artifactId, lifecycleState: err.lifecycleState },
+      );
+      emitPineShadowRefused({
+        strategy_id: parentExport.strategyId,
+        lifecycle_state: err.lifecycleState ?? "unknown",
+        shadow_mode_enabled: err.shadowModeEnabled,
+        blocked_at: "artifact_download",
+        correlation_id: null,
+      });
+      res.status(403).json({ error: "forbidden", reason: "shadow_strategy_pine_blocked" });
+      return;
+    }
+    // Non-PineExportShadowError: DB failure — fail-CLOSED (return 403, don't leak artifact).
+    logger.error({ err, artifactId, exportId }, "pine-export: shadow-guard unexpected error, blocking as fail-CLOSED");
+    res.status(403).json({ error: "forbidden", reason: "shadow_guard_error" });
     return;
   }
 

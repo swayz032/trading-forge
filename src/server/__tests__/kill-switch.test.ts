@@ -79,6 +79,15 @@ vi.mock("../db/schema.js", () => ({
     firmId: "firm_id",
     enabled: "enabled",
   },
+  // H6 fix: paperSessions is now needed by Layers 2 & 3 on the signal path
+  paperSessions: {
+    id: "id",
+    firmId: "firm_id",
+    status: "status",
+    dailyPnlBreakdown: "daily_pnl_breakdown",
+    currentEquity: "current_equity",
+    realizedPeakEquity: "realized_peak_equity",
+  },
   ProductionMode: undefined,
 }));
 
@@ -128,6 +137,11 @@ vi.mock("../services/windows-health-check-service.js", () => ({
 
 vi.mock("../lib/audit-log-helper.js", () => ({
   insertAuditRow: vi.fn().mockResolvedValue(undefined),
+}));
+
+// H6 fix: firm-config is now dynamically imported by Layers 2 & 3
+vi.mock("../../shared/firm-config.js", () => ({
+  getFirmAccount: vi.fn().mockReturnValue({ dailyLossLimit: 1000, maxDrawdown: 2000 }),
 }));
 
 // ─── Imports after mocks ──────────────────────────────────────────────────────
@@ -219,15 +233,24 @@ describe("KillSwitch — Phase 4A Production Hardening", () => {
   });
 
   // ── Test 2: PAPER mode returns not halted ──────────────────────────────────
+  // H6 fix: isHaltedForProduction() now evaluates all 9 layers. Seed layers 2-9
+  // as not-halted so this test remains a pure L1 regression (PAPER mode = not halted).
   it("isHaltedForProduction() returns false when production_mode = PAPER", async () => {
     mockProductionMode("PAPER");
+    for (let layer = 2; layer <= 9; layer++) {
+      killSwitch._setLayerCacheForTests(layer, { halted: false });
+    }
     const halted = await killSwitch.isHaltedForProduction();
     expect(halted).toBe(false);
   });
 
   // ── Test 3: LIVE mode returns not halted ───────────────────────────────────
+  // H6 fix: seed layers 2-9 as not-halted (pure L1 regression — LIVE mode = not halted).
   it("isHaltedForProduction() returns false when production_mode = LIVE", async () => {
     mockProductionMode("LIVE");
+    for (let layer = 2; layer <= 9; layer++) {
+      killSwitch._setLayerCacheForTests(layer, { halted: false });
+    }
     const halted = await killSwitch.isHaltedForProduction();
     expect(halted).toBe(false);
   });

@@ -241,10 +241,15 @@ describe("runAuditScan — per-market noise injection", () => {
   });
 
   it("passes enriched noise_score per market to Python payload", async () => {
-    // MES has a recent skip_decision with noise_score=0.35
+    // runAuditScan now calls enrichWithRealAtr (2 queries) + enrichWithPTargetHit (2 queries)
+    // before enrichWithPerMarketNoise (2 queries) — mock the full queue in order.
     dbExecuteMock
-      .mockResolvedValueOnce([{ noise_score: "0.35" }])  // MES enrichment
-      .mockResolvedValueOnce([]);                          // MNQ enrichment — no data
+      .mockResolvedValueOnce([])  // enrichWithRealAtr: MES ATR (no pre_market_sessions row)
+      .mockResolvedValueOnce([])  // enrichWithRealAtr: MNQ ATR (no pre_market_sessions row)
+      .mockResolvedValueOnce([])  // enrichWithPTargetHit: MES p_target (no row — uses neutral)
+      .mockResolvedValueOnce([])  // enrichWithPTargetHit: MNQ p_target (no row — uses neutral)
+      .mockResolvedValueOnce([{ noise_score: "0.35" }])  // enrichWithPerMarketNoise: MES
+      .mockResolvedValueOnce([]);                          // enrichWithPerMarketNoise: MNQ — no data
 
     setupDbInsert("scan-row-001");
 

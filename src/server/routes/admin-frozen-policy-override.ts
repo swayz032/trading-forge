@@ -216,40 +216,54 @@ adminFrozenPolicyOverrideRoutes.post("/frozen-policy-override", async (req, res)
   const now = new Date();
   const newOverrideCount = (strategy.frozenPolicyOverrideCount ?? 0) + 1;
 
-  // ── Atomic DB update ─────────────────────────────────────────────────────
-  await db
-    .update(strategies)
-    .set({
-      frozenPolicyHash: newHash,
-      frozenPolicySetAt: now,
-      frozenPolicyOverrideCount: newOverrideCount,
-      updatedAt: now,
-    })
-    .where(eq(strategies.id, strategyId));
+  // ── Atomic DB update + audit in a single transaction ─────────────────────
+  // The UPDATE (policy hash) and the audit INSERT must commit or rollback
+  // together.  A commit-then-fail-to-audit leaves the hash mutated but
+  // invisible — the exact gap this fix closes.
+  try {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(strategies)
+        .set({
+          frozenPolicyHash: newHash,
+          frozenPolicySetAt: now,
+          frozenPolicyOverrideCount: newOverrideCount,
+          updatedAt: now,
+        })
+        .where(eq(strategies.id, strategyId));
 
-  // ── Audit: frozen_policy.override_used ───────────────────────────────────
-  await db
-    .insert(auditLog)
-    .values({
-      action: "frozen_policy.override_used",
-      entityId: strategyId,
-      entityType: "strategy",
-      status: "success",
-      decisionAuthority: "operator",
-      result: {
-        strategy_name: strategy.name,
-        rationale,
-        previous_hash: strategy.frozenPolicyHash ?? null,
-        new_hash: newHash,
-        override_count: newOverrideCount,
-        frozen_at: now.toISOString(),
-        correlation_id: correlationId,
-      },
-      correlationId,
-    })
-    .catch((auditErr) => {
-      logger.warn({ err: auditErr, correlationId }, "frozen-policy-override: override_used audit failed (non-blocking)");
+      await tx
+        .insert(auditLog)
+        .values({
+          action: "frozen_policy.override_used",
+          entityId: strategyId,
+          entityType: "strategy",
+          status: "success",
+          decisionAuthority: "operator",
+          result: {
+            strategy_name: strategy.name,
+            rationale,
+            previous_hash: strategy.frozenPolicyHash ?? null,
+            new_hash: newHash,
+            override_count: newOverrideCount,
+            frozen_at: now.toISOString(),
+            correlation_id: correlationId,
+          },
+          correlationId,
+        });
     });
+  } catch (txErr) {
+    logger.error(
+      { err: txErr, strategyId, correlationId },
+      "frozen-policy-override: transaction (UPDATE + audit) failed — neither committed",
+    );
+    res.status(500).json({
+      error: "override_transaction_failed",
+      message: "Policy update and audit could not be committed atomically. No change was made.",
+      correlationId,
+    });
+    return;
+  }
 
   logger.info(
     {

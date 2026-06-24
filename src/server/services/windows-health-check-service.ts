@@ -22,6 +22,7 @@ import { spawn } from "child_process";
 import { logger } from "../lib/logger.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { notifyCritical } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 export interface HealthCheckResult {
   exitCode: number;
@@ -207,7 +208,11 @@ export async function runPreTradingDayHealthCheck(
     await pausePipelineSafely(reason);
     notifyCritical(
       "Pre-trading-day health check crashed",
-      `Could not spawn PowerShell. Pipeline paused.\n${reason}`,
+      appendFamilyGradePostscript(
+        `Could not spawn PowerShell. Pipeline paused.\n${reason}`,
+        "The trading computer had a health issue.",
+        "No action needed — the bot is self-healing. Call Tony if trading stops.",
+      ),
       { error: String(err) },
     );
     broadcastSSE("windows:health-check-failed", {
@@ -282,7 +287,11 @@ export async function runPreTradingDayHealthCheck(
 
   notifyCritical(
     `Pre-trading-day health check failed: ${status}`,
-    `${reason}\n\nPipeline has been PAUSED. Review infra/windows-update-policy.md and resume manually after the host is healthy.`,
+    appendFamilyGradePostscript(
+      `${reason}\n\nPipeline has been PAUSED. Review infra/windows-update-policy.md and resume manually after the host is healthy.`,
+      "The trading computer had a health issue.",
+      "No action needed — the bot is self-healing. Call Tony if trading stops.",
+    ),
     { exitCode: scriptResult.exitCode, status, payload },
   );
 
@@ -318,7 +327,11 @@ async function pausePipelineSafely(reason: string): Promise<void> {
     );
     notifyCritical(
       "CRITICAL: Pipeline pause failed during health-check response",
-      `The pre-market health check detected a failure (${reason}) but setMode() threw. Pipeline state is UNCHANGED. Pause manually NOW.`,
+      appendFamilyGradePostscript(
+        `The pre-market health check detected a failure (${reason}) but setMode() threw. Pipeline state is UNCHANGED. Pause manually NOW.`,
+        "The trading computer has a serious problem.",
+        "Call Tony immediately — the computer may need attention.",
+      ),
       { reason, error: String(err) },
     );
   }

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Slumhouse · The Office</title>
+  <link rel="stylesheet" href="/slumhouse/slumhouse.css">
+  <link rel="icon" type="image/png" sizes="32x32" href="/slumhouse/icons/slumdawg-32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/slumhouse/icons/slumdawg-180.png">
+  <meta name="theme-color" content="#000000">
+  <style>
+    /* ── The Office — Pass 1 (page shell + passcode gate only) ──────────────
+       Background image (Pass 2) + floating switch-cards (Pass 3) land next. */
+    .of-hide { display: none !important; }
+
+    /* Passcode lock screen — centered glassy card on pure black */
+    .of-lock {
+      min-height: 78vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .of-lock-card {
+      width: 100%;
+      max-width: 360px;
+      background: #000;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 30px 26px 26px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 0 40px rgba(163, 255, 18, 0.05);
+      text-align: center;
+    }
+    .of-lock-badge {
+      width: 46px; height: 46px; border-radius: 12px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(163, 255, 18, 0.10);
+      box-shadow: 0 0 18px rgba(163, 255, 18, 0.25);
+      margin-bottom: 14px;
+    }
+    .of-lock-title {
+      font-size: 17px; font-weight: 700; color: var(--ink); letter-spacing: 0.02em;
+      margin: 0 0 4px;
+    }
+    .of-lock-sub {
+      font-size: 12px; color: var(--mute); margin: 0 0 20px; letter-spacing: 0.02em;
+    }
+    .of-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--ink);
+      font-family: var(--num-font);
+      font-size: 15px;
+      letter-spacing: 0.3em;
+      text-align: center;
+      padding: 12px 16px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .of-input:focus {
+      border-color: var(--lime-dim);
+      box-shadow: 0 0 0 3px rgba(163, 255, 18, 0.08);
+    }
+    .of-btn {
+      width: 100%;
+      margin-top: 12px;
+      background: var(--lime);
+      color: #000;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.04em;
+      border: none;
+      border-radius: 999px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: transform 0.15s, filter 0.15s;
+    }
+    .of-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+    .of-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .of-msg { min-height: 16px; margin-top: 12px; font-size: 12px; letter-spacing: 0.02em; }
+    .of-msg.err { color: var(--red); }
+    .of-msg.warn { color: var(--warm); }
+
+    /* Unlocked shell — Pass 1 placeholder content area (cards arrive Pass 3) */
+    .of-stage {
+      margin-top: 6px;
+      min-height: 46vh;
+      border: 1px dashed var(--line);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--mute);
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .of-lock-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-left: auto;
+      color: rgba(255, 120, 120, 0.85);
+      background: rgba(40, 0, 0, 0.0);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.15s;
+    }
+    .of-lock-link:hover { background: rgba(40, 0, 0, 0.55); transform: translateY(-1px); }
+  </style>
+</head>
+<body>
+  <header class="sh-header">
+    <a class="sh-logo" href="/slumhouse/office.html" aria-label="Slumhouse — The Office">
+      <svg viewBox="0 0 64 56" width="38" height="34" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <linearGradient id="lg-bull-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#c5ff5f"/>
+            <stop offset="100%" stop-color="#a3ff12"/>
+          </linearGradient>
+          <filter id="lg-bull-glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="1.2" result="g"/>
+            <feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <g filter="url(#lg-bull-glow)">
+          <path d="M14 14 L17 4 L25 16 Z" fill="url(#lg-bull-grad)"/>
+          <path d="M50 14 L47 4 L39 16 Z" fill="url(#lg-bull-grad)"/>
+          <path d="M16 14 C 16 8, 24 4, 32 4 C 40 4, 48 8, 48 14 L 52 26 C 52 36, 48 42, 44 44 L 41 50 C 37 52, 27 52, 23 50 L 20 44 C 16 42, 12 36, 12 26 Z" fill="url(#lg-bull-grad)"/>
+        </g>
+        <path d="M20 18 Q32 14 44 18" stroke="#000" stroke-width="1.4" fill="none" opacity="0.55"/>
+        <rect x="20" y="22" width="6" height="4" rx="1" fill="#000"/>
+        <rect x="38" y="22" width="6" height="4" rx="1" fill="#000"/>
+        <circle cx="24" cy="23" r="0.7" fill="#fff" opacity="0.9"/>
+        <circle cx="42" cy="23" r="0.7" fill="#fff" opacity="0.9"/>
+        <path d="M27 32 Q32 30 37 32 Q37 36 32 36 Q27 36 27 32 Z" fill="#000"/>
+        <path d="M24 41 Q32 39 40 41" stroke="#000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      </svg>
+      <div class="sh-logo-text">
+        <span class="sh-logo-name">SLUMHOUSE</span>
+        <span class="sh-logo-sub">/ THE OFFICE</span>
+      </div>
+    </a>
+    <nav class="sh-nav">
+      <a class="sh-pill" href="/slumhouse/crib.html">The Crib</a>
+      <a class="sh-pill" href="/slumhouse/kitchen.html">The Kitchen</a>
+      <a class="sh-pill active" href="/slumhouse/office.html">The Office</a>
+    </nav>
+    <div class="sh-header-spacer">
+      <button id="of-lock-btn" class="of-lock-link of-hide" title="Lock the Office">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Lock
+      </button>
+    </div>
+  </header>
+
+  <div class="sh-page">
+    <!-- LOCKED state: passcode entry -->
+    <section id="of-lock" class="of-lock">
+      <div class="of-lock-card">
+        <div class="of-lock-badge">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a3ff12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h1 class="of-lock-title">The Office</h1>
+        <p class="of-lock-sub">Operator only · enter passcode</p>
+        <form id="of-form" autocomplete="off">
+          <input id="of-passcode" class="of-input" type="password" inputmode="numeric"
+                 placeholder="• • • • • •" aria-label="Passcode" autocomplete="off" />
+          <button id="of-submit" class="of-btn" type="submit">Unlock</button>
+        </form>
+        <div id="of-msg" class="of-msg"></div>
+      </div>
+    </section>
+
+    <!-- UNLOCKED state: page shell (cards arrive in a later pass) -->
+    <section id="of-shell" class="of-hide">
+      <h1 class="sh-title">The Office</h1>
+      <p class="sh-sub">Operator control room — switches land in the next pass.</p>
+      <div class="of-stage">Pass 1 · page shell ready</div>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      var lockSec = document.getElementById('of-lock');
+      var shellSec = document.getElementById('of-shell');
+      var lockBtn = document.getElementById('of-lock-btn');
+      var form = document.getElementById('of-form');
+      var input = document.getElementById('of-passcode');
+      var submit = document.getElementById('of-submit');
+      var msg = document.getElementById('of-msg');
+
+      function showUnlocked() {
+        lockSec.classList.add('of-hide');
+        shellSec.classList.remove('of-hide');
+        lockBtn.classList.remove('of-hide');
+      }
+      function showLocked() {
+        shellSec.classList.add('of-hide');
+        lockBtn.classList.add('of-hide');
+        lockSec.classList.remove('of-hide');
+        setTimeout(function () { input.focus(); }, 50);
+      }
+      function setMsg(text, cls) {
+        msg.textContent = text || '';
+        msg.className = 'of-msg' + (cls ? ' ' + cls : '');
+      }
+
+      // On load: ask the server if we're already unlocked / configured.
+      fetch('/slumhouse/admin/status', { credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (s) {
+          if (s && s.unlocked) { showUnlocked(); return; }
+          showLocked();
+          if (s && !s.configured) {
+            setMsg('Office not configured — set SLUMHOUSE_ADMIN_PASSCODE in .env.', 'warn');
+            submit.disabled = true;
+          }
+        })
+        .catch(function () { showLocked(); });
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var pass = input.value || '';
+        if (!pass) { setMsg('Enter the passcode.', 'err'); return; }
+        submit.disabled = true;
+        setMsg('Checking…', '');
+        fetch('/slumhouse/admin/auth', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ passcode: pass })
+        })
+          .then(function (r) { return r.json().then(function (j) { return { status: r.status, body: j }; }); })
+          .then(function (res) {
+            submit.disabled = false;
+            input.value = '';
+            if (res.status === 200 && res.body && res.body.ok) { setMsg('', ''); showUnlocked(); return; }
+            if (res.status === 429) { setMsg('Too many attempts — locked out, try again later.', 'err'); return; }
+            if (res.status === 503) { setMsg('Office not configured — set SLUMHOUSE_ADMIN_PASSCODE in .env.', 'warn'); return; }
+            setMsg('Wrong passcode.', 'err');
+          })
+          .catch(function () { submit.disabled = false; setMsg('Network error — try again.', 'err'); });
+      });
+
+      lockBtn.addEventListener('click', function () {
+        fetch('/slumhouse/admin/logout', { method: 'POST', credentials: 'same-origin' })
+          .then(function () { showLocked(); setMsg('Locked.', ''); })
+          .catch(function () { showLocked(); });
+      });
+    })();
+  </script>
+</body>
+</html>

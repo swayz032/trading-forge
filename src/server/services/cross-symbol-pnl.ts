@@ -156,11 +156,33 @@ export const DLL_FORCE_CLOSE_PCT = (() => {
   return 0.95;
 })();
 
+// DLL_REDUCE_SIZE_PCT: SOFT band BELOW the halt — at this fraction of personal DLL, new entries
+// are sized DOWN (not blocked) to absorb a losing streak before the hard 67% halt. Completes the
+// institutional 60/80/90/100 escalation ladder (NexusFi Operations Manual 2026-06; a 60% band is
+// math, not paranoia — a $50K Topstep tolerates ~2.5 max-loss days). Default 60%.
+export const DLL_REDUCE_SIZE_PCT = (() => {
+  const envVal = process.env["DLL_REDUCE_SIZE_PCT"];
+  if (envVal && !isNaN(parseFloat(envVal))) return parseFloat(envVal);
+  return 0.60;
+})();
+
+// DLL_REDUCE_SIZE_FACTOR: size multiplier applied when in the reduce_size band (default 0.50 = half).
+export const DLL_REDUCE_SIZE_FACTOR = (() => {
+  const envVal = process.env["DLL_REDUCE_SIZE_FACTOR"];
+  if (envVal && !isNaN(parseFloat(envVal))) {
+    const v = parseFloat(envVal);
+    if (v > 0 && v <= 1) return v;   // clamp to (0,1] — a reduce factor must shrink, never zero/grow
+  }
+  return 0.50;
+})();
+
 export interface CrossSymbolDllResult {
-  /** No action — P&L is within limits */
-  action: "none" | "halt" | "force_close";
+  /** none — within limits; reduce_size — soft 60% band (size down, don't block); halt — 67%; force_close — 95% */
+  action: "none" | "reduce_size" | "halt" | "force_close";
   combinedPnL: number;
   dllPct: number;   // fraction of personal DLL consumed (negative = loss, positive = gain)
+  reduceThreshold: number;
+  reduceSizeFactor: number;   // multiplier to apply to new-entry contracts when action === "reduce_size"
   haltThreshold: number;
   forceCloseThreshold: number;
   pnLBySymbol: Record<string, number>;
@@ -174,6 +196,7 @@ export function evaluateCrossSymbolDll(
   pnl: AccountSessionPnL,
   personalDllDollars: number = DEFAULT_PERSONAL_DLL_DOLLARS,
 ): CrossSymbolDllResult {
+  const reduceThreshold = personalDllDollars * DLL_REDUCE_SIZE_PCT;
   const haltThreshold = personalDllDollars * DLL_HALT_PCT;
   const forceCloseThreshold = personalDllDollars * DLL_FORCE_CLOSE_PCT;
 
@@ -182,17 +205,22 @@ export function evaluateCrossSymbolDll(
   const drawdown = pnl.totalPnL < 0 ? Math.abs(pnl.totalPnL) : 0;
   const dllPct = personalDllDollars > 0 ? drawdown / personalDllDollars : 0;
 
+  // Escalation ladder (highest band wins): force_close (95%) > halt (67%) > reduce_size (60%) > none.
   let action: CrossSymbolDllResult["action"] = "none";
   if (drawdown >= forceCloseThreshold) {
     action = "force_close";
   } else if (drawdown >= haltThreshold) {
     action = "halt";
+  } else if (drawdown >= reduceThreshold) {
+    action = "reduce_size";
   }
 
   return {
     action,
     combinedPnL: pnl.totalPnL,
     dllPct,
+    reduceThreshold,
+    reduceSizeFactor: DLL_REDUCE_SIZE_FACTOR,
     haltThreshold,
     forceCloseThreshold,
     pnLBySymbol: pnl.pnLBySymbol,

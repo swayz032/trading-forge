@@ -46,6 +46,7 @@ import { logger } from "../lib/logger.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { getMode as getPipelineMode } from "./pipeline-control-service.js";
 import { notifyCritical } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 // ─── Constants ───────────────────────────────────────────────────────
 const DRAIN_STALL_LOOKBACK_HOURS = 2;
@@ -326,7 +327,11 @@ export async function runDrainStallCheck(): Promise<DrainStallResult> {
 
   notifyCritical(
     "Scout drain stall detected",
-    `Scouted backlog has NOT decreased over the last ${DRAIN_STALL_LOOKBACK_HOURS}h despite drain cron running every 10 min. Now=${scoutedNow}, ${DRAIN_STALL_LOOKBACK_HOURS}h ago=${scoutedThen}. Pipeline mode: ${pipelineMode}. Last CANDIDATE: ${lastCandidateAt ?? "never"}. Synthesizer stats: ${JSON.stringify(synthesizerStats)}.`,
+    appendFamilyGradePostscript(
+      `Scouted backlog has NOT decreased over the last ${DRAIN_STALL_LOOKBACK_HOURS}h despite drain cron running every 10 min. Now=${scoutedNow}, ${DRAIN_STALL_LOOKBACK_HOURS}h ago=${scoutedThen}. Pipeline mode: ${pipelineMode}. Last CANDIDATE: ${lastCandidateAt ?? "never"}. Synthesizer stats: ${JSON.stringify(synthesizerStats)}.`,
+      "The strategy discovery pipeline has a backlog that is not draining — it is finding new strategy ideas but they are not being processed into candidates.",
+      "No trading is affected. Tell Tony: 'The strategy scout pipeline looks stuck.' He will check it when available.",
+    ),
     { job: "scout-drain-stall-check", ...payload },
   );
 
@@ -420,7 +425,11 @@ export async function runRejectDistributionCheck(): Promise<RejectDistributionRe
 
   notifyCritical(
     "Scout reject distribution skewed",
-    `${dominantCategory} accounts for ${(dominantPct * 100).toFixed(1)}% of ${total} rejects in last ${REJECT_DIST_LOOKBACK_HOURS}h. Implication: ${implication}.`,
+    appendFamilyGradePostscript(
+      `${dominantCategory} accounts for ${(dominantPct * 100).toFixed(1)}% of ${total} rejects in last ${REJECT_DIST_LOOKBACK_HOURS}h. Implication: ${implication}.`,
+      "The strategy discovery system is rejecting most of its candidates for the same reason. The pipeline is still running, but fewer strategies will be produced until Tony looks into it.",
+      "No trading is affected. Tell Tony: 'The scout pipeline reject pattern looks abnormal.' He will review it when available.",
+    ),
     { job: "scout-reject-distribution-check", ...payload },
   );
 

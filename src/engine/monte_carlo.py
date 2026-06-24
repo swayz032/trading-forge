@@ -813,8 +813,20 @@ def simulate_firm_survival(
     is_realtime = firm["trailing"] == "realtime"
     is_eod_trailing = firm["trailing"] == "eod"
     locks_at_start = firm.get("locks_at_start", False)
-    # Map consistency rule to max single-day ratio
+    # Map consistency rule to max single-day ratio.
+    # B14 fix 2026-06-22: "topstep_50pct" was MISSING from this map, causing
+    # consistency_ratio to resolve to None for Topstep → the consistency breach
+    # check block was never entered for Topstep → every Topstep survival sim ran
+    # WITHOUT the 50% best-day cap, inflating eval_pass_rate.  A spiky strategy
+    # with one day = 60% of cumulative profit passed survival with full confidence,
+    # but Topstep denies every payout under their consistency rule.
+    # Fix: add "topstep_50pct": 0.50 so the consistency branch fires for Topstep.
+    # The full-path fallback (payout_cycle_days=None for Topstep) correctly
+    # compares best_day_pnl / total_profit against this threshold.
+    # Fail-toward-breach: when consistency_ratio is non-None but the branch is
+    # entered, any ambiguity resolves as a violation (conservative).
     _consistency_map = {
+        "topstep_50pct": 0.50,      # B14 fix 2026-06-22 — was MISSING, causing silent skip
         "tpt_50pct": 0.50,
         "alpha_50pct": 0.50,
         "mffu_50pct": 0.50,

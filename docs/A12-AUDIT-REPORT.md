@@ -1,6 +1,6 @@
 # A12 — 12-Category Code Audit Report
 
-**Generated:** 2026-05-20 01:20:07 UTC  
+**Generated:** 2026-06-23 22:24:19 UTC  
 **Auditor:** W12 Team B (trading-forge-architect)  
 **Plan:** PART A §A12 of `C:\Users\tonio\.claude\plans\reflective-dancing-moth.md`  
 **Scope:** Read-only static + numerical audit of existing Trading Forge code.  
@@ -8,8 +8,8 @@
 
 ## Summary
 
-- PASS:    12/12
-- FAIL:    0/12
+- PASS:    9/12
+- FAIL:    3/12
 - UNKNOWN: 0/12
 
 | Cat | Category | Status |
@@ -18,16 +18,16 @@
 |  2 | Timestamp correctness | **PASS** |
 |  3 | Indicator math | **PASS** |
 |  4 | Backtest fill assumptions | **PASS** |
-|  5 | PnL math (CRITICAL) | **PASS** |
+|  5 | PnL math (CRITICAL) | **FAIL** |
 |  6 | Walk-forward leakage | **PASS** |
 |  7 | Monte Carlo accuracy | **PASS** |
-|  8 | Paper-vs-backtest parity | **PASS** |
+|  8 | Paper-vs-backtest parity | **FAIL** |
 |  9 | Daily PnL aggregation | **PASS** |
-| 10 | Compliance accuracy | **PASS** |
+| 10 | Compliance accuracy | **FAIL** |
 | 11 | DB write integrity | **PASS** |
 | 12 | Source-of-truth conflicts | **PASS** |
 
-**Verdict:** All 12 categories PASS. Proceed to W13.
+**Verdict:** 3 categories FAIL. Open bug-fix tickets per the per-category sections below before W13.
 
 ---
 
@@ -101,7 +101,7 @@
 
 ### Cat 5 — PnL math (CRITICAL)
 
-**Status:** **PASS**
+**Status:** **FAIL**
 
 **Evidence:**
 
@@ -123,13 +123,17 @@
   - TS CONTRACT_SPECS[MCL].tickSize = 0.01 (expected 0.01): OK
   - TS CONTRACT_SPECS[MCL].tickValue = 1.0 (expected 1.0): OK
   - TS CONTRACT_SPECS[MCL].pointValue = 100.0 (expected 100.0): OK
-  - FIRM_COMMISSIONS[topstep_50k][MES] = $0.37 (expected $0.37): OK
-  - FIRM_COMMISSIONS[mffu_50k][MES] = $0.62 (expected $0.62): OK
+  - FIRM_COMMISSIONS[topstep_50k][MES] = $0.62 (expected $0.37): MISMATCH
+  - FIRM_COMMISSIONS[mffu_50k][MES] = $0.95 (expected $0.62): MISMATCH
   - FIRM_COMMISSIONS firm count: OK (2 firms — Topstep + MFFU)
   - Python backtester PnL uses spec.point_value: OK
   - TS paper service PnL uses spec.pointValue: OK
   - backtester.py adds slippage to PnL (wrong sign): no
   - Paper commission * 2 (round-turn): OK
+
+**Fix PR Description:**
+
+> CRITICAL — PnL math errors invalidate every backtest. Fix immediately: topstep_50k commission mismatch: got $0.62, expected $0.37; mffu_50k commission mismatch: got $0.95, expected $0.62
 
 ---
 
@@ -166,19 +170,23 @@
 
 ### Cat 8 — Paper-vs-backtest parity
 
-**Status:** **PASS**
+**Status:** **FAIL**
 
 **Evidence:**
 
 - contract specs parity: see Cat 5 for exact field-by-field check
   - paper overnight slippage 3.0x: OK
   - backtest overnight slippage 3.0x: OK
-  - paper getCommissionPerSide(firmId): OK
+  - paper getCommissionPerSide(firmId): MISSING
   - paper uses ET (toEasternDateString): OK
   - paper-risk-gate uses DST-aware ET offset: OK
   - paper CME_HALT classification: OK
   - backtest CME_HALT in liquidity multipliers: OK
   - (NOTE) fill probability models are structurally aligned but not bit-identical: paper adds volume factor, backtest adds spread factor. Acceptable drift.
+
+**Fix PR Description:**
+
+> Restore parity: paper-execution-service.ts does not pull commission from per-firm config
 
 ---
 
@@ -197,12 +205,12 @@
 
 ### Cat 10 — Compliance accuracy
 
-**Status:** **PASS**
+**Status:** **FAIL**
 
 **Evidence:**
 
 - FIRM_RULES[topstep_50k].daily_loss_limit = 1000 (expected 1000): OK
-  - FIRM_RULES[mffu_50k].daily_loss_limit = None (expected None): OK
+  - FIRM_RULES[mffu_50k].daily_loss_limit = 1000 (expected None): MISMATCH
   - FIRM_RULES firm count: OK (2 firms — Topstep + MFFU)
   - prop_compliance.py locks_at_start: OK
   - monte_carlo.py honors locks_at_start: OK
@@ -211,10 +219,14 @@
   - FIRM_CONTRACT_CAPS[topstep_50k][MES] = 50: OK
   - FIRM_CONTRACT_CAPS[topstep_50k][MNQ] = 50: OK
   - FIRM_CONTRACT_CAPS[topstep_50k][MCL] = 50: OK
-  - FIRM_CONTRACT_CAPS[mffu_50k][MES] = 50: OK
-  - FIRM_CONTRACT_CAPS[mffu_50k][MNQ] = 50: OK
-  - FIRM_CONTRACT_CAPS[mffu_50k][MCL] = 50: OK
+  - FIRM_CONTRACT_CAPS[mffu_50k][MES] = 40: MISMATCH (expected 50)
+  - FIRM_CONTRACT_CAPS[mffu_50k][MNQ] = 40: MISMATCH (expected 50)
+  - FIRM_CONTRACT_CAPS[mffu_50k][MCL] = 40: MISMATCH (expected 50)
   - (NOTE) src/shared/firm-config.ts marks ALL firms `trailing: "eod"`. MFFU "Rapid" plan and Apex "Intraday" 50K account both use intraday trailing per docs/prop-firm-rules.md. Acceptable for current trading (user only uses EOD plans) but flagged for future plan additions.
+
+**Fix PR Description:**
+
+> Fix compliance: mffu_50k daily_loss_limit mismatch: got 1000, expected None; FIRM_CONTRACT_CAPS[mffu_50k][MES] = 40 (expected 50); FIRM_CONTRACT_CAPS[mffu_50k][MNQ] = 40 (expected 50); FIRM_CONTRACT_CAPS[mffu_50k][MCL] = 40 (expected 50)
 
 ---
 
@@ -225,7 +237,7 @@
 **Evidence:**
 
 - critical PnL fields using numeric(): 19/19 OK
-  - schema.ts jsonb() usages: 130
+  - schema.ts jsonb() usages: 156
   - db-locks.ts uses pg_advisory_xact_lock: OK
   - paper-execution-service uses withSessionLock >=2 times: OK
   - migrations using float8/double precision: none

@@ -42,6 +42,7 @@ import { evaluateLunchBlackoutGate, getLunchBlackoutStartEnvDefault, getLunchBla
 // CONSISTENCY_RULE_FIRMS used to guard the gate to covered firms only.
 // Fail-OPEN: payout-eligibility gate (not a loss gate) — consistent with daily-trade-cap precedent.
 import { shouldBlockNewEntry as consistencyGateShouldBlock, CONSISTENCY_RULE_FIRMS } from "./consistency-tracker-service.js";
+import { resolveConsistencyEnforced } from "../lib/consistency-lane.js";
 // FIX B (2026-06-22): In-process Tier-1 event window checker for calendar fallback.
 // When the Python calendar_filter subprocess fails, CALENDAR_SAFE_DEFAULT had
 // is_economic_event:false — silently opening FOMC/CPI/NFP windows. The in-process
@@ -49,6 +50,17 @@ import { shouldBlockNewEntry as consistencyGateShouldBlock, CONSISTENCY_RULE_FIR
 export { checkInProcessTier1EventWindow } from "../lib/tier1-event-blackout.js";
 import { checkInProcessTier1EventWindow as _checkInProcessTier1EventWindow } from "../lib/tier1-event-blackout.js";
 import { computePmSizeFactor } from "../lib/pm-size-factor.js";
+// Phase 2 (2026-06-22) — firm-aware Tier-1 news behavior: Topstep (PRIMARY) reduces
+// size in the window (caution); MFFU Rapid (restricted) hard-blocks. Product-scoped.
+import { resolveNewsAction } from "../lib/news-policy.js";
+// Phase 3 (2026-06-23) — authoritative T1 calendar from economic_release_dates (FRED/Fed/EIA
+// synced), replacing the hardcoded/projected Python list. Covers FOMC/FOMC_MINUTES/CPI/NFP +
+// EIA, product-scoped, hardcoded fail-safe fallback.
+import { getT1ReleaseWindow } from "../lib/economic-calendar-loader.js";
+// Topstep Prohibited Conduct (2026-06-23): cross-account hedging (opposite positions across
+// the operator's multiple accounts) + holding within 2% of a product's price-lock limit.
+import { checkCrossAccountHedge, checkIntraAccountHedge, symbolToUnderlying } from "../lib/cross-account-hedge-gate.js";
+import { checkPriceLockLimit } from "../lib/price-lock-limit-gate.js";
 // W23H.F: cross-symbol DLL coordinator + pre-market blackout consumption
 import { getAccountSessionCumulativePnL, evaluateCrossSymbolDll, DEFAULT_PERSONAL_DLL_DOLLARS } from "./cross-symbol-pnl.js";
 import { toFuturesTradingDayString } from "./paper-risk-gate.js";
@@ -60,11 +72,17 @@ import { getDecayTelemetryThreshold } from "../lib/confluence-decay.js";
 // error — null result → factor falls back to "liquidity_map_unavailable".
 import { getNearestLiquidity } from "./liquidity-map-service.js";
 import { notifyCritical } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { shadowSignalsTotal } from "../lib/metrics-registry.js";
 // Wave 26 Group B Task 3: SMT live bridge — wires Python compute_smt_divergence()
 // into Path C SignalContext. Fail-soft: returns null snapshot on any error →
 // evalSmtConfirmation returns reason="smt_unavailable" (same fail-open as before).
 import { getSmtLiveSnapshot } from "./smt-live-service.js";
+// H3 (2026-06-23): kill switch needed at pending-entry fill site (bar N+1)
+import { killSwitch } from "../production/kill-switch.js";
+// M2 (2026-06-23): divergence_vs_backtest inline writer — updates the shadow signal row
+// immediately after INSERT so the SHADOW→PAPER gate has a fresh value.
+import { writeShadowDivergence } from "../lib/shadow-divergence-writer.js";
 const FAIL_CLOSED_EXECUTION = process.env.TF_FAIL_CLOSED_EXECUTION !== "0";
 
 // ─── Wave 23.C: A+ gate constants ────────────────────────────────────────────
@@ -887,6 +905,36 @@ async function getSessionConfig(sessionId: string): Promise<CachedSession | null
 
 export function invalidateSessionCache(sessionId: string): void {
   sessionCache.delete(sessionId);
+}
+
+/**
+ * F-1 Capital Safety Fix — shadow_mode_enabled cache invalidation by strategy.
+ *
+ * When lifecycle-service.ts atomically sets shadow_mode_enabled in the DB
+ * (entering or leaving SHADOW), the in-memory sessionCache may hold a stale
+ * CachedSession.shadowModeEnabled value for any active session belonging to
+ * this strategy.  A stale false → signals execute as real broker orders instead
+ * of being shadow-intercepted.  A stale true → signals are shadow-intercepted
+ * after the strategy exits SHADOW.
+ *
+ * This function evicts ALL sessionCache entries whose .strategyId matches the
+ * given strategyId.  The next signal for the affected session(s) will reload
+ * the fresh shadowModeEnabled flag from the DB.
+ *
+ * Safe by design:
+ *   - The cache is keyed by sessionId (not strategyId); we must iterate.
+ *   - Map.delete() on a missing key is always a no-op (never throws).
+ *   - An empty cache or zero-match case is fully safe.
+ *   - Called from lifecycle-service.ts post-commit, wrapped in try/catch
+ *     there, so any unexpected error here is absorbed and logged — it NEVER
+ *     blocks or aborts the lifecycle transition itself.
+ */
+export function invalidateSessionCacheForStrategy(strategyId: string): void {
+  for (const [sessionId, entry] of sessionCache.entries()) {
+    if (entry.strategyId === strategyId) {
+      sessionCache.delete(sessionId);
+    }
+  }
 }
 
 export function clearSessionCache(): void {
@@ -1726,6 +1774,10 @@ export async function evaluateSignals(
     currentEquity: paperSessions.currentEquity,
     // W23H.4: needed for cumulativeProfit and accountStartingFloor
     startingCapital: paperSessions.startingCapital,
+    // Balanced scaling plan: monotonic winning-trade count for proven-trades ramp.
+    // Read here so live sizing reflects the ramp while backtests (which don't pass it)
+    // keep the dollar-profit fallback in computeRiskDerivedContracts.
+    provenTradesCount: paperSessions.provenTradesCount,
   }).from(paperSessions).where(eq(paperSessions.id, sessionId));
 
   // Skip if session doesn't exist or is paused/stopped
@@ -2109,6 +2161,12 @@ export async function evaluateSignals(
 
   let calendarBlocked = false;
   let calendarBlockReason = "";
+  // Phase 2 (2026-06-22) — firm-aware news caution. When a T1 event affects this product
+  // and the firm is Topstep (PRIMARY, caution-not-block), we DON'T block; we carry a
+  // size-reduction factor down to the sizing call instead. 1 = no reduction. Applied
+  // multiplicatively alongside the PM size factor at computeRiskDerivedContracts.
+  let newsReduceSizeFactor = 1;
+  let newsReduceEvent = "";
   try {
     const calResult = await getCachedSignalCalendarStatus(bar.timestamp);
 
@@ -2118,30 +2176,47 @@ export async function evaluateSignals(
       calendarBlocked = true;
       calendarBlockReason = "holiday";
       logger.info({ sessionId, symbol, date: bar.timestamp }, "Calendar filter: holiday — skipping signals");
-    } else if (calResult.is_economic_event === true) {
-      if (bypassNewsBlackout) {
-        // Event-driven strategy with explicit bypass — log the decision and allow through
-        logger.info(
-          {
-            sessionId, symbol, event: calResult.economic_event_name,
-            windowMinutes: calResult.event_window_minutes, timestamp: bar.timestamp,
-            bypass: true,
-          },
-          `Calendar filter: ${calResult.economic_event_name} ±${calResult.event_window_minutes}min blackout — BYPASSED (bypass_news_blackout=true, event-driven strategy)`,
-        );
-        span.setAttribute("calendar_news_bypass", true);
-        span.setAttribute("calendar_block_event", calResult.economic_event_name);
-      } else {
-        calendarBlocked = true;
-        calendarBlockReason = calResult.economic_event_name;
-        logger.info(
-          {
-            sessionId, symbol, event: calResult.economic_event_name,
-            windowMinutes: calResult.event_window_minutes, timestamp: bar.timestamp,
-          },
-          `Calendar filter: ${calResult.economic_event_name} ±${calResult.event_window_minutes}min blackout — skipping signals`,
-        );
-        span.setAttribute("calendar_block_event", calResult.economic_event_name);
+    } else {
+      // AUTHORITATIVE T1 window check (Phase 3, 2026-06-23). Reads economic_release_dates
+      // (FRED/Fed/EIA-synced; hardcoded fail-safe fallback) instead of the Python hardcoded
+      // list, which had projected/WRONG dates (FOMC 2026 May 6/Nov 4/Dec 16 vs the Fed's
+      // Apr 29/Oct 28/Dec 9; CPI off by days). Covers FOMC/FOMC_MINUTES/CPI/NFP (all/index)
+      // + EIA (crude), product-scoped, T−5/+2 window. Holidays handled above (Python is
+      // authoritative for CME closures). calResult.is_economic_event is intentionally NOT
+      // used anymore — its dates were unreliable.
+      const t1 = await getT1ReleaseWindow(symbol, bar.timestamp);
+      if (t1.inWindow) {
+        if (bypassNewsBlackout) {
+          logger.info(
+            { sessionId, symbol, event: t1.eventType, source: t1.source, timestamp: bar.timestamp, bypass: true },
+            `Calendar filter: ${t1.eventType} T1 window — BYPASSED (bypass_news_blackout=true, event-driven strategy)`,
+          );
+          span.setAttribute("calendar_news_bypass", true);
+          span.setAttribute("calendar_block_event", t1.eventType);
+        } else {
+          // Firm-aware: Topstep (PRIMARY) trades with caution (reduce size, never block);
+          // MFFU Rapid (restricted) + unknown firm → hard-block.
+          const { action, sizeFactor } = resolveNewsAction(sessionRow.firmId, true, false);
+          if (action === "reduce_size") {
+            newsReduceSizeFactor = sizeFactor;
+            newsReduceEvent = t1.eventType;
+            logger.info(
+              { sessionId, symbol, firm: sessionRow.firmId, event: t1.eventType, sizeFactor, source: t1.source, timestamp: bar.timestamp },
+              `Calendar filter: ${t1.eventType} T1 window — Topstep CAUTION, reducing size ×${sizeFactor} (not blocking)`,
+            );
+            span.setAttribute("news_reduce_size_factor", sizeFactor);
+            span.setAttribute("news_reduce_event", t1.eventType);
+          } else {
+            calendarBlocked = true;
+            calendarBlockReason = t1.eventType;
+            logger.info(
+              { sessionId, symbol, firm: sessionRow.firmId, event: t1.eventType, source: t1.source, timestamp: bar.timestamp },
+              `Calendar filter: ${t1.eventType} T1 window — ${sessionRow.firmId ?? "unknown-firm"} HARD-BLOCK, skipping signals`,
+            );
+            span.setAttribute("calendar_block_event", t1.eventType);
+            span.setAttribute("calendar_block_source", t1.source);
+          }
+        }
       }
     }
   } catch (calErr) {
@@ -2161,6 +2236,10 @@ export async function evaluateSignals(
     });
     span.setAttribute("calendar_guard_down", true);
   }
+
+  // (Phase 3: EIA is now handled inside getT1ReleaseWindow above — product-scoped to crude
+  // from the same authoritative economic_release_dates source. The standalone EIA block was
+  // removed to avoid a second, divergent calendar check.)
 
   if (calendarBlocked) {
     // M5: Log calendar block to DB so it leaves a traceable record for post-session
@@ -2233,6 +2312,244 @@ export async function evaluateSignals(
   if (pendingEntry && !openPos && !isShadow) {
     pendingEntryQueue.delete(pendingKey); // consume the pending entry
 
+    // ─── H3 (2026-06-23): Re-evaluate all entry gates at fill time (bar N+1) ──
+    //
+    // Signal-time gates (kill-switch, lunch-blackout, FOMC/CPI/NFP, DLL, daily-
+    // trade-cap, news-policy) were only evaluated at bar N when the signal was
+    // QUEUED.  Conditions can change between queue and fill:
+    //   • Kill switch can flip to HALT (operator action, DLL breach, CME outage)
+    //   • Lunch blackout can begin (signal at 11:28 → fill at 11:30:01 ET)
+    //   • FOMC/CPI/NFP window can open (signal at 09:59:58 → fill at 10:00:01)
+    //   • DLL can flip over 67% (held position took heat between bars N and N+1)
+    //   • Daily trade cap can reset (queued on day N, fill arrives on day N+1)
+    //
+    // On any drop: dequeue is already done; emit pending_entry.dropped_<reason>
+    // audit row with the original correlationId and skip openPosition.
+    {
+      const fillTs = new Date(bar.timestamp);
+      const fillCorrelationId = pendingEntry.correlationId ?? null;
+      let pendingDropReason: string | null = null;
+
+      // Gate 1: Kill switch (H6 layered, fail-CLOSED)
+      if (!pendingDropReason) {
+        try {
+          const halted = await killSwitch.isHaltedForProduction({ correlationId: pendingEntry.correlationId });
+          if (halted) {
+            pendingDropReason = "kill_switch";
+          }
+        } catch (_ksErr) {
+          // isHaltedForProduction is already fail-CLOSED internally; belt-and-suspenders
+          pendingDropReason = "kill_switch";
+        }
+      }
+
+      // Gate 2: Session-day boundary check — if the fill bar is on a DIFFERENT CME
+      // trading day than the signal bar, the daily-trade-cap counter has reset and
+      // the signal's context is stale. Drop the queued entry unconditionally.
+      if (!pendingDropReason) {
+        const signalDay = toFuturesTradingDayString(new Date(pendingEntry.signalBarTimestamp));
+        const fillDay = toFuturesTradingDayString(fillTs);
+        if (signalDay !== fillDay) {
+          pendingDropReason = "session_boundary_crossed";
+        }
+      }
+
+      // Gate 3: Lunch blackout (11:30–13:30 ET) — use FILL timestamp, not queue timestamp
+      if (!pendingDropReason) {
+        try {
+          const perStrategyDisabled =
+            ((config as { entry_quality?: { lunch_blackout_disabled?: boolean } }).entry_quality
+              ?.lunch_blackout_disabled) === true;
+          const lunchCheck = evaluateLunchBlackoutGate({
+            barTsUtc: fillTs,
+            startEt: getLunchBlackoutStartEnvDefault(),
+            endEt: getLunchBlackoutEndEnvDefault(),
+            perStrategyDisabled,
+          });
+          if (lunchCheck.block) {
+            pendingDropReason = "lunch_blackout";
+          }
+        } catch (_lunchErr) {
+          // Fail-CLOSED — lunch blackout gate error means we cannot confirm the window
+          // is clear. Drop the entry (consistent with signal-time fail-CLOSED policy).
+          pendingDropReason = "lunch_blackout";
+        }
+      }
+
+      // Gate 4: FOMC/CPI/NFP macro blackout — use FILL timestamp
+      //
+      // CF4 (2026-06-24): When action === "reduce_size" (Topstep/MFFU caution), multiply
+      // pendingEntry.contracts by the sizeFactor (default 0.5). If the result rounds down
+      // to 0 contracts, DROP the entry with audit pending_entry.dropped_news_size_reduced_to_zero
+      // (info severity — correct capital-safety behavior). Otherwise emit
+      // pending_entry.contracts_reduced_news_window info audit with original + reduced counts.
+      //
+      // NOTE: we modify pendingEntry.contracts in-place here so the subsequent openPosition
+      // call uses the reduced count transparently. The original count is captured first for
+      // the audit trail.
+      if (!pendingDropReason) {
+        try {
+          const bypassNewsBlackout =
+            (sessionConfig.config as unknown as Record<string, unknown>).bypass_news_blackout === true;
+          if (!bypassNewsBlackout) {
+            const t1Check = await getT1ReleaseWindow(symbol, bar.timestamp);
+            if (t1Check.inWindow) {
+              const { action: newsAction, sizeFactor } = resolveNewsAction(sessionRow.firmId, true, false);
+              if (newsAction === "block") {
+                pendingDropReason = "macro_blackout";
+              } else if (newsAction === "reduce_size") {
+                // CF4: Apply NEWS_REDUCE_SIZE_FACTOR at fill time (signal queued outside window).
+                const originalContracts = pendingEntry.contracts;
+                const reducedContracts = Math.floor(originalContracts * sizeFactor);
+                if (reducedContracts <= 0) {
+                  // Sizing reduced to zero — drop the entry (correct capital-safety behavior).
+                  // The generic pendingDropReason handler below emits pending_entry.dropped_news_size_reduced_to_zero.
+                  pendingDropReason = "news_size_reduced_to_zero";
+                } else {
+                  // Apply the reduction and allow through.
+                  pendingEntry.contracts = reducedContracts;
+                  span.setAttribute("news_reduce_size_factor_at_fill", sizeFactor);
+                  span.setAttribute("news_reduced_contracts_original", originalContracts);
+                  span.setAttribute("news_reduced_contracts_fill", reducedContracts);
+                  insertAuditRow({
+                    action: "pending_entry.contracts_reduced_news_window",
+                    entityType: "paper_session",
+                    entityId: sessionId,
+                    decisionAuthority: "system",
+                    status: "info",
+                    input: {
+                      sessionId,
+                      symbol,
+                      side: pendingEntry.side,
+                      originalContracts,
+                      sizeFactor,
+                    } as Record<string, unknown>,
+                    result: { reducedContracts } as Record<string, unknown>,
+                    correlationId: fillCorrelationId,
+                  }).catch(() => {});
+                  logger.info(
+                    {
+                      sessionId,
+                      symbol,
+                      originalContracts,
+                      reducedContracts,
+                      sizeFactor,
+                      correlationId: fillCorrelationId,
+                    },
+                    "CF4: Pending entry contracts reduced at fill time due to T1 news window (reduce_size action)",
+                  );
+                }
+              }
+              // action === "allow": fill proceeds unchanged — no modification.
+            }
+          }
+        } catch (_macroErr) {
+          // Fail-OPEN: calendar/news failure is non-blocking (same as signal-time policy).
+          // Don't drop a pending entry just because the calendar service hiccuped.
+        }
+      }
+
+      // Gate 5: DLL re-check at fill time — current combined P&L may have shifted
+      if (!pendingDropReason) {
+        try {
+          const firmId = sessionRow.firmId ?? "default";
+          const sessionDate = toFuturesTradingDayString(fillTs);
+          const cumPnL = await getAccountSessionCumulativePnL(firmId, sessionDate);
+          const dllResult = evaluateCrossSymbolDll(cumPnL, DEFAULT_PERSONAL_DLL_DOLLARS);
+          if (dllResult.action === "halt" || dllResult.action === "force_close") {
+            pendingDropReason = "dll_halt";
+          }
+        } catch (_dllErr) {
+          // Fail-CLOSED for DLL gate (same as signal-time policy)
+          pendingDropReason = "dll_halt";
+        }
+      }
+
+      // Gate 6: Daily trade cap re-check using FILL-time CME day
+      // (session_boundary_crossed gate above already handles cross-day; this gate
+      // catches the within-day count crossing the cap between queue and fill.)
+      if (!pendingDropReason) {
+        try {
+          const capTodayEt = toFuturesTradingDayString(fillTs);
+          const [capRow] = await db
+            .select({ count: sql<number>`count(*)::int` })
+            .from(paperTrades)
+            .where(and(
+              eq(paperTrades.sessionId, sessionId),
+              sql`to_char(${paperTrades.exitTime} AT TIME ZONE 'America/New_York' + interval '7 hours', 'YYYY-MM-DD') = ${capTodayEt}`,
+            ));
+          const tradesTodayAtFill = capRow?.count ?? 0;
+          const sessionCfgRaw = (sessionRow as { config?: { max_trades_per_day?: number | null } }).config;
+          const perSessionCap = sessionCfgRaw?.max_trades_per_day != null
+            ? Number(sessionCfgRaw.max_trades_per_day)
+            : null;
+          const capCheck = evaluateDailyTradeCap({
+            tradesToday: tradesTodayAtFill,
+            perSessionCap,
+            envDefault: getDailyTradeCapEnvDefault(),
+          });
+          if (!capCheck.allow) {
+            pendingDropReason = "daily_trade_cap";
+          }
+        } catch (_capErr) {
+          // Fail-OPEN (same as signal-time daily-trade-cap policy): let a borderline
+          // trade through rather than silently halt on infrastructure failure.
+        }
+      }
+
+      if (pendingDropReason !== null) {
+        // A gate failed at fill time — emit audit + skip openPosition.
+        // Severity: "info" for expected temporal crossings (lunch/session-boundary/
+        // daily-cap reset); "warning" for unexpected state flips (kill-switch/DLL).
+        const dropSeverity: "info" | "warning" =
+          (pendingDropReason === "lunch_blackout" ||
+           pendingDropReason === "session_boundary_crossed" ||
+           pendingDropReason === "daily_trade_cap" ||
+           pendingDropReason === "news_size_reduced_to_zero")
+            ? "info" : "warning";
+
+        const logPayload = {
+          sessionId,
+          symbol,
+          side: pendingEntry.side,
+          reason: pendingDropReason,
+          signalBarTimestamp: pendingEntry.signalBarTimestamp,
+          fillBarTimestamp: bar.timestamp,
+          correlationId: fillCorrelationId,
+        };
+        const dropMsg = `H3: Pending entry DROPPED at fill time — gate re-check failed: ${pendingDropReason}`;
+        if (dropSeverity === "warning") {
+          logger.warn(logPayload, dropMsg);
+        } else {
+          logger.info(logPayload, dropMsg);
+        }
+        insertAuditRow({
+          action: `pending_entry.dropped_${pendingDropReason}`,
+          entityType: "paper_session",
+          entityId: sessionId,
+          decisionAuthority: "system",
+          status: dropSeverity === "warning" ? "warning" : "info",
+          input: {
+            sessionId,
+            symbol,
+            side: pendingEntry.side,
+            signalBarTimestamp: pendingEntry.signalBarTimestamp,
+            fillBarTimestamp: bar.timestamp,
+          } as Record<string, unknown>,
+          result: { dropped: true, reason: pendingDropReason } as Record<string, unknown>,
+          correlationId: fillCorrelationId,
+        }).catch(() => {});
+
+        // Propagate span attribute then short-circuit — skip to next bar
+        span.setAttribute("pending_entry_dropped", true);
+        span.setAttribute("pending_entry_drop_reason", pendingDropReason);
+        previousIndicators.set(prevKey, indicators);
+        span.end();
+        return;
+      }
+    }
+    // ─── End H3 pending-entry fill-gate re-check ─────────────────────────────
+
     logger.info(
       {
         sessionId, symbol,
@@ -2268,6 +2585,66 @@ export async function evaluateSignals(
         { sessionId, symbol, side: pendingEntry.side, executionPrice: bar.close, contracts: pendingEntry.contracts },
         "FIX 1: Deferred entry filled — position opened at bar N+1 close",
       );
+
+      // ─── Server-Mediated Execution: Phase 0 entry routing ────────────────────
+      // Fire live order when SERVER_MEDIATED_EXECUTION_ENABLED=true and strategy
+      // is DEPLOYED or PILOT. Fire-and-forget: routing failure NEVER prevents
+      // paper position from persisting. Fill reconciliation = Phase 1.
+      // SHADOW guard enforced inside routeLiveEntry — this call is safe for all states.
+      {
+        const _smeLifecycleState = sessionConfig.lifecycleState ?? "";
+        const _smeFirmId = sessionRow.firmId ?? "";
+        const _smeContracts = deferredResult.position.contracts;
+        const _smeBarTs = typeof pendingEntry.signalBarTimestamp === "number"
+          ? new Date(pendingEntry.signalBarTimestamp).toISOString()
+          : typeof pendingEntry.signalBarTimestamp === "string"
+            ? pendingEntry.signalBarTimestamp
+            : undefined;
+        const _smeCorrelationId = pendingEntry.correlationId ?? null;
+        const _smeStrategyId = sessionConfig.strategyId ?? "";
+
+        import("./server-mediated-executor.js").then(async ({ routeLiveEntry, isServerMediatedExecutionEnabled }) => {
+          if (!isServerMediatedExecutionEnabled()) return; // fast-path: flag off
+
+          // Resolve broker accountId from firmId (first enabled account for this firm)
+          let _smeAccountId = "";
+          try {
+            const [_acct] = await db
+              .select({ accountId: brokerAccounts.accountId })
+              .from(brokerAccounts)
+              .where(and(eq(brokerAccounts.firmId, _smeFirmId), eq(brokerAccounts.enabled, true)))
+              .limit(1);
+            _smeAccountId = _acct?.accountId ?? "";
+          } catch (acctErr) {
+            logger.warn({ acctErr, sessionId, firmId: _smeFirmId }, "SME: broker account lookup failed (routing skipped)");
+            return;
+          }
+          if (!_smeAccountId) {
+            logger.warn({ sessionId, firmId: _smeFirmId }, "SME: no enabled broker account for firm (routing skipped)");
+            return;
+          }
+
+          return routeLiveEntry({
+            ctx: {
+              accountId: _smeAccountId,
+              lifecycleState: _smeLifecycleState,
+              sessionId,
+              strategyId: _smeStrategyId,
+              correlationId: _smeCorrelationId,
+            },
+            symbol,
+            side: pendingEntry.side as "long" | "short",
+            quantity: _smeContracts,
+            barTimestamp: _smeBarTs,
+          });
+        }).catch((smeErr: unknown) => {
+          logger.error(
+            { err: smeErr, sessionId, symbol, lifecycleState: sessionConfig.lifecycleState },
+            "SME: routeLiveEntry threw — paper position already open (isolated failure, no action required)",
+          );
+        });
+      }
+      // ─── End SME entry routing ────────────────────────────────────────────────
     } else {
       fillMiss = true;
       db.insert(paperSignalLogs).values({
@@ -2701,6 +3078,9 @@ export async function evaluateSignals(
     // Fail-open: query errors return zero P&L so trading is never blocked.
     let dllHaltBlocked = blackoutBlocked;   // short-circuit if already blackout-blocked
     let dllForceCloseTriggered = false;
+    // 60%-DLL reduce-size band: when in the soft band (below the 67% halt), new entries are
+    // sized DOWN by this factor (NOT blocked). 1 = no reduction. Applied at the sizing site.
+    let dllReduceSizeFactor = 1;
     if (!blackoutBlocked) {
       try {
         const firmId = sessionRow.firmId ?? "default";
@@ -2767,6 +3147,26 @@ export async function evaluateSignals(
             acted: false,
             reason: `cross_symbol_dll_halt_triggered: combined_pnl=${dllResult.combinedPnL.toFixed(2)} dll_pct=${(dllResult.dllPct * 100).toFixed(1)}%`,
           }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist DLL halt log"));
+        } else if (dllResult.action === "reduce_size") {
+          // SOFT 60% band — do NOT block; size the new entry DOWN to absorb the losing streak
+          // before the hard 67% halt. Applied at the sizing site via dllReduceSizeFactor.
+          dllReduceSizeFactor = dllResult.reduceSizeFactor;
+          span.setAttribute("dll_reduce_size_band", true);
+          span.setAttribute("dll_reduce_size_factor", dllResult.reduceSizeFactor);
+          span.setAttribute("cross_symbol_dll_pct", dllResult.dllPct);
+          logger.warn(
+            { sessionId, symbol, firmId, combinedPnL: dllResult.combinedPnL, dllPct: dllResult.dllPct, reduceFactor: dllResult.reduceSizeFactor },
+            "60%-DLL band — sizing new entry DOWN (soft throttle before the 67% halt)",
+          );
+          insertAuditRow({
+            action: "sizing.dll_reduce_size_band_entered",
+            entityType: "paper_session",
+            entityId: sessionId,
+            decisionAuthority: "system",
+            status: "warning",
+            input: { firmId, sessionDate, combinedPnL: dllResult.combinedPnL } as Record<string, unknown>,
+            result: { dll_pct: dllResult.dllPct, reduce_factor: dllResult.reduceSizeFactor, reduce_threshold: dllResult.reduceThreshold } as Record<string, unknown>,
+          }).catch(() => {});
         }
       } catch (dllErr) {
         // Fail-CLOSED: loss-throttling gate must not allow entry when data is unavailable.
@@ -2946,7 +3346,13 @@ export async function evaluateSignals(
     //   do NOT block the entry. Missing a block is not account-fatal.
     let consistencyBlocked = false;
     const sessionFirmId = sessionRow.firmId ?? "";
-    if (CONSISTENCY_RULE_FIRMS.includes(sessionFirmId)) {
+    // 2026-06-23: the single-day consistency rule is an EVAL / Consistency-payout-lane rule —
+    // NOT the funded Standard lane (operator's choice). Default OFF; opt-in per-account/env for
+    // the eval phase or the Consistency lane. See consistency-lane.ts.
+    const consistencyEnforced = resolveConsistencyEnforced(
+      sessionConfig.config as unknown as Record<string, unknown>,
+    );
+    if (CONSISTENCY_RULE_FIRMS.includes(sessionFirmId) && consistencyEnforced) {
       try {
         const consistencyResult = await consistencyGateShouldBlock(
           sessionId,                    // used as cache key and audit entityId
@@ -3119,7 +3525,107 @@ export async function evaluateSignals(
 
     // ─���─ Anti-setup gate: check if known bad pattern blocks entry ──
     // Anti-setup gate short-circuits if lockout or correlated position guard is already active
-    let antiSetupBlocked = lockoutBlocked || correlatedBlocked;
+    // ─── Tier 5.3.2: Cross-account hedge gate (Topstep Prohibited Conduct) ──
+    // Topstep bans holding OPPOSITE positions across your multiple accounts (single-user
+    // cross-account hedging). Block a new entry that would be opposite to an open position on
+    // the SAME UNDERLYING in another account of this firm. Fail-OPEN on DB error.
+    let crossAccountHedgeBlocked = lockoutBlocked || correlatedBlocked;
+    if (!crossAccountHedgeBlocked) {
+      const hedge = await checkCrossAccountHedge(sessionRow.firmId, symbol, config.side, sessionId);
+      if (hedge.blocked) {
+        crossAccountHedgeBlocked = true;
+        span.setAttribute("cross_account_hedge_blocked", true);
+        span.setAttribute("cross_account_hedge_underlying", hedge.conflictUnderlying ?? "");
+        logger.info(
+          { sessionId, symbol, firmId: sessionRow.firmId, conflictUnderlying: hedge.conflictUnderlying, conflictSide: hedge.conflictSide, conflictSessionId: hedge.conflictSessionId },
+          "Tier 5.3.2: entry blocked — cross-account hedge (Topstep prohibited conduct: opposite positions across accounts)",
+        );
+        db.insert(paperSignalLogs).values({
+          sessionId, symbol, direction: config.side, signalType: "cross_account_hedge_blocked",
+          price: String(bar.close),
+          indicatorSnapshot: { ...indicators, _hedge_underlying: hedge.conflictUnderlying, _hedge_conflict_side: hedge.conflictSide, _hedge_conflict_session: hedge.conflictSessionId },
+          acted: false,
+          reason: `cross_account_hedge_blocked: open ${hedge.conflictSide} on ${hedge.conflictUnderlying} in another account`,
+        }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist cross-account hedge block log"));
+        insertAuditRow({
+          action: "compliance.cross_account_hedge_blocked",
+          entityType: "paper_session", entityId: sessionId, decisionAuthority: "system", status: "blocked",
+          input: { sessionId, symbol, firmId: sessionRow.firmId, side: config.side } as Record<string, unknown>,
+          result: { blocked: true, conflictUnderlying: hedge.conflictUnderlying, conflictSide: hedge.conflictSide } as Record<string, unknown>,
+          correlationId: correlationId ?? null,
+        }).catch(() => {});
+      }
+    }
+
+    // ─── Tier 5.3.2b: Intra-account hedge gate (MFFU Fair Play §5 / hedgingSameUnderlyingBanned) ──
+    // MFFU bans hedging = buy + sell on the SAME UNDERLYING at the same time within ONE account
+    // (their example: MNQ + NQ share underlying NQ). The cross-account gate above excludes the
+    // current session; this catches an opposite-side open position on the same underlying in the
+    // SAME account (e.g. one strategy long MNQ while another is short NQ). Firm-agnostic defense —
+    // a same-underlying opposite-side pair is never a real position for our day-trade bot. Fail-OPEN.
+    if (!crossAccountHedgeBlocked) {
+      const intra = await checkIntraAccountHedge(sessionId, symbol, config.side);
+      if (intra.blocked) {
+        crossAccountHedgeBlocked = true;
+        span.setAttribute("intra_account_hedge_blocked", true);
+        span.setAttribute("intra_account_hedge_underlying", intra.conflictUnderlying ?? "");
+        logger.info(
+          { sessionId, symbol, firmId: sessionRow.firmId, conflictUnderlying: intra.conflictUnderlying, conflictSide: intra.conflictSide },
+          "Tier 5.3.2b: entry blocked — intra-account hedge (MFFU §5: buy+sell same underlying, one account)",
+        );
+        db.insert(paperSignalLogs).values({
+          sessionId, symbol, direction: config.side, signalType: "intra_account_hedge_blocked",
+          price: String(bar.close),
+          indicatorSnapshot: { ...indicators, _hedge_underlying: intra.conflictUnderlying, _hedge_conflict_side: intra.conflictSide },
+          acted: false,
+          reason: `intra_account_hedge_blocked: open ${intra.conflictSide} on ${intra.conflictUnderlying} in same account`,
+        }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist intra-account hedge block log"));
+        insertAuditRow({
+          action: "compliance.intra_account_hedge_blocked",
+          entityType: "paper_session", entityId: sessionId, decisionAuthority: "system", status: "blocked",
+          input: { sessionId, symbol, firmId: sessionRow.firmId, side: config.side } as Record<string, unknown>,
+          result: { blocked: true, conflictUnderlying: intra.conflictUnderlying, conflictSide: intra.conflictSide } as Record<string, unknown>,
+          correlationId: correlationId ?? null,
+        }).catch(() => {});
+      }
+    }
+
+    // ─── Tier 5.3.3: Price-lock limit gate (Topstep Prohibited Conduct) ──────
+    // Topstep bans holding a position within 2% of a product's daily price-lock limit. The
+    // reference (prior settlement) is best-effort; FAIL-OPEN when unavailable — intraday
+    // structural trades are essentially never within 2% of a ±7% limit, so a missing reference
+    // must not halt trading. TODO: wire the daily settlement feed for full enforcement.
+    let priceLockBlocked = lockoutBlocked || correlatedBlocked || crossAccountHedgeBlocked;
+    if (!priceLockBlocked) {
+      const refSettlement = (indicators["prior_settlement"] ?? indicators["daily_reference"] ?? null) as number | null;
+      const lock = checkPriceLockLimit(symbolToUnderlying(symbol), bar.close, refSettlement);
+      if (lock.blocked) {
+        priceLockBlocked = true;
+        span.setAttribute("price_lock_limit_blocked", true);
+        span.setAttribute("price_lock_reason", lock.reason ?? "");
+        logger.info(
+          { sessionId, symbol, price: bar.close, reason: lock.reason, limitUp: lock.limitUp, limitDown: lock.limitDown },
+          "Tier 5.3.3: entry blocked — within 2% of price-lock limit (Topstep prohibited conduct)",
+        );
+        db.insert(paperSignalLogs).values({
+          sessionId, symbol, direction: config.side, signalType: "price_lock_limit_blocked",
+          price: String(bar.close),
+          indicatorSnapshot: { ...indicators, _price_lock_reason: lock.reason, _limit_up: lock.limitUp, _limit_down: lock.limitDown },
+          acted: false,
+          reason: `price_lock_limit_blocked: ${lock.reason} (price ${bar.close})`,
+        }).catch((err: unknown) => logger.error({ err, sessionId }, "Failed to persist price-lock block log"));
+        insertAuditRow({
+          action: "compliance.price_lock_limit_blocked",
+          entityType: "paper_session", entityId: sessionId, decisionAuthority: "system", status: "blocked",
+          input: { sessionId, symbol, price: bar.close } as Record<string, unknown>,
+          result: { blocked: true, reason: lock.reason } as Record<string, unknown>,
+          correlationId: correlationId ?? null,
+        }).catch(() => {});
+      }
+    }
+
+    // ─── Anti-setup gate: check if known bad pattern blocks entry ──
+    let antiSetupBlocked = lockoutBlocked || correlatedBlocked || crossAccountHedgeBlocked || priceLockBlocked;
     let antiSetupResult: AntiSetupGateResult | null = null;
     try {
       antiSetupResult = await checkAntiSetupGate(
@@ -3710,7 +4216,11 @@ export async function evaluateSignals(
               }).catch((auditErr: unknown) => logger.warn({ err: auditErr, sessionId }, "path_c_error audit write failed"));
               notifyCritical(
                 "Path C evaluation failed",
-                `evaluateWeightedConfluence threw for strategy ${sessionConfig.strategyId}: ${pathCErrMsg}. Falling back to Path B.`,
+                appendFamilyGradePostscript(
+                  `evaluateWeightedConfluence threw for strategy ${sessionConfig.strategyId}: ${pathCErrMsg}. Falling back to Path B.`,
+                  "The bot's signal-scoring engine had an internal error and switched to a simpler backup method.",
+                  "No action needed — the bot is still trading safely using a backup signal check.",
+                ),
                 { strategyId: sessionConfig.strategyId, sessionId, correlationId: correlationId ?? null },
               );
               broadcastSSE("alert:path_c_error", {
@@ -4305,8 +4815,22 @@ export async function evaluateSignals(
           // Default: 1.0 AM, 0.50 at 13:30 ET decaying linearly to 0.25 by 15:00 ET,
           // 0.0 after 15:30 ET (no new entries). Configurable via PM_SIZE_FACTOR_AT_13_30
           // / PM_SIZE_FACTOR_AT_15_00 env vars.
-          pmSizeFactor: computePmSizeFactor({ barTsUtc: new Date(bar.timestamp) }).factor,
+          // Phase 2 (2026-06-22): PM session factor × firm-aware news-caution factor.
+          // newsReduceSizeFactor is < 1 only when a Topstep account fires a signal inside a
+          // T1 news window (caution = cut size; MFFU would have hard-blocked above instead).
+          pmSizeFactor:
+            computePmSizeFactor({ barTsUtc: new Date(bar.timestamp) }).factor * newsReduceSizeFactor,
+          // Balanced scaling plan: pass proven-trades count so live sizing can apply
+          // the proven-trades ramp gate. Backtests do not pass this field and keep
+          // the dollar-profit fallback inside computeRiskDerivedContracts.
+          provenTrades: typeof sessionRow.provenTradesCount === "number"
+            ? sessionRow.provenTradesCount
+            : (sessionRow.provenTradesCount != null ? Number(sessionRow.provenTradesCount) : 0),
         };
+        if (newsReduceSizeFactor < 1) {
+          span.setAttribute("news_caution_size_applied", newsReduceSizeFactor);
+          span.setAttribute("news_caution_event", newsReduceEvent);
+        }
 
         const sizingResult = computeRiskDerivedContracts(sizingInputs);
         // Finding #10 fix (2026-06-22): when sizing returns 0, the backtest engine
@@ -4400,6 +4924,23 @@ export async function evaluateSignals(
       } else {
         // Fixed contracts or unknown position_size type — clamp to firm cap
         baseContracts = Math.min(config.contracts, firmCap);
+      }
+
+      // 60%-DLL reduce-size band (soft throttle BELOW the 67% halt): when the cross-symbol DLL
+      // evaluation above put us in the reduce_size band, shrink whatever size the sizing path
+      // produced. Floored to ≥1 — the reduce band sizes DOWN, it never zeroes (the 67% halt does).
+      if (dllReduceSizeFactor < 1) {
+        const preReduceContracts = baseContracts;
+        baseContracts = Math.max(1, Math.floor(baseContracts * dllReduceSizeFactor));
+        if (baseContracts < preReduceContracts) {
+          span.setAttribute("dll_reduce_size_applied", true);
+          insertAuditRow({
+            action: "sizing.dll_reduce_size_applied",
+            entityType: "paper_session", entityId: sessionId, decisionAuthority: "system", status: "warning",
+            input: { sessionId, symbol, preReduceContracts, factor: dllReduceSizeFactor } as Record<string, unknown>,
+            result: { contracts: baseContracts } as Record<string, unknown>,
+          }).catch(() => {});
+        }
       }
 
       let contextContracts = skipReduce
@@ -4643,28 +5184,46 @@ export async function evaluateSignals(
 
             // INSERT lifecycle_shadow_signals row.
             // traderspost_webhook_called MUST be false — invariant enforced here.
+            // M2 (2026-06-23): use .returning({ id }) so we can immediately compute and
+            // UPDATE divergence_vs_backtest on the same row (inline write — no cron needed).
             const shadowCorrelationId = correlationId ?? randomUUID();
-            db.insert(lifecycleShadowSignals).values({
-              strategyId: sessionConfig.strategyId,
-              signalTs: bar.timestamp ? new Date(bar.timestamp) : new Date(),
-              direction: config.side,
-              entryPrice: bar.close,
-              intendedSize: contextContracts,
-              killzone: detectedKillzone,
-              regime: (biasState as Record<string, unknown> | null)?.regimeLabel as string | undefined ?? null,
-              confluenceScore: shadowConfluenceScore,
-              lifecycleState: "SHADOW",
-              divergenceVsBacktest: null,  // filled by A.3 divergence checker
-              sourceCorrelationId: shadowCorrelationId,
-              traderspostWebhookCalled: false,  // INVARIANT: always false
-            }).catch((err: unknown) => {
-              // Fail-soft: shadow INSERT failure logs error but STILL skips TradersPost.
-              // The shadow invariant (never route) takes precedence over observability.
-              logger.error(
-                { err, sessionId, strategyId: sessionConfig.strategyId, symbol },
-                "Wave 29 Pass A.1: lifecycle_shadow_signals INSERT failed — still skipping TradersPost (invariant preserved)",
-              );
-            });
+            db.insert(lifecycleShadowSignals)
+              .values({
+                strategyId: sessionConfig.strategyId,
+                signalTs: bar.timestamp ? new Date(bar.timestamp) : new Date(),
+                direction: config.side,
+                entryPrice: bar.close,
+                intendedSize: contextContracts,
+                killzone: detectedKillzone,
+                regime: (biasState as Record<string, unknown> | null)?.regimeLabel as string | undefined ?? null,
+                confluenceScore: shadowConfluenceScore,
+                lifecycleState: "SHADOW",
+                divergenceVsBacktest: null,  // set by writeShadowDivergence below
+                sourceCorrelationId: shadowCorrelationId,
+                traderspostWebhookCalled: false,  // INVARIANT: always false
+              })
+              .returning({ id: lifecycleShadowSignals.id })
+              .then(([row]) => {
+                if (!row?.id) return;
+                // M2: compute + persist divergence_vs_backtest inline.
+                // Fire-and-forget — shadow invariant (never route to TradersPost) must
+                // not be blocked by a slow divergence computation.
+                writeShadowDivergence(row.id as bigint, sessionConfig.strategyId, shadowCorrelationId)
+                  .catch((err: unknown) =>
+                    logger.warn(
+                      { err, sessionId, strategyId: sessionConfig.strategyId },
+                      "M2: writeShadowDivergence failed (non-blocking — shadow invariant preserved)",
+                    ),
+                  );
+              })
+              .catch((err: unknown) => {
+                // Fail-soft: shadow INSERT failure logs error but STILL skips TradersPost.
+                // The shadow invariant (never route) takes precedence over observability.
+                logger.error(
+                  { err, sessionId, strategyId: sessionConfig.strategyId, symbol },
+                  "Wave 29 Pass A.1: lifecycle_shadow_signals INSERT failed — still skipping TradersPost (invariant preserved)",
+                );
+              });
 
             // Emit audit row: lifecycle.shadow_signal_logged
             insertAuditRow({
@@ -4827,6 +5386,71 @@ export async function evaluateSignals(
             ? "slumdawg-rl-challenger"
             : "slumdawg-baseline";
 
+          // ── Pass 6 Track B: resolve broker_account_id for the target sub-account ──
+          // Look up the UUID assigned by migration 0159 to the paper sub-account row.
+          // This UUID is required by routeOrder() — it's the broker_accounts PK.
+          let resolvedAccountId: string | null = null;
+          let routingCalled = false;
+          let routingSuccess: boolean | null = null;
+
+          const subAccountRows = await db
+            .select({ accountId: brokerAccounts.accountId })
+            .from(brokerAccounts)
+            .where(
+              and(
+                eq(brokerAccounts.accountIdExternal, targetSubAccount),
+                eq(brokerAccounts.firmId, "paper"),
+              ),
+            )
+            .limit(1);
+          resolvedAccountId = subAccountRows[0]?.accountId ?? null;
+
+          // Only call routeOrder when explicitly set to rl-challenger
+          // (baseline is the default — observability-only for most strategies).
+          // The canonical path for PAPER+ strategies is:
+          //   Pine alert → /api/live-order → routeOrder() (wired in Pass 4 Track B)
+          // SHADOW strategies are gated out earlier (SHADOW intercept block above).
+          //
+          // B1 capital-safety guard (2026-06-23): routeOrder() places an EXTERNAL
+          // broker order (TradersPost). Per §8 paper-engine authority, ONLY PAPER+
+          // strategies (PAPER / DEPLOY_READY / PILOT / DEPLOYED) interact with the
+          // broker — CANDIDATE / TESTING use the internal simulator ONLY. Before this
+          // guard, the A/B rl-challenger branch fired routeOrder() for pre-PAPER states
+          // (the old comment here even said "For CANDIDATE/TESTING ... we call
+          // routeOrder() directly here"), publishing a real broker order from a wrong
+          // lifecycle state. Skip (not throw) so the bar-eval loop + audit row continue.
+          const PAPER_PLUS_STATES = ["PAPER", "DEPLOY_READY", "PILOT", "DEPLOYED"];
+          const lcStateForRouting = sessionConfig.lifecycleState ?? "";
+          if (routingDecision === "rl-challenger" && resolvedAccountId !== null) {
+            if (!PAPER_PLUS_STATES.includes(lcStateForRouting)) {
+              logger.warn(
+                {
+                  strategyId: sessionConfig.strategyId,
+                  lifecycleState: lcStateForRouting,
+                  symbol,
+                  correlationId: correlationId ?? null,
+                },
+                "B1: routeOrder skipped — non-PAPER+ lifecycle state may not place external broker orders (capital safety)",
+              );
+            } else {
+              routingCalled = true;
+              const { routeOrder } = await import("./broker-router.js");
+              const signal = {
+                action: (config.side === "short" ? "enter_short" : "enter_long") as
+                  "enter_long" | "enter_short" | "exit_long" | "exit_short" | "exit",
+                ticker: symbol,
+                quantity: contextContracts,
+                strategyId: sessionConfig.strategyId,
+                barTimestamp: typeof bar.timestamp === "number"
+                  ? new Date(bar.timestamp).toISOString()
+                  : typeof bar.timestamp === "string" ? bar.timestamp : undefined,
+              };
+              const routeResult = await routeOrder(resolvedAccountId, signal, correlationId ?? null);
+              routingSuccess = routeResult.success;
+            }
+          }
+
+          // ── Audit row fires AFTER routing (not before — closes observability illusion) ──
           insertAuditRow({
             action: "quantum_rl.signal_routed",
             entityType: "strategy",
@@ -4835,6 +5459,9 @@ export async function evaluateSignals(
             result: {
               paper_account_routing: routingDecision,
               target_sub_account: targetSubAccount,
+              resolved_account_id: resolvedAccountId,
+              routing_called: routingCalled,
+              routing_success: routingSuccess,
               symbol,
               side: config.side,
               contracts: contextContracts,
@@ -4854,6 +5481,9 @@ export async function evaluateSignals(
             symbol,
             routing: routingDecision,
             targetSubAccount,
+            resolvedAccountId,
+            routingCalled,
+            routingSuccess,
             side: config.side,
             contracts: contextContracts,
             signalBar: bar.timestamp,

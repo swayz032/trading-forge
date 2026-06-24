@@ -16,7 +16,7 @@
  *   // Then use ctx.db exactly like the production db import.
  *
  * SCHEMA APPLICATION:
- *   We create the 7 core tables directly using inline SQL DDL (not migration files).
+ *   We create the 10 core tables directly using inline SQL DDL (not migration files).
  *   The live migrations are PostgreSQL-specific and contain features like triggers,
  *   partial indexes with WHERE clauses, and pgcrypto functions that add friction
  *   without adding test coverage value.  All FK relationships are preserved so
@@ -25,7 +25,8 @@
  * SKIPPED FEATURES (safe for test layer):
  *   - audit_log append-only trigger (migration 0058) — observability, not correctness
  *   - pgcrypto uuid_generate_v4() DEFAULT — supply explicit UUIDs in test inserts
- *   - Non-core tables (paper_sessions, backtest_matrix, etc.) — out of scope
+ *   - paper_sessions unique partial index WHERE status='active' — production-only guard
+ *   - paper_positions open partial index WHERE closed_at IS NULL — hot-path lookup only
  *
  * OTHER TESTS ADOPTING THIS LAYER:
  *   1. Import createTestDb, call in beforeAll/afterAll.
@@ -61,8 +62,9 @@ export interface TestDb {
 
 const CORE_DDL = `
 -- Wave hardening 2026-06-22, pglite real-DB test layer
--- 7 core tables: strategies, backtests, monte_carlo_runs,
--- strategy_health_scores, lifecycle_shadow_signals, audit_log, lifecycle_transitions
+-- 10 core tables: strategies, backtests, monte_carlo_runs,
+-- strategy_health_scores, lifecycle_shadow_signals, audit_log, lifecycle_transitions,
+-- paper_sessions, paper_positions, paper_trades
 -- DDL mirrors schema.ts column-for-column so Drizzle INSERT statements match.
 
 CREATE TABLE IF NOT EXISTS strategies (
@@ -200,15 +202,18 @@ CREATE TABLE IF NOT EXISTS lifecycle_shadow_signals (
 );
 
 CREATE TABLE IF NOT EXISTS audit_log (
-  id            UUID PRIMARY KEY,
-  action        TEXT NOT NULL,
-  entity_id     UUID,
-  entity_type   TEXT,
-  result        JSONB,
-  correlation_id TEXT,
-  severity      TEXT,
-  metadata      JSONB,
-  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  id                  UUID PRIMARY KEY,
+  action              TEXT NOT NULL,
+  entity_type         TEXT,
+  entity_id           UUID,
+  input               JSONB,
+  result              JSONB,
+  status              TEXT NOT NULL DEFAULT 'success',
+  duration_ms         INTEGER,
+  error_message       TEXT,
+  decision_authority  TEXT,
+  correlation_id      TEXT,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS lifecycle_transitions (
@@ -227,6 +232,100 @@ CREATE TABLE IF NOT EXISTS lifecycle_transitions (
   quantum_classical_disagreement_pct  NUMERIC,
   cloud_qmc_run_id                    UUID,
   created_at                          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Pass 6 Track C: paper_sessions / paper_positions / paper_trades tables.
+-- Mirrors schema.ts column-for-column.  Partial/conditional unique indexes
+-- and partial WHERE indexes are omitted here to reduce PGlite DDL friction
+-- (they are observability/correctness guards for production, not correctness
+-- correctness guards for the state-machine logic under test).
+--
+-- SKIPPED:
+--   - UNIQUE INDEX WHERE status='active'  (paper_sessions_one_active_per_strategy)
+--   - PARTIAL INDEX WHERE closed_at IS NULL (paper_positions_open_idx)
+-- Both are safe to skip for state-machine / P&L integration tests.
+
+CREATE TABLE IF NOT EXISTS paper_sessions (
+  id                    UUID PRIMARY KEY,
+  strategy_id           UUID REFERENCES strategies(id) ON DELETE SET NULL,
+  status                TEXT NOT NULL DEFAULT 'active',
+  mode                  TEXT NOT NULL DEFAULT 'paper',
+  firm_id               TEXT,
+  started_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  stopped_at            TIMESTAMPTZ,
+  paused_at             TIMESTAMPTZ,
+  starting_capital      NUMERIC NOT NULL DEFAULT '50000',
+  current_equity        NUMERIC NOT NULL DEFAULT '50000',
+  peak_equity           NUMERIC NOT NULL DEFAULT '50000',
+  realized_peak_equity  NUMERIC NOT NULL DEFAULT '50000',
+  high_water_balance    NUMERIC NOT NULL DEFAULT '50000',
+  config                JSONB,
+  last_signal_time      TIMESTAMPTZ,
+  cooldown_until        TIMESTAMPTZ,
+  daily_pnl_breakdown   JSONB DEFAULT '{}',
+  metrics_snapshot      JSONB DEFAULT '{}',
+  total_trades          INTEGER NOT NULL DEFAULT 0,
+  governor_state        JSONB,
+  created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS paper_positions (
+  id                        UUID PRIMARY KEY,
+  session_id                UUID NOT NULL REFERENCES paper_sessions(id) ON DELETE CASCADE,
+  symbol                    TEXT NOT NULL,
+  side                      TEXT NOT NULL,
+  entry_price               NUMERIC NOT NULL,
+  current_price             NUMERIC,
+  contracts                 INTEGER NOT NULL DEFAULT 1,
+  unrealized_pnl            NUMERIC DEFAULT '0',
+  entry_time                TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  closed_at                 TIMESTAMPTZ,
+  arrival_price             NUMERIC,
+  implementation_shortfall  NUMERIC,
+  fill_ratio                NUMERIC DEFAULT '1.0',
+  trail_hwm                 NUMERIC,
+  bars_held                 INTEGER NOT NULL DEFAULT 0,
+  fill_probability          NUMERIC,
+  mae                       NUMERIC,
+  mfe                       NUMERIC,
+  previous_unrealized_pnl   NUMERIC DEFAULT '0',
+  tp1_filled_at             TIMESTAMPTZ,
+  tp2_filled_at             TIMESTAMPTZ,
+  tp1_filled                BOOLEAN NOT NULL DEFAULT FALSE,
+  tp2_filled                BOOLEAN NOT NULL DEFAULT FALSE,
+  be_stop_applied           BOOLEAN NOT NULL DEFAULT FALSE,
+  current_exit_style        TEXT,
+  current_trail_method      TEXT,
+  last_handler_eval_at      TIMESTAMPTZ,
+  exit_plan                 JSONB
+);
+
+CREATE TABLE IF NOT EXISTS paper_trades (
+  id                UUID PRIMARY KEY,
+  session_id        UUID NOT NULL REFERENCES paper_sessions(id) ON DELETE CASCADE,
+  symbol            TEXT NOT NULL,
+  side              TEXT NOT NULL,
+  entry_price       NUMERIC NOT NULL,
+  exit_price        NUMERIC NOT NULL,
+  pnl               NUMERIC NOT NULL,
+  gross_pnl         NUMERIC,
+  commission        NUMERIC DEFAULT '0',
+  contracts         INTEGER NOT NULL DEFAULT 1,
+  entry_time        TIMESTAMPTZ NOT NULL,
+  exit_time         TIMESTAMPTZ NOT NULL,
+  slippage          NUMERIC,
+  mae               NUMERIC,
+  mfe               NUMERIC,
+  hold_duration_ms  INTEGER,
+  hour_of_day       INTEGER,
+  day_of_week       INTEGER,
+  session_type      TEXT,
+  macro_regime      TEXT,
+  event_active      BOOLEAN,
+  skip_signal       TEXT,
+  fill_probability  NUMERIC,
+  roll_spread_cost  NUMERIC,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 `;
 

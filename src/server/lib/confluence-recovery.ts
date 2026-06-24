@@ -60,6 +60,7 @@ export function recoverConfluences(idea: IdeaLike): {
   recovered: RecoveredConfluence[];
   explicit_count: number;
   effective_count: number;
+  derived_name?: string;
 } {
   const steps = Array.isArray(idea.entry_sequence) ? idea.entry_sequence : [];
   const explicitConfl = Array.isArray(idea.confluences) ? idea.confluences : [];

@@ -40,8 +40,14 @@ class TestStaticCalendar:
         assert len(fomc_2024) == 8
 
     def test_all_event_types_present(self):
-        """All 7 event types are in the static calendar (F-4 fix: added ISM + PPI)."""
-        assert set(STATIC_EVENTS.keys()) == {"FOMC", "CPI", "NFP", "GDP", "PCE", "ISM", "PPI"}
+        """All event types present. FOMC_MINUTES + EIA added 2026-06-22 (MFFU Feb-2026).
+
+        GDP/PCE/ISM/PPI remain as DATA here (non-blackout consumers) even though removed
+        from the live calendar_filter blackout — they are not T1 per the current policy.
+        """
+        assert set(STATIC_EVENTS.keys()) == {
+            "FOMC", "FOMC_MINUTES", "CPI", "NFP", "GDP", "PCE", "ISM", "PPI", "EIA",
+        }
 
     def test_fomc_always_at_2pm(self):
         """All FOMC events are at 2:00 PM ET."""
@@ -237,3 +243,33 @@ class TestNewEventTypes:
         # Should emit nothing / just a warning at worst, never raise
         _warn_if_calendar_incomplete(2025)
         _warn_if_calendar_incomplete(2024)
+
+    def test_gdp_2026_has_4_dates(self):
+        """GDP calendar has 4 dates for 2026 (quarterly)."""
+        gdp_2026 = [e for e in STATIC_EVENTS["GDP"] if e["date"].startswith("2026")]
+        assert len(gdp_2026) == 4, f"GDP 2026 should have 4 entries, got {len(gdp_2026)}"
+
+    def test_gdp_2027_has_4_dates(self):
+        """GDP calendar has 4 dates for 2027 (quarterly)."""
+        gdp_2027 = [e for e in STATIC_EVENTS["GDP"] if e["date"].startswith("2027")]
+        assert len(gdp_2027) == 4, f"GDP 2027 should have 4 entries, got {len(gdp_2027)}"
+
+    def test_ism_2026_has_12_dates(self):
+        """ISM calendar has 12 dates for 2026."""
+        ism_2026 = [e for e in STATIC_EVENTS["ISM"] if e["date"].startswith("2026")]
+        assert len(ism_2026) == 12, f"ISM 2026 should have 12 entries, got {len(ism_2026)}"
+
+    def test_ism_2027_has_12_dates(self):
+        """ISM calendar has 12 dates for 2027."""
+        ism_2027 = [e for e in STATIC_EVENTS["ISM"] if e["date"].startswith("2027")]
+        assert len(ism_2027) == 12, f"ISM 2027 should have 12 entries, got {len(ism_2027)}"
+
+    def test_ppi_2026_has_12_dates(self):
+        """PPI calendar has 12 dates for 2026."""
+        ppi_2026 = [e for e in STATIC_EVENTS["PPI"] if e["date"].startswith("2026")]
+        assert len(ppi_2026) == 12, f"PPI 2026 should have 12 entries, got {len(ppi_2026)}"
+
+    def test_ppi_2027_has_12_dates(self):
+        """PPI calendar has 12 dates for 2027."""
+        ppi_2027 = [e for e in STATIC_EVENTS["PPI"] if e["date"].startswith("2027")]
+        assert len(ppi_2027) == 12, f"PPI 2027 should have 12 entries, got {len(ppi_2027)}"

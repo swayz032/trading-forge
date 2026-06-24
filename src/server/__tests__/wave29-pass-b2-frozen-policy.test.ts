@@ -25,35 +25,48 @@ const mocks = vi.hoisted(() => ({
   dbInsertValues: vi.fn(),
 }));
 
-vi.mock("../db/index.js", () => ({
-  db: {
-    select: (_fields?: unknown) => ({
-      from: (_table: unknown) => ({
-        where: (_cond: unknown) => {
-          // Return an object that is both awaitable AND supports .limit()
-          const resultPromise = Promise.resolve(mocks.dbSelectResult());
-          (resultPromise as unknown as Record<string, unknown>).limit = (_n: number) =>
-            Promise.resolve(mocks.dbSelectResult());
-          return resultPromise as unknown as Promise<unknown[]> & { limit: (n: number) => Promise<unknown[]> };
-        },
+vi.mock("../db/index.js", () => {
+  // Shared db-operation helpers — used both at the top-level db object and
+  // inside the transaction callback (tx has the same surface).
+  function makeTxLike() {
+    return {
+      select: (_fields?: unknown) => ({
+        from: (_table: unknown) => ({
+          where: (_cond: unknown) => {
+            const resultPromise = Promise.resolve(mocks.dbSelectResult());
+            (resultPromise as unknown as Record<string, unknown>).limit = (_n: number) =>
+              Promise.resolve(mocks.dbSelectResult());
+            return resultPromise as unknown as Promise<unknown[]> & { limit: (n: number) => Promise<unknown[]> };
+          },
+        }),
       }),
-    }),
-    insert: (_table: unknown) => ({
-      values: (vals: unknown) => {
-        mocks.dbInsertValues(vals);
-        return Promise.resolve(undefined);
-      },
-    }),
-    update: (_table: unknown) => ({
-      set: (vals: unknown) => ({
-        where: (_cond: unknown) => {
-          mocks.dbUpdateCalled(vals);
+      insert: (_table: unknown) => ({
+        values: (vals: unknown) => {
+          mocks.dbInsertValues(vals);
           return Promise.resolve(undefined);
         },
       }),
-    }),
-  },
-}));
+      update: (_table: unknown) => ({
+        set: (vals: unknown) => ({
+          where: (_cond: unknown) => {
+            mocks.dbUpdateCalled(vals);
+            return Promise.resolve(undefined);
+          },
+        }),
+      }),
+    };
+  }
+
+  return {
+    db: {
+      ...makeTxLike(),
+      // transaction(cb) — calls cb with a tx that has the same mock surface.
+      transaction: async (cb: (tx: ReturnType<typeof makeTxLike>) => Promise<unknown>) => {
+        return cb(makeTxLike());
+      },
+    },
+  };
+});
 
 vi.mock("../db/schema.js", () => ({
   strategies: { id: "id", config: "config", frozenPolicyHash: "frozenPolicyHash" },

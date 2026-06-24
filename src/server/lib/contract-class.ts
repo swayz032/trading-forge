@@ -107,12 +107,19 @@ export const DEFAULT_MINI_COMMISSION_PER_SIDE = 6.20;
  * When adding a new firm or new contract class, update BOTH files.
  */
 const COMMISSION_RATES_BY_CLASS: Record<string, number> = {
-  // Topstep — micro rate is lower than MFFU (Topstep platform fee is bundled)
-  "topstep.micro": 0.37,
-  "topstep.mini":  3.70,  // 10× micro rate (verified 2026-05-25 Topstep fee schedule)
-  // MFFU — standard $0.62/side for micros, $6.20/side for minis
-  "mffu.micro":    0.62,
-  "mffu.mini":     6.20,
+  // Topstep — AUTHORITATIVE TopstepX/ProjectX all-in round-turn ÷ 2 (2026-06-23 correction;
+  // was $0.37 — too low). MES/MNQ = $0.62/side ($1.24 RT). NOTE: this is class-based, so MCL
+  // ($0.77/side, $1.54 RT) is slightly under-estimated here — the BACKTEST (firm_config.py)
+  // has the exact per-symbol value; this TS rate is live/paper estimation (broker is
+  // authoritative for real fills). TODO: per-symbol override if MCL estimation precision matters.
+  "topstep.micro": 0.62,
+  "topstep.mini":  1.90,  // ES/NQ $3.80 RT ÷ 2 (NOT 10× micro — commissions ~3× not 10×)
+  // MFFU — AUTHORITATIVE MFFU instrument list all-in round-turn ÷ 2 (2026-06-23 correction;
+  // was a flat $0.62 = TopstepX's value, wrong for MFFU). MES/MNQ = $0.95/side ($1.90 RT).
+  // Class-based, so MCL ($0.58/side, $1.16 RT) is slightly over-estimated here — the BACKTEST
+  // (firm_config.py) has the exact per-symbol value; this TS rate is live/paper estimation.
+  "mffu.micro":    0.95,
+  "mffu.mini":     2.34,  // ES/NQ $4.68 RT ÷ 2 (CL is $2.46 — see firm_config per-symbol)
 } as const;
 
 // ─── Audit callback type ──────────────────────────────────────────────────────

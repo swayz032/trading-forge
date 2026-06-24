@@ -746,6 +746,10 @@ export const paperSessions = pgTable(
     dailyPnlBreakdown: jsonb("daily_pnl_breakdown").default({}), // Gap 4: consistency tracking
     metricsSnapshot: jsonb("metrics_snapshot").default({}),       // Gap 5: rolling Sharpe
     totalTrades: integer("total_trades").notNull().default(0),    // H3: trade counter for promotion inputs
+    // Balanced scaling plan (migration 0174): monotonic count of closed WINNING trades
+    // (net realized P&L > 0). Consumed by computeRiskDerivedContracts() for proven-trades ramp.
+    // Never decreases — only incremented in closePosition when netPnl > 0.
+    provenTradesCount: integer("proven_trades_count").notNull().default(0),
     // F-4 (migration 0125): TS-level shape via PaperSessionGovernorStateShape.
     governorState: jsonb("governor_state").$type<PaperSessionGovernorStateShape>(),                        // P0-4: persisted governor state — { state, consecutiveLosses, sessionLossPct, lastUpdatedAt }
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -2412,6 +2416,62 @@ export const productionTrades = pgTable(
   ],
 );
 
+// ─── Server-Mediated Orders (Fill Reconciliation Phase 1 — migration 0171, journal idx 173) ───
+//
+// One row per order dispatched through server-mediated-executor.ts → broker-router.
+// Lifecycle: routed → acked → filled | partially_filled | rejected | needs_reconcile → reconciled.
+//
+// A position with status='needs_reconcile' BLOCKS new server-mediated entries for that account
+// until the operator clears it (via admin endpoint or successful auto-reconciliation).
+//
+// broker_fill_id dedup: re-ingesting the same broker_fill_id is a no-op (unique index).
+export const serverMediatedOrders = pgTable(
+  "server_mediated_orders",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    idempotencyKey:     text("idempotency_key").notNull(),    // bar-scoped key from broker-router
+    accountId:          uuid("account_id").notNull(),
+    strategyId:         uuid("strategy_id").notNull(),
+    sessionId:          uuid("session_id").notNull(),
+    correlationId:      uuid("correlation_id"),
+
+    // Intended order (what was dispatched)
+    intendedAction:     text("intended_action").notNull(),
+    intendedSymbol:     text("intended_symbol").notNull(),
+    intendedQty:        integer("intended_qty").notNull(),
+    intendedOrderType:  text("intended_order_type").notNull().default("market"),
+    intendedLimitPrice: numeric("intended_limit_price"),
+    intendedStopPrice:  numeric("intended_stop_price"),
+
+    // Broker references
+    brokerOrderRef:     text("broker_order_ref"),             // from TradersPost responseBody
+    brokerFillId:       text("broker_fill_id"),               // from fill callback (dedup key)
+
+    // Lifecycle state (see migration 0171 for valid values)
+    status:             text("status").notNull().default("routed"),
+
+    // Actual fill (updated by fill-reconciliation-service on fill callback)
+    filledQty:          integer("filled_qty").notNull().default(0),
+    filledAvgPrice:     numeric("filled_avg_price"),
+    filledAt:           timestamp("filled_at", { withTimezone: true }),
+
+    // Timestamps
+    createdAt:          timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt:          timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+
+    // JSON blobs
+    brokerResponse:     jsonb("broker_response"),             // full TradersPost responseBody
+    fillEvents:         jsonb("fill_events").notNull().default(sql`'[]'::jsonb`),
+  },
+  (table) => [
+    uniqueIndex("smo_idempotency_key_uq").on(table.idempotencyKey),
+    uniqueIndex("smo_broker_fill_id_uq").on(table.brokerFillId).where(sql`broker_fill_id IS NOT NULL`),
+    index("smo_broker_order_ref_idx").on(table.brokerOrderRef).where(sql`broker_order_ref IS NOT NULL`),
+    index("smo_account_needs_reconcile_idx").on(table.accountId, table.status).where(sql`status = 'needs_reconcile'`),
+    index("smo_account_created_idx").on(table.accountId, table.createdAt),
+  ],
+);
+
 // ─── Daily Reconciliation ─────────────────────────────────────────────────────
 export const dailyReconciliation = pgTable(
   "daily_reconciliation",
@@ -2527,8 +2587,12 @@ export const brokerAccounts = pgTable(
     // 2026-06-22 (migration 0167): Topstep voluntary-DLL opt-in flag.
     // When true, Topstep XFA payout caps are DOUBLED (Standard $4K / Consistency $6K
     // on a $50K account). MFFU accounts carry this field but it has no effect —
-    // MFFU cap is always $2,000 (no promo). Default false = base cap (conservative).
-    dllOptedIn: boolean("dll_opted_in").notNull().default(false),
+    // MFFU cap is always $2,000 (no promo). MFFU carries the field with no effect.
+    // Default TRUE (migration 0168, 2026-06-22): operator standing policy is to ALWAYS
+    // add the Topstep voluntary DLL at checkout (free 2x payout cap, and our risk engine
+    // already self-imposes a tighter 67%/95% halt). Nothing to remember/flip per account.
+    // Only real-world dependency: tick the DLL box at Topstep signup — the flag reflects it.
+    dllOptedIn: boolean("dll_opted_in").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
@@ -2609,6 +2673,15 @@ export const tradingviewMarkers = pgTable(
     correlationId: uuid("correlation_id"),
   },
   (table) => [
+    // Dedup constraint — mirrors migration 0173_tradingview_markers_unique.sql.
+    // Without this declaration Drizzle cannot reconstruct the index on a fresh
+    // db:push, and schema readers see an incomplete constraint surface.
+    uniqueIndex("idx_tradingview_markers_dedup").on(
+      table.accountId,
+      table.strategyId,
+      table.barTimestamp,
+      table.signal,
+    ),
     index("tradingview_markers_account_idx").on(table.accountId),
     index("tradingview_markers_bar_timestamp_idx").on(table.barTimestamp.desc()),
     index("tradingview_markers_received_at_idx").on(table.receivedAt.desc()),
@@ -3157,3 +3230,39 @@ export const agentJobs = pgTable(
 
 export type AgentJob = typeof agentJobs.$inferSelect;
 export type NewAgentJob = typeof agentJobs.$inferInsert;
+
+// ─── live_order_pine_dedup ─────────────────────────────────────────────────────
+// Dedup table for Pine bar-close alerts arriving at live-order.ts.
+// Backed by migration 0170 (Pass 1 Track C, 2026-06-22).
+// The unique index on (account_id, strategy_id, bar_timestamp, action) lets the
+// route use INSERT … ON CONFLICT DO NOTHING + RETURNING id to distinguish a
+// first-seen alert from a replay without a SELECT-then-INSERT race.
+export const liveOrderPineDedup = pgTable(
+  "live_order_pine_dedup",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    accountId: uuid("account_id").notNull(),
+    strategyId: uuid("strategy_id").notNull(),
+    barTimestamp: timestamp("bar_timestamp", { withTimezone: true }).notNull(),
+    action: text("action").notNull(),
+    correlationId: uuid("correlation_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    // Unique key used by ON CONFLICT DO NOTHING in insertPineDedupRow().
+    dedupKey: uniqueIndex("idx_live_order_pine_dedup_key").on(
+      t.accountId,
+      t.strategyId,
+      t.barTimestamp,
+      t.action,
+    ),
+    // Fast lookup by account for cleanup / audit queries.
+    accountCreatedIdx: index("idx_live_order_pine_dedup_account").on(
+      t.accountId,
+      t.createdAt,
+    ),
+  }),
+);
+
+export type LiveOrderPineDedup = typeof liveOrderPineDedup.$inferSelect;
+export type NewLiveOrderPineDedup = typeof liveOrderPineDedup.$inferInsert;

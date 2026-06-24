@@ -69,9 +69,14 @@ pineExportRecipientRoutes.post(
         setup_readme: result.setupReadme,
         presigned_url: result.presignedUrl,
         expires_at: result.expiresAt,
+        // A2 (Pass 3 Track A): propagate download URL so the frontend can wire
+        // a "Download .pine" button without constructing the URL itself.
+        // Shape: /api/pine-export/:exportId/artifacts/:artifactId/download
+        // null when export was not persisted (dry-run).
+        download_url: result.downloadUrl,
       });
     } catch (err) {
-      const error = err as Error & { pipelinePaused?: boolean; legacyFirmRejection?: boolean };
+      const error = err as Error & { pipelinePaused?: boolean; legacyFirmRejection?: boolean; shadowStrategyBlocked?: boolean };
 
       if (error.pipelinePaused) {
         res.status(423).json({ error: "pipeline_paused" });
@@ -82,6 +87,17 @@ pineExportRecipientRoutes.post(
         res.status(403).json({
           error: "forbidden_firm",
           message: "Account does not belong to a supported firm (mffu or topstep)",
+        });
+        return;
+      }
+
+      // C3 (Pass 3 Track C): SHADOW strategy blocked — audit + Discord already
+      // fired inside generateRecipientExport. Return 403 to the caller.
+      if (error.shadowStrategyBlocked) {
+        res.status(403).json({
+          error: "shadow_strategy_pine_blocked",
+          reason: "shadow_strategy_pine_blocked",
+          message: "Pine export blocked: strategy is in SHADOW state and cannot produce artifacts",
         });
         return;
       }

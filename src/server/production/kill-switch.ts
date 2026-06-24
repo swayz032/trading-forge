@@ -15,6 +15,9 @@
  *   - Singleton: exported as `killSwitch` — same instance across all imports
  *   - Audit trail: every mode change writes audit_log + broadcasts SSE
  *   - 9-layer status: getKillSwitchStatus() reports all layers independently
+ *   - Signal-path guard: evaluateAllKillSwitchLayers() / isHaltedForProduction()
+ *     enforces ALL 9 layers, not just Layer 1. Each layer has a 1s LRU cache and
+ *     a 100ms per-layer timeout budget; timeout → fail-OPEN with audit row.
  *
  * 9 Kill Switch Layers:
  *   1. Manual (operator)     — production_mode === 'HALT'
@@ -45,13 +48,78 @@ import { isConnectivityDegraded } from "../lib/network-failover.js";
 // importing the whole kill-switch module graph in a live-DB environment.
 export const LAYER7_AUDIT_GENERATES_CORRELATION_ID = true;
 
+// ─── H6 FIX sentinel ─────────────────────────────────────────────────────────
+// Exported so tests can assert that the signal-path enforcement is active.
+export const ALL_LAYERS_ENFORCED_ON_SIGNAL_PATH = true;
+
 // ─── DLL / trailing-DD thresholds (match paper-execution-service) ─────────────
 const DLL_HALT_PCT        = parseFloat(process.env.DLL_HALT_PCT        ?? "0.67");
 const DLL_FORCE_CLOSE_PCT = parseFloat(process.env.DLL_FORCE_CLOSE_PCT ?? "0.95");
 const TRAILING_DD_BUFFER_DOLLARS = 200; // force-close trigger: $200 inside max drawdown
 
-// Lazy imports to avoid circular init issues. These services start their own
-// timers at module load; we only need their query functions here.
+// ─── Per-layer cache (1s TTL for signal-path budget) ─────────────────────────
+// Each entry holds the last HaltDecision returned and its expiry timestamp.
+// Separate from the 5s system_state cache — layers 2-9 do DB/service calls that
+// would exceed the per-bar budget without short-lived caching.
+const LAYER_CACHE_TTL_MS = 1_000;
+const LAYER_CHECK_TIMEOUT_MS = 100; // fail-OPEN if a layer takes longer than this
+
+interface LayerCacheEntry {
+  decision: HaltDecision;
+  expiresAt: number;
+}
+
+const layerCache: Map<number, LayerCacheEntry> = new Map();
+
+/** Retrieve a cached layer result if still within TTL. */
+function getCachedLayer(layer: number): HaltDecision | null {
+  const entry = layerCache.get(layer);
+  if (entry && Date.now() < entry.expiresAt) {
+    return entry.decision;
+  }
+  return null;
+}
+
+/** Store a layer result in cache for 1s. */
+function setCachedLayer(layer: number, decision: HaltDecision): void {
+  layerCache.set(layer, { decision, expiresAt: Date.now() + LAYER_CACHE_TTL_MS });
+}
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export type { ProductionMode };
+
+export interface SystemState {
+  production_mode: ProductionMode;
+  kill_reason: string | null;
+  set_by: string;
+  set_at: Date;
+}
+
+/** Result of a single layer evaluation. */
+export interface HaltDecision {
+  halted: boolean;
+  layer?: number;
+  reason?: string;
+  detail?: Record<string, unknown>;
+}
+
+export interface KillSwitchLayerStatus {
+  layer: number;
+  name: string;
+  halted: boolean;
+  reason?: string;
+}
+
+export interface KillSwitchStatusReport {
+  overall_halted: boolean;
+  production_mode: ProductionMode;
+  layers: KillSwitchLayerStatus[];
+  checked_at: Date;
+}
+
+// ─── Lazy imports to avoid circular init ─────────────────────────────────────
+
 async function getMacroGateResult(): Promise<{ crisis_gate_triggered: boolean }> {
   try {
     const { evaluateMacroGates } = await import("../services/macro-gate-service.js");
@@ -72,29 +140,414 @@ async function getWindowsHealthOk(): Promise<boolean> {
   }
 }
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Per-layer pure-function predicates ──────────────────────────────────────
+// Each function returns a HaltDecision (halted: true|false, reason, detail).
+// Heavy functions cache their result for LAYER_CACHE_TTL_MS (1s).
+// All are called from both evaluateAllKillSwitchLayers() (signal path) and
+// getKillSwitchStatus() (dashboard reporting), keeping logic DRY.
 
-export type { ProductionMode };
-
-export interface SystemState {
-  production_mode: ProductionMode;
-  kill_reason: string | null;
-  set_by: string;
-  set_at: Date;
+/**
+ * Layer 1: Manual operator — production_mode === 'HALT'.
+ * No cache needed: delegates to the existing 5s system_state cache.
+ */
+async function checkLayer1Manual(state: SystemState): Promise<HaltDecision> {
+  const halted = state.production_mode === "HALT";
+  return halted
+    ? { halted: true, layer: 1, reason: "production_mode_halt", detail: { production_mode: state.production_mode } }
+    : { halted: false };
 }
 
-export interface KillSwitchLayerStatus {
-  layer: number;
-  name: string;
-  halted: boolean;
-  reason?: string;
+/**
+ * Layer 2: Daily loss limit.
+ * Fail-CLOSED: DB error → halted (a crashed DB cannot bypass the DLL gate).
+ */
+async function checkLayer2DailyLoss(): Promise<HaltDecision> {
+  const cached = getCachedLayer(2);
+  if (cached) return cached;
+
+  let decision: HaltDecision;
+  try {
+    const { getFirmAccount } = await import("../../shared/firm-config.js");
+    const _cmeEtFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" });
+    const today = _cmeEtFormatter.format(new Date(Date.now() + 7 * 3_600_000));
+
+    const activeSessions = await db
+      .select({
+        id: paperSessions.id,
+        firmId: paperSessions.firmId,
+        dailyPnlBreakdown: paperSessions.dailyPnlBreakdown,
+      })
+      .from(paperSessions)
+      .where(eq(paperSessions.status, "active"));
+
+    for (const session of activeSessions) {
+      const firmId = session.firmId ?? "mffu";
+      let firmAccount: { dailyLossLimit?: number } | null = null;
+      try {
+        firmAccount = getFirmAccount(firmId) as { dailyLossLimit?: number };
+      } catch {
+        continue;
+      }
+      const dll = firmAccount?.dailyLossLimit;
+      if (!dll || dll <= 0) continue;
+
+      const breakdown = session.dailyPnlBreakdown as Record<string, number> | null ?? {};
+      const dayPnl = breakdown[today] ?? 0;
+
+      if (dayPnl < 0 && Math.abs(dayPnl) >= DLL_HALT_PCT * dll) {
+        const reason = `dll_at_${Math.round(DLL_HALT_PCT * 100)}pct_personal_threshold`;
+        decision = {
+          halted: true,
+          layer: 2,
+          reason,
+          detail: { session_id: session.id, firm_id: firmId, day_pnl: dayPnl, dll },
+        };
+        break;
+      }
+    }
+
+    decision ??= { halted: false };
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    logger.error({ err }, "kill-switch L2: DLL check failed — blocking entries (fail-closed)");
+    decision = {
+      halted: true,
+      layer: 2,
+      reason: "dll_check_failed",
+      detail: { error: errMsg, fail_closed: true },
+    };
+  }
+
+  setCachedLayer(2, decision);
+  return decision;
 }
 
-export interface KillSwitchStatusReport {
-  overall_halted: boolean;
-  production_mode: ProductionMode;
-  layers: KillSwitchLayerStatus[];
-  checked_at: Date;
+/**
+ * Layer 3: Trailing drawdown.
+ * Fail-CLOSED: DB error → halted.
+ */
+async function checkLayer3TrailingDD(): Promise<HaltDecision> {
+  const cached = getCachedLayer(3);
+  if (cached) return cached;
+
+  let decision: HaltDecision;
+  try {
+    const { getFirmAccount } = await import("../../shared/firm-config.js");
+
+    const activeSessions = await db
+      .select({
+        id: paperSessions.id,
+        firmId: paperSessions.firmId,
+        currentEquity: paperSessions.currentEquity,
+        realizedPeakEquity: paperSessions.realizedPeakEquity,
+      })
+      .from(paperSessions)
+      .where(eq(paperSessions.status, "active"));
+
+    for (const session of activeSessions) {
+      const firmId = session.firmId ?? "mffu";
+      let firmAccount: { maxDrawdown?: number; maxDailyDrawdown?: number } | null = null;
+      try {
+        firmAccount = getFirmAccount(firmId) as { maxDrawdown?: number; maxDailyDrawdown?: number };
+      } catch {
+        continue;
+      }
+      const maxDrawdown = firmAccount?.maxDrawdown ?? firmAccount?.maxDailyDrawdown;
+      if (!maxDrawdown || maxDrawdown <= 0) continue;
+
+      const currentEquity = parseFloat(String(session.currentEquity ?? "0"));
+      const peakEquity    = parseFloat(String(session.realizedPeakEquity ?? "0"));
+      const drawdown      = peakEquity - currentEquity;
+
+      if (drawdown >= maxDrawdown - TRAILING_DD_BUFFER_DOLLARS) {
+        decision = {
+          halted: true,
+          layer: 3,
+          reason: "trailing_dd_force_close_at_95pct",
+          detail: {
+            session_id: session.id,
+            firm_id: firmId,
+            drawdown,
+            max_dd: maxDrawdown,
+            buffer_remaining: maxDrawdown - drawdown,
+          },
+        };
+        break;
+      }
+    }
+
+    decision ??= { halted: false };
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    logger.error({ err }, "kill-switch L3: trailing-DD check failed — blocking entries (fail-closed)");
+    decision = {
+      halted: true,
+      layer: 3,
+      reason: "trailing_dd_check_failed",
+      detail: { error: errMsg, fail_closed: true },
+    };
+  }
+
+  setCachedLayer(3, decision);
+  return decision;
+}
+
+/**
+ * Layer 4: Connectivity.
+ * Fail-OPEN: if the connectivity check itself errors, don't block trading.
+ * Advisory only — connectivity degradation is transient; hard-halt only when
+ * the poller has confirmed degraded state (not on a check error).
+ */
+function checkLayer4Connectivity(): HaltDecision {
+  const cached = getCachedLayer(4);
+  if (cached) return cached;
+
+  let decision: HaltDecision;
+  try {
+    const degraded = isConnectivityDegraded();
+    decision = degraded
+      ? { halted: true, layer: 4, reason: "network_failover_connectivity_degraded" }
+      : { halted: false };
+  } catch {
+    decision = { halted: false };
+  }
+
+  setCachedLayer(4, decision);
+  return decision;
+}
+
+/**
+ * Layer 5: Drift — latest weekly_drift_report severity === 'red'.
+ * Fail-OPEN: drift detector is advisory until Phase 4B hard-gate wiring.
+ */
+async function checkLayer5Drift(): Promise<HaltDecision> {
+  const cached = getCachedLayer(5);
+  if (cached) return cached;
+
+  let decision: HaltDecision;
+  try {
+    const driftRows = await db
+      .select({ severity: weeklyDriftReports.severity, reportWeek: weeklyDriftReports.reportWeek })
+      .from(weeklyDriftReports)
+      .orderBy(desc(weeklyDriftReports.ranAt))
+      .limit(1);
+
+    if (driftRows.length > 0 && driftRows[0].severity === "red") {
+      decision = {
+        halted: true,
+        layer: 5,
+        reason: "weekly_drift_red",
+        detail: { report_week: driftRows[0].reportWeek },
+      };
+    } else {
+      decision = { halted: false };
+    }
+  } catch {
+    // Fail-open: drift is advisory
+    decision = { halted: false };
+  }
+
+  setCachedLayer(5, decision);
+  return decision;
+}
+
+/**
+ * Layer 6: CME outage.
+ * Fail-CLOSED: if isExchangeHalted() throws (poller crash), we cannot determine
+ * outage status → block entries.
+ */
+function checkLayer6CmeOutage(correlationId: string): HaltDecision {
+  const cached = getCachedLayer(6);
+  if (cached) return cached;
+
+  let decision: HaltDecision;
+  try {
+    const halted = isExchangeHalted("CME");
+    decision = halted
+      ? { halted: true, layer: 6, reason: "cme_outage_active" }
+      : { halted: false };
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    logger.error({ err }, "C1 CME outage eval FAILED — blocking entries (fail-closed, Layer 6)");
+    // Fire-and-forget audit + SSE
+    insertAuditRow({
+      action: "kill_switch.c1_cme_outage_eval_failed",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { error_message: errMsg, layer: 6 } as Record<string, unknown>,
+      result: { halted: true } as Record<string, unknown>,
+      status: "failure",
+      correlationId,
+    }).catch((auditErr) =>
+      logger.error({ err: auditErr }, "kill-switch L6: audit_log write failed (non-blocking)"),
+    );
+    broadcastSSE("kill_switch:c1_cme_eval_failed", {
+      error_message: errMsg,
+      layer: 6,
+      halted: true,
+      timestamp: new Date().toISOString(),
+    });
+    decision = { halted: true, layer: 6, reason: "cme_outage_eval_failed", detail: { error: errMsg } };
+  }
+
+  setCachedLayer(6, decision);
+  return decision;
+}
+
+/**
+ * Layer 7: Firm suspension.
+ * Fail-CLOSED: DB unavailable = we cannot verify suspension → halt.
+ */
+async function checkLayer7FirmSuspension(correlationId: string): Promise<HaltDecision> {
+  const cached = getCachedLayer(7);
+  if (cached) return cached;
+
+  let decision: HaltDecision;
+  try {
+    const enabledAccounts = await db
+      .select({ firmId: brokerAccounts.firmId })
+      .from(brokerAccounts)
+      .where(eq(brokerAccounts.enabled, true));
+
+    const firmsChecked = [...new Set(enabledAccounts.map((r) => r.firmId))];
+    const suspendedFirms = firmsChecked.filter((firmId) => isFirmSuspended(firmId));
+
+    if (suspendedFirms.length > 0) {
+      decision = {
+        halted: true,
+        layer: 7,
+        reason: "firm_suspended",
+        detail: { suspended_firms: suspendedFirms },
+      };
+    } else {
+      decision = { halted: false };
+    }
+
+    // Audit row for every evaluation (non-blocking)
+    insertAuditRow({
+      action: "kill_switch.c2_multi_firm_check",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { firms_checked: firmsChecked } as Record<string, unknown>,
+      result: { suspended_firms: suspendedFirms, halted: decision.halted } as Record<string, unknown>,
+      status: "success",
+      correlationId,
+    }).catch((auditErr) =>
+      logger.error({ err: auditErr }, "kill-switch L7: audit_log write failed (non-blocking)"),
+    );
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    logger.error({ err }, "C2 multi-firm suspension check FAILED — blocking entries (fail-closed, Layer 7)");
+    decision = {
+      halted: true,
+      layer: 7,
+      reason: "firm_suspension_check_failed",
+      detail: { error: errMsg, fail_closed: true },
+    };
+    insertAuditRow({
+      action: "kill_switch.c2_multi_firm_check",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { error_message: errMsg, layer: 7 } as Record<string, unknown>,
+      result: { suspended_firms: [], halted: true, eval_failed: true } as Record<string, unknown>,
+      status: "failure",
+      correlationId,
+    }).catch((auditErr) =>
+      logger.error({ err: auditErr }, "kill-switch L7: audit_log write failed (non-blocking)"),
+    );
+  }
+
+  setCachedLayer(7, decision);
+  return decision;
+}
+
+/**
+ * Layer 8: Macro crisis.
+ * Fail-OPEN: macro gate is advisory for status reporting.
+ */
+async function checkLayer8MacroCrisis(): Promise<HaltDecision> {
+  const cached = getCachedLayer(8);
+  if (cached) return cached;
+
+  let decision: HaltDecision;
+  try {
+    const macro = await getMacroGateResult();
+    decision = macro.crisis_gate_triggered
+      ? { halted: true, layer: 8, reason: "macro_crisis_gate_triggered", detail: { prob_crisis_above_0_60: true } }
+      : { halted: false };
+  } catch {
+    decision = { halted: false };
+  }
+
+  setCachedLayer(8, decision);
+  return decision;
+}
+
+/**
+ * Layer 9: Windows reboot pending.
+ * Fail-OPEN: Windows check is independent of trading infrastructure.
+ */
+async function checkLayer9WindowsReboot(): Promise<HaltDecision> {
+  const cached = getCachedLayer(9);
+  if (cached) return cached;
+
+  let decision: HaltDecision;
+  try {
+    const windowsOk = await getWindowsHealthOk();
+    decision = !windowsOk
+      ? { halted: true, layer: 9, reason: "windows_reboot_pending_or_unhealthy" }
+      : { halted: false };
+  } catch {
+    decision = { halted: false };
+  }
+
+  setCachedLayer(9, decision);
+  return decision;
+}
+
+/**
+ * Runs a single layer check with a per-layer timeout budget.
+ * If the check times out (> LAYER_CHECK_TIMEOUT_MS), returns halted:false
+ * (fail-OPEN) and emits a kill_switch.layer_N_timeout audit row so the
+ * operator knows which layer is slow.
+ *
+ * This prevents a slow DB or external service from blocking the signal path
+ * indefinitely on every bar.
+ */
+async function runLayerWithTimeout(
+  layer: number,
+  checkFn: () => Promise<HaltDecision>,
+  correlationId: string,
+): Promise<HaltDecision> {
+  const timeoutPromise: Promise<HaltDecision> = new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      logger.warn(
+        { layer, timeout_ms: LAYER_CHECK_TIMEOUT_MS, correlationId },
+        `kill-switch: Layer ${layer} check timed out — failing OPEN (signal path budget exceeded)`,
+      );
+      // Fire-and-forget audit — non-blocking
+      insertAuditRow({
+        action: `kill_switch.layer_${layer}_timeout`,
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { layer, timeout_ms: LAYER_CHECK_TIMEOUT_MS } as Record<string, unknown>,
+        result: { halted: false, fail_open: true } as Record<string, unknown>,
+        status: "failure",
+        correlationId,
+      }).catch((auditErr) =>
+        logger.error({ err: auditErr }, `kill-switch L${layer}: timeout audit_log write failed`),
+      );
+      resolve({ halted: false });
+    }, LAYER_CHECK_TIMEOUT_MS);
+    // Prevent the timeout timer from keeping Node alive if the check resolves first
+    if (typeof timer.unref === "function") timer.unref();
+  });
+
+  return Promise.race([checkFn(), timeoutPromise]);
 }
 
 // ─── KillSwitch ───────────────────────────────────────────────────────────────
@@ -106,16 +559,159 @@ class KillSwitch {
   // ── Core mode read ────────────────────────────────────────────────────────
 
   /**
-   * Returns true when production trading should be blocked.
-   * Fail-CLOSED: DB error → returns true (halted). Never returns undefined.
-   * Cache hit within 5s TTL → sub-1ms. DB read → sub-10ms.
+   * Evaluates ALL 9 kill switch layers in priority order.
+   * Returns the FIRST blocking layer's HaltDecision, or {halted:false} if all pass.
+   *
+   * Each layer:
+   *   - Has a 1s in-memory cache (amortizes DB/service cost across signal bars)
+   *   - Has a 100ms per-layer timeout budget → fail-OPEN with audit row on timeout
+   *   - Emits kill_switch.layer_N_halted audit row + kill_switch:layer_halted SSE on block
+   *   - Returns on the FIRST blocking layer (priority: L1 > L2 > L3 > ... > L9)
+   *
+   * Callers on the signal path must use isHaltedForProduction() which wraps this
+   * and returns a boolean for backward compatibility.
    */
-  async isHaltedForProduction(): Promise<boolean> {
+  async evaluateAllKillSwitchLayers(
+    opts: { correlationId?: string } = {},
+  ): Promise<HaltDecision> {
+    const correlationId = opts.correlationId ?? randomUUID();
+
+    // ── Layer 1: Manual halt — no timeout needed (5s cached state read) ──
+    let state: SystemState;
     try {
-      const state = await this.getCurrentState();
-      return state.production_mode === "HALT";
+      state = await this.getCurrentState();
     } catch (err) {
       logger.error({ err }, "kill-switch: DB error reading system_state — failing CLOSED (halted)");
+      return { halted: true, layer: 1, reason: "system_state_read_failed", detail: { fail_closed: true } };
+    }
+    const l1 = await checkLayer1Manual(state);
+    if (l1.halted) {
+      await this._emitLayerHaltedSignals(l1, correlationId);
+      return l1;
+    }
+
+    // ── Layer 2: Daily loss limit ──
+    const l2 = await runLayerWithTimeout(2, () => checkLayer2DailyLoss(), correlationId);
+    if (l2.halted) {
+      await this._emitLayerHaltedSignals(l2, correlationId);
+      return l2;
+    }
+
+    // ── Layer 3: Trailing drawdown ──
+    const l3 = await runLayerWithTimeout(3, () => checkLayer3TrailingDD(), correlationId);
+    if (l3.halted) {
+      await this._emitLayerHaltedSignals(l3, correlationId);
+      return l3;
+    }
+
+    // ── Layer 4: Connectivity (sync — no timeout wrapping needed) ──
+    const l4 = checkLayer4Connectivity();
+    if (l4.halted) {
+      await this._emitLayerHaltedSignals(l4, correlationId);
+      return l4;
+    }
+
+    // ── Layer 5: Drift ──
+    const l5 = await runLayerWithTimeout(5, () => checkLayer5Drift(), correlationId);
+    if (l5.halted) {
+      await this._emitLayerHaltedSignals(l5, correlationId);
+      return l5;
+    }
+
+    // ── Layer 6: CME outage (sync, but wraps its own error into audit) ──
+    const l6 = checkLayer6CmeOutage(correlationId);
+    if (l6.halted) {
+      await this._emitLayerHaltedSignals(l6, correlationId);
+      return l6;
+    }
+
+    // ── Layer 7: Firm suspension ──
+    const l7 = await runLayerWithTimeout(
+      7,
+      () => checkLayer7FirmSuspension(correlationId),
+      correlationId,
+    );
+    if (l7.halted) {
+      await this._emitLayerHaltedSignals(l7, correlationId);
+      return l7;
+    }
+
+    // ── Layer 8: Macro crisis ──
+    const l8 = await runLayerWithTimeout(8, () => checkLayer8MacroCrisis(), correlationId);
+    if (l8.halted) {
+      await this._emitLayerHaltedSignals(l8, correlationId);
+      return l8;
+    }
+
+    // ── Layer 9: Windows reboot pending ──
+    const l9 = await runLayerWithTimeout(9, () => checkLayer9WindowsReboot(), correlationId);
+    if (l9.halted) {
+      await this._emitLayerHaltedSignals(l9, correlationId);
+      return l9;
+    }
+
+    return { halted: false };
+  }
+
+  /**
+   * Emits the kill_switch.layer_N_halted audit row and kill_switch:layer_halted SSE.
+   * Called only when a layer returns halted:true. Fire-and-forget (non-blocking).
+   */
+  private async _emitLayerHaltedSignals(
+    decision: HaltDecision,
+    correlationId: string,
+  ): Promise<void> {
+    const layer = decision.layer ?? 0;
+    const reason = decision.reason ?? "unknown";
+
+    // Audit row (non-blocking)
+    insertAuditRow({
+      action: `kill_switch.layer_${layer}_halted`,
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { layer, reason, detail: decision.detail ?? {} } as Record<string, unknown>,
+      result: { halted: true } as Record<string, unknown>,
+      status: "failure",
+      correlationId,
+    }).catch((auditErr) =>
+      logger.error(
+        { err: auditErr, layer },
+        `kill-switch L${layer}: halted audit_log write failed (non-blocking)`,
+      ),
+    );
+
+    // SSE broadcast (non-blocking)
+    broadcastSSE("kill_switch:layer_halted", {
+      layer,
+      reason,
+      detail: decision.detail ?? {},
+      correlationId,
+      halted_at: new Date().toISOString(),
+    });
+
+    logger.warn(
+      { layer, reason, correlationId },
+      `kill-switch: Layer ${layer} HALTED signal path — ${reason}`,
+    );
+  }
+
+  /**
+   * Returns true when production trading should be blocked.
+   * NOW enforces ALL 9 layers, not just Layer 1 (H6 fix — 2026-06-23).
+   *
+   * Backward-compatible boolean wrapper over evaluateAllKillSwitchLayers().
+   * All existing callers (paper-signal-service, paper-execution-service,
+   * openPosition) continue to work without changes.
+   *
+   * Fail-CLOSED: any unhandled error returns true (halted).
+   */
+  async isHaltedForProduction(opts: { correlationId?: string } = {}): Promise<boolean> {
+    try {
+      const decision = await this.evaluateAllKillSwitchLayers(opts);
+      return decision.halted;
+    } catch (err) {
+      logger.error({ err }, "kill-switch: evaluateAllKillSwitchLayers threw unexpectedly — failing CLOSED (halted)");
       return true;
     }
   }
@@ -194,15 +790,11 @@ class KillSwitch {
       })
       .where(eq(systemState.id, 1));
 
-    // Invalidate cache
+    // Invalidate cache (both system_state and all layer caches)
     this.cache = null;
+    layerCache.clear();
 
     // FINDING #3 FIX: Generate a correlationId for the mode-change audit row.
-    // The HALT row is the entry point for all incident forensics — a null
-    // correlationId here makes it impossible to correlate the HALT event with
-    // the follow-on forceCloseAllPositions, SSE broadcast, and any downstream
-    // audit rows. We generate one per setMode call (stable for this invocation,
-    // a fresh UUID per incident).
     const modeChangeCorrelationId = randomUUID();
 
     // Audit log — non-blocking
@@ -236,9 +828,6 @@ class KillSwitch {
     );
 
     // HALT path: dynamic-import force-flatten to avoid circular dependency.
-    // kill-switch.ts (production/) cannot statically import paper-execution-service
-    // (services/) — that would create production/ → services/ → production/ cycle.
-    // Dynamic import at call time breaks the cycle while preserving the wiring.
     if (mode === "HALT") {
       logger.warn(
         { reason, setBy },
@@ -251,9 +840,6 @@ class KillSwitch {
           `Force-flattening all open paper positions.`
         )
       );
-      // Non-blocking: fire-and-forget so setMode() returns promptly.
-      // Errors are logged inside forceCloseAllPositions; they do not affect
-      // the mode-change result (mode is already committed to DB above).
       import("../services/paper-execution-service.js")
         .then(({ forceCloseAllPositions }) =>
           forceCloseAllPositions(`production_halt:${reason}`)
@@ -264,20 +850,21 @@ class KillSwitch {
     }
   }
 
-  // ── 9-Layer Status ────────────────────────────────────────────────────────
+  // ── 9-Layer Status (dashboard reporting) ─────────────────────────────────
 
   /**
    * Returns the status of all 9 kill switch layers independently.
-   * Each layer is evaluated in isolation — failure of one layer's check
-   * does not prevent others from reporting.
+   * Used by GET /api/production/status dashboard endpoint.
+   * Each layer is evaluated in isolation using the same per-layer check functions
+   * as evaluateAllKillSwitchLayers() — logic is NOT duplicated.
    *
-   * This is the Phase 4B input for GET /api/production/status.
-   * Layers 2-3 (daily loss, trailing drawdown) require the Phase 4C
-   * paper-execution-service integration to produce real values; until
-   * then they report not_halted with a note.
+   * Note: unlike evaluateAllKillSwitchLayers(), this evaluates ALL layers even
+   * after finding a block, so the dashboard shows the full picture. The signal path
+   * uses evaluateAllKillSwitchLayers() which short-circuits on first block.
    */
   async getKillSwitchStatus(): Promise<KillSwitchStatusReport> {
     const checkedAt = new Date();
+    const evalCorrelationId = randomUUID();
     const layers: KillSwitchLayerStatus[] = [];
 
     // ── Layer 1: Manual (operator) ──
@@ -298,292 +885,78 @@ class KillSwitch {
     });
 
     // ── Layer 2: Daily loss ──
-    // Query all active sessions. If any session's today-P&L has exceeded
-    // DLL_HALT_PCT of its firm's daily loss limit → halt new entries.
-    // Fail-CLOSED: DB error → halted so a crashed DB cannot bypass the gate.
-    let l2Halted = false;
-    let l2Reason: string | undefined;
-    try {
-      const { getFirmAccount } = await import("../../shared/firm-config.js");
-      // C-4 FIX: Use CME trading-day key (5pm ET cutoff, +7h shift) so Layer 2
-      // DLL check matches the key written by paper-execution-service.ts:874 via
-      // toFuturesTradingDayString(). UTC ISO date diverges on CME overnight sessions
-      // (e.g. 4:59 PM ET → UTC date is already "next day" but CME session boundary
-      // is at exactly 5:00 PM ET, so the key would be wrong). Inline the same
-      // +7h shift to avoid a dynamic import that causes test-environment hangs
-      // (paper-risk-gate module load triggers DB connections in unit test scope).
-      //
-      // Algorithm matches paper-risk-gate.ts:toFuturesTradingDayString() exactly:
-      //   shifted = now + 7h  →  17:00 ET + 7h = 00:00 next-day ET (en-CA YYYY-MM-DD)
-      const _cmeEtFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" });
-      const today = _cmeEtFormatter.format(new Date(Date.now() + 7 * 3_600_000));
-
-      const activeSessions = await db
-        .select({
-          id: paperSessions.id,
-          firmId: paperSessions.firmId,
-          dailyPnlBreakdown: paperSessions.dailyPnlBreakdown,
-        })
-        .from(paperSessions)
-        .where(eq(paperSessions.status, "active"));
-
-      for (const session of activeSessions) {
-        const firmId = session.firmId ?? "mffu";
-        let firmAccount: { dailyLossLimit?: number } | null = null;
-        try {
-          firmAccount = getFirmAccount(firmId) as { dailyLossLimit?: number };
-        } catch {
-          // unknown firmId — skip
-          continue;
-        }
-        const dll = firmAccount?.dailyLossLimit;
-        if (!dll || dll <= 0) continue;
-
-        // dailyPnlBreakdown is a JSON object keyed by trading-day string → number
-        const breakdown = session.dailyPnlBreakdown as Record<string, number> | null ?? {};
-        const dayPnl = breakdown[today] ?? 0;
-
-        // dayPnl is negative when losing; compare magnitude against DLL
-        if (dayPnl < 0 && Math.abs(dayPnl) >= DLL_HALT_PCT * dll) {
-          l2Halted = true;
-          l2Reason = `dll_at_${Math.round(DLL_HALT_PCT * 100)}pct_personal_threshold: session=${session.id} firm=${firmId} day_pnl=${dayPnl.toFixed(2)} dll=${dll}`;
-          break;
-        }
-      }
-    } catch (l2Err) {
-      l2Halted = true; // fail-CLOSED
-      const errMsg = l2Err instanceof Error ? l2Err.message : String(l2Err);
-      logger.error({ err: l2Err }, "kill-switch L2: DLL check failed — blocking entries (fail-closed)");
-      l2Reason = `dll_check_failed (fail-closed): ${errMsg}`;
-    }
-    layers.push({ layer: 2, name: "daily_loss", halted: l2Halted, reason: l2Reason });
+    // Re-use per-layer checker (applies its own cache independently of this call)
+    const l2Result = await checkLayer2DailyLoss();
+    layers.push({
+      layer: 2,
+      name: "daily_loss",
+      halted: l2Result.halted,
+      reason: l2Result.reason,
+    });
 
     // ── Layer 3: Trailing drawdown ──
-    // Query all active sessions. If (realizedPeakEquity - currentEquity) is within
-    // $200 of the firm's maxDrawdown → trigger force-close (95% threshold).
-    // Fail-CLOSED: DB error → halted.
-    let l3Halted = false;
-    let l3Reason: string | undefined;
-    try {
-      const { getFirmAccount } = await import("../../shared/firm-config.js");
-
-      const activeSessions = await db
-        .select({
-          id: paperSessions.id,
-          firmId: paperSessions.firmId,
-          currentEquity: paperSessions.currentEquity,
-          realizedPeakEquity: paperSessions.realizedPeakEquity,
-        })
-        .from(paperSessions)
-        .where(eq(paperSessions.status, "active"));
-
-      for (const session of activeSessions) {
-        const firmId = session.firmId ?? "mffu";
-        let firmAccount: { maxDrawdown?: number; maxDailyDrawdown?: number } | null = null;
-        try {
-          firmAccount = getFirmAccount(firmId) as { maxDrawdown?: number; maxDailyDrawdown?: number };
-        } catch {
-          continue;
-        }
-        const maxDrawdown = firmAccount?.maxDrawdown ?? firmAccount?.maxDailyDrawdown;
-        if (!maxDrawdown || maxDrawdown <= 0) continue;
-
-        const currentEquity = parseFloat(String(session.currentEquity ?? "0"));
-        const peakEquity    = parseFloat(String(session.realizedPeakEquity ?? "0"));
-        const drawdown      = peakEquity - currentEquity;
-
-        // Trigger when drawdown has consumed 95%+ of the max-drawdown budget
-        // i.e. remaining buffer < $200 (TRAILING_DD_BUFFER_DOLLARS)
-        if (drawdown >= maxDrawdown - TRAILING_DD_BUFFER_DOLLARS) {
-          l3Halted = true;
-          l3Reason = `trailing_dd_force_close_at_95pct: session=${session.id} firm=${firmId} drawdown=${drawdown.toFixed(2)} max_dd=${maxDrawdown} buffer_remaining=${(maxDrawdown - drawdown).toFixed(2)}`;
-          break;
-        }
-      }
-    } catch (l3Err) {
-      l3Halted = true; // fail-CLOSED
-      const errMsg = l3Err instanceof Error ? l3Err.message : String(l3Err);
-      logger.error({ err: l3Err }, "kill-switch L3: trailing-DD check failed — blocking entries (fail-closed)");
-      l3Reason = `trailing_dd_check_failed (fail-closed): ${errMsg}`;
-    }
-    layers.push({ layer: 3, name: "trailing_drawdown", halted: l3Halted, reason: l3Reason });
+    const l3Result = await checkLayer3TrailingDD();
+    layers.push({
+      layer: 3,
+      name: "trailing_drawdown",
+      halted: l3Result.halted,
+      reason: l3Result.reason,
+    });
 
     // ── Layer 4: Connectivity ──
-    let l4Halted = false;
-    try {
-      l4Halted = isConnectivityDegraded();
-    } catch {
-      l4Halted = false;
-    }
+    const l4Result = checkLayer4Connectivity();
     layers.push({
       layer: 4,
       name: "connectivity",
-      halted: l4Halted,
-      reason: l4Halted ? "network_failover: connectivity degraded" : undefined,
+      halted: l4Result.halted,
+      reason: l4Result.halted ? "network_failover: connectivity degraded" : undefined,
     });
 
     // ── Layer 5: Drift ──
-    let l5Halted = false;
-    let l5Reason: string | undefined;
-    try {
-      const driftRows = await db
-        .select({ severity: weeklyDriftReports.severity, reportWeek: weeklyDriftReports.reportWeek })
-        .from(weeklyDriftReports)
-        .orderBy(desc(weeklyDriftReports.ranAt))
-        .limit(1);
-      if (driftRows.length > 0 && driftRows[0].severity === "red") {
-        l5Halted = true;
-        l5Reason = `weekly_drift: severity=red for week ${driftRows[0].reportWeek}`;
-      }
-    } catch {
-      l5Halted = false; // fail-open for status (drift detector is advisory until Phase 4B)
-    }
-    layers.push({ layer: 5, name: "drift", halted: l5Halted, reason: l5Reason });
+    const l5Result = await checkLayer5Drift();
+    layers.push({
+      layer: 5,
+      name: "drift",
+      halted: l5Result.halted,
+      reason: l5Result.reason,
+    });
 
     // ── Layer 6: CME outage ──
-    // C1 fail-CLOSED: if isExchangeHalted() throws (poller crash, import error),
-    // we cannot determine outage status → block entries (Wave 23H Fix 1).
-    //
-    // Wave hardening 2026-06-22, correlation_id traceability: mint a per-evaluation
-    // UUID so the c1_cme_outage_eval_failed audit row can be linked to other rows
-    // emitted by this getKillSwitchStatus() call (mirrors the L7 l7EvalCorrelationId
-    // pattern introduced for firm-suspension traceability).
-    const l6EvalCorrelationId = randomUUID();
-    let l6Halted = false;
-    try {
-      l6Halted = isExchangeHalted("CME");
-    } catch (l6Err) {
-      l6Halted = true; // fail-CLOSED: unknown outage state = halt
-      const errMsg = l6Err instanceof Error ? l6Err.message : String(l6Err);
-      logger.error(
-        { err: l6Err },
-        "C1 CME outage eval FAILED — blocking entries (fail-closed, Layer 6)",
-      );
-      // Audit row — fire-and-forget (non-blocking)
-      insertAuditRow({
-        action: "kill_switch.c1_cme_outage_eval_failed",
-        entityType: "system",
-        entityId: null,
-        decisionAuthority: "system",
-        input: { error_message: errMsg, layer: 6 } as Record<string, unknown>,
-        result: { l6Halted: true } as Record<string, unknown>,
-        status: "failure",
-        correlationId: l6EvalCorrelationId,
-      }).catch((auditErr) =>
-        logger.error({ err: auditErr }, "kill-switch L6: audit_log write failed (non-blocking)"),
-      );
-      // SSE so dashboard surfaces the eval failure immediately
-      broadcastSSE("kill_switch:c1_cme_eval_failed", {
-        error_message: errMsg,
-        layer: 6,
-        halted: true,
-        timestamp: new Date().toISOString(),
-      });
-    }
+    const l6EvalCorrelationId = evalCorrelationId;
+    const l6Result = checkLayer6CmeOutage(l6EvalCorrelationId);
     layers.push({
       layer: 6,
       name: "cme_outage",
-      halted: l6Halted,
-      reason: l6Halted ? "exchange-status: CME outage active" : undefined,
+      halted: l6Result.halted,
+      reason: l6Result.halted ? "exchange-status: CME outage active" : undefined,
     });
 
     // ── Layer 7: Firm suspension ──
-    // C2 multi-firm: query ALL enabled broker_accounts and check each firmId.
-    // If ANY firm is suspended → halt. Fail-CLOSED on DB error so a crashed
-    // DB cannot be used to bypass the suspension gate (Wave 23H Fix 2).
-    //
-    // FINDING #3 FIX: Generate a per-evaluation correlationId so all Layer 7
-    // audit rows for a single getKillSwitchStatus() call share an ID. Without
-    // this, the two audit rows (success path and failure path) emitted null,
-    // making incident forensics impossible (the suspension event is the
-    // operational record of a trading halt — it must be traceable).
-    const l7EvalCorrelationId = randomUUID();
-
-    let l7Halted = false;
-    let l7Reason: string | undefined;
-    try {
-      const enabledAccounts = await db
-        .select({ firmId: brokerAccounts.firmId })
-        .from(brokerAccounts)
-        .where(eq(brokerAccounts.enabled, true));
-
-      // Deduplicate firm IDs (one firm may have multiple accounts)
-      const firmsChecked = [...new Set(enabledAccounts.map((r) => r.firmId))];
-      const suspendedFirms = firmsChecked.filter((firmId) => isFirmSuspended(firmId));
-
-      if (suspendedFirms.length > 0) {
-        l7Halted = true;
-        l7Reason = `prop-firm-health: suspended firms: ${suspendedFirms.join(", ")}`;
-      }
-
-      // Audit row for every evaluation (non-blocking)
-      insertAuditRow({
-        action: "kill_switch.c2_multi_firm_check",
-        entityType: "system",
-        entityId: null,
-        decisionAuthority: "system",
-        input: { firms_checked: firmsChecked } as Record<string, unknown>,
-        result: { suspended_firms: suspendedFirms, halted: l7Halted } as Record<string, unknown>,
-        status: "success",
-        correlationId: l7EvalCorrelationId,
-      }).catch((auditErr) =>
-        logger.error({ err: auditErr }, "kill-switch L7: audit_log write failed (non-blocking)"),
-      );
-    } catch (l7Err) {
-      // Fail-CLOSED: DB unavailable = we cannot verify suspension state → halt
-      l7Halted = true;
-      const errMsg = l7Err instanceof Error ? l7Err.message : String(l7Err);
-      logger.error(
-        { err: l7Err },
-        "C2 multi-firm suspension check FAILED — blocking entries (fail-closed, Layer 7)",
-      );
-      l7Reason = `prop-firm-health: multi-firm check failed (fail-closed): ${errMsg}`;
-      insertAuditRow({
-        action: "kill_switch.c2_multi_firm_check",
-        entityType: "system",
-        entityId: null,
-        decisionAuthority: "system",
-        input: { error_message: errMsg, layer: 7 } as Record<string, unknown>,
-        result: { suspended_firms: [], halted: true, eval_failed: true } as Record<string, unknown>,
-        status: "failure",
-        correlationId: l7EvalCorrelationId,
-      }).catch((auditErr) =>
-        logger.error({ err: auditErr }, "kill-switch L7: audit_log write failed (non-blocking)"),
-      );
-    }
-    layers.push({ layer: 7, name: "firm_suspension", halted: l7Halted, reason: l7Reason });
+    const l7EvalCorrelationId = evalCorrelationId;
+    const l7Result = await checkLayer7FirmSuspension(l7EvalCorrelationId);
+    layers.push({
+      layer: 7,
+      name: "firm_suspension",
+      halted: l7Result.halted,
+      reason: l7Result.reason,
+    });
 
     // ── Layer 8: Macro crisis ──
-    let l8Halted = false;
-    let l8Reason: string | undefined;
-    try {
-      const macro = await getMacroGateResult();
-      if (macro.crisis_gate_triggered) {
-        l8Halted = true;
-        l8Reason = "macro-gate: crisis_gate_triggered (prob_crisis > 0.60)";
-      }
-    } catch {
-      l8Halted = false;
-    }
-    layers.push({ layer: 8, name: "macro_crisis", halted: l8Halted, reason: l8Reason });
+    const l8Result = await checkLayer8MacroCrisis();
+    layers.push({
+      layer: 8,
+      name: "macro_crisis",
+      halted: l8Result.halted,
+      reason: l8Result.reason,
+    });
 
     // ── Layer 9: Windows reboot pending ──
-    let l9Halted = false;
-    let l9Reason: string | undefined;
-    try {
-      const windowsOk = await getWindowsHealthOk();
-      if (!windowsOk) {
-        l9Halted = true;
-        l9Reason = "windows-health: reboot pending or health check failed";
-      }
-    } catch {
-      l9Halted = false;
-    }
+    const l9Result = await checkLayer9WindowsReboot();
     layers.push({
       layer: 9,
       name: "windows_reboot_pending",
-      halted: l9Halted,
-      reason: l9Reason,
+      halted: l9Result.halted,
+      reason: l9Result.halted ? "windows-health: reboot pending or health check failed" : undefined,
     });
 
     const overallHalted = layers.some((l) => l.halted);
@@ -601,6 +974,12 @@ class KillSwitch {
   /** Exposed for tests only. Clears the in-memory cache. */
   _invalidateCacheForTests(): void {
     this.cache = null;
+    layerCache.clear();
+  }
+
+  /** Exposed for tests only. Injects a pre-computed layer result into the cache. */
+  _setLayerCacheForTests(layer: number, decision: HaltDecision): void {
+    setCachedLayer(layer, decision);
   }
 }
 

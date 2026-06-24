@@ -80,6 +80,25 @@ execution paths. **TopstepX API is the only permitted execution platform.**
   `required_platform = "topstepx"`. The broker router (B6 in Pass 2 Track 4)
   rejects any non-TopstepX execution attempt for Topstep accounts.
 
+**Integration spec for the direct-execution connector (DEFERRED until operator opens
+account; this is the build sheet for `broker-router.ts` TopstepX path, currently a stub):**
+- **Powered by ProjectX.** API Access is provisioned via ProjectX (dashboard.projectx.com),
+  billed separately from the Topstep subscription. Billing appears as **"Sim2Funded Solutions"**.
+- **Auth = OAuth with API key + username.** Generate the API key inside TopstepX (Settings ⚙️ →
+  API tab → Add API Key, which routes through ProjectX). Authenticate every request with the
+  **API key + your TopstepX username** (both required). Store the key in the Bitwarden vault
+  (`broker_accounts.api_key_vault_ref`), NEVER in code/.env-plaintext.
+- **Transport:** REST + WebSocket. Pull live + historical market data; place/execute orders.
+- **⚠️ Orders are FINAL** — no review, adjustment, or reversal. Reinforces our existing
+  contract: every order MUST flow through `routeOrder()` with the `killSwitch.isHaltedForProduction()`
+  FIRST-gate + idempotency (no duplicate sends) + the compliance gates already in this doc. A
+  buggy send is irreversible capital loss — fail-CLOSED on any uncertainty.
+- **No Topstep support** for API/coding/troubleshooting — refs: ProjectX Developer Docs,
+  Topstep Discord `#api-trading`, `dashboardapi@topstep.com`.
+- **Hedging note:** Topstep flags that API access affects hedging potential — our
+  `cross-account-hedge-gate.ts` (Tier 5.3.2) is the enforcement for the single-user
+  cross-account hedging prohibition this raises.
+
 ### 2. Personal Device Only — No VPS / VPN / Remote Desktop
 
 Topstep prohibits orders originating from cloud or remote infrastructure.
@@ -158,6 +177,15 @@ requirement). The funded stage has no consistency rule on the Standard Path.
   to Topstep simulations identically to MFFU (generalized `"50pct"` string match).
 - **Sources:** Vigil 2026-03-21, PropTradingVibes 2026-04-28, Tradecovex 2026-04-09,
   Backtrex 2026-06-07, TheTraderStack 2026-06-18 (5 corroborating sources).
+- **Live entry-gate behavior (2026-06-23 — operator decision):** the consistency entry-gate
+  (`consistency-tracker-service.ts` 50%-block / 40%-warn) is now **OPT-IN**, default **OFF**.
+  The operator runs the **Standard payout lane** in funded accounts, where there is **no
+  day-size cap** — so the gate must NOT throttle big winning days. It only enforces when the
+  account is in the **eval phase** or on the **Consistency lane**. Enable per-account via
+  `paper_sessions.config.consistency_rule_enforced=true` (or `consistency_lane:"eval"`/`"consistency"`),
+  or globally for an eval run via env `TOPSTEP_CONSISTENCY_RULE_ENFORCED=true`. Resolver:
+  `src/server/lib/consistency-lane.ts`. The daily 40% digest (informational, never blocks)
+  is unchanged. Same opt-in applies to MFFU (re-enable per-account if a plan requires it).
 
 ### 9. XFA Two-Path Split — Effective 2026-02-05
 
@@ -231,6 +259,124 @@ payout event to prevent oversizing in the first session post-payout.
   reset `realizedPeakEquity` via `UPDATE paper_sessions SET ...` after each
   payout until an automated payout-detection hook is wired.
 - **Sources:** Tradecovex 2026-04-28, Backtrex 2026-06-07 (2 corroborating sources).
+
+---
+
+## Prohibited Conduct (2026 — coverage map)
+
+Topstep's Prohibited Conduct list applies at every level. Responses range from a warning to
+permanent account closure / payout denial, case-by-case on severity + history. Below is each
+item mapped to how Trading Forge handles it. Two new enforced gates were added 2026-06-23.
+
+| Prohibited conduct | Bot handling |
+|---|---|
+| **Cross-account hedging (single-user)** — opposite positions across your accounts | **ENFORCED (2026-06-23):** `cross-account-hedge-gate.ts` blocks an entry that would be opposite to an open position on the same underlying in another account of this firm. Wired at the paper-signal entry cluster (Tier 5.3.2). `compliance.cross_account_hedge_blocked`. Critical on the multi-account scaling path (§5 lever 3). |
+| **Holding within 2% of a product's price-lock limit** | **ENFORCED (2026-06-23):** `price-lock-limit-gate.ts` blocks an entry within 2% of the ±7% daily limit (Tier 5.3.3). Distinct from the MFFU "2% account loss" rule. Reference = prior settlement; FAIL-OPEN when unavailable (intraday structural trades are never near ±7%). `compliance.price_lock_limit_blocked`. TODO: wire the daily settlement feed for full enforcement. |
+| **Coordinated trading** — same/opposite strategy in concert with others | Covered by family distribution rules: each member runs a DIFFERENT strategy (`account_strategy_assignments` UNIQUE), separate device + instance (§9). |
+| **Use of VPN / proxy / TOR / geo-obfuscation** | ENFORCED: `vps_prohibited` compliance rule (§2 above) — host must be `local`. Both firms ban it. |
+| **Circumventing geographical/technical restrictions** | Same as VPN ban — local host only, no obfuscation. |
+| **Account stacking** (repeat max-loss then switch accounts) | The 67% personal DLL halt + 95% force-close (CLAUDE.md §4) prevents the high-risk-blowup mechanic; the rest is account-management behavior, not bot logic. |
+| **Trading outside best bid/offer** | Posture: orders are stop-LIMIT (CLAUDE.md "Don't use stop-market"), placed at structural levels — never outside BBO by design. |
+| **Unfair tech / AI / ultra-high-speed / mass data entry** | Posture: the bot is **1–2 A+ trades/day** (`TF_MAX_TRADES_PER_DAY=2`), standard automation via TradersPost (Topstep-sanctioned) — NOT HFT, NOT mass-entry. |
+| **Disruptive practices / spoofing** | Posture: the bot never places-and-cancels to manipulate; it sends a single entry + bracket. |
+| **Price exploitation / external or slow data feed** | Posture: trades fire on standard closed-bar signals; no latency-arbitrage, no exploiting feed delays. |
+| **Trading on behalf of others / sharing incentives** | N/A: operator trades own accounts; family run their own independent stacks (§9). |
+| **Excessive Combine/Reset purchases** | Operator/account-level, not bot logic. |
+
+**Enforcement code:** `src/server/lib/cross-account-hedge-gate.ts`, `src/server/lib/price-lock-limit-gate.ts`,
+wired in `paper-signal-service.ts` (Tier 5.3.2 / 5.3.3). New env: `NEWS_REDUCE_SIZE_FACTOR` (unrelated),
+`PRICE_LOCK_LIMIT_PCT_<UNDERLYING>` (per-underlying limit % override, default 0.07).
+
+### Prohibited Trading Strategies (SIM exploitation + news) — coverage
+
+Topstep's "Prohibited Trading Strategies" doc targets SIM-fill abuse and full-size news trades.
+**Trading Forge is on the right side of all of these BY DESIGN** — the abuse pattern Topstep
+describes ("hundreds or thousands of trades per day, durations in seconds") is the polar
+opposite of our **1–2 A+ trades/day, structural holds (minutes–hours)** architecture.
+
+| Prohibited strategy | Bot handling |
+|---|---|
+| **Scalping algos / hundreds of rapid trades for SIM queue position** | ENFORCED: `daily-trade-cap.ts` HARD-caps `TF_MAX_TRADES_PER_DAY=2` per account (all firms). The 3rd signal of the day is rejected. We are structurally incapable of the "hundreds of trades/day" pattern. |
+| **Durations in seconds / scalping** | By design: structural entries with Style C / adaptive exits hold for the move (minutes–hours), not seconds. No sub-minute scalping. |
+| **Reckless trades in gapped markets for stray fills** | Guarded: `check_zero_volume_trade_critical()` (holiday/gap bars fail loud), backtest partial-fill + vol-scaled slippage models — fills are modeled realistically, not idealized. |
+| **Exploiting SIM lack-of-slippage for impossible stop execution** | By design: backtest computes P&L manually with vol/session-dependent slippage (never idealized); stop-LIMIT orders, structural stops. |
+| **Tight brackets / auto-breakeven to farm favorable SIM fills** | Legitimate use only: BE+1 stop fires AFTER a real +1R move (TP1 fill over minutes) — risk management, not a sub-second SIM-fill farm. |
+| **Trading MAXIMUM position size into a scheduled major news event** | ENFORCED for NEW entries: the firm-aware news gate reduces Topstep size to `NEWS_REDUCE_SIZE_FACTOR=0.5` (never max) in the T−5/+2 window (`news-policy.ts` + `economic-calendar-loader.ts`). **Residual:** a position OPENED before the window and HELD into the event stays at full size — narrow (only EIA/MCL lands in the 9:30–11:30 window; FOMC/CPI/NFP are outside it). Candidate refinement: taper/flag open positions held into a major event. |
+| **Intentionally depleting a Live Funded Account** | N/A: the bot maximizes risk-adjusted return; it never intentionally draws down. The 67% DLL halt + 95% force-close are the only loss mechanics. |
+| **Account stacking** | The 67% personal DLL halt prevents the high-risk-blowup mechanic; switching accounts to repeat is operator behavior, not bot logic. |
+
+**Net:** no new enforcement code required — the daily-trade-cap (2/day) + structural-hold
+architecture + realistic fill modeling + news size-reduction already satisfy this list. The
+single narrow residual is full-size positions HELD into a major news event (vs new entries).
+
+---
+
+## Risk Adjustments — Volatility Position Limits + Restricted-Symbol Scaling (ProjectX)
+
+During extreme volatility (expanding price limits, Velocity Logic halts, historic ranges,
+rapid sustained moves), Topstep **temporarily tightens position limits** on affected products
+(or halts mini+ contracts). Temporary, product-specific, Risk-Team-monitored; notified via
+email + dashboard banner + @AskTopstep on X. Lifted when volatility normalizes.
+
+**Current restricted limits** (by account size 50K / 100K / 150K):
+
+| Product | Combine / Express Funded / Pro | Live Funded (LFA) |
+|---|---|---|
+| Crude Oil (CL), QM, RB, HO | 3 / 6 / 9 | 3 / 6 / 9 |
+| **Micro Crude (MCL)** | **30 / 60 / 90** | **3 / 6 / 9** ← LFA much tighter |
+| Gold (GC) | 3 / 6 / 9 | 3 / 6 / 9 |
+| Micro Gold (MGC) | 30 / 60 / 90 | 5 / 10 / 15 |
+| Micro Silver (SIL), Micro Copper (MHG) | 2 / 4 / 6 | 2 / 4 / 6 |
+| Silver (SI), Copper (HG), Platinum (PL) | 0 (no trade) | 0 (no trade) |
+
+**Express Funded Scaling Plan (applies INDEPENDENTLY — actual limit = MIN(ceiling, balance tier))**
+for restricted symbols CL / QM / MCL / HO / RB / GC / MGC:
+
+| Account | Balance → contracts |
+|---|---|
+| 50K XFA | <$1,500 = 1 · $1,500 = 1 · $2,000 = 3 · $3,000 = 6 · $4,500 = 9 |
+| 100K XFA | <$1,500 = 1 · $1,500 = 2 · $2,000 = 3 · $3,000 = 6 |
+| 150K XFA | <$1,500 = 1 · $1,500 = 2 · $2,000 = 3 · $3,000 = 6 · $4,500 = 9 |
+
+**★ IMPACT ON OUR SIZING:** **MCL is the operator's only product on this restricted list**
+(MES/MNQ are equity-index — not restricted). Our pyramid base is **18 MCL** (CLAUDE.md §4),
+but on a Topstep XFA the restricted MCL cap + balance-scaling can be far lower — e.g. a fresh
+50K XFA below $1,500 balance is capped at **1 MCL**, and an LFA is capped at **3/6/9**. When
+the operator goes live on Topstep, `computeRiskDerivedContracts()` must add a Topstep
+restricted-symbol cap: `min(existing sizing, restricted_ceiling[symbol][accountSize],
+xfa_scaling_tier(balance))`. NOT needed on MFFU (different rules) and NOT for MES/MNQ.
+**Carry-forward — wire when the Topstep account opens** (deferred with the TopstepX connector).
+
+---
+
+## Commissions & Fees (TopstepX / ProjectX — authoritative 2026-06-23)
+
+Round-turn (RT) cost = both sides; per-side = RT ÷ 2. Each RT = exchange fee + NFA regulatory
+($0.04) + commission. Auto-deducted per trade. **These are all-in** (the backtester applies
+`commission_per_side × size × 2` with NO separate exchange/NFA add — `firm_config.py` values
+MUST be the full per-side cost).
+
+| Product | RT | Per-side (used in `firm_config.py`) |
+|---|---|---|
+| **MES / MNQ** (our micros) | **$1.24** | **$0.62** |
+| **MCL** (our micro crude) | **$1.54** | **$0.77** |
+| M2K / MYM | $1.24 | $0.62 |
+| MGC (micro gold) | $1.74 | $0.87 |
+| MNG (micro nat gas) | $1.74 | $0.87 |
+| ES / NQ / RTY / YM (minis, Phase 5) | $3.80 | $1.90 |
+| CL (mini crude, Phase 5) | $4.04 | $2.02 |
+| QM | $3.44 | $1.72 |
+| GC (gold) | $4.24 | $2.12 |
+
+**★ CORRECTION 2026-06-23:** `firm_config.py::FIRM_COMMISSIONS["topstep_50k"]` previously had
+**$0.37/side** for all micros — too LOW, which UNDER-COSTED every Topstep backtest (strategies
+looked more profitable than reality). Fixed to the authoritative TopstepX schedule: MES/MNQ
+$0.62, MCL $0.77; minis ES/NQ $1.90, CL $2.02 (minis are ~3× micros, NOT the old 10× assumption).
+The TS `contract-class.ts` mirror was fixed too (class-based, so MCL is slightly under-estimated
+live-side; the backtest is exact per-symbol). Changing `FIRM_COMMISSIONS` re-hashes
+`firm_rules_version` — old backtests will trip `monte_carlo.firm_rule_version_mismatch` on MC
+re-run (correct: they were graded against wrong fees; re-run them). MFFU rates unchanged
+(separate schedule). Source: operator-provided TopstepX Commissions & Fees doc.
 
 ---
 

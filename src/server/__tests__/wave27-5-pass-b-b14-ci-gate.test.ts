@@ -37,9 +37,9 @@ afterEach(() => {
 // ─── Threshold env-var ────────────────────────────────────────────────────────
 
 describe("getB14CiHighThreshold", () => {
-  it("returns 0.40 when env var is unset", () => {
+  it("returns 0.20 when env var is unset (hardening 2026-06-22: tightened from 0.40)", () => {
     delete process.env.B14_RUIN_CI_HIGH_THRESHOLD;
-    expect(getB14CiHighThreshold()).toBe(0.40);
+    expect(getB14CiHighThreshold()).toBe(0.20);
   });
 
   it("returns parsed value when env var is a valid float string", () => {
@@ -47,16 +47,16 @@ describe("getB14CiHighThreshold", () => {
     expect(getB14CiHighThreshold()).toBe(0.35);
   });
 
-  it("returns 0.40 default for invalid string env var", () => {
+  it("returns 0.20 default for invalid string env var (hardening 2026-06-22)", () => {
     process.env.B14_RUIN_CI_HIGH_THRESHOLD = "banana";
-    expect(getB14CiHighThreshold()).toBe(0.40);
+    expect(getB14CiHighThreshold()).toBe(0.20);
   });
 });
 
 // ─── Happy path — ci_high available ──────────────────────────────────────────
 
 describe("evaluateB14CiGate — ci_high above threshold → blocked", () => {
-  it("blocks when ci_high is 0.41 against default threshold 0.40", () => {
+  it("blocks when ci_high is 0.41 against explicit threshold 0.40", () => {
     const ruinCi: RuinCiDict = {
       point_estimate: 0.30,
       ci_low: 0.20,
@@ -64,7 +64,8 @@ describe("evaluateB14CiGate — ci_high above threshold → blocked", () => {
       ci_method: "BCa",
       n_resamples: 9999,
     };
-    const result = evaluateB14CiGate(ruinCi, null);
+    // Pass explicit threshold=0.40 so this test is independent of the default.
+    const result = evaluateB14CiGate(ruinCi, null, 0.40);
     expect(result.passed).toBe(false);
     expect(result.reason).toBe("b14.ci_high_exceeds_threshold");
     expect(result.legacyFallback).toBe(false);
@@ -75,18 +76,18 @@ describe("evaluateB14CiGate — ci_high above threshold → blocked", () => {
 
   it("blocks when ci_high is 0.80 (very high ruin probability)", () => {
     const ruinCi: RuinCiDict = { ci_high: 0.80, ci_low: 0.60, point_estimate: 0.70 };
-    const result = evaluateB14CiGate(ruinCi, null);
+    const result = evaluateB14CiGate(ruinCi, null, 0.40);
     expect(result.passed).toBe(false);
     expect(result.auditPayload.blocked).toBe(true);
   });
 });
 
 describe("evaluateB14CiGate — ci_high below threshold → passes", () => {
-  it("passes when ci_high is 0.20 (well below threshold)", () => {
+  it("passes when ci_high is 0.10 (well below default 0.20 threshold)", () => {
     const ruinCi: RuinCiDict = {
-      point_estimate: 0.10,
-      ci_low: 0.05,
-      ci_high: 0.20,
+      point_estimate: 0.06,
+      ci_low: 0.02,
+      ci_high: 0.10,
       ci_method: "BCa",
       n_resamples: 9999,
     };
@@ -97,9 +98,15 @@ describe("evaluateB14CiGate — ci_high below threshold → passes", () => {
     expect(result.auditPayload.blocked).toBe(false);
   });
 
-  it("passes when ci_high is 0.39 (just below threshold)", () => {
-    const ruinCi: RuinCiDict = { ci_high: 0.39, point_estimate: 0.25 };
+  it("passes when ci_high is 0.19 (just below 0.20 default threshold)", () => {
+    const ruinCi: RuinCiDict = { ci_high: 0.19, point_estimate: 0.12 };
     const result = evaluateB14CiGate(ruinCi, null);
+    expect(result.passed).toBe(true);
+  });
+
+  it("passes when ci_high is 0.39 with explicit threshold 0.40", () => {
+    const ruinCi: RuinCiDict = { ci_high: 0.39, point_estimate: 0.25 };
+    const result = evaluateB14CiGate(ruinCi, null, 0.40);
     expect(result.passed).toBe(true);
   });
 });
@@ -118,8 +125,9 @@ describe("evaluateB14CiGate — boundary: ci_high == threshold → NOT blocked (
 // ─── Legacy fallback ──────────────────────────────────────────────────────────
 
 describe("evaluateB14CiGate — null ruinCi → scalar fallback", () => {
-  it("uses scalar point estimate when ruinCi is null (pre-Pass-A MC run)", () => {
-    const result = evaluateB14CiGate(null, 0.50);
+  it("uses scalar point estimate when ruinCi is null (pre-Pass-A MC run) — blocks at 0.50", () => {
+    // Use explicit threshold=0.40 to test scalar-fallback behavior independent of default.
+    const result = evaluateB14CiGate(null, 0.50, 0.40);
     expect(result.legacyFallback).toBe(true);
     // ci_high is set from scalar → 0.50 > 0.40 → blocked
     expect(result.passed).toBe(false);
@@ -127,26 +135,31 @@ describe("evaluateB14CiGate — null ruinCi → scalar fallback", () => {
     expect(result.auditPayload.ci_high).toBe(0.50);
   });
 
-  it("uses scalar fallback and passes when scalar is below threshold", () => {
-    const result = evaluateB14CiGate(null, 0.20);
+  it("uses scalar fallback and passes when scalar is below explicit threshold 0.40", () => {
+    const result = evaluateB14CiGate(null, 0.20, 0.40);
     expect(result.legacyFallback).toBe(true);
     expect(result.passed).toBe(true);
     expect(result.auditPayload.ci_high).toBe(0.20);
   });
 
-  it("uses scalar fallback when ruinCi dict is missing ci_high key", () => {
+  it("uses scalar fallback when ruinCi dict is missing ci_high key — blocks at 0.25 > 0.20 default", () => {
     const ruinCi: RuinCiDict = { point_estimate: 0.15, ci_low: 0.05 }; // ci_high absent
     const result = evaluateB14CiGate(ruinCi, 0.25);
     expect(result.legacyFallback).toBe(true);
+    // 0.25 > 0.20 default threshold → blocks
+    expect(result.passed).toBe(false);
     expect(result.auditPayload.ci_high).toBe(0.25);
   });
 
-  it("passes with no-MC-run marker when both ruinCi and scalar are null", () => {
+  it("BLOCKS (fail-CLOSED) when both ruinCi and scalar are null — hardening 2026-06-22", () => {
+    // Previously returned passed:true with reason "b14.ci_high_unavailable_no_mc_run".
+    // Hardening 2026-06-22 (F-1): when survival cannot be proven, BLOCK.
+    // Any legacy/pre-MC grandfather is an explicit allow at the CALLER, not here.
     const result = evaluateB14CiGate(null, null);
-    expect(result.passed).toBe(true);
-    expect(result.reason).toBe("b14.ci_high_unavailable_no_mc_run");
+    expect(result.passed).toBe(false);
+    expect(result.reason).toBe("b14.firm_breach_ruin_unavailable_fail_closed");
     expect(result.auditPayload.ci_high).toBeNull();
-    expect(result.auditPayload.blocked).toBe(false);
+    expect(result.auditPayload.blocked).toBe(true);
   });
 });
 
@@ -164,9 +177,17 @@ describe("evaluateB14CiGate — custom threshold override", () => {
     process.env.B14_RUIN_CI_HIGH_THRESHOLD = "0.60";
     const ruinCi: RuinCiDict = { ci_high: 0.55, point_estimate: 0.40 };
     const result = evaluateB14CiGate(ruinCi, null);
-    // 0.55 < 0.60 → should pass
+    // 0.55 < 0.60 env-threshold → should pass
     expect(result.passed).toBe(true);
     expect(result.auditPayload.threshold).toBe(0.60);
+  });
+
+  it("new default 0.20 blocks what the old 0.40 default would have passed", () => {
+    // ci_high=0.25 would have passed at 0.40, now blocks at 0.20 (hardening)
+    const ruinCi: RuinCiDict = { ci_high: 0.25, point_estimate: 0.15 };
+    const result = evaluateB14CiGate(ruinCi, null);
+    expect(result.passed).toBe(false);
+    expect(result.auditPayload.threshold).toBe(0.20);
   });
 });
 
@@ -208,7 +229,7 @@ describe("evaluateB14CiGate — audit payload fields", () => {
 // Covers the scipy BCa DegenerateDataWarning (NaN ci_high) silent-pass defect.
 
 describe("evaluateB14CiGate — ci_high=NaN with finite scalar below threshold → scalar fallback, passes", () => {
-  it("falls back to scalar and passes when ci_high is NaN and scalar is below threshold", () => {
+  it("falls back to scalar and passes when ci_high is NaN and scalar is below explicit threshold 0.40", () => {
     const ruinCi: RuinCiDict = {
       point_estimate: 0.20,
       ci_low: 0.05,
@@ -216,7 +237,8 @@ describe("evaluateB14CiGate — ci_high=NaN with finite scalar below threshold �
       ci_method: "BCa",
       n_resamples: 9999,
     };
-    const result = evaluateB14CiGate(ruinCi, 0.25);
+    // Use explicit threshold=0.40 so this test is independent of the new 0.20 default.
+    const result = evaluateB14CiGate(ruinCi, 0.25, 0.40);
     // ci_high NaN → discarded → falls to scalar 0.25 → 0.25 < 0.40 → passes
     expect(result.passed).toBe(true);
     expect(result.reason).toBe("b14.ci_high_within_threshold");

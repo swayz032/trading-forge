@@ -3,6 +3,7 @@ import { deadLetterQueue } from "../db/schema.js";
 import { eq, and, sql } from "drizzle-orm";
 import { logger } from "../lib/logger.js";
 import { notifyCritical } from "../services/notification-service.js";
+import { appendFamilyGradePostscript } from "./notification-helpers.js";
 
 /**
  * Capture a failed operation to the Dead Letter Queue.
@@ -136,7 +137,11 @@ export async function escalateDLQ(): Promise<number> {
 
     notifyCritical(
       `DLQ Escalation: ${item.operationType}`,
-      `Operation ${item.operationType} failed after ${item.retryCount} retries.\nEntity: ${item.entityType}/${item.entityId}\nError: ${item.errorMessage}`,
+      appendFamilyGradePostscript(
+        `Operation ${item.operationType} failed after ${item.retryCount} retries.\nEntity: ${item.entityType}/${item.entityId}\nError: ${item.errorMessage}`,
+        "A background task repeatedly failed and has been flagged for review.",
+        "No action needed — the bot flagged this automatically. Call Tony if trades aren't happening.",
+      ),
       { dlqId: item.id, operationType: item.operationType, entityId: item.entityId },
     );
 

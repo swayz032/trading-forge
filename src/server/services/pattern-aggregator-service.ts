@@ -19,8 +19,9 @@
  *   No async in the hot path. No breaking change to callers.
  *
  * Kill switch: system_parameters row with paramName="auto_patch_loop_enabled".
- *   Value "false" (string) halts the aggregator and emits auto_patch.loop_halted_skip.
- *   Missing row is treated as "true" (fail-open, loop enabled).
+ *   Value "true" (exact string) enables the loop.  Any other value, a missing
+ *   row, or a DB error disables the loop (FAIL-CLOSED) and emits
+ *   auto_patch.loop_halted_skip.  Default seed value is "false" (disabled).
  *
  * Min-sample guard: env PATTERN_AGGREGATOR_MIN_CRITIQUES (default 10).
  *   Fewer critiques than the threshold → audit + return "insufficient_samples".
@@ -29,11 +30,15 @@
  *   prompt-evolution resolveAbTests() job determines which version wins.
  */
 
+import { randomUUID } from "crypto";
 import { eq, desc, and, gte, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { tradeCritique, systemParameters, auditLog, promptVersions, promptAbTests } from "../db/schema.js";
 import { callOpenAI, getFallback, loadSystemPrompt, setAppendixCache } from "./model-router.js";
 import { OllamaClient } from "./ollama-client.js";
+import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
+import { notifyWarning } from "./notification-service.js";
 import { logger } from "../lib/logger.js";
 
 // ─── Constants ─────────────────────────────────────────────────
@@ -43,6 +48,115 @@ const MIN_CRITIQUES =  Number(process.env.PATTERN_AGGREGATOR_MIN_CRITIQUES ?? "1
 const KILL_SWITCH_PARAM = "auto_patch_loop_enabled";
 const PROMPT_TYPE = "strategy_proposer";
 const MIN_SAMPLES_PER_VARIANT = 20;
+
+// F-6: consecutive-failure tracking (mirrors trade-critique-service.ts pattern)
+const CONSEC_FAIL_KEY = "pattern_aggregator_consecutive_failures";
+const CONSEC_FAIL_THRESHOLD = 3;
+
+// F-7: readiness-nudge dedup window (env LEARNING_LOOP_READY_NUDGE_DAYS, default 7)
+const NUDGE_DEDUP_DAYS = Number(process.env.LEARNING_LOOP_READY_NUDGE_DAYS ?? "7");
+const NUDGE_ACTION = "auto_patch.loop_ready_but_disabled";
+
+// ─── Consecutive-failure tracking (F-6) ──────────────────────────────────────
+
+/**
+ * Read the current consecutive-failure count from system_parameters.
+ * Fail-open: returns 0 on any DB error so one bad read never falsely fires an alert.
+ */
+async function _readConsecFailures(): Promise<number> {
+  try {
+    const rows = await db
+      .select({ currentValue: systemParameters.currentValue })
+      .from(systemParameters)
+      .where(eq(systemParameters.paramName, CONSEC_FAIL_KEY))
+      .limit(1);
+    return rows.length > 0 ? parseInt(rows[0].currentValue ?? "0", 10) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Upsert the consecutive-failure counter, return the new value.
+ * Never throws — failure to increment is non-fatal; returns 0 on error.
+ */
+async function _incrementConsecFailures(): Promise<number> {
+  try {
+    const current = await _readConsecFailures();
+    const next = current + 1;
+    await _upsertParam(CONSEC_FAIL_KEY, String(next));
+    return next;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Reset the consecutive-failure counter (called on a successful run).
+ * Best-effort — failure to reset is non-fatal.
+ */
+async function _resetConsecFailures(): Promise<void> {
+  try {
+    await _upsertParam(CONSEC_FAIL_KEY, "0");
+  } catch {
+    // best-effort
+  }
+}
+
+/**
+ * Generic system_parameters upsert helper.
+ * Uses .limit(1) for mock-safe resolution (consistent with _readConsecFailures).
+ */
+async function _upsertParam(key: string, value: string): Promise<void> {
+  const rows = await db
+    .select({ paramName: systemParameters.paramName })
+    .from(systemParameters)
+    .where(eq(systemParameters.paramName, key))
+    .limit(1);
+
+  if (rows.length > 0) {
+    await db
+      .update(systemParameters)
+      .set({ currentValue: value, updatedAt: new Date() })
+      .where(eq(systemParameters.paramName, key));
+  } else {
+    await db.insert(systemParameters).values({
+      paramName: key,
+      currentValue: value,
+      description: "Pattern aggregator consecutive failure counter (auto-resets on success)",
+      domain: "critic",
+    });
+  }
+}
+
+/**
+ * Fire the Discord WARN for N consecutive failures.
+ * Fail-soft: any error is swallowed so the cron is never brought down
+ * by a Discord or notification-service issue.
+ */
+function _warnConsecFailures(strikes: number): void {
+  try {
+    notifyWarning(
+      "Pattern Aggregator — 3 Consecutive Failures",
+      appendFamilyGradePostscript(
+        `The pattern aggregator has failed ${strikes} times in a row. ` +
+        `Check OPENAI_API_KEY, Ollama connectivity, and model availability. ` +
+        `Trading Forge continues to operate normally — pattern aggregation is advisory.`,
+        "The bot's self-improvement feature has been having trouble — it's trying to review trade patterns but keeps running into errors.",
+        "No action needed. The bot is still trading normally. Tell Tony if this alert keeps appearing.",
+      ),
+      {
+        strikes,
+        param: KILL_SWITCH_PARAM,
+        action: "investigate_llm_connectivity",
+        service: "pattern_aggregator",
+      },
+    );
+  } catch (err) {
+    // Fail-soft — Discord failure must never crash the cron.
+    logger.warn({ err }, "Pattern aggregator: consecutive-failure Discord WARN failed (non-fatal)");
+  }
+}
 
 // ─── Types ─────────────────────────────────────────────────────
 
@@ -130,8 +244,30 @@ export async function runPatternAggregator(dryRun: boolean = false): Promise<Pat
   } else {
     const killSwitchValue = await _readKillSwitch();
     if (killSwitchValue === false) {
-      logger.info("Pattern aggregator: kill switch engaged — skipping");
+      const correlationId = randomUUID();
+      logger.info({ correlationId }, "Pattern aggregator: kill switch engaged — skipping");
       await _audit("auto_patch.loop_halted_skip", "success", { reason: "kill_switch" });
+      // L4: emit structured kill-switch-observed event so post-incident review can
+      // reconstruct whether the loop was halted during any window.
+      await insertAuditRowSafe({
+        action: "auto_patch.loop_halted_kill_switch",
+        entityType: "scheduler",
+        status: "info",
+        result: { service: "pattern-aggregator", param: KILL_SWITCH_PARAM } as Record<string, unknown>,
+        correlationId,
+      });
+
+      // F-7: readiness nudge — fire as a side-effect, never a gate.
+      // Count eligible critiques and notify if the loop WOULD aggregate right now
+      // if it were enabled.  Deduped to at most once per NUDGE_DEDUP_DAYS days.
+      // Fail-soft: any error here must never block the halted return.
+      try {
+        const eligible = await _countEligibleCritiques();
+        await _maybeEmitReadinessNudge(eligible);
+      } catch (err) {
+        logger.warn({ err }, "pattern-aggregator: readiness nudge check failed (non-fatal)");
+      }
+
       return { ...empty, status: "halted", durationMs: Date.now() - startTime };
     }
   }
@@ -213,10 +349,29 @@ export async function runPatternAggregator(dryRun: boolean = false): Promise<Pat
 
   if (!llmOutput) {
     logger.error("Pattern aggregator: both providers failed — aborting");
-    if (!dryRun) await _audit("pattern_aggregator.failed", "failure", {
-      critiques_reviewed: rows.length,
-      reason: "all_providers_failed",
-    });
+
+    // F-6: track consecutive failures and fire a Discord WARN at the threshold.
+    // Fail-soft: counter read/write errors are non-fatal; warn is fire-and-forget.
+    if (!dryRun) {
+      const strikes = await _incrementConsecFailures();
+
+      await _audit("pattern_aggregator.failed", "failure", {
+        critiques_reviewed: rows.length,
+        reason: "all_providers_failed",
+        strikes,
+      });
+
+      if (strikes >= CONSEC_FAIL_THRESHOLD) {
+        _warnConsecFailures(strikes);
+        // Emit a dedicated audit row so post-incident review can reconstruct the alert.
+        await _audit("pattern_aggregator.consecutive_failure_alert", "failure", {
+          strikes,
+          threshold: CONSEC_FAIL_THRESHOLD,
+          alert_sent: true,
+        });
+      }
+    }
+
     return { ...empty, status: "failed", critiques_reviewed: rows.length, durationMs: Date.now() - startTime };
   }
 
@@ -268,6 +423,9 @@ export async function runPatternAggregator(dryRun: boolean = false): Promise<Pat
   const paramHints = _extractBulletPoints(trimmedOutput);
 
   if (!dryRun) {
+    // F-6: reset consecutive-failure counter on success so the next run starts fresh.
+    await _resetConsecFailures();
+
     await _audit("pattern_aggregator.completed", "success", {
       critiques_reviewed: rows.length,
       new_prompt_version_id: newVersionId,
@@ -300,8 +458,12 @@ export async function runPatternAggregator(dryRun: boolean = false): Promise<Pat
 
 /**
  * Read kill switch from system_parameters.
- * Returns true (enabled) if row missing or value != "false".
- * Returns false (disabled) only when value is exactly "false".
+ * FAIL-CLOSED: returns true (enabled) ONLY when the row is present AND
+ * its value is exactly the string "true".  An absent row, any other
+ * value, or a DB error all return false (disabled) so the LLM-mutation
+ * loop never fires without explicit operator opt-in.
+ *
+ * F-5 fix (Wave B): inverted from the previous fail-open semantic.
  */
 async function _readKillSwitch(): Promise<boolean> {
   try {
@@ -311,11 +473,13 @@ async function _readKillSwitch(): Promise<boolean> {
       .where(eq(systemParameters.paramName, KILL_SWITCH_PARAM))
       .limit(1);
 
-    if (rows.length === 0) return true; // missing = enabled (fail-open)
-    return String(rows[0].currentValue).trim() !== "false";
+    // Absent row → DISABLED (fail-closed).
+    if (rows.length === 0) return false;
+    // Only the exact string "true" enables the loop.
+    return String(rows[0].currentValue).trim() === "true";
   } catch (err) {
-    logger.warn({ err }, "Pattern aggregator: failed to read kill switch — defaulting to enabled");
-    return true; // fail-open
+    logger.warn({ err }, "Pattern aggregator: failed to read kill switch — defaulting to disabled (fail-closed)");
+    return false; // fail-closed
   }
 }
 
@@ -408,12 +572,141 @@ async function _storeVersionAndABTest(
 }
 
 /**
+ * Count how many eligible trade_critique rows currently exist (same window as
+ * the normal aggregation path: last DEFAULT_WINDOW rows, capped by MIN_CRITIQUES).
+ * Returns the count as a non-negative integer.
+ * Fail-open: returns 0 on any DB error so a bad read never crashes the halt path.
+ */
+async function _countEligibleCritiques(): Promise<number> {
+  try {
+    const rows = await db
+      .select({ id: tradeCritique.id })
+      .from(tradeCritique)
+      .orderBy(desc(tradeCritique.critiquedAt))
+      .limit(DEFAULT_WINDOW);
+    return rows.length;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Check whether a readiness-nudge audit row was written within the dedup window.
+ * Returns true if a recent nudge row exists (within NUDGE_DEDUP_DAYS days).
+ * Fail-open: returns false on any DB error (let the nudge fire so operator isn't silenced).
+ */
+async function _hasRecentNudgeAudit(): Promise<boolean> {
+  try {
+    const cutoff = new Date(Date.now() - NUDGE_DEDUP_DAYS * 24 * 60 * 60 * 1000);
+    const rows = await db
+      .select({ id: auditLog.id })
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.action, NUDGE_ACTION),
+          gte(auditLog.createdAt, cutoff),
+        ),
+      )
+      .limit(1);
+    return rows.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * F-7: Emit the "loop ready but disabled" readiness nudge.
+ *
+ * Fires when the kill switch is DISABLED and the eligible critique count is at
+ * or above MIN_CRITIQUES.  The nudge is:
+ *   - An audit row (status=warning, action=auto_patch.loop_ready_but_disabled)
+ *   - A Discord WARN via notifyWarning + family-grade postscript
+ *
+ * The nudge is DEDUPED: only fires if no row with this action exists in the last
+ * NUDGE_DEDUP_DAYS days (env LEARNING_LOOP_READY_NUDGE_DAYS, default 7).
+ *
+ * INVARIANTS:
+ *   - NEVER auto-enables the loop
+ *   - NEVER mutates any prompt or kill-switch value
+ *   - Fail-soft: any nudge/Discord/dedup error is swallowed (non-fatal)
+ *   - Ordered as a side-effect — never blocks or gates the halted return
+ */
+async function _maybeEmitReadinessNudge(eligibleCritiques: number): Promise<void> {
+  if (eligibleCritiques < MIN_CRITIQUES) {
+    // Not ready yet — dormant path.  No nudge.
+    return;
+  }
+
+  // Dedup: skip if a recent nudge was already sent.
+  let recentExists = false;
+  try {
+    recentExists = await _hasRecentNudgeAudit();
+  } catch {
+    // Fail-open: let it fire if we can't check
+  }
+
+  if (recentExists) {
+    logger.debug(
+      { action: NUDGE_ACTION, dedupDays: NUDGE_DEDUP_DAYS },
+      "pattern-aggregator: readiness nudge deduped — recent nudge exists within window",
+    );
+    return;
+  }
+
+  // ── Write audit row ──────────────────────────────────────────────────────────
+  const nudgePayload = {
+    eligibleCritiques,
+    threshold: MIN_CRITIQUES,
+    paramName: KILL_SWITCH_PARAM,
+    dedupWindowDays: NUDGE_DEDUP_DAYS,
+  };
+  try {
+    await _audit(NUDGE_ACTION, "warning", nudgePayload as unknown as Record<string, unknown>);
+  } catch (err) {
+    // Fail-soft — audit failure never crashes
+    logger.warn({ err }, "pattern-aggregator: readiness nudge audit write failed (non-fatal)");
+  }
+
+  // ── Fire Discord WARN ────────────────────────────────────────────────────────
+  const operatorBody =
+    `Learning loop READY but OFF — ${eligibleCritiques} trade critiques have accumulated ` +
+    `(threshold ${MIN_CRITIQUES}). The bot can start improving its own strategy generator, ` +
+    `but it's currently disabled for safety. ` +
+    `To turn it ON: set system_parameters.auto_patch_loop_enabled = 'true'. ` +
+    `Leaving it OFF is safe — the bot just won't self-improve.`;
+
+  const fullBody = appendFamilyGradePostscript(
+    operatorBody,
+    `The trading bot has enough data to start learning from its own trades (${eligibleCritiques} ` +
+    `critiques collected), but the self-improvement feature is turned off.`,
+    `No action needed unless Tony says so. The bot continues trading normally either way.`,
+  );
+
+  try {
+    notifyWarning(
+      "Learning Loop READY but OFF",
+      fullBody,
+      {
+        eligibleCritiques,
+        threshold: MIN_CRITIQUES,
+        paramName: KILL_SWITCH_PARAM,
+        action: "set_auto_patch_loop_enabled_true_to_enable",
+        service: "pattern_aggregator",
+      },
+    );
+  } catch (err) {
+    // Fail-soft — Discord failure must never crash the cron
+    logger.warn({ err }, "pattern-aggregator: readiness nudge Discord WARN failed (non-fatal)");
+  }
+}
+
+/**
  * Fire-and-forget audit row. Merges payload into result jsonb.
  * Never throws — non-blocking.
  */
 async function _audit(
   action: string,
-  status: "success" | "failure",
+  status: "success" | "failure" | "warning" | "info",
   payload: Record<string, unknown>,
 ): Promise<void> {
   try {

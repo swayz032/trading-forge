@@ -12,7 +12,7 @@ Trading Forge is a production-grade, family-distributable futures trading bot in
 
 **Target:** scale ONE robustly-validated strategy (avg-R ≥ 2.0R, PF ≥ 1.7, deflated Sharpe ≥ 1.5, max 1-2 A+ trades/day) from a $250/day baseline to **$1,000–5,000+/day** via four scaling levers. Win rate is an OBSERVED output metric — never a target, never a gate, never specified as a band.
 
-1. **Contract pyramid** — single account, profit-tier scaling on one strategy (base 6 MES / 6 MNQ / 18 MCL → risk-cap-bounded ceiling, +3 per +$3K cumulative profit)
+1. **Contract pyramid** — single account, profit-tier scaling on one strategy (base 9 MES / 9 MNQ / 18 MCL → risk-cap-bounded ceiling, 50-micro final cap; +3 per tier via proven-trades ramp live / +$3K dollar fallback in backtests). Growth is primarily HORIZONTAL (multiple Topstep accounts + copy-trade), not maxing one account — see `docs/scaling-plan-baby-mode.md`.
 2. **Multi-account same firm** — Topstep allows multiple accounts per user (single TopstepX subscription covers all)
 3. **Multi-firm parallel** — Topstep + MFFU running DIFFERENT strategies per firm (MFFU collaborative-trading compliance)
 4. **Family copy distribution** — each family member runs a DIFFERENT DEPLOYED strategy on their own TradingView + TradersPost + own MFFU/Topstep account
@@ -103,7 +103,7 @@ All build phases are done. **No new subsystems for 90 days.** The only work is p
 
 > **PRODUCTION-VERIFIED 2026-05-19:** Cycle 4 produced first organic W23F-shaped strategy (`orb_mnq_15m` with `entry_quality.confluence_factors=["structural_setup","vp_shape"]`, `extraction_provenance: youtube_transcript`). Pipeline runs end-to-end: MES → MNQ → MCL rotation, LLM extracts confluence factors + symbols, graduator emits entry_quality block, DSL critic accepts with W23F.L convention pre-filter, auditor accepts risk_derived_pyramid sizing. See AGENT-LOGS Wave 23F entry for full bug catalog + fixes.
 
-The scout pipeline runs `autonomous-scout-discovery` cron every 4 hours via in-process `src/server/services/autonomous-scout-runner.ts`. Every compiled strategy passes through `src/server/services/framework-overlay.ts` which REPLACES the scout's risk-management with framework defaults (W23F.N: **Style C 33/33/33** default — TP1 33%@1R / TP2 33%@2R / runner 34% trails developing_session_poc with Chandelier(14,2) fallback; stop floor 1.5×ATR + ceiling 14pt MES / 40pt MNQ / 25 tick MCL; 15:55 ET hard time-stop; 67% personal DLL; pyramid base 6 MES / 6 MNQ / 18 MCL with +3 increments per +$3K; max_risk 2%; per-symbol liquidity caps 100/50/30) while PRESERVING the entry signal. Style D is DEAD — see W23F.N AGENT-LOGS entry.
+The scout pipeline runs `autonomous-scout-discovery` cron every 4 hours via in-process `src/server/services/autonomous-scout-runner.ts`. Every compiled strategy passes through `src/server/services/framework-overlay.ts` which REPLACES the scout's risk-management with framework defaults (W23F.N: **Style C 33/33/33** default — TP1 33%@1R / TP2 33%@2R / runner 34% trails developing_session_poc with Chandelier(14,2) fallback; stop floor 1.5×ATR + ceiling 14pt MES / 40pt MNQ / 25 tick MCL; 15:55 ET hard time-stop; 67% personal DLL; pyramid base 9 MES / 9 MNQ / 18 MCL with +3 increments (proven-trades ramp live / +$3K backtest fallback); max_risk 2%; per-symbol liquidity caps 100/50/30) while PRESERVING the entry signal. Style D is DEAD — see W23F.N AGENT-LOGS entry.
 
 ### Two-stage DSL philosophy
 
@@ -301,11 +301,18 @@ When `exit_style="adaptive"`:
 ### Sizing — Risk-Derived Pyramid (W23F.N — Wave 23 canonical)
 Sizing is **risk-management-bounded, not contract-count-bounded**. Pyramid is the SLOW-RAMP floor; risk math is the CEILING. Lowest wins.
 
-**Pyramid ramp (time progression):**
+**Pyramid ramp (2026-06-23 — base 9 + proven-trades ramp):**
 ```
-Base:      6 MES / 6 MNQ / 18 MCL
-Increment: +3 contracts per +$3,000 cumulative profit
+Base:      9 MES / 9 MNQ / 18 MCL   (was 6/6/18; 9÷3 keeps Style C clean; MCL unchanged)
+Final cap: 50 micros (Topstep firm cap) — the ceiling the ramp climbs TO
+Increment: +3 contracts per tier.
+  LIVE (paper/funded): tier = floor(provenTrades / proven_trades_per_tier)   ← survives payouts
+  BACKTEST fallback:   tier = floor(max(0, cumulativeProfit) / tier_threshold_dollars)
 ```
+The LIVE ramp climbs on PROVEN WINNING TRADES (`paper_sessions.proven_trades_count`, monotonic) so
+taking a payout never drags size down. Backtests (no proven-trades input) keep the dollar fallback —
+byte-identical to pre-2026-06-23 behavior. Growth is primarily HORIZONTAL (multiple Topstep accounts
++ copy-trade at moderate size), NOT maxing one account to 50 — see `docs/scaling-plan-baby-mode.md`.
 
 **Risk-derived ceiling (computed every signal):**
 ```
@@ -316,9 +323,13 @@ finalContracts = min(
   firmContractCap,                                        // Topstep/MFFU tier
   liquidity_comfort_cap,                                  // book-depth ceiling
   floor(currentDrawdownRoom × DRAWDOWN_ROOM_RISK_PCT      // Topstep ONLY (W25P2 Inst-10)
-        ÷ (stop_multiplier × ATR_points × point_dollar_value))    //   env DRAWDOWN_ROOM_RISK_PCT=0.01
+        ÷ (stop_multiplier × ATR_points × point_dollar_value))    //   env DRAWDOWN_ROOM_RISK_PCT=0.08
 )
 ```
+**DRAWDOWN_ROOM_RISK_PCT recalibrated 0.01 → 0.08 (2026-06-23).** The 1% rule produced ~$20/trade =
+**0 contracts** on a fresh $2K Topstep buffer — it strangled sizing (the bot couldn't trade base size).
+8% of remaining buffer is the institutional 2026 sweet spot (NexusFi 2026-05, "8-12% of buffer"); the
+2%-of-balance cap remains the secondary ceiling. See `docs/scaling-plan-baby-mode.md`.
 
 **Per-symbol liquidity comfort caps (W23F.N):**
 | Symbol | Cap | Rationale |
@@ -328,9 +339,12 @@ finalContracts = min(
 | MCL | 30 | 20-80 contracts at touch (retail flow); cap prevents 1-2 tick slippage |
 
 **Sizing parameters:**
-- `max_risk_pct_per_trade: 0.02` — 2% of risk base per trade
+- `max_risk_pct_per_trade: 0.02` — 2% of risk base per trade (secondary ceiling)
 - `personal_dll_pct: 0.67` — Personal DLL = 67% of firm DLL
-- `tier_threshold_dollars: 3000` — pyramid steps every +$3K profit
+- `tier_threshold_dollars: 3000` — DOLLAR FALLBACK only (backtests): pyramid steps every +$3K profit
+- `proven_trades_per_tier` — env `PROVEN_TRADES_PER_TIER` (default 10) — LIVE ramp: +1 tier per N cumulative winning trades (`paper_sessions.proven_trades_count`, migration 0174, monotonic, survives payouts)
+- `DRAWDOWN_ROOM_RISK_PCT: 0.08` — 8% of Topstep drawdown buffer per trade (recalibrated from 0.01 — see above)
+- **Scaling validation:** `scripts/validate-scaling-schedule.py` proves per-tier firm-breach risk < `SCALING_BREACH_GATE_PCT` (default 0.05) via `simulate_firm_survival` on real data (fail-closed). Bar-by-bar pyramid replay across WF folds is a documented follow-up.
 
 **Concrete examples (1.5×ATR stop, ATR=4pts on MES, MFFU 2% rule):**
 - $50K eval funded:   $1,000 risk / $30/contract = 33 contracts ceiling
@@ -341,13 +355,19 @@ finalContracts = min(
 
 **Mini→micro contract conversion:** scout-extract's `remapMarket()` scales contracts 10× when remapping ES→MES, NQ→MNQ, CL→MCL. Transcript "trade 3 ES" becomes "trade 30 MES" — same dollar-risk exposure post-conversion.
 
-### Daily Loss Limit — kill switch
+### Daily Loss Limit — 4-band escalation ladder
 ```
 Personal DLL = 67% of firm DLL
-HALT new entries at 67% (env: DLL_HALT_PCT)
-FORCE-CLOSE all positions at 95% (env: DLL_FORCE_CLOSE_PCT)
+REDUCE new-entry size ×0.50 at 60% (env: DLL_REDUCE_SIZE_PCT / DLL_REDUCE_SIZE_FACTOR)  ← soft, 2026-06-23
+HALT new entries           at 67% (env: DLL_HALT_PCT)
+FORCE-CLOSE all positions  at 95% (env: DLL_FORCE_CLOSE_PCT)
 Reset at session boundary
 ```
+The 60% band (NexusFi Operations Manual 2026-06 institutional ladder) sizes new entries DOWN
+(never zeroes — floored ≥1; the 67% halt is the zero path) to absorb a losing streak before the
+hard halt. Lives in `cross-symbol-pnl.ts::evaluateCrossSymbolDll` (action `reduce_size`), applied
+at the `paper-signal-service.ts` sizing site. Audit: `sizing.dll_reduce_size_band_entered` +
+`sizing.dll_reduce_size_applied`. Ordering: force_close > halt > reduce_size > none.
 
 ### Daily Trade Cap — 1-2 A+ trades/day mandate (Wave 26 Pass K Phase 1)
 ```
@@ -407,20 +427,39 @@ as a belt-and-suspenders defense layer for any signal that somehow slipped past 
 
 ## §7. Execution Layer
 
-### Current path
+### Execution routing is FIRM-SPECIFIC (corrected 2026-06-23)
+**Topstep does NOT use TradersPost** — Topstep banned Tradovate/NinjaTrader on 2026-01-12 and
+requires **TopstepX**. TradersPost is ONLY for MFFU / other prop firms + TradingView paper testing.
+
 ```
-Strategy fires signal → Pine alert (TradingView) → TradersPost webhook →
-broker login → MFFU/Topstep account
+TOPSTEP (PRIMARY):   TF engine → broker-router → TopstepX REST/WS API → Topstep account
+                     [STUB today — must BUILD when operator opens the account. No TradersPost.]
+
+MFFU / other firms:  TF engine → broker-router → TradersPost webhook → Tradovate (broker) → account
+                     Tradovate = the futures broker on TradersPost (demo for paper, live for funded).
+
+TradingView paper-test: TradingView Pine alert → TradersPost → Tradovate demo (paper account)
 ```
 
-### Future path (when operator opens Topstep account)
-```
-Strategy fires signal → broker-router → TopstepX REST/WebSocket API →
-Topstep account (direct, no TradersPost middleware)
-```
+### ★ The Pine parity wall — full Slumdawg does NOT ride through TradingView Pine
+Pine cannot reproduce Style C / adaptive exits (one `strategy.exit()` only), the 11-factor weighted
+confluence gate, multi-TF gating, ICT/SMT/volume-profile, or the RL challenger. The `exportability.py`
+**`faithful` flag HARD-blocks** any Pine that would misrepresent the strategy (correct behavior).
+So the institutional path for FULL Slumdawg is **TF engine → broker-router → (TopstepX | TradersPost)
+DIRECT** — preserving everything. **TradingView Pine is for (a) the FAMILY's SIMPLE strategies
+(different per member, §9) and (b) a visual monitor**, NOT for executing full Slumdawg. Known parity
+gaps still open: no automated Strategy-Tester-vs-broker P&L reconciliation harness; no Pine-vs-engine
+result-equivalence test; VWAP session-reset divergence (paper TS vs backtest vs Pine).
+
+### Cost split (lean — don't double-pay)
+- **Topstep accounts → TopstepX** ($14.50/mo sub covers Topstep accounts + the TopstepX copier). No TradersPost.
+- **MFFU / other firms → TradersPost + Tradovate.** Operator's own multi-account copy-scaling on TradersPost
+  (Pro $199 = 3 / Premium $299 = 6) is only for MFFU/other-firm accounts; Topstep copy is TopstepX-side.
+- **Family:** each member = own TradersPost Starter ($49, futures = the 1 asset class) + own Tradovate demo→live + own device + a DIFFERENT simple strategy.
 
 ### Broker abstraction layer
-`src/server/services/broker-router.ts` is the SINGLE SOURCE OF TRUTH for order routing. Today: TradersPost path active, TopstepX returns stub.
+`src/server/services/broker-router.ts` is the SINGLE SOURCE OF TRUTH for order routing. Today: TradersPost
+path active (MFFU/other firms), TopstepX returns stub (`topstepx_not_configured`).
 
 ### Per-account broker mapping
 `broker_accounts` table maps each account_id → firm_id + broker_type + Bitwarden vault ref. `instance_config.enabled_firms` controls which firms an instance allows.
@@ -428,6 +467,8 @@ Topstep account (direct, no TradersPost middleware)
 ---
 
 ## §8. Paper Testing — TradingView is the Bot's Eye
+
+**Paper-engine authority (Pass 5, 2026-06-23):** For strategies in PAPER state or higher (PAPER → DEPLOY_READY → PILOT → DEPLOYED), the canonical paper-trade journal is TradersPost's broker tape — NOT the internal Massive-WS simulator. The internal simulator is pre-PAPER only (CANDIDATE/TESTING). On TESTING→PAPER transition, the internal stream is stopped via `stopStream(session.id)`. `POST /api/paper/start` rejects PAPER-state strategies with `paper.start_refused_paper_state` audit. This eliminates the dual-stream P&L drift the audit identified.
 
 Every new strategy paper-trades through TradingView's Strategy() panel for 3-5 days before going live.
 
@@ -671,6 +712,7 @@ Skipping commit-and-push is **fail-CLOSED**, same severity as skipping `system-m
 ### Architecture
 - Don't add Supabase or complex auth — single operator, no SaaS
 - Don't over-engineer — MVP each phase, iterate
+- **Ship gates STRICT, then loosen with DATA — not fear (2026-06-24).** The system stacks many entry gates (11-factor confluence@0.72, macro/lunch blackout, PM taper, DLL bands, daily-trade-cap, structural-stop ceiling, B15/PBO/WFE) — each REDUCES trade count; stacked, they can strangle the edge ("death by a thousand filters" → a bot that can't lose but can't win). The operator trades BIG MOVES (14-24pt Style C 2R+, NOT scalps), so a gate blocking a big-move A+ setup is the EXPENSIVE error. Diagnose with `src/engine/gate_block_analyzer.py` — for every gate-BLOCKED signal (`paper_signal_logs` acted=false) it replays the FAITHFUL counterfactual (real per-symbol framework stop 14/40/0.25pt + Style C exit + same fill model on real forward bars) and verdicts each gate COSTING (blocked big-move winners) vs SAVING (blocked losers). Run: `python -m src.engine.gate_block_analyzer <name> --since <iso>`. Loosen only the gates the DATA shows are blocking winners. Env: `GATE_BLOCK_BIG_MOVE_POINTS_<SYM>`, `STOP_CEILING_PTS_<SYM>`. Fail-closed (INDETERMINATE on missing forward bars, never fabricated); needs paper/backtest block data to verdict.
 - Don't generate complex strategies — max 5 parameters
 - Don't optimize parameters to find "the best" — test robustness across a wide range
 - Don't add backwards-compat hacks unless explicitly required
@@ -914,6 +956,111 @@ Replay protection: timestamp drift > 60s → 401. NSSM respawns automatically to
 - Tower relay client logs: `C:\Users\tonio\bin\tower-relay-client.log`
 - Relay singleton — second client connection force-closes the older one
 - `RELAY_TOKEN` must match between Railway env and tower client env
+
+### Power resilience hardware — UPS + Kasa (HARD RULE for any live/PAPER+ operation)
+
+Trading Forge is hybrid (CLAUDE.md §15a topology diagram): the institutional safety
+stack — kill-switch L1-L9, B14 ci_high gate, compliance enforce, frozen-policy hash,
+paper-journal-recon, audit chain, scheduler crons — all run ON THE TOWER inside
+TradingForgeAPI. **None of these fire when the tower is offline.** A Pine→TradersPost
+family bot would technically keep firing during a tower outage (TradingView + TradersPost
+are cloud-only), but it would do so with zero institutional safety net — exactly the
+retail-shaped failure mode the 4-wave 2026-06-23 hardening sweep eliminated. The Full
+Slumdawg DIRECT path and the TF Gateway archetype path are HARD-DEPENDENT on the tower
+and stop entirely when it goes down.
+
+**Therefore: any operator running live or PAPER+ strategies MUST have both UPS and Kasa
+installed before the first live trade.** This is not optional gear; it's the physical-layer
+prerequisite for the safety contract.
+
+**Topology (mandatory order):**
+```
+WALL OUTLET → KASA SMART PLUG → UPS → TOWER
+```
+Kasa upstream of UPS is critical: it lets `triggerRemotePowerCycle()` actually cut all
+power downstream (including UPS battery) so the tower cold-boots. Reversed order
+(Tower→Kasa→UPS or UPS upstream of Kasa) means the remote-cycle path cannot fully
+de-energize the tower and NSSM may not respawn into fresh code. The UPS smooths grid
+brownouts because Kasa just passes power through normally — UPS only sees Kasa cuts
+during an explicit power-cycle (rare).
+
+**Hardware (~$170-220 total):**
+- **UPS:** CyberPower CP1500AVRLCD or APC BX1500M (~900W output, 10-30 min runtime for
+  a desktop tower). Closes the brief-outage failure mode (open positions exposed to
+  arbitrary fill at re-open after a 5-minute brownout). ~$150-200.
+- **Kasa:** TP-Link HS103 (cheapest) or HS105 (more compact). HS110's energy monitoring
+  is not used. ~$10-20.
+
+**Role separation:**
+| Failure mode | UPS handles | Kasa handles |
+|---|---|---|
+| Brief brownout (<30 min) during RTH | YES (invisible to bot) | no |
+| Bot software hang (tower fine, API frozen) | no | YES (auto-cycles after 3 failed restarts) |
+| Long outage (UPS battery exhausted) | dies gracefully, tower shuts down clean | restores power when grid returns + tower BIOS auto-boots |
+| Tower BIOS lockup / NSSM stuck | no | YES (hard power-cycle) |
+
+**Operator setup (one-time):**
+1. Purchase UPS + Kasa per the spec above.
+2. Cable: wall outlet → Kasa → UPS → tower (NOT tower → UPS → Kasa).
+3. Connect Kasa to home Wi-Fi via the Kasa app.
+4. Router DHCP reservation: assign a **static IP** to the Kasa's MAC address so the
+   IP never changes across reboots.
+5. **Kasa app config:** Device Settings → "Default Power State" → **On** (foolproof —
+   ensures plug auto-energizes when grid returns after a long outage).
+6. **Tower BIOS/UEFI config:** Power Management → "AC Power Recovery" (or "Restore on
+   AC/Power Loss") → **Power On** (default is "Off" on most boards — without this, the
+   Kasa energizing the tower does nothing because the motherboard won't auto-boot).
+   This is the more important of the two — skip it and the Kasa work is dead.
+7. Set the three env vars below in your tower `.env` and restart the backend.
+8. Verify the boot log says "KASA remote power-cycle escape valve is ACTIVE" before
+   declaring setup complete.
+
+**Required env vars (all three or none — `startup-config-check.ts` enforces, and
+M13 commit `ef3ba4c` 2026-06-23 added a runtime fail-CLOSED guard at
+`triggerRemotePowerCycle()` entry that throws `remote_power_cycle_partial_config` if
+called with partial config):**
+```
+KASA_DEVICE_IP=192.168.1.42    # IPv4 of the smart plug (static LAN IP)
+KASA_USERNAME=you@example.com  # Kasa cloud account email
+KASA_PASSWORD=yourpassword     # Kasa cloud account password
+```
+
+**What happens during a remote power-cycle (dead-man's heartbeat + KASA path):**
+When the dead-man's heartbeat fires 3 auto-restart attempts in 24h and all fail, the
+4th-attempt code path checks `KASA_DEVICE_IP`. If set, it invokes
+`scripts/remote-power-cycle.ps1` (via `remote-power-cycle-service.ts`):
+1. `remote-power-cycle-service.ts` writes a `recovery.remote_power_cycle_triggered`
+   audit row with `correlationId` before touching the plug.
+2. `scripts/remote-power-cycle.ps1` sends OFF→30s→ON via the local LAN API (port 9999,
+   no cloud round-trip — works even during internet outages).
+3. Script appends to `C:\Users\tonio\bin\kasa-cycle.log`.
+4. Discord CRITICAL fires with operator-version (full technical + audit ID) AND
+   family-grade postscript ("wait 10 minutes, check heartbeat, call Tony if still down").
+5. NSSM auto-respawns TradingForgeAPI on power-up.
+
+**What happens during a grid outage (UPS path):**
+1. Grid drops → Kasa loses power → UPS battery kicks in immediately → tower keeps
+   running.
+2. If grid returns within UPS runtime (~10-30 min): zero downtime; bot doesn't notice.
+3. If grid stays down past UPS runtime: UPS battery exhausts → controlled shutdown of
+   tower (BIOS-managed if "AC Power Recovery" is set, otherwise NSSM crash-loop logs).
+4. When grid returns: Kasa re-energizes (Default Power State = On) → tower BIOS detects
+   AC restored → motherboard auto-boots → Windows boots → NSSM auto-starts
+   TradingForgeAPI → backend back online + scheduler catches up missed crons.
+
+**When KASA vars are absent:** the dead-man's heartbeat path fires the terminal Discord
+CRITICAL with "hold the power button for 5 seconds" — operator must be physically
+present. This is acceptable for CANDIDATE/TESTING strategies but a HARD violation of
+the vacation-mode contract for PAPER+ strategies.
+
+**When UPS is absent:** any grid blip causes uncontrolled tower shutdown mid-RTH. Open
+positions are exposed to whatever fill the broker gives at re-open. There is no
+software-side mitigation for this — the safety stack we shipped cannot fire when
+electricity stops.
+
+**Family-distribution mandate:** each family member running an independent bot needs
+their own UPS + Kasa on their own tower. Per memory `feedback_family_not_part_of_operator_scaling`,
+family members are not a single-tower-shared operation; each is a standalone deployment.
 
 ---
 

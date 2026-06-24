@@ -120,15 +120,18 @@ const FRAMEWORK = {
   // 67% personal DLL of firm DLL
   personalDllPct: 0.67,
   // Risk-derived pyramid: base + increment per +$threshold cumulative profit.
-  // W23F.N (2026-05-19) — Wave 23 spec: base 6 MES / 6 MNQ / 18 MCL with +3
-  // increments per +$3K cumulative profit. The Wave 23 spec resets the pyramid
-  // floor to align with Style C 33/33/33 partials (base must be ≥ 6 so 33% slice
-  // is at least 2 contracts; MCL bumps to 18 so $1/tick × 25 ticks × 18 ≈ $450
+  // W23F.N (2026-05-19) — Wave 23 spec: base MES / MNQ / MCL with +3 increments
+  // per +$3K cumulative profit. The Wave 23 spec resets the pyramid floor to align
+  // with Style C 33/33/33 partials (base must be divisible by 3 so 33% slice is a
+  // whole number of contracts; MCL stays at 18 so $1/tick × 25 ticks × 18 ≈ $450
   // risk delivers meaningful $/day at Phase 1 targets).
+  // Scaling-plan-baby-mode update (2026-06-23): base 6→9 for MES/MNQ (9 % 3 == 0
+  // so Style C partial math is still clean; MCL stays 18). This delivers the
+  // $250-$375/day target on a fresh Phase 1 account vs the $150-$250 at base 6.
   // DO NOT add max_contracts here — it is computed at signal-time from
   // account_balance + ATR + firm cap (see src/server/lib/risk-sizing.ts).
   // A static max_contracts baked at graduation time cannot honor real dollar risk.
-  baseSize: { MES: 6, MNQ: 6, MCL: 18 } as Record<string, number>,
+  baseSize: { MES: 9, MNQ: 9, MCL: 18 } as Record<string, number>,
   sizingTier: { increment: 3, threshold: 3000 },
   // 2% max risk per trade. Applied to the risk base of each firm:
   //   MFFU: 2% of current balance

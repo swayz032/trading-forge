@@ -5,34 +5,41 @@ Legacy firms (TPT, Apex, FFN, Alpha, Tradeify, Earn2Trade, Top One, YRM Prop,
 FundingPips) were removed from production scope on 2026-05-10 (DB migration
 0097) and stripped from runtime config on 2026-05-19.
 
-Don't use gross P&L for performance gates — use net P&L per firm
-(Topstep $0.37/side, MFFU $0.62/side).
+Don't use gross P&L for performance gates — use net P&L per firm.
 Don't ignore firm contract caps in backtests.
+
+VALUES ARE ALL-IN PER-SIDE (commission + exchange + NFA regulatory) = round-turn ÷ 2.
+The backtester applies `commission_per_side × size × 2` with NO separate exchange/NFA add —
+so these MUST be the full all-in per-side cost, not the commission component alone.
 """
 
 from __future__ import annotations
 
-# ─── Per-Firm Commissions (per side, per contract) ───────────────
-# Source: each firm's fee schedule for 50K accounts.
+# ─── Per-Firm Commissions (ALL-IN per side, per contract) ───────────────
+# Source: each firm's official 2026 fee schedule (all-in round-turn ÷ 2).
 
 FIRM_COMMISSIONS: dict[str, dict[str, float]] = {
-    # Wave 27.5 Pass D.2: micro AND mini rates per firm.
-    # Micros (MES/MNQ/MCL): active in production today.
-    # Minis  (ES/NQ/CL):    Phase 5 only — deferred until single-account funded
-    #                       balance ≥ $200K per CLAUDE.md §5.
-    # Mini rates = 10× micro rates (10:1 contract ratio, same notional exposure).
-    # Verified 2026-05-25 against Topstep + MFFU 2026 published fee schedules.
+    # 2026-06-23 CORRECTION: Topstep rates were $0.37/side (too low — under-costed every
+    # Topstep backtest). Replaced with the AUTHORITATIVE TopstepX/ProjectX fee schedule
+    # (all-in round-turn ÷ 2). Micros (MES/MNQ/MCL) are active. Minis (ES/NQ/CL) are Phase 5
+    # (≥$200K, CLAUDE.md §5) — note minis are ~3× micros, NOT 10× (commissions don't scale
+    # with notional; the old 10×-micro assumption was wrong).
+    # TopstepX round-turn (RT): MES/MNQ $1.24, MCL $1.54, ES/NQ $3.80, CL $4.04.
     "topstep_50k": {
-        # Micros
-        "MES": 0.37, "MNQ": 0.37, "MCL": 0.37,
-        # Minis (Phase 5)
-        "ES": 3.70, "NQ": 3.70, "CL": 3.70,
+        # Micros (RT ÷ 2)
+        "MES": 0.62, "MNQ": 0.62, "MCL": 0.77,
+        # Minis (Phase 5) — ES/NQ $3.80 RT, CL $4.04 RT
+        "ES": 1.90, "NQ": 1.90, "CL": 2.02,
     },
     "mffu_50k": {
-        # Micros
-        "MES": 0.62, "MNQ": 0.62, "MCL": 0.62,
-        # Minis (Phase 5)
-        "ES": 6.20, "NQ": 6.20, "CL": 6.20,
+        # 2026-06-23 CORRECTION: MFFU rates were a flat $0.62 (wrong — that's TopstepX's MES
+        # value, not MFFU's). Replaced with MFFU's authoritative instrument list (all-in
+        # round-turn ÷ 2): MES/MNQ $1.90 RT, MCL $1.16 RT, ES/NQ $4.68 RT, CL $4.92 RT.
+        # Note MFFU MES/MNQ ($0.95) are PRICIER than TopstepX ($0.62) but MCL ($0.58) is cheaper.
+        # Micros (RT ÷ 2)
+        "MES": 0.95, "MNQ": 0.95, "MCL": 0.58,
+        # Minis (Phase 5) — ES/NQ $4.68 RT, CL $4.92 RT
+        "ES": 2.34, "NQ": 2.34, "CL": 2.46,
     },
 }
 
@@ -51,7 +58,8 @@ FIRM_COMMISSIONS: dict[str, dict[str, float]] = {
 
 FIRM_CONTRACT_CAPS: dict[str, dict[str, int]] = {
     "topstep_50k": {"MES": 50, "MNQ": 50, "MCL": 50},
-    "mffu_50k":    {"MES": 50, "MNQ": 50, "MCL": 50},
+    # MFFU BUILDER 50K = 40 micros (4 minis / 40 micros). Room for our pyramid base (6/6/18).
+    "mffu_50k":    {"MES": 40, "MNQ": 40, "MCL": 40},
 }
 
 # Hard bounds: min 0, max 60 (MFFU Pro). ATR sizing is clamped to this range.
@@ -81,7 +89,7 @@ SCALING_PLANS: dict[str, list[dict]] = {
 # ─── Initial Contract Caps (starting limits before scaling) ──────
 INITIAL_CONTRACT_CAPS: dict[str, int] = {
     "topstep_50k": 50,  # 50 micros at $50K Combine + Funded
-    "mffu_50k": 50,     # 50 micros at $50K Core/Flex/Rapid
+    "mffu_50k": 40,     # MFFU BUILDER 50K = 40 micros (4 minis / 40 micros)
 }
 
 
@@ -123,17 +131,26 @@ FIRM_RULES: dict[str, dict] = {
         "ongoing_monthly_fee": 0,
         "profit_target": 3000,
         "max_drawdown": 2000,
-        "max_contracts": 50,  # 50 micros (10:1 mini ratio) at $50K
+        # 2026-06-23: operator chose the MFFU BUILDER plan. Builder = EOD trailing + 40 micros
+        # (room for our pyramid, unlike Pro's 5) — best fit for the micro bot.
+        "max_contracts": 40,  # Builder: 4 minis / 40 micros (eval + sim funded)
+        # Builder Sim Funded = EOD trailing drawdown (Max EOD Drawdown / MLL $2,000; eval starting
+        # floor $48,000) — matches Topstep basis + our realizedPeakEquity model (NO intraday build).
+        # LIVE account: $2,000 EOD trailing, MLL STATIC once it reaches $0. NEWS TRADING ALLOWED.
         "trailing": "eod",
-        "payout_split": 0.80,
-        "min_payout_days": 5,
-        "min_trading_days": 5,
-        "consistency_rule": "mffu_50pct",
-        "daily_loss_limit": None,
+        "starting_floor": 48_000,      # Builder eval starting floor ($50K − $2K)
+        "payout_split": 0.80,          # Builder 80/20 (eval + sim + live)
+        "min_payout_days": 2,          # Builder: 2 qualifying days/cycle; pays every 48h after buffer
+        "payout_buffer": 2100,         # $2,100 buffer cleared before first payout
+        "min_payout": 500,             # Builder min payout $500 (max $2,000/cycle, 5 sim payouts → live)
+        "min_trading_days": 1,         # Builder eval 1-day minimum
+        "consistency_rule": "mffu_50pct_sim_payout",  # 50% at the SIM-FUNDED payout stage only; NONE eval, NONE live
+        "daily_loss_limit": 1000,      # Builder $1,000 DLL — SOFT pause (account survives, not a breach)
         "overnight_ok": False,
         "weekend_ok": False,
+        # Builder: news trading ALLOWED (eval + sim funded) — news-policy MFFU should NOT hard-block.
         # 2026-compliance (canonical: docs/prop-firm-rules-2026-mffu.md)
-        "payout_cycle_days": 14,  # Bi-weekly payouts every 14 days
+        "payout_cycle_days": 2,  # Builder: every 48h after buffer cleared (5 sim payouts → live)
     },
 }
 

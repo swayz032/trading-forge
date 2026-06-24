@@ -32,6 +32,9 @@ import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { logger } from "../lib/logger.js";  // F-5: leaf module import — never ../index.js
 import { broadcastSSE } from "../routes/sse.js";
 import { notifyWarning, notifyCritical } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
+import { assertNotShadow, PineExportShadowError } from "../lib/pine-export-shadow-guard.js";
+import { emitPineShadowRefused } from "../lib/pine-shadow-observability.js";
 import { spawn } from "child_process";
 import { resolve as pathResolve } from "path";
 
@@ -276,7 +279,11 @@ async function getOrCreateHmacSecret(
 
   notifyCritical(
     "HMAC persist failed after retries",
-    `pine_export.hmac_persist_failed_after_retries: accountId=${accountId} strategyId=${strategyId} attempts=3 error=${errorMsg}`,
+    appendFamilyGradePostscript(
+      `pine_export.hmac_persist_failed_after_retries: accountId=${accountId} strategyId=${strategyId} attempts=3 error=${errorMsg}`,
+      "A family member's trading script failed to export.",
+      "Call Tony — a family member's trading account may not be set up correctly.",
+    ),
     { accountId, strategyId, attempts: 3, correlationId: correlationId ?? null },
   );
 
@@ -359,9 +366,13 @@ print(json.dumps({"qty": qty}))
       );
       notifyWarning(
         "Pine Export Sizing Timeout",
-        `Python sizing subprocess timed out (10s) for symbol ${symbol}. ` +
-          `Falling back to base contract count ${baseContracts}. ` +
-          `Check sizing.py availability and Python process health.`,
+        appendFamilyGradePostscript(
+          `Python sizing subprocess timed out (10s) for symbol ${symbol}. ` +
+            `Falling back to base contract count ${baseContracts}. ` +
+            `Check sizing.py availability and Python process health.`,
+          "There was a minor issue with a family member's trading script.",
+          "No action needed — the bot will retry.",
+        ),
         { symbol, baseContracts, accountPnlTotal },
       );
       resolve(baseContracts);
@@ -471,6 +482,53 @@ export async function generateRecipientExport(
     throw Object.assign(new Error("pipeline_paused"), { pipelinePaused: true });
   }
 
+  // ── 1b. SHADOW guard (Pass 3 Track C) ───────────────────────────────────
+  // Must run before any strategy load or artifact generation.
+  // A SHADOW strategy must NEVER produce Pine artifacts (Wave 29 Pass A.1 invariant).
+  try {
+    await assertNotShadow(strategyId, db);
+  } catch (err) {
+    if (err instanceof PineExportShadowError) {
+      try {
+        await db.insert(auditLog).values({
+          action: "pine_export.refused_shadow_strategy",
+          entityType: "strategy",
+          entityId: strategyId,
+          decisionAuthority: "system",
+          input: { strategyId, accountId, blockedAt: "generateRecipientExport" } as Record<string, unknown>,
+          result: {
+            strategy_id: strategyId,
+            lifecycle_state: err.lifecycleState ?? "unknown",
+            shadow_mode_enabled: err.shadowModeEnabled,
+            blocked_at: "generateRecipientExport",
+          } as Record<string, unknown>,
+          status: "warn",
+          correlationId: correlationId ?? null,
+        });
+      } catch (auditErr) {
+        logger.error({ auditErr, strategyId }, "pine-export-shadow-guard: audit write failed in recipient service");
+      }
+      notifyWarning(
+        `Pine export blocked: SHADOW strategy ${strategyId}`,
+        appendFamilyGradePostscript(
+          `generateRecipientExport blocked for strategy ${strategyId} (${err.message})`,
+          "The system blocked a Pine export request for a strategy still in Shadow testing mode.",
+          "No action needed — the strategy is not ready for TradingView deployment yet.",
+        ),
+        { strategyId, accountId, lifecycleState: err.lifecycleState, shadowModeEnabled: err.shadowModeEnabled },
+      );
+      emitPineShadowRefused({
+        strategy_id: strategyId,
+        lifecycle_state: err.lifecycleState ?? "unknown",
+        shadow_mode_enabled: err.shadowModeEnabled,
+        blocked_at: "recipient_build",
+        correlation_id: correlationId ?? null,
+      });
+      throw Object.assign(err, { shadowStrategyBlocked: true });
+    }
+    throw err;
+  }
+
   // ── 2. Load strategy ────────────────────────────────────────────────────
   const [strategy] = await db
     .select()
@@ -565,6 +623,14 @@ export async function generateRecipientExport(
   // BUG-1 fix: pass accountId so the Python subprocess injects it into compile_dual_artifacts,
   // enabling the marker alertcondition block (Track 8) to be emitted when both account_id
   // and hmac_secret are present. Previously account_id was never forwarded to the compiler.
+  //
+  // CF3: thread gatewayOptions explicitly when strategy has paper_account_routing set
+  // (A/B routed strategies).  Suppresses pine_export.gateway_options_missing audit warn
+  // and makes routing intent auditable.  Falls through to undefined for legacy rows.
+  const recipientPaperRouting = (strategy as unknown as { paperAccountRouting?: string | null }).paperAccountRouting;
+  const recipientGatewayOpts = (recipientPaperRouting != null && recipientPaperRouting !== "")
+    ? ({ mode: "tf_gateway" } as const)
+    : undefined;
   const exportResult = await compileDualPineExport(
     strategyId,
     firmKey,
@@ -575,6 +641,7 @@ export async function generateRecipientExport(
     recipientLabel,
     hmacSecret,
     accountId,
+    recipientGatewayOpts,
   );
 
   if (exportResult.status === "failed") {

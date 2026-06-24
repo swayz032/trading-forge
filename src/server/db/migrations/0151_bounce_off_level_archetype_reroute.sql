@@ -107,7 +107,12 @@ AND config->>'entry_indicator' = 'archetype:bounce_off_level';
 
 -- Step 4: Emit audit_log rows for traceability
 -- (Each row represents one strategy that was corrected)
-INSERT INTO audit_log (action, decision_authority, payload, created_at)
+-- FIX 2026-06-22: audit_log has NO `payload` column (cols are input/result) and
+-- `status` is NOT NULL. The original (action, decision_authority, payload, created_at)
+-- INSERT threw "column payload does not exist", rolling back the whole migration and
+-- blocking the boot-migration-runner on EVERY boot (fail-closed) — stranding all
+-- later migrations (0166/0167/0168/0169). Corrected to the real schema.
+INSERT INTO audit_log (action, decision_authority, input, status, created_at)
 SELECT
   'migration.bounce_off_level_archetype_reroute',
   'system',
@@ -118,6 +123,7 @@ SELECT
     'migration', '0151',
     'reason', 'MA-as-S/R concept incorrectly routed to ema_crossover; corrected to bounce_off_level (2026-05-26)'
   ),
+  'success',
   NOW()
 FROM strategies
 WHERE name IN (

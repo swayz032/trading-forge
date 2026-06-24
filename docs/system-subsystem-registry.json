@@ -600,12 +600,16 @@
       "/api/health/dashboard",
       "/api/synthetic-black-swan"
     ],
-    "scheduler_jobs": [],
+    "scheduler_jobs": [
+      "synthetic-regime-bank-populate"
+    ],
     "routes": [
       "/api/nemo-scenarios",
       "/api/synthetic-black-swan"
     ],
-    "engine_subsystems": [],
+    "engine_subsystems": [
+      "synthetic"
+    ],
     "database_tables": [
       "nemo_scenario_bank",
       "synthetic_black_swan_runs",
@@ -1099,7 +1103,8 @@
       "daily-reconciliation",
       "weekly-drift-2sigma-check",
       "weekly-drift-detection",
-      "db-backup"
+      "db-backup",
+      "paper-journal-recon-daily"
     ],
     "routes": [
       "/api/production"
@@ -1884,13 +1889,18 @@
     "scheduler_jobs": [
       "agent-health-sweep",
       "data-integrity-suite",
+      "deployed-pine-artifact-check",
       "deployed-strategy-starvation-check",
       "disabled-job-probe",
+      "discord-fanout-audit-30min",
       "dlq-escalation",
       "dlq-retry",
+      "economic-calendar-sync",
       "idempotency-cleanup",
       "metrics-collector",
       "metrics-heartbeat",
+      "ollama-keepwarm-watchdog",
+      "position-drift-reconcile",
       "pre-trading-day-health-check",
       "python-pool-saturation-check",
       "regime-coverage-check",
@@ -2090,6 +2100,7 @@
     "routes": [
       "/api/broker-accounts",
       "/api/broker-error-budget",
+      "/api/broker/fill-callback",
       "/api/live-order",
       "/api/strategy-assignments"
     ],
@@ -2101,7 +2112,9 @@
     "database_tables": [
       "broker_accounts",
       "instance_config",
-      "audit_log"
+      "audit_log",
+      "live_order_pine_dedup",
+      "server_mediated_orders"
     ],
     "learning_from": [],
     "learning_assets": [],

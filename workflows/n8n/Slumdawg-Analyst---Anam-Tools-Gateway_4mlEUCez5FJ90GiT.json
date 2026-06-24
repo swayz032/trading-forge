@@ -1,0 +1,816 @@
+{
+  "updatedAt": "2026-06-22T23:33:04.036Z",
+  "createdAt": "2026-05-25T19:33:55.358Z",
+  "id": "4mlEUCez5FJ90GiT",
+  "name": "Slumdawg Analyst \u2014 Anam Tools Gateway",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "webhook-ingest",
+      "name": "Webhook: ingest-youtube",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        200,
+        100
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "slumdawg/ingest-youtube",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "ad16e343-7248-4db2-99f4-bbeea2daaaad"
+    },
+    {
+      "id": "http-ingest",
+      "name": "TF: ingest-youtube",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://tf-relay-production.up.railway.app/api/admin/slumdawg/ingest-youtube",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $json.body.url }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 180000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "id": "respond-ingest",
+      "name": "Respond: ingest-youtube",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        100
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      }
+    },
+    {
+      "id": "webhook-activity",
+      "name": "Webhook: activity-today",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        200,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "slumdawg/activity-today",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "c4055196-4f44-4a20-afbc-2e53aa235400"
+    },
+    {
+      "id": "http-activity",
+      "name": "TF: activity-today",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://tf-relay-production.up.railway.app/api/admin/slumdawg/activity-today",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "id": "respond-activity",
+      "name": "Respond: activity-today",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      }
+    },
+    {
+      "id": "webhook-journal",
+      "name": "Webhook: journal-today",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        200,
+        500
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "slumdawg/journal-today",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "1296703f-9fe5-48e6-9e7f-c0789d5962cd"
+    },
+    {
+      "id": "http-journal",
+      "name": "TF: journal-today",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        500
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://tf-relay-production.up.railway.app/api/admin/slumdawg/journal-today",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "id": "respond-journal",
+      "name": "Respond: journal-today",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        500
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      }
+    },
+    {
+      "id": "webhook-status",
+      "name": "Webhook: status-now",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        200,
+        700
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "slumdawg/status-now",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "6d7a818a-6985-4603-b0aa-d6dd08e57dc8"
+    },
+    {
+      "id": "http-status",
+      "name": "TF: status-now",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        700
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://tf-relay-production.up.railway.app/api/admin/slumdawg/status-now",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "id": "respond-status",
+      "name": "Respond: status-now",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        700
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      }
+    },
+    {
+      "id": "webhook-lifecycle",
+      "name": "Webhook: lifecycle",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        200,
+        900
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "slumdawg/lifecycle",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "4873dc9c-23bf-4da3-8ef2-887861dee2d1"
+    },
+    {
+      "id": "http-lifecycle",
+      "name": "TF: lifecycle",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        900
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://tf-relay-production.up.railway.app/api/admin/slumdawg/lifecycle/{{ $json.body.name || '' }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2
+    },
+    {
+      "id": "respond-lifecycle",
+      "name": "Respond: lifecycle",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        900
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook: ingest-youtube": {
+      "main": [
+        [
+          {
+            "node": "TF: ingest-youtube",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TF: ingest-youtube": {
+      "main": [
+        [
+          {
+            "node": "Respond: ingest-youtube",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: activity-today": {
+      "main": [
+        [
+          {
+            "node": "TF: activity-today",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TF: activity-today": {
+      "main": [
+        [
+          {
+            "node": "Respond: activity-today",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: journal-today": {
+      "main": [
+        [
+          {
+            "node": "TF: journal-today",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TF: journal-today": {
+      "main": [
+        [
+          {
+            "node": "Respond: journal-today",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: status-now": {
+      "main": [
+        [
+          {
+            "node": "TF: status-now",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TF: status-now": {
+      "main": [
+        [
+          {
+            "node": "Respond: status-now",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: lifecycle": {
+      "main": [
+        [
+          {
+            "node": "TF: lifecycle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TF: lifecycle": {
+      "main": [
+        [
+          {
+            "node": "Respond: lifecycle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "errorWorkflow": "DGEk1D478xWJClKD"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "1cd4ee4d-b98f-46e8-b9df-1f5ce9b71115",
+  "activeVersionId": "1cd4ee4d-b98f-46e8-b9df-1f5ce9b71115",
+  "versionCounter": 7,
+  "triggerCount": 5,
+  "shared": [
+    {
+      "updatedAt": "2026-05-25T19:33:55.358Z",
+      "createdAt": "2026-05-25T19:33:55.358Z",
+      "role": "workflow:owner",
+      "workflowId": "4mlEUCez5FJ90GiT",
+      "projectId": "MbOHOApVuCtg1xkk",
+      "project": {
+        "updatedAt": "2026-05-18T00:43:18.027Z",
+        "createdAt": "2026-05-18T00:40:08.136Z",
+        "id": "MbOHOApVuCtg1xkk",
+        "name": "Tonio Scott <tonioswayz32@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "9c696557-451d-4406-8914-ed7b33cfeeb0"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-06-22T23:33:04.044Z",
+    "createdAt": "2026-06-22T23:33:04.044Z",
+    "versionId": "1cd4ee4d-b98f-46e8-b9df-1f5ce9b71115",
+    "workflowId": "4mlEUCez5FJ90GiT",
+    "nodes": [
+      {
+        "id": "webhook-ingest",
+        "name": "Webhook: ingest-youtube",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          200,
+          100
+        ],
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "slumdawg/ingest-youtube",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "webhookId": "ad16e343-7248-4db2-99f4-bbeea2daaaad"
+      },
+      {
+        "id": "http-ingest",
+        "name": "TF: ingest-youtube",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          500,
+          100
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "=https://tf-relay-production.up.railway.app/api/admin/slumdawg/ingest-youtube",
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "url",
+                "value": "={{ $json.body.url }}"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 180000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2
+      },
+      {
+        "id": "respond-ingest",
+        "name": "Respond: ingest-youtube",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          800,
+          100
+        ],
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify($json) }}"
+        }
+      },
+      {
+        "id": "webhook-activity",
+        "name": "Webhook: activity-today",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          200,
+          300
+        ],
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "slumdawg/activity-today",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "webhookId": "c4055196-4f44-4a20-afbc-2e53aa235400"
+      },
+      {
+        "id": "http-activity",
+        "name": "TF: activity-today",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          500,
+          300
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "=https://tf-relay-production.up.railway.app/api/admin/slumdawg/activity-today",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2
+      },
+      {
+        "id": "respond-activity",
+        "name": "Respond: activity-today",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          800,
+          300
+        ],
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify($json) }}"
+        }
+      },
+      {
+        "id": "webhook-journal",
+        "name": "Webhook: journal-today",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          200,
+          500
+        ],
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "slumdawg/journal-today",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "webhookId": "1296703f-9fe5-48e6-9e7f-c0789d5962cd"
+      },
+      {
+        "id": "http-journal",
+        "name": "TF: journal-today",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          500,
+          500
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "=https://tf-relay-production.up.railway.app/api/admin/slumdawg/journal-today",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2
+      },
+      {
+        "id": "respond-journal",
+        "name": "Respond: journal-today",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          800,
+          500
+        ],
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify($json) }}"
+        }
+      },
+      {
+        "id": "webhook-status",
+        "name": "Webhook: status-now",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          200,
+          700
+        ],
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "slumdawg/status-now",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "webhookId": "6d7a818a-6985-4603-b0aa-d6dd08e57dc8"
+      },
+      {
+        "id": "http-status",
+        "name": "TF: status-now",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          500,
+          700
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "=https://tf-relay-production.up.railway.app/api/admin/slumdawg/status-now",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2
+      },
+      {
+        "id": "respond-status",
+        "name": "Respond: status-now",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          800,
+          700
+        ],
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify($json) }}"
+        }
+      },
+      {
+        "id": "webhook-lifecycle",
+        "name": "Webhook: lifecycle",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          200,
+          900
+        ],
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "slumdawg/lifecycle",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "webhookId": "4873dc9c-23bf-4da3-8ef2-887861dee2d1"
+      },
+      {
+        "id": "http-lifecycle",
+        "name": "TF: lifecycle",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          500,
+          900
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "=https://tf-relay-production.up.railway.app/api/admin/slumdawg/lifecycle/{{ $json.body.name || '' }}",
+          "options": {
+            "timeout": 30000
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 2
+      },
+      {
+        "id": "respond-lifecycle",
+        "name": "Respond: lifecycle",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.1,
+        "position": [
+          800,
+          900
+        ],
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify($json) }}"
+        }
+      }
+    ],
+    "connections": {
+      "Webhook: ingest-youtube": {
+        "main": [
+          [
+            {
+              "node": "TF: ingest-youtube",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "TF: ingest-youtube": {
+        "main": [
+          [
+            {
+              "node": "Respond: ingest-youtube",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook: activity-today": {
+        "main": [
+          [
+            {
+              "node": "TF: activity-today",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "TF: activity-today": {
+        "main": [
+          [
+            {
+              "node": "Respond: activity-today",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook: journal-today": {
+        "main": [
+          [
+            {
+              "node": "TF: journal-today",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "TF: journal-today": {
+        "main": [
+          [
+            {
+              "node": "Respond: journal-today",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook: status-now": {
+        "main": [
+          [
+            {
+              "node": "TF: status-now",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "TF: status-now": {
+        "main": [
+          [
+            {
+              "node": "Respond: status-now",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook: lifecycle": {
+        "main": [
+          [
+            {
+              "node": "TF: lifecycle",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "TF: lifecycle": {
+        "main": [
+          [
+            {
+              "node": "Respond: lifecycle",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Tonio Scott",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-06-22T23:33:04.245Z",
+        "id": 13,
+        "workflowId": "4mlEUCez5FJ90GiT",
+        "versionId": "1cd4ee4d-b98f-46e8-b9df-1f5ce9b71115",
+        "event": "deactivated",
+        "userId": "9c696557-451d-4406-8914-ed7b33cfeeb0"
+      },
+      {
+        "createdAt": "2026-06-22T23:33:04.359Z",
+        "id": 14,
+        "workflowId": "4mlEUCez5FJ90GiT",
+        "versionId": "1cd4ee4d-b98f-46e8-b9df-1f5ce9b71115",
+        "event": "activated",
+        "userId": "9c696557-451d-4406-8914-ed7b33cfeeb0"
+      }
+    ]
+  }
+}
