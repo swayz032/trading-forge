@@ -196,6 +196,24 @@ Plus 7 HIGH (Pine placeholder substitution missing, correlation_id null on live 
 
 ---
 
+### Session Log — 2026-06-24 Institutional Deep-Scan + Hardening Batch 1 (commit 78b4af0)
+
+**Mission:** Deep-scan the codebase to FIND the next systems not yet institutional-grade (operator: "you havent even deep scan to find the next system"), then fix the verified findings.
+
+**Scan:** 3 parallel agents (stubs/fail-open · correctness/observability · autonomy). Verdict: capital-execution CORE is sound (broker-router, kill-switch, promotion-gate orchestrator, CME-gate, MC/B14/WFE all correctly fail-CLOSED; migrations idempotent). Real gaps were in side-effect observability + correctness seams. Agents disproved several of their own false alarms (exchange-status fails CLOSED, drift-detector live, etc.).
+
+**Fixed (commit 78b4af0, +74 tests, 113/113 GREEN touched suites):**
+- **consistency-tracker** read `unrealized_pnl` (ZEROED on close) → 50% concentration gate evaluated on all-zero prior-day history. Repointed to realized `paper_trades.pnl` by ET trading day. (opt-in/OFF today; now correct before enable.)
+- **drift-detector** auto-demoted PAPER→DECLINING on WIN-RATE >2σ — MANDATE VIOLATION. winRate capped at 'investigate' (reported not gated); demotion keys only on avgTradePnl+maxDrawdown.
+- **strategy-lockout** 24h-pause write → no audit/correlationId (invisible in audit_log). Added `strategy.lockout_written` + correlationId (fail-soft).
+- **shadow-service** logShadowSignal unguarded/no-audit (threw into caller). Fail-soft + `signal.shadow_logged`; SHADOW invariant preserved.
+- **frozen-policy override** mutate-then-audit → wrapped in `db.transaction()`.
+- **+43 boundary tests** for dd-velocity / daily-trade-cap / lunch-blackout / pm-size-factor (they DID have Wave-26 tests; added DST/env/boundary edges).
+
+**Carry-forward (ranked, next batches):** Autonomy HIGH — paper session `failed_to_stream` no auto-restart (DEBT-2) + Pine artifact missing no auto-recompile (DEBT-1) — block unattended-live. Smaller: cache-TTL env-gating on kill-switch/compliance read path (M4); admin-recovery correlationId threading (M5); price-lock proximity env-gate (L2); MFFU Retail Sales T1 dates (data-gated). Pre-existing '1 unregistered scheduler job' drift is the parallel session's (scheduler.ts/registry untouched here).
+
+---
+
 ### Session Log — 2026-06-23 Firm-Rules Reconciliation + Baby-Mode Scaling Rails (commit 8760d18)
 
 **Mission:** Reconcile Topstep + MFFU firm rules from operator-provided 2026 docs, then build a balanced, data-backed contract-scaling plan and ship its rails institutional-grade.
