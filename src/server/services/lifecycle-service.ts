@@ -801,6 +801,12 @@ export class LifecycleService {
               } as Record<string, unknown>,
               correlationId: options.correlationId ?? null,
             }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.backtest_stale audit row write failed"));
+            broadcastSSE(LIFECYCLE_GATE_EVENTS.BACKTEST_STALE, {
+              strategyId: id,
+              age_days: parseFloat(ageDays.toFixed(1)),
+              limit_days: stalenessDays,
+              correlation_id: options.correlationId ?? null,
+            });
             return { success: false, error };
           }
         }
@@ -2081,6 +2087,12 @@ export class LifecycleService {
             }).catch((auditErr) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "lifecycle.backtest_stale auto-check audit insert failed (non-blocking)");
             });
+            broadcastSSE(LIFECYCLE_GATE_EVENTS.BACKTEST_STALE, {
+              strategyId: s.id,
+              age_days: parseFloat(ageDays.toFixed(1)),
+              limit_days: stalenessDays,
+              correlation_id: correlationId,
+            });
             continue;
           }
         }
@@ -2157,6 +2169,11 @@ export class LifecycleService {
                 correlationId,
               }).catch((auditErr) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "compliance-drift audit insert failed (non-blocking)");
+              });
+              broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
+                strategyId: s.id,
+                drift_firms: driftFirms,
+                correlation_id: correlationId,
               });
               continue;
             }
@@ -2959,6 +2976,12 @@ export class LifecycleService {
               }).catch((auditErr) => {
                 logger.warn({ strategyId: s.id, err: auditErr }, "lifecycle.backtest_stale PAPER audit insert failed (non-blocking)");
               });
+              broadcastSSE(LIFECYCLE_GATE_EVENTS.BACKTEST_STALE, {
+                strategyId: s.id,
+                age_days: parseFloat(ageDays.toFixed(1)),
+                limit_days: stalenessDays,
+                correlation_id: correlationId,
+              });
               continue;  // skip to next strategy — inside the outer try
             }
           }
@@ -2987,6 +3010,11 @@ export class LifecycleService {
                   correlationId,
                 }).catch((auditErr) => {
                   logger.warn({ strategyId: s.id, err: auditErr }, "compliance-drift audit insert failed (non-blocking)");
+                });
+                broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
+                  strategyId: s.id,
+                  drift_firms: driftFirms,
+                  correlation_id: correlationId,
                 });
                 continue;
               }
@@ -3974,6 +4002,12 @@ export class LifecycleService {
               correlationId,
             }).catch((auditErr) => {
               logger.warn({ strategyId: s.id, err: auditErr }, "frozen_policy drift-block audit failed (non-blocking)");
+            });
+            broadcastSSE(LIFECYCLE_GATE_EVENTS.FROZEN_POLICY_DRIFT_BLOCKED, {
+              strategyId: s.id,
+              current_hash: driftResult.currentHash,
+              frozen_hash: driftResult.frozenHash ?? null,
+              correlation_id: correlationId,
             });
             continue; // skip this strategy in the current pass
           }

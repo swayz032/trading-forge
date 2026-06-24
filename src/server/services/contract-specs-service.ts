@@ -18,6 +18,7 @@ import { contractSpecsAuthoritative } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { runPythonModule } from "../lib/python-runner.js";
 import { notifyWarning } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 
 // ─── Hardcoded fallback values (from firm-config.ts CONTRACT_SPECS) ─────
@@ -213,7 +214,11 @@ export async function runDefinitionPull(correlationId?: string): Promise<Definit
 
     await notifyWarning(
       "CME contract spec changed vs hardcoded reference",
-      `W19 Definition pull detected spec change. Review firm-config.ts CONTRACT_SPECS. Changed: ${changedDetails}`,
+      appendFamilyGradePostscript(
+        `W19 Definition pull detected spec change. Review firm-config.ts CONTRACT_SPECS. Changed: ${changedDetails}`,
+        "A trading contract's specifications changed from what was hardcoded — the bot detected a difference.",
+        "No action needed — the bot will use backup specifications. Call Tony to review the change.",
+      ),
       { changedSymbols, details: changedDetails, correlationId },
     );
 

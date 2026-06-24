@@ -26,6 +26,7 @@ import { auditLog } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { notifyWarning } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 // ─── Regime list — single source of truth ─────────────────────────────────────
 // Mirrors src/engine/context/bias_engine.py MacroRegime enum.
@@ -216,7 +217,11 @@ export async function runRegimeCoverageCheck(): Promise<RegimeCoverageResult> {
 
   notifyWarning(
     "Regime coverage gap detected",
-    `No PILOT/DEPLOYED strategy covers the following regime(s): ${gapRegimes.join(", ")}. A regime shift to an uncovered regime will produce zero trades. Add at least one strategy tagged for each missing regime.`,
+    appendFamilyGradePostscript(
+      `No PILOT/DEPLOYED strategy covers the following regime(s): ${gapRegimes.join(", ")}. A regime shift to an uncovered regime will produce zero trades. Add at least one strategy tagged for each missing regime.`,
+      "The bot detected a gap in market condition coverage.",
+      "No action needed — this is an advisory alert for Tony.",
+    ),
     { job: "regime-coverage-check", ...payload },
   );
 

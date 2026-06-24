@@ -315,13 +315,14 @@ export interface FactoryMultiMarketBucketPayload {
 // These constants are declared here so consumers can import a stable name
 // rather than embed magic strings that may drift.
 //
-// Emission sites (as of Wave 29 Pass A + B + C close):
-//   SHADOW_LOGGED             — paper-signal-service.ts:4375   (Pass A.1)
-//   PBO_EVALUATED             — lifecycle-service.ts:940/965   (Pass A.2)
-//   SHADOW_DIVERGENCE_EVALUATED — lifecycle-service.ts:2049/2088 (Pass A.3)
-//   RL_AB_ROUTED              — paper-signal-service.ts:4520   (Pass C.3)
-//   RL_TRAINING_COMPLETED     — quantum-rl-training-runner.ts post-completion callers
-//   RL_KILL_SWITCH_ENGAGED    — rl-signal-fetcher.ts kill-switch path callers
+// Emission sites (as of Wave 29 Pass A + B + C close — use function anchors, not line
+// numbers, as line numbers drift immediately after any insertion or deletion):
+//   SHADOW_LOGGED             — paper-signal-service.ts::evaluateSignals() shadow-intercept block (Pass A.1)
+//   PBO_EVALUATED             — lifecycle-service.ts::LifecycleService._promoteStrategyInner() PBO gate (Pass A.2)
+//   SHADOW_DIVERGENCE_EVALUATED — lifecycle-service.ts::LifecycleService._promoteStrategyInner() SHADOW→PAPER gate (Pass A.3)
+//   RL_AB_ROUTED              — paper-signal-service.ts::evaluateSignals() A/B paper routing branch (Pass C.3)
+//   RL_TRAINING_COMPLETED     — quantum-rl-training-runner.ts post-subprocess-completion emit path
+//   RL_KILL_SWITCH_ENGAGED    — rl-signal-fetcher.ts::fetchRlSignalForStrategy() kill-switch branch
 //
 // Data shapes:
 //   SHADOW_LOGGED             { strategy_id, signal_ts, direction, regime, correlation_id }

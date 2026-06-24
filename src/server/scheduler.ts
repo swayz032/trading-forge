@@ -192,7 +192,7 @@ function recordJobFailure(name: string, error: unknown): void {
     notifyCritical(
       `Scheduler: ${name} AUTO-DISABLED`,
       appendFamilyGradePostscript(
-        `Job "${name}" disabled after ${health.consecutiveFailures} consecutive failures.\nLast error: ${error instanceof Error ? error.message : String(error)}\nUse POST /api/admin/scheduler/jobs/${name}/enable to re-enable.`,
+        `Job "${name}" disabled after ${health.consecutiveFailures} consecutive failures.\nLast error: ${error instanceof Error ? error.message : String(error)}\nTo re-enable: see docs/admin-runbook.md#scheduler-re-enable`,
         `A background maintenance job (${name}) has been automatically disabled after failing too many times. The bot continues trading, but this maintenance function is paused.`,
         "No immediate action needed. Tell Tony: 'A scheduler job was auto-disabled.' He will re-enable it when ready.",
       ),

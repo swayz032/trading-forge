@@ -21,7 +21,7 @@ import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { systemParameters } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
-import { insertAuditRow } from "../lib/audit-log-helper.js";
+import { insertAuditRow, insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { notifyWarning, notifyInfo } from "../services/notification-service.js";
 
@@ -301,6 +301,15 @@ export async function runQuantumReplayWeeklyAnalysis(): Promise<WeeklyAnalysisRe
     }).catch((err) =>
       logger.warn({ err, correlationId }, "quantum-replay-weekly: audit row write failed (loop_halted_skip)"),
     );
+    // L4: emit structured kill-switch-observed event so post-incident review can
+    // reconstruct whether this loop was halted during any window.
+    await insertAuditRowSafe({
+      action: "auto_patch.loop_halted_kill_switch",
+      entityType: "scheduler",
+      status: "info",
+      result: { service: "quantum-replay-weekly", param: KILL_SWITCH_PARAM } as Record<string, unknown>,
+      correlationId,
+    });
     return {
       status: "loop_halted_skip",
       verdict: null,

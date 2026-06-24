@@ -86,6 +86,7 @@ import type { WebhookSignal } from "../integrations/traderspost/webhook-builder.
 import { lookupHmacSecret } from "../services/tradingview-marker-service.js";
 import { runPythonModule } from "../lib/python-runner.js";
 import { notifyWarning } from "../services/notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { LIVE_EXECUTION_STATES } from "../services/server-mediated-executor.js";
 import {
   emitArchetypeSignalReceived,
@@ -686,7 +687,11 @@ liveOrderRoutes.post(
         try {
           await notifyWarning(
             `Archetype evaluator FAILED: ${archetypeKey} / ${ticker}`,
-            `Evaluator error for account ${account_id}: ${errMsg}`,
+            appendFamilyGradePostscript(
+              `Evaluator error for account ${account_id}: ${errMsg}`,
+              "The bot's strategy analyzer hit an error and could not evaluate the trade signal.",
+              "No action needed — the bot skipped this signal and will retry on the next one.",
+            ),
             { archetypeKey, ticker, accountId: account_id, correlationId },
           );
         } catch { /* non-blocking */ }

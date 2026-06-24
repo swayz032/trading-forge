@@ -323,9 +323,14 @@ export async function runBrokerErrorBudgetCheck(): Promise<void> {
     // Discord WARN (batched by notification-service)
     try {
       const { notifyWarning } = await import("./notification-service.js");
+      const { appendFamilyGradePostscript } = await import("../lib/notification-helpers.js");
       notifyWarning(
         `Broker ${broker} error budget breach`,
-        `Broker **${broker}** has **${classPct}%** ${className}-class rejections over the last 24h (${classCount}/${entry.totalAttempts} attempts). Threshold: 5%.`,
+        appendFamilyGradePostscript(
+          `Broker **${broker}** has **${classPct}%** ${className}-class rejections over the last 24h (${classCount}/${entry.totalAttempts} attempts). Threshold: 5%.`,
+          "The bot has encountered too many broker errors recently.",
+          "No action needed — the bot is monitoring itself. Call Tony if trading stops.",
+        ),
         {
           broker,
           rejectionClass: className,

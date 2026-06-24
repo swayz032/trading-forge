@@ -20,6 +20,7 @@ import { runPythonModule } from "../lib/python-runner.js";
 import { tracer } from "../lib/tracing.js";
 import { captureToDLQ } from "../lib/dlq-service.js";
 import { notifyCritical } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 // Wave 27.5 Pass A.1 — CRITICAL #1: firm rules version drift detection
 import { computeFirmRulesVersion } from "../lib/firm-rules-version.js";
 
@@ -541,8 +542,12 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {},
     // MC failure blocks the TESTING→PAPER promotion gate (MC survival > 70% required)
     notifyCritical(
       "MC failed — promotion gate blocked",
-      `Monte Carlo run ${mcId} failed for strategy ${bt.strategyId ?? "unknown"} (backtest ${backtestId}). ` +
-      `The TESTING→PAPER promotion gate is now blocked until MC re-runs successfully. Error: ${errorMsg}`,
+      appendFamilyGradePostscript(
+        `Monte Carlo run ${mcId} failed for strategy ${bt.strategyId ?? "unknown"} (backtest ${backtestId}). ` +
+        `The TESTING→PAPER promotion gate is now blocked until MC re-runs successfully. Error: ${errorMsg}`,
+        "The bot's risk simulation failed.",
+        "No action needed — the bot will retry. Call Tony if this keeps happening.",
+      ),
       { mcId, backtestId, strategyId: bt.strategyId ?? null },
     );
 

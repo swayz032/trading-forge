@@ -30,6 +30,7 @@ import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { notifyCritical } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -337,9 +338,13 @@ export async function assignStrategyToAccount(
     // Discord alert — operator must be notified of MFFU collaborative-trading risk
     notifyCritical(
       "MFFU Collaborative-Trading Warning",
-      `Strategy ${strategyId} is being assigned to account ${accountId} on MFFU. ` +
-        `2+ family members running the same strategy on MFFU risks collaborative-trading detection. ` +
-        `Affected accounts: ${warning.affectedAccountIds.join(", ")}. Labels: ${warning.familyMemberLabels.join(", ")}.`,
+      appendFamilyGradePostscript(
+        `Strategy ${strategyId} is being assigned to account ${accountId} on MFFU. ` +
+          `2+ family members running the same strategy on MFFU risks collaborative-trading detection. ` +
+          `Affected accounts: ${warning.affectedAccountIds.join(", ")}. Labels: ${warning.familyMemberLabels.join(", ")}.`,
+        "A trading strategy couldn't be assigned to an account.",
+        "No action needed — the bot will retry. Call Tony if trading doesn't start within an hour.",
+      ),
       { strategyId, firmId: warning.firmId, affectedAccountIds: warning.affectedAccountIds },
     );
 

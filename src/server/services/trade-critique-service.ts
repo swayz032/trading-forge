@@ -34,6 +34,7 @@ import {
 import { callOpenAI, getFallback, loadSystemPrompt } from "./model-router.js";
 import { OllamaClient } from "./ollama-client.js";
 import { notifyWarning } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { logger } from "../lib/logger.js";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -594,10 +595,14 @@ async function _runCritiqueInternal(
       if (strikes >= STRIKE_THRESHOLD) {
         notifyWarning(
           "Trade Critique — 3 Consecutive Failures",
-          `The trade critique service has failed ${strikes} times in a row. ` +
-          `Last failed position: ${positionId}. ` +
-          `Check OPENAI_API_KEY, Ollama connectivity, and model availability. ` +
-          `Trading Forge continues to operate normally — critique is observability-only.`,
+          appendFamilyGradePostscript(
+            `The trade critique service has failed ${strikes} times in a row. ` +
+            `Last failed position: ${positionId}. ` +
+            `Check OPENAI_API_KEY, Ollama connectivity, and model availability. ` +
+            `Trading Forge continues to operate normally — critique is observability-only.`,
+            "The bot had trouble analyzing a recent trade.",
+            "No action needed — the bot will continue trading normally.",
+          ),
           {
             positionId,
             strikes,

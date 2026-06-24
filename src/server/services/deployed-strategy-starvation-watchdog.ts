@@ -34,6 +34,7 @@ import { auditLog } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { notifyCritical, notifyWarning } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 // 5 RTH days ≈ 5 calendar days of M-F trading hours.
@@ -266,7 +267,11 @@ async function checkStrategy(strategy: {
 
       notifyCritical(
         `Signal pipeline broken on strategy ${strategyName}`,
-        `Strategy ${strategyName} (${lifecycleState}) has had ZERO A+ signal evaluations in the last ${LOOKBACK_CALENDAR_DAYS} calendar days. Feature pipeline may be broken — paper session may not be running or signal service not wired to this strategy.`,
+        appendFamilyGradePostscript(
+          `Strategy ${strategyName} (${lifecycleState}) has had ZERO A+ signal evaluations in the last ${LOOKBACK_CALENDAR_DAYS} calendar days. Feature pipeline may be broken — paper session may not be running or signal service not wired to this strategy.`,
+          "A deployed trading strategy hasn't received any signals in several days — the pipeline may be stuck.",
+          "No action needed — the bot detected a stall. Call Tony if trading doesn't resume within an hour.",
+        ),
         { job: "deployed-strategy-starvation-check", ...payload },
       );
 
@@ -313,7 +318,11 @@ async function checkStrategy(strategy: {
 
       notifyWarning(
         `Signal starvation warning on strategy ${strategyName}`,
-        `Strategy ${strategyName} (${lifecycleState}) has ${signalEvalCount} signal evaluations but ZERO entries in the last ${LOOKBACK_CALENDAR_DAYS} days. W25.1 score threshold may be too tight.`,
+        appendFamilyGradePostscript(
+          `Strategy ${strategyName} (${lifecycleState}) has ${signalEvalCount} signal evaluations but ZERO entries in the last ${LOOKBACK_CALENDAR_DAYS} days. W25.1 score threshold may be too tight.`,
+          "A trading strategy is reviewing market conditions but not finding any trades to take.",
+          "No action needed — this may resolve itself. Call Tony if no trades happen for several days.",
+        ),
         { job: "deployed-strategy-starvation-check", ...payload },
       );
 

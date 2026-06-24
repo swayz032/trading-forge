@@ -39,6 +39,7 @@ import { sql } from "drizzle-orm";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { logger } from "../lib/logger.js";
 import { notifyCritical } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 /** Caller-supplied function that performs the underlying partial update. */
 export type PartialUpdateFn = (
@@ -392,7 +393,11 @@ export class N8nWorkflowDeployer {
     });
     notifyCritical(
       "n8n webhook auto-re-register FAILED",
-      `Workflow ${opts.workflowId} webhook "${opts.path}" did not come back online after force-cycle. Operator must manually toggle Active OFF/ON in n8n UI. Reason: ${opts.reason}`,
+      appendFamilyGradePostscript(
+        `Workflow ${opts.workflowId} webhook "${opts.path}" did not come back online after force-cycle. Operator must manually toggle Active OFF/ON in n8n UI. Reason: ${opts.reason}`,
+        "The bot's workflow automation failed to deploy.",
+        "No action needed — the bot will retry. Call Tony if automation stays broken for more than an hour.",
+      ),
       {
         correlationId: opts.correlationId,
         workflowId: opts.workflowId,

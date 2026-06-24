@@ -38,10 +38,15 @@ import { db } from "../db/index.js";
 import {
   paperTrades,
   paperSessions,
+  paperSignalLogs,
   strategies,
   tradingviewMarkers,
   productionTrades,
   auditLog,
+  lifecycleShadowSignals,
+  backtests,
+  quantumMcRuns,
+  brokerAccounts,
 } from "../db/schema.js";
 import {
   eq,
@@ -50,9 +55,10 @@ import {
   lt,
   and,
   inArray,
+  isNull,
 } from "drizzle-orm";
 import { logger } from "../lib/logger.js";
-import { notifyCritical } from "../services/notification-service.js";
+import { notifyCritical, notifyWarning } from "../services/notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 // ─── Config (no magic numbers) ────────────────────────────────────────────────
@@ -77,6 +83,17 @@ export const PAPER_RECON_CONFIG = {
   BAR_WINDOW_MINUTES: Number(process.env["PAPER_RECON_BAR_WINDOW_MINUTES"] ?? 5),
   /** Lifecycle states considered "DEPLOYED+" (active paper journal is canonical). */
   DEPLOYED_PLUS_STATES: ["PAPER", "DEPLOY_READY", "PILOT", "DEPLOYED"],
+  /**
+   * Shadow-signal recon: delta > 5% across ≥20 signals = intercept is silently dropping.
+   * These mirror SHADOW_DIVERGENCE_THRESHOLD_PCT / SHADOW_DIVERGENCE_MIN_SAMPLE but are
+   * read-only diagnostics — the recon never blocks signal flow.
+   */
+  SHADOW_SIGNAL_DELTA_THRESHOLD_PCT: Number(
+    process.env["PAPER_RECON_SHADOW_SIGNAL_DELTA_THRESHOLD_PCT"] ?? 0.05
+  ),
+  SHADOW_SIGNAL_MIN_SAMPLE: Number(
+    process.env["PAPER_RECON_SHADOW_SIGNAL_MIN_SAMPLE"] ?? 20
+  ),
 } as const;
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -105,6 +122,37 @@ export interface PaperJournalReconResult {
   strategiesWithMissingBrokerData: number;
   results: PaperReconStrategyResult[];
   hasDrift: boolean;
+  /** M10 sub-check summary counts */
+  shadowSignalSubcheck: ShadowSignalReconResult;
+  quantumReplaySubcheck: QuantumReplayReconResult;
+  abRoutingSubcheck: AbRoutingReconResult;
+}
+
+// ─── M10 sub-check result types ───────────────────────────────────────────────
+
+export interface ShadowSignalReconResult {
+  /** Was the check run? False only when sample below MIN_SAMPLE threshold. */
+  checked: boolean;
+  shadowStrategiesChecked: number;
+  totalShadowSignals: number;
+  totalSignalLogs: number;
+  deltaPct: number | null;
+  deltaExceedsThreshold: boolean;
+  belowMinSample: boolean;
+}
+
+export interface QuantumReplayReconResult {
+  /** Was the check run? False when QUANTUM_REPLAY_AUTO_FIRE_ENABLED is off/unset. */
+  checked: boolean;
+  skipped: boolean;
+  orphanBacktestIds: string[];
+  orphanCount: number;
+}
+
+export interface AbRoutingReconResult {
+  checked: boolean;
+  orphanStrategyIds: string[];
+  orphanCount: number;
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -132,6 +180,445 @@ function reconDayBoundaries(reconDate: Date): { dayStart: Date; dayEnd: Date } {
   );
   const dayEnd = new Date(dayStart.getTime() + 86_400_000);
   return { dayStart, dayEnd };
+}
+
+// ─── M10 Sub-check: Shadow-signal recon ──────────────────────────────────────
+
+/**
+ * Sub-check 1: Shadow-signal recon.
+ *
+ * For SHADOW-state strategies on the recon day, compare:
+ *   - Count of lifecycle_shadow_signals rows (what the interceptor recorded)
+ *   - Count of paper_signal_logs rows for the same sessions (what should have fired)
+ *
+ * Delta > SHADOW_SIGNAL_DELTA_THRESHOLD_PCT across ≥ SHADOW_SIGNAL_MIN_SAMPLE signals
+ * means the shadow intercept is silently dropping signals.
+ */
+async function runShadowSignalRecon(
+  dayStart: Date,
+  dayEnd: Date,
+  reconDateStr: string,
+  correlationId: string
+): Promise<ShadowSignalReconResult> {
+  const empty: ShadowSignalReconResult = {
+    checked: false,
+    shadowStrategiesChecked: 0,
+    totalShadowSignals: 0,
+    totalSignalLogs: 0,
+    deltaPct: null,
+    deltaExceedsThreshold: false,
+    belowMinSample: true,
+  };
+
+  try {
+    // Fetch SHADOW-state strategies
+    const shadowStrategies = await db
+      .select({ id: strategies.id })
+      .from(strategies)
+      .where(eq(strategies.lifecycleState, "SHADOW"));
+
+    if (shadowStrategies.length === 0) {
+      await writeAuditRow({
+        action: "paper_recon.shadow_signal_recon",
+        status: "success",
+        correlationId,
+        payload: { reconDate: reconDateStr, reason: "no_shadow_strategies" },
+      });
+      return { ...empty, checked: true, belowMinSample: false };
+    }
+
+    const shadowStrategyIds = shadowStrategies.map((s) => s.id);
+
+    // Count lifecycle_shadow_signals for the day
+    const shadowRows = await db
+      .select({ cnt: sql<string>`count(*)` })
+      .from(lifecycleShadowSignals)
+      .where(
+        and(
+          inArray(lifecycleShadowSignals.strategyId, shadowStrategyIds),
+          gte(lifecycleShadowSignals.signalTs, dayStart),
+          lt(lifecycleShadowSignals.signalTs, dayEnd)
+        )
+      );
+    const totalShadowSignals = Number(shadowRows[0]?.cnt ?? 0);
+
+    // Count paper_signal_logs for the same sessions (via SHADOW strategy sessions)
+    const sessionRows = await db
+      .select({ id: paperSessions.id })
+      .from(paperSessions)
+      .where(inArray(paperSessions.strategyId, shadowStrategyIds));
+
+    let totalSignalLogs = 0;
+    if (sessionRows.length > 0) {
+      const sessionIds = sessionRows.map((s) => s.id);
+      const signalLogRows = await db
+        .select({ cnt: sql<string>`count(*)` })
+        .from(paperSignalLogs)
+        .where(
+          and(
+            inArray(paperSignalLogs.sessionId, sessionIds),
+            gte(paperSignalLogs.createdAt, dayStart),
+            lt(paperSignalLogs.createdAt, dayEnd)
+          )
+        );
+      totalSignalLogs = Number(signalLogRows[0]?.cnt ?? 0);
+    }
+
+    const totalSample = Math.max(totalShadowSignals, totalSignalLogs);
+
+    if (totalSample < PAPER_RECON_CONFIG.SHADOW_SIGNAL_MIN_SAMPLE) {
+      await writeAuditRow({
+        action: "paper_recon.shadow_signal_recon",
+        status: "success",
+        correlationId,
+        payload: {
+          reconDate: reconDateStr,
+          reason: "below_min_sample",
+          totalShadowSignals,
+          totalSignalLogs,
+          minSample: PAPER_RECON_CONFIG.SHADOW_SIGNAL_MIN_SAMPLE,
+        },
+      });
+      return {
+        checked: true,
+        shadowStrategiesChecked: shadowStrategies.length,
+        totalShadowSignals,
+        totalSignalLogs,
+        deltaPct: null,
+        deltaExceedsThreshold: false,
+        belowMinSample: true,
+      };
+    }
+
+    // Compute delta
+    const deltaPct = totalSignalLogs === 0
+      ? 0
+      : Math.abs(totalShadowSignals - totalSignalLogs) / totalSignalLogs;
+
+    const deltaExceedsThreshold = deltaPct > PAPER_RECON_CONFIG.SHADOW_SIGNAL_DELTA_THRESHOLD_PCT;
+
+    if (deltaExceedsThreshold) {
+      logger.warn(
+        { reconDate: reconDateStr, deltaPct, totalShadowSignals, totalSignalLogs },
+        "paper-journal-recon: shadow-signal delta exceeds threshold"
+      );
+      await writeAuditRow({
+        action: "paper_recon.shadow_signal_delta_detected",
+        status: "warning",
+        correlationId,
+        payload: {
+          reconDate: reconDateStr,
+          deltaPct,
+          totalShadowSignals,
+          totalSignalLogs,
+          threshold: PAPER_RECON_CONFIG.SHADOW_SIGNAL_DELTA_THRESHOLD_PCT,
+          shadowStrategiesChecked: shadowStrategies.length,
+        },
+      });
+
+      // Discord WARN — non-critical but requires investigation
+      const body = appendFamilyGradePostscript(
+        `Shadow-signal intercept delta of ${(deltaPct * 100).toFixed(1)}% detected on ${reconDateStr}. ` +
+        `Expected ${totalSignalLogs} signal_log rows but intercepted only ${totalShadowSignals} shadow rows. ` +
+        `The SHADOW intercept may be silently dropping signals — verify paper-signal-service.ts shadow path. ` +
+        `Review audit_log action=paper_recon.shadow_signal_delta_detected.`,
+        "The bot is running in a test mode and may have missed some trade signals today.",
+        "No action needed — tell the operator (Tonio) to check the bot logs."
+      );
+      notifyWarning(
+        `[PAPER RECON] Shadow-signal delta ${(deltaPct * 100).toFixed(1)}% on ${reconDateStr}`,
+        body,
+        { reconDate: reconDateStr, deltaPct, totalShadowSignals, totalSignalLogs }
+      );
+    } else {
+      // Delta within threshold — silent info audit
+      await writeAuditRow({
+        action: "paper_recon.shadow_signal_recon",
+        status: "success",
+        correlationId,
+        payload: {
+          reconDate: reconDateStr,
+          deltaPct,
+          totalShadowSignals,
+          totalSignalLogs,
+          shadowStrategiesChecked: shadowStrategies.length,
+        },
+      });
+    }
+
+    return {
+      checked: true,
+      shadowStrategiesChecked: shadowStrategies.length,
+      totalShadowSignals,
+      totalSignalLogs,
+      deltaPct,
+      deltaExceedsThreshold,
+      belowMinSample: false,
+    };
+  } catch (err) {
+    logger.warn({ err, reconDate: reconDateStr }, "paper-journal-recon: shadow-signal sub-check failed");
+    return empty;
+  }
+}
+
+// ─── M10 Sub-check: Quantum-replay orphan recon ────────────────────────────────
+
+/**
+ * Sub-check 2: Quantum-replay orphan recon.
+ *
+ * When QUANTUM_REPLAY_AUTO_FIRE_ENABLED=true, every completed backtest in the last 24h
+ * should have a matching quantum_mc_runs row with governanceLabels->>'replay_mode'='true'.
+ * Orphan backtests = auto-fire failed silently.
+ *
+ * Skipped entirely when QUANTUM_REPLAY_AUTO_FIRE_ENABLED is false or unset.
+ */
+async function runQuantumReplayOrphanRecon(
+  reconDateStr: string,
+  correlationId: string
+): Promise<QuantumReplayReconResult> {
+  const autoFireEnabled =
+    (process.env["QUANTUM_REPLAY_AUTO_FIRE_ENABLED"] ?? "true") === "true";
+
+  if (!autoFireEnabled) {
+    await writeAuditRow({
+      action: "paper_recon.quantum_replay_check_disabled",
+      status: "success",
+      correlationId,
+      payload: { reconDate: reconDateStr, reason: "QUANTUM_REPLAY_AUTO_FIRE_ENABLED=false" },
+    });
+    return { checked: false, skipped: true, orphanBacktestIds: [], orphanCount: 0 };
+  }
+
+  try {
+    // Find completed backtests in the last 24 hours
+    const cutoff = new Date(Date.now() - 86_400_000);
+
+    const recentCompleted = await db
+      .select({ id: backtests.id })
+      .from(backtests)
+      .where(
+        and(
+          eq(backtests.status, "completed"),
+          gte(backtests.createdAt, cutoff)
+        )
+      );
+
+    if (recentCompleted.length === 0) {
+      await writeAuditRow({
+        action: "paper_recon.quantum_replay_check_disabled",
+        status: "success",
+        correlationId,
+        payload: { reconDate: reconDateStr, reason: "no_completed_backtests_in_24h" },
+      });
+      return { checked: true, skipped: false, orphanBacktestIds: [], orphanCount: 0 };
+    }
+
+    const completedIds = recentCompleted.map((b) => b.id);
+
+    // Find which of those have a matching quantum_mc_runs replay row
+    const replayRows = await db
+      .select({ backtestId: quantumMcRuns.backtestId })
+      .from(quantumMcRuns)
+      .where(
+        and(
+          inArray(quantumMcRuns.backtestId, completedIds),
+          // governanceLabels->>'replay_mode' = 'true'
+          sql`${quantumMcRuns.governanceLabels}->>'replay_mode' = 'true'`
+        )
+      );
+
+    const replayedIds = new Set(replayRows.map((r) => r.backtestId));
+    const orphanBacktestIds = completedIds.filter((id) => !replayedIds.has(id));
+    const orphanCount = orphanBacktestIds.length;
+
+    if (orphanCount > 0) {
+      logger.warn(
+        { reconDate: reconDateStr, orphanCount, orphanBacktestIds },
+        "paper-journal-recon: quantum-replay orphan backtests detected"
+      );
+      await writeAuditRow({
+        action: "paper_recon.quantum_replay_orphans_detected",
+        status: "warning",
+        correlationId,
+        payload: {
+          reconDate: reconDateStr,
+          orphanCount,
+          orphanBacktestIds,
+          totalCompletedIn24h: recentCompleted.length,
+        },
+      });
+    } else {
+      await writeAuditRow({
+        action: "paper_recon.quantum_replay_check_clean",
+        status: "success",
+        correlationId,
+        payload: {
+          reconDate: reconDateStr,
+          totalCompletedIn24h: recentCompleted.length,
+          allHaveReplayRows: true,
+        },
+      });
+    }
+
+    return { checked: true, skipped: false, orphanBacktestIds, orphanCount };
+  } catch (err) {
+    logger.warn({ err, reconDate: reconDateStr }, "paper-journal-recon: quantum-replay sub-check failed");
+    return { checked: false, skipped: false, orphanBacktestIds: [], orphanCount: 0 };
+  }
+}
+
+// ─── M10 Sub-check: A/B account session recon ─────────────────────────────────
+
+/**
+ * Sub-check 3: A/B account session recon.
+ *
+ * For each strategy with paper_account_routing IN ('slumdawg-baseline','slumdawg-rl-challenger'),
+ * verify:
+ *   1. The corresponding broker_accounts.account_id_external row EXISTS.
+ *   2. There's an active (no closed_at) paper_sessions row for it.
+ *
+ * Missing broker_account OR no active session = the A/B Friday digest will be vacuous.
+ */
+async function runAbRoutingRecon(
+  reconDateStr: string,
+  correlationId: string
+): Promise<AbRoutingReconResult> {
+  const AB_ROUTING_VALUES = ["slumdawg-baseline", "slumdawg-rl-challenger"];
+
+  try {
+    // Fetch A/B routed strategies
+    const abStrategies = await db
+      .select({ id: strategies.id, paperAccountRouting: strategies.paperAccountRouting })
+      .from(strategies)
+      .where(inArray(strategies.paperAccountRouting, AB_ROUTING_VALUES));
+
+    if (abStrategies.length === 0) {
+      await writeAuditRow({
+        action: "paper_recon.ab_routing_recon",
+        status: "success",
+        correlationId,
+        payload: { reconDate: reconDateStr, reason: "no_ab_routed_strategies" },
+      });
+      return { checked: true, orphanStrategyIds: [], orphanCount: 0 };
+    }
+
+    const orphanStrategyIds: string[] = [];
+
+    for (const strat of abStrategies) {
+      // 1. Check broker_accounts: needs a row with account_id_external matching the routing value
+      const brokerRows = await db
+        .select({ accountId: brokerAccounts.accountId })
+        .from(brokerAccounts)
+        .where(eq(brokerAccounts.accountIdExternal, strat.paperAccountRouting));
+
+      if (brokerRows.length === 0) {
+        logger.warn(
+          { strategyId: strat.id, paperAccountRouting: strat.paperAccountRouting },
+          "paper-journal-recon: A/B routing orphan — missing broker_account row"
+        );
+        await writeAuditRow({
+          action: "paper_recon.ab_routing_orphan_detected",
+          status: "warning",
+          correlationId,
+          payload: {
+            reconDate: reconDateStr,
+            strategyId: strat.id,
+            paperAccountRouting: strat.paperAccountRouting,
+            reason: "missing_broker_account_row",
+          },
+        });
+        orphanStrategyIds.push(strat.id);
+        continue;
+      }
+
+      // 2. Check active paper_sessions (no closed_at = still open)
+      const activeSessions = await db
+        .select({ id: paperSessions.id })
+        .from(paperSessions)
+        .where(
+          and(
+            eq(paperSessions.strategyId, strat.id),
+            isNull(paperSessions.closedAt)
+          )
+        );
+
+      if (activeSessions.length === 0) {
+        logger.warn(
+          { strategyId: strat.id, paperAccountRouting: strat.paperAccountRouting },
+          "paper-journal-recon: A/B routing orphan — no active paper_sessions row"
+        );
+        await writeAuditRow({
+          action: "paper_recon.ab_routing_orphan_detected",
+          status: "warning",
+          correlationId,
+          payload: {
+            reconDate: reconDateStr,
+            strategyId: strat.id,
+            paperAccountRouting: strat.paperAccountRouting,
+            reason: "no_active_session",
+          },
+        });
+        orphanStrategyIds.push(strat.id);
+      }
+    }
+
+    if (orphanStrategyIds.length === 0) {
+      await writeAuditRow({
+        action: "paper_recon.ab_routing_recon",
+        status: "success",
+        correlationId,
+        payload: {
+          reconDate: reconDateStr,
+          abStrategiesChecked: abStrategies.length,
+          orphanCount: 0,
+        },
+      });
+    }
+
+    return {
+      checked: true,
+      orphanStrategyIds,
+      orphanCount: orphanStrategyIds.length,
+    };
+  } catch (err) {
+    logger.warn({ err, reconDate: reconDateStr }, "paper-journal-recon: A/B routing sub-check failed");
+    return { checked: false, orphanStrategyIds: [], orphanCount: 0 };
+  }
+}
+
+// ─── Sub-check empty-result builder ──────────────────────────────────────────
+
+/**
+ * Returns empty/zero sub-check results for early-exit paths
+ * (strategy fetch error, no DEPLOYED+ strategies).
+ */
+function buildEmptySubchecks(): {
+  shadowSignalSubcheck: ShadowSignalReconResult;
+  quantumReplaySubcheck: QuantumReplayReconResult;
+  abRoutingSubcheck: AbRoutingReconResult;
+} {
+  return {
+    shadowSignalSubcheck: {
+      checked: false,
+      shadowStrategiesChecked: 0,
+      totalShadowSignals: 0,
+      totalSignalLogs: 0,
+      deltaPct: null,
+      deltaExceedsThreshold: false,
+      belowMinSample: true,
+    },
+    quantumReplaySubcheck: {
+      checked: false,
+      skipped: false,
+      orphanBacktestIds: [],
+      orphanCount: 0,
+    },
+    abRoutingSubcheck: {
+      checked: false,
+      orphanStrategyIds: [],
+      orphanCount: 0,
+    },
+  };
 }
 
 // ─── Core recon logic ─────────────────────────────────────────────────────────
@@ -184,6 +671,7 @@ export async function runPaperJournalRecon(
       strategyId: "unknown",
       error: err instanceof Error ? err.message : String(err),
     }]);
+    const emptySubchecks = buildEmptySubchecks();
     return {
       reconDate: reconDateStr,
       ranAt: new Date(),
@@ -193,6 +681,7 @@ export async function runPaperJournalRecon(
       strategiesWithMissingBrokerData: 0,
       results: [],
       hasDrift: true,
+      ...emptySubchecks,
     };
   }
 
@@ -212,6 +701,7 @@ export async function runPaperJournalRecon(
         summary: "no_deployed_strategies",
       },
     });
+    const emptySubchecks = buildEmptySubchecks();
     return {
       reconDate: reconDateStr,
       ranAt: new Date(),
@@ -221,6 +711,7 @@ export async function runPaperJournalRecon(
       strategiesWithMissingBrokerData: 0,
       results: [],
       hasDrift: false,
+      ...emptySubchecks,
     };
   }
 
@@ -231,6 +722,14 @@ export async function runPaperJournalRecon(
     const stratResult = await evaluateStrategy(strategy, dayStart, dayEnd, reconDateStr);
     results.push(stratResult);
   }
+
+  // ── M10 sub-checks (run in parallel after the per-strategy evaluation) ───────
+  const [shadowSignalSubcheck, quantumReplaySubcheck, abRoutingSubcheck] =
+    await Promise.all([
+      runShadowSignalRecon(dayStart, dayEnd, reconDateStr, correlationId),
+      runQuantumReplayOrphanRecon(reconDateStr, correlationId),
+      runAbRoutingRecon(reconDateStr, correlationId),
+    ]);
 
   // ── Aggregate ─────────────────────────────────────────────────────────────
   const strategiesWithMismatch = results.filter(
@@ -281,7 +780,7 @@ export async function runPaperJournalRecon(
     }
   }
 
-  // Always write the top-level evaluated row
+  // Always write the top-level evaluated row (includes all 4 sub-check summaries)
   await writeAuditRow({
     action: "paper_reconciliation.evaluated",
     status: hasDrift ? "failure" : "success",
@@ -292,6 +791,28 @@ export async function runPaperJournalRecon(
       strategiesWithMismatch,
       strategiesWithMissingBrokerData,
       hasDrift,
+      subcheck_summary: {
+        paper_journal: {
+          strategiesEvaluated: deployedStrategies.length,
+          strategiesWithMismatch,
+          hasDrift,
+        },
+        shadow_signal: {
+          checked: shadowSignalSubcheck.checked,
+          deltaExceedsThreshold: shadowSignalSubcheck.deltaExceedsThreshold,
+          deltaPct: shadowSignalSubcheck.deltaPct,
+          belowMinSample: shadowSignalSubcheck.belowMinSample,
+        },
+        quantum_replay: {
+          checked: quantumReplaySubcheck.checked,
+          skipped: quantumReplaySubcheck.skipped,
+          orphanCount: quantumReplaySubcheck.orphanCount,
+        },
+        ab_routing: {
+          checked: abRoutingSubcheck.checked,
+          orphanCount: abRoutingSubcheck.orphanCount,
+        },
+      },
     },
   });
 
@@ -301,6 +822,9 @@ export async function runPaperJournalRecon(
       strategiesEvaluated: deployedStrategies.length,
       strategiesWithMismatch,
       hasDrift,
+      shadowSignalDelta: shadowSignalSubcheck.deltaPct,
+      quantumReplayOrphans: quantumReplaySubcheck.orphanCount,
+      abRoutingOrphans: abRoutingSubcheck.orphanCount,
     },
     "paper-journal-recon: complete"
   );
@@ -314,6 +838,9 @@ export async function runPaperJournalRecon(
     strategiesWithMissingBrokerData,
     results,
     hasDrift,
+    shadowSignalSubcheck,
+    quantumReplaySubcheck,
+    abRoutingSubcheck,
   };
 }
 

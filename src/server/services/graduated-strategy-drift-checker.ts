@@ -17,6 +17,7 @@ import { strategies, strategyPendingBuckets } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { auditGraduatedConfig } from "./graduated-strategy-auditor.js";
 import { notifyCritical } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 
 export interface DriftSummary {
@@ -96,7 +97,11 @@ export async function runGraduatedStrategyDriftCheck(): Promise<DriftSummary> {
       try {
         notifyCritical(
           `Graduated strategy drift: ${summary.defectiveStrategies.length} defects`,
-          `Backtest-pipeline integrity at risk. Layer 1/2 graduator + pre-backtest gates SHOULD have caught these — drift indicates manual SQL edits, migrations, or a regression in graduator/overlay.\n\nTop 5:\n${summaryLines}${more}\n\nRun \`npx tsx scripts/deep-scan-graduated-strategies.ts\` for full report.`,
+          appendFamilyGradePostscript(
+            `Backtest-pipeline integrity at risk. Layer 1/2 graduator + pre-backtest gates SHOULD have caught these — drift indicates manual SQL edits, migrations, or a regression in graduator/overlay.\n\nTop 5:\n${summaryLines}${more}\n\nRun \`npx tsx scripts/deep-scan-graduated-strategies.ts\` for full report.`,
+            "A trading strategy's behavior drifted significantly from its backtest.",
+            "No action needed — the bot paused the strategy automatically. Call Tony to review.",
+          ),
           {
             totalScanned: summary.totalScanned,
             defectiveCount: summary.defectiveStrategies.length,

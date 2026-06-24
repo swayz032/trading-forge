@@ -23,6 +23,7 @@ import { strategies, paperTrades, paperSessions, backtests } from "../db/schema.
 import { logger } from "../lib/logger.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { notifyCritical } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { killSwitch } from "../production/kill-switch.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -245,9 +246,13 @@ async function checkStrategyDrift(
   // ── 7. Discord CRITICAL ───────────────────────────────────────────────────
   notifyCritical(
     `Weekly Drift HALT: ${strategyName}`,
-    `Strategy "${strategyName}" (${strategyId}) exceeded 2σ weekly drift threshold.\n` +
-      `Z-score: ${zScore.toFixed(3)} | Observed 7d mean: $${observedMean.toFixed(2)} | Baseline mean: $${baselineMean.toFixed(2)}\n` +
-      `Production mode set to HALT. Review drift and reset via POST /api/production/halt with operator credentials.`,
+    appendFamilyGradePostscript(
+      `Strategy "${strategyName}" (${strategyId}) exceeded 2σ weekly drift threshold.\n` +
+        `Z-score: ${zScore.toFixed(3)} | Observed 7d mean: $${observedMean.toFixed(2)} | Baseline mean: $${baselineMean.toFixed(2)}\n` +
+        `Production mode set to HALT. Review drift and reset via POST /api/production/halt with operator credentials.`,
+      "The bot halted itself because the strategy drifted too far from its baseline.",
+      "No action needed — the bot paused trading to protect your account. Call Tony to review.",
+    ),
     { strategyId, strategyName, zScore, observedMean, baselineMean, correlationId },
   );
 
