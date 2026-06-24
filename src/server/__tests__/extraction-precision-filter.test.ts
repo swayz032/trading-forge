@@ -82,7 +82,8 @@ describe("E-PRECISION — denominator hygiene on real cached extractions", () =>
 
 // Full-gate grade mirrors scripts/fast-grade.ts (coverage pass + compilable + non-generic name)
 // but in the clean vitest harness (no server boot). Prints a scoreboard for the operator.
-function fullGrade(vid: string): { skip: true } | { skip: false; pass: boolean; line: string } {
+interface GradeRow { skip: false; coveragePass: boolean; compilable: boolean; nonGeneric: boolean; missing: string[]; line: string; }
+function fullGrade(vid: string): { skip: true } | GradeRow {
   const r = loadCache(vid);
   if (!r) return { skip: true };
   const items = Array.isArray(r._coverage_speaker_items) ? r._coverage_speaker_items : null;
@@ -97,6 +98,10 @@ function fullGrade(vid: string): { skip: true } | { skip: false; pass: boolean; 
       entry_indicator: (idea0.entry_indicator as string) ?? null,
       archetype: (idea0.entry_archetype as string) ?? null,
       entry_params: (idea0.entry_params as Record<string, unknown>) ?? null,
+      entry_condition: (idea0.entry_condition as string) ?? null,
+      // NB: no resolved_entry_indicator here (pure test — no DB to run deriveEntryIndicator). The
+      // gate's raw-field fallback classifies a concept-echo name as non-structural, matching what
+      // production's parametric/uncatalogued resolution concludes for these cached extractions.
       direction: (idea0.direction as string) ?? null,
       timeframe: (idea0.timeframe as string) ?? null,
       confluence_factors,
@@ -105,35 +110,49 @@ function fullGrade(vid: string): { skip: true } | { skip: false; pass: boolean; 
     (idea0.concept_name as string) ?? null,
   );
   const name = (idea0.concept_name as string) ?? "(none)";
-  const generic = !name || /^extracted(_strategy)?$/i.test(name);
-  const pass = verdict.verdict === "pass" && gate.compilable && !generic;
+  const nonGeneric = !(!name || /^extracted(_strategy)?$/i.test(name));
+  const coveragePass = verdict.verdict === "pass";
+  const fullPass = coveragePass && gate.compilable && nonGeneric;
   return {
     skip: false,
-    pass,
-    line: `${pass ? "PASS" : "FAIL"} ${vid} cov=${verdict.verdict}/${Math.round(verdict.coverage_pct * 100)}% compilable=${gate.compilable} name=${name}${pass ? "" : " [" + (gate.missing.join(",") || verdict.verdict) + "]"}`,
+    coveragePass,
+    compilable: gate.compilable,
+    nonGeneric,
+    missing: gate.missing,
+    line: `${fullPass ? "PASS" : "FAIL"} ${vid} cov=${verdict.verdict}/${Math.round(verdict.coverage_pct * 100)}% compilable=${gate.compilable} name=${name}${fullPass ? "" : " [" + (gate.missing.join(",") || verdict.verdict) + "]"}`,
   };
 }
 
 describe("E-PRECISION — full-gate scoreboard (real caches)", () => {
-  it("prints scoreboard + asserts rf_ FULLY passes under real enumerated grading", () => {
+  // 2026-06-24 Layer 2 (separate metrics): COVERAGE (did we capture the concepts?) and
+  // COMPILABILITY (does the extraction carry an executable trigger?) are DISTINCT. The
+  // blind-reconstruction audit showed these cached extractions reach high coverage while their
+  // entry_params are empty + entry_indicator is a concept-echo → no deterministic trigger.
+  // This test now asserts the SEPARATED truth instead of conflating them into one "pass".
+  it("prints scoreboard + asserts coverage and compilability are measured SEPARATELY", () => {
     const vids = ["rf_EQvubKlk", "FqxEKDxemtI", "75DJN5UVQnw", "ktkqq7QsN9Q", "gddYspvW0_w", "SY2jXlW9bt4"];
     const lines: string[] = [];
     let anyGraded = false;
-    const passByVid: Record<string, boolean> = {};
+    const rows: Record<string, GradeRow> = {};
     for (const v of vids) {
       const g = fullGrade(v);
       if (g.skip) { lines.push(`SKIP ${v} (cache predates speaker_items)`); continue; }
       anyGraded = true;
       lines.push(g.line);
-      passByVid[v] = g.pass;
+      rows[v] = g;
     }
     // eslint-disable-next-line no-console
-    console.log("\n=== FULL-GATE SCOREBOARD ===\n" + lines.join("\n") + "\n");
-    if (!anyGraded) return; // nothing to assert if no fresh caches
-    // rf_ is a genuinely-complete extraction (100% enumerated coverage) — it must FULLY pass.
-    // Fqx is NO LONGER asserted to pass: under real enumerated grading it's ~75% (missing band
-    // components), correctly coverage_failed. The scoreboard line documents its true state.
-    if ("rf_EQvubKlk" in passByVid) expect(passByVid["rf_EQvubKlk"]).toBe(true);
+    console.log("\n=== COVERAGE vs COMPILABILITY SCOREBOARD ===\n" + lines.join("\n") + "\n");
+    if (!anyGraded) return;
+    // rf_ COVERAGE remains intact (the named-concept capture is genuinely complete)...
+    if ("rf_EQvubKlk" in rows) expect(rows["rf_EQvubKlk"].coveragePass).toBe(true);
+    // ...but COMPILABILITY is now correctly gated: an extraction whose entry_params are empty and
+    // whose entry_indicator is a concept-echo (resolves to no structural archetype) does NOT carry
+    // a deterministic trigger → not compilable. This is the Layer 1 shipping-integrity fix: high
+    // coverage no longer implies a shippable, executable strategy.
+    if ("rf_EQvubKlk" in rows && rows["rf_EQvubKlk"].missing.includes("null_entry_trigger")) {
+      expect(rows["rf_EQvubKlk"].compilable).toBe(false);
+    }
   });
 });
 

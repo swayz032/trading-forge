@@ -12,6 +12,7 @@ import { recoverConfluences } from "../lib/confluence-recovery.js";
 import { runRecallPass } from "../lib/transcript-extractor-recall.js";
 import { runCoverageRepairLoop } from "../lib/extraction-coverage-repair.js";
 import { checkCompilabilityGate } from "../lib/extraction-quality-gate.js";
+import { deriveEntryIndicator } from "../services/direct-bucket-graduator.js";
 import { runRobustnessTest } from "../services/robustness-service.js";
 import { db } from "../db/index.js";
 // Wave hardening 2026-06-22: agentJobs is the mutable job-state table.
@@ -2114,6 +2115,8 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       const entryIndicator = typeof idea.entry_indicator === "string" ? idea.entry_indicator : null;
       const archetype = typeof idea.archetype === "string" ? idea.archetype : null;
       const entryParams = idea.entry_params && typeof idea.entry_params === "object" ? (idea.entry_params as Record<string, unknown>) : null;
+      const entryCondition = typeof idea.entry_condition === "string" ? idea.entry_condition : null;
+      const entryType = typeof idea.entry_type === "string" ? idea.entry_type : null;
       const direction = typeof idea.direction === "string" ? idea.direction : null;
       const ideaTimeframe = typeof idea.timeframe === "string" ? idea.timeframe : null;
       const confluenceFactors = Array.isArray(idea.confluences)
@@ -2123,11 +2126,20 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       // Only apply coverage_verdict from W3.1 to the FIRST idea (it was computed against ideas[0]).
       const coverageForIdea = ideaIdx === 0 ? coverageVerdictResult : null;
 
+      // 2026-06-24 Layer 1: resolve the entry_indicator through the SAME router the graduator
+      // uses, so the gate's "does this carry a real trigger?" decision is resolution-aware.
+      // "archetype:<key>" → structural (params optional); "uncatalogued:<...>" → needs-structure;
+      // bare engine indicator (macd_crossover, …) → parametric (needs params).
+      const resolvedEntryIndicator = deriveEntryIndicator(conceptName, null, entryIndicator);
+
       const gateResult = checkCompilabilityGate(
         {
           entry_indicator: entryIndicator,
           archetype,
           entry_params: entryParams,
+          entry_condition: entryCondition,
+          entry_type: entryType,
+          resolved_entry_indicator: resolvedEntryIndicator,
           direction,
           timeframe: ideaTimeframe,
           confluence_factors: confluenceFactors,

@@ -24,6 +24,7 @@
  * graduated_bucket source — those guards exist for OPENCLAW/OLLAMA-generated
  * candidates that need post-extraction LLM enrichment.
  */
+import { RAW_ARCHETYPES_RESPECTED as RAW_ARCHETYPES_RESPECTED_CANONICAL } from "../lib/archetype-registry-keys.js";
 import { db } from "../db/index.js";
 import { strategies, strategyPendingBuckets, auditLog, deadLetterQueue } from "../db/schema.js";
 import { eq, sql } from "drizzle-orm";
@@ -536,28 +537,10 @@ const ENGINE_INDICATOR_WHITELIST = new Set([
 // 'gemma_archetype_respected'). This prevents the regex chain from
 // overwriting a correct Gemma emission (e.g. 'ict_bias_aligned_continuation')
 // with a false regex match (e.g. 'break_of_structure').
-const RAW_ARCHETYPES_RESPECTED = new Set<string>([
-  // ICT time-window archetypes
-  "ict_silver_bullet_ny_am", "ict_silver_bullet_london", "ict_silver_bullet_ny_pm",
-  "ict_judas_swing", "ict_ny_lunch_reversal", "ict_midnight_open", "ict_london_raid",
-  "ict_turtle_soup", "ict_ote", "ict_power_of_3", "ict_unicorn", "ict_breaker",
-  "ict_mitigation", "ict_iofed", "smt_reversal", "ict_quarterly_swing",
-  "ict_propulsion", "ict_eqhl_raid", "ict_scalp", "ict_swing", "ict_2022",
-  // Structural primitives
-  "break_of_structure", "change_of_character", "market_structure_shift", "cisd",
-  "fvg_retrace", "order_block", "liquidity_sweep",
-  // W23G.3 short-form aliases
-  "fvg", "judas_swing", "silver_bullet", "breaker_block",
-  // Wyckoff
-  "wyckoff_spring", "wyckoff_upthrust", "wyckoff_accumulation", "wyckoff_distribution",
-  // Wave 26 Pass G archetypes
-  "bounce_off_level", "ict_bias_aligned_continuation",
-  // Sub-layer indicators frequently emitted by ICT-tuned LLMs
-  "liquidity_magnet", "displacement", "htf_bias", "daily_bias",
-  "accumulation", "manipulation", "distribution", "asian_range",
-  "equal_highs", "equal_lows", "false_breakout", "session_open", "reversal",
-  "sma_support", "ema_support", "trendline_bounce", "wick_rejection", "engulfing_rejection",
-]);
+// 2026-06-24 (Layer 1 shipping-integrity): moved to the pure module
+// `src/server/lib/archetype-registry-keys.ts` (single source of truth) so the
+// compilability gate can share the same set without importing this DB-coupled module.
+const RAW_ARCHETYPES_RESPECTED = RAW_ARCHETYPES_RESPECTED_CANONICAL;
 
 export function deriveEntryIndicator(
   conceptName: string,
