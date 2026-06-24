@@ -4,6 +4,52 @@
 
 ---
 
+### Session Log — 2026-06-23 Pass 2 Institutional-Grade Hardening WAVE CLOSE (10 MED + 1 verified-correct + caught REAL TS↔Python drift) — pushed hardening/phase-0 → main
+
+**Mission:** Operator directives "execute make institutional grade" + "push to main". 5 parallel subagents on disjoint file scopes + fast-forward push to main.
+
+**Closed this session:**
+
+| ID | Commit | File | Closure |
+|----|--------|------|---------|
+| M2 | `1984231` | new shadow-divergence-writer.ts + paper-signal-service.ts | SHADOW→PAPER divergence_vs_backtest writer (.returning + .then chain; fire-and-forget preserves TradersPost invariant); fail-OPEN on missing baseline |
+| M3 | bundled into `a11107e` (shared-tree race) | docs/m3-verification.md + pglite test | VERIFIED-CORRECT — lifecycle_state is free TEXT (mig 0077:17-25); 15 pglite vitest sweep all 12 VALID_STATES |
+| M4 | `c5652cf` | new scripts/check-ts-python-firm-rules-version.ts | **NEW CI HARD GATE — caught REAL drift on first run: 7 fields out-of-sync between TS and Python firm-rules.** In prod would have fired monte_carlo.firm_rule_version_mismatch CRITICAL on EVERY MC run forever. Repaired by aligning TS to Python (MFFU Builder per operator's 2026-06-23 choice). |
+| M5 | `3dbdd4e` | pine-export-service.ts | Post-compile assertion now fires on credential-presence; new pine_export.gateway_options_missing audit warn |
+| M6 | `28e2e58` | schema.ts | tradingViewMarkers uniqueIndex added (mirrors mig 0173) |
+| M8 | `9812102` | sse.ts + lifecycle-service.ts | LIFECYCLE_GATE_EVENTS catalog (7 W27.5 constants) + promotion_evidence_incomplete SSE broadcast |
+| M9 | `586f01b` | quantum-replay-runner.ts + backtest-service.ts | parentCorrelationId inheritance in quantum_replay.auto_fire_enqueued audit JSONB |
+| M11 | `e983641` | broker-router.ts | H4 retry-exhaustion (retryAttempt>=2) escalates notifyWarning→notifyCritical with family-grade postscript |
+| M1 | `a11107e` | model-router + scout-watchdog + scheduler (12+ sites) + new check-family-grade-postscript.ts | Family-grade postscripts wrapped + new CI hard gate (4th, scoped) |
+| M12 | `1984231` (combined w/ M2) | paper-execution-service.ts:603 | openPosition() correlationId threaded into isHaltedForProduction({ correlationId }) |
+
+**Push to main:** Fast-forward `0b39cce..0d2d5b0` `hardening/phase-0 → main`. 15 commits shipped (Pass 2 wave + deep-scan WAVE 1 + parallel session's a-plus-auditor + execution-topology docs). NOT a force push — clean ancestor relationship verified before push.
+
+**Tests:** 66 new vitest/pytest GREEN. All regression baselines GREEN. All 3 (now 5) CI hard gates GREEN.
+
+**Institutional-grade lifts:**
+- M4 caught real silent drift on first run (single highest-value finding — new gate earned its keep before being wired into CI)
+- M2 makes SHADOW gate non-vacuous (real divergence persisted)
+- M11 + M1 family-safety surface complete
+- M8 LIFECYCLE_GATE_EVENTS catalog eliminates magic-string drift
+- M9 parentCorrelationId enables single-query backtest→quantum-replay trace
+
+**Shared-tree coordination lesson:** Track 4's M3 verification doc + pglite test got bundled into Track 2's `a11107e` M1 commit due to parallel staging race. Content correctly in HEAD, but commit archeology shows M3 work under M1 subject. `git commit --only <paths>` is NOT atomic with another agent's `git add` happening simultaneously. Future protocol: each subagent should `git stash` unintended adds before `--only` commit, OR work in separate worktrees.
+
+**Carry-forward to Pass 3 (low priority, not capital-safety):**
+- M7 frontend VITE_API_BASE env
+- M10 paper-journal-recon scope expansion (NOW UNBLOCKED by M2)
+- M13 Kasa partial-config guard
+- L1-L4 cosmetic batch
+- Global M1 audit expansion (73 legacy alert sites in admin.ts / lifecycle-service.ts / paper-execution-service.ts / dead-mans-heartbeat-service.ts + ~20 others)
+- M4 CI wire-in (.github/workflows/ci.yml needs check:ts-python-firm-rules-version added)
+- M8 broadcast gaps (FROZEN_POLICY_DRIFT_BLOCKED + COMPLIANCE_DRIFT_BLOCKED + BACKTEST_STALE still audit-only, 3-line follow-up)
+- Operator confirm M4-detected MFFU Builder field set (matches memory project_topstep_mffu_both_eod_drawdown — M4 agent aligned TS to Python under that assumption)
+
+**Cumulative wave state (deep-scan WAVE 1 + Pass 2 WAVE 2):** 23 of 27 prioritized findings CLOSED; 4 Pass 3 candidates remain; 6 operator action items remain (env vars, Kasa hardware, v12 decision, smoke-test fire).
+
+---
+
 ### Session Log — 2026-06-23 Deep-scan production-blocker WAVE CLOSE (12 of 13 findings closed; 1 verified-already-correct)
 
 **Mission:** Operator directive "execute all remaining tasks and carry forward tasks" after the deep-scan parent wrap-up identified 6 BLOCKERs + 7 HIGH + 15 MED + 4 LOW. Close everything actionable in parallel; defer only what collides with other session's in-flight work.
