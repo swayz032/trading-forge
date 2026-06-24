@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { createMassiveFetcher } from "../../data/fetchers/massive.js";
 import { updatePositionPrices, type StyleExitBarContext } from "./paper-execution-service.js";
 import { evaluateSignals, updateStateOnly, ATR } from "./paper-signal-service.js";
@@ -150,8 +151,18 @@ async function buildExitBarContext(bar: Bar): Promise<StyleExitBarContext | unde
 /**
  * Process a single session's price update + signal evaluation.
  * Serialized per-session via sessionLocks to prevent concurrent evaluateSignals.
+ *
+ * H2 fix (2026-06-23): mint a fresh correlationId per bar so every downstream
+ * audit row (confluence score, DLL gate, shadow log, openPosition, exit handler)
+ * is linked by a non-null correlationId. Satisfies §2 90-day reconstruction contract.
+ * Each bar gets a NEW UUID — no carryover between bars — so individual bars are
+ * independently traceable and not conflated in audit queries.
  */
 async function processSessionBar(sessionId: string, bar: Bar) {
+  // Mint a per-bar correlationId at the Massive-WS entry point.
+  // Every downstream call that accepts a correlationId receives this value.
+  const correlationId = randomUUID();
+
   const priceMap = { [bar.symbol]: bar.close };
 
   // Build exit bar context for Track 3 Style C/adaptive runner trail dispatch.
@@ -162,13 +173,13 @@ async function processSessionBar(sessionId: string, bar: Bar) {
   try {
     await updatePositionPrices(sessionId, priceMap, exitBarContext);
   } catch (err) {
-    logger.error({ err, sessionId, symbol: bar.symbol }, "Failed to update position prices");
+    logger.error({ err, sessionId, symbol: bar.symbol, correlationId }, "Failed to update position prices");
   }
 
   try {
-    await evaluateSignals(sessionId, bar.symbol, bar, getBarBuffer(bar.symbol));
+    await evaluateSignals(sessionId, bar.symbol, bar, getBarBuffer(bar.symbol), { correlationId });
   } catch (err) {
-    logger.error({ err, sessionId, symbol: bar.symbol }, "Failed to evaluate signals");
+    logger.error({ err, sessionId, symbol: bar.symbol, correlationId }, "Failed to evaluate signals");
   }
 }
 
