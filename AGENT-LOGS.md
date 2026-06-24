@@ -3,6 +3,27 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-24 (cont. 3) Layer 2 benchmark integrity — separate metrics + deterministic placeability scorer + reason histogram
+
+**Mission:** Operationalize the blind-reconstruction finding as a repeatable benchmark (operator Layer 2): measure Coverage / Placeability / Compilability / Fidelity SEPARATELY, with a failure-reason histogram that scopes Layer 3.
+
+**Work completed (commit `01a14cd`, on main):**
+- **Gate reason enums** (operator recommendation): split generic `null_entry_trigger` into precise codes — `uncatalogued_indicator` (resolves to uncatalogued:*), `params_required` (parametric indicator, empty params), `no_trigger` (nothing resolves). Feeds the histogram.
+- **NEW `src/server/lib/placeability-score.ts`** — deterministic, repeatable placeability metric. Operator weights: Trigger 30 (DOMINATES + hard-fail) · Stop 20 · Direction 15 · Setup 15 · Entry-method 10 · Session 10. Structured verdict {placeable, placeability_score, failure_reasons[], missing_fields[], direction_label}; trigger classification mirrors the compilability gate so the two metrics never disagree.
+- **NEW `placeability-suite.test.ts`** — runs the scorer across all 14 caches (real deriveEntryIndicator resolution under vitest) → scoreboard + failure-reason + direction histograms; repeatable regression suite.
+
+**FAILURE-REASON HISTOGRAM across 14 (the Layer 3 roadmap):**
+  14 × DIRECTION_AMBIGUOUS — every extraction is direction:both (the "all strategies are both" assumption → needs the 5-direction model)
+  14 × SESSION_MISSING — session_filter NEVER extracted (universal; iU8/W7nln graders proved the videos DID teach NY/UTC sessions → extraction-gap)
+   7 × PARAMS_REQUIRED — parametric indicators (macd/bollinger/vwap) with empty params
+   2 × UNCATALOGUED_INDICATOR — SY2, W7nln (need archetype building)
+Deterministic placeability = 5/14 (field-completeness only). CAVEAT: deterministic over-scores — the LLM grader is stricter because it knows a session-anchored strategy is NOT placeable without its session; true semantic placeability is lower than 5.
+
+**Verification:** tsc 0; extraction+gate+archetype+placeability tests 101/101; 3 CI hard gates GREEN. Committed `01a14cd`, pushed, main fast-forwarded `01b090e..01a14cd`.
+
+**Carry-forward:** Layer 2 deterministic suite DONE. Optional next: full LLM blind-reconstruction sweep across all 14 (I have 4: gdd=source-vague, SY2/iU8/W7nln=extraction-gap) to classify SOURCE_VAGUE vs EXTRACTION_GAP per video — but the dominant signal (session + direction = universal extraction-side gaps) is already clear. THEN Layer 3 extraction improvement in priority order: (1) session extraction (NY/London/UTC/ORB → session_filter), (2) directional parity (5-direction model; capture taught shorts; drop "all-both"), (3) structured trigger params for the 7 parametric + 2 uncatalogued. ONLY after Layer 3 → unseen-URL generalization.
+
+---
 ### Session Log — 2026-06-24 (cont. 2) BLIND-RECONSTRUCTION test refutes placeability; Layer 1 compilability null-trigger hole CLOSED
 
 **Mission:** Operator challenged the "bar met" conclusion — a coverage score (or my own audit) doesn't prove a trader can place the trade from the extraction alone. Run the stronger test (blind reconstruction), then fix what it exposes, highest-integrity-first.
