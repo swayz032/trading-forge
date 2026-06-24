@@ -11006,6 +11006,28 @@ Caller-side correlationId threading into `isHaltedForProduction(opts)` is explic
 
 ---
 
+### Session Log — 2026-06-23 M2 + M12 shadow divergence writer + correlationId plumbing
+
+**Mission:** Close the `divergence_vs_backtest` write gap (column existed but was never populated) and thread `correlationId` into the missed `isHaltedForProduction()` call site in `openPosition()`.
+
+**Work completed:**
+- Created `src/server/lib/shadow-divergence-writer.ts` — loads backtest `expected_signals` baseline, loads last 20 shadow signals, runs `compareShadowToBacktest()` pure fn, UPDATEs `lifecycle_shadow_signals.divergence_vs_backtest`. Fail-OPEN on missing baseline (writes NULL). Emits `lifecycle.shadow_divergence_computed` (info) or `lifecycle.shadow_divergence_baseline_missing` (warn) audit rows.
+- Modified `src/server/services/paper-signal-service.ts` — shadow INSERT changed from fire-and-forget to `.returning({ id: lifecycleShadowSignals.id }).then(([row]) => { writeShadowDivergence(...).catch(...) }).catch(...)`. Shadow invariant preserved (TradersPost never contacted regardless of divergence outcome).
+- Modified `src/server/services/paper-execution-service.ts` — `openPosition()` ~line 603: `killSwitch.isHaltedForProduction()` → `killSwitch.isHaltedForProduction({ correlationId })`. `correlationId` was already in scope at line 591 from `context?.correlationId ?? randomUUID()`. (`paper-signal-service.ts` H3 site at ~line 2332 was already correct from commit 456b716.)
+- Created `src/server/__tests__/m2-m12-shadow-divergence-and-correlation-plumbing.test.ts` — 16 tests: 6 pure comparator (direction/size/timing/boundary/unmatched/insufficient-samples), 2 contract-shape, 2 PGlite round-trip (UPDATE→SELECT for real value and NULL paths), 6 source-analysis wiring assertions.
+
+**Verification:**
+- 16/16 new tests GREEN; 14/14 regression tests GREEN
+- `check:production-isolation` EXIT 0; `check:2026-compliance` EXIT 0
+- `system-map:check` EXIT 1 — pre-existing drift (1 scheduler job mismatch confirmed pre-existing via `git stash` test)
+- Committed `1984231` with `--only` explicit paths; pushed to `origin hardening/phase-0`
+
+**Known-facts updates:** None.
+
+**Carry-forward for next session:** M2/M12 CLOSED. No carry-forward from this track.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### `git add <paths>` + `git commit` is UNSAFE on the shared index — use `git commit -- <paths>` (pinned 2026-06-23)
