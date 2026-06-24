@@ -226,11 +226,29 @@ Return ONLY valid JSON:
  * recovered steps + confluences (unverified — mergeRepairResult does the quote check).
  * @throws never — returns empty arrays on any failure.
  */
+// Experiment B' (2026-06-23): per-call focus cap. B (cap 6→10) confirmed the cap hypothesis (SY2
+// 76→86 pass) but cramming 10 targets into ONE gemma call DILUTED per-target attention on heavy
+// videos (iU8 83→78, missing 1→5) — the allocation pressure that was ABSENT at the base-extraction
+// level (refuted for Rule 6) is REAL at the repair-call level. Fix: keep the cap-10 REACH but batch
+// each gemma call to ≤RECALL_BATCH focused targets and UNION the results, so no single call loses
+// focus. Reclaims iU8 without giving back SY2's gain.
+const RECALL_BATCH = Number(process.env.COVERAGE_REPAIR_CALL_BATCH) || 6;
+
 export async function runCoverageTargetedRecall(
   transcript: string,
   targets: SpeakerItem[],
 ): Promise<{ steps: RecoveredStep[]; confluences: RecoveredConfluence[] }> {
   if (targets.length === 0) return { steps: [], confluences: [] };
+  if (targets.length > RECALL_BATCH) {
+    // Batch into focused ≤RECALL_BATCH-target calls; union results (no per-call dilution).
+    const out: { steps: RecoveredStep[]; confluences: RecoveredConfluence[] } = { steps: [], confluences: [] };
+    for (let i = 0; i < targets.length; i += RECALL_BATCH) {
+      const batch = await runCoverageTargetedRecall(transcript, targets.slice(i, i + RECALL_BATCH));
+      out.steps.push(...batch.steps);
+      out.confluences.push(...batch.confluences);
+    }
+    return out;
+  }
   const prompt = buildTargetedRecallPrompt(transcript, targets);
 
   let raw: string | null = null;
