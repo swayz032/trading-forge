@@ -123,7 +123,16 @@ function validateHmacRequest(
   req: Request,
   res: Response,
 ): { ok: true; timestamp: number; reason: string; correlationId: string } | { ok: false } {
-  const correlationId = randomUUID();
+  // Honor an inbound x-correlation-id header so operator-initiated recovery preserves
+  // end-to-end trace continuity; generate a fresh UUID only when absent/empty.
+  const inboundCorrelationId = req.headers["x-correlation-id"];
+  const headerCorrelationId =
+    typeof inboundCorrelationId === "string" && inboundCorrelationId.trim().length > 0
+      ? inboundCorrelationId.trim()
+      : Array.isArray(inboundCorrelationId) && typeof inboundCorrelationId[0] === "string" && inboundCorrelationId[0].trim().length > 0
+        ? inboundCorrelationId[0].trim()
+        : null;
+  const correlationId = headerCorrelationId ?? randomUUID();
   const body = (req.body ?? {}) as { timestamp?: unknown; reason?: unknown };
 
   if (typeof body.timestamp !== "number") {

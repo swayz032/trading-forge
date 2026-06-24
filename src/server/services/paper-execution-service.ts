@@ -193,7 +193,13 @@ interface KillSwitchCacheEntry {
   force_close_pct_used: number;
   cachedAt: number;
 }
-const KILL_SWITCH_CACHE_TTL_MS = 5_000;
+// Capital-decision staleness gate: how OLD a cached kill-switch verdict may be
+// before we re-spawn the Python evaluator. Env-overridable; invalid (NaN / ≤0)
+// falls back to the 5_000 ms default (behavior unchanged unless an operator tunes it).
+const KILL_SWITCH_CACHE_TTL_MS = ((): number => {
+  const v = parseInt(process.env.KILL_SWITCH_CACHE_TTL_MS ?? "5000", 10);
+  return Number.isFinite(v) && v > 0 ? v : 5_000;
+})();
 const killSwitchCache = new Map<string, KillSwitchCacheEntry>();
 
 /** Test/admin hook — clear kill switch cache (force re-evaluation). */
@@ -243,7 +249,13 @@ interface ComplianceCacheEntry {
   rulesetPayload: Record<string, unknown>;
   cachedAt: number;
 }
-const COMPLIANCE_CACHE_TTL_MS = 60_000;
+// Capital-decision staleness gate: how OLD a cached compliance-freshness verdict
+// may be before re-evaluation. Env-overridable; invalid (NaN / ≤0) falls back to
+// the 60_000 ms default (behavior unchanged unless an operator tunes it).
+const COMPLIANCE_CACHE_TTL_MS = ((): number => {
+  const v = parseInt(process.env.COMPLIANCE_CACHE_TTL_MS ?? "60000", 10);
+  return Number.isFinite(v) && v > 0 ? v : 60_000;
+})();
 const complianceCache = new Map<string, ComplianceCacheEntry>();
 
 /** Test/admin hook — clear the in-memory cache (force re-evaluation). */
@@ -290,8 +302,18 @@ interface CalendarFailureTracker {
   windowStart: number;  // epoch ms
   alertFired: boolean;
 }
-const CALENDAR_FAILURE_WINDOW_MS = 10 * 60_000; // 10 minutes
-const CALENDAR_FAILURE_THRESHOLD = 3;
+// Capital-decision staleness gate: rolling window + consecutive-failure count that
+// decide when the calendar guard is declared persistently down. Env-overridable;
+// invalid (NaN / ≤0) falls back to the 10-minute / 3-failure defaults (behavior
+// unchanged unless an operator tunes them).
+const CALENDAR_FAILURE_WINDOW_MS = ((): number => {
+  const v = parseInt(process.env.CALENDAR_FAILURE_WINDOW_MS ?? "600000", 10);
+  return Number.isFinite(v) && v > 0 ? v : 10 * 60_000;
+})();
+const CALENDAR_FAILURE_THRESHOLD = ((): number => {
+  const v = parseInt(process.env.CALENDAR_FAILURE_THRESHOLD ?? "3", 10);
+  return Number.isFinite(v) && v > 0 ? v : 3;
+})();
 const calendarFailureTracker: CalendarFailureTracker = {
   count: 0,
   windowStart: Date.now(),

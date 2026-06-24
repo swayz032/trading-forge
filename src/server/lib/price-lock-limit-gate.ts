@@ -30,8 +30,20 @@ const DEFAULT_LIMIT_PCT: Record<string, number> = {
   SI: 0.07,
 };
 
-/** The proximity band: "within 2% of the limit price" → block. */
-export const PRICE_LOCK_PROXIMITY_PCT = 0.02;
+/**
+ * The proximity band: "within 2% of the limit price" → block (Topstep Prohibited Conduct).
+ * Env-overridable via `PRICE_LOCK_PROXIMITY_PCT`; the value must be a fraction in (0,1).
+ * Invalid input (NaN / ≤0 / ≥1) falls back to the 0.02 default — behavior unchanged
+ * unless an operator sets a valid override.
+ */
+export const PRICE_LOCK_PROXIMITY_PCT = ((): number => {
+  const raw = process.env.PRICE_LOCK_PROXIMITY_PCT;
+  if (raw !== undefined) {
+    const v = Number(raw);
+    if (Number.isFinite(v) && v > 0 && v < 1) return v;
+  }
+  return 0.02;
+})();
 
 function limitPctFor(underlying: string): number {
   const envKey = `PRICE_LOCK_LIMIT_PCT_${underlying}`;
@@ -78,6 +90,10 @@ export function checkPriceLockLimit(
   const limitDown = referenceSettlement * (1 - pct);
 
   // Within 2% (of current price) of the up-limit → too close to the lock.
+  // The `* 1.001` / `* 0.999` factors are a 0.1% float-comparison tolerance: they let a
+  // price sitting AT (or a rounding-hair past) the computed limit still count as "near"
+  // despite floating-point error in `referenceSettlement * (1 ± pct)`, without admitting
+  // prices that are genuinely well beyond the limit. 0.1% is small relative to the 2% band.
   if (limitUp - currentPrice <= currentPrice * PRICE_LOCK_PROXIMITY_PCT && currentPrice <= limitUp * 1.001) {
     return { blocked: true, reason: "near_up_limit", limitUp, limitDown };
   }

@@ -374,6 +374,104 @@ describe("A-5: POST /api/admin/clear-stuck-session", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// M5: admin-recovery honors inbound x-correlation-id header (trace continuity)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("M5: admin-recovery threads inbound x-correlation-id", () => {
+  const OLD_ENV = process.env;
+  const INBOUND_CID = "op-trace-7f3a9c2e-recovery";
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env = { ...OLD_ENV, ADMIN_RESTART_HMAC_SECRET: TEST_SECRET, NODE_ENV: "test" };
+  });
+
+  afterEach(() => {
+    process.env = OLD_ENV;
+  });
+
+  it("clear-kill-switch-cache: echoes inbound correlation_id in body + audit", async () => {
+    const app = await buildRecoveryApp();
+    const timestamp = Math.floor(Date.now() / 1000);
+    const reason = "python_subprocess_stuck";
+    const sig = makeHmacSig(TEST_SECRET, timestamp, reason);
+
+    const { status, body } = await callRecovery(
+      app,
+      "/clear-kill-switch-cache",
+      { timestamp, reason },
+      { "x-restart-signature": sig, "x-correlation-id": INBOUND_CID },
+    );
+
+    expect(status).toBe(200);
+    expect(body.correlationId).toBe(INBOUND_CID);
+    expect(mocks.insertAuditRow).toHaveBeenCalledWith(
+      expect.objectContaining({ correlationId: INBOUND_CID }),
+    );
+  });
+
+  it("clear-stuck-session: echoes inbound correlation_id in body + audit", async () => {
+    const app = await buildRecoveryApp();
+    const timestamp = Math.floor(Date.now() / 1000);
+    const reason = "force_flatten_stuck";
+    const sessionId = "sess-cid-1";
+    const sig = makeHmacSig(TEST_SECRET, timestamp, reason);
+
+    const { status, body } = await callRecovery(
+      app,
+      "/clear-stuck-session",
+      { timestamp, reason, session_id: sessionId },
+      { "x-restart-signature": sig, "x-correlation-id": INBOUND_CID },
+    );
+
+    expect(status).toBe(200);
+    expect(body.correlationId).toBe(INBOUND_CID);
+    expect(mocks.insertAuditRow).toHaveBeenCalledWith(
+      expect.objectContaining({ correlationId: INBOUND_CID }),
+    );
+  });
+
+  it("generates a fresh UUID when x-correlation-id is absent", async () => {
+    const app = await buildRecoveryApp();
+    const timestamp = Math.floor(Date.now() / 1000);
+    const reason = "no_inbound_cid";
+    const sig = makeHmacSig(TEST_SECRET, timestamp, reason);
+
+    const { status, body } = await callRecovery(
+      app,
+      "/clear-kill-switch-cache",
+      { timestamp, reason },
+      { "x-restart-signature": sig },
+    );
+
+    expect(status).toBe(200);
+    // UUID v4 shape — proves we fell back to randomUUID(), not echoed an empty header.
+    expect(body.correlationId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    );
+  });
+
+  it("falls back to a fresh UUID when x-correlation-id is whitespace-only", async () => {
+    const app = await buildRecoveryApp();
+    const timestamp = Math.floor(Date.now() / 1000);
+    const reason = "blank_inbound_cid";
+    const sig = makeHmacSig(TEST_SECRET, timestamp, reason);
+
+    const { status, body } = await callRecovery(
+      app,
+      "/clear-kill-switch-cache",
+      { timestamp, reason },
+      { "x-restart-signature": sig, "x-correlation-id": "   " },
+    );
+
+    expect(status).toBe(200);
+    expect(body.correlationId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    );
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // A-8: Boot-time secret check
 // ─────────────────────────────────────────────────────────────────────────────
 

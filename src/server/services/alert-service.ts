@@ -243,15 +243,23 @@ export const AlertFactory = {
   // Track 7: Prop-firm cookie refresh failed alert.
   // Fires when automated Playwright cookie refresh fails for a firm, meaning session cookies
   // will go stale and the dashboard snapshot / login sequence will break.
+  //
+  // FIX 4 (DEBT-4) 2026-06-24: wrapped with appendFamilyGradePostscript so family members
+  // receive plain-English context (mirrors heartbeat/BW alert pattern). The cookie failure
+  // only affects dashboard snapshots — live trading continues safely — so the family action
+  // is low-urgency (tell Tony, don't panic).
   notifyCookieRefreshFailed: (firmId: string, error: string) =>
     createAlert({
       type: "system",
       severity: "critical",
       title: `Cookie refresh failed: ${firmId}`,
-      message:
+      message: appendFamilyGradePostscript(
         `Automated session cookie refresh for firm "${firmId}" failed. ` +
         `Dashboard snapshots and authenticated actions for this firm will degrade until cookies are renewed. ` +
         `Error: ${error}`,
+        `The bot's connection to the ${firmId} dashboard expired and could not renew automatically.`,
+        `Tell Tony: '${firmId} cookies failed to refresh.' The bot is still trading safely — this only affects dashboard snapshots.`,
+      ),
       metadata: {
         firmId,
         error,

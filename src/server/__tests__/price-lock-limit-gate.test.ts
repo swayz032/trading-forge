@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { checkPriceLockLimit, PRICE_LOCK_PROXIMITY_PCT } from "../lib/price-lock-limit-gate.js";
 
 describe("price-lock-limit-gate (Topstep Prohibited Conduct — within 2% of price limit)", () => {
@@ -41,7 +41,57 @@ describe("price-lock-limit-gate (Topstep Prohibited Conduct — within 2% of pri
     expect(checkPriceLockLimit("ES", 5450, 5000).blocked).toBe(true);
   });
 
-  it("proximity constant is 2%", () => {
+  it("proximity constant default is 2% (no env set)", () => {
     expect(PRICE_LOCK_PROXIMITY_PCT).toBe(0.02);
+  });
+});
+
+describe("price-lock-limit-gate — PRICE_LOCK_PROXIMITY_PCT env override (L2)", () => {
+  const origEnv = { ...process.env };
+  afterEach(() => {
+    process.env = { ...origEnv };
+    vi.resetModules();
+  });
+
+  async function loadConst(): Promise<number> {
+    vi.resetModules();
+    const mod = await import("../lib/price-lock-limit-gate.js");
+    return mod.PRICE_LOCK_PROXIMITY_PCT;
+  }
+
+  it("default is 0.02 when env unset", async () => {
+    delete process.env.PRICE_LOCK_PROXIMITY_PCT;
+    expect(await loadConst()).toBe(0.02);
+  });
+
+  it("honors a valid (0,1) override", async () => {
+    process.env.PRICE_LOCK_PROXIMITY_PCT = "0.03";
+    expect(await loadConst()).toBe(0.03);
+  });
+
+  it("falls back to default on NaN", async () => {
+    process.env.PRICE_LOCK_PROXIMITY_PCT = "not-a-number";
+    expect(await loadConst()).toBe(0.02);
+  });
+
+  it("falls back to default on ≤0", async () => {
+    process.env.PRICE_LOCK_PROXIMITY_PCT = "0";
+    expect(await loadConst()).toBe(0.02);
+    process.env.PRICE_LOCK_PROXIMITY_PCT = "-0.5";
+    expect(await loadConst()).toBe(0.02);
+  });
+
+  it("falls back to default on ≥1 (out of fraction range)", async () => {
+    process.env.PRICE_LOCK_PROXIMITY_PCT = "1.5";
+    expect(await loadConst()).toBe(0.02);
+  });
+
+  it("a wider override actually widens the live block band", async () => {
+    process.env.PRICE_LOCK_PROXIMITY_PCT = "0.05";
+    vi.resetModules();
+    const { checkPriceLockLimit: check } = await import("../lib/price-lock-limit-gate.js");
+    // ES settlement 5000 → up-limit 5350. Price 5180 is 3.3% below 5350:
+    // within the 5% band → blocked (would NOT block at the 2% default).
+    expect(check("ES", 5180, 5000).blocked).toBe(true);
   });
 });

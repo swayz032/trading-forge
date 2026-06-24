@@ -5305,14 +5305,115 @@ except Exception as e:
     });
 
     if (missing.length > 0) {
+      // ─── FIX 2 (DEBT-1) 2026-06-24: auto-recompile missing Pine artifacts ────
+      // When a DEPLOYED strategy is missing its artifact, autonomously attempt to
+      // recompile. Cap: 1 auto-export per strategy per 24h (audit_log count).
+      // On success: audit `pine.artifact_auto_recompiled` + Discord INFO.
+      // On failure: audit `pine.artifact_auto_recompile_failed` + Discord CRITICAL + family postscript.
+      const PINE_RECOMPILE_CAP_PER_24H = 1;
+      const twentyFourHoursAgo2 = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+      const { compilePineExport } = await import("./services/pine-export-service.js");
+
+      for (const strat of missing) {
+        try {
+          // Check 24h cap: count auto-recompile attempts for this strategy today
+          const recentRecompiles = await db
+            .select({ id: auditLog.id })
+            .from(auditLog)
+            .where(
+              and(
+                inArray(auditLog.action, ["pine.artifact_auto_recompiled", "pine.artifact_auto_recompile_failed"]),
+                eq(auditLog.entityId, strat.strategyId),
+                gte(auditLog.createdAt, twentyFourHoursAgo2),
+              ),
+            );
+
+          if (recentRecompiles.length >= PINE_RECOMPILE_CAP_PER_24H) {
+            logger.debug(
+              { strategyId: strat.strategyId, recentCount: recentRecompiles.length, cap: PINE_RECOMPILE_CAP_PER_24H },
+              "FIX-2: deployed-pine-artifact-check: auto-recompile cap reached for this strategy today, skipping",
+            );
+            continue;
+          }
+
+          logger.info(
+            { strategyId: strat.strategyId, strategyName: strat.strategyName, correlationId },
+            "FIX-2: auto-recompiling Pine artifact for DEPLOYED strategy",
+          );
+
+          await compilePineExport(strat.strategyId, undefined, "pine_indicator", null, correlationId);
+
+          await db.insert(auditLog).values({
+            action: "pine.artifact_auto_recompiled",
+            entityType: "strategy",
+            entityId: strat.strategyId,
+            status: "success",
+            decisionAuthority: "scheduler",
+            input: { strategyName: strat.strategyName },
+            result: { note: "Auto-recompiled by deployed-pine-artifact-check cron" },
+            correlationId,
+          }).catch((auditErr: unknown) => {
+            logger.warn({ err: auditErr, strategyId: strat.strategyId }, "FIX-2: pine.artifact_auto_recompiled audit write failed");
+          });
+
+          notifyWarning(
+            `Pine Artifact Auto-Recompiled: ${strat.strategyName}`,
+            `DEPLOYED strategy \`${strat.strategyName}\` was missing its Pine artifact. ` +
+            `Auto-recompile succeeded. TradingView alerting has been restored. (correlationId: ${correlationId})`,
+          );
+
+          logger.info(
+            { strategyId: strat.strategyId, strategyName: strat.strategyName },
+            "FIX-2: Pine artifact auto-recompile succeeded",
+          );
+        } catch (recompileErr) {
+          logger.error(
+            { strategyId: strat.strategyId, strategyName: strat.strategyName, err: recompileErr },
+            "FIX-2: Pine artifact auto-recompile FAILED",
+          );
+
+          await db.insert(auditLog).values({
+            action: "pine.artifact_auto_recompile_failed",
+            entityType: "strategy",
+            entityId: strat.strategyId,
+            status: "failure",
+            decisionAuthority: "scheduler",
+            input: { strategyName: strat.strategyName },
+            result: {
+              error: recompileErr instanceof Error ? recompileErr.message : String(recompileErr),
+              note: "Auto-recompile failed — TradingView alerting degraded",
+            },
+            correlationId,
+          }).catch((auditErr: unknown) => {
+            logger.warn({ err: auditErr, strategyId: strat.strategyId }, "FIX-2: pine.artifact_auto_recompile_failed audit write failed");
+          });
+
+          notifyCritical(
+            `Pine Artifact Auto-Recompile FAILED: ${strat.strategyName}`,
+            appendFamilyGradePostscript(
+              `Auto-recompile of Pine artifact for DEPLOYED strategy \`${strat.strategyName}\` FAILED. ` +
+              `TradingView alerting is degraded — no new signals will be sent until the Pine file is rebuilt. ` +
+              `Error: ${recompileErr instanceof Error ? recompileErr.message : String(recompileErr)}`,
+              `A live strategy's TradingView chart file failed to rebuild automatically.`,
+              `Tell Tony: '${strat.strategyName} Pine artifact failed to recompile.' ` +
+              `The bot is still running safely, but TradingView will not get new signals until Tony fixes this.`,
+            ),
+            { strategyId: strat.strategyId, strategyName: strat.strategyName },
+          );
+        }
+      }
+      // ─── End FIX 2 ────────────────────────────────────────────
+
+      // Original warn for operator log/dashboard visibility (kept after auto-recompile attempts)
       const names = missing.map((m) => `\`${m.strategyName}\``).join(", ");
       notifyWarning(
         `Pine Artifacts Missing: ${missing.length} DEPLOYED strategy/strategies lack TradingView artifact`,
         appendFamilyGradePostscript(
           `${missing.length} DEPLOYED strategy/strategies missing Pine artifacts (>24h old): ` +
-          `${names}. Re-run Pine compile to restore TradingView alerting.`,
-          "One or more live strategies are missing their TradingView chart files (>24 hours old).",
-          "Go to the strategy library and re-trigger Pine compile for the listed strategies.",
+          `${names}. Auto-recompile attempted (see audit log for results).`,
+          "One or more live strategies were missing their TradingView chart files — auto-rebuild was attempted.",
+          "Check the Trading Forge dashboard or ask Tony if TradingView signals are working.",
         ),
       );
     }
@@ -6390,6 +6491,170 @@ async function detectStalePaperSessions(): Promise<void> {
   const correlationId = randomUUID();
   const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
   const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+
+  // ─── FIX 1 (DEBT-2) 2026-06-24: auto-restart failed_to_stream sessions ────
+  // Sessions in `failed_to_stream` are terminal today — stream died at startup,
+  // Discord WARN fired, and nothing fixed them. For vacation / family-distribution
+  // mode we need autonomous recovery. Pattern mirrors heartbeat N-strikes auto-restart:
+  //   - Count `paper.session_auto_restarted` rows in last 24h via audit_log
+  //   - Cap at PAPER_STREAM_RESTART_CAP_PER_24H (3)
+  //   - On cap hit: Discord CRITICAL + family-grade postscript + audit `paper.session_auto_restart_exhausted`
+  const PAPER_STREAM_RESTART_CAP_PER_24H = 3;
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  const failedToStreamSessions = await db
+    .select({
+      id: paperSessions.id,
+      strategyId: paperSessions.strategyId,
+      startedAt: paperSessions.startedAt,
+      startingCapital: paperSessions.startingCapital,
+      config: paperSessions.config,
+      mode: paperSessions.mode,
+      firmId: paperSessions.firmId,
+    })
+    .from(paperSessions)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .where(eq(paperSessions.status, "failed_to_stream" as any));
+
+  for (const session of failedToStreamSessions) {
+    try {
+      // Count how many times we've already attempted for this session in the last 24h
+      const recentRestarts = await db
+        .select({ id: auditLog.id })
+        .from(auditLog)
+        .where(
+          and(
+            eq(auditLog.action, "paper.session_auto_restarted"),
+            eq(auditLog.entityId, session.id),
+            gte(auditLog.createdAt, twentyFourHoursAgo),
+          ),
+        );
+
+      const restartCount = recentRestarts.length;
+
+      if (restartCount >= PAPER_STREAM_RESTART_CAP_PER_24H) {
+        // Cap hit — check if we already wrote the exhaustion audit today
+        const exhaustedToday = await db
+          .select({ id: auditLog.id })
+          .from(auditLog)
+          .where(
+            and(
+              eq(auditLog.action, "paper.session_auto_restart_exhausted"),
+              eq(auditLog.entityId, session.id),
+              gte(auditLog.createdAt, twentyFourHoursAgo),
+            ),
+          );
+
+        if (exhaustedToday.length === 0) {
+          // First time hitting the cap today — fire CRITICAL + write exhaustion audit
+          await db.insert(auditLog).values({
+            action: "paper.session_auto_restart_exhausted",
+            entityType: "paper_session",
+            entityId: session.id,
+            status: "failure",
+            decisionAuthority: "scheduler",
+            input: {
+              strategyId: session.strategyId,
+              restart_count: restartCount,
+              cap: PAPER_STREAM_RESTART_CAP_PER_24H,
+            },
+            result: { note: "Auto-restart cap hit — operator intervention required" },
+            correlationId,
+          }).catch((auditErr: unknown) => {
+            logger.warn({ err: auditErr, sessionId: session.id }, "paper.session_auto_restart_exhausted: audit write failed");
+          });
+
+          notifyCritical(
+            `Paper session stream keeps crashing: session ${session.id.slice(0, 8)}`,
+            appendFamilyGradePostscript(
+              `Paper session \`${session.id.slice(0, 8)}\` (strategy ${session.strategyId?.slice(0, 8) ?? "unknown"}) ` +
+              `has failed to restart ${restartCount} times in the last 24h. Manual intervention required. ` +
+              `Check MASSIVE_API_KEY and data feed connectivity.`,
+              "The paper trading session keeps crashing and has run out of automatic restart attempts.",
+              "Tell Tony: 'The paper session keeps crashing — tell Tony to check the data connection.' He will restart it when available.",
+            ),
+            { sessionId: session.id, strategyId: session.strategyId, restartCount, cap: PAPER_STREAM_RESTART_CAP_PER_24H },
+          );
+
+          broadcastSSE("paper:auto_restart_exhausted", {
+            sessionId: session.id,
+            strategyId: session.strategyId,
+            restartCount,
+          });
+        }
+        continue;
+      }
+
+      // ─── Attempt restart ────────────────────────────────────────
+      // Resolve strategy symbols (mirrors POST /api/paper/start symbol resolution)
+      const strat = session.strategyId
+        ? await db.select({ symbol: strategies.symbol, config: strategies.config })
+            .from(strategies)
+            .where(eq(strategies.id, session.strategyId))
+            .limit(1)
+        : [];
+
+      const symbols: string[] = [];
+      if (strat[0]?.symbol) symbols.push(strat[0].symbol);
+      const stratConfig = strat[0]?.config as Record<string, unknown> | undefined;
+      if (stratConfig?.symbol && !symbols.includes(String(stratConfig.symbol))) {
+        symbols.push(String(stratConfig.symbol));
+      }
+
+      if (symbols.length === 0) {
+        logger.warn({ sessionId: session.id, strategyId: session.strategyId }, "FIX-1: cannot auto-restart failed_to_stream session — no symbol found");
+        continue;
+      }
+
+      logger.info(
+        { sessionId: session.id, strategyId: session.strategyId, symbols, restartAttempt: restartCount + 1 },
+        "FIX-1: auto-restarting failed_to_stream paper session",
+      );
+
+      // Write the attempt audit BEFORE starting stream (mirrors heartbeat pattern)
+      await db.insert(auditLog).values({
+        action: "paper.session_auto_restarted",
+        entityType: "paper_session",
+        entityId: session.id,
+        status: "pending",
+        decisionAuthority: "scheduler",
+        input: {
+          strategyId: session.strategyId,
+          symbols,
+          restart_attempt: restartCount + 1,
+          cap: PAPER_STREAM_RESTART_CAP_PER_24H,
+        },
+        result: null,
+        correlationId,
+      }).catch((auditErr: unknown) => {
+        logger.warn({ err: auditErr, sessionId: session.id }, "paper.session_auto_restarted: pre-attempt audit write failed");
+      });
+
+      // Reset status to `active` so startStream + paper signal flow can process it
+      await db
+        .update(paperSessions)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .set({ status: "active" as any })
+        .where(eq(paperSessions.id, session.id));
+
+      startStream(session.id, symbols);
+
+      logger.info(
+        { sessionId: session.id, symbols, restartAttempt: restartCount + 1 },
+        "FIX-1: paper session stream restarted successfully",
+      );
+
+      broadcastSSE("paper:auto_restarted", {
+        sessionId: session.id,
+        strategyId: session.strategyId,
+        restartAttempt: restartCount + 1,
+        symbols,
+      });
+    } catch (restartErr) {
+      logger.error({ sessionId: session.id, err: restartErr }, "FIX-1: failed_to_stream auto-restart threw unexpectedly");
+    }
+  }
+  // ─── End FIX 1 ────────────────────────────────────────────────
 
   const activeSessions = await db
     .select({
