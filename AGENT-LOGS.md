@@ -4,6 +4,28 @@
 
 ---
 
+### Session Log — 2026-06-24 M10 + M13 (paper-journal-recon scope expansion + Kasa partial-config guard) — hardening/phase-0
+
+**Mission:** Close M10 (paper-journal-recon 3 new sub-checks) and M13 (triggerRemotePowerCycle fail-CLOSED on partial Kasa env) per reliability-MED batch spec. Explicit-path commits on shared branch.
+
+**Closed this session:**
+
+| ID | Commit | File(s) | Closure |
+|----|--------|---------|---------|
+| M10 | `8dd0cad` | paper-journal-recon.ts + m10-m13-recon-and-kasa-guard.test.ts + system-map JSONs | 3 new sub-checks in Promise.all: shadow-signal delta (>5%/≥20 warns + Discord WARN), quantum-replay orphan (finds completed backtests lacking replay row; skips when QUANTUM_REPLAY_AUTO_FIRE_ENABLED=false), A/B routing (verifies broker_account + active session per AB strategy). PaperJournalReconResult now carries all 3 sub-check payloads. Both early-exit paths spread buildEmptySubchecks(). |
+| M13 | `ef3ba4c` | remote-power-cycle-service.ts | Partial-config guard at top of triggerRemotePowerCycle(): if any-but-not-all of KASA_DEVICE_IP/USERNAME/PASSWORD are set, emits recovery.remote_power_cycle_partial_config critical audit row BEFORE throwing. noneSet path passes through (caller must not invoke when unconfigured). |
+
+**Tests:** 12 new vitest GREEN (6 M10 + 6 M13) in `src/server/__tests__/m10-m13-recon-and-kasa-guard.test.ts`. All 14 existing paper-journal-recon regression tests GREEN. All 24 regressions (paper-journal-recon + pass7-remote-power-cycle) GREEN.
+
+**Commit notes:** Pre-commit hook stash/restore on shared tree reset M13 file during M10 commit. Detected via `git diff` check before M13 commit. Re-applied guard and committed separately. Protocol confirmed: always verify target file still has edits after pre-commit stash/restore on shared branch.
+
+**New audit actions added:** `paper_recon.shadow_signal_delta_detected`, `paper_recon.shadow_signal_recon`, `paper_recon.quantum_replay_orphans_detected`, `paper_recon.quantum_replay_check_disabled`, `paper_recon.quantum_replay_check_clean`, `paper_recon.ab_routing_orphan_detected`, `paper_recon.ab_routing_recon`, `recovery.remote_power_cycle_partial_config`. System map JSON regenerated via `npm run system-map:sync` (included in M10 commit).
+
+**Carry-forwards from this session (none — M10 + M13 both fully closed):**
+- M10 and M13 are removed from the carry-forward list in the previous session log below.
+
+---
+
 ### Session Log — 2026-06-23 Pass 2 Institutional-Grade Hardening WAVE CLOSE (10 MED + 1 verified-correct + caught REAL TS↔Python drift) — pushed hardening/phase-0 → main
 
 **Mission:** Operator directives "execute make institutional grade" + "push to main". 5 parallel subagents on disjoint file scopes + fast-forward push to main.
