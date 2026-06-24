@@ -427,20 +427,39 @@ as a belt-and-suspenders defense layer for any signal that somehow slipped past 
 
 ## §7. Execution Layer
 
-### Current path
+### Execution routing is FIRM-SPECIFIC (corrected 2026-06-23)
+**Topstep does NOT use TradersPost** — Topstep banned Tradovate/NinjaTrader on 2026-01-12 and
+requires **TopstepX**. TradersPost is ONLY for MFFU / other prop firms + TradingView paper testing.
+
 ```
-Strategy fires signal → Pine alert (TradingView) → TradersPost webhook →
-broker login → MFFU/Topstep account
+TOPSTEP (PRIMARY):   TF engine → broker-router → TopstepX REST/WS API → Topstep account
+                     [STUB today — must BUILD when operator opens the account. No TradersPost.]
+
+MFFU / other firms:  TF engine → broker-router → TradersPost webhook → Tradovate (broker) → account
+                     Tradovate = the futures broker on TradersPost (demo for paper, live for funded).
+
+TradingView paper-test: TradingView Pine alert → TradersPost → Tradovate demo (paper account)
 ```
 
-### Future path (when operator opens Topstep account)
-```
-Strategy fires signal → broker-router → TopstepX REST/WebSocket API →
-Topstep account (direct, no TradersPost middleware)
-```
+### ★ The Pine parity wall — full Slumdawg does NOT ride through TradingView Pine
+Pine cannot reproduce Style C / adaptive exits (one `strategy.exit()` only), the 11-factor weighted
+confluence gate, multi-TF gating, ICT/SMT/volume-profile, or the RL challenger. The `exportability.py`
+**`faithful` flag HARD-blocks** any Pine that would misrepresent the strategy (correct behavior).
+So the institutional path for FULL Slumdawg is **TF engine → broker-router → (TopstepX | TradersPost)
+DIRECT** — preserving everything. **TradingView Pine is for (a) the FAMILY's SIMPLE strategies
+(different per member, §9) and (b) a visual monitor**, NOT for executing full Slumdawg. Known parity
+gaps still open: no automated Strategy-Tester-vs-broker P&L reconciliation harness; no Pine-vs-engine
+result-equivalence test; VWAP session-reset divergence (paper TS vs backtest vs Pine).
+
+### Cost split (lean — don't double-pay)
+- **Topstep accounts → TopstepX** ($14.50/mo sub covers Topstep accounts + the TopstepX copier). No TradersPost.
+- **MFFU / other firms → TradersPost + Tradovate.** Operator's own multi-account copy-scaling on TradersPost
+  (Pro $199 = 3 / Premium $299 = 6) is only for MFFU/other-firm accounts; Topstep copy is TopstepX-side.
+- **Family:** each member = own TradersPost Starter ($49, futures = the 1 asset class) + own Tradovate demo→live + own device + a DIFFERENT simple strategy.
 
 ### Broker abstraction layer
-`src/server/services/broker-router.ts` is the SINGLE SOURCE OF TRUTH for order routing. Today: TradersPost path active, TopstepX returns stub.
+`src/server/services/broker-router.ts` is the SINGLE SOURCE OF TRUTH for order routing. Today: TradersPost
+path active (MFFU/other firms), TopstepX returns stub (`topstepx_not_configured`).
 
 ### Per-account broker mapping
 `broker_accounts` table maps each account_id → firm_id + broker_type + Bitwarden vault ref. `instance_config.enabled_firms` controls which firms an instance allows.
