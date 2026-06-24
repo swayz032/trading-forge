@@ -361,6 +361,28 @@ const INDICATOR_ANATOMY_RE =
   /^(the\s+)?histogram$|^(macd\s+)?signal\s+line$|^macd\s+line$|^zero\s+line$|^(upper|lower|middle)\s+bands?$|^basis$|^middle\s+line$|^upper\s+and\s+lower\s+bands?$|^(upper|lower)\s+bands?$/i;
 const MIRROR_PARTNER = new Map<string, string>([["swing high", "swing low"]]);
 
+// 2026-06-24 ENTRY-EDGE AUDIT (manual 14-video reproducibility audit): the residual deficit is
+// now DENOMINATOR NOISE, not extraction gaps (every sub-100% video proved entry-edge-reproducible).
+// Two more general noise classes the enumerator surfaces, neither ever a backtest-critical ENTRY
+// element — folding them cannot hide a real entry edge on unseen videos:
+//   (10) OUTPUT STATISTICS — "average risk reward", "win rate", "profit factor". These are
+//        OUTCOMES, never entry mechanics; framework-overlay AUTHORITATIVELY sets R:R/exits and
+//        CLAUDE.md mandates win-rate is observed-output-not-target. (z3Qn "average risk reward".)
+//   (11) BARE TIMEFRAME LABELS — "1-hour time frame", "15 minute timeframe". The operating TF is
+//        captured in the extraction's `timeframe` field + validated by the direction/TF
+//        post-validator; a bare TF-label speaker_item is metadata. Strict: matches ONLY a pure
+//        timeframe label (no extra mechanic word like "1-hour order block"). (UBvf "1-hour time frame".)
+const OUTPUT_STAT_RE =
+  /^(the\s+|an?\s+)?(average\s+)?(risk[\s-]?reward|risk[\s/:-]?to[\s/:-]?reward|r[\s:/-]?r|win[\s-]?rate|winrate|profit[\s-]?factor|expectancy|average\s+r|avg\s+r)(\s+(ratio|target|rate))?$/i;
+const TIMEFRAME_LABEL_RE =
+  /^(the\s+)?\d+[\s-]?(min(ute)?s?|hour?s?|hr|h|day|daily|week(ly)?|m)\s*(time[\s-]?frames?|tf|chart)?$|^(daily|weekly|monthly|intraday)\s+(time[\s-]?frames?|chart)$/i;
+// Pure umbrella/label tokens stripped from an item NAME before depth-matching so an umbrella name
+// ("candle close to candle open MODEL", "X strategy/system/method") matches its captured mechanic
+// words. Narrower than _GENERIC_TOKEN_RE on purpose — does NOT strip zones/levels/trading (those can
+// be the mechanic). Safe: only removes pure-label filler; the real concept words must still appear.
+// (SY2 "candle close to candle open model" — steps 3/4/8 capture it; "model" was the only obstruction.)
+const UMBRELLA_TOKEN_RE = /\b(model|strategy|strategies|system|method|methodology|approach|framework|theory|concept)\b/gi;
+
 // 2026-06-23 ENUMERATOR PRECISION (miss-category audit): the enumerator was counting NON-mechanic
 // items as speaker_items, inflating the denominator + creating false "misses". Per the operator's
 // mandate ("we don't care WHAT they trade, we care about the strategy"), instrument/symbol names
@@ -412,6 +434,8 @@ function selectDistinctItems(items: SpeakerItem[]): SpeakerItem[] {
     if (AUX_META_RE.test(n)) continue; // (6) aux/meta artifact (watchlist, PDF, sizing tool, flowchart)
     if (GARBLED_NUMERIC_ZONE_RE.test(n)) continue; // (7) garbled numeric-zone enumeration
     if (CANDLE_DESCRIPTOR_RE.test(n)) continue; // (8) generic bullish/bearish candle descriptor
+    if (OUTPUT_STAT_RE.test(n)) continue; // (10) output statistic (R:R / win-rate) — never an entry element
+    if (TIMEFRAME_LABEL_RE.test(n)) continue; // (11) bare timeframe label — metadata, captured in timeframe field
     const norm = normalizeForDedup(n); // (9) near-duplicate fold ("X strategy" ↔ "X", plurals)
     if (norm.length > 0 && keptNorm.has(norm)) continue;
     keptNorm.add(norm);
@@ -445,7 +469,13 @@ export function computeCoverageVerdict(
 
   function classify(item: SpeakerItem): "covered" | "shallow" | "missing" {
     const normName = normalize(item.name);
-    const nameWords = normName.split(" ").filter((w) => w.length >= 4);
+    // Strip pure umbrella/label tokens (model/strategy/system/...) before deriving match words, so an
+    // umbrella-named concept matches its captured mechanic (e.g. "candle close to candle open model"
+    // matches steps that say "candle close" + "candle open"). The mechanic words still must appear.
+    const nameWords = normName
+      .replace(UMBRELLA_TOKEN_RE, " ")
+      .split(" ")
+      .filter((w) => w.length >= 4);
     const nameInUnit = (u: string) =>
       u.includes(normName) || (nameWords.length > 0 && nameWords.every((w) => u.includes(w)));
     const mentioning = units.filter(nameInUnit);
