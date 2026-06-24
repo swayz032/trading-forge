@@ -108,15 +108,23 @@
     .of-card3d {
       position: absolute; top: 50%; left: 50%;
       width: min(660px, 64vw); height: min(420px, 56vh);
-      border-radius: 28px;
-      background: linear-gradient(158deg, rgba(24, 30, 26, 0.985), rgba(9, 12, 10, 0.99));
-      backdrop-filter: blur(8px) saturate(1.1);
-      -webkit-backdrop-filter: blur(8px) saturate(1.1);
-      border: 1px solid rgba(255, 255, 255, 0.10);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 40px 90px rgba(0,0,0,0.62);
-      display: flex; flex-direction: column; padding: 42px 48px;
-      transition: transform 0.55s cubic-bezier(0.2,0.7,0.2,1), opacity 0.45s, box-shadow 0.45s;
+      border-radius: 26px; overflow: hidden;
+      background:
+        radial-gradient(135% 95% at 50% -12%, rgba(163,255,18,0.08), transparent 56%),
+        linear-gradient(158deg, rgba(28, 34, 30, 0.99), rgba(10, 13, 11, 0.995));
+      border: 1px solid rgba(163, 255, 18, 0.20);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.10),
+        inset 0 -40px 80px rgba(0,0,0,0.35),
+        0 36px 80px rgba(0,0,0,0.70),
+        0 0 34px rgba(163,255,18,0.08);
+      display: flex; flex-direction: column; padding: 44px 50px;
+      transition: transform 0.55s cubic-bezier(0.2,0.7,0.2,1), opacity 0.45s, box-shadow 0.45s, border-color 0.45s;
       cursor: pointer; will-change: transform, opacity;
+    }
+    .of-card3d::before {
+      content: ""; position: absolute; top: 0; left: 12%; right: 12%; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(163,255,18,0.55), transparent);
     }
     .of-card-eyebrow { font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); }
     .of-card-title { margin-top: 12px; font-size: 46px; font-weight: 800; color: var(--ink); letter-spacing: 0.004em; line-height: 1.04; }
@@ -128,8 +136,12 @@
     .of-card-slot .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--mute); }
     .of-card3d.is-active {
       transform: translate(-50%, -50%) translateZ(60px) scale(1) rotateY(0deg); opacity: 1; z-index: 5;
-      border-color: rgba(163,255,18,0.5);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 40px 90px rgba(0,0,0,0.62), 0 0 70px rgba(163,255,18,0.16);
+      border-color: rgba(163,255,18,0.6);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.13),
+        inset 0 -40px 90px rgba(0,0,0,0.30),
+        0 44px 100px rgba(0,0,0,0.72),
+        0 0 64px rgba(163,255,18,0.24);
       cursor: default;
     }
     .of-card3d.is-prev { transform: translate(-50%, -50%) translateX(-66%) translateZ(-90px) rotateY(48deg) scale(0.9); opacity: 0.95; z-index: 3; }
