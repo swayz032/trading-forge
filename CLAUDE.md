@@ -957,31 +957,78 @@ Replay protection: timestamp drift > 60s → 401. NSSM respawns automatically to
 - Relay singleton — second client connection force-closes the older one
 - `RELAY_TOKEN` must match between Railway env and tower client env
 
-### Remote power-cycle escape valve (Pass 7 Track B)
+### Power resilience hardware — UPS + Kasa (HARD RULE for any live/PAPER+ operation)
 
-When the dead-man's heartbeat fires 3 auto-restart attempts in 24h and all fail, the
-4th-attempt code path checks `KASA_DEVICE_IP`. If set, it invokes
-`scripts/remote-power-cycle.ps1` (via `remote-power-cycle-service.ts`) to cut power
-to the Skytech tower for 30 seconds and then restore it. NSSM auto-respawns
-TradingForgeAPI on power-up. This is the vacation-mode escape valve that replaces the
-terminal "hold the power button for 5 seconds" alert with an autonomous recovery.
+Trading Forge is hybrid (CLAUDE.md §15a topology diagram): the institutional safety
+stack — kill-switch L1-L9, B14 ci_high gate, compliance enforce, frozen-policy hash,
+paper-journal-recon, audit chain, scheduler crons — all run ON THE TOWER inside
+TradingForgeAPI. **None of these fire when the tower is offline.** A Pine→TradersPost
+family bot would technically keep firing during a tower outage (TradingView + TradersPost
+are cloud-only), but it would do so with zero institutional safety net — exactly the
+retail-shaped failure mode the 4-wave 2026-06-23 hardening sweep eliminated. The Full
+Slumdawg DIRECT path and the TF Gateway archetype path are HARD-DEPENDENT on the tower
+and stop entirely when it goes down.
+
+**Therefore: any operator running live or PAPER+ strategies MUST have both UPS and Kasa
+installed before the first live trade.** This is not optional gear; it's the physical-layer
+prerequisite for the safety contract.
+
+**Topology (mandatory order):**
+```
+WALL OUTLET → KASA SMART PLUG → UPS → TOWER
+```
+Kasa upstream of UPS is critical: it lets `triggerRemotePowerCycle()` actually cut all
+power downstream (including UPS battery) so the tower cold-boots. Reversed order
+(Tower→Kasa→UPS or UPS upstream of Kasa) means the remote-cycle path cannot fully
+de-energize the tower and NSSM may not respawn into fresh code. The UPS smooths grid
+brownouts because Kasa just passes power through normally — UPS only sees Kasa cuts
+during an explicit power-cycle (rare).
+
+**Hardware (~$170-220 total):**
+- **UPS:** CyberPower CP1500AVRLCD or APC BX1500M (~900W output, 10-30 min runtime for
+  a desktop tower). Closes the brief-outage failure mode (open positions exposed to
+  arbitrary fill at re-open after a 5-minute brownout). ~$150-200.
+- **Kasa:** TP-Link HS103 (cheapest) or HS105 (more compact). HS110's energy monitoring
+  is not used. ~$10-20.
+
+**Role separation:**
+| Failure mode | UPS handles | Kasa handles |
+|---|---|---|
+| Brief brownout (<30 min) during RTH | YES (invisible to bot) | no |
+| Bot software hang (tower fine, API frozen) | no | YES (auto-cycles after 3 failed restarts) |
+| Long outage (UPS battery exhausted) | dies gracefully, tower shuts down clean | restores power when grid returns + tower BIOS auto-boots |
+| Tower BIOS lockup / NSSM stuck | no | YES (hard power-cycle) |
 
 **Operator setup (one-time):**
-1. Purchase a TP-Link Kasa HS103, HS105, or HS110 smart plug (~$10-20).
-2. Plug the Skytech tower's power cable into the smart plug.
-3. Connect the smart plug to your home Wi-Fi using the Kasa app.
-4. In your router's DHCP reservation table, assign a **static IP** to the plug's
-   MAC address so the IP never changes.
-5. Set the three env vars below in your tower `.env` and restart the backend.
+1. Purchase UPS + Kasa per the spec above.
+2. Cable: wall outlet → Kasa → UPS → tower (NOT tower → UPS → Kasa).
+3. Connect Kasa to home Wi-Fi via the Kasa app.
+4. Router DHCP reservation: assign a **static IP** to the Kasa's MAC address so the
+   IP never changes across reboots.
+5. **Kasa app config:** Device Settings → "Default Power State" → **On** (foolproof —
+   ensures plug auto-energizes when grid returns after a long outage).
+6. **Tower BIOS/UEFI config:** Power Management → "AC Power Recovery" (or "Restore on
+   AC/Power Loss") → **Power On** (default is "Off" on most boards — without this, the
+   Kasa energizing the tower does nothing because the motherboard won't auto-boot).
+   This is the more important of the two — skip it and the Kasa work is dead.
+7. Set the three env vars below in your tower `.env` and restart the backend.
+8. Verify the boot log says "KASA remote power-cycle escape valve is ACTIVE" before
+   declaring setup complete.
 
-**Required env vars (all three or none):**
+**Required env vars (all three or none — `startup-config-check.ts` enforces, and
+M13 commit `ef3ba4c` 2026-06-23 added a runtime fail-CLOSED guard at
+`triggerRemotePowerCycle()` entry that throws `remote_power_cycle_partial_config` if
+called with partial config):**
 ```
 KASA_DEVICE_IP=192.168.1.42    # IPv4 of the smart plug (static LAN IP)
 KASA_USERNAME=you@example.com  # Kasa cloud account email
 KASA_PASSWORD=yourpassword     # Kasa cloud account password
 ```
 
-**What happens when triggered:**
+**What happens during a remote power-cycle (dead-man's heartbeat + KASA path):**
+When the dead-man's heartbeat fires 3 auto-restart attempts in 24h and all fail, the
+4th-attempt code path checks `KASA_DEVICE_IP`. If set, it invokes
+`scripts/remote-power-cycle.ps1` (via `remote-power-cycle-service.ts`):
 1. `remote-power-cycle-service.ts` writes a `recovery.remote_power_cycle_triggered`
    audit row with `correlationId` before touching the plug.
 2. `scripts/remote-power-cycle.ps1` sends OFF→30s→ON via the local LAN API (port 9999,
@@ -989,14 +1036,31 @@ KASA_PASSWORD=yourpassword     # Kasa cloud account password
 3. Script appends to `C:\Users\tonio\bin\kasa-cycle.log`.
 4. Discord CRITICAL fires with operator-version (full technical + audit ID) AND
    family-grade postscript ("wait 10 minutes, check heartbeat, call Tony if still down").
-5. NSSM auto-restarts TradingForgeAPI once power is restored.
+5. NSSM auto-respawns TradingForgeAPI on power-up.
 
-**Partial config guard:** `startup-config-check.ts` warns at boot if only SOME of the
-three vars are set. Partial config is worse than none — it creates a false impression
-the escape valve is active when it will fail at invocation time.
+**What happens during a grid outage (UPS path):**
+1. Grid drops → Kasa loses power → UPS battery kicks in immediately → tower keeps
+   running.
+2. If grid returns within UPS runtime (~10-30 min): zero downtime; bot doesn't notice.
+3. If grid stays down past UPS runtime: UPS battery exhausts → controlled shutdown of
+   tower (BIOS-managed if "AC Power Recovery" is set, otherwise NSSM crash-loop logs).
+4. When grid returns: Kasa re-energizes (Default Power State = On) → tower BIOS detects
+   AC restored → motherboard auto-boots → Windows boots → NSSM auto-starts
+   TradingForgeAPI → backend back online + scheduler catches up missed crons.
 
-**When KASA vars are absent:** behavior is unchanged. The terminal Discord CRITICAL
-with "hold the power button for 5 seconds" fires as before.
+**When KASA vars are absent:** the dead-man's heartbeat path fires the terminal Discord
+CRITICAL with "hold the power button for 5 seconds" — operator must be physically
+present. This is acceptable for CANDIDATE/TESTING strategies but a HARD violation of
+the vacation-mode contract for PAPER+ strategies.
+
+**When UPS is absent:** any grid blip causes uncontrolled tower shutdown mid-RTH. Open
+positions are exposed to whatever fill the broker gives at re-open. There is no
+software-side mitigation for this — the safety stack we shipped cannot fire when
+electricity stops.
+
+**Family-distribution mandate:** each family member running an independent bot needs
+their own UPS + Kasa on their own tower. Per memory `feedback_family_not_part_of_operator_scaling`,
+family members are not a single-tower-shared operation; each is a standalone deployment.
 
 ---
 
