@@ -144,22 +144,46 @@
     .of-card-slot .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--mute); }
     /* Pass 4: the switch (lime pill toggle) */
     .of-toggle-row { margin-top: 30px; display: flex; align-items: center; gap: 20px; }
+    /* 3D toggle: recessed track + raised spherical knob */
     .of-toggle {
-      position: relative; width: 96px; height: 46px; border-radius: 999px; flex-shrink: 0;
-      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);
-      cursor: pointer; transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
+      position: relative; width: 100px; height: 48px; border-radius: 999px; flex-shrink: 0;
+      background: linear-gradient(#191c19, #0b0d0b);
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.75), inset 0 -1px 0 rgba(255,255,255,0.04);
+      cursor: pointer; transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
     }
     .of-knob {
-      position: absolute; top: 4px; left: 4px; width: 38px; height: 38px; border-radius: 50%;
-      background: radial-gradient(circle at 35% 30%, #8a8a8a, #5a5a5a);
-      transition: transform 0.3s cubic-bezier(0.2,0.7,0.2,1), background 0.25s, box-shadow 0.25s;
+      position: absolute; top: 5px; left: 5px; width: 38px; height: 38px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 28%, #9c9c9c, #565656 68%, #3a3a3a);
+      box-shadow: 0 4px 9px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.5), inset 0 -3px 4px rgba(0,0,0,0.45);
+      transition: transform 0.38s cubic-bezier(0.2,0.8,0.2,1), background 0.3s, box-shadow 0.3s;
     }
-    .of-toggle.on { background: rgba(163,255,18,0.22); border-color: rgba(163,255,18,0.6); box-shadow: 0 0 24px rgba(163,255,18,0.25); }
-    .of-toggle.on .of-knob { transform: translateX(50px); background: radial-gradient(circle at 35% 30%, #d4ff7a, var(--lime)); box-shadow: 0 0 20px var(--lime); }
-    .of-toggle.disabled { opacity: 0.4; cursor: not-allowed; }
-    .of-status { font-family: var(--num-font); font-size: 24px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mute); }
-    .of-status.on  { color: var(--lime); text-shadow: 0 0 16px rgba(163,255,18,0.4); }
-    .of-status.off { color: var(--red); }
+    /* GREEN — running (knob slides right, pulses green) */
+    .of-toggle.on { background: linear-gradient(rgba(163,255,18,0.16), rgba(70,120,8,0.10)); border-color: rgba(163,255,18,0.5); }
+    .of-toggle.on .of-knob {
+      transform: translateX(52px);
+      background: radial-gradient(circle at 35% 28%, #e6ffae, var(--lime) 62%, #7cbf0c);
+      animation: ofPulseGreen 2.2s ease-in-out infinite;
+    }
+    /* RED — safety halt / alert (knob stays left, pulses red) */
+    .of-toggle.alert { background: linear-gradient(rgba(255,80,80,0.16), rgba(130,18,18,0.10)); border-color: rgba(255,99,99,0.5); }
+    .of-toggle.alert .of-knob {
+      background: radial-gradient(circle at 35% 28%, #ffbfbf, #ff5757 62%, #c01e1e);
+      animation: ofPulseRed 1.1s ease-in-out infinite;
+    }
+    .of-toggle.disabled { opacity: 0.45; cursor: not-allowed; }
+    @keyframes ofPulseGreen {
+      0%,100% { box-shadow: 0 4px 9px rgba(0,0,0,0.55), inset 0 1px 1px rgba(255,255,255,0.6), 0 0 16px rgba(163,255,18,0.65); }
+      50%     { box-shadow: 0 4px 9px rgba(0,0,0,0.55), inset 0 1px 1px rgba(255,255,255,0.6), 0 0 32px rgba(163,255,18,1); }
+    }
+    @keyframes ofPulseRed {
+      0%,100% { box-shadow: 0 4px 9px rgba(0,0,0,0.55), inset 0 1px 1px rgba(255,255,255,0.5), 0 0 16px rgba(255,90,90,0.65); }
+      50%     { box-shadow: 0 4px 9px rgba(0,0,0,0.55), inset 0 1px 1px rgba(255,255,255,0.5), 0 0 32px rgba(255,90,90,1); }
+    }
+    .of-status { font-family: var(--num-font); font-size: 24px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); }
+    .of-status.on    { color: var(--lime); text-shadow: 0 0 16px rgba(163,255,18,0.45); }
+    .of-status.alert { color: var(--red); text-shadow: 0 0 16px rgba(255,90,90,0.45); }
+    .of-status.paused { color: var(--dim); }   /* PAUSED = blank/neutral, not red */
     .of-status.on { color: var(--lime); }
     .of-status.off { color: var(--red); }
     .of-card3d.is-active {
@@ -360,10 +384,13 @@
           var tg = el.querySelector('[data-toggle]');
           var st = el.querySelector('[data-status]');
           var bd = el.querySelector('[data-badge]');
-          if (s.on) tg.classList.add('on'); else tg.classList.remove('on');
+          var state = s.state || (s.on ? 'running' : 'paused');  // running=green, alert=red, paused=blank
+          tg.classList.remove('on', 'alert');
+          if (state === 'running') tg.classList.add('on');
+          else if (state === 'alert') tg.classList.add('alert');
           if (s.wired) tg.classList.remove('disabled'); else tg.classList.add('disabled');
           st.textContent = s.status || (s.on ? 'ON' : 'OFF');
-          st.className = 'of-status' + (s.on ? ' on' : (s.wired ? ' off' : ''));
+          st.className = 'of-status ' + (state === 'running' ? 'on' : (state === 'alert' ? 'alert' : 'paused'));
           if (bd) {
             bd.textContent = s.wired ? 'LIVE' : (s.needsSetup ? 'SETUP' : 'SOON');
             bd.className = 'of-card-badge' + (s.wired ? ' on' : '');

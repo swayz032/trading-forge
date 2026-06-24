@@ -177,14 +177,18 @@ adminOfficeRouter.get("/slumhouse/admin/switches", async (req: Request, res: Res
   if (!requireAdminSession(req, res)) return;
   let mode: string | null = null;
   try { mode = await getMode(); } catch { mode = null; }
-  const botOn = mode === "ACTIVE";
+  // 3-state: running (green) / paused (blank/neutral) / alert (red — safety auto-pause)
+  let botState: "running" | "paused" | "alert" = "paused";
+  if (mode === "ACTIVE") botState = "running";
+  else if (mode === "AUTOPAUSE_DD_VELOCITY") botState = "alert";
+  const botStatus = botState === "running" ? "RUNNING" : botState === "alert" ? "AUTO-PAUSED" : "PAUSED";
   res.json({
     switches: {
-      bot_power:      { on: botOn, wired: true,  dangerOff: true,  status: botOn ? "RUNNING" : "PAUSED" },
-      learning_loop:  { on: false, wired: false, status: "COMING SOON" },
-      vacation_mode:  { on: false, wired: false, status: "COMING SOON" },
-      recovery:       { on: false, wired: false, status: "COMING SOON" },
-      live_execution: { on: false, wired: false, needsSetup: true, status: "NEEDS SETUP" },
+      bot_power:      { on: mode === "ACTIVE", state: botState, wired: true, dangerOff: true, status: botStatus },
+      learning_loop:  { on: false, state: "paused", wired: false, status: "COMING SOON" },
+      vacation_mode:  { on: false, state: "paused", wired: false, status: "COMING SOON" },
+      recovery:       { on: false, state: "paused", wired: false, status: "COMING SOON" },
+      live_execution: { on: false, state: "paused", wired: false, needsSetup: true, status: "NEEDS SETUP" },
     },
   });
 });
