@@ -84,8 +84,8 @@ describe("M6 — tradingviewMarkers uniqueIndex in schema.ts", () => {
     expect(colsSym, "drizzle:ExtraConfigColumns symbol must exist on tradingviewMarkers").toBeDefined();
 
     type IndexItem = { config: { name: string; unique: boolean; columns: Array<{ name: string }> } };
-    const builderFn = (tradingviewMarkers as Record<symbol, (cols: unknown) => IndexItem[]>)[builderSym!];
-    const cols      = (tradingviewMarkers as Record<symbol, unknown>)[colsSym!];
+    const builderFn = (tradingviewMarkers as unknown as Record<symbol, (cols: unknown) => IndexItem[]>)[builderSym!];
+    const cols      = (tradingviewMarkers as unknown as Record<symbol, unknown>)[colsSym!];
     const indexDefs = builderFn(cols);
 
     expect(Array.isArray(indexDefs)).toBe(true);
