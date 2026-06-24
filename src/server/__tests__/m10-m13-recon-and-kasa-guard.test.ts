@@ -548,7 +548,7 @@ describe("M13 — triggerRemotePowerCycle partial-config guard", () => {
 
     // The function throws; the audit must be written first.
     // db.insert is called inside the guard before the throw.
-    const { db } = await import("../db/index.js") as { db: { insert: ReturnType<typeof vi.fn> } };
+    const { db } = await import("../db/index.js") as unknown as { db: { insert: ReturnType<typeof vi.fn> } };
 
     let caught = false;
     try {

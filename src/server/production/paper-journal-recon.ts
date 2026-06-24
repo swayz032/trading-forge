@@ -538,7 +538,7 @@ async function runAbRoutingRecon(
         .where(
           and(
             eq(paperSessions.strategyId, strat.id),
-            isNull(paperSessions.closedAt)
+            eq(paperSessions.status, "active")
           )
         );
 
