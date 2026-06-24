@@ -3,6 +3,20 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-24 (cont. 4) Layer 3A — structured session extraction + temporal normalization (SESSION_MISSING 14→2)
+
+**Mission:** Close the #1 universal placeability gap (14/14 SESSION_MISSING). Session is strategy IDENTITY (an ORB without a session anchor is a different strategy) → store STRUCTURED, never plain text (operator mandate).
+
+**Work completed (commit `0e257e1`, on main):**
+- **NEW `src/server/lib/session-filter.ts`** — `SessionFilter` type {region (NY/LONDON/ASIA/UTC) / start / end / timezone / subtype (ORB/KILLZONE/OPEN/CLOSE/RTH/OVERNIGHT/PREMARKET) / constraints / confidence}. `normalizeSessionPhrase()` = Layer 3A.5 temporal normalization (handles "NY open", "9:30", "first 30 min", "London killzone", "8 AM EST", "13:30 UTC"→ET, "overnight high/low"→16:00-09:30, "no lunch"→constraint). `extractSessionFromTranscript()` picks the dominant taught session. `sessionFilterLabel()` = canonical string view for backward-compat. ET-anchored to match the DST-correct killzone.ts model. Confidence field is the Layer-4 forward-hook (explicit clock=0.85+, named window=0.5-0.7).
+- `placeability-score.ts` credits a structured `session_window` (authoritative) or the legacy `session_filter` string.
+- `agent.ts` production wiring: when the LLM leaves session null, recover a structured `session_window` from the transcript + populate `session_filter` with the canonical label (improves the existing string consumers gemma-prose-to-v11 / Pine export / scout-runner that were getting null).
+
+**Verification (deterministic, 14 caches):** SESSION_MISSING **14 → 2** (only rf_/75DJ carry no clear session cue). Histogram now: 14×DIRECTION_AMBIGUOUS, 7×PARAMS_REQUIRED, 2×SESSION_MISSING, 2×UNCATALOGUED_INDICATOR. Placeable count unchanged (5) — session-recovered videos are now blocked by the TRIGGER hard-fail (Layer 3C), proving the layers are independent. tsc 0, 70/70 tests, 3 CI hard gates GREEN. Pushed, main fast-forwarded `e8e3944..0e257e1`.
+
+**Carry-forward:** Layer 3A DONE. NEXT = **Layer 3B directional parity** (14×DIRECTION_AMBIGUOUS — the remaining universal gap): implement the 5-direction model (LONG_ONLY / SHORT_ONLY / BIDIRECTIONAL_EXPLICIT / LONG_WITH_IMPLIED_MIRROR / SHORT_WITH_IMPLIED_MIRROR), do NOT collapse implied-mirror into bidirectional (W7nln lesson), penalize implied differently in fidelity. NOTE 3B likely needs the long/short RULE SETS (harder than session — may need an extractor-prompt change → 5-fixture parity test per CLAUDE.md). THEN Layer 3C trigger extraction (7 parametric param-capture + 2 uncatalogued archetype synthesis). Operator's Layer-4 hint: replace binary field checks with quality-weighted confidence (explicit=1.0 / vice-versa=0.45 / inferred=0.2). THEN unseen-URL generalization. (Optional skipped per operator: the remaining 10 LLM blind sweeps — marginal info low.)
+
+---
 ### Session Log — 2026-06-24 (cont. 3) Layer 2 benchmark integrity — separate metrics + deterministic placeability scorer + reason histogram
 
 **Mission:** Operationalize the blind-reconstruction finding as a repeatable benchmark (operator Layer 2): measure Coverage / Placeability / Compilability / Fidelity SEPARATELY, with a failure-reason histogram that scopes Layer 3.
