@@ -252,6 +252,23 @@ Plus 7 HIGH (Pine placeholder substitution missing, correlation_id null on live 
 
 ---
 
+### Session Log — 2026-06-24 Institutional Hardening Batch 2 — Autonomy Auto-Recovery + Small Fixes (commit cd53822)
+
+**Mission:** "fix whats still open" — close the deep-scan's remaining autonomy + small-correctness findings.
+
+**Fixed (commit cd53822, +72 tests GREEN, typecheck + compliance GREEN):**
+- **DEBT-2 (HIGH)** paper session `failed_to_stream` was terminal → `stale-session-check` cron now auto-restarts (reuse /api/paper/start), cap 3/24h, then Discord CRITICAL + family postscript. `paper.session_auto_restarted`/`_restart_exhausted` + SSE.
+- **DEBT-1 (HIGH)** DEPLOYED strategy missing Pine artifact was WARN-only → `deployed-pine-artifact-check` cron now auto-recompiles (reuse pine-export), cap 1/24h, CRITICAL+family on fail. `pine.artifact_auto_recompiled`/`_failed`.
+- **DEBT-3 (MED)** evidence-gate stall now auto-enqueues a backtest (cap 1/24h, pipeline-pause-aware, INFO). `lifecycle.evidence_auto_backtest_enqueued`.
+- **DEBT-4 (LOW)** `notifyCookieRefreshFailed` wrapped in `appendFamilyGradePostscript`.
+- **M4** env-gated kill-switch/compliance cache-freshness TTLs. **M5** admin-recovery honors inbound `x-correlation-id`. **L2** `PRICE_LOCK_PROXIMITY_PCT` env-gated.
+
+**Dropped (correctly):** MFFU Retail-Sales T1 blackout — NOT in the operator's confirmed MFFU T1 list + Builder is news-unrestricted; nothing to enforce + inventing dates is forbidden.
+
+**Carry-forward:** DEBT-5 tower-relay NSSM supervision = OPERATOR action (verify `sc query` lists a separate relay NSSM service). Prometheus counters for the 3 auto-recovery loops (metrics-wave). Pre-existing '1 unregistered scheduler job' drift = parallel session's (model-router/pattern-aggregator learning-loop work co-resident in the tree). New env vars: KILL_SWITCH_CACHE_TTL_MS(5000), COMPLIANCE_CACHE_TTL_MS(60000), CALENDAR_FAILURE_WINDOW_MS(600000), CALENDAR_FAILURE_THRESHOLD(3), PRICE_LOCK_PROXIMITY_PCT(0.02).
+
+---
+
 ### Session Log — 2026-06-24 Institutional Deep-Scan + Hardening Batch 1 (commit 78b4af0)
 
 **Mission:** Deep-scan the codebase to FIND the next systems not yet institutional-grade (operator: "you havent even deep scan to find the next system"), then fix the verified findings.
