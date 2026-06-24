@@ -37,6 +37,7 @@ import { tradeCritique, systemParameters, auditLog, promptVersions, promptAbTest
 import { callOpenAI, getFallback, loadSystemPrompt, setAppendixCache } from "./model-router.js";
 import { OllamaClient } from "./ollama-client.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { notifyWarning } from "./notification-service.js";
 import { logger } from "../lib/logger.js";
 
@@ -51,6 +52,10 @@ const MIN_SAMPLES_PER_VARIANT = 20;
 // F-6: consecutive-failure tracking (mirrors trade-critique-service.ts pattern)
 const CONSEC_FAIL_KEY = "pattern_aggregator_consecutive_failures";
 const CONSEC_FAIL_THRESHOLD = 3;
+
+// F-7: readiness-nudge dedup window (env LEARNING_LOOP_READY_NUDGE_DAYS, default 7)
+const NUDGE_DEDUP_DAYS = Number(process.env.LEARNING_LOOP_READY_NUDGE_DAYS ?? "7");
+const NUDGE_ACTION = "auto_patch.loop_ready_but_disabled";
 
 // ─── Consecutive-failure tracking (F-6) ──────────────────────────────────────
 
@@ -247,6 +252,18 @@ export async function runPatternAggregator(dryRun: boolean = false): Promise<Pat
         result: { service: "pattern-aggregator", param: KILL_SWITCH_PARAM } as Record<string, unknown>,
         correlationId,
       });
+
+      // F-7: readiness nudge — fire as a side-effect, never a gate.
+      // Count eligible critiques and notify if the loop WOULD aggregate right now
+      // if it were enabled.  Deduped to at most once per NUDGE_DEDUP_DAYS days.
+      // Fail-soft: any error here must never block the halted return.
+      try {
+        const eligible = await _countEligibleCritiques();
+        await _maybeEmitReadinessNudge(eligible);
+      } catch (err) {
+        logger.warn({ err }, "pattern-aggregator: readiness nudge check failed (non-fatal)");
+      }
+
       return { ...empty, status: "halted", durationMs: Date.now() - startTime };
     }
   }
@@ -551,12 +568,141 @@ async function _storeVersionAndABTest(
 }
 
 /**
+ * Count how many eligible trade_critique rows currently exist (same window as
+ * the normal aggregation path: last DEFAULT_WINDOW rows, capped by MIN_CRITIQUES).
+ * Returns the count as a non-negative integer.
+ * Fail-open: returns 0 on any DB error so a bad read never crashes the halt path.
+ */
+async function _countEligibleCritiques(): Promise<number> {
+  try {
+    const rows = await db
+      .select({ id: tradeCritique.id })
+      .from(tradeCritique)
+      .orderBy(desc(tradeCritique.critiquedAt))
+      .limit(DEFAULT_WINDOW);
+    return rows.length;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Check whether a readiness-nudge audit row was written within the dedup window.
+ * Returns true if a recent nudge row exists (within NUDGE_DEDUP_DAYS days).
+ * Fail-open: returns false on any DB error (let the nudge fire so operator isn't silenced).
+ */
+async function _hasRecentNudgeAudit(): Promise<boolean> {
+  try {
+    const cutoff = new Date(Date.now() - NUDGE_DEDUP_DAYS * 24 * 60 * 60 * 1000);
+    const rows = await db
+      .select({ id: auditLog.id })
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.action, NUDGE_ACTION),
+          gte(auditLog.createdAt, cutoff),
+        ),
+      )
+      .limit(1);
+    return rows.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * F-7: Emit the "loop ready but disabled" readiness nudge.
+ *
+ * Fires when the kill switch is DISABLED and the eligible critique count is at
+ * or above MIN_CRITIQUES.  The nudge is:
+ *   - An audit row (status=warning, action=auto_patch.loop_ready_but_disabled)
+ *   - A Discord WARN via notifyWarning + family-grade postscript
+ *
+ * The nudge is DEDUPED: only fires if no row with this action exists in the last
+ * NUDGE_DEDUP_DAYS days (env LEARNING_LOOP_READY_NUDGE_DAYS, default 7).
+ *
+ * INVARIANTS:
+ *   - NEVER auto-enables the loop
+ *   - NEVER mutates any prompt or kill-switch value
+ *   - Fail-soft: any nudge/Discord/dedup error is swallowed (non-fatal)
+ *   - Ordered as a side-effect — never blocks or gates the halted return
+ */
+async function _maybeEmitReadinessNudge(eligibleCritiques: number): Promise<void> {
+  if (eligibleCritiques < MIN_CRITIQUES) {
+    // Not ready yet — dormant path.  No nudge.
+    return;
+  }
+
+  // Dedup: skip if a recent nudge was already sent.
+  let recentExists = false;
+  try {
+    recentExists = await _hasRecentNudgeAudit();
+  } catch {
+    // Fail-open: let it fire if we can't check
+  }
+
+  if (recentExists) {
+    logger.debug(
+      { action: NUDGE_ACTION, dedupDays: NUDGE_DEDUP_DAYS },
+      "pattern-aggregator: readiness nudge deduped — recent nudge exists within window",
+    );
+    return;
+  }
+
+  // ── Write audit row ──────────────────────────────────────────────────────────
+  const nudgePayload = {
+    eligibleCritiques,
+    threshold: MIN_CRITIQUES,
+    paramName: KILL_SWITCH_PARAM,
+    dedupWindowDays: NUDGE_DEDUP_DAYS,
+  };
+  try {
+    await _audit(NUDGE_ACTION, "warning", nudgePayload as unknown as Record<string, unknown>);
+  } catch (err) {
+    // Fail-soft — audit failure never crashes
+    logger.warn({ err }, "pattern-aggregator: readiness nudge audit write failed (non-fatal)");
+  }
+
+  // ── Fire Discord WARN ────────────────────────────────────────────────────────
+  const operatorBody =
+    `Learning loop READY but OFF — ${eligibleCritiques} trade critiques have accumulated ` +
+    `(threshold ${MIN_CRITIQUES}). The bot can start improving its own strategy generator, ` +
+    `but it's currently disabled for safety. ` +
+    `To turn it ON: set system_parameters.auto_patch_loop_enabled = 'true'. ` +
+    `Leaving it OFF is safe — the bot just won't self-improve.`;
+
+  const fullBody = appendFamilyGradePostscript(
+    operatorBody,
+    `The trading bot has enough data to start learning from its own trades (${eligibleCritiques} ` +
+    `critiques collected), but the self-improvement feature is turned off.`,
+    `No action needed unless Tony says so. The bot continues trading normally either way.`,
+  );
+
+  try {
+    notifyWarning(
+      "Learning Loop READY but OFF",
+      fullBody,
+      {
+        eligibleCritiques,
+        threshold: MIN_CRITIQUES,
+        paramName: KILL_SWITCH_PARAM,
+        action: "set_auto_patch_loop_enabled_true_to_enable",
+        service: "pattern_aggregator",
+      },
+    );
+  } catch (err) {
+    // Fail-soft — Discord failure must never crash the cron
+    logger.warn({ err }, "pattern-aggregator: readiness nudge Discord WARN failed (non-fatal)");
+  }
+}
+
+/**
  * Fire-and-forget audit row. Merges payload into result jsonb.
  * Never throws — non-blocking.
  */
 async function _audit(
   action: string,
-  status: "success" | "failure",
+  status: "success" | "failure" | "warning" | "info",
   payload: Record<string, unknown>,
 ): Promise<void> {
   try {

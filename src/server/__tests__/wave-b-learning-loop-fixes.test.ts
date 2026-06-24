@@ -434,3 +434,218 @@ describe("F-5 seed — auto_patch_loop_enabled default is false", () => {
     }
   });
 });
+
+// ─── F-7: Readiness nudge — "ready but off" intersection ──────────────────────
+//
+// When the kill switch is DISABLED (loop off) AND eligible critiques >= threshold,
+// the cron must:
+//   (a) emit audit row "auto_patch.loop_ready_but_disabled" (status warning)
+//   (b) fire Discord WARN via notifyWarning
+//   (c) DEDUP: skip if a recent nudge audit row exists within LEARNING_LOOP_READY_NUDGE_DAYS
+//   (d) NEVER auto-enable the loop, NEVER mutate any prompt or kill-switch value
+//   (e) fail-soft: Discord/dedup errors must not crash the cron
+//
+// DB select sequence for the non-dryRun kill-switch-disabled path + nudge:
+//   [0] kill switch read → disabled  (→ halted audit fires)
+//
+// For the normal-run path (kill switch enabled, enough critiques, no LLM):
+//   [0] kill switch read → enabled
+//   [1] critiques read → ENOUGH_CRITIQUES
+//   dedup check is inline in run after critiques count
+
+describe("F-7 — readiness nudge: disabled + >=threshold → audit + Discord (deduped)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    buildUpdateMock();
+  });
+
+  // Helper: run with kill switch ENABLED, enough critiques, no LLM output
+  // (returns insufficient_samples OR no_change, depending on LLM mock)
+  // but we need to test the nudge which fires BEFORE the LLM call.
+  // The nudge fires in the halted path when the kill switch is DISABLED.
+  // Wait — the spec says nudge fires AFTER counting critiques and reading kill switch.
+  // When kill switch is DISABLED, the service returns "halted" immediately (Step 1).
+  // But the nudge must fire when DISABLED AND critiques >= threshold.
+  // So the nudge check must happen in the kill-switch-disabled branch,
+  // AFTER we query critiques. We need to restructure the flow.
+  //
+  // Correct flow: kill switch read → DISABLED → count critiques → IF >= threshold → NUDGE → return halted
+  // The nudge is a side-effect within the halted path, not blocking it.
+
+  it("F-7-A: disabled + >=threshold + no recent nudge → fires audit row + Discord WARN", async () => {
+    const auditInserts: Record<string, unknown>[] = [];
+
+    // Sequence:
+    //   [0] kill switch → disabled
+    //   [1] critiques → ENOUGH_CRITIQUES (15 >= 10 threshold)
+    //   [2] dedup check for recent nudge → no recent row (empty)
+    buildSelectSequence([
+      [{ currentValue: "false" }],  // kill switch disabled
+      ENOUGH_CRITIQUES,              // critiques >= threshold
+      [],                            // no recent nudge audit row
+    ]);
+
+    (db as any).insert = vi.fn().mockImplementation(() => ({
+      values: vi.fn().mockImplementation((row: Record<string, unknown>) => {
+        auditInserts.push(row);
+        return { returning: vi.fn().mockResolvedValue([{ id: "audit-id" }]) };
+      }),
+    }));
+
+    const result = await runPatternAggregator(false);
+
+    // Still returns halted — the nudge is a side-effect, not a gate change
+    expect(result.status).toBe("halted");
+
+    // Audit row must be written
+    const nudgeAudit = auditInserts.find((r) => r.action === "auto_patch.loop_ready_but_disabled");
+    expect(nudgeAudit).toBeTruthy();
+    const nudgeResult = nudgeAudit!.result as Record<string, unknown>;
+    expect(nudgeResult).toHaveProperty("eligibleCritiques");
+    expect(nudgeResult).toHaveProperty("threshold");
+    expect(nudgeResult).toHaveProperty("paramName");
+    expect((nudgeResult as Record<string, unknown>).paramName).toBe("auto_patch_loop_enabled");
+
+    // Discord WARN must fire
+    expect(vi.mocked(notifyWarning)).toHaveBeenCalledOnce();
+    const [title, body] = vi.mocked(notifyWarning).mock.calls[0];
+    expect(typeof title).toBe("string");
+    expect(title.length).toBeGreaterThan(0);
+    // Body must mention the key to enable
+    expect(body).toContain("auto_patch_loop_enabled");
+  });
+
+  it("F-7-B: disabled + >=threshold + recent nudge within window → SKIP (dedup, no audit, no Discord)", async () => {
+    // Sequence:
+    //   [0] kill switch → disabled
+    //   [1] critiques → ENOUGH_CRITIQUES
+    //   [2] dedup check → recent nudge row EXISTS (within window)
+    buildSelectSequence([
+      [{ currentValue: "false" }],
+      ENOUGH_CRITIQUES,
+      [{ id: "recent-nudge-id" }],  // recent nudge exists → skip
+    ]);
+
+    (db as any).insert = vi.fn().mockImplementation(() => ({
+      values: vi.fn().mockImplementation(() => ({
+        returning: vi.fn().mockResolvedValue([{ id: "audit-id" }]),
+      })),
+    }));
+
+    await runPatternAggregator(false);
+
+    // Discord WARN must NOT fire (deduped)
+    expect(vi.mocked(notifyWarning)).not.toHaveBeenCalled();
+    // No nudge audit row (only the halt audit should be written, not the nudge)
+    const insertCalls = (db as any).insert.mock.calls as unknown[][];
+    const nudgeInsertedRow = insertCalls.some((call) => {
+      const valArg = call[0] as Record<string, unknown> | undefined;
+      return valArg?.action === "auto_patch.loop_ready_but_disabled";
+    });
+    // "values" is called with the row — we check the .values() spy argument
+    const valuesCalls = ((db as any).insert.mock.results as Array<{ value: { values: ReturnType<typeof vi.fn> } }>)
+      .map((r) => r.value.values.mock.calls)
+      .flat();
+    const nudgeRow = valuesCalls.find((args) => {
+      const row = args[0] as Record<string, unknown>;
+      return row?.action === "auto_patch.loop_ready_but_disabled";
+    });
+    expect(nudgeRow).toBeUndefined();
+  });
+
+  it("F-7-C: disabled + <threshold → NO nudge (not ready yet)", async () => {
+    // 5 critiques < 10 threshold → nudge should NOT fire
+    buildSelectSequence([
+      [{ currentValue: "false" }],  // kill switch disabled
+      // No critiques select needed if kill switch halts before reading critiques.
+      // BUT: the nudge spec says count critiques even in the halt path.
+      // If critiques are < threshold, no nudge fires.
+      // The service reads critiques AFTER the halt decision in the new flow.
+      // Provide the critiques row just in case the service reads them:
+      [{ id: "c1" }, { id: "c2" }, { id: "c3" }, { id: "c4" }, { id: "c5" }],  // 5 < 10
+    ]);
+
+    (db as any).insert = vi.fn().mockImplementation(() => ({
+      values: vi.fn().mockImplementation(() => ({
+        returning: vi.fn().mockResolvedValue([{ id: "audit-id" }]),
+      })),
+    }));
+
+    await runPatternAggregator(false);
+
+    // No Discord WARN (not ready, no nudge)
+    expect(vi.mocked(notifyWarning)).not.toHaveBeenCalled();
+  });
+
+  it("F-7-D: enabled → NO nudge (normal aggregation path, kill switch is on)", async () => {
+    // When kill switch is ON, the normal aggregation path runs — no nudge
+    buildSelectSequence([
+      [{ currentValue: "true" }],  // kill switch enabled → proceed
+      ENOUGH_CRITIQUES,
+    ]);
+
+    (db as any).insert = vi.fn().mockImplementation(() => ({
+      values: vi.fn().mockImplementation(() => ({
+        returning: vi.fn().mockResolvedValue([{ id: "audit-id" }]),
+      })),
+    }));
+
+    // LLM returns null → both providers fail → status=failed (no LLM call setup)
+    vi.mocked(callOpenAI).mockResolvedValue(null);
+
+    await runPatternAggregator(false);
+
+    // No nudge Discord WARN fired
+    expect(vi.mocked(notifyWarning)).not.toHaveBeenCalled();
+  });
+
+  it("F-7-E: nudge never calls the prompt-mutation path / never flips kill switch", async () => {
+    // Verify the setAppendixCache and _upsertParam are not called during the nudge path
+    buildSelectSequence([
+      [{ currentValue: "false" }],
+      ENOUGH_CRITIQUES,
+      [],  // no recent nudge
+    ]);
+
+    (db as any).insert = vi.fn().mockImplementation(() => ({
+      values: vi.fn().mockImplementation(() => ({
+        returning: vi.fn().mockResolvedValue([{ id: "audit-id" }]),
+      })),
+    }));
+
+    await runPatternAggregator(false);
+
+    // setAppendixCache (prompt mutation) must NOT be called
+    expect(vi.mocked(setAppendixCache)).not.toHaveBeenCalled();
+    // update (upsertParam = kill switch mutation) must NOT be called for the kill switch param
+    const updateCalls = (db as any).update?.mock?.calls ?? [];
+    // No update call should set auto_patch_loop_enabled to any value
+    // (update is called for CONSEC_FAIL_KEY in failure path, but not in halt path)
+    expect(updateCalls.length).toBe(0);
+  });
+
+  it("F-7-F: Discord WARN failure in nudge does not crash the cron (fail-soft)", async () => {
+    vi.mocked(notifyWarning).mockImplementationOnce(() => {
+      throw new Error("Discord network error");
+    });
+
+    buildSelectSequence([
+      [{ currentValue: "false" }],
+      ENOUGH_CRITIQUES,
+      [],  // no recent nudge
+    ]);
+
+    (db as any).insert = vi.fn().mockImplementation(() => ({
+      values: vi.fn().mockImplementation(() => ({
+        returning: vi.fn().mockResolvedValue([{ id: "audit-id" }]),
+      })),
+    }));
+
+    // Must not throw — fail-soft
+    await expect(runPatternAggregator(false)).resolves.not.toThrow();
+
+    // Still returns halted (nudge failure doesn't block)
+    const result = await runPatternAggregator(false);
+    expect(result.status).toBe("halted");
+  });
+});
