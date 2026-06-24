@@ -16,6 +16,7 @@ import { complianceRulesets, complianceDriftLog } from "../db/schema.js";
 import { eq, desc } from "drizzle-orm";
 import { logger } from "../lib/logger.js";
 import { notifyCritical } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 // F-5: Use lowercase firm IDs matching paper-execution-service queries.
 // Legacy firms (Apex, FFN, Alpha, Tradeify, Earn2Trade, TPT) were removed via
@@ -127,11 +128,15 @@ export async function checkComplianceRuleDrift(): Promise<DriftCheckResult> {
     const firmList = driftDetails.map((d) => d.firm).join(", ");
     notifyCritical(
       "Compliance Rule Drift Detected",
-      `The prop firm rules document has changed.\n` +
-        `Affected firms: ${firmList}\n` +
-        `Old hash: ${oldHash?.slice(0, 12) ?? "none"}\n` +
-        `New hash: ${newHash.slice(0, 12)}\n` +
-        `Please review and re-validate active strategies.`,
+      appendFamilyGradePostscript(
+        `The prop firm rules document has changed.\n` +
+          `Affected firms: ${firmList}\n` +
+          `Old hash: ${oldHash?.slice(0, 12) ?? "none"}\n` +
+          `New hash: ${newHash.slice(0, 12)}\n` +
+          `Please review and re-validate active strategies.`,
+        "The bot's trading compliance rules failed to refresh — a prop firm's rules document changed unexpectedly.",
+        "Call Tony — the bot may be using outdated trading rules.",
+      ),
       { oldHash, newHash, affectedFirms: driftDetails.map((d) => d.firm) },
     );
   }

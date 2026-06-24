@@ -19,6 +19,7 @@ import { dailyStatistics, backtests } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { runPythonModule } from "../lib/python-runner.js";
 import { notifyWarning } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 
 const RECONCILIATION_THRESHOLD = 0.005; // 0.5% max delta allowed
@@ -272,7 +273,11 @@ export async function runSettlementReconciliation(correlationId?: string): Promi
   if (alertsFired > 0) {
     await notifyWarning(
       "Settlement reconciliation: PnL delta exceeded threshold",
-      `${alertsFired} strategy/date combinations show >0.5% PnL delta vs CME settlement. Review daily_statistics table.`,
+      appendFamilyGradePostscript(
+        `${alertsFired} strategy/date combinations show >0.5% PnL delta vs CME settlement. Review daily_statistics table.`,
+        "The bot found a discrepancy in settlement records.",
+        "No action needed — the bot is tracking this automatically. Call Tony to review.",
+      ),
       { alertsFired, strategiesChecked: recentBacktests.length, correlationId },
     );
   }

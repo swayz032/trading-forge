@@ -204,7 +204,11 @@ export async function writeHeartbeat(): Promise<void> {
       );
       await notifyCritical(
         "Heartbeat schema drift",
-        `Table "${HEARTBEAT_TABLE}" is missing. The dead-man's heartbeat cannot write. Apply the pending migration immediately.`,
+        appendFamilyGradePostscript(
+          `Table "${HEARTBEAT_TABLE}" is missing. The dead-man's heartbeat cannot write. Apply the pending migration immediately.`,
+          "The trading bot's safety heartbeat is broken — a missing database table needs to be created.",
+          "Call Tony immediately — the bot cannot confirm it is running safely.",
+        ),
         { table: HEARTBEAT_TABLE, error_code: PG_RELATION_NOT_FOUND },
       );
       return; // Do not throw — schema drift is operator-actionable, not a crash
@@ -258,8 +262,12 @@ export async function getLastHeartbeatAt(): Promise<Date | null> {
           await recordSchemaDriftAlert();
           notifyCritical(
             "Heartbeat schema drift (read-path)",
-            `Table "${HEARTBEAT_TABLE}" is missing during the stale heartbeat check. ` +
-              `The dead-man's heartbeat cannot verify backend liveness. Apply the pending migration immediately.`,
+            appendFamilyGradePostscript(
+              `Table "${HEARTBEAT_TABLE}" is missing during the stale heartbeat check. ` +
+                `The dead-man's heartbeat cannot verify backend liveness. Apply the pending migration immediately.`,
+              "The trading bot cannot check its own health — a missing database table needs to be created.",
+              "Call Tony immediately — the bot's self-check system is broken.",
+            ),
             { table: HEARTBEAT_TABLE, error_code: PG_RELATION_NOT_FOUND, path: "read" },
           );
         }
@@ -462,8 +470,12 @@ async function attemptAutoRestart(
     );
     await notifyCritical(
       "Heartbeat stale — auto-restart unavailable",
-      "The backend heartbeat is stale but autonomous restart is disabled because " +
-        "ADMIN_RESTART_HMAC_SECRET is not configured. Manual intervention required.",
+      appendFamilyGradePostscript(
+        "The backend heartbeat is stale but autonomous restart is disabled because " +
+          "ADMIN_RESTART_HMAC_SECRET is not configured. Manual intervention required.",
+        "The trading bot stopped responding and cannot restart itself — a security key is missing.",
+        "Call Tony immediately — the bot needs to be restarted manually.",
+      ),
       { parentCorrelationId, reason: "secret_not_configured" },
     );
     return;
@@ -715,10 +727,14 @@ export async function runScheduledRefreshStalenessCheck(): Promise<void> {
         }).catch((err) => logger.error({ err }, "dead-mans-heartbeat: BW stale audit row failed"));
         notifyCritical(
           "CRITICAL: BW session refresh cron not running",
-          `Bitwarden session refresh heartbeat is ${ageHours}h stale (last: ${bwLastAt.toISOString()}). ` +
-            `The bw-session-refresh scheduled job may be disabled or throwing. ` +
-            `BW vault access will degrade if BW_SESSION expires. ` +
-            `Check: POST /api/admin/scheduler/jobs/bw-session-refresh/enable`,
+          appendFamilyGradePostscript(
+            `Bitwarden session refresh heartbeat is ${ageHours}h stale (last: ${bwLastAt.toISOString()}). ` +
+              `The bw-session-refresh scheduled job may be disabled or throwing. ` +
+              `BW vault access will degrade if BW_SESSION expires. ` +
+              `Check: POST /api/admin/scheduler/jobs/bw-session-refresh/enable`,
+            "The bot's password vault auto-refresh stopped working — trading credentials may expire soon.",
+            "No action needed yet — call Tony if the alert persists for more than an hour.",
+          ),
           { lastHeartbeatAt: bwLastAt.toISOString(), ageHours, thresholdHours: "13" },
         );
       }
@@ -755,9 +771,13 @@ export async function runScheduledRefreshStalenessCheck(): Promise<void> {
         }).catch((err) => logger.error({ err }, "dead-mans-heartbeat: cookie stale audit row failed"));
         notifyCritical(
           "CRITICAL: Prop-firm cookie refresh cron not running",
-          `Cookie refresh heartbeat is ${ageHours}h stale (last: ${cookieLastAt.toISOString()}). ` +
-            `C2 evidence captures may be failing. ` +
-            `Check: POST /api/admin/scheduler/jobs/prop-firm-cookie-refresh/enable`,
+          appendFamilyGradePostscript(
+            `Cookie refresh heartbeat is ${ageHours}h stale (last: ${cookieLastAt.toISOString()}). ` +
+              `C2 evidence captures may be failing. ` +
+              `Check: POST /api/admin/scheduler/jobs/prop-firm-cookie-refresh/enable`,
+            "The bot's prop firm session refresh stopped working — the trading account may lose access.",
+            "Call Tony — if this persists more than 2.5 hours, the bot may get locked out of the prop firm.",
+          ),
           { lastHeartbeatAt: cookieLastAt.toISOString(), ageHours, thresholdHours: "2.5" },
         );
       }

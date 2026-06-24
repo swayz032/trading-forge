@@ -929,16 +929,21 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             ? (invariants.critical_failures?.[0] ?? "invariant_failure")
             : "parity_drift";
 
+          const { appendFamilyGradePostscript: appendFGP } = await import("../lib/notification-helpers.js");
           notifyCritical(
             "BACKTEST TRUTHINESS FAILURE",
-            [
-              `Backtest: ${backtestId}`,
-              `Strategy: ${strategyName} (${strategySymbol})`,
-              `Dates: ${dateRange}`,
-              `Failure type: ${failureType}`,
-              `Evidence: ${evidenceSummary}`,
-              `Severity: ${severity}`,
-            ].join("\n"),
+            appendFGP(
+              [
+                `Backtest: ${backtestId}`,
+                `Strategy: ${strategyName} (${strategySymbol})`,
+                `Dates: ${dateRange}`,
+                `Failure type: ${failureType}`,
+                `Evidence: ${evidenceSummary}`,
+                `Severity: ${severity}`,
+              ].join("\n"),
+              "A backtest failed unexpectedly — the result couldn't be verified against expected behavior.",
+              "No action needed — the bot will retry. Call Tony if backtests keep failing.",
+            ),
             {
               backtestId,
               strategyId,

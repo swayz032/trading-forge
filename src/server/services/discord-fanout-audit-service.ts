@@ -96,11 +96,16 @@ export async function runDiscordFanoutAudit(instanceId?: string): Promise<Discor
     // Fail-CLOSED: use the DB/SSE critical path since Discord is down
     try {
       const { notifyCritical } = await import("./notification-service.js");
+      const { appendFamilyGradePostscript } = await import("../lib/notification-helpers.js");
       await notifyCritical(
         "discord_webhook_unreachable",
-        `Discord webhook unreachable on boot (${_instanceId}). ` +
-          `Check DISCORD_WEBHOOK_URL env var. All Discord alerts will fail until resolved. ` +
-          `Error: ${err instanceof Error ? err.message : String(err)}`,
+        appendFamilyGradePostscript(
+          `Discord webhook unreachable on boot (${_instanceId}). ` +
+            `Check DISCORD_WEBHOOK_URL env var. All Discord alerts will fail until resolved. ` +
+            `Error: ${err instanceof Error ? err.message : String(err)}`,
+          "The bot's Discord alert system failed to start — you may not receive trade alerts.",
+          "Call Tony — Discord alerts are down and the bot cannot notify you of issues.",
+        ),
         { instanceId: _instanceId, webhookConfigured: true, timeout: isTimeout },
       );
     } catch (notifyErr) {

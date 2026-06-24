@@ -39,6 +39,7 @@
  */
 
 import { logger } from "./logger.js";
+import { appendFamilyGradePostscript } from "./notification-helpers.js";
 
 /** Minimum recommended secret length (32 chars — same as self-restart docs). */
 const MIN_SECRET_LENGTH = 32;
@@ -87,8 +88,12 @@ export async function checkStartupSecrets(): Promise<{ warnings: string[] }> {
       const { notifyWarning } = await import("../services/notification-service.js");
       notifyWarning(
         "ADMIN_RESTART_HMAC_SECRET not configured — vacation-survival disabled",
-        msg +
-          "\n\nTo fix: add `ADMIN_RESTART_HMAC_SECRET=<random-32-char-string>` to your .env and restart the backend.",
+        appendFamilyGradePostscript(
+          msg +
+            "\n\nTo fix: add `ADMIN_RESTART_HMAC_SECRET=<random-32-char-string>` to your .env and restart the backend.",
+          "A required security setting is missing — Tony's remote-restart and recovery tools are disabled.",
+          "No action needed — trading continues normally. Tony should fix this before going on vacation.",
+        ),
         { env_var: "ADMIN_RESTART_HMAC_SECRET" },
       );
     } catch (notifyErr) {
@@ -274,7 +279,11 @@ export async function checkStartupSecrets(): Promise<{ warnings: string[] }> {
         const { notifyWarning } = await import("../services/notification-service.js");
         notifyWarning(
           "KASA remote power-cycle partially configured — escape valve will fail",
-          msg + "\n\nTo fix: set all three KASA_* vars in .env and restart the backend.",
+          appendFamilyGradePostscript(
+            msg + "\n\nTo fix: set all three KASA_* vars in .env and restart the backend.",
+            "The smart-plug remote-restart feature is partially set up and will not work if needed.",
+            "No action needed — trading continues normally. Tony needs to finish the smart-plug setup.",
+          ),
           { kasa_vars_set: kasaVarsSet, kasa_vars_missing: kasaVarsMissing },
         );
       } catch (notifyErr) {

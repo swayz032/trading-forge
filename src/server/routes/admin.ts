@@ -16,6 +16,7 @@ import { agentHealthReports, dataIntegrityFindings, liquidityLevels, needsArchet
 import { AgentService } from "../services/agent-service.js";
 import { getPhaseRecord, setPhaseOverride, type PhaseValue } from "../services/harsh-regime-phase-service.js";
 import { notifyCritical, notifyWarning } from "../services/notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { insertAuditRow, insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { logger } from "../lib/logger.js";
 import { getStrategySourceUrls } from "../lib/strategy-source-resolver.js";
@@ -154,7 +155,11 @@ adminRoutes.post("/self-restart", async (req, res) => {
   // ── Discord notification ───────────────────────────────────────────────────
   notifyCritical(
     "Self-Restart Initiated",
-    `Backend process is restarting via HMAC-authenticated endpoint. Reason: ${reason}. NSSM will respawn automatically.`,
+    appendFamilyGradePostscript(
+      `Backend process is restarting via HMAC-authenticated endpoint. Reason: ${reason}. NSSM will respawn automatically.`,
+      "The trading bot restarted itself automatically.",
+      "No action needed — the bot will be back online in 30 seconds.",
+    ),
     { reason, correlationId, parentCorrelationId: parentId },
   );
 
@@ -302,13 +307,21 @@ adminRoutes.post("/ollama-health-recheck", async (req, res) => {
   if (recheckResult.healthy) {
     notifyWarning(
       "Ollama Health Restored",
-      `OLLAMA_HEALTHY reset to true via runtime recheck. transcript_extractor routing restored to local gemma4:e2b. Reason: ${reason}`,
+      appendFamilyGradePostscript(
+        `OLLAMA_HEALTHY reset to true via runtime recheck. transcript_extractor routing restored to local gemma4:e2b. Reason: ${reason}`,
+        "The local AI model is working again.",
+        "No action needed — the bot's AI features are restored.",
+      ),
       { correlationId },
     );
   } else {
     notifyCritical(
       "Ollama Health Recheck FAILED",
-      `Runtime recheck returned healthy=false. transcript_extractor will continue routing to cloud. Probe failure: ${recheckResult.reason ?? "unknown"}. Reason: ${reason}`,
+      appendFamilyGradePostscript(
+        `Runtime recheck returned healthy=false. transcript_extractor will continue routing to cloud. Probe failure: ${recheckResult.reason ?? "unknown"}. Reason: ${reason}`,
+        "The local AI is still down — using cloud backup.",
+        "No action needed — the bot is using its cloud backup. Call Tony if this persists for more than 2 hours.",
+      ),
       { correlationId },
     );
   }
@@ -357,8 +370,12 @@ adminRoutes.post("/operator-mark-present", async (req, res) => {
     if (clearedSince || clearedPending) {
       notifyWarning(
         "Operator presence confirmed — vacation autopilot disengaged",
-        `Operator manually cleared absence markers. clearedSince=${clearedSince?.toISOString() ?? "null"}, ` +
-          `clearedPending=${clearedPending?.toISOString() ?? "null"}.`,
+        appendFamilyGradePostscript(
+          `Operator manually cleared absence markers. clearedSince=${clearedSince?.toISOString() ?? "null"}, ` +
+            `clearedPending=${clearedPending?.toISOString() ?? "null"}.`,
+          "Tony confirmed he's back — vacation mode is off.",
+          "No action needed — trading is back to normal operator supervision.",
+        ),
         { correlationId },
       );
     }
@@ -1200,13 +1217,21 @@ adminRoutes.post("/harsh-regime-phase", async (req, res) => {
     if (newPhase === "hard") {
       notifyCritical(
         "Harsh-Regime Gate: MANUALLY ACTIVATED (HARD phase)",
-        `Operator override: gate manually hardened to HARD phase.\n\nReason: ${reason}\nOperator: ${operator}\nPrevious phase: ${result.previousPhase}\n\nFrom now on, strategies that fail regime survival checks at TESTING→PAPER will be BLOCKED.`,
+        appendFamilyGradePostscript(
+          `Operator override: gate manually hardened to HARD phase.\n\nReason: ${reason}\nOperator: ${operator}\nPrevious phase: ${result.previousPhase}\n\nFrom now on, strategies that fail regime survival checks at TESTING→PAPER will be BLOCKED.`,
+          "Tony manually tightened the strategy quality gates.",
+          "No action needed — Tony is managing the trading filters.",
+        ),
         { operator, reason, previousPhase: result.previousPhase, correlationId },
       );
     } else if (newPhase === "advisory" && result.previousPhase === "hard") {
       notifyWarning(
         "Harsh-Regime Gate: Rolled back to ADVISORY",
-        `Operator override: gate rolled back from HARD to advisory.\n\nReason: ${reason}\nOperator: ${operator}\n\nThe 90-day auto-activation clock has been reset. The cron will re-trigger automatically if conditions are met again.`,
+        appendFamilyGradePostscript(
+          `Operator override: gate rolled back from HARD to advisory.\n\nReason: ${reason}\nOperator: ${operator}\n\nThe 90-day auto-activation clock has been reset. The cron will re-trigger automatically if conditions are met again.`,
+          "Tony relaxed the strategy quality gates back to normal.",
+          "No action needed — trading is running under standard filters.",
+        ),
         { operator, reason, previousPhase: result.previousPhase, correlationId },
       );
     }

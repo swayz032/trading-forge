@@ -60,6 +60,7 @@ import { randomUUID, createHmac, timingSafeEqual } from "node:crypto";
 import { logger } from "../lib/logger.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { notifyWarning } from "../services/notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 export const adminRecoveryRoutes = Router();
 
@@ -193,9 +194,13 @@ adminRecoveryRoutes.post("/clear-kill-switch-cache", async (req, res) => {
 
   notifyWarning(
     "Kill-Switch Cache Cleared",
-    `Operator cleared the compliance kill-switch cache via HMAC-authenticated endpoint. Reason: ${reason}. ` +
-    "Next signal will trigger a fresh Python subprocess evaluation. " +
-    "If the Python subprocess was the root cause, verify it has recovered before the next entry.",
+    appendFamilyGradePostscript(
+      `Operator cleared the compliance kill-switch cache via HMAC-authenticated endpoint. Reason: ${reason}. ` +
+      "Next signal will trigger a fresh Python subprocess evaluation. " +
+      "If the Python subprocess was the root cause, verify it has recovered before the next entry.",
+      "Tony cleared a trading safety cache.",
+      "No action needed — Tony is managing the bot's safety systems.",
+    ),
     { correlationId, reason },
   );
 
@@ -250,9 +255,13 @@ adminRecoveryRoutes.post("/clear-stuck-session", async (req, res) => {
 
   notifyWarning(
     "Stuck Session Cleared",
-    `Operator cleared stuck-session entry block for session ${sessionId} via HMAC-authenticated endpoint. Reason: ${reason}. ` +
-    "Ensure the stuck position has been manually closed in the broker UI before resuming entries. " +
-    "Failure to do so may result in duplicate positions.",
+    appendFamilyGradePostscript(
+      `Operator cleared stuck-session entry block for session ${sessionId} via HMAC-authenticated endpoint. Reason: ${reason}. ` +
+      "Ensure the stuck position has been manually closed in the broker UI before resuming entries. " +
+      "Failure to do so may result in duplicate positions.",
+      "Tony cleared a stuck trading session.",
+      "No action needed — Tony is managing a minor position issue.",
+    ),
     { correlationId, reason, sessionId },
   );
 

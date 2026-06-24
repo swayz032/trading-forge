@@ -28,6 +28,7 @@ import { auditLog } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { notifyWarning } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const ROLLING_WINDOW_HOURS = 1;
@@ -178,7 +179,11 @@ export async function runWebhookLatencyCheck(): Promise<LatencyMonitorRunResult>
 
   notifyWarning(
     "Webhook latency high",
-    `Pine→TradingView→TradersPost→broker p95 latency = ${percentiles.p95}ms (threshold: ${P95_ALARM_THRESHOLD_MS}ms) over the last ${ROLLING_WINDOW_HOURS}h. ${percentiles.count} samples. Investigate TradersPost queue depth or broker ack latency.`,
+    appendFamilyGradePostscript(
+      `Pine→TradingView→TradersPost→broker p95 latency = ${percentiles.p95}ms (threshold: ${P95_ALARM_THRESHOLD_MS}ms) over the last ${ROLLING_WINDOW_HOURS}h. ${percentiles.count} samples. Investigate TradersPost queue depth or broker ack latency.`,
+      "The trading signals are arriving slower than expected.",
+      "No action needed — the bot is monitoring this. Call Tony if trading misses entries consistently.",
+    ),
     { job: "webhook-latency-check", ...payload },
   );
 

@@ -279,7 +279,11 @@ async function getOrCreateHmacSecret(
 
   notifyCritical(
     "HMAC persist failed after retries",
-    `pine_export.hmac_persist_failed_after_retries: accountId=${accountId} strategyId=${strategyId} attempts=3 error=${errorMsg}`,
+    appendFamilyGradePostscript(
+      `pine_export.hmac_persist_failed_after_retries: accountId=${accountId} strategyId=${strategyId} attempts=3 error=${errorMsg}`,
+      "A family member's trading script failed to export.",
+      "Call Tony — a family member's trading account may not be set up correctly.",
+    ),
     { accountId, strategyId, attempts: 3, correlationId: correlationId ?? null },
   );
 
@@ -362,9 +366,13 @@ print(json.dumps({"qty": qty}))
       );
       notifyWarning(
         "Pine Export Sizing Timeout",
-        `Python sizing subprocess timed out (10s) for symbol ${symbol}. ` +
-          `Falling back to base contract count ${baseContracts}. ` +
-          `Check sizing.py availability and Python process health.`,
+        appendFamilyGradePostscript(
+          `Python sizing subprocess timed out (10s) for symbol ${symbol}. ` +
+            `Falling back to base contract count ${baseContracts}. ` +
+            `Check sizing.py availability and Python process health.`,
+          "There was a minor issue with a family member's trading script.",
+          "No action needed — the bot will retry.",
+        ),
         { symbol, baseContracts, accountPnlTotal },
       );
       resolve(baseContracts);

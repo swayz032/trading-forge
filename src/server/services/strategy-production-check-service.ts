@@ -17,6 +17,7 @@ import { auditLog } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { getMode as getPipelineMode } from "./pipeline-control-service.js";
 import { notifyCritical } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { broadcastSSE } from "../routes/sse.js";
 
 export async function runStrategyProductionCheck(): Promise<{
@@ -100,7 +101,11 @@ export async function runStrategyProductionCheck(): Promise<{
 
   notifyCritical(
     "No new strategies today",
-    `Pipeline mode: ${mode}. CANDIDATE transitions today: ${count}. Scout backlog (today): ${JSON.stringify(scoutBacklog)}. Synthesizer/critic counts (today): ${JSON.stringify(synthesizerStats)}. Check /scout health tile.`,
+    appendFamilyGradePostscript(
+      `Pipeline mode: ${mode}. CANDIDATE transitions today: ${count}. Scout backlog (today): ${JSON.stringify(scoutBacklog)}. Synthesizer/critic counts (today): ${JSON.stringify(synthesizerStats)}. Check /scout health tile.`,
+      "The bot's production readiness check failed.",
+      "No action needed — the bot is protecting you from unsafe trading. Call Tony to review.",
+    ),
     { job: "b14-strategy-production-check", mode, scoutBacklog, synthesizerStats },
   );
 
