@@ -476,40 +476,28 @@ describe("wave26-pattern-aggregator", () => {
     expect(vi.mocked(setAppendixCache)).toHaveBeenCalled();
   });
 
-  // ── 16. Kill switch missing row → enabled ─────────────────────────────────────
-  it("kill switch: missing system_parameters row → treated as enabled (fail-open)", async () => {
-    const critiques = makeCritiques(12);
-
+  // ── 16. Kill switch missing row → DISABLED (fail-closed after F-5 fix) ─────────
+  //
+  // F-5 fix (Wave B): inverted from the previous fail-open semantic.
+  // An absent row now means the loop is DISABLED until an operator explicitly
+  // seeds the row with current_value = "true".
+  it("kill switch: missing system_parameters row → treated as disabled (fail-closed)", async () => {
     buildSelectSequence([
-      [],          // no kill switch row → treated as enabled
-      critiques,
-      [{ maxVer: 1 }],
-      [],
-      [{ id: "av", version: 1, isActive: true, content: "old" }],
+      [],   // no kill switch row → DISABLED (fail-closed)
     ]);
 
-    let insertCount = 0;
     (db as any).insert = vi.fn().mockImplementation(() => ({
-      values: vi.fn().mockImplementation(() => {
-        insertCount++;
-        return {
-          returning: vi.fn().mockImplementation(() => {
-            if (insertCount === 1) return Promise.resolve([{ id: "nv" }]);
-            return Promise.resolve([{ id: "nt" }]);
-          }),
-        };
+      values: vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([{ id: "audit-id" }]),
       }),
     }));
-
-    vi.mocked(callOpenAI).mockResolvedValue(
-      "## Recent Trade Lessons (auto-generated 2026-05-24 08:00 ET)\n- Test hint observed",
-    );
 
     const { runPatternAggregator } = await import("../services/pattern-aggregator-service.js");
     const result = await runPatternAggregator();
 
-    expect(result.status).not.toBe("halted");
-    expect(result.status).toBe("completed");
+    // After F-5 fix: absent row → halted, not completed
+    expect(result.status).toBe("halted");
+    expect(vi.mocked(callOpenAI)).not.toHaveBeenCalled();
   });
 });
 

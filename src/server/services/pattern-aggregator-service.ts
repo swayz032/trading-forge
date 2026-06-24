@@ -19,8 +19,9 @@
  *   No async in the hot path. No breaking change to callers.
  *
  * Kill switch: system_parameters row with paramName="auto_patch_loop_enabled".
- *   Value "false" (string) halts the aggregator and emits auto_patch.loop_halted_skip.
- *   Missing row is treated as "true" (fail-open, loop enabled).
+ *   Value "true" (exact string) enables the loop.  Any other value, a missing
+ *   row, or a DB error disables the loop (FAIL-CLOSED) and emits
+ *   auto_patch.loop_halted_skip.  Default seed value is "false" (disabled).
  *
  * Min-sample guard: env PATTERN_AGGREGATOR_MIN_CRITIQUES (default 10).
  *   Fewer critiques than the threshold → audit + return "insufficient_samples".
@@ -36,6 +37,7 @@ import { tradeCritique, systemParameters, auditLog, promptVersions, promptAbTest
 import { callOpenAI, getFallback, loadSystemPrompt, setAppendixCache } from "./model-router.js";
 import { OllamaClient } from "./ollama-client.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
+import { notifyWarning } from "./notification-service.js";
 import { logger } from "../lib/logger.js";
 
 // ─── Constants ─────────────────────────────────────────────────
@@ -45,6 +47,107 @@ const MIN_CRITIQUES =  Number(process.env.PATTERN_AGGREGATOR_MIN_CRITIQUES ?? "1
 const KILL_SWITCH_PARAM = "auto_patch_loop_enabled";
 const PROMPT_TYPE = "strategy_proposer";
 const MIN_SAMPLES_PER_VARIANT = 20;
+
+// F-6: consecutive-failure tracking (mirrors trade-critique-service.ts pattern)
+const CONSEC_FAIL_KEY = "pattern_aggregator_consecutive_failures";
+const CONSEC_FAIL_THRESHOLD = 3;
+
+// ─── Consecutive-failure tracking (F-6) ──────────────────────────────────────
+
+/**
+ * Read the current consecutive-failure count from system_parameters.
+ * Fail-open: returns 0 on any DB error so one bad read never falsely fires an alert.
+ */
+async function _readConsecFailures(): Promise<number> {
+  try {
+    const rows = await db
+      .select({ currentValue: systemParameters.currentValue })
+      .from(systemParameters)
+      .where(eq(systemParameters.paramName, CONSEC_FAIL_KEY))
+      .limit(1);
+    return rows.length > 0 ? parseInt(rows[0].currentValue ?? "0", 10) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Upsert the consecutive-failure counter, return the new value.
+ * Never throws — failure to increment is non-fatal; returns 0 on error.
+ */
+async function _incrementConsecFailures(): Promise<number> {
+  try {
+    const current = await _readConsecFailures();
+    const next = current + 1;
+    await _upsertParam(CONSEC_FAIL_KEY, String(next));
+    return next;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * Reset the consecutive-failure counter (called on a successful run).
+ * Best-effort — failure to reset is non-fatal.
+ */
+async function _resetConsecFailures(): Promise<void> {
+  try {
+    await _upsertParam(CONSEC_FAIL_KEY, "0");
+  } catch {
+    // best-effort
+  }
+}
+
+/**
+ * Generic system_parameters upsert helper.
+ * Uses .limit(1) for mock-safe resolution (consistent with _readConsecFailures).
+ */
+async function _upsertParam(key: string, value: string): Promise<void> {
+  const rows = await db
+    .select({ paramName: systemParameters.paramName })
+    .from(systemParameters)
+    .where(eq(systemParameters.paramName, key))
+    .limit(1);
+
+  if (rows.length > 0) {
+    await db
+      .update(systemParameters)
+      .set({ currentValue: value, updatedAt: new Date() })
+      .where(eq(systemParameters.paramName, key));
+  } else {
+    await db.insert(systemParameters).values({
+      paramName: key,
+      currentValue: value,
+      description: "Pattern aggregator consecutive failure counter (auto-resets on success)",
+      domain: "critic",
+    });
+  }
+}
+
+/**
+ * Fire the Discord WARN for N consecutive failures.
+ * Fail-soft: any error is swallowed so the cron is never brought down
+ * by a Discord or notification-service issue.
+ */
+function _warnConsecFailures(strikes: number): void {
+  try {
+    notifyWarning(
+      "Pattern Aggregator — 3 Consecutive Failures",
+      `The pattern aggregator has failed ${strikes} times in a row. ` +
+      `Check OPENAI_API_KEY, Ollama connectivity, and model availability. ` +
+      `Trading Forge continues to operate normally — pattern aggregation is advisory.`,
+      {
+        strikes,
+        param: KILL_SWITCH_PARAM,
+        action: "investigate_llm_connectivity",
+        service: "pattern_aggregator",
+      },
+    );
+  } catch (err) {
+    // Fail-soft — Discord failure must never crash the cron.
+    logger.warn({ err }, "Pattern aggregator: consecutive-failure Discord WARN failed (non-fatal)");
+  }
+}
 
 // ─── Types ─────────────────────────────────────────────────────
 
@@ -225,10 +328,29 @@ export async function runPatternAggregator(dryRun: boolean = false): Promise<Pat
 
   if (!llmOutput) {
     logger.error("Pattern aggregator: both providers failed — aborting");
-    if (!dryRun) await _audit("pattern_aggregator.failed", "failure", {
-      critiques_reviewed: rows.length,
-      reason: "all_providers_failed",
-    });
+
+    // F-6: track consecutive failures and fire a Discord WARN at the threshold.
+    // Fail-soft: counter read/write errors are non-fatal; warn is fire-and-forget.
+    if (!dryRun) {
+      const strikes = await _incrementConsecFailures();
+
+      await _audit("pattern_aggregator.failed", "failure", {
+        critiques_reviewed: rows.length,
+        reason: "all_providers_failed",
+        strikes,
+      });
+
+      if (strikes >= CONSEC_FAIL_THRESHOLD) {
+        _warnConsecFailures(strikes);
+        // Emit a dedicated audit row so post-incident review can reconstruct the alert.
+        await _audit("pattern_aggregator.consecutive_failure_alert", "failure", {
+          strikes,
+          threshold: CONSEC_FAIL_THRESHOLD,
+          alert_sent: true,
+        });
+      }
+    }
+
     return { ...empty, status: "failed", critiques_reviewed: rows.length, durationMs: Date.now() - startTime };
   }
 
@@ -280,6 +402,9 @@ export async function runPatternAggregator(dryRun: boolean = false): Promise<Pat
   const paramHints = _extractBulletPoints(trimmedOutput);
 
   if (!dryRun) {
+    // F-6: reset consecutive-failure counter on success so the next run starts fresh.
+    await _resetConsecFailures();
+
     await _audit("pattern_aggregator.completed", "success", {
       critiques_reviewed: rows.length,
       new_prompt_version_id: newVersionId,
@@ -312,8 +437,12 @@ export async function runPatternAggregator(dryRun: boolean = false): Promise<Pat
 
 /**
  * Read kill switch from system_parameters.
- * Returns true (enabled) if row missing or value != "false".
- * Returns false (disabled) only when value is exactly "false".
+ * FAIL-CLOSED: returns true (enabled) ONLY when the row is present AND
+ * its value is exactly the string "true".  An absent row, any other
+ * value, or a DB error all return false (disabled) so the LLM-mutation
+ * loop never fires without explicit operator opt-in.
+ *
+ * F-5 fix (Wave B): inverted from the previous fail-open semantic.
  */
 async function _readKillSwitch(): Promise<boolean> {
   try {
@@ -323,11 +452,13 @@ async function _readKillSwitch(): Promise<boolean> {
       .where(eq(systemParameters.paramName, KILL_SWITCH_PARAM))
       .limit(1);
 
-    if (rows.length === 0) return true; // missing = enabled (fail-open)
-    return String(rows[0].currentValue).trim() !== "false";
+    // Absent row → DISABLED (fail-closed).
+    if (rows.length === 0) return false;
+    // Only the exact string "true" enables the loop.
+    return String(rows[0].currentValue).trim() === "true";
   } catch (err) {
-    logger.warn({ err }, "Pattern aggregator: failed to read kill switch — defaulting to enabled");
-    return true; // fail-open
+    logger.warn({ err }, "Pattern aggregator: failed to read kill switch — defaulting to disabled (fail-closed)");
+    return false; // fail-closed
   }
 }
 

@@ -753,12 +753,26 @@ const _appendixCache = new Map<string, string>();
  * after each successful aggregation run. Also called by warmAppendixCache() at boot.
  *
  * Thread-safe: JavaScript single-threaded; Map.set() is atomic.
+ *
+ * F-4 fix (Wave B): also invalidates every promptCache entry whose key starts
+ * with the same promptType prefix so the NEXT loadSystemPrompt() call rebuilds
+ * with the freshly injected appendix instead of serving a stale 60-second TTL hit.
+ * The __clearPromptCacheForTests export remains intact.
  */
 export function setAppendixCache(promptType: string, content: string): void {
   _appendixCache.set(promptType, content);
+
+  // Invalidate any cached prompt that was built with the old appendix value.
+  // cacheKey() produces "<role>::<ctx-json>" — exact role match covers all contexts.
+  for (const key of promptCache.keys()) {
+    if (key.startsWith(`${promptType}::`)) {
+      promptCache.delete(key);
+    }
+  }
+
   logger.info(
     { promptType, contentLength: content.length },
-    "model-router: appendix cache updated",
+    "model-router: appendix cache updated + promptCache entries invalidated",
   );
 }
 
