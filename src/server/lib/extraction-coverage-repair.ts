@@ -65,7 +65,12 @@ const REPAIR_SCHEMA: Record<string, unknown> = {
 
 const REPAIR_MAX_ROUNDS = Number(process.env.COVERAGE_REPAIR_MAX_ROUNDS) || 2;
 const REPAIR_ACCEPT_PCT = Number(process.env.COVERAGE_REPAIR_ACCEPT_PCT) || 0.95;
-const REPAIR_MAX_TARGETS = Number(process.env.COVERAGE_REPAIR_MAX_TARGETS) || 6;
+// Experiment B (2026-06-23): raised 6 → 10. SY2 surfaced ~24 speaker_items with >6 genuine named
+// concepts missing; the 6-cap left break block / PCC / pause displacement unrecovered (its residual
+// 3 misses post-dedup). 10 lets one repair pass reach the full named-concept set. Quote-verify in
+// mergeRepairResult still rejects fabrication, so a higher cap can't inflate via hallucination —
+// only recover MORE real concepts. Isolated from Experiment A (comparator dedup) for clean attribution.
+const REPAIR_MAX_TARGETS = Number(process.env.COVERAGE_REPAIR_MAX_TARGETS) || 10;
 
 export interface RepairResult {
   /** The repaired extraction (entry_sequence + confluences gap-filled). */
