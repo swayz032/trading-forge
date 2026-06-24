@@ -97,20 +97,54 @@
     .of-msg.err { color: var(--red); }
     .of-msg.warn { color: var(--warm); }
 
-    /* Unlocked shell — Pass 1 placeholder content area (cards arrive Pass 3) */
-    .of-stage {
-      margin-top: 6px;
-      min-height: 46vh;
-      border: 1px dashed var(--line);
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--mute);
-      font-size: 12px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
+    /* Pass 3: floating 3D switch-card carousel (coverflow — empty shells) */
+    .of-carousel { margin-top: 18px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .of-stage3d {
+      position: relative; flex: 1; max-width: 720px; height: 340px;
+      perspective: 1400px; overflow: hidden;
     }
+    .of-track { position: absolute; inset: 0; }
+    .of-card3d {
+      position: absolute; top: 50%; left: 50%;
+      width: 300px; height: 300px; margin: -150px 0 0 -150px;
+      border-radius: 22px;
+      background: rgba(8, 12, 8, 0.50);
+      backdrop-filter: blur(22px) saturate(1.2);
+      -webkit-backdrop-filter: blur(22px) saturate(1.2);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 30px 70px rgba(0,0,0,0.6);
+      display: flex; flex-direction: column; padding: 26px 24px;
+      transition: transform 0.5s cubic-bezier(0.2,0.7,0.2,1), opacity 0.4s, box-shadow 0.4s;
+      cursor: pointer; will-change: transform, opacity;
+    }
+    .of-card-eyebrow { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--dim); }
+    .of-card-title { margin-top: 8px; font-size: 26px; font-weight: 700; color: var(--ink); letter-spacing: 0.01em; }
+    .of-card-sub { margin-top: 6px; font-size: 13px; color: var(--dim); line-height: 1.4; }
+    .of-card-slot {
+      margin-top: auto; display: flex; align-items: center; gap: 8px;
+      font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute);
+    }
+    .of-card-slot .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--mute); }
+    .of-card3d.is-active {
+      transform: translateX(0) scale(1) rotateY(0deg); opacity: 1; z-index: 5;
+      border-color: rgba(163,255,18,0.45);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 30px 70px rgba(0,0,0,0.6), 0 0 50px rgba(163,255,18,0.18);
+      cursor: default;
+    }
+    .of-card3d.is-prev { transform: translateX(-66%) scale(0.8) rotateY(20deg); opacity: 0.42; z-index: 3; }
+    .of-card3d.is-next { transform: translateX(66%) scale(0.8) rotateY(-20deg); opacity: 0.42; z-index: 3; }
+    .of-card3d.is-far  { transform: translateX(0) scale(0.6); opacity: 0; z-index: 1; pointer-events: none; }
+    .of-arrow {
+      flex-shrink: 0; width: 42px; height: 42px; border-radius: 50%;
+      background: rgba(8,12,8,0.5); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.12); color: var(--ink);
+      font-size: 22px; line-height: 1; cursor: pointer;
+      transition: background 0.15s, transform 0.15s, border-color 0.15s;
+    }
+    .of-arrow:hover { background: rgba(163,255,18,0.12); border-color: var(--lime-dim); transform: translateY(-1px); }
+    .of-dots { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
+    .of-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.18); cursor: pointer; transition: background 0.15s, transform 0.15s; border: none; padding: 0; }
+    .of-dot.on { background: var(--lime); box-shadow: 0 0 10px var(--lime); transform: scale(1.25); }
     .of-lock-link {
       display: inline-flex; align-items: center; gap: 6px;
       margin-left: auto;
@@ -190,11 +224,14 @@
       </div>
     </section>
 
-    <!-- UNLOCKED state: page shell (cards arrive in a later pass) -->
+    <!-- UNLOCKED state: floating 3D switch-cards (Pass 3 — empty shells, no switches wired yet) -->
     <section id="of-shell" class="of-hide">
-      <h1 class="sh-title">The Office</h1>
-      <p class="sh-sub">Operator control room — switches land in the next pass.</p>
-      <div class="of-stage">Pass 1 · page shell ready</div>
+      <div class="of-carousel">
+        <button class="of-arrow of-prev" type="button" aria-label="Previous">&#8249;</button>
+        <div class="of-stage3d"><div class="of-track" id="of-track"></div></div>
+        <button class="of-arrow of-next" type="button" aria-label="Next">&#8250;</button>
+      </div>
+      <div class="of-dots" id="of-dots"></div>
     </section>
   </div>
 
@@ -208,10 +245,64 @@
       var submit = document.getElementById('of-submit');
       var msg = document.getElementById('of-msg');
 
+      // ── Pass 3: floating 3D switch-card carousel (empty shells, no switches yet) ──
+      var OF_CARDS = [
+        { eyebrow: 'Master',  title: 'Bot Power',      sub: 'Pause or resume all trading' },
+        { eyebrow: 'Engine',  title: 'Learning Loop',  sub: 'Let the bot improve itself' },
+        { eyebrow: 'Away',    title: 'Vacation Mode',  sub: 'Operator-absent autopilot' },
+        { eyebrow: 'Reset',   title: 'Recovery',       sub: 'Clear halts, locks & pauses' },
+        { eyebrow: 'Future',  title: 'Live Execution', sub: 'Needs setup before arming' }
+      ];
+      var ofTrack = document.getElementById('of-track');
+      var ofDots = document.getElementById('of-dots');
+      var ofCur = 0, ofInited = false;
+
+      function ofLayout() {
+        var cards = ofTrack.children;
+        for (var i = 0; i < cards.length; i++) {
+          var c = cards[i];
+          c.classList.remove('is-active', 'is-prev', 'is-next', 'is-far');
+          if (i === ofCur) c.classList.add('is-active');
+          else if (i === ofCur - 1) c.classList.add('is-prev');
+          else if (i === ofCur + 1) c.classList.add('is-next');
+          else c.classList.add('is-far');
+        }
+        var dots = ofDots.children;
+        for (var d = 0; d < dots.length; d++) {
+          if (d === ofCur) dots[d].classList.add('on'); else dots[d].classList.remove('on');
+        }
+      }
+      function ofGo(i) { ofCur = Math.max(0, Math.min(OF_CARDS.length - 1, i)); ofLayout(); }
+
+      function initCarousel() {
+        if (ofInited) return; ofInited = true;
+        OF_CARDS.forEach(function (cd, i) {
+          var el = document.createElement('div');
+          el.className = 'of-card3d';
+          el.innerHTML =
+            '<div class="of-card-eyebrow">' + cd.eyebrow + '</div>' +
+            '<div class="of-card-title">' + cd.title + '</div>' +
+            '<div class="of-card-sub">' + cd.sub + '</div>' +
+            '<div class="of-card-slot"><span class="dot"></span>switch — next pass</div>';
+          el.addEventListener('click', function () { if (i !== ofCur) ofGo(i); });
+          ofTrack.appendChild(el);
+          var dot = document.createElement('button');
+          dot.className = 'of-dot'; dot.type = 'button';
+          dot.addEventListener('click', function () { ofGo(i); });
+          ofDots.appendChild(dot);
+        });
+        var prev = document.querySelector('.of-prev');
+        var next = document.querySelector('.of-next');
+        if (prev) prev.addEventListener('click', function () { ofGo(ofCur - 1); });
+        if (next) next.addEventListener('click', function () { ofGo(ofCur + 1); });
+        ofLayout();
+      }
+
       function showUnlocked() {
         lockSec.classList.add('of-hide');
         shellSec.classList.remove('of-hide');
         lockBtn.classList.remove('of-hide');
+        initCarousel();
       }
       function showLocked() {
         shellSec.classList.add('of-hide');
