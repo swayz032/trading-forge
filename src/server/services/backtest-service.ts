@@ -1992,6 +1992,14 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           const { isQuantumReplayEnabled, runQuantumReplayForBacktest } = await import("../lib/quantum-replay-runner.js");
           if (!isQuantumReplayEnabled()) return;
           const replayResult = await runQuantumReplayForBacktest(backtestId, correlationId);
+          // M9: parentCorrelationId links the replay row back to its originating
+          // backtest. The replay's own UUID (correlationId in the replay's scope)
+          // is the audit's primary correlationId; parentCorrelationId is the
+          // cross-system trace key that ties replay activity to its source backtest.
+          //
+          // Query to find all activity downstream of a given backtest:
+          //   WHERE correlation_id = $backtestId
+          //      OR result->>'parentCorrelationId' = $backtestId
           await db.insert(auditLog).values({
             action: "quantum_replay.auto_fire_enqueued",
             entityType: "backtest",
@@ -2004,6 +2012,11 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
               rows_written: replayResult.rowsWritten,
               duration_ms: replayResult.durationMs,
               replay_status: replayResult.status,
+              // Cross-system trace key: the backtest's own correlationId is the
+              // parentCorrelationId for every downstream replay operation. Allows
+              // a single query to reconstruct the full causal chain:
+              //   WHERE correlation_id=$backtestId OR result->>'parentCorrelationId'=$backtestId
+              parentCorrelationId: correlationId ?? null,
             },
           });
         } catch (replayErr) {

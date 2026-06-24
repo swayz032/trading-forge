@@ -10950,6 +10950,39 @@ Caller-side correlationId threading into `isHaltedForProduction(opts)` is explic
 
 ---
 
+### Session Log — 2026-06-24 M5: Pine gatewayOptions thread-through (closes H1 caller-side blind spot)
+
+**Mission:** Close M5 carry-forward from H1 (ea92fc3) — the post-compile placeholder assertion in `compileDualPineExport` was gated on `gatewayOptions &&` which meant it NEVER fired for any external caller (all pass `gatewayOptions=undefined`), leaving the placeholder guard inactive on every production path.
+
+**Work completed:**
+- `pine-export-service.ts`: Removed `gatewayOptions &&` from the post-compile assertion condition (line ~729). Assertion now fires on `config.account_id && config.live_order_token` (credential presence alone) regardless of whether the caller explicitly passed `gatewayOptions`. The function already resolves credentials via internal A/B routing + `deriveGatewayOptions` env fallback — the previous condition was a guard bypass for all production callers.
+- `pine-export-service.ts`: Added `pine_export.gateway_options_missing` defensive audit warn block — fires when an archetype strategy (`entry_indicator.startsWith('archetype:')`) with `paper_account_routing` set compiles with `gatewayOptions=undefined`. Fail-soft: warn only, export not blocked. Surfaces the threading gap to make it visible in audit_log.
+- New test file: `src/server/__tests__/m5-pine-gateway-options-thread-through.test.ts` — 12 vitest tests across 4 describe blocks: (1) assertion fires on credential presence for rl-challenger/baseline/parametric/clean cases, (2) `gateway_options_missing` audit warn fires/not-fires correctly by archetype+routing combination, (3) lifecycle dry-run regression (partial credentials → no assertion; full credentials → assertion fires), (4) H1 backward-compat (explicit gatewayOptions still triggers assertion).
+
+**Callers found outside owned scope (NOT edited — Pass 3 carry-forward):**
+- `lifecycle-service.ts:4257` — DEPLOY_READY Pine compile trigger. No `gatewayOptions` passed. Resolves correctly via env fallback but threading intent is not auditable.
+- `lifecycle-service.ts:4567` — PILOT→DEPLOYED auto-promote (retry loop). No `gatewayOptions` passed. Same env fallback.
+- `pine-export-recipient-service.ts:618` — Per-recipient export. No `gatewayOptions` passed.
+- `routes/pine-export.ts:164` — HTTP POST `/api/pine-export/compile`. No `gatewayOptions` passed.
+- `lifecycle-service.ts:1406` — Archetype gateway dry-run gate (already correct — passes `{ mode: 'tf_gateway' }` since B3 fix).
+
+**Verification:**
+- 12/12 new vitest GREEN on `m5-pine-gateway-options-thread-through.test.ts`
+- 10/10 H1 regression tests GREEN on `pine-export-archetype-placeholder-wiring.test.ts`
+- CI gate 1 `check:production-isolation`: CLEAN — 5 files checked, 0 violations
+- CI gate 2 `check:2026-compliance`: OK — MFFU + Topstep aligned
+- CI gate 3 `system-map:check`: pre-existing drift "Registry is missing 1 scheduler job mappings" (verified present on HEAD before any M5 changes, unrelated to pine-export)
+- Commit `3dbdd4e` pushed to `hardening/phase-0` with explicit-path staging only
+
+**Known-facts updates:**
+- The post-compile assertion was always dead for external callers (gated on `gatewayOptions &&` which no production caller passes). The bug survived H1 review because H1 tests validated the assertion with `gatewayOptions` explicitly set. Production paths never exercised that branch.
+- `system-map:check` returns status `drift` on this branch (pre-existing 1-job registry mismatch). Not a blocker for pine-export commits. Other track sessions adding scheduler jobs in parallel likely introduced it.
+
+**Carry-forward (Pass 3 for next session):**
+- Thread `gatewayOptions` explicitly from the 4 external callers (lifecycle-service x2, pine-export-recipient-service, pine-export route) to make override intent auditable at call-site. The function already resolves correctly via env when `LIVE_ORDER_GATEWAY_URL` is set — this is an audit-clarity fix, not a correctness fix.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### `git add <paths>` + `git commit` is UNSAFE on the shared index — use `git commit -- <paths>` (pinned 2026-06-23)
