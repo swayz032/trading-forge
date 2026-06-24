@@ -9,9 +9,17 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/slumhouse/icons/slumdawg-180.png">
   <meta name="theme-color" content="#000000">
   <style>
-    /* ── The Office — Pass 1 (page shell + passcode gate only) ──────────────
-       Background image (Pass 2) + floating switch-cards (Pass 3) land next. */
+    /* ── The Office — Pass 2 (SlumDawg room background) ─────────────────────
+       Floating switch-cards land in Pass 3. */
     .of-hide { display: none !important; }
+
+    /* Pass 2: SlumDawg Traders room backdrop with a dark scrim for readability */
+    body {
+      background:
+        linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.72)),
+        url('/slumhouse/images/office-bg.png') center center / cover no-repeat fixed,
+        #000;
+    }
 
     /* Passcode lock screen — centered glassy card on pure black */
     .of-lock {
@@ -24,11 +32,17 @@
     .of-lock-card {
       width: 100%;
       max-width: 360px;
-      background: #000;
-      border: 1px solid var(--line);
+      /* glassy panel floating over the room */
+      background: rgba(8, 10, 8, 0.55);
+      backdrop-filter: blur(20px) saturate(1.15);
+      -webkit-backdrop-filter: blur(20px) saturate(1.15);
+      border: 1px solid rgba(255, 255, 255, 0.10);
       border-radius: 16px;
       padding: 30px 26px 26px;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 0 40px rgba(163, 255, 18, 0.05);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.06),
+        0 24px 60px rgba(0, 0, 0, 0.55),
+        0 0 50px rgba(163, 255, 18, 0.07);
       text-align: center;
     }
     .of-lock-badge {
