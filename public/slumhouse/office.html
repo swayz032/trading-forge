@@ -168,7 +168,8 @@
         <p class="of-lock-sub">Operator only · enter passcode</p>
         <form id="of-form" autocomplete="off">
           <input id="of-passcode" class="of-input" type="password" inputmode="numeric"
-                 placeholder="• • • • • •" aria-label="Passcode" autocomplete="off" />
+                 name="of-otp" placeholder="• • • • • •" aria-label="Passcode"
+                 autocomplete="one-time-code" data-lpignore="true" data-1p-ignore data-form-type="other" />
           <button id="of-submit" class="of-btn" type="submit">Unlock</button>
         </form>
         <div id="of-msg" class="of-msg"></div>
@@ -202,7 +203,10 @@
         shellSec.classList.add('of-hide');
         lockBtn.classList.add('of-hide');
         lockSec.classList.remove('of-hide');
-        setTimeout(function () { input.focus(); }, 50);
+        input.value = '';                 // never leave a passcode sitting in the box
+        // clear again after any late browser autofill, then focus
+        setTimeout(function () { input.value = ''; input.focus(); }, 60);
+        setTimeout(function () { input.value = ''; }, 400);
       }
       function setMsg(text, cls) {
         msg.textContent = text || '';
