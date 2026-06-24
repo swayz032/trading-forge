@@ -101,8 +101,8 @@
     #of-shell { min-height: calc(100vh - 168px); display: flex; flex-direction: column; justify-content: center; }
     .of-carousel { display: flex; align-items: center; justify-content: center; gap: 10px; }
     .of-stage3d {
-      position: relative; flex: 1; max-width: 1240px; height: min(66vh, 540px);
-      perspective: 1300px; perspective-origin: center 45%; overflow: hidden;
+      position: relative; flex: 1; max-width: 1500px; height: min(66vh, 540px);
+      perspective: 1150px; perspective-origin: center 50%; overflow: visible;
     }
     .of-track { position: absolute; inset: 0; }
     .of-card3d {
@@ -132,10 +132,11 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 40px 90px rgba(0,0,0,0.62), 0 0 70px rgba(163,255,18,0.16);
       cursor: default;
     }
-    .of-card3d.is-prev { transform: translate(-50%, -50%) translateX(-64%) translateZ(-120px) rotateY(46deg) scale(0.9); opacity: 0.96; z-index: 3; }
-    .of-card3d.is-next { transform: translate(-50%, -50%) translateX(64%) translateZ(-120px) rotateY(-46deg) scale(0.9); opacity: 0.96; z-index: 3; }
+    .of-card3d.is-prev { transform: translate(-50%, -50%) translateX(-88%) translateZ(-40px) rotateY(54deg) scale(0.86); opacity: 0.95; z-index: 3; }
+    .of-card3d.is-next { transform: translate(-50%, -50%) translateX(88%) translateZ(-40px) rotateY(-54deg) scale(0.86); opacity: 0.95; z-index: 3; }
     .of-card3d.is-far  { transform: translate(-50%, -50%) translateZ(-260px) scale(0.7); opacity: 0; z-index: 1; pointer-events: none; }
     .of-arrow {
+      position: relative; z-index: 20;
       flex-shrink: 0; width: 42px; height: 42px; border-radius: 50%;
       background: rgba(8,12,8,0.5); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
       border: 1px solid rgba(255,255,255,0.12); color: var(--ink);
