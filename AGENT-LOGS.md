@@ -3,6 +3,22 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-24 (cont. 5) Layer 3B — directional parity via deterministic evidence accumulation (DIRECTION_AMBIGUOUS 14→2)
+
+**Mission:** Close the 2nd universal placeability gap (14/14 DIRECTION_AMBIGUOUS). Extract directionality from TAUGHT transcript evidence, never infer from instrument symmetry. Deterministic-first (no prompt change; operator escalation rule: prompt only if >25% unresolved).
+
+**Work completed (commit `e86075f`, on main):**
+- **NEW `src/server/lib/direction-parity.ts`** — evidence-accumulation classifier (operator architecture): `extractDirectionEvidence()` scans long markers + short markers + mirror-language (per-phrase strength: "opposite for shorts" 0.8 / "vice versa" 0.6); `classifyDirection()` = operator's exact logic → 5-class {LONG_ONLY, SHORT_ONLY, BIDIRECTIONAL_EXPLICIT, LONG_WITH_IMPLIED_MIRROR, SHORT_WITH_IMPLIED_MIRROR, NO_DIRECTION_EVIDENCE} + confidence. **CRITICAL GUARD: symmetric indicator ≠ bidirectional** — only explicit directional transcript evidence counts (an RSI-reversal video with no long/short language → NO_DIRECTION_EVIDENCE, never inferred both). Markers deliberately exclude bare "long"/"short" (avoids "long term"/"as long as" false-positives).
+- `placeability-score.ts`: replaced the DIRECTION_AMBIGUOUS catch-all with the two precise enums — NO_DIRECTION_EVIDENCE (no directional language) / INSUFFICIENT_DIRECTIONAL_PARITY (claims "both" but evidence isn't explicit-both).
+- `agent.ts`: emits direction_class + direction_confidence + direction_evidence (postprocessing, no prompt change).
+
+**Verification (deterministic, 14 caches):** DIRECTION_AMBIGUOUS **14 → resolved** as 12 BIDIRECTIONAL_EXPLICIT + 1 SHORT_WITH_IMPLIED_MIRROR + 1 NO_DIRECTION_EVIDENCE; direction-failure residual = **2** (under the 25% escalation threshold → no prompt change). **W7nln now classifies BIDIRECTIONAL_EXPLICIT** — the classifier recovered the explicit short side the extraction had collapsed to "vice versa" (validates the W7nln lesson). tsc 0, 85/85 tests, 3 CI hard gates GREEN. Pushed, main fast-forwarded `683bd8b..e86075f`.
+
+**Histogram now TRIGGER-DOMINATED (Layer 3C is the binding constraint):** 7×PARAMS_REQUIRED, 2×SESSION_MISSING, 2×UNCATALOGUED_INDICATOR, 1×NO_DIRECTION_EVIDENCE, 1×INSUFFICIENT_DIRECTIONAL_PARITY. Placeable 5/14 (unchanged — all not-placeable now blocked by the trigger hard-fail, exactly the predicted layering).
+
+**Carry-forward:** Layers 3A + 3B DONE (both universal gaps closed). NEXT = **Layer 3C trigger extraction** — (a) PARAMS_REQUIRED (7): capture concrete params for parametric indicators (macd {fast,slow,signal}, bollinger {period,stddev}, vwap) so indicator≠executable becomes executable; (b) UNCATALOGUED_INDICATOR (2: SY2, W7nln): archetype synthesis (raw phrase → semantic decomposition → trigger graph nodes, not a string). Operator's Layer-4 hint: quality-weighted confidence (explicit=1.0 / vice-versa=0.45 / inferred=0.2) replaces binary field checks. THEN unseen-URL generalization. NOTE: Layer 3C params capture likely DOES need the extractor prompt (the params live in the speaker's words) → 5-fixture parity test gate applies; OR a deterministic param-scanner first (same deterministic-first discipline).
+
+---
 ### Session Log — 2026-06-24 (cont. 4) Layer 3A — structured session extraction + temporal normalization (SESSION_MISSING 14→2)
 
 **Mission:** Close the #1 universal placeability gap (14/14 SESSION_MISSING). Session is strategy IDENTITY (an ORB without a session anchor is a different strategy) → store STRUCTURED, never plain text (operator mandate).
