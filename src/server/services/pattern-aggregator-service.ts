@@ -29,11 +29,13 @@
  *   prompt-evolution resolveAbTests() job determines which version wins.
  */
 
+import { randomUUID } from "crypto";
 import { eq, desc, and, gte, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { tradeCritique, systemParameters, auditLog, promptVersions, promptAbTests } from "../db/schema.js";
 import { callOpenAI, getFallback, loadSystemPrompt, setAppendixCache } from "./model-router.js";
 import { OllamaClient } from "./ollama-client.js";
+import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { logger } from "../lib/logger.js";
 
 // ─── Constants ─────────────────────────────────────────────────
@@ -130,8 +132,18 @@ export async function runPatternAggregator(dryRun: boolean = false): Promise<Pat
   } else {
     const killSwitchValue = await _readKillSwitch();
     if (killSwitchValue === false) {
-      logger.info("Pattern aggregator: kill switch engaged — skipping");
+      const correlationId = randomUUID();
+      logger.info({ correlationId }, "Pattern aggregator: kill switch engaged — skipping");
       await _audit("auto_patch.loop_halted_skip", "success", { reason: "kill_switch" });
+      // L4: emit structured kill-switch-observed event so post-incident review can
+      // reconstruct whether the loop was halted during any window.
+      await insertAuditRowSafe({
+        action: "auto_patch.loop_halted_kill_switch",
+        entityType: "scheduler",
+        status: "info",
+        result: { service: "pattern-aggregator", param: KILL_SWITCH_PARAM } as Record<string, unknown>,
+        correlationId,
+      });
       return { ...empty, status: "halted", durationMs: Date.now() - startTime };
     }
   }

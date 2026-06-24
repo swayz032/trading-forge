@@ -271,12 +271,19 @@ export const regimeTransitionTotal = new Counter({
 //   audit fires (Pass A.2 gate at TESTING → SHADOW / TESTING → PAPER).
 //   regime label = institutional regime at the time of block evaluation.
 //   Cardinality: 6 regime values × 1 counter = 6 time series max.
-export const pboBLocksTotal = new Counter({
+export const pboBlocksTotal = new Counter({
   name: "tf_pbo_blocks_total",
   help: "Total PBO overfit blocks at TESTING lifecycle gate, labelled by institutional regime",
   labelNames: ["regime"] as const,
   registers: [promRegistry],
 });
+/**
+ * @deprecated Use `pboBlocksTotal` (corrected camelCase). Alias retained for
+ * backward-compat with lifecycle-service.ts which is managed by another agent
+ * in the same hardening pass. Remove this alias once lifecycle-service.ts is
+ * updated to the canonical name.
+ */
+export const pboBLocksTotal = pboBlocksTotal;
 
 // tf_shadow_signals_total{strategy_id, divergence_bucket}
 //   Incremented on each shadow signal write (lifecycle.shadow_signal_logged audit).
