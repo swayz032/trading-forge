@@ -107,7 +107,7 @@
     .of-track { position: absolute; inset: 0; transform-style: preserve-3d; }
     .of-card3d {
       position: absolute; top: 50%; left: 50%;
-      width: min(660px, 64vw); height: min(420px, 56vh);
+      width: min(600px, 60vw); height: min(360px, 52vh);
       border-radius: 26px; overflow: hidden;
       background:
         radial-gradient(135% 95% at 50% -12%, rgba(163,255,18,0.08), transparent 56%),
@@ -126,29 +126,40 @@
       content: ""; position: absolute; top: 0; left: 12%; right: 12%; height: 1px;
       background: linear-gradient(90deg, transparent, rgba(163,255,18,0.55), transparent);
     }
+    .of-card-top { display: flex; align-items: center; justify-content: space-between; }
     .of-card-eyebrow { font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); }
-    .of-card-title { margin-top: 12px; font-size: 46px; font-weight: 800; color: var(--ink); letter-spacing: 0.004em; line-height: 1.04; }
-    .of-card-sub { margin-top: 14px; font-size: 17px; color: var(--dim); line-height: 1.45; }
+    .of-card-badge {
+      font-family: var(--num-font); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 5px 13px; border-radius: 999px; color: var(--mute);
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10);
+    }
+    .of-card-badge.on  { color: var(--lime); background: rgba(163,255,18,0.12); border-color: rgba(163,255,18,0.40); box-shadow: 0 0 14px rgba(163,255,18,0.22); }
+    .of-card-badge.off { color: var(--red);  background: rgba(255,99,99,0.10); border-color: rgba(255,99,99,0.35); }
+    .of-card-title { margin-top: 16px; font-size: 42px; font-weight: 800; color: var(--ink); letter-spacing: 0.004em; line-height: 1.04; }
+    .of-card-sub { margin-top: 12px; font-size: 16px; color: var(--dim); line-height: 1.45; max-width: 90%; }
     .of-card-slot {
       margin-top: auto; display: flex; align-items: center; gap: 9px;
       font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mute);
     }
     .of-card-slot .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--mute); }
     /* Pass 4: the switch (lime pill toggle) */
-    .of-toggle-row { margin-top: 36px; display: flex; align-items: center; gap: 18px; }
+    .of-toggle-row { margin-top: 30px; display: flex; align-items: center; gap: 20px; }
     .of-toggle {
-      position: relative; width: 78px; height: 38px; border-radius: 999px; flex-shrink: 0;
-      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.14);
+      position: relative; width: 96px; height: 46px; border-radius: 999px; flex-shrink: 0;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);
       cursor: pointer; transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
     }
     .of-knob {
-      position: absolute; top: 3px; left: 3px; width: 30px; height: 30px; border-radius: 50%;
-      background: #6d6d6d; transition: transform 0.28s cubic-bezier(0.2,0.7,0.2,1), background 0.25s, box-shadow 0.25s;
+      position: absolute; top: 4px; left: 4px; width: 38px; height: 38px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #8a8a8a, #5a5a5a);
+      transition: transform 0.3s cubic-bezier(0.2,0.7,0.2,1), background 0.25s, box-shadow 0.25s;
     }
-    .of-toggle.on { background: rgba(163,255,18,0.20); border-color: rgba(163,255,18,0.55); box-shadow: 0 0 18px rgba(163,255,18,0.18); }
-    .of-toggle.on .of-knob { transform: translateX(40px); background: var(--lime); box-shadow: 0 0 16px var(--lime); }
+    .of-toggle.on { background: rgba(163,255,18,0.22); border-color: rgba(163,255,18,0.6); box-shadow: 0 0 24px rgba(163,255,18,0.25); }
+    .of-toggle.on .of-knob { transform: translateX(50px); background: radial-gradient(circle at 35% 30%, #d4ff7a, var(--lime)); box-shadow: 0 0 20px var(--lime); }
     .of-toggle.disabled { opacity: 0.4; cursor: not-allowed; }
-    .of-status { font-family: var(--num-font); font-size: 16px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute); }
+    .of-status { font-family: var(--num-font); font-size: 24px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mute); }
+    .of-status.on  { color: var(--lime); text-shadow: 0 0 16px rgba(163,255,18,0.4); }
+    .of-status.off { color: var(--red); }
     .of-status.on { color: var(--lime); }
     .of-status.off { color: var(--red); }
     .of-card3d.is-active {
@@ -315,7 +326,7 @@
           var el = document.createElement('div');
           el.className = 'of-card3d';
           el.innerHTML =
-            '<div class="of-card-eyebrow">' + cd.eyebrow + '</div>' +
+            '<div class="of-card-top"><span class="of-card-eyebrow">' + cd.eyebrow + '</span><span class="of-card-badge" data-badge>—</span></div>' +
             '<div class="of-card-title">' + cd.title + '</div>' +
             '<div class="of-card-sub">' + cd.sub + '</div>' +
             '<div class="of-toggle-row"><div class="of-toggle" data-toggle></div><span class="of-status" data-status>—</span></div>';
@@ -348,10 +359,15 @@
           var s = ofSwitches[cd.id] || {};
           var tg = el.querySelector('[data-toggle]');
           var st = el.querySelector('[data-status]');
+          var bd = el.querySelector('[data-badge]');
           if (s.on) tg.classList.add('on'); else tg.classList.remove('on');
           if (s.wired) tg.classList.remove('disabled'); else tg.classList.add('disabled');
           st.textContent = s.status || (s.on ? 'ON' : 'OFF');
           st.className = 'of-status' + (s.on ? ' on' : (s.wired ? ' off' : ''));
+          if (bd) {
+            bd.textContent = s.wired ? 'LIVE' : (s.needsSetup ? 'SETUP' : 'SOON');
+            bd.className = 'of-card-badge' + (s.wired ? ' on' : '');
+          }
         });
       }
       function onToggle(cd) {
