@@ -2673,6 +2673,15 @@ export const tradingviewMarkers = pgTable(
     correlationId: uuid("correlation_id"),
   },
   (table) => [
+    // Dedup constraint — mirrors migration 0173_tradingview_markers_unique.sql.
+    // Without this declaration Drizzle cannot reconstruct the index on a fresh
+    // db:push, and schema readers see an incomplete constraint surface.
+    uniqueIndex("idx_tradingview_markers_dedup").on(
+      table.accountId,
+      table.strategyId,
+      table.barTimestamp,
+      table.signal,
+    ),
     index("tradingview_markers_account_idx").on(table.accountId),
     index("tradingview_markers_bar_timestamp_idx").on(table.barTimestamp.desc()),
     index("tradingview_markers_received_at_idx").on(table.receivedAt.desc()),
