@@ -77,6 +77,8 @@ import { shadowSignalsTotal } from "../lib/metrics-registry.js";
 // into Path C SignalContext. Fail-soft: returns null snapshot on any error →
 // evalSmtConfirmation returns reason="smt_unavailable" (same fail-open as before).
 import { getSmtLiveSnapshot } from "./smt-live-service.js";
+// H3 (2026-06-23): kill switch needed at pending-entry fill site (bar N+1)
+import { killSwitch } from "../production/kill-switch.js";
 const FAIL_CLOSED_EXECUTION = process.env.TF_FAIL_CLOSED_EXECUTION !== "0";
 
 // ─── Wave 23.C: A+ gate constants ────────────────────────────────────────────
@@ -2305,6 +2307,192 @@ export async function evaluateSignals(
   const pendingEntry = pendingEntryQueue.get(pendingKey);
   if (pendingEntry && !openPos && !isShadow) {
     pendingEntryQueue.delete(pendingKey); // consume the pending entry
+
+    // ─── H3 (2026-06-23): Re-evaluate all entry gates at fill time (bar N+1) ──
+    //
+    // Signal-time gates (kill-switch, lunch-blackout, FOMC/CPI/NFP, DLL, daily-
+    // trade-cap, news-policy) were only evaluated at bar N when the signal was
+    // QUEUED.  Conditions can change between queue and fill:
+    //   • Kill switch can flip to HALT (operator action, DLL breach, CME outage)
+    //   • Lunch blackout can begin (signal at 11:28 → fill at 11:30:01 ET)
+    //   • FOMC/CPI/NFP window can open (signal at 09:59:58 → fill at 10:00:01)
+    //   • DLL can flip over 67% (held position took heat between bars N and N+1)
+    //   • Daily trade cap can reset (queued on day N, fill arrives on day N+1)
+    //
+    // On any drop: dequeue is already done; emit pending_entry.dropped_<reason>
+    // audit row with the original correlationId and skip openPosition.
+    {
+      const fillTs = new Date(bar.timestamp);
+      const fillCorrelationId = pendingEntry.correlationId ?? null;
+      let pendingDropReason: string | null = null;
+
+      // Gate 1: Kill switch (H6 layered, fail-CLOSED)
+      if (!pendingDropReason) {
+        try {
+          const halted = await killSwitch.isHaltedForProduction({ correlationId: pendingEntry.correlationId });
+          if (halted) {
+            pendingDropReason = "kill_switch";
+          }
+        } catch (_ksErr) {
+          // isHaltedForProduction is already fail-CLOSED internally; belt-and-suspenders
+          pendingDropReason = "kill_switch";
+        }
+      }
+
+      // Gate 2: Session-day boundary check — if the fill bar is on a DIFFERENT CME
+      // trading day than the signal bar, the daily-trade-cap counter has reset and
+      // the signal's context is stale. Drop the queued entry unconditionally.
+      if (!pendingDropReason) {
+        const signalDay = toFuturesTradingDayString(new Date(pendingEntry.signalBarTimestamp));
+        const fillDay = toFuturesTradingDayString(fillTs);
+        if (signalDay !== fillDay) {
+          pendingDropReason = "session_boundary_crossed";
+        }
+      }
+
+      // Gate 3: Lunch blackout (11:30–13:30 ET) — use FILL timestamp, not queue timestamp
+      if (!pendingDropReason) {
+        try {
+          const perStrategyDisabled =
+            ((config as { entry_quality?: { lunch_blackout_disabled?: boolean } }).entry_quality
+              ?.lunch_blackout_disabled) === true;
+          const lunchCheck = evaluateLunchBlackoutGate({
+            barTsUtc: fillTs,
+            startEt: getLunchBlackoutStartEnvDefault(),
+            endEt: getLunchBlackoutEndEnvDefault(),
+            perStrategyDisabled,
+          });
+          if (lunchCheck.block) {
+            pendingDropReason = "lunch_blackout";
+          }
+        } catch (_lunchErr) {
+          // Fail-CLOSED — lunch blackout gate error means we cannot confirm the window
+          // is clear. Drop the entry (consistent with signal-time fail-CLOSED policy).
+          pendingDropReason = "lunch_blackout";
+        }
+      }
+
+      // Gate 4: FOMC/CPI/NFP macro blackout — use FILL timestamp
+      if (!pendingDropReason) {
+        try {
+          const bypassNewsBlackout =
+            (sessionConfig.config as unknown as Record<string, unknown>).bypass_news_blackout === true;
+          if (!bypassNewsBlackout) {
+            const t1Check = await getT1ReleaseWindow(symbol, bar.timestamp);
+            if (t1Check.inWindow) {
+              const { action } = resolveNewsAction(sessionRow.firmId, true, false);
+              if (action === "block") {
+                pendingDropReason = "macro_blackout";
+              }
+              // action === "reduce_size" (Topstep caution): allow through — sizing
+              // was set at signal time; fill proceeds. Not a drop reason.
+            }
+          }
+        } catch (_macroErr) {
+          // Fail-OPEN: calendar/news failure is non-blocking (same as signal-time policy).
+          // Don't drop a pending entry just because the calendar service hiccuped.
+        }
+      }
+
+      // Gate 5: DLL re-check at fill time — current combined P&L may have shifted
+      if (!pendingDropReason) {
+        try {
+          const firmId = sessionRow.firmId ?? "default";
+          const sessionDate = toFuturesTradingDayString(fillTs);
+          const cumPnL = await getAccountSessionCumulativePnL(firmId, sessionDate);
+          const dllResult = evaluateCrossSymbolDll(cumPnL, DEFAULT_PERSONAL_DLL_DOLLARS);
+          if (dllResult.action === "halt" || dllResult.action === "force_close") {
+            pendingDropReason = "dll_halt";
+          }
+        } catch (_dllErr) {
+          // Fail-CLOSED for DLL gate (same as signal-time policy)
+          pendingDropReason = "dll_halt";
+        }
+      }
+
+      // Gate 6: Daily trade cap re-check using FILL-time CME day
+      // (session_boundary_crossed gate above already handles cross-day; this gate
+      // catches the within-day count crossing the cap between queue and fill.)
+      if (!pendingDropReason) {
+        try {
+          const capTodayEt = toFuturesTradingDayString(fillTs);
+          const [capRow] = await db
+            .select({ count: sql<number>`count(*)::int` })
+            .from(paperTrades)
+            .where(and(
+              eq(paperTrades.sessionId, sessionId),
+              sql`to_char(${paperTrades.exitTime} AT TIME ZONE 'America/New_York' + interval '7 hours', 'YYYY-MM-DD') = ${capTodayEt}`,
+            ));
+          const tradesTodayAtFill = capRow?.count ?? 0;
+          const sessionCfgRaw = (sessionRow as { config?: { max_trades_per_day?: number | null } }).config;
+          const perSessionCap = sessionCfgRaw?.max_trades_per_day != null
+            ? Number(sessionCfgRaw.max_trades_per_day)
+            : null;
+          const capCheck = evaluateDailyTradeCap({
+            tradesToday: tradesTodayAtFill,
+            perSessionCap,
+            envDefault: getDailyTradeCapEnvDefault(),
+          });
+          if (!capCheck.allow) {
+            pendingDropReason = "daily_trade_cap";
+          }
+        } catch (_capErr) {
+          // Fail-OPEN (same as signal-time daily-trade-cap policy): let a borderline
+          // trade through rather than silently halt on infrastructure failure.
+        }
+      }
+
+      if (pendingDropReason !== null) {
+        // A gate failed at fill time — emit audit + skip openPosition.
+        // Severity: "info" for expected temporal crossings (lunch/session-boundary/
+        // daily-cap reset); "warning" for unexpected state flips (kill-switch/DLL).
+        const dropSeverity: "info" | "warning" =
+          (pendingDropReason === "lunch_blackout" ||
+           pendingDropReason === "session_boundary_crossed" ||
+           pendingDropReason === "daily_trade_cap")
+            ? "info" : "warning";
+
+        const logPayload = {
+          sessionId,
+          symbol,
+          side: pendingEntry.side,
+          reason: pendingDropReason,
+          signalBarTimestamp: pendingEntry.signalBarTimestamp,
+          fillBarTimestamp: bar.timestamp,
+          correlationId: fillCorrelationId,
+        };
+        const dropMsg = `H3: Pending entry DROPPED at fill time — gate re-check failed: ${pendingDropReason}`;
+        if (dropSeverity === "warning") {
+          logger.warn(logPayload, dropMsg);
+        } else {
+          logger.info(logPayload, dropMsg);
+        }
+        insertAuditRow({
+          action: `pending_entry.dropped_${pendingDropReason}`,
+          entityType: "paper_session",
+          entityId: sessionId,
+          decisionAuthority: "system",
+          status: dropSeverity === "warning" ? "warning" : "info",
+          input: {
+            sessionId,
+            symbol,
+            side: pendingEntry.side,
+            signalBarTimestamp: pendingEntry.signalBarTimestamp,
+            fillBarTimestamp: bar.timestamp,
+          } as Record<string, unknown>,
+          result: { dropped: true, reason: pendingDropReason } as Record<string, unknown>,
+          correlationId: fillCorrelationId,
+        }).catch(() => {});
+
+        // Propagate span attribute then short-circuit — skip to next bar
+        span.setAttribute("pending_entry_dropped", true);
+        span.setAttribute("pending_entry_drop_reason", pendingDropReason);
+        previousIndicators.set(prevKey, indicators);
+        span.end();
+        return;
+      }
+    }
+    // ─── End H3 pending-entry fill-gate re-check ─────────────────────────────
 
     logger.info(
       {
