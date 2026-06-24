@@ -11236,6 +11236,34 @@ true under Wave 29 Pass A's SHADOW addition).
 
 ---
 
+### Session Log — 2026-06-24 F1+F3 global postscript sweep + lifecycle broadcast wiring
+
+**Mission:** Bundle FIX F1 (global M1 audit expansion — sweep all of src/server/ for unwrapped notifyCritical/notifyWarning calls) and FIX F3 (add broadcastSSE immediately after 3 lifecycle catalog event audit inserts: FROZEN_POLICY_DRIFT_BLOCKED, COMPLIANCE_DRIFT_BLOCKED, BACKTEST_STALE) into one commit on shared branch `hardening/phase-0`. Both fixes touch lifecycle-service.ts.
+
+**Work completed:**
+
+F1 — Family-Grade Postscript Sweep:
+- Swept 30 newly-owned files (routes: admin.ts, admin-recovery.ts, admin-frozen-policy-override.ts, live-order.ts, paper.ts, pine-export.ts; lib: confluence-quality-audit.ts, dlq-service.ts, quantum-replay-runner.ts, startup-config-check.ts; services: alert-service.ts, backtest-service.ts, bitwarden-session-refresh-service.ts, broker-error-budget-service.ts, compliance-refresh-service.ts, consistency-tracker-service.ts, contract-specs-service.ts, db-backup-service.ts, dd-velocity-gate.ts, dead-mans-heartbeat-service.ts, deployed-strategy-starvation-watchdog.ts, discord-fanout-audit-service.ts, fill-reconciliation-service.ts, graduated-strategy-drift-checker.ts, monte-carlo-service.ts, n8n-workflow-deployer.ts, pine-delivery-service.ts, pine-export-recipient-service.ts, regime-coverage-monitor-service.ts, settlement-reconciliation-service.ts, strategy-assignment-service.ts, strategy-production-check-service.ts, trade-critique-service.ts, webhook-latency-monitor-service.ts, weekly-drift-halt-service.ts, windows-health-check-service.ts, lifecycle-service.ts)
+- 46 genuinely unwrapped sites wrapped with appendFamilyGradePostscript()
+- 34 sites already wrapped (confirmed correct); false positives from indirect fullBody variable patterns
+- CI lint script expanded: OWNED_FILES_RELATIVE 4 → 43 files; LOOKBACK_LINES 10 → 60 (handles shared fullBody = appendFamilyGradePostscript() built 51 lines before call in consistency-tracker); function-definition exclusion added for notification-service.ts definitions
+
+F3 — broadcastSSE wiring (lifecycle-service.ts):
+- FROZEN_POLICY_DRIFT_BLOCKED: 1 site (~line 4006) after frozen-policy drift audit insert
+- COMPLIANCE_DRIFT_BLOCKED: 2 sites (TESTING→PAPER cron ~line 2173; PAPER→DEPLOY_READY cron ~line 3014)
+- BACKTEST_STALE: 3 sites (promoteStrategy() ~line 804 uses `id`/`options.correlationId`; TESTING cron ~line 2090; PAPER cron ~line 2979 — both use `s.id`/`correlationId`)
+
+Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal-recon.ts, quantum-replay-weekly-service.ts, pattern-aggregator-service.ts, remote-power-cycle-service.ts, paper-signal-service.ts, pine-export-service.ts.
+
+**Verification:** `npx tsx scripts/check-family-grade-postscript.ts` → PASS (43 files, exit 0). `npx vitest run src/server/__tests__/f1-f3-postscript-sweep-and-broadcast-wiring.test.ts` → 6/6 GREEN. Commit `fb5cb45` pushed to `hardening/phase-0`.
+
+**Known-facts updates:**
+- Lint script LOOKBACK_LINES must be at least 60, not 10 or 25. consistency-tracker-service.ts uses a shared `const fullBody = appendFamilyGradePostscript(...)` at line 370 that is consumed by THREE notify calls at lines 392, 421, and 474 — the farthest is 51 lines away.
+- `notification-service.ts` lines 306/313 define `export function notifyCritical(...)` / `export function notifyWarning(...)` — these match the regex but are DEFINITIONS not call sites. Lint script must skip lines matching `\bfunction\s+notify(Critical|Warning|Info)\s*\(`.
+- discord-fanout-audit-service.ts uses dynamic imports (`await import(...)`) for both notifyCritical AND appendFamilyGradePostscript because it is a module-boundary service that cannot import notification-service.ts statically (circular dep risk). The pattern `const { appendFamilyGradePostscript } = await import("../lib/notification-helpers.js")` inside the same try block is canonical for this file.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### `git add <paths>` + `git commit` is UNSAFE on the shared index — use `git commit -- <paths>` (pinned 2026-06-23)
