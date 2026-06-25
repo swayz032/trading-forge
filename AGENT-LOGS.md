@@ -3,6 +3,24 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-24 (cont. 6) Layer 3C.1+3C.2 — deterministic param scanner + no-silent-defaults policy (placeable 5→7/14)
+
+**Mission:** Close the now-dominant placeability gap (trigger / PARAMS_REQUIRED). Recover explicit indicator params from transcript (deterministic-first); decide prompt-escalation from the measured recovery rate.
+
+**Work completed (commit `478c861`, on main):**
+- **NEW `src/server/lib/indicator-params.ts`** — operator's 4-stage parser: indicator detection + alias-normalization (separator-normalize so snake_case "bollinger_band_15m" detects); numeric window extraction (3-tuple / period / stddev); CONTEXT BINDING with locality — param-context cues beyond the canonical word (Fqx says "standard deviations"/"bands" but never "Bollinger") + a timeframe guard ("15-minute"/"5m" can't bind as params); conservative MA binding (slash-form only — killed a false-positive {15,20} from "15 to 20 minutes" video-length chatter: wrong param > none). **3C.2 defaults policy**: `applyParamDefaults` tags DEFAULT_ASSUMPTION @ 0.25; `paramsSatisfyTrigger` → fidelity mode credits ONLY TRANSCRIPT_EXPLICIT (no hallucinated executability), backtest mode allows defaults-with-warning. Defaults are NOT source truth.
+- `agent.ts`: recovers entry_params from transcript when LLM gave none (TRANSCRIPT_EXPLICIT only) + emits `param_source`.
+- placeability-suite credits recovered params → PARAMS_REQUIRED 7→5, placeable **5→7/14**.
+
+**ESCALATION METRIC (operator rule, hard evidence):** explicit-param recovery = **2/7 = 29%**. Verified against transcripts — the low rate is NOT scanner weakness; honest breakdown: 2 partial-recoverable (gdd 20-MA / Fqx period, scattered across sentences); **3 SOURCE-VAGUE** (rf_ MACD has zero settings/period/tuple language; N7uP/ktkqq VWAP is session-anchored/no params — speaker omits entirely → no prompt CAN recover); **2 non-parametric** (2LnFWQ/D1Ipi8 `ind=null` — misclassified as params, belong to archetype handling). **CONCLUSION: a prompt change is NOT justified** despite <30% — it can't recover params the speaker never stated. Right handling = defaults policy (fidelity-fail / backtest-allowed) for source-vague, archetype routing for the non-parametric.
+
+**Verification:** tsc 0, 95/95 tests, 3 CI hard gates GREEN. Pushed, main fast-forwarded `dff6f4d..478c861`.
+
+**Placeability state after 3A+3B+3C.1: 7/14 placeable** (was 5 at Layer 2 baseline). Residual histogram: 5×PARAMS_REQUIRED (3 source-vague + 2 non-parametric), 2×UNCATALOGUED_INDICATOR (SY2/W7nln), 1×SESSION_MISSING-pair, 1×NO_DIRECTION_EVIDENCE, 1×INSUFFICIENT_DIRECTIONAL_PARITY.
+
+**Carry-forward:** 3C.1+3C.2 DONE. Remaining (all genuinely-hard / deferred): (a) **3C.3 archetype synthesis** for the 2 UNCATALOGUED (SY2 impulse_range_sweep, W7nln overnight_retest) — semantic graph construction (raw phrase → htf_context/event/confirmation_tf/trigger/invalidation nodes), NOT regex; isolated, high-risk — operator said keep isolated, do last. (b) defaults-policy WIRING for the 3 source-vague params (backtest-mode-allowed/fidelity-fail) — small. (c) the 2 non-parametric misclassified (2LnFWQ/D1Ipi8) → route to archetype/structural, not params. (d) THEN unseen-URL generalization. Operator's Layer-4 hint stands: replace binary field checks with quality-weighted confidence (explicit=1.0 / vice-versa=0.45 / inferred=0.2).
+
+---
 ### Session Log — 2026-06-24 (cont. 5) Layer 3B — directional parity via deterministic evidence accumulation (DIRECTION_AMBIGUOUS 14→2)
 
 **Mission:** Close the 2nd universal placeability gap (14/14 DIRECTION_AMBIGUOUS). Extract directionality from TAUGHT transcript evidence, never infer from instrument symmetry. Deterministic-first (no prompt change; operator escalation rule: prompt only if >25% unresolved).
