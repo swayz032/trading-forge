@@ -40,6 +40,24 @@
   3. **Archetype-match check** — reject `order_block` for an ORB video (the named indicator must match the taught mechanic).
 - **Confirm systematic** — 3/3 with a shared root cause is strong, but run the probe on 2-3 more executables to be certain it's structural (expected: yes).
 
+## CONFIRMATION ROUND (expanded to 6 — frozen second baseline)
+
+3 more executables across families to test whether the pattern is structural or a failure family:
+
+| strategy | family | `entry_condition`/`params` | verdict | mismatch |
+|---|---|---|---|---|
+| TMVHO4sgo70 | ICT order-block (bullish) | null / {} | PARTIAL_MATCH | CONFIRMATION (return-TO vs trade-THROUGH opening price / missing CISD) + direction metadata incoherence (`both` vs `LONG_ONLY`) |
+| 2u9oYfx5xdY | order-block (HTF→5m CHoCH) | null / {} | UNVERIFIABLE | CONFIRMATION — the 5m CHoCH gate that separates the educator's explicit NO-TRADE tap from his TRADE tap is not encoded → can't discriminate → would OVER-fire |
+| iU8ww5MC2FQ | 4h-candle-box (different family) | null / {} | SYSTEMATIC_DIVERGENCE | CONFIRMATION + LEVEL — 50-step transcript dump, no box/zone/trigger compiled |
+
+**6-VIDEO TALLY: 0 STRONG_MATCH · 4 SYSTEMATIC_DIVERGENCE · 1 PARTIAL · 1 UNVERIFIABLE. Dominant mismatch on ALL 6 = CONFIRMATION.** Pattern is UNIVERSAL across order-block / ORB / 4h-box families → fidelity is unquestionably the primary bottleneck (operator's "5-6/6" threshold met).
+
+**The proven root cause (one sentence):** the entry trigger is never compiled — `entry_condition: null` + `entry_params: {}` on all 6; the educator's differentiating CONFIRMATION event (CISD break-through-opening-price, 5m CHoCH, chain-of-state close, breaker-block rebalance, displacement) lives only in the prose `entry_sequence`, so the resolved archetype runs its own generic logic and **arms on a passive level-touch instead of the active confirmation** → fires earlier/looser than the educator and, in at least one case, takes setups the educator explicitly rejects (over-firing).
+
+**Sub-findings to fix:** wrong-archetype assignment (order_block named for an ORB video), session mis-parse (US-open compiled as London), direction metadata incoherence (`both` vs `LONG_ONLY`), and `entry_sequence` being a transcript dump (27-50 steps) rather than a strategy spec.
+
+→ See the fidelity fix design: `docs/designs/fidelity-design.md`.
+
 ## Method note (for re-running)
 
 Probe = blind grader: `scratchpad/fidelity/<id>.compiled.json` (compiled logic) + `tmp/generalization/<id>.transcript.txt` (ground truth) → grader classifies per-example fire/no-fire + mismatch taxonomy {TIMING, CONFIRMATION, CONTEXT, DIRECTION, LEVEL, NO_MISMATCH}. Cheap (no historical data / replay). A full Layer 4 would add: extract educator's dated example trades → run compiled strategy on that history → compare actual signals.
