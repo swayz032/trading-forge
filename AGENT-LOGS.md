@@ -3,6 +3,19 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-24 (cont. 9) FIDELITY PROBE — 3/3 systematic divergence; "compilable" ≠ "faithful"; 3C.3 PAUSED
+
+**Mission:** Before building 3C.3 (more archetypes), cheaply test the untested assumption: does an EXECUTABLE strategy actually reproduce the educator's own demonstrated trades? (operator: executability and fidelity are different questions; if fidelity is untested, more coverage has diminishing value).
+
+**Work completed (commit `956fcc3`; doc `docs/baselines/fidelity-probe-2026-06-24.md`):** ran a cheap semantic fidelity probe (blind grader, no backtest infra) on 3 diverse executables — O9czLS8lv4U (ICT order-block), yAMaiOI9cmc (ORB-retest), sv-ixHXUTSQ (ORB+EMA). For each: educator's NARRATED example entries vs the COMPILED logic; classify mismatch {TIMING/CONFIRMATION/CONTEXT/DIRECTION/LEVEL/NO_MISMATCH}.
+
+**RESULT: 3/3 SYSTEMATIC_DIVERGENCE — 0/3 would fire the educator's own example entries.** Shared structural root cause (not bad luck): **"compilable" only verifies the entry_indicator RESOLVES to some archetype — NOT that the archetype implements the taught mechanic.** (1) entry_condition=null + entry_params empty on all 3 → real entry logic lives only in un-executed prose `entry_sequence`; the resolved archetype runs its OWN generic logic. (2) Resolved archetype generic/WRONG — yAMaiOI9cmc named `order_block` for an ORB-retest video → detects the wrong level; O9czLS8lv4U missing the load-bearing Asia-low POI + 1m MSS confirmation → would fire the 5m OB the educator says NOT to take. (3) Real session bug — sv-ixHXUTSQ compiled LONDON 02:00-05:00 but the video is US-open 09:30 (Layer 3A mis-fire).
+
+**DECISION (operator's tree: systematic divergence → fidelity = highest priority):** **3C.3 PAUSED** (more archetypes would mass-produce executable-but-unfaithful strategies). The 0% false-compilation property (Stage 2) STILL HOLDS and is real — but "compilable" ≠ "faithful," so the 43% compilable / 52% placeable Stage-2 numbers OVERSTATE backtest-readiness (fidelity-adjusted: 0/3). The honest distance to "backtestable" is BIGGER than the executability numbers implied — and now LOCATED precisely at the execution-fidelity layer.
+
+**Carry-forward:** (1) confirm systematic on 2-3 more executables (expected: yes). (2) Scope the FIDELITY fix — candidate directions: a fidelity gate (compiled archetype must MATCH educator examples, not just exist) / compile entry_sequence prose into real conditions / archetype-match check (reject order_block for an ORB video). (3) Fix the Layer 3A session mis-parse (US-open→London). 3C.3 design (`docs/designs/3c3-archetype-synthesis-design.md`) stays on disk, unbuilt, until fidelity is addressed. W4.2 still deferred.
+
+---
 ### Session Log — 2026-06-24 (cont. 8) GENERALIZATION Stage 2 — full pipeline on 25 UNSEEN videos; 0 false compilations; baseline FROZEN
 
 **Mission:** Run the full gemma pipeline on unseen videos (operator's highest-information experiment) → does the architecture fail SAFELY on data it's never seen? Then freeze the baseline before 3C.3.
