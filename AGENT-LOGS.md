@@ -3,6 +3,21 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-24 (cont. 7) GENERALIZATION Stage 1 — unseen-video test finds + fixes a session overfit bug
+
+**Mission:** Operator's call — run the unseen-video generalization test BEFORE 3C.3. The patched-14 corpus can't reveal whether the architecture generalizes or just overfit. Freeze + test on unseen videos.
+
+**Work completed (commit `8a91687`, on main):**
+- NEW `scripts/generalization-deterministic.ts` — discovers fresh strategy videos via YouTube Data API (excludes ALL 15 known IDs), pulls transcripts (youtube-transcript), runs the PURE deterministic Layer 3A/3B/3C.1 extractors (session/direction/params) with zero manual intervention, reports distributions + misfire signals. Ran on 28 unseen transcripts.
+- **FINDING (the test working as intended): the SESSION extractor was OVERFIT** — bare timeframe numbers ("15-minute"/"5-min"/"3m" ORB videos) misfired as CLOCK times (NY 15:00 / 05:00 / 03:00). Invisible on the 14; systematic on the ORB-heavy unseen set. **FIXED** in `session-filter.ts`: strip timeframe tokens before clock parsing + require a real clock qualifier (:MM, am/pm, or tz) — a bare 1-2 digit number is no longer a clock. Post-fix the ORB videos correctly read NY 09:30; benchmark suite unaffected (SESSION_MISSING still 2).
+
+**Generalization verdict (DETERMINISTIC heuristics only):** session GENERALIZES post-fix (~75% detect, no misfires); direction GENERALIZES (healthy 5-class spread 19 bidir / 4 long-only / 3 none / 1 short-implied / 1 short-only — no degenerate collapse; bidirectional dominant on the order-block-heavy sample, flagged for an LLM spot-check); params consistent with benchmark (few unseen videos are parametric).
+
+**Verification:** tsc 0, 47/47 extraction tests, 3 CI hard gates GREEN. Pushed, main fast-forwarded `b3c5967..8a91687`.
+
+**Carry-forward — the TWO remaining big unknowns (operator's frame):** (1) **Stage 2 generalization = full GEMMA pipeline on the unseen set** (extraction completeness / quarantine correctness / false compilations) — gemma is UP (gemma4:e2b); needs the extraction orchestration run (~30-45min, W4.2 server-drop risk). This is where "systems look complete but fail in practice." (2) **Layer 4 FIDELITY = 0% built** — prove the compiled strategy fires the same trades the video teaches. These two are the real distance, NOT 3C.3. 3C.3 archetype synthesis (SY2/W7nln) remains deferred — the generalization test should decide if uncatalogued archetypes are common enough in the wild to justify it.
+
+---
 ### Session Log — 2026-06-24 (cont. 6) Layer 3C.1+3C.2 — deterministic param scanner + no-silent-defaults policy (placeable 5→7/14)
 
 **Mission:** Close the now-dominant placeability gap (trigger / PARAMS_REQUIRED). Recover explicit indicator params from transcript (deterministic-first); decide prompt-escalation from the measured recovery rate.
