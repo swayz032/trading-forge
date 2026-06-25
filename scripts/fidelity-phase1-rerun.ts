@@ -5,6 +5,7 @@
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from "fs";
 import { join } from "path";
 import { compileConfirmation } from "../src/server/lib/confirmation-compiler.js";
+import { extractSessionFromTranscript } from "../src/server/lib/session-filter.js";
 
 const SIX: Array<{ id: string; dir: string }> = [
   { id: "O9czLS8lv4U", dir: "tmp/generalization" },
@@ -36,7 +37,7 @@ for (const { id, dir } of SIX) {
     const enriched = { ...idea, _phase1_confirmation: r.compiled };
     writeFileSync(join(OUT, `${id}.enriched.json`), JSON.stringify({
       concept_name: idea.concept_name, direction: idea.direction, direction_class: idea.direction_class,
-      timeframe: idea.timeframe, session_window: idea.session_window, entry_indicator: idea.entry_indicator,
+      timeframe: idea.timeframe, session_window: extractSessionFromTranscript(transcript), entry_indicator: idea.entry_indicator,
       entry_sequence: idea.entry_sequence, confluences: (idea.confluences ?? []).map((c: { name?: string }) => c?.name),
       PHASE1_CONFIRMATION_TRIGGER: r.compiled,
     }, null, 2));

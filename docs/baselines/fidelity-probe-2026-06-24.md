@@ -79,6 +79,22 @@ trigger:
 
 **Next:** (a) directional-mapping refinement in structure_shift, (b) fix the Layer 3A session mis-parse (US-open→London), (c) re-grade the full 6 + wire the confirmation predicate into the fidelity gate. 3C.3 stays paused.
 
+## PHASE 1 RESIDUAL FIXES (structure_shift directional mapping + session frequency-vote + windowing)
+
+Fixed the 2 named residuals from the first re-grade + their shared root cause (punctuation-less
+transcripts → `text-windows.ts`). Re-graded the 2 affected:
+
+| strategy | original | Phase 1 v1 | after residual fixes |
+|---|---|---|---|
+| sv-ixHXUTSQ | SYSTEMATIC | PARTIAL | **STRONG_MATCH** — session fixed (London→NY 09:30 ORB via keyword-frequency vote); both demonstrated entries now fire on close_through@range |
+| 2u9oYfx5xdY | UNVERIFIABLE | PARTIAL | **PARTIAL** — directional_rule now correct (long=break-above / short=break-below); correctly rejects the no-trade BECAUSE of the direction fix |
+
+**Cumulative: STRONG_MATCH 0 → 2 (TMVHO, sv-ix); 1 PARTIAL (2u9); FALSE COMPILATIONS still 0.**
+
+**2u9's deeper residual (the named next problems):** (1) PROVENANCE — `evidence_quote` + entry_sequence steps still cite the educator's own INVERTED recap line ("breaks below a swing low for long entry") that contradicts the now-correct directional_rule (the transcript contains both the correct live phrasing and the sloppy recap). (2) CONFIRMATION STRENGTH — the educator's no-trade was a WEAK/unclear CHoCH ("slight reaction… not the confirmation we wanted"); the compiler models confirmation DIRECTION but not QUALITY, so it would not reject a clean-but-low-quality same-direction CHoCH. Confirmation-strength is a genuinely deeper fidelity dimension (Phase 2 candidate), not a regex fix.
+
+**Next per operator sequence:** re-run the FULL 6 fidelity set (not just the 3 touched) → then a small UNSEEN fidelity set (the "locally vs generally correct" test). Phase 1 verdict: the confirmation lever is proven causal — 2 STRONG recovered, safety invariant held.
+
 ## Method note (for re-running)
 
 Probe = blind grader: `scratchpad/fidelity/<id>.compiled.json` (compiled logic) + `tmp/generalization/<id>.transcript.txt` (ground truth) → grader classifies per-example fire/no-fire + mismatch taxonomy {TIMING, CONFIRMATION, CONTEXT, DIRECTION, LEVEL, NO_MISMATCH}. Cheap (no historical data / replay). A full Layer 4 would add: extract educator's dated example trades → run compiled strategy on that history → compare actual signals.
