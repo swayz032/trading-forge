@@ -58,6 +58,27 @@
 
 → See the fidelity fix design: `docs/designs/fidelity-design.md`.
 
+## PHASE 1 RE-GRADE (confirmation-event compiler) — diagnosis VALIDATED
+
+After building `confirmation-compiler.ts` (Fidelity Phase 1), re-graded 3 of the 6 (spanning the
+baseline's PARTIAL / UNVERIFIABLE / SYSTEMATIC) with the confirmation predicate made the explicit entry
+trigger:
+
+| strategy | baseline | after Phase 1 | delta |
+|---|---|---|---|
+| TMVHO4sgo70 | PARTIAL_MATCH | **STRONG_MATCH** | `close_through`@opening_price = the CISD; passive-return over-fire removed |
+| 2u9oYfx5xdY | UNVERIFIABLE | **PARTIAL_MATCH** | `structure_shift` now fires the TRADE tap AND rejects the NO-TRADE tap (over-fire closed) |
+| sv-ixHXUTSQ | SYSTEMATIC_DIVERGENCE | **PARTIAL_MATCH** | `close_through`@opening_range = the ORB break; over-fire removed |
+
+**3/3 improved · STRONG_MATCH 0→1 · UNVERIFIABLE 1→0 · over-firing fixed in both cases that had it · FALSE COMPILATIONS still 0** (the compiler only ever makes triggers stricter). **Diagnosis CONFIRMED: the missing confirmation event was the dominant source of fidelity divergence** (operator's falsification test passed — the frozen set improved materially).
+
+**Residuals are now specific + debuggable** (shifted from "no executable logic"):
+- 2u9 → directional-mapping in `structure_shift` (swing-HIGH break for longs / swing-LOW for shorts must be explicit, not one quote).
+- sv-ix → the SESSION bug (London vs US-open) — a SEPARATE Layer 3A mis-parse, NOT a confirmation issue; next fix.
+- Known limit: punctuation-less transcripts yield imprecise evidence QUOTES (kind+level still detect correctly).
+
+**Next:** (a) directional-mapping refinement in structure_shift, (b) fix the Layer 3A session mis-parse (US-open→London), (c) re-grade the full 6 + wire the confirmation predicate into the fidelity gate. 3C.3 stays paused.
+
 ## Method note (for re-running)
 
 Probe = blind grader: `scratchpad/fidelity/<id>.compiled.json` (compiled logic) + `tmp/generalization/<id>.transcript.txt` (ground truth) → grader classifies per-example fire/no-fire + mismatch taxonomy {TIMING, CONFIRMATION, CONTEXT, DIRECTION, LEVEL, NO_MISMATCH}. Cheap (no historical data / replay). A full Layer 4 would add: extract educator's dated example trades → run compiled strategy on that history → compare actual signals.

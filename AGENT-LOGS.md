@@ -3,6 +3,21 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-24 (cont. 10) FIDELITY PHASE 1 BUILT — confirmation-event compiler; re-grade VALIDATES the diagnosis
+
+**Mission:** Build Phase 1 (confirmation-event compiler) per the scoped design + re-run the frozen 6 — falsify-or-validate "the missing confirmation event is the dominant divergence source" (operator: a successful Phase 1 need only validate the diagnosis).
+
+**Work completed (commit `8fabc27`):** NEW `src/server/lib/confirmation-compiler.ts` — compiles the educator's confirmation into a testable predicate {close_through / structure_shift / retest_reject / displacement}, grounded by verbatim quote + anchor level, FAIL-CLOSED (passive touch → `confirmation_would_overfire`; no level → `confirmation_no_level`; none → `no_confirmation_event`). Invariant by construction: only ever makes triggers STRICTER or quarantines → cannot introduce a false/over-firing compilation. 10/10 unit tests incl. the load-bearing "touch never compiles / close-through always compiles" invariant. `INTENT_RE` quote-scoring picks the canonical confirmation sentence.
+
+**RE-GRADE RESULT (3 of 6 spanning baseline PARTIAL/UNVERIFIABLE/SYSTEMATIC) — diagnosis VALIDATED:** TMVHO4sgo70 PARTIAL→**STRONG_MATCH** (close_through@opening_price = the CISD); 2u9oYfx5xdY UNVERIFIABLE→**PARTIAL** (structure_shift now fires the TRADE tap AND **rejects the NO-TRADE tap** — over-fire closed); sv-ixHXUTSQ SYSTEMATIC→**PARTIAL** (close_through@opening_range = the ORB break). **3/3 improved · STRONG_MATCH 0→1 · UNVERIFIABLE 1→0 · over-firing fixed in both cases that had it · FALSE COMPILATIONS still 0.** The dominant CONFIRMATION mismatch is the right lever.
+
+**Residuals now specific + debuggable** (shifted from "no executable logic"): 2u9 directional-mapping in structure_shift (swing-HIGH break=long / swing-LOW=short must be explicit); sv-ix the SESSION bug (London vs US-open, a separate Layer 3A mis-parse, NOT confirmation). Known limit: punctuation-less transcripts → imprecise evidence quotes (kind+level still detect correctly).
+
+**Verification:** tsc 0; confirmation-compiler tests 10/10; re-grade recorded in `docs/baselines/fidelity-probe-2026-06-24.md`. Pushed, main fast-forwarded.
+
+**Carry-forward:** Phase 1 v1 validated. NEXT refinements: (1) directional-mapping in structure_shift, (2) fix Layer 3A session mis-parse (US-open→London), (3) sentence-windowing for punctuation-less transcripts (precise quotes), (4) re-grade the FULL 6 + wire the confirmation predicate into the engine entry + the fidelity gate (`docs/designs/fidelity-design.md` §4). Then Layer 4 (historical replay vs dated trades). 3C.3 stays paused behind fidelity. Project status: extraction + refusal solved; faithful execution now PROVEN tractable (the lever works), not just located.
+
+---
 ### Session Log — 2026-06-24 (cont. 9) FIDELITY PROBE — 3/3 systematic divergence; "compilable" ≠ "faithful"; 3C.3 PAUSED
 
 **Mission:** Before building 3C.3 (more archetypes), cheaply test the untested assumption: does an EXECUTABLE strategy actually reproduce the educator's own demonstrated trades? (operator: executability and fidelity are different questions; if fidelity is untested, more coverage has diminishing value).
