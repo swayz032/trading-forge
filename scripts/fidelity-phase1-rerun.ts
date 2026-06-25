@@ -27,6 +27,7 @@ for (const { id, dir } of SIX) {
     transcript,
     entry_sequence: idea.entry_sequence,
     confluences: (idea.confluences ?? []).map((c: { name?: string }) => c?.name ?? ""),
+    direction_class: idea.direction_class ?? idea.direction,
   });
   if (r.compiled) {
     console.log(`${id.padEnd(13)} COMPILE  ${r.compiled.kind.padEnd(16)} level=${String(r.compiled.level_ref).padEnd(18)} conf=${r.compiled.confluence ?? "-"}`);

@@ -33,6 +33,24 @@ describe("compileConfirmation — active confirmation compiles", () => {
     const r = compileConfirmation({ transcript: "Price closes above the range. Then we get a change of character confirming the shift." });
     expect(r.compiled?.kind).toBe("structure_shift");
   });
+
+  it("directional_rule encodes long=break-above / short=break-below SEPARATELY (the 2u9 fix)", () => {
+    const r = compileConfirmation({
+      transcript: "We need a change of character: a market structure shift breaking the prior swing.",
+      direction_class: "BIDIRECTIONAL_EXPLICIT",
+    });
+    expect(r.compiled?.directional_rule?.long).toMatch(/above/i);
+    expect(r.compiled?.directional_rule?.short).toMatch(/below/i);
+  });
+
+  it("LONG_ONLY → only the long break rule (no spurious short side)", () => {
+    const r = compileConfirmation({
+      transcript: "Change of character: market structure shift breaking the prior swing high.",
+      direction_class: "LONG_ONLY",
+    });
+    expect(r.compiled?.directional_rule?.long).toBeTruthy();
+    expect(r.compiled?.directional_rule?.short).toBeUndefined();
+  });
 });
 
 describe("compileConfirmation — FAIL-CLOSED (the over-fire guard)", () => {

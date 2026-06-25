@@ -14,6 +14,8 @@
  * the existing DST-correct killzone.ts runtime model. UTC is derived at runtime (DST-aware), not stored.
  */
 
+import { toWindows } from "./text-windows.js";
+
 export type SessionRegion = "NY" | "LONDON" | "ASIA" | "UTC";
 export type SessionSubtype = "ORB" | "KILLZONE" | "OPEN" | "CLOSE" | "RTH" | "OVERNIGHT" | "PREMARKET";
 
@@ -152,25 +154,60 @@ export function normalizeSessionPhrase(raw: string | null | undefined): SessionF
   return out;
 }
 
+/** Anchor phrases that mark the educator's CHOSEN session (vs alternatives merely listed). */
+const SESSION_ANCHOR_RE = /\b(focus on|for (?:this|the) (?:example|strategy)|i (?:trade|use|focus|like)|we(?:'re| are)? (?:going to |gonna )?(?:focus|trade|use)|stick to|primarily|mainly)\b/i;
+
 /**
- * Scan a full transcript for the dominant session the speaker teaches and return it structured.
- * Picks the highest-confidence normalized phrase across windowed candidate sentences. Pure.
+ * Scan a full transcript for the DOMINANT session the speaker teaches and return it structured.
+ *
+ * 2026-06-24 fix: punctuation-less transcripts collapse to one giant span where EVERY session keyword
+ * co-occurs (a video listing "US session, London session, Tokyo open" before choosing US would mis-bind
+ * to London). Now: WINDOW the text (text-windows.ts) → VOTE per region across windows, weighting windows
+ * that also contain an anchor phrase ("focus on the US session") → the dominant/chosen region wins.
  */
 export function extractSessionFromTranscript(transcript: string | null | undefined): SessionFilter | null {
   if (typeof transcript !== "string" || transcript.trim().length === 0) return null;
-  // Candidate sentences: those mentioning any session/time cue (keeps the normalizer focused).
   const cueRe = /(new york|\bny\b|london|asia|asian|tokyo|kill ?zone|opening range|\borb\b|overnight|pre[\s-]?market|lunch|\brth\b|session|\d{1,2}:\d{2}|\d{1,2}\s*(?:a\.?m\.?|p\.?m\.?))/i;
-  const sentences = transcript.split(/(?<=[.!?])\s+|\n+/).filter((x) => cueRe.test(x));
-  let best: SessionFilter | null = null;
+  const windows = toWindows(transcript).filter((w) => cueRe.test(w));
+
+  const candidates: SessionFilter[] = [];
   const mergedConstraints = new Set<string>();
-  for (const sent of sentences) {
-    const sf = normalizeSessionPhrase(sent);
+  for (const w of windows) {
+    const sf = normalizeSessionPhrase(w);
     if (!sf) continue;
     (sf.constraints ?? []).forEach((c) => mergedConstraints.add(c));
-    if (!best || (sf.confidence ?? 0) > (best.confidence ?? 0)) {
-      if (sf.region || sf.start) best = sf; // prefer a real window over a bare constraint
+    if (sf.region || sf.start) candidates.push(sf);
+  }
+
+  // Dominant region = most keyword MENTIONS across the whole transcript (a one-off "London session"
+  // listed as an alternative can't beat the educator's repeated "US session / US open"), with anchor
+  // windows ("focus on the US session") weighted. Frequency beats per-window precedence.
+  const REGION_KW: Record<SessionRegion, RegExp> = {
+    NY: /\b(new york|nyse|us session|us open|us equity|\bny\b|9:?30)\b/gi,
+    LONDON: /\blondon\b/gi,
+    ASIA: /\b(asia|asian|tokyo|sydney)\b/gi,
+    UTC: /\butc\b/gi,
+  };
+  const regionVotes: Record<string, number> = {};
+  for (const [region, re] of Object.entries(REGION_KW)) {
+    const hits = (transcript.match(re) ?? []).length;
+    if (hits > 0) regionVotes[region] = hits;
+  }
+  // anchor bump: if an anchor window names a region, add weight to THAT region
+  for (const w of windows) {
+    if (!SESSION_ANCHOR_RE.test(w)) continue;
+    for (const [region, re] of Object.entries(REGION_KW)) {
+      if (new RegExp(re.source, "i").test(w)) regionVotes[region] = (regionVotes[region] ?? 0) + 3;
     }
   }
+  const domRegion = Object.entries(regionVotes).sort((a, b) => b[1] - a[1])[0]?.[0];
+  let best: SessionFilter | null = null;
+  if (domRegion) {
+    const ofRegion = candidates.filter((c) => c.region === domRegion);
+    best = ofRegion.sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0))[0] ?? null;
+  }
+  if (!best) best = candidates.sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0))[0] ?? null;
+
   if (!best && mergedConstraints.size === 0) return null;
   if (!best) best = { timezone: ET, confidence: 0.4 };
   if (mergedConstraints.size) best.constraints = [...new Set([...(best.constraints ?? []), ...mergedConstraints])];

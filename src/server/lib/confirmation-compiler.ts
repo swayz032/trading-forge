@@ -12,6 +12,8 @@
  * COMPILATIONS stay exactly 0 by construction.
  */
 
+import { toWindows } from "./text-windows.js";
+
 export type ConfirmationKind = "close_through" | "structure_shift" | "retest_reject" | "displacement";
 
 export type ConfirmationQuarantineReason =
@@ -29,6 +31,12 @@ export interface ConfirmationPredicate {
   level_ref: LevelRef | null; // null only for displacement (level optional there)
   confluence?: string; // e.g. "fair_value_gap" for retest_reject
   evidence_quote: string; // verbatim grounding (anti-fabrication)
+  /**
+   * Direction-explicit break rule (fixes the 2u9 mis-mapping where one quote conflated long/short).
+   * For a break/shift, LONG = break above the swing high, SHORT = break below the swing low — never
+   * collapsed into a single side. Present for structure_shift / close_through.
+   */
+  directional_rule?: { long?: string; short?: string };
 }
 
 export interface ConfirmationResult {
@@ -43,6 +51,8 @@ export interface ConfirmationInput {
   entry_sequence?: Array<{ action?: string; rationale?: string | null }> | null;
   /** confluence names (helps resolve retest_reject confluence + level). */
   confluences?: string[] | null;
+  /** strategy directionality (Layer 3B class or raw "long"/"short"/"both") — builds the directional_rule. */
+  direction_class?: string | null;
 }
 
 // ── ACTIVE confirmation language (the strict, correct trigger) ────────────────
@@ -66,7 +76,7 @@ const LEVEL_RES: Array<{ ref: LevelRef; re: RegExp }> = [
   { ref: "order_block", re: /\b(order block|\bob\b|breaker)\b/i },
   { ref: "prior_swing", re: /\b(swing (?:high|low)|previous (?:high|low)|protected (?:high|low)|structural (?:high|low))\b/i },
   { ref: "session_level", re: /\b(session (?:high|low)|daily (?:high|low)|\bpdh\b|\bpdl\b|prior day)\b/i },
-  { ref: "range_edge", re: /\b(range (?:high|low|edge)|box (?:high|low))\b/i },
+  { ref: "range_edge", re: /\b(range (?:high|low|edge)|box (?:high|low)|(?:the|our|a)\s+range)\b/i },
 ];
 
 function findLevel(text: string): LevelRef | null {
@@ -74,8 +84,17 @@ function findLevel(text: string): LevelRef | null {
   return null;
 }
 
-function sentences(t: string): string[] {
-  return t.split(/(?<=[.!?])\s+|\n+/).map((s) => s.trim()).filter((s) => s.length > 0);
+/** Direction-explicit break rule for a level (fixes long/short conflation). */
+function buildDirectionalRule(level: LevelRef | null, directionClass: string | null | undefined): { long?: string; short?: string } | undefined {
+  if (!level) return undefined;
+  const lvl = level.replace(/_/g, " ");
+  const longRule = `break/close ABOVE the ${lvl} (swing high)`;
+  const shortRule = `break/close BELOW the ${lvl} (swing low)`;
+  const d = (directionClass ?? "").toUpperCase();
+  if (d.includes("LONG_ONLY")) return { long: longRule };
+  if (d.includes("SHORT_ONLY")) return { short: shortRule };
+  // bidirectional / implied / unknown → both sides explicit (the correct general encoding)
+  return { long: longRule, short: shortRule };
 }
 
 /**
@@ -102,7 +121,7 @@ export function compileConfirmation(input: ConfirmationInput): ConfirmationResul
   // not an intro/context sentence that merely mentions the keyword.
   const INTENT_RE = /\b(enter|entry|confirm|confirmation|qualif|trigger|signal|wait for|we (?:go|take)|look to (?:enter|buy|sell|take))\b/i;
 
-  for (const sent of sentences(corpus)) {
+  for (const sent of toWindows(corpus)) {
     const hasStructure = STRUCTURE_SHIFT_RE.test(sent);
     const hasClose = ACTIVE_CLOSE_RE.test(sent);
     const hasRetest = RETEST_RE.test(sent);
@@ -113,8 +132,8 @@ export function compileConfirmation(input: ConfirmationInput): ConfirmationResul
 
     const level = findLevel(sent);
     let cand: ConfirmationPredicate | null = null;
-    if (hasStructure) cand = { kind: "structure_shift", level_ref: level ?? "prior_swing", evidence_quote: sent.slice(0, 180) };
-    else if (hasClose) cand = { kind: "close_through", level_ref: level, evidence_quote: sent.slice(0, 180) };
+    if (hasStructure) cand = { kind: "structure_shift", level_ref: level ?? "prior_swing", evidence_quote: sent.slice(0, 180), directional_rule: buildDirectionalRule(level ?? "prior_swing", input.direction_class) };
+    else if (hasClose) cand = { kind: "close_through", level_ref: level, evidence_quote: sent.slice(0, 180), directional_rule: buildDirectionalRule(level, input.direction_class) };
     else if (hasRetest && hasRejection) cand = { kind: "retest_reject", level_ref: level, confluence, evidence_quote: sent.slice(0, 180) };
     else if (hasDisplacement) cand = { kind: "displacement", level_ref: level, evidence_quote: sent.slice(0, 180) };
 

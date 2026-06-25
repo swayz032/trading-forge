@@ -80,6 +80,17 @@ describe("extractSessionFromTranscript", () => {
   it("returns null for a transcript with no session content", () => {
     expect(extractSessionFromTranscript("we look for a hammer candle off the 20 ema")).toBeNull();
   });
+
+  it("★ punctuation-less run-on: dominant/anchored session wins (US over a one-off London mention)", () => {
+    // The sv-ix bug: one giant blob listing alternatives, then choosing US — must NOT bind to London.
+    const blob =
+      "there are many opening ranges you can look at the US session you can look at the London session the Tokyo open " +
+      "for the sake of this example I'm going to focus on the US session open at 9:30 and US equity index futures " +
+      "we wait for a full body close outside of the opening range right after the open";
+    const s = extractSessionFromTranscript(blob);
+    expect(s?.region).toBe("NY"); // not LONDON
+    expect(s?.start).toBe("09:30");
+  });
 });
 
 describe("sessionFilterLabel (backward-compat string view)", () => {
