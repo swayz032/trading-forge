@@ -106,25 +106,37 @@ export function normalizeSessionPhrase(raw: string | null | undefined): SessionF
   else if (RE.killzone.test(s)) { base = { ...CANON.NY_AM }; confidence = 0.5; }
 
   // Explicit clock overrides the default start (and bumps confidence). Take the FIRST clock token.
+  // 2026-06-24 GENERALIZATION FIX: strip TIMEFRAME tokens first ("15-minute"/"5 min"/"3m"), then
+  // require a real clock QUALIFIER — :MM, am/pm, or a tz. A bare 1-2 digit number ("15", "5") is NOT
+  // a clock; the unseen-video test exposed bare timeframes ("15-minute ORB") misfiring as 15:00.
+  const sClock = s.replace(
+    /\b\d+\s*-?\s*(?:m|min|mins|minute|minutes|h|hr|hrs|hour|hours|d|day|days|sec|second|seconds)\b/gi,
+    " ",
+  );
   RE.clock.lastIndex = 0;
-  const m = RE.clock.exec(s);
   let explicitStart: string | null = null;
-  if (m && m[1]) {
-    let h = parseInt(m[1], 10);
-    const min = m[2] ? parseInt(m[2], 10) : 0;
-    const ampm = m[3]?.replace(/\./g, "").toLowerCase();
-    const tz = m[4]?.toLowerCase();
+  let matchedTz: string | undefined;
+  let cm: RegExpExecArray | null;
+  while ((cm = RE.clock.exec(sClock)) !== null) {
+    const hasQualifier = Boolean(cm[2] || cm[3] || cm[4]); // :MM, am/pm, or tz — required
+    if (!hasQualifier) continue;
+    let h = parseInt(cm[1], 10);
+    const min = cm[2] ? parseInt(cm[2], 10) : 0;
+    const ampm = cm[3]?.replace(/\./g, "").toLowerCase();
+    const tz = cm[4]?.toLowerCase();
     if (h <= 23 && min <= 59) {
       if (ampm === "pm" && h < 12) h += 12;
       if (ampm === "am" && h === 12) h = 0;
       if (tz === "utc" || tz === "gmt") { const et = utcToEtApprox(h, min); h = et.h; }
       explicitStart = hhmm(h, min);
+      matchedTz = tz;
+      break;
     }
   }
 
   if (!base && !explicitStart && constraints.length === 0) return null;
 
-  const region: SessionRegion = base?.region ?? (m?.[4]?.toLowerCase() === "utc" ? "UTC" : "NY");
+  const region: SessionRegion = base?.region ?? (matchedTz === "utc" ? "UTC" : "NY");
   const start = explicitStart ?? base?.start;
   const end = base?.end;
   const subtype = base?.subtype;
