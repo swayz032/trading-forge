@@ -15,6 +15,7 @@ import { checkCompilabilityGate } from "../lib/extraction-quality-gate.js";
 import { deriveEntryIndicator } from "../services/direct-bucket-graduator.js";
 import { extractSessionFromTranscript, sessionFilterLabel } from "../lib/session-filter.js";
 import { classifyDirectionFromTranscript } from "../lib/direction-parity.js";
+import { scanIndicatorParams } from "../lib/indicator-params.js";
 import { runRobustnessTest } from "../services/robustness-service.js";
 import { db } from "../db/index.js";
 // Wave hardening 2026-06-22: agentJobs is the mutable job-state table.
@@ -1562,7 +1563,23 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       // slow:21}, direction: "long"} and we were dropping all of it. This was the
       // root architectural bottleneck for the entire factory.
       const direction = typeof s.direction === "string" ? s.direction : "long";
-      const entryParams = s.entry_params && typeof s.entry_params === "object" ? s.entry_params as Record<string, unknown> : {};
+      const llmEntryParams = s.entry_params && typeof s.entry_params === "object" ? s.entry_params as Record<string, unknown> : {};
+      // Layer 3C.1 (2026-06-24): recover EXPLICIT indicator params from the transcript when the LLM
+      // gave none (deterministic; no prompt change). Only TRANSCRIPT_EXPLICIT params are credited —
+      // never silent defaults (3C.2 defaults policy keeps assumed defaults out of fidelity).
+      const paramHint =
+        (typeof s.entry_indicator === "string" ? s.entry_indicator : null) ??
+        (typeof s.name === "string" ? s.name : null) ??
+        (typeof s.concept_name === "string" ? s.concept_name : null);
+      let entryParams = llmEntryParams;
+      let paramSource: string | null = Object.keys(llmEntryParams).length > 0 ? "llm" : null;
+      if (Object.keys(llmEntryParams).length === 0) {
+        const scanned = scanIndicatorParams(markdown, paramHint);
+        if (scanned.source === "TRANSCRIPT_EXPLICIT" && scanned.params) {
+          entryParams = scanned.params;
+          paramSource = "transcript_explicit";
+        }
+      }
       const extractionConfidence = typeof s.extraction_confidence === "number" ? s.extraction_confidence : 0.5;
       const entryType = typeof s.entry_type === "string" ? s.entry_type : null;
       const entryArchetype = typeof s.entry_archetype === "string" ? s.entry_archetype : null;
@@ -1744,6 +1761,7 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
         entry_indicator:            entryInd || null,
         entry_archetype:            entryArchetype,
         entry_params:               entryParams,
+        param_source:               paramSource, // Layer 3C.1: "llm" | "transcript_explicit" | null (source-vague)
         entry_condition:            entryCond || null,
         entry_type:                 entryType,
         direction,

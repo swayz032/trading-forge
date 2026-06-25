@@ -15,6 +15,7 @@ import { join } from "node:path";
 import { scorePlaceability, type PlaceabilityFailureReason } from "../lib/placeability-score.js";
 import { extractSessionFromTranscript } from "../lib/session-filter.js";
 import { classifyDirectionFromTranscript } from "../lib/direction-parity.js";
+import { scanIndicatorParams } from "../lib/indicator-params.js";
 import { computeCoverageVerdict, type SpeakerItem, type ExtractionSnapshot } from "../lib/extraction-coverage-gate.js";
 
 const CACHE_DIR = join(process.cwd(), "tmp", "validate5");
@@ -74,6 +75,13 @@ describe("PLACEABILITY regression suite — Coverage vs Placeability vs Compilab
       const transcript = existsSync(tPath) ? readFileSync(tPath, "utf8") : "";
       const sessionWindow = extractSessionFromTranscript(transcript);
       const directionEvidence = classifyDirectionFromTranscript(transcript); // Layer 3B
+      // Layer 3C.1: recover explicit params from the transcript when the extraction has none.
+      const llmParams = (i.entry_params as Record<string, unknown>) ?? {};
+      let effectiveParams = llmParams;
+      if (Object.keys(llmParams).length === 0) {
+        const scanned = scanIndicatorParams(transcript, (i.entry_indicator as string) ?? (i.concept_name as string));
+        if (scanned.source === "TRANSCRIPT_EXPLICIT" && scanned.params) effectiveParams = scanned.params;
+      }
       const verdict = scorePlaceability({
         direction: (i.direction as string) ?? null,
         direction_evidence: directionEvidence,
@@ -82,7 +90,7 @@ describe("PLACEABILITY regression suite — Coverage vs Placeability vs Compilab
         resolved_entry_indicator: resolved,
         entry_condition: (i.entry_condition as string) ?? null,
         entry_type: (i.entry_type as string) ?? null,
-        entry_params: (i.entry_params as Record<string, unknown>) ?? null,
+        entry_params: effectiveParams,
         entry_sequence: (i.entry_sequence as Array<{ action?: string; rationale?: string | null }>) ?? null,
         confluences: (i.confluences as Array<{ name?: string; description?: string }>) ?? null,
         session_filter: (i.session_filter as string) ?? null,
@@ -128,10 +136,14 @@ describe("PLACEABILITY regression suite — Coverage vs Placeability vs Compilab
     expect(failureHist["DIRECTION_AMBIGUOUS"] ?? 0).toBe(0); // old catch-all is gone
     const dirResidual = (failureHist["INSUFFICIENT_DIRECTIONAL_PARITY"] ?? 0) + (failureHist["NO_DIRECTION_EVIDENCE"] ?? 0);
     expect(dirResidual).toBeLessThanOrEqual(7); // < 50% — deterministic 3B resolved the majority
-    // Placeable count is unchanged from Layer 2 (5): the session-recovered videos are now blocked by
-    // the TRIGGER hard-fail (params_required / uncatalogued — Layer 3C), not session. The layers are
-    // independent; session was necessary but trigger is the binding constraint for the count. Bump as
-    // Layer 3B/3C land.
-    expect(placeableCount).toBe(5);
+    // Layer 3C.1: explicit params recovered from transcripts (was 7 PARAMS_REQUIRED at 3B; now ≤5 —
+    // gdd/Fqx recovered. Residual = source-vague params (rf_/N7uP/ktkqq) + non-parametric misclassified
+    // (2LnFWQ/D1Ipi8) — neither fixable by param-scanning or a prompt change).
+    expect(failureHist["PARAMS_REQUIRED"] ?? 0).toBeLessThanOrEqual(5);
+    // Placeable after Layers 3A (session) + 3B (direction) + 3C.1 (param recovery) = 7/14 (was 5 at
+    // the Layer 2 baseline). The remaining 7 are the irreducible-by-deterministic-means set: source-
+    // vague params (rf_/N7uP/ktkqq), non-parametric misclassified (2LnFWQ/D1Ipi8), and uncatalogued
+    // archetypes needing synthesis (SY2/W7nln — Layer 3C.3). Bump as 3C.3 / defaults-policy land.
+    expect(placeableCount).toBe(7);
   });
 });
