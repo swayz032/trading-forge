@@ -3,6 +3,25 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-24 (cont. 8) GENERALIZATION Stage 2 — full pipeline on 25 UNSEEN videos; 0 false compilations; baseline FROZEN
+
+**Mission:** Run the full gemma pipeline on unseen videos (operator's highest-information experiment) → does the architecture fail SAFELY on data it's never seen? Then freeze the baseline before 3C.3.
+
+**Work completed (run @ `403810b`; baseline doc committed `dcb8f5c`):**
+- Booted a fresh CURRENT-code extract-only instance on `:4099` (had to kill a stale 4.4h instance — pid 25428 — that was holding the port AND serving old code; the stale one false-compiled a `liquidity_sweep` concept-echo on probe, a live preview of the Layer 1 hole). Verified currency (session_window/direction_class present).
+- Ran `scripts/generalization-stage2.ts` (resumable) on 25 frozen unseen IDs via the full pipeline, scored completeness / compilable / quarantine / placeability / **false-compilations** / archetype frequency.
+
+**RESULTS (23 scored, 2 unextractable):** extracted 23/23 (100%); coverage pass 20/23 (**87%** — extraction generalizes); compilable 10/23 (43%); quarantined 13/23 (57%); placeable 12/23 (52%); **FALSE COMPILATIONS 0/23 (0%) ★** — the safe-failure property holds on UNSEEN data (no no-trigger extraction passed as compilable). Archetype routing: 11 archetype · **7 uncatalogued (30%)** · 5 parametric.
+
+**ROADMAP DECISION (the experiment's purpose):** uncatalogued archetypes are COMMON in the wild (30%), not a benchmark artifact → **3C.3 archetype synthesis is now a justified PRODUCTION build** (the largest executable-yield bottleneck). Gates need no work first (0% false compilations). Per-video buckets: 10 EXECUTABLE / 7 UNCATALOGUED (3C.3 target) / 3 PARAMS_REQUIRED / 3 COVERAGE_FAIL / 2 UNEXTRACTABLE.
+
+**BASELINE FROZEN:** `docs/baselines/generalization-stage2-2026-06-24.md` records commit hash + frozen 25 IDs + per-video buckets + aggregate metrics. 3C.3 success criterion: re-run the frozen 25 → UNCATALOGUED↓ EXECUTABLE↑ while FALSE COMPILATIONS stays 0 (don't trade safety for yield). (tmp/generalization/ is gitignored — durable record lives in the doc.)
+
+**Verification:** tsc 0 + all extraction tests green at the baseline commit; 3 CI gates green (carried from prior commits). The `:4099` current-code instance (pid 1184, scheduler off) is left UP for the eventual 3C.3 re-run.
+
+**Carry-forward:** Stage 2 baseline LOCKED. NEXT = **3C.3 archetype synthesis** (raw uncatalogued phrase → semantic trigger graph: htf_context/event/confirmation_tf/trigger/invalidation — NOT regex). Target the 7 UNCATALOGUED unseen videos + SY2/W7nln. Then re-run the frozen 25 + diff. THEN Layer 4 fidelity. W4.2 remains deferred (irrelevant to the script-based runs; Ollama keep-alive + harness resumability are the real stabilizers).
+
+---
 ### Session Log — 2026-06-24 (cont. 7) GENERALIZATION Stage 1 — unseen-video test finds + fixes a session overfit bug
 
 **Mission:** Operator's call — run the unseen-video generalization test BEFORE 3C.3. The patched-14 corpus can't reveal whether the architecture generalizes or just overfit. Freeze + test on unseen videos.
