@@ -3,6 +3,23 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-24 (cont. 11) FIDELITY closed-world matrix — full-6 re-graded 5-axis; 2 axes SOLVED, confirmation-SELECTION is the real residual
+
+**Mission:** Finish the remaining 3 of the frozen-6 fidelity re-grades + collapse all 6 into a single 5-axis matrix (operator's "locally-correct truth table" before any unseen-fidelity expansion) — answer: is "confirmation strength" the final primitive or a surface symptom?
+
+**Work completed (matrix recorded in `docs/baselines/fidelity-probe-2026-06-24.md`):** re-graded O9cz / yAMaiOI / iU8 under current logic (windowing + directional_rule + session frequency-vote) on 5 axes {direction, session, confirmation-existence, confirmation-strength, provenance}.
+
+**FULL-6 FINAL: 2 STRONG (TMVHO, sv-ix) · 3 PARTIAL (2u9, O9cz, iU8) · 1 SYSTEMATIC (yAMaiOI) · 0 UNVERIFIABLE** (baseline 0/1/4/1).
+
+**Axis aggregate (the diagnostic):** DIRECTION 6/6 ✅ SOLVED · CONFIRMATION-EXISTENCE 6/6 ✅ SOLVED · SESSION 4pass/1partial/1fail (O9cz new bug: Asia-POI hardcoded as traded session) · **CONFIRMATION-STRENGTH 3 FAIL/1 partial = dominant residual** · PROVENANCE 2fail/2partial = secondary.
+
+**ANSWER to operator's question:** "confirmation strength" is NOT one primitive — it decomposes into THREE: (1) **confirmation SELECTION** (biggest — compiler grabs generic `structure_shift@prior_swing` when the educator's real trigger is a specific event+level: yAMaiOI = OR-low retest+FVG not a swing break → stayed SYSTEMATIC; O9cz = Asia-low POI + 1m displacement not generic MSS); (2) **multi-leg confirmation** (iU8 chain-state-close + breaker-rebalance + optimum-zone; 2u9 CHoCH + quality); (3) **PROVENANCE/quote-selection** (confounder — evidence_quote cites failed-setup counter-examples / inverted recaps, grading correct triggers worse than they are). Plus the 1 new session bug.
+
+**Verification:** matrix is LLM-grader-derived (3 agents, 5-axis), recorded durable. No code change this entry (analysis/lock only).
+
+**Carry-forward — Phase 2 priority order:** (a) confirmation SELECTION (prefer specific retest@named-level+confluence over generic structure_shift when present) — this converts the 1 SYSTEMATIC + lifts the PARTIALs; (b) PROVENANCE quote-selection (exclude counter-example/failed-setup windows; match the rule's direction) — cheap, de-confounds the strength read; (c) multi-leg confirmation sequences; (d) O9cz POI-vs-session fix. Two axes (direction, confirmation-existence) are DONE. THEN the small UNSEEN fidelity set (locally-correct → generally-correct test). 3C.3 still paused behind fidelity.
+
+---
 ### Session Log — 2026-06-24 (cont. 10) FIDELITY PHASE 1 BUILT — confirmation-event compiler; re-grade VALIDATES the diagnosis
 
 **Mission:** Build Phase 1 (confirmation-event compiler) per the scoped design + re-run the frozen 6 — falsify-or-validate "the missing confirmation event is the dominant divergence source" (operator: a successful Phase 1 need only validate the diagnosis).

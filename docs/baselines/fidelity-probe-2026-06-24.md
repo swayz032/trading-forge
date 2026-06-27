@@ -95,6 +95,43 @@ transcripts → `text-windows.ts`). Re-graded the 2 affected:
 
 **Next per operator sequence:** re-run the FULL 6 fidelity set (not just the 3 touched) → then a small UNSEEN fidelity set (the "locally vs generally correct" test). Phase 1 verdict: the confirmation lever is proven causal — 2 STRONG recovered, safety invariant held.
 
+## CLOSED-WORLD FINAL MATRIX (all 6 re-graded under current logic, 5-axis)
+
+The full frozen-6 re-graded on the operator's 5 fidelity axes (PASS / PARTIAL / FAIL):
+
+| video | direction | session | conf-EXISTS | conf-STRENGTH | provenance | OVERALL |
+|---|---|---|---|---|---|---|
+| TMVHO4sgo70 | PASS | PASS | PASS | PASS (CISD) | PASS | **STRONG** |
+| sv-ixHXUTSQ | PASS | PASS (NY 9:30) | PASS | PARTIAL (full-body vs close) | PASS | **STRONG** |
+| 2u9oYfx5xdY | PASS | PASS | PASS | FAIL (no-trade quality) | FAIL (inverted quote) | **PARTIAL** |
+| O9czLS8lv4U | PASS | FAIL (Asia POI hardcoded as traded session; educator trades London) | PASS | PARTIAL (drops displacement + 1m refinement) | FAIL (quote = the sweep, not the MSS) | **PARTIAL** |
+| iU8ww5MC2FQ | PASS | PARTIAL | PASS | FAIL (generic break loses box/zone/breaker legs) | PARTIAL | **PARTIAL** |
+| yAMaiOI9cmc | PASS | PASS | PASS | FAIL (WRONG level: structure_shift@prior_swing vs the OR-low retest + FVG) | FAIL (quote = a failed-setup counter-example) | **SYSTEMATIC** |
+
+**Overall tally: 2 STRONG · 3 PARTIAL · 1 SYSTEMATIC · 0 UNVERIFIABLE** (baseline was 0 / 1 / 4 / 1).
+
+### Axis aggregate — WHERE the system is correct vs failing (the diagnostic)
+
+| axis | result | status |
+|---|---|---|
+| DIRECTION | 6/6 PASS | ✅ **SOLVED** (directional_rule fix generalizes) |
+| CONFIRMATION EXISTENCE | 6/6 PASS | ✅ **SOLVED** (confirmation is always compiled now — the Phase 1 core win) |
+| SESSION | 4 PASS / 1 PARTIAL / 1 FAIL | mostly solved; 1 NEW bug (O9cz: a POI level hardcoded as the traded session_window) |
+| **CONFIRMATION STRENGTH** | 2 ok / 1 PARTIAL / 3 FAIL | ❌ **dominant remaining failure axis** |
+| PROVENANCE | 2 PASS / 2 PARTIAL / 2 FAIL | ❌ secondary failure (evidence_quote ≠ compiled trigger) |
+
+### Answer to "is confirmation strength the final primitive, or another surface symptom?"
+
+**It is a surface label for a deeper layer — it decomposes into THREE distinct sub-problems, not one primitive:**
+
+1. **Confirmation SELECTION (the biggest)** — the compiler grabs the highest-priority GENERIC confirmation (`structure_shift@prior_swing`) even when the educator's actual trigger is a *specific* event+level (yAMaiOI: a retest of the **opening-range-low + FVG**, not a swing break; O9cz: the **Asia-low POI + 1m displacement**, not a generic MSS). Right *kind* ≠ right *trigger*. This is a level/event-selection problem, and it's why yAMaiOI stayed SYSTEMATIC.
+2. **Multi-leg confirmation** — the educator's A+ entry is a 2-3 step sequence (iU8: chain-state-close **+** breaker-rebalance **+** 25-50% optimum zone; 2u9: CHoCH **+** "clear/not-weak" quality). The compiler emits ONE leg and drops the rest.
+3. **PROVENANCE / quote selection (confounder)** — the evidence_quote often doesn't match the compiled rule (2u9 cites the educator's *inverted* recap; yAMaiOI cites a *failed-setup counter-example*; O9cz cites the passive sweep, not the MSS). A correct trigger with a bad quote grades worse than it is — so fixing quote-selection is cheap and would clarify the true strength picture.
+
+Plus 1 new SESSION bug (O9cz: POI-level vs traded-session conflation).
+
+**Phase 2 targets, in priority order:** (a) confirmation SELECTION — when a higher-specificity event+level (retest@named-level + confluence) is present in the source, prefer it over the generic structure_shift; (b) PROVENANCE — quote-selection must pick the window matching the compiled rule's direction/event (exclude counter-examples / failed-setup sentences); (c) multi-leg confirmation sequences; (d) the O9cz POI-vs-session fix. The two SOLVED axes (direction, confirmation-existence) need no further work.
+
 ## Method note (for re-running)
 
 Probe = blind grader: `scratchpad/fidelity/<id>.compiled.json` (compiled logic) + `tmp/generalization/<id>.transcript.txt` (ground truth) → grader classifies per-example fire/no-fire + mismatch taxonomy {TIMING, CONFIRMATION, CONTEXT, DIRECTION, LEVEL, NO_MISMATCH}. Cheap (no historical data / replay). A full Layer 4 would add: extract educator's dated example trades → run compiled strategy on that history → compare actual signals.
