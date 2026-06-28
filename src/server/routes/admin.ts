@@ -12,7 +12,7 @@ import { randomUUID, createHmac, timingSafeEqual } from "crypto";
 import { desc, eq, and, sql, count, gte } from "drizzle-orm";
 import { getMode, setMode } from "../services/pipeline-control-service.js";
 import { db } from "../db/index.js";
-import { agentHealthReports, dataIntegrityFindings, liquidityLevels, needsArchetypeQueue, strategies } from "../db/schema.js";
+import { agentHealthReports, dataIntegrityFindings, liquidityLevels, needsArchetypeQueue, strategies, systemParameters } from "../db/schema.js";
 import { AgentService } from "../services/agent-service.js";
 import { getPhaseRecord, setPhaseOverride, type PhaseValue } from "../services/harsh-regime-phase-service.js";
 import { notifyCritical, notifyWarning } from "../services/notification-service.js";
@@ -389,6 +389,50 @@ adminRoutes.post("/operator-mark-present", async (req, res) => {
   } catch (err) {
     req.log?.error({ err, correlationId }, "operator-mark-present: failed");
     res.status(500).json({ error: "operator_mark_present_failed", correlationId });
+  }
+});
+
+// ─── GET /kill-switch ────────────────────────────────────────────
+// Read-only exposure of the `system_parameters.auto_patch_loop_enabled`
+// flag for the Layer-14 nightly intelligence orchestrator (n8n 14A-master).
+// This is the SAME operator-phone-tappable halt that gates the Wave 26
+// pattern-aggregator and Wave 27 quantum-replay loops (CLAUDE.md §13).
+//
+// CANONICAL semantics (mirrors pattern-aggregator-service.ts::_readKillSwitch
+// + routes/slumhouse/admin.ts): `current_value` is NUMERIC — 1=enabled, 0/absent
+// =disabled. The autonomous LLM loops are OFF by default (an ABSENT row means
+// disabled, per migration 0175). FAIL-CLOSED: any read error → enabled:false.
+// 14A is one of those autonomous loops (it generates critic proposals), so it
+// must obey the same master halt — when the operator engages the kill switch,
+// or before they have explicitly enabled the loop, 14A stays dormant.
+adminRoutes.get("/kill-switch", async (req, res) => {
+  try {
+    const rows = await db
+      .select({ val: systemParameters.currentValue })
+      .from(systemParameters)
+      .where(eq(systemParameters.paramName, "auto_patch_loop_enabled"))
+      .limit(1);
+    const raw = rows.length > 0 ? rows[0].val : null;
+    const enabled = rows.length > 0 && Number(raw) >= 1;
+    res.json({
+      key: "auto_patch_loop_enabled",
+      enabled,
+      raw: raw ?? null,
+      source: "system_parameters",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    req.log.error({ err }, "Admin: failed to read kill-switch");
+    // FAIL-CLOSED on error: report enabled=false so the autonomous loop stays
+    // halted when we cannot confirm it was explicitly enabled.
+    res.status(200).json({
+      key: "auto_patch_loop_enabled",
+      enabled: false,
+      raw: null,
+      source: "error_fail_closed",
+      error: String(err),
+      timestamp: new Date().toISOString(),
+    });
   }
 });
 
