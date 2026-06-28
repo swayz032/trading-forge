@@ -3,6 +3,21 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-28 DISTRIBUTION-LEVEL VALIDATION — confirmation-collapse is UNIVERSAL; inference taxonomy (permanent vs fixable)
+
+**Mission:** Operator's named remaining gap — is "confirmation-heavy paraphrase collapse" UNIVERSAL or instructor-specific? (general compiler vs domain-adapted). Plus the refinement: distinguish PERMANENT (non-linguistic) inference from FIXABLE (extraction gap) — don't chase verbatim capture on inherently-visual primitives.
+
+**Measurement (n=38 videos, per-edge-primitive grounding rate via tradeGrounding):** execution_context **100%** · structural_event **96%** · wait_state.until **87%** · wait_state.confirmation **13%** (inferred in 33/38). DECISIVE: confirmation grounds at 13% ACROSS instructors while the other 3 primitives ground at 87-100% → **confirmation-collapse is UNIVERSAL, a structural property of trading pedagogy** (confirmation is DEMONSTRATED on the chart, not described in words). Answers general-vs-domain-adapted: **the compiler is general; confirmation-is-non-linguistic is a universal domain fact.** Only 5/38 fully-grounded edges (because confirmation drags nearly all to INFERENCE_DEPENDENT — correct + honest).
+
+**Work completed (commit + tag `inference-taxonomy`):** `inference-taxonomy.ts` — `CORPUS_GROUNDING_PRIORS` (empirical n=38) + `classifyInference(role)` → PERMANENT_NON_LINGUISTIC (corpus grounding < 0.4 → confirmation) vs FIXABLE_EXTRACTION_GAP (event/zone/until). `analyzeInference(tradeGrounding)` → {permanent, fixable, inference_density, **fixable_density**}. The key reprioritization: confirmation inference is PERMANENT (representational floor — don't chase verbatim; uncertainty-propagation already isolates its financial impact); event/zone/until inference is FIXABLE (real extraction gap worth closing). `fixable_density` is the ACTUAL optimization target (not raw inference_density).
+
+**Verification:** tsc 0; 25 tests (taxonomy + uncertainty + grounding); standalone. Distribution measured on the real 38-video corpus.
+
+**The reframe locked (operator):** the system is "a deterministic system that turns instructional ambiguity into measurable financial attribution risk" — a semantic financial attribution filter (span layer = truth / inference layer = reconstruction / financial projection = what survives when inference is removed). Confirmation's 13% is NOT a parser bug to fix — it's the domain telling us where human teaching becomes non-verbal. The system correctly EXPOSES that limit rather than papering over it.
+
+**Carry-forward:** (1) drive down FIXABLE_density only (event/zone/until verbatim capture — small, extraction-time/live-gated); confirmation stays a permanent inference layer. (2) the deeper frontier (operator): execution semantics STABLE under high inference density — the confirmation node (universally inferred) means most strategies run with an inferred confirmation, so the backtest must treat confirmation-inference as a first-class risk (uncertainty-propagation's INFERENCE_DEPENDENT segregation already does this). (3) verdict phase: blind suite / 100-corpus / replay parity, segregated by grounding class. No new architecture — all freeze-compatible.
+
+---
 ### Session Log — 2026-06-28 UNCERTAINTY PROPAGATION — honest under simulation (the honesty-thread capstone)
 
 **Mission:** Operator's named next layer — execution semantics must PROPAGATE inferred-node uncertainty into the backtest instead of FLATTENING it. A backtest that pools grounded + inferred trades can't tell you whether the measured edge came from what the educator TAUGHT or what the compiler ASSUMED.
