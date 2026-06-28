@@ -3,6 +3,21 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-28 UNCERTAINTY PROPAGATION — honest under simulation (the honesty-thread capstone)
+
+**Mission:** Operator's named next layer — execution semantics must PROPAGATE inferred-node uncertainty into the backtest instead of FLATTENING it. A backtest that pools grounded + inferred trades can't tell you whether the measured edge came from what the educator TAUGHT or what the compiler ASSUMED.
+
+**Work completed (commit + tag `uncertainty-propagation`):** `uncertainty-propagation.ts` — `tradeGrounding(ir)` classifies a strategy's EDGE (event/zone/until/confirmation — NOT entry order-type, which framework-overlay owns) as FULLY_GROUNDED (every edge node transcript-span-bound) vs INFERENCE_DEPENDENT (≥1 edge node compiler-inferred), and propagates weakest-link `trade_confidence`. `segregateBacktest(trades)` splits P&L by grounding class → verdict: GROUNDED_EDGE (edge survives on grounded setups — faithful) / INFERENCE_EDGE_SUSPECT (edge ONLY in inference-dependent trades — the compiler invented it, not the educator) / MIXED / NO_EDGE. A test proves the key honesty property: a POOLED positive avg can hide an invented edge that segregation exposes.
+
+**HONEST MEASUREMENT (frozen-6 edge grounding):** 2/6 FULLY_GROUNDED (TMVHO conf .97, 2u9 conf .97); 4/6 INFERENCE_DEPENDENT (O9cz/yAMaiOI/iU8 conf .72 — confirmation inferred; sv-ix conf .6 — until+confirmation inferred). The CONFIRMATION node is the most-paraphrased (its compiled leg quote isn't verbatim transcript) → confirmation-binding is exactly where verbatim-capture would most raise grounded-edge coverage. Actionable.
+
+**Verification:** tsc 0; 101 tests green (full state-machine + grounding + uncertainty + fidelity); standalone (zero production wiring). One synthetic test corrected (the compiler grounded confirmation via a different leg than assumed → rebuilt the test to construct the IR directly).
+
+**The capstone:** the honesty stack is complete — conserveOrThrow (no silent loss) → explicit-XOR-inferred → grounding (no ungrounded claim executes) → span-native (evidence IS a transcript slice) → uncertainty-propagation (inference is visible in the BACKTEST, not flattened). Correctness is a graph-constraint over spans; uncertainty is now structural + measurable + carried into simulation. The system is honest under simulation.
+
+**Carry-forward (operator reframes locked):** grounding_rate is a TYPE-SYSTEM property (always 100% in a correct build, not a metric); inference_rate is SOURCE-CONTENT metadata (compression gap: explicit vs tacit teacher), never reaches 0. Two tracks remain, both freeze-compatible: (1) MAXIMAL SPAN CAPTURE — bind confirmation/until to `_coverage_speaker_items.verbatim_quote` at extraction (raises grounded-edge %; core lever is extraction-time = live/stable-supervisor-gated). (2) the verdict phase: blind suite vs frozen control + ~100-video corpus + real-bar replay parity (now reportable SEGREGATED by grounding class — grounded-edge replay parity is the true faithfulness measure). No new architecture.
+
+---
 ### Session Log — 2026-06-28 SPAN-NATIVE LOWERING — the compiler bug fix; grounding collapsed 1/6 → 6/6
 
 **Mission:** Operator root-cause: the 50-67% grounding failure was NOT model hallucination — it was a COMPILER BUG. The lowering sliced evidence from the corpus (transcript + PARAPHRASED extraction steps), promoting paraphrase tokens into "explicit" IR nodes. Fix = make the IR SPAN-NATIVE: every explicit node's evidence must be a real transcript slice (`transcript.slice(start,end)`), never generated text; if a concept isn't in the transcript it's honestly DERIVED, never fabricated-explicit.
