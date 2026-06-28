@@ -203,6 +203,21 @@ attributable to grounded/perceptual layers, under replay on unseen data"* — is
 AND Gate 1.5 ✓ (executable) AND Gate 1.75 ✓ (complete — no missed/invented decisions) AND Gate 2 PASS AND
 Gate 3 GENERALIZES.
 
+## Execution-layer contract (pre-defined before the engine — `decision-status.ts`)
+
+The state-machine IR already IS the decision graph (S0–S8 nodes; activation/context/trigger are 3 separate
+nodes; per-node grounding). Two contracts are pre-defined for the replay engine to honor:
+- **Epistemic status (extraction layer, where confidence lives):** KNOWN / **UNKNOWN** / VISUAL_ONLY /
+  FRAMEWORK / IMPLIED. UNKNOWN ("educator had a decision here but never verbalized it") is DISTINCT from null
+  ("no decision") — they localize differently at replay.
+- **Execution resolution (execution layer — BINARY, no confidence):** every required condition resolves to
+  TRUE / FALSE / UNKNOWN / UNOBSERVABLE — never "probably / 0.63." **No-guess rule:** any required condition
+  that resolves UNKNOWN/UNOBSERVABLE → the strategy is NOT faithfully executable (the engine must not invent
+  behavior the educator never specified). `decisionCoverage = executable / expected` decisions (not field coverage).
+- **Per-trade proof tree (DEFERRED to replay-time — needs the engine):** every executed trade must be
+  traceable to a complete proof tree (each node TRUE + grounded to a span); any UNKNOWN node → incomplete
+  proof → not a faithful reproduction. This makes every backtested trade *auditable*. Built when replay exists.
+
 ## First-class invariant — Executable Strategy IR
 
 The IR's contract is **backtestability**, not representation: **every extraction-owned node is PRESENT or
