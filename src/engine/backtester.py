@@ -746,7 +746,8 @@ def _apply_trade_management(
     Routing:
       exit_engine="static_styleC" (default) → _apply_static_styleC_management()
         Existing behavior: 6pt max SL, structural TP via DOL, BE+trail progression.
-        Preserved verbatim — no changes.
+        Wave 1 Track 1A: passes liquidity_snapshot (from adaptive_ctx if available)
+        to compute_single_tp for liquidity-mapped TP2.
       exit_engine="adaptive" + adaptive_ctx provided → _apply_adaptive_management()
         Adaptive exits: liquidity-mapped TP1/TP2, regime-scaling, pre-lunch partial,
         delta-div early-exit, 15:55 ET hard flatten.
@@ -767,11 +768,22 @@ def _apply_trade_management(
             atr_stop_multiplier=atr_stop_multiplier,
         )
 
-    # Default / fallback: static Style C (existing path, unchanged)
+    # Wave 1 Track 1A: extract liquidity snapshot for static TP2 mapping.
+    # adaptive_ctx may be set even when exit_engine=static_styleC (e.g. caller
+    # provides context for TP2 mapping but prefers the static exit rules).
+    # Falls through gracefully when no context available.
+    _static_liq_snapshot: Optional[list] = None
+    if adaptive_ctx is not None and hasattr(adaptive_ctx, "liquidity_snapshot"):
+        _raw_snap = adaptive_ctx.liquidity_snapshot
+        if _raw_snap:
+            _static_liq_snapshot = list(_raw_snap)
+
+    # Default / fallback: static Style C (existing path)
     return _apply_static_styleC_management(
         trades_records, high_np, low_np, close_np, atr_np,
         spec, htf_cache, df, open_np=open_np,
         atr_stop_multiplier=atr_stop_multiplier,
+        liquidity_snapshot=_static_liq_snapshot,
     )
 
 
@@ -786,6 +798,7 @@ def _apply_static_styleC_management(
     df,
     open_np: Optional[np.ndarray] = None,
     atr_stop_multiplier: float = 1.5,
+    liquidity_snapshot: Optional[list] = None,  # Wave 1 Track 1A: intraday levels for TP2 mapping
 ) -> list[dict]:
     """Style C static trade management — PRESERVED VERBATIM from original _apply_trade_management.
 
@@ -861,6 +874,8 @@ def _apply_static_styleC_management(
             nearest_old_high=htf.prev_day_high if htf and not is_short else None,
             nearest_old_low=htf.prev_day_low if htf and is_short else None,
             atr=atr_at_entry,
+            # Wave 1 Track 1A: intraday levels for TP2 mapping (None = no change)
+            liquidity_snapshot=liquidity_snapshot,
         )
 
         # Build managed trade record
@@ -1918,29 +1933,92 @@ def _apply_max_trades_per_day(
 # ─── Wave 21 E.3 — Stop ceiling per symbol ───────────────────────────────────
 # Per CLAUDE.md §4: structural stops have a CEILING per instrument.
 # If stop_distance > ceiling → SKIP THE TRADE (never clamp).
-# MCL ceiling is 0.25 points (25 ticks × $0.01/tick = $0.25/pt).
-_STOP_CEILING_TABLE: dict[str, float] = {
-    "MES": 14.0,
-    "ES":  14.0,   # micro alias
-    "MNQ": 40.0,
-    "NQ":  40.0,   # micro alias
-    "MCL": 0.25,
-    "CL":  0.25,   # micro alias
+#
+# Wave 1 Track 1A 2026-06-27 recalibration:
+#   MNQ / NQ: 40 → 62  (MNQ ATR in normal/high-vol can reach 50-60pt; 40 over-skipped)
+#   MCL / CL: 0.25 → 1.00  (1pt = 100 ticks; old 0.25 = 25 ticks was far too tight)
+#   MES / ES: 14.0 (unchanged)
+#
+# IMPORTANT: reads the SAME env vars as gate_block_analyzer.STRUCTURAL_STOP_CEILING_PTS
+# so the two tables can NEVER diverge.  Any change here must also update the defaults
+# in gate_block_analyzer.py (env var keys: STOP_CEILING_PTS_MES / _MNQ / _MCL).
+_STOP_CEILING_DEFAULTS: dict[str, tuple[str, float]] = {
+    # symbol → (env_var_key, default_value)
+    "MES": ("STOP_CEILING_PTS_MES", 14.0),
+    "ES":  ("STOP_CEILING_PTS_MES", 14.0),   # micro alias — shares MES env var
+    "MNQ": ("STOP_CEILING_PTS_MNQ", 62.0),
+    "NQ":  ("STOP_CEILING_PTS_MNQ", 62.0),   # mini alias — shares MNQ env var
+    "MCL": ("STOP_CEILING_PTS_MCL", 1.00),
+    "CL":  ("STOP_CEILING_PTS_MCL", 1.00),   # mini alias — shares MCL env var
 }
-_STOP_CEILING_DEFAULT: float = 14.0  # fallback to MES ceiling
+_STOP_CEILING_DEFAULT: float = 14.0  # fallback for unknown symbols (MES default)
 
 
 def _get_stop_ceiling_for_symbol(symbol: str) -> float:
     """Return the maximum allowed stop distance (in points) for a given symbol.
 
-    Per CLAUDE.md §4:
-        MES / ES  → 14 points
-        MNQ / NQ  → 40 points
-        MCL / CL  → 0.25 points (25 ticks)
+    Reads env vars (STOP_CEILING_PTS_MES / _MNQ / _MCL) so this function and
+    gate_block_analyzer.STRUCTURAL_STOP_CEILING_PTS share a single source of truth
+    and can never diverge.
 
-    Unknown symbols fall back to the MES default (14 points).
+    Wave 1 Track 1A 2026-06-27 defaults:
+        MES / ES  → 14.0 points (STOP_CEILING_PTS_MES, unchanged)
+        MNQ / NQ  → 62.0 points (STOP_CEILING_PTS_MNQ, was 40)
+        MCL / CL  →  1.0 points (STOP_CEILING_PTS_MCL, was 0.25)
+
+    Unknown symbols fall back to the MES default (14.0 points).
     """
-    return _STOP_CEILING_TABLE.get(symbol.upper(), _STOP_CEILING_DEFAULT)
+    sym = symbol.upper()
+    if sym not in _STOP_CEILING_DEFAULTS:
+        return _STOP_CEILING_DEFAULT
+    env_key, default = _STOP_CEILING_DEFAULTS[sym]
+    raw = os.environ.get(env_key)
+    if raw is not None:
+        try:
+            return float(raw)
+        except ValueError:
+            return default
+    return default
+
+
+# ─── Wave 1 Track 1A — Stop floor per symbol ─────────────────────────────────
+# A floor widens a stop that is too tight (prevents trivial fills from noise).
+# Floor is applied BEFORE the ceiling check.  Precedence:
+#   compute structural/ATR stop → apply floor (widen up) → apply ceiling (skip if over).
+# Only MES has a default floor (6.0 pt).  MNQ/MCL floors are opt-in via env.
+# A floor widens — it never skips (that is the ceiling's job).
+_STOP_FLOOR_ENV_MAP: dict[str, tuple[str, Optional[float]]] = {
+    "MES": ("STOP_FLOOR_PTS_MES", 6.0),
+    "ES":  ("STOP_FLOOR_PTS_MES", 6.0),   # micro alias
+    "MNQ": ("STOP_FLOOR_PTS_MNQ", None),   # no default — opt-in via env
+    "NQ":  ("STOP_FLOOR_PTS_MNQ", None),
+    "MCL": ("STOP_FLOOR_PTS_MCL", None),   # no default — opt-in via env
+    "CL":  ("STOP_FLOOR_PTS_MCL", None),
+}
+
+
+def _get_stop_floor_for_symbol(symbol: str) -> Optional[float]:
+    """Return the minimum stop distance (floor) in points for a given symbol.
+
+    Returns None when no floor applies (unknown symbol or opt-in env unset for MNQ/MCL).
+
+    Wave 1 Track 1A 2026-06-27 defaults:
+        MES / ES  → 6.0 points (STOP_FLOOR_PTS_MES)
+        MNQ / NQ  → None unless STOP_FLOOR_PTS_MNQ is set
+        MCL / CL  → None unless STOP_FLOOR_PTS_MCL is set
+    """
+    sym = symbol.upper()
+    if sym not in _STOP_FLOOR_ENV_MAP:
+        return None
+    env_key, default = _STOP_FLOOR_ENV_MAP[sym]
+    raw = os.environ.get(env_key)
+    if raw is not None:
+        try:
+            v = float(raw)
+            return v if v > 0.0 else None  # 0 or negative = no floor
+        except ValueError:
+            return default
+    return default
 
 
 def _apply_dsl_stop_loss_and_time_stop(
@@ -1984,6 +2062,7 @@ def _apply_dsl_stop_loss_and_time_stop(
             time_stop_exits: int — number of 15:55 ET time-stop exit signals set
     """
     ceiling = _get_stop_ceiling_for_symbol(symbol)
+    floor = _get_stop_floor_for_symbol(symbol)  # Wave 1 Track 1A: None → no floor for this symbol
 
     entry_long_out = entry_long.copy()
     exit_long_out = exit_long.copy()
@@ -2009,6 +2088,12 @@ def _apply_dsl_stop_loss_and_time_stop(
         ts_str = str(timestamps[i]) if timestamps is not None and i < len(timestamps) else ""
         atr = float(atr_np[i]) if not np.isnan(atr_np[i]) else 0.0
         stop_dist = stop_multiplier * atr
+
+        # ── Wave 1 Track 1A: stop floor — widen stop_dist if too tight ──────
+        # Precedence: ATR stop → floor (widen) → ceiling (skip).
+        # `floor` is computed once above the loop; None → no floor for this symbol.
+        if floor is not None and stop_dist < floor:
+            stop_dist = floor
 
         # ── E.5: 15:55 ET time-stop ────────────────────────────────
         # H1 FIX: Use ts_et column for DST-safe time comparison when available.
@@ -3358,6 +3443,22 @@ def run_backtest(
         )
 
         _guard_stop_mult = float(getattr(config.stop_loss, "multiplier", 1.5)) if hasattr(config, "stop_loss") and config.stop_loss else 1.5
+
+        # ── Wave 1 Track 1A: VIX-tiered ATR multiplier (default OFF) ──────────
+        # When VIX_TIERED_ATR_ENABLED=true, _guard_stop_mult is replaced by the
+        # VIX-regime multiplier BEFORE passing into E.3 ceiling enforcement.
+        # With the flag OFF (default), base_mult is returned unchanged → zero
+        # behavior change.  VIX is read from df when available; None = fail-open.
+        _vix_for_stop: Optional[float] = None
+        if "vix" in df.columns:
+            _vix_arr_stop = df["vix"].to_numpy()
+            _vix_clean_stop = _vix_arr_stop[~np.isnan(_vix_arr_stop)]
+            if len(_vix_clean_stop) > 0:
+                _vix_for_stop = float(np.max(_vix_clean_stop))  # peak = conservative
+        from src.engine.margin_expansion import (
+            apply_vix_atr_multiplier as _apply_vix_atr_mult,  # noqa: E402
+        )
+        _guard_stop_mult = _apply_vix_atr_mult(_guard_stop_mult, _vix_for_stop)
 
         # E.3 + E.5
         (

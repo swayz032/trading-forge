@@ -120,3 +120,81 @@ def get_vix_expansion_audit(
         "tier_triggered": tier_triggered,
         "expansion_applied": expanded_max_contracts != base_max_contracts,
     }
+
+
+# ─── Wave 1 Track 1A — VIX-tiered ATR stop multiplier ────────────────────────
+# Adjusts the ATR stop multiplier based on VIX regime.
+# Default OFF (VIX_TIERED_ATR_ENABLED != "true") — returns base_mult unchanged,
+# preserving exact current behaviour.
+#
+# When ENABLED:
+#   vix < VIX_ATR_TIER_LOW  (default 20.0) → 1.5  (calm, tight stops)
+#   vix in [TIER_LOW, TIER_MID] (20–30)    → 2.0  (elevated, wider stops)
+#   vix > VIX_ATR_TIER_MID  (default 30.0) → 2.5  (crisis, wide stops)
+#
+# Tier breakpoints and per-tier multiplier values are all env-overridable.
+# Pure-functional: no I/O, no DB, deterministic.
+
+_VIX_ATR_TIER_LOW: float = float(os.environ.get("VIX_ATR_TIER_LOW", "20.0"))
+_VIX_ATR_TIER_MID: float = float(os.environ.get("VIX_ATR_TIER_MID", "30.0"))
+_VIX_ATR_MULT_LOW: float = float(os.environ.get("VIX_ATR_MULT_LOW", "1.5"))   # vix < tier_low
+_VIX_ATR_MULT_MID: float = float(os.environ.get("VIX_ATR_MULT_MID", "2.0"))   # tier_low ≤ vix ≤ tier_mid
+_VIX_ATR_MULT_HIGH: float = float(os.environ.get("VIX_ATR_MULT_HIGH", "2.5"))  # vix > tier_mid
+
+
+def apply_vix_atr_multiplier(
+    base_mult: float,
+    vix: "float | None",
+    *,
+    enabled: "bool | None" = None,
+    tier_low: "float | None" = None,
+    tier_mid: "float | None" = None,
+    mult_low: "float | None" = None,
+    mult_mid: "float | None" = None,
+    mult_high: "float | None" = None,
+) -> float:
+    """Return the VIX-adjusted ATR stop multiplier.
+
+    When VIX_TIERED_ATR_ENABLED != "true" (default) OR vix is None,
+    returns base_mult UNCHANGED — exact current behaviour preserved.
+
+    When enabled:
+        vix < tier_low  → mult_low   (default 1.5)
+        tier_low ≤ vix ≤ tier_mid → mult_mid (default 2.0)
+        vix > tier_mid  → mult_high  (default 2.5)
+
+    These REPLACE (not add to) the multiplier — the returned value is
+    the multiplier to pass directly to the ATR stop computation.
+
+    Args:
+        base_mult: The multiplier that would be used without VIX adjustment.
+            Returned as-is when the feature is disabled or vix is None.
+        vix: Current VIX reading (or peak VIX for the backtest window).
+            None → feature fails-open (returns base_mult unchanged).
+        enabled: Override for VIX_TIERED_ATR_ENABLED env-flag (tests only).
+        tier_low, tier_mid: Override thresholds (tests only).
+        mult_low, mult_mid, mult_high: Override per-tier values (tests only).
+
+    Returns:
+        Adjusted multiplier (float).
+    """
+    # Feature gate — default OFF
+    if enabled is None:
+        enabled = os.environ.get("VIX_TIERED_ATR_ENABLED", "false").lower() == "true"
+    if not enabled:
+        return base_mult
+    if vix is None:
+        return base_mult
+
+    _tier_low = tier_low if tier_low is not None else _VIX_ATR_TIER_LOW
+    _tier_mid = tier_mid if tier_mid is not None else _VIX_ATR_TIER_MID
+    _mult_low = mult_low if mult_low is not None else _VIX_ATR_MULT_LOW
+    _mult_mid = mult_mid if mult_mid is not None else _VIX_ATR_MULT_MID
+    _mult_high = mult_high if mult_high is not None else _VIX_ATR_MULT_HIGH
+
+    if vix < _tier_low:
+        return _mult_low
+    elif vix <= _tier_mid:
+        return _mult_mid
+    else:
+        return _mult_high

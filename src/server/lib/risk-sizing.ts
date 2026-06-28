@@ -226,6 +226,18 @@ export interface RiskSizingInputs {
    * PROVEN_TRADES_PER_TIER (default "10").
    */
   provenTrades?: number | null;
+
+  // ── Wave 1 Track 1B: symbol-aware stop floor ──────────────────────────────
+  /**
+   * Contract symbol (e.g. "MES", "MNQ", "MCL"). Optional for backward compat.
+   * When provided and symbol="MES", the MES stop floor (STOP_FLOOR_PTS_MES=6.0)
+   * is applied: if computed stop distance < floor, it is widened to the floor.
+   * Widen-up semantics: never skips the trade, never reduces the stop.
+   *
+   * Also enables VIX-tiered ATR multiplier (VIX_TIERED_ATR_ENABLED) when vixNow
+   * is provided, applying computeVixAtrMultiplier() to the stop multiplier.
+   */
+  symbol?: string | null;
 }
 
 /**
@@ -309,6 +321,31 @@ const DRAWDOWN_ROOM_RISK_PCT = parseFloat(process.env.DRAWDOWN_ROOM_RISK_PCT ?? 
 // Env: PROVEN_TRADES_PER_TIER (default 10)
 const PROVEN_TRADES_PER_TIER = parseInt(process.env.PROVEN_TRADES_PER_TIER ?? "10", 10);
 
+// ── Wave 1 Track 1B: VIX-tiered ATR multiplier ───────────────────────────────
+// Parity with Python `margin_expansion.apply_vix_atr_multiplier()`.
+// Default OFF — when OFF, returns baseMultiplier unchanged (byte-identical behavior).
+// When ON: replaces the static 1.5× stop-distance multiplier with a VIX-tiered value:
+//   vix < 20  → VIX_ATR_TIER_LOW  (wider stop in calm vol)
+//   vix 20-30 → VIX_ATR_TIER_MID  (wider stop in moderate vol)
+//   vix > 30  → VIX_ATR_TIER_HIGH (widest stop in high vol — capital preservation)
+//
+// Env names MUST match Python side exactly (enforced by npm run check:ts-python-exit-parity):
+//   VIX_TIERED_ATR_ENABLED  default "false"
+//   VIX_ATR_TIER_LOW        default 1.5  (matches static base when calm)
+//   VIX_ATR_TIER_MID        default 2.0
+//   VIX_ATR_TIER_HIGH       default 2.5
+const _VIX_TIERED_ATR_ENABLED = process.env.VIX_TIERED_ATR_ENABLED === "true";
+const _VIX_ATR_TIER_LOW  = parseFloat(process.env.VIX_ATR_TIER_LOW  ?? "1.5");
+const _VIX_ATR_TIER_MID  = parseFloat(process.env.VIX_ATR_TIER_MID  ?? "2.0");
+const _VIX_ATR_TIER_HIGH = parseFloat(process.env.VIX_ATR_TIER_HIGH ?? "2.5");
+
+// ── Wave 1 Track 1B: MES stop floor ──────────────────────────────────────────
+// Widen-up floor for MES: if computed stop distance < floor, use floor instead.
+// NEVER skip the trade on a narrow stop — widen to the floor (parity with Python).
+// Only applied when RiskSizingInputs.symbol === "MES".
+// Env: STOP_FLOOR_PTS_MES default 6.0
+const _STOP_FLOOR_PTS_MES = parseFloat(process.env.STOP_FLOOR_PTS_MES ?? "6.0");
+
 /**
  * Wave 24 Item 16 — VIX-driven vol scale on max_risk_pct_per_trade.
  *
@@ -323,6 +360,35 @@ const PROVEN_TRADES_PER_TIER = parseInt(process.env.PROVEN_TRADES_PER_TIER ?? "1
 export function computeVolScale(vixNow: number | null): number {
   if (vixNow == null || vixNow <= 0) return 1.0;
   return Math.max(RISK_VOL_SCALE_MIN, Math.min(RISK_VOL_SCALE_MAX, RISK_VIX_TARGET / vixNow));
+}
+
+/**
+ * Wave 1 Track 1B — VIX-tiered ATR multiplier for stop-distance sizing.
+ *
+ * Mirrors Python `margin_expansion.apply_vix_atr_multiplier()`.
+ * Note: this is DIFFERENT from computeVolScale() above.
+ *   computeVolScale:      scales max_risk_pct_per_trade (how many dollars to risk)
+ *   computeVixAtrMultiplier: scales the stop DISTANCE in ATR multiples
+ *
+ * When VIX_TIERED_ATR_ENABLED=false (default): returns baseMultiplier unchanged.
+ *   → With flag OFF paper sizing is byte-identical to before.
+ *
+ * When enabled:
+ *   vix < 20  → VIX_ATR_TIER_LOW  (1.5 default — calm market, normal stop)
+ *   vix 20-30 → VIX_ATR_TIER_MID  (2.0 default — elevated vol, wider stop)
+ *   vix > 30  → VIX_ATR_TIER_HIGH (2.5 default — crisis vol, widest stop)
+ *
+ * Fail-open on missing/zero VIX: returns baseMultiplier (data absence never blocks entries).
+ *
+ * @param vixNow        Current VIX level. null/0/negative → fail-open.
+ * @param baseMultiplier  The ATR multiplier to use when flag is OFF or VIX absent.
+ */
+export function computeVixAtrMultiplier(vixNow: number | null, baseMultiplier: number): number {
+  if (!_VIX_TIERED_ATR_ENABLED) return baseMultiplier;
+  if (vixNow == null || vixNow <= 0) return baseMultiplier; // fail-open on missing data
+  if (vixNow < 20) return _VIX_ATR_TIER_LOW;
+  if (vixNow <= 30) return _VIX_ATR_TIER_MID;
+  return _VIX_ATR_TIER_HIGH;
 }
 
 /**
@@ -625,7 +691,18 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
   }
 
   // Risk-derived ceiling (common to both firms)
-  const stopDollarsPerContract = input.stopMultiplier * input.atrPoints * input.pointDollarValue;
+  // Wave 1 Track 1B: apply VIX-tiered ATR multiplier + MES stop floor (parity with Python).
+  // When VIX_TIERED_ATR_ENABLED=false (default): effectiveMultiplier = input.stopMultiplier.
+  // When flag ON: multiplier is replaced by the VIX-tiered value via computeVixAtrMultiplier().
+  // MES floor: widened stop distance ensures a minimum 6pt stop (widen-up, never skip).
+  // With both flags OFF: byte-identical to the pre-Track-1B computation.
+  const effectiveStopMultiplier = computeVixAtrMultiplier(input.vixNow ?? null, input.stopMultiplier);
+  const rawStopDistancePts = effectiveStopMultiplier * input.atrPoints;
+  const isMES = (input.symbol ?? "").toUpperCase() === "MES";
+  const effectiveStopDistancePts = isMES
+    ? Math.max(rawStopDistancePts, _STOP_FLOOR_PTS_MES)
+    : rawStopDistancePts;
+  const stopDollarsPerContract = effectiveStopDistancePts * input.pointDollarValue;
   const riskDerivedCap = Math.floor(riskDollars / stopDollarsPerContract);
 
   // Wave 25 Pass 2 Inst-10: Drawdown-room cap (Topstep only, when input provided).

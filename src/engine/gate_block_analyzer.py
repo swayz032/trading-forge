@@ -71,14 +71,18 @@ BIG_MOVE_POINTS: dict[str, float] = {
 BIG_MOVE_MIN_R: float = float(os.environ.get("GATE_BLOCK_BIG_MOVE_MIN_R", "2.0"))
 
 # Structural stop ceiling — PER-SYMBOL, matching the LIVE framework overlay (CLAUDE.md §4:
-# 14pt MES / 40pt MNQ / 25-tick MCL). The live bot trades these, so the counterfactual MUST
+# 14pt MES / 62pt MNQ / 1.00pt MCL). The live bot trades these, so the counterfactual MUST
 # too — a flat 6pt cap would falsely stop out the operator's BIG-MOVE trades (a 14pt-stop trade
 # held through an 8pt pullback to catch an 18pt move would look like a loser under a 6pt stop),
 # inverting gate verdicts. Env-overridable per symbol.
+# Wave 1 Track 1A 2026-06-27 recalibration:
+#   MNQ: 40 → 62  (MNQ ATR in normal/high-vol can reach 50-60pt; 40 was over-skipping)
+#   MCL: 0.25 → 1.00  (1pt = 100 ticks; 0.25 = 25 ticks was far too tight for crude micro)
+# MUST stay in sync with backtester._STOP_CEILING_DEFAULTS — both read the same env vars.
 STRUCTURAL_STOP_CEILING_PTS: dict[str, float] = {
     "MES": float(os.environ.get("STOP_CEILING_PTS_MES", "14")),
-    "MNQ": float(os.environ.get("STOP_CEILING_PTS_MNQ", "40")),
-    "MCL": float(os.environ.get("STOP_CEILING_PTS_MCL", "0.25")),  # 25 ticks * $0.01
+    "MNQ": float(os.environ.get("STOP_CEILING_PTS_MNQ", "62")),
+    "MCL": float(os.environ.get("STOP_CEILING_PTS_MCL", "1.00")),  # 100 ticks * $0.01
 }
 STRUCTURAL_STOP_CEILING_DEFAULT_PTS: float = 14.0
 STATIC_STYLE_C_ATR_STOP_MULTIPLIER: float = 1.5
@@ -328,14 +332,9 @@ def simulate_counterfactual(
     else:
         initial_stop = entry_price - risk_points
 
-    # ── TP price: single full-exit TP at infinity (same as backtester when no
-    #    structural DOL available — tp_price = inf for long, -inf for short) ──
-    # We model Style C bar-by-bar: TP1 at 1R, TP2 at 2R, runner trail after 2R.
-    # For counterfactual we exit at 2R (the point where max runner trail begins)
-    # or stop — this mirrors the backtester's tp_price=inf path that lets the
-    # runner trail resolve the exit. We record MFE independently.
-    tp_price = float("inf") if not is_short else float("-inf")
-
+    # ── TP model: Style C bar-by-bar — TP1 at 1R, TP2 at 2R, runner trail after 2R.
+    # For the counterfactual we exit at 2R (where max runner trail begins) or stop;
+    # this mirrors the backtester's runner-trail resolution. We record MFE independently.
     trail_stop = initial_stop
     exit_price = float("nan")
     exit_idx = -1
@@ -348,7 +347,6 @@ def simulate_counterfactual(
     # ── Bar-by-bar simulation (mirrors backtester.py lines 899-1003) ──
     sim_end = min(entry_bar_idx + MAX_HOLD_BARS, len(bars))
     tp1_filled = False
-    tp2_filled = False
     tp1_price = entry_price + (1 if not is_short else -1) * risk_points * 1.0
     tp2_price = entry_price + (1 if not is_short else -1) * risk_points * 2.0
 
@@ -561,7 +559,6 @@ def _compute_verdict(
         verdict = "COSTING"
 
     # Recommendation text
-    total_r = sum(r.realized_r for r in valid)
     if verdict == "COSTING":
         if big_move_winners > 0:
             avg_pnl_blocked = total_pnl / evaluated_count

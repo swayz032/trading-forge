@@ -13,7 +13,7 @@ import { onPaperTradeClose } from "../scheduler.js";
 import { getFirmAccount, CONTRACT_SPECS } from "../../shared/firm-config.js";
 // Wave 27.5 Pass D.2: symbol-aware commission — replaces the legacy symbol-agnostic
 // getCommissionPerSide(firmId) for position-close P&L calculations.
-import { getCommissionPerSide as getCommissionPerSideBySymbol } from "../lib/contract-class.js";
+import { getCommissionPerSide as getCommissionPerSideBySymbol, getStopCeilingPts } from "../lib/contract-class.js";
 import { toEasternDateString, toFuturesTradingDayString, invalidateDailyLossCache } from "./paper-risk-gate.js";
 import { getEtOffsetMinutes } from "../lib/dst-utils.js";
 import { tracer } from "../lib/tracing.js";
@@ -1503,9 +1503,10 @@ export async function openPosition(sessionId: string, params: {
       // Use ATR-based stop if ATR is available; fall back to firm ceiling (conservative).
       const specForStop = CONTRACT_SPECS[params.symbol as keyof typeof CONTRACT_SPECS];
       const pointValue = specForStop?.pointValue ?? 5;
-      // Firm stop ceiling per CLAUDE.md §4 and framework-overlay conventions
-      const STOP_CEILING_POINTS: Record<string, number> = { MES: 14, MNQ: 40, MCL: 25 };
-      const stopCeilingPts = STOP_CEILING_POINTS[params.symbol] ?? 14;
+      // Firm stop ceiling per CLAUDE.md §4 and framework-overlay conventions.
+      // Wave 1 Track 1B: read from canonical getStopCeilingPts() (env-var-backed,
+      // mirrors Python _STOP_CEILING_TABLE: MES=14, MNQ=62, MCL=1.00pt).
+      const stopCeilingPts = getStopCeilingPts(params.symbol);
       // If ATR is provided: stop distance = 1.5 × ATR (floor per §4), capped at ceiling.
       // If ATR is absent: use ceiling as conservative upper bound.
       const stopDistancePts = params.atr
@@ -1840,6 +1841,108 @@ export async function openPosition(sessionId: string, params: {
         correlationId,
       }).catch((err) => logger.warn({ err }, "signal.exit_plan_fallback_static audit write failed (non-blocking)"));
       exitPlanForInsert = null;
+    }
+  } else if (exitStyle === "static_styleC" && adaptiveInput != null) {
+    // ── Wave 1 Track 1B: static_styleC TP2 liquidity injection ─────────────────
+    // Give static_styleC the same in-band liquidity lookup that adaptive gets.
+    // Band: [STATIC_STYLEC_TP2_MIN_R, STATIC_STYLEC_TP2_MAX_R] (default +1.4R..+2.6R).
+    // Falls back to +2.0R when no qualified intraday level in band.
+    // Fully backward-compatible: no stored TP2 = Python handles at +2.0R as before.
+    try {
+      const tp2MinR = parseFloat(process.env.STATIC_STYLEC_TP2_MIN_R ?? "1.4");
+      const tp2MaxR = parseFloat(process.env.STATIC_STYLEC_TP2_MAX_R ?? "2.6");
+      const stopDistance = Math.abs(actualEntry - adaptiveInput.entry.stop);
+
+      if (stopDistance > 0) {
+        // Replicate INTRADAY_ALLOWED_LEVEL_TYPES from adaptive-exit-engine.ts (not exported).
+        // Day-trader mandate: PWH/PWL/PMH/PML excluded (multi-day DOL — blows EOD-DD buffer).
+        const STATIC_STYLEC_INTRADAY_TYPES = new Set([
+          "pdh", "pdl",
+          "asian_high", "asian_low",
+          "london_high", "london_low",
+          "hod", "lod",
+          "naked_poc",
+          "untouched_fvg",
+          "untouched_ob",
+          "eqh", "eql",
+        ]);
+
+        const direction = params.side === "long" ? "above" : "below";
+        // Search up to tp2MaxR × stopDistance from entry price
+        const maxSearchDistance = stopDistance * tp2MaxR;
+
+        const { getNearestLiquidity } = await import("./liquidity-map-service.js");
+        const candidates = await getNearestLiquidity(
+          params.symbol,
+          actualEntry,
+          direction as "above" | "below",
+          maxSearchDistance,
+        );
+
+        // Filter: intraday types only + R in [tp2MinR, tp2MaxR]
+        let tp2Price: number | null = null;
+        let tp2Source: "liquidity" | "r_multiple" = "r_multiple";
+        let tp2LevelType: string | null = null;
+        let tp2RMultiple = 2.0;
+
+        for (const candidate of candidates) {
+          if (!STATIC_STYLEC_INTRADAY_TYPES.has(candidate.level_type)) continue;
+          const rMult = Math.abs(candidate.price - actualEntry) / stopDistance;
+          if (rMult >= tp2MinR && rMult <= tp2MaxR) {
+            tp2Price = candidate.price;
+            tp2Source = "liquidity";
+            tp2LevelType = candidate.level_type;
+            tp2RMultiple = rMult;
+            break; // nearest qualifying level wins
+          }
+        }
+
+        // If no qualifying level found, default to +2.0R (Python's native computation)
+        if (tp2Price === null) {
+          tp2Price = params.side === "long"
+            ? actualEntry + 2.0 * stopDistance
+            : actualEntry - 2.0 * stopDistance;
+        }
+
+        exitPlanForInsert = {
+          static_styleC_tp2_price: tp2Price,
+          static_styleC_tp2_source: tp2Source,
+          static_styleC_tp2_level_type: tp2LevelType,
+          static_styleC_tp2_r_multiple: tp2RMultiple,
+          runtime_state: {},
+        } as unknown as import("../db/jsonb-shapes.js").ExitPlanWithRuntimeState;
+
+        db.insert(auditLog).values({
+          action: tp2Source === "liquidity"
+            ? "signal.static_styleC_tp2_liquidity_mapped"
+            : "signal.static_styleC_tp2_r_multiple_fallback",
+          entityType: "paper_position",
+          entityId: null,
+          decisionAuthority: "system",
+          input: {
+            sessionId,
+            symbol: params.symbol,
+            side: params.side,
+            stop_distance: stopDistance,
+            tp2_band: [tp2MinR, tp2MaxR],
+          } as Record<string, unknown>,
+          result: {
+            tp2_price: tp2Price,
+            tp2_r_multiple: tp2RMultiple,
+            tp2_source: tp2Source,
+            tp2_level_type: tp2LevelType,
+          } as Record<string, unknown>,
+          status: "success",
+          correlationId,
+        }).catch((err) => logger.warn({ err }, "signal.static_styleC_tp2 audit write failed (non-blocking)"));
+      }
+    } catch (tp2Err) {
+      const reason = tp2Err instanceof Error ? tp2Err.message : String(tp2Err);
+      logger.warn(
+        { sessionId, symbol: params.symbol, err: reason },
+        "Wave1Track1B: static_styleC TP2 liquidity lookup failed — Python +2.0R fallback will apply",
+      );
+      exitPlanForInsert = null; // no stored TP2 → Python handles TP2 at 2.0R
     }
   }
 
@@ -2712,6 +2815,44 @@ async function callExitHandler(
         developing_session_poc: barCtx.developingSessionPoc?.[pos.symbol] ?? null,
       },
     };
+  }
+
+  // ── Wave 1 Track 1B: static_styleC TP2 liquidity pre-check ──────────────────
+  // If a liquidity-mapped TP2 was stored at position open (static_styleC only),
+  // check if current price has reached it BEFORE calling Python. This allows TP2
+  // to fire at the liquidity level (may be < 2.0R) rather than Python's fixed 2.0R.
+  // Fully backward-compatible: only fires when stored TP2 exists. When no stored TP2,
+  // Python handles it at 2.0R as before.
+  if (exitStyle === "C" && !(pos.tp2Filled ?? false) && (pos.tp1Filled ?? false)) {
+    const storedPlan = pos.exitPlan as Record<string, unknown> | null;
+    const storedTp2Price = typeof storedPlan?.["static_styleC_tp2_price"] === "number"
+      ? (storedPlan["static_styleC_tp2_price"] as number)
+      : null;
+    if (storedTp2Price != null) {
+      const currentPriceNum = Number(pos.currentPrice ?? entryPrice);
+      const tp2Reached = pos.side === "long"
+        ? currentPriceNum >= storedTp2Price
+        : currentPriceNum <= storedTp2Price;
+      if (tp2Reached) {
+        logger.debug(
+          { positionId: pos.id, storedTp2Price, currentPriceNum, side: pos.side },
+          "Wave1Track1B: static_styleC TP2 reached at liquidity-mapped price (pre-check firing)",
+        );
+        return {
+          decision: "FILL_TP2",
+          new_stop: null,
+          evidence: {
+            trigger: "tp2_fill_liquidity_mapped",
+            tp2_price: storedTp2Price,
+            tp2_fraction: 0.33,
+            tp2_source: (storedPlan?.["static_styleC_tp2_source"] as string | undefined) ?? "liquidity",
+            tp2_level_type: (storedPlan?.["static_styleC_tp2_level_type"] as string | null | undefined) ?? null,
+            handler_version: "static_styleC_liquidity_mapped_v1",
+          },
+          handler_version: "static_styleC_liquidity_mapped_v1",
+        };
+      }
+    }
   }
 
   // ── Circuit breaker check (short-circuit before subprocess spawn) ────────
