@@ -3,6 +3,27 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-28 Paper/live-prop READINESS audit + 3-wave fix (commits 13247bc + ee9f8d4)
+
+**Mission:** Operator: "deep scan our codebase and make sure everything is institutional grade for the bot to perform good in paper trading and live prop firms" → then "execute and fix make institutional grade."
+
+**Audit:** 5 read-only specialists (autonomous-readiness / paper-parity / accuracy-validator / trading-forge-architect / backtest-core), graded BUILD-READINESS (pre-live by design). Verdict: foundation institutional-grade (risk controls, conservative backtest engine, contract-safe loop) but TWO blockers before trusting paper / going live.
+
+**Fixed (verify-then-fix — the shallow paper audit's BL-3 was a confirmed FALSE POSITIVE, so each claim was re-verified against live code before fixing):**
+- **BLOCKER 1 — promotion path was FROZEN:** White's Reality Check + Hansen's SPA gates were never fed (`whites_reality_check.py`/`hansens_spa.py` never called) → null → fail-CLOSED → nothing could reach DEPLOY_READY. Wired both into `walk_forward.py` (CPCV + plain), stamped `backtests.wrc_result`/`spa_result`, producer keys (`p_value`/`spa_consistent_p`) match the lifecycle consumer. 26 vitest prove DEPLOY_READY reachable for significant / blocked for insignificant.
+- **BLOCKER 2 — paper engine systematically OPTIMISTIC:** BL-1 intrabar stops now caught in TS (per-bar high/low) before the close-only Python handler (also resolves BL-2); BL-4 TP1/TP2 partial closes now book realized P&L + commission per leg into paper_trades + equity; BL-5 kill route force-closes positions (no orphans); BL-8 slippage uses rolling-median ATR (was constant ~1.176×); H-1/H-2 chandelier + structure trail wired highSinceEntry/swing inputs. Migration 0179 (paper_positions stop OHLC, idempotent, journal idx 182).
+- **Wave C polish:** firm↔broker routing invariant (fail-CLOSED refuse + CRITICAL audit `broker_router.firm_broker_mismatch` — prevents Topstep routing through TradersPost); full CPCV purge (IS-side + OOS-end embargo → WFE/PBO now correctly conservative); removed dead `evaluateWfeGateForPromotion`; CLAUDE.md doc drift (kill-switch numeric 0/1/2, B14 0.20).
+
+**Verification:** 61 + 16 + 14(CPCV pure-fn) vitest/pytest GREEN, tsc + ruff clean, routes 200 post-deploy ×3 restarts, all pushed. Python WRC/SPA emission tested by authoring agent (local pytest blocked by vectorbt/WDAC import hang — TS contract + keys verified instead).
+
+**Known-facts / carry-forward:**
+- Stale `0.40` B14 references remain in CODE (not just docs): `lifecycle-service.ts:3282` comment, `promotion-gate-orchestrator` display payload, `survival-twin-disagreement.ts:303`, and **`quantum_rl_agent.py:91` `_RL_CI_HIGH_THRESHOLD=0.40` is an ACTUAL value mismatch** (RL reward anchor vs gate default 0.20) — needs a dedicated review.
+- WRC/SPA construction uses OOS-pnl-vs-cash bootstrap (single-strategy significance), not the full best-of-N data-snooping universe — functional + blocks insignificant, but the true multi-strategy WRC universe is a methodology refinement for later.
+- accuracy-validator F-4: B14 survival-twin gate auto-passes for un-replayed strategies (B14 CI gate still guards ruin, so not a highway) — wire survival-twin inline later.
+- paper BL-9 (correlation_id in paper_trades) + BL-11 (recon strategy_id filter) not yet done — auditability follow-ups.
+- ADMIN_RESTART_HMAC_SECRET IS set (used for self-restart all session; autonomous-readiness's "unset" was a false read). KASA smart-plug (4th-restart escape valve) is operator hardware, not yet installed.
+
+---
 ### Session Log — 2026-06-27/28 Production deep-scan #1 + YouTube-led discovery pivot (10 workflows retired)
 
 **Mission:** Operator — (1) "deep scan to find all loose ends/wiring/bugs blocking production & institutional-grade backtesting + first TradingView paper trade"; then (2) pivot strategy discovery to YouTube-ONLY and retire everything else.
