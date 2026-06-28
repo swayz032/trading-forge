@@ -107,7 +107,7 @@
     .of-track { position: absolute; inset: 0; transform-style: preserve-3d; }
     .of-card3d {
       position: absolute; top: 50%; left: 50%;
-      width: min(600px, 60vw); height: min(360px, 52vh);
+      width: min(620px, 62vw); height: min(410px, 60vh);
       border-radius: 26px; overflow: hidden;
       background:
         radial-gradient(135% 95% at 50% -12%, rgba(163,255,18,0.08), transparent 56%),
@@ -137,6 +137,13 @@
     .of-card-badge.off { color: var(--red);  background: rgba(255,99,99,0.10); border-color: rgba(255,99,99,0.35); }
     .of-card-title { margin-top: 16px; font-size: 42px; font-weight: 800; color: var(--ink); letter-spacing: 0.004em; line-height: 1.04; }
     .of-card-sub { margin-top: 12px; font-size: 16px; color: var(--dim); line-height: 1.45; max-width: 90%; }
+    /* explicit ON / OFF meanings (color-coded) */
+    .of-onoff { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .of-on, .of-off { display: flex; gap: 12px; align-items: baseline; font-size: 15px; line-height: 1.4; color: var(--ink); }
+    .of-on .lbl, .of-off .lbl { flex-shrink: 0; min-width: 36px; font-family: var(--num-font); font-size: 12px; font-weight: 700; letter-spacing: 0.1em; }
+    .of-on .lbl  { color: var(--lime); }
+    .of-off .lbl { color: var(--red); }
+    .of-locknote { margin-top: 14px; font-size: 13px; color: var(--warm); letter-spacing: 0.01em; }
     .of-card-slot {
       margin-top: auto; display: flex; align-items: center; gap: 9px;
       font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mute);
@@ -320,10 +327,19 @@
 
       // ── Pass 3: floating 3D switch-card carousel (empty shells, no switches yet) ──
       var OF_CARDS = [
-        { id: 'bot_power',      eyebrow: 'Main switch', title: 'Bot Power',      sub: 'ON = the bot trades. OFF = it stops opening trades. Turns RED if it pauses itself for safety — flip ON to resume.' },
-        { id: 'learning_loop',  eyebrow: 'Smart mode',  title: 'Learning Loop',  sub: 'ON = the bot studies its trades and improves itself. OFF = it stays exactly as it is now.' },
-        { id: 'vacation_mode',  eyebrow: 'Away',        title: 'Vacation Mode',  sub: 'ON = runs on autopilot while you are away. OFF = you are driving (nothing auto-promotes).' },
-        { id: 'live_execution', eyebrow: 'Real money',  title: 'Live Execution', sub: 'ON = trade real money. OFF = paper only. Locked until setup is done.' }
+        { id: 'bot_power', eyebrow: 'Main switch', title: 'Bot Power',
+          on: 'The bot makes trades.',
+          off: 'The bot stops — no new trades. (Turns RED if it pauses itself for safety; flip ON to resume.)' },
+        { id: 'learning_loop', eyebrow: 'Smart mode', title: 'Learning Loop',
+          on: 'The bot studies its own trades overnight and improves itself.',
+          off: 'The bot stays exactly as it is — it makes no changes to itself.' },
+        { id: 'vacation_mode', eyebrow: 'Away', title: 'Vacation Mode',
+          on: 'Fully hands-off while you are away — the bot can put strategies live and un-pause itself on its own.',
+          off: 'You are in control — the bot waits for your OK before going live or un-pausing.' },
+        { id: 'live_execution', eyebrow: 'Real money', title: 'Live Execution',
+          on: 'Trades REAL money in your funded account.',
+          off: 'Practice mode only (paper) — no real money at risk.',
+          lockNote: 'Locked for now — needs broker setup before this can turn on.' }
       ];
       var ofTrack = document.getElementById('of-track');
       var ofDots = document.getElementById('of-dots');
@@ -357,7 +373,11 @@
           el.innerHTML =
             '<div class="of-card-top"><span class="of-card-eyebrow">' + cd.eyebrow + '</span><span class="of-card-badge" data-badge>—</span></div>' +
             '<div class="of-card-title">' + cd.title + '</div>' +
-            '<div class="of-card-sub">' + cd.sub + '</div>' +
+            '<div class="of-onoff">' +
+              '<div class="of-on"><span class="lbl">ON</span><span>' + cd.on + '</span></div>' +
+              '<div class="of-off"><span class="lbl">OFF</span><span>' + cd.off + '</span></div>' +
+            '</div>' +
+            (cd.lockNote ? '<div class="of-locknote">🔒 ' + cd.lockNote + '</div>' : '') +
             '<div class="of-toggle-row"><div class="of-toggle" data-toggle></div><span class="of-status" data-status>—</span></div>';
           el.addEventListener('click', function () { if (i !== ofCur) ofGo(i); });
           var tg = el.querySelector('[data-toggle]');
