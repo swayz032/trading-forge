@@ -175,6 +175,27 @@ to the EXTRACTION-validation gates; the backtest/MC promotion stack — PBO/DSR/
 larger-n surface and keeps its statistics.) Add such machinery only if the corpus later grows enough to
 genuinely support it — and only as a dated amendment.
 
+## Replay failure taxonomy (pre-registered — every Gate 2/3 failure gets a class)
+
+A failed replay is never recorded as bare "FAIL." It is classified into exactly one class, in a fixed
+precedence (deeper cause never mislabeled as shallower), by `classifyReplayFailure()` — each class detected by
+an instrument that already exists, and each directing the next engineering investment:
+
+| class | detected by | directs investment to |
+|---|---|---|
+| DATA_REPLAY_LIMIT | demonstrated bars unavailable | data coverage (not extraction) |
+| COMPILER_DEFECT | Gate 1.5 (entry_trigger MISSING) | the compiler (e.g. the P1 quarantines) |
+| EXTRACTION_MISS | Gate 1.75 (Missed rule) | recall (coverage/repair loop) |
+| VISUAL_DEPENDENCY | evidence_mode = VISUAL_REQUIRED | **multimodal extraction (chart context)** |
+| FRAMEWORK_MISMATCH | entry reproduced, overlay diverged | framework-overlay ↔ educator reconciliation |
+| EDUCATOR_AMBIGUITY | faithful extraction of a vague source | source limit — not fixable downstream |
+| UNKNOWN | none of the above | manual escalation — never default-blame |
+
+Precedence: data → compiler → extraction → visual → framework → source → unknown. The corpus-level
+`dominantFailureClass()` is the payoff: if most failures are VISUAL_DEPENDENCY the next investment is
+multimodal extraction; if COMPILER_DEFECT, the compiler is the bottleneck; if EDUCATOR_AMBIGUITY, the limit is
+the source material itself. This converts replay from a verdict into a roadmap.
+
 ## What survives / fails the central hypothesis
 
 The central hypothesis — *"the compiler faithfully reconstructs educator strategies, and the edge is
@@ -219,3 +240,9 @@ of what the system can faithfully compile, which is itself worth knowing.
   relax one. Also RECLASSIFIED the confirmation-compiler quarantines from "optimization" to **Known P1
   semantic defect (quarantined by protocol)** — deterministic, same subsystem/symptom; still no fix before
   replay, but it is a known defect class, not a nice-to-have.
+- **2026-06-28 — PRE-REGISTER the replay failure taxonomy, before replay exists.** 7 classes
+  (DATA_REPLAY_LIMIT / COMPILER_DEFECT / EXTRACTION_MISS / VISUAL_DEPENDENCY / FRAMEWORK_MISMATCH /
+  EDUCATOR_AMBIGUITY / UNKNOWN) with a fixed precedence — `classifyReplayFailure()` + `dominantFailureClass()`
+  (`replay-failure-taxonomy.ts`). Defining the categories before results prevents post-hoc attribution; each
+  class maps to an existing instrument (Gate 1.5 / 1.75 / evidence_mode / overlay) and directs the next
+  investment. Pure addition — changes no threshold.
