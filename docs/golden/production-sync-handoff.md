@@ -53,11 +53,16 @@ Golden behavior the synced path must reproduce (the 4 known-failing inputs):
 ## The validation sequence (each stage answers a different question)
 
 1. **Synchronize** the targeted extraction subsystem onto the production branch.
-2. **Golden extraction verification** — `verify-extraction-golden.ts` green against `:4000` → the synced path
-   behaves like the verified branch on KNOWN inputs. *(Cheap. Do this before spending replay compute.)*
-3. **Replay** — run the compiled IR against real OHLC for educator-demonstrated trades → first evidence about
-   BEHAVIOR rather than structure. Gated on engine-attach + stable supervisor (W4.2).
-4. **Blind validation** — the unseen-corpus generalization test → does it hold across educators/styles.
+2. **Golden extraction verification (Gate 1)** — `verify-extraction-golden.ts` green against `:4000` → the
+   synced path behaves like the verified branch on KNOWN inputs. *(Cheap. Do before spending replay compute.)*
+   Run BOTH validations here: **Validation A = Gate 1 (parity)** and **Validation B = Gate 1.5 (semantic
+   determinism — `scoreDeterminism`)**. Gate 1 proves format-parity; Gate 1.5 proves the IR is executable by a
+   dumb engine (0 MISSING + 0 AMBIGUOUS on extraction-owned fields). A strategy can pass Gate 1 and FAIL
+   Gate 1.5 (e.g. confirmation never compiled → no executable trigger) — that's exactly the case 1.5 exists
+   to catch.
+3. **Replay (Gate 2)** — run the compiled IR against real OHLC for educator-demonstrated trades → first
+   evidence about BEHAVIOR rather than structure. Gated on engine-attach + stable supervisor (W4.2).
+4. **Blind validation (Gate 3)** — the unseen-corpus generalization test → does it hold across educators/styles.
 
 If a stage fails, the boundary that introduced it is unambiguous — that's the point of separating them.
 

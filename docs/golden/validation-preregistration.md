@@ -52,6 +52,26 @@ Harness: `scripts/verify-extraction-golden.ts` vs `docs/golden/extraction-golden
 
 ---
 
+## Gate 1.5 — Semantic determinism (executability)
+
+*Question: can a DUMB ENGINE execute the extracted strategy with no human interpretation?* Gate 1 proves
+parity with the golden FORMAT; it does NOT prove the IR is backtestable. Gate 1.5 closes that gap.
+Validator: `scoreDeterminism(ir)` in `src/server/lib/semantic-determinism.ts`.
+
+Each EXTRACTION-OWNED field is scored PRESENT / IMPLIED / MISSING / AMBIGUOUS:
+`direction` · `setup_context` · `entry_trigger` · `session_filter` · `invalidation`.
+`stop_loss` / `take_profit` / `risk_model` are **FRAMEWORK_OWNED** (overlay-authoritative per §13) — satisfied
+by construction, NOT scored as extraction gaps (scoring them MISSING would be a false-fail).
+
+| | criterion |
+|---|---|
+| **PASS** | **0 MISSING and 0 AMBIGUOUS** on extraction-owned fields (operator's rule — a dumb engine can run it) |
+| **FAIL → localizes to** | `entry_trigger` MISSING → confirmation never compiled (e.g. `confirmation_no_level` / `confirmation_would_overfire`) and not zero-wait → not backtestable · `setup_context` AMBIGUOUS → zone named without a resolvable ref · OR-alternatives unresolved → engine can't pick a branch |
+| **faithfulness debt (reported, NOT gated)** | count of IMPLIED fields — executable defaults/inferences the engine CAN run but that were NOT taught ("Implied ≠ what-was-taught"). Surfaced so executability and faithfulness stay separate. |
+
+*Why this gate exists:* "Gemma matches golden 100%" can mean "reproduces my format," not "the engine can run
+it." Gate 1.5 is the difference between *parity* and *backtestability*.
+
 ## Gate 2 — Replay parity (execution fidelity)
 
 *Question: does the compiled IR reproduce the educator's DEMONSTRATED entries on real OHLC?*
@@ -130,10 +150,17 @@ genuinely support it — and only as a dated amendment.
 
 The central hypothesis — *"the compiler faithfully reconstructs educator strategies, and the edge is
 attributable to grounded/perceptual layers, under replay on unseen data"* — is **SUPPORTED** only if Gate 1 ✓
-AND Gate 2 PASS AND Gate 3 GENERALIZES. Any other outcome leaves it a hypothesis, with the failing gate
+AND Gate 1.5 ✓ (the strategy is actually executable) AND Gate 2 PASS AND Gate 3 GENERALIZES. Any other outcome leaves it a hypothesis, with the failing gate
 naming exactly which sub-claim didn't survive. A negative result is still a result: it localizes the boundary
 of what the system can faithfully compile, which is itself worth knowing.
 
 ## Amendments (append-only — the anti-goalpost log)
 
-*(none yet — thresholds frozen at first commit; record any post-result change here with date + rationale)*
+- **2026-06-28 — ADD Gate 1.5 (Semantic Determinism), before any validation results collected.** Rationale
+  (operator): Gate 1 proves extraction-parity with the golden FORMAT, not that the IR is executable by a dumb
+  engine — "matches golden 100%" can mean "reproduces my format," not "backtestable." Gate 1.5 (0 MISSING +
+  0 AMBIGUOUS on extraction-owned fields; stop/tp/risk FRAMEWORK_OWNED) closes that gap and is inserted
+  between Gate 1 and Gate 2 in the sequence. **Legitimate under the freeze:** added BEFORE results exist, so
+  it cannot be goalpost-moving — it raises the bar, it doesn't relax one. No existing threshold changed.
+  (Diagnostic baseline on the 4 frozen IRs at add-time: psH + h6T FAIL [entry_trigger MISSING — confirmation
+  quarantine], l-2 + MKsjbL PASS — recorded as diagnostic, NOT a validation result.)
