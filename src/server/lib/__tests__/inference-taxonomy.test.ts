@@ -4,7 +4,7 @@
  * event/zone/until ground at 87-100% → inference there is a real, fixable extraction gap.
  */
 import { describe, it, expect } from "vitest";
-import { classifyInference, analyzeInference, CORPUS_GROUNDING_PRIORS } from "../inference-taxonomy.js";
+import { classifyInference, classifyInferenceModality, analyzeInference, CORPUS_GROUNDING_PRIORS } from "../inference-taxonomy.js";
 import type { TradeGrounding } from "../uncertainty-propagation.js";
 
 describe("classifyInference — why is a node inferred?", () => {
@@ -46,8 +46,30 @@ describe("analyzeInference — direct effort at what can actually be reduced", (
     expect(a.fixable_density).toBe(0);
   });
 
-  it("priors reflect the measured corpus (confirmation is the universal non-linguistic primitive)", () => {
+  it("priors reflect the measured corpus (confirmation under-linguified in THIS corpus — scoped, not universal)", () => {
     expect(CORPUS_GROUNDING_PRIORS["wait_state.confirmation"]).toBeLessThan(0.4);
     expect(CORPUS_GROUNDING_PRIORS.execution_context).toBeGreaterThan(0.8);
+  });
+});
+
+describe("inference MODALITY — perceptual (judgment) vs structural (imposed rule)", () => {
+  it("★ confirmation = PERCEPTUAL operator (visual judgment over price); rest = STRUCTURAL rules", () => {
+    expect(classifyInferenceModality("wait_state.confirmation")).toBe("PERCEPTUAL");
+    expect(classifyInferenceModality("wait_state.until")).toBe("STRUCTURAL");
+    expect(classifyInferenceModality("entry")).toBe("STRUCTURAL");
+  });
+
+  it("★ analyzeInference splits perceptual vs structural + sets dominant_modality", () => {
+    const perceptualOnly: TradeGrounding = { grounding_class: "INFERENCE_DEPENDENT", trade_confidence: 0.72, span_bound: ["structural_event", "execution_context", "wait_state.until"], inference_dependencies: ["wait_state.confirmation"] };
+    const a = analyzeInference(perceptualOnly);
+    expect(a.perceptual).toEqual(["wait_state.confirmation"]);
+    expect(a.structural).toEqual([]);
+    expect(a.dominant_modality).toBe("PERCEPTUAL");
+
+    const structuralToo: TradeGrounding = { grounding_class: "INFERENCE_DEPENDENT", trade_confidence: 0.6, span_bound: ["structural_event", "execution_context"], inference_dependencies: ["wait_state.until", "wait_state.confirmation"] };
+    const b = analyzeInference(structuralToo);
+    expect(b.structural).toEqual(["wait_state.until"]);
+    expect(b.perceptual).toEqual(["wait_state.confirmation"]);
+    expect(b.dominant_modality).toBe("STRUCTURAL"); // a missing structural rule is the higher-attribution-risk class
   });
 });

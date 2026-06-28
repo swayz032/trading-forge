@@ -4,7 +4,7 @@
  * grounding so it can answer: did the educator teach this edge, or did the compiler invent it?
  */
 import { describe, it, expect } from "vitest";
-import { tradeGrounding, segregateBacktest } from "../uncertainty-propagation.js";
+import { tradeGrounding, segregateBacktest, segregateByInferenceModality } from "../uncertainty-propagation.js";
 import { lowerToStateMachineIR } from "../state-machine-lowering.js";
 import { SPAN, DERIVED, COMPILER, type StrategyIR, type ConfirmationNode } from "../state-machine-ir.js";
 
@@ -83,5 +83,37 @@ describe("segregateBacktest — is the edge real or compiler-invented?", () => {
     const pooledAvg = trades.reduce((a, t) => a + t.pnl, 0) / trades.length; // +1.0 — looks great pooled
     expect(pooledAvg).toBeGreaterThan(0);
     expect(segregateBacktest(trades).verdict).toBe("INFERENCE_EDGE_SUSPECT"); // but it's a mirage
+  });
+});
+
+describe("segregateByInferenceModality — is inference SIGNAL or NOISE? (the scientific-closure experiment)", () => {
+  const fg = (pnl: number) => ({ modality_class: "FULLY_GROUNDED" as const, pnl });
+  const pc = (pnl: number) => ({ modality_class: "PERCEPTUAL" as const, pnl });
+  const st = (modality_class: "STRUCTURAL", pnl: number) => ({ modality_class, pnl });
+  const five = (f: (n: number) => any, vals: number[]) => vals.map(f);
+
+  it("★ PERCEPTUAL_SIGNAL_REAL: inferred confirmation carries real alpha → inference is faithful, not noise", () => {
+    // grounded flat/negative, perceptual-inference profitable, structural not → the perceptual reconstruction is REAL
+    const trades = [...five(fg, [-1, -1, 0.5, -1, -0.5]), ...five(pc, [2, 1.5, 2, 1, 2]), ...[st("STRUCTURAL", -1), st("STRUCTURAL", -2), st("STRUCTURAL", -1), st("STRUCTURAL", -1), st("STRUCTURAL", -2)]];
+    const r = segregateByInferenceModality(trades);
+    expect(r.verdict).toBe("PERCEPTUAL_SIGNAL_REAL");
+    expect(r.note).toMatch(/faithful signal/i);
+  });
+
+  it("★ STRUCTURAL_SIGNAL_SUSPECT: edge only from imposed structural rules → likely compiler-invented", () => {
+    const trades = [...five(fg, [-1, -1, -1, -1, -1]), ...five(pc, [-1, -2, -1, -1, -2]), ...[st("STRUCTURAL", 3), st("STRUCTURAL", 2), st("STRUCTURAL", 2), st("STRUCTURAL", 3), st("STRUCTURAL", 2)]];
+    const r = segregateByInferenceModality(trades);
+    expect(r.verdict).toBe("STRUCTURAL_SIGNAL_SUSPECT");
+    expect(r.note).toMatch(/compiler-invented/i);
+  });
+
+  it("GROUNDED_SIGNAL wins when the grounded edge is real", () => {
+    const trades = [...five(fg, [2, 1.5, 2, 1, 2]), ...five(pc, [2, 2, 2, 2, 2])];
+    expect(segregateByInferenceModality(trades).verdict).toBe("GROUNDED_SIGNAL");
+  });
+
+  it("INFERENCE_NOISE when no inference class is profitable", () => {
+    const trades = [...five(pc, [-1, -1, -1, -1, -1]), ...[st("STRUCTURAL", -1), st("STRUCTURAL", -1), st("STRUCTURAL", -1), st("STRUCTURAL", -1), st("STRUCTURAL", -1)]];
+    expect(segregateByInferenceModality(trades).verdict).toBe("INFERENCE_NOISE");
   });
 });

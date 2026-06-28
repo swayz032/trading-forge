@@ -95,3 +95,36 @@ export function segregateBacktest(trades: Array<{ grounding_class: GroundingClas
   }
   return { fully_grounded: fg, inference_dependent: id, verdict, note };
 }
+
+// ── The scientific-closure experiment: is inference SIGNAL or NOISE, by modality? ──
+export type ModalityClass = "FULLY_GROUNDED" | "PERCEPTUAL" | "STRUCTURAL";
+export type ModalityVerdict =
+  | "GROUNDED_SIGNAL"            // the educator's transcript-grounded edge is real (best case)
+  | "PERCEPTUAL_SIGNAL_REAL"    // the inferred PERCEPTUAL operator (confirmation) carries real alpha → inference is faithful signal
+  | "STRUCTURAL_SIGNAL_SUSPECT" // edge only from imposed STRUCTURAL rules → likely compiler-invented
+  | "MIXED_INFERENCE_SIGNAL"
+  | "INFERENCE_NOISE"           // no inference class is profitable → inference is noise
+  | "NO_EDGE" | "INSUFFICIENT_DATA";
+export interface ModalitySegregation { fully_grounded: ClassStats; perceptual: ClassStats; structural: ClassStats; verdict: ModalityVerdict; note: string }
+
+/**
+ * Answer the only remaining scientific axis (operator): "which kinds of inference survive segregation as TRUE
+ * predictive signal?" Splits P&L into grounded / perceptual-inference / structural-inference and verdicts
+ * whether the inferred edge is faithful (perceptual confirmation captures real alpha) or invented (structural
+ * rules the compiler imposed). The real verdict needs real backtest P&L (engine-gated); this is the mechanism.
+ */
+export function segregateByInferenceModality(trades: Array<{ modality_class: ModalityClass; pnl: number }>, opts?: { minTrades?: number }): ModalitySegregation {
+  const minTrades = opts?.minTrades ?? 5;
+  const fg = stats(trades.filter((t) => t.modality_class === "FULLY_GROUNDED").map((t) => t.pnl));
+  const pc = stats(trades.filter((t) => t.modality_class === "PERCEPTUAL").map((t) => t.pnl));
+  const st = stats(trades.filter((t) => t.modality_class === "STRUCTURAL").map((t) => t.pnl));
+  const edge = (x: ClassStats) => x.n >= minTrades && x.avg_pnl > 0;
+  let verdict: ModalityVerdict, note: string;
+  if (fg.n < minTrades && pc.n < minTrades && st.n < minTrades) { verdict = "INSUFFICIENT_DATA"; note = `need ≥${minTrades} trades in a class`; }
+  else if (edge(fg)) { verdict = "GROUNDED_SIGNAL"; note = "grounded edge is real — faithful to the educator"; }
+  else if (edge(pc) && edge(st)) { verdict = "MIXED_INFERENCE_SIGNAL"; note = "both inference modalities profitable"; }
+  else if (edge(pc)) { verdict = "PERCEPTUAL_SIGNAL_REAL"; note = "the inferred perceptual operator (confirmation) carries real alpha — inference is faithful signal, not noise"; }
+  else if (edge(st)) { verdict = "STRUCTURAL_SIGNAL_SUSPECT"; note = "edge only from imposed structural rules — likely compiler-invented, not the educator's strategy"; }
+  else { verdict = (pc.n >= minTrades || st.n >= minTrades) ? "INFERENCE_NOISE" : "NO_EDGE"; note = "no inference class is profitable"; }
+  return { fully_grounded: fg, perceptual: pc, structural: st, verdict, note };
+}

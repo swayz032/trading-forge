@@ -3,6 +3,22 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-28 INFERENCE MODALITY (perceptual vs structural) + scoped-claim correction + the signal-vs-noise experiment
+
+**Mission:** Operator's two corrections + the named scientific-closure experiment. (1) Tighten the over-claim: NOT "universal property of trading pedagogy" — only "confirmation is systematically UNDER-LINGUIFIED across THIS corpus" (n=38, instructor-weighted, modality-uncontrolled; over-generalization is now the main failure mode). (2) The real insight: confirmation is a PERCEPTUAL DECISION OPERATOR (visual judgment over price), NOT missing data — inference there is CORRECT; verbatim capture would DEGRADE fidelity; the system is RIGHT to leave it inferred. (3) Build the one justified split (perceptual vs structural) + measure which inference is economically real.
+
+**Work completed (commit + tag `inference-modality-experiment`):**
+- CORRECTED the over-generalization in `inference-taxonomy.ts` header (scoped claim + perceptual-operator framing + priors-stay-overridable). 
+- `classifyInferenceModality(role)` → PERCEPTUAL (confirmation — perception over price) vs STRUCTURAL (until/entry/event/zone — imposed rules). `analyzeInference` extended: perceptual[] / structural[] / dominant_modality (structural wins ties = higher attribution risk).
+- `segregateByInferenceModality(trades)` (uncertainty-propagation) — the scientific-closure mechanism: splits P&L into FULLY_GROUNDED / PERCEPTUAL / STRUCTURAL → verdict: GROUNDED_SIGNAL / PERCEPTUAL_SIGNAL_REAL (inferred confirmation carries real alpha → inference is faithful, not noise) / STRUCTURAL_SIGNAL_SUSPECT (edge only from imposed rules → compiler-invented) / MIXED / INFERENCE_NOISE.
+
+**The reframe (operator):** the system is NOT an extractor — it's "epistemic simulation of instruction under uncertainty constraints": a span-grounded compiler mapping instructional media into a dual-layer execution graph (linguistic primitives = verifiable / perceptual primitives = inference-encoded) that propagates that epistemic structure into simulated financial outcomes. The remaining scientific axis is NOT more taxonomy — it's: does inference behave like SIGNAL or NOISE under market conditions? `segregateByInferenceModality` is that test's mechanism (real verdict = engine-gated; mechanism offline-proven).
+
+**Verification:** tsc 0; 114 tests green (full stack); standalone (zero production wiring).
+
+**Carry-forward:** the experiment that gives scientific closure = run `segregateByInferenceModality` on REAL backtest trades tagged by `tradeGrounding`+`analyzeInference.dominant_modality` → does PERCEPTUAL inference (confirmation) survive as predictive signal? If yes → leaving confirmation inferred is validated (the perceptual reconstruction is faithful). If it's noise → the confirmation reconstruction is wrong. This is the verdict-phase headline (engine + stable-supervisor gated). NO more taxonomy/ontology — operator: over-generalization is the main remaining risk.
+
+---
 ### Session Log — 2026-06-28 DISTRIBUTION-LEVEL VALIDATION — confirmation-collapse is UNIVERSAL; inference taxonomy (permanent vs fixable)
 
 **Mission:** Operator's named remaining gap — is "confirmation-heavy paraphrase collapse" UNIVERSAL or instructor-specific? (general compiler vs domain-adapted). Plus the refinement: distinguish PERMANENT (non-linguistic) inference from FIXABLE (extraction gap) — don't chase verbatim capture on inherently-visual primitives.
