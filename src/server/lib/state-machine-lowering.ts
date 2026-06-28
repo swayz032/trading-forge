@@ -54,6 +54,12 @@ const ZONE_KINDS: Array<{ zone: ExecutionZoneKind; re: RegExp }> = [
 const firstMatch = <T>(corpus: string, table: Array<{ re: RegExp } & T>): T | null =>
   table.find((t) => t.re.test(corpus)) ?? null;
 
+/** Evidence span for an explicit node (the invariant requires every explicit node carry transcript evidence). */
+const evidenceFor = (corpus: string, re: RegExp): string => {
+  const m = corpus.match(re);
+  return m ? corpus.slice(Math.max(0, (m.index ?? 0) - 12), (m.index ?? 0) + 72).trim() : "";
+};
+
 export interface LoweringInput extends ConfirmationInput { direction?: "long" | "short" | "both" }
 
 /** Lower extraction → StrategyIR. Immediate ⇒ zero-wait (parity); delayed ⇒ populated wait_state (rep only). */
@@ -87,18 +93,20 @@ export function lowerToStateMachineIR(input: LoweringInput): StrategyIR {
       : { kind: "bias", direction: "both", provenance: COMPILER("no explicit bias — default both (symmetric futures)") },
     eligibility: ctx.gates.filter((g) => g.type === "session" || g.type === "regime"),
     structural_event: ev
-      ? { kind: "structural_event", event: ev.kind, provenance: EXPLICIT() }
+      ? { kind: "structural_event", event: ev.kind, provenance: EXPLICIT(evidenceFor(corpus, ev.re)) }
       : null,
     execution_context: zoneGate
-      ? { kind: "execution_context", zone: (zoneHit?.zone ?? "named_level"), ref: zoneGate.params.level ?? zoneGate.name, provenance: EXPLICIT(zoneGate.evidence_quote) }
+      ? { kind: "execution_context", zone: (zoneHit?.zone ?? "named_level"), ref: zoneGate.params.level ?? zoneGate.name, provenance: EXPLICIT(zoneGate.evidence_quote || zoneGate.name) }
       : zoneHit
-        ? { kind: "execution_context", zone: zoneHit.zone, provenance: EXPLICIT() }
+        ? { kind: "execution_context", zone: zoneHit.zone, provenance: EXPLICIT(evidenceFor(corpus, zoneHit.re)) }
         : null,
     wait_state: {
-      provenance: until.kind === "now" ? COMPILER("zero-wait: event is the confirmation") : EXPLICIT(),
+      provenance: until.kind === "now" ? COMPILER("zero-wait: event is the confirmation") : EXPLICIT(until.provenance.evidence_quote || "wait condition"),
       active: until.kind !== "now",
       until,
-      confirmation: { kind: "confirmation", compound: compoundResult.compound, provenance: EXPLICIT() },
+      confirmation: compoundResult.compound
+        ? { kind: "confirmation", compound: compoundResult.compound, provenance: EXPLICIT(compoundResult.compound.legs.find((l) => l.order === compoundResult.compound!.primary_order)?.evidence_quote || "confirmation") }
+        : { kind: "confirmation", compound: null, provenance: COMPILER(`no confirmation compiled (${compoundResult.quarantine_reason ?? "unknown"})`) },
       ...(invalStep ? { invalidated_by: { kind: "invalidation" as const, condition: stepText(invalStep).trim().slice(0, 80), provenance: EXPLICIT(stepText(invalStep).trim().slice(0, 80)) } } : {}),
     },
     entry: { kind: "entry", order_type: "market", direction, provenance: COMPILER("entry order-type not stated — default market") },

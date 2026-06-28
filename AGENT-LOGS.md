@@ -3,6 +3,19 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-27 (cont.) STATE-MACHINE IR — Checkpoint 5: Decision Provenance + the non-negotiable invariant
+
+**Mission:** CP5 — trace BELIEFS not code. Mechanize the operator's elevated invariant (every executable decision is explicit-with-evidence XOR inferred-with-justification, NO third category) + build the six-question decision record (explainable replay substrate) + bidirectional chains + honesty dashboard.
+
+**Work completed (commit + tag `sm-checkpoint-5-decision-provenance`):** `decision-provenance.ts` — `labelOf(provenance)` collapses a node to the binary and THROWS (`ProvenanceInvariantError`) on explicit-without-evidence or inferred-without-justification (the invariant, mechanized). `assertProvenanceInvariant(ir)` enforces it across every IR node. `buildDecisionRecord(ir, entry_bar, confirmation)` answers the six belief questions (setup_existed / still_valid / waiting_completed / confirmation_happened / entry_legal / confidence_sufficient), each evidence-or-inference backed + confidence; forward (setup→entry) + reverse (click-a-trade) chains. `confidenceOf` grades extraction uncertainty by origin (explicit .97 > normalized .9 > derived .72 > compiler .6). `provenanceDashboard` = honesty ratio (taught vs compiler-inferred) + conservation columns.
+
+**THE INVARIANT CAUGHT A REAL VIOLATION IN MY OWN CODE:** the lowering created explicit nodes (structural_event/execution_context/confirmation) via `EXPLICIT()` with NO evidence_quote → invariant threw. Fixed lowering: every explicit node now carries transcript evidence (evidenceFor() span / primary-leg quote); confirmation falls to COMPILER when compound null. This is the invariant doing its job — silent invention is now mechanically impossible.
+
+**ACCEPTANCE MET:** invariant mechanized + adversarially tested (explicit-no-evidence throws, inferred-no-justification throws); real lowered IR satisfies it (with honestly-inferred market-default entry); six questions answered + bidirectional; missing invalidation surfaced as INFERRED assumption (not hidden); edge confidence graded; honesty dashboard quantifies taught-vs-inferred. tsc 0; 92 tests green; decision-provenance standalone (zero production wiring).
+
+**Carry-forward:** CP5b adversarial-property suite (swap-steps ordering / contradict-rule refusal / duplicate-confirmation single-entry — some need the contradiction detector that partly exists in the compound IR) + semantic-diff (compare two state graphs — defer to CP6 since it compares two Gemma passes). CP6 = Gemma multi-pass designed as 4 DISAGREEING hypotheses (literal extractor / decision-process extractor / contradiction-finder / conservation-validator), not 4 similar prompts. THEN FREEZE architecture + re-run the blind suite vs the frozen control + 100-video corpus + replay parity (no CP7 / no new primitives until those results).
+
+---
 ### Session Log — 2026-06-27 (cont.) STATE-MACHINE IR — Checkpoint 4: re-root the 5 axes into ONE confirmation evaluator (integration)
 
 **Mission:** CP4 — unify. Re-root the existing axes (selection/multi-leg/strength/anchor + context-eligibility) into the S5 confirmation node so BOTH immediate and wait-state paths run the SAME confirmation code (observational equivalence), with rich confirmation provenance. Plus: capture the operator's forward-architecture reframe as the roadmap.
