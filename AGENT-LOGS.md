@@ -3,6 +3,43 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-27/28 Production deep-scan #1 + YouTube-led discovery pivot (10 workflows retired)
+
+**Mission:** Operator — (1) "deep scan to find all loose ends/wiring/bugs blocking production & institutional-grade backtesting + first TradingView paper trade"; then (2) pivot strategy discovery to YouTube-ONLY and retire everything else.
+
+**Method:** 8 parallel read-only specialist auditors (deep scan) → 6 blocker fixes via 5 parallel edit agents on disjoint scopes; then operator-directed discovery pivot executed inline. All commits explicit-path + pushed to `hardening/phase-0`.
+
+**PART 1 — Deep scan + 6 fixes (commit `cfad7bb`):**
+- **X1** system-map RED→GREEN: registered `position-drift-reconcile` scheduler job (was the only gating drift item).
+- **A3** B15 Parameter Robustness Battery was a PHANTOM hard gate (producer default OFF `backtest-args.ts`, consumer null-silent-passed) → made it a real gate, fail-soft warn on missing data, `_promoteStrategyInner` now honors the flag. 21 vitest.
+- **B6** paper/backtest parity: VWAP Globex session reset + volume_rolling_mean_20 (true matches); SMT-null + first_30min_volume_ratio made observable not silent (`paper-signal-service.ts`). 15 vitest.
+- **T1** NEW `gate-chain-integration.test.ts` (pglite) — proves producer→DB→gate chains connect (WFE/PBO/B15/shadow-divergence); CAUGHT the wrong-key grandfather-pass disconnect class CI was structurally blind to. 24 vitest.
+- **A1** per-symbol eligibility stop-ceiling test (code already in HEAD via parallel wave1). 13 pytest.
+- **X2** repointed 5 n8n workflows off dead `qwen2.5-coder:7b` → verified-live `gemma4:e2b`.
+- **Dependability verdict given:** operationally production-grade (fail-closed, kill-switch-first, atomic+audited, self-recovering); trustworthy NUMBERS gated on these fixes — biggest hole was zero DB-integration test coverage (now closed by T1).
+
+**PART 2 — YouTube-led discovery pivot (operator decision: Lane-1 only, YouTube-only):**
+- Scout keyword extension + NEW deterministic daily-rotating-subset (`getRotatingQuerySubset`, env `SCOUT_KEYWORD_SUBSET_SIZE`=16, cycleIndex-driven, fail-open) in `autonomous-scout-runner.ts` — fresh videos daily + under YouTube quota. 44 vitest. Commit `2c55b9e`.
+- **Retired 4 Ollama generate-from-scratch loops** (Nightly Strategy Research Loop, Weekly Strategy Hunt, Strategy Tournament, Strategy Generation Loop) — `bab7f09`.
+- **Retired 2 nightly organs** superseded by the Wave 4 **14A-master-nightly-intelligence** GPT orchestrator (Nightly Self-Correction, Strategy Deep Analysis Pipeline — both deepseek-critique, SDA orphaned w/ 0 callers/executions) — `2521a29`.
+- **Archived 4 non-YouTube discovery scouts** (5G-brave, 5H-reddit, 8A-idea-to-strategy, 8B-source-quality) — `2cfb40b` + system-map sync `9493110`.
+- **Net: 10 n8n workflows retired this session; active 32 → 22.** All archived via n8n UI (REST `/deactivate`+`/activate` are 403/UI-only on this Railway instance), reversible, full JSON backups in scratch.
+
+**Audits (no code changed):**
+- Autonomous extraction→graduation production-grade audit = **NO-WITH-GAPS**: removing the 3-source corroboration is safe (it's redundancy, not quality; the DSL-Quality-Critic `hasRealRules` regex gate is the keystone that blocks junk single videos) BUT it's the *only* graduation trigger (must REPLACE not delete) + 5 fail-open gaps (G1-G5: replace-trigger, fallback_only-block, LLM-critic-fail-open, quarantine-ignored, confidence-default).
+- **Coordination check:** my work does NOT interfere with the extraction agent's "extraction-100" breakthrough (branch `extraction/100pct-evidence`; files = `agent.ts` + extraction-*.ts). I never touched `agent.ts`/extraction gates. The 3-source gate + G1-G5 are THEIR domain — intentionally left untouched.
+
+**Verification:** tsc clean; system-map:check / production-isolation / 2026-compliance GREEN throughout; 117 new tests (104 vitest + 13 pytest). Live n8n archival verified via API per batch.
+
+**Known-facts updates (pinned to Known-Facts Pin below):** tower has ONLY `gemma4:e2b` (deepseek-r1:14b/qwen3/nomic-embed-text NOT installed + NOT needed — all nightly intelligence is GPT via 14A + model-router); gate readers grandfather-pass on producer wrong-key writes (now regression-guarded).
+
+**Carry-forward:**
+- **First paper trade blocked ONLY by operator:** set `ADMIN_PROMOTE_HMAC_SECRET`, `LIVE_ORDER_GATEWAY_URL`, `LIVE_ORDER_HMAC_SECRET`; seed MFFU `broker_accounts` row + `MFFU_TRADERSPOST_API_KEY`. (Tower model pulls NO LONGER needed — dropped.)
+- 3-source-rule removal + G1-G5 graduation fail-open gaps = **extraction agent's domain** (do not touch from this lane).
+- **Shared-tree hazard is biting:** parallel session's `git reset`/`add -A` wiped my repo-archival AND my first AGENT-LOGS entry mid-session (both redone atomically). Recommend separate `git worktree` per agent.
+- Cosmetic: "Weekly Strategy Hunt" accidentally favorited in n8n UI (archived, harmless).
+
+---
 ### Session Log — 2026-06-28 Slumdawg Waves 1-4 DEEP-SCAN #2 — 11 bugs fixed (commit 1c602f0)
 
 **Mission:** Operator "deep scan and catch any bugs you missed in the waves." 5 parallel read-only specialist auditors (backtest-core / accuracy-validator / n8n-orchestration / trading-forge-architect / observability-reliability) over everything shipped this session → 15 findings; fixed the 11 substantive ones via 3 parallel edit-only fix tracks; committed + deployed + pushed.
