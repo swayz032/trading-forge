@@ -207,6 +207,29 @@ premature-zone second-entry; O9cz `asia_high` mis-typed as a required gate when 
 **Trajectory on the operator's forecast:** 3A → iU8 STRONG. **2D** (level anchor + POI/session role + target-vs-gate)
 → O9cz STRONG = **5 STRONG / 1 PARTIAL**. **3B** (confirmation-strength) → 2u9 STRONG = 6 STRONG. On track.
 
+## PHASE 2D (level anchor + session split + level-role typing) — O9cz PARTIAL→STRONG; 5 STRONG / 1 PARTIAL
+
+Three deterministic structural fixes closed O9cz's three residuals (grader-confirmed all three):
+- **2D-A anchor binding** — `ConfirmationLeg.anchor_ref` couples spatial legs to a WHERE anchor; O9cz
+  displacement + structure_shift now bound to `asia_low` (was level_ref=null, uncoupled). PRIMARY spatial
+  leg with no anchorable level → hard-fail `leg_anchor_missing`.
+- **2D-B session role split** — `SessionRole formation|execution`; O9cz = ASIA:formation (POI forms) +
+  LONDON:execution (trade), no longer conflated.
+- **2D-C level-role typing** — `LevelRole {entry_anchor|gate|target|stop_anchor}`; O9cz `asia_high` is now
+  role=target (the TP), not a required validity gate (fixed the self-contradictory both-ends-required encoding).
+
+**MATRIX AFTER 2D: 5 STRONG · 1 PARTIAL · 0 SYSTEMATIC · 0 UNVERIFIABLE** (was 4/2). O9cz→STRONG; the 4
+prior STRONG unchanged (no regression); 0 false quarantines. Acceptance met (anchor binding / session
+semantics / level roles / zero degradation). Only remaining PARTIAL = **2u9**, blocked solely by
+confirmation-STRENGTH (clean vs weak CHoCH) = **Phase 3B (the HOW axis)** — the last ontology dimension.
+
+### Fidelity journey (frozen-6, end to end)
+baseline 0 STRONG / 1 PARTIAL / 4 SYSTEMATIC / 1 UNVERIFIABLE → Phase 1 (confirmation compiler) → 2A
+(specificity selection: SYSTEMATIC→0) → 2B (multi-leg + enforcement) → 3A (zone/context gates: iU8→STRONG)
+→ 2D (anchor/session/role: O9cz→STRONG) = **5 STRONG / 1 PARTIAL / 0 SYSTEMATIC / 0 UNVERIFIABLE**, FALSE
+COMPILATIONS held at 0 the entire way. Ontology: WHICH(2A) · WHAT(2B) · WHERE(3A) · anchoring(2D) shipped;
+HOW(3B) is the last piece for 2u9.
+
 ## Method note (for re-running)
 
 Probe = blind grader: `scratchpad/fidelity/<id>.compiled.json` (compiled logic) + `tmp/generalization/<id>.transcript.txt` (ground truth) → grader classifies per-example fire/no-fire + mismatch taxonomy {TIMING, CONFIRMATION, CONTEXT, DIRECTION, LEVEL, NO_MISMATCH}. Cheap (no historical data / replay). A full Layer 4 would add: extract educator's dated example trades → run compiled strategy on that history → compare actual signals.

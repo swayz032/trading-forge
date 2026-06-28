@@ -3,6 +3,19 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-27 (cont.) FIDELITY PHASE 2D — anchor + session-split + level-role; O9cz PARTIAL→STRONG (5 STRONG / 1 PARTIAL)
+
+**Mission:** Phase 2D (deterministic structural cleanup) — close O9cz's three residuals: level anchor, formation-vs-execution session, target-vs-gate typing.
+
+**Work completed (commit `c573391`):** 2D-A — `ConfirmationLeg.anchor_ref {type,id}`; spatial legs (displacement / generic structure_shift) bind to a WHERE anchor (context POI/zone, else preceding named leg); PRIMARY spatial leg unanchorable → hard-fail `leg_anchor_missing`. 2D-B — `SessionRole formation|execution` via tight local window (no cross-session leakage). 2D-C — `LevelRole {entry_anchor|gate|target|stop_anchor}`; target-role levels are NOT required validity gates (+ excluded from the gate AND-check). 
+
+**RESULT (frozen-6 + re-grade):** O9cz PARTIAL→**STRONG** — anchors[ss→asia_low, disp→asia_low], sess[ASIA:formation, LONDON:execution], target[asia_high]; grader confirmed all 3 residuals closed (only minor sweep→MSS precedence nuance remains, non-demoting). 4 prior STRONG unchanged, 0 false quarantines. **MATRIX: 5 STRONG / 1 PARTIAL / 0 SYSTEMATIC / 0 UNVERIFIABLE** — operator's 2D goal hit exactly.
+
+**Verification:** tsc 0; 68 vitest green (incl 2D-A anchor + hard-fail, 2D-B session-role, 2D-C target/entry/stop role).
+
+**Carry-forward:** ONLY 2u9 PARTIAL left, blocked solely by confirmation-STRENGTH (clean vs weak CHoCH) = **Phase 3B (the HOW axis — last ontology dimension)**. 3B is probabilistic/scoring (do after structural per operator). Fidelity journey: baseline 0 STRONG/4 SYSTEMATIC → 5 STRONG/1 PARTIAL/0 SYSTEMATIC, false-comps 0 throughout. Engine WHERE-evaluator wiring (context gates live in backtests) + SCL hard-gate calibration remain follow-ons.
+
+---
 ### Session Log — 2026-06-27 (cont.) FIDELITY PHASE 3A — zone/context-gate primitive (WHERE axis); iU8 PARTIAL→STRONG (4 STRONG / 2 PARTIAL)
 
 **Mission:** Build Phase 3A (the WHERE-validity primitive 2B revealed) per the scoped design — recover the discarded context gates, evaluate T1/T2, fail-closed on T3.
