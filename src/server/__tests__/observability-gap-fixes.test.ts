@@ -546,24 +546,49 @@ describe("GAP 5 — GET /api/admin/kill-switch: insertAuditRowSafe on read", () 
     });
   });
 
-  it("reports enabled:true in audit row when DB row has value '1'", async () => {
-    _killSwitchRow = { val: "1" };
+  it("reports enabled:true (AUTOPILOT) in audit row when DB row has value '2'", async () => {
+    _killSwitchRow = { val: "2" };
 
     const app = await buildAdminApp();
     const { status, body } = await getKillSwitch(app);
 
     expect(status).toBe(200);
+    // backward-compat: enabled === autonomous_on (mode >= 2)
     expect(body.enabled).toBe(true);
+    expect(body.mode).toBe(2);
+    expect(body.advisory_on).toBe(true);
+    expect(body.autonomous_on).toBe(true);
 
     const call = mocks.insertAuditRowSafe.mock.calls.find(
       (args: any[]) => args[0]?.action === "kill_switch.autonomous_loop_read",
     );
     expect(call).toBeDefined();
     expect(call![0].result.enabled).toBe(true);
+    expect(call![0].result.raw).toBe("2");
+  });
+
+  it("SAFETY CRUX — value '1' (OBSERVE) reports enabled:false but advisory_on:true", async () => {
+    // OBSERVE must NOT set enabled=true — autonomous readers gate on `enabled`.
+    _killSwitchRow = { val: "1" };
+
+    const app = await buildAdminApp();
+    const { status, body } = await getKillSwitch(app);
+
+    expect(status).toBe(200);
+    expect(body.enabled).toBe(false);
+    expect(body.mode).toBe(1);
+    expect(body.advisory_on).toBe(true);
+    expect(body.autonomous_on).toBe(false);
+
+    const call = mocks.insertAuditRowSafe.mock.calls.find(
+      (args: any[]) => args[0]?.action === "kill_switch.autonomous_loop_read",
+    );
+    expect(call).toBeDefined();
+    expect(call![0].result.enabled).toBe(false);
     expect(call![0].result.raw).toBe("1");
   });
 
-  it("reports enabled:false in audit row when DB row has value '0'", async () => {
+  it("reports enabled:false (OFF) in audit row when DB row has value '0'", async () => {
     _killSwitchRow = { val: "0" };
 
     const app = await buildAdminApp();
@@ -571,6 +596,8 @@ describe("GAP 5 — GET /api/admin/kill-switch: insertAuditRowSafe on read", () 
 
     expect(status).toBe(200);
     expect(body.enabled).toBe(false);
+    expect(body.mode).toBe(0);
+    expect(body.advisory_on).toBe(false);
 
     const call = mocks.insertAuditRowSafe.mock.calls.find(
       (args: any[]) => args[0]?.action === "kill_switch.autonomous_loop_read",

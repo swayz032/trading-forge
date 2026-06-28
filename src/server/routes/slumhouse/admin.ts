@@ -39,6 +39,14 @@ import {
   getExecutionMode,
   setExecutionMode,
 } from "../../lib/execution-mode.js";
+import {
+  parseLearningLoopMode,
+  learningLoopModeLabel,
+  LEARNING_LOOP_MODE_PARAM,
+  MODE_OBSERVE,
+  MODE_AUTOPILOT,
+  type LearningLoopMode,
+} from "../../lib/learning-loop-mode.js";
 
 export const adminOfficeRouter = Router();
 
@@ -196,19 +204,25 @@ export async function getSwitchStates(req: Request, res: Response): Promise<void
   else if (mode === "AUTOPAUSE_DD_VELOCITY") botState = "alert";
   const botStatus = botState === "running" ? "RUNNING" : botState === "alert" ? "AUTO-PAUSED" : "PAUSED";
 
-  // ── learning_loop: read auto_patch_loop_enabled from system_parameters ────
-  // current_value is NUMERIC — never store the string "true".  1=enabled, 0=disabled.
-  let llOn = false;
+  // ── learning_loop: read auto_patch_loop_enabled (3-MODE) ──────────────────
+  // current_value is NUMERIC — never store the string "true".
+  //   0 = OFF / 1 = OBSERVE (advisory only) / 2 = AUTOPILOT (autonomous).
+  // The UI dial needs the exact mode (0/1/2) + a label to show the right
+  // position. `on` (legacy boolean) = mode >= 1 (dial not at OFF). Fail-CLOSED
+  // to mode 0 on any error. Derived via the shared parseLearningLoopMode().
+  let llMode: LearningLoopMode = 0;
   try {
     const llRows = await db
       .select({ val: systemParameters.currentValue })
       .from(systemParameters)
-      .where(eq(systemParameters.paramName, "auto_patch_loop_enabled"))
+      .where(eq(systemParameters.paramName, LEARNING_LOOP_MODE_PARAM))
       .limit(1);
-    llOn = llRows.length > 0 && Number(llRows[0].val) >= 1;
+    llMode = llRows.length > 0 ? parseLearningLoopMode(llRows[0].val) : 0;
   } catch {
-    llOn = false; // fail-closed
+    llMode = 0; // fail-closed
   }
+  const llLabel = learningLoopModeLabel(llMode);
+  const llOn = llMode >= MODE_OBSERVE;
 
   // ── vacation_mode: TRUE effective state (env override OR operator_absent_since) ──
   // Read via operatorAbsentModeActive() so the switch reflects REALITY: the
@@ -236,9 +250,13 @@ export async function getSwitchStates(req: Request, res: Response): Promise<void
       bot_power:     { on: mode === "ACTIVE", state: botState, wired: true, dangerOff: true, status: botStatus },
       learning_loop: {
         on: llOn,
+        mode: llMode,
+        label: llLabel,
+        advisory_on: llMode >= MODE_OBSERVE,
+        autonomous_on: llMode >= MODE_AUTOPILOT,
         state: llOn ? "running" : "paused",
         wired: true,
-        status: llOn ? "LEARNING" : "OFF",
+        status: llLabel,
         dangerOn: true,
       },
       vacation_mode: {
@@ -305,28 +323,42 @@ export async function postSwitch(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  // ── learning_loop: numeric 1/0 in system_parameters ──────────────────────
-  // current_value is a NUMERIC column.  1=enabled, 0=disabled.  Never "true".
+  // ── learning_loop: 3-MODE numeric in system_parameters ────────────────────
+  // current_value is a NUMERIC column. 0=OFF / 1=OBSERVE / 2=AUTOPILOT. Never "true".
+  // The frontend dial sends `{ mode: 0|1|2 }`. Legacy callers that send only
+  // `{ on: bool }` map on:true → 2 (AUTOPILOT, preserves the old "Learning Loop
+  // ON = full autonomous" meaning) and on:false → 0. An explicit `mode` always
+  // wins over a legacy `on`.
   if (id === "learning_loop") {
-    const newVal = on ? "1" : "0";
+    const hasMode =
+      req.body?.mode !== undefined && req.body?.mode !== null;
+    const targetMode: LearningLoopMode = hasMode
+      ? parseLearningLoopMode(req.body.mode)
+      : on
+        ? MODE_AUTOPILOT // legacy on:true → AUTOPILOT
+        : 0; // legacy on:false → OFF
+    const newVal = String(targetMode);
+    const label = learningLoopModeLabel(targetMode);
     try {
       // Read-then-write mirrors pipeline-control-service.ts pattern.
       const existing = await db
         .select({ id: systemParameters.id })
         .from(systemParameters)
-        .where(eq(systemParameters.paramName, "auto_patch_loop_enabled"))
+        .where(eq(systemParameters.paramName, LEARNING_LOOP_MODE_PARAM))
         .limit(1);
       if (existing.length > 0) {
         await db
           .update(systemParameters)
           .set({ currentValue: newVal, updatedAt: new Date() })
-          .where(eq(systemParameters.paramName, "auto_patch_loop_enabled"));
+          .where(eq(systemParameters.paramName, LEARNING_LOOP_MODE_PARAM));
       } else {
         await db.insert(systemParameters).values({
-          paramName: "auto_patch_loop_enabled",
+          paramName: LEARNING_LOOP_MODE_PARAM,
           currentValue: newVal,
           domain: "critic",
-          description: "Self-improvement loop kill switch (1=enabled, 0=disabled). Shared with quantum-replay-weekly.",
+          description:
+            "Autonomous learning-loop mode (0=OFF, 1=OBSERVE advisory-only, " +
+            "2=AUTOPILOT autonomous). Shared with quantum-replay-weekly.",
         });
       }
     } catch (err) {
@@ -339,12 +371,22 @@ export async function postSwitch(req: Request, res: Response): Promise<void> {
       entityType: "system",
       entityId: null,
       decisionAuthority: "human",
-      input: { switch: id, on } as Record<string, unknown>,
-      result: { value: newVal } as Record<string, unknown>,
+      input: { switch: id, mode: targetMode, on } as Record<string, unknown>,
+      result: { value: newVal, mode: targetMode, label } as Record<string, unknown>,
       status: "success",
       correlationId: null,
     });
-    res.json({ ok: true, id, on, state: on ? "running" : "paused", status: on ? "LEARNING" : "OFF" });
+    res.json({
+      ok: true,
+      id,
+      mode: targetMode,
+      label,
+      on: targetMode >= MODE_OBSERVE,
+      advisory_on: targetMode >= MODE_OBSERVE,
+      autonomous_on: targetMode >= MODE_AUTOPILOT,
+      state: targetMode >= MODE_OBSERVE ? "running" : "paused",
+      status: label,
+    });
     return;
   }
 

@@ -143,6 +143,13 @@
     .of-on .lbl, .of-off .lbl { flex-shrink: 0; min-width: 36px; font-family: var(--num-font); font-size: 12px; font-weight: 700; letter-spacing: 0.1em; }
     .of-on .lbl  { color: var(--lime); }
     .of-off .lbl { color: var(--red); }
+    /* 3-mode dial (Learning Loop): OFF / OBSERVE / AUTOPILOT — inactive dimmed, active highlighted */
+    .of-3mode .of-mode { display: flex; gap: 12px; align-items: baseline; font-size: 15px; line-height: 1.4; color: var(--ink); opacity: 0.38; padding: 5px 8px; border-radius: 8px; transition: opacity .15s ease, background .15s ease; }
+    .of-3mode .of-mode .lbl { flex-shrink: 0; min-width: 84px; font-family: var(--num-font); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; }
+    .of-3mode .of-mode[data-mode="0"] .lbl { color: var(--red); }
+    .of-3mode .of-mode[data-mode="1"] .lbl { color: #f0b429; }
+    .of-3mode .of-mode[data-mode="2"] .lbl { color: var(--lime); }
+    .of-3mode .of-mode.active { opacity: 1; background: rgba(255,255,255,0.06); }
     .of-locknote { margin-top: 14px; font-size: 13px; color: var(--warm); letter-spacing: 0.01em; }
     .of-card-slot {
       margin-top: auto; display: flex; align-items: center; gap: 9px;
@@ -395,7 +402,12 @@
         { id: 'bot_power', eyebrow: 'Main switch', title: 'Bot Power',
           on: 'The bot makes trades.',
           off: 'The bot stops — no new trades. (Turns RED if it pauses itself for safety; flip ON to resume.)' },
-        { id: 'learning_loop', eyebrow: 'Smart mode', title: 'Learning Loop',
+        { id: 'learning_loop', eyebrow: 'Smart mode', title: 'Learning Loop', threeMode: true,
+          modes: [
+            { key: 0, label: 'OFF', desc: 'Brain asleep — no overnight study, no changes. Everything stays frozen.' },
+            { key: 1, label: 'OBSERVE', desc: 'Brain studies your trades overnight and sends a morning report (regime, leaks, decay, rankings). It changes nothing on its own — insight only, zero risk.' },
+            { key: 2, label: 'AUTOPILOT', desc: 'Brain studies AND improves itself — proposes and tests its own changes. Every change still passes all safety gates before it can go live.' }
+          ],
           on: 'The bot studies its own trades overnight and improves itself.',
           off: 'The bot stays exactly as it is — it makes no changes to itself.' },
         { id: 'vacation_mode', eyebrow: 'Away', title: 'Vacation Mode',
@@ -435,13 +447,23 @@
         OF_CARDS.forEach(function (cd, i) {
           var el = document.createElement('div');
           el.className = 'of-card3d';
+          var ofBody;
+          if (cd.threeMode) {
+            ofBody = '<div class="of-onoff of-3mode">' +
+              cd.modes.map(function (m) {
+                return '<div class="of-mode" data-mode="' + m.key + '"><span class="lbl">' + m.label + '</span><span>' + m.desc + '</span></div>';
+              }).join('') +
+              '</div>';
+          } else {
+            ofBody = '<div class="of-onoff">' +
+              '<div class="of-on"><span class="lbl">ON</span><span>' + cd.on + '</span></div>' +
+              '<div class="of-off"><span class="lbl">OFF</span><span>' + cd.off + '</span></div>' +
+            '</div>';
+          }
           el.innerHTML =
             '<div class="of-card-top"><span class="of-card-eyebrow">' + cd.eyebrow + '</span><span class="of-card-badge" data-badge>—</span></div>' +
             '<div class="of-card-title">' + cd.title + '</div>' +
-            '<div class="of-onoff">' +
-              '<div class="of-on"><span class="lbl">ON</span><span>' + cd.on + '</span></div>' +
-              '<div class="of-off"><span class="lbl">OFF</span><span>' + cd.off + '</span></div>' +
-            '</div>' +
+            ofBody +
             (cd.lockNote ? '<div class="of-locknote">🔒 ' + cd.lockNote + '</div>' : '') +
             '<div class="of-toggle-row"><div class="of-toggle" data-toggle></div><span class="of-status" data-status>—</span></div>';
           el.addEventListener('click', function () { if (i !== ofCur) ofGo(i); });
@@ -491,6 +513,27 @@
           var tg = el.querySelector('[data-toggle]');
           var st = el.querySelector('[data-status]');
           var bd = el.querySelector('[data-badge]');
+          if (cd.threeMode) {                                  // 3-mode dial render
+            var mode3 = (typeof s.mode === 'number') ? s.mode : 0;
+            var rows = el.querySelectorAll('.of-mode');
+            for (var r = 0; r < rows.length; r++) {
+              if (parseInt(rows[r].getAttribute('data-mode'), 10) === mode3) rows[r].classList.add('active');
+              else rows[r].classList.remove('active');
+            }
+            tg.classList.remove('on', 'alert', 'disabled');
+            if (!s.wired) tg.classList.add('disabled');
+            else if (mode3 === 2) tg.classList.add('on');        // AUTOPILOT = green
+            else if (mode3 === 1) tg.classList.add('alert');     // OBSERVE = amber
+            // mode 0 (OFF) = neutral
+            var lbl3 = s.label || (mode3 === 2 ? 'AUTOPILOT' : mode3 === 1 ? 'OBSERVE' : 'OFF');
+            st.textContent = lbl3;
+            st.className = 'of-status ' + (mode3 === 2 ? 'on' : (mode3 === 1 ? 'alert' : 'paused'));
+            if (bd) {
+              bd.textContent = s.wired ? 'LIVE' : (s.needsSetup ? 'SETUP' : 'SOON');
+              bd.className = 'of-card-badge' + (s.wired ? ' on' : '');
+            }
+            return;
+          }
           var state = s.state || (s.on ? 'running' : 'paused');
           tg.classList.remove('on', 'alert');
           if (state === 'running') tg.classList.add('on');     // GREEN + green pulse
@@ -508,6 +551,24 @@
       function onToggle(cd) {
         var s = ofSwitches[cd.id] || {};
         if (!s.wired) return;                                  // not wired yet
+        if (cd.threeMode) {                                    // 3-mode dial: OFF → OBSERVE → AUTOPILOT → OFF
+          var cur = (typeof s.mode === 'number') ? s.mode : 0;
+          var nextMode = (cur + 1) % 3;
+          if (nextMode === 2 && !window.confirm('Turn ON AUTOPILOT for ' + cd.title + '?\n\nThe bot will start proposing + testing its OWN changes overnight (each still passes every safety gate before it can go live).')) return;
+          fetch('/slumhouse/admin/switch', {
+            method: 'POST', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: cd.id, mode: nextMode })
+          })
+            .then(function (r) { return r.json().then(function (j) { return { status: r.status, body: j }; }); })
+            .then(function (res) {
+              if (res.status === 200 && res.body && res.body.ok) {
+                loadSwitches();   // re-read authoritative mode/label from the server
+              } else if (res.status === 401) { showLocked(); }
+            })
+            .catch(function () {});
+          return;
+        }
         var willBe = !s.on;
         if (s.momentary) {                                     // recovery — a trigger, not an on/off state
           if (s.confirmAction && !window.confirm('Clear the safety stop on ' + cd.title + '?\n\nThis re-enables the bot after it halted itself.')) return;

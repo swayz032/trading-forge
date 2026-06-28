@@ -138,9 +138,10 @@ describe("F-5 — kill switch FAIL-CLOSED (absent row → DISABLED)", () => {
     expect(vi.mocked(callOpenAI)).not.toHaveBeenCalled();
   });
 
-  it("F-5-B: numeric row value '1' → loop ENABLED (proceeds)", async () => {
+  it("F-5-B: numeric row value '2' (AUTOPILOT) → loop ENABLED (proceeds)", async () => {
+    // 3-MODE: only AUTOPILOT (2) enables the autonomous mutation loop.
     buildSelectSequence([
-      [{ currentValue: "1" }],  // explicit opt-in via numeric 1
+      [{ currentValue: "2" }],  // explicit AUTOPILOT opt-in
       ENOUGH_CRITIQUES,
       [{ maxVer: 1 }],
       [],
@@ -152,6 +153,20 @@ describe("F-5 — kill switch FAIL-CLOSED (absent row → DISABLED)", () => {
     const result = await runPatternAggregator(false);
 
     expect(result.status).not.toBe("halted");
+  });
+
+  it("F-5-B2: numeric row value '1' (OBSERVE) → loop HALTED (advisory-only, autonomous OFF)", async () => {
+    // SAFETY CRUX: OBSERVE runs nightly advisory intelligence but must NOT wake
+    // the autonomous mutation loop. Under the old binary contract "1" enabled it;
+    // under 3-MODE "1" is OBSERVE → autonomousOn=false → halt.
+    buildSelectSequence([
+      [{ currentValue: "1" }],  // OBSERVE — advisory only
+    ]);
+
+    const result = await runPatternAggregator(false);
+
+    expect(result.status).toBe("halted");
+    expect(vi.mocked(callOpenAI)).not.toHaveBeenCalled();
   });
 
   it("F-5-C: row value 'false' → loop DISABLED (halted)", async () => {
@@ -233,7 +248,7 @@ describe("F-6 — 3 consecutive failures → Discord WARN (fail-soft, never cras
       //   2: _readConsecFailures (current strike count = i)
       //   3: _upsertParam existence check (simulate "row exists" so it takes update path)
       buildSelectSequence([
-        [{ currentValue: "1" }],                 // kill switch → enabled (numeric 1)
+        [{ currentValue: "2" }],                 // kill switch → AUTOPILOT (enabled)
         ENOUGH_CRITIQUES,                         // enough critiques
         [{ currentValue: String(i) }],           // _readConsecFailures → i
         [{ paramName: CONSEC_FAIL_KEY }],        // _upsertParam: row exists → update
@@ -365,7 +380,7 @@ describe("F-4 — setAppendixCache invalidates the 60s TTL promptCache", () => {
     buildUpdateMock();
 
     buildSelectSequence([
-      [{ currentValue: "1" }],  // numeric 1 = enabled
+      [{ currentValue: "2" }],  // AUTOPILOT = enabled
       ENOUGH_CRITIQUES,
       [{ maxVer: 3 }],
       [],
@@ -418,9 +433,11 @@ describe("F-5 seed — auto_patch_loop_enabled default is false", () => {
     expect(result.status).toBe("halted");
   });
 
-  it("F-5-seed-B: only numeric ≥ 1 enables — non-numeric strings and 0 halt", async () => {
-    // "1" now enables (see F-5-B); the values below all parse to NaN or 0, so they halt.
-    for (const val of ["yes", "enabled", "TRUE", "True", "", "0", "false"]) {
+  it("F-5-seed-B: only numeric 2 (AUTOPILOT) enables — 0, 1 (OBSERVE), and non-numerics halt", async () => {
+    // 3-MODE: only "2" enables the autonomous loop (see F-5-B). "1" is OBSERVE
+    // (advisory-only → halts this loop), "0" is OFF, and the non-numeric strings
+    // all parse to NaN → 0, so every value below halts the autonomous loop.
+    for (const val of ["yes", "enabled", "TRUE", "True", "", "0", "1", "false"]) {
       vi.clearAllMocks();
       buildInsertMock();
       buildUpdateMock();
@@ -579,9 +596,9 @@ describe("F-7 — readiness nudge: disabled + >=threshold → audit + Discord (d
   });
 
   it("F-7-D: enabled → NO nudge (normal aggregation path, kill switch is on)", async () => {
-    // When kill switch is ON (numeric 1), the normal aggregation path runs — no nudge
+    // When kill switch is AUTOPILOT (numeric 2), the normal aggregation path runs — no nudge
     buildSelectSequence([
-      [{ currentValue: "1" }],  // kill switch enabled (numeric 1) → proceed
+      [{ currentValue: "2" }],  // kill switch AUTOPILOT → proceed
       ENOUGH_CRITIQUES,
     ]);
 

@@ -215,7 +215,7 @@ describe("Wave 27 Pass 1.5 A2 — quantum-replay-weekly-service", () => {
 
   // Test 1 ─────────────────────────────────────────────────────────────────────
   it("test_weekly_cron_runs_analysis_and_audits: SIGNAL verdict → audit emitted + Discord called", async () => {
-    mockKillSwitch("true");
+    mockKillSwitch("2"); // AUTOPILOT — autonomous cron runs
     execFileSucceeds(makeSIGNALStdout(55));
 
     const { runQuantumReplayWeeklyAnalysis } = await import(
@@ -252,7 +252,7 @@ describe("Wave 27 Pass 1.5 A2 — quantum-replay-weekly-service", () => {
 
   // Test 2 ─────────────────────────────────────────────────────────────────────
   it("test_weekly_cron_failure_audits_warns: script error → audit failed + notifyWarning fired", async () => {
-    mockKillSwitch("true");
+    mockKillSwitch("2"); // AUTOPILOT — autonomous cron runs
     execFileFails("DB connection refused");
 
     const { runQuantumReplayWeeklyAnalysis } = await import(
@@ -282,7 +282,7 @@ describe("Wave 27 Pass 1.5 A2 — quantum-replay-weekly-service", () => {
 
   // Test 3 ─────────────────────────────────────────────────────────────────────
   it("test_weekly_cron_timeout_audits: subprocess timeout → audit timeout + notifyWarning fired", async () => {
-    mockKillSwitch("true");
+    mockKillSwitch("2"); // AUTOPILOT — autonomous cron runs
     execFileTimesOut();
 
     const { runQuantumReplayWeeklyAnalysis } = await import(
@@ -336,9 +336,26 @@ describe("Wave 27 Pass 1.5 A2 — quantum-replay-weekly-service", () => {
     expect(mockNotifyWarning).not.toHaveBeenCalled();
   });
 
+  // Test 4b ────────────────────────────────────────────────────────────────────
+  it("test_observe_mode_halts: auto_patch_loop_enabled=1 (OBSERVE) → halts, no subprocess (advisory-only)", async () => {
+    // SAFETY CRUX: OBSERVE (mode 1) runs nightly ADVISORY intelligence only and
+    // must NOT wake this autonomous cron. Only AUTOPILOT (2) proceeds.
+    mockKillSwitch("1");
+
+    const { runQuantumReplayWeeklyAnalysis } = await import(
+      "../services/quantum-replay-weekly-service.js"
+    );
+    const result = await runQuantumReplayWeeklyAnalysis();
+
+    expect(result.status).toBe("loop_halted_skip");
+    expect(mockExecFile).not.toHaveBeenCalled();
+    expect(mockNotifyInfo).not.toHaveBeenCalled();
+    expect(mockNotifyWarning).not.toHaveBeenCalled();
+  });
+
   // Test 5 ─────────────────────────────────────────────────────────────────────
   it("test_no_data_skips_gracefully: zero replay rows → audit skipped_no_data, no Discord ping", async () => {
-    mockKillSwitch("true");
+    mockKillSwitch("2"); // AUTOPILOT — autonomous cron runs
     execFileSucceeds(makeZeroRowsStdout());
 
     const { runQuantumReplayWeeklyAnalysis } = await import(

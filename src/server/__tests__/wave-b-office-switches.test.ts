@@ -194,7 +194,7 @@ describe("learning_loop GET — numeric state reading", () => {
     vi.mocked(getMode).mockResolvedValue("PAUSED");
   });
 
-  it("numeric '1' → on:true, state:running, status:LEARNING, wired:true, dangerOn:true", async () => {
+  it("numeric '1' (OBSERVE) → mode:1, label:OBSERVE, advisory_on:true, autonomous_on:false", async () => {
     buildSelectMock([
       [{ val: "1" }],   // learning_loop row
       [{ ts: null }],   // vacation_mode row
@@ -202,14 +202,34 @@ describe("learning_loop GET — numeric state reading", () => {
     const res = makeRes();
     await getSwitchStates(makeReq(), res as any);
     const sw = res.getBody().switches as Record<string, Record<string, unknown>>;
-    expect(sw.learning_loop.on).toBe(true);
+    expect(sw.learning_loop.mode).toBe(1);
+    expect(sw.learning_loop.label).toBe("OBSERVE");
+    expect(sw.learning_loop.advisory_on).toBe(true);
+    expect(sw.learning_loop.autonomous_on).toBe(false);
+    expect(sw.learning_loop.on).toBe(true); // dial not at OFF
     expect(sw.learning_loop.state).toBe("running");
-    expect(sw.learning_loop.status).toBe("LEARNING");
+    expect(sw.learning_loop.status).toBe("OBSERVE");
     expect(sw.learning_loop.wired).toBe(true);
     expect(sw.learning_loop.dangerOn).toBe(true);
   });
 
-  it("numeric '0' → on:false, state:paused, status:OFF", async () => {
+  it("numeric '2' (AUTOPILOT) → mode:2, label:AUTOPILOT, autonomous_on:true", async () => {
+    buildSelectMock([
+      [{ val: "2" }],   // learning_loop row
+      [{ ts: null }],   // vacation_mode row
+    ]);
+    const res = makeRes();
+    await getSwitchStates(makeReq(), res as any);
+    const sw = res.getBody().switches as Record<string, Record<string, unknown>>;
+    expect(sw.learning_loop.mode).toBe(2);
+    expect(sw.learning_loop.label).toBe("AUTOPILOT");
+    expect(sw.learning_loop.advisory_on).toBe(true);
+    expect(sw.learning_loop.autonomous_on).toBe(true);
+    expect(sw.learning_loop.on).toBe(true);
+    expect(sw.learning_loop.status).toBe("AUTOPILOT");
+  });
+
+  it("numeric '0' (OFF) → mode:0, label:OFF, on:false, state:paused", async () => {
     buildSelectMock([
       [{ val: "0" }],   // learning_loop row
       [{ ts: null }],   // vacation_mode row
@@ -217,7 +237,11 @@ describe("learning_loop GET — numeric state reading", () => {
     const res = makeRes();
     await getSwitchStates(makeReq(), res as any);
     const sw = res.getBody().switches as Record<string, Record<string, unknown>>;
+    expect(sw.learning_loop.mode).toBe(0);
+    expect(sw.learning_loop.label).toBe("OFF");
     expect(sw.learning_loop.on).toBe(false);
+    expect(sw.learning_loop.advisory_on).toBe(false);
+    expect(sw.learning_loop.autonomous_on).toBe(false);
     expect(sw.learning_loop.state).toBe("paused");
     expect(sw.learning_loop.status).toBe("OFF");
   });
@@ -257,52 +281,117 @@ describe("learning_loop POST — toggle persistence", () => {
     buildInsertMock();
   });
 
-  it("on:true with existing row → db.update sets '1'", async () => {
+  it("LEGACY on:true with existing row → db.update sets '2' (AUTOPILOT)", async () => {
+    // Legacy {on:true} preserves the old "Learning Loop ON = full autonomous"
+    // meaning by mapping to AUTOPILOT (mode 2).
     buildSelectMock([[{ id: "existing-uuid" }]]); // existing row found
     const res = makeRes();
     await postSwitch(makeReq({ body: { id: "learning_loop", on: true } }), res as any);
     expect((db as any).update).toHaveBeenCalled();
     const setCall = (db as any).update.mock.results[0].value.set;
-    expect(setCall).toHaveBeenCalledWith(expect.objectContaining({ currentValue: "1" }));
+    expect(setCall).toHaveBeenCalledWith(expect.objectContaining({ currentValue: "2" }));
     const body = res.getBody();
     expect(body.ok).toBe(true);
-    expect(body.status).toBe("LEARNING");
+    expect(body.mode).toBe(2);
+    expect(body.status).toBe("AUTOPILOT");
+    expect(body.autonomous_on).toBe(true);
     expect(body.state).toBe("running");
   });
 
-  it("on:false with existing row → db.update sets '0'", async () => {
+  it("LEGACY on:false with existing row → db.update sets '0' (OFF)", async () => {
     buildSelectMock([[{ id: "existing-uuid" }]]);
     const res = makeRes();
     await postSwitch(makeReq({ body: { id: "learning_loop", on: false } }), res as any);
     const setCall = (db as any).update.mock.results[0].value.set;
     expect(setCall).toHaveBeenCalledWith(expect.objectContaining({ currentValue: "0" }));
     const body = res.getBody();
+    expect(body.mode).toBe(0);
     expect(body.status).toBe("OFF");
     expect(body.state).toBe("paused");
   });
 
-  it("on:true with no existing row → db.insert with '1'", async () => {
+  it("mode:1 (OBSERVE) with existing row → db.update sets '1', status OBSERVE, autonomous_on:false", async () => {
+    buildSelectMock([[{ id: "existing-uuid" }]]);
+    const res = makeRes();
+    await postSwitch(makeReq({ body: { id: "learning_loop", mode: 1 } }), res as any);
+    const setCall = (db as any).update.mock.results[0].value.set;
+    expect(setCall).toHaveBeenCalledWith(expect.objectContaining({ currentValue: "1" }));
+    const body = res.getBody();
+    expect(body.mode).toBe(1);
+    expect(body.status).toBe("OBSERVE");
+    expect(body.advisory_on).toBe(true);
+    expect(body.autonomous_on).toBe(false);
+    expect(body.state).toBe("running");
+  });
+
+  it("mode:2 (AUTOPILOT) with existing row → db.update sets '2', autonomous_on:true", async () => {
+    buildSelectMock([[{ id: "existing-uuid" }]]);
+    const res = makeRes();
+    await postSwitch(makeReq({ body: { id: "learning_loop", mode: 2 } }), res as any);
+    const setCall = (db as any).update.mock.results[0].value.set;
+    expect(setCall).toHaveBeenCalledWith(expect.objectContaining({ currentValue: "2" }));
+    const body = res.getBody();
+    expect(body.mode).toBe(2);
+    expect(body.status).toBe("AUTOPILOT");
+    expect(body.autonomous_on).toBe(true);
+  });
+
+  it("mode:0 (OFF) with existing row → db.update sets '0'", async () => {
+    buildSelectMock([[{ id: "existing-uuid" }]]);
+    const res = makeRes();
+    await postSwitch(makeReq({ body: { id: "learning_loop", mode: 0 } }), res as any);
+    const setCall = (db as any).update.mock.results[0].value.set;
+    expect(setCall).toHaveBeenCalledWith(expect.objectContaining({ currentValue: "0" }));
+    const body = res.getBody();
+    expect(body.mode).toBe(0);
+    expect(body.status).toBe("OFF");
+  });
+
+  it("explicit mode wins over legacy on (mode:1 + on:true → '1', not '2')", async () => {
+    buildSelectMock([[{ id: "existing-uuid" }]]);
+    const res = makeRes();
+    await postSwitch(
+      makeReq({ body: { id: "learning_loop", mode: 1, on: true } }),
+      res as any,
+    );
+    const setCall = (db as any).update.mock.results[0].value.set;
+    expect(setCall).toHaveBeenCalledWith(expect.objectContaining({ currentValue: "1" }));
+    expect(res.getBody().mode).toBe(1);
+  });
+
+  it("out-of-range mode:5 clamps to '2' (AUTOPILOT)", async () => {
+    buildSelectMock([[{ id: "existing-uuid" }]]);
+    const res = makeRes();
+    await postSwitch(makeReq({ body: { id: "learning_loop", mode: 5 } }), res as any);
+    const setCall = (db as any).update.mock.results[0].value.set;
+    expect(setCall).toHaveBeenCalledWith(expect.objectContaining({ currentValue: "2" }));
+  });
+
+  it("LEGACY on:true with no existing row → db.insert with '2'", async () => {
     buildSelectMock([[]]); // no existing row
     const res = makeRes();
     await postSwitch(makeReq({ body: { id: "learning_loop", on: true } }), res as any);
     expect((db as any).insert).toHaveBeenCalled();
     const valuesCall = (db as any).insert.mock.results[0].value.values;
+    expect(valuesCall).toHaveBeenCalledWith(expect.objectContaining({ currentValue: "2" }));
+  });
+
+  it("mode:1 with no existing row → db.insert with '1'", async () => {
+    buildSelectMock([[]]);
+    const res = makeRes();
+    await postSwitch(makeReq({ body: { id: "learning_loop", mode: 1 } }), res as any);
+    const valuesCall = (db as any).insert.mock.results[0].value.values;
     expect(valuesCall).toHaveBeenCalledWith(expect.objectContaining({ currentValue: "1" }));
   });
 
-  it("on:false with no existing row → db.insert with '0'", async () => {
-    buildSelectMock([[]]);
-    const res = makeRes();
-    await postSwitch(makeReq({ body: { id: "learning_loop", on: false } }), res as any);
-    const valuesCall = (db as any).insert.mock.results[0].value.values;
-    expect(valuesCall).toHaveBeenCalledWith(expect.objectContaining({ currentValue: "0" }));
-  });
-
-  it("audit record emitted with switch:learning_loop", async () => {
+  it("audit record emitted with switch:learning_loop + mode", async () => {
     buildSelectMock([[{ id: "x" }]]);
-    await postSwitch(makeReq({ body: { id: "learning_loop", on: true } }), makeRes() as any);
+    await postSwitch(makeReq({ body: { id: "learning_loop", mode: 2 } }), makeRes() as any);
     expect(insertAuditRowSafe).toHaveBeenCalledWith(
-      expect.objectContaining({ action: "slumhouse_admin.switch_toggled" }),
+      expect.objectContaining({
+        action: "slumhouse_admin.switch_toggled",
+        result: expect.objectContaining({ value: "2", mode: 2 }),
+      }),
     );
   });
 });

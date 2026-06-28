@@ -279,7 +279,7 @@ describe("L4 — auto_patch.loop_halted_kill_switch audit when kill switch is fa
           select: vi.fn().mockReturnValue({
             from: vi.fn().mockReturnValue({
               where: vi.fn().mockReturnValue({
-                limit: vi.fn().mockResolvedValue([{ currentValue: "true" }]),
+                limit: vi.fn().mockResolvedValue([{ currentValue: "2" }]),
               }),
             }),
           }),
