@@ -238,9 +238,16 @@ export const LOOKAHEAD_GUARD_INSTRUCTION =
  * For candidates from parameter_evolver.py: Python already built governance_meta
  * with full 5-field validation — trust and forward it.
  *
- * For candidates from critic_optimizer.py: Python does not (yet) emit governance_meta.
- * Tag as "advisory" — 5-field enforcement is not yet wired for this path. The R8 hard
- * gate only blocks "incomplete" (parameter_evolver.py path); "advisory" proceeds.
+ * For candidates from critic_optimizer.py: Python does NOT emit governance_meta.
+ * F-6 INSTITUTIONAL FIX (option b, fail-closed): validate the 5 mandatory governance
+ * fields on this path too. Since critic_optimizer.py never emits those fields, ALL
+ * candidates from this path resolve to precommit_status="incomplete" and are BLOCKED
+ * at the replay gate. critic_optimizer.py must be updated to emit the 5 fields before
+ * its candidates can proceed past replay. The "advisory" bypass is REMOVED.
+ *
+ * The 5 mandatory fields are:
+ *   economic_rationale, declared_param_space_size, min_sample_size,
+ *   target_regime, declared_failure_mode
  *
  * Exported for testability.
  */
@@ -249,6 +256,7 @@ export function buildCandidateGovernanceMeta(
     changed_params?: Record<string, number>;
     reasoning?: string;
     governance_meta?: Record<string, unknown>;
+    [key: string]: unknown;
   },
   evidence: Pick<EvidencePacket, "backtest_metrics" | "trial_n_total">,
 ): GovernanceMeta {
@@ -261,13 +269,21 @@ export function buildCandidateGovernanceMeta(
     };
   }
 
-  // critic_optimizer.py path: governance_meta absent → tag "advisory", not "incomplete".
-  // "advisory" passes the replay gate; the operator can tighten this once
-  // critic_optimizer.py is updated to emit the 5 governance fields.
+  // critic_optimizer.py path: governance_meta absent.
+  // F-6: validate the 5 mandatory fields — they will ALL be absent, so status becomes
+  // "incomplete" → blocked at replay. This is intentional: fail-closed until
+  // critic_optimizer.py is updated to emit the governance fields.
   const totalTrades = Number((evidence.backtest_metrics as Record<string, unknown>)?.total_trades ?? 0);
+  const missingFields: string[] = [];
+  if (!candidate.economic_rationale) missingFields.push("economic_rationale");
+  if (candidate.declared_param_space_size == null) missingFields.push("declared_param_space_size");
+  if (candidate.min_sample_size == null) missingFields.push("min_sample_size");
+  if (!candidate.target_regime) missingFields.push("target_regime");
+  if (!candidate.declared_failure_mode) missingFields.push("declared_failure_mode");
+
   const meta: GovernanceMeta = {
-    precommit_status: "advisory",
-    missing_fields: [],
+    precommit_status: missingFields.length === 0 ? "complete" : "incomplete",
+    missing_fields: missingFields,
     trial_n_total: evidence.trial_n_total ?? 1,
   };
   if (totalTrades < GOVERNANCE_MIN_SAMPLE_DAYS) {
@@ -2170,7 +2186,8 @@ async function replayCandidatesAsync(
         // declared_param_space_size, min_sample_size, target_regime,
         // declared_failure_mode). It must NOT be queued for replay — kept as
         // "skipped_precommit_incomplete" so the audit trail is accurate.
-        // "advisory" (critic_optimizer.py path — not yet wired for 5-field) passes.
+        // F-6: the "advisory" bypass for the critic_optimizer.py path is REMOVED.
+        // Both code paths now validate the 5 fields — see buildCandidateGovernanceMeta.
         const candidateGovMeta = (candidate.governanceMeta as GovernanceMeta | null) ?? null;
         if (candidateGovMeta?.precommit_status === "incomplete") {
           logger.warn(
@@ -2198,6 +2215,42 @@ async function replayCandidatesAsync(
             correlationId,
           );
           broadcastSSE("critic:replay_complete", { runId, candidateId: candidate.id, status: "skipped_precommit_incomplete" });
+          continue;
+        }
+
+        // R3 F-5 mirror: Block candidates with lookahead_violation=true.
+        // parameter_evolver.py HARD mode already excludes these before they reach the
+        // DB when LOOKAHEAD_GUARD_HARD=true. This gate is the TS-layer defence for
+        // candidates that arrive via soft mode or legacy data with the flag already set.
+        if (candidateGovMeta?.lookahead_violation === true) {
+          logger.warn(
+            {
+              runId,
+              candidateId: candidate.id,
+              reasons: (candidateGovMeta as any).lookahead_violation_reasons,
+            },
+            "R3: candidate has lookahead_violation=true — skipping (lookahead_blocked)",
+          );
+          await db
+            .update(criticCandidates)
+            .set({
+              replayStatus: "skipped_lookahead_violation",
+              governanceLabels: {
+                ...(candidate.governanceLabels as Record<string, unknown> ?? {}),
+                lookahead_violation: true,
+                skip_reason: "lookahead_violation",
+              } as any,
+            })
+            .where(eq(criticCandidates.id, candidate.id));
+          await logAudit(
+            "research_governance.lookahead_violation_blocked",
+            "critic_optimization",
+            runId,
+            { candidateId: candidate.id, strategyId },
+            { reasons: (candidateGovMeta as any).lookahead_violation_reasons },
+            correlationId,
+          );
+          broadcastSSE("critic:replay_complete", { runId, candidateId: candidate.id, status: "skipped_lookahead_violation" });
           continue;
         }
 

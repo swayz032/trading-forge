@@ -5,6 +5,7 @@ Each signal independently detects a specific type of strategy degradation.
 import math
 
 import numpy as np
+
 from .half_life import _within_grace_period
 
 
@@ -324,3 +325,50 @@ def _slope(x: np.ndarray, y: np.ndarray) -> float:
     if ss_xx == 0:
         return 0.0
     return ss_xy / ss_xx
+
+
+if __name__ == "__main__":
+    import argparse
+    import json
+    import sys
+
+    _parser = argparse.ArgumentParser(description="Sub-signals composite decay CLI")
+    _parser.add_argument("--config", required=True, help="Path to JSON config file")
+    _args = _parser.parse_args()
+
+    try:
+        with open(_args.config) as _f:
+            _cfg = json.load(_f)
+    except Exception as _e:
+        print(json.dumps({"error": f"Failed to read config: {_e}"}))
+        sys.exit(1)
+
+    _action = _cfg.get("action", "")
+
+    if _action == "signals":
+        # Route: GET /api/decay/signals/:strategyId
+        # Config keys: strategy_id (str), daily_pnls (list[float], optional),
+        #   trades (list[dict], optional), strategy_regime (str, optional),
+        #   current_regime (str, optional).
+        # When called without P&L data (health-check or strategy with no live trades),
+        # composite_decay_score handles empty inputs gracefully (returns score=0).
+        try:
+            _result = composite_decay_score(
+                daily_pnls=_cfg.get("daily_pnls", []),
+                trades=_cfg.get("trades", []),
+                strategy_regime=_cfg.get("strategy_regime", ""),
+                current_regime=_cfg.get("current_regime", ""),
+            )
+            _result["strategy_id"] = _cfg.get("strategy_id", "")
+            print(json.dumps(_result))
+        except Exception as _e:
+            print(json.dumps({"error": f"composite_decay_score failed: {_e}"}))
+            sys.exit(1)
+
+    else:
+        # Fail-closed: unknown action → error JSON + non-zero exit; NEVER empty stdout.
+        print(json.dumps({
+            "error": f"Unknown sub_signals action: {_action!r}",
+            "valid_actions": ["signals"],
+        }))
+        sys.exit(1)

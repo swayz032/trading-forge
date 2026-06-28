@@ -237,3 +237,82 @@ def _classify_trend(slope: float, r_squared: float) -> str:
     if slope < -0.005:
         return "declining"
     return "stable"
+
+
+if __name__ == "__main__":
+    import argparse
+    import json
+    import sys
+
+    _parser = argparse.ArgumentParser(description="Half-life decay CLI")
+    _parser.add_argument("--config", required=True, help="Path to JSON config file")
+    _args = _parser.parse_args()
+
+    try:
+        with open(_args.config) as _f:
+            _cfg = json.load(_f)
+    except Exception as _e:
+        print(json.dumps({"error": f"Failed to read config: {_e}"}))
+        sys.exit(1)
+
+    _action = _cfg.get("action", "")
+
+    if _action == "analyze":
+        # Route: POST /api/decay/analyze
+        # Config keys: daily_pnls (list[float]), window (int, default 60),
+        #   optionally strategy_id, trades, strategy_regime, current_regime.
+        _daily_pnls = _cfg.get("daily_pnls", [])
+        _window = int(_cfg.get("window", 60))
+        _result = fit_decay(_daily_pnls, window=_window)
+        _result["strategy_id"] = _cfg.get("strategy_id", "")
+        print(json.dumps(_result))
+
+    elif _action == "status":
+        # Route: GET /api/decay/status/:strategyId
+        # Config keys: strategy_id (str).
+        # P&L data is not supplied; return lightweight status indicating
+        # no data available rather than running a meaningless empty fit.
+        _sid = _cfg.get("strategy_id", "")
+        print(json.dumps({
+            "strategy_id": _sid,
+            "status": "no_data",
+            "decay_detected": False,
+            "decay_rate": 0.0,
+            "half_life_days": None,
+            "r_squared": 0.0,
+            "current_vs_peak": 1.0,
+            "trend": "stable",
+            "message": "No P&L data supplied. Pass daily_pnls via action=analyze for a full fit.",
+        }))
+
+    elif _action == "dashboard":
+        # Route: GET /api/decay/dashboard
+        # Config keys (optional): strategies — list of {strategy_id, daily_pnls, window}.
+        # When called with no strategy data (health-check / nightly ping), return an
+        # empty-but-valid dashboard structure so the caller receives valid JSON, not a 500.
+        _strategies_in = _cfg.get("strategies", [])
+        _strategy_results = []
+        for _s in _strategies_in:
+            _sid = _s.get("strategy_id", "")
+            _pnls = _s.get("daily_pnls", [])
+            _w = int(_s.get("window", 60))
+            _fit = fit_decay(_pnls, window=_w)
+            _strategy_results.append({"strategy_id": _sid, **_fit})
+        _total = len(_strategy_results)
+        _healthy = sum(1 for _r in _strategy_results if not _r.get("decay_detected", False))
+        print(json.dumps({
+            "strategies": _strategy_results,
+            "summary": {
+                "total": _total,
+                "healthy": _healthy,
+                "declining": _total - _healthy,
+            },
+        }))
+
+    else:
+        # Fail-closed: unknown action → error JSON + non-zero exit; NEVER empty stdout.
+        print(json.dumps({
+            "error": f"Unknown decay action: {_action!r}",
+            "valid_actions": ["analyze", "status", "dashboard"],
+        }))
+        sys.exit(1)

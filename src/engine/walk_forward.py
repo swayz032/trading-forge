@@ -53,6 +53,17 @@ from src.engine.walk_forward_regime_context import classify_parameter_drift
 # PBO > threshold = strategy more likely overfit than not.
 _PBO_OVERFIT_THRESHOLD_DEFAULT = 0.5
 
+# ── F-4: DSR N_total wiring ───────────────────────────────────────────────────
+# Env var: DSR_USE_NTOTAL (default "true")
+# When true: CPCV DSR uses effective_n_trials = max(n_paths, trial_n_total)
+# where trial_n_total is the cumulative mutation proposal count for the strategy
+# (from research_trial_counter via BacktestRequest.trial_n_total).
+# This prevents 2–5× Sharpe inflation caused by treating each CPCV run as if
+# only n_paths (15) trials were ever proposed for the strategy.
+# Fail-closed default: true. Override DSR_USE_NTOTAL=false to revert to legacy
+# behaviour (n_trials = n_paths only) — for diagnostic use only.
+_DSR_USE_NTOTAL: bool = os.getenv("DSR_USE_NTOTAL", "true").lower() != "false"
+
 # ─── OOS Window Minimums ─────────────────────────────────────────
 # Below these thresholds, OOS results are statistically unreliable.
 MIN_OOS_TRADES = 30
@@ -332,14 +343,23 @@ def _run_walk_forward_cpcv(
 
     # ── PSR / DSR across CPCV paths ──────────────────────────────────────────
     # PSR = fraction of paths where path Sharpe > Sharpe* (the expected max under null).
-    # DSR computed with n_trials = n_paths (each path = an independent trial in CPCV).
+    # F-4 DSR n_trials: use effective_n_trials = max(n_paths, trial_n_total) when
+    # DSR_USE_NTOTAL=true (default). trial_n_total is the cumulative mutation count for
+    # this strategy across all evolution cycles — using it as the denominator prevents
+    # the 2–5× Sharpe inflation that occurs when treating each run as if only n_paths
+    # (15 CPCV paths) trials were ever proposed. Fail-safe: trial_n_total < 1 → treated
+    # as 1, so effective_n_trials never drops below n_paths.
+    _trial_n_total: int = max(1, getattr(request, "trial_n_total", 1))
+    _effective_n_trials: int = (
+        max(n_paths, _trial_n_total) if _DSR_USE_NTOTAL else n_paths
+    )
     try:
         from src.engine.risk_metrics import compute_deflated_sharpe_ratio as _cpcv_dsr
 
         _n_obs = len(all_oos_pnls)
         _dsr_result = _cpcv_dsr(
             observed_sharpe=agg_sharpe,
-            n_trials=n_paths,
+            n_trials=_effective_n_trials,
             n_observations=max(_n_obs, 2),
         )
         _psr = float(sum(1 for s in path_sharpes if s > 0) / max(len(path_sharpes), 1))

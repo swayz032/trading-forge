@@ -6149,6 +6149,17 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                 exit_engine=exit_engine,
                 adaptive_ctx=_adaptive_ctx,
             )
+            # F-1 (point-in-time integrity telemetry): propagate tp2 liquidity flags
+            # from the adaptive_exit_context config to the result dict so downstream
+            # analytics can identify backtests that used R-multiple TP2 fallback vs
+            # live liquidity-mapped TP2 (paper-only). These flags are set by
+            # backtest-service.ts when it correctly withholds point-in-time levels.
+            _raw_ae_ctx = config.get("adaptive_exit_context") if isinstance(config, dict) else None
+            if isinstance(_raw_ae_ctx, dict) and _raw_ae_ctx.get("tp2_liquidity_unavailable"):
+                result["tp2_liquidity_source"] = _raw_ae_ctx.get(
+                    "tp2_liquidity_source", "backtest_no_historical_levels"
+                )
+                result["tp2_liquidity_unavailable"] = True
     else:
         # DSL expression-based strategy path (original)
         try:

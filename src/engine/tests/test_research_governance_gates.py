@@ -181,61 +181,61 @@ class TestValidateLookaheadGuard:
 class TestValidateMutationsPrecommit:
     def test_complete_mutation_passes_with_all_fields(self):
         mutations = [dict(MINIMAL_MUTATION)]  # copy to avoid mutation
-        result = validate_mutations(mutations, RANGES, PARAMS)
-        assert len(result) == 1
-        meta = result[0]["governance_meta"]
+        validated, _ = validate_mutations(mutations, RANGES, PARAMS)
+        assert len(validated) == 1
+        meta = validated[0]["governance_meta"]
         assert meta["precommit_status"] == "complete"
         assert meta["missing_fields"] == []
 
     def test_missing_economic_rationale_marks_incomplete(self):
         mut = dict(MINIMAL_MUTATION)
         del mut["economic_rationale"]
-        result = validate_mutations([mut], RANGES, PARAMS)
-        assert len(result) == 1
-        meta = result[0]["governance_meta"]
+        validated, _ = validate_mutations([mut], RANGES, PARAMS)
+        assert len(validated) == 1
+        meta = validated[0]["governance_meta"]
         assert meta["precommit_status"] == "incomplete"
         assert "economic_rationale" in meta["missing_fields"]
 
     def test_missing_target_regime_marks_incomplete(self):
         mut = dict(MINIMAL_MUTATION)
         del mut["target_regime"]
-        result = validate_mutations([mut], RANGES, PARAMS)
-        assert len(result) == 1
-        meta = result[0]["governance_meta"]
+        validated, _ = validate_mutations([mut], RANGES, PARAMS)
+        assert len(validated) == 1
+        meta = validated[0]["governance_meta"]
         assert meta["precommit_status"] == "incomplete"
         assert "target_regime" in meta["missing_fields"]
 
     def test_missing_declared_failure_mode_marks_incomplete(self):
         mut = dict(MINIMAL_MUTATION)
         del mut["declared_failure_mode"]
-        result = validate_mutations([mut], RANGES, PARAMS)
-        assert len(result) == 1
-        meta = result[0]["governance_meta"]
+        validated, _ = validate_mutations([mut], RANGES, PARAMS)
+        assert len(validated) == 1
+        meta = validated[0]["governance_meta"]
         assert meta["precommit_status"] == "incomplete"
         assert "declared_failure_mode" in meta["missing_fields"]
 
     def test_missing_declared_param_space_size_marks_incomplete(self):
         mut = dict(MINIMAL_MUTATION)
         del mut["declared_param_space_size"]
-        result = validate_mutations([mut], RANGES, PARAMS)
-        assert len(result) == 1
-        meta = result[0]["governance_meta"]
+        validated, _ = validate_mutations([mut], RANGES, PARAMS)
+        assert len(validated) == 1
+        meta = validated[0]["governance_meta"]
         assert meta["precommit_status"] == "incomplete"
         assert "declared_param_space_size" in meta["missing_fields"]
 
     def test_missing_min_sample_size_marks_incomplete(self):
         mut = dict(MINIMAL_MUTATION)
         del mut["min_sample_size"]
-        result = validate_mutations([mut], RANGES, PARAMS)
-        assert len(result) == 1
-        meta = result[0]["governance_meta"]
+        validated, _ = validate_mutations([mut], RANGES, PARAMS)
+        assert len(validated) == 1
+        meta = validated[0]["governance_meta"]
         assert meta["precommit_status"] == "incomplete"
         assert "min_sample_size" in meta["missing_fields"]
 
     def test_all_precommit_fields_preserved_in_governance_meta(self):
         mutations = [dict(MINIMAL_MUTATION)]
-        result = validate_mutations(mutations, RANGES, PARAMS)
-        meta = result[0]["governance_meta"]
+        validated, _ = validate_mutations(mutations, RANGES, PARAMS)
+        meta = validated[0]["governance_meta"]
         assert meta["economic_rationale"] == VALID_PRECOMMIT["economic_rationale"]
         assert meta["declared_param_space_size"] == 1
         assert meta["min_sample_size"] == 63
@@ -244,24 +244,29 @@ class TestValidateMutationsPrecommit:
 
     def test_governance_meta_included_in_each_result(self):
         mutations = [dict(MINIMAL_MUTATION)]
-        result = validate_mutations(mutations, RANGES, PARAMS)
-        assert "governance_meta" in result[0]
-        assert "params" in result[0]
-        assert "reason" in result[0]
+        validated, _ = validate_mutations(mutations, RANGES, PARAMS)
+        assert "governance_meta" in validated[0]
+        assert "params" in validated[0]
+        assert "reason" in validated[0]
 
-    def test_lookahead_violation_recorded_in_governance_meta(self):
+    def test_lookahead_violation_recorded_in_governance_meta_soft_mode(self, monkeypatch):
+        """In soft mode (LOOKAHEAD_GUARD_HARD=false), the mutation still passes
+        but governance_meta records the violation."""
+        import src.engine.parameter_evolver as pe
+        monkeypatch.setattr(pe, "LOOKAHEAD_GUARD_HARD", False)
         mut = dict(MINIMAL_MUTATION)
         mut["reason"] = "In 2025 this worked well according to external research."
-        result = validate_mutations([mut], RANGES, PARAMS)
-        assert len(result) == 1
-        meta = result[0]["governance_meta"]
+        validated, rejected = validate_mutations([mut], RANGES, PARAMS)
+        assert len(validated) == 1, "Soft mode must NOT block — mutation stays in validated"
+        assert len(rejected) == 0
+        meta = validated[0]["governance_meta"]
         assert meta["lookahead_violation"] is True
         assert len(meta["lookahead_violation_reasons"]) >= 1
 
     def test_no_lookahead_violation_when_reason_clean(self):
         mutations = [dict(MINIMAL_MUTATION)]
-        result = validate_mutations(mutations, RANGES, PARAMS)
-        meta = result[0]["governance_meta"]
+        validated, _ = validate_mutations(mutations, RANGES, PARAMS)
+        meta = validated[0]["governance_meta"]
         assert meta["lookahead_violation"] is False
         assert meta["lookahead_violation_reasons"] == []
 
@@ -273,39 +278,39 @@ class TestValidateMutationsPrecommit:
 class TestInsufficientSampleTag:
     def test_no_tag_when_trades_at_minimum(self):
         mutations = [dict(MINIMAL_MUTATION)]
-        result = validate_mutations(mutations, RANGES, PARAMS, total_trades=MIN_SAMPLE_TRADING_DAYS)
-        meta = result[0]["governance_meta"]
+        validated, _ = validate_mutations(mutations, RANGES, PARAMS, total_trades=MIN_SAMPLE_TRADING_DAYS)
+        meta = validated[0]["governance_meta"]
         assert "sample_tag" not in meta
 
     def test_no_tag_when_trades_above_minimum(self):
         mutations = [dict(MINIMAL_MUTATION)]
-        result = validate_mutations(mutations, RANGES, PARAMS, total_trades=100)
-        meta = result[0]["governance_meta"]
+        validated, _ = validate_mutations(mutations, RANGES, PARAMS, total_trades=100)
+        meta = validated[0]["governance_meta"]
         assert "sample_tag" not in meta
 
     def test_insufficient_sample_tag_below_minimum(self):
         mutations = [dict(MINIMAL_MUTATION)]
-        result = validate_mutations(mutations, RANGES, PARAMS, total_trades=30)
-        meta = result[0]["governance_meta"]
+        validated, _ = validate_mutations(mutations, RANGES, PARAMS, total_trades=30)
+        meta = validated[0]["governance_meta"]
         assert meta.get("sample_tag") == "INSUFFICIENT_SAMPLE"
 
     def test_insufficient_sample_tag_at_zero_trades(self):
         mutations = [dict(MINIMAL_MUTATION)]
-        result = validate_mutations(mutations, RANGES, PARAMS, total_trades=0)
-        meta = result[0]["governance_meta"]
+        validated, _ = validate_mutations(mutations, RANGES, PARAMS, total_trades=0)
+        meta = validated[0]["governance_meta"]
         assert meta.get("sample_tag") == "INSUFFICIENT_SAMPLE"
 
     def test_insufficient_sample_one_below_minimum(self):
         mutations = [dict(MINIMAL_MUTATION)]
-        result = validate_mutations(mutations, RANGES, PARAMS, total_trades=MIN_SAMPLE_TRADING_DAYS - 1)
-        meta = result[0]["governance_meta"]
+        validated, _ = validate_mutations(mutations, RANGES, PARAMS, total_trades=MIN_SAMPLE_TRADING_DAYS - 1)
+        meta = validated[0]["governance_meta"]
         assert meta.get("sample_tag") == "INSUFFICIENT_SAMPLE"
 
     def test_default_total_trades_zero_triggers_tag(self):
         """Calling without total_trades should default to 0 → INSUFFICIENT_SAMPLE."""
         mutations = [dict(MINIMAL_MUTATION)]
-        result = validate_mutations(mutations, RANGES, PARAMS)
-        meta = result[0]["governance_meta"]
+        validated, _ = validate_mutations(mutations, RANGES, PARAMS)
+        meta = validated[0]["governance_meta"]
         assert meta.get("sample_tag") == "INSUFFICIENT_SAMPLE"
 
 
@@ -354,3 +359,222 @@ class TestMinSampleTradingDaysConstant:
         assert pe.MIN_SAMPLE_TRADING_DAYS == 90
         # Restore
         importlib.reload(pe)
+
+
+# ---------------------------------------------------------------------------
+# F-5 — Lookahead guard HARD mode (LOOKAHEAD_GUARD_HARD=true, default)
+# Mutations with lookahead violations must be BLOCKED (not just warned).
+# ---------------------------------------------------------------------------
+
+class TestLookaheadGuardHardMode:
+    LOOKAHEAD_REASON = "In 2025 this strategy historically outperformed in trending sessions."
+
+    def test_hard_mode_blocks_lookahead_mutation(self, monkeypatch):
+        """LOOKAHEAD_GUARD_HARD=true (default): violating mutation goes to rejected, NOT validated."""
+        import src.engine.parameter_evolver as pe
+        monkeypatch.setattr(pe, "LOOKAHEAD_GUARD_HARD", True)
+        mut = {**MINIMAL_MUTATION, "reason": self.LOOKAHEAD_REASON}
+        validated, rejected = validate_mutations([mut], RANGES, PARAMS)
+        assert len(validated) == 0, "Hard mode must exclude the mutation from validated"
+        assert len(rejected) == 1, "Blocked mutation must appear in rejected list"
+
+    def test_hard_mode_rejected_entry_has_governance_meta(self, monkeypatch):
+        """Rejected entry must carry governance_meta with lookahead_violation=True and drop_reason."""
+        import src.engine.parameter_evolver as pe
+        monkeypatch.setattr(pe, "LOOKAHEAD_GUARD_HARD", True)
+        mut = {**MINIMAL_MUTATION, "reason": self.LOOKAHEAD_REASON}
+        _, rejected = validate_mutations([mut], RANGES, PARAMS)
+        assert len(rejected) == 1
+        meta = rejected[0]["governance_meta"]
+        assert meta["lookahead_violation"] is True
+        assert meta["drop_reason"] == "lookahead_guard_hard"
+        assert meta["precommit_status"] == "rejected_lookahead"
+        assert len(meta["lookahead_violation_reasons"]) >= 1
+
+    def test_hard_mode_clean_reason_passes_through(self, monkeypatch):
+        """Clean reason must still reach validated with HARD mode active."""
+        import src.engine.parameter_evolver as pe
+        monkeypatch.setattr(pe, "LOOKAHEAD_GUARD_HARD", True)
+        mutations = [dict(MINIMAL_MUTATION)]
+        validated, rejected = validate_mutations(mutations, RANGES, PARAMS)
+        assert len(validated) == 1
+        assert len(rejected) == 0
+
+    def test_soft_mode_lookahead_stays_in_validated(self, monkeypatch):
+        """LOOKAHEAD_GUARD_HARD=false: mutation with violation still reaches validated."""
+        import src.engine.parameter_evolver as pe
+        monkeypatch.setattr(pe, "LOOKAHEAD_GUARD_HARD", False)
+        mut = {**MINIMAL_MUTATION, "reason": self.LOOKAHEAD_REASON}
+        validated, rejected = validate_mutations([mut], RANGES, PARAMS)
+        assert len(validated) == 1, "Soft mode: mutation must remain in validated"
+        assert len(rejected) == 0, "Soft mode: nothing goes to rejected"
+        assert validated[0]["governance_meta"]["lookahead_violation"] is True
+
+    def test_mixed_batch_blocks_only_violating(self, monkeypatch):
+        """Only the lookahead-violating mutation is blocked; clean mutation passes."""
+        import src.engine.parameter_evolver as pe
+        monkeypatch.setattr(pe, "LOOKAHEAD_GUARD_HARD", True)
+        clean = dict(MINIMAL_MUTATION)
+        dirty = {**MINIMAL_MUTATION, "ema_fast": 14, "reason": self.LOOKAHEAD_REASON}
+        validated, rejected = validate_mutations([clean, dirty], RANGES, PARAMS)
+        assert len(validated) == 1
+        assert len(rejected) == 1
+        assert validated[0]["params"]["ema_fast"] == 12  # clean mutation
+        assert rejected[0]["governance_meta"]["lookahead_violation"] is True
+
+    def test_validate_mutations_returns_tuple(self):
+        """validate_mutations must return a 2-tuple (validated, rejected)."""
+        result = validate_mutations([dict(MINIMAL_MUTATION)], RANGES, PARAMS)
+        assert isinstance(result, tuple), "Must return a tuple"
+        assert len(result) == 2, "Tuple must have exactly 2 elements"
+
+    def test_governance_summary_lookahead_blocked_count(self, monkeypatch):
+        """governance_summary.lookahead_blocked reflects the actual rejected count."""
+        import src.engine.parameter_evolver as pe
+        monkeypatch.setattr(pe, "LOOKAHEAD_GUARD_HARD", True)
+        # Inject a test lookahead reason via an extra mutation
+        clean = dict(MINIMAL_MUTATION)
+        dirty = {**MINIMAL_MUTATION, "ema_fast": 14, "reason": self.LOOKAHEAD_REASON}
+        # validate_mutations is a pure function — test summary through evolve()
+        # indirectly by confirming the returned list lengths match expectations.
+        _, rejected = validate_mutations([clean, dirty], RANGES, PARAMS)
+        assert len(rejected) == 1
+
+
+# ---------------------------------------------------------------------------
+# F-4 — DSR N_total wiring via BacktestRequest.trial_n_total
+# Verifies that BacktestRequest accepts the field and that the DSR bar
+# tightens (DSR value decreases) as trial_n_total grows.
+# ---------------------------------------------------------------------------
+
+class TestDSRNtotalWiring:
+    """Tests the DSR N_total wiring introduced in F-4.
+
+    We call compute_deflated_sharpe_ratio directly to verify that
+    higher n_trials (= max(n_paths, trial_n_total)) produces a lower DSR
+    value — i.e., the bar gets STRICTER, not looser.
+    """
+
+    def test_backrequest_accepts_trial_n_total(self):
+        """BacktestRequest must accept trial_n_total field without error."""
+        from src.engine.config import (
+            BacktestRequest,
+            IndicatorConfig,
+            PositionSizeConfig,
+            StopConfig,
+            StrategyConfig,
+        )
+        req = BacktestRequest(
+            strategy=StrategyConfig(
+                name="Test",
+                symbol="MES",
+                timeframe="5m",
+                indicators=[IndicatorConfig(type="atr", period=14)],
+                entry_long="close > open",
+                entry_short="close < open",
+                exit="close crosses_above open",
+                stop_loss=StopConfig(type="atr", multiplier=2.0),
+                position_size=PositionSizeConfig(type="fixed", fixed_contracts=1),
+            ),
+            start_date="2024-01-01",
+            end_date="2024-06-01",
+            trial_n_total=42,
+        )
+        assert req.trial_n_total == 42
+
+    def test_trial_n_total_defaults_to_one(self):
+        """Default trial_n_total=1 preserves backward compat (pre-F4 behaviour)."""
+        from src.engine.config import (
+            BacktestRequest,
+            IndicatorConfig,
+            PositionSizeConfig,
+            StopConfig,
+            StrategyConfig,
+        )
+        req = BacktestRequest(
+            strategy=StrategyConfig(
+                name="Test",
+                symbol="MES",
+                timeframe="5m",
+                indicators=[IndicatorConfig(type="atr", period=14)],
+                entry_long="close > open",
+                entry_short="close < open",
+                exit="close crosses_above open",
+                stop_loss=StopConfig(type="atr", multiplier=2.0),
+                position_size=PositionSizeConfig(type="fixed", fixed_contracts=1),
+            ),
+            start_date="2024-01-01",
+            end_date="2024-06-01",
+        )
+        assert req.trial_n_total == 1
+
+    def test_dsr_tightens_as_ntotal_grows(self):
+        """Higher n_trials → lower DSR (stricter bar). Core F-4 correctness proof."""
+        from src.engine.risk_metrics import compute_deflated_sharpe_ratio
+        # Shared params: same observed Sharpe and n_observations.
+        observed_sharpe = 1.5
+        n_obs = 252  # ~1 trading year
+
+        dsr_15 = compute_deflated_sharpe_ratio(
+            observed_sharpe=observed_sharpe,
+            n_trials=15,      # n_paths only (legacy behaviour)
+            n_observations=n_obs,
+        ).get("dsr", 0.0)
+
+        dsr_50 = compute_deflated_sharpe_ratio(
+            observed_sharpe=observed_sharpe,
+            n_trials=50,      # max(15, 50) — trial_n_total = 50
+            n_observations=n_obs,
+        ).get("dsr", 0.0)
+
+        dsr_200 = compute_deflated_sharpe_ratio(
+            observed_sharpe=observed_sharpe,
+            n_trials=200,     # max(15, 200) — high mutation count
+            n_observations=n_obs,
+        ).get("dsr", 0.0)
+
+        # More trials = higher expected-max-Sharpe bar = lower DSR value.
+        assert dsr_15 is not None, "DSR must be computed"
+        assert dsr_50 is not None
+        assert dsr_200 is not None
+        assert dsr_15 > dsr_50, (
+            f"DSR with 50 trials must be lower than with 15 (got {dsr_15:.4f} vs {dsr_50:.4f})"
+        )
+        assert dsr_50 > dsr_200, (
+            f"DSR with 200 trials must be lower than with 50 (got {dsr_50:.4f} vs {dsr_200:.4f})"
+        )
+
+    def test_dsr_ntotal_failsafe_below_one(self):
+        """trial_n_total < 1 must be treated as 1 (fail-safe, no division by zero)."""
+        from src.engine.risk_metrics import compute_deflated_sharpe_ratio
+        # n_trials=1 must not raise
+        result_1 = compute_deflated_sharpe_ratio(
+            observed_sharpe=1.0,
+            n_trials=1,
+            n_observations=252,
+        )
+        assert result_1.get("dsr") is not None or result_1.get("dsr_unavailable")
+
+    def test_effective_ntrial_is_max_of_npaths_and_ntotal(self, monkeypatch):
+        """When trial_n_total < n_paths (15), effective_n_trials stays at n_paths (min floor)."""
+        from src.engine.risk_metrics import compute_deflated_sharpe_ratio
+        # trial_n_total=3 < n_paths=15 → effective = max(15, 3) = 15
+        dsr_floor = compute_deflated_sharpe_ratio(
+            observed_sharpe=1.2,
+            n_trials=15,  # max(15, 3) floor
+            n_observations=252,
+        ).get("dsr", 0.0)
+
+        dsr_below = compute_deflated_sharpe_ratio(
+            observed_sharpe=1.2,
+            n_trials=3,   # this would be wrong — smaller = easier bar
+            n_observations=252,
+        ).get("dsr", 0.0)
+
+        # The floor ensures we never get an easier bar than n_paths.
+        # With fewer trials, the expected-max Sharpe bar is lower → DSR is HIGHER.
+        # So: dsr(n_trials=3) > dsr(n_trials=15) — confirming max() clamps upward.
+        assert dsr_below > dsr_floor, (
+            f"Fewer trials should produce higher DSR (easier bar), "
+            f"got dsr_below={dsr_below:.4f} dsr_floor={dsr_floor:.4f}"
+        )

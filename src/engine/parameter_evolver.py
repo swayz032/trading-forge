@@ -50,6 +50,14 @@ _LOOKAHEAD_GUARD = (
 # Override via env for test / paper-mode contexts.
 MIN_SAMPLE_TRADING_DAYS: int = int(os.getenv("GOVERNANCE_MIN_SAMPLE_DAYS", "63"))
 
+# R3: Hard lookahead guard mode (F-5 governance hardening).
+# When HARD (default true): mutations whose reason trips the lookahead scan are
+# EXCLUDED from the validated list entirely and placed in the rejected list.
+# When SOFT (LOOKAHEAD_GUARD_HARD=false): violations are warned but the mutation
+# still proceeds (advisory mode — downgrade to warn-only when explicitly needed).
+# Fail-closed default: true.
+LOOKAHEAD_GUARD_HARD: bool = os.getenv("LOOKAHEAD_GUARD_HARD", "true").lower() != "false"
+
 # R3: Patterns whose presence in a mutation reason indicates possible lookahead bias.
 # Compiled once at module load; designed for speed (no catastrophic backtracking).
 _LOOKAHEAD_PATTERNS: list[re.Pattern] = [
@@ -253,21 +261,28 @@ def validate_mutations(
     robust_ranges: dict,
     current_params: dict,
     total_trades: int = 0,
-) -> list[dict]:
+) -> tuple[list[dict], list[dict]]:
     """Validate mutations stay within robust ranges and are meaningfully different.
 
     Wave 4 Track 4C governance gates:
-      R3: Scans each mutation's reason for lookahead bias patterns and records any
-          violations in governance_meta. Violations emit a stderr warning but do NOT
-          discard the mutation — the TS service decides on enforcement.
+      R3: Scans each mutation's reason for lookahead bias patterns.
+          F-5 HARDENING: When LOOKAHEAD_GUARD_HARD=true (default), mutations with
+          lookahead violations are EXCLUDED from validated and placed in rejected.
+          When LOOKAHEAD_GUARD_HARD=false (downgrade), violations emit a warning
+          but the mutation still proceeds (advisory mode).
       R5: Tags governance_meta with INSUFFICIENT_SAMPLE when total_trades < MIN_SAMPLE_TRADING_DAYS.
       R8: Checks for the 5 mandatory pre-commit governance fields. Missing any →
           precommit_status: "incomplete" in governance_meta. The TS service skips
           candidates with precommit_incomplete at the replay gate.
 
-    Returns the same list shape as before but each entry now carries a "governance_meta" key.
+    Returns:
+        (validated, rejected) tuple.
+        validated: mutations that passed all gates.
+        rejected:  mutations dropped by a hard gate (e.g. lookahead violation),
+                   each carrying governance_meta with the drop reason for audit.
     """
-    validated = []
+    validated: list[dict] = []
+    rejected: list[dict] = []
     for mut in mutations:
         # Extract the reason and R8 pre-commit fields BEFORE iterating param keys,
         # so they are not treated as strategy params.
@@ -311,12 +326,37 @@ def validate_mutations(
             continue
 
         # R3: Lookahead violation scan on the mutation reason.
+        # F-5 HARDENING: LOOKAHEAD_GUARD_HARD=true (default) BLOCKS the mutation;
+        # LOOKAHEAD_GUARD_HARD=false downgrades to warn-only.
         lookahead_violations = _validate_lookahead_guard(reason)
         if lookahead_violations:
-            print(
-                f"  R3 WARN: lookahead pattern in mutation reason — matches: {lookahead_violations}",
-                file=sys.stderr,
-            )
+            if LOOKAHEAD_GUARD_HARD:
+                # Hard guard: exclude this mutation from validated. Record the dropped
+                # entry with governance_meta.lookahead_violation=True for audit.
+                _dropped_gov_meta: dict = {
+                    "precommit_status": "rejected_lookahead",
+                    "missing_fields": [],
+                    "lookahead_violation": True,
+                    "lookahead_violation_reasons": lookahead_violations,
+                    "drop_reason": "lookahead_guard_hard",
+                }
+                print(
+                    f"  R3 BLOCK (LOOKAHEAD_GUARD_HARD=true): lookahead pattern in mutation reason "
+                    f"— EXCLUDED from validated. Matches: {lookahead_violations}",
+                    file=sys.stderr,
+                )
+                rejected.append({
+                    "params": clamped,
+                    "reason": reason,
+                    "governance_meta": _dropped_gov_meta,
+                })
+                continue
+            else:
+                print(
+                    f"  R3 WARN (LOOKAHEAD_GUARD_HARD=false): lookahead pattern in mutation reason "
+                    f"— matches: {lookahead_violations} (downgraded to warn-only)",
+                    file=sys.stderr,
+                )
 
         # R8: Build pre-commit status. All 5 fields must be non-null/non-empty.
         missing_fields: list[str] = []
@@ -356,7 +396,7 @@ def validate_mutations(
             "governance_meta": governance_meta,
         })
 
-    return validated
+    return validated, rejected
 
 
 def evolve(config_path: str) -> dict:
@@ -412,8 +452,12 @@ def evolve(config_path: str) -> dict:
     if not raw_mutations:
         return {"mutations": [], "error": "LLM returned no valid mutations"}
 
-    validated = validate_mutations(raw_mutations, robust_ranges, params, total_trades=total_trades)
-    print(f"  Generated {len(raw_mutations)} mutations, {len(validated)} validated", file=sys.stderr)
+    validated, rejected = validate_mutations(raw_mutations, robust_ranges, params, total_trades=total_trades)
+    print(
+        f"  Generated {len(raw_mutations)} mutations, {len(validated)} validated, "
+        f"{len(rejected)} blocked by hard gate",
+        file=sys.stderr,
+    )
 
     # Build governance summary for the caller.
     governance_complete = sum(
@@ -427,6 +471,9 @@ def evolve(config_path: str) -> dict:
 
     return {
         "mutations": validated,
+        # F-5: rejected list carries mutations blocked by hard gates (e.g. lookahead).
+        # Each entry has governance_meta with drop_reason for full audit trail.
+        "rejected": rejected,
         "model": MODEL,
         "parent_params": params,
         "governance_summary": {
@@ -435,6 +482,7 @@ def evolve(config_path: str) -> dict:
             "precommit_complete": governance_complete,
             "precommit_incomplete": len(validated) - governance_complete,
             "lookahead_flagged": lookahead_flagged,
+            "lookahead_blocked": len(rejected),
         },
     }
 

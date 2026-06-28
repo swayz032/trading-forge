@@ -639,6 +639,13 @@ class BacktestRequest(BaseModel):
     # None → adaptive path bails gracefully to static_styleC (backward compat).
     # See AdaptiveExitContext dataclass above for full contract documentation.
     adaptive_exit_context: Optional[object] = None  # type: Optional[AdaptiveExitContext]
+    # F-4 Wave 4 Track 4C Research Governance: cumulative mutation trial count for this
+    # strategy across all evolution cycles. Used by walk_forward.py CPCV DSR to compute
+    # the correct effective n_trials = max(cpcv_paths, trial_n_total), preventing 2–5×
+    # Sharpe inflation that occurs when the denominator assumes only 1 trial.
+    # The TS critic-optimizer-service passes this from evidence.trial_n_total.
+    # Default 1 = safe fail-open (same as pre-F4 behaviour — no inflation regression).
+    trial_n_total: int = 1
 
 
 # ─── Backtest Result ──────────────────────────────────────────────

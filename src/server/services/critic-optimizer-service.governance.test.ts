@@ -139,19 +139,52 @@ describe("R3 — LOOKAHEAD_GUARD_INSTRUCTION export", () => {
   });
 });
 
-// ── R8: buildCandidateGovernanceMeta — advisory for critic_optimizer.py path ─
+// ── R8/F-6: buildCandidateGovernanceMeta — fail-closed for critic_optimizer.py path ─
+//
+// F-6 HARDENING: The old "advisory" bypass is REMOVED. The critic_optimizer.py path
+// now validates the same 5 fields as the parameter_evolver.py path. Since
+// critic_optimizer.py never emits those fields, ALL candidates from this path
+// become precommit_status="incomplete" → blocked at replay. This is intentional
+// fail-closed behaviour until critic_optimizer.py is updated.
 
-describe("R8 — buildCandidateGovernanceMeta: critic_optimizer.py path (no governance_meta from Python)", () => {
-  it("returns advisory status when Python emits no governance_meta", async () => {
+describe("R8/F-6 — buildCandidateGovernanceMeta: critic_optimizer.py path (fail-closed, no governance_meta from Python)", () => {
+  it("returns incomplete (not advisory) when Python emits no governance_meta", async () => {
+    // F-6: "advisory" bypass removed — critic_optimizer.py path must be "incomplete".
     const meta = buildCandidateGovernanceMeta(makeCandidate(), makeEvidence());
-    expect(meta.precommit_status).toBe("advisory");
-    expect(meta.missing_fields).toEqual([]);
+    expect(meta.precommit_status).toBe("incomplete");
   });
 
-  it("advisory status passes the replay gate (not 'incomplete')", async () => {
+  it("reports all 5 mandatory fields as missing on critic_optimizer.py path", async () => {
+    // critic_optimizer.py never emits the 5 governance fields, so all must be missing.
     const meta = buildCandidateGovernanceMeta(makeCandidate(), makeEvidence());
-    // Advisory must NOT equal "incomplete" — the gate only blocks "incomplete".
-    expect(meta.precommit_status).not.toBe("incomplete");
+    expect(meta.missing_fields).toContain("economic_rationale");
+    expect(meta.missing_fields).toContain("declared_param_space_size");
+    expect(meta.missing_fields).toContain("min_sample_size");
+    expect(meta.missing_fields).toContain("target_regime");
+    expect(meta.missing_fields).toContain("declared_failure_mode");
+    expect(meta.missing_fields).toHaveLength(5);
+  });
+
+  it("incomplete status means candidate is blocked at replay gate", async () => {
+    // Verify the gate property directly: "incomplete" === what the gate blocks.
+    const meta = buildCandidateGovernanceMeta(makeCandidate(), makeEvidence());
+    expect(meta.precommit_status).toBe("incomplete");
+  });
+
+  it("resolves to complete when critic_optimizer.py candidate provides all 5 fields", async () => {
+    // Future-proof: once critic_optimizer.py emits the 5 fields as candidate-level
+    // keys, the status must resolve to "complete" without any governance_meta wrapper.
+    const candidateWithFields = {
+      ...makeCandidate(),
+      economic_rationale: "EMA crossover lag supported by walk-forward metrics.",
+      declared_param_space_size: 2,
+      min_sample_size: 63,
+      target_regime: "TRENDING",
+      declared_failure_mode: "Underperforms in ranging.",
+    };
+    const meta = buildCandidateGovernanceMeta(candidateWithFields, makeEvidence());
+    expect(meta.precommit_status).toBe("complete");
+    expect(meta.missing_fields).toHaveLength(0);
   });
 
   it("carries trial_n_total from evidence", async () => {
@@ -160,6 +193,59 @@ describe("R8 — buildCandidateGovernanceMeta: critic_optimizer.py path (no gove
       makeEvidence({ trial_n_total: 5 }),
     );
     expect(meta.trial_n_total).toBe(5);
+  });
+});
+
+// ── R3/F-5: lookahead_violation flag blocks at TS replay gate ─────────────────
+//
+// F-5 HARDENING: Candidates with lookahead_violation=true must be blocked at the
+// TS replay layer as a mirror to the Python BLOCK in parameter_evolver.py.
+// buildCandidateGovernanceMeta forwards lookahead_violation from Python govMeta
+// when the parameter_evolver.py path is taken.
+
+describe("R3/F-5 — lookahead_violation forwarded and detectable at replay gate", () => {
+  it("forwards lookahead_violation=true from Python governance_meta", async () => {
+    const candidate = makeCandidate({
+      governance_meta: {
+        precommit_status: "complete",
+        missing_fields: [],
+        lookahead_violation: true,
+        lookahead_violation_reasons: ["historically.*outperform"],
+        drop_reason: "lookahead_guard_hard",
+        economic_rationale: "...",
+        declared_param_space_size: 1,
+        min_sample_size: 63,
+        target_regime: "TRENDING",
+        declared_failure_mode: "Fails in ranging.",
+      },
+    });
+    const meta = buildCandidateGovernanceMeta(candidate, makeEvidence());
+    expect(meta.lookahead_violation).toBe(true);
+  });
+
+  it("forwards lookahead_violation=false when Python found no violations", async () => {
+    const candidate = makeCandidate({
+      governance_meta: {
+        precommit_status: "complete",
+        missing_fields: [],
+        lookahead_violation: false,
+        lookahead_violation_reasons: [],
+        economic_rationale: "Clean.",
+        declared_param_space_size: 1,
+        min_sample_size: 63,
+        target_regime: "TRENDING",
+        declared_failure_mode: "Fails in ranging.",
+      },
+    });
+    const meta = buildCandidateGovernanceMeta(candidate, makeEvidence());
+    expect(meta.lookahead_violation).toBe(false);
+  });
+
+  it("lookahead_violation is absent (falsy) on critic_optimizer.py path with no govMeta", async () => {
+    // critic_optimizer.py path returns no governance_meta; the TS layer builds
+    // a governance meta with no lookahead_violation field (undefined = falsy).
+    const meta = buildCandidateGovernanceMeta(makeCandidate(), makeEvidence());
+    expect(meta.lookahead_violation).toBeFalsy();
   });
 });
 
@@ -249,12 +335,14 @@ describe("R5 — INSUFFICIENT_SAMPLE tag in buildCandidateGovernanceMeta", () =>
     expect(meta.sample_tag).toBe("INSUFFICIENT_SAMPLE");
   });
 
-  it("INSUFFICIENT_SAMPLE coexists with advisory precommit_status", async () => {
+  it("INSUFFICIENT_SAMPLE coexists with incomplete precommit_status on critic_optimizer.py path", async () => {
+    // F-6: "advisory" is gone — the critic_optimizer.py path now resolves to "incomplete".
+    // Both INSUFFICIENT_SAMPLE tag AND incomplete precommit_status are present simultaneously.
     const meta = buildCandidateGovernanceMeta(
       makeCandidate(),
       makeEvidence({ total_trades: 10 }),
     );
-    expect(meta.precommit_status).toBe("advisory");
+    expect(meta.precommit_status).toBe("incomplete");
     expect(meta.sample_tag).toBe("INSUFFICIENT_SAMPLE");
   });
 

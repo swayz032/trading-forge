@@ -304,6 +304,14 @@ interface BacktestResult {
     warnings: Array<string>;
     [key: string]: unknown;
   };
+  // F-1 (point-in-time integrity telemetry):
+  //   tp2_liquidity_unavailable=true means this backtest used +2.0R structural TP2
+  //   (not liquidity-mapped TP2) because point-in-time historical liquidity levels
+  //   are not stored. The PAPER path gets real liquidity via getNearestLiquidity().
+  //   This parity gap is expected and intentional. See backtest-service.ts comment
+  //   at the adaptive_exit_context injection block for full rationale.
+  tp2_liquidity_source?: string;
+  tp2_liquidity_unavailable?: boolean;
 }
 
 interface SqaOptimizationResult {
@@ -436,8 +444,8 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     const mode = config.mode ?? "single";
 
     // ── Wave 25 Gap B: Adaptive exit context injection ─────────────────────
-    // When exit_engine="adaptive", populate config.adaptive_exit_context with
-    // a liquidity snapshot so the Python backtest path has real levels to work with.
+    // When exit_engine="adaptive", populate config.adaptive_exit_context so the
+    // Python backtester receives a valid AdaptiveExitContext object.
     //
     // Contract (from src/engine/config.py AdaptiveExitContext):
     //   adaptive_exit_context.liquidity_snapshot: list of {level_type, price,
@@ -446,21 +454,32 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     //   adaptive_exit_context.pre_lunch_threshold_r: float (default 0.3)
     //   adaptive_exit_context.delta_div_threshold: float (default 0.6)
     //
-    // This stub populates an EMPTY snapshot (length 0) which causes the Python
-    // adaptive path to fall back to R-multiple targets (+1R / +2R) — still
-    // divergent from Style C because the regime-dependent scaling and trail method
-    // ARE applied regardless of liquidity snapshot availability.
+    // POINT-IN-TIME INTEGRITY (look-ahead prevention):
+    //   getNearestLiquidity() reads the CURRENT liquidity_levels table — today's live
+    //   market structure (current PDH/PDL/untouched OBs). Using those levels on
+    //   historical bars is look-ahead bias: a backtest for 2024-01 cannot know what
+    //   the PDH was at each historical bar using today's data.
     //
-    // TODO (Wave 26): Call getNearestLiquidity(symbol, ...) here to populate
-    // real levels. Tracked as adaptive_exit_liquidity_wiring in known-gaps.
-    // Operator runs: ADAPTIVE_WIRED=true python -m scripts.wave25_exit_engine_ab_report
-    //   --days 30 --strategies silver_bullet,power_of_3
-    // to validate the A/B harness produces non-zero deltas.
+    //   There is no point-in-time liquidity snapshot store — we cannot replay "what
+    //   were the intraday liquidity levels on bar X at timestamp T?". Therefore:
+    //     * liquidity_snapshot is intentionally [] for ALL historical backtests.
+    //     * Python structural_targets.compute_single_tp() falls through to the
+    //       +2.0R structural fallback — correct for replay; NOT a bug.
+    //     * The PAPER path (paper-signal-service.ts) DOES call getNearestLiquidity()
+    //       because it evaluates each bar at the current moment in live execution.
+    //
+    //   tp2_liquidity_unavailable=true is added to the context so downstream reviewers
+    //   can distinguish "backtest used R-multiple TP2" from "paper used liquidity-mapped
+    //   TP2" — parity gap is expected and documented here as intentional.
     const exitEngine = (config as unknown as Record<string, unknown>)["exit_engine"];
     if (exitEngine === "adaptive" && !(config as unknown as Record<string, unknown>)["adaptive_exit_context"]) {
       const exitPlanConfig = ((config as unknown as Record<string, unknown>)["strategy"] as Record<string, unknown> | null | undefined)?.["exit_plan_config"] as Record<string, unknown> | null | undefined;
       (config as unknown as Record<string, unknown>)["adaptive_exit_context"] = {
-        liquidity_snapshot: [],  // TODO W26: fill from getNearestLiquidity()
+        // Empty by design — point-in-time historical liquidity not available.
+        // Python falls back to +2.0R structural target. See comment above.
+        liquidity_snapshot: [],
+        tp2_liquidity_unavailable: true,
+        tp2_liquidity_source: "backtest_no_historical_levels",
         regime_at_entry: null,   // Python backtester uses per-bar classify_institutional_regime
         pre_lunch_threshold_r: (exitPlanConfig?.["pre_lunch_threshold_r"] as number | null) ?? 0.3,
         delta_div_threshold: (exitPlanConfig?.["delta_div_threshold"] as number | null) ?? 0.6,
