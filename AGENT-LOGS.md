@@ -3,6 +3,22 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-28 GATE-1-AT-SCALE (passed) + falsification protocol + minimum-validation spec — INSTRUMENT COMPLETE, AWAITING REALITY
+
+**Mission:** Operator's clean-close guidance — don't build; prepare to be proven right/wrong cleanly. Two non-architectural actions: (A) offline pre-flight regression check; (B) synthesis of the falsification protocol + minimum validation run.
+
+**Work completed (commits `0789e30` + this):**
+- **GATE 1 @ SCALE (offline regression check) — PASSED: 38/38 unseen videos GROUNDED, 0 UNGROUNDED_VIOLATIONS** via validateGrounding on span-native lowering. Grounding integrity (compiler honesty / P1) holds beyond the frozen-6 — no paraphrase-leak regression at corpus scale.
+- `docs/designs/minimum-validation-run.md` — smallest dataset that proves/disproves the mission (~18 unseen videos, ≥3 educators/≥2 families/≥2 instruments, ≥2 demonstrated trades each; 3 gates with thresholds; yes/no table; every failure localizes).
+- `docs/designs/falsification-protocol.md` — one-page compression: 4 falsifiable predicates (P1 compiler honesty / P2 behavioral fidelity / P3 edge provenance / P4 generalization), survival conditions, failure-localization map, the single-line survival statement.
+
+**STATUS: structurally complete, empirically untested in its final layer.** P1 (grounding) closed offline (38/38). P2 (replay parity ≥70%) / P3 (edge from grounded-or-perceptual, not structural-suspect/noise) / P4 (signal-layer stable across regimes = structural law vs corpus-conditional) ALL require the one unbuilt coupling: real OHLC replay + stable NSSM supervisor (W4.2). 
+
+**The honest scoreboard (operator-validated):** architecture ~95-100% · grounding ~100% offline · empirical validation ~0% achieved / ~95% instrumented. The system = a decomposition of instruction → inference → execution → financial consequence; everything hard is now MEASURABLE, not conceptual. The blind-gen run already falsified the prior architecture once (0% STRONG) — "validated" is reserved for real-market evidence.
+
+**Carry-forward: NO MORE CONSTRUCTION.** When the supervisor + engine-attach exist: run the minimum-validation-run protocol → `runVerdict(real_trades, {stratifyBy:"regime"})` → the P2/P3/P4 verdict. The instrument fires the moment real trades exist. Until then, the only valuable action is the external measurement, not another insight layer.
+
+---
 ### Session Log — 2026-06-28 VERDICT HARNESS — the falsification instrument (last artifact); architecture CLOSED
 
 **Mission:** Operator-endorsed final artifact — a zero-dependency verdict harness that consumes real trades and renders modality-segregated attribution, for FRICTIONLESS FALSIFICATION when live data arrives. NOT intelligence; NOT architecture. After this: no more building.
