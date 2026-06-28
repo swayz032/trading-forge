@@ -35,6 +35,7 @@ scripts/*.js.map
 Trading_forge_frontend/amber-vision-main/tsconfig.*.tsbuildinfo
 .clawhub/
 data_cache/
+.numba_cache/
 backups/
 logs/
 models/

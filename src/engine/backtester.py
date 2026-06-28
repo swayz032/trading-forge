@@ -1604,27 +1604,62 @@ def _compute_daily_pnls(
         # index has timezone info. Fall back to UTC calendar date when tz info is absent
         # (e.g. daily data, synthetic test data) to preserve backward compatibility.
         from datetime import timedelta as _td
+        import pandas as _pd
+
         daily = {}
-        for i, v in enumerate(equity):
-            ts = index[i]
+        # PERF (2026-06-28): vectorized CME trading-day grouping for a pandas
+        # DatetimeIndex. The per-element loop below boxed every timestamp
+        # (pandas Timestamp._box_func), costing ~1.8s per 149k-bar call and
+        # dominating walk-forward CPU (N_windows x n_trials calls). The
+        # vectorized branch produces BYTE-IDENTICAL day strings + last-value-
+        # per-day grouping (proven on real MES data) and falls back to the
+        # original loop verbatim for object / non-DatetimeIndex inputs.
+        _vec_ok = False
+        if isinstance(index, _pd.DatetimeIndex) and len(index) == len(equity):
             try:
-                # Attempt CME trading-day calculation using ET timezone.
-                if hasattr(ts, "tz_convert") and ts.tzinfo is not None:
-                    et_ts = ts.tz_convert("America/New_York")
-                    if et_ts.hour >= 17:
-                        trading_day = (et_ts + _td(days=1)).date()
-                    else:
-                        trading_day = et_ts.date()
-                    day_str = str(trading_day)
-                elif hasattr(ts, "date"):
-                    # No timezone info — fall back to UTC calendar date (daily data path).
-                    day_str = str(ts.date())
+                if index.tz is not None:
+                    _et = index.tz_convert("America/New_York")
+                    # hour >= 17 ET belongs to the NEXT CME trading day (+1 day,
+                    # absolute 24h — identical to et_ts + timedelta(days=1)).
+                    _shifted = _et + _pd.to_timedelta(
+                        np.asarray(_et.hour >= 17, dtype="int64"), unit="D"
+                    )
+                    _day_arr = _shifted.strftime("%Y-%m-%d")
                 else:
-                    day_str = str(ts)
+                    # No tz info — calendar date (matches str(ts.date())).
+                    _day_arr = index.strftime("%Y-%m-%d")
+                _ser = _pd.Series(
+                    np.asarray(equity, dtype="float64"),
+                    index=_pd.Index(np.asarray(_day_arr)),
+                )
+                # last value wins per day (matches dict-overwrite semantics)
+                _last = _ser.groupby(level=0, sort=False).last()
+                daily = {str(_k): float(_v) for _k, _v in _last.items()}
+                _vec_ok = True
             except Exception:
-                # Defensive fallback: any conversion failure reverts to UTC string slice.
-                day_str = str(ts)[:10] if len(str(ts)) >= 10 else str(ts)
-            daily[day_str] = float(v)
+                daily = {}
+                _vec_ok = False
+        if not _vec_ok:
+            for i, v in enumerate(equity):
+                ts = index[i]
+                try:
+                    # Attempt CME trading-day calculation using ET timezone.
+                    if hasattr(ts, "tz_convert") and ts.tzinfo is not None:
+                        et_ts = ts.tz_convert("America/New_York")
+                        if et_ts.hour >= 17:
+                            trading_day = (et_ts + _td(days=1)).date()
+                        else:
+                            trading_day = et_ts.date()
+                        day_str = str(trading_day)
+                    elif hasattr(ts, "date"):
+                        # No timezone info — fall back to UTC calendar date (daily data path).
+                        day_str = str(ts.date())
+                    else:
+                        day_str = str(ts)
+                except Exception:
+                    # Defensive fallback: any conversion failure reverts to UTC string slice.
+                    day_str = str(ts)[:10] if len(str(ts)) >= 10 else str(ts)
+                daily[day_str] = float(v)
 
     sorted_days = sorted(daily.items())
     if len(sorted_days) < 1:
@@ -1652,6 +1687,30 @@ def _compute_monthly_returns(equity: np.ndarray, index) -> list[dict]:
     """
     if len(equity) < 2:
         return []
+
+    import pandas as _pd
+
+    # PERF (2026-06-28): vectorized (year, month) grouping for a pandas
+    # DatetimeIndex — avoids per-timestamp boxing (~2.4s per 149k-bar call).
+    # first/last value per month, sorted by (year, month) — byte-identical to
+    # the per-element loop below (retained as fallback for non-DatetimeIndex).
+    if isinstance(index, _pd.DatetimeIndex) and len(index) == len(equity):
+        try:
+            _eq = np.asarray(equity, dtype="float64")
+            _mi = _pd.MultiIndex.from_arrays(
+                [np.asarray(index.year), np.asarray(index.month)]
+            )
+            _grp = _pd.Series(_eq, index=_mi).groupby(level=[0, 1], sort=True)
+            _first = _grp.first()
+            _last = _grp.last()
+            results = []
+            for _key in _first.index:
+                _year, _month = int(_key[0]), int(_key[1])
+                _pnl = float(_last.loc[_key]) - float(_first.loc[_key])
+                results.append({"year": _year, "month": _month, "pnl": round(_pnl, 2)})
+            return results
+        except Exception:
+            pass  # fall through to the per-element loop
 
     # Group equity by (year, month), take first and last value per month
     monthly: dict[tuple[int, int], list[float]] = {}
@@ -1694,12 +1753,35 @@ def _aggregate_equity_daily(equity: np.ndarray, index, ts_et_index=None) -> list
             day_str = ts_str[:10] if len(ts_str) >= 10 else ts_str
             daily[day_str] = round(float(v), 2)
     else:
-        for i, v in enumerate(equity):
-            if hasattr(index[i], "date"):
-                day_str = str(index[i].date())
-            else:
-                day_str = str(index[i])
-            daily[day_str] = round(float(v), 2)  # last value wins
+        import pandas as _pd
+
+        # PERF (2026-06-28): vectorized calendar-day grouping for a pandas
+        # DatetimeIndex — avoids per-timestamp boxing (~1.8s per 149k-bar call).
+        # strftime on a tz-aware index yields the LOCAL date, identical to
+        # str(index[i].date()). last value wins; first-appearance (chronological)
+        # order preserved via groupby(sort=False) to match dict-insertion order.
+        _vec_ok = False
+        if isinstance(index, _pd.DatetimeIndex) and len(index) == len(equity):
+            try:
+                _day_arr = index.strftime("%Y-%m-%d")
+                _ser = _pd.Series(
+                    np.asarray(equity, dtype="float64"),
+                    index=_pd.Index(np.asarray(_day_arr)),
+                )
+                _last = _ser.groupby(level=0, sort=False).last()
+                for _k, _v in _last.items():
+                    daily[str(_k)] = round(float(_v), 2)
+                _vec_ok = True
+            except Exception:
+                daily = {}
+                _vec_ok = False
+        if not _vec_ok:
+            for i, v in enumerate(equity):
+                if hasattr(index[i], "date"):
+                    day_str = str(index[i].date())
+                else:
+                    day_str = str(index[i])
+                daily[day_str] = round(float(v), 2)  # last value wins
 
     return [{"time": k, "value": v} for k, v in daily.items()]
 

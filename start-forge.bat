@@ -23,6 +23,15 @@ curl -s -X POST http://localhost:11434/api/generate -d "{\"model\":\"llama3.1:8b
 echo       Ollama models warmed.
 echo.
 
+REM ─── Step 2b: Warm Numba/vectorbt JIT cache (perf 2026-06-28) ──────
+REM Populates <repo>\.numba_cache once so the FIRST backtest subprocess
+REM (and every spawned walk-forward worker) loads cached machine code
+REM (~2.4s) instead of cold-compiling vectorbt (~7s). Accuracy-neutral.
+echo [2b] Warming Numba/vectorbt JIT cache...
+cd /d C:\Users\tonio\Projects\trading-forge\trading-forge
+.venv\Scripts\python.exe scripts\warm-numba-cache.py 2>nul && echo       JIT cache warmed. || echo       WARN: JIT warm skipped (first backtest pays cold-compile once).
+echo.
+
 REM ─── Step 3: Resurrect PM2 services ───────────────────────────
 echo [3/4] Starting PM2 services...
 cd /d C:\Users\tonio\Projects\trading-forge\trading-forge
