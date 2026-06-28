@@ -103,7 +103,7 @@ All build phases are done. **No new subsystems for 90 days.** The only work is p
 
 > **PRODUCTION-VERIFIED 2026-05-19:** Cycle 4 produced first organic W23F-shaped strategy (`orb_mnq_15m` with `entry_quality.confluence_factors=["structural_setup","vp_shape"]`, `extraction_provenance: youtube_transcript`). Pipeline runs end-to-end: MES → MNQ → MCL rotation, LLM extracts confluence factors + symbols, graduator emits entry_quality block, DSL critic accepts with W23F.L convention pre-filter, auditor accepts risk_derived_pyramid sizing. See AGENT-LOGS Wave 23F entry for full bug catalog + fixes.
 
-The scout pipeline runs `autonomous-scout-discovery` cron every 4 hours via in-process `src/server/services/autonomous-scout-runner.ts`. Every compiled strategy passes through `src/server/services/framework-overlay.ts` which REPLACES the scout's risk-management with framework defaults (W23F.N: **Style C 33/33/33** default — TP1 33%@1R / TP2 33%@2R / runner 34% trails developing_session_poc with Chandelier(14,2) fallback; stop floor 1.5×ATR + ceiling 14pt MES / 40pt MNQ / 25 tick MCL; 15:55 ET hard time-stop; 67% personal DLL; pyramid base 9 MES / 9 MNQ / 18 MCL with +3 increments (proven-trades ramp live / +$3K backtest fallback); max_risk 2%; per-symbol liquidity caps 100/50/30) while PRESERVING the entry signal. Style D is DEAD — see W23F.N AGENT-LOGS entry.
+The scout pipeline runs `autonomous-scout-discovery` cron every 4 hours via in-process `src/server/services/autonomous-scout-runner.ts`. Every compiled strategy passes through `src/server/services/framework-overlay.ts` which REPLACES the scout's risk-management with framework defaults (W23F.N: **Style C 33/33/33** default — TP1 33%@1R / TP2 33%@2R / runner 34% trails developing_session_poc with Chandelier(14,2) fallback; stop floor 1.5×ATR (+6pt MES min) + ceiling 14pt MES / 62pt MNQ / 100 tick MCL (Wave 1 2026-06-27 recal); 15:55 ET hard time-stop; 67% personal DLL; pyramid base 9 MES / 9 MNQ / 18 MCL with +3 increments (proven-trades ramp live / +$3K backtest fallback); max_risk 2%; per-symbol liquidity caps 100/50/30) while PRESERVING the entry signal. Style D is DEAD — see W23F.N AGENT-LOGS entry.
 
 ### Two-stage DSL philosophy
 
@@ -255,9 +255,10 @@ Data sources: Raschke, Grimes, Bellafiore, SMB consensus; Topstep funded-trader 
 ### Stop Loss — structural, NEVER fixed-point
 ```
 stop_distance = invalidation_swing + sweep_buffer (per-symbol tick count)
-floor   = 1.5 × current-timeframe ATR
-ceiling = 14pts MES   (≈ 40pts MNQ, ≈ 25 ticks MCL)
-If structural distance > ceiling → SKIP TRADE
+floor   = 1.5 × current-timeframe ATR  (+ 6pt MES min floor — STOP_FLOOR_PTS_MES)
+        optional VIX-tiered ATR mult (VIX_TIERED_ATR_ENABLED, default OFF): <20=1.5/20-30=2.0/>30=2.5
+ceiling = 14pts MES, 62pts MNQ, 100 ticks (1.00pt) MCL   (Wave 1 2026-06-27 recal to 2026 ATR; env STOP_CEILING_PTS_*)
+If structural distance > ceiling → SKIP TRADE (widen to floor first, never clamp down)
 ```
 
 **Sweep-aware buffer (W24-P2, 2026-05-23)** — replaces old flat +1pt.
@@ -712,7 +713,7 @@ Skipping commit-and-push is **fail-CLOSED**, same severity as skipping `system-m
 ### Architecture
 - Don't add Supabase or complex auth — single operator, no SaaS
 - Don't over-engineer — MVP each phase, iterate
-- **Ship gates STRICT, then loosen with DATA — not fear (2026-06-24).** The system stacks many entry gates (11-factor confluence@0.72, macro/lunch blackout, PM taper, DLL bands, daily-trade-cap, structural-stop ceiling, B15/PBO/WFE) — each REDUCES trade count; stacked, they can strangle the edge ("death by a thousand filters" → a bot that can't lose but can't win). The operator trades BIG MOVES (14-24pt Style C 2R+, NOT scalps), so a gate blocking a big-move A+ setup is the EXPENSIVE error. Diagnose with `src/engine/gate_block_analyzer.py` — for every gate-BLOCKED signal (`paper_signal_logs` acted=false) it replays the FAITHFUL counterfactual (real per-symbol framework stop 14/40/0.25pt + Style C exit + same fill model on real forward bars) and verdicts each gate COSTING (blocked big-move winners) vs SAVING (blocked losers). Run: `python -m src.engine.gate_block_analyzer <name> --since <iso>`. Loosen only the gates the DATA shows are blocking winners. Env: `GATE_BLOCK_BIG_MOVE_POINTS_<SYM>`, `STOP_CEILING_PTS_<SYM>`. Fail-closed (INDETERMINATE on missing forward bars, never fabricated); needs paper/backtest block data to verdict.
+- **Ship gates STRICT, then loosen with DATA — not fear (2026-06-24).** The system stacks many entry gates (11-factor confluence@0.72, macro/lunch blackout, PM taper, DLL bands, daily-trade-cap, structural-stop ceiling, B15/PBO/WFE) — each REDUCES trade count; stacked, they can strangle the edge ("death by a thousand filters" → a bot that can't lose but can't win). The operator trades BIG MOVES (14-24pt Style C 2R+, NOT scalps), so a gate blocking a big-move A+ setup is the EXPENSIVE error. Diagnose with `src/engine/gate_block_analyzer.py` — for every gate-BLOCKED signal (`paper_signal_logs` acted=false) it replays the FAITHFUL counterfactual (real per-symbol framework stop 14/62/1.00pt + Style C exit + same fill model on real forward bars) and verdicts each gate COSTING (blocked big-move winners) vs SAVING (blocked losers). Run: `python -m src.engine.gate_block_analyzer <name> --since <iso>`. Loosen only the gates the DATA shows are blocking winners. Env: `GATE_BLOCK_BIG_MOVE_POINTS_<SYM>`, `STOP_CEILING_PTS_<SYM>`. Fail-closed (INDETERMINATE on missing forward bars, never fabricated); needs paper/backtest block data to verdict.
 - Don't generate complex strategies — max 5 parameters
 - Don't optimize parameters to find "the best" — test robustness across a wide range
 - Don't add backwards-compat hacks unless explicitly required
