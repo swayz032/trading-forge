@@ -216,6 +216,16 @@ export interface CompoundConfirmation {
   predicate_type: "single" | "sequence" | "and";
   operator: "SEQUENCE" | "AND"; // SEQUENCE = ordered (sweep→displacement→retest); AND = parallel confluence (FVG+OB+discount)
   legs: ConfirmationLeg[];
+  /**
+   * How the legs gate entry:
+   *  - "primary_plus_confluence" (DEFAULT) — the PRIMARY (entry) leg fires; preceding legs are recorded
+   *    confluence/context, NOT hard gates. Educators state a canonical sequence but demonstrate variants;
+   *    hard-requiring every leg drops demonstrated winners (the yAMaiOI regression).
+   *  - "all_required" — every leg is mandatory (only when the educator uses gating language: only/must/
+   *    no-trade-unless/need-to-see-X-before). This is the no-trade-discrimination case (e.g. 2u9 CHoCH gate).
+   */
+  enforcement: "primary_plus_confluence" | "all_required";
+  primary_order: number; // which leg (1-based) is the actual entry trigger (highest-specificity leg)
 }
 export type ContradictionType = "MISSING_LEG" | "ORDER_COLLAPSE" | "GENERIC_REPLACEMENT" | "LEVEL_LOSS" | "SESSION_LOSS";
 export interface Contradiction { type: ContradictionType; expected?: number; compiled?: number; detail?: string }
@@ -229,6 +239,8 @@ export interface CompoundResult {
 
 const PARALLEL_RE = /\b(combined with|overlap|overlapping|plus|along with|together with|confluence of)\b/i;
 const SEQUENCE_RE = /\b(then|next|after|once|first|second|third|step \d|followed by)\b/i;
+// Explicit gating language → every leg is mandatory (no-trade-unless). Otherwise legs are confluence.
+const GATING_RE = /\b(only (?:if|when|enter|take)|must (?:see|have|be)|no trade (?:unless|without)|need to see[^.]{0,40}\bbefore\b|required|do not (?:enter|trade) (?:unless|until)|we have no trade)\b/i;
 
 /**
  * Phase 2B — compile the educator's confirmation as a COMPOUND (multi-leg) predicate.
@@ -275,7 +287,7 @@ export function compileConfirmationCompound(input: ConfirmationInput): CompoundR
     const single = compileConfirmation(input);
     if (!single.compiled) return { compound: null, quarantine_reason: single.quarantine_reason, contradictions, leg_count: 0, expected_legs };
     return {
-      compound: { predicate_type: "single", operator: "SEQUENCE", legs: [{ ...single.compiled, order: 1 }] },
+      compound: { predicate_type: "single", operator: "SEQUENCE", legs: [{ ...single.compiled, order: 1 }], enforcement: "primary_plus_confluence", primary_order: 1 },
       quarantine_reason: null, contradictions, leg_count: 1, expected_legs: Math.max(1, expected_legs),
     };
   }
@@ -285,9 +297,19 @@ export function compileConfirmationCompound(input: ConfirmationInput): CompoundR
     contradictions.push({ type: "MISSING_LEG", expected: expected_legs, compiled: legs.length });
   }
   // Invariant 2 — preserve operator: parallel-confluence language (no ordering words) → AND, else SEQUENCE.
-  const corpus = steps.map((s) => s.action ?? "").join(" ");
+  const corpus = steps.map((s) => `${s.action ?? ""} ${s.rationale ?? ""}`).join(" ");
   const operator: "SEQUENCE" | "AND" = legs.length >= 2 && PARALLEL_RE.test(corpus) && !SEQUENCE_RE.test(corpus) ? "AND" : "SEQUENCE";
   const predicate_type = legs.length === 1 ? "single" : operator === "AND" ? "and" : "sequence";
+  // Enforcement: default PRIMARY-fires (legs are confluence, not hard gates) to avoid dropping demonstrated
+  // variants; switch to all_required ONLY when the educator uses explicit gating language.
+  const enforcement: "primary_plus_confluence" | "all_required" = GATING_RE.test(corpus) ? "all_required" : "primary_plus_confluence";
+  // Primary = the highest-specificity (entry) leg; tie → the LAST leg (the entry usually comes last).
+  let primary_order = legs[0].order;
+  let bestPrimarySpec = -1;
+  for (const leg of legs) {
+    const spec = triggerSpecificity({ named_level: predicateLevelIsNamed(leg.level_ref), timeframe_specific: false, confluence_count: leg.confluence ? 1 : 0, rare_pattern: leg.kind === "displacement" });
+    if (spec >= bestPrimarySpec) { bestPrimarySpec = spec; primary_order = leg.order; }
+  }
 
-  return { compound: { predicate_type, operator, legs }, quarantine_reason: null, contradictions, leg_count: legs.length, expected_legs };
+  return { compound: { predicate_type, operator, legs, enforcement, primary_order }, quarantine_reason: null, contradictions, leg_count: legs.length, expected_legs };
 }

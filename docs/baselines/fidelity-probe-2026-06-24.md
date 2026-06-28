@@ -153,6 +153,37 @@ STRONG 2→3, **FALSE COMPILATIONS stayed 0** (gate off; nothing quarantined). *
 is 2-3 conjoined legs; the compiler captures one). That is exactly **Phase 2B** (multi-leg preservation +
 contradiction detector). 2A cleanly teed up 2B. Phase 2D (O9cz session/level anchor) + 2C (provenance) remain.
 
+## PHASE 2B (compound multi-leg) — representation shipped + a key trap avoided; NEW residual class found
+
+Built the compound IR (`compileConfirmationCompound`): one leg per confirmation-bearing entry_sequence
+step → ordered `CompoundConfirmation {predicate_type, operator SEQUENCE|AND, legs[], enforcement, primary_order}`
++ contradiction detector (MISSING_LEG / LEVEL_LOSS). Frozen-6 multi-leg: yAMaiOI `close_through@OR →
+retest@OR`; iU8 `displacement → retest@order_block`; O9cz 3 legs incl MSS+displacement; TMVHO/sv-ix/2u9 single.
+
+**The trap (caught by re-grade):** a naive MANDATORY ordered sequence REGRESSED yAMaiOI STRONG→PARTIAL —
+the educator demonstrated TWO shorts; only one had a close-through breakdown before the retest. Hard-
+requiring every leg drops the other demonstrated winner. **Educators STATE a canonical sequence but
+DEMONSTRATE variants** → hard-gating all legs blocks winners (the §13 expensive error).
+
+**Fix:** `enforcement` field, default **`primary_plus_confluence`** — the PRIMARY (highest-specificity
+entry) leg is the firing condition; preceding legs are recorded confluence/context, NOT hard gates.
+`all_required` only when the educator uses explicit gating language (only/must/no-trade-unless). Re-grade
+confirmed: yAMaiOI **restored to STRONG** (primary retest fires both shorts; close-through = confluence).
+
+**Matrix after 2B: 3 STRONG · 3 PARTIAL · 0 SYSTEMATIC** (same count as 2A but RICHER representation + no
+regression). The predicted 5-STRONG did NOT materialize — because the remaining PARTILs are blocked by a
+**DIFFERENT primitive than multi-leg:**
+- iU8, O9cz → **zone/context gates** (iU8's 4h-box 25-50% optimum zone; O9cz's Asia-low POI). The
+  educator's entry is valid only WITHIN a zone — that's a *where-valid context*, NOT a confirmation event,
+  so the confirmation compiler structurally can't represent it. **NEW residual class (a future phase).**
+- 2u9 → confirmation STRENGTH (clean vs weak CHoCH), not multi-leg — stayed single-leg.
+- O9cz → also level anchor (Phase 2D).
+
+**2B verdict:** multi-leg was necessary, shipped, and avoided a regression — but NOT sufficient for the
+remaining PARTILs, which need a **zone/context-gate primitive** (the next real bottleneck) + confirmation-
+strength + the 2D anchor. The compound IR + the primary_plus_confluence enforcement principle are the
+durable wins.
+
 ## Method note (for re-running)
 
 Probe = blind grader: `scratchpad/fidelity/<id>.compiled.json` (compiled logic) + `tmp/generalization/<id>.transcript.txt` (ground truth) → grader classifies per-example fire/no-fire + mismatch taxonomy {TIMING, CONFIRMATION, CONTEXT, DIRECTION, LEVEL, NO_MISMATCH}. Cheap (no historical data / replay). A full Layer 4 would add: extract educator's dated example trades → run compiled strategy on that history → compare actual signals.

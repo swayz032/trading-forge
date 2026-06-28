@@ -3,6 +3,21 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-27 (cont.) FIDELITY PHASE 2B — compound multi-leg IR + enforcement principle; NEW zone-context residual class found
+
+**Mission:** Build Phase 2B (multi-leg representation + contradiction detector) per the bridge contract — represent A AND B AND C, which no ranking function can.
+
+**Work completed (commits `2eea9be` + enforcement fix):** `compileConfirmationCompound()` — one leg per confirmation-bearing entry_sequence step → `CompoundConfirmation {predicate_type, operator SEQUENCE|AND, legs[], enforcement, primary_order}`. Global dedup + specific-miss expected-count + contradiction detector (MISSING_LEG/LEVEL_LOSS). Frozen-6: yAMaiOI 2-leg, iU8 2-leg (displacement→retest@OB), O9cz 3-leg (incl MSS+displacement), TMVHO/sv-ix/2u9 single.
+
+**KEY FINDING — the mandatory-sequence trap:** a naive all-legs-required sequence REGRESSED yAMaiOI STRONG→PARTIAL (re-grade caught it): the educator demonstrated 2 shorts, only 1 with a close-through before the retest; hard-requiring every leg drops the other demonstrated winner. **Educators STATE a canonical sequence but DEMONSTRATE variants.** FIX: `enforcement` field, default `primary_plus_confluence` (the highest-specificity PRIMARY leg fires; preceding legs = confluence, not hard gates); `all_required` only on explicit gating language (only/must/no-trade-unless). Re-grade CONFIRMED yAMaiOI restored to STRONG (primary retest fires both shorts).
+
+**Matrix after 2B: 3 STRONG / 3 PARTIAL / 0 SYSTEMATIC** (same count as 2A, RICHER representation, no regression). Predicted 5-STRONG did NOT land — the remaining PARTILs need a DIFFERENT primitive: **zone/context gates** (iU8 4h-box optimum zone; O9cz Asia-low POI — a *where-valid context*, not a confirmation event → confirmation compiler structurally can't represent it; NEW residual class). 2u9 = confirmation-strength (not multi-leg). O9cz also level-anchor (2D).
+
+**Verification:** tsc 0; compound tests 9/9 (sequence/AND/MISSING_LEG/LEVEL_LOSS/dedup/fallback/enforcement-default/gating). Re-grades via LLM graders (iU8 improved-PARTIAL, yAMaiOI STRONG-restored).
+
+**Carry-forward:** durable 2B wins = compound IR + `primary_plus_confluence` enforcement principle. NEXT real bottleneck = **zone/context-gate primitive** (blocks iU8+O9cz) — a future phase beyond confirmation legs. Then 2C provenance, 2D O9cz anchor, confirmation-strength for 2u9. SCL hard-gate still default-off pending calibration.
+
+---
 ### Session Log — 2026-06-27 FIDELITY PHASE 2A — specificity-ranked selection + SCL; last SYSTEMATIC case eliminated (3 STRONG / 0 SYSTEMATIC)
 
 **Mission:** Build Phase 2A of the edge→predicate bridge contract — replace the compiler's fixed kind-rank with specificity-ranked selection + add the SCL metric — and convert the SYSTEMATIC fidelity case.

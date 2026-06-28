@@ -60,6 +60,32 @@ describe("compileConfirmationCompound — multi-leg representation", () => {
     expect(r.compound?.predicate_type).toBe("single");
   });
 
+  it("★ enforcement defaults to primary_plus_confluence (legs are confluence, not hard gates)", () => {
+    // Educator states a sequence but no gating language → don't hard-require every leg (avoids dropping
+    // demonstrated variants = the yAMaiOI regression). Primary = the highest-specificity entry leg.
+    const r = compileConfirmationCompound({
+      entry_sequence: seq(
+        "price closes through the opening range edge",
+        "then we enter on the retest of the opening range low with a fair value gap",
+      ),
+    });
+    expect(r.compound?.enforcement).toBe("primary_plus_confluence");
+    expect(r.compound?.legs.length).toBe(2);
+    // primary = retest leg (named level + FVG confluence outranks the bare close-through)
+    const primary = r.compound?.legs.find((l) => l.order === r.compound?.primary_order);
+    expect(primary?.kind).toBe("retest_reject");
+  });
+
+  it("explicit gating language → enforcement all_required (no-trade-unless)", () => {
+    const r = compileConfirmationCompound({
+      entry_sequence: seq(
+        "we must see a change of character at the prior swing",
+        "no trade unless a candle closes through the opening range edge",
+      ),
+    });
+    expect(r.compound?.enforcement).toBe("all_required");
+  });
+
   it("single confirmation step → predicate_type single", () => {
     const r = compileConfirmationCompound({ entry_sequence: seq("enter on a full body close through the opening range edge") });
     expect(r.compound?.predicate_type).toBe("single");
