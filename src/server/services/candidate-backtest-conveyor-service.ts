@@ -81,7 +81,6 @@ export async function runCandidateBacktestConveyor(): Promise<void> {
   // CF-6 rule: NEVER use sql`col = ANY(${jsArray})`. This uses correlated
   // subqueries instead — ${strategies.id} serialises as "strategies"."id"
   // in the outer query context, giving a valid correlated reference.
-  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
   let candidates: Array<typeof strategies.$inferSelect>;
   try {
     candidates = await db
@@ -104,7 +103,7 @@ export async function runCandidateBacktestConveyor(): Promise<void> {
             SELECT 1 FROM backtests b
             WHERE b.strategy_id = ${strategies.id}
               AND b.status = 'failed'
-              AND b.created_at >= ${twentyFourHoursAgo}
+              AND b.created_at >= now() - interval '24 hours'
           )`,
         ),
       )
