@@ -86,13 +86,17 @@ export { PipelinePausedError };
 // ─── instance_config.enabled_firms reader (60s cache) ────────────────────────
 //
 // The firm allowlist is per-instance config, not hardcoded. Reads from
-// `instance_config` (singleton row, id=1). Defaults to ["mffu","topstep"] if
+// `instance_config` (singleton row, id=1). Defaults to ["topstep","mffu"] if
 // the row is missing (boot-time fallback). Result cached for 60s to avoid
 // hammering the DB on every assignment write.
 //
 // Mirrors the cache pattern used in compliance-gate-service.ts.
 
-const DEFAULT_ENABLED_FIRMS = ["mffu", "topstep"] as const;
+// Topstep is PRIMARY (operator mandate) — listed first so any ordered/pick-first
+// consumer favors Topstep. Matches broker-router.ts ENABLED_FIRMS_FALLBACK.
+// (2026-06-28: flipped from ["mffu","topstep"] — operator has no MFFU account;
+// MFFU is a secondary/future option, never the default primary.)
+const DEFAULT_ENABLED_FIRMS = ["topstep", "mffu"] as const;
 
 let enabledFirmsCache: { value: string[]; expiresAt: number } | null = null;
 const ENABLED_FIRMS_TTL_MS = 60_000;
