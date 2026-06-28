@@ -257,6 +257,12 @@ interface BacktestResult {
   wfe_status?: string | null;
   pbo_overall?: number | null;
   pbo_overall_p_value?: number | null;
+  // Wave 3 Track 3B — BIF gate fields (contract with Python side: result.bif / result.k_eff).
+  // `bif`   — Bias Information Factor; quantifies IS→OOS overfitting transfer gap.
+  // `k_eff` — Effective parameter count; companion metric for audit payload.
+  // Both optional (null when Python has not yet emitted them — pre-Wave-3 backtests).
+  bif?: number | null;
+  k_eff?: number | null;
   information_ratio?: number | null;         // A13: Information Ratio (vs benchmark); null when benchmark data insufficient
   prop_compliance?: Record<string, unknown>;
   crisis_results?: Record<string, unknown>;
@@ -638,6 +644,13 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           // A13: Information Ratio — written once on backtest completion.
           // Null when engine returned null (insufficient benchmark data or < 2 bars).
           informationRatio: result.information_ratio != null ? String(result.information_ratio) : null,
+          // Wave 3 Track 3B — BIF gate fields.
+          // Python WF result carries `bif` (Bias Information Factor) and `k_eff`
+          // (effective parameter count) at the top level of the result dict.
+          // Fail-soft: null when the Python side has not yet emitted the field
+          // (pre-Wave-3 backtests); lifecycle gate treats null as a grandfather pass.
+          bif: result.bif != null ? String(result.bif) : null,
+          kEff: result.k_eff != null ? String(result.k_eff) : null,
         })
         .where(eq(backtests.id, backtestId));
 

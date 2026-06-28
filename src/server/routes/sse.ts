@@ -423,6 +423,8 @@ export const LIFECYCLE_GATE_EVENTS = {
   // Pass 7 Track A.2 — evidence completeness gate blocked promotion
   // (>= 3 of 8 tracked gates lack institutional-quality data)
   PROMOTION_EVIDENCE_INCOMPLETE: "lifecycle:promotion_evidence_incomplete",
+  // Wave 3 Track 3B — BIF (Bias Information Factor) gate evaluated at PAPER → DEPLOY_READY
+  BIF_EVALUATED: "lifecycle:bif_evaluated",
 } as const;
 
 export type LifecycleGateEventName =

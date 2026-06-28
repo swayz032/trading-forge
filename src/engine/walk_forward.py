@@ -300,6 +300,9 @@ def _run_walk_forward_cpcv(
             "trades": [],
             "daily_pnls": [],
             "windows": [],
+            # Wave 3 Track 3A: BIF absent on empty-path early return.
+            "bif": None,
+            "k_eff": 0,
             "execution_time_ms": int((time.time() - start_time) * 1000),
         }
 
@@ -362,6 +365,38 @@ def _run_walk_forward_cpcv(
         _dsr_val = None
 
     elapsed_ms = int((time.time() - start_time) * 1000)
+
+    # ── Wave 3 Track 3A: BIF computation (CPCV mode) ─────────────────────────
+    # K_eff = n_paths (C(6,2)=15 combinatorial paths per default CPCV config).
+    # IS Sharpe proxy = max(path_sharpes) — the best-looking path Sharpe, which
+    # is the selection-bias source when choosing from multiple combinatorial paths.
+    # Per-path IS Sharpes (using true IS fold data) are a Wave 30 carry-forward
+    # per the comment at the top of the CPCV combinations loop.
+    _cpcv_bif_result: dict = {}
+    try:
+        from src.engine.statistics.backtest_inflation_factor import (
+            compute_bif as _cpcv_compute_bif,
+        )
+        _cpcv_bif_is_sharpe = max(path_sharpes) if path_sharpes else 0.0
+        _cpcv_bif_k_eff = float(max(n_paths, 1))
+        _cpcv_bif_result = _cpcv_compute_bif(
+            is_sharpe=_cpcv_bif_is_sharpe,
+            wf_sharpe=agg_sharpe,
+            k_eff=_cpcv_bif_k_eff,
+        )
+        print(
+            f"  BIF (CPCV): {_cpcv_bif_result.get('bif', 'N/A'):.4f} "
+            f"(IS_proxy={_cpcv_bif_is_sharpe:.4f}, WF={agg_sharpe:.4f}, "
+            f"K_eff={_cpcv_bif_k_eff:.0f}) "
+            f"→ {_cpcv_bif_result.get('verdict', 'N/A')}",
+            file=sys.stderr,
+        )
+    except Exception as _cpcv_bif_exc:
+        print(
+            f"  BIF (CPCV): computation failed ({_cpcv_bif_exc!r}) — "
+            f"skipping (non-blocking, bif=None in output).",
+            file=sys.stderr,
+        )
 
     # ── Wave 29 Pass A.2: compute pbo_overall from CPCV paths ────────────────
     # In CPCV mode, path_sharpes ARE the per-path OOS Sharpes.
@@ -433,6 +468,14 @@ def _run_walk_forward_cpcv(
         "pbo_overall": _cpcv_pbo_overall,
         "pbo_overall_p_value": _cpcv_pbo_p_value,
         "pbo_audit_actions": _cpcv_pbo_audit_actions,
+        # Wave 3 Track 3A — BIF (Backtest Inflation Factor): selection-bias ratio.
+        # In CPCV mode IS Sharpe tracking is a Wave 30 carry-forward; we use
+        # max(path_sharpes) as a documented proxy for the best-looking path.
+        # K_eff = n_paths (C(6,2)=15 default combinatorial paths).
+        # TS gate contract: reads "bif" and "k_eff" from this dict.
+        "bif": _cpcv_bif_result.get("bif"),
+        "k_eff": _cpcv_bif_result.get("k_eff"),
+        "bif_detail": _cpcv_bif_result,
     }
 
 
@@ -1269,6 +1312,38 @@ def run_walk_forward(
             file=sys.stderr,
         )
 
+    # ── Wave 3 Track 3A: BIF computation (plain/purged_embargo mode) ─────────────
+    # IS Sharpe  = _combined_is_sharpe — same value already computed for WFE;
+    #              no additional IS backtests required.
+    # OOS Sharpe = agg_sharpe (combined-fold OOS, not per-window average).
+    # K_eff      = len(windows) — each WF window is an independent IS/OOS draw.
+    # Reuses the same Sharpe pair as the WFE gate; pure derivation, no I/O.
+    _bif_result: dict = {}
+    try:
+        from src.engine.statistics.backtest_inflation_factor import (
+            compute_bif as _compute_bif,
+        )
+        _bif_is_sharpe = _combined_is_sharpe if _combined_is_sharpe is not None else 0.0
+        _bif_k_eff = float(max(len(windows), 1))
+        _bif_result = _compute_bif(
+            is_sharpe=_bif_is_sharpe,
+            wf_sharpe=agg_sharpe,
+            k_eff=_bif_k_eff,
+        )
+        print(
+            f"  BIF: {_bif_result.get('bif', 'N/A'):.4f} "
+            f"(IS={_bif_is_sharpe:.4f}, WF={agg_sharpe:.4f}, "
+            f"K_eff={_bif_k_eff:.0f}) "
+            f"→ {_bif_result.get('verdict', 'N/A')}",
+            file=sys.stderr,
+        )
+    except Exception as _bif_exc:
+        print(
+            f"  BIF: computation failed ({_bif_exc!r}) — "
+            f"skipping (non-blocking, bif=None in output).",
+            file=sys.stderr,
+        )
+
     # ─── Prop firm compliance on aggregated OOS results ─────
     prop_compliance = None
     if all_oos_pnl_records and all_oos_trades:
@@ -1351,6 +1426,14 @@ def run_walk_forward(
         # Contains: "walk_forward.pbo_computed" and optionally
         #           "walk_forward.pbo_high_overfit_risk"
         "pbo_audit_actions": pbo_audit_actions,
+        # Wave 3 Track 3A — BIF (Backtest Inflation Factor): IS/OOS Sharpe ratio.
+        # is_sharpe = _combined_is_sharpe (same as WFE input; no extra backtests).
+        # wf_sharpe = agg_sharpe (combined-fold OOS aggregate).
+        # k_eff     = n_splits (WF windows = independent IS/OOS draws).
+        # TS gate contract: reads "bif" (float) and "k_eff" (float) from this dict.
+        "bif": _bif_result.get("bif"),
+        "k_eff": _bif_result.get("k_eff"),
+        "bif_detail": _bif_result,
     }
 
 

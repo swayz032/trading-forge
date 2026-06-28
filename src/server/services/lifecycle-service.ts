@@ -61,6 +61,10 @@ import {
   evaluateFrozenPolicyDriftAtPromotion,
   freezePolicyForStrategy,
 } from "../lib/frozen-policy-contract.js";
+// Wave 3 Track 3B — BIF (Bias Information Factor) promotion gate (PAPER → DEPLOY_READY).
+// Reads backtests.bif / backtests.kEff stamped from Python WF result fields `bif` / `k_eff`.
+// Hard-blocks when bif > BIF_BLOCK_THRESHOLD (default 4.0). Grandfather-passes on null.
+import { evaluateBifGate } from "../lib/bif-gate.js";
 
 const VALID_STATES = [
   "CANDIDATE",
@@ -3657,6 +3661,91 @@ export class LifecycleService {
           logger.warn(
             { strategyId: s.id, err: dsrPdrErr },
             "DSR gate (PAPER→DEPLOY_READY): read failed (non-blocking — promotion continues)",
+          );
+          gateEvidenceStatuses.push("data_unavailable");
+        }
+
+        // ── Wave 3 Track 3B: BIF (Bias Information Factor) gate (PAPER → DEPLOY_READY) ──
+        // Reads backtests.bif and backtests.kEff (stamped from Python WF result fields
+        // `bif` and `k_eff` at completion time in backtest-service.ts).
+        //
+        // Hard-blocks when bif > BIF_BLOCK_THRESHOLD (default 4.0) — synthetic overfit;
+        // IS edge does not transfer to OOS.
+        // Warn band when BIF_WARN_THRESHOLD < bif <= BIF_BLOCK_THRESHOLD (default 2.0–4.0).
+        // Legacy grandfather pass on null (pre-Wave-3 backtests that never emitted bif).
+        //
+        // This gate runs AFTER the DSR walk-forward gate and BEFORE the Wave 26 Pass G
+        // Pass E orchestrator — additive, never replaces existing gates.
+        try {
+          const [latestBtForBif] = await db
+            .select({ bif: backtests.bif, kEff: backtests.kEff })
+            .from(backtests)
+            .where(
+              and(
+                eq(backtests.strategyId, s.id),
+                eq(backtests.status, "completed"),
+              ),
+            )
+            .orderBy(desc(backtests.createdAt))
+            .limit(1);
+
+          const bifValue = latestBtForBif?.bif != null ? Number(latestBtForBif.bif) : null;
+          const kEffValue = latestBtForBif?.kEff != null ? Number(latestBtForBif.kEff) : null;
+
+          const bifResult = evaluateBifGate(bifValue, kEffValue);
+
+          // Always emit audit row so dashboard can show gate evaluation history.
+          await db.insert(auditLog).values({
+            action: "bif.gate_evaluated",
+            entityId: s.id,
+            entityType: "strategy",
+            status: bifResult.passed ? "success" : "failure",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: bifResult.auditPayload,
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "BIF gate audit insert failed (non-blocking)");
+          });
+
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.BIF_EVALUATED, {
+            strategyId: s.id,
+            ...bifResult.auditPayload,
+            passed: bifResult.passed,
+            reason: bifResult.reason,
+            legacyNull: bifResult.legacyNull,
+          });
+
+          if (!bifResult.passed) {
+            logger.warn(
+              {
+                strategyId: s.id,
+                bif: bifValue,
+                k_eff: kEffValue,
+                reason: bifResult.reason,
+                blockThreshold: bifResult.auditPayload.block_threshold,
+                transition: "PAPER→DEPLOY_READY",
+              },
+              `BIF gate BLOCKED PAPER→DEPLOY_READY: ${bifResult.reason}`,
+            );
+            strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+            continue;
+          }
+
+          if (bifResult.legacyNull) {
+            // Track A.2: grandfather pass = legacy_null evidence status.
+            gateEvidenceStatuses.push("legacy_null");
+          } else {
+            // Track A.2: real bif data present (clean or warn band) = complete.
+            gateEvidenceStatuses.push("complete");
+          }
+        } catch (bifGateErr) {
+          // Fail-open: BIF gate infrastructure failure is non-blocking.
+          // Mirrors DSR gate behavior — a DB hiccup during bif read is NOT sufficient
+          // reason to block (unlike B14 which fails-CLOSED). BIF is additive.
+          logger.warn(
+            { strategyId: s.id, err: bifGateErr },
+            "BIF gate (PAPER→DEPLOY_READY): read failed (non-blocking — promotion continues)",
           );
           gateEvidenceStatuses.push("data_unavailable");
         }

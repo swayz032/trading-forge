@@ -207,6 +207,14 @@ export const backtests = pgTable(
     // { spa_lower_p, spa_consistent_p, spa_upper_p, passed, threshold, n_obs, n_bootstrap, block_length }
     // Null for backtests run before Pass E. Migration: 0155_wrc_spa_promotion_gates.sql.
     spaResult: jsonb("spa_result"),
+    // Wave 3 Track 3B — BIF gate persistence (migration 0177_backtests_bif.sql)
+    // `bif`   — Bias Information Factor from Python WF result. Lower = better IS→OOS transfer.
+    //           Gate threshold: BIF_WARN_THRESHOLD (default 2.0) / BIF_BLOCK_THRESHOLD (default 4.0).
+    // `k_eff` — Effective parameter count; companion metric surfaced in audit payload.
+    // Both stamped by backtest-service.ts at UPDATE completion; null for pre-Wave-3 backtests
+    // (lifecycle gate treats null as legacy grandfather pass, never blocks on missing data).
+    bif: numeric("bif"),
+    kEff: numeric("k_eff"),
     errorMessage: text("error_message"),
     executionTimeMs: integer("execution_time_ms"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
