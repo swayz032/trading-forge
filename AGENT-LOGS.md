@@ -3,6 +3,85 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-27 Slumdawg Blueprint — Wave 2 (n8n Hardening, LIVE Railway)
+
+**Mission:** Operator approved the Slumdawg blueprint 5-wave plan; executed Wave 2 (n8n hardening) after Wave 1 (calibration) shipped. All n8n edits via live REST PUT (`{name,nodes,connections,settings}` only); full 31-workflow backup taken first; GET→modify→PUT→GET-verify per workflow; 0 restores.
+
+**2A — webhook idempotency + dedupe:** `X-Idempotency-Key` (semantic keys, never `$execution.id`) on write nodes of Strategy Generation Loop / Deep Analysis / Slumdawg Gateway; backend `idempotencyMiddleware` (fail-open) added to `/api/backtests/matrix` + `/api/monte-carlo` + `/api/admin/slumdawg/ingest-youtube` (commit `d1d0795`, 3 vitest, tsc clean; hot paths already had it); `5G-brave-search-scout` fingerprint dedupe mirroring `5H` (6→8 nodes).
+
+**2B-i — IF loosen + dual-brief:** 16 IF nodes strict→loose across 6 critical-path workflows (conditions unchanged); Pre-Session Skip Check (13→11) now skip-advisory-only — in-app `pre-market-briefing-service` is the single 09:00 written-bias brief.
+
+**2B-ii — SHADOW-skip (F-3): VERIFIED ALREADY CLOSED (2026-06-23), no change.** `VALID_TRANSITIONS` forbids CANDIDATE→PAPER (enforced `lifecycle-service.ts:390`); `/api/paper/start` blocks non-[TESTING,PAPER,DEPLOY_READY,DEPLOYED]; Deep Analysis promote node only calls `/api/paper/start {strategyId}`. Stale "F-3 open" memory-index note corrected.
+
+**2C — meta-monitor: COVERED, no new build.** `n8n-execution-scrape` (5-min, pipeline-exempt) tracks active-count + failed-exec + SSE + audit; `0A-health-monitor` error-sink → Discord.
+
+**Verification:** all PUTs 200; `errorWorkflow=DGEk1D478xWJClKD` + retry preserved on all 6; 2A headers preserved through 2B; independent live GET confirms `if_strict=0` on all 6.
+
+**Operator action:** deploy backend `d1d0795` to Railway to activate the 3 NEW middleware routes (n8n already sends keys live; existing hot-path middleware honors them now). Wave 1+2 commits on `hardening/phase-0`, NOT pushed. Backup at `scratchpad/n8n-backup-wave2/`. Next: Wave 3 (BIF gate), Wave 4 (Layer 14 `14A-master` + Layer 15 leak).
+
+---
+### Session Log — 2026-06-27 Production/Institutional Deep-Scan + 6 Blocker Fixes (commit cfad7bb, pushed → hardening/phase-0)
+
+**Mission:** Operator — "deep scan to find all loose ends, wiring, and bugs blocking us from going to production / institutional grade, so we can start institutional-grade backtesting and start paper trading the bot successfully."
+
+**Method:** 8 parallel read-only specialist audit agents (backtest-core, accuracy-validator, trading-forge-architect, paper-parity, pine-export, execution/general, n8n-orchestration, autonomous-readiness) + parent-run CI gates/tsc. Then 5 parallel implementation agents on disjoint file scopes (no shared-tree collision); parent integrated + committed by explicit pathspec.
+
+**Scope decision (operator, this session):** **Lane 1 ONLY** is the system. Lane 1 = full Slumdawg runs server-side (broker-router → server-mediated → TradersPost → Tradovate); TradingView/TradersPost(Tradovate) is the operator's **external real-paper cross-check** vs the internal custom paper engine. Lane 2 (TradingView Pine *bot*, strategy logic in Pine) is NOT part of the plan/system → Pine `symbol→ticker` fix (B2/B3) **dropped**. Source-of-truth: internal engine = strategy-validation authority (faithful, feeds gates); Tradovate-demo = real-fill realism benchmark; recon compares them.
+
+**Dependability verdict given to operator:** Operationally production-grade (kill-switch-first, fail-closed, atomic+audited, self-recovering) — HIGH confidence. Trustworthy *numbers* (risk capital on its verdicts) — NOT yet, gated on the fixes below; the biggest hole was zero DB-integration test coverage (green CI structurally blind to producer→DB→gate disconnects).
+
+**Fixes shipped (commit cfad7bb):**
+- **X1** — registered `position-drift-reconcile` in `docs/system-subsystem-registry.json` (broker_abstraction_layer); `system-map:check` now GREEN (driftItems: []). Sync regenerated the 3 generated artifacts.
+- **A3** — B15 Parameter Robustness Battery converted from PHANTOM gate to REAL hard gate: producer default flipped ON (`backtest-args.ts`), `_promoteStrategyInner` now passes `b15HardGateEnabled`, null-data emits documented warn (grandfather pattern) instead of silent-pass (`lifecycle-service.ts`). 21 vitest.
+- **B6** — paper/backtest parity: VWAP Globex session reset + `volume_rolling_mean_20` (true matches to backtester); SMT-null + `first_30min_volume_ratio` made OBSERVABLE (logged) instead of silent (`paper-signal-service.ts`). 15 vitest.
+- **T1** — NEW `gate-chain-integration.test.ts` (pglite) proving producer→DB→gate chains connect (WFE/PBO/B15/shadow-divergence). **Caught the disconnect class as live tests**: wrong-key writes (`wfe_score` vs `wfe_overall`, `pbo` vs `pbo_overall`, `battery_passed` vs `passed`) silently grandfather-pass. 24 vitest. This closes the structural CI blind spot.
+- **A1** — backtester eligibility-gate per-symbol stop ceiling: CODE already in HEAD via parallel `wave1-calibration` commit; I added the regression test `tests/test_eligibility_gate_stop_ceiling.py`. 13 pytest.
+- **X2** — repointed 5 live n8n workflows off the DEAD model `qwen2.5-coder:7b` → verified-live `gemma4:e2b` (REST PUT, backups saved, repo exports synced). Strategy-gen pipeline was failing live daily.
+
+**Verification:** tsc clean; `system-map:check` / `check:production-isolation` / `check:2026-compliance` GREEN; 73 new tests pass (60 vitest + 13 pytest). Committed by explicit pathspec (15 files, no parallel-session co-mingle), pushed `3289ffc..cfad7bb`.
+
+**Known-facts updates (added to Known-Facts Pin section):**
+- Tower is in a DEGRADED single-model state: only `gemma4:e2b` serves; `deepseek-r1:14b` AND `nomic-embed-text` both 404 on the tower (`tf-relay-production/__ollama`).
+- Gate readers silently grandfather-PASS on producer wrong-key writes — now regression-guarded by `gate-chain-integration.test.ts`.
+
+**Carry-forward (operator action items — paper-trade is blocked ONLY by these):**
+- Set env vars: `ADMIN_PROMOTE_HMAC_SECRET` (else every promotion 503; smoke-test gives FALSE PASS via ADMIN_OVERRIDE fallback), `LIVE_ORDER_GATEWAY_URL` (else TESTING→PAPER fail-closed), `LIVE_ORDER_HMAC_SECRET`. Seed MFFU `broker_accounts` row + `MFFU_TRADERSPOST_API_KEY`.
+- **Tower: `ollama pull deepseek-r1:14b` + `ollama pull nomic-embed-text`** — Nightly/Weekly/StrategyGen won't close end-to-end until restored (sibling nodes still call them).
+- **Operator DECISION: MCL stop ceiling** (currently 1.0pt may skip most MCL setups — dollar-equiv ~7pt, or MCL = structural-stops-only).
+- Code follow-ups (deferred, not blockers): NEEDS_REVISION/NEEDS_ARCHETYPE off-state-machine (no lifecycle_transitions row); dual PBO gate legacy fail-open; stale `wave25-b15` test asserting old "false" default; add dead-model + exec-error-rate checks to `audit-n8n-workflows.mjs`; persist last-valid SMT snapshot across bars; wire `first_30min_volume_ratio` DAL.
+- Vacation hardening (not paper-trade blockers): Kasa plug+UPS+3 env vars; verify `TowerRelayClient` under NSSM; rotate `RELAY_TOKEN` (in git history).
+
+---
+### Session Log — 2026-06-27 Live Execution Switch + Crib Mode Badge
+
+**Mission:** Wire the Slumhouse "Live Execution" switch so it actually controls the bot's execution mode (paper vs live), with the Crib homepage stats switching accordingly, and the switch locked to paper until go-live setup is confirmed.
+
+**Work completed:**
+- NEW `src/server/lib/execution-mode.ts` — `isLiveExecutionConfigured()` (env-gate), `getExecutionMode()` (fail-closed DB read, NUMERIC 1/0), `setExecutionMode()` (select-then-update-or-insert, domain='paper')
+- MODIFIED `src/server/routes/slumhouse/admin.ts` — `live_execution` in GET (`getSwitchStates`) now reads real mode via `getExecutionMode()` + `isLiveExecutionConfigured()`; POST handler replaced 501 stub with 503-fail-closed gate + `setExecutionMode()` + audit + 400 for unknown switch ids
+- MODIFIED `src/server/lib/slumhouse/crib-data.ts` — `CribData` type extended with `executionMode` and `executionModeLabel`; `assembleCribData` reads mode at start; live mode zeroes account-scoped stats (todayBag/openNow/sparklines) without ever falling back to paper numbers while claiming live; global stats (inPot/pot/crew) returned in both modes
+- MODIFIED `public/slumhouse/crib.html` — mode badge added inline with subtitle; lime "LIVE" / muted "PAPER · practice" populated from crib API fetch
+- NEW `src/server/__tests__/execution-mode-unit.test.ts` — 18 tests for the real execution-mode.ts (A: isLiveExecutionConfigured, B: getExecutionMode, C: setExecutionMode)
+- NEW `src/server/__tests__/live-execution-wiring.test.ts` — 16 tests for admin.ts wiring (D: GET shape, E: POST fail-closed + toggle) and crib-data.ts (F: mode fields + zeroed live stats)
+
+**Verification:**
+- `execution-mode-unit.test.ts`: 18/18 GREEN
+- `live-execution-wiring.test.ts`: 16/16 GREEN
+- `wave-b-office-switches.test.ts`: 27/27 GREEN (no regressions)
+- `slumhouse/crib-data.test.ts`: 6/6 GREEN (no regressions)
+- `npx tsc --noEmit`: clean (exit 0)
+
+**Known-facts updates:**
+- NUMERIC trap: system_parameters.current_value is PostgreSQL NUMERIC. Storing "true" in a prior incident caused a prod outage. Execution mode stores "1"/"0" (numeric strings), never booleans or "true"/"false".
+- Two-file test pattern required: `vi.mock("../lib/execution-mode.js")` is hoisted and replaces the real module for all imports in the file. Unit tests for the real module must be in a separate file from wiring tests that mock the module.
+- Live mode DB query order for crib-data: skips today/open/sparkPnl execute calls (canReadAccountScopedData=false). Live-mode fixtures must map to [pot, kill, discord, potRows, crew] not the paper-mode order.
+
+**Carry-forward for next session:**
+- No migration needed (execution_mode_live row is created on first setExecutionMode() write)
+- No TopstepX live stat source yet — live mode returns zeroed account-scoped stats pending live tape
+- `public/slumhouse/office.html` was not touched (parent owns it per task constraint)
+
+---
 ### Session Log — 2026-06-27 Slumdawg Blueprint Audit + Wave 1 (Calibration & Exits)
 
 **Mission:** Operator submitted a 20-layer (+10.5 SL/TP, +14 "3AM GPT") institutional blueprint — "tell me what you think, research it, how does it benefit Trading Forge, and implement." Then approved a 5-wave plan and greenlit Wave 1.
@@ -11477,6 +11556,14 @@ Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal
 ---
 
 ## Known-Facts Pin — Stop Misdiagnosing These
+
+### Tower is in a DEGRADED single-model state — only `gemma4:e2b` serves (pinned 2026-06-27)
+
+As of 2026-06-27 the tower's Ollama (via `https://tf-relay-production.up.railway.app/__ollama`) serves ONLY `gemma4:e2b`. Both `deepseek-r1:14b` AND `nomic-embed-text` return 404 `model not found` on `/api/generate` + `/api/embeddings`. This is why repointing n8n's dead `qwen2.5-coder:7b` to the documented fallback `deepseek-r1:14b` would have re-broken it — `gemma4:e2b` is the only verified-live choice. Consequence: n8n Nightly/Weekly/StrategyGen workflows have SIBLING nodes (Critique/QA/Embeddings) still calling `deepseek-r1:14b` + `nomic-embed-text`, so they will NOT close end-to-end until the operator runs `ollama pull deepseek-r1:14b` + `ollama pull nomic-embed-text` (or restores the tower). Don't diagnose those workflow failures as code bugs — the tower is missing the models. Verify availability with `curl <relay>/__ollama/api/tags` before assuming any model is live.
+
+### Promotion-gate readers silently grandfather-PASS on producer wrong-key writes (pinned 2026-06-27)
+
+The promotion gates (WFE/PBO/B15) read JSONB keys (`walk_forward_results.wfe_overall`, `.pbo_overall`, `b15_battery.passed`). If the engine writes the value under a DIFFERENT key (`wfe_score`, `pbo`, `battery_passed`), the reader gets `undefined` → treats it as legacy/null → grandfather-PASSES a strategy that should BLOCK. This is the exact class that shipped green repeatedly (B14 ruin-CI key, B15) because the test suite had ZERO DB-integration coverage. Now REGRESSION-GUARDED by `src/server/__tests__/gate-chain-integration.test.ts` (pglite — boots real schema, INSERTs producer-shape rows, runs the REAL gate readers, asserts both pass AND wrong-key-catches). When adding a new gate, add its chain to this file or the disconnect ships green. Do NOT mock the DB for gate-chain tests — mocking is what created the blind spot.
 
 ### `git add <paths>` + `git commit` is UNSAFE on the shared index — use `git commit -- <paths>` (pinned 2026-06-23)
 
