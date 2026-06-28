@@ -23,6 +23,7 @@ import {
   sclGateEnabled,
   type TriggerFeatures,
 } from "./specificity-score.js";
+import { scanContextGates, type ContextGate } from "./context-gate.js";
 
 export type ConfirmationKind = "close_through" | "structure_shift" | "retest_reject" | "displacement";
 
@@ -31,7 +32,8 @@ export type ConfirmationQuarantineReason =
   | "confirmation_would_overfire" // only a passive touch/tap present — compiling it would over-fire
   | "confirmation_no_level" // active confirmation but no anchor level identifiable
   | "confirmation_unmapped" // confirmation language present but not mappable to a primitive
-  | "semantic_compression_loss"; // Phase 2A — compiled predicate dropped too much edge specificity (SCL gate)
+  | "semantic_compression_loss" // Phase 2A — compiled predicate dropped too much edge specificity (SCL gate)
+  | "context_gate_unrepresented"; // Phase 3A — a REQUIRED zone/POI validity gate is fuzzy (T3); shipping it over-fires
 
 export type LevelRef =
   | "opening_range_edge" | "opening_price" | "prior_swing" | "order_block"
@@ -243,6 +245,8 @@ export interface CompoundResult {
   contradictions: Contradiction[];
   leg_count: number;
   expected_legs: number;
+  /** Phase 3A — WHERE-validity gates (orthogonal to confirmation legs). */
+  context_gates: ContextGate[];
 }
 
 const PARALLEL_RE = /\b(combined with|overlap|overlapping|plus|along with|together with|confluence of)\b/i;
@@ -262,6 +266,13 @@ const GATING_RE = /\b(only (?:if|when|enter|take)|must (?:see|have|be)|no trade 
 export function compileConfirmationCompound(input: ConfirmationInput): CompoundResult {
   const confluence = (input.confluences ?? []).some((c) => /fvg|fair.?value.?gap/i.test(c)) ? "fair_value_gap" : undefined;
   const steps = input.entry_sequence ?? [];
+
+  // Phase 3A — WHERE gates: mine the full edge text (transcript + all step actions/rationales, incl. the
+  // pure-context steps the confirmation loop below skips). A REQUIRED but unrepresentable (T3) gate must
+  // quarantine — dropping it over-fires (the trigger fires outside the zone, inflating edge).
+  const gateCorpus = [input.transcript ?? "", ...steps.map((s) => `${s.action ?? ""} ${s.rationale ?? ""}`)].join("\n");
+  const ctx = scanContextGates(gateCorpus);
+  const ctxUnrepresented = ctx.contradictions.some((c) => c.type === "CONTEXT_GATE_UNREPRESENTED");
   const legs: ConfirmationLeg[] = [];
   const contradictions: Contradiction[] = [];
   const seen = new Set<string>(); // global dedup (not just consecutive) — entry_sequence dumps repeat legs
@@ -295,10 +306,11 @@ export function compileConfirmationCompound(input: ConfirmationInput): CompoundR
   // Fallback: no step-derived legs → single corpus scan (preserves Phase 2A behavior for thin entry_sequence).
   if (legs.length === 0) {
     const single = compileConfirmation(input);
-    if (!single.compiled) return { compound: null, quarantine_reason: single.quarantine_reason, contradictions, leg_count: 0, expected_legs };
+    if (!single.compiled) return { compound: null, quarantine_reason: single.quarantine_reason, contradictions, leg_count: 0, expected_legs, context_gates: ctx.gates };
+    if (ctxUnrepresented) return { compound: null, quarantine_reason: "context_gate_unrepresented", contradictions, leg_count: 1, expected_legs: Math.max(1, expected_legs), context_gates: ctx.gates };
     return {
       compound: { predicate_type: "single", operator: "SEQUENCE", legs: [{ ...single.compiled, order: 1, role: "primary" }], enforcement: "primary_plus_confluence", primary_order: 1 },
-      quarantine_reason: null, contradictions, leg_count: 1, expected_legs: Math.max(1, expected_legs),
+      quarantine_reason: null, contradictions, leg_count: 1, expected_legs: Math.max(1, expected_legs), context_gates: ctx.gates,
     };
   }
 
@@ -322,5 +334,9 @@ export function compileConfirmationCompound(input: ConfirmationInput): CompoundR
   }
   for (const leg of legs) if (leg.order === primary_order) leg.role = "primary"; // primary overrides
 
-  return { compound: { predicate_type, operator, legs, enforcement, primary_order }, quarantine_reason: null, contradictions, leg_count: legs.length, expected_legs };
+  // Fail-closed: a REQUIRED unrepresentable (T3) WHERE-gate → quarantine (shipping it over-fires).
+  if (ctxUnrepresented) {
+    return { compound: null, quarantine_reason: "context_gate_unrepresented", contradictions, leg_count: legs.length, expected_legs, context_gates: ctx.gates };
+  }
+  return { compound: { predicate_type, operator, legs, enforcement, primary_order }, quarantine_reason: null, contradictions, leg_count: legs.length, expected_legs, context_gates: ctx.gates };
 }
