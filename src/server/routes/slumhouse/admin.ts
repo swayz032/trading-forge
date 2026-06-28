@@ -33,6 +33,7 @@ import { db } from "../../db/index.js";
 import { systemParameters, systemState } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import { clearOperatorAbsenceMarkers } from "../../services/dead-mans-heartbeat-service.js";
+import { operatorAbsentModeActive } from "../../services/operator-absent-mode-service.js";
 import {
   isLiveExecutionConfigured,
   getExecutionMode,
@@ -209,15 +210,14 @@ export async function getSwitchStates(req: Request, res: Response): Promise<void
     llOn = false; // fail-closed
   }
 
-  // ── vacation_mode: operator_absent_since non-null ⇒ AWAY ──────────────────
+  // ── vacation_mode: TRUE effective state (env override OR operator_absent_since) ──
+  // Read via operatorAbsentModeActive() so the switch reflects REALITY: the
+  // OPERATOR_ABSENT_AUTOPROMOTE env var forces vacation on regardless of the DB
+  // timestamp. Reading operatorAbsentSince alone would show OFF while autopilot
+  // is actually firing (audit V-3). Fail-closed to false on error.
   let vmOn = false;
   try {
-    const ssRows = await db
-      .select({ ts: systemState.operatorAbsentSince })
-      .from(systemState)
-      .where(eq(systemState.id, 1))
-      .limit(1);
-    vmOn = ssRows.length > 0 && ssRows[0].ts !== null;
+    vmOn = await operatorAbsentModeActive();
   } catch {
     vmOn = false; // fail-closed
   }
