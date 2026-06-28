@@ -11,6 +11,8 @@
  *     - computeRegimeSurvivalFailureRate: regime filter, empty regime
  *     - computeB14CiHighDrift: delta arithmetic
  *     - splitWindows: window/baseline slicing
+ *     - computeMaxDrawdownFromPnls: running-equity DD fraction (Category 6)
+ *     - computeMcDistributionBreach: MC distribution breach logic (Category 6)
  *
  *   5-CATEGORY CLASSIFIER mocks (DB rows supplied as test fixtures):
  *     - detectExecutionSlippage — clean, warning, high-severity
@@ -18,6 +20,13 @@
  *     - detectRegimeLeak       — trained regime matches, mismatch PAPER (warning), mismatch DEPLOYED (high)
  *     - detectAttributionOpacity — all full, majority minimal (high), moderate (warning)
  *     - detectSubsystemConsensus — no drop, drop below threshold, drop above threshold
+ *
+ *   CATEGORY 6 — MC_DISTRIBUTION_BREACH:
+ *     - computeMaxDrawdownFromPnls: empty/clean/rising-then-falling/all-negative/cap-at-1
+ *     - computeMcDistributionBreach: clean/dd-warning/dd-high/sharpe-warning/sharpe-high/
+ *                                    dd-and-sharpe/insufficient-sample/null-mc/partial-null
+ *     - Integration: full runLeakDetection with mocked DB rows (3-step DB chain)
+ *     - Advisory-only invariant: mc_distribution_breach finding has no gate fields
  *
  *   SEVERITY ESCALATION:
  *     - Regime leak: PAPER = warning, DEPLOYED = high
@@ -39,6 +48,8 @@ import {
   computeRegimeSurvivalFailureRate,
   computeB14CiHighDrift,
   splitWindows,
+  computeMaxDrawdownFromPnls,
+  computeMcDistributionBreach,
 } from "../lib/leak-metrics.js";
 
 // ─── Service (mocked DB) ──────────────────────────────────────────────────────
@@ -533,6 +544,374 @@ describe("subsystem_consensus category logic", () => {
   });
 });
 
+// ─── Category 6: computeMaxDrawdownFromPnls ───────────────────────────────────
+
+describe("computeMaxDrawdownFromPnls", () => {
+  it("returns null for empty P&L array", () => {
+    expect(computeMaxDrawdownFromPnls([])).toBeNull();
+  });
+
+  it("returns 0 when equity only rises (no drawdown)", () => {
+    // Equity: 100 → 200 → 300 — peak grows monotonically, no dip
+    expect(computeMaxDrawdownFromPnls([100, 100, 100])).toBe(0);
+  });
+
+  it("computes fractional drawdown from a rising-then-falling equity curve", () => {
+    // pnls: +100, +100, −50, −50
+    // equity: 100, 200, 150, 100   peak = 200
+    // max DD = (200 − 100) / 200 = 0.50
+    const dd = computeMaxDrawdownFromPnls([100, 100, -50, -50]);
+    expect(dd).not.toBeNull();
+    expect(dd!).toBeCloseTo(0.5, 5);
+  });
+
+  it("returns 0 when all P&Ls are negative (equity never exceeds 0, no peak to measure against)", () => {
+    // equity stays at or below 0; peak remains 0 → DD condition (peak > 0) never fires
+    const dd = computeMaxDrawdownFromPnls([-50, -100]);
+    expect(dd).toBe(0);
+  });
+
+  it("caps max drawdown at 1.0 when equity goes deeply negative", () => {
+    // pnls: +100, −200 → equity: 100, −100   peak = 100
+    // raw DD = (100 − (−100)) / 100 = 2.0  → capped at 1.0
+    const dd = computeMaxDrawdownFromPnls([100, -200]);
+    expect(dd).not.toBeNull();
+    expect(dd!).toBe(1.0);
+  });
+
+  it("handles single positive trade (no drawdown possible)", () => {
+    const dd = computeMaxDrawdownFromPnls([500]);
+    expect(dd).toBe(0);
+  });
+});
+
+// ─── Category 6: computeMcDistributionBreach ─────────────────────────────────
+
+describe("computeMcDistributionBreach", () => {
+  const BASE_INPUT = {
+    realizedSharpe: 1.2,
+    realizedMaxDrawdown: 0.05,
+    sharpeP5: 0.5,
+    maxDrawdownP95: 0.10,
+    tradeCount: 25,
+    minTrades: 20,
+    severeDdMult: 1.5,
+  } as const;
+
+  it("returns clean when both realized metrics are within MC bounds", () => {
+    // realized DD 0.05 < P95 0.10 AND realized Sharpe 1.2 > P5 0.5 → clean
+    const result = computeMcDistributionBreach(BASE_INPUT);
+    expect(result.outcome).toBe("clean");
+    expect(result.severity).toBeUndefined();
+  });
+
+  it("returns insufficient_sample when tradeCount < minTrades", () => {
+    const result = computeMcDistributionBreach({ ...BASE_INPUT, tradeCount: 15 });
+    expect(result.outcome).toBe("insufficient_sample");
+    expect(result.severity).toBeUndefined();
+  });
+
+  it("returns no_mc_data when both MC percentiles are null", () => {
+    const result = computeMcDistributionBreach({
+      ...BASE_INPUT,
+      sharpeP5: null,
+      maxDrawdownP95: null,
+    });
+    expect(result.outcome).toBe("no_mc_data");
+    expect(result.severity).toBeUndefined();
+  });
+
+  it("returns DD-breach warning when realized DD mildly exceeds P95", () => {
+    // realized DD 0.12 > P95 0.10 but < 1.5 × 0.10 = 0.15 → warning
+    const result = computeMcDistributionBreach({
+      ...BASE_INPUT,
+      realizedMaxDrawdown: 0.12,
+    });
+    expect(result.outcome).toBe("breach");
+    expect(result.severity).toBe("warning");
+    expect(result.dimension).toBe("dd");
+    expect(result.ddBreach).toBeDefined();
+    expect(result.ddBreach!.severe).toBe(false);
+    expect(result.ddBreach!.p95Bound).toBeCloseTo(0.10, 5);
+    expect(result.ddBreach!.pctOverBound).toBeCloseTo(0.2, 5); // (0.12-0.10)/0.10 = 0.2
+    expect(result.sharpeBreach).toBeUndefined();
+  });
+
+  it("returns DD-breach high when realized DD exceeds severeDdMult × P95", () => {
+    // realized DD 0.16 > 1.5 × 0.10 = 0.15 → high
+    const result = computeMcDistributionBreach({
+      ...BASE_INPUT,
+      realizedMaxDrawdown: 0.16,
+    });
+    expect(result.outcome).toBe("breach");
+    expect(result.severity).toBe("high");
+    expect(result.dimension).toBe("dd");
+    expect(result.ddBreach!.severe).toBe(true);
+  });
+
+  it("returns Sharpe-breach warning when realized Sharpe is below P5 but still positive", () => {
+    // realized Sharpe 0.3 < P5 0.5 but 0.3 > 0 → warning
+    const result = computeMcDistributionBreach({
+      ...BASE_INPUT,
+      realizedSharpe: 0.3,
+    });
+    expect(result.outcome).toBe("breach");
+    expect(result.severity).toBe("warning");
+    expect(result.dimension).toBe("sharpe");
+    expect(result.sharpeBreach).toBeDefined();
+    expect(result.sharpeBreach!.severe).toBe(false);
+    expect(result.sharpeBreach!.p5Bound).toBeCloseTo(0.5, 5);
+    expect(result.ddBreach).toBeUndefined();
+  });
+
+  it("returns Sharpe-breach high when realized Sharpe ≤ 0 and P5 > 0", () => {
+    // realized Sharpe −0.5 ≤ 0 and P5 0.5 > 0 → severe → high
+    const result = computeMcDistributionBreach({
+      ...BASE_INPUT,
+      realizedSharpe: -0.5,
+    });
+    expect(result.outcome).toBe("breach");
+    expect(result.severity).toBe("high");
+    expect(result.dimension).toBe("sharpe");
+    expect(result.sharpeBreach!.severe).toBe(true);
+  });
+
+  it("returns dd_and_sharpe dimension when both metrics breach their bounds", () => {
+    const result = computeMcDistributionBreach({
+      ...BASE_INPUT,
+      realizedMaxDrawdown: 0.20, // > P95 0.10 and > 1.5 × 0.10 → severe DD
+      realizedSharpe: -0.8,      // ≤ 0, P5 > 0 → severe Sharpe
+    });
+    expect(result.outcome).toBe("breach");
+    expect(result.severity).toBe("high");
+    expect(result.dimension).toBe("dd_and_sharpe");
+    expect(result.ddBreach).toBeDefined();
+    expect(result.sharpeBreach).toBeDefined();
+  });
+
+  it("skips DD dimension but checks Sharpe when maxDrawdownP95 is null", () => {
+    // Only Sharpe bound available; realized Sharpe 0.3 < P5 0.5 → warning
+    const result = computeMcDistributionBreach({
+      ...BASE_INPUT,
+      maxDrawdownP95: null,
+      realizedSharpe: 0.3,
+    });
+    expect(result.outcome).toBe("breach");
+    expect(result.dimension).toBe("sharpe");
+    expect(result.ddBreach).toBeUndefined();
+  });
+
+  it("skips Sharpe dimension but checks DD when sharpeP5 is null", () => {
+    // Only DD bound available; realized DD 0.12 > P95 0.10 → warning (mild)
+    const result = computeMcDistributionBreach({
+      ...BASE_INPUT,
+      sharpeP5: null,
+      realizedMaxDrawdown: 0.12,
+    });
+    expect(result.outcome).toBe("breach");
+    expect(result.dimension).toBe("dd");
+    expect(result.sharpeBreach).toBeUndefined();
+  });
+
+  it("returns clean when realized metrics are null (nothing to compare)", () => {
+    // MC exists but realized metrics unknown → skip both dimensions → clean
+    const result = computeMcDistributionBreach({
+      ...BASE_INPUT,
+      realizedSharpe: null,
+      realizedMaxDrawdown: null,
+    });
+    expect(result.outcome).toBe("clean");
+  });
+
+  it("severity escalation: one severe dimension overrides a mild dimension to high", () => {
+    // DD mild warning, Sharpe severe → combined is 'high'
+    const result = computeMcDistributionBreach({
+      ...BASE_INPUT,
+      realizedMaxDrawdown: 0.12, // mild DD breach
+      realizedSharpe: -0.3,      // severe Sharpe (≤ 0, P5 > 0)
+    });
+    expect(result.outcome).toBe("breach");
+    expect(result.severity).toBe("high"); // elevated by severe Sharpe
+    expect(result.dimension).toBe("dd_and_sharpe");
+  });
+});
+
+// ─── Category 6: integration test (mocked DB rows) ───────────────────────────
+//
+// This test exercises the full runLeakDetection() path with 1 DEPLOYED strategy
+// (no regime constraints → regime category makes 0 DB calls).
+//
+// Mock sequence (chronological DB call order):
+//   where    ×1 — strategies query
+//   orderBy  ×4 — cats 1 (slippage), 2 (allocation), 4 (opacity), 5 (consensus)
+//   orderBy  ×3 — cat 6: lifecycleTransitions, monteCarloRuns, paperTrades
+
+describe("mc_distribution_breach integration (mocked DB)", () => {
+  let db: Record<string, ReturnType<typeof vi.fn>>;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    process.env.LEAK_ENABLED = "true";
+    process.env.LEAK_MC_MIN_TRADES = "20";
+    process.env.LEAK_MC_DD_SEVERE_MULT = "1.5";
+    const mod = await import("../db/index.js");
+    db = mod.db as unknown as Record<string, ReturnType<typeof vi.fn>>;
+    // Reset all mock chain methods to return db synchronously (default state)
+    (db.select as ReturnType<typeof vi.fn>).mockReturnValue(db);
+    (db.from as ReturnType<typeof vi.fn>).mockReturnValue(db);
+    (db.innerJoin as ReturnType<typeof vi.fn>).mockReturnValue(db);
+    (db.where as ReturnType<typeof vi.fn>).mockReturnValue(db);
+    (db.orderBy as ReturnType<typeof vi.fn>).mockReturnValue(db);
+    (db.limit as ReturnType<typeof vi.fn>).mockReturnValue(db);
+  });
+
+  it("emits mc_distribution_breach finding (high) when paper equity curve is a tail MC outcome", async () => {
+    const STRATEGY_ID = "11111111-1111-1111-1111-111111111111";
+    const BACKTEST_ID = "22222222-2222-2222-2222-222222222222";
+    const now = Date.now();
+
+    // 10 positive trades then 15 loss trades → severe DD + negative Sharpe
+    const TRADES = [
+      ...Array.from({ length: 10 }, (_, i) => ({
+        strategyId: STRATEGY_ID,
+        pnl: "200",
+        exitTime: new Date(now - (24 - i) * 86_400_000),
+      })),
+      ...Array.from({ length: 15 }, (_, i) => ({
+        strategyId: STRATEGY_ID,
+        pnl: "-150",
+        exitTime: new Date(now - (13 - i) * 86_400_000),
+      })),
+    ];
+
+    // 1. Strategies query (ends at where)
+    // Note: symbol="" so filter(Boolean) gives symbols=[] → detectRegimeLeak returns early
+    // with zero DB calls, keeping the orderBy mock queue at exactly 7 slots (4 cats + 3 mc).
+    (db.where as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
+      {
+        id: STRATEGY_ID,
+        name: "TestMCStrat",
+        lifecycleState: "DEPLOYED",
+        preferredRegimes: null,
+        regimeTrainedOn: null,
+        symbol: "",
+      },
+    ]);
+
+    // Categories 1+2+4+5: all empty (no slippage/allocation/opacity/consensus leaks)
+    (db.orderBy as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce([]) // cat 1 execution_slippage
+      .mockResolvedValueOnce([]) // cat 2 allocation_drift
+      .mockResolvedValueOnce([]) // cat 4 attribution_opacity
+      .mockResolvedValueOnce([]) // cat 5 subsystem_consensus
+      // Category 6 — three-step DB chain
+      .mockResolvedValueOnce([{ strategyId: STRATEGY_ID, backtestId: BACKTEST_ID }])
+      .mockResolvedValueOnce([
+        {
+          backtestId: BACKTEST_ID,
+          sharpeP5: "0.5",      // P5 Sharpe = 0.5 (realized < this triggers breach)
+          maxDrawdownP95: "0.10", // P95 DD = 10% (realized >> 10% triggers breach)
+          createdAt: new Date(),
+        },
+      ])
+      .mockResolvedValueOnce(TRADES);
+
+    const result = await runLeakDetection();
+
+    const mcFindings = result.leaks.filter((l) => l.category === "mc_distribution_breach");
+    expect(mcFindings).toHaveLength(1);
+
+    const finding = mcFindings[0];
+    expect(finding.severity).toBe("high");
+    expect(finding.strategyId).toBe(STRATEGY_ID);
+    expect(finding.evidence).toMatchObject({
+      mcBacktestId: BACKTEST_ID,
+      tradeCount: 25,
+    });
+    // Advisory-only: no gate fields
+    expect(finding).not.toHaveProperty("blocks_promotion");
+    expect(finding).not.toHaveProperty("gate_result");
+    expect(finding).not.toHaveProperty("lifecycle_action");
+    expect(finding.recommendedAction).toContain("regime shift or overfit");
+  });
+
+  it("emits no mc_distribution_breach finding when no promotion lifecycle transition exists", async () => {
+    const STRATEGY_ID = "33333333-3333-3333-3333-333333333333";
+
+    (db.where as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
+      {
+        id: STRATEGY_ID,
+        name: "NoTransitionStrat",
+        lifecycleState: "PAPER",
+        preferredRegimes: null,
+        regimeTrainedOn: null,
+        symbol: "", // empty → regime_leak returns early, no extra orderBy call
+      },
+    ]);
+
+    (db.orderBy as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce([]) // cat 1
+      .mockResolvedValueOnce([]) // cat 2
+      .mockResolvedValueOnce([]) // cat 4
+      .mockResolvedValueOnce([]) // cat 5
+      .mockResolvedValueOnce([]); // cat 6: lifecycleTransitions — no promotion rows
+
+    const result = await runLeakDetection();
+
+    const mcFindings = result.leaks.filter((l) => l.category === "mc_distribution_breach");
+    expect(mcFindings).toHaveLength(0);
+    // Service still completes successfully
+    expect(result.strategies_scanned).toBe(1);
+  });
+
+  it("emits no mc_distribution_breach finding when tradeCount < LEAK_MC_MIN_TRADES", async () => {
+    process.env.LEAK_MC_MIN_TRADES = "20";
+    const STRATEGY_ID = "44444444-4444-4444-4444-444444444444";
+    const BACKTEST_ID = "55555555-5555-5555-5555-555555555555";
+    const now = Date.now();
+
+    // Only 10 trades — below the 20-trade minimum
+    const SPARSE_TRADES = Array.from({ length: 10 }, (_, i) => ({
+      strategyId: STRATEGY_ID,
+      pnl: "-100",
+      exitTime: new Date(now - i * 86_400_000),
+    }));
+
+    (db.where as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
+      {
+        id: STRATEGY_ID,
+        name: "SparseTrades",
+        lifecycleState: "PAPER",
+        preferredRegimes: null,
+        regimeTrainedOn: null,
+        symbol: "", // empty → regime_leak returns early, no extra orderBy call
+      },
+    ]);
+
+    (db.orderBy as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ strategyId: STRATEGY_ID, backtestId: BACKTEST_ID }])
+      .mockResolvedValueOnce([
+        {
+          backtestId: BACKTEST_ID,
+          sharpeP5: "0.5",
+          maxDrawdownP95: "0.10",
+          createdAt: new Date(),
+        },
+      ])
+      .mockResolvedValueOnce(SPARSE_TRADES);
+
+    const result = await runLeakDetection();
+
+    // Insufficient sample → no finding emitted
+    const mcFindings = result.leaks.filter((l) => l.category === "mc_distribution_breach");
+    expect(mcFindings).toHaveLength(0);
+  });
+});
+
 // ─── Advisory-only invariant ──────────────────────────────────────────────────
 
 describe("advisory-only invariant", () => {
@@ -567,5 +946,33 @@ describe("advisory-only invariant", () => {
     expect(result).not.toHaveProperty("gate_passed");
     expect(result).not.toHaveProperty("promote");
     expect(result).not.toHaveProperty("demote");
+  });
+
+  it("mc_distribution_breach finding has no lifecycle gate fields", () => {
+    // Category 6 must follow the same advisory-only contract as categories 1–5.
+    const finding = {
+      category: "mc_distribution_breach" as const,
+      severity: "high" as const,
+      strategyId: "uuid-1",
+      strategyName: "strat",
+      evidence: {
+        dimension: "dd",
+        impliedPercentile: ">P95",
+        tradeCount: 25,
+        mcBacktestId: "bt-uuid-1",
+        realizedMaxDrawdown: 0.22,
+        mcMaxDrawdownP95: 0.10,
+        ddPctOverBound: 1.2,
+        ddSevere: true,
+      },
+      recommendedAction: "Review for regime shift or overfit.",
+    };
+
+    expect(finding).not.toHaveProperty("blocks_promotion");
+    expect(finding).not.toHaveProperty("gate_result");
+    expect(finding).not.toHaveProperty("lifecycle_action");
+    expect(finding).not.toHaveProperty("blocked");
+    // category is the correct constant
+    expect(finding.category).toBe("mc_distribution_breach");
   });
 });

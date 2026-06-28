@@ -4,7 +4,7 @@
  * ADVISORY-ONLY — this service NEVER gates lifecycle transitions or promotions.
  * It observes DEPLOYED + PAPER strategies and surfaces degradation signals.
  *
- * ─── 5-Category taxonomy ────────────────────────────────────────────────────
+ * ─── 6-Category taxonomy ────────────────────────────────────────────────────
  *
  * 1. EXECUTION_SLIPPAGE — avg(|slippage|) 20d z-score vs 60d baseline
  *    Source: paper_trades.slippage (joined through paper_sessions)
@@ -27,14 +27,23 @@
  *    Source: strategy_health_scores (latest vs prior row)
  *    Detects: broad internal health degradation before it manifests in live P&L
  *
+ * 6. MC_DISTRIBUTION_BREACH — realized paper metrics vs promotion-time MC distribution
+ *    Source: lifecycle_transitions.backtest_id → monte_carlo_runs (sharpe_p5, max_drawdown_p95)
+ *            paper_trades.pnl (realized Sharpe + realized max-drawdown via equity curve)
+ *    Detects: live performance is a tail outcome of its own MC distribution —
+ *             early signal of regime shift or promotion-time overfit
+ *    Point-in-time: uses FROZEN MC from the promotion lifecycle transition, never re-runs MC.
+ *    Sample gate: skips if fewer than LEAK_MC_MIN_TRADES closed trades exist (no noise alarm).
+ *
  * ─── Audit actions emitted ───────────────────────────────────────────────────
- *   layer15.leak_detected.execution_slippage   (info|warning|high)
- *   layer15.leak_detected.allocation_drift     (info|warning|high)
- *   layer15.leak_detected.regime               (info|warning|high)
- *   layer15.leak_detected.attribution_opacity  (info|warning|high)
- *   layer15.leak_detected.subsystem_consensus  (info|warning|high)
- *   layer15.run_completed                      (info — run summary)
- *   layer15.category_error                     (info — per-category read failure)
+ *   layer15.leak_detected.execution_slippage     (info|warning|high)
+ *   layer15.leak_detected.allocation_drift       (info|warning|high)
+ *   layer15.leak_detected.regime                 (info|warning|high)
+ *   layer15.leak_detected.attribution_opacity    (info|warning|high)
+ *   layer15.leak_detected.subsystem_consensus    (info|warning|high)
+ *   layer15.leak_detected.mc_distribution_breach (warning|high)
+ *   layer15.run_completed                        (info — run summary)
+ *   layer15.category_error                       (info — per-category read failure)
  *
  * ─── Discord alerts ──────────────────────────────────────────────────────────
  *   notifyWarning fires ONLY on severity='high'.
@@ -51,6 +60,8 @@
  *   LEAK_MIN_REGRESSED_SUBSYSTEMS  (default: 3)      — min subsystems regressed
  *   LEAK_OPACITY_HIGH_PCT          (default: 0.50)   — minimal critique fraction → 'high'
  *   LEAK_OPACITY_WARN_PCT          (default: 0.25)   — minimal critique fraction → 'warning'
+ *   LEAK_MC_MIN_TRADES             (default: 20)     — min closed trades for MC check
+ *   LEAK_MC_DD_SEVERE_MULT         (default: 1.5)    — realized DD > mult×P95 → 'high'
  *
  * ─── Import notes ────────────────────────────────────────────────────────────
  *   logger from ./logger.js (leaf module — do NOT import from ../index.js)
@@ -62,6 +73,8 @@ import { db } from "../db/index.js";
 import {
   auditLog,
   biasState,
+  lifecycleTransitions,
+  monteCarloRuns,
   paperSessions,
   paperTrades,
   strategies,
@@ -72,6 +85,9 @@ import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import {
   classifyFractionSeverity,
   classifyZScoreSeverity,
+  computeMaxDrawdownFromPnls,
+  computeMcDistributionBreach,
+  computeSharpeFromPnls,
   computeZScore,
   splitWindows,
   type LeakSeverity,
@@ -88,10 +104,11 @@ export type LeakCategory =
   | "allocation_drift"
   | "regime"
   | "attribution_opacity"
-  | "subsystem_consensus";
+  | "subsystem_consensus"
+  | "mc_distribution_breach";
 
 export interface LeakFinding {
-  /** One of the 5 Layer 15 taxonomy categories */
+  /** One of the 6 Layer 15 taxonomy categories */
   category: LeakCategory;
   /** Info = FYI, warning = monitor, high = investigate now */
   severity: LeakSeverity;
@@ -132,6 +149,8 @@ function getCfg() {
     ),
     opacityHighPct: parseFloat(process.env.LEAK_OPACITY_HIGH_PCT ?? "0.50"),
     opacityWarnPct: parseFloat(process.env.LEAK_OPACITY_WARN_PCT ?? "0.25"),
+    mcMinTrades: Math.max(1, parseInt(process.env.LEAK_MC_MIN_TRADES ?? "20", 10)),
+    mcDdSevereMult: parseFloat(process.env.LEAK_MC_DD_SEVERE_MULT ?? "1.5"),
   } as const;
 }
 
@@ -252,6 +271,10 @@ export async function runLeakDetection(
     {
       name: "subsystem_consensus",
       fn: () => detectSubsystemConsensus(strategyIds, strategyMeta, cfg),
+    },
+    {
+      name: "mc_distribution_breach",
+      fn: () => detectMcDistributionBreach(strategyIds, strategyMeta, cutoff, cfg),
     },
   ];
 
@@ -786,6 +809,221 @@ async function detectSubsystemConsensus(
           ? `Composite health dropped ${round2(drop * 100)}% — ${regressedCount} subsystems regressed. ` +
             "Review composite-health dashboard and investigate degraded subsystems before next promotion."
           : `Composite health declining (${regressedCount} subsystems regressed). Monitor closely.`,
+    });
+  }
+
+  return findings;
+}
+
+// ─── Category 6: MC distribution breach ──────────────────────────────────────
+//
+// Compares live paper performance against the strategy's FROZEN promotion-time
+// Monte Carlo distribution (point-in-time — no look-ahead, no fresh MC run).
+//
+// DB path: lifecycle_transitions.backtest_id → monte_carlo_runs (sharpe_p5, max_drawdown_p95)
+//          paper_sessions → paper_trades (realized Sharpe + max-drawdown from equity curve)
+//
+// Fail-soft contract:
+//   missing lifecycle transition   → skip
+//   missing / incomplete MC run    → skip
+//   null MC percentiles            → skip that dimension
+//   tradeCount < mcMinTrades       → skip (insufficient sample; no false alarm)
+//   any DB error                   → category runner catches it (never throws)
+
+/** Group chronological trade rows into daily P&L sums (UTC date boundary). */
+function computeDailyPnlsFromTrades(
+  trades: ReadonlyArray<{ exitTime: Date; pnl: unknown }>,
+): number[] {
+  const byDay = new Map<string, number>();
+  for (const t of trades) {
+    const day = t.exitTime.toISOString().substring(0, 10); // YYYY-MM-DD (UTC)
+    const pnl = parseFloat(String(t.pnl ?? "0"));
+    if (!Number.isFinite(pnl)) continue;
+    byDay.set(day, (byDay.get(day) ?? 0) + pnl);
+  }
+  return [...byDay.values()];
+}
+
+async function detectMcDistributionBreach(
+  strategyIds: string[],
+  strategyMeta: Array<{ id: string; name: string }>,
+  cutoff: Date,
+  cfg: ReturnType<typeof getCfg>,
+): Promise<LeakFinding[]> {
+  // ── Step 1: find promotion-time backtestId per strategy ─────────────────────
+  // Use lifecycle_transitions to pin the FROZEN MC to the moment of promotion,
+  // not a fresh re-run — point-in-time, no look-ahead.
+  const promotionRows = await db
+    .select({
+      strategyId: lifecycleTransitions.strategyId,
+      backtestId: lifecycleTransitions.backtestId,
+    })
+    .from(lifecycleTransitions)
+    .where(
+      and(
+        inArray(lifecycleTransitions.strategyId, strategyIds),
+        inArray(lifecycleTransitions.toState, [
+          "PAPER",
+          "DEPLOY_READY",
+          "PILOT",
+          "DEPLOYED",
+        ]),
+        isNotNull(lifecycleTransitions.backtestId),
+      ),
+    )
+    .orderBy(desc(lifecycleTransitions.createdAt));
+
+  // Map strategy → most-recent promotion backtestId (DESC order ensures first hit is newest)
+  const backtestIdByStrategy = new Map<string, string>();
+  for (const row of promotionRows) {
+    if (row.strategyId && row.backtestId && !backtestIdByStrategy.has(row.strategyId)) {
+      backtestIdByStrategy.set(row.strategyId, row.backtestId);
+    }
+  }
+
+  const backtestIds = [...new Set(backtestIdByStrategy.values())];
+  if (backtestIds.length === 0) return []; // no strategies have promotion-time backtests
+
+  // ── Step 2: fetch frozen MC percentiles for each promotion backtest ─────────
+  const mcRows = await db
+    .select({
+      backtestId: monteCarloRuns.backtestId,
+      sharpeP5: monteCarloRuns.sharpeP5,
+      maxDrawdownP95: monteCarloRuns.maxDrawdownP95,
+      createdAt: monteCarloRuns.createdAt,
+    })
+    .from(monteCarloRuns)
+    .where(
+      and(
+        inArray(monteCarloRuns.backtestId, backtestIds),
+        eq(monteCarloRuns.status, "completed"),
+      ),
+    )
+    .orderBy(desc(monteCarloRuns.createdAt));
+
+  // Map backtestId → most recent completed MC run
+  const mcByBacktestId = new Map<string, (typeof mcRows)[0]>();
+  for (const mc of mcRows) {
+    if (!mcByBacktestId.has(mc.backtestId)) {
+      mcByBacktestId.set(mc.backtestId, mc);
+    }
+  }
+
+  // ── Step 3: fetch realized paper trade P&L within lookback window ────────────
+  const paperRows = await db
+    .select({
+      strategyId: paperSessions.strategyId,
+      pnl: paperTrades.pnl,
+      exitTime: paperTrades.exitTime,
+    })
+    .from(paperTrades)
+    .innerJoin(paperSessions, eq(paperTrades.sessionId, paperSessions.id))
+    .where(
+      and(
+        inArray(paperSessions.strategyId, strategyIds),
+        gte(paperTrades.exitTime, cutoff),
+      ),
+    )
+    .orderBy(paperTrades.exitTime);
+
+  // Group trades by strategy (chronological order preserved by orderBy above)
+  const tradesByStrategy = groupBy(
+    paperRows as Array<{ strategyId: string | null; pnl: unknown; exitTime: Date }>,
+    (r) => r.strategyId ?? "",
+  );
+
+  // ── Step 4: evaluate each strategy ──────────────────────────────────────────
+  const findings: LeakFinding[] = [];
+
+  for (const strategyId of strategyIds) {
+    // Fail-soft: no promotion backtestId → skip
+    const backtestId = backtestIdByStrategy.get(strategyId);
+    if (!backtestId) continue;
+
+    // Fail-soft: no completed MC run for the promotion backtest → skip
+    const mc = mcByBacktestId.get(backtestId);
+    if (!mc) continue;
+
+    const sharpeP5 =
+      mc.sharpeP5 !== null && mc.sharpeP5 !== undefined
+        ? parseFloat(String(mc.sharpeP5))
+        : null;
+    const maxDrawdownP95 =
+      mc.maxDrawdownP95 !== null && mc.maxDrawdownP95 !== undefined
+        ? parseFloat(String(mc.maxDrawdownP95))
+        : null;
+
+    // Fail-soft: both MC percentiles null → nothing to compare
+    if (
+      (sharpeP5 === null || !Number.isFinite(sharpeP5)) &&
+      (maxDrawdownP95 === null || !Number.isFinite(maxDrawdownP95))
+    ) {
+      continue;
+    }
+
+    // Realized paper metrics
+    const trades = (tradesByStrategy.get(strategyId) ?? []) as Array<{
+      strategyId: string | null;
+      pnl: unknown;
+      exitTime: Date;
+    }>;
+    const tradeCount = trades.length;
+
+    const orderedPnls = trades.map((t) => parseFloat(String(t.pnl ?? "0")));
+    const dailyPnls = computeDailyPnlsFromTrades(trades);
+
+    const realizedSharpe = computeSharpeFromPnls(dailyPnls);
+    const realizedMaxDrawdown = computeMaxDrawdownFromPnls(orderedPnls);
+
+    // Evaluate breach
+    const result = computeMcDistributionBreach({
+      realizedSharpe,
+      realizedMaxDrawdown,
+      sharpeP5: Number.isFinite(sharpeP5 as number) ? (sharpeP5 as number) : null,
+      maxDrawdownP95: Number.isFinite(maxDrawdownP95 as number) ? (maxDrawdownP95 as number) : null,
+      tradeCount,
+      minTrades: cfg.mcMinTrades,
+      severeDdMult: cfg.mcDdSevereMult,
+    });
+
+    // Only report actual breaches — skip clean / insufficient_sample / no_mc_data
+    if (result.outcome !== "breach" || !result.severity) continue;
+
+    const meta = strategyMeta.find((s) => s.id === strategyId);
+    const strategyName = meta?.name ?? strategyId;
+
+    findings.push({
+      category: "mc_distribution_breach",
+      severity: result.severity,
+      strategyId,
+      strategyName,
+      evidence: {
+        dimension: result.dimension,
+        impliedPercentile: (() => {
+          if (result.dimension === "dd") return ">P95";
+          if (result.dimension === "sharpe") return "<P5";
+          return "dd>P95 and sharpe<P5";
+        })(),
+        tradeCount,
+        mcBacktestId: backtestId,
+        ...(result.ddBreach && {
+          realizedMaxDrawdown: round2(result.ddBreach.realized),
+          mcMaxDrawdownP95: round2(result.ddBreach.p95Bound),
+          ddPctOverBound: round2(result.ddBreach.pctOverBound),
+          ddSevere: result.ddBreach.severe,
+        }),
+        ...(result.sharpeBreach && {
+          realizedSharpe: round2(result.sharpeBreach.realized),
+          mcSharpeP5: round2(result.sharpeBreach.p5Bound),
+          sharpeSevere: result.sharpeBreach.severe,
+        }),
+      },
+      recommendedAction:
+        result.severity === "high"
+          ? "Live P&L is a tail outcome of its own MC distribution — review for regime shift or " +
+            "overfit. Consider running CPCV validation in current market regime before next promotion."
+          : "Monitor — live performance is trending outside MC distribution bounds. " +
+            "Review for regime shift / overfit before extending the observation window.",
     });
   }
 
