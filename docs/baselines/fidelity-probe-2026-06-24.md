@@ -184,6 +184,29 @@ remaining PARTILs, which need a **zone/context-gate primitive** (the next real b
 strength + the 2D anchor. The compound IR + the primary_plus_confluence enforcement principle are the
 durable wins.
 
+## PHASE 3A (zone/context-gate primitive) — iU8 PARTIAL→STRONG; the WHERE axis works
+
+Built `context-gate.ts` (`scanContextGates` + representability T1/T2/T3 + gate specificity + the T1/T2
+`evaluateContextGate` WHERE-evaluator) and wired `context_gates[]` into the compound result with the
+fail-closed T3-required quarantine. Frozen-6 recovery (no false quarantines after precision-hardening):
+iU8 `zone:optimum_zone(T1, 0.25-0.50, req)`; O9cz `poi:asia_low(T2, req)` + LONDON; sv-ix/2u9/yAMaiOI light gates.
+
+| video | before 3A | after 3A | |
+|---|---|---|---|
+| iU8ww5MC2FQ | PARTIAL | **STRONG_MATCH** | optimum_zone gate fixes the over-fire; WHERE(25-50% box) ∧ WHEN(displacement→retest@OB) match the educator |
+| O9czLS8lv4U | PARTIAL | PARTIAL (improved) | Asia-low POI + LONDON recovered (WHERE closed); remaining residual = **Phase-2D level anchor** (grader-confirmed): displacement.level_ref=null not positionally coupled to the POI; ASIA-formation vs LONDON-execution session conflation; asia_high mis-typed as gate (it's the TP target) |
+
+**MATRIX AFTER 3A: 4 STRONG · 2 PARTIAL · 0 SYSTEMATIC · 0 UNVERIFIABLE** (was 3/3). Acceptance met:
+context steps recovered, T1/T2 evaluator built, T3-required quarantines, **FALSE COMPILATIONS 0** (zero
+false quarantines — precision-hardened: zones need real bounds/quadrant, named-levels only, strong-gating `required`).
+
+**New minor findings for 2D/gate-precision (under-fire, not over-fire — non-blocking):** iU8 `regime:ranging`
+is arguably wrong-signed (educator wants strong-impulse); strict 0.25-0.50 excludes the educator's
+premature-zone second-entry; O9cz `asia_high` mis-typed as a required gate when it's the TP target.
+
+**Trajectory on the operator's forecast:** 3A → iU8 STRONG. **2D** (level anchor + POI/session role + target-vs-gate)
+→ O9cz STRONG = **5 STRONG / 1 PARTIAL**. **3B** (confirmation-strength) → 2u9 STRONG = 6 STRONG. On track.
+
 ## Method note (for re-running)
 
 Probe = blind grader: `scratchpad/fidelity/<id>.compiled.json` (compiled logic) + `tmp/generalization/<id>.transcript.txt` (ground truth) → grader classifies per-example fire/no-fire + mismatch taxonomy {TIMING, CONFIRMATION, CONTEXT, DIRECTION, LEVEL, NO_MISMATCH}. Cheap (no historical data / replay). A full Layer 4 would add: extract educator's dated example trades → run compiled strategy on that history → compare actual signals.

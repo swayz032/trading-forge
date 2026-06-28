@@ -3,6 +3,19 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-27 (cont.) FIDELITY PHASE 3A — zone/context-gate primitive (WHERE axis); iU8 PARTIAL→STRONG (4 STRONG / 2 PARTIAL)
+
+**Mission:** Build Phase 3A (the WHERE-validity primitive 2B revealed) per the scoped design — recover the discarded context gates, evaluate T1/T2, fail-closed on T3.
+
+**Work completed (commit `a76178e` + precision fix):** NEW `src/server/lib/context-gate.ts` — `scanContextGates()` mines WHERE gates {zone|poi|session|regime} from the edge text (largely the pure-context entry_sequence steps the confirmation compiler SKIPS). Representability T1 (explicit bounds, e.g. 25-50% box) / T2 (named ref + tolerance: asia_low ±1ATR, quadrant, regime) / T3 (fuzzy). Gate specificity (bounds*5+named*4+tf*3+quant*5). `evaluateContextGate()` = T1/T2 WHERE-evaluator (price-vs-zone / level-distance / session / regime). Wired `context_gates[]` into the compound result; compile semantics `trade_valid = required gates pass AND primary leg fires`. FAIL-CLOSED: required T3 → quarantine `context_gate_unrepresented` (dropping a zone over-fires = inflated edge). **Precision-hardened to NOT quarantine winners**: zones need real bounds/quadrant (no bare-fib/zone T3 — was falsely quarantining STRONG sv-ix), named-levels only (dropped generic-POI catch-all), strong-gating-only `required`.
+
+**RESULT (frozen-6 + re-grade):** iU8 PARTIAL→**STRONG** (optimum_zone(T1,0.25-0.50) gate fixes the over-fire; WHERE∧WHEN now match). O9cz PARTIAL→improved-PARTIAL (Asia-low POI + LONDON recovered = WHERE closed; remaining residual grader-CONFIRMED to be the **Phase-2D level anchor** — displacement.level_ref=null not coupled to POI, ASIA-formation vs LONDON-execution conflation, asia_high mis-typed as gate=TP target). **MATRIX: 4 STRONG / 2 PARTIAL / 0 SYSTEMATIC / 0 UNVERIFIABLE** (was 3/3). ZERO false quarantines.
+
+**Verification:** tsc 0; 46 vitest green (10 context-gate: T1/T2/T3, specificity, evaluator, fail-closed). All 4 operator acceptance criteria met (recover steps / T1+T2 evaluator / T3-required quarantine / false-comps 0). Re-grades via LLM graders.
+
+**Carry-forward:** ontology now has 3 of 4 axes shipped (WHICH 2A, WHAT 2B, WHERE 3A; HOW=3B pending). NEXT = **Phase 2D** (level anchor: couple confirmation leg to POI/zone + POI-formation-vs-execution-session split + target-vs-gate typing) → predicted O9cz STRONG = 5 STRONG / 1 PARTIAL. Then 3B confirmation-strength → 2u9 STRONG = 6 STRONG. Gate-precision minors: iU8 regime:ranging wrong-signed, premature-zone second-entry excluded. SCL hard-gate still default-off.
+
+---
 ### Session Log — 2026-06-27 (cont.) FIDELITY PHASE 2B — compound multi-leg IR + enforcement principle; NEW zone-context residual class found
 
 **Mission:** Build Phase 2B (multi-leg representation + contradiction detector) per the bridge contract — represent A AND B AND C, which no ranking function can.
