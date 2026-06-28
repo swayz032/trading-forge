@@ -3,6 +3,23 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-28 VERDICT HARNESS — the falsification instrument (last artifact); architecture CLOSED
+
+**Mission:** Operator-endorsed final artifact — a zero-dependency verdict harness that consumes real trades and renders modality-segregated attribution, for FRICTIONLESS FALSIFICATION when live data arrives. NOT intelligence; NOT architecture. After this: no more building.
+
+**Work completed (commit + tag `verdict-harness`):** `verdict-harness.ts` — `runVerdict(trades, {stratifyBy})` consumes real trades (each with IR or pre-tagged grounding/modality class + optional regime/educator/asset), derives classes via tradeGrounding+analyzeInference, and renders: (a) grounded-vs-inference segregation (does the edge survive on grounded-only trades?), (b) modality segregation (which inference layer carries signal), (c) **CLOSURE** — stratifies by regime/educator/asset and tests whether the signal-carrying layer is the SAME across strata → STRUCTURAL_LAW (universal in this stratification) vs CORPUS_CONDITIONAL (varies → not universal). Bakes in the operator's strict-closure condition: stability-of-absence-of-language ≠ universality-of-mechanism — the harness distinguishes them. `renderVerdict` → operator-facing markdown readout. Pure; imports only the built libs.
+
+**The sharpened hypothesis (encoded):** not "signal vs noise" but — decomposing instruction into lexical(grounded)/perceptual(confirmation)/structural(imposed rules) — does ONLY ONE layer carry predictive power, and does that partition hold ACROSS UNSEEN REGIMES (a structural law of instructional encoding) or vary (corpus-conditional)?
+
+**Verification:** tsc 0; 76 tests in the final batch (full stack); standalone (zero production wiring). Closure tests prove STRUCTURAL_LAW (same layer across regimes) vs CORPUS_CONDITIONAL (layer varies) vs INSUFFICIENT_DATA (no strata).
+
+**★ ARCHITECTURE CLOSED.** The system is a span-grounded, inference-classified execution compiler producing segregated financial simulations conditioned on the epistemic origin of instruction — internally consistent, externally measurable, epistemically explicit about its own uncertainty classes. Closure conditions all met: representation stable (span + perceptual/structural inference split) · propagation deterministic (no silent blending) · simulation segregated (P&L class-conditioned) · attribution reversible (every outcome maps to a representational layer). NO more construction — the only thing left is "waiting for reality to decide which layer carries signal."
+
+**The complete stack (all tagged):** fidelity-baseline-event-centric (control) → sm-checkpoint-1..6 (state-machine redesign) → grounding-validator-reality-lock → span-native-lowering → uncertainty-propagation → inference-taxonomy → inference-modality-experiment → verdict-harness.
+
+**Carry-forward (MEASUREMENT only, all gated on stable supervisor + engine-attach):** (1) run blind suite vs frozen control on the new IR; (2) ~100-video corpus for distribution priors; (3) feed REAL backtest trades → `runVerdict(..., {stratifyBy:"regime"})` → the closure verdict (structural law vs corpus-conditional). The harness is ready; it fires the moment real trades exist. Build nothing new until that evidence is in hand.
+
+---
 ### Session Log — 2026-06-28 INFERENCE MODALITY (perceptual vs structural) + scoped-claim correction + the signal-vs-noise experiment
 
 **Mission:** Operator's two corrections + the named scientific-closure experiment. (1) Tighten the over-claim: NOT "universal property of trading pedagogy" — only "confirmation is systematically UNDER-LINGUIFIED across THIS corpus" (n=38, instructor-weighted, modality-uncontrolled; over-generalization is now the main failure mode). (2) The real insight: confirmation is a PERCEPTUAL DECISION OPERATOR (visual judgment over price), NOT missing data — inference there is CORRECT; verbatim capture would DEGRADE fidelity; the system is RIGHT to leave it inferred. (3) Build the one justified split (perceptual vs structural) + measure which inference is economically real.
