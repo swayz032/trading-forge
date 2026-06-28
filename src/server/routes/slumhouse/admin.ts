@@ -33,6 +33,11 @@ import { db } from "../../db/index.js";
 import { systemParameters, systemState } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import { clearOperatorAbsenceMarkers } from "../../services/dead-mans-heartbeat-service.js";
+import {
+  isLiveExecutionConfigured,
+  getExecutionMode,
+  setExecutionMode,
+} from "../../lib/execution-mode.js";
 
 export const adminOfficeRouter = Router();
 
@@ -217,6 +222,11 @@ export async function getSwitchStates(req: Request, res: Response): Promise<void
     vmOn = false; // fail-closed
   }
 
+  // ── live_execution: configured only when go-live env prereqs are met ────────
+  // getExecutionMode() is fail-closed: returns "paper" on DB error or missing config.
+  let liveMode: "paper" | "live" = "paper";
+  try { liveMode = await getExecutionMode(); } catch { liveMode = "paper"; }
+
   // ── recovery: reflects live pipeline halt — never a persistent "on" ───────
   // Reuses `mode` already read for bot_power — no extra DB round-trip needed.
   const recoveryHalted = mode === "AUTOPAUSE_DD_VELOCITY";
@@ -246,7 +256,18 @@ export async function getSwitchStates(req: Request, res: Response): Promise<void
         momentary: true,
         ...(recoveryHalted ? { confirmAction: true } : {}),
       },
-      live_execution: { on: false, state: "paused", wired: false, needsSetup: true, status: "NEEDS SETUP" },
+      live_execution: (() => {
+        const configured = isLiveExecutionConfigured();
+        const live = liveMode === "live";
+        return {
+          on: live,
+          state: live ? "running" : "paused",
+          wired: configured,
+          needsSetup: !configured,
+          dangerOn: true,
+          status: live ? "LIVE" : configured ? "PAPER" : "NEEDS SETUP",
+        };
+      })(),
     },
   });
 }
@@ -389,8 +410,39 @@ export async function postSwitch(req: Request, res: Response): Promise<void> {
     return;
   }
 
-  // ── live_execution: not wired yet ─────────────────────────────────────────
-  res.status(501).json({ ok: false, error: "not_wired_yet", id });
+  // ── live_execution: fail-closed — 503 until go-live prereqs are met ────────
+  if (id === "live_execution") {
+    if (!isLiveExecutionConfigured()) {
+      res.status(503).json({
+        ok: false,
+        error: "live_execution_not_configured",
+        hint: "Set SERVER_MEDIATED_EXECUTION_ENABLED=true and BROKER_FILL_HMAC_SECRET (≥32 chars) before enabling live execution.",
+      });
+      return;
+    }
+    await setExecutionMode(on);
+    await insertAuditRowSafe({
+      action: "slumhouse_admin.live_execution_toggled",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "human",
+      input: { switch: id, on } as Record<string, unknown>,
+      result: { mode: on ? "live" : "paper" } as Record<string, unknown>,
+      status: "success",
+      correlationId: null,
+    });
+    res.json({
+      ok: true,
+      id: "live_execution",
+      on,
+      state: on ? "running" : "paused",
+      status: on ? "LIVE" : "PAPER",
+    });
+    return;
+  }
+
+  // ── unknown switch id ──────────────────────────────────────────────────────
+  res.status(400).json({ ok: false, error: "unknown_switch", id });
 }
 
 adminOfficeRouter.post("/slumhouse/admin/switch", postSwitch);

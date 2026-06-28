@@ -83,7 +83,9 @@
 
   <div class="sh-page">
     <h1 class="sh-title">The Crib</h1>
-    <p class="sh-sub">Slumdawg's home — talk to him, see what's cooking.</p>
+    <p class="sh-sub">Slumdawg's home — talk to him, see what's cooking.
+      <span id="sh-exec-mode-badge" style="display:none;margin-left:10px;font-size:9px;padding:3px 10px;border-radius:999px;letter-spacing:0.1em;text-transform:uppercase;font-weight:700;vertical-align:middle;"></span>
+    </p>
 
     <div id="sh-banner" class="sh-banner"></div>
 
@@ -174,6 +176,17 @@
       const data = await SH.fetchJSON("/slumhouse/api/crib");
       if (!data) return;
       const { el, sparkline, sparkTrend } = SH;
+
+      // ─── Execution mode badge ───────────────────────────────────────
+      (function () {
+        const badge = document.getElementById("sh-exec-mode-badge");
+        if (!badge || !data.executionModeLabel) return;
+        badge.textContent = data.executionModeLabel;
+        const isLive = data.executionMode === "live";
+        badge.style.background = isLive ? "rgba(163,255,18,0.14)" : "rgba(255,255,255,0.06)";
+        badge.style.color = isLive ? "var(--lime)" : "var(--mute,#666)";
+        badge.style.display = "inline-block";
+      }());
 
       // ─── Premium fintech banner ─────────────────────────────────────
       const b = document.getElementById("sh-banner");

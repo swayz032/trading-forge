@@ -9,6 +9,7 @@
  */
 import { sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
+import { getExecutionMode } from "../execution-mode.js";
 
 export type CribData = {
   banner: {
@@ -40,6 +41,13 @@ export type CribData = {
     displayName: string;
     weekBag: string;
   }>;
+  /** Effective execution mode driving these stats. */
+  executionMode: "paper" | "live";
+  /**
+   * Human-readable label for the mode badge.
+   * "PAPER · practice" (paper mode) or "LIVE" (live mode).
+   */
+  executionModeLabel: string;
 };
 
 const FRESH_DISCORD_FEED_STATUSES = new Set([
@@ -182,7 +190,14 @@ async function fetchSlumdawgFeedRows(limit = 20): Promise<SlumdawgFeedRow[]> {
 export async function assembleCribData(args: { brokerAccountId: string | null }): Promise<CribData> {
   const { brokerAccountId } = args;
   const brokerAccountSql = brokerAccountId ? sql`${brokerAccountId}::uuid` : sql`NULL::uuid`;
-  const canReadAccountScopedData = Boolean(brokerAccountId);
+
+  // ─── Execution mode — fail-closed to "paper" on any error ────────────────
+  // LIVE mode: account-scoped stats (todayBag / openNow / sparklines) are
+  // zeroed — no live tape exists yet.  Global stats (inPot, discordFeed,
+  // pot, crew) are returned normally in both modes.
+  // NEVER fall back to paper numbers while claiming live — return zeroed instead.
+  const mode = await getExecutionMode().catch(() => "paper" as const);
+  const canReadAccountScopedData = Boolean(brokerAccountId) && mode !== "live";
 
   // 1. Today's closed P&L + W/L counts for THIS account's assigned strategies
   const todayRow = canReadAccountScopedData
@@ -352,6 +367,8 @@ export async function assembleCribData(args: { brokerAccountId: string | null })
       displayName: String(r.display_name ?? "?"),
       weekBag: formatBag(Number(r.week_pnl ?? 0)),
     })),
+    executionMode: mode,
+    executionModeLabel: mode === "live" ? "LIVE" : "PAPER · practice",
   };
 }
 
