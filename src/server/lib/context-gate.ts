@@ -209,6 +209,36 @@ export function scanContextGates(corpus: string | null | undefined): ContextScan
   return { gates, contradictions };
 }
 
+export interface GateEvalResult {
+  allowed: boolean;            // WHERE half of trade_valid — do all required entry gates pass?
+  failed: ContextGate[];       // required gates that evaluated false
+  unevaluable: ContextGate[];  // required gates with no market-state input (fail-closed → blocks)
+}
+
+/**
+ * Signal-time WHERE gate (Phase 3A→engine): evaluate the REQUIRED entry-validity gates against market
+ * state and decide whether the trigger is allowed to fire. This is the WHERE half of
+ *   trade_valid = required_context_gates_pass AND primary_confirmation_leg_fires.
+ *
+ * Only ENTRY-validity gates participate: target/stop levels never gate entry, and a FORMATION session
+ * (where the POI formed) is NOT an entry-time session check (the 2D-B payoff — O9cz checks LONDON
+ * execution, not ASIA formation). Fail-CLOSED: a required gate with no market-state input BLOCKS
+ * (a missing zone/POI check over-fires if we let it through).
+ */
+export function evaluateContextGates(gates: ContextGate[], state: GateMarketState): GateEvalResult {
+  const entryGates = gates.filter(
+    (g) => g.required && g.role !== "target" && g.role !== "stop_anchor" && !(g.type === "session" && g.session_role === "formation"),
+  );
+  const failed: ContextGate[] = [];
+  const unevaluable: ContextGate[] = [];
+  for (const g of entryGates) {
+    const r = evaluateContextGate(g, state);
+    if (r === null) unevaluable.push(g); // no data for a REQUIRED gate → fail-closed
+    else if (r === false) failed.push(g);
+  }
+  return { allowed: failed.length === 0 && unevaluable.length === 0, failed, unevaluable };
+}
+
 /** Market state the WHERE-evaluator reads at signal time (engine-provided). */
 export interface GateMarketState {
   range_position?: number;                 // zone: price as a fraction [0,1] of the anchor range
