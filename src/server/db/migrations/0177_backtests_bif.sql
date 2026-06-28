@@ -1,8 +1,8 @@
--- Wave 3 Track 3B: BIF (Bias Information Factor) gate persistence
+-- Wave 3 Track 3B: BIF (Backtest Inflation Factor) gate persistence
 -- Adds bif and k_eff columns to the backtests table so the promotion gate
 -- can read them directly without parsing nested JSONB.
 --
--- bif   — Bias Information Factor emitted by the Python WF result (`result.bif`).
+-- bif   — Backtest Inflation Factor emitted by the Python WF result (`result.bif`).
 --         Lower values indicate better IS→OOS transfer (less overfitting bias).
 --         Gate: BIF_WARN_THRESHOLD (default 2.0) / BIF_BLOCK_THRESHOLD (default 4.0).
 --         HARD block when bif > 4.0; warn band 2.0–4.0; grandfather pass when null.

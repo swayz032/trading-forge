@@ -414,6 +414,17 @@ adminRoutes.get("/kill-switch", async (req, res) => {
       .limit(1);
     const raw = rows.length > 0 ? rows[0].val : null;
     const enabled = rows.length > 0 && Number(raw) >= 1;
+    // GAP 5 fix: fire-and-forget audit row so Layer-14 read events are reconstructable.
+    // Previously the 14A nightly orchestrator could read this endpoint repeatedly with
+    // no trace in audit_log — silent reads are not reconstructable after an incident.
+    // Fail-soft: insertAuditRowSafe never throws; response is never blocked.
+    void insertAuditRowSafe({
+      action: "kill_switch.autonomous_loop_read",
+      entityType: "system",
+      status: "info",
+      result: { enabled, raw: raw ?? null, key: "auto_patch_loop_enabled" },
+      correlationId: req.id,
+    });
     res.json({
       key: "auto_patch_loop_enabled",
       enabled,

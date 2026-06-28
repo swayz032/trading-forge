@@ -473,21 +473,25 @@ export const pineShadowRefusalsTotal = new Counter({
 // tf_layer15_leak_detections_total{category, severity}
 //   Incremented by leak-detection-service.ts on every leak finding emitted.
 //
-//   category label (closed set — 5 Layer 15 taxonomy buckets):
-//     "execution_slippage" — avg(|slippage|) z-score vs 60d baseline
-//     "allocation_drift"   — contracts-used z-score vs 60d baseline
-//     "regime"             — current regime outside trained/preferred regimes
-//     "attribution_opacity"— trade critique data_completeness='minimal' or missing fields
-//     "subsystem_consensus"— composite health score drop + ≥N subsystems regressed
+//   category label (closed set — 6 Layer 15 taxonomy buckets):
+//     "execution_slippage"   — avg(|slippage|) z-score vs 60d baseline
+//     "allocation_drift"     — contracts-used z-score vs 60d baseline
+//     "regime"               — current regime outside trained/preferred regimes
+//     "attribution_opacity"  — trade critique data_completeness='minimal' or missing fields
+//     "subsystem_consensus"  — composite health score drop + ≥N subsystems regressed
+//     "mc_distribution_breach" — realized paper metrics vs promotion-time MC distribution
 //
 //   severity label (closed set):
 //     "info"    — signal detected; monitor
 //     "warning" — signal elevated; investigate soon
 //     "high"    — action needed; Discord WARN fires
 //
-//   Cardinality: 5 categories × 3 severities = 15 time series — safe.
-//   Declared at registry init so Prometheus sees zero values from first scrape
-//   (no "no data" gaps in Grafana even before the first run completes).
+//   Cardinality: 6 categories × 3 severities = 18 time series — safe.
+//
+//   GAP 4 fix: zero-initialized at registry startup for all 18 label combinations
+//   so Prometheus sees value=0 from first scrape instead of "no data".
+//   Without this, Grafana shows blank panels for categories that haven't fired yet
+//   (e.g. "mc_distribution_breach" before the first live promotion).
 //
 //   Operational question answered: "Which leak category fires most often at high
 //   severity?" — informs where to prioritise debugging effort across strategies.
@@ -500,6 +504,26 @@ export const layer15LeakDetectionsTotal = new Counter({
   labelNames: ["category", "severity"] as const,
   registers: [promRegistry],
 });
+
+// Zero-init all 6 × 3 = 18 label combinations so Prometheus sees value=0 from
+// first scrape. prom-client Counters do not pre-register label sets automatically;
+// without this, Grafana shows "no data" for categories that have not yet fired.
+(function _zeroInitLayer15Labels() {
+  const LAYER15_CATEGORIES = [
+    "execution_slippage",
+    "allocation_drift",
+    "regime",
+    "attribution_opacity",
+    "subsystem_consensus",
+    "mc_distribution_breach",
+  ] as const;
+  const LAYER15_SEVERITIES = ["info", "warning", "high"] as const;
+  for (const category of LAYER15_CATEGORIES) {
+    for (const severity of LAYER15_SEVERITIES) {
+      layer15LeakDetectionsTotal.labels({ category, severity }).inc(0);
+    }
+  }
+})();
 
 // tf_layer15_run_duration_ms
 //   Histogram of end-to-end leak detection run durations.
@@ -525,6 +549,34 @@ export const layer15RunDurationMs = new Histogram({
 export const candidateConveyorEnqueuedTotal = new Counter({
   name: "tf_candidate_conveyor_enqueued_total",
   help: "Total backtests enqueued by the candidate backtest conveyor",
+  registers: [promRegistry],
+});
+
+// ─── Wave 4 Track 4B — BIF gate evaluation counter (2026-06-28) ───────────────
+//
+// tf_bif_gate_evaluations_total{outcome}
+//   Incremented by lifecycle-service.ts at every BIF gate evaluation at the
+//   PAPER → DEPLOY_READY lifecycle transition, immediately after evaluateBifGate()
+//   resolves.
+//
+//   outcome label (closed set — mirrors BIF gate reason codes from bif-gate.ts):
+//     "clean"       — bif ≤ BIF_WARN_THRESHOLD (2.0): no overfitting concern
+//     "warn"        — BIF_WARN_THRESHOLD < bif ≤ BIF_BLOCK_THRESHOLD: elevated bias, promotion allowed
+//     "blocked"     — bif > BIF_BLOCK_THRESHOLD (4.0): hard block, synthetic overfit
+//     "legacy_null" — bif absent (pre-Wave-3 backtest): grandfather pass, promoted with warn audit
+//
+//   Cardinality: 4 outcome values = 4 time series — safe.
+//   Declared at registry init so Prometheus sees zero values from first scrape
+//   (no "no data" gaps in Grafana before the first promotion attempt).
+//
+//   Operational question answered: "How often does the BIF gate block vs pass
+//   promotions, and is the system still processing legacy-null backtests?"
+//   Lets dashboards detect a systematic cluster of blocked promotions that indicate
+//   the autonomous scout is generating over-fit strategy candidates.
+export const bifGateEvaluationsTotal = new Counter({
+  name: "tf_bif_gate_evaluations_total",
+  help: "Total BIF gate evaluations at PAPER→DEPLOY_READY, labelled by gate outcome",
+  labelNames: ["outcome"] as const,
   registers: [promRegistry],
 });
 

@@ -1,10 +1,10 @@
 /**
  * bif-gate.ts — Wave 3 Track 3B (paper-parity)
  *
- * Pure-function BIF (Bias Information Factor) promotion gate.
+ * Pure-function BIF (Backtest Inflation Factor) promotion gate.
  *
  * The Python WF result carries two fields:
- *   `bif`   (float) — Bias Information Factor; quantifies overfitting bias in the
+ *   `bif`   (float) — Backtest Inflation Factor; quantifies overfitting bias in the
  *                     IS→OOS transfer.  Lower is better.  Derived from the
  *                     expected IS/OOS performance gap, normalised by parameter count.
  *   `k_eff` (float) — Effective parameter count; companion metric surfaced in the
@@ -110,7 +110,7 @@ export interface BifGateResult {
 /**
  * Evaluate the BIF gate.
  *
- * @param bif   Bias Information Factor from Python WF result (`result.bif`).
+ * @param bif   Backtest Inflation Factor from Python WF result (`result.bif`).
  *              Pass null / undefined for pre-Wave-3 backtests.
  * @param kEff  Effective parameter count from Python WF result (`result.k_eff`).
  *              Surfaced in the audit payload; does not affect the pass/block decision.

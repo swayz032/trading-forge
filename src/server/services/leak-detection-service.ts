@@ -224,7 +224,21 @@ export async function runLeakDetection(
     strategyMeta = rows;
     strategyIds = rows.map((r) => r.id);
   } catch (err) {
-    logger.error({ err, runId }, "layer15: failed to resolve strategy IDs");
+    logger.error({ err, runId, correlationId: runCorrelationId }, "layer15: failed to resolve strategy IDs — run aborted (layer15.run_failed)");
+    // GAP 1 fix: emit audit row so a crashed scan is visible in the audit trail.
+    // HTTP 200 with {strategies_scanned:0, leaks:[]} was previously indistinguishable
+    // from a clean run with no observable strategies. Now the failure is attributable.
+    void insertAuditRowSafe({
+      action: "layer15.run_failed",
+      entityType: "system",
+      status: "failure",
+      result: {
+        error: String(err),
+        runId,
+        phase: "strategy_id_resolution",
+      },
+      correlationId: runCorrelationId,
+    });
     return {
       run_id: runId,
       started_at: startedAt.toISOString(),

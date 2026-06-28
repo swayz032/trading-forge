@@ -58,6 +58,8 @@ import { MAX_GENERATIONS as _MAX_GENERATIONS_SHARED } from "../lib/lifecycle-con
 import { assertCrossValidatedSource } from "./agent-service.js";
 import { sqaRegistry } from "../lib/sqa-promise-registry.js";
 import { CANONICAL_PARAM_RANGES } from "../lib/param-ranges.js";
+import { notifyWarning } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 const PROJECT_ROOT = resolve(import.meta.dirname ?? ".", "../../..");
 
@@ -2112,6 +2114,10 @@ async function replayCandidatesAsync(
   // can be negative or >1). strat.forgeScore is always 0-100, matching replayForgeScore.
   const parentForgeScore = Number(strat.forgeScore ?? 0);
 
+  // B2 fix: hoisted so it's in scope at all 2 runBacktest call sites below.
+  // Populated inside the C-3 try block; defaults to 1 (no deflation) on any error.
+  let _replayTrialNTotal: number = 1;
+
   // ─── C-3: Evidence drift audit ─────────────────────────────────────────────
   // Read _settled_with_sources from the persisted evidence packet on this run.
   // Compare against the current collector's source set (if still active).
@@ -2125,6 +2131,8 @@ async function replayCandidatesAsync(
       .limit(1);
 
     const persistedSources: string[] = (runRow?.evidencePacket as any)?._settled_with_sources ?? [];
+    // B2 fix: assign trial_n_total from evidence packet (hoisted variable above).
+    _replayTrialNTotal = (runRow?.evidencePacket as any)?.trial_n_total ?? 1;
     const activeCollector = getEvidenceCollector(runId);
     // Use the public hasSource() API — collected is private.
     // This yields the subset of ALL_EVIDENCE_SOURCES that have reported to the collector.
@@ -2215,6 +2223,18 @@ async function replayCandidatesAsync(
             correlationId,
           );
           broadcastSSE("critic:replay_complete", { runId, candidateId: candidate.id, status: "skipped_precommit_incomplete" });
+          // GAP 2 fix — R8: emit Discord WARN so governance blocks are visible to the operator.
+          // Previously this block was silent on Discord; operator had no signal that the
+          // critic produced governance-incomplete candidates without querying audit_log.
+          void notifyWarning(
+            "R8: Critic governance block — candidate skipped (precommit_incomplete)",
+            appendFamilyGradePostscript(
+              `Critic candidate ${candidate.id} for strategy ${strategyId} was skipped because it is missing mandatory governance fields: ${(candidateGovMeta.missing_fields ?? []).join(", ")}. Run ID: ${runId}.`,
+              "The trading research system blocked a proposed parameter change because required safety information was missing from it.",
+              "No action needed. The system is protecting itself automatically. Let Tony know if this alert keeps firing repeatedly.",
+            ),
+            { runId, candidateId: candidate.id, strategyId, missingFields: candidateGovMeta.missing_fields },
+          );
           continue;
         }
 
@@ -2251,6 +2271,19 @@ async function replayCandidatesAsync(
             correlationId,
           );
           broadcastSSE("critic:replay_complete", { runId, candidateId: candidate.id, status: "skipped_lookahead_violation" });
+          // GAP 2 fix — R3: emit Discord WARN so lookahead violations are visible to the operator.
+          // Lookahead violations = LLM fabricating market knowledge (institutional red flag).
+          // Previously silent on Discord; operator could not detect systematic violations
+          // without querying audit_log. Now surfaces as an actionable warning signal.
+          void notifyWarning(
+            "R3: Critic governance block — candidate skipped (lookahead_violation)",
+            appendFamilyGradePostscript(
+              `Critic candidate ${candidate.id} for strategy ${strategyId} was blocked because it contains a lookahead violation — the proposed parameter change references future market data that would not be available at trade time. Violation reasons: ${JSON.stringify((candidateGovMeta as any).lookahead_violation_reasons ?? [])}. Run ID: ${runId}.`,
+              "The trading research system blocked a proposed change because it was based on information that would not exist at the time of a real trade. This is an important integrity check.",
+              "No action needed. The system caught and blocked this automatically. If Tony sees this alert often, it may indicate a problem with the research pipeline that he should investigate.",
+            ),
+            { runId, candidateId: candidate.id, strategyId, reasons: (candidateGovMeta as any).lookahead_violation_reasons },
+          );
           continue;
         }
 
@@ -2333,6 +2366,7 @@ async function replayCandidatesAsync(
           mode: "walkforward",
           optimizer: undefined, // Don't re-trigger SQA/critic on replay
           suppressAutoPromote: true,
+          trial_n_total: _replayTrialNTotal,
         } as any, undefined, undefined, correlationId);
 
         // Update candidate with replay results
@@ -2517,6 +2551,7 @@ async function replayCandidatesAsync(
             mode: "walkforward",
             optimizer: undefined,
             suppressAutoPromote: true,
+            trial_n_total: _replayTrialNTotal,
           } as any, undefined, undefined, correlationId).catch((err: unknown) =>
             logger.error({ err, childId }, "Auto-backtest for critic child failed"),
           );
@@ -2713,6 +2748,15 @@ export async function manualReplayCandidates(
   // can be negative or >1) and cannot be compared against replayForgeScore directly.
   const parentForgeScore = Number(strat.forgeScore ?? 0);
 
+  // B2 fix: fetch trial_n_total from persisted evidence packet so DSR deflation
+  // receives the correct cumulative mutation count during manual replay.
+  const [_manualRunRow] = await db
+    .select({ evidencePacket: criticOptimizationRuns.evidencePacket })
+    .from(criticOptimizationRuns)
+    .where(eq(criticOptimizationRuns.id, runId))
+    .limit(1);
+  const _manualTrialNTotal: number = (_manualRunRow?.evidencePacket as any)?.trial_n_total ?? 1;
+
   let bestCandidate: { id: string; compositeScore: number; backtestId: string } | null = null;
 
   try {
@@ -2760,6 +2804,7 @@ export async function manualReplayCandidates(
           mode: "walkforward",
           optimizer: undefined,
           suppressAutoPromote: true,
+          trial_n_total: _manualTrialNTotal,
         } as any, undefined, undefined, correlationId);
 
         const rr = replayResult as any;
@@ -2961,6 +3006,7 @@ export async function manualReplayCandidates(
               mode: "walkforward",
               optimizer: undefined,
               suppressAutoPromote: true,
+              trial_n_total: _manualTrialNTotal,
             } as any, undefined, undefined, correlationId).catch((err: unknown) =>
               logger.error({ err, childId }, "Auto-backtest for critic child (manual replay) failed"),
             );

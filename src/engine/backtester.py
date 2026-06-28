@@ -2039,6 +2039,7 @@ def _apply_dsl_stop_loss_and_time_stop(
     symbol: str = "MES",
     close_np: Optional[np.ndarray] = None,
     ts_et_timestamps: Optional[list] = None,
+    vix_np: Optional[np.ndarray] = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, dict]:
     """Enforce ATR stop ceiling and 15:55 ET time-stop for DSL strategies.
 
@@ -2089,10 +2090,28 @@ def _apply_dsl_stop_loss_and_time_stop(
     short_entry_price: float = 0.0
     short_stop_price: float = 0.0
 
+    # B5 fix: import VIX multiplier here (only when vix_np was passed).
+    # The import is inside the function to avoid a circular-dependency risk at module
+    # load time.  It is a no-op when VIX_TIERED_ATR_ENABLED=false (default).
+    _vix_mult_fn = None
+    if vix_np is not None:
+        try:
+            from src.engine.margin_expansion import (  # noqa: E402
+                apply_vix_atr_multiplier as _vix_mult_fn,
+            )
+        except Exception:
+            _vix_mult_fn = None  # fail-open: no VIX scaling if import fails
+
     for i in range(n):
         ts_str = str(timestamps[i]) if timestamps is not None and i < len(timestamps) else ""
         atr = float(atr_np[i]) if not np.isnan(atr_np[i]) else 0.0
-        stop_dist = stop_multiplier * atr
+        # B5 fix: apply VIX-tiered multiplier per-bar (no look-ahead).
+        # When vix_np is None or the per-bar VIX is NaN, _bar_stop_mult = stop_multiplier.
+        _bar_stop_mult = stop_multiplier
+        if _vix_mult_fn is not None and vix_np is not None and i < len(vix_np):
+            _bar_vix = float(vix_np[i]) if not np.isnan(vix_np[i]) else None
+            _bar_stop_mult = _vix_mult_fn(stop_multiplier, _bar_vix)
+        stop_dist = _bar_stop_mult * atr
 
         # ── Wave 1 Track 1A: stop floor — widen stop_dist if too tight ──────
         # Precedence: ATR stop → floor (widen) → ceiling (skip).
@@ -3461,20 +3480,16 @@ def run_backtest(
         _guard_stop_mult = float(getattr(config.stop_loss, "multiplier", 1.5)) if hasattr(config, "stop_loss") and config.stop_loss else 1.5
 
         # ── Wave 1 Track 1A: VIX-tiered ATR multiplier (default OFF) ──────────
-        # When VIX_TIERED_ATR_ENABLED=true, _guard_stop_mult is replaced by the
-        # VIX-regime multiplier BEFORE passing into E.3 ceiling enforcement.
-        # With the flag OFF (default), base_mult is returned unchanged → zero
-        # behavior change.  VIX is read from df when available; None = fail-open.
-        _vix_for_stop: Optional[float] = None
+        # B5 fix: pass the raw per-bar VIX array into _apply_dsl_stop_loss_and_time_stop
+        # so each bar's stop multiplier uses the VIX value from THAT bar, not the
+        # peak-of-window value which introduces look-ahead bias (January bars seeing
+        # October's VIX spike).
+        # The margin-expansion peak-of-window path in margin_expansion.py is LEFT
+        # UNCHANGED — it has a documented CME-regime rationale and uses a different
+        # code path not touched here.
+        _vix_np_for_stop: Optional[np.ndarray] = None
         if "vix" in df.columns:
-            _vix_arr_stop = df["vix"].to_numpy()
-            _vix_clean_stop = _vix_arr_stop[~np.isnan(_vix_arr_stop)]
-            if len(_vix_clean_stop) > 0:
-                _vix_for_stop = float(np.max(_vix_clean_stop))  # peak = conservative
-        from src.engine.margin_expansion import (
-            apply_vix_atr_multiplier as _apply_vix_atr_mult,  # noqa: E402
-        )
-        _guard_stop_mult = _apply_vix_atr_mult(_guard_stop_mult, _vix_for_stop)
+            _vix_np_for_stop = df["vix"].to_numpy()
 
         # E.3 + E.5
         (
@@ -3496,6 +3511,7 @@ def run_backtest(
             symbol=config.symbol,
             close_np=_guard_close_np,
             ts_et_timestamps=_guard_ts_et,
+            vix_np=_vix_np_for_stop,
         )
         _dsl_guards_meta["stop_ceiling_skips"] = len(_dsl_sl_meta.get("skipped_trades", []))
         _dsl_guards_meta["time_stop_exits"] = _dsl_sl_meta.get("time_stop_exits", 0)

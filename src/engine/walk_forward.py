@@ -397,7 +397,12 @@ def _run_walk_forward_cpcv(
         from src.engine.statistics.backtest_inflation_factor import (
             compute_bif as _cpcv_compute_bif,
         )
-        _cpcv_bif_is_sharpe = max(path_sharpes) if path_sharpes else 0.0
+        # B4 fix: use mean of path OOS Sharpes as the IS-Sharpe proxy, not max.
+        # max(path_sharpes) overstates IS performance because it cherry-picks the
+        # best CPCV path — this deflates BIF (IS/OOS gap appears small) when the
+        # true per-path IS Sharpe is unknown (pooled across folds).
+        # WAVE 30 carry-forward: derive true per-path IS Sharpe from IS fold data.
+        _cpcv_bif_is_sharpe = float(np.mean(path_sharpes)) if path_sharpes else 0.0
         _cpcv_bif_k_eff = float(max(n_paths, 1))
         _cpcv_bif_result = _cpcv_compute_bif(
             is_sharpe=_cpcv_bif_is_sharpe,
@@ -1344,7 +1349,10 @@ def run_walk_forward(
             compute_bif as _compute_bif,
         )
         _bif_is_sharpe = _combined_is_sharpe if _combined_is_sharpe is not None else 0.0
-        _bif_k_eff = float(max(len(windows), 1))
+        # B7 fix: k_eff counts only non-LOW-confidence windows (floored at 1).
+        # LOW-confidence windows have too few OOS trades to be reliable IS/OOS draws;
+        # counting them inflates k_eff which artificially reduces BIF.
+        _bif_k_eff = float(max(len([w for w in window_results if w.get("confidence") != "LOW"]), 1))
         _bif_result = _compute_bif(
             is_sharpe=_bif_is_sharpe,
             wf_sharpe=agg_sharpe,

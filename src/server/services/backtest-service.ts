@@ -199,6 +199,12 @@ interface BacktestConfig {
   overnight_hold?: boolean;       // True = swing strategy; gates overnight margin checks in prop sim
   fill_rate?: number;             // Fraction of orders that fill (0.0–1.0); default 1.0
   spread_multiplier?: number;     // Multiplier on bid-ask spread for slippage model; default 1.0
+  // B2 fix: cumulative mutation count across all critic iterations for this strategy.
+  // Python walk_forward.py reads this as request.trial_n_total and uses
+  // max(n_paths, trial_n_total) as n_trials for DSR deflation — ensuring the
+  // bar tightens with every candidate evaluated, not just within one replay batch.
+  // Default 1 = no deflation (single initial backtest, backward-compatible).
+  trial_n_total?: number;
 }
 
 /**

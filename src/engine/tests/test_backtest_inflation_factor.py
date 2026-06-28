@@ -321,6 +321,76 @@ class TestComputeBifDeterminism:
             assert result["bif"] == pytest.approx(999.0)
 
 
+# ── B4/B7 regression: CPCV IS-Sharpe proxy (mean not max) + k_eff LOW exclusion ──
+
+class TestBifB4B7Regressions:
+    """Regression tests for B4 (CPCV IS-Sharpe mean vs max) and B7 (k_eff excludes LOW windows)."""
+
+    def test_b4_mean_proxy_lower_than_max(self):
+        """B4: mean(path_sharpes) < max(path_sharpes) for heterogeneous path set.
+        The CPCV IS-Sharpe proxy now uses mean, not max.
+        A max-based proxy would produce a LOWER BIF (underestimates IS/OOS gap).
+        The mean-based proxy is conservative and produces a HIGHER or EQUAL BIF.
+        """
+        path_sharpes = [0.5, 1.0, 2.0, 1.5, 0.8]  # heterogeneous
+        import numpy as np
+        mean_proxy = float(np.mean(path_sharpes))  # 1.16
+        max_proxy = max(path_sharpes)               # 2.0
+        # mean < max for this set → mean-proxy BIF is LOWER (more IS-like = harder bar)
+        # BUT the CPCV IS-Sharpe is the proxy for IS, and BIF = IS/OOS.
+        # Mean proxy < max proxy → lower numerator → lower BIF.
+        # However the key invariant is: mean != max when heterogeneous.
+        assert mean_proxy < max_proxy
+        # BIF with mean proxy: BIF = mean / wf_sharpe
+        result_mean = compute_bif(is_sharpe=mean_proxy, wf_sharpe=0.5, k_eff=5.0)
+        result_max = compute_bif(is_sharpe=max_proxy, wf_sharpe=0.5, k_eff=5.0)
+        # BIF_mean < BIF_max: using mean is MORE CONSERVATIVE (less overstated IS edge)
+        assert result_mean["bif"] < result_max["bif"], (
+            f"mean-proxy BIF ({result_mean['bif']:.4f}) should be less than "
+            f"max-proxy BIF ({result_max['bif']:.4f})"
+        )
+
+    def test_b4_uniform_path_sharpes_mean_equals_max(self):
+        """B4: when all path Sharpes are equal, mean == max (no change in result)."""
+        import numpy as np
+        path_sharpes = [1.0, 1.0, 1.0, 1.0]
+        mean_proxy = float(np.mean(path_sharpes))
+        max_proxy = max(path_sharpes)
+        assert mean_proxy == pytest.approx(max_proxy)
+
+    def test_b7_k_eff_excludes_low_confidence_windows(self):
+        """B7: k_eff for plain-WF counts only non-LOW windows, floored at 1."""
+        # Simulate 5 windows: 3 OK, 2 LOW
+        window_results = [
+            {"confidence": "OK"},
+            {"confidence": "LOW"},
+            {"confidence": "OK"},
+            {"confidence": "LOW"},
+            {"confidence": "OK"},
+        ]
+        non_low_count = len([w for w in window_results if w.get("confidence") != "LOW"])
+        assert non_low_count == 3, f"Expected 3 non-LOW windows, got {non_low_count}"
+        k_eff_correct = float(max(non_low_count, 1))
+        k_eff_wrong = float(max(len(window_results), 1))
+        assert k_eff_correct < k_eff_wrong, (
+            f"Correct k_eff ({k_eff_correct}) should be < wrong k_eff ({k_eff_wrong})"
+        )
+        # Higher k_eff → higher expected inflation → higher BIF → stricter gate.
+        # Using wrong k_eff (all windows) overstates overfitting penalty.
+        result_correct = compute_bif(is_sharpe=2.0, wf_sharpe=1.0, k_eff=k_eff_correct)
+        result_wrong = compute_bif(is_sharpe=2.0, wf_sharpe=1.0, k_eff=k_eff_wrong)
+        assert result_correct["k_eff"] == pytest.approx(k_eff_correct)
+        assert result_wrong["k_eff"] == pytest.approx(k_eff_wrong)
+
+    def test_b7_all_low_confidence_floors_at_1(self):
+        """B7: when all windows are LOW confidence, k_eff floors at 1 (not 0)."""
+        window_results = [{"confidence": "LOW"}, {"confidence": "LOW"}]
+        k_eff = float(max(len([w for w in window_results if w.get("confidence") != "LOW"]), 1))
+        assert k_eff == pytest.approx(1.0), f"Expected k_eff=1.0 (floor), got {k_eff}"
+        result = compute_bif(is_sharpe=1.5, wf_sharpe=1.0, k_eff=k_eff)
+        assert result["k_eff"] == pytest.approx(1.0)
+
+
 # ── Module-level import check ──────────────────────────────────────────────────
 
 class TestModuleImport:

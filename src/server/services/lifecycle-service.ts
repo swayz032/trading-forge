@@ -34,7 +34,7 @@ import { broadcastSSE, LIFECYCLE_GATE_EVENTS } from "../routes/sse.js";
 import { compileDualPineExport } from "./pine-export-service.js";
 import { agentCoordinator } from "./agent-coordinator-service.js";
 import { tracer } from "../lib/tracing.js";
-import { strategyPromotions, pboBlocksTotal, lifecycleShadowPromotionsTotal, autoGraveyardTotal } from "../lib/metrics-registry.js";
+import { strategyPromotions, pboBlocksTotal, lifecycleShadowPromotionsTotal, autoGraveyardTotal, bifGateEvaluationsTotal } from "../lib/metrics-registry.js";
 import { evaluateMultiFirmEligibility } from "./multi-firm-promotion-service.js";
 import { killSwitch } from "../production/kill-switch.js";
 import { evaluateB14CiGate, evaluateDsrWalkForwardGate } from "../lib/b14-ci-gate.js";
@@ -61,7 +61,7 @@ import {
   evaluateFrozenPolicyDriftAtPromotion,
   freezePolicyForStrategy,
 } from "../lib/frozen-policy-contract.js";
-// Wave 3 Track 3B — BIF (Bias Information Factor) promotion gate (PAPER → DEPLOY_READY).
+// Wave 3 Track 3B — BIF (Backtest Inflation Factor) promotion gate (PAPER → DEPLOY_READY).
 // Reads backtests.bif / backtests.kEff stamped from Python WF result fields `bif` / `k_eff`.
 // Hard-blocks when bif > BIF_BLOCK_THRESHOLD (default 4.0). Grandfather-passes on null.
 import { evaluateBifGate } from "../lib/bif-gate.js";
@@ -3740,7 +3740,7 @@ export class LifecycleService {
           gateEvidenceStatuses.push("data_unavailable");
         }
 
-        // ── Wave 3 Track 3B: BIF (Bias Information Factor) gate (PAPER → DEPLOY_READY) ──
+        // ── Wave 3 Track 3B: BIF (Backtest Inflation Factor) gate (PAPER → DEPLOY_READY) ──
         // Reads backtests.bif and backtests.kEff (stamped from Python WF result fields
         // `bif` and `k_eff` at completion time in backtest-service.ts).
         //
@@ -3768,6 +3768,21 @@ export class LifecycleService {
           const kEffValue = latestBtForBif?.kEff != null ? Number(latestBtForBif.kEff) : null;
 
           const bifResult = evaluateBifGate(bifValue, kEffValue);
+
+          // GAP 3 fix: increment BIF-specific counter so dashboards can distinguish
+          // clean/warn/blocked/legacy_null outcomes rather than only seeing the generic
+          // strategyPromotions counter which doesn't carry BIF outcome detail.
+          {
+            const bifOutcome =
+              !bifResult.passed
+                ? "blocked"
+                : bifResult.legacyNull
+                  ? "legacy_null"
+                  : bifResult.reason === "bif.warn_above_warn_threshold"
+                    ? "warn"
+                    : "clean";
+            bifGateEvaluationsTotal.labels({ outcome: bifOutcome }).inc();
+          }
 
           // Always emit audit row so dashboard can show gate evaluation history.
           await db.insert(auditLog).values({

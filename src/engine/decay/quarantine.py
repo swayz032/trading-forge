@@ -205,13 +205,17 @@ if __name__ == "__main__":
 
     if _action == "evaluate":
         # Route: POST /api/decay/quarantine/evaluate
-        # Config keys: current_level, decay_score, days_at_current_level, improving_days.
+        # Config keys: current_level, decay_score, days_at_current_level, improving_days,
+        #              promoted_at (ISO string or null — B3 fix).
+        # B3 fix: pass promoted_at so _within_grace_period() can protect newly
+        # promoted strategies from immediate quarantine escalation.
         try:
             _result = evaluate_quarantine(
                 current_level=str(_cfg.get("current_level", "healthy")),
                 decay_score=float(_cfg.get("decay_score", 0)),
                 days_at_current_level=int(_cfg.get("days_at_current_level", 0)),
                 improving_days=int(_cfg.get("improving_days", 0)),
+                promoted_at=_cfg.get("promoted_at"),
             )
             print(json.dumps(_result))
         except Exception as _e:
