@@ -2714,6 +2714,20 @@ interface LocalLlmDownOpts {
 }
 
 async function emitLocalLlmDownSignal(opts: LocalLlmDownOpts): Promise<void> {
+  // H6: inline Ollama health recheck before firing the EXTRACTION LOST alert.
+  // The boot-time probe (checkTranscriptExtractorOllamaHealth at T+0) can catch
+  // gemma4:e2b during a 7GB cold-load and mark OLLAMA_HEALTHY=false as a false
+  // negative. A runtime recheck here (2–5s) aborts the spurious critical alert
+  // and resets OLLAMA_HEALTHY=true so the next extraction call routes locally.
+  const _h6Recheck = await recheckOllamaHealth();
+  if (_h6Recheck.healthy) {
+    logger.info(
+      { fallback_reason: opts.fallback_reason },
+      "model-router: EXTRACTION LOST alert aborted — Ollama recheck healthy; boot-time false-negative corrected",
+    );
+    return;
+  }
+
   const { messages, fallback_reason } = opts;
 
   // Best-effort: extract source_url from the user message JSON payload.
@@ -3019,5 +3033,8 @@ export async function callScoutExtractLlm(
   logger.error({ role }, "callScoutExtractLlm: both Ollama primary and cloud fallback exhausted");
   return null;
 }
+
+/** Test helper: call emitLocalLlmDownSignal directly. Production code never calls this. */
+export const __emitLocalLlmDownSignalForTests = emitLocalLlmDownSignal;
 
 export { MODEL_CONFIGS, KB_MANIFEST, FEWSHOT_ROLES };

@@ -4024,6 +4024,19 @@ export async function evaluateSignals(
             // when all fields are null (insufficient bars / no divergence detected), log
             // so the gap is visible in telemetry without blocking the stream.
             // evalSmtConfirmation will return satisfied=false, reason="smt_unavailable".
+            // ── Deep-Scan H12: SMT null-fallback contamination marker ────────────
+            // When the live bridge yields no usable divergence the smt_confirmation
+            // factor fail-OPENS (entry allowed as if no bearish divergence exists).
+            // That overstates edge and silently contaminates PAPER → DEPLOY_READY
+            // gate inputs. Stamp a data-source provenance flag on the journal entry
+            // and emit a parity-diagnostic SSE so the contamination is measurable
+            // without requiring the live bridge to be built.
+            const smtNullFallback =
+              smtSnapshot === null ||
+              (smtSnapshot.score === null && smtSnapshot.direction === null);
+            const smtDataSource: "live_bridge" | "null_fallback" =
+              smtNullFallback ? "null_fallback" : "live_bridge";
+
             if (smtSnapshot === null) {
               logger.info(
                 { sessionId, symbol, correlationId },
@@ -4034,6 +4047,21 @@ export async function evaluateSignals(
                 { sessionId, symbol, correlationId, stale: smtSnapshot.stale },
                 "paper-parity: smt_score null (insufficient bars or no divergence detected); evalSmtConfirmation returns smt_unavailable",
               );
+            }
+
+            if (smtNullFallback) {
+              broadcastSSE("PAPER_PARITY_DEGRADED", {
+                source: "smt_live_bridge",
+                sessionId,
+                strategyId: sessionConfig.strategyId,
+                symbol,
+                smt_data_source: smtDataSource,
+                smt_snapshot_null: smtSnapshot === null,
+                stale: smtSnapshot?.stale ?? false,
+                price: bar.close,
+                timestamp: bar.timestamp,
+                correlationId: correlationId ?? null,
+              });
             }
 
             const weightedCtx: WeightedSignalContext = {
@@ -4241,6 +4269,8 @@ export async function evaluateSignals(
                   _hard_block: weightedResult.hardBlockTriggered,
                   _weights_source: weightedResult.weightsSource,
                   _a_plus_factor_source: "weighted",
+                  _smt_data_source: smtDataSource,
+                  _smt_null_fallback: smtNullFallback,
                 },
                 acted: false,
                 reason: `signal.weighted_score_rejected: score=${weightedResult.score.toFixed(4)} threshold=${weightedResult.threshold} hard_block=${weightedResult.hardBlockTriggered} weights_source=${weightedResult.weightsSource}`,
@@ -4268,6 +4298,8 @@ export async function evaluateSignals(
                   _weighted_threshold: weightedResult.threshold,
                   _weights_source: weightedResult.weightsSource,
                   _a_plus_factor_source: "weighted",
+                  _smt_data_source: smtDataSource,
+                  _smt_null_fallback: smtNullFallback,
                 },
                 acted: true,
                 reason: `signal.confluence_score_evaluated: score=${weightedResult.score.toFixed(4)} threshold=${weightedResult.threshold} weights_source=${weightedResult.weightsSource}`,

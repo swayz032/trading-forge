@@ -16,11 +16,25 @@ export async function createAlert(params: {
   message: string;
   metadata?: Record<string, unknown>;
 }) {
+  // H7: guarantee every critical alert carries a family-grade postscript so
+  // family members always have context. Callers that already wrap with
+  // appendFamilyGradePostscript() pass through unchanged (sentinel present).
+  // The 9 AlertFactory paths that don't include a postscript get this
+  // generic fallback applied centrally — zero caller changes required.
+  const FAMILY_SENTINEL = "--- For family members ---";
+  const effectiveMessage =
+    params.severity === "critical" && !params.message.includes(FAMILY_SENTINEL)
+      ? params.message +
+        "\n\n--- For family members ---\n" +
+        "What this means: The trading system detected a critical issue. Auto-remediation was attempted.\n" +
+        "What to do: No immediate action needed — wait 5 minutes. If you see multiple alerts in a row, call Tony."
+      : params.message;
+
   const [alert] = await db.insert(alerts).values({
     type: params.type,
     severity: params.severity,
     title: params.title,
-    message: params.message,
+    message: effectiveMessage,
     metadata: params.metadata ?? {},
   }).returning();
 
@@ -30,14 +44,25 @@ export async function createAlert(params: {
   // Log critical alerts
   if (params.severity === "critical") {
     logger.error({ alert: params }, `CRITICAL ALERT: ${params.title}`);
+    // C2: add Authorization header when API_KEY is set so the Discord bot
+    // accepts the request instead of returning 401. Check response.ok so
+    // 4xx responses are visible even when the bot returns a non-success status.
     try {
       const discordPort = process.env.DISCORD_ALERT_PORT || "4100";
-      await fetch(`http://localhost:${discordPort}/alert/alerts`, {
+      const apiKey = process.env.API_KEY;
+      const discordHeaders: Record<string, string> = { "Content-Type": "application/json" };
+      if (apiKey) {
+        discordHeaders["Authorization"] = `Bearer ${apiKey}`;
+      }
+      const response = await fetch(`http://localhost:${discordPort}/alert/alerts`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: params.title, message: params.message, severity: "critical" }),
+        headers: discordHeaders,
+        body: JSON.stringify({ title: params.title, message: effectiveMessage, severity: "critical" }),
         signal: AbortSignal.timeout(4000),
       });
+      if (!response.ok) {
+        logger.warn({ status: response.status }, "alert delivery to discord bot failed");
+      }
     } catch (e) {
       // Best-effort — a hung relay must never block critical alert delivery
       const isAbort = e instanceof Error && (e.name === "AbortError" || e.name === "TimeoutError");

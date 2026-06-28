@@ -1078,7 +1078,12 @@ export function initScheduler() {
           AlertFactory.systemError(
             "python-pool-saturation",
             `Python subprocess pool backlogged for >=60s: queued=${stats.queued}, active=${stats.active}, cap=${stats.cap}`,
-          ).catch(() => {});
+          ).catch((alertErr) =>
+            logger.error(
+              { err: alertErr, context: "python-pool-saturation" },
+              "AlertFactory.systemError failed — alert not persisted",
+            ),
+          );
           logger.warn(
             { queued: stats.queued, active: stats.active, cap: stats.cap, ticks: poolSaturationTicks },
             "python-pool-saturation: alert fired — 60s sustained backpressure",
@@ -5981,7 +5986,12 @@ async function updateRollingSharpe() {
             "DRIFT ALERT: Live Sharpe deviates > 2σ from backtest",
           );
           // Persist alert to DB + broadcast SSE
-          AlertFactory.driftAlert(strat.id, "Sharpe", deviation / oneSigma).catch(() => {});
+          AlertFactory.driftAlert(strat.id, "Sharpe", deviation / oneSigma).catch((alertErr) =>
+            logger.error(
+              { err: alertErr, context: "rolling-sharpe-drift" },
+              "AlertFactory.driftAlert failed — alert not persisted",
+            ),
+          );
         } else if (deviation > oneSigma) {
           logger.warn(
             { strategyId: strat.id, name: strat.name, liveSharpe, btSharpe, deviation, threshold: oneSigma },
@@ -6173,7 +6183,12 @@ async function comparePaperToBacktest() {
         });
         // Persist alert to DB
         const worstMetric = deviations.reduce((w, d) => d.sigmas > w.sigmas ? d : w, deviations[0]);
-        AlertFactory.driftAlert(session.strategyId, worstMetric.metric, maxDeviation).catch(() => {});
+        AlertFactory.driftAlert(session.strategyId, worstMetric.metric, maxDeviation).catch((alertErr) =>
+          logger.error(
+            { err: alertErr, context: "paper-vs-backtest-deviation" },
+            "AlertFactory.driftAlert failed — alert not persisted",
+          ),
+        );
         logger.warn(
           { strategyId: session.strategyId, sessionId: session.id, maxDeviation, deviations },
           "Paper-vs-backtest deviation alert triggered",
@@ -6327,7 +6342,12 @@ async function runDailyDecayMonitor(): Promise<void> {
               toState: targetState,
               message: `Strategy "${strat.name}" demoted to ${targetState} — decay score ${decayScore}`,
             });
-            AlertFactory.decayAlert(strat.id, "demotion").catch(() => {});
+            AlertFactory.decayAlert(strat.id, "demotion").catch((alertErr) =>
+              logger.error(
+                { err: alertErr, context: "decay-monitor-demotion" },
+                "AlertFactory.decayAlert failed — alert not persisted",
+              ),
+            );
             logger.warn(
               { strategyId: strat.id, name: strat.name, decayScore, fromState: currentState, toState: targetState },
               "Decay monitor: strategy demoted due to elevated decay score",
@@ -6347,7 +6367,12 @@ async function runDailyDecayMonitor(): Promise<void> {
             lifecycleState: currentState,
             message: `Strategy "${strat.name}" has elevated decay score ${decayScore} (state: ${currentState} — alert only)`,
           });
-          AlertFactory.decayAlert(strat.id, decayScore > 90 ? "quarantine" : "watch").catch(() => {});
+          AlertFactory.decayAlert(strat.id, decayScore > 90 ? "quarantine" : "watch").catch((alertErr) =>
+            logger.error(
+              { err: alertErr, context: "decay-monitor-alert-only" },
+              "AlertFactory.decayAlert failed — alert not persisted",
+            ),
+          );
           logger.warn(
             { strategyId: strat.id, name: strat.name, decayScore, lifecycleState: currentState },
             "Decay monitor: elevated decay score — alert only (no demotion path for this state)",
@@ -6963,7 +6988,12 @@ export async function onPaperTradeClose(sessionId: string, strategyId: string) {
         message: `Strategy drifting: ${maxDeviation.toFixed(1)}σ from backtest expectations`,
       });
       // Persist alert to DB
-      AlertFactory.driftAlert(strategyId, "live_drift", maxDeviation).catch(() => {});
+      AlertFactory.driftAlert(strategyId, "live_drift", maxDeviation).catch((alertErr) =>
+        logger.error(
+          { err: alertErr, context: "post-trade-live-drift" },
+          "AlertFactory.driftAlert failed — alert not persisted",
+        ),
+      );
       logger.warn({ strategyId, maxDeviation, alerts: driftAlerts }, "Strategy drift detected after paper trade");
     }
 
@@ -6986,7 +7016,12 @@ export async function onPaperTradeClose(sessionId: string, strategyId: string) {
             decayScore,
             message: `Decay score ${decayScore} — strategy losing edge`,
           });
-          AlertFactory.decayAlert(strategyId, decayScore > 80 ? "quarantine" : "watch").catch(() => {});
+          AlertFactory.decayAlert(strategyId, decayScore > 80 ? "quarantine" : "watch").catch((alertErr) =>
+            logger.error(
+              { err: alertErr, context: "post-trade-decay-check" },
+              "AlertFactory.decayAlert failed — alert not persisted",
+            ),
+          );
           logger.warn({ strategyId, decayScore }, "Auto decay check: elevated decay score");
         }
       })

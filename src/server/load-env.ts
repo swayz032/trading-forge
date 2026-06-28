@@ -3,4 +3,24 @@
 // is the source of truth — protects against stale PM2-cached env values
 // after secrets are rotated in .env.
 import { config as dotenvConfig } from "dotenv";
+import { existsSync, readFileSync } from "fs";
+import { join } from "path";
+
 dotenvConfig({ override: true });
+
+// H4: Override BW_SESSION from .bw-session-runtime if it exists.
+// bitwarden-session-refresh-service writes this file after a successful refresh.
+// Loaded AFTER dotenv so the runtime file wins over the stale value in .env,
+// ensuring NSSM restarts pick up the latest valid session token rather than
+// the expired one that was present when the service was last restarted.
+const _runtimeBwSessionPath = join(process.cwd(), ".bw-session-runtime");
+if (existsSync(_runtimeBwSessionPath)) {
+  try {
+    const _runtimeToken = readFileSync(_runtimeBwSessionPath, "utf8").trim();
+    if (_runtimeToken) {
+      process.env["BW_SESSION"] = _runtimeToken;
+    }
+  } catch {
+    // Non-fatal; logger is not available yet. Fall back to whatever dotenv set.
+  }
+}

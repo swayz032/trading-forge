@@ -49,6 +49,8 @@ import {
 import { evaluateWfeGate } from "./wfe-gate.js";
 import { evaluateParameterDriftGate } from "./parameter-drift-gate.js";
 import { evaluatePromotionGates, type StrategyPromotionData } from "./promotion-gate-orchestrator.js";
+// H1 fix 2026-06-28: import BIF gate so both manual and cron paths enforce it.
+import { evaluateBifGate } from "./bif-gate.js";
 import {
   evaluateFrozenPolicyDriftAtPromotion,
   type FrozenPolicyDriftResult,
@@ -193,6 +195,13 @@ export interface PaperToDeployReadyGateInput {
   orchGates?: OrchGatesInput | null;
 
   /**
+   * H1 fix 2026-06-28 — BIF gate inputs (bif and k_eff from latest completed backtest).
+   * Both stamped on backtests table by backtest-service.ts at completion.
+   * Pass null / omit for pre-Wave-3 backtests (gate grandfather-passes on missing data).
+   */
+  bifInput?: { bif?: number | null; kEff?: number | null } | null;
+
+  /**
    * Pre-fetched composite-shadow result (observability only — never blocks).
    * Pass null to skip the shadow evaluation (gate is logged as NO_OPINION).
    */
@@ -211,6 +220,7 @@ export type PaperToDeployReadyFailedGate =
   | "wfe"
   | "parameter_drift"
   | "dsr_walk_forward"
+  | "bif"
   | "wave26_orchestrator"
   | "frozen_policy";
 // NOTE: composite_shadow is intentionally absent — it never blocks.
@@ -542,6 +552,47 @@ export function evaluatePaperToDeployReadyGates(
       logger.info(
         { strategyId },
         "evaluatePaperToDeployReadyGates: DSR gate: pre-Wave-A backtest — proceeding with legacy warn",
+      );
+    }
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Gate 6.5 — BIF (Backtest Inflation Factor) gate (fail-OPEN on missing data)
+  // H1 fix 2026-06-28: moved from cron-only inline block to symmetric evaluator
+  // so BOTH the cron sweep and the manual PATCH /:id/lifecycle path enforce it.
+  // Source: lifecycle-service.ts:3743-3845 (inline block now deleted from cron).
+  // Hard-blocks when bif > BIF_BLOCK_THRESHOLD (default 4.0).
+  // Warn band: BIF_WARN_THRESHOLD (2.0) < bif ≤ BIF_BLOCK_THRESHOLD — pass with warn.
+  // Legacy grandfather: null bif (pre-Wave-3 backtest) → always pass.
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    const bifIn = input.bifInput ?? null;
+    const bifNum = bifIn?.bif != null && Number.isFinite(Number(bifIn.bif)) ? Number(bifIn.bif) : null;
+    const kEffNum = bifIn?.kEff != null && Number.isFinite(Number(bifIn.kEff)) ? Number(bifIn.kEff) : null;
+
+    const bifResult = evaluateBifGate(bifNum, kEffNum);
+
+    if (!bifResult.passed) {
+      logger.warn(
+        { strategyId, bif: bifNum, k_eff: kEffNum, reason: bifResult.reason },
+        `evaluatePaperToDeployReadyGates: BIF gate BLOCKED PAPER→DEPLOY_READY: ${bifResult.reason}`,
+      );
+      return {
+        passed: false,
+        status: "blocked",
+        auditAction: "bif.gate_evaluated",
+        auditPayload: bifResult.auditPayload,
+        reason: bifResult.reason,
+        failedGate: "bif",
+      };
+    }
+
+    if (bifResult.legacyNull) {
+      logger.info({ strategyId }, "evaluatePaperToDeployReadyGates: BIF gate: pre-Wave-3 backtest — grandfather pass");
+    } else {
+      logger.info(
+        { strategyId, bif: bifNum, reason: bifResult.reason },
+        "evaluatePaperToDeployReadyGates: BIF gate passed",
       );
     }
   }

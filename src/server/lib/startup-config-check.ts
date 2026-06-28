@@ -54,8 +54,14 @@ const SLUMDAWG_PLACEHOLDER = "slumdawg-rotate-me-after-first-deploy-2026-05-25";
  * Returns a summary of findings so callers can log or take action.
  * Never throws — all findings are warnings, not hard failures.
  */
-export async function checkStartupSecrets(): Promise<{ warnings: string[] }> {
+export async function checkStartupSecrets(): Promise<{ warnings: string[]; errors: string[] }> {
   const warnings: string[] = [];
+  // errors[] is the ERROR-severity channel (vs warnings[]). A missing
+  // ADMIN_PROMOTE_HMAC_SECRET is not a soft warning: without it
+  // PATCH /api/strategies/:id/lifecycle returns 401 on EVERY call, so no
+  // promotion can ever run and the first paper trade can never start — even
+  // though the server boots and looks healthy.
+  const errors: string[] = [];
 
   // ── ADMIN_RESTART_HMAC_SECRET ─────────────────────────────────────────────
   const secret = process.env.ADMIN_RESTART_HMAC_SECRET;
@@ -222,10 +228,14 @@ export async function checkStartupSecrets(): Promise<{ warnings: string[] }> {
     if (!promoteSecret || promoteSecret.trim().length === 0) {
       const msg =
         "ADMIN_PROMOTE_HMAC_SECRET is NOT SET. " +
-        "PATCH /api/strategies/:id/lifecycle will reject all calls with HTTP 401. " +
+        "PATCH /api/strategies/:id/lifecycle will reject all calls with HTTP 401 — " +
+        "NO promotion is possible, so the first paper trade can never start. " +
         "Set ADMIN_PROMOTE_HMAC_SECRET (≥32 random chars) in .env to enable manual lifecycle transitions.";
-      logger.warn({ env_var: "ADMIN_PROMOTE_HMAC_SECRET", affected_endpoints: ["PATCH /api/strategies/:id/lifecycle"] }, `[STARTUP WARN] ${msg}`);
-      warnings.push("ADMIN_PROMOTE_HMAC_SECRET_NOT_SET");
+      // ERROR severity is carried by the errors[] return channel (vs warnings[]);
+      // the log line stays on logger.warn (the file's single log convention) but is
+      // tagged [STARTUP ERROR] so the level is unambiguous in the boot log.
+      logger.warn({ env_var: "ADMIN_PROMOTE_HMAC_SECRET", affected_endpoints: ["PATCH /api/strategies/:id/lifecycle"] }, `[STARTUP ERROR] ${msg}`);
+      errors.push("ADMIN_PROMOTE_HMAC_SECRET_NOT_SET");
     } else if (promoteSecret.trim().length < MIN_SECRET_LENGTH) {
       logger.warn({ env_var: "ADMIN_PROMOTE_HMAC_SECRET", length: promoteSecret.trim().length }, `[STARTUP WARN] ADMIN_PROMOTE_HMAC_SECRET is set but shorter than recommended (${promoteSecret.trim().length} < ${MIN_SECRET_LENGTH}).`);
       warnings.push("ADMIN_PROMOTE_HMAC_SECRET_TOO_SHORT");
@@ -298,7 +308,79 @@ export async function checkStartupSecrets(): Promise<{ warnings: string[] }> {
     // kasaVarsSet.length === 0 → escape valve disabled intentionally (no warning needed)
   }
 
-  if (warnings.length === 0) {
+  // ── broker_accounts credentials (Deep-Scan H13) ──────────────────────────
+  // Surface a missing-broker-credentials gap at BOOT instead of at first-order
+  // routing time — broker-router throws there AFTER partial journal state is
+  // written, which is far harder to recover from. Non-fatal (warn-only) and
+  // fail-soft: a transient DB error at boot must never crash the process.
+  // db/schema are dynamically imported (not top-level) so this check never
+  // perturbs test isolation per feedback_helper_logger_import.md.
+  {
+    try {
+      const { db } = await import("../db/index.js");
+      const { brokerAccounts, instanceConfig } = await import("../db/schema.js");
+      const { eq } = await import("drizzle-orm");
+
+      const enabledAccounts = await db
+        .select()
+        .from(brokerAccounts)
+        .where(eq(brokerAccounts.enabled, true));
+
+      // (a) Every firm in the instance allow-list must have ≥1 enabled account.
+      const cfgRows = await db.select().from(instanceConfig).limit(1);
+      const allowList: string[] = Array.isArray(cfgRows[0]?.enabledFirms)
+        ? (cfgRows[0]!.enabledFirms as string[])
+        : [];
+      const enabledFirmIds = new Set(enabledAccounts.map((a) => a.firmId));
+      const firmsWithoutAccount = allowList.filter((firm) => !enabledFirmIds.has(firm));
+
+      if (allowList.length > 0 && firmsWithoutAccount.length > 0) {
+        const msg =
+          `No enabled broker_accounts row for allow-listed firm(s): [${firmsWithoutAccount.join(", ")}]. ` +
+          "Order routing for these firms will THROW at first signal (after partial journal state is written). " +
+          "Seed an enabled broker_accounts row per firm before going live.";
+        logger.warn(
+          { firms_without_account: firmsWithoutAccount, allow_list: allowList },
+          `[STARTUP WARN] ${msg}`,
+        );
+        warnings.push("BROKER_ACCOUNT_MISSING_FOR_ENABLED_FIRM");
+      }
+
+      // (b) Any enabled account whose apiKeyVaultRef points at an undefined env var.
+      const missingVaultEnv = enabledAccounts
+        .filter(
+          (a) =>
+            a.apiKeyVaultRef != null &&
+            a.apiKeyVaultRef.trim().length > 0 &&
+            process.env[a.apiKeyVaultRef] === undefined,
+        )
+        .map((a) => ({ account_id: a.accountId, firm_id: a.firmId, vault_ref: a.apiKeyVaultRef }));
+
+      if (missingVaultEnv.length > 0) {
+        const msg =
+          `${missingVaultEnv.length} enabled broker_accounts row(s) reference an apiKeyVaultRef ` +
+          `whose env var is UNDEFINED: [${missingVaultEnv.map((m) => m.vault_ref).join(", ")}]. ` +
+          "Broker auth will fail at order-routing time. Set the referenced env var(s) in .env.";
+        logger.warn({ missing_vault_env: missingVaultEnv }, `[STARTUP WARN] ${msg}`);
+        warnings.push("BROKER_ACCOUNT_VAULT_ENV_UNDEFINED");
+      }
+    } catch (brokerErr) {
+      // Fail-soft: a DB hiccup at boot must never crash. Log and move on.
+      logger.warn(
+        { err: brokerErr },
+        "startup-config-check: broker_accounts credential check skipped (query failed)",
+      );
+    }
+  }
+
+  if (errors.length > 0) {
+    logger.warn(
+      { errors },
+      "[STARTUP ERROR] startup-config-check: ERROR-severity config problems detected — fix before promoting any strategy",
+    );
+  }
+
+  if (warnings.length === 0 && errors.length === 0) {
     logger.info(
       {
         checked: [
@@ -309,11 +391,12 @@ export async function checkStartupSecrets(): Promise<{ warnings: string[] }> {
           "SLUMDAWG_WEBHOOK_SECRET",
           "ADMIN_PROMOTE_HMAC_SECRET",
           "KASA_DEVICE_IP/KASA_USERNAME/KASA_PASSWORD",
+          "broker_accounts (enabled rows + vault env)",
         ],
       },
       "startup-config-check: all required secrets configured",
     );
   }
 
-  return { warnings };
+  return { warnings, errors };
 }

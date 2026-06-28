@@ -752,6 +752,26 @@ export const server = app.listen(port, () => {
     logger.info({ err }, "model-router import failed during appendix warm — non-blocking");
   });
 
+  // ─── H5: 60s post-boot Ollama recheck ────────────────────────────────────────
+  // The boot-time probe runs at T+0 when gemma4:e2b (7GB) may still be cold-
+  // loading into VRAM, leaving OLLAMA_HEALTHY stuck false and routing all
+  // extraction to cloud. This one-shot re-probe fires after the cold-load
+  // window and corrects the flag before the first extraction cron fires.
+  setTimeout(() => {
+    import("./services/model-router.js").then(({ recheckOllamaHealth }) => {
+      recheckOllamaHealth().then((r) => {
+        logger.info(
+          { healthy: r.healthy, reason: r.reason },
+          "model-router: 60s post-boot Ollama recheck complete",
+        );
+      }).catch((err: unknown) => {
+        logger.warn({ err }, "model-router: 60s post-boot Ollama recheck threw");
+      });
+    }).catch((err: unknown) => {
+      logger.warn({ err }, "model-router: 60s post-boot Ollama recheck import failed");
+    });
+  }, 60_000);
+
   // ─── Discord fanout audit boot probe (Pass 1 Track D) ────────────────────────
   // Probes all configured Discord webhooks so production-status.ts reads
   // "discord_webhook_health: healthy" instead of the false "not_configured"

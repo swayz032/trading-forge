@@ -286,6 +286,12 @@ interface BacktestResult {
   gate_rejections?: Record<string, unknown>;
   daily_pnl_records?: Array<{ date: string; pnl: number }>;
   oos_metrics?: Record<string, unknown>;
+  // C1 fix 2026-06-28: wf_metadata is a top-level sibling of oos_metrics in the
+  // Python walk_forward.py output (emitted at walk_forward.py:~1252).
+  // Contains: { mode, n_paths, dsr_pass, dsr_unavailable, dsr }.
+  // Previously absent from BacktestResult — silently discarded during WfResultsShape
+  // construction, disabling the DSR gate (fail-OPEN) and CPCV n_paths gate (fail-CLOSED).
+  wf_metadata?: Record<string, unknown> | null;
   confidence?: string;
   windows?: Array<Record<string, unknown>>;
   n_splits?: number;
@@ -549,6 +555,12 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       // Wave 29 Pass A.2 — PBO gate inputs (walk_forward.py:1272)
       pbo_overall?: number | null;
       pbo_overall_p_value?: number | null;
+      // C1 fix 2026-06-28 — wf_metadata sibling emitted by walk_forward.py.
+      // Contains DSR gate inputs (dsr_pass, dsr_unavailable, dsr) and CPCV
+      // orchestrator inputs (mode, n_paths).  Was previously discarded here,
+      // silently disabling the DSR gate (fail-OPEN) and starving the CPCV
+      // n_paths gate (fail-CLOSED) on the walkForwardResults JSONB column.
+      wf_metadata?: Record<string, unknown> | null;
     };
     const wfResults: WfResultsShape | null = result.oos_metrics
       ? {
@@ -560,6 +572,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           wfe_status: result.wfe_status as string | null | undefined,
           pbo_overall: result.pbo_overall as number | null | undefined,
           pbo_overall_p_value: result.pbo_overall_p_value as number | null | undefined,
+          wf_metadata: result.wf_metadata as Record<string, unknown> | null | undefined,
         }
       : (() => {
           const wfr = result.walk_forward_results as WfResultsShape | null | undefined;
