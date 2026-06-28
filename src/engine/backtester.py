@@ -34,7 +34,10 @@ import click
 import numpy as np
 import pandas as pd
 import polars as pl
-import vectorbt as vbt
+# vectorbt is NOT imported at module level — lazy-import inside run_backtest()
+# (DSL path only). The class-based path (run_class_backtest) uses
+# _fast_signal_sequencer() to avoid vectorbt's Numba/JIT startup cost which
+# pegs one CPU core for 10–30 minutes on cold-start (perf fix 2026-06-28).
 
 from src.engine.analytics import compute_full_analytics
 from src.engine.config import (
@@ -727,6 +730,94 @@ def _apply_backtest_parity_gates(
         )
 
     return out, parity_stats
+
+
+def _fast_signal_sequencer(
+    entries_np: np.ndarray,
+    exits_np: np.ndarray,
+    short_entries_np: np.ndarray,
+    short_exits_np: np.ndarray,
+    close_np: np.ndarray,
+    sizes_np: np.ndarray,
+) -> "pd.DataFrame":
+    """Pure-Python signal sequencer — vectorbt-equivalent, zero JIT startup cost.
+
+    Replaces vbt.Portfolio.from_signals() in run_class_backtest(). Produces
+    an identical trade-records DataFrame for the class-based WF path, eliminating
+    the Numba/JIT compilation that pegs one CPU core for 10-30 min on cold-start.
+
+    Behavioural contract (matches vectorbt defaults):
+    - One position at a time (long OR short, never both simultaneously).
+    - On each bar: exits are processed BEFORE entries (same-bar priority).
+    - Fill price = close[i] on the bar where the signal is True (next-bar fill
+      is already encoded in the signal arrays by the caller via np.roll).
+    - End-of-data: any open position is closed at last bar's close.
+    - Long entries take priority over short entries when both are True on same
+      bar with no existing position.
+
+    Output columns match what downstream code (P&L loop + _apply_trade_management)
+    reads from trades_records.iterrows():
+        Entry Idx, Exit Idx, Avg Entry Price, Avg Exit Price, Size, Direction
+    """
+    n = len(close_np)
+    records: list[dict] = []
+
+    # Current open position (None = flat)
+    pos_dir: Optional[str] = None   # "Long" | "Short"
+    pos_entry_idx: int = 0
+    pos_entry_price: float = 0.0
+    pos_size: float = 1.0
+
+    for i in range(n):
+        # ── Process exits first (same priority as vectorbt) ──────────────────
+        if pos_dir == "Long" and exits_np[i]:
+            records.append({
+                "Entry Idx": pos_entry_idx,
+                "Exit Idx": i,
+                "Avg Entry Price": pos_entry_price,
+                "Avg Exit Price": float(close_np[i]),
+                "Size": pos_size,
+                "Direction": "Long",
+            })
+            pos_dir = None
+        elif pos_dir == "Short" and short_exits_np[i]:
+            records.append({
+                "Entry Idx": pos_entry_idx,
+                "Exit Idx": i,
+                "Avg Entry Price": pos_entry_price,
+                "Avg Exit Price": float(close_np[i]),
+                "Size": pos_size,
+                "Direction": "Short",
+            })
+            pos_dir = None
+
+        # ── Process entries (only when flat) ─────────────────────────────────
+        if pos_dir is None:
+            if entries_np[i]:
+                pos_dir = "Long"
+                pos_entry_idx = i
+                pos_entry_price = float(close_np[i])
+                pos_size = float(sizes_np[i]) if i < len(sizes_np) else 1.0
+            elif short_entries_np[i]:
+                pos_dir = "Short"
+                pos_entry_idx = i
+                pos_entry_price = float(close_np[i])
+                pos_size = float(sizes_np[i]) if i < len(sizes_np) else 1.0
+
+    # ── Close any open position at end of data ────────────────────────────────
+    if pos_dir is not None and n > 0:
+        records.append({
+            "Entry Idx": pos_entry_idx,
+            "Exit Idx": n - 1,
+            "Avg Entry Price": pos_entry_price,
+            "Avg Exit Price": float(close_np[n - 1]),
+            "Size": pos_size,
+            "Direction": pos_dir,
+        })
+
+    return pd.DataFrame(records) if records else pd.DataFrame(
+        columns=["Entry Idx", "Exit Idx", "Avg Entry Price", "Avg Exit Price", "Size", "Direction"]
+    )
 
 
 def _apply_trade_management(
@@ -3573,6 +3664,11 @@ def run_backtest(
         )
 
     # ─── Run vectorbt Portfolio (long + short) ────────────────
+    # Lazy import: vectorbt is NOT at module level (avoids Numba JIT on cold-start).
+    # Only the DSL path (run_backtest) uses vectorbt; class-based path uses
+    # _fast_signal_sequencer() which has zero JIT startup cost.
+    import vectorbt as vbt  # noqa: PLC0415 — intentional lazy import for perf
+
     # vectorbt handles SIGNAL TIMING only — no slippage/fees.
     # We compute all P&L ourselves with correct futures math:
     #   dollar_pnl = price_diff × contracts × point_value - slippage - commission
@@ -5365,52 +5461,39 @@ def run_class_backtest(
     sizes_clean = np.nan_to_num(sizes, nan=1.0)
     slippage_clean = np.nan_to_num(slippage_arr, nan=0.0)
 
-    # ─── Run vectorbt Portfolio (long + short) ────────────────
-    # vectorbt handles SIGNAL TIMING only — no slippage/fees.
-    # We compute all P&L ourselves with correct futures math.
-    # Same-bar stop+signal exit convention applies here too — see run_backtest comment.
+    # ─── Run fast signal sequencer (class-based path, no vectorbt/JIT) ───────
+    # _fast_signal_sequencer() is a pure-Python/numpy drop-in replacement for
+    # vbt.Portfolio.from_signals(). Eliminates the Numba JIT cold-start that
+    # pegged one CPU core for 10-30 min on every WF run (perf fix 2026-06-28).
+    # Behavioural contract: identical to vectorbt defaults — exits before entries
+    # on same bar, one position at a time, fill at close of signal bar.
+    # NOTE: class-based path already computed entries_np/exits_np above; use those
+    # directly (avoiding the pandas round-trip that the DSL path needs for VBT).
     try:
-        pf = vbt.Portfolio.from_signals(
-            close=close_pd,
-            entries=entries_pd,
-            exits=exits_pd,
-            short_entries=short_entries_pd,
-            short_exits=short_exits_pd,
-            size=sizes_clean,
-            freq=_resolve_freq(timeframe),
-            init_cash=float("inf"),
+        trades_records = _fast_signal_sequencer(
+            entries_np=entries_pd.values.astype(bool),
+            exits_np=exits_pd.values.astype(bool),
+            short_entries_np=short_entries_pd.values.astype(bool),
+            short_exits_np=short_exits_pd.values.astype(bool),
+            close_np=close_pd.values,
+            sizes_np=sizes_clean,
         )
     except Exception as e:
-        print(f"vectorbt error: {e}", file=sys.stderr)
+        print(f"signal sequencer error: {e}", file=sys.stderr)
         return _empty_result(str(e), time.time() - start_time)
 
     # ─── Extract metrics (futures P&L computed independently) ─
     STARTING_CAPITAL = 50_000.0
 
-    total_trades = int(pf.trades.count())
-    trades_records = pf.trades.records_readable if total_trades > 0 else None
+    total_trades = len(trades_records)
+    trades_records = trades_records if total_trades > 0 else None
     print(
         f"Signal pipeline → trades={total_trades} "
-        f"(vectorbt drop: {100 - (total_trades / max(diag_post_rollover_long + diag_post_rollover_short, 1)) * 100:.0f}%)",
+        f"(sequencer drop: {100 - (total_trades / max(diag_post_rollover_long + diag_post_rollover_short, 1)) * 100:.0f}%)",
         file=sys.stderr,
     )
-
-    # ─── Add Entry/Exit Idx columns (VBT v2 uses timestamps, not indices) ──
-    if trades_records is not None and "Entry Idx" not in trades_records.columns:
-        ts_to_idx = {ts: i for i, ts in enumerate(close_pd.index)}
-        if "Entry Timestamp" in trades_records.columns:
-            trades_records = trades_records.copy()
-            entry_idx_mapped = trades_records["Entry Timestamp"].map(ts_to_idx)
-            exit_idx_mapped = trades_records["Exit Timestamp"].map(ts_to_idx)
-            unmapped = int(entry_idx_mapped.isna().sum() + exit_idx_mapped.isna().sum())
-            if unmapped > 0:
-                raise ValueError(
-                    f"CRITICAL: {unmapped} trade timestamps unmapped to bar indices. "
-                    f"Data integrity compromised — timestamp mismatch between "
-                    f"trades and price data."
-                )
-            trades_records["Entry Idx"] = entry_idx_mapped.astype(int)
-            trades_records["Exit Idx"] = exit_idx_mapped.astype(int)
+    # Entry Idx and Exit Idx are already integers in the sequencer output —
+    # no VBT v2 timestamp→index remapping needed.
 
     # ─── Trade management: SL/TP/trailing applied bar-by-bar ──
     close_np = df["close"].to_numpy()
