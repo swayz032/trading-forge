@@ -11757,8 +11757,43 @@ Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal
 **Commit:** `d1a9348` — pushed to `hardening/phase-0`
 
 ---
+### Session Log — 2026-06-28 Full-system deep scan (7 lenses) + 3-wave fix campaign on isolated worktree
+
+**Mission:** Operator — "deep scan all systems and codebase, make sure everything is institutional-grade, no bottlenecks, everything wired." Then: fix everything (Waves 1-3) in an isolated git worktree.
+
+**Method:** 7 parallel read-only specialist auditors (trading-forge-architect / accuracy-validator / backtest-core / paper-parity / observability-reliability / n8n-orchestration / autonomy-readiness-incident-classes) → consolidated severity-ranked report → 3 fix waves via file-disjoint parallel edit agents on branch `hardening/deepscan-fixes-2026-06-28` (worktree at ../tf-deepscan-fixes, off 1c601ff — isolated from the parallel session's live hardening/phase-0 edits).
+
+**Findings (2 CRITICAL / 13 HIGH / 18 MED / 9 LOW). Verdict: trading-execution core IS institutional-grade; the breaks were in promotion-gate wiring, alert delivery, and self-healing-after-restart.**
+
+**WAVE 1 — commit `89ed9d5` (14 files, 2 CRITICAL + code-side HIGH):**
+- C1 wf_metadata dropped in backtest-service WfResultsShape → DSR gate was fail-OPEN (could never block) AND CPCV n_paths gate fail-CLOSED (blocked every legit PAPER→DEPLOY_READY). Now persisted; contract test guards the key.
+- C2 alert-service sent NO Authorization header → when API_KEY set, ALL critical Discord alerts silently 401-dropped (fetch doesn't throw, response.ok unchecked). Added Bearer header + response.ok warn.
+- H1 BIF gate moved into shared evaluatePaperToDeployReadyGates (was cron-only → manual PATCH bypassed it). H2 SHADOW→PAPER archetype gate (fromState→toState). H3 7 scheduler + 1 lifecycle `.catch(()=>{})` → structured logger.error. H4 BW_SESSION persisted to .bw-session-runtime + load-env override (survives NSSM restart). H5/H6 60s post-boot + inline recheckOllamaHealth (no false EXTRACTION LOST / flag-stuck-false). H7 family-grade postscript fallback for all 9 critical paths. H11 ADMIN_PROMOTE_HMAC_SECRET WARN→ERROR. H13 broker_accounts boot validation. H12 SMT null-fallback journal flag + PAPER_PARITY_DEGRADED SSE.
+
+**WAVE 2 — commit `107095d` (27 files, MED hardening, 100+ new tests):**
+- Engine stats: M1 CPCV BIF proxy marked bif_proxy_basis=oos_mean_not_is + non-blocking warn; F-4 trial_n_total sourced from research_trial_counter (DSR deflation now reflects mutation history); M2 VIX margin uses trailing 30-bar rolling-max (was whole-window peak look-ahead); L1/L2 docstring + opt-in conftest vbt mock.
+- DLL/paper parity: M-1 95% DLL force-close wired on the Layer-2 axis (TS matched Python compliance_gate); A-5 new 80% DLL approach warning; M-2 VWAP buffer keys on Globex 18:00 ET; M-4 force_close_price_unconfirmed flag.
+- 30-day autonomy: A-8 heartbeat dedup DB-backed; A-9 Postgres reconnect audited+alerted; A-11 proactive TradersPost key probe; A-12 KASA daily cap; A-13 cookie persistence.
+- HARNESS FIX (important): pglite-db.ts CORE_DDL was missing bif/k_eff (drift from migration 0177) → it was silently breaking EVERY DB-backed gate-chain test, incl. the wrong-key regression guard. Fixed → 33/33 gate-chain + b14 suites now run GREEN. Added DSR gate to gate-chain-integration.test.ts.
+
+**LIVE n8n — H9 (HIGH) applied + verified:** `TF Health Watchdog` GET /api/health onError default(stopWorkflow)→continueRegularOutput, so the auto-restart chain is now reachable on a true backend outage (was dead-on-arrival). Backup saved; clean byte-diff; workflow still active.
+
+**Verification:** tsc exit 0 on combined tree after each wave; all 3 CI hard gates GREEN both waves (production-isolation CLEAN / 2026-compliance OK / system-map:check driftItems=[]); previously-blocked DB suites 33/33 GREEN post-harness-fix. Both commits pushed to origin/hardening/deepscan-fixes-2026-06-28.
+
+**Known-facts updates (pinned below):** pglite-db.ts CORE_DDL drift breaks ALL gate-chain DB tests; deepscan-fixes branch is unmerged.
+
+**Carry-forward for next session:**
+- MERGE `hardening/deepscan-fixes-2026-06-28` → `hardening/phase-0` (expect conflicts on walk_forward.py / lifecycle-service.ts / backtest-service.ts / paper-execution-service.ts / AGENT-LOGS.md — the parallel session edited these concurrently; reconcile, don't clobber).
+- OPERATOR-ONLY (no code): set ADMIN_PROMOTE_HMAC_SECRET (≥32, unblocks all promotions), SLUMDAWG_WEBHOOK_SECRET (≥32, unblocks YouTube ingestion); insert MFFU broker_accounts row + MFFU_TRADERSPOST_API_KEY; in n8n UI deactivate zombie workflows 9A (cN2IPq27NeEsOCiu) + 11A (MXTkxH5x8yjpLNXS) — renamed [RETIRED→14A] but still active+scheduled, racing 14A.
+- DEFERRED (flagged, not done): A-6 Pine alert-drift detector (new detector, own pass); A-7 hot-reload risk env vars (risky to safety code); A-10 relay >5min escalation (external tower-relay-client.cjs); M-3 first_30min_volume_ratio sentinel (real code in pre-market-routine.ts); Monthly Robustness Check (RIK5eQ0rFEG78Vtd) needs a kill-switch gate node (node-graph insertion = error-prone via REST, do in n8n UI); structural F-2 schema-version stamp on JSONB gate writers OR INFO→CRITICAL on grandfather-pass warns (operator decision — gate-chain test now guards it at test-time).
+
+---
 
 ## Known-Facts Pin — Stop Misdiagnosing These
+
+### pglite test-harness DDL drifts from schema.ts and silently breaks ALL DB-backed gate tests (pinned 2026-06-28)
+
+`src/server/__tests__/helpers/pglite-db.ts` hand-writes a `CORE_DDL` `CREATE TABLE backtests (...)` that must mirror `src/server/db/schema.ts`. When a migration adds a column to `backtests` (e.g. `bif`/`k_eff` via 0177) but CORE_DDL is NOT updated, Drizzle auto-emits the new column on every INSERT → PGlite rejects with `column "bif" of relation "backtests" does not exist` in the shared `beforeAll` → this fails EVERY DB-backed suite at once (gate-chain-integration, b14-ruin-ci, WFE/PBO/B15/DSR chains), not just the new test. It looks like "my new test is broken" but it's harness drift breaking the whole file. Fixed 2026-06-28 (added bif/k_eff). RULE: whenever you add a gated column to `backtests` (or any table CORE_DDL declares) in schema.ts/migrations, add it to `helpers/pglite-db.ts` CORE_DDL in the SAME change — or the gate-chain regression guard (the thing that catches producer→DB→gate wrong-key disconnects) silently stops running and green CI goes blind again.
 
 ### Tower is in a DEGRADED single-model state — only `gemma4:e2b` serves (pinned 2026-06-27)
 
