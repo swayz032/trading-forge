@@ -831,6 +831,10 @@ export const paperPositions = pgTable(
     // Contains ExitPlan + runtime_state for per-bar runner trail state.
     // Migration: 0145_paper_positions_exit_plan.sql (idx 147).
     exitPlan: jsonb("exit_plan").$type<ExitPlanWithRuntimeState>(),
+    // BL-9 (migration 0180): persist the entry-time correlation_id so closePosition() can
+    // recover the signal→trade trace when called externally (force-close, time-stop).
+    // NULL for positions opened before migration 0180 is applied.
+    correlationId: text("correlation_id"),
   },
   (table) => [
     index("paper_positions_session_idx").on(table.sessionId),
@@ -875,6 +879,10 @@ export const paperTrades = pgTable(
     skipSignal: text("skip_signal"),                  // Most recent skipDecisions.decision for the ET trading day (TRADE | REDUCE | SKIP)
     fillProbability: numeric("fill_probability"),     // Fill probability used at entry (copied from paperPositions)
     rollSpreadCost: numeric("roll_spread_cost"),      // Estimated calendar spread cost when position held across a CME roll date (null = pre-migration or no roll crossed)
+    // BL-9 (migration 0180): end-to-end signal→trade traceability.
+    // Populated from the originating signal's correlationId (carried via paperPositions.correlationId).
+    // NULL for trades closed before migration 0180 is applied.
+    correlationId: text("correlation_id"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [

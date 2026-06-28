@@ -1930,7 +1930,8 @@ def run_monte_carlo(
             else:
                 # FIX 4 (2026-06-22): No firm models in this MC run.
                 # Do NOT silently write probability_of_ruin_ci with terminal<=0 basis —
-                # the B14 gate reads ci_high and blocks when ci_high > 0.40, but the
+                # the B14 gate reads ci_high and blocks when ci_high > B14_RUIN_CI_HIGH_THRESHOLD
+                # (default 0.20, tightened 2026-06-22 from 0.40), but the
                 # terminal<=0 ruin definition is categorically different from firm-breach
                 # ruin and may be materially lower (trading a trending strategy can show
                 # 0% terminal loss while EOD trailing DD already closed the account).

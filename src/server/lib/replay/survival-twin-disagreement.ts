@@ -299,10 +299,16 @@ export function computeCrossMethodAgreement(
 
   let betterPredictorOnDisagreement = "insufficient_data";
   if (disagreeFolds.length >= 3) {
-    // For each fold, check if OOS Sharpe degraded below floor (failure)
-    // survival_twin fires when survivalBreachProb > 0.40 (B14_RUIN_CI_HIGH_THRESHOLD default)
-    // pass_a fires when passARuinCiHigh > 0.40
-    const GATE_THRESHOLD = 0.40;
+    // For each fold, check if OOS Sharpe degraded below floor (failure).
+    // GATE_THRESHOLD mirrors B14_RUIN_CI_HIGH_THRESHOLD (default 0.20, tightened 2026-06-22
+    // from 0.40) so this retrospective analysis reflects the SAME firing point as the
+    // production gate in b14-ci-gate.ts::getB14CiHighThreshold().
+    // NOTE: DISAGREEMENT_THRESHOLD (0.10, above) is a SEPARATE concept — it is the
+    //       minimum inter-method spread required to count a fold as "disagreeing".
+    //       Do NOT confuse the two.
+    const GATE_THRESHOLD = parseFloat(
+      (typeof process !== "undefined" ? process.env["B14_RUIN_CI_HIGH_THRESHOLD"] : undefined) ?? "0.20",
+    );
     let survivalCorrect = 0;
     let passACorrect = 0;
 

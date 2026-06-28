@@ -3279,7 +3279,7 @@ export class LifecycleService {
         //
         // Wave 27.5 Pass B.2: B14 now ALSO reads probability_of_ruin_ci.ci_high from
         // the latest MC run (Pass A introduced BCa CI bootstrap). When ci_high > threshold
-        // (default 0.40, env B14_RUIN_CI_HIGH_THRESHOLD), the gate hard-blocks.
+        // (default 0.20, env B14_RUIN_CI_HIGH_THRESHOLD — tightened 2026-06-22), the gate hard-blocks.
         // Falls back to scalar probability_of_ruin for pre-Pass-A MC runs.
         const b14HardGateEnabled = (process.env.B14_HARD_GATE_ENABLED ?? "true") !== "false";
         if (b14HardGateEnabled) {

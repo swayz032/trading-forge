@@ -1978,6 +1978,9 @@ export async function openPosition(sessionId: string, params: {
     initialStopPrice: initialStopPriceForInsert != null ? String(initialStopPriceForInsert) : null,
     highSinceEntryPrice: String(actualEntry),
     lowSinceEntryPrice: String(actualEntry),
+    // BL-9 (migration 0180): persist the entry correlation_id so closePosition() can
+    // recover the signal→trade trace when invoked externally (force-close, time-stop).
+    correlationId,
   }).returning();
 
   const executionResult: ExecutionResult = {
@@ -2062,7 +2065,12 @@ export async function openPosition(sessionId: string, params: {
  *                         slippage (prior behaviour).
  */
 export async function closePosition(positionId: string, exitSignalPrice: number, atr?: number, context?: { correlationId?: string; barTimestamp?: Date; medianAtr?: number }) {
-  const correlationId = context?.correlationId ?? null;
+  // BL-9: declared as let so it can be resolved from the position row after the DB read.
+  // Callers that do supply context.correlationId (inline signal processing) use that value;
+  // external callers (force-close, time-stop) fall back to pos.correlationId persisted at open.
+  // If neither is available (positions predating migration 0180), a fresh UUID is generated
+  // so every trade row always has a non-null correlation_id.
+  let correlationId: string | null = context?.correlationId ?? null;
   const closeSpan = tracer.startSpan("paper.position_close");
   try {
   // Read position outside the lock to get the sessionId for the lock key
@@ -2074,6 +2082,12 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
   // Re-read position inside lock to get fresh state
   const [pos] = await dbConn.select().from(paperPositions).where(eq(paperPositions.id, positionId));
   if (!pos) throw new Error(`Position ${positionId} not found`);
+
+  // BL-9: resolve correlationId now that we have the position row.
+  // Priority: context caller → persisted entry id → fresh UUID (positions pre-0180).
+  if (correlationId == null) {
+    correlationId = pos.correlationId ?? randomUUID();
+  }
 
   // Fetch session early to get firmId for commission lookup
   // (session is re-read after the equity update below for downstream logic)
@@ -2237,6 +2251,9 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
         // Roll spread cost: non-null when cost > 0 (roll crossed), null when no roll crossed.
         // Persisted even when cost is 0 (distinguishes "evaluated, no roll" from "pre-migration null").
         rollSpreadCost: String(rollCost.estimatedSpreadCost),
+        // BL-9 (migration 0180): end-to-end signal→trade trace.
+        // Always non-null after migration 0180 (resolved above from context / pos.correlationId / fresh UUID).
+        correlationId,
       }).returning();
 
       // 2. Mark position as closed — unrealizedPnl resets to 0 (realized P&L lives in paperTrades)
@@ -3105,6 +3122,9 @@ async function bookPartialClose(
         mae: pos.mae,
         mfe: pos.mfe,
         fillProbability: pos.fillProbability,
+        // BL-9 (migration 0180): partial-close legs carry the same correlationId as the full close
+        // so the TP1/TP2 legs and the runner-close are all traceable to the originating signal.
+        correlationId: correlationId ?? null,
       });
 
       // Atomic equity credit — same additive-SQL pattern as closePosition
