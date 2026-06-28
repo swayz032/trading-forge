@@ -246,35 +246,39 @@
        16px passcode input (stops iOS auto-zoom on focus).
        ───────────────────────────────────────────────────────────────────────── */
     @media (max-width: 480px) {
-      /* HEADER: logo + lock on row 1, the 3 nav pills full-width on row 2 so
-         they're all visible (slumhouse.css packs them in one row → overflow). */
+      /* Flex column fills the screen so the card centers reliably (was floating
+         high with empty space below). */
+      body { display: flex; flex-direction: column; min-height: 100svh; }
+      .sh-page {
+        flex: 1 1 auto; display: flex; flex-direction: column; padding-bottom: 0;
+        padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right);
+      }
+
+      /* HEADER: pushed BELOW the status bar / Dynamic Island (safe-area-top);
+         nav pills drop to their own full-width row so all 3 are visible. */
       .sh-header {
+        flex-shrink: 0;
         grid-template-columns: 1fr auto;
         grid-template-areas: "logo tools" "nav nav";
-        row-gap: 10px; column-gap: 8px;
-        padding: 12px 14px 8px;
+        row-gap: 8px; column-gap: 8px;
+        padding: calc(env(safe-area-inset-top) + 10px) 14px 8px;
       }
       .sh-logo { grid-area: logo; }
       .sh-header-spacer { grid-area: tools; min-width: 0; }
       .sh-nav { grid-area: nav; width: 100%; justify-content: center; }
-      .sh-pill { padding: 8px 15px; font-size: 12px; }
+      .sh-pill { padding: 8px 16px; font-size: 12px; }
 
-      .sh-page {
-        padding-left: env(safe-area-inset-left);
-        padding-right: env(safe-area-inset-right);
-        padding-bottom: 16px;
-      }
-
-      /* CAROUSEL: one card centered, sized to its content (NOT stretched tall). */
+      /* CAROUSEL: single card, swipe to change (arrows removed), centered. */
       #of-shell {
-        min-height: calc(100svh - 150px);
-        padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
+        flex: 1 1 auto; min-height: 0; justify-content: center;
+        padding: 6px 0 calc(env(safe-area-inset-bottom) + 14px);
       }
-      .of-carousel { gap: 2px; }
-      .of-stage3d { height: min(60svh, 470px); perspective: 1050px; }
-      /* content-sized card — drop the min/max-height that stretched it tall */
+      .of-arrow { display: none; }            /* operator swipes instead of tapping arrows */
+      .of-carousel { gap: 0; }
+      .of-stage3d { height: 56svh; perspective: 1050px; touch-action: pan-y; }
+      /* content-sized card — no min/max-height stretch */
       .of-card3d {
-        width: 86vw; height: auto; min-height: 0; max-height: none;
+        width: 88vw; height: auto; min-height: 0; max-height: none;
         padding: 24px 22px; border-radius: 22px; justify-content: center;
       }
       .of-card3d.is-active {
@@ -288,14 +292,11 @@
       .of-locknote { font-size: 12px; margin-top: 14px; }
       .of-toggle-row { margin-top: 22px; gap: 16px; }
       .of-status { font-size: 19px; }
-
-      /* touch-friendly nav controls */
-      .of-arrow { width: 42px; height: 42px; font-size: 21px; }
-      .of-dots { margin-top: 14px; gap: 12px; }
+      .of-dots { margin-top: 16px; gap: 12px; }
       .of-dot { width: 11px; height: 11px; }
 
       /* passcode lock screen */
-      .of-lock { min-height: 64svh; padding: 18px; }
+      .of-lock { flex: 1 1 auto; min-height: 0; padding: 18px; }
       .of-lock-card { padding: 26px 20px 22px; }
       .of-input { font-size: 16px; padding: 14px 16px; }   /* ≥16px = no iOS zoom-on-focus */
       .of-btn { font-size: 16px; padding: 14px 16px; }
@@ -454,6 +455,23 @@
         var next = document.querySelector('.of-next');
         if (prev) prev.addEventListener('click', function () { ofGo(ofCur - 1); });
         if (next) next.addEventListener('click', function () { ofGo(ofCur + 1); });
+
+        // Swipe to change cards (mobile — arrows are hidden there).
+        var stage = document.querySelector('.of-stage3d');
+        if (stage) {
+          var sx = 0, sy = 0, tracking = false;
+          stage.addEventListener('touchstart', function (e) {
+            var t = e.changedTouches[0]; sx = t.clientX; sy = t.clientY; tracking = true;
+          }, { passive: true });
+          stage.addEventListener('touchend', function (e) {
+            if (!tracking) return; tracking = false;
+            var t = e.changedTouches[0];
+            var dx = t.clientX - sx, dy = t.clientY - sy;
+            if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
+              ofGo(dx < 0 ? ofCur + 1 : ofCur - 1);   // swipe left → next, right → prev
+            }
+          }, { passive: true });
+        }
         ofLayout();
         loadSwitches();
       }
