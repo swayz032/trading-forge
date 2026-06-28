@@ -19,9 +19,10 @@
  *   No async in the hot path. No breaking change to callers.
  *
  * Kill switch: system_parameters row with paramName="auto_patch_loop_enabled".
- *   Value "true" (exact string) enables the loop.  Any other value, a missing
- *   row, or a DB error disables the loop (FAIL-CLOSED) and emits
- *   auto_patch.loop_halted_skip.  Default seed value is "false" (disabled).
+ *   Numeric value ≥ 1 enables the loop.  Any other value, a missing row,
+ *   or a DB error disables the loop (FAIL-CLOSED) and emits
+ *   auto_patch.loop_halted_skip.  Store 1 to enable, 0 to disable (never the
+ *   string "true"/"false" — current_value is a NUMERIC column).
  *
  * Min-sample guard: env PATTERN_AGGREGATOR_MIN_CRITIQUES (default 10).
  *   Fewer critiques than the threshold → audit + return "insufficient_samples".
@@ -459,9 +460,12 @@ export async function runPatternAggregator(dryRun: boolean = false): Promise<Pat
 /**
  * Read kill switch from system_parameters.
  * FAIL-CLOSED: returns true (enabled) ONLY when the row is present AND
- * its value is exactly the string "true".  An absent row, any other
- * value, or a DB error all return false (disabled) so the LLM-mutation
+ * Number(current_value) >= 1.  An absent row, any value that parses to
+ * less than 1, or a DB error all return false (disabled) so the LLM-mutation
  * loop never fires without explicit operator opt-in.
+ *
+ * NOTE: current_value is a NUMERIC column — never store the string "true".
+ * Store 1 to enable, 0 to disable.
  *
  * F-5 fix (Wave B): inverted from the previous fail-open semantic.
  */
@@ -475,8 +479,8 @@ async function _readKillSwitch(): Promise<boolean> {
 
     // Absent row → DISABLED (fail-closed).
     if (rows.length === 0) return false;
-    // Only the exact string "true" enables the loop.
-    return String(rows[0].currentValue).trim() === "true";
+    // Numeric ≥ 1 enables the loop.  "1" → 1, "0" → 0, "true" → NaN → false.
+    return Number(rows[0].currentValue) >= 1;
   } catch (err) {
     logger.warn({ err }, "Pattern aggregator: failed to read kill switch — defaulting to disabled (fail-closed)");
     return false; // fail-closed
@@ -672,7 +676,7 @@ async function _maybeEmitReadinessNudge(eligibleCritiques: number): Promise<void
     `Learning loop READY but OFF — ${eligibleCritiques} trade critiques have accumulated ` +
     `(threshold ${MIN_CRITIQUES}). The bot can start improving its own strategy generator, ` +
     `but it's currently disabled for safety. ` +
-    `To turn it ON: set system_parameters.auto_patch_loop_enabled = 'true'. ` +
+    `To turn it ON: set system_parameters.auto_patch_loop_enabled = 1 (numeric). ` +
     `Leaving it OFF is safe — the bot just won't self-improve.`;
 
   const fullBody = appendFamilyGradePostscript(

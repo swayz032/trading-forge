@@ -138,9 +138,9 @@ describe("F-5 — kill switch FAIL-CLOSED (absent row → DISABLED)", () => {
     expect(vi.mocked(callOpenAI)).not.toHaveBeenCalled();
   });
 
-  it("F-5-B: row value 'true' → loop ENABLED (proceeds)", async () => {
+  it("F-5-B: numeric row value '1' → loop ENABLED (proceeds)", async () => {
     buildSelectSequence([
-      [{ currentValue: "true" }],  // explicit opt-in
+      [{ currentValue: "1" }],  // explicit opt-in via numeric 1
       ENOUGH_CRITIQUES,
       [{ maxVer: 1 }],
       [],
@@ -233,7 +233,7 @@ describe("F-6 — 3 consecutive failures → Discord WARN (fail-soft, never cras
       //   2: _readConsecFailures (current strike count = i)
       //   3: _upsertParam existence check (simulate "row exists" so it takes update path)
       buildSelectSequence([
-        [{ currentValue: "true" }],              // kill switch → enabled
+        [{ currentValue: "1" }],                 // kill switch → enabled (numeric 1)
         ENOUGH_CRITIQUES,                         // enough critiques
         [{ currentValue: String(i) }],           // _readConsecFailures → i
         [{ paramName: CONSEC_FAIL_KEY }],        // _upsertParam: row exists → update
@@ -365,7 +365,7 @@ describe("F-4 — setAppendixCache invalidates the 60s TTL promptCache", () => {
     buildUpdateMock();
 
     buildSelectSequence([
-      [{ currentValue: "true" }],
+      [{ currentValue: "1" }],  // numeric 1 = enabled
       ENOUGH_CRITIQUES,
       [{ maxVer: 3 }],
       [],
@@ -418,8 +418,9 @@ describe("F-5 seed — auto_patch_loop_enabled default is false", () => {
     expect(result.status).toBe("halted");
   });
 
-  it("F-5-seed-B: only exact string 'true' enables — any other value halts", async () => {
-    for (const val of ["1", "yes", "enabled", "TRUE", "True", ""]) {
+  it("F-5-seed-B: only numeric ≥ 1 enables — non-numeric strings and 0 halt", async () => {
+    // "1" now enables (see F-5-B); the values below all parse to NaN or 0, so they halt.
+    for (const val of ["yes", "enabled", "TRUE", "True", "", "0", "false"]) {
       vi.clearAllMocks();
       buildInsertMock();
       buildUpdateMock();
@@ -578,9 +579,9 @@ describe("F-7 — readiness nudge: disabled + >=threshold → audit + Discord (d
   });
 
   it("F-7-D: enabled → NO nudge (normal aggregation path, kill switch is on)", async () => {
-    // When kill switch is ON, the normal aggregation path runs — no nudge
+    // When kill switch is ON (numeric 1), the normal aggregation path runs — no nudge
     buildSelectSequence([
-      [{ currentValue: "true" }],  // kill switch enabled → proceed
+      [{ currentValue: "1" }],  // kill switch enabled (numeric 1) → proceed
       ENOUGH_CRITIQUES,
     ]);
 

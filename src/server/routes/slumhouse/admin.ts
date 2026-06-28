@@ -29,6 +29,10 @@ import {
 import { insertAuditRowSafe } from "../../lib/audit-log-helper.js";
 import { logger } from "../../lib/logger.js";
 import { getMode, setMode } from "../../services/pipeline-control-service.js";
+import { db } from "../../db/index.js";
+import { systemParameters, systemState } from "../../db/schema.js";
+import { eq } from "drizzle-orm";
+import { clearOperatorAbsenceMarkers } from "../../services/dead-mans-heartbeat-service.js";
 
 export const adminOfficeRouter = Router();
 
@@ -173,8 +177,11 @@ function requireAdminSession(req: Request, res: Response): boolean {
   return true;
 }
 
-adminOfficeRouter.get("/slumhouse/admin/switches", async (req: Request, res: Response) => {
+// Named so tests can import the handler directly.
+export async function getSwitchStates(req: Request, res: Response): Promise<void> {
   if (!requireAdminSession(req, res)) return;
+
+  // ── bot_power ─────────────────────────────────────────────────────────────
   let mode: string | null = null;
   try { mode = await getMode(); } catch { mode = null; }
   // 3-state: running (green) / paused (blank/neutral) / alert (red — safety auto-pause)
@@ -182,22 +189,78 @@ adminOfficeRouter.get("/slumhouse/admin/switches", async (req: Request, res: Res
   if (mode === "ACTIVE") botState = "running";
   else if (mode === "AUTOPAUSE_DD_VELOCITY") botState = "alert";
   const botStatus = botState === "running" ? "RUNNING" : botState === "alert" ? "AUTO-PAUSED" : "PAUSED";
+
+  // ── learning_loop: read auto_patch_loop_enabled from system_parameters ────
+  // current_value is NUMERIC — never store the string "true".  1=enabled, 0=disabled.
+  let llOn = false;
+  try {
+    const llRows = await db
+      .select({ val: systemParameters.currentValue })
+      .from(systemParameters)
+      .where(eq(systemParameters.paramName, "auto_patch_loop_enabled"))
+      .limit(1);
+    llOn = llRows.length > 0 && Number(llRows[0].val) >= 1;
+  } catch {
+    llOn = false; // fail-closed
+  }
+
+  // ── vacation_mode: operator_absent_since non-null ⇒ AWAY ──────────────────
+  let vmOn = false;
+  try {
+    const ssRows = await db
+      .select({ ts: systemState.operatorAbsentSince })
+      .from(systemState)
+      .where(eq(systemState.id, 1))
+      .limit(1);
+    vmOn = ssRows.length > 0 && ssRows[0].ts !== null;
+  } catch {
+    vmOn = false; // fail-closed
+  }
+
+  // ── recovery: reflects live pipeline halt — never a persistent "on" ───────
+  // Reuses `mode` already read for bot_power — no extra DB round-trip needed.
+  const recoveryHalted = mode === "AUTOPAUSE_DD_VELOCITY";
+
   res.json({
     switches: {
-      bot_power:      { on: mode === "ACTIVE", state: botState, wired: true, dangerOff: true, status: botStatus },
-      learning_loop:  { on: false, state: "paused", wired: false, status: "COMING SOON" },
-      vacation_mode:  { on: false, state: "paused", wired: false, status: "COMING SOON" },
-      recovery:       { on: false, state: "paused", wired: false, status: "COMING SOON" },
+      bot_power:     { on: mode === "ACTIVE", state: botState, wired: true, dangerOff: true, status: botStatus },
+      learning_loop: {
+        on: llOn,
+        state: llOn ? "running" : "paused",
+        wired: true,
+        status: llOn ? "LEARNING" : "OFF",
+        dangerOn: true,
+      },
+      vacation_mode: {
+        on: vmOn,
+        state: vmOn ? "running" : "paused",
+        wired: true,
+        status: vmOn ? "AWAY" : "HOME",
+        dangerOn: true,
+      },
+      recovery: {
+        on: false,
+        state: recoveryHalted ? "alert" : "paused",
+        wired: true,
+        status: recoveryHalted ? "HALTED" : "ALL CLEAR",
+        momentary: true,
+        ...(recoveryHalted ? { confirmAction: true } : {}),
+      },
       live_execution: { on: false, state: "paused", wired: false, needsSetup: true, status: "NEEDS SETUP" },
     },
   });
-});
+}
 
-adminOfficeRouter.post("/slumhouse/admin/switch", async (req: Request, res: Response) => {
+adminOfficeRouter.get("/slumhouse/admin/switches", getSwitchStates);
+
+// Named so tests can import the handler directly.
+export async function postSwitch(req: Request, res: Response): Promise<void> {
   if (!requireAdminSession(req, res)) return;
   const id = typeof req.body?.id === "string" ? req.body.id : "";
   const on = req.body?.on === true;
 
+  // ── bot_power ─────────────────────────────────────────────────────────────
+  // DO NOT modify this block — bot_power wiring is production-verified.
   if (id === "bot_power") {
     const newMode = on ? "ACTIVE" : "PAUSED";
     try {
@@ -221,5 +284,113 @@ adminOfficeRouter.post("/slumhouse/admin/switch", async (req: Request, res: Resp
     return;
   }
 
+  // ── learning_loop: numeric 1/0 in system_parameters ──────────────────────
+  // current_value is a NUMERIC column.  1=enabled, 0=disabled.  Never "true".
+  if (id === "learning_loop") {
+    const newVal = on ? "1" : "0";
+    try {
+      // Read-then-write mirrors pipeline-control-service.ts pattern.
+      const existing = await db
+        .select({ id: systemParameters.id })
+        .from(systemParameters)
+        .where(eq(systemParameters.paramName, "auto_patch_loop_enabled"))
+        .limit(1);
+      if (existing.length > 0) {
+        await db
+          .update(systemParameters)
+          .set({ currentValue: newVal, updatedAt: new Date() })
+          .where(eq(systemParameters.paramName, "auto_patch_loop_enabled"));
+      } else {
+        await db.insert(systemParameters).values({
+          paramName: "auto_patch_loop_enabled",
+          currentValue: newVal,
+          domain: "critic",
+          description: "Self-improvement loop kill switch (1=enabled, 0=disabled). Shared with quantum-replay-weekly.",
+        });
+      }
+    } catch (err) {
+      logger.error({ err }, "slumhouse Office: learning_loop toggle failed");
+      res.status(500).json({ ok: false, error: "toggle_failed" });
+      return;
+    }
+    await insertAuditRowSafe({
+      action: "slumhouse_admin.switch_toggled",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "human",
+      input: { switch: id, on } as Record<string, unknown>,
+      result: { value: newVal } as Record<string, unknown>,
+      status: "success",
+      correlationId: null,
+    });
+    res.json({ ok: true, id, on, state: on ? "running" : "paused", status: on ? "LEARNING" : "OFF" });
+    return;
+  }
+
+  // ── vacation_mode: operator_absent_since in system_state ──────────────────
+  // on=true  → set operator_absent_since = now (mirrors heartbeat-service set-since).
+  // on=false → clear both absence columns (mirrors /operator-mark-present route).
+  if (id === "vacation_mode") {
+    try {
+      if (on) {
+        await db
+          .update(systemState)
+          .set({ operatorAbsentSince: new Date() })
+          .where(eq(systemState.id, 1));
+      } else {
+        await clearOperatorAbsenceMarkers();
+      }
+    } catch (err) {
+      logger.error({ err }, "slumhouse Office: vacation_mode toggle failed");
+      res.status(500).json({ ok: false, error: "toggle_failed" });
+      return;
+    }
+    await insertAuditRowSafe({
+      action: "slumhouse_admin.switch_toggled",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "human",
+      input: { switch: id, on } as Record<string, unknown>,
+      result: { operatorAbsent: on } as Record<string, unknown>,
+      status: "success",
+      correlationId: null,
+    });
+    res.json({ ok: true, id, on, state: on ? "running" : "paused", status: on ? "AWAY" : "HOME" });
+    return;
+  }
+
+  // ── recovery: momentary — clears AUTOPAUSE_DD_VELOCITY pipeline mode ──────
+  // Not a persistent toggle.  Fail-soft on all errors — never crash the route.
+  if (id === "recovery") {
+    const cleared: string[] = [];
+    let clearErr: unknown = null;
+    try {
+      const currentMode = await getMode();
+      if (currentMode === "AUTOPAUSE_DD_VELOCITY") {
+        await setMode("ACTIVE", "slumhouse Office recovery clear", null);
+        cleared.push("AUTOPAUSE_DD_VELOCITY");
+      }
+    } catch (err) {
+      clearErr = err;
+      logger.error({ err }, "slumhouse Office: recovery clear failed");
+      // Fail-soft: proceed to audit + response regardless.
+    }
+    await insertAuditRowSafe({
+      action: "slumhouse_admin.recovery_triggered",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "human",
+      input: { switch: id } as Record<string, unknown>,
+      result: { cleared, error: clearErr ? String(clearErr) : null } as Record<string, unknown>,
+      status: clearErr !== null && cleared.length === 0 ? "warning" : "success",
+      correlationId: null,
+    });
+    res.json({ ok: true, id: "recovery", state: "paused", status: cleared.length > 0 ? "CLEARED" : "ALL CLEAR" });
+    return;
+  }
+
+  // ── live_execution: not wired yet ─────────────────────────────────────────
   res.status(501).json({ ok: false, error: "not_wired_yet", id });
-});
+}
+
+adminOfficeRouter.post("/slumhouse/admin/switch", postSwitch);

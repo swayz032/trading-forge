@@ -408,8 +408,13 @@
         var s = ofSwitches[cd.id] || {};
         if (!s.wired) return;                                  // not wired yet
         var willBe = !s.on;
-        if (s.dangerOff && s.on) {                             // turning a dangerous switch OFF
+        if (s.momentary) {                                     // recovery — a trigger, not an on/off state
+          if (s.confirmAction && !window.confirm('Clear the safety stop on ' + cd.title + '?\n\nThis re-enables the bot after it halted itself.')) return;
+          willBe = true;
+        } else if (s.dangerOff && s.on) {                      // turning a dangerous switch OFF
           if (!window.confirm('Turn OFF ' + cd.title + '?\n\nThis stops the bot from making any trades.')) return;
+        } else if (s.dangerOn && !s.on) {                      // turning a sensitive switch ON
+          if (!window.confirm('Turn ON ' + cd.title + '?')) return;
         }
         fetch('/slumhouse/admin/switch', {
           method: 'POST', credentials: 'same-origin',
@@ -421,6 +426,7 @@
             if (res.status === 200 && res.body && res.body.ok) {
               ofSwitches[cd.id] = Object.assign({}, s, { on: res.body.on, state: res.body.state, status: res.body.status });
               applySwitches();
+              loadSwitches();   // re-read derived states (e.g. recovery clearing a halt)
             } else if (res.status === 401) { showLocked(); }
           })
           .catch(function () {});
