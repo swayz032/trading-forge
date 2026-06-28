@@ -320,11 +320,10 @@
 
       // ── Pass 3: floating 3D switch-card carousel (empty shells, no switches yet) ──
       var OF_CARDS = [
-        { id: 'bot_power',      eyebrow: 'Main switch', title: 'Bot Power',      sub: 'Turn the whole bot on or off. Off = it stops making any trades.' },
-        { id: 'learning_loop',  eyebrow: 'Smart mode',  title: 'Learning Loop',  sub: 'Let the bot study its own trades and get smarter over time.' },
-        { id: 'vacation_mode',  eyebrow: 'Away',        title: 'Vacation Mode',  sub: 'Keeps things safe and running by itself while you are away.' },
-        { id: 'recovery',       eyebrow: 'Fix it',      title: 'Recovery',       sub: 'If the bot stopped itself for safety, this starts it back up.' },
-        { id: 'live_execution', eyebrow: 'Real money',  title: 'Live Execution', sub: 'Trade with real money. Not on yet — needs setup first.' }
+        { id: 'bot_power',      eyebrow: 'Main switch', title: 'Bot Power',      sub: 'ON = the bot trades. OFF = it stops opening trades. Turns RED if it pauses itself for safety — flip ON to resume.' },
+        { id: 'learning_loop',  eyebrow: 'Smart mode',  title: 'Learning Loop',  sub: 'ON = the bot studies its trades and improves itself. OFF = it stays exactly as it is now.' },
+        { id: 'vacation_mode',  eyebrow: 'Away',        title: 'Vacation Mode',  sub: 'ON = runs on autopilot while you are away. OFF = you are driving (nothing auto-promotes).' },
+        { id: 'live_execution', eyebrow: 'Real money',  title: 'Live Execution', sub: 'ON = trade real money. OFF = paper only. Locked until setup is done.' }
       ];
       var ofTrack = document.getElementById('of-track');
       var ofDots = document.getElementById('of-dots');
