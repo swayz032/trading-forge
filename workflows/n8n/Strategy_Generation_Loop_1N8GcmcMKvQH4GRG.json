@@ -39,7 +39,7 @@
     },
     {
       "parameters": {
-        "model": "qwen2.5-coder:7b",
+        "model": "gemma4:e2b",
         "options": {}
       },
       "id": "ollama-model",
@@ -1237,7 +1237,7 @@
       },
       {
         "parameters": {
-          "model": "qwen2.5-coder:7b",
+          "model": "gemma4:e2b",
           "options": {}
         },
         "id": "ollama-model",

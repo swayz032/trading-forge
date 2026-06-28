@@ -2093,7 +2093,8 @@
       "audit_log:live_order.routed"
     ],
     "scheduler_jobs": [
-      "broker-error-budget-check"
+      "broker-error-budget-check",
+      "position-drift-reconcile"
     ],
     "routes": [
       "/api/broker-accounts",

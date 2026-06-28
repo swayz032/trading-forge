@@ -14,10 +14,12 @@
  * Build the CLI args array passed to the Python backtester subprocess.
  *
  * B15_BATTERY_ENABLED must match the lifecycle gate default in lifecycle-service.ts:
- *   `(process.env.B15_BATTERY_ENABLED ?? "false") === "true"`
- * Default is FALSE so the battery is advisory-only until explicitly opted in.
- * When the flag flips to true the producer (this function) and the consumer
- * (lifecycle B15 gate) both activate simultaneously — no silent mismatch.
+ *   `(process.env.B15_BATTERY_ENABLED ?? "true") === "true"`
+ * Default is TRUE (hardening 2026-06-27: phantom-gate fix — the 30-day grandfather
+ * window from 2026-05 has expired). Battery now runs on every backtest unless the
+ * operator explicitly sets B15_BATTERY_ENABLED=false (research/emergency disable).
+ * The consumer default in lifecycle-service.ts was already "true" (line :3410);
+ * the producer now matches — both ends aligned for the first time since Wave 25 Item 5.
  */
 export function buildBacktestArgs(opts: {
   backtestId: string;
@@ -35,7 +37,7 @@ export function buildBacktestArgs(opts: {
   // sentinel. Previously the flag was NEVER passed, so backtests.b15_battery
   // was always null and the lifecycle gate's `if (latestBtForB15?.b15Battery)`
   // guard short-circuited on every run.
-  const batteryOn = opts.b15BatteryEnabled ?? ((process.env.B15_BATTERY_ENABLED ?? "false") === "true");
+  const batteryOn = opts.b15BatteryEnabled ?? ((process.env.B15_BATTERY_ENABLED ?? "true") === "true");
   if (batteryOn) {
     args.push("--b15-battery");
   }

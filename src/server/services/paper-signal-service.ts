@@ -1048,6 +1048,35 @@ export function VWAP(bars: Bar[]): number {
   return cumulativeTPV / cumulativeVolume;
 }
 
+/**
+ * Filter a bar buffer to bars belonging to the SAME CME Globex trading session
+ * as the last bar in the buffer.
+ *
+ * CME Globex session rule: trading day N runs from 18:00 ET on day N-1 through
+ * 17:00 ET on day N. This mirrors the backtester's _assign_globex_session_id()
+ * in core.py (bars at ET hour >= 18 belong to the NEXT calendar day's session_id).
+ *
+ * Uses toFuturesTradingDayString (CME +7h shift: 17:00 ET → midnight next day)
+ * to assign each bar to a Globex day key. Bars sharing the same key as the last
+ * bar are in the current session.
+ *
+ * Parity: closes the VWAP reset gap vs backtester. The paper-trading-stream bar
+ * buffer resets at ET midnight (toEasternDateString), NOT at the 18:00 ET Globex
+ * boundary. Filtering here ensures VWAP only spans the current Globex session,
+ * matching core.py::compute_vwap_with_bands().
+ *
+ * Exported for unit testing.
+ */
+export function filterToGlobexSession(bars: Bar[]): Bar[] {
+  if (bars.length === 0) return bars;
+  const currentSessionKey = toFuturesTradingDayString(
+    new Date(bars[bars.length - 1].timestamp),
+  );
+  return bars.filter(
+    (b) => toFuturesTradingDayString(new Date(b.timestamp)) === currentSessionKey,
+  );
+}
+
 export function BollingerBands(
   closes: number[],
   period: number,
@@ -1080,7 +1109,7 @@ interface ICTBridgeResult {
   error?: string;
 }
 
-function computeIndicators(barBuffer: Bar[]): IndicatorValues {
+export function computeIndicators(barBuffer: Bar[]): IndicatorValues {
   const closes = barBuffer.map((b) => b.close);
   const vals: IndicatorValues = {};
 
@@ -1104,8 +1133,13 @@ function computeIndicators(barBuffer: Bar[]): IndicatorValues {
     vals[`atr_${p}`] = ATR(barBuffer, p);
   }
 
-  // VWAP (full buffer = intraday assumption; caller resets buffer daily)
-  vals["vwap"] = VWAP(barBuffer);
+  // VWAP: session-resetting at 18:00 ET Globex boundary (parity with backtester
+  // compute_vwap_with_bands/_assign_globex_session_id in core.py). The bar buffer
+  // resets at ET midnight (toEasternDateString), NOT 18:00 ET —
+  // filterToGlobexSession() corrects this so VWAP spans only the current CME
+  // trading session, eliminating pre-session bars from contaminating the anchor.
+  const sessionBarsForVwap = filterToGlobexSession(barBuffer);
+  vals["vwap"] = sessionBarsForVwap.length > 0 ? VWAP(sessionBarsForVwap) : NaN;
 
   // Bollinger Bands at common periods
   for (const p of [20]) {
@@ -1125,6 +1159,21 @@ function computeIndicators(barBuffer: Bar[]): IndicatorValues {
     vals["low"] = currentBar.low;
     vals["close"] = currentBar.close;
     vals["volume"] = currentBar.volume;
+  }
+
+  // volume_rolling_mean_20: 20-bar rolling mean of bar volume.
+  // Enables evalDeltaOrVolumeSignature (delta_or_volume_signature factor, weight 0.08)
+  // to evaluate the volume spike condition rather than falling through to
+  // "volume_rolling_mean_unavailable_pending_accumulation".
+  // Parity: matches backtester rolling mean over the last 20 bars.
+  // Absent for the first 19 bars of any session — that is expected and handled by
+  // evalDeltaOrVolumeSignature's existing fallback path.
+  const volSeries = barBuffer
+    .map((b) => b.volume)
+    .filter((v) => Number.isFinite(v));
+  if (volSeries.length >= 20) {
+    vals["volume_rolling_mean_20"] =
+      volSeries.slice(-20).reduce((s, v) => s + v, 0) / 20;
   }
 
   return vals;
@@ -3005,7 +3054,12 @@ export async function evaluateSignals(
     try {
       const today = toFuturesTradingDayString(new Date(bar.timestamp));
       const [pmSession] = await db
-        .select({ blackoutWindows: preMarketSessions.blackoutWindows })
+        .select({
+          blackoutWindows: preMarketSessions.blackoutWindows,
+          // Gap 3 (observable): read first_30min_volume_ratio so we can surface
+          // the null → tells operator the DAL is not yet wired.
+          first30minVolumeRatio: preMarketSessions.first30minVolumeRatio,
+        })
         .from(preMarketSessions)
         .where(and(
           eq(preMarketSessions.sessionDate, today),
@@ -3066,6 +3120,19 @@ export async function evaluateSignals(
             }).catch((err: unknown) => logger.warn({ err, sessionId }, "audit_log insert failed for signal.skipped_pre_market_blackout"));
           }
         }
+      }
+
+      // ── Parity Gap 3 (observable): first_30min_volume_ratio null diagnostics ──
+      // first_30min_volume_ratio is structurally null until priorSessionVolume is
+      // wired in pre-market-routine.ts. Log at debug so the paper/backtest
+      // divergence is discoverable in telemetry without blocking trading.
+      // delta_or_volume_signature uses volume_rolling_mean_20 from the bar buffer
+      // as the operative volume reference when this ratio is unavailable.
+      if (pmSession !== undefined && pmSession.first30minVolumeRatio === null) {
+        logger.debug(
+          { sessionId, symbol, correlationId, sessionDate: today },
+          "paper-parity: first_30min_volume_ratio null (priorSessionVolume DAL not wired); delta_or_volume_signature uses bar-derived volume_rolling_mean_20",
+        );
       }
     } catch (blackoutErr) {
       // Fail-open: query/parse errors → no block
@@ -3951,6 +4018,23 @@ export async function evaluateSignals(
                 correlationId ?? undefined,
               ).catch(() => null),
             ]);
+
+            // ── Parity Gap 1 (observable): SMT snapshot availability diagnostics ──────
+            // When smtSnapshot is null (Python threw, caught by .catch(() => null)), or
+            // when all fields are null (insufficient bars / no divergence detected), log
+            // so the gap is visible in telemetry without blocking the stream.
+            // evalSmtConfirmation will return satisfied=false, reason="smt_unavailable".
+            if (smtSnapshot === null) {
+              logger.info(
+                { sessionId, symbol, correlationId },
+                "paper-parity: smt_confirmation unavailable — smtSnapshot null (Python error or bar buffer miss); smt_confirmation factor scores 0 this bar",
+              );
+            } else if (smtSnapshot.score === null && smtSnapshot.direction === null) {
+              logger.debug(
+                { sessionId, symbol, correlationId, stale: smtSnapshot.stale },
+                "paper-parity: smt_score null (insufficient bars or no divergence detected); evalSmtConfirmation returns smt_unavailable",
+              );
+            }
 
             const weightedCtx: WeightedSignalContext = {
               strategyId: sessionConfig.strategyId,

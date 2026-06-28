@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-24T13:01:37.421Z",
+  "generatedAt": "2026-06-28T02:30:05.276Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -981,14 +981,12 @@
     ],
     "coveredCounts": {
       "routes": 75,
-      "schedulerJobs": 100,
+      "schedulerJobs": 101,
       "engineSubsystems": 29,
       "databaseTables": 106
     },
     "missingRoutes": [],
-    "missingSchedulerJobs": [
-      "position-drift-reconcile"
-    ],
+    "missingSchedulerJobs": [],
     "missingEngineSubsystems": [],
     "missingDatabaseTables": [],
     "subsystemsMissingAudit": [],
@@ -1864,7 +1862,8 @@
           "/api/strategy-assignments"
         ],
         "schedulerJobs": [
-          "broker-error-budget-check"
+          "broker-error-budget-check",
+          "position-drift-reconcile"
         ],
         "healthCheck": "/api/health/dashboard",
         "freshnessSignals": [
@@ -8582,7 +8581,8 @@
         "/api/strategy-assignments"
       ],
       "schedulerJobs": [
-        "broker-error-budget-check"
+        "broker-error-budget-check",
+        "position-drift-reconcile"
       ],
       "healthCheck": "/api/health/dashboard",
       "freshnessSignals": [

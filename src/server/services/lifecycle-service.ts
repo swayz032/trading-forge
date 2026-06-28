@@ -452,6 +452,11 @@ export class LifecycleService {
         const pdrInput: import("../lib/paper-to-deploy-ready-gates.js").PaperToDeployReadyGateInput = {
           strategyId: id,
           correlationId,
+          // Hardening 2026-06-27 (phantom-gate fix): pass b15HardGateEnabled explicitly so the
+          // operator's B15_BATTERY_ENABLED=false escape hatch is honored on the direct-promotion
+          // path (_promoteStrategyInner). Previously omitted → pure evaluator defaulted to true,
+          // silently ignoring the env flag when this path was used instead of the cron sweep.
+          b15HardGateEnabled: (process.env.B15_BATTERY_ENABLED ?? "true") === "true",
           b14SurvivalTwin: { survival_twin: (survivalTwin ?? null) as import("../lib/paper-to-deploy-ready-gates.js").B14SurvivalTwinInput["survival_twin"] },
           mcRuinCi: {
             probability_of_ruin_ci: ruinCi as import("../lib/b14-ci-gate.js").RuinCiDict | null,
@@ -3460,6 +3465,16 @@ export class LifecycleService {
                 continue;
               }
             }
+          } else if (b15HardGateEnabled) {
+            // Hardening 2026-06-27 (phantom-gate fix): producer default now ON; a null b15Battery
+            // on a fresh backtest means the Python battery sentinel was not emitted (data-collection
+            // failure or pre-fix backtest). Emit a documented warn + PROCEED — matches the
+            // lifecycle.wfe_unavailable_legacy grandfather pattern (not a hard block for missing data).
+            // Operator action: re-run the backtest to populate battery data, then retry promotion.
+            logger.warn(
+              { strategyId: s.id },
+              "B15 Parameter Robustness Battery gate: no battery data on latest backtest — lifecycle.b15_unavailable_legacy (warn; promotion continues; re-run backtest to populate battery)",
+            );
           }
         } catch (b15Err) {
           // Fail-open: B15 gate read failure is non-blocking (pre-B15 strategies may not have data).
