@@ -81,6 +81,36 @@ const spanByRegex = (transcript: string, re: RegExp): Provenance | null => {
   return m && m.index != null ? SPAN(m[0], m.index, m.index + m[0].length) : null;
 };
 
+const SPAN_STOPWORDS = new Set(["the","a","an","to","of","and","or","for","with","that","this","then","you","your","it","is","are","be","on","in","at","as","we","i","my","will","can","want","just","one","up","down"]);
+/** MAXIMAL-SPAN binding (maximal span capture): when the FULL candidate is not a verbatim transcript slice,
+ * bind to the LONGEST contiguous content-word run from the candidate that IS provably in the transcript
+ * (≥2 content words, or one distinctive ≥6-char word). Span-native + honest — returns a REAL transcript
+ * slice, never generated text. Recovers a PARAPHRASED confirmation ("...engulfs THE PREVIOUS candle" vs the
+ * transcript's "...engulfs THIS candle") as a grounded node instead of forcing it to DERIVED inference. */
+function locateMaximalSpan(transcript: string, candidate: string): { start: number; end: number; quote: string } | null {
+  const full = locateTranscriptSpan(transcript, candidate);
+  if (full) return full;
+  if (!transcript) return null;
+  const words = (candidate || "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(Boolean).slice(0, 12);
+  for (let len = Math.min(words.length, 8); len >= 1; len--) {
+    for (let i = 0; i + len <= words.length; i++) {
+      const seq = words.slice(i, i + len);
+      const content = seq.filter((w) => !SPAN_STOPWORDS.has(w) && w.length > 1);
+      const specific = content.length >= 2 || content.some((w) => w.length >= 6); // honest: never bind on a lone generic word
+      if (!specific) continue;
+      const re = new RegExp(seq.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("[^a-z0-9]{1,12}"), "i");
+      const m = transcript.match(re);
+      if (m && m.index != null) return { start: m.index, end: m.index + m[0].length, quote: m[0] };
+    }
+  }
+  return null;
+}
+/** Span-native provenance via maximal span capture, or null if no specific verbatim run exists (caller infers). */
+const maximalSpanProv = (transcript: string, candidate: string): Provenance | null => {
+  const s = locateMaximalSpan(transcript, candidate);
+  return s ? SPAN(s.quote, s.start, s.end) : null;
+};
+
 /** Lower extraction → StrategyIR, SPAN-NATIVE: every explicit node's evidence is a real transcript slice,
  * else the node is honestly DERIVED/COMPILER (inference). No paraphrase ever enters as "explicit". */
 export function lowerToStateMachineIR(input: LoweringInput): StrategyIR {
@@ -112,8 +142,10 @@ export function lowerToStateMachineIR(input: LoweringInput): StrategyIR {
     : zoneHit ? spanByRegex(transcript, zoneHit.re) : null;
 
   const primaryLeg = compoundResult.compound?.legs.find((l) => l.order === compoundResult.compound!.primary_order);
+  // maximal span capture: bind confirmation to the largest provable verbatim transcript run from the leg
+  // (recovers paraphrased confirmation as grounded instead of inferred — the controlled-rig INFERENCE_DISAGREEMENT fix)
   const confProv = compoundResult.compound
-    ? (spanProv(transcript, primaryLeg?.evidence_quote || "") ?? DERIVED("confirmation compiled from extraction; no verbatim transcript span"))
+    ? (maximalSpanProv(transcript, primaryLeg?.evidence_quote || "") ?? DERIVED("confirmation compiled from extraction; no verbatim transcript span"))
     : COMPILER(`no confirmation compiled (${compoundResult.quarantine_reason ?? "unknown"})`);
 
   return {
