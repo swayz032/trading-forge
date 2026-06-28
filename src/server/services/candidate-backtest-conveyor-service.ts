@@ -125,10 +125,14 @@ export async function runCandidateBacktestConveyor(): Promise<void> {
   // keeps this service out of the paper/live execution import graph.
   const { runBacktest } = await import("./backtest-service.js");
 
-  let enqueued = 0;
-
-  for (const s of candidates) {
-    try {
+  // Process up to `slots` candidates CONCURRENTLY (was a serial for-await loop —
+  // one slow ~15-30 min walk-forward backtest blocked the entire queue, so only
+  // ONE ran at a time regardless of the cap). Promise.allSettled holds the tick
+  // (and its job lock) until this batch finishes, so the next tick can't start
+  // more until these complete — the cap (slots = MAX_CONCURRENT_BACKTESTS −
+  // running) is never exceeded. The next tick then picks up the next batch.
+  const outcomes = await Promise.allSettled(
+    candidates.map(async (s) => {
       // Spread REAL strategy config + force walkforward mode.
       // MUST NOT use a stub config like lifecycle-service.ts FIX-3 (line 4284).
       // dates auto-resolve inside runBacktest via resolveDataRange(symbol).
@@ -152,10 +156,9 @@ export async function runCandidateBacktestConveyor(): Promise<void> {
           { strategyId: s.id, strategyName: s.name, reason: result?.error ?? "unknown" },
           "candidate-backtest-conveyor: runBacktest returned skipped — pipeline may have just paused",
         );
-        continue;
+        return 0;
       }
 
-      enqueued++;
       candidateConveyorEnqueuedTotal.inc();
 
       broadcastSSE("factory:candidate_backtest_enqueued", {
@@ -165,7 +168,7 @@ export async function runCandidateBacktestConveyor(): Promise<void> {
         correlationId,
       });
 
-      // Non-blocking audit write — failure must not abort the remaining strategies.
+      // Non-blocking audit write — failure must not abort the other strategies.
       db.insert(auditLog)
         .values({
           action: "lifecycle.candidate_conveyor_enqueued",
@@ -183,11 +186,23 @@ export async function runCandidateBacktestConveyor(): Promise<void> {
             "candidate-backtest-conveyor: audit write failed (non-blocking)",
           );
         });
-    } catch (err) {
-      // Per-strategy try/catch: one failure must not abort the rest of the tick.
-      logger.error({ err, strategyId: s.id }, "candidate-backtest-conveyor: per-strategy error (non-blocking)");
+
+      return 1;
+    }),
+  );
+
+  // allSettled: one failed backtest must not abort the rest of the batch.
+  let enqueued = 0;
+  outcomes.forEach((o, i) => {
+    if (o.status === "fulfilled") {
+      enqueued += o.value;
+    } else {
+      logger.error(
+        { err: o.reason, strategyId: candidates[i].id },
+        "candidate-backtest-conveyor: per-strategy error (non-blocking)",
+      );
     }
-  }
+  });
 
   logger.info(
     { enqueued, evaluated: candidates.length, correlationId },
