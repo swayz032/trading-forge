@@ -8,7 +8,7 @@
  */
 
 import { eq, and, sql } from "drizzle-orm";
-import { backtests, backtestTrades, stressTestRuns, strategies, paperSessions, auditLog, walkForwardWindows, strategyNames, sqaOptimizationRuns, quboTimingRuns, tensorPredictions, rlTrainingRuns, monteCarloRuns, backtestProvenance } from "../db/schema.js";
+import { backtests, backtestTrades, stressTestRuns, strategies, paperSessions, auditLog, walkForwardWindows, strategyNames, sqaOptimizationRuns, quboTimingRuns, tensorPredictions, rlTrainingRuns, monteCarloRuns, backtestProvenance, researchTrialCounter } from "../db/schema.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { startStream } from "./paper-trading-stream.js";
 import { runMonteCarlo } from "./monte-carlo-service.js";
@@ -502,6 +502,34 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
         pre_lunch_threshold_r: (exitPlanConfig?.["pre_lunch_threshold_r"] as number | null) ?? 0.3,
         delta_div_threshold: (exitPlanConfig?.["delta_div_threshold"] as number | null) ?? 0.6,
       };
+    }
+
+    // F-4 fix 2026-06-28: populate trial_n_total from research_trial_counter when
+    // not already set by the caller (critic-optimizer-service.ts sets it on replay
+    // paths; standard backtest launch paths never set it → Python defaults to 1 →
+    // effective_n_trials = n_paths only → no cumulative deflation across critic loops).
+    // Fail-soft: if the lookup errors or the row is absent, default to 1 (single
+    // trial — backward-compatible, no extra deflation).
+    if ((config as BacktestConfig).trial_n_total == null) {
+      try {
+        const [trialRow] = await db
+          .select({ nTotal: researchTrialCounter.nTotal })
+          .from(researchTrialCounter)
+          .where(eq(researchTrialCounter.strategyId, strategyId))
+          .limit(1);
+        (config as BacktestConfig & { trial_n_total?: number }).trial_n_total =
+          trialRow?.nTotal != null && trialRow.nTotal > 0 ? trialRow.nTotal : 1;
+        logger.info(
+          { strategyId, trial_n_total: (config as BacktestConfig & { trial_n_total?: number }).trial_n_total },
+          "F-4: trial_n_total resolved from research_trial_counter for DSR deflation",
+        );
+      } catch (trialLookupErr) {
+        logger.warn(
+          { strategyId, err: trialLookupErr },
+          "F-4: trial_n_total lookup failed — defaulting to 1 (no cumulative deflation)",
+        );
+        (config as BacktestConfig & { trial_n_total?: number }).trial_n_total = 1;
+      }
     }
 
     const result = await CircuitBreakerRegistry.get("python-backtest").call(() =>

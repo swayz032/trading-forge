@@ -61,8 +61,36 @@ function getMassiveFetcher() {
   return createMassiveFetcher({ apiKey });
 }
 
-/** Track last bar date per symbol for session boundary detection */
+/** Track last bar's Globex session key per symbol for session boundary detection */
 const lastBarDate = new Map<string, string>();
+
+/**
+ * Globex session date key (M-2 fix).
+ *
+ * The raw bar buffer must reset on the CME Globex session boundary (18:00 ET),
+ * NOT ET calendar midnight. Parity with the backtester's
+ * `_assign_globex_session_id()` in src/engine/indicators/core.py: bars at ET
+ * hour >= 18 belong to the NEXT calendar day's session.
+ *
+ * A +6h instant shift maps 18:00 ET → ET-calendar-midnight of the next day, so a
+ * plain ET-date format yields the correct Globex session date:
+ *   18:00 ET + 6h = 00:00 ET next day  → next session date
+ *   17:59 ET + 6h = 23:59 ET same day  → current session date
+ * (CME has no bars in the 17:00–18:00 ET maintenance pause, so this is exact, and
+ * it agrees with paper-signal-service.ts::filterToGlobexSession's +7h/17:00 key on
+ * every real bar — the filter path stays correct as defense-in-depth.)
+ *
+ * Prior code keyed on toEasternDateString (ET calendar midnight) and only stayed
+ * correct because filterToGlobexSession() re-filtered the buffer before every VWAP
+ * read. Keying the buffer itself on the Globex boundary makes it correct regardless
+ * of read-path order — any future callsite computing VWAP before the filter no
+ * longer contaminates the next session's anchor with 17:00–18:00 ET bars.
+ *
+ * Exported for unit testing.
+ */
+export function toGlobexSessionDateString(date: Date): string {
+  return toEasternDateString(new Date(date.getTime() + 6 * 3600_000));
+}
 
 function pushBar(symbol: string, bar: Bar) {
   let buf = barBuffer.get(symbol);
@@ -71,17 +99,17 @@ function pushBar(symbol: string, bar: Bar) {
     barBuffer.set(symbol, buf);
   }
 
-  // Session boundary reset: detect ET date change → clear buffer for VWAP freshness.
-  // Futures sessions reset at 6 PM ET (Globex open), which aligns with the ET date
-  // boundary for evening-to-overnight trading.  Using UTC date change would cause
-  // the VWAP to reset at midnight UTC (7 PM ET in winter, 8 PM ET in summer) —
-  // mid-session for overnight traders.  ET date change matches actual session logic.
-  const barEtDate = toEasternDateString(new Date(bar.timestamp));
-  const prevEtDate = lastBarDate.get(symbol);
-  if (prevEtDate && barEtDate !== prevEtDate) {
-    buf.length = 0; // Reset buffer on new ET trading day (Globex session boundary)
+  // Session boundary reset: detect Globex session change → clear buffer for VWAP
+  // freshness. Futures sessions reset at 18:00 ET (Globex open after the 17:00–18:00
+  // maintenance pause). Keying on toGlobexSessionDateString (18:00 ET boundary)
+  // instead of toEasternDateString (ET calendar midnight) makes the raw buffer
+  // correct independent of call order — see toGlobexSessionDateString docstring.
+  const barSessionKey = toGlobexSessionDateString(new Date(bar.timestamp));
+  const prevSessionKey = lastBarDate.get(symbol);
+  if (prevSessionKey && barSessionKey !== prevSessionKey) {
+    buf.length = 0; // Reset buffer on new Globex trading session (18:00 ET boundary)
   }
-  lastBarDate.set(symbol, barEtDate);
+  lastBarDate.set(symbol, barSessionKey);
 
   buf.push(bar);
   if (buf.length > BAR_BUFFER_SIZE) {

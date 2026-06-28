@@ -48,3 +48,7 @@ CTemp*
 npm-cache-tf/
 *.pid
 *.bak
+
+# Runtime session/credential persistence files (survive NSSM restart) — never commit (deepscan 2026-06-28)
+.bw-session-runtime
+.cookie-runtime-*

@@ -2061,8 +2061,14 @@ export async function openPosition(sessionId: string, params: {
  *                         Omit for manual/force-close — falls back to base-tick
  *                         slippage (prior behaviour).
  */
-export async function closePosition(positionId: string, exitSignalPrice: number, atr?: number, context?: { correlationId?: string; barTimestamp?: Date; medianAtr?: number }) {
+export async function closePosition(positionId: string, exitSignalPrice: number, atr?: number, context?: { correlationId?: string; barTimestamp?: Date; medianAtr?: number; forceClosePriceUnconfirmed?: boolean }) {
   const correlationId = context?.correlationId ?? null;
+  // M-4: when the exit price is an unconfirmed proxy (e.g. emergency force-flatten
+  // falling back to entryPrice → zero-PnL), stamp the trade_close audit so the
+  // promotion gate can DETECT and exclude/flag sessions whose paper_sessions.finalPnl
+  // was contaminated by proxy-priced closes. A future TradersPost fill-confirmation
+  // webhook would reconcile the real broker exit price and clear this flag.
+  const forceClosePriceUnconfirmed = context?.forceClosePriceUnconfirmed === true;
   const closeSpan = tracer.startSpan("paper.position_close");
   try {
   // Read position outside the lock to get the sessionId for the lock key
@@ -2274,6 +2280,10 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
           commission,
           rollSpreadCost: rollCost.estimatedSpreadCost,
           rollDates: rollCost.rollDates,
+          // M-4: contamination marker — true when exitPrice is an unconfirmed proxy
+          // (emergency force-flatten entryPrice fallback → zero-PnL row). Promotion
+          // gate consumers query this to flag/exclude affected sessions' finalPnl.
+          ...(forceClosePriceUnconfirmed ? { force_close_price_unconfirmed: true } : {}),
         },
         status: "success",
         decisionAuthority: "agent",
@@ -4372,13 +4382,17 @@ export async function forceCloseAllPositions(reason: string): Promise<{ count: n
           entityId: pos.id,
           decisionAuthority: "system",
           input: { reason, positionId: pos.id, symbol: pos.symbol, entryPrice: pos.entryPrice, fallbackPrice: rawEntry } as Record<string, unknown>,
-          result: { reason: "no_current_price_fallback_to_entry", batchCorrelationId, pnl_impact: 0 } as Record<string, unknown>,
+          // M-4: flag the zero-PnL proxy close so promotion-gate math can detect the
+          // contaminated session (entryPrice == exitPrice → finalPnl understated).
+          result: { reason: "no_current_price_fallback_to_entry", batchCorrelationId, pnl_impact: 0, force_close_price_unconfirmed: true } as Record<string, unknown>,
           status: "warning",
           correlationId: batchCorrelationId,
         }).catch((err) => logger.error({ err }, "paper-execution.force-flatten: fallback audit write failed (non-blocking)"));
 
         try {
-          await closePosition(pos.id, rawEntry, undefined, { correlationId: batchCorrelationId });
+          // M-4: thread the unconfirmed-price marker into the trade_close write so
+          // the paper_trades close row's audit carries the contamination flag too.
+          await closePosition(pos.id, rawEntry, undefined, { correlationId: batchCorrelationId, forceClosePriceUnconfirmed: true });
           closedCount++;
           // FIX 6: count force-close in paperTradesCounter
           paperTradesCounter.labels({

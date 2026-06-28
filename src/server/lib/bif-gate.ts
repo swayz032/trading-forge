@@ -102,6 +102,13 @@ export interface BifGateResult {
     blocked: boolean;
     legacy_null: boolean;
     reason: string;
+    /**
+     * M1 fix 2026-06-28: present when bif_proxy_basis="oos_mean_not_is" was
+     * flagged by walk_forward.py.  NON-BLOCKING — documents that CPCV BIF ≈ 1.0
+     * because IS proxy and WF agg_sharpe both derive from the same OOS series.
+     * Wave 30 carry-forward: true per-path IS fold Sharpe will replace the proxy.
+     */
+    proxy_basis_warn?: string | null;
   };
 }
 
@@ -122,6 +129,13 @@ export function evaluateBifGate(
   opts?: {
     warnThreshold?: number;
     blockThreshold?: number;
+    /**
+     * M1 fix 2026-06-28: bif_proxy_basis from walk_forward.py wf_metadata.
+     * When "oos_mean_not_is", emits a NON-BLOCKING audit warn (bif.proxy_basis_oos_mean)
+     * because CPCV BIF ≈ 1.0 — IS proxy and WF agg_sharpe both come from OOS data.
+     * Does NOT change the passed/blocked verdict.
+     */
+    proxyBasis?: string | null;
   },
 ): BifGateResult {
   const warnThreshold = opts?.warnThreshold ?? getBifWarnThreshold();
@@ -129,6 +143,21 @@ export function evaluateBifGate(
 
   const bifNum = bif != null && Number.isFinite(Number(bif)) ? Number(bif) : null;
   const kEffNum = kEff != null && Number.isFinite(Number(kEff)) ? Number(kEff) : null;
+
+  // M1 fix 2026-06-28: non-blocking proxy-basis warn.
+  // When CPCV mode emits bif_proxy_basis="oos_mean_not_is", the IS Sharpe proxy
+  // and agg_sharpe both derive from the same OOS series → BIF ≈ 1.0 always.
+  // Emit a warn so operators know the BIF gate is structurally near-no-op in
+  // CPCV mode.  NEVER changes the passed/blocked verdict.
+  const proxyBasisWarn: string | null =
+    opts?.proxyBasis === "oos_mean_not_is" ? "bif.proxy_basis_oos_mean" : null;
+  if (proxyBasisWarn !== null) {
+    logger.warn(
+      { bif: bifNum, k_eff: kEffNum, proxyBasis: opts?.proxyBasis },
+      "BIF gate: CPCV proxy-basis warn — IS sharpe proxy derived from OOS series " +
+        "(bif.proxy_basis_oos_mean); BIF ≈ 1.0 in default CPCV mode (Wave 30 carry-forward: true IS fold Sharpe)",
+    );
+  }
 
   // ── 1. Legacy null — pre-Wave-3 backtest; bif field never emitted ──────────
   // NEVER block on missing data.  Grandfather window: every fresh WF run since
@@ -150,6 +179,7 @@ export function evaluateBifGate(
         blocked: false,
         legacy_null: true,
         reason: "bif.legacy_null_pre_wave3",
+        proxy_basis_warn: proxyBasisWarn,
       },
     };
   }
@@ -173,6 +203,7 @@ export function evaluateBifGate(
         blocked: true,
         legacy_null: false,
         reason: "bif.blocked_exceeds_threshold",
+        proxy_basis_warn: proxyBasisWarn,
       },
     };
   }
@@ -196,6 +227,7 @@ export function evaluateBifGate(
         blocked: false,
         legacy_null: false,
         reason: "bif.warn_above_warn_threshold",
+        proxy_basis_warn: proxyBasisWarn,
       },
     };
   }
@@ -213,6 +245,7 @@ export function evaluateBifGate(
       blocked: false,
       legacy_null: false,
       reason: "bif.clean",
+      proxy_basis_warn: proxyBasisWarn,
     },
   };
 }

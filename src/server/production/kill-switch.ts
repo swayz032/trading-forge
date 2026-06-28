@@ -38,7 +38,7 @@ import { eq, desc, and } from "drizzle-orm";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
-import { AlertFactory } from "../services/alert-service.js";
+import { AlertFactory, createAlert } from "../services/alert-service.js";
 import { isExchangeHalted } from "../services/exchange-status-service.js";
 import { isFirmSuspended } from "../services/prop-firm-health-service.js";
 import { isConnectivityDegraded } from "../lib/network-failover.js";
@@ -54,8 +54,19 @@ export const ALL_LAYERS_ENFORCED_ON_SIGNAL_PATH = true;
 
 // ─── DLL / trailing-DD thresholds (match paper-execution-service) ─────────────
 const DLL_HALT_PCT        = parseFloat(process.env.DLL_HALT_PCT        ?? "0.67");
+// DLL_WARN_PCT: alert threshold between halt (67%) and force-close (95%).
+// Fires once per session via dll80PctWarnedSessionIds dedup below (A-5 fix).
+const DLL_WARN_PCT        = parseFloat(process.env.DLL_WARN_PCT        ?? "0.80");
 const DLL_FORCE_CLOSE_PCT = parseFloat(process.env.DLL_FORCE_CLOSE_PCT ?? "0.95");
 const TRAILING_DD_BUFFER_DOLLARS = 200; // force-close trigger: $200 inside max drawdown
+
+// ─── Per-session 80% DLL warn dedup ──────────────────────────────────────────
+// Prevents re-firing the 80% approach warning on every bar check within the 1s
+// layer cache TTL. Session IDs are unique per trading session; the Set persists
+// for the process lifetime (acceptable — sessions are per-trading-day, and the
+// process restarts at most once per day). Tests can use unique session IDs to
+// avoid cross-test interference; no explicit clear hook is required.
+const dll80PctWarnedSessionIds = new Set<string>();
 
 // ─── Per-layer cache (1s TTL for signal-path budget) ─────────────────────────
 // Each entry holds the last HaltDecision returned and its expiry timestamp.
@@ -194,6 +205,94 @@ async function checkLayer2DailyLoss(): Promise<HaltDecision> {
       const breakdown = session.dailyPnlBreakdown as Record<string, number> | null ?? {};
       const dayPnl = breakdown[today] ?? 0;
 
+      // ── M-1 FIX: 95% DLL force-close (highest band — check first) ───────────
+      // Python compliance_gate.py:562 force-closes at 95% DLL. Without this
+      // check, paper holds tail exposure that backtests would have closed —
+      // a parity break. Layer 3 force-closes on trailing-DD $200 buffer (different
+      // axis), so this sub-check does NOT double-fire with Layer 3.
+      // Ordering: force_close (95%) > halt (67%) > reduce_size (60%) > none.
+      if (dayPnl < 0 && Math.abs(dayPnl) >= DLL_FORCE_CLOSE_PCT * dll) {
+        const fcCorrelationId = randomUUID();
+        logger.warn(
+          { session_id: session.id, firm_id: firmId, day_pnl: dayPnl, dll, threshold_pct: DLL_FORCE_CLOSE_PCT },
+          "kill-switch L2: DLL at 95% — force-closing all positions (M-1 fix)"
+        );
+        // Audit (fire-and-forget, non-blocking)
+        insertAuditRow({
+          action: "sizing.dll_force_close",
+          entityType: "system",
+          entityId: session.id,
+          decisionAuthority: "system",
+          input: { session_id: session.id, firm_id: firmId, day_pnl: dayPnl, dll, threshold_pct: DLL_FORCE_CLOSE_PCT } as Record<string, unknown>,
+          result: { action: "force_close" } as Record<string, unknown>,
+          status: "success",
+          correlationId: fcCorrelationId,
+        }).catch((auditErr) =>
+          logger.error({ err: auditErr }, "kill-switch L2: dll 95pct force-close audit failed (non-blocking)")
+        );
+        // SSE — consistent with existing force-close path in setMode("HALT")
+        broadcastSSE("kill_switch:dll_force_close", {
+          session_id: session.id,
+          firm_id: firmId,
+          day_pnl: dayPnl,
+          dll,
+          threshold_pct: DLL_FORCE_CLOSE_PCT,
+          correlationId: fcCorrelationId,
+          forced_at: new Date().toISOString(),
+        });
+        // Fire-and-forget force-close — mirrors setMode("HALT") dynamic-import pattern
+        import("../services/paper-execution-service.js")
+          .then(({ forceCloseAllPositions }) =>
+            forceCloseAllPositions(`dll_force_close_at_95pct:${session.id}`)
+          )
+          .catch((err) =>
+            logger.error({ err, session_id: session.id }, "kill-switch L2: dll 95pct forceCloseAllPositions failed (non-blocking)")
+          );
+        decision = {
+          halted: true,
+          layer: 2,
+          reason: "dll_force_close_at_95pct",
+          detail: { session_id: session.id, firm_id: firmId, day_pnl: dayPnl, dll, threshold_pct: DLL_FORCE_CLOSE_PCT },
+        };
+        break;
+      }
+
+      // ── A-5 FIX: 80% DLL approach warning (once per session, deduped) ────────
+      // No alert exists between the 67% halt and 95% force-close. Families see a
+      // force-close with no prior warning. This warning fires once per session
+      // (deduped via dll80PctWarnedSessionIds) when losses are between 67-95%.
+      // Does NOT halt on its own — falls through to the 67% halt check below.
+      if (dayPnl < 0 && Math.abs(dayPnl) >= DLL_WARN_PCT * dll && !dll80PctWarnedSessionIds.has(session.id)) {
+        dll80PctWarnedSessionIds.add(session.id);
+        const warnCorrelationId = randomUUID();
+        insertAuditRow({
+          action: "sizing.dll_80pct_approach_warned",
+          entityType: "system",
+          entityId: session.id,
+          decisionAuthority: "system",
+          input: { session_id: session.id, firm_id: firmId, day_pnl: dayPnl, dll, threshold_pct: DLL_WARN_PCT } as Record<string, unknown>,
+          result: { warned: true } as Record<string, unknown>,
+          status: "success",
+          correlationId: warnCorrelationId,
+        }).catch((auditErr) =>
+          logger.error({ err: auditErr }, "kill-switch L2: dll 80pct warn audit failed (non-blocking)")
+        );
+        createAlert({
+          type: "system",
+          severity: "warning",
+          title: `DLL approach: ${Math.round(DLL_WARN_PCT * 100)}% of daily safety limit reached`,
+          message:
+            "Trading losses today are at 80% of the safety limit. " +
+            "The bot already stopped taking new trades. " +
+            "It is still holding its current position. " +
+            "No action needed — it will exit automatically if losses continue.",
+          metadata: { session_id: session.id, firm_id: firmId, day_pnl: dayPnl, dll },
+        }).catch((alertErr) =>
+          logger.error({ err: alertErr }, "kill-switch L2: dll 80pct approach alert failed (non-blocking)")
+        );
+      }
+
+      // ── Existing 67% halt ──────────────────────────────────────────────────
       if (dayPnl < 0 && Math.abs(dayPnl) >= DLL_HALT_PCT * dll) {
         const reason = `dll_at_${Math.round(DLL_HALT_PCT * 100)}pct_personal_threshold`;
         decision = {

@@ -116,6 +116,63 @@ async function hasSchemaDriftAlertedToday(): Promise<boolean> {
   }
 }
 
+// ─── A-8: DB-backed stale-alert dedup (survives NSSM restarts) ───────────────
+//
+// The in-memory variables _lastAlertedForTs / _alertFiredAt are reset to null
+// on every NSSM restart. Without DB backing, a restart during an active stale
+// window causes a duplicate Discord spam alert.
+//
+// hasStaleAlertFiredForWindow() queries audit_log for any
+// dead_mans_heartbeat.stale_detected row written AFTER the stale heartbeat
+// timestamp (lastAt). If found, the current process should NOT re-alert.
+// On DB error: fail-open (may double-alert once, but never silently skip).
+async function hasStaleAlertFiredForWindow(lastAt: Date): Promise<boolean> {
+  try {
+    const { auditLog } = await import("../db/schema.js");
+    const { and, eq, gte } = await import("drizzle-orm");
+    const rows = await db
+      .select({ id: auditLog.id })
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.action, "dead_mans_heartbeat.stale_detected"),
+          gte(auditLog.createdAt, lastAt),
+        ),
+      )
+      .limit(1);
+    return rows.length > 0;
+  } catch (err) {
+    logger.warn({ err }, "dead-mans-heartbeat: stale-alert dedup DB lookup failed (fail-open — may double-alert once)");
+    return false;
+  }
+}
+
+// hasRefreshStaleAlertFiredWithinWindow() queries audit_log for any alert row
+// matching `action` written within the last `windowMs` milliseconds.
+// Used for BW + cookie refresh staleness dedup after restart.
+// On DB error: fail-open (may double-alert once).
+async function hasRefreshStaleAlertFiredWithinWindow(action: string, windowMs: number): Promise<boolean> {
+  try {
+    const { auditLog } = await import("../db/schema.js");
+    const { and, eq, gte } = await import("drizzle-orm");
+    const windowStart = new Date(Date.now() - windowMs);
+    const rows = await db
+      .select({ id: auditLog.id })
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.action, action),
+          gte(auditLog.createdAt, windowStart),
+        ),
+      )
+      .limit(1);
+    return rows.length > 0;
+  } catch (err) {
+    logger.warn({ err, action }, "dead-mans-heartbeat: refresh-stale dedup DB lookup failed (fail-open — may double-alert once)");
+    return false;
+  }
+}
+
 async function recordSchemaDriftAlert(): Promise<void> {
   const correlationId = randomUUID();
   try {
@@ -337,10 +394,23 @@ export async function runHeartbeatStaleCheck(): Promise<void> {
 
   // STALE — check dedup before alerting
   if (_lastAlertedForTs && lastAt.getTime() === _lastAlertedForTs.getTime()) {
-    // Already alerted for this exact stale heartbeat — skip
+    // Fast-path: in-memory cache says we already alerted for this stale window
     logger.debug(
       { minutesSince, lastAlertedFor: _lastAlertedForTs.toISOString() },
       "dead-mans-heartbeat: stale already alerted — skipping duplicate",
+    );
+    return;
+  }
+
+  // A-8: DB-backed dedup — survives NSSM restarts.
+  // After a restart _lastAlertedForTs is null; check audit_log to avoid re-alerting
+  // for the same stale window that already fired before the restart.
+  if (!_lastAlertedForTs && (await hasStaleAlertFiredForWindow(lastAt))) {
+    _lastAlertedForTs = lastAt;
+    _alertFiredAt = new Date(); // approximate — exact time is not critical
+    logger.debug(
+      { lastAt: lastAt.toISOString() },
+      "dead-mans-heartbeat: DB dedup: stale alert already recorded for this window (restart-safe) — skipping",
     );
     return;
   }
@@ -707,8 +777,12 @@ export async function runScheduledRefreshStalenessCheck(): Promise<void> {
   if (bwLastAt) {
     const ageMs = now - bwLastAt.getTime();
     if (ageMs > BW_HEARTBEAT_STALE_MS) {
-      // Dedup: only alert once per stale window
-      if (!_lastBwAlertAt || now - _lastBwAlertAt.getTime() > BW_HEARTBEAT_STALE_MS) {
+      // A-8: DB-backed dedup survives NSSM restarts.
+      // When _lastBwAlertAt is null (post-restart), query DB before re-alerting.
+      const shouldFireBwAlert = _lastBwAlertAt !== null
+        ? now - _lastBwAlertAt.getTime() > BW_HEARTBEAT_STALE_MS
+        : !(await hasRefreshStaleAlertFiredWithinWindow("dead_mans_heartbeat.bw_refresh_stale", BW_HEARTBEAT_STALE_MS));
+      if (shouldFireBwAlert) {
         _lastBwAlertAt = new Date();
         const ageHours = (ageMs / (60 * 60 * 1000)).toFixed(1);
         logger.error(
@@ -752,7 +826,11 @@ export async function runScheduledRefreshStalenessCheck(): Promise<void> {
   if (cookieLastAt) {
     const ageMs = now - cookieLastAt.getTime();
     if (ageMs > COOKIE_HEARTBEAT_STALE_MS) {
-      if (!_lastCookieAlertAt || now - _lastCookieAlertAt.getTime() > COOKIE_HEARTBEAT_STALE_MS) {
+      // A-8: DB-backed dedup survives NSSM restarts (same pattern as BW above).
+      const shouldFireCookieAlert = _lastCookieAlertAt !== null
+        ? now - _lastCookieAlertAt.getTime() > COOKIE_HEARTBEAT_STALE_MS
+        : !(await hasRefreshStaleAlertFiredWithinWindow("dead_mans_heartbeat.cookie_refresh_stale", COOKIE_HEARTBEAT_STALE_MS));
+      if (shouldFireCookieAlert) {
         _lastCookieAlertAt = new Date();
         const ageHours = (ageMs / (60 * 60 * 1000)).toFixed(1);
         logger.error(

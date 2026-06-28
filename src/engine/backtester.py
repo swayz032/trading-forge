@@ -3026,29 +3026,56 @@ def run_backtest(
     # Apply expansion to the max_contracts cap BEFORE sizing so simulated
     # P&L reflects actual tradeable position limits in high-vol regimes.
     # Backward compat: when VIX column is absent, skip silently + emit audit.
+    # M2 fix 2026-06-28: replaced whole-window peak (look-ahead) with a 30-bar
+    # rolling trailing max applied per-bar.  Pre-sizing uses last-bar rolling max;
+    # a per-bar post-cap is applied after compute_position_sizes().  Mirrors the
+    # per-bar VIX ATR path in _apply_static_styleC_management (vix_np array).
     _margin_expansion_audit_dsl: dict = {}
+    # Initialized here so post-sizing per-bar cap can reference even when VIX absent.
+    _vix_rolling_max_np: Optional[np.ndarray] = None
+    _base_mc_for_vix_perbar: int = max_contracts if max_contracts is not None else 100
     if "vix" in df.columns:
         from src.engine.margin_expansion import (
             apply_vix_margin_expansion,
             get_vix_expansion_audit,
         )
-        # Use the peak VIX in the backtest window for a conservative cap.
-        # Rationale: CME margin requirements are regime-level policy changes
-        # (announced days ahead), not bar-by-bar — peak represents the worst
-        # sustained regime the backtest faced.
         _vix_np = df["vix"].to_numpy()
-        _vix_np_clean = _vix_np[~np.isnan(_vix_np)]
-        _peak_vix = float(np.max(_vix_np_clean)) if len(_vix_np_clean) > 0 else 0.0
-        _base_mc = max_contracts if max_contracts is not None else 100  # sentinel if no firm cap
-        _expanded_mc = apply_vix_margin_expansion(_base_mc, _peak_vix)
-        _margin_expansion_audit_dsl = get_vix_expansion_audit(_base_mc, _expanded_mc, _peak_vix)
+        # M2: rolling 30-bar trailing max — no look-ahead (each bar uses only past bars).
+        # CME margin regime changes are announced days ahead; 30-bar window
+        # approximates "current announced regime" without using future VIX spikes.
+        _VIX_MARGIN_ROLLING_WINDOW: int = int(os.environ.get("VIX_MARGIN_ROLLING_WINDOW", "30"))
+        # fill_nan(0.0): Polars NaN ≠ null; NaN propagates through rolling_max.
+        # Treat missing VIX as 0.0 (no expansion) so NaN bars never starve the window.
+        # min_samples is the Polars ≥1.21 spelling of min_periods.
+        _vix_rolling_max_np = (
+            pl.Series("_vix_rm_", _vix_np, dtype=pl.Float64)
+            .fill_nan(0.0)
+            .rolling_max(window_size=_VIX_MARGIN_ROLLING_WINDOW, min_samples=1)
+            .to_numpy()
+        )
+        # Scalar for pre-sizing max_contracts override and audit:
+        # last bar's rolling max (end-of-window view; no look-ahead since sizing
+        # runs after all data is available, and the last-bar value only uses the
+        # final 30 bars — not future data relative to earlier entries).
+        _last_rolling_vix = (
+            float(_vix_rolling_max_np[-1])
+            if len(_vix_rolling_max_np) > 0 and not np.isnan(_vix_rolling_max_np[-1])
+            else 0.0
+        )
+        _base_mc = max_contracts if max_contracts is not None else 100
+        _base_mc_for_vix_perbar = _base_mc  # preserve original for vectorized per-bar cap
+        _expanded_mc = apply_vix_margin_expansion(_base_mc, _last_rolling_vix)
+        _margin_expansion_audit_dsl = get_vix_expansion_audit(_base_mc, _expanded_mc, _last_rolling_vix)
+        # M2 marker: auditors and downstream consumers can identify the rolling-max basis.
+        _margin_expansion_audit_dsl["vix_cap_basis"] = "rolling_max_30bar"
         if _expanded_mc != _base_mc:
             # Only override if we have an actual firm cap to constrain.
             # If max_contracts was None (no firm cap), we don't impose one.
             if max_contracts is not None:
                 max_contracts = _expanded_mc
                 print(
-                    f"[margin-expansion] VIX={_peak_vix:.1f} → max_contracts {_base_mc} → {_expanded_mc}",
+                    f"[margin-expansion] rolling-30bar[last] VIX={_last_rolling_vix:.1f} "
+                    f"→ max_contracts {_base_mc} → {_expanded_mc}",
                     file=sys.stderr,
                 )
     else:
@@ -3114,6 +3141,30 @@ def run_backtest(
     )
     # Defense-in-depth: replace any inf/nan sizes with 1 contract
     sizes = np.where(np.isfinite(sizes), sizes, 1.0)
+
+    # M2 fix 2026-06-28: per-bar rolling-max VIX cap — applied AFTER compute_position_sizes
+    # so that each bar's size is bounded by the VIX margin regime AT THAT BAR (no look-ahead).
+    # Uses the rolling 30-bar max series computed in the VIX margin expansion block above.
+    # Vectorized numpy approach mirrors the thresholds in margin_expansion.py.
+    if _vix_rolling_max_np is not None:
+        _m2_thr30 = float(os.environ.get("MARGIN_VIX_THRESHOLD_30", "30.0"))
+        _m2_thr50 = float(os.environ.get("MARGIN_VIX_THRESHOLD_50", "50.0"))
+        _m2_mult30 = float(os.environ.get("MARGIN_VIX_MULTIPLIER_30", "0.5"))
+        _m2_mult50 = float(os.environ.get("MARGIN_VIX_MULTIPLIER_50", "0.25"))
+        _base_mc_f = float(_base_mc_for_vix_perbar)
+        _vix_perbar_cap = np.where(
+            _vix_rolling_max_np > _m2_thr50,
+            np.maximum(1.0, np.floor(_base_mc_f * _m2_mult50)),
+            np.where(
+                _vix_rolling_max_np > _m2_thr30,
+                np.maximum(1.0, np.floor(_base_mc_f * _m2_mult30)),
+                _base_mc_f,
+            ),
+        )
+        # NaN VIX bars: no expansion (treat as low-VIX → full cap)
+        _vix_perbar_cap = np.where(np.isnan(_vix_perbar_cap), _base_mc_f, _vix_perbar_cap)
+        sizes = np.minimum(sizes, _vix_perbar_cap)
+
     over_risk_count = int(np.sum(over_risk))
     if over_risk_count > 0:
         print(

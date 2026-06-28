@@ -570,7 +570,11 @@ export function evaluatePaperToDeployReadyGates(
     const bifNum = bifIn?.bif != null && Number.isFinite(Number(bifIn.bif)) ? Number(bifIn.bif) : null;
     const kEffNum = bifIn?.kEff != null && Number.isFinite(Number(bifIn.kEff)) ? Number(bifIn.kEff) : null;
 
-    const bifResult = evaluateBifGate(bifNum, kEffNum);
+    // M1 fix 2026-06-28: extract bif_proxy_basis from wf_metadata so the BIF gate
+    // can emit the non-blocking audit warn when CPCV mode is active.
+    // wf_metadata is stored as JSONB in walkForwardResults; typed as Record<string,unknown>.
+    const bifProxyBasis = ((wfr?.wf_metadata as Record<string, unknown> | null | undefined)?.["bif_proxy_basis"] as string | null | undefined) ?? null;
+    const bifResult = evaluateBifGate(bifNum, kEffNum, { proxyBasis: bifProxyBasis });
 
     if (!bifResult.passed) {
       logger.warn(

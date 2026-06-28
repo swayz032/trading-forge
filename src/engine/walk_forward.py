@@ -499,8 +499,10 @@ def _run_walk_forward_cpcv(
 
     # ── Wave 3 Track 3A: BIF computation (CPCV mode) ─────────────────────────
     # K_eff = n_paths (C(6,2)=15 combinatorial paths per default CPCV config).
-    # IS Sharpe proxy = max(path_sharpes) — the best-looking path Sharpe, which
-    # is the selection-bias source when choosing from multiple combinatorial paths.
+    # IS Sharpe proxy = mean(path_OOS_sharpes) — uses the same OOS series as
+    # agg_sharpe (M1 limitation: BIF ≈ 1.0, block gate never fires in default
+    # CPCV mode).  The result dict carries bif_proxy_basis="oos_mean_not_is" so
+    # the TS BIF gate can emit a non-blocking audit warn.
     # Per-path IS Sharpes (using true IS fold data) are a Wave 30 carry-forward
     # per the comment at the top of the CPCV combinations loop.
     _cpcv_bif_result: dict = {}
@@ -520,6 +522,11 @@ def _run_walk_forward_cpcv(
             wf_sharpe=agg_sharpe,
             k_eff=_cpcv_bif_k_eff,
         )
+        # M1 fix 2026-06-28: tag the BIF result so the TS BIF gate can emit a
+        # non-blocking audit warn. In CPCV mode both is_sharpe and wf_sharpe
+        # derive from the same OOS series → BIF ≈ 1.0 (near-no-op).
+        # TS gate reads bif_proxy_basis from wf_metadata.bif_proxy_basis.
+        _cpcv_bif_result["bif_proxy_basis"] = "oos_mean_not_is"
         print(
             f"  BIF (CPCV): {_cpcv_bif_result.get('bif', 'N/A'):.4f} "
             f"(IS_proxy={_cpcv_bif_is_sharpe:.4f}, WF={agg_sharpe:.4f}, "
@@ -664,6 +671,10 @@ def _run_walk_forward_cpcv(
             # When DSR computation fails, _dsr_result has dsr_pass=False, dsr_unavailable=True.
             "dsr_pass": _dsr_result.get("dsr_pass"),
             "dsr_unavailable": _dsr_result.get("dsr_unavailable", False),
+            # M1 fix 2026-06-28: surface bif_proxy_basis so the TS BIF gate can
+            # emit a non-blocking audit warn.  "oos_mean_not_is" signals that both
+            # is_sharpe and wf_sharpe derive from the same OOS series → BIF ≈ 1.0.
+            "bif_proxy_basis": _cpcv_bif_result.get("bif_proxy_basis"),
         },
         # Wave 29 Pass A.2 — pbo_overall for TESTING → SHADOW/PAPER lifecycle gate.
         "pbo_overall": _cpcv_pbo_overall,

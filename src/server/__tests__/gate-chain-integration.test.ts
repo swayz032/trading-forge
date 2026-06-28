@@ -42,6 +42,7 @@ import { createTestDb } from "./helpers/pglite-db.js";
 import type { TestDb } from "./helpers/pglite-db.js";
 import { evaluateWfeGate } from "../lib/wfe-gate.js";
 import { evaluatePboGate } from "../lib/pbo-gate.js";
+import { evaluateDsrWalkForwardGate } from "../lib/b14-ci-gate.js";
 import {
   backtests,
   strategies,
@@ -57,6 +58,7 @@ import {
 //
 // WFE suite:   cc0000xx-...
 // PBO suite:   dd0000xx-...
+// DSR suite:   ab0000xx-...
 // B15 suite:   ee0000xx-...
 // Shadow suite: ff0000xx-...
 
@@ -396,6 +398,169 @@ describe("PBO gate — backtests.walk_forward_results.pbo_overall round-trip (PG
     expect(result.legacyNull).toBe(true);
     expect(result.reason).toBe("lifecycle.pbo_unavailable_legacy");
     // The test documents: wrong key = silent grandfather pass even when PBO=0.20 > 0.15.
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Suite 2b — DSR walk-forward gate DB round-trip
+// ════════════════════════════════════════════════════════════════════════════════
+//
+// The DSR gate is the one hardening-batch gate previously missing from this
+// producer→DB→gate regression guard. It reads
+//   backtests.walk_forward_results.wf_metadata.{dsr_pass, dsr_unavailable, dsr}
+// (walk_forward.py FIX 7 / Wave A, 2026-06-22) and lifecycle-service.ts consumes
+// it at PAPER → DEPLOY_READY via evaluateDsrWalkForwardGate. The wrong-key
+// disconnect mirrors the B14/B15 silent-pass class: a producer that writes
+// `dsr_passed` (the honest-SR field name) instead of the consumer's `dsr_pass`
+// yields undefined → legacy grandfather PASS, never seeing a real DSR-floor fail.
+
+describe("DSR gate — backtests.walk_forward_results.wf_metadata.dsr_pass round-trip (PGlite)", () => {
+  let ctx: TestDb;
+
+  const STRAT_ID    = "ab000001-0000-0000-0000-000000000001";
+  const BT_PASS     = "ab000001-0000-0000-0000-000000000010"; // dsr_pass=true → PASS
+  const BT_BLOCK    = "ab000001-0000-0000-0000-000000000011"; // dsr_pass=false → BLOCK (floor)
+  const BT_LEGACY   = "ab000001-0000-0000-0000-000000000012"; // no dsr_pass key → legacy PASS
+  const BT_WRONGKEY = "ab000001-0000-0000-0000-000000000013"; // wrong key dsr_passed → null → legacy PASS
+
+  beforeAll(async () => {
+    ctx = await createTestDb();
+
+    await ctx.db.insert(strategies).values({
+      id: STRAT_ID,
+      name: "dsr-integration-test",
+      symbol: "MES",
+      timeframe: "5m",
+      config: {},
+    });
+
+    await ctx.db.insert(backtests).values([
+      {
+        id: BT_PASS,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // PRODUCER writes: wf_metadata.dsr_pass=true → gate passes clean.
+        walkForwardResults: { wf_metadata: { dsr_pass: true, dsr: 0.62 } },
+      },
+      {
+        id: BT_BLOCK,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // PRODUCER writes: dsr_pass=false (honest SR below floor) → BLOCK.
+        walkForwardResults: { wf_metadata: { dsr_pass: false, dsr: 0.18 } },
+      },
+      {
+        id: BT_LEGACY,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // No dsr_pass key — pre-Wave-A backtest → grandfather PASS (legacy_proceed).
+        walkForwardResults: { wf_metadata: { mode: "cpcv" } },
+      },
+      {
+        id: BT_WRONGKEY,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // DISCONNECT: producer writes `dsr_passed` instead of `dsr_pass`.
+        // Consumer reads `dsr_pass` → undefined → legacy grandfather PASS.
+        // The real DSR failed the floor (dsr_passed=false) but the gate never sees it.
+        walkForwardResults: { wf_metadata: { dsr_passed: false, dsr: 0.18 } },
+      },
+    ]);
+  });
+
+  afterAll(async () => { await ctx.close(); });
+
+  // Mirror lifecycle-service.ts: read walk_forward_results.wf_metadata, pass to gate.
+  async function selectWfMeta(btId: string) {
+    const [row] = await ctx.db
+      .select({ wfr: backtests.walkForwardResults })
+      .from(backtests)
+      .where(eq(backtests.id, btId));
+    const wfr = (row?.wfr as Record<string, unknown> | null) ?? null;
+    return (wfr?.wf_metadata as Record<string, unknown> | null) ?? null;
+  }
+
+  it("JSONB round-trip preserves wf_metadata.dsr_pass boolean and dsr numeric", async () => {
+    const meta = await selectWfMeta(BT_PASS);
+    expect(meta?.dsr_pass).toBe(true);
+    expect(meta?.dsr).toBe(0.62);
+  });
+
+  it("PASS: wf_metadata.dsr_pass=true → gate status=pass", async () => {
+    const meta = await selectWfMeta(BT_PASS);
+
+    const result = evaluateDsrWalkForwardGate(
+      meta as { dsr_pass?: boolean | null; dsr_unavailable?: boolean | null; dsr?: number | null } | null,
+    );
+
+    expect(result.passed).toBe(true);
+    expect(result.status).toBe("pass");
+    expect(result.auditAction).toBeNull();
+  });
+
+  it("BLOCK: wf_metadata.dsr_pass=false → gate status=blocked_dsr_floor", async () => {
+    const meta = await selectWfMeta(BT_BLOCK);
+    expect(meta?.dsr_pass).toBe(false);
+
+    const result = evaluateDsrWalkForwardGate(
+      meta as { dsr_pass?: boolean | null; dsr_unavailable?: boolean | null; dsr?: number | null } | null,
+    );
+
+    expect(result.passed).toBe(false);
+    expect(result.status).toBe("blocked_dsr_floor");
+    expect(result.auditAction).toBe("lifecycle.dsr_floor_block");
+    expect(result.auditPayload.blocked).toBe(true);
+  });
+
+  it("LEGACY PASS: no dsr_pass key (pre-Wave-A backtest) → gate proceeds (grandfather)", async () => {
+    const meta = await selectWfMeta(BT_LEGACY);
+    // Confirm the key is genuinely absent
+    expect(meta?.dsr_pass).toBeUndefined();
+
+    const result = evaluateDsrWalkForwardGate(
+      meta as { dsr_pass?: boolean | null; dsr_unavailable?: boolean | null; dsr?: number | null } | null,
+    );
+
+    expect(result.passed).toBe(true);
+    expect(result.status).toBe("legacy_proceed");
+    expect(result.auditAction).toBe("lifecycle.dsr_unavailable_legacy");
+  });
+
+  it("DISCONNECT (wrong key): producer writes dsr_passed=false; consumer reads dsr_pass=null → grandfather PASS", async () => {
+    const meta = await selectWfMeta(BT_WRONGKEY);
+
+    // Confirm the wrong key IS present in the stored JSONB
+    expect((meta as any)?.dsr_passed).toBe(false);
+
+    // Consumer reads dsr_pass (the correct key) → undefined
+    expect(meta?.dsr_pass).toBeUndefined();
+
+    const result = evaluateDsrWalkForwardGate(
+      meta as { dsr_pass?: boolean | null; dsr_unavailable?: boolean | null; dsr?: number | null } | null,
+    );
+
+    // Gate sees no dsr_pass → legacy grandfather pass. The real DSR failed the
+    // floor (dsr_passed=false) but the gate never saw it.
+    // This documents the SILENT PRODUCER→CONSUMER KEY DISCONNECT (dsr_passed vs dsr_pass).
+    expect(result.passed).toBe(true);
+    expect(result.status).toBe("legacy_proceed");
+    expect(result.auditAction).toBe("lifecycle.dsr_unavailable_legacy");
   });
 });
 

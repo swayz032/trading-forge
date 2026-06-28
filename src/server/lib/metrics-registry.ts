@@ -75,11 +75,10 @@ export const pythonSubprocessQueued = new Gauge({
 // ─── Lifecycle counters ────────────────────────────────────────────────────────
 // These are incremented by the relevant service calls. The metrics.ts scrape
 // endpoint does not need to refresh these — counters accumulate in memory.
+// Declared at registry init so Prometheus sees them from first scrape (value 0)
+// even before the first event, which prevents "no data" gaps in dashboards.
 //
-// TODO: wire increment calls in lifecycle-service, backtest-service, and
-// paper-engine once those files are in scope for instrumentation. The counters
-// are declared here so Prometheus sees them from first scrape (value 0) even
-// before the first event, which prevents "no data" gaps in dashboards.
+// Wired: lifecycle-service.ts (strategyPromotions), backtest-service.ts (backtestRuns), paper-execution-service.ts (paperTrades).
 
 export const strategyPromotions = new Counter({
   name: "tf_strategy_promotions_total",

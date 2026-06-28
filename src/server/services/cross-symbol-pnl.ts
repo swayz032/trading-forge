@@ -156,6 +156,16 @@ export const DLL_FORCE_CLOSE_PCT = (() => {
   return 0.95;
 })();
 
+// DLL_WARN_80PCT: alert-only band between the 67% halt and the 95% force-close.
+// At 80% a family-grade warning fires once per session (in kill-switch.ts Layer 2).
+// Does NOT halt or reduce size on its own — the 67% halt has already fired.
+// Exported here alongside peer DLL threshold constants for auditability.
+export const DLL_WARN_80PCT = (() => {
+  const envVal = process.env["DLL_WARN_80PCT"];
+  if (envVal && !isNaN(parseFloat(envVal))) return parseFloat(envVal);
+  return 0.80;
+})();
+
 // DLL_REDUCE_SIZE_PCT: SOFT band BELOW the halt — at this fraction of personal DLL, new entries
 // are sized DOWN (not blocked) to absorb a losing streak before the hard 67% halt. Completes the
 // institutional 60/80/90/100 escalation ladder (NexusFi Operations Manual 2026-06; a 60% band is
