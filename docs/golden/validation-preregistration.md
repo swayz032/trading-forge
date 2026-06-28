@@ -72,6 +72,35 @@ by construction, NOT scored as extraction gaps (scoring them MISSING would be a 
 *Why this gate exists:* "Gemma matches golden 100%" can mean "reproduces my format," not "the engine can run
 it." Gate 1.5 is the difference between *parity* and *backtestability*.
 
+## Gate 1.75 — Extraction completeness (no missing/invented decisions)
+
+*Question: did we capture every DECISION the educator used — not just is it executable?* Distinct from Gate 1.5:
+a strategy can be **executable but incomplete** (e.g. extracts "enter on bullish engulfing" but omits "don't
+trade if the engulfing closes inside yesterday's range" → replay loses a large fraction of trades). Gate 1.5
+passes (runnable); the strategy is still **wrong**.
+
+**Rules vs explanations:** score only **executable rules** (contain an operator/condition/level/time — e.g.
+"close above the EMA"). IGNORE explanations/rationale ("we want buyers to step in", "look for momentum") —
+the extractor must NOT be rewarded for capturing prose, only decisions.
+
+**Each educator decision-rule is scored:** Captured · Partially-Captured · Missed · Hallucinated.
+
+| | criterion |
+|---|---|
+| **PASS** | 0 Missed AND 0 Hallucinated decision-rules (Partially-Captured is reported as completeness debt) |
+| **FAIL → localizes to** | Missed → recall gap (a taught rule absent) · Hallucinated → invention (a rule not taught) · Partial → under-specified rule |
+
+**Engine:** this is the existing coverage gate (`extraction-coverage-gate.ts` enumerator + comparator) applied
+at **decision-rule granularity** with the rules-vs-explanations filter — NOT net-new architecture. The
+Captured/Partial/Missed/Hallucinated taxonomy + the explanation filter are the additions; the full
+decision-level scorer is built at sync time when the coverage enumerator runs live (no offline pre-build).
+
+### Evidence-mode tag (replay-attribution, runs alongside Gate 1.75 — diagnostic, not a gate)
+`classifyEvidenceMode(ir)` (`evidence-mode.ts`) labels each strategy TRANSCRIPT_ONLY / VISUAL_REQUIRED / MIXED
+by how chart-referential its decisive logic is. Recorded BEFORE Gate 2 so a replay miss on a VISUAL_REQUIRED
+strategy can be attributed to **visual-grounding debt** (the transcript can't carry the chart referent) rather
+than a bad strategy. Heuristic, not a pass/fail.
+
 ## Gate 2 — Replay parity (execution fidelity)
 
 *Question: does the compiled IR reproduce the educator's DEMONSTRATED entries on real OHLC?*
@@ -150,7 +179,23 @@ genuinely support it — and only as a dated amendment.
 
 The central hypothesis — *"the compiler faithfully reconstructs educator strategies, and the edge is
 attributable to grounded/perceptual layers, under replay on unseen data"* — is **SUPPORTED** only if Gate 1 ✓
-AND Gate 1.5 ✓ (the strategy is actually executable) AND Gate 2 PASS AND Gate 3 GENERALIZES. Any other outcome leaves it a hypothesis, with the failing gate
+AND Gate 1.5 ✓ (executable) AND Gate 1.75 ✓ (complete — no missed/invented decisions) AND Gate 2 PASS AND
+Gate 3 GENERALIZES.
+
+## First-class invariant — Executable Strategy IR
+
+The IR's contract is **backtestability**, not representation: **every extraction-owned node is PRESENT or
+FRAMEWORK_OWNED — never AMBIGUOUS, never MISSING.** That is exactly what `scoreDeterminism` (Gate 1.5)
+measures. An IR that violates it is not a "lower-quality extraction"; it is a non-executable artifact and must
+quarantine, not ship.
+
+## Validation target (corrected — operator/GPT)
+
+NOT "100% textual extraction." The target is **100% semantic executability for all extraction-owned rules,
+every rule grounded to transcript evidence, no missing decision points, no hallucinated rules.** Rationale:
+some educators are genuinely ambiguous; some omit assumed prior knowledge; ASR distorts words; two equivalent
+formulations differ syntactically but have identical trading semantics. If the engine executes the strategy
+exactly as taught, superficial wording differences are immaterial. Any other outcome leaves it a hypothesis, with the failing gate
 naming exactly which sub-claim didn't survive. A negative result is still a result: it localizes the boundary
 of what the system can faithfully compile, which is itself worth knowing.
 
@@ -164,3 +209,13 @@ of what the system can faithfully compile, which is itself worth knowing.
   it cannot be goalpost-moving — it raises the bar, it doesn't relax one. No existing threshold changed.
   (Diagnostic baseline on the 4 frozen IRs at add-time: psH + h6T FAIL [entry_trigger MISSING — confirmation
   quarantine], l-2 + MKsjbL PASS — recorded as diagnostic, NOT a validation result.)
+- **2026-06-28 — ADD Gate 1.75 (Extraction Completeness) + Executable-IR invariant + evidence_mode tag +
+  corrected target, before any validation results.** Rationale (GPT/operator): (a) Gate 1.5 proves executable,
+  not complete — a runnable strategy that omits a taught decision-rule is still wrong (completeness ≠
+  determinism); scored Captured/Partial/Missed/Hallucinated on RULES only (explanations ignored). (b) The
+  IR's contract is backtestability (PRESENT or FRAMEWORK_OWNED, never AMBIGUOUS/MISSING). (c) `evidence_mode`
+  segregates visual-grounding-debt from bad-strategy at replay. (d) Target corrected from "100% textual" to
+  "100% semantic executability, grounded, no missing/invented decisions." All ADD bars before results — never
+  relax one. Also RECLASSIFIED the confirmation-compiler quarantines from "optimization" to **Known P1
+  semantic defect (quarantined by protocol)** — deterministic, same subsystem/symptom; still no fix before
+  replay, but it is a known defect class, not a nice-to-have.

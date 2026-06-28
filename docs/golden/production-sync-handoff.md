@@ -66,13 +66,15 @@ Golden behavior the synced path must reproduce (the 4 known-failing inputs):
 
 If a stage fails, the boundary that introduced it is unambiguous — that's the point of separating them.
 
-## Explicitly deferred (anti-polish discipline)
+## Explicitly deferred (but correctly classified)
 
 The two confirmation-compiler quarantines (`confirmation_no_level` — engulf-at-retest needs level
-association; `confirmation_would_overfire` — indicator-confirmation threshold) are **optimization, not
-prerequisites.** They only earn priority if **replay** shows they account for a material fraction of
-fidelity mismatches. Until replay says so, polishing the compiler is the easy-but-low-information move and
-is on hold.
+association; `confirmation_would_overfire` — indicator-confirmation threshold) are a **Known P1 semantic
+defect — quarantined by protocol, NOT "optimization."** They are a deterministic defect class: 2/2 failures,
+same subsystem, same symptom (`entry_trigger MISSING` → not backtestable per Gate 1.5). We do not fix them yet
+**only because the protocol forbids tuning before replay** — not because they're a nice-to-have. They earn an
+active fix the moment replay confirms they account for a material fraction of fidelity mismatches. The
+discipline being held is "no tuning before replay," not "this isn't a real defect."
 
 ## Methodology note — manual is a hypothesis, not ground truth
 
