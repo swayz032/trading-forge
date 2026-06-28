@@ -30,6 +30,9 @@ const WAIT_PREDICATES: Array<{ kind: WaitPredicateKind; re: RegExp }> = [
   { kind: "tap", re: /\btap(?:s| into)?\b/i },
 ];
 
+// invalidation = CANCELS the setup BEFORE entry (distinct from a managing stop-loss). Tight matcher.
+const INVALIDATION_RE = /\bno trade (?:if|unless|when|until)\b|\binvalidat\w*|setup (?:is )?(?:void|dead|invalid)|cancel(?:s|led)? the setup|if (?:price |it )?closes? (?:back )?(?:below|above)[^.]{0,40}(?:no trade|invalid|cancel|skip)/i;
+
 const EVENT_KINDS: Array<{ kind: StructuralEventKind; re: RegExp }> = [
   { kind: "choch", re: /\bchange of character|choch\b/i },
   { kind: "mss", re: /\bmarket structure shift|\bmss\b/i },
@@ -68,6 +71,9 @@ export function lowerToStateMachineIR(input: LoweringInput): StrategyIR {
     ? { kind: waitHit.kind, provenance: EXPLICIT(waitStep ? stepText(waitStep).trim().slice(0, 80) : undefined) }
     : { kind: "now", provenance: COMPILER("no wait language found — zero-wait degenerate (immediate entry)") };
 
+  // Invalidation (optional) — a step that cancels the setup before entry
+  const invalStep = steps.find((s) => INVALIDATION_RE.test(stepText(s)));
+
   // S2 structural event (optional)
   const ev = firstMatch(corpus, EVENT_KINDS);
   // S3 execution context (the zone) — prefer a poi/zone gate, else detect from corpus
@@ -93,6 +99,7 @@ export function lowerToStateMachineIR(input: LoweringInput): StrategyIR {
       active: until.kind !== "now",
       until,
       confirmation: { kind: "confirmation", compound: compoundResult.compound, provenance: EXPLICIT() },
+      ...(invalStep ? { invalidated_by: { kind: "invalidation" as const, condition: stepText(invalStep).trim().slice(0, 80), provenance: EXPLICIT(stepText(invalStep).trim().slice(0, 80)) } } : {}),
     },
     entry: { kind: "entry", order_type: "market", direction, provenance: COMPILER("entry order-type not stated — default market") },
     meta: { lowered_from: "structured_extraction", quarantine_reason: compoundResult.quarantine_reason },

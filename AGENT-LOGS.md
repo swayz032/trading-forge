@@ -3,6 +3,25 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-27 (cont.) STATE-MACHINE IR — Checkpoint 3: wait-state ACTIVATION (first execution change)
+
+**Mission:** CP3 — activate the wait-state execution model (the architectural hypothesis: a zone-return strategy reaches its entry on the RETURN, via generic IR constructs, no special primitive). Tight instrumentation; smallest execution change; differential vs the frozen control.
+
+**Work completed (commit + tag `sm-checkpoint-3-wait-activation`):** `state-machine-runtime.ts` — `runStateMachine(ir, bars)` executes the IR over a bar stream (S4 Waiting → S5 Confirm → S6 Entry, with invalidation + timeout/expiry); `runEventCentric(bars)` keeps the frozen baseline's model alive for the side-by-side differential; `aggregateTransitions()` = the operator's transition matrix (wait_created/confirmed/invalidated/expired/entries). CP3 ISOLATION: bars carry engine-computed PREDICATE SIGNALS (until_satisfied/confirmation/invalidation/event), NOT raw OHLC — isolates the state-machine LOGIC from indicator math (real OHLC→signal is the later engine-attach), so divergence is attributable to the execution model. Also fixed a real lowering gap: `invalidated_by` now populated from invalidation language ("no trade if closes below").
+
+**RESULT — architectural hypothesis CONFIRMED (synthetic replay):**
+- CANONICAL ACCEPTANCE: a zone-return strategy lowered via GENERIC constructs (isZeroWait=false, no special primitive) → replay enters on bar 3 (the RETURN), NOT bar 0 (the event). MET.
+- DIFFERENTIAL vs frozen control: zone-return DIVERGES — event-centric enters on the event (bar 0, the systematic-divergence bug), state-machine waits for the return (bar 2/3, the fix).
+- REGRESSION GUARD: immediate strategy → state-machine entry bar == event-centric (parity preserved, zero-wait degenerate).
+- invalidation → no entry; timeout → expired; transition matrix counts sensible.
+
+**Verification:** tsc 0; 16 state-machine tests (CP1-3) + 36 fidelity = 52 green; runtime standalone (no production wiring, grep-verified) — zero replay change to the live system.
+
+**HONEST SCOPE:** CP3 proves the execution-MODEL logic + the architectural hypothesis on SYNTHETIC replay (predicate signals precomputed). The full blind-suite re-run against real transcripts is gated on later checkpoints — the lowered IR is not yet the graded production artifact (CP4 re-roots the 5 axes so the confirmation node actually computes; engine-attach feeds real bars). So the blind-suite lift is demonstrated IN PRINCIPLE (event→return entry timing) here, attributable once the IR is the end-to-end output.
+
+**Carry-forward:** CP4 = re-root the 5 axes (selection/multi-leg/strength/anchor/context-gates) as the S5 Confirmation node's evaluators (move, not rewrite); acceptance = frozen-6 still passes + wait-state strategies execute through the same modules. Then CP5 traceability, CP6 Gemma multi-pass, then re-run the blind suite as the acceptance bar vs the frozen control.
+
+---
 ### Session Log — 2026-06-27 (cont.) STATE-MACHINE IR — Checkpoint 1 (types) + Checkpoint 2 (lowering + semantic conservation)
 
 **Mission:** Build the redesign as 6 measurable checkpoints (one architectural change at a time, each compared to the frozen control). CP1 = IR types only; CP2 = lowering (representation) + semantic conservation. No execution change in either.
