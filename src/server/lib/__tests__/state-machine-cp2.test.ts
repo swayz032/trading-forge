@@ -40,8 +40,8 @@ describe("CP2 lowering — representation preserved, execution unchanged", () =>
     const cg = compilerGeneratedNodes(ir).map((n) => n.at);
     expect(cg).toContain("entry");          // market default never stated
     expect(cg).toContain("wait_state.until"); // zero-wait inferred
-    // the confirmation IS real → explicit, NOT compiler_generated
-    expect(ir.wait_state.confirmation.provenance.origin).toBe("explicit");
+    // the confirmation IS real (from extraction) → NOT a compiler default (span-native: explicit if transcript-bound, else derived)
+    expect(ir.wait_state.confirmation.provenance.origin).not.toBe("compiler_generated");
   });
 });
 

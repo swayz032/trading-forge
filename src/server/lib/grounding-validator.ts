@@ -75,6 +75,11 @@ export function validateGrounding(ir: StrategyIR, transcript: string, opts?: { s
     const isExplicit = p.origin === "explicit" || p.origin === "normalized";
     if (isExplicit) {
       if (!p.evidence_quote) { nodes.push({ node: name, origin: p.origin, critical, method: "none", verdict: "MISSING_EVIDENCE" }); violations++; rejection_reasons.push(`${name}: explicit node missing evidence (R1)`); continue; }
+      // R3 tamper check: if a transcript_span is declared, the quote MUST equal transcript.slice(span) exactly.
+      if (p.transcript_span) {
+        const sliced = transcript.slice(p.transcript_span.start, p.transcript_span.end);
+        if (sliced !== p.evidence_quote) { nodes.push({ node: name, origin: p.origin, critical, evidence_quote: p.evidence_quote, method: "none", verdict: "UNGROUNDED_VIOLATION" }); violations++; rejection_reasons.push(`${name}: transcript_span does not match evidence_quote (R3 tamper)`); continue; }
+      }
       const g = groundQuote(p.evidence_quote, transcript);
       if (g.grounded) { nodes.push({ node: name, origin: p.origin, critical, evidence_quote: p.evidence_quote, method: g.method, verdict: "GROUNDED" }); grounded++; }
       else { nodes.push({ node: name, origin: p.origin, critical, evidence_quote: p.evidence_quote, method: "none", verdict: "UNGROUNDED_VIOLATION" }); violations++; rejection_reasons.push(`${name}: explicit quote NOT in transcript (R2) — "${p.evidence_quote.slice(0, 50)}"`); }

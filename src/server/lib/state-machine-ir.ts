@@ -36,6 +36,7 @@ export type Origin = "explicit" | "normalized" | "derived" | "compiler_generated
 export interface Provenance {
   transcript_lines?: number[]; // source line refs (forward+reverse traceability)
   evidence_quote?: string;     // verbatim span the node was derived from
+  transcript_span?: { start: number; end: number }; // span-native binding: evidence_quote === transcript.slice(start,end)
   confidence: Confidence;
   origin: Origin;
   inferred: boolean;           // true = compiler/model filled it in, NOT stated by the educator
@@ -43,6 +44,9 @@ export interface Provenance {
 }
 export const EXPLICIT = (evidence_quote?: string, transcript_lines?: number[]): Provenance =>
   ({ confidence: "explicit", origin: "explicit", inferred: false, evidence_quote, transcript_lines });
+/** Span-native explicit: the evidence IS a transcript slice (the grounding-safe constructor). */
+export const SPAN = (evidence_quote: string, start: number, end: number): Provenance =>
+  ({ confidence: "explicit", origin: "explicit", inferred: false, evidence_quote, transcript_span: { start, end } });
 export const NORMALIZED = (because: string, evidence_quote?: string): Provenance =>
   ({ confidence: "explicit", origin: "normalized", inferred: false, because, evidence_quote });
 export const DERIVED = (because: string, evidence_quote?: string): Provenance =>

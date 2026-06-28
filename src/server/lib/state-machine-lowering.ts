@@ -14,7 +14,7 @@
 import { compileConfirmationCompound, type ConfirmationInput } from "./confirmation-compiler.js";
 import { scanContextGates } from "./context-gate.js";
 import {
-  EXPLICIT, COMPILER, type StrategyIR, type WaitPredicate, type WaitPredicateKind,
+  COMPILER, SPAN, DERIVED, type Provenance, type StrategyIR, type WaitPredicate, type WaitPredicateKind,
   type StructuralEventKind, type ExecutionZoneKind,
 } from "./state-machine-ir.js";
 
@@ -54,60 +54,87 @@ const ZONE_KINDS: Array<{ zone: ExecutionZoneKind; re: RegExp }> = [
 const firstMatch = <T>(corpus: string, table: Array<{ re: RegExp } & T>): T | null =>
   table.find((t) => t.re.test(corpus)) ?? null;
 
-/** Evidence span for an explicit node (the invariant requires every explicit node carry transcript evidence). */
-const evidenceFor = (corpus: string, re: RegExp): string => {
-  const m = corpus.match(re);
-  return m ? corpus.slice(Math.max(0, (m.index ?? 0) - 12), (m.index ?? 0) + 72).trim() : "";
-};
 
 export interface LoweringInput extends ConfirmationInput { direction?: "long" | "short" | "both" }
 
-/** Lower extraction → StrategyIR. Immediate ⇒ zero-wait (parity); delayed ⇒ populated wait_state (rep only). */
+/** SPAN-NATIVE binding: locate `candidate` in the TRANSCRIPT (exact → flexible word-gap) and return a real
+ * transcript slice. NEVER returns generated text — only what is provably in the transcript. */
+function locateTranscriptSpan(transcript: string, candidate: string): { start: number; end: number; quote: string } | null {
+  const c = (candidate || "").trim();
+  if (!transcript || c.length < 3) return null;
+  const exact = transcript.indexOf(c);
+  if (exact >= 0) return { start: exact, end: exact + c.length, quote: c };
+  const words = c.toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter((w) => w.length > 1).slice(0, 8);
+  if (words.length < 1) return null;
+  const re = new RegExp(words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("[^a-z0-9]{1,12}"), "i");
+  const m = transcript.match(re);
+  return m && m.index != null ? { start: m.index, end: m.index + m[0].length, quote: m[0] } : null;
+}
+/** Span-native explicit provenance, or `null` if the candidate is NOT in the transcript (caller infers). */
+const spanProv = (transcript: string, candidate: string): Provenance | null => {
+  const s = locateTranscriptSpan(transcript, candidate);
+  return s ? SPAN(s.quote, s.start, s.end) : null;
+};
+/** First regex match located AS A TRANSCRIPT SPAN (not the paraphrased corpus). */
+const spanByRegex = (transcript: string, re: RegExp): Provenance | null => {
+  const m = transcript.match(re);
+  return m && m.index != null ? SPAN(m[0], m.index, m.index + m[0].length) : null;
+};
+
+/** Lower extraction → StrategyIR, SPAN-NATIVE: every explicit node's evidence is a real transcript slice,
+ * else the node is honestly DERIVED/COMPILER (inference). No paraphrase ever enters as "explicit". */
 export function lowerToStateMachineIR(input: LoweringInput): StrategyIR {
   const compoundResult = compileConfirmationCompound(input);
   const steps = input.entry_sequence ?? [];
-  const corpus = [input.transcript ?? "", ...steps.map(stepText)].join("\n");
+  const transcript = input.transcript ?? "";
+  const corpus = [transcript, ...steps.map(stepText)].join("\n");
   const ctx = scanContextGates(corpus);
   const direction = input.direction ?? "both";
 
-  // S4 wait predicate — find the step that introduces the wait
-  const waitStep = steps.find((s) => WAIT_PREDICATES.some((w) => w.re.test(stepText(s))));
-  const waitHit = waitStep ? firstMatch(stepText(waitStep), WAIT_PREDICATES) : null;
-  const until: WaitPredicate = waitHit
-    ? { kind: waitHit.kind, provenance: EXPLICIT(waitStep ? stepText(waitStep).trim().slice(0, 80) : undefined) }
-    : { kind: "now", provenance: COMPILER("no wait language found — zero-wait degenerate (immediate entry)") };
+  // S4 wait — TRANSCRIPT-FIRST: a wait phrase found in the transcript binds to a span; one found only in the
+  // paraphrased steps is DERIVED (honest inference); none → zero-wait.
+  const twHit = WAIT_PREDICATES.map((w) => ({ w, m: transcript.match(w.re) })).find((x) => x.m && x.m.index != null);
+  const stepWait = steps.find((s) => WAIT_PREDICATES.some((w) => w.re.test(stepText(s))));
+  const until: WaitPredicate = twHit
+    ? { kind: twHit.w.kind, provenance: SPAN(twHit.m![0], twHit.m!.index!, twHit.m!.index! + twHit.m![0].length) }
+    : stepWait
+      ? { kind: firstMatch(stepText(stepWait), WAIT_PREDICATES)!.kind, provenance: DERIVED("wait stated in extraction steps; no verbatim transcript span") }
+      : { kind: "now", provenance: COMPILER("no wait language — zero-wait degenerate (immediate entry)") };
 
-  // Invalidation (optional) — a step that cancels the setup before entry
   const invalStep = steps.find((s) => INVALIDATION_RE.test(stepText(s)));
+  const invalSpan = invalStep ? spanByRegex(transcript, INVALIDATION_RE) : null;
 
-  // S2 structural event (optional)
   const ev = firstMatch(corpus, EVENT_KINDS);
-  // S3 execution context (the zone) — prefer a poi/zone gate, else detect from corpus
+  const evProv = ev ? spanByRegex(transcript, ev.re) : null;        // span if the event word is IN the transcript
   const zoneGate = ctx.gates.find((g) => g.type === "zone" || g.type === "poi");
   const zoneHit = firstMatch(corpus, ZONE_KINDS);
+  const zoneProv = zoneGate ? (spanProv(transcript, zoneGate.evidence_quote || "") ?? (zoneHit ? spanByRegex(transcript, zoneHit.re) : null))
+    : zoneHit ? spanByRegex(transcript, zoneHit.re) : null;
+
+  const primaryLeg = compoundResult.compound?.legs.find((l) => l.order === compoundResult.compound!.primary_order);
+  const confProv = compoundResult.compound
+    ? (spanProv(transcript, primaryLeg?.evidence_quote || "") ?? DERIVED("confirmation compiled from extraction; no verbatim transcript span"))
+    : COMPILER(`no confirmation compiled (${compoundResult.quarantine_reason ?? "unknown"})`);
 
   return {
     schema_version: "state_machine_v1",
+    // bias direction is a CLASSIFICATION (from direction_class), not a quote → honestly DERIVED, never explicit
     bias: input.direction
-      ? { kind: "bias", direction, provenance: EXPLICIT(`direction: ${direction}`) }
+      ? { kind: "bias", direction, provenance: DERIVED(`direction from extraction direction_class: ${direction}`) }
       : { kind: "bias", direction: "both", provenance: COMPILER("no explicit bias — default both (symmetric futures)") },
     eligibility: ctx.gates.filter((g) => g.type === "session" || g.type === "regime"),
     structural_event: ev
-      ? { kind: "structural_event", event: ev.kind, provenance: EXPLICIT(evidenceFor(corpus, ev.re)) }
+      ? { kind: "structural_event", event: ev.kind, provenance: evProv ?? DERIVED(`event '${ev.kind}' from extraction; no verbatim transcript span`) }
       : null,
-    execution_context: zoneGate
-      ? { kind: "execution_context", zone: (zoneHit?.zone ?? "named_level"), ref: zoneGate.params.level ?? zoneGate.name, provenance: EXPLICIT(zoneGate.evidence_quote || zoneGate.name) }
-      : zoneHit
-        ? { kind: "execution_context", zone: zoneHit.zone, provenance: EXPLICIT(evidenceFor(corpus, zoneHit.re)) }
-        : null,
+    execution_context: zoneGate || zoneHit
+      ? { kind: "execution_context", zone: (zoneHit?.zone ?? "named_level"), ref: zoneGate?.params.level ?? zoneGate?.name, provenance: zoneProv ?? DERIVED("zone from extraction; no verbatim transcript span") }
+      : null,
     wait_state: {
-      provenance: until.kind === "now" ? COMPILER("zero-wait: event is the confirmation") : EXPLICIT(until.provenance.evidence_quote || "wait condition"),
+      provenance: until.kind === "now" ? COMPILER("zero-wait: event is the confirmation") : until.provenance,
       active: until.kind !== "now",
       until,
-      confirmation: compoundResult.compound
-        ? { kind: "confirmation", compound: compoundResult.compound, provenance: EXPLICIT(compoundResult.compound.legs.find((l) => l.order === compoundResult.compound!.primary_order)?.evidence_quote || "confirmation") }
-        : { kind: "confirmation", compound: null, provenance: COMPILER(`no confirmation compiled (${compoundResult.quarantine_reason ?? "unknown"})`) },
-      ...(invalStep ? { invalidated_by: { kind: "invalidation" as const, condition: stepText(invalStep).trim().slice(0, 80), provenance: EXPLICIT(stepText(invalStep).trim().slice(0, 80)) } } : {}),
+      confirmation: { kind: "confirmation", compound: compoundResult.compound, provenance: confProv },
+      ...(invalStep ? { invalidated_by: { kind: "invalidation" as const, condition: stepText(invalStep).trim().slice(0, 80), provenance: invalSpan ?? DERIVED("invalidation from extraction; no verbatim transcript span") } } : {}),
     },
     entry: { kind: "entry", order_type: "market", direction, provenance: COMPILER("entry order-type not stated — default market") },
     meta: { lowered_from: "structured_extraction", quarantine_reason: compoundResult.quarantine_reason },

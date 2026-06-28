@@ -3,6 +3,21 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-28 SPAN-NATIVE LOWERING — the compiler bug fix; grounding collapsed 1/6 → 6/6
+
+**Mission:** Operator root-cause: the 50-67% grounding failure was NOT model hallucination — it was a COMPILER BUG. The lowering sliced evidence from the corpus (transcript + PARAPHRASED extraction steps), promoting paraphrase tokens into "explicit" IR nodes. Fix = make the IR SPAN-NATIVE: every explicit node's evidence must be a real transcript slice (`transcript.slice(start,end)`), never generated text; if a concept isn't in the transcript it's honestly DERIVED, never fabricated-explicit.
+
+**Work completed (commit + tag `span-native-lowering`):** Provenance gains `transcript_span:{start,end}` + `SPAN(quote,start,end)` constructor (grounding-safe by construction). `state-machine-lowering.ts` rewritten TRANSCRIPT-FIRST: `locateTranscriptSpan(transcript, candidate)` (exact → flexible word-gap regex) returns a REAL transcript slice or null; every node (event/zone/until/confirmation/invalidation) binds to a span if found in the transcript, else DERIVED (inference). bias → DERIVED (direction is a classification, not a quote). Grounding validator strengthened with R3 tamper check (transcript_span must equal the slice). Removed paraphrase-sourced `evidenceFor`.
+
+**RESULT (operator's prediction, confirmed): grounding collapsed 1/6 → 6/6 GROUNDED, 100% pass_rate, ZERO violations** — NOT because the model improved, but because the IR stopped inventing text. New honest signal = `inference_rate` (33-67% per video): the fraction we could NOT verbatim-bind (compiler-filled), which is the real, measurable grounding-gap dial. 3 unit tests failed for the RIGHT reason (they asserted the old paraphrase-as-explicit behavior; without a transcript, span-native correctly marks nodes derived) — fixed by giving the tests transcripts to bind to + relaxing one assertion to "not compiler_generated".
+
+**Verification:** tsc 0; 92 tests green (full state-machine + grounding + fidelity); 6/6 frozen-6 GROUNDED on real transcripts. Standalone (zero production wiring).
+
+**The milestone (operator's framing):** the system crossed to the COMPILER side of the line — "if a system cannot trace every executable token to a source span, it is a generator, not a compiler." Correctness is no longer a model property; it's a GRAPH CONSTRAINT over spans. Success criteria locked: no ungrounded transformation survives execution; measure grounding_pass_rate / inference_rate / rejection_rate.
+
+**Carry-forward:** inference_rate (33-67%) is now the dial to drive down — bind until/confirmation to `_coverage_speaker_items.verbatim_quote` at extraction time (raises explicit, lowers inference) — offline-measurable. THEN (freeze holds): blind suite vs frozen control + ~100-video corpus + real-bar replay parity (live / stable-supervisor gated).
+
+---
 ### Session Log — 2026-06-28 GROUNDING VALIDATOR — the reality-lock (closure, not CP7); explainability ≠ correctness PROVEN
 
 **Mission:** Operator correction — CP1-6 is a VERIFICATION FRAMEWORK for extraction HYPOTHESES, not extraction correctness. Consensus can agree on something wrong; explainability ≠ correctness. The real invariant = NO UNVERIFIED CLAIM SURVIVES INTO EXECUTION. Add the missing hard GROUNDING GATE (deterministic transcript↔IR binding, model-consensus cannot override).

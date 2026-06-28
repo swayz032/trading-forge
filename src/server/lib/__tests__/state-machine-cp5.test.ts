@@ -39,7 +39,8 @@ describe("CP5 — the non-negotiable invariant (explicit XOR inferred, no third)
 });
 
 describe("CP5 — decision record (the six questions, bidirectional, evidence-backed)", () => {
-  const ir = lowerToStateMachineIR({ entry_sequence: seq("break of structure to the upside", "wait for price to come back and retest the order block", "no trade if it closes below the order block", "enter on the bullish confirmation"), direction: "long" });
+  const transcript = "we get a break of structure to the upside, then we wait for price to come back and retest the order block, and there is no trade if it closes below the order block, finally enter on the bullish confirmation.";
+  const ir = lowerToStateMachineIR({ transcript, entry_sequence: seq("break of structure to the upside", "wait for price to come back and retest the order block", "no trade if it closes below the order block", "enter on the bullish confirmation"), direction: "long" });
   const bars: ReplayBar[] = [{ i: 0, event: true }, { i: 1, until_satisfied: true, confirmation: true }];
 
   it("★ answers all six belief questions, each evidence-or-inference backed with confidence", () => {
@@ -76,7 +77,7 @@ describe("CP5 — decision record (the six questions, bidirectional, evidence-ba
 
 describe("CP5 — honesty dashboard (taught vs compiler-inferred)", () => {
   it("★ quantifies how much of the strategy is TAUGHT vs compiler-filled", () => {
-    const ir = lowerToStateMachineIR({ entry_sequence: seq("break of structure", "wait for the retest of the order block", "enter on confirmation"), direction: "long" });
+    const ir = lowerToStateMachineIR({ transcript: "a break of structure, then wait for the retest of the order block, enter on confirmation", entry_sequence: seq("break of structure", "wait for the retest of the order block", "enter on confirmation"), direction: "long" });
     const conservation = { total: 10, executed: 7, normalized: 1, ignored: 1, silent_loss: [{ name: "x" }] };
     const d = provenanceDashboard(ir, conservation);
     expect(d.transcript_units).toBe(10);
