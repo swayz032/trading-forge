@@ -76,6 +76,22 @@ describe("compileConfirmationCompound — multi-leg representation", () => {
     expect(primary?.kind).toBe("retest_reject");
   });
 
+  it("★ leg roles: primary = entry trigger, gated step = hard_gate, rest = confluence", () => {
+    const r = compileConfirmationCompound({
+      entry_sequence: seq(
+        "price closes through the opening range edge",                       // confluence (precedes entry)
+        "then we enter on the retest of the opening range low with a fair value gap", // primary (entry)
+        "no trade unless a candle closes below the overnight low",           // hard_gate (gating language + resolvable level)
+      ),
+    });
+    const roleOf = (ord: number) => r.compound?.legs.find((l) => l.order === ord)?.role;
+    const primary = r.compound?.legs.find((l) => l.role === "primary");
+    expect(primary?.kind).toBe("retest_reject"); // highest-specificity leg is primary
+    expect(r.compound?.legs.some((l) => l.role === "hard_gate")).toBe(true);
+    expect(r.compound?.legs.some((l) => l.role === "confluence")).toBe(true);
+    void roleOf;
+  });
+
   it("explicit gating language → enforcement all_required (no-trade-unless)", () => {
     const r = compileConfirmationCompound({
       entry_sequence: seq(

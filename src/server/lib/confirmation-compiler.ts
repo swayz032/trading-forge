@@ -211,7 +211,15 @@ export function compileConfirmation(input: ConfirmationInput): ConfirmationResul
 }
 
 // ── Phase 2B — compound (multi-leg) confirmation ───────────────────────────────
-export interface ConfirmationLeg extends ConfirmationPredicate { order: number; }
+/**
+ * Leg role (Phase 2B refinement): every leg is one of —
+ *  - "primary"   — the actual firing trigger; absent → no trade.
+ *  - "confluence"— improves quality; missing does NOT invalidate (the demonstrated-variant case).
+ *  - "hard_gate" — no trade unless true (educator used explicit gating language on this leg).
+ * Roles are the per-leg refinement of the compound `enforcement` summary.
+ */
+export type LegRole = "primary" | "confluence" | "hard_gate";
+export interface ConfirmationLeg extends ConfirmationPredicate { order: number; role: LegRole }
 export interface CompoundConfirmation {
   predicate_type: "single" | "sequence" | "and";
   operator: "SEQUENCE" | "AND"; // SEQUENCE = ordered (sweep→displacement→retest); AND = parallel confluence (FVG+OB+discount)
@@ -278,7 +286,9 @@ export function compileConfirmationCompound(input: ConfirmationInput): CompoundR
     if (!predicateLevelIsNamed(best.level_ref) && stepNamesLevel) {
       contradictions.push({ type: "LEVEL_LOSS", detail: `step "${(s.action ?? "").slice(0, 60)}" named a specific level but compiled to ${best.level_ref ?? "null"}` });
     }
-    legs.push({ ...best, order: legs.length + 1 });
+    // role: hard_gate when THIS step used explicit gating language ("only/must/no-trade-unless");
+    // primary is assigned after the loop (the highest-specificity entry leg); else confluence.
+    legs.push({ ...best, order: legs.length + 1, role: GATING_RE.test(stepText) ? "hard_gate" : "confluence" });
   }
   const expected_legs = legs.length + specificMisses;
 
@@ -287,7 +297,7 @@ export function compileConfirmationCompound(input: ConfirmationInput): CompoundR
     const single = compileConfirmation(input);
     if (!single.compiled) return { compound: null, quarantine_reason: single.quarantine_reason, contradictions, leg_count: 0, expected_legs };
     return {
-      compound: { predicate_type: "single", operator: "SEQUENCE", legs: [{ ...single.compiled, order: 1 }], enforcement: "primary_plus_confluence", primary_order: 1 },
+      compound: { predicate_type: "single", operator: "SEQUENCE", legs: [{ ...single.compiled, order: 1, role: "primary" }], enforcement: "primary_plus_confluence", primary_order: 1 },
       quarantine_reason: null, contradictions, leg_count: 1, expected_legs: Math.max(1, expected_legs),
     };
   }
@@ -310,6 +320,7 @@ export function compileConfirmationCompound(input: ConfirmationInput): CompoundR
     const spec = triggerSpecificity({ named_level: predicateLevelIsNamed(leg.level_ref), timeframe_specific: false, confluence_count: leg.confluence ? 1 : 0, rare_pattern: leg.kind === "displacement" });
     if (spec >= bestPrimarySpec) { bestPrimarySpec = spec; primary_order = leg.order; }
   }
+  for (const leg of legs) if (leg.order === primary_order) leg.role = "primary"; // primary overrides
 
   return { compound: { predicate_type, operator, legs, enforcement, primary_order }, quarantine_reason: null, contradictions, leg_count: legs.length, expected_legs };
 }
