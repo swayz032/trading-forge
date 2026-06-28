@@ -3,6 +3,25 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-27 Slumdawg Blueprint — Wave 4 (Layer 14 orchestrator + Layer 15 leak + governance) — INSTITUTIONAL GRADE
+
+**Mission:** Operator "execute institutional grade!!" — Wave 4 centerpiece: unify the scattered GPT-brained nightly intelligence into one 3AM orchestrator, add the missing 5-category leak detector, and harden the LLM research-proposal pipeline against statistical self-deception.
+
+**Shipped — commits `728c187` (4B+4C) + `8123e73` (4A kill-switch fix) + `6fdd6e9` (system-map):**
+- **4B — Layer 15 leak detection (observability-reliability), ADVISORY-ONLY:** new `leak-detection-service.ts` + pure `leak-metrics.ts` (20d-vs-60d Sharpe z-score, win-rate z, regime-survival rate, B14 ci_high drift). 5 categories: execution-slippage / allocation-drift / regime / attribution-opacity / subsystem-consensus. Emits `layer15.leak_detected.*` audit + Prom `tf_layer15_leak_detections_total` + Discord WARN (high severity only). `POST /api/leak-detection/run` for the orchestrator. NEVER gates lifecycle. 55 vitest.
+- **4C — proposal governance (critic-optimizer):** R2 cumulative-trial counter (migration 0178 `research_trial_counter` + `governance_meta` JSONB; DSR/PBO use N_total not N=1); R3 look-ahead-safe prompts (`parameter_evolver.py` + critic-optimizer-service.ts inject "evaluate only provided data, do not recall" + citation check); R8 5-field pre-commit before backtest-queue; R5 63-day min sample. Audit `research_governance.*`. 34 pytest + 17 vitest.
+- **4A — `14A-master-nightly-intelligence` n8n orchestrator (LIVE Railway, id `Nk4pmHP6c0VOEOaT`, 27 nodes, staged INACTIVE):** 3AM ET schedule → kill-switch check → regime audit → leak detection → decay → ranking → critic fan-out → GPT-authored nightly report → Discord. Single correlation_id threads all nodes; errorWorkflow + retry + X-Idempotency-Key on every node. Resolved the 03:00 collision: retimed `7A-auto-evolution`→03:20, `11A-critic-optimization`→03:40 (not deleted). Fresh 31-workflow backup at `scratchpad/n8n-backup-wave4/`.
+- **4A kill-switch FIX (caught in close-out):** the new `GET /api/admin/kill-switch` route the agent wrote queried non-existent columns (`key`/`value`) and fail-OPENed → would silently never read the flag. Rewrote to canonical (`paramName`/`currentValue` numeric 1=enabled/0/absent=disabled, **FAIL-CLOSED**) matching pattern-aggregator `_readKillSwitch` + slumhouse/admin.ts. 14A now correctly obeys the operator's master halt (autonomous loops OFF by default per migration 0175).
+
+**Verification:** 34 pytest + 72+ vitest GREEN, tsc + ruff clean, system-map:check GREEN (registered `/api/leak-detection` route + `research_trial_counter` table). Leak engine advisory-only confirmed by tests (no gate fields). 4C governance look-ahead + pre-commit + trial-counter tested.
+
+**⚠️ TWO OPERATOR ACTIONS before 14A goes live:** (1) toggle 14A **Active ON in the n8n UI** — REST `/activate` returns 403 on this Railway instance (Wave-9 limitation; UI-only). (2) **restart TradingForgeAPI** to deploy `GET /api/admin/kill-switch` (until then the route 404s; 14A's kill-switch check then reads disabled→14A stays halted, which is the safe default). Also: `npm run db:migrate` applies 0178; deploy backend for leak route + governance.
+
+**Shared-tree:** parallel session committed vacation_mode/office-mobile throughout; migrations 0178/idx181 verified collision-free; explicit-path commits, 0 collisions.
+
+**Next:** Wave 5 DEFERRED (order-flow depth + multi-account portfolio, gated on TopstepX live). The Slumdawg blueprint's 4 build-waves are COMPLETE.
+
+---
 ### Session Log — 2026-06-27 Slumdawg Blueprint — Wave 3 (BIF Gate)
 
 **Mission:** Execute Wave 3 of the approved Slumdawg blueprint plan — a Backtest Inflation Factor promotion gate guarding the autonomous scout (hundreds of variants) from promoting selection-inflated strategies to live capital.
