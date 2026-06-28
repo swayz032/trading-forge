@@ -230,6 +230,44 @@ baseline 0 STRONG / 1 PARTIAL / 4 SYSTEMATIC / 1 UNVERIFIABLE → Phase 1 (confi
 COMPILATIONS held at 0 the entire way. Ontology: WHICH(2A) · WHAT(2B) · WHERE(3A) · anchoring(2D) shipped;
 HOW(3B) is the last piece for 2u9.
 
+## PHASE 3B (confirmation-strength scorer — the HOW axis) — 2u9 PARTIAL→STRONG; FROZEN-6 = 6 STRONG
+
+Built `confirmation-strength.ts` (Layer A features → Layer B weighted score → Layer C weak/medium/strong)
++ `detectStrengthRequirement` (educator demands clean/decisive, or rejects weak "slight reaction… not the
+confirmation we wanted" = the no-trade tap) + `meetsStrengthRequirement` (signal-time). The primary leg now
+carries `strength_requirement`; a weak CHoCH (the no-trade tap) fails it, a clean one fires — representing
+2u9's trade-vs-no-trade discrimination the compiler previously couldn't (it captured CHoCH direction, not quality).
+
+2u9 PARTIAL→**STRONG** (grader): the discrimination is faithfully represented; the 5 prior STRONG carry
+additive strength metadata with NO regression (0 quarantines). Continuous scorer, interpretable (NOT ML —
+one residual isn't enough to learn). Caveat (grader): the "strong" THRESHOLD is system-chosen and the scorer's
+calibration on the actual demonstrated candles is unverifiable from static extraction — it needs real bar
+features at signal-time (the SAME engine-wiring gap as context gates → folds into Part 2 replay validation).
+
+**FROZEN-6 FINAL: 6 STRONG · 0 PARTIAL · 0 SYSTEMATIC · 0 UNVERIFIABLE.** FALSE COMPILATIONS = 0 throughout.
+
+### The complete fidelity arc + ontology
+```
+baseline: 0 STRONG · 1 PARTIAL · 4 SYSTEMATIC · 1 UNVERIFIABLE   ("compilable" ≠ "faithful")
+ Phase 1  confirmation compiler ............ the trigger is finally compiled
+ 2A  specificity selection ................. SYSTEMATIC 4→0   (WHICH fires)
+ 2B  multi-leg + primary-plus-confluence .... compound IR     (WHAT confirms)
+ 3A  zone/context gates + integration ....... iU8 → STRONG    (WHERE valid)
+ 2D  anchor + session-split + level-roles ... O9cz → STRONG   (anchoring)
+ 3B  confirmation-strength scorer ........... 2u9 → STRONG    (HOW strong)
+NOW: 6 STRONG · 0 PARTIAL · 0 SYSTEMATIC · 0 UNVERIFIABLE
+```
+Ontology COMPLETE: WHICH(2A) · WHAT(2B) · WHERE(3A) · anchoring(2D) · HOW(3B). The extraction compiler is
+no longer the bottleneck — every frozen-6 educator strategy now compiles to a faithful, executable representation.
+
+### Remaining (NOT frozen-6 fidelity — live-proof + generalization)
+1. **Engine attach Part 2** — context gates + strength scorer → live signal path + Python mirror + parity +
+   **backtest-replay** (proves gates/scorer actually fire correctly on real bars; closes the grader's 2u9
+   calibration caveat). The compiler is standalone extraction-side today.
+2. **Generalization** — the frozen-6 is now effectively the CALIBRATION set; re-run on a fresh UNSEEN set to
+   prove the 6 primitives generalize (don't overfit to 6 examples). This is the highest-value next epistemic check.
+3. SCL hard-gate calibration.
+
 ## Method note (for re-running)
 
 Probe = blind grader: `scratchpad/fidelity/<id>.compiled.json` (compiled logic) + `tmp/generalization/<id>.transcript.txt` (ground truth) → grader classifies per-example fire/no-fire + mismatch taxonomy {TIMING, CONFIRMATION, CONTEXT, DIRECTION, LEVEL, NO_MISMATCH}. Cheap (no historical data / replay). A full Layer 4 would add: extract educator's dated example trades → run compiled strategy on that history → compare actual signals.

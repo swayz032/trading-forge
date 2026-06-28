@@ -24,6 +24,7 @@ import {
   type TriggerFeatures,
 } from "./specificity-score.js";
 import { scanContextGates, type ContextGate } from "./context-gate.js";
+import { detectStrengthRequirement, type StrengthRequirement } from "./confirmation-strength.js";
 
 export type ConfirmationKind = "close_through" | "structure_shift" | "retest_reject" | "displacement";
 
@@ -51,6 +52,8 @@ export interface ConfirmationPredicate {
    * collapsed into a single side. Present for structure_shift / close_through.
    */
   directional_rule?: { long?: string; short?: string };
+  /** Phase 3B — the educator's required confirmation STRENGTH (clean/decisive vs any structural break). */
+  strength_requirement?: StrengthRequirement;
 }
 
 export interface ConfirmationResult {
@@ -339,6 +342,12 @@ export function compileConfirmationCompound(input: ConfirmationInput): CompoundR
     if (spec >= bestPrimarySpec) { bestPrimarySpec = spec; primary_order = leg.order; }
   }
   for (const leg of legs) if (leg.order === primary_order) leg.role = "primary"; // primary overrides
+
+  // ── Phase 3B — confirmation STRENGTH requirement: does the educator demand a clean/decisive confirmation
+  // (or reject a weak one = the no-trade tap)? Attach to the primary firing leg. Signal-time scoring then
+  // distinguishes the educator's TRADE tap from the NO-TRADE tap (the 2u9 residual). Extraction-side here.
+  const strengthReq = detectStrengthRequirement(gateCorpus);
+  if (strengthReq.required) for (const leg of legs) if (leg.order === primary_order) leg.strength_requirement = strengthReq;
 
   // ── Phase 2D-A — anchor binding: couple spatial legs (displacement / generic structure_shift) to a
   // WHERE anchor (a context POI/zone, or a preceding leg's named level). A bare displacement is generic;

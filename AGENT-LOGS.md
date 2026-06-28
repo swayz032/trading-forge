@@ -3,6 +3,21 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-27 (cont.) FIDELITY 3A-integration Part 1 + PHASE 3B — frozen-6 = 6 STRONG (ontology COMPLETE)
+
+**Mission:** (1) Option-B de-risk: wire the context-gate WHERE-evaluator + harness (validate gates change firing before more capability). (2) Phase 3B confirmation-strength scorer to close the last residual (2u9).
+
+**Work completed (commits `920c771` + 3B):**
+- 3A→engine Part 1 (`920c771`): `evaluateContextGates()` (WHERE half of trade_valid; target/stop never gate; FORMATION session ≠ entry check; fail-closed on missing input) + `context-gate-integration.test.ts` (7 cases PROVING gates change firing: zone in/out, POI distance, session, formation-exclusion, fail-closed). Part 2 (cross-language engine attach) scoped in `docs/designs/context-gate-engine-integration.md` — fidelity compiler is standalone extraction-side today.
+- Phase 3B: NEW `confirmation-strength.ts` — Layer A features (range/ATR, body_ratio, break_distance/ATR, follow_through) → Layer B weighted (impulse.30/break.30/candle.25/follow.15) → Layer C weak/medium/strong + `detectStrengthRequirement` (clean/decisive/with-displacement OR rejects-weak "slight reaction…no trade") + `meetsStrengthRequirement` (signal-time). Primary leg carries `strength_requirement`; represents 2u9's trade-vs-no-trade discrimination. Interpretable (NOT ML — one residual).
+
+**RESULT:** 2u9 PARTIAL→**STRONG** (grader: discrimination faithfully represented; caveat = scorer CALIBRATION on real candles unverifiable from static extraction → needs signal-time bars = Part 2). **FROZEN-6: 6 STRONG / 0 PARTIAL / 0 SYSTEMATIC / 0 UNVERIFIABLE.** Arc: baseline 0 STRONG/4 SYSTEMATIC → 6 STRONG; FALSE COMPILATIONS 0 throughout. **Ontology COMPLETE: WHICH(2A)·WHAT(2B)·WHERE(3A)·anchor(2D)·HOW(3B).** Extraction compiler no longer the bottleneck.
+
+**Verification:** tsc 0; 69 vitest green across the fidelity suite (strength scorer + req-detection + signal-time discrimination; 5 STRONG no regression).
+
+**Carry-forward (live-proof + generalization, NOT frozen-6 fidelity):** (1) Engine attach Part 2 — gates + strength scorer → live signal path + Python mirror + parity + BACKTEST-REPLAY (closes the 2u9 calibration caveat + proves no-misfire-in-replay). (2) **Generalization** — frozen-6 is now the CALIBRATION set; re-run on a fresh UNSEEN set to prove the 6 primitives generalize (highest-value next epistemic check; don't overfit to 6). (3) SCL hard-gate calibration. The fidelity compiler remains a standalone extraction-side subsystem until Part 2 wires it to the engine.
+
+---
 ### Session Log — 2026-06-27 (cont.) FIDELITY PHASE 2D — anchor + session-split + level-role; O9cz PARTIAL→STRONG (5 STRONG / 1 PARTIAL)
 
 **Mission:** Phase 2D (deterministic structural cleanup) — close O9cz's three residuals: level anchor, formation-vs-execution session, target-vs-gate typing.
