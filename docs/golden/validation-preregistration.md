@@ -5,8 +5,11 @@
 > thresholds below are the contract. **Changing any threshold AFTER seeing a result requires a dated,
 > justified amendment in this file — never a silent edit.** That clause is the anti-goalpost-moving guard.
 >
-> Status: DRAFT for operator sign-off. Once signed, the numbers freeze. Each gate fails independently and
-> each failure localizes to a layer (extraction / grounding / semantic / execution / engine).
+> Status: **SIGNED OFF + FROZEN 2026-06-28** (operator). The thresholds below are now the contract. Per the
+> sign-off: do not change them unless a compelling methodological reason is discovered BEFORE validation
+> results are collected; any change is a dated entry in the amendment log, never a silent edit. Each gate
+> fails independently and each failure localizes to a layer (extraction / grounding / semantic / execution /
+> engine).
 
 ## Reporting discipline (applies to every gate)
 
@@ -37,6 +40,9 @@ Harness: `scripts/verify-extraction-golden.ts` vs `docs/golden/extraction-golden
 
 **A demonstrated entry is "reproduced" iff:** same direction AND entry bar within **±3 bars** of the
 demonstrated entry AND entry inside the demonstrated level/zone OR within **0.5×ATR** of the demonstrated price.
+**Replay is computed identically for every educator** — ONE preregistered replay definition (same fill model,
+same ATR window, same bar tolerance), no per-educator tuning. The metric must be reproducible by re-running,
+not reconstructed per video.
 
 **Sample floor:** ≥2 demonstrated trades per video AND ≥10 demonstrated trades total — below this the gate is
 **INDETERMINATE** (undersampled), never a pass or fail.
@@ -64,17 +70,43 @@ ENTRY EDGE (what extraction owns), not the exit (what the framework owns).
 **Corpus (predefined):** ≥3 educators, ≥2 strategy families, ≥2 instruments (per `minimum-validation-run.md`)
 — diversity is required so "universal compiler vs fitted interpreter" is even computable.
 
+**GENERALIZES requires ALL THREE, each an INDEPENDENT hard requirement (operator sign-off — do not collapse
+into one):**
+1. **Blind replay ≥70%** (absolute floor — the blind set must itself be acceptable, regardless of the gap)
+2. **Calibration − blind gap ≤15 pp** (no severe degradation from the tuned set)
+3. **Edge NOT attributable solely to `STRUCTURAL_SIGNAL_SUSPECT` or `INFERENCE_NOISE`** (`verdict-harness.ts`)
+
+*Why independent (operator's example): calibration=72%, blind=58% → gap=14% passes criterion 2, but blind=58%
+fails criterion 1. Both must hold, so this case is correctly a FAIL, not a pass.*
+
 | verdict | criterion |
 |---|---|
-| **GENERALIZES** | blind-set entry-reproduction ≥**70%** AND (calibration_rate − blind_rate) ≤ **15 pp** AND segregated edge is NOT `STRUCTURAL_SIGNAL_SUSPECT` and NOT `INFERENCE_NOISE` (`verdict-harness.ts`) |
-| **OVERFIT** | calibration high but blind_rate drops >15 pp below it |
-| **LIMITED GENERALITY** | blind_rate <50% across the board |
+| **GENERALIZES** | all three above hold |
+| **OVERFIT** | criterion 1 or 2 fails because calibration is high but blind drops (gap >15 pp) |
+| **LIMITED GENERALITY** | blind_rate <70% on its own (criterion 1 fails) — worst case blind <50% |
 
 **Closure (`runVerdict({stratifyBy:"regime"})`):** STRUCTURAL_LAW (signal layer stable across regimes →
 universal in this stratification) vs CORPUS_CONDITIONAL (varies → real but scoped). Both are valid results;
 only STRUCTURAL_LAW supports a universality claim.
 
 ---
+
+## Stopping rule (operator sign-off)
+
+**The first failing gate determines the overall validation status.** If Gate 1 fails, the verdict is FAIL —
+Gates 2/3 may still be run for DIAGNOSTIC purposes, but a green Gate 2 or 3 does NOT overturn a failed Gate 1.
+Same downward: a passing Gate 3 never rescues a failed Gate 2. A failed prerequisite must be corrected and
+**re-run** before the overall verdict can change. This prevents a successful later analysis from being
+mistaken for overriding an earlier failed prerequisite (the gates are a chain, not a vote).
+
+## Explicitly NOT pre-registered (kept simple by design — operator sign-off)
+
+At this dataset scale, NO confidence intervals, p-values, Bayesian factors, or similar statistical machinery
+on the validation gates. Transparent, reproducible metrics (counts, rates, layer attribution) are more
+informative here than sophisticated statistics that the sample size cannot honestly support. (This is scoped
+to the EXTRACTION-validation gates; the backtest/MC promotion stack — PBO/DSR/B14 CI — is a separate,
+larger-n surface and keeps its statistics.) Add such machinery only if the corpus later grows enough to
+genuinely support it — and only as a dated amendment.
 
 ## What survives / fails the central hypothesis
 
