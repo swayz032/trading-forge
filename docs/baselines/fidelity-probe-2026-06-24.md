@@ -268,6 +268,45 @@ no longer the bottleneck — every frozen-6 educator strategy now compiles to a 
    prove the 6 primitives generalize (don't overfit to 6 examples). This is the highest-value next epistemic check.
 3. SCL hard-gate calibration.
 
+## ★ BLIND GENERALIZATION (unseen set) — FALSIFIED: frozen-6 did NOT generalize
+
+Ran the full compiler (selection + multi-leg + gates + anchor + strength) on 32 UNSEEN videos (primitives
+tuned ONLY on the frozen-6). Deterministic: 14 compiled / 18 quarantined; NO new quarantine reasons, no
+crashes (vocabulary covered every case); primitives activate broadly (gates 11/14, strength 10/14, multileg
+6/14, anchor 6/14). Then BLIND-graded a sample (grader given no expected result / no frozen-6 history / no
+primitive names):
+
+- **Compiled (8 graded): 0 STRONG · 2 PARTIAL · 6 SYSTEMATIC.**
+- **Quarantined (3 sampled): 3 of 3 = FALSE_QUARANTINE** (real executable strategies wrongly rejected).
+
+Against the operator's bar (≥85% STRONG · 0 SYSTEMATIC · 0 false-comps) this FAILS on every axis. The
+frozen-6 "6 STRONG" was a CALIBRATION-set result; the architecture is NOT general.
+
+**The failures collapse into ONE dominant missing primitive (Case C — new primitive), not chaos:**
+
+> **ZONE-RETURN ENTRY.** The educator's entry is a RETURN to a zone/level (retest / tap-back / reclaim)
+> AFTER a structural event (break / sweep / displacement / impulse). The compiler captures the structural
+> EVENT as the trigger and misses the "wait for price to come back to the zone" entry. The context-gate
+> machinery treats a zone as a WHERE-valid filter, never as THE ENTRY TRIGGER.
+
+Evidence (compiled-fired-on-event): s7v/f18 (tap into OB after BOS → fired the displacement/break);
+W7nln/I29 (retest of broken level + confirmation → fired the breakout close); SY2/Gann (retrace to
+prior-candle-close + LTF sweep → fired the impulse candle); z3Qn (reclaim/fade after fakeout → fired generic
+swing-edge breakout); NGM5 (one-tick sweep-below-high into FVG → fired close-above-OB). Evidence
+(false-quarantine, same root): bc6 (OB-before-FVG zone + pin-bar = `confirmation_no_level`), e-Qm (S/D zone
+retest = `leg_anchor_missing`, took step-1 BOS bias not the zone), 75DJ (zone + active rejection =
+`confirmation_would_overfire`) — all three teach a concrete zone-return entry the compiler refused because it
+hunted a confirmation EVENT and found a ZONE.
+
+Secondary recurring shapes (Case B composition): OR-alternatives flattened to AND (E9Mz: breakout OR retest
+OR sweep); direction inversion on reclaim/fade (E9Mz liquidity sweep, z3Qn POC fade).
+
+**Conclusion:** ontology incomplete by ~1 major primitive (zone-return entry) + OR-operator / reclaim-direction
+composition fixes. The 5 frozen-6 axes are necessary but the frozen-6 was NOT a representative sample — most
+educators teach zone-return, which the frozen-6 under-represented. NEXT (operator decision): scope the
+zone-return-entry primitive; then re-run THIS blind suite as the acceptance test (frozen-6 retired as a
+unit-fixture set, NOT the generalization bar).
+
 ## Method note (for re-running)
 
 Probe = blind grader: `scratchpad/fidelity/<id>.compiled.json` (compiled logic) + `tmp/generalization/<id>.transcript.txt` (ground truth) → grader classifies per-example fire/no-fire + mismatch taxonomy {TIMING, CONFIRMATION, CONTEXT, DIRECTION, LEVEL, NO_MISMATCH}. Cheap (no historical data / replay). A full Layer 4 would add: extract educator's dated example trades → run compiled strategy on that history → compare actual signals.

@@ -3,6 +3,19 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-27 (cont.) BLIND GENERALIZATION — FALSIFIED: frozen-6 did NOT generalize; ONE new primitive found (zone-return entry)
+
+**Mission:** Falsification — run the full compiler on UNSEEN videos (blind-graded) to test whether the 6 frozen-6 primitives are universal or memorized. Bar: ≥85% STRONG / 0 SYSTEMATIC / 0 false-comps.
+
+**Work completed (read-only; NO code changed, NO commits of code):** Deterministic pass on 32 unseen videos (14 compiled / 18 quarantined; no new quarantine reasons, no crashes; primitives activate broadly). BLIND-graded 11 (grader given no expected result / no history / no primitive names): compiled 8 = 0 STRONG / 2 PARTIAL / 6 SYSTEMATIC; quarantined 3 sampled = 3/3 FALSE_QUARANTINE.
+
+**RESULT — FAILS the bar on every axis.** The frozen-6 "6 STRONG" was a CALIBRATION-set artifact; the architecture is NOT general. BUT failures collapse into ONE dominant missing primitive (Case C): **ZONE-RETURN ENTRY** — the educator enters on a RETURN to a zone/level (retest/tap-back/reclaim) AFTER a structural event (break/sweep/displacement/impulse); the compiler fires on the EVENT and misses the return-to-zone entry. The context-gate machinery treats a zone as a WHERE-filter, never as THE ENTRY TRIGGER. This single gap explains BOTH the 6 systematic compiles (fired on the event) AND the 3 false quarantines (no event → refused, when the zone WAS the entry: no_level / would_overfire / leg_anchor_missing). Secondary (Case B): OR-alternatives flattened to AND; direction inversion on reclaim/fade.
+
+**Verification:** 11 independent blind LLM graders. Deterministic activation matrix in docs/baselines/fidelity-probe-2026-06-24.md (★ BLIND GENERALIZATION section).
+
+**Carry-forward:** OPERATOR DECISION pending — scope the zone-return-entry primitive (data now demands it). Then re-run THIS blind suite as the acceptance test; frozen-6 retired as unit-fixtures, NOT the generalization bar. Also: OR-operator support + reclaim-direction handling. The 5 shipped axes (WHICH/WHAT/WHERE/anchor/HOW) remain correct + necessary — just insufficient without zone-return.
+
+---
 ### Session Log — 2026-06-27 (cont.) FIDELITY 3A-integration Part 1 + PHASE 3B — frozen-6 = 6 STRONG (ontology COMPLETE)
 
 **Mission:** (1) Option-B de-risk: wire the context-gate WHERE-evaluator + harness (validate gates change firing before more capability). (2) Phase 3B confirmation-strength scorer to close the last residual (2u9).
