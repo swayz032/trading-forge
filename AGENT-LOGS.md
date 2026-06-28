@@ -3,6 +3,19 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-27 FIDELITY PHASE 2A — specificity-ranked selection + SCL; last SYSTEMATIC case eliminated (3 STRONG / 0 SYSTEMATIC)
+
+**Mission:** Build Phase 2A of the edge→predicate bridge contract — replace the compiler's fixed kind-rank with specificity-ranked selection + add the SCL metric — and convert the SYSTEMATIC fidelity case.
+
+**Work completed (commit `b2f0fca`):** NEW `src/server/lib/specificity-score.ts` (trigger specificity named*5/tf*4/confluence*3/rare*2 + `computeScl` = specificity(edge)−specificity(predicate), deterministic/no-LLM). `confirmation-compiler.ts` SELECTION rewritten: (1) emit EVERY matching kind per window as COMPETING candidates — no fixed structure→close→retest precedence (the old if-else discarded the specific retest before ranking = the yAMaiOI bug); (2) rank by INTRINSIC specificity (resolved level + own confluence + kind rarity, NOT ambient run-on text — punctuation-less windows lumped structure words next to unrelated levels, inflating the generic candidate); (3) retest_reject relaxed to fire on retest + (rejection|confluence|intent) + window-FVG confluence credit. SCL = TELEMETRY (scl/edge/pred/multi_leg_gap on result); HARD GATE default-OFF (`SCL_GATE_ENABLED`) — candidate-scoped ceiling over-counts multi-confluence educators, and quarantining a faithful winner is the expensive error (only flip on post-calibration).
+
+**RESULT (frozen-6 re-grade):** yAMaiOI **SYSTEMATIC→STRONG** (now `retest_reject@opening_range_edge+FVG` = the educator's exact entry; both demonstrated shorts fire). O9cz PARTIAL→PARTIAL (no regression; `displacement` = more faithful of its 2 legs). **FULL-6: 3 STRONG / 3 PARTIAL / 0 SYSTEMATIC / 0 UNVERIFIABLE** (was 2/3/1/0). Acceptance met: STRONG 2→3, FALSE COMPILATIONS stayed 0.
+
+**Verification:** tsc 0; 43 vitest green (specificity litmus + multi-candidate selection + opt-in gate firing + anti-over-quarantine). Re-grade via 2 LLM graders.
+
+**Carry-forward:** all 3 remaining PARTILs share ONE residual = **multi-leg** (educator trigger is 2-3 conjoined legs; compiler captures 1) → **Phase 2B** (multi-leg preservation + contradiction detector, the contract's next item). Then 2C provenance, 2D O9cz session/level anchor. SCL hard-gate calibration pending. Other agent's Slumdawg Bot v1 plan (Waves 1-5) is on hardening/phase-0 — disjoint files from fidelity work (verified 0 overlap), complementary stage of pipeline.
+
+---
 ### Session Log — 2026-06-24 (cont. 11) FIDELITY closed-world matrix — full-6 re-graded 5-axis; 2 axes SOLVED, confirmation-SELECTION is the real residual
 
 **Mission:** Finish the remaining 3 of the frozen-6 fidelity re-grades + collapse all 6 into a single 5-axis matrix (operator's "locally-correct truth table" before any unseen-fidelity expansion) — answer: is "confirmation strength" the final primitive or a surface symptom?

@@ -132,6 +132,27 @@ Plus 1 new SESSION bug (O9cz: POI-level vs traded-session conflation).
 
 **Phase 2 targets, in priority order:** (a) confirmation SELECTION — when a higher-specificity event+level (retest@named-level + confluence) is present in the source, prefer it over the generic structure_shift; (b) PROVENANCE — quote-selection must pick the window matching the compiled rule's direction/event (exclude counter-examples / failed-setup sentences); (c) multi-leg confirmation sequences; (d) the O9cz POI-vs-session fix. The two SOLVED axes (direction, confirmation-existence) need no further work.
 
+## PHASE 2A RE-GRADE (specificity-ranked selection + SCL telemetry) — last SYSTEMATIC eliminated
+
+Built `specificity-score.ts` (trigger specificity + SCL) + rewrote compiler selection: emit every
+matching kind per window as COMPETING candidates, rank by INTRINSIC specificity (resolved level + own
+confluence + kind rarity, not ambient run-on text). SCL shipped as telemetry; hard gate default-OFF
+(`SCL_GATE_ENABLED`) until calibrated.
+
+| video | before 2A | after 2A | note |
+|---|---|---|---|
+| yAMaiOI9cmc | SYSTEMATIC | **STRONG_MATCH** | now compiles `retest_reject@opening_range_edge + fair_value_gap` = the educator's exact OR-low-retest+FVG entry (was generic structure_shift@prior_swing) |
+| O9czLS8lv4U | PARTIAL | PARTIAL (no regression) | `displacement` = the more faithful of its 2 legs; residual = conjoined MSS+displacement (2B) + level anchor (2D) |
+| TMVHO / sv-ix | STRONG | STRONG | unchanged (close_through, SCL 0) |
+| 2u9 / iU8 | PARTIAL | PARTIAL | unchanged; residual = multi-leg (2B) |
+
+**FULL-6 AFTER 2A: 3 STRONG · 3 PARTIAL · 0 SYSTEMATIC · 0 UNVERIFIABLE** (was 2/3/1/0). Acceptance met:
+STRONG 2→3, **FALSE COMPILATIONS stayed 0** (gate off; nothing quarantined). **The last SYSTEMATIC case is gone.**
+
+**Key convergence:** all 3 remaining PARTIALs share ONE residual — **multi-leg** (the educator's trigger
+is 2-3 conjoined legs; the compiler captures one). That is exactly **Phase 2B** (multi-leg preservation +
+contradiction detector). 2A cleanly teed up 2B. Phase 2D (O9cz session/level anchor) + 2C (provenance) remain.
+
 ## Method note (for re-running)
 
 Probe = blind grader: `scratchpad/fidelity/<id>.compiled.json` (compiled logic) + `tmp/generalization/<id>.transcript.txt` (ground truth) → grader classifies per-example fire/no-fire + mismatch taxonomy {TIMING, CONFIRMATION, CONTEXT, DIRECTION, LEVEL, NO_MISMATCH}. Cheap (no historical data / replay). A full Layer 4 would add: extract educator's dated example trades → run compiled strategy on that history → compare actual signals.
