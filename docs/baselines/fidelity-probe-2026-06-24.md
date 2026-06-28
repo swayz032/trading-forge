@@ -307,6 +307,39 @@ educators teach zone-return, which the frozen-6 under-represented. NEXT (operato
 zone-return-entry primitive; then re-run THIS blind suite as the acceptance test (frozen-6 retired as a
 unit-fixture set, NOT the generalization bar).
 
+## ★★ ENTRY-TIMING TAXONOMY (n=38 blind) — 92% require a WAIT-STATE → the diagnosis is EVENT-vs-STATE, not a missing primitive
+
+Operator reframe: "zone-return entry" is likely NOT a new atomic primitive — it's the symptom of an
+EVENT-CENTRIC compiler (`event → trade`) meeting a STATE-MACHINE reality (`bias → event → execution zone →
+WAIT → confirmation-in-zone → entry`). The trigger doesn't go missing; it ALREADY happened — the transcript
+is describing the wait + confirmation. Measure before redesigning. Blind entry-TIMING classification of all
+38 available transcripts (5 parallel classifiers, neutral 5-category taxonomy, no mention of our compiler):
+
+| category | count | % of 36 concrete | wait-state |
+|---|---|---|---|
+| zone_return | 18 | 50% | yes |
+| multi_stage | 10 | 28% | yes |
+| delayed_confirmation | 5 | 14% | yes |
+| immediate | 3 | 8% | no |
+| continuous_condition | 0 | 0% | no |
+| (none — vague/promo: SgcEY, l6Ca) | 2 | — | — |
+
+**REQUIRES A WAIT-STATE: 33/36 = 92%.** Event-coincident (the model the compiler assumes): 3/36 = 8%
+(Cmo break-and-go, iLmF resting-stop-on-breakout, rf_ MACD-cross). The operator's bar ("≥70-80% delayed →
+go state-oriented") is cleared at 92%. **CONCLUSION: the 0%-STRONG generalization failure is ONE architectural
+mismatch — event-centric IR vs state-machine reality — not six missing primitives.** It also explains the
+false quarantines: compiler looked for a trigger that had already fired, found the wait/confirmation, refused.
+The 5 shipped axes (selection/multi-leg/WHERE-gate/anchor/strength) are all COMPONENTS OF THE CONFIRMATION
+STEP — correct, but hung off an event spine; the redesign re-roots them in a state model.
+
+**RECOMMENDED REDESIGN (operator's, pending greenlight):** (1) state-machine IR (`bias → event → zone →
+wait_until → confirmation → entry`; immediate/continuous = the zero-wait degenerate case, subsuming all 3
+wait-families). (2) 4 independently-testable pipeline stages — Semantic extraction → IR → Compilation →
+Replay parity — so a failure localizes to ONE stage. (3) Gemma multi-pass with BIDIRECTIONAL TRACEABILITY
+(P1 verbatim rules → P2 normalize → P3 compile IR → P4 validate every IR node ↔ ≥1 transcript span, no rule
+dropped). Then re-run the blind suite as the acceptance bar. Honest n caveat: 38 not the operator's ~100, but
+the 92/8 split is lopsided enough that more samples won't move the architectural verdict (expand later to confirm proportions).
+
 ## Method note (for re-running)
 
 Probe = blind grader: `scratchpad/fidelity/<id>.compiled.json` (compiled logic) + `tmp/generalization/<id>.transcript.txt` (ground truth) → grader classifies per-example fire/no-fire + mismatch taxonomy {TIMING, CONFIRMATION, CONTEXT, DIRECTION, LEVEL, NO_MISMATCH}. Cheap (no historical data / replay). A full Layer 4 would add: extract educator's dated example trades → run compiled strategy on that history → compare actual signals.

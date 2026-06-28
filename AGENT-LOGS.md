@@ -3,9 +3,24 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-27 (cont.) ENTRY-TIMING TAXONOMY — 92% require a WAIT-STATE; diagnosis is EVENT-vs-STATE, not a missing primitive
+
+**Mission:** Operator reframe — before scoping a "zone-return primitive", MEASURE whether the failure is one missing primitive or an event-centric-vs-state-machine architecture mismatch. Blind entry-TIMING taxonomy over all 38 transcripts.
+
+**Work completed (read-only; no code):** 5 parallel blind classifiers, neutral 5-category taxonomy (immediate / delayed_confirmation / zone_return / multi_stage / continuous_condition / none) + `requires_wait_state` flag. RESULT (36 concrete of 38): zone_return 18 (50%), multi_stage 10 (28%), delayed_confirmation 5 (14%), immediate 3 (8%), continuous 0, none 2. **WAIT-STATE required: 33/36 = 92%; event-coincident = 8%.**
+
+**CONCLUSION:** the 0%-STRONG blind-generalization failure is ONE architectural mismatch — the compiler is `event → trade` (fits 8% of the corpus) while 92% of educators teach `bias → event → execution zone → WAIT → confirmation-in-zone → entry` (a state machine). "Zone-return" is the biggest single cell (50%) but NOT a new atomic primitive — it's one case of the wait-state family (zone_return + multi_stage + delayed_confirmation). Building one primitive would miss multi_stage/delayed. Also explains the false quarantines (trigger already fired; compiler refused the wait/confirmation as "no trigger"). The 5 shipped axes are COMPONENTS OF THE CONFIRMATION STEP — correct, re-rootable in a state IR.
+
+**Verification:** 38 blind classifications across 5 agents; distribution in docs/baselines/fidelity-probe-2026-06-24.md (★★ ENTRY-TIMING TAXONOMY). Operator's bar (≥70-80% delayed → state-oriented) cleared at 92%.
+
+**Carry-forward (operator greenlight pending):** (1) state-machine IR (`bias→event→zone→wait_until→confirmation→entry`; immediate/continuous = zero-wait degenerate); (2) 4 testable stages (Semantic extraction → IR → Compilation → Replay parity) for failure localization; (3) Gemma multi-pass with bidirectional traceability (verbatim → normalize → compile → validate every IR node ↔ transcript span). Re-run blind suite as acceptance bar. n=38 honest caveat (operator wanted ~100; 92/8 split won't move the verdict).
+
+---
 ### Session Log — 2026-06-27 (cont.) BLIND GENERALIZATION — FALSIFIED: frozen-6 did NOT generalize; ONE new primitive found (zone-return entry)
 
 **Mission:** Falsification — run the full compiler on UNSEEN videos (blind-graded) to test whether the 6 frozen-6 primitives are universal or memorized. Bar: ≥85% STRONG / 0 SYSTEMATIC / 0 false-comps.
+
+NOTE: the "missing primitive = zone-return" framing in THIS entry was REFINED by the entry-timing taxonomy above — it's an event-vs-state architecture mismatch, not an atomic primitive. Read the taxonomy entry as the current diagnosis.
 
 **Work completed (read-only; NO code changed, NO commits of code):** Deterministic pass on 32 unseen videos (14 compiled / 18 quarantined; no new quarantine reasons, no crashes; primitives activate broadly). BLIND-graded 11 (grader given no expected result / no history / no primitive names): compiled 8 = 0 STRONG / 2 PARTIAL / 6 SYSTEMATIC; quarantined 3 sampled = 3/3 FALSE_QUARANTINE.
 
