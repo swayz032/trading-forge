@@ -3,6 +3,21 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-28 CONTROLLED RE-RUN — confound RESOLVED on a frozen rig; the comparison is now valid
+
+**Mission:** De-confound the dual-extraction comparison by running the SAME 4 fresh videos through CURRENT code on a frozen rig (operator: "nothing is impossible" + "fix the cold-load").
+
+**How (no prod restart — the right call):** Discovered `:4000` is the OTHER agent's backend (`trading-forge/trading-forge` @ `hardening/phase-0`, via tsx — NOT a stale dist, NOT my code). Restarting it would reload THEIR branch + disrupt them → did NOT restart. Instead stood up an ISOLATED instance from my worktree on `:4099` (`TF_DISABLE_SCHEDULER=true`, scheduler-off), Gemma pre-pinned (`keep_alive:-1`, resident — cold-load spiral fixed) + freeze manifest captured before/after.
+
+**Result (FROZEN — before=after=fa25ea9e, drift=NONE → a genuinely CONTROLLED run):**
+- Enumerator on current code: psH **7**, l-2 **7**, h6T **10**, MKsjbL **22** speaker_items (vs `:4000`'s 0/0/0/0). **PROVEN: the `:4000` 0-items failure = stale-BRANCH divergence (`hardening/phase-0` lacks the enumerator fix), NOT model weakness.** 3 of 4 coverage=PASS (l-2, the 4-confluence MTF, still coverage_failed — a real depth gap on the hardest video, separate from the enumerator).
+- Confirmation binding (de-confounded vs my manual read): **all 4 = INFERENCE_DISAGREEMENT** — Gemma DOES capture confirmation but as PARAPHRASE in entry_sequence (psH "a strong candle that engulfs the previous candle" vs transcript "form a strong candle that engulfs this candle"); span-native lowering correctly refuses to bind a paraphrase → confirmation stays inferred. Now a VALID semantic verdict (execution clean + no drift), NOT EXECUTION_DROP. My earlier "Gemma missed confirmation" was confounded → formally retracted; the truth is a FIXABLE extraction/lowering gap ("maximal span capture").
+
+**Durable finding:** confirmation-collapse is CORPUS-CONDITIONAL (manual read found confirmation linguistically in all 4 rule/indicator educators; the frozen-38 was ICT/price-action-heavy). The freeze harness + commit-exposure made the difference between a confounded guess and a controlled verdict.
+
+**Carry-forward (single evidence-justified fix):** maximal-span-capture for confirmation in `state-machine-lowering.ts` — bind the confirmation node to a verbatim transcript span (search the confirmation phrase/key-term, or pull `_coverage_speaker_items.verbatim_quote`) instead of the paraphrased entry_sequence step. Verify on the frozen `:4099` rig that INFERENCE_DISAGREEMENT → AGREE. STANDALONE fidelity-module change only. **The REAL systemic blocker is branch divergence:** the running extraction backend (`hardening/phase-0`) lacks the fixes on `extraction/100pct-evidence` — reconciling that (coordinated with the other agent) is what actually unblocks fresh-data extraction in production.
+
+---
 ### Session Log — 2026-06-28 FIRST FRESH-DATA RUN — dual extraction (me vs Gemma) + confound diagnosed + hard-freeze harness shipped
 
 **Mission:** Operator dropped 4 NEW unseen YouTube videos + "extract yourself too so you compare." First real external measurement on fresh data. Environment IS the tower (Ollama UP, backend UP) — live pipeline reachable.
