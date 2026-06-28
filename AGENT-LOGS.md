@@ -3,6 +3,20 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-27 (cont.) STATE-MACHINE IR REDESIGN — baseline frozen + 8-role taxonomy + design doc
+
+**Mission:** Operator's ordered plan — freeze the event-centric compiler as a control, validate the IR vocabulary (8-role instruction taxonomy), then write the state-machine IR design doc.
+
+**Work completed (read-only + docs; no compiler code changed):**
+- **Froze baseline** `fidelity-baseline-event-centric` (git tag @ 9cfa1e1) = the control. Event-centric IR; blind-gen 0 STRONG/2 PARTIAL/6 SYSTEMATIC + 3/3 false-quarantine; fits 8% of corpus. The redesign is measured against the SAME blind suite for apples-to-apples attribution.
+- **8-role instruction taxonomy** (n=38 blind, 5 classifiers): lifecycle vocabulary VALIDATED (all 8 roles appear: creator/modifier/wait/confirm/entry/mgmt/exit/inval; modifier rare ~4 videos; inval optional). Unclassifiable column → 1 GENUINELY MISSING role = ELIGIBILITY/precondition ("don't trade at all right now" — session/news/trend-side/chop; distinct from per-setup invalidation) which MAPS ONTO existing 3A context_gates (cross-validates 3A as a real lifecycle role). 3 other "gaps" already homed (risk→framework-overlay; indicators→indicators[]; TF-drilldown→TF columns); psychology/promo = drop-noise.
+- **Design doc** `docs/designs/state-machine-ir-redesign.md`: explicit states S0-S8 (every instruction creates/modifies/consumes state); first-class `wait_state` object {active, until, confirmation, invalidated_by, expires, timeout} → zone-return/retest/sweep/reclaim become DATA not primitives; 5 existing axes RE-ROOTED as the S5 Confirmation node internals (move not rewrite); context_gates promoted to precondition+S3; immediate/continuous = zero-wait degenerate; 4 testable stages (semantic→IR→compile→replay, each its own metric); bidirectional traceability (transcript↔semantic↔IR↔compiled↔engine); Gemma 4-pass (verbatim→normalize→compile→validate); acceptance = same blind suite vs frozen control.
+
+**Verification:** 2 blind measurements (38 entry-timing + 38 role) across 10 agents; design doc written. No code changed — design + measurement phase.
+
+**Carry-forward (operator greenlight pending for BUILD):** build order in design doc §9 — IR types + wait_state → stage-2 lowering + per-stage metric harness → re-root 5 axes + promote context_gates → OR-operator + reclaim-direction → Gemma multi-pass + traceability → re-run blind suite as acceptance. Parallel non-blocking: expand corpus toward ~100 for priority tuning (NOT architecture re-decision). The event-centric compiler stays as the frozen control.
+
+---
 ### Session Log — 2026-06-27 (cont.) ENTRY-TIMING TAXONOMY — 92% require a WAIT-STATE; diagnosis is EVENT-vs-STATE, not a missing primitive
 
 **Mission:** Operator reframe — before scoping a "zone-return primitive", MEASURE whether the failure is one missing primitive or an event-centric-vs-state-machine architecture mismatch. Blind entry-TIMING taxonomy over all 38 transcripts.

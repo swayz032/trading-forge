@@ -340,6 +340,31 @@ Replay parity — so a failure localizes to ONE stage. (3) Gemma multi-pass with
 dropped). Then re-run the blind suite as the acceptance bar. Honest n caveat: 38 not the operator's ~100, but
 the 92/8 split is lopsided enough that more samples won't move the architectural verdict (expand later to confirm proportions).
 
+## ★★ 8-ROLE INSTRUCTION TAXONOMY (n=38 blind) — validates the state-machine vocabulary before freezing the IR
+
+Operator's pre-design measurement: classify every educator INSTRUCTION (not just entry timing) into 8
+semantic roles + an `unclassifiable` column (the real vocab-completeness test). 5 parallel blind classifiers.
+
+**Lifecycle spine VALIDATED:** all 8 roles appear across the corpus (state_creator / state_modifier /
+wait_condition / confirmation / entry / management / exit / invalidation). Backbone = creator → wait →
+confirmation → entry → management → exit. `state_modifier` rare (~4 videos: bias-flip-on-CHoCH, wick-refine,
+valid-low-transfer); `invalidation` present in ICT/SMC, absent in simple ORB (real but optional node).
+
+**Unclassifiable column sorted into 4 buckets — 3 already have homes:**
+| theme | freq | verdict |
+|---|---|---|
+| ELIGIBILITY / "don't trade at all right now" (session/news/lunch/trend-side/chop/volume) | ~6+ (dominant) | **GENUINELY MISSING ROLE** — distinct from invalidation (cancels a SPECIFIC pending setup); this gates whether to look for setups AT ALL. **Maps exactly onto existing 3A `context_gates` (session/regime)** → promote to a PRECONDITION node. |
+| risk / position-sizing / min-R:R go-no-go | recurs | intentionally EXCLUDED — framework-overlay authoritative (§13) |
+| indicator/chart-tool setup ("add VWAP+8EMA", Bollinger 2σ/3σ) | 4+ | already homed in existing `indicators[]` manifest |
+| timeframe drill-down ("mark 5m OR, drop to 1m execute") | several | already homed in existing daily/htf/itf/trigger/exec TF columns |
+| education / psychology / promo | pervasive | correctly DROPPED noise |
+
+**CONCLUSION:** the 8-role lifecycle vocabulary is sufficient for the state-machine spine + ONE addition —
+an ELIGIBILITY/context-precondition role (already implemented as 3A context_gates; the redesign elevates it
+to a precondition node, separate from per-setup invalidation). The 3 "homed" themes wire to existing config
+surfaces (don't drop them); psychology/promo stays drop-noise. Cross-validates that 3A was a real lifecycle
+role, not a one-off. Ready to freeze the IR vocabulary → design doc.
+
 ## Method note (for re-running)
 
 Probe = blind grader: `scratchpad/fidelity/<id>.compiled.json` (compiled logic) + `tmp/generalization/<id>.transcript.txt` (ground truth) → grader classifies per-example fire/no-fire + mismatch taxonomy {TIMING, CONFIRMATION, CONTEXT, DIRECTION, LEVEL, NO_MISMATCH}. Cheap (no historical data / replay). A full Layer 4 would add: extract educator's dated example trades → run compiled strategy on that history → compare actual signals.
