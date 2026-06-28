@@ -122,3 +122,43 @@ calibration-set 6-STRONG.
 6. Re-run the blind suite as the acceptance bar (§8).
 Parallel (non-blocking): expand the unseen corpus toward ~100 to firm up multi_stage/zone_return proportions
 for priority tuning (NOT to re-decide the architecture — the 92/8 split already settled that).
+
+## 10. FORWARD ARCHITECTURE (operator's reframe — the north star, built incrementally)
+
+> **Mission, restated:** not "YouTube → extract → backtest" but **"compile a human decision process into a
+> deterministic executable specification with NO semantic loss."** Backtesting is the *verification*; the
+> product is *semantic compilation*. This reframes every component and is the standard each checkpoint serves.
+
+**Five compilers (separated permanently — most projects collapse them; separating localizes every failure):**
+| # | compiler | transform | maps to |
+|---|---|---|---|
+| 1 | Instruction | NL → instructional units (no trading logic) | CP6 Gemma Pass 1 (verbatim extraction) |
+| 2 | Semantic | instruction graph → semantic state graph | the state-machine IR (CP1-4) |
+| 3 | Execution | semantic graph → runtime predicates | the runtime (CP3) + confirmation evaluator (CP4) |
+| 4 | Engine | executable graph → Python / Pine / Lean / … | the engine-attach (future; a correct IR makes this near-trivial / multi-target) |
+| 5 | Replay | historical bars → semantic events → compare to educator | the blind suite + real-bar replay (validation) |
+
+**Architectural evolutions to fold in as checkpoints reach them (NOT all at once):**
+- **IR as a GRAPH, not a chain.** bias / eligibility / execution-zone / confirmation / invalidation are nodes
+  with edges (AND / OR / optional / parallel-prereq / timeout). The current linear S0-S8 is the spine; the
+  graph generalizes it (handles OR-alternatives — the blind-gen secondary gap — natively). Evolve when CP4's
+  `alternatives` + multi-prereq cases demand it.
+- **Waiting → a SCHEDULER.** Generalize `wait_state` to an event scheduler: an ExecutionContext has
+  `created / expires / watch[] / confirmation / cancel[]`. The runtime becomes an event loop over active
+  contexts. CP3's runtime is the seed; this is its mature form.
+- **Provenance gains an INTENT level.** transcript → INTENT → semantic → IR. "I want buyers to prove they're
+  stepping in" (intent: demand confirmation) vs "bullish engulfing" (literal). Different educators express the
+  same intent differently — intent is the transferable layer. Builds on the existing `origin`/provenance.
+- **Semantic FINGERPRINT.** Every strategy compiles to {bias, confirmation, execution, risk, management, exit}
+  → compare strategies mathematically, not transcripts. Enables dedup / clustering / "is this novel?".
+- **Explainable REPLAY.** A trade reconstructs its causal chain to transcript lines (bias@L82 → CHoCH@L91 →
+  OB@L94 → wait-satisfied@L103 → engulf@L108 → strength 0.82 → entry). The CP4 confirmation-provenance
+  (contributors/blocked_by) + bidirectional traceability (CP5) are the substrate.
+- **ADVERSARIAL validator.** Don't only ask "what did we miss?" — ask "what would make this trade ILLEGAL?"
+  (missing invalidations, contradictory rules, impossible states, ambiguity, inferred assumptions). Property-
+  testing for strategies. Extends `conserveOrThrow` + `inferredNodes`.
+- **Decision-theory extraction (the deepest shift).** Today: "what does the educator DO?" Eventually: "what
+  must be TRUE before the educator is willing to act?" — extract the decision, not just the procedure. Most transferable.
+
+These are the map. The checkpoints are the steps. Each is built only when the prior one's data demands it,
+measured against the frozen control, on the same blind suite.

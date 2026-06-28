@@ -15,13 +15,28 @@
  */
 
 import { isZeroWait, type StrategyIR } from "./state-machine-ir.js";
+import { evaluateConfirmation, type ConfirmationBarContext } from "./confirmation-evaluator.js";
+import { evaluateContextGates, type GateMarketState } from "./context-gate.js";
 
 export interface ReplayBar {
   i: number;
   event?: boolean;          // the structural event fired on this bar (what the OLD model entered on)
   until_satisfied?: boolean;// the wait predicate is met on this bar (price re-entered zone / retest / sweep / …)
-  confirmation?: boolean;   // the S5 confirmation fired on this bar
+  confirmation?: boolean;   // CP3 synthetic shortcut for lifecycle tests (boolean overrides the evaluator)
+  confirmation_ctx?: ConfirmationBarContext; // CP4: real per-bar features → the UNIFIED confirmation evaluator
   invalidation?: boolean;   // the setup was invalidated on this bar (before entry)
+}
+
+/**
+ * CP4 — the SINGLE confirmation code path. Both the immediate and the wait-state branches call this, so
+ * confirmation is observationally equivalent regardless of entry-timing (the operator's acceptance #3).
+ * A synthetic boolean (CP3 lifecycle tests) short-circuits identically in both paths; otherwise the real
+ * unified `evaluateConfirmation` runs over the bar's features.
+ */
+function confirmationFired(ir: StrategyIR, bar: ReplayBar): boolean {
+  if (typeof bar.confirmation === "boolean") return bar.confirmation; // synthetic shortcut (same in both paths)
+  if (bar.confirmation_ctx) return evaluateConfirmation(ir.wait_state.confirmation, bar.confirmation_ctx).passed;
+  return false;
 }
 
 export interface TransitionCounts { wait_created: number; confirmed: number; invalidated: number; expired: number }
@@ -38,18 +53,27 @@ export function runEventCentric(bars: ReplayBar[]): RunResult {
   return { entry_bar: null, transitions: t, trace: ["event-centric: no entry"] };
 }
 
-/** The new state-machine execution model. Zero-wait ⇒ behaves like the baseline (parity); wait ⇒ holds state. */
-export function runStateMachine(ir: StrategyIR, bars: ReplayBar[]): RunResult {
+/** The new state-machine execution model. Zero-wait ⇒ behaves like the baseline (parity); wait ⇒ holds state.
+ * `opts.gateState` feeds the eligibility PRECONDITION (context_gates, 3A) — re-rooted here as the gate that
+ * decides whether a setup may be sought at all (same code for immediate + wait). */
+export function runStateMachine(ir: StrategyIR, bars: ReplayBar[], opts?: { gateState?: GateMarketState }): RunResult {
   const t = zeroCounts();
   const trace: string[] = [];
   const hasInval = !!ir.wait_state.invalidated_by;
   const timeout = ir.wait_state.timeout_bars ?? Infinity;
 
+  // PRECONDITION (eligibility / context axis) — gates BOTH paths identically. Fail-closed if a required gate fails.
+  if (opts?.gateState && ir.eligibility.length) {
+    const gate = evaluateContextGates(ir.eligibility, opts.gateState);
+    if (!gate.allowed) { trace.push(`precondition: eligibility BLOCKED (${gate.failed.map((g) => g.name).join(",") || "unevaluable"})`); return { entry_bar: null, transitions: t, trace }; }
+    trace.push("precondition: eligibility passed");
+  }
+
   // Zero-wait degenerate = the old model: no wait created, enter on the first confirmation (the event IS it).
   if (isZeroWait(ir)) {
     for (const b of bars) {
       if (hasInval && b.invalidation) { t.invalidated++; trace.push(`bar ${b.i}: invalidated`); return { entry_bar: null, transitions: t, trace }; }
-      if (b.confirmation || b.event) { t.confirmed++; trace.push(`bar ${b.i}: immediate entry (zero-wait)`); return { entry_bar: b.i, transitions: t, trace }; }
+      if (confirmationFired(ir, b) || b.event) { t.confirmed++; trace.push(`bar ${b.i}: immediate entry (zero-wait)`); return { entry_bar: b.i, transitions: t, trace }; }
     }
     trace.push("zero-wait: no confirmation"); return { entry_bar: null, transitions: t, trace };
   }
@@ -63,7 +87,7 @@ export function runStateMachine(ir: StrategyIR, bars: ReplayBar[]): RunResult {
     if (hasInval && b.invalidation) { t.invalidated++; trace.push(`bar ${b.i}: INVALIDATED → S0`); return { entry_bar: null, transitions: t, trace }; }
     if (b.i - armBar > timeout) { t.expired++; trace.push(`bar ${b.i}: timeout (${timeout}) EXPIRED`); return { entry_bar: null, transitions: t, trace }; }
     if (!satisfied && b.until_satisfied) { satisfied = true; trace.push(`bar ${b.i}: until satisfied → S5 confirming`); }
-    if (satisfied && b.confirmation) { t.confirmed++; trace.push(`bar ${b.i}: confirmed → S6 ENTRY`); return { entry_bar: b.i, transitions: t, trace }; }
+    if (satisfied && confirmationFired(ir, b)) { t.confirmed++; trace.push(`bar ${b.i}: confirmed → S6 ENTRY`); return { entry_bar: b.i, transitions: t, trace }; }
   }
   t.expired++; trace.push("end of bars: wait unfulfilled → EXPIRED"); return { entry_bar: null, transitions: t, trace };
 }

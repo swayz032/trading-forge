@@ -3,6 +3,21 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-27 (cont.) STATE-MACHINE IR — Checkpoint 4: re-root the 5 axes into ONE confirmation evaluator (integration)
+
+**Mission:** CP4 — unify. Re-root the existing axes (selection/multi-leg/strength/anchor + context-eligibility) into the S5 confirmation node so BOTH immediate and wait-state paths run the SAME confirmation code (observational equivalence), with rich confirmation provenance. Plus: capture the operator's forward-architecture reframe as the roadmap.
+
+**Work completed (commit + tag `sm-checkpoint-4-confirmation-integration`):** `confirmation-evaluator.ts` — `evaluateConfirmation(node, ctx)` re-roots the axes as the confirmation node's evaluators (multi-leg/enforcement; selection/anchor via predicateLevelIsNamed; strength via meetsStrengthRequirement — CALLED here, not a separate pass) and returns CONFIRMATION PROVENANCE {passed, contributors[], blocked_by[], confidence, evidence} (explainability). Runtime wired: `confirmationFired()` is the SINGLE confirmation path both branches call (synthetic boolean shortcut identical in both; else the real evaluator). Eligibility precondition (context axis) re-rooted via evaluateContextGates gating both paths before arming.
+
+**ACCEPTANCE MET:** (1) frozen-6 fidelity suite STILL PASSES (compile-time axes untouched — confirmation-compound/strength/context-gate/specificity/compiler all green); (2) wait-state strategies use the same confirmation modules; (3) OBSERVATIONAL EQUIVALENCE — one confirmation node through BOTH runtime paths: STRONG features → both enter, WEAK → neither (the same evaluator verdict gates both); confirmation provenance lists contributors (primary/anchor/strength) on pass and blocked_by (weak_confirmation) on fail.
+
+**Verification:** tsc 0; 83 tests green (state-machine CP1-4 + full fidelity suite); runtime+evaluator standalone (grep-verified, zero production wiring) — no replay change to the live system.
+
+**Forward architecture recorded** (design doc §10): operator's reframe — mission = "compile a human decision process into a deterministic executable spec with NO semantic loss" (backtest = verification, product = semantic compilation). Five separated compilers (Instruction/Semantic/Execution/Engine/Replay) mapped to checkpoints; evolutions to fold in as data demands (graph IR not chain; waiting→scheduler; intent provenance level; semantic fingerprint; explainable replay; adversarial validator; decision-theory extraction). The map; checkpoints are the steps.
+
+**Carry-forward:** CP5 = bidirectional traceability (transcript↔semantic↔IR↔compiled↔engine; explainable replay substrate — build heavily here). CP6 = Gemma multi-pass (verbatim→normalize→compile→validate). THEN re-run the blind suite as the acceptance bar vs the frozen control (`fidelity-baseline-event-centric`) — the apples-to-apples test of whether the redesign solves the right problem. Engine-attach (real bars, Compiler 4) feeds the live-replay validation.
+
+---
 ### Session Log — 2026-06-27 (cont.) STATE-MACHINE IR — Checkpoint 3: wait-state ACTIVATION (first execution change)
 
 **Mission:** CP3 — activate the wait-state execution model (the architectural hypothesis: a zone-return strategy reaches its entry on the RETURN, via generic IR constructs, no special primitive). Tight instrumentation; smallest execution change; differential vs the frozen control.
