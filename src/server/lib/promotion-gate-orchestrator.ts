@@ -29,7 +29,8 @@
  *     Checked by lifecycle-service.ts at the TESTING→PAPER transition point.
  *   - 0.80 floor (WFE_PROMOTION_FLOOR in this file) = PAPER → DEPLOY_READY deploy gate.
  *     This is the institutional-grade bar before real capital is allocated.
- *     Checked exclusively here (evaluateWfeGateForPromotion).
+ *     Checked exclusively here, inline within evaluatePromotionGates (the WFE
+ *     branch that reads getWfePromotionFloor() / the effectiveWfeFloor override).
  *   - F-5 hardening (2026-06-23): removed the redundant standalone 0.70 gate that had
  *     been re-evaluated at PAPER → DEPLOY_READY.  The 0.80 orchestrator gate is now
  *     the sole authority for that transition.  Do NOT add back the 0.70 gate at
@@ -173,34 +174,6 @@ function evaluateB14Gate(data: StrategyPromotionData): GateResult {
     value: typeof ciHigh === "number" ? ciHigh : null,
     threshold: b14Result.auditPayload.threshold,
     reason: b14Result.reason,
-    data_available: true,
-  };
-}
-
-function evaluateWfeGateForPromotion(data: StrategyPromotionData): GateResult {
-  const floor = getWfePromotionFloor();
-  const wfe = data.wfeOverall ?? null;
-
-  if (wfe === null) {
-    return {
-      passed: true,  // fail-open for legacy backtests (pre-Pass-B.1)
-      value: null,
-      threshold: floor,
-      reason: "wfe.unavailable_legacy — no WFE data, fail-open",
-      data_available: false,
-    };
-  }
-
-  const numWfe = Number(wfe);
-  const passed = numWfe >= floor;
-
-  return {
-    passed,
-    value: numWfe,
-    threshold: floor,
-    reason: passed
-      ? `wfe.passed (${numWfe.toFixed(3)} >= ${floor})`
-      : `gate.wfe_floor_failed (${numWfe.toFixed(3)} < ${floor})`,
     data_available: true,
   };
 }

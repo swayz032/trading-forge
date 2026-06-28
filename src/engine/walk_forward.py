@@ -106,7 +106,7 @@ def split_walk_forward_windows(
     data: pl.DataFrame,
     n_splits: int = 5,
     is_ratio: float = 0.7,
-    embargo_bars: int = 0,
+    embargo_bars: int = 20,
 ) -> list[tuple[pl.DataFrame, pl.DataFrame]]:
     """Split data into anchored walk-forward windows.
 
@@ -126,7 +126,11 @@ def split_walk_forward_windows(
         data: Full OHLCV DataFrame
         n_splits: Number of walk-forward windows
         is_ratio: Fraction of total data reserved as minimum IS warmup (default 0.7)
-        embargo_bars: Bars to skip between IS and OOS to prevent leakage (default 0)
+        embargo_bars: Bars to skip between IS and OOS to prevent leakage (default 20).
+            Changed from 0 to 20 in Wave C hardening so ad-hoc callers don't
+            accidentally run with zero embargo. Production callers
+            (run_walk_forward, run_walk_forward_class) pass embargo_bars
+            explicitly and are unaffected by this default.
 
     Returns:
         List of (is_data, oos_data) tuples
@@ -150,6 +154,67 @@ def split_walk_forward_windows(
         windows.append((is_data, oos_data))
 
     return windows
+
+
+def _cpcv_fold_embargo_strips(
+    fold_idx: int,
+    test_fold_set: set,
+    n_splits: int,
+    embargo_bars: int,
+    is_test_fold: bool,
+) -> tuple:
+    """Compute (strip_start, strip_end) bar counts for a CPCV fold.
+
+    Pure function — no I/O, no polars, no backtester import — unit-testable
+    in isolation without triggering vectorbt JIT loading.
+
+    For OOS (test) folds, strip only at IS-facing boundaries:
+      - Strip START  when left  neighbor (fold_idx-1) is an IS fold AND exists
+      - Strip END    when right neighbor (fold_idx+1) is an IS fold AND exists
+    For IS (training) folds, strip only at OOS-facing boundaries:
+      - Strip START  when left  neighbor (fold_idx-1) is an OOS fold AND exists
+      - Strip END    when right neighbor (fold_idx+1) is an OOS fold AND exists
+
+    Contiguous OOS↔OOS or IS↔IS boundaries produce zero strip — no leakage
+    can cross a same-role boundary.  Data-boundary folds (fold_idx=0 or
+    fold_idx=n_splits-1) produce zero strip toward the absent neighbor.
+
+    Args:
+        fold_idx:      Index of the fold being examined (0 .. n_splits-1).
+        test_fold_set: Set of fold indices designated as OOS for this path.
+        n_splits:      Total number of CPCV folds.
+        embargo_bars:  Number of bars to strip per IS↔OOS boundary.
+        is_test_fold:  True → computing strips for an OOS fold;
+                       False → computing strips for an IS fold.
+
+    Returns:
+        (strip_start, strip_end) — non-negative integer pair.
+    """
+    if is_test_fold:
+        # OOS fold: strip the edge that faces IS territory
+        strip_start = (
+            embargo_bars
+            if fold_idx > 0 and (fold_idx - 1) not in test_fold_set
+            else 0
+        )
+        strip_end = (
+            embargo_bars
+            if fold_idx < n_splits - 1 and (fold_idx + 1) not in test_fold_set
+            else 0
+        )
+    else:
+        # IS fold: strip the edge that faces OOS territory
+        strip_start = (
+            embargo_bars
+            if fold_idx > 0 and (fold_idx - 1) in test_fold_set
+            else 0
+        )
+        strip_end = (
+            embargo_bars
+            if fold_idx < n_splits - 1 and (fold_idx + 1) in test_fold_set
+            else 0
+        )
+    return strip_start, strip_end
 
 
 def _run_walk_forward_cpcv(
@@ -228,28 +293,71 @@ def _run_walk_forward_cpcv(
 
     for test_fold_indices in _combos(range(n_splits), k_test_groups):
         is_fold_indices = [fi for fi in range(n_splits) if fi not in test_fold_indices]
+        test_fold_set = set(test_fold_indices)
 
-        # IS data = concatenation of IS folds (must be temporally ordered)
-        is_fold_dfs = [folds[fi] for fi in sorted(is_fold_indices)]
-        if is_fold_dfs:
-            is_data = pl.concat(is_fold_dfs)
+        # IS data — bilateral IS-side purge (Wave C hardening).
+        # López de Prado AFML Ch.7: IS bars temporally adjacent to an OOS fold
+        # boundary carry forward label information from the OOS window (Style C
+        # runners can hold across the fold edge, option expiry / roll effects can
+        # propagate backwards).  Purge those bars from each IS fold on the side(s)
+        # that face an OOS fold, using _cpcv_fold_embargo_strips() for the math.
+        #
+        # Previous behaviour (pre-Wave C): no IS-side strip — is_data included ALL
+        # embargo-adjacent IS bars, making WFE and PBO mildly optimistic.
+        is_fold_dfs_purged: list[pl.DataFrame] = []
+        for fi in sorted(is_fold_indices):
+            fold_df = folds[fi]
+            strip_start, strip_end = _cpcv_fold_embargo_strips(
+                fold_idx=fi,
+                test_fold_set=test_fold_set,
+                n_splits=n_splits,
+                embargo_bars=embargo_bars,
+                is_test_fold=False,
+            )
+            effective_len = len(fold_df) - strip_start - strip_end
+            if effective_len > 0:
+                is_fold_dfs_purged.append(fold_df.slice(strip_start, effective_len))
+            else:
+                print(
+                    f"  CPCV: IS fold {fi} too small ({len(fold_df)} bars <= "
+                    f"purge start={strip_start}+end={strip_end}) — skipping.",
+                    file=sys.stderr,
+                )
+        if is_fold_dfs_purged:
+            is_data = pl.concat(is_fold_dfs_purged)
         else:
-            continue
+            continue  # No usable IS data after purge — skip this path
 
-        # OOS data = concatenation of test folds with embargo strip applied.
-        # For each test fold, we drop the first embargo_bars rows to implement
-        # the temporal purge (labels from the IS side cannot overlap OOS).
+        # OOS data — bilateral embargo strip (Wave C hardening: adds OOS-end strip).
+        # - Strip START: bars adjacent to the preceding IS fold (was already present).
+        # - Strip END  : bars adjacent to the following IS fold (NEW — was missing).
+        # Contiguous OOS↔OOS boundaries receive zero strip — no IS contamination
+        # crosses that edge.  _cpcv_fold_embargo_strips() encodes the adjacency rule.
+        #
+        # Previous behaviour (pre-Wave C): only the START was stripped.
+        # fold_df.slice(embargo_bars, len(fold_df) - embargo_bars) kept the last
+        # embargo_bars rows intact, leaving IS→OOS leakage at the OOS-end boundary.
         oos_parts: list[pl.DataFrame] = []
         for ti in sorted(test_fold_indices):
             fold_df = folds[ti]
-            if len(fold_df) > embargo_bars:
-                oos_parts.append(fold_df.slice(embargo_bars, len(fold_df) - embargo_bars))
+            strip_start, strip_end = _cpcv_fold_embargo_strips(
+                fold_idx=ti,
+                test_fold_set=test_fold_set,
+                n_splits=n_splits,
+                embargo_bars=embargo_bars,
+                is_test_fold=True,
+            )
+            effective_len = len(fold_df) - strip_start - strip_end
+            if effective_len > 0:
+                oos_parts.append(fold_df.slice(strip_start, effective_len))
             else:
-                # FIX 6 (2026-06-22): fold too small after purge — skip entirely.
-                # Previous code appended the raw unembargoed fold, introducing IS→OOS
-                # lookahead leakage across the embargo boundary for short folds.
+                # FIX 6 (2026-06-22) extended: bilateral check — fold too small after
+                # full bilateral embargo strip — skip entirely.
+                # Pre-Wave C: only tested start-strip (len > embargo_bars).
+                # Now: len must exceed start_strip + end_strip (stricter, correct).
                 print(
-                    f"  CPCV: fold {ti} too small ({len(fold_df)} bars <= embargo {embargo_bars}) "
+                    f"  CPCV: fold {ti} too small ({len(fold_df)} bars <= "
+                    f"purge start={strip_start}+end={strip_end}) "
                     f"— skipping to preserve embargo integrity.",
                     file=sys.stderr,
                 )

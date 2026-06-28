@@ -78,6 +78,15 @@ vi.mock("../lib/python-runner.js", () => ({
   runPythonModule: vi.fn().mockResolvedValue({ violation: false, status: "ok", message: "", violations: [] }),
 }));
 
+vi.mock("../services/notification-service.js", () => ({
+  notifyCritical: vi.fn(),
+  notifyWarning: vi.fn(),
+}));
+
+vi.mock("../lib/notification-helpers.js", () => ({
+  appendFamilyGradePostscript: vi.fn((msg: string) => msg),
+}));
+
 vi.mock("../lib/credential-loader.js", () => ({
   loadBrokerCredentials: vi.fn().mockResolvedValue({ apiKey: "test-api-key-abc123" }),
 }));
@@ -106,6 +115,7 @@ import { broadcastSSE } from "../routes/sse.js";
 import { db } from "../db/index.js";
 import { killSwitch } from "../production/kill-switch.js";
 import { getEnabledFirms } from "../services/strategy-assignment-service.js";
+import { notifyCritical } from "../services/notification-service.js";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -398,5 +408,74 @@ describe("broker-router", () => {
     };
     expect(callArg.config.strategy_state.intended_max_loss).toBeNull();
     expect(callArg.config.strategy_state.account_balance).toBeNull();
+  });
+
+  // ─── Test 14 (F-3 invariant): firm↔broker_type mismatch is REFUSED ─────────
+  // TOPOLOGY + COMPLIANCE SAFETY: a Topstep row mis-seeded as broker_type=
+  // 'traderspost' must NOT route Topstep orders through TradersPost (§7: Topstep
+  // uses TopstepX ONLY). The invariant fail-CLOSES, writes a CRITICAL audit row,
+  // fires a Discord critical, and does NOT route.
+
+  it("F-3-invariant: refuses a Topstep account mis-seeded as broker_type='traderspost'", async () => {
+    // firmId=topstep but broker_type=traderspost — the dangerous mis-seed.
+    mockSelectReturning([{ ...TRADERSPOST_ACCOUNT, firmId: "topstep", brokerType: "traderspost" }]);
+
+    const valuesMock = vi.fn().mockResolvedValue([{ id: "audit-mismatch" }]);
+    const insertMock = vi.fn().mockReturnValue({ values: valuesMock });
+    // @ts-ignore — partial Drizzle mock
+    vi.mocked(db.insert).mockImplementation(insertMock);
+
+    const result = await routeOrder("test-account-uuid-1234", TEST_SIGNAL, "corr-mismatch");
+
+    expect(result.success).toBe(false);
+    expect(result.reason).toBe("firm_broker_mismatch");
+    expect(result.firmId).toBe("topstep");
+    expect(result.brokerType).toBe("traderspost");
+    expect(result.error).toMatch(/firm_broker_mismatch/);
+    // Did NOT route to any broker
+    expect(submitWebhookOrder).not.toHaveBeenCalled();
+    expect(loadBrokerCredentials).not.toHaveBeenCalled();
+
+    // CRITICAL audit row written
+    const auditCalls: string[] = valuesMock.mock.calls
+      .flat()
+      .map((v: { action?: string }) => v?.action)
+      .filter((a): a is string => Boolean(a));
+    expect(auditCalls).toContain("broker_router.firm_broker_mismatch");
+
+    // CRITICAL Discord fired
+    expect(notifyCritical).toHaveBeenCalledOnce();
+  });
+
+  // ─── Test 15 (F-3 invariant): MFFU mis-seeded as topstepx is REFUSED ───────
+
+  it("F-3-invariant: refuses an MFFU account mis-seeded as broker_type='topstepx'", async () => {
+    // firmId=mffu but broker_type=topstepx — the reverse mis-seed.
+    mockSelectReturning([{ ...TRADERSPOST_ACCOUNT, firmId: "mffu", brokerType: "topstepx" }]);
+
+    const result = await routeOrder("test-account-uuid-1234", TEST_SIGNAL, "corr-mismatch-2");
+
+    expect(result.success).toBe(false);
+    expect(result.reason).toBe("firm_broker_mismatch");
+    expect(result.firmId).toBe("mffu");
+    expect(result.brokerType).toBe("topstepx");
+    // Did NOT reach the TopstepX stub (would have been topstepx_not_configured)
+    expect(result.reason).not.toBe("topstepx_not_configured");
+    expect(submitWebhookOrder).not.toHaveBeenCalled();
+  });
+
+  // ─── Test 16 (F-3 invariant): tier-suffixed firmId normalizes correctly ────
+  // A Topstep account keyed as 'topstep_50k' must still resolve to the 'topstep'
+  // firm key (suffix stripped) and pass the invariant when broker_type=topstepx.
+
+  it("F-3-invariant: tier-suffixed topstep_50k with topstepx PASSES the invariant (reaches stub)", async () => {
+    mockSelectReturning([{ ...TRADERSPOST_ACCOUNT, firmId: "topstep_50k", brokerType: "topstepx" }]);
+
+    const result = await routeOrder("test-account-uuid-1234", TEST_SIGNAL, "corr-suffix");
+
+    // Invariant passes (topstep_50k → topstep ⇒ topstepx is consistent); the
+    // request flows through to the TopstepX stub, NOT firm_broker_mismatch.
+    expect(result.reason).not.toBe("firm_broker_mismatch");
+    expect(result.reason).toBe("topstepx_not_configured");
   });
 });

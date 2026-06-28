@@ -13,6 +13,7 @@
  *   - Pipeline paused          → { success: false, reason: "pipeline_paused" }
  *   - Firm not enabled         → { success: false, reason: "account_not_found" }
  *   - Compliance violation     → { success: false, reason: "compliance_violation" }
+ *   - Firm↔broker_type drift   → { success: false, reason: "firm_broker_mismatch" }
  *   - Any unexpected error     → { success: false, reason: "internal_error" }
  *
  * Every route attempt (success or failure) writes one audit_log row and emits
@@ -152,6 +153,7 @@ export type BrokerResultReason =
   | "pipeline_paused"
   | "production_halt"
   | "compliance_violation"
+  | "firm_broker_mismatch"
   | "topstepx_not_configured"
   | "traderspost_circuit_open"
   | "internal_error"
@@ -380,6 +382,112 @@ export async function routeOrder(
     broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...nullFirmResult, correlationId: correlationId ?? null });
     await writeAuditLog(accountId, signal, nullFirmResult, correlationId);
     return nullFirmResult;
+  }
+
+  // ── F-3: firm_id ↔ broker_type routing invariant (FAIL-CLOSED) ─────────────
+  // TOPOLOGY + COMPLIANCE SAFETY. Dispatch (below) keys purely on
+  // broker_accounts.broker_type, but nothing upstream guarantees broker_type
+  // actually matches the firm. A Topstep account row mis-seeded as
+  // broker_type='traderspost' would silently route Topstep orders through
+  // TradersPost — a topology violation (CLAUDE.md §7: Topstep uses TopstepX ONLY
+  // since the 2026-01-12 Tradovate/NinjaTrader lockdown) AND a compliance
+  // violation (orders crossing the wrong broker/firm boundary).
+  //
+  // Canonical mapping (CLAUDE.md §7):
+  //   topstep        ⇒ topstepx
+  //   mffu / others  ⇒ traderspost
+  //
+  // On mismatch we REFUSE the order, write a CRITICAL audit row
+  // (broker_router.firm_broker_mismatch), fire a Discord critical, and do NOT
+  // route. firmId is guaranteed non-null/non-empty here (the null-firm guard
+  // above already fail-CLOSED on missing firmId). This runs BEFORE the
+  // enabled-firms check so a mis-seeded row is surfaced as the specific topology
+  // violation rather than masked as a generic enabled-firms block.
+  //
+  // SCOPE: this invariant enforces consistency only between the two KNOWN
+  // routing targets (traderspost / topstepx). A genuinely-unknown broker_type
+  // (DB CHECK-constraint violation) is a DIFFERENT failure and falls through to
+  // the dedicated `unknown_broker_type` handler at the dispatch tail — we do not
+  // conflate "wrong known broker" with "broker_type we don't recognize at all".
+  {
+    const KNOWN_BROKER_TYPES = ["traderspost", "topstepx"] as const;
+    const invariantFirmKey = account.firmId.toLowerCase().replace(/_\d+k$/, "");
+    const expectedBrokerType = invariantFirmKey === "topstep" ? "topstepx" : "traderspost";
+    if (
+      (KNOWN_BROKER_TYPES as readonly string[]).includes(account.brokerType) &&
+      account.brokerType !== expectedBrokerType
+    ) {
+      const result: BrokerResult = {
+        success: false,
+        reason: "firm_broker_mismatch",
+        accountId,
+        firmId: account.firmId,
+        brokerType: account.brokerType,
+        error: `firm_broker_mismatch: firm '${account.firmId}' (key '${invariantFirmKey}') requires broker_type '${expectedBrokerType}' but the broker_accounts row is configured as '${account.brokerType}'`,
+      };
+      logger.error(
+        {
+          accountId,
+          firmId: account.firmId,
+          firmKey: invariantFirmKey,
+          brokerType: account.brokerType,
+          expectedBrokerType,
+          correlationId,
+        },
+        "broker-router: BLOCKED — firm↔broker_type mismatch (topology + compliance violation, fail-CLOSED)",
+      );
+      await db
+        .insert(auditLog)
+        .values({
+          action: "broker_router.firm_broker_mismatch",
+          entityType: "broker_account",
+          entityId: null,
+          decisionAuthority: "system",
+          input: {
+            accountId,
+            firmId: account.firmId,
+            ticker: signal.ticker,
+            action: signal.action,
+          } as Record<string, unknown>,
+          result: {
+            blocked: true,
+            firmId: account.firmId,
+            firmKey: invariantFirmKey,
+            brokerType: account.brokerType,
+            expectedBrokerType,
+            error:
+              "firm_id and broker_type are inconsistent — refusing to route to the wrong broker (topology/compliance violation)",
+          } as Record<string, unknown>,
+          status: "blocked",
+          correlationId: correlationId ?? null,
+        })
+        .catch((err: unknown) => {
+          logger.error({ err }, "broker-router: firm_broker_mismatch audit_log write failed (non-blocking)");
+        });
+      // CRITICAL Discord — a mis-seeded broker_accounts row is a capital-routing
+      // safety event: orders would otherwise hit the wrong broker entirely.
+      notifyCritical(
+        "Broker Routing Topology Violation",
+        appendFamilyGradePostscript(
+          `Account ${accountId} (firm: ${account.firmId}) has broker_type='${account.brokerType}' but firm ` +
+            `'${invariantFirmKey}' requires '${expectedBrokerType}'. The order was REFUSED — routing it would ` +
+            `send orders to the WRONG broker (topology + compliance violation). Fix the broker_accounts row so ` +
+            `broker_type matches the firm, then re-enable the account.`,
+          "A trading account is pointed at the wrong broker — orders are safely blocked, not mis-routed.",
+          "Tell Tony: 'A trading account is pointed at the wrong broker.' If you cannot reach him, do nothing — orders are safely blocked, not sent to the wrong place.",
+        ),
+        {
+          accountId,
+          firmId: account.firmId,
+          brokerType: account.brokerType,
+          expectedBrokerType,
+          correlationId: correlationId ?? null,
+        },
+      );
+      broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...result, correlationId: correlationId ?? null });
+      await writeAuditLog(accountId, signal, result, correlationId);
+      return result;
+    }
   }
 
   // ── F-3: Enabled-firms enforcement ─────────────────────────────────────────
