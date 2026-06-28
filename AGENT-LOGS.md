@@ -3,6 +3,64 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-27 Slumdawg Blueprint Audit + Wave 1 (Calibration & Exits)
+
+**Mission:** Operator submitted a 20-layer (+10.5 SL/TP, +14 "3AM GPT") institutional blueprint — "tell me what you think, research it, how does it benefit Trading Forge, and implement." Then approved a 5-wave plan and greenlit Wave 1.
+
+**Audit (17-agent workflow + 3 Explore + live n8n deep-scan):** Verified the blueprint is a SPEC of the system already ~85-90% built across app code AND n8n. Key corrections found during audit: (1) the "3AM GPT" IS in n8n — workflows' `lmChatOpenAi` sub-nodes + `/api/agent/*` route through `/api/openai-proxy/v1` → GPT-5-mini primary, Ollama fallback at the 2.5M tok/day budget cap (NOT "all Ollama" as a subagent first reported). (2) No unified orchestrator (`10A-master` is a 05:00 stats digest; intelligence = 5 scattered crons, two colliding at 03:00). (3) Live scaling = base-9 + proven-trades ramp; the "+$3K/+3" is only the backtest dollar fallback (operator confirmed). Institutional research (≥2025 sources, persisted under `docs/institutional-evidence/`) confirmed SL=invalidation / TP=liquidity / constant-$ sizing / scale-out + the "FVG/OB aren't the edge, regime+allocation+routing is" thesis.
+
+**Wave 1 SHIPPED — commits `c34a8e8` (code, 14 files) + `bb799e8` (CLAUDE.md §4) + `b35563e` (verification fixes):**
+- Stop-ceiling recal MNQ 40→62pt, MCL 0.25→1.00pt (25→100 ticks), env-driven across `backtester.py` + `gate_block_analyzer.py` + `contract-class.ts` (no TS/Python drift). Fixes silent skip of nearly all MNQ/MCL setups (ceiling was below the 5-min ATR noise floor at 2026 index prices).
+- MES 6pt stop floor (`STOP_FLOOR_PTS_MES`, widen-up not skip).
+- VIX-tiered ATR multiplier (`VIX_TIERED_ATR_ENABLED`, default OFF; <20=1.5/20-30=2.0/>30=2.5) in `margin_expansion.apply_vix_atr_multiplier`, wired into both engines.
+- static_styleC TP2 → liquidity-mapped (`structural_targets.compute_single_tp` band 1.4R-2.6R, reuses adaptive `INTRADAY_ALLOWED_LEVEL_TYPES`) before the +2.0R fallback. Backward-compatible when no liquidity snapshot.
+- `framework-overlay.ts` stopCeilingPts aligned to canonical points (documentary; live source = `getStopCeilingPts()`/env).
+
+**Verification (real, not mocked):** 93 vitest + tsc clean. Python initially appeared blocked by a vectorbt JIT hang — resolved with `NUMBA_DISABLE_JIT=1` (the actual workaround), then ran the FULL backtester path: **78/78 Wave 1 Python tests GREEN**. Running them caught 2 real issues the masked suite hid: (a) a **latent crash** — `_apply_dsl_stop_loss_and_time_stop` dereferenced `close_np[i]` despite `close_np: Optional=None` (now guarded, falls back to high/low); (b) 3 stale E.5 time-stop tests that fed ET times into the legacy UTC `timestamps` slot instead of `ts_et_timestamps` (the 15:55 flatten itself is correct in production). Also removed 3 pre-existing F841 dead vars in `gate_block_analyzer.py` to pass the diff-scoped ruff pre-commit.
+
+**System-map:** Wave 1 introduced ZERO drift (no new subsystems/routes/crons). Existing drift items (broker-error-budget, n8n-drift-detector-*, regime-drift-detector, etc.) are pre-existing/parallel-session, NOT from this wave.
+
+**Shared-tree note:** branch `hardening/phase-0` was co-mingled with a parallel "learning-loop / A/B real-prompt-stamp (migration 0176)" session committing continuously (HEAD moved 5×). Explicit-path `git commit -- <paths>` held the line — zero collisions, no cross-session sweeping. (This AGENT-LOGS entry was appended above their complete entry, preserving it.)
+
+**Carry-forward (next waves, plan `eventual-greeting-adleman.md`):** Wave 2 = n8n hardening (LIVE Railway PUT — webhook idempotency, 5G dedupe, strict→loose IF, CANDIDATE→PAPER SHADOW-skip, dual-09:00-brief reconcile); Wave 3 = BIF gate; Wave 4 = Layer 14 `14A-master` orchestrator + Layer 15 leak detection; Wave 5 = deferred (order-flow depth, multi-account portfolio). Cosmetic "Daily Session Context" rename descoped from Wave 1 (optional polish). Full-suite (non-WDAC) confirmation of integration tests recommended on a box without the numba/WDAC JIT block.
+
+---
+### Session Log — 2026-06-27 A/B test real-prompt-stamp fix (migration 0176)
+
+**Mission:** Fix the broken A/B test in `prompt-evolution-service.ts` so it measures real prompt-variant performance instead of noise.
+
+**Root causes closed:**
+1. `collectVariantMetrics()` attributed strategies to variant A/B via `hashToVariant(strategyId)` — a SHA-256 coin flip unrelated to which prompt actually generated the strategy.
+2. `buildPromptSync()` served all strategies the same cached appendix, so both "variants" were generated identically.
+3. `resolveOneTest()` rollback guard (`stddevA > 0 && diff < -k*stddevA`) could never fire when all variant-A scores were identical (stddevA === 0).
+
+**Work completed:**
+- `src/server/db/migrations/0176_system_journal_generation_prompt_version_id.sql` — new migration, idempotent `ADD COLUMN IF NOT EXISTS generation_prompt_version_id TEXT` on `system_journal`.
+- `src/server/db/migrations/meta/_journal.json` — entry idx=179, tag=0176_system_journal_generation_prompt_version_id.
+- `src/server/db/schema.ts` — `generationPromptVersionId: text(...)` added to `systemJournal` table.
+- `src/server/services/prompt-evolution-service.ts` — three changes:
+  - `collectVariantMetrics` now selects `generationPromptVersionId` from journal and filters by exact version ID; null-stamp (legacy) entries EXCLUDED, not coin-flipped.
+  - `resolveOneTest` zero-variance guard: when `stddevA === 0`, falls back to mean-delta — rollback fires if B mean < A mean (reason: `rollback_b_worse_zero_variance`).
+  - New exported `getActiveVersionIdForGeneration(promptType)`: fail-safe DB lookup of active version id, returns null on error/absent — never blocks generation.
+  - Test-only export `__collectVariantMetricsForTest`.
+- `src/server/services/agent-service.ts`:
+  - Import `getActiveVersionIdForGeneration` from prompt-evolution-service.
+  - Capture active version id once before the scouted-ideas for-loop.
+  - Stamp `generationPromptVersionId` on the journal UPDATE alongside `strategyId`.
+- `src/server/__tests__/ab-test-real-prompt-stamp.test.ts` — 9 new tests (T-1..T-7): getActiveVersionIdForGeneration happy/null/error paths; collectVariantMetrics real-stamp grouping; legacy null-stamp exclusion; zero-variance rollback fires / does not fire on tie.
+
+**Verification:**
+- 9/9 new tests GREEN.
+- 23/23 wave-b-learning-loop-fixes GREEN (no regression).
+- 27/27 wave-b-office-switches GREEN (no regression).
+- `npm run build` (tsc) exits 0.
+
+**Carry-forward for next session:**
+- Migration 0176 is boot-runner ready (BOOT_MIGRATION_ENABLED=true picks it up on next restart).
+- No live data exists yet (Learning OFF, 0 critiques) — the stamp infrastructure is in place for when Learning Mode is enabled.
+- `buildPromptSync()` still serves the same cached appendix to all strategies — fixing A/B routing so variant B strategies actually get a different prompt is a separate future task (would require serving the B appendix to specific strategy IDs at generation time, not just attribution).
+
+---
 ### Session Log — 2026-06-24 Carry-Forward WAVE CLOSE — 5 of 5 carry-forwards closed; pushed → main
 
 **Mission:** Operator "fix all carry forward" — close the Pass 3 carry-forward backlog (CF1-CF5).
