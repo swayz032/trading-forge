@@ -3,6 +3,23 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-27 (cont.) STATE-MACHINE IR — Checkpoint 6: CONSENSUS PROTOCOL (final architecture checkpoint) → ARCHITECTURE FROZEN
+
+**Mission:** CP6 — the last architecture piece. Build extraction as a CONSENSUS PROTOCOL (4 passes meant to DISAGREE), measure uncertainty, then FREEZE (operator directive: no CP7 / no new primitives until the blind suite + 100-video corpus + replay parity render a verdict).
+
+**Work completed (commit + tag `sm-checkpoint-6-consensus-protocol`):** `consensus-protocol.ts` (PURE machinery, testable offline): 4-pass model (literal / decision_process / skeptic / conservation); `buildAgreement` (agreement graph: unanimous/majority/minority/single); `disagreementReport`; `semanticEntropy` (total/unanimous/disputed/missing — WHERE uncertainty lives); `skepticFindings` (Pass 3 adversary: SILENT_INVENTION = DP extracted-as-fact a unit literal never saw; DROPPED_EXPLICIT; OR_COLLAPSE = literal saw alternatives but DP forced all_required); `semanticDiff` + `semanticStability` (compare GRAPHS not text — the CP5-deferred diff, now built); `GemmaPassRunner` live adapter DEFINED + FLAGGED (needs the stable NSSM supervisor, W4.2 — NOT run in tests).
+
+**HONEST BOUNDARY:** CP1-5 were pure/deterministic + fully unit-testable. CP6 invokes Gemma (live model), which on the tower hits the W4.2 dev-server-drop fragility — so CP6 ships the consensus MACHINERY proven offline with deterministic pass fixtures + the live adapter flagged. The actual 4-pass live run + the blind-suite rerun need the stable supervisor + live model. Not claimed as green here.
+
+**Verification:** tsc 0; 101 tests green (all 6 checkpoints + full fidelity suite); consensus-protocol standalone (zero production wiring). The skeptic's inferred-is-honest test corrected a confused assertion (inferred-marked units are NOT silent inventions — the invariant respected).
+
+**★ ARCHITECTURE FROZEN after CP6 (operator directive).** 6 checkpoints, each tagged + measured vs the frozen control `fidelity-baseline-event-centric`: CP1 types · CP2 lowering+conservation · CP3 wait-activation · CP4 confirmation-integration · CP5 decision-provenance · CP6 consensus-protocol. NO CP7, no new ontology/primitive/scoring until evidence justifies it.
+
+**NEXT = MEASURE, NOT BUILD (the verdict phase):** (1) wire the lowered state-machine IR as the production extraction output + run the BLIND SUITE vs the frozen control (apples-to-apples — does STRONG-rate rise, SYSTEMATIC/false-quarantine fall on the SAME 32-unseen evaluator?); (2) expand to ~100 unseen videos; (3) real-bar REPLAY PARITY vs educators' demonstrated trades (needs engine-attach = Compiler 4 + real OHLC→predicate). Success = the 4 properties: every instructional unit has one disposition · every executable decision is explicit-or-inferred · every trade explainable · every replay disagreement localizes to extraction/semantic/execution/engine. These all run live → operator/stable-supervisor gated.
+
+**Success ≠ "Gemma extracts correctly" — success = the system EARNS TRUST through evidence + is improvable in a disciplined way (every transform measurable/explainable/attributable).**
+
+---
 ### Session Log — 2026-06-27 (cont.) STATE-MACHINE IR — Checkpoint 5: Decision Provenance + the non-negotiable invariant
 
 **Mission:** CP5 — trace BELIEFS not code. Mechanize the operator's elevated invariant (every executable decision is explicit-with-evidence XOR inferred-with-justification, NO third category) + build the six-question decision record (explainable replay substrate) + bidirectional chains + honesty dashboard.
