@@ -241,49 +241,62 @@
 
     /* ─────────────────────────────────────────────────────────────────────────
        iPhone Pro (393pt) + Pro Max (430pt) portrait optimization.
-       Bigger touch targets, card sized to the screen, notch/home-indicator safe
-       areas, 16px passcode input (stops iOS auto-zoom on focus).
+       Header nav stacks onto its own row (was overflowing off-screen); card is
+       sized to its CONTENT (no tall stretch); notch/home-indicator safe areas;
+       16px passcode input (stops iOS auto-zoom on focus).
        ───────────────────────────────────────────────────────────────────────── */
     @media (max-width: 480px) {
-      /* keep content clear of the notch + home indicator */
-      .sh-page { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
-      #of-shell {
-        min-height: calc(100svh - 132px);
-        padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+      /* HEADER: logo + lock on row 1, the 3 nav pills full-width on row 2 so
+         they're all visible (slumhouse.css packs them in one row → overflow). */
+      .sh-header {
+        grid-template-columns: 1fr auto;
+        grid-template-areas: "logo tools" "nav nav";
+        row-gap: 10px; column-gap: 8px;
+        padding: 12px 14px 8px;
+      }
+      .sh-logo { grid-area: logo; }
+      .sh-header-spacer { grid-area: tools; min-width: 0; }
+      .sh-nav { grid-area: nav; width: 100%; justify-content: center; }
+      .sh-pill { padding: 8px 15px; font-size: 12px; }
+
+      .sh-page {
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        padding-bottom: 16px;
       }
 
-      /* carousel: card fills the screen, arrows tuck into the edges */
+      /* CAROUSEL: one card centered, sized to its content (NOT stretched tall). */
+      #of-shell {
+        min-height: calc(100svh - 150px);
+        padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
+      }
       .of-carousel { gap: 2px; }
-      .of-stage3d { height: min(74svh, 600px); perspective: 1000px; }
+      .of-stage3d { height: min(60svh, 470px); perspective: 1050px; }
+      /* content-sized card — drop the min/max-height that stretched it tall */
       .of-card3d {
-        width: 84vw; height: auto; min-height: 58svh; max-height: 76svh;
-        padding: 26px 22px; border-radius: 22px;
-        justify-content: flex-start;
+        width: 86vw; height: auto; min-height: 0; max-height: none;
+        padding: 24px 22px; border-radius: 22px; justify-content: center;
       }
       .of-card3d.is-active {
-        transform: translate(-50%, -50%) translateZ(36px) scale(1) rotateY(0deg);
+        transform: translate(-50%, -50%) translateZ(30px) scale(1) rotateY(0deg);
       }
-      .of-card-title { font-size: 30px; margin-top: 14px; }
+      .of-card-title { font-size: 28px; margin-top: 12px; line-height: 1.08; }
       .of-card-sub { font-size: 14px; max-width: 100%; }
-      .of-onoff { margin-top: 16px; gap: 11px; }
+      .of-onoff { margin-top: 14px; gap: 10px; }
       .of-on, .of-off { font-size: 14px; }
       .of-on .lbl, .of-off .lbl { min-width: 32px; }
-      .of-locknote { font-size: 12px; margin-top: 16px; }
-      .of-toggle-row { margin-top: 26px; gap: 16px; }
-      /* slightly larger knob travel-safe toggle for thumbs */
-      .of-toggle { width: 104px; height: 50px; }
-      .of-knob { width: 40px; height: 40px; }
-      .of-toggle.on .of-knob { transform: translateX(54px); }
-      .of-status { font-size: 20px; }
+      .of-locknote { font-size: 12px; margin-top: 14px; }
+      .of-toggle-row { margin-top: 22px; gap: 16px; }
+      .of-status { font-size: 19px; }
 
-      /* touch-friendly nav controls (≥44px effective) */
-      .of-arrow { width: 44px; height: 44px; font-size: 22px; }
-      .of-dots { margin-top: 16px; gap: 12px; }
+      /* touch-friendly nav controls */
+      .of-arrow { width: 42px; height: 42px; font-size: 21px; }
+      .of-dots { margin-top: 14px; gap: 12px; }
       .of-dot { width: 11px; height: 11px; }
 
       /* passcode lock screen */
-      .of-lock { min-height: 72svh; padding: 20px; }
-      .of-lock-card { padding: 28px 22px 24px; }
+      .of-lock { min-height: 64svh; padding: 18px; }
+      .of-lock-card { padding: 26px 20px 22px; }
       .of-input { font-size: 16px; padding: 14px 16px; }   /* ≥16px = no iOS zoom-on-focus */
       .of-btn { font-size: 16px; padding: 14px 16px; }
     }
