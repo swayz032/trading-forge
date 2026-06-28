@@ -467,3 +467,49 @@ export const pineShadowRefusalsTotal = new Counter({
   labelNames: ["blocked_at"] as const,
   registers: [promRegistry],
 });
+
+// ─── Wave 4 Track 4B — Layer 15 Leak Detection counters (2026-06-27) ──────────
+//
+// tf_layer15_leak_detections_total{category, severity}
+//   Incremented by leak-detection-service.ts on every leak finding emitted.
+//
+//   category label (closed set — 5 Layer 15 taxonomy buckets):
+//     "execution_slippage" — avg(|slippage|) z-score vs 60d baseline
+//     "allocation_drift"   — contracts-used z-score vs 60d baseline
+//     "regime"             — current regime outside trained/preferred regimes
+//     "attribution_opacity"— trade critique data_completeness='minimal' or missing fields
+//     "subsystem_consensus"— composite health score drop + ≥N subsystems regressed
+//
+//   severity label (closed set):
+//     "info"    — signal detected; monitor
+//     "warning" — signal elevated; investigate soon
+//     "high"    — action needed; Discord WARN fires
+//
+//   Cardinality: 5 categories × 3 severities = 15 time series — safe.
+//   Declared at registry init so Prometheus sees zero values from first scrape
+//   (no "no data" gaps in Grafana even before the first run completes).
+//
+//   Operational question answered: "Which leak category fires most often at high
+//   severity?" — informs where to prioritise debugging effort across strategies.
+//
+// ADVISORY-ONLY: these counters reflect observation signals. No hard-gate or
+// lifecycle-promotion decision is derived from them.
+export const layer15LeakDetectionsTotal = new Counter({
+  name: "tf_layer15_leak_detections_total",
+  help: "Total Layer 15 leak findings emitted, labelled by category and severity",
+  labelNames: ["category", "severity"] as const,
+  registers: [promRegistry],
+});
+
+// tf_layer15_run_duration_ms
+//   Histogram of end-to-end leak detection run durations.
+//   Buckets cover from a sub-second fast-path (all strategies clean) through a
+//   worst-case multi-strategy deep scan (~60s for 50+ strategies).
+//   Operational question answered: "Is the 3AM orchestrator completing its
+//   leak scan before market open at 09:30 ET?"
+export const layer15RunDurationMs = new Histogram({
+  name: "tf_layer15_run_duration_ms",
+  help: "End-to-end Layer 15 leak detection run duration in milliseconds",
+  buckets: [100, 500, 1000, 2500, 5000, 10000, 20000, 30000, 60000],
+  registers: [promRegistry],
+});

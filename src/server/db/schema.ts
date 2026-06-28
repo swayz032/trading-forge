@@ -1230,6 +1230,21 @@ export const criticCandidates = pgTable("critic_candidates", {
       rl?: string[];
     }>(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    // R8 Wave 4 Track 4C: pre-commit governance metadata (5-field declaration).
+    // Missing fields → precommit_status: "incomplete" → candidate skipped at replay.
+    // Sample adequacy: sample_tag "INSUFFICIENT_SAMPLE" when total_trades < 63.
+    governanceMeta: jsonb("governance_meta").$type<{
+      precommit_status?: "complete" | "incomplete" | "advisory";
+      missing_fields?: string[];
+      sample_tag?: "INSUFFICIENT_SAMPLE";
+      lookahead_violation?: boolean;
+      trial_n_total?: number;
+      economic_rationale?: string | null;
+      declared_param_space_size?: number | null;
+      min_sample_size?: number | null;
+      target_regime?: string | null;
+      declared_failure_mode?: string | null;
+    }>().notNull().default({}),
 },
 (table) => [
     index("critic_cand_run_idx").on(table.runId),
@@ -1237,6 +1252,17 @@ export const criticCandidates = pgTable("critic_candidates", {
     index("critic_cand_status_idx").on(table.replayStatus),
     index("critic_cand_selected_idx").on(table.selected),
 ]);
+
+// ─── R2 Wave 4 Track 4C: Research Trial Counter ───────────────────────────────
+// Tracks cumulative LLM proposal emissions per strategy across all evolution
+// cycles. N_total is injected into DSR/PBO calculations so multi-night loops
+// don't inflate significance by treating each night as an independent experiment.
+
+export const researchTrialCounter = pgTable("research_trial_counter", {
+    strategyId: uuid("strategy_id").primaryKey().references(() => strategies.id, { onDelete: "cascade" }),
+    nTotal: integer("n_total").notNull().default(0),
+    lastUpdatedAt: timestamp("last_updated_at").defaultNow().notNull(),
+});
 
 // ─── DeepAR Forecasts (Regime Prediction) ────────────────────────────
 

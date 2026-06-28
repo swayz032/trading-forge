@@ -94,6 +94,7 @@ import { compositeHealthRoutes } from "./routes/composite-health.js";
 import { abComparisonRoutes } from "./routes/ab-comparison.js";
 import { liveOrderRoutes } from "./routes/live-order.js";
 import { fillCallbackRoutes } from "./routes/fill-callback.js";
+import { leakDetectionRoutes } from "./routes/leak-detection.js";
 import { runPendingMigrations } from "./lib/boot-migration-runner.js";
 import { checkStartupSecrets } from "./lib/startup-config-check.js";
 
@@ -576,6 +577,10 @@ app.use("/api/live-order", liveOrderRoutes);
 // POST /api/broker/fill-callback/reconcile-clear — admin clear of needs_reconcile block.
 // Flag-gated: SERVER_MEDIATED_EXECUTION_ENABLED=true (default OFF).
 app.use("/api/broker/fill-callback", fillCallbackRoutes);
+
+// Wave 4 Track 4B: Layer 15 Leak Detection — ADVISORY-ONLY, no lifecycle gate authority.
+// POST /api/leak-detection/run — called by 3AM orchestrator (Track 4A).
+app.use("/api/leak-detection", leakDetectionRoutes);
 
 // 404 handler for API routes — returns JSON instead of Express default HTML
 app.use("/api", (_req, res) => {

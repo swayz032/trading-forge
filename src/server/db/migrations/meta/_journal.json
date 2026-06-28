@@ -1262,6 +1262,13 @@
       "when": 1782614957607,
       "tag": "0177_backtests_bif",
       "breakpoints": true
+    },
+    {
+      "idx": 181,
+      "version": "7",
+      "when": 1782701357607,
+      "tag": "0178_research_trial_counter",
+      "breakpoints": true
     }
   ]
 }
