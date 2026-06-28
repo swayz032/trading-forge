@@ -1306,6 +1306,7 @@
       "critic_candidates",
       "critic_optimization_runs",
       "mutation_outcomes",
+      "research_trial_counter",
       "system_parameter_history",
       "system_parameters"
     ],
@@ -1916,6 +1917,7 @@
       "/api/deployed-strategy-starvation",
       "/api/dlq",
       "/api/health",
+      "/api/leak-detection",
       "/api/metrics",
       "/api/sse",
       "/api/validation-cadence",

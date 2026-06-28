@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-06-28T02:30:05.276Z`.
+Updated automatically from the repo on `2026-06-28T03:51:21.104Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -11,13 +11,13 @@ Updated automatically from the repo on `2026-06-28T02:30:05.276Z`.
 
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `ci_gate, kill_switch, operator, operator_hmac_override, operator_invoke_for_cohort_validation, operator_opt_in_per_strategy, operator-approve, operator-halt-only, operator-only-recovery, tradingview_deploy`
-- API routes tracked: `75`
+- API routes tracked: `76`
 - Scheduler jobs tracked: `101`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
 - Engine subsystems tracked: `29`
-- Database tables tracked: `106`
+- Database tables tracked: `107`
 
 ### Subsystem Runtime States
 - `active`: `63`
@@ -54,10 +54,10 @@ Updated automatically from the repo on `2026-06-28T02:30:05.276Z`.
 
 ### Registry Coverage
 - Registry subsystems tracked: `69`
-- Route coverage: `75/75`
+- Route coverage: `76/76`
 - Scheduler coverage: `101/101`
 - Engine coverage: `29/29`
-- Database coverage: `106/106`
+- Database coverage: `107/107`
 - Autonomous subsystems with audit coverage: `62/62`
 - Autonomous subsystems with audit actions: `62/62`
 - Autonomous subsystems with telemetry evidence: `62/62`
@@ -262,6 +262,7 @@ Updated automatically from the repo on `2026-06-28T02:30:05.276Z`.
 - `/api/health`
 - `/api/indicators`
 - `/api/journal`
+- `/api/leak-detection`
 - `/api/library-diversity`
 - `/api/live-order`
 - `/api/macro`
@@ -539,6 +540,7 @@ Updated automatically from the repo on `2026-06-28T02:30:05.276Z`.
 - `quantum_run_costs`
 - `qubo_timing_runs`
 - `regime_hmm_models`
+- `research_trial_counter`
 - `rl_training_runs`
 - `scout_drain_samples`
 - `server_mediated_orders`

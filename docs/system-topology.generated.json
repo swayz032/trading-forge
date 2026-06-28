@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-28T02:30:05.276Z",
+  "generatedAt": "2026-06-28T03:51:21.104Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,12 +15,12 @@
     ]
   },
   "counts": {
-    "routes": 75,
+    "routes": 76,
     "schedulerJobs": 101,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 29,
-    "databaseTables": 106,
+    "databaseTables": 107,
     "registrySubsystems": 69
   },
   "routes": [
@@ -59,6 +59,7 @@
     "/api/health",
     "/api/indicators",
     "/api/journal",
+    "/api/leak-detection",
     "/api/library-diversity",
     "/api/live-order",
     "/api/macro",
@@ -886,6 +887,7 @@
     "quantum_run_costs",
     "qubo_timing_runs",
     "regime_hmm_models",
+    "research_trial_counter",
     "rl_training_runs",
     "scout_drain_samples",
     "server_mediated_orders",
@@ -980,10 +982,10 @@
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 75,
+      "routes": 76,
       "schedulerJobs": 101,
       "engineSubsystems": 29,
-      "databaseTables": 106
+      "databaseTables": 107
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
@@ -2695,6 +2697,7 @@
           "journal critique history",
           "mutation outcomes",
           "mutation_outcomes",
+          "research_trial_counter",
           "system parameters",
           "system_journal",
           "system_parameter_history",
@@ -3937,6 +3940,7 @@
           "/api/deployed-strategy-starvation",
           "/api/dlq",
           "/api/health",
+          "/api/leak-detection",
           "/api/metrics",
           "/api/sse",
           "/api/validation-cadence",
@@ -9414,6 +9418,7 @@
         "journal critique history",
         "mutation outcomes",
         "mutation_outcomes",
+        "research_trial_counter",
         "system parameters",
         "system_journal",
         "system_parameter_history",
@@ -10656,6 +10661,7 @@
         "/api/deployed-strategy-starvation",
         "/api/dlq",
         "/api/health",
+        "/api/leak-detection",
         "/api/metrics",
         "/api/sse",
         "/api/validation-cadence",
