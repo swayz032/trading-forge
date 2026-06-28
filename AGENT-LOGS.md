@@ -3,6 +3,23 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-27 Slumdawg Blueprint — Wave 3 (BIF Gate)
+
+**Mission:** Execute Wave 3 of the approved Slumdawg blueprint plan — a Backtest Inflation Factor promotion gate guarding the autonomous scout (hundreds of variants) from promoting selection-inflated strategies to live capital.
+
+**Shipped — commit `c6a673c` (12 files) + `b69940c` (CLAUDE.md gate table):**
+- **3A (backtest-core, Python):** new `src/engine/statistics/backtest_inflation_factor.py` — pure `compute_bif(is_sharpe, wf_sharpe, k_eff)` → `{bif, k_eff, verdict, expected_inflation}`. BIF = optimized in-sample Sharpe ÷ walk-forward OOS Sharpe; K_eff = CPCV `n_paths` (or WF window count); expected inflation = `sqrt(2·ln K_eff)` (Bailey & López de Prado 2014); fail-closed on non-positive/non-finite WF Sharpe; env `BIF_WARN_THRESHOLD=2.0` / `BIF_BLOCK_THRESHOLD=4.0`. Wired into `walk_forward.py` (both `run_walk_forward` + CPCV paths emit `bif`/`k_eff`/`bif_detail`, additive — reuses existing IS+WF Sharpe, no new backtests). 40 pytest. **Honest limitation:** CPCV IS-Sharpe uses `max(path_sharpes)` as a proxy; true per-path IS folds = documented Wave 30 carry-forward.
+- **3B (paper-parity, TS):** new `src/server/lib/bif-gate.ts` (mirrors `b14-ci-gate.ts` contract); wired into `lifecycle-service.ts` PAPER→DEPLOY_READY suite alongside B14/WFE/PBO/drift; `bif>4` BLOCKS, 2–4 warns, null grandfather-passes (pre-Wave-3); fail-OPEN on infra read error (additive signal). Migration `0177_backtests_bif.sql` (idx 180, idempotent `ADD COLUMN IF NOT EXISTS bif,k_eff`); `schema.ts` columns; `backtest-service.ts` stamps from WF result; audit `bif.gate_evaluated`; SSE `lifecycle:bif_evaluated`. 33 vitest + tsc clean.
+
+**Verification:** 40 pytest (NUMBA_DISABLE_JIT=1 real path) + 33 vitest GREEN, tsc clean, ruff clean. Field contract `bif`/`k_eff` matches TS↔Python. 3B's synthetic-overfit fixture (bif=7.5, k_eff=18) BLOCKS — proves the gate. system-map:check GREEN (driftItems: []) — bif-gate not flagged for registration; no co-mingled sync forced.
+
+**Shared-tree:** parallel session committed vacation_mode + slumhouse-office mobile during the agent runs (different files) — no collision; migration 0177/idx 180 verified free before commit; explicit-path commits.
+
+**Operator action:** `npm run db:migrate` (or boot-runner) applies 0177; deploy backend for the gate to read `bif` live. All Wave 1–3 commits on `hardening/phase-0`, NOT pushed.
+
+**Next:** Wave 4 (Layer 14 `14A-master` nightly intelligence orchestrator + Layer 15 leak detection + proposal governance), Wave 5 deferred.
+
+---
 ### Session Log — 2026-06-27 Slumdawg Blueprint — Wave 2 (n8n Hardening, LIVE Railway)
 
 **Mission:** Operator approved the Slumdawg blueprint 5-wave plan; executed Wave 2 (n8n hardening) after Wave 1 (calibration) shipped. All n8n edits via live REST PUT (`{name,nodes,connections,settings}` only); full 31-workflow backup taken first; GET→modify→PUT→GET-verify per workflow; 0 restores.
