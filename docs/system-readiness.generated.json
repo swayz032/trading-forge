@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-28T04:53:18.322Z",
+  "generatedAt": "2026-06-28T05:39:31.409Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -55,8 +55,8 @@
     "workflow-source-missing:Weekly_Strategy_Hunt_sAIrnCVB4iOsodsy"
   ],
   "subsystemCounts": {
-    "total": 69,
-    "ready": 45,
+    "total": 70,
+    "ready": 46,
     "blocked": 17,
     "manualGated": 2,
     "experimental": 5
@@ -207,6 +207,25 @@
         "live_order.blocked_kill_switch",
         "live_order.blocked_replay",
         "live_order.routed"
+      ]
+    },
+    {
+      "id": "candidate_backtest_conveyor",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "operator_only",
+      "blockers": [],
+      "requiredEvidence": [
+        "audit_log:lifecycle.candidate_conveyor_enqueued",
+        "factory:candidate_backtest_enqueued SSE",
+        "lifecycle.candidate_conveyor_enqueued",
+        "SELECT COUNT(*) FROM audit_log WHERE action = 'lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '24 hours'",
+        "tf_candidate_conveyor_enqueued_total",
+        "tf_candidate_conveyor_enqueued_total (Prometheus counter)"
       ]
     },
     {

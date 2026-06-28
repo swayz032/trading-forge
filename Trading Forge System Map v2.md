@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-06-28T04:53:18.322Z`.
+Updated automatically from the repo on `2026-06-28T05:39:31.409Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -12,7 +12,7 @@ Updated automatically from the repo on `2026-06-28T04:53:18.322Z`.
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `ci_gate, kill_switch, operator, operator_hmac_override, operator_invoke_for_cohort_validation, operator_opt_in_per_strategy, operator-approve, operator-halt-only, operator-only-recovery, tradingview_deploy`
 - API routes tracked: `76`
-- Scheduler jobs tracked: `101`
+- Scheduler jobs tracked: `102`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
@@ -20,55 +20,55 @@ Updated automatically from the repo on `2026-06-28T04:53:18.322Z`.
 - Database tables tracked: `107`
 
 ### Subsystem Runtime States
-- `active`: `63`
+- `active`: `64`
 - `experimental`: `5`
 - `scaffold`: `1`
 
 ### Current Pre-Production States
-- `active_preprod`: `64`
+- `active_preprod`: `65`
 - `experimental_preprod`: `5`
 - `inactive_preprod`: `0`
 - `partially_active_preprod`: `0`
 
 ### Launch Target States
 - `experimental_challenger`: `5`
-- `runtime_proven_autonomous`: `62`
+- `runtime_proven_autonomous`: `63`
 - `runtime_proven_manual_gate`: `2`
 
 ### Production Target States
-- `production_autonomous`: `62`
+- `production_autonomous`: `63`
 - `production_experimental`: `5`
 - `production_manual_gate`: `2`
 - `production_not_intended`: `0`
 
 ### Subsystem Operating Classes
 - `adaptive`: `7`
-- `deterministic_instrumented`: `60`
+- `deterministic_instrumented`: `61`
 - `manual_gated`: `2`
 
 ### Learning Modes
 - `active_learning`: `7`
-- `deterministic_instrumented`: `55`
+- `deterministic_instrumented`: `56`
 - `manual_gate_only`: `2`
 - `shadow_experimental`: `5`
 
 ### Registry Coverage
-- Registry subsystems tracked: `69`
+- Registry subsystems tracked: `70`
 - Route coverage: `76/76`
-- Scheduler coverage: `101/101`
+- Scheduler coverage: `102/102`
 - Engine coverage: `29/29`
 - Database coverage: `107/107`
-- Autonomous subsystems with audit coverage: `62/62`
-- Autonomous subsystems with audit actions: `62/62`
-- Autonomous subsystems with telemetry evidence: `62/62`
-- Active-runtime subsystems with freshness signals: `69/69`
-- Runtime/experimental subsystems with evidence queries: `69/69`
+- Autonomous subsystems with audit coverage: `63/63`
+- Autonomous subsystems with audit actions: `63/63`
+- Autonomous subsystems with telemetry evidence: `63/63`
+- Active-runtime subsystems with freshness signals: `70/70`
+- Runtime/experimental subsystems with evidence queries: `70/70`
 - Self-evolving subsystems with learning inputs: `9/9`
 - Self-evolving subsystems with learning persistence: `9/9`
-- Failure visibility complete: `69/69`
+- Failure visibility complete: `70/70`
 
 ### Proof Status
-- `runtime-proven`: `63`
+- `runtime-proven`: `64`
 - `partially-proven`: `1`
 - `offline-by-design`: `0`
 - `experimental`: `5`
@@ -76,17 +76,17 @@ Updated automatically from the repo on `2026-06-28T04:53:18.322Z`.
 
 ### Pre-Production Integrity
 - Integrity status: `incomplete`
-- Automation complete: `57/69`
-- Data collection complete: `69/69`
-- Auditability complete: `69/69`
-- Failure visibility complete: `69/69`
-- Authority correct: `69/69`
+- Automation complete: `58/70`
+- Data collection complete: `70/70`
+- Auditability complete: `70/70`
+- Failure visibility complete: `70/70`
+- Authority correct: `70/70`
 - Learning active: `8/9`
 - Incomplete subsystems: `7`
 
 ### Production Convergence
 - Convergence status: `blocked`
-- Ready subsystem targets: `47`
+- Ready subsystem targets: `48`
 - Blocked subsystem targets: `17`
 - Experimental subsystem targets: `5`
 - Shadow workflow candidates: `0`
@@ -111,7 +111,7 @@ Updated automatically from the repo on `2026-06-28T04:53:18.322Z`.
 - `collecting_only`: `0`
 - `learning_active`: `8`
 - `learning_blocked`: `0`
-- `not_collecting`: `56`
+- `not_collecting`: `57`
 - `shadow_experimental`: `5`
 
 ### Workflow States
@@ -131,6 +131,7 @@ Updated automatically from the repo on `2026-06-28T04:53:18.322Z`.
 - `adaptive_exit_engine` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`incomplete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`false` preprodBlockers=manual_gate:operator_opt_in_per_strategy productionBlockers=manual_gate:operator_opt_in_per_strategy gaps=none
 - `backtest_qualification` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `broker_abstraction_layer` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
+- `candidate_backtest_conveyor` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `cloud_qmc_ising` class=`deterministic_instrumented` learningMode=`shadow_experimental` current=`experimental_preprod` target=`production_experimental` automation=`experimental` data=`complete` audit=`complete` failureVisibility=`complete` learning=`experimental` authority=`correct` ready=`false` preprodBlockers=experimental_governance productionBlockers=experimental_governance gaps=none
 - `cohort_audit_report_service` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `compliance_governance` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
@@ -320,6 +321,7 @@ Updated automatically from the repo on `2026-06-28T04:53:18.322Z`.
 - `c11-fred-daily`
 - `c11-h41-weekly`
 - `c11-treasury-auctions`
+- `candidate-backtest-conveyor`
 - `cloud-qmc-poll`
 - `cme-status-poll`
 - `compliance-rule-drift`

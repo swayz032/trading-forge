@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-28T04:53:18.322Z",
+  "generatedAt": "2026-06-28T05:39:31.409Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,12 +16,12 @@
   },
   "counts": {
     "routes": 76,
-    "schedulerJobs": 101,
+    "schedulerJobs": 102,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 29,
     "databaseTables": 107,
-    "registrySubsystems": 69
+    "registrySubsystems": 70
   },
   "routes": [
     "/api/ab-comparison",
@@ -117,6 +117,7 @@
     "c11-fred-daily",
     "c11-h41-weekly",
     "c11-treasury-auctions",
+    "candidate-backtest-conveyor",
     "cloud-qmc-poll",
     "cme-status-poll",
     "compliance-rule-drift",
@@ -925,34 +926,34 @@
     "weekly_drift_reports"
   ],
   "registryCoverage": {
-    "registryEntries": 69,
-    "autonomousSubsystems": 62,
+    "registryEntries": 70,
+    "autonomousSubsystems": 63,
     "selfEvolvingSubsystems": 9,
     "proofStatusCounts": {
-      "runtime-proven": 63,
+      "runtime-proven": 64,
       "partially-proven": 1,
       "offline-by-design": 0,
       "experimental": 5,
       "drifted": 0
     },
     "runtimeStateCounts": {
-      "active": 63,
+      "active": 64,
       "experimental": 5,
       "scaffold": 1
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
       "partially_active_preprod": 0,
-      "active_preprod": 64,
+      "active_preprod": 65,
       "experimental_preprod": 5
     },
     "launchTargetCounts": {
-      "runtime_proven_autonomous": 62,
+      "runtime_proven_autonomous": 63,
       "runtime_proven_manual_gate": 2,
       "experimental_challenger": 5
     },
     "closedLoopCounts": {
-      "not_collecting": 56,
+      "not_collecting": 57,
       "collecting_only": 0,
       "learning_active": 8,
       "learning_blocked": 0,
@@ -960,13 +961,13 @@
     },
     "learningModeCounts": {
       "active_learning": 7,
-      "deterministic_instrumented": 55,
+      "deterministic_instrumented": 56,
       "manual_gate_only": 2,
       "shadow_experimental": 5
     },
     "operatingClassCounts": {
       "adaptive": 7,
-      "deterministic_instrumented": 60,
+      "deterministic_instrumented": 61,
       "manual_gated": 2
     },
     "manualGates": [
@@ -983,7 +984,7 @@
     ],
     "coveredCounts": {
       "routes": 76,
-      "schedulerJobs": 101,
+      "schedulerJobs": 102,
       "engineSubsystems": 29,
       "databaseTables": 107
     },
@@ -1010,11 +1011,11 @@
     "manualGateViolations": [],
     "preprodIntegrity": {
       "status": "incomplete",
-      "automationComplete": 57,
-      "dataCollectionComplete": 69,
-      "auditabilityComplete": 69,
-      "failureVisibilityComplete": 69,
-      "authorityCorrect": 69,
+      "automationComplete": 58,
+      "dataCollectionComplete": 70,
+      "auditabilityComplete": 70,
+      "failureVisibilityComplete": 70,
+      "authorityCorrect": 70,
       "learningActive": 8,
       "incompleteSubsystems": [
         "adaptive_exit_engine",
@@ -1029,7 +1030,7 @@
     "productionConvergence": {
       "status": "blocked",
       "targetStateCounts": {
-        "production_autonomous": 62,
+        "production_autonomous": 63,
         "production_manual_gate": 2,
         "production_experimental": 5,
         "production_not_intended": 0
@@ -1039,6 +1040,7 @@
         "ab_comparison",
         "backtest_qualification",
         "broker_abstraction_layer",
+        "candidate_backtest_conveyor",
         "cohort_audit_report_service",
         "compliance_governance",
         "composite_shadow_gate",
@@ -1875,6 +1877,88 @@
         "evidenceQueries": [
           "broker-order-routing-audit",
           "broker-credentials-loaded-audit"
+        ],
+        "coverageGaps": []
+      },
+      {
+        "id": "candidate_backtest_conveyor",
+        "domain": "qualification",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "scheduler",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "production",
+        "deploymentAuthority": "operator_only",
+        "criticality": "medium",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
+        ],
+        "runtimeEvidence": [
+          "audit_log:lifecycle.candidate_conveyor_enqueued",
+          "factory:candidate_backtest_enqueued SSE",
+          "lifecycle.candidate_conveyor_enqueued",
+          "tf_candidate_conveyor_enqueued_total",
+          "tf_candidate_conveyor_enqueued_total (Prometheus counter)"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "backtests",
+          "backtests table (running count for slot math)",
+          "MAX_CONCURRENT_BACKTESTS env var",
+          "strategies",
+          "strategies table (lifecycleState=CANDIDATE)"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": true,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log:lifecycle.candidate_conveyor_enqueued",
+          "factory:candidate_backtest_enqueued SSE",
+          "lifecycle.candidate_conveyor_enqueued",
+          "SELECT COUNT(*) FROM audit_log WHERE action = 'lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '24 hours'",
+          "tf_candidate_conveyor_enqueued_total",
+          "tf_candidate_conveyor_enqueued_total (Prometheus counter)"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [],
+        "schedulerJobs": [
+          "candidate-backtest-conveyor"
+        ],
+        "healthCheck": "SELECT COUNT(*) FROM audit_log WHERE action='lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '1 hour'",
+        "freshnessSignals": [
+          "audit_log:lifecycle.candidate_conveyor_enqueued",
+          "tf_candidate_conveyor_enqueued_total"
+        ],
+        "evidenceQueries": [
+          "SELECT COUNT(*) FROM audit_log WHERE action = 'lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '24 hours'"
         ],
         "coverageGaps": []
       },
@@ -8596,6 +8680,88 @@
       "evidenceQueries": [
         "broker-order-routing-audit",
         "broker-credentials-loaded-audit"
+      ],
+      "coverageGaps": []
+    },
+    {
+      "id": "candidate_backtest_conveyor",
+      "domain": "qualification",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "scheduler",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "production",
+      "deploymentAuthority": "operator_only",
+      "criticality": "medium",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
+      ],
+      "runtimeEvidence": [
+        "audit_log:lifecycle.candidate_conveyor_enqueued",
+        "factory:candidate_backtest_enqueued SSE",
+        "lifecycle.candidate_conveyor_enqueued",
+        "tf_candidate_conveyor_enqueued_total",
+        "tf_candidate_conveyor_enqueued_total (Prometheus counter)"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "backtests",
+        "backtests table (running count for slot math)",
+        "MAX_CONCURRENT_BACKTESTS env var",
+        "strategies",
+        "strategies table (lifecycleState=CANDIDATE)"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": true,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log:lifecycle.candidate_conveyor_enqueued",
+        "factory:candidate_backtest_enqueued SSE",
+        "lifecycle.candidate_conveyor_enqueued",
+        "SELECT COUNT(*) FROM audit_log WHERE action = 'lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '24 hours'",
+        "tf_candidate_conveyor_enqueued_total",
+        "tf_candidate_conveyor_enqueued_total (Prometheus counter)"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [],
+      "schedulerJobs": [
+        "candidate-backtest-conveyor"
+      ],
+      "healthCheck": "SELECT COUNT(*) FROM audit_log WHERE action='lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '1 hour'",
+      "freshnessSignals": [
+        "audit_log:lifecycle.candidate_conveyor_enqueued",
+        "tf_candidate_conveyor_enqueued_total"
+      ],
+      "evidenceQueries": [
+        "SELECT COUNT(*) FROM audit_log WHERE action = 'lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '24 hours'"
       ],
       "coverageGaps": []
     },
