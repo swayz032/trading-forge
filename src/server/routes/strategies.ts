@@ -72,7 +72,20 @@ strategyRoutes.get("/", async (req, res) => {
   // Build filter conditions
   const conditions = [];
   if (name) conditions.push(ilike(strategies.name, `%${String(name)}%`));
-  if (lifecycleState) conditions.push(eq(strategies.lifecycleState, String(lifecycleState)));
+  if (lifecycleState) {
+    // Accept a comma-separated list (e.g. ?lifecycleState=CANDIDATE,TESTING,SHADOW)
+    // for the 3-bin lifecycle UI (Factory Floor / Deploy / Graveyard). Single-value
+    // behavior is preserved. Use drizzle inArray, NOT sql`= ANY` (CLAUDE.md §13).
+    const states = String(lifecycleState)
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (states.length === 1) {
+      conditions.push(eq(strategies.lifecycleState, states[0]));
+    } else if (states.length > 1) {
+      conditions.push(inArray(strategies.lifecycleState, states));
+    }
+  }
   if (symbol) conditions.push(eq(strategies.symbol, String(symbol)));
   // Hide archived duplicates from the default list (dashboards, lifecycle UI).
   // The dedup pass tagged these so they stay in DB for audit + history but

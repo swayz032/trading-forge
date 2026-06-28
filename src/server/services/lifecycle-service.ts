@@ -34,7 +34,7 @@ import { broadcastSSE, LIFECYCLE_GATE_EVENTS } from "../routes/sse.js";
 import { compileDualPineExport } from "./pine-export-service.js";
 import { agentCoordinator } from "./agent-coordinator-service.js";
 import { tracer } from "../lib/tracing.js";
-import { strategyPromotions, pboBlocksTotal, lifecycleShadowPromotionsTotal } from "../lib/metrics-registry.js";
+import { strategyPromotions, pboBlocksTotal, lifecycleShadowPromotionsTotal, autoGraveyardTotal } from "../lib/metrics-registry.js";
 import { evaluateMultiFirmEligibility } from "./multi-firm-promotion-service.js";
 import { killSwitch } from "../production/kill-switch.js";
 import { evaluateB14CiGate, evaluateDsrWalkForwardGate } from "../lib/b14-ci-gate.js";
@@ -2002,10 +2002,23 @@ export class LifecycleService {
         if (!latestBt.walkForwardResults) continue;
 
         const tier = latestBt.tier;
-        if (!tier || tier === "REJECTED") continue;
+        // TRANSIENT: no tier data yet — skip without counting toward burial
+        if (!tier) continue;
+        // HARD: strategy was explicitly scored and rejected
+        if (tier === "REJECTED") {
+          await this._maybeAutoGraveyard(s.id, "tier_rejected", { tier }, "CANDIDATE", correlationId);
+          continue;
+        }
+        // Gate passed — reset consecutive counter
+        this._resetHardGateCounter(s.id, "tier_rejected", correlationId);
 
         const forgeScore = s.forgeScore ? parseFloat(String(s.forgeScore)) : 0;
-        if (forgeScore < 50) continue;
+        if (forgeScore < 50) {
+          await this._maybeAutoGraveyard(s.id, "forge_score_below_floor", { forgeScore, floor: 50 }, "CANDIDATE", correlationId);
+          continue;
+        }
+        // Gate passed — reset consecutive counter
+        this._resetHardGateCounter(s.id, "forge_score_below_floor", correlationId);
 
         const result = await this.promoteStrategy(s.id, "CANDIDATE", "TESTING", { correlationId: correlationId ?? undefined });
         if (result.success) {
@@ -2127,8 +2140,11 @@ export class LifecycleService {
             { id: s.id, survivalRate: survivalRate.toFixed(3) },
             "TESTING → PAPER blocked: MC survival rate <= 0.70",
           );
+          await this._maybeAutoGraveyard(s.id, "mc_survival_below_floor", { survivalRate, floor: 0.70 }, "TESTING", tickCorrelationId);
           continue;
         }
+        // Gate passed — reset consecutive counter
+        this._resetHardGateCounter(s.id, "mc_survival_below_floor", tickCorrelationId);
 
         // Prop compliance: check backtests.propCompliance if present, but don't block if absent
         // The propCompliance field is a per-firm results blob set during backtest
@@ -2308,7 +2324,12 @@ export class LifecycleService {
               },
               correlationId,
             });
+            await this._maybeAutoGraveyard(s.id, "survival_score_below_threshold", { rawSurvivalScore, floor: 60 }, "TESTING", tickCorrelationId);
             continue;
+          }
+          // Gate passed (rawSurvivalScore >= 60) — reset consecutive counter
+          if (rawSurvivalScore !== null) {
+            this._resetHardGateCounter(s.id, "survival_score_below_threshold", tickCorrelationId);
           }
         } else {
           // Permissive fallback: legacy backtests written before gateResult was persisted
@@ -2382,6 +2403,12 @@ export class LifecycleService {
             });
 
             exportabilityBlocked = true;
+            // HARD gate: exportability check ran and the strategy genuinely cannot be exported.
+            // Infra errors (catch below) are TRANSIENT and do NOT count toward burial.
+            await this._maybeAutoGraveyard(s.id, "exportability_blocked", { score: exportCheck.score, band: exportCheck.band }, "TESTING", tickCorrelationId);
+          } else {
+            // Gate passed — reset consecutive counter
+            this._resetHardGateCounter(s.id, "exportability_blocked", tickCorrelationId);
           }
         } catch (err) {
           // Pass 8 Track A (2026-06-23): Convert fail-OPEN to fail-CLOSED.
@@ -2498,8 +2525,11 @@ export class LifecycleService {
                 "B14 CI gate BLOCKED TESTING→PAPER: probability_of_ruin_ci.ci_high exceeds threshold",
               );
               strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+              await this._maybeAutoGraveyard(s.id, "b14_ci_high", { ciHigh: b14CiResultTp.auditPayload.ci_high, threshold: b14CiResultTp.auditPayload.threshold }, "TESTING", tickCorrelationId);
               continue;
             }
+            // Gate passed — reset consecutive counter
+            this._resetHardGateCounter(s.id, "b14_ci_high", tickCorrelationId);
           }
         } catch (b14TpErr) {
           // F-6 Hardening 2026-06-23: Fail-CLOSED on B14 CI gate infrastructure error.
@@ -2570,8 +2600,11 @@ export class LifecycleService {
                 "WFE gate BLOCKED TESTING→PAPER: wfe_overall below hard floor",
               );
               strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+              await this._maybeAutoGraveyard(s.id, "wfe_hard_floor", { wfeOverall: wfeResultTp.wfeOverall, hardFloor: wfeResultTp.hardFloor }, "TESTING", tickCorrelationId);
               continue;
             }
+            // Gate passed (or warn-only) — reset consecutive counter
+            this._resetHardGateCounter(s.id, "wfe_hard_floor", tickCorrelationId);
           }
         } catch (wfeTpErr) {
           // Fail-open: WFE gate read failure is non-blocking
@@ -2622,8 +2655,11 @@ export class LifecycleService {
                 "Parameter drift gate BLOCKED TESTING→PAPER: overfit_drift with high confidence",
               );
               strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+              await this._maybeAutoGraveyard(s.id, "parameter_overfit_drift", { classification: driftResultTp.classification, confidence: driftResultTp.confidence }, "TESTING", tickCorrelationId);
               continue;
             }
+            // Gate passed (or warn-only) — reset consecutive counter
+            this._resetHardGateCounter(s.id, "parameter_overfit_drift", tickCorrelationId);
           }
         } catch (driftTpErr) {
           // Fail-open: drift gate read failure is non-blocking
@@ -2677,8 +2713,15 @@ export class LifecycleService {
               `DSR gate BLOCKED TESTING→PAPER: ${dsrGateResultTp.reason}`,
             );
             strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+            // blocked_dsr_floor = genuine Sharpe failure (HARD).
+            // blocked_dsr_unavailable = computation infra failure (TRANSIENT — do not count toward burial).
+            if (dsrGateResultTp.status === "blocked_dsr_floor") {
+              await this._maybeAutoGraveyard(s.id, "dsr_blocked_floor", { dsr: dsrGateResultTp.auditPayload.dsr, status: dsrGateResultTp.status }, "TESTING", tickCorrelationId);
+            }
             continue;
           }
+          // Gate passed — reset consecutive counter
+          this._resetHardGateCounter(s.id, "dsr_blocked_floor", tickCorrelationId);
         } catch (dsrTpErr) {
           // Fail-open: DSR gate read failure is non-blocking for TESTING→PAPER.
           // The gate failing to evaluate is distinct from dsr_pass=false — we
@@ -2816,8 +2859,15 @@ export class LifecycleService {
               } catch (_promErr) { /* non-blocking */ }
             }
 
+            // insufficient_samples = not enough data yet (TRANSIENT).
+            // Real divergence = strategy behaviour genuinely differs from backtest (HARD).
+            if (!isInsufficientSamples) {
+              await this._maybeAutoGraveyard(s.id, "shadow_divergence", { divergence_pct: divergenceResult.divergence_pct, sample_size: divergenceResult.sample_size, reason: divergenceResult.reason }, "SHADOW", correlationId);
+            }
             continue; // BLOCK SHADOW → PAPER
           }
+          // Gate passed — reset consecutive counter
+          this._resetHardGateCounter(s.id, "shadow_divergence", correlationId);
 
           // ok: true — PROMOTE to PAPER
           logger.info(
@@ -3178,6 +3228,8 @@ export class LifecycleService {
               logger.warn({ strategyId: s.id, err: auditErr }, "A7 audit insert failed (non-blocking)");
             });
             strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+            // Check ran successfully and the strategy is a signal duplicate — HARD gate.
+            await this._maybeAutoGraveyard(s.id, "signal_correlation", { maxSimilarity: sigCorrelationResult.maxSimilarity, blockingStrategyId: sigCorrelationResult.blockingStrategyId, reason: sigCorrelationResult.reason }, "PAPER", correlationId);
             continue;
           }
 
@@ -3190,6 +3242,8 @@ export class LifecycleService {
             },
             "A7 signal correlation gate: PASSED",
           );
+          // Gate passed — reset consecutive counter
+          this._resetHardGateCounter(s.id, "signal_correlation", correlationId);
         } catch (sigCorrelationErr) {
           // Fail-closed on infrastructure error — same policy as Frankenstein gate.
           // A broken correlation check is safer treated as a failed gate than an
@@ -3286,8 +3340,11 @@ export class LifecycleService {
                   logger.warn({ strategyId: s.id, err: auditErr }, "B14 audit insert failed (non-blocking)");
                 });
                 strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+                await this._maybeAutoGraveyard(s.id, "b14_survival_twin_failed", { survivalTwin: survivalTwin as Record<string, unknown> | undefined }, "PAPER", correlationId);
                 continue;
               }
+              // Gate passed (survival_twin not failed) — reset consecutive counter
+              this._resetHardGateCounter(s.id, "b14_survival_twin_failed", correlationId);
             }
             // Track A.2: B14 survival twin gate evidence
             // If we reach this point without continuing, the survival twin either passed
@@ -3359,8 +3416,11 @@ export class LifecycleService {
                     "B14 CI gate BLOCKED: probability_of_ruin_ci.ci_high exceeds institutional threshold",
                   );
                   strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+                  await this._maybeAutoGraveyard(s.id, "b14_ci_high", { ciHigh: b14CiResult.auditPayload.ci_high, threshold: b14CiResult.auditPayload.threshold }, "PAPER", correlationId);
                   continue;
                 }
+                // Gate passed — reset consecutive counter
+                this._resetHardGateCounter(s.id, "b14_ci_high", correlationId);
 
                 if (b14CiResult.legacyFallback) {
                   logger.warn(
@@ -3466,8 +3526,13 @@ export class LifecycleService {
               });
               if (b15HardGateEnabled) {
                 strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+                await this._maybeAutoGraveyard(s.id, "b15_battery_failed", { sdr: b15.sdr, psi: b15.psi, rws: b15.rws, failures: b15.failures }, "PAPER", correlationId);
                 continue;
               }
+            }
+            // Battery ran and passed (or no battery data) — reset consecutive counter
+            if (latestBtForB15?.b15Battery && (latestBtForB15.b15Battery as Record<string, unknown>).passed !== false) {
+              this._resetHardGateCounter(s.id, "b15_battery_failed", correlationId);
             }
           } else if (b15HardGateEnabled) {
             // Hardening 2026-06-27 (phantom-gate fix): producer default now ON; a null b15Battery
@@ -3575,8 +3640,11 @@ export class LifecycleService {
             });
             if (isBlock) {
               strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+              await this._maybeAutoGraveyard(s.id, "parameter_overfit_drift", { classification: driftResult.classification, confidence: driftResult.confidence }, "PAPER", correlationId);
               continue;
             }
+            // Gate passed (or warn-only) — reset consecutive counter
+            this._resetHardGateCounter(s.id, "parameter_overfit_drift", correlationId);
             // Track A.2: push parameter drift status
             gateEvidenceStatuses.push(driftResult.status ?? "legacy_null");
           } else {
@@ -3648,8 +3716,15 @@ export class LifecycleService {
                 `DSR gate BLOCKED PAPER→DEPLOY_READY: ${dsrGateResult.reason}`,
               );
               strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+              // blocked_dsr_floor = genuine Sharpe failure (HARD).
+              // blocked_dsr_unavailable = computation infra failure (TRANSIENT).
+              if (dsrGateResult.status === "blocked_dsr_floor") {
+                await this._maybeAutoGraveyard(s.id, "dsr_blocked_floor", { dsr: dsrGateResult.auditPayload.dsr, status: dsrGateResult.status }, "PAPER", correlationId);
+              }
               continue;
             }
+            // Gate passed — reset consecutive counter
+            this._resetHardGateCounter(s.id, "dsr_blocked_floor", correlationId);
             // Track A.2: push DSR status
             gateEvidenceStatuses.push(dsrGateResult.status ?? "legacy_proceed");
           } else {
@@ -3729,8 +3804,12 @@ export class LifecycleService {
               `BIF gate BLOCKED PAPER→DEPLOY_READY: ${bifResult.reason}`,
             );
             strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+            // BIF data was present and exceeded block threshold — HARD gate (not legacy null).
+            await this._maybeAutoGraveyard(s.id, "bif_block_threshold", { bif: bifValue, kEff: kEffValue, blockThreshold: bifResult.auditPayload.block_threshold }, "PAPER", correlationId);
             continue;
           }
+          // Gate passed (or legacyNull grandfather) — reset consecutive counter
+          this._resetHardGateCounter(s.id, "bif_block_threshold", correlationId);
 
           if (bifResult.legacyNull) {
             // Track A.2: grandfather pass = legacy_null evidence status.
@@ -3861,9 +3940,28 @@ export class LifecycleService {
                 }).catch((auditErr) => {
                   logger.warn({ strategyId: s.id, gate, err: auditErr }, "Pass E gate_failed audit insert failed (non-blocking)");
                 });
+                // data_available: false → strategy just lacks data yet (TRANSIENT); don't count toward burial.
+                // data_available: true → gate evaluated against real data and failed (HARD).
+                // Fail-safe: undefined/null data_available is treated as TRANSIENT (don't bury on uncertainty).
+                if (gateRes.data_available === true) {
+                  // Use a stable gate name by prefixing with "promotion_gate_"
+                  await this._maybeAutoGraveyard(
+                    s.id,
+                    `promotion_gate_${gate}`,
+                    { gate, value: gateRes.value, threshold: gateRes.threshold, reason: gateRes.reason },
+                    "PAPER",
+                    correlationId,
+                  );
+                }
               }
               strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
               continue;
+            }
+            // All orchestrator gates cleared — reset consecutive counters for gates that had data_available
+            for (const gate of gatesToEvaluate) {
+              if (orchResult.gate_results[gate].data_available === true) {
+                this._resetHardGateCounter(s.id, `promotion_gate_${gate}`, correlationId);
+              }
             }
 
             // All Pass E gates cleared — write gates_cleared audit (advisory, not blocking)
@@ -4413,6 +4511,201 @@ export class LifecycleService {
     }
 
     return promoted;
+  }
+
+  // ── Auto-Graveyard helpers ─────────────────────────────────────────────────
+  //
+  // Design: two audit-log action types per gate encode the consecutive-fail state
+  // without JSONB parsing.  Counter resets whenever the gate passes OR the
+  // strategy is promoted to a different state (it leaves the gate's evaluation set).
+  //
+  //   lifecycle.hard_gate_fail.<gate>   — written at each HARD gate block
+  //   lifecycle.hard_gate_reset.<gate>  — written when gate passes this tick
+  //
+  // Consecutive count = rows of "fail.<gate>" for this strategy
+  //   WHERE created_at > most-recent "reset.<gate>" row (or epoch if none).
+  //
+  // Threshold: LIFECYCLE_GATE_FAIL_GRAVEYARD_THRESHOLD env (default 3).
+  // Fail-safe: any gate NOT in the HARD allowlist must NOT be passed here.
+
+  /**
+   * Record a hard gate failure for (strategyId, gate).
+   * Count consecutive failures since last reset; if threshold is reached and the
+   * strategy is not already in GRAVEYARD, promote it to GRAVEYARD.
+   *
+   * MUST only be called at explicitly identified HARD gate `continue` sites —
+   * never at transient/infra-error sites.
+   */
+  private async _maybeAutoGraveyard(
+    strategyId: string,
+    gate: string,
+    metrics: Record<string, unknown>,
+    fromState: LifecycleState,
+    correlationId: string | null,
+  ): Promise<void> {
+    const threshold = parseInt(process.env.LIFECYCLE_GATE_FAIL_GRAVEYARD_THRESHOLD ?? "3", 10);
+    const failAction = `lifecycle.hard_gate_fail.${gate}`;
+    const resetAction = `lifecycle.hard_gate_reset.${gate}`;
+
+    // Step 1: Persist this hard gate failure (non-blocking on error)
+    await db.insert(auditLog).values({
+      action: failAction,
+      entityType: "strategy",
+      entityId: strategyId,
+      status: "failure",
+      decisionAuthority: "gate",
+      input: { fromState, gate } as Record<string, unknown>,
+      result: { gate, ...metrics } as Record<string, unknown>,
+      correlationId,
+    }).catch((auditErr: unknown) => {
+      logger.warn({ strategyId, gate, err: auditErr }, "_maybeAutoGraveyard: fail audit insert failed (non-blocking)");
+    });
+
+    // Step 2: Find most-recent reset row to bound the consecutive count
+    const [lastReset] = await db
+      .select({ createdAt: auditLog.createdAt })
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.action, resetAction),
+          eq(auditLog.entityId, strategyId),
+        ),
+      )
+      .orderBy(desc(auditLog.createdAt))
+      .limit(1);
+
+    const sinceCutoff: Date = lastReset?.createdAt ?? new Date(0);
+
+    // Step 3: Count consecutive failures since last reset
+    const failRows = await db
+      .select({ id: auditLog.id })
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.action, failAction),
+          eq(auditLog.entityId, strategyId),
+          gte(auditLog.createdAt, sinceCutoff),
+        ),
+      );
+    const consecutiveFailures = failRows.length;
+
+    if (consecutiveFailures < threshold) {
+      logger.debug(
+        { strategyId, gate, consecutiveFailures, threshold },
+        `auto-graveyard: ${consecutiveFailures}/${threshold} consecutive hard failures — not yet at threshold`,
+      );
+      return;
+    }
+
+    // Step 4: Double-bury guard — re-read current state (may have changed this tick)
+    const [current] = await db
+      .select({ lifecycleState: strategies.lifecycleState })
+      .from(strategies)
+      .where(eq(strategies.id, strategyId));
+
+    if (!current || current.lifecycleState === "GRAVEYARD") {
+      logger.debug(
+        { strategyId, gate },
+        "auto-graveyard: strategy already in GRAVEYARD or missing — no double-bury",
+      );
+      return;
+    }
+
+    // Step 5: Promote to GRAVEYARD
+    logger.warn(
+      { strategyId, gate, consecutiveFailures, threshold, fromState },
+      `AUTO-GRAVEYARD: ${consecutiveFailures} consecutive hard failures on gate "${gate}" — archiving strategy`,
+    );
+
+    const graveyardResult = await this.promoteStrategy(
+      strategyId,
+      fromState,
+      "GRAVEYARD",
+      {
+        actor: "system",
+        reason: `hard_gate_fail:${gate}`,
+        correlationId: correlationId ?? undefined,
+      },
+    );
+
+    if (graveyardResult.success) {
+      // Durable audit row for the auto-graveyard event
+      await db.insert(auditLog).values({
+        action: "lifecycle.auto_graveyard",
+        entityType: "strategy",
+        entityId: strategyId,
+        status: "success",
+        decisionAuthority: "gate",
+        input: { fromState, toState: "GRAVEYARD", gate } as Record<string, unknown>,
+        result: {
+          gate,
+          metrics,
+          consecutiveFailures,
+          fromState,
+          threshold,
+        } as Record<string, unknown>,
+        correlationId,
+      }).catch((auditErr: unknown) => {
+        logger.warn({ strategyId, gate, err: auditErr }, "lifecycle.auto_graveyard audit insert failed (non-blocking)");
+      });
+
+      // Prometheus
+      autoGraveyardTotal.labels({ gate }).inc();
+
+      // SSE
+      broadcastSSE(LIFECYCLE_GATE_EVENTS.AUTO_GRAVEYARD, {
+        strategyId,
+        gate,
+        consecutiveFailures,
+        threshold,
+        fromState,
+        metrics,
+        correlationId,
+      });
+
+      // Discord WARN (family-grade, non-blocking)
+      try {
+        notifyWarning(
+          `Auto-Graveyard: strategy ${strategyId} archived`,
+          appendFamilyGradePostscript(
+            `Strategy ${strategyId} (state ${fromState}) was auto-archived to GRAVEYARD after ${consecutiveFailures} consecutive hard failures on gate \`${gate}\`.`,
+            "A strategy that kept failing quality checks was automatically archived and will no longer trade.",
+            "No action needed — the bot handled this. View the strategy audit log for details.",
+          ),
+          { strategyId, gate, consecutiveFailures, fromState },
+        );
+      } catch (_discordErr) { /* non-blocking */ }
+    } else {
+      logger.error(
+        { strategyId, gate, error: graveyardResult.error },
+        "auto-graveyard: promoteStrategy to GRAVEYARD FAILED — strategy remains in current state",
+      );
+    }
+  }
+
+  /**
+   * Record a hard gate PASS (reset the consecutive-failure counter for this gate).
+   * Fire-and-forget — never blocks promotion on audit write failure.
+   *
+   * Call immediately after the hard gate check code block falls through (i.e. passes).
+   */
+  private _resetHardGateCounter(
+    strategyId: string,
+    gate: string,
+    correlationId: string | null,
+  ): void {
+    db.insert(auditLog).values({
+      action: `lifecycle.hard_gate_reset.${gate}`,
+      entityType: "strategy",
+      entityId: strategyId,
+      status: "success",
+      decisionAuthority: "gate",
+      input: { gate } as Record<string, unknown>,
+      result: { gate, reason: "gate_passed" } as Record<string, unknown>,
+      correlationId,
+    }).catch((auditErr: unknown) => {
+      logger.warn({ strategyId, gate, err: auditErr }, "_resetHardGateCounter: audit insert failed (non-blocking)");
+    });
   }
 
   /**

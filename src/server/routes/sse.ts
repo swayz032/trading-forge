@@ -425,6 +425,9 @@ export const LIFECYCLE_GATE_EVENTS = {
   PROMOTION_EVIDENCE_INCOMPLETE: "lifecycle:promotion_evidence_incomplete",
   // Wave 3 Track 3B — BIF (Bias Information Factor) gate evaluated at PAPER → DEPLOY_READY
   BIF_EVALUATED: "lifecycle:bif_evaluated",
+  // Auto-Graveyard: N consecutive hard gate failures → archived to GRAVEYARD
+  // Payload: { strategyId, gate, consecutiveFailures, threshold, fromState, metrics, correlationId }
+  AUTO_GRAVEYARD: "lifecycle:auto_graveyard",
 } as const;
 
 export type LifecycleGateEventName =

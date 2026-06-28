@@ -25,6 +25,28 @@ export function useStrategies(filters?: {
   });
 }
 
+/**
+ * Fetch strategies filtered by one OR MORE lifecycle states.
+ *
+ * Backend `GET /api/strategies` accepts a comma-separated `lifecycleState`
+ * query param and filters via drizzle `inArray`. Powers the 3-bin lifecycle
+ * library (Factory Floor / Deploy / Graveyard). Non-paginated (returns the
+ * full bin) — these bins are small relative to the full strategy table.
+ */
+export function useStrategiesByLifecycle(states: readonly string[]) {
+  const lifecycleState = states.join(",");
+  return useQuery({
+    queryKey: ["strategies", "lifecycle", lifecycleState],
+    queryFn: async () => {
+      const res = await api.get<{ data: Strategy[]; total: number } | Strategy[]>(
+        `/strategies?lifecycleState=${encodeURIComponent(lifecycleState)}`
+      );
+      if (Array.isArray(res)) return res;
+      return res.data;
+    },
+  });
+}
+
 export function useStrategy(id: string | undefined) {
   return useQuery({
     queryKey: ["strategies", id],

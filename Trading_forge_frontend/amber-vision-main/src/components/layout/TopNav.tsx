@@ -54,6 +54,7 @@ const NAV_GROUPS: NavGroup[] = [
     label: "Strategy Lab",
     items: [
       { title: "Strategies", url: "/strategies", icon: Swords },
+      { title: "Library", url: "/library", icon: Boxes },
       { title: "Deploy Ready", url: "/strategies/deploy-ready", icon: Rocket },
       { title: "Backtests", url: "/backtests", icon: FlaskConical },
       { title: "Monte Carlo", url: "/monte-carlo", icon: Dice5 },

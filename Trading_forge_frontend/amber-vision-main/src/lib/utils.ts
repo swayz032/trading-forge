@@ -62,6 +62,31 @@ export function fmtPoints(pts: number): string {
   return `${pts >= 0 ? "+" : ""}${pts.toFixed(1)} pts`;
 }
 
+/** Prop-firm default account size used for ratio→dollar conversions in the UI
+ *  (matches the $50K eval baseline referenced across BacktestDetail). */
+export const DEFAULT_STARTING_CAPITAL = 50_000;
+
+/** Format a backtest period as "Mon D, YYYY – Mon D, YYYY". Falls back to the
+ *  raw string when a date can't be parsed. */
+export function fmtDateRange(start: string, end: string): string {
+  const fmt = (d: string) => {
+    const dt = new Date(d);
+    if (Number.isNaN(dt.getTime())) return d;
+    return dt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };
+  return `${fmt(start)} – ${fmt(end)}`;
+}
+
+/** Format a max-drawdown ratio (e.g. 0.123) as "-12.3% (-$6,150)" against the
+ *  given starting capital. Sign-agnostic on input — drawdown is always shown
+ *  as a loss. */
+export function fmtMaxDrawdown(ratio: number, startingCapital: number = DEFAULT_STARTING_CAPITAL): string {
+  const mag = Math.abs(ratio);
+  const pct = mag * 100;
+  const dollars = mag * startingCapital;
+  return `-${pct.toFixed(1)}% (-$${dollars.toLocaleString("en-US", { maximumFractionDigits: 0 })})`;
+}
+
 /** Time ago helper */
 export function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();

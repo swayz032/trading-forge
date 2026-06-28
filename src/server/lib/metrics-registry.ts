@@ -527,3 +527,19 @@ export const candidateConveyorEnqueuedTotal = new Counter({
   help: "Total backtests enqueued by the candidate backtest conveyor",
   registers: [promRegistry],
 });
+
+// ── Auto-Graveyard (Production Hardening) ────────────────────────────────────
+//   Incremented each time checkAutoPromotions() auto-promotes a strategy to
+//   GRAVEYARD after LIFECYCLE_GATE_FAIL_GRAVEYARD_THRESHOLD (default 3)
+//   consecutive hard gate failures for the same (strategy, gate) pair.
+//   Labels: gate — the name of the hard gate that triggered burial, e.g.
+//     "mc_survival_below_floor", "b14_ci_high", "wfe_hard_floor", etc.
+//   Cardinality: N_gate_names (bounded — closed allowlist in lifecycle-service).
+//   Lets dashboards answer "how many strategies were buried per gate type?"
+//   without scanning audit_log.
+export const autoGraveyardTotal = new Counter({
+  name: "tf_auto_graveyard_total",
+  help: "Total auto-graveyard promotions triggered by consecutive hard gate failures, labelled by gate name",
+  labelNames: ["gate"] as const,
+  registers: [promRegistry],
+});
