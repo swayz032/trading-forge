@@ -372,6 +372,9 @@ export const systemJournal = pgTable(
     tier: text("tier"), // TIER_1 | TIER_2 | TIER_3 | REJECTED
     analystNotes: text("analyst_notes"), // Ollama Analyst self-critique
     parentJournalId: uuid("parent_journal_id"), // Links refinements to original
+    // Migration 0176: Real prompt-version stamp for A/B test attribution.
+    // NULL = pre-stamp legacy entry; comparator EXCLUDES nulls (never coin-flips).
+    generationPromptVersionId: text("generation_prompt_version_id"),
     status: text("status").notNull().default("tested"), // tested | promoted | archived | failed | scouted | flagged
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
