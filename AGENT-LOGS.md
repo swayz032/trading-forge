@@ -3,6 +3,21 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-28 GROUNDING VALIDATOR — the reality-lock (closure, not CP7); explainability ≠ correctness PROVEN
+
+**Mission:** Operator correction — CP1-6 is a VERIFICATION FRAMEWORK for extraction HYPOTHESES, not extraction correctness. Consensus can agree on something wrong; explainability ≠ correctness. The real invariant = NO UNVERIFIED CLAIM SURVIVES INTO EXECUTION. Add the missing hard GROUNDING GATE (deterministic transcript↔IR binding, model-consensus cannot override).
+
+**Work completed (commit + tag `grounding-validator-reality-lock`):** `grounding-validator.ts` — `groundQuote(quote, transcript)` = deterministic substring bind (exact → normalized-exact → none). `validateGrounding(ir, transcript, {strictCriticalInference})` walks every node: explicit/normalized node MUST carry an evidence_quote (R1) that is a transcript substring (R2) with a char-offset (R3); else UNGROUNDED_VIOLATION/MISSING_EVIDENCE → HARD REJECT. Inferred (compiler/derived) nodes = honest INFERENCE (counted in inference_rate, allowed); strict mode rejects when a CRITICAL node (confirmation/until/entry/event) is merely inferred. Metrics: grounding_pass_rate, inference_rate, rejection_reasons.
+
+**★ HONEST MEASUREMENT (the critical finding) — the current lowered IR is NOT verbatim-grounded.** Ran validateGrounding on the frozen-6 vs their REAL transcripts: **5 of 6 REJECTED, grounding pass-rate 50-67%** (only 2u9 GROUNDED at 100%). Failures cluster in `wait_state.until` + `wait_state.confirmation` — because the lowering sources those evidence quotes from PARAPHRASED extraction output (entry_sequence steps / compound leg quotes), NOT verbatim transcript spans. **The IR was explainable (CP5 provenance) but not BOUND — the gate proves explainability ≠ correctness.** This is the actionable truth: under the strict invariant only verbatim-bound claims may execute.
+
+**REFRAMED SUCCESS CRITERIA (operator):** not "model extracts correctly" but "system guarantees no ungrounded transformation survives into execution." Measure: grounding_pass_rate, rejection_rate, disagreement-entropy-per-rejected-node, replay-divergence-attribution. NOTE: semantic entropy (CP6) measures model DISAGREEMENT not TRUTH — use only to TARGET stricter grounding, never as a reliability signal.
+
+**Verification:** tsc 0; 48 tests green (grounding + all 6 checkpoints); grounding-validator standalone (zero production wiring).
+
+**Carry-forward (post-freeze, evidence-driven):** the fix for the 50-67% grounding gap is to make extraction/lowering carry VERBATIM transcript spans for until/confirmation (the `_coverage_speaker_items.verbatim_quote` proves the pipeline CAN do verbatim — the lowering just isn't using bound quotes there). That is the highest-value extraction fix, now MEASURABLE via grounding_pass_rate. The grounding gate plugs in AFTER CP6 consensus → before execution. Then: blind suite vs frozen control + ~100-video corpus + real-bar replay parity (live / stable-supervisor gated).
+
+---
 ### Session Log — 2026-06-27 (cont.) STATE-MACHINE IR — Checkpoint 6: CONSENSUS PROTOCOL (final architecture checkpoint) → ARCHITECTURE FROZEN
 
 **Mission:** CP6 — the last architecture piece. Build extraction as a CONSENSUS PROTOCOL (4 passes meant to DISAGREE), measure uncertainty, then FREEZE (operator directive: no CP7 / no new primitives until the blind suite + 100-video corpus + replay parity render a verdict).
