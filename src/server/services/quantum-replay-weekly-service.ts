@@ -73,8 +73,11 @@ async function _readKillSwitch(): Promise<boolean> {
       .where(eq(systemParameters.paramName, KILL_SWITCH_PARAM))
       .limit(1);
 
-    if (rows.length === 0) return true; // missing = enabled (fail-open)
-    return String(rows[0].currentValue).trim() !== "false";
+    // NUMERIC contract, fail-CLOSED — must match pattern-aggregator-service.ts
+    // _readKillSwitch so ONE flip of auto_patch_loop_enabled halts BOTH loops.
+    // system_parameters.current_value is numeric: 1 = enabled, 0 / absent = disabled.
+    if (rows.length === 0) return false; // missing = DISABLED (fail-closed)
+    return Number(rows[0].currentValue) >= 1;
   } catch (err) {
     // Fail-CLOSED: if we cannot read the kill switch, treat it as DISENGAGED
     // (loop halted). Institutional rule: if you can't read the kill switch,
