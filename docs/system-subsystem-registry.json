@@ -5279,5 +5279,70 @@
     "learning_boundary": "production",
     "deployment_authority": "operator_only",
     "criticality": "medium"
+  },
+  {
+    "id": "candidate_backtest_conveyor",
+    "domain": "qualification",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "scheduler",
+    "automation_scope": "Automatically enqueues walk-forward backtests for CANDIDATE strategies when pipeline mode is ACTIVE. Slot-bounded by MAX_CONCURRENT_BACKTESTS (default 3). Never touches paper streams, TradersPost, or broker path.",
+    "data_sources": [
+      "strategies table (lifecycleState=CANDIDATE)",
+      "backtests table (running count for slot math)",
+      "MAX_CONCURRENT_BACKTESTS env var"
+    ],
+    "reads_from": [
+      "strategies",
+      "backtests"
+    ],
+    "writes_to": [
+      "backtests",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "lifecycle.candidate_conveyor_enqueued"
+    ],
+    "metrics_surfaces": [
+      "tf_candidate_conveyor_enqueued_total (Prometheus counter)"
+    ],
+    "telemetry_sources": [
+      "factory:candidate_backtest_enqueued SSE",
+      "tf_candidate_conveyor_enqueued_total"
+    ],
+    "scheduler_jobs": [
+      "candidate-backtest-conveyor"
+    ],
+    "routes": [],
+    "engine_subsystems": [
+      "candidate-backtest-conveyor-service"
+    ],
+    "database_tables": [
+      "strategies",
+      "backtests",
+      "audit_log"
+    ],
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:lifecycle.candidate_conveyor_enqueued",
+      "tf_candidate_conveyor_enqueued_total"
+    ],
+    "evidence_queries": [
+      "SELECT COUNT(*) FROM audit_log WHERE action = 'lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '24 hours'"
+    ],
+    "failure_visibility": ["scheduler logs", "tf_candidate_conveyor_enqueued_total Prometheus", "audit_log:lifecycle.candidate_conveyor_enqueued"],
+    "recovery_mode": "scheduler-retry-with-per-strategy-isolation",
+    "health_check": "SELECT COUNT(*) FROM audit_log WHERE action='lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '1 hour'",
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "production",
+    "deployment_authority": "operator_only",
+    "criticality": "medium"
   }
 ]

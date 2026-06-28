@@ -513,3 +513,17 @@ export const layer15RunDurationMs = new Histogram({
   buckets: [100, 500, 1000, 2500, 5000, 10000, 20000, 30000, 60000],
   registers: [promRegistry],
 });
+
+// ─── Candidate backtest conveyor counter (2026-06-28) ─────────────────────────
+//
+// tf_candidate_conveyor_enqueued_total
+//   Incremented by candidate-backtest-conveyor-service.ts each time a CANDIDATE
+//   strategy is successfully handed to runBacktest() (status !== "skipped").
+//   No labels — single time series, minimal cardinality.
+//   Cardinality: 1. Lets dashboards answer "how many automated backtests have
+//   been enqueued since boot?" without a full audit_log scan.
+export const candidateConveyorEnqueuedTotal = new Counter({
+  name: "tf_candidate_conveyor_enqueued_total",
+  help: "Total backtests enqueued by the candidate backtest conveyor",
+  registers: [promRegistry],
+});
