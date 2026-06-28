@@ -33,7 +33,8 @@ export type ConfirmationQuarantineReason =
   | "confirmation_no_level" // active confirmation but no anchor level identifiable
   | "confirmation_unmapped" // confirmation language present but not mappable to a primitive
   | "semantic_compression_loss" // Phase 2A — compiled predicate dropped too much edge specificity (SCL gate)
-  | "context_gate_unrepresented"; // Phase 3A — a REQUIRED zone/POI validity gate is fuzzy (T3); shipping it over-fires
+  | "context_gate_unrepresented" // Phase 3A — a REQUIRED zone/POI validity gate is fuzzy (T3); shipping it over-fires
+  | "leg_anchor_missing"; // Phase 2D-A — the PRIMARY spatial leg has no anchor (displacement with no level/POI)
 
 export type LevelRef =
   | "opening_range_edge" | "opening_price" | "prior_swing" | "order_block"
@@ -221,7 +222,12 @@ export function compileConfirmation(input: ConfirmationInput): ConfirmationResul
  * Roles are the per-leg refinement of the compound `enforcement` summary.
  */
 export type LegRole = "primary" | "confluence" | "hard_gate";
-export interface ConfirmationLeg extends ConfirmationPredicate { order: number; role: LegRole }
+export interface ConfirmationLeg extends ConfirmationPredicate {
+  order: number;
+  role: LegRole;
+  /** Phase 2D-A — what this (spatial) leg is positionally measured against. Couples WHEN to WHERE. */
+  anchor_ref?: { type: "poi" | "zone" | "leg"; id: string };
+}
 export interface CompoundConfirmation {
   predicate_type: "single" | "sequence" | "and";
   operator: "SEQUENCE" | "AND"; // SEQUENCE = ordered (sweep→displacement→retest); AND = parallel confluence (FVG+OB+discount)
@@ -333,6 +339,27 @@ export function compileConfirmationCompound(input: ConfirmationInput): CompoundR
     if (spec >= bestPrimarySpec) { bestPrimarySpec = spec; primary_order = leg.order; }
   }
   for (const leg of legs) if (leg.order === primary_order) leg.role = "primary"; // primary overrides
+
+  // ── Phase 2D-A — anchor binding: couple spatial legs (displacement / generic structure_shift) to a
+  // WHERE anchor (a context POI/zone, or a preceding leg's named level). A bare displacement is generic;
+  // "displacement away from asia_low" is executable. The PRIMARY spatial leg MUST anchor → else hard-fail.
+  const requiresAnchor = (leg: ConfirmationLeg) => leg.kind === "displacement" || leg.level_ref == null || leg.level_ref === "prior_swing";
+  const namedAnchored = (leg: ConfirmationLeg) => predicateLevelIsNamed(leg.level_ref);
+  // candidate anchors from context gates (entry_anchor preferred over generic gate; never target/stop).
+  const anchorGates = ctx.gates
+    .filter((g) => (g.type === "poi" || g.type === "zone") && (g.role === "entry_anchor" || g.role === "gate"))
+    .sort((a, b) => (a.role === "entry_anchor" ? -1 : 1) - (b.role === "entry_anchor" ? -1 : 1));
+  for (const leg of legs) {
+    if (!requiresAnchor(leg) || namedAnchored(leg)) continue;
+    const gate = anchorGates[0];
+    if (gate) { leg.anchor_ref = { type: gate.type === "zone" ? "zone" : "poi", id: gate.params.level ?? gate.name }; continue; }
+    const prevNamed = legs.find((l) => l.order < leg.order && predicateLevelIsNamed(l.level_ref));
+    if (prevNamed) leg.anchor_ref = { type: "leg", id: `${prevNamed.kind}@${prevNamed.level_ref}` };
+  }
+  const primaryLeg = legs.find((l) => l.order === primary_order)!;
+  if (requiresAnchor(primaryLeg) && !namedAnchored(primaryLeg) && !primaryLeg.anchor_ref) {
+    return { compound: null, quarantine_reason: "leg_anchor_missing", contradictions, leg_count: legs.length, expected_legs, context_gates: ctx.gates };
+  }
 
   // Fail-closed: a REQUIRED unrepresentable (T3) WHERE-gate → quarantine (shipping it over-fires).
   if (ctxUnrepresented) {

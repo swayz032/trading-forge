@@ -54,6 +54,33 @@ describe("scanContextGates — extraction (the discarded WHERE semantics)", () =
   });
 });
 
+describe("Phase 2D-C — level-role typing (target vs gate)", () => {
+  it("★ a TP target level is role=target and NOT a required validity gate (O9cz asia_high)", () => {
+    const r = scanContextGates("our target which is the asia session high, take profit there");
+    const ah = r.gates.find((g) => g.name === "asia_high");
+    expect(ah?.role).toBe("target");
+    expect(ah?.required).toBe(false); // a target never gates entry validity
+  });
+  it("an entry POI is role=entry_anchor (buying below the asia low)", () => {
+    const r = scanContextGates("we want to be buying below the asia session low at our point of interest");
+    expect(r.gates.find((g) => g.name === "asia_low")?.role).toBe("entry_anchor");
+  });
+  it("a stop level is role=stop_anchor", () => {
+    const r = scanContextGates("place your stop below the order block");
+    expect(r.gates.find((g) => g.name === "order_block")?.role).toBe("stop_anchor");
+  });
+});
+
+describe("Phase 2D-B — session formation vs execution role", () => {
+  it("★ Asia (POI formation) and London (execution) get distinct session roles (O9cz)", () => {
+    const r = scanContextGates("the asia session range is liquid; we trade during the london session");
+    const asia = r.gates.find((g) => g.type === "session" && g.name === "ASIA");
+    const london = r.gates.find((g) => g.type === "session" && g.name === "LONDON");
+    expect(asia?.session_role).toBe("formation");
+    expect(london?.session_role).toBe("execution");
+  });
+});
+
 describe("evaluateContextGate — the WHERE evaluator (T1/T2)", () => {
   it("zone: price within bounds passes, outside fails", () => {
     const [zone] = scanContextGates("retrace into the 25 to 50% zone of the 4h box").gates;

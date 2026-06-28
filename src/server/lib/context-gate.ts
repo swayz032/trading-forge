@@ -17,6 +17,10 @@
 export type ContextGateType = "zone" | "poi" | "session" | "regime";
 /** Representability: T1 fully computable · T2 computable with a tolerance/approx · T3 unrepresentable (fuzzy). */
 export type Representability = "T1" | "T2" | "T3";
+/** Phase 2D-C — level role: what the level is FOR. Prevents a TP target being mis-typed as a validity gate. */
+export type LevelRole = "entry_anchor" | "gate" | "target" | "stop_anchor";
+/** Phase 2D-B — session role: WHERE the POI forms vs WHERE the trade executes (distinct variables). */
+export type SessionRole = "formation" | "execution";
 
 export interface ContextGate {
   type: ContextGateType;
@@ -25,6 +29,8 @@ export interface ContextGate {
   representability: Representability;
   specificity: number;
   evidence_quote: string;
+  role: LevelRole;            // 2D-C — only `gate`/`entry_anchor` participate in validity; `target`/`stop_anchor` do not
+  session_role?: SessionRole; // 2D-B — set on session gates
   params: {
     bounds?: { min: number; max: number }; // zone: fraction of the anchor range [0,1]
     anchor?: string;                        // zone: what the range is measured on (e.g. 4h_candle_box)
@@ -54,6 +60,29 @@ function gateSpecificity(f: { explicit_bounds: boolean; named_reference: boolean
 // appear everywhere (those falsely mark every gate required, then any T3 over-quarantines a winner).
 const REQUIRED_RE = /\b(only (?:enter|trade|take|buy|sell|in|when|during)|must (?:be|see|have|enter|trade|wait)|no trade (?:unless|without)|never (?:trade|enter)|do not (?:enter|trade))\b/i;
 const TF_RE = /\b(4h|4 hour|1h|hourly|daily|15m|5m|1m|session)\b/i;
+
+// 2D-C — level-role cues (detected NEAR the level mention).
+const TARGET_RE = /\b(target|take profit|\btp\b|aim for|profit objective|our objective|take[- ]profit|tp at|targeting)\b/i;
+const STOP_RE = /\b(stop (?:loss|below|above)?|stop[- ]loss|invalidation|invalidat)\b/i;
+const ENTRY_ANCHOR_RE = /\b(buying below|selling above|point of interest|\bpoi\b|setup forms|enter (?:at|from|near)|entry (?:at|from|near)|from the|off (?:the|of))\b/i;
+// 2D-B — session-formation cues (the session whose RANGE/levels seed the POI, vs where we execute).
+const FORMATION_RE = /\b(range|session (?:high|low)|liquidity|forms? (?:in|during)|formed (?:in|during)|swept|sweep|point of interest|\bpoi\b)\b/i;
+const EXECUTION_RE = /\b(trade during|execute|entries? during|we trade|i trade|enter during|killzone|window to trade)\b/i;
+
+/** Classify a level's role from the words around its mention. Order: target > stop > entry_anchor > gate. */
+function levelRole(near: string): LevelRole {
+  if (TARGET_RE.test(near)) return "target";
+  if (STOP_RE.test(near)) return "stop_anchor";
+  if (ENTRY_ANCHOR_RE.test(near)) return "entry_anchor";
+  return "gate";
+}
+/** Text window around the FIRST match of `re` (for role classification of THAT mention). */
+function around(text: string, re: RegExp): string {
+  const m = text.match(re);
+  if (!m) return "";
+  const i = m.index ?? 0;
+  return text.slice(Math.max(0, i - 50), i + 60);
+}
 
 /** Parse an explicit fraction zone like "25 to 50%", "0.25-0.5", "25%-50%". */
 function parseZoneBounds(text: string): { min: number; max: number } | null {
@@ -130,6 +159,7 @@ export function scanContextGates(corpus: string | null | undefined): ContextScan
       type: "zone", name: quadHit ? `${quadHit}_zone` : "fib_zone", required: REQUIRED_RE.test(text),
       representability, specificity: gateSpecificity({ explicit_bounds: explicit, named_reference: named, timeframe_anchor: anchorTf, quantitative_rule: explicit }),
       evidence_quote: quote(bounds ? /(\d{1,3})\s*(?:%|percent)?\s*(?:to|-|–|through)\s*(\d{1,3})/i : quadHit ? new RegExp(`\\b${quadHit}\\b`, "i") : /\bzone\b/i),
+      role: "gate", // a zone is a validity boundary
       params: gateBounds ? { bounds: gateBounds, anchor: anchorTf ? "htf_box" : undefined } : {},
     };
     add(g);
@@ -138,27 +168,33 @@ export function scanContextGates(corpus: string | null | undefined): ContextScan
     }
   }
 
-  // POI — named liquidity level (T2) or fuzzy (T3).
+  // POI — named liquidity level (T2). 2D-C: classify role (a TP target is NOT a validity gate).
   for (const { re, name } of POI_LEVELS) {
     if (!re.test(text)) continue;
-    const fuzzy = FUZZY_RE.test(text);
-    const representability: Representability = fuzzy && name === "poi" ? "T3" : "T2";
+    const role = levelRole(around(text, re));
+    const isValidity = role === "gate" || role === "entry_anchor";
     const g: ContextGate = {
-      type: "poi", name, required: REQUIRED_RE.test(text), representability,
+      type: "poi", name, required: isValidity && REQUIRED_RE.test(text), representability: "T2",
       specificity: gateSpecificity({ explicit_bounds: false, named_reference: true, timeframe_anchor: TF_RE.test(text), quantitative_rule: false }),
-      evidence_quote: quote(re), params: { level: name, proximity_atr: 1.0 },
+      evidence_quote: quote(re), role, params: { level: name, proximity_atr: 1.0 },
     };
     add(g);
-    if (g.required && representability === "T3") contradictions.push({ type: "CONTEXT_GATE_UNREPRESENTED", detail: `required POI gate "${name}" is unrepresentable (T3)` });
   }
 
-  // SESSION — computable time window (T1).
+  // SESSION — computable time window (T1). 2D-B: emit EACH region with formation/execution role, using a
+  // TIGHT local window (formation cue right after the region; execution cue right before) so one session's
+  // "trade during" doesn't leak onto another's role.
   for (const { re, region } of SESSION_RE) {
-    if (!re.test(text)) continue;
-    add({ type: "session", name: region, required: REQUIRED_RE.test(text), representability: "T1",
+    const m = text.match(re);
+    if (!m) continue;
+    const idx = m.index ?? 0;
+    const after = text.slice(idx, idx + 40);
+    const before = text.slice(Math.max(0, idx - 30), idx);
+    const isFormation = FORMATION_RE.test(after) && !EXECUTION_RE.test(before) && !EXECUTION_RE.test(after.slice(0, 15));
+    const session_role: SessionRole = isFormation ? "formation" : "execution";
+    add({ type: "session", name: region, required: session_role === "execution" && REQUIRED_RE.test(text), representability: "T1",
       specificity: gateSpecificity({ explicit_bounds: false, named_reference: true, timeframe_anchor: true, quantitative_rule: false }),
-      evidence_quote: quote(re), params: { region } });
-    break; // dominant session only
+      evidence_quote: quote(re), role: "gate", session_role, params: { region } });
   }
 
   // REGIME — needs the regime classifier (T2).
@@ -166,7 +202,7 @@ export function scanContextGates(corpus: string | null | undefined): ContextScan
     if (!re.test(text)) continue;
     add({ type: "regime", name: value, required: REQUIRED_RE.test(text), representability: "T2",
       specificity: gateSpecificity({ explicit_bounds: false, named_reference: true, timeframe_anchor: false, quantitative_rule: false }),
-      evidence_quote: quote(re), params: { value } });
+      evidence_quote: quote(re), role: "gate", params: { value } });
     break;
   }
 

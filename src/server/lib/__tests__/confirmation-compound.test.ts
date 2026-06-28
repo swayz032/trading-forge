@@ -102,6 +102,26 @@ describe("compileConfirmationCompound — multi-leg representation", () => {
     expect(r.compound?.enforcement).toBe("all_required");
   });
 
+  it("★ 2D-A: a displacement leg is ANCHORED to the POI gate (couples WHEN to WHERE; the O9cz fix)", () => {
+    const r = compileConfirmationCompound({
+      entry_sequence: seq(
+        "we are buying below the asia session low at our point of interest",   // context → poi:asia_low (entry_anchor)
+        "then look for a displacement candle to confirm",                      // displacement leg, no own level
+        "enter on the order block retest",                                     // retest@order_block (primary)
+      ),
+    });
+    const disp = r.compound?.legs.find((l) => l.kind === "displacement");
+    expect(disp?.anchor_ref?.id).toBe("asia_low"); // displacement now bound to the Asia-low POI
+    expect(r.quarantine_reason).toBeNull();
+  });
+
+  it("2D-A: PRIMARY spatial leg with no anchorable level → leg_anchor_missing (hard-fail)", () => {
+    const r = compileConfirmationCompound({ entry_sequence: seq("enter on a displacement candle") });
+    // displacement is the only/primary leg, no level, no POI/zone to anchor to → hard-fail
+    expect(r.compound).toBeNull();
+    expect(r.quarantine_reason).toBe("leg_anchor_missing");
+  });
+
   it("single confirmation step → predicate_type single", () => {
     const r = compileConfirmationCompound({ entry_sequence: seq("enter on a full body close through the opening range edge") });
     expect(r.compound?.predicate_type).toBe("single");
