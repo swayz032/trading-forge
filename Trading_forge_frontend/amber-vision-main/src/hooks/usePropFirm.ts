@@ -60,6 +60,22 @@ interface FirmRanking {
   trailing: string;
   maxDrawdown: number;
   maxContracts: number;
+  // B14 Survival Twin advisory fields (Phase 0). The backend does NOT yet
+  // populate these on the /prop-firm/rank response — they are OPTIONAL so the
+  // survival-first UI compiles and renders honest "—" / "unavailable" empty
+  // states until the survival API lands. Never fabricated client-side.
+  survivalProbability?: number | null;
+  survivalCurve?: SurvivalCurve | null;
+  evidenceWeight?: number | null;
+}
+
+/** 6-month survival probability sampled at fixed horizons. Optional/advisory —
+ *  populated only when the backend B14 survival API is wired (not yet). */
+export interface SurvivalCurve {
+  p_30d: number;
+  p_90d: number;
+  p_180d: number;
+  p_365d: number;
 }
 
 interface RankingResponse {
@@ -139,6 +155,10 @@ interface SimulateResult {
   fundedPayoutMonths: number;
   annualProfit: number;
   roi: number;
+  // B14 Survival Twin advisory field (Phase 0). Optional — backend does not yet
+  // populate it on /prop-firm/simulate; PropFirmSimCard renders the legacy
+  // verdict pill when null. Never fabricated client-side.
+  survivalProbability?: number | null;
 }
 
 interface SimulateResponse {
@@ -150,6 +170,32 @@ interface SimulateResponse {
 }
 
 export type { Firm, FirmRanking, RankingResponse, PayoutMonth, PayoutResponse, TimelineResponse, SimulateResult, SimulateResponse, FirmAccountDetail };
+
+/** StatusBadge variant union (mirrors src/components/forge/StatusBadge.tsx). */
+type SurvivalBadgeVariant = "profit" | "amber" | "loss";
+
+/**
+ * Map a 6-month survival probability ∈ [0,1] to a StatusBadge verdict variant.
+ * Pure presentation helper — it formats whatever probability it is GIVEN and
+ * never invents data. Callers guard with `!= null` before invoking, so a missing
+ * (undefined/null) survival probability is rendered as an honest "—" upstream,
+ * never passed here. Thresholds: ≥70% healthy (profit), ≥50% caution (amber),
+ * else danger (loss).
+ */
+export function survivalVerdict(p: number): SurvivalBadgeVariant {
+  if (p >= 0.7) return "profit";
+  if (p >= 0.5) return "amber";
+  return "loss";
+}
+
+/**
+ * Format a survival probability ∈ [0,1] as a whole-percent string ("83%").
+ * Pure presentation helper — no fabrication; clamps to [0,1] for display safety.
+ */
+export function formatSurvivalPct(p: number): string {
+  const clamped = Math.max(0, Math.min(1, p));
+  return `${Math.round(clamped * 100)}%`;
+}
 
 export function useFirms() {
   return useQuery<Firm[]>({
