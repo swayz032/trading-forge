@@ -83,12 +83,24 @@ RL_RUNS_GOVERNANCE = {
 # ─── RL Reward Hyperparameters ────────────────────────────────────
 # α: ci_high penalty coefficient — default 0.5, override via QUANTUM_RL_REWARD_ALPHA
 # β: drawdown penalty coefficient — default 0.3, override via QUANTUM_RL_REWARD_BETA
-# Reward formula: realized_R − α × max(0, ci_high − 0.40) − β × drawdown_penalty
-# CFA Institute Nov 2025 institutional consensus: ci_high at 0.40 threshold per
-# Wave 27.5 Pass A B14_RUIN_CI_HIGH_THRESHOLD.
+# Reward formula: realized_R − α × max(0, ci_high − _RL_CI_HIGH_THRESHOLD) − β × drawdown_penalty
+#
+# _RL_CI_HIGH_THRESHOLD reads B14_RUIN_CI_HIGH_THRESHOLD from env (default 0.20,
+# tightened from 0.40 on 2026-06-22) so it always tracks the production gate in
+# b14-ci-gate.ts::getB14CiHighThreshold(). Single source of truth.
+#
+# NOTE on frozen-policy SHA-256 contract (Wave 29 Pass B):
+#   The frozen-policy hash covers {entry_quality, position_size, stop_loss,
+#   take_profit, exit_plan_config}. Reward hyperparameters are NOT in that slice,
+#   so changing this constant does NOT invalidate any existing frozen_policy_hash.
+#   However, existing trained policies in quantum_rl_runs were shaped by the prior
+#   0.40 anchor. Those policies are NOT automatically retrained — the operator must
+#   trigger new training runs (off-RTH cron) to benefit from the tighter anchor.
 _RL_REWARD_ALPHA_DEFAULT = 0.5
 _RL_REWARD_BETA_DEFAULT = 0.3
-_RL_CI_HIGH_THRESHOLD = 0.40  # Must match B14_RUIN_CI_HIGH_THRESHOLD env default
+_RL_CI_HIGH_THRESHOLD: float = float(
+    os.environ.get("B14_RUIN_CI_HIGH_THRESHOLD", "0.20")
+)  # Tightened 0.40 → 0.20 on 2026-06-22; tracks production gate default
 _RL_DRAWDOWN_WINDOW = 20       # Rolling window for drawdown penalty computation
 
 # ─── Kill-switch dormancy threshold ───────────────────────────────
@@ -619,9 +631,10 @@ class TradingEnv:
       Short signals against HTF trend are architecturally impossible in this env.
 
     Reward formula (CFA Institute Nov 2025 institutional consensus):
-      R = realized_R − α × max(0, ci_high − 0.40) − β × drawdown_penalty
+      R = realized_R − α × max(0, ci_high − _RL_CI_HIGH_THRESHOLD) − β × drawdown_penalty
       α = QUANTUM_RL_REWARD_ALPHA env (default 0.5)
       β = QUANTUM_RL_REWARD_BETA env (default 0.3)
+      _RL_CI_HIGH_THRESHOLD = B14_RUIN_CI_HIGH_THRESHOLD env (default 0.20, tightened 2026-06-22)
 
     Backward-compat: reset() and step() signatures preserved from original toy env.
     Legacy callers passing raw features arrays still work (production state loading
@@ -761,7 +774,7 @@ class TradingEnv:
     ) -> tuple[float, float, float]:
         """Compute shaped reward with ci_high and drawdown penalties.
 
-        Formula: R = realized_R − α × max(0, ci_high − 0.40) − β × drawdown_penalty
+        Formula: R = realized_R − α × max(0, ci_high − _RL_CI_HIGH_THRESHOLD) − β × drawdown_penalty
 
         Args:
             realized_r: raw realized reward (P&L change)
@@ -791,7 +804,7 @@ class TradingEnv:
         LONG/FLAT only. No short entries. Position is 0 (flat) or 1 (long).
 
         Reward is shaped per formula:
-          R = realized_R − α × max(0, ci_high − 0.40) − β × drawdown_penalty
+          R = realized_R − α × max(0, ci_high − _RL_CI_HIGH_THRESHOLD) − β × drawdown_penalty
 
         Signature preserved for backward-compat with training loop callers.
         """

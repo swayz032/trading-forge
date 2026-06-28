@@ -4,7 +4,7 @@
  * Orchestrates all 5 institutional promotion gates for PAPER → DEPLOY_READY.
  *
  * Gates evaluated (AND logic — ALL must pass):
- *   1. B14 ci_high   — P(ruin) conservative bound < 0.40 (Wave 27.5 Pass B)
+ *   1. B14 ci_high   — P(ruin) conservative bound < 0.20 (tightened 2026-06-22; env B14_RUIN_CI_HIGH_THRESHOLD)
  *   2. WFE ≥ 0.80    — Walk-Forward Efficiency floor lifted from 0.70 (Pass E)
  *   3. CPCV n_paths ≥ 15 — minimum combinatorial paths for OOS confidence
  *   4. WRC p < 0.05  — White's Reality Check data-snooping guard
@@ -38,7 +38,7 @@
  */
 
 import { logger } from "./logger.js";
-import { evaluateB14CiGate } from "./b14-ci-gate.js";
+import { evaluateB14CiGate, getB14CiHighThreshold } from "./b14-ci-gate.js";
 import { evaluateWfeGate } from "./wfe-gate.js";
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -161,7 +161,7 @@ function evaluateB14Gate(data: StrategyPromotionData): GateResult {
     return {
       passed: grandfather,
       value: null,
-      threshold: 0.40,
+      threshold: getB14CiHighThreshold(), // reads env; default 0.20 (tightened 2026-06-22)
       reason: grandfather
         ? "b14.ci_high_unavailable — no MC run, fail-open (PROMOTION_GRANDFATHER_PRE_PASS_E=true)"
         : "b14.ci_high_unavailable — no MC run, fail-closed (missing evidence blocks promotion)",

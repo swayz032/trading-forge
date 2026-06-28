@@ -404,7 +404,10 @@ class TestTrainQuantumAgentRewardShape:
     """Reward formula: R = realized_R - α*max(0, ci_high - 0.40) - β*drawdown_penalty."""
 
     def test_reward_formula_explicit(self):
-        """Direct test of compute_shaped_reward with known inputs."""
+        """Direct test of compute_shaped_reward with known inputs.
+
+        Threshold is 0.20 (B14_RUIN_CI_HIGH_THRESHOLD default, tightened 2026-06-22).
+        """
         n = 10
         prices = _make_prices(n)
         features = _make_features(n)
@@ -419,20 +422,25 @@ class TestTrainQuantumAgentRewardShape:
         env.reset()
 
         # realized_R=1.0, ci_high=0.5, drawdown=0.0
-        # R = 1.0 - 0.5*max(0, 0.5 - 0.40) - 0.3*0.0
-        # R = 1.0 - 0.5*0.10 - 0 = 1.0 - 0.05 = 0.95
+        # _RL_CI_HIGH_THRESHOLD = 0.20 (env default, tightened from 0.40 on 2026-06-22)
+        # R = 1.0 - 0.5*max(0, 0.5 - 0.20) - 0.3*0.0
+        # R = 1.0 - 0.5*0.30 - 0 = 1.0 - 0.15 = 0.85
         shaped, ci_penalty, dd_penalty = env.compute_shaped_reward(
             realized_r=1.0,
             ci_high=0.5,
             drawdown_penalty=0.0,
         )
-        assert shaped == pytest.approx(0.95, abs=1e-9), (
-            f"Reward formula result {shaped} != expected 0.95. "
+        assert shaped == pytest.approx(0.85, abs=1e-9), (
+            f"Reward formula result {shaped} != expected 0.85 (threshold=0.20). "
             f"ci_penalty={ci_penalty}, dd_penalty={dd_penalty}"
         )
 
     def test_reward_formula_no_ci_penalty_when_ci_below_threshold(self):
-        """When ci_high < 0.40, ci_high penalty component is zero."""
+        """When ci_high < threshold (0.20), ci_high penalty component is zero.
+
+        Uses ci_high=0.10 which is clearly below the tightened 0.20 threshold
+        (previously tested 0.30 against old 0.40 threshold — updated 2026-06-22).
+        """
         n = 10
         prices = _make_prices(n)
         features = _make_features(n)
@@ -440,9 +448,9 @@ class TestTrainQuantumAgentRewardShape:
                          reward_alpha=0.5, reward_beta=0.3)
         env.reset()
         shaped, ci_penalty, dd_penalty = env.compute_shaped_reward(
-            realized_r=1.0, ci_high=0.30, drawdown_penalty=0.0
+            realized_r=1.0, ci_high=0.10, drawdown_penalty=0.0
         )
-        # ci_high=0.30 < threshold 0.40 → penalty=0
+        # ci_high=0.10 < threshold 0.20 → penalty=0
         assert ci_penalty == pytest.approx(0.0, abs=1e-9)
         assert shaped == pytest.approx(1.0, abs=1e-9)
 
@@ -454,9 +462,16 @@ class TestTrainQuantumAgentRewardShape:
         """Default beta comes from QUANTUM_RL_REWARD_BETA env (default 0.3)."""
         assert _RL_REWARD_BETA_DEFAULT == pytest.approx(0.3)
 
-    def test_ci_high_threshold_constant(self):
-        """_RL_CI_HIGH_THRESHOLD must match B14 0.40 threshold."""
-        assert _RL_CI_HIGH_THRESHOLD == pytest.approx(0.40)
+    def test_ci_high_threshold_tracks_env(self):
+        """_RL_CI_HIGH_THRESHOLD reads B14_RUIN_CI_HIGH_THRESHOLD env (default 0.20).
+
+        Tightened from 0.40 → 0.20 on 2026-06-22 to match production gate.
+        When B14_RUIN_CI_HIGH_THRESHOLD is not set in the test environment,
+        the module resolves to the 0.20 default.
+        """
+        import os
+        expected = float(os.environ.get("B14_RUIN_CI_HIGH_THRESHOLD", "0.20"))
+        assert _RL_CI_HIGH_THRESHOLD == pytest.approx(expected)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

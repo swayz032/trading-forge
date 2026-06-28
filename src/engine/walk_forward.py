@@ -278,6 +278,9 @@ def _run_walk_forward_cpcv(
     all_oos_pnls: list[float] = []
     all_oos_pnl_records: list[dict] = []
     all_oos_equity: list[float] = []
+    # Multi-model WRC/SPA: each path's daily P&L series tracked separately so
+    # whites_reality_check_multi / hansens_spa_multi can build the (L, T) matrix.
+    per_path_oos_pnls: list[list[float]] = []
 
     _shared_req = BacktestRequest(
         strategy=config,
@@ -389,7 +392,10 @@ def _run_walk_forward_cpcv(
         path_sharpes.append(float(path_result.get("sharpe_ratio", 0.0)))
         path_returns.append(float(path_result.get("total_return", 0.0)))
         all_oos_trades.extend(path_result.get("trades", []))
-        all_oos_pnls.extend(path_result.get("daily_pnls", []))
+        _path_daily_pnls = list(path_result.get("daily_pnls", []))
+        all_oos_pnls.extend(_path_daily_pnls)
+        # Track per-path series for multi-model WRC/SPA (White 2000 / Hansen 2005)
+        per_path_oos_pnls.append(_path_daily_pnls)
         all_oos_pnl_records.extend(path_result.get("daily_pnl_records", []))
         # equity_bars is raw float[] equity per bar; equity_curve is list[dict] (daily agg).
         # Use equity_bars for drawdown math to avoid dict → float cast error.
@@ -572,28 +578,80 @@ def _run_walk_forward_cpcv(
     except Exception as _cpcv_pbo_exc:
         print(f"  PBO (cpcv gate): computation failed ({_cpcv_pbo_exc}).", file=sys.stderr)
 
-    # ── WRC + SPA — data-snooping guard ──────────────────────────────────────
-    # Compute White's Reality Check and Hansen's SPA on the concatenated OOS
-    # daily P&L series.  Using OOS returns avoids IS contamination.
+    # ── WRC + SPA — multi-model data-snooping guard (White 2000 / Hansen 2005) ─
+    # Upgraded from single-series to proper multiple-comparison construction:
+    #   Model universe: the L = n_paths CPCV OOS series (each path is one "model")
+    #   Observed stat:  max_k(mean(excess_k)) — max mean excess return across paths
+    #   Bootstrap null: shared time-index resample applied to ALL L series jointly,
+    #                   preserving cross-path correlation
+    #   Šidák:          if n_total_trials > n_paths, inflate p for additional snooping
     #
-    # Statistical construction:
-    #   strategy_returns = all_oos_pnls   (concatenated OOS daily P&L in dollars)
-    #   benchmark_returns = zeros          (cash benchmark — tests positive edge over cash)
+    # This is the correct institutional construction: a single-series test is
+    # mathematically equivalent to a t-test on the mean and is blind to having
+    # selected the winner from L path candidates.  The multi-model null builds
+    # the distribution of the MAX statistic — not one series' mean — so a path
+    # that was lucky best-of-L gets a higher p-value than one with genuine
+    # positive edge on every fold.
     #
-    # This is the institutionally-correct construction for a single-strategy test.
-    # The null hypothesis (H0) is that the strategy's expected excess return over
-    # cash is ≤ 0 — i.e. that any observed positive P&L is data-snooping luck from
-    # the scout selection pipeline.  Rejecting H0 (p_value < 0.05) provides
-    # statistical evidence that the edge is real after multiple-testing adjustment
-    # via the stationary bootstrap.
-    #
-    # Fail-soft: when the OOS series is too short (< 20 observations) we emit
-    # {available: false, reason: "..."} rather than crashing or producing
-    # degenerate results.  DO NOT emit a fake passing p-value on insufficient data.
-    _WRC_MIN_OBS = 20  # floor below which the stationary bootstrap is unreliable
+    # Fail-soft: emit {available: false, reason} when insufficient data.
+    # NEVER emit a fake-passing p-value on insufficient data.
+    # Key contract: p_value and spa_consistent_p are preserved for TS gate.
+    _WRC_MIN_OBS = 20  # floor below which stationary bootstrap is unreliable
     _cpcv_wrc_result: dict = {}
     _cpcv_spa_result: dict = {}
-    if len(all_oos_pnls) >= _WRC_MIN_OBS:
+    _rng_seed_cpcv = int(os.environ.get("BACKTEST_SEED", "42"))
+    # Paths with sufficient data to participate in the multi-model bootstrap
+    _eligible_paths = [p for p in per_path_oos_pnls if len(p) >= _WRC_MIN_OBS]
+    if len(_eligible_paths) >= 2:
+        try:
+            from src.engine.statistics.hansens_spa import (
+                hansens_spa_multi as _spa_multi,
+            )
+            from src.engine.statistics.whites_reality_check import (
+                whites_reality_check_multi as _wrc_multi,
+            )
+            # Truncate all paths to minimum length so the matrix is rectangular.
+            # Using min-length avoids padding artifacts; shorter paths typically
+            # arise from CPCV embargo stripping at fold boundaries (small loss).
+            _min_path_len = min(len(p) for p in _eligible_paths)
+            _perf_matrix = np.array(
+                [p[:_min_path_len] for p in _eligible_paths], dtype=float
+            )  # (L, T)
+            _bench_matrix = np.zeros_like(_perf_matrix)
+            _cpcv_wrc_result = _wrc_multi(
+                performance_matrix=_perf_matrix,
+                benchmark_matrix=_bench_matrix,
+                n_total_trials=_trial_n_total,
+                k_eff=n_paths,
+                rng_seed=_rng_seed_cpcv,
+            )
+            _cpcv_spa_result = _spa_multi(
+                performance_matrix=_perf_matrix,
+                benchmark_matrix=_bench_matrix,
+                n_total_trials=_trial_n_total,
+                k_eff=n_paths,
+                rng_seed=_rng_seed_cpcv + 1,
+            )
+            print(
+                f"  WRC multi (CPCV): p={_cpcv_wrc_result.get('p_value', 'N/A'):.4f} "
+                f"{'PASS' if _cpcv_wrc_result.get('passed') else 'FAIL'} | "
+                f"SPA consistent_p={_cpcv_spa_result.get('spa_consistent_p', 'N/A'):.4f} "
+                f"{'PASS' if _cpcv_spa_result.get('passed') else 'FAIL'} "
+                f"(n_models={len(_eligible_paths)}, T={_min_path_len}, "
+                f"n_total={_trial_n_total}, sidak={_cpcv_wrc_result.get('sidak_adjusted')})",
+                file=sys.stderr,
+            )
+        except Exception as _cpcv_wrc_exc:
+            print(
+                f"  WRC/SPA multi (CPCV): computation failed ({_cpcv_wrc_exc!r}) — "
+                f"emitting available=false (non-blocking).",
+                file=sys.stderr,
+            )
+            _cpcv_wrc_result = {"available": False, "reason": str(_cpcv_wrc_exc)}
+            _cpcv_spa_result = {"available": False, "reason": str(_cpcv_wrc_exc)}
+    elif len(all_oos_pnls) >= _WRC_MIN_OBS:
+        # Fallback: < 2 eligible paths but concatenated series is long enough.
+        # Use single-series (backward-compat); no multi-model correction possible.
         try:
             from src.engine.statistics.hansens_spa import hansens_spa as _spa_fn
             from src.engine.statistics.whites_reality_check import (
@@ -603,29 +661,29 @@ def _run_walk_forward_cpcv(
             _cpcv_wrc_result = _wrc_fn(
                 strategy_returns=all_oos_pnls,
                 benchmark_returns=_benchmark_zeros,
-                rng_seed=int(os.environ.get("BACKTEST_SEED", "42")),
+                rng_seed=_rng_seed_cpcv,
             )
             _cpcv_spa_result = _spa_fn(
                 strategy_returns=all_oos_pnls,
                 benchmark_returns=_benchmark_zeros,
-                rng_seed=int(os.environ.get("BACKTEST_SEED", "42")) + 1,
+                rng_seed=_rng_seed_cpcv + 1,
             )
             print(
-                f"  WRC (CPCV): p={_cpcv_wrc_result.get('p_value', 'N/A'):.4f} "
+                f"  WRC single (CPCV fallback, <2 eligible paths): "
+                f"p={_cpcv_wrc_result.get('p_value', 'N/A'):.4f} "
                 f"{'PASS' if _cpcv_wrc_result.get('passed') else 'FAIL'} | "
                 f"SPA consistent_p={_cpcv_spa_result.get('spa_consistent_p', 'N/A'):.4f} "
-                f"{'PASS' if _cpcv_spa_result.get('passed') else 'FAIL'} "
                 f"(n_obs={len(all_oos_pnls)})",
                 file=sys.stderr,
             )
-        except Exception as _cpcv_wrc_exc:
+        except Exception as _cpcv_wrc_exc2:
             print(
-                f"  WRC/SPA (CPCV): computation failed ({_cpcv_wrc_exc!r}) — "
+                f"  WRC/SPA single (CPCV fallback): computation failed ({_cpcv_wrc_exc2!r}) — "
                 f"emitting available=false (non-blocking).",
                 file=sys.stderr,
             )
-            _cpcv_wrc_result = {"available": False, "reason": str(_cpcv_wrc_exc)}
-            _cpcv_spa_result = {"available": False, "reason": str(_cpcv_wrc_exc)}
+            _cpcv_wrc_result = {"available": False, "reason": str(_cpcv_wrc_exc2)}
+            _cpcv_spa_result = {"available": False, "reason": str(_cpcv_wrc_exc2)}
     else:
         _insufficient_reason = (
             f"insufficient OOS observations: {len(all_oos_pnls)} < {_WRC_MIN_OBS} minimum"
@@ -883,6 +941,9 @@ def run_walk_forward(
     # WF Fix 1: bar-level equity accumulator for intraday max DD computation.
     all_oos_equity_bars: list[float] = []
     all_oos_trades: list[dict] = []
+    # Multi-model WRC/SPA: per-window deduplicated P&L series (same dedup applied
+    # in accumulation below) so the (L, T) matrix reflects what was actually added.
+    per_window_oos_pnls: list[list[float]] = []
     # WFE accumulators — collect IS daily P&Ls for combined-fold IS Sharpe.
     # We run a lightweight IS backtest (no optimization, fixed config) so we
     # can compute WFE = combined_OOS_Sharpe / combined_IS_Sharpe.
@@ -1154,6 +1215,8 @@ def run_walk_forward(
         # result is to add nothing (empty list), not to re-add the raw un-deduped data.
         _deduped_pnls = [r.get("pnl", 0.0) for r in _deduped_records]
         all_oos_pnls.extend(_deduped_pnls if len(_deduped_pnls) > 0 else [])
+        # Track per-window deduplicated series for multi-model WRC/SPA.
+        per_window_oos_pnls.append(list(_deduped_pnls))
         all_oos_equity.extend(oos_result.get("equity_curve", []))
         # WF Fix 1: collect raw bar-level equity for accurate intraday max DD.
         # equity_bars is a list[float] of bar-level equity values from the backtest result.
@@ -1565,17 +1628,66 @@ def run_walk_forward(
             file=sys.stderr,
         )
 
-    # ── WRC + SPA — data-snooping guard (plain/purged_embargo WF) ───────────
-    # Same statistical construction as the CPCV path: concatenated OOS daily
-    # P&Ls vs. a cash benchmark (zeros).  The stationary bootstrap handles
-    # serial autocorrelation in the daily P&L series.
-    #
-    # Fail-soft on insufficient data or computation errors — emit
-    # {available: false, reason: ...} rather than crashing or fabricating a p-value.
+    # ── WRC + SPA — multi-model data-snooping guard (plain/purged_embargo WF) ─
+    # Upgraded to proper multiple-comparison construction (White 2000 / Hansen 2005).
+    # Model universe: each WF window is one "model" (its OOS P&L series).
+    # k_eff = len(windows) — each window is an independent IS/OOS draw.
+    # n_total_trials from request.trial_n_total applies Šidák for scout snooping.
+    # Fail-soft on insufficient data — NEVER a fake passing p-value.
     _WRC_MIN_OBS_PLAIN = 20
     _plain_wrc_result: dict = {}
     _plain_spa_result: dict = {}
-    if len(all_oos_pnls) >= _WRC_MIN_OBS_PLAIN:
+    _rng_seed_plain = int(os.environ.get("BACKTEST_SEED", "42"))
+    _trial_n_total_plain: int = max(1, getattr(request, "trial_n_total", 1))
+    _k_eff_plain: int = max(len(windows), 1)
+    # Windows with sufficient deduplicated OOS P&L series
+    _eligible_windows = [p for p in per_window_oos_pnls if len(p) >= _WRC_MIN_OBS_PLAIN]
+    if len(_eligible_windows) >= 2:
+        try:
+            from src.engine.statistics.hansens_spa import (
+                hansens_spa_multi as _spa_multi_plain,
+            )
+            from src.engine.statistics.whites_reality_check import (
+                whites_reality_check_multi as _wrc_multi_plain,
+            )
+            _min_window_len = min(len(w) for w in _eligible_windows)
+            _perf_matrix_plain = np.array(
+                [w[:_min_window_len] for w in _eligible_windows], dtype=float
+            )  # (L, T)
+            _bench_matrix_plain = np.zeros_like(_perf_matrix_plain)
+            _plain_wrc_result = _wrc_multi_plain(
+                performance_matrix=_perf_matrix_plain,
+                benchmark_matrix=_bench_matrix_plain,
+                n_total_trials=_trial_n_total_plain,
+                k_eff=_k_eff_plain,
+                rng_seed=_rng_seed_plain,
+            )
+            _plain_spa_result = _spa_multi_plain(
+                performance_matrix=_perf_matrix_plain,
+                benchmark_matrix=_bench_matrix_plain,
+                n_total_trials=_trial_n_total_plain,
+                k_eff=_k_eff_plain,
+                rng_seed=_rng_seed_plain + 1,
+            )
+            print(
+                f"  WRC multi (plain): p={_plain_wrc_result.get('p_value', 'N/A'):.4f} "
+                f"{'PASS' if _plain_wrc_result.get('passed') else 'FAIL'} | "
+                f"SPA consistent_p={_plain_spa_result.get('spa_consistent_p', 'N/A'):.4f} "
+                f"{'PASS' if _plain_spa_result.get('passed') else 'FAIL'} "
+                f"(n_models={len(_eligible_windows)}, T={_min_window_len}, "
+                f"n_total={_trial_n_total_plain}, sidak={_plain_wrc_result.get('sidak_adjusted')})",
+                file=sys.stderr,
+            )
+        except Exception as _plain_wrc_exc:
+            print(
+                f"  WRC/SPA multi (plain): computation failed ({_plain_wrc_exc!r}) — "
+                f"emitting available=false (non-blocking).",
+                file=sys.stderr,
+            )
+            _plain_wrc_result = {"available": False, "reason": str(_plain_wrc_exc)}
+            _plain_spa_result = {"available": False, "reason": str(_plain_wrc_exc)}
+    elif len(all_oos_pnls) >= _WRC_MIN_OBS_PLAIN:
+        # Fallback: < 2 eligible windows but concatenated series is long enough.
         try:
             from src.engine.statistics.hansens_spa import hansens_spa as _spa_fn_plain
             from src.engine.statistics.whites_reality_check import (
@@ -1585,29 +1697,28 @@ def run_walk_forward(
             _plain_wrc_result = _wrc_fn_plain(
                 strategy_returns=all_oos_pnls,
                 benchmark_returns=_bm_zeros_plain,
-                rng_seed=int(os.environ.get("BACKTEST_SEED", "42")),
+                rng_seed=_rng_seed_plain,
             )
             _plain_spa_result = _spa_fn_plain(
                 strategy_returns=all_oos_pnls,
                 benchmark_returns=_bm_zeros_plain,
-                rng_seed=int(os.environ.get("BACKTEST_SEED", "42")) + 1,
+                rng_seed=_rng_seed_plain + 1,
             )
             print(
-                f"  WRC (plain): p={_plain_wrc_result.get('p_value', 'N/A'):.4f} "
-                f"{'PASS' if _plain_wrc_result.get('passed') else 'FAIL'} | "
-                f"SPA consistent_p={_plain_spa_result.get('spa_consistent_p', 'N/A'):.4f} "
-                f"{'PASS' if _plain_spa_result.get('passed') else 'FAIL'} "
+                f"  WRC single (plain fallback, <2 eligible windows): "
+                f"p={_plain_wrc_result.get('p_value', 'N/A'):.4f} "
+                f"{'PASS' if _plain_wrc_result.get('passed') else 'FAIL'} "
                 f"(n_obs={len(all_oos_pnls)})",
                 file=sys.stderr,
             )
-        except Exception as _plain_wrc_exc:
+        except Exception as _plain_wrc_exc2:
             print(
-                f"  WRC/SPA (plain): computation failed ({_plain_wrc_exc!r}) — "
+                f"  WRC/SPA single (plain fallback): computation failed ({_plain_wrc_exc2!r}) — "
                 f"emitting available=false (non-blocking).",
                 file=sys.stderr,
             )
-            _plain_wrc_result = {"available": False, "reason": str(_plain_wrc_exc)}
-            _plain_spa_result = {"available": False, "reason": str(_plain_wrc_exc)}
+            _plain_wrc_result = {"available": False, "reason": str(_plain_wrc_exc2)}
+            _plain_spa_result = {"available": False, "reason": str(_plain_wrc_exc2)}
     else:
         _plain_insufficient = (
             f"insufficient OOS observations: {len(all_oos_pnls)} < {_WRC_MIN_OBS_PLAIN} minimum"

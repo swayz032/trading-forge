@@ -1,4 +1,4 @@
-"""Wave 26 Pass G Pass E — Hansen's SPA tests.
+"""Wave 26 Pass G Pass E + 2026-06-28 multi-model upgrade — Hansen's SPA tests.
 
 Covers:
   - Output schema: all three p-values + metadata present
@@ -10,6 +10,11 @@ Covers:
   - Input validation: length mismatch, dimensionality
   - Env var threshold override
   - SPA is at least as powerful as WRC (spa_consistent_p <= spa_lower_p)
+  - 2026-06-28 bug fix: shared time-index per bootstrap iteration (was 3×independent)
+  - Multi-model (hansens_spa_multi): genuine edge → low spa_consistent_p
+  - Multi-model: SPA more powerful than WRC on dominated-model fixture
+  - Multi-model: Šidák inflation, schema, determinism
+  - Multi-model: gate key spa_consistent_p present and gate-ready
 """
 
 from __future__ import annotations
@@ -20,11 +25,14 @@ import numpy as np
 import pytest
 
 from src.engine.statistics.hansens_spa import (
-    hansens_spa,
     get_spa_p_threshold,
+    hansens_spa,
+    hansens_spa_multi,
 )
-from src.engine.statistics.whites_reality_check import whites_reality_check
-
+from src.engine.statistics.whites_reality_check import (
+    whites_reality_check,
+    whites_reality_check_multi,
+)
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -224,3 +232,218 @@ class TestSpaEnvVarOverride:
                 os.environ.pop("SPA_P_VALUE_THRESHOLD", None)
             else:
                 os.environ["SPA_P_VALUE_THRESHOLD"] = original
+
+
+# ── Multi-model SPA tests (hansens_spa_multi) ─────────────────────────────────
+
+
+def _make_positive_matrix(n_models: int = 5, T: int = 500, mean: float = 0.004, seed: int = 0) -> np.ndarray:
+    """All L models have consistently positive mean excess return."""
+    rng = np.random.default_rng(seed)
+    return rng.normal(mean, 0.01, (n_models, T))
+
+
+def _make_dominated_matrix(T: int = 500, seed: int = 0) -> np.ndarray:
+    """1 strong positive model + 4 dominated (clearly negative) models.
+
+    SPA consistent recentering down-weights dominated models → SPA consistent_p
+    should be lower than WRC p (SPA is more powerful in this configuration).
+    """
+    rng = np.random.default_rng(seed)
+    winner = rng.normal(0.004, 0.01, (1, T))
+    dominated = rng.normal(-0.006, 0.01, (4, T))
+    return np.vstack([winner, dominated])
+
+
+class TestSpaMultiModel:
+    """Multi-model Hansen's SPA — studentised construction with consistent recentering."""
+
+    # ── Schema tests ─────────────────────────────────────────────────────────
+
+    def test_output_schema_complete(self):
+        """All documented keys present in multi-model SPA result."""
+        matrix = _make_positive_matrix(5, 200)
+        bench = np.zeros_like(matrix)
+        result = hansens_spa_multi(matrix, bench, n_bootstrap=100, rng_seed=0)
+        required = {
+            "spa_consistent_p", "spa_lower_p", "spa_upper_p",
+            "spa_consistent_p_raw", "spa_lower_p_raw", "spa_upper_p_raw",
+            "passed", "threshold", "n_models", "n_total_trials", "k_eff",
+            "sidak_adjusted", "test_stat_studentized", "mean_excess_return",
+            "n_obs", "n_bootstrap", "block_length",
+        }
+        missing = required - set(result.keys())
+        assert not missing, f"Missing keys: {missing}"
+
+    def test_all_p_values_in_unit_interval(self):
+        matrix = _make_positive_matrix(4, 200)
+        result = hansens_spa_multi(matrix, np.zeros_like(matrix), n_bootstrap=100)
+        for key in ("spa_lower_p", "spa_consistent_p", "spa_upper_p"):
+            assert 0.0 <= result[key] <= 1.0, f"{key}={result[key]} not in [0,1]"
+
+    def test_n_models_matches_rows(self):
+        matrix = _make_positive_matrix(6, 200)
+        result = hansens_spa_multi(matrix, np.zeros_like(matrix), n_bootstrap=50)
+        assert result["n_models"] == 6
+
+    def test_passed_reflects_spa_consistent_p(self):
+        """passed must be True iff spa_consistent_p < threshold."""
+        matrix = _make_positive_matrix(5, 500, mean=0.005, seed=42)
+        result = hansens_spa_multi(matrix, np.zeros_like(matrix), n_bootstrap=2000, rng_seed=42)
+        assert result["passed"] == (result["spa_consistent_p"] < result["threshold"])
+
+    def test_gate_key_is_spa_consistent_p(self):
+        """spa_consistent_p must be present — it is the TS gate contract key."""
+        matrix = _make_positive_matrix(3, 200)
+        result = hansens_spa_multi(matrix, np.zeros_like(matrix), n_bootstrap=100)
+        assert "spa_consistent_p" in result, "Gate contract key spa_consistent_p must be present"
+        assert isinstance(result["spa_consistent_p"], float)
+
+    # ── Determinism ──────────────────────────────────────────────────────────
+
+    def test_deterministic_same_seed(self):
+        """Same inputs + same seed → identical results."""
+        matrix = _make_positive_matrix(5, 300)
+        bench = np.zeros_like(matrix)
+        r1 = hansens_spa_multi(matrix, bench, n_bootstrap=200, rng_seed=55)
+        r2 = hansens_spa_multi(matrix, bench, n_bootstrap=200, rng_seed=55)
+        assert r1["spa_consistent_p"] == r2["spa_consistent_p"]
+        assert r1["spa_lower_p"] == r2["spa_lower_p"]
+        assert r1["spa_upper_p"] == r2["spa_upper_p"]
+        assert r1["test_stat_studentized"] == r2["test_stat_studentized"]
+
+    # ── Known-answer tests ────────────────────────────────────────────────────
+
+    def test_genuine_edge_across_all_paths_passes(self):
+        """All L paths with genuine positive mean → spa_consistent_p < 0.05."""
+        matrix = _make_positive_matrix(5, 500, mean=0.005, seed=42)
+        bench = np.zeros_like(matrix)
+        result = hansens_spa_multi(matrix, bench, n_bootstrap=2000, rng_seed=42)
+        assert result["passed"] is True, (
+            f"Expected passed=True for genuine multi-path edge, "
+            f"got spa_consistent_p={result['spa_consistent_p']}"
+        )
+        assert result["spa_consistent_p"] < 0.05
+
+    def test_all_zero_mean_does_not_pass(self):
+        """L paths with zero mean → H0 is true → spa_consistent_p near 0.5."""
+        rng = np.random.default_rng(88)
+        matrix = rng.normal(0.0, 0.01, (5, 500))
+        result = hansens_spa_multi(matrix, np.zeros_like(matrix), n_bootstrap=2000, rng_seed=88)
+        assert result["passed"] is False
+        assert result["spa_consistent_p"] >= 0.10
+
+    def test_all_negative_mean_does_not_pass(self):
+        """All L paths have negative mean → spa_consistent_p high → passed=False."""
+        rng = np.random.default_rng(7)
+        matrix = rng.normal(-0.005, 0.01, (5, 500))
+        result = hansens_spa_multi(matrix, np.zeros_like(matrix), n_bootstrap=500, rng_seed=7)
+        assert result["passed"] is False
+        assert result["spa_consistent_p"] >= 0.30
+
+    # ── SPA more powerful than WRC on dominated fixture ──────────────────────
+
+    def test_spa_consistent_more_powerful_than_wrc_on_dominated_paths(self):
+        """On a dominated-model fixture, SPA consistent p <= WRC p (SPA more powerful).
+
+        When 4 of 5 models clearly underperform (negative mean), the WRC null
+        is inflated by their bootstrap variance.  SPA consistent recentering
+        removes them from the null → smaller p → more power to detect the winner's edge.
+
+        We test: spa_consistent_p_raw <= wrc_p_raw (before Šidák) for this fixture.
+        """
+        matrix = _make_dominated_matrix(T=500, seed=20)
+        bench = np.zeros_like(matrix)
+        spa_result = hansens_spa_multi(matrix, bench, n_bootstrap=1000, rng_seed=20,
+                                       n_total_trials=5, k_eff=5)
+        wrc_result = whites_reality_check_multi(matrix, bench, n_bootstrap=1000, rng_seed=20,
+                                                n_total_trials=5, k_eff=5)
+        # SPA consistent should have lower or equal p_raw vs WRC (more powerful)
+        # Allow 0.05 tolerance for bootstrap variance
+        assert spa_result["spa_consistent_p_raw"] <= wrc_result["p_value_raw"] + 0.05, (
+            f"SPA consistent_p_raw ({spa_result['spa_consistent_p_raw']:.4f}) should be <= "
+            f"WRC p_value_raw ({wrc_result['p_value_raw']:.4f}) + 0.05 on dominated fixture"
+        )
+
+    def test_p_value_ordering_lower_geq_consistent_geq_upper(self):
+        """p-value ordering: lower >= consistent >= upper (most to least conservative)."""
+        matrix = _make_positive_matrix(5, 400, mean=0.003, seed=30)
+        result = hansens_spa_multi(matrix, np.zeros_like(matrix), n_bootstrap=800, rng_seed=30)
+        # Ordering is approximate due to bootstrap variance; allow 0.10 tolerance
+        assert result["spa_upper_p"] - 0.10 <= result["spa_consistent_p"], (
+            f"spa_consistent_p ({result['spa_consistent_p']:.4f}) should be >= "
+            f"spa_upper_p ({result['spa_upper_p']:.4f}) - 0.10"
+        )
+        assert result["spa_consistent_p"] <= result["spa_lower_p"] + 0.10, (
+            f"spa_consistent_p ({result['spa_consistent_p']:.4f}) should be <= "
+            f"spa_lower_p ({result['spa_lower_p']:.4f}) + 0.10"
+        )
+
+    # ── Šidák multiplicity correction ────────────────────────────────────────
+
+    def test_sidak_not_applied_when_n_total_equals_k_eff(self):
+        """n_total == k_eff → no Šidák → spa_consistent_p == spa_consistent_p_raw."""
+        matrix = _make_positive_matrix(5, 300, mean=0.002)
+        result = hansens_spa_multi(
+            matrix, np.zeros_like(matrix), n_bootstrap=300, rng_seed=1,
+            n_total_trials=5, k_eff=5,
+        )
+        assert result["sidak_adjusted"] is False
+        assert result["spa_consistent_p"] == result["spa_consistent_p_raw"]
+
+    def test_sidak_inflates_spa_consistent_p_when_n_total_much_greater(self):
+        """n_total >> k_eff → spa_consistent_p > spa_consistent_p_raw (Šidák applied)."""
+        matrix = _make_positive_matrix(5, 300, mean=0.002, seed=5)
+        result = hansens_spa_multi(
+            matrix, np.zeros_like(matrix), n_bootstrap=300, rng_seed=5,
+            n_total_trials=300, k_eff=5,  # 60× more trials than paths
+        )
+        assert result["sidak_adjusted"] is True
+        assert result["spa_consistent_p"] >= result["spa_consistent_p_raw"], (
+            f"Šidák should inflate p: consistent_p={result['spa_consistent_p']} "
+            f">= consistent_p_raw={result['spa_consistent_p_raw']}"
+        )
+
+    def test_sidak_cannot_push_p_above_1(self):
+        """Šidák-adjusted spa_consistent_p is capped at 1.0."""
+        rng = np.random.default_rng(0)
+        matrix = rng.normal(0.0, 0.01, (3, 200))  # null case
+        result = hansens_spa_multi(
+            matrix, np.zeros_like(matrix), n_bootstrap=100, rng_seed=0,
+            n_total_trials=10**6, k_eff=1,
+        )
+        assert result["spa_consistent_p"] <= 1.0
+        assert result["spa_lower_p"] <= 1.0
+        assert result["spa_upper_p"] <= 1.0
+
+    # ── Input validation ──────────────────────────────────────────────────────
+
+    def test_invalid_ndim_raises(self):
+        with pytest.raises(ValueError, match="2-D"):
+            hansens_spa_multi(np.zeros((5, 10, 3)), np.zeros((5, 10, 3)))
+
+    def test_shape_mismatch_raises(self):
+        with pytest.raises(ValueError, match="Shape mismatch"):
+            hansens_spa_multi(np.zeros((5, 100)), np.zeros((5, 90)))
+
+    def test_too_few_time_periods_raises(self):
+        with pytest.raises(ValueError, match="at least 2"):
+            hansens_spa_multi(np.zeros((3, 1)), np.zeros((3, 1)))
+
+    # ── Benchmark broadcast ───────────────────────────────────────────────────
+
+    def test_1d_benchmark_broadcast_to_all_models(self):
+        """(T,) benchmark is broadcast to (L, T) — no error."""
+        matrix = _make_positive_matrix(4, 200)
+        result = hansens_spa_multi(matrix, np.zeros(200), n_bootstrap=100)
+        assert isinstance(result["spa_consistent_p"], float)
+
+    # ── Single-row backward-compat ────────────────────────────────────────────
+
+    def test_1d_input_treated_as_1_model(self):
+        """1-D input is reshaped to (1, T)."""
+        rng = np.random.default_rng(3)
+        series = rng.normal(0.003, 0.01, 300)
+        result = hansens_spa_multi(series, np.zeros(300), n_bootstrap=100)
+        assert result["n_models"] == 1
+        assert isinstance(result["spa_consistent_p"], float)
