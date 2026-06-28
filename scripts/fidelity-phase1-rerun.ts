@@ -32,6 +32,7 @@ for (const { id, dir } of SIX) {
   });
   if (r.compiled) {
     console.log(`${id.padEnd(13)} COMPILE  ${r.compiled.kind.padEnd(16)} level=${String(r.compiled.level_ref).padEnd(18)} conf=${r.compiled.confluence ?? "-"}`);
+    console.log(`              scl=${r.scl} edge=${r.edge_specificity} pred=${r.predicate_specificity} legs=${r.multi_leg_gap}`);
     console.log(`              quote: "${r.compiled.evidence_quote.slice(0, 110)}"`);
     // enriched payload for re-grade = original compiled logic + the explicit confirmation predicate
     const enriched = { ...idea, _phase1_confirmation: r.compiled };

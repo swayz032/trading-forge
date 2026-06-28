@@ -13,6 +13,16 @@
  */
 
 import { toWindows } from "./text-windows.js";
+import {
+  triggerFeaturesFromText,
+  triggerSpecificity,
+  predicateLevelIsNamed,
+  maxFeatures,
+  computeScl,
+  sclMaxTolerance,
+  sclGateEnabled,
+  type TriggerFeatures,
+} from "./specificity-score.js";
 
 export type ConfirmationKind = "close_through" | "structure_shift" | "retest_reject" | "displacement";
 
@@ -20,7 +30,8 @@ export type ConfirmationQuarantineReason =
   | "no_confirmation_event" // educator stated no confirmation (or extraction lost it)
   | "confirmation_would_overfire" // only a passive touch/tap present — compiling it would over-fire
   | "confirmation_no_level" // active confirmation but no anchor level identifiable
-  | "confirmation_unmapped"; // confirmation language present but not mappable to a primitive
+  | "confirmation_unmapped" // confirmation language present but not mappable to a primitive
+  | "semantic_compression_loss"; // Phase 2A — compiled predicate dropped too much edge specificity (SCL gate)
 
 export type LevelRef =
   | "opening_range_edge" | "opening_price" | "prior_swing" | "order_block"
@@ -42,6 +53,12 @@ export interface ConfirmationPredicate {
 export interface ConfirmationResult {
   compiled: ConfirmationPredicate | null;
   quarantine_reason: ConfirmationQuarantineReason | null;
+  /** Phase 2A telemetry — populated whenever a candidate was selected (compiled OR SCL-quarantined). */
+  scl?: number; // Semantic Compression Loss: triggerSpecificity(edge) − triggerSpecificity(predicate)
+  edge_specificity?: number;
+  predicate_specificity?: number;
+  /** Phase 2B target — ordered legs in the source beyond the single compiled predicate (advisory, not gated in 2A). */
+  multi_leg_gap?: number;
 }
 
 export interface ConfirmationInput {
@@ -99,7 +116,11 @@ function buildDirectionalRule(level: LevelRef | null, directionClass: string | n
 
 /**
  * Compile the educator's confirmation event into a testable predicate, or a quarantine reason.
- * Priority: structure_shift > close_through > retest_reject > displacement. Pure, deterministic.
+ *
+ * Phase 2A: selection is SPECIFICITY-RANKED (not fixed kind-rank). The compiler prefers the most
+ * SPECIFIC trigger present (named level + confluence + rare pattern + intent), so a retest@OR-low+FVG
+ * outranks a generic structure_shift@prior_swing — fixing the dominant SELECTION failure. A final SCL
+ * gate quarantines the compile if even the best predicate dropped too much edge specificity. Pure.
  */
 export function compileConfirmation(input: ConfirmationInput): ConfirmationResult {
   const parts: string[] = [];
@@ -112,16 +133,19 @@ export function compileConfirmation(input: ConfirmationInput): ConfirmationResul
 
   let anyActive = false;
   let anyPassive = false;
-  // Scan sentence-by-sentence so the level binds LOCALLY to the confirmation (avoids the cross-sentence
-  // mis-binding the param scanner had to guard against).
   let best: ConfirmationPredicate | null = null;
   let bestScore = -1;
+  // Edge ceiling = max specificity among windows that produced a CANDIDATE (the trigger neighborhood),
+  // NOT the whole transcript — a long explainer video mentions FVG/OB/displacement as teaching concepts
+  // that aren't the trigger; counting them over-quarantines faithful compiles. SCL then measures
+  // SELECTION loss (did we pick the most specific available trigger?), not explainer richness.
+  let edgeFeatures: TriggerFeatures = { named_level: false, timeframe_specific: false, confluence_count: 0, rare_pattern: false };
+  // kind-rank is now only a small TIE-BREAK at equal specificity (was the dominant selector — the bug).
   const rank = (k: ConfirmationKind) => ({ structure_shift: 4, close_through: 3, retest_reject: 2, displacement: 1 }[k]);
-  // Prefer the sentence that actually STATES the entry confirmation (has entry-intent + a level),
-  // not an intro/context sentence that merely mentions the keyword.
   const INTENT_RE = /\b(enter|entry|confirm|confirmation|qualif|trigger|signal|wait for|we (?:go|take)|look to (?:enter|buy|sell|take))\b/i;
+  const windows = toWindows(corpus);
 
-  for (const sent of toWindows(corpus)) {
+  for (const sent of windows) {
     const hasStructure = STRUCTURE_SHIFT_RE.test(sent);
     const hasClose = ACTIVE_CLOSE_RE.test(sent);
     const hasRetest = RETEST_RE.test(sent);
@@ -131,30 +155,67 @@ export function compileConfirmation(input: ConfirmationInput): ConfirmationResul
     if (hasPassive) anyPassive = true;
 
     const level = findLevel(sent);
-    let cand: ConfirmationPredicate | null = null;
-    if (hasStructure) cand = { kind: "structure_shift", level_ref: level ?? "prior_swing", evidence_quote: sent.slice(0, 180), directional_rule: buildDirectionalRule(level ?? "prior_swing", input.direction_class) };
-    else if (hasClose) cand = { kind: "close_through", level_ref: level, evidence_quote: sent.slice(0, 180), directional_rule: buildDirectionalRule(level, input.direction_class) };
-    else if (hasRetest && hasRejection) cand = { kind: "retest_reject", level_ref: level, confluence, evidence_quote: sent.slice(0, 180) };
-    else if (hasDisplacement) cand = { kind: "displacement", level_ref: level, evidence_quote: sent.slice(0, 180) };
+    const winFeatures = triggerFeaturesFromText(sent);
+    const hasConfluenceHere = winFeatures.confluence_count > 0 || Boolean(confluence);
+    // retest_reject carries a confluence — credit FVG named in THIS window (not just input.confluences).
+    const windowConfluence = /\b(fair value gap|\bfvg\b)\b/i.test(sent) ? "fair_value_gap" : confluence;
+    // Phase 2A: emit EVERY matching kind as a COMPETING candidate (no fixed structure→close→retest
+    // precedence). A window mentioning both a structure word AND a retest+FVG must let the more specific
+    // retest interpretation compete — the old if-else discarded it before specificity ranking (the yAMaiOI bug).
+    const cands: ConfirmationPredicate[] = [];
+    if (hasStructure) cands.push({ kind: "structure_shift", level_ref: level ?? "prior_swing", evidence_quote: sent.slice(0, 180), directional_rule: buildDirectionalRule(level ?? "prior_swing", input.direction_class) });
+    if (hasClose) cands.push({ kind: "close_through", level_ref: level, evidence_quote: sent.slice(0, 180), directional_rule: buildDirectionalRule(level, input.direction_class) });
+    if (hasRetest && (hasRejection || hasConfluenceHere || INTENT_RE.test(sent))) cands.push({ kind: "retest_reject", level_ref: level, confluence: windowConfluence, evidence_quote: sent.slice(0, 180) });
+    if (hasDisplacement) cands.push({ kind: "displacement", level_ref: level, evidence_quote: sent.slice(0, 180) });
 
-    if (cand) {
+    for (const cand of cands) {
       anyActive = true;
-      // Quote-quality score: kind rank dominates, then prefer a sentence with an explicit level +
-      // entry-intent (the canonical confirmation sentence over a keyword-only intro).
-      const score = rank(cand.kind) * 10 + (level ? 3 : 0) + (INTENT_RE.test(sent) ? 2 : 0);
+      // INTRINSIC specificity: score the candidate by what THE PREDICATE encodes (its resolved level,
+      // its own confluence, its kind's rarity) — NOT ambient co-located text. A punctuation-less run-on
+      // window lumps structure words next to unrelated levels/confluences; crediting that ambient text
+      // let a generic structure_shift inherit richness it doesn't encode (the yAMaiOI mis-rank).
+      const candFeatures: TriggerFeatures = {
+        named_level: predicateLevelIsNamed(cand.level_ref),
+        timeframe_specific: winFeatures.timeframe_specific,
+        confluence_count: cand.confluence ? 1 : 0,
+        rare_pattern: cand.kind === "displacement" || (cand.kind === "retest_reject" && /\bbreaker\b/i.test(sent)),
+      };
+      edgeFeatures = maxFeatures(edgeFeatures, candFeatures); // ceiling over candidate-bearing windows
+      // SPECIFICITY-ranked selection: trigger-specificity dominates; kind-rank is a sub-unit tie-break;
+      // entry-intent a final nudge. The most specific trigger present wins.
+      const score = triggerSpecificity(candFeatures) * 100 + rank(cand.kind) * 5 + (INTENT_RE.test(sent) ? 1 : 0);
       if (score > bestScore) { best = cand; bestScore = score; }
     }
   }
 
   // FAIL-CLOSED decision table (design §4).
   if (!best) {
-    // No active confirmation. If only passive touches were present → compiling would over-fire.
     return { compiled: null, quarantine_reason: anyPassive ? "confirmation_would_overfire" : "no_confirmation_event" };
   }
-  // structure_shift defaults its level to prior_swing; the others REQUIRE an explicit level (no level → quarantine).
   if (best.kind !== "structure_shift" && best.kind !== "displacement" && !best.level_ref) {
     return { compiled: null, quarantine_reason: "confirmation_no_level" };
   }
   void anyActive;
-  return { compiled: best, quarantine_reason: null };
+
+  // ── Phase 2A SCL gate ─────────────────────────────────────────────────────
+  // edgeFeatures already accumulated over candidate-bearing windows (the trigger neighborhood).
+  if (confluence) edgeFeatures.confluence_count = Math.max(edgeFeatures.confluence_count, 1);
+  // predicate captured = the chosen predicate's INTRINSIC specificity (consistent with selection).
+  const predFeatures: TriggerFeatures = {
+    named_level: predicateLevelIsNamed(best.level_ref),
+    timeframe_specific: triggerFeaturesFromText(best.evidence_quote).timeframe_specific,
+    confluence_count: best.confluence ? 1 : 0,
+    rare_pattern: best.kind === "displacement" || (best.kind === "retest_reject" && /\bbreaker\b/i.test(best.evidence_quote)),
+  };
+
+  const scl = computeScl(edgeFeatures, predFeatures);
+  const edge_specificity = triggerSpecificity(edgeFeatures);
+  const predicate_specificity = triggerSpecificity(predFeatures);
+  const multi_leg_gap = Math.max(0, (input.entry_sequence?.length ?? 1) - 1);
+
+  if (sclGateEnabled() && scl > sclMaxTolerance()) {
+    // Hard gate (opt-in until calibrated): best available compile drops too much specificity.
+    return { compiled: null, quarantine_reason: "semantic_compression_loss", scl, edge_specificity, predicate_specificity, multi_leg_gap };
+  }
+  return { compiled: best, quarantine_reason: null, scl, edge_specificity, predicate_specificity, multi_leg_gap };
 }
