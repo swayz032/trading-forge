@@ -3,6 +3,23 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-28 FIRST FRESH-DATA RUN — dual extraction (me vs Gemma) + confound diagnosed + hard-freeze harness shipped
+
+**Mission:** Operator dropped 4 NEW unseen YouTube videos + "extract yourself too so you compare." First real external measurement on fresh data. Environment IS the tower (Ollama UP, backend UP) — live pipeline reachable.
+
+**Dual extraction (the operator's cross-check):** I manually extracted all 4 (psH=15m ORB+retest, l-2=4-confluence MTF ICT, h6T=EMA+CCI crossover, MKsjbL0WNjg=two-line time-based). **FINDING THAT STANDS: confirmation is LINGUISTICALLY encoded in all 4** (engulfing / MSS / CCI>0 / opposite-color-candle-close) → these are rule/indicator/mechanical educators. **Confirmation-collapse (13% in the frozen-38) is CORPUS-CONDITIONAL, not universal** — the frozen corpus was ICT/price-action-heavy ("you see it react"); rule-based educators linguify confirmation. Validates the over-generalization caution with fresh evidence.
+
+**Gemma pipeline run:** all 4 extracted via live :4000 but came back coverage_failed + 0 speaker_items (ideas 1/1/10/4 non-zero). Backend DROPPED mid-run after 2 (W4.2, observed live; NSSM respawned). 
+
+**Operator correction (absorbed): the comparison is CONFOUNDED, not controlled.** A "Gemma missed confirmation" claim is unprovable while the backend can be stale / drop / version-skew. **Diagnosis (decisive): the confound is STALE INFRA, not model weakness** — all-4 coverage_failed/0-items = the fixed-on-branch enumerator-wrong-schema signature; prod runs `node dist/` (stale build); `/api/health` was `version:"dev"` (running-code unobservable). NOT an extraction weakness.
+
+**Shipped (commit `fa25ea9`):** (1) `/api/health` now exposes the RUNNING git commit + code_dirty (freeze was "impossible" because the running code was unobservable — SOLVED). (2) `freeze-harness.ts` — captureManifest (model digest + transcript sha256 + backend commit) + verifyNoDrift (commit/uptime-decrease/dirty/model/transcript) + classifyDisagreement that ENFORCES the attribution order: VERSION_INCONSISTENCY → EXECUTION_DROP → only THEN SPAN_FAILURE / INFERENCE_DISAGREEMENT. The psH/l-2 mismatch correctly classifies as EXECUTION_DROP, not span_failure → my earlier "pipeline missed confirmation" claim is formally REFUTED until a clean frozen re-run. tsc 0; 14 freeze tests green.
+
+**BLOCKER for the clean re-run (genuinely infra/operator-gated, W4.2):** current code is committed+merged to main but :4000 runs a STALE dist; restart needs `npm run build` + NSSM restart (admin / HMAC — but ADMIN_RESTART_HMAC_SECRET is UNSET); an isolated tsx instance hits the Ollama cold-load spiral (no warm model). So a controlled run needs: set ADMIN_RESTART_HMAC_SECRET (or admin), `npm run build` in tf-deep-scan, restart NSSM → :4000 runs current code (enumerator fix + commit exposed + gemma warm) → re-run the 4 frozen → freeze-verify → THEN the dual-extraction comparison is valid.
+
+**Carry-forward:** the freeze harness + commit exposure make the next run CONTROLLED. The dual-extraction confirmation finding (corpus-conditional) is the durable scientific result. The W4.2 single-supervisor gap is now the literal blocker to empirical validation — it's the highest-value infra fix.
+
+---
 ### Session Log — 2026-06-28 GATE-1-AT-SCALE (passed) + falsification protocol + minimum-validation spec — INSTRUMENT COMPLETE, AWAITING REALITY
 
 **Mission:** Operator's clean-close guidance — don't build; prepare to be proven right/wrong cleanly. Two non-architectural actions: (A) offline pre-flight regression check; (B) synthesis of the falsification protocol + minimum validation run.
