@@ -238,6 +238,7 @@ class TestTimestop1555ET:
         el_out, exit_l_out, _, _, meta = _apply_dsl_stop_loss_and_time_stop(
             entry_long, exit_long, entry_short, exit_short,
             high_np, low_np, atr_np, ts_list, stop_multiplier=1.5, symbol="MES",
+            ts_et_timestamps=ts_list,  # ET-native path: detect 15:55 ET directly (FIX-6)
         )
 
         assert bool(exit_l_out[bar_1555]) is True, "Exit signal must be set at 15:55 ET bar"
@@ -268,6 +269,7 @@ class TestTimestop1555ET:
         _, exit_l_out, _, _, meta = _apply_dsl_stop_loss_and_time_stop(
             entry_long, exit_long, entry_short, exit_short,
             high_np, low_np, atr_np, ts_list, stop_multiplier=1.5, symbol="MES",
+            ts_et_timestamps=ts_list,  # ET-native path: detect 15:55 ET directly (FIX-6)
         )
 
         # Find 15:55 bar
@@ -306,6 +308,7 @@ class TestTimestop1555ET:
         _, _, _, exit_s_out, meta = _apply_dsl_stop_loss_and_time_stop(
             entry_long, exit_long, entry_short, exit_short,
             high_np, low_np, atr_np, ts_list, stop_multiplier=1.5, symbol="MES",
+            ts_et_timestamps=ts_list,  # ET-native path: detect 15:55 ET directly (FIX-6)
         )
         assert meta["time_stop_exits"] >= 1, "Short position must also be closed at 15:55 ET"
 

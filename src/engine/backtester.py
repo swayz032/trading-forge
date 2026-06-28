@@ -294,7 +294,11 @@ def apply_eligibility_gate(
                 in_killzone=session.ny_killzone_active or session.london_killzone_active,
             )
 
-            # Structural stop (with 6pt cap)
+            # Structural stop — per-symbol ceiling (Wave 1 fix 2026-06-27)
+            # BUG was: max_stop_points=6.0 hardcoded (MES only) and symbol not
+            # passed → sweep buffer also defaulted to MES 3-tick for ALL symbols.
+            # FIX: use _get_stop_ceiling_for_symbol(symbol) so MNQ gets 62pt,
+            # MCL gets 1.0pt, MES stays 14pt — matching the DSL path at :2064.
             atr_val = float(atr_np[idx]) if not np.isnan(atr_np[idx]) else 1.0
             stop_plan = compute_structural_stop(
                 direction=direction,
@@ -302,7 +306,8 @@ def apply_eligibility_gate(
                 point_value=point_value,
                 atr=atr_val,
                 tick_size=tick_size,
-                max_stop_points=6.0,
+                symbol=symbol,
+                max_stop_points=_get_stop_ceiling_for_symbol(symbol),
             )
 
             # Structural targets
@@ -2167,7 +2172,13 @@ def _apply_dsl_stop_loss_and_time_stop(
                 # C3 FIX: use close_np[i] (bar close) as the entry reference price,
                 # NOT high_np[i]. The previous use of high_np inflated the stop price
                 # for longs, making breaches look wider than they were.
-                _long_ep = float(close_np[i]) if not np.isnan(close_np[i]) else 0.0
+                # close_np is Optional[...]=None — guard it: fall back to high_np
+                # (pre-C3 reference) when a caller omits the close array.
+                _long_ep = (
+                    float(close_np[i])
+                    if close_np is not None and not np.isnan(close_np[i])
+                    else (float(high_np[i]) if not np.isnan(high_np[i]) else 0.0)
+                )
                 _long_sp = _long_ep - stop_dist
                 # C-6 FIX: gap-down bars can produce a phantom entry that immediately
                 # stops out on the same bar. If the bar's low already violates the
@@ -2211,7 +2222,12 @@ def _apply_dsl_stop_loss_and_time_stop(
                 })
             else:
                 # C3 FIX: use close_np[i] for short entry reference (mirror of long fix).
-                _short_ep = float(close_np[i]) if not np.isnan(close_np[i]) else 0.0
+                # Guard the Optional close_np: fall back to low_np (pre-C3 mirror) when omitted.
+                _short_ep = (
+                    float(close_np[i])
+                    if close_np is not None and not np.isnan(close_np[i])
+                    else (float(low_np[i]) if not np.isnan(low_np[i]) else 0.0)
+                )
                 _short_sp = _short_ep + stop_dist
                 # C-6 FIX: mirror of long phantom-entry guard.
                 # Gap-up bars can fire a short entry that immediately stops out.
