@@ -11,6 +11,14 @@
 > fails independently and each failure localizes to a layer (extraction / grounding / semantic / execution /
 > engine).
 
+## The framing that does NOT change with results
+
+**The protocol is frozen; the hypothesis is NOT assumed true.** Freezing the criteria makes the experiment
+fair — it does not imply replay or blind validation are likely to pass. Whether they pass is exactly what the
+experiment determines. A positive result is more persuasive *because* the criteria predate it; a negative
+result is still informative *because* the architecture localizes where/why it failed. Both outcomes produce
+knowledge.
+
 ## Reporting discipline (applies to every gate)
 
 Every finding is reported as **observation → hypothesis → tested conclusion**, never collapsed:
@@ -18,6 +26,16 @@ Every finding is reported as **observation → hypothesis → tested conclusion*
 - a pattern across the calibration set is a **hypothesis**;
 - only a pattern that survives the **blind** set is a **conclusion**.
 A surprising replay result is the start of an investigation, not the end of one.
+
+## Report format (frozen — every results report follows this order)
+
+1. **Observed result** — the raw measurements against the frozen criteria (counts, rates, no spin).
+2. **Gate outcome** — PASS / FAIL / INDETERMINATE strictly per this pre-registration.
+3. **Localization** — which layer accounts for any discrepancy (extraction / grounding / semantic / execution / engine).
+4. **Interpretation** — clearly separated from 1–3; explicitly labeled as interpretation, not measurement.
+5. **Next experiment** — only if warranted by the localization (never "tune until it passes").
+
+This order keeps evidence distinguishable from explanation, and is itself fixed before results arrive.
 
 ---
 
