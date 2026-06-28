@@ -269,6 +269,12 @@ interface BacktestResult {
   // Both optional (null when Python has not yet emitted them — pre-Wave-3 backtests).
   bif?: number | null;
   k_eff?: number | null;
+  // WRC / SPA — data-snooping guard results.
+  // Python walk_forward.py emits these at both CPCV and plain/purged_embargo WF paths.
+  // Contract: wrc_result.p_value → wrcResult JSONB → evaluateWrcGate()
+  //           spa_result.spa_consistent_p → spaResult JSONB → evaluateSpaGate()
+  wrc_result?: Record<string, unknown> | null;
+  spa_result?: Record<string, unknown> | null;
   information_ratio?: number | null;         // A13: Information Ratio (vs benchmark); null when benchmark data insufficient
   prop_compliance?: Record<string, unknown>;
   crisis_results?: Record<string, unknown>;
@@ -676,6 +682,20 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           // (pre-Wave-3 backtests); lifecycle gate treats null as a grandfather pass.
           bif: result.bif != null ? String(result.bif) : null,
           kEff: result.k_eff != null ? String(result.k_eff) : null,
+          // WRC / SPA — data-snooping guard results wired from Python walk_forward.py.
+          // Python emits these at both CPCV and plain/purged_embargo WF paths.
+          // Contract (producer → DB → gate):
+          //   wrc_result.p_value         → backtests.wrc_result (JSONB) → wrcPValue gate
+          //   spa_result.spa_consistent_p → backtests.spa_result (JSONB) → spaConsistentP gate
+          // Fail-soft: null when available=false (insufficient OOS obs or computation error).
+          // Gate in promotion-gate-orchestrator.ts reads:
+          //   (wrcResult?.p_value as number | null) → evaluateWrcGate()
+          //   (spaResult?.spa_consistent_p as number | null) → evaluateSpaGate()
+          // When null → fail-CLOSED unless PROMOTION_GRANDFATHER_PRE_PASS_E=true.
+          wrcResult:
+            (result.wrc_result as Record<string, unknown> | null | undefined) ?? null,
+          spaResult:
+            (result.spa_result as Record<string, unknown> | null | undefined) ?? null,
         })
         .where(eq(backtests.id, backtestId));
 

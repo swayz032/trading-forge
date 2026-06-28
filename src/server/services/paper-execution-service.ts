@@ -1946,6 +1946,20 @@ export async function openPosition(sessionId: string, params: {
     }
   }
 
+  // BL-1 fix: compute initial stop price at entry for intrabar stop-breach detection.
+  // Precedence: (1) adaptive exit input explicit stop price, (2) ATR × 2.0 from params.atr.
+  // Null when neither is available (e.g., first bars of a session before ATR warms up).
+  const initialStopPriceForInsert: number | null = (() => {
+    if (params.adaptiveExitInput?.entry.stop != null) {
+      return params.adaptiveExitInput.entry.stop;
+    }
+    if (params.atr != null && params.atr > 0) {
+      const stopPts = params.atr * 2.0;
+      return params.side === "long" ? actualEntry - stopPts : actualEntry + stopPts;
+    }
+    return null;
+  })();
+
   const [position] = await dbConn.insert(paperPositions).values({
     sessionId,
     symbol: params.symbol,
@@ -1960,6 +1974,10 @@ export async function openPosition(sessionId: string, params: {
     fillProbability: capturedFillProbability !== null ? String(capturedFillProbability) : null,
     // Wave 25.5 Track 1: persist adaptive exit plan when available
     exitPlan: exitPlanForInsert ?? undefined,
+    // BL-1 / H-1 fix (migration 0179): initialise stop and running high/low at entry
+    initialStopPrice: initialStopPriceForInsert != null ? String(initialStopPriceForInsert) : null,
+    highSinceEntryPrice: String(actualEntry),
+    lowSinceEntryPrice: String(actualEntry),
   }).returning();
 
   const executionResult: ExecutionResult = {
@@ -2043,7 +2061,7 @@ export async function openPosition(sessionId: string, params: {
  *                         Omit for manual/force-close — falls back to base-tick
  *                         slippage (prior behaviour).
  */
-export async function closePosition(positionId: string, exitSignalPrice: number, atr?: number, context?: { correlationId?: string; barTimestamp?: Date }) {
+export async function closePosition(positionId: string, exitSignalPrice: number, atr?: number, context?: { correlationId?: string; barTimestamp?: Date; medianAtr?: number }) {
   const correlationId = context?.correlationId ?? null;
   const closeSpan = tracer.startSpan("paper.position_close");
   try {
@@ -2076,7 +2094,11 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
   const exitSlippageSession = sessionAtClose === "ASIA" ? "ASIAN"
     : sessionAtClose === "CME_HALT" ? "CME_HALT"
     : sessionAtClose;
-  const medianAtrEstimate = atr ? atr * 0.85 : undefined;
+  // BL-8 fix: use rolling median ATR from context when available (passed from exitBarContext.medianAtr14).
+  // Falls back to atr * 0.85 estimate when no rolling median is provided (legacy callers, tests, forceClose).
+  // The backtest uses np.nanmedian(atr_values) over the full bar series; rolling median over last 100 bars
+  // is a live approximation that removes the constant-ratio distortion of the 0.85 hack.
+  const medianAtrEstimate = context?.medianAtr ?? (atr ? atr * 0.85 : undefined);
   const slippage = calculateSlippage(pos.symbol, 1, atr, medianAtrEstimate, "stop_limit", exitSlippageSession);
   closeSpan.setAttribute("exitSlippage", slippage);
   closeSpan.setAttribute("atrProvided", atr !== undefined);
@@ -2710,6 +2732,15 @@ export interface StyleExitBarContext {
   last2barSwingHigh?: Record<string, number>;
   /** Per-symbol developing session POC (for Style C runner) */
   developingSessionPoc?: Record<string, number>;
+  /**
+   * BL-8 fix: per-symbol rolling median ATR (14) from the last 100 bars.
+   * Replaces the constant medianAtrEstimate = atr * 0.85 hack in exit slippage.
+   * The backtest uses np.nanmedian(atr_values) over all bars so the ratio varies
+   * per bar (low-vol bars < 1.0×, high-vol bars > 1.5×). With the 0.85 hack, the
+   * ratio was always 1/0.85 ≈ 1.176 regardless of regime — optimistic on high-vol days.
+   * When absent (legacy callers), falls back to atr * 0.85 (prior behaviour preserved).
+   */
+  medianAtr14?: Record<string, number>;
 }
 
 interface ExitHandlerResult {
@@ -3001,6 +3032,129 @@ async function _resolveSmeContextForExit(
 }
 
 /**
+ * BL-4 FIX: Book realized P&L for a partial-close event (TP1 or TP2).
+ *
+ * When Style C/D exits close a fraction of the position (TP1=33%/50%, TP2=33%),
+ * the residual contracts remain open and the position is NOT closed. However the
+ * realized P&L of the exited contracts must be:
+ *   (a) persisted as a paper_trades row (for journal analytics and Sharpe calc)
+ *   (b) credited to session currentEquity atomically (same SQL-atomic pattern as
+ *       closePosition so there is no race with the per-bar MTM update)
+ *
+ * This function DOES NOT set closedAt on paper_positions — the position stays open.
+ * It DOES insert a paper_trades row with contracts = contractsToClose so the partial
+ * exit appears in the journal. The full exit row (runner) is written by closePosition
+ * when the residual contracts are eventually closed.
+ *
+ * Commission is charged on the exiting contracts only (1 round-trip side equivalent —
+ * entry commission was already paid at openPosition; only the exit side remains).
+ */
+async function bookPartialClose(
+  pos: typeof paperPositions.$inferSelect,
+  contractsToClose: number,
+  exitPrice: number,
+  exitReason: string,
+  atr?: number,
+  correlationId?: string | null,
+): Promise<void> {
+  try {
+    const spec = CONTRACT_SPECS[pos.symbol];
+    if (!spec) {
+      logger.warn({ positionId: pos.id, symbol: pos.symbol }, "bookPartialClose: unknown contract symbol — skipping P&L booking");
+      return;
+    }
+
+    const entryPrice = Number(pos.entryPrice);
+    const direction = pos.side === "long" ? 1 : -1;
+
+    // Exit slippage on the partial close (same session-aware formula as closePosition)
+    const closeTimestamp = new Date();
+    const sessionAtClose = classifySessionType(closeTimestamp);
+    const exitSlippageSession = sessionAtClose === "ASIA" ? "ASIAN"
+      : sessionAtClose === "CME_HALT" ? "CME_HALT"
+      : sessionAtClose;
+    const medianAtrEstimate = atr ? atr * 0.85 : undefined;
+    const slippage = calculateSlippage(pos.symbol, 1, atr, medianAtrEstimate, "stop_limit", exitSlippageSession);
+    const actualExit = pos.side === "long" ? exitPrice - slippage : exitPrice + slippage;
+
+    const grossPnl = direction * (actualExit - entryPrice) * spec.pointValue * contractsToClose;
+
+    // Only the exit commission side for the partial close contracts
+    // (entry side was paid at openPosition across the full position).
+    const [sessionForFirm] = await db.select({ firmId: paperSessions.firmId })
+      .from(paperSessions).where(eq(paperSessions.id, pos.sessionId));
+    const commissionPerSide = getCommissionPerSideBySymbol(pos.symbol, sessionForFirm?.firmId ?? null);
+    const exitCommission = commissionPerSide * contractsToClose;   // exit-side only
+    const netPnl = grossPnl - exitCommission;
+
+    // Insert partial trade row + atomic equity credit in one transaction
+    await db.transaction(async (tx) => {
+      await tx.insert(paperTrades).values({
+        sessionId: pos.sessionId,
+        symbol: pos.symbol,
+        side: pos.side,
+        entryPrice: pos.entryPrice,
+        exitPrice: String(actualExit),
+        pnl: String(netPnl),
+        grossPnl: String(grossPnl),
+        commission: String(exitCommission),
+        contracts: contractsToClose,
+        entryTime: pos.entryTime,
+        exitTime: closeTimestamp,
+        slippage: String(slippage),
+        mae: pos.mae,
+        mfe: pos.mfe,
+        fillProbability: pos.fillProbability,
+      });
+
+      // Atomic equity credit — same additive-SQL pattern as closePosition
+      await tx
+        .update(paperSessions)
+        .set({ currentEquity: sql`current_equity + ${String(netPnl)}` })
+        .where(eq(paperSessions.id, pos.sessionId));
+    });
+
+    logger.info(
+      {
+        positionId: pos.id, exitReason, contractsToClose,
+        grossPnl, exitCommission, netPnl, actualExit, correlationId,
+      },
+      "paper.partial_close: P&L booked and equity credited",
+    );
+
+    db.insert(auditLog).values({
+      action: `paper.partial_close.${exitReason.toLowerCase()}`,
+      entityType: "paper_position",
+      entityId: pos.id,
+      decisionAuthority: "system",
+      input: { positionId: pos.id, contractsToClose, exitPrice, atr, correlationId } as Record<string, unknown>,
+      result: { grossPnl, exitCommission, netPnl, actualExit, slippage } as Record<string, unknown>,
+      status: "success",
+      correlationId: correlationId ?? null,
+    }).catch((err) => logger.warn({ err }, "bookPartialClose: audit write failed (non-blocking)"));
+
+  } catch (err) {
+    // Fail-soft: P&L booking failure does not block the position state update.
+    // The partial close still registers on paper_positions (contracts decremented).
+    // The missing trade row is a journal gap — observable via audit log and reconciliation cron.
+    logger.error(
+      { err, positionId: pos.id, exitReason, contractsToClose, correlationId },
+      "bookPartialClose: FAILED — partial P&L NOT booked; position still partially closed; journal gap created",
+    );
+    db.insert(auditLog).values({
+      action: "paper.partial_close.booking_failed",
+      entityType: "paper_position",
+      entityId: pos.id,
+      decisionAuthority: "system",
+      input: { positionId: pos.id, contractsToClose, exitPrice, exitReason, correlationId } as Record<string, unknown>,
+      result: { error: String(err) } as Record<string, unknown>,
+      status: "error",
+      correlationId: correlationId ?? null,
+    }).catch(() => undefined);
+  }
+}
+
+/**
  * Apply an ExitDecision to an open position. Mutates DB state.
  * Returns true if the position was fully closed (TIME_STOP_FLATTEN).
  */
@@ -3012,6 +3166,7 @@ async function applyExitDecision(
   currentPrice: number,
   atr?: number,
   correlationId?: string | null,
+  medianAtr?: number,   // BL-8 fix: rolling median ATR for realistic exit slippage
 ): Promise<boolean> {
   const { decision, new_stop, evidence } = result;
 
@@ -3060,6 +3215,10 @@ async function applyExitDecision(
           contracts: pos.contracts - contractsToClose,
           lastHandlerEvalAt: new Date(),
         }).where(eq(paperPositions.id, pos.id));
+        // BL-4 FIX: book realized P&L for the partial close contracts (fire-and-forget
+        // fail-soft so a booking failure doesn't block the position state update).
+        bookPartialClose(pos, contractsToClose, currentPrice, "tp1", atr, correlationId)
+          .catch((err) => logger.warn({ err, positionId: pos.id }, "TP1 bookPartialClose fire-and-forget failed"));
         logger.info(
           {
             positionId: pos.id, strategyId, exitStyle, currentPrice, tp1Price,
@@ -3085,7 +3244,7 @@ async function applyExitDecision(
         );
       } else {
         // Fully closes (e.g. 1-contract position — close whole thing)
-        await closePosition(pos.id, currentPrice, atr);
+        await closePosition(pos.id, currentPrice, atr, { medianAtr });
         logger.info(
           {
             positionId: pos.id, strategyId, exitStyle, currentPrice, tp1Price,
@@ -3128,6 +3287,9 @@ async function applyExitDecision(
           contracts: pos.contracts - contractsToClose,
           lastHandlerEvalAt: new Date(),
         }).where(eq(paperPositions.id, pos.id));
+        // BL-4 FIX: book realized P&L for the TP2 partial close contracts.
+        bookPartialClose(pos, contractsToClose, currentPrice, "tp2", atr, correlationId)
+          .catch((err) => logger.warn({ err, positionId: pos.id }, "TP2 bookPartialClose fire-and-forget failed"));
         logger.info(
           {
             positionId: pos.id, strategyId, exitStyle, currentPrice,
@@ -3152,7 +3314,7 @@ async function applyExitDecision(
           logger.error({ err, positionId: pos.id }, "SME: TP2 exit routing failed (paper sim unaffected)")
         );
       } else {
-        await closePosition(pos.id, currentPrice, atr);
+        await closePosition(pos.id, currentPrice, atr, { medianAtr });
         logger.info(
           {
             positionId: pos.id, strategyId, exitStyle, currentPrice,
@@ -3270,7 +3432,7 @@ async function applyExitDecision(
       const pnlAtFlatten = spec
         ? direction * (currentPrice - entryPx) * spec.pointValue * pos.contracts
         : null;
-      await closePosition(pos.id, currentPrice, atr);
+      await closePosition(pos.id, currentPrice, atr, { medianAtr });
       // FIX 6: count time-stop close in paperTradesCounter
       paperTradesCounter.labels({
         symbol: pos.symbol,
@@ -3381,17 +3543,113 @@ export async function updatePositionPrices(
     const prevUnrealized = Number(pos.previousUnrealizedPnl ?? 0);
     const unrealizedDelta = unrealizedPnl - prevUnrealized;
 
+    // H-1 fix: update running high/low since entry from this bar's OHLC extreme.
+    // These are used by the chandelier and structure_trail methods so the stop level
+    // rises with price (for longs) rather than staying pinned at entry price.
+    // Prior: exitBarContext.highSinceEntry was never populated, so callExitHandler
+    // always fell back to entryPrice → chandelier = entryPrice - 2*ATR (below BE) →
+    // ratchet blocked it → trail permanently stuck at BE.
+    const newHighSinceEntry = Math.max(
+      pos.highSinceEntryPrice != null ? Number(pos.highSinceEntryPrice) : entryPrice,
+      high,
+    );
+    const newLowSinceEntry = Math.min(
+      pos.lowSinceEntryPrice != null ? Number(pos.lowSinceEntryPrice) : entryPrice,
+      low,
+    );
+
+    // H-1 fix: inject per-position high/low into the shared exitBarContext so
+    // callExitHandler's barCtx.highSinceEntry?.[pos.symbol] returns the correct value.
+    // Per-symbol keying is safe when positions are one-per-symbol in a session.
+    if (exitBarContext) {
+      if (!exitBarContext.highSinceEntry) exitBarContext.highSinceEntry = {};
+      if (!exitBarContext.lowSinceEntry)  exitBarContext.lowSinceEntry  = {};
+      exitBarContext.highSinceEntry[pos.symbol] = newHighSinceEntry;
+      exitBarContext.lowSinceEntry[pos.symbol]  = newLowSinceEntry;
+    }
+
     await db.update(paperPositions).set({
       currentPrice: String(currentPrice),
       unrealizedPnl: String(unrealizedPnl),
       previousUnrealizedPnl: String(unrealizedPnl),  // advance the stored baseline
       mae: String(nextMae),
       mfe: String(nextMfe),
+      highSinceEntryPrice: String(newHighSinceEntry),
+      lowSinceEntryPrice: String(newLowSinceEntry),
     }).where(eq(paperPositions.id, pos.id));
 
     totalUnrealizedPnl += unrealizedPnl;
     totalUnrealizedDelta += unrealizedDelta;
     positionsUpdated++;
+
+    // ── BL-1 FIX: Intrabar stop-breach detection ─────────────────────────────
+    // The backtester checks bar low/high against the stop price within each bar.
+    // Without this check, a bar that touches the stop but closes above it (for longs)
+    // would NOT be closed — creating an optimistic parity gap vs backtest.
+    //
+    // Stop level precedence (same as Python handler):
+    //   1. trailHwm  — explicit stop after BE move or trail tighten
+    //   2. initialStopPrice — initial structural stop set at entry from ATR×2.0
+    //   (null → skip; stop breach not detectable without a stored stop level)
+    //
+    // Closed at the stop PRICE (not the adverse extreme) to match backtester fill model.
+    // This block runs BEFORE the adaptive trail and Python handler so a stop-closed
+    // position is not processed further.
+    {
+      const stopLevel =
+        pos.trailHwm != null ? Number(pos.trailHwm)
+        : pos.initialStopPrice != null ? Number(pos.initialStopPrice)
+        : null;
+
+      if (stopLevel != null) {
+        const stopBreached = pos.side === "long"
+          ? adversePrice <= stopLevel   // bar low breached below stop
+          : adversePrice >= stopLevel;  // bar high breached above stop (short)
+
+        if (stopBreached) {
+          const atrForClose = exitBarContext?.atr14[pos.symbol];
+          const medianAtrForClose = exitBarContext?.medianAtr14?.[pos.symbol];
+          try {
+            await closePosition(pos.id, stopLevel, atrForClose, { correlationId: correlationId ?? undefined, medianAtr: medianAtrForClose });
+            paperTradesCounter.labels({
+              symbol: pos.symbol,
+              side: pos.side,
+              outcome: "stop_loss",
+            }).inc();
+            closedByExitHandler.add(pos.id);
+            totalUnrealizedDelta -= unrealizedDelta;
+            totalUnrealizedPnl   -= unrealizedPnl;
+            logger.info(
+              {
+                positionId: pos.id, sessionId, symbol: pos.symbol, side: pos.side,
+                stopLevel, adversePrice, high, low, currentPrice, correlationId,
+              },
+              "paper.stop_breach: position closed at stop level (intrabar adverse extreme crossed stop)",
+            );
+            db.insert(auditLog).values({
+              action: "paper.stop_breach",
+              entityType: "paper_position",
+              entityId: pos.id,
+              decisionAuthority: "system",
+              input: { stopLevel, adversePrice, high, low, currentPrice, trailHwm: pos.trailHwm, initialStopPrice: pos.initialStopPrice } as Record<string, unknown>,
+              result: { closed: true, exitPrice: stopLevel } as Record<string, unknown>,
+              status: "success",
+              correlationId: correlationId ?? null,
+            }).catch((err) => logger.warn({ err }, "stop_breach audit write failed (non-blocking)"));
+            broadcastSSE("paper:position-stop-breached", {
+              positionId: pos.id, sessionId, symbol: pos.symbol, side: pos.side,
+              stopLevel, adversePrice, currentPrice,
+            });
+          } catch (stopCloseErr) {
+            logger.error(
+              { err: stopCloseErr, positionId: pos.id, stopLevel, adversePrice, correlationId },
+              "paper.stop_breach: closePosition FAILED — position NOT closed; HOLD until next bar",
+            );
+          }
+          continue; // skip trail + handler for this position regardless of close outcome
+        }
+      }
+    }
 
     // ── Wave 25.5 Track 1 Gap C: Adaptive runner trail execution ─────────────
     // For positions with exit_plan.runner.trail_method set, compute the
@@ -3457,12 +3715,17 @@ export async function updatePositionPrices(
           }
 
           case "chandelier": {
-            // Chandelier(14, 2.0) — uses highSinceEntry/lowSinceEntry from exitBarContext.
-            // For longs: trail = highSinceEntry - (2.0 × atrAtEntry)
-            // For shorts: trail = lowSinceEntry + (2.0 × atrAtEntry)
+            // H-1 FIX: Chandelier(14, 2.0) now reads highSinceEntryPrice / lowSinceEntryPrice
+            // from the DB row (updated every bar from bar.high/low above).
+            // Prior to this fix, exitBarContext.highSinceEntry was never populated so the
+            // chandelier was computed from entryPrice — always below the BE stop, so the
+            // ratchet blocked it and the trail was permanently stuck at BE.
+            //
+            // For longs:  trail = highSinceEntryPrice - (2.0 × atrAtEntry)
+            // For shorts: trail = lowSinceEntryPrice  + (2.0 × atrAtEntry)
             const CHANDELIER_MULTIPLIER = 2.0;
-            const highSince = exitBarContext.highSinceEntry?.[pos.symbol] ?? currentPrice;
-            const lowSince  = exitBarContext.lowSinceEntry?.[pos.symbol]  ?? currentPrice;
+            const highSince = newHighSinceEntry;   // already computed above from this bar's data
+            const lowSince  = newLowSinceEntry;
             computedTrail = pos.side === "long"
               ? highSince - CHANDELIER_MULTIPLIER * atrAtEntry
               : lowSince  + CHANDELIER_MULTIPLIER * atrAtEntry;
@@ -3576,10 +3839,11 @@ export async function updatePositionPrices(
         const stratId = await getSessionStrategyId();
         const handlerResult = await callExitHandler(pos, exitBarContext, stratId, correlationId);
         const atr14ForClose = exitBarContext.atr14[pos.symbol];
+        const medianAtr14ForClose = exitBarContext.medianAtr14?.[pos.symbol]; // BL-8 fix
         const positionClosed = await applyExitDecision(
           pos, handlerResult,
           (pos.currentExitStyle ?? "C") as "D" | "C",  // Wave 24: Style D dead — default C
-          stratId, currentPrice, atr14ForClose, correlationId,
+          stratId, currentPrice, atr14ForClose, correlationId, medianAtr14ForClose,
         );
         if (positionClosed) {
           closedByExitHandler.add(pos.id);

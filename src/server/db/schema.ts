@@ -798,6 +798,16 @@ export const paperPositions = pgTable(
     fillRatio: numeric("fill_ratio").default("1.0"),         // Gap 8: TCA — intended vs filled
     trailHwm: numeric("trail_hwm"),                          // H2: trail stop high-water mark (persisted so restarts don't lose it)
     barsHeld: integer("bars_held").notNull().default(0),     // H2: bars held counter (persisted so restarts don't lose it)
+    // BL-1 fix (migration 0179): initial stop price set at entry for intrabar stop-breach detection.
+    // Compared to adversePrice (bar low for longs, bar high for shorts) each bar before the Python handler.
+    // Null when no ATR is available at open time (market-open race) — stop breach skipped for those bars.
+    initialStopPrice: numeric("initial_stop_price"),
+    // H-1 fix (migration 0179): running high/low since entry for chandelier/structure trail.
+    // Updated every bar in updatePositionPrices from the bar's high/low.
+    // Chandelier formula: highSinceEntryPrice - 2*ATR (long) | lowSinceEntryPrice + 2*ATR (short).
+    // Null until first bar update — falls back to entryPrice.
+    highSinceEntryPrice: numeric("high_since_entry_price"),
+    lowSinceEntryPrice: numeric("low_since_entry_price"),
     fillProbability: numeric("fill_probability"),            // Phase 1.1: fill probability used at entry (null for market orders that bypass the model)
     mae: numeric("mae"),                                     // Maximum Adverse Excursion ($) — per-bar watermark, accumulated by updatePositionPrices (migration 0034)
     mfe: numeric("mfe"),                                     // Maximum Favorable Excursion ($) — per-bar watermark, accumulated by updatePositionPrices (migration 0034)

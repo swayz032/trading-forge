@@ -1269,6 +1269,13 @@
       "when": 1782701357607,
       "tag": "0178_research_trial_counter",
       "breakpoints": true
+    },
+    {
+      "idx": 182,
+      "version": "7",
+      "when": 1782701417607,
+      "tag": "0179_paper_positions_stop_ohlc",
+      "breakpoints": true
     }
   ]
 }

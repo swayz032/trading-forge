@@ -22,6 +22,18 @@
  *   - Missing data for any gate (pre-Pass-E backtests) → that gate fails-open
  *     EXCEPT when explicitly documented as a hard block (B14, WFE)
  *   - WFE floor lifted 0.70 → 0.80 ONLY for NEW PAPER → DEPLOY_READY transitions
+ *
+ * WFE dual-threshold design — INTENTIONAL, not a bug:
+ *   - 0.70 floor (WFE_HARD_FLOOR in wfe-gate.ts) = TESTING → PAPER lifecycle gate.
+ *     This is an early signal that the strategy is at minimum viable OOS efficiency.
+ *     Checked by lifecycle-service.ts at the TESTING→PAPER transition point.
+ *   - 0.80 floor (WFE_PROMOTION_FLOOR in this file) = PAPER → DEPLOY_READY deploy gate.
+ *     This is the institutional-grade bar before real capital is allocated.
+ *     Checked exclusively here (evaluateWfeGateForPromotion).
+ *   - F-5 hardening (2026-06-23): removed the redundant standalone 0.70 gate that had
+ *     been re-evaluated at PAPER → DEPLOY_READY.  The 0.80 orchestrator gate is now
+ *     the sole authority for that transition.  Do NOT add back the 0.70 gate at
+ *     PAPER → DEPLOY_READY — it would create a double evaluation with weaker semantics.
  */
 
 import { logger } from "./logger.js";

@@ -314,6 +314,9 @@ def _run_walk_forward_cpcv(
             # Wave 3 Track 3A: BIF absent on empty-path early return.
             "bif": None,
             "k_eff": 0,
+            # WRC/SPA: no paths completed → unavailable.
+            "wrc_result": {"available": False, "reason": "no CPCV paths completed"},
+            "spa_result": {"available": False, "reason": "no CPCV paths completed"},
             "execution_time_ms": int((time.time() - start_time) * 1000),
         }
 
@@ -454,6 +457,71 @@ def _run_walk_forward_cpcv(
     except Exception as _cpcv_pbo_exc:
         print(f"  PBO (cpcv gate): computation failed ({_cpcv_pbo_exc}).", file=sys.stderr)
 
+    # ── WRC + SPA — data-snooping guard ──────────────────────────────────────
+    # Compute White's Reality Check and Hansen's SPA on the concatenated OOS
+    # daily P&L series.  Using OOS returns avoids IS contamination.
+    #
+    # Statistical construction:
+    #   strategy_returns = all_oos_pnls   (concatenated OOS daily P&L in dollars)
+    #   benchmark_returns = zeros          (cash benchmark — tests positive edge over cash)
+    #
+    # This is the institutionally-correct construction for a single-strategy test.
+    # The null hypothesis (H0) is that the strategy's expected excess return over
+    # cash is ≤ 0 — i.e. that any observed positive P&L is data-snooping luck from
+    # the scout selection pipeline.  Rejecting H0 (p_value < 0.05) provides
+    # statistical evidence that the edge is real after multiple-testing adjustment
+    # via the stationary bootstrap.
+    #
+    # Fail-soft: when the OOS series is too short (< 20 observations) we emit
+    # {available: false, reason: "..."} rather than crashing or producing
+    # degenerate results.  DO NOT emit a fake passing p-value on insufficient data.
+    _WRC_MIN_OBS = 20  # floor below which the stationary bootstrap is unreliable
+    _cpcv_wrc_result: dict = {}
+    _cpcv_spa_result: dict = {}
+    if len(all_oos_pnls) >= _WRC_MIN_OBS:
+        try:
+            from src.engine.statistics.hansens_spa import hansens_spa as _spa_fn
+            from src.engine.statistics.whites_reality_check import (
+                whites_reality_check as _wrc_fn,
+            )
+            _benchmark_zeros = [0.0] * len(all_oos_pnls)
+            _cpcv_wrc_result = _wrc_fn(
+                strategy_returns=all_oos_pnls,
+                benchmark_returns=_benchmark_zeros,
+                rng_seed=int(os.environ.get("BACKTEST_SEED", "42")),
+            )
+            _cpcv_spa_result = _spa_fn(
+                strategy_returns=all_oos_pnls,
+                benchmark_returns=_benchmark_zeros,
+                rng_seed=int(os.environ.get("BACKTEST_SEED", "42")) + 1,
+            )
+            print(
+                f"  WRC (CPCV): p={_cpcv_wrc_result.get('p_value', 'N/A'):.4f} "
+                f"{'PASS' if _cpcv_wrc_result.get('passed') else 'FAIL'} | "
+                f"SPA consistent_p={_cpcv_spa_result.get('spa_consistent_p', 'N/A'):.4f} "
+                f"{'PASS' if _cpcv_spa_result.get('passed') else 'FAIL'} "
+                f"(n_obs={len(all_oos_pnls)})",
+                file=sys.stderr,
+            )
+        except Exception as _cpcv_wrc_exc:
+            print(
+                f"  WRC/SPA (CPCV): computation failed ({_cpcv_wrc_exc!r}) — "
+                f"emitting available=false (non-blocking).",
+                file=sys.stderr,
+            )
+            _cpcv_wrc_result = {"available": False, "reason": str(_cpcv_wrc_exc)}
+            _cpcv_spa_result = {"available": False, "reason": str(_cpcv_wrc_exc)}
+    else:
+        _insufficient_reason = (
+            f"insufficient OOS observations: {len(all_oos_pnls)} < {_WRC_MIN_OBS} minimum"
+        )
+        _cpcv_wrc_result = {"available": False, "reason": _insufficient_reason}
+        _cpcv_spa_result = {"available": False, "reason": _insufficient_reason}
+        print(
+            f"  WRC/SPA (CPCV): skipped — {_insufficient_reason}",
+            file=sys.stderr,
+        )
+
     return {
         "confidence": "OK" if total_trades >= MIN_OOS_TRADES else "LOW",
         "low_confidence_windows": 0,
@@ -501,6 +569,12 @@ def _run_walk_forward_cpcv(
         "bif": _cpcv_bif_result.get("bif"),
         "k_eff": _cpcv_bif_result.get("k_eff"),
         "bif_detail": _cpcv_bif_result,
+        # WRC / SPA — data-snooping guard on concatenated CPCV OOS P&L series.
+        # TS gate contract: reads wrc_result.p_value / spa_result.spa_consistent_p.
+        # When available=False the TS gate treats these as null → fail-CLOSED
+        # (unless PROMOTION_GRANDFATHER_PRE_PASS_E=true is explicitly set).
+        "wrc_result": _cpcv_wrc_result,
+        "spa_result": _cpcv_spa_result,
     }
 
 
@@ -1372,6 +1446,60 @@ def run_walk_forward(
             file=sys.stderr,
         )
 
+    # ── WRC + SPA — data-snooping guard (plain/purged_embargo WF) ───────────
+    # Same statistical construction as the CPCV path: concatenated OOS daily
+    # P&Ls vs. a cash benchmark (zeros).  The stationary bootstrap handles
+    # serial autocorrelation in the daily P&L series.
+    #
+    # Fail-soft on insufficient data or computation errors — emit
+    # {available: false, reason: ...} rather than crashing or fabricating a p-value.
+    _WRC_MIN_OBS_PLAIN = 20
+    _plain_wrc_result: dict = {}
+    _plain_spa_result: dict = {}
+    if len(all_oos_pnls) >= _WRC_MIN_OBS_PLAIN:
+        try:
+            from src.engine.statistics.hansens_spa import hansens_spa as _spa_fn_plain
+            from src.engine.statistics.whites_reality_check import (
+                whites_reality_check as _wrc_fn_plain,
+            )
+            _bm_zeros_plain = [0.0] * len(all_oos_pnls)
+            _plain_wrc_result = _wrc_fn_plain(
+                strategy_returns=all_oos_pnls,
+                benchmark_returns=_bm_zeros_plain,
+                rng_seed=int(os.environ.get("BACKTEST_SEED", "42")),
+            )
+            _plain_spa_result = _spa_fn_plain(
+                strategy_returns=all_oos_pnls,
+                benchmark_returns=_bm_zeros_plain,
+                rng_seed=int(os.environ.get("BACKTEST_SEED", "42")) + 1,
+            )
+            print(
+                f"  WRC (plain): p={_plain_wrc_result.get('p_value', 'N/A'):.4f} "
+                f"{'PASS' if _plain_wrc_result.get('passed') else 'FAIL'} | "
+                f"SPA consistent_p={_plain_spa_result.get('spa_consistent_p', 'N/A'):.4f} "
+                f"{'PASS' if _plain_spa_result.get('passed') else 'FAIL'} "
+                f"(n_obs={len(all_oos_pnls)})",
+                file=sys.stderr,
+            )
+        except Exception as _plain_wrc_exc:
+            print(
+                f"  WRC/SPA (plain): computation failed ({_plain_wrc_exc!r}) — "
+                f"emitting available=false (non-blocking).",
+                file=sys.stderr,
+            )
+            _plain_wrc_result = {"available": False, "reason": str(_plain_wrc_exc)}
+            _plain_spa_result = {"available": False, "reason": str(_plain_wrc_exc)}
+    else:
+        _plain_insufficient = (
+            f"insufficient OOS observations: {len(all_oos_pnls)} < {_WRC_MIN_OBS_PLAIN} minimum"
+        )
+        _plain_wrc_result = {"available": False, "reason": _plain_insufficient}
+        _plain_spa_result = {"available": False, "reason": _plain_insufficient}
+        print(
+            f"  WRC/SPA (plain): skipped — {_plain_insufficient}",
+            file=sys.stderr,
+        )
+
     # ─── Prop firm compliance on aggregated OOS results ─────
     prop_compliance = None
     if all_oos_pnl_records and all_oos_trades:
@@ -1462,6 +1590,12 @@ def run_walk_forward(
         "bif": _bif_result.get("bif"),
         "k_eff": _bif_result.get("k_eff"),
         "bif_detail": _bif_result,
+        # WRC / SPA — data-snooping guard on concatenated plain/purged_embargo OOS P&L.
+        # TS gate contract: reads wrc_result.p_value / spa_result.spa_consistent_p.
+        # When available=False the TS gate treats these as null → fail-CLOSED
+        # (unless PROMOTION_GRANDFATHER_PRE_PASS_E=true is explicitly set).
+        "wrc_result": _plain_wrc_result,
+        "spa_result": _plain_spa_result,
     }
 
 

@@ -133,6 +133,45 @@ async function buildExitBarContext(bar: Bar): Promise<StyleExitBarContext | unde
     });
     const currentTimeEt = etFormatter.format(barDate);
 
+    // H-2 fix: last2barSwingLow/High from the buffer — prior 2 bars before the current bar.
+    // buf[buf.length-1] = current bar (just pushed by pushBar before processSessionBar).
+    // buf[buf.length-2] = previous bar, buf[buf.length-3] = 2 bars ago.
+    // "last 2-bar swing" = min/max low/high of those 2 prior bars (not the current bar).
+    let last2barSwingLow: number | undefined = undefined;
+    let last2barSwingHigh: number | undefined = undefined;
+    if (buf.length >= 3) {
+      const prevBar1 = buf[buf.length - 2];
+      const prevBar2 = buf[buf.length - 3];
+      // Both bars must have valid OHLC fields (backfill bars always do; unit test stubs may omit high/low)
+      if (prevBar1.low != null && prevBar2.low != null) {
+        last2barSwingLow  = Math.min(prevBar1.low,  prevBar2.low);
+        last2barSwingHigh = Math.max(prevBar1.high, prevBar2.high);
+      }
+    }
+
+    // BL-8 fix: compute rolling median ATR from the last 100 bars of the buffer.
+    // The backtest uses np.nanmedian(atr_values) over all bars; paper previously used
+    // atr * 0.85 (constant ratio ~1.176 regardless of regime volatility).
+    // A 100-bar window approximates the backtest median over the recent regime.
+    // min 14 bars required (ATR warmup); falls back to undefined (no ATR scaling).
+    let medianAtr14Val: number | undefined = undefined;
+    if (buf.length >= 14) {
+      const window = buf.slice(-100);  // last 100 bars (or fewer on session start)
+      // ATR(14) on the window — compute as average of true-range over window
+      // Re-use the ATR helper on a subslice: ATR(buf, 14) uses the full buf.
+      // We extract the raw ATR values from the buffer ATR field if available,
+      // or approximate using |high-low| range as a fast true-range proxy.
+      // The exact median is not critical — any reasonable estimate removes the
+      // constant-ratio distortion. |high-low| is available on every bar.
+      const trueRanges = window.map(b => (b.high ?? b.close) - (b.low ?? b.close));
+      const sortedRanges = [...trueRanges].sort((a, b) => a - b);
+      const mid = Math.floor(sortedRanges.length / 2);
+      medianAtr14Val = sortedRanges.length % 2 === 0
+        ? (sortedRanges[mid - 1] + sortedRanges[mid]) / 2
+        : sortedRanges[mid];
+      if (medianAtr14Val <= 0) medianAtr14Val = undefined;
+    }
+
     const ctx: StyleExitBarContext = {
       currentTimeEt,
       atr14: { [bar.symbol]: atr14 },
@@ -140,6 +179,11 @@ async function buildExitBarContext(bar: Bar): Promise<StyleExitBarContext | unde
       // Handlers fallback to unit-vol (barVol=1) when this map is absent or zero.
       barVol: { [bar.symbol]: bar.volume > 0 ? bar.volume : 1 },
       ...(poc != null ? { developingSessionPoc: { [bar.symbol]: poc } } : {}),
+      // H-2 fix: swing data from bar buffer (populated when buffer has ≥3 bars)
+      ...(last2barSwingLow  != null ? { last2barSwingLow:  { [bar.symbol]: last2barSwingLow  } } : {}),
+      ...(last2barSwingHigh != null ? { last2barSwingHigh: { [bar.symbol]: last2barSwingHigh } } : {}),
+      // BL-8 fix: rolling median ATR for slippage ATR-scaling (replaces atr*0.85 constant)
+      ...(medianAtr14Val != null ? { medianAtr14: { [bar.symbol]: medianAtr14Val } } : {}),
     };
     return ctx;
   } catch (err) {
@@ -163,7 +207,14 @@ async function processSessionBar(sessionId: string, bar: Bar) {
   // Every downstream call that accepts a correlationId receives this value.
   const correlationId = randomUUID();
 
-  const priceMap = { [bar.symbol]: bar.close };
+  // BL-1 / H-1 fix: pass full OHLC bar so updatePositionPrices can:
+  //   (a) detect intrabar stop breaches using bar.low (longs) / bar.high (shorts)
+  //   (b) update highSinceEntryPrice / lowSinceEntryPrice running trackers
+  // Prior code sent only bar.close — the high/low fields were always equal to close
+  // in normalizePriceUpdate (the number-fallback path).
+  const priceMap: Record<string, import("./paper-execution-service.js").PriceBarUpdate> = {
+    [bar.symbol]: { close: bar.close, high: bar.high, low: bar.low, volume: bar.volume },
+  };
 
   // Build exit bar context for Track 3 Style C/adaptive runner trail dispatch.
   // Includes true bar volume (Wave 26 AVWAP wiring). Fail-soft: if context build

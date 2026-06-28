@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { db } from "../db/index.js";
 import { paperSessions, paperPositions, paperTrades, paperSignalLogs, paperSessionFeedback, strategies, backtests, monteCarloRuns, auditLog } from "../db/schema.js";
-import { eq, desc, and, sql as drizzleSql } from "drizzle-orm";
+import { eq, desc, and, isNull, sql as drizzleSql } from "drizzle-orm";
 import { broadcastSSE } from "./sse.js";
 import { openPosition, closePosition, updatePositionPrices, getExecutionQuality, getTcaReport, getRollingMetrics } from "../services/paper-execution-service.js";
 import { computeAndPersistSessionFeedback } from "../services/paper-session-feedback-service.js";
@@ -801,6 +801,36 @@ router.post("/kill/:sessionId", async (req, res) => {
       .select({ status: paperSessions.status, strategyId: paperSessions.strategyId })
       .from(paperSessions)
       .where(eq(paperSessions.id, sessionId));
+
+    // BL-5 FIX: Close orphan positions before marking session stopped.
+    // Without this, positions remain with closedAt=NULL after a kill, making them
+    // unreconcilable and corrupting session P&L and promotion-gate inputs.
+    // Closed at last-known mark-to-market price (currentPrice).
+    // Fail-soft: a single position close failure logs and continues (best-effort flatten).
+    {
+      const openPositions = await db.select().from(paperPositions)
+        .where(and(eq(paperPositions.sessionId, sessionId), isNull(paperPositions.closedAt)));
+      for (const pos of openPositions) {
+        const exitPrice = pos.currentPrice != null ? Number(pos.currentPrice) : Number(pos.entryPrice);
+        try {
+          await closePosition(pos.id, exitPrice, undefined, { correlationId: req.id ?? undefined });
+          req.log.info({ sessionId, positionId: pos.id, exitPrice }, "kill: position closed at last-known MtM price");
+        } catch (posCloseErr) {
+          req.log.error({ sessionId, positionId: pos.id, exitPrice, err: posCloseErr }, "kill: position close FAILED — orphan position may remain");
+          // Write audit row so the gap is visible in reconciliation
+          await db.insert(auditLog).values({
+            action: "paper.kill_position_close_failed",
+            entityType: "paper_position",
+            entityId: pos.id,
+            decisionAuthority: "human",
+            input: { sessionId, exitPrice, killReason: req.body?.reason ?? "operator_kill" },
+            result: { error: String(posCloseErr), positionId: pos.id },
+            status: "error",
+            correlationId: req.id ?? null,
+          }).catch(() => undefined);
+        }
+      }
+    }
 
     await db
       .update(paperSessions)
