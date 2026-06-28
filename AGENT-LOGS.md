@@ -3,6 +3,21 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-28 Slumdawg Wave 1-4 DEPLOY + adversarial wiring audit (5 false-greens fixed)
+
+**Mission:** Operator "is it wired institutional-grade, double-check" + push + deploy. Pushed hardening/phase-0; rebuilt dist + HMAC self-restarted the tower (boot-runner applied migrations 0177+0178); 14A activated in n8n UI (REST /activate is 403 on Railway = UI-only). Master autonomy switch = Office "Learning Loop" toggle = `auto_patch_loop_enabled` (currently 0=off; 14A halts at kill-switch until flipped — safe default).
+
+**Adversarial double-check (accuracy-validator, read-only) found 6 gaps — 5 were false-greens (scaffolded/claimed but not firing); all fixed in commit `e16df15`, deployed + verified live:**
+- **F-3 CRITICAL** — every `/api/decay/*` route 500'd: `decay/{half_life,quarantine,sub_signals}.py` had no `__main__` CLI → `runPythonModule` got empty stdout → `JSON.parse("")` → 500. Added action-dispatch `__main__` to all three → all 5 decay routes return 200 (verified live `curl /api/decay/dashboard` → 200). Was breaking 14A's nightly decay step.
+- **F-5** — look-ahead guard was warn-not-block → `parameter_evolver.validate_mutations` now EXCLUDES violating mutations (returns validated+rejected); critic-optimizer-service blocks them from replay. `LOOKAHEAD_GUARD_HARD=true`.
+- **F-6** — `critic_optimizer.py` candidates bypassed the 5-field pre-commit (hardcoded "advisory") → now validates all 5 → incomplete→blocked; both paths fail-closed.
+- **F-4** — N_total tracked but DSR math ignored it (false migration-0178 comment) → walk_forward CPCV DSR now uses `max(n_paths, trial_n_total)` (`DSR_USE_NTOTAL=true`); DSR tightens as trials grow (test proves). Comment now true.
+- **F-1** — static_styleC TP2 "liquidity-mapped" was dead in backtests (empty snapshot): filling from live `getNearestLiquidity` on historical bars = LOOK-AHEAD bias (worse than +2.0R), so kept the fallback but made it EXPLICIT + telemetry (`tp2_liquidity_unavailable`/`tp2_liquidity_source`) — no longer a silent false-green. Paper path has real point-in-time liquidity; historical-liquidity backtest mapping = documented future item.
+- **F-2 (scope-gap, not a regression):** 6 OTHER workflows still have strict IF (the 6 critical-path ones from Wave 2 are loose) — Daily Compliance Check / Pre-Session Compliance Gate / Anti-Setup Refresh / Macro Evening / Nightly Self-Correction / 7A. Optional broaden.
+
+**Verified:** 46+38 pytest, 22 vitest (+72 prior), tsc+ruff clean, system-map GREEN, live routes 200 (health/decay/kill-switch). Pushed `bab7f09..e16df15`. **The "are you sure?" adversarial double-check is what caught the scaffolded-but-dead features — structure was institutional-grade but 4 of my own features weren't firing.**
+
+---
 ### Session Log — 2026-06-27 Slumdawg Blueprint — Wave 4 (Layer 14 orchestrator + Layer 15 leak + governance) — INSTITUTIONAL GRADE
 
 **Mission:** Operator "execute institutional grade!!" — Wave 4 centerpiece: unify the scattered GPT-brained nightly intelligence into one 3AM orchestrator, add the missing 5-category leak detector, and harden the LLM research-proposal pipeline against statistical self-deception.
