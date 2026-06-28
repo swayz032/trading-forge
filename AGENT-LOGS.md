@@ -3,6 +3,81 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-28 Slumdawg Waves 1-4 DEEP-SCAN #2 — 11 bugs fixed (commit 1c602f0)
+
+**Mission:** Operator "deep scan and catch any bugs you missed in the waves." 5 parallel read-only specialist auditors (backtest-core / accuracy-validator / n8n-orchestration / trading-forge-architect / observability-reliability) over everything shipped this session → 15 findings; fixed the 11 substantive ones via 3 parallel edit-only fix tracks; committed + deployed + pushed.
+
+**HIGH:**
+- **F-4 DSR deflation was INERT** — `trial_n_total` fetched into the evidence packet but never passed to `runBacktest` (BacktestRequest defaulted to 1) → DSR never tightened. Now threaded end-to-end (backtest-service.ts BacktestConfig + critic-optimizer-service.ts all 4 replay sites + manual path). Same claimed-but-not-wired class the first audit caught — the fix's *plumbing* was incomplete.
+- **Decay routes fed Python EMPTY data** → `/api/decay/signals`+`/analyze` always returned "clean" (hollow) — the F-3 __main__ made them callable but the routes passed no P&L. `decay.ts` now fetches per-strategy paper P&L + promoted_at into the CLI configs (dashboard/signals/analyze/quarantine).
+- **Watchdog "API-down" alert hit a dead 404** (`/api/admin/discord-fallback`) — the escalation that fires when the API is down silently failed. Repointed to `/__oc/alert/alerts` (live n8n, the separate __oc bot that survives an API outage).
+
+**MED:** VIX-tiered ATR used peak-of-WINDOW VIX (look-ahead when enabled) → per-entry-bar; governance R3/R8 blocks now Discord-notify (were audit/SSE only); leak `run_failed` audit on DB error (was silent HTTP 200); `tf_bif_gate_evaluations_total{outcome}` Prom counter + layer15 18-label zero-init; kill-switch read audit; 14A retry(all HTTP)+composite `.data.counts` shape+423-handling+journal idempotency (live n8n); 7A decay route→dashboard (live n8n); 3A backup cron 03:00→02:00.
+
+**LOW:** CPCV BIF IS-proxy max→mean (was over-blocking), k_eff excludes LOW-confidence windows, BIF naming drift fixed (Bias Information→Backtest Inflation Factor, 4 sites).
+
+**Verified:** 131 pytest + 160 vitest + tsc + ruff GREEN; routes 200 post-rebuild+restart; pushed `bb278ff..1c602f0`.
+
+**Process scar:** dispatched 2 fix agents that both edited `critic-optimizer-service.ts` in parallel → transient tsc errors; final state reconciled clean (different line regions) but SAME-FILE parallel edits should be sequenced.
+
+**Remaining (LOW / operator):** 9A/11A full deactivate is UI-only (already trigger-disabled/inert); **14A kill-switch DESIGN QUESTION** — it gates the WHOLE nightly run incl the read-only advisory brief, so during hardening (Learning Loop off) 14A produces nothing; consider splitting so advisory intel always runs and only the mutation chain is gated; true per-path CPCV IS-Sharpe = Wave 30; historical point-in-time liquidity for backtest TP2 = future.
+
+---
+### Session Log — 2026-06-28 Adversarial re-verification audit (accuracy-validator, READ-ONLY)
+
+**Mission:** Re-verify the 5 Wave 1-4 fixes from commit `e16df15` actually hold post-deploy, and hunt for new producer→DB→gate disconnects.
+
+**Work completed:** READ-ONLY audit (no edits, no commits). Verified 4 of 5 claimed fixes. Found one HIGH disconnect.
+
+**Verification results:**
+
+- **F-3 (decay routes):** VERIFIED. `__main__` blocks confirmed in all 3 Python modules (`half_life.py:242`, `quarantine.py:188`, `sub_signals.py:330`). `GET /api/decay/dashboard` → 200 live. Correct route paths clarified: `GET /decay/status/:id`, `POST /decay/analyze`, `GET /decay/signals/:id`, `POST /decay/quarantine/evaluate`, `GET /decay/dashboard`.
+- **F-5 (lookahead):** VERIFIED. `LOOKAHEAD_GUARD_HARD=true` confirmed default. `validate_mutations()` `(validated, rejected)` tuple confirmed.
+- **F-6 (pre-commit):** VERIFIED. `buildCandidateGovernanceMeta()` at `critic-optimizer-service.ts:262` always produces `incomplete` for `critic_optimizer.py` path; replay skips at `skipped_precommit_incomplete`.
+- **F-1 (TP2 telemetry):** VERIFIED as transparency-only (correct scope).
+- **F-4 (N_total DSR) — DISCONNECT (HIGH):** Python side confirmed fixed (`walk_forward.py:56–65` uses `max(n_paths, _trial_n_total)`). But `backtest-service.ts` has NO `trial_n_total` field in its payload interface, and `critic-optimizer-service.ts:2330–2336` calls `runBacktest` without `trial_n_total`. Python always receives `trial_n_total=1` (default in `config.py:648`). Net effect: `max(n_paths, 1) = n_paths` = same as pre-fix. Session log claim that F-4 is "fixed" is a false positive. `config.py:646` comment "TS critic-optimizer-service passes this" is aspirational documentation, not reality. **Fix needed:** add `trial_n_total?: number` to `backtest-service.ts` interface; inject `trial_n_total: evidence.trial_n_total` at `critic-optimizer-service.ts:2330`.
+
+**Chain verifications:**
+- Migrations 0177/0178: VERIFIED INDIRECT (boot-runner fail-closed + server running = no boot failure = migrations applied; direct DB column query unavailable via API)
+- Leak detector cat-6 (all column names): VERIFIED (`lifecycleTransitions.backtestId`, `monteCarloRuns.sharpeP5/maxDrawdownP95`, `paperTrades.pnl` all match `schema.ts`; `POST /api/leak-detection/run` → 200)
+- BIF gate chain (stamp + invocation): VERIFIED (`backtest-service.ts:671–672` stamps bif/kEff; `lifecycle-service.ts:~3755` invokes gate at PAPER→DEPLOY_READY)
+- Kill-switch route: VERIFIED (fail-CLOSED; live probe `{enabled:false, source:"system_parameters"}`)
+- 14A IF-node kill-switch logic: CANT-VERIFY (n8n API unreachable at localhost:5678; MCP NO_RESPONSE; backup predates 14A)
+
+**Carry-forward for next session:**
+- F-4 TS→Python wiring gap: add `trial_n_total` to `backtest-service.ts` payload interface AND inject at `critic-optimizer-service.ts:2330` replay call
+- 14A IF-node verification: access live n8n UI to confirm the IF expression checks `$json.enabled === false`
+
+---
+### Session Log — 2026-06-28 AUTO-GRAVEYARD: consecutive hard-gate failures auto-archive strategies
+
+**Mission:** Build AUTO-GRAVEYARD — N consecutive hard gate failures for the same (strategy, gate) pair auto-promote the strategy to GRAVEYARD so the factory floor stays clean. TDD, no new subsystems, no schema changes, no git commit (operator commits).
+
+**Work completed:**
+- `src/server/routes/sse.ts`: Added `AUTO_GRAVEYARD: "lifecycle:auto_graveyard"` to `LIFECYCLE_GATE_EVENTS` const
+- `src/server/lib/metrics-registry.ts`: Added `autoGraveyardTotal` Prometheus Counter with `labelNames: ["gate"]`, appended after `candidateConveyorEnqueuedTotal`
+- `src/server/services/lifecycle-service.ts`:
+  - Imported `autoGraveyardTotal` from metrics-registry
+  - Added private `_maybeAutoGraveyard(strategyId, gate, metrics, fromState, correlationId)` method — records fail audit row, counts consecutive fails since last reset, calls `promoteStrategy(→GRAVEYARD)` at threshold, emits Prom/SSE/Discord, double-bury guard
+  - Added private `_resetHardGateCounter(strategyId, gate, correlationId)` method — fire-and-forget reset row
+  - Instrumented 17 HARD gate `continue` sites in `checkAutoPromotions` (CANDIDATE→TESTING x2, TESTING→PAPER x6, SHADOW→PAPER x1, PAPER→DEPLOY_READY x8) with `_maybeAutoGraveyard` calls and corresponding `_resetHardGateCounter` calls at pass sites
+  - TRANSIENT sites (infra errors, insufficient_samples, blocked_dsr_unavailable, !mcRun, !tier) deliberately NOT instrumented
+  - Orchestrator gates: only when `data_available: true` — fail-safe for data-absent fails
+- `src/server/__tests__/auto-graveyard.test.ts`: 61 vitest tests covering all 5 spec cases (a–e) + full HARD allowlist + threshold pure-logic simulation
+
+**Verification:**
+- `npm run build` → exits 0 (tsc clean)
+- `npx vitest run src/server/__tests__/auto-graveyard.test.ts` → 61/61 GREEN
+
+**Known-facts updates:** None
+
+**Carry-forward for next session:**
+- Operator must `git commit` via explicit path (this agent was told not to commit)
+- Burial threshold default = 3; tunable via `LIFECYCLE_GATE_FAIL_GRAVEYARD_THRESHOLD` env
+- Gate names for Prometheus/audit: `tier_rejected`, `forge_score_below_floor`, `mc_survival_below_floor`, `survival_score_below_threshold`, `exportability_blocked`, `b14_ci_high`, `wfe_hard_floor`, `parameter_overfit_drift`, `dsr_blocked_floor`, `shadow_divergence`, `b14_survival_twin_failed`, `b15_battery_failed`, `bif_block_threshold`, `signal_correlation`, `promotion_gate_wfe_floor`, `promotion_gate_cpcv_n_paths`, `promotion_gate_wrc_p`, `promotion_gate_spa_p`
+
+---
+
 ### Session Log — 2026-06-28 Slumdawg Wave 1-4 DEPLOY + adversarial wiring audit (5 false-greens fixed)
 
 **Mission:** Operator "is it wired institutional-grade, double-check" + push + deploy. Pushed hardening/phase-0; rebuilt dist + HMAC self-restarted the tower (boot-runner applied migrations 0177+0178); 14A activated in n8n UI (REST /activate is 403 on Railway = UI-only). Master autonomy switch = Office "Learning Loop" toggle = `auto_patch_loop_enabled` (currently 0=off; 14A halts at kill-switch until flipped — safe default).
