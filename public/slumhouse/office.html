@@ -265,6 +265,8 @@
       }
       .sh-logo { grid-area: logo; }
       .sh-header-spacer { grid-area: tools; min-width: 0; }
+      /* hide the manual Lock button on mobile — pagehide auto-locks on exit anyway */
+      .of-lock-link { display: none !important; }
       .sh-nav { grid-area: nav; width: 100%; justify-content: center; }
       .sh-pill { padding: 8px 16px; font-size: 12px; }
 
