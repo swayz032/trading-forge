@@ -3,6 +3,24 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-27 (cont.) STATE-MACHINE IR — Checkpoint 1 (types) + Checkpoint 2 (lowering + semantic conservation)
+
+**Mission:** Build the redesign as 6 measurable checkpoints (one architectural change at a time, each compared to the frozen control). CP1 = IR types only; CP2 = lowering (representation) + semantic conservation. No execution change in either.
+
+**CP1 (commit 04d1f7e, tag `sm-checkpoint-1-types`):** `state-machine-ir.ts` — lifecycle node types S0-S8, first-class `WaitState` object (zone-return/retest/sweep = DATA), Provenance on every node. Acceptance MET: baseline expressible as zero-wait via `fromEventCentric()` (5 axes preserved verbatim); ZERO replay change (grep-verified no runtime importer). 4 tests.
+
+**CP2 (this commit, tag `sm-checkpoint-2-lowering-conservation`):**
+- Added `origin` to Provenance (operator rule — explicit/normalized/derived/compiler_generated; distinct from confidence; `compiler_generated` exonerates the extractor on replay disagreement). Helpers EXPLICIT/NORMALIZED/DERIVED/COMPILER + `compilerGeneratedNodes()`/`inferredNodes()` queries.
+- `state-machine-lowering.ts` — `lowerToStateMachineIR()` lowers structured extraction → StrategyIR (the "semantic graph" stand-in; fresh transcript→semantic LLM parse is CP6). Immediate → zero-wait (confirmation.compound BYTE-IDENTICAL to baseline = parity); delayed → populated wait_state (representation only, NOT executed differently — CP3 activates). origin labels on every node.
+- `semantic-conservation.ts` — the headline metric: every instructional unit gets EXACTLY ONE disposition {EXECUTED / NORMALIZED / IGNORED_WITH_REASON} or → silent_loss; `conserveOrThrow()` HARD-FAILS on silent loss. Makes silent loss structurally detectable.
+
+**RESULT (real data, 37 deduped corpus videos via `_coverage_speaker_items`):** **96.5% auto-accounted-for** (411/426 units); 15 silent-loss across 8 videos — now an ENUMERATED, categorized worklist (was invisible): genuine extraction gaps CORRECTLY surfaced (W7nln bearish-engulfing short-side, Fqx swing_high, SY2/W7nln candle patterns — deliberately NOT hidden by an over-broad matcher), enumerator-input garble (618/786/MEES/15-inut), minor psychology/umbrella matcher gaps. CP2 contract = silent loss can no longer vanish invisibly.
+
+**Verification:** tsc 0; 10 CP1+CP2 tests green; conservation run on real corpus. Acceptance MET: immediate-entry parity, provenance+origin on every node, compiler-generated nodes labeled, silent-loss detectable+hard-fail. Honest caveat: 96.5% not literal 100% auto-classified — but the CONTRACT (no invisible loss) holds; residual is a precise worklist where genuine gaps are surfaced, not buried.
+
+**Carry-forward:** CP3 = wait-state ACTIVATION (first execution change; ≥1 zone-return strategy compiles without a special primitive; first expected blind-suite lift). Then CP4 re-root the 5 axes, CP5 bidirectional traceability, CP6 Gemma multi-pass. The 15-item silent-loss worklist feeds the extraction layer (genuine gaps) + enumerator-garble cleanup (separate).
+
+---
 ### Session Log — 2026-06-27 (cont.) STATE-MACHINE IR REDESIGN — baseline frozen + 8-role taxonomy + design doc
 
 **Mission:** Operator's ordered plan — freeze the event-centric compiler as a control, validate the IR vocabulary (8-role instruction taxonomy), then write the state-machine IR design doc.

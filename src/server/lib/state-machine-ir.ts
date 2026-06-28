@@ -24,17 +24,35 @@ import type { ContextGate } from "./context-gate.js";
 // Distinguishes what the educator EXPLICITLY said from what the compiler/model INFERRED. This is what lets
 // the validator ask "are we backtesting on instructions or on assumptions?".
 export type Confidence = "explicit" | "inferred";
+/**
+ * `origin` (CP2 — distinct from `confidence`): HOW the node got here, not just stated-vs-inferred.
+ *  - explicit            — educator literally stated it
+ *  - normalized          — same meaning, different wording (synonym/umbrella reworded)
+ *  - derived             — required COMBINING multiple statements
+ *  - compiler_generated  — needed for execution but NEVER stated (timeouts, market-default, zero-wait)
+ * On a replay disagreement: a wrong trade from a `compiler_generated` node exonerates the extractor instantly.
+ */
+export type Origin = "explicit" | "normalized" | "derived" | "compiler_generated";
 export interface Provenance {
   transcript_lines?: number[]; // source line refs (forward+reverse traceability)
   evidence_quote?: string;     // verbatim span the node was derived from
   confidence: Confidence;
+  origin: Origin;
   inferred: boolean;           // true = compiler/model filled it in, NOT stated by the educator
-  because?: string;            // when inferred, the reasoning (audit trail)
+  because?: string;            // when inferred/derived/compiler-generated, the reasoning (audit trail)
 }
 export const EXPLICIT = (evidence_quote?: string, transcript_lines?: number[]): Provenance =>
-  ({ confidence: "explicit", inferred: false, evidence_quote, transcript_lines });
+  ({ confidence: "explicit", origin: "explicit", inferred: false, evidence_quote, transcript_lines });
+export const NORMALIZED = (because: string, evidence_quote?: string): Provenance =>
+  ({ confidence: "explicit", origin: "normalized", inferred: false, because, evidence_quote });
+export const DERIVED = (because: string, evidence_quote?: string): Provenance =>
+  ({ confidence: "inferred", origin: "derived", inferred: true, because, evidence_quote });
+/** Compiler-generated: needed for execution, never stated. The default for baseline-filled defaults. */
+export const COMPILER = (because: string): Provenance =>
+  ({ confidence: "inferred", origin: "compiler_generated", inferred: true, because });
+/** Back-compat alias — INFERRED defaults to compiler_generated origin (baseline fills are compiler-made). */
 export const INFERRED = (because: string, evidence_quote?: string): Provenance =>
-  ({ confidence: "inferred", inferred: true, because, evidence_quote });
+  ({ confidence: "inferred", origin: "compiler_generated", inferred: true, because, evidence_quote });
 
 export interface IRNode { provenance: Provenance }
 
@@ -105,19 +123,29 @@ export interface StrategyIR {
 /** Zero-wait degenerate = the old event-centric model (the event IS the confirmation, no waiting). */
 export function isZeroWait(ir: StrategyIR): boolean { return ir.wait_state.until.kind === "now"; }
 
-/** Collect every node carrying an INFERRED value — the validator's "are we backtesting on assumptions?" query. */
-export function inferredNodes(ir: StrategyIR): Array<{ at: string; because?: string }> {
-  const out: Array<{ at: string; because?: string }> = [];
-  const check = (at: string, n?: { provenance: Provenance } | null) => { if (n && n.provenance.inferred) out.push({ at, because: n.provenance.because }); };
-  check("bias", ir.bias);
-  check("structural_event", ir.structural_event);
-  check("execution_context", ir.execution_context);
-  check("wait_state", ir.wait_state);
-  check("wait_state.until", ir.wait_state.until);
-  check("wait_state.confirmation", ir.wait_state.confirmation);
-  check("wait_state.invalidated_by", ir.wait_state.invalidated_by);
-  check("entry", ir.entry);
+/** Walk every node with its dotted path (for the validator queries below). */
+function walkNodes(ir: StrategyIR): Array<{ at: string; provenance: Provenance }> {
+  const out: Array<{ at: string; provenance: Provenance }> = [];
+  const add = (at: string, n?: { provenance: Provenance } | null) => { if (n) out.push({ at, provenance: n.provenance }); };
+  add("bias", ir.bias);
+  add("structural_event", ir.structural_event);
+  add("execution_context", ir.execution_context);
+  add("wait_state", ir.wait_state);
+  add("wait_state.until", ir.wait_state.until);
+  add("wait_state.confirmation", ir.wait_state.confirmation);
+  add("wait_state.invalidated_by", ir.wait_state.invalidated_by);
+  add("entry", ir.entry);
   return out;
+}
+
+/** Collect every node carrying an INFERRED value — the "are we backtesting on assumptions?" query. */
+export function inferredNodes(ir: StrategyIR): Array<{ at: string; because?: string }> {
+  return walkNodes(ir).filter((n) => n.provenance.inferred).map((n) => ({ at: n.at, because: n.provenance.because }));
+}
+
+/** Collect compiler-generated nodes — CP2 acceptance: these must be explicitly labeled origin=compiler_generated. */
+export function compilerGeneratedNodes(ir: StrategyIR): Array<{ at: string; because?: string }> {
+  return walkNodes(ir).filter((n) => n.provenance.origin === "compiler_generated").map((n) => ({ at: n.at, because: n.provenance.because }));
 }
 
 /**
