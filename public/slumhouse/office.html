@@ -137,6 +137,39 @@
     .of-card-badge.off { color: var(--red);  background: rgba(255,99,99,0.10); border-color: rgba(255,99,99,0.35); }
     .of-card-title { margin-top: 16px; font-size: 42px; font-weight: 800; color: var(--ink); letter-spacing: 0.004em; line-height: 1.04; }
     .of-card-sub { margin-top: 12px; font-size: 16px; color: var(--dim); line-height: 1.45; max-width: 90%; }
+    /* Carter connect card — mirrors the Slumdawg UpTOP connect screen theme
+       (cover art + dark veil + glassy black/lime pill), inside the 3D card. */
+    .of-card3d.of-connect { padding: 0; }
+    .of-connect-cover {
+      position: absolute; inset: 0; border-radius: inherit;
+      background-size: cover; background-position: center; background-repeat: no-repeat;
+      -webkit-transform: translateZ(0); transform: translateZ(0); backface-visibility: hidden;
+    }
+    .of-connect-veil {
+      position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+      box-shadow:
+        inset 0 0 0 1px rgba(163,255,18,0.10),
+        inset 0 -90px 110px rgba(0,0,0,0.72),
+        inset 0 0 90px rgba(0,0,0,0.40);
+    }
+    .of-connect-foot {
+      position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
+      display: flex; justify-content: center; padding-bottom: 24px;
+    }
+    .of-connect-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: inherit; font-size: 15px; font-weight: 700; letter-spacing: 0.02em;
+      color: rgba(255,255,255,0.95);
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      padding: 13px 26px; border-radius: 999px; border: 1px solid rgba(163,255,18,0.40);
+      text-shadow: 0 1px 4px rgba(0,0,0,0.6); cursor: pointer;
+      box-shadow: 0 0 20px rgba(163,255,18,0.18);
+      transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s, background 0.18s;
+    }
+    .of-connect-pill:hover { transform: translateY(-1px); border-color: rgba(163,255,18,0.75); background: rgba(0,0,0,0.72); box-shadow: 0 0 30px rgba(163,255,18,0.34); }
+    .of-connect-pill:active { transform: translateY(0); }
+    .of-connect-pill:disabled { opacity: 0.8; cursor: default; }
+    .of-connect-pill span { color: var(--lime); font-size: 12px; text-shadow: 0 0 8px rgba(163,255,18,0.6); }
     /* explicit ON / OFF meanings (color-coded) */
     .of-onoff { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
     .of-on, .of-off { display: flex; gap: 12px; align-items: baseline; font-size: 15px; line-height: 1.4; color: var(--ink); }
@@ -399,6 +432,8 @@
 
       // ── Pass 3: floating 3D switch-card carousel (empty shells, no switches yet) ──
       var OF_CARDS = [
+        { id: 'carter', connect: true, eyebrow: 'Your AI', title: 'Carter',
+          cover: '/slumhouse/images/carter-cover.png', connectLabel: 'Connect to Carter' },
         { id: 'bot_power', eyebrow: 'Main switch', title: 'Bot Power',
           on: 'The bot makes trades.',
           off: 'The bot stops — no new trades. (Turns RED if it pauses itself for safety; flip ON to resume.)' },
@@ -447,6 +482,26 @@
         OF_CARDS.forEach(function (cd, i) {
           var el = document.createElement('div');
           el.className = 'of-card3d';
+          if (cd.connect) {
+            // Carter connect card — mirrors the Slumdawg UpTOP connect screen
+            // (cover art + dark veil + glassy lime pill). No toggle.
+            el.classList.add('of-connect');
+            el.innerHTML =
+              '<div class="of-connect-cover" style="background-image:url(\'' + cd.cover + '\')"></div>' +
+              '<div class="of-connect-veil"></div>' +
+              '<div class="of-connect-foot">' +
+                '<button class="of-connect-pill" type="button" data-connect><span>&#9658;</span> ' + cd.connectLabel + '</button>' +
+              '</div>';
+            el.addEventListener('click', function () { if (i !== ofCur) ofGo(i); });
+            var cbtn = el.querySelector('[data-connect]');
+            cbtn.addEventListener('click', function (e) { e.stopPropagation(); connectCarter(); });
+            ofTrack.appendChild(el);
+            var cdot = document.createElement('button');
+            cdot.className = 'of-dot'; cdot.type = 'button';
+            cdot.addEventListener('click', function () { ofGo(i); });
+            ofDots.appendChild(cdot);
+            return; // connect card has no toggle — skip the switch-card wiring
+          }
           var ofBody;
           if (cd.threeMode) {
             ofBody = '<div class="of-onoff of-3mode">' +
@@ -500,6 +555,18 @@
         loadSwitches();
       }
 
+      // Carter connect — the immersive connect page is designed separately
+      // (operator-directed). This placeholder is the hook the pill calls; it
+      // will be replaced with the real connect-screen launch.
+      function connectCarter() {
+        var pill = document.querySelector('.of-connect-pill');
+        if (!pill) return;
+        var prev = pill.innerHTML;
+        pill.innerHTML = '<span>&#9679;</span> Connect screen coming next';
+        pill.disabled = true;
+        setTimeout(function () { pill.innerHTML = prev; pill.disabled = false; }, 1800);
+      }
+
       function loadSwitches() {
         fetch('/slumhouse/admin/switches', { credentials: 'same-origin' })
           .then(function (r) { return r.json(); })
@@ -508,6 +575,7 @@
       }
       function applySwitches() {
         OF_CARDS.forEach(function (cd, i) {
+          if (cd.connect) return; // Carter connect card has no toggle/badge/status
           var el = ofTrack.children[i]; if (!el) return;
           var s = ofSwitches[cd.id] || {};
           var tg = el.querySelector('[data-toggle]');
