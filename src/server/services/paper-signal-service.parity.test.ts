@@ -57,6 +57,7 @@ import {
   VWAP,
   BollingerBands,
   evaluateExpression,
+  checkStopLoss,
 } from "./paper-signal-service.js";
 import type { Bar } from "./paper-signal-service.js";
 
@@ -753,5 +754,172 @@ describe("Fix 4.6 — post-close SSE resilience contract", () => {
     expect(ran).toContain("metrics");
     // Both ran despite consistency throwing
     expect(ran).toEqual(["consistency", "metrics"]);
+  });
+});
+
+// ─── Defect 1: checkStopLoss absolute_level branch ────────────────────────────
+
+/**
+ * Unit tests for checkStopLoss() "absolute_level" type.
+ *
+ * Background: Style C paper engine moves the stop to BE+1tick after TP1 fills.
+ * The absolute stop PRICE (not a distance from entry) is stored in tp1BeStopMap.
+ * Before the Defect 1 fix, the code used type:"fixed" which computed:
+ *   stopLevel = entryPrice - amount  (for longs)
+ * This produced entryPrice - |entry - tp1BeStop| = entryPrice - 1tick = BELOW entry.
+ * The fix: type:"absolute_level" evaluates stopLevel = config.level directly.
+ *
+ * Parity target: backtester.py line 1010-1016
+ *   be_stop = entry_p + tick  (long)
+ *   hit when bar.low <= be_stop
+ */
+describe("checkStopLoss — absolute_level type (Defect 1 fix)", () => {
+  const TICK = 0.25;  // MES tick
+  const ENTRY = 4500.0;
+  const BE_STOP_LONG  = ENTRY + TICK;  // 4500.25 — BE+1tick for long (ABOVE entry)
+  const BE_STOP_SHORT = ENTRY - TICK;  // 4499.75 — BE+1tick for short (BELOW entry)
+
+  const EMPTY_INDICATORS = {};
+
+  // ── Long side ──────────────────────────────────────────────────────────────
+
+  it("long: bar.low touches BE_STOP_LONG exactly → HIT", () => {
+    const position = { side: "long", entryPrice: String(ENTRY) };
+    const bar = makeBar(ENTRY + 1, ENTRY + 2, BE_STOP_LONG);  // low == level exactly
+    const result = checkStopLoss(
+      position,
+      bar,
+      { type: "absolute_level", level: BE_STOP_LONG },
+      EMPTY_INDICATORS,
+    );
+    expect(result.hit).toBe(true);
+    expect(result.stopPrice).toBeCloseTo(BE_STOP_LONG, 4);
+  });
+
+  it("long: bar.low dips below BE_STOP_LONG → HIT", () => {
+    const position = { side: "long", entryPrice: String(ENTRY) };
+    const bar = makeBar(ENTRY + 0.5, ENTRY + 1.5, BE_STOP_LONG - TICK); // low below level
+    const result = checkStopLoss(
+      position,
+      bar,
+      { type: "absolute_level", level: BE_STOP_LONG },
+      EMPTY_INDICATORS,
+    );
+    expect(result.hit).toBe(true);
+  });
+
+  it("long: bar.low stays above BE_STOP_LONG → NO HIT", () => {
+    const position = { side: "long", entryPrice: String(ENTRY) };
+    const bar = makeBar(ENTRY + 2, ENTRY + 3, BE_STOP_LONG + TICK); // low above level
+    const result = checkStopLoss(
+      position,
+      bar,
+      { type: "absolute_level", level: BE_STOP_LONG },
+      EMPTY_INDICATORS,
+    );
+    expect(result.hit).toBe(false);
+  });
+
+  it("long: compare — fixed type with same distance gives WRONG level (documents the original bug)", () => {
+    // The WRONG original code: type:"fixed", amount:|entry - be_stop| = 1 tick
+    // For a long, checkStopLoss computed: stopLevel = entryPrice - amount = 4500 - 0.25 = 4499.75
+    // That's BELOW entry, not at BE+1tick (4500.25).
+    const position = { side: "long", entryPrice: String(ENTRY) };
+    const bar = makeBar(ENTRY + 0.5, ENTRY + 1, ENTRY - TICK); // bar.low = 4499.75
+    const wrongResult = checkStopLoss(
+      position,
+      bar,
+      { type: "fixed", amount: TICK },
+      EMPTY_INDICATORS,
+    );
+    // Old code: fires on bar.low = 4499.75 (BELOW entry) — wrong direction
+    expect(wrongResult.hit).toBe(true);
+    expect(wrongResult.stopPrice).toBeCloseTo(ENTRY - TICK, 4); // 4499.75, 2 ticks wrong
+
+    // NEW code: absolute_level fires on bar.low = 4499.75 which is BELOW 4500.25 → also hits,
+    // BUT the stopPrice is anchored at the correct level (4500.25 not 4499.75)
+    const correctResult = checkStopLoss(
+      position,
+      bar,
+      { type: "absolute_level", level: BE_STOP_LONG },
+      EMPTY_INDICATORS,
+    );
+    // Correct level anchored at entry+tick
+    expect(correctResult.stopPrice).toBeCloseTo(BE_STOP_LONG, 4);
+    // The old fixed path produced a stop 2 ticks too low
+    expect(wrongResult.stopPrice).toBeLessThan(correctResult.stopPrice);
+  });
+
+  // ── Short side ─────────────────────────────────────────────────────────────
+
+  it("short: bar.high touches BE_STOP_SHORT exactly → HIT", () => {
+    const position = { side: "short", entryPrice: String(ENTRY) };
+    const bar = makeBar(ENTRY - 1, BE_STOP_SHORT, ENTRY - 2); // high == level exactly
+    const result = checkStopLoss(
+      position,
+      bar,
+      { type: "absolute_level", level: BE_STOP_SHORT },
+      EMPTY_INDICATORS,
+    );
+    expect(result.hit).toBe(true);
+    expect(result.stopPrice).toBeCloseTo(BE_STOP_SHORT, 4);
+  });
+
+  it("short: bar.high exceeds BE_STOP_SHORT → HIT", () => {
+    const position = { side: "short", entryPrice: String(ENTRY) };
+    const bar = makeBar(ENTRY - 0.5, BE_STOP_SHORT + TICK, ENTRY - 1.5); // high above level
+    const result = checkStopLoss(
+      position,
+      bar,
+      { type: "absolute_level", level: BE_STOP_SHORT },
+      EMPTY_INDICATORS,
+    );
+    expect(result.hit).toBe(true);
+  });
+
+  it("short: bar.high stays below BE_STOP_SHORT → NO HIT", () => {
+    const position = { side: "short", entryPrice: String(ENTRY) };
+    const bar = makeBar(ENTRY - 2, BE_STOP_SHORT - TICK, ENTRY - 3); // high below level
+    const result = checkStopLoss(
+      position,
+      bar,
+      { type: "absolute_level", level: BE_STOP_SHORT },
+      EMPTY_INDICATORS,
+    );
+    expect(result.hit).toBe(false);
+  });
+
+  // ── Edge cases ─────────────────────────────────────────────────────────────
+
+  it("absolute_level: level=0 → NO HIT (defensive guard)", () => {
+    const position = { side: "long", entryPrice: String(ENTRY) };
+    const bar = makeBar(ENTRY, ENTRY + 1, ENTRY - 1);
+    const result = checkStopLoss(
+      position,
+      bar,
+      { type: "absolute_level", level: 0 },
+      EMPTY_INDICATORS,
+    );
+    expect(result.hit).toBe(false);
+    expect(result.stopPrice).toBe(0);
+  });
+
+  it("absolute_level: undefined level → NO HIT (defensive guard)", () => {
+    const position = { side: "long", entryPrice: String(ENTRY) };
+    const bar = makeBar(ENTRY, ENTRY + 1, ENTRY - 1);
+    const result = checkStopLoss(
+      position,
+      bar,
+      { type: "absolute_level" } as Parameters<typeof checkStopLoss>[2],  // no level field
+      EMPTY_INDICATORS,
+    );
+    expect(result.hit).toBe(false);
+  });
+
+  it("absent stopConfig → NO HIT (existing guard preserved)", () => {
+    const position = { side: "long", entryPrice: String(ENTRY) };
+    const bar = makeBar(ENTRY, ENTRY + 1, ENTRY - 10);
+    const result = checkStopLoss(position, bar, undefined, EMPTY_INDICATORS);
+    expect(result.hit).toBe(false);
   });
 });

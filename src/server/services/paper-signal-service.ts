@@ -370,9 +370,10 @@ interface StrategyConfig {
 }
 
 interface StopLossConfig {
-  type: "atr" | "fixed";
+  type: "atr" | "fixed" | "absolute_level";
   multiplier?: number;   // for ATR stop
-  amount?: number;        // for fixed stop
+  amount?: number;        // for fixed stop (distance from entry)
+  level?: number;         // for absolute_level stop (exact stop PRICE, not distance)
   atr_period?: number;    // default 14
 }
 
@@ -1482,7 +1483,23 @@ async function fetchICTIndicators(
 
 // ─── Stop-Loss Check ────────────────────────────────────────
 
-function checkStopLoss(
+/**
+ * Evaluate whether a stop-loss has been hit for an open position.
+ *
+ * Exported for unit testing only — callers outside this module should not
+ * import this function directly.
+ *
+ * Stop types:
+ *   "atr"            — dynamic: stop DISTANCE = multiplier × ATR
+ *   "fixed"          — static: stop DISTANCE = config.amount (subtracted from entryPrice)
+ *   "absolute_level" — static: stop LEVEL = config.level (exact price, not a distance)
+ *
+ * The "absolute_level" type is used for the BE+1tick override after TP1 fills
+ * (Style C). It carries the exact stop PRICE rather than a distance from entry,
+ * preventing the sign inversion that the "fixed"/"atr" types produce when the
+ * stop is ABOVE entry (i.e., BE+1tick for a long is entry+1tick, not entry-1tick).
+ */
+export function checkStopLoss(
   position: { side: string; entryPrice: string },
   bar: Bar,
   stopConfig: StopLossConfig | undefined,
@@ -1491,6 +1508,19 @@ function checkStopLoss(
   if (!stopConfig) return { hit: false, stopPrice: 0 };
 
   const entryPrice = Number(position.entryPrice);
+
+  // Defect 1 fix: absolute_level carries the exact stop PRICE — no arithmetic needed.
+  // Used for BE+1tick override after Style C TP1 fills (tp1BeStopMap mechanism).
+  if (stopConfig.type === "absolute_level") {
+    const level = stopConfig.level ?? 0;
+    if (level === 0) return { hit: false, stopPrice: 0 };
+    if (position.side === "long") {
+      return { hit: bar.low <= level, stopPrice: level };
+    } else {
+      return { hit: bar.high >= level, stopPrice: level };
+    }
+  }
+
   let stopDistance: number;
 
   if (stopConfig.type === "atr") {
@@ -1506,6 +1536,7 @@ function checkStopLoss(
     }
     stopDistance = atrVal * (stopConfig.multiplier ?? 2);
   } else {
+    // "fixed" type: amount is the distance from entry price
     stopDistance = stopConfig.amount ?? 0;
     if (stopDistance === 0) return { hit: false, stopPrice: 0 };
   }
@@ -2916,9 +2947,16 @@ export async function evaluateSignals(
     // C-3: When Style C TP1 has been crossed, override the stop config with the
     // BE+1tick level stored in tp1BeStopMap. This ensures the risk guarantee
     // (stop moves to break-even after TP1 fills) is honored every bar.
+    //
+    // Defect 1 fix: use type:"absolute_level" (not type:"fixed") so checkStopLoss
+    // receives the EXACT stop PRICE rather than a distance.  The old type:"fixed"
+    // path computed stopLevel = entryPrice - distance = entryPrice - 1tick, which
+    // is BELOW entry for a long — 2 ticks wrong.  type:"absolute_level" evaluates
+    // bar.low <= level directly, which is the correct parity with backtester.py
+    // (be_stop = entry_p + tick; hit when bar.low <= be_stop).
     const tp1BeStop = tp1BeStopMap.get(openPos.id);
     const effectiveStopConfig: StopLossConfig | undefined = tp1BeStop != null
-      ? { type: "fixed", amount: Math.abs(Number(openPos.entryPrice) - tp1BeStop) }
+      ? { type: "absolute_level", level: tp1BeStop }
       : config.stop_loss;
     const stopResult = checkStopLoss(openPos, bar, effectiveStopConfig, indicators);
     stopHit = stopResult.hit;
