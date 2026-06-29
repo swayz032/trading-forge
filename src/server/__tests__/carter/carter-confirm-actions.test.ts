@@ -187,6 +187,27 @@ describe("Carter YELLOW confirm handlers — token gating", () => {
     expect(out.error).toBe("invalid_webhook_path");
   });
 
+  // F-1 (HIGH) regression — path traversal must NOT resolve past /webhook/ to the management API.
+  it.each([
+    "../../api/v1/workflows",
+    "../api/v1/workflows",
+    "%2E%2E/api/v1/workflows",
+  ])("confirm_trigger_n8n_workflow rejects traversal path %s and never calls fetch", async (badPath) => {
+    const params = { workflowWebhookPath: badPath };
+    const token = await proposeToken("trigger_n8n_workflow", params);
+    const out = await CARTER_CONFIRM_HANDLERS.confirm_trigger_n8n_workflow(params, token) as { error?: string };
+    expect(out.error).toBe("invalid_webhook_path");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("confirm_trigger_n8n_workflow still triggers a clean path after the traversal guard", async () => {
+    const params = { workflowWebhookPath: "my-flow" };
+    const token = await proposeToken("trigger_n8n_workflow", params);
+    const ok = await CARTER_CONFIRM_HANDLERS.confirm_trigger_n8n_workflow(params, token) as { triggered?: boolean };
+    expect(ok.triggered).toBe(true);
+    expect(fetchMock).toHaveBeenCalledWith("https://n8n.test/webhook/my-flow", expect.anything());
+  });
+
   it("confirm_run_quantum rejects without a token, runs MC (cloud OFF) with one", async () => {
     const params = { backtestId: "bt-1" };
     const rejected = await CARTER_CONFIRM_HANDLERS.confirm_run_quantum(params) as { error?: string };

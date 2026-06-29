@@ -815,15 +815,46 @@ async function confirmTriggerN8nWorkflow(params: unknown, token?: string): Promi
 
   const path = String(clean.workflowWebhookPath ?? "").replace(/^\/+/, "");
   if (!path) return { error: "workflowWebhookPath is required" };
+
   // GUARDRAIL: webhook trigger paths ONLY — never the management REST API.
+  // The naive prefix check is insufficient: `../../api/v1/workflows` resolves
+  // past `/webhook/` to the management API. Defense in depth, 3 layers:
   const lower = path.toLowerCase();
-  if (/[?#]/.test(path) || lower.includes("rest/") || lower.startsWith("api/") || lower.startsWith("webhook/")) {
+
+  // Layer 1 — reject path traversal / null-byte in any form (raw or %-encoded).
+  if (
+    lower.includes("../") || lower.includes("..\\") ||
+    lower.includes("%2e%2e") || lower.includes("%2f") || lower.includes("%5c") ||
+    path.includes("\0")
+  ) {
+    return { error: "invalid_webhook_path", message: "Path traversal is not allowed (workflow management is a RED action)." };
+  }
+
+  // Layer 2 — reject management-path tokens anywhere, not just as a prefix.
+  if (/[?#]/.test(path) || lower.includes("api/") || lower.includes("rest/") || lower.includes("webhook/")) {
     return { error: "invalid_webhook_path", message: "Only the n8n webhook trigger path segment is allowed (workflow management is a RED action)." };
   }
+
   const base = process.env.N8N_BASE_URL;
   if (!base) return { error: "n8n_base_url_not_configured" };
 
-  const resp = await fetch(`${base}/webhook/${path}`, {
+  const finalUrl = `${base}/webhook/${path}`;
+
+  // Layer 3 — strongest: verify the RESOLVED URL still lands under /webhook/ and
+  // never reaches /api/ or /rest/. Catches resolution-based escapes regardless of
+  // the input string form (the URL parser normalizes `..` dot-segments).
+  let parsedPath: string;
+  try {
+    parsedPath = new URL(finalUrl).pathname;
+  } catch {
+    return { error: "invalid_webhook_path", message: "Resolved webhook URL is malformed." };
+  }
+  const parsedLower = parsedPath.toLowerCase();
+  if (!parsedLower.startsWith("/webhook/") || parsedLower.includes("/api/") || parsedLower.includes("/rest/")) {
+    return { error: "invalid_webhook_path", message: "Resolved URL escapes the webhook trigger path (workflow management is a RED action)." };
+  }
+
+  const resp = await fetch(finalUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify((clean.payload as Record<string, unknown>) ?? {}),
