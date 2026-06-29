@@ -4124,12 +4124,22 @@ export async function updatePositionPrices(
       try {
         const exitPlanRow = pos.exitPlan as ExitPlanWithRuntimeState;
         const trailMethod = exitPlanRow.runner?.trail_method;
-        // F-4 (2026-06-29): renamed from atrAtBar — this reads CURRENT-BAR ATR from
-        // exitBarContext, not entry-frozen ATR. Name was misleading. Backtest equivalent:
-        // atr_at_bar = float(atr_np[bar]) if not np.isnan(atr_np[bar]) else atr_at_entry.
-        // Parity note: backtest falls back to atr_at_entry on NaN; paper falls back to 0.
-        // Gap is edge-case only (NaN ATR bar). atr_at_entry not stored in paper_positions.
-        const atrAtBar = exitBarContext.atr14[pos.symbol] ?? 0;
+        // F-4 (2026-06-29): current-bar ATR from exitBarContext (renamed from misleading atrAtEntry).
+        // Backtest equivalent: atr_at_bar = float(atr_np[bar]) if not np.isnan(atr_np[bar]) else atr_at_entry.
+        // F-4 residual (2026-06-29): when rawAtrAtBar is 0 (paper-trading-stream.ts:204 converts
+        // NaN→0 for insufficient ATR history), fall back to entry ATR estimated from initialStopPrice.
+        // Matches backtester NaN-fallback to atr_at_entry. Formula mirrors FINDING #5 FIX (~line 4877):
+        //   |entryPrice - initialStopPrice| / 2.0 ≈ atr_at_entry  (when stop was set as atr×2.0)
+        // If initialStopPrice is unset (pre-migration positions), atrAtBar stays 0;
+        // chandelier guard below skips trail update to prevent highSince stop-out.
+        const rawAtrAtBar = exitBarContext.atr14[pos.symbol] ?? 0;
+        const atrAtBar = rawAtrAtBar > 0 ? rawAtrAtBar : (() => {
+          const stopNum = Number(pos.initialStopPrice ?? 0);
+          const entryNum = Number(pos.entryPrice);
+          if (!stopNum || !isFinite(stopNum) || !isFinite(entryNum)) return 0;
+          const est = Math.abs(entryNum - stopNum) / 2.0;
+          return est > 0 ? est : 0;
+        })();
         const ATR_TRAIL_CUSHION_MULTIPLIER = 1.0; // named constant per CLAUDE.md §13 no-magic-numbers
         let computedTrail: number | null = null;
         let updatedRuntimeState: ExitPlanWithRuntimeState["runtime_state"] | null = null;
@@ -4181,17 +4191,19 @@ export async function updatePositionPrices(
             // chandelier was computed from entryPrice — always below the BE stop, so the
             // ratchet blocked it and the trail was permanently stuck at BE.
             //
-            // F-4 (2026-06-29): atrAtBar = exitBarContext.atr14[symbol] — current-bar ATR.
-            // Backtest uses atr_at_bar = float(atr_np[bar]) with atr_at_entry fallback on NaN.
-            // Both paths use current-bar ATR in the normal (non-NaN) case — parity confirmed.
-            // Remaining gap: fallback when ATR is NaN — paper uses 0, backtest uses atr_at_entry.
-            // atr_at_entry is not stored in paper_positions; edge-case gap is documented only.
+            // F-4 (2026-06-29): atrAtBar = current-bar ATR (or initialStopPrice-derived fallback
+            // when current-bar ATR is 0 — see declaration above).
+            // F-4 residual (2026-06-29): NaN-fallback parity closed: paper now estimates entry ATR
+            // from initialStopPrice, matching backtester atr_at_entry fallback on NaN.
+            // Guard: if atrAtBar===0 (even after fallback, e.g. pre-migration null initialStopPrice),
+            // skip chandelier trail — prevents trail being set to highSince (instant stop-out).
             //
             // For longs:  trail = highSinceEntryPrice - (2.0 × atrAtBar)
             // For shorts: trail = lowSinceEntryPrice  + (2.0 × atrAtBar)
             const CHANDELIER_MULTIPLIER = 2.0;
             const highSince = newHighSinceEntry;   // already computed above from this bar's data
             const lowSince  = newLowSinceEntry;
+            if (atrAtBar === 0) break; // guard: skip trail when ATR unavailable — prevents highSince stop-out
             computedTrail = pos.side === "long"
               ? highSince - CHANDELIER_MULTIPLIER * atrAtBar
               : lowSince  + CHANDELIER_MULTIPLIER * atrAtBar;

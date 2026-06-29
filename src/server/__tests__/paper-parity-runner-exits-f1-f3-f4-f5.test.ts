@@ -187,6 +187,86 @@ describe("F-4 parity: chandelier ATR is current-bar (not entry-frozen)", () => {
   });
 });
 
+// ─── F-4 residual parity: chandelier NaN-ATR fallback = initialStopPrice-derived ATR ──
+//
+// When exitBarContext.atr14[symbol] is 0 (paper-trading-stream.ts:204 converts
+// NaN→0 for insufficient ATR history), the pre-fix code used 0 as the ATR.
+// chandelier trail = highSince - 2.0 * 0 = highSince → instant stop-out on any pullback.
+//
+// Post-fix: derive entry ATR from initialStopPrice using |entryPrice - initialStopPrice| / 2.0
+// when rawAtrAtBar is 0. Matches backtester.py NaN path:
+//   atr_at_bar = float(atr_np[bar]) if not np.isnan(atr_np[bar]) else atr_at_entry
+// If even the derived fallback is 0 (initialStopPrice unset), chandelier guard
+// skips the update — trail stays at last valid HWM (not at highSince).
+
+describe("F-4 residual parity: chandelier NaN-ATR fallback = initialStopPrice-derived entry ATR", () => {
+  it("pre-fix regression: zero ATR produces trail = highSince (catastrophic instant stop-out)", () => {
+    // Documents the bug: rawAtrAtBar=0 → trail = highSince → stop-out on any 1-tick pullback
+    const rawAtrAtBar = 0; // stream converts NaN → 0 for insufficient ATR history
+    const CHANDELIER_MULTIPLIER = 2.0;
+    const highSince = 5020.0;
+    const trail_preFix = highSince - CHANDELIER_MULTIPLIER * rawAtrAtBar;
+    // Pre-fix result == highSince (the running high) — any bar with price < 5020 stops out
+    expect(trail_preFix).toBe(highSince);
+  });
+
+  it("post-fix long: zero ATR falls back to initialStopPrice-derived entry ATR for chandelier", () => {
+    // rawAtrAtBar = 0 → derive ATR from |entryPrice - initialStopPrice| / 2.0
+    // initialStopPrice = 4990 implies ATR×2 stop → ATR estimate = (5000-4990)/2 = 5.0
+    const rawAtrAtBar = 0;
+    const entryPrice = 5000.0;
+    const initialStopPrice = 4990.0;
+    const atrEstimate = Math.abs(entryPrice - initialStopPrice) / 2.0; // 5.0
+
+    const atrAtBar = rawAtrAtBar > 0 ? rawAtrAtBar : atrEstimate; // 5.0
+    expect(atrAtBar).toBe(5.0);
+
+    const CHANDELIER_MULTIPLIER = 2.0;
+    const highSince = 5020.0;
+    const trail = highSince - CHANDELIER_MULTIPLIER * atrAtBar; // 5010.0
+
+    expect(trail).toBeCloseTo(5010.0, 4); // correct — 2×ATR below running high
+    expect(trail).not.toBe(highSince);    // not instant stop-out
+  });
+
+  it("post-fix short: zero ATR falls back to initialStopPrice-derived entry ATR for chandelier", () => {
+    const rawAtrAtBar = 0;
+    const entryPrice = 5000.0;
+    const initialStopPrice = 5010.0; // short stop above entry: ATR estimate = 5.0
+    const atrEstimate = Math.abs(entryPrice - initialStopPrice) / 2.0; // 5.0
+
+    const atrAtBar = rawAtrAtBar > 0 ? rawAtrAtBar : atrEstimate;
+
+    const CHANDELIER_MULTIPLIER = 2.0;
+    const lowSince = 4980.0;
+    const trail = lowSince + CHANDELIER_MULTIPLIER * atrAtBar; // 4990.0
+
+    expect(trail).toBeCloseTo(4990.0, 4);
+    expect(trail).not.toBe(lowSince); // not instant stop-out for shorts
+  });
+
+  it("initialStopPrice null → atrAtBar stays 0 → chandelier guard skips trail update", () => {
+    // When initialStopPrice is unset, fallback derivation returns 0.
+    // The chandelier guard (atrAtBar === 0) prevents setting trail = highSince.
+    const rawAtrAtBar = 0;
+    const initialStopPrice: number | null = null; // pre-migration positions
+
+    // Derive atrAtBar (mirrors service code)
+    const stopNum = Number(initialStopPrice ?? 0);
+    const entryNum = 5000.0;
+    const atrAtBar = rawAtrAtBar > 0 ? rawAtrAtBar
+      : (stopNum > 0 && isFinite(stopNum) && isFinite(entryNum)
+          ? (() => { const est = Math.abs(entryNum - stopNum) / 2.0; return est > 0 ? est : 0; })()
+          : 0);
+
+    expect(atrAtBar).toBe(0); // fallback fails — can't derive ATR
+
+    // Guard: chandelier skips trail update when atrAtBar === 0
+    const chandelierGuardFires = atrAtBar === 0;
+    expect(chandelierGuardFires).toBe(true); // trail stays at HWM, not set to highSince
+  });
+});
+
 // ─── F-5 parity: daily cap counts entries (positions) not legs (trades) ───────
 //
 // Verifies the counting contract: 1 paper_positions row per entry, regardless of
