@@ -5365,10 +5365,12 @@
       "strategies",
       "backtests",
       "audit_log",
-      "carter_issues"
+      "carter_issues",
+      "carter_memory"
     ],
     "writes_to": [
       "carter_issues",
+      "carter_memory",
       "audit_log"
     ],
     "audit_tables": [
@@ -5396,7 +5398,8 @@
     ],
     "engine_subsystems": [],
     "database_tables": [
-      "carter_issues"
+      "carter_issues",
+      "carter_memory"
     ],
     "learning_from": [],
     "learning_assets": [],

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-29T07:31:07.510Z",
+  "generatedAt": "2026-06-29T20:47:24.381Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -20,7 +20,7 @@
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 29,
-    "databaseTables": 109,
+    "databaseTables": 110,
     "registrySubsystems": 71
   },
   "routes": [
@@ -837,6 +837,7 @@
     "bias_state",
     "broker_accounts",
     "carter_issues",
+    "carter_memory",
     "cloud_qmc_runs",
     "compliance_drift_log",
     "compliance_reviews",
@@ -991,7 +992,7 @@
       "routes": 78,
       "schedulerJobs": 103,
       "engineSubsystems": 29,
-      "databaseTables": 109
+      "databaseTables": 110
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
@@ -2010,6 +2011,7 @@
           "backtests",
           "Carter tool registry (read+run tools)",
           "carter_issues",
+          "carter_memory",
           "ElevenLabs post-call transcript webhook",
           "strategies",
           "subsystem read surfaces (status, lifecycle, backtests, scout)"
@@ -8910,6 +8912,7 @@
         "backtests",
         "Carter tool registry (read+run tools)",
         "carter_issues",
+        "carter_memory",
         "ElevenLabs post-call transcript webhook",
         "strategies",
         "subsystem read surfaces (status, lifecycle, backtests, scout)"
