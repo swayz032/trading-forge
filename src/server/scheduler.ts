@@ -391,8 +391,14 @@ function _tryAcquireJobLock(name: string): boolean {
     _jobWatchdogs.delete(name);
     notifyCritical(
       `[scheduler.job_hung] ${name} exceeded max duration`,
-      `Job "${name}" held its lock for >${MAX_JOB_DURATION_MS}ms without completing. ` +
-      `Lock was force-released. Check for deadlocks, hung subprocesses, or DB connection exhaustion.`,
+      // Deep-scan #5 (2026-06-29): family-grade postscript on the job-hung watchdog alert
+      // (was the lone unwrapped notifyCritical in scheduler.ts the postscript lint flagged).
+      appendFamilyGradePostscript(
+        `Job "${name}" held its lock for >${MAX_JOB_DURATION_MS}ms without completing. ` +
+        `Lock was force-released. Check for deadlocks, hung subprocesses, or DB connection exhaustion.`,
+        "A scheduled background job got stuck and the bot force-released it so other jobs keep running.",
+        "Trading is unaffected. If you see this repeatedly for the same job, tell Tony.",
+      ),
       { jobName: name, maxMs: MAX_JOB_DURATION_MS },
     );
     insertAuditRowSafe({

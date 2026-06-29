@@ -383,11 +383,15 @@ export function setOllamaUnhealthy(reason: string): void {
   const now = Date.now();
   if (wasHealthy || now - _lastOllamaUnhealthyNotifyMs > cooldownMs) {
     _lastOllamaUnhealthyNotifyMs = now;
-    import("./notification-service.js")
-      .then(({ notifyWarning }) =>
+    Promise.all([import("./notification-service.js"), import("../lib/notification-helpers.js")])
+      .then(([{ notifyWarning }, { appendFamilyGradePostscript }]) =>
         notifyWarning(
           "Local LLM (Ollama) unhealthy — cloud fallback active",
-          `model-router set OLLAMA_HEALTHY=false (reason: ${reason}). Transcript extraction is now routing to the cloud fallback (incurs cost). The system auto-rechecks on recovery; if this persists, the tower's Ollama may need a restart or model re-pull.`,
+          appendFamilyGradePostscript(
+            `model-router set OLLAMA_HEALTHY=false (reason: ${reason}). Transcript extraction is now routing to the cloud fallback (incurs cost). The system auto-rechecks on recovery; if this persists, the tower's Ollama may need a restart or model re-pull.`,
+            "The bot's local AI model went offline, so it switched to the paid cloud AI to keep working.",
+            "Nothing is broken — trading is unaffected. If this alert repeats for hours, tell Tony the tower may need a restart.",
+          ),
         ),
       )
       .catch((e) => logger.warn({ err: e }, "model-router: ollama-unhealthy Discord notify failed (non-blocking)"));
