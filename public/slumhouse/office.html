@@ -139,7 +139,11 @@
     .of-card-sub { margin-top: 12px; font-size: 16px; color: var(--dim); line-height: 1.45; max-width: 90%; }
     /* Carter connect card — mirrors the Slumdawg UpTOP connect screen theme
        (cover art + dark veil + glassy black/lime pill), inside the 3D card. */
-    .of-card3d.of-connect { padding: 0; }
+    /* Connect card is all absolutely-positioned (cover/veil/pill) — it has NO
+       flow content, so it needs an explicit height or it collapses to 0 (this
+       is why it vanished on mobile where .of-card3d is height:auto). The
+       two-class selector outranks the mobile `.of-card3d { height:auto }`. */
+    .of-card3d.of-connect { padding: 0; height: min(410px, 60vh); }
     .of-connect-cover {
       position: absolute; inset: 0; border-radius: inherit;
       background-size: cover; background-position: center; background-repeat: no-repeat;
@@ -323,6 +327,9 @@
         width: 88vw; height: auto; min-height: 0; max-height: none;
         padding: 24px 22px; border-radius: 22px; justify-content: center;
       }
+      /* Carter connect card: fixed height so the cover fills it like the other
+         cards (it has no flow content to give it height on mobile). */
+      .of-card3d.of-connect { width: 88vw; height: 56svh; max-height: 56svh; padding: 0; }
       .of-card3d.is-active {
         transform: translate(-50%, -50%) translateZ(30px) scale(1) rotateY(0deg);
       }
