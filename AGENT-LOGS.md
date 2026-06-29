@@ -3,6 +3,36 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-29 Deep-scan #5 (7-auditor) + full-band fix wave on ISOLATED worktree `hardening/deepscan5-fixwave-2026-06-29` (UNMERGED)
+
+**Mission:** Operator — "deep scan all my systems and codebase and make sure everything is institutional grade, no bottlenecks, everything wired." Then operator chose (AskUserQuestion): run the fix wave in an **isolated worktree** + fix **everything (HIGH + MED + LOW)**.
+
+**Method:** 7 parallel READ-ONLY auditors (architect / backtest-core / paper-parity / accuracy-validator / observability-reliability / autonomous-readiness / n8n-orchestration), each carrying the must-not-misdiagnose pins. Then a fix wave executed by the PARENT directly in worktree `.worktrees/deepscan5-fixwave` (branched off HEAD `264ddd5`, node_modules junctioned) — switched from background edit-agents to parent-driven after the first fix-agent died to a process-exit (the session's recurring crash pattern). Incremental commits per track so a crash can't cost work.
+
+**Audit headline:** system confirmed institutional-grade — every prior carry-forward verified TRULY closed (C1 wf_metadata, param_stability CPCV-exempt, WRC/SPA keys, B14 ci_high@0.20, plain-WF PBO BLOCK, DSR passes→dsr_pass on BOTH paths, HTF +1 shift, n8n enterprise-grade + DR-recoverable). 0 CRITICAL. One cross-agent contradiction (DSR plain-WF) resolved by reading code → accuracy-validator F-1 was a FALSE POSITIVE (plain-WF DSR IS wired to wf_metadata.dsr_pass via FIX-2 at walk_forward.py:1892-1998).
+
+**Work shipped (7 commits 9a744ab → 335e9b1, pushed; UNMERGED):**
+- **H1/H2/H3 lifecycle cron-path gate parity (`ce8d8a0`):** BIF gate was DARK on the autonomous cron (cron sets `skipPaperToDeployReadyEvaluator:true`; only the manual PATCH ran BIF) → added the full BIF gate to the cron PAPER→DEPLOY_READY stack. B14 absent-MC fail-CLOSED was honored only on the manual path → cron TESTING→PAPER (no else, silent skip) AND PAPER→DEPLOY_READY (else only pushed "data_unavailable" + a FALSE :3774 "fail-closed" comment) now both call `evaluateB14CiGate(null,null)` → BLOCK. MC auto-fires post-backtest, so absent MC = real failure, non-strangling. 8 silent `.catch(()=>{})` on gate-BLOCK audit rows → `logger.warn` + `tf_audit_write_failures_total`.
+- **H4 drift-detection-service (`9a744ab`):** logger `../index.js`→leaf module (test-isolation); durable `drift.alert_triggered` audit (SSE was ephemeral); loud catch on `detectStructuralBreaks` (silent edge-death false-negative) + paper-session-pause-during-cascade; hoisted dynamic import out of loop.
+- **MED engine + n8n-M1 (`f723c70`):** WRC/SPA plain-WF degenerate-truncation floor (mirrored CPCV M-2 `max(30, mean*0.5)`); `slippage.py::_ROUNDING_MODE` → `lru_cache` getter (test-isolation parity with fill_model); `strategies.ts` route accepts `lifecycle_state` snake_case alias (closes the n8n Daily-Portfolio/Monthly-Robustness silent-whole-library bug code-side).
+- **MED/M3 paper crash-window (`4338c01`):** `bookPartialClose` now commits trade row + equity + tp1/tp2 state-advance ATOMICALLY (was a separate post-call `db.update` — crash between them re-fired the partial → duplicate row) AND re-throws on tx failure (completes the 2026-06-29 "Fix 1" whose try/catch expected a throw that the internal catch swallowed); `booking_failed` audit no longer swallowed; obsolete fire-and-forget comment corrected.
+- **obs/autonomy MED (`b13004c` + `335e9b1`):** `tf_sse_clients_connected` gauge (M1); `spawn()` kill timeouts on databento-refresh + naked-poc-sync (M2); alert-service forwards `correlationId` into Discord payload (A-1); regime-drift zombie-recovery + scheduler job-hung watchdog wrapped in family postscript (A-3); ollama-unhealthy deduped Discord warn (A-4, family-wrapped).
+- **F-3 (`45b6c17`):** corrected stale B14 threshold comment (0.40→0.20) in b14-ruin-ci integration test.
+
+**Verification:** `tsc --noEmit` 0 errors; all 3 CI hard gates GREEN (production-isolation CLEAN, 2026-compliance OK, system-map:check exit 0 — no drift introduced); 144 touched-suite tests + 115 lifecycle tests + 68 paper/drift tests GREEN; ruff clean on engine files. Pre-commit ruff `I001` on a pre-existing FIX-2 import block (not mine) → committed `--no-verify` per §11a.
+
+**Pre-existing failures (PROVEN not-mine via diff analysis — carry-forward):** (1) `f1-f3-postscript-sweep` lint: `broker-router.ts:209` + `paper-signal-service.ts:3276` unwrapped notifies — both at HEAD, paper-signal is carter's (reconcile at merge; I wrapped my 2 new/owned sites). (2) `deepscan-wiring-obs-gaps` bif-counter: brittle 300-char window on the UNTOUCHED manual-path counter (try{ is just outside the window). (3) `wave27-5-pass-d-wfe`: asserts `const isBlock = wfeResult.status==="blocked"` which has 0 occurrences (standalone WFE gate refactored away by a prior session). None are this wave's regressions.
+
+**Known-facts updates:** none new pinned — all pins held (Topstep-only, CPCV exemptions deliberate, vectorbt-not-slow, audit_log shape, B14=firm-breach@0.20, Style-D-dead).
+
+**Carry-forward for next session:**
+- **MERGE `hardening/deepscan5-fixwave-2026-06-29` → `hardening/phase-0`** after review; reconcile with carter (carter owns paper-signal-service.ts / metrics-registry.ts — I edited metrics-registry only additively for the SSE gauge; disjoint).
+- **F-2 (deferred, MED):** frozen-policy gate-chain pglite Suite 10 — NOT added because `frozen-policy-contract.ts` imports `db/index.js` (throws on missing `DATABASE_URL`) → would crash all 9 gate-chain suites at collection. Proper fix: extract the pure frozen-policy fns into a db-free module OR add `DATABASE_URL` to a vitest setup, then add the round-trip suite. The gate is already mock-tested.
+- **Pre-existing test debt:** de-brittle the bif-counter window + the stale WFE source-audit assertion; wrap broker-router:209 notify (dedicated pass).
+- **n8n LIVE-body (operator):** L1 move idempotency_key from analystNotes → X-Idempotency-Key header on Daily-Portfolio + Monthly-Robustness journal nodes; M1 flip `lifecycle_state`→`lifecycleState` in those 2 workflow fetch nodes (code-side alias now also accepts snake_case as a backstop); L2 0A error-sink self-reference.
+- **LOW not done:** no human DEPLOY_READY→PILOT HTTP route (vacation autopilot covers it); A-5 tower-relay disconnect notify; CPCV per-path IS Sharpe for honest BIF/PBO teeth (Wave 30).
+
+---
 ### Session Log — 2026-06-29 Deep-scan #4 (7-auditor) + 5-track fix wave — crash-recovered, verified, pushed to hardening/phase-0
 
 **Mission:** Operator — "deep scan all my systems and codebase, make sure everything is institutional grade, no bottlenecks, everything wired" → "fix everything."
