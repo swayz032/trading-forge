@@ -58,6 +58,9 @@ const mocks = vi.hoisted(() => ({
   lookupHmacSecret: vi.fn(),
   // dbExecute handles the dedup INSERT ON CONFLICT DO NOTHING.
   dbExecute: vi.fn(),
+  // dbSelect is the .limit() at the end of the F-1 lifecycle-gate Drizzle chain:
+  //   db.select().from(strategies).where(eq(...)).limit(1)
+  dbSelect: vi.fn(),
 }));
 
 // ─── Module mocks ─────────────────────────────────────────────────────────────
@@ -78,11 +81,19 @@ vi.mock("../db/index.js", () => ({
   db: {
     insert: () => ({ values: mocks.dbInsert }),
     execute: mocks.dbExecute,
+    select: () => ({
+      from: () => ({
+        where: () => ({
+          limit: mocks.dbSelect,
+        }),
+      }),
+    }),
   },
 }));
 
 vi.mock("../db/schema.js", () => ({
   auditLog: Symbol("auditLog_mock"),
+  strategies: Symbol("strategies_mock"),
 }));
 
 vi.mock("../lib/logger.js", () => ({
@@ -153,6 +164,10 @@ function makeHmacPayload(overrides: Partial<Record<string, unknown>> = {}): Reco
   const hmac = signPayload(TEST_ACCOUNT_ID, TEST_TICKER, TEST_ACTION, timestampMs, TEST_SECRET);
   return {
     account_id: TEST_ACCOUNT_ID,
+    // F-2 (2026-06-29): a live order must carry a strategy_id (subject to the
+    // lifecycle gate) or an explicit raw_order ack. HMAC callers here carry a
+    // strategy_id; beforeEach defaults its lifecycle state to DEPLOYED.
+    strategy_id: TEST_STRATEGY_ID,
     ticker: TEST_TICKER,
     action: TEST_ACTION,
     timestamp_ms: timestampMs,
@@ -199,6 +214,10 @@ describe("POST /api/live-order — W1 CORE + Pine static-token", () => {
     mocks.lookupHmacSecret.mockResolvedValue(TEST_STATIC_TOKEN);
     // Default: dedup INSERT is first (not a dup)
     mocks.dbExecute.mockResolvedValue({ rows: [{ id: 1 }] });
+    // Default: F-1 lifecycle gate sees a DEPLOYED (live-eligible) strategy so the
+    // gate passes and routeOrder is reached. Tests that need a non-live state or
+    // missing context override this per-test.
+    mocks.dbSelect.mockResolvedValue([{ lifecycleState: "DEPLOYED" }]);
   });
 
   afterEach(() => {

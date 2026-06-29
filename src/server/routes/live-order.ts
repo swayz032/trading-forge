@@ -212,6 +212,7 @@ const liveOrderPayloadSchema = z.object({
   live_order_token: z.string().min(1).optional(),   // Static-token mode — Pine callers
   correlation_id:   z.string().uuid().optional().nullable(),
   archetype:        z.string().optional(),          // archetype_signal mode — archetype key
+  raw_order:        z.boolean().optional(),         // F-2 (2026-06-29): explicit "no strategy lifecycle" capability ack
 });
 
 // ─── Audit helper ─────────────────────────────────────────────────────────────
@@ -324,6 +325,7 @@ liveOrderRoutes.post(
       live_order_hmac,
       live_order_token,
       correlation_id,
+      raw_order,
     } = parsed.data;
 
     const correlationId: string = correlation_id ?? randomUUID();
@@ -538,14 +540,19 @@ liveOrderRoutes.post(
       }
     }
 
+    // ── F-2 (2026-06-29): Lifecycle-context requirement ─────────────────────────
+    // A live order MUST carry EITHER a strategy_id (subject to the lifecycle gate
+    // below) OR an explicit raw_order:true capability acknowledgement. The old
+    // backward-compat exemption let any authenticated caller reach routeOrder() with
+    // NO lifecycle-state check simply by omitting strategy_id — bypassing the
+    // DEPLOYED/PILOT gate. Fail-CLOSED: neither present → 409 missing_lifecycle_context.
+    //
     // ── F-1: Lifecycle gate ────────────────────────────────────────────────────
     // CRITICAL CAPITAL-SAFETY GATE: if a strategy_id is present, verify it is in
     // LIVE_EXECUTION_STATES (DEPLOYED or PILOT) before allowing ANY routeOrder() call.
     // Fail-CLOSED: DB error OR no row found → REJECT (never fall through to routeOrder).
     // Strategies in CANDIDATE/TESTING/SHADOW/PAPER/DEPLOY_READY/DECLINING/RETIRED/GRAVEYARD
     // are NOT eligible for live capital — reject 409.
-    // Strategies without a strategy_id (programmatic HMAC callers) are exempt from this
-    // gate because they have no lifecycle row to look up (backward-compat).
     if (strategy_id) {
       let lifecycleGatePassed = false;
       let lifecycleState: string | null = null;
@@ -592,6 +599,57 @@ liveOrderRoutes.post(
         });
         return;
       }
+    } else if (raw_order === true) {
+      // F-2 (2026-06-29): explicit, logged "programmatic raw order — no strategy
+      // lifecycle" acknowledgement. Visible + traceable, not a silent bypass.
+      logger.info(
+        { accountId: account_id, ticker, action, correlationId },
+        "live-order: raw_order=true acknowledged — no strategy lifecycle gate applies",
+      );
+      try {
+        await db.insert(auditLog).values({
+          action: "live_order.raw_order_accepted",
+          entityType: "live_order",
+          entityId: null,
+          decisionAuthority: "system",
+          input: { accountId: account_id, ticker, action } as Record<string, unknown>,
+          result: { rawOrder: true, accepted: true } as Record<string, unknown>,
+          status: "accepted",
+          durationMs: Date.now() - startedAt,
+          correlationId,
+        });
+      } catch (auditErr) {
+        logger.error({ err: auditErr }, "live-order: raw_order_accepted audit row write failed (non-blocking)");
+      }
+    } else {
+      // F-2 (2026-06-29): neither a strategy_id nor an explicit raw_order — REJECT.
+      // Closes the backward-compat hole where omitting strategy_id bypassed the
+      // lifecycle gate. Fail-CLOSED with an awaited audit row for traceability.
+      logger.warn(
+        { accountId: account_id, ticker, action, correlationId },
+        "live-order: no strategy_id and no raw_order capability — rejected 409 missing_lifecycle_context",
+      );
+      try {
+        await db.insert(auditLog).values({
+          action: "live_order.rejected_missing_lifecycle_context",
+          entityType: "live_order",
+          entityId: null,
+          decisionAuthority: "system",
+          input: { accountId: account_id, ticker, action } as Record<string, unknown>,
+          result: { rejected: true, reason: "missing_lifecycle_context" } as Record<string, unknown>,
+          status: "rejected",
+          durationMs: Date.now() - startedAt,
+          correlationId,
+        });
+      } catch (auditErr) {
+        logger.error({ err: auditErr }, "live-order: missing_lifecycle_context audit row write failed (non-blocking)");
+      }
+      res.status(409).json({
+        error: "missing_lifecycle_context",
+        detail: "Live order requires a strategy_id (subject to the lifecycle gate) or an explicit raw_order:true acknowledgement",
+        correlationId,
+      });
+      return;
     }
 
     // ── Archetype-signal dispatch ─────────────────────────────────────────────

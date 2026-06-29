@@ -628,7 +628,11 @@ strategyRoutes.patch("/:id/lifecycle", async (req, res) => {
     res.status(400).json({ error: "Use /api/strategies/:id/deploy for manual TradingView deployment approval." });
     return;
   }
-  const result = await lifecycleService.promoteStrategy(req.params.id, fromState, toState);
+  // F-1 (2026-06-29): forward the request correlationId so every gate audit row
+  // under this human-triggered promotion links back to the inbound HTTP request.
+  const result = await lifecycleService.promoteStrategy(req.params.id, fromState, toState, {
+    correlationId: req.id,
+  });
   if (!result.success) {
     // 403 (gate-blocked) — the request was authenticated but a promotion gate refused it.
     // This is distinct from a 400 (bad request payload).
@@ -702,6 +706,9 @@ strategyRoutes.post("/:id/deploy", async (req, res) => {
     {
       actor: "human_release",
       reason: "manual_tradingview_deployment_approval",
+      // F-1 (2026-06-29): forward the request correlationId so the human-deploy
+      // gate audit rows link back to the inbound HTTP request.
+      correlationId: req.id,
     },
   );
   if (!result.success) {

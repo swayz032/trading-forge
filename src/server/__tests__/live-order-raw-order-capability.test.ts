@@ -1,17 +1,21 @@
 /**
- * live-order-lifecycle-gate.test.ts — F-1 (2026-06-23)
+ * live-order-raw-order-capability.test.ts — F-2 (2026-06-29)
  *
- * Capital-safety gate: POST /api/live-order must verify the strategy's lifecycle
- * state BEFORE calling routeOrder(). Strategies in CANDIDATE/TESTING/PAPER/etc.
- * are NOT live-eligible; only DEPLOYED and PILOT are in LIVE_EXECUTION_STATES.
+ * Sunsets the strategy_id-omission exemption. A POST /api/live-order must carry
+ * EITHER a strategy_id (subject to the F-1 lifecycle gate) OR an explicit
+ * raw_order:true capability acknowledgement. Neither → 409 missing_lifecycle_context.
  *
- * Fail-CLOSED semantics:
- *   - Non-live-state strategy → 409 + audit live_order.rejected_non_live_state
- *   - Lifecycle lookup returns no row → reject (no routeOrder call)
- *   - Lifecycle lookup throws an error → reject (no routeOrder call)
+ * Cases:
+ *   1. No strategy_id AND no raw_order → 409 missing_lifecycle_context +
+ *      audit live_order.rejected_missing_lifecycle_context (status "rejected");
+ *      routeOrder NOT called.
+ *   2. raw_order:true (no strategy_id) → proceeds to routeOrder() +
+ *      audit live_order.raw_order_accepted (status "accepted").
+ *   3. Valid strategy_id in a non-LIVE state → 409 non_live_state (F-1 unchanged);
+ *      routeOrder NOT called.
  *
  * Pattern: real Express app + native fetch over an ephemeral port.
- * Matches the convention in w1-live-order-gateway.test.ts.
+ * Matches the convention in live-order-lifecycle-gate.test.ts.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -35,9 +39,6 @@ const mocks = vi.hoisted(() => ({
   dbInsert: vi.fn(),
   dbExecute: vi.fn(),
   lookupHmacSecret: vi.fn(),
-  // dbSelect is used by the NEW lifecycle gate to query strategies.lifecycleState.
-  // It represents the .limit() call at the end of the Drizzle chain:
-  //   db.select().from(strategies).where(eq(...)).limit(1)
   dbSelect: vi.fn(),
 }));
 
@@ -97,8 +98,6 @@ vi.mock("../lib/python-runner.js", () => ({
   runPythonModule: vi.fn(),
 }));
 
-// server-mediated-executor imports db/index.js directly; mock it so
-// LIVE_EXECUTION_STATES is available without a real DB connection.
 vi.mock("../services/server-mediated-executor.js", () => ({
   LIVE_EXECUTION_STATES: new Set(["DEPLOYED", "PILOT"]),
 }));
@@ -119,7 +118,6 @@ function buildApp(): express.Express {
 async function call(
   app: express.Express,
   body: Record<string, unknown>,
-  headers?: Record<string, string>,
 ): Promise<{ status: number; body: Record<string, unknown>; server: Server }> {
   return await new Promise((resolve, reject) => {
     const server = app.listen(0, async () => {
@@ -128,13 +126,10 @@ async function call(
         const port = typeof addr === "object" && addr ? addr.port : 0;
         const res = await fetch(`http://127.0.0.1:${port}/api/live-order`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...headers,
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
-        const responseBody = await res.json() as Record<string, unknown>;
+        const responseBody = (await res.json()) as Record<string, unknown>;
         resolve({ status: res.status, body: responseBody, server });
       } catch (err) {
         reject(err);
@@ -155,12 +150,12 @@ function signPayload(
   return createHmac("sha256", secret).update(message, "utf8").digest("hex");
 }
 
+/** Valid HMAC-authenticated payload; overrides control strategy_id / raw_order. */
 function makeHmacPayload(overrides: Partial<Record<string, unknown>> = {}): Record<string, unknown> {
   const timestampMs = Date.now();
   const hmac = signPayload(TEST_ACCOUNT_ID, TEST_TICKER, TEST_ACTION, timestampMs, TEST_SECRET);
   return {
     account_id: TEST_ACCOUNT_ID,
-    strategy_id: TEST_STRATEGY_ID,
     ticker: TEST_TICKER,
     action: TEST_ACTION,
     timestamp_ms: timestampMs,
@@ -171,7 +166,7 @@ function makeHmacPayload(overrides: Partial<Record<string, unknown>> = {}): Reco
 
 // ─── Test suite ───────────────────────────────────────────────────────────────
 
-describe("F-1 — /api/live-order lifecycle gate (DEPLOYED/PILOT only)", () => {
+describe("F-2 — /api/live-order requires strategy_id OR explicit raw_order", () => {
   let server: Server | null = null;
 
   beforeEach(() => {
@@ -190,148 +185,82 @@ describe("F-1 — /api/live-order lifecycle gate (DEPLOYED/PILOT only)", () => {
     }
   });
 
-  // ── F-1.1: Non-live states → 409, routeOrder NOT called ──────────────────
+  // ── F-2.1: neither strategy_id nor raw_order → 409 + audit, no routeOrder ──
 
-  it("F-1.1a: CANDIDATE strategy → 409 non_live_state, routeOrder NOT called", async () => {
-    mocks.dbSelect.mockResolvedValueOnce([{ lifecycleState: "CANDIDATE" }]);
-
+  it("F-2.1: no strategy_id and no raw_order → 409 missing_lifecycle_context, routeOrder NOT called", async () => {
     const app = buildApp();
+    // No strategy_id, no raw_order
     const res = await call(app, makeHmacPayload());
-    server = res.server;
-
-    expect(res.status).toBe(409);
-    expect(res.body).toMatchObject({ error: "non_live_state" });
-    expect(mocks.routeOrder).not.toHaveBeenCalled();
-  });
-
-  it("F-1.1b: TESTING strategy → 409 non_live_state, routeOrder NOT called", async () => {
-    mocks.dbSelect.mockResolvedValueOnce([{ lifecycleState: "TESTING" }]);
-
-    const app = buildApp();
-    const res = await call(app, makeHmacPayload());
-    server = res.server;
-
-    expect(res.status).toBe(409);
-    expect(res.body).toMatchObject({ error: "non_live_state" });
-    expect(mocks.routeOrder).not.toHaveBeenCalled();
-  });
-
-  it("F-1.1c: PAPER strategy → 409 non_live_state, routeOrder NOT called", async () => {
-    mocks.dbSelect.mockResolvedValueOnce([{ lifecycleState: "PAPER" }]);
-
-    const app = buildApp();
-    const res = await call(app, makeHmacPayload());
-    server = res.server;
-
-    expect(res.status).toBe(409);
-    expect(res.body).toMatchObject({ error: "non_live_state" });
-    expect(mocks.routeOrder).not.toHaveBeenCalled();
-  });
-
-  // ── F-1.2: DEPLOYED and PILOT → routeOrder IS called ─────────────────────
-
-  it("F-1.2a: DEPLOYED strategy → routeOrder called (allowed through gate)", async () => {
-    mocks.dbSelect.mockResolvedValueOnce([{ lifecycleState: "DEPLOYED" }]);
-    mocks.routeOrder.mockResolvedValueOnce({
-      success: true,
-      reason: "routed",
-      brokerType: "traderspost",
-      firmId: "topstep",
-      statusCode: 200,
-    });
-
-    const app = buildApp();
-    const res = await call(app, makeHmacPayload());
-    server = res.server;
-
-    expect(res.status).toBe(200);
-    expect(mocks.routeOrder).toHaveBeenCalledOnce();
-  });
-
-  it("F-1.2b: PILOT strategy → routeOrder called (allowed through gate)", async () => {
-    mocks.dbSelect.mockResolvedValueOnce([{ lifecycleState: "PILOT" }]);
-    mocks.routeOrder.mockResolvedValueOnce({
-      success: true,
-      reason: "routed",
-      brokerType: "traderspost",
-      firmId: "topstep",
-      statusCode: 200,
-    });
-
-    const app = buildApp();
-    const res = await call(app, makeHmacPayload());
-    server = res.server;
-
-    expect(res.status).toBe(200);
-    expect(mocks.routeOrder).toHaveBeenCalledOnce();
-  });
-
-  // ── F-1.3: Fail-CLOSED — no row returned ─────────────────────────────────
-
-  it("F-1.3: Lifecycle lookup returns no row → 409 fail-closed, routeOrder NOT called", async () => {
-    mocks.dbSelect.mockResolvedValueOnce([]);
-
-    const app = buildApp();
-    const res = await call(app, makeHmacPayload());
-    server = res.server;
-
-    expect(res.status).toBe(409);
-    expect(res.body).toMatchObject({ error: "non_live_state" });
-    expect(mocks.routeOrder).not.toHaveBeenCalled();
-  });
-
-  // ── F-1.4: Fail-CLOSED — lookup throws DB error ───────────────────────────
-
-  it("F-1.4: Lifecycle lookup throws DB error → 409 fail-closed, routeOrder NOT called", async () => {
-    mocks.dbSelect.mockRejectedValueOnce(new Error("DB connection timeout"));
-
-    const app = buildApp();
-    const res = await call(app, makeHmacPayload());
-    server = res.server;
-
-    expect(res.status).toBe(409);
-    expect(res.body).toMatchObject({ error: "non_live_state" });
-    expect(mocks.routeOrder).not.toHaveBeenCalled();
-  });
-
-  // ── F-1.5: audit row written on rejection ─────────────────────────────────
-
-  it("F-1.5: Rejected non-live-state writes live_order.rejected_non_live_state audit row", async () => {
-    mocks.dbSelect.mockResolvedValueOnce([{ lifecycleState: "CANDIDATE" }]);
-
-    const app = buildApp();
-    const res = await call(app, makeHmacPayload());
-    server = res.server;
-
-    expect(res.status).toBe(409);
-    expect(mocks.dbInsert).toHaveBeenCalledWith(
-      expect.objectContaining({ action: "live_order.rejected_non_live_state" }),
-    );
-  });
-
-  // ── F-1.6 / F-2: No strategy_id AND no raw_order → 409 missing_lifecycle_context ──
-  // Updated 2026-06-29 (F-2): the old strategy_id-omission exemption is SUNSET. A
-  // caller can no longer reach routeOrder() with no lifecycle context by omitting
-  // strategy_id; it must opt in explicitly via raw_order:true.
-
-  it("F-1.6: No strategy_id and no raw_order → 409 missing_lifecycle_context, routeOrder NOT called", async () => {
-    const timestampMs = Date.now();
-    const hmac = signPayload(TEST_ACCOUNT_ID, TEST_TICKER, TEST_ACTION, timestampMs, TEST_SECRET);
-    const app = buildApp();
-    const res = await call(app, {
-      account_id: TEST_ACCOUNT_ID,
-      ticker: TEST_TICKER,
-      action: TEST_ACTION,
-      timestamp_ms: timestampMs,
-      live_order_hmac: hmac,
-      // strategy_id intentionally omitted; no raw_order
-    });
     server = res.server;
 
     expect(res.status).toBe(409);
     expect(res.body).toMatchObject({ error: "missing_lifecycle_context" });
     expect(mocks.routeOrder).not.toHaveBeenCalled();
-    // No lifecycle DB lookup when strategy_id is absent
+    // Lifecycle DB lookup is NOT performed when strategy_id is absent
     expect(mocks.dbSelect).not.toHaveBeenCalled();
+    // Awaited audit row written with status "rejected"
+    expect(mocks.dbInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "live_order.rejected_missing_lifecycle_context",
+        status: "rejected",
+      }),
+    );
+  });
+
+  // ── F-2.2: raw_order:true (no strategy_id) → proceeds + accepted audit ─────
+
+  it("F-2.2: raw_order:true with no strategy_id → routeOrder called + raw_order_accepted audit", async () => {
+    mocks.routeOrder.mockResolvedValueOnce({
+      success: true,
+      reason: "routed",
+      brokerType: "traderspost",
+      firmId: "topstep",
+      statusCode: 200,
+    });
+
+    const app = buildApp();
+    const res = await call(app, makeHmacPayload({ raw_order: true }));
+    server = res.server;
+
+    expect(res.status).toBe(200);
+    expect(mocks.routeOrder).toHaveBeenCalledOnce();
+    // No lifecycle lookup on the raw-order path
+    expect(mocks.dbSelect).not.toHaveBeenCalled();
+    // Awaited audit row written with status "accepted" (raw orders are traceable)
+    expect(mocks.dbInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "live_order.raw_order_accepted",
+        status: "accepted",
+      }),
+    );
+  });
+
+  // ── F-2.3: strategy_id in non-LIVE state still → 409 non_live_state (F-1) ──
+
+  it("F-2.3: strategy_id in CANDIDATE state → 409 non_live_state (F-1 gate unchanged), routeOrder NOT called", async () => {
+    mocks.dbSelect.mockResolvedValueOnce([{ lifecycleState: "CANDIDATE" }]);
+
+    const app = buildApp();
+    const res = await call(app, makeHmacPayload({ strategy_id: TEST_STRATEGY_ID }));
+    server = res.server;
+
+    expect(res.status).toBe(409);
+    expect(res.body).toMatchObject({ error: "non_live_state" });
+    expect(mocks.routeOrder).not.toHaveBeenCalled();
+    expect(mocks.dbInsert).toHaveBeenCalledWith(
+      expect.objectContaining({ action: "live_order.rejected_non_live_state" }),
+    );
+  });
+
+  // ── F-2.4: raw_order:false is NOT an opt-in → 409 (must be explicit true) ──
+
+  it("F-2.4: raw_order:false with no strategy_id → 409 missing_lifecycle_context", async () => {
+    const app = buildApp();
+    const res = await call(app, makeHmacPayload({ raw_order: false }));
+    server = res.server;
+
+    expect(res.status).toBe(409);
+    expect(res.body).toMatchObject({ error: "missing_lifecycle_context" });
+    expect(mocks.routeOrder).not.toHaveBeenCalled();
   });
 });
