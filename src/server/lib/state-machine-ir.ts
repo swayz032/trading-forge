@@ -20,6 +20,16 @@
 import type { CompoundConfirmation } from "./confirmation-compiler.js";
 import type { ContextGate } from "./context-gate.js";
 
+/**
+ * IR SEMANTIC VERSION — frozen research artifact. v1.0 is FROZEN for the first replay validation cycle.
+ * Allowed without a version bump: bug fixes, implementation fixes, extraction fixes. NOT allowed: new semantic
+ * node types, new execution semantics, replay-driven tuning. If replay proves the IR genuinely cannot represent
+ * a decision (per the Representation Change Policy — ≥3 independent failures across ≥2 educators AND ≥2 strategy
+ * families, resolved without adding ambiguity or reducing determinism), that is IR v2.0 — NOT a quiet edit of
+ * v1.0. See docs/golden/ir-freeze-policy-v1.md.
+ */
+export const IR_VERSION = "1.0" as const;
+
 // ── Provenance + confidence on EVERY node (operator rule) ──────────────────────
 // Distinguishes what the educator EXPLICITLY said from what the compiler/model INFERRED. This is what lets
 // the validator ask "are we backtesting on instructions or on assumptions?".

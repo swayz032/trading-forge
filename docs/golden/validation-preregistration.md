@@ -281,6 +281,13 @@ of what the system can faithfully compile, which is itself worth knowing.
   static / pre-replay-appropriate; the per-trade proof tree is the replay-time runtime instantiation
   (deferred — needs the engine). Closure diagnostic on the 4 frozen IRs: psH + h6T IMPOSSIBLE_STATE (entry
   unreachable — converges with Gate 1.5), l-2 + MKsjbL closed. Pure additions — no threshold changed.
+- **2026-06-28 — FREEZE the IR as a versioned spec (v1.0) + Representation Change Policy.** `IR_VERSION="1.0"`
+  stamped in `state-machine-ir.ts`; full governance in `docs/golden/ir-freeze-policy-v1.md`. A representation
+  change (new node type / execution semantic) is permitted ONLY with ≥3 independent replay failures across ≥2
+  educators AND ≥2 families, classified as representation gaps (not extraction/visual/ambiguity), resolved
+  without adding ambiguity or reducing determinism → that is IR v2.0, never a quiet v1.0 edit. The determinism
+  invariant is NOT relaxed by replay (no "confidence>0.8 execute anyway"; reduced coverage from UNKNOWN-stops
+  is a corpus finding, not a weakness). Governance only — changes no threshold, adds no representation.
 - **DEFERRED to post-replay (do NOT pre-build):** **Reconstruction Rate** = strategies that replay
   successfully / strategies that pass Gate 1.5. GPT-flagged as "after replay exists, not before" — it isolates
   the final research question (representation+extraction working vs source-unreconstructable) and is meaningless
