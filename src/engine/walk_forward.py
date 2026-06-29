@@ -533,6 +533,12 @@ def _run_walk_forward_cpcv(
         # derive from the same OOS series → BIF ≈ 1.0 (near-no-op).
         # TS gate reads bif_proxy_basis from wf_metadata.bif_proxy_basis.
         _cpcv_bif_result["bif_proxy_basis"] = "oos_mean_not_is"
+        # BYPASS 3 EXPLICIT AUDIT (2026-06-28 hardening): IS Sharpe is unavailable
+        # in CPCV mode without running a separate IS backtest per path (Wave 30
+        # carry-forward). bif_reliable=False surfaces this fact explicitly so the
+        # TS BIF gate logs a documented audit-warn rather than treating BIF≈1.0 as
+        # a genuine clean-gate pass. The gate must NOT block on an unreliable BIF.
+        _cpcv_bif_result["bif_reliable"] = False
         print(
             f"  BIF (CPCV): {_cpcv_bif_result.get('bif', 'N/A'):.4f} "
             f"(IS_proxy={_cpcv_bif_is_sharpe:.4f}, WF={agg_sharpe:.4f}, "
@@ -556,6 +562,10 @@ def _run_walk_forward_cpcv(
     _cpcv_pbo_overall: Optional[float] = None
     _cpcv_pbo_p_value: Optional[float] = None
     _cpcv_pbo_audit_actions: list[str] = []
+    # BYPASS 2 EXPLICIT AUDIT (2026-06-28 hardening): track the degenerate reason
+    # so the TS lifecycle gate receives a distinct "cpcv_is_sharpe_unavailable"
+    # label rather than the generic legacy-null grandfather-PASS path.
+    _cpcv_pbo_degenerate_reason: Optional[str] = None
     try:
         from src.engine.pbo_gate import compute_pbo_from_cpcv_paths as _cpcv_pbo_fn
         _cpcv_path_dicts = [
@@ -563,6 +573,14 @@ def _run_walk_forward_cpcv(
             for s in path_sharpes
         ]
         _cpcv_gate = _cpcv_pbo_fn(_cpcv_path_dicts)
+        # Override the generic degenerate reason with a CPCV-specific auditable
+        # label so the TS lifecycle gate can distinguish this case from other
+        # degenerate-PBO paths (e.g., a genuine IS==OOS backtest outcome).
+        # The generic pbo_gate message correctly explains WHY is==oos, but the
+        # "cpcv_is_sharpe_unavailable" label is more actionable for gate routing.
+        if _cpcv_gate.get("degenerate"):
+            _cpcv_gate["degenerate_reason"] = "cpcv_is_sharpe_unavailable"
+        _cpcv_pbo_degenerate_reason = _cpcv_gate.get("degenerate_reason")
         _cpcv_pbo_val = _cpcv_gate.get("pbo")
         if _cpcv_pbo_val is not None and not (
             isinstance(_cpcv_pbo_val, float) and (_cpcv_pbo_val != _cpcv_pbo_val)
@@ -716,6 +734,15 @@ def _run_walk_forward_cpcv(
         "n_splits": n_splits,
         "is_ratio": 1.0 - (k_test_groups / n_splits),
         "execution_time_ms": elapsed_ms,
+        # BYPASS 1 EXPLICIT AUDIT (2026-06-28 hardening): WFE is mathematically
+        # undefined in CPCV mode because there is no single pooled IS Sharpe to
+        # divide against the OOS aggregate. The plain-WF path produces wfe_overall
+        # from _combined_is_sharpe; CPCV has no such value without extra IS backtests.
+        # Emitting wfe_overall=None + wfe_status="cpcv_not_applicable" lets the TS
+        # wfe-gate.ts emit a documented exemption audit action instead of routing
+        # through the legacy_null grandfather-PASS path silently.
+        "wfe_overall": None,
+        "wfe_status": "cpcv_not_applicable",
         "wf_metadata": {
             "mode": "cpcv",
             "n_folds": n_splits,
@@ -733,11 +760,18 @@ def _run_walk_forward_cpcv(
             # emit a non-blocking audit warn.  "oos_mean_not_is" signals that both
             # is_sharpe and wf_sharpe derive from the same OOS series → BIF ≈ 1.0.
             "bif_proxy_basis": _cpcv_bif_result.get("bif_proxy_basis"),
+            # BYPASS 3 EXPLICIT AUDIT: bif_reliable=False when IS Sharpe unavailable.
+            # TS BIF gate must not block on an unreliable BIF≈1.0 value.
+            "bif_reliable": _cpcv_bif_result.get("bif_reliable", True),
         },
         # Wave 29 Pass A.2 — pbo_overall for TESTING → SHADOW/PAPER lifecycle gate.
         "pbo_overall": _cpcv_pbo_overall,
         "pbo_overall_p_value": _cpcv_pbo_p_value,
         "pbo_audit_actions": _cpcv_pbo_audit_actions,
+        # BYPASS 2 EXPLICIT AUDIT: surface the CPCV-specific degenerate reason.
+        # "cpcv_is_sharpe_unavailable" is distinguishable from the generic
+        # legacy_null grandfather-PASS so the TS gate can emit an informative audit.
+        "pbo_degenerate_reason": _cpcv_pbo_degenerate_reason,
         # Wave 3 Track 3A — BIF (Backtest Inflation Factor): selection-bias ratio.
         # In CPCV mode IS Sharpe tracking is a Wave 30 carry-forward; we use
         # max(path_sharpes) as a documented proxy for the best-looking path.
