@@ -515,6 +515,16 @@
     }
     .cc-inbox-badge.on { display: block; }
 
+    /* ── Transient toast (attachment feedback) ── */
+    .cc-toast {
+      position: absolute; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 24vh); transform: translate(-50%, 8px);
+      z-index: 4; max-width: 80%; padding: 10px 16px; border-radius: 14px; font-size: 14px; color: #eafff0; text-align: center;
+      background: linear-gradient(145deg, rgba(163,255,18,0.20), rgba(25,195,125,0.12));
+      border: 1px solid rgba(163,255,18,0.32); box-shadow: 0 8px 22px rgba(0,0,0,0.5), 0 0 24px rgba(163,255,18,0.14);
+      opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .cc-toast.on { opacity: 1; transform: translate(-50%, 0); }
+
     /* ── Inbox phase — SOLID BLACK; the cc-glow border (z-index 2) stays on top ── */
     .cc-inbox {
       position: absolute; inset: 0; z-index: 1; background: #000;
@@ -740,6 +750,7 @@
     <section class="cc-phase cc-immersive" id="cc-immersive">
       <div class="cc-glow"></div>
       <!-- Blob video removed — the Carter scene is the immersive backdrop now. -->
+      <div class="cc-toast" id="cc-toast" aria-live="polite"></div>
 
       <div class="cc-immersive-foot">
         <div class="cc-mic-state" id="cc-mic-state">Connecting…</div>
@@ -748,6 +759,10 @@
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 2H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4l4 4 4-4h4a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zM7 9h10v2H7V9zm6 4H7v2h6v-2z"/></svg>
             <span class="cc-inbox-badge" id="cc-inbox-badge" aria-hidden="true"></span>
           </button>
+          <button class="cc-iconbtn" id="cc-attach-btn" type="button" aria-label="Show Carter an image or file">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+          <input type="file" id="cc-attach-input" accept="image/*,application/pdf" style="display:none" />
           <button class="cc-hangup" id="cc-hangup-b" type="button" aria-label="End call">
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a1 1 0 0 0-1.01.24l-1.57 1.97a15.07 15.07 0 0 1-6.59-6.59l1.95-1.66a1 1 0 0 0 .25-1.01A11.36 11.36 0 0 1 8.95 4.5a1 1 0 0 0-1-.99H4.19a1 1 0 0 0-1 1.05C3.59 14.07 9.93 20.41 19.45 20.81a1 1 0 0 0 1.05-1V16.4a1 1 0 0 0-1-1.02z"/></svg>
           </button>
@@ -1113,6 +1128,10 @@
     var inboxReturnPhase = 'cc-lobby';
     var inboxTimer = null;
     var lastSeenInboxId = (function () { try { return localStorage.getItem('cc-inbox-seen') || ''; } catch (e) { return ''; } })();
+    var attachBtn   = document.getElementById('cc-attach-btn');
+    var attachInput = document.getElementById('cc-attach-input');
+    var toastEl     = document.getElementById('cc-toast');
+    var toastTimer  = null;
 
     var conversation = null;   // ElevenLabs Conversation instance
     var ringEl = document.getElementById('cc-ring');  // looping <audio> ringtone
@@ -1343,6 +1362,43 @@
     if (lobbyMsgsBtn) lobbyMsgsBtn.addEventListener('click', function () { goInbox('cc-lobby'); });
     if (lobbyCallBtn) lobbyCallBtn.addEventListener('click', function () { openCarterCall(); });
     if (lobbyCloseBtn) lobbyCloseBtn.addEventListener('click', function () { endCarterCall(); });
+
+    // ── Show Carter an image/PDF — sent INTO the live conversation so his EL
+    //    GPT-5.4 (multimodal) actually sees it; he answers on voice. ──
+    function showToast(msg) {
+      if (!toastEl) return;
+      toastEl.textContent = msg;
+      toastEl.classList.add('on');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(function () { toastEl.classList.remove('on'); }, 3200);
+    }
+    function sendAttachment(file) {
+      if (!file) return;
+      if (!conversation) { showToast('Connect to Carter first'); return; }
+      var isPdf = (file.type || '').indexOf('pdf') >= 0 || /\.pdf$/i.test(file.name || '');
+      var kind = isPdf ? 'document' : 'image';
+      showToast('Sending Carter your ' + kind + '…');
+      conversation.uploadFile(file)
+        .then(function (res) {
+          var fileId = res && res.fileId;
+          if (!fileId) throw new Error('no_file_id');
+          conversation.sendMultimodalMessage({
+            text: 'I just sent you a ' + kind + ' — take a look and tell me what you see.',
+            fileId: fileId,
+          });
+          showToast("Sent — Carter's looking…");
+        })
+        .catch(function () { showToast("Couldn't send that — try again"); });
+    }
+    if (attachBtn) attachBtn.addEventListener('click', function () {
+      if (!conversation) { showToast('Connect to Carter first'); return; }
+      if (attachInput) attachInput.click();
+    });
+    if (attachInput) attachInput.addEventListener('change', function () {
+      var f = attachInput.files && attachInput.files[0];
+      sendAttachment(f);
+      attachInput.value = '';   // reset so the same file can be re-picked
+    });
 
     var hangA = document.getElementById('cc-hangup-a');
     var hangB = document.getElementById('cc-hangup-b');
