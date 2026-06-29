@@ -568,6 +568,12 @@ async function reportDrawdownStatus(_params: unknown): Promise<unknown> {
 
 import { listOpenIssues } from "./carter-issues-store.js";
 
+// ── Introspection handlers (explain_gate, list_subsystems, summarize_subsystem,
+//    read_strategy_internals, trace_correlation, read_recent_decisions,
+//    read_system_map) — spread into CARTER_READ_HANDLERS below so the route
+//    dispatches them via the same single merged map.
+import { CARTER_INTROSPECT_HANDLERS } from "./carter-introspect.js";
+
 async function getCurrentIssues(_params: unknown): Promise<unknown> {
   const issues = listOpenIssues();
 
@@ -631,5 +637,7 @@ export const CARTER_READ_HANDLERS: Record<string, (params: unknown) => Promise<u
   query_audit_log:            queryAuditLog,
   report_drawdown_status:     reportDrawdownStatus,
   get_current_issues:         getCurrentIssues,
+  // ── Introspection tools (carter-introspect.ts) ──────────────────────────────
+  ...CARTER_INTROSPECT_HANDLERS,
 };
 

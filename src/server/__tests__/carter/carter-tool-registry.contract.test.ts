@@ -122,6 +122,14 @@ const REQUIRED_READ_TOOLS = [
   "query_audit_log",
   "report_drawdown_status",
   "get_current_issues",
+  // Introspection tools (carter-introspect.ts) — "knows every inch of Trading Forge"
+  "explain_gate",
+  "list_subsystems",
+  "summarize_subsystem",
+  "read_strategy_internals",
+  "trace_correlation",
+  "read_recent_decisions",
+  "read_system_map",
 ] as const;
 
 const REQUIRED_ACTION_TOOLS = [
@@ -183,9 +191,9 @@ const REQUIRED_TOOLS = [
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe("Carter tool registry — structural contract", () => {
-  it("has exactly 62 tools (16 read + 12 action + 18 yellow + 16 red)", () => {
-    expect(CARTER_TOOLS).toHaveLength(62);
-    expect(CARTER_TOOLS.filter((t) => t.tier === "green")).toHaveLength(28);
+  it("has exactly 69 tools (23 read + 12 action + 18 yellow + 16 red)", () => {
+    expect(CARTER_TOOLS).toHaveLength(69);
+    expect(CARTER_TOOLS.filter((t) => t.tier === "green")).toHaveLength(35);
     expect(CARTER_TOOLS.filter((t) => t.tier === "yellow")).toHaveLength(18);
     expect(CARTER_TOOLS.filter((t) => t.tier === "red")).toHaveLength(16);
   });
@@ -282,8 +290,8 @@ describe("Carter tool registry — structural contract", () => {
     }
   });
 
-  it("CARTER_READ_HANDLERS exports exactly 16 functions", () => {
-    expect(Object.keys(CARTER_READ_HANDLERS)).toHaveLength(16);
+  it("CARTER_READ_HANDLERS exports exactly 23 functions (16 base + 7 introspection)", () => {
+    expect(Object.keys(CARTER_READ_HANDLERS)).toHaveLength(23);
   });
 
   it("CARTER_ACTION_HANDLERS exports exactly 12 functions", () => {

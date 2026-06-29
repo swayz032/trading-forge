@@ -140,6 +140,50 @@ export const CARTER_TOOLS: CarterTool[] = [
     handler: "get_current_issues",
   },
 
+  // ── Introspection tools (Tier: green) — "knows every inch of Trading Forge" ──
+  {
+    name: "explain_gate",
+    description: "Explains a Trading Forge hard gate in plain English (what it catches, lifecycle stage, live threshold). Knows B14 ci_high, WFE, PBO, parameter drift, B15, BIF, compliance enforce, frozen policy, shadow divergence, daily trade cap, lunch blackout, macro alignment, kill switch, A4 Frankenstein, A7 signal correlation. Accepts loose names. Params: { name }.",
+    tier: "green",
+    handler: "explain_gate",
+  },
+  {
+    name: "list_subsystems",
+    description: "Returns the bounded list of registered Trading Forge subsystems (name + category) from the system subsystem registry. No params.",
+    tier: "green",
+    handler: "list_subsystems",
+  },
+  {
+    name: "summarize_subsystem",
+    description: "Returns one subsystem's registry entry (domain, scope/description, routes, tables, audit actions). Params: { name }.",
+    tier: "green",
+    handler: "summarize_subsystem",
+  },
+  {
+    name: "read_strategy_internals",
+    description: "Returns a strategy's policy slice (lifecycle state, symbols, entry_quality, position_size, stop_loss, take_profit, exit_plan_config, use_weighted_scoring) from its config. Identify by id or name. Params: { strategyId, name }.",
+    tier: "green",
+    handler: "read_strategy_internals",
+  },
+  {
+    name: "trace_correlation",
+    description: "Traces one correlationId end-to-end: returns up to 50 audit_log events (action, status, time) in chronological order. Params: { correlationId }.",
+    tier: "green",
+    handler: "trace_correlation",
+  },
+  {
+    name: "read_recent_decisions",
+    description: "Returns the most recent lifecycle promotion/demotion decisions (strategy name, from-state, to-state, time), newest first. Params: { limit } (default 15, max 50).",
+    tier: "green",
+    handler: "read_recent_decisions",
+  },
+  {
+    name: "read_system_map",
+    description: "Reads the Trading Forge System Map. With a section name, returns the text under the best-matching heading (bounded); without one, returns the list of available headings. Params: { section }.",
+    tier: "green",
+    handler: "read_system_map",
+  },
+
   // ── Action tools (Tier: green) — capital-SAFE, never bypass a gate ───────────
 
   {
@@ -403,6 +447,51 @@ export const CARTER_PARAMS_SCHEMAS: Record<string, Record<string, unknown>> = {
       action: { type: "string", description: "Audit action name to filter by (e.g. 'lifecycle.promoted')." },
       correlationId: { type: "string", description: "Correlation ID to trace one event end-to-end." },
       limit: { type: "number", description: "Max rows (default 20, max 50)." },
+    },
+    required: [],
+  },
+  // ── introspection (green) ───────────────────────────────────────────────────
+  explain_gate: {
+    type: "object",
+    properties: {
+      name: { type: "string", description: "Gate name (loose match): e.g. 'B14', 'WFE', 'PBO', 'frozen policy', 'lunch blackout', 'kill switch', 'A4'." },
+    },
+    required: ["name"],
+  },
+  summarize_subsystem: {
+    type: "object",
+    properties: {
+      name: { type: "string", description: "Subsystem id/name from the registry (e.g. 'strategy_lifecycle', 'quantum_rl_challenger')." },
+    },
+    required: ["name"],
+  },
+  read_strategy_internals: {
+    type: "object",
+    properties: {
+      strategyId: { type: "string", description: "Strategy UUID. Provide this OR name." },
+      name: { type: "string", description: "Strategy name. Provide this OR strategyId." },
+    },
+    required: [],
+    description: "Identify the strategy by id or name (one of the two).",
+  },
+  trace_correlation: {
+    type: "object",
+    properties: {
+      correlationId: { type: "string", description: "The correlation ID to trace end-to-end through the audit log." },
+    },
+    required: ["correlationId"],
+  },
+  read_recent_decisions: {
+    type: "object",
+    properties: {
+      limit: { type: "number", description: "How many recent lifecycle decisions to return (default 15, max 50)." },
+    },
+    required: [],
+  },
+  read_system_map: {
+    type: "object",
+    properties: {
+      section: { type: "string", description: "Optional heading to read (e.g. 'API Routes', 'Scheduler Jobs'). Omit to list all available headings." },
     },
     required: [],
   },
