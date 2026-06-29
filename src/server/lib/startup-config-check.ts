@@ -222,20 +222,25 @@ export async function checkStartupSecrets(): Promise<{ warnings: string[]; error
 
   // ── ADMIN_PROMOTE_HMAC_SECRET (Pass 5 Track C) ────────────────────────────
   // Required by PATCH /api/strategies/:id/lifecycle HMAC validation.
-  // Missing → route returns 401 on every manual lifecycle transition attempt.
+  // Missing → route returns 401 on every MANUAL (dashboard) lifecycle transition.
+  // Deep-scan 2026-06-28: downgraded ERROR→WARN. The prior message claimed "the
+  // first paper trade can never start" — that is FALSE. Reaching PAPER
+  // (CANDIDATE→TESTING→SHADOW→PAPER) is driven by the autonomous lifecycle cron,
+  // which calls lifecycle-service.promoteStrategy() INTERNALLY and never touches
+  // this HTTP route. This secret only gates the operator's manual Slumhouse
+  // promote button; its absence does not block autonomous operation or paper.
   {
     const promoteSecret = process.env.ADMIN_PROMOTE_HMAC_SECRET;
     if (!promoteSecret || promoteSecret.trim().length === 0) {
       const msg =
         "ADMIN_PROMOTE_HMAC_SECRET is NOT SET. " +
-        "PATCH /api/strategies/:id/lifecycle will reject all calls with HTTP 401 — " +
-        "NO promotion is possible, so the first paper trade can never start. " +
-        "Set ADMIN_PROMOTE_HMAC_SECRET (≥32 random chars) in .env to enable manual lifecycle transitions.";
-      // ERROR severity is carried by the errors[] return channel (vs warnings[]);
-      // the log line stays on logger.warn (the file's single log convention) but is
-      // tagged [STARTUP ERROR] so the level is unambiguous in the boot log.
-      logger.warn({ env_var: "ADMIN_PROMOTE_HMAC_SECRET", affected_endpoints: ["PATCH /api/strategies/:id/lifecycle"] }, `[STARTUP ERROR] ${msg}`);
-      errors.push("ADMIN_PROMOTE_HMAC_SECRET_NOT_SET");
+        "PATCH /api/strategies/:id/lifecycle (the MANUAL dashboard promote/demote " +
+        "button) will reject calls with HTTP 401. Autonomous promotion is " +
+        "UNAFFECTED — the lifecycle cron promotes internally, so paper trading " +
+        "still starts on its own. Set ADMIN_PROMOTE_HMAC_SECRET (≥32 random chars) " +
+        "only if you want manual dashboard lifecycle control.";
+      logger.warn({ env_var: "ADMIN_PROMOTE_HMAC_SECRET", affected_endpoints: ["PATCH /api/strategies/:id/lifecycle"] }, `[STARTUP WARN] ${msg}`);
+      warnings.push("ADMIN_PROMOTE_HMAC_SECRET_NOT_SET");
     } else if (promoteSecret.trim().length < MIN_SECRET_LENGTH) {
       logger.warn({ env_var: "ADMIN_PROMOTE_HMAC_SECRET", length: promoteSecret.trim().length }, `[STARTUP WARN] ADMIN_PROMOTE_HMAC_SECRET is set but shorter than recommended (${promoteSecret.trim().length} < ${MIN_SECRET_LENGTH}).`);
       warnings.push("ADMIN_PROMOTE_HMAC_SECRET_TOO_SHORT");
