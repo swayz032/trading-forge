@@ -128,7 +128,7 @@ function resolveAllowlist(existing: AllowlistEntry[]): { allowlist: AllowlistEnt
 function buildPatchBody(
   current: Record<string, any>,
   systemPrompt: string,
-  llm: string,
+  _llm: string, // retained for call-site compatibility; llm is now operator-owned (not patched)
 ): { body: Record<string, any>; prodHostMissing: boolean } {
   const currentPlatform = current?.platform_settings ?? {};
   const currentAuth = currentPlatform?.auth ?? {};
@@ -159,7 +159,10 @@ function buildPatchBody(
           prompt: {
             ...currentPromptNoTools,
             prompt: systemPrompt,
-            llm,
+            // OPERATOR-OWNED: llm (the model, e.g. gpt-5.4-mini) is chosen in the
+            // ElevenLabs dashboard. The script used to force claude-sonnet-4-5 here,
+            // which REVERTED the operator's model on every run — removed. We preserve
+            // whatever model is on the agent (currentPromptNoTools.llm).
           },
         },
         // OPERATOR-OWNED: tts (voice_id + model_id) is controlled in the
