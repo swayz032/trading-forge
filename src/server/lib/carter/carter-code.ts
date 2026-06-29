@@ -62,13 +62,10 @@ async function git(args: string[], cwd: string): Promise<string> {
       // commit author is clear and the commit doesn't fail with "unknown author".
       "-c", "user.name=Carter (Trading Forge voice agent)",
       "-c", "user.email=carter@trading-forge.local",
-      // Push over HTTPS using gh's authenticated credential helper — the service
-      // account has no SSH key/known_hosts, so the SSH `origin` fails host-key
-      // verification. gh is logged in (keyring); this lets HTTPS pushes work.
-      "-c", "credential.helper=!gh auth git-credential",
       ...args,
     ],
-    { cwd, maxBuffer: 8 * 1024 * 1024 },
+    // Hard timeout so a git op can NEVER hang the handler (e.g. a credential prompt).
+    { cwd, maxBuffer: 8 * 1024 * 1024, timeout: 30_000 },
   );
   return stdout.trim();
 }
@@ -137,7 +134,27 @@ async function saveCodeDraft(params: unknown): Promise<unknown> {
       `${p.rationale ?? ""}\n\n— Drafted by Carter (voice agent) for review. ` +
       `Do NOT merge without review. Nothing in the live system has changed.`;
     await git(["commit", "-m", `carter draft: ${p.summary}`, "-m", body, "--no-verify"], wt);
-    await git(["push", "https://github.com/swayz032/trading-forge.git", branch], wt);
+    // Push over HTTPS with the gh token (the service account has no SSH key/
+    // known_hosts, so SSH `origin` fails host-key verification). Non-interactive
+    // (no credential helper that could hang); token redacted from any error.
+    let ghTok = "";
+    try {
+      ghTok = (await execFileAsync("gh", ["auth", "token"], { timeout: 10_000 })).stdout.trim();
+    } catch {
+      ghTok = "";
+    }
+    if (!ghTok) throw new Error("gh_token_unavailable");
+    const pushUrl = `https://x-access-token:${ghTok}@github.com/swayz032/trading-forge.git`;
+    try {
+      await execFileAsync(
+        "git",
+        ["-c", "safe.directory=*", "push", pushUrl, `${branch}:${branch}`],
+        { cwd: wt, timeout: 60_000, maxBuffer: 8 * 1024 * 1024 },
+      );
+    } catch (e) {
+      const msg = (e instanceof Error ? e.message : String(e)).split(ghTok).join("***");
+      throw new Error(`push_failed: ${msg.slice(0, 200)}`);
+    }
 
     // Draft PR (best-effort — branch is pushed regardless).
     let prUrl: string | null = null;
