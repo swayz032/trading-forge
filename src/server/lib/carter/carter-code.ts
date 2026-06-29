@@ -137,13 +137,18 @@ async function saveCodeDraft(params: unknown): Promise<unknown> {
     // Push over HTTPS with the gh token (the service account has no SSH key/
     // known_hosts, so SSH `origin` fails host-key verification). Non-interactive
     // (no credential helper that could hang); token redacted from any error.
-    let ghTok = "";
-    try {
-      ghTok = (await execFileAsync("gh", ["auth", "token"], { timeout: 10_000 })).stdout.trim();
-    } catch {
-      ghTok = "";
+    // Prefer an env token — the service account can't read gh's per-user keyring,
+    // so GITHUB_TOKEN (repo: contents + pull-requests write) must be set for live
+    // use. Fall back to `gh auth token` for local dev under the operator's user.
+    let ghTok = (process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN ?? "").trim();
+    if (!ghTok) {
+      try {
+        ghTok = (await execFileAsync("gh", ["auth", "token"], { timeout: 10_000 })).stdout.trim();
+      } catch {
+        ghTok = "";
+      }
     }
-    if (!ghTok) throw new Error("gh_token_unavailable");
+    if (!ghTok) throw new Error("no_github_token (set GITHUB_TOKEN in .env)");
     const pushUrl = `https://x-access-token:${ghTok}@github.com/swayz032/trading-forge.git`;
     try {
       await execFileAsync(
@@ -169,8 +174,11 @@ async function saveCodeDraft(params: unknown): Promise<unknown> {
         // dubious-ownership avoidance as the git() helper above).
         {
           cwd: wt,
+          timeout: 30_000,
           maxBuffer: 2 * 1024 * 1024,
-          env: { ...process.env, GIT_CONFIG_COUNT: "1", GIT_CONFIG_KEY_0: "safe.directory", GIT_CONFIG_VALUE_0: "*" },
+          // GH_TOKEN authenticates gh (service can't read the keyring); GIT_CONFIG_*
+          // injects safe.directory into gh's internal git.
+          env: { ...process.env, GH_TOKEN: ghTok, GIT_CONFIG_COUNT: "1", GIT_CONFIG_KEY_0: "safe.directory", GIT_CONFIG_VALUE_0: "*" },
         },
       );
       prUrl = stdout.trim() || null;
