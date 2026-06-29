@@ -34,6 +34,31 @@ VISUAL (because it REFUSED to invent decisions) is a STRONGER scientific instrum
 guessing. Per the determinism invariant (`ir-freeze-policy-v1.md`), a high replay % bought by relaxing
 UNKNOWN-stops is a regression, not progress. Always read replay % alongside the UNKNOWN/VISUAL/ambiguity split.
 
+## Campaign acceptance criteria — experiment quality, NOT replay quality (pre-committed)
+
+A campaign is a **methodologically successful experiment** iff ALL of the following hold — *regardless of
+whether replay performance is 30% or 90%.* A scientifically successful campaign can produce a low replay
+number that motivates substantial engineering; that is still a success at THIS layer.
+1. **Every replay run produced a reproducible artifact package** (`assembleReproducibilityPackage`,
+   `reproducible=true` — dataset_hash matches the corpus; market_data_hash + decision_record_ref present).
+2. **Every failure was assigned exactly ONE taxonomy class BEFORE inspection** (measured-evaluation-before-
+   diagnosis; the class came from signals, not from watching the video).
+3. **Every observed representation gap was tested against the IR v2.0 governance threshold** — and explicitly
+   either met it (→ proposes v2.0) or failed it (→ stays v1.0). No gap is acted on informally.
+4. **An independent engineer can reconstruct every reported conclusion from the stored artifacts alone** — not
+   from "we think it was around when we fixed X."
+
+If any criterion fails, the campaign's *methodology* is flawed and its numbers are not yet citable — fix the
+process and re-run (a NEW run_id), do not salvage the conclusion. This is the experiment evaluating itself.
+
+## What Campaign 1 delivers — a BASELINE, not "proof"
+
+A measured reconstruction rate under IR v1.0 · a measured failure-mode distribution · those distributions by
+educator family / market / strategy style · evidence on whether the dominant limit is extraction /
+representation / implementation / source material. That baseline is the reference point for every later
+campaign. Campaign 1 is not expected to "succeed at replay" — it is expected to establish where the system
+actually stands so the next investment is evidence-driven.
+
 ## Per-campaign record schema (each campaign = one append-only entry)
 
 Corpus Version · IR Version · Replay Coverage · Behavioral Reconstruction (Gate 2) · Decision Coverage ·
