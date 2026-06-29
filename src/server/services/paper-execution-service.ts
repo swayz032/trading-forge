@@ -43,6 +43,8 @@ import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 // 2026-06-29 Fix 2 (HIGH): TS Style C evaluator — primary path replacing Python subprocess.
 // Eliminates per-bar spawn overhead and 1h TP blackout from circuit-breaker open state.
 import { evaluateStyleCExit } from "../lib/style-c-exit-evaluator.js";
+// F-1 (2026-06-29): TICK_SIZES for AVWAP runner trail cushion — must match backtest tick offset.
+import { TICK_SIZES } from "./paper-signal-service.js";
 export { CONTRACT_SPECS };
 
 // ─── C1: Register CME outage callback on module init ─────────────────────────
@@ -4122,7 +4124,12 @@ export async function updatePositionPrices(
       try {
         const exitPlanRow = pos.exitPlan as ExitPlanWithRuntimeState;
         const trailMethod = exitPlanRow.runner?.trail_method;
-        const atrAtEntry = exitBarContext.atr14[pos.symbol] ?? 0;
+        // F-4 (2026-06-29): renamed from atrAtBar — this reads CURRENT-BAR ATR from
+        // exitBarContext, not entry-frozen ATR. Name was misleading. Backtest equivalent:
+        // atr_at_bar = float(atr_np[bar]) if not np.isnan(atr_np[bar]) else atr_at_entry.
+        // Parity note: backtest falls back to atr_at_entry on NaN; paper falls back to 0.
+        // Gap is edge-case only (NaN ATR bar). atr_at_entry not stored in paper_positions.
+        const atrAtBar = exitBarContext.atr14[pos.symbol] ?? 0;
         const ATR_TRAIL_CUSHION_MULTIPLIER = 1.0; // named constant per CLAUDE.md §13 no-magic-numbers
         let computedTrail: number | null = null;
         let updatedRuntimeState: ExitPlanWithRuntimeState["runtime_state"] | null = null;
@@ -4131,8 +4138,9 @@ export async function updatePositionPrices(
           case "anchored_vwap": {
             // Per-position running ΣP·V / ΣV from entry timestamp.
             // State: exit_plan.runtime_state.{ sum_pv, sum_v }
-            // Trail = anchored VWAP - (ATR_TRAIL_CUSHION_MULTIPLIER × atrAtEntry) for longs
-            //        anchored VWAP + cushion for shorts
+            // F-1 (2026-06-29): trail = AVWAP - 1 tick for longs, AVWAP + 1 tick for shorts.
+            // Backtest (backtester.py:1554-1556): trail_stop = avwap_price - tick (tick = spec.tick_size).
+            // Prior code: cushion = ATR_TRAIL_CUSHION_MULTIPLIER * atrAtBar (~5pt for MES) — too wide.
             const prevState = exitPlanRow.runtime_state ?? {};
             const prevSumPv = prevState.sum_pv ?? 0;
             const prevSumV  = prevState.sum_v  ?? 0;
@@ -4147,7 +4155,7 @@ export async function updatePositionPrices(
             const newSumPv = prevSumPv + barMid * barVol;
             const newSumV  = prevSumV  + barVol;
             const avwap = newSumV > 0 ? newSumPv / newSumV : currentPrice;
-            const cushion = ATR_TRAIL_CUSHION_MULTIPLIER * atrAtEntry;
+            const cushion = TICK_SIZES[pos.symbol] ?? 0.25;  // F-1: 1 tick offset (0.25pt MES/MNQ); matches backtester.py
             computedTrail = pos.side === "long" ? avwap - cushion : avwap + cushion;
             updatedRuntimeState = { ...prevState, sum_pv: newSumPv, sum_v: newSumV, avwap };
             break;
@@ -4159,7 +4167,7 @@ export async function updatePositionPrices(
             // By mapping this case to the existing POC data, we preserve exact parity.
             const poc = exitBarContext.developingSessionPoc?.[pos.symbol] ?? null;
             if (poc != null) {
-              const cushion = ATR_TRAIL_CUSHION_MULTIPLIER * atrAtEntry;
+              const cushion = ATR_TRAIL_CUSHION_MULTIPLIER * atrAtBar;
               computedTrail = pos.side === "long" ? poc - cushion : poc + cushion;
             }
             // No runtime_state needed for developing_poc (stateless)
@@ -4173,14 +4181,20 @@ export async function updatePositionPrices(
             // chandelier was computed from entryPrice — always below the BE stop, so the
             // ratchet blocked it and the trail was permanently stuck at BE.
             //
-            // For longs:  trail = highSinceEntryPrice - (2.0 × atrAtEntry)
-            // For shorts: trail = lowSinceEntryPrice  + (2.0 × atrAtEntry)
+            // F-4 (2026-06-29): atrAtBar = exitBarContext.atr14[symbol] — current-bar ATR.
+            // Backtest uses atr_at_bar = float(atr_np[bar]) with atr_at_entry fallback on NaN.
+            // Both paths use current-bar ATR in the normal (non-NaN) case — parity confirmed.
+            // Remaining gap: fallback when ATR is NaN — paper uses 0, backtest uses atr_at_entry.
+            // atr_at_entry is not stored in paper_positions; edge-case gap is documented only.
+            //
+            // For longs:  trail = highSinceEntryPrice - (2.0 × atrAtBar)
+            // For shorts: trail = lowSinceEntryPrice  + (2.0 × atrAtBar)
             const CHANDELIER_MULTIPLIER = 2.0;
             const highSince = newHighSinceEntry;   // already computed above from this bar's data
             const lowSince  = newLowSinceEntry;
             computedTrail = pos.side === "long"
-              ? highSince - CHANDELIER_MULTIPLIER * atrAtEntry
-              : lowSince  + CHANDELIER_MULTIPLIER * atrAtEntry;
+              ? highSince - CHANDELIER_MULTIPLIER * atrAtBar
+              : lowSince  + CHANDELIER_MULTIPLIER * atrAtBar;
             break;
           }
 
@@ -4200,7 +4214,7 @@ export async function updatePositionPrices(
               const trackedSwingLow = newSwingLow != null && newSwingLow < currentPrice
                 ? Math.max(prevSwingLow, newSwingLow) // use highest (most recent) valid swing low
                 : prevSwingLow;
-              const cushion = ATR_TRAIL_CUSHION_MULTIPLIER * atrAtEntry;
+              const cushion = ATR_TRAIL_CUSHION_MULTIPLIER * atrAtBar;
               computedTrail = trackedSwingLow - cushion;
               updatedRuntimeState = { ...prevState, current_swing_low: trackedSwingLow };
             } else {
@@ -4209,7 +4223,7 @@ export async function updatePositionPrices(
               const trackedSwingHigh = newSwingHigh != null && newSwingHigh > currentPrice
                 ? Math.min(prevSwingHigh, newSwingHigh)
                 : prevSwingHigh;
-              const cushion = ATR_TRAIL_CUSHION_MULTIPLIER * atrAtEntry;
+              const cushion = ATR_TRAIL_CUSHION_MULTIPLIER * atrAtBar;
               computedTrail = trackedSwingHigh + cushion;
               updatedRuntimeState = { ...prevState, current_swing_high: trackedSwingHigh };
             }
@@ -4221,7 +4235,7 @@ export async function updatePositionPrices(
             {
               const poc = exitBarContext.developingSessionPoc?.[pos.symbol] ?? null;
               if (poc != null) {
-                computedTrail = poc - ATR_TRAIL_CUSHION_MULTIPLIER * atrAtEntry;
+                computedTrail = poc - ATR_TRAIL_CUSHION_MULTIPLIER * atrAtBar;
               }
             }
         }
@@ -4250,7 +4264,7 @@ export async function updatePositionPrices(
             logger.debug(
               {
                 positionId: pos.id, sessionId, trailMethod, computedTrail,
-                oldTrail: currentTrailHwm, atrAtEntry, correlationId,
+                oldTrail: currentTrailHwm, atrAtBar, correlationId,
               },
               "wave25.5: adaptive trail tightened",
             );
