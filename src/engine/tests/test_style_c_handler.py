@@ -463,3 +463,107 @@ def test_bar_high_low_in_audit_evidence():
     assert "bar_low"  in decision.evidence
     assert decision.evidence["bar_high"] == 5010.0
     assert decision.evidence["bar_low"]  == 4998.0
+# ─── Test 15: Style C NEVER emits MOVE_STOP_TO_BE (Defect 2 parity contract) ──
+
+# Background: Only style_d_handler emits MOVE_STOP_TO_BE.  Style C uses the
+# TS-side tp1BeStopMap mechanism (absolute_level stop config) for the BE+1tick
+# guarantee.  A misleading comment in paper-execution-service.ts previously
+# claimed Python made this decision — Defect 2 corrects that comment.
+# These tests lock the contract so the Python handler cannot silently add
+# MOVE_STOP_TO_BE in the future without a corresponding TS-side removal.
+
+_ALL_STYLE_C_DECISIONS = {"FILL_TP1_50PCT", "FILL_TP2", "TIGHTEN_TRAIL_TO_X",
+                           "TIME_STOP_FLATTEN", "HOLD"}
+
+
+def _assert_no_move_stop_to_be(state: StyleCState) -> None:
+    decision = evaluate_exit(state)
+    assert decision.decision != "MOVE_STOP_TO_BE", (
+        f"Style C must never emit MOVE_STOP_TO_BE (TS-side tp1BeStopMap handles this). "
+        f"Got decision={decision.decision!r} for state={state!r}"
+    )
+    assert decision.decision in _ALL_STYLE_C_DECISIONS, (
+        f"Unexpected Style C decision={decision.decision!r}"
+    )
+
+
+def test_no_move_stop_to_be_at_tp1_fill_long():
+    """Long TP1 fills: FILL_TP1_50PCT emitted — NEVER MOVE_STOP_TO_BE."""
+    state = _make_state(
+        direction="long",
+        entry_price=5000.0,
+        stop_pts=10.0,
+        current_price=5010.0,   # exactly +1R
+        tp1_filled=False,
+        tp2_filled=False,
+    )
+    decision = evaluate_exit(state)
+    assert decision.decision == "FILL_TP1_50PCT"
+    _assert_no_move_stop_to_be(state)
+
+
+def test_no_move_stop_to_be_at_tp1_fill_short():
+    """Short TP1 fills: FILL_TP1_50PCT emitted — NEVER MOVE_STOP_TO_BE."""
+    state = _make_state(
+        direction="short",
+        entry_price=5000.0,
+        stop_pts=10.0,
+        current_price=4990.0,   # exactly +1R short-side
+        tp1_filled=False,
+        tp2_filled=False,
+    )
+    decision = evaluate_exit(state)
+    assert decision.decision == "FILL_TP1_50PCT"
+    _assert_no_move_stop_to_be(state)
+
+
+def test_no_move_stop_to_be_after_tp1_with_poc_trail():
+    """After TP1 fill, POC trail updates TIGHTEN_TRAIL_TO_X — NEVER MOVE_STOP_TO_BE."""
+    state = _make_state(
+        direction="long",
+        entry_price=5000.0,
+        stop_pts=10.0,
+        current_price=5025.0,
+        tp1_filled=True,
+        tp2_filled=True,
+        developing_session_poc=5015.0,
+    )
+    # Emit TIGHTEN_TRAIL_TO_X (POC update path) — must not be MOVE_STOP_TO_BE
+    decision = evaluate_exit(state)
+    assert decision.decision == "TIGHTEN_TRAIL_TO_X"
+    _assert_no_move_stop_to_be(state)
+
+
+def test_no_move_stop_to_be_during_hold():
+    """Hold state: HOLD emitted — NEVER MOVE_STOP_TO_BE."""
+    state = _make_state(
+        direction="long",
+        entry_price=5000.0,
+        stop_pts=10.0,
+        current_price=5002.0,   # below 1R
+        tp1_filled=False,
+        tp2_filled=False,
+    )
+    decision = evaluate_exit(state)
+    assert decision.decision == "HOLD"
+    _assert_no_move_stop_to_be(state)
+
+
+def test_all_style_c_reachable_decisions_exclude_move_stop_to_be():
+    """Exhaustive: every reachable Style C decision is not MOVE_STOP_TO_BE."""
+    # Scenario set covers all 5 reachable paths:
+    scenarios = [
+        # HOLD — below TP1
+        _make_state(current_price=5002.0),
+        # FILL_TP1_50PCT — exactly at 1R
+        _make_state(current_price=5010.0, tp1_filled=False),
+        # FILL_TP2 — at 2R with TP1 already filled
+        _make_state(current_price=5020.0, tp1_filled=True, tp2_filled=False),
+        # TIME_STOP_FLATTEN
+        _make_state(current_price=5002.0, current_time_et="15:55"),
+        # TIGHTEN_TRAIL_TO_X — both filled, POC present
+        _make_state(current_price=5025.0, tp1_filled=True, tp2_filled=True,
+                    developing_session_poc=5015.0),
+    ]
+    for state in scenarios:
+        _assert_no_move_stop_to_be(state)

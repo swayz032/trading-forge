@@ -107,7 +107,7 @@ const FORCE_CLOSE_TIMEOUT_MS = parseInt(process.env.FORCE_CLOSE_TIMEOUT_MS ?? "1
  * On timeout or call failure, writes paper.force_flatten_kill_switch_failed audit
  * and fires a CRITICAL Discord alert so the operator knows positions may be open.
  */
-async function _confirmedForceClose(reason: string, correlationId: string): Promise<void> {
+async function _confirmedForceClose(reason: string, correlationId: string): Promise<boolean> {
   const timeoutMs = FORCE_CLOSE_TIMEOUT_MS > 0 ? FORCE_CLOSE_TIMEOUT_MS : 10_000;
   try {
     await Promise.race([
@@ -122,6 +122,7 @@ async function _confirmedForceClose(reason: string, correlationId: string): Prom
       ),
     ]);
     logger.info({ reason, correlationId }, "kill-switch: forceCloseAllPositions completed");
+    return true;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     logger.error(
@@ -147,6 +148,7 @@ async function _confirmedForceClose(reason: string, correlationId: string): Prom
     }).catch((auditErr) =>
       logger.error({ err: auditErr }, "kill-switch: force_flatten_failed audit write also failed")
     );
+    return false;
   }
 }
 
@@ -271,18 +273,21 @@ async function checkLayer2DailyLoss(): Promise<HaltDecision> {
           { session_id: session.id, firm_id: firmId, day_pnl: dayPnl, dll, threshold_pct: DLL_FORCE_CLOSE_PCT },
           "kill-switch L2: DLL at 95% — force-closing all positions (M-1 fix)"
         );
-        // Audit (fire-and-forget, non-blocking)
+        // Audit — status PENDING until the close actually confirms. Deep-scan
+        // 2026-06-28: this row used to pre-write status:"success" BEFORE the
+        // fire-and-forget close ran, so a failed close left a misleading
+        // "success" row and no alert. Now: pending → completed/failed below.
         insertAuditRow({
           action: "sizing.dll_force_close",
           entityType: "system",
           entityId: session.id,
           decisionAuthority: "system",
           input: { session_id: session.id, firm_id: firmId, day_pnl: dayPnl, dll, threshold_pct: DLL_FORCE_CLOSE_PCT } as Record<string, unknown>,
-          result: { action: "force_close" } as Record<string, unknown>,
-          status: "success",
+          result: { action: "force_close", outcome: "triggered" } as Record<string, unknown>,
+          status: "pending",
           correlationId: fcCorrelationId,
         }).catch((auditErr) =>
-          logger.error({ err: auditErr }, "kill-switch L2: dll 95pct force-close audit failed (non-blocking)")
+          logger.error({ err: auditErr }, "kill-switch L2: dll 95pct force-close trigger audit failed (non-blocking)")
         );
         // SSE — consistent with existing force-close path in setMode("HALT")
         broadcastSSE("kill_switch:dll_force_close", {
@@ -294,8 +299,33 @@ async function checkLayer2DailyLoss(): Promise<HaltDecision> {
           correlationId: fcCorrelationId,
           forced_at: new Date().toISOString(),
         });
-        // FINDING #1 FIX: awaited force-close with timeout and CRITICAL escalation on failure
-        await _confirmedForceClose(`dll_force_close_at_95pct:${session.id}`, fcCorrelationId);
+        // MERGE 2026-06-29: both deep-scan sessions hardened this DLL-95 force-close.
+        // Adopted the deepscan-wiring version: an AWAITED force-close with a
+        // FORCE_CLOSE_TIMEOUT_MS (10s) guard — this fixes the ACTUAL hang risk (a
+        // fire-and-forget .then()/.catch() never fires its catch if the close hangs,
+        // leaving positions open at a 95% breach). _confirmedForceClose writes the
+        // paper.force_flatten_kill_switch_failed audit + a CRITICAL Discord alert on
+        // timeout/failure, and is the same helper used by the production-halt path.
+        const _fcOk = await _confirmedForceClose(`dll_force_close_at_95pct:${session.id}`, fcCorrelationId);
+        // Completion observability (phase-0 deep-scan): record a success audit row ONLY
+        // when the force-close actually completed. On failure/timeout, _confirmedForceClose
+        // already wrote paper.force_flatten_kill_switch_failed + fired a CRITICAL Discord —
+        // so we must NOT also emit a "completed" row (would falsely mark success while
+        // positions may still be open).
+        if (_fcOk) {
+          insertAuditRow({
+            action: "sizing.dll_force_close_completed",
+            entityType: "system",
+            entityId: session.id,
+            decisionAuthority: "system",
+            input: { session_id: session.id, firm_id: firmId } as Record<string, unknown>,
+            result: { action: "force_close", outcome: "completed" } as Record<string, unknown>,
+            status: "success",
+            correlationId: fcCorrelationId,
+          }).catch((auditErr) =>
+            logger.error({ err: auditErr }, "kill-switch L2: dll 95pct force-close completed-audit failed (non-blocking)")
+          );
+        }
         decision = {
           halted: true,
           layer: 2,
@@ -564,26 +594,32 @@ async function checkLayer7FirmSuspension(correlationId: string): Promise<HaltDec
       decision = {
         halted: true,
         layer: 7,
-        reason: "firm_suspended",
+        // Name the suspended firm(s) so the operator knows WHICH firm halted the
+        // bot without drilling into detail (deep-scan 2026-06-28).
+        reason: `firm_suspended:${suspendedFirms.join(",")}`,
         detail: { suspended_firms: suspendedFirms },
       };
+      // Audit ONLY on actual suspension (deep-scan 2026-06-28). The old code
+      // wrote a "checked firms, nothing suspended" row on every per-second
+      // signal-path eval (up to ~23k+ rows/day RTH), burying real suspension
+      // events in the append-only trust spine. The clean-state result is already
+      // visible via the kill-switch status report + SSE; it does not need an
+      // immutable audit row. Suspension (a real event) still always audits.
+      insertAuditRow({
+        action: "kill_switch.c2_multi_firm_check",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { firms_checked: firmsChecked } as Record<string, unknown>,
+        result: { suspended_firms: suspendedFirms, halted: decision.halted } as Record<string, unknown>,
+        status: "success",
+        correlationId,
+      }).catch((auditErr) =>
+        logger.error({ err: auditErr }, "kill-switch L7: audit_log write failed (non-blocking)"),
+      );
     } else {
       decision = { halted: false };
     }
-
-    // Audit row for every evaluation (non-blocking)
-    insertAuditRow({
-      action: "kill_switch.c2_multi_firm_check",
-      entityType: "system",
-      entityId: null,
-      decisionAuthority: "system",
-      input: { firms_checked: firmsChecked } as Record<string, unknown>,
-      result: { suspended_firms: suspendedFirms, halted: decision.halted } as Record<string, unknown>,
-      status: "success",
-      correlationId,
-    }).catch((auditErr) =>
-      logger.error({ err: auditErr }, "kill-switch L7: audit_log write failed (non-blocking)"),
-    );
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     logger.error({ err }, "C2 multi-firm suspension check FAILED — blocking entries (fail-closed, Layer 7)");

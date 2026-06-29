@@ -3321,3 +3321,31 @@ export const liveOrderPineDedup = pgTable(
 
 export type LiveOrderPineDedup = typeof liveOrderPineDedup.$inferSelect;
 export type NewLiveOrderPineDedup = typeof liveOrderPineDedup.$inferInsert;
+
+// ─── Carter Issues ────────────────────────────────────────────────────────────
+// Persistent store for the proactive Carter issue watcher (Wave 4, 2026-06-28).
+// The in-memory map in carter-issues-store.ts is the primary runtime source;
+// this table is the persistence layer hydrated at boot and updated fire-and-forget.
+// Issues are keyed by issue_key (stable per-issue-class identifier).
+// Backed by migration 0181.
+export const carterIssues = pgTable(
+  "carter_issues",
+  {
+    id:          bigserial("id", { mode: "number" }).primaryKey(),
+    issueKey:    text("issue_key").notNull().unique(),
+    severity:    text("severity").notNull(), // 'critical' | 'warning' | 'info'
+    title:       text("title").notNull(),
+    detail:      text("detail"),
+    sourceEvent: text("source_event"),
+    firstSeen:   timestamp("first_seen", { withTimezone: true }).notNull().defaultNow(),
+    lastSeen:    timestamp("last_seen", { withTimezone: true }).notNull().defaultNow(),
+    resolved:    boolean("resolved").notNull().default(false),
+    resolvedAt:  timestamp("resolved_at", { withTimezone: true }),
+  },
+  (t) => ({
+    openIdx: index("carter_issues_open_idx").on(t.resolved, t.severity),
+  }),
+);
+
+export type CarterIssueRow = typeof carterIssues.$inferSelect;
+export type NewCarterIssueRow = typeof carterIssues.$inferInsert;

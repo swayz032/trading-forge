@@ -272,70 +272,76 @@ async function loadKillSwitchStatus(): Promise<KillSwitchStatus> {
   }
 }
 
+// ─── buildABComparisonData ────────────────────────────────────────────────────
+// Exported so Carter voice-agent (and other callers) can query without HTTP.
+// Same logic as the /recent route; Prom gauges are updated as a side-effect.
+
+export async function buildABComparisonData(): Promise<ABComparisonPayload> {
+  // Step 1: verify broker_accounts rows exist (fail-soft if missing)
+  const accountRows = await db
+    .select({
+      accountId: brokerAccounts.accountId,
+      accountIdExternal: brokerAccounts.accountIdExternal,
+    })
+    .from(brokerAccounts)
+    .where(
+      inArray(brokerAccounts.accountIdExternal, [BASELINE_SLUG, CHALLENGER_SLUG]),
+    );
+
+  const baselineAccount = accountRows.find(
+    (r) => r.accountIdExternal === BASELINE_SLUG,
+  );
+  const challengerAccount = accountRows.find(
+    (r) => r.accountIdExternal === CHALLENGER_SLUG,
+  );
+
+  if (!baselineAccount) {
+    logger.warn({ slug: BASELINE_SLUG }, "ab-comparison: broker_accounts row missing for baseline — fail-soft");
+  }
+  if (!challengerAccount) {
+    logger.warn({ slug: CHALLENGER_SLUG }, "ab-comparison: broker_accounts row missing for challenger — fail-soft");
+  }
+
+  // Step 2: load metrics for both sub-accounts in parallel
+  const [subAccount1, subAccount2, killSwitch] = await Promise.all([
+    baselineAccount
+      ? loadSubAccountMetrics("baseline", BASELINE_SLUG)
+      : Promise.resolve({ ...EMPTY_METRICS }),
+    challengerAccount
+      ? loadSubAccountMetrics("rl-challenger", CHALLENGER_SLUG)
+      : Promise.resolve({ ...EMPTY_METRICS }),
+    loadKillSwitchStatus(),
+  ]);
+
+  // Step 3: compute deltas (Sub-Account 2 − Sub-Account 1 = RL marginal edge)
+  const delta: ABComparisonDelta = {
+    sharpe_delta: subAccount2.rolling_20_session_sharpe - subAccount1.rolling_20_session_sharpe,
+    pnl_delta: subAccount2.cumulative_pnl - subAccount1.cumulative_pnl,
+    drawdown_delta: subAccount2.max_drawdown - subAccount1.max_drawdown,
+  };
+
+  // Wave 29 prod hardening: set Prom gauges #8 and #9 (rl_ab_sharpe_delta, rl_ab_pnl_delta)
+  try {
+    rlAbSharpeDelta.set(delta.sharpe_delta);
+    rlAbPnlDelta.set(delta.pnl_delta);
+  } catch (_promErr) { /* non-blocking */ }
+
+  return {
+    sub_account_1: subAccount1,
+    sub_account_2: subAccount2,
+    delta,
+    kill_switch_status: killSwitch,
+    last_updated: new Date(),
+  };
+}
+
 // ─── Route ────────────────────────────────────────────────────────────────────
 
 abComparisonRoutes.get(
   "/recent",
   async (_req: Request, res: Response): Promise<void> => {
     try {
-      // Step 1: verify broker_accounts rows exist (fail-soft if missing)
-      const accountRows = await db
-        .select({
-          accountId: brokerAccounts.accountId,
-          accountIdExternal: brokerAccounts.accountIdExternal,
-        })
-        .from(brokerAccounts)
-        .where(
-          inArray(brokerAccounts.accountIdExternal, [BASELINE_SLUG, CHALLENGER_SLUG]),
-        );
-
-      const baselineAccount = accountRows.find(
-        (r) => r.accountIdExternal === BASELINE_SLUG,
-      );
-      const challengerAccount = accountRows.find(
-        (r) => r.accountIdExternal === CHALLENGER_SLUG,
-      );
-
-      if (!baselineAccount) {
-        logger.warn({ slug: BASELINE_SLUG }, "ab-comparison: broker_accounts row missing for baseline — fail-soft");
-      }
-      if (!challengerAccount) {
-        logger.warn({ slug: CHALLENGER_SLUG }, "ab-comparison: broker_accounts row missing for challenger — fail-soft");
-      }
-
-      // Step 2: load metrics for both sub-accounts in parallel
-      const [subAccount1, subAccount2, killSwitch] = await Promise.all([
-        baselineAccount
-          ? loadSubAccountMetrics("baseline", BASELINE_SLUG)
-          : Promise.resolve({ ...EMPTY_METRICS }),
-        challengerAccount
-          ? loadSubAccountMetrics("rl-challenger", CHALLENGER_SLUG)
-          : Promise.resolve({ ...EMPTY_METRICS }),
-        loadKillSwitchStatus(),
-      ]);
-
-      // Step 3: compute deltas (Sub-Account 2 − Sub-Account 1 = RL marginal edge)
-      const delta: ABComparisonDelta = {
-        sharpe_delta: subAccount2.rolling_20_session_sharpe - subAccount1.rolling_20_session_sharpe,
-        pnl_delta: subAccount2.cumulative_pnl - subAccount1.cumulative_pnl,
-        drawdown_delta: subAccount2.max_drawdown - subAccount1.max_drawdown,
-      };
-
-      // Wave 29 prod hardening: set Prom gauges #8 and #9 (rl_ab_sharpe_delta, rl_ab_pnl_delta)
-      // Gauges are unlabeled per registry declaration — single time series per delta metric.
-      try {
-        rlAbSharpeDelta.set(delta.sharpe_delta);
-        rlAbPnlDelta.set(delta.pnl_delta);
-      } catch (_promErr) { /* non-blocking */ }
-
-      const payload: ABComparisonPayload = {
-        sub_account_1: subAccount1,
-        sub_account_2: subAccount2,
-        delta,
-        kill_switch_status: killSwitch,
-        last_updated: new Date(),
-      };
-
+      const payload = await buildABComparisonData();
       res.status(200).json(payload);
     } catch (err) {
       logger.error({ err }, "ab-comparison: /recent query failed");

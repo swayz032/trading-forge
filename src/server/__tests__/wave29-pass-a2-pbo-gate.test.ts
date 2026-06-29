@@ -180,6 +180,81 @@ describe("evaluatePboGate — audit payload completeness", () => {
   });
 });
 
+// ─── CPCV-exempt path (hardening/phase-0) ────────────────────────────────────
+//
+// walk_forward.py emits pbo_degenerate_reason="cpcv_is_sharpe_unavailable" in
+// wf_metadata when mode="cpcv". PBO rank-comparison requires per-path IS Sharpe
+// which CPCV does not produce. The gate MUST:
+//   - return ok=true (do NOT block)
+//   - return legacyNull=false (distinct from the grandfather window)
+//   - return reason="lifecycle.pbo_cpcv_is_unavailable" (distinct from "lifecycle.pbo_unavailable_legacy")
+//   - include cpcv_exempt=true in auditPayload
+
+describe("evaluatePboGate — CPCV-exempt path (hardening/phase-0)", () => {
+  it("pbo_overall=null + pbo_degenerate_reason=cpcv_is_sharpe_unavailable → cpcv_exempt, not legacy_null", () => {
+    const result = evaluatePboGate({
+      pbo_overall: null,
+      pbo_degenerate_reason: "cpcv_is_sharpe_unavailable",
+    });
+    expect(result.ok).toBe(true);
+    expect(result.pbo).toBeNull();
+    expect(result.legacyNull).toBe(false);
+    expect(result.reason).toBe("lifecycle.pbo_cpcv_is_unavailable");
+  });
+
+  it("cpcv_exempt audit payload has cpcv_exempt=true and legacy_null=false", () => {
+    const result = evaluatePboGate({
+      pbo_overall: null,
+      pbo_degenerate_reason: "cpcv_is_sharpe_unavailable",
+    });
+    expect(result.auditPayload.cpcv_exempt).toBe(true);
+    expect(result.auditPayload.legacy_null).toBe(false);
+    expect(result.auditPayload.blocked).toBe(false);
+  });
+
+  it("cpcv_exempt reason is distinct from legacy_null reason", () => {
+    const cpcvResult = evaluatePboGate({
+      pbo_overall: null,
+      pbo_degenerate_reason: "cpcv_is_sharpe_unavailable",
+    });
+    const legacyResult = evaluatePboGate({ pbo_overall: null });
+    expect(cpcvResult.reason).toBe("lifecycle.pbo_cpcv_is_unavailable");
+    expect(legacyResult.reason).toBe("lifecycle.pbo_unavailable_legacy");
+    expect(cpcvResult.legacyNull).toBe(false);
+    expect(legacyResult.legacyNull).toBe(true);
+  });
+
+  it("regression: genuine legacy null (no pbo_degenerate_reason) → legacyNull=true, pbo_unavailable_legacy", () => {
+    const result = evaluatePboGate({ pbo_overall: null });
+    expect(result.ok).toBe(true);
+    expect(result.legacyNull).toBe(true);
+    expect(result.reason).toBe("lifecycle.pbo_unavailable_legacy");
+    expect(result.auditPayload.legacy_null).toBe(true);
+    expect(result.auditPayload.cpcv_exempt).toBeUndefined();
+  });
+
+  it("regression: real PBO value (0.20) still BLOCKS regardless of pbo_degenerate_reason field", () => {
+    // pbo_degenerate_reason is only checked when pbo_overall == null.
+    // A real PBO value must still be evaluated normally.
+    const result = evaluatePboGate({
+      pbo_overall: 0.20,
+      pbo_degenerate_reason: "cpcv_is_sharpe_unavailable",
+    });
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe("lifecycle.pbo_overfit_block");
+    expect(result.legacyNull).toBe(false);
+  });
+
+  it("other pbo_degenerate_reason values do NOT trigger cpcv-exempt (falls through to legacy null)", () => {
+    const result = evaluatePboGate({
+      pbo_overall: null,
+      pbo_degenerate_reason: "some_other_reason",
+    });
+    expect(result.legacyNull).toBe(true);
+    expect(result.reason).toBe("lifecycle.pbo_unavailable_legacy");
+  });
+});
+
 // ─── Two-threshold separation invariant ──────────────────────────────────────
 
 describe("Two-threshold invariant", () => {

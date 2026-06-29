@@ -5,12 +5,10 @@ Usage:
 """
 from __future__ import annotations
 
-import json
 import math
 import os
 import platform
 import subprocess
-import sys
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -135,12 +133,22 @@ def detect_cloud_backends() -> dict:
     ibm_token = os.environ.get("IBM_QUANTUM_TOKEN", "")
     if ibm_token:
         try:
-            from qiskit_ibm_runtime import QiskitRuntimeService
             import concurrent.futures
 
+            from qiskit_ibm_runtime import QiskitRuntimeService
+
             def _list_ibm() -> list[str]:
+                # MED-FIX: channel is env-driven; defaults "ibm_cloud" for the
+                # post-2023 IBM Cloud CRN account.  Legacy "ibm_quantum_platform"
+                # caused latent auth failures on hardware-profile probes.
+                # ibm_cloud also requires an instance (CRN) — resolve from env.
                 svc = QiskitRuntimeService(
-                    channel="ibm_quantum_platform", token=ibm_token
+                    channel=os.environ.get("IBM_QUANTUM_CHANNEL", "ibm_cloud"),
+                    token=ibm_token,
+                    instance=os.environ.get(
+                        "IBM_QUANTUM_CRN",
+                        os.environ.get("IBM_QUANTUM_INSTANCE", "open-instance"),
+                    ),
                 )
                 return [b.name for b in svc.backends()]
 
@@ -161,8 +169,9 @@ def detect_cloud_backends() -> dict:
     )
     if aws_key:
         try:
-            import boto3
             import concurrent.futures
+
+            import boto3
             from braket.aws import AwsDevice, AwsSession
 
             def _list_braket() -> list[str]:
@@ -223,7 +232,6 @@ def select_backend(
         if problem_size > local_max:
             try:
                 from src.engine.cloud_backend import (
-                    CloudBudgetTracker,
                     resolve_backend,
                 )
                 _, _obj, cloud_label = resolve_backend(

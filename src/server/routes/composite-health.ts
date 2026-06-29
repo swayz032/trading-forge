@@ -123,6 +123,67 @@ compositeHealthRoutes.get(
   }
 );
 
+// ─── buildCompositeHealthSummary ─────────────────────────────────────────────
+// Exported so Carter voice-agent (and other callers) can query without HTTP.
+
+export async function buildCompositeHealthSummary(): Promise<SummaryPayload> {
+  const emptyCounts: Record<HealthVerdict, number> = {
+    HEALTHY: 0,
+    MARGINAL: 0,
+    UNHEALTHY: 0,
+    CRITICAL: 0,
+    SKIPPED: 0,
+  };
+
+  // Step 1 — active strategy IDs
+  const activeRows = await db
+    .select({ id: strategies.id })
+    .from(strategies)
+    .where(inArray(strategies.lifecycleState, ACTIVE_STATES));
+
+  const activeIds = activeRows.map((r) => Number(r.id));
+
+  if (activeIds.length === 0) {
+    return { counts: emptyCounts, totalActiveStrategies: 0, computedAt: new Date().toISOString() };
+  }
+
+  // Step 2 — latest health row per active strategy via a correlated subquery.
+  const latestRows = await db
+    .select({
+      strategyId: strategyHealthScores.strategyId,
+      verdict: strategyHealthScores.verdict,
+    })
+    .from(strategyHealthScores)
+    .where(
+      sql`${strategyHealthScores.strategyId} IN (${sql.join(
+        activeIds.map((id) => sql`${id}`),
+        sql`, `
+      )}) AND ${strategyHealthScores.evaluatedAt} = (
+        SELECT MAX(shs2.evaluated_at)
+        FROM strategy_health_scores shs2
+        WHERE shs2.strategy_id = ${strategyHealthScores.strategyId}
+      )`
+    );
+
+  const counts: Record<HealthVerdict, number> = { ...emptyCounts };
+  for (const row of latestRows) {
+    const v = (row.verdict ?? "SKIPPED") as HealthVerdict;
+    if (v in counts) {
+      counts[v]++;
+    } else {
+      counts["SKIPPED"]++;
+    }
+  }
+
+  // Strategies with no health row yet count as SKIPPED
+  const scoredIds = new Set(latestRows.map((r) => Number(r.strategyId)));
+  for (const id of activeIds) {
+    if (!scoredIds.has(id)) counts["SKIPPED"]++;
+  }
+
+  return { counts, totalActiveStrategies: activeIds.length, computedAt: new Date().toISOString() };
+}
+
 // ─── GET /api/composite-health/summary ───────────────────────────────────────
 //
 // Returns the most-recent verdict for each active strategy, then tallies counts.
@@ -137,76 +198,7 @@ compositeHealthRoutes.get(
   "/summary",
   async (_req: Request, res: Response): Promise<void> => {
     try {
-      // Step 1 — active strategy IDs
-      const activeRows = await db
-        .select({ id: strategies.id })
-        .from(strategies)
-        .where(inArray(strategies.lifecycleState, ACTIVE_STATES));
-
-      const activeIds = activeRows.map((r) => Number(r.id));
-
-      const emptyCounts: Record<HealthVerdict, number> = {
-        HEALTHY: 0,
-        MARGINAL: 0,
-        UNHEALTHY: 0,
-        CRITICAL: 0,
-        SKIPPED: 0,
-      };
-
-      if (activeIds.length === 0) {
-        res.status(200).json({
-          data: {
-            counts: emptyCounts,
-            totalActiveStrategies: 0,
-            computedAt: new Date().toISOString(),
-          },
-        });
-        return;
-      }
-
-      // Step 2 — latest health row per active strategy via a correlated subquery.
-      // Drizzle does not expose DISTINCT ON natively; we use a lateral-style
-      // subquery with sql`` template for the correlated eq — safe because the
-      // value is a validated integer array from the DB, not user input.
-      const latestRows = await db
-        .select({
-          strategyId: strategyHealthScores.strategyId,
-          verdict: strategyHealthScores.verdict,
-        })
-        .from(strategyHealthScores)
-        .where(
-          sql`${strategyHealthScores.strategyId} IN (${sql.join(
-            activeIds.map((id) => sql`${id}`),
-            sql`, `
-          )}) AND ${strategyHealthScores.evaluatedAt} = (
-            SELECT MAX(shs2.evaluated_at)
-            FROM strategy_health_scores shs2
-            WHERE shs2.strategy_id = ${strategyHealthScores.strategyId}
-          )`
-        );
-
-      const counts: Record<HealthVerdict, number> = { ...emptyCounts };
-      for (const row of latestRows) {
-        const v = (row.verdict ?? "SKIPPED") as HealthVerdict;
-        if (v in counts) {
-          counts[v]++;
-        } else {
-          counts["SKIPPED"]++;
-        }
-      }
-
-      // Strategies with no health row yet count as SKIPPED
-      const scoredIds = new Set(latestRows.map((r) => Number(r.strategyId)));
-      for (const id of activeIds) {
-        if (!scoredIds.has(id)) counts["SKIPPED"]++;
-      }
-
-      const payload: SummaryPayload = {
-        counts,
-        totalActiveStrategies: activeIds.length,
-        computedAt: new Date().toISOString(),
-      };
-
+      const payload = await buildCompositeHealthSummary();
       res.status(200).json({ data: payload });
     } catch (err) {
       logger.error({ err }, "composite-health: /summary query failed");

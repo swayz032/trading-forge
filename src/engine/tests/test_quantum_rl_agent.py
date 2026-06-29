@@ -672,3 +672,123 @@ class TestNoStrategiesTableMutation:
             "quantum_rl_runs table not referenced in quantum_rl_agent.py — "
             "RL runs are not being persisted"
         )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Group 14 — TestCloudPathFallbackAudit
+# LOW-FIX: when IBM gates are open but the cloud path falls back to local sim,
+# emit 'quantum_rl.cloud_path_fallback' (warning) to audit_log so the event
+# is queryable — mirrors the existing cloud_path_engaged success case.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestCloudPathFallbackAudit:
+    """quantum_rl.cloud_path_fallback must be emitted when IBM was attempted but
+    the path resolved to local sim.  cloud_path_engaged is already tested
+    implicitly via the IBM opt-in gate tests; these tests cover the fallback path."""
+
+    def test_cloud_path_fallback_action_in_source(self):
+        """'quantum_rl.cloud_path_fallback' must appear in quantum_rl_agent.py."""
+        source_path = pathlib.Path(
+            "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/quantum_rl_agent.py"
+        )
+        if not source_path.exists():
+            pytest.skip("quantum_rl_agent.py not found")
+        content = source_path.read_text(encoding="utf-8")
+        assert "quantum_rl.cloud_path_fallback" in content, (
+            "LOW-FIX: audit action 'quantum_rl.cloud_path_fallback' not found in source. "
+            "The fallback visibility fix was not applied."
+        )
+
+    def test_ibm_quantum_channel_env_documented_in_source(self):
+        """IBM_QUANTUM_CHANNEL must be listed as a read env var in the source."""
+        source_path = pathlib.Path(
+            "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/quantum_rl_agent.py"
+        )
+        if not source_path.exists():
+            pytest.skip("quantum_rl_agent.py not found")
+        content = source_path.read_text(encoding="utf-8")
+        assert "IBM_QUANTUM_CHANNEL" in content, (
+            "IBM_QUANTUM_CHANNEL env var is documented in docstring but should now appear "
+            "as a referenced env var in the source (both via cloud_backend.py read-through "
+            "and the updated docstring in _build_vqc_policy_ibm)."
+        )
+
+    def test_ibm_cloud_channel_default_in_docstring(self):
+        """_build_vqc_policy_ibm docstring must mention 'ibm_cloud' as default channel."""
+        source_path = pathlib.Path(
+            "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/quantum_rl_agent.py"
+        )
+        if not source_path.exists():
+            pytest.skip("quantum_rl_agent.py not found")
+        content = source_path.read_text(encoding="utf-8")
+        # Updated docstring should say ibm_cloud is the default channel
+        assert "ibm_cloud" in content, (
+            "Docstring must mention 'ibm_cloud' as the correct post-2023 IBM Cloud channel."
+        )
+
+    def test_cloud_path_fallback_emitted_when_ibm_gates_open_but_falls_back(self):
+        """When IBM gates are open (opt_in=True, token set, cloud_enabled != false) but
+        _build_vqc_policy_ibm returns a local backend label, _emit_audit_row must be
+        called with action='quantum_rl.cloud_path_fallback'.
+
+        Strategy: patch _REGIME_MIN_BARS=0 so the per-regime loop body executes even
+        with empty bar lists (DATABASE_URL="" skips DB load); training_epochs=0 skips
+        TradingEnv instantiation; _build_vqc_policy_ibm returns local label.
+        """
+        import src.engine.quantum_rl_agent as rl_mod
+        from src.engine.quantum_rl_agent import train_regime_conditioned_policies
+
+        captured_actions = []
+
+        def _fake_emit(action, entity_type, entity_id, status, result, db_url=None):
+            captured_actions.append(action)
+
+        with (
+            patch.object(rl_mod, "_REGIME_MIN_BARS", 0),
+            patch("src.engine.quantum_rl_agent._build_vqc_policy_ibm",
+                  return_value=(None, 0, "default.qubit")),
+            patch("src.engine.quantum_rl_agent._emit_audit_row", side_effect=_fake_emit),
+            patch.dict(os.environ, {
+                "QUANTUM_RL_IBM_CLOUD_OPT_IN": "true",
+                "QUANTUM_CLOUD_ENABLED": "true",
+                "IBM_QUANTUM_TOKEN": "fake-token-for-fallback-test",
+                "DATABASE_URL": "",
+            }),
+        ):
+            train_regime_conditioned_policies(
+                strategy_id=9999,
+                training_epochs=0,
+                seed=0,
+            )
+
+        assert "quantum_rl.cloud_path_fallback" in captured_actions, (
+            f"Expected 'quantum_rl.cloud_path_fallback' in audit actions but got: {captured_actions}. "
+            "LOW-FIX: fallback audit must fire when IBM was gated-open but backend resolved to local sim."
+        )
+
+    def test_cloud_path_fallback_not_emitted_when_opt_in_false(self):
+        """When QUANTUM_RL_IBM_CLOUD_OPT_IN=false, no fallback audit should fire."""
+        from src.engine.quantum_rl_agent import train_regime_conditioned_policies
+
+        captured_actions = []
+
+        def _fake_emit(action, entity_type, entity_id, status, result, db_url=None):
+            captured_actions.append(action)
+
+        with patch("src.engine.quantum_rl_agent._emit_audit_row", side_effect=_fake_emit):
+            with patch.dict(os.environ, {
+                "QUANTUM_RL_IBM_CLOUD_OPT_IN": "false",
+                "QUANTUM_CLOUD_ENABLED": "true",
+                "IBM_QUANTUM_TOKEN": "fake-token",
+                "DATABASE_URL": "",
+            }):
+                train_regime_conditioned_policies(
+                    strategy_id=8888,
+                    training_epochs=1,
+                    seed=0,
+                )
+
+        assert "quantum_rl.cloud_path_fallback" not in captured_actions, (
+            "Fallback audit must NOT fire when QUANTUM_RL_IBM_CLOUD_OPT_IN=false — "
+            "IBM was never attempted so there is nothing to fall back from."
+        )

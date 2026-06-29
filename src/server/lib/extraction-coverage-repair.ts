@@ -32,9 +32,45 @@ import {
 } from "./extraction-coverage-gate.js";
 import { logger } from "./logger.js";
 
+// 2026-06-23: GBNF schema locking gemma to the REPAIR output shape. Without it the repair call
+// reused the strategies-extractor schema (callScoutExtractLlm default) → gemma returned
+// {strategies:[...]} → parsed.recovered_steps was always undefined → repair recovered NOTHING →
+// the enumerated named-concept misses (GA box, break block, etc.) were never recovered, so coverage
+// never improved. Same root cause + fix as the coverage enumerator.
+const REPAIR_SCHEMA: Record<string, unknown> = {
+  type: "object",
+  additionalProperties: false,
+  required: ["recovered_steps", "recovered_confluences"],
+  properties: {
+    recovered_steps: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["action", "evidence_quote"],
+        properties: { action: { type: "string" }, rationale: { type: "string" }, evidence_quote: { type: "string" } },
+      },
+    },
+    recovered_confluences: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["name", "evidence_quote"],
+        properties: { name: { type: "string" }, description: { type: "string" }, evidence_quote: { type: "string" } },
+      },
+    },
+  },
+};
+
 const REPAIR_MAX_ROUNDS = Number(process.env.COVERAGE_REPAIR_MAX_ROUNDS) || 2;
 const REPAIR_ACCEPT_PCT = Number(process.env.COVERAGE_REPAIR_ACCEPT_PCT) || 0.95;
-const REPAIR_MAX_TARGETS = Number(process.env.COVERAGE_REPAIR_MAX_TARGETS) || 6;
+// Experiment B (2026-06-23): raised 6 → 10. SY2 surfaced ~24 speaker_items with >6 genuine named
+// concepts missing; the 6-cap left break block / PCC / pause displacement unrecovered (its residual
+// 3 misses post-dedup). 10 lets one repair pass reach the full named-concept set. Quote-verify in
+// mergeRepairResult still rejects fabrication, so a higher cap can't inflate via hallucination —
+// only recover MORE real concepts. Isolated from Experiment A (comparator dedup) for clean attribution.
+const REPAIR_MAX_TARGETS = Number(process.env.COVERAGE_REPAIR_MAX_TARGETS) || 10;
 
 export interface RepairResult {
   /** The repaired extraction (entry_sequence + confluences gap-filled). */
@@ -173,6 +209,12 @@ ${transcript.slice(0, 16_000)}
 3. Capture the MECHANIC (how to draw/construct/use it), not just the name.
 4. recovered_steps = ordered actions for the setup; recovered_confluences = supporting conditions/filters.
 5. If you genuinely cannot find an item, omit it (do not fabricate).
+6. ★ For EACH item in ITEMS TO RECOVER that you find in the transcript, you MUST emit a
+   recovered_confluence whose "name" is the item's name copied VERBATIM (exact characters — this
+   is how we confirm the named concept is now captured), with "description" = the mechanic and
+   "evidence_quote" = the verbatim transcript substring. You may ALSO emit recovered_steps for
+   procedural detail, but the verbatim-named confluence per recovered item is REQUIRED. Do NOT
+   rename the concept (e.g. do not turn "break block" into "Candle Anatomy") — copy the name as-is.
 
 Return ONLY valid JSON:
 { "recovered_steps": [ { "action": "...", "rationale": "...", "evidence_quote": "..." } ],
@@ -184,16 +226,38 @@ Return ONLY valid JSON:
  * recovered steps + confluences (unverified — mergeRepairResult does the quote check).
  * @throws never — returns empty arrays on any failure.
  */
+// Experiment B' (2026-06-23): per-call focus cap. B (cap 6→10) confirmed the cap hypothesis (SY2
+// 76→86 pass) but cramming 10 targets into ONE gemma call DILUTED per-target attention on heavy
+// videos (iU8 83→78, missing 1→5) — the allocation pressure that was ABSENT at the base-extraction
+// level (refuted for Rule 6) is REAL at the repair-call level. Fix: keep the cap-10 REACH but batch
+// each gemma call to ≤RECALL_BATCH focused targets and UNION the results, so no single call loses
+// focus. Reclaims iU8 without giving back SY2's gain.
+const RECALL_BATCH = Number(process.env.COVERAGE_REPAIR_CALL_BATCH) || 6;
+
 export async function runCoverageTargetedRecall(
   transcript: string,
   targets: SpeakerItem[],
 ): Promise<{ steps: RecoveredStep[]; confluences: RecoveredConfluence[] }> {
   if (targets.length === 0) return { steps: [], confluences: [] };
+  if (targets.length > RECALL_BATCH) {
+    // Batch into focused ≤RECALL_BATCH-target calls; union results (no per-call dilution).
+    const out: { steps: RecoveredStep[]; confluences: RecoveredConfluence[] } = { steps: [], confluences: [] };
+    for (let i = 0; i < targets.length; i += RECALL_BATCH) {
+      const batch = await runCoverageTargetedRecall(transcript, targets.slice(i, i + RECALL_BATCH));
+      out.steps.push(...batch.steps);
+      out.confluences.push(...batch.confluences);
+    }
+    return out;
+  }
   const prompt = buildTargetedRecallPrompt(transcript, targets);
 
   let raw: string | null = null;
   try {
-    raw = await callScoutExtractLlm([{ role: "user", content: prompt }]);
+    // opts is the 5th param (after callFn + sleepFn) — pass all four leading args, then opts.
+    raw = await callScoutExtractLlm([{ role: "user", content: prompt }], undefined, undefined, undefined, {
+      schemaOverride: REPAIR_SCHEMA,
+      skipFewShot: true,
+    });
   } catch (e) {
     logger.warn({ err: (e as Error).message }, "coverage-repair: targeted recall LLM threw");
     return { steps: [], confluences: [] };

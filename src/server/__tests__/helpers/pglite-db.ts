@@ -122,7 +122,7 @@ CREATE TABLE IF NOT EXISTS backtests (
   avg_daily_pnl         NUMERIC,
   forge_score           NUMERIC,
   bif                   NUMERIC,
-  k_eff                 INTEGER,
+  k_eff                 NUMERIC,
   tier                  TEXT,
   equity_curve          JSONB,
   monthly_returns       JSONB,

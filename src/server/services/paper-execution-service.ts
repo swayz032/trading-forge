@@ -2865,6 +2865,22 @@ export interface StyleExitBarContext {
   /** Per-symbol developing session POC (for Style C runner) */
   developingSessionPoc?: Record<string, number>;
   /**
+   * Defect 4 fix: per-symbol current bar HIGH.
+   * Used to pass the intrabar favorable extreme to the Style C handler for TP detection.
+   * Longs: TP fires when bar.high >= tp_price (matches backtester.py's bar.high >= tp1).
+   * Populated in updatePositionPrices per-position loop.  When absent, falls back to
+   * currentPrice (bar close) — preserves pre-fix behaviour for legacy callers.
+   */
+  barHigh?: Record<string, number>;
+  /**
+   * Defect 4 fix: per-symbol current bar LOW.
+   * Used to pass the intrabar favorable extreme to the Style C handler for TP detection.
+   * Shorts: TP fires when bar.low <= tp_price (matches backtester.py's bar.low <= tp1).
+   * Populated in updatePositionPrices per-position loop.  When absent, falls back to
+   * currentPrice (bar close) — preserves pre-fix behaviour for legacy callers.
+   */
+  barLow?: Record<string, number>;
+  /**
    * BL-8 fix: per-symbol rolling median ATR (14) from the last 100 bars.
    * Replaces the constant medianAtrEstimate = atr * 0.85 hack in exit slippage.
    * The backtest uses np.nanmedian(atr_values) over all bars so the ratio varies
@@ -2938,11 +2954,16 @@ async function callExitHandler(
   const entryPrice = Number(pos.entryPrice);
   const atr14 = barCtx.atr14[pos.symbol] ?? 0;
 
-  // Compute stop_pts from trailHwm or estimate from ATR if no explicit stop stored.
-  // trailHwm field stores the trail high-water mark, not the original stop distance.
-  // For stop_pts we use 2x ATR as a reasonable default (matches BreakerStrategy sl_mult).
-  // Positions opened with Track 3 will have entryPrice and known ATR.
-  const stopPts = atr14 > 0 ? atr14 * 2.0 : 1.0;  // floor at 1.0 to avoid div/0 in handler
+  // Defect 3 fix: use the persisted structural stop distance (initialStopPrice, set at
+  // openPosition time from ATR×2.0 or adaptive exit input) so TP targets stay fixed
+  // at the exact same 1R/2R levels as the backtester.  Dynamic atr14*2.0 caused TP
+  // targets to float bar-to-bar as ATR changed, diverging from backtester.py which
+  // anchors to the original stop distance.
+  // Fallback: dynamic atr14*2.0 for positions opened before migration 0179 added the
+  // initialStopPrice column (pre-0179 rows have null; ATR keeps existing behavior).
+  const stopPts = pos.initialStopPrice != null
+    ? Math.abs(Number(pos.entryPrice) - Number(pos.initialStopPrice))
+    : (atr14 > 0 ? atr14 * 2.0 : 1.0);  // floor at 1.0 to avoid div/0 in handler
 
   const highSinceEntry = barCtx.highSinceEntry?.[pos.symbol] ?? entryPrice;
   const lowSinceEntry  = barCtx.lowSinceEntry?.[pos.symbol]  ?? entryPrice;
@@ -2976,13 +2997,24 @@ async function callExitHandler(
       },
     };
   } else {
+    // Defect 4 fix: pass the intrabar FAVORABLE extreme (bar.high for longs, bar.low
+    // for shorts) as current_price for TP detection.  The backtester checks
+    //   bar.high >= tp1_price  (longs)  / bar.low <= tp1_price  (shorts)
+    // so using bar.close misses bars where price touched TP then pulled back.
+    // Stop detection is NOT affected — stops are handled by the BL-1 intrabar
+    // stop-breach block and the checkStopLoss absolute_level mechanism, both of which
+    // already use the ADVERSE extreme correctly.
+    const favorableExtreme = pos.side === "long"
+      ? (barCtx.barHigh?.[pos.symbol] ?? Number(pos.currentPrice ?? entryPrice))
+      : (barCtx.barLow?.[pos.symbol]  ?? Number(pos.currentPrice ?? entryPrice));
+
     config = {
       action: "evaluate_exit",
       state: {
         direction: pos.side,
         entry_price: entryPrice,
         stop_pts: stopPts,
-        current_price: Number(pos.currentPrice ?? entryPrice),
+        current_price: favorableExtreme,  // intrabar favorable extreme for TP detection
         current_time_et: barCtx.currentTimeEt,
         position_pct_open: Number(pos.fillRatio ?? 1.0),
         tick_size: tickSize,
@@ -3736,6 +3768,15 @@ export async function updatePositionPrices(
       if (!exitBarContext.lowSinceEntry)  exitBarContext.lowSinceEntry  = {};
       exitBarContext.highSinceEntry[pos.symbol] = newHighSinceEntry;
       exitBarContext.lowSinceEntry[pos.symbol]  = newLowSinceEntry;
+
+      // Defect 4 fix: thread current bar's OHLC extremes so callExitHandler can pass
+      // the intrabar favorable extreme to style_c_handler.py for TP detection.
+      // This matches backtester.py which checks bar.high/bar.low against TP targets,
+      // not bar.close — ensuring TP1 fires on intrabar touch even if price pulls back.
+      if (!exitBarContext.barHigh) exitBarContext.barHigh = {};
+      if (!exitBarContext.barLow)  exitBarContext.barLow  = {};
+      exitBarContext.barHigh[pos.symbol] = high;
+      exitBarContext.barLow[pos.symbol]  = low;
     }
 
     await db.update(paperPositions).set({
@@ -3830,7 +3871,9 @@ export async function updatePositionPrices(
     //
     // HARD INVARIANTS (preserved — this block CANNOT override):
     //   - 15:55 ET hard flatten: TIME_STOP_FLATTEN decision made by Python handler
-    //   - BE+1 tick on TP1 fill: MOVE_STOP_TO_BE decision made by Python handler
+    //   - BE+1 tick on TP1 fill: handled by tp1BeStopMap in paper-signal-service.ts
+    //     (TS-side absolute_level stop, NOT a Python MOVE_STOP_TO_BE decision —
+    //      style_c_handler.py does NOT emit MOVE_STOP_TO_BE; only style_d_handler does)
     //   - 67% DLL halt: enforced upstream in openPosition (not in trail logic)
     //   - Per-symbol liquidity caps: enforced upstream in openPosition
     //

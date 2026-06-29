@@ -18,6 +18,8 @@
  * callers decide whether to log, surface to operator, or block.
  */
 
+import { entryIndicatorResolvesToArchetype } from "./archetype-registry-keys.js";
+
 export interface Step {
   step?: number;
   action?: string;
@@ -133,6 +135,22 @@ export interface CompilabilityInput {
   archetype?: string | null;
   /** The LLM's entry_params field. */
   entry_params?: Record<string, unknown> | null;
+  /**
+   * The LLM's entry_condition field — an explicit DSL/prose trigger condition.
+   * A non-empty string counts as a deterministic trigger even without params/archetype.
+   */
+  entry_condition?: string | null;
+  /** The LLM's entry_type field (kept for completeness; not gated independently). */
+  entry_type?: string | null;
+  /**
+   * The graduator's `deriveEntryIndicator()` output for this extraction, computed by the caller
+   * (which has DB access; this gate is pure). Resolution-aware classification:
+   *   "archetype:<key>"   → STRUCTURAL (detector-driven; engine class carries the trigger → params optional)
+   *   "uncatalogued:<...>" → UNCATALOGUED (no engine handler → needs params/condition or quarantine)
+   *   bare name (e.g. "macd_crossover") → PARAMETRIC (needs concrete params to be deterministic)
+   * When omitted, the gate classifies from the raw entry_indicator/archetype fields (unit-test path).
+   */
+  resolved_entry_indicator?: string | null;
   /** The LLM's direction field. */
   direction?: string | null;
   /** The LLM's timeframe field. */
@@ -208,15 +226,69 @@ export function checkCompilabilityGate(
     missing.push("missing_entry_indicator_or_archetype");
   }
 
-  // Gate 2: entry_params must be non-empty object (at least one key)
+  // Gate 2: DETERMINISTIC ENTRY TRIGGER (2026-06-24 Layer 1 shipping-integrity — replaces the
+  // FIX 7 waiver). A non-empty entry_indicator STRING is not sufficient: the blind-reconstruction
+  // audit found extractions shipping compilable=true with entry_indicator = a concept-name ECHO
+  // ("impulse_range_sweep_4h_5m") that resolves to NO engine archetype, while entry_condition,
+  // entry_type, and entry_params were all null/empty — i.e. no trigger lives anywhere, yet the gate
+  // passed them on the FIX 7 assumption "a named entry_indicator carries the entry logic". That
+  // assumption only holds for a REAL registered archetype. The trigger is deterministic iff ANY of:
+  //   (a) entry_indicator/archetype resolves to a registered executable archetype (detector-driven —
+  //       the engine class supplies the trigger; params are optional → preserves FIX 7's legit case,
+  //       e.g. an ICT/volume_profile archetype that cleared coverage with empty params), OR
+  //   (b) entry_params is non-empty (a parametric trigger with concrete parameters), OR
+  //   (c) entry_condition is a non-empty string (an explicit DSL condition).
+  // None of the above → null_entry_trigger → quarantine. This closes the hole without re-breaking
+  // the archetype-without-params path FIX 7 was protecting.
   const params = input.entry_params;
   const hasParams =
     params !== null &&
     params !== undefined &&
     typeof params === "object" &&
     Object.keys(params).length > 0;
-  if (!hasParams) {
-    missing.push("empty_entry_params");
+  const hasCondition =
+    typeof input.entry_condition === "string" && input.entry_condition.trim().length > 0;
+
+  // Resolution-aware classification of the entry trigger. Prefer the caller-computed
+  // `resolved_entry_indicator` (deriveEntryIndicator output); fall back to the raw fields.
+  const resolved = input.resolved_entry_indicator;
+  let isStructuralArchetype: boolean;
+  if (typeof resolved === "string" && resolved.trim().length > 0) {
+    const r = resolved.trim().toLowerCase();
+    // STRUCTURAL only when it resolves to a REAL registered archetype. "uncatalogued:*" and bare
+    // parametric names are NOT structural — they require concrete params (or an explicit condition).
+    isStructuralArchetype = r.startsWith("archetype:") && entryIndicatorResolvesToArchetype(r);
+  } else {
+    // No derived value (unit-test / legacy path): a raw entry_indicator/archetype only counts as
+    // structural if it is itself a registered archetype name. A concept-name echo does not.
+    isStructuralArchetype =
+      entryIndicatorResolvesToArchetype(input.entry_indicator) ||
+      entryIndicatorResolvesToArchetype(input.archetype);
+  }
+
+  // A deterministic trigger exists iff: structural archetype (detector carries it) OR concrete
+  // params OR an explicit entry_condition. Concept-echoes / uncatalogued / parametric-without-params
+  // carry NO trigger → quarantine / needs-structure.
+  // 2026-06-24 Layer 2: emit a PRECISE reason (per operator) so failure histograms scope Layer 3:
+  //   uncatalogued_indicator — resolved to "uncatalogued:*" (no engine handler exists)
+  //   params_required        — resolved to a real parametric engine indicator but params are empty
+  //   no_trigger             — nothing resolves at all (no archetype, no params, no condition)
+  const hasDeterministicTrigger = isStructuralArchetype || hasParams || hasCondition;
+  if (!hasDeterministicTrigger) {
+    const resolvedLower = typeof resolved === "string" ? resolved.trim().toLowerCase() : "";
+    const isUncatalogued = resolvedLower.startsWith("uncatalogued:");
+    // A parametric indicator is present if EITHER the resolver returned a bare engine indicator name
+    // (not archetype:/uncatalogued:) or the raw entry_indicator/archetype field is a non-empty string.
+    const resolvedIsParametric =
+      resolvedLower.length > 0 && !resolvedLower.startsWith("archetype:") && !isUncatalogued;
+    const hasNamedIndicator = hasEntryIndicator || hasArchetype || resolvedIsParametric;
+    if (isUncatalogued) {
+      missing.push("uncatalogued_indicator");
+    } else if (hasNamedIndicator) {
+      missing.push("params_required");
+    } else {
+      missing.push("no_trigger");
+    }
   }
 
   // Gate 3: direction must be present and non-empty

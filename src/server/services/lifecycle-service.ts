@@ -86,7 +86,7 @@ const VALID_STATES = [
 type LifecycleState = (typeof VALID_STATES)[number];
 
 interface PromoteStrategyOptions {
-  actor?: "system" | "human_release";
+  actor?: "system" | "human_release" | "operator_absent_mode";
   reason?: string;
   /** Parent strategy ID for evolution-driven promotions (e.g., gen+1 child created by evolution-service). */
   parentStrategyId?: string;
@@ -379,7 +379,18 @@ export class LifecycleService {
     // B8: DEPLOY_READY → PILOT requires human approval (same authority as DEPLOYED).
     // This prevents system-auto promotion into the canary track — a human must decide
     // to enter the canary window for each strategy.
-    if (fromState === "DEPLOY_READY" && toState === "PILOT" && options.actor !== "human_release") {
+    // Deep-scan 2026-06-28 (C-1): the operator-absent (vacation) autopilot is the
+    // ONE authorized exception — actor="operator_absent_mode" promotes Tier-1
+    // strategies (rolling Sharpe >= floor AND all autopilot gates passed, enforced
+    // in operator-absent-mode-service.ts) while the operator is away. Plain
+    // actor="system" is still blocked. Previously this gate blocked even the
+    // vacation autopilot, making the documented §3 feature dead code.
+    if (
+      fromState === "DEPLOY_READY" &&
+      toState === "PILOT" &&
+      options.actor !== "human_release" &&
+      options.actor !== "operator_absent_mode"
+    ) {
       const error = "Only manual release authority can promote DEPLOY_READY -> PILOT (canary track requires human approval)";
       logger.warn({ id, fromState, toState, actor: options.actor ?? "system" }, error);
       return { success: false, error };
@@ -514,6 +525,37 @@ export class LifecycleService {
             frozenPolicyHash: frozenShadowRow?.frozenPolicyHash ?? null,
           },
         };
+        // hardening/phase-0: BIF CPCV-unmeasured pre-check.
+        // walk_forward.py emits bif_reliable=false in wf_metadata when mode="cpcv".
+        // paper-to-deploy-ready-gates.ts (Gate 6.5) cannot be edited (paper-*.ts restriction),
+        // so we emit the distinct lifecycle.bif_cpcv_unmeasured audit here — BEFORE the
+        // evaluator runs — so the exemption is visible in the audit trail.
+        // The evaluator still runs normally; in CPCV mode bif ≈ 1.0 (proxy-based) which
+        // passes the BIF threshold cleanly (1.0 < 2.0 warn floor) — the proxy-basis warn
+        // emitted by evaluatePaperToDeployReadyGates Gate 6.5 complements this audit row.
+        {
+          const p2dWfMeta = ((wfResults?.wf_metadata as Record<string, unknown> | null) ?? null);
+          const bifReliable = p2dWfMeta?.bif_reliable;
+          if (bifReliable === false) {
+            const bifNum = latestBtP2D?.bif != null ? Number(latestBtP2D.bif) : null;
+            const kEffNum = latestBtP2D?.kEff != null ? Number(latestBtP2D.kEff) : null;
+            const bifProxyBasis = (p2dWfMeta?.bif_proxy_basis as string | null | undefined) ?? null;
+            const bifCpcvResult = evaluateBifGate(bifNum, kEffNum, { bifReliable: false, proxyBasis: bifProxyBasis });
+            await db.insert(auditLog).values({
+              action: "lifecycle.bif_cpcv_unmeasured",
+              entityId: id,
+              entityType: "strategy",
+              status: "success",
+              decisionAuthority: "gate",
+              input: { fromState, toState },
+              result: bifCpcvResult.auditPayload as Record<string, unknown>,
+              correlationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: id, err: auditErr }, "lifecycle.bif_cpcv_unmeasured audit insert failed (non-blocking)");
+            });
+          }
+        }
+
         const gatePdrResult = await evaluatePaperToDeployReadyGates(pdrInput);
 
         // Finding 3 fix: emit bifGateEvaluationsTotal Prometheus counter.
@@ -1129,15 +1171,18 @@ export class LifecycleService {
           const wfMeta = btExtrasPboW29.walkForwardResults as Record<string, unknown> | null | undefined;
           const pboOverall = wfMeta?.pbo_overall as number | null | undefined;
           const pboOverallPValue = wfMeta?.pbo_overall_p_value as number | null | undefined;
-          // FINDING-1 wiring (deepscan 2026-06-28): thread pbo_degenerate so the gate
-          // can distinguish a CPCV-degenerate run (IS==OOS for all paths → BLOCK via
-          // pbo_cpcv_degenerate_block) from a genuine pre-Wave-29 legacy null (PROCEED).
-          // Without this the producer (walk_forward.py) emits the flag but the consumer
-          // never reads it — the degenerate guard would never fire (grandfather-pass).
-          const pboDegenerate = wfMeta?.pbo_degenerate as boolean | null | undefined;
+          // Merge 2026-06-29: adopted the phase-0 cpcv_exempt approach (proceed with an
+          // explicit honest audit) over the deepscan-wiring BLOCK approach — CPCV is the
+          // default WF_MODE so BLOCK-on-degenerate would strangle the whole pipeline.
+          // pbo_degenerate_reason is nested inside wf_metadata (the sub-object inside
+          // walkForwardResults) — walk_forward.py emits "cpcv_is_sharpe_unavailable" there
+          // and backtest-service persists the wf_metadata sub-dict wholesale, so this read
+          // matches the producer end-to-end (verified during merge).
+          const innerWfMeta = (wfMeta?.wf_metadata as Record<string, unknown> | null) ?? null;
+          const pboDegenReason = (innerWfMeta?.pbo_degenerate_reason as string | null | undefined) ?? null;
 
           const pboGateResult = evaluatePboGate(
-            { pbo_overall: pboOverall, pbo_p_value: pboOverallPValue, pbo_degenerate: pboDegenerate },
+            { pbo_overall: pboOverall, pbo_p_value: pboOverallPValue, pbo_degenerate_reason: pboDegenReason },
           );
 
           if (!pboGateResult.ok) {
@@ -1194,7 +1239,9 @@ export class LifecycleService {
             return { success: false, error: pboError };
           }
 
-          // Legacy null or pbo passes — emit lifecycle.pbo_unavailable_legacy warn if needed
+          // Legacy null or pbo passes — emit the appropriate audit action:
+          //   - legacyNull=true     → genuine pre-Wave-29 backtest, no pbo_overall field
+          //   - cpcv_is_unavailable → CPCV mode structural limitation (distinct from legacy)
           if (pboGateResult.legacyNull) {
             insertAuditRow({
               action: "lifecycle.pbo_unavailable_legacy",
@@ -1206,6 +1253,20 @@ export class LifecycleService {
               result: pboGateResult.auditPayload as Record<string, unknown>,
               correlationId: options.correlationId ?? null,
             }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.pbo_unavailable_legacy audit row write failed"));
+          } else if (pboGateResult.reason === "lifecycle.pbo_cpcv_is_unavailable") {
+            // hardening/phase-0: CPCV mode — PBO structurally unavailable (not legacy missing).
+            // Emit lifecycle.pbo_cpcv_is_unavailable so the audit trail distinguishes this
+            // exemption from both a real PBO pass and the generic grandfather window.
+            insertAuditRow({
+              action: "lifecycle.pbo_cpcv_is_unavailable",
+              entityType: "strategy",
+              entityId: id,
+              decisionAuthority: "gate",
+              status: "success",
+              input: { fromState, toState, backtestId: promotionEvidence.backtestId } as Record<string, unknown>,
+              result: pboGateResult.auditPayload as Record<string, unknown>,
+              correlationId: options.correlationId ?? null,
+            }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.pbo_cpcv_is_unavailable audit row write failed"));
           }
 
           // Emit SSE event lifecycle:pbo_evaluated on every evaluation
@@ -2658,11 +2719,18 @@ export class LifecycleService {
 
           if (wfeResultTp.auditAction) {
             const isBlockTp = wfeResultTp.status === "blocked";
+            // hardening/phase-0: cpcv_exempt is a known, intentional pass — emit "success"
+            // rather than "warning" so the audit trail is unambiguous.  All other non-block
+            // statuses (legacy_null, degenerate_is_block is never reached here) keep "warning".
+            const wfeAuditStatusTp: "failure" | "warning" | "success" =
+              isBlockTp ? "failure"
+              : wfeResultTp.status === "cpcv_exempt" ? "success"
+              : "warning";
             await db.insert(auditLog).values({
               action: wfeResultTp.auditAction,
               entityId: s.id,
               entityType: "strategy",
-              status: isBlockTp ? "failure" : "warning",
+              status: wfeAuditStatusTp,
               decisionAuthority: "gate",
               input: { fromState: "TESTING", toState: "PAPER" },
               result: {

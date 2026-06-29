@@ -1004,6 +1004,186 @@ describe("Shadow divergence — lifecycle_shadow_signals read + compareShadowToB
   });
 });
 
+// ════════════════════════════════════════════════════════════════════════════════
+// Suite 5 — CPCV-exempt gate round-trip (hardening/phase-0)
+// ════════════════════════════════════════════════════════════════════════════════
+//
+// Verifies the full producer→DB→gate chain for CPCV-mode backtests.
+// Key invariants:
+//   1. wfe_status="cpcv_not_applicable" in JSONB → gate returns "cpcv_exempt", NOT "legacy_null"
+//      auditAction="lifecycle.wfe_cpcv_exempt", NOT "lifecycle.wfe_unavailable_legacy"
+//   2. wf_metadata.pbo_degenerate_reason="cpcv_is_sharpe_unavailable" → gate returns
+//      reason="lifecycle.pbo_cpcv_is_unavailable", NOT "lifecycle.pbo_unavailable_legacy"
+//      legacyNull=false, cpcv_exempt=true in auditPayload
+//   3. Regression: plain-WF wfe_overall=0.30 (below floor), no wfe_status → still BLOCKS
+//   4. Regression: plain-WF pbo_overall=0.20 → still BLOCKS
+
+describe("CPCV-exempt gate round-trip — WFE + PBO through PGlite (hardening/phase-0)", () => {
+  let ctx: TestDb;
+
+  // Suite 5 IDs use prefix "55"
+  const STRAT_ID   = "55000001-0000-0000-0000-000000000001";
+  const BT_CPCV    = "55000001-0000-0000-0000-000000000010"; // CPCV mode: wfe_status=cpcv_not_applicable + pbo_degenerate_reason
+  const BT_PLAINSF = "55000001-0000-0000-0000-000000000011"; // Plain WF: wfe_overall=0.30 → still BLOCKS
+  const BT_PLAINPB = "55000001-0000-0000-0000-000000000012"; // Plain WF: pbo_overall=0.20 → still BLOCKS
+
+  beforeAll(async () => {
+    ctx = await createTestDb();
+
+    await ctx.db.insert(strategies).values({
+      id: STRAT_ID,
+      name: "cpcv-exempt-integration-test",
+      symbol: "MES",
+      timeframe: "5m",
+      config: {},
+    });
+
+    await ctx.db.insert(backtests).values([
+      {
+        id: BT_CPCV,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // Producer: walk_forward.py CPCV mode emits:
+        //   wfe_overall=None/null + wfe_status="cpcv_not_applicable" (top-level)
+        //   wf_metadata.pbo_degenerate_reason="cpcv_is_sharpe_unavailable"
+        //   wf_metadata.bif_reliable=false
+        walkForwardResults: {
+          wfe_overall: null,
+          wfe_status: "cpcv_not_applicable",
+          wf_metadata: {
+            mode: "cpcv",
+            n_paths: 18,
+            pbo_degenerate_reason: "cpcv_is_sharpe_unavailable",
+            bif_reliable: false,
+          },
+        },
+      },
+      {
+        id: BT_PLAINSF,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // Regression guard: a plain-WF strategy with wfe_overall=0.30 MUST still BLOCK.
+        // The CPCV-exempt fix must NOT weaken this.
+        walkForwardResults: { wfe_overall: 0.30, wfe_status: "ok" },
+      },
+      {
+        id: BT_PLAINPB,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // Regression guard: a plain-WF strategy with pbo_overall=0.20 > 0.15 MUST BLOCK.
+        walkForwardResults: { pbo_overall: 0.20 },
+      },
+    ]);
+  });
+
+  afterAll(async () => { await ctx.close(); });
+
+  async function selectWfRow(btId: string) {
+    const [row] = await ctx.db
+      .select({ wfr: backtests.walkForwardResults })
+      .from(backtests)
+      .where(eq(backtests.id, btId));
+    return row?.wfr as Record<string, unknown> | null;
+  }
+
+  // ── WFE CPCV-exempt ─────────────────────────────────────────────────────────
+
+  it("CPCV WFE: wfe_status=cpcv_not_applicable stored and retrieved from PGlite JSONB", async () => {
+    const wfr = await selectWfRow(BT_CPCV);
+    expect(wfr?.wfe_overall).toBeNull();
+    expect(wfr?.wfe_status).toBe("cpcv_not_applicable");
+    const meta = wfr?.wf_metadata as Record<string, unknown>;
+    expect(meta?.mode).toBe("cpcv");
+    expect(meta?.pbo_degenerate_reason).toBe("cpcv_is_sharpe_unavailable");
+    expect(meta?.bif_reliable).toBe(false);
+  });
+
+  it("CPCV WFE: wfe_status=cpcv_not_applicable → gate returns cpcv_exempt, NOT legacy_null", async () => {
+    const wfr = await selectWfRow(BT_CPCV);
+    const wfeOverall = (wfr?.wfe_overall ?? null) as number | null;
+    const wfeStatus = (wfr?.wfe_status ?? null) as string | null;
+
+    const result = evaluateWfeGate(wfeOverall, undefined, undefined, wfeStatus);
+
+    // Must be "cpcv_exempt", never "legacy_null"
+    expect(result.status).toBe("cpcv_exempt");
+    expect(result.passed).toBe(true);
+    expect(result.auditAction).toBe("lifecycle.wfe_cpcv_exempt");
+    // Must NOT produce the generic legacy action
+    expect(result.auditAction).not.toBe("lifecycle.wfe_unavailable_legacy");
+    expect(result.status).not.toBe("legacy_null");
+  });
+
+  // ── PBO CPCV-exempt ─────────────────────────────────────────────────────────
+
+  it("CPCV PBO: pbo_degenerate_reason retrieved from wf_metadata JSONB (nested one level)", async () => {
+    const wfr = await selectWfRow(BT_CPCV);
+    const innerMeta = (wfr?.wf_metadata as Record<string, unknown> | null) ?? null;
+    expect(innerMeta?.pbo_degenerate_reason).toBe("cpcv_is_sharpe_unavailable");
+  });
+
+  it("CPCV PBO: pbo_degenerate_reason=cpcv_is_sharpe_unavailable → gate reason=pbo_cpcv_is_unavailable, legacyNull=false", async () => {
+    const wfr = await selectWfRow(BT_CPCV);
+    const pboOverall = (wfr?.pbo_overall ?? null) as number | null;
+    const innerMeta = (wfr?.wf_metadata as Record<string, unknown> | null) ?? null;
+    const pboDegenReason = (innerMeta?.pbo_degenerate_reason as string | null) ?? null;
+
+    const result = evaluatePboGate({
+      pbo_overall: pboOverall,
+      pbo_degenerate_reason: pboDegenReason,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.legacyNull).toBe(false);
+    expect(result.reason).toBe("lifecycle.pbo_cpcv_is_unavailable");
+    expect(result.auditPayload.cpcv_exempt).toBe(true);
+    // Must NOT produce the generic legacy action or legacy_null=true
+    expect(result.reason).not.toBe("lifecycle.pbo_unavailable_legacy");
+    expect(result.auditPayload.legacy_null).toBe(false);
+  });
+
+  // ── Regression guards ────────────────────────────────────────────────────────
+
+  it("regression: plain-WF wfe_overall=0.30 (below 0.70 floor) → BLOCKS (CPCV-exempt must not weaken this)", async () => {
+    const wfr = await selectWfRow(BT_PLAINSF);
+    const wfeOverall = (wfr?.wfe_overall ?? null) as number | null;
+    const wfeStatus = (wfr?.wfe_status ?? null) as string | null;
+
+    expect(wfeOverall).toBe(0.30);
+
+    const result = evaluateWfeGate(wfeOverall, undefined, undefined, wfeStatus);
+
+    expect(result.status).toBe("blocked");
+    expect(result.passed).toBe(false);
+    expect(result.auditAction).toBe("lifecycle.wfe_hard_floor_block");
+  });
+
+  it("regression: plain-WF pbo_overall=0.20 (> 0.15 threshold) → BLOCKS (CPCV-exempt must not weaken this)", async () => {
+    const wfr = await selectWfRow(BT_PLAINPB);
+    const pboOverall = (wfr?.pbo_overall ?? null) as number | null;
+
+    expect(pboOverall).toBe(0.20);
+
+    const result = evaluatePboGate({ pbo_overall: pboOverall });
+
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe("lifecycle.pbo_overfit_block");
+    expect(result.legacyNull).toBe(false);
+  });
+});
+
 // ─── Private helper (outside describe scope, used in suite 4 only) ─────────────
 
 function shadowSignals_19long1short(): ShadowSignal[] {

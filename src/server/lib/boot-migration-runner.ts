@@ -365,7 +365,37 @@ export async function runPendingMigrations(): Promise<void> {
     const sqlFilePath = path.join(migrationsDir, `${entry.tag}.sql`);
 
     if (!fs.existsSync(sqlFilePath)) {
-      logger.warn({ tag: entry.tag, sqlFilePath }, "boot-migration: SQL file missing — skipping entry");
+      // Deep-scan 2026-06-28: a journal entry whose .sql file is missing used to
+      // be a SILENT logger.warn skip — an invisible, permanent schema gap (git
+      // conflict / incomplete push / renamed-away migration). Now it writes an
+      // audit row + fires Discord CRITICAL so the gap is attributable at boot,
+      // not at a downstream "column does not exist" runtime error. Default stays
+      // SKIP-AND-CONTINUE (not fail-closed) so a benign journal/disk drift can
+      // never brick the live autonomous boot during a vacation; set
+      // BOOT_MIGRATION_FAIL_ON_MISSING_SQL=true to opt into hard-fail boot block.
+      logger.error({ tag: entry.tag, sqlFilePath }, "boot-migration: SQL file MISSING for pending journal entry — schema may be incomplete");
+      await insertAuditRowSafe({
+        action: "boot_migration.sql_file_missing",
+        entityType: "migration",
+        entityId: entry.tag,
+        decisionAuthority: "system",
+        input: { tag: entry.tag, idx: entry.idx, sqlFilePath } as Record<string, unknown>,
+        result: { skipped: true } as Record<string, unknown>,
+        status: "error",
+        errorMessage: `boot-migration SQL file missing: ${sqlFilePath}`,
+      });
+      await fireDiscordCritical(
+        "Boot migration SQL file missing",
+        `Migration ${entry.tag} is pending in the journal but its .sql file is missing (${sqlFilePath}). The database schema may be incomplete. Investigate before relying on any feature that touches this migration's tables/columns.`,
+      );
+      const failOnMissing =
+        (process.env.BOOT_MIGRATION_FAIL_ON_MISSING_SQL ?? "false").toLowerCase() === "true";
+      if (failOnMissing) {
+        throw new Error(
+          `boot-migration: SQL file missing for pending journal entry ${entry.tag} (${sqlFilePath}). ` +
+            `Restore the file or set BOOT_MIGRATION_FAIL_ON_MISSING_SQL=false to skip and continue.`,
+        );
+      }
       continue;
     }
 

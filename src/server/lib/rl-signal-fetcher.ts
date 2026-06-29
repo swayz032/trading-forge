@@ -81,10 +81,17 @@ const RL_KILL_SWITCH_SHARPE_GAP_THRESHOLD = parseFloat(
  *
  * dormant=true  → Sharpe gap ≤ 30% → subsystem ACTIVE
  * dormant=false → Sharpe gap > 30% → subsystem DORMANT (unavailable)
+ *
+ * @param srIsFromGovernance  Fix F-2 (2026-06-28): pass sr_is extracted from the
+ *   latest row's governance_labels before calling this function. When present and
+ *   finite, this value replaces the avgEffectiveConf×2 proxy for the IS-Sharpe
+ *   reference. Callers that cannot supply it may omit (undefined/null) to retain
+ *   the existing proxy fallback.
  */
 async function _computeKillSwitchState(
   strategyId: string,
   lookbackSessions: number = 20,
+  srIsFromGovernance?: number | null,
 ): Promise<KillSwitchState> {
   const rows = await db
     .select({
@@ -130,12 +137,15 @@ async function _computeKillSwitchState(
   // Rolling OOS Sharpe approximation from recent reward distribution
   const rolling_sharpe_oos = stddev > 0 ? mean / stddev : null;
 
-  // IS reference: use the average effective_confidence as a proxy for IS-era Sharpe quality
-  // (the actual IS Sharpe is persisted in governance_labels by C.2; this is a conservative approx)
+  // IS reference: F-2 fix (2026-06-28) — use governance_labels.sr_is from the
+  // latest training run when the caller supplies it (extracted from the latest DB
+  // row before calling this function). Falls back to the avgEffectiveConf×2 proxy
+  // when the persisted value is absent (legacy rows without governance_labels.sr_is).
   const avgEffectiveConf = rows.reduce((a, r) => a + Number(r.effectiveConfidence), 0) / rows.length;
-  // IS reference Sharpe = confidence-weighted proxy: normalised to Sharpe-scale
-  // Full C.2 implementation uses the persisted training-phase IS Sharpe in governance_labels
-  const is_sharpe_reference = avgEffectiveConf * 2; // [0,2] proxy range
+  const is_sharpe_reference =
+    (srIsFromGovernance != null && isFinite(srIsFromGovernance))
+      ? srIsFromGovernance
+      : avgEffectiveConf * 2; // [0,2] proxy range — pre-F-2 fallback
 
   // Gap ratio
   let sharpe_gap_ratio: number | null = null;
@@ -203,8 +213,20 @@ export async function fetchRlSignal(strategyId: string): Promise<RlSignalResult>
       };
     }
 
+    // Extract governance_labels values now, before the kill-switch call, so
+    // sr_is can be forwarded to _computeKillSwitchState (F-2 fix, 2026-06-28).
+    // This block was previously Step 3; moved up so both fixes share one extraction.
+    const gl = latestRun.governanceLabels as Record<string, unknown>;
+    const srIs = gl["sr_is"] != null ? Number(gl["sr_is"]) : null;
+    const srOos = gl["sr_oos"] != null ? Number(gl["sr_oos"]) : null;
+    const nIterations = gl["n_training_iterations"] != null ? Number(gl["n_training_iterations"]) : null;
+    const dsrPassed = gl["dsr_passed"] === true;
+
     // Step 2: kill-switch state check
-    const killSwitch = await _computeKillSwitchState(strategyId, 20);
+    // F-2 fix (2026-06-28): pass sr_is from governance_labels so the IS-Sharpe
+    // reference in _computeKillSwitchState uses the real persisted value instead
+    // of the avgEffectiveConf×2 proxy when the training loop has emitted sr_is.
+    const killSwitch = await _computeKillSwitchState(strategyId, 20, srIs);
 
     if (!killSwitch.dormant) {
       logger.warn(
@@ -239,19 +261,21 @@ export async function fetchRlSignal(strategyId: string): Promise<RlSignalResult>
     }
 
     // Step 3: DSR gate check
-    // Extract IS/OOS Sharpe from governance_labels (persisted by C.2)
-    const gl = latestRun.governanceLabels as Record<string, unknown>;
-    const srIs = gl["sr_is"] != null ? Number(gl["sr_is"]) : null;
-    const srOos = gl["sr_oos"] != null ? Number(gl["sr_oos"]) : null;
-    const nIterations = gl["n_training_iterations"] != null ? Number(gl["n_training_iterations"]) : null;
-    const dsrPassed = gl["dsr_passed"] === true;
-
-    // If governance_labels explicitly marks dsr_passed, trust it (C.2 computed)
-    // Otherwise, re-evaluate with available data
-    let dsrGatePassed = dsrPassed;
-    if (!dsrPassed && srIs !== null && srOos !== null && nIterations !== null) {
+    // F-1 fix (2026-06-28): TS probit DSR is authoritative when all three
+    // governance inputs are present. Python's persisted dsr_passed flag is a
+    // pre-filter only — a policy with raw SR≥0.5 but heavy IS/OOS decay can
+    // pass Python's raw-SR check while failing the probit selection-bias
+    // correction (Bailey & Lopez de Prado 2014). Always run the full probit
+    // DSR evaluation when inputs are available; fall back to Python's flag only
+    // when governance_labels lacks the required Sharpe inputs (legacy rows).
+    let dsrGatePassed: boolean;
+    if (srIs !== null && srOos !== null && nIterations !== null) {
+      // TS probit DSR is the authoritative gate
       const dsrResult = evaluateRlDsrGate(srIs, srOos, nIterations);
       dsrGatePassed = dsrResult.ok;
+    } else {
+      // Inputs absent — fail-soft: trust Python's persisted flag
+      dsrGatePassed = dsrPassed;
     }
 
     if (!dsrGatePassed) {

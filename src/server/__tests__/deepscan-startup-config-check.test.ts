@@ -101,13 +101,18 @@ describe("checkStartupSecrets — Deep-Scan H11 + H13", () => {
 
   // ── H11 ──────────────────────────────────────────────────────────────────────
 
-  it("surfaces ADMIN_PROMOTE_HMAC_SECRET unset as an ERROR, not a warning", async () => {
+  // Deep-scan 2026-06-28: ADMIN_PROMOTE_HMAC_SECRET unset is a WARNING, not an
+  // ERROR. The prior premise ("no first paper trade can ever start") was false —
+  // reaching PAPER is driven by the autonomous lifecycle cron (promoteStrategy
+  // internal), which never touches the HMAC-gated PATCH route. The secret only
+  // gates the manual dashboard promote button.
+  it("surfaces ADMIN_PROMOTE_HMAC_SECRET unset as a WARNING (manual route only; autonomous promotion unaffected)", async () => {
     const restore = applyEnv({ ADMIN_PROMOTE_HMAC_SECRET: undefined });
     try {
       const { checkStartupSecrets } = await import("../lib/startup-config-check.js");
       const result = await checkStartupSecrets();
-      expect(result.errors).toContain("ADMIN_PROMOTE_HMAC_SECRET_NOT_SET");
-      expect(result.warnings).not.toContain("ADMIN_PROMOTE_HMAC_SECRET_NOT_SET");
+      expect(result.warnings).toContain("ADMIN_PROMOTE_HMAC_SECRET_NOT_SET");
+      expect(result.errors).not.toContain("ADMIN_PROMOTE_HMAC_SECRET_NOT_SET");
     } finally {
       restore();
     }

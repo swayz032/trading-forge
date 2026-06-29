@@ -1385,11 +1385,18 @@ def _build_vqc_policy_ibm(n_qubits: int, n_layers: int, opt_in_cloud: bool) -> t
     If any gate is closed, falls through to local PennyLane default.qubit.
     On any IBM API error: logs WARN, falls back to local PennyLane simulator.
     Emits audit 'quantum_rl.cloud_path_engaged' on successful IBM use.
+    The caller (train_regime_conditioned_policies) emits
+    'quantum_rl.cloud_path_fallback' (warning) when the IBM gates were open
+    but the cloud path fell back to local sim — so "tried IBM, fell back"
+    is queryable via audit_log alongside the cloud_path_engaged success case.
 
     Env vars read (documented for env inventory):
       QUANTUM_CLOUD_ENABLED   — if "false", cloud is disabled (gate 2)
       IBM_QUANTUM_TOKEN       — IBM credential (gate 3)
-      IBM_QUANTUM_CHANNEL     — should be "ibm_cloud" (NOT "ibm_quantum")
+      IBM_QUANTUM_CHANNEL     — channel passed to QiskitRuntimeService;
+                                defaults "ibm_cloud" (post-2023 IBM Cloud CRN
+                                accounts MUST use "ibm_cloud", NOT the legacy
+                                "ibm_quantum" or "ibm_quantum_platform" values)
 
     Args:
         n_qubits:      number of qubits for the VQC circuit
@@ -1738,6 +1745,36 @@ def train_regime_conditioned_policies(
                     "governance_labels": RL_RUNS_GOVERNANCE,
                 },
             )
+
+        # LOW-FIX: fallback audit — IBM gates were open (token present +
+        # opt_in_cloud + QUANTUM_CLOUD_ENABLED) but the cloud path resolved to
+        # local sim.  Emit 'quantum_rl.cloud_path_fallback' so "tried IBM, fell
+        # back to local" is queryable in audit_log alongside cloud_path_engaged.
+        # _emit_audit_row is already fail-soft; this block adds a belt-and-
+        # suspenders try/except to guarantee the training loop is never crashed
+        # by a fallback audit failure.
+        try:
+            _ibm_attempted = (
+                opt_in_cloud
+                and os.environ.get("QUANTUM_CLOUD_ENABLED", "").lower() != "false"
+                and bool(os.environ.get("IBM_QUANTUM_TOKEN", ""))
+            )
+            if _ibm_attempted and backend_label in ("default.qubit", "unavailable", "local"):
+                _emit_audit_row(
+                    action="quantum_rl.cloud_path_fallback",
+                    entity_type="strategy",
+                    entity_id=str(strategy_id),
+                    status="warning",
+                    result={
+                        "backend_label": backend_label,
+                        "strategy_id": strategy_id,
+                        "regime": regime,
+                        "fallback_reason": "ibm_path_failed_or_budget_exhausted",
+                        "governance_labels": RL_RUNS_GOVERNANCE,
+                    },
+                )
+        except Exception:
+            pass  # never crash the training loop on a fallback audit failure
 
         # Train policy via REINFORCE
         params = rng.standard_normal(n_params) * 0.1

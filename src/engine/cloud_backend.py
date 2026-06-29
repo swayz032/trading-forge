@@ -17,14 +17,13 @@ import hashlib
 import json
 import logging
 import os
-import tempfile
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal, Optional, TypedDict
 
 from filelock import FileLock
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -378,7 +377,6 @@ class QuantumResultCache:
             # TTL check
             cached_ts = entry.get("_cache_ts", "")
             if cached_ts:
-                from datetime import timedelta
                 cached_dt = datetime.fromisoformat(cached_ts)
                 age = datetime.now(timezone.utc) - cached_dt.replace(tzinfo=timezone.utc)
                 if age.days >= _CACHE_TTL_DAYS:
@@ -466,10 +464,24 @@ def get_ibm_sampler(
             "qiskit-ibm-runtime is not installed. "
             "Run: pip install 'qiskit-ibm-runtime>=0.46.0'"
         )
+    # MED-FIX: channel is now env-driven.  Post-2023 IBM Cloud (CRN) accounts
+    # require channel="ibm_cloud"; the legacy "ibm_quantum_platform" value was
+    # hardcoded here and caused latent auth failures on the first real QPU call.
+    # IBM_QUANTUM_CHANNEL defaults to "ibm_cloud" (the rotated account channel).
+    ibm_channel = os.environ.get("IBM_QUANTUM_CHANNEL", "ibm_cloud")
+    # For ibm_cloud the instance must be the CRN, not the legacy "open-instance"
+    # placeholder.  Resolve from IBM_QUANTUM_CRN / IBM_QUANTUM_INSTANCE env vars
+    # when the caller passed the default placeholder so every call site benefits
+    # automatically without requiring each caller to thread the CRN through.
+    ibm_instance = (
+        os.environ.get("IBM_QUANTUM_CRN", os.environ.get("IBM_QUANTUM_INSTANCE", instance))
+        if instance == "open-instance"
+        else instance
+    ) or instance
     service = QiskitRuntimeService(
-        channel="ibm_quantum_platform",
+        channel=ibm_channel,
         token=token,
-        instance=instance,
+        instance=ibm_instance,
     )
     backend = service.backend(backend_name)
     sampler = SamplerV2(backend=backend)
@@ -1162,11 +1174,17 @@ def poll_ibm_job(
                 "backend_name": backend_name, "governance_labels": GOVERNANCE_LABELS}
 
     token = os.environ.get("IBM_QUANTUM_TOKEN", "")
-    instance = "open-instance"
+    # MED-FIX: resolve instance from env (CRN required for ibm_cloud channel).
+    instance = os.environ.get(
+        "IBM_QUANTUM_CRN", os.environ.get("IBM_QUANTUM_INSTANCE", "open-instance")
+    )
 
     try:
+        # MED-FIX: channel is env-driven; defaults "ibm_cloud" for the post-2023
+        # IBM Cloud CRN account.  Legacy "ibm_quantum_platform" caused latent auth
+        # failures on the first real QPU call to poll an enqueued Ising job.
         service = QiskitRuntimeService(
-            channel="ibm_quantum_platform",
+            channel=os.environ.get("IBM_QUANTUM_CHANNEL", "ibm_cloud"),
             token=token,
             instance=instance,
         )

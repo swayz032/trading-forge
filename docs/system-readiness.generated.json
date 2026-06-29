@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-29T02:35:24.275Z",
+  "generatedAt": "2026-06-29T04:15:51.573Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -55,8 +55,8 @@
     "workflow-source-missing:Weekly_Strategy_Hunt_sAIrnCVB4iOsodsy"
   ],
   "subsystemCounts": {
-    "total": 70,
-    "ready": 46,
+    "total": 71,
+    "ready": 47,
     "blocked": 17,
     "manualGated": 2,
     "experimental": 5
@@ -226,6 +226,30 @@
         "SELECT COUNT(*) FROM audit_log WHERE action = 'lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '24 hours'",
         "tf_candidate_conveyor_enqueued_total",
         "tf_candidate_conveyor_enqueued_total (Prometheus counter)"
+      ]
+    },
+    {
+      "id": "carter_voice_agent",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "operator_only",
+      "blockers": [],
+      "requiredEvidence": [
+        "/api/health",
+        "/api/sse",
+        "audit_log:carter.conversation_logged",
+        "audit_log:carter.tool_invoked",
+        "carter_issues:recent-entry",
+        "carter-conversation-log-history",
+        "carter-issue-watcher-history",
+        "carter-tool-invocation-history",
+        "carter.conversation_logged",
+        "carter.tool_failed",
+        "carter.tool_invoked"
       ]
     },
     {

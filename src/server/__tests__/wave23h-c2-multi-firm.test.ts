@@ -246,19 +246,32 @@ describe("Wave 23H Fix 2 — C2 Firm Suspension Layer 7 multi-firm", () => {
     );
   });
 
-  // ── 5c. Success path → audit row with status=success ─────────────────────
-  it("Layer 7: success path inserts audit_log row with action=kill_switch.c2_multi_firm_check, status=success", async () => {
+  // ── 5c. Anti-spam (deep-scan 2026-06-28): clean path writes NO audit row;
+  //         suspension (a real event) still audits ────────────────────────────
+  it("Layer 7: clean path writes no c2_multi_firm_check audit row; suspension still audits", async () => {
+    const c2Rows = () =>
+      vi.mocked(insertAuditRow).mock.calls.filter(
+        ([row]) => (row as { action?: string }).action === "kill_switch.c2_multi_firm_check",
+      );
+
+    // Clean: 3 firms, none suspended → no audit row (was per-eval spam before)
     _brokerAccountRows = [...THREE_FIRMS];
     vi.mocked(isFirmSuspended).mockReturnValue(false);
-
     await killSwitch.getKillSwitchStatus();
+    expect(c2Rows()).toHaveLength(0);
 
-    expect(vi.mocked(insertAuditRow)).toHaveBeenCalledWith(
+    // Suspension: a real event → audit row with status success, halted true
+    killSwitch._invalidateCacheForTests();
+    vi.mocked(insertAuditRow).mockClear();
+    vi.mocked(isFirmSuspended).mockImplementation((firmId) => firmId === "mffu");
+    await killSwitch.getKillSwitchStatus();
+    const rows = c2Rows();
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows[0]![0]).toEqual(
       expect.objectContaining({
         action: "kill_switch.c2_multi_firm_check",
         status: "success",
-        input: expect.objectContaining({ firms_checked: expect.any(Array) }),
-        result: expect.objectContaining({ suspended_firms: [], halted: false }),
+        result: expect.objectContaining({ suspended_firms: ["mffu"], halted: true }),
       }),
     );
   });

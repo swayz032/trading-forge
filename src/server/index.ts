@@ -20,6 +20,7 @@ import { indicatorRoutes } from "./routes/indicators.js";
 import { backtestRoutes } from "./routes/backtests.js";
 import { agentRoutes } from "./routes/agent.js";
 import { carterWebhookRouter } from "./routes/carter-webhook.js";
+import { carterToolsRouter } from "./routes/carter-tools.js";
 import { monteCarloRoutes } from "./routes/monte-carlo.js";
 import complianceRoutes from "./routes/compliance.js";
 import { compilerRoutes } from "./routes/compiler.js";
@@ -437,6 +438,12 @@ app.get("/api/health", async (_req, res) => {
   });
 });
 
+// Carter tools-plane router — own Bearer auth (CARTER_TOOLS_HMAC_SECRET), NOT the
+// general authMiddleware. Mounted AFTER express.json (needs JSON body parsing)
+// and AFTER the webhook mount (so /api/carter/webhook is not shadowed) but BEFORE
+// the general /api authMiddleware so tools-plane auth is self-contained.
+app.use("/api/carter", carterToolsRouter);
+
 // Auth gate
 app.use("/api", authMiddleware);
 
@@ -826,6 +833,17 @@ export const server = app.listen(port, () => {
       logger.warn({ err }, "Scheduler failed to initialize — cron jobs disabled");
     });
   }
+
+  // ─── Carter proactive issue watcher (Wave 4 backend, 2026-06-28) ────────────
+  // PIPELINE-GATE EXEMPT: starts unconditionally — NOT gated behind isActive().
+  // FAIL-SOFT: any startup error is caught here so it never crashes the API.
+  import("./services/carter-issue-watcher.js").then(({ startCarterIssueWatcher }) => {
+    startCarterIssueWatcher().catch((err: unknown) => {
+      logger.warn({ err }, "carter-issue-watcher: startup failed (non-fatal — watcher disabled for this session)");
+    });
+  }).catch((err: unknown) => {
+    logger.warn({ err }, "carter-issue-watcher: import failed at boot (non-fatal)");
+  });
 
   // ─── Track 3 completion audit record (written once, idempotent guard) ────────
   // trading-forge-architect signed off Track 3 — Stop/TP/Sizing Framework as

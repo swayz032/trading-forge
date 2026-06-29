@@ -5345,5 +5345,84 @@
     "learning_boundary": "production",
     "deployment_authority": "operator_only",
     "criticality": "medium"
+  },
+  {
+    "id": "carter_voice_agent",
+    "domain": "operations",
+    "owner_surface": "node",
+    "automation_mode": "operator-controlled",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "advisory",
+    "automation_scope": "Operator nerve-center voice agent (ElevenLabs WebRTC). REPORTS on every subsystem and RUNS capital-safe work only (backtests, Monte Carlo, scout discovery, research) via a registry-driven read+run tool dispatcher. May PROPOSE risky actions but NEVER bypasses a promotion, compliance, or risk gate — the gates remain authoritative. Operator-assist/advisory, not a lifecycle gate. Not in the live-trade path.",
+    "data_sources": [
+      "ElevenLabs post-call transcript webhook",
+      "Carter tool registry (read+run tools)",
+      "subsystem read surfaces (status, lifecycle, backtests, scout)"
+    ],
+    "reads_from": [
+      "strategies",
+      "backtests",
+      "audit_log",
+      "carter_issues"
+    ],
+    "writes_to": [
+      "carter_issues",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "carter_issues"
+    ],
+    "audit_actions": [
+      "carter.tool_invoked",
+      "carter.tool_failed",
+      "carter.conversation_logged"
+    ],
+    "metrics_surfaces": [
+      "/api/health"
+    ],
+    "telemetry_sources": [
+      "/api/sse",
+      "audit_log:carter.tool_invoked",
+      "audit_log:carter.conversation_logged"
+    ],
+    "scheduler_jobs": [],
+    "routes": [
+      "/api/carter",
+      "/api/carter/webhook",
+      "/slumhouse/api/carter-session"
+    ],
+    "engine_subsystems": [],
+    "database_tables": [
+      "carter_issues"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/sse",
+      "/api/alerts",
+      "audit_log",
+      "carter_issues"
+    ],
+    "recovery_mode": "fail-soft",
+    "health_check": "/api/health",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:carter.tool_invoked",
+      "carter_issues:recent-entry"
+    ],
+    "evidence_queries": [
+      "carter-tool-invocation-history",
+      "carter-conversation-log-history",
+      "carter-issue-watcher-history"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "none",
+    "deployment_authority": "operator_only",
+    "criticality": "important"
   }
 ]

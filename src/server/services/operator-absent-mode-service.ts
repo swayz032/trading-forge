@@ -219,7 +219,11 @@ export async function runOperatorAbsentAutoPromote(correlationId?: string): Prom
       const { LifecycleService } = await import("./lifecycle-service.js");
       const lifecycle = new LifecycleService();
       const promoteResult = await lifecycle.promoteStrategy(strategy.id, "DEPLOY_READY", "PILOT", {
-        actor: "system",
+        // Deep-scan 2026-06-28 (C-1): was actor:"system", which the B8 gate in
+        // lifecycle-service.ts blocked — so this whole sweep was dead code. The
+        // dedicated "operator_absent_mode" actor is the one authorized vacation
+        // exception to the human-release requirement for DEPLOY_READY -> PILOT.
+        actor: "operator_absent_mode",
         reason: `Operator-absent auto-promotion: Tier 1, rolling_sharpe=${rollingSharpeSince.toFixed(2)}`,
       });
 
