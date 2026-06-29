@@ -27,6 +27,24 @@ Every finding is reported as **observation → hypothesis → tested conclusion*
 - only a pattern that survives the **blind** set is a **conclusion**.
 A surprising replay result is the start of an investigation, not the end of one.
 
+## Measured evaluation BEFORE diagnostic investigation (replay-phase bias guard)
+
+When replay fails, there is a natural pull to open the video and immediately understand why. Preserve the
+distinction — the same discipline as branch-freeze and pre-registration:
+- **Measured evaluation:** the failure is COUNTED and CLASSIFIED (via `classifyReplayFailure`) **before** any
+  human inspects the source. The class is recorded from the available signals (gate outcomes / evidence_mode /
+  data availability), not from watching the video.
+- **Diagnostic investigation:** inspecting the video to understand a failure is allowed and useful — but it
+  happens AFTER the failure is counted, and it **never retroactively reclassifies** a counted failure or
+  adapts the evaluation. (If inspection reveals the taxonomy itself is wrong, that is a dated amendment to THIS
+  file, not a silent re-label of past results.)
+
+**Negative evidence is a result, not a disappointment.** A failure distribution dominated by VISUAL_DEPENDENCY
++ EDUCATOR_AMBIGUITY supports the conclusion that the limit is the SOURCE MATERIAL, not the representation —
+scientifically valuable even at low coverage. A distribution dominated by COMPILER_DEFECT justifies reopening
+the IR under the freeze policy. Both are wins because both are attributable. Report the full distribution
+(`dominantFailureClass`), never just a coverage percentage.
+
 ## Report format (frozen — every results report follows this order)
 
 1. **Observed result** — the raw measurements against the frozen criteria (counts, rates, no spin).
@@ -288,6 +306,12 @@ of what the system can faithfully compile, which is itself worth knowing.
   without adding ambiguity or reducing determinism → that is IR v2.0, never a quiet v1.0 edit. The determinism
   invariant is NOT relaxed by replay (no "confidence>0.8 execute anyway"; reduced coverage from UNKNOWN-stops
   is a corpus finding, not a weakness). Governance only — changes no threshold, adds no representation.
+- **2026-06-28 — ADD the measured-evaluation-before-diagnosis bias guard + negative-evidence norm, before
+  replay.** A replay failure is counted + classified from available signals BEFORE any video inspection;
+  diagnostic inspection happens after and never retroactively reclassifies a counted failure (a taxonomy
+  change is a dated amendment, not a silent re-label). The full failure distribution is itself a result —
+  report it, not just coverage %. Pre-committed now so the replay phase can't adapt the evaluation from what
+  individual failures reveal. Governance only.
 - **DEFERRED to post-replay (do NOT pre-build):** **Reconstruction Rate** = strategies that replay
   successfully / strategies that pass Gate 1.5. GPT-flagged as "after replay exists, not before" — it isolates
   the final research question (representation+extraction working vs source-unreconstructable) and is meaningless
