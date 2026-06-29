@@ -30,6 +30,13 @@ export interface CarterTool {
    * DOCUMENTED in the registry as the refusal surface but have NO tool path.
    */
   handler?: string | null;
+  /**
+   * JSON-Schema for the tool's request body. configure-agent.ts emits this as the
+   * ElevenLabs `request_body_schema` so the agent KNOWS which arguments to collect
+   * and SEND (e.g. research_reddit needs `topic`). Tools with no params omit this
+   * and ship a clean empty-object schema. Attached below from CARTER_PARAMS_SCHEMAS.
+   */
+  paramsSchema?: Record<string, unknown>;
 }
 
 /** Ordered list of all registered Carter tools. */
@@ -348,6 +355,227 @@ export const CARTER_TOOLS: CarterTool[] = [
   { name: "kasa_power_cycle",        description: "RED — remote Kasa power-cycle the tower. No tool path; refused.", tier: "red", handler: null },
   { name: "disable_safety_cron",     description: "RED — disable a safety cron (heartbeat, drift, recon). No tool path; refused.", tier: "red", handler: null },
 ];
+
+/**
+ * Request-body JSON-Schemas for the tools that take parameters. configure-agent.ts
+ * reads `tool.paramsSchema` and registers it as the ElevenLabs `request_body_schema`
+ * so the agent collects + SENDS these args. Names + requireds are derived from the
+ * actual handler param reads (carter-reads.ts / carter-actions.ts). Tools NOT listed
+ * here take no params and ship the clean empty-object schema. `token` (on confirm_*)
+ * is the single-use confirmation token minted by the matching propose_ call.
+ */
+const _tokenProp = {
+  token: {
+    type: "string",
+    description: "The single-use confirmation token returned by the matching propose_ call.",
+  },
+} as const;
+
+export const CARTER_PARAMS_SCHEMAS: Record<string, Record<string, unknown>> = {
+  // ── reads ──────────────────────────────────────────────────────────────────
+  report_strategy_status: {
+    type: "object",
+    properties: {
+      strategyId: { type: "string", description: "Strategy UUID. Provide this OR name." },
+      name: { type: "string", description: "Strategy name. Provide this OR strategyId." },
+    },
+    required: [],
+    description: "Identify the strategy by id or name (one of the two).",
+  },
+  report_backtest_result: {
+    type: "object",
+    properties: { backtestId: { type: "string", description: "Backtest UUID to report." } },
+    required: ["backtestId"],
+  },
+  report_montecarlo_survival: {
+    type: "object",
+    properties: { backtestId: { type: "string", description: "Backtest UUID whose Monte Carlo survival to report." } },
+    required: ["backtestId"],
+  },
+  report_recent_alerts: {
+    type: "object",
+    properties: { limit: { type: "number", description: "How many recent alerts to return (default 20, max 100)." } },
+    required: [],
+  },
+  query_audit_log: {
+    type: "object",
+    properties: {
+      action: { type: "string", description: "Audit action name to filter by (e.g. 'lifecycle.promoted')." },
+      correlationId: { type: "string", description: "Correlation ID to trace one event end-to-end." },
+      limit: { type: "number", description: "Max rows (default 20, max 50)." },
+    },
+    required: [],
+  },
+  // ── actions (green) ─────────────────────────────────────────────────────────
+  run_backtest: {
+    type: "object",
+    properties: {
+      strategyId: { type: "string", description: "Strategy UUID to backtest." },
+      mode: { type: "string", enum: ["single", "walkforward"], description: "Backtest mode; defaults to walkforward." },
+    },
+    required: ["strategyId"],
+  },
+  run_walk_forward: {
+    type: "object",
+    properties: { strategyId: { type: "string", description: "Strategy UUID to walk-forward backtest." } },
+    required: ["strategyId"],
+  },
+  run_monte_carlo: {
+    type: "object",
+    properties: { backtestId: { type: "string", description: "Completed backtest UUID to run Monte Carlo survival on." } },
+    required: ["backtestId"],
+  },
+  run_matrix: {
+    type: "object",
+    properties: { strategyId: { type: "string", description: "Strategy UUID to run a parameter matrix sweep on." } },
+    required: ["strategyId"],
+  },
+  competitive_intel: {
+    type: "object",
+    properties: {
+      topic: { type: "string", description: "What to research (trader methodology, institutional edge, quant approach)." },
+      regime: { type: "string", description: "Optional market regime context." },
+      market: { type: "string", description: "Optional market/symbol context (MES/MNQ/MCL)." },
+    },
+    required: ["topic"],
+  },
+  scan_youtube_for_setups: {
+    type: "object",
+    properties: { topic: { type: "string", description: "Day-trading topic to search YouTube for (e.g. 'ICT silver bullet ES')." } },
+    required: ["topic"],
+  },
+  extract_youtube_strategy: {
+    type: "object",
+    properties: {
+      url: { type: "string", description: "YouTube video URL to extract a strategy from." },
+      title: { type: "string", description: "Optional video title for logging." },
+    },
+    required: ["url"],
+  },
+  research_reddit: {
+    type: "object",
+    properties: {
+      topic: { type: "string", description: "The Reddit research topic/question — NON-strategy (sentiment, community discussion, market/bot/growth). Never a strategy source." },
+    },
+    required: ["topic"],
+  },
+  institutional_research: {
+    type: "object",
+    properties: {
+      question: { type: "string", description: "The institutional research question — NON-strategy (market structure, methodology, growth, compliance)." },
+      includeParallel: { type: "boolean", description: "Optional: also run the deep Parallel.ai research provider." },
+    },
+    required: ["question"],
+  },
+  deposit_pending_mention: {
+    type: "object",
+    properties: {
+      conceptName: { type: "string", description: "Strategy concept name (snake_case)." },
+      market: { type: "string", description: "Target market: MES, MNQ, or MCL." },
+      sourceUrl: { type: "string", description: "Source URL of the mention." },
+      layer: { type: "string", enum: ["web", "youtube", "reddit"], description: "Discovery layer." },
+    },
+    required: ["conceptName", "market", "sourceUrl", "layer"],
+  },
+  evaluate_kill_signal: {
+    type: "object",
+    properties: {
+      attempts: {
+        type: "array",
+        description: "Ordered list of backtest attempt metric objects to evaluate for a kill verdict.",
+        items: { type: "object" },
+      },
+    },
+    required: ["attempts"],
+  },
+  // ── yellow propose/confirm (confirm_* additionally require the token) ─────────
+  propose_toggle_bot_power: {
+    type: "object",
+    properties: { mode: { type: "string", enum: ["ACTIVE", "PAUSED"], description: "Target engine authority; defaults to ACTIVE." } },
+    required: [],
+  },
+  confirm_toggle_bot_power: {
+    type: "object",
+    properties: { mode: { type: "string", enum: ["ACTIVE", "PAUSED"], description: "Same target proposed." }, ..._tokenProp },
+    required: ["token"],
+  },
+  propose_set_learning_loop_mode: {
+    type: "object",
+    properties: { mode: { type: "number", description: "Learning-loop mode: 0=OFF, 1=OBSERVE, 2=AUTOPILOT." } },
+    required: ["mode"],
+  },
+  confirm_set_learning_loop_mode: {
+    type: "object",
+    properties: { mode: { type: "number", description: "Same mode proposed (0=OFF, 1=OBSERVE, 2=AUTOPILOT)." }, ..._tokenProp },
+    required: ["mode", "token"],
+  },
+  propose_toggle_vacation_mode: {
+    type: "object",
+    properties: { on: { type: "boolean", description: "true = turn operator-absent (vacation) mode ON, false = OFF." } },
+    required: ["on"],
+  },
+  confirm_toggle_vacation_mode: {
+    type: "object",
+    properties: { on: { type: "boolean", description: "Same value proposed." }, ..._tokenProp },
+    required: ["on", "token"],
+  },
+  confirm_self_restart: { type: "object", properties: { ..._tokenProp }, required: ["token"] },
+  propose_trigger_n8n_workflow: {
+    type: "object",
+    properties: { workflowWebhookPath: { type: "string", description: "The n8n webhook trigger path (no leading slash)." } },
+    required: ["workflowWebhookPath"],
+  },
+  confirm_trigger_n8n_workflow: {
+    type: "object",
+    properties: { workflowWebhookPath: { type: "string", description: "Same path proposed." }, ..._tokenProp },
+    required: ["workflowWebhookPath", "token"],
+  },
+  propose_run_quantum: {
+    type: "object",
+    properties: { backtestId: { type: "string", description: "Completed backtest UUID to run local quantum MC on." } },
+    required: ["backtestId"],
+  },
+  confirm_run_quantum: {
+    type: "object",
+    properties: { backtestId: { type: "string", description: "Same backtest proposed." }, ..._tokenProp },
+    required: ["backtestId", "token"],
+  },
+  confirm_request_lifecycle_check: { type: "object", properties: { ..._tokenProp }, required: ["token"] },
+  propose_request_promotion: {
+    type: "object",
+    properties: {
+      strategyId: { type: "string", description: "Strategy UUID to promote." },
+      toState: { type: "string", description: "Target lifecycle state (e.g. PAPER, DEPLOY_READY, PILOT)." },
+    },
+    required: ["strategyId", "toState"],
+  },
+  confirm_request_promotion: {
+    type: "object",
+    properties: {
+      strategyId: { type: "string", description: "Same strategy proposed." },
+      toState: { type: "string", description: "Same target state proposed." },
+      ..._tokenProp,
+    },
+    required: ["strategyId", "toState", "token"],
+  },
+  propose_rearm_scheduler_job: {
+    type: "object",
+    properties: { jobName: { type: "string", description: "The disabled scheduler job name to re-enable." } },
+    required: ["jobName"],
+  },
+  confirm_rearm_scheduler_job: {
+    type: "object",
+    properties: { jobName: { type: "string", description: "Same job proposed." }, ..._tokenProp },
+    required: ["jobName", "token"],
+  },
+};
+
+// Attach the schemas onto the registry entries so configure-agent.ts (which reads
+// `tool.paramsSchema`) registers them as ElevenLabs request_body_schema.
+for (const _t of CARTER_TOOLS) {
+  const _s = CARTER_PARAMS_SCHEMAS[_t.name];
+  if (_s) _t.paramsSchema = _s;
+}
 
 /** Fast O(1) lookup by tool name. Returns undefined when not found. */
 const _toolIndex = new Map<string, CarterTool>(
