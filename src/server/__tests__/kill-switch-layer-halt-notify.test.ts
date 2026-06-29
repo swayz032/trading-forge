@@ -12,7 +12,7 @@
  * the Discord notification fires — audit first, then Discord.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // vi.hoisted() — variables must be initialised before vi.mock() factories run.
@@ -198,7 +198,11 @@ vi.mock("../lib/metrics-registry.js", () => ({
 // Module under test (loaded after all vi.mock() calls are registered)
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { killSwitch } from "../production/kill-switch.js";
+import {
+  killSwitch,
+  KILL_SWITCH_LAYER_NOTIFY_COOLDOWN_MS,
+  _clearLayerNotifyCooldownForTests,
+} from "../production/kill-switch.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -221,9 +225,21 @@ async function callEmitSignals(
 // Test suites
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** Mirror of LAYER_LABELS.name values — used to assert titles are human-readable. */
+const EXPECTED_LAYER_NAMES: Record<number, string> = {
+  3: "Trailing Drawdown",
+  4: "Connectivity Degraded",
+  5: "Strategy Drift Detected",
+  6: "CME Exchange Outage",
+  7: "Topstep Account Suspended",
+  8: "Macro Crisis Gate",
+  9: "Windows Reboot Pending",
+};
+
 describe("C-1: _emitLayerHaltedSignals fires CRITICAL Discord on autonomous halt (L3–L9)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    _clearLayerNotifyCooldownForTests();
     mockInsertAuditRow.mockResolvedValue(undefined);
     mockAppendFamilyGradePostscript.mockImplementation(
       (body: string, what: string, action: string) =>
@@ -234,15 +250,21 @@ describe("C-1: _emitLayerHaltedSignals fires CRITICAL Discord on autonomous halt
   const HALT_LAYERS = [3, 4, 5, 6, 7, 8, 9] as const;
 
   for (const layer of HALT_LAYERS) {
-    it(`Layer ${layer}: fires exactly one notifyCritical with body mentioning "Layer ${layer}"`, async () => {
+    it(`Layer ${layer}: fires exactly one notifyCritical with title and body identifying the layer`, async () => {
       await callEmitSignals(layer, `test_halt_L${layer}`, `corr-L${layer}`);
 
       expect(mockNotifyCritical).toHaveBeenCalledTimes(1);
 
       const callArgs = mockNotifyCritical.mock.calls[0] as [string, string, ...unknown[]];
+      const title = callArgs[0];
       const body = callArgs[1];
+
+      // Title must contain "Layer N" and the human-readable label name (C-1 review requirement)
+      expect(title).toContain(`Layer ${layer}`);
+      expect(title).toContain(EXPECTED_LAYER_NAMES[layer]);
+
+      // Body must also mention the layer number
       expect(typeof body).toBe("string");
-      // Body must mention the layer number so the operator knows which layer fired
       expect(body).toContain(String(layer));
     });
   }
@@ -270,6 +292,7 @@ describe("C-1: _emitLayerHaltedSignals fires CRITICAL Discord on autonomous halt
 describe("MED-4: halt audit_log write is awaited (durable) before Discord fires", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    _clearLayerNotifyCooldownForTests();
     mockInsertAuditRow.mockResolvedValue(undefined);
   });
 
@@ -302,5 +325,88 @@ describe("MED-4: halt audit_log write is awaited (durable) before Discord fires"
 
     // Discord fires despite audit failure (fail-safe: operator must be paged)
     expect(mockNotifyCritical).toHaveBeenCalledTimes(1);
+  });
+
+  it("notifyCritical throw does not propagate — halt path resolves cleanly", async () => {
+    mockNotifyCritical.mockImplementation(() => {
+      throw new Error("Discord webhook timeout");
+    });
+    mockAppendFamilyGradePostscript.mockReturnValue("family-grade body text");
+
+    // Must not throw even when notifyCritical itself throws
+    await expect(
+      callEmitSignals(6, "cme_outage_active", "corr-notify-throw"),
+    ).resolves.toBeUndefined();
+
+    // Audit row still written before notify was attempted
+    expect(mockInsertAuditRow).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("C-1: per-layer notify cooldown prevents CRITICAL rate-limit flooding", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    _clearLayerNotifyCooldownForTests();
+    mockInsertAuditRow.mockResolvedValue(undefined);
+    mockAppendFamilyGradePostscript.mockReturnValue("family-grade body text");
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("second emit within cooldown window does not fire notifyCritical", async () => {
+    await callEmitSignals(6, "cme_outage_active", "corr-cooldown-1");
+    expect(mockNotifyCritical).toHaveBeenCalledTimes(1);
+
+    // Immediately re-emit — within cooldown window (same fake-clock ms)
+    await callEmitSignals(6, "cme_outage_active", "corr-cooldown-2");
+    expect(mockNotifyCritical).toHaveBeenCalledTimes(1); // still 1 — blocked
+  });
+
+  it("emit after cooldown elapses fires notifyCritical again", async () => {
+    await callEmitSignals(6, "cme_outage_active", "corr-cooldown-3");
+    expect(mockNotifyCritical).toHaveBeenCalledTimes(1);
+
+    // Still within cooldown — blocked
+    await callEmitSignals(6, "cme_outage_active", "corr-cooldown-4");
+    expect(mockNotifyCritical).toHaveBeenCalledTimes(1);
+
+    // Advance clock past the cooldown threshold
+    vi.advanceTimersByTime(KILL_SWITCH_LAYER_NOTIFY_COOLDOWN_MS);
+
+    // Now the cooldown has elapsed — should fire
+    await callEmitSignals(6, "cme_outage_active", "corr-cooldown-5");
+    expect(mockNotifyCritical).toHaveBeenCalledTimes(2);
+  });
+
+  it("cooldown is per-layer — L6 cooldown does not block L7", async () => {
+    await callEmitSignals(6, "cme_outage_active", "corr-cooldown-l6");
+    expect(mockNotifyCritical).toHaveBeenCalledTimes(1);
+
+    // L7 has its own independent cooldown bucket
+    await callEmitSignals(7, "topstep_suspended", "corr-cooldown-l7");
+    expect(mockNotifyCritical).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("C-1: layers 1 and 2 do not fire notifyCritical (no LAYER_LABELS entry)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    _clearLayerNotifyCooldownForTests();
+    mockInsertAuditRow.mockResolvedValue(undefined);
+  });
+
+  it("Layer 1 (manual halt) does not fire notifyCritical", async () => {
+    await callEmitSignals(1, "manual_halt", "corr-l1");
+    // Layer 1 has no LAYER_LABELS entry — Discord guard must be skipped
+    expect(mockNotifyCritical).not.toHaveBeenCalled();
+  });
+
+  it("Layer 2 (daily loss limit) does not fire notifyCritical", async () => {
+    await callEmitSignals(2, "daily_loss_limit", "corr-l2");
+    // Layer 2 has no LAYER_LABELS entry — Discord guard must be skipped
+    expect(mockNotifyCritical).not.toHaveBeenCalled();
   });
 });

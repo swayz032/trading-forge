@@ -828,6 +828,21 @@ const LAYER_LABELS: Record<
   },
 };
 
+// C-1 (2026-06-29): per-layer cooldown prevents CRITICAL rate-limit flooding during
+// sustained halts (L6/L7 can last hours; CRITICAL severity bypasses global title-dedup).
+// Audit row + SSE remain unconditional — only the Discord notification is rate-limited.
+const KILL_SWITCH_LAYER_NOTIFY_COOLDOWN_MS = Number(
+  process.env.KILL_SWITCH_LAYER_NOTIFY_COOLDOWN_MS ?? 900_000,
+);
+const _lastLayerNotifyMs = new Map<number, number>();
+
+/** Clears per-layer notify cooldown state. For tests only — do not call in production code. */
+export function _clearLayerNotifyCooldownForTests(): void {
+  _lastLayerNotifyMs.clear();
+}
+
+export { KILL_SWITCH_LAYER_NOTIFY_COOLDOWN_MS };
+
 // ─── KillSwitch ───────────────────────────────────────────────────────────────
 
 class KillSwitch {
@@ -976,19 +991,32 @@ class KillSwitch {
       `kill-switch: Layer ${layer} HALTED signal path — ${reason}`,
     );
 
-    // C-1 (2026-06-29): fire Discord on autonomous halt so operator is paged during vacation
+    // C-1 (2026-06-29): fire Discord on autonomous halt so operator is paged during vacation.
+    // Cooldown gate: CRITICAL severity bypasses the global 10-min title-dedup window, so we
+    // enforce a per-layer cooldown here. Audit row + SSE remain unconditional above.
     const label = LAYER_LABELS[layer];
     if (label) {
-      notifyCritical(
-        `Trading bot halted — Layer ${layer}: ${label.name}`,
-        appendFamilyGradePostscript(
-          `Kill-switch Layer ${layer} (${label.name}) halted all new entries. ` +
-            `Reason: ${reason}. CorrelationId: ${correlationId}.`,
-          label.familyWhat,
-          label.familyAction,
-        ),
-        { layer, reason, correlationId },
-      );
+      const sinceLastNotifyMs = Date.now() - (_lastLayerNotifyMs.get(layer) ?? 0);
+      if (sinceLastNotifyMs >= KILL_SWITCH_LAYER_NOTIFY_COOLDOWN_MS) {
+        _lastLayerNotifyMs.set(layer, Date.now());
+        try {
+          notifyCritical(
+            `Trading bot halted — Layer ${layer}: ${label.name}`,
+            appendFamilyGradePostscript(
+              `Kill-switch Layer ${layer} (${label.name}) halted all new entries. ` +
+                `Reason: ${reason}. CorrelationId: ${correlationId}.`,
+              label.familyWhat,
+              label.familyAction,
+            ),
+            { layer, reason, correlationId },
+          );
+        } catch (notifyErr) {
+          logger.error(
+            { err: notifyErr, layer },
+            `kill-switch L${layer}: Discord notify failed`,
+          );
+        }
+      }
     }
   }
 
