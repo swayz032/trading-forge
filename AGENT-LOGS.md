@@ -11975,6 +11975,22 @@ Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal
 
 ---
 
+### Session Log — 2026-06-29 Deep-Scan #5 closeout (4 follow-up items)
+
+**Mission:** Operator: "FIX THEM" — close the 4 deep-scan #5 follow-up items (M4 firm-rules, prop_sim vocab, obs-H1 pool bottleneck, n8n operator runbook).
+
+**Work completed (branch `hardening/deepscan5-closeout-2026-06-29` → MERGED to origin/hardening/phase-0 via fast-forward, tip 87c809b; commit 0318e8f):**
+- **Item 1 (M4 firm-rules):** `mffu_50k` uses `consistency_rule="mffu_50pct_sim_payout"` which was absent from `monte_carlo._consistency_map` → MFFU B14 consistency silently never fired while the firm_config comment claimed a full-path fallback ran. Resolved per the deliberate "NONE eval/live, sim-payout-stage only" intent: recognized the rule in the map (kills silent map-miss/typo-blindness) + added an EXPLICIT auditable MFFU skip mirroring the Topstep standard-lane skip; fixed the misleading firm_config.py comment; rewrote stale `TestMFFUSlidingWindowConsistency` → `TestMFFUConsistencyNotModeledInB14` (3 tests incl. a guard that Topstep consistency-lane STILL fires → skip is MFFU-scoped, not blanket).
+- **Item 2 (prop_sim vocab):** `prop_sim.py::_KNOWN_CONSISTENCY_RULES` only had `mffu_50pct` → warned `Unknown consistency rule 'topstep_50pct'` every backtest. Expanded to the canonical 8-rule vocabulary (mirrors `_consistency_map`); typo still warns; enforcement unchanged (B14 is authoritative).
+- **Item 3 (obs-H1 capital-safety, TS):** backtests/MC + execution path shared ONE 6-slot Python pool → backtest load could queue kill-switch/compliance/Style C exit calls past their 3 s timeout → 3 timeouts/10min tripped the exit-handler circuit breaker → TP/stop/15:55-flatten disabled on open positions. FIX: two-lane semaphore in `python-runner.ts` — reserved "execution" lane (`MAX_PYTHON_SUBPROCESSES_EXECUTION`, default 2) backtests can never consume; tagged the 4 execution-path call sites `lane:"execution"`. `getPythonSubprocessStats` preserves its top-level contract + adds per-lane detail.
+- **Item 4 (operator-action):** wrote `docs/operator-deepscan5-followups-2026-06-29.md` — copy-pasteable steps for 3A-backup durable write, 0A 5-min health-schedule split, watchdog external supervisor, and degraded-tower model pulls. Inherently operator/UI/physical; parallel session already fixed n8n M1/L1/L2 code-side.
+
+**Verification:** `test_monte_carlo` 77 passed (M4 failure resolved, 0 regressions); 3 new MFFU tests pass; `prop_sim` Unknown-rule warning count 0 on backtest (was every run); `tsc --noEmit` clean on `python-runner.ts` + `paper-execution-service.ts` + all `getPythonSubprocessStats` consumers. Merged conflict-free over parallel carter commits.
+
+**Carry-forward:** Item 4 is operator-execute (n8n UI + `ollama pull` on tower + Railway healthcheck). New env var `MAX_PYTHON_SUBPROCESSES_EXECUTION` (default 2) — tune if execution-lane saturation ever shows in `getPythonSubprocessStats().lanes.execution`. MFFU sim-payout consistency remains intentionally unmodeled in B14 — model the discrete payout stage as a distinct event if MFFU ever becomes primary.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### pglite test-harness DDL drifts from schema.ts and silently breaks ALL DB-backed gate tests (pinned 2026-06-28)
