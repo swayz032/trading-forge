@@ -3,6 +3,21 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-29 Carter "Trading Jarvis" — Wave A (self-knowledge) + Wave B (recommendation engine + code drafts) SHIPPED
+
+**Mission:** Make Carter (the ElevenLabs voice agent in the Slumhouse Office) a grounded, deep-reasoning "second brain" — knows every inch of Trading Forge, recommends improvements/fixes, can draft real code. Earlier in the same session: tuned the connect-screen Siri glow (many iterations → thick flush lime band + voice-reactive breathe), fixed Carter's robotic persona + tool errors, and wrote the Jarvis wave plan.
+
+**Work completed:**
+- **Persona + tool-error fix (earlier):** rewrote `scripts/carter/carter-system-prompt.md` (human/Jarvis delivery, no reflexive health reports/tool narration); ROOT-CAUSED the live tool errors — `configure-agent` read `tool.paramsSchema` but the registry never defined one, so every tool shipped an EMPTY body schema and the agent never sent args. Added `CARTER_PARAMS_SCHEMAS` to `tool-registry.ts` (names from handler reads). Made the agent **LLM operator-owned** in `configure-agent.ts` (stop force-reverting the dashboard model — operator set `gpt-5.4`).
+- **Wave A — self-knowledge:** KB was already live (RAG on, e5_mistral, gpt-5.4 brain). Built `scripts/carter/sync-knowledge-base.ts` (surgical freshness sync — refreshes repo-sourced docs, PRESERVES curated `carter-glossary`/`EDGE-MECHANISMS`, re-indexes; applied → KB now current). Built **7 GREEN introspection tools** (`src/server/lib/carter/carter-introspect.ts`): explain_gate (static GATE_CATALOG + live thresholds), read_system_map, list_subsystems, summarize_subsystem, read_strategy_internals, trace_correlation, read_recent_decisions. Prompt teaches grounded self-knowledge.
+- **Wave B — recommendation engine + code drafts:** **4 GREEN rec tools** (`carter-recommend.ts`): diagnose_pipeline, analyze_gate_blocks (fast frequency view; notes the offline `gate_block_analyzer.py` for the costing-vs-saving counterfactual), review_strategy (critique bundle), find_hardening_opportunities. **`save_code_draft`** (`carter-code.ts`, GREEN action): worktree-isolated draft branch + draft PR via `gh` — NEVER merges, guards protected branches + secret/config paths. Prompt: diagnose→propose (finding/evidence/change/risk/touches) + draft-code-with-spoken-confirm-first.
+- **Registration:** `configure-agent` now registers **58 tools** (40 green + 18 yellow); 16 RED documented-refusal-only. Agent llm `gpt-5.4` + voice Charles + greeting preserved.
+
+**Verification:** 212 carter vitest GREEN (13 files incl. contract test at 74 tools/40 green/13 action). tsc clean. system-map:check `status:ok, driftItems:[]`. Live simulate-conversation proofs: Carter answered "how does B14 work" with the CURRENT 20% threshold (proves fresh-KB grounding, not stale/guess); called research_reddit WITH `{topic}` (proves the schema fix); pulled pipeline tools for a bottleneck question. Pushed `cb30ba7..e6264c4` on hardening/phase-0 (interleaved with concurrent sessions; clean rebases).
+
+**Carry-forward for next session:** Wave C (domain-mastery RAG corpora: futures/quant/AI/quantum/SWE + memory/recall tool) and Wave D (proactive "Carter Analyst" daily-insights cron + connect briefing) remain — plan at `docs/superpowers/plans/2026-06-29-carter-trading-jarvis.md`. `save_code_draft` happy-path (real git ops) is guard-tested only — not exercised end-to-end live (would push a draft branch); first real use will validate the worktree/PR path. ElevenLabs voice Speed/Stability are operator-owned dashboard dials if delivery pacing needs tuning.
+
+---
 ### Session Log — 2026-06-29 Deep-scan #5 carry-forward CLOSED + MERGED → phase-0 (operator: "FIX THIS")
 
 **Mission:** Operator directed closing the 3 pre-existing test failures, F-2, the merge, and the n8n live-body items I'd listed as carry-forward.
