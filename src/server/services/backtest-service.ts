@@ -590,6 +590,21 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       // orchestrator inputs (mode, n_paths).  Was previously discarded here,
       // silently disabling the DSR gate (fail-OPEN) and starving the CPCV
       // n_paths gate (fail-CLOSED) on the walkForwardResults JSONB column.
+      //
+      // hardening/phase-0 CPCV-exempt fields (nested inside wf_metadata):
+      //   pbo_degenerate_reason?: "cpcv_is_sharpe_unavailable"
+      //     — walk_forward.py emits this when mode="cpcv". PBO rank-comparison
+      //       is structurally unavailable in CPCV mode. Read by lifecycle-service.ts
+      //       PBO gate to emit "lifecycle.pbo_cpcv_is_unavailable" instead of
+      //       the generic "lifecycle.pbo_unavailable_legacy".
+      //   bif_reliable?: false
+      //     — walk_forward.py emits this when mode="cpcv". BIF IS-Sharpe proxy
+      //       and OOS agg_sharpe both derive from OOS data → BIF ≈ 1.0 structurally.
+      //       Read by lifecycle-service.ts _promoteStrategyInner BIF pre-check to
+      //       emit "lifecycle.bif_cpcv_unmeasured" audit before evaluatePaperToDeployReadyGates.
+      //
+      // Both fields are carried verbatim through this JSONB blob — no separate
+      // top-level key needed; lifecycle-service.ts drills into wf_metadata directly.
       wf_metadata?: Record<string, unknown> | null;
     };
     const wfResults: WfResultsShape | null = result.oos_metrics

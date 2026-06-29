@@ -45,7 +45,8 @@ export type WfeGateStatus =
                           // retained for backward-compat with serialized audit_log rows only
   | "blocked"             // wfe_overall < WFE_HARD_FLOOR (includes former "warn band")
   | "degenerate_is_block" // wfe_status="degenerate_is" from producer (G2a hardening 2026-06-22)
-  | "legacy_null";        // wfe_overall key absent (pre-Pass-B.1 backtest) → grandfather pass
+  | "legacy_null"         // wfe_overall key absent (pre-Pass-B.1 backtest) → grandfather pass
+  | "cpcv_exempt";        // wfe_status="cpcv_not_applicable" → CPCV mode; WFE formula N/A → distinct audit
 
 export interface WfeGateResult {
   status: WfeGateStatus;
@@ -60,6 +61,7 @@ export interface WfeGateResult {
     | "lifecycle.wfe_degenerate_is_block"   // G2a hardening 2026-06-22: IS windows produced no positive Sharpe
     | "lifecycle.wfe_warning_below_target"  // DEPRECATED — no longer returned at runtime (2026-06-22 parity fix)
     | "lifecycle.wfe_unavailable_legacy"
+    | "lifecycle.wfe_cpcv_exempt"           // CPCV mode: WFE formula is not applicable; PASS with distinct audit
     | null; // null = passes, no audit needed for happy path (optional caller choice)
 }
 
@@ -106,6 +108,23 @@ export function evaluateWfeGate(
 ): WfeGateResult {
   const effectiveHardFloor = hardFloor ?? getWfeHardFloor();
   const effectiveWarnFloor = warnFloor ?? getWfeWarnFloor();
+
+  // CPCV-exempt path (hardening/phase-0): walk_forward.py emits wfe_status="cpcv_not_applicable"
+  // when the run used Combinatorial Purged Cross-Validation (mode="cpcv").  In CPCV mode the
+  // WFE ratio (OOS/IS Sharpe) is structurally undefined — CPCV has no single IS window to
+  // compare against.  This is NOT a legacy null (wfe_overall was deliberately set to None/null
+  // by the producer) and NOT a degenerate IS failure.  The gate PASSES with a DISTINCT audit
+  // action so the exemption is visible and auditable rather than silently grandfather-passing.
+  if (wfeStatus === "cpcv_not_applicable") {
+    return {
+      status: "cpcv_exempt",
+      passed: true,
+      wfeOverall: null,
+      hardFloor: effectiveHardFloor,
+      warnFloor: effectiveWarnFloor,
+      auditAction: "lifecycle.wfe_cpcv_exempt",
+    };
+  }
 
   // Wave hardening 2026-06-22 (G2a) — degenerate IS path: producer signals that WF
   // ran but IS Sharpe was non-positive / absent.  This is a DISTINCT state from a

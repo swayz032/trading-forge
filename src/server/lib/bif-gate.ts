@@ -109,6 +109,12 @@ export interface BifGateResult {
      * Wave 30 carry-forward: true per-path IS fold Sharpe will replace the proxy.
      */
     proxy_basis_warn?: string | null;
+    /**
+     * Present when bif_reliable=false was flagged by walk_forward.py (hardening/phase-0).
+     * The BIF value is structurally ~1.0 due to CPCV OOS-only measurement; it is NOT a
+     * real IS-vs-OOS evaluation. Audit-visible; gate always passes.
+     */
+    cpcv_unmeasured?: boolean;
   };
 }
 
@@ -132,10 +138,20 @@ export function evaluateBifGate(
     /**
      * M1 fix 2026-06-28: bif_proxy_basis from walk_forward.py wf_metadata.
      * When "oos_mean_not_is", emits a NON-BLOCKING audit warn (bif.proxy_basis_oos_mean)
-     * because CPCV BIF ≈ 1.0 — IS proxy and WF agg_sharpe both come from OOS data.
+     * because CPCV BIF ≈ 1.0 — IS proxy and WF agg_sharpe both derive from OOS data.
      * Does NOT change the passed/blocked verdict.
      */
     proxyBasis?: string | null;
+    /**
+     * CPCV-unmeasured flag (hardening/phase-0): walk_forward.py emits bif_reliable=false
+     * in wf_metadata when mode="cpcv". In CPCV mode the BIF IS-Sharpe proxy and OOS
+     * agg_sharpe both derive from the same OOS series → BIF ≈ 1.0 structurally, not
+     * from a real IS evaluation. When bifReliable===false the gate returns a DISTINCT
+     * status ("bif.cpcv_unmeasured") so the audit row is visible and distinguishable
+     * from a genuine clean pass. Gate ALWAYS passed=true when bifReliable===false —
+     * do NOT block on a measurement-limitation.
+     */
+    bifReliable?: boolean | null;
   },
 ): BifGateResult {
   const warnThreshold = opts?.warnThreshold ?? getBifWarnThreshold();
@@ -157,6 +173,36 @@ export function evaluateBifGate(
       "BIF gate: CPCV proxy-basis warn — IS sharpe proxy derived from OOS series " +
         "(bif.proxy_basis_oos_mean); BIF ≈ 1.0 in default CPCV mode (Wave 30 carry-forward: true IS fold Sharpe)",
     );
+  }
+
+  // ── 0. CPCV-unmeasured path (hardening/phase-0) ────────────────────────────
+  // walk_forward.py emits bif_reliable=false in wf_metadata when mode="cpcv".
+  // BIF ≈ 1.0 structurally (IS proxy and OOS agg_sharpe both from OOS series) —
+  // NOT a real IS-vs-OOS comparison. Return a DISTINCT status so the audit row
+  // ("bif.cpcv_unmeasured") is visible and distinguishable from a genuine bif.clean.
+  // Gate always passes — do NOT block on a structural measurement limitation.
+  if (opts?.bifReliable === false) {
+    logger.warn(
+      { bif: bifNum, k_eff: kEffNum },
+      "BIF gate: bif_reliable=false (CPCV mode) — BIF is structurally unmeasured (IS proxy = OOS mean); " +
+        "gate passes with distinct audit (bif.cpcv_unmeasured)",
+    );
+    return {
+      passed: true,
+      reason: "bif.cpcv_unmeasured",
+      legacyNull: false,
+      auditPayload: {
+        bif: bifNum,
+        k_eff: kEffNum,
+        warn_threshold: warnThreshold,
+        block_threshold: blockThreshold,
+        blocked: false,
+        legacy_null: false,
+        reason: "bif.cpcv_unmeasured",
+        proxy_basis_warn: proxyBasisWarn,
+        cpcv_unmeasured: true,
+      },
+    };
   }
 
   // ── 1. Legacy null — pre-Wave-3 backtest; bif field never emitted ──────────

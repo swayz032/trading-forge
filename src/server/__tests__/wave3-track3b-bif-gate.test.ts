@@ -275,6 +275,79 @@ describe("evaluateBifGate — k_eff does not affect gate decision", () => {
   });
 });
 
+// ─── CPCV-unmeasured path (hardening/phase-0) ────────────────────────────────
+//
+// walk_forward.py emits bif_reliable=false in wf_metadata when mode="cpcv".
+// BIF ≈ 1.0 structurally (IS proxy and OOS agg_sharpe both from OOS data) —
+// NOT a real IS-vs-OOS comparison. When opts.bifReliable===false the gate MUST:
+//   - return passed=true (do NOT block — this is a measurement limitation)
+//   - return reason="bif.cpcv_unmeasured" (distinct from "bif.clean" and legacy)
+//   - return legacyNull=false (distinct from the legacy grandfather window)
+//   - include cpcv_unmeasured=true in auditPayload
+
+describe("evaluateBifGate — CPCV-unmeasured path (hardening/phase-0)", () => {
+  it("bifReliable=false + null bif → cpcv_unmeasured, passed=true, legacyNull=false", () => {
+    const result = evaluateBifGate(null, null, { bifReliable: false });
+    expect(result.passed).toBe(true);
+    expect(result.legacyNull).toBe(false);
+    expect(result.reason).toBe("bif.cpcv_unmeasured");
+    expect(result.auditPayload.cpcv_unmeasured).toBe(true);
+  });
+
+  it("bifReliable=false + bif=1.0 (proxy value) → cpcv_unmeasured, not bif.clean", () => {
+    // In CPCV mode, bif ≈ 1.0 is a proxy artefact, not a real IS evaluation.
+    // bifReliable=false must prevent the normal evaluation path.
+    const result = evaluateBifGate(1.0, 2.5, { bifReliable: false });
+    expect(result.passed).toBe(true);
+    expect(result.reason).toBe("bif.cpcv_unmeasured");
+    expect(result.legacyNull).toBe(false);
+    expect(result.auditPayload.cpcv_unmeasured).toBe(true);
+  });
+
+  it("bifReliable=false prevents blocking even when bif value exceeds block threshold", () => {
+    // This tests that bifReliable=false short-circuits before the block check.
+    // In practice this scenario shouldn't occur (CPCV BIF ≈ 1.0), but the gate
+    // must be deterministic — bifReliable=false always short-circuits.
+    const result = evaluateBifGate(9.0, null, { bifReliable: false });
+    expect(result.passed).toBe(true);
+    expect(result.reason).toBe("bif.cpcv_unmeasured");
+  });
+
+  it("cpcv_unmeasured is NOT legacyNull — distinct for audit purposes", () => {
+    const cpcvResult = evaluateBifGate(null, null, { bifReliable: false });
+    const legacyResult = evaluateBifGate(null, null);
+    expect(cpcvResult.legacyNull).toBe(false);
+    expect(legacyResult.legacyNull).toBe(true);
+    expect(cpcvResult.reason).toBe("bif.cpcv_unmeasured");
+    expect(legacyResult.reason).toBe("bif.legacy_null_pre_wave3");
+  });
+
+  it("regression: bifReliable=null (not explicitly false) → normal evaluation path", () => {
+    // bifReliable=null means unknown — fall through to normal bif evaluation.
+    const result = evaluateBifGate(5.0, null, { bifReliable: null });
+    expect(result.passed).toBe(false);
+    expect(result.reason).toBe("bif.blocked_exceeds_threshold");
+  });
+
+  it("regression: bifReliable=undefined (omitted) → normal evaluation (bif=0.5 → bif.clean)", () => {
+    const result = evaluateBifGate(0.5, 1.0);
+    expect(result.passed).toBe(true);
+    expect(result.reason).toBe("bif.clean");
+    expect(result.auditPayload.cpcv_unmeasured).toBeUndefined();
+  });
+
+  it("cpcv_unmeasured audit payload contains threshold fields for operator inspection", () => {
+    const result = evaluateBifGate(1.0, 3.5, { bifReliable: false });
+    expect(result.auditPayload).toMatchObject({
+      cpcv_unmeasured: true,
+      blocked: false,
+      legacy_null: false,
+    });
+    expect(result.auditPayload.warn_threshold).toBeTypeOf("number");
+    expect(result.auditPayload.block_threshold).toBeTypeOf("number");
+  });
+});
+
 // ─── Audit payload completeness ───────────────────────────────────────────────
 
 describe("evaluateBifGate — audit payload shape is always complete", () => {
