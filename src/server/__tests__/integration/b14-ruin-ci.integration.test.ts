@@ -21,7 +21,7 @@
  *      probability_of_ruin_ci.ci_high = 0.55 (above threshold 0.20).
  *   2. SELECT the row via Drizzle and extract risk_metrics.probability_of_ruin_ci.
  *   3. Call evaluateB14CiGate(ruinCi, scalar) and assert:
- *      - passed = false (blocked because 0.55 > 0.40)
+ *      - passed = false (blocked because 0.55 > 0.20; deep-scan #5 F-3: comment said 0.40, threshold was tightened to 0.20 on 2026-06-22 — assertion was always correct)
  *      - legacyFallback = false (ci_high was available, scalar NOT used)
  *      - auditPayload.ci_high = 0.55 (key path round-tripped correctly)
  *   4. Repeat with ci_high = 0.15 (below the 0.20 threshold) and assert passed = true.
