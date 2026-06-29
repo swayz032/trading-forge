@@ -33,8 +33,25 @@ import "dotenv/config";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { CARTER_TOOLS, type CarterTool } from "../../src/server/lib/carter/tool-registry.js";
 
 const ELEVENLABS_API_BASE = "https://api.elevenlabs.io/v1/convai/agents";
+const ELEVENLABS_TOOLS_BASE = "https://api.elevenlabs.io/v1/convai/tools";
+
+// ─── Wave 2 — Carter tool registration ───────────────────────────────────────
+// Every green + yellow tool in the canonical registry becomes an ElevenLabs
+// WEBHOOK tool pointed at the relay (CARTER_WEBHOOK_URL/api/carter/<name>).
+// RED tools are NEVER registered — that is the whole point of the tier system.
+//
+// Naming: ElevenLabs tool names must match ^[a-zA-Z][a-zA-Z0-9_]*$. We prefix
+// every tool with "carter_" so they are namespaced away from any other tools in
+// the same workspace (the workspace is shared). The relay URL still carries the
+// REGISTRY name (`/api/carter/<tool.name>`), so the backend route is unaffected
+// by the EL-side display name.
+const CARTER_TOOL_NAME_PREFIX = "carter_";
+// Per-tool response timeout (relay → tower round-trip). 20s is generous for the
+// read/action handlers; the relay itself forwards synchronously.
+const CARTER_TOOL_TIMEOUT_SECS = 20;
 
 // ─── Wave 1 canonical agent settings ────────────────────────────────────────
 const CARTER_LLM = "claude-sonnet-4-5"; // Claude Sonnet 4.5 — ElevenLabs ConvAI enum
@@ -178,6 +195,190 @@ async function patchAgent(
   return { ok: true, status: res.status, json: (await res.json()) as Record<string, any> };
 }
 
+/**
+ * Build the ElevenLabs webhook tool_config for one Carter tool.
+ *
+ * - url      = <CARTER_WEBHOOK_URL>/api/carter/<registry-name> (relay → tower)
+ * - method   = POST (the relay forwards the JSON body to the tower)
+ * - auth     = static "Authorization: Bearer <CARTER_TOOLS_HMAC_SECRET>" via the
+ *              `request_headers` plain key-value map (confirmed live on existing
+ *              workspace tools — request_headers is a {name: value} object, not a
+ *              list). Every call therefore carries the tools-plane Bearer secret.
+ * - body     = derived from the registry's optional paramsSchema; when a tool has
+ *              none (the current registry carries no paramsSchema), we emit a
+ *              valid empty object schema so the tool stays a clean POST.
+ */
+function buildCarterToolConfig(
+  tool: CarterTool,
+  webhookBase: string,
+  bearerSecret: string,
+): Record<string, any> {
+  const base = webhookBase.replace(/\/+$/, "");
+  const url = `${base}/api/carter/${tool.name}`;
+
+  // The canonical interface does not declare paramsSchema today; honor it if a
+  // future registry adds one, otherwise ship an empty object schema.
+  const paramsSchema = (tool as { paramsSchema?: Record<string, any> }).paramsSchema;
+  const request_body_schema =
+    paramsSchema && typeof paramsSchema === "object"
+      ? paramsSchema
+      : { type: "object", properties: {}, required: [], description: "No parameters." };
+
+  return {
+    type: "webhook",
+    name: `${CARTER_TOOL_NAME_PREFIX}${tool.name}`,
+    description: tool.description,
+    response_timeout_secs: CARTER_TOOL_TIMEOUT_SECS,
+    api_schema: {
+      url,
+      method: "POST",
+      request_headers: {
+        "Content-Type": "application/json",
+        // Static Bearer secret == CARTER_TOOLS_HMAC_SECRET (the tools-plane secret
+        // the backend checks). Authenticates every relay call.
+        Authorization: `Bearer ${bearerSecret}`,
+      },
+      path_params_schema: {},
+      query_params_schema: null,
+      request_body_schema,
+    },
+  };
+}
+
+/** GET every workspace tool, return a name → id map (for idempotent upserts). */
+async function listWorkspaceTools(apiKey: string): Promise<Map<string, string>> {
+  const byName = new Map<string, string>();
+  const res = await fetch(ELEVENLABS_TOOLS_BASE, {
+    method: "GET",
+    headers: { "xi-api-key": apiKey },
+  });
+  if (!res.ok) {
+    throw new Error(`GET /convai/tools failed: ${res.status} ${(await res.text()).slice(0, 400)}`);
+  }
+  const body = (await res.json()) as { tools?: Array<{ id?: string; tool_config?: { name?: string } }> };
+  for (const t of body?.tools ?? []) {
+    const name = t?.tool_config?.name;
+    const id = t?.id;
+    if (name && id) byName.set(name, id);
+  }
+  return byName;
+}
+
+/**
+ * Idempotently create-or-update a single webhook tool. Returns its tool id.
+ * Throws on a non-OK response so the caller can fail loudly (we never want to
+ * silently set tool_ids to a partial set).
+ */
+async function upsertCarterTool(
+  apiKey: string,
+  toolConfig: Record<string, any>,
+  existingId: string | undefined,
+): Promise<{ id: string; mode: "created" | "updated" }> {
+  const headers = { "xi-api-key": apiKey, "Content-Type": "application/json" };
+  if (existingId) {
+    const res = await fetch(`${ELEVENLABS_TOOLS_BASE}/${existingId}`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({ tool_config: toolConfig }),
+    });
+    if (!res.ok) {
+      throw new Error(
+        `PATCH tool ${toolConfig.name} (${existingId}) failed: ${res.status} ${(await res.text()).slice(0, 400)}`,
+      );
+    }
+    return { id: existingId, mode: "updated" };
+  }
+  const res = await fetch(ELEVENLABS_TOOLS_BASE, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ tool_config: toolConfig }),
+  });
+  if (!res.ok) {
+    throw new Error(
+      `POST tool ${toolConfig.name} failed: ${res.status} ${(await res.text()).slice(0, 400)}`,
+    );
+  }
+  const body = (await res.json()) as { id?: string };
+  if (!body?.id) throw new Error(`POST tool ${toolConfig.name} returned no id`);
+  return { id: body.id, mode: "created" };
+}
+
+/**
+ * Register every green + yellow Carter tool as an ElevenLabs webhook tool and set
+ * the agent's prompt.tool_ids to EXACTLY that set (idempotent — re-running updates
+ * tools in place by id and replaces the tool_ids array, never duplicates).
+ *
+ * RED tools are filtered out and never touched. Returns a summary, or null if the
+ * required env (CARTER_WEBHOOK_URL / CARTER_TOOLS_HMAC_SECRET) is missing.
+ */
+async function registerCarterTools(
+  apiKey: string,
+  agentUrl: string,
+): Promise<
+  | {
+      green: number;
+      yellow: number;
+      redSkipped: number;
+      registered: number;
+      created: number;
+      updated: number;
+      toolIdsOnAgent: number;
+      sampleNames: string[];
+      bearerAttached: boolean;
+    }
+  | { skipped: true; reason: string }
+> {
+  const webhookBase = process.env.CARTER_WEBHOOK_URL?.trim();
+  const bearerSecret = process.env.CARTER_TOOLS_HMAC_SECRET?.trim();
+  if (!webhookBase) return { skipped: true, reason: "CARTER_WEBHOOK_URL not set" };
+  if (!bearerSecret) return { skipped: true, reason: "CARTER_TOOLS_HMAC_SECRET not set" };
+
+  // Tier filter — green + yellow ONLY. RED tools have no tool path and must never
+  // be registered on the live agent.
+  const dispatchable = CARTER_TOOLS.filter((t) => t.tier === "green" || t.tier === "yellow");
+  const greenCount = dispatchable.filter((t) => t.tier === "green").length;
+  const yellowCount = dispatchable.filter((t) => t.tier === "yellow").length;
+  const redCount = CARTER_TOOLS.filter((t) => t.tier === "red").length;
+
+  const existing = await listWorkspaceTools(apiKey);
+
+  const toolIds: string[] = [];
+  const createdNames: string[] = [];
+  const updatedNames: string[] = [];
+  for (const tool of dispatchable) {
+    const cfg = buildCarterToolConfig(tool, webhookBase, bearerSecret);
+    const { id, mode } = await upsertCarterTool(apiKey, cfg, existing.get(cfg.name));
+    toolIds.push(id);
+    (mode === "created" ? createdNames : updatedNames).push(cfg.name);
+  }
+
+  // Set the agent's tool_ids to EXACTLY the registered set. Isolated nested merge
+  // patch (ElevenLabs PATCH deep-merges; arrays are replaced) so we never clobber
+  // the prompt text / llm / knowledge_base / built_in_tools.
+  const patchRes = await patchAgent(agentUrl, apiKey, {
+    conversation_config: { agent: { prompt: { tool_ids: toolIds } } },
+  });
+  if (!patchRes.ok) {
+    throw new Error(
+      `PATCH agent tool_ids failed: ${patchRes.status} ${(patchRes.text ?? "").slice(0, 400)}`,
+    );
+  }
+  const appliedToolIds: string[] =
+    patchRes.json?.conversation_config?.agent?.prompt?.tool_ids ?? [];
+
+  return {
+    green: greenCount,
+    yellow: yellowCount,
+    redSkipped: redCount,
+    registered: toolIds.length,
+    created: createdNames.length,
+    updated: updatedNames.length,
+    toolIdsOnAgent: appliedToolIds.length,
+    sampleNames: dispatchable.slice(0, 5).map((t) => `${CARTER_TOOL_NAME_PREFIX}${t.name}`),
+    bearerAttached: true,
+  };
+}
+
 async function main(): Promise<void> {
   const apiKey = process.env.ELEVENLABS_API_KEY;
   const agentId = process.env.CARTER_AGENT_ID;
@@ -261,6 +462,19 @@ async function main(): Promise<void> {
     cascadeNote = `cascade PATCH error: ${e instanceof Error ? e.message : String(e)}`;
   }
 
+  // 3b. Wave 2 — register every green + yellow Carter tool as a webhook tool and
+  //     set the agent's tool_ids to exactly that set. Isolated from the core
+  //     config patch above; throws loudly on any failure so we never leave the
+  //     agent with a partial tool set.
+  let toolReg:
+    | Awaited<ReturnType<typeof registerCarterTools>>
+    | { error: string };
+  try {
+    toolReg = await registerCarterTools(apiKey, url);
+  } catch (e) {
+    toolReg = { error: e instanceof Error ? e.message : String(e) };
+  }
+
   // 4. Post-call webhook wiring (Task 1.5 step 6). ElevenLabs references a
   //    WORKSPACE webhook resource by id (platform_settings.workspace_overrides
   //    .webhooks.post_call_webhook_id) — it is NOT a plain URL on the agent. We
@@ -301,11 +515,26 @@ async function main(): Promise<void> {
         system_prompt_len: typeof prompt.prompt === "string" ? prompt.prompt.length : null,
         enable_auth: auth.enable_auth,
         allowlist: auth.allowlist,
+        tool_registration: toolReg,
       },
       null,
       2,
     ),
   );
+
+  if ("error" in toolReg) {
+    console.error(`\n⚠️  Carter tool registration FAILED: ${toolReg.error}`);
+  } else if ("skipped" in toolReg) {
+    console.error(
+      `\nℹ️  Carter tool registration SKIPPED: ${toolReg.reason} — set it and re-run to register tools.`,
+    );
+  } else {
+    console.error(
+      `\n✅ Carter tools registered: ${toolReg.registered} (${toolReg.green} green + ${toolReg.yellow} yellow; ` +
+        `${toolReg.created} created / ${toolReg.updated} updated). RED tools skipped: ${toolReg.redSkipped}. ` +
+        `agent.tool_ids now = ${toolReg.toolIdsOnAgent}. Bearer secret attached: ${toolReg.bearerAttached}.`,
+    );
+  }
 
   if (llmApplied !== CARTER_LLM) {
     console.error(
