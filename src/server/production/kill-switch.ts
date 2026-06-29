@@ -42,6 +42,8 @@ import { AlertFactory, createAlert } from "../services/alert-service.js";
 import { isExchangeHalted } from "../services/exchange-status-service.js";
 import { isFirmSuspended } from "../services/prop-firm-health-service.js";
 import { isConnectivityDegraded } from "../lib/network-failover.js";
+import { notifyCritical } from "../services/notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 // ─── FINDING #3 FIX sentinel ─────────────────────────────────────────────────
 // Exported as a verifiable boolean so tests can assert the fix is active without
@@ -770,6 +772,62 @@ async function runLayerWithTimeout(
   return Promise.race([checkFn(), timeoutPromise]);
 }
 
+// ─── C-1 (2026-06-29): per-layer Discord labels for autonomous halt notification ─
+// Each entry provides operator-technical name + family-grade plain-English text.
+const LAYER_LABELS: Record<
+  number,
+  { name: string; familyWhat: string; familyAction: string }
+> = {
+  3: {
+    name: "Trailing Drawdown",
+    familyWhat:
+      "The trading bot has hit a large drawdown limit and is protecting the account from further losses.",
+    familyAction:
+      "No immediate action needed. Contact Tony if the account is not restored to normal within 1 business day.",
+  },
+  4: {
+    name: "Connectivity Degraded",
+    familyWhat:
+      "The bot detected a network problem and stopped trading to avoid bad fills.",
+    familyAction:
+      "Check the internet connection at home. If the connection looks normal, contact Tony.",
+  },
+  5: {
+    name: "Strategy Drift Detected",
+    familyWhat:
+      "The bot's strategies are drifting from their expected behavior; trading was paused automatically.",
+    familyAction: "No immediate action needed. Contact Tony to review.",
+  },
+  6: {
+    name: "CME Exchange Outage",
+    familyWhat:
+      "The futures exchange (CME) is down or halted, so the bot cannot trade safely.",
+    familyAction:
+      "Wait for the exchange to reopen. Contact Tony if the outage exceeds 2 hours.",
+  },
+  7: {
+    name: "Topstep Account Suspended",
+    familyWhat:
+      "The Topstep trading account has been flagged or suspended by the prop firm.",
+    familyAction:
+      "Contact Tony immediately — the trading account may need attention.",
+  },
+  8: {
+    name: "Macro Crisis Gate",
+    familyWhat:
+      "A macro-economic crisis signal was detected and trading was paused for safety.",
+    familyAction:
+      "No immediate action needed. Contact Tony if this persists beyond 1 trading day.",
+  },
+  9: {
+    name: "Windows Reboot Pending",
+    familyWhat:
+      "The home computer needs to restart, which could interrupt the bot.",
+    familyAction:
+      "Allow the computer to restart if it is safe to do so, or contact Tony.",
+  },
+};
+
 // ─── KillSwitch ───────────────────────────────────────────────────────────────
 
 class KillSwitch {
@@ -874,8 +932,9 @@ class KillSwitch {
   }
 
   /**
-   * Emits the kill_switch.layer_N_halted audit row and kill_switch:layer_halted SSE.
-   * Called only when a layer returns halted:true. Fire-and-forget (non-blocking).
+   * Emits the kill_switch.layer_N_halted audit row, kill_switch:layer_halted SSE,
+   * and — for layers 3–9 — a CRITICAL Discord notification so the operator is
+   * paged during unattended vacations. C-1 (2026-06-29).
    */
   private async _emitLayerHaltedSignals(
     decision: HaltDecision,
@@ -884,22 +943,24 @@ class KillSwitch {
     const layer = decision.layer ?? 0;
     const reason = decision.reason ?? "unknown";
 
-    // Audit row (non-blocking)
-    insertAuditRow({
-      action: `kill_switch.layer_${layer}_halted`,
-      entityType: "system",
-      entityId: null,
-      decisionAuthority: "system",
-      input: { layer, reason, detail: decision.detail ?? {} } as Record<string, unknown>,
-      result: { halted: true } as Record<string, unknown>,
-      status: "failure",
-      correlationId,
-    }).catch((auditErr) =>
+    // Audit row — awaited for halt durability (MED-4, 2026-06-29)
+    try {
+      await insertAuditRow({
+        action: `kill_switch.layer_${layer}_halted`,
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { layer, reason, detail: decision.detail ?? {} } as Record<string, unknown>,
+        result: { halted: true } as Record<string, unknown>,
+        status: "failure",
+        correlationId,
+      });
+    } catch (auditErr) {
       logger.error(
         { err: auditErr, layer },
-        `kill-switch L${layer}: halted audit_log write failed (non-blocking)`,
-      ),
-    );
+        `kill-switch L${layer}: halted audit_log write failed`,
+      );
+    }
 
     // SSE broadcast (non-blocking)
     broadcastSSE("kill_switch:layer_halted", {
@@ -914,6 +975,21 @@ class KillSwitch {
       { layer, reason, correlationId },
       `kill-switch: Layer ${layer} HALTED signal path — ${reason}`,
     );
+
+    // C-1 (2026-06-29): fire Discord on autonomous halt so operator is paged during vacation
+    const label = LAYER_LABELS[layer];
+    if (label) {
+      notifyCritical(
+        `Trading bot halted — Layer ${layer}: ${label.name}`,
+        appendFamilyGradePostscript(
+          `Kill-switch Layer ${layer} (${label.name}) halted all new entries. ` +
+            `Reason: ${reason}. CorrelationId: ${correlationId}.`,
+          label.familyWhat,
+          label.familyAction,
+        ),
+        { layer, reason, correlationId },
+      );
+    }
   }
 
   /**
@@ -1017,9 +1093,9 @@ class KillSwitch {
     // FINDING #3 FIX: Generate a correlationId for the mode-change audit row.
     const modeChangeCorrelationId = randomUUID();
 
-    // Audit log — non-blocking
-    db.insert(auditLog)
-      .values({
+    // Audit log — awaited for mode-change durability (MED-4, 2026-06-29)
+    try {
+      await db.insert(auditLog).values({
         action: "production.mode_changed",
         entityType: "system",
         entityId: null,
@@ -1028,10 +1104,10 @@ class KillSwitch {
         result: { mode, setBy, reason } as Record<string, unknown>,
         status: "success",
         correlationId: modeChangeCorrelationId,
-      })
-      .catch((err) =>
-        logger.error({ err }, "kill-switch: audit_log write failed (non-blocking)")
-      );
+      });
+    } catch (err) {
+      logger.error({ err }, "kill-switch: audit_log write failed");
+    }
 
     // SSE broadcast
     broadcastSSE("production:mode-changed", {
