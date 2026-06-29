@@ -89,9 +89,9 @@ const SYNONYMS: Array<[RegExp, string]> = [
 ];
 /** Fold a decision's object to a canonical key so two runs that captured the same decision match. */
 export function canonObject(s: string): string {
-  let t = (s || "").toLowerCase();
+  let t = (s || "").toLowerCase().replace(/_/g, " ");   // snake_case -> spaces so "session_high" === "session high"
   for (const [re, to] of SYNONYMS) t = t.replace(re, to);
-  return t.replace(UMBRELLA, " ").replace(/[^a-z0-9_ ]/g, " ").replace(/\s+/g, " ").trim();
+  return t.replace(UMBRELLA, " ").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
 }
 
 /** Stable atom id. ordinal disambiguates genuine duplicates of the SAME (type, canonical object). */

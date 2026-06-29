@@ -140,13 +140,16 @@ function resolveDeps(atoms: DecisionAtom[], depHints: Map<string, DepRef[]>, ato
     for (const h of depHints.get(a.id) ?? []) {
       expected++;
       const obj = canonObject(h.object ?? ""); const ev = (h.event ?? "").toLowerCase();
-      if (!obj) continue;
-      let best: DecisionAtom | undefined;
-      for (let i = (pos.get(a.id) ?? 0) - 1; i >= 0; i--) {                       // exact (event,object) key
-        if (ordered[i].object_canonical === obj && (!ev || (atomEvent.get(ordered[i].id) ?? "") === ev)) { best = ordered[i]; break; }
-      }
-      if (!best) for (let i = (pos.get(a.id) ?? 0) - 1; i >= 0; i--) {            // object-only fallback
-        if (ordered[i].object_canonical === obj) { best = ordered[i]; break; }
+      const depToks = obj.split(" ").filter((w) => w.length >= 3);
+      if (!depToks.length) continue;
+      // FUZZY key match: nearest PRIOR atom whose object shares >=50% of the dep's significant tokens (event bonus).
+      let best: DecisionAtom | undefined; let bestScore = 0.49;
+      for (let i = (pos.get(a.id) ?? 0) - 1; i >= 0; i--) {
+        const cand = ordered[i]; const cToks = cand.object_canonical.split(" ");
+        const inter = depToks.filter((t) => cToks.includes(t)).length;
+        let score = inter / depToks.length;
+        if (ev && (atomEvent.get(cand.id) ?? "") === ev) score += 0.25;
+        if (inter > 0 && score > bestScore) { bestScore = score; best = cand; if (score >= 1) break; }
       }
       if (best) { edges.push(best.id); resolved++; }
     }
