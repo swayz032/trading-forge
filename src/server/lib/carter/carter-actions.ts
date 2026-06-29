@@ -47,6 +47,14 @@ import { getBacktestConcurrencyStats } from "../../routes/backtests.js";
 import { insertAuditRowSafe } from "../../lib/audit-log-helper.js";
 import { createHmac } from "node:crypto";
 import { issueConfirmation, verifyConfirmation } from "./carter-confirm.js";
+// Wave 7 — RESEARCH lane (NON-strategy). Leaf imports only; carter-research pulls
+// the logger leaf + the pure reddit-cross-extract helper (no heavy graph).
+import { institutionalResearch, researchReddit } from "./carter-research.js";
+
+// In-process base URL for reusing the EXISTING extraction pipeline endpoints
+// (/api/agent/scout-extract + /api/agent/scout-ideas/pending) — same pattern as
+// autonomous-scout-runner.ts. Localhost in-process calls need no auth.
+const BACKEND_URL = `http://localhost:${process.env.PORT ?? 4000}`;
 
 // ─── Shared payload factories ─────────────────────────────────────────────────
 
@@ -262,36 +270,177 @@ async function fireScoutCycleHandler(_params: unknown): Promise<unknown> {
   return { status: "cycle_started", message: "Autonomous scout cycle started. It runs asynchronously for 3-10 minutes." };
 }
 
-// research_strategy_idea ──────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════════════
+// Wave 7 — STRATEGY lane: extract_youtube_strategy
+// ════════════════════════════════════════════════════════════════════════════
+// THE governance boundary: a strategy may enter Trading Forge through EXACTLY
+// ONE door — YouTube → the existing extraction pipeline → the PENDING scout
+// bucket. This handler plugs into that pipeline; it does NOT reimplement it and
+// it NEVER posts to the strict path. Web/Reddit are never strategy sources.
+//
+// Flow (mirrors autonomous-scout-runner.ts):
+//   1. fetchTranscriptWithRetry(videoId)         — existing transcript fetcher
+//   2. POST /api/agent/scout-extract             — existing extraction pipeline
+//   3. POST /api/agent/scout-ideas/pending       — existing pending-bucket deposit
+//                                                  (NEVER /scout-ideas/strict)
 
-async function researchStrategyIdeaHandler(params: unknown): Promise<unknown> {
-  const p = params as { query?: string; regime?: string; market?: string; depth?: string };
+/** Parse a YouTube video ID from a watch / youtu.be / shorts / embed URL. */
+function parseYoutubeVideoId(url: string): string | null {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.replace(/^www\./, "").toLowerCase();
+    if (host === "youtu.be") {
+      const seg = u.pathname.split("/").filter(Boolean)[0];
+      return seg && /^[\w-]{6,}$/.test(seg) ? seg : null;
+    }
+    if (host.endsWith("youtube.com")) {
+      const v = u.searchParams.get("v");
+      if (v && /^[\w-]{6,}$/.test(v)) return v;
+      // /shorts/<id> or /embed/<id>
+      const parts = u.pathname.split("/").filter(Boolean);
+      const idx = parts.findIndex((p) => p === "shorts" || p === "embed");
+      if (idx >= 0 && parts[idx + 1] && /^[\w-]{6,}$/.test(parts[idx + 1])) return parts[idx + 1];
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
-  if (!p.query || typeof p.query !== "string") {
-    return { error: "query is required" };
+async function extractYoutubeStrategyHandler(params: unknown): Promise<unknown> {
+  const p = params as { url?: string; title?: string };
+  const url = p.url;
+  if (!url || typeof url !== "string") {
+    return { error: "url is required" };
+  }
+  const videoId = parseYoutubeVideoId(url);
+  if (!videoId) {
+    return { error: "invalid_youtube_url", url };
   }
 
-  const results = await strategyHunt({
-    intent: "strategy research — institutional edge discovery",
-    query: p.query,
-    regime: p.regime,
-    market: p.market,
-    depth: (p.depth === "basic" || p.depth === "advanced") ? p.depth : "advanced",
-    maxResults: 10,
-  });
+  // 1. Fetch transcript via the EXISTING retry queue (dynamic import — keeps the
+  //    heavy services/index.js graph out of module load for the contract tests).
+  let transcript = "";
+  try {
+    const { fetchTranscriptWithRetry } = await import("../../services/transcript-fetch-queue.js");
+    const r = await fetchTranscriptWithRetry(videoId);
+    transcript = r.transcript ?? "";
+  } catch (err) {
+    logger.warn({ err: err instanceof Error ? err.message : String(err), videoId }, "carter: extract_youtube_strategy — transcript fetch failed");
+    return { error: "transcript_fetch_failed", url, message: err instanceof Error ? err.message : String(err) };
+  }
+  if (transcript.length < 200) {
+    return { extracted: false, reason: "transcript_too_short", url, transcript_len: transcript.length, deposited: false };
+  }
 
-  const top = results.results.slice(0, 5).map((r) => ({
-    title: (r as unknown as Record<string, unknown>).title ?? (r as unknown as Record<string, unknown>).snippet,
-    url: (r as unknown as Record<string, unknown>).url,
-    provider: (r as unknown as Record<string, unknown>).provider,
-  }));
+  // 2. Run the EXISTING extraction pipeline (scout-extract). sourceProvider must
+  //    be one of the route's enum values; "exa" is the runner's YouTube choice
+  //    (framework-overlay rewrites metadata.source downstream).
+  let ideas: Array<Record<string, unknown>> = [];
+  let extractionMeta: Record<string, unknown> = {};
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/agent/scout-extract`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sourceUrl: url,
+        markdown: transcript,
+        sourceProvider: "exa",
+        title: typeof p.title === "string" ? p.title.slice(0, 500) : "",
+      }),
+      signal: AbortSignal.timeout(300_000),
+    });
+    const j = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    ideas = Array.isArray(j.ideas) ? (j.ideas as Array<Record<string, unknown>>) : [];
+    extractionMeta = {
+      extraction_mode: j.extraction_mode ?? null,
+      instrument_classification: j.instrument_classification ?? null,
+      reason: j.reason ?? null,
+    };
+  } catch (err) {
+    logger.error({ err: err instanceof Error ? err.message : String(err), url }, "carter: extract_youtube_strategy — scout-extract failed");
+    return { error: "scout_extract_failed", url, message: err instanceof Error ? err.message : String(err) };
+  }
 
-  return {
-    query: results.query,
-    totalFound: results.totalAfterGraveyard,
-    perProvider: results.perProvider,
-    topResults: top,
+  if (ideas.length === 0) {
+    return { extracted: false, reason: "no_strategy_extracted", url, ...extractionMeta, deposited: false };
+  }
+
+  // 3. Deposit the best idea into the PENDING bucket — NEVER the strict path.
+  const idea = ideas[0];
+  const market = (["MES", "MNQ", "MCL"].includes(String(idea.market))) ? String(idea.market) : "MES";
+  const depositBody: Record<string, unknown> = {
+    thesis: String(idea.thesis ?? `YouTube-extracted strategy from ${url}`).slice(0, 2000),
+    market,
+    timeframe: String(idea.timeframe ?? "5m"),
+    entry_rules: String(idea.entry_rules ?? "").slice(0, 2000) || "YouTube extraction; framework overlay applies risk rules.",
+    exit_rules: String(idea.exit_rules ?? "").slice(0, 2000) || "Style C framework overlay applies.",
+    risk_rules: String(idea.risk_rules ?? "").slice(0, 1000) || "CLAUDE.md §4 framework risk rules apply post-overlay.",
+    source_url: url,
+    regime: String(idea.preferred_regime ?? idea.regime ?? "TRENDING"),
+    concept_name: String(idea.concept_name ?? idea.name ?? `youtube_${videoId}`),
+    source_provider: "youtube_transcript_npm",
+    layer: "youtube",
+    is_cross_validation_result: false,
   };
+  // Forward rich DSL fields when present (same set as runner postLayerMention).
+  for (const k of [
+    "name", "entry_indicator", "entry_archetype", "entry_params", "entry_condition",
+    "entry_type", "direction", "exit_type", "exit_params", "stop_loss_atr_multiple",
+    "take_profit_atr_multiple", "preferred_regime", "session_filter", "extraction_confidence",
+    "confluence_factors", "min_factors_satisfied", "source_claim_win_rate", "source_claim_avg_r",
+    "symbols", "max_contracts", "base_contracts", "tier_increment",
+  ]) {
+    if (idea[k] !== undefined && idea[k] !== null) depositBody[k] = idea[k];
+  }
+
+  let deposit: Record<string, unknown> = {};
+  try {
+    const depRes = await fetch(`${BACKEND_URL}/api/agent/scout-ideas/pending`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(depositBody),
+      signal: AbortSignal.timeout(45_000),
+    });
+    deposit = (await depRes.json().catch(() => ({}))) as Record<string, unknown>;
+  } catch (err) {
+    logger.error({ err: err instanceof Error ? err.message : String(err), url }, "carter: extract_youtube_strategy — pending deposit failed");
+    return { extracted: true, strategy: idea, ...extractionMeta, deposited: false, deposit_error: err instanceof Error ? err.message : String(err), deposit_path: "pending" };
+  }
+
+  logger.info({ url, videoId, conceptName: depositBody.concept_name, market }, "carter: extract_youtube_strategy — extracted + deposited to pending");
+  return {
+    extracted: true,
+    url,
+    videoId,
+    strategy: idea,
+    ...extractionMeta,
+    deposited: true,
+    deposit,
+    deposit_path: "pending", // GUARDRAIL: always pending, never strict
+  };
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// Wave 7 — RESEARCH lane: research_reddit + institutional_research (NON-strategy)
+// ════════════════════════════════════════════════════════════════════════════
+
+// research_reddit ─────────────────────────────────────────────────────────────
+async function researchRedditHandler(params: unknown): Promise<unknown> {
+  const p = params as { topic?: string };
+  if (!p.topic || typeof p.topic !== "string") {
+    return { error: "topic is required" };
+  }
+  return researchReddit({ topic: p.topic });
+}
+
+// institutional_research ──────────────────────────────────────────────────────
+async function institutionalResearchHandler(params: unknown): Promise<unknown> {
+  const p = params as { question?: string; includeParallel?: boolean };
+  if (!p.question || typeof p.question !== "string") {
+    return { error: "question is required" };
+  }
+  return institutionalResearch({ question: p.question, includeParallel: p.includeParallel === true });
 }
 
 // competitive_intel ───────────────────────────────────────────────────────────
@@ -574,9 +723,11 @@ export const CARTER_ACTION_HANDLERS: Record<string, (params: unknown) => Promise
   run_monte_carlo:          runMonteCarloHandler,
   run_matrix:               runMatrixHandler,
   fire_scout_cycle:         fireScoutCycleHandler,
-  research_strategy_idea:   researchStrategyIdeaHandler,
   competitive_intel:        competitiveIntelHandler,
   scan_youtube_for_setups:  scanYouTubeForSetupsHandler,
+  extract_youtube_strategy: extractYoutubeStrategyHandler,
+  research_reddit:          researchRedditHandler,
+  institutional_research:   institutionalResearchHandler,
   deposit_pending_mention:  depositPendingMentionHandler,
   evaluate_kill_signal:     evaluateKillSignalHandler,
 };

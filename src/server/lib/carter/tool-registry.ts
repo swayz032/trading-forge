@@ -166,22 +166,38 @@ export const CARTER_TOOLS: CarterTool[] = [
     handler: "fire_scout_cycle",
   },
   {
-    name: "research_strategy_idea",
-    description: "Searches across Brave, Tavily, Exa, and Parallel.ai for strategy ideas matching a query. Returns the top 5 results and provider breakdown.",
-    tier: "green",
-    handler: "research_strategy_idea",
-  },
-  {
     name: "competitive_intel",
     description: "Multi-provider competitive intelligence search on a topic (trader methodology, institutional edge, quant approach). Returns the top 5 results.",
     tier: "green",
     handler: "competitive_intel",
   },
+
+  // ── STRATEGY lane (Wave 7) — strategies enter ONLY via YouTube extraction ────
   {
     name: "scan_youtube_for_setups",
-    description: "Searches YouTube Data API for day-trading videos matching a topic. Returns candidate list (title+URL) only — does NOT extract transcripts. Feed results to the scout cycle for processing.",
+    description: "STRATEGY LANE — YouTube discovery only. Searches YouTube Data API for day-trading videos matching a topic and returns a candidate list (title+URL). Does NOT extract transcripts. Pairs with extract_youtube_strategy: scan first, then extract a chosen video's strategy.",
     tier: "green",
     handler: "scan_youtube_for_setups",
+  },
+  {
+    name: "extract_youtube_strategy",
+    description: "STRATEGY LANE — the ONLY way a strategy enters the system. Takes a YouTube URL, runs the existing extraction pipeline on its transcript, and deposits the result into the pending scout bucket (never the strict path). Web/Reddit are NEVER used to source strategies. Params: { url }.",
+    tier: "green",
+    handler: "extract_youtube_strategy",
+  },
+
+  // ── RESEARCH lane (Wave 7) — NON-strategy research only ──────────────────────
+  {
+    name: "research_reddit",
+    description: "RESEARCH LANE (non-strategy) — general Reddit community/sentiment/market research across finance subs (sort=relevance). Returns top posts + an LLM summary. Explicitly NOT a strategy source. Params: { topic }.",
+    tier: "green",
+    handler: "research_reddit",
+  },
+  {
+    name: "institutional_research",
+    description: "RESEARCH LANE (non-strategy) — top-tier institutional-grade research. Fans out across Brave (web), Exa (neural + research-paper whitepapers), Tavily (web), and Reddit in parallel with per-provider timeouts and graceful degradation, leaning to >=2025 sources, then synthesizes a cited brief. NEVER sources a trading strategy. Params: { question, includeParallel? }.",
+    tier: "green",
+    handler: "institutional_research",
   },
   {
     name: "deposit_pending_mention",

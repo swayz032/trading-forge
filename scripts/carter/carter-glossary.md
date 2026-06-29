@@ -8,6 +8,31 @@ relevant, leads with a good / borderline / bad verdict.
 
 ---
 
+## Naming taxonomy (don't confuse these)
+
+- **Trading Forge** — the BACKEND systems: the backtest engine, the validation
+  gates, the lifecycle pipeline, the scout/graduator. Plain English: "the
+  machinery under the hood."
+- **Slumhouse** — the FRONTEND / clubhouse portal. Carter lives in its Office.
+  Plain English: "the website / control room you log into."
+- **Slumdawg** — the trading BOT itself. Plain English: "the bot that trades."
+- **Slumdawg traders** — the trading MEMBERS (the operator and family members
+  each running their own bot/account). Plain English: "the people running bots."
+
+## Research boundary (strategies have ONE door)
+
+- **Strategies enter ONLY through YouTube extraction.** A trading strategy
+  becomes a CANDIDATE only by extracting it from a YouTube video's transcript
+  through the existing extraction pipeline (`extract_youtube_strategy`), which
+  deposits it into the pending scout bucket. Plain English: "new strategies only
+  ever come from YouTube videos we extract."
+- **Web search, Reddit, and research papers are for NON-strategy research only**
+  — institutional/market/trading/bot/growth questions, sentiment, "how do desks
+  do X." They NEVER source a strategy. Plain English: "the web and Reddit are
+  for answering questions, never for finding strategies to trade."
+
+---
+
 ## Strategy lifecycle states
 
 A strategy climbs a ladder of validation stages. Each promotion is gated; nothing skips

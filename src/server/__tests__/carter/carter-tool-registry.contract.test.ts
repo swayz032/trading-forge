@@ -11,7 +11,9 @@
  *      (READ / ACTION / CONFIRM).
  *   4. No handler key in any map is absent from the registry.
  *   5. Every RED tool has tier 'red', handler null, and NO entry in any handler map.
- *   6. Counts: 16 read + 10 action + 18 yellow (9 propose/confirm pairs) + 16 red.
+ *   6. Counts: 16 read + 12 action + 18 yellow (9 propose/confirm pairs) + 16 red.
+ *      (Wave 7: research_strategy_idea removed; +extract_youtube_strategy,
+ *       +research_reddit, +institutional_research → action 10 → 12.)
  */
 
 // ── Mocks — prevent side-effectful service imports ────────────────────────────
@@ -128,9 +130,11 @@ const REQUIRED_ACTION_TOOLS = [
   "run_monte_carlo",
   "run_matrix",
   "fire_scout_cycle",
-  "research_strategy_idea",
   "competitive_intel",
   "scan_youtube_for_setups",
+  "extract_youtube_strategy",
+  "research_reddit",
+  "institutional_research",
   "deposit_pending_mention",
   "evaluate_kill_signal",
 ] as const;
@@ -179,9 +183,9 @@ const REQUIRED_TOOLS = [
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe("Carter tool registry — structural contract", () => {
-  it("has exactly 60 tools (16 read + 10 action + 18 yellow + 16 red)", () => {
-    expect(CARTER_TOOLS).toHaveLength(60);
-    expect(CARTER_TOOLS.filter((t) => t.tier === "green")).toHaveLength(26);
+  it("has exactly 62 tools (16 read + 12 action + 18 yellow + 16 red)", () => {
+    expect(CARTER_TOOLS).toHaveLength(62);
+    expect(CARTER_TOOLS.filter((t) => t.tier === "green")).toHaveLength(28);
     expect(CARTER_TOOLS.filter((t) => t.tier === "yellow")).toHaveLength(18);
     expect(CARTER_TOOLS.filter((t) => t.tier === "red")).toHaveLength(16);
   });
@@ -282,8 +286,8 @@ describe("Carter tool registry — structural contract", () => {
     expect(Object.keys(CARTER_READ_HANDLERS)).toHaveLength(16);
   });
 
-  it("CARTER_ACTION_HANDLERS exports exactly 10 functions", () => {
-    expect(Object.keys(CARTER_ACTION_HANDLERS)).toHaveLength(10);
+  it("CARTER_ACTION_HANDLERS exports exactly 12 functions", () => {
+    expect(Object.keys(CARTER_ACTION_HANDLERS)).toHaveLength(12);
   });
 
   it("CARTER_CONFIRM_HANDLERS exports exactly 18 functions (9 propose + 9 confirm)", () => {

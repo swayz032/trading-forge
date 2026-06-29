@@ -101,6 +101,21 @@ vi.mock("../../services/search-router.js", () => ({
   strategyHunt: (...args: unknown[]) => mockStrategyHunt(...args),
 }));
 
+// Wave 7 — transcript fetch (dynamic import inside extract_youtube_strategy).
+const mockFetchTranscript = vi.fn();
+vi.mock("../../services/transcript-fetch-queue.js", () => ({
+  fetchTranscriptWithRetry: (...args: unknown[]) => mockFetchTranscript(...args),
+}));
+
+// Wave 7 — research lane handlers delegate to carter-research (tested in depth
+// in carter-research.test.ts). Here we only assert the handler delegates.
+const mockInstitutionalResearch = vi.fn();
+const mockResearchReddit = vi.fn();
+vi.mock("../../lib/carter/carter-research.js", () => ({
+  institutionalResearch: (...args: unknown[]) => mockInstitutionalResearch(...args),
+  researchReddit: (...args: unknown[]) => mockResearchReddit(...args),
+}));
+
 vi.mock("../../services/strategy-fingerprint.js", () => ({
   computeConceptFingerprintHash: vi.fn(() => "fp-hash-abc"),
   extractEntryArchetype: vi.fn(() => "breakout"),
@@ -137,7 +152,7 @@ vi.mock("drizzle-orm", () => ({
 
 // ── Imports ───────────────────────────────────────────────────────────────────
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { CARTER_ACTION_HANDLERS } from "../../lib/carter/carter-actions.js";
 
 // ── Helper ────────────────────────────────────────────────────────────────────
@@ -151,15 +166,17 @@ const getHandler = (name: string) => {
 // ─── Test suites ──────────────────────────────────────────────────────────────
 
 describe("CARTER_ACTION_HANDLERS — map structure", () => {
-  it("exports exactly 10 handlers", () => {
-    expect(Object.keys(CARTER_ACTION_HANDLERS)).toHaveLength(10);
+  it("exports exactly 12 handlers", () => {
+    expect(Object.keys(CARTER_ACTION_HANDLERS)).toHaveLength(12);
   });
 
   it("all expected keys are present", () => {
     const expected = [
       "run_backtest", "run_walk_forward", "run_monte_carlo", "run_matrix",
-      "fire_scout_cycle", "research_strategy_idea", "competitive_intel",
-      "scan_youtube_for_setups", "deposit_pending_mention", "evaluate_kill_signal",
+      "fire_scout_cycle", "competitive_intel",
+      "scan_youtube_for_setups", "extract_youtube_strategy",
+      "research_reddit", "institutional_research",
+      "deposit_pending_mention", "evaluate_kill_signal",
     ];
     for (const key of expected) {
       expect(CARTER_ACTION_HANDLERS).toHaveProperty(key);
@@ -492,38 +509,139 @@ describe("run_walk_forward", () => {
   });
 });
 
-// ─── research_strategy_idea and competitive_intel ────────────────────────────
+// ─── Wave 7 — extract_youtube_strategy (STRATEGY lane) ───────────────────────
+// THE governance boundary: strategies enter ONLY via YouTube extraction, and
+// always deposit to the PENDING bucket — NEVER the strict path.
 
-describe("research_strategy_idea", () => {
+describe("extract_youtube_strategy — YouTube-only strategy lane", () => {
+  const realFetch = globalThis.fetch;
+  let fetchMock: ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it("returns topResults and totalFound from strategyHunt", async () => {
-    mockStrategyHunt.mockResolvedValue({
-      query: "vwap pullback",
-      depth: "advanced",
-      totalRaw: 10,
-      totalFused: 8,
-      totalAfterGraveyard: 5,
-      perProvider: { brave: { count: 3, ok: true }, tavily: { count: 2, ok: true } },
-      results: [
-        { title: "VWAP Pullback Guide", url: "https://example.com/1", provider: "brave" },
-        { title: "VWAP Trade Setup", url: "https://example.com/2", provider: "tavily" },
-      ],
+    fetchMock = vi.fn(async (url: string) => {
+      if (String(url).includes("/scout-extract")) {
+        return {
+          ok: true,
+          json: async () => ({
+            extracted: true,
+            extraction_mode: "single_pass",
+            ideas: [{
+              market: "MES", timeframe: "5m", thesis: "ORB long on opening range break with volume",
+              entry_rules: "Enter long when price breaks the 15m opening range high with volume confirmation",
+              exit_rules: "Style C 33/33/34 scale-out", risk_rules: "1.5x ATR structural stop",
+              concept_name: "opening_range_breakout", name: "ORB MES",
+              entry_indicator: "opening_range_breakout", direction: "long",
+            }],
+          }),
+        } as unknown as Response;
+      }
+      if (String(url).includes("/scout-ideas/pending")) {
+        return { ok: true, json: async () => ({ accepted: true, bucket_id: "bk-1", path: "pending" }) } as unknown as Response;
+      }
+      throw new Error(`unexpected fetch URL: ${url}`);
     });
-    const handler = getHandler("research_strategy_idea");
-    const result = await handler({ query: "vwap pullback" }) as Record<string, unknown>;
-
-    expect(result.totalFound).toBe(5);
-    expect(Array.isArray(result.topResults)).toBe(true);
-    expect((result.topResults as unknown[]).length).toBeLessThanOrEqual(5);
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
   });
 
-  it("returns error when query is missing", async () => {
-    const handler = getHandler("research_strategy_idea");
+  afterEach(() => { globalThis.fetch = realFetch; });
+
+  it("fetches transcript, calls scout-extract, and deposits to PENDING (never strict)", async () => {
+    mockFetchTranscript.mockResolvedValue({ transcript: "x".repeat(800), attempts: [], finalOutcome: "captioned_succeeded" });
+    const handler = getHandler("extract_youtube_strategy");
+    const result = await handler({ url: "https://www.youtube.com/watch?v=abc123XYZ" }) as Record<string, unknown>;
+
+    expect(mockFetchTranscript).toHaveBeenCalledWith("abc123XYZ");
+    const calledUrls = fetchMock.mock.calls.map((c) => String(c[0]));
+    expect(calledUrls.some((u) => u.includes("/api/agent/scout-extract"))).toBe(true);
+    expect(calledUrls.some((u) => u.includes("/api/agent/scout-ideas/pending"))).toBe(true);
+    // GUARDRAIL: never the strict path
+    expect(calledUrls.some((u) => u.includes("/scout-ideas/strict"))).toBe(false);
+
+    expect(result.extracted).toBe(true);
+    expect(result.deposited).toBe(true);
+    expect(result.deposit_path).toBe("pending");
+  });
+
+  it("deposits with source_provider youtube_transcript_npm and layer youtube", async () => {
+    mockFetchTranscript.mockResolvedValue({ transcript: "x".repeat(800), attempts: [], finalOutcome: "captioned_succeeded" });
+    const handler = getHandler("extract_youtube_strategy");
+    await handler({ url: "https://youtu.be/abc123XYZ" });
+
+    const pendingCall = fetchMock.mock.calls.find((c) => String(c[0]).includes("/scout-ideas/pending"));
+    expect(pendingCall).toBeDefined();
+    const body = JSON.parse((pendingCall![1] as { body: string }).body);
+    expect(body.layer).toBe("youtube");
+    expect(body.source_provider).toBe("youtube_transcript_npm");
+    expect(body.is_cross_validation_result).toBe(false);
+  });
+
+  it("returns error when url is missing", async () => {
+    const handler = getHandler("extract_youtube_strategy");
+    const result = await handler({}) as Record<string, unknown>;
+    expect(result.error).toBe("url is required");
+    expect(mockFetchTranscript).not.toHaveBeenCalled();
+  });
+
+  it("returns invalid_youtube_url for a non-YouTube URL", async () => {
+    const handler = getHandler("extract_youtube_strategy");
+    const result = await handler({ url: "https://example.com/article" }) as Record<string, unknown>;
+    expect(result.error).toBe("invalid_youtube_url");
+  });
+
+  it("does NOT call scout-extract when transcript is too short", async () => {
+    mockFetchTranscript.mockResolvedValue({ transcript: "short", attempts: [], finalOutcome: "captioned_failed" });
+    const handler = getHandler("extract_youtube_strategy");
+    const result = await handler({ url: "https://www.youtube.com/watch?v=abc123XYZ" }) as Record<string, unknown>;
+    expect(result.extracted).toBe(false);
+    expect(result.reason).toBe("transcript_too_short");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+// ─── Wave 7 — research lane handlers delegate to carter-research ──────────────
+
+describe("research_reddit — delegates to carter-research (NON-strategy)", () => {
+  beforeEach(() => { vi.clearAllMocks(); });
+
+  it("delegates to researchReddit with the topic", async () => {
+    mockResearchReddit.mockResolvedValue({ topic: "FOMC", summary: "…", posts: [], count: 0, note: "" });
+    const handler = getHandler("research_reddit");
+    const result = await handler({ topic: "FOMC reaction" }) as Record<string, unknown>;
+    expect(mockResearchReddit).toHaveBeenCalledWith({ topic: "FOMC reaction" });
+    expect(result.topic).toBe("FOMC");
+  });
+
+  it("returns error when topic is missing", async () => {
+    const handler = getHandler("research_reddit");
     const result = await handler({}) as Record<string, unknown>;
     expect(result.error).toBeDefined();
+    expect(mockResearchReddit).not.toHaveBeenCalled();
+  });
+});
+
+describe("institutional_research — delegates to carter-research (NON-strategy)", () => {
+  beforeEach(() => { vi.clearAllMocks(); });
+
+  it("delegates to institutionalResearch with question + includeParallel", async () => {
+    mockInstitutionalResearch.mockResolvedValue({ question: "q", brief: "b", sources: [], providers_ok: [], providers_failed: [], synthesized_by: "ollama", elapsed_ms: 1 });
+    const handler = getHandler("institutional_research");
+    await handler({ question: "How do desks size kill switches?", includeParallel: true });
+    expect(mockInstitutionalResearch).toHaveBeenCalledWith({ question: "How do desks size kill switches?", includeParallel: true });
+  });
+
+  it("defaults includeParallel to false", async () => {
+    mockInstitutionalResearch.mockResolvedValue({ question: "q", brief: "b", sources: [], providers_ok: [], providers_failed: [], synthesized_by: "ollama", elapsed_ms: 1 });
+    const handler = getHandler("institutional_research");
+    await handler({ question: "q" });
+    expect(mockInstitutionalResearch).toHaveBeenCalledWith({ question: "q", includeParallel: false });
+  });
+
+  it("returns error when question is missing", async () => {
+    const handler = getHandler("institutional_research");
+    const result = await handler({}) as Record<string, unknown>;
+    expect(result.error).toBeDefined();
+    expect(mockInstitutionalResearch).not.toHaveBeenCalled();
   });
 });
 
