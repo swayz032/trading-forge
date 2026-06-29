@@ -857,12 +857,17 @@ def _apply_static_styleC_management(
     )
     _symbol_static: str = getattr(spec, "symbol", None) or "UNKNOWN"
 
-    # BACKTEST_STATIC_C_PARTIALS_ENABLED (default OFF).
-    # OFF (default): byte-identical with all historical runs — existing single-TP path.
-    # ON: 33/33/34 TP1/TP2/Chandelier-runner path matching paper/live Style C economics.
+    # BACKTEST_STATIC_C_PARTIALS_ENABLED (default ON — H-5 2026-06-29).
+    # ON (default): 33/33/34 TP1/TP2/Chandelier-runner path matching paper/live Style C economics.
+    #   TP1 33% @ +1.0R → stop moves to BE+1 tick
+    #   TP2 33% @ +2.0R (flat structural)
+    #   Runner 34% — Chandelier(14, 2.0) trail until time-stop or signal
+    # OFF: byte-identical with pre-H-5 historical runs — existing single-TP path.
     # This flag is read ONCE per call so callers can toggle it between calls deterministically.
+    # Parity validated 2026-06-29: blending math matches paper engine bookPartialClose
+    # 33/33/34 economics (test_static_c_partials_ab.py, test_fix5_static_stylec_be_tick.py).
     _USE_PARTIALS: bool = (
-        os.environ.get("BACKTEST_STATIC_C_PARTIALS_ENABLED", "").lower() in ("1", "true", "yes")
+        os.environ.get("BACKTEST_STATIC_C_PARTIALS_ENABLED", "true").lower() not in ("0", "false", "no")
     )
     if _USE_PARTIALS:
         from datetime import datetime as _sc_dt
