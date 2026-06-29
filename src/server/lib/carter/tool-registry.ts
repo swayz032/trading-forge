@@ -184,6 +184,33 @@ export const CARTER_TOOLS: CarterTool[] = [
     handler: "read_system_map",
   },
 
+  // ── Recommendation-engine tools (Tier: green) — grounded raw material so ─────
+  //    Carter's GPT-5.4 brain can recommend improvements/fixes. Read-only.
+  {
+    name: "diagnose_pipeline",
+    description: "Diagnoses where strategies are stuck in the lifecycle pipeline. Returns stage_counts (strategies grouped by lifecycle state), recent_blocks (top block-actions from the last 14 days of audit_log with sample reasons), oldest_stuck (strategies whose latest lifecycle transition is oldest, with days since), and a plain-English summary. No params.",
+    tier: "green",
+    handler: "diagnose_pipeline",
+  },
+  {
+    name: "analyze_gate_blocks",
+    description: "FAST block-FREQUENCY view of which gates/reasons are rejecting signals (NOT the slow Python costing-vs-saving counterfactual). Reads paper_signal_logs (acted=false), falling back to audit_log block rows. Returns since_days, total_blocked, and by_gate frequency counts. Params: { strategyName?, sinceDays? } (sinceDays default 7, clamped 1-60).",
+    tier: "green",
+    handler: "analyze_gate_blocks",
+  },
+  {
+    name: "review_strategy",
+    description: "Returns a CRITIQUE BUNDLE for one strategy (raw material — Carter writes the actual critique): lifecycle state, symbols, entry_quality, position_size, exit_plan_config, latest backtest metrics (sharpe/wfe/pbo/bif/profit_factor/created_at), Monte Carlo survival (probability_of_ruin_ci_high), and the likely blocking gate. Identify by id or name. Params: { strategyId?, name? } (one required).",
+    tier: "green",
+    handler: "review_strategy",
+  },
+  {
+    name: "find_hardening_opportunities",
+    description: "Raw material for 'what should I fix': recent_errors (last ~10 error/critical audit rows), stale_strategies (latest backtest older than BACKTEST_STALENESS_DAYS, top ~5), stuck_pre_paper (CANDIDATE/TESTING strategies, top ~5), open_issues (from carter_issues if present), and a summary. No params.",
+    tier: "green",
+    handler: "find_hardening_opportunities",
+  },
+
   // ── Action tools (Tier: green) — capital-SAFE, never bypass a gate ───────────
 
   {
@@ -494,6 +521,24 @@ export const CARTER_PARAMS_SCHEMAS: Record<string, Record<string, unknown>> = {
       section: { type: "string", description: "Optional heading to read (e.g. 'API Routes', 'Scheduler Jobs'). Omit to list all available headings." },
     },
     required: [],
+  },
+  // ── recommendation engine (green) ───────────────────────────────────────────
+  analyze_gate_blocks: {
+    type: "object",
+    properties: {
+      strategyName: { type: "string", description: "Optional: restrict the block-frequency view to one strategy by name." },
+      sinceDays: { type: "number", description: "Lookback window in days (default 7, clamped 1-60)." },
+    },
+    required: [],
+  },
+  review_strategy: {
+    type: "object",
+    properties: {
+      strategyId: { type: "string", description: "Strategy UUID. Provide this OR name." },
+      name: { type: "string", description: "Strategy name. Provide this OR strategyId." },
+    },
+    required: [],
+    description: "Identify the strategy by id or name (one of the two).",
   },
   // ── actions (green) ─────────────────────────────────────────────────────────
   run_backtest: {

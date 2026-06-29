@@ -130,6 +130,11 @@ const REQUIRED_READ_TOOLS = [
   "trace_correlation",
   "read_recent_decisions",
   "read_system_map",
+  // Recommendation-engine tools (carter-recommend.ts) — grounded raw material for fixes
+  "diagnose_pipeline",
+  "analyze_gate_blocks",
+  "review_strategy",
+  "find_hardening_opportunities",
 ] as const;
 
 const REQUIRED_ACTION_TOOLS = [
@@ -191,9 +196,9 @@ const REQUIRED_TOOLS = [
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe("Carter tool registry — structural contract", () => {
-  it("has exactly 69 tools (23 read + 12 action + 18 yellow + 16 red)", () => {
-    expect(CARTER_TOOLS).toHaveLength(69);
-    expect(CARTER_TOOLS.filter((t) => t.tier === "green")).toHaveLength(35);
+  it("has exactly 73 tools (27 read + 12 action + 18 yellow + 16 red)", () => {
+    expect(CARTER_TOOLS).toHaveLength(73);
+    expect(CARTER_TOOLS.filter((t) => t.tier === "green")).toHaveLength(39);
     expect(CARTER_TOOLS.filter((t) => t.tier === "yellow")).toHaveLength(18);
     expect(CARTER_TOOLS.filter((t) => t.tier === "red")).toHaveLength(16);
   });
@@ -290,8 +295,8 @@ describe("Carter tool registry — structural contract", () => {
     }
   });
 
-  it("CARTER_READ_HANDLERS exports exactly 23 functions (16 base + 7 introspection)", () => {
-    expect(Object.keys(CARTER_READ_HANDLERS)).toHaveLength(23);
+  it("CARTER_READ_HANDLERS exports exactly 27 functions (16 base + 7 introspection + 4 recommend)", () => {
+    expect(Object.keys(CARTER_READ_HANDLERS)).toHaveLength(27);
   });
 
   it("CARTER_ACTION_HANDLERS exports exactly 12 functions", () => {

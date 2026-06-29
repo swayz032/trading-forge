@@ -574,6 +574,12 @@ import { listOpenIssues } from "./carter-issues-store.js";
 //    dispatches them via the same single merged map.
 import { CARTER_INTROSPECT_HANDLERS } from "./carter-introspect.js";
 
+// ── Recommendation-engine handlers (diagnose_pipeline, analyze_gate_blocks,
+//    review_strategy, find_hardening_opportunities) — grounded raw material for
+//    Carter's GPT-5.4 brain to recommend improvements/fixes. Spread into
+//    CARTER_READ_HANDLERS below alongside the introspection map.
+import { CARTER_RECOMMEND_HANDLERS } from "./carter-recommend.js";
+
 async function getCurrentIssues(_params: unknown): Promise<unknown> {
   const issues = listOpenIssues();
 
@@ -639,5 +645,7 @@ export const CARTER_READ_HANDLERS: Record<string, (params: unknown) => Promise<u
   get_current_issues:         getCurrentIssues,
   // ── Introspection tools (carter-introspect.ts) ──────────────────────────────
   ...CARTER_INTROSPECT_HANDLERS,
+  // ── Recommendation-engine tools (carter-recommend.ts) ───────────────────────
+  ...CARTER_RECOMMEND_HANDLERS,
 };
 
