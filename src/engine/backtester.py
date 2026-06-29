@@ -2232,9 +2232,8 @@ def _apply_max_trades_per_day(
         combined = long_entries.astype(np.int32) + short_entries.astype(np.int32)
 
         # Per-day cumulative sum including this bar.
-        # pd.Series.groupby preserves original row order within each group, so
-        # cumsum() matches the sequential left-to-right counting of the old loop.
-        day_series = pd.Series(day_strings)
+        # DataFrame.groupby(sort=False) preserves original row order within each group,
+        # so cumsum() matches the sequential left-to-right counting of the old loop.
         day_cumsum = (
             pd.DataFrame({"day": day_strings, "combined": combined.astype(np.int64)})
             .groupby("day", sort=False)["combined"]
