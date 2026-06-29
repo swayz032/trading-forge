@@ -609,106 +609,16 @@ def compute_information_ratio(
     return float(ir)
 
 
-def compute_pbo(
-    walk_forward_windows: list[dict],
-    metric: str = "sharpe_ratio",
-) -> dict:
-    """Probability of Backtest Overfitting — combinatorial analysis of WF windows.
-
-    For M windows, compute all (M choose M/2) combinations.
-    For each combo: rank strategies on IS half, check if top-ranked strategy
-    is also top on OOS half. PBO = fraction where IS-best is OOS-worst-half.
-
-    Simplified single-strategy version: checks if OOS performance degrades
-    relative to what IS ranking would predict.
-
-    Package boundary: this function is wired into walk_forward.py aggregation
-    (Wave 27.5 Pass B HIGH #3). It is always called when >= 4 WF windows are
-    present — callers no longer need to invoke it manually.
-
-    Returns dict with keys:
-      pbo            : float in [0, 1], or None when insufficient windows
-      interpretation : human-readable band label
-      n_combinations : number of C(M, M//2) combos evaluated
-
-    The caller (walk_forward.py) adds:
-      pbo_pass       : bool — pbo <= PBO_OVERFIT_THRESHOLD (default 0.5)
-      pbo_threshold  : the threshold used
-      pbo_p_value    : None (reserved for Bayesian extension)
-    """
-    from itertools import combinations
-
-    n_windows = len(walk_forward_windows)
-    if n_windows < 4:
-        return {
-            "pbo": None,
-            "interpretation": f"Need at least 4 walk-forward windows for PBO (have {n_windows}).",
-            "n_combinations": 0,
-            "pbo_p_value": None,  # Insufficient data
-        }
-
-    # Extract OOS metric values per window
-    oos_values = []
-    for w in walk_forward_windows:
-        metrics = w.get("oos_metrics", {})
-        val = metrics.get(metric, 0)
-        oos_values.append(float(val))
-
-    half = n_windows // 2
-    n_overfit = 0
-    n_combos = 0
-
-    # For each combination of windows as "IS proxy"
-    for is_indices in combinations(range(n_windows), half):
-        oos_indices = [i for i in range(n_windows) if i not in is_indices]
-
-        # IS performance = mean of selected windows' OOS metrics (proxy for IS ranking)
-        is_mean = sum(oos_values[i] for i in is_indices) / len(is_indices)
-        oos_mean = sum(oos_values[i] for i in oos_indices) / len(oos_indices)
-
-        # Overfit = IS looks better than OOS
-        if is_mean > oos_mean:
-            n_overfit += 1
-        n_combos += 1
-
-    pbo = n_overfit / max(1, n_combos)
-
-    if pbo < 0.15:
-        interp = f"PBO={pbo:.2f} — Low overfitting probability. Strategy appears robust."
-    elif pbo < 0.40:
-        interp = f"PBO={pbo:.2f} — Moderate overfitting risk. Monitor OOS degradation."
-    else:
-        interp = f"PBO={pbo:.2f} — High overfitting probability. Strategy likely curve-fit."
-
-    # ── pbo_p_value real computation (Wave 27.5 Pass D.4) ─────────────────
-    # Binomial test under null hypothesis H0: PBO = 0.5 (no systematic overfitting).
-    # n_overfit = number of IS/OOS combination pairs where IS-selected strategy
-    # degraded in OOS (the "success" count under H0: PBO).
-    # p-value = P(observing this or more extreme | H0: p=0.5).
-    #   Small p → statistically significant departure from baseline.
-    #   PBO >> 0.5 → overfit signal; PBO << 0.5 → robust / generalises well.
-    # Two-sided test is appropriate: both directions are informative.
-    # Minimum 10 combinations required for statistical reliability.
-    pbo_p_value: float | None = None
-    _MIN_COMBOS_FOR_PVALUE = 10
-    if n_combos >= _MIN_COMBOS_FOR_PVALUE:
-        try:
-            from scipy.stats import binomtest as _binomtest
-            _btest = _binomtest(n_overfit, n_combos, p=0.5, alternative="two-sided")
-            pbo_p_value = float(_btest.pvalue)
-        except ImportError:
-            # scipy not available — pbo_p_value remains None
-            pass
-        except Exception:
-            # Any computation failure → None (fail-soft, never blocks PBO result)
-            pass
-
-    return {
-        "pbo": round(pbo, 4),
-        "interpretation": interp,
-        "n_combinations": n_combos,
-        "pbo_p_value": pbo_p_value,
-    }
+# ── F-3 (2026-06-29): compute_pbo() REMOVED ─────────────────────────────────
+# The OOS-as-IS-proxy combinatorial PBO was superseded by the rank-based Bailey
+# implementation in src/engine/pbo_gate.py::compute_pbo_from_cpcv_paths.
+# All callers have been migrated:
+#   backtester.py invariant harness → pbo_gate._build_cpcv_paths_from_window_results
+#                                   + pbo_gate.compute_pbo_from_cpcv_paths
+#   walk_forward.py plain-WF path  → pbo_gate._build_cpcv_paths_from_window_results
+#                                   + pbo_gate.compute_pbo_from_cpcv_paths
+# Test coverage: test_fix2_pbo_degenerate_input.py, test_cpcv_gate_bypasses.py,
+#                test_f3_invariant_pbo_bailey.py
 
 
 def compute_all_risk_metrics(

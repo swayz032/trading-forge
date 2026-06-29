@@ -150,10 +150,14 @@ class TestComputePboFromCpcvPaths(unittest.TestCase):
             compute_pbo_from_cpcv_paths,
         )
 
+        # F-3: windows need optimization.best_sharpe so _build_cpcv_paths returns
+        # non-degenerate IS Sharpes. Without it, is_sharpe==oos_sharpe for every
+        # path → degenerate guard fires → pbo=None.
         window_results = [
             {
                 "window": i + 1,
                 "oos_metrics": {"sharpe_ratio": float(i) / 5.0 + 0.1},
+                "optimization": {"best_sharpe": float(i + 1) * 0.3 + 0.5},
                 "confidence": "OK",
             }
             for i in range(5)
@@ -167,8 +171,9 @@ class TestComputePboFromCpcvPaths(unittest.TestCase):
         self.assertEqual(result["n_paths"], 5)
         self.assertFalse(result.get("sample_size_guard", False))
         self.assertIn("pbo", result)
-        # PBO must be a valid float in [0, 1]
+        # PBO must be a valid float in [0, 1] (not None — we have IS Sharpe from optimizer)
         pbo = result["pbo"]
+        self.assertIsNotNone(pbo, "pbo must not be None when IS Sharpe is available from optimizer")
         self.assertFalse(math.isnan(pbo))
         self.assertGreaterEqual(pbo, 0.0)
         self.assertLessEqual(pbo, 1.0)

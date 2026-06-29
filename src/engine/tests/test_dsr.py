@@ -1,7 +1,8 @@
 """Tests for Deflated Sharpe Ratio, PBO, and Bonferroni correction."""
 import pytest
-from src.engine.risk_metrics import compute_deflated_sharpe_ratio, compute_pbo
+
 from src.engine.monte_carlo import adjust_p_value_bonferroni
+from src.engine.risk_metrics import compute_deflated_sharpe_ratio
 
 
 def test_dsr_penalizes_many_trials():
@@ -21,18 +22,6 @@ def test_dsr_passes_strong_sharpe():
         observed_sharpe=3.0, n_trials=5, n_observations=252
     )
     assert result["passes"] is True
-
-
-def test_pbo_low_for_consistent_strategy():
-    """Uniform OOS performance should produce low PBO."""
-    # Windows with similar OOS performance
-    windows = [
-        {"oos_metrics": {"sharpe_ratio": 1.8 + i * 0.01}} for i in range(6)
-    ]
-    result = compute_pbo(windows)
-    # Monotonically increasing = consistent, PBO should be reasonable
-    assert result["pbo"] is not None
-    assert result["n_combinations"] > 0
 
 
 def test_bonferroni_rejects_marginal():

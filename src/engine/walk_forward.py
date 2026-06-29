@@ -1504,68 +1504,20 @@ def run_walk_forward(
     # ── PBO computation — HIGH #3 auto-wire ──────────────────────────────────
     # PBO (Probability of Backtest Overfitting) per Bailey et al. is now wired
     # into the aggregation block so it is always computed when >= 4 windows exist.
-    # Previously it had to be called explicitly by the caller — fixed here.
     #
-    # Wave 29 Pass A.2: also calls compute_pbo_from_cpcv_paths() from pbo_gate.py
-    # to populate pbo_overall (the canonical CPCV-path-based PBO used by the
-    # TESTING → SHADOW lifecycle gate). Two separate results:
-    #   pbo_result      — from risk_metrics.compute_pbo (existing W27.5 path)
-    #   pbo_gate_result — from pbo_gate.compute_pbo_from_cpcv_paths (new W29 gate)
-    # pbo_overall = pbo_gate_result.pbo (preferred) or pbo_result.pbo (fallback).
-    # pbo_audit_actions — list of audit action names for the TS layer to write.
-    pbo_result: Optional[dict] = None
+    # F-3 (2026-06-29): unified on Bailey rank-based pbo_gate.py path.
+    # risk_metrics.compute_pbo (OOS-as-IS-proxy) has been removed.
+    # All result dict PBO keys (pbo, pbo_pass, pbo_p_value, pbo_detail, pbo_overall)
+    # now come from pbo_gate_result (single source). pbo_audit_actions are
+    # emitted by the walk_forward.py block below; pbo_gate_result is the raw Bailey output.
     pbo_gate_result: Optional[dict] = None
     pbo_audit_actions: list[str] = []
     _pbo_threshold = float(os.environ.get("PBO_OVERFIT_THRESHOLD", str(_PBO_OVERFIT_THRESHOLD_DEFAULT)))
+    # F-3 fix: initialized here so the result dict at line ~1960 can always reference it,
+    # even when len(window_results) < 4 (pbo_gate block is skipped entirely).
+    _plain_wf_pbo_degenerate_reason: Optional[str] = None
+
     if len(window_results) >= 4:
-        try:
-            from src.engine.risk_metrics import compute_pbo as _compute_pbo
-            pbo_result = _compute_pbo(window_results)
-            _pbo_val = pbo_result.get("pbo")
-            _pbo_pass = (_pbo_val is None) or (_pbo_val <= _pbo_threshold)
-            pbo_result["pbo_pass"] = _pbo_pass
-            pbo_result["pbo_threshold"] = _pbo_threshold
-            # pbo_p_value is now populated by compute_pbo() (Wave 27.5 Pass D.4).
-            # compute_pbo uses scipy.stats.binomtest on the IS/OOS rank-pair count.
-            # Result is already present in pbo_result — no override needed.
-            # Fall back to None only when compute_pbo didn't include the key
-            # (e.g. scipy not installed, or compute_pbo pre-dates this version).
-            if "pbo_p_value" not in pbo_result:
-                pbo_result["pbo_p_value"] = None
-
-            if _pbo_val is not None:
-                if _pbo_val > _pbo_threshold:
-                    print(
-                        f"  PBO: {_pbo_val:.4f} > threshold {_pbo_threshold} — "
-                        f"HIGH OVERFIT RISK (walk_forward.pbo_high_overfit_risk)",
-                        file=sys.stderr,
-                    )
-                else:
-                    print(
-                        f"  PBO: {_pbo_val:.4f} <= threshold {_pbo_threshold} — pass "
-                        f"(walk_forward.pbo_computed)",
-                        file=sys.stderr,
-                    )
-        except Exception as _pbo_exc:
-            # FIX 2 (2026-06-22): fail-CLOSED on exception — previous code set
-            # pbo_pass: True (fail-open), allowing overfitted strategies to pass B14.
-            # Conservative-on-error contract: pbo_pass=False, pbo_overall=1.0 (worst case).
-            # The TS pbo-gate.ts treats pbo_pass=False as a hard block; it distinguishes
-            # this from the None/missing legacy case (pbo_unavailable_legacy → proceed).
-            print(
-                f"  PBO: computation failed ({_pbo_exc}) — emitting walk_forward.pbo_computation_failed "
-                f"and setting pbo_pass=False (conservative-on-error).",
-                file=sys.stderr,
-            )
-            pbo_audit_actions.append("walk_forward.pbo_computation_failed")
-            pbo_result = {
-                "pbo": 1.0,        # worst-case: assume fully overfit
-                "pbo_pass": False,  # hard block at TS gate
-                "pbo_threshold": _pbo_threshold,
-                "error": str(_pbo_exc),
-                "error_type": type(_pbo_exc).__name__,
-            }
-
         # ── Wave 29 Pass A.2: pbo_gate.py CPCV-path-based PBO ────────────────
         # Builds CPCV-style path dicts from plain-mode window_results and
         # computes the institutional-grade PBO via compute_pbo_from_cpcv_paths.
@@ -1931,7 +1883,9 @@ def run_walk_forward(
     _plain_wf_dsr_pass: Optional[bool] = None
     _plain_wf_dsr_unavailable: bool = False
     try:
-        from src.engine.risk_metrics import compute_deflated_sharpe_ratio as _plain_dsr_fn
+        from src.engine.risk_metrics import (
+            compute_deflated_sharpe_ratio as _plain_dsr_fn,
+        )
         _plain_wf_dsr_result = _plain_dsr_fn(
             observed_sharpe=agg_sharpe,
             n_trials=_plain_wf_n_trials,
@@ -2027,13 +1981,25 @@ def run_walk_forward(
         # "unavailable"               = IS Sharpe could not be computed (wfe_overall absent).
         "wfe_is_basis": _wfe_is_basis,
         # Wave 27.5 Pass B HIGH #3 — PBO auto-wire (additive; None when < 4 windows)
-        "pbo": pbo_result.get("pbo") if pbo_result else None,
-        "pbo_pass": pbo_result.get("pbo_pass") if pbo_result else None,
-        # Wave 27.5 Pass D.4: pbo_p_value now populated by compute_pbo() via
-        # scipy.stats.binomtest — no longer hardcoded None.
-        # Falls back to None when compute_pbo unavailable or < 10 combinations.
-        "pbo_p_value": pbo_result.get("pbo_p_value") if pbo_result else None,
-        "pbo_detail": pbo_result,
+        # F-3 (2026-06-29): pbo_result removed; all PBO fields now sourced exclusively
+        # from pbo_gate_result (Bailey rank-based). pbo_pass recomputed inline using the
+        # same _pbo_threshold used by the audit-action block above.
+        "pbo": pbo_gate_result.get("pbo") if pbo_gate_result else None,
+        "pbo_pass": (
+            (
+                pbo_gate_result.get("pbo") is not None
+                and not (
+                    isinstance(pbo_gate_result.get("pbo"), float)
+                    and (pbo_gate_result["pbo"] != pbo_gate_result["pbo"])  # nan check
+                )
+                and pbo_gate_result["pbo"] < _pbo_threshold
+            )
+            if pbo_gate_result
+            else None
+        ),
+        # pbo_p_value: Bailey compute_pbo_from_cpcv_paths returns "p_value" (not "pbo_p_value").
+        "pbo_p_value": pbo_gate_result.get("p_value") if pbo_gate_result else None,
+        "pbo_detail": pbo_gate_result,
         # Wave 29 Pass A.2 — CPCV-path-based PBO for TESTING → SHADOW/PAPER gate.
         # pbo_overall = canonical lifecycle-gate PBO from pbo_gate.py
         # pbo_p_value is already above; reuse the same field (pbo_gate_result's
@@ -2041,10 +2007,11 @@ def run_walk_forward(
         # Two separate thresholds:
         #   PBO_OVERFIT_THRESHOLD     (0.5)  — W27.5 warn threshold (above)
         #   PBO_OVERFIT_THRESHOLD_PCT (0.15) — W29 lifecycle gate (pbo-gate.ts)
+        # F-3: pbo_overall and pbo (legacy) are now identical — both from pbo_gate_result.
         "pbo_overall": (
             pbo_gate_result.get("pbo")
             if pbo_gate_result
-            else (pbo_result.get("pbo") if pbo_result else None)
+            else None
         ),
         "pbo_overall_p_value": (
             pbo_gate_result.get("p_value")

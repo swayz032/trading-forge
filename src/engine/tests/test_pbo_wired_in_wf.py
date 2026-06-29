@@ -19,16 +19,10 @@ from datetime import datetime, timedelta
 
 import polars as pl
 
-from src.engine.risk_metrics import compute_pbo
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
-def _make_windows(oos_sharpes: list[float]) -> list[dict]:
-    """Build minimal walk-forward window dicts from OOS Sharpe list."""
-    return [
-        {"oos_metrics": {"sharpe_ratio": s, "total_trades": 50, "total_return": s * 100.0}}
-        for s in oos_sharpes
-    ]
+# F-3 (2026-06-29): compute_pbo removed from risk_metrics.
+# TestPBOKnownOverfit / TestPBOKnownStable classes removed — they called
+# the dead OOS-as-IS-proxy implementation directly.  Bailey path coverage
+# lives in test_f3_invariant_pbo_bailey.py and test_wave29_pass_a2_pbo_gate.py.
 
 
 def _make_synthetic_data(n: int = 500) -> pl.DataFrame:
@@ -45,61 +39,8 @@ def _make_synthetic_data(n: int = 500) -> pl.DataFrame:
     })
 
 
-# ── Test: known overfit → PBO ~0.5 ───────────────────────────────────────────
 
-class TestPBOKnownOverfit:
-    def test_pbo_known_overfit_returns_near_point_five(self):
-        """When IS half always outperforms OOS half → PBO should be >= 0.5.
-
-        We construct 6 windows where the first 3 (often used as "IS proxy" in
-        C(6,3) combinations) consistently beat the last 3 (OOS proxy).
-        PBO will be high because IS-look windows always outperform OOS-look windows.
-        """
-        # Strong IS-era performance, weak OOS-era performance
-        oos_sharpes = [2.5, 2.3, 2.1, 0.1, -0.1, 0.2]
-        windows = _make_windows(oos_sharpes)
-        result = compute_pbo(windows)
-        assert result["pbo"] is not None
-        # IS half consistently better than OOS half → elevated PBO
-        assert result["pbo"] >= 0.4  # within 0.1 of 0.5
-
-    def test_pbo_known_overfit_interpretation_not_robust(self):
-        """High PBO → interpretation must signal risk (not 'Low overfitting')."""
-        oos_sharpes = [3.0, 2.8, 2.6, 0.05, -0.1, 0.1]
-        windows = _make_windows(oos_sharpes)
-        result = compute_pbo(windows)
-        assert result["pbo"] is not None
-        if result["pbo"] >= 0.4:
-            assert "Low overfitting" not in result["interpretation"]
-
-
-# ── Test: known stable → PBO ~0.0 ────────────────────────────────────────────
-
-class TestPBOKnownStable:
-    def test_pbo_known_stable_returns_low(self):
-        """Consistent performance across all windows → low PBO.
-
-        When IS-look and OOS-look windows are comparable in performance, the
-        IS half does NOT systematically beat the OOS half → PBO is low.
-        """
-        # Nearly identical Sharpe across all 6 windows → balanced IS/OOS splits
-        oos_sharpes = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-        windows = _make_windows(oos_sharpes)
-        result = compute_pbo(windows)
-        assert result["pbo"] is not None
-        # Balanced performance → PBO around 0.5 (random coin flip)
-        # A truly stable strategy should have PBO NOT heavily elevated
-        assert 0.0 <= result["pbo"] <= 1.0
-
-    def test_pbo_increasing_sharpe_is_robust(self):
-        """Monotonically increasing Sharpe (improving) → IS half not always better."""
-        oos_sharpes = [0.5, 0.7, 0.9, 1.1, 1.3, 1.5]
-        windows = _make_windows(oos_sharpes)
-        result = compute_pbo(windows)
-        assert result["pbo"] is not None
-        assert result["n_combinations"] > 0
-        # PBO should be low for a strategy that improves over time
-        assert result["pbo"] < 0.6
+# F-3 (2026-06-29): TestPBOKnownStable removed — called dead compute_pbo() directly.
 
 
 # ── Test: PBO wired into walk_forward result ──────────────────────────────────
@@ -128,6 +69,7 @@ class TestPBOWiredIntoWalkForward:
                 ],
                 entry_long="close crosses_above sma_5",
                 entry_short="close crosses_below sma_5",
+                exit="close crosses_below sma_5",
                 stop_loss=StopConfig(type="atr", multiplier=2.0),
                 position_size=PositionSizeConfig(type="fixed", fixed_contracts=1),
             ),
@@ -135,7 +77,7 @@ class TestPBOWiredIntoWalkForward:
             end_date="2023-06-30",
         )
 
-        result = run_walk_forward(request, data=data, n_splits=5)
+        result = run_walk_forward(request, data=data, n_splits=5, wf_mode="plain")
 
         # pbo key MUST be present (may be None if < 4 windows survived)
         assert "pbo" in result
@@ -167,6 +109,7 @@ class TestPBOWiredIntoWalkForward:
                 ],
                 entry_long="close crosses_above sma_10",
                 entry_short="close crosses_below sma_10",
+                exit="close crosses_below sma_10",
                 stop_loss=StopConfig(type="atr", multiplier=1.5),
                 position_size=PositionSizeConfig(type="fixed", fixed_contracts=1),
             ),
@@ -174,7 +117,7 @@ class TestPBOWiredIntoWalkForward:
             end_date="2023-06-30",
         )
 
-        result = run_walk_forward(request, data=data, n_splits=5)
+        result = run_walk_forward(request, data=data, n_splits=5, wf_mode="plain")
         pbo_val = result.get("pbo")
         if pbo_val is not None:
             assert 0.0 <= pbo_val <= 1.0
@@ -203,6 +146,7 @@ class TestPBOWiredIntoWalkForward:
                 ],
                 entry_long="close crosses_above sma_5",
                 entry_short="close crosses_below sma_5",
+                exit="close crosses_below sma_5",
                 stop_loss=StopConfig(type="atr", multiplier=2.0),
                 position_size=PositionSizeConfig(type="fixed", fixed_contracts=1),
             ),
@@ -210,7 +154,7 @@ class TestPBOWiredIntoWalkForward:
             end_date="2022-06-30",
         )
 
-        result = run_walk_forward(request, data=data, n_splits=2)
+        result = run_walk_forward(request, data=data, n_splits=2, wf_mode="plain")
         # With 2 splits, PBO cannot be computed (needs >= 4 windows)
         # pbo key must exist in result; value may be None
         assert "pbo" in result

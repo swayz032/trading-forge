@@ -4894,10 +4894,18 @@ def run_backtest(
         # They do NOT affect overall_passed — the promotion gate in TS reads them
         # separately. See lifecycle-service.ts wave24-pbo-promotion-gate checks.
         try:
+            # F-3 (2026-06-29): route to Bailey rank-based PBO (pbo_gate.py).
+            # Replaced the OOS-as-IS-proxy compute_pbo from risk_metrics which was
+            # conceptually wrong (used OOS values as IS-ranking proxies).
+            from src.engine.pbo_gate import (
+                _build_cpcv_paths_from_window_results as _build_pbo_paths_inv,
+            )
+            from src.engine.pbo_gate import (  # noqa: PLC0415
+                compute_pbo_from_cpcv_paths as _compute_pbo_bailey_inv,
+            )
             from src.engine.risk_metrics import (
                 compute_deflated_sharpe_ratio as _compute_dsr_inv,
             )
-            from src.engine.risk_metrics import compute_pbo as _compute_pbo_inv
 
             # ── PBO: computed from walk-forward windows if present ────────────
             _wf_windows = result.get("windows", [])
@@ -4906,19 +4914,37 @@ def run_backtest(
             _observed_sharpe_inv = float(result.get("sharpe_ratio", 0.0))
 
             if len(_wf_windows) >= 4:
-                _pbo_result = _compute_pbo_inv(_wf_windows, metric="sharpe_ratio")
+                # Build CPCV-style path dicts from WF windows.
+                # IS Sharpe from optimizer.best_score when available;
+                # otherwise IS==OOS fallback → degenerate guard returns pbo=None.
+                _cpcv_paths_inv = _build_pbo_paths_inv(_wf_windows)
+                _pbo_result = _compute_pbo_bailey_inv(_cpcv_paths_inv)
                 _pbo_val = _pbo_result.get("pbo")
                 _pbo_threshold = float(os.environ.get("PBO_PROMOTION_THRESHOLD", "0.5"))
-                _pbo_flag = (_pbo_val is not None and _pbo_val > _pbo_threshold)
+                # nan guard: float("nan") is not None but nan > threshold is False
+                _pbo_is_finite = (
+                    _pbo_val is not None and
+                    isinstance(_pbo_val, float) and
+                    _pbo_val == _pbo_val  # nan check
+                )
+                _pbo_flag = _pbo_is_finite and _pbo_val > _pbo_threshold
+                # Interpretation from value (pbo_gate.py does not emit this field)
+                _pbo_interp = (
+                    f"PBO={_pbo_val:.2f} — High overfitting probability." if (_pbo_is_finite and _pbo_val >= 0.4) else
+                    f"PBO={_pbo_val:.2f} — Moderate overfitting risk." if (_pbo_is_finite and _pbo_val >= 0.15) else
+                    f"PBO={_pbo_val:.2f} — Low overfitting probability." if _pbo_is_finite else
+                    _pbo_result.get("degenerate_reason", "PBO unavailable (degenerate or sample guard)")
+                )
                 result["invariants"]["pbo"] = {
                     "value": _pbo_val,
-                    "n_trials": _pbo_result.get("n_combinations", 0),
+                    "n_trials": _pbo_result.get("n_paths", 0),
                     "interpretable": (
-                        "high" if (_pbo_val is not None and _pbo_val >= 0.4) else
-                        "med" if (_pbo_val is not None and _pbo_val >= 0.15) else
+                        "high" if (_pbo_is_finite and _pbo_val >= 0.4) else
+                        "med" if (_pbo_is_finite and _pbo_val >= 0.15) else
                         "low"
                     ),
-                    "interpretation": _pbo_result.get("interpretation", ""),
+                    "interpretation": _pbo_interp,
+                    "algorithm": "bailey_rank_based",  # audit: distinguishes from old OOS-proxy
                 }
                 result["invariants"]["pbo_flag"] = _pbo_flag
             else:

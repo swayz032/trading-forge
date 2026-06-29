@@ -1,128 +1,47 @@
 """FIX 2 regression: PBO computation failure must fail-CLOSED (pbo_pass=False).
 
-Previous behavior: exception in compute_pbo() set pbo_pass=True (fail-open),
-silently allowing overfitted strategies to pass the B14 gate.
+F-3 (2026-06-29): TestPboFailClosed removed — it patched and imported
+risk_metrics.compute_pbo which no longer exists (replaced by Bailey rank-based
+implementation in pbo_gate.compute_pbo_from_cpcv_paths).
 
-New behavior: exception → pbo_pass=False, pbo=1.0 (worst case), and emits
-walk_forward.pbo_computation_failed into pbo_audit_actions.
+Exception-path behavior for the Bailey PBO block in walk_forward.py:
+  - Exception in compute_pbo_from_cpcv_paths → pbo_gate_result = None
+  - pbo_pass = None (TS gate treats null as fail-closed by convention)
+  - No audit action emitted for exceptions (logged to stderr)
+
+New exception coverage lives in: test_f3_invariant_pbo_bailey.py
 """
 from __future__ import annotations
 
 import sys
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
 sys.modules.setdefault("vectorbt", MagicMock())
 
-# We test the aggregation helper directly without mocking the full backtest stack.
-# The PBO block lives in run_walk_forward() — we test it via a targeted mock
-# of compute_pbo to simulate the exception path.
 
+# ── F-3 tombstone — all tests in this class were removed ─────────────────────
 
 class TestPboFailClosed:
-    """FIX 2: PBO exception → fail-CLOSED, not fail-open."""
+    """F-3 (2026-06-29): compute_pbo() removed; tests superseded."""
 
-    def _make_window_results(self, n: int = 5) -> list[dict]:
-        """Minimal window_results to trigger the PBO block (needs >= 4 windows)."""
-        return [
-            {
-                "window": i,
-                "oos_metrics": {"sharpe_ratio": float(i) * 0.1, "total_return": 100.0 * i},
-                "is_sharpe": 1.0,
-                "oos_sharpe": float(i) * 0.1,
-                "optimization": {"best_params": {"period": 10 + i}, "best_score": float(i) * 0.1},
-            }
-            for i in range(n)
-        ]
-
+    @pytest.mark.skip(reason="F-3: compute_pbo removed; exception-path tests superseded by test_f3_invariant_pbo_bailey.py")
     def test_pbo_exception_sets_pbo_pass_false(self):
-        """When compute_pbo raises, pbo_pass must be False."""
-        # We simulate the exception by directly testing the logic that walk_forward runs.
-        # Rather than invoking the full WF stack, we replicate the try/except block.
+        pass  # superseded
 
-        window_results = self._make_window_results(5)
-        pbo_result = None
-        pbo_audit_actions: list[str] = []
-        _pbo_threshold = 0.5
-
-        with patch("src.engine.risk_metrics.compute_pbo", side_effect=RuntimeError("pbo broken")):
-            try:
-                from src.engine.risk_metrics import compute_pbo as _compute_pbo
-                pbo_result = _compute_pbo(window_results)
-            except Exception as _pbo_exc:
-                pbo_audit_actions.append("walk_forward.pbo_computation_failed")
-                pbo_result = {
-                    "pbo": 1.0,
-                    "pbo_pass": False,
-                    "pbo_threshold": _pbo_threshold,
-                    "error": str(_pbo_exc),
-                    "error_type": type(_pbo_exc).__name__,
-                }
-
-        assert pbo_result is not None
-        assert pbo_result["pbo_pass"] is False, (
-            "pbo_pass must be False on exception (fail-CLOSED); got True (fail-open)"
-        )
-
+    @pytest.mark.skip(reason="F-3: compute_pbo removed")
     def test_pbo_exception_emits_audit_action(self):
-        """walk_forward.pbo_computation_failed must appear in pbo_audit_actions."""
-        pbo_audit_actions: list[str] = []
-        _pbo_threshold = 0.5
+        pass  # superseded
 
-        with patch("src.engine.risk_metrics.compute_pbo", side_effect=ValueError("boom")):
-            try:
-                from src.engine.risk_metrics import compute_pbo as _compute_pbo
-                _compute_pbo([])
-            except Exception as _pbo_exc:
-                pbo_audit_actions.append("walk_forward.pbo_computation_failed")
-
-        assert "walk_forward.pbo_computation_failed" in pbo_audit_actions
-
+    @pytest.mark.skip(reason="F-3: compute_pbo removed")
     def test_pbo_exception_sets_worst_case_pbo_value(self):
-        """pbo must be 1.0 (worst case = fully overfitted) on exception."""
-        pbo_result = None
-        with patch("src.engine.risk_metrics.compute_pbo", side_effect=ImportError("no scipy")):
-            try:
-                from src.engine.risk_metrics import compute_pbo as _p
-                _p([])
-            except Exception as e:
-                pbo_result = {
-                    "pbo": 1.0,
-                    "pbo_pass": False,
-                    "error": str(e),
-                }
+        pass  # superseded
 
-        assert pbo_result["pbo"] == 1.0
-
+    @pytest.mark.skip(reason="F-3: compute_pbo removed")
     def test_pbo_exception_records_error_type(self):
-        """Error type must be stored so operator can diagnose root cause."""
-        pbo_result = None
-        with patch("src.engine.risk_metrics.compute_pbo", side_effect=TypeError("bad input")):
-            try:
-                from src.engine.risk_metrics import compute_pbo as _p
-                _p([])
-            except Exception as e:
-                pbo_result = {
-                    "pbo": 1.0,
-                    "pbo_pass": False,
-                    "error": str(e),
-                    "error_type": type(e).__name__,
-                }
+        pass  # superseded
 
-        assert pbo_result["error_type"] == "TypeError"
-
+    @pytest.mark.skip(reason="F-3: compute_pbo removed")
     def test_pbo_success_path_still_sets_pbo_pass_true_when_below_threshold(self):
-        """Regression: successful PBO below threshold still passes (pbo_pass=True)."""
-        from src.engine.risk_metrics import compute_pbo
-        window_results = self._make_window_results(5)
-        try:
-            result = compute_pbo(window_results)
-            _pbo_val = result.get("pbo")
-            _pbo_threshold = 0.5
-            _pbo_pass = (_pbo_val is None) or (_pbo_val <= _pbo_threshold)
-            result["pbo_pass"] = _pbo_pass
-            # verify contract intact
-            assert isinstance(result["pbo_pass"], bool)
-        except Exception:
-            pytest.skip("compute_pbo not available in this env")
+        pass  # superseded
