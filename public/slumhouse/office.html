@@ -438,23 +438,29 @@
        Carter speaks. z-index 2 = above blob (1), below foot (3). */
     @property --cc-spin { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
     .cc-glow {
-      position: absolute; inset: 0; z-index: 2; pointer-events: none;
-      opacity: calc(0.62 + var(--carter-voice) * 0.38);
+      /* inset a hair so the rim sits JUST INSIDE the screen edge (like Apple's
+         glow) — avoids the device's own corner clipping it into square corners. */
+      position: absolute; inset: 5px; z-index: 2; pointer-events: none;
+      opacity: calc(0.72 + var(--carter-voice) * 0.28);
       transition: opacity 0.12s linear; will-change: opacity;
     }
+    /* SLIM premium rim, generously rounded (radius ~55px ≈ iPhone screen corner)
+       so the corners hug the screen instead of looking boxy. Thickens a touch
+       when Carter speaks. Bold premium green mix: chartreuse-lime → mint →
+       emerald → jade. */
     .cc-glow::before, .cc-glow::after {
-      content: ""; position: absolute; inset: 0; border-radius: 30px;
-      padding: calc(7px + var(--carter-voice) * 16px);   /* rim thickness reacts to voice */
+      content: ""; position: absolute; inset: 0; border-radius: 54px;
+      padding: calc(2.5px + var(--carter-voice) * 5.5px);
       background: conic-gradient(from var(--cc-spin),
-        #a3ff12, #19c37d, #28cdb4, #1aa050, #78e63c, #19c37d, #a3ff12);
+        #c6ff3a, #6bffa0, #18d07e, #0aa55f, #2fe08c, #9affc4, #5dff8f, #c6ff3a);
       -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
               mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
       -webkit-mask-composite: xor; mask-composite: exclude;
-      animation: ccSpin 6s linear infinite;
+      animation: ccSpin 7s linear infinite;
     }
-    .cc-glow::after {            /* outer bloom = the same ring, blurred wider */
-      filter: blur(calc(24px + var(--carter-voice) * 34px)) saturate(1.35);
-      opacity: 0.9;
+    .cc-glow::after {            /* refined premium bloom — tighter + brighter than before */
+      filter: blur(calc(15px + var(--carter-voice) * 22px)) saturate(1.5) brightness(1.18);
+      opacity: 0.8;
     }
     @keyframes ccSpin { to { --cc-spin: 360deg; } }
     .cc-blob {
@@ -587,9 +593,8 @@
     <!-- Phase B: IMMERSIVE -->
     <section class="cc-phase cc-immersive" id="cc-immersive">
       <div class="cc-glow"></div>
-      <video class="cc-blob" id="cc-blob" autoplay muted loop playsinline preload="auto">
-        <source src="/slumhouse/video/carter-blob.mp4?v=3" type="video/mp4">
-      </video>
+      <!-- Blob video removed — the Carter scene is the immersive backdrop now.
+           To bring it back: re-add <video class="cc-blob" id="cc-blob" ...>. -->
       <div class="cc-immersive-foot">
         <div class="cc-mic-state" id="cc-mic-state">Connecting…</div>
         <button class="cc-hangup" id="cc-hangup-b" type="button" aria-label="End call">
