@@ -257,7 +257,7 @@ interface BacktestResult {
   execution_time_ms: number;
   tier?: string;
   forge_score?: number;
-  walk_forward_results?: Record<string, unknown>;
+  walk_forward_results?: WfResultsBlob;
   // Wave hardening 2026-06-22 (G1b): WFE + PBO keys emitted at top level when
   // Python uses the oos_metrics branch (walk_forward.py:1252). Previously absent
   // from this interface — a rename would have silently dropped them from wfResults.
@@ -341,6 +341,89 @@ interface BacktestResult {
   //   at the adaptive_exit_context injection block for full rationale.
   tp2_liquidity_source?: string;
   tp2_liquidity_unavailable?: boolean;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// H-3 / F-3 / F-8 (2026-06-29): Python→TS walk-forward result CONTRACT.
+//
+// The Python walk-forward engine (src/engine/walk_forward.py) writes its result keys
+// into the `backtests.walk_forward_results` JSONB blob (+ nested `wf_metadata`). TS
+// lifecycle gates read those keys. If Python RENAMES a key (e.g. wfe_overall→wfe_score,
+// pbo_overall→pbo, dsr_pass, bif, k_eff, bif_reliable, pbo_degenerate_reason) the TS
+// reader silently gets `undefined` → treats it as legacy/null → GRANDFATHER-PASSES a
+// strategy that should BLOCK. That is the single most dangerous silent-pass path to live
+// capital.
+//
+// These exported types lock the contract on the TS side:
+//   • Every GATE-consumed key is enumerated below (top-level + wf_metadata sub-keys), so
+//     the writer (the wfResults construction further down) explicitly references each one
+//     and a removed/renamed key is visible in review.
+//   • The lifecycle reader(s) cast `backtests.walkForwardResults` to `WfResultsBlob`
+//     instead of `Record<string,unknown>`, so a renamed TOP-LEVEL key surfaces as a TS
+//     compile error at the reader (WfResultsBlob has NO index signature on purpose).
+//   • The CI parity gate (scripts/check-ts-python-wf-metadata-parity.ts) FAILS the build
+//     if any Python-written GATE key is absent from these types — the structural tripwire
+//     that catches a Python rename before it reaches a promotion decision.
+//
+// Sub-object shapes (WfMetadataShape, ParamStabilityShape) carry an index signature so the
+// many existing `wf_metadata as Record<string,unknown>` reader casts keep compiling
+// (no cascade); their gate sub-keys are covered by the parity gate. The TOP-LEVEL
+// WfResultsBlob intentionally omits the index signature so the F-8 keys (pbo_overall,
+// wfe_overall, …) get reader-side compile enforcement. Do NOT add an index signature to
+// WfResultsBlob — that would defeat the tripwire.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** `wf_metadata` sub-object inside the walk-forward result blob. */
+export interface WfMetadataShape {
+  mode?: string | null;                 // "cpcv" | "plain" | "purged_embargo" — read by n_paths/orchestrator gates
+  n_folds?: number | null;
+  n_paths?: number | null;              // CPCV combinatorial path count — read by Gate 7 / orchestrator
+  embargo_pct?: number | null;
+  purge_window?: number | null;
+  psr?: number | null;
+  // DSR walk-forward gate (evaluateDsrWalkForwardGate): wf_metadata.{dsr_pass, dsr_unavailable, dsr}
+  dsr?: number | null;
+  dsr_pass?: boolean | null;
+  dsr_unavailable?: boolean | null;
+  // BIF gate CPCV pre-check (evaluateBifGate): wf_metadata.{bif_reliable, bif_proxy_basis}
+  bif_reliable?: boolean | null;
+  bif_proxy_basis?: string | null;
+  // PBO gate cpcv_exempt discriminator (evaluatePboGate): wf_metadata.pbo_degenerate_reason
+  pbo_degenerate_reason?: string | null;
+  [key: string]: unknown;               // sub-key rename detection is the parity gate's job; keep casts compiling
+}
+
+/** Top-level `param_stability` sub-object (parameter-drift gate). */
+export interface ParamStabilityShape {
+  drift_classification?: string | null;
+  drift_confidence?: number | null;
+  [key: string]: unknown;
+}
+
+/**
+ * Canonical typed shape of `backtests.walk_forward_results`.
+ * NO index signature on purpose — a renamed top-level gate key must be a TS compile error
+ * at the lifecycle reader, not a silent `undefined`.
+ */
+export interface WfResultsBlob {
+  confidence?: string;
+  windows?: Array<Record<string, unknown>>;
+  n_splits?: number;
+  param_stability?: ParamStabilityShape | null;
+  param_stability_status?: string | null;
+  // WFE gate (evaluateWfeGate): walkForwardResults.{wfe_overall, wfe_status}
+  wfe_overall?: number | null;
+  wfe_status?: string | null;
+  // PBO gate (evaluatePboGate): walkForwardResults.{pbo_overall, pbo_overall_p_value}
+  pbo_overall?: number | null;
+  pbo_overall_p_value?: number | null;
+  pbo_degenerate?: boolean | null;
+  // BIF gate reads bif/k_eff from the backtests.bif/k_eff COLUMNS, but walk_forward.py also
+  // emits them at the top level of this blob — declared so the parity gate sees coverage.
+  bif?: number | null;
+  k_eff?: number | null;
+  // DSR / BIF-CPCV / PBO-degenerate / n_paths gates drill into this typed sub-object.
+  wf_metadata?: WfMetadataShape | null;
 }
 
 interface SqaOptimizationResult {
@@ -578,55 +661,21 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     const metrics = result.oos_metrics ?? result;
     // Store full walk-forward structure (windows, confidence, param_stability) separately.
     //
-    // Wave hardening 2026-06-22 (G1b): explicitly include wfe_overall, wfe_status,
-    // pbo_overall, pbo_overall_p_value in the type so the WFE + Wave 29 PBO lifecycle
-    // gates have a compile-checked contract to read from. These keys are emitted at
-    // walk_forward.py:1252 and were previously only surviving by accidental runtime
-    // object spread — a Python rename would have silently dropped them with no TS error.
-    type WfResultsShape = {
-      confidence?: string;
-      windows?: Array<Record<string, unknown>>;
-      n_splits?: number;
-      param_stability?: Record<string, unknown>;
-      // C1 (2026-06-29): top-level param_stability_status sibling of param_stability.
-      // Must be persisted so parameter-drift-gate distinguishes CPCV-exempt from legacy_null.
-      param_stability_status?: string | null;
-      // Wave 27.5 Pass B — WFE gate inputs (walk_forward.py:1252)
-      wfe_overall?: number | null;
-      wfe_status?: string | null;
-      // Wave 29 Pass A.2 — PBO gate inputs (walk_forward.py:1272)
-      pbo_overall?: number | null;
-      pbo_overall_p_value?: number | null;
-      // FINDING-1 (deepscan 2026-06-28): CPCV-degenerate discriminator.
-      pbo_degenerate?: boolean | null;
-      // C1 fix 2026-06-28 — wf_metadata sibling emitted by walk_forward.py.
-      // Contains DSR gate inputs (dsr_pass, dsr_unavailable, dsr) and CPCV
-      // orchestrator inputs (mode, n_paths).  Was previously discarded here,
-      // silently disabling the DSR gate (fail-OPEN) and starving the CPCV
-      // n_paths gate (fail-CLOSED) on the walkForwardResults JSONB column.
-      //
-      // hardening/phase-0 CPCV-exempt fields (nested inside wf_metadata):
-      //   pbo_degenerate_reason?: "cpcv_is_sharpe_unavailable"
-      //     — walk_forward.py emits this when mode="cpcv". PBO rank-comparison
-      //       is structurally unavailable in CPCV mode. Read by lifecycle-service.ts
-      //       PBO gate to emit "lifecycle.pbo_cpcv_is_unavailable" instead of
-      //       the generic "lifecycle.pbo_unavailable_legacy".
-      //   bif_reliable?: false
-      //     — walk_forward.py emits this when mode="cpcv". BIF IS-Sharpe proxy
-      //       and OOS agg_sharpe both derive from OOS data → BIF ≈ 1.0 structurally.
-      //       Read by lifecycle-service.ts _promoteStrategyInner BIF pre-check to
-      //       emit "lifecycle.bif_cpcv_unmeasured" audit before evaluatePaperToDeployReadyGates.
-      //
-      // Both fields are carried verbatim through this JSONB blob — no separate
-      // top-level key needed; lifecycle-service.ts drills into wf_metadata directly.
-      wf_metadata?: Record<string, unknown> | null;
-    };
-    const wfResults: WfResultsShape | null = result.oos_metrics
+    // Wave hardening 2026-06-22 (G1b) + H-3/F-3/F-8 (2026-06-29): the persisted shape is
+    // the module-level WfResultsBlob contract (declared above) so the WFE / PBO / DSR / BIF
+    // lifecycle gates have a compile-checked contract to read from, AND the CI parity gate
+    // (scripts/check-ts-python-wf-metadata-parity.ts) can prove Python↔TS key alignment.
+    // These keys are emitted by walk_forward.py and were previously only surviving by
+    // accidental runtime object spread — a Python rename would have silently dropped them
+    // with no TS error (the grandfather-pass-to-live-capital failure mode this closes).
+    // wf_metadata (DSR / bif_reliable / pbo_degenerate_reason / mode / n_paths) is carried
+    // verbatim through this JSONB blob — lifecycle-service.ts drills into it directly.
+    const wfResults: WfResultsBlob | null = result.oos_metrics
       ? {
           confidence: result.confidence,
           windows: result.windows as Array<Record<string, unknown>>,
           n_splits: result.n_splits,
-          param_stability: result.param_stability,
+          param_stability: result.param_stability as ParamStabilityShape | undefined,
           // C1 (2026-06-29): carry param_stability_status into the persisted JSONB blob
           // so the CPCV cpcv_exempt path survives end-to-end (producer → DB → gate).
           param_stability_status: result.param_stability_status as string | null | undefined,
@@ -638,12 +687,9 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           // wf_metadata as pbo_degenerate_reason ("cpcv_is_sharpe_unavailable"), persisted
           // wholesale below and read by lifecycle at wf_metadata.pbo_degenerate_reason.
           // (Superseded the deepscan-wiring top-level pbo_degenerate boolean.)
-          wf_metadata: result.wf_metadata as Record<string, unknown> | null | undefined,
+          wf_metadata: result.wf_metadata as WfMetadataShape | null | undefined,
         }
-      : (() => {
-          const wfr = result.walk_forward_results as WfResultsShape | null | undefined;
-          return wfr ?? null;
-        })();
+      : (result.walk_forward_results ?? null);
 
     // ─── Pre-compute trade rows (pure computation — outside the transaction) ───
     const trades = result.trades ?? [];

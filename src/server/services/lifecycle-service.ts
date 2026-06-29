@@ -486,7 +486,7 @@ export class LifecycleService {
 
         // Map DB rows to the flat PaperToDeployReadyGateInput required by the evaluator.
         // The evaluator is a pure function — caller is responsible for all DB access and mapping.
-        const wfResults = latestBtP2D?.walkForwardResults as Record<string, unknown> | null | undefined;
+        const wfResults = latestBtP2D?.walkForwardResults as import("./backtest-service.js").WfResultsBlob | null | undefined;
         const gateResultBlob = latestBtP2D?.gateResult as Record<string, unknown> | null | undefined;
         const survivalTwin = gateResultBlob?.survival_twin as { passed?: boolean } | null | undefined;
 
@@ -1228,7 +1228,7 @@ export class LifecycleService {
           // pbo_overall lives in walkForwardResults (the WF result JSON blob).
           // Wave 29 Pass A.2 wires pbo_overall + pbo_overall_p_value into the
           // walk_forward.py return dict, which backtest-service persists here.
-          const wfMeta = btExtrasPboW29.walkForwardResults as Record<string, unknown> | null | undefined;
+          const wfMeta = btExtrasPboW29.walkForwardResults as import("./backtest-service.js").WfResultsBlob | null | undefined;
           const pboOverall = wfMeta?.pbo_overall as number | null | undefined;
           const pboOverallPValue = wfMeta?.pbo_overall_p_value as number | null | undefined;
           // Merge 2026-06-29: adopted the phase-0 cpcv_exempt approach (proceed with an
@@ -2879,7 +2879,7 @@ export class LifecycleService {
 
         // FIX 1: WFE gate — TESTING→PAPER (mirrors PAPER→DEPLOY_READY pattern)
         try {
-          const wfResultsTp = (latestBt.walkForwardResults as Record<string, unknown> | null) ?? null;
+          const wfResultsTp = (latestBt.walkForwardResults as import("./backtest-service.js").WfResultsBlob | null) ?? null;
           const wfeOverallTp = wfResultsTp?.wfe_overall != null ? Number(wfResultsTp.wfe_overall) : null;
           const wfeStatusTp = wfResultsTp?.wfe_status != null ? String(wfResultsTp.wfe_status) : null;
 
@@ -2954,7 +2954,7 @@ export class LifecycleService {
 
         // FIX 1: Parameter drift gate — TESTING→PAPER (mirrors PAPER→DEPLOY_READY pattern)
         try {
-          const driftWfResultsTp = (latestBt.walkForwardResults as Record<string, unknown> | null) ?? null;
+          const driftWfResultsTp = (latestBt.walkForwardResults as import("./backtest-service.js").WfResultsBlob | null) ?? null;
           const paramStabilityTp = (driftWfResultsTp?.param_stability as Record<string, unknown> | null) ?? null;
           const driftClassificationTp = (paramStabilityTp?.drift_classification as string | null) ?? null;
           const driftConfidenceTp = paramStabilityTp?.drift_confidence != null
@@ -3036,7 +3036,7 @@ export class LifecycleService {
         //   dsr_pass undefined/null                 → legacy_proceed + warn (grandfather)
         //   dsr_pass=true                           → pass clean
         try {
-          const wfMetaTp = (latestBt.walkForwardResults as Record<string, unknown> | null) ?? null;
+          const wfMetaTp = (latestBt.walkForwardResults as import("./backtest-service.js").WfResultsBlob | null) ?? null;
           const wfMetaObjTp = (wfMetaTp?.wf_metadata as Record<string, unknown> | null) ?? null;
 
           const dsrGateResultTp = evaluateDsrWalkForwardGate(
@@ -4032,7 +4032,7 @@ export class LifecycleService {
             .orderBy(desc(backtests.createdAt))
             .limit(1);
 
-          const driftWfResults = (latestBtForDrift?.walkForwardResults as Record<string, unknown> | null) ?? null;
+          const driftWfResults = (latestBtForDrift?.walkForwardResults as import("./backtest-service.js").WfResultsBlob | null) ?? null;
           // param_stability.drift_classification is the regime-context enhanced field.
           // Falls back to binary is_fragile via "indeterminate" in legacy WF runs.
           const paramStability = (driftWfResults?.param_stability as Record<string, unknown> | null) ?? null;
@@ -4142,7 +4142,7 @@ export class LifecycleService {
             .orderBy(desc(backtests.createdAt))
             .limit(1);
 
-          const wfResultsDsr = (latestBtForDsr?.walkForwardResults as Record<string, unknown> | null) ?? null;
+          const wfResultsDsr = (latestBtForDsr?.walkForwardResults as import("./backtest-service.js").WfResultsBlob | null) ?? null;
           const wfMetaDsr = (wfResultsDsr?.wf_metadata as Record<string, unknown> | null) ?? null;
 
           const dsrGateResult = evaluateDsrWalkForwardGate(
@@ -4238,7 +4238,7 @@ export class LifecycleService {
             .orderBy(desc(backtests.createdAt))
             .limit(1);
 
-          const bifWfMeta = ((latestBtForBif?.walkForwardResults as Record<string, unknown> | null)?.wf_metadata as Record<string, unknown> | null) ?? null;
+          const bifWfMeta = ((latestBtForBif?.walkForwardResults as import("./backtest-service.js").WfResultsBlob | null)?.wf_metadata as Record<string, unknown> | null) ?? null;
           const bifReliableFalse = bifWfMeta?.bif_reliable === false;
           const bifProxyBasis = (bifWfMeta?.bif_proxy_basis as string | null | undefined) ?? null;
           const bifNum = latestBtForBif?.bif != null ? Number(latestBtForBif.bif) : null;
@@ -4359,7 +4359,7 @@ export class LifecycleService {
             .limit(1);
 
           if (latestBtForOrch) {
-            const wfResults = (latestBtForOrch.walkForwardResults as Record<string, unknown> | null) ?? null;
+            const wfResults = (latestBtForOrch.walkForwardResults as import("./backtest-service.js").WfResultsBlob | null) ?? null;
             const wfeOverall = wfResults?.wfe_overall != null ? Number(wfResults.wfe_overall) : null;
 
             // CPCV n_paths lives in wf_metadata sub-object
