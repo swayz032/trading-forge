@@ -59,6 +59,8 @@
 import { logger } from "../lib/logger.js";
 import { insertMemory, queryMemories } from "../lib/carter/carter-memory-store.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
+import { notifyInfo } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 // ─── Tunables (env-overridable, no magic numbers) ─────────────────────────────
 
@@ -373,6 +375,20 @@ export async function pollRunAndStore(args: PollArgs): Promise<void> {
           runId,
           itemCount: items.length,
         });
+        // Discord ping so the operator gets it on their phone even when away — the
+        // report itself lives in the Carter inbox. Fail-soft (never block the poller).
+        try {
+          notifyInfo(
+            `Carter · ${platform} research ready`,
+            appendFamilyGradePostscript(
+              `"${topic}" — ${headline}`,
+              `Carter finished researching ${platform} on "${topic}".`,
+              "Open the Carter inbox in the Office to read the full report.",
+            ),
+          );
+        } catch (e) {
+          logger.warn({ err: e instanceof Error ? e.message : String(e) }, "apify-research: discord notify failed (non-fatal)");
+        }
         logger.info({ platform, topic, runId, itemCount: items.length }, "apify-research: completed");
         return;
       }
