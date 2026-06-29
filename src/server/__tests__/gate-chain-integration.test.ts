@@ -45,6 +45,10 @@ import { evaluatePboGate } from "../lib/pbo-gate.js";
 import { evaluateDsrWalkForwardGate } from "../lib/b14-ci-gate.js";
 import { evaluateBifGate } from "../lib/bif-gate.js";
 import { evaluateParameterDriftGate } from "../lib/parameter-drift-gate.js";
+// Deep-scan #5 F-2 (2026-06-29): import the PURE frozen-policy fns from the DB-free module
+// (frozen-policy-hash.js) NOT frozen-policy-contract.js — the latter imports ../db/index.js,
+// which throws on missing DATABASE_URL and would crash this whole gate-chain file at collection.
+import { evaluateFrozenPolicyDriftAtPromotion, computeFrozenPolicyHash } from "../lib/frozen-policy-hash.js";
 import {
   backtests,
   strategies,
@@ -1483,5 +1487,83 @@ describe("Parameter-drift gate — param_stability_status cpcv_exempt round-trip
     expect(result.status).toBe("blocked");
     expect(result.passed).toBe(false);
     expect(result.auditAction).toBe("lifecycle.parameter_overfit_drift_block");
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Suite 10 — Frozen-policy gate — strategies.frozen_policy_hash column round-trip (PGlite)
+// Deep-scan #5 F-2 (2026-06-29): closes the coverage gap accuracy-validator flagged — the
+// frozen-policy gate was MOCK-ONLY, so a future rename/drop of strategies.frozen_policy_hash
+// (or CORE_DDL drift) would ship green. This suite INSERTs the column via real PGlite, SELECTs
+// it back, and runs the REAL evaluateFrozenPolicyDriftAtPromotion against the round-tripped row.
+// Suite 10 IDs use prefix "fc".
+// ════════════════════════════════════════════════════════════════════════════════
+describe("Frozen-policy gate — strategies.frozen_policy_hash round-trip + drift (PGlite)", () => {
+  let ctx: TestDb;
+
+  const STRAT_STABLE = "fc000001-0000-0000-0000-000000000001"; // frozen hash matches config → ok
+  const STRAT_DRIFT  = "fc000001-0000-0000-0000-000000000002"; // frozen hash stale → drift block
+  const STRAT_FIRST  = "fc000001-0000-0000-0000-000000000003"; // frozen hash null → first-freeze pass
+
+  // The 5-field policy slice lives inside config; other config keys must NOT affect the hash.
+  const POLICY_CONFIG = {
+    entry_quality: { use_weighted_scoring: true, min_factors_satisfied: 2 },
+    position_size: { type: "risk_derived_pyramid", base_contracts: 9 },
+    stop_loss: { type: "atr", multiplier: 1.5 },
+    take_profit: { style: "c", partials: [{ at_r: 1.0, size_pct: 0.33 }] },
+    exit_plan_config: { exit_style: "static_styleC" },
+    name: "irrelevant-cosmetic-field",
+  };
+
+  beforeAll(async () => {
+    ctx = await createTestDb();
+    const stableHash = computeFrozenPolicyHash({ config: POLICY_CONFIG });
+    await ctx.db.insert(strategies).values([
+      { id: STRAT_STABLE, name: "fp-stable", symbol: "MES", timeframe: "5m", config: POLICY_CONFIG, frozenPolicyHash: stableHash },
+      { id: STRAT_DRIFT,  name: "fp-drift",  symbol: "MES", timeframe: "5m", config: POLICY_CONFIG, frozenPolicyHash: "0000000000000000000000000000000000000000000000000000000000000000" },
+      { id: STRAT_FIRST,  name: "fp-first",  symbol: "MES", timeframe: "5m", config: POLICY_CONFIG, frozenPolicyHash: null },
+    ]);
+  });
+  afterAll(async () => { await ctx.close(); });
+
+  async function selectStrat(id: string) {
+    const [row] = await ctx.db
+      .select({ id: strategies.id, config: strategies.config, frozenPolicyHash: strategies.frozenPolicyHash })
+      .from(strategies).where(eq(strategies.id, id));
+    return row;
+  }
+
+  it("frozen_policy_hash column round-trips as a 64-char hex string (CORE_DDL contract)", async () => {
+    const row = await selectStrat(STRAT_STABLE);
+    expect(typeof row?.frozenPolicyHash).toBe("string");
+    expect(row?.frozenPolicyHash).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("PASS: stored hash matches current config → ok=true (no drift)", async () => {
+    const row = await selectStrat(STRAT_STABLE);
+    const result = evaluateFrozenPolicyDriftAtPromotion({
+      id: row!.id, config: row!.config, frozenPolicyHash: row!.frozenPolicyHash,
+    });
+    expect(result.ok).toBe(true);
+    expect(result.currentHash).toBe(result.frozenHash);
+  });
+
+  it("BLOCK: stored hash stale vs current config → ok=false (operator override required)", async () => {
+    const row = await selectStrat(STRAT_DRIFT);
+    const result = evaluateFrozenPolicyDriftAtPromotion({
+      id: row!.id, config: row!.config, frozenPolicyHash: row!.frozenPolicyHash,
+    });
+    expect(result.ok).toBe(false);
+    expect(result.reason).toContain("frozen_policy.hash_mismatch");
+  });
+
+  it("FIRST-FREEZE: frozen_policy_hash null → ok=true (permit, lifecycle then stamps the hash)", async () => {
+    const row = await selectStrat(STRAT_FIRST);
+    expect(row?.frozenPolicyHash).toBeNull();
+    const result = evaluateFrozenPolicyDriftAtPromotion({
+      id: row!.id, config: row!.config, frozenPolicyHash: row!.frozenPolicyHash,
+    });
+    expect(result.ok).toBe(true);
+    expect(result.frozenHash).toBeNull();
   });
 });

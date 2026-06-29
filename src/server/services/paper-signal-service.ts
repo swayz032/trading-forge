@@ -3275,7 +3275,13 @@ export async function evaluateSignals(
             });
             notifyCritical(
               "CRITICAL: Cross-symbol DLL force-close FAILED",
-              `firm: ${firmId} dllPct: ${dllResult.dllPct.toFixed(3)} — Positions may still be open past the breach threshold. Manual close required immediately. err: ${fcMsg}`,
+              // Deep-scan #5 (2026-06-29): family-grade postscript (was the unwrapped
+              // notifyCritical the postscript lint flagged — pre-existing at HEAD).
+              appendFamilyGradePostscript(
+                `firm: ${firmId} dllPct: ${dllResult.dllPct.toFixed(3)} — Positions may still be open past the breach threshold. Manual close required immediately. err: ${fcMsg}`,
+                "The bot tried to auto-close all positions after hitting the daily loss limit but the close FAILED.",
+                "URGENT: open positions may still be live past the safety limit. Call Tony now and/or flatten manually in the broker.",
+              ),
               { firmId, dllPct: dllResult.dllPct, sessionId, error: fcMsg },
             );
           }

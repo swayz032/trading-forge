@@ -142,23 +142,27 @@ describe("lifecycle-service.ts WFE source audit — parity fix 2026-06-22", () =
     expect(src).not.toContain('wfeResult.status === "warned"');
   });
 
-  it('lifecycle-service.ts uses isBlock as sole continue gate for WFE (const isBlock = wfeResult.status === "blocked")', () => {
+  it("lifecycle-service.ts uses isBlockTp as the WFE continue gate at TESTING→PAPER", () => {
     const src = readLifecycleServiceSource();
-    // The only gate after audit insert is `if (isBlock) { continue; }`
-    expect(src).toContain('const isBlock = wfeResult.status === "blocked"');
-    expect(src).toContain("if (isBlock) {");
+    // Deep-scan #5 (2026-06-29): F-5 Hardening 2026-06-23 REMOVED the redundant standalone
+    // WFE gate at PAPER→DEPLOY_READY (the orchestrator's wfe_floor 0.80 gate is now
+    // authoritative there). The standalone evaluateWfeGate now lives only at TESTING→PAPER
+    // and uses `isBlockTp`. This assertion was stale (referenced the removed `isBlock`).
+    expect(src).toContain('const isBlockTp = wfeResultTp.status === "blocked"');
+    expect(src).toContain("if (isBlockTp) {");
     expect(src).toContain("continue;");
   });
 
-  it("lifecycle-service.ts WFE block path log message states hard floor 0.70", () => {
+  it("lifecycle-service.ts WFE block path log message states the TESTING→PAPER transition", () => {
     const src = readLifecycleServiceSource();
-    // The block message must reference the hard floor
-    expect(src).toContain("WFE gate BLOCKED PAPER→DEPLOY_READY: wfe_overall below hard floor (0.70)");
+    // The TESTING→PAPER block message references the hard floor block.
+    expect(src).toContain("WFE gate BLOCKED TESTING→PAPER: wfe_overall below hard floor");
   });
 
-  it("lifecycle-service.ts WFE block comment documents parity fix", () => {
+  it("lifecycle-service.ts documents the F-5 removal of the redundant PAPER→DEPLOY_READY WFE gate", () => {
     const src = readLifecycleServiceSource();
-    // The parity fix must be documented in source
-    expect(src).toContain("Parity fix 2026-06-22");
+    // Deep-scan #5 (2026-06-29): the PAPER→DEPLOY_READY standalone WFE gate was removed
+    // (F-5 Hardening 2026-06-23) — WFE there is enforced by the promotion-gate-orchestrator.
+    expect(src).toContain("F-5 Hardening 2026-06-23: REMOVED redundant standalone WFE gate");
   });
 });

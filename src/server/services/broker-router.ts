@@ -208,9 +208,15 @@ async function probeSingleTradersPostKey(
     // Emit warning alert (non-blocking — don't await)
     notifyWarning(
       "TradersPost API Key May Be Revoked",
-      `Proactive key validity probe for broker account ${accountId} received HTTP 401/403 from TradersPost. ` +
-        `The API key may have been revoked. The next live order will fail with 'credential_load_error' or HTTP 401. ` +
-        `Check TradersPost account settings and re-generate the API key if needed.`,
+      // Deep-scan #5 (2026-06-29): family-grade postscript (was the unwrapped notifyWarning
+      // the postscript lint flagged — pre-existing at HEAD, fixed here).
+      appendFamilyGradePostscript(
+        `Proactive key validity probe for broker account ${accountId} received HTTP 401/403 from TradersPost. ` +
+          `The API key may have been revoked. The next live order will fail with 'credential_load_error' or HTTP 401. ` +
+          `Check TradersPost account settings and re-generate the API key if needed.`,
+        "The bot's connection key to the broker (TradersPost) looks like it stopped working.",
+        "No trade was lost — this is an early warning. Tell Tony to re-generate the TradersPost API key.",
+      ),
       { accountId, probeUrl: TP_PROBE_BASE_URL },
     );
     // Audit row (fire-and-forget)
