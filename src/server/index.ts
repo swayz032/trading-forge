@@ -19,6 +19,7 @@ import { dataRoutes } from "./routes/data.js";
 import { indicatorRoutes } from "./routes/indicators.js";
 import { backtestRoutes } from "./routes/backtests.js";
 import { agentRoutes } from "./routes/agent.js";
+import { carterWebhookRouter } from "./routes/carter-webhook.js";
 import { monteCarloRoutes } from "./routes/monte-carlo.js";
 import complianceRoutes from "./routes/compliance.js";
 import { compilerRoutes } from "./routes/compiler.js";
@@ -200,6 +201,13 @@ async function checkPythonDependencies(): Promise<void> {
     };
   }
 }
+
+// Carter post-call webhook — MOUNTED BEFORE express.json AND before the Bearer
+// authMiddleware. ElevenLabs calls this server-to-server with its own HMAC in the
+// `ElevenLabs-Signature` header (the HMAC is the auth, like /api/health is exempt).
+// It must run before express.json so its own express.raw parser can verify the
+// signature over the EXACT raw body bytes (re-serialized JSON would not match).
+app.use("/api/carter/webhook", carterWebhookRouter);
 
 // Middleware
 app.use(express.json({ limit: "10mb" }));
