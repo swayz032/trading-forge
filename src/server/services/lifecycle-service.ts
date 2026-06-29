@@ -86,7 +86,7 @@ const VALID_STATES = [
 type LifecycleState = (typeof VALID_STATES)[number];
 
 interface PromoteStrategyOptions {
-  actor?: "system" | "human_release";
+  actor?: "system" | "human_release" | "operator_absent_mode";
   reason?: string;
   /** Parent strategy ID for evolution-driven promotions (e.g., gen+1 child created by evolution-service). */
   parentStrategyId?: string;
@@ -379,7 +379,18 @@ export class LifecycleService {
     // B8: DEPLOY_READY → PILOT requires human approval (same authority as DEPLOYED).
     // This prevents system-auto promotion into the canary track — a human must decide
     // to enter the canary window for each strategy.
-    if (fromState === "DEPLOY_READY" && toState === "PILOT" && options.actor !== "human_release") {
+    // Deep-scan 2026-06-28 (C-1): the operator-absent (vacation) autopilot is the
+    // ONE authorized exception — actor="operator_absent_mode" promotes Tier-1
+    // strategies (rolling Sharpe >= floor AND all autopilot gates passed, enforced
+    // in operator-absent-mode-service.ts) while the operator is away. Plain
+    // actor="system" is still blocked. Previously this gate blocked even the
+    // vacation autopilot, making the documented §3 feature dead code.
+    if (
+      fromState === "DEPLOY_READY" &&
+      toState === "PILOT" &&
+      options.actor !== "human_release" &&
+      options.actor !== "operator_absent_mode"
+    ) {
       const error = "Only manual release authority can promote DEPLOY_READY -> PILOT (canary track requires human approval)";
       logger.warn({ id, fromState, toState, actor: options.actor ?? "system" }, error);
       return { success: false, error };

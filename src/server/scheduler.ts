@@ -742,16 +742,43 @@ export function initScheduler() {
     const demoted = await lifecycle.checkAutoDemotions({ correlationId });
     // B8: PILOT canary sweep — runs alongside regular auto-promotion check
     const pilotResult = await lifecycle.checkPilotAutoPromotions({ correlationId });
-    if (promoted.length > 0 || demoted.length > 0 || pilotResult.promoted > 0 || pilotResult.killed > 0) {
+
+    // Deep-scan 2026-06-28 (C-1): operator-absent (vacation) Tier-1 auto-promote.
+    // runOperatorAbsentAutoPromote was EXPORTED but never called from any cron, so
+    // the documented §3 vacation feature (DEPLOY_READY -> PILOT while away) never
+    // fired. It self-guards (no-ops unless operator-absent mode is active AND the
+    // pipeline is unpaused), so it is safe to call every tick.
+    let absentPromoted: string[] = [];
+    try {
+      const { runOperatorAbsentAutoPromote } = await import("./services/operator-absent-mode-service.js");
+      const absentResult = await runOperatorAbsentAutoPromote(correlationId);
+      absentPromoted = absentResult.promoted;
+      if (absentResult.errors.length > 0) {
+        notifyWarning(
+          `Operator-absent Tier-1 auto-promote: ${absentResult.errors.length} error(s)`,
+          appendFamilyGradePostscript(
+            `${absentResult.errors.length} vacation DEPLOY_READY->PILOT auto-promotion(s) failed: ${absentResult.errors.map((e) => `${e.strategyId} (${e.reason})`).join("; ")}.`,
+            `${absentResult.errors.length} automatic promotion(s) during vacation mode did not complete. The bot is still running safely.`,
+            "No action needed right now — Tony will review when back.",
+          ),
+          { errors: absentResult.errors, correlationId },
+        );
+      }
+    } catch (absentErr) {
+      logger.error({ err: absentErr, correlationId }, "lifecycle-auto-check: operator-absent auto-promote sweep failed (non-blocking)");
+    }
+
+    if (promoted.length > 0 || demoted.length > 0 || pilotResult.promoted > 0 || pilotResult.killed > 0 || absentPromoted.length > 0) {
       broadcastSSE("lifecycle:auto-check", {
         promoted,
         demoted,
         pilotPromoted: pilotResult.promoted,
         pilotKilled: pilotResult.killed,
+        operatorAbsentPromoted: absentPromoted,
         timestamp: new Date().toISOString(),
       });
     }
-    logger.info({ promoted: promoted.length, demoted: demoted.length, pilotSwept: pilotResult.swept, pilotPromoted: pilotResult.promoted, pilotKilled: pilotResult.killed, correlationId }, "Lifecycle auto-check complete");
+    logger.info({ promoted: promoted.length, demoted: demoted.length, pilotSwept: pilotResult.swept, pilotPromoted: pilotResult.promoted, pilotKilled: pilotResult.killed, operatorAbsentPromoted: absentPromoted.length, correlationId }, "Lifecycle auto-check complete");
 
     // Discord: WARNING if strategies were demoted — system health degraded
     if (demoted.length > 0) {
