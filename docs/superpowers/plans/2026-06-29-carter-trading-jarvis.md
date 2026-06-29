@@ -6,12 +6,13 @@ of Trading Forge, and proposes (and drafts) improvements/fixes — while the gat
 the operator keep final authority.
 
 **Architecture (the real "1000×" levers):** grounding (RAG knowledge + live system
-tools, never vibes) + on-demand reasoning horsepower (a HEAVY reasoning model behind a
-tower-side tool — NOT Opus/Anthropic, which the operator has no key for; use the
-operator's existing OpenAI cloud as primary + optional local deepseek-r1 once pulled —
-the live chat brain stays the fast GPT-5.4-mini) + proactivity (a background analyst
-that surfaces what the operator wouldn't think to ask). Advisory/draft only — nothing
-auto-applies; RED stays RED; grounding-or-silence on facts.
+tools, never vibes) + a strong brain (Carter's ElevenLabs LLM set to **GPT-5.4 (full)**
+— EL bundles the model, NO OpenAI/Anthropic key needed; the model itself does the
+reasoning, recommendations, AND writes code drafts in-conversation) + proactivity (a
+background analyst that surfaces what the operator wouldn't think to ask). NO separate
+deep-analysis backend — dropped per operator (EL already serves GPT-5.4). Optional $0
+local deepseek-r1 tier is a "only if we ever need more" footnote, not a dependency.
+Advisory/draft only — nothing auto-applies; RED stays RED; grounding-or-silence on facts.
 
 **Confirmed scope (operator, 2026-06-29):** start with self-knowledge · chat model =
 GPT-5.4-mini (operator-owned in dashboard) · Carter may diagnose, propose, AND draft
@@ -38,23 +39,23 @@ real code/PRs for review (never auto-merge) · daily insights digest + connect b
   GPT-5.4-mini) to push prompt + new tools + KB attachment. Live-verify with a
   simulate-conversation ("how does the B14 gate work / why is X stuck").
 
-## Wave B — Deep Brain + Recommendation Engine (reason · propose · draft code)
+## Wave B — Recommendation Engine (reason · propose · draft code)
 
-- **B1 — `deep_analysis` tool.** Tower endpoint runs a HEAVY reasoning model with full
-  TF context injected; returns synthesized analysis. NOT Opus/Anthropic (no key):
-  primary = the strongest model on the operator's existing OpenAI key (bounded by
-  `OPENAI_DAILY_BUDGET`); optional tier-down = local `deepseek-r1` via Ollama once
-  pulled ($0, private). Carter calls it for hard, multi-step questions; speaks back the
-  conclusion. Fast chat stays on GPT-5.4-mini; depth is on-demand.
+- **B1 — Brain = ElevenLabs GPT-5.4 (full).** No separate deep-analysis backend, no
+  external key. Operator bumps the dashboard model `gpt-5.4-mini → gpt-5.4` (full) for
+  deeper reasoning (one dropdown; accept slightly slower/costlier turns). The model
+  reasons, recommends, and writes code drafts directly in-conversation, grounded by the
+  Wave A read-tools + KB.
 - **B2 — Recommendation tools.** `diagnose_pipeline`, `analyze_gate_blocks` (wraps the
   existing `src/engine/gate_block_analyzer.py` — gates costing winners vs saving from
   losers), `review_strategy` (institutional critique), `propose_hardening`,
   `what_would_an_institution_do`. Each returns a structured PROPOSAL (finding →
   tool-grounded evidence → recommended change → risk → gates/Don'ts touched).
-- **B3 — Code-draft capability.** `propose_code_change`: the deep-analysis backend
-  generates a proposed diff on an isolated review branch / draft PR (via `gh`) for
-  operator review. NEVER auto-merges; CI hard gates + operator approve. Audit every
-  draft.
+- **B3 — Code-draft capability.** Carter (the EL GPT-5.4 brain) writes the proposed
+  change in-conversation; a `save_code_draft` tool persists it to an isolated review
+  branch / draft PR (via `gh`) for operator review. NEVER auto-merges; CI hard gates +
+  operator approve. Audit every draft. No backend model — the EL model generates, the
+  tool only stores.
 
 ## Wave C — Domain Mastery + Memory
 
