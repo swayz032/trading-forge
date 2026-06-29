@@ -924,7 +924,8 @@
     var callSub   = document.getElementById('cc-calling-sub');
 
     var conversation = null;   // ElevenLabs Conversation instance
-    var audioCtx = null;       // Web Audio context for ringback synthesis
+    var audioCtx = null;       // Web Audio context for ringback synthesis (created ONCE, reused)
+    var micStream = null;      // persistent mic grant — acquire once so we don't re-prompt every call
     var ringTimer = null;
     var ringsPlayed = 0;
     var connected = false;
@@ -983,7 +984,8 @@
     function goImmersive() {
       phase = 'immersive';
       stopRinging();
-      if (audioCtx) { try { audioCtx.close(); } catch (e) {} audioCtx = null; }
+      // Keep audioCtx alive + reuse it (closing it here is what broke the ring
+      // on every call after the first). stopRinging() already silences it.
       phaseCall.classList.remove('cc-on');
       phaseImm.classList.add('cc-on');
       updateMicState();
@@ -1027,6 +1029,19 @@
       if (phase !== 'idle') return;
       phase = 'calling';
       connected = false; mode = 'listening'; voice = 0.2;
+      // Acquire the mic ONCE (inside this click gesture) and hold the grant for
+      // the page lifetime so the browser stops re-prompting on every Connect.
+      // Between calls we disable the tracks (no capture) but keep the stream
+      // alive so permission persists. The ConvAI SDK reuses the granted state.
+      try {
+        if (!micStream && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(function (s) { micStream = s; })
+            .catch(function () {});
+        } else if (micStream) {
+          micStream.getAudioTracks().forEach(function (t) { t.enabled = true; });
+        }
+      } catch (e) {}
       if (callStat) callStat.textContent = 'Calling…';
       if (callSub) callSub.textContent = 'CEO · Slumdawg Traders';
       overlay.classList.add('cc-open');
@@ -1062,7 +1077,11 @@
       cancelAnimationFrame(rafId); rafId = null;
       phase = 'idle';
       if (conversation) { try { await conversation.endSession(); } catch (e) {} conversation = null; }
-      if (audioCtx) { try { audioCtx.close(); } catch (e) {} audioCtx = null; }
+      // Keep audioCtx alive for the next call (do NOT close — reused so the ring
+      // keeps working). Suspend it to save resources; startRinging resumes it.
+      if (audioCtx) { try { audioCtx.suspend(); } catch (e) {} }
+      // Keep the mic grant but stop capturing between calls (no re-prompt next time).
+      if (micStream) { try { micStream.getAudioTracks().forEach(function (t) { t.enabled = false; }); } catch (e) {} }
       connected = false; mode = 'listening';
       overlay.classList.remove('cc-open');
       overlay.setAttribute('aria-hidden', 'true');
