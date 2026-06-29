@@ -808,15 +808,28 @@ def _apply_static_styleC_management(
     atr_stop_multiplier: float = 1.5,
     liquidity_snapshot: Optional[list] = None,  # Wave 1 Track 1A: intraday levels for TP2 mapping
 ) -> list[dict]:
-    """Style C static trade management — PRESERVED VERBATIM from original _apply_trade_management.
+    """Style C static trade management.
 
-    Rules:
-    - Stop loss: max 6 points from entry
-    - Take profit: single structural TP via DOL hierarchy (>= 2R or skip)
-    - After 1R profit: move stop to breakeven
-    - After 2R profit: trail 1R behind price, min 2pt breathing room
-    - Exit priority per bar: TP hit > trailing stop hit > original exit
-    - Safety cap: MAX_HOLD_BARS (200) — ~16h on 5m, forces exit if nothing else triggers
+    Two code paths controlled by env flag BACKTEST_STATIC_C_PARTIALS_ENABLED:
+
+    FLAG OFF (default) — byte-identical with all historical runs:
+      - Single structural TP via DOL hierarchy (>= 2R or skip)
+      - After 1R: move stop to BE+1 tick
+      - After 2R: trail 1R behind price, min 2pt breathing room
+      - Exit priority per bar: TP hit > trailing stop hit > original exit
+
+    FLAG ON — 33/33/34 partial blending path matching paper/live economics:
+      - TP1 at +1.0R (33%), TP2 at +2.0R (33%), runner 34% Chandelier(14,2.0) trail
+      - BE+1 tick on TP1 fill; Chandelier runner trail after TP2 fill
+      - Blended exit: tp1_pct*tp1 + tp2_pct*tp2 + runner_pct*close (or stop if stopped out)
+      - 15:55 ET hard flatten ALWAYS applied
+      - Audit fields: static_c_tp1_price, static_c_tp2_price, static_c_tp1_filled, static_c_tp2_filled
+
+    Common invariants (both paths):
+      - MAX_HOLD_BARS=200 safety cap (~16h on 5m)
+      - Zero-volume trade-critical guard per bar (W27.5 P-D.5)
+      - Gap-fill stop logic (fill at bar open when gap through stop)
+      - F-3 loop convention: range(entry_idx+1, original_exit_idx) — exclusive of signal exit bar
 
     Returns list of managed trade dicts with updated exit_price, exit_idx, exit_reason.
     """
@@ -839,6 +852,26 @@ def _apply_static_styleC_management(
         df["volume"].to_numpy() if "volume" in df.columns else None
     )
     _symbol_static: str = getattr(spec, "symbol", None) or "UNKNOWN"
+
+    # BACKTEST_STATIC_C_PARTIALS_ENABLED (default OFF).
+    # OFF (default): byte-identical with all historical runs — existing single-TP path.
+    # ON: 33/33/34 TP1/TP2/Chandelier-runner path matching paper/live Style C economics.
+    # This flag is read ONCE per call so callers can toggle it between calls deterministically.
+    _USE_PARTIALS: bool = (
+        os.environ.get("BACKTEST_STATIC_C_PARTIALS_ENABLED", "").lower() in ("1", "true", "yes")
+    )
+    if _USE_PARTIALS:
+        from datetime import datetime as _sc_dt
+        from datetime import timezone as _sc_tz
+
+        from src.engine.exits.style_c_handler import (  # noqa: PLC0415
+            RUNNER_FRACTION_C,
+            TP1_AT_R_C,
+            TP1_FRACTION_C,
+            TP2_AT_R_C,
+            TP2_FRACTION_C,
+        )
+        from src.engine.exits.style_d_handler import _is_time_stop  # noqa: PLC0415
 
     for _, row in trades_records.iterrows():
         entry_p = float(row["Avg Entry Price"])
@@ -865,6 +898,206 @@ def _apply_static_styleC_management(
             initial_stop = entry_p + risk_points
         else:
             initial_stop = entry_p - risk_points
+
+        if _USE_PARTIALS:
+            # ────────────────────────────────────────────────────────────────────
+            # Style C 33/33/34 partial blending path
+            # (BACKTEST_STATIC_C_PARTIALS_ENABLED=true)
+            #
+            # Matches paper/live economics:
+            #   TP1 = +1.0R (33%) → move stop to BE+1 tick
+            #   TP2 = +2.0R (33%) → switch runner to Chandelier(14, 2.0) trail
+            #   Runner (34%) trails until Chandelier stop fires or signal exit
+            #
+            # Blending (mirror _apply_adaptive_management lines 1333-1354):
+            #   - stop/trail/time exit → single price (no blend)
+            #   - both TPs filled → tp1_pct*tp1 + tp2_pct*tp2 + runner_pct*close
+            #   - only TP1 filled  → tp1_pct*tp1 + (tp2_pct+runner_pct)*exit
+            #   - no TPs filled    → original exit price
+            # ────────────────────────────────────────────────────────────────────
+            sign = -1 if is_short else 1
+            tp1_price_p = entry_p + sign * risk_points * TP1_AT_R_C
+            tp2_price_p = entry_p + sign * risk_points * TP2_AT_R_C
+
+            tp1_filled_p = False
+            tp2_filled_p = False
+            trail_stop_p = initial_stop
+            exit_price_p = original_exit_p
+            exit_idx_p = original_exit_idx
+            exit_reason_p = "signal"
+            gap_count_p = 0
+
+            for bar in range(entry_idx + 1, original_exit_idx):
+                if bar >= len(high_np):
+                    break
+
+                bar_high = float(high_np[bar])
+                bar_low = float(low_np[bar])
+                bar_open = (
+                    float(open_np[bar])
+                    if open_np is not None and bar < len(open_np)
+                    else bar_low
+                )
+
+                # ── Zero-volume trade-critical guard (W27.5 P-D.5) ────────────
+                if _vol_np_static is not None and bar < len(_vol_np_static):
+                    _active_tp_p = (
+                        tp1_price_p if not tp1_filled_p
+                        else (tp2_price_p if not tp2_filled_p
+                              else (float("inf") if not is_short else float("-inf")))
+                    )
+                    _sc_candidate = (
+                        (not is_short and (bar_low <= trail_stop_p or bar_high >= _active_tp_p))
+                        or (is_short and (bar_high >= trail_stop_p or bar_low <= _active_tp_p))
+                    )
+                    if _sc_candidate:
+                        try:
+                            _bar_ts_str_p = str(df[ts_col][bar]) if has_ts else f"idx={bar}"
+                            _skip_p = check_zero_volume_trade_critical(
+                                bar_volume=float(_vol_np_static[bar]),
+                                bar_timestamp=_bar_ts_str_p,
+                                symbol=_symbol_static,
+                                attempted_action="stop_or_tp_trigger",
+                            )
+                            if _skip_p:
+                                continue
+                        except ZeroVolumeOnTradeCriticalBar:
+                            raise
+
+                # ── 15:55 ET hard flatten (CLAUDE.md §4 invariant) ────────────
+                if has_ts and bar < len(df):
+                    try:
+                        _raw_ts_p = df[ts_col][bar]
+                        _dt_p = (
+                            _raw_ts_p
+                            if isinstance(_raw_ts_p, _sc_dt)
+                            else _sc_dt.fromisoformat(str(_raw_ts_p))
+                        )
+                        _dt_utc_p = (
+                            _dt_p.astimezone(_sc_tz.utc)
+                            if _dt_p.tzinfo is not None
+                            else _dt_p.replace(tzinfo=_sc_tz.utc)
+                        )
+                        if _is_time_stop(_dst_correct_et_hour(_dt_utc_p)):
+                            exit_price_p = (
+                                float(close_np[bar]) if bar < len(close_np) else bar_open
+                            )
+                            exit_reason_p = "time_stop"
+                            exit_idx_p = bar
+                            break
+                    except Exception:
+                        pass  # timestamp unavailable — skip time-stop check this bar
+
+                # ── Stop loss / trailing stop (gap-fill logic preserved) ───────
+                if not is_short and bar_low <= trail_stop_p:
+                    if bar_open < trail_stop_p:
+                        exit_price_p = bar_open
+                        gap_count_p += 1
+                    else:
+                        exit_price_p = trail_stop_p
+                    exit_reason_p = (
+                        "trailing_stop" if trail_stop_p > initial_stop else "stop_loss"
+                    )
+                    exit_idx_p = bar
+                    break
+                elif is_short and bar_high >= trail_stop_p:
+                    if bar_open > trail_stop_p:
+                        exit_price_p = bar_open
+                        gap_count_p += 1
+                    else:
+                        exit_price_p = trail_stop_p
+                    exit_reason_p = (
+                        "trailing_stop" if trail_stop_p < initial_stop else "stop_loss"
+                    )
+                    exit_idx_p = bar
+                    break
+
+                # ── TP1 fill at +1.0R (intrabar high/low detection) ───────────
+                if not tp1_filled_p:
+                    tp1_hit = (
+                        (not is_short and bar_high >= tp1_price_p)
+                        or (is_short and bar_low <= tp1_price_p)
+                    )
+                    if tp1_hit:
+                        tp1_filled_p = True
+                        # INVARIANT: BE+1 tick on TP1 fill (CLAUDE.md §4)
+                        if not is_short:
+                            trail_stop_p = max(trail_stop_p, entry_p + tick)
+                        else:
+                            trail_stop_p = min(trail_stop_p, entry_p - tick)
+
+                # ── TP2 fill at +2.0R (intrabar high/low detection) ───────────
+                if tp1_filled_p and not tp2_filled_p:
+                    tp2_hit = (
+                        (not is_short and bar_high >= tp2_price_p)
+                        or (is_short and bar_low <= tp2_price_p)
+                    )
+                    if tp2_hit:
+                        tp2_filled_p = True
+
+                # ── Chandelier(14, 2.0) runner trail after TP2 ───────────────
+                # developing_session_poc unavailable per-bar in backtest (no intraday VP).
+                # Falls back to Chandelier ATR trail — same fallback as adaptive path.
+                if tp2_filled_p:
+                    atr_at_bar = (
+                        float(atr_np[bar])
+                        if bar < len(atr_np) and not np.isnan(atr_np[bar])
+                        else atr_at_entry
+                    )
+                    if not is_short:
+                        new_trail = bar_high - (2.0 * atr_at_bar)
+                        trail_stop_p = max(trail_stop_p, new_trail)
+                    else:
+                        new_trail = bar_low + (2.0 * atr_at_bar)
+                        trail_stop_p = min(trail_stop_p, new_trail)
+
+            # ── Blended exit price (mirrors adaptive path lines 1333-1354) ────
+            if exit_reason_p in ("stop_loss", "trailing_stop", "time_stop"):
+                final_exit_p = exit_price_p
+            elif tp1_filled_p and tp2_filled_p:
+                runner_exit_p = (
+                    float(close_np[exit_idx_p]) if exit_idx_p < len(close_np) else tp2_price_p
+                )
+                final_exit_p = (
+                    TP1_FRACTION_C * tp1_price_p
+                    + TP2_FRACTION_C * tp2_price_p
+                    + RUNNER_FRACTION_C * runner_exit_p
+                )
+                exit_reason_p = "take_profit"
+            elif tp1_filled_p:
+                runner_exit_p = (
+                    float(close_np[exit_idx_p]) if exit_idx_p < len(close_np) else exit_price_p
+                )
+                final_exit_p = (
+                    TP1_FRACTION_C * tp1_price_p
+                    + (TP2_FRACTION_C + RUNNER_FRACTION_C) * runner_exit_p
+                )
+                exit_reason_p = "take_profit"
+            else:
+                final_exit_p = exit_price_p
+
+            managed_p = {
+                "entry_idx": entry_idx,
+                "entry_price": entry_p,
+                "original_exit_idx": original_exit_idx,
+                "original_exit_price": original_exit_p,
+                "size": size,
+                "direction": direction_str,
+                "risk_points": round(risk_points, 2),
+                "exit_price": final_exit_p,
+                "exit_idx": exit_idx_p,
+                "exit_reason": exit_reason_p,
+                "trail_stop_final": round(trail_stop_p, 4),
+                "gap_through_stop_count": gap_count_p,
+                # Audit fields (partials path only)
+                "static_c_partials_enabled": True,
+                "static_c_tp1_price": round(tp1_price_p, 4),
+                "static_c_tp2_price": round(tp2_price_p, 4),
+                "static_c_tp1_filled": tp1_filled_p,
+                "static_c_tp2_filled": tp2_filled_p,
+            }
+            managed_trades.append(managed_p)
+            continue  # skip flag-OFF path below
 
         # Compute structural TP via DOL hierarchy
         # Get HTF data for weekly high/low as BSL/SSL
@@ -6196,8 +6429,10 @@ def _load_strategy_class(class_path: str) -> BaseStrategy:
     type=click.Choice(["static_styleC", "adaptive"]),
     help=(
         "W25.17 A/B flag: which exit engine to use. "
-        "'static_styleC' (default) = existing Style C 33/33/34 TP1/TP2/runner path — "
-        "backward-compat; existing CI runs unchanged. "
+        "'static_styleC' (default) = single structural-TP path via DOL hierarchy — "
+        "byte-identical with all historical CI runs. "
+        "Set BACKTEST_STATIC_C_PARTIALS_ENABLED=true to enable 33/33/34 TP1/TP2/runner "
+        "Chandelier blending that matches paper/live Style C economics. "
         "'adaptive' = adaptive exit engine (P7.A1+A2 TS path); "
         "Python harness stubs until framework-overlay wiring lands in P7.A5."
     ),
