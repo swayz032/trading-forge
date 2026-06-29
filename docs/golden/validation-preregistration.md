@@ -218,6 +218,19 @@ nodes; per-node grounding). Two contracts are pre-defined for the replay engine 
   traceable to a complete proof tree (each node TRUE + grounded to a span); any UNKNOWN node → incomplete
   proof → not a faithful reproduction. This makes every backtested trade *auditable*. Built when replay exists.
 
+## Decision closure (dependency proof) + the three independent proofs
+
+**Decision Closure** (`decision-closure.ts`, `checkDecisionClosure`) — a static graph-integrity check
+(compiler verification, NOT new representation): the IR's decision graph must have no IMPOSSIBLE_STATE (entry
+unreachable / wait with no anchor), no DANGLING_REF (a ref no upstream node provides), no ORPHAN_NODE, no
+CYCLE. Catches "a trade that can never legally be reached" statically, before replay.
+
+**A faithful executable trade requires THREE independent proofs** (`threeProofs`) — all must hold:
+1. **Evidence proof** — every condition has transcript provenance (`grounding-validator.ts`).
+2. **Decision proof** — every required condition resolves TRUE/FALSE, none UNKNOWN/UNOBSERVABLE (`semantic-determinism` + `decision-status`).
+3. **Dependency proof** — every required parent node exists + entry is reachable (`decision-closure.ts`).
+Any one fails → no trade. (At replay, the per-trade proof tree is the runtime instantiation of these three.)
+
 ## First-class invariant — Executable Strategy IR
 
 The IR's contract is **backtestability**, not representation: **every extraction-owned node is PRESENT or
@@ -261,3 +274,14 @@ of what the system can faithfully compile, which is itself worth knowing.
   (`replay-failure-taxonomy.ts`). Defining the categories before results prevents post-hoc attribution; each
   class maps to an existing instrument (Gate 1.5 / 1.75 / evidence_mode / overlay) and directs the next
   investment. Pure addition — changes no threshold.
+- **2026-06-28 — ADD Decision Closure (dependency proof) + three-proof gate + decision-status vocabulary
+  (UNKNOWN/binary-execution), before results.** `decision-closure.ts` (graph integrity: no impossible-state /
+  dangling-ref / orphan / cycle) + `threeProofs` (evidence ∧ decision ∧ dependency) + `decision-status.ts`
+  (EpistemicStatus incl. UNKNOWN ≠ null; ExecutionResolution binary; no-guess rule; decisionCoverage). All
+  static / pre-replay-appropriate; the per-trade proof tree is the replay-time runtime instantiation
+  (deferred — needs the engine). Closure diagnostic on the 4 frozen IRs: psH + h6T IMPOSSIBLE_STATE (entry
+  unreachable — converges with Gate 1.5), l-2 + MKsjbL closed. Pure additions — no threshold changed.
+- **DEFERRED to post-replay (do NOT pre-build):** **Reconstruction Rate** = strategies that replay
+  successfully / strategies that pass Gate 1.5. GPT-flagged as "after replay exists, not before" — it isolates
+  the final research question (representation+extraction working vs source-unreconstructable) and is meaningless
+  until replay produces real pass/fail. Recorded here so it's not forgotten, NOT built.
