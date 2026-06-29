@@ -2,7 +2,7 @@
  * Replay run ledger + corpus freeze — attributability governance (no silent reruns, frozen corpus).
  */
 import { describe, it, expect } from "vitest";
-import { captureCorpusManifest, corpusUnchanged, appendRun, runsComparable, type ReplayRunRecord } from "../replay-run-ledger.js";
+import { captureCorpusManifest, corpusUnchanged, appendRun, runsComparable, assembleReproducibilityPackage, type ReplayRunRecord } from "../replay-run-ledger.js";
 
 const vids = [
   { video_id: "a", transcript: "alpha transcript", market: "futures", instrument: "MES", timeframe: "15m", educator_family: "opening_range_breakout" },
@@ -34,7 +34,7 @@ describe("captureCorpusManifest", () => {
 
 describe("appendRun — no silent reruns", () => {
   const rec = (id: string, result: ReplayRunRecord["result"]): ReplayRunRecord => ({
-    manifest: { run_id: id, compiler_commit: "c1", extraction_commit: "e1", replay_engine_commit: "r1", dataset_hash: "d1", ir_version: "1.0" },
+    manifest: { run_id: id, compiler_commit: "c1", extraction_commit: "e1", replay_engine_commit: "r1", dataset_hash: "d1", market_data_hash: "m1", ir_version: "1.0", raw_decision_record_ref: "proofs/R.jsonl" },
     result,
   });
   it("appends distinct run_ids", () => {
@@ -54,5 +54,16 @@ describe("appendRun — no silent reruns", () => {
     const a = rec("R-1", "PASS");
     const b: ReplayRunRecord = { ...rec("R-2", "PASS"), manifest: { ...rec("R-2", "PASS").manifest, dataset_hash: "d2" } };
     expect(runsComparable(a, b)).toBe(false);
+  });
+
+  it("★ reproducibility package is self-contained + verifies dataset_hash matches the corpus", () => {
+    const corpus = captureCorpusManifest("1.0-seed", vids);
+    const onCorpus: ReplayRunRecord = { ...rec("R-3", "PASS"), manifest: { ...rec("R-3", "PASS").manifest, dataset_hash: corpus.corpus_hash } };
+    const pkg = assembleReproducibilityPackage(onCorpus, corpus);
+    expect(pkg.reproducible).toBe(true);            // run's dataset_hash == corpus hash
+    expect(pkg.manifest.market_data_hash).toBe("m1");
+    expect(pkg.manifest.raw_decision_record_ref).toBe("proofs/R.jsonl");
+    // a run claiming a corpus it didn't run against → NOT reproducible
+    expect(assembleReproducibilityPackage(rec("R-4", "PASS"), corpus).reproducible).toBe(false);
   });
 });

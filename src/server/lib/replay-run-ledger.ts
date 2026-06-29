@@ -61,12 +61,34 @@ export interface ReplayRunManifest {
   extraction_commit: string;
   replay_engine_commit: string;
   dataset_hash: string;         // = the CorpusManifest.corpus_hash this run graded against
+  market_data_hash: string;     // hash of the OHLC bars replay executed on (reproducibility — GPT)
   ir_version: string;           // IR_VERSION at run time (e.g. "1.0")
+  raw_decision_record_ref: string; // pointer to the per-trade proof-tree / decision records this run produced
+}
+
+/** The four perspectives — never collapse into one "accuracy %" (GPT). */
+export interface ReplayMetrics {
+  replay_eligibility: number;        // fraction of extracted strategies EXECUTABLE under the no-guess rule
+  behavioral_reconstruction: number; // of ELIGIBLE strategies, fraction reproducing demonstrated entries (Gate 2)
+  decision_coverage: number;         // executable decisions / expected decisions
+  failure_distribution: Record<string, number>; // dominantFailureClass table
+  variation_note?: string;           // did distributions differ by educator / family / market / teaching style?
 }
 export interface ReplayRunRecord {
   manifest: ReplayRunManifest;
   result: "PASS" | "FAIL" | "INDETERMINATE";
-  failure_distribution?: Record<string, number>; // dominantFailureClass output, when FAIL
+  metrics?: ReplayMetrics;
+  failure_distribution?: Record<string, number>; // legacy convenience; prefer metrics.failure_distribution
+}
+
+/** A self-contained REPRODUCIBILITY PACKAGE: everything needed to reproduce a run from artifacts, not memory.
+ * "Why did R-2026-014 fail?" → here is the exact artifact set, not "we think it was around when we fixed X." */
+export function assembleReproducibilityPackage(record: ReplayRunRecord, corpus: CorpusManifest): {
+  run_id: string; manifest: ReplayRunManifest; corpus: CorpusManifest; result: ReplayRunRecord["result"]; metrics?: ReplayMetrics; reproducible: boolean;
+} {
+  // reproducible iff the run's dataset_hash matches the corpus it claims to have run against
+  const reproducible = record.manifest.dataset_hash === corpus.corpus_hash;
+  return { run_id: record.manifest.run_id, manifest: record.manifest, corpus, result: record.result, metrics: record.metrics, reproducible };
 }
 
 /**
