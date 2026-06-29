@@ -424,8 +424,11 @@
     .cc-immersive { background: #000; }
     /* THE signature effect: a blurred green gradient hugging all four edges,
        continuously flowing/breathing. Intensity tied to --carter-voice. */
-    .cc-glow { position: absolute; inset: 0; z-index: 0; pointer-events: none;
-      opacity: calc(0.30 + var(--carter-voice) * 0.70);
+    /* z-index 2 = ABOVE the blob video (z-index 1) so the edge halo shows OVER
+       the blob (its center is transparent, so the blob stays visible). It was
+       z-index 0 = behind the full-screen video, which hid it completely. */
+    .cc-glow { position: absolute; inset: 0; z-index: 2; pointer-events: none;
+      opacity: calc(0.45 + var(--carter-voice) * 0.55);
       transform: scale(calc(1 + var(--carter-voice) * 0.05));
       transition: opacity 0.10s linear, transform 0.10s linear;
       will-change: opacity, transform;
