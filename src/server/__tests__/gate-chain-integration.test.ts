@@ -44,6 +44,7 @@ import { evaluateWfeGate } from "../lib/wfe-gate.js";
 import { evaluatePboGate } from "../lib/pbo-gate.js";
 import { evaluateDsrWalkForwardGate } from "../lib/b14-ci-gate.js";
 import { evaluateBifGate } from "../lib/bif-gate.js";
+import { evaluateParameterDriftGate } from "../lib/parameter-drift-gate.js";
 import {
   backtests,
   strategies,
@@ -1381,5 +1382,106 @@ describe("SPA gate — backtests.spa_result.spa_consistent_p key round-trip + di
     expect((spa as Record<string, unknown>)?.spa_p).toBe(0.02); // wrong key present
     const spaP = (spa?.spa_consistent_p as number | null | undefined) ?? null;
     expect(spaP).toBeNull(); // correct key absent → null → false-green guard
+  });
+});
+
+// ── Parameter-drift CPCV-exempt round-trip (C1 — deep-scan #4 net-new guard) ──────
+// Re-added 2026-06-29 after the merge reconciliation dropped FIX-T's original guard.
+// Guards the C1 fix: walk_forward.py CPCV path now emits param_stability_status=
+// "cpcv_not_applicable" so the parameter-drift gate returns a DISTINCT cpcv_exempt
+// result instead of silently collapsing to legacy_null (the 4th CPCV-bypassed gate).
+describe("Parameter-drift gate — param_stability_status cpcv_exempt round-trip (PGlite)", () => {
+  let ctx: TestDb;
+  // Suite IDs use prefix "99"
+  const STRAT_ID  = "99000001-0000-0000-0000-000000000001";
+  const BT_CPCV   = "99000001-0000-0000-0000-000000000010"; // CPCV: param_stability_status=cpcv_not_applicable, no param_stability
+  const BT_LEGACY = "99000001-0000-0000-0000-000000000011"; // genuine legacy: neither key present
+  const BT_DRIFT  = "99000001-0000-0000-0000-000000000012"; // real overfit_drift + confidence 0.75 → BLOCK
+
+  beforeAll(async () => {
+    ctx = await createTestDb();
+    await ctx.db.insert(strategies).values({
+      id: STRAT_ID, name: "param-drift-cpcv-test", symbol: "MES", timeframe: "5m", config: {},
+    });
+    await ctx.db.insert(backtests).values([
+      {
+        id: BT_CPCV, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        // Producer: walk_forward.py CPCV path emits param_stability_status="cpcv_not_applicable"
+        // as a top-level sibling of param_stability (absent in CPCV mode — no single window).
+        walkForwardResults: { param_stability_status: "cpcv_not_applicable" },
+      },
+      {
+        id: BT_LEGACY, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        // Genuine pre-Pass-B.1 backtest: neither key present → legacy_null grandfather.
+        walkForwardResults: {},
+      },
+      {
+        id: BT_DRIFT, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        // Plain-WF with a real overfit_drift classification — the cpcv fix must NOT weaken this.
+        walkForwardResults: {
+          param_stability_status: "computed",
+          param_stability: { drift_classification: "overfit_drift", drift_confidence: 0.75 },
+        },
+      },
+    ]);
+  });
+
+  afterAll(async () => { await ctx.close(); });
+
+  async function selectWfr(btId: string) {
+    const [row] = await ctx.db
+      .select({ wfr: backtests.walkForwardResults })
+      .from(backtests)
+      .where(eq(backtests.id, btId));
+    return row?.wfr as Record<string, unknown> | null;
+  }
+
+  it("CPCV: param_stability_status=cpcv_not_applicable stored + retrieved (JSONB round-trip)", async () => {
+    const wfr = await selectWfr(BT_CPCV);
+    expect(wfr?.param_stability_status).toBe("cpcv_not_applicable");
+    expect(wfr?.param_stability).toBeUndefined();
+  });
+
+  it("CPCV: gate returns cpcv_exempt + distinct audit, NOT legacy_null (the C1 bypass guard)", async () => {
+    const wfr = await selectWfr(BT_CPCV);
+    const ps = (wfr?.param_stability ?? null) as Record<string, unknown> | null;
+    const classification = (ps?.drift_classification ?? null) as string | null;
+    const confidence = (ps?.drift_confidence ?? null) as number | null;
+    const status = (wfr?.param_stability_status ?? null) as string | null;
+
+    const result = evaluateParameterDriftGate(classification, confidence, status);
+
+    expect(result.status).toBe("cpcv_exempt");
+    expect(result.passed).toBe(true);
+    expect(result.auditAction).toBe("lifecycle.parameter_drift_cpcv_exempt");
+    // Must NOT silently collapse to the generic legacy path — that was the C1 bug.
+    expect(result.status).not.toBe("legacy_null");
+    expect(result.auditAction).not.toBe("lifecycle.parameter_drift_unavailable");
+  });
+
+  it("Legacy: neither key → legacy_null grandfather (distinct from cpcv_exempt)", async () => {
+    const wfr = await selectWfr(BT_LEGACY);
+    const status = (wfr?.param_stability_status ?? null) as string | null;
+    const result = evaluateParameterDriftGate(null, null, status);
+    expect(result.status).toBe("legacy_null");
+    expect(result.passed).toBe(true);
+    expect(result.auditAction).toBe("lifecycle.parameter_drift_unavailable");
+  });
+
+  it("Regression: real overfit_drift + confidence 0.75 STILL BLOCKS (cpcv fix must not weaken)", async () => {
+    const wfr = await selectWfr(BT_DRIFT);
+    const ps = (wfr?.param_stability ?? null) as Record<string, unknown> | null;
+    const classification = (ps?.drift_classification ?? null) as string | null;
+    const confidence = (ps?.drift_confidence ?? null) as number | null;
+    const status = (wfr?.param_stability_status ?? null) as string | null;
+
+    const result = evaluateParameterDriftGate(classification, confidence, status);
+
+    expect(result.status).toBe("blocked");
+    expect(result.passed).toBe(false);
+    expect(result.auditAction).toBe("lifecycle.parameter_overfit_drift_block");
   });
 });
