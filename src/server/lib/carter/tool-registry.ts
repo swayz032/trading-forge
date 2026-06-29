@@ -22,13 +22,14 @@ export interface CarterTool {
   name: string;
   /** Human-readable description (for ElevenLabs agent config and docs) */
   description: string;
-  /** Access tier — only "green" tools have a live handler today */
+  /** Access tier — "green" + "yellow" tools dispatch; "red" tools never do */
   tier: CarterTier;
   /**
-   * Key in CARTER_READ_HANDLERS that dispatches this tool.
-   * Must be undefined for tier "red" tools (no live handler).
+   * Key in CARTER_READ_HANDLERS / CARTER_ACTION_HANDLERS / CARTER_CONFIRM_HANDLERS
+   * that dispatches this tool. Explicitly `null` for tier "red" tools — they are
+   * DOCUMENTED in the registry as the refusal surface but have NO tool path.
    */
-  handler?: string;
+  handler?: string | null;
 }
 
 /** Ordered list of all registered Carter tools. */
@@ -194,6 +195,142 @@ export const CARTER_TOOLS: CarterTool[] = [
     tier: "green",
     handler: "evaluate_kill_signal",
   },
+
+  // ── Confirm-action tools (Tier: yellow) — propose/confirm voice protocol ─────
+  // Each capability is a PAIR: propose_<x> reads back a summary + mints a token;
+  // confirm_<x> verifies the token then calls the underlying service directly.
+  // RISKY-BUT-REVERSIBLE only. Gates remain authoritative; nothing is forced.
+
+  {
+    name: "propose_toggle_bot_power",
+    description: "Proposes pausing or resuming Trading Forge engine authority (ACTIVE/PAUSED). Returns a human read-back summary + a single-use confirmation token. Does NOT mutate.",
+    tier: "yellow",
+    handler: "propose_toggle_bot_power",
+  },
+  {
+    name: "confirm_toggle_bot_power",
+    description: "Executes a previously-proposed bot power toggle. Requires a valid confirmation token; calls setMode(ACTIVE|PAUSED) and audits carter.action_executed.",
+    tier: "yellow",
+    handler: "confirm_toggle_bot_power",
+  },
+  {
+    name: "propose_set_learning_loop_mode",
+    description: "Proposes setting the autonomous learning-loop mode (0=OFF, 1=OBSERVE, 2=AUTOPILOT). Returns a summary + token. Lowering to OFF/OBSERVE needs no token; raising to AUTOPILOT requires confirmation.",
+    tier: "yellow",
+    handler: "propose_set_learning_loop_mode",
+  },
+  {
+    name: "confirm_set_learning_loop_mode",
+    description: "Sets the learning-loop mode. Down-shift to OFF/OBSERVE executes without a token (GREEN); up-shift to AUTOPILOT requires a valid confirmation token (YELLOW). Audits carter.action_executed.",
+    tier: "yellow",
+    handler: "confirm_set_learning_loop_mode",
+  },
+  {
+    name: "propose_toggle_vacation_mode",
+    description: "Proposes turning operator-absent (vacation) mode on or off. Returns a summary + token. Does NOT mutate.",
+    tier: "yellow",
+    handler: "propose_toggle_vacation_mode",
+  },
+  {
+    name: "confirm_toggle_vacation_mode",
+    description: "Sets/clears system_state.operator_absent_since. Requires a valid confirmation token; audits carter.action_executed.",
+    tier: "yellow",
+    handler: "confirm_toggle_vacation_mode",
+  },
+  {
+    name: "propose_self_restart",
+    description: "Proposes a graceful backend self-restart. Returns a summary + token. Does NOT restart.",
+    tier: "yellow",
+    handler: "propose_self_restart",
+  },
+  {
+    name: "confirm_self_restart",
+    description: "Triggers a graceful self-restart via the HMAC-signed /api/admin/self-restart endpoint. Requires a valid confirmation token; audits carter.action_executed.",
+    tier: "yellow",
+    handler: "confirm_self_restart",
+  },
+  {
+    name: "propose_trigger_n8n_workflow",
+    description: "Proposes firing an n8n webhook workflow by its webhook path. Returns a summary + token. Cannot create/update/delete workflows (that is RED).",
+    tier: "yellow",
+    handler: "propose_trigger_n8n_workflow",
+  },
+  {
+    name: "confirm_trigger_n8n_workflow",
+    description: "Fires the n8n webhook at N8N_BASE_URL/webhook/<path>. Requires a valid confirmation token; webhook trigger paths only; audits carter.action_executed.",
+    tier: "yellow",
+    handler: "confirm_trigger_n8n_workflow",
+  },
+  {
+    name: "propose_run_quantum",
+    description: "Proposes running the LOCAL quantum Monte Carlo survival simulation for a backtest. Returns a summary + token. Cloud QPU stays OFF.",
+    tier: "yellow",
+    handler: "propose_run_quantum",
+  },
+  {
+    name: "confirm_run_quantum",
+    description: "Runs runQuantumMC for a backtest with cloud OFF (challenger-only, advisory). Requires a valid confirmation token; audits carter.action_executed.",
+    tier: "yellow",
+    handler: "confirm_run_quantum",
+  },
+  {
+    name: "propose_request_lifecycle_check",
+    description: "Proposes running the lifecycle sweep (auto-promotion + auto-demotion checks). Returns a summary + token. Does NOT mutate.",
+    tier: "yellow",
+    handler: "propose_request_lifecycle_check",
+  },
+  {
+    name: "confirm_request_lifecycle_check",
+    description: "Runs checkAutoPromotions + checkAutoDemotions. Honors pipeline pause. Requires a valid confirmation token; gates run inside; audits carter.action_executed.",
+    tier: "yellow",
+    handler: "confirm_request_lifecycle_check",
+  },
+  {
+    name: "propose_request_promotion",
+    description: "Proposes promoting a strategy to a target lifecycle state. Returns a summary + token. The gates remain authoritative; nothing is forced.",
+    tier: "yellow",
+    handler: "propose_request_promotion",
+  },
+  {
+    name: "confirm_request_promotion",
+    description: "Calls lifecycleService.promoteStrategy with actor='voice_agent'. Gates run INSIDE; a gate block is RETURNED as the reason, never bypassed. Requires a valid confirmation token; audits carter.action_executed.",
+    tier: "yellow",
+    handler: "confirm_request_promotion",
+  },
+  {
+    name: "propose_rearm_scheduler_job",
+    description: "Proposes re-enabling a disabled scheduler job. Returns a summary + token. Does NOT mutate.",
+    tier: "yellow",
+    handler: "propose_rearm_scheduler_job",
+  },
+  {
+    name: "confirm_rearm_scheduler_job",
+    description: "Re-enables a disabled scheduler job via enableJob(). Requires a valid confirmation token; audits carter.action_executed.",
+    tier: "yellow",
+    handler: "confirm_rearm_scheduler_job",
+  },
+
+  // ── RED tools (Tier: red) — DOCUMENTED refusal surface, NO tool path ─────────
+  // These are listed so the registry positively documents what Carter will NEVER
+  // do. handler is `null`. POST /api/carter/<name> returns 403 red_action_no_tool_path.
+  // Capital-risk, gate-threshold, safety-disable, and destructive actions live here.
+
+  { name: "enable_live_execution",   description: "RED — enable live order execution. No tool path; refused.", tier: "red", handler: null },
+  { name: "place_live_order",        description: "RED — place a live broker order. No tool path; refused.", tier: "red", handler: null },
+  { name: "open_position",           description: "RED — open a trading position. No tool path; refused.", tier: "red", handler: null },
+  { name: "clear_kill_switch",       description: "RED — clear the production halt kill switch. No tool path; refused.", tier: "red", handler: null },
+  { name: "clear_safety_autopause",  description: "RED — clear an AUTOPAUSE drawdown-velocity safety pause. No tool path; refused.", tier: "red", handler: null },
+  { name: "clear_stuck_session",     description: "RED — force-clear a stuck paper/live session. No tool path; refused.", tier: "red", handler: null },
+  { name: "delete_backtest",         description: "RED — delete a backtest record. No tool path; refused.", tier: "red", handler: null },
+  { name: "delete_strategy",         description: "RED — delete a strategy. No tool path; refused.", tier: "red", handler: null },
+  { name: "set_gate_threshold",      description: "RED — change a gate threshold (B14/WFE/PBO/DSR/payout). No tool path; refused.", tier: "red", handler: null },
+  { name: "set_compliance_shadow",   description: "RED — switch backtest compliance to shadow mode. No tool path; refused.", tier: "red", handler: null },
+  { name: "edit_framework_sizing",   description: "RED — edit framework sizing / risk parameters. No tool path; refused.", tier: "red", handler: null },
+  { name: "enable_cloud_quantum",    description: "RED — enable IBM cloud quantum QPU. No tool path; refused.", tier: "red", handler: null },
+  { name: "assign_rl_challenger",    description: "RED — assign an RL challenger to an account route. No tool path; refused.", tier: "red", handler: null },
+  { name: "manage_n8n_workflow",     description: "RED — create/update/delete an n8n workflow. No tool path; refused.", tier: "red", handler: null },
+  { name: "kasa_power_cycle",        description: "RED — remote Kasa power-cycle the tower. No tool path; refused.", tier: "red", handler: null },
+  { name: "disable_safety_cron",     description: "RED — disable a safety cron (heartbeat, drift, recon). No tool path; refused.", tier: "red", handler: null },
 ];
 
 /** Fast O(1) lookup by tool name. Returns undefined when not found. */
