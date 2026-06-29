@@ -320,6 +320,14 @@ of what the system can faithfully compile, which is itself worth knowing.
   (Gate 1.75) / execution-determinism (Gate 1.5) / behavioral-reconstruction (Gate 2) into one accuracy
   number. Operational governance only — no representation, no protocol threshold changed. **Fourth frozen
   layer: representation + protocol + governance + CORPUS.**
+- **2026-06-28 — CREATE the append-only research record (permanent scientific record, separate from the mutable
+  engineering dashboard).** `docs/golden/research-record-v1.md` — created empty BEFORE the first campaign so
+  the first result is an append, not hindsight-shaped; per-campaign schema (corpus/IR version, replay coverage,
+  behavioral reconstruction, decision coverage, failure distribution, fidelity/determinism, threats to
+  validity); append-only (engineering improvements never rewrite a recorded conclusion). Encodes the
+  do-not-optimize-replay-%-alone rule (System B with UNKNOWN-refusals > System A guessing) + four threats to
+  validity recorded in advance (seed corpus not official, engine not attached, branch divergence, evidence_mode
+  heuristic). Governance/reporting only.
 - **DEFERRED to post-replay (do NOT pre-build):** **Reconstruction Rate** = strategies that replay
   successfully / strategies that pass Gate 1.5. GPT-flagged as "after replay exists, not before" — it isolates
   the final research question (representation+extraction working vs source-unreconstructable) and is meaningless
