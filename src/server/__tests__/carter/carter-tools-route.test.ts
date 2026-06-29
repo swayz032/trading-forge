@@ -42,6 +42,15 @@ vi.mock("../../lib/carter/carter-actions.js", () => ({
   CARTER_ACTION_HANDLERS: {},
 }));
 
+// Prevent carter-issues-store.ts from importing db/index.js in the route test.
+vi.mock("../../lib/carter/carter-issues-store.js", () => ({
+  listOpenIssues:  vi.fn(() => []),
+  hydrateFromDb:   vi.fn(async () => {}),
+  upsertIssue:     vi.fn(),
+  resolveIssue:    vi.fn(),
+  _resetForTest:   vi.fn(),
+}));
+
 // ── Imports ───────────────────────────────────────────────────────────────────
 
 import { describe, it, expect, vi, beforeEach } from "vitest";

@@ -28,8 +28,30 @@ import { verifyCarterToolAuth } from "../lib/carter/carter-auth.js";
 import { getCarterTool } from "../lib/carter/tool-registry.js";
 import { CARTER_READ_HANDLERS } from "../lib/carter/carter-reads.js";
 import { CARTER_ACTION_HANDLERS } from "../lib/carter/carter-actions.js";
+import { listOpenIssues } from "../lib/carter/carter-issues-store.js";
 
 export const carterToolsRouter = Router();
+
+// ─── GET /api/carter/issue-badge — non-sensitive summary for the Office card ──
+//
+// Returns open-issue count and max severity for the Office dashboard badge.
+// No auth required: only a count + severity label is exposed (no strategy names,
+// system internals, or sensitive data).
+// MUST be mounted BEFORE the /:tool handler so "issue-badge" is not parsed as
+// a tool name.
+carterToolsRouter.get("/issue-badge", (_req: Request, res: Response): void => {
+  const open = listOpenIssues();
+  const maxSeverity =
+    open.some((i) => i.severity === "critical")
+      ? "critical"
+      : open.some((i) => i.severity === "warning")
+        ? "warning"
+        : open.length > 0
+          ? "info"
+          : null;
+
+  res.json({ count: open.length, maxSeverity });
+});
 
 // ─── POST /api/carter/:tool ───────────────────────────────────────────────────
 

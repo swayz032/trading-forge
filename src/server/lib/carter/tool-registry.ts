@@ -125,6 +125,12 @@ export const CARTER_TOOLS: CarterTool[] = [
     tier: "green",
     handler: "report_drawdown_status",
   },
+  {
+    name: "get_current_issues",
+    description: "Returns the live open-issue list from the proactive issue watcher (severity-sorted: critical first). Call this FIRST on connect to brief the operator on anything that needs attention.",
+    tier: "green",
+    handler: "get_current_issues",
+  },
 
   // ── Action tools (Tier: green) — capital-SAFE, never bypass a gate ───────────
 

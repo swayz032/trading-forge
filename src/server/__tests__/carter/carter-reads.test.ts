@@ -97,6 +97,14 @@ vi.mock("../../lib/audit-log-helper.js",       () => ({
 vi.mock("../../lib/logger.js",                 () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
+// Carter issue store mock — listOpenIssues() is overridden per test
+vi.mock("../../lib/carter/carter-issues-store.js", () => ({
+  listOpenIssues: vi.fn(() => []),
+  hydrateFromDb:  vi.fn(async () => {}),
+  upsertIssue:    vi.fn(),
+  resolveIssue:   vi.fn(),
+  _resetForTest:  vi.fn(),
+}));
 
 // ── Gate getter mocks (D-2 — default values mirror code defaults) ─────────────
 
@@ -116,6 +124,7 @@ vi.mock("../../lib/pbo-gate.js", () => ({
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { db } from "../../db/index.js";
+import { listOpenIssues } from "../../lib/carter/carter-issues-store.js";
 import { getB14CiHighThreshold } from "../../lib/b14-ci-gate.js";
 import { getWfeHardFloor } from "../../lib/wfe-gate.js";
 import { getPboLifecycleThreshold } from "../../lib/pbo-gate.js";
@@ -524,5 +533,113 @@ describe("queryAuditLog handler", () => {
     expect(row.correlationId).toBe("corr-abc");
     expect(row.errorMessage).toBeNull();
     expect(row.createdAt).toBe("2026-06-01T09:00:00.000Z");
+  });
+});
+
+// ─── get_current_issues ───────────────────────────────────────────────────────
+
+describe("get_current_issues handler", () => {
+  // Cast the mocked listOpenIssues so we can override its return value per test
+  const mockListOpenIssues = listOpenIssues as ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    mockListOpenIssues.mockReturnValue([]);
+  });
+
+  it("returns all-clear when there are no open issues", async () => {
+    mockListOpenIssues.mockReturnValue([]);
+
+    const result = await CARTER_READ_HANDLERS["get_current_issues"]({}) as {
+      issues: unknown[];
+      count: number;
+      maxSeverity: string | null;
+      summary: string;
+    };
+
+    expect(result.count).toBe(0);
+    expect(result.issues).toHaveLength(0);
+    expect(result.maxSeverity).toBeNull();
+    expect(result.summary).toBe("All clear — no open issues.");
+  });
+
+  it("returns issue list and correct maxSeverity=critical", async () => {
+    mockListOpenIssues.mockReturnValue([
+      {
+        issue_key: "alert:kill_switch",
+        severity:  "critical",
+        title:     "Kill switch engaged",
+        detail:    "Layer 6",
+        source_event: "alert:triggered",
+        first_seen: new Date("2026-06-28T09:00:00Z"),
+        last_seen:  new Date("2026-06-28T09:01:00Z"),
+        resolved:   false,
+      },
+      {
+        issue_key: "system_health_degraded",
+        severity:  "warning",
+        title:     "System health degraded",
+        detail:    "Health status: degraded",
+        source_event: "health_poll",
+        first_seen: new Date("2026-06-28T08:00:00Z"),
+        last_seen:  new Date("2026-06-28T09:00:00Z"),
+        resolved:   false,
+      },
+    ]);
+
+    const result = await CARTER_READ_HANDLERS["get_current_issues"]({}) as {
+      issues: Array<Record<string, unknown>>;
+      count: number;
+      maxSeverity: string | null;
+      summary: string;
+    };
+
+    expect(result.count).toBe(2);
+    expect(result.maxSeverity).toBe("critical");
+    expect(result.issues).toHaveLength(2);
+
+    // First issue (critical)
+    expect(result.issues[0]!["issue_key"]).toBe("alert:kill_switch");
+    expect(result.issues[0]!["severity"]).toBe("critical");
+    expect(result.issues[0]!["title"]).toBe("Kill switch engaged");
+    expect(result.issues[0]!["first_seen"]).toBe("2026-06-28T09:00:00.000Z");
+
+    // Summary mentions both issues
+    expect(result.summary).toContain("2 open issues");
+    expect(result.summary).toContain("[CRITICAL]");
+    expect(result.summary).toContain("[WARNING]");
+  });
+
+  it("returns maxSeverity=warning when no critical issues", async () => {
+    mockListOpenIssues.mockReturnValue([
+      {
+        issue_key: "w1", severity: "warning", title: "Warning",
+        first_seen: new Date(), last_seen: new Date(), resolved: false,
+      },
+      {
+        issue_key: "i1", severity: "info", title: "Info",
+        first_seen: new Date(), last_seen: new Date(), resolved: false,
+      },
+    ]);
+
+    const result = await CARTER_READ_HANDLERS["get_current_issues"]({}) as {
+      maxSeverity: string | null;
+    };
+    expect(result.maxSeverity).toBe("warning");
+  });
+
+  it("returns maxSeverity=info when only info issues", async () => {
+    mockListOpenIssues.mockReturnValue([
+      {
+        issue_key: "i1", severity: "info", title: "Info",
+        first_seen: new Date(), last_seen: new Date(), resolved: false,
+      },
+    ]);
+
+    const result = await CARTER_READ_HANDLERS["get_current_issues"]({}) as {
+      maxSeverity: string | null;
+      summary: string;
+    };
+    expect(result.maxSeverity).toBe("info");
+    expect(result.summary).toContain("1 open issue:");
   });
 });

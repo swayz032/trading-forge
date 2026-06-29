@@ -121,6 +121,30 @@ router.get("/events", (req: Request, res: Response) => {
   });
 });
 
+// ─── Internal SSE broadcast listeners (Carter issue watcher et al.) ──────────
+// Additive hook for in-process subscribers that need to react to SSE events
+// without going through the external HTTP SSE stream. Listeners are registered
+// via onSseBroadcast() and receive the ORIGINAL data object BEFORE JSON
+// serialization (no need to JSON.parse on the receiving end).
+//
+// Design invariant: listener errors are caught inside broadcastSSE() and MUST
+// NOT abort the broadcast chain. A buggy or crashing internal listener must
+// never prevent external SSE clients from receiving their event.
+const _internalSseListeners: Array<(event: string, data: unknown) => void> = [];
+
+/**
+ * Register an in-process listener that fires on every broadcastSSE() call.
+ * The callback receives (eventName, originalDataObject) before serialization.
+ * Errors thrown by the callback are caught and swallowed — callers should be
+ * fail-soft internally.
+ *
+ * Note: there is no deregistration API. Listeners are expected to be long-lived
+ * (registered once at service startup, alive for the process lifetime).
+ */
+export function onSseBroadcast(cb: (event: string, data: unknown) => void): void {
+  _internalSseListeners.push(cb);
+}
+
 // ─── broadcastSSE ─────────────────────────────────────────────
 // Exported for use throughout the server. Assigns a sequence number to every
 // event, writes it to the ring buffer, then fans out to all live clients.
@@ -132,6 +156,13 @@ router.get("/events", (req: Request, res: Response) => {
 // A throw here would propagate to the caller and can abort the post-commit
 // broadcast entirely, leaving other clients without the event.
 export function broadcastSSE(event: string, data: unknown): void {
+  // ── Notify internal in-process subscribers BEFORE external fan-out ──
+  // Listeners receive the original data object (no JSON.parse needed).
+  // Errors are caught so a crashing listener cannot abort the broadcast chain.
+  for (const listener of _internalSseListeners) {
+    try { listener(event, data); } catch { /* swallow — must not abort broadcast */ }
+  }
+
   const seq = ++eventSeq;
 
   // Pass 5 Track A F-10: SERIALIZE FIRST. Push the serialized string into the

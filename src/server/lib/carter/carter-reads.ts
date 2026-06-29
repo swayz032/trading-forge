@@ -561,6 +561,52 @@ async function reportDrawdownStatus(_params: unknown): Promise<unknown> {
   return buildDrawdownDistance();
 }
 
+// ─── get_current_issues ───────────────────────────────────────────────────────
+// Returns the live open-issue list from the proactive issue watcher.
+// This is the FIRST tool Carter should call on connect so the operator briefing
+// is grounded in real observed system state, not a cached or guessed summary.
+
+import { listOpenIssues } from "./carter-issues-store.js";
+
+async function getCurrentIssues(_params: unknown): Promise<unknown> {
+  const issues = listOpenIssues();
+
+  if (issues.length === 0) {
+    return {
+      issues: [],
+      count: 0,
+      maxSeverity: null,
+      summary: "All clear — no open issues.",
+    };
+  }
+
+  const maxSeverity =
+    issues.some((i) => i.severity === "critical")
+      ? "critical"
+      : issues.some((i) => i.severity === "warning")
+        ? "warning"
+        : "info";
+
+  const summaryParts = issues.map(
+    (i) => `[${i.severity.toUpperCase()}] ${i.title}`,
+  );
+
+  return {
+    issues: issues.map((i) => ({
+      issue_key:    i.issue_key,
+      severity:     i.severity,
+      title:        i.title,
+      detail:       i.detail ?? null,
+      source_event: i.source_event ?? null,
+      first_seen:   i.first_seen instanceof Date ? i.first_seen.toISOString() : String(i.first_seen),
+      last_seen:    i.last_seen instanceof Date  ? i.last_seen.toISOString()  : String(i.last_seen),
+    })),
+    count:       issues.length,
+    maxSeverity,
+    summary:     `${issues.length} open issue${issues.length === 1 ? "" : "s"}: ${summaryParts.join("; ")}`,
+  };
+}
+
 // ─── CARTER_READ_HANDLERS ─────────────────────────────────────────────────────
 
 /**
@@ -584,5 +630,6 @@ export const CARTER_READ_HANDLERS: Record<string, (params: unknown) => Promise<u
   report_recent_alerts:       reportRecentAlerts,
   query_audit_log:            queryAuditLog,
   report_drawdown_status:     reportDrawdownStatus,
+  get_current_issues:         getCurrentIssues,
 };
 

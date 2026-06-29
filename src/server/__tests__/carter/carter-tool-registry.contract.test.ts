@@ -62,6 +62,14 @@ vi.mock("../../lib/audit-log-helper.js", () => ({
 vi.mock("../../lib/logger.js", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
+// Carter issue store mock (prevents DB access in contract test)
+vi.mock("../../lib/carter/carter-issues-store.js", () => ({
+  listOpenIssues:  vi.fn(() => []),
+  hydrateFromDb:   vi.fn(async () => {}),
+  upsertIssue:     vi.fn(),
+  resolveIssue:    vi.fn(),
+  _resetForTest:   vi.fn(),
+}));
 // Action handler service mocks
 vi.mock("../../services/backtest-service.js", () => ({ runBacktest: vi.fn() }));
 vi.mock("../../services/monte-carlo-service.js", () => ({ runMonteCarlo: vi.fn() }));
@@ -107,6 +115,7 @@ const REQUIRED_READ_TOOLS = [
   "report_recent_alerts",
   "query_audit_log",
   "report_drawdown_status",
+  "get_current_issues",
 ] as const;
 
 const REQUIRED_ACTION_TOOLS = [
@@ -127,8 +136,8 @@ const REQUIRED_TOOLS = [...REQUIRED_READ_TOOLS, ...REQUIRED_ACTION_TOOLS] as con
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe("Carter tool registry — structural contract", () => {
-  it("has exactly 25 tools (15 read + 10 action)", () => {
-    expect(CARTER_TOOLS).toHaveLength(25);
+  it("has exactly 26 tools (16 read + 10 action)", () => {
+    expect(CARTER_TOOLS).toHaveLength(26);
   });
 
   it("contains all required tool names", () => {
@@ -209,8 +218,8 @@ describe("Carter tool registry — structural contract", () => {
     }
   });
 
-  it("CARTER_READ_HANDLERS exports exactly 15 functions", () => {
-    expect(Object.keys(CARTER_READ_HANDLERS)).toHaveLength(15);
+  it("CARTER_READ_HANDLERS exports exactly 16 functions", () => {
+    expect(Object.keys(CARTER_READ_HANDLERS)).toHaveLength(16);
   });
 
   it("CARTER_ACTION_HANDLERS exports exactly 10 functions", () => {

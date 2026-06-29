@@ -834,6 +834,17 @@ export const server = app.listen(port, () => {
     });
   }
 
+  // ─── Carter proactive issue watcher (Wave 4 backend, 2026-06-28) ────────────
+  // PIPELINE-GATE EXEMPT: starts unconditionally — NOT gated behind isActive().
+  // FAIL-SOFT: any startup error is caught here so it never crashes the API.
+  import("./services/carter-issue-watcher.js").then(({ startCarterIssueWatcher }) => {
+    startCarterIssueWatcher().catch((err: unknown) => {
+      logger.warn({ err }, "carter-issue-watcher: startup failed (non-fatal — watcher disabled for this session)");
+    });
+  }).catch((err: unknown) => {
+    logger.warn({ err }, "carter-issue-watcher: import failed at boot (non-fatal)");
+  });
+
   // ─── Track 3 completion audit record (written once, idempotent guard) ────────
   // trading-forge-architect signed off Track 3 — Stop/TP/Sizing Framework as
   // complete. This is the canonical persistence record for that sign-off.
