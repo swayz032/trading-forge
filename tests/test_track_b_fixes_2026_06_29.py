@@ -52,24 +52,27 @@ class TestSlippageStopMarketProhibited:
         with pytest.raises(ValueError, match="stop_market orders are prohibited"):
             compute_slippage(df, spec, order_type="stop_market")
 
-    def test_stop_market_error_message_mentions_stop_with_budget(self):
-        """Error message must mention the correct alternative (stop with slippage budget)."""
+    def test_stop_market_error_message_points_to_stop_limit(self):
+        """Error message must name the correct alternative (stop_limit), matching fill_model.py.
+        2026-06-29 reconcile: was asserting an "explicit slippage budget" message from the
+        removed FIX-3 branch; the canonical L-1 guard (and fill_model.py:217) say 'Use stop_limit'.
+        """
         from src.engine.slippage import compute_slippage
         df = self._make_df()
         spec = self._make_spec()
-        with pytest.raises(ValueError, match="explicit slippage budget"):
+        with pytest.raises(ValueError, match="stop_limit"):
             compute_slippage(df, spec, order_type="stop_market")
 
-    def test_stop_still_works_with_2x(self):
-        """'stop' (without _market suffix) must still produce 2x slippage — no regression."""
+    def test_stop_also_prohibited(self):
+        """'stop' is ALSO prohibited (ban-BOTH), matching fill_model.py:217 — there is no 2x path.
+        2026-06-29 reconcile: the prior test_stop_still_works_with_2x assumed a 2x 'stop' branch
+        that contradicted fill_model's ban-both contract; slippage.py now rejects both order types.
+        """
         from src.engine.slippage import compute_slippage
-        import numpy as np
         df = self._make_df()
         spec = self._make_spec()
-        stop_slip = compute_slippage(df, spec, base_ticks=1.0, order_type="stop")
-        market_slip = compute_slippage(df, spec, base_ticks=1.0, order_type="market")
-        # Stop should be 2x market slippage
-        assert np.allclose(stop_slip, market_slip * 2.0)
+        with pytest.raises(ValueError, match="prohibited"):
+            compute_slippage(df, spec, order_type="stop")
 
     def test_market_order_still_works(self):
         """'market' must still return base slippage — no regression."""

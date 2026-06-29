@@ -133,19 +133,13 @@ def compute_slippage(
     slippage_ticks = _round_ticks_by_mode(raw_ticks, _ROUNDING_MODE)
     slippage_dollars = slippage_ticks * contract_spec.tick_value
 
-    # Order-type slippage modifier
-    # FIX-3 (2026-06-29): stop_market was silently accepting 2x slippage while
-    # fill_model.py raises ValueError for the same order_type.  Align sibling
-    # contract: raise here so no caller gets silently-wrong 2x instead of a
-    # hard error.  Use "stop_limit" (stop order with explicit slippage budget)
-    # per CLAUDE.md mandate.
-    if order_type == "stop_market":
-        raise ValueError(
-            "stop_market orders are prohibited — use stop with explicit slippage budget"
-        )
-    elif order_type == "stop":
-        slippage_dollars = slippage_dollars * 2.0  # Stop order: 2x slippage
-    elif order_type == "limit":
+    # Order-type slippage modifier.
+    # NOTE (2026-06-29 reconcile): "stop" and "stop_market" are already rejected by
+    # the L-1 guard at the top of this function — matching fill_model.py:217's
+    # ban-BOTH contract (use stop_limit). The earlier FIX-3 here that re-raised only
+    # stop_market and kept "stop" at 2x was wrong (fill_model bans both) and dead
+    # (the L-1 guard raised first); removed to keep slippage<->fill_model in lockstep.
+    if order_type == "limit":
         # Limit orders: slippage = half-spread only (better fill)
         slippage_dollars = slippage_dollars * 0.5
     elif order_type == "stop_limit":
