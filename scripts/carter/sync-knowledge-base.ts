@@ -42,6 +42,11 @@ const CANONICAL: Array<{ kbName: string; relPath: string }> = [
   { kbName: "Trading Forge System Map v2.md", relPath: "Trading Forge System Map v2.md" },
   { kbName: "prop-firm-rules-2026-topstep.md", relPath: "docs/prop-firm-rules-2026-topstep.md" },
   { kbName: "prop-firm-rules-2026-mffu.md", relPath: "docs/prop-firm-rules-2026-mffu.md" },
+  // Wave C domain-mastery corpora (curated, TF-anchored).
+  { kbName: "futures-instruments.md", relPath: "docs/carter-kb/futures-instruments.md" },
+  { kbName: "quant-validation-methods.md", relPath: "docs/carter-kb/quant-validation-methods.md" },
+  { kbName: "trading-methods-and-edge.md", relPath: "docs/carter-kb/trading-methods-and-edge.md" },
+  { kbName: "ai-quant-systems.md", relPath: "docs/carter-kb/ai-quant-systems.md" },
 ];
 
 const APPLY = process.argv.includes("--apply");
