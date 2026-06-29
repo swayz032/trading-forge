@@ -43,6 +43,7 @@ import type { TestDb } from "./helpers/pglite-db.js";
 import { evaluateWfeGate } from "../lib/wfe-gate.js";
 import { evaluatePboGate } from "../lib/pbo-gate.js";
 import { evaluateDsrWalkForwardGate } from "../lib/b14-ci-gate.js";
+import { evaluateBifGate } from "../lib/bif-gate.js";
 import {
   backtests,
   strategies,
@@ -1195,3 +1196,190 @@ function shadowSignals_19long1short(): ShadowSignal[] {
     intended_size: 3,
   }));
 }
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Suite 6 — BIF gate — backtests.bif numeric column round-trip (PGlite)
+// Closes accuracy-validator F-1/H6: WRC/SPA/BIF had no gate-chain integration coverage.
+// `bif` is a Drizzle numeric() column → Postgres returns it as a STRING in JS, so the
+// consumer must Number()-coerce it. This suite proves the coercion + PASS/BLOCK/LEGACY.
+// ════════════════════════════════════════════════════════════════════════════════
+describe("BIF gate — backtests.bif numeric column round-trip + string-coercion (PGlite)", () => {
+  let ctx: TestDb;
+
+  const STRAT_ID    = "ba000001-0000-0000-0000-000000000001";
+  const BT_CLEAN    = "ba000001-0000-0000-0000-000000000010"; // bif=1.5 → clean PASS
+  const BT_BLOCK    = "ba000001-0000-0000-0000-000000000011"; // bif=5.0 → BLOCK (>4.0)
+  const BT_LEGACY   = "ba000001-0000-0000-0000-000000000012"; // bif=null → grandfather PASS
+
+  beforeAll(async () => {
+    ctx = await createTestDb();
+    await ctx.db.insert(strategies).values({
+      id: STRAT_ID, name: "bif-integration-test", symbol: "MES", timeframe: "5m", config: {},
+    });
+    await ctx.db.insert(backtests).values([
+      { id: BT_CLEAN, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        bif: "1.5", kEff: "8" },
+      { id: BT_BLOCK, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        bif: "5.0", kEff: "8" },
+      { id: BT_LEGACY, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        bif: null, kEff: null },
+    ]);
+  });
+  afterAll(async () => { await ctx.close(); });
+
+  async function selectBif(btId: string) {
+    const [row] = await ctx.db
+      .select({ bif: backtests.bif, kEff: backtests.kEff })
+      .from(backtests).where(eq(backtests.id, btId));
+    return row;
+  }
+
+  it("numeric column round-trips as STRING (Drizzle numeric semantics) — consumer must coerce", async () => {
+    const row = await selectBif(BT_CLEAN);
+    // Postgres numeric → JS string. If this ever becomes a number, the coercion
+    // contract changed and downstream Number() is now redundant (still safe).
+    expect(typeof row?.bif).toBe("string");
+    expect(Number(row?.bif)).toBe(1.5);
+  });
+
+  it("PASS: bif=1.5 (≤ 2.0 warn floor) → gate passed, reason bif.clean", async () => {
+    const row = await selectBif(BT_CLEAN);
+    const result = evaluateBifGate(Number(row?.bif), Number(row?.kEff));
+    expect(result.passed).toBe(true);
+    expect(result.reason).toBe("bif.clean");
+  });
+
+  it("BLOCK: bif=5.0 (> 4.0 block threshold) → gate passed=false", async () => {
+    const row = await selectBif(BT_BLOCK);
+    const result = evaluateBifGate(Number(row?.bif), Number(row?.kEff));
+    expect(result.passed).toBe(false);
+    expect(result.reason).toBe("bif.blocked_exceeds_threshold");
+  });
+
+  it("LEGACY PASS: bif=null (pre-Wave-3 backtest) → grandfather pass", async () => {
+    const row = await selectBif(BT_LEGACY);
+    // null coerces to NaN via Number(null)=0 — so guard on the raw null, mirroring
+    // the consumer (lifecycle passes null, not Number(null)).
+    const rawBif = row?.bif == null ? null : Number(row.bif);
+    const result = evaluateBifGate(rawBif, null);
+    expect(result.passed).toBe(true);
+    expect(result.reason).toBe("bif.legacy_null_pre_wave3");
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Suite 7 — WRC gate — backtests.wrc_result.p_value JSONB key round-trip (PGlite)
+// The false-green class: a silent Python-side key rename → consumer reads null →
+// grandfather pass, invisible to CI. This suite FAILS if the p_value key drifts.
+// ════════════════════════════════════════════════════════════════════════════════
+describe("WRC gate — backtests.wrc_result.p_value key round-trip + disconnect (PGlite)", () => {
+  let ctx: TestDb;
+
+  const STRAT_ID    = "bb000001-0000-0000-0000-000000000001";
+  const BT_SIG      = "bb000001-0000-0000-0000-000000000010"; // p_value=0.01 significant
+  const BT_INSIG    = "bb000001-0000-0000-0000-000000000011"; // p_value=0.40 insignificant
+  const BT_WRONGKEY = "bb000001-0000-0000-0000-000000000012"; // wrong key `pvalue` → null
+
+  beforeAll(async () => {
+    ctx = await createTestDb();
+    await ctx.db.insert(strategies).values({
+      id: STRAT_ID, name: "wrc-integration-test", symbol: "MES", timeframe: "5m", config: {},
+    });
+    await ctx.db.insert(backtests).values([
+      { id: BT_SIG, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        wrcResult: { p_value: 0.01, n_strategies: 1 } },
+      { id: BT_INSIG, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        wrcResult: { p_value: 0.40, n_strategies: 1 } },
+      { id: BT_WRONGKEY, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        wrcResult: { pvalue: 0.01 } },
+    ]);
+  });
+  afterAll(async () => { await ctx.close(); });
+
+  async function selectWrc(btId: string) {
+    const [row] = await ctx.db
+      .select({ wrc: backtests.wrcResult }).from(backtests).where(eq(backtests.id, btId));
+    return row?.wrc as Record<string, unknown> | null;
+  }
+
+  it("round-trip: consumer reads .p_value (the lifecycle-service.ts:521 key) — significant", async () => {
+    const wrc = await selectWrc(BT_SIG);
+    const wrcPValue = (wrc?.p_value as number | null | undefined) ?? null;
+    expect(wrcPValue).toBe(0.01); // significant (< 0.05) → orchestrator wrc_p passes
+  });
+
+  it("round-trip: insignificant p_value preserved (orchestrator wrc_p would block)", async () => {
+    const wrc = await selectWrc(BT_INSIG);
+    const wrcPValue = (wrc?.p_value as number | null | undefined) ?? null;
+    expect(wrcPValue).toBe(0.40); // ≥ 0.05 → not significant → block input
+  });
+
+  it("DISCONNECT (wrong key): producer writes `pvalue`; consumer reads `p_value`=null → silent grandfather", async () => {
+    const wrc = await selectWrc(BT_WRONGKEY);
+    expect((wrc as Record<string, unknown>)?.pvalue).toBe(0.01); // wrong key IS present
+    const wrcPValue = (wrc?.p_value as number | null | undefined) ?? null;
+    expect(wrcPValue).toBeNull(); // correct key absent → null → the false-green this test guards
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Suite 8 — SPA gate — backtests.spa_result.spa_consistent_p JSONB key round-trip (PGlite)
+// ════════════════════════════════════════════════════════════════════════════════
+describe("SPA gate — backtests.spa_result.spa_consistent_p key round-trip + disconnect (PGlite)", () => {
+  let ctx: TestDb;
+
+  const STRAT_ID    = "bc000001-0000-0000-0000-000000000001";
+  const BT_SIG      = "bc000001-0000-0000-0000-000000000010"; // spa_consistent_p=0.02 significant
+  const BT_INSIG    = "bc000001-0000-0000-0000-000000000011"; // spa_consistent_p=0.30 insignificant
+  const BT_WRONGKEY = "bc000001-0000-0000-0000-000000000012"; // wrong key `spa_p` → null
+
+  beforeAll(async () => {
+    ctx = await createTestDb();
+    await ctx.db.insert(strategies).values({
+      id: STRAT_ID, name: "spa-integration-test", symbol: "MES", timeframe: "5m", config: {},
+    });
+    await ctx.db.insert(backtests).values([
+      { id: BT_SIG, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        spaResult: { spa_consistent_p: 0.02 } },
+      { id: BT_INSIG, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        spaResult: { spa_consistent_p: 0.30 } },
+      { id: BT_WRONGKEY, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        spaResult: { spa_p: 0.02 } },
+    ]);
+  });
+  afterAll(async () => { await ctx.close(); });
+
+  async function selectSpa(btId: string) {
+    const [row] = await ctx.db
+      .select({ spa: backtests.spaResult }).from(backtests).where(eq(backtests.id, btId));
+    return row?.spa as Record<string, unknown> | null;
+  }
+
+  it("round-trip: consumer reads .spa_consistent_p (the lifecycle-service.ts:522 key) — significant", async () => {
+    const spa = await selectSpa(BT_SIG);
+    const spaP = (spa?.spa_consistent_p as number | null | undefined) ?? null;
+    expect(spaP).toBe(0.02);
+  });
+
+  it("round-trip: insignificant spa_consistent_p preserved (orchestrator spa_p would block)", async () => {
+    const spa = await selectSpa(BT_INSIG);
+    const spaP = (spa?.spa_consistent_p as number | null | undefined) ?? null;
+    expect(spaP).toBe(0.30);
+  });
+
+  it("DISCONNECT (wrong key): producer writes `spa_p`; consumer reads `spa_consistent_p`=null → silent grandfather", async () => {
+    const spa = await selectSpa(BT_WRONGKEY);
+    expect((spa as Record<string, unknown>)?.spa_p).toBe(0.02); // wrong key present
+    const spaP = (spa?.spa_consistent_p as number | null | undefined) ?? null;
+    expect(spaP).toBeNull(); // correct key absent → null → false-green guard
+  });
+});
