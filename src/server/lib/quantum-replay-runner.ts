@@ -34,7 +34,7 @@ import { resolve as pathResolve } from "path";
 import { createHash } from "crypto";
 import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { systemParameters } from "../db/schema.js";
+import { systemParameters, auditLog } from "../db/schema.js";
 import { logger } from "./logger.js";
 import { notifyCritical } from "../services/notification-service.js";
 import { appendFamilyGradePostscript } from "./notification-helpers.js";
@@ -76,18 +76,27 @@ const _threshold = Math.max(
 );
 let _consecutiveFailures = 0;
 let _circuitOpen = false;
+let _circuitOpenedAt: number | null = null; // epoch-ms when the breaker last opened (for cooldown)
 let _stateLoaded = false; // true once DB init has been attempted
+
+// Auto-cooldown: after this long the breaker self-resets (parity with quantum-rl-training-runner).
+const _circuitBreakerCooldownMs = Math.max(
+  60_000,
+  parseInt(process.env.QUANTUM_REPLAY_CIRCUIT_BREAKER_COOLDOWN_MS ?? "3600000", 10) || 3_600_000,
+);
 
 const _PARAM_OPEN = "quantum_replay_circuit_open";
 const _PARAM_FAILURES = "quantum_replay_consecutive_failures";
+const _PARAM_OPENED_AT = "quantum_replay_circuit_opened_at";
 
 /** Persist breaker state to system_parameters (fire-and-forget; never throws). */
 async function _persistBreakerState(): Promise<void> {
   try {
     const openVal = _circuitOpen ? "1" : "0";
     const failVal = String(_consecutiveFailures);
+    const openedAtVal = _circuitOpenedAt === null ? "" : String(_circuitOpenedAt);
 
-    for (const [paramName, val] of [[_PARAM_OPEN, openVal], [_PARAM_FAILURES, failVal]] as const) {
+    for (const [paramName, val] of [[_PARAM_OPEN, openVal], [_PARAM_FAILURES, failVal], [_PARAM_OPENED_AT, openedAtVal]] as const) {
       const [row] = await db
         .select({ id: systemParameters.id })
         .from(systemParameters)
@@ -106,7 +115,9 @@ async function _persistBreakerState(): Promise<void> {
           description:
             paramName === _PARAM_OPEN
               ? "quantum-replay-runner circuit breaker open flag (Fix 10). 0=closed 1=open."
-              : "quantum-replay-runner consecutive failure count (Fix 10). Resets to 0 on success.",
+              : paramName === _PARAM_OPENED_AT
+                ? "quantum-replay-runner epoch-ms the breaker last opened (for auto-cooldown reset). Empty when closed."
+                : "quantum-replay-runner consecutive failure count (Fix 10). Resets to 0 on success.",
         });
       }
     }
@@ -143,6 +154,10 @@ async function _initBreakerStateFromDb(): Promise<void> {
         const n = parseInt(String(row.currentValue), 10);
         _consecutiveFailures = Number.isFinite(n) ? n : 0;
       }
+      if (row.paramName === _PARAM_OPENED_AT) {
+        const ts = parseInt(String(row.currentValue), 10);
+        _circuitOpenedAt = Number.isFinite(ts) ? ts : null;
+      }
     }
 
     if (_circuitOpen) {
@@ -160,9 +175,32 @@ async function _initBreakerStateFromDb(): Promise<void> {
   }
 }
 
+/**
+ * Returns { isOpen, justReset } — justReset=true when the cooldown expired this call.
+ * Callers that see justReset=true should emit a `quantum_replay.circuit_breaker_closed`
+ * audit row so recovery is visible in audit_log. Parity with quantum-rl-training-runner.
+ */
+function _isCircuitOpen(): { isOpen: boolean; justReset: boolean } {
+  if (!_circuitOpen) return { isOpen: false, justReset: false };
+  // Auto-reset after cooldown — the breaker self-heals (was: stuck-open until manual SQL).
+  if (_circuitOpenedAt !== null && Date.now() - _circuitOpenedAt >= _circuitBreakerCooldownMs) {
+    _consecutiveFailures = 0;
+    _circuitOpen = false;
+    _circuitOpenedAt = null;
+    logger.info(
+      { cooldownMs: _circuitBreakerCooldownMs },
+      "quantum-replay-runner: circuit breaker RESET after cooldown — resuming auto-fire",
+    );
+    _persistBreakerState().catch(() => { /* already logged inside */ });
+    return { isOpen: false, justReset: true };
+  }
+  return { isOpen: true, justReset: false };
+}
+
 function _recordSuccess(): void {
   _consecutiveFailures = 0;
   _circuitOpen = false;
+  _circuitOpenedAt = null;
   _persistBreakerState().catch(() => { /* already logged inside */ });
 }
 
@@ -170,20 +208,22 @@ function _recordFailure(lastError?: string): boolean {
   _consecutiveFailures++;
   if (!_circuitOpen && _consecutiveFailures >= _threshold) {
     _circuitOpen = true;
+    _circuitOpenedAt = Date.now();
+    const cooldownMin = Math.round(_circuitBreakerCooldownMs / 60_000);
     logger.error(
-      { consecutiveFailures: _consecutiveFailures, threshold: _threshold },
-      "quantum-replay-runner: circuit breaker OPENED — auto-fire disabled until manual reset",
+      { consecutiveFailures: _consecutiveFailures, threshold: _threshold, cooldownMs: _circuitBreakerCooldownMs },
+      "quantum-replay-runner: circuit breaker OPENED — auto-fire disabled; self-resets after cooldown",
     );
     // Wave 29 prod hardening: Discord escalation when circuit breaker opens
     try {
       notifyCritical(
         "Quantum-Replay Circuit Breaker OPEN",
         appendFamilyGradePostscript(
-          `Quantum-replay circuit breaker OPEN after ${_consecutiveFailures} consecutive failures; auto-fire halted until manual reset via system_parameters. Last error: ${lastError ?? "unknown"}`,
+          `Quantum-replay circuit breaker OPEN after ${_consecutiveFailures} consecutive failures; auto-fire halted. It self-resets automatically after ~${cooldownMin} min. To clear immediately: UPDATE system_parameters SET current_value='0' WHERE param_name='quantum_replay_circuit_open'; (also set quantum_replay_consecutive_failures='0'). Last error: ${lastError ?? "unknown"}`,
           "The quantum analysis background job stopped after repeated failures.",
-          "No action needed — the bot will keep trading normally. Call Tony if this persists more than 24 hours.",
+          `No action needed — the bot keeps trading normally and the job auto-resumes in about ${cooldownMin} minutes. Call Tony if it keeps failing past a day.`,
         ),
-        { consecutiveFailures: _consecutiveFailures, threshold: _threshold },
+        { consecutiveFailures: _consecutiveFailures, threshold: _threshold, cooldownMs: _circuitBreakerCooldownMs },
       );
     } catch (_discordErr) { /* non-blocking */ }
     _persistBreakerState().catch(() => { /* already logged inside */ });
@@ -197,6 +237,7 @@ function _recordFailure(lastError?: string): boolean {
 export function _resetCircuitBreakerForTests(): void {
   _consecutiveFailures = 0;
   _circuitOpen = false;
+  _circuitOpenedAt = null;
   _stateLoaded = false; // allow re-init from DB in integration tests
 }
 
@@ -315,8 +356,25 @@ export async function runQuantumReplayForBacktest(
   // fire-and-forget — mutates _circuitOpen/_consecutiveFailures in-place.
   await _initBreakerStateFromDb();
 
-  // ── Circuit breaker check ───────────────────────────────────────────────────
-  if (_circuitOpen) {
+  // ── Circuit breaker check (auto-resets after cooldown) ──────────────────────
+  const { isOpen, justReset } = _isCircuitOpen();
+  if (justReset) {
+    // Recovery audit — makes the auto-reset visible in audit_log (parity with RL breaker).
+    db.insert(auditLog).values({
+      action: "quantum_replay.circuit_breaker_closed",
+      entityType: "backtest",
+      entityId: String(backtestId),
+      status: "success",
+      correlationId: correlationId ?? null,
+      result: { reason: "cooldown_expired", cooldown_ms: _circuitBreakerCooldownMs },
+    }).catch((auditErr) =>
+      logger.warn(
+        { err: String(auditErr), backtestId },
+        "quantum-replay-runner: circuit_breaker_closed audit row failed (non-blocking)",
+      ),
+    );
+  }
+  if (isOpen) {
     logger.warn(
       { backtestId, correlationId, consecutiveFailures: _consecutiveFailures },
       "quantum-replay-runner: circuit open — skipping auto-fire",
