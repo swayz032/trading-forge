@@ -8,9 +8,14 @@ import { extractSpeakerConceptsFromTranscript } from "../lib/transcript-speaker-
 import { classifyMechanicPortability, explainRejectClass } from "../lib/mechanic-portability.js";
 import { runPass1VocabularyExtraction } from "../lib/two-pass-vocab-extractor.js";
 import { runCoverageGate } from "../lib/extraction-coverage-gate.js";
+import { recoverConfluences } from "../lib/confluence-recovery.js";
 import { runRecallPass } from "../lib/transcript-extractor-recall.js";
 import { runCoverageRepairLoop } from "../lib/extraction-coverage-repair.js";
 import { checkCompilabilityGate } from "../lib/extraction-quality-gate.js";
+import { deriveEntryIndicator } from "../services/direct-bucket-graduator.js";
+import { extractSessionFromTranscript, sessionFilterLabel } from "../lib/session-filter.js";
+import { classifyDirectionFromTranscript } from "../lib/direction-parity.js";
+import { scanIndicatorParams } from "../lib/indicator-params.js";
 import { runRobustnessTest } from "../services/robustness-service.js";
 import { db } from "../db/index.js";
 // Wave hardening 2026-06-22: agentJobs is the mutable job-state table.
@@ -743,6 +748,17 @@ function containsForbiddenOptionsContent(text: string): { blocked: boolean; matc
 }
 
 agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
+  // The multi-pass extraction pipeline (windowed-enum → recall → depth-coverage → bounded
+  // repair → name/route) issues 10-15 sequential local-gemma calls; on the 8GB tower GPU a
+  // single video can run 5-20 min. The server's default socket timeout (index.ts:618,
+  // server.timeout = 5 min) destroys the connection mid-pipeline because no bytes flow while
+  // gemma is generating — surfacing client-side as the bare "fetch failed" / RemoteDisconnected
+  // we chased. Opt THIS request's socket out of the 5-min default (mirrors the SSE route's
+  // req.setTimeout(0) at index.ts:615-617). 25-min bound, not 0, so a truly-hung pipeline
+  // still releases the socket eventually rather than leaking it.
+  req.setTimeout(25 * 60 * 1000);
+  res.setTimeout(25 * 60 * 1000);
+
   const parsed = scoutExtractSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
@@ -959,11 +975,34 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
         "scout-extract: routing to OOM-safe chunked path",
       );
       try {
-        const { merged, rawChunks } = await extractTranscriptChunked(markdown, {
-          sourceUrl,
-          title: title || sourceUrl,
-          channel: sourceProvider,
-        });
+        // E-CHUNK-RETRY (5-URL audit run-4, 2026-06-23): the OOM-safe chunker is empirically
+        // NON-DETERMINISTIC on heavy (>12K) transcripts — the SAME 35K SY2 transcript yielded
+        // merged_strategies=4 on one run and =0 on the next (a transient empty per-chunk LLM
+        // call zeroes the merge). Retry up to 3× when the merge is empty before giving up to the
+        // sparse fallback — mirrors the enumerator's retry-once-on-0-items (FIX 11). Cheap
+        // insurance: only fires on the empty path, and a single recovered attempt saves the video.
+        const CHUNK_MAX_ATTEMPTS = 3;
+        let merged!: Awaited<ReturnType<typeof extractTranscriptChunked>>["merged"];
+        let rawChunks!: Awaited<ReturnType<typeof extractTranscriptChunked>>["rawChunks"];
+        for (let attempt = 1; attempt <= CHUNK_MAX_ATTEMPTS; attempt++) {
+          ({ merged, rawChunks } = await extractTranscriptChunked(markdown, {
+            sourceUrl,
+            title: title || sourceUrl,
+            channel: sourceProvider,
+          }));
+          if (merged.strategies.length > 0) {
+            if (attempt > 1) {
+              logger.info({ sourceUrl, attempt }, "scout-extract: chunked extraction recovered on retry");
+            }
+            break;
+          }
+          if (attempt < CHUNK_MAX_ATTEMPTS) {
+            logger.warn(
+              { sourceUrl, attempt, max: CHUNK_MAX_ATTEMPTS },
+              "scout-extract: chunked extraction returned 0 strategies — retrying (non-deterministic heavy-video path)",
+            );
+          }
+        }
         // Surface chunk-level diagnostics in the audit_log via the per-chunk durations.
         logger.info(
           {
@@ -1011,25 +1050,49 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       return;
     }
 
-    // W23G.7 — Chunked fallback: only when first pass is empty AND source is
-    // longer than the first-pass window. This prevents wasting 3 extra LLM calls
-    // when a short transcript genuinely contains no strategy.
-    if ((strategiesIn as unknown[]).length === 0 && markdown.length > CHUNKED_FALLBACK_THRESHOLD) {
+    // W23G.7 + THIN-RECHUNK (2026-06-23): escalate single-pass → chunked when the result is EMPTY
+    // *or THIN* on a substantial transcript. N7uP (11.5K, fit in one 12K window so NOT truncated)
+    // still produced a generic 2-step result — a single-pass attention failure on a genuinely rich
+    // VWAP+EMA+pre-market strategy. Chunking into overlapping 4K windows forces per-section
+    // attention + synthesis recovers the full step set. "Thin" = every candidate is generic-named
+    // OR <3 steps. Size guard (6K) preserves the original intent: don't burn extra LLM calls
+    // re-chunking a genuinely-short clip that simply contains no strategy.
+    const THIN_RECHUNK_MIN = 6_000;
+    const isThinResult = (arr: unknown[]): boolean => {
+      if (arr.length === 0) return true;
+      return arr.every((s) => {
+        const x = s as { concept_name?: string; name?: string; entry_sequence?: unknown[] };
+        const cn = (x.concept_name || x.name || "").trim();
+        const generic = !cn || /^extracted(_strategy)?$/i.test(cn);
+        const steps = Array.isArray(x.entry_sequence) ? x.entry_sequence.length : 0;
+        return generic || steps < 3;
+      });
+    };
+    if (isThinResult(strategiesIn as unknown[]) && markdown.length > THIN_RECHUNK_MIN) {
       extractionMode = "chunked_fallback";
-      const chunks = [
-        markdown.slice(0, 4000),
-        markdown.slice(Math.floor(markdown.length / 2) - 2000, Math.floor(markdown.length / 2) + 2000),
-        markdown.slice(Math.max(0, markdown.length - 4000)),
-      ];
+      // E-CHUNK-DENSE (5-URL audit run-4, 2026-06-23): cover the FULL transcript in overlapping
+      // 4K windows, not just start/mid/end. The old 3-sample missed ~23K of a 35K transcript, so
+      // a strategy taught in the un-sampled middle (SY2 Gann box) produced 0 strategies. 1K
+      // overlap avoids splitting a rule across a window boundary; cap bounds LLM calls.
+      const FB_WIN = 4000, FB_STEP = 3000, FB_MAX_WINDOWS = 12;
+      const chunks: string[] = [];
+      for (let off = 0; off < markdown.length && chunks.length < FB_MAX_WINDOWS; off += FB_STEP) {
+        chunks.push(markdown.slice(off, off + FB_WIN));
+      }
       const merged: unknown[] = [];
       const seenConcepts = new Set<string>();
       for (const c of chunks) {
         const res2 = await extractFromChunk(c);
         if (!res2 || res2 === NON_JSON_SENTINEL) continue;
         for (const s of (res2 as unknown[])) {
-          const cn = (s as { concept_name?: string }).concept_name || (s as { name?: string }).name || "";
-          if (seenConcepts.has(cn)) continue;
-          seenConcepts.add(cn);
+          const cn = ((s as { concept_name?: string }).concept_name || (s as { name?: string }).name || "").trim();
+          // Only dedup SPECIFIC concept names. Generic "extracted_strategy" fragments from different
+          // windows carry DIFFERENT content (different sections of the strategy) under the same
+          // label — collapsing them by name would discard the very fragments synthesis must union
+          // (the N7uP failure mode: all windows → "extracted_strategy" → deduped to 1 → no union).
+          const generic = !cn || /^extracted(_strategy)?$/i.test(cn);
+          if (!generic && seenConcepts.has(cn)) continue;
+          if (!generic) seenConcepts.add(cn);
           merged.push(s);
         }
       }
@@ -1259,6 +1322,101 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
     // inside the loop body, which silently aborted the response. Reason fields
     // never reached the caller.)
     const portability = classifyMechanicPortability(markdown);
+    // ─── CHUNK-FRAGMENT SYNTHESIS (2026-06-23) ──────────────────────────────────
+    // The OOM-safe chunker emits ONE fragment per transcript window. For a single video that
+    // teaches ONE coherent strategy, those fragments must be SYNTHESIZED into a single rich
+    // strategy — NOT left as N thin ideas where the entire recall/coverage/repair pipeline grades
+    // ideas[0] (often a generic 3-step fragment) and IGNORES the rich fragment sitting at ideas[2].
+    // SY2 (Gann box, 35K) produced 4 fragments [3,4,5,4 steps]; only one had a specific
+    // concept_name and the gate graded the generic one → false "thin extraction". Union them:
+    // most-specific concept_name wins, steps + confluences are unioned (dedup), best non-null
+    // entry_indicator carried. Fires ONLY on chunked modes with >1 fragment — single-pass
+    // extractions (rf_/Fqx/75DJ, <12K) are untouched, so passing videos can't regress.
+    if (
+      (extractionMode === "chunked_oom_safe" || extractionMode === "chunked_fallback") &&
+      Array.isArray(strategiesIn) &&
+      (strategiesIn as unknown[]).length > 1
+    ) {
+      const frags = strategiesIn as Array<Record<string, unknown>>;
+      const isGeneric = (n: unknown): boolean =>
+        typeof n !== "string" || n.trim().length === 0 || /^extracted(_strategy)?$/i.test(n.trim());
+      const nameOf = (f: Record<string, unknown>): string =>
+        (typeof f.concept_name === "string" && f.concept_name) || (typeof f.name === "string" && f.name) || "";
+      const specificNames = frags.map(nameOf).filter((n) => n && !isGeneric(n)).sort((a, b) => b.length - a.length);
+      const conceptName = specificNames[0] ?? frags.map(nameOf).find((n) => n.length > 0) ?? "extracted_strategy";
+      const seenAct = new Set<string>();
+      const steps: Array<Record<string, unknown>> = [];
+      for (const f of frags) {
+        for (const st of (Array.isArray(f.entry_sequence) ? f.entry_sequence : []) as Array<Record<string, unknown>>) {
+          const a = String(st?.action ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+          if (!a || seenAct.has(a)) continue;
+          seenAct.add(a);
+          steps.push({ ...st, step: steps.length + 1 });
+        }
+      }
+      // Union confluences from BOTH representations a fragment may use: `confluences` (objects
+      // {name,description}, what the coverage gate's depth check reads) AND `confluence_factors`
+      // (canonical strings, what the A+ transform reads). The chunker often emits only one of the
+      // two per fragment; reading just `confluences` dropped SY2's lone factor → 0 confluences →
+      // coverage self-evident path (which needs >=1) failed. Convert strings → objects so the
+      // synthesized strategy carries confluences the gate can count, and preserve the string list.
+      const seenConf = new Set<string>();
+      const confluences: Array<Record<string, unknown>> = [];
+      const confluenceFactors: string[] = [];
+      for (const f of frags) {
+        for (const c of (Array.isArray(f.confluences) ? f.confluences : []) as Array<Record<string, unknown>>) {
+          const nm = String((c && typeof c === "object" ? c.name : c) ?? "").trim();
+          const k = nm.toLowerCase();
+          if (!k || seenConf.has(k)) continue;
+          seenConf.add(k);
+          confluences.push(c);
+        }
+        for (const cf of (Array.isArray(f.confluence_factors) ? f.confluence_factors : []) as unknown[]) {
+          const nm = String(cf ?? "").trim();
+          const k = nm.toLowerCase();
+          if (!k || seenConf.has(k)) continue;
+          seenConf.add(k);
+          confluences.push({ name: nm, description: "" });
+          confluenceFactors.push(nm);
+        }
+      }
+      const firstNonNull = (key: string): unknown =>
+        frags.map((f) => f[key]).find((v) => v != null && v !== "" && !(typeof v === "string" && /^(unknown|none|null)$/i.test(v.trim())));
+      const base =
+        [...frags].sort(
+          (a, b) =>
+            (Array.isArray(b.entry_sequence) ? b.entry_sequence.length : 0) -
+            (Array.isArray(a.entry_sequence) ? a.entry_sequence.length : 0),
+        )[0] ?? {};
+      const mergedFactors = Array.from(
+        new Set([
+          ...(Array.isArray(base.confluence_factors) ? (base.confluence_factors as unknown[]).map(String) : []),
+          ...confluenceFactors,
+        ]),
+      );
+      const synthesized: Record<string, unknown> = {
+        ...base,
+        concept_name: conceptName,
+        name: conceptName,
+        entry_sequence: steps,
+        confluences,
+        ...(mergedFactors.length > 0 && { confluence_factors: mergedFactors }),
+        entry_indicator: firstNonNull("entry_indicator") ?? base.entry_indicator ?? null,
+        direction: frags.some((f) => f.direction === "both") ? "both" : (firstNonNull("direction") ?? base.direction ?? "both"),
+      };
+      logger.info(
+        {
+          sourceUrl,
+          fragments: frags.length,
+          synthesized_steps: steps.length,
+          synthesized_confluences: confluences.length,
+          concept_name: conceptName,
+        },
+        "scout-extract: synthesized chunked fragments into single strategy",
+      );
+      strategiesIn = [synthesized];
+    }
+
     const rawStrategyCount = Array.isArray(strategiesIn) ? (strategiesIn as unknown[]).length : 0;
     const rawStrategyNames = Array.isArray(strategiesIn)
       ? (strategiesIn as Array<Record<string, unknown>>)
@@ -1405,11 +1563,36 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       // slow:21}, direction: "long"} and we were dropping all of it. This was the
       // root architectural bottleneck for the entire factory.
       const direction = typeof s.direction === "string" ? s.direction : "long";
-      const entryParams = s.entry_params && typeof s.entry_params === "object" ? s.entry_params as Record<string, unknown> : {};
+      const llmEntryParams = s.entry_params && typeof s.entry_params === "object" ? s.entry_params as Record<string, unknown> : {};
+      // Layer 3C.1 (2026-06-24): recover EXPLICIT indicator params from the transcript when the LLM
+      // gave none (deterministic; no prompt change). Only TRANSCRIPT_EXPLICIT params are credited —
+      // never silent defaults (3C.2 defaults policy keeps assumed defaults out of fidelity).
+      const paramHint =
+        (typeof s.entry_indicator === "string" ? s.entry_indicator : null) ??
+        (typeof s.name === "string" ? s.name : null) ??
+        (typeof s.concept_name === "string" ? s.concept_name : null);
+      let entryParams = llmEntryParams;
+      let paramSource: string | null = Object.keys(llmEntryParams).length > 0 ? "llm" : null;
+      if (Object.keys(llmEntryParams).length === 0) {
+        const scanned = scanIndicatorParams(markdown, paramHint);
+        if (scanned.source === "TRANSCRIPT_EXPLICIT" && scanned.params) {
+          entryParams = scanned.params;
+          paramSource = "transcript_explicit";
+        }
+      }
       const extractionConfidence = typeof s.extraction_confidence === "number" ? s.extraction_confidence : 0.5;
       const entryType = typeof s.entry_type === "string" ? s.entry_type : null;
       const entryArchetype = typeof s.entry_archetype === "string" ? s.entry_archetype : null;
-      const sessionFilter = typeof s.session_filter === "string" ? s.session_filter : null;
+      const llmSessionFilter = typeof s.session_filter === "string" && s.session_filter.trim().length > 0 ? s.session_filter : null;
+      // Layer 3A (2026-06-24): session is strategy IDENTITY, not metadata. When the LLM left it null,
+      // recover a STRUCTURED session from the transcript (temporal normalization → ET-anchored window).
+      const sessionWindow = llmSessionFilter ? null : extractSessionFromTranscript(markdown);
+      // session_filter stays a string for backward-compat consumers (gemma-prose-to-v11, Pine export,
+      // scout runner); populate it with the canonical label when we recovered a structured window.
+      const sessionFilter = llmSessionFilter ?? sessionFilterLabel(sessionWindow);
+      // Layer 3B (2026-06-24): classify directionality from TAUGHT transcript evidence (5-class model),
+      // not the lossy "all strategies are both" assumption. Postprocessing only — no prompt change.
+      const directionMeta = classifyDirectionFromTranscript(markdown);
       const exitParamsObj = s.exit_params && typeof s.exit_params === "object" ? s.exit_params as Record<string, unknown> : {};
       const extractedName = typeof s.name === "string" ? s.name : null;
 
@@ -1578,6 +1761,7 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
         entry_indicator:            entryInd || null,
         entry_archetype:            entryArchetype,
         entry_params:               entryParams,
+        param_source:               paramSource, // Layer 3C.1: "llm" | "transcript_explicit" | null (source-vague)
         entry_condition:            entryCond || null,
         entry_type:                 entryType,
         direction,
@@ -1587,6 +1771,10 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
         take_profit_atr_multiple:   tpAtr,
         preferred_regime:           regime,
         session_filter:             sessionFilter,
+        session_window:             sessionWindow, // Layer 3A structured session (null when LLM gave a string)
+        direction_class:            directionMeta.class, // Layer 3B evidence-based 5-class directionality
+        direction_confidence:       directionMeta.confidence,
+        direction_evidence:         directionMeta.evidence,
         extraction_confidence:      extractionConfidence,
         // Sizing fields (scaled via mini→micro remap above)
         max_contracts:              effectiveMaxContracts,
@@ -1735,15 +1923,54 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       );
     }
 
+    // Layer 1.5 (CONFLUENCE RECOVERY 2026-06-23): the local model often files confirmations under
+    // entry_sequence (procedural channel) instead of confluence_factors (evaluation channel). The
+    // dual-score diagnostic PROVED this is representational — SY2/gdd/ktkqq/75DJ carry 3-6 distinct
+    // confluence families in their step text while reporting 0 explicit; rf_/Fqx/iU8/z3Qn unchanged;
+    // truly-thin N7uP stays at 1. This pass AUGMENTS (never replaces) ideas[0]'s confluences by
+    // reading distinct categories from steps (family-deduped, provenance-tagged step_inferred vs
+    // explicit). The gate is UNTOUCHED — it still requires real confluences; we read them from the
+    // field the model used. Runs BEFORE coverage so FIX-13 + compilability both see the recovery.
+    try {
+      const recoveryTarget = ideas[0] as import("../lib/confluence-recovery.js").IdeaLike | undefined;
+      if (recoveryTarget) {
+        const rep = recoverConfluences(recoveryTarget);
+        if (rep.recovered.length > 0) {
+          insertAuditRow({
+            action: "extraction.confluence_recovered",
+            entityType: "scout_extract",
+            entityId: null,
+            status: "info",
+            result: {
+              source_url: sourceUrl,
+              explicit_count: rep.explicit_count,
+              recovered_count: rep.recovered.length,
+              recovered: rep.recovered.map((r) => ({ category: r.category, canonical: r.name, step: r.evidence_step })),
+              lineage_key: extractionLineageKey,
+              video_id: _videoId,
+            },
+            correlationId,
+          }).catch(() => {});
+        }
+      }
+    } catch (recoveryErr) {
+      logger.warn(
+        { err: recoveryErr instanceof Error ? recoveryErr.message : String(recoveryErr), sourceUrl },
+        "scout-extract: confluence recovery threw (non-blocking — continuing)",
+      );
+    }
+
     // W3.1 — Coverage gate: enumerate what the speaker taught and cross-check
     // against the extraction. Layer 3 (E-REPAIR) runs the bounded repair loop on a
     // coverage_failed verdict BEFORE W3.2's quarantine. We use the first extracted
     // idea's entry_sequence + confluences as the representative extraction snapshot.
     let coverageVerdictResult: import("../lib/extraction-coverage-gate.js").CoverageVerdict | null = null;
+    let coverageSpeakerItems: import("../lib/extraction-coverage-gate.js").SpeakerItem[] = [];
     try {
       const firstIdea = ideas[0] as import("../lib/extraction-coverage-gate.js").ExtractionSnapshot | undefined;
       if (firstIdea) {
         const { speakerItems, verdict } = await runCoverageGate(markdown, firstIdea);
+        coverageSpeakerItems = speakerItems; // exposed below for cached fast-grade iteration
         let finalVerdict = verdict;
         let repairRounds = 0;
         let repairedItems: string[] = [];
@@ -1833,6 +2060,19 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
               }
             }
           }
+
+          // FIX 6 (5-URL audit 2026-06-22): ensure entry_indicator is non-null even when the
+          // concept is already well-named (e.g. "4h_candle_box_continuation", "volume_profile").
+          // A null entry_indicator was quarantining good extractions + blocking archetype routing;
+          // deriveEntryIndicator maps the concept -> archetype downstream.
+          const eiIdea = ideas[0] as Record<string, unknown>;
+          const eiVal = typeof eiIdea.entry_indicator === "string" ? eiIdea.entry_indicator : "";
+          const eiConcept = typeof eiIdea.concept_name === "string"
+            ? eiIdea.concept_name
+            : (typeof eiIdea.name === "string" ? eiIdea.name : "");
+          if (!eiVal && eiConcept && !/^extracted(_strategy)?$/i.test(eiConcept)) {
+            eiIdea.entry_indicator = eiConcept;
+          }
         } catch (nameErr) {
           logger.warn(
             { err: nameErr instanceof Error ? nameErr.message : String(nameErr), sourceUrl },
@@ -1908,6 +2148,8 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       const entryIndicator = typeof idea.entry_indicator === "string" ? idea.entry_indicator : null;
       const archetype = typeof idea.archetype === "string" ? idea.archetype : null;
       const entryParams = idea.entry_params && typeof idea.entry_params === "object" ? (idea.entry_params as Record<string, unknown>) : null;
+      const entryCondition = typeof idea.entry_condition === "string" ? idea.entry_condition : null;
+      const entryType = typeof idea.entry_type === "string" ? idea.entry_type : null;
       const direction = typeof idea.direction === "string" ? idea.direction : null;
       const ideaTimeframe = typeof idea.timeframe === "string" ? idea.timeframe : null;
       const confluenceFactors = Array.isArray(idea.confluences)
@@ -1917,11 +2159,20 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       // Only apply coverage_verdict from W3.1 to the FIRST idea (it was computed against ideas[0]).
       const coverageForIdea = ideaIdx === 0 ? coverageVerdictResult : null;
 
+      // 2026-06-24 Layer 1: resolve the entry_indicator through the SAME router the graduator
+      // uses, so the gate's "does this carry a real trigger?" decision is resolution-aware.
+      // "archetype:<key>" → structural (params optional); "uncatalogued:<...>" → needs-structure;
+      // bare engine indicator (macd_crossover, …) → parametric (needs params).
+      const resolvedEntryIndicator = deriveEntryIndicator(conceptName, null, entryIndicator);
+
       const gateResult = checkCompilabilityGate(
         {
           entry_indicator: entryIndicator,
           archetype,
           entry_params: entryParams,
+          entry_condition: entryCondition,
+          entry_type: entryType,
+          resolved_entry_indicator: resolvedEntryIndicator,
           direction,
           timeframe: ideaTimeframe,
           confluence_factors: confluenceFactors,
@@ -1974,6 +2225,7 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       mechanic_portable: portability.portable,
       tokens_estimated: Math.ceil(markdown.length / 4),
       ...(coverageVerdictResult !== null && { coverage_verdict: coverageVerdictResult }),
+      _coverage_speaker_items: coverageSpeakerItems, // debug: raw enum output for cached fast-grade
       compilability_results: compilabilityResults,
       quarantined_count: quarantinedCount,
     });
