@@ -3,6 +3,36 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-28 Full-system deep scan + 4-track institutional-grade fix wave (branch `hardening/deepscan-wiring-2026-06-28`, commit `2de7e47`, pushed — UNMERGED)
+
+**Mission:** Operator — "deep scan all my systems and codebase and make sure everything is institutional grade, no bottlenecks, everything wired."
+
+**Method:** 7 parallel READ-ONLY specialist auditors (trading-forge-architect / backtest-core / paper-parity / accuracy-validator / observability-reliability / autonomous-readiness / n8n-orchestration) over the whole system, then a 4-track parallel EDIT wave in an **isolated git worktree** (operator chose isolation because a parallel "carter" voice-agent session had uncommitted edits to `paper-signal-service.ts` / `backtest-service.ts` / `metrics-registry.ts` / `quantum_rl_agent.py` on the shared `hardening/phase-0` tree). Worktree branched off HEAD `e3f9633`; `node_modules` junctioned; disjoint file scopes per track (no same-file parallel edits).
+
+**Audit headline:** System is genuinely well-wired — architect found ZERO critical wiring disconnects and confirmed the big carry-forwards (F-4 `trial_n_total` DSR, B14 0.40→0.20, C1 `wf_metadata`, BIF, WRC/SPA key-match) are TRULY closed end-to-end (not false-greens). Failures clustered in: one structurally-inert hard gate, money-safety fire-and-forget paths, and unattended-op blind spots.
+
+**Work completed (commit `2de7e47`):**
+- **CRITICAL C1 — PBO gate INERT for every CPCV run.** Degenerate `is_sharpe==oos_sharpe` → `pbo_gate.py` returns `None` → `pbo_overall=null` → lifecycle grandfather-PASSED. The Wave 29 TESTING→SHADOW overfit HARD gate never fired on the only production path. FIX: `walk_forward.py` emits `pbo_degenerate` discriminator; **parent closed the producer→DB→gate hop** (`backtest-service.ts` persists `pbo_degenerate` into `walkForwardResults` JSONB + type decls; `lifecycle-service.ts:1129` reads it and passes to `evaluatePboGate`); `pbo-gate.ts` BLOCKs via `pbo_cpcv_degenerate_block`, genuine pre-Wave-29 legacy-null still grandfather-passes.
+- **CRITICAL C2 — T1 news (FOMC/NFP) hard-block silently bypassed at fill** (`paper-signal-service.ts:~2495` empty catch) → fail-CLOSED drop + `paper.fill_blocked_news_check_error` audit.
+- **CRITICAL C3 — 95% DLL force-close fire-and-forget via dynamic import** (both `paper-signal-service.ts` and `kill-switch.ts:244,942`) → static import, awaited (`_confirmedForceClose` Promise.race 10s), `paper.force_flatten_kill_switch_failed` audit + CRITICAL Discord.
+- **CRITICAL C4 — scheduler job-lock no timeout** (`scheduler.ts:364`) → `MAX_JOB_DURATION_MS` watchdog force-releases lock + CRITICAL alert.
+- **CRITICAL C5 — regime-drift two-step demotion stranded zombie DECLINING** (`regime-drift-detector-service.ts`) → atomic txn + `>25h` (`ZOMBIE_DECLINING_THRESHOLD_MS`) compensating sweep + CRITICAL.
+- **CRITICAL C7 — admin-runbook kill-switch SQL wrong columns** (`key/value` vs `param_name/current_value`, `'false'` vs `'0'`) → corrected + documented 0/1/2 semantics.
+- **HIGH cluster:** BIF advisory-only in CPCV (`bif_unavailable_cpcv`); WFE optimize=True IS-basis tagged; `paper-journal-recon.ts:983` P&L SUM `strategyId` filter; BL-8 median-ATR slippage threaded to entry/TP legs; force-close ATR scaling; Tier-3 orphan startup sweep (`recoverOrphanedPositionsAtStartup`); `initialStopPrice` never-null; `backtests`+`agent_jobs` added to stale-pending-sweeper; weekend out-of-RTH heartbeat WARNING (`runOffRthHeartbeatCheck`, new cron `heartbeat-ooh-check` 0 */4 * * *, registered in registry); Discord circuit breaker; ollama per-chunk timeout; `cloud-qmc` spawnSync→execFile (event-loop unblock); `bifGateEvaluationsTotal` increment; `WAVE29_EVENTS`/`LIFECYCLE_GATE_EVENTS` constants for bare SSE strings; `lifecycleShadowPromotionsTotal{blocked_unavailable}` zero-init; DEPLOY_READY alert no longer swallowed.
+- **MED/PERF:** Topstep STANDARD-lane consistency opt-out (`TOPSTEP_PAYOUT_LANE=standard` default, skips 50% cap in B14 — matches operator's standard-lane reality + a discovered MFFU 2-day-window consistency bug fix); `data-integrity` persist-failure now audited; `bootstrap_ci` vectorized byte-identical.
+
+**Verification:** 259 new vitest + 38 pytest GREEN; **135 EXISTING gate-regression tests GREEN (pbo/b14/bif/wave29 — no regression from the cross-file `pbo_degenerate` wiring)**; `tsc --noEmit` clean on ALL touched files; `check:production-isolation` + `check:2026-compliance` GREEN; `system-map:check` clean of all introduced drift (synced topology + registered `heartbeat-ooh-check`).
+
+**Known-facts updates:** none new pinned (all pinned facts held — Tavily/tower-degraded/vectorbt-not-slow/phantom-apply all confirmed accurate during audit, not misdiagnosed).
+
+**Carry-forward for next session:**
+- **MERGE `hardening/deepscan-wiring-2026-06-28` → main/phase-0** after review (PR-ready, pushed). Reconcile with the parallel carter session's edits to `paper-signal-service.ts` / `backtest-service.ts` / `metrics-registry.ts` at merge.
+- **1 pre-existing system-map drift NOT mine:** `/api/carter/webhook` (parallel carter session) has no registry subsystem — THEIRS to register at their close-out; I deliberately did not fabricate a carter subsystem to avoid collision.
+- **DEFERRED (own pass):** structural paper↔backtest exit-shape parity (paper 33/33/34 partials vs backtest single-DOL TP; TP-hit close-vs-intrabar) — needs A/B-verified pass touching Python backtester; corrupts promotion-gate comparison inputs until closed. This is the #1 remaining institutional-grade gap.
+- **OPERATOR-only:** C6 phantom-apply — verify `backtests.firm_rules_version` + `compliance_mode` columns exist on live Railway DB (`psql ... information_schema.columns`); `ALTER TABLE ADD COLUMN IF NOT EXISTS` if missing (boot-runner won't re-apply phantom-journaled migrations). n8n 9A+11A retired workflows still active (UI-only deactivation; 11A bypasses learning-loop kill switch). n8n monitors use `lifecycle_state` snake_case (ignored) instead of `lifecycleState` — mutate wrong-scope strategies.
+- **Track follow-ups (flagged by agents, not done):** wire `recoverOrphanedPositionsAtStartup()` + medianAtr14 rolling computation in `evaluateSignals` from `index.ts` boot; agent_jobs needs `started_at`/`retry_count` migration for proper sweeper keying.
+
+---
 ### Session Log — 2026-06-28 Slumhouse "The Office" admin + autonomous lifecycle conveyor + backtest-engine speed unblock
 
 **Mission:** Operator-driven build marathon: (1) build the Slumhouse "Office" operator-control page; (2) make Bot Power ON actually drive graduated library strategies through the full lifecycle; (3) make 11-year backtests fast enough — KEEPING vectorbt for accuracy.
