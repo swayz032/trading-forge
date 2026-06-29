@@ -16,6 +16,8 @@ import { SPAN } from "../src/server/lib/state-machine-ir.js";
 import { atomId, canonObject, canonKey, type AtomType, type DecisionAtom, type DecisionGraph, type TemporalKind } from "../src/server/lib/decision-atom.js";
 import { ledgerA, ledgerB, ledgerC, structuralHallucinations, type Clause, type ClauseDisposition } from "../src/server/lib/conservation-ledgers.js";
 import { canonicalHash, checkIdempotence } from "../src/server/lib/decision-graph-canonical.js";
+import { compileGraph } from "../src/server/lib/graph-compiler.js";
+import { scoreSGF, GOLD } from "../src/server/lib/graph-fidelity.js";
 
 const VIDEO = process.argv[2] ?? "psH--oXkD8M";
 const OLLAMA = process.env.OLLAMA_URL ?? "http://localhost:11434";
@@ -38,10 +40,6 @@ const SCHEMA = {
     temporal_kind: { type: "string", enum: ["event", "condition", "none"] },
     object: { type: "string" }, polarity: { type: "string", enum: ["long", "short", "both", "none"] },
     parameters: { type: "string" }, evidence_span: { type: "string" },
-    depends_on: { type: "array", items: { type: "object", properties: {
-      type: { type: "string", enum: [...ATOM_TYPES] },
-      role: { type: "string", enum: ["prerequisite", "temporal", "branch", "alternative", "exception"] },
-    }, required: ["type", "role"] } },
     classification: { type: "string", enum: ["decision_bearing","terminology","explanation","justification","motivation","recap","example","warning","observation","visual_reference","framework_owned","non_strategy"] },
   }, required: ["clause_id", "is_decision", "classification"] } } }, required: ["results"],
 } as const;
@@ -64,22 +62,14 @@ FRAMEWORK-OWNED (outside the strategy edge). They are valid concepts but NEVER d
 
 For EACH clause:
 - PASSES the gate -> is_decision=true, classification="decision_bearing", fill atom_type (one of ${ATOM_TYPES.join(", ")}),
-  temporal_kind (event=occurs once / condition=stays true), object (the core concept), polarity, parameters, evidence_span,
-  AND depends_on = the prior decisions THIS one requires, EACH as {type, role}:
-    type = the ATOM_TYPE of the prior decision (one of the ATOM_TYPES above — NOT free text),
-    role = prerequisite (must hold first) / temporal (after, in time) / branch (a conditional fork) /
-           alternative (an OR-entry path) / exception (an unless/override).
-  The assembler links each to the NEAREST PRIOR atom of that type — so reference by TYPE, not by words.
-  e.g. an entry depends_on [{type:"WAIT_CONFIRMATION",role:"prerequisite"},{type:"WAIT_RETEST",role:"prerequisite"}].
-  Use [] for a root (session / bias / filter that needs nothing prior).
+  temporal_kind (event=occurs once / condition=stays true), object (the core concept), polarity, parameters, evidence_span.
+  Do NOT describe dependencies — the compiler derives the graph edges from order + grammar. Just extract the atom.
 - FAILS the gate -> is_decision=false, atom_type="NONE", classify: terminology / explanation / justification /
   motivation / recap / example / warning / observation / visual_reference / framework_owned / non_strategy.
 Be STRICT: when unsure whether a clause introduces a rule or merely discusses one, it is NOT a decision.
 Return EXACTLY one result per clause, preserving clause_id order. Return JSON matching the schema.`;
 
-type EdgeRole = "prerequisite" | "temporal" | "branch" | "alternative" | "exception";
-interface DepRef { type: string; role: EdgeRole }
-interface GemmaResult { clause_id: string; is_decision: boolean; atom_type: string; temporal_kind?: string; object?: string; polarity?: string; parameters?: string; evidence_span?: string; depends_on?: DepRef[]; classification: string }
+interface GemmaResult { clause_id: string; is_decision: boolean; atom_type: string; temporal_kind?: string; object?: string; polarity?: string; parameters?: string; evidence_span?: string; classification: string }
 
 async function classifyBatch(clauses: SegmentedClause[]): Promise<GemmaResult[]> {
   const input = clauses.map((c) => ({ clause_id: c.id, text: c.text.trim() }));
@@ -92,7 +82,7 @@ async function classifyBatch(clauses: SegmentedClause[]): Promise<GemmaResult[]>
 }
 
 interface PerClause { is_decision: boolean; atom_type: string; object_canonical: string; classification: string }
-async function extractAtoms(clauses: SegmentedClause[]): Promise<{ clauseLedger: Clause[]; atoms: DecisionAtom[]; rows: Array<{ c: SegmentedClause; cls: string; atomIds: string[] }>; byClause: Map<string, PerClause>; drr: { resolved: number; expected: number; roleDist: Record<string, number> }; connTags: Map<string, ConnTag> }> {
+async function extractAtoms(clauses: SegmentedClause[]): Promise<{ clauseLedger: Clause[]; atoms: DecisionAtom[]; rows: Array<{ c: SegmentedClause; cls: string; atomIds: string[] }>; byClause: Map<string, PerClause> }> {
   const byId = new Map(clauses.map((c) => [c.id, c]));
   const results: GemmaResult[] = [];
   for (let i = 0; i < clauses.length; i += BATCH) {
@@ -102,7 +92,7 @@ async function extractAtoms(clauses: SegmentedClause[]): Promise<{ clauseLedger:
   const resById = new Map(results.map((r) => [r.clause_id, r]));
 
   const clauseLedger: Clause[] = []; const atoms: DecisionAtom[] = []; const rows: Array<{ c: SegmentedClause; cls: string; atomIds: string[] }> = [];
-  const ordinal = new Map<string, number>(); const depHints = new Map<string, DepRef[]>();
+  const ordinal = new Map<string, number>();
   for (const c of clauses) {
     const r = resById.get(c.id);
     if (!r) { clauseLedger.push({ id: c.id, text: c.text, span: { start: c.start, end: c.end } }); rows.push({ c, cls: "UNCLASSIFIED", atomIds: [] }); continue; }
@@ -118,64 +108,17 @@ async function extractAtoms(clauses: SegmentedClause[]): Promise<{ clauseLedger:
       const a: DecisionAtom = { id: atomId(r.atom_type as AtomType, objc, ord), type: r.atom_type as AtomType, temporal_kind: tk,
         object: r.object ?? c.text.trim(), object_canonical: objc, depends_on: [], provenance: SPAN((r.evidence_span || c.text).trim(), c.start, c.end) };
       atoms.push(a); atomIds.push(a.id);
-      depHints.set(a.id, Array.isArray(r.depends_on) ? r.depends_on : []);
     }
     rows.push({ c, cls: r.is_decision ? (r.atom_type || "DECISION") : r.classification, atomIds });
     void byId;
   }
-  const drr = resolveDeps(atoms, depHints);
-  const connTags = classifyConnectivity(atoms, depHints);
+  // Phase A is DONE here: atoms only, NO dependency burden. The deterministic compiler (Phase B) builds edges in main.
   const byClause = new Map<string, PerClause>();
   for (const [cid, r] of resById) byClause.set(cid, { is_decision: !!r.is_decision, atom_type: r.atom_type ?? "NONE", object_canonical: canonObject(r.object ?? ""), classification: r.classification });
-  return { clauseLedger, atoms, rows, byClause, drr, connTags };
+  return { clauseLedger, atoms, rows, byClause };
 }
 
-/** v4 DETERMINISTIC assembler — the dependency is PRODUCED (typed) not INFERRED. The extractor emits each dep as
- * {type, role}; this links it to the NEAREST PRIOR atom OF THAT TYPE. No semantics, no NLP — a hash lookup over a
- * reliable enum. prerequisite/temporal feed the reachability chain; branch/alternative/exception are recorded by
- * role (first-class edge types) for the assembler's branch handling. Returns DRR inputs + the role distribution. */
-function resolveDeps(atoms: DecisionAtom[], depHints: Map<string, DepRef[]>): { resolved: number; expected: number; roleDist: Record<string, number> } {
-  const ordered = [...atoms].sort((a, b) => (a.provenance.transcript_span?.start ?? 0) - (b.provenance.transcript_span?.start ?? 0));
-  const pos = new Map(ordered.map((a, i) => [a.id, i]));
-  const types = new Set<string>(ATOM_TYPES);
-  let resolved = 0, expected = 0; const roleDist: Record<string, number> = {};
-  for (const a of ordered) {
-    const chain: string[] = [];
-    for (const h of depHints.get(a.id) ?? []) {
-      expected++;
-      const t = (h.type ?? "").toUpperCase();
-      if (!types.has(t)) continue;
-      let best: DecisionAtom | undefined;                              // nearest PRIOR atom of that type (deterministic)
-      for (let i = (pos.get(a.id) ?? 0) - 1; i >= 0; i--) if (ordered[i].type === t) { best = ordered[i]; break; }
-      if (best) {
-        resolved++; roleDist[h.role] = (roleDist[h.role] ?? 0) + 1;
-        if (h.role === "prerequisite" || h.role === "temporal") chain.push(best.id);  // reachability spine
-      }
-    }
-    a.depends_on = [...new Set(chain)];
-  }
-  return { resolved, expected, roleDist };
-}
-
-export type ConnTag = "CONNECTED" | "ISOLATED_RESOLUTION_FAILURE" | "ISOLATED_FRAMEWORK" | "ISOLATED_POSSIBLE_NOISE";
 const FRAMEWORK_OBJ = /\b(risk|reward|stop|target|profit|size|sizing|position|lot|pips?)\b/i;
-const SPINE: ReadonlySet<string> = new Set(["WAIT_STRUCTURE","VERIFY_STRUCTURE","WAIT_RETEST","WAIT_CONFIRMATION","CONFIRM_DIRECTION","ENABLE_ENTRY","ENTER","WAIT_BIAS"]);
-/** CLASSIFY connectivity (do NOT delete) — isolated atoms are diagnostic, not noise: until DRR is high, isolation
- * means noise OR resolver failure, and those are different diagnoses (operator/GPT). */
-function classifyConnectivity(atoms: DecisionAtom[], depHints: Map<string, DepRef[]>): Map<string, ConnTag> {
-  const byId = new Map(atoms.map((a) => [a.id, a]));
-  const connected = new Set<string>();
-  const visit = (id: string) => { if (connected.has(id) || !byId.has(id)) return; connected.add(id); for (const d of byId.get(id)!.depends_on) visit(d); };
-  atoms.filter((a) => a.type === "ENTER").forEach((e) => visit(e.id));
-  const tag = new Map<string, ConnTag>();
-  for (const a of atoms) {
-    if (connected.has(a.id)) tag.set(a.id, "CONNECTED");
-    else if (FRAMEWORK_OBJ.test(a.object) || a.type === "EXIT_HINT") tag.set(a.id, "ISOLATED_FRAMEWORK");
-    else if ((depHints.get(a.id)?.length ?? 0) > 0 || SPINE.has(a.type)) tag.set(a.id, "ISOLATED_RESOLUTION_FAILURE");
-    else tag.set(a.id, "ISOLATED_POSSIBLE_NOISE");
-  }
-  return tag;
-}
 
 (async () => {
   const transcript = readFileSync(join("tmp/generalization", `${VIDEO}.transcript.txt`), "utf8");
@@ -196,13 +139,17 @@ function classifyConnectivity(atoms: DecisionAtom[], depHints: Map<string, DepRe
     console.log(`${r.c.id.padEnd(12)} | ${String(r.cls).padEnd(21)} | ${(r.atomIds.join(", ") || "—").slice(0, 36).padEnd(36)} | ${status}`);
   }
 
-  const A = ledgerA(p1.clauseLedger), B = ledgerB(p1.clauseLedger, p1.atoms);
-  const graph: DecisionGraph = { atoms: p1.atoms }; const C = ledgerC(graph);  // on ALL atoms — NO destructive prune
-  const hall = structuralHallucinations(p1.atoms, transcript);
-  const connDist: Record<string, number> = {};
-  for (const t of p1.connTags.values()) connDist[t] = (connDist[t] ?? 0) + 1;
-  const stab = checkIdempotence([{ atoms: p1.atoms }, { atoms: p2.atoms }]);
-  const keysA = new Set(p1.atoms.map(canonKey)), keysB = new Set(p2.atoms.map(canonKey));
+  // Phase B — the DETERMINISTIC GRAPH COMPILER builds the edges (it owns the graph; gemma does not).
+  const compiled = compileGraph(p1.atoms, transcript);
+  const compiled2 = compileGraph(p2.atoms, transcript);
+  const A = ledgerA(p1.clauseLedger), B = ledgerB(p1.clauseLedger, compiled.atoms);
+  const graph: DecisionGraph = { atoms: compiled.atoms }; const C = ledgerC(graph);  // on the COMPILED graph
+  const hall = structuralHallucinations(compiled.atoms, transcript);
+  const connected = compiled.reachable.size;
+  const isolated = compiled.atoms.filter((a) => !compiled.reachable.has(a.id));
+  const isoFramework = isolated.filter((a) => FRAMEWORK_OBJ.test(a.object) || a.type === "EXIT_HINT").length;
+  const stab = checkIdempotence([{ atoms: compiled.atoms }, { atoms: compiled2.atoms }]);
+  const keysA = new Set(compiled.atoms.map(canonKey)), keysB = new Set(compiled2.atoms.map(canonKey));
   const keyDiff = [...keysA].filter((k) => !keysB.has(k)).concat([...keysB].filter((k) => !keysA.has(k)));
 
   console.log(`\nSUMMARY`);
@@ -218,12 +165,18 @@ function classifyConnectivity(atoms: DecisionAtom[], depHints: Map<string, DepRe
   console.log(`  B decision conservation:   ${B.conserved ? "PASS" : "FAIL"} (omissions ${B.orphanClauses.length})`);
   console.log(`  C graph conservation:      ${C.conserved ? "PASS" : "FAIL"} (hasEntry ${C.hasEntry}, dangling ${C.danglingDeps.length}, cyclic ${C.cyclic.length}, unreachable ${C.unreachable.length})`);
   console.log(`  hallucinations (structural reverse-traceability): ${hall.length}`);
-  const drr = p1.drr.expected ? Math.round((p1.drr.resolved / p1.drr.expected) * 100) : 0;
-  console.log(`\nDEPENDENCY RESOLUTION (key matching) + CONNECTIVITY CLASSIFICATION (advisory, no prune)`);
-  console.log(`  DEPENDENCY RESOLUTION RATE (DRR): ${drr}% (${p1.drr.resolved}/${p1.drr.expected} typed edges -> nearest prior of type)`);
-  console.log(`  edge roles: ${Object.entries(p1.drr.roleDist).map(([k, v]) => `${k}=${v}`).join(" | ") || "none"}`);
-  console.log(`  connectivity: CONNECTED ${connDist.CONNECTED ?? 0} | ISO_RESOLUTION_FAILURE ${connDist.ISOLATED_RESOLUTION_FAILURE ?? 0} | ISO_FRAMEWORK ${connDist.ISOLATED_FRAMEWORK ?? 0} | ISO_NOISE ${connDist.ISOLATED_POSSIBLE_NOISE ?? 0}`);
-  console.log(`\nCANONICAL GRAPH (all atoms): ${canonicalHash(graph)} (${new Set(p1.atoms.map(canonKey)).size} distinct atoms)`);
+  const edgeRoles: Record<string, number> = {};
+  for (const e of compiled.edges) edgeRoles[e.role] = (edgeRoles[e.role] ?? 0) + 1;
+  console.log(`\nDETERMINISTIC GRAPH COMPILER (Phase B) — edges DERIVED from order + grammar, not extracted`);
+  console.log(`  edges: ${compiled.edges.length} (${Object.entries(edgeRoles).map(([k, v]) => `${k}=${v}`).join(" | ") || "none"}) | AND-groups ${compiled.andGroups.length} | OR-branches ${compiled.orBranches.length}`);
+  console.log(`  connectivity: CONNECTED(reach ENTER) ${connected}/${compiled.atoms.length} | isolated ${isolated.length} (framework ${isoFramework}, other ${isolated.length - isoFramework})`);
+  const gold = GOLD[VIDEO];
+  if (gold) {
+    const s = scoreSGF(compiled, gold);
+    console.log(`\nSTRATEGY GRAPH FIDELITY (SGF) vs gold (${gold.nodes.length} nodes, ${gold.edges.length} edges) — the north-star:`);
+    console.log(`  NodeRecall ${(s.NR * 100).toFixed(0)}% | EdgeRecall ${(s.ER * 100).toFixed(0)}% | Reachable ${s.RG ? "YES" : "NO"} | TopologyFidelity ${(s.TF * 100).toFixed(0)}%  ->  SGF ${(s.SGF * 100).toFixed(0)}%`);
+  } else console.log(`\nSTRATEGY GRAPH FIDELITY: (no gold graph for ${VIDEO} yet — only psH built)`);
+  console.log(`\nCANONICAL GRAPH: ${canonicalHash(graph)} (${new Set(compiled.atoms.map(canonKey)).size} distinct atoms)`);
   console.log(`ATOM STABILITY (2 passes): countA=${p1.atoms.length} countB=${p2.atoms.length} Δ=${Math.abs(p1.atoms.length - p2.atoms.length)} | canonical-key diff=${keyDiff.length} ${keyDiff.length ? "[" + keyDiff.slice(0, 6).join(", ") + "]" : ""} -> ${stab.idempotent && keyDiff.length === 0 ? "STABLE" : "UNSTABLE"}`);
 
   // ── Decision Boundary Agreement (DBA) + per-clause instability detail (taxonomy input) ──
