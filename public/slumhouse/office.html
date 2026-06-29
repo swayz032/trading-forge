@@ -386,7 +386,7 @@
 
     /* ── Phase A: CALLING ─────────────────────────────────────────────────── */
     .cc-calling {
-      background: #000 url('/slumhouse/images/carter-calling.png') center center / cover no-repeat;
+      background: #000 url('/slumhouse/images/carter-calling.png?v=3') center center / cover no-repeat;
     }
     .cc-calling-veil {
       position: absolute; inset: 0; pointer-events: none;
@@ -421,38 +421,59 @@
     .cc-spacer { flex: 1 1 auto; min-height: 24px; }
 
     /* ── Phase B: IMMERSIVE (black + green Siri edge-glow + blob) ─────────── */
-    .cc-immersive { background: #000; }
-    /* THE signature effect: a blurred green gradient hugging all four edges,
-       continuously flowing/breathing. Intensity tied to --carter-voice. */
-    .cc-glow { position: absolute; inset: 0; z-index: 0; pointer-events: none;
-      opacity: calc(0.30 + var(--carter-voice) * 0.70);
-      transform: scale(calc(1 + var(--carter-voice) * 0.05));
-      transition: opacity 0.10s linear, transform 0.10s linear;
-      will-change: opacity, transform;
+    /* Immersive backdrop = the "Carter on the phone" scene; a dark veil keeps
+       the blob + glow + text legible over it. */
+    .cc-immersive {
+      background: #000 url("/slumhouse/images/carter-immersive.png?v=3") center / cover no-repeat;
     }
-    .cc-glow-flow {
-      position: absolute; inset: -12%;
-      background:
-        radial-gradient(42% 24% at 50% 0%,    rgba(163,255,18,0.95), transparent 72%),
-        radial-gradient(42% 24% at 50% 100%,  rgba(25,195,125,0.90), transparent 72%),
-        radial-gradient(24% 46% at 0% 50%,    rgba(20,150,80,0.92),  transparent 72%),
-        radial-gradient(24% 46% at 100% 50%,  rgba(40,205,180,0.62), transparent 72%),
-        radial-gradient(34% 30% at 0% 0%,     rgba(163,255,18,0.62), transparent 70%),
-        radial-gradient(34% 30% at 100% 100%, rgba(25,195,125,0.62), transparent 70%),
-        radial-gradient(34% 30% at 100% 0%,   rgba(120,230,60,0.50), transparent 70%),
-        radial-gradient(34% 30% at 0% 100%,   rgba(20,170,120,0.52), transparent 70%);
-      filter: blur(58px) saturate(1.15);
-      animation: ccGlowFlow 9s ease-in-out infinite alternate;
-      will-change: transform;
+    .cc-immersive::after {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background: linear-gradient(rgba(0,0,0,0.30), rgba(0,0,0,0.55));
     }
-    @keyframes ccGlowFlow {
-      0%   { transform: translate3d(-2%, -1%, 0) scale(1.05) rotate(0deg); }
-      50%  { transform: translate3d( 2%,  1%, 0) scale(1.12) rotate(1.5deg); }
-      100% { transform: translate3d(-1%,  2%, 0) scale(1.06) rotate(-1.5deg); }
+    /* THE signature effect — Apple-Intelligence / Siri style: a bright ANIMATED
+       conic-gradient GREEN border hugging the screen rim + an outer bloom.
+       Masked to a ring (mask-composite) so the CENTER is transparent and the
+       blob + scene show through. Reacts to --carter-voice (set each frame from
+       getOutputVolume): the rim thickens, bloom widens, brightness rises when
+       Carter speaks. z-index 2 = above blob (1), below foot (3). */
+    @property --cc-spin { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+    /* THE effect, two parts:
+       (1) a SLIM flowing Slumhouse-lime border LINE locked FLUSH to the screen
+           edge (inset:0). Thickness is CONSTANT so it never detaches/gaps when
+           Carter talks — voice only changes brightness, not geometry.
+       (2) an inset "immersive" bloom that bleeds soft lime light INWARD from the
+           rounded edges (the Apple-immersive glow). Both ride cheap OPACITY off
+           --carter-voice, so it brightens when he speaks but the rim stays put. */
+    .cc-glow {
+      position: absolute; inset: 0; z-index: 2; pointer-events: none; border-radius: 54px;
+      opacity: calc(0.62 + var(--carter-voice) * 0.38);
+      /* ONE blended luminous edge: a crisp bright lime LINE flush at the very
+         edge (visible border) → bleeding into a wide immersive inward glow.
+         Border + glow are the same stack, so they read as one. */
+      box-shadow:
+        inset 0 0 2px 1px  rgba(163, 255, 18, 0.95),   /* the visible border line */
+        inset 0 0 24px 2px rgba(163, 255, 18, 0.78),   /* tight inner glow */
+        inset 0 0 65px 6px rgba(140, 255, 70, 0.50),   /* mid immersive bloom */
+        inset 0 0 160px 0  rgba(120, 230, 60, 0.32);   /* wide immersive light-bleed */
+      transition: opacity 0.10s linear; will-change: opacity;
     }
+    .cc-glow::before, .cc-glow::after {
+      content: ""; position: absolute; inset: 0; border-radius: 54px;
+      padding: 3.5px;   /* CONSTANT — flowing lime color over the edge line */
+      background: conic-gradient(from var(--cc-spin),
+        #a3ff12, #c6ff5a, #5dff8f, #19c37d, #7dffb0, #a3ff12, #c6ff3a, #a3ff12);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+              mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+      animation: ccSpin 7s linear infinite;
+    }
+    /* blur the conic ring so its color melts into the glow → border+glow blend */
+    .cc-glow::after { filter: blur(13px) saturate(1.5) brightness(1.25); opacity: 0.85; }
+    @keyframes ccSpin { to { --cc-spin: 360deg; } }
     .cc-blob {
       position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%;
-      object-fit: cover; pointer-events: none; background: #000;
+      object-fit: cover; pointer-events: none;
+      mix-blend-mode: screen;   /* drops the video's black bg so the blob floats over the scene */
       transform: scale(calc(1 + var(--carter-voice) * 0.05));
       transition: transform 0.10s linear; will-change: transform;
     }
@@ -472,10 +493,16 @@
       .cc-calling-name { font-size: 42px; }
       .cc-hangup { width: 64px; height: 64px; }
       .cc-hangup svg { width: 28px; height: 28px; }
-      .cc-glow-flow { filter: blur(42px) saturate(1.15); }  /* lighter blur on phones */
+      /* lighter bloom on phones — same blended border+glow, smaller blur radii */
+      .cc-glow { box-shadow:
+        inset 0 0 2px 1px  rgba(163,255,18,0.95),
+        inset 0 0 18px 2px rgba(163,255,18,0.75),
+        inset 0 0 50px 5px rgba(140,255,70,0.45),
+        inset 0 0 110px 0  rgba(120,230,60,0.28); }
+      .cc-glow::after { filter: blur(9px) saturate(1.4) brightness(1.2); }
     }
     @media (prefers-reduced-motion: reduce) {
-      .cc-ring-pulse, .cc-glow-flow { animation: none; }
+      .cc-ring-pulse, .cc-glow::before, .cc-glow::after { animation: none; }
     }
   </style>
 </head>
@@ -559,6 +586,7 @@
     <!-- Phase A: CALLING -->
     <section class="cc-phase cc-calling" id="cc-calling">
       <div class="cc-calling-veil"></div>
+      <audio id="cc-ring" preload="auto" loop playsinline><source src="/slumhouse/audio/carter-ring.mp3?v=3" type="audio/mpeg"></audio>
       <div class="cc-calling-inner">
         <div class="cc-calling-status" id="cc-calling-status">Calling…</div>
         <div class="cc-calling-name">Carter</div>
@@ -577,10 +605,9 @@
 
     <!-- Phase B: IMMERSIVE -->
     <section class="cc-phase cc-immersive" id="cc-immersive">
-      <div class="cc-glow"><div class="cc-glow-flow"></div></div>
-      <video class="cc-blob" id="cc-blob" autoplay muted loop playsinline preload="auto">
-        <source src="/slumhouse/video/carter-blob.mp4" type="video/mp4">
-      </video>
+      <div class="cc-glow"></div>
+      <!-- Blob video removed — the Carter scene is the immersive backdrop now.
+           To bring it back: re-add <video class="cc-blob" id="cc-blob" ...>. -->
       <div class="cc-immersive-foot">
         <div class="cc-mic-state" id="cc-mic-state">Connecting…</div>
         <button class="cc-hangup" id="cc-hangup-b" type="button" aria-label="End call">
@@ -603,7 +630,7 @@
       // ── Pass 3: floating 3D switch-card carousel (empty shells, no switches yet) ──
       var OF_CARDS = [
         { id: 'carter', connect: true, eyebrow: 'Your AI', title: 'Carter',
-          cover: '/slumhouse/images/carter-cover.png', connectLabel: 'Connect to Carter' },
+          cover: '/slumhouse/images/carter-cover.png?v=3', connectLabel: 'Connect to Carter' },
         { id: 'bot_power', eyebrow: 'Main switch', title: 'Bot Power',
           on: 'The bot makes trades.',
           off: 'The bot stops — no new trades. (Turns RED if it pauses itself for safety; flip ON to resume.)' },
@@ -924,7 +951,7 @@
     var callSub   = document.getElementById('cc-calling-sub');
 
     var conversation = null;   // ElevenLabs Conversation instance
-    var audioCtx = null;       // Web Audio context for ringback synthesis
+    var ringEl = document.getElementById('cc-ring');  // looping <audio> ringtone
     var ringTimer = null;
     var ringsPlayed = 0;
     var connected = false;
@@ -936,43 +963,24 @@
 
     function setVoice(v) { overlay.style.setProperty('--carter-voice', v.toFixed(3)); }
 
-    // ── Ringback tone (Web Audio API) — US ringback = 440Hz + 480Hz, 2s ON / 1s OFF ──
+    // ── Ringback via a looping <audio> element ──────────────────────────────
+    // Reliable on iOS across REPEAT calls. (Web Audio suspend/resume kept dying
+    // after the first call — that's why the ring only worked once.)
     function startRinging() {
-      try {
-        if (!audioCtx) {
-          var AC = window.AudioContext || window.webkitAudioContext;
-          audioCtx = new AC();
-        }
-        if (audioCtx.state === 'suspended') { audioCtx.resume().catch(function(){}); }
-      } catch (e) { audioCtx = null; }
-      ringsPlayed = 0;
-      var cadence = function () {
+      if (ringEl) {
+        try { ringEl.currentTime = 0; var p = ringEl.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+      }
+      ringsPlayed = 1;          // first ring is playing now
+      maybeAnswer();
+      ringTimer = setInterval(function () {
         if (phase !== 'calling') return;
-        playRingBurst();
-        ringsPlayed++;
+        ringsPlayed++;          // one ring per 3.5s loop of the tone
         maybeAnswer();
-        ringTimer = setTimeout(cadence, 3000);   // 2s tone + 1s silence
-      };
-      cadence();
-    }
-    function playRingBurst() {
-      if (!audioCtx) return;
-      var now = audioCtx.currentTime;
-      var dur = 2.0;
-      var gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.16, now + 0.05);
-      gain.gain.setValueAtTime(0.16, now + dur - 0.06);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-      gain.connect(audioCtx.destination);
-      [440, 480].forEach(function (f) {
-        var o = audioCtx.createOscillator();
-        o.type = 'sine'; o.frequency.value = f;
-        o.connect(gain); o.start(now); o.stop(now + dur + 0.02);
-      });
+      }, 3500);
     }
     function stopRinging() {
-      if (ringTimer) { clearTimeout(ringTimer); ringTimer = null; }
+      if (ringTimer) { clearInterval(ringTimer); ringTimer = null; }
+      if (ringEl) { try { ringEl.pause(); ringEl.currentTime = 0; } catch (e) {} }
     }
 
     // Answer-transition: cut to immersive ONLY once connected AND ≥2 rings played.
@@ -983,7 +991,8 @@
     function goImmersive() {
       phase = 'immersive';
       stopRinging();
-      if (audioCtx) { try { audioCtx.close(); } catch (e) {} audioCtx = null; }
+      // Keep audioCtx alive + reuse it (closing it here is what broke the ring
+      // on every call after the first). stopRinging() already silences it.
       phaseCall.classList.remove('cc-on');
       phaseImm.classList.add('cc-on');
       updateMicState();
@@ -1027,6 +1036,18 @@
       if (phase !== 'idle') return;
       phase = 'calling';
       connected = false; mode = 'listening'; voice = 0.2;
+      // Establish mic permission INSIDE this click gesture (so the prompt times
+      // right on iOS), then immediately STOP the tracks — we don't hold the mic
+      // open ourselves (that's what left the mic on after disconnect). The grant
+      // persists for the page, so the ConvAI SDK acquires its own without a new
+      // prompt, and endSession() releases it cleanly when the call ends.
+      try {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(function (s) { s.getTracks().forEach(function (t) { t.stop(); }); })
+            .catch(function () {});
+        }
+      } catch (e) {}
       if (callStat) callStat.textContent = 'Calling…';
       if (callSub) callSub.textContent = 'CEO · Slumdawg Traders';
       overlay.classList.add('cc-open');
@@ -1061,8 +1082,8 @@
       stopRinging();
       cancelAnimationFrame(rafId); rafId = null;
       phase = 'idle';
+      // endSession() releases the SDK's mic — that turns the mic indicator OFF.
       if (conversation) { try { await conversation.endSession(); } catch (e) {} conversation = null; }
-      if (audioCtx) { try { audioCtx.close(); } catch (e) {} audioCtx = null; }
       connected = false; mode = 'listening';
       overlay.classList.remove('cc-open');
       overlay.setAttribute('aria-hidden', 'true');
