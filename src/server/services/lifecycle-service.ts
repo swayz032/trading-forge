@@ -30,7 +30,7 @@ import { logger } from "../lib/logger.js";
 import { insertAuditRow, insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { evolveStrategy } from "./evolution-service.js";
 import { AlertFactory } from "./alert-service.js";
-import { broadcastSSE, LIFECYCLE_GATE_EVENTS } from "../routes/sse.js";
+import { broadcastSSE, LIFECYCLE_GATE_EVENTS, WAVE29_EVENTS } from "../routes/sse.js";
 import { compileDualPineExport } from "./pine-export-service.js";
 import { agentCoordinator } from "./agent-coordinator-service.js";
 import { tracer } from "../lib/tracing.js";
@@ -516,6 +516,26 @@ export class LifecycleService {
         };
         const gatePdrResult = await evaluatePaperToDeployReadyGates(pdrInput);
 
+        // Finding 3 fix: emit bifGateEvaluationsTotal Prometheus counter.
+        // evaluateBifGate is pure/synchronous (no I/O); calling it here with the same
+        // inputs provides the BIF-specific outcome label without changing gate logic.
+        // outcome label is mapped to short-form: clean | warn | blocked | legacy_null.
+        // The counter increment is non-blocking — errors never affect promotion outcome.
+        try {
+          const bifResult = evaluateBifGate(
+            latestBtP2D?.bif != null ? Number(latestBtP2D.bif) : null,
+            latestBtP2D?.kEff != null ? Number(latestBtP2D.kEff) : null,
+          );
+          const bifOutcome = !bifResult.passed
+            ? "blocked"
+            : bifResult.legacyNull
+              ? "legacy_null"
+              : bifResult.reason === "bif.warn_above_warn_threshold"
+                ? "warn"
+                : "clean";
+          bifGateEvaluationsTotal.labels({ outcome: bifOutcome }).inc();
+        } catch (_bifCounterErr) { /* non-blocking — counter failures never prevent promotion */ }
+
         if (!gatePdrResult.passed) {
           logger.warn({ strategyId: id, reason: gatePdrResult.reason, fromState, toState }, "PAPER→DEPLOY_READY blocked by evaluatePaperToDeployReadyGates");
           await db.insert(auditLog).values({
@@ -524,7 +544,7 @@ export class LifecycleService {
             input: { fromState, toState }, result: gatePdrResult.auditPayload ?? { reason: gatePdrResult.reason },
             correlationId,
           }).catch((e) => { logger.warn({ err: e }, "PAPER→DEPLOY_READY evaluator audit failed (non-blocking)"); });
-          broadcastSSE("lifecycle:paper_to_deploy_ready_blocked", { strategyId: id, reason: gatePdrResult.reason, passed: false });
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.PAPER_TO_DEPLOY_READY_BLOCKED, { strategyId: id, reason: gatePdrResult.reason, passed: false });
           strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
           return { success: false, error: gatePdrResult.reason ?? "PAPER→DEPLOY_READY gate failed" };
         }
@@ -582,7 +602,7 @@ export class LifecycleService {
             input: { fromState, toState }, result: shadowGateResult.auditPayload ?? { reason: shadowGateResult.reason },
             correlationId,
           }).catch((e) => { logger.warn({ err: e }, "SHADOW→PAPER evaluator audit failed (non-blocking)"); });
-          broadcastSSE("lifecycle:shadow_to_paper_blocked", { strategyId: id, reason: shadowGateResult.reason, passed: false });
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.SHADOW_TO_PAPER_BLOCKED, { strategyId: id, reason: shadowGateResult.reason, passed: false });
           return { success: false, error: shadowGateResult.reason ?? "SHADOW→PAPER gate failed" };
         }
       } catch (shadowGateErr) {
@@ -1109,9 +1129,15 @@ export class LifecycleService {
           const wfMeta = btExtrasPboW29.walkForwardResults as Record<string, unknown> | null | undefined;
           const pboOverall = wfMeta?.pbo_overall as number | null | undefined;
           const pboOverallPValue = wfMeta?.pbo_overall_p_value as number | null | undefined;
+          // FINDING-1 wiring (deepscan 2026-06-28): thread pbo_degenerate so the gate
+          // can distinguish a CPCV-degenerate run (IS==OOS for all paths → BLOCK via
+          // pbo_cpcv_degenerate_block) from a genuine pre-Wave-29 legacy null (PROCEED).
+          // Without this the producer (walk_forward.py) emits the flag but the consumer
+          // never reads it — the degenerate guard would never fire (grandfather-pass).
+          const pboDegenerate = wfMeta?.pbo_degenerate as boolean | null | undefined;
 
           const pboGateResult = evaluatePboGate(
-            { pbo_overall: pboOverall, pbo_p_value: pboOverallPValue },
+            { pbo_overall: pboOverall, pbo_p_value: pboOverallPValue, pbo_degenerate: pboDegenerate },
           );
 
           if (!pboGateResult.ok) {
@@ -1136,7 +1162,7 @@ export class LifecycleService {
               correlationId: options.correlationId ?? null,
             }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.pbo_overfit_block audit row write failed"));
             // Emit SSE event lifecycle:pbo_evaluated
-            broadcastSSE("lifecycle:pbo_evaluated", {
+            broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
               strategyId: id,
               fromState,
               toState,
@@ -1183,7 +1209,7 @@ export class LifecycleService {
           }
 
           // Emit SSE event lifecycle:pbo_evaluated on every evaluation
-          broadcastSSE("lifecycle:pbo_evaluated", {
+          broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
             strategyId: id,
             fromState,
             toState,
@@ -2080,7 +2106,7 @@ export class LifecycleService {
         if (result.success) {
           promoted.push(s.id);
 
-          broadcastSSE("lifecycle:promoted", {
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
             strategyId: s.id,
             from: "CANDIDATE",
             to: "TESTING",
@@ -2789,7 +2815,7 @@ export class LifecycleService {
         if (result.success) {
           promoted.push(s.id);
 
-          broadcastSSE("lifecycle:promoted", {
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
             strategyId: s.id,
             from: "TESTING",
             to: "PAPER",
@@ -2888,7 +2914,7 @@ export class LifecycleService {
               logger.warn({ strategyId: s.id, err: auditErr }, "shadow divergence block audit insert failed (non-blocking)");
             });
 
-            broadcastSSE("lifecycle:shadow_divergence_evaluated", {
+            broadcastSSE(WAVE29_EVENTS.SHADOW_DIVERGENCE_EVALUATED, {
               strategyId: s.id,
               ok: false,
               divergence_pct: divergenceResult.divergence_pct,
@@ -2953,7 +2979,7 @@ export class LifecycleService {
             logger.warn({ strategyId: s.id, err: auditErr }, "shadow promotion passed audit insert failed (non-blocking)");
           });
 
-          broadcastSSE("lifecycle:shadow_divergence_evaluated", {
+          broadcastSSE(WAVE29_EVENTS.SHADOW_DIVERGENCE_EVALUATED, {
             strategyId: s.id,
             ok: true,
             divergence_pct: divergenceResult.divergence_pct,
@@ -4459,7 +4485,22 @@ export class LifecycleService {
           AlertFactory.deployReady(
             s.id,
             `Strategy "${s.name}" is DEPLOY_READY — Sharpe ${rollingSharpe.toFixed(2)}, ${tradingDays} trading days. Awaiting your approval.`,
-          ).catch(() => {});
+          ).catch((e) => {
+            logger.error(
+              { err: e, strategyId: s.id, correlationId },
+              "AlertFactory.deployReady failed — operator will not receive DEPLOY_READY notification",
+            );
+            insertAuditRowSafe({
+              action: "lifecycle.deploy_ready_alert_failed",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "failure",
+              decisionAuthority: "lifecycle_service",
+              input: { rollingSharpe, tradingDays },
+              result: { error: String(e) },
+              correlationId: correlationId ?? null,
+            }).catch(() => {});
+          });
 
           logger.info(
             { id: s.id, rollingSharpe, tradingDays },
@@ -5026,7 +5067,7 @@ export class LifecycleService {
           });
           if (killResult.success) {
             result.killed++;
-            broadcastSSE("lifecycle:promoted", {
+            broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
               strategyId: s.id,
               from: "PILOT",
               to: "GRAVEYARD",
@@ -5085,7 +5126,7 @@ export class LifecycleService {
           });
           if (promoteResult.success) {
             result.promoted++;
-            broadcastSSE("lifecycle:promoted", {
+            broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
               strategyId: s.id,
               from: "PILOT",
               to: "DEPLOYED",
@@ -5179,7 +5220,7 @@ export class LifecycleService {
           });
           if (failResult.success) {
             result.killed++;
-            broadcastSSE("lifecycle:promoted", {
+            broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
               strategyId: s.id,
               from: "PILOT",
               to: "GRAVEYARD",

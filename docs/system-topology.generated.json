@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-28T06:19:07.973Z",
+  "generatedAt": "2026-06-29T02:35:24.275Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,8 +15,8 @@
     ]
   },
   "counts": {
-    "routes": 76,
-    "schedulerJobs": 102,
+    "routes": 77,
+    "schedulerJobs": 103,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 29,
@@ -41,6 +41,7 @@
     "/api/broker-accounts",
     "/api/broker-error-budget",
     "/api/broker/fill-callback",
+    "/api/carter/webhook",
     "/api/cloud-qmc",
     "/api/compiler",
     "/api/compliance",
@@ -146,6 +147,7 @@
     "funnel-snapshot",
     "graveyard-pattern-extraction",
     "harsh-regime-phase-activation-check",
+    "heartbeat-ooh-check",
     "heartbeat-stale-check",
     "heartbeat-write",
     "hmm-regime-weekly-refit",
@@ -984,11 +986,13 @@
     ],
     "coveredCounts": {
       "routes": 76,
-      "schedulerJobs": 102,
+      "schedulerJobs": 103,
       "engineSubsystems": 29,
       "databaseTables": 107
     },
-    "missingRoutes": [],
+    "missingRoutes": [
+      "/api/carter/webhook"
+    ],
     "missingSchedulerJobs": [],
     "missingEngineSubsystems": [],
     "missingDatabaseTables": [],
@@ -4175,6 +4179,7 @@
         ],
         "schedulerJobs": [
           "bw-session-refresh",
+          "heartbeat-ooh-check",
           "heartbeat-stale-check",
           "heartbeat-write",
           "prop-firm-cookie-refresh"
@@ -10978,6 +10983,7 @@
       ],
       "schedulerJobs": [
         "bw-session-refresh",
+        "heartbeat-ooh-check",
         "heartbeat-stale-check",
         "heartbeat-write",
         "prop-firm-cookie-refresh"

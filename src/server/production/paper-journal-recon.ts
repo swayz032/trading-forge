@@ -976,11 +976,15 @@ async function evaluateStrategy(
 
     // Fetch broker proxy P&L (production_trades expected_pnl for the window)
     try {
+      // FINDING #3 FIX: must filter by strategyId here (matches the COUNT query at line ~928).
+      // Without this filter, a multi-strategy account's combined broker P&L was compared
+      // against a single strategy's paper P&L → false CRITICAL drift alerts + masked real drift.
       const brokerPnlRows = await db
         .select({ total: sql<string>`coalesce(sum(expected_pnl), 0)` })
         .from(productionTrades)
         .where(
           and(
+            eq(productionTrades.strategyId, strategy.id),
             gte(productionTrades.barTimestamp, dayStart),
             lt(productionTrades.barTimestamp, dayEnd)
           )

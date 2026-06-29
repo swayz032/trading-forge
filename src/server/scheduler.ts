@@ -14,7 +14,7 @@ import { randomUUID } from "crypto";
 import { cronJobsConcurrent } from "./lib/metrics-registry.js";
 import { eq, and, gte, lte, desc, inArray, isNull, isNotNull, min, sql } from "drizzle-orm";
 import { db } from "./db/index.js";
-import { strategies, paperSessions, paperPositions, paperTrades, paperSignalLogs, backtests, systemJournal, skipDecisions, auditLog, dayArchetypes, tournamentResults, macroSnapshots, macroFeatures, macroRegimeStates, lifecycleTransitions, harshRegimePhase, strategyExports, strategyExportArtifacts } from "./db/schema.js";
+import { strategies, paperSessions, paperPositions, paperTrades, paperSignalLogs, backtests, agentJobs, systemJournal, skipDecisions, auditLog, dayArchetypes, tournamentResults, macroSnapshots, macroFeatures, macroRegimeStates, lifecycleTransitions, harshRegimePhase, strategyExports, strategyExportArtifacts } from "./db/schema.js";
 import { broadcastSSE } from "./routes/sse.js";
 import { logger } from "./lib/logger.js";
 import { LifecycleService } from "./services/lifecycle-service.js";
@@ -362,15 +362,58 @@ function markJobRun(name: string) {
 // the next interval fires, both run concurrently. For long-running jobs (sweep,
 // scout discovery, suite runs) this stacks subprocesses and DB transactions.
 const _inFlightJobs = new Set<string>();
+
+// FINDING #2 FIX: wall-clock watchdog — force-release lock + CRITICAL Discord if job hangs.
+// A hung fn() would hold the lock indefinitely; callers see "still in-flight" forever.
+// MAX_JOB_DURATION_MS env-overridable; default 30 min (longest legit job is DeepAR ~10 min).
+const MAX_JOB_DURATION_MS = parseInt(process.env.MAX_JOB_DURATION_MS ?? String(30 * 60 * 1000), 10);
+const _jobWatchdogs = new Map<string, ReturnType<typeof setTimeout>>();
+
 function _tryAcquireJobLock(name: string): boolean {
   if (_inFlightJobs.has(name)) {
     logger.warn({ jobName: name }, "cron tick skipped — previous tick still in-flight");
     return false;
   }
   _inFlightJobs.add(name);
+  // Start wall-clock watchdog — fires if the job holds its lock past MAX_JOB_DURATION_MS
+  const watchdog = setTimeout(() => {
+    logger.error(
+      { jobName: name, maxMs: MAX_JOB_DURATION_MS },
+      "scheduler: job hung past wall-clock limit — force-releasing lock",
+    );
+    _inFlightJobs.delete(name);
+    _jobWatchdogs.delete(name);
+    notifyCritical(
+      `[scheduler.job_hung] ${name} exceeded max duration`,
+      `Job "${name}" held its lock for >${MAX_JOB_DURATION_MS}ms without completing. ` +
+      `Lock was force-released. Check for deadlocks, hung subprocesses, or DB connection exhaustion.`,
+      { jobName: name, maxMs: MAX_JOB_DURATION_MS },
+    );
+    insertAuditRowSafe({
+      action: "scheduler.job_hung",
+      entityType: "scheduler_job",
+      entityId: name,
+      decisionAuthority: "system",
+      result: { maxMs: MAX_JOB_DURATION_MS, forcedRelease: true },
+      status: "error",
+    }).catch((auditErr: unknown) => {
+      logger.error({ auditErr }, "scheduler: job_hung audit write failed");
+    });
+  }, MAX_JOB_DURATION_MS);
+  // Allow process to exit without waiting for watchdog timers
+  if ((watchdog as unknown as { unref?: () => void }).unref) {
+    (watchdog as unknown as { unref: () => void }).unref();
+  }
+  _jobWatchdogs.set(name, watchdog);
   return true;
 }
 function _releaseJobLock(name: string): void {
+  // FINDING #2 FIX: clear watchdog before releasing lock so it does not fire after completion
+  const watchdog = _jobWatchdogs.get(name);
+  if (watchdog) {
+    clearTimeout(watchdog);
+    _jobWatchdogs.delete(name);
+  }
   _inFlightJobs.delete(name);
 }
 
@@ -992,6 +1035,27 @@ export function initScheduler() {
     }
   });
   _scheduledJobs.add("heartbeat-stale-check");
+
+  // FINDING #6 FIX: secondary off-RTH heartbeat check every 4h.
+  // The primary heartbeat-stale-check is RTH-only (isEtRth gate), leaving a ~64h blind spot
+  // after a Friday-evening crash. This check fires at 4h intervals and sends a WARNING
+  // (not CRITICAL auto-restart) when the last heartbeat is >8h old outside RTH.
+  registerJob("heartbeat-ooh-check", 4 * 60 * 60 * 1000, async () => {
+    const { runOffRthHeartbeatCheck } = await import("./services/dead-mans-heartbeat-service.js");
+    await runOffRthHeartbeatCheck();
+  });
+  cron.schedule("0 */4 * * *", async () => {
+    if (!_tryAcquireJobLock("heartbeat-ooh-check")) return;
+    try {
+      const t0 = Date.now();
+      await withRetry("heartbeat-ooh-check", SCHEDULER_JOBS["heartbeat-ooh-check"].run, 1);
+      markJobRun("heartbeat-ooh-check");
+      emitJobComplete("heartbeat-ooh-check", Date.now() - t0);
+    } finally {
+      _releaseJobLock("heartbeat-ooh-check");
+    }
+  });
+  _scheduledJobs.add("heartbeat-ooh-check");
 
   // ─── Pass 6 / Track C F-6: n8n execution-log scraper every 5 min ───
   // Pulls execution telemetry from n8n on Railway via REST API and writes
@@ -2287,6 +2351,59 @@ export function initScheduler() {
       }
     } catch (err) {
       logger.error({ table: "critic_candidates", err }, "stale-pending-sweeper: error sweeping table");
+    }
+
+    // FINDING #5 FIX: backtests stuck 'running' >90min block conveyor re-enqueue.
+    // A Python SIGKILL/OOM leaves status='running' forever — conveyor's NOT-EXISTS-running
+    // guard never re-enqueues the strategy → strategy silently stranded indefinitely.
+    // Marking failed allows the conveyor to re-enqueue after the 24h cooling-off period.
+    try {
+      const backtestsResult = await db
+        .update(backtests)
+        .set({ status: "failed", errorMessage: "stale-pending-sweeper: marked failed after 90min running (Python OOM/SIGKILL guard)" })
+        .where(_and(_eq(backtests.status, "running"), lt(backtests.createdAt, cutoff90)));
+      const backtestsSwept = (backtestsResult as any)?.rowCount ?? 0;
+      if (backtestsSwept > 0) {
+        totalSwept += backtestsSwept;
+        logger.warn({ table: "backtests", swept: backtestsSwept, thresholdMin: 90 }, "stale-pending-sweeper: marked stale running backtests as failed");
+        await db.insert(auditLog).values({
+          action: "stale-pending-sweeper.swept",
+          entityType: "backtests",
+          entityId: null,
+          input: { cutoff: cutoff90.toISOString(), threshold_min: 90 },
+          result: { swept: backtestsSwept, note: "conveyor will re-enqueue after 24h cooling-off" },
+          status: "success",
+          correlationId,
+        });
+      }
+    } catch (err) {
+      logger.error({ table: "backtests", err }, "stale-pending-sweeper: error sweeping backtests");
+    }
+
+    // FINDING #5 FIX: agent_jobs stuck 'pending' >90min (no started_at column — using created_at interim).
+    // NOTE: A future migration should add started_at to agent_jobs for a more accurate threshold.
+    // Interim: pending jobs older than 90min on created_at indicate a hung or lost job handler.
+    try {
+      const agentJobsResult = await db
+        .update(agentJobs)
+        .set({ status: "failure", errorMessage: "stale-pending-sweeper: marked failure after 90min pending (created_at interim — add started_at migration for precision)" })
+        .where(_and(_eq(agentJobs.status, "pending"), lt(agentJobs.createdAt, cutoff90)));
+      const agentJobsSwept = (agentJobsResult as any)?.rowCount ?? 0;
+      if (agentJobsSwept > 0) {
+        totalSwept += agentJobsSwept;
+        logger.warn({ table: "agent_jobs", swept: agentJobsSwept, thresholdMin: 90, note: "keyed on created_at (interim) — add started_at migration for precision" }, "stale-pending-sweeper: marked stale pending agent_jobs as failure");
+        await db.insert(auditLog).values({
+          action: "stale-pending-sweeper.swept",
+          entityType: "agent_jobs",
+          entityId: null,
+          input: { cutoff: cutoff90.toISOString(), threshold_min: 90, keyed_on: "created_at_interim" },
+          result: { swept: agentJobsSwept },
+          status: "success",
+          correlationId,
+        });
+      }
+    } catch (err) {
+      logger.error({ table: "agent_jobs", err }, "stale-pending-sweeper: error sweeping agent_jobs");
     }
 
     if (totalSwept === 0) {

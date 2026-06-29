@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { db } from "../db/index.js";
 import { paperSessions, paperPositions, paperTrades, strategies, paperSignalLogs, skipDecisions, shadowSignals, preMarketSessions, brokerAccounts, lifecycleShadowSignals } from "../db/schema.js";
-import { openPosition, closePosition } from "./paper-execution-service.js";
+import { openPosition, closePosition, forceCloseAllPositions } from "./paper-execution-service.js";
 import { checkRiskGate } from "./paper-risk-gate.js";
 import { evaluateContextGate } from "./context-gate-service.js";
 import { checkAntiSetupGate, type AntiSetupGateResult } from "./anti-setup-gate-service.js";
@@ -2493,8 +2493,24 @@ export async function evaluateSignals(
             }
           }
         } catch (_macroErr) {
-          // Fail-OPEN: calendar/news failure is non-blocking (same as signal-time policy).
-          // Don't drop a pending entry just because the calendar service hiccuped.
+          // Fail-CLOSED: calendar/news check failure — cannot confirm the T1 window is clear.
+          // Drop the pending entry (consistent with Gate 3 lunch-blackout fail-CLOSED policy
+          // and the institutional rule that unknown macro risk = block, not allow).
+          pendingDropReason = "macro_news_check_error";
+          logger.warn(
+            { sessionId, symbol, correlationId: fillCorrelationId },
+            "H3 Gate 4: T1 news check error at fill time — dropping pending entry (fail-CLOSED)",
+          );
+          insertAuditRow({
+            action: "paper.fill_blocked_news_check_error",
+            entityType: "paper_session",
+            entityId: sessionId,
+            decisionAuthority: "system",
+            status: "warning",
+            input: { sessionId, symbol, side: pendingEntry.side } as Record<string, unknown>,
+            result: { reason: "macro_news_check_error", failClosed: true } as Record<string, unknown>,
+            correlationId: fillCorrelationId,
+          }).catch(() => {});
         }
       }
 
@@ -3173,14 +3189,38 @@ export async function evaluateSignals(
             input: { firmId, sessionDate, combinedPnL: dllResult.combinedPnL },
             result: { dll_pct: dllResult.dllPct, by_symbol: dllResult.pnLBySymbol, threshold: dllResult.forceCloseThreshold },
           }).catch(() => {});
-          // Force-close path: trigger forceCloseAllPositions via dynamic import
-          // (same pattern as kill-switch.ts → paper-execution-service.ts).
-          // Fire-and-forget: new entry is already blocked; close completes async.
-          import("./paper-execution-service.js")
-            .then(({ forceCloseAllPositions }) =>
-              forceCloseAllPositions(`cross_symbol_dll_force_close:${firmId}:${dllResult.dllPct.toFixed(3)}`)
-            )
-            .catch((err: unknown) => logger.error({ err, sessionId, firmId }, "W23H.F: forceCloseAllPositions dynamic import failed"));
+          // Force-close path: await forceCloseAllPositions (static import — no circular
+          // dependency: paper-signal-service already imports paper-execution-service at
+          // the top; paper-execution-service only dynamically imports paper-signal-service
+          // for updateGovernorOnTrade which runs on a DIFFERENT code path).
+          // FINDING #2 FIX: prior fire-and-forget dynamic import meant a module-load
+          // failure or thrown exception silently swallowed — positions stayed open past
+          // the firm DLL breach with no audit row and no operator alert.
+          try {
+            await forceCloseAllPositions(
+              `cross_symbol_dll_force_close:${firmId}:${dllResult.dllPct.toFixed(3)}`
+            );
+          } catch (fcErr: unknown) {
+            const fcMsg = fcErr instanceof Error ? fcErr.message : String(fcErr);
+            logger.error(
+              { err: fcErr, sessionId, firmId, dllPct: dllResult.dllPct },
+              "W23H.F: forceCloseAllPositions FAILED — positions may still be open past firm DLL; manual close required",
+            );
+            insertAuditRow({
+              action: "cross_symbol_force_close_failed",
+              entityType: "paper_session",
+              entityId: sessionId,
+              decisionAuthority: "system",
+              status: "error",
+              input: { firmId, dllPct: dllResult.dllPct, combinedPnL: dllResult.combinedPnL } as Record<string, unknown>,
+              result: { error: fcMsg, requiresManualClose: true } as Record<string, unknown>,
+            }).catch(() => {});
+            notifyCritical(
+              "CRITICAL: Cross-symbol DLL force-close FAILED",
+              `firm: ${firmId} dllPct: ${dllResult.dllPct.toFixed(3)} — Positions may still be open past the breach threshold. Manual close required immediately. err: ${fcMsg}`,
+              { firmId, dllPct: dllResult.dllPct, sessionId, error: fcMsg },
+            );
+          }
         } else if (dllResult.action === "halt") {
           dllHaltBlocked = true;
           span.setAttribute("cross_symbol_dll_halt", true);

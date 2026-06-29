@@ -34,6 +34,7 @@ import { auditLog, backtests, strategies } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { candidateConveyorEnqueuedTotal } from "../lib/metrics-registry.js";
 import { broadcastSSE } from "../routes/sse.js";
+import { notifyWarning } from "./notification-service.js";
 import { getMode as getPipelineMode } from "./pipeline-control-service.js";
 
 export async function runCandidateBacktestConveyor(): Promise<void> {
@@ -209,21 +210,27 @@ export async function runCandidateBacktestConveyor(): Promise<void> {
     "candidate-backtest-conveyor: tick complete",
   );
 
-  // ── 5. Phase 3b: fire-and-forget checkAutoPromotions ─────────────────────
-  // Re-evaluate any TESTING-eligible promotion gates after enqueuing.
-  // Errors here are non-blocking and never reach the scheduler.
+  // ── 5. Phase 3b: awaited checkAutoPromotions inside job-locked body ─────────
+  // FINDING #4 FIX: was fire-and-forget (void (async()=>{})()) racing the 6h
+  // lifecycle-auto-check cron with errors swallowed to logger.warn only.
+  // Now awaited so the scheduler sees failures and can escalate via notifyWarning.
   if (enqueued > 0) {
-    void (async () => {
-      try {
-        const { LifecycleService } = await import("./lifecycle-service.js");
-        const lifecycle = new LifecycleService();
-        await lifecycle.checkAutoPromotions({ correlationId });
-      } catch (promotionErr) {
-        logger.warn(
-          { promotionErr, correlationId },
-          "candidate-backtest-conveyor: checkAutoPromotions error (non-blocking)",
-        );
-      }
-    })();
+    try {
+      const { LifecycleService } = await import("./lifecycle-service.js");
+      const lifecycle = new LifecycleService();
+      await lifecycle.checkAutoPromotions({ correlationId });
+    } catch (promotionErr) {
+      logger.warn(
+        { promotionErr, correlationId },
+        "candidate-backtest-conveyor: checkAutoPromotions error",
+      );
+      notifyWarning(
+        "[candidate-backtest-conveyor] checkAutoPromotions failed",
+        `Auto-promotion check failed after enqueuing ${enqueued} backtest(s). ` +
+        `Strategies may be delayed reaching TESTING stage. ` +
+        `Error: ${promotionErr instanceof Error ? promotionErr.message : String(promotionErr)}`,
+        { enqueued, correlationId },
+      );
+    }
   }
 }

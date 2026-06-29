@@ -33,7 +33,7 @@ import { db } from "../db/index.js";
 import { logger } from "../lib/logger.js";
 import { AlertFactory } from "./alert-service.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
-import { notifyCritical } from "./notification-service.js";
+import { notifyCritical, notifyWarning } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 const HEARTBEAT_TABLE = "system_health_heartbeat";
@@ -375,8 +375,18 @@ export async function runHeartbeatStaleCheck(): Promise<void> {
   const now = Date.now();
 
   if (!lastAt) {
-    // No heartbeat ever written this session — not necessarily stale (first RTH start)
-    logger.debug("dead-mans-heartbeat: no heartbeat row yet — cannot determine stale state");
+    // FINDING #6 FIX: null lastAt during RTH = no heartbeat ever written → WARNING.
+    // An empty table during trading hours means the backend may never have started its
+    // heartbeat loop, or the table was truncated. Cannot verify liveness — fire WARNING.
+    logger.warn("dead-mans-heartbeat: no heartbeat rows in table during RTH — treating as stale (WARNING)");
+    notifyWarning(
+      "[dead-mans-heartbeat] No heartbeat rows written during RTH",
+      "The system_health_heartbeat table has no rows during trading hours. " +
+      "This may indicate: (1) the backend just started and has not yet written its first heartbeat " +
+      "(expected within 15 min of RTH open), (2) the heartbeat-write cron is not registered, " +
+      "or (3) the migration was not applied. " +
+      "If this persists beyond 30 min during RTH, investigate immediately.",
+    );
     return;
   }
 
@@ -454,6 +464,83 @@ export async function runHeartbeatStaleCheck(): Promise<void> {
   // After the stale alert fires, autonomously attempt self-restart so a hung
   // backend heals without operator intervention during a 14-day vacation.
   await attemptAutoRestart(lastAt, minutesSince, cronCorrelationId);
+}
+
+// ─── FINDING #6 FIX: secondary out-of-RTH heartbeat check ───────────────────
+// The primary runHeartbeatStaleCheck() is RTH-only (isEtRth gate), leaving a
+// ~64h blind spot after a Friday-evening crash. This function runs every 4h
+// and fires a WARNING (not CRITICAL auto-restart) when the last heartbeat is
+// older than OOH_STALE_THRESHOLD_MS (default 8h) outside of RTH.
+
+const OOH_STALE_THRESHOLD_MS = parseInt(
+  process.env.OOH_STALE_THRESHOLD_MS ?? String(8 * 60 * 60 * 1000),
+  10,
+);
+
+// Dedup: one OOH WARNING per stale window (reset when heartbeat becomes fresh)
+let _lastOohAlertedForTs: Date | null = null;
+
+/**
+ * Out-of-RTH stale check. Only fires during non-RTH hours.
+ * Sends a WARNING (not CRITICAL auto-restart) if the last heartbeat is older
+ * than OOH_STALE_THRESHOLD_MS — catches Friday-evening crash scenarios.
+ * Registered in scheduler.ts at 4h interval ("heartbeat-ooh-check" job).
+ */
+export async function runOffRthHeartbeatCheck(): Promise<void> {
+  if (isEtRth()) {
+    // Primary RTH check handles this window — no-op
+    logger.debug("dead-mans-heartbeat: off-rth check skipped — inside RTH");
+    return;
+  }
+
+  const lastAt = await getLastHeartbeatAt();
+
+  if (!lastAt) {
+    // No heartbeat rows yet — normal if backend just started outside RTH.
+    // The RTH check will handle it at next market open.
+    logger.debug("dead-mans-heartbeat: off-rth check — no heartbeat rows (expected pre-RTH)");
+    return;
+  }
+
+  const ageMs = Date.now() - lastAt.getTime();
+
+  if (ageMs <= OOH_STALE_THRESHOLD_MS) {
+    // Fresh — reset dedup state if we previously alerted
+    if (_lastOohAlertedForTs) {
+      _lastOohAlertedForTs = null;
+      logger.debug({ ageMs }, "dead-mans-heartbeat: off-rth check — heartbeat fresh, clearing dedup");
+    }
+    return;
+  }
+
+  // Stale OOH — check dedup before alerting
+  if (_lastOohAlertedForTs && lastAt.getTime() === _lastOohAlertedForTs.getTime()) {
+    logger.debug(
+      { ageMs, lastOohAlertedFor: _lastOohAlertedForTs.toISOString() },
+      "dead-mans-heartbeat: off-rth check — already alerted for this stale window",
+    );
+    return;
+  }
+
+  const hoursSince = Math.round(ageMs / (60 * 60 * 1000));
+  _lastOohAlertedForTs = lastAt;
+
+  logger.warn(
+    { lastAt: lastAt.toISOString(), hoursSince, thresholdH: OOH_STALE_THRESHOLD_MS / (60 * 60 * 1000) },
+    "dead-mans-heartbeat: off-rth check — STALE HEARTBEAT OUTSIDE RTH (WARNING)",
+  );
+
+  notifyWarning(
+    `[dead-mans-heartbeat] Backend stale outside RTH — ${hoursSince}h since last heartbeat`,
+    appendFamilyGradePostscript(
+      `The last recorded heartbeat was ${hoursSince}h ago (${lastAt.toISOString()}). ` +
+      `This is outside trading hours but exceeds the ${OOH_STALE_THRESHOLD_MS / 3_600_000}h threshold. ` +
+      `If today is a weekend or holiday this may be normal. ` +
+      `If the backend should be running, check that the tower is powered on and restart the backend.`,
+      "Backend may have crashed overnight or over the weekend.",
+      "Check the tower is on. Restart the backend service if needed.",
+    ),
+  );
 }
 
 // ─── Auto-restart constants (A-1) ────────────────────────────────────────────

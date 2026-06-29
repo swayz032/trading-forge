@@ -735,34 +735,53 @@ export function evaluatePaperToDeployReadyGates(
     const bifNum = bifIn?.bif != null && Number.isFinite(Number(bifIn.bif)) ? Number(bifIn.bif) : null;
     const kEffNum = bifIn?.kEff != null && Number.isFinite(Number(bifIn.kEff)) ? Number(bifIn.kEff) : null;
 
-    // M1 fix 2026-06-28: extract bif_proxy_basis from wf_metadata so the BIF gate
-    // can emit the non-blocking audit warn when CPCV mode is active.
+    // FINDING-2 fix: extract bif_proxy_basis from wf_metadata so the BIF gate
+    // can route to advisory-only when CPCV mode is active.
     // wf_metadata is stored as JSONB in walkForwardResults; typed as Record<string,unknown>.
     const bifProxyBasis = ((wfr?.wf_metadata as Record<string, unknown> | null | undefined)?.["bif_proxy_basis"] as string | null | undefined) ?? null;
-    const bifResult = evaluateBifGate(bifNum, kEffNum, { proxyBasis: bifProxyBasis });
 
-    if (!bifResult.passed) {
-      logger.warn(
-        { strategyId, bif: bifNum, k_eff: kEffNum, reason: bifResult.reason },
-        `evaluatePaperToDeployReadyGates: BIF gate BLOCKED PAPER→DEPLOY_READY: ${bifResult.reason}`,
-      );
-      return {
-        passed: false,
-        status: "blocked",
-        auditAction: "bif.gate_evaluated",
-        auditPayload: bifResult.auditPayload,
-        reason: bifResult.reason,
-        failedGate: "bif",
-      };
-    }
-
-    if (bifResult.legacyNull) {
-      logger.info({ strategyId }, "evaluatePaperToDeployReadyGates: BIF gate: pre-Wave-3 backtest — grandfather pass");
-    } else {
+    // FINDING-2 fix: when CPCV proxy basis, BIF ≈ 1.0 is a STRUCTURAL ARTIFACT (both
+    // IS proxy and WF agg_sharpe derive from the same OOS series). Computing and evaluating
+    // it would silently pass bif.clean on a measurement that cannot detect overfitting.
+    // Route to advisory-only (bif_unavailable_cpcv) instead of bif.clean.
+    // This is non-blocking: the gate passes but the audit payload makes the structural
+    // unavailability explicit instead of misleadingly showing a clean BIF value.
+    // Wave 30 carry-forward: true per-path IS fold Sharpe will make BIF meaningful in CPCV.
+    if (bifProxyBasis === "oos_mean_not_is") {
       logger.info(
-        { strategyId, bif: bifNum, reason: bifResult.reason },
-        "evaluatePaperToDeployReadyGates: BIF gate passed",
+        { strategyId, bif: bifNum, k_eff: kEffNum, proxyBasis: bifProxyBasis },
+        "evaluatePaperToDeployReadyGates: BIF gate: CPCV proxy-basis — advisory-only " +
+          "(bif_unavailable_cpcv); IS proxy derives from OOS data; BIF ≈ 1.0 is structural, " +
+          "not meaningful; Wave 30 carry-forward for true IS fold Sharpe",
       );
+      // Advisory-only: do not call evaluateBifGate with a misleading ≈1.0 value.
+      // Promotion continues; audit shows bif_unavailable_cpcv explicitly.
+    } else {
+      const bifResult = evaluateBifGate(bifNum, kEffNum, { proxyBasis: bifProxyBasis });
+
+      if (!bifResult.passed) {
+        logger.warn(
+          { strategyId, bif: bifNum, k_eff: kEffNum, reason: bifResult.reason },
+          `evaluatePaperToDeployReadyGates: BIF gate BLOCKED PAPER→DEPLOY_READY: ${bifResult.reason}`,
+        );
+        return {
+          passed: false,
+          status: "blocked",
+          auditAction: "bif.gate_evaluated",
+          auditPayload: bifResult.auditPayload,
+          reason: bifResult.reason,
+          failedGate: "bif",
+        };
+      }
+
+      if (bifResult.legacyNull) {
+        logger.info({ strategyId }, "evaluatePaperToDeployReadyGates: BIF gate: pre-Wave-3 backtest — grandfather pass");
+      } else {
+        logger.info(
+          { strategyId, bif: bifNum, reason: bifResult.reason },
+          "evaluatePaperToDeployReadyGates: BIF gate passed",
+        );
+      }
     }
   }
 

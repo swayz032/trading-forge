@@ -99,6 +99,7 @@ vi.mock("../../db/schema.js", () => ({
   },
   productionTrades: {
     tableName: "production_trades",
+    strategyId: { name: "strategy_id" },   // Finding 3 fix: needed for per-strategy SUM filter
     barTimestamp: { name: "bar_timestamp" },
     expectedPnl: { name: "expected_pnl" },
   },
@@ -408,6 +409,101 @@ describe("computePnlTolerance", () => {
     expect(PAPER_RECON_CONFIG.DEPLOYED_PLUS_STATES).toContain("PAPER");
     expect(PAPER_RECON_CONFIG.DEPLOYED_PLUS_STATES).toContain("DEPLOYED");
     expect(PAPER_RECON_CONFIG.DEPLOYED_PLUS_STATES).toContain("PILOT");
+  });
+
+});
+
+// ─── Finding 3: broker P&L SUM must be per-strategy (not combined) ───────────
+//
+// BUG: the SUM query for pnlDriftDollars was missing eq(productionTrades.strategyId,
+// strategy.id). With 2+ DEPLOYED strategies on the same day, strategy A's drift was
+// computed against ALL strategies' broker P&L — causing false CRITICAL drift alerts
+// when strategy B had a large P&L and A's paper P&L was small.
+//
+// REGRESSION TEST: Two strategies. Strategy A: paper=$100, broker-SUM=$100 (clean).
+// Strategy B: paper=$400, broker-SUM=$400 (clean). Each must report NO drift.
+// If the filter was missing, strategy A's broker SUM would return $500 (combined),
+// yielding $400 drift → false CRITICAL. The test verifies both show clean.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("Finding 3 — broker P&L SUM must be per-strategy, not combined", () => {
+
+  it("11. two strategies with identical paper/broker P&L each show no drift (per-strategy isolation)", async () => {
+    const stratA = { id: "strat-f3a", name: "strategy_a", symbol: "MES" };
+    const stratB = { id: "strat-f3b", name: "strategy_b", symbol: "MNQ" };
+    const tradeDate = new Date("2026-06-28T15:00:00Z");
+
+    // Call sequence with 2 strategies, each with 1 paper trade:
+    // 0: strategies list
+    // 1: paper_trades for strat-f3a (1 trade, $100)
+    // 2: broker COUNT for strat-f3a (1)
+    // 3: TradingView COUNT for strat-f3a (1)
+    // 4: broker P&L SUM for strat-f3a ($100 — per-strategy, no drift)
+    // 5: paper_trades for strat-f3b (1 trade, $400)
+    // 6: broker COUNT for strat-f3b (1)
+    // 7: TradingView COUNT for strat-f3b (1)
+    // 8: broker P&L SUM for strat-f3b ($400 — per-strategy, no drift)
+    setResponses(
+      [stratA, stratB],
+      // strategy A
+      [{ id: "ta-1", pnl: "100", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
+      [{ cnt: "1" }],  // broker count A
+      [{ cnt: "1" }],  // tv count A
+      [{ total: "100" }],  // broker SUM A — matches paper ($100 each = no drift)
+      // strategy B
+      [{ id: "tb-1", pnl: "400", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
+      [{ cnt: "1" }],  // broker count B
+      [{ cnt: "1" }],  // tv count B
+      [{ total: "400" }],  // broker SUM B — matches paper ($400 each = no drift)
+    );
+
+    const result = await runPaperJournalRecon(new Date("2026-06-28"));
+
+    expect(result.strategiesEvaluated).toBe(2);
+    expect(result.strategiesWithMismatch).toBe(0);
+    expect(result.hasDrift).toBe(false);
+    // No CRITICAL alert — both strategies are clean
+    expect(state.criticalAlerts).toHaveLength(0);
+
+    const resultA = result.results.find((r) => r.strategyId === "strat-f3a");
+    const resultB = result.results.find((r) => r.strategyId === "strat-f3b");
+    expect(resultA?.pnlDriftExceedsTolerance).toBe(false);
+    expect(resultB?.pnlDriftExceedsTolerance).toBe(false);
+  });
+
+  it("12. two strategies: one clean, one with P&L drift — only the drifting one fires CRITICAL", async () => {
+    const stratA = { id: "strat-f3c", name: "clean_strategy",   symbol: "MES" };
+    const stratB = { id: "strat-f3d", name: "drifting_strategy", symbol: "MNQ" };
+    const tradeDate = new Date("2026-06-28T14:00:00Z");
+
+    // strategy A: paper=$100, broker=$100 (clean)
+    // strategy B: paper=$200, broker=$50  (drift=$150, exceeds MNQ 2-tick=$1 tolerance)
+    setResponses(
+      [stratA, stratB],
+      // A
+      [{ id: "ta-2", pnl: "100", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
+      [{ cnt: "1" }], [{ cnt: "1" }],
+      [{ total: "100" }],
+      // B
+      [{ id: "tb-2", pnl: "200", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
+      [{ cnt: "1" }], [{ cnt: "1" }],
+      [{ total: "50" }],   // $150 drift — CRITICAL for MNQ (tolerance=1.00)
+    );
+
+    const result = await runPaperJournalRecon(new Date("2026-06-28"));
+
+    expect(result.strategiesEvaluated).toBe(2);
+    expect(result.strategiesWithMismatch).toBe(1);
+    expect(result.hasDrift).toBe(true);
+
+    const resultA = result.results.find((r) => r.strategyId === "strat-f3c");
+    const resultB = result.results.find((r) => r.strategyId === "strat-f3d");
+    // Strategy A is clean — no drift
+    expect(resultA?.pnlDriftExceedsTolerance).toBe(false);
+    // Strategy B has drift
+    expect(resultB?.pnlDriftExceedsTolerance).toBe(true);
+    // Exactly one CRITICAL alert — for strategy B only
+    expect(state.criticalAlerts).toHaveLength(1);
   });
 
 });

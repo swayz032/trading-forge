@@ -228,6 +228,84 @@ export function clearStuckSessionId(sessionId: string): void {
   stuckSessionIds.delete(sessionId);
 }
 
+// ─── FINDING #6 FIX: Startup orphan-position recovery sweep ─────────────────
+//
+// stuckSessionIds is a module-level in-memory Set that is cleared on every
+// process restart. paper_positions rows with closedAt=null whose session is
+// no longer "active" become PERMANENT ORPHANS — openPosition blocks on them
+// indefinitely because stuckSessionIds is empty after the restart and the
+// orphan is never re-detected.
+//
+// This function must be called ONCE at boot (wired in index.ts before listen())
+// to re-populate stuckSessionIds with any pre-existing orphaned positions.
+//
+// Safe to call multiple times (idempotent: stuckSessionIds.add is a no-op for
+// already-present IDs; audit rows deduplicate by their own identity).
+//
+// Do NOT call from scheduler.ts or any hot path — this is a one-shot boot sweep.
+//
+export async function recoverOrphanedPositionsAtStartup(): Promise<{ orphansFound: number }> {
+  let orphansFound = 0;
+  try {
+    const [allOpen, activeSessions] = await Promise.all([
+      db.select({
+        id: paperPositions.id,
+        sessionId: paperPositions.sessionId,
+        symbol: paperPositions.symbol,
+        side: paperPositions.side,
+      }).from(paperPositions).where(isNull(paperPositions.closedAt)),
+      db.select({ id: paperSessions.id })
+        .from(paperSessions)
+        .where(eq(paperSessions.status, "active")),
+    ]);
+
+    const activeSessionIdSet = new Set(activeSessions.map(s => s.id));
+    const orphans = allOpen.filter(p => p.sessionId && !activeSessionIdSet.has(p.sessionId));
+
+    for (const orphan of orphans) {
+      if (orphan.sessionId) {
+        stuckSessionIds.add(orphan.sessionId);
+      }
+      orphansFound++;
+      logger.warn(
+        { positionId: orphan.id, sessionId: orphan.sessionId, symbol: orphan.symbol },
+        "paper-execution.startup: orphaned position detected (session not active) — session blocked until manual resolution",
+      );
+      // Write audit row so the orphan is visible in the audit_log for post-restart review.
+      db.insert(auditLog).values({
+        action: "paper.orphaned_position_detected",
+        entityType: "paper_position",
+        entityId: orphan.id,
+        decisionAuthority: "system",
+        input: {
+          positionId: orphan.id,
+          sessionId: orphan.sessionId,
+          symbol: orphan.symbol,
+          side: orphan.side,
+          reason: "session_not_active_at_startup",
+        } as Record<string, unknown>,
+        result: {
+          sessionBlocked: true,
+          resolution: "operator_must_manually_close_or_call_clearStuckSessionId",
+        } as Record<string, unknown>,
+        status: "error",
+      }).catch((err) => logger.error({ err, positionId: orphan.id }, "paper-execution.startup: orphan audit write failed (non-blocking)"));
+    }
+
+    if (orphansFound > 0) {
+      logger.error(
+        { orphansFound, activeSessionCount: activeSessions.length },
+        "paper-execution.startup: ORPHANED POSITIONS detected — blocked sessions require manual resolution (use clearStuckSessionId after confirming position is closed)",
+      );
+    }
+  } catch (err) {
+    // Fail-open on startup: a DB error should not block the whole boot sequence.
+    // Orphans will be re-detected when they next hit the stuckSessionIds guard in openPosition.
+    logger.error({ err }, "paper-execution.startup: orphan recovery sweep failed — will not block boot (positions may be orphaned until next open attempt)");
+  }
+  return { orphansFound };
+}
+
 // ─── Compliance Gate cache (B4.4 / C5) ──────────────────────────
 // Cache the FRESHNESS check result per firm for 60s so we don't spawn a
 // Python subprocess on every bar / signal.  The cache key is firmId;
@@ -593,6 +671,10 @@ export async function openPosition(sessionId: string, params: {
   barTimestamp?: Date;
   rsi?: number;
   atr?: number;
+  /** FINDING #4 FIX: rolling median ATR (np.nanmedian equivalent) for entry slippage parity.
+   *  When provided, replaces the constant 0.85× ATR estimate used before this fix.
+   *  Paper-signal-service passes this from evaluateSignals() via the bar ATR series. */
+  medianAtr14?: number;
   barVolume?: number;
   medianBarVolume?: number;
   // ── Wave 25.5 Track 1: adaptive exit plan wiring ──────────────────────────
@@ -1696,7 +1778,10 @@ export async function openPosition(sessionId: string, params: {
   // Apply variable slippage (ATR-scaled, session-aware, order-type-aware)
   // Use median ATR estimate: assume current ATR is near median unless extreme
   // This gives ~1x slippage normally, 1.5-2x during high vol, 0.5-0.7x during low vol
-  const medianAtrEstimate = params.atr ? params.atr * 0.85 : undefined; // Slight underestimate to bias conservatively
+  // FINDING #4 FIX: prefer the rolling medianAtr14 passed by the caller (matches
+  // np.nanmedian from the Python slippage model) over the constant 0.85× estimate.
+  // When medianAtr14 is absent (legacy callers, tests), fall back to 0.85× (prior behaviour).
+  const medianAtrEstimate = params.medianAtr14 ?? (params.atr ? params.atr * 0.85 : undefined);
   // P1-8: Use bar timestamp for session classification (not wall-clock new Date()).
   // Bar timestamp is passed via params; fall back to wall-clock only as last resort.
   // Fix 2: derive session at order time so calculateSlippage applies the correct
@@ -1946,10 +2031,20 @@ export async function openPosition(sessionId: string, params: {
     }
   }
 
-  // BL-1 fix: compute initial stop price at entry for intrabar stop-breach detection.
-  // Precedence: (1) adaptive exit input explicit stop price, (2) ATR × 2.0 from params.atr.
-  // Null when neither is available (e.g., first bars of a session before ATR warms up).
-  const initialStopPriceForInsert: number | null = (() => {
+  // BL-1 / FINDING #7 FIX: compute initial stop price at entry for intrabar stop-breach detection.
+  //
+  // Precedence:
+  //   (1) adaptiveExitInput.entry.stop — structural stop derived by the strategy before calling openPosition
+  //   (2) params.atr × 2.0             — ATR-based structural stop (standard BreakerStrategy sl_mult=2.0)
+  //   (3) CONTRACT_SPECS[symbol].tickSize × 16 — last-resort structural floor so live positions NEVER
+  //       have null initialStopPrice, which would cause updatePositionPrices to skip stop-breach detection
+  //       indefinitely. 16-tick fallback is deliberately tight (not permissive) — a loose stop would let
+  //       a runaway position escape the intrabar guard. Tight-but-wrong is safer than no stop at all.
+  //       This fires only when both ATR and adaptive stop are absent (first bars of a session where the
+  //       ATR series has not yet warmed up). Writes a warn log so the operator sees it.
+  //
+  // INVARIANT: initialStopPriceForInsert must NEVER be null for a live position.
+  const initialStopPriceForInsert: number = (() => {
     if (params.adaptiveExitInput?.entry.stop != null) {
       return params.adaptiveExitInput.entry.stop;
     }
@@ -1957,7 +2052,16 @@ export async function openPosition(sessionId: string, params: {
       const stopPts = params.atr * 2.0;
       return params.side === "long" ? actualEntry - stopPts : actualEntry + stopPts;
     }
-    return null;
+    // Fallback: derive stop from contract tick size when ATR is not yet available.
+    const specForStop = CONTRACT_SPECS[params.symbol as keyof typeof CONTRACT_SPECS];
+    const fallbackStopPts = (specForStop?.tickSize ?? 0.25) * 16;
+    const fallbackStop = params.side === "long" ? actualEntry - fallbackStopPts : actualEntry + fallbackStopPts;
+    logger.warn(
+      { sessionId, symbol: params.symbol, side: params.side, fallbackStop, fallbackStopPts },
+      "paper-execution: initialStopPrice derived from tickSize×16 fallback (ATR not yet available at entry). " +
+      "Stop breach detection will be conservative until ATR warms up.",
+    );
+    return fallbackStop;
   })();
 
   const [position] = await dbConn.insert(paperPositions).values({
@@ -1975,7 +2079,8 @@ export async function openPosition(sessionId: string, params: {
     // Wave 25.5 Track 1: persist adaptive exit plan when available
     exitPlan: exitPlanForInsert ?? undefined,
     // BL-1 / H-1 fix (migration 0179): initialise stop and running high/low at entry
-    initialStopPrice: initialStopPriceForInsert != null ? String(initialStopPriceForInsert) : null,
+    // FINDING #7 FIX: always a number now (never null) — guaranteed by fallback logic above.
+    initialStopPrice: String(initialStopPriceForInsert),
     highSinceEntryPrice: String(actualEntry),
     lowSinceEntryPrice: String(actualEntry),
     // BL-9 (migration 0180): persist the entry correlation_id so closePosition() can
@@ -3083,6 +3188,11 @@ async function bookPartialClose(
   exitReason: string,
   atr?: number,
   correlationId?: string | null,
+  // FINDING #4 FIX: thread rolling medianAtr14 from the exit-bar context so partial-close
+  // slippage matches closePosition's BL-8 path (context.medianAtr). Without this, partial
+  // closes always used the 0.85× ATR hack rather than the rolling median, causing
+  // systematic slippage understatement on TP1/TP2 partial closes vs the backtest model.
+  medianAtr14?: number,
 ): Promise<void> {
   try {
     const spec = CONTRACT_SPECS[pos.symbol];
@@ -3100,7 +3210,10 @@ async function bookPartialClose(
     const exitSlippageSession = sessionAtClose === "ASIA" ? "ASIAN"
       : sessionAtClose === "CME_HALT" ? "CME_HALT"
       : sessionAtClose;
-    const medianAtrEstimate = atr ? atr * 0.85 : undefined;
+    // FINDING #4 FIX: prefer the passed-in rolling median (from exitBarContext.medianAtr14)
+    // over the constant 0.85× ATR estimate. The 0.85 factor was an approximation that
+    // systematically understated slippage vs the backtest np.nanmedian model.
+    const medianAtrEstimate = medianAtr14 ?? (atr ? atr * 0.85 : undefined);
     const slippage = calculateSlippage(pos.symbol, 1, atr, medianAtrEstimate, "stop_limit", exitSlippageSession);
     const actualExit = pos.side === "long" ? exitPrice - slippage : exitPrice + slippage;
 
@@ -3247,7 +3360,8 @@ async function applyExitDecision(
         }).where(eq(paperPositions.id, pos.id));
         // BL-4 FIX: book realized P&L for the partial close contracts (fire-and-forget
         // fail-soft so a booking failure doesn't block the position state update).
-        bookPartialClose(pos, contractsToClose, currentPrice, "tp1", atr, correlationId)
+        // FINDING #4 FIX: pass medianAtr so bookPartialClose uses rolling median slippage.
+        bookPartialClose(pos, contractsToClose, currentPrice, "tp1", atr, correlationId, medianAtr)
           .catch((err) => logger.warn({ err, positionId: pos.id }, "TP1 bookPartialClose fire-and-forget failed"));
         logger.info(
           {
@@ -3318,7 +3432,8 @@ async function applyExitDecision(
           lastHandlerEvalAt: new Date(),
         }).where(eq(paperPositions.id, pos.id));
         // BL-4 FIX: book realized P&L for the TP2 partial close contracts.
-        bookPartialClose(pos, contractsToClose, currentPrice, "tp2", atr, correlationId)
+        // FINDING #4 FIX: pass medianAtr so bookPartialClose uses rolling median slippage.
+        bookPartialClose(pos, contractsToClose, currentPrice, "tp2", atr, correlationId, medianAtr)
           .catch((err) => logger.warn({ err, positionId: pos.id }, "TP2 bookPartialClose fire-and-forget failed"));
         logger.info(
           {
@@ -4358,6 +4473,10 @@ export async function forceCloseAllPositions(reason: string): Promise<{ count: n
       side: paperPositions.side,
       entryPrice: paperPositions.entryPrice,
       currentPrice: paperPositions.currentPrice,
+      // FINDING #5 FIX: fetch initialStopPrice so we can back-derive an ATR estimate
+      // for realistic exit slippage on forced closes. Without ATR, closePosition used
+      // base-tick slippage (optimistic vs Python which ATR-scales all fills including halts).
+      initialStopPrice: paperPositions.initialStopPrice,
     })
     .from(paperPositions)
     .where(isNull(paperPositions.closedAt));
@@ -4380,6 +4499,19 @@ export async function forceCloseAllPositions(reason: string): Promise<{ count: n
     // currentPrice is updated by updatePositionPrices on every bar tick and
     // reflects the last known market price for the position's symbol.
     const rawCurrent = Number(pos.currentPrice ?? 0);
+
+    // FINDING #5 FIX: back-derive an approximate ATR from the stored initialStopPrice so
+    // forced-exit slippage is ATR-scaled (matching Python which ATR-scales all fills).
+    // Formula mirrors openPosition: stopPrice = entryPrice ± atr×2.0  →  atr = |entry-stop|/2.
+    // When initialStopPrice is absent (positions opened before BL-1 fix), atr stays undefined
+    // and closePosition falls back to base-tick slippage (prior conservative behaviour).
+    const derivedAtr = (() => {
+      const stopNum = Number(pos.initialStopPrice ?? 0);
+      const entryNum = Number(pos.entryPrice ?? 0);
+      if (!stopNum || !entryNum || !isFinite(stopNum) || !isFinite(entryNum)) return undefined;
+      const atrEstimate = Math.abs(entryNum - stopNum) / 2.0;
+      return atrEstimate > 0 ? atrEstimate : undefined;
+    })();
 
     if (!rawCurrent || !isFinite(rawCurrent)) {
       // GAP-2 FIX: currentPrice is null/zero — attempt entryPrice as fallback before giving up.
@@ -4412,7 +4544,7 @@ export async function forceCloseAllPositions(reason: string): Promise<{ count: n
         try {
           // M-4: thread the unconfirmed-price marker into the trade_close write so
           // the paper_trades close row's audit carries the contamination flag too.
-          await closePosition(pos.id, rawEntry, undefined, { correlationId: batchCorrelationId, forceClosePriceUnconfirmed: true });
+          await closePosition(pos.id, rawEntry, derivedAtr, { correlationId: batchCorrelationId, forceClosePriceUnconfirmed: true });
           closedCount++;
           // FIX 6: count force-close in paperTradesCounter
           paperTradesCounter.labels({
@@ -4473,7 +4605,7 @@ export async function forceCloseAllPositions(reason: string): Promise<{ count: n
     try {
       // Close at mark-to-market (currentPrice). Thread the batchCorrelationId so
       // this close is linkable to the halt event in the audit_log.
-      await closePosition(pos.id, rawCurrent, undefined, { correlationId: batchCorrelationId });
+      await closePosition(pos.id, rawCurrent, derivedAtr, { correlationId: batchCorrelationId });
       closedCount++;
       // FIX 6: count force-close in paperTradesCounter
       paperTradesCounter.labels({

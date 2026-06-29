@@ -40,6 +40,17 @@ export interface PboGateInput {
   pbo_overall?: number | null;
   /** p-value from binomial test on PBO; null when scipy unavailable or n < 10. */
   pbo_p_value?: number | null;
+  /**
+   * FINDING-1 fix: discriminator flag emitted by walk_forward.py when pbo_gate.py
+   * fires the degenerate guard (IS==OOS for all paths — per-path IS Sharpe unavailable
+   * in CPCV mode). When true, the gate BLOCKS with pbo_cpcv_degenerate_block rather
+   * than using the legacy-null grandfather-pass path (pbo_unavailable_legacy).
+   *
+   * Distinction:
+   *   pbo_overall===null AND pbo_degenerate===undefined/false → legacy-null → PROCEED
+   *   pbo_overall===null AND pbo_degenerate===true            → CPCV degenerate → BLOCK
+   */
+  pbo_degenerate?: boolean | null;
 }
 
 export interface PboGateResult {
@@ -60,6 +71,8 @@ export interface PboGateResult {
     threshold: number;
     blocked: boolean;
     legacy_null: boolean;
+    /** FINDING-1: present and true when CPCV degenerate guard fired. */
+    cpcv_degenerate?: boolean;
   };
 }
 
@@ -92,16 +105,24 @@ export function getPboLifecycleThreshold(): number {
 /**
  * Evaluate the PBO lifecycle gate.
  *
- * Gate semantics:
+ * Gate semantics (in evaluation order):
+ *   pbo_degenerate === true        → BLOCK (FINDING-1: CPCV IS==OOS; pbo_cpcv_degenerate_block)
  *   pbo_overall === null/undefined → PROCEED (legacy grandfather) + legacy warn
- *   pbo_overall < threshold        → PROCEED (not blocked; strict <)
- *   pbo_overall === threshold      → PROCEED (strict <; at-threshold is not blocked)
+ *   pbo_overall is non-finite      → BLOCK (sample-size guard; pbo_sample_size_guard)
  *   pbo_overall > threshold        → BLOCK + lifecycle.pbo_overfit_block audit
+ *   pbo_overall <= threshold       → PROCEED (not blocked; strict <)
+ *
+ * CRITICAL DISTINCTION (Finding 1):
+ *   pbo_overall===null AND pbo_degenerate===undefined/false → legacy-null → PROCEED
+ *   pbo_overall===null AND pbo_degenerate===true            → CPCV degenerate → BLOCK
+ *
+ * Legacy-null path is ONLY for pre-Wave-29 backtests where pbo_overall was never
+ * computed. CPCV degenerate is a known structural failure mode (not a missing field).
  *
  * Convention: strict < (not ≤) — pbo_overall exactly equal to threshold PROCEEDS.
  * Mirrors the B14 gate convention (strict > for blocking).
  *
- * @param backtestResult  Object with pbo_overall and optionally pbo_p_value.
+ * @param backtestResult  Object with pbo_overall, optionally pbo_p_value and pbo_degenerate.
  *                        Pass {} or { pbo_overall: undefined } for legacy backtests.
  * @param opts.threshold  Override env-derived threshold (for tests).
  */
@@ -113,9 +134,42 @@ export function evaluatePboGate(
   const pboRaw = backtestResult.pbo_overall;
   const pValueRaw = backtestResult.pbo_p_value ?? null;
 
+  // ── FINDING-1 fix: CPCV degenerate path ────────────────────────────────────
+  // walk_forward.py emits pbo_degenerate=true when pbo_gate.py fires the degenerate
+  // guard (IS==OOS for ALL paths — per-path IS Sharpe is unavailable in CPCV mode).
+  // This is structurally different from a legacy-null pre-Wave-29 backtest:
+  //   - Legacy null: pbo_overall field absent (grandfather window) → PROCEED is correct.
+  //   - CPCV degenerate: pbo_overall=null because PBO was ATTEMPTED but structurally
+  //     impossible (IS==OOS for every path). Grandfathering would HIDE the failure.
+  // BLOCK is fail-CLOSED: we know the PBO gate cannot fire meaningfully in this run;
+  // the strategy must re-run with a WF configuration that produces genuine IS data.
+  if (backtestResult.pbo_degenerate === true) {
+    logger.warn(
+      { threshold: effectiveThreshold },
+      "PBO gate: BLOCKED — pbo_degenerate=true (CPCV degenerate guard fired: IS==OOS " +
+        "for all paths; per-path IS Sharpe unavailable; lifecycle.pbo_cpcv_degenerate_block)",
+    );
+    return {
+      ok: false,
+      pbo: null,
+      threshold: effectiveThreshold,
+      reason: "lifecycle.pbo_cpcv_degenerate_block",
+      legacyNull: false,
+      auditPayload: {
+        pbo: null,
+        pbo_p_value: pValueRaw,
+        threshold: effectiveThreshold,
+        blocked: true,
+        legacy_null: false,
+        cpcv_degenerate: true,
+      },
+    };
+  }
+
   // ── Legacy null path ───────────────────────────────────────────────────────
   // Pre-Wave-29 backtests do not have pbo_overall. We proceed with a warn.
   // This is the documented grandfather window — future backtests always emit the field.
+  // NOTE: pbo_degenerate check MUST come first (see FINDING-1 block above).
   if (pboRaw == null) {
     logger.warn(
       { threshold: effectiveThreshold },

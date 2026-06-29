@@ -151,6 +151,11 @@ FIRM_RULES: dict[str, dict] = {
         # Builder: news trading ALLOWED (eval + sim funded) — news-policy MFFU should NOT hard-block.
         # 2026-compliance (canonical: docs/prop-firm-rules-2026-mffu.md)
         "payout_cycle_days": 2,  # Builder: every 48h after buffer cleared (5 sim payouts → live)
+        # consistency_window_days=None → B14 consistency check uses the full-path fallback
+        # (single best day vs total eval profit) rather than the 2-day payout window.
+        # A 2-day window trivially fires the 50% cap (max(A,B)/(A+B)>0.5 for any A≠B).
+        # MFFU's actual consistency rule compares best-day to the FULL eval period.
+        "consistency_window_days": None,
     },
 }
 

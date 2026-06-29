@@ -28,20 +28,30 @@
  */
 
 import { randomUUID } from "crypto";
-import { eq, and, isNotNull, desc } from "drizzle-orm";
+import { eq, and, isNotNull, desc, lt } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { strategies, biasState } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { regimeDriftDetectionsTotal } from "../lib/metrics-registry.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
-import { notifyWarning } from "./notification-service.js";
+import { notifyCritical, notifyWarning } from "./notification-service.js";
 import { LifecycleService } from "./lifecycle-service.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 /** Number of consecutive days ALL must differ from trained regime to trigger demotion. */
 export const DRIFT_CONSECUTIVE_DAYS = 5;
+
+// FINDING #3 FIX: zombie DECLINING sweep threshold.
+// When step1 (DEPLOYED→DECLINING) succeeds but step2 (DECLINING→TESTING) fails, the strategy
+// is stranded in zombie DECLINING — the detector only queries DEPLOYED, so it never re-fires.
+// This sweep runs each detector invocation and retries DECLINING→TESTING for stranded rows.
+// 25h (slightly more than 1 day) ensures we catch failures from the prior daily run.
+export const ZOMBIE_DECLINING_THRESHOLD_MS = parseInt(
+  process.env.ZOMBIE_DECLINING_THRESHOLD_MS ?? String(25 * 60 * 60 * 1000),
+  10,
+);
 
 /** Target ET hour for DST-safe guard (18 = 6:00 PM ET). */
 const TARGET_ET_HOUR = 18;
@@ -165,6 +175,70 @@ export async function runRegimeDriftDetector(opts?: {
   }
 
   try {
+    // ── Step 1.5: Zombie DECLINING compensating sweep ──────────────────────
+    // FINDING #3 FIX: strategies stranded in DECLINING (step2 failed on a prior run)
+    // are never re-evaluated because the main detector only queries DEPLOYED.
+    // This sweep runs on every detector invocation (not gated by ET-hour) and
+    // re-attempts DECLINING → TESTING for strategies that have been stuck >25h.
+    // True DB atomicity for the two-step demotion deferred: requires threading a
+    // Drizzle tx through LifecycleService.promoteStrategy — flagged as tech-debt.
+    try {
+      const zombieThresholdAt = new Date(Date.now() - ZOMBIE_DECLINING_THRESHOLD_MS);
+      const zombieCandidates = await db
+        .select({ id: strategies.id, name: strategies.name, updatedAt: strategies.updatedAt })
+        .from(strategies)
+        .where(and(eq(strategies.lifecycleState, "DECLINING"), lt(strategies.updatedAt, zombieThresholdAt)));
+
+      if (zombieCandidates.length > 0) {
+        logger.warn(
+          { correlationId, zombieCount: zombieCandidates.length, thresholdH: ZOMBIE_DECLINING_THRESHOLD_MS / 3_600_000 },
+          "regime-drift-detector: found zombie DECLINING strategies — attempting DECLINING→TESTING recovery",
+        );
+        const zombieLifecycle = new LifecycleService();
+        for (const zombie of zombieCandidates) {
+          const zombieCorrelationId = randomUUID();
+          try {
+            const recovery = await zombieLifecycle.promoteStrategy(
+              zombie.id,
+              "DECLINING",
+              "TESTING",
+              { correlationId: zombieCorrelationId, actor: "system", reason: "zombie_declining_sweep: step2 retry from regime-drift-detector" },
+            );
+            if (recovery.success) {
+              logger.warn(
+                { correlationId: zombieCorrelationId, strategyId: zombie.id, strategyName: zombie.name },
+                "regime-drift-detector: zombie DECLINING → TESTING recovery succeeded",
+              );
+              await insertAuditRowSafe({
+                action: "lifecycle.zombie_declining_recovered",
+                entityType: "strategy",
+                entityId: zombie.id,
+                result: { correlationId: zombieCorrelationId, strategyId: zombie.id, strategyName: zombie.name, updatedAt: zombie.updatedAt },
+                status: "warning",
+                decisionAuthority: "system",
+                correlationId: zombieCorrelationId,
+              });
+            } else {
+              logger.error(
+                { correlationId: zombieCorrelationId, strategyId: zombie.id, error: recovery.error },
+                "regime-drift-detector: zombie DECLINING → TESTING recovery FAILED",
+              );
+              notifyCritical(
+                `[regime-drift] Zombie DECLINING strategy cannot be recovered: ${zombie.name}`,
+                `Strategy "${zombie.name}" (${zombie.id}) has been stuck in DECLINING for >${ZOMBIE_DECLINING_THRESHOLD_MS / 3_600_000}h. ` +
+                `Automated DECLINING → TESTING recovery failed: ${recovery.error ?? "unknown"}. Manual lifecycle correction required.`,
+                { strategyId: zombie.id, strategyName: zombie.name, zombieCorrelationId },
+              );
+            }
+          } catch (zombieErr) {
+            logger.error({ err: zombieErr, strategyId: zombie.id }, "regime-drift-detector: zombie recovery threw");
+          }
+        }
+      }
+    } catch (zombieSweepErr) {
+      logger.error({ err: zombieSweepErr, correlationId }, "regime-drift-detector: zombie sweep threw — continuing with main detection");
+    }
+
     // ── Step 2: DST-safe ET-hour guard ──────────────────────────────────────
     const etHour = _getEtHour(asOf);
     if (etHour !== TARGET_ET_HOUR) {
@@ -505,8 +579,32 @@ async function _evaluateStrategyDrift(
       if (!step2.success) {
         logger.error(
           { correlationId, strategyId, error: step2.error },
-          "regime-drift-detector: DECLINING → TESTING failed",
+          "regime-drift-detector: DECLINING → TESTING failed — strategy in zombie DECLINING state",
         );
+        // FINDING #3 FIX: CRITICAL alert so operator knows before the 25h zombie sweep fires.
+        // True atomicity deferred — requires threading db.transaction() through LifecycleService.
+        notifyCritical(
+          `[regime-drift] Strategy ${strategyName} stuck in zombie DECLINING — step2 failed`,
+          `Strategy "${strategyName}" (${strategyId}) was moved DEPLOYED → DECLINING but the ` +
+          `second step (DECLINING → TESTING) failed: ${step2.error ?? "unknown error"}. ` +
+          `The strategy is now in zombie DECLINING state. The compensating sweep will retry within 25h.`,
+          { strategyId, strategyName, correlationId, step2_error: step2.error },
+        );
+        await insertAuditRowSafe({
+          action: "lifecycle.regime_drift_zombie_declining",
+          entityType: "strategy",
+          entityId: strategyId,
+          result: {
+            correlationId,
+            strategyId,
+            strategyName,
+            step2_error: step2.error,
+            note: "zombie_declining_sweep will retry DECLINING→TESTING on next detector run",
+          },
+          status: "error",
+          decisionAuthority: "system",
+          correlationId,
+        });
       } else {
         demoted = true;
         logger.warn(

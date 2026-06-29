@@ -96,6 +96,60 @@ function setCachedLayer(layer: number, decision: HaltDecision): void {
   layerCache.set(layer, { decision, expiresAt: Date.now() + LAYER_CACHE_TTL_MS });
 }
 
+// ─── FINDING #1 FIX: confirmed force-close ───────────────────────────────────
+// forceCloseAllPositions was fire-and-forget at both the 95% DLL trigger (Layer 2)
+// and the production HALT path (setMode). Positions could remain open past firm DLL.
+// Dynamic import is retained to avoid a kill-switch ↔ paper-execution circular dep.
+const FORCE_CLOSE_TIMEOUT_MS = parseInt(process.env.FORCE_CLOSE_TIMEOUT_MS ?? "10000", 10);
+
+/**
+ * Awaited force-close with wall-clock timeout and CRITICAL escalation on failure.
+ * On timeout or call failure, writes paper.force_flatten_kill_switch_failed audit
+ * and fires a CRITICAL Discord alert so the operator knows positions may be open.
+ */
+async function _confirmedForceClose(reason: string, correlationId: string): Promise<void> {
+  const timeoutMs = FORCE_CLOSE_TIMEOUT_MS > 0 ? FORCE_CLOSE_TIMEOUT_MS : 10_000;
+  try {
+    await Promise.race([
+      import("../services/paper-execution-service.js").then(({ forceCloseAllPositions }) =>
+        forceCloseAllPositions(reason)
+      ),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error(`forceCloseAllPositions timed out after ${timeoutMs}ms`)),
+          timeoutMs,
+        )
+      ),
+    ]);
+    logger.info({ reason, correlationId }, "kill-switch: forceCloseAllPositions completed");
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error(
+      { err, reason, correlationId },
+      "kill-switch: forceCloseAllPositions FAILED — positions may still be open"
+    );
+    AlertFactory.systemError(
+      "kill-switch-force-flatten-failed",
+      new Error(
+        `forceCloseAllPositions failed: ${msg}. Reason: ${reason}. CorrelationId: ${correlationId}. ` +
+        `IMMEDIATE ACTION REQUIRED — manually close all open positions.`
+      )
+    );
+    insertAuditRow({
+      action: "paper.force_flatten_kill_switch_failed",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { reason, correlationId } as Record<string, unknown>,
+      result: { error: msg, positions_may_be_open: true } as Record<string, unknown>,
+      status: "error",
+      correlationId,
+    }).catch((auditErr) =>
+      logger.error({ err: auditErr }, "kill-switch: force_flatten_failed audit write also failed")
+    );
+  }
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type { ProductionMode };
@@ -240,14 +294,8 @@ async function checkLayer2DailyLoss(): Promise<HaltDecision> {
           correlationId: fcCorrelationId,
           forced_at: new Date().toISOString(),
         });
-        // Fire-and-forget force-close — mirrors setMode("HALT") dynamic-import pattern
-        import("../services/paper-execution-service.js")
-          .then(({ forceCloseAllPositions }) =>
-            forceCloseAllPositions(`dll_force_close_at_95pct:${session.id}`)
-          )
-          .catch((err) =>
-            logger.error({ err, session_id: session.id }, "kill-switch L2: dll 95pct forceCloseAllPositions failed (non-blocking)")
-          );
+        // FINDING #1 FIX: awaited force-close with timeout and CRITICAL escalation on failure
+        await _confirmedForceClose(`dll_force_close_at_95pct:${session.id}`, fcCorrelationId);
         decision = {
           halted: true,
           layer: 2,
@@ -939,13 +987,8 @@ class KillSwitch {
           `Force-flattening all open paper positions.`
         )
       );
-      import("../services/paper-execution-service.js")
-        .then(({ forceCloseAllPositions }) =>
-          forceCloseAllPositions(`production_halt:${reason}`)
-        )
-        .catch((err) =>
-          logger.error({ err, reason, setBy }, "kill-switch: forceCloseAllPositions dynamic import or call failed")
-        );
+      // FINDING #1 FIX: awaited force-close with timeout and CRITICAL escalation on failure
+      await _confirmedForceClose(`production_halt:${reason}`, modeChangeCorrelationId);
     }
   }
 

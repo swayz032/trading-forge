@@ -375,6 +375,25 @@ export const lifecycleShadowPromotionsTotal = new Counter({
   labelNames: ["outcome"] as const,
   registers: [promRegistry],
 });
+// Zero-initialize all four outcome labels so Prometheus sees value=0 from first
+// scrape instead of "no data".  Without this, Grafana shows blank panels for
+// the `blocked_unavailable` series until the first DB-error path fires in prod.
+// Outcome labels (closed set):
+//   passed                   → divergence gate cleared; strategy promoted to PAPER
+//   blocked_divergence        → divergence_pct ≥ SHADOW_DIVERGENCE_THRESHOLD_PCT
+//   blocked_insufficient_samples → sample_size < SHADOW_DIVERGENCE_MIN_SAMPLE
+//   blocked_unavailable      → fail-closed DB-error path (divergence inputs unavailable)
+(function () {
+  const SHADOW_OUTCOMES = [
+    "passed",
+    "blocked_divergence",
+    "blocked_insufficient_samples",
+    "blocked_unavailable",
+  ] as const;
+  for (const outcome of SHADOW_OUTCOMES) {
+    lifecycleShadowPromotionsTotal.labels({ outcome }).inc(0);
+  }
+})();
 
 // Pass 1 Track D: counts warning-severity alerts routed to Discord via notification-service.
 // Answers "how many non-critical alerts reached Discord?" on the observability dashboard.

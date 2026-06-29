@@ -556,6 +556,9 @@ def _run_walk_forward_cpcv(
     _cpcv_pbo_overall: Optional[float] = None
     _cpcv_pbo_p_value: Optional[float] = None
     _cpcv_pbo_audit_actions: list[str] = []
+    # FINDING-1 fix: propagate degenerate flag so TS pbo-gate.ts can BLOCK
+    # instead of taking the legacy-null grandfather-pass path.
+    _cpcv_pbo_degenerate: bool = False
     try:
         from src.engine.pbo_gate import compute_pbo_from_cpcv_paths as _cpcv_pbo_fn
         _cpcv_path_dicts = [
@@ -575,6 +578,20 @@ def _run_walk_forward_cpcv(
             _cpcv_pbo_audit_actions.append("walk_forward.pbo_computed")
             if _cpcv_pbo_val > _pbo_threshold_cpcv:
                 _cpcv_pbo_audit_actions.append("walk_forward.pbo_high_overfit_risk")
+        elif _cpcv_gate.get("degenerate"):
+            # FINDING-1 fix: CPCV mode uses is_sharpe == oos_sharpe (no per-path IS data).
+            # pbo_gate.py fires the degenerate guard → pbo=None.
+            # Emit pbo_degenerate=True so TS pbo-gate.ts BLOCKs via pbo_cpcv_degenerate_block
+            # instead of the legacy-null grandfather-pass (pbo_unavailable_legacy).
+            _cpcv_pbo_degenerate = True
+            _cpcv_pbo_audit_actions.append("walk_forward.pbo_cpcv_degenerate")
+            print(
+                "  PBO (cpcv gate): degenerate — IS==OOS for all paths "
+                "(per-path IS unavailable in CPCV mode); emitting pbo_degenerate=True "
+                "→ TS will BLOCK with pbo_cpcv_degenerate_block "
+                "(walk_forward.pbo_cpcv_degenerate)",
+                file=sys.stderr,
+            )
     except Exception as _cpcv_pbo_exc:
         print(f"  PBO (cpcv gate): computation failed ({_cpcv_pbo_exc}).", file=sys.stderr)
 
@@ -738,6 +755,10 @@ def _run_walk_forward_cpcv(
         "pbo_overall": _cpcv_pbo_overall,
         "pbo_overall_p_value": _cpcv_pbo_p_value,
         "pbo_audit_actions": _cpcv_pbo_audit_actions,
+        # FINDING-1 fix: discriminator flag so pbo-gate.ts can distinguish
+        # CPCV-degenerate (BLOCK via pbo_cpcv_degenerate_block) from
+        # genuine legacy-null (PROCEED via pbo_unavailable_legacy).
+        "pbo_degenerate": _cpcv_pbo_degenerate,
         # Wave 3 Track 3A — BIF (Backtest Inflation Factor): selection-bias ratio.
         # In CPCV mode IS Sharpe tracking is a Wave 30 carry-forward; we use
         # max(path_sharpes) as a documented proxy for the best-looking path.
@@ -1500,13 +1521,27 @@ def run_walk_forward(
                         file=sys.stderr,
                     )
             else:
-                # NaN = sample-size guard fired
-                print(
-                    f"  PBO (gate): NaN — sample-size guard fired "
-                    f"(n_paths={pbo_gate_result.get('n_paths', 0)} < "
-                    f"{pbo_gate_result.get('sample_size_guard_threshold', 4)})",
-                    file=sys.stderr,
-                )
+                # pbo_overall_val is None (degenerate) or NaN (sample-size guard).
+                if _pbo_overall_val is None and pbo_gate_result.get("degenerate"):
+                    # FINDING-1 fix: degenerate IS==OOS case (plain-mode fallback also uses
+                    # is_sharpe=oos_sharpe when per-window IS unavailable). Emit audit action;
+                    # pbo_degenerate=True propagated to TS via the result dict below.
+                    pbo_audit_actions.append("walk_forward.pbo_cpcv_degenerate")
+                    print(
+                        "  PBO (gate): degenerate — IS==OOS for all paths "
+                        "(per-window IS Sharpe unavailable); emitting pbo_degenerate=True "
+                        "→ TS will BLOCK with pbo_cpcv_degenerate_block "
+                        "(walk_forward.pbo_cpcv_degenerate)",
+                        file=sys.stderr,
+                    )
+                else:
+                    # NaN = sample-size guard fired
+                    print(
+                        f"  PBO (gate): NaN — sample-size guard fired "
+                        f"(n_paths={pbo_gate_result.get('n_paths', 0)} < "
+                        f"{pbo_gate_result.get('sample_size_guard_threshold', 4)})",
+                        file=sys.stderr,
+                    )
         except Exception as _gate_pbo_exc:
             print(f"  PBO (gate): computation failed ({_gate_pbo_exc}).", file=sys.stderr)
             pbo_gate_result = None
@@ -1531,6 +1566,12 @@ def run_walk_forward(
     # we skip the accumulated path and use the opt score as combined IS Sharpe.
     _combined_is_sharpe: Optional[float] = None
 
+    # FINDING-3 fix: track WFE IS Sharpe basis to surface inflation visibility.
+    # optimizer_best_score_mean = IS is the cherry-picked optimizer best score (inflated vs base config)
+    # base_config_daily_pnls    = IS is from base-config backtests (unoptimized, correct denominator)
+    # unavailable               = IS Sharpe could not be computed (wfe_overall will be None)
+    _wfe_is_basis: str = "unavailable"
+
     # Check if all windows used optimizer IS scores (no raw IS daily P&Ls accumulated)
     _opt_is_sharpes = [
         w.get("_is_sharpe_opt")
@@ -1543,12 +1584,25 @@ def run_walk_forward(
 
     if _opt_is_sharpes:
         # When optimizer IS scores are available, use their mean as the combined IS Sharpe.
-        # This matches the semantic intent (IS Sharpe = optimizer-selected Sharpe).
+        # FINDING-3 note: optimizer.best_score is the cherry-picked maximum across parameter
+        # trials — higher than base-config IS Sharpe. WFE = OOS/IS is therefore deflated
+        # (conservative but misleading). wfe_is_basis="optimizer_best_score_mean" exposes
+        # this so operators know the WFE denominator is inflated.
         _combined_is_sharpe = float(np.mean(_opt_is_sharpes))
+        _wfe_is_basis = "optimizer_best_score_mean"  # FINDING-3 fix
+        print(
+            f"  WFE IS-basis: optimizer_best_score_mean "
+            f"({len(_opt_is_sharpes)} windows; mean={_combined_is_sharpe:.4f}) — "
+            f"IS Sharpe is optimizer-selected (cherry-picked max); "
+            f"WFE may be deflated vs base-config denominator. "
+            f"(walk_forward.wfe_is_basis_optimizer)",
+            file=sys.stderr,
+        )
     elif len(all_is_pnls) > 1:
         _is_pnl_arr = np.array(all_is_pnls)
         _is_std = float(np.std(_is_pnl_arr, ddof=1))
         _combined_is_sharpe = float(np.mean(_is_pnl_arr) / _is_std * np.sqrt(252)) if _is_std > 0 else 0.0
+        _wfe_is_basis = "base_config_daily_pnls"  # FINDING-3 fix
 
     if _combined_is_sharpe is not None and _combined_is_sharpe > 0:
         _wfe_dict = compute_wfe(is_sharpe=_combined_is_sharpe, oos_sharpe=agg_sharpe)
@@ -1783,6 +1837,11 @@ def run_walk_forward(
         "wfe_hard_floor": _wfe_hard_floor,
         "wfe_warn_floor": _wfe_warn_floor,
         "wfe_per_window": wfe_per_window,
+        # FINDING-3 fix: WFE IS-Sharpe basis tag.
+        # "optimizer_best_score_mean" = IS is cherry-picked optimizer max (deflates WFE vs base).
+        # "base_config_daily_pnls"    = IS is honest base-config IS run.
+        # "unavailable"               = IS Sharpe could not be computed (wfe_overall absent).
+        "wfe_is_basis": _wfe_is_basis,
         # Wave 27.5 Pass B HIGH #3 — PBO auto-wire (additive; None when < 4 windows)
         "pbo": pbo_result.get("pbo") if pbo_result else None,
         "pbo_pass": pbo_result.get("pbo_pass") if pbo_result else None,
@@ -1808,9 +1867,17 @@ def run_walk_forward(
             if pbo_gate_result
             else None
         ),
+        # FINDING-1 fix: discriminator flag so pbo-gate.ts can distinguish
+        # plain-mode CPCV-style degenerate (BLOCK via pbo_cpcv_degenerate_block) from
+        # genuine legacy-null (PROCEED via pbo_unavailable_legacy).
+        "pbo_degenerate": (
+            pbo_gate_result.get("degenerate", False)
+            if pbo_gate_result
+            else False
+        ),
         # Audit action names for the TS backtest-service to write to audit_log.
         # Contains: "walk_forward.pbo_computed" and optionally
-        #           "walk_forward.pbo_high_overfit_risk"
+        #           "walk_forward.pbo_high_overfit_risk" or "walk_forward.pbo_cpcv_degenerate"
         "pbo_audit_actions": pbo_audit_actions,
         # Wave 3 Track 3A — BIF (Backtest Inflation Factor): IS/OOS Sharpe ratio.
         # is_sharpe = _combined_is_sharpe (same as WFE input; no extra backtests).

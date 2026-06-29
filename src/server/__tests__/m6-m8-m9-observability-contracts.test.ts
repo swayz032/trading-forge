@@ -132,9 +132,10 @@ describe("M6 — tradingviewMarkers uniqueIndex in schema.ts", () => {
 // ─── M8: LIFECYCLE_GATE_EVENTS catalog ───────────────────────────────────────
 
 describe("M8 — LIFECYCLE_GATE_EVENTS catalog in sse.ts", () => {
-  it("exports all 7 expected constants with correct string values", async () => {
+  it("exports all 12 expected constants with correct string values", async () => {
     const { LIFECYCLE_GATE_EVENTS } = await import("../routes/sse.js");
 
+    // Original 7 (W27.5 Pass B + Wave 29 Pass B)
     expect(LIFECYCLE_GATE_EVENTS.WFE_EVALUATED).toBe("lifecycle:wfe_evaluated");
     expect(LIFECYCLE_GATE_EVENTS.B14_EVALUATED).toBe("lifecycle:b14_evaluated");
     expect(LIFECYCLE_GATE_EVENTS.PARAMETER_DRIFT_EVALUATED).toBe("lifecycle:parameter_drift_evaluated");
@@ -142,9 +143,16 @@ describe("M8 — LIFECYCLE_GATE_EVENTS catalog in sse.ts", () => {
     expect(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED).toBe("lifecycle:compliance_drift_blocked");
     expect(LIFECYCLE_GATE_EVENTS.BACKTEST_STALE).toBe("lifecycle:backtest_stale");
     expect(LIFECYCLE_GATE_EVENTS.PROMOTION_EVIDENCE_INCOMPLETE).toBe("lifecycle:promotion_evidence_incomplete");
+    // Wave 3 Track 3B + production hardening
+    expect(LIFECYCLE_GATE_EVENTS.BIF_EVALUATED).toBe("lifecycle:bif_evaluated");
+    expect(LIFECYCLE_GATE_EVENTS.AUTO_GRAVEYARD).toBe("lifecycle:auto_graveyard");
+    // deepscan-wiring additions (Finding 5): previously bare-string sites
+    expect(LIFECYCLE_GATE_EVENTS.PAPER_TO_DEPLOY_READY_BLOCKED).toBe("lifecycle:paper_to_deploy_ready_blocked");
+    expect(LIFECYCLE_GATE_EVENTS.SHADOW_TO_PAPER_BLOCKED).toBe("lifecycle:shadow_to_paper_blocked");
+    expect(LIFECYCLE_GATE_EVENTS.PROMOTED).toBe("lifecycle:promoted");
 
-    // Exactly 7 entries
-    expect(Object.keys(LIFECYCLE_GATE_EVENTS).length).toBe(7);
+    // 12 total entries
+    expect(Object.keys(LIFECYCLE_GATE_EVENTS).length).toBe(12);
   });
 
   it("catalog constant values are stable strings — no mutation possible (const assertion)", async () => {

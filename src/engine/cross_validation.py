@@ -132,10 +132,12 @@ def bootstrap_ci(
     # Fix 3: use authoritative PCG64DXSM RNG matching monte_carlo.py for replay determinism.
     rng = create_authoritative_rng(seed)[0]
     arr = np.array(daily_pnls)
-    means = np.array([
-        rng.choice(arr, size=len(arr), replace=True).mean()
-        for _ in range(n_resamples)
-    ])
+    # FINDING-5 fix: vectorize bootstrap resampling — single 2D rng.choice call replaces
+    # the Python-level loop (n_resamples calls → 1 call), reducing overhead for large n_resamples.
+    # Byte-identical with the loop for the same PCG64DXSM seed: numpy's Generator draws the same
+    # random integers in the same sequence whether requested in one 2D batch or n_resamples 1D batches.
+    # Proved by test_bootstrap_ci_vectorize.py determinism test.
+    means = rng.choice(arr, size=(n_resamples, len(arr)), replace=True).mean(axis=1)
 
     alpha = 1 - confidence
     ci_lower = float(np.percentile(means, alpha / 2 * 100))

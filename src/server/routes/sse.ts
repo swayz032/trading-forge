@@ -428,6 +428,15 @@ export const LIFECYCLE_GATE_EVENTS = {
   // Auto-Graveyard: N consecutive hard gate failures → archived to GRAVEYARD
   // Payload: { strategyId, gate, consecutiveFailures, threshold, fromState, metrics, correlationId }
   AUTO_GRAVEYARD: "lifecycle:auto_graveyard",
+  // PAPER → DEPLOY_READY blocked by evaluatePaperToDeployReadyGates composite gate
+  // Payload: { strategyId, reason, passed: false }
+  PAPER_TO_DEPLOY_READY_BLOCKED: "lifecycle:paper_to_deploy_ready_blocked",
+  // SHADOW → PAPER blocked by shadow divergence gate
+  // Payload: { strategyId, reason, passed: false }
+  SHADOW_TO_PAPER_BLOCKED: "lifecycle:shadow_to_paper_blocked",
+  // Strategy successfully promoted between lifecycle states (CANDIDATE→TESTING, TESTING→PAPER, SHADOW→PAPER, PAPER→DEPLOY_READY, PILOT→DEPLOYED, PILOT→GRAVEYARD)
+  // Payload: { strategyId, from, to, name, ...transition-specific fields }
+  PROMOTED: "lifecycle:promoted",
 } as const;
 
 export type LifecycleGateEventName =

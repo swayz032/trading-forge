@@ -263,6 +263,8 @@ interface BacktestResult {
   wfe_status?: string | null;
   pbo_overall?: number | null;
   pbo_overall_p_value?: number | null;
+  // FINDING-1 (deepscan 2026-06-28): CPCV-degenerate discriminator from walk_forward.py.
+  pbo_degenerate?: boolean | null;
   // Wave 3 Track 3B — BIF gate fields (contract with Python side: result.bif / result.k_eff).
   // `bif`   — Bias Information Factor; quantifies IS→OOS overfitting transfer gap.
   // `k_eff` — Effective parameter count; companion metric for audit payload.
@@ -583,6 +585,8 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       // Wave 29 Pass A.2 — PBO gate inputs (walk_forward.py:1272)
       pbo_overall?: number | null;
       pbo_overall_p_value?: number | null;
+      // FINDING-1 (deepscan 2026-06-28): CPCV-degenerate discriminator.
+      pbo_degenerate?: boolean | null;
       // C1 fix 2026-06-28 — wf_metadata sibling emitted by walk_forward.py.
       // Contains DSR gate inputs (dsr_pass, dsr_unavailable, dsr) and CPCV
       // orchestrator inputs (mode, n_paths).  Was previously discarded here,
@@ -600,6 +604,11 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           wfe_status: result.wfe_status as string | null | undefined,
           pbo_overall: result.pbo_overall as number | null | undefined,
           pbo_overall_p_value: result.pbo_overall_p_value as number | null | undefined,
+          // FINDING-1 wiring (deepscan 2026-06-28): persist the CPCV-degenerate
+          // discriminator so lifecycle pbo-gate can BLOCK on it. walk_forward.py emits
+          // pbo_degenerate=true when IS==OOS for all paths; without persisting it here
+          // the lifecycle reader sees undefined and grandfather-passes a real overfit.
+          pbo_degenerate: result.pbo_degenerate as boolean | null | undefined,
           wf_metadata: result.wf_metadata as Record<string, unknown> | null | undefined,
         }
       : (() => {

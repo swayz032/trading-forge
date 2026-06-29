@@ -2199,6 +2199,7 @@
     ],
     "scheduler_jobs": [
       "bw-session-refresh",
+      "heartbeat-ooh-check",
       "heartbeat-stale-check",
       "heartbeat-write",
       "prop-firm-cookie-refresh"
