@@ -45,7 +45,7 @@ import { broadcastSSE, LIFECYCLE_GATE_EVENTS, WAVE29_EVENTS } from "../routes/ss
 import { compileDualPineExport } from "./pine-export-service.js";
 import { agentCoordinator } from "./agent-coordinator-service.js";
 import { tracer } from "../lib/tracing.js";
-import { strategyPromotions, pboBlocksTotal, lifecycleShadowPromotionsTotal, autoGraveyardTotal, bifGateEvaluationsTotal } from "../lib/metrics-registry.js";
+import { strategyPromotions, pboBlocksTotal, lifecycleShadowPromotionsTotal, autoGraveyardTotal, bifGateEvaluationsTotal, auditWriteFailuresTotal } from "../lib/metrics-registry.js";
 import { evaluateMultiFirmEligibility } from "./multi-firm-promotion-service.js";
 import { killSwitch } from "../production/kill-switch.js";
 import { evaluateB14CiGate, evaluateDsrWalkForwardGate } from "../lib/b14-ci-gate.js";
@@ -2555,7 +2555,12 @@ export class LifecycleService {
                   error: gateErr instanceof Error ? gateErr.message : String(gateErr),
                 },
                 correlationId,
-              }).catch(() => {});
+              }).catch((auditErr) => {
+                // Deep-scan #5 H3 (2026-06-29): was silently swallowed — a gate-BLOCK decision
+                // dropped with zero visibility if the DB was under pressure.
+                logger.warn({ err: auditErr, correlationId }, "compliance_gate_error audit insert failed (non-blocking)");
+                auditWriteFailuresTotal.labels({ action: "lifecycle.compliance_gate_error" }).inc();
+              });
               broadcastSSE("strategy:compliance_blocked", {
                 strategyId: s.id,
                 name: s.name,
@@ -2674,7 +2679,11 @@ export class LifecycleService {
               } as Record<string, unknown>,
               status: "failure",
               correlationId,
-            }).catch(() => {});
+            }).catch((auditErr) => {
+              // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
+              logger.warn({ err: auditErr, correlationId }, "exportability_block audit insert failed (non-blocking)");
+              auditWriteFailuresTotal.labels({ action: "lifecycle.exportability_block" }).inc();
+            });
 
             // SSE so the dashboard can surface the block to the operator
             broadcastSSE("strategy:exportability_blocked", {
@@ -2815,6 +2824,32 @@ export class LifecycleService {
             }
             // Gate passed — reset consecutive counter
             this._resetHardGateCounter(s.id, "b14_ci_high", tickCorrelationId);
+          } else {
+            // Deep-scan #5 H2a (2026-06-29): the `if (mcRunForB14Tp)` had NO else, so an
+            // absent MC run silently SKIPPED the ruin gate entirely (only a DB read error
+            // hit the fail-closed catch below). MC auto-fires after every completed backtest
+            // (backtest-service.ts:1734), so by TESTING→PAPER the latest backtest has an MC
+            // run — an absent one means MC errored or is still pending, a genuine failure
+            // that must BLOCK (retries next cron cycle once MC completes), not slip through.
+            const b14TpNoMc = evaluateB14CiGate(null, null);
+            await db.insert(auditLog).values({
+              action: "b14.gate_evaluated",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "failure",
+              decisionAuthority: "gate",
+              input: { fromState: "TESTING", toState: "PAPER" },
+              result: { ...b14TpNoMc.auditPayload, note: "no completed MC run for latest backtest — fail-closed (MC auto-fires post-backtest; absent = errored/pending)" },
+              correlationId: tickCorrelationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate (TESTING→PAPER no-MC fail-closed) audit insert failed (non-blocking)");
+            });
+            logger.warn(
+              { strategyId: s.id, transition: "TESTING→PAPER" },
+              "B14 CI gate BLOCKED TESTING→PAPER: no completed MC run for latest backtest (fail-closed)",
+            );
+            strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+            continue;
           }
         } catch (b14TpErr) {
           // F-6 Hardening 2026-06-23: Fail-CLOSED on B14 CI gate infrastructure error.
@@ -3561,7 +3596,11 @@ export class LifecycleService {
               threshold: 0.85,
             },
             correlationId,
-          }).catch(() => {});
+          }).catch((auditErr) => {
+            // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
+            logger.warn({ err: auditErr, correlationId }, "A7 gate fail-closed audit insert failed (non-blocking)");
+            auditWriteFailuresTotal.labels({ action: "lifecycle.a7_gate_error" }).inc();
+          });
           strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
           continue;
         }
@@ -3768,11 +3807,41 @@ export class LifecycleService {
                   gateEvidenceStatuses.push("complete");
                 }
               } else {
-                // No MC run — evidence incomplete
+                // Deep-scan #5 H2b (2026-06-29): the previous code only pushed
+                // "data_unavailable" to the evidence aggregate and the comment FALSELY
+                // claimed evaluateB14CiGate(null,null) blocked fail-CLOSED — no such call
+                // existed, so a strategy missing ONLY its MC run (1 incomplete gate) sailed
+                // past the ≥3-incomplete aggregate and promoted toward live capital with NO
+                // ruin evidence. The manual PATCH path (_promoteStrategyInner via the pure
+                // evaluator) ALREADY hard-blocks absent MC here; this makes the autonomous
+                // cron path match. evaluateB14CiGate(null,null) returns passed=false.
+                const b14NoMcResult = evaluateB14CiGate(null, null);
+                await db.insert(auditLog).values({
+                  action: "b14.gate_evaluated",
+                  entityId: s.id,
+                  entityType: "strategy",
+                  status: "failure",
+                  decisionAuthority: "gate",
+                  input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+                  result: { ...b14NoMcResult.auditPayload, note: "no completed MC run for latest backtest — fail-closed" },
+                  correlationId,
+                }).catch((auditErr) => {
+                  logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate (no-MC fail-closed) audit insert failed (non-blocking)");
+                });
+                broadcastSSE(LIFECYCLE_GATE_EVENTS.B14_EVALUATED, {
+                  strategyId: s.id,
+                  ...b14NoMcResult.auditPayload,
+                  passed: false,
+                  reason: b14NoMcResult.reason,
+                });
+                logger.warn(
+                  { strategyId: s.id, transition: "PAPER→DEPLOY_READY" },
+                  "B14 CI gate BLOCKED: no completed MC run for latest backtest (fail-closed; re-run MC to promote)",
+                );
+                strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
                 gateEvidenceStatuses.push("data_unavailable");
+                continue;
               }
-              // No MC run at all for this backtest → evaluateB14CiGate(null,null) blocks
-              // fail-CLOSED per hardening 2026-06-22 (F-1). No fall-through needed.
             }
           } catch (b14Err) {
             // Hardening 2026-06-22 (F-2): DB hiccup in B14 gate must BLOCK promotion,
@@ -4073,6 +4142,97 @@ export class LifecycleService {
           logger.warn(
             { strategyId: s.id, err: dsrPdrErr },
             "DSR gate (PAPER→DEPLOY_READY): read failed (non-blocking — promotion continues)",
+          );
+          gateEvidenceStatuses.push("data_unavailable");
+        }
+
+        // ── Deep-scan #5 H1 (2026-06-29): BIF gate on the AUTONOMOUS cron path ──
+        // The cron calls promoteStrategy(..., {skipPaperToDeployReadyEvaluator:true}), so the
+        // pure evaluator's Gate 6.5 (which holds BIF) never ran here — BIF was enforced ONLY on
+        // the manual dashboard PATCH path (_promoteStrategyInner). This block makes the autonomous
+        // cron path — the PRIMARY promotion path — enforce BIF identically. Mirrors the manual
+        // path (lifecycle-service.ts ~558-631) + bif-gate.ts. CPCV mode (bif_reliable=false) →
+        // advisory cpcv_unmeasured pass (BIF≈1.0 structural, Wave 30 carry-forward); bif>4.0 →
+        // HARD block; legacy-null → grandfather pass; infra read error → fail-OPEN (additive
+        // signal — a DB blip shouldn't block, but a real bif>4 still blocks).
+        try {
+          const [latestBtForBif] = await db
+            .select({
+              bif: backtests.bif,
+              kEff: backtests.kEff,
+              walkForwardResults: backtests.walkForwardResults,
+            })
+            .from(backtests)
+            .where(
+              and(
+                eq(backtests.strategyId, s.id),
+                eq(backtests.status, "completed"),
+              ),
+            )
+            .orderBy(desc(backtests.createdAt))
+            .limit(1);
+
+          const bifWfMeta = ((latestBtForBif?.walkForwardResults as Record<string, unknown> | null)?.wf_metadata as Record<string, unknown> | null) ?? null;
+          const bifReliableFalse = bifWfMeta?.bif_reliable === false;
+          const bifProxyBasis = (bifWfMeta?.bif_proxy_basis as string | null | undefined) ?? null;
+          const bifNum = latestBtForBif?.bif != null ? Number(latestBtForBif.bif) : null;
+          const kEffNum = latestBtForBif?.kEff != null ? Number(latestBtForBif.kEff) : null;
+
+          const bifResult = evaluateBifGate(
+            bifNum,
+            kEffNum,
+            bifReliableFalse ? { bifReliable: false, proxyBasis: bifProxyBasis } : { proxyBasis: bifProxyBasis },
+          );
+
+          const bifOutcome = bifResult.reason === "bif.cpcv_unmeasured"
+            ? "cpcv_unmeasured"
+            : !bifResult.passed
+              ? "blocked"
+              : bifResult.legacyNull
+                ? "legacy_null"
+                : bifResult.reason === "bif.warn_above_warn_threshold"
+                  ? "warn"
+                  : "clean";
+          try { bifGateEvaluationsTotal.labels({ outcome: bifOutcome }).inc(); } catch { /* non-blocking counter */ }
+
+          await db.insert(auditLog).values({
+            action: "bif.gate_evaluated",
+            entityId: s.id,
+            entityType: "strategy",
+            status: bifResult.passed
+              ? (bifResult.reason === "bif.warn_above_warn_threshold" ? "warning" : "success")
+              : "failure",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: bifResult.auditPayload as Record<string, unknown>,
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "BIF gate audit insert (PAPER→DEPLOY_READY) failed (non-blocking)");
+          });
+
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.BIF_EVALUATED, {
+            strategyId: s.id,
+            ...bifResult.auditPayload,
+            passed: bifResult.passed,
+            reason: bifResult.reason,
+          });
+
+          if (!bifResult.passed) {
+            logger.warn(
+              { strategyId: s.id, bif: bifResult.auditPayload.bif, threshold: bifResult.auditPayload.block_threshold, transition: "PAPER→DEPLOY_READY" },
+              "BIF gate BLOCKED PAPER→DEPLOY_READY: bif exceeds block threshold (synthetic overfit; IS edge does not transfer to OOS)",
+            );
+            strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+            await this._maybeAutoGraveyard(s.id, "bif_blocked", { bif: bifResult.auditPayload.bif, threshold: bifResult.auditPayload.block_threshold }, "PAPER", correlationId);
+            continue;
+          }
+          // Gate passed (clean / warn / cpcv_unmeasured / legacy) — reset consecutive counter
+          this._resetHardGateCounter(s.id, "bif_blocked", correlationId);
+          gateEvidenceStatuses.push(bifResult.legacyNull ? "legacy_null" : "complete");
+        } catch (bifErr) {
+          logger.warn(
+            { strategyId: s.id, err: bifErr },
+            "BIF gate (PAPER→DEPLOY_READY): read failed (non-blocking — promotion continues)",
           );
           gateEvidenceStatuses.push("data_unavailable");
         }
@@ -4400,7 +4560,11 @@ export class LifecycleService {
                 note: "composite shadow gate threw — promotion proceeds via Wave 27.5 hard gates alone",
               },
               correlationId,
-            }).catch(() => {});
+            }).catch((auditErr) => {
+              // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
+              logger.warn({ err: auditErr, correlationId }, "composite_shadow_evaluation_error audit insert failed (non-blocking)");
+              auditWriteFailuresTotal.labels({ action: "composite.shadow_evaluation_error" }).inc();
+            });
           }
           // Track A.2: composite shadow gate is observability-only and always runs —
           // evidence is always "complete" (the evaluator itself handles missing data).
@@ -4502,7 +4666,11 @@ export class LifecycleService {
                 input: { fromState: "PAPER", toState: "DEPLOY_READY" },
                 result: { error: freezeMsg, note: "first-time freeze write failed — promotion blocked; retries next cron cycle" },
                 correlationId,
-              }).catch(() => {});
+              }).catch((auditErr) => {
+                // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
+                logger.warn({ err: auditErr, correlationId }, "frozen_policy.hash_compute_failed (freeze-write) audit insert failed (non-blocking)");
+                auditWriteFailuresTotal.labels({ action: "frozen_policy.hash_compute_failed" }).inc();
+              });
               continue;
             }
           }
@@ -4522,7 +4690,11 @@ export class LifecycleService {
             input: { fromState: "PAPER", toState: "DEPLOY_READY" },
             result: { error: msg, note: "hash compute exception — promotion blocked until manual investigation" },
             correlationId,
-          }).catch(() => {});
+          }).catch((auditErr) => {
+            // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
+            logger.warn({ err: auditErr, correlationId }, "frozen_policy.hash_compute_failed (exception) audit insert failed (non-blocking)");
+            auditWriteFailuresTotal.labels({ action: "frozen_policy.hash_compute_failed" }).inc();
+          });
         }
 
         if (frozenPolicyBlocked) continue; // already continued above; guard for clarity
@@ -4725,7 +4897,11 @@ export class LifecycleService {
               input: { rollingSharpe, tradingDays },
               result: { error: String(e) },
               correlationId: correlationId ?? null,
-            }).catch(() => {});
+            }).catch((auditErr) => {
+              // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
+              logger.warn({ err: auditErr, correlationId }, "deploy_ready_alert_failed audit insert failed (non-blocking)");
+              auditWriteFailuresTotal.labels({ action: "lifecycle.deploy_ready_alert_failed" }).inc();
+            });
           });
 
           logger.info(
@@ -5405,7 +5581,11 @@ export class LifecycleService {
                   input: { fromState: "PILOT", toState: "DEPLOYED" },
                   result: { error: errMsg, attempts: 3, note: "Pine compile failed after 3 retries (30s/2m/10m)" },
                   correlationId: correlationId ?? null,
-                }).catch(() => {});
+                }).catch((auditErr) => {
+                  // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
+                  logger.warn({ err: auditErr, correlationId }, "deployed_pine_compile_failed audit insert failed (non-blocking)");
+                  auditWriteFailuresTotal.labels({ action: "lifecycle.deployed_pine_compile_failed" }).inc();
+                });
                 notifyWarning(
                   `Pine Compile Failed: strategy ${s.name} DEPLOYED but no TradingView artifact`,
                   appendFamilyGradePostscript(
