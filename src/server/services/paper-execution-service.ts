@@ -2873,6 +2873,19 @@ export interface StyleExitBarContext {
    * When absent (legacy callers), falls back to atr * 0.85 (prior behaviour preserved).
    */
   medianAtr14?: Record<string, number>;
+  /**
+   * C2 fix: per-symbol current bar high/low for intrabar TP touch detection.
+   * Populated from bar.high / bar.low in buildExitBarContext (paper-trading-stream.ts).
+   * Used by callExitHandler to pass bar_high/bar_low into style_c_handler.py so
+   * price_reached() tests the intrabar extreme instead of bar close, matching
+   * backtester.py:1248/1260 limit-fill semantics:
+   *   long:  bar_high >= tp_price  (touched from below)
+   *   short: bar_low  <= tp_price  (touched from above)
+   * Also used directly in the "Wave 1 Track 1B" static_styleC TP2 pre-check.
+   * When absent (legacy callers), all paths fall back to close-based detection.
+   */
+  currentBarHigh?: Record<string, number>;
+  currentBarLow?: Record<string, number>;
 }
 
 interface ExitHandlerResult {
@@ -2976,6 +2989,12 @@ async function callExitHandler(
         tp1_filled: pos.tp1Filled ?? false,
         tp2_filled: pos.tp2Filled ?? false,
         developing_session_poc: barCtx.developingSessionPoc?.[pos.symbol] ?? null,
+        // C2 fix: intrabar bar extremes for limit-touch TP detection.
+        // Mirrors backtester.py:1248/1260 — long: bar_high >= tp; short: bar_low <= tp.
+        // null when caller is legacy (no exitBarContext.currentBarHigh) → Python falls
+        // back to current_price (close-based), preserving backward-compat.
+        bar_high: barCtx.currentBarHigh?.[pos.symbol] ?? null,
+        bar_low:  barCtx.currentBarLow?.[pos.symbol]  ?? null,
       },
     };
   }
@@ -2992,13 +3011,19 @@ async function callExitHandler(
       ? (storedPlan["static_styleC_tp2_price"] as number)
       : null;
     if (storedTp2Price != null) {
+      // C2 fix: use intrabar bar extreme for TP touch detection, matching
+      // backtester.py:1248/1260 limit-fill semantics (long: bar_high >= target;
+      // short: bar_low <= target). Falls back to close-based detection when
+      // currentBarHigh/Low absent (legacy callers or no bar context).
       const currentPriceNum = Number(pos.currentPrice ?? entryPrice);
+      const barHighForTp2 = barCtx.currentBarHigh?.[pos.symbol] ?? null;
+      const barLowForTp2  = barCtx.currentBarLow?.[pos.symbol]  ?? null;
       const tp2Reached = pos.side === "long"
-        ? currentPriceNum >= storedTp2Price
-        : currentPriceNum <= storedTp2Price;
+        ? (barHighForTp2 !== null ? barHighForTp2 : currentPriceNum) >= storedTp2Price
+        : (barLowForTp2  !== null ? barLowForTp2  : currentPriceNum) <= storedTp2Price;
       if (tp2Reached) {
         logger.debug(
-          { positionId: pos.id, storedTp2Price, currentPriceNum, side: pos.side },
+          { positionId: pos.id, storedTp2Price, currentPriceNum, barHighForTp2, barLowForTp2, side: pos.side },
           "Wave1Track1B: static_styleC TP2 reached at liquidity-mapped price (pre-check firing)",
         );
         return {

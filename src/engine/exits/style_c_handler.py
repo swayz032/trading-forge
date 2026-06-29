@@ -109,6 +109,16 @@ class StyleCState(BaseModel):
     vp_shape: Optional[str] = None
     macro_state: Optional[str] = None
 
+    # C2 fix: intrabar high/low for limit-touch TP detection.
+    # When supplied by the paper engine (via StyleExitBarContext.currentBarHigh/Low),
+    # price_reached() uses bar_high (long TP) / bar_low (short TP) to match the
+    # backtester's intrabar limit-fill semantics (backtester.py:1248/1260):
+    #   long:  bar_high >= tp_price  (touch from below)
+    #   short: bar_low  <= tp_price  (touch from above)
+    # Backward-compatible: when None, falls back to current_price (close-based).
+    bar_high: Optional[float] = None  # intrabar high — for TP fill touch detection
+    bar_low: Optional[float] = None   # intrabar low  — for TP fill touch detection
+
 
 # ─── Main handler ─────────────────────────────────────────────────────────────
 
@@ -135,6 +145,8 @@ def evaluate_exit(state: StyleCState) -> ExitDecision:
         "entry_price": state.entry_price,
         "stop_pts": state.stop_pts,
         "current_price": state.current_price,
+        "bar_high": state.bar_high,
+        "bar_low": state.bar_low,
         "position_pct_open": state.position_pct_open,
         "tp1_filled": state.tp1_filled,
         "tp2_filled": state.tp2_filled,
@@ -171,9 +183,18 @@ def evaluate_exit(state: StyleCState) -> ExitDecision:
         tp2_price = state.entry_price + sign * risk_pts * TP2_AT_R_C
 
         def price_reached(target: float) -> bool:
+            # C2 fix: use intrabar high/low for limit-order TP touch detection
+            # when bar context is supplied by the paper engine, mirroring
+            # backtester.py:1248/1260 semantics:
+            #   long:  bar_high >= target  (price touched limit from below intrabar)
+            #   short: bar_low  <= target  (price touched limit from above intrabar)
+            # Falls back to current_price (close) when bar_high/bar_low absent,
+            # preserving backward-compat for callers that don't supply OHLC context.
             if state.direction == "long":
-                return state.current_price >= target
-            return state.current_price <= target
+                probe = state.bar_high if state.bar_high is not None else state.current_price
+                return probe >= target
+            probe = state.bar_low if state.bar_low is not None else state.current_price
+            return probe <= target
 
         # ── Priority 1: Time-stop ──────────────────────────────────────────────
         if _is_time_stop(state.current_time_et):

@@ -212,6 +212,12 @@ async function buildExitBarContext(bar: Bar): Promise<StyleExitBarContext | unde
       ...(last2barSwingHigh != null ? { last2barSwingHigh: { [bar.symbol]: last2barSwingHigh } } : {}),
       // BL-8 fix: rolling median ATR for slippage ATR-scaling (replaces atr*0.85 constant)
       ...(medianAtr14Val != null ? { medianAtr14: { [bar.symbol]: medianAtr14Val } } : {}),
+      // C2 fix: current bar OHLC extremes for intrabar TP touch detection.
+      // Passed to style_c_handler.py as bar_high/bar_low so price_reached() uses the
+      // bar's intrabar high (longs) / low (shorts) instead of bar close, matching
+      // backtester.py:1248/1260. Bar.high/Bar.low are always numbers per the Bar interface.
+      currentBarHigh: { [bar.symbol]: bar.high },
+      currentBarLow:  { [bar.symbol]: bar.low  },
     };
     return ctx;
   } catch (err) {
