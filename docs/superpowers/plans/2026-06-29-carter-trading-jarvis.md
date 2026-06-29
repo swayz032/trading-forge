@@ -6,9 +6,11 @@ of Trading Forge, and proposes (and drafts) improvements/fixes — while the gat
 the operator keep final authority.
 
 **Architecture (the real "1000×" levers):** grounding (RAG knowledge + live system
-tools, never vibes) + on-demand reasoning horsepower (Claude Opus behind a tool, since
-the live chat brain is the fast GPT-5.4-mini) + proactivity (a background analyst that
-surfaces what the operator wouldn't think to ask). Advisory/draft only — nothing
+tools, never vibes) + on-demand reasoning horsepower (a HEAVY reasoning model behind a
+tower-side tool — NOT Opus/Anthropic, which the operator has no key for; use the
+operator's existing OpenAI cloud as primary + optional local deepseek-r1 once pulled —
+the live chat brain stays the fast GPT-5.4-mini) + proactivity (a background analyst
+that surfaces what the operator wouldn't think to ask). Advisory/draft only — nothing
 auto-applies; RED stays RED; grounding-or-silence on facts.
 
 **Confirmed scope (operator, 2026-06-29):** start with self-knowledge · chat model =
@@ -38,10 +40,12 @@ real code/PRs for review (never auto-merge) · daily insights digest + connect b
 
 ## Wave B — Deep Brain + Recommendation Engine (reason · propose · draft code)
 
-- **B1 — `deep_analysis` tool.** Tower endpoint runs a heavy reasoning model (Claude
-  Opus) with full TF context injected; returns synthesized analysis. Carter calls it
-  for hard, multi-step questions; speaks back the conclusion. Fast chat stays on
-  GPT-5.4-mini; depth is on-demand.
+- **B1 — `deep_analysis` tool.** Tower endpoint runs a HEAVY reasoning model with full
+  TF context injected; returns synthesized analysis. NOT Opus/Anthropic (no key):
+  primary = the strongest model on the operator's existing OpenAI key (bounded by
+  `OPENAI_DAILY_BUDGET`); optional tier-down = local `deepseek-r1` via Ollama once
+  pulled ($0, private). Carter calls it for hard, multi-step questions; speaks back the
+  conclusion. Fast chat stays on GPT-5.4-mini; depth is on-demand.
 - **B2 — Recommendation tools.** `diagnose_pipeline`, `analyze_gate_blocks` (wraps the
   existing `src/engine/gate_block_analyzer.py` — gates costing winners vs saving from
   losers), `review_strategy` (institutional critique), `propose_hardening`,
