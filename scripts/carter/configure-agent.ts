@@ -139,6 +139,11 @@ function buildPatchBody(
   const currentConv = current?.conversation_config ?? {};
   const currentAgent = currentConv?.agent ?? {};
   const currentPrompt = currentAgent?.prompt ?? {};
+  // ElevenLabs rejects a PATCH that carries BOTH the deprecated inline `tools`
+  // field AND `tool_ids` ("Cannot specify both tools and tool IDs"). The GET
+  // denormalizes tool_ids back into `tools`, so a read-modify-write re-sends it.
+  // Strip the legacy `tools` field; tool_ids is the canonical model and survives.
+  const { tools: _dropLegacyTools, ...currentPromptNoTools } = currentPrompt;
   const currentTts = currentConv?.tts ?? {};
   const currentTurn = currentConv?.turn ?? {};
 
@@ -150,7 +155,7 @@ function buildPatchBody(
           ...currentAgent,
           first_message: CARTER_FIRST_MESSAGE,
           prompt: {
-            ...currentPrompt,
+            ...currentPromptNoTools,
             prompt: systemPrompt,
             llm,
           },
