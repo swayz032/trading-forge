@@ -19,6 +19,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+from functools import lru_cache
 
 import numpy as np
 import polars as pl
@@ -30,18 +31,29 @@ from src.engine.config import ContractSpec
 # 'round' — round to nearest integer → neutral estimate
 # 'floor' — always round down in absolute terms → best-case (optimistic, not recommended)
 _VALID_ROUNDING_MODES = {"ceil", "round", "floor"}
-_ROUNDING_MODE = os.environ.get("SLIPPAGE_TICK_ROUNDING_MODE", "ceil").lower()
-if _ROUNDING_MODE not in _VALID_ROUNDING_MODES:
-    print(
-        json.dumps({
-            "event": "slippage.invalid_rounding_mode",
-            "mode": _ROUNDING_MODE,
-            "fallback": "ceil",
-            "valid": sorted(_VALID_ROUNDING_MODES),
-        }),
-        file=sys.stderr,
-    )
-    _ROUNDING_MODE = "ceil"
+
+
+# Deep-scan #5 MED (2026-06-29): was a module-level constant frozen at import time, so
+# tests that set SLIPPAGE_TICK_ROUNDING_MODE after import never saw the change (unlike
+# fill_model.py which already used lru_cache getters). Mirror that pattern so tests can:
+#   os.environ["SLIPPAGE_TICK_ROUNDING_MODE"] = "round"
+#   slippage._get_rounding_mode.cache_clear()
+# Production behavior is unchanged — default resolves to 'ceil' (conservative) once.
+@lru_cache(maxsize=1)
+def _get_rounding_mode() -> str:
+    mode = os.environ.get("SLIPPAGE_TICK_ROUNDING_MODE", "ceil").lower()
+    if mode not in _VALID_ROUNDING_MODES:
+        print(
+            json.dumps({
+                "event": "slippage.invalid_rounding_mode",
+                "mode": mode,
+                "fallback": "ceil",
+                "valid": sorted(_VALID_ROUNDING_MODES),
+            }),
+            file=sys.stderr,
+        )
+        return "ceil"
+    return mode
 
 
 def _ceil_ticks(ticks: np.ndarray) -> np.ndarray:
@@ -130,7 +142,7 @@ def compute_slippage(
     # C1 FIX: round per configured mode (default: ceiling on abs value).
     # Fractional ticks must never be silently gifted back to the trader.
     raw_ticks = base_ticks * (atr_values / median_atr)
-    slippage_ticks = _round_ticks_by_mode(raw_ticks, _ROUNDING_MODE)
+    slippage_ticks = _round_ticks_by_mode(raw_ticks, _get_rounding_mode())
     slippage_dollars = slippage_ticks * contract_spec.tick_value
 
     # Order-type slippage modifier.

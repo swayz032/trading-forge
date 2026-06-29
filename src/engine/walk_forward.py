@@ -1789,6 +1789,25 @@ def run_walk_forward(
     _k_eff_plain: int = max(len(windows), 1)
     # Windows with sufficient deduplicated OOS P&L series
     _eligible_windows = [p for p in per_window_oos_pnls if len(p) >= _WRC_MIN_OBS_PLAIN]
+    # Deep-scan #5 MED (2026-06-29): mirror the CPCV-path M-2 floor (line ~659).
+    # The plain-WF path used a raw min(len) truncation, so a single barely-eligible
+    # 20-obs window dragged every other window down to 20 points → degenerate matrix /
+    # spurious WRC p-value. Exclude windows significantly shorter than the mean.
+    # WRC/SPA is non-blocking (unavailable → grandfather-pass), so stricter eligibility
+    # is the conservative direction — it never relaxes a gate.
+    if len(_eligible_windows) >= 2:
+        _all_window_lens = [len(w) for w in _eligible_windows]
+        _mean_window_len = sum(_all_window_lens) / len(_all_window_lens)
+        _window_floor = max(30.0, _mean_window_len * 0.5)
+        _windows_pre_floor = _eligible_windows[:]
+        _eligible_windows = [w for w in _eligible_windows if len(w) >= _window_floor]
+        for _ex_window in _windows_pre_floor:
+            if len(_ex_window) < _window_floor:
+                print(
+                    f"  WRC/SPA (plain): walk_forward.wrc_spa_short_path_excluded "
+                    f"window_len={len(_ex_window)} floor={_window_floor:.0f} mean={_mean_window_len:.0f}",
+                    file=sys.stderr,
+                )
     if len(_eligible_windows) >= 2:
         try:
             from src.engine.statistics.hansens_spa import (
