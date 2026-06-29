@@ -10,7 +10,8 @@
  */
 
 import { broadcastSSE } from "../routes/sse.js";
-import { logger } from "../index.js";
+import { logger } from "../lib/logger.js"; // Obs HIGH-3 2026-06-29: leaf import, not ../index.js
+import { insertAuditRowSafe } from "../lib/audit-log-helper.js"; // Obs HIGH-3 2026-06-29: durable domain-down audit row
 
 // ─── Event Types ────────────────────────────────────────────────────
 
@@ -142,13 +143,23 @@ export function initAgentCoordination(): void {
   });
 
   // When a domain goes down, broadcast a critical alert
-  agentCoordinator.on("health:domain_down", (payload) => {
+  // Obs HIGH-3 2026-06-29: handler made async so audit row is awaited (durable, not fire-and-forget)
+  agentCoordinator.on("health:domain_down", async (payload) => {
     logger.error({ domain: payload.domain }, `Agent domain DOWN: ${payload.domain}`);
     broadcastSSE("alert:triggered", {
       type: "agent_domain_down",
       domain: payload.domain,
       message: payload.message,
       severity: "critical",
+    });
+    // Durable audit row — SSE is ephemeral; this row survives for post-incident reconstruction
+    await insertAuditRowSafe({
+      action: "agent_domain.down",
+      entityType: "agent_domain",
+      entityId: payload.domain,
+      status: "error",
+      result: { domain: payload.domain, message: payload.message, timestamp: new Date().toISOString() },
+      decisionAuthority: "agent_coordinator",
     });
   });
 

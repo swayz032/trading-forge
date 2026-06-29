@@ -9,6 +9,7 @@ import { broadcastSSE } from "./sse.js";
 import { LifecycleService } from "../services/lifecycle-service.js";
 import { isActive as isPipelineActive } from "../services/pipeline-control-service.js";
 import { assertCrossValidatedSource } from "../services/agent-service.js";
+import { insertAuditRowSafe } from "../lib/audit-log-helper.js"; // Obs HIGH-5 2026-06-29: post-deploy block failure audit
 
 export const strategyRoutes = Router();
 const lifecycleService = new LifecycleService();
@@ -764,7 +765,18 @@ strategyRoutes.post("/:id/deploy", async (req, res) => {
     compilePineExport(strategyId, firmKey, "pine_indicator").catch((err: unknown) =>
       logger.error({ err, strategyId, firmKey }, "Post-deploy Pine export failed"),
     );
-  }).catch(() => {});
+  }).catch((err: unknown) => {
+    // Obs HIGH-5 2026-06-29: post-deploy async block failed — previously silent, now audit-logged
+    logger.error({ err, strategyId }, "Post-deploy async block failed — Pine export was skipped");
+    void insertAuditRowSafe({
+      action: "strategy.post_deploy_block_failed",
+      entityType: "strategy",
+      entityId: strategyId,
+      status: "error",
+      result: { err: String(err) },
+      decisionAuthority: "system",
+    });
+  });
 
   // Broadcast deploy SSE so dashboard and any listeners know immediately
   broadcastSSE("strategy:deployed", {

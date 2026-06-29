@@ -3,6 +3,7 @@ import { paperTrades } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
+import { insertAuditRowSafe } from "../lib/audit-log-helper.js"; // Obs HIGH-2 2026-06-29: durable A7 gate-breach audit row
 import { A7_CORRELATION_THRESHOLD } from "../lib/correlation-constants.js";
 
 export interface CorrelationResult {
@@ -88,6 +89,17 @@ export async function calculateCorrelation(sessionId1: string, sessionId2: strin
       "A7: high correlation detected between strategies",
     );
     broadcastSSE("correlation:alert", result);
+    // Obs HIGH-2 2026-06-29: durable audit row for A7 hard gate (PAPER→DEPLOY_READY) —
+    // SSE is ephemeral; this row is queryable post-incident.
+    await insertAuditRowSafe({
+      action: "correlation.a7_gate_breach",
+      entityType: "paper_session",
+      entityId: result.strategy1,
+      status: "rejected",
+      input: { strategy1: result.strategy1, strategy2: result.strategy2, a7_threshold: highThreshold },
+      result: { correlation: result.correlation, status: result.status },
+      decisionAuthority: "correlation_service",
+    });
   }
 
   return result;

@@ -239,13 +239,14 @@ export async function runMclPreEiaStopTighten(): Promise<PreEiaTightenSummary> {
 
       if (!marketRow || !marketRow.atr14 || marketRow.atr14 <= 0) {
         summary.positionsSkipped += 1;
-        insertAuditRow({
+        // Obs HIGH-6 2026-06-29: audit row awaited — EIA stop-management audit trail must be durable
+        await insertAuditRow({
           action: "mcl_pre_eia.skip_no_market_data",
           entityType: "paper_position",
           entityId: pos.id,
           status: "info",
           result: { reason: "missing_atr_or_close" },
-        }).catch(() => {});
+        });
         continue;
       }
 
@@ -260,13 +261,14 @@ export async function runMclPreEiaStopTighten(): Promise<PreEiaTightenSummary> {
 
       if (decision.newStop === null) {
         summary.positionsSkipped += 1;
-        insertAuditRow({
+        // Obs HIGH-6 2026-06-29: audit row awaited — EIA stop-management audit trail must be durable
+        await insertAuditRow({
           action: "mcl_pre_eia.skip_not_profitable",
           entityType: "paper_position",
           entityId: pos.id,
           status: "info",
           result: { reason: decision.reason, currentR: decision.currentR },
-        }).catch(() => {});
+        });
         continue;
       }
 
@@ -277,14 +279,15 @@ export async function runMclPreEiaStopTighten(): Promise<PreEiaTightenSummary> {
         .where(eq(paperPositions.id, pos.id));
 
       summary.positionsTightened += 1;
-      insertAuditRow({
+      // Obs HIGH-6 2026-06-29: audit row awaited — EIA stop-management audit trail must be durable
+      await insertAuditRow({
         action: "mcl_pre_eia.stop_tightened",
         entityType: "paper_position",
         entityId: pos.id,
         status: "info",
         input: { sessionId: pos.sessionId, direction, entryPrice, currentStop, currentR: decision.currentR },
         result: { newStop: decision.newStop, reason: decision.reason, atr14: marketRow.atr14 },
-      }).catch(() => {});
+      });
     } catch (posErr) {
       summary.errors += 1;
       logger.warn({ err: posErr, positionId: pos.id }, "mcl-pre-eia-stop-tighten: per-position error");

@@ -1,7 +1,8 @@
 import { db } from "../db/index.js";
 import { paperSessions, paperPositions } from "../db/schema.js";
 import { eq, and, isNull } from "drizzle-orm";
-import { logger } from "../index.js";
+import { logger } from "../lib/logger.js"; // Obs HIGH-1 2026-06-29: leaf import, not ../index.js
+import { insertAuditRowSafe } from "../lib/audit-log-helper.js"; // Obs HIGH-1 2026-06-29: durable gate-block audit rows
 import { getFirmAccount, getTightestDrawdown, type FirmAccountConfig } from "../../shared/firm-config.js";
 import { tracer } from "../lib/tracing.js";
 import { isUsDst } from "../lib/dst-utils.js";
@@ -185,6 +186,16 @@ export async function checkRiskGate(
 
   if (openPositions.length >= maxPositions) {
     logger.warn({ sessionId, openPositions: openPositions.length, maxPositions }, "Risk gate: max concurrent positions reached");
+    // Obs HIGH-1 2026-06-29: durable audit row so post-incident "why did it stop trading?" is answerable
+    await insertAuditRowSafe({
+      action: "paper_risk_gate.blocked",
+      entityType: "paper_session",
+      entityId: sessionId,
+      status: "rejected",
+      input: { sessionId, symbol, contracts },
+      result: { check: "max_concurrent_positions", openPositions: openPositions.length, maxPositions },
+      decisionAuthority: "paper_risk_gate",
+    });
     return {
       allowed: false,
       reason: `Max concurrent positions reached (${openPositions.length}/${maxPositions})`,
@@ -210,6 +221,16 @@ export async function checkRiskGate(
 
   if (sessionLoss >= drawdownLimit) {
     logger.warn({ sessionId, sessionLoss, drawdownLimit, firmId: session.firmId }, "Risk gate: session drawdown limit hit");
+    // Obs HIGH-1 2026-06-29: durable audit row so post-incident "why did it stop trading?" is answerable
+    await insertAuditRowSafe({
+      action: "paper_risk_gate.blocked",
+      entityType: "paper_session",
+      entityId: sessionId,
+      status: "rejected",
+      input: { sessionId, symbol, contracts },
+      result: { check: "session_drawdown", sessionLoss, drawdownLimit, firmId: session.firmId },
+      decisionAuthority: "paper_risk_gate",
+    });
     return {
       allowed: false,
       reason: `Session drawdown limit reached ($${sessionLoss.toFixed(2)} loss vs $${drawdownLimit} limit)`,
@@ -228,6 +249,16 @@ export async function checkRiskGate(
 
   if (maxContracts !== undefined && contracts > maxContracts) {
     logger.warn({ sessionId, symbol, contracts, maxContracts, firmId: session.firmId }, "Risk gate: contract cap exceeded");
+    // Obs HIGH-1 2026-06-29: durable audit row so post-incident "why did it stop trading?" is answerable
+    await insertAuditRowSafe({
+      action: "paper_risk_gate.blocked",
+      entityType: "paper_session",
+      entityId: sessionId,
+      status: "rejected",
+      input: { sessionId, symbol, contracts },
+      result: { check: "max_contracts", contracts, maxContracts, firmId: session.firmId },
+      decisionAuthority: "paper_risk_gate",
+    });
     return {
       allowed: false,
       reason: `Contracts (${contracts}) exceeds cap for ${symbol} (max ${maxContracts})`,
@@ -255,6 +286,16 @@ export async function checkRiskGate(
         { sessionId, todayLoss, dllHaltThreshold, dailyLossLimit: firmConfig.dailyLossLimit, DLL_HALT_PCT },
         "Risk gate: daily loss halt threshold hit",
       );
+      // Obs HIGH-1 2026-06-29: durable audit row so post-incident "why did it stop trading?" is answerable
+      await insertAuditRowSafe({
+        action: "paper_risk_gate.blocked",
+        entityType: "paper_session",
+        entityId: sessionId,
+        status: "rejected",
+        input: { sessionId, symbol, contracts },
+        result: { check: "daily_loss_limit", todayLoss, dllHaltThreshold, dailyLossLimit: firmConfig.dailyLossLimit, DLL_HALT_PCT, firmId: session.firmId },
+        decisionAuthority: "paper_risk_gate",
+      });
       return {
         allowed: false,
         reason: `Daily loss halt threshold reached ($${todayLoss.toFixed(2)} today vs $${dllHaltThreshold.toFixed(2)} halt limit [${Math.round(DLL_HALT_PCT * 100)}% of $${firmConfig.dailyLossLimit} for ${session.firmId}])`,
@@ -278,6 +319,16 @@ export async function checkRiskGate(
 
     if (utcTime < rthStartUTC || utcTime >= rthEndUTC) {
       logger.warn({ sessionId, firmId: session.firmId, utcTime, rthStartUTC, rthEndUTC }, "Risk gate: overnight positions not allowed for this firm");
+      // Obs HIGH-1 2026-06-29: durable audit row so post-incident "why did it stop trading?" is answerable
+      await insertAuditRowSafe({
+        action: "paper_risk_gate.blocked",
+        entityType: "paper_session",
+        entityId: sessionId,
+        status: "rejected",
+        input: { sessionId, symbol, contracts },
+        result: { check: "overnight_restriction", firmId: session.firmId, utcTime, rthStartUTC, rthEndUTC },
+        decisionAuthority: "paper_risk_gate",
+      });
       return {
         allowed: false,
         reason: `Overnight positions not allowed for ${session.firmId} — outside RTH`,
@@ -314,6 +365,16 @@ export async function checkRiskGate(
 
   if (totalTodayLoss >= DEFAULT_GLOBAL_LOSS_LIMIT) {
     logger.warn({ totalTodayLoss, limit: DEFAULT_GLOBAL_LOSS_LIMIT }, "Risk gate: global daily loss limit hit");
+    // Obs HIGH-1 2026-06-29: durable audit row so post-incident "why did it stop trading?" is answerable
+    await insertAuditRowSafe({
+      action: "paper_risk_gate.blocked",
+      entityType: "paper_session",
+      entityId: sessionId,
+      status: "rejected",
+      input: { sessionId, symbol, contracts },
+      result: { check: "global_daily_loss", totalTodayLoss, limit: DEFAULT_GLOBAL_LOSS_LIMIT },
+      decisionAuthority: "paper_risk_gate",
+    });
     return {
       allowed: false,
       reason: `Global daily loss across all sessions ($${totalTodayLoss.toFixed(2)} today) exceeds $${DEFAULT_GLOBAL_LOSS_LIMIT} limit`,

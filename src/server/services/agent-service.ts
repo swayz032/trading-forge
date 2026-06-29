@@ -1089,7 +1089,18 @@ export class AgentService {
     // 3a. C9: Persist DSL feature vector for future diversity checks (fire-and-forget).
     // Written AFTER strategy DB insert so the feature table only contains accepted candidates.
     // Failures are non-blocking — the strategy was already accepted and will be backtested.
-    persistDslFeatureVector(strategyId, dsl).catch(() => {});
+    // Obs HIGH-4 2026-06-29: surface persist failures instead of silently dropping them
+    persistDslFeatureVector(strategyId, dsl).catch((err: unknown) => {
+      logger.error({ err, strategyId }, "C9: persistDslFeatureVector failed — DSL diversity gap possible");
+      void insertAuditRowSafe({
+        action: "c9.feature_vector_persist_failed",
+        entityType: "strategy",
+        entityId: strategyId,
+        status: "error",
+        result: { err: String(err) },
+        decisionAuthority: "system",
+      });
+    });
 
     // Pass 19: When pipeline is paused AND source=graduated_bucket, skip backtest.
     // Insert audit row for the pause-gated CANDIDATE and return early.

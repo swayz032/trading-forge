@@ -378,8 +378,8 @@ export async function buildCohortAuditReport(
     _fetchCount("signal.runner_trail_method_selected", since),
     _fetchCount("paper.time_stop_flatten",             since),
     _fetchCount("paper.tp1_fill",                      since),
-    _fetchCount("cross_symbol_dll_halt_triggered",     since),
-    _fetchCount("paper.dll_95_force_close",            since),
+    _fetchCount("sizing.dll_force_close",              since), // MED-3 2026-06-29: fixed wrong action name (was cross_symbol_dll_halt_triggered — kill-switch writes sizing.dll_force_close)
+    _fetchCount("sizing.dll_force_close_completed",    since), // MED-3 2026-06-29: fixed wrong action name (was paper.dll_95_force_close — kill-switch writes sizing.dll_force_close_completed)
   ]);
 
   const testRows: _TestRows = {

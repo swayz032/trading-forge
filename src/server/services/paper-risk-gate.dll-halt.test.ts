@@ -39,9 +39,28 @@ vi.mock("../lib/tracing.js", () => ({
   },
 }));
 
+// Obs HIGH-1 2026-06-29: mock audit-log-helper so new insertAuditRowSafe calls
+// don't reach the real DB (which only has `select` mocked, not `insert`).
+vi.mock("../lib/audit-log-helper.js", () => ({
+  insertAuditRowSafe: vi.fn(async () => true),
+}));
+
+// paper-risk-gate.ts now imports logger from ../lib/logger.js (leaf module, not ../index.js)
+vi.mock("../lib/logger.js", () => ({
+  logger: { warn: vi.fn(), info: vi.fn(), error: vi.fn(), debug: vi.fn() },
+}));
+
+// ── Deterministic time: 10:00 AM EDT (14:00 UTC) — within RTH for overnight gate ──
+// Both Topstep and MFFU have overnightOk=false. Tests that do NOT block at an
+// earlier gate (DLL, max_positions, etc.) will reach the overnight gate. Without
+// a fixed time the tests are flaky: they pass during trading hours, fail after 4 PM ET.
+vi.useFakeTimers();
+vi.setSystemTime(new Date("2026-06-29T14:00:00Z")); // 10:00 AM EDT = within RTH
+
 // ── Import after mocks are registered ──────────────────────────────────────
 
 import { db } from "../db/index.js";
+import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { checkRiskGate, __resetDailyLossCacheForTests } from "./paper-risk-gate.js";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -197,14 +216,15 @@ describe("F-1: paper-risk-gate DLL halt at DLL_HALT_PCT (67%), not 100%", () => 
     expect(result.check).toBe("daily_loss_limit");
   });
 
-  it("MFFU (null dailyLossLimit): $2000 loss NOT blocked by DLL gate", async () => {
-    // MFFU has dailyLossLimit=null — DLL gate must be entirely skipped
-    const session = makeSessionRow({ firmId: "mffu", lossToday: 2000, todayKey });
+  it("MFFU (dailyLossLimit=$1000): $500 loss NOT blocked by DLL gate (< $670 = $1000*0.67 threshold)", async () => {
+    // MFFU BUILDER plan has dailyLossLimit=$1000; halt threshold = $1000 * 0.67 = $670.
+    // $500 < $670 → DLL gate passes (note: old tests assumed dailyLossLimit=null — firm config updated).
+    const session = makeSessionRow({ firmId: "mffu", lossToday: 500, todayKey });
     wireDbMock(session, [session]);
 
     const result = await checkRiskGate("test-session-id", "MES", 6);
 
-    // Should not be blocked by daily_loss_limit check
+    // Should not be blocked by daily_loss_limit check (below halt threshold)
     expect(result.check).not.toBe("daily_loss_limit");
   });
 
@@ -217,5 +237,91 @@ describe("F-1: paper-risk-gate DLL halt at DLL_HALT_PCT (67%), not 100%", () => 
 
     expect(result.allowed).toBe(false);
     expect(result.check).toBe("daily_loss_limit");
+  });
+});
+
+// ── Obs HIGH-1 2026-06-29: durable audit rows on gate blocks ─────────────────
+
+describe("Obs HIGH-1 2026-06-29: insertAuditRowSafe called on each hard-gate block", () => {
+  let todayKey: string;
+
+  beforeEach(async () => {
+    todayKey = await makeTodayKey();
+    __resetDailyLossCacheForTests();
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    __resetDailyLossCacheForTests();
+  });
+
+  it("daily_loss_limit block: audit row written with action=paper_risk_gate.blocked, check=daily_loss_limit", async () => {
+    const session = makeSessionRow({ firmId: "topstep", lossToday: 800, todayKey });
+    wireDbMock(session, [session]);
+
+    const result = await checkRiskGate("test-session-id", "MES", 6);
+
+    expect(result.allowed).toBe(false);
+    expect(vi.mocked(insertAuditRowSafe)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "paper_risk_gate.blocked",
+        status: "rejected",
+        result: expect.objectContaining({ check: "daily_loss_limit" }),
+      }),
+    );
+  });
+
+  it("max_concurrent_positions block: audit row written with check=max_concurrent_positions", async () => {
+    const session = makeSessionRow({ firmId: "topstep", lossToday: 0, todayKey });
+    // Override DB mock so the first call returns 1 open position (>= max_positions=1)
+    const dbMock = db as unknown as { select: ReturnType<typeof vi.fn> };
+    let callIndex = 0;
+    dbMock.select.mockImplementation(() => {
+      const call = callIndex++;
+      if (call === 0) {
+        return {
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([{ id: "pos-1" }]),
+          }),
+        };
+      }
+      if (call === 1) {
+        return {
+          from: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              then: (fn: (rows: object[]) => unknown) =>
+                Promise.resolve(fn([session])),
+            }),
+          }),
+        };
+      }
+      return {
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([session]),
+        }),
+      };
+    });
+
+    const result = await checkRiskGate("test-session-id", "MES", 6);
+
+    expect(result.allowed).toBe(false);
+    expect(result.check).toBe("max_concurrent_positions");
+    expect(vi.mocked(insertAuditRowSafe)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "paper_risk_gate.blocked",
+        status: "rejected",
+        result: expect.objectContaining({ check: "max_concurrent_positions" }),
+      }),
+    );
+  });
+
+  it("allowed path: insertAuditRowSafe NOT called when gate passes", async () => {
+    const session = makeSessionRow({ firmId: "topstep", lossToday: 0, todayKey });
+    wireDbMock(session, [session]);
+
+    const result = await checkRiskGate("test-session-id", "MES", 6);
+
+    expect(result.allowed).toBe(true);
+    expect(vi.mocked(insertAuditRowSafe)).not.toHaveBeenCalled();
   });
 });
