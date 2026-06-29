@@ -32,6 +32,9 @@ scripts/*.d.ts
 scripts/*.d.ts.map
 scripts/*.js
 scripts/*.js.map
+
+# Carter agent audit output (live API snapshot — do not commit)
+scripts/carter/agent-baseline.json
 Trading_forge_frontend/amber-vision-main/tsconfig.*.tsbuildinfo
 .clawhub/
 data_cache/
