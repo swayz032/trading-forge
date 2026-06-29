@@ -517,6 +517,46 @@ describe("evaluatePaperToDeployReadyGates", () => {
 
       expect(result.failedGate).not.toBe("parameter_drift");
     });
+
+    // ── C1 (2026-06-29): param_stability_status threading ────────────────────
+    it("threads param_stability_status into evaluateParameterDriftGate as the 3rd arg", () => {
+      setAllGatesPass();
+      const input = buildPassInput();
+      input.walkForwardResults = {
+        ...wfrPass,
+        param_stability: { drift_classification: null, drift_confidence: null },
+        param_stability_status: "cpcv_not_applicable",
+      };
+
+      evaluatePaperToDeployReadyGates(input);
+
+      // Gate must forward the top-level status so the gate can resolve cpcv_exempt.
+      expect(mockDrift).toHaveBeenCalledWith(null, null, "cpcv_not_applicable");
+    });
+
+    it("does not block on cpcv_exempt (CPCV path is non-blocking, distinct audit)", () => {
+      setAllGatesPass();
+      mockDrift.mockReturnValue({
+        status: "cpcv_exempt",
+        passed: true,
+        classification: null,
+        confidence: null,
+        auditAction: "lifecycle.parameter_drift_cpcv_exempt",
+      });
+      const input = buildPassInput();
+      input.walkForwardResults = { ...wfrPass, param_stability_status: "cpcv_not_applicable" };
+
+      const result = evaluatePaperToDeployReadyGates(input);
+
+      expect(result.failedGate).not.toBe("parameter_drift");
+    });
+
+    it("passes null 3rd arg when param_stability_status is absent (legacy backtests)", () => {
+      setAllGatesPass();
+      evaluatePaperToDeployReadyGates(buildPassInput()); // wfrPass has no param_stability_status
+      const lastCall = mockDrift.mock.calls.at(-1);
+      expect(lastCall?.[2]).toBeNull();
+    });
   });
 
   // ── Gate 6: DSR walk-forward ────────────────────────────────────────────────

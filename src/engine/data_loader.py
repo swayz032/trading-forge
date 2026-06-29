@@ -245,15 +245,24 @@ def _validate_data_quality(df: pl.DataFrame, symbol: str, timeframe: str) -> Non
 # ─── Comprehensive Data Quality Validation ───────────────────────
 
 def compute_dataset_hash(df: pl.DataFrame) -> str:
-    """Compute SHA-256 hash of OHLCV data for reproducibility tracking."""
-    csv_bytes = (
+    """Compute SHA-256 hash of OHLCV data for reproducibility tracking.
+
+    M-4 fix (2026-06-29): replaced .to_pandas().to_csv() chain with Polars-native
+    write_csv() into an io.BytesIO buffer.
+
+    Previous implementation used pandas float formatting which varies by pandas version
+    (e.g., pandas 1.x vs 2.x print different decimal representations for the same float),
+    making the hash non-deterministic across environments that differ in pandas version.
+    Polars write_csv() output is stable and version-independent for the same Polars major.
+    """
+    import io
+    buffer = io.BytesIO()
+    (
         df.sort("ts_event")
         .select(["ts_event", "open", "high", "low", "close", "volume"])
-        .to_pandas()
-        .to_csv(index=False)
-        .encode()
+        .write_csv(buffer)
     )
-    return hashlib.sha256(csv_bytes).hexdigest()
+    return hashlib.sha256(buffer.getvalue()).hexdigest()
 
 
 # ─── Zero-Volume Fail-Loud Guard (M1) ────────────────────────────

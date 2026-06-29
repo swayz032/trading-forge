@@ -100,6 +100,16 @@ def compute_slippage(
     so fractional ticks are never gifted back to the trader.
     Rounding mode controlled by SLIPPAGE_TICK_ROUNDING_MODE env var (default: ceil).
     """
+    # L-1 fix (2026-06-29): hard guard — stop/stop_market orders are prohibited by
+    # CLAUDE.md §13.  If any caller passes these, the error surfaces immediately
+    # instead of silently computing a 2× slippage value that hides the contract violation.
+    # Use stop_limit instead (base slippage × 1.0, no modifier).
+    if order_type in ("stop", "stop_market"):
+        raise ValueError(
+            f"stop/stop_market orders are prohibited per CLAUDE.md §13; "
+            f"received order_type={order_type!r}. Use stop_limit instead."
+        )
+
     atr_col = f"atr_{atr_period}"
     if atr_col not in df.columns:
         from src.engine.indicators.core import compute_atr

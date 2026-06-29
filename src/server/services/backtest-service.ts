@@ -265,6 +265,13 @@ interface BacktestResult {
   wfe_status?: string | null;
   pbo_overall?: number | null;
   pbo_overall_p_value?: number | null;
+  // C1 consumer-side (2026-06-29): top-level param_stability_status emitted by
+  // walk_forward.py — "cpcv_not_applicable" on the CPCV path, "computed" on plain WF.
+  // Declared + persisted into walkForwardResults so parameter-drift-gate resolves to
+  // the distinct cpcv_exempt result instead of a silent legacy_null. Was previously
+  // absent → cherry-picked wfResults would have dropped it (silent producer/consumer
+  // disconnect — the exact failure mode this fix closes).
+  param_stability_status?: string | null;
   // FINDING-1 (deepscan 2026-06-28): CPCV-degenerate discriminator from walk_forward.py.
   pbo_degenerate?: boolean | null;
   // Wave 3 Track 3B — BIF gate fields (contract with Python side: result.bif / result.k_eff).
@@ -581,6 +588,9 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       windows?: Array<Record<string, unknown>>;
       n_splits?: number;
       param_stability?: Record<string, unknown>;
+      // C1 (2026-06-29): top-level param_stability_status sibling of param_stability.
+      // Must be persisted so parameter-drift-gate distinguishes CPCV-exempt from legacy_null.
+      param_stability_status?: string | null;
       // Wave 27.5 Pass B — WFE gate inputs (walk_forward.py:1252)
       wfe_overall?: number | null;
       wfe_status?: string | null;
@@ -617,6 +627,9 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           windows: result.windows as Array<Record<string, unknown>>,
           n_splits: result.n_splits,
           param_stability: result.param_stability,
+          // C1 (2026-06-29): carry param_stability_status into the persisted JSONB blob
+          // so the CPCV cpcv_exempt path survives end-to-end (producer → DB → gate).
+          param_stability_status: result.param_stability_status as string | null | undefined,
           wfe_overall: result.wfe_overall as number | null | undefined,
           wfe_status: result.wfe_status as string | null | undefined,
           pbo_overall: result.pbo_overall as number | null | undefined,
@@ -2671,28 +2684,42 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             }).where(eq(strategies.id, strategyId));
           }
 
-          // ── Single path lifecycle write: CANDIDATE → SHADOW via LifecycleService ──
-          // F-3 fix (2026-06-23): routes to SHADOW (not PAPER). No paper session is
-          // created here — paper sessions are created when SHADOW→PAPER fires via the
-          // A.3 divergence gate in checkAutoPromotions (≥20 signals, <5% divergence).
-          // The lifecycle write atomically sets shadow_mode_enabled=true so the signal
-          // interceptor (paper-signal-service) begins capturing signals immediately.
+          // ── Single path lifecycle write: CANDIDATE → TESTING via LifecycleService ──
+          // H1/H2/H3 fix (2026-06-29): the canonical fast-track now routes
+          // CANDIDATE → TESTING → SHADOW (NOT CANDIDATE → SHADOW directly). The
+          // CANDIDATE → TESTING hop lands here (atomic with the Forge-name claim);
+          // the TESTING → SHADOW hop runs immediately AFTER this tx commits so the
+          // existing PBO < 0.15 lifecycle gate (keyed on TESTING → SHADOW/PAPER) and
+          // the SHADOW → PAPER divergence gate both fire on the default autonomous
+          // path via ONE canonical driver. shadowModeEnabled is flagged true here so
+          // the Gate 1.5 TESTING → SHADOW cron driver (checkAutoPromotions) retries
+          // the second hop if it does not complete in-process (PBO block, transient
+          // failure, process death between commit and the immediate hop).
           // Cast tx to typeof db — Drizzle's PgTransaction is structurally compatible
           // with the db handle for query/insert/update/select but lacks `$client`.
           // This matches the pattern used in src/server/lib/db-locks.ts.
           const promoteResult = await lifecycle.promoteStrategy(
             strategyId,
             "CANDIDATE",
-            "SHADOW",
-            { actor: "system", reason: "tier-qualified-shadow-entry" },
+            "TESTING",
+            { actor: "system", reason: "tier-qualified-testing-entry" },
             tx as unknown as typeof db,
           );
           if (!promoteResult.success) {
             promotionError = promoteResult.error;
             // Throwing inside tx triggers rollback — Forge name claim reverts so we
-            // don't end up with a claimed name for a non-SHADOW strategy.
+            // don't end up with a claimed name for a non-promoted strategy.
             throw new Error(`Lifecycle promotion failed: ${promoteResult.error}`);
           }
+
+          // Flag for SHADOW so the Gate 1.5 TESTING → SHADOW cron driver picks this
+          // strategy up (and the immediate in-process hop below knows it is destined
+          // for SHADOW). promoteStrategy(... → SHADOW) re-asserts this at SHADOW entry;
+          // setting it here makes the flag durable across the CANDIDATE → TESTING hop
+          // so a deferred second hop is never orphaned at TESTING.
+          await tx.update(strategies).set({
+            shadowModeEnabled: true,
+          }).where(eq(strategies.id, strategyId));
 
           // Auto-promote context audit row — captures backtest+MC+tier metadata so
           // observers can join lifecycle audit row to its triggering backtest. The
@@ -2705,7 +2732,8 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             entityId: strategyId,
             input: { backtestId, tier: result.tier },
             result: {
-              toState: "SHADOW",
+              toState: "TESTING",
+              shadowDestination: "SHADOW",
               mcSurvivalRate,
               forgeScore: result.forge_score,
             },
@@ -2721,31 +2749,67 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
         if (!promotionSucceeded) {
           logger.warn(
             { strategyId, backtestId, error: promotionError },
-            "Auto-promote transaction rolled back — strategy not promoted to SHADOW",
+            "Auto-promote transaction rolled back — strategy not promoted to TESTING",
           );
           return { id: backtestId, status: "completed", ...result };
         }
 
-        // NOTE (F-3): No stream start here. Streams are started when SHADOW→PAPER
-        // fires via the A.3 divergence gate in checkAutoPromotions. In SHADOW state
-        // the signal interceptor captures signals but does NOT open TradersPost orders.
-
-        // Broadcast SHADOW entry event (outside transaction — SSE is best-effort)
+        // Broadcast TESTING entry event (outside transaction — SSE is best-effort)
         broadcastSSE("strategy:promoted", {
           strategyId,
           tier: result.tier,
           forgeScore: result.forge_score,
-          toState: "SHADOW",
-          // paperSessionId not yet set — created at SHADOW→PAPER divergence gate
+          toState: "TESTING",
         });
 
-        logger.info({
-          strategyId,
-          tier: result.tier,
-          toState: "SHADOW",
-        }, "Strategy fast-tracked to SHADOW — skew measurement begins (F-3)");
+        // ── Immediate second hop: TESTING → SHADOW (fires the PBO < 0.15 gate) ──
+        // H1/H2/H3 (2026-06-29): the canonical CANDIDATE → TESTING → SHADOW ladder.
+        // promoteStrategy(TESTING → SHADOW) runs the existing Wave 29 Pass A.2 PBO
+        // lifecycle gate; a PBO block correctly HOLDS the strategy at TESTING (it is
+        // NOT silently promoted) and the Gate 1.5 cron driver retries on later ticks
+        // once a fresh backtest clears PBO. A transient failure here is likewise
+        // recovered by Gate 1.5 (shadowModeEnabled was flagged in the tx above).
+        // NOTE (F-3): no stream start here. Streams start at SHADOW → PAPER via the
+        // A.3 divergence gate in checkAutoPromotions. In SHADOW the signal interceptor
+        // captures signals but does NOT open TradersPost orders.
+        try {
+          const shadowHop = await lifecycle.promoteStrategy(
+            strategyId,
+            "TESTING",
+            "SHADOW",
+            { actor: "system", reason: "tier-qualified-shadow-entry", correlationId: correlationId ?? undefined },
+          );
+          if (shadowHop.success) {
+            broadcastSSE("strategy:promoted", {
+              strategyId,
+              tier: result.tier,
+              forgeScore: result.forge_score,
+              toState: "SHADOW",
+              // paperSessionId not yet set — created at SHADOW→PAPER divergence gate
+            });
+            logger.info(
+              { strategyId, tier: result.tier, toState: "SHADOW" },
+              "Strategy fast-tracked CANDIDATE → TESTING → SHADOW — skew measurement begins (H1/H2/H3)",
+            );
+          } else {
+            // PBO block (or transient) — strategy correctly held at TESTING. The PBO
+            // gate already wrote its own audit + SSE inside promoteStrategy. Gate 1.5
+            // (checkAutoPromotions) is the durable retry driver.
+            logger.info(
+              { strategyId, tier: result.tier, error: shadowHop.error },
+              "TESTING → SHADOW hop did not complete in-process (PBO block or transient) — held at TESTING; Gate 1.5 cron will retry",
+            );
+          }
+        } catch (shadowHopErr) {
+          // Non-fatal: the strategy is durably at TESTING with shadowModeEnabled=true;
+          // Gate 1.5 will drive TESTING → SHADOW on the next cron tick.
+          logger.warn(
+            { strategyId, err: shadowHopErr },
+            "TESTING → SHADOW immediate hop threw (non-fatal — Gate 1.5 cron will retry)",
+          );
+        }
       } catch (promoErr) {
-        logger.error(promoErr, "Failed to fast-track strategy to SHADOW");
+        logger.error(promoErr, "Failed to fast-track strategy through TESTING → SHADOW");
       }
     }
 

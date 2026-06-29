@@ -600,7 +600,12 @@ export async function reconcileMissedRuns() {
           await meta.run();
           markJobRun(name);
         } catch (err) {
+          // F4 FIX: surface catchup failures in scheduler health so
+          // /api/admin/scheduler/health reflects them (lastError + consecutiveFailures).
+          // Previously the bare catch only logged, leaving health showing null/0.
           logger.error({ err, job: name }, "Scheduler: catchup run failed");
+          schedulerLastError[name] = err instanceof Error ? err.message : String(err);
+          recordJobFailure(name, err);
         }
       }
     } else if (meta.lastRunAt.getTime() + meta.intervalMs < now) {
@@ -610,7 +615,10 @@ export async function reconcileMissedRuns() {
         await meta.run();
         markJobRun(name);
       } catch (err) {
+        // F4 FIX: same as above — propagate catchup failures to health state.
         logger.error({ err, job: name }, "Scheduler: catchup run failed");
+        schedulerLastError[name] = err instanceof Error ? err.message : String(err);
+        recordJobFailure(name, err);
       }
     }
   }
@@ -651,9 +659,17 @@ function registerDLQHandlers(): void {
 
   // ── sqa_optimization:failure / qubo_timing:failure / tensor_prediction:failure /
   //    rl_training:failure ── these are all fire-and-forget analytics runs that
-  //    failed AFTER the primary backtest committed. Re-run from the backtestId in
-  //    metadata. A simple no-op retry logs the attempt; the analytics are not
-  //    business-critical but we do want them retried once.
+  //    failed AFTER the primary backtest committed.
+  //
+  // F2 FIX: each handler now THROWS after logging so the DLQ item stays in
+  // needs_retry state and escalates to CRITICAL after maxRetries. The previous
+  // silent return caused the DLQ to mark the item "resolved" with zero retry,
+  // producing invisible analytics data loss.
+  //
+  // We cannot auto-rerun these sub-runs without the original backtest config, so
+  // the throw escalates to operator attention after the retry budget is consumed.
+  // Operators can trigger a full re-backtest from the UI if the analytics data
+  // is needed for a promotion decision.
   for (const opType of [
     "sqa_optimization:failure",
     "qubo_timing:failure",
@@ -664,13 +680,14 @@ function registerDLQHandlers(): void {
       const meta = (item.metadata ?? {}) as Record<string, unknown>;
       logger.info(
         { dlqId: item.id, operationType: opType, backtestId: meta.backtestId },
-        "DLQ retry: analytics sub-run — re-trigger deferred (no auto-rerun implemented, marking resolved)",
+        "DLQ retry: analytics sub-run — no auto-rerun implemented; throwing to keep item in needs_retry (F2 fix)",
       );
-      // Analytics sub-runs (SQA/QUBO/Tensor/RL) require the original backtest
-      // config to re-invoke. Rather than duplicating that logic here, we log the
-      // retry attempt and resolve the DLQ item so it doesn't escalate indefinitely.
-      // Operators can trigger a full re-backtest from the UI if the analytics data
-      // is needed for a promotion decision.
+      // Throw so the DLQ service keeps this item in needs_retry and escalates
+      // to CRITICAL after maxRetries instead of silently marking it resolved.
+      throw new Error(
+        `${opType}: no auto-rerun available for analytics sub-run (backtestId=${meta.backtestId ?? "unknown"}). ` +
+        `Trigger a full re-backtest from the UI to regenerate analytics data.`,
+      );
     });
   }
 
@@ -808,7 +825,14 @@ export function initScheduler() {
         );
       }
     } catch (absentErr) {
+      const absentErrMsg = absentErr instanceof Error ? absentErr.message : String(absentErr);
       logger.error({ err: absentErr, correlationId }, "lifecycle-auto-check: operator-absent auto-promote sweep failed (non-blocking)");
+      // A-1 FIX: emit a CRITICAL Discord alert so the operator sees the sweep failure
+      // even while on vacation. Without this, a DB hiccup during the sweep would
+      // silently skip all DEPLOY_READY → PILOT auto-promotions with no visibility.
+      AlertFactory.notifyAbsentAutoPromoteFailed(absentErrMsg, correlationId).catch(
+        (alertErr) => logger.error({ err: alertErr }, "lifecycle-auto-check: absent auto-promote Discord alert failed (non-blocking)"),
+      );
     }
 
     if (promoted.length > 0 || demoted.length > 0 || pilotResult.promoted > 0 || pilotResult.killed > 0 || absentPromoted.length > 0) {

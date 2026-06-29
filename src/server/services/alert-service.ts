@@ -1,7 +1,7 @@
 import { db } from "../db/index.js";
 import { alerts } from "../db/schema.js";
 import { broadcastSSE } from "../routes/sse.js";
-import { logger } from "../index.js";
+import { logger } from "../lib/logger.js";
 import { notifyWarning, notifyInfo } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { warningSeverityDiscordRoutedTotal } from "../lib/metrics-registry.js";
@@ -290,6 +290,28 @@ export const AlertFactory = {
         error,
         event: "cookie_refresh_failed",
       },
+    }),
+
+  // A-1: Operator-absent auto-promote sweep failure alert.
+  // Fires when the catch() wrapping the vacation auto-promote sweep catches an
+  // unexpected error (e.g. DB unavailable, lifecycle-service import failure).
+  // This is Discord-CRITICAL so the operator sees the failure even while on
+  // vacation. appendFamilyGradePostscript adds a plain-English family postscript
+  // so a family member reading Discord knows no action is needed immediately.
+  notifyAbsentAutoPromoteFailed: (errorMessage: string, correlationId: string) =>
+    createAlert({
+      type: "system",
+      severity: "critical",
+      title: "Vacation auto-promote sweep FAILED",
+      message: appendFamilyGradePostscript(
+        `The operator-absent auto-promote sweep threw an unexpected error and did NOT run. ` +
+        `DEPLOY_READY strategies may not have been promoted to PILOT during this vacation window. ` +
+        `Error: ${errorMessage}. CorrelationId: ${correlationId}. ` +
+        `Review lifecycle-service logs and re-trigger manually via the admin dashboard.`,
+        "The bot tried to automatically advance a strategy while you were away, but hit a technical error. No trades were affected.",
+        "The bot is still running safely — call Tony when he's back so he can review. No action needed right now.",
+      ),
+      metadata: { errorMessage, correlationId, event: "absent_auto_promote_sweep_failed" },
     }),
 
   // H-4: Reconciliation mismatch alert (first-class method).

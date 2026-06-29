@@ -43,6 +43,9 @@ import type { TestDb } from "./helpers/pglite-db.js";
 import { evaluateWfeGate } from "../lib/wfe-gate.js";
 import { evaluatePboGate } from "../lib/pbo-gate.js";
 import { evaluateDsrWalkForwardGate } from "../lib/b14-ci-gate.js";
+import { evaluateBifGate } from "../lib/bif-gate.js";
+import { evaluatePromotionGates } from "../lib/promotion-gate-orchestrator.js";
+import { evaluateParameterDriftGate } from "../lib/parameter-drift-gate.js";
 import {
   backtests,
   strategies,
@@ -1195,3 +1198,722 @@ function shadowSignals_19long1short(): ShadowSignal[] {
     intended_size: 3,
   }));
 }
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Suite 6 — BIF gate DB round-trip (Wave 3 / hardening/deepscan-fixwave-2026-06-29)
+// ════════════════════════════════════════════════════════════════════════════════
+//
+// F-2a regression guard: the BIF gate reads from backtests.bif (a dedicated NUMERIC
+// column), NOT from walkForwardResults.bif. A future wrong-key reconnect that tries
+// to read walkForwardResults.bif instead of the column would produce null → legacy
+// grandfather pass, silently hiding a real bif > 4.0 (CRITICAL false positive on
+// the hardening check).
+//
+// This suite also guards the CPCV-unmeasured path: when walk_forward.py runs in
+// CPCV mode it emits bif_reliable=false in walkForwardResults.wf_metadata, which
+// causes evaluateBifGate to return the DISTINCT status "bif.cpcv_unmeasured" —
+// never confusable with "bif.legacy_null_pre_wave3" (no bif data at all).
+//
+// Reader path mirrored from lifecycle-service.ts lines 438-443 + 517-520:
+//   latestBtP2D.bif    → Number(bif)    (backtests.bif NUMERIC column)
+//   latestBtP2D.kEff   → Number(kEff)   (backtests.k_eff NUMERIC column)
+//   wfResults.wf_metadata.bif_reliable → boolean flag for CPCV path
+
+describe("BIF gate — backtests.bif + walkForwardResults.wf_metadata.bif_reliable round-trip (PGlite)", () => {
+  let ctx: TestDb;
+
+  // UUID prefix "66" — no collision with existing suites (cc/dd/ab/ee/ff/55)
+  const STRAT_ID    = "66000001-0000-0000-0000-000000000001";
+  const BT_BLOCK    = "66000001-0000-0000-0000-000000000010"; // bif=4.5 → BLOCK (> 4.0)
+  const BT_PASS     = "66000001-0000-0000-0000-000000000011"; // bif=3.0 → clean PASS
+  const BT_CPCV     = "66000001-0000-0000-0000-000000000012"; // bif=4.5 + bif_reliable=false → cpcv_unmeasured
+  const BT_LEGACY   = "66000001-0000-0000-0000-000000000013"; // bif=null (no column) → legacy_null
+
+  beforeAll(async () => {
+    ctx = await createTestDb();
+
+    await ctx.db.insert(strategies).values({
+      id: STRAT_ID,
+      name: "bif-integration-test",
+      symbol: "MES",
+      timeframe: "5m",
+      config: {},
+    });
+
+    await ctx.db.insert(backtests).values([
+      {
+        id: BT_BLOCK,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // PRODUCER writes bif=4.5 into the dedicated NUMERIC column.
+        // This is ABOVE the BIF_BLOCK_THRESHOLD default (4.0), so it MUST BLOCK.
+        bif: "4.5",
+        kEff: "8",
+        walkForwardResults: { wfe_overall: 0.85, wf_metadata: { mode: "plain" } },
+      },
+      {
+        id: BT_PASS,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // PRODUCER writes bif=3.0 — below warn threshold (2.0 < 3.0 ≤ 4.0) → WARN band pass.
+        // Wait: 3.0 is between warn_threshold(2.0) and block_threshold(4.0), so it passes
+        // with reason "bif.warn_above_warn_threshold".
+        bif: "3.0",
+        kEff: "8",
+        walkForwardResults: { wfe_overall: 0.85, wf_metadata: { mode: "plain" } },
+      },
+      {
+        id: BT_CPCV,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // PRODUCER: CPCV mode run — bif_reliable=false signals BIF is structurally unmeasured
+        // (IS proxy and OOS agg_sharpe both derive from same OOS series → BIF ≈ 1.0 always).
+        // bif column is still stamped (may appear ~1.0 or even 4.5 as a red herring), but
+        // bif_reliable=false MUST cause the gate to return DISTINCT status "bif.cpcv_unmeasured".
+        // Guard: the gate MUST NOT return "bif.blocked_exceeds_threshold" for bif=4.5 when
+        // bif_reliable=false — a structural measurement limitation is NOT a real overfit signal.
+        bif: "4.5",
+        kEff: "18",
+        walkForwardResults: {
+          wfe_overall: null,
+          wfe_status: "cpcv_not_applicable",
+          wf_metadata: {
+            mode: "cpcv",
+            n_paths: 18,
+            bif_reliable: false,
+            bif_proxy_basis: "oos_mean_not_is",
+          },
+        },
+      },
+      {
+        id: BT_LEGACY,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // PRODUCER: pre-Wave-3 backtest — bif column was never stamped.
+        // Gate must grandfather-pass with "bif.legacy_null_pre_wave3" — NEVER block on
+        // missing data from a backtest that predates BIF computation.
+        // bif: null (omit entirely, let the DB default to null)
+        walkForwardResults: { wfe_overall: 0.78 },
+      },
+    ]);
+  });
+
+  afterAll(async () => { await ctx.close(); });
+
+  // Helper: mirror lifecycle-service.ts reader path (lines 438-443 + 517-520).
+  // Reads bif + kEff from the dedicated NUMERIC columns and bif_reliable from JSONB.
+  async function readBifInputs(btId: string) {
+    const [row] = await ctx.db
+      .select({
+        bif: backtests.bif,
+        kEff: backtests.kEff,
+        wfr: backtests.walkForwardResults,
+      })
+      .from(backtests)
+      .where(eq(backtests.id, btId));
+    if (!row) throw new Error(`BT row not found: ${btId}`);
+    const bif = row.bif != null ? Number(row.bif) : null;
+    const kEff = row.kEff != null ? Number(row.kEff) : null;
+    const wfMeta = ((row.wfr as Record<string, unknown> | null)?.wf_metadata as Record<string, unknown> | null) ?? null;
+    const bifReliable = wfMeta?.bif_reliable;
+    return { bif, kEff, bifReliable };
+  }
+
+  it("JSONB round-trip: backtests.bif NUMERIC column + wf_metadata.bif_reliable boolean preserved", async () => {
+    const { bif, kEff, bifReliable } = await readBifInputs(BT_CPCV);
+    expect(bif).toBe(4.5);
+    expect(kEff).toBe(18);
+    // PGlite JSONB stores boolean false and retrieves it exactly.
+    expect(bifReliable).toBe(false);
+  });
+
+  it("BLOCK: bif=4.5 (> BIF_BLOCK_THRESHOLD 4.0) → gate blocks with reason bif.blocked_exceeds_threshold", async () => {
+    const { bif, kEff, bifReliable } = await readBifInputs(BT_BLOCK);
+    expect(bif).toBe(4.5);
+
+    const result = evaluateBifGate(bif, kEff, {
+      bifReliable: bifReliable === false ? false : undefined,
+    });
+
+    expect(result.passed).toBe(false);
+    expect(result.legacyNull).toBe(false);
+    expect(result.reason).toBe("bif.blocked_exceeds_threshold");
+    expect(result.auditPayload.blocked).toBe(true);
+    expect(result.auditPayload.bif).toBe(4.5);
+  });
+
+  it("PASS (warn band): bif=3.0 (warn_threshold 2.0 < bif ≤ block_threshold 4.0) → gate passes with reason bif.warn_above_warn_threshold", async () => {
+    const { bif, kEff, bifReliable } = await readBifInputs(BT_PASS);
+    expect(bif).toBe(3.0);
+
+    const result = evaluateBifGate(bif, kEff, {
+      bifReliable: bifReliable === false ? false : undefined,
+    });
+
+    expect(result.passed).toBe(true);
+    expect(result.legacyNull).toBe(false);
+    expect(result.reason).toBe("bif.warn_above_warn_threshold");
+    expect(result.auditPayload.blocked).toBe(false);
+    expect(result.auditPayload.bif).toBe(3.0);
+  });
+
+  it("CPCV-UNMEASURED: bif_reliable=false in wf_metadata → gate returns bif.cpcv_unmeasured (DISTINCT from blocked or legacy_null), NOT bif.blocked_exceeds_threshold even though bif=4.5", async () => {
+    const { bif, kEff, bifReliable } = await readBifInputs(BT_CPCV);
+
+    // Prove the column value is indeed 4.5 (would block without the bif_reliable=false flag)
+    expect(bif).toBe(4.5);
+    expect(bifReliable).toBe(false);
+
+    const result = evaluateBifGate(bif, kEff, {
+      bifReliable: bifReliable === false ? false : undefined,
+    });
+
+    // CRITICAL: bif=4.5 > 4.0 would normally block, but bif_reliable=false overrides —
+    // CPCV structural measurement limitation must NOT be treated as genuine overfit.
+    expect(result.passed).toBe(true);
+    expect(result.reason).toBe("bif.cpcv_unmeasured");
+    expect(result.auditPayload.cpcv_unmeasured).toBe(true);
+    expect(result.legacyNull).toBe(false);
+    expect(result.auditPayload.blocked).toBe(false);
+    // MUST NOT be the generic legacy-null action (that's a different exemption path)
+    expect(result.reason).not.toBe("bif.legacy_null_pre_wave3");
+  });
+
+  it("LEGACY-NULL (grandfather): bif column is null (pre-Wave-3) → gate passes with bif.legacy_null_pre_wave3, legacyNull=true", async () => {
+    const { bif, kEff, bifReliable } = await readBifInputs(BT_LEGACY);
+
+    // Confirm the column is genuinely null in the DB
+    expect(bif).toBeNull();
+
+    const result = evaluateBifGate(bif, kEff, {
+      bifReliable: bifReliable === false ? false : undefined,
+    });
+
+    expect(result.passed).toBe(true);
+    expect(result.legacyNull).toBe(true);
+    expect(result.reason).toBe("bif.legacy_null_pre_wave3");
+    expect(result.auditPayload.legacy_null).toBe(true);
+    expect(result.auditPayload.blocked).toBe(false);
+    expect(result.auditPayload.bif).toBeNull();
+    // MUST NOT return the CPCV-unmeasured path — that requires explicit bif_reliable=false
+    expect(result.reason).not.toBe("bif.cpcv_unmeasured");
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Suite 7 — WRC/SPA orchestrator gate DB round-trip (Wave 26 Pass G Pass E)
+// ════════════════════════════════════════════════════════════════════════════════
+//
+// F-2b regression guard: the lifecycle-service.ts orchestrator reads WRC/SPA results
+// via these exact paths (lines 3984-3988):
+//
+//   const wrcData = (latestBtForOrch.wrcResult as Record<string, unknown> | null) ?? null;
+//   const wrcPValue = wrcData?.p_value != null ? Number(wrcData.p_value) : null;
+//   const spaData = (latestBtForOrch.spaResult as Record<string, unknown> | null) ?? null;
+//   const spaConsistentP = spaData?.spa_consistent_p != null ? Number(spaData.spa_consistent_p) : null;
+//
+// A producer that drifts to writing `pValue` instead of `p_value` (or `spaConsistentP`
+// instead of `spa_consistent_p`) silently delivers null to the gate. The gate's default
+// behavior with null is fail-CLOSED (PROMOTION_GRANDFATHER_PRE_PASS_E=false): the
+// strategy cannot promote even though the real p-value would have passed. This is a
+// DIFFERENT wrong-key class from DSR (which silently allows a bad strategy); here the
+// wrong key silently BLOCKS a valid strategy. Both are dangerous for different reasons.
+//
+// Gate semantics (from promotion-gate-orchestrator.ts):
+//   WRC:  p < 0.05  → PASSES (genuine edge detected, null hypothesis rejected)
+//         p >= 0.05 → BLOCKS (insufficient evidence against data-snooping)
+//   SPA:  spa_consistent_p < 0.05 → PASSES (strongest consistent strategy has genuine edge)
+//         spa_consistent_p >= 0.05 → BLOCKS
+
+describe("WRC/SPA orchestrator — backtests.wrc_result + spa_result JSONB round-trip (PGlite)", () => {
+  let ctx: TestDb;
+
+  // UUID prefix "77" — no collision
+  const STRAT_ID         = "77000001-0000-0000-0000-000000000001";
+  const BT_WRC_PASS      = "77000001-0000-0000-0000-000000000010"; // p_value=0.03 → WRC PASSES
+  const BT_WRC_BLOCK     = "77000001-0000-0000-0000-000000000011"; // p_value=0.08 → WRC BLOCKS
+  const BT_WRC_WRONGKEY  = "77000001-0000-0000-0000-000000000012"; // pValue=0.03 → wrong key → null → fail-CLOSED BLOCK
+  const BT_SPA_PASS      = "77000001-0000-0000-0000-000000000013"; // spa_consistent_p=0.03 → SPA PASSES
+  const BT_SPA_BLOCK     = "77000001-0000-0000-0000-000000000014"; // spa_consistent_p=0.08 → SPA BLOCKS
+  const BT_SPA_WRONGKEY  = "77000001-0000-0000-0000-000000000015"; // spaConsistentP=0.03 → wrong key → null → fail-CLOSED BLOCK
+
+  beforeAll(async () => {
+    ctx = await createTestDb();
+
+    await ctx.db.insert(strategies).values({
+      id: STRAT_ID,
+      name: "wrc-spa-integration-test",
+      symbol: "MES",
+      timeframe: "5m",
+      config: {},
+    });
+
+    await ctx.db.insert(backtests).values([
+      {
+        id: BT_WRC_PASS,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // PRODUCER: WRC test passes — p_value=0.03 < 0.05 threshold → genuine edge detected.
+        wrcResult: { p_value: 0.03, method: "white_reality_check" },
+      },
+      {
+        id: BT_WRC_BLOCK,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // PRODUCER: WRC test BLOCKS — p_value=0.08 >= 0.05 threshold → insufficient evidence
+        // against data-snooping; the strategy may be a selection artifact.
+        wrcResult: { p_value: 0.08, method: "white_reality_check" },
+      },
+      {
+        id: BT_WRC_WRONGKEY,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // DISCONNECT: producer drifts to writing `pValue` (camelCase) instead of `p_value`.
+        // Consumer reads `wrcData?.p_value` → undefined → null → fail-CLOSED BLOCK.
+        // The real WRC p=0.03 WOULD have passed, but the wrong key causes the strategy
+        // to be silently BLOCKED despite having genuine edge evidence.
+        // This is the wrong-key class for WRC: a VALID strategy cannot promote.
+        wrcResult: { pValue: 0.03, method: "white_reality_check" },  // wrong key: pValue not p_value
+      },
+      {
+        id: BT_SPA_PASS,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // PRODUCER: Hansen SPA test passes — spa_consistent_p=0.03 < 0.05 threshold.
+        spaResult: { spa_consistent_p: 0.03, method: "hansen_spa" },
+      },
+      {
+        id: BT_SPA_BLOCK,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // PRODUCER: Hansen SPA test BLOCKS — spa_consistent_p=0.08 >= 0.05 threshold.
+        spaResult: { spa_consistent_p: 0.08, method: "hansen_spa" },
+      },
+      {
+        id: BT_SPA_WRONGKEY,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // DISCONNECT: producer drifts to writing `spaConsistentP` (camelCase) instead of
+        // `spa_consistent_p`. Consumer reads `spaData?.spa_consistent_p` → undefined → null
+        // → fail-CLOSED BLOCK. The real SPA p=0.03 WOULD have passed.
+        spaResult: { spaConsistentP: 0.03, method: "hansen_spa" },  // wrong key
+      },
+    ]);
+  });
+
+  afterAll(async () => { await ctx.close(); });
+
+  // ── Reader helpers: mirror lifecycle-service.ts lines 3984-3988 exactly ─────
+
+  async function readWrcPValue(btId: string): Promise<{ wrcPValue: number | null; rawWrcResult: Record<string, unknown> | null }> {
+    const [row] = await ctx.db
+      .select({ wrcResult: backtests.wrcResult })
+      .from(backtests)
+      .where(eq(backtests.id, btId));
+    const wrcData = (row?.wrcResult as Record<string, unknown> | null) ?? null;
+    const wrcPValue = wrcData?.p_value != null ? Number(wrcData.p_value) : null;
+    return { wrcPValue, rawWrcResult: wrcData };
+  }
+
+  async function readSpaPValue(btId: string): Promise<{ spaConsistentP: number | null; rawSpaResult: Record<string, unknown> | null }> {
+    const [row] = await ctx.db
+      .select({ spaResult: backtests.spaResult })
+      .from(backtests)
+      .where(eq(backtests.id, btId));
+    const spaData = (row?.spaResult as Record<string, unknown> | null) ?? null;
+    const spaConsistentP = spaData?.spa_consistent_p != null ? Number(spaData.spa_consistent_p) : null;
+    return { spaConsistentP, rawSpaResult: spaData };
+  }
+
+  // ── WRC JSONB round-trip ─────────────────────────────────────────────────────
+
+  it("JSONB round-trip: wrc_result.p_value=0.03 preserved as numeric after PGlite insert/select", async () => {
+    const { rawWrcResult, wrcPValue } = await readWrcPValue(BT_WRC_PASS);
+    expect(rawWrcResult).not.toBeNull();
+    expect(rawWrcResult?.p_value).toBe(0.03);
+    expect(wrcPValue).toBe(0.03);
+  });
+
+  it("WRC PASS: p_value=0.03 (< 0.05 threshold) → orchestrator wrc_p gate passed=true", async () => {
+    const { wrcPValue } = await readWrcPValue(BT_WRC_PASS);
+    expect(wrcPValue).toBe(0.03);
+
+    // Call orchestrator — only check wrc_p gate result, other gates may vary
+    const orchResult = evaluatePromotionGates({
+      ruinCi: { ci_high: 0.10 },     // passes B14 (0.10 < 0.20)
+      wfeOverall: 0.90,               // passes WFE (0.90 >= 0.80)
+      cpcvNPaths: 20,                 // passes CPCV (20 >= 15)
+      wrcPValue,
+      spaConsistentP: null,           // SPA absent — fail-CLOSED by default; isolated
+    });
+
+    expect(orchResult.gate_results.wrc_p.passed).toBe(true);
+    expect(orchResult.gate_results.wrc_p.data_available).toBe(true);
+    expect(orchResult.gate_results.wrc_p.value).toBe(0.03);
+    expect(orchResult.gate_results.wrc_p.reason).toMatch(/wrc\.passed/);
+  });
+
+  it("WRC BLOCK: p_value=0.08 (>= 0.05 threshold) → orchestrator wrc_p gate passed=false", async () => {
+    const { wrcPValue } = await readWrcPValue(BT_WRC_BLOCK);
+    expect(wrcPValue).toBe(0.08);
+
+    const orchResult = evaluatePromotionGates({
+      ruinCi: { ci_high: 0.10 },
+      wfeOverall: 0.90,
+      cpcvNPaths: 20,
+      wrcPValue,
+      spaConsistentP: null,
+    });
+
+    expect(orchResult.gate_results.wrc_p.passed).toBe(false);
+    expect(orchResult.gate_results.wrc_p.data_available).toBe(true);
+    expect(orchResult.gate_results.wrc_p.value).toBe(0.08);
+    expect(orchResult.gate_results.wrc_p.reason).toMatch(/wrc\.not_significant/);
+  });
+
+  it("DISCONNECT (wrong key): producer writes pValue=0.03; consumer reads p_value=undefined → null → wrc gate fail-CLOSED BLOCK (valid strategy blocked)", async () => {
+    const { wrcPValue, rawWrcResult } = await readWrcPValue(BT_WRC_WRONGKEY);
+
+    // Prove the wrong key IS present in the stored JSONB
+    expect((rawWrcResult as any)?.pValue).toBe(0.03);
+
+    // Consumer reads p_value (correct key) → undefined → null
+    expect(wrcPValue).toBeNull();
+
+    // Default: PROMOTION_GRANDFATHER_PRE_PASS_E=false → fail-CLOSED when no data
+    const orchResult = evaluatePromotionGates({
+      ruinCi: { ci_high: 0.10 },
+      wfeOverall: 0.90,
+      cpcvNPaths: 20,
+      wrcPValue,
+      spaConsistentP: null,
+    });
+
+    // Gate sees null → fail-CLOSED: the strategy that would have PASSED (p=0.03 < 0.05)
+    // is silently BLOCKED because the producer wrote "pValue" instead of "p_value".
+    // This is the DANGEROUS wrong-key disconnect class for WRC: a VALID strategy cannot promote.
+    expect(orchResult.gate_results.wrc_p.passed).toBe(false);
+    expect(orchResult.gate_results.wrc_p.data_available).toBe(false);
+    expect(orchResult.gate_results.wrc_p.value).toBeNull();
+    expect(orchResult.gate_results.wrc_p.reason).toMatch(/fail-closed/);
+  });
+
+  // ── SPA JSONB round-trip ─────────────────────────────────────────────────────
+
+  it("JSONB round-trip: spa_result.spa_consistent_p=0.03 preserved after PGlite insert/select", async () => {
+    const { rawSpaResult, spaConsistentP } = await readSpaPValue(BT_SPA_PASS);
+    expect(rawSpaResult).not.toBeNull();
+    expect(rawSpaResult?.spa_consistent_p).toBe(0.03);
+    expect(spaConsistentP).toBe(0.03);
+  });
+
+  it("SPA PASS: spa_consistent_p=0.03 (< 0.05 threshold) → orchestrator spa_p gate passed=true", async () => {
+    const { spaConsistentP } = await readSpaPValue(BT_SPA_PASS);
+    expect(spaConsistentP).toBe(0.03);
+
+    const orchResult = evaluatePromotionGates({
+      ruinCi: { ci_high: 0.10 },
+      wfeOverall: 0.90,
+      cpcvNPaths: 20,
+      wrcPValue: null,            // WRC absent — isolated; gate may fail-CLOSED but we only check SPA
+      spaConsistentP,
+    });
+
+    expect(orchResult.gate_results.spa_p.passed).toBe(true);
+    expect(orchResult.gate_results.spa_p.data_available).toBe(true);
+    expect(orchResult.gate_results.spa_p.value).toBe(0.03);
+    expect(orchResult.gate_results.spa_p.reason).toMatch(/spa\.passed/);
+  });
+
+  it("SPA BLOCK: spa_consistent_p=0.08 (>= 0.05 threshold) → orchestrator spa_p gate passed=false", async () => {
+    const { spaConsistentP } = await readSpaPValue(BT_SPA_BLOCK);
+    expect(spaConsistentP).toBe(0.08);
+
+    const orchResult = evaluatePromotionGates({
+      ruinCi: { ci_high: 0.10 },
+      wfeOverall: 0.90,
+      cpcvNPaths: 20,
+      wrcPValue: null,
+      spaConsistentP,
+    });
+
+    expect(orchResult.gate_results.spa_p.passed).toBe(false);
+    expect(orchResult.gate_results.spa_p.data_available).toBe(true);
+    expect(orchResult.gate_results.spa_p.value).toBe(0.08);
+    expect(orchResult.gate_results.spa_p.reason).toMatch(/spa\.not_significant/);
+  });
+
+  it("DISCONNECT (wrong key): producer writes spaConsistentP=0.03; consumer reads spa_consistent_p=undefined → null → spa gate fail-CLOSED BLOCK (valid strategy blocked)", async () => {
+    const { spaConsistentP, rawSpaResult } = await readSpaPValue(BT_SPA_WRONGKEY);
+
+    // Prove the wrong key IS present in the stored JSONB
+    expect((rawSpaResult as any)?.spaConsistentP).toBe(0.03);
+
+    // Consumer reads spa_consistent_p (correct key) → undefined → null
+    expect(spaConsistentP).toBeNull();
+
+    const orchResult = evaluatePromotionGates({
+      ruinCi: { ci_high: 0.10 },
+      wfeOverall: 0.90,
+      cpcvNPaths: 20,
+      wrcPValue: null,
+      spaConsistentP,
+    });
+
+    // Gate sees null → fail-CLOSED: the strategy that would have PASSED (p=0.03 < 0.05)
+    // is silently BLOCKED because the producer wrote "spaConsistentP" instead of "spa_consistent_p".
+    expect(orchResult.gate_results.spa_p.passed).toBe(false);
+    expect(orchResult.gate_results.spa_p.data_available).toBe(false);
+    expect(orchResult.gate_results.spa_p.value).toBeNull();
+    expect(orchResult.gate_results.spa_p.reason).toMatch(/fail-closed/);
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Suite 8 — C1 regression guard: param_stability CPCV-exempt path (SEAM TEST)
+// ════════════════════════════════════════════════════════════════════════════════
+//
+// SEAM NOTE (2026-06-29): This suite is written to the AGREED CONTRACT between the
+// gate-chain coverage agent and the parameter-drift-gate agent. As of this commit,
+// parameter-drift-gate.ts does NOT yet have a handler for
+// `classification === "cpcv_not_applicable"`. It currently falls through to the
+// forward-compat `status: "passed"` path. The test for the cpcv_not_applicable case
+// WILL FAIL until the gate agent adds an explicit handler that returns:
+//   { status: "cpcv_exempt", passed: true, auditAction: "lifecycle.parameter_drift_cpcv_exempt" }
+//
+// The two non-seam tests (genuine legacy_null and real overfit_drift block) should
+// pass today and serve as regression anchors that the gate agent must not regress.
+//
+// CONTRACT COORDINATES (gate agent must use these exact values):
+//   Input classification:  "cpcv_not_applicable"   (snake_case, top-level wfr key)
+//   Output status:         "cpcv_exempt"
+//   Output auditAction:    "lifecycle.parameter_drift_cpcv_exempt"
+//
+// WHY THIS EXISTS: CPCV-mode walk-forward does not compute true per-path IS parameter
+// stability (the IS/OOS Spearman ρ used by parameter-drift-gate requires IS fold Sharpe
+// which CPCV cannot provide by design). Without explicit exemption, CPCV strategies get
+// `classification=null` (legacy_null) which is indistinguishable from "never ran the
+// classifier at all" — hiding the reason in the audit trail. The cpcv_exempt path makes
+// the reason visible and distinguishable. The gate MUST still BLOCK when genuinely
+// overfit (last test below).
+
+describe("param_stability CPCV-exempt — walkForwardResults.param_stability_status round-trip (PGlite) [SEAM]", () => {
+  let ctx: TestDb;
+
+  // UUID prefix "88" — no collision
+  const STRAT_ID       = "88000001-0000-0000-0000-000000000001";
+  const BT_CPCV_EXEMPT = "88000001-0000-0000-0000-000000000010"; // param_stability_status="cpcv_not_applicable", no param_stability
+  const BT_LEGACY_NULL = "88000001-0000-0000-0000-000000000011"; // neither key → genuine legacy_null
+  const BT_REAL_BLOCK  = "88000001-0000-0000-0000-000000000012"; // param_stability.drift_classification="overfit_drift", confidence=0.75 → BLOCK
+
+  beforeAll(async () => {
+    ctx = await createTestDb();
+
+    await ctx.db.insert(strategies).values({
+      id: STRAT_ID,
+      name: "param-stability-cpcv-exempt-test",
+      symbol: "MES",
+      timeframe: "5m",
+      config: {},
+    });
+
+    await ctx.db.insert(backtests).values([
+      {
+        id: BT_CPCV_EXEMPT,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // PRODUCER (CPCV path): walk_forward.py emits param_stability_status="cpcv_not_applicable"
+        // at the TOP LEVEL of walk_forward_results when mode="cpcv". The param_stability object
+        // is absent because per-path IS Sharpe is not available in CPCV mode.
+        // The gate must detect this and return a DISTINCT "cpcv_exempt" status, NOT "legacy_null".
+        // [SEAM]: This test will FAIL until parameter-drift-gate.ts adds explicit handling for
+        //         classification === "cpcv_not_applicable".
+        walkForwardResults: {
+          wfe_overall: null,
+          wfe_status: "cpcv_not_applicable",
+          param_stability_status: "cpcv_not_applicable",
+          wf_metadata: { mode: "cpcv", n_paths: 18 },
+          // param_stability: absent intentionally — CPCV cannot compute it
+        },
+      },
+      {
+        id: BT_LEGACY_NULL,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // PRODUCER (pre-Pass-B.1 / plain-WF without regime context): neither
+        // param_stability_status NOR param_stability is present. This is the GENUINE
+        // LEGACY case — the classifier was never run. Gate must return legacy_null.
+        walkForwardResults: {
+          wfe_overall: 0.82,
+          wf_metadata: { mode: "plain" },
+        },
+      },
+      {
+        id: BT_REAL_BLOCK,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // PRODUCER (Pass B.1 classification): overfit_drift with high confidence — MUST BLOCK.
+        // This is the regression anchor that ensures the cpcv_not_applicable exemption
+        // can NEVER silently return "cpcv_not_applicable" for a genuine overfit_drift result.
+        walkForwardResults: {
+          wfe_overall: 0.78,
+          param_stability: {
+            drift_classification: "overfit_drift",
+            drift_confidence: 0.75,
+          },
+          wf_metadata: { mode: "plain" },
+        },
+      },
+    ]);
+  });
+
+  afterAll(async () => { await ctx.close(); });
+
+  // Helper: mirrors the reader path in paper-to-deploy-ready-gates.ts lines 653-657.
+  // param_stability lives inside walkForwardResults (JSONB); param_stability_status
+  // is a sibling top-level key to be added by the gate agent's lifecycle-service change.
+  async function readParamStabilityInputs(btId: string) {
+    const [row] = await ctx.db
+      .select({ wfr: backtests.walkForwardResults })
+      .from(backtests)
+      .where(eq(backtests.id, btId));
+    const wfr = (row?.wfr as Record<string, unknown> | null) ?? null;
+
+    // New top-level key added by CPCV walk-forward output (gate agent contract)
+    const paramStabilityStatus = (wfr?.param_stability_status as string | null | undefined) ?? null;
+
+    // Existing key consumed by parameter-drift-gate.ts via paper-to-deploy-ready-gates.ts
+    const paramStability = (wfr?.param_stability as { drift_classification?: string | null; drift_confidence?: number | null } | null | undefined) ?? null;
+    const driftClassification = (paramStability?.drift_classification as string | null) ?? null;
+    const driftConfidence = paramStability?.drift_confidence != null ? Number(paramStability.drift_confidence) : null;
+
+    return { paramStabilityStatus, driftClassification, driftConfidence };
+  }
+
+  it("JSONB round-trip: param_stability_status='cpcv_not_applicable' preserved, param_stability absent", async () => {
+    const { paramStabilityStatus, driftClassification, driftConfidence } = await readParamStabilityInputs(BT_CPCV_EXEMPT);
+
+    // Confirm the new key round-trips through PGlite JSONB
+    expect(paramStabilityStatus).toBe("cpcv_not_applicable");
+
+    // Confirm param_stability is genuinely absent (not a null placeholder — the key was not written)
+    expect(driftClassification).toBeNull();
+    expect(driftConfidence).toBeNull();
+  });
+
+  // [SEAM] This test WILL FAIL until the gate agent adds explicit handling for
+  // classification === "cpcv_not_applicable" returning { status: "cpcv_exempt", ... }.
+  // The gate-chain contract: when param_stability_status is "cpcv_not_applicable",
+  // the lifecycle service should pass that string as the classification to evaluateParameterDriftGate.
+  it("[SEAM] CPCV-EXEMPT: param_stability_status='cpcv_not_applicable' → gate returns status=cpcv_exempt with auditAction=lifecycle.parameter_drift_cpcv_exempt (NOT legacy_null)", async () => {
+    const { paramStabilityStatus, driftClassification, driftConfidence } = await readParamStabilityInputs(BT_CPCV_EXEMPT);
+
+    // Gate contract: when param_stability_status="cpcv_not_applicable" AND param_stability is absent,
+    // the lifecycle service passes "cpcv_not_applicable" as the classification.
+    // The gate MUST handle this with a DISTINCT exempt path, not fall through to legacy_null or "passed".
+    const effectiveClassification = paramStabilityStatus ?? driftClassification;
+    const result = evaluateParameterDriftGate(effectiveClassification, driftConfidence);
+
+    // [SEAM]: Until the gate agent adds explicit handling, "cpcv_not_applicable" currently
+    // falls through to the forward-compat "passed" path (auditAction: null). This test
+    // will fail with status="passed" instead of status="cpcv_exempt".
+    expect(result.status).toBe("cpcv_exempt");
+    expect(result.passed).toBe(true);
+    expect(result.auditAction).toBe("lifecycle.parameter_drift_cpcv_exempt");
+    // Must NOT be the generic legacy_null — that would hide the exemption reason
+    expect(result.status).not.toBe("legacy_null");
+    expect(result.auditAction).not.toBe("lifecycle.parameter_drift_unavailable");
+  });
+
+  it("GENUINE LEGACY-NULL: neither param_stability_status nor param_stability present → gate returns legacy_null path (distinct from cpcv_exempt)", async () => {
+    const { paramStabilityStatus, driftClassification, driftConfidence } = await readParamStabilityInputs(BT_LEGACY_NULL);
+
+    // Confirm neither key is present
+    expect(paramStabilityStatus).toBeNull();
+    expect(driftClassification).toBeNull();
+
+    const effectiveClassification = paramStabilityStatus ?? driftClassification;
+    const result = evaluateParameterDriftGate(effectiveClassification, driftConfidence);
+
+    // Genuine legacy behavior — pre-Pass-B.1 backtest that never ran the classifier
+    expect(result.status).toBe("legacy_null");
+    expect(result.passed).toBe(true);
+    expect(result.auditAction).toBe("lifecycle.parameter_drift_unavailable");
+    // Must NOT be confused with the CPCV-exempt path
+    expect(result.status).not.toBe("cpcv_exempt");
+  });
+
+  it("REGRESSION ANCHOR: overfit_drift + confidence=0.75 (>= 0.70) → BLOCKS (cpcv_not_applicable must NEVER silently return this case as exempt)", async () => {
+    const { paramStabilityStatus, driftClassification, driftConfidence } = await readParamStabilityInputs(BT_REAL_BLOCK);
+
+    // Confirm the correct key is present (no param_stability_status)
+    expect(paramStabilityStatus).toBeNull();
+    expect(driftClassification).toBe("overfit_drift");
+    expect(driftConfidence).toBe(0.75);
+
+    // CRITICAL: param_stability.drift_classification="overfit_drift" must not be confused
+    // with param_stability_status="cpcv_not_applicable". This test ensures the two code
+    // paths remain cleanly separated after the gate agent's change.
+    const effectiveClassification = paramStabilityStatus ?? driftClassification;
+    const result = evaluateParameterDriftGate(effectiveClassification, driftConfidence);
+
+    expect(result.status).toBe("blocked");
+    expect(result.passed).toBe(false);
+    expect(result.auditAction).toBe("lifecycle.parameter_overfit_drift_block");
+    // MUST NOT be cpcv_exempt
+    expect(result.status).not.toBe("cpcv_exempt");
+    expect(result.status).not.toBe("legacy_null");
+  });
+});

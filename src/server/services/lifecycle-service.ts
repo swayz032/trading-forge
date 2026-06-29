@@ -3,12 +3,23 @@
  *
  * Valid transitions:
  * CANDIDATE → TESTING → SHADOW → PAPER → DEPLOY_READY → DEPLOYED → DECLINING → RETIRED → GRAVEYARD
- * CANDIDATE → SHADOW (fast-track; skips TESTING for tier-qualified strategies)
  * DECLINING → TESTING (retry)
  * TESTING → DECLINING (catastrophic failure)
  * PAPER → DECLINING (drift demotion)
  * Every state → GRAVEYARD (terminal burial)
- * Note: CANDIDATE→PAPER is INVALID (F-3 fix 2026-06-23). All paths to PAPER require SHADOW first.
+ *
+ * Canonical autonomous ladder (H1/H2/H3 fix 2026-06-29): the tier-qualified fast-track
+ * (backtest-service.ts) now routes CANDIDATE → TESTING → SHADOW (it no longer jumps
+ * CANDIDATE → SHADOW). Every strategy entering TESTING via the autonomous path is flagged
+ * shadowModeEnabled=true and is driven TESTING → SHADOW by Gate 1.5 in checkAutoPromotions —
+ * so the Wave 29 PBO < 0.15 gate (TESTING → SHADOW) and the SHADOW → PAPER divergence gate
+ * BOTH fire on the default path. CANDIDATE → SHADOW remains in VALID_TRANSITIONS as a
+ * legacy/manual edge but no autonomous driver uses it.
+ *
+ * Note: CANDIDATE → PAPER is INVALID (F-3 fix 2026-06-23). TESTING → PAPER remains a
+ * VALID edge but is the LEGACY direct path, taken only by shadowModeEnabled=false strategies
+ * via Gate 2; every shadowModeEnabled=true strategy reaches PAPER only through SHADOW. So on
+ * the autonomous path, all routes to PAPER require SHADOW first.
  *
  * DEPLOY_READY is the "strategy library" — strategies that passed paper trading
  * and are ready for human review. Only manual approval moves them to DEPLOYED.
@@ -92,6 +103,21 @@ interface PromoteStrategyOptions {
   parentStrategyId?: string;
   /** HTTP request correlation ID (req.id) or scheduler-generated UUID for end-to-end tracing. */
   correlationId?: string;
+  /**
+   * Double-evaluation guard (2026-06-29, fix #4): when the checkAutoPromotions cron
+   * drives PAPER → DEPLOY_READY it has ALREADY run the full inline gate stack (including
+   * the on-demand B14 survival-twin replay — a Python subprocess — and every hard gate).
+   * Setting this true skips the PAPER → DEPLOY_READY evaluator block inside
+   * _promoteStrategyInner so the survival-twin subprocess does NOT fire a SECOND time and
+   * the per-gate audit rows are not duplicated per tick. Manual PATCH /:id/lifecycle does
+   * NOT set this — that path relies on the evaluator as its sole gate stack.
+   * TODO(consolidation): the cleaner end-state is to replace the cron's ~1400-line inline
+   * PAPER → DEPLOY_READY block with a single evaluatePaperToDeployReadyGates() call (keeping
+   * the cron-only side effects — _maybeAutoGraveyard, _resetHardGateCounter, gateEvidenceStatuses,
+   * composite-shadow Discord — as a thin wrapper around the evaluator result). Deferred here
+   * as too invasive to do without behavior-change risk; this guard removes the duplicate work.
+   */
+  skipPaperToDeployReadyEvaluator?: boolean;
 }
 
 const VALID_TRANSITIONS: Record<LifecycleState, LifecycleState[]> = {
@@ -430,7 +456,12 @@ export class LifecycleService {
     }
 
     // Pass 5 Track C: PAPER → DEPLOY_READY evaluator in _promoteStrategyInner
-    if (fromState === "PAPER" && toState === "DEPLOY_READY") {
+    // Fix #4 (2026-06-29): the checkAutoPromotions cron sets skipPaperToDeployReadyEvaluator=true
+    // because it already ran the full inline gate stack (incl. on-demand survival-twin replay).
+    // Skipping here prevents the survival-twin Python subprocess from firing a SECOND time and
+    // avoids duplicate per-gate audit rows per tick. The manual PATCH path leaves the flag unset
+    // so the evaluator remains its authoritative gate stack.
+    if (fromState === "PAPER" && toState === "DEPLOY_READY" && !options.skipPaperToDeployReadyEvaluator) {
       try {
         const { evaluatePaperToDeployReadyGates } = await import("../lib/paper-to-deploy-ready-gates.js");
         // Load gate inputs
@@ -504,6 +535,9 @@ export class LifecycleService {
                 wfe_overall: (wfResults.wfe_overall as number | null | undefined) ?? null,
                 wfe_status: (wfResults.wfe_status as string | null | undefined) ?? null,
                 param_stability: (wfResults.param_stability as { drift_classification?: string | null; drift_confidence?: number | null } | null | undefined) ?? null,
+                // C1 (2026-06-29): thread the top-level param_stability_status key so the
+                // CPCV path resolves to cpcv_exempt (distinct audit) not legacy_null.
+                param_stability_status: (wfResults.param_stability_status as string | null | undefined) ?? null,
                 wf_metadata: ((wfResults.wf_metadata as Record<string, unknown> | null) ?? null) as import("../lib/b14-ci-gate.js").WalkForwardDsrInput | null,
                 wf_metadata_mode: ((wfResults.wf_metadata as Record<string, unknown> | null)?.mode as string | null) ?? null,
                 wf_metadata_n_paths: ((wfResults.wf_metadata as Record<string, unknown> | null)?.n_paths as number | null) ?? null,
@@ -1089,6 +1123,14 @@ export class LifecycleService {
 
     // ── Wave 24 Pass 1 — Item 18: PBO overfit gate (TESTING → PAPER) ────────
     // PBO > 0.5 = more likely overfit than not. Block promotion. (Item 18, W24P1)
+    //
+    // DEPRECATED belt-and-suspenders (2026-06-29): the AUTHORITATIVE PBO gate is the
+    // Wave 29 Pass A.2 gate below (reads walkForwardResults.pbo_overall @ PBO_OVERFIT_THRESHOLD_PCT
+    // 0.15, CPCV-aware, fires on TESTING → SHADOW *and* TESTING → PAPER). This W24 layer
+    // reads a DIFFERENT, coarser signal — resultExtras.invariants.pbo_flag @ 0.5 — and is
+    // retained only as a secondary catch on the legacy TESTING → PAPER edge. Its threshold
+    // is NOT loosened (stricter W29 gate wins on the canonical SHADOW path). If the W24
+    // pbo_flag producer is ever removed, delete this block — do NOT relax 0.15 to 0.5.
     if (fromState === "TESTING" && toState === "PAPER" && promotionEvidence.backtestId) {
       try {
         const [btExtrasPbo] = await (tx ?? db)
@@ -2167,6 +2209,16 @@ export class LifecycleService {
         if (result.success) {
           promoted.push(s.id);
 
+          // H1/H2/H3 (2026-06-29): flag for the SHADOW path. The canonical ladder is
+          // CANDIDATE → TESTING → SHADOW → PAPER; every strategy entering TESTING via the
+          // autonomous cron is destined for SHADOW (skew measurement) before PAPER. Setting
+          // shadowModeEnabled here makes Gate 1.5 (TESTING → SHADOW) the sole driver and
+          // makes Gate 2 (legacy TESTING → PAPER) skip these strategies — preventing the
+          // dual-driver race. Mirrors the backtest-service fast-track which also flags it.
+          await db.update(strategies).set({ shadowModeEnabled: true }).where(eq(strategies.id, s.id)).catch((flagErr) => {
+            logger.warn({ strategyId: s.id, err: flagErr }, "Gate 1: shadowModeEnabled flag set failed (non-blocking — Gate 1.5 keys on it)");
+          });
+
           broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
             strategyId: s.id,
             from: "CANDIDATE",
@@ -2197,9 +2249,64 @@ export class LifecycleService {
     }
 
     // ──────────────────────────────────────────────────────────────
-    // Gate 2: TESTING → PAPER
+    // Gate 1.5: TESTING → SHADOW  (H1/H2/H3, 2026-06-29)
+    // The single canonical driver for the TESTING → SHADOW hop. Keyed on
+    // shadowModeEnabled=true (set by the backtest-service fast-track AND Gate 1
+    // above). promoteStrategy(TESTING → SHADOW) fires the existing Wave 29 Pass A.2
+    // PBO < 0.15 hard gate — a PBO block HOLDS the strategy at TESTING (it is NOT
+    // silently promoted) and this driver retries on the next tick once a fresh
+    // backtest clears PBO. This closes the orphan TESTING → SHADOW transition (no
+    // driver previously performed it) and routes the default autonomous path through
+    // BOTH Wave 29 hard gates (PBO here, SHADOW → PAPER divergence at Gate 2.5).
+    // The optimistic WHERE lifecycleState=fromState guard inside promoteStrategy is the
+    // final backstop against any double-drive with the in-process fast-track hop.
+    // ──────────────────────────────────────────────────────────────
+    const testingShadowStrategies = await db
+      .select()
+      .from(strategies)
+      .where(
+        and(
+          eq(strategies.lifecycleState, "TESTING"),
+          eq(strategies.shadowModeEnabled, true),
+        ),
+      );
+
+    for (const s of testingShadowStrategies) {
+      try {
+        const shadowResult = await this.promoteStrategy(s.id, "TESTING", "SHADOW", { correlationId: correlationId ?? undefined });
+        if (shadowResult.success) {
+          promoted.push(s.id);
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
+            strategyId: s.id,
+            from: "TESTING",
+            to: "SHADOW",
+            name: s.name,
+          });
+          logger.info({ id: s.id }, "Auto-promoted TESTING → SHADOW (Gate 1.5)");
+        } else {
+          // Non-success is the expected outcome on a PBO block — promoteStrategy's PBO
+          // gate already wrote lifecycle.pbo_overfit_block audit + lifecycle:pbo_evaluated
+          // SSE. Strategy stays at TESTING; retried next tick after re-backtest.
+          logger.info(
+            { id: s.id, reason: shadowResult.error },
+            "TESTING → SHADOW held (Gate 1.5) — PBO block or transient; will retry",
+          );
+        }
+      } catch (err) {
+        logger.error({ strategyId: s.id, err }, "Error checking TESTING → SHADOW promotion (Gate 1.5)");
+      }
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // Gate 2: TESTING → PAPER  (LEGACY path — shadowModeEnabled=false only)
     // Requires: completed backtest with WF, MC survival > 0.70, non-REJECTED tier
     // Prop compliance is checked if data exists but does NOT block if absent
+    //
+    // H1/H2/H3 (2026-06-29): shadowModeEnabled=true strategies are routed exclusively
+    // through Gate 1.5 (TESTING → SHADOW). They are SKIPPED here so the legacy direct
+    // TESTING → PAPER edge never double-drives a strategy already destined for SHADOW.
+    // This is the deterministic routing the VALID_TRANSITIONS TESTING comment describes
+    // ("SHADOW vs PAPER depending on whether shadow_mode_enabled=true").
     // ──────────────────────────────────────────────────────────────
     const testingStrategies = await db
       .select()
@@ -2208,6 +2315,8 @@ export class LifecycleService {
 
     for (const s of testingStrategies) {
       try {
+        // H1/H2/H3: skip shadow-destined strategies — Gate 1.5 owns them.
+        if (s.shadowModeEnabled) continue;
         // Find latest completed backtest with walk-forward
         const [latestBt] = await db
           .select()
@@ -2769,8 +2878,10 @@ export class LifecycleService {
           const driftConfidenceTp = paramStabilityTp?.drift_confidence != null
             ? Number(paramStabilityTp.drift_confidence)
             : null;
+          // C1 (2026-06-29): top-level param_stability_status → cpcv_exempt on CPCV path.
+          const paramStabilityStatusTp = (driftWfResultsTp?.param_stability_status as string | null | undefined) ?? null;
 
-          const driftResultTp = evaluateParameterDriftGate(driftClassificationTp, driftConfidenceTp);
+          const driftResultTp = evaluateParameterDriftGate(driftClassificationTp, driftConfidenceTp, paramStabilityStatusTp);
 
           broadcastSSE(LIFECYCLE_GATE_EVENTS.PARAMETER_DRIFT_EVALUATED, {
             strategyId: s.id,
@@ -3787,8 +3898,11 @@ export class LifecycleService {
           const driftConfidence = paramStability?.drift_confidence != null
             ? Number(paramStability.drift_confidence)
             : null;
+          // C1 (2026-06-29): top-level param_stability_status → cpcv_exempt on CPCV path
+          // (distinct lifecycle.parameter_drift_cpcv_exempt audit, not legacy_null).
+          const paramStabilityStatus = (driftWfResults?.param_stability_status as string | null | undefined) ?? null;
 
-          const driftResult = evaluateParameterDriftGate(driftClassification, driftConfidence);
+          const driftResult = evaluateParameterDriftGate(driftClassification, driftConfidence, paramStabilityStatus);
 
           broadcastSSE(LIFECYCLE_GATE_EVENTS.PARAMETER_DRIFT_EVALUATED, {
             strategyId: s.id,
@@ -4536,7 +4650,11 @@ export class LifecycleService {
           );
         }
 
-        const result = await this.promoteStrategy(s.id, "PAPER", "DEPLOY_READY", { correlationId: correlationId ?? undefined });
+        // Fix #4 (2026-06-29): skipPaperToDeployReadyEvaluator=true — the inline gate
+        // stack above already evaluated every PAPER → DEPLOY_READY gate (incl. the
+        // on-demand B14 survival-twin replay). This commit-only call must NOT re-run the
+        // evaluator (would fire a second survival-twin Python subprocess + duplicate audits).
+        const result = await this.promoteStrategy(s.id, "PAPER", "DEPLOY_READY", { correlationId: correlationId ?? undefined, skipPaperToDeployReadyEvaluator: true });
         if (result.success) {
           promoted.push(s.id);
 
