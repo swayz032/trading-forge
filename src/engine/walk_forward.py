@@ -481,6 +481,16 @@ def _run_walk_forward_cpcv(
         )
         _psr = float(sum(1 for s in path_sharpes if s > 0) / max(len(path_sharpes), 1))
         _dsr_val = _dsr_result.get("dsr")
+        # FIX (2026-06-29): compute_deflated_sharpe_ratio returns the gate under
+        # "passes", but wf_metadata + the TS consumer expect "dsr_pass". On the
+        # success path _dsr_result is the raw helper output (no "dsr_pass" key), so
+        # the prior _dsr_result.get("dsr_pass") at wf_metadata-build returned None on
+        # EVERY successful CPCV run → DSR gate silently un-enforced. Normalise here.
+        _dsr_passes_raw = _dsr_result.get("passes")
+        _dsr_result["dsr_pass"] = (
+            bool(_dsr_passes_raw) if _dsr_passes_raw is not None else None
+        )
+        _dsr_result.setdefault("dsr_unavailable", False)
     except Exception as _dsr_exc:
         # FIX 7 (2026-06-22): emit walk_forward.dsr_computation_failed audit signal
         # and set dsr_pass=False so TS consumer can block instead of silently proceeding.

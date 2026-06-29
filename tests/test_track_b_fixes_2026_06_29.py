@@ -412,7 +412,13 @@ class TestPlainWfDsrComputation:
             "purge_window": 0,
             "pbo_degenerate_reason": None,
             "dsr": _dsr_result.get("dsr"),
-            "dsr_pass": _dsr_result.get("dsr_pass"),
+            # compute_deflated_sharpe_ratio returns the gate under "passes" — mirror
+            # the production normalisation in walk_forward.py (passes -> dsr_pass).
+            "dsr_pass": (
+                bool(_dsr_result.get("passes"))
+                if _dsr_result.get("passes") is not None
+                else None
+            ),
             "dsr_unavailable": _dsr_result.get("dsr_unavailable", False),
         }
         # All three DSR keys must be present
