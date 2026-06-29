@@ -327,9 +327,11 @@
         width: 88vw; height: auto; min-height: 0; max-height: none;
         padding: 24px 22px; border-radius: 22px; justify-content: center;
       }
-      /* Carter connect card: fixed height so the cover fills it like the other
-         cards (it has no flow content to give it height on mobile). */
-      .of-card3d.of-connect { width: 88vw; height: 56svh; max-height: 56svh; padding: 0; }
+      /* Carter connect card: match the cover's 3:2 landscape ratio so the FULL
+         picture fits (was 56svh portrait → cropped the landscape photo).
+         height = width / 1.5; explicit calc (no flow content, no aspect-ratio
+         dependency) so it can't collapse. */
+      .of-card3d.of-connect { width: 88vw; height: calc(88vw / 1.5); max-height: 72svh; padding: 0; }
       .of-card3d.is-active {
         transform: translate(-50%, -50%) translateZ(30px) scale(1) rotateY(0deg);
       }
