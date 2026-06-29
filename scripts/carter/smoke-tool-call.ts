@@ -9,6 +9,7 @@
  *
  * Run: npx tsx scripts/carter/smoke-tool-call.ts
  */
+export {}; // make this a module so top-level await is allowed
 const API = "https://api.elevenlabs.io/v1/convai";
 const key = process.env.ELEVENLABS_API_KEY;
 const agentId = process.env.CARTER_AGENT_ID;
