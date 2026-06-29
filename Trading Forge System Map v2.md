@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-06-28T06:19:07.973Z`.
+Updated automatically from the repo on `2026-06-29T03:42:18.777Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -11,64 +11,64 @@ Updated automatically from the repo on `2026-06-28T06:19:07.973Z`.
 
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `ci_gate, kill_switch, operator, operator_hmac_override, operator_invoke_for_cohort_validation, operator_opt_in_per_strategy, operator-approve, operator-halt-only, operator-only-recovery, tradingview_deploy`
-- API routes tracked: `76`
+- API routes tracked: `78`
 - Scheduler jobs tracked: `102`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
 - Engine subsystems tracked: `29`
-- Database tables tracked: `107`
+- Database tables tracked: `108`
 
 ### Subsystem Runtime States
-- `active`: `64`
+- `active`: `65`
 - `experimental`: `5`
 - `scaffold`: `1`
 
 ### Current Pre-Production States
-- `active_preprod`: `65`
+- `active_preprod`: `66`
 - `experimental_preprod`: `5`
 - `inactive_preprod`: `0`
 - `partially_active_preprod`: `0`
 
 ### Launch Target States
 - `experimental_challenger`: `5`
-- `runtime_proven_autonomous`: `63`
+- `runtime_proven_autonomous`: `64`
 - `runtime_proven_manual_gate`: `2`
 
 ### Production Target States
-- `production_autonomous`: `63`
+- `production_autonomous`: `64`
 - `production_experimental`: `5`
 - `production_manual_gate`: `2`
 - `production_not_intended`: `0`
 
 ### Subsystem Operating Classes
 - `adaptive`: `7`
-- `deterministic_instrumented`: `61`
+- `deterministic_instrumented`: `62`
 - `manual_gated`: `2`
 
 ### Learning Modes
 - `active_learning`: `7`
-- `deterministic_instrumented`: `56`
+- `deterministic_instrumented`: `57`
 - `manual_gate_only`: `2`
 - `shadow_experimental`: `5`
 
 ### Registry Coverage
-- Registry subsystems tracked: `70`
-- Route coverage: `76/76`
+- Registry subsystems tracked: `71`
+- Route coverage: `78/78`
 - Scheduler coverage: `102/102`
 - Engine coverage: `29/29`
-- Database coverage: `107/107`
+- Database coverage: `108/108`
 - Autonomous subsystems with audit coverage: `63/63`
 - Autonomous subsystems with audit actions: `63/63`
 - Autonomous subsystems with telemetry evidence: `63/63`
-- Active-runtime subsystems with freshness signals: `70/70`
-- Runtime/experimental subsystems with evidence queries: `70/70`
+- Active-runtime subsystems with freshness signals: `71/71`
+- Runtime/experimental subsystems with evidence queries: `71/71`
 - Self-evolving subsystems with learning inputs: `9/9`
 - Self-evolving subsystems with learning persistence: `9/9`
-- Failure visibility complete: `70/70`
+- Failure visibility complete: `71/71`
 
 ### Proof Status
-- `runtime-proven`: `64`
+- `runtime-proven`: `65`
 - `partially-proven`: `1`
 - `offline-by-design`: `0`
 - `experimental`: `5`
@@ -76,17 +76,17 @@ Updated automatically from the repo on `2026-06-28T06:19:07.973Z`.
 
 ### Pre-Production Integrity
 - Integrity status: `incomplete`
-- Automation complete: `58/70`
-- Data collection complete: `70/70`
-- Auditability complete: `70/70`
-- Failure visibility complete: `70/70`
-- Authority correct: `70/70`
+- Automation complete: `58/71`
+- Data collection complete: `71/71`
+- Auditability complete: `71/71`
+- Failure visibility complete: `71/71`
+- Authority correct: `71/71`
 - Learning active: `8/9`
-- Incomplete subsystems: `7`
+- Incomplete subsystems: `8`
 
 ### Production Convergence
 - Convergence status: `blocked`
-- Ready subsystem targets: `48`
+- Ready subsystem targets: `49`
 - Blocked subsystem targets: `17`
 - Experimental subsystem targets: `5`
 - Shadow workflow candidates: `0`
@@ -111,7 +111,7 @@ Updated automatically from the repo on `2026-06-28T06:19:07.973Z`.
 - `collecting_only`: `0`
 - `learning_active`: `8`
 - `learning_blocked`: `0`
-- `not_collecting`: `57`
+- `not_collecting`: `58`
 - `shadow_experimental`: `5`
 
 ### Workflow States
@@ -132,6 +132,7 @@ Updated automatically from the repo on `2026-06-28T06:19:07.973Z`.
 - `backtest_qualification` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `broker_abstraction_layer` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `candidate_backtest_conveyor` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
+- `carter_voice_agent` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`incomplete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `cloud_qmc_ising` class=`deterministic_instrumented` learningMode=`shadow_experimental` current=`experimental_preprod` target=`production_experimental` automation=`experimental` data=`complete` audit=`complete` failureVisibility=`complete` learning=`experimental` authority=`correct` ready=`false` preprodBlockers=experimental_governance productionBlockers=experimental_governance gaps=none
 - `cohort_audit_report_service` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
 - `compliance_governance` class=`deterministic_instrumented` learningMode=`deterministic_instrumented` current=`active_preprod` target=`production_autonomous` automation=`complete` data=`complete` audit=`complete` failureVisibility=`complete` learning=`not_applicable` authority=`correct` ready=`true` preprodBlockers=none productionBlockers=none gaps=none
@@ -245,6 +246,8 @@ Updated automatically from the repo on `2026-06-28T06:19:07.973Z`.
 - `/api/broker-accounts`
 - `/api/broker-error-budget`
 - `/api/broker/fill-callback`
+- `/api/carter`
+- `/api/carter/webhook`
 - `/api/cloud-qmc`
 - `/api/compiler`
 - `/api/compliance`
@@ -487,6 +490,7 @@ Updated automatically from the repo on `2026-06-28T06:19:07.973Z`.
 - `bias_decisions`
 - `bias_state`
 - `broker_accounts`
+- `carter_issues`
 - `cloud_qmc_runs`
 - `compliance_drift_log`
 - `compliance_reviews`

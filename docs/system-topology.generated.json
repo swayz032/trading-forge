@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-28T06:19:07.973Z",
+  "generatedAt": "2026-06-29T03:42:18.777Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,13 +15,13 @@
     ]
   },
   "counts": {
-    "routes": 76,
+    "routes": 78,
     "schedulerJobs": 102,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 29,
-    "databaseTables": 107,
-    "registrySubsystems": 70
+    "databaseTables": 108,
+    "registrySubsystems": 71
   },
   "routes": [
     "/api/ab-comparison",
@@ -41,6 +41,8 @@
     "/api/broker-accounts",
     "/api/broker-error-budget",
     "/api/broker/fill-callback",
+    "/api/carter",
+    "/api/carter/webhook",
     "/api/cloud-qmc",
     "/api/compiler",
     "/api/compliance",
@@ -833,6 +835,7 @@
     "bias_decisions",
     "bias_state",
     "broker_accounts",
+    "carter_issues",
     "cloud_qmc_runs",
     "compliance_drift_log",
     "compliance_reviews",
@@ -926,34 +929,34 @@
     "weekly_drift_reports"
   ],
   "registryCoverage": {
-    "registryEntries": 70,
+    "registryEntries": 71,
     "autonomousSubsystems": 63,
     "selfEvolvingSubsystems": 9,
     "proofStatusCounts": {
-      "runtime-proven": 64,
+      "runtime-proven": 65,
       "partially-proven": 1,
       "offline-by-design": 0,
       "experimental": 5,
       "drifted": 0
     },
     "runtimeStateCounts": {
-      "active": 64,
+      "active": 65,
       "experimental": 5,
       "scaffold": 1
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
       "partially_active_preprod": 0,
-      "active_preprod": 65,
+      "active_preprod": 66,
       "experimental_preprod": 5
     },
     "launchTargetCounts": {
-      "runtime_proven_autonomous": 63,
+      "runtime_proven_autonomous": 64,
       "runtime_proven_manual_gate": 2,
       "experimental_challenger": 5
     },
     "closedLoopCounts": {
-      "not_collecting": 57,
+      "not_collecting": 58,
       "collecting_only": 0,
       "learning_active": 8,
       "learning_blocked": 0,
@@ -961,13 +964,13 @@
     },
     "learningModeCounts": {
       "active_learning": 7,
-      "deterministic_instrumented": 56,
+      "deterministic_instrumented": 57,
       "manual_gate_only": 2,
       "shadow_experimental": 5
     },
     "operatingClassCounts": {
       "adaptive": 7,
-      "deterministic_instrumented": 61,
+      "deterministic_instrumented": 62,
       "manual_gated": 2
     },
     "manualGates": [
@@ -983,10 +986,10 @@
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 76,
+      "routes": 78,
       "schedulerJobs": 102,
       "engineSubsystems": 29,
-      "databaseTables": 107
+      "databaseTables": 108
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
@@ -1012,13 +1015,14 @@
     "preprodIntegrity": {
       "status": "incomplete",
       "automationComplete": 58,
-      "dataCollectionComplete": 70,
-      "auditabilityComplete": 70,
-      "failureVisibilityComplete": 70,
-      "authorityCorrect": 70,
+      "dataCollectionComplete": 71,
+      "auditabilityComplete": 71,
+      "failureVisibilityComplete": 71,
+      "authorityCorrect": 71,
       "learningActive": 8,
       "incompleteSubsystems": [
         "adaptive_exit_engine",
+        "carter_voice_agent",
         "exit_engine_ab_harness",
         "phase5_contract_spec_scaffold",
         "slumhouse_frontend",
@@ -1030,7 +1034,7 @@
     "productionConvergence": {
       "status": "blocked",
       "targetStateCounts": {
-        "production_autonomous": 63,
+        "production_autonomous": 64,
         "production_manual_gate": 2,
         "production_experimental": 5,
         "production_not_intended": 0
@@ -1041,6 +1045,7 @@
         "backtest_qualification",
         "broker_abstraction_layer",
         "candidate_backtest_conveyor",
+        "carter_voice_agent",
         "cohort_audit_report_service",
         "compliance_governance",
         "composite_shadow_gate",
@@ -1959,6 +1964,101 @@
         ],
         "evidenceQueries": [
           "SELECT COUNT(*) FROM audit_log WHERE action = 'lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '24 hours'"
+        ],
+        "coverageGaps": []
+      },
+      {
+        "id": "carter_voice_agent",
+        "domain": "operations",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "operator-controlled",
+        "decisionAuthority": "advisory",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "repo-runtime",
+        "learningBoundary": "none",
+        "deploymentAuthority": "operator_only",
+        "criticality": "important",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "route contract reachable",
+          "runtime evidence persisted"
+        ],
+        "runtimeEvidence": [
+          "/api/health",
+          "/api/sse",
+          "audit_log:carter.conversation_logged",
+          "audit_log:carter.tool_invoked",
+          "carter_issues:recent-entry",
+          "carter.conversation_logged",
+          "carter.tool_failed",
+          "carter.tool_invoked"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "backtests",
+          "Carter tool registry (read+run tools)",
+          "carter_issues",
+          "ElevenLabs post-call transcript webhook",
+          "strategies",
+          "subsystem read surfaces (status, lifecycle, backtests, scout)"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": true,
+        "automationStatus": "incomplete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "/api/health",
+          "/api/sse",
+          "audit_log:carter.conversation_logged",
+          "audit_log:carter.tool_invoked",
+          "carter_issues:recent-entry",
+          "carter-conversation-log-history",
+          "carter-issue-watcher-history",
+          "carter-tool-invocation-history",
+          "carter.conversation_logged",
+          "carter.tool_failed",
+          "carter.tool_invoked"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [
+          "/api/carter",
+          "/api/carter/webhook",
+          "/slumhouse/api/carter-session"
+        ],
+        "schedulerJobs": [],
+        "healthCheck": "/api/health",
+        "freshnessSignals": [
+          "audit_log:carter.tool_invoked",
+          "carter_issues:recent-entry"
+        ],
+        "evidenceQueries": [
+          "carter-tool-invocation-history",
+          "carter-conversation-log-history",
+          "carter-issue-watcher-history"
         ],
         "coverageGaps": []
       },
@@ -8762,6 +8862,101 @@
       ],
       "evidenceQueries": [
         "SELECT COUNT(*) FROM audit_log WHERE action = 'lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '24 hours'"
+      ],
+      "coverageGaps": []
+    },
+    {
+      "id": "carter_voice_agent",
+      "domain": "operations",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "operator-controlled",
+      "decisionAuthority": "advisory",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "repo-runtime",
+      "learningBoundary": "none",
+      "deploymentAuthority": "operator_only",
+      "criticality": "important",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "route contract reachable",
+        "runtime evidence persisted"
+      ],
+      "runtimeEvidence": [
+        "/api/health",
+        "/api/sse",
+        "audit_log:carter.conversation_logged",
+        "audit_log:carter.tool_invoked",
+        "carter_issues:recent-entry",
+        "carter.conversation_logged",
+        "carter.tool_failed",
+        "carter.tool_invoked"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "backtests",
+        "Carter tool registry (read+run tools)",
+        "carter_issues",
+        "ElevenLabs post-call transcript webhook",
+        "strategies",
+        "subsystem read surfaces (status, lifecycle, backtests, scout)"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": true,
+      "automationStatus": "incomplete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "/api/health",
+        "/api/sse",
+        "audit_log:carter.conversation_logged",
+        "audit_log:carter.tool_invoked",
+        "carter_issues:recent-entry",
+        "carter-conversation-log-history",
+        "carter-issue-watcher-history",
+        "carter-tool-invocation-history",
+        "carter.conversation_logged",
+        "carter.tool_failed",
+        "carter.tool_invoked"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [
+        "/api/carter",
+        "/api/carter/webhook",
+        "/slumhouse/api/carter-session"
+      ],
+      "schedulerJobs": [],
+      "healthCheck": "/api/health",
+      "freshnessSignals": [
+        "audit_log:carter.tool_invoked",
+        "carter_issues:recent-entry"
+      ],
+      "evidenceQueries": [
+        "carter-tool-invocation-history",
+        "carter-conversation-log-history",
+        "carter-issue-watcher-history"
       ],
       "coverageGaps": []
     },
