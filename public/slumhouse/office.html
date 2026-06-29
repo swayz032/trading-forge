@@ -386,7 +386,7 @@
 
     /* ── Phase A: CALLING ─────────────────────────────────────────────────── */
     .cc-calling {
-      background: #000 url('/slumhouse/images/carter-calling.png') center center / cover no-repeat;
+      background: #000 url('/slumhouse/images/carter-calling.png?v=3') center center / cover no-repeat;
     }
     .cc-calling-veil {
       position: absolute; inset: 0; pointer-events: none;
@@ -421,41 +421,46 @@
     .cc-spacer { flex: 1 1 auto; min-height: 24px; }
 
     /* ── Phase B: IMMERSIVE (black + green Siri edge-glow + blob) ─────────── */
-    .cc-immersive { background: #000; }
-    /* THE signature effect: a blurred green gradient hugging all four edges,
-       continuously flowing/breathing. Intensity tied to --carter-voice. */
-    /* z-index 2 = ABOVE the blob video (z-index 1) so the edge halo shows OVER
-       the blob (its center is transparent, so the blob stays visible). It was
-       z-index 0 = behind the full-screen video, which hid it completely. */
-    .cc-glow { position: absolute; inset: 0; z-index: 2; pointer-events: none;
-      opacity: calc(0.45 + var(--carter-voice) * 0.55);
-      transform: scale(calc(1 + var(--carter-voice) * 0.05));
-      transition: opacity 0.10s linear, transform 0.10s linear;
-      will-change: opacity, transform;
+    /* Immersive backdrop = the "Carter on the phone" scene; a dark veil keeps
+       the blob + glow + text legible over it. */
+    .cc-immersive {
+      background: #000 url("/slumhouse/images/carter-immersive.png?v=3") center / cover no-repeat;
     }
-    .cc-glow-flow {
-      position: absolute; inset: -12%;
-      background:
-        radial-gradient(42% 24% at 50% 0%,    rgba(163,255,18,0.95), transparent 72%),
-        radial-gradient(42% 24% at 50% 100%,  rgba(25,195,125,0.90), transparent 72%),
-        radial-gradient(24% 46% at 0% 50%,    rgba(20,150,80,0.92),  transparent 72%),
-        radial-gradient(24% 46% at 100% 50%,  rgba(40,205,180,0.62), transparent 72%),
-        radial-gradient(34% 30% at 0% 0%,     rgba(163,255,18,0.62), transparent 70%),
-        radial-gradient(34% 30% at 100% 100%, rgba(25,195,125,0.62), transparent 70%),
-        radial-gradient(34% 30% at 100% 0%,   rgba(120,230,60,0.50), transparent 70%),
-        radial-gradient(34% 30% at 0% 100%,   rgba(20,170,120,0.52), transparent 70%);
-      filter: blur(58px) saturate(1.15);
-      animation: ccGlowFlow 9s ease-in-out infinite alternate;
-      will-change: transform;
+    .cc-immersive::after {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background: linear-gradient(rgba(0,0,0,0.30), rgba(0,0,0,0.55));
     }
-    @keyframes ccGlowFlow {
-      0%   { transform: translate3d(-2%, -1%, 0) scale(1.05) rotate(0deg); }
-      50%  { transform: translate3d( 2%,  1%, 0) scale(1.12) rotate(1.5deg); }
-      100% { transform: translate3d(-1%,  2%, 0) scale(1.06) rotate(-1.5deg); }
+    /* THE signature effect — Apple-Intelligence / Siri style: a bright ANIMATED
+       conic-gradient GREEN border hugging the screen rim + an outer bloom.
+       Masked to a ring (mask-composite) so the CENTER is transparent and the
+       blob + scene show through. Reacts to --carter-voice (set each frame from
+       getOutputVolume): the rim thickens, bloom widens, brightness rises when
+       Carter speaks. z-index 2 = above blob (1), below foot (3). */
+    @property --cc-spin { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+    .cc-glow {
+      position: absolute; inset: 0; z-index: 2; pointer-events: none;
+      opacity: calc(0.62 + var(--carter-voice) * 0.38);
+      transition: opacity 0.12s linear; will-change: opacity;
     }
+    .cc-glow::before, .cc-glow::after {
+      content: ""; position: absolute; inset: 0; border-radius: 30px;
+      padding: calc(7px + var(--carter-voice) * 16px);   /* rim thickness reacts to voice */
+      background: conic-gradient(from var(--cc-spin),
+        #a3ff12, #19c37d, #28cdb4, #1aa050, #78e63c, #19c37d, #a3ff12);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+              mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+      animation: ccSpin 6s linear infinite;
+    }
+    .cc-glow::after {            /* outer bloom = the same ring, blurred wider */
+      filter: blur(calc(24px + var(--carter-voice) * 34px)) saturate(1.35);
+      opacity: 0.9;
+    }
+    @keyframes ccSpin { to { --cc-spin: 360deg; } }
     .cc-blob {
       position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%;
-      object-fit: cover; pointer-events: none; background: #000;
+      object-fit: cover; pointer-events: none;
+      mix-blend-mode: screen;   /* drops the video's black bg so the blob floats over the scene */
       transform: scale(calc(1 + var(--carter-voice) * 0.05));
       transition: transform 0.10s linear; will-change: transform;
     }
@@ -475,10 +480,10 @@
       .cc-calling-name { font-size: 42px; }
       .cc-hangup { width: 64px; height: 64px; }
       .cc-hangup svg { width: 28px; height: 28px; }
-      .cc-glow-flow { filter: blur(42px) saturate(1.15); }  /* lighter blur on phones */
+      .cc-glow::after { filter: blur(calc(14px + var(--carter-voice) * 16px)) saturate(1.25); }  /* lighter bloom on phones */
     }
     @media (prefers-reduced-motion: reduce) {
-      .cc-ring-pulse, .cc-glow-flow { animation: none; }
+      .cc-ring-pulse, .cc-glow::before, .cc-glow::after { animation: none; }
     }
   </style>
 </head>
@@ -562,7 +567,7 @@
     <!-- Phase A: CALLING -->
     <section class="cc-phase cc-calling" id="cc-calling">
       <div class="cc-calling-veil"></div>
-      <audio id="cc-ring" preload="auto" loop playsinline><source src="/slumhouse/audio/carter-ring.mp3" type="audio/mpeg"></audio>
+      <audio id="cc-ring" preload="auto" loop playsinline><source src="/slumhouse/audio/carter-ring.mp3?v=3" type="audio/mpeg"></audio>
       <div class="cc-calling-inner">
         <div class="cc-calling-status" id="cc-calling-status">Calling…</div>
         <div class="cc-calling-name">Carter</div>
@@ -581,9 +586,9 @@
 
     <!-- Phase B: IMMERSIVE -->
     <section class="cc-phase cc-immersive" id="cc-immersive">
-      <div class="cc-glow"><div class="cc-glow-flow"></div></div>
+      <div class="cc-glow"></div>
       <video class="cc-blob" id="cc-blob" autoplay muted loop playsinline preload="auto">
-        <source src="/slumhouse/video/carter-blob.mp4" type="video/mp4">
+        <source src="/slumhouse/video/carter-blob.mp4?v=3" type="video/mp4">
       </video>
       <div class="cc-immersive-foot">
         <div class="cc-mic-state" id="cc-mic-state">Connecting…</div>
@@ -607,7 +612,7 @@
       // ── Pass 3: floating 3D switch-card carousel (empty shells, no switches yet) ──
       var OF_CARDS = [
         { id: 'carter', connect: true, eyebrow: 'Your AI', title: 'Carter',
-          cover: '/slumhouse/images/carter-cover.png', connectLabel: 'Connect to Carter' },
+          cover: '/slumhouse/images/carter-cover.png?v=3', connectLabel: 'Connect to Carter' },
         { id: 'bot_power', eyebrow: 'Main switch', title: 'Bot Power',
           on: 'The bot makes trades.',
           off: 'The bot stops — no new trades. (Turns RED if it pauses itself for safety; flip ON to resume.)' },
