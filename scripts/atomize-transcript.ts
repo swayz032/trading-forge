@@ -26,6 +26,9 @@ const ATOM_TYPES: AtomType[] = ["WAIT_SESSION","FILTER","WAIT_BIAS","WAIT_STRUCT
 const CLASS_MAP: Record<string, ClauseDisposition> = {
   decision_bearing: "decision_bearing", terminology: "semantic_only", context: "contextual",
   motivation: "motivational", observation: "contextual", visual_reference: "visual_only", non_strategy: "ignored",
+  // Decision Introduction Gate (2026-06-29) — new non-decision classes for clauses that DISCUSS rather than INTRODUCE:
+  explanation: "contextual", justification: "contextual", recap: "contextual", example: "contextual",
+  warning: "motivational", framework_owned: "ignored",
 };
 
 const SCHEMA = {
@@ -35,17 +38,32 @@ const SCHEMA = {
     temporal_kind: { type: "string", enum: ["event", "condition", "none"] },
     object: { type: "string" }, polarity: { type: "string", enum: ["long", "short", "both", "none"] },
     parameters: { type: "string" }, evidence_span: { type: "string" },
-    classification: { type: "string", enum: ["decision_bearing","terminology","context","motivation","observation","visual_reference","non_strategy"] },
+    classification: { type: "string", enum: ["decision_bearing","terminology","explanation","justification","motivation","recap","example","warning","observation","visual_reference","framework_owned","non_strategy"] },
   }, required: ["clause_id", "is_decision", "classification"] } } }, required: ["results"],
 } as const;
 
-const PROMPT = `You are compiling a trading-strategy transcript into EXECUTABLE decision atoms.
-For EACH clause decide ONE thing: does it introduce a trading DECISION a backtester would act on?
-- If YES: is_decision=true, classification="decision_bearing", and fill atom_type (one of ${ATOM_TYPES.join(", ")}),
-  temporal_kind (event=occurs once / condition=stays true), object (what it is about), polarity, parameters
-  (numbers if any, else ""), evidence_span (the exact words from the clause).
-- If NO: is_decision=false, atom_type="NONE", and classify: terminology / context / motivation / observation /
-  visual_reference / non_strategy.
+const PROMPT = `You are compiling a trading-strategy transcript into EXECUTABLE decision atoms for a DETERMINISTIC backtest engine.
+
+DECISION INTRODUCTION GATE — apply to EVERY clause FIRST, before emitting any atom:
+A clause is a DECISION only if removing it would CHANGE the behavior of a deterministic trading engine — i.e. it
+INTRODUCES a new entry / wait / confirmation / filter / invalidation / exit-trigger RULE the engine executes.
+A clause that merely DISCUSSES, explains, defines, recaps, justifies, motivates, warns, or gives an example of a
+rule is NOT a decision — even if it mentions indicators or price.
+  "wait for the EMA10 to cross above the EMA20"  -> YES (the engine changes)
+  "this is called a liquidity sweep" / "CCI measures deviation from average"  -> NO (terminology / explanation)
+  "this setup has a high win rate" / "you stop trusting yourself"  -> NO (justification / motivation)
+  "the engulfing candle confirms buyers"  -> YES only if it introduces a confirmation rule not already stated, else explanation.
+
+OWNERSHIP BOUNDARY: stop-loss, take-profit, target, position size, risk amount, and risk/reward are
+FRAMEWORK-OWNED (outside the strategy edge). They are valid concepts but NEVER decision atoms — classify them
+"framework_owned".
+
+For EACH clause:
+- PASSES the gate -> is_decision=true, classification="decision_bearing", fill atom_type (one of ${ATOM_TYPES.join(", ")}),
+  temporal_kind (event=occurs once / condition=stays true), object (the core concept), polarity, parameters, evidence_span.
+- FAILS the gate -> is_decision=false, atom_type="NONE", classify: terminology / explanation / justification /
+  motivation / recap / example / warning / observation / visual_reference / framework_owned / non_strategy.
+Be STRICT: when unsure whether a clause introduces a rule or merely discusses one, it is NOT a decision.
 Return EXACTLY one result per clause, preserving clause_id order. Return JSON matching the schema.`;
 
 interface GemmaResult { clause_id: string; is_decision: boolean; atom_type: string; temporal_kind?: string; object?: string; polarity?: string; parameters?: string; evidence_span?: string; classification: string }
