@@ -2574,15 +2574,17 @@ export async function evaluateSignals(
       // Gate 6: Daily trade cap re-check using FILL-time CME day
       // (session_boundary_crossed gate above already handles cross-day; this gate
       // catches the within-day count crossing the cap between queue and fill.)
+      // F-5 (2026-06-29): uses paper_positions.entryTime (1 row per entry) not
+      // paper_trades.exitTime (multiple rows per entry when bookPartialClose fires).
       if (!pendingDropReason) {
         try {
           const capTodayEt = toFuturesTradingDayString(fillTs);
           const [capRow] = await db
             .select({ count: sql<number>`count(*)::int` })
-            .from(paperTrades)
+            .from(paperPositions)
             .where(and(
-              eq(paperTrades.sessionId, sessionId),
-              sql`to_char(${paperTrades.exitTime} AT TIME ZONE 'America/New_York' + interval '7 hours', 'YYYY-MM-DD') = ${capTodayEt}`,
+              eq(paperPositions.sessionId, sessionId),
+              sql`to_char(${paperPositions.entryTime} AT TIME ZONE 'America/New_York' + interval '7 hours', 'YYYY-MM-DD') = ${capTodayEt}`,
             ));
           const tradesTodayAtFill = capRow?.count ?? 0;
           const sessionCfgRaw = (sessionRow as { config?: { max_trades_per_day?: number | null } }).config;
@@ -2845,8 +2847,16 @@ export async function evaluateSignals(
     // position that hits TP1 and the time-stop in the same bar gets time-stopped
     // (already returned above). The BE-stop only activates for the NEXT bar.
     //
+    // F-3 (2026-06-29): tp1JustFiredThisBar gates the BE stop so it CANNOT fire
+    // on the same bar as TP1 detection. Backtest parity: backtester.py processes
+    // TP1 and advances the bar index before checking the BE stop — the stop can
+    // only trigger on bar N+1 and later. Without this guard, paper would check
+    // bar.low <= entry+1tick on the exact bar where TP1 fired, prematurely stopping
+    // out the position before the runner has a chance to form.
+    //
     // We only apply this for positions where exit_params.style === "c" (i.e.,
     // strategies that have been processed by framework-overlay).
+    let tp1JustFiredThisBar = false;
     {
       const rawCfg = config as unknown as Record<string, unknown>;
       const exitParams = rawCfg.exit_params as Record<string, unknown> | undefined;
@@ -2889,6 +2899,7 @@ export async function evaluateSignals(
               : entryPrice - tickSize;
 
             tp1BeStopMap.set(openPos.id, beStop);
+            tp1JustFiredThisBar = true;  // F-3: BE stop activates on bar N+1, not this bar
 
             // Persist tp1_filled_at to DB so restart correctly identifies TP1-filled positions.
             const nowTs = new Date();
@@ -2984,7 +2995,11 @@ export async function evaluateSignals(
     // is BELOW entry for a long — 2 ticks wrong.  type:"absolute_level" evaluates
     // bar.low <= level directly, which is the correct parity with backtester.py
     // (be_stop = entry_p + tick; hit when bar.low <= be_stop).
-    const tp1BeStop = tp1BeStopMap.get(openPos.id);
+    //
+    // F-3 (2026-06-29): BE stop is NOT applied on the same bar TP1 fires (tp1JustFiredThisBar).
+    // Backtest parity: backtester.py advances bar index after TP1, so BE stop fires bar N+1+.
+    // tp1BeStopMap is set in the block above, so without this guard the stop would fire on bar N.
+    const tp1BeStop = tp1JustFiredThisBar ? undefined : tp1BeStopMap.get(openPos.id);
     const effectiveStopConfig: StopLossConfig | undefined = tp1BeStop != null
       ? { type: "absolute_level", level: tp1BeStop }
       : config.stop_loss;
@@ -3374,9 +3389,11 @@ export async function evaluateSignals(
     // it. This gate enforces the framework default (TF_MAX_TRADES_PER_DAY=2)
     // at SIGNAL TIME so the 3rd signal of the day never reaches openPosition.
     //
-    // Counting: paper_trades rows CLOSED on the current CME futures trading day
-    // (same date convention as paper-execution-service.ts:925). Per-session
-    // scope — each prop-firm account has its own quota.
+    // F-5 (2026-06-29): Counting changed from paper_trades rows to paper_positions rows.
+    // Prior bug: bookPartialClose writes one paper_trades row per partial leg (TP1, TP2,
+    // runner). A 33/33/34 Style C trade produced 3 rows, counted as 3 trades against the cap.
+    // Fix: count distinct paper_positions by entryTime on today's CME trading day — 1 per entry
+    // regardless of how many partial-close legs were booked. Matches the "1 A+ entry/day" intent.
     //
     // Precedence: sessionRow.max_trades_per_day (if set + positive) > env default.
     // Fail-OPEN: DB error → allow the trade through + warn audit (better to let
@@ -3386,10 +3403,10 @@ export async function evaluateSignals(
       const capTodayEt = toFuturesTradingDayString(new Date(bar.timestamp));
       const [capRow] = await db
         .select({ count: sql<number>`count(*)::int` })
-        .from(paperTrades)
+        .from(paperPositions)
         .where(and(
-          eq(paperTrades.sessionId, sessionId),
-          sql`to_char(${paperTrades.exitTime} AT TIME ZONE 'America/New_York' + interval '7 hours', 'YYYY-MM-DD') = ${capTodayEt}`,
+          eq(paperPositions.sessionId, sessionId),
+          sql`to_char(${paperPositions.entryTime} AT TIME ZONE 'America/New_York' + interval '7 hours', 'YYYY-MM-DD') = ${capTodayEt}`,
         ));
       const tradesToday = capRow?.count ?? 0;
       // Per-session cap lives inside paper_sessions.config JSONB (max_trades_per_day),
