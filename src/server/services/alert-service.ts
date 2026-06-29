@@ -54,10 +54,15 @@ export async function createAlert(params: {
       if (apiKey) {
         discordHeaders["Authorization"] = `Bearer ${apiKey}`;
       }
+      // Deep-scan #5 A-1 (2026-06-29): forward correlationId into the Discord payload so an
+      // alert seen on a phone can be traced back to the audit_log chain. It is stored in the
+      // DB alert.metadata but was never sent to Discord — forensic lookup from Discord was
+      // impossible. Pull from metadata.correlationId (the canonical propagation key).
+      const _alertCorrelationId = (params.metadata?.correlationId as string | null | undefined) ?? null;
       const response = await fetch(`http://localhost:${discordPort}/alert/alerts`, {
         method: "POST",
         headers: discordHeaders,
-        body: JSON.stringify({ title: params.title, message: effectiveMessage, severity: "critical" }),
+        body: JSON.stringify({ title: params.title, message: effectiveMessage, severity: "critical", correlationId: _alertCorrelationId }),
         signal: AbortSignal.timeout(4000),
       });
       if (!response.ok) {

@@ -3063,9 +3063,18 @@ except Exception as e:
       });
       let stdout = "";
       let stderr = "";
+      // Deep-scan #5 M2 (2026-06-29): explicit kill timeout so a hung child doesn't hold the
+      // job lock until the 30-min MAX_JOB_DURATION_MS watchdog fires. Mirrors _runN8nDriftAudit.
+      const _killTimeoutMs = Number(process.env.DATABENTO_REFRESH_TIMEOUT_MS ?? 20 * 60 * 1000);
+      const _killTimer = setTimeout(() => {
+        try { proc.kill("SIGTERM"); } catch { /* already exited */ }
+        rej(new Error(`databento-weekly-refresh exceeded ${_killTimeoutMs}ms — SIGTERM sent`));
+      }, _killTimeoutMs);
+      _killTimer.unref?.();
       proc.stdout?.on("data", (d: Buffer) => (stdout += d.toString()));
       proc.stderr?.on("data", (d: Buffer) => (stderr += d.toString()));
       proc.on("close", (code: number | null) => {
+        clearTimeout(_killTimer);
         if (stderr.trim()) logger.debug({ job: "databento-weekly-refresh" }, stderr.slice(0, 2000));
         if (code === 0) {
           logger.info({ job: "databento-weekly-refresh", output: stdout.slice(0, 1000) }, "Databento refresh complete");
@@ -3074,7 +3083,7 @@ except Exception as e:
           rej(new Error(`refresh-databento.mjs exited ${code}: ${stderr.slice(0, 500)}`));
         }
       });
-      proc.on("error", rej);
+      proc.on("error", (e) => { clearTimeout(_killTimer); rej(e); });
     });
   });
 
@@ -4272,10 +4281,20 @@ except Exception as e:
 
         let stdoutBuf = "";
         let stderrBuf = "";
+        // Deep-scan #5 M2 (2026-06-29): per-symbol kill timeout so a hung Python child
+        // can't hold the job lock until the 30-min watchdog. Per-symbol failure is already
+        // non-blocking (caught below), so a SIGTERM here just skips that symbol.
+        const _pocKillMs = Number(process.env.NAKED_POC_SYNC_TIMEOUT_MS ?? 5 * 60 * 1000);
+        const _pocKillTimer = setTimeout(() => {
+          try { proc.kill("SIGTERM"); } catch { /* already exited */ }
+          reject(new Error(`naked-poc-sync-daily: ${sym} exceeded ${_pocKillMs}ms — SIGTERM sent`));
+        }, _pocKillMs);
+        _pocKillTimer.unref?.();
         proc.stdout?.on("data", (d: Buffer) => { stdoutBuf += d.toString(); });
         proc.stderr?.on("data", (d: Buffer) => { stderrBuf += d.toString(); });
 
         proc.on("close", (code: number | null) => {
+          clearTimeout(_pocKillTimer);
           if (code === 0) {
             logger.info(
               { symbol: sym, sessionDate: isoDate, stdout: stdoutBuf.slice(0, 2000) },
@@ -4293,6 +4312,7 @@ except Exception as e:
         });
 
         proc.on("error", (err: Error) => {
+          clearTimeout(_pocKillTimer);
           logger.error(
             { symbol: sym, sessionDate: isoDate, err: String(err) },
             "naked-poc-sync-daily: failed to spawn Python process",

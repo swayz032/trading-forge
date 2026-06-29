@@ -1,10 +1,18 @@
 import { Router, Request, Response } from "express";
 import { logger } from "../lib/logger.js";
+import { sseClientsConnected } from "../lib/metrics-registry.js";
 
 const router = Router();
 
 // ─── Connected clients ────────────────────────────────────────
 const clients: Set<Response> = new Set();
+
+// Deep-scan #5 M1 (2026-06-29): mirror clients.size into the Prometheus gauge after
+// every mutation so the operator can alert on "0 SSE clients while paper engine active"
+// or unbounded client accumulation. Never throws — a metric set must never break SSE.
+function _syncSseClientGauge(): void {
+  try { sseClientsConnected.set(clients.size); } catch { /* non-blocking */ }
+}
 
 // ─── Event sequence counter ───────────────────────────────────
 // Monotonically increasing integer attached to every SSE event.
@@ -115,14 +123,17 @@ router.get("/events", (req: Request, res: Response) => {
   }
 
   clients.add(res);
+  _syncSseClientGauge();
   logger.info(`SSE client connected (${clients.size} total)`);
 
   res.on("error", () => {
     clients.delete(res);
+    _syncSseClientGauge();
   });
 
   req.on("close", () => {
     clients.delete(res);
+    _syncSseClientGauge();
     logger.info(`SSE client disconnected (${clients.size} total)`);
   });
 });
@@ -220,6 +231,7 @@ export function broadcastSSE(event: string, data: unknown): void {
   for (const dead of deadClients) {
     clients.delete(dead);
   }
+  if (deadClients.size > 0) _syncSseClientGauge();
 }
 
 // ─── POST /api/sse/broadcast — n8n / external broadcast ──────

@@ -225,8 +225,14 @@ export async function runRegimeDriftDetector(opts?: {
               );
               notifyCritical(
                 `[regime-drift] Zombie DECLINING strategy cannot be recovered: ${zombie.name}`,
-                `Strategy "${zombie.name}" (${zombie.id}) has been stuck in DECLINING for >${ZOMBIE_DECLINING_THRESHOLD_MS / 3_600_000}h. ` +
-                `Automated DECLINING → TESTING recovery failed: ${recovery.error ?? "unknown"}. Manual lifecycle correction required.`,
+                // Deep-scan #5 A-3 (2026-06-29): family-grade postscript so an unattended
+                // family operator gets a plain-English action, not raw lifecycle jargon.
+                appendFamilyGradePostscript(
+                  `Strategy "${zombie.name}" (${zombie.id}) has been stuck in DECLINING for >${ZOMBIE_DECLINING_THRESHOLD_MS / 3_600_000}h. ` +
+                  `Automated DECLINING → TESTING recovery failed: ${recovery.error ?? "unknown"}. Manual lifecycle correction required.`,
+                  "A strategy got stuck part-way through being paused and the bot could not auto-fix it.",
+                  "No trades are at risk — the strategy is halted. Tell Tony to reset its status when convenient.",
+                ),
                 { strategyId: zombie.id, strategyName: zombie.name, zombieCorrelationId },
               );
             }

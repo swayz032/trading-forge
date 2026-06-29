@@ -647,6 +647,15 @@ export const auditWriteFailuresTotal = new Counter({
   registers: [promRegistry],
 });
 
+// Deep-scan #5 M1 (2026-06-29): live SSE client count was logged on connect/disconnect
+// but invisible to Prometheus — could not alert on "0 SSE clients while paper engine
+// active" or detect unbounded client accumulation. Set from sse.ts on every mutation.
+export const sseClientsConnected = new Gauge({
+  name: "tf_sse_clients_connected",
+  help: "Number of currently-connected SSE clients (dashboard live-event subscribers)",
+  registers: [promRegistry],
+});
+
 // ─── Wave 29 quantum observability zero-init (2026-06-28) ──────────────────────
 //
 // Fix MED-1: Zero-initialise closed-label-set Wave 29 counters so Prometheus sees
