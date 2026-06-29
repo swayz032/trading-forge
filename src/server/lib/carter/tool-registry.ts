@@ -219,6 +219,17 @@ export const CARTER_TOOLS: CarterTool[] = [
     handler: "recall",
   },
 
+  // ── Daily Analyst tool (Tier: green) — proactive insight surface ─────────────
+  //    The daily analyst cron aggregates pipeline / hardening / recent-decisions
+  //    signals into a stored insight bundle; this read returns the latest one so
+  //    Carter's brain can surface a briefing on connect. Read-only, no params.
+  {
+    name: "get_daily_insights",
+    description: "Returns the latest daily insight bundle the proactive Analyst assembled (generated_at, a short plain-English headline, pipeline diagnosis, hardening opportunities, and recent lifecycle decisions). Call this on connect to proactively brief the operator. Returns { note: 'no insights yet' } when the analyst has not run yet. No params.",
+    tier: "green",
+    handler: "get_daily_insights",
+  },
+
   // ── Action tools (Tier: green) — capital-SAFE, never bypass a gate ───────────
 
   {

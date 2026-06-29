@@ -584,6 +584,11 @@ import { CARTER_RECOMMEND_HANDLERS } from "./carter-recommend.js";
 //    CARTER_READ_HANDLERS below so the route dispatches it via the same map.
 import { CARTER_MEMORY_READ_HANDLERS } from "./carter-memory-store.js";
 
+// ── Daily Analyst read tool (get_daily_insights) — carter-insights.ts. Returns
+//    the latest insight bundle the analyst sweep stored. Spread into
+//    CARTER_READ_HANDLERS below so the route dispatches it via the same map.
+import { CARTER_INSIGHTS_READ_HANDLERS } from "./carter-insights.js";
+
 async function getCurrentIssues(_params: unknown): Promise<unknown> {
   const issues = listOpenIssues();
 
@@ -653,5 +658,7 @@ export const CARTER_READ_HANDLERS: Record<string, (params: unknown) => Promise<u
   ...CARTER_RECOMMEND_HANDLERS,
   // ── Memory continuity tool (carter-memory-store.ts) ─────────────────────────
   ...CARTER_MEMORY_READ_HANDLERS,
+  // ── Daily Analyst read tool (carter-insights.ts) ────────────────────────────
+  ...CARTER_INSIGHTS_READ_HANDLERS,
 };
 

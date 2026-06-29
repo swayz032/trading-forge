@@ -137,6 +137,8 @@ const REQUIRED_READ_TOOLS = [
   "find_hardening_opportunities",
   // Memory continuity read tool (carter-memory-store.ts)
   "recall",
+  // Daily Analyst read tool (carter-insights.ts) — proactive insight surface
+  "get_daily_insights",
 ] as const;
 
 const REQUIRED_ACTION_TOOLS = [
@@ -201,9 +203,9 @@ const REQUIRED_TOOLS = [
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe("Carter tool registry — structural contract", () => {
-  it("has exactly 76 tools (28 read + 14 action + 18 yellow + 16 red)", () => {
-    expect(CARTER_TOOLS).toHaveLength(76);
-    expect(CARTER_TOOLS.filter((t) => t.tier === "green")).toHaveLength(42);
+  it("has exactly 77 tools (29 read + 14 action + 18 yellow + 16 red)", () => {
+    expect(CARTER_TOOLS).toHaveLength(77);
+    expect(CARTER_TOOLS.filter((t) => t.tier === "green")).toHaveLength(43);
     expect(CARTER_TOOLS.filter((t) => t.tier === "yellow")).toHaveLength(18);
     expect(CARTER_TOOLS.filter((t) => t.tier === "red")).toHaveLength(16);
   });
@@ -300,8 +302,8 @@ describe("Carter tool registry — structural contract", () => {
     }
   });
 
-  it("CARTER_READ_HANDLERS exports exactly 28 functions (16 base + 7 introspection + 4 recommend + 1 memory)", () => {
-    expect(Object.keys(CARTER_READ_HANDLERS)).toHaveLength(28);
+  it("CARTER_READ_HANDLERS exports exactly 29 functions (16 base + 7 introspection + 4 recommend + 1 memory + 1 insights)", () => {
+    expect(Object.keys(CARTER_READ_HANDLERS)).toHaveLength(29);
   });
 
   it("CARTER_ACTION_HANDLERS exports exactly 14 functions", () => {

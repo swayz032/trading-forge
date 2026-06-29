@@ -66,6 +66,8 @@ import { runConsistencyDailyDigest } from "./services/consistency-tracker-servic
 import { runQuantumReplayWeeklyAnalysis } from "./services/quantum-replay-weekly-service.js";
 // W28 Pass A.4: Composite health daily digest — 5:00 PM ET daily
 import { runCompositeHealthDailyDigest } from "./services/composite-health-digest-service.js";
+// Carter Analyst: daily insight-bundle aggregator — 08:00 ET daily (data-only, no LLM)
+import { runCarterAnalystSweep } from "./services/carter-analyst-service.js";
 // W26 Pass G Pass D: Strategy stale detector — 04:00 ET daily
 import { runStrategyStaleDetector } from "./services/strategy-stale-detector.js";
 // W29 Pass C.2: Quantum RL training window cron
@@ -486,6 +488,10 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   // paused. The digest is a pure observability signal for the operator — strategy
   // health monitoring must continue regardless of pipeline gate state.
   "composite-health-daily-digest",      // W28A.4: composite strategy health digest
+  // Carter Analyst: the daily insight aggregator is a pure observability signal —
+  // it must assemble the operator's morning briefing bundle even when the pipeline
+  // is paused. Data-only (no LLM, no mutation beyond the insight memory + audit).
+  "carter-analyst-daily",               // Carter proactive Analyst insight sweep
   // W29 Pass B.3: regime drift detection must fire even when pipeline is paused.
   // Regime drift continues regardless of operator intent to pause research. A
   // DEPLOYED strategy losing its trained regime during a pipeline pause is still
@@ -4816,6 +4822,48 @@ except Exception as e:
     }
   });
   _scheduledJobs.add("composite-health-daily-digest");
+
+  // ─── Carter Analyst: daily insight-bundle sweep — 08:00 ET daily ────────────
+  //
+  // DATA AGGREGATOR ONLY (no LLM). Gathers pipeline diagnosis + hardening
+  // opportunities + recent lifecycle decisions into one bounded insight bundle,
+  // stores it as a kind='insight' carter_memory row, and posts a family-grade
+  // Discord digest. Carter's gpt-5.4 brain reads the bundle via get_daily_insights
+  // on connect and synthesizes the spoken briefing.
+  //
+  // 08:00 ET = 12:00 UTC (EDT, UTC-4) or 13:00 UTC (EST, UTC-5). Schedule
+  // "0 12,13 * * *" covers both offsets; the in-handler ET-hour guard fires
+  // only at hour=8. Pipeline-gate EXEMPT (in _PIPELINE_GATE_EXEMPT) — the morning
+  // briefing must assemble even when the operator pauses research.
+  registerJob("carter-analyst-daily", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "carter-analyst-daily" }, "cron tick start");
+    await runCarterAnalystSweep();
+  });
+
+  cron.schedule("0 12,13 * * *", async () => {
+    if (!_tryAcquireJobLock("carter-analyst-daily")) return;
+    try {
+      const now = new Date();
+      const etHour = parseInt(
+        now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+        10,
+      );
+      if (etHour !== 8) {
+        logger.debug({ etHour }, "Scheduler: carter-analyst-daily cron fired but not 08:00 ET — skipping");
+        return;
+      }
+      // NOT pipeline-gated — observability signal (in _PIPELINE_GATE_EXEMPT)
+      logger.info("Scheduler: carter-analyst-daily (8:00 AM ET confirmed)");
+      const t0ca = Date.now();
+      await withRetry("carter-analyst-daily", SCHEDULER_JOBS["carter-analyst-daily"].run, 1);
+      markJobRun("carter-analyst-daily");
+      emitJobComplete("carter-analyst-daily", Date.now() - t0ca);
+    } finally {
+      _releaseJobLock("carter-analyst-daily");
+    }
+  });
+  _scheduledJobs.add("carter-analyst-daily");
 
   // ─── W26 Pass G Pass D: Strategy STALE detector — 04:00 ET daily ──────────
   //
