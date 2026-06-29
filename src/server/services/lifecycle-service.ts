@@ -4098,12 +4098,25 @@ export class LifecycleService {
             gateEvidenceStatuses.push("complete");
           }
         } catch (driftErr) {
-          // Fail-open: drift gate read failure is non-blocking.
+          // H-1 (2026-06-29): fail-CLOSED on param-drift gate infra error (mirrors B14 PAPER→DEPLOY_READY catch ~:3846).
           logger.warn(
             { strategyId: s.id, err: driftErr },
-            "Parameter drift gate: read failed (non-blocking — promotion continues)",
+            "Parameter drift gate (PAPER→DEPLOY_READY): read failed — blocking promotion (fail-closed)",
           );
-          gateEvidenceStatuses.push("data_unavailable");
+          await db.insert(auditLog).values({
+            action: "lifecycle.parameter_drift_gate_infra_error",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "failure",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: { note: "parameter_drift gate threw — promotion blocked (fail-closed); retries next cron cycle", error: driftErr instanceof Error ? driftErr.message : String(driftErr) },
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "Parameter drift fail-closed audit insert (PAPER→DEPLOY_READY) failed (non-blocking)");
+          });
+          strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+          continue;
         }
 
         // ── Wave B Fix 1: DSR walk-forward gate (PAPER → DEPLOY_READY) ──────────

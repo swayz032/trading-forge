@@ -4,7 +4,7 @@
  * WHAT THIS GUARDS
  * ----------------
  * The AUTONOMOUS cron promotion path (`checkAutoPromotions` in lifecycle-service.ts)
- * is the PRIMARY promotion path. Five gate-evaluation catch blocks on that path used
+ * is the PRIMARY promotion path. Six gate-evaluation catch blocks on that path used
  * to FAIL OPEN ("non-blocking — promotion continues") — a transient DB/import error
  * during the cron sweep silently advanced a strategy past the gate:
  *
@@ -13,8 +13,9 @@
  *   3. DSR          TESTING → PAPER            (catch var: dsrTpErr)
  *   4. DSR          PAPER   → DEPLOY_READY     (catch var: dsrPdrErr)
  *   5. BIF          PAPER   → DEPLOY_READY     (catch var: bifErr)
+ *   6. param-drift  PAPER   → DEPLOY_READY     (catch var: driftErr)
  *
- * H-1 changed all five to FAIL CLOSED, mirroring the B14 catch (~:2854 / ~:3846):
+ * H-1 changed all six to FAIL CLOSED, mirroring the B14 catch (~:2854 / ~:3846):
  * on exception they write a fail-closed `lifecycle.<gate>_gate_infra_error` audit row,
  * increment the `strategyPromotions` system_gate counter, and `continue` (skip the
  * promotion — it retries next cron cycle). The transition does NOT occur.
@@ -74,7 +75,9 @@ function extractCatchBlock(source: string, catchVar: string): string {
   throw new Error(`unbalanced braces in catch (${catchVar})`);
 }
 
-// The 5 in-scope cron catch blocks: catch var → expected fail-closed audit action + transition.
+// The 6 in-scope cron catch blocks: catch var → expected fail-closed audit action + transition.
+// (Initial 5 + the 6th param-drift PAPER→DEPLOY_READY block added for full parity — every
+// fail-open cron gate catch is now closed.)
 const CRON_FAIL_CLOSED_CATCHES: ReadonlyArray<{
   catchVar: string;
   gate: string;
@@ -87,6 +90,8 @@ const CRON_FAIL_CLOSED_CATCHES: ReadonlyArray<{
   { catchVar: "dsrTpErr",   gate: "DSR",          action: "lifecycle.dsr_gate_infra_error",            fromState: "TESTING", toState: "PAPER" },
   { catchVar: "dsrPdrErr",  gate: "DSR",          action: "lifecycle.dsr_gate_infra_error",            fromState: "PAPER",   toState: "DEPLOY_READY" },
   { catchVar: "bifErr",     gate: "BIF",          action: "lifecycle.bif_gate_infra_error",            fromState: "PAPER",   toState: "DEPLOY_READY" },
+  // 6th block: param-drift on PAPER→DEPLOY_READY — identical H-1 defect class.
+  { catchVar: "driftErr",   gate: "param-drift",  action: "lifecycle.parameter_drift_gate_infra_error", fromState: "PAPER",   toState: "DEPLOY_READY" },
 ];
 
 describe("H-1: autonomous-cron gate-exception catches FAIL CLOSED (F1 parity guard)", () => {
@@ -138,13 +143,15 @@ describe("H-1: autonomous-cron gate-exception catches FAIL CLOSED (F1 parity gua
     });
   }
 
-  it("PARITY INVARIANT: B14 + WFE + param-drift + DSR + BIF ALL fail-closed on the cron path", () => {
+  it("PARITY INVARIANT: ALL 6 cron gate catches (B14 + WFE + param-drift×2 + DSR×2 + BIF) fail-closed", () => {
     // B14 was already correct (the reference pattern) — prove it is still present on
-    // BOTH cron transitions so this guard documents the full 5-gate parity, not just
-    // the 4 newly-hardened gates.
+    // BOTH cron transitions so this guard documents the full parity, not just the
+    // newly-hardened gates.
     expect(source).toContain('action: "b14.gate_error_fail_closed"'); // B14 reference (TESTING→PAPER & PAPER→DEPLOY_READY)
 
     // All 4 newly-hardened fail-closed actions must be present somewhere in the source.
+    // (parameter_drift_gate_infra_error now covers BOTH the TESTING→PAPER `driftTpErr`
+    // catch AND the PAPER→DEPLOY_READY `driftErr` catch — the 6th block.)
     const requiredActions = [
       "lifecycle.wfe_gate_infra_error",
       "lifecycle.parameter_drift_gate_infra_error",
@@ -155,8 +162,10 @@ describe("H-1: autonomous-cron gate-exception catches FAIL CLOSED (F1 parity gua
       expect(source).toContain(`action: "${a}"`);
     }
 
-    // Each of the 5 in-scope catch blocks must terminate with `continue;` (fail-closed
-    // skip) and contain NO fail-open fall-through marker.
+    // Exactly 6 in-scope catch blocks, each terminating with `continue;` (fail-closed
+    // skip) and containing NO fail-open fall-through marker. The count assertion guards
+    // against a future fail-open catch being added without a corresponding test entry.
+    expect(CRON_FAIL_CLOSED_CATCHES).toHaveLength(6);
     for (const { catchVar } of CRON_FAIL_CLOSED_CATCHES) {
       const block = extractCatchBlock(source, catchVar);
       expect(block).toContain("continue;");
