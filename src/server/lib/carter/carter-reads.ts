@@ -242,7 +242,7 @@ async function reportStrategyStatus(params: unknown): Promise<unknown> {
     why: blockingWhy,
     gate_evidence: backtest
       ? {
-          bif: backtest.bif !== null ? Number(backtest.bif) : null,
+          bif: backtest.bif !== null ? Number(backtest.bif) : null, // numeric() returns string — always Number() before compare (F-6)
           wfe_overall: typeof wfeOverall === "number" ? wfeOverall : null,
           pbo_overall: typeof pboOverall === "number" ? pboOverall : null,
           ruin_ci_high: typeof ruinCiHigh === "number" ? ruinCiHigh : null,
@@ -288,7 +288,7 @@ async function reportBacktestResult(params: unknown): Promise<unknown> {
     totalTrades: b.totalTrades ?? null,
     forgeScore: b.forgeScore !== null ? Number(b.forgeScore) : null,
     tier: b.tier ?? null,
-    bif: b.bif !== null ? Number(b.bif) : null,
+    bif: b.bif !== null ? Number(b.bif) : null, // numeric() returns string — always Number() before compare (F-6)
     wfe_overall: wfr["wfe_overall"] ?? null,
     pbo_overall: wfr["pbo_overall"] ?? null,
     gateResult: b.gateResult ?? null,

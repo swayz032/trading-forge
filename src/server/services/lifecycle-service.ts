@@ -557,6 +557,7 @@ export class LifecycleService {
           },
           // H1 fix 2026-06-28: wire BIF gate inputs from backtests row.
           bifInput: {
+            // numeric() returns string — always Number() before compare (F-6)
             bif: latestBtP2D?.bif != null ? Number(latestBtP2D.bif) : null,
             kEff: latestBtP2D?.kEff != null ? Number(latestBtP2D.kEff) : null,
           },
@@ -579,6 +580,7 @@ export class LifecycleService {
           const p2dWfMeta = ((wfResults?.wf_metadata as Record<string, unknown> | null) ?? null);
           const bifReliable = p2dWfMeta?.bif_reliable;
           if (bifReliable === false) {
+            // numeric() returns string — always Number() before compare (F-6)
             const bifNum = latestBtP2D?.bif != null ? Number(latestBtP2D.bif) : null;
             const kEffNum = latestBtP2D?.kEff != null ? Number(latestBtP2D.kEff) : null;
             const bifProxyBasis = (p2dWfMeta?.bif_proxy_basis as string | null | undefined) ?? null;
@@ -613,6 +615,7 @@ export class LifecycleService {
           // silently counted as outcome="clean". Map that distinct reason to its own label.
           const bifReliableForCounter =
             ((wfResults?.wf_metadata as Record<string, unknown> | null)?.bif_reliable) === false;
+          // numeric() returns string — always Number() before compare (F-6)
           const bifResult = evaluateBifGate(
             latestBtP2D?.bif != null ? Number(latestBtP2D.bif) : null,
             latestBtP2D?.kEff != null ? Number(latestBtP2D.kEff) : null,
@@ -4241,6 +4244,7 @@ export class LifecycleService {
           const bifWfMeta = ((latestBtForBif?.walkForwardResults as import("./backtest-service.js").WfResultsBlob | null)?.wf_metadata as Record<string, unknown> | null) ?? null;
           const bifReliableFalse = bifWfMeta?.bif_reliable === false;
           const bifProxyBasis = (bifWfMeta?.bif_proxy_basis as string | null | undefined) ?? null;
+          // numeric() returns string — always Number() before compare (F-6)
           const bifNum = latestBtForBif?.bif != null ? Number(latestBtForBif.bif) : null;
           const kEffNum = latestBtForBif?.kEff != null ? Number(latestBtForBif.kEff) : null;
 

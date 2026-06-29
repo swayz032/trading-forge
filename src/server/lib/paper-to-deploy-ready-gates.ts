@@ -742,6 +742,7 @@ export function evaluatePaperToDeployReadyGates(
   // ──────────────────────────────────────────────────────────────────────────
   {
     const bifIn = input.bifInput ?? null;
+    // numeric() returns string — always Number() before compare (F-6)
     const bifNum = bifIn?.bif != null && Number.isFinite(Number(bifIn.bif)) ? Number(bifIn.bif) : null;
     const kEffNum = bifIn?.kEff != null && Number.isFinite(Number(bifIn.kEff)) ? Number(bifIn.kEff) : null;
 

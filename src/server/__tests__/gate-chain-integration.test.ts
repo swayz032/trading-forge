@@ -49,6 +49,7 @@ import { evaluateParameterDriftGate } from "../lib/parameter-drift-gate.js";
 // (frozen-policy-hash.js) NOT frozen-policy-contract.js — the latter imports ../db/index.js,
 // which throws on missing DATABASE_URL and would crash this whole gate-chain file at collection.
 import { evaluateFrozenPolicyDriftAtPromotion, computeFrozenPolicyHash } from "../lib/frozen-policy-hash.js";
+import { evaluatePromotionGates, type StrategyPromotionData } from "../lib/promotion-gate-orchestrator.js";
 import {
   backtests,
   strategies,
@@ -1565,5 +1566,345 @@ describe("Frozen-policy gate — strategies.frozen_policy_hash round-trip + drif
     });
     expect(result.ok).toBe(true);
     expect(result.frozenHash).toBeNull();
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Suite 11 — WRC/SPA orchestrator — evaluatePromotionGates REAL gate calls (PGlite, F-4)
+// Closes accuracy-validator F-4 (2026-06-29): Suites 7/8 are round-trip-only —
+// they verify DB key preservation but NEVER CALL evaluateWrcGate/evaluateSpaGate.
+// This suite INSERTs backtests with real WRC/SPA JSONB shapes, SELECTs the p-value
+// fields back, constructs StrategyPromotionData, and calls the EXPORTED
+// evaluatePromotionGates() — which internally invokes the private
+// evaluateWrcGate / evaluateSpaGate functions.
+//
+// Key assertions:
+//   PASS      : p_value=0.01 (< 0.05) → gate_results.wrc_p.passed=true
+//   PASS      : spa_consistent_p=0.02 (< 0.05) → gate_results.spa_p.passed=true
+//   BLOCK     : wrc p_value=0.40 (>= 0.05) → gate_results.wrc_p.passed=false
+//   BLOCK     : spa p=0.30 (>= 0.05) → gate_results.spa_p.passed=false
+//   FAIL-CLOSED: null data + PROMOTION_GRANDFATHER_PRE_PASS_E unset → both fail-closed
+//   FAIL-OPEN  : null data + PROMOTION_GRANDFATHER_PRE_PASS_E=true → both fail-open
+// ════════════════════════════════════════════════════════════════════════════════
+describe("WRC/SPA orchestrator — evaluatePromotionGates REAL gate calls (PGlite, F-4)", () => {
+  let ctx: TestDb;
+
+  // Suite IDs use prefix "f4" — no collision with cc/dd/ab/ee/ff/55/ba/bb/bc/99/fc
+  const STRAT_ID     = "f4000001-0000-0000-0000-000000000001";
+  const BT_BOTH_PASS = "f4000001-0000-0000-0000-000000000010"; // wrc p=0.01, spa p=0.02
+  const BT_WRC_BLOCK = "f4000001-0000-0000-0000-000000000011"; // wrc p=0.40 → WRC blocks
+  const BT_SPA_BLOCK = "f4000001-0000-0000-0000-000000000012"; // spa p=0.30 → SPA blocks
+
+  beforeAll(async () => {
+    ctx = await createTestDb();
+    await ctx.db.insert(strategies).values({
+      id: STRAT_ID, name: "wrc-spa-orch-test", symbol: "MES", timeframe: "5m", config: {},
+    });
+    await ctx.db.insert(backtests).values([
+      {
+        id: BT_BOTH_PASS, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        wrcResult: { p_value: 0.01, n_strategies: 1 },
+        spaResult: { spa_consistent_p: 0.02 },
+      },
+      {
+        id: BT_WRC_BLOCK, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        wrcResult: { p_value: 0.40, n_strategies: 1 },
+        spaResult: { spa_consistent_p: 0.02 },
+      },
+      {
+        id: BT_SPA_BLOCK, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        wrcResult: { p_value: 0.01, n_strategies: 1 },
+        spaResult: { spa_consistent_p: 0.30 },
+      },
+    ]);
+  });
+
+  afterAll(async () => { await ctx.close(); });
+
+  // Build StrategyPromotionData from DB row — this is the producer→consumer path
+  async function loadPromotionData(btId: string): Promise<StrategyPromotionData> {
+    const [row] = await ctx.db
+      .select({ wrc: backtests.wrcResult, spa: backtests.spaResult })
+      .from(backtests)
+      .where(eq(backtests.id, btId));
+    const wrc = row?.wrc as Record<string, unknown> | null;
+    const spa = row?.spa as Record<string, unknown> | null;
+    return {
+      // Provide well-formed values for all non-WRC/SPA gates so they pass on their own merit
+      ruinCi: { ci_high: 0.10 },
+      wfeOverall: 0.85,
+      cpcvNPaths: 20,
+      // WRC and SPA flow from DB SELECT — this is the integration seam under test
+      wrcPValue: (wrc?.p_value as number | null | undefined) ?? null,
+      spaConsistentP: (spa?.spa_consistent_p as number | null | undefined) ?? null,
+    };
+  }
+
+  // ── DB round-trip: producer key paths preserved ───────────────────────────
+  it("JSONB round-trip: wrc_result.p_value=0.01 and spa_result.spa_consistent_p=0.02 preserved", async () => {
+    const [row] = await ctx.db
+      .select({ wrc: backtests.wrcResult, spa: backtests.spaResult })
+      .from(backtests)
+      .where(eq(backtests.id, BT_BOTH_PASS));
+    const wrc = row?.wrc as Record<string, unknown>;
+    const spa = row?.spa as Record<string, unknown>;
+    expect(wrc?.p_value).toBe(0.01);
+    expect(spa?.spa_consistent_p).toBe(0.02);
+  });
+
+  // ── PASS: p < threshold ──────────────────────────────────────────────────
+  it("PASS: wrc_result.p_value=0.01 flows DB→gate → gate_results.wrc_p.passed=true", async () => {
+    const data = await loadPromotionData(BT_BOTH_PASS);
+    expect(data.wrcPValue).toBe(0.01); // confirm DB value flowed through
+    const result = evaluatePromotionGates(data);
+    expect(result.gate_results.wrc_p.passed).toBe(true);
+    expect(result.gate_results.wrc_p.value).toBeCloseTo(0.01, 6);
+    expect(result.gate_results.wrc_p.data_available).toBe(true);
+    expect(result.gate_results.wrc_p.reason).toContain("wrc.passed");
+  });
+
+  it("PASS: spa_result.spa_consistent_p=0.02 flows DB→gate → gate_results.spa_p.passed=true", async () => {
+    const data = await loadPromotionData(BT_BOTH_PASS);
+    expect(data.spaConsistentP).toBe(0.02);
+    const result = evaluatePromotionGates(data);
+    expect(result.gate_results.spa_p.passed).toBe(true);
+    expect(result.gate_results.spa_p.value).toBeCloseTo(0.02, 6);
+    expect(result.gate_results.spa_p.data_available).toBe(true);
+    expect(result.gate_results.spa_p.reason).toContain("spa.passed");
+  });
+
+  it("BOTH PASS: wrc_p and spa_p both pass → can_promote=true, n_gates_failed=0", async () => {
+    const data = await loadPromotionData(BT_BOTH_PASS);
+    const result = evaluatePromotionGates(data);
+    expect(result.can_promote).toBe(true);
+    expect(result.n_gates_failed).toBe(0);
+    expect(result.failing_gates).toHaveLength(0);
+  });
+
+  // ── BLOCK: p >= threshold ────────────────────────────────────────────────
+  it("BLOCK: wrc p_value=0.40 (>=0.05) → wrc_p.passed=false; spa_p still passes", async () => {
+    const data = await loadPromotionData(BT_WRC_BLOCK);
+    const result = evaluatePromotionGates(data);
+    expect(result.gate_results.wrc_p.passed).toBe(false);
+    expect(result.gate_results.wrc_p.data_available).toBe(true);
+    expect(result.gate_results.wrc_p.reason).toContain("wrc.not_significant");
+    expect(result.gate_results.spa_p.passed).toBe(true); // spa passes with p=0.02
+    expect(result.can_promote).toBe(false);
+    expect(result.failing_gates).toContain("wrc_p" as const);
+  });
+
+  it("BLOCK: spa spa_consistent_p=0.30 (>=0.05) → spa_p.passed=false; wrc_p still passes", async () => {
+    const data = await loadPromotionData(BT_SPA_BLOCK);
+    const result = evaluatePromotionGates(data);
+    expect(result.gate_results.spa_p.passed).toBe(false);
+    expect(result.gate_results.spa_p.data_available).toBe(true);
+    expect(result.gate_results.spa_p.reason).toContain("spa.not_significant");
+    expect(result.gate_results.wrc_p.passed).toBe(true); // wrc passes with p=0.01
+    expect(result.can_promote).toBe(false);
+    expect(result.failing_gates).toContain("spa_p" as const);
+  });
+
+  // ── FAIL-CLOSED: null data, default env (no grandfather) ─────────────────
+  it("FAIL-CLOSED: null wrcPValue + PROMOTION_GRANDFATHER_PRE_PASS_E unset → wrc_p.passed=false, data_available=false", () => {
+    const origGF = process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    delete process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    try {
+      const data: StrategyPromotionData = { wrcPValue: null, spaConsistentP: null };
+      const result = evaluatePromotionGates(data);
+      expect(result.gate_results.wrc_p.passed).toBe(false);
+      expect(result.gate_results.wrc_p.data_available).toBe(false);
+      expect(result.gate_results.wrc_p.reason).toContain("fail-closed");
+    } finally {
+      if (origGF !== undefined) process.env.PROMOTION_GRANDFATHER_PRE_PASS_E = origGF;
+    }
+  });
+
+  it("FAIL-CLOSED: null spaConsistentP + PROMOTION_GRANDFATHER_PRE_PASS_E unset → spa_p.passed=false, data_available=false", () => {
+    const origGF = process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    delete process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    try {
+      const data: StrategyPromotionData = { wrcPValue: null, spaConsistentP: null };
+      const result = evaluatePromotionGates(data);
+      expect(result.gate_results.spa_p.passed).toBe(false);
+      expect(result.gate_results.spa_p.data_available).toBe(false);
+      expect(result.gate_results.spa_p.reason).toContain("fail-closed");
+    } finally {
+      if (origGF !== undefined) process.env.PROMOTION_GRANDFATHER_PRE_PASS_E = origGF;
+    }
+  });
+
+  // ── FAIL-OPEN: grandfather opt-in ────────────────────────────────────────
+  it("FAIL-OPEN: null data + PROMOTION_GRANDFATHER_PRE_PASS_E=true → both wrc_p and spa_p pass", () => {
+    const origGF = process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    process.env.PROMOTION_GRANDFATHER_PRE_PASS_E = "true";
+    try {
+      const data: StrategyPromotionData = { wrcPValue: null, spaConsistentP: null };
+      const result = evaluatePromotionGates(data);
+      expect(result.gate_results.wrc_p.passed).toBe(true);
+      expect(result.gate_results.wrc_p.data_available).toBe(false);
+      expect(result.gate_results.wrc_p.reason).toContain("fail-open");
+      expect(result.gate_results.spa_p.passed).toBe(true);
+      expect(result.gate_results.spa_p.data_available).toBe(false);
+      expect(result.gate_results.spa_p.reason).toContain("fail-open");
+    } finally {
+      if (origGF !== undefined) process.env.PROMOTION_GRANDFATHER_PRE_PASS_E = origGF;
+      else delete process.env.PROMOTION_GRANDFATHER_PRE_PASS_E;
+    }
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Suite 12 — W24 DSR honest path — result_extras.invariants.dsr_honest (PGlite, F-5)
+// Closes accuracy-validator F-5 (2026-06-29): lifecycle-service.ts:~1383 reads a
+// SECOND DSR implementation at backtests.resultExtras.invariants.dsr_honest.dsr_passed —
+// entirely distinct from the wf_metadata.dsr_pass path that Suite 2b covers.
+//
+// Exact gate check replicated inline from lifecycle-service.ts:1376-1414
+// (lifecycle-service.ts cannot be imported directly — it holds a reference to the
+// production `db` singleton which throws on missing DATABASE_URL):
+//
+//   const dsrHonest = resultExtras?.invariants?.dsr_honest
+//   if (dsrHonest && !dsrHonest.not_applicable) {
+//     if (dsrHonest.dsr_passed === false) { BLOCK }
+//   }
+//
+// Key assertions:
+//   PASS       : dsr_passed=true → NOT blocked
+//   BLOCK      : dsr_passed=false → BLOCKED
+//   LEGACY PASS: no dsr_honest key (pre-W24 backtest) → NOT blocked
+//   SKIP       : dsr_honest.not_applicable=true → gate skipped, NOT blocked
+//   DISCONNECT : producer writes dsrPassed (camelCase) → consumer reads dsr_passed → undefined → false-green
+// ════════════════════════════════════════════════════════════════════════════════
+describe("W24 DSR honest path — result_extras.invariants.dsr_honest.dsr_passed (PGlite, F-5)", () => {
+  let ctx: TestDb;
+
+  // Suite IDs use prefix "f5" — no collision with other suites
+  const STRAT_ID    = "f5000001-0000-0000-0000-000000000001";
+  const BT_PASS     = "f5000001-0000-0000-0000-000000000010"; // dsr_passed=true → PASS
+  const BT_BLOCK    = "f5000001-0000-0000-0000-000000000011"; // dsr_passed=false → BLOCK
+  const BT_LEGACY   = "f5000001-0000-0000-0000-000000000012"; // no dsr_honest key → legacy PASS
+  const BT_NA       = "f5000001-0000-0000-0000-000000000013"; // not_applicable=true → gate skipped PASS
+  const BT_WRONGKEY = "f5000001-0000-0000-0000-000000000014"; // camelCase dsrPassed → false-green
+
+  beforeAll(async () => {
+    ctx = await createTestDb();
+    await ctx.db.insert(strategies).values({
+      id: STRAT_ID, name: "dsr-honest-test", symbol: "MES", timeframe: "5m", config: {},
+    });
+    await ctx.db.insert(backtests).values([
+      {
+        id: BT_PASS, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        resultExtras: { invariants: { dsr_honest: { dsr_passed: true, dsr: 1.8, n_trials: 5000 } } },
+      },
+      {
+        id: BT_BLOCK, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        resultExtras: { invariants: { dsr_honest: { dsr_passed: false, dsr: 0.9, n_trials: 5000 } } },
+      },
+      {
+        id: BT_LEGACY, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        // Pre-W24: no dsr_honest key at all — gate should be transparent
+        resultExtras: { invariants: {} },
+      },
+      {
+        id: BT_NA, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        // not_applicable=true → CPCV path where Sharpe Ratio cannot be computed; gate skipped
+        resultExtras: { invariants: { dsr_honest: { not_applicable: true, dsr_passed: false } } },
+      },
+      {
+        id: BT_WRONGKEY, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        // DISCONNECT: producer wrote dsrPassed (camelCase) instead of dsr_passed (snake_case).
+        // Consumer at lifecycle-service.ts:~1413 reads `dsrHonest.dsr_passed` → undefined.
+        // undefined === false is false → gate does NOT block → silent false-green.
+        resultExtras: { invariants: { dsr_honest: { dsrPassed: false, dsr: 0.9 } } },
+      },
+    ]);
+  });
+
+  afterAll(async () => { await ctx.close(); });
+
+  // Replicate lifecycle-service.ts:1376-1414 check inline.
+  // Cannot import lifecycle-service.ts — it imports `db` from ../db/index.js which
+  // requires DATABASE_URL and throws in test isolation. (B15 Suite 3 uses same pattern.)
+  function isDsrHonestBlocked(resultExtras: Record<string, unknown> | null): boolean {
+    if (!resultExtras) return false;
+    const invariants = resultExtras.invariants as Record<string, unknown> | undefined;
+    const dsrHonest = invariants?.dsr_honest as Record<string, unknown> | undefined;
+    // Gate is skipped when dsr_honest absent OR not_applicable is truthy
+    if (!dsrHonest || dsrHonest.not_applicable) return false;
+    return dsrHonest.dsr_passed === false;
+  }
+
+  async function selectExtras(btId: string): Promise<Record<string, unknown> | null> {
+    const [row] = await ctx.db
+      .select({ resultExtras: backtests.resultExtras })
+      .from(backtests)
+      .where(eq(backtests.id, btId));
+    return row?.resultExtras as Record<string, unknown> | null;
+  }
+
+  // ── DB round-trip ────────────────────────────────────────────────────────
+  it("JSONB round-trip: resultExtras.invariants.dsr_honest.dsr_passed=true preserved after INSERT/SELECT", async () => {
+    const extras = await selectExtras(BT_PASS);
+    const invariants = extras?.invariants as Record<string, unknown>;
+    const dsrHonest = invariants?.dsr_honest as Record<string, unknown>;
+    expect(dsrHonest?.dsr_passed).toBe(true);
+    expect(dsrHonest?.dsr).toBeCloseTo(1.8, 4);
+    expect(dsrHonest?.n_trials).toBe(5000);
+  });
+
+  it("JSONB round-trip: dsr_passed=false preserved as boolean false (not null, not undefined)", async () => {
+    const extras = await selectExtras(BT_BLOCK);
+    const invariants = extras?.invariants as Record<string, unknown>;
+    const dsrHonest = invariants?.dsr_honest as Record<string, unknown>;
+    // Must be boolean false — the === false gate check fails on null/undefined
+    expect(dsrHonest?.dsr_passed).toBe(false);
+    expect(typeof dsrHonest?.dsr_passed).toBe("boolean");
+  });
+
+  // ── Gate behavior ────────────────────────────────────────────────────────
+  it("PASS: dsr_honest.dsr_passed=true → gate does NOT block promotion", async () => {
+    const extras = await selectExtras(BT_PASS);
+    expect(isDsrHonestBlocked(extras)).toBe(false);
+  });
+
+  it("BLOCK: dsr_honest.dsr_passed=false → gate blocks promotion (lifecycle.dsr_honest_blocked)", async () => {
+    const extras = await selectExtras(BT_BLOCK);
+    expect(isDsrHonestBlocked(extras)).toBe(true);
+  });
+
+  it("LEGACY PASS: no dsr_honest key (pre-W24 backtest) → gate skips, NOT blocked", async () => {
+    const extras = await selectExtras(BT_LEGACY);
+    const invariants = extras?.invariants as Record<string, unknown>;
+    expect(invariants?.dsr_honest).toBeUndefined();
+    expect(isDsrHonestBlocked(extras)).toBe(false);
+  });
+
+  it("SKIP (not_applicable=true): gate skips even when dsr_passed=false — CPCV path, SR not computable", async () => {
+    const extras = await selectExtras(BT_NA);
+    const invariants = extras?.invariants as Record<string, unknown>;
+    const dsrHonest = invariants?.dsr_honest as Record<string, unknown>;
+    expect(dsrHonest?.not_applicable).toBe(true);
+    expect(isDsrHonestBlocked(extras)).toBe(false);
+  });
+
+  it("DISCONNECT (camelCase drift): producer writes dsrPassed; consumer reads dsr_passed → undefined → NOT blocked (false-green documented)", async () => {
+    const extras = await selectExtras(BT_WRONGKEY);
+    const invariants = extras?.invariants as Record<string, unknown>;
+    const dsrHonest = invariants?.dsr_honest as Record<string, unknown>;
+    // Wrong camelCase key IS present in JSONB
+    expect((dsrHonest as Record<string, unknown>)["dsrPassed"]).toBe(false);
+    // Correct snake_case key is absent
+    expect(dsrHonest?.dsr_passed).toBeUndefined();
+    // Consumer reads dsr_passed → undefined; undefined === false → NOT blocked → silent false-green
+    // This test documents the exact producer-key-drift failure mode for this gate.
+    expect(isDsrHonestBlocked(extras)).toBe(false);
   });
 });
