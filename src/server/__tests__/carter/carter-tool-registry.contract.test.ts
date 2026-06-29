@@ -7,9 +7,11 @@
  * Assertions:
  *   1. Every tool name matches ^[a-z][a-z0-9_]*$ (stable URL-safe identifier).
  *   2. Tool names are unique.
- *   3. Every non-red tool's `handler` key exists in CARTER_READ_HANDLERS OR CARTER_ACTION_HANDLERS.
- *   4. No handler key in either map is absent from the registry.
- *   5. All 25 required tools are present (15 read + 10 action).
+ *   3. Every NON-red tool's `handler` key exists in one of the three handler maps
+ *      (READ / ACTION / CONFIRM).
+ *   4. No handler key in any map is absent from the registry.
+ *   5. Every RED tool has tier 'red', handler null, and NO entry in any handler map.
+ *   6. Counts: 16 read + 10 action + 18 yellow (9 propose/confirm pairs) + 16 red.
  */
 
 // ── Mocks — prevent side-effectful service imports ────────────────────────────
@@ -21,6 +23,8 @@ vi.mock("../../db/schema.js", () => ({
   strategyPendingBuckets: {},
   strategyPendingMentions: {},
   auditLog: {},
+  systemState: {},
+  systemParameters: {},
 }));
 vi.mock("../../routes/backtests.js", () => ({ getBacktestConcurrencyStats: vi.fn(() => ({ active: 0, cap: 3, saturated: false })) }));
 vi.mock("../../lib/python-runner.js", () => ({ getPythonSubprocessStats: vi.fn() }));
@@ -93,7 +97,7 @@ vi.mock("../../services/strategy-fingerprint.js", () => ({
 import { describe, it, expect, vi } from "vitest";
 import { CARTER_TOOLS, getCarterTool } from "../../lib/carter/tool-registry.js";
 import { CARTER_READ_HANDLERS } from "../../lib/carter/carter-reads.js";
-import { CARTER_ACTION_HANDLERS } from "../../lib/carter/carter-actions.js";
+import { CARTER_ACTION_HANDLERS, CARTER_CONFIRM_HANDLERS } from "../../lib/carter/carter-actions.js";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -131,13 +135,55 @@ const REQUIRED_ACTION_TOOLS = [
   "evaluate_kill_signal",
 ] as const;
 
-const REQUIRED_TOOLS = [...REQUIRED_READ_TOOLS, ...REQUIRED_ACTION_TOOLS] as const;
+// 9 YELLOW capabilities, each a propose_/confirm_ pair = 18 tools.
+const YELLOW_CAPABILITIES = [
+  "toggle_bot_power",
+  "set_learning_loop_mode",
+  "toggle_vacation_mode",
+  "self_restart",
+  "trigger_n8n_workflow",
+  "run_quantum",
+  "request_lifecycle_check",
+  "request_promotion",
+  "rearm_scheduler_job",
+] as const;
+
+const REQUIRED_YELLOW_TOOLS = YELLOW_CAPABILITIES.flatMap((c) => [`propose_${c}`, `confirm_${c}`]);
+
+const REQUIRED_RED_TOOLS = [
+  "enable_live_execution",
+  "place_live_order",
+  "open_position",
+  "clear_kill_switch",
+  "clear_safety_autopause",
+  "clear_stuck_session",
+  "delete_backtest",
+  "delete_strategy",
+  "set_gate_threshold",
+  "set_compliance_shadow",
+  "edit_framework_sizing",
+  "enable_cloud_quantum",
+  "assign_rl_challenger",
+  "manage_n8n_workflow",
+  "kasa_power_cycle",
+  "disable_safety_cron",
+] as const;
+
+const REQUIRED_TOOLS = [
+  ...REQUIRED_READ_TOOLS,
+  ...REQUIRED_ACTION_TOOLS,
+  ...REQUIRED_YELLOW_TOOLS,
+  ...REQUIRED_RED_TOOLS,
+] as const;
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe("Carter tool registry — structural contract", () => {
-  it("has exactly 26 tools (16 read + 10 action)", () => {
-    expect(CARTER_TOOLS).toHaveLength(26);
+  it("has exactly 60 tools (16 read + 10 action + 18 yellow + 16 red)", () => {
+    expect(CARTER_TOOLS).toHaveLength(60);
+    expect(CARTER_TOOLS.filter((t) => t.tier === "green")).toHaveLength(26);
+    expect(CARTER_TOOLS.filter((t) => t.tier === "yellow")).toHaveLength(18);
+    expect(CARTER_TOOLS.filter((t) => t.tier === "red")).toHaveLength(16);
   });
 
   it("contains all required tool names", () => {
@@ -162,36 +208,46 @@ describe("Carter tool registry — structural contract", () => {
     expect(unique.size).toBe(names.length);
   });
 
-  it("every non-red tool handler key exists in CARTER_READ_HANDLERS or CARTER_ACTION_HANDLERS", () => {
-    const mergedHandlers = { ...CARTER_READ_HANDLERS, ...CARTER_ACTION_HANDLERS };
+  it("every NON-red tool handler key exists in one of the three handler maps", () => {
+    const mergedHandlers = { ...CARTER_READ_HANDLERS, ...CARTER_ACTION_HANDLERS, ...CARTER_CONFIRM_HANDLERS };
     for (const tool of CARTER_TOOLS) {
       if (tool.tier === "red") continue;
       expect(
-        tool.handler,
+        typeof tool.handler === "string",
         `Tool "${tool.name}" is tier "${tool.tier}" but has no handler key`
-      ).toBeDefined();
+      ).toBe(true);
       expect(
-        Object.prototype.hasOwnProperty.call(mergedHandlers, tool.handler!),
-        `Handler key "${tool.handler}" for tool "${tool.name}" is missing from both CARTER_READ_HANDLERS and CARTER_ACTION_HANDLERS`
+        Object.prototype.hasOwnProperty.call(mergedHandlers, tool.handler as string),
+        `Handler key "${tool.handler}" for tool "${tool.name}" is missing from all three handler maps`
       ).toBe(true);
     }
   });
 
-  it("no handler key in CARTER_READ_HANDLERS or CARTER_ACTION_HANDLERS is absent from the registry", () => {
+  it("no handler key in any map is absent from the registry", () => {
     const registryHandlerKeys = new Set(
-      CARTER_TOOLS.filter((t) => t.handler !== undefined).map((t) => t.handler!)
+      CARTER_TOOLS.filter((t) => typeof t.handler === "string").map((t) => t.handler as string)
     );
-    for (const key of Object.keys(CARTER_READ_HANDLERS)) {
-      expect(
-        registryHandlerKeys.has(key),
-        `Handler key "${key}" in CARTER_READ_HANDLERS has no matching registry entry`
-      ).toBe(true);
+    for (const map of [CARTER_READ_HANDLERS, CARTER_ACTION_HANDLERS, CARTER_CONFIRM_HANDLERS]) {
+      for (const key of Object.keys(map)) {
+        expect(
+          registryHandlerKeys.has(key),
+          `Handler key "${key}" has no matching registry entry`
+        ).toBe(true);
+      }
     }
-    for (const key of Object.keys(CARTER_ACTION_HANDLERS)) {
+  });
+
+  it("every RED tool is tier 'red' with handler null and NO handler in any map", () => {
+    const mergedHandlers = { ...CARTER_READ_HANDLERS, ...CARTER_ACTION_HANDLERS, ...CARTER_CONFIRM_HANDLERS };
+    for (const name of REQUIRED_RED_TOOLS) {
+      const tool = getCarterTool(name);
+      expect(tool, `RED tool "${name}" missing from registry`).toBeDefined();
+      expect(tool!.tier).toBe("red");
+      expect(tool!.handler, `RED tool "${name}" must have handler null`).toBeNull();
       expect(
-        registryHandlerKeys.has(key),
-        `Handler key "${key}" in CARTER_ACTION_HANDLERS has no matching registry entry`
-      ).toBe(true);
+        Object.prototype.hasOwnProperty.call(mergedHandlers, name),
+        `RED tool "${name}" must NOT have a handler in any map`
+      ).toBe(false);
     }
   });
 
@@ -209,12 +265,16 @@ describe("Carter tool registry — structural contract", () => {
     expect(getCarterTool("")).toBeUndefined();
   });
 
-  it("all green tools have a handler key", () => {
-    for (const tool of CARTER_TOOLS.filter((t) => t.tier === "green")) {
-      expect(
-        tool.handler,
-        `Green tool "${tool.name}" must have a handler key`
-      ).toBeDefined();
+  it("all green + yellow tools have a handler key; no red tool has one", () => {
+    for (const tool of CARTER_TOOLS) {
+      if (tool.tier === "red") {
+        expect(tool.handler, `Red tool "${tool.name}" must not have a handler`).toBeNull();
+      } else {
+        expect(
+          typeof tool.handler === "string",
+          `${tool.tier} tool "${tool.name}" must have a handler key`
+        ).toBe(true);
+      }
     }
   });
 
@@ -226,25 +286,25 @@ describe("Carter tool registry — structural contract", () => {
     expect(Object.keys(CARTER_ACTION_HANDLERS)).toHaveLength(10);
   });
 
-  it("all CARTER_READ_HANDLERS values are functions", () => {
-    for (const [key, fn] of Object.entries(CARTER_READ_HANDLERS)) {
-      expect(typeof fn, `Handler "${key}" must be a function`).toBe("function");
+  it("CARTER_CONFIRM_HANDLERS exports exactly 18 functions (9 propose + 9 confirm)", () => {
+    expect(Object.keys(CARTER_CONFIRM_HANDLERS)).toHaveLength(18);
+  });
+
+  it("all handler-map values are functions", () => {
+    for (const map of [CARTER_READ_HANDLERS, CARTER_ACTION_HANDLERS, CARTER_CONFIRM_HANDLERS]) {
+      for (const [key, fn] of Object.entries(map)) {
+        expect(typeof fn, `Handler "${key}" must be a function`).toBe("function");
+      }
     }
   });
 
-  it("all CARTER_ACTION_HANDLERS values are functions", () => {
-    for (const [key, fn] of Object.entries(CARTER_ACTION_HANDLERS)) {
-      expect(typeof fn, `Action handler "${key}" must be a function`).toBe("function");
-    }
-  });
-
-  it("no handler key exists in both CARTER_READ_HANDLERS and CARTER_ACTION_HANDLERS (no collision)", () => {
-    const readKeys = new Set(Object.keys(CARTER_READ_HANDLERS));
-    for (const key of Object.keys(CARTER_ACTION_HANDLERS)) {
-      expect(
-        readKeys.has(key),
-        `Handler key "${key}" exists in both CARTER_READ_HANDLERS and CARTER_ACTION_HANDLERS — collision`
-      ).toBe(false);
+  it("no handler key exists in more than one map (no collision)", () => {
+    const seen = new Set<string>();
+    for (const map of [CARTER_READ_HANDLERS, CARTER_ACTION_HANDLERS, CARTER_CONFIRM_HANDLERS]) {
+      for (const key of Object.keys(map)) {
+        expect(seen.has(key), `Handler key "${key}" exists in more than one map — collision`).toBe(false);
+        seen.add(key);
+      }
     }
   });
 });

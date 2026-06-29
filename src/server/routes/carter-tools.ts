@@ -27,7 +27,7 @@ import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { verifyCarterToolAuth } from "../lib/carter/carter-auth.js";
 import { getCarterTool } from "../lib/carter/tool-registry.js";
 import { CARTER_READ_HANDLERS } from "../lib/carter/carter-reads.js";
-import { CARTER_ACTION_HANDLERS } from "../lib/carter/carter-actions.js";
+import { CARTER_ACTION_HANDLERS, CARTER_CONFIRM_HANDLERS } from "../lib/carter/carter-actions.js";
 import { listOpenIssues } from "../lib/carter/carter-issues-store.js";
 
 export const carterToolsRouter = Router();
@@ -76,27 +76,35 @@ carterToolsRouter.post("/:tool", async (req: Request, res: Response): Promise<vo
     return;
   }
 
-  // 3. Tier check — only green tools are dispatchable
-  if (tool.tier !== "green") {
-    logger.warn({ toolName, tier: tool.tier }, "carter-tools: tool tier not dispatchable");
-    res.status(403).json({ error: "tool_not_available", tool: toolName, tier: tool.tier });
+  // 3. Tier check — RED tools have NO tool path (the governance guarantee).
+  //    GREEN (read/action) + YELLOW (propose/confirm) dispatch.
+  if (tool.tier === "red") {
+    logger.warn({ toolName }, "carter-tools: red action refused — no tool path");
+    res.status(403).json({ error: "red_action_no_tool_path", tool: toolName, tier: "red" });
     return;
   }
 
-  // 4. Handler lookup — check read handlers first, then action handlers
+  // 4. Handler lookup — read, then action, then confirm (no key collisions; the
+  //    contract test enforces single-map ownership of each handler key).
   const handlerKey = tool.handler!;
-  const handler = CARTER_READ_HANDLERS[handlerKey] ?? CARTER_ACTION_HANDLERS[handlerKey];
+  const handler: ((params: unknown, token?: string) => Promise<unknown>) | undefined =
+    CARTER_READ_HANDLERS[handlerKey] ?? CARTER_ACTION_HANDLERS[handlerKey] ?? CARTER_CONFIRM_HANDLERS[handlerKey];
   if (!handler) {
     // Should not happen if registry↔handler map are in sync (contract test catches this)
-    logger.error({ toolName, handlerKey }, "carter-tools: handler missing for green tool — registry/handler parity violation");
+    logger.error({ toolName, handlerKey }, "carter-tools: handler missing for dispatchable tool — registry/handler parity violation");
     res.status(500).json({ error: "handler_not_found", tool: toolName });
     return;
   }
 
-  // 5. Dispatch
+  // 5. Dispatch. For YELLOW confirm_* tools the confirmation token rides in the
+  //    body; extract it and pass as the second arg (read/action handlers ignore it).
   const params = req.body ?? {};
+  const token =
+    params && typeof params === "object" && typeof (params as Record<string, unknown>)["token"] === "string"
+      ? ((params as Record<string, unknown>)["token"] as string)
+      : undefined;
   try {
-    const result = await handler(params);
+    const result = await handler(params, token);
     const durationMs = Date.now() - startMs;
 
     await insertAuditRowSafe({

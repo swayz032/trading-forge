@@ -42,8 +42,11 @@ import {
   extractEntryArchetype,
   normalizeExitType,
 } from "../../services/strategy-fingerprint.js";
-import { isActive as isPipelineActive } from "../../services/pipeline-control-service.js";
+import { isActive as isPipelineActive, setMode } from "../../services/pipeline-control-service.js";
 import { getBacktestConcurrencyStats } from "../../routes/backtests.js";
+import { insertAuditRowSafe } from "../../lib/audit-log-helper.js";
+import { createHmac } from "node:crypto";
+import { issueConfirmation, verifyConfirmation } from "./carter-confirm.js";
 
 // ─── Shared payload factories ─────────────────────────────────────────────────
 
@@ -576,4 +579,466 @@ export const CARTER_ACTION_HANDLERS: Record<string, (params: unknown) => Promise
   scan_youtube_for_setups:  scanYouTubeForSetupsHandler,
   deposit_pending_mention:  depositPendingMentionHandler,
   evaluate_kill_signal:     evaluateKillSignalHandler,
+};
+
+// ════════════════════════════════════════════════════════════════════════════
+// YELLOW confirm-action handlers (Wave 5 — propose/confirm two-call protocol)
+// ════════════════════════════════════════════════════════════════════════════
+//
+// Each YELLOW capability is a PAIR registered tier="yellow" in the registry:
+//   propose_<x>(params)          → { summary, token }  (token via issueConfirmation)
+//   confirm_<x>(params, token)   → verifyConfirmation first; then call the
+//                                  underlying SERVICE function DIRECTLY (never the
+//                                  cookie-gated HTTP route); then audit
+//                                  `carter.action_executed` decisionAuthority='voice_agent'.
+//
+// GUARDRAILS (do not remove):
+//   - confirm_* without a valid token → { error: 'confirmation_required' } and NO mutation.
+//   - request_promotion: gates run INSIDE promoteStrategy — a gate block is RETURNED,
+//     never bypassed or forced.
+//   - run_quantum: cloud stays OFF (never sets optInCloud / QUANTUM_CLOUD_ENABLED).
+//   - trigger_n8n_workflow: webhook trigger paths only — workflow create/update/delete is RED.
+//   - set_learning_loop_mode: lowering to OFF(0)/OBSERVE(1) is GREEN (no token);
+//     raising to AUTOPILOT(2) is YELLOW (token required).
+
+/** Split a params object into the token field and the clean params it was minted over. */
+function stripToken(params: unknown): { clean: Record<string, unknown>; token: string | undefined } {
+  const p = (params ?? {}) as Record<string, unknown>;
+  const { token, ...clean } = p;
+  return { clean, token: typeof token === "string" ? token : undefined };
+}
+
+/** Reject when no valid confirmation token accompanies the action. */
+function tokenGate(
+  action: string,
+  clean: Record<string, unknown>,
+  token: string | undefined,
+): { error: "confirmation_required"; reason?: string } | null {
+  const v = verifyConfirmation(token ?? "", action, clean);
+  if (!v.ok) return { error: "confirmation_required", reason: v.reason };
+  return null;
+}
+
+/** Write the canonical voice-agent action-executed audit row. */
+async function auditActionExecuted(
+  action: string,
+  params: unknown,
+  result: unknown,
+  status: "success" | "failure" = "success",
+  errorMessage?: string,
+): Promise<void> {
+  await insertAuditRowSafe({
+    action: "carter.action_executed",
+    entityType: "voice_agent_action",
+    status,
+    decisionAuthority: "voice_agent",
+    correlationId: null,
+    input: { action, params } as Record<string, unknown>,
+    result: (result ?? {}) as Record<string, unknown>,
+    ...(errorMessage ? { errorMessage } : {}),
+  });
+}
+
+// ── toggle_bot_power (setMode ACTIVE|PAUSED) ─────────────────────────────────
+
+async function proposeToggleBotPower(params: unknown): Promise<unknown> {
+  const { clean } = stripToken(params);
+  const mode = clean.mode === "PAUSED" ? "PAUSED" : "ACTIVE";
+  const summary = mode === "PAUSED"
+    ? "This PAUSES all Trading Forge engine authority — lifecycle promotion, scheduler automation, and paper execution stop. Open positions stay as-is; n8n keeps feeding the queue. Confirm to pause."
+    : "This sets Trading Forge to ACTIVE — engine authority, lifecycle automation, and paper execution resume. Confirm to resume.";
+  const { token } = issueConfirmation("toggle_bot_power", clean);
+  return { summary, token };
+}
+
+async function confirmToggleBotPower(params: unknown, token?: string): Promise<unknown> {
+  const { clean, token: stripped } = stripToken(params);
+  const tok = token ?? stripped;
+  const gate = tokenGate("toggle_bot_power", clean, tok);
+  if (gate) return gate;
+
+  const mode = clean.mode === "PAUSED" ? "PAUSED" : clean.mode === "ACTIVE" ? "ACTIVE" : null;
+  if (!mode) return { error: "mode must be ACTIVE or PAUSED" };
+
+  await setMode(mode, "carter_voice_agent: toggle_bot_power", null);
+  const result = { executed: true, mode };
+  await auditActionExecuted("toggle_bot_power", clean, result);
+  logger.info({ mode }, "carter: toggle_bot_power executed");
+  return result;
+}
+
+// ── set_learning_loop_mode (auto_patch_loop_enabled 0/1/2) ───────────────────
+// Down to OFF(0)/OBSERVE(1) = GREEN (no token); up to AUTOPILOT(2) = YELLOW (token).
+
+async function proposeSetLearningLoopMode(params: unknown): Promise<unknown> {
+  const { clean } = stripToken(params);
+  const mode = Number(clean.mode);
+  const label = mode === 2 ? "AUTOPILOT" : mode === 1 ? "OBSERVE" : "OFF";
+  const summary = mode === 2
+    ? "This raises the learning loop to AUTOPILOT — autonomous prompt mutation loops (pattern-aggregator, quantum-replay-weekly) will run unattended. This requires confirmation."
+    : `This lowers the learning loop to ${label}. Lowering is safe and needs no confirmation; you can call confirm directly.`;
+  const { token } = issueConfirmation("set_learning_loop_mode", clean);
+  return { summary, token };
+}
+
+async function confirmSetLearningLoopMode(params: unknown, token?: string): Promise<unknown> {
+  const { clean, token: stripped } = stripToken(params);
+  const tok = token ?? stripped;
+
+  const mode = Number(clean.mode);
+  if (![0, 1, 2].includes(mode)) return { error: "mode must be 0 (OFF), 1 (OBSERVE), or 2 (AUTOPILOT)" };
+
+  // SPECIAL: only raising to AUTOPILOT(2) demands a token. OFF/OBSERVE are GREEN.
+  if (mode === 2) {
+    const gate = tokenGate("set_learning_loop_mode", clean, tok);
+    if (gate) return gate;
+  }
+
+  const { LEARNING_LOOP_MODE_PARAM } = await import("../../lib/learning-loop-mode.js");
+  const { systemParameters } = await import("../../db/schema.js");
+  const existing = await db
+    .select({ id: systemParameters.id })
+    .from(systemParameters)
+    .where(eq(systemParameters.paramName, LEARNING_LOOP_MODE_PARAM));
+  if (existing[0]) {
+    await db
+      .update(systemParameters)
+      .set({ currentValue: String(mode), updatedAt: new Date() })
+      .where(eq(systemParameters.paramName, LEARNING_LOOP_MODE_PARAM));
+  } else {
+    await db.insert(systemParameters).values({
+      paramName: LEARNING_LOOP_MODE_PARAM,
+      currentValue: String(mode),
+      domain: "scheduler",
+      description: "Autonomous learning-loop mode: 0=OFF, 1=OBSERVE, 2=AUTOPILOT",
+    });
+  }
+
+  const result = { executed: true, mode, tokenRequired: mode === 2 };
+  await auditActionExecuted("set_learning_loop_mode", clean, result);
+  logger.info({ mode }, "carter: set_learning_loop_mode executed");
+  return result;
+}
+
+// ── toggle_vacation_mode (system_state.operator_absent_since) ─────────────────
+
+async function proposeToggleVacationMode(params: unknown): Promise<unknown> {
+  const { clean } = stripToken(params);
+  const on = clean.on === true || clean.on === "true" || clean.on === "on";
+  const summary = on
+    ? "This turns ON vacation mode — Tier-1 strategies may auto-promote DEPLOY_READY → PILOT while you are away. Confirm to engage."
+    : "This turns OFF vacation mode — clears the operator-absent markers and returns to full operator supervision. Confirm to disengage.";
+  const { token } = issueConfirmation("toggle_vacation_mode", clean);
+  return { summary, token };
+}
+
+async function confirmToggleVacationMode(params: unknown, token?: string): Promise<unknown> {
+  const { clean, token: stripped } = stripToken(params);
+  const tok = token ?? stripped;
+  const gate = tokenGate("toggle_vacation_mode", clean, tok);
+  if (gate) return gate;
+
+  const on = clean.on === true || clean.on === "true" || clean.on === "on";
+  const { systemState } = await import("../../db/schema.js");
+  if (on) {
+    await db.update(systemState).set({ operatorAbsentSince: new Date() }).where(eq(systemState.id, 1));
+  } else {
+    const { clearOperatorAbsenceMarkers } = await import("../../services/dead-mans-heartbeat-service.js");
+    await clearOperatorAbsenceMarkers();
+  }
+
+  const result = { executed: true, vacation: on };
+  await auditActionExecuted("toggle_vacation_mode", clean, result);
+  logger.info({ on }, "carter: toggle_vacation_mode executed");
+  return result;
+}
+
+// ── self_restart (HMAC-signed POST to /api/admin/self-restart) ───────────────
+
+async function proposeSelfRestart(params: unknown): Promise<unknown> {
+  const { clean } = stripToken(params);
+  const summary = "This triggers a graceful backend self-restart. NSSM respawns fresh code in a few seconds; in-flight requests drop. Confirm to restart.";
+  const { token } = issueConfirmation("self_restart", clean);
+  return { summary, token };
+}
+
+async function confirmSelfRestart(params: unknown, token?: string): Promise<unknown> {
+  const { clean, token: stripped } = stripToken(params);
+  const tok = token ?? stripped;
+  const gate = tokenGate("self_restart", clean, tok);
+  if (gate) return gate;
+
+  const secret = process.env.ADMIN_RESTART_HMAC_SECRET;
+  if (!secret) return { error: "admin_restart_secret_not_configured" };
+
+  const reason = typeof clean.reason === "string" && clean.reason.trim()
+    ? clean.reason.trim()
+    : "carter_voice_self_restart";
+  // body.timestamp is Unix SECONDS (admin.ts multiplies by 1000); HMAC over `${ts}:${reason}`.
+  const tsSeconds = Math.floor(Date.now() / 1000);
+  const sig = createHmac("sha256", secret).update(`${tsSeconds}:${reason}`, "utf8").digest("hex");
+  const port = process.env.PORT ?? "4000";
+
+  // Audit BEFORE firing — the process may die before the fetch resolves.
+  await auditActionExecuted("self_restart", clean, { triggered: true, reason });
+
+  try {
+    await fetch(`http://localhost:${port}/api/admin/self-restart`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Restart-Signature": sig },
+      body: JSON.stringify({ timestamp: tsSeconds, reason }),
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch (err) {
+    // Connection reset is EXPECTED — the server closes mid-request on restart.
+    logger.info({ err: err instanceof Error ? err.message : String(err) }, "carter: self_restart fetch ended (restart in progress)");
+  }
+  logger.info({ reason }, "carter: self_restart triggered");
+  return { triggered: true, reason };
+}
+
+// ── trigger_n8n_workflow (fire an n8n webhook) ───────────────────────────────
+
+async function proposeTriggerN8nWorkflow(params: unknown): Promise<unknown> {
+  const { clean } = stripToken(params);
+  const path = String(clean.workflowWebhookPath ?? "").replace(/^\/+/, "");
+  const summary = `This fires the n8n webhook workflow "/webhook/${path}". It cannot create, edit, or delete workflows (that is a RED action). Confirm to trigger.`;
+  const { token } = issueConfirmation("trigger_n8n_workflow", clean);
+  return { summary, token };
+}
+
+async function confirmTriggerN8nWorkflow(params: unknown, token?: string): Promise<unknown> {
+  const { clean, token: stripped } = stripToken(params);
+  const tok = token ?? stripped;
+  const gate = tokenGate("trigger_n8n_workflow", clean, tok);
+  if (gate) return gate;
+
+  const path = String(clean.workflowWebhookPath ?? "").replace(/^\/+/, "");
+  if (!path) return { error: "workflowWebhookPath is required" };
+
+  // GUARDRAIL: webhook trigger paths ONLY — never the management REST API.
+  // The naive prefix check is insufficient: `../../api/v1/workflows` resolves
+  // past `/webhook/` to the management API. Defense in depth, 3 layers:
+  const lower = path.toLowerCase();
+
+  // Layer 1 — reject path traversal / null-byte in any form (raw or %-encoded).
+  if (
+    lower.includes("../") || lower.includes("..\\") ||
+    lower.includes("%2e%2e") || lower.includes("%2f") || lower.includes("%5c") ||
+    path.includes("\0")
+  ) {
+    return { error: "invalid_webhook_path", message: "Path traversal is not allowed (workflow management is a RED action)." };
+  }
+
+  // Layer 2 — reject management-path tokens anywhere, not just as a prefix.
+  if (/[?#]/.test(path) || lower.includes("api/") || lower.includes("rest/") || lower.includes("webhook/")) {
+    return { error: "invalid_webhook_path", message: "Only the n8n webhook trigger path segment is allowed (workflow management is a RED action)." };
+  }
+
+  const base = process.env.N8N_BASE_URL;
+  if (!base) return { error: "n8n_base_url_not_configured" };
+
+  const finalUrl = `${base}/webhook/${path}`;
+
+  // Layer 3 — strongest: verify the RESOLVED URL still lands under /webhook/ and
+  // never reaches /api/ or /rest/. Catches resolution-based escapes regardless of
+  // the input string form (the URL parser normalizes `..` dot-segments).
+  let parsedPath: string;
+  try {
+    parsedPath = new URL(finalUrl).pathname;
+  } catch {
+    return { error: "invalid_webhook_path", message: "Resolved webhook URL is malformed." };
+  }
+  const parsedLower = parsedPath.toLowerCase();
+  if (!parsedLower.startsWith("/webhook/") || parsedLower.includes("/api/") || parsedLower.includes("/rest/")) {
+    return { error: "invalid_webhook_path", message: "Resolved URL escapes the webhook trigger path (workflow management is a RED action)." };
+  }
+
+  const resp = await fetch(finalUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify((clean.payload as Record<string, unknown>) ?? {}),
+    signal: AbortSignal.timeout(10000),
+  });
+
+  const result = { triggered: true, workflowWebhookPath: path, status: resp.status };
+  await auditActionExecuted("trigger_n8n_workflow", clean, result);
+  logger.info({ path, status: resp.status }, "carter: trigger_n8n_workflow executed");
+  return result;
+}
+
+// ── run_quantum (quantum Monte Carlo — cloud OFF) ────────────────────────────
+
+async function proposeRunQuantum(params: unknown): Promise<unknown> {
+  const { clean } = stripToken(params);
+  const backtestId = String(clean.backtestId ?? "");
+  const summary = `This runs the LOCAL quantum Monte Carlo survival simulation for backtest ${backtestId}. Cloud QPU stays OFF (challenger-only, advisory). Confirm to run.`;
+  const { token } = issueConfirmation("run_quantum", clean);
+  return { summary, token };
+}
+
+async function confirmRunQuantum(params: unknown, token?: string): Promise<unknown> {
+  const { clean, token: stripped } = stripToken(params);
+  const tok = token ?? stripped;
+  const gate = tokenGate("run_quantum", clean, tok);
+  if (gate) return gate;
+
+  const backtestId = String(clean.backtestId ?? "");
+  if (!backtestId) return { error: "backtestId is required" };
+
+  const { runQuantumMC } = await import("../../services/quantum-mc-service.js");
+  const eventType = typeof clean.eventType === "string" ? clean.eventType : "breach";
+  const firmKey = typeof clean.firmKey === "string" ? clean.firmKey : "topstep_50k";
+  // GUARDRAIL: never pass optInCloud — cloud QPU stays OFF for voice-triggered runs.
+  const mc = await runQuantumMC(backtestId, eventType, firmKey, {});
+
+  const result = { executed: true, backtestId, mcRunId: (mc as Record<string, unknown>)?.id ?? null };
+  await auditActionExecuted("run_quantum", clean, result);
+  logger.info({ backtestId }, "carter: run_quantum executed (cloud OFF)");
+  return result;
+}
+
+// ── request_lifecycle_check (lifecycle sweep) ────────────────────────────────
+
+async function proposeRequestLifecycleCheck(params: unknown): Promise<unknown> {
+  const { clean } = stripToken(params);
+  const summary = "This runs the lifecycle sweep now — auto-promotion and auto-demotion checks across all strategies. Every gate still runs inside; nothing is bypassed. Confirm to run.";
+  const { token } = issueConfirmation("request_lifecycle_check", clean);
+  return { summary, token };
+}
+
+async function confirmRequestLifecycleCheck(params: unknown, token?: string): Promise<unknown> {
+  const { clean, token: stripped } = stripToken(params);
+  const tok = token ?? stripped;
+  const gate = tokenGate("request_lifecycle_check", clean, tok);
+  if (gate) return gate;
+
+  // GUARDRAIL: honor pause — the sweep writes lifecycle state, audit, and SSE.
+  if (!(await isPipelineActive())) return pipelinePausedPayload("request_lifecycle_check");
+
+  const { LifecycleService } = await import("../../services/lifecycle-service.js");
+  const svc = new LifecycleService();
+  const [promotions, demotions] = await Promise.all([
+    svc.checkAutoPromotions({}),
+    svc.checkAutoDemotions({}),
+  ]);
+
+  const result = {
+    executed: true,
+    promotions: promotions.length,
+    demotions: demotions.length,
+  };
+  await auditActionExecuted("request_lifecycle_check", clean, result);
+  logger.info(result, "carter: request_lifecycle_check executed");
+  return result;
+}
+
+// ── request_promotion (gates authoritative — NEVER forced) ───────────────────
+
+async function proposeRequestPromotion(params: unknown): Promise<unknown> {
+  const { clean } = stripToken(params);
+  const strategyId = String(clean.strategyId ?? "");
+  const toState = String(clean.toState ?? "");
+  const summary = `This requests promotion of strategy ${strategyId} to ${toState}. The lifecycle gates run inside the service and remain authoritative — if a gate blocks, the promotion is refused and I will read you the reason. Confirm to attempt.`;
+  const { token } = issueConfirmation("request_promotion", clean);
+  return { summary, token };
+}
+
+async function confirmRequestPromotion(params: unknown, token?: string): Promise<unknown> {
+  const { clean, token: stripped } = stripToken(params);
+  const tok = token ?? stripped;
+  const gate = tokenGate("request_promotion", clean, tok);
+  if (gate) return gate;
+
+  const strategyId = String(clean.strategyId ?? "");
+  const toState = String(clean.toState ?? "");
+  if (!strategyId) return { error: "strategyId is required" };
+  if (!toState) return { error: "toState is required" };
+
+  const [strat] = await db
+    .select({ lifecycleState: strategies.lifecycleState })
+    .from(strategies)
+    .where(eq(strategies.id, strategyId));
+  if (!strat) return { error: "strategy_not_found", strategyId };
+  const fromState = String(strat.lifecycleState);
+
+  const { LifecycleService } = await import("../../services/lifecycle-service.js");
+  const svc = new LifecycleService();
+  // GUARDRAIL: actor="system" (NOT human_release) — Carter is non-human authority,
+  // so human-required promotions (DEPLOY_READY → DEPLOYED / PILOT) stay blocked inside
+  // promoteStrategy. The voice-agent attribution lives on the audit row, not the gate actor.
+  const result = await svc.promoteStrategy(
+    strategyId,
+    fromState as Parameters<InstanceType<typeof LifecycleService>["promoteStrategy"]>[1],
+    toState as Parameters<InstanceType<typeof LifecycleService>["promoteStrategy"]>[2],
+    { actor: "system" },
+  );
+
+  // GUARDRAIL: a gate block is RETURNED, never forced or bypassed.
+  if (!result.success) {
+    const blocked = { blocked: true, reason: result.error ?? "promotion_blocked", strategyId, fromState, toState };
+    await auditActionExecuted("request_promotion", clean, blocked, "failure", result.error);
+    logger.warn(blocked, "carter: request_promotion blocked by gate (not forced)");
+    return blocked;
+  }
+
+  const ok = { executed: true, strategyId, fromState, toState };
+  await auditActionExecuted("request_promotion", clean, ok);
+  logger.info(ok, "carter: request_promotion executed");
+  return ok;
+}
+
+// ── rearm_scheduler_job (re-enable a disabled scheduler job) ──────────────────
+
+async function proposeRearmSchedulerJob(params: unknown): Promise<unknown> {
+  const { clean } = stripToken(params);
+  const jobName = String(clean.jobName ?? "");
+  const summary = `This re-enables the disabled scheduler job "${jobName}" so it resumes on its next tick. Confirm to re-arm.`;
+  const { token } = issueConfirmation("rearm_scheduler_job", clean);
+  return { summary, token };
+}
+
+async function confirmRearmSchedulerJob(params: unknown, token?: string): Promise<unknown> {
+  const { clean, token: stripped } = stripToken(params);
+  const tok = token ?? stripped;
+  const gate = tokenGate("rearm_scheduler_job", clean, tok);
+  if (gate) return gate;
+
+  const jobName = String(clean.jobName ?? "");
+  if (!jobName) return { error: "jobName is required" };
+
+  const { enableJob } = await import("../../scheduler.js");
+  const enabled = enableJob(jobName);
+  if (!enabled) return { enabled: false, jobName, error: "job_not_found_or_not_disabled" };
+
+  const result = { executed: true, jobName, enabled: true };
+  await auditActionExecuted("rearm_scheduler_job", clean, result);
+  logger.info({ jobName }, "carter: rearm_scheduler_job executed");
+  return result;
+}
+
+// ─── Confirm-handler export map ────────────────────────────────────────────────
+// Keys MUST match CarterTool.handler fields (tier="yellow") in tool-registry.ts.
+// Confirm handlers accept (params, token?) — the route extracts token from the body
+// and passes it through; propose handlers ignore the second arg.
+
+export const CARTER_CONFIRM_HANDLERS: Record<string, (params: unknown, token?: string) => Promise<unknown>> = {
+  propose_toggle_bot_power:        proposeToggleBotPower,
+  confirm_toggle_bot_power:        confirmToggleBotPower,
+  propose_set_learning_loop_mode:  proposeSetLearningLoopMode,
+  confirm_set_learning_loop_mode:  confirmSetLearningLoopMode,
+  propose_toggle_vacation_mode:    proposeToggleVacationMode,
+  confirm_toggle_vacation_mode:    confirmToggleVacationMode,
+  propose_self_restart:            proposeSelfRestart,
+  confirm_self_restart:            confirmSelfRestart,
+  propose_trigger_n8n_workflow:    proposeTriggerN8nWorkflow,
+  confirm_trigger_n8n_workflow:    confirmTriggerN8nWorkflow,
+  propose_run_quantum:             proposeRunQuantum,
+  confirm_run_quantum:             confirmRunQuantum,
+  propose_request_lifecycle_check: proposeRequestLifecycleCheck,
+  confirm_request_lifecycle_check: confirmRequestLifecycleCheck,
+  propose_request_promotion:       proposeRequestPromotion,
+  confirm_request_promotion:       confirmRequestPromotion,
+  propose_rearm_scheduler_job:     proposeRearmSchedulerJob,
+  confirm_rearm_scheduler_job:     confirmRearmSchedulerJob,
 };

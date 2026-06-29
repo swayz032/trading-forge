@@ -40,6 +40,7 @@ vi.mock("../../lib/carter/carter-reads.js", () => ({
 // loading in the route test — the route only exercises auth + registry + audit.
 vi.mock("../../lib/carter/carter-actions.js", () => ({
   CARTER_ACTION_HANDLERS: {},
+  CARTER_CONFIRM_HANDLERS: {},
 }));
 
 // Prevent carter-issues-store.ts from importing db/index.js in the route test.
