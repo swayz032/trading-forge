@@ -78,7 +78,8 @@ async function classifyBatch(clauses: SegmentedClause[]): Promise<GemmaResult[]>
   try { return JSON.parse(j.message?.content ?? "{}").results ?? []; } catch { return []; }
 }
 
-async function extractAtoms(clauses: SegmentedClause[]): Promise<{ clauseLedger: Clause[]; atoms: DecisionAtom[]; rows: Array<{ c: SegmentedClause; cls: string; atomIds: string[] }> }> {
+interface PerClause { is_decision: boolean; atom_type: string; object_canonical: string; classification: string }
+async function extractAtoms(clauses: SegmentedClause[]): Promise<{ clauseLedger: Clause[]; atoms: DecisionAtom[]; rows: Array<{ c: SegmentedClause; cls: string; atomIds: string[] }>; byClause: Map<string, PerClause> }> {
   const byId = new Map(clauses.map((c) => [c.id, c]));
   const results: GemmaResult[] = [];
   for (let i = 0; i < clauses.length; i += BATCH) {
@@ -109,7 +110,9 @@ async function extractAtoms(clauses: SegmentedClause[]): Promise<{ clauseLedger:
     void byId;
   }
   assembleDeps(atoms);
-  return { clauseLedger, atoms, rows };
+  const byClause = new Map<string, PerClause>();
+  for (const [cid, r] of resById) byClause.set(cid, { is_decision: !!r.is_decision, atom_type: r.atom_type ?? "NONE", object_canonical: canonObject(r.object ?? ""), classification: r.classification });
+  return { clauseLedger, atoms, rows, byClause };
 }
 
 /** v1 sequential assembler: preconditions are roots; the spine chains in transcript order; ENTER needs both. */
@@ -161,6 +164,20 @@ function assembleDeps(atoms: DecisionAtom[]): void {
   console.log(`  hallucinations (structural reverse-traceability): ${hall.length}`);
   console.log(`\nCANONICAL GRAPH: ${canonicalHash(graph)} (${new Set(p1.atoms.map(canonKey)).size} distinct atoms)`);
   console.log(`ATOM STABILITY (2 passes): countA=${p1.atoms.length} countB=${p2.atoms.length} Δ=${Math.abs(p1.atoms.length - p2.atoms.length)} | canonical-key diff=${keyDiff.length} ${keyDiff.length ? "[" + keyDiff.slice(0, 6).join(", ") + "]" : ""} -> ${stab.idempotent && keyDiff.length === 0 ? "STABLE" : "UNSTABLE"}`);
+
+  // ── Decision Boundary Agreement (DBA) + per-clause instability detail (taxonomy input) ──
+  const flips: Array<{ id: string; a: string; b: string; text: string }> = [];
+  let dbaTotal = 0, dbaAgree = 0;
+  const sig = (r?: PerClause) => !r ? "MISSING" : r.is_decision ? `${r.atom_type}:${r.object_canonical}` : `NON:${r.classification}`;
+  for (const c of clauses) {
+    const ra = p1.byClause.get(c.id), rb = p2.byClause.get(c.id);
+    if (ra?.is_decision || rb?.is_decision) { dbaTotal++; if (!!ra?.is_decision === !!rb?.is_decision) dbaAgree++; }
+    const ka = sig(ra), kb = sig(rb);
+    if (ka !== kb) flips.push({ id: c.id, a: ka, b: kb, text: c.text.trim().replace(/\s+/g, " ").slice(0, 64) });
+  }
+  console.log(`\nDECISION BOUNDARY AGREEMENT (DBA): ${dbaTotal ? Math.round((dbaAgree / dbaTotal) * 100) : 100}% (${dbaAgree}/${dbaTotal} either-pass-decision clauses agreed on is_decision)`);
+  console.log(`INSTABILITY DETAIL — ${flips.length} clause(s) flipped between passes (classify each into the cause taxonomy):`);
+  for (const f of flips) console.log(`  ${f.id} | A=${f.a.padEnd(30)} B=${f.b.padEnd(30)} | "${f.text}"`);
 
   const success = A.conserved && B.conserved && stab.idempotent && keyDiff.length === 0;
   console.log(`\nPHASE-1 SUCCESS CRITERION (every strategy-bearing clause dispositioned + every decision an atom + deterministic graph): ${success ? "MET" : "NOT MET"}`);
