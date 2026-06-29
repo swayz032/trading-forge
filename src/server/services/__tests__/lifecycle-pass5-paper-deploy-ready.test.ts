@@ -26,48 +26,44 @@ describe("Pass 5 Track C — PAPER→DEPLOY_READY evaluator wiring in lifecycle-
     expect(afterBlock).toContain("evaluatePaperToDeployReadyGates");
   });
 
+  // 2026-06-29 (deep-scan #4): these were brittle fixed-char-window slices that broke
+  // when Track A added code between `const pdrInput:` and the block (the snippets were
+  // already beyond the 4000/6000-char windows at baseline). Rewritten to robust
+  // whole-file assertions on the UNIQUE PDR markers — same intent, refactor-proof.
   it("blocks with return { success: false } when passed===false", () => {
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
-    // Anchor from pdrInput declaration — closer to the block guard than the function import site
-    const pdrInputIdx = src.indexOf("const pdrInput:");
-    expect(pdrInputIdx).toBeGreaterThan(-1);
-    const afterCall = src.slice(pdrInputIdx, pdrInputIdx + 4000);
-    expect(afterCall).toContain("!gatePdrResult.passed");
-    expect(afterCall).toContain("return { success: false");
+    expect(src).toContain("!gatePdrResult.passed");
+    // The block guard and its fail-closed return both present in the consolidated path.
+    // Window spans the in-block audit insert + SSE broadcast that sit before the return.
+    const guardIdx = src.indexOf("!gatePdrResult.passed");
+    expect(src.slice(guardIdx, guardIdx + 1300)).toContain("return { success: false");
   });
 
   it("inserts audit row on block", () => {
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
-    // Anchor from pdrInput — audit row is ~2000 chars from there
-    const pdrInputIdx = src.indexOf("const pdrInput:");
-    expect(pdrInputIdx).toBeGreaterThan(-1);
-    const afterCall = src.slice(pdrInputIdx, pdrInputIdx + 4000);
-    expect(afterCall).toContain("db.insert(auditLog)");
+    // PDR-specific audit action (unique marker — not the generic db.insert(auditLog)).
+    expect(src).toContain("lifecycle.paper_to_deploy_ready_blocked");
+    const actionIdx = src.indexOf("lifecycle.paper_to_deploy_ready_blocked");
+    expect(src.slice(actionIdx - 300, actionIdx)).toContain("db.insert(auditLog)");
   });
 
   it("broadcasts SSE on block", () => {
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
-    expect(src).toContain("lifecycle:paper_to_deploy_ready_blocked");
+    // SSE is broadcast via the typed catalog constant, not a raw colon-string.
+    expect(src).toContain("LIFECYCLE_GATE_EVENTS.PAPER_TO_DEPLOY_READY_BLOCKED");
   });
 
-  it("increments strategyPromotions counter on block", () => {
+  it("increments strategyPromotions counter on the PAPER→DEPLOY_READY path", () => {
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
-    // Anchor from pdrInput — strategyPromotions.labels is ~2500 chars from there
-    const pdrInputIdx = src.indexOf("const pdrInput:");
-    expect(pdrInputIdx).toBeGreaterThan(-1);
-    expect(src.slice(pdrInputIdx, pdrInputIdx + 4000)).toContain("strategyPromotions.labels");
+    expect(src).toContain('strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY"');
   });
 
   it("fail-CLOSED on infrastructure errors (catch (pdrGateErr) returns { success: false })", () => {
-    // F-1 Hardening 2026-06-23: catch now fail-CLOSED (not fail-open)
+    // F-1 Hardening 2026-06-23: catch is fail-CLOSED (not fail-open).
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
-    const pdrInputIdx = src.indexOf("const pdrInput:");
-    expect(pdrInputIdx).toBeGreaterThan(-1);
-    const block = src.slice(pdrInputIdx, pdrInputIdx + 6000);
-    expect(block).toContain("catch (pdrGateErr)");
-    // Must return fail-closed (use 700 chars to capture return statement)
+    expect(src).toContain("catch (pdrGateErr)");
     const catchIdx = src.indexOf("catch (pdrGateErr)");
-    const catchBlock = src.slice(catchIdx, catchIdx + 700);
+    const catchBlock = src.slice(catchIdx, catchIdx + 900);
     expect(catchBlock).toContain("return { success: false");
     expect(catchBlock).toContain("paper_to_deploy_ready_gate_evaluator_error");
   });
