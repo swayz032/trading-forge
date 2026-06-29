@@ -36,6 +36,12 @@ vi.mock("../../lib/carter/carter-reads.js", () => ({
   },
 }));
 
+// Prevent carter-actions.ts (and its transitive db/index.js import) from
+// loading in the route test — the route only exercises auth + registry + audit.
+vi.mock("../../lib/carter/carter-actions.js", () => ({
+  CARTER_ACTION_HANDLERS: {},
+}));
+
 // ── Imports ───────────────────────────────────────────────────────────────────
 
 import { describe, it, expect, vi, beforeEach } from "vitest";

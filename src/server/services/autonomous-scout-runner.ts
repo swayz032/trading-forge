@@ -912,7 +912,10 @@ async function _fetchYouTubeOrder(
 // W23G.6 (2026-05-19) — eligibility now uses combined_score (title + description
 // at half weight) rather than title-only score. Threshold unchanged at > -3 but
 // applied to combined_score.
-async function fetchYouTubeTopVideos(
+// Exported so carter-actions.ts can call YouTube discovery without re-implementing
+// the two-pass captioned+uncaptioned strategy. Returns candidate list (title+url) only —
+// callers MUST NOT auto-extract transcripts; that is the autonomous-cycle's job.
+export async function fetchYouTubeTopVideos(
   conceptName: string,
   cycleCorrelationId?: string,
 ): Promise<Array<{ url: string; title: string; source_pass: "captioned" | "uncaptioned"; sourceQuery: string; titleScore: number; combinedScore: number; videoId: string }>> {

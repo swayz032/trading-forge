@@ -125,6 +125,69 @@ export const CARTER_TOOLS: CarterTool[] = [
     tier: "green",
     handler: "report_drawdown_status",
   },
+
+  // ── Action tools (Tier: green) — capital-SAFE, never bypass a gate ───────────
+
+  {
+    name: "run_backtest",
+    description: "Runs a walk-forward backtest for a strategy (by ID). Strips compliance_mode/actor/trial_n_total — engine sets those. Returns backtestId and status. Returns system_busy if the concurrent cap is reached.",
+    tier: "green",
+    handler: "run_backtest",
+  },
+  {
+    name: "run_walk_forward",
+    description: "Explicit walk-forward backtest alias. Always uses mode=walkforward. Same guardrails as run_backtest.",
+    tier: "green",
+    handler: "run_walk_forward",
+  },
+  {
+    name: "run_monte_carlo",
+    description: "Runs a Monte Carlo survival simulation for a completed backtest. Always evaluates against Topstep 50K and MFFU 50K firms — B14 gate requires both. Returns mcRunId.",
+    tier: "green",
+    handler: "run_monte_carlo",
+  },
+  {
+    name: "run_matrix",
+    description: "Runs a parameter matrix sweep for a strategy. Returns matrixId. Use to generate variants for the critic review.",
+    tier: "green",
+    handler: "run_matrix",
+  },
+  {
+    name: "fire_scout_cycle",
+    description: "Fires a single autonomous scout research cycle (fire-and-forget, 3-10 min). Returns paused if pipeline is stopped. Does NOT force past the pause — operator must resume first.",
+    tier: "green",
+    handler: "fire_scout_cycle",
+  },
+  {
+    name: "research_strategy_idea",
+    description: "Searches across Brave, Tavily, Exa, and Parallel.ai for strategy ideas matching a query. Returns the top 5 results and provider breakdown.",
+    tier: "green",
+    handler: "research_strategy_idea",
+  },
+  {
+    name: "competitive_intel",
+    description: "Multi-provider competitive intelligence search on a topic (trader methodology, institutional edge, quant approach). Returns the top 5 results.",
+    tier: "green",
+    handler: "competitive_intel",
+  },
+  {
+    name: "scan_youtube_for_setups",
+    description: "Searches YouTube Data API for day-trading videos matching a topic. Returns candidate list (title+URL) only — does NOT extract transcripts. Feed results to the scout cycle for processing.",
+    tier: "green",
+    handler: "scan_youtube_for_setups",
+  },
+  {
+    name: "deposit_pending_mention",
+    description: "Deposits a strategy concept mention into the pending scout bucket (never the strict grading path). Requires conceptName, market (MES/MNQ/MCL), sourceUrl, and layer (web/youtube/reddit).",
+    tier: "green",
+    handler: "deposit_pending_mention",
+  },
+  {
+    name: "evaluate_kill_signal",
+    description: "Evaluates a sequence of backtest attempt metrics and returns a kill signal verdict (catastrophic_risk / no_edge / wrong_direction / unprofitable / flat_improvement / below_tier3 / null=keep going) plus the current stage and prompt.",
+    tier: "green",
+    handler: "evaluate_kill_signal",
+  },
 ];
 
 /** Fast O(1) lookup by tool name. Returns undefined when not found. */

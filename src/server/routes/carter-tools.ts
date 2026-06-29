@@ -27,6 +27,7 @@ import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { verifyCarterToolAuth } from "../lib/carter/carter-auth.js";
 import { getCarterTool } from "../lib/carter/tool-registry.js";
 import { CARTER_READ_HANDLERS } from "../lib/carter/carter-reads.js";
+import { CARTER_ACTION_HANDLERS } from "../lib/carter/carter-actions.js";
 
 export const carterToolsRouter = Router();
 
@@ -60,9 +61,9 @@ carterToolsRouter.post("/:tool", async (req: Request, res: Response): Promise<vo
     return;
   }
 
-  // 4. Handler lookup
+  // 4. Handler lookup — check read handlers first, then action handlers
   const handlerKey = tool.handler!;
-  const handler = CARTER_READ_HANDLERS[handlerKey];
+  const handler = CARTER_READ_HANDLERS[handlerKey] ?? CARTER_ACTION_HANDLERS[handlerKey];
   if (!handler) {
     // Should not happen if registry↔handler map are in sync (contract test catches this)
     logger.error({ toolName, handlerKey }, "carter-tools: handler missing for green tool — registry/handler parity violation");
