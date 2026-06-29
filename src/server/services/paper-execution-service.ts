@@ -3108,13 +3108,16 @@ async function callExitHandler(
     }
   }
 
-  // ── 2026-06-29 Fix 2 (HIGH): TS evaluator primary path for Style C ──────────
-  // Runs synchronously — no subprocess, no circuit-breaker risk, <1ms per call.
-  // Eliminates the per-bar Python spawn overhead and the 1h TP blackout that
+  // ── 2026-06-29 Fix 2 (HIGH): TS-native Style C exit evaluator — DARK LAUNCH ──
+  // Runs synchronously — no subprocess, no circuit-breaker risk, <1ms per call —
+  // eliminating the per-bar Python spawn overhead and the 1h TP blackout that
   // occurs when the CB opens after 3 failures in 10 min.
-  // Set STYLE_C_EXIT_PYTHON_FALLBACK=true to route Style C to Python subprocess
-  // (useful for parity-testing the two paths against each other).
-  if (exitStyle === "C" && process.env.STYLE_C_EXIT_PYTHON_FALLBACK !== "true") {
+  // SHIPPED OPT-IN / DEFAULT OFF (mirrors BACKTEST_STATIC_C_PARTIALS_ENABLED): the
+  // default path remains the audited Python style_c_handler so default exit
+  // behavior is byte-identical to today. Flip STYLE_C_EXIT_TS_NATIVE=true only
+  // after the evaluator is parity-validated against the Python handler across the
+  // regime fixtures. Until then this is a dead-by-default fast path.
+  if (exitStyle === "C" && process.env.STYLE_C_EXIT_TS_NATIVE === "true") {
     const cState = (config as { action: string; state: Record<string, unknown> }).state;
     return evaluateStyleCExit({
       direction: cState["direction"] as "long" | "short",
