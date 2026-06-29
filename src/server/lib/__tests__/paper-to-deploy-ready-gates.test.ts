@@ -18,7 +18,7 @@
  *  - No MC run (b14McDataAvailable=false) blocks fail-CLOSED
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // ── Module mocks ─────────────────────────────────────────────────────────────
 // All gate evaluators are imported inside the pure function — mock at module level.
@@ -60,10 +60,18 @@ vi.mock("../logger.js", () => ({
   },
 }));
 
+// Mock the Python subprocess runner so resolveSurvivalTwinOnDemand can be tested
+// without spawning Python.
+vi.mock("../python-runner.js", () => ({
+  runPythonModule: vi.fn(),
+}));
+
 import {
   evaluatePaperToDeployReadyGates,
+  resolveSurvivalTwinOnDemand,
   type PaperToDeployReadyGateInput,
 } from "../paper-to-deploy-ready-gates.js";
+import { runPythonModule } from "../python-runner.js";
 import { evaluateB14CiGate, evaluateDsrWalkForwardGate } from "../b14-ci-gate.js";
 import { evaluateWfeGate } from "../wfe-gate.js";
 import { evaluateParameterDriftGate } from "../parameter-drift-gate.js";
@@ -78,6 +86,7 @@ const mockWfe = vi.mocked(evaluateWfeGate);
 const mockDrift = vi.mocked(evaluateParameterDriftGate);
 const mockOrch = vi.mocked(evaluatePromotionGates);
 const mockFrozen = vi.mocked(evaluateFrozenPolicyDriftAtPromotion);
+const mockRunPython = vi.mocked(runPythonModule);
 
 /** Returns all gate mocks in their "pass" configuration. */
 function setAllGatesPass() {
@@ -822,5 +831,173 @@ describe("evaluatePaperToDeployReadyGates", () => {
       expect(result.passed).toBe(true);
       expect(result.failedGate).toBeUndefined();
     });
+  });
+
+  // ── Gate 1 honest 3-state — on-demand survival twin replay ──────────────────
+  describe("Gate 1 — on-demand survival twin replay (honest 3-state)", () => {
+    it("(a) PRESENT + passed===false → BLOCK; survivalTwin.status=survival_twin_blocked", () => {
+      setAllGatesPass();
+      const input = buildPassInput();
+      input.b14SurvivalTwin = { survival_twin: { passed: false } };
+
+      const result = evaluatePaperToDeployReadyGates(input);
+
+      expect(result.passed).toBe(false);
+      expect(result.failedGate).toBe("b14_survival_twin");
+      expect(result.auditAction).toBe("lifecycle.b14_hard_blocked");
+      expect(result.survivalTwin?.status).toBe("survival_twin_blocked");
+      expect(result.survivalTwin?.evaluatedVia).toBe("present_gate_result");
+    });
+
+    it("(b) ABSENT + on-demand replay BLOCKED → BLOCK on b14_survival_twin", () => {
+      setAllGatesPass();
+      const input = buildPassInput();
+      input.b14SurvivalTwin = {
+        survival_twin: null,
+        onDemandReplay: {
+          status: "blocked",
+          reason: "survival_twin_replay_grade_fail",
+          perFirm: [{ firm: "Topstep", grade: "F", survival_score: 22, status: "completed" }],
+        },
+      };
+
+      const result = evaluatePaperToDeployReadyGates(input);
+
+      expect(result.passed).toBe(false);
+      expect(result.failedGate).toBe("b14_survival_twin");
+      expect(result.auditAction).toBe("lifecycle.b14_survival_twin_replay_blocked");
+      expect(result.survivalTwin?.status).toBe("survival_twin_blocked");
+      expect(result.survivalTwin?.evaluatedVia).toBe("on_demand_replay");
+      expect(result.survivalTwin?.perFirm?.[0]?.grade).toBe("F");
+    });
+
+    it("(c) ABSENT + on-demand replay PASSED → PASS; survivalTwin.status=survival_twin_passed", () => {
+      setAllGatesPass();
+      const input = buildPassInput();
+      input.b14SurvivalTwin = {
+        survival_twin: null,
+        onDemandReplay: {
+          status: "passed",
+          reason: "survival_twin_replay_grade_pass",
+          perFirm: [{ firm: "Topstep", grade: "B", survival_score: 71, status: "completed" }],
+        },
+      };
+
+      const result = evaluatePaperToDeployReadyGates(input);
+
+      expect(result.passed).toBe(true);
+      expect(result.failedGate).toBeUndefined();
+      expect(result.survivalTwin?.status).toBe("survival_twin_passed");
+      expect(result.survivalTwin?.evaluatedVia).toBe("on_demand_replay");
+    });
+
+    it("(d) ABSENT + on-demand replay NOT-EVALUATED → allow through + advisory_not_evaluated", () => {
+      setAllGatesPass();
+      const input = buildPassInput();
+      input.b14SurvivalTwin = {
+        survival_twin: null,
+        onDemandReplay: {
+          status: "advisory_not_evaluated",
+          reason: "on_demand_replay_error",
+          error: "timed out",
+          perFirm: null,
+        },
+      };
+
+      const result = evaluatePaperToDeployReadyGates(input);
+
+      // allow-through — the B14 ci_high ruin gate remains the hard guard
+      expect(result.passed).toBe(true);
+      expect(result.failedGate).toBeUndefined();
+      expect(result.survivalTwin?.status).toBe("survival_twin_advisory_not_evaluated");
+      expect(result.survivalTwin?.replayError).toBe("timed out");
+    });
+
+    it("ABSENT + no on-demand replay provided → advisory_not_evaluated, allow through (honest legacy)", () => {
+      setAllGatesPass();
+      const input = buildPassInput();
+      input.b14SurvivalTwin = null;
+
+      const result = evaluatePaperToDeployReadyGates(input);
+
+      expect(result.passed).toBe(true);
+      expect(result.survivalTwin?.status).toBe("survival_twin_advisory_not_evaluated");
+      expect(result.survivalTwin?.evaluatedVia).toBe("not_evaluated");
+    });
+  });
+});
+
+// ── resolveSurvivalTwinOnDemand (mock runPythonModule) ────────────────────────
+describe("resolveSurvivalTwinOnDemand", () => {
+  beforeEach(() => {
+    mockRunPython.mockReset();
+  });
+
+  it("maps replay verdict 'blocked' → status blocked (real protection)", async () => {
+    mockRunPython.mockResolvedValue({
+      verdict: "blocked",
+      reason: "survival_twin_replay_grade_fail",
+      per_firm: [{ firm: "MFFU", grade: "F", survival_score: 18, status: "completed" }],
+    });
+
+    const r = await resolveSurvivalTwinOnDemand({ strategyId: "s1", backtestId: "bt1" });
+
+    expect(r.status).toBe("blocked");
+    expect(r.perFirm?.[0]?.grade).toBe("F");
+    expect(r.perFirm?.[0]?.survival_score).toBe(18);
+  });
+
+  it("maps replay verdict 'passed' → status passed", async () => {
+    mockRunPython.mockResolvedValue({
+      verdict: "passed",
+      reason: "survival_twin_replay_grade_pass",
+      per_firm: [{ firm: "Topstep", grade: "A", survival_score: 88, status: "completed" }],
+    });
+
+    const r = await resolveSurvivalTwinOnDemand({ strategyId: "s1", backtestId: "bt1" });
+
+    expect(r.status).toBe("passed");
+  });
+
+  it("maps replay verdict 'advisory_not_evaluated' → status advisory_not_evaluated", async () => {
+    mockRunPython.mockResolvedValue({
+      verdict: "advisory_not_evaluated",
+      reason: "no_completed_firm_replay",
+      per_firm: [],
+    });
+
+    const r = await resolveSurvivalTwinOnDemand({ strategyId: "s1", backtestId: "bt1" });
+
+    expect(r.status).toBe("advisory_not_evaluated");
+    expect(r.reason).toBe("no_completed_firm_replay");
+  });
+
+  it("FAIL-SOFT: runPythonModule throws → advisory_not_evaluated (NEVER blocked — cannot fail-OPEN)", async () => {
+    mockRunPython.mockRejectedValue(
+      new Error("b14-survival-twin-on-demand-replay timed out after 60000ms"),
+    );
+
+    const r = await resolveSurvivalTwinOnDemand({ strategyId: "s1", backtestId: "bt1" });
+
+    expect(r.status).toBe("advisory_not_evaluated");
+    expect(r.reason).toBe("on_demand_replay_error");
+    expect(r.error).toContain("timed out");
+    expect(mockRunPython).toHaveBeenCalledTimes(1);
+  });
+
+  it("unrecognized verdict → advisory_not_evaluated (never silently blocks/passes)", async () => {
+    mockRunPython.mockResolvedValue({ verdict: "weird_unknown", reason: "x", per_firm: [] });
+
+    const r = await resolveSurvivalTwinOnDemand({ strategyId: "s1", backtestId: "bt1" });
+
+    expect(r.status).toBe("advisory_not_evaluated");
+  });
+
+  it("no backtestId → advisory_not_evaluated without invoking python", async () => {
+    const r = await resolveSurvivalTwinOnDemand({ strategyId: "s1", backtestId: null });
+
+    expect(r.status).toBe("advisory_not_evaluated");
+    expect(r.reason).toBe("no_completed_backtest_for_on_demand_replay");
+    expect(mockRunPython).not.toHaveBeenCalled();
   });
 });

@@ -561,14 +561,14 @@ class TestCloudOptInGateMissingToken:
 
         with patch.dict(os.environ, env, clear=True):
             if PENNYLANE_AVAILABLE:
-                circuit, n_params, backend_label = _build_vqc_policy_ibm(n_qubits=2, n_layers=1)
+                circuit, n_params, backend_label = _build_vqc_policy_ibm(n_qubits=2, n_layers=1, opt_in_cloud=True)
                 # Without token, should fall back to default.qubit
                 assert backend_label == "default.qubit", (
                     f"Expected 'default.qubit' fallback, got '{backend_label}'"
                 )
             else:
                 # PennyLane unavailable — function returns (None, 0, "unavailable")
-                circuit, n_params, backend_label = _build_vqc_policy_ibm(n_qubits=2, n_layers=1)
+                circuit, n_params, backend_label = _build_vqc_policy_ibm(n_qubits=2, n_layers=1, opt_in_cloud=True)
                 assert backend_label == "unavailable"
 
 

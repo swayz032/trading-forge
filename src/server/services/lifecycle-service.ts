@@ -447,6 +447,23 @@ export class LifecycleService {
         const wfResults = latestBtP2D?.walkForwardResults as Record<string, unknown> | null | undefined;
         const gateResultBlob = latestBtP2D?.gateResult as Record<string, unknown> | null | undefined;
         const survivalTwin = gateResultBlob?.survival_twin as { passed?: boolean } | null | undefined;
+
+        // Honest B14 Survival Twin: survival_twin is only ever written by the manual
+        // replay tool, so for every normal strategy it is ABSENT and Gate 1 used to
+        // silently auto-pass. Evaluate it ON DEMAND via the replay harness so the gate
+        // actually runs. Fail-soft: a slow/broken replay degrades to
+        // advisory_not_evaluated (the B14 ci_high ruin gate remains the hard ruin
+        // guard) — never a new freeze surface, never a false block.
+        let survivalTwinOnDemand:
+          import("../lib/paper-to-deploy-ready-gates.js").OnDemandSurvivalReplayResult | null = null;
+        if (!survivalTwin && latestBtP2D?.id) {
+          const { resolveSurvivalTwinOnDemand } = await import("../lib/paper-to-deploy-ready-gates.js");
+          survivalTwinOnDemand = await resolveSurvivalTwinOnDemand({
+            strategyId: id,
+            backtestId: latestBtP2D.id,
+          });
+        }
+
         const mcRm = (latestMcP2D?.riskMetrics as Record<string, unknown> | null) ?? {};
         const ruinCi = (mcRm.probability_of_ruin_ci ?? null) as Record<string, unknown> | null;
         const wrcResult = latestBtP2D?.wrcResult as Record<string, unknown> | null | undefined;
@@ -464,7 +481,7 @@ export class LifecycleService {
           // path (_promoteStrategyInner). Previously omitted → pure evaluator defaulted to true,
           // silently ignoring the env flag when this path was used instead of the cron sweep.
           b15HardGateEnabled: (process.env.B15_BATTERY_ENABLED ?? "true") === "true",
-          b14SurvivalTwin: { survival_twin: (survivalTwin ?? null) as import("../lib/paper-to-deploy-ready-gates.js").B14SurvivalTwinInput["survival_twin"] },
+          b14SurvivalTwin: { survival_twin: (survivalTwin ?? null) as import("../lib/paper-to-deploy-ready-gates.js").B14SurvivalTwinInput["survival_twin"], onDemandReplay: survivalTwinOnDemand },
           mcRuinCi: {
             probability_of_ruin_ci: ruinCi as import("../lib/b14-ci-gate.js").RuinCiDict | null,
             probability_of_ruin: latestMcP2D?.probabilityOfRuin != null ? Number(latestMcP2D.probabilityOfRuin) : null,
@@ -510,6 +527,27 @@ export class LifecycleService {
           broadcastSSE("lifecycle:paper_to_deploy_ready_blocked", { strategyId: id, reason: gatePdrResult.reason, passed: false });
           strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
           return { success: false, error: gatePdrResult.reason ?? "PAPER→DEPLOY_READY gate failed" };
+        }
+
+        // Honest survival-twin audit on the PROCEED path — makes an un-evaluated (or
+        // on-demand-passed) gate VISIBLE rather than masquerading as protection. Block
+        // paths are already audited above via gatePdrResult.auditAction (which carries
+        // the survival-twin block action when the twin itself was the blocker).
+        if (gatePdrResult.survivalTwin) {
+          const stv = gatePdrResult.survivalTwin;
+          const stAction =
+            stv.status === "survival_twin_passed"
+              ? "lifecycle.b14_survival_twin_evaluated"
+              : "lifecycle.b14_survival_twin_advisory_not_evaluated";
+          await db.insert(auditLog).values({
+            action: stAction,
+            entityId: id, entityType: "strategy",
+            status: stv.status === "survival_twin_passed" ? "success" : "warning",
+            decisionAuthority: "gate",
+            input: { fromState, toState, evaluated_via: stv.evaluatedVia },
+            result: { survival_twin_status: stv.status, reason: stv.auditReason, per_firm: stv.perFirm ?? null, replay_error: stv.replayError ?? null },
+            correlationId,
+          }).catch((e) => { logger.warn({ err: e }, "PAPER→DEPLOY_READY survival-twin audit failed (non-blocking)"); });
         }
       } catch (pdrGateErr) {
         // F-1 Hardening 2026-06-23: Fail-CLOSED on infrastructure errors.
@@ -3318,10 +3356,12 @@ export class LifecycleService {
               .orderBy(desc(backtests.createdAt))
               .limit(1);
 
+            let survivalTwinPresentB14 = false;
             if (latestBtForB14?.gateResult) {
               const b14Gate = latestBtForB14.gateResult as Record<string, unknown>;
               // survival_twin.passed=false → HARD block.
               const survivalTwin = b14Gate.survival_twin as Record<string, unknown> | undefined;
+              survivalTwinPresentB14 = survivalTwin != null;
 
               // Hardening 2026-06-22 (F-4): REMOVED the full-history daily-P&L consistency
               // reimplementation (max/sum over entire backtest history). That check used the
@@ -3364,6 +3404,44 @@ export class LifecycleService {
               // Gate passed (survival_twin not failed) — reset consecutive counter
               this._resetHardGateCounter(s.id, "b14_survival_twin_failed", correlationId);
             }
+
+            // HONESTY FIX (autonomous-promotion path): survival_twin is only ever
+            // written by the manual replay tool, so on the cron auto-promote path it is
+            // ABSENT for every normal strategy and this gate used to silently auto-pass.
+            // Evaluate it ON DEMAND via the replay harness. Fail-soft: blocked → skip
+            // promotion; advisory_not_evaluated → allow through with a distinct audit so
+            // it is visibly un-evaluated; passed → allow through. The B14 ci_high ruin
+            // gate below remains the hard ruin guard (defense-in-depth).
+            if (!survivalTwinPresentB14 && latestBtForB14?.id) {
+              const { resolveSurvivalTwinOnDemand } = await import("../lib/paper-to-deploy-ready-gates.js");
+              const od = await resolveSurvivalTwinOnDemand({ strategyId: s.id, backtestId: latestBtForB14.id });
+              await db.insert(auditLog).values({
+                action: od.status === "blocked"
+                  ? "lifecycle.b14_survival_twin_replay_blocked"
+                  : od.status === "passed"
+                    ? "lifecycle.b14_survival_twin_evaluated"
+                    : "lifecycle.b14_survival_twin_advisory_not_evaluated",
+                entityId: s.id, entityType: "strategy",
+                status: od.status === "blocked" ? "failure" : od.status === "passed" ? "success" : "warning",
+                decisionAuthority: "gate",
+                input: { fromState: "PAPER", toState: "DEPLOY_READY", evaluated_via: "on_demand_replay" },
+                result: { survival_twin_status: od.status, reason: od.reason, per_firm: od.perFirm ?? null, replay_error: od.error ?? null },
+                correlationId,
+              }).catch((auditErr) => {
+                logger.warn({ strategyId: s.id, err: auditErr }, "B14 survival-twin on-demand audit insert failed (non-blocking)");
+              });
+
+              if (od.status === "blocked") {
+                logger.warn(
+                  { strategyId: s.id, reason: od.reason, perFirm: od.perFirm, transition: "PAPER→DEPLOY_READY" },
+                  "B14 Survival Twin ON-DEMAND REPLAY BLOCKED PAPER→DEPLOY_READY promotion",
+                );
+                strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+                await this._maybeAutoGraveyard(s.id, "b14_survival_twin_replay_blocked", { reason: od.reason, perFirm: od.perFirm }, "PAPER", correlationId);
+                continue;
+              }
+            }
+
             // Track A.2: B14 survival twin gate evidence
             // If we reach this point without continuing, the survival twin either passed
             // or there was no data (legacy). Push the appropriate evidence status.

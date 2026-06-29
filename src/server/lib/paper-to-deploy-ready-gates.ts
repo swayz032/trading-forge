@@ -131,11 +131,62 @@ export interface CompositeShadowInput {
 
 // ─── B14 survival twin input ──────────────────────────────────────────────────
 
+/** Per-firm survival evidence row returned by the on-demand replay harness. */
+export interface SurvivalTwinPerFirm {
+  firm: string;
+  grade: string | null;
+  survival_score: number | null;
+  status: string;
+}
+
+/**
+ * Verdict from the on-demand survival-twin replay (resolveSurvivalTwinOnDemand).
+ *
+ * IMPORTANT contract: this resolver is FAIL-SOFT and is the defense-in-depth twin
+ * to the B14 ci_high ruin gate (which remains the HARD ruin guard). It returns:
+ *   - "blocked"               ONLY when a completed replay graded a firm as failing
+ *   - "passed"                when a completed replay graded all firms surviving
+ *   - "advisory_not_evaluated" when the replay could not run / errored / timed out
+ *                             / produced no completed firm (NEVER a silent pass, NEVER
+ *                             a hard freeze — honest "un-evaluated" so it is visible)
+ * It NEVER returns "blocked" on an error path, so it cannot fail-OPEN into a false block.
+ */
+export interface OnDemandSurvivalReplayResult {
+  status: "passed" | "blocked" | "advisory_not_evaluated";
+  reason: string;
+  perFirm?: SurvivalTwinPerFirm[] | null;
+  /** Populated only on the error / not-evaluated path. */
+  error?: string | null;
+}
+
+/** Honest survival-twin gate status surfaced on the gate result for audit. */
+export type SurvivalTwinGateStatus =
+  | "survival_twin_passed"
+  | "survival_twin_blocked"
+  | "survival_twin_advisory_not_evaluated";
+
+/** Survival-twin verdict attached to the gate result so the caller can audit it honestly. */
+export interface SurvivalTwinVerdict {
+  status: SurvivalTwinGateStatus;
+  evaluatedVia: "present_gate_result" | "on_demand_replay" | "not_evaluated";
+  auditReason: string;
+  perFirm?: SurvivalTwinPerFirm[] | null;
+  replayError?: string | null;
+}
+
 export interface B14SurvivalTwinInput {
   /** gateResult.survival_twin from latest completed backtest */
   survival_twin?: { passed?: boolean; [key: string]: unknown } | null;
   /** True when B14 gate infra threw (caller's try/catch produced an error) */
   infraError?: boolean;
+  /**
+   * On-demand replay verdict resolved by the caller via resolveSurvivalTwinOnDemand()
+   * when survival_twin data was ABSENT (the normal case — survival_twin is only ever
+   * written by the manual replay tool). When present, Gate 1 evaluates it honestly
+   * instead of silently auto-passing. Caller is responsible for the (async) replay
+   * invocation; the pure evaluator stays sync + side-effect-free.
+   */
+  onDemandReplay?: OnDemandSurvivalReplayResult | null;
 }
 
 // ─── Orchestrator WRC/SPA inputs ─────────────────────────────────────────────
@@ -256,6 +307,16 @@ export interface PaperToDeployReadyGateResult {
   needsFirstTimeFreeze?: boolean;
 
   /**
+   * Honest B14 Survival Twin verdict. Distinguishes survival_twin_passed /
+   * survival_twin_blocked / survival_twin_advisory_not_evaluated instead of
+   * conflating "data absent" with "passed". The caller writes an honest audit row
+   * from this (especially the advisory_not_evaluated state, so an un-evaluated gate
+   * is visible rather than masquerading as protection). Attached on the gate-1
+   * returns, the final pass return, and the frozen-policy returns.
+   */
+  survivalTwin?: SurvivalTwinVerdict;
+
+  /**
    * Shadow evaluation result for observability logging.
    * Always present (even when null indicates data unavailable).
    * The caller should write a composite.shadow_evaluation audit row.
@@ -292,9 +353,27 @@ export function evaluatePaperToDeployReadyGates(
     b15HardGateEnabled = true,
   } = input;
 
+  // Honest survival-twin verdict — set by Gate 1 below and threaded onto the
+  // gate-1 / final-pass / frozen-policy returns for the caller to audit.
+  let survivalTwinVerdict: SurvivalTwinVerdict | undefined;
+
   // ──────────────────────────────────────────────────────────────────────────
-  // Gate 1 — B14 Survival Twin (fail-CLOSED on infra error)
+  // Gate 1 — B14 Survival Twin (fail-CLOSED on infra error; HONEST 3-state otherwise)
   // Source: lifecycle-service.ts:2807-2984
+  //
+  // HONESTY FIX: previously this gate auto-PASSED whenever survival_twin data was
+  // absent (it only blocked on survival_twin.passed===false). Since survival_twin
+  // is only ever written by the manual replay tool, every normal strategy slid
+  // through un-evaluated — a hard gate masquerading as protection.
+  //
+  // Now Gate 1 distinguishes three HONEST states:
+  //   1. PRESENT + passed===false              → BLOCK (existing behavior)
+  //   2. ABSENT  + on-demand replay blocked    → BLOCK (NEW real protection)
+  //   3. ABSENT  + on-demand replay passed     → PASS
+  //   4. ABSENT  + replay not-evaluated/errored→ advisory_not_evaluated, allow
+  //      through (FAIL-SOFT — the B14 ci_high ruin gate below remains the HARD
+  //      ruin guard; this avoids re-freezing promotion and never fail-OPENs into a
+  //      false block, but is HONEST about being un-evaluated via a distinct audit).
   // ──────────────────────────────────────────────────────────────────────────
   if (b14HardGateEnabled) {
     const b14Twin = input.b14SurvivalTwin;
@@ -316,8 +395,15 @@ export function evaluatePaperToDeployReadyGates(
     }
 
     if (b14Twin?.survival_twin) {
+      // ── State 1: survival_twin data PRESENT (written by the replay tool) ──
       const survivalTwin = b14Twin.survival_twin;
       if (survivalTwin.passed === false) {
+        survivalTwinVerdict = {
+          status: "survival_twin_blocked",
+          evaluatedVia: "present_gate_result",
+          auditReason: "b14_survival_twin_failed",
+          perFirm: null,
+        };
         logger.warn(
           { strategyId, survivalTwin },
           "evaluatePaperToDeployReadyGates: B14 Survival Twin BLOCKED PAPER→DEPLOY_READY",
@@ -333,11 +419,90 @@ export function evaluatePaperToDeployReadyGates(
           },
           reason: "b14_survival_twin_failed",
           failedGate: "b14_survival_twin",
+          survivalTwin: survivalTwinVerdict,
         };
       }
+      survivalTwinVerdict = {
+        status: "survival_twin_passed",
+        evaluatedVia: "present_gate_result",
+        auditReason: "b14_survival_twin_present_passed",
+        perFirm: null,
+      };
+    } else if (b14Twin?.onDemandReplay) {
+      // ── States 2-4: survival_twin ABSENT — caller ran the on-demand replay ──
+      const od = b14Twin.onDemandReplay;
+      if (od.status === "blocked") {
+        survivalTwinVerdict = {
+          status: "survival_twin_blocked",
+          evaluatedVia: "on_demand_replay",
+          auditReason: od.reason,
+          perFirm: od.perFirm ?? null,
+          replayError: od.error ?? null,
+        };
+        logger.warn(
+          { strategyId, reason: od.reason, perFirm: od.perFirm },
+          "evaluatePaperToDeployReadyGates: B14 Survival Twin ON-DEMAND REPLAY BLOCKED PAPER→DEPLOY_READY",
+        );
+        return {
+          passed: false,
+          status: "blocked",
+          auditAction: "lifecycle.b14_survival_twin_replay_blocked",
+          auditPayload: {
+            reason: od.reason,
+            per_firm: od.perFirm ?? null,
+            evaluated_via: "on_demand_replay",
+            b14_hard_gate_enabled: true,
+          },
+          reason: od.reason,
+          failedGate: "b14_survival_twin",
+          survivalTwin: survivalTwinVerdict,
+        };
+      } else if (od.status === "passed") {
+        survivalTwinVerdict = {
+          status: "survival_twin_passed",
+          evaluatedVia: "on_demand_replay",
+          auditReason: od.reason,
+          perFirm: od.perFirm ?? null,
+        };
+        logger.info(
+          { strategyId, reason: od.reason },
+          "evaluatePaperToDeployReadyGates: B14 Survival Twin on-demand replay PASSED",
+        );
+      } else {
+        // advisory_not_evaluated — honest, allow through (B14 ci_high gate is the hard guard)
+        survivalTwinVerdict = {
+          status: "survival_twin_advisory_not_evaluated",
+          evaluatedVia: "on_demand_replay",
+          auditReason: od.reason,
+          perFirm: od.perFirm ?? null,
+          replayError: od.error ?? null,
+        };
+        logger.warn(
+          { strategyId, reason: od.reason, replayError: od.error ?? null },
+          "evaluatePaperToDeployReadyGates: B14 Survival Twin NOT EVALUATED (advisory) — allowing through; B14 ci_high ruin gate remains the hard guard",
+        );
+      }
+    } else {
+      // ── State 4 (no on-demand attempted): ABSENT and caller passed no replay ──
+      // Honest "un-evaluated" rather than a silent legacy pass.
+      survivalTwinVerdict = {
+        status: "survival_twin_advisory_not_evaluated",
+        evaluatedVia: "not_evaluated",
+        auditReason: "survival_twin_absent_no_on_demand_replay",
+        perFirm: null,
+      };
+      logger.warn(
+        { strategyId },
+        "evaluatePaperToDeployReadyGates: B14 Survival Twin data absent and no on-demand replay provided — advisory_not_evaluated (allowing through; B14 ci_high ruin gate remains the hard guard)",
+      );
     }
-    // No gateResult or survival_twin data → log advisory, allow through (legacy).
   } else {
+    survivalTwinVerdict = {
+      status: "survival_twin_advisory_not_evaluated",
+      evaluatedVia: "not_evaluated",
+      auditReason: "b14_hard_gate_disabled",
+      perFirm: null,
+    };
     logger.warn(
       { strategyId },
       "evaluatePaperToDeployReadyGates: B14 Survival Twin gate DISABLED via b14HardGateEnabled=false",
@@ -741,6 +906,7 @@ export function evaluatePaperToDeployReadyGates(
         auditPayload: { error: msg, note: "hash compute exception — promotion blocked" },
         reason: "frozen_policy.hash_compute_failed",
         failedGate: "frozen_policy",
+        survivalTwin: survivalTwinVerdict,
         shadowEvaluation,
       };
     }
@@ -768,6 +934,7 @@ export function evaluatePaperToDeployReadyGates(
         },
         reason: "lifecycle.frozen_policy_drift_blocked",
         failedGate: "frozen_policy",
+        survivalTwin: survivalTwinVerdict,
         shadowEvaluation,
       };
     }
@@ -788,6 +955,7 @@ export function evaluatePaperToDeployReadyGates(
         auditPayload: {},
         reason: "all_gates_passed_first_time_freeze",
         needsFirstTimeFreeze: true,
+        survivalTwin: survivalTwinVerdict,
         shadowEvaluation,
       };
     }
@@ -806,6 +974,207 @@ export function evaluatePaperToDeployReadyGates(
     auditAction: null,
     auditPayload: {},
     reason: "all_gates_passed",
+    survivalTwin: survivalTwinVerdict,
     shadowEvaluation,
   };
+}
+
+// ─── On-demand B14 Survival Twin replay resolver ──────────────────────────────
+
+/**
+ * Inline Python wrapper that runs the existing B14 Survival Twin replay harness
+ * (src/engine/replay/survival_twin_replay.replay_survival_on_backtest) for a single
+ * backtest and prints a single aggregated JSON verdict to stdout.
+ *
+ * Why a wrapper (not `-m`): the module's __main__ prints a human-readable summary
+ * and sys.exit()s — not parseable JSON. This wrapper imports the function directly
+ * (per the circular-import workaround documented in db_loader.py) and emits JSON.
+ *
+ * Verdict criterion (grounded in survival_scorer._assign_grade): a completed firm
+ * is "failing" when its letter grade is in fail_grades (default {"F"} = composite
+ * survival score < 35) OR, optionally, when survival_score < min_score. blocked when
+ * any completed firm fails; passed when all completed firms survive; advisory when
+ * no firm produced a completed replay (no daily_pnls, unknown firm, load error, …).
+ *
+ * The wrapper NEVER raises — every path prints a JSON verdict so the Node side gets a
+ * structured result instead of a subprocess error it has to interpret.
+ */
+const SURVIVAL_TWIN_REPLAY_WRAPPER = `
+import json, sys
+
+def _find_config_path(argv):
+    for i, a in enumerate(argv):
+        if a == "--config" and i + 1 < len(argv):
+            return argv[i + 1]
+    return None
+
+def main():
+    try:
+        cfg_path = _find_config_path(sys.argv)
+        if not cfg_path:
+            print(json.dumps({"verdict": "advisory_not_evaluated", "reason": "no_config_path", "per_firm": []}))
+            return
+        with open(cfg_path) as f:
+            cfg = json.load(f)
+        backtest_id = cfg.get("backtest_id")
+        fail_grades = set(cfg.get("fail_grades") or ["F"])
+        min_score = cfg.get("min_score")
+        if not backtest_id:
+            print(json.dumps({"verdict": "advisory_not_evaluated", "reason": "missing_backtest_id", "per_firm": []}))
+            return
+        try:
+            from src.engine.replay.survival_twin_replay import replay_survival_on_backtest
+            results = replay_survival_on_backtest(backtest_id=backtest_id, apply=False)
+        except Exception as exc:
+            print(json.dumps({"verdict": "advisory_not_evaluated", "reason": "replay_invocation_error", "error": str(exc)[:500], "per_firm": []}))
+            return
+        per_firm = []
+        completed = []
+        for r in results:
+            row = {
+                "firm": getattr(r, "firm", None),
+                "grade": getattr(r, "grade", None),
+                "survival_score": getattr(r, "survival_score", None),
+                "status": getattr(r, "status", None),
+            }
+            per_firm.append(row)
+            if row["status"] == "completed":
+                completed.append(row)
+        if not completed:
+            print(json.dumps({"verdict": "advisory_not_evaluated", "reason": "no_completed_firm_replay", "per_firm": per_firm}))
+            return
+        def _is_failing(row):
+            g = row.get("grade")
+            if g is not None and g in fail_grades:
+                return True
+            s = row.get("survival_score")
+            if min_score is not None and s is not None and s < min_score:
+                return True
+            return False
+        failing = [row for row in completed if _is_failing(row)]
+        if failing:
+            print(json.dumps({"verdict": "blocked", "reason": "survival_twin_replay_grade_fail", "per_firm": per_firm}))
+        else:
+            print(json.dumps({"verdict": "passed", "reason": "survival_twin_replay_grade_pass", "per_firm": per_firm}))
+    except Exception as exc:
+        print(json.dumps({"verdict": "advisory_not_evaluated", "reason": "wrapper_unexpected_error", "error": str(exc)[:500], "per_firm": []}))
+
+main()
+`;
+
+interface SurvivalTwinReplayRaw {
+  verdict?: string;
+  reason?: string;
+  error?: string;
+  per_firm?: Array<Record<string, unknown>>;
+}
+
+/**
+ * Resolve the B14 Survival Twin gate ON DEMAND when the normal backtest never wrote
+ * survival_twin data (the normal case). Runs the existing replay harness in a bounded,
+ * fail-soft Python subprocess and maps the result to an OnDemandSurvivalReplayResult.
+ *
+ * FAIL-SOFT POSTURE (deliberate — defense-in-depth, the B14 ci_high ruin gate is the
+ * HARD ruin guard):
+ *   - No backtestId            → advisory_not_evaluated (nothing to replay)
+ *   - subprocess error/timeout → advisory_not_evaluated (NEVER blocked — cannot
+ *                                fail-OPEN into a false block)
+ *   - replay graded a firm F   → blocked (NEW real protection)
+ *   - replay graded all firms surviving → passed
+ *
+ * This function NEVER throws. The caller awaits it BEFORE calling the (sync, pure)
+ * evaluatePaperToDeployReadyGates and passes the verdict in via b14SurvivalTwin.onDemandReplay.
+ *
+ * Timeout: B14_SURVIVAL_TWIN_REPLAY_TIMEOUT_MS (default 60000). Fail criterion:
+ * B14_SURVIVAL_TWIN_REPLAY_FAIL_GRADES (default "F") + optional
+ * B14_SURVIVAL_TWIN_REPLAY_MIN_SCORE.
+ */
+export async function resolveSurvivalTwinOnDemand(params: {
+  strategyId: string;
+  backtestId?: string | null;
+  timeoutMs?: number;
+}): Promise<OnDemandSurvivalReplayResult> {
+  const { strategyId, backtestId } = params;
+
+  if (!backtestId) {
+    return {
+      status: "advisory_not_evaluated",
+      reason: "no_completed_backtest_for_on_demand_replay",
+      perFirm: null,
+      error: null,
+    };
+  }
+
+  const timeoutMs =
+    params.timeoutMs ??
+    (Number(process.env.B14_SURVIVAL_TWIN_REPLAY_TIMEOUT_MS) || 60_000);
+
+  const failGrades = (process.env.B14_SURVIVAL_TWIN_REPLAY_FAIL_GRADES ?? "F")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const minScoreRaw = process.env.B14_SURVIVAL_TWIN_REPLAY_MIN_SCORE;
+  const minScore =
+    minScoreRaw != null && minScoreRaw !== "" && Number.isFinite(Number(minScoreRaw))
+      ? Number(minScoreRaw)
+      : null;
+
+  try {
+    const { runPythonModule } = await import("./python-runner.js");
+    const raw = await runPythonModule<SurvivalTwinReplayRaw>({
+      scriptCode: SURVIVAL_TWIN_REPLAY_WRAPPER,
+      config: { backtest_id: backtestId, fail_grades: failGrades, min_score: minScore },
+      timeoutMs,
+      componentName: "b14-survival-twin-on-demand-replay",
+    });
+
+    const perFirm: SurvivalTwinPerFirm[] | null = Array.isArray(raw.per_firm)
+      ? raw.per_firm.map((f) => ({
+          firm: f.firm != null ? String(f.firm) : "",
+          grade: f.grade != null ? String(f.grade) : null,
+          survival_score: f.survival_score != null ? Number(f.survival_score) : null,
+          status: f.status != null ? String(f.status) : "",
+        }))
+      : null;
+
+    if (raw.verdict === "blocked") {
+      return {
+        status: "blocked",
+        reason: raw.reason ?? "survival_twin_replay_grade_fail",
+        perFirm,
+        error: null,
+      };
+    }
+    if (raw.verdict === "passed") {
+      return {
+        status: "passed",
+        reason: raw.reason ?? "survival_twin_replay_grade_pass",
+        perFirm,
+        error: null,
+      };
+    }
+    // advisory_not_evaluated OR any unrecognized verdict → honest, allow-through
+    return {
+      status: "advisory_not_evaluated",
+      reason: raw.reason ?? "survival_twin_replay_not_evaluated",
+      perFirm,
+      error: raw.error ?? null,
+    };
+  } catch (err) {
+    // FAIL-SOFT: a slow/broken replay never hangs (timeout) or fail-OPENs into a
+    // hard block. It degrades to advisory_not_evaluated; the B14 ci_high ruin gate
+    // remains the hard ruin guard.
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.warn(
+      { strategyId, backtestId, err },
+      "resolveSurvivalTwinOnDemand: on-demand replay failed — advisory_not_evaluated (B14 ci_high ruin gate remains the hard guard)",
+    );
+    return {
+      status: "advisory_not_evaluated",
+      reason: "on_demand_replay_error",
+      perFirm: null,
+      error: msg,
+    };
+  }
 }
