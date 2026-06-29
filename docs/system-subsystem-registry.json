@@ -5425,5 +5425,86 @@
     "learning_boundary": "none",
     "deployment_authority": "operator_only",
     "criticality": "important"
+  },
+  {
+    "id": "strategy_decay_monitor",
+    "domain": "lifecycle",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "advisory",
+    "automation_scope": "inst-10of10 blueprint gap #2. Monitors DEPLOYED strategies for within-regime rolling-Sharpe z-score edge decay. Distinct from regime-drift-detector: catches OOS Sharpe degradation inside a STABLE regime. Advisory only — no auto-demotion. >1σ → strategy.edge_decay_warn; >2σ → strategy.edge_decay_demotion_review.",
+    "data_sources": [
+      "paper_trades.pnl + exitTime",
+      "paper_sessions (active|paused|stopped)",
+      "bias_state.regime_label (stable-regime guard)"
+    ],
+    "reads_from": [
+      "strategies",
+      "paper_sessions",
+      "paper_trades",
+      "bias_state"
+    ],
+    "writes_to": [
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "strategy_decay_monitor.skipped_lock_contention",
+      "strategy_decay_monitor.skipped_dst_guard",
+      "strategy_decay_monitor.completed",
+      "strategy.edge_decay_regime_shifting",
+      "strategy.edge_decay_insufficient_data",
+      "strategy.edge_decay_baseline_zero_std",
+      "strategy.edge_decay_ok",
+      "strategy.edge_decay_warn",
+      "strategy.edge_decay_demotion_review"
+    ],
+    "metrics_surfaces": [],
+    "telemetry_sources": [
+      "audit_log.strategy_decay_monitor.*",
+      "audit_log.strategy.edge_decay_*",
+      "scheduler:strategy-decay-monitor:21,22-utc"
+    ],
+    "scheduler_jobs": [
+      "strategy-decay-monitor"
+    ],
+    "routes": [],
+    "engine_subsystems": [
+      "src/server/services/strategy-decay-monitor-service.ts::runStrategyDecayMonitor",
+      "src/server/services/strategy-decay-monitor-service.ts::_evaluateStrategyDecay",
+      "scheduler.ts::strategy-decay-monitor-cron"
+    ],
+    "database_tables": [
+      "strategies",
+      "paper_sessions",
+      "paper_trades",
+      "bias_state",
+      "audit_log"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": "audit_log",
+    "recovery_mode": "fail-soft",
+    "health_check": "src/server/__tests__/strategy-decay-monitor.test.ts",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log.strategy_decay_monitor.completed",
+      "scheduler:strategy-decay-monitor:21,22-utc"
+    ],
+    "evidence_queries": [
+      "SELECT * FROM audit_log WHERE action = 'strategy_decay_monitor.completed' ORDER BY created_at DESC LIMIT 7",
+      "SELECT * FROM audit_log WHERE action IN ('strategy.edge_decay_warn','strategy.edge_decay_demotion_review') ORDER BY created_at DESC LIMIT 20"
+    ],
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "production",
+    "deployment_authority": "operator_only",
+    "criticality": "observability"
   }
 ]

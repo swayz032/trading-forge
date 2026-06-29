@@ -72,6 +72,8 @@ import { runStrategyStaleDetector } from "./services/strategy-stale-detector.js"
 import { isOffRthTrainingWindow } from "./lib/quantum-rl-training-runner.js";
 // W29 Pass B.3: Regime drift detector — daily 18:00 ET sweep
 import { runRegimeDriftDetector } from "./services/regime-drift-detector-service.js";
+// inst-10of10 blueprint gap #2: within-regime rolling-Sharpe z-score decay monitor — daily 17:00 ET
+import { runStrategyDecayMonitor } from "./services/strategy-decay-monitor-service.js";
 // W29 Pass D.3: A/B comparison weekly digest — Friday 17:00 ET
 import { runAbComparisonWeeklyDigest } from "./services/ab-comparison-weekly-digest-service.js";
 // W0.1: Nightly off-tower database backup (hardware-failure safety net)
@@ -492,6 +494,10 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   // dangerous — the operator must be alerted and the strategy demoted regardless
   // of the pipeline gate state.
   "regime-drift-detector",              // W29B.3: daily regime drift sweep
+  // inst-10of10 blueprint gap #2: decay monitor is a pure observability signal —
+  // edge decay within a stable regime continues accumulating regardless of pipeline
+  // pause state. Advisory-only; no lifecycle mutations.
+  "strategy-decay-monitor",             // inst-10of10: daily within-regime decay sweep
   // W29 Pass D.3: A/B comparison weekly digest must fire even when pipeline is
   // paused. The operator needs weekly A/B performance visibility regardless of
   // whether the research pipeline is paused — pausing research does not stop
@@ -5027,6 +5033,54 @@ except Exception as e:
     }
   });
   _scheduledJobs.add("regime-drift-detector");
+
+  // ─── inst-10of10 blueprint gap #2: within-regime rolling-Sharpe decay monitor ───
+  //
+  // Catches edge DECAY within a STABLE regime. Distinct from regime-drift-detector
+  // (which catches REGIME CHANGES). Per Man Group "continuous factor-decay
+  // monitoring": a strategy's OOS Sharpe can degrade significantly without any
+  // observable regime change, requiring independent monitoring.
+  //
+  // Schedule: 17:00 ET = 21:00 UTC (EDT, UTC-4) or 22:00 UTC (EST, UTC-5).
+  // Double-fire "33 21,22 * * *" covers both UTC offsets; ET-hour=17 guard inside
+  // runStrategyDecayMonitor() filters to exactly 17:00 ET. Offset :33 avoids
+  // pile-up with consistency-tracker (:07), composite-health (:13), regime-drift (:23).
+  //
+  // Advisory only — emits audit events and Discord WARNs but no lifecycle mutations.
+  // Registered in _PIPELINE_GATE_EXEMPT above.
+  _PIPELINE_GATE_EXEMPT.add("strategy-decay-monitor");
+
+  registerJob("strategy-decay-monitor", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "strategy-decay-monitor" }, "cron tick start");
+    await runStrategyDecayMonitor();
+  });
+
+  // 17:00 ET = 21:00 UTC (EDT, UTC-4) or 22:00 UTC (EST, UTC-5).
+  // Offset :33 avoids pile-up with other daily digests at :07, :13, :23.
+  cron.schedule("33 21,22 * * *", async () => {
+    if (!_tryAcquireJobLock("strategy-decay-monitor")) return;
+    try {
+      const now = new Date();
+      const etHour = parseInt(
+        now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+        10,
+      );
+      if (etHour !== 17) {
+        logger.debug({ etHour }, "Scheduler: strategy-decay-monitor cron fired but not 17:00 ET — skipping (DST guard)");
+        return;
+      }
+      // NOT pipeline-gated — in _PIPELINE_GATE_EXEMPT
+      logger.info("Scheduler: strategy-decay-monitor (17:00 ET confirmed)");
+      const t0sdm = Date.now();
+      await withRetry("strategy-decay-monitor", SCHEDULER_JOBS["strategy-decay-monitor"].run, 1);
+      markJobRun("strategy-decay-monitor");
+      emitJobComplete("strategy-decay-monitor", Date.now() - t0sdm);
+    } finally {
+      _releaseJobLock("strategy-decay-monitor");
+    }
+  });
+  _scheduledJobs.add("strategy-decay-monitor");
 
   // ─── Wave 26 Pass L Tweak 2: MCL pre-EIA stop tightening — Wed 10:00 ET ───
   //
