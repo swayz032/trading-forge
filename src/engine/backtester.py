@@ -4951,15 +4951,28 @@ def run_backtest(
                 result["invariants"]["pbo"] = {"not_applicable": True, "reason": "fewer than 4 walk-forward windows"}
                 result["invariants"]["pbo_flag"] = False
 
-            # ── Honest DSR: n_trials from WF fold count or MC trial count ────
-            # n_trials = number of independent parameter configurations evaluated.
-            # For a single-config backtest: n_trials=1 → DSR reduces to raw SR test.
-            # For a walk-forward run: n_trials = number of OOS windows (each is a
-            # distinct candidate evaluation in the IS optimization search space).
-            # For an MC sweep: n_trials is passed via result["mc_n_trials"] if set.
+            # ── Honest DSR: n_trials from trial_n_total, WF folds, or MC count ───
+            # n_trials = total independent parameter configurations evaluated.
+            # For a single-config backtest: n_trials=1 → DSR = raw SR test.
+            # For a walk-forward run: n_trials = max(trial_n_total, n_folds) so
+            #   the cumulative mutation history from the critic-optimizer is reflected.
+            #   trial_n_total is set by TS critic-optimizer-service and represents the
+            #   total number of candidate evaluations across ALL evolution cycles for
+            #   this strategy (not just the current WF run).
+            # For an MC sweep: mc_n_trials from result dict overrides (highest priority).
+            #
+            # F-5 (2026-06-29): DSR_USE_TRIAL_N_TOTAL env flag (default ON).
+            # Set env=0/false/no to revert to the pre-F5 len(wf_windows)-only path
+            # for historical reproduction.  When ON, n_trials = max(trial_n_total, n_folds).
+            _DSR_USE_NTOTAL = (
+                os.environ.get("DSR_USE_TRIAL_N_TOTAL", "true").lower() not in ("0", "false", "no")
+            )
+            _strategy_n_total: int = (
+                getattr(request, "trial_n_total", 1) or 1
+            ) if _DSR_USE_NTOTAL else 1
             _n_trials_inv = int(
                 result.get("mc_n_trials", 0)
-                or len(_wf_windows)
+                or max(_strategy_n_total, len(_wf_windows))
                 or 1
             )
             _dsr_threshold = float(os.environ.get("DSR_HONEST_THRESHOLD", "1.5"))
@@ -4977,6 +4990,8 @@ def run_backtest(
                     "sr_observed": round(_observed_sharpe_inv, 4),
                     "sr_threshold": _dsr_honest.get("sr_expected_max"),
                     "n_trials": _n_trials_inv,
+                    # F-5 audit fields: distinguish trial_n_total source from wf-fold fallback
+                    "trial_n_total_used": _strategy_n_total,
                     "dsr": _dsr_honest.get("dsr"),
                     "dsr_passed": _dsr_passed_honest,
                     "p_value": _dsr_honest.get("p_value"),
