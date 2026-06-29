@@ -392,6 +392,7 @@ app.get("/api/health", async (_req, res) => {
     youtubeDataApiConfigured: Boolean(process.env.YOUTUBE_DATA_API_KEY),
     apifyConfigured:          Boolean(process.env.APIFY_API_KEY),
     apifyUserIdSet:           Boolean(process.env.APIFY_USER_ID),
+    carterConfigured:         Boolean(process.env.ELEVENLABS_API_KEY && process.env.CARTER_AGENT_ID),
   };
 
   res.json({
