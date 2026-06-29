@@ -49,7 +49,10 @@ import { createHmac } from "node:crypto";
 import { issueConfirmation, verifyConfirmation } from "./carter-confirm.js";
 // Wave 7 — RESEARCH lane (NON-strategy). Leaf imports only; carter-research pulls
 // the logger leaf + the pure reddit-cross-extract helper (no heavy graph).
-import { institutionalResearch, researchReddit } from "./carter-research.js";
+import { institutionalResearch } from "./carter-research.js";
+// Apify-backed async research (Reddit + Instagram) — fire-then-fetch-later.
+// research_reddit + research_instagram action handlers live in the service map.
+import { CARTER_APIFY_RESEARCH_ACTION_HANDLERS } from "../../services/apify-research-service.js";
 
 // In-process base URL for reusing the EXISTING extraction pipeline endpoints
 // (/api/agent/scout-extract + /api/agent/scout-ideas/pending) — same pattern as
@@ -425,14 +428,9 @@ async function extractYoutubeStrategyHandler(params: unknown): Promise<unknown> 
 // Wave 7 — RESEARCH lane: research_reddit + institutional_research (NON-strategy)
 // ════════════════════════════════════════════════════════════════════════════
 
-// research_reddit ─────────────────────────────────────────────────────────────
-async function researchRedditHandler(params: unknown): Promise<unknown> {
-  const p = params as { topic?: string };
-  if (!p.topic || typeof p.topic !== "string") {
-    return { error: "topic is required" };
-  }
-  return researchReddit({ topic: p.topic });
-}
+// research_reddit + research_instagram ────────────────────────────────────────
+// These now route to the Apify-backed ASYNC research service (fire-then-fetch).
+// The handlers are defined there and spread into CARTER_ACTION_HANDLERS below.
 
 // institutional_research ──────────────────────────────────────────────────────
 async function institutionalResearchHandler(params: unknown): Promise<unknown> {
@@ -723,6 +721,7 @@ import { CARTER_MEMORY_ACTION_HANDLERS } from "./carter-memory-store.js";
 export const CARTER_ACTION_HANDLERS: Record<string, (params: unknown) => Promise<unknown>> = {
   ...CARTER_CODE_HANDLERS,
   ...CARTER_MEMORY_ACTION_HANDLERS,
+  ...CARTER_APIFY_RESEARCH_ACTION_HANDLERS, // research_reddit + research_instagram
   run_backtest:             runBacktestHandler,
   run_walk_forward:         runWalkForwardHandler,
   run_monte_carlo:          runMonteCarloHandler,
@@ -731,7 +730,6 @@ export const CARTER_ACTION_HANDLERS: Record<string, (params: unknown) => Promise
   competitive_intel:        competitiveIntelHandler,
   scan_youtube_for_setups:  scanYouTubeForSetupsHandler,
   extract_youtube_strategy: extractYoutubeStrategyHandler,
-  research_reddit:          researchRedditHandler,
   institutional_research:   institutionalResearchHandler,
   deposit_pending_mention:  depositPendingMentionHandler,
   evaluate_kill_signal:     evaluateKillSignalHandler,

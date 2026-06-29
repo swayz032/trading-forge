@@ -589,6 +589,11 @@ import { CARTER_MEMORY_READ_HANDLERS } from "./carter-memory-store.js";
 //    CARTER_READ_HANDLERS below so the route dispatches it via the same map.
 import { CARTER_INSIGHTS_READ_HANDLERS } from "./carter-insights.js";
 
+// ── Apify async-research read tool (get_research_result) — apify-research-service.ts.
+//    Pulls the latest stored Reddit/Instagram scan result per topic. Spread into
+//    CARTER_READ_HANDLERS below so the route dispatches it via the same map.
+import { CARTER_APIFY_RESEARCH_READ_HANDLERS } from "../../services/apify-research-service.js";
+
 async function getCurrentIssues(_params: unknown): Promise<unknown> {
   const issues = listOpenIssues();
 
@@ -660,5 +665,7 @@ export const CARTER_READ_HANDLERS: Record<string, (params: unknown) => Promise<u
   ...CARTER_MEMORY_READ_HANDLERS,
   // ── Daily Analyst read tool (carter-insights.ts) ────────────────────────────
   ...CARTER_INSIGHTS_READ_HANDLERS,
+  // ── Apify async-research read tool (apify-research-service.ts) ───────────────
+  ...CARTER_APIFY_RESEARCH_READ_HANDLERS,
 };
 

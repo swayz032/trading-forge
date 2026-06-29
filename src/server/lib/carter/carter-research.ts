@@ -76,14 +76,6 @@ export interface InstitutionalResearchResult {
   elapsed_ms: number;
 }
 
-export interface RedditResearchResult {
-  topic: string;
-  summary: string;
-  posts: ResearchSource[];
-  count: number;
-  note: string;
-}
-
 /** Injectable dependencies — defaults are the real implementations; tests override. */
 export interface ResearchDeps {
   fetchImpl?: typeof fetch;
@@ -502,75 +494,8 @@ export async function institutionalResearch(
   };
 }
 
-/**
- * research_reddit — GENERAL Reddit community/sentiment research. Reuses the
- * Reddit JSON API (sort=relevance&t=all per pinned fact) over a broad set of
- * finance/trading subs. Returns top posts + an LLM summary. Explicitly NOT a
- * strategy source.
- */
-const REDDIT_GENERAL_SUBS = (process.env.CARTER_RESEARCH_REDDIT_SUBS ??
-  "algotrading,daytrading,futurestrading,investing,stocks,quant,FuturesTrading")
-  .split(",").map((s) => s.trim()).filter(Boolean);
-
-export async function researchReddit(
-  opts: { topic: string },
-  deps: ResearchDeps = {},
-): Promise<RedditResearchResult> {
-  const fetchImpl = deps.fetchImpl ?? fetch;
-  const synthFn = deps.synthFn ?? ollamaSynthesize;
-  const topic = opts.topic;
-  const q = encodeURIComponent(topic);
-  const USER_AGENT = "trading-forge-carter-research/1.0";
-
-  const posts: ResearchSource[] = [];
-  for (const sub of REDDIT_GENERAL_SUBS) {
-    if (posts.length >= MAX_SOURCES) break;
-    const url =
-      `https://www.reddit.com/r/${sub}/search.json` +
-      `?q=${q}&restrict_sr=1&sort=relevance&t=all&limit=5`; // pinned: relevance + t=all
-    try {
-      const res = await withTimeout(
-        fetchImpl(url, { headers: { "User-Agent": USER_AGENT } }),
-        PROVIDER_TIMEOUT_MS,
-        `reddit_${sub}`,
-      );
-      if (!res.ok) continue; // 429 / 5xx → skip this sub, keep going (graceful)
-      const j = (await res.json()) as { data?: { children?: Array<{ data?: Record<string, unknown> }> } };
-      for (const child of j.data?.children ?? []) {
-        const d = child.data ?? {};
-        const permalink = String(d.permalink ?? "");
-        if (!permalink) continue;
-        posts.push({
-          title: String(d.title ?? ""),
-          url: `https://www.reddit.com${permalink}`,
-          provider: `reddit/${String(d.subreddit ?? sub)}`,
-          snippet: String(d.selftext ?? "").slice(0, 400),
-          published_at: d.created_utc ? new Date(Number(d.created_utc) * 1000).toISOString() : null,
-        });
-      }
-    } catch (err) {
-      logger.debug({ err: err instanceof Error ? err.message : String(err), sub }, "carter-research: reddit sub fetch failed");
-      continue;
-    }
-  }
-
-  const deduped = dedupeByUrl(posts).slice(0, MAX_SOURCES);
-
-  let summary: string;
-  if (deduped.length === 0) {
-    summary = `No Reddit discussion found for "${topic}" across the searched communities.`;
-  } else {
-    const synthed = await synthFn(`Summarize Reddit community sentiment and key points on: ${topic}`, deduped, fetchImpl).catch(() => null);
-    summary = (synthed && synthed.trim().length > 0)
-      ? synthed
-      : buildExtractiveBrief(`Reddit sentiment on ${topic}`, deduped);
-  }
-
-  return {
-    topic,
-    summary,
-    posts: deduped,
-    count: deduped.length,
-    note: "General Reddit community research (sentiment/discussion). NOT a strategy source — strategies enter only via YouTube extraction.",
-  };
-}
+// NOTE: the former `research_reddit` direct-Reddit-JSON path was retired —
+// Reddit's search.json now 403s and the tool moved to the Apify-backed ASYNC
+// research service (src/server/services/apify-research-service.ts). The Reddit
+// COMMUNITY-SIGNAL provider for institutional_research lives in
+// `redditResearchSource` above (reddit-cross-extract) and is unaffected.

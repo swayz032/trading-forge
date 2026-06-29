@@ -286,9 +286,21 @@ export const CARTER_TOOLS: CarterTool[] = [
   // ── RESEARCH lane (Wave 7) — NON-strategy research only ──────────────────────
   {
     name: "research_reddit",
-    description: "RESEARCH LANE (non-strategy) — general Reddit community/sentiment/market research across finance subs (sort=relevance). Returns top posts + an LLM summary. Explicitly NOT a strategy source. Params: { topic }.",
+    description: "RESEARCH LANE (non-strategy) — fires a REAL Apify Reddit scrape for a topic and returns immediately (runs ASYNC, ~1-2 min). The scan stores its result; pull it later with get_research_result. Explicitly NOT a strategy source. Params: { topic }.",
     tier: "green",
     handler: "research_reddit",
+  },
+  {
+    name: "research_instagram",
+    description: "RESEARCH LANE (non-strategy) — fires a REAL Apify Instagram scrape for a topic (hashtag by default) and returns immediately (runs ASYNC, ~1-2 min). The scan stores its result; pull it later with get_research_result. Explicitly NOT a strategy source. Params: { topic, searchType? (hashtag|user) }.",
+    tier: "green",
+    handler: "research_instagram",
+  },
+  {
+    name: "get_research_result",
+    description: "RESEARCH LANE (non-strategy) — reads the latest stored Reddit/Instagram scan result per topic (status running | completed | failed, plus a headline + top posts when completed). Use after research_reddit / research_instagram. Params: { topic? }.",
+    tier: "green",
+    handler: "get_research_result",
   },
   {
     name: "institutional_research",
@@ -645,6 +657,21 @@ export const CARTER_PARAMS_SCHEMAS: Record<string, Record<string, unknown>> = {
       topic: { type: "string", description: "The Reddit research topic/question — NON-strategy (sentiment, community discussion, market/bot/growth). Never a strategy source." },
     },
     required: ["topic"],
+  },
+  research_instagram: {
+    type: "object",
+    properties: {
+      topic: { type: "string", description: "The Instagram research topic — NON-strategy (sentiment, community, market/bot/growth). A hashtag word by default. Never a strategy source." },
+      searchType: { type: "string", enum: ["hashtag", "user"], description: "Optional: 'hashtag' (default) scans a hashtag's posts; 'user' scans a profile's posts." },
+    },
+    required: ["topic"],
+  },
+  get_research_result: {
+    type: "object",
+    properties: {
+      topic: { type: "string", description: "Optional: the topic to fetch the latest scan result for. Omit to list the latest result per recent topic." },
+    },
+    required: [],
   },
   institutional_research: {
     type: "object",

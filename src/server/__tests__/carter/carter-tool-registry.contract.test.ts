@@ -11,9 +11,9 @@
  *      (READ / ACTION / CONFIRM).
  *   4. No handler key in any map is absent from the registry.
  *   5. Every RED tool has tier 'red', handler null, and NO entry in any handler map.
- *   6. Counts: 16 read + 12 action + 18 yellow (9 propose/confirm pairs) + 16 red.
- *      (Wave 7: research_strategy_idea removed; +extract_youtube_strategy,
- *       +research_reddit, +institutional_research → action 10 → 12.)
+ *   6. Counts: 30 read + 15 action + 18 yellow (9 propose/confirm pairs) + 16 red.
+ *      (Apify async research: +research_instagram action + get_research_result
+ *       read; research_reddit re-pointed to the Apify service.)
  */
 
 // ── Mocks — prevent side-effectful service imports ────────────────────────────
@@ -122,6 +122,8 @@ const REQUIRED_READ_TOOLS = [
   "query_audit_log",
   "report_drawdown_status",
   "get_current_issues",
+  // Apify async-research read tool (apify-research-service.ts)
+  "get_research_result",
   // Introspection tools (carter-introspect.ts) — "knows every inch of Trading Forge"
   "explain_gate",
   "list_subsystems",
@@ -151,6 +153,7 @@ const REQUIRED_ACTION_TOOLS = [
   "scan_youtube_for_setups",
   "extract_youtube_strategy",
   "research_reddit",
+  "research_instagram",
   "institutional_research",
   "deposit_pending_mention",
   "evaluate_kill_signal",
@@ -203,9 +206,9 @@ const REQUIRED_TOOLS = [
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe("Carter tool registry — structural contract", () => {
-  it("has exactly 77 tools (29 read + 14 action + 18 yellow + 16 red)", () => {
-    expect(CARTER_TOOLS).toHaveLength(77);
-    expect(CARTER_TOOLS.filter((t) => t.tier === "green")).toHaveLength(43);
+  it("has exactly 79 tools (30 read + 15 action + 18 yellow + 16 red)", () => {
+    expect(CARTER_TOOLS).toHaveLength(79);
+    expect(CARTER_TOOLS.filter((t) => t.tier === "green")).toHaveLength(45);
     expect(CARTER_TOOLS.filter((t) => t.tier === "yellow")).toHaveLength(18);
     expect(CARTER_TOOLS.filter((t) => t.tier === "red")).toHaveLength(16);
   });
@@ -302,12 +305,12 @@ describe("Carter tool registry — structural contract", () => {
     }
   });
 
-  it("CARTER_READ_HANDLERS exports exactly 29 functions (16 base + 7 introspection + 4 recommend + 1 memory + 1 insights)", () => {
-    expect(Object.keys(CARTER_READ_HANDLERS)).toHaveLength(29);
+  it("CARTER_READ_HANDLERS exports exactly 30 functions (16 base + 7 introspection + 4 recommend + 1 memory + 1 insights + 1 apify-research)", () => {
+    expect(Object.keys(CARTER_READ_HANDLERS)).toHaveLength(30);
   });
 
-  it("CARTER_ACTION_HANDLERS exports exactly 14 functions", () => {
-    expect(Object.keys(CARTER_ACTION_HANDLERS)).toHaveLength(14);
+  it("CARTER_ACTION_HANDLERS exports exactly 15 functions", () => {
+    expect(Object.keys(CARTER_ACTION_HANDLERS)).toHaveLength(15);
   });
 
   it("CARTER_CONFIRM_HANDLERS exports exactly 18 functions (9 propose + 9 confirm)", () => {

@@ -110,10 +110,31 @@ vi.mock("../../services/transcript-fetch-queue.js", () => ({
 // Wave 7 — research lane handlers delegate to carter-research (tested in depth
 // in carter-research.test.ts). Here we only assert the handler delegates.
 const mockInstitutionalResearch = vi.fn();
-const mockResearchReddit = vi.fn();
 vi.mock("../../lib/carter/carter-research.js", () => ({
   institutionalResearch: (...args: unknown[]) => mockInstitutionalResearch(...args),
-  researchReddit: (...args: unknown[]) => mockResearchReddit(...args),
+}));
+
+// research_reddit + research_instagram now route to the Apify async research
+// service (deep-tested in carter-apify-research.test.ts). Here we mock the
+// service's action-handler map and assert the action registry wires them.
+const mockStartAndStoreResearch = vi.fn();
+vi.mock("../../services/apify-research-service.js", () => ({
+  CARTER_APIFY_RESEARCH_ACTION_HANDLERS: {
+    research_reddit: async (params: unknown) => {
+      const p = (params ?? {}) as { topic?: string };
+      if (!p.topic || typeof p.topic !== "string") return { error: "topic is required" };
+      return mockStartAndStoreResearch({ platform: "reddit", topic: p.topic });
+    },
+    research_instagram: async (params: unknown) => {
+      const p = (params ?? {}) as { topic?: string; searchType?: string };
+      if (!p.topic || typeof p.topic !== "string") return { error: "topic is required" };
+      return mockStartAndStoreResearch({
+        platform: "instagram",
+        topic: p.topic,
+        searchType: p.searchType === "user" ? "user" : "hashtag",
+      });
+    },
+  },
 }));
 
 vi.mock("../../services/strategy-fingerprint.js", () => ({
@@ -166,8 +187,8 @@ const getHandler = (name: string) => {
 // ─── Test suites ──────────────────────────────────────────────────────────────
 
 describe("CARTER_ACTION_HANDLERS — map structure", () => {
-  it("exports exactly 14 handlers", () => {
-    expect(Object.keys(CARTER_ACTION_HANDLERS)).toHaveLength(14);
+  it("exports exactly 15 handlers", () => {
+    expect(Object.keys(CARTER_ACTION_HANDLERS)).toHaveLength(15);
   });
 
   it("all expected keys are present", () => {
@@ -175,7 +196,7 @@ describe("CARTER_ACTION_HANDLERS — map structure", () => {
       "run_backtest", "run_walk_forward", "run_monte_carlo", "run_matrix",
       "fire_scout_cycle", "competitive_intel",
       "scan_youtube_for_setups", "extract_youtube_strategy",
-      "research_reddit", "institutional_research",
+      "research_reddit", "research_instagram", "institutional_research",
       "deposit_pending_mention", "evaluate_kill_signal",
     ];
     for (const key of expected) {
@@ -601,22 +622,48 @@ describe("extract_youtube_strategy — YouTube-only strategy lane", () => {
 
 // ─── Wave 7 — research lane handlers delegate to carter-research ──────────────
 
-describe("research_reddit — delegates to carter-research (NON-strategy)", () => {
+describe("research_reddit — routes to Apify async research (NON-strategy)", () => {
   beforeEach(() => { vi.clearAllMocks(); });
 
-  it("delegates to researchReddit with the topic", async () => {
-    mockResearchReddit.mockResolvedValue({ topic: "FOMC", summary: "…", posts: [], count: 0, note: "" });
+  it("fires an async Reddit scan and returns the started payload", async () => {
+    mockStartAndStoreResearch.mockResolvedValue({ started: true, platform: "reddit", topic: "FOMC reaction", runId: "run-1", note: "Scan started" });
     const handler = getHandler("research_reddit");
     const result = await handler({ topic: "FOMC reaction" }) as Record<string, unknown>;
-    expect(mockResearchReddit).toHaveBeenCalledWith({ topic: "FOMC reaction" });
-    expect(result.topic).toBe("FOMC");
+    expect(mockStartAndStoreResearch).toHaveBeenCalledWith({ platform: "reddit", topic: "FOMC reaction" });
+    expect(result.started).toBe(true);
   });
 
   it("returns error when topic is missing", async () => {
     const handler = getHandler("research_reddit");
     const result = await handler({}) as Record<string, unknown>;
     expect(result.error).toBeDefined();
-    expect(mockResearchReddit).not.toHaveBeenCalled();
+    expect(mockStartAndStoreResearch).not.toHaveBeenCalled();
+  });
+});
+
+describe("research_instagram — routes to Apify async research (NON-strategy)", () => {
+  beforeEach(() => { vi.clearAllMocks(); });
+
+  it("fires an async Instagram scan (default hashtag) and returns the started payload", async () => {
+    mockStartAndStoreResearch.mockResolvedValue({ started: true, platform: "instagram", topic: "daytrading", runId: "run-2", note: "Scan started" });
+    const handler = getHandler("research_instagram");
+    const result = await handler({ topic: "daytrading" }) as Record<string, unknown>;
+    expect(mockStartAndStoreResearch).toHaveBeenCalledWith({ platform: "instagram", topic: "daytrading", searchType: "hashtag" });
+    expect(result.started).toBe(true);
+  });
+
+  it("passes searchType=user through when requested", async () => {
+    mockStartAndStoreResearch.mockResolvedValue({ started: true });
+    const handler = getHandler("research_instagram");
+    await handler({ topic: "someprofile", searchType: "user" });
+    expect(mockStartAndStoreResearch).toHaveBeenCalledWith({ platform: "instagram", topic: "someprofile", searchType: "user" });
+  });
+
+  it("returns error when topic is missing", async () => {
+    const handler = getHandler("research_instagram");
+    const result = await handler({}) as Record<string, unknown>;
+    expect(result.error).toBeDefined();
+    expect(mockStartAndStoreResearch).not.toHaveBeenCalled();
   });
 });
 

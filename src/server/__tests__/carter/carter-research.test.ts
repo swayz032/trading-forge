@@ -15,7 +15,7 @@ vi.mock("../../lib/logger.js", () => ({
 }));
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { institutionalResearch, researchReddit } from "../../lib/carter/carter-research.js";
+import { institutionalResearch } from "../../lib/carter/carter-research.js";
 
 // ── Provider key env (so providers don't short-circuit on no_api_key) ─────────
 const ORIG_ENV = { ...process.env };
@@ -115,50 +115,7 @@ describe("institutional_research — fan-out + graceful degradation", () => {
   });
 });
 
-describe("research_reddit — general Reddit research (NON-strategy)", () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it("returns top posts + a summary, and is flagged NOT a strategy source", async () => {
-    const fetchImpl = vi.fn(async (url: string) => {
-      if (String(url).includes("reddit.com")) {
-        return {
-          ok: true,
-          json: async () => ({
-            data: { children: [
-              { data: { title: "FOMC reaction thread", permalink: "/r/daytrading/comments/x/fomc/", subreddit: "daytrading", selftext: "discussion", created_utc: 1735689600 } },
-            ] },
-          }),
-        } as unknown as Response;
-      }
-      throw new Error("unexpected");
-    });
-    const result = await researchReddit(
-      { topic: "FOMC reaction" },
-      { fetchImpl: fetchImpl as unknown as typeof fetch, synthFn: fixedSynth },
-    );
-    expect(result.count).toBeGreaterThan(0);
-    expect(result.posts[0].url).toContain("reddit.com");
-    expect(result.summary).toBeTruthy();
-    expect(result.note).toMatch(/NOT a strategy source/i);
-  });
-
-  it("returns empty with a clear message when no discussion is found", async () => {
-    const fetchImpl = vi.fn(async () => ({ ok: true, json: async () => ({ data: { children: [] } }) }) as unknown as Response);
-    const result = await researchReddit(
-      { topic: "obscure topic" },
-      { fetchImpl: fetchImpl as unknown as typeof fetch, synthFn: fixedSynth },
-    );
-    expect(result.count).toBe(0);
-    expect(result.summary).toContain("No Reddit discussion");
-  });
-
-  it("survives a sub returning 429 (graceful — keeps going)", async () => {
-    const fetchImpl = vi.fn(async () => ({ ok: false, status: 429, json: async () => ({}) }) as unknown as Response);
-    const result = await researchReddit(
-      { topic: "x" },
-      { fetchImpl: fetchImpl as unknown as typeof fetch, synthFn: fixedSynth },
-    );
-    expect(result.count).toBe(0);
-    expect(result.posts).toEqual([]);
-  });
-});
+// NOTE: the former `research_reddit` direct-Reddit-JSON tests were removed —
+// the tool moved to the Apify-backed ASYNC research service. See
+// carter-apify-research.test.ts for the new coverage. institutional_research
+// (which uses redditResearchSource via reddit-cross-extract) is unchanged above.
