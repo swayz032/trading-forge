@@ -3370,6 +3370,13 @@ async function bookPartialClose(
   // closes always used the 0.85× ATR hack rather than the rolling median, causing
   // systematic slippage understatement on TP1/TP2 partial closes vs the backtest model.
   medianAtr14?: number,
+  // Deep-scan #5 MED (2026-06-29): position-state advance (tp1Filled/tp2Filled + decremented
+  // contracts) applied INSIDE this function's transaction so the paper_trades row, the equity
+  // credit, AND the position-state advance commit atomically. Previously the caller advanced
+  // state in a SEPARATE db.update AFTER this returned — a process crash in that sub-ms window
+  // left tp1Filled=false with the partial already booked, so the next bar re-fired the partial
+  // → DUPLICATE paper_trades row + wrong contract count + distorted promotion-gate inputs.
+  positionStateUpdate?: Partial<typeof paperPositions.$inferInsert>,
 ): Promise<void> {
   try {
     const spec = CONTRACT_SPECS[pos.symbol];
@@ -3439,6 +3446,16 @@ async function bookPartialClose(
           totalTrades:        sql`COALESCE(${paperSessions.totalTrades}, 0) + 1`,
         })
         .where(eq(paperSessions.id, pos.sessionId));
+
+      // Deep-scan #5 MED (2026-06-29): advance the position state in the SAME transaction
+      // as the trade row + equity credit — atomic, so a crash can never leave a booked
+      // partial with tp1Filled/tp2Filled=false (the duplicate-re-fire window).
+      if (positionStateUpdate) {
+        await tx
+          .update(paperPositions)
+          .set(positionStateUpdate)
+          .where(eq(paperPositions.id, pos.id));
+      }
     });
 
     logger.info(
@@ -3480,14 +3497,21 @@ async function bookPartialClose(
     }).catch((err) => logger.warn({ err }, "bookPartialClose: audit write failed (non-blocking)"));
 
   } catch (err) {
-    // Fail-soft: P&L booking failure does not block the position state update.
-    // The partial close still registers on paper_positions (contracts decremented).
-    // The missing trade row is a journal gap — observable via audit log and reconciliation cron.
+    // Deep-scan #5 MED (2026-06-29): RE-THROW on transaction failure. The transaction now
+    // covers the trade row + equity credit + position-state advance atomically, so a failed
+    // tx means NOTHING committed — re-throwing lets the caller's existing try/catch (the
+    // "Fix 1" block at the TP1/TP2 call sites) return false WITHOUT advancing state, so the
+    // partial re-evaluates next bar with no journal gap. Previously this catch swallowed the
+    // error and returned void, which (a) defeated the caller's Fix-1 protection — it expected
+    // a throw that never came — and (b) let the caller advance tp1Filled even though no P&L
+    // was booked. The atomic tx + re-throw makes "booked" and "state advanced" inseparable.
     logger.error(
       { err, positionId: pos.id, exitReason, contractsToClose, correlationId },
-      "bookPartialClose: FAILED — partial P&L NOT booked; position still partially closed; journal gap created",
+      "bookPartialClose: transaction FAILED — nothing committed (no trade row, no equity credit, no state advance); re-throwing so caller re-evaluates next bar",
     );
-    db.insert(auditLog).values({
+    // M3 (2026-06-29): await + log the booking_failed audit (was .catch(() => undefined) —
+    // a silent swallow inside an already-failing path compounded the diagnostic loss).
+    await db.insert(auditLog).values({
       action: "paper.partial_close.booking_failed",
       entityType: "paper_position",
       entityId: pos.id,
@@ -3496,7 +3520,8 @@ async function bookPartialClose(
       result: { error: String(err) } as Record<string, unknown>,
       status: "error",
       correlationId: correlationId ?? null,
-    }).catch(() => undefined);
+    }).catch((auditErr) => logger.warn({ err: auditErr, positionId: pos.id }, "bookPartialClose: booking_failed audit write dropped (non-blocking)"));
+    throw err;
   }
 }
 
@@ -3561,7 +3586,14 @@ async function applyExitDecision(
         // closes the wrong number of contracts (double-charges commission + corrupts P&L).
         // On failure: write CRITICAL audit + do NOT advance state → next bar re-evaluates TP1.
         try {
-          await bookPartialClose(pos, contractsToClose, currentPrice, "tp1", atr, correlationId, medianAtr);
+          // Deep-scan #5 MED (2026-06-29): pass the position-state advance so bookPartialClose
+          // commits it ATOMICALLY with the trade row + equity (eliminates the crash-window
+          // duplicate-re-fire). The separate post-call db.update that used to live here is gone.
+          await bookPartialClose(pos, contractsToClose, currentPrice, "tp1", atr, correlationId, medianAtr, {
+            tp1Filled: true,
+            contracts: pos.contracts - contractsToClose,
+            lastHandlerEvalAt: new Date(),
+          });
         } catch (bookErr) {
           const bookErrMsg = bookErr instanceof Error ? bookErr.message : String(bookErr);
           logger.error(
@@ -3590,12 +3622,8 @@ async function applyExitDecision(
           );
           return false; // leave tp1Filled=false and contracts unchanged
         }
-        // bookPartialClose durably committed — NOW advance position state
-        await db.update(paperPositions).set({
-          tp1Filled: true,
-          contracts: pos.contracts - contractsToClose,
-          lastHandlerEvalAt: new Date(),
-        }).where(eq(paperPositions.id, pos.id));
+        // bookPartialClose committed the trade row + equity credit + tp1Filled/contracts
+        // advance ATOMICALLY (deep-scan #5 MED) — no separate state write, no crash window.
         logger.info(
           {
             positionId: pos.id, strategyId, exitStyle, currentPrice, tp1Price,
@@ -3662,7 +3690,12 @@ async function applyExitDecision(
         // 2026-06-29 Fix 1 (CRITICAL): await bookPartialClose BEFORE advancing state (same
         // as TP1 fix). On failure: CRITICAL audit + no state advance → re-evaluate next bar.
         try {
-          await bookPartialClose(pos, contractsToClose, currentPrice, "tp2", atr, correlationId, medianAtr);
+          // Deep-scan #5 MED (2026-06-29): atomic position-state advance (same as TP1).
+          await bookPartialClose(pos, contractsToClose, currentPrice, "tp2", atr, correlationId, medianAtr, {
+            tp2Filled: true,
+            contracts: pos.contracts - contractsToClose,
+            lastHandlerEvalAt: new Date(),
+          });
         } catch (bookErr) {
           const bookErrMsg = bookErr instanceof Error ? bookErr.message : String(bookErr);
           logger.error(
@@ -3691,12 +3724,8 @@ async function applyExitDecision(
           );
           return false; // leave tp2Filled=false and contracts unchanged
         }
-        // bookPartialClose durably committed — NOW advance position state
-        await db.update(paperPositions).set({
-          tp2Filled: true,
-          contracts: pos.contracts - contractsToClose,
-          lastHandlerEvalAt: new Date(),
-        }).where(eq(paperPositions.id, pos.id));
+        // bookPartialClose committed the trade row + equity credit + tp2Filled/contracts
+        // advance ATOMICALLY (deep-scan #5 MED) — no separate state write, no crash window.
         logger.info(
           {
             positionId: pos.id, strategyId, exitStyle, currentPrice,
@@ -4274,11 +4303,12 @@ export async function updatePositionPrices(
         // callExitHandler will return HOLD and this block is a no-op (safe default).
         //
         // IMPORTANT: do NOT do a DB round-trip here to re-read the updated position.
-        // bookPartialClose is fire-and-forget (not awaited) and runs synchronously until its
-        // first await (db.select for firmId). In the mock and in production under certain
-        // ordering, that concurrent select races this re-read and can consume the wrong slot.
-        // Constructing the updated position in memory is both race-free and more efficient —
-        // we know exactly what applyExitDecision wrote: tp1Filled=true + contracts decremented.
+        // Deep-scan #5 LOW (2026-06-29): bookPartialClose is now AWAITED and commits the
+        // position-state advance inside its own transaction (the prior "fire-and-forget /
+        // concurrent select races this re-read" note was obsolete after the 2026-06-29 Fix-1
+        // await + the atomic-state-advance fix). We still construct updatedPos in memory rather
+        // than re-reading because it is race-free and more efficient — we know exactly what
+        // applyExitDecision committed: tp1Filled=true + contracts decremented.
         if (!positionClosed && handlerResult.decision === "FILL_TP1_50PCT") {
           try {
             const tp1ExitStyle   = (pos.currentExitStyle ?? "C") as "D" | "C";

@@ -55,13 +55,13 @@ describe("F4 — medianAtr14 threading for entry/exit slippage parity", () => {
   });
 
   it("TP1 bookPartialClose call passes medianAtr as 7th argument", () => {
-    // Verify TP1 call site passes medianAtr at the end
-    expect(SRC).toContain('bookPartialClose(pos, contractsToClose, currentPrice, "tp1", atr, correlationId, medianAtr)');
+    // Deep-scan #5 (2026-06-29): the call gained an 8th positionStateUpdate arg (atomic
+    // state advance). medianAtr is still threaded as the 7th arg (FINDING #4 intact).
+    expect(SRC).toContain('bookPartialClose(pos, contractsToClose, currentPrice, "tp1", atr, correlationId, medianAtr, {');
   });
 
   it("TP2 bookPartialClose call passes medianAtr as 7th argument", () => {
-    // Verify TP2 call site passes medianAtr at the end
-    expect(SRC).toContain('bookPartialClose(pos, contractsToClose, currentPrice, "tp2", atr, correlationId, medianAtr)');
+    expect(SRC).toContain('bookPartialClose(pos, contractsToClose, currentPrice, "tp2", atr, correlationId, medianAtr, {');
   });
 });
 
