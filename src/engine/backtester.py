@@ -34,11 +34,11 @@ import click
 import numpy as np
 import pandas as pd
 import polars as pl
+
 # vectorbt is NOT imported at module level — lazy-import inside each run path.
 # Both run_backtest() (DSL) and run_class_backtest() (class-based) lazy-import
 # vectorbt at call time so non-vectorbt code paths pay zero JIT startup cost.
 # The Numba JIT cache is pinned via determinism.py → NUMBA_CACHE_DIR (Fix A).
-
 from src.engine.analytics import compute_full_analytics
 from src.engine.config import (
     CONTRACT_SPECS,
@@ -783,20 +783,19 @@ def _apply_trade_management(
 
     # Wave 1 Track 1A: extract liquidity snapshot for static TP2 mapping.
     # adaptive_ctx may be set even when exit_engine=static_styleC (e.g. caller
-    # provides context for TP2 mapping but prefers the static exit rules).
-    # Falls through gracefully when no context available.
-    _static_liq_snapshot: Optional[list] = None
-    if adaptive_ctx is not None and hasattr(adaptive_ctx, "liquidity_snapshot"):
-        _raw_snap = adaptive_ctx.liquidity_snapshot
-        if _raw_snap:
-            _static_liq_snapshot = list(_raw_snap)
-
+    # F-2 (2026-06-29): static_styleC TP2 MUST use flat structural target (no liquidity snap).
+    # Parity mandate: the partials path (BACKTEST_STATIC_C_PARTIALS_ENABLED=True) hard-codes
+    # tp2_price_p = entry + 2.0R; the non-partials path must also avoid snapping TP2 to a live
+    # intraday liquidity level because paper evaluation uses TS style-c-exit-evaluator.ts which
+    # also uses flat 2.0R. Passing liquidity_snapshot to compute_single_tp would snap TP2 to a
+    # live level that was never validated by the backtest.
+    # Option B judgment: gate snap OFF by always passing None — structural DOL fallback only.
     # Default / fallback: static Style C (existing path)
     return _apply_static_styleC_management(
         trades_records, high_np, low_np, close_np, atr_np,
         spec, htf_cache, df, open_np=open_np,
         atr_stop_multiplier=atr_stop_multiplier,
-        liquidity_snapshot=_static_liq_snapshot,
+        liquidity_snapshot=None,  # F-2: no liquidity snap for static_styleC — flat 2.0R structural only
     )
 
 
@@ -1766,6 +1765,7 @@ def _compute_daily_pnls(
         # index has timezone info. Fall back to UTC calendar date when tz info is absent
         # (e.g. daily data, synthetic test data) to preserve backward compatibility.
         from datetime import timedelta as _td
+
         import pandas as _pd
 
         daily = {}
