@@ -132,20 +132,23 @@ export async function loadBacktestExpectedSignalsForPeriod(
       return [];
     }
 
-    // TODO (A.4 architect + backtest-core): Wire backtests.expected_signals JSONB
-    // column once backtest-core adds it in their Pass A.2 / Pass B.1 scope.
-    // The column will be an array of {signal_ts, direction, entry_price, intended_size}.
-    //
-    // For now, attempt to read expected_signals from resultExtras (may be null).
+    // WIRED (Wave 29 Pass A.3): the Python backtester populates
+    // result["expected_signals"] via _build_expected_signals_from_trades()
+    // (backtester.py ~5079), and backtest-service.ts persists it into
+    // resultExtras.expected_signals (extraKeys list). The earlier "not yet wired"
+    // TODO is obsolete (2026-06-29 deep-scan #4 verified the full producer chain).
+    // An empty/absent array means a 0-trade backtest or a pre-Wave-29 backtest:
+    // the comparator's baseline-availability gate then BLOCKs fail-closed with
+    // reason "backtest_baseline_unavailable" (not a spurious 100% divergence).
     const extras = latestBt.resultExtras as Record<string, unknown> | null;
     const rawExpected = extras?.expected_signals as unknown[] | undefined;
 
     if (!Array.isArray(rawExpected) || rawExpected.length === 0) {
       logger.warn(
         { strategyId, backtestId: latestBt.id },
-        "shadow-signal-divergence-loader: backtests.resultExtras.expected_signals absent — " +
-        "insufficient_samples guard will trigger (pre-Wave-29 backtest). " +
-        "TODO: wire backtests.expected_signals JSONB column in backtest-core Pass A.2.",
+        "shadow-signal-divergence-loader: backtests.resultExtras.expected_signals " +
+        "empty/absent (0-trade or pre-Wave-29 backtest) — comparator blocks fail-closed " +
+        "with backtest_baseline_unavailable.",
       );
       return [];
     }
