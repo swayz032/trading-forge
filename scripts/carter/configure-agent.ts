@@ -84,26 +84,31 @@ interface AllowlistEntry {
 }
 
 /**
- * Resolve the allowlist for Wave 0.
+ * Resolve the allowlist.
  *
- * Always includes localhost (dev). Includes the production Slumhouse host ONLY
- * when SLUMHOUSE_HOST is set — we DO NOT guess the prod host. If it is unset,
- * the operator must add the prod host before going live (reported at the end).
+ * ElevenLabs' allowlist validator requires each hostname to be a real domain
+ * (must contain a ".") OR a host with an explicit port ("host:port"). A bare
+ * "localhost" is REJECTED by the dashboard ("Hostname must consist of a domain
+ * and an optional port"), so we never emit it — preserve only VALID existing
+ * entries and add the prod Slumhouse host when SLUMHOUSE_HOST is set. For local
+ * dev, set SLUMHOUSE_DEV_HOST to a ported value like "localhost:5173".
  */
+function isValidAllowlistHost(h: string): boolean {
+  return h.includes(".") || h.includes(":");
+}
 function resolveAllowlist(existing: AllowlistEntry[]): { allowlist: AllowlistEntry[]; prodHostMissing: boolean } {
   const hosts = new Set<string>();
+  // Preserve only valid pre-existing entries (drops bare "localhost" etc.).
   for (const e of existing) {
-    if (e?.hostname) hosts.add(e.hostname);
+    if (e?.hostname && isValidAllowlistHost(e.hostname)) hosts.add(e.hostname);
   }
-  hosts.add("localhost");
+
+  const devHost = process.env.SLUMHOUSE_DEV_HOST?.trim();
+  if (devHost && isValidAllowlistHost(devHost)) hosts.add(devHost);
 
   const prodHost = process.env.SLUMHOUSE_HOST?.trim();
-  if (prodHost) {
-    hosts.add(prodHost);
-  }
-  // TODO(operator): if SLUMHOUSE_HOST is not set, add the production Slumhouse
-  // hostname (e.g. the tf-relay public host) to the allowlist before flipping
-  // Carter live. We deliberately do not hard-code or guess it here.
+  if (prodHost && isValidAllowlistHost(prodHost)) hosts.add(prodHost);
+  // We deliberately do not hard-code or guess the prod host.
 
   return {
     allowlist: [...hosts].map((hostname) => ({ hostname })),
