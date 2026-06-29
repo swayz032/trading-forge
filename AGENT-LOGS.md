@@ -11908,6 +11908,28 @@ Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal
 
 ---
 
+### Session Log — 2026-06-29 Deep-Scan #5 engine-track (Python, isolated)
+
+**Mission:** Operator asked for a full deep scan of all systems + make everything institutional-grade, no bottlenecks, everything wired. Ran a 7-auditor read-only scan; a PARALLEL session was already executing the TS tracks of deepscan5 on `hardening/deepscan5-fixwave-2026-06-29` (marquee cron-gate-parity + lifecycle_state route alias already committed there), so per operator direction I took ONLY the Python backtest-engine track on an isolated worktree branched off that session's HEAD to avoid co-mingle.
+
+**Work completed (branch `hardening/deepscan5-engine-2026-06-29`, off ce8d8a0, PUSHED, UNMERGED; commit d1dc71a):**
+- **C2 (CRITICAL)** — zero-trade `UnboundLocalError`: `_h5_entry_slips`/`_h5_exit_slips` init'd inside `if trades_records is not None:` but read unconditionally in the `exit_slippage_session_applied` result key → every zero-trade backtest (short OOS folds, all-signals-rejected, stress runs) crashed. Hoisted defaults to the unconditional accumulator block (`backtester.py` ~4070). + regression test `test_zero_trade_backtest_does_not_crash` (verified it crashes pre-fix via neutralize-and-run).
+- **C4 (HIGH)** — flat `min(6.0, ...)` stop cap in BOTH management loops (`backtester.py:893` static Style C / `1394` adaptive) + the two R:R sites (`4234`/`5923`) → MNQ (5m ATR 30-80pt) got a noise-level 6pt stop while the eligibility gate used the real per-symbol ceiling (62pt). EVERY MNQ Style C/adaptive backtest was invalid. Replaced with `_get_stop_ceiling_for_symbol(spec.symbol)`. MES/MCL unchanged in practice.
+- **M1 (MED)** — `apply_eligibility_gate` except-block referenced undefined `_apply_eligibility_gate` (leading underscore) → `NameError` in the error path (noqa:F821 hid it from the linter, not runtime). Fixed.
+- **M2 (MED)** — class-path R:R (`5923`) hardcoded 2.0 stop mult → use `_cls_stop_mult` from config (overstated risk 33% for the 1.5× default). Folded into the C4 edit.
+
+**FALSE POSITIVE corrected:** paper-parity auditor's "PM size taper absent from backtester" (its C1) is WRONG — `pm_size_factor.compute_pm_size_factor_vec` IS imported + applied per-bar in `sizing.py:1213/1228` (the canonical `risk_derived_pyramid` path), before the cap min, matching paper ordering. The auditor grepped only `backtester.py` and missed `sizing.py`. No change made.
+
+**Verification:** `test_backtester.py` 9 passed (the 3 prior C2-root-cause failures now green) + new regression test; 142 passed across fill_model/walk_forward/pbo/determinism/monte_carlo; the 4 remaining failures are PRE-EXISTING (3 `test_walk_forward` interface-drift + 1 `test_monte_carlo` M4 stale MFFU test) — zero new regressions. `py_compile` clean. Commit used `--no-verify` per §11a (ruff blocked on pre-existing unused `day_series` in backtester.py:2237, unrelated to this diff; the lint issues I caused — unused pytest import + isort order in the test file — I fixed honestly).
+
+**Carry-forward for next session:**
+- **MERGE COORDINATION:** two deepscan5 branches now exist — `hardening/deepscan5-fixwave-2026-06-29` (parallel session, TS, local-only, has an uncommitted `paper-execution-service.ts` partial-re-fire edit in flight) and `hardening/deepscan5-engine-2026-06-29` (this session, Python, off ce8d8a0, PUSHED). Operator must reconcile BOTH into phase-0. My branch contains the parallel session's 3 committed commits (ce8d8a0/f723c70/9a744ab) as its base — merge mine and theirs together.
+- **M4 latent disconnect (firm-rules decision, not fixed):** `mffu_50k` config sets `consistency_rule="mffu_50pct_sim_payout"` which is NOT in `monte_carlo.py::_consistency_map` (only `mffu_50pct`) → MFFU consistency `consistency_ratio` resolves to None → the B14 consistency branch never fires for MFFU. The config comment (firm_config.py:158) claims "full-path fallback runs" but it can't. Either add `mffu_50pct_sim_payout` to `_consistency_map` (so full-path fallback fires as documented) OR confirm MFFU consistency is intentionally off in B14 (MFFU = secondary, no account). The `test_monte_carlo` MFFU sliding-window test is STALE against the current 48h-payout-cycle config — update it once the semantics are decided.
+- **OBSERVATION (not chased — borders firm-config/parallel-session domain):** `prop_sim.py:299` warns `Unknown consistency rule 'topstep_50pct'` on every backtest — a firm config passes `topstep_50pct` but the legacy `prop_sim.py` daily-statement check only knows `mffu_50pct` (and B14's `simulate_firm_survival` skips Topstep consistency in STANDARD payout lane by design). Reconcile the rule-name vocab across prop_sim.py / monte_carlo.py / firm_config.py.
+- **NON-CANONICAL SIZING MODES:** PM taper only applies in the `risk_derived_pyramid` sizing path (the production canonical). `dynamic_atr`/`fixed`/`kelly` modes do NOT apply it — out of scope here (those aren't the production path) but worth a note if any non-pyramid strategy ever trades the PM window.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### pglite test-harness DDL drifts from schema.ts and silently breaks ALL DB-backed gate tests (pinned 2026-06-28)
