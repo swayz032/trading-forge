@@ -729,6 +729,50 @@ export const server = app.listen(port, () => {
     logger.error({ err }, "startup-import-failed: paper-signal-service failed to load — position state maps NOT restored");
   });
 
+  // ─── Fix 2 (2026-06-29): Orphaned paper-position startup recovery ───────────
+  // Covers a DIFFERENT failure mode from H2 above: positions OPEN in DB with NO
+  // active session (session was stopped or server crashed between session end and
+  // position close). Must run AFTER initializePositionStateMaps (H2) so HWM state
+  // is restored before orphan detection, and BEFORE initScheduler so audit rows
+  // are visible on the first scheduler pass. Fail-open: DB errors never block boot.
+  import("./services/paper-execution-service.js").then(({ recoverOrphanedPositionsAtStartup }) => {
+    recoverOrphanedPositionsAtStartup().then(({ orphansFound }) => {
+      if (orphansFound > 0) {
+        import("./services/notification-service.js").then(({ notifyCritical }) => {
+          notifyCritical(
+            `[CRITICAL] ${orphansFound} orphaned paper position(s) detected at startup`,
+            `What happened: ${orphansFound} position(s) were open in the database with no active session when the server restarted.\nAuto-remediation attempted: yes — stuckSessionIds populated; blocked sessions prevent duplicate opens.\nWhy it failed: sessions were not active at restart; positions require manual review.\nYour action: Review audit_log for paper.orphaned_position_detected entries and close positions via the dashboard or call clearStuckSessionId() after confirming each is closed.`,
+          );
+        }).catch((notifyErr: unknown) => {
+          logger.error({ err: notifyErr }, "Startup: notification-service import failed during orphan CRITICAL alert (non-blocking)");
+        });
+        // Write consolidated CRITICAL audit row (individual orphan rows already written
+        // inside recoverOrphanedPositionsAtStartup).
+        import("./db/schema.js").then(({ auditLog: auditLogTable }) => {
+          void db.insert(auditLogTable).values({
+            action: "paper.orphaned_positions_startup_critical",
+            entityType: "paper_position",
+            entityId: null,
+            decisionAuthority: "system",
+            input: { orphansFound } as Record<string, unknown>,
+            result: { autoRemediationAttempted: true, stuckSessionIdsPopulated: true } as Record<string, unknown>,
+            status: "error",
+          }).catch((dbErr: unknown) => {
+            logger.error({ err: dbErr }, "Startup: orphan CRITICAL audit row write failed (non-blocking)");
+          });
+        }).catch((schemaErr: unknown) => {
+          logger.error({ err: schemaErr }, "Startup: db/schema import failed during orphan audit write (non-blocking)");
+        });
+      } else {
+        logger.info("Startup: no orphaned paper positions detected");
+      }
+    }).catch((err: unknown) => {
+      logger.error({ err }, "Startup: recoverOrphanedPositionsAtStartup failed (non-blocking — orphans will be re-detected on next open attempt)");
+    });
+  }).catch((err: unknown) => {
+    logger.error({ err }, "startup-import-failed: paper-execution-service import failed during orphan recovery (non-blocking)");
+  });
+
   // Paper session recovery is handled by the scheduler `resumeActivePaperSessions`
   // job (scheduler.ts — see the resumeActivePaperSessions function), which runs
   // on scheduler boot and writes the canonical `session.recovered` audit rows.
@@ -1206,7 +1250,7 @@ export const server = app.listen(port, () => {
   //   - Production isolation lint CLEAN (4 files, 0 violations)
   //   - killSwitch.isHaltedForProduction() is FIRST gate in openPosition() (paper-execution-service.ts:549, fail-CLOSED)
   //   - Auto-HALT on drift severity=red wired (drift-detector.ts → killSwitch.setMode('HALT'))
-  //   - forceCloseAllPositions wired via dynamic import (no circular dep, swallowed errors)
+  //   - forceCloseAllPositions wired via static import in paper-signal-service.ts, awaited with notifyCritical on failure
   //   - All 4 reconciliation source comparisons present; fail-CLOSED on any data fetch error
   //   - 2 new crons in scheduler: daily-reconciliation (4:15 PM ET), weekly-drift-detection
   //     (Sunday 6 PM ET); both bypass pipelineGate (safety signals)

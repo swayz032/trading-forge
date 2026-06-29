@@ -40,6 +40,9 @@ import type { ExitPlanWithRuntimeState } from "../db/jsonb-shapes.js";
 // Pass 6 Track D: per-call exit-handler Discord visibility
 import { notifyWarning, notifyCritical } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
+// 2026-06-29 Fix 2 (HIGH): TS Style C evaluator — primary path replacing Python subprocess.
+// Eliminates per-bar spawn overhead and 1h TP blackout from circuit-breaker open state.
+import { evaluateStyleCExit } from "../lib/style-c-exit-evaluator.js";
 export { CONTRACT_SPECS };
 
 // ─── C1: Register CME outage callback on module init ─────────────────────────
@@ -2766,17 +2769,26 @@ async function updateRollingMetrics(sessionId: string, strategyId: string | null
 // This prevents cascading subprocess spawns when Python is down.
 const EXIT_HANDLER_CB_THRESHOLD  = 3;
 const EXIT_HANDLER_CB_WINDOW_MS  = 10 * 60_000;  // 10 min sliding window
-const EXIT_HANDLER_CB_COOLDOWN_MS = 60 * 60_000; // 1 hour auto-close
+// 2026-06-29 Fix 2b (HIGH): configurable cooldown — default 5 min (was hardcoded 1h).
+// 1h blackout silently missed TP1/TP2 for all positions, distorting paper Sharpe/win-rate
+// below backtest and corrupting promotion-gate inputs.
+const EXIT_HANDLER_CB_COOLDOWN_MS = Number(process.env.EXIT_HANDLER_CB_COOLDOWN_MS ?? 300_000);
 
 interface ExitHandlerCircuitBreaker {
   state: "CLOSED" | "OPEN";
   openedAt: number | null;
   failTimestamps: number[];
+  /** Accumulated open-count for session telemetry (promotion gates can flag/exclude distorted periods). */
+  openCount: number;
+  /** Accumulated total-ms in OPEN state for session telemetry. */
+  openTotalMs: number;
 }
 const exitHandlerCb: ExitHandlerCircuitBreaker = {
   state: "CLOSED",
   openedAt: null,
   failTimestamps: [],
+  openCount: 0,
+  openTotalMs: 0,
 };
 
 function _exitCbPruneWindow(): void {
@@ -2787,10 +2799,15 @@ function _exitCbPruneWindow(): void {
 function _exitCbCheckAutoClose(): void {
   if (exitHandlerCb.state === "OPEN" && exitHandlerCb.openedAt !== null) {
     if (Date.now() - exitHandlerCb.openedAt >= EXIT_HANDLER_CB_COOLDOWN_MS) {
+      // 2026-06-29 Fix 2b: accumulate total OPEN duration before closing
+      exitHandlerCb.openTotalMs += Date.now() - exitHandlerCb.openedAt;
       exitHandlerCb.state = "CLOSED";
       exitHandlerCb.openedAt = null;
       exitHandlerCb.failTimestamps = [];
-      logger.info("exit-handler circuit breaker: auto-closed after 1h cooldown");
+      logger.info(
+        { cooldownMs: EXIT_HANDLER_CB_COOLDOWN_MS, totalOpenMs: exitHandlerCb.openTotalMs },
+        "exit-handler circuit breaker: auto-closed after cooldown",
+      );
       db.insert(auditLog).values({
         action: "exit_handler.circuit_breaker_closed",
         entityType: "system",
@@ -2811,9 +2828,11 @@ function _exitCbRecordFailure(): void {
   if (exitHandlerCb.state === "CLOSED" && exitHandlerCb.failTimestamps.length >= EXIT_HANDLER_CB_THRESHOLD) {
     exitHandlerCb.state = "OPEN";
     exitHandlerCb.openedAt = Date.now();
+    exitHandlerCb.openCount += 1; // 2026-06-29 Fix 2b: telemetry accumulator
     logger.warn(
-      { failures: exitHandlerCb.failTimestamps.length, windowMs: EXIT_HANDLER_CB_WINDOW_MS },
-      "exit-handler circuit breaker: OPEN — all exit handler calls return HOLD for 1h",
+      { failures: exitHandlerCb.failTimestamps.length, windowMs: EXIT_HANDLER_CB_WINDOW_MS,
+        cooldownMs: EXIT_HANDLER_CB_COOLDOWN_MS, openCount: exitHandlerCb.openCount },
+      "exit-handler circuit breaker: OPEN — exit handler calls return HOLD during cooldown",
     );
     AlertFactory.systemError("exit-handler-circuit-open", "Exit handler Python subprocess failed 3× in 10 min — circuit OPEN, HOLD applied to all positions for 1h");
     db.insert(auditLog).values({
@@ -2834,6 +2853,20 @@ export function resetExitHandlerCircuitBreaker(): void {
   exitHandlerCb.state = "CLOSED";
   exitHandlerCb.openedAt = null;
   exitHandlerCb.failTimestamps = [];
+  exitHandlerCb.openCount = 0;
+  exitHandlerCb.openTotalMs = 0;
+}
+
+/**
+ * Returns CB telemetry accumulators for session diagnostics / promotion-gate distortion analysis.
+ * 2026-06-29 Fix 2b: promotion gates can read these to flag sessions with extended CB-OPEN periods.
+ */
+export function getExitHandlerCbTelemetry(): { openCount: number; openTotalMs: number; currentState: "CLOSED" | "OPEN" } {
+  return {
+    openCount: exitHandlerCb.openCount,
+    openTotalMs: exitHandlerCb.openTotalMs,
+    currentState: exitHandlerCb.state,
+  };
 }
 
 // ─── Track 3: Style D/C Bar Context ──────────────────────────
@@ -3073,6 +3106,30 @@ async function callExitHandler(
         };
       }
     }
+  }
+
+  // ── 2026-06-29 Fix 2 (HIGH): TS evaluator primary path for Style C ──────────
+  // Runs synchronously — no subprocess, no circuit-breaker risk, <1ms per call.
+  // Eliminates the per-bar Python spawn overhead and the 1h TP blackout that
+  // occurs when the CB opens after 3 failures in 10 min.
+  // Set STYLE_C_EXIT_PYTHON_FALLBACK=true to route Style C to Python subprocess
+  // (useful for parity-testing the two paths against each other).
+  if (exitStyle === "C" && process.env.STYLE_C_EXIT_PYTHON_FALLBACK !== "true") {
+    const cState = (config as { action: string; state: Record<string, unknown> }).state;
+    return evaluateStyleCExit({
+      direction: cState["direction"] as "long" | "short",
+      entry_price: cState["entry_price"] as number,
+      stop_pts: cState["stop_pts"] as number,
+      current_price: cState["current_price"] as number,
+      current_time_et: cState["current_time_et"] as string,
+      position_pct_open: (cState["position_pct_open"] as number | undefined) ?? 1.0,
+      tick_size: (cState["tick_size"] as number | undefined) ?? 0.25,
+      tp1_filled: (cState["tp1_filled"] as boolean | undefined) ?? false,
+      tp2_filled: (cState["tp2_filled"] as boolean | undefined) ?? false,
+      developing_session_poc: (cState["developing_session_poc"] as number | null | undefined) ?? null,
+      bar_high: (cState["bar_high"] as number | null | undefined) ?? null,
+      bar_low: (cState["bar_low"] as number | null | undefined) ?? null,
+    });
   }
 
   // ── Circuit breaker check (short-circuit before subprocess spawn) ────────
@@ -3410,16 +3467,46 @@ async function applyExitDecision(
         : undefined;
       // Close partial — if full position closes here, fall through to full close below
       if (contractsToClose < pos.contracts) {
+        // 2026-06-29 Fix 1 (CRITICAL): await bookPartialClose BEFORE advancing position state.
+        // If the DB write fails while tp1Filled/contracts are already advanced, the next bar
+        // closes the wrong number of contracts (double-charges commission + corrupts P&L).
+        // On failure: write CRITICAL audit + do NOT advance state → next bar re-evaluates TP1.
+        try {
+          await bookPartialClose(pos, contractsToClose, currentPrice, "tp1", atr, correlationId, medianAtr);
+        } catch (bookErr) {
+          const bookErrMsg = bookErr instanceof Error ? bookErr.message : String(bookErr);
+          logger.error(
+            { err: bookErrMsg, positionId: pos.id, strategyId, correlationId },
+            "paper.partial_close_booking_failed (TP1): position state NOT advanced; re-evaluates next bar",
+          );
+          db.insert(auditLog).values({
+            action: "paper.partial_close_booking_failed",
+            entityType: "paper_position",
+            entityId: pos.id,
+            decisionAuthority: "system",
+            input: { leg: "tp1", positionId: pos.id, strategyId, contractsToClose, currentPrice, correlationId } as Record<string, unknown>,
+            result: { error: bookErrMsg, state_advanced: false } as Record<string, unknown>,
+            status: "error",
+            correlationId: correlationId ?? null,
+          }).catch((e) => logger.error({ e }, "TP1 booking_failed audit write failed (non-blocking)"));
+          notifyCritical(
+            "TP1 partial close journal write failed",
+            appendFamilyGradePostscript(
+              `TP1 bookPartialClose failed for position ${pos.id} (strategy ${strategyId ?? "unknown"}). ` +
+              `Error: ${bookErrMsg}. Position state NOT advanced — trade will re-evaluate on next bar.`,
+              "The trading bot hit a database error while recording a partial profit exit.",
+              "The position is still open and will try again next bar. Tell Tony if this repeats.",
+            ),
+            { positionId: pos.id, strategyId, correlationId: correlationId ?? null, error: bookErrMsg },
+          );
+          return false; // leave tp1Filled=false and contracts unchanged
+        }
+        // bookPartialClose durably committed — NOW advance position state
         await db.update(paperPositions).set({
           tp1Filled: true,
           contracts: pos.contracts - contractsToClose,
           lastHandlerEvalAt: new Date(),
         }).where(eq(paperPositions.id, pos.id));
-        // BL-4 FIX: book realized P&L for the partial close contracts (fire-and-forget
-        // fail-soft so a booking failure doesn't block the position state update).
-        // FINDING #4 FIX: pass medianAtr so bookPartialClose uses rolling median slippage.
-        bookPartialClose(pos, contractsToClose, currentPrice, "tp1", atr, correlationId, medianAtr)
-          .catch((err) => logger.warn({ err, positionId: pos.id }, "TP1 bookPartialClose fire-and-forget failed"));
         logger.info(
           {
             positionId: pos.id, strategyId, exitStyle, currentPrice, tp1Price,
@@ -3483,15 +3570,44 @@ async function applyExitDecision(
       const contractsToClose = Math.max(1, Math.floor(pos.contracts * tp2Fraction));
       const tp2Evidence = evidence as Record<string, unknown>;
       if (contractsToClose < pos.contracts) {
+        // 2026-06-29 Fix 1 (CRITICAL): await bookPartialClose BEFORE advancing state (same
+        // as TP1 fix). On failure: CRITICAL audit + no state advance → re-evaluate next bar.
+        try {
+          await bookPartialClose(pos, contractsToClose, currentPrice, "tp2", atr, correlationId, medianAtr);
+        } catch (bookErr) {
+          const bookErrMsg = bookErr instanceof Error ? bookErr.message : String(bookErr);
+          logger.error(
+            { err: bookErrMsg, positionId: pos.id, strategyId, correlationId },
+            "paper.partial_close_booking_failed (TP2): position state NOT advanced; re-evaluates next bar",
+          );
+          db.insert(auditLog).values({
+            action: "paper.partial_close_booking_failed",
+            entityType: "paper_position",
+            entityId: pos.id,
+            decisionAuthority: "system",
+            input: { leg: "tp2", positionId: pos.id, strategyId, contractsToClose, currentPrice, correlationId } as Record<string, unknown>,
+            result: { error: bookErrMsg, state_advanced: false } as Record<string, unknown>,
+            status: "error",
+            correlationId: correlationId ?? null,
+          }).catch((e) => logger.error({ e }, "TP2 booking_failed audit write failed (non-blocking)"));
+          notifyCritical(
+            "TP2 partial close journal write failed",
+            appendFamilyGradePostscript(
+              `TP2 bookPartialClose failed for position ${pos.id} (strategy ${strategyId ?? "unknown"}). ` +
+              `Error: ${bookErrMsg}. Position state NOT advanced — trade will re-evaluate on next bar.`,
+              "The trading bot hit a database error while recording a partial profit exit.",
+              "The position is still open and will try again next bar. Tell Tony if this repeats.",
+            ),
+            { positionId: pos.id, strategyId, correlationId: correlationId ?? null, error: bookErrMsg },
+          );
+          return false; // leave tp2Filled=false and contracts unchanged
+        }
+        // bookPartialClose durably committed — NOW advance position state
         await db.update(paperPositions).set({
           tp2Filled: true,
           contracts: pos.contracts - contractsToClose,
           lastHandlerEvalAt: new Date(),
         }).where(eq(paperPositions.id, pos.id));
-        // BL-4 FIX: book realized P&L for the TP2 partial close contracts.
-        // FINDING #4 FIX: pass medianAtr so bookPartialClose uses rolling median slippage.
-        bookPartialClose(pos, contractsToClose, currentPrice, "tp2", atr, correlationId, medianAtr)
-          .catch((err) => logger.warn({ err, positionId: pos.id }, "TP2 bookPartialClose fire-and-forget failed"));
         logger.info(
           {
             positionId: pos.id, strategyId, exitStyle, currentPrice,

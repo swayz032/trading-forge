@@ -11,6 +11,12 @@
 
 import cron from "node-cron";
 import { randomUUID } from "crypto";
+// Fix 1 (2026-06-29): non-blocking subprocess for n8n-workflow-sync.
+// execSync freezes V8's event loop for up to 60s — no HTTP/WS/SSE/cron/DLL
+// signals are processed during that window. execFileAsync is non-blocking.
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+const execFileAsync = promisify(execFile);
 import { cronJobsConcurrent } from "./lib/metrics-registry.js";
 import { eq, and, gte, lte, desc, inArray, isNull, isNotNull, min, sql } from "drizzle-orm";
 import { db } from "./db/index.js";
@@ -2407,23 +2413,27 @@ export function initScheduler() {
       logger.error({ table: "backtests", err }, "stale-pending-sweeper: error sweeping backtests");
     }
 
-    // FINDING #5 FIX: agent_jobs stuck 'pending' >90min (no started_at column — using created_at interim).
-    // NOTE: A future migration should add started_at to agent_jobs for a more accurate threshold.
-    // Interim: pending jobs older than 90min on created_at indicate a hung or lost job handler.
+    // Fix 3d (2026-06-29): agent_jobs — use COALESCE(started_at, created_at) so the
+    // 90-min threshold is measured from actual execution start, not job creation.
+    // Sweeps both 'pending' (never picked up) and 'running' (picked up but timed out).
+    // Migration 0183 added started_at; routes/agent.ts sets it on pickup.
     try {
       const agentJobsResult = await db
         .update(agentJobs)
-        .set({ status: "failure", errorMessage: "stale-pending-sweeper: marked failure after 90min pending (created_at interim — add started_at migration for precision)" })
-        .where(_and(_eq(agentJobs.status, "pending"), lt(agentJobs.createdAt, cutoff90)));
+        .set({ status: "failure", errorMessage: "stale-pending-sweeper: marked failure after 90min without completion (COALESCE(started_at, created_at) threshold)" })
+        .where(_and(
+          _or(_eq(agentJobs.status, "pending"), _eq(agentJobs.status, "running")),
+          sql`COALESCE(${agentJobs.startedAt}, ${agentJobs.createdAt}) < ${cutoff90}`,
+        ));
       const agentJobsSwept = (agentJobsResult as any)?.rowCount ?? 0;
       if (agentJobsSwept > 0) {
         totalSwept += agentJobsSwept;
-        logger.warn({ table: "agent_jobs", swept: agentJobsSwept, thresholdMin: 90, note: "keyed on created_at (interim) — add started_at migration for precision" }, "stale-pending-sweeper: marked stale pending agent_jobs as failure");
+        logger.warn({ table: "agent_jobs", swept: agentJobsSwept, thresholdMin: 90, keyed_on: "coalesce_started_at_created_at" }, "stale-pending-sweeper: marked stale agent_jobs as failure");
         await db.insert(auditLog).values({
           action: "stale-pending-sweeper.swept",
           entityType: "agent_jobs",
           entityId: null,
-          input: { cutoff: cutoff90.toISOString(), threshold_min: 90, keyed_on: "created_at_interim" },
+          input: { cutoff: cutoff90.toISOString(), threshold_min: 90, keyed_on: "coalesce_started_at_created_at" },
           result: { swept: agentJobsSwept },
           status: "success",
           correlationId,
@@ -2456,16 +2466,17 @@ export function initScheduler() {
   // snapshot — verified registered at the daily session-end block.
 
   // ─── n8n workflow sync — daily at 2:15 AM ET ─────────────────
+  // Fix 1 (2026-06-29): was execSync, which blocked V8's event loop for up to
+  // 60s (no HTTP/WS/SSE/cron/DLL signals processed). Now uses execFileAsync
+  // (non-blocking) — static import at file top, mirrors cloud-qmc-service.ts.
   registerJob("n8n-workflow-sync", 24 * 60 * 60 * 1000, async () => {
-    const { execSync } = await import("child_process");
     try {
-      const output = execSync("npx tsx scripts/n8n-workflow-sync.ts", {
+      const { stdout } = await execFileAsync("npx", ["tsx", "scripts/n8n-workflow-sync.ts"], {
         cwd: process.cwd(),
         timeout: 60000,
-        encoding: "utf-8",
         env: process.env as Record<string, string>,
       });
-      logger.info({ output: output.slice(-500) }, "n8n workflow sync completed");
+      logger.info({ output: stdout.slice(-500) }, "n8n workflow sync completed");
     } catch (err) {
       logger.error({ err }, "n8n workflow sync failed");
       throw err;

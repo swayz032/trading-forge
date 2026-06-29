@@ -791,7 +791,11 @@ export function evaluatePaperToDeployReadyGates(
   // ──────────────────────────────────────────────────────────────────────────
   {
     const wfeOverall = wfr?.wfe_overall != null ? Number(wfr.wfe_overall) : null;
-    const cpcvNPaths = wfr?.wf_metadata_n_paths ?? null;
+    // Finding 3 fix 2026-06-29: the CPCV n_paths gate only applies in CPCV mode.
+    // Guard on wf_metadata_mode here (defense-in-depth, matching the cron sweep's
+    // inline read at lifecycle-service.ts:~3980) so a plain-WF window_count can never
+    // be consumed as a CPCV n_paths value even if a caller passed it unguarded.
+    const cpcvNPaths = wfr?.wf_metadata_mode === "cpcv" ? (wfr?.wf_metadata_n_paths ?? null) : null;
     const orchInput: StrategyPromotionData = {
       ruinCi: null, // B14 already handled above — skip in orchestrator
       wfeOverall,

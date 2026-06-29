@@ -3274,6 +3274,10 @@ export const agentJobs = pgTable(
     correlationId: text("correlation_id"),
     createdAt:     timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt:     timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    // Fix 3b (2026-06-29): records actual pickup/execution start time so the
+    // stale-pending-sweeper can use COALESCE(started_at, created_at) as the
+    // threshold — preventing false failures on jobs with long queue delays.
+    startedAt:     timestamp("started_at", { withTimezone: true }),
   },
   (table) => [
     index("idx_agent_jobs_action").on(table.action),

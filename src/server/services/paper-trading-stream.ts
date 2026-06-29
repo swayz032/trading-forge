@@ -182,16 +182,23 @@ async function buildExitBarContext(bar: Bar): Promise<StyleExitBarContext | unde
     // atr * 0.85 (constant ratio ~1.176 regardless of regime volatility).
     // A 100-bar window approximates the backtest median over the recent regime.
     // min 14 bars required (ATR warmup); falls back to undefined (no ATR scaling).
+    //
+    // FIX MED-4 (2026-06-29): use Wilder True Range instead of |high-low| proxy.
+    // |H-L| underestimates ATR on gap-open bars (CME Globex gap days, EIA on MCL)
+    // → slippage was underestimated → paper P&L optimistically biased vs live.
+    // True Range = max(|H-L|, |H-prevClose|, |L-prevClose|), matching backtester.py.
+    // Fallback: when no prevClose is available (first bar in window), use |H-L|.
     let medianAtr14Val: number | undefined = undefined;
     if (buf.length >= 14) {
       const window = buf.slice(-100);  // last 100 bars (or fewer on session start)
-      // ATR(14) on the window — compute as average of true-range over window
-      // Re-use the ATR helper on a subslice: ATR(buf, 14) uses the full buf.
-      // We extract the raw ATR values from the buffer ATR field if available,
-      // or approximate using |high-low| range as a fast true-range proxy.
-      // The exact median is not critical — any reasonable estimate removes the
-      // constant-ratio distortion. |high-low| is available on every bar.
-      const trueRanges = window.map(b => (b.high ?? b.close) - (b.low ?? b.close));
+      const trueRanges = window.map((b, i) => {
+        const h = b.high ?? b.close;
+        const l = b.low ?? b.close;
+        const hl = Math.abs(h - l);
+        if (i === 0) return hl; // no prevClose for first window bar — fallback
+        const prevC = window[i - 1].close;
+        return Math.max(hl, Math.abs(h - prevC), Math.abs(l - prevC));
+      });
       const sortedRanges = [...trueRanges].sort((a, b) => a - b);
       const mid = Math.floor(sortedRanges.length / 2);
       medianAtr14Val = sortedRanges.length % 2 === 0

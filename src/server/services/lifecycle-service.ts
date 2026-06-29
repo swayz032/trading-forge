@@ -506,7 +506,15 @@ export class LifecycleService {
                 param_stability: (wfResults.param_stability as { drift_classification?: string | null; drift_confidence?: number | null } | null | undefined) ?? null,
                 wf_metadata: ((wfResults.wf_metadata as Record<string, unknown> | null) ?? null) as import("../lib/b14-ci-gate.js").WalkForwardDsrInput | null,
                 wf_metadata_mode: ((wfResults.wf_metadata as Record<string, unknown> | null)?.mode as string | null) ?? null,
-                wf_metadata_n_paths: ((wfResults.wf_metadata as Record<string, unknown> | null)?.n_paths as number | null) ?? null,
+                // Finding 3 fix 2026-06-29: read n_paths ONLY when mode==="cpcv", matching the
+                // cron sweep's inline orchestrator read (lifecycle-service.ts:~3980). Without this
+                // guard the consolidated mapping fed a plain-WF window_count into Gate 7's CPCV
+                // n_paths check, so the SAME backtest row could yield different CPCV verdicts on
+                // the cron path vs the manual PATCH path. The guard makes the verdict identical.
+                wf_metadata_n_paths: (() => {
+                  const m = wfResults.wf_metadata as Record<string, unknown> | null;
+                  return m?.mode === "cpcv" && m.n_paths != null ? Number(m.n_paths) : null;
+                })(),
               }
             : null,
           orchGates: {
@@ -564,17 +572,27 @@ export class LifecycleService {
         // outcome label is mapped to short-form: clean | warn | blocked | legacy_null.
         // The counter increment is non-blocking — errors never affect promotion outcome.
         try {
+          // Finding 5 fix 2026-06-29 (filed as F-4 by accuracy-validator / M-1 by backtest-core):
+          // pass bifReliable so this counter call sees the SAME CPCV verdict the gate verdict uses.
+          // wf_metadata.bif_reliable===false (CPCV mode) → the gate returns reason
+          // "bif.cpcv_unmeasured"; without threading bifReliable here, CPCV strategies were
+          // silently counted as outcome="clean". Map that distinct reason to its own label.
+          const bifReliableForCounter =
+            ((wfResults?.wf_metadata as Record<string, unknown> | null)?.bif_reliable) === false;
           const bifResult = evaluateBifGate(
             latestBtP2D?.bif != null ? Number(latestBtP2D.bif) : null,
             latestBtP2D?.kEff != null ? Number(latestBtP2D.kEff) : null,
+            bifReliableForCounter ? { bifReliable: false } : undefined,
           );
-          const bifOutcome = !bifResult.passed
-            ? "blocked"
-            : bifResult.legacyNull
-              ? "legacy_null"
-              : bifResult.reason === "bif.warn_above_warn_threshold"
-                ? "warn"
-                : "clean";
+          const bifOutcome = bifResult.reason === "bif.cpcv_unmeasured"
+            ? "cpcv_unmeasured"
+            : !bifResult.passed
+              ? "blocked"
+              : bifResult.legacyNull
+                ? "legacy_null"
+                : bifResult.reason === "bif.warn_above_warn_threshold"
+                  ? "warn"
+                  : "clean";
           bifGateEvaluationsTotal.labels({ outcome: bifOutcome }).inc();
         } catch (_bifCounterErr) { /* non-blocking — counter failures never prevent promotion */ }
 
@@ -1186,18 +1204,33 @@ export class LifecycleService {
           );
 
           if (!pboGateResult.ok) {
+            // Finding 6 fix 2026-06-29 (Track B coordination): a plain-WF degenerate PBO
+            // (pbo_degenerate_reason="plain_wf_is_unavailable") must route to a DISTINCT
+            // audit action so it is never conflated with the generic overfit block. The
+            // pbo-gate.ts evaluator returns reason "lifecycle.pbo_plain_wf_degenerate_block"
+            // for that case; the NaN sample-size guard and the real overfit block both keep
+            // the canonical "lifecycle.pbo_overfit_block" action.
+            const pboBlockAction =
+              pboGateResult.reason === "lifecycle.pbo_plain_wf_degenerate_block"
+                ? "lifecycle.pbo_plain_wf_degenerate_block"
+                : "lifecycle.pbo_overfit_block";
             const pboError =
-              `lifecycle.pbo_overfit_block: strategy ${id} has PBO=${pboGateResult.pbo?.toFixed(4) ?? "?"} ` +
-              `which exceeds threshold ${pboGateResult.threshold} (Wave 29 institutional gate). ` +
-              `Strategy appears overfit — block promotion to ${toState}. ` +
-              `Re-run backtest with more CPCV folds or reduce parameter search space.`;
+              pboBlockAction === "lifecycle.pbo_plain_wf_degenerate_block"
+                ? `lifecycle.pbo_plain_wf_degenerate_block: strategy ${id} has a degenerate/unavailable ` +
+                  `plain-WF PBO (plain_wf_is_unavailable) — strategy is UN-VALIDATED, block promotion to ${toState}. ` +
+                  `Re-run the backtest (CPCV preferred) to produce a measurable PBO.`
+                : `lifecycle.pbo_overfit_block: strategy ${id} has PBO=${pboGateResult.pbo?.toFixed(4) ?? "?"} ` +
+                  `which exceeds threshold ${pboGateResult.threshold} (Wave 29 institutional gate). ` +
+                  `Strategy appears overfit — block promotion to ${toState}. ` +
+                  `Re-run backtest with more CPCV folds or reduce parameter search space.`;
             logger.warn(
-              { strategyId: id, fromState, toState, pbo: pboGateResult.pbo, threshold: pboGateResult.threshold, backtestId: promotionEvidence.backtestId },
+              { strategyId: id, fromState, toState, pbo: pboGateResult.pbo, threshold: pboGateResult.threshold, reason: pboGateResult.reason, backtestId: promotionEvidence.backtestId },
               pboError,
             );
-            // Emit lifecycle.pbo_overfit_block audit (canonical Wave 29 action name)
+            // Emit the resolved block audit action (canonical Wave 29 overfit action OR
+            // the distinct plain-WF-degenerate action per Finding 6).
             insertAuditRow({
-              action: "lifecycle.pbo_overfit_block",
+              action: pboBlockAction,
               entityType: "strategy",
               entityId: id,
               decisionAuthority: "gate",
@@ -4529,7 +4562,14 @@ export class LifecycleService {
           }
           // Evidence is adequate — compute composite score and proceed.
           // Score is persisted into lifecycle_transitions.result after successful promotion.
-          const compositeEvidenceScore = 1.0 - (incompleteCount / 8.0);
+          // Finding 4 fix 2026-06-29: derive the denominator from the actual number of
+          // tracked gates, NOT a hardcoded 8. After F-5 removed the inline standalone WFE
+          // gate, gateEvidenceStatuses.length is no longer 8, so `/ 8.0` produced a score
+          // inconsistent with total_gates (gateEvidenceStatuses.length) reported in the
+          // audit/SSE payloads above. Math.max(1, …) guards the (theoretically impossible)
+          // zero-length case so the score can never divide by zero.
+          const evidenceDenominator = Math.max(1, gateEvidenceStatuses.length);
+          const compositeEvidenceScore = 1.0 - (incompleteCount / evidenceDenominator);
           logger.info(
             { strategyId: s.id, compositeEvidenceScore, incompleteCount, total: gateEvidenceStatuses.length },
             "Track A.2: composite_evidence_score computed — promotion proceeding",

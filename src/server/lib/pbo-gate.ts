@@ -124,6 +124,39 @@ export function evaluatePboGate(
   const pboRaw = backtestResult.pbo_overall;
   const pValueRaw = backtestResult.pbo_p_value ?? null;
 
+  // ── Plain-WF degenerate path (Track B coordination — 2026-06-29) ────────────
+  // walk_forward.py writes pbo_degenerate_reason="plain_wf_is_unavailable" into the
+  // PLAIN-WF wf_metadata when a plain-WF run produces a degenerate PBO (the IS/OOS
+  // rank comparison could not be computed). Unlike CPCV — which has a structural
+  // excuse (all paths share OOS data) — plain WF has NO such excuse: it RAN and came
+  // back unusable, so the strategy is UN-VALIDATED, not measurement-limited. This is
+  // therefore distinct from BOTH the CPCV-exempt PROCEED and the legacy-null
+  // grandfather PROCEED. Fail-CLOSED → BLOCK with a distinct reason so the audit row
+  // is never confused with either PROCEED path.
+  // NOTE: the string "plain_wf_is_unavailable" must match Track B's walk_forward.py
+  // emitter EXACTLY — do not rename without coordinating the Python side.
+  if (pboRaw == null && backtestResult.pbo_degenerate_reason === "plain_wf_is_unavailable") {
+    logger.warn(
+      { threshold: effectiveThreshold, pbo_degenerate_reason: backtestResult.pbo_degenerate_reason },
+      "PBO gate: BLOCKED — plain-WF PBO is degenerate/unavailable (plain_wf_is_unavailable); " +
+        "fail-CLOSED (lifecycle.pbo_plain_wf_degenerate_block) — NOT CPCV-exempt, NOT legacy grandfather",
+    );
+    return {
+      ok: false,
+      pbo: null,
+      threshold: effectiveThreshold,
+      reason: "lifecycle.pbo_plain_wf_degenerate_block",
+      legacyNull: false,
+      auditPayload: {
+        pbo: null,
+        pbo_p_value: pValueRaw,
+        threshold: effectiveThreshold,
+        blocked: true,
+        legacy_null: false,
+      },
+    };
+  }
+
   // ── CPCV-exempt path (hardening/phase-0) ───────────────────────────────────
   // walk_forward.py emits pbo_degenerate_reason="cpcv_is_sharpe_unavailable" in
   // wf_metadata when mode="cpcv". PBO rank-comparison requires per-path IS Sharpe

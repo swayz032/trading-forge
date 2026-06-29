@@ -1528,6 +1528,15 @@ def run_walk_forward(
         # This value feeds the TESTING → SHADOW/PAPER lifecycle gate in pbo-gate.ts.
         # pbo_overall is additive to the existing pbo/pbo_pass/pbo_p_value keys —
         # downstream consumers that read the old keys are unaffected.
+        #
+        # FIX-1 (2026-06-29): track degenerate reason for wf_metadata injection.
+        # When IS==OOS in plain-WF (per-window IS Sharpe unavailable), the TS gate
+        # must BLOCK on the EXACT string "plain_wf_is_unavailable" — distinct from
+        # "cpcv_is_sharpe_unavailable" (CPCV exempt path) and distinct from the
+        # legacy-null grandfather-PROCEED path.  Placing the reason inside
+        # wf_metadata ensures backtest-service persists it (it stores wf_metadata
+        # wholesale) and lifecycle-service reads it at wf_metadata.pbo_degenerate_reason.
+        _plain_wf_pbo_degenerate_reason: Optional[str] = None
         try:
             from src.engine.pbo_gate import (
                 _build_cpcv_paths_from_window_results as _build_paths,
@@ -1562,12 +1571,16 @@ def run_walk_forward(
                     # FINDING-1 fix: degenerate IS==OOS case (plain-mode fallback also uses
                     # is_sharpe=oos_sharpe when per-window IS unavailable). Emit audit action;
                     # pbo_degenerate=True propagated to TS via the result dict below.
+                    # FIX-1 (2026-06-29): set degenerate reason for wf_metadata injection.
+                    # The EXACT string "plain_wf_is_unavailable" is the TS pbo-gate.ts
+                    # contract to route to BLOCK (distinct from cpcv_is_sharpe_unavailable).
+                    _plain_wf_pbo_degenerate_reason = "plain_wf_is_unavailable"
                     pbo_audit_actions.append("walk_forward.pbo_cpcv_degenerate")
                     print(
                         "  PBO (gate): degenerate — IS==OOS for all paths "
                         "(per-window IS Sharpe unavailable); emitting pbo_degenerate=True "
-                        "→ TS will BLOCK with pbo_cpcv_degenerate_block "
-                        "(walk_forward.pbo_cpcv_degenerate)",
+                        "and pbo_degenerate_reason='plain_wf_is_unavailable' "
+                        "→ TS will BLOCK (walk_forward.pbo_cpcv_degenerate)",
                         file=sys.stderr,
                     )
                 else:
@@ -1832,6 +1845,59 @@ def run_walk_forward(
             overnight_hold=_overnight_hold,
         )
 
+    # ─── FIX-2 (2026-06-29): DSR for plain-WF path ──────────────────────────
+    # CPCV path computes DSR via n_paths (15 combinations as proxy for n_trials).
+    # Plain-WF path had no DSR computation, so wf_metadata.dsr_pass was always
+    # absent → TS consumer saw undefined → silent legacy-null path (no gate).
+    #
+    # Wire compute_deflated_sharpe_ratio using:
+    #   observed_sharpe = agg_sharpe (combined OOS aggregate)
+    #   n_trials        = max(n_splits, trial_n_total) — n_splits as the floor
+    #                     (each fold is an independent IS/OOS evaluation;
+    #                      trial_n_total from request when optimization is active)
+    #   n_observations  = len(all_oos_pnls) (total OOS daily PnL count)
+    # On any failure: emit dsr_unavailable=True so it is auditable, not silent.
+    _plain_wf_dsr_result: dict = {}
+    _plain_wf_n_trials: int = max(
+        len(windows),
+        max(1, getattr(request, "trial_n_total", 1)),
+    )
+    # _plain_wf_dsr_pass: bool|None — read separately because compute_deflated_sharpe_ratio
+    # returns the gate under key "passes" (not "dsr_pass").  We normalise to "dsr_pass"
+    # in wf_metadata to match the CPCV path contract consumed by lifecycle-service.ts.
+    _plain_wf_dsr_pass: Optional[bool] = None
+    _plain_wf_dsr_unavailable: bool = False
+    try:
+        from src.engine.risk_metrics import compute_deflated_sharpe_ratio as _plain_dsr_fn
+        _plain_wf_dsr_result = _plain_dsr_fn(
+            observed_sharpe=agg_sharpe,
+            n_trials=_plain_wf_n_trials,
+            n_observations=max(len(all_oos_pnls), 2),
+        )
+        # compute_deflated_sharpe_ratio returns "passes" (bool); map to dsr_pass for wf_metadata.
+        _plain_wf_dsr_pass_raw = _plain_wf_dsr_result.get("passes")
+        _plain_wf_dsr_pass = bool(_plain_wf_dsr_pass_raw) if _plain_wf_dsr_pass_raw is not None else None
+        print(
+            f"  DSR (plain WF): dsr={_plain_wf_dsr_result.get('dsr')} "
+            f"passes={_plain_wf_dsr_pass} "
+            f"(n_trials={_plain_wf_n_trials}, n_obs={len(all_oos_pnls)})",
+            file=sys.stderr,
+        )
+    except Exception as _plain_wf_dsr_exc:
+        print(
+            f"  DSR (plain WF): computation failed ({_plain_wf_dsr_exc!r}) — "
+            f"emitting dsr_unavailable=True (auditable, not silent).",
+            file=sys.stderr,
+        )
+        _plain_wf_dsr_result = {
+            "dsr": None,
+            "passes": None,
+            "error": str(_plain_wf_dsr_exc),
+            "error_type": type(_plain_wf_dsr_exc).__name__,
+        }
+        _plain_wf_dsr_pass = False
+        _plain_wf_dsr_unavailable = True
+
     return {
         "confidence": overall_confidence,
         "low_confidence_windows": len(low_confidence_windows),
@@ -1861,11 +1927,26 @@ def run_walk_forward(
         # mode: "plain" | "purged_embargo" | "cpcv"
         # purge_window: bars excluded between IS and OOS (purged_embargo mode)
         # embargo_pct: % of dataset embargoed after each OOS fold (approx)
+        #
+        # FIX-1 (2026-06-29): pbo_degenerate_reason — contract with pbo-gate.ts.
+        #   "plain_wf_is_unavailable" → TS pbo-gate.ts routes to BLOCK.
+        #   None → no degenerate case; standard pbo_overall logic applies.
+        #
+        # FIX-2 (2026-06-29): dsr_pass / dsr_unavailable — mirrors CPCV wf_metadata
+        #   contract (FIX 7, 2026-06-22).  dsr_pass=None = missing (legacy null);
+        #   dsr_pass=False = failed or unavailable; dsr_pass=True = passed.
+        #   dsr_unavailable=True signals computation failure (auditable, not silent).
         "wf_metadata": {
             "mode": _resolved_mode,
             "n_folds": len(windows),
             "embargo_pct": _embargo_pct if _resolved_mode == "purged_embargo" else 0.0,
             "purge_window": _purge_window if _resolved_mode == "purged_embargo" else 0,
+            "pbo_degenerate_reason": _plain_wf_pbo_degenerate_reason,
+            "dsr": _plain_wf_dsr_result.get("dsr"),
+            # dsr_pass: normalised from compute_deflated_sharpe_ratio's "passes" key.
+            # None = computation skipped / result absent; False = gate failed or unavailable.
+            "dsr_pass": _plain_wf_dsr_pass,
+            "dsr_unavailable": _plain_wf_dsr_unavailable,
         },
         # Wave 27.5 Pass B HIGH #1 — WFE fields (all optional; additive; backward compat)
         "wfe_overall": wfe_overall,

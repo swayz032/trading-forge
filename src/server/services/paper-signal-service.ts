@@ -73,7 +73,7 @@ import { getDecayTelemetryThreshold } from "../lib/confluence-decay.js";
 import { getNearestLiquidity } from "./liquidity-map-service.js";
 import { notifyCritical } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
-import { shadowSignalsTotal } from "../lib/metrics-registry.js";
+import { shadowSignalsTotal, auditWriteFailuresTotal } from "../lib/metrics-registry.js";
 // Wave 26 Group B Task 3: SMT live bridge — wires Python compute_smt_divergence()
 // into Path C SignalContext. Fail-soft: returns null snapshot on any error →
 // evalSmtConfirmation returns reason="smt_unavailable" (same fail-open as before).
@@ -1832,7 +1832,11 @@ export async function evaluateSignals(
   barBuffer: Bar[],
   context?: { correlationId?: string },
 ): Promise<void> {
-  const correlationId = context?.correlationId;
+  // FIX MED-2 (2026-06-29): self-generate correlationId when caller omits it.
+  // Previously: context?.correlationId was always undefined → paper_trades.correlation_id
+  // was always NULL (migration 0180 column never populated). Now every bar cycle
+  // threads a real UUID through all downstream audit rows + closePosition + paper_trades.
+  const correlationId = context?.correlationId ?? randomUUID();
   const span = tracer.startSpan("paper.signal_evaluation");
   span.setAttribute("symbol", symbol);
   span.setAttribute("session_id", sessionId);
@@ -2506,7 +2510,10 @@ export async function evaluateSignals(
                     } as Record<string, unknown>,
                     result: { reducedContracts } as Record<string, unknown>,
                     correlationId: fillCorrelationId,
-                  }).catch(() => {});
+                  }).catch((e: unknown) => {
+                    logger.warn({ e, action: "pending_entry.contracts_reduced_news_window" }, "audit write failed — non-blocking");
+                    auditWriteFailuresTotal.labels({ action: "pending_entry.contracts_reduced_news_window" }).inc();
+                  });
                   logger.info(
                     {
                       sessionId,
@@ -2541,7 +2548,10 @@ export async function evaluateSignals(
             input: { sessionId, symbol, side: pendingEntry.side } as Record<string, unknown>,
             result: { reason: "macro_news_check_error", failClosed: true } as Record<string, unknown>,
             correlationId: fillCorrelationId,
-          }).catch(() => {});
+          }).catch((e: unknown) => {
+            logger.warn({ e, action: "paper.fill_blocked_news_check_error" }, "audit write failed — non-blocking");
+            auditWriteFailuresTotal.labels({ action: "paper.fill_blocked_news_check_error" }).inc();
+          });
         }
       }
 
@@ -2634,7 +2644,11 @@ export async function evaluateSignals(
           } as Record<string, unknown>,
           result: { dropped: true, reason: pendingDropReason } as Record<string, unknown>,
           correlationId: fillCorrelationId,
-        }).catch(() => {});
+        }).catch((e: unknown) => {
+          const _dropAct = `pending_entry.dropped_${pendingDropReason}`;
+          logger.warn({ e, action: _dropAct }, "audit write failed — non-blocking");
+          auditWriteFailuresTotal.labels({ action: "pending_entry.dropped" }).inc();
+        });
 
         // Propagate span attribute then short-circuit — skip to next bar
         span.setAttribute("pending_entry_dropped", true);
@@ -3226,7 +3240,10 @@ export async function evaluateSignals(
             status: "warning",
             input: { firmId, sessionDate, combinedPnL: dllResult.combinedPnL },
             result: { dll_pct: dllResult.dllPct, by_symbol: dllResult.pnLBySymbol, threshold: dllResult.forceCloseThreshold },
-          }).catch(() => {});
+          }).catch((e: unknown) => {
+            logger.warn({ e, action: "cross_symbol_force_close_triggered" }, "audit write failed — non-blocking");
+            auditWriteFailuresTotal.labels({ action: "cross_symbol_force_close_triggered" }).inc();
+          });
           // Force-close path: await forceCloseAllPositions (static import — no circular
           // dependency: paper-signal-service already imports paper-execution-service at
           // the top; paper-execution-service only dynamically imports paper-signal-service
@@ -3252,7 +3269,10 @@ export async function evaluateSignals(
               status: "error",
               input: { firmId, dllPct: dllResult.dllPct, combinedPnL: dllResult.combinedPnL } as Record<string, unknown>,
               result: { error: fcMsg, requiresManualClose: true } as Record<string, unknown>,
-            }).catch(() => {});
+            }).catch((e: unknown) => {
+              logger.warn({ e, action: "cross_symbol_force_close_failed" }, "audit write failed — non-blocking");
+              auditWriteFailuresTotal.labels({ action: "cross_symbol_force_close_failed" }).inc();
+            });
             notifyCritical(
               "CRITICAL: Cross-symbol DLL force-close FAILED",
               `firm: ${firmId} dllPct: ${dllResult.dllPct.toFixed(3)} — Positions may still be open past the breach threshold. Manual close required immediately. err: ${fcMsg}`,
@@ -3275,7 +3295,10 @@ export async function evaluateSignals(
             status: "warning",
             input: { firmId, sessionDate, combinedPnL: dllResult.combinedPnL },
             result: { dll_pct: dllResult.dllPct, by_symbol: dllResult.pnLBySymbol, threshold: dllResult.haltThreshold },
-          }).catch(() => {});
+          }).catch((e: unknown) => {
+            logger.warn({ e, action: "cross_symbol_dll_halt_triggered" }, "audit write failed — non-blocking");
+            auditWriteFailuresTotal.labels({ action: "cross_symbol_dll_halt_triggered" }).inc();
+          });
           db.insert(paperSignalLogs).values({
             sessionId,
             symbol,
@@ -3311,7 +3334,10 @@ export async function evaluateSignals(
             status: "warning",
             input: { firmId, sessionDate, combinedPnL: dllResult.combinedPnL } as Record<string, unknown>,
             result: { dll_pct: dllResult.dllPct, reduce_factor: dllResult.reduceSizeFactor, reduce_threshold: dllResult.reduceThreshold } as Record<string, unknown>,
-          }).catch(() => {});
+          }).catch((e: unknown) => {
+            logger.warn({ e, action: "sizing.dll_reduce_size_band_entered" }, "audit write failed — non-blocking");
+            auditWriteFailuresTotal.labels({ action: "sizing.dll_reduce_size_band_entered" }).inc();
+          });
         }
       } catch (dllErr) {
         // Fail-CLOSED: loss-throttling gate must not allow entry when data is unavailable.
@@ -3327,7 +3353,10 @@ export async function evaluateSignals(
           input: { sessionId, symbol, error: String(dllErr) } as Record<string, unknown>,
           result: { blocked: true, reason: "cross_symbol_dll_gate_error" } as Record<string, unknown>,
           correlationId: correlationId ?? null,
-        }).catch(() => {});
+        }).catch((e: unknown) => {
+          logger.warn({ e, action: "consistency.cross_symbol_dll_failclosed" }, "audit write failed — non-blocking");
+          auditWriteFailuresTotal.labels({ action: "consistency.cross_symbol_dll_failclosed" }).inc();
+        });
       }
     }
 
@@ -3385,7 +3414,10 @@ export async function evaluateSignals(
           status: "info",
           input: { symbol, perSessionCap, envDefault: getDailyTradeCapEnvDefault(), trades_today: tradesToday },
           result: { effective_cap: capResult.effectiveCap, reason: capResult.reason },
-        }).catch(() => {});
+        }).catch((e: unknown) => {
+          logger.warn({ e, action: "consistency.daily_trade_cap_blocked" }, "audit write failed — non-blocking");
+          auditWriteFailuresTotal.labels({ action: "consistency.daily_trade_cap_blocked" }).inc();
+        });
       }
     } catch (capErr) {
       // Fail-OPEN per CLAUDE.md §4 documented policy: let trade slip rather than
@@ -3400,7 +3432,10 @@ export async function evaluateSignals(
         input: { sessionId, symbol, error: String(capErr) } as Record<string, unknown>,
         result: { allowed: true, reason: "daily_trade_cap_db_error_fail_open" } as Record<string, unknown>,
         correlationId: correlationId ?? null,
-      }).catch(() => {});
+      }).catch((e: unknown) => {
+        logger.warn({ e, action: "consistency.daily_trade_cap_failopen" }, "audit write failed — non-blocking");
+        auditWriteFailuresTotal.labels({ action: "consistency.daily_trade_cap_failopen" }).inc();
+      });
     }
 
     // ─── Wave 26 Pass K Phase 2 (2026-05-26) — Lunch Blackout Gate (11:30-13:30 ET) ──
@@ -3446,7 +3481,10 @@ export async function evaluateSignals(
           status: "info",
           input: { symbol, window_spec: lunchResult.windowSpec, bar_timestamp: bar.timestamp, per_strategy_disabled: perStrategyDisabled },
           result: { reason: lunchResult.reason, per_strategy_override_applied: lunchResult.perStrategyOverrideApplied },
-        }).catch(() => {});
+        }).catch((e: unknown) => {
+          logger.warn({ e, action: "consistency.lunch_blackout_blocked" }, "audit write failed — non-blocking");
+          auditWriteFailuresTotal.labels({ action: "consistency.lunch_blackout_blocked" }).inc();
+        });
       } else if (lunchResult.perStrategyOverrideApplied) {
         // Per-strategy override fired — emit info audit for observability (operator
         // can monitor which strategies are bypassing the institutional default).
@@ -3458,7 +3496,10 @@ export async function evaluateSignals(
           status: "info",
           input: { symbol, strategy_id: sessionConfig.strategyId, window_spec: lunchResult.windowSpec },
           result: { reason: lunchResult.reason },
-        }).catch(() => {});
+        }).catch((e: unknown) => {
+          logger.warn({ e, action: "consistency.lunch_blackout_per_strategy_override" }, "audit write failed — non-blocking");
+          auditWriteFailuresTotal.labels({ action: "consistency.lunch_blackout_per_strategy_override" }).inc();
+        });
       }
     } catch (lunchErr) {
       // Fail-CLOSED: the lunch blackout gate guards a known-bad time window. An
@@ -3475,7 +3516,10 @@ export async function evaluateSignals(
         input: { sessionId, symbol, error: String(lunchErr) } as Record<string, unknown>,
         result: { blocked: true, reason: "lunch_blackout_gate_unexpected_error" } as Record<string, unknown>,
         correlationId: correlationId ?? null,
-      }).catch(() => {});
+      }).catch((e: unknown) => {
+        logger.warn({ e, action: "consistency.lunch_blackout_failclosed" }, "audit write failed — non-blocking");
+        auditWriteFailuresTotal.labels({ action: "consistency.lunch_blackout_failclosed" }).inc();
+      });
     }
 
     // ─── FIX A (2026-06-22): Consistency gate — Topstep + MFFU 50% single-day rule ──
@@ -3525,7 +3569,10 @@ export async function evaluateSignals(
             input: { sessionId, symbol, firmId: sessionFirmId } as Record<string, unknown>,
             result: { blocked: true, reason: consistencyResult.reason } as Record<string, unknown>,
             correlationId: correlationId ?? null,
-          }).catch(() => {});
+          }).catch((e: unknown) => {
+            logger.warn({ e, action: "consistency.50pct_blocked" }, "audit write failed — non-blocking");
+            auditWriteFailuresTotal.labels({ action: "consistency.50pct_blocked" }).inc();
+          });
         } else {
           // Emit gate_cleared or 40pct_warned depending on gate state
           const auditAction = consistencyResult.reason === "ok"
@@ -3546,7 +3593,10 @@ export async function evaluateSignals(
             input: { sessionId, symbol, firmId: sessionFirmId } as Record<string, unknown>,
             result: { blocked: false, reason: consistencyResult.reason } as Record<string, unknown>,
             correlationId: correlationId ?? null,
-          }).catch(() => {});
+          }).catch((e: unknown) => {
+            logger.warn({ e, action: auditAction }, "audit write failed — non-blocking");
+            auditWriteFailuresTotal.labels({ action: auditAction }).inc();
+          });
         }
       } catch (consistencyErr) {
         // Fail-OPEN: payout-eligibility gate — a DB error does NOT block entry.
@@ -3565,7 +3615,10 @@ export async function evaluateSignals(
           input: { sessionId, symbol, firmId: sessionFirmId, error: String(consistencyErr) } as Record<string, unknown>,
           result: { blocked: false, reason: "consistency_gate_db_error_fail_open" } as Record<string, unknown>,
           correlationId: correlationId ?? null,
-        }).catch(() => {});
+        }).catch((e: unknown) => {
+          logger.warn({ e, action: "consistency.gate_failopen" }, "audit write failed — non-blocking");
+          auditWriteFailuresTotal.labels({ action: "consistency.gate_failopen" }).inc();
+        });
       }
     }
 
@@ -3698,7 +3751,10 @@ export async function evaluateSignals(
           input: { sessionId, symbol, firmId: sessionRow.firmId, side: config.side } as Record<string, unknown>,
           result: { blocked: true, conflictUnderlying: hedge.conflictUnderlying, conflictSide: hedge.conflictSide } as Record<string, unknown>,
           correlationId: correlationId ?? null,
-        }).catch(() => {});
+        }).catch((e: unknown) => {
+          logger.warn({ e, action: "compliance.cross_account_hedge_blocked" }, "audit write failed — non-blocking");
+          auditWriteFailuresTotal.labels({ action: "compliance.cross_account_hedge_blocked" }).inc();
+        });
       }
     }
 
@@ -3731,7 +3787,10 @@ export async function evaluateSignals(
           input: { sessionId, symbol, firmId: sessionRow.firmId, side: config.side } as Record<string, unknown>,
           result: { blocked: true, conflictUnderlying: intra.conflictUnderlying, conflictSide: intra.conflictSide } as Record<string, unknown>,
           correlationId: correlationId ?? null,
-        }).catch(() => {});
+        }).catch((e: unknown) => {
+          logger.warn({ e, action: "compliance.intra_account_hedge_blocked" }, "audit write failed — non-blocking");
+          auditWriteFailuresTotal.labels({ action: "compliance.intra_account_hedge_blocked" }).inc();
+        });
       }
     }
 
@@ -3765,7 +3824,10 @@ export async function evaluateSignals(
           input: { sessionId, symbol, price: bar.close } as Record<string, unknown>,
           result: { blocked: true, reason: lock.reason } as Record<string, unknown>,
           correlationId: correlationId ?? null,
-        }).catch(() => {});
+        }).catch((e: unknown) => {
+          logger.warn({ e, action: "compliance.price_lock_limit_blocked" }, "audit write failed — non-blocking");
+          auditWriteFailuresTotal.labels({ action: "compliance.price_lock_limit_blocked" }).inc();
+        });
       }
     }
 
@@ -5051,7 +5113,10 @@ export async function evaluateSignals(
             input: { sessionId, symbol, accountBalance, drawdownRoom: sizingInputs.currentDrawdownRoom } as Record<string, unknown>,
             result: { finalContracts: 0, rejectionReason: sizingResult.rejectionReason ?? "zero_contracts" } as Record<string, unknown>,
             correlationId: correlationId ?? null,
-          }).catch(() => {});
+          }).catch((e: unknown) => {
+            logger.warn({ e, action: "signal.skipped_zero_size" }, "audit write failed — non-blocking");
+            auditWriteFailuresTotal.labels({ action: "signal.skipped_zero_size" }).inc();
+          });
         } else {
           baseContracts = sizingResult.finalContracts;
         }
@@ -5133,7 +5198,10 @@ export async function evaluateSignals(
             entityType: "paper_session", entityId: sessionId, decisionAuthority: "system", status: "warning",
             input: { sessionId, symbol, preReduceContracts, factor: dllReduceSizeFactor } as Record<string, unknown>,
             result: { contracts: baseContracts } as Record<string, unknown>,
-          }).catch(() => {});
+          }).catch((e: unknown) => {
+            logger.warn({ e, action: "sizing.dll_reduce_size_applied" }, "audit write failed — non-blocking");
+            auditWriteFailuresTotal.labels({ action: "sizing.dll_reduce_size_applied" }).inc();
+          });
         }
       }
 

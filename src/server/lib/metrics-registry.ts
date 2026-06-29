@@ -623,6 +623,30 @@ export const autoGraveyardTotal = new Counter({
   registers: [promRegistry],
 });
 
+// ─── Audit write failure counter (2026-06-29) ─────────────────────────────────
+//
+// tf_audit_write_failures_total{action}
+//   Incremented in every non-blocking insertAuditRow() .catch() handler on the
+//   execution path (paper-signal-service.ts). Previously these were silent swallows
+//   (.catch(() => {})). Each failure now logs a structured warn AND increments this
+//   counter so DB pressure, pool exhaustion, or post-migration schema mismatches
+//   become visible on the metrics dashboard without blocking signal evaluation.
+//
+//   action label: the audit_log action string of the row that failed to write.
+//   Cardinality: ~25 distinct action values — safe (bounded by the known audit
+//   actions on the execution path).
+//
+//   Operational question answered: "Are audit writes silently failing during a
+//   session?" — a spike here under DB load is the early signal that the session's
+//   audit_log trail may be incomplete (DLL breach, cooldown, position open rows
+//   missing). Allows targeting an investigation before the session ends.
+export const auditWriteFailuresTotal = new Counter({
+  name: "tf_audit_write_failures_total",
+  help: "Total non-blocking insertAuditRow() failures on the execution path, labelled by audit action",
+  labelNames: ["action"] as const,
+  registers: [promRegistry],
+});
+
 // ─── Wave 29 quantum observability zero-init (2026-06-28) ──────────────────────
 //
 // Fix MED-1: Zero-initialise closed-label-set Wave 29 counters so Prometheus sees

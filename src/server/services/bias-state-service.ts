@@ -38,6 +38,11 @@ import { logger } from "../lib/logger.js";
 import { and, eq, isNotNull, desc, sql, or } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { computePickerScores } from "./picker-metrics.js";
+// FIX MED-5 (2026-06-29): static import replaces dynamic import inside try block.
+// Dynamic import inside a try on regimeTransitionTotal meant an import-throw silently
+// swallowed the counter increment — tf_regime_transition_total never fired on
+// those bars. metrics-registry boots with the server; no circular-dep risk.
+import { regimeTransitionTotal } from "../lib/metrics-registry.js";
 
 // ─── Wave 25 W25.2 StructureState contract ────────────────────────────────────
 // Mirrors the Python `StructureState` dataclass (src/engine/context/structure_engine.py)
@@ -1135,9 +1140,10 @@ except Exception as e:
 
   // Wave 26 Pass G Pass F: emit regime.late_cycle_overheating_detected on transition
   // into the 7th institutional regime. Also increments Prometheus tf_regime_transition_total.
+  // FIX MED-5 (2026-06-29): regimeTransitionTotal now statically imported at top of file —
+  // dynamic import inside the try meant an import-throw silently dropped the counter increment.
   if (institutionalRegimeLabel != null) {
     try {
-      const { regimeTransitionTotal } = await import("../lib/metrics-registry.js");
       const fromLabel = previousInstitutionalRegime ?? "unknown";
       if (fromLabel !== institutionalRegimeLabel) {
         regimeTransitionTotal.labels({ from: fromLabel, to: institutionalRegimeLabel }).inc();

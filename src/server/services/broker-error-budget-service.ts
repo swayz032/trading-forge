@@ -249,8 +249,10 @@ export async function computeAlarmedBrokers(
 /**
  * Run the hourly budget check: log, audit, SSE, Discord for any alarmed broker.
  * Called from scheduler.ts every hour during RTH.
+ * FIX MED-3 (2026-06-29): accepts optional correlationId to thread into the
+ * broker-rejection-budget-breach audit row (was hardcoded null).
  */
-export async function runBrokerErrorBudgetCheck(): Promise<void> {
+export async function runBrokerErrorBudgetCheck(correlationId?: string): Promise<void> {
   const result = await computeBrokerErrorBudget(24);
   const alarmedBrokers = Object.entries(result.byBroker).filter(
     ([, entry]) => entry.alarmed,
@@ -299,7 +301,7 @@ export async function runBrokerErrorBudgetCheck(): Promise<void> {
           byRejectionClass: entry.byRejectionClass,
         } as Record<string, unknown>,
         status: "failure",
-        correlationId: null,
+        correlationId: correlationId ?? undefined,
       });
     } catch (err) {
       logger.warn({ err }, "broker-error-budget: audit write failed (non-blocking)");
