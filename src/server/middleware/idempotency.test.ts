@@ -119,6 +119,39 @@ describe("idempotencyMiddleware (P1-2 dual-read header)", () => {
     expect(next).toHaveBeenCalledOnce();
   });
 
+  it("reads body idempotency_key when no header is present (deep-scan #5 L1)", async () => {
+    const next = vi.fn();
+    // No headers, but the body carries idempotency_key (the n8n journal-node shape).
+    const req = { headers: {}, method: "POST", body: { idempotency_key: "body-789", source: "n8n" } } as unknown as Request;
+    const res = makeRes();
+    const originalJson = res.json;
+
+    idempotencyMiddleware(req, res, next);
+
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(next).toHaveBeenCalledOnce();
+    // PROOF the body key was honored (keyed path), not the no-key fall-through:
+    // the keyed branch wraps res.json with a caching interceptor; the no-key path
+    // leaves res.json untouched. A wrapped res.json means the body key was read.
+    expect(res.json).not.toBe(originalJson);
+  });
+
+  it("does NOT enter the keyed path when neither header nor body key is present", async () => {
+    const next = vi.fn();
+    const req = { headers: {}, method: "POST", body: { source: "n8n" } } as unknown as Request;
+    const res = makeRes();
+    const originalJson = res.json;
+
+    idempotencyMiddleware(req, res, next);
+    await Promise.resolve();
+
+    expect(next).toHaveBeenCalledOnce();
+    // No key anywhere → res.json is left untouched (no caching wrapper).
+    expect(res.json).toBe(originalJson);
+  });
+
   it("calls next immediately when no header is provided", () => {
     const next = vi.fn();
     const req = makeReq({}, "POST");
