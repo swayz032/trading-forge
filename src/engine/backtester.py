@@ -357,11 +357,16 @@ def apply_eligibility_gate(
             # Dedupe by error type per bar to avoid log explosion on systematic failures.
             # seen_errors is captured from the outer function scope (closure).
             exc_type_key = type(exc).__name__
-            if not hasattr(_apply_eligibility_gate, "_seen_errors"):  # noqa: F821
-                _apply_eligibility_gate._seen_errors = set()  # noqa: F821
+            # M1 FIX (deepscan5 2026-06-29): the function is `apply_eligibility_gate` (no
+            # leading underscore). The old `_apply_eligibility_gate` references were an
+            # undefined name → NameError inside the except block (the noqa: F821 silenced the
+            # linter, not the runtime). This error-recovery path is only reached when the gate
+            # loop itself throws, so it slept until then; now it correctly dedupes by error type.
+            if not hasattr(apply_eligibility_gate, "_seen_errors"):
+                apply_eligibility_gate._seen_errors = set()
             error_bar_key = (exc_type_key, int(idx))
-            if error_bar_key not in _apply_eligibility_gate._seen_errors:  # noqa: F821
-                _apply_eligibility_gate._seen_errors.add(error_bar_key)  # noqa: F821
+            if error_bar_key not in apply_eligibility_gate._seen_errors:
+                apply_eligibility_gate._seen_errors.add(error_bar_key)
                 print(
                     f"eligibility_gate_error bar={idx}: {exc_type_key}: {exc}",
                     file=sys.stderr,
@@ -890,7 +895,12 @@ def _apply_static_styleC_management(
         atr_at_entry = float(atr_np[entry_idx]) if entry_idx < len(atr_np) and not np.isnan(atr_np[entry_idx]) else 1.0
         # L3 FIX: Use atr_stop_multiplier from config rather than hardcoded 2.0.
         # The W23-D R-multiple gate depends on this matching the strategy's actual stop multiplier.
-        risk_points = min(6.0, atr_at_entry * atr_stop_multiplier)
+        # C4 FIX (deepscan5 2026-06-29): per-symbol ceiling, not a flat 6.0pt cap.
+        # The eligibility gate uses _get_stop_ceiling_for_symbol (14 MES / 62 MNQ / 1.0 MCL);
+        # the management loop must match or MNQ trades get a noise-level 6pt stop (5m ATR ~30-80pt)
+        # → every MNQ Style C/adaptive trade was stopped on noise. MES/MCL unchanged in practice.
+        _stop_ceiling = _get_stop_ceiling_for_symbol(spec.symbol if spec else "MES")
+        risk_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
         # Min breathing room: 2pt for MES/ES (tick_size=0.25), scaled for other instruments
         tick = spec.tick_size if spec else 0.25
         min_trail = max(2.0, tick * 8)  # 8 ticks minimum breathing room
@@ -1391,7 +1401,12 @@ def _apply_adaptive_management(
         direction = "short" if is_short else "long"
 
         atr_at_entry = float(atr_np[entry_idx]) if entry_idx < len(atr_np) and not np.isnan(atr_np[entry_idx]) else 1.0
-        risk_points = min(6.0, atr_at_entry * atr_stop_multiplier)
+        # C4 FIX (deepscan5 2026-06-29): per-symbol ceiling, not a flat 6.0pt cap.
+        # The eligibility gate uses _get_stop_ceiling_for_symbol (14 MES / 62 MNQ / 1.0 MCL);
+        # the management loop must match or MNQ trades get a noise-level 6pt stop (5m ATR ~30-80pt)
+        # → every MNQ Style C/adaptive trade was stopped on noise. MES/MCL unchanged in practice.
+        _stop_ceiling = _get_stop_ceiling_for_symbol(spec.symbol if spec else "MES")
+        risk_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
         tick = spec.tick_size if spec else 0.25
 
         # Initial stop price
@@ -4068,6 +4083,12 @@ def run_backtest(
     losers = np.array([])
     avg_winner = 0.0
     avg_loser = 0.0
+    # C2 FIX (deepscan5 2026-06-29): hoist exit-slippage accumulator defaults out of the
+    # `if trades_records is not None:` block. They are referenced unconditionally in the
+    # result dict ("exit_slippage_session_applied"), so a zero-trade backtest raised
+    # UnboundLocalError. Wave 27.5 Pass C.1 added the refs without zero-trade defaults.
+    _h5_entry_slips: list[float] = []
+    _h5_exit_slips: list[float] = []
 
     # C4 FIX: Apply _apply_trade_management to vectorbt trades so that stop/TP
     # price overrides are used for P&L computation rather than vectorbt's bar-close
@@ -4225,7 +4246,8 @@ def run_backtest(
             atr_col_name = "atr_14"
             atr_at_entry = float(df[atr_col_name][entry_idx]) if atr_col_name in df.columns and entry_idx < len(df) else 0.0
             sl_mult = float(config.stop_loss.multiplier) if hasattr(config, "stop_loss") and config.stop_loss else 1.5  # L3 fix: use config multiplier, fall back to 1.5
-            risk_points = min(atr_at_entry * sl_mult, 6.0)  # 6pt max cap
+            # C4 FIX (deepscan5 2026-06-29): per-symbol ceiling, not flat 6.0pt (see mgmt loops above).
+            risk_points = min(atr_at_entry * sl_mult, _get_stop_ceiling_for_symbol(spec.symbol if spec else "MES"))
             risk_dollars = risk_points * spec.point_value
             if risk_dollars > 0 and size > 0:
                 reward_dollars = net_pnl / size
@@ -5914,7 +5936,11 @@ def run_class_backtest(
                 exit_p = float(row["Avg Exit Price"])
                 exit_idx = int(row["Exit Idx"]) if "Exit Idx" in row.index else min(entry_idx + 1, len(slippage_clean) - 1)
                 exit_reason = "signal"
-                risk_pts = min(float(atr_np[entry_idx]) * 2.0, 6.0) if entry_idx < len(atr_np) else 6.0
+                # C4 + M2 FIX (deepscan5 2026-06-29): per-symbol ceiling (was flat 6.0pt) AND
+                # config stop multiplier _cls_stop_mult (was hardcoded 2.0, overstating risk 33%
+                # for the Slumdawg 1.5× default — understated R:R on the class path).
+                _cls_ceiling = _get_stop_ceiling_for_symbol(spec.symbol if spec else "MES")
+                risk_pts = min(float(atr_np[entry_idx]) * _cls_stop_mult, _cls_ceiling) if entry_idx < len(atr_np) else _cls_ceiling
 
             # H2 FIX (class path): Floor size to integer contracts — brokers charge
             # per integer contract only. FLOOR is conservative (can't trade 0.3 contracts).

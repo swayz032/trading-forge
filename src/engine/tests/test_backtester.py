@@ -6,20 +6,18 @@ from datetime import datetime, timedelta
 
 import numpy as np
 import polars as pl
-import pytest
 
-from src.engine.sizing import compute_position_sizes
-from src.engine.slippage import compute_slippage
 from src.engine.config import (
+    CONTRACT_SPECS,
+    BacktestRequest,
     ContractSpec,
     IndicatorConfig,
-    StopConfig,
     PositionSizeConfig,
+    StopConfig,
     StrategyConfig,
-    BacktestRequest,
-    CONTRACT_SPECS,
 )
-
+from src.engine.sizing import compute_position_sizes
+from src.engine.slippage import compute_slippage
 
 # ─── Helpers ───────────────────────────────────────────────────────
 
@@ -194,6 +192,52 @@ class TestBacktesterOutput:
         assert "trades" in result
         assert "daily_pnls" in result
         assert "execution_time_ms" in result
+
+    def test_zero_trade_backtest_does_not_crash(self):
+        """C2 regression (deepscan5 2026-06-29): a backtest that produces ZERO trades
+        must return a clean empty result, not raise UnboundLocalError.
+
+        The exit-slippage accumulators (_h5_entry_slips/_h5_exit_slips) were only
+        initialized inside `if trades_records is not None:` but referenced
+        unconditionally in the result dict ("exit_slippage_session_applied"), so a
+        no-entry window crashed instead of returning n_trades=0. Wave 27.5 Pass C.1
+        added the refs without zero-trade defaults; deepscan5 hoisted the defaults.
+        """
+        from src.engine.backtester import run_backtest
+
+        config = BacktestRequest(
+            strategy=StrategyConfig(
+                name="Never Fires",
+                symbol="MES",
+                timeframe="daily",
+                # Same indicator/exit structure as test_run_backtest_returns_result
+                # (the config that reproduced the original crash) so this exercises the
+                # same managed-exit result path — but with an impossible entry so the
+                # trade count is deterministically zero.
+                indicators=[
+                    IndicatorConfig(type="sma", period=5),
+                    IndicatorConfig(type="sma", period=15),
+                    IndicatorConfig(type="atr", period=14),
+                ],
+                entry_long="close > 9999999",  # no synthetic MES price reaches this → zero entries
+                entry_short="high < low",      # never-true sentinel (W23F.L)
+                exit="close crosses_below sma_15",
+                stop_loss=StopConfig(type="atr", multiplier=2.0),
+                position_size=PositionSizeConfig(
+                    type="dynamic_atr", target_risk_dollars=500
+                ),
+            ),
+            start_date="2023-01-01",
+            end_date="2023-12-31",
+            commission_per_side=0.62,
+        )
+
+        df = _make_ohlcv(200, base=4000.0, trend=0.5)
+        result = run_backtest(config, data=df)  # must NOT raise (C2: UnboundLocalError pre-fix)
+
+        # Core contract: a zero-trade window returns a clean result, never crashes.
+        assert result["total_trades"] == 0
+        assert isinstance(result.get("equity_curve"), list)
 
     def test_result_is_json_serializable(self):
         """Output must be JSON-serializable for stdout bridge."""
