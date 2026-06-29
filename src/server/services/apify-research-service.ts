@@ -61,6 +61,7 @@ import { insertMemory, queryMemories } from "../lib/carter/carter-memory-store.j
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { notifyInfo } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
+import { ollamaSynthesize } from "../lib/carter/carter-research.js";
 
 // ─── Tunables (env-overridable, no magic numbers) ─────────────────────────────
 
@@ -355,6 +356,16 @@ export async function pollRunAndStore(args: PollArgs): Promise<void> {
           return;
         }
         const headline = buildHeadline(platform, topic, items);
+        // Synthesize the scraped posts into a HUMAN-LIKE findings brief — the whole
+        // point is to tell the operator what people are saying, not dump links. Local
+        // LLM (CARTER_RESEARCH_MODEL); null on failure → inbox falls back to the headline.
+        const summary =
+          items.length > 0
+            ? await ollamaSynthesize(
+                `What are people on ${platform} actually saying about "${topic}"? Give me the findings: the main themes, the problems they hit, what's working, and the useful takeaways — in plain English, like a sharp colleague briefing me. Cite posts inline as [n].`,
+                items.map((it) => ({ title: it.title, url: it.url, snippet: it.snippet, provider: platform })),
+              ).catch(() => null)
+            : null;
         await insertMemory({
           kind: "research",
           topic,
@@ -364,6 +375,7 @@ export async function pollRunAndStore(args: PollArgs): Promise<void> {
             status: "completed",
             runId,
             headline,
+            summary: summary && summary.trim().length > 0 ? summary.trim() : undefined,
             items,
             completedAtIso: nowIso(),
           }),

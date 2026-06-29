@@ -22,7 +22,8 @@ interface InboxItem {
   title: string;
   status: "running" | "completed" | "failed" | "info";
   headline?: string;
-  items?: Array<{ title: string; url?: string }>;
+  summary?: string;
+  items?: Array<{ title: string; url?: string; snippet?: string }>;
   severity?: string;
   at: string;
 }
@@ -65,10 +66,12 @@ export async function getCarterInbox(_req: SlumhouseRequest, res: Response): Pro
         title: `${String(b.platform ?? "research")} · ${topic}`.trim(),
         status,
         headline: typeof b.headline === "string" ? b.headline : undefined,
+        summary: typeof b.summary === "string" ? b.summary : undefined,
         items: Array.isArray(b.items)
           ? (b.items as Array<Record<string, unknown>>).slice(0, 6).map((it) => ({
               title: String(it.title ?? "").slice(0, 140),
               url: typeof it.url === "string" ? it.url : undefined,
+              snippet: typeof it.snippet === "string" && it.snippet.trim() ? it.snippet.slice(0, 180) : undefined,
             }))
           : undefined,
         at: iso(m.createdAt),
