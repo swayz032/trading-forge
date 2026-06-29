@@ -67,7 +67,19 @@ construction), explicitly NOT a silent flip of `l-2`'s golden value to make the 
 the honest score stands at **19/20 hard criteria, 18/18 deterministic-signal criteria** (grounding +
 speaker_items + speaker_items-band + ideas, all PASS on all 4; coverage_verdict 3/4 with `l-2` borderline).
 
-## Honest verdict against the pre-registered gate
+## RESOLVED 2026-06-29 (amendment A1) — Gate 1 EQUIVALENT on deterministic criteria
+
+A controlled regression test (`src/server/lib/__tests__/coverage-verdict-not-equivalence.test.ts`, 2/2 GREEN)
+PROVED `coverage_verdict` is not a hard-equivalence property: two artifacts with identical hard keys (7
+speaker_items, 1 idea) yield different verdicts on one item's mechanic phrasing. So `coverage_verdict` was
+demoted from a HARD Gate-1 criterion to ADVISORY (amendment A1 in `validation-preregistration.md`); the gate now
+keys on grounding + speaker_items + ideas. Amended harness result vs `:4000`:
+**DETERMINISTIC EQUIVALENCE: 16/16 — EQUIVALENT.** Advisory coverage 3/4 (non-gating). Further evidence: on the
+amended run `l-2` coverage came back `pct 1.000` (fully covered) — a FULL swing from the golden's
+`coverage_failed`, identical speaker_items(7)+ideas(1) — confirming the verdict tracks non-deterministic gemma
+TEXT, not the equivalence artifact. Prior 19/20 (below) preserved verbatim as the historical record.
+
+## Honest verdict against the pre-registered gate (pre-amendment; preserved for history)
 
 The harness requires 20/20 to declare "green / proceed to replay." We are at **19/20**, with the single gap
 being **extraction-layer non-determinism on a borderline coverage label, not sync incompleteness**. The sync
