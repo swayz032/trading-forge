@@ -101,6 +101,30 @@ export async function postCarterWebhook(req: Request, res: Response): Promise<vo
     // already logged. Returning 5xx would trigger redelivery against a dead DB.
   }
 
+  // Best-effort: persist a Carter-memory call_summary so future calls have context.
+  // NEVER fails the webhook — wrapped in try/catch, dynamic import keeps the DB
+  // module off the webhook's static import graph (the HMAC path must load lean).
+  try {
+    const summaryText =
+      summary && summary.trim() !== ""
+        ? summary
+        : transcript
+            .map((t) => `${t.role ?? "?"}: ${t.message ?? ""}`)
+            .join("\n");
+    const content = summaryText.slice(0, 2000);
+    if (content.trim() !== "") {
+      const { insertMemory } = await import("../lib/carter/carter-memory-store.js");
+      await insertMemory({
+        kind: "call_summary",
+        content,
+        correlationId: conversationId,
+        source: "webhook",
+      });
+    }
+  } catch (err) {
+    logger.warn({ err, conversationId }, "carter-webhook: memory call_summary persist failed (non-fatal)");
+  }
+
   logger.info({ conversationId, turnCount: transcript.length }, "carter-webhook: conversation logged");
   res.status(200).json({ ok: true });
 }

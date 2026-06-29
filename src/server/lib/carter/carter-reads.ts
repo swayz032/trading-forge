@@ -580,6 +580,10 @@ import { CARTER_INTROSPECT_HANDLERS } from "./carter-introspect.js";
 //    CARTER_READ_HANDLERS below alongside the introspection map.
 import { CARTER_RECOMMEND_HANDLERS } from "./carter-recommend.js";
 
+// ── Memory continuity handler (recall) — carter-memory-store.ts. Spread into
+//    CARTER_READ_HANDLERS below so the route dispatches it via the same map.
+import { CARTER_MEMORY_READ_HANDLERS } from "./carter-memory-store.js";
+
 async function getCurrentIssues(_params: unknown): Promise<unknown> {
   const issues = listOpenIssues();
 
@@ -647,5 +651,7 @@ export const CARTER_READ_HANDLERS: Record<string, (params: unknown) => Promise<u
   ...CARTER_INTROSPECT_HANDLERS,
   // ── Recommendation-engine tools (carter-recommend.ts) ───────────────────────
   ...CARTER_RECOMMEND_HANDLERS,
+  // ── Memory continuity tool (carter-memory-store.ts) ─────────────────────────
+  ...CARTER_MEMORY_READ_HANDLERS,
 };
 

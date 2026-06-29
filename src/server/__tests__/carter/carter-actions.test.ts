@@ -166,8 +166,8 @@ const getHandler = (name: string) => {
 // ─── Test suites ──────────────────────────────────────────────────────────────
 
 describe("CARTER_ACTION_HANDLERS — map structure", () => {
-  it("exports exactly 13 handlers", () => {
-    expect(Object.keys(CARTER_ACTION_HANDLERS)).toHaveLength(13);
+  it("exports exactly 14 handlers", () => {
+    expect(Object.keys(CARTER_ACTION_HANDLERS)).toHaveLength(14);
   });
 
   it("all expected keys are present", () => {

@@ -718,9 +718,11 @@ async function evaluateKillSignalHandler(params: unknown): Promise<unknown> {
 // ─── Export map ──────────────────────────────────────────────────────────────
 
 import { CARTER_CODE_HANDLERS } from "./carter-code.js";
+import { CARTER_MEMORY_ACTION_HANDLERS } from "./carter-memory-store.js";
 
 export const CARTER_ACTION_HANDLERS: Record<string, (params: unknown) => Promise<unknown>> = {
   ...CARTER_CODE_HANDLERS,
+  ...CARTER_MEMORY_ACTION_HANDLERS,
   run_backtest:             runBacktestHandler,
   run_walk_forward:         runWalkForwardHandler,
   run_monte_carlo:          runMonteCarloHandler,

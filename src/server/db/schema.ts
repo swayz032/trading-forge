@@ -3382,3 +3382,28 @@ export const carterIssues = pgTable(
 
 export type CarterIssueRow = typeof carterIssues.$inferSelect;
 export type NewCarterIssueRow = typeof carterIssues.$inferInsert;
+
+// ─── carter_memory — persistent continuity store for the Carter voice agent ────
+// Carter remembers across calls: decisions / preferences / facts / open_threads
+// (voice-written via the `remember` tool) plus best-effort call_summary rows
+// (webhook-written on post_call_transcription). The `recall` tool reads it back,
+// newest-first, optionally filtered by topic. Backed by migration 0185.
+export const carterMemory = pgTable(
+  "carter_memory",
+  {
+    id:            bigserial("id", { mode: "number" }).primaryKey(),
+    createdAt:     timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    kind:          text("kind").notNull(), // 'decision'|'preference'|'fact'|'open_thread'|'call_summary'
+    topic:         text("topic"),
+    content:       text("content").notNull(),
+    correlationId: text("correlation_id"),
+    source:        text("source").notNull().default("voice"), // 'voice' | 'webhook'
+  },
+  (t) => ({
+    createdAtIdx: index("carter_memory_created_at_idx").on(t.createdAt),
+    kindIdx:      index("carter_memory_kind_idx").on(t.kind),
+  }),
+);
+
+export type CarterMemoryRow = typeof carterMemory.$inferSelect;
+export type NewCarterMemoryRow = typeof carterMemory.$inferInsert;

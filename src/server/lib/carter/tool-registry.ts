@@ -211,6 +211,14 @@ export const CARTER_TOOLS: CarterTool[] = [
     handler: "find_hardening_opportunities",
   },
 
+  // ── Memory continuity tool (Tier: green) — read side of Carter's memory ──────
+  {
+    name: "recall",
+    description: "Recalls what Carter has remembered across calls (decisions, preferences, facts, open threads, and call summaries), newest first. Optionally filter by topic (substring match). Params: { topic?, limit? } (limit default 10, max 30).",
+    tier: "green",
+    handler: "recall",
+  },
+
   // ── Action tools (Tier: green) — capital-SAFE, never bypass a gate ───────────
 
   {
@@ -288,6 +296,12 @@ export const CARTER_TOOLS: CarterTool[] = [
     description: "Evaluates a sequence of backtest attempt metrics and returns a kill signal verdict (catastrophic_risk / no_edge / wrong_direction / unprofitable / flat_improvement / below_tier3 / null=keep going) plus the current stage and prompt.",
     tier: "green",
     handler: "evaluate_kill_signal",
+  },
+  {
+    name: "remember",
+    description: "Stores a memory so Carter recalls it on later calls. kind must be one of decision | preference | fact | open_thread. Use for operator preferences, decisions made on the call, facts to retain, or open threads to follow up. Params: { kind, content, topic? }. Returns { ok, id }.",
+    tier: "green",
+    handler: "remember",
   },
   {
     name: "save_code_draft",
@@ -545,6 +559,28 @@ export const CARTER_PARAMS_SCHEMAS: Record<string, Record<string, unknown>> = {
     },
     required: [],
     description: "Identify the strategy by id or name (one of the two).",
+  },
+  // ── memory continuity (green) ───────────────────────────────────────────────
+  recall: {
+    type: "object",
+    properties: {
+      topic: { type: "string", description: "Optional topic substring to filter remembered items by." },
+      limit: { type: "number", description: "How many memories to return (default 10, max 30)." },
+    },
+    required: [],
+  },
+  remember: {
+    type: "object",
+    properties: {
+      kind: {
+        type: "string",
+        enum: ["decision", "preference", "fact", "open_thread"],
+        description: "Memory category: decision | preference | fact | open_thread.",
+      },
+      content: { type: "string", description: "The thing to remember (<= 4000 chars). Never store secrets." },
+      topic: { type: "string", description: "Optional grouping key so recall can filter by topic." },
+    },
+    required: ["kind", "content"],
   },
   // ── actions (green) ─────────────────────────────────────────────────────────
   run_backtest: {
