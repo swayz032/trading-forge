@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-29T07:31:07.510Z",
+  "generatedAt": "2026-06-29T23:02:25.384Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,12 +16,12 @@
   },
   "counts": {
     "routes": 78,
-    "schedulerJobs": 103,
+    "schedulerJobs": 104,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 29,
     "databaseTables": 109,
-    "registrySubsystems": 71
+    "registrySubsystems": 72
   },
   "routes": [
     "/api/ab-comparison",
@@ -195,6 +195,7 @@
     "session-analytics-rollup",
     "stale-pending-sweeper",
     "stale-session-check",
+    "strategy-decay-monitor",
     "strategy-stale-detector",
     "synthetic-regime-bank-populate",
     "system-map-drift",
@@ -931,34 +932,34 @@
     "workflow_backups"
   ],
   "registryCoverage": {
-    "registryEntries": 71,
-    "autonomousSubsystems": 63,
+    "registryEntries": 72,
+    "autonomousSubsystems": 64,
     "selfEvolvingSubsystems": 9,
     "proofStatusCounts": {
-      "runtime-proven": 65,
+      "runtime-proven": 66,
       "partially-proven": 1,
       "offline-by-design": 0,
       "experimental": 5,
       "drifted": 0
     },
     "runtimeStateCounts": {
-      "active": 65,
+      "active": 66,
       "experimental": 5,
       "scaffold": 1
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
       "partially_active_preprod": 0,
-      "active_preprod": 66,
+      "active_preprod": 67,
       "experimental_preprod": 5
     },
     "launchTargetCounts": {
-      "runtime_proven_autonomous": 64,
+      "runtime_proven_autonomous": 65,
       "runtime_proven_manual_gate": 2,
       "experimental_challenger": 5
     },
     "closedLoopCounts": {
-      "not_collecting": 58,
+      "not_collecting": 59,
       "collecting_only": 0,
       "learning_active": 8,
       "learning_blocked": 0,
@@ -966,13 +967,13 @@
     },
     "learningModeCounts": {
       "active_learning": 7,
-      "deterministic_instrumented": 57,
+      "deterministic_instrumented": 58,
       "manual_gate_only": 2,
       "shadow_experimental": 5
     },
     "operatingClassCounts": {
       "adaptive": 7,
-      "deterministic_instrumented": 62,
+      "deterministic_instrumented": 63,
       "manual_gated": 2
     },
     "manualGates": [
@@ -989,7 +990,7 @@
     ],
     "coveredCounts": {
       "routes": 78,
-      "schedulerJobs": 103,
+      "schedulerJobs": 104,
       "engineSubsystems": 29,
       "databaseTables": 109
     },
@@ -1016,11 +1017,11 @@
     "manualGateViolations": [],
     "preprodIntegrity": {
       "status": "incomplete",
-      "automationComplete": 58,
-      "dataCollectionComplete": 71,
-      "auditabilityComplete": 71,
-      "failureVisibilityComplete": 71,
-      "authorityCorrect": 71,
+      "automationComplete": 59,
+      "dataCollectionComplete": 72,
+      "auditabilityComplete": 72,
+      "failureVisibilityComplete": 72,
+      "authorityCorrect": 72,
       "learningActive": 8,
       "incompleteSubsystems": [
         "adaptive_exit_engine",
@@ -1036,7 +1037,7 @@
     "productionConvergence": {
       "status": "blocked",
       "targetStateCounts": {
-        "production_autonomous": 64,
+        "production_autonomous": 65,
         "production_manual_gate": 2,
         "production_experimental": 5,
         "production_not_intended": 0
@@ -1084,6 +1085,7 @@
         "slumhouse_routes",
         "smt_divergence_engine",
         "smt_live_bridge_service",
+        "strategy_decay_monitor",
         "strategy_health_observability",
         "strategy_lifecycle",
         "trade_critique_service",
@@ -6999,6 +7001,108 @@
         ],
         "evidenceQueries": [
           "src/server/__tests__/wave26-smt-live-bridge.test.ts"
+        ],
+        "coverageGaps": []
+      },
+      {
+        "id": "strategy_decay_monitor",
+        "domain": "lifecycle",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "advisory",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "production",
+        "deploymentAuthority": "operator_only",
+        "criticality": "observability",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
+        ],
+        "runtimeEvidence": [
+          "audit_log.strategy_decay_monitor.*",
+          "audit_log.strategy_decay_monitor.completed",
+          "audit_log.strategy.edge_decay_*",
+          "scheduler:strategy-decay-monitor:21,22-utc",
+          "strategy_decay_monitor.completed",
+          "strategy_decay_monitor.skipped_dst_guard",
+          "strategy_decay_monitor.skipped_lock_contention",
+          "strategy.edge_decay_baseline_zero_std",
+          "strategy.edge_decay_demotion_review",
+          "strategy.edge_decay_insufficient_data",
+          "strategy.edge_decay_ok",
+          "strategy.edge_decay_regime_shifting",
+          "strategy.edge_decay_warn"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "bias_state",
+          "bias_state.regime_label (stable-regime guard)",
+          "paper_sessions",
+          "paper_sessions (active|paused|stopped)",
+          "paper_trades",
+          "paper_trades.pnl + exitTime",
+          "strategies"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": true,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log.strategy_decay_monitor.*",
+          "audit_log.strategy_decay_monitor.completed",
+          "audit_log.strategy.edge_decay_*",
+          "scheduler:strategy-decay-monitor:21,22-utc",
+          "SELECT * FROM audit_log WHERE action = 'strategy_decay_monitor.completed' ORDER BY created_at DESC LIMIT 7",
+          "SELECT * FROM audit_log WHERE action IN ('strategy.edge_decay_warn','strategy.edge_decay_demotion_review') ORDER BY created_at DESC LIMIT 20",
+          "strategy_decay_monitor.completed",
+          "strategy_decay_monitor.skipped_dst_guard",
+          "strategy_decay_monitor.skipped_lock_contention",
+          "strategy.edge_decay_baseline_zero_std",
+          "strategy.edge_decay_demotion_review",
+          "strategy.edge_decay_insufficient_data",
+          "strategy.edge_decay_ok",
+          "strategy.edge_decay_regime_shifting",
+          "strategy.edge_decay_warn"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [],
+        "schedulerJobs": [
+          "strategy-decay-monitor"
+        ],
+        "healthCheck": "src/server/__tests__/strategy-decay-monitor.test.ts",
+        "freshnessSignals": [
+          "audit_log.strategy_decay_monitor.completed",
+          "scheduler:strategy-decay-monitor:21,22-utc"
+        ],
+        "evidenceQueries": [
+          "SELECT * FROM audit_log WHERE action = 'strategy_decay_monitor.completed' ORDER BY created_at DESC LIMIT 7",
+          "SELECT * FROM audit_log WHERE action IN ('strategy.edge_decay_warn','strategy.edge_decay_demotion_review') ORDER BY created_at DESC LIMIT 20"
         ],
         "coverageGaps": []
       },
@@ -13899,6 +14003,108 @@
       ],
       "evidenceQueries": [
         "src/server/__tests__/wave26-smt-live-bridge.test.ts"
+      ],
+      "coverageGaps": []
+    },
+    {
+      "id": "strategy_decay_monitor",
+      "domain": "lifecycle",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "advisory",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "production",
+      "deploymentAuthority": "operator_only",
+      "criticality": "observability",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
+      ],
+      "runtimeEvidence": [
+        "audit_log.strategy_decay_monitor.*",
+        "audit_log.strategy_decay_monitor.completed",
+        "audit_log.strategy.edge_decay_*",
+        "scheduler:strategy-decay-monitor:21,22-utc",
+        "strategy_decay_monitor.completed",
+        "strategy_decay_monitor.skipped_dst_guard",
+        "strategy_decay_monitor.skipped_lock_contention",
+        "strategy.edge_decay_baseline_zero_std",
+        "strategy.edge_decay_demotion_review",
+        "strategy.edge_decay_insufficient_data",
+        "strategy.edge_decay_ok",
+        "strategy.edge_decay_regime_shifting",
+        "strategy.edge_decay_warn"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "bias_state",
+        "bias_state.regime_label (stable-regime guard)",
+        "paper_sessions",
+        "paper_sessions (active|paused|stopped)",
+        "paper_trades",
+        "paper_trades.pnl + exitTime",
+        "strategies"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": true,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log.strategy_decay_monitor.*",
+        "audit_log.strategy_decay_monitor.completed",
+        "audit_log.strategy.edge_decay_*",
+        "scheduler:strategy-decay-monitor:21,22-utc",
+        "SELECT * FROM audit_log WHERE action = 'strategy_decay_monitor.completed' ORDER BY created_at DESC LIMIT 7",
+        "SELECT * FROM audit_log WHERE action IN ('strategy.edge_decay_warn','strategy.edge_decay_demotion_review') ORDER BY created_at DESC LIMIT 20",
+        "strategy_decay_monitor.completed",
+        "strategy_decay_monitor.skipped_dst_guard",
+        "strategy_decay_monitor.skipped_lock_contention",
+        "strategy.edge_decay_baseline_zero_std",
+        "strategy.edge_decay_demotion_review",
+        "strategy.edge_decay_insufficient_data",
+        "strategy.edge_decay_ok",
+        "strategy.edge_decay_regime_shifting",
+        "strategy.edge_decay_warn"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [],
+      "schedulerJobs": [
+        "strategy-decay-monitor"
+      ],
+      "healthCheck": "src/server/__tests__/strategy-decay-monitor.test.ts",
+      "freshnessSignals": [
+        "audit_log.strategy_decay_monitor.completed",
+        "scheduler:strategy-decay-monitor:21,22-utc"
+      ],
+      "evidenceQueries": [
+        "SELECT * FROM audit_log WHERE action = 'strategy_decay_monitor.completed' ORDER BY created_at DESC LIMIT 7",
+        "SELECT * FROM audit_log WHERE action IN ('strategy.edge_decay_warn','strategy.edge_decay_demotion_review') ORDER BY created_at DESC LIMIT 20"
       ],
       "coverageGaps": []
     },

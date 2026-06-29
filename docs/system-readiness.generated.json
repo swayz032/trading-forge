@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-29T07:31:07.510Z",
+  "generatedAt": "2026-06-29T23:02:25.384Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -55,8 +55,8 @@
     "workflow-source-missing:Weekly_Strategy_Hunt_sAIrnCVB4iOsodsy"
   ],
   "subsystemCounts": {
-    "total": 71,
-    "ready": 47,
+    "total": 72,
+    "ready": 48,
     "blocked": 17,
     "manualGated": 2,
     "experimental": 5
@@ -1469,6 +1469,34 @@
         "smt.snapshot_captured",
         "smt.snapshot_stale_skipped",
         "src/server/__tests__/wave26-smt-live-bridge.test.ts"
+      ]
+    },
+    {
+      "id": "strategy_decay_monitor",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "operator_only",
+      "blockers": [],
+      "requiredEvidence": [
+        "audit_log.strategy_decay_monitor.*",
+        "audit_log.strategy_decay_monitor.completed",
+        "audit_log.strategy.edge_decay_*",
+        "scheduler:strategy-decay-monitor:21,22-utc",
+        "SELECT * FROM audit_log WHERE action = 'strategy_decay_monitor.completed' ORDER BY created_at DESC LIMIT 7",
+        "SELECT * FROM audit_log WHERE action IN ('strategy.edge_decay_warn','strategy.edge_decay_demotion_review') ORDER BY created_at DESC LIMIT 20",
+        "strategy_decay_monitor.completed",
+        "strategy_decay_monitor.skipped_dst_guard",
+        "strategy_decay_monitor.skipped_lock_contention",
+        "strategy.edge_decay_baseline_zero_std",
+        "strategy.edge_decay_demotion_review",
+        "strategy.edge_decay_insufficient_data",
+        "strategy.edge_decay_ok",
+        "strategy.edge_decay_regime_shifting",
+        "strategy.edge_decay_warn"
       ]
     },
     {
