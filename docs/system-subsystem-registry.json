@@ -5390,7 +5390,9 @@
       "audit_log:carter.tool_invoked",
       "audit_log:carter.conversation_logged"
     ],
-    "scheduler_jobs": [],
+    "scheduler_jobs": [
+      "carter-analyst-daily"
+    ],
     "routes": [
       "/api/carter",
       "/api/carter/webhook",

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-29T20:47:24.381Z",
+  "generatedAt": "2026-06-29T21:01:16.947Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,7 +16,7 @@
   },
   "counts": {
     "routes": 78,
-    "schedulerJobs": 103,
+    "schedulerJobs": 104,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 29,
@@ -120,6 +120,7 @@
     "c11-h41-weekly",
     "c11-treasury-auctions",
     "candidate-backtest-conveyor",
+    "carter-analyst-daily",
     "cloud-qmc-poll",
     "cme-status-poll",
     "compliance-rule-drift",
@@ -990,7 +991,7 @@
     ],
     "coveredCounts": {
       "routes": 78,
-      "schedulerJobs": 103,
+      "schedulerJobs": 104,
       "engineSubsystems": 29,
       "databaseTables": 110
     },
@@ -1994,7 +1995,8 @@
           "failure visibility wired",
           "freshness signals available",
           "route contract reachable",
-          "runtime evidence persisted"
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
         ],
         "runtimeEvidence": [
           "/api/health",
@@ -2053,7 +2055,9 @@
           "/api/carter/webhook",
           "/slumhouse/api/carter-session"
         ],
-        "schedulerJobs": [],
+        "schedulerJobs": [
+          "carter-analyst-daily"
+        ],
         "healthCheck": "/api/health",
         "freshnessSignals": [
           "audit_log:carter.tool_invoked",
@@ -8895,7 +8899,8 @@
         "failure visibility wired",
         "freshness signals available",
         "route contract reachable",
-        "runtime evidence persisted"
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
       ],
       "runtimeEvidence": [
         "/api/health",
@@ -8954,7 +8959,9 @@
         "/api/carter/webhook",
         "/slumhouse/api/carter-session"
       ],
-      "schedulerJobs": [],
+      "schedulerJobs": [
+        "carter-analyst-daily"
+      ],
       "healthCheck": "/api/health",
       "freshnessSignals": [
         "audit_log:carter.tool_invoked",
