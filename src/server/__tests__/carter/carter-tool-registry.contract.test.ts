@@ -150,6 +150,7 @@ const REQUIRED_ACTION_TOOLS = [
   "institutional_research",
   "deposit_pending_mention",
   "evaluate_kill_signal",
+  "save_code_draft",
 ] as const;
 
 // 9 YELLOW capabilities, each a propose_/confirm_ pair = 18 tools.
@@ -196,9 +197,9 @@ const REQUIRED_TOOLS = [
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe("Carter tool registry — structural contract", () => {
-  it("has exactly 73 tools (27 read + 12 action + 18 yellow + 16 red)", () => {
-    expect(CARTER_TOOLS).toHaveLength(73);
-    expect(CARTER_TOOLS.filter((t) => t.tier === "green")).toHaveLength(39);
+  it("has exactly 74 tools (27 read + 13 action + 18 yellow + 16 red)", () => {
+    expect(CARTER_TOOLS).toHaveLength(74);
+    expect(CARTER_TOOLS.filter((t) => t.tier === "green")).toHaveLength(40);
     expect(CARTER_TOOLS.filter((t) => t.tier === "yellow")).toHaveLength(18);
     expect(CARTER_TOOLS.filter((t) => t.tier === "red")).toHaveLength(16);
   });
@@ -299,8 +300,8 @@ describe("Carter tool registry — structural contract", () => {
     expect(Object.keys(CARTER_READ_HANDLERS)).toHaveLength(27);
   });
 
-  it("CARTER_ACTION_HANDLERS exports exactly 12 functions", () => {
-    expect(Object.keys(CARTER_ACTION_HANDLERS)).toHaveLength(12);
+  it("CARTER_ACTION_HANDLERS exports exactly 13 functions", () => {
+    expect(Object.keys(CARTER_ACTION_HANDLERS)).toHaveLength(13);
   });
 
   it("CARTER_CONFIRM_HANDLERS exports exactly 18 functions (9 propose + 9 confirm)", () => {

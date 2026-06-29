@@ -289,6 +289,12 @@ export const CARTER_TOOLS: CarterTool[] = [
     tier: "green",
     handler: "evaluate_kill_signal",
   },
+  {
+    name: "save_code_draft",
+    description: "Writes Carter-authored code to an ISOLATED review branch + draft PR for the operator to review. NEVER merges, never force-pushes, never touches protected branches or secret/config paths (refused). Nothing in the live system changes — the draft IS the review gate. Use ONLY after reading back the change and getting a spoken go-ahead. Params: { summary, rationale?, files:[{path,content}] }.",
+    tier: "green",
+    handler: "save_code_draft",
+  },
 
   // ── Confirm-action tools (Tier: yellow) — propose/confirm voice protocol ─────
   // Each capability is a PAIR: propose_<x> reads back a summary + mints a token;
@@ -621,6 +627,26 @@ export const CARTER_PARAMS_SCHEMAS: Record<string, Record<string, unknown>> = {
       },
     },
     required: ["attempts"],
+  },
+  save_code_draft: {
+    type: "object",
+    properties: {
+      summary: { type: "string", description: "Short title of the change (becomes the branch slug + PR title)." },
+      rationale: { type: "string", description: "Why this change — the reasoning, shown in the PR body." },
+      files: {
+        type: "array",
+        description: "Files to write — each item is the FULL new content of one repo-relative file.",
+        items: {
+          type: "object",
+          properties: {
+            path: { type: "string", description: "Repo-relative path (no secrets/.git/.env/data — refused)." },
+            content: { type: "string", description: "Full new content of the file." },
+          },
+          required: ["path", "content"],
+        },
+      },
+    },
+    required: ["summary", "files"],
   },
   // ── yellow propose/confirm (confirm_* additionally require the token) ─────────
   propose_toggle_bot_power: {
