@@ -36,6 +36,8 @@ import { notifyCritical } from "./notification-service.js";
 import { computeFirmRulesVersion } from "../lib/firm-rules-version.js";
 // Wave 27.5 Pass C.2 — compliance gate enforcement mode env knob
 import { resolveComplianceMode, isResearchBacktest } from "../lib/compliance-mode.js";
+// RL kill-switch: RL training is an AUTONOMOUS loop — requires AUTOPILOT (mode >= 2)
+import { readLearningLoopMode } from "../lib/learning-loop-mode.js";
 // Wave hardening 2026-06-22 (G1a) — buildBacktestArgs extracted so tests can
 // import it without the full service chain. Re-exported for backward compat.
 import { buildBacktestArgs } from "../lib/backtest-args.js";
@@ -1898,10 +1900,48 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       })();
     }
 
-    // ─── Auto RL training (fire-and-forget) ───
+    // ─── Auto RL training (fire-and-forget) — LEGACY PATH ───────────────────
     // Requires 50+ daily P&L samples for a meaningful training episode set.
+    // Writes to `rl_training_runs` (consumed by critic-optimizer-service.ts).
+    // Kill switch: RL training is an AUTONOMOUS loop → requires AUTOPILOT (mode>=2).
+    // Off-RTH guard: mirrors the C.2 path to prevent dual GPU subprocesses during RTH.
+    // NOTE: `rl_training_runs` IS consumed by the critic — see critic-optimizer-service.ts
+    // line ~1393. This legacy path is retained (not retired) but gated identically to C.2.
     if (result.tier && result.tier !== "REJECTED" && result.daily_pnls?.length >= 50) {
-      (async () => {
+      void (async () => {
+        // ── Kill-switch gate (AUTOPILOT required — autonomous loop) ──────────
+        const rlLegacyMode = await readLearningLoopMode();
+        if (!rlLegacyMode.autonomousOn) {
+          logger.info(
+            { strategyId, backtestId, mode: rlLegacyMode.mode },
+            "backtest-service: RL legacy training skipped — kill switch not AUTOPILOT",
+          );
+          await db.insert(auditLog).values({
+            action: "quantum_rl.training_loop_halted_skip",
+            entityType: "strategy",
+            entityId: String(strategyId),
+            status: "success",
+            correlationId: correlationId ?? null,
+            result: {
+              reason: "kill_switch_not_autopilot",
+              mode: rlLegacyMode.mode,
+              path: "legacy_rl_training_runs",
+              backtest_id: backtestId,
+            },
+          }).catch((auditErr) =>
+            logger.warn({ err: String(auditErr), strategyId }, "backtest-service: RL legacy halt audit failed"),
+          );
+          return;
+        }
+        // ── Off-RTH guard (no GPU subprocess during live-market hours) ───────
+        const { isOffRthTrainingWindow } = await import("../lib/quantum-rl-training-runner.js");
+        if (!isOffRthTrainingWindow()) {
+          logger.info(
+            { strategyId, backtestId },
+            "backtest-service: RL legacy training skipped — within RTH window",
+          );
+          return;
+        }
         // Insert running row before Python call
         const [rlRow] = await db.insert(rlTrainingRuns).values({
           strategyId,
@@ -1978,12 +2018,37 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     // Uses quantum-rl-training-runner.ts (mirrors quantum-replay-runner.ts pattern).
     // ET-hour guard: only off-RTH windows {6,7,8,16,17} — enforced inside runner.
     // Circuit breaker: 5 consecutive failures → 1h cooldown.
+    // Kill switch: RL training is an AUTONOMOUS loop → requires AUTOPILOT (mode>=2).
     // governance: challenger_only, training_mode=true, never blocks lifecycle.
     {
       const entryQuality = (config as unknown as Record<string, unknown>)["entry_quality"] as Record<string, unknown> | undefined;
       const trainRlPolicy = entryQuality?.train_rl_policy === true;
       if (!config.suppressAutoPromote && trainRlPolicy && result.tier && result.tier !== "REJECTED") {
         void (async () => {
+          // ── Kill-switch gate (AUTOPILOT required — autonomous loop) ──────────
+          const rlC2Mode = await readLearningLoopMode();
+          if (!rlC2Mode.autonomousOn) {
+            logger.info(
+              { strategyId, backtestId, mode: rlC2Mode.mode },
+              "backtest-service: RL C.2 training skipped — kill switch not AUTOPILOT",
+            );
+            await db.insert(auditLog).values({
+              action: "quantum_rl.training_loop_halted_skip",
+              entityType: "strategy",
+              entityId: String(strategyId),
+              status: "success",
+              correlationId: correlationId ?? null,
+              result: {
+                reason: "kill_switch_not_autopilot",
+                mode: rlC2Mode.mode,
+                path: "c2_quantum_rl_runs",
+                backtest_id: backtestId,
+              },
+            }).catch((auditErr) =>
+              logger.warn({ err: String(auditErr), strategyId }, "backtest-service: RL C.2 halt audit failed"),
+            );
+            return;
+          }
           try {
             const { runRlTrainingForStrategy, deriveRlTrainingSeed, _getRlConsecutiveFailuresForTests } = await import("../lib/quantum-rl-training-runner.js");
             const rlSeed = deriveRlTrainingSeed(strategyId);

@@ -304,9 +304,18 @@ export const shadowSignalsTotal = new Counter({
 //   Incremented per RL training epoch completion (quantum_rl.training_completed audit).
 //   regime label = institutional regime the policy was trained on.
 //   Cardinality: 6 regime values × 1 counter = 6 time series max.
+//
+//   AUDIT NOTE — F-2 (2026-06-28): The increment site in backtest-service.ts
+//   always passes {regime: "combined"} — the RL training loop aggregates across
+//   institutional regimes per epoch and does not decompose by regime at the
+//   individual-epoch level. The label is retained for forward-compatibility
+//   (per-regime epoch breakdown is a future enhancement). "combined" is the
+//   ONLY value currently emitted; per-regime series remain at zero and are
+//   NOT zero-initialised (that would create misleading "0" regime signals).
+//   See the zero-init at end of file which pre-seeds only "combined".
 export const rlTrainingEpochsTotal = new Counter({
   name: "tf_rl_training_epochs_total",
-  help: "Total RL training epochs completed, labelled by institutional regime",
+  help: "Total RL training epochs completed, labelled by institutional regime (regime=combined is the only currently-emitted value — per-regime breakdown is a future enhancement; see audit note F-2 2026-06-28)",
   labelNames: ["regime"] as const,
   registers: [promRegistry],
 });
@@ -594,3 +603,58 @@ export const autoGraveyardTotal = new Counter({
   labelNames: ["gate"] as const,
   registers: [promRegistry],
 });
+
+// ─── Wave 29 quantum observability zero-init (2026-06-28) ──────────────────────
+//
+// Fix MED-1: Zero-initialise closed-label-set Wave 29 counters so Prometheus sees
+// value=0 from first scrape instead of "no data". Without this Grafana shows blank
+// panels for label combinations that have not yet fired (e.g. the "manual" kill-switch
+// reason, or "blocked_insufficient_samples" shadow-promotion outcome, or any PBO
+// block regime before the first TESTING→SHADOW promotion attempt).
+//
+// Pattern mirrors the layer15 zero-init IIFE (lines ~510-525).
+//
+// Intentionally EXCLUDED from zero-init:
+//   tf_regime_drift_detections_total{from_regime, to_regime} — 36-combo sparse
+//   matrix; zero-initialising all combinations creates misleading gauge noise.
+//
+//   tf_rl_training_epochs_total{regime} — see audit note F-2: only "combined" is
+//   ever emitted; regime-specific values are never populated today.
+(function _zeroInitWave29QuantumLabels() {
+  // tf_rl_kill_switch_total{reason} — 3 closed values
+  const RL_KILL_SWITCH_REASONS = [
+    "sharpe_gap_30pct",
+    "insufficient_samples",
+    "manual",
+  ] as const;
+  for (const reason of RL_KILL_SWITCH_REASONS) {
+    rlKillSwitchTotal.labels({ reason }).inc(0);
+  }
+
+  // tf_lifecycle_shadow_promotions_total{outcome} — 3 closed values
+  const SHADOW_PROMOTION_OUTCOMES = [
+    "passed",
+    "blocked_divergence",
+    "blocked_insufficient_samples",
+  ] as const;
+  for (const outcome of SHADOW_PROMOTION_OUTCOMES) {
+    lifecycleShadowPromotionsTotal.labels({ outcome }).inc(0);
+  }
+
+  // tf_pbo_blocks_total{regime} — 6 institutional regimes
+  const INSTITUTIONAL_REGIMES = [
+    "TRENDING",
+    "EXPANSION",
+    "RANGE_BOUND",
+    "COMPRESSION",
+    "HIGH_VOL_MACRO",
+    "LOW_LIQ_CHOP",
+  ] as const;
+  for (const regime of INSTITUTIONAL_REGIMES) {
+    pboBlocksTotal.labels({ regime }).inc(0);
+  }
+
+  // tf_rl_training_epochs_total{regime} — only zero-init the aggregate "combined"
+  // label (the only value ever emitted by the increment site; see audit note F-2).
+  rlTrainingEpochsTotal.labels({ regime: "combined" }).inc(0);
+})();

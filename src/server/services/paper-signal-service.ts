@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { db } from "../db/index.js";
-import { paperSessions, paperPositions, paperTrades, strategies, paperSignalLogs, skipDecisions, shadowSignals, preMarketSessions, brokerAccounts, lifecycleShadowSignals } from "../db/schema.js";
+import { paperSessions, paperPositions, paperTrades, strategies, paperSignalLogs, skipDecisions, shadowSignals, preMarketSessions, brokerAccounts, lifecycleShadowSignals, accountStrategyAssignments } from "../db/schema.js";
 import { openPosition, closePosition } from "./paper-execution-service.js";
 import { checkRiskGate } from "./paper-risk-gate.js";
 import { evaluateContextGate } from "./context-gate-service.js";
@@ -5498,7 +5498,54 @@ export async function evaluateSignals(
             .limit(1);
 
           const routingDecision = strategyForRouting[0]?.paperAccountRouting ?? "baseline";
-          const targetSubAccount = routingDecision === "rl-challenger"
+
+          // ── Family invariant assertion (Fix LOW-5, 2026-06-28) ───────────────────
+          // A/B rl-challenger routing is OPERATOR-ONLY (CLAUDE.md §13 + feedback
+          // family_not_part_of_operator_scaling). account_strategy_assignments.
+          // released_to_family=true marks a strategy distributed to a family member;
+          // if such a strategy somehow has paper_account_routing='rl-challenger'
+          // (operator tooling error), we refuse the routing and fall back to baseline.
+          // This is a code-level assertion: normal flows never set rl-challenger on a
+          // family strategy, but the DB column is mutable, so we verify here.
+          let effectiveRoutingDecision = routingDecision;
+          if (routingDecision === "rl-challenger") {
+            const familyAssignment = await db
+              .select({ releasedToFamily: accountStrategyAssignments.releasedToFamily })
+              .from(accountStrategyAssignments)
+              .where(eq(accountStrategyAssignments.strategyId, sessionConfig.strategyId))
+              .limit(1);
+            const isFamilyStrategy = familyAssignment[0]?.releasedToFamily === true;
+            if (isFamilyStrategy) {
+              logger.warn(
+                {
+                  strategyId: sessionConfig.strategyId,
+                  paperAccountRouting: routingDecision,
+                  correlationId: correlationId ?? null,
+                },
+                "paper-signal-service: FAMILY INVARIANT VIOLATION — strategy has paper_account_routing=rl-challenger but is released to family; overriding to baseline (family strategies must never route to rl-challenger)",
+              );
+              insertAuditRow({
+                action: "quantum_rl.family_routing_override",
+                entityType: "strategy",
+                entityId: sessionConfig.strategyId,
+                decisionAuthority: "system",
+                result: {
+                  db_routing: routingDecision,
+                  effective_routing: "baseline",
+                  reason: "family_strategy_must_not_route_to_rl_challenger",
+                  correlation_id: correlationId ?? null,
+                } as Record<string, unknown>,
+                status: "warning",
+                correlationId: correlationId ?? null,
+              }).catch((err: unknown) =>
+                logger.warn({ err }, "audit_log insert failed for quantum_rl.family_routing_override"),
+              );
+              effectiveRoutingDecision = "baseline";
+            }
+          }
+          // ── End family invariant assertion ────────────────────────────────────────
+
+          const targetSubAccount = effectiveRoutingDecision === "rl-challenger"
             ? "slumdawg-rl-challenger"
             : "slumdawg-baseline";
 
@@ -5537,7 +5584,7 @@ export async function evaluateSignals(
           // lifecycle state. Skip (not throw) so the bar-eval loop + audit row continue.
           const PAPER_PLUS_STATES = ["PAPER", "DEPLOY_READY", "PILOT", "DEPLOYED"];
           const lcStateForRouting = sessionConfig.lifecycleState ?? "";
-          if (routingDecision === "rl-challenger" && resolvedAccountId !== null) {
+          if (effectiveRoutingDecision === "rl-challenger" && resolvedAccountId !== null) {
             if (!PAPER_PLUS_STATES.includes(lcStateForRouting)) {
               logger.warn(
                 {
@@ -5573,7 +5620,8 @@ export async function evaluateSignals(
             entityId: sessionConfig.strategyId,
             decisionAuthority: "system",
             result: {
-              paper_account_routing: routingDecision,
+              paper_account_routing: routingDecision,          // raw DB value
+              effective_routing: effectiveRoutingDecision,     // after family-invariant override
               target_sub_account: targetSubAccount,
               resolved_account_id: resolvedAccountId,
               routing_called: routingCalled,
