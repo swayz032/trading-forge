@@ -38,7 +38,8 @@ const SCHEMA = {
     temporal_kind: { type: "string", enum: ["event", "condition", "none"] },
     object: { type: "string" }, polarity: { type: "string", enum: ["long", "short", "both", "none"] },
     parameters: { type: "string" }, evidence_span: { type: "string" },
-    depends_on: { type: "array", items: { type: "string" } },
+    event: { type: "string", enum: ["break","sweep","cross","retest","engulf","close","reject","reclaim","form","mark","tap","displacement","none"] },
+    depends_on: { type: "array", items: { type: "object", properties: { event: { type: "string" }, object: { type: "string" } }, required: ["object"] } },
     classification: { type: "string", enum: ["decision_bearing","terminology","explanation","justification","motivation","recap","example","warning","observation","visual_reference","framework_owned","non_strategy"] },
   }, required: ["clause_id", "is_decision", "classification"] } } }, required: ["results"],
 } as const;
@@ -61,16 +62,20 @@ FRAMEWORK-OWNED (outside the strategy edge). They are valid concepts but NEVER d
 
 For EACH clause:
 - PASSES the gate -> is_decision=true, classification="decision_bearing", fill atom_type (one of ${ATOM_TYPES.join(", ")}),
-  temporal_kind (event=occurs once / condition=stays true), object (the core concept), polarity, parameters, evidence_span,
-  AND depends_on = the prior events/conditions THIS decision requires to have happened first, named by their CONCEPT
-  using the speaker's words (e.g. an entry depends_on ["retest","engulfing confirmation"]; a confirmation depends_on
-  ["the break above the high"]). Use [] for a root (session / bias / filter that needs nothing prior).
+  temporal_kind (event=occurs once / condition=stays true), polarity, parameters, evidence_span, AND a STRUCTURED IDENTITY:
+    event = the action verb, normalized to ONE of: break, sweep, cross, retest, engulf, close, reject, reclaim, form, mark, tap, displacement, none
+    object = the NORMALIZED thing it acts on, lower_snake_case, reusing the SAME label every time you mention it
+             (e.g. session_high, session_low, order_block, ema_10, ema_20, cci_zero, fifteen_min_high). Be consistent.
+  AND depends_on = the prior decisions THIS one requires, EACH as {event, object} using the SAME normalized labels
+    (e.g. an entry depends_on [{event:"engulf",object:"session_high"},{event:"retest",object:"session_high"}]).
+    Critical: a dependency's {event,object} MUST exactly match the event+object of the atom it refers to. [] for a root.
 - FAILS the gate -> is_decision=false, atom_type="NONE", classify: terminology / explanation / justification /
   motivation / recap / example / warning / observation / visual_reference / framework_owned / non_strategy.
 Be STRICT: when unsure whether a clause introduces a rule or merely discusses one, it is NOT a decision.
 Return EXACTLY one result per clause, preserving clause_id order. Return JSON matching the schema.`;
 
-interface GemmaResult { clause_id: string; is_decision: boolean; atom_type: string; temporal_kind?: string; object?: string; polarity?: string; parameters?: string; evidence_span?: string; depends_on?: string[]; classification: string }
+interface DepRef { event?: string; object: string }
+interface GemmaResult { clause_id: string; is_decision: boolean; atom_type: string; temporal_kind?: string; object?: string; polarity?: string; parameters?: string; evidence_span?: string; event?: string; depends_on?: DepRef[]; classification: string }
 
 async function classifyBatch(clauses: SegmentedClause[]): Promise<GemmaResult[]> {
   const input = clauses.map((c) => ({ clause_id: c.id, text: c.text.trim() }));
@@ -83,7 +88,7 @@ async function classifyBatch(clauses: SegmentedClause[]): Promise<GemmaResult[]>
 }
 
 interface PerClause { is_decision: boolean; atom_type: string; object_canonical: string; classification: string }
-async function extractAtoms(clauses: SegmentedClause[]): Promise<{ clauseLedger: Clause[]; atoms: DecisionAtom[]; rows: Array<{ c: SegmentedClause; cls: string; atomIds: string[] }>; byClause: Map<string, PerClause>; unresolvedDeps: number }> {
+async function extractAtoms(clauses: SegmentedClause[]): Promise<{ clauseLedger: Clause[]; atoms: DecisionAtom[]; rows: Array<{ c: SegmentedClause; cls: string; atomIds: string[] }>; byClause: Map<string, PerClause>; drr: { resolved: number; expected: number }; connTags: Map<string, ConnTag> }> {
   const byId = new Map(clauses.map((c) => [c.id, c]));
   const results: GemmaResult[] = [];
   for (let i = 0; i < clauses.length; i += BATCH) {
@@ -93,7 +98,7 @@ async function extractAtoms(clauses: SegmentedClause[]): Promise<{ clauseLedger:
   const resById = new Map(results.map((r) => [r.clause_id, r]));
 
   const clauseLedger: Clause[] = []; const atoms: DecisionAtom[] = []; const rows: Array<{ c: SegmentedClause; cls: string; atomIds: string[] }> = [];
-  const ordinal = new Map<string, number>(); const depHints = new Map<string, string[]>();
+  const ordinal = new Map<string, number>(); const depHints = new Map<string, DepRef[]>(); const atomEvent = new Map<string, string>();
   for (const c of clauses) {
     const r = resById.get(c.id);
     if (!r) { clauseLedger.push({ id: c.id, text: c.text, span: { start: c.start, end: c.end } }); rows.push({ c, cls: "UNCLASSIFIED", atomIds: [] }); continue; }
@@ -108,49 +113,66 @@ async function extractAtoms(clauses: SegmentedClause[]): Promise<{ clauseLedger:
       const tk: TemporalKind = r.temporal_kind === "condition" ? "condition" : "event";
       const a: DecisionAtom = { id: atomId(r.atom_type as AtomType, objc, ord), type: r.atom_type as AtomType, temporal_kind: tk,
         object: r.object ?? c.text.trim(), object_canonical: objc, depends_on: [], provenance: SPAN((r.evidence_span || c.text).trim(), c.start, c.end) };
-      atoms.push(a); atomIds.push(a.id); depHints.set(a.id, Array.isArray(r.depends_on) ? r.depends_on : []);
+      atoms.push(a); atomIds.push(a.id);
+      depHints.set(a.id, Array.isArray(r.depends_on) ? r.depends_on : []);
+      atomEvent.set(a.id, r.event && r.event !== "none" ? r.event.toLowerCase() : "");
     }
     rows.push({ c, cls: r.is_decision ? (r.atom_type || "DECISION") : r.classification, atomIds });
     void byId;
   }
-  const unresolvedDeps = resolveDeps(atoms, depHints);
+  const drr = resolveDeps(atoms, depHints, atomEvent);
+  const connTags = classifyConnectivity(atoms, depHints);
   const byClause = new Map<string, PerClause>();
   for (const [cid, r] of resById) byClause.set(cid, { is_decision: !!r.is_decision, atom_type: r.atom_type ?? "NONE", object_canonical: canonObject(r.object ?? ""), classification: r.classification });
-  return { clauseLedger, atoms, rows, byClause, unresolvedDeps };
+  return { clauseLedger, atoms, rows, byClause, drr, connTags };
 }
 
-/** v2 DETERMINISTIC resolver: the EXTRACTOR emitted the dependency CONCEPTS; this just maps each concept to the
- * nearest PRIOR atom (by canonical-object/type match) and records edges. It infers nothing — it validates.
- * Returns the count of extracted dependencies that did NOT resolve to an atom (the new Ledger-C-adjacent invariant). */
-function resolveDeps(atoms: DecisionAtom[], depHints: Map<string, string[]>): number {
+/** v3 DETERMINISTIC resolver — ENTITY RESOLUTION by KEY matching (a compiler problem, NOT NLP). The extractor
+ * emitted each atom's structured identity {event, object_canonical} and each dependency as {event, object}; this
+ * resolves each dep by KEY LOOKUP to the nearest PRIOR atom (exact event+object, then object-only fallback). It
+ * infers nothing — it validates. Returns Dependency Resolution Rate inputs {resolved, expected}. */
+function resolveDeps(atoms: DecisionAtom[], depHints: Map<string, DepRef[]>, atomEvent: Map<string, string>): { resolved: number; expected: number } {
   const ordered = [...atoms].sort((a, b) => (a.provenance.transcript_span?.start ?? 0) - (b.provenance.transcript_span?.start ?? 0));
   const pos = new Map(ordered.map((a, i) => [a.id, i]));
-  let unresolved = 0;
+  let resolved = 0, expected = 0;
   for (const a of ordered) {
-    const hints = depHints.get(a.id) ?? [];
-    const resolved: string[] = [];
-    for (const h of hints) {
-      const hc = canonObject(h); if (!hc) continue;
+    const edges: string[] = [];
+    for (const h of depHints.get(a.id) ?? []) {
+      expected++;
+      const obj = canonObject(h.object ?? ""); const ev = (h.event ?? "").toLowerCase();
+      if (!obj) continue;
       let best: DecisionAtom | undefined;
-      for (let i = (pos.get(a.id) ?? 0) - 1; i >= 0; i--) {              // nearest PRIOR atom that matches the concept
-        const cand = ordered[i]; const oc = cand.object_canonical;
-        if ((oc && (oc.includes(hc) || hc.includes(oc))) || hc.includes(cand.type.toLowerCase().replace(/_/g, " ").replace(/^wait |^verify |^confirm /, ""))) { best = cand; break; }
+      for (let i = (pos.get(a.id) ?? 0) - 1; i >= 0; i--) {                       // exact (event,object) key
+        if (ordered[i].object_canonical === obj && (!ev || (atomEvent.get(ordered[i].id) ?? "") === ev)) { best = ordered[i]; break; }
       }
-      if (best) resolved.push(best.id); else unresolved++;
+      if (!best) for (let i = (pos.get(a.id) ?? 0) - 1; i >= 0; i--) {            // object-only fallback
+        if (ordered[i].object_canonical === obj) { best = ordered[i]; break; }
+      }
+      if (best) { edges.push(best.id); resolved++; }
     }
-    a.depends_on = [...new Set(resolved)];
+    a.depends_on = [...new Set(edges)];
   }
-  return unresolved;
+  return { resolved, expected };
 }
 
-/** Connectivity precision filter: keep only atoms in some ENTER's dependency closure. Isolated atoms (no path to
- * ENTER — "trading requires discipline" etc.) are pruned. Returns the surviving atoms + the pruned ones. */
-function pruneIsolated(atoms: DecisionAtom[]): { kept: DecisionAtom[]; pruned: DecisionAtom[] } {
+export type ConnTag = "CONNECTED" | "ISOLATED_RESOLUTION_FAILURE" | "ISOLATED_FRAMEWORK" | "ISOLATED_POSSIBLE_NOISE";
+const FRAMEWORK_OBJ = /\b(risk|reward|stop|target|profit|size|sizing|position|lot|pips?)\b/i;
+const SPINE: ReadonlySet<string> = new Set(["WAIT_STRUCTURE","VERIFY_STRUCTURE","WAIT_RETEST","WAIT_CONFIRMATION","CONFIRM_DIRECTION","ENABLE_ENTRY","ENTER","WAIT_BIAS"]);
+/** CLASSIFY connectivity (do NOT delete) — isolated atoms are diagnostic, not noise: until DRR is high, isolation
+ * means noise OR resolver failure, and those are different diagnoses (operator/GPT). */
+function classifyConnectivity(atoms: DecisionAtom[], depHints: Map<string, DepRef[]>): Map<string, ConnTag> {
   const byId = new Map(atoms.map((a) => [a.id, a]));
-  const keep = new Set<string>();
-  const visit = (id: string) => { if (keep.has(id) || !byId.has(id)) return; keep.add(id); for (const d of byId.get(id)!.depends_on) visit(d); };
+  const connected = new Set<string>();
+  const visit = (id: string) => { if (connected.has(id) || !byId.has(id)) return; connected.add(id); for (const d of byId.get(id)!.depends_on) visit(d); };
   atoms.filter((a) => a.type === "ENTER").forEach((e) => visit(e.id));
-  return { kept: atoms.filter((a) => keep.has(a.id)), pruned: atoms.filter((a) => !keep.has(a.id)) };
+  const tag = new Map<string, ConnTag>();
+  for (const a of atoms) {
+    if (connected.has(a.id)) tag.set(a.id, "CONNECTED");
+    else if (FRAMEWORK_OBJ.test(a.object) || a.type === "EXIT_HINT") tag.set(a.id, "ISOLATED_FRAMEWORK");
+    else if ((depHints.get(a.id)?.length ?? 0) > 0 || SPINE.has(a.type)) tag.set(a.id, "ISOLATED_RESOLUTION_FAILURE");
+    else tag.set(a.id, "ISOLATED_POSSIBLE_NOISE");
+  }
+  return tag;
 }
 
 (async () => {
@@ -172,10 +194,11 @@ function pruneIsolated(atoms: DecisionAtom[]): { kept: DecisionAtom[]; pruned: D
     console.log(`${r.c.id.padEnd(12)} | ${String(r.cls).padEnd(21)} | ${(r.atomIds.join(", ") || "—").slice(0, 36).padEnd(36)} | ${status}`);
   }
 
-  const prune = pruneIsolated(p1.atoms); const kept = prune.kept;
   const A = ledgerA(p1.clauseLedger), B = ledgerB(p1.clauseLedger, p1.atoms);
-  const graph: DecisionGraph = { atoms: kept }; const C = ledgerC(graph);  // Ledger C on the PRUNED resolver graph
-  const hall = structuralHallucinations(kept, transcript);
+  const graph: DecisionGraph = { atoms: p1.atoms }; const C = ledgerC(graph);  // on ALL atoms — NO destructive prune
+  const hall = structuralHallucinations(p1.atoms, transcript);
+  const connDist: Record<string, number> = {};
+  for (const t of p1.connTags.values()) connDist[t] = (connDist[t] ?? 0) + 1;
   const stab = checkIdempotence([{ atoms: p1.atoms }, { atoms: p2.atoms }]);
   const keysA = new Set(p1.atoms.map(canonKey)), keysB = new Set(p2.atoms.map(canonKey));
   const keyDiff = [...keysA].filter((k) => !keysB.has(k)).concat([...keysB].filter((k) => !keysA.has(k)));
@@ -193,11 +216,11 @@ function pruneIsolated(atoms: DecisionAtom[]): { kept: DecisionAtom[]; pruned: D
   console.log(`  B decision conservation:   ${B.conserved ? "PASS" : "FAIL"} (omissions ${B.orphanClauses.length})`);
   console.log(`  C graph conservation:      ${C.conserved ? "PASS" : "FAIL"} (hasEntry ${C.hasEntry}, dangling ${C.danglingDeps.length}, cyclic ${C.cyclic.length}, unreachable ${C.unreachable.length})`);
   console.log(`  hallucinations (structural reverse-traceability): ${hall.length}`);
-  console.log(`\nDEPENDENCY EXTRACTION + CONNECTIVITY PRUNE (precision filter)`);
-  console.log(`  atoms RAW -> KEPT (reach ENTER): ${p1.atoms.length} -> ${kept.length}  (pruned ${prune.pruned.length} isolated)`);
-  console.log(`  unresolved extracted dependencies (concept had no prior atom): ${p1.unresolvedDeps}`);
-  console.log(`  pruned-out (isolated) atoms: ${prune.pruned.map((a) => canonKey(a)).slice(0, 14).join(", ") || "none"}`);
-  console.log(`\nCANONICAL GRAPH (pruned): ${canonicalHash(graph)} (${new Set(kept.map(canonKey)).size} distinct atoms)`);
+  const drr = p1.drr.expected ? Math.round((p1.drr.resolved / p1.drr.expected) * 100) : 0;
+  console.log(`\nDEPENDENCY RESOLUTION (key matching) + CONNECTIVITY CLASSIFICATION (advisory, no prune)`);
+  console.log(`  DEPENDENCY RESOLUTION RATE (DRR): ${drr}% (${p1.drr.resolved}/${p1.drr.expected} extracted edges resolved by key)`);
+  console.log(`  connectivity: CONNECTED ${connDist.CONNECTED ?? 0} | ISO_RESOLUTION_FAILURE ${connDist.ISOLATED_RESOLUTION_FAILURE ?? 0} | ISO_FRAMEWORK ${connDist.ISOLATED_FRAMEWORK ?? 0} | ISO_NOISE ${connDist.ISOLATED_POSSIBLE_NOISE ?? 0}`);
+  console.log(`\nCANONICAL GRAPH (all atoms): ${canonicalHash(graph)} (${new Set(p1.atoms.map(canonKey)).size} distinct atoms)`);
   console.log(`ATOM STABILITY (2 passes): countA=${p1.atoms.length} countB=${p2.atoms.length} Δ=${Math.abs(p1.atoms.length - p2.atoms.length)} | canonical-key diff=${keyDiff.length} ${keyDiff.length ? "[" + keyDiff.slice(0, 6).join(", ") + "]" : ""} -> ${stab.idempotent && keyDiff.length === 0 ? "STABLE" : "UNSTABLE"}`);
 
   // ── Decision Boundary Agreement (DBA) + per-clause instability detail (taxonomy input) ──
