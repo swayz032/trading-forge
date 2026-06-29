@@ -38,6 +38,11 @@ import { assembleKitchenData, assembleTodaysMenu } from "../../lib/slumhouse/kit
 import { assembleCribData } from "../../lib/slumhouse/crib-data.js";
 import { getMode } from "../../services/pipeline-control-service.js";
 
+// ── Gate threshold getters (canonical env-synced values, not hardcoded literals) ─
+import { getB14CiHighThreshold } from "../../lib/b14-ci-gate.js";
+import { getWfeHardFloor } from "../../lib/wfe-gate.js";
+import { getPboLifecycleThreshold } from "../../lib/pbo-gate.js";
+
 // ─── report_system_health ─────────────────────────────────────────────────────
 
 async function reportSystemHealth(_params: unknown): Promise<unknown> {
@@ -213,15 +218,19 @@ async function reportStrategyStatus(params: unknown): Promise<unknown> {
   let blockingGate: string | null = null;
   let blockingWhy: string | null = null;
 
-  if (typeof ruinCiHigh === "number" && ruinCiHigh > 0.2) {
+  const b14Threshold = getB14CiHighThreshold();
+  const wfeFloor = getWfeHardFloor();
+  const pboThreshold = getPboLifecycleThreshold();
+
+  if (typeof ruinCiHigh === "number" && ruinCiHigh > b14Threshold) {
     blockingGate = "B14_RUIN_CI";
-    blockingWhy = `B14 ruin CI high ${ruinCiHigh.toFixed(3)} > 0.200 (blocks PAPER→DEPLOY_READY)`;
-  } else if (typeof wfeOverall === "number" && wfeOverall < 0.7) {
+    blockingWhy = `B14 ruin CI high ${ruinCiHigh.toFixed(3)} > ${b14Threshold.toFixed(3)} (blocks PAPER→DEPLOY_READY)`;
+  } else if (typeof wfeOverall === "number" && wfeOverall < wfeFloor) {
     blockingGate = "WFE_HARD_FLOOR";
-    blockingWhy = `WFE ${wfeOverall.toFixed(3)} < 0.700 (blocks PAPER→DEPLOY_READY)`;
-  } else if (typeof pboOverall === "number" && pboOverall > 0.15) {
+    blockingWhy = `WFE ${wfeOverall.toFixed(3)} < ${wfeFloor.toFixed(3)} (blocks PAPER→DEPLOY_READY)`;
+  } else if (typeof pboOverall === "number" && pboOverall > pboThreshold) {
     blockingGate = "PBO_OVERFIT";
-    blockingWhy = `PBO ${pboOverall.toFixed(3)} > 0.150 (blocks TESTING→SHADOW/PAPER)`;
+    blockingWhy = `PBO ${pboOverall.toFixed(3)} > ${pboThreshold.toFixed(3)} (blocks TESTING→SHADOW/PAPER)`;
   }
 
   return {
