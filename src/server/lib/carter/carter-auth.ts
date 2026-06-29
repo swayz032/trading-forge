@@ -17,6 +17,7 @@
  * mismatch, or stale timestamp (outside the tolerance window) returns invalid.
  */
 import { createHmac, timingSafeEqual } from "node:crypto";
+import type { Request } from "express";
 
 const DEFAULT_TOLERANCE_SECONDS = 30 * 60; // 30 minutes — matches ElevenLabs SDK
 
@@ -77,6 +78,49 @@ export function verifyElevenLabsSignature(
   if (expBuf.length !== provBuf.length) return { valid: false, reason: "signature_mismatch", timestamp: ts };
   const ok = timingSafeEqual(expBuf, provBuf);
   return ok ? { valid: true, timestamp: ts } : { valid: false, reason: "signature_mismatch", timestamp: ts };
+}
+
+// ─── Carter tools-plane Bearer auth ──────────────────────────────────────────
+
+export interface CarterToolAuthResult {
+  ok: boolean;
+  reason?: string;
+}
+
+/**
+ * Verify the static Bearer token used by the Carter tools plane.
+ *
+ * ElevenLabs sends a fixed `Authorization: Bearer <secret>` header for every
+ * tool-call request (not a per-request HMAC like the webhook path). We verify
+ * it with `timingSafeEqual` to prevent timing oracles.
+ *
+ * Fail-CLOSED: missing env var → `{ ok: false, reason: "secret_not_configured" }`.
+ * Missing/empty header → `{ ok: false, reason: "missing_bearer_header" }`.
+ * Length or content mismatch → `{ ok: false, reason: "token_mismatch" }`.
+ */
+export function verifyCarterToolAuth(req: Request): CarterToolAuthResult {
+  const secret = process.env.CARTER_TOOLS_HMAC_SECRET;
+  if (!secret) return { ok: false, reason: "secret_not_configured" };
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return { ok: false, reason: "missing_bearer_header" };
+  }
+
+  const provided = authHeader.slice("Bearer ".length);
+  if (provided.length === 0) return { ok: false, reason: "empty_token" };
+
+  const expectedBuf = Buffer.from(secret, "utf8");
+  const providedBuf = Buffer.from(provided, "utf8");
+
+  // timingSafeEqual requires equal-length buffers; length mismatch is itself a
+  // mismatch — return early rather than padding (padding leaks length info).
+  if (expectedBuf.length !== providedBuf.length) {
+    return { ok: false, reason: "token_mismatch" };
+  }
+
+  const ok = timingSafeEqual(expectedBuf, providedBuf);
+  return ok ? { ok: true } : { ok: false, reason: "token_mismatch" };
 }
 
 /** Build a valid ElevenLabs-Signature header (used by tests + smoke tooling). */

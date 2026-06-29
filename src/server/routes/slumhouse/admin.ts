@@ -191,10 +191,19 @@ function requireAdminSession(req: Request, res: Response): boolean {
   return true;
 }
 
-// Named so tests can import the handler directly.
-export async function getSwitchStates(req: Request, res: Response): Promise<void> {
-  if (!requireAdminSession(req, res)) return;
+// ─── computeSwitchStates ─────────────────────────────────────────────────────
+// Exported so Carter voice-agent (and tests) can call it without a Request/
+// Response. getSwitchStates delegates here after the admin-session guard.
 
+export interface SwitchStates {
+  bot_power:     { on: boolean; state: string; wired: boolean; dangerOff: boolean; status: string };
+  learning_loop: { on: boolean; mode: number; label: string; advisory_on: boolean; autonomous_on: boolean; state: string; wired: boolean; status: string; dangerOn: boolean };
+  vacation_mode: { on: boolean; state: string; wired: boolean; status: string; dangerOn: boolean };
+  recovery:      { on: boolean; state: string; wired: boolean; status: string; momentary: boolean; confirmAction?: boolean };
+  live_execution: { on: boolean; state: string; wired: boolean; needsSetup: boolean; dangerOn: boolean; status: string };
+}
+
+export async function computeSwitchStates(): Promise<SwitchStates> {
   // ── bot_power ─────────────────────────────────────────────────────────────
   let mode: string | null = null;
   try { mode = await getMode(); } catch { mode = null; }
@@ -245,49 +254,52 @@ export async function getSwitchStates(req: Request, res: Response): Promise<void
   // Reuses `mode` already read for bot_power — no extra DB round-trip needed.
   const recoveryHalted = mode === "AUTOPAUSE_DD_VELOCITY";
 
-  res.json({
-    switches: {
-      bot_power:     { on: mode === "ACTIVE", state: botState, wired: true, dangerOff: true, status: botStatus },
-      learning_loop: {
-        on: llOn,
-        mode: llMode,
-        label: llLabel,
-        advisory_on: llMode >= MODE_OBSERVE,
-        autonomous_on: llMode >= MODE_AUTOPILOT,
-        state: llOn ? "running" : "paused",
-        wired: true,
-        status: llLabel,
-        dangerOn: true,
-      },
-      vacation_mode: {
-        on: vmOn,
-        state: vmOn ? "running" : "paused",
-        wired: true,
-        status: vmOn ? "AWAY" : "HOME",
-        dangerOn: true,
-      },
-      recovery: {
-        on: false,
-        state: recoveryHalted ? "alert" : "paused",
-        wired: true,
-        status: recoveryHalted ? "HALTED" : "ALL CLEAR",
-        momentary: true,
-        ...(recoveryHalted ? { confirmAction: true } : {}),
-      },
-      live_execution: (() => {
-        const configured = isLiveExecutionConfigured();
-        const live = liveMode === "live";
-        return {
-          on: live,
-          state: live ? "running" : "paused",
-          wired: configured,
-          needsSetup: !configured,
-          dangerOn: true,
-          status: live ? "LIVE" : configured ? "PAPER" : "NEEDS SETUP",
-        };
-      })(),
+  const configured = isLiveExecutionConfigured();
+  const live = liveMode === "live";
+
+  return {
+    bot_power:     { on: mode === "ACTIVE", state: botState, wired: true, dangerOff: true, status: botStatus },
+    learning_loop: {
+      on: llOn,
+      mode: llMode,
+      label: llLabel,
+      advisory_on: llMode >= MODE_OBSERVE,
+      autonomous_on: llMode >= MODE_AUTOPILOT,
+      state: llOn ? "running" : "paused",
+      wired: true,
+      status: llLabel,
+      dangerOn: true,
     },
-  });
+    vacation_mode: {
+      on: vmOn,
+      state: vmOn ? "running" : "paused",
+      wired: true,
+      status: vmOn ? "AWAY" : "HOME",
+      dangerOn: true,
+    },
+    recovery: {
+      on: false,
+      state: recoveryHalted ? "alert" : "paused",
+      wired: true,
+      status: recoveryHalted ? "HALTED" : "ALL CLEAR",
+      momentary: true,
+      ...(recoveryHalted ? { confirmAction: true } : {}),
+    },
+    live_execution: {
+      on: live,
+      state: live ? "running" : "paused",
+      wired: configured,
+      needsSetup: !configured,
+      dangerOn: true,
+      status: live ? "LIVE" : configured ? "PAPER" : "NEEDS SETUP",
+    },
+  };
+}
+
+// Named so tests can import the handler directly.
+export async function getSwitchStates(req: Request, res: Response): Promise<void> {
+  if (!requireAdminSession(req, res)) return;
+  res.json({ switches: await computeSwitchStates() });
 }
 
 adminOfficeRouter.get("/slumhouse/admin/switches", getSwitchStates);
