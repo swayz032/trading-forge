@@ -559,6 +559,7 @@
     <!-- Phase A: CALLING -->
     <section class="cc-phase cc-calling" id="cc-calling">
       <div class="cc-calling-veil"></div>
+      <audio id="cc-ring" preload="auto" loop playsinline><source src="/slumhouse/audio/carter-ring.mp3" type="audio/mpeg"></audio>
       <div class="cc-calling-inner">
         <div class="cc-calling-status" id="cc-calling-status">Calling…</div>
         <div class="cc-calling-name">Carter</div>
@@ -924,8 +925,7 @@
     var callSub   = document.getElementById('cc-calling-sub');
 
     var conversation = null;   // ElevenLabs Conversation instance
-    var audioCtx = null;       // Web Audio context for ringback synthesis (created ONCE, reused)
-    var micStream = null;      // persistent mic grant — acquire once so we don't re-prompt every call
+    var ringEl = document.getElementById('cc-ring');  // looping <audio> ringtone
     var ringTimer = null;
     var ringsPlayed = 0;
     var connected = false;
@@ -937,43 +937,24 @@
 
     function setVoice(v) { overlay.style.setProperty('--carter-voice', v.toFixed(3)); }
 
-    // ── Ringback tone (Web Audio API) — US ringback = 440Hz + 480Hz, 2s ON / 1s OFF ──
+    // ── Ringback via a looping <audio> element ──────────────────────────────
+    // Reliable on iOS across REPEAT calls. (Web Audio suspend/resume kept dying
+    // after the first call — that's why the ring only worked once.)
     function startRinging() {
-      try {
-        if (!audioCtx) {
-          var AC = window.AudioContext || window.webkitAudioContext;
-          audioCtx = new AC();
-        }
-        if (audioCtx.state === 'suspended') { audioCtx.resume().catch(function(){}); }
-      } catch (e) { audioCtx = null; }
-      ringsPlayed = 0;
-      var cadence = function () {
+      if (ringEl) {
+        try { ringEl.currentTime = 0; var p = ringEl.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+      }
+      ringsPlayed = 1;          // first ring is playing now
+      maybeAnswer();
+      ringTimer = setInterval(function () {
         if (phase !== 'calling') return;
-        playRingBurst();
-        ringsPlayed++;
+        ringsPlayed++;          // one ring per 3.5s loop of the tone
         maybeAnswer();
-        ringTimer = setTimeout(cadence, 3000);   // 2s tone + 1s silence
-      };
-      cadence();
-    }
-    function playRingBurst() {
-      if (!audioCtx) return;
-      var now = audioCtx.currentTime;
-      var dur = 2.0;
-      var gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.16, now + 0.05);
-      gain.gain.setValueAtTime(0.16, now + dur - 0.06);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
-      gain.connect(audioCtx.destination);
-      [440, 480].forEach(function (f) {
-        var o = audioCtx.createOscillator();
-        o.type = 'sine'; o.frequency.value = f;
-        o.connect(gain); o.start(now); o.stop(now + dur + 0.02);
-      });
+      }, 3500);
     }
     function stopRinging() {
-      if (ringTimer) { clearTimeout(ringTimer); ringTimer = null; }
+      if (ringTimer) { clearInterval(ringTimer); ringTimer = null; }
+      if (ringEl) { try { ringEl.pause(); ringEl.currentTime = 0; } catch (e) {} }
     }
 
     // Answer-transition: cut to immersive ONLY once connected AND ≥2 rings played.
@@ -1029,17 +1010,16 @@
       if (phase !== 'idle') return;
       phase = 'calling';
       connected = false; mode = 'listening'; voice = 0.2;
-      // Acquire the mic ONCE (inside this click gesture) and hold the grant for
-      // the page lifetime so the browser stops re-prompting on every Connect.
-      // Between calls we disable the tracks (no capture) but keep the stream
-      // alive so permission persists. The ConvAI SDK reuses the granted state.
+      // Establish mic permission INSIDE this click gesture (so the prompt times
+      // right on iOS), then immediately STOP the tracks — we don't hold the mic
+      // open ourselves (that's what left the mic on after disconnect). The grant
+      // persists for the page, so the ConvAI SDK acquires its own without a new
+      // prompt, and endSession() releases it cleanly when the call ends.
       try {
-        if (!micStream && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
           navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(function (s) { micStream = s; })
+            .then(function (s) { s.getTracks().forEach(function (t) { t.stop(); }); })
             .catch(function () {});
-        } else if (micStream) {
-          micStream.getAudioTracks().forEach(function (t) { t.enabled = true; });
         }
       } catch (e) {}
       if (callStat) callStat.textContent = 'Calling…';
@@ -1076,12 +1056,8 @@
       stopRinging();
       cancelAnimationFrame(rafId); rafId = null;
       phase = 'idle';
+      // endSession() releases the SDK's mic — that turns the mic indicator OFF.
       if (conversation) { try { await conversation.endSession(); } catch (e) {} conversation = null; }
-      // Keep audioCtx alive for the next call (do NOT close — reused so the ring
-      // keeps working). Suspend it to save resources; startRinging resumes it.
-      if (audioCtx) { try { audioCtx.suspend(); } catch (e) {} }
-      // Keep the mic grant but stop capturing between calls (no re-prompt next time).
-      if (micStream) { try { micStream.getAudioTracks().forEach(function (t) { t.enabled = false; }); } catch (e) {} }
       connected = false; mode = 'listening';
       overlay.classList.remove('cc-open');
       overlay.setAttribute('aria-hidden', 'true');
