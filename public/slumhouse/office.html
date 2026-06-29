@@ -352,6 +352,131 @@
       .of-input { font-size: 16px; padding: 14px 16px; }   /* ≥16px = no iOS zoom-on-focus */
       .of-btn { font-size: 16px; padding: 14px 16px; }
     }
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       CARTER CONNECT — full-screen "call Carter" overlay (Phase A calling /
+       Phase B immersive). Lives inside office.html as a fixed inset:0 overlay,
+       hidden by default. Opened by connectCarter() → window.openCarterCall().
+       --carter-voice (0..1) is updated each frame from getOutputVolume() and
+       drives the green Siri edge-glow + blob pulse.
+       ═══════════════════════════════════════════════════════════════════════ */
+    #carter-call {
+      --carter-voice: 0;
+      position: fixed; inset: 0; z-index: 4000;
+      display: none; background: #000; overflow: hidden;
+      font-family: var(--ui-font, inherit);
+    }
+    #carter-call.cc-open { display: block; }
+    #carter-call .cc-phase { position: absolute; inset: 0; display: none; }
+    #carter-call .cc-phase.cc-on { display: block; }
+
+    /* round red hang-up button (shared by both phases) */
+    .cc-hangup {
+      width: 72px; height: 72px; border-radius: 50%; border: none; cursor: pointer;
+      background: radial-gradient(circle at 38% 30%, #ff6b6b, #e0142a 70%, #a30d1e);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.55), 0 0 26px rgba(224,20,42,0.55),
+                  inset 0 2px 3px rgba(255,255,255,0.35), inset 0 -4px 8px rgba(0,0,0,0.4);
+      display: inline-flex; align-items: center; justify-content: center;
+      color: #fff; transition: transform 0.15s, box-shadow 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .cc-hangup:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(0,0,0,0.6), 0 0 36px rgba(224,20,42,0.75), inset 0 2px 3px rgba(255,255,255,0.35), inset 0 -4px 8px rgba(0,0,0,0.4); }
+    .cc-hangup:active { transform: translateY(0) scale(0.96); }
+    .cc-hangup svg { width: 32px; height: 32px; transform: rotate(135deg); }
+
+    /* ── Phase A: CALLING ─────────────────────────────────────────────────── */
+    .cc-calling {
+      background: #000 url('/slumhouse/images/carter-calling.png') center center / cover no-repeat;
+    }
+    .cc-calling-veil {
+      position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(to top,
+        rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.45) 38%, rgba(0,0,0,0.10) 64%, rgba(0,0,0,0.42) 100%);
+    }
+    .cc-calling-inner {
+      position: relative; z-index: 2; width: 100%; height: 100%;
+      display: flex; flex-direction: column; align-items: center;
+      padding: calc(env(safe-area-inset-top) + 7vh) 20px calc(env(safe-area-inset-bottom) + 7vh);
+    }
+    .cc-calling-status { font-size: 13px; letter-spacing: 0.32em; text-transform: uppercase; color: rgba(255,255,255,0.72); }
+    .cc-calling-name { font-size: 54px; font-weight: 800; color: #fff; letter-spacing: 0.01em; margin: 8px 0 6px; text-shadow: 0 3px 26px rgba(0,0,0,0.7); }
+    .cc-calling-sub { font-size: 14px; color: rgba(255,255,255,0.78); letter-spacing: 0.07em; }
+    /* pulsing ring indicator */
+    .cc-ring { position: relative; margin-top: 40px; width: 96px; height: 96px; }
+    .cc-ring-core {
+      position: absolute; inset: 28px; border-radius: 50%;
+      background: radial-gradient(circle at 38% 32%, rgba(163,255,18,0.95), rgba(70,120,8,0.5));
+      box-shadow: 0 0 26px rgba(163,255,18,0.6);
+    }
+    .cc-ring-pulse {
+      position: absolute; inset: 0; border-radius: 50%;
+      border: 2px solid rgba(163,255,18,0.55);
+      animation: ccRingPulse 2s ease-out infinite;
+    }
+    .cc-ring-pulse:nth-child(2) { animation-delay: 1s; }
+    @keyframes ccRingPulse {
+      0%   { transform: scale(0.45); opacity: 0.9; }
+      100% { transform: scale(1.25); opacity: 0; }
+    }
+    .cc-spacer { flex: 1 1 auto; min-height: 24px; }
+
+    /* ── Phase B: IMMERSIVE (black + green Siri edge-glow + blob) ─────────── */
+    .cc-immersive { background: #000; }
+    /* THE signature effect: a blurred green gradient hugging all four edges,
+       continuously flowing/breathing. Intensity tied to --carter-voice. */
+    .cc-glow { position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      opacity: calc(0.30 + var(--carter-voice) * 0.70);
+      transform: scale(calc(1 + var(--carter-voice) * 0.05));
+      transition: opacity 0.10s linear, transform 0.10s linear;
+      will-change: opacity, transform;
+    }
+    .cc-glow-flow {
+      position: absolute; inset: -12%;
+      background:
+        radial-gradient(42% 24% at 50% 0%,    rgba(163,255,18,0.95), transparent 72%),
+        radial-gradient(42% 24% at 50% 100%,  rgba(25,195,125,0.90), transparent 72%),
+        radial-gradient(24% 46% at 0% 50%,    rgba(20,150,80,0.92),  transparent 72%),
+        radial-gradient(24% 46% at 100% 50%,  rgba(40,205,180,0.62), transparent 72%),
+        radial-gradient(34% 30% at 0% 0%,     rgba(163,255,18,0.62), transparent 70%),
+        radial-gradient(34% 30% at 100% 100%, rgba(25,195,125,0.62), transparent 70%),
+        radial-gradient(34% 30% at 100% 0%,   rgba(120,230,60,0.50), transparent 70%),
+        radial-gradient(34% 30% at 0% 100%,   rgba(20,170,120,0.52), transparent 70%);
+      filter: blur(58px) saturate(1.15);
+      animation: ccGlowFlow 9s ease-in-out infinite alternate;
+      will-change: transform;
+    }
+    @keyframes ccGlowFlow {
+      0%   { transform: translate3d(-2%, -1%, 0) scale(1.05) rotate(0deg); }
+      50%  { transform: translate3d( 2%,  1%, 0) scale(1.12) rotate(1.5deg); }
+      100% { transform: translate3d(-1%,  2%, 0) scale(1.06) rotate(-1.5deg); }
+    }
+    .cc-blob {
+      position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%;
+      object-fit: cover; pointer-events: none; background: #000;
+      transform: scale(calc(1 + var(--carter-voice) * 0.05));
+      transition: transform 0.10s linear; will-change: transform;
+    }
+    .cc-immersive-foot {
+      position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
+      display: flex; flex-direction: column; align-items: center; gap: 22px;
+      padding: 0 20px calc(env(safe-area-inset-bottom) + 7vh);
+    }
+    .cc-mic-state {
+      font-size: 15px; letter-spacing: 0.14em; text-transform: uppercase;
+      color: rgba(255,255,255,0.82); text-shadow: 0 2px 12px rgba(0,0,0,0.7);
+      min-height: 18px;
+    }
+    .cc-mic-state.speaking { color: var(--lime, #a3ff12); text-shadow: 0 0 16px rgba(163,255,18,0.55); }
+
+    @media (max-width: 480px) {
+      .cc-calling-name { font-size: 42px; }
+      .cc-hangup { width: 64px; height: 64px; }
+      .cc-hangup svg { width: 28px; height: 28px; }
+      .cc-glow-flow { filter: blur(42px) saturate(1.15); }  /* lighter blur on phones */
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .cc-ring-pulse, .cc-glow-flow { animation: none; }
+    }
   </style>
 </head>
 <body>
@@ -426,6 +551,42 @@
         <button class="of-arrow of-next" type="button" aria-label="Next">&#8250;</button>
       </div>
       <div class="of-dots" id="of-dots"></div>
+    </section>
+  </div>
+
+  <!-- ═══ CARTER CONNECT OVERLAY (full-screen, hidden by default) ═══ -->
+  <div id="carter-call" aria-hidden="true">
+    <!-- Phase A: CALLING -->
+    <section class="cc-phase cc-calling" id="cc-calling">
+      <div class="cc-calling-veil"></div>
+      <div class="cc-calling-inner">
+        <div class="cc-calling-status" id="cc-calling-status">Calling…</div>
+        <div class="cc-calling-name">Carter</div>
+        <div class="cc-calling-sub" id="cc-calling-sub">CEO · Slumdawg Traders</div>
+        <div class="cc-ring">
+          <span class="cc-ring-pulse"></span>
+          <span class="cc-ring-pulse"></span>
+          <span class="cc-ring-core"></span>
+        </div>
+        <div class="cc-spacer"></div>
+        <button class="cc-hangup" id="cc-hangup-a" type="button" aria-label="End call">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a1 1 0 0 0-1.01.24l-1.57 1.97a15.07 15.07 0 0 1-6.59-6.59l1.95-1.66a1 1 0 0 0 .25-1.01A11.36 11.36 0 0 1 8.95 4.5a1 1 0 0 0-1-.99H4.19a1 1 0 0 0-1 1.05C3.59 14.07 9.93 20.41 19.45 20.81a1 1 0 0 0 1.05-1V16.4a1 1 0 0 0-1-1.02z"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- Phase B: IMMERSIVE -->
+    <section class="cc-phase cc-immersive" id="cc-immersive">
+      <div class="cc-glow"><div class="cc-glow-flow"></div></div>
+      <video class="cc-blob" id="cc-blob" autoplay muted loop playsinline preload="auto">
+        <source src="/slumhouse/video/carter-blob.mp4" type="video/mp4">
+      </video>
+      <div class="cc-immersive-foot">
+        <div class="cc-mic-state" id="cc-mic-state">Connecting…</div>
+        <button class="cc-hangup" id="cc-hangup-b" type="button" aria-label="End call">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a1 1 0 0 0-1.01.24l-1.57 1.97a15.07 15.07 0 0 1-6.59-6.59l1.95-1.66a1 1 0 0 0 .25-1.01A11.36 11.36 0 0 1 8.95 4.5a1 1 0 0 0-1-.99H4.19a1 1 0 0 0-1 1.05C3.59 14.07 9.93 20.41 19.45 20.81a1 1 0 0 0 1.05-1V16.4a1 1 0 0 0-1-1.02z"/></svg>
+        </button>
+      </div>
     </section>
   </div>
 
@@ -564,16 +725,21 @@
         loadSwitches();
       }
 
-      // Carter connect — the immersive connect page is designed separately
-      // (operator-directed). This placeholder is the hook the pill calls; it
-      // will be replaced with the real connect-screen launch.
+      // Carter connect — opens the immersive full-screen "call Carter" overlay.
+      // The overlay logic lives in the ES module at the end of the body, which
+      // exposes window.openCarterCall(). This non-module script just hands off.
       function connectCarter() {
+        if (typeof window.openCarterCall === 'function') {
+          window.openCarterCall();
+          return;
+        }
+        // Module not ready yet (very early tap) — brief affordance, no-op.
         var pill = document.querySelector('.of-connect-pill');
         if (!pill) return;
         var prev = pill.innerHTML;
-        pill.innerHTML = '<span>&#9679;</span> Connect screen coming next';
+        pill.innerHTML = '<span>&#9679;</span> One moment…';
         pill.disabled = true;
-        setTimeout(function () { pill.innerHTML = prev; pill.disabled = false; }, 1800);
+        setTimeout(function () { pill.innerHTML = prev; pill.disabled = false; }, 900);
       }
 
       function loadSwitches() {
@@ -741,6 +907,178 @@
         try { navigator.sendBeacon('/slumhouse/admin/logout'); } catch (e) { /* noop */ }
       });
     })();
+  </script>
+
+  <!-- ElevenLabs ConvAI browser SDK — pinned to @elevenlabs/client@1.14.0 -->
+  <script type="importmap">
+  { "imports": { "@elevenlabs/client": "https://esm.sh/@elevenlabs/client@1.14.0" } }
+  </script>
+  <script type="module">
+    import { Conversation } from '@elevenlabs/client';
+
+    var overlay   = document.getElementById('carter-call');
+    var phaseCall = document.getElementById('cc-calling');
+    var phaseImm  = document.getElementById('cc-immersive');
+    var micState  = document.getElementById('cc-mic-state');
+    var callStat  = document.getElementById('cc-calling-status');
+    var callSub   = document.getElementById('cc-calling-sub');
+
+    var conversation = null;   // ElevenLabs Conversation instance
+    var audioCtx = null;       // Web Audio context for ringback synthesis
+    var ringTimer = null;
+    var ringsPlayed = 0;
+    var connected = false;
+    var phase = 'idle';        // 'idle' | 'calling' | 'immersive'
+    var rafId = null;
+    var voice = 0;             // smoothed [0..1] → --carter-voice
+    var mode = 'listening';    // 'speaking' | 'listening'
+    var MIN_RINGS = 2;         // let it ring a couple times for realism
+
+    function setVoice(v) { overlay.style.setProperty('--carter-voice', v.toFixed(3)); }
+
+    // ── Ringback tone (Web Audio API) — US ringback = 440Hz + 480Hz, 2s ON / 1s OFF ──
+    function startRinging() {
+      try {
+        if (!audioCtx) {
+          var AC = window.AudioContext || window.webkitAudioContext;
+          audioCtx = new AC();
+        }
+        if (audioCtx.state === 'suspended') { audioCtx.resume().catch(function(){}); }
+      } catch (e) { audioCtx = null; }
+      ringsPlayed = 0;
+      var cadence = function () {
+        if (phase !== 'calling') return;
+        playRingBurst();
+        ringsPlayed++;
+        maybeAnswer();
+        ringTimer = setTimeout(cadence, 3000);   // 2s tone + 1s silence
+      };
+      cadence();
+    }
+    function playRingBurst() {
+      if (!audioCtx) return;
+      var now = audioCtx.currentTime;
+      var dur = 2.0;
+      var gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.16, now + 0.05);
+      gain.gain.setValueAtTime(0.16, now + dur - 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+      gain.connect(audioCtx.destination);
+      [440, 480].forEach(function (f) {
+        var o = audioCtx.createOscillator();
+        o.type = 'sine'; o.frequency.value = f;
+        o.connect(gain); o.start(now); o.stop(now + dur + 0.02);
+      });
+    }
+    function stopRinging() {
+      if (ringTimer) { clearTimeout(ringTimer); ringTimer = null; }
+    }
+
+    // Answer-transition: cut to immersive ONLY once connected AND ≥2 rings played.
+    // If connect is slow we keep ringing; if connect is fast we still let it ring.
+    function maybeAnswer() {
+      if (phase === 'calling' && connected && ringsPlayed >= MIN_RINGS) goImmersive();
+    }
+    function goImmersive() {
+      phase = 'immersive';
+      stopRinging();
+      if (audioCtx) { try { audioCtx.close(); } catch (e) {} audioCtx = null; }
+      phaseCall.classList.remove('cc-on');
+      phaseImm.classList.add('cc-on');
+      updateMicState();
+      var blob = document.getElementById('cc-blob');
+      if (blob) { var p = blob.play(); if (p && p.catch) p.catch(function(){}); }
+    }
+
+    function updateMicState() {
+      if (!micState) return;
+      if (mode === 'speaking') { micState.textContent = 'Carter is speaking'; micState.classList.add('speaking'); }
+      else { micState.textContent = 'Listening…'; micState.classList.remove('speaking'); }
+    }
+
+    // ── Voice-reactive loop: drives --carter-voice every frame ──
+    function startVoiceLoop() {
+      cancelAnimationFrame(rafId);
+      var tick = function (t) {
+        var target;
+        if (connected && mode === 'speaking' && conversation && typeof conversation.getOutputVolume === 'function') {
+          var vol = 0;
+          try { vol = conversation.getOutputVolume() || 0; } catch (e) { vol = 0; }
+          target = Math.min(1, vol * 1.6);
+        } else {
+          // idle / listening: slow gentle breathe
+          target = 0.18 + 0.12 * (0.5 + 0.5 * Math.sin(t / 1400));
+        }
+        voice += (target - voice) * 0.18;   // smoothing
+        setVoice(voice);
+        rafId = requestAnimationFrame(tick);
+      };
+      rafId = requestAnimationFrame(tick);
+    }
+
+    function showError(msg) {
+      stopRinging();
+      if (callStat) callStat.textContent = msg || 'Couldn’t reach Carter';
+      if (callSub) callSub.textContent = 'Tap the red button to hang up and try again.';
+    }
+
+    async function openCarterCall() {
+      if (phase !== 'idle') return;
+      phase = 'calling';
+      connected = false; mode = 'listening'; voice = 0.2;
+      if (callStat) callStat.textContent = 'Calling…';
+      if (callSub) callSub.textContent = 'CEO · Slumdawg Traders';
+      overlay.classList.add('cc-open');
+      overlay.setAttribute('aria-hidden', 'false');
+      phaseImm.classList.remove('cc-on');
+      phaseCall.classList.add('cc-on');
+      setVoice(voice);
+      startVoiceLoop();
+      startRinging();          // synchronous → stays inside the click gesture (iOS)
+
+      try {
+        var r = await fetch('/slumhouse/api/carter-session', { method: 'POST', credentials: 'same-origin' });
+        if (!r.ok) { showError(r.status === 401 ? 'Session expired — re-unlock the Office' : 'Couldn’t reach Carter'); return; }
+        var data = await r.json();
+        var token = data && data.conversationToken;
+        if (!token) { showError('Couldn’t reach Carter'); return; }
+        if (phase === 'idle') return;   // user hung up while minting
+        conversation = await Conversation.startSession({
+          conversationToken: token,
+          connectionType: 'webrtc',
+          onConnect: function () { connected = true; maybeAnswer(); },
+          onModeChange: function (m) { mode = (m && m.mode) || 'listening'; updateMicState(); },
+          onDisconnect: function () { endCarterCall(); },
+          onError: function () { showError('Call error — hang up and retry'); }
+        });
+      } catch (e) {
+        showError('Couldn’t reach Carter');
+      }
+    }
+
+    async function endCarterCall() {
+      stopRinging();
+      cancelAnimationFrame(rafId); rafId = null;
+      phase = 'idle';
+      if (conversation) { try { await conversation.endSession(); } catch (e) {} conversation = null; }
+      if (audioCtx) { try { audioCtx.close(); } catch (e) {} audioCtx = null; }
+      connected = false; mode = 'listening';
+      overlay.classList.remove('cc-open');
+      overlay.setAttribute('aria-hidden', 'true');
+      phaseCall.classList.remove('cc-on');
+      phaseImm.classList.remove('cc-on');
+      setVoice(0);
+    }
+
+    var hangA = document.getElementById('cc-hangup-a');
+    var hangB = document.getElementById('cc-hangup-b');
+    if (hangA) hangA.addEventListener('click', function () { endCarterCall(); });
+    if (hangB) hangB.addEventListener('click', function () { endCarterCall(); });
+    // Release the mic + session if the operator leaves the page mid-call.
+    window.addEventListener('pagehide', function () { if (phase !== 'idle') endCarterCall(); });
+
+    window.openCarterCall = openCarterCall;
   </script>
 </body>
 </html>

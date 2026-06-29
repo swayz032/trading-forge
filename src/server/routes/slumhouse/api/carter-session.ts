@@ -10,7 +10,7 @@
  * Mirrors anam-session.ts (the Anam persona token mint) almost exactly.
  */
 import { Router, type Response } from "express";
-import { requireSlumhouseUser, type SlumhouseRequest } from "../../../lib/slumhouse/require-session.js";
+import { requireSlumhouseUserOrAdmin, type SlumhouseRequest } from "../../../lib/slumhouse/require-session.js";
 
 const CARTER_AGENT_ID = process.env.CARTER_AGENT_ID;
 const ELEVENLABS_CONVERSATION_TOKEN_URL = "https://api.elevenlabs.io/v1/convai/conversation/token";
@@ -43,4 +43,6 @@ export async function postCarterSession(req: SlumhouseRequest, res: Response): P
 }
 
 export const carterSessionRouter = Router();
-carterSessionRouter.post("/slumhouse/api/carter-session", requireSlumhouseUser, postCarterSession);
+// Auth accepts EITHER the Discord Slumhouse session OR the Office admin session
+// (the Carter connect page lives inside the operator-only Office).
+carterSessionRouter.post("/slumhouse/api/carter-session", requireSlumhouseUserOrAdmin, postCarterSession);
