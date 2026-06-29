@@ -72,6 +72,21 @@ atoms: **~85% over-fragmentation** (sub-features of one real decision), **~12% f
 **~3% true false-positives**. The dominant fix is a **semantic compression layer** (merge, not delete);
 the secondary fix is a small gate tightening on the framework-leak vocabulary (orthogonal, cheap).
 
+**Fragmentation stability (n=2).** The pattern reproduced across two independent gemma runs of psH — the variance
+is small and the *concentration* is stable, which lifts the claim from plausible hypothesis to measured
+systematic behavior:
+
+| type | run 1 | run 2 | gold |
+|---|---|---|---|
+| WAIT_STRUCTURE    | 11 | 10 | 2 |
+| WAIT_CONFIRMATION | 6  | 7  | 1 |
+| WAIT_RETEST       | 4  | 2  | 1 |
+| WAIT_SESSION      | 1  | 1  | **1 (clean 1:1, both runs)** |
+
+The signal: fragmentation scales with how much the educator *elaborates* a decision (rich states blow up;
+simple states stay 1:1), not randomly — so a compression layer has a *stable* target to merge against. Consistent
+with the earlier finding (gemma varies text, counts stay ~stable, DBA 100%).
+
 ## 3. The new fork (this is the question for the collaborator)
 
 v1's edge-production question is closed. The open question is now: **which source-level precision mechanism is

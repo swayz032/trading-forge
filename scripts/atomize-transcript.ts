@@ -17,7 +17,8 @@ import { atomId, canonObject, canonKey, type AtomType, type DecisionAtom, type D
 import { ledgerA, ledgerB, ledgerC, structuralHallucinations, type Clause, type ClauseDisposition } from "../src/server/lib/conservation-ledgers.js";
 import { canonicalHash, checkIdempotence } from "../src/server/lib/decision-graph-canonical.js";
 import { compileGraph } from "../src/server/lib/graph-compiler.js";
-import { scoreSGF, GOLD } from "../src/server/lib/graph-fidelity.js";
+import { scoreSGF, atomPurity, GOLD } from "../src/server/lib/graph-fidelity.js";
+import { compressAtoms } from "../src/server/lib/predicate-compression.js";
 
 const VIDEO = process.argv[2] ?? "psH--oXkD8M";
 const OLLAMA = process.env.OLLAMA_URL ?? "http://localhost:11434";
@@ -170,12 +171,26 @@ const FRAMEWORK_OBJ = /\b(risk|reward|stop|target|profit|size|sizing|position|lo
   console.log(`\nDETERMINISTIC GRAPH COMPILER (Phase B) — edges DERIVED from order + grammar, not extracted`);
   console.log(`  edges: ${compiled.edges.length} (${Object.entries(edgeRoles).map(([k, v]) => `${k}=${v}`).join(" | ") || "none"}) | AND-groups ${compiled.andGroups.length} | OR-branches ${compiled.orBranches.length}`);
   console.log(`  connectivity: CONNECTED(reach ENTER) ${connected}/${compiled.atoms.length} | isolated ${isolated.length} (framework ${isoFramework}, other ${isolated.length - isoFramework})`);
+  // ── SEMANTIC COMPRESSION — lift supporting PREDICATES out of the graph; recompile on decision NODES only ──
+  const clones = p1.atoms.map((a) => ({ ...a, depends_on: [] as string[] }));
+  const comp = compressAtoms(clones, transcript);
+  const compiledC = compileGraph(comp.nodes, transcript);
+  const totalPreds = comp.nodes.reduce((s, n) => s + (n.predicates?.length ?? 0), 0);
+  console.log(`\nSEMANTIC COMPRESSION (decision NODES vs PREDICATES) — raw ${comp.rawCount} -> nodes ${comp.nodes.length} (+${totalPreds} predicates folded, ${comp.frameworkLeaks.length} framework leaks classified out)`);
+  console.log(`  NODES: ${comp.nodes.map((n) => `${canonKey(n)}${n.predicates?.length ? "[+" + n.predicates.length + "]" : ""}`).join(" | ")}`);
+  console.log(`  connectivity: CONNECTED(reach ENTER) ${compiledC.reachable.size}/${compiledC.atoms.length}`);
   const gold = GOLD[VIDEO];
   if (gold) {
-    const s = scoreSGF(compiled, gold);
-    console.log(`\nSTRATEGY GRAPH FIDELITY (SGF) vs gold (${gold.nodes.length} nodes, ${gold.edges.length} edges) — the north-star:`);
-    console.log(`  NodeRecall ${(s.NR * 100).toFixed(0)}% | EdgeRecall ${(s.ER * 100).toFixed(0)}% | Reachable ${s.RG ? "YES" : "NO"} | TopologyFidelity ${(s.TF * 100).toFixed(0)}%  ->  SGF ${(s.SGF * 100).toFixed(0)}%`);
-  } else console.log(`\nSTRATEGY GRAPH FIDELITY: (no gold graph for ${VIDEO} yet — only psH built)`);
+    const base = scoreSGF(compiled, gold), comped = scoreSGF(compiledC, gold);
+    console.log(`\nSGF vs gold (${gold.nodes.length} nodes, ${gold.edges.length} edges) — BASELINE -> COMPRESSED:`);
+    console.log(`  AtomPurity:  ${(atomPurity(compiled.atoms.length, gold) * 100).toFixed(0)}% -> ${(atomPurity(compiledC.atoms.length, gold) * 100).toFixed(0)}%`);
+    console.log(`  NodeRecall:  ${(base.NR * 100).toFixed(0)}% -> ${(comped.NR * 100).toFixed(0)}%`);
+    console.log(`  EdgeRecall:  ${(base.ER * 100).toFixed(0)}% -> ${(comped.ER * 100).toFixed(0)}%`);
+    console.log(`  Reachable:   ${base.RG ? "YES" : "NO"} -> ${comped.RG ? "YES" : "NO"}    TopologyFid: ${(base.TF * 100).toFixed(0)}% -> ${(comped.TF * 100).toFixed(0)}%`);
+    console.log(`  SGF:         ${(base.SGF * 100).toFixed(0)}% -> ${(comped.SGF * 100).toFixed(0)}%`);
+    const erUp = comped.ER > base.ER + 0.05, nrHeld = comped.NR >= base.NR - 0.01;
+    console.log(`  VERDICT: ${erUp && nrHeld ? "COMPRESSION VALIDATED — ER up + NR held" : !nrHeld ? "FAILED — NodeRecall dropped (over-merge)" : "INCONCLUSIVE — ER not materially up"}`);
+  } else console.log(`  (no gold for ${VIDEO})`);
   console.log(`\nCANONICAL GRAPH: ${canonicalHash(graph)} (${new Set(compiled.atoms.map(canonKey)).size} distinct atoms)`);
   console.log(`ATOM STABILITY (2 passes): countA=${p1.atoms.length} countB=${p2.atoms.length} Δ=${Math.abs(p1.atoms.length - p2.atoms.length)} | canonical-key diff=${keyDiff.length} ${keyDiff.length ? "[" + keyDiff.slice(0, 6).join(", ") + "]" : ""} -> ${stab.idempotent && keyDiff.length === 0 ? "STABLE" : "UNSTABLE"}`);
 

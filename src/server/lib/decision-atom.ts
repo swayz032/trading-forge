@@ -37,6 +37,19 @@ export type AtomType =
  */
 export type TemporalKind = "event" | "condition";
 
+/**
+ * A PREDICATE refines a decision NODE's satisfaction — it is NOT its own graph node. The over-extraction finding
+ * (2026-06-29): gemma fragments ONE decision ("confirmation means displacement + body-close + follow-through")
+ * into many atoms. Those sub-features are predicates UNDER the node, not separate state transitions. The
+ * semantic compression layer lifts them here so the graph spine threads decision nodes, not predicate noise.
+ */
+export interface Predicate {
+  kind: string;              // the predicate's atom type before compression (e.g. "VERIFY_STRUCTURE")
+  object: string;
+  object_canonical: string;
+  provenance: Provenance;
+}
+
 export interface DecisionAtom {
   /** Canonical id `${type}:${object_canonical}#${ordinal}` — the SAME decision from two runs gets the SAME id. */
   id: string;
@@ -50,6 +63,8 @@ export interface DecisionAtom {
   depends_on: string[];
   /** Span + origin + confidence — reused IR node model; reverse-traceable to the transcript. */
   provenance: Provenance;
+  /** Supporting predicates folded in by the compression layer (sub-features of THIS decision; preserved, not deleted). */
+  predicates?: Predicate[];
   /** OPTIONAL — the SpeakerItem this atom compiled from. Session/timing/exception atoms may have NO parent. */
   parent_speaker_item?: string;
 }
