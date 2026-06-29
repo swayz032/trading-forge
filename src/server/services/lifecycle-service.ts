@@ -2934,8 +2934,22 @@ export class LifecycleService {
             this._resetHardGateCounter(s.id, "wfe_hard_floor", tickCorrelationId);
           }
         } catch (wfeTpErr) {
-          // Fail-open: WFE gate read failure is non-blocking
-          logger.warn({ strategyId: s.id, err: wfeTpErr }, "WFE gate (TESTING→PAPER): read failed (non-blocking — promotion continues)");
+          // H-1 (2026-06-29): fail-CLOSED on WFE gate infra error (mirrors B14 catch ~:2854).
+          logger.warn({ strategyId: s.id, err: wfeTpErr }, "WFE gate (TESTING→PAPER): read failed — blocking promotion (fail-closed)");
+          await db.insert(auditLog).values({
+            action: "lifecycle.wfe_gate_infra_error",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "failure",
+            decisionAuthority: "gate",
+            input: { fromState: "TESTING", toState: "PAPER" },
+            result: { note: "WFE gate threw — promotion blocked (fail-closed); retries next cron cycle", error: wfeTpErr instanceof Error ? wfeTpErr.message : String(wfeTpErr) },
+            correlationId: tickCorrelationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "WFE fail-closed audit insert (TESTING→PAPER) failed (non-blocking)");
+          });
+          strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+          continue;
         }
 
         // FIX 1: Parameter drift gate — TESTING→PAPER (mirrors PAPER→DEPLOY_READY pattern)
@@ -2991,8 +3005,22 @@ export class LifecycleService {
             this._resetHardGateCounter(s.id, "parameter_overfit_drift", tickCorrelationId);
           }
         } catch (driftTpErr) {
-          // Fail-open: drift gate read failure is non-blocking
-          logger.warn({ strategyId: s.id, err: driftTpErr }, "Parameter drift gate (TESTING→PAPER): read failed (non-blocking — promotion continues)");
+          // H-1 (2026-06-29): fail-CLOSED on param-drift gate infra error (mirrors B14 catch ~:2854).
+          logger.warn({ strategyId: s.id, err: driftTpErr }, "Parameter drift gate (TESTING→PAPER): read failed — blocking promotion (fail-closed)");
+          await db.insert(auditLog).values({
+            action: "lifecycle.parameter_drift_gate_infra_error",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "failure",
+            decisionAuthority: "gate",
+            input: { fromState: "TESTING", toState: "PAPER" },
+            result: { note: "parameter_drift gate threw — promotion blocked (fail-closed); retries next cron cycle", error: driftTpErr instanceof Error ? driftTpErr.message : String(driftTpErr) },
+            correlationId: tickCorrelationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "Parameter drift fail-closed audit insert (TESTING→PAPER) failed (non-blocking)");
+          });
+          strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+          continue;
         }
 
         // ── Wave B Fix 1: DSR walk-forward gate (TESTING → PAPER) ────────────
@@ -3052,10 +3080,22 @@ export class LifecycleService {
           // Gate passed — reset consecutive counter
           this._resetHardGateCounter(s.id, "dsr_blocked_floor", tickCorrelationId);
         } catch (dsrTpErr) {
-          // Fail-open: DSR gate read failure is non-blocking for TESTING→PAPER.
-          // The gate failing to evaluate is distinct from dsr_pass=false — we
-          // cannot block on infrastructure failures alone.
-          logger.warn({ strategyId: s.id, err: dsrTpErr }, "DSR gate (TESTING→PAPER): read failed (non-blocking — promotion continues)");
+          // H-1 (2026-06-29): fail-CLOSED on DSR gate infra error (mirrors B14 catch ~:2854).
+          logger.warn({ strategyId: s.id, err: dsrTpErr }, "DSR gate (TESTING→PAPER): read failed — blocking promotion (fail-closed)");
+          await db.insert(auditLog).values({
+            action: "lifecycle.dsr_gate_infra_error",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "failure",
+            decisionAuthority: "gate",
+            input: { fromState: "TESTING", toState: "PAPER" },
+            result: { note: "dsr gate threw — promotion blocked (fail-closed); retries next cron cycle", error: dsrTpErr instanceof Error ? dsrTpErr.message : String(dsrTpErr) },
+            correlationId: tickCorrelationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "DSR fail-closed audit insert (TESTING→PAPER) failed (non-blocking)");
+          });
+          strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+          continue;
         }
 
         const result = await this.promoteStrategy(s.id, "TESTING", "PAPER", { correlationId: correlationId ?? undefined });
@@ -4138,12 +4178,25 @@ export class LifecycleService {
             gateEvidenceStatuses.push("complete");
           }
         } catch (dsrPdrErr) {
-          // Fail-open: DSR gate infrastructure failure is non-blocking.
+          // H-1 (2026-06-29): fail-CLOSED on DSR gate infra error (mirrors B14 PAPER→DEPLOY_READY catch ~:3846).
           logger.warn(
             { strategyId: s.id, err: dsrPdrErr },
-            "DSR gate (PAPER→DEPLOY_READY): read failed (non-blocking — promotion continues)",
+            "DSR gate (PAPER→DEPLOY_READY): read failed — blocking promotion (fail-closed)",
           );
-          gateEvidenceStatuses.push("data_unavailable");
+          await db.insert(auditLog).values({
+            action: "lifecycle.dsr_gate_infra_error",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "failure",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: { note: "dsr gate threw — promotion blocked (fail-closed); retries next cron cycle", error: dsrPdrErr instanceof Error ? dsrPdrErr.message : String(dsrPdrErr) },
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "DSR fail-closed audit insert (PAPER→DEPLOY_READY) failed (non-blocking)");
+          });
+          strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+          continue;
         }
 
         // ── Deep-scan #5 H1 (2026-06-29): BIF gate on the AUTONOMOUS cron path ──
@@ -4230,11 +4283,25 @@ export class LifecycleService {
           this._resetHardGateCounter(s.id, "bif_blocked", correlationId);
           gateEvidenceStatuses.push(bifResult.legacyNull ? "legacy_null" : "complete");
         } catch (bifErr) {
+          // H-1 (2026-06-29): fail-CLOSED on BIF gate infra error (mirrors B14 PAPER→DEPLOY_READY catch ~:3846).
           logger.warn(
             { strategyId: s.id, err: bifErr },
-            "BIF gate (PAPER→DEPLOY_READY): read failed (non-blocking — promotion continues)",
+            "BIF gate (PAPER→DEPLOY_READY): read failed — blocking promotion (fail-closed)",
           );
-          gateEvidenceStatuses.push("data_unavailable");
+          await db.insert(auditLog).values({
+            action: "lifecycle.bif_gate_infra_error",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "failure",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: { note: "bif gate threw — promotion blocked (fail-closed); retries next cron cycle", error: bifErr instanceof Error ? bifErr.message : String(bifErr) },
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "BIF fail-closed audit insert (PAPER→DEPLOY_READY) failed (non-blocking)");
+          });
+          strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+          continue;
         }
 
         // ── Wave 26 Pass G Pass E Gate Stack: WFE-0.80 + CPCV-15 + WRC + SPA ─
