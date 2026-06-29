@@ -312,6 +312,14 @@ of what the system can faithfully compile, which is itself worth knowing.
   change is a dated amendment, not a silent re-label). The full failure distribution is itself a result —
   report it, not just coverage %. Pre-committed now so the replay phase can't adapt the evaluation from what
   individual failures reveal. Governance only.
+- **2026-06-28 — FREEZE the replay corpus + no-silent-reruns ledger + three-quantities reporting rule.**
+  `replay-run-ledger.ts` + `docs/golden/replay-corpus-v1.json` (Corpus 1.0-SEED: 4 videos / 4 families / 3
+  instruments, `meets_minimum=false` — needs ≥18 + futures). Corpus is hashed so coverage deltas are
+  attributable; replay ledger is append-only (unique run_id + env manifest; reruns get a NEW id, never an
+  overwrite; runs comparable only on matching dataset_hash). Reporting: never collapse extraction-fidelity
+  (Gate 1.75) / execution-determinism (Gate 1.5) / behavioral-reconstruction (Gate 2) into one accuracy
+  number. Operational governance only — no representation, no protocol threshold changed. **Fourth frozen
+  layer: representation + protocol + governance + CORPUS.**
 - **DEFERRED to post-replay (do NOT pre-build):** **Reconstruction Rate** = strategies that replay
   successfully / strategies that pass Gate 1.5. GPT-flagged as "after replay exists, not before" — it isolates
   the final research question (representation+extraction working vs source-unreconstructable) and is meaningless
