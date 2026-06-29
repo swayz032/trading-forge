@@ -153,18 +153,18 @@ function buildPatchBody(
         ...currentConv,
         agent: {
           ...currentAgent,
-          first_message: CARTER_FIRST_MESSAGE,
+          // OPERATOR-OWNED: first_message (greeting) is controlled in the
+          // ElevenLabs dashboard. The script used to set it here, which REVERTED
+          // the operator's dashboard edits on every run — removed.
           prompt: {
             ...currentPromptNoTools,
             prompt: systemPrompt,
             llm,
           },
         },
-        tts: {
-          ...currentTts,
-          model_id: CARTER_TTS_MODEL,
-          voice_id: CARTER_VOICE_ID,
-        },
+        // OPERATOR-OWNED: tts (voice_id + model_id) is controlled in the
+        // ElevenLabs dashboard (e.g. voice=Charles, model). The script no longer
+        // touches tts — it was reverting the operator's voice/model choices.
         turn: {
           ...currentTurn,
           // interruptions enabled = turn-taking mode "turn" (the model yields to
