@@ -1242,6 +1242,7 @@ export async function openPosition(sessionId: string, params: {
             },
             timeoutMs: 3_000,
             componentName: "kill-switch",
+            lane: "execution", // deepscan5 obs-H1: capital-safety path — reserved subprocess lane.
           });
 
           killCached = { ...killResult, cachedAt: Date.now() };
@@ -1532,6 +1533,7 @@ export async function openPosition(sessionId: string, params: {
         },
         timeoutMs: 3_000,
         componentName: "compliance-gate-paper-freshness",
+        lane: "execution", // deepscan5 obs-H1: compliance gate on the entry path — reserved lane.
       });
 
       cached = {
@@ -1686,6 +1688,7 @@ export async function openPosition(sessionId: string, params: {
         },
         timeoutMs: 3_000,
         componentName: "compliance-gate-paper-violation",
+        lane: "execution", // deepscan5 obs-H1: compliance gate on the entry path — reserved lane.
       });
 
       if (violationResult.violation) {
@@ -3217,6 +3220,8 @@ async function callExitHandler(
       config,
       timeoutMs: 3_000,
       componentName: `style-${exitStyle.toLowerCase()}-handler`,
+      lane: "execution", // deepscan5 obs-H1: per-bar exit handler — reserved lane so backtest load
+                         // can't queue it past its 3 s timeout and trip the circuit breaker.
     });
     return result;
   } catch (err) {

@@ -830,6 +830,10 @@ def simulate_firm_survival(
         "tpt_50pct": 0.50,
         "alpha_50pct": 0.50,
         "mffu_50pct": 0.50,
+        "mffu_50pct_sim_payout": 0.50,  # deepscan5 2026-06-29 — recognized rule name (firm_config
+                                        # uses this for mffu_50k); explicitly skipped in B14 below
+                                        # (sim-payout-stage only). Mapped (not silently absent) so a
+                                        # typo'd rule name would surface, not silently skip.
         "ffn_40pct": 0.40,
         "tradeify_40pct": 0.40,
         "earn2trade_consistency": 0.50,
@@ -850,6 +854,15 @@ def simulate_firm_survival(
         and _topstep_payout_lane == "standard"
     ):
         consistency_ratio = None  # FINDING-4 fix: standard lane has no consistency cap
+
+    # deepscan5 2026-06-29: MFFU Builder consistency (mffu_50pct_sim_payout) applies ONLY at the
+    # discrete SIM-FUNDED payout stage — NONE at eval, NONE live (firm_config.py mffu_50k). The
+    # B14 eval+funded survival sim does not model that discrete payout gate, so MFFU consistency
+    # is intentionally NOT enforced here. This is an EXPLICIT, auditable skip (mirrors the Topstep
+    # standard-lane skip above) — NOT a silent map-miss. Re-enabling requires modeling the
+    # sim-payout stage as a distinct event, not flipping this skip.
+    if consistency_ratio is not None and firm_key == "mffu_50k":
+        consistency_ratio = None
 
     # Per-firm commission per round trip per contract
     firm_comms = FIRM_COMMISSIONS.get(firm_key, {})

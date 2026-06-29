@@ -290,9 +290,18 @@ def simulate_prop_firm(
     best_single_day = max((s["net_pnl"] for s in daily_statements), default=0)
     consistency_ratio = best_single_day / total_profit if total_profit > 0 else 0.0
 
-    # Consistency check — only MFFU 50% rule remains. Topstep has no
-    # consistency rule. Legacy firms removed 2026-05-19 per CLAUDE.md §6.
-    _KNOWN_CONSISTENCY_RULES = {"mffu_50pct"}
+    # Consistency check. deepscan5 2026-06-29: recognize the FULL canonical rule-name vocabulary
+    # (must mirror monte_carlo.simulate_firm_survival `_consistency_map` keys) so real configured
+    # rules don't trip the "unknown rule" warning on every backtest. firm_config currently uses
+    # `topstep_50pct` (Combine pass-request) + `mffu_50pct_sim_payout` (Builder sim-payout stage) —
+    # both were previously unrecognized here, spamming the warning. A genuinely typo'd rule (not in
+    # this set) still warns. NOTE: this legacy daily-statement sim does NOT enforce these rules —
+    # B14 `simulate_firm_survival` is the authoritative consistency model (Topstep standard-lane and
+    # MFFU sim-payout are both intentionally skipped there). Enforcement below stays narrow.
+    _KNOWN_CONSISTENCY_RULES = {
+        "topstep_50pct", "tpt_50pct", "alpha_50pct", "mffu_50pct", "mffu_50pct_sim_payout",
+        "ffn_40pct", "tradeify_40pct", "earn2trade_consistency",
+    }
     rule = firm.get("consistency_rule")
     if rule and rule not in _KNOWN_CONSISTENCY_RULES:
         import warnings

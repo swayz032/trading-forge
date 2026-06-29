@@ -13,32 +13,61 @@ const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 // spawn 50+ Python processes on a busy day → OOM. The semaphore queues calls
 // once `MAX_PYTHON_SUBPROCESSES` are active. Set the env var to tune for the
 // host (default 6 — conservative for an 8-core dev box).
+//
+// deepscan5 2026-06-29 (obs-H1 capital-safety): TWO ISOLATED LANES.
+// Previously a SINGLE pool served both backtest/MC runs and the execution path
+// (kill-switch, compliance gate, Style C exit handler). Under backtest load all
+// slots filled → execution-path calls queued behind 30-min backtests, hit their
+// 3 s timeout, and 3 timeouts in 10 min tripped the exit-handler circuit breaker
+// → TP/stop/15:55-flatten disabled on open positions for the cooldown window.
+// FIX: a dedicated "execution" lane with its own reserved slots that backtest-lane
+// calls can NEVER consume. Execution-path calls only ever wait behind OTHER
+// execution-path calls (cap MAX_PYTHON_SUBPROCESSES_EXECUTION), never behind a backtest.
+type PythonLane = "backtest" | "execution";
+
 const MAX_PYTHON_SUBPROCESSES = Math.max(
   1,
   parseInt(process.env.MAX_PYTHON_SUBPROCESSES ?? "6", 10) || 6,
 );
-let _pythonActiveCount = 0;
-let _pythonQueueDepth = 0;
-const _pythonWaitQueue: Array<() => void> = [];
+// Reserved execution-lane slots (default 2). Kept small — execution-path Python
+// calls are short (compliance/exit-plan/kill-switch), so 2 concurrent is ample and
+// the reservation costs little headroom on the shared host.
+const MAX_PYTHON_SUBPROCESSES_EXECUTION = Math.max(
+  1,
+  parseInt(process.env.MAX_PYTHON_SUBPROCESSES_EXECUTION ?? "2", 10) || 2,
+);
 
-function _acquirePythonSlot(): Promise<void> {
-  if (_pythonActiveCount < MAX_PYTHON_SUBPROCESSES) {
-    _pythonActiveCount++;
+interface _LaneState {
+  active: number;
+  queueDepth: number;
+  cap: number;
+  waitQueue: Array<() => void>;
+}
+const _lanes: Record<PythonLane, _LaneState> = {
+  backtest: { active: 0, queueDepth: 0, cap: MAX_PYTHON_SUBPROCESSES, waitQueue: [] },
+  execution: { active: 0, queueDepth: 0, cap: MAX_PYTHON_SUBPROCESSES_EXECUTION, waitQueue: [] },
+};
+
+function _acquirePythonSlot(lane: PythonLane = "backtest"): Promise<void> {
+  const L = _lanes[lane];
+  if (L.active < L.cap) {
+    L.active++;
     return Promise.resolve();
   }
-  _pythonQueueDepth++;
+  L.queueDepth++;
   return new Promise<void>((resolve) => {
-    _pythonWaitQueue.push(() => {
-      _pythonQueueDepth--;
-      _pythonActiveCount++;
+    L.waitQueue.push(() => {
+      L.queueDepth--;
+      L.active++;
       resolve();
     });
   });
 }
 
-function _releasePythonSlot(): void {
-  _pythonActiveCount = Math.max(0, _pythonActiveCount - 1);
-  const next = _pythonWaitQueue.shift();
+function _releasePythonSlot(lane: PythonLane = "backtest"): void {
+  const L = _lanes[lane];
+  L.active = Math.max(0, L.active - 1);
+  const next = L.waitQueue.shift();
   if (next) next();
 }
 
@@ -94,12 +123,24 @@ export async function gracefullyShutdownPythonSubprocesses(timeoutMs = 5_000): P
   }
 }
 
-/** Observability hook — used by /api/health and metrics endpoints. */
-export function getPythonSubprocessStats(): { active: number; queued: number; cap: number } {
+/** Observability hook — used by /api/health and metrics endpoints.
+ * `active`/`queued`/`cap` report the BACKTEST lane (the historical contract — existing
+ * callers + the /api/health backtestConcurrency block read these). Per-lane detail under
+ * `lanes` so dashboards can see execution-lane saturation independently. */
+export function getPythonSubprocessStats(): {
+  active: number;
+  queued: number;
+  cap: number;
+  lanes: Record<PythonLane, { active: number; queued: number; cap: number }>;
+} {
   return {
-    active: _pythonActiveCount,
-    queued: _pythonQueueDepth,
-    cap: MAX_PYTHON_SUBPROCESSES,
+    active: _lanes.backtest.active,
+    queued: _lanes.backtest.queueDepth,
+    cap: _lanes.backtest.cap,
+    lanes: {
+      backtest: { active: _lanes.backtest.active, queued: _lanes.backtest.queueDepth, cap: _lanes.backtest.cap },
+      execution: { active: _lanes.execution.active, queued: _lanes.execution.queueDepth, cap: _lanes.execution.cap },
+    },
   };
 }
 
@@ -112,6 +153,11 @@ export interface PythonRunnerOptions {
   componentName?: string;
   /** Correlation ID from the originating HTTP request (req.id). Propagated to Python as config._metadata.correlationId. */
   correlationId?: string;
+  /** deepscan5 obs-H1: subprocess concurrency lane. "execution" draws from a dedicated reserved
+   * pool (MAX_PYTHON_SUBPROCESSES_EXECUTION) that backtest/MC runs can never consume — use it for
+   * the capital-safety path (kill-switch, compliance gate, Style C exit handler) so those calls
+   * never queue behind a long backtest. Default "backtest" (all batch/MC/scout/cache work). */
+  lane?: "backtest" | "execution";
 }
 
 // ─── Truthiness sentinel payloads ────────────────────────────────────────────
@@ -201,13 +247,16 @@ export async function runPythonModule<T = Record<string, unknown>>(
     timeoutMs = 60_000,
     componentName = "python-engine",
     correlationId,
+    lane = "backtest",
   } = options;
 
   let configTmpPath: string | null = null;
   let scriptTmpPath: string | null = null;
 
-  // G5.1: acquire a subprocess slot before doing any work. Released in finally.
-  await _acquirePythonSlot();
+  // G5.1 + deepscan5 obs-H1: acquire a subprocess slot on the requested lane before doing any
+  // work. Released in finally on the SAME lane. "execution" lane is reserved (backtest load
+  // cannot starve it). Default "backtest".
+  await _acquirePythonSlot(lane);
 
   try {
     // Python interpreter selection (Phase 15 revised):
@@ -413,7 +462,7 @@ export async function runPythonModule<T = Record<string, unknown>>(
     // Cleanup temp files
     if (configTmpPath) { try { unlinkSync(configTmpPath); } catch { /* ignore */ } }
     if (scriptTmpPath) { try { unlinkSync(scriptTmpPath); } catch { /* ignore */ } }
-    // G5.1: always release the slot, even on throw / timeout.
-    _releasePythonSlot();
+    // G5.1: always release the slot on the SAME lane, even on throw / timeout.
+    _releasePythonSlot(lane);
   }
 }

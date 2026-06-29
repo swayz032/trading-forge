@@ -151,10 +151,14 @@ FIRM_RULES: dict[str, dict] = {
         # Builder: news trading ALLOWED (eval + sim funded) — news-policy MFFU should NOT hard-block.
         # 2026-compliance (canonical: docs/prop-firm-rules-2026-mffu.md)
         "payout_cycle_days": 2,  # Builder: every 48h after buffer cleared (5 sim payouts → live)
-        # consistency_window_days=None → B14 consistency check uses the full-path fallback
-        # (single best day vs total eval profit) rather than the 2-day payout window.
-        # A 2-day window trivially fires the 50% cap (max(A,B)/(A+B)>0.5 for any A≠B).
-        # MFFU's actual consistency rule compares best-day to the FULL eval period.
+        # consistency_window_days=None. NOTE (deepscan5 2026-06-29): MFFU consistency
+        # (mffu_50pct_sim_payout) applies ONLY at the discrete sim-funded payout stage — NONE at
+        # eval, NONE live. The B14 eval+funded survival sim does NOT model that discrete payout
+        # gate, so monte_carlo.simulate_firm_survival EXPLICITLY SKIPS MFFU consistency (see the
+        # `firm_key == "mffu_50k"` skip there, mirroring the Topstep standard-lane skip). This
+        # window value is therefore inert for mffu_50k today; it is retained for the day the
+        # sim-payout stage is modeled as a distinct event. (Prior comment wrongly claimed a
+        # full-path fallback runs — it does not, because the rule is skipped upstream.)
         "consistency_window_days": None,
     },
 }
