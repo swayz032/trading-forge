@@ -3,6 +3,21 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-06-29 Deep-scan #5 carry-forward CLOSED + MERGED → phase-0 (operator: "FIX THIS")
+
+**Mission:** Operator directed closing the 3 pre-existing test failures, F-2, the merge, and the n8n live-body items I'd listed as carry-forward.
+
+**Work shipped (commits 91803fa + n8n-L1 + merge 3dfe1cc, pushed to origin/hardening/phase-0):**
+- **3 pre-existing test failures CLOSED:** (1) family-grade-postscript lint now PASS — wrapped the 2 remaining unwrapped notifies (`broker-router.ts:209` TradersPost-key-revoked, `paper-signal-service.ts:3276` cross-symbol DLL force-close-failed). (2) De-brittled the bif-counter assertion in `deepscan-wiring-obs-gaps.test.ts` (fixed 300-char window → regex asserting the inline `try { ...inc(); } catch` wrap). (3) Fixed the stale WFE source-audit in `wave27-5-pass-d-wfe-discord-warn.test.ts` — it asserted `const isBlock = wfeResult.status==="blocked"` (0 occurrences; F-5 2026-06-23 removed the redundant PAPER→DEPLOY_READY standalone WFE gate) → now asserts the real TESTING→PAPER `isBlockTp` gate + the F-5 removal comment.
+- **F-2 CLOSED (the right way, zero blast radius):** extracted the pure frozen-policy fns into NEW db-free `src/server/lib/frozen-policy-hash.ts` (`computeFrozenPolicyHash` + `evaluateFrozenPolicyDriftAtPromotion`, only `node:crypto`); `frozen-policy-contract.ts` re-exports them + keeps the db-coupled `freezePolicyForStrategy` (all import sites unchanged, tsc-verified). Added gate-chain **Suite 10** (frozen_policy_hash round-trip: stable-pass / stale-drift-block / first-freeze-null) importing from the db-free module — no `db/index.js` import, so it can't crash the gate-chain file at collection. Chose this over a global vitest `DATABASE_URL` (which would un-mask the ~13 collection-crashing files and change the baseline unpredictably).
+- **n8n live-body items (REST PUT, verified):** **M1 FIXED LIVE** — `lifecycle_state=DEPLOYED`→`lifecycleState=DEPLOYED` in the fetch nodes of Daily Portfolio Monitor (eZSbajXAi7v7tGPx) + Monthly Robustness Check (RIK5eQ0rFEG78Vtd) (verified 0 remaining snake_case; also backstopped code-side by the route alias). **L1 FIXED BACKEND** — `idempotency.ts` middleware now honors a body `idempotency_key` fallback (after the two header forms), fixing the 4 journal nodes that bury the key in the body without live workflow surgery; closes the deepscan4 `/api/journal idempotency_key` carry-forward (+2 vitest, 8 GREEN). **L2 = UI-ONLY (empirically proven):** 0A-health-monitor's self-referential `settings.errorWorkflow` cannot be cleared via REST — omission is a no-op, explicit null → 400. Operator must remove it in the n8n UI. 0A left intact (active, 14 nodes).
+- **MERGE DONE:** merged `origin/hardening/phase-0` (advanced to 73f1f9e — 8 carter UI/asset commits, fully DISJOINT from my backend/engine/test files) into the fixwave branch with ZERO conflicts, verified (tsc 0 + 3 CI gates GREEN), fast-forwarded `origin/hardening/phase-0` → `3dfe1cc`. Deep-scan #5 is now LIVE on phase-0.
+
+**Verification:** tsc 0 errors; all 3 CI hard gates GREEN; family-grade-postscript lint PASS; previously-failing 5 suites (127 tests) + idempotency (8) GREEN; merge conflict-free.
+
+**Carry-forward:** L2 (0A self-ref errorWorkflow) — operator removes in n8n UI (REST can't). Parallel `hardening/deepscan5-engine-2026-06-29` branch (Python engine track off ce8d8a0) still needs merging to phase-0. Pre-existing test debt outside this wave's findings is now clear.
+
+---
 ### Session Log — 2026-06-29 Deep-scan #5 (7-auditor) + full-band fix wave on ISOLATED worktree `hardening/deepscan5-fixwave-2026-06-29` (UNMERGED)
 
 **Mission:** Operator — "deep scan all my systems and codebase and make sure everything is institutional grade, no bottlenecks, everything wired." Then operator chose (AskUserQuestion): run the fix wave in an **isolated worktree** + fix **everything (HIGH + MED + LOW)**.
