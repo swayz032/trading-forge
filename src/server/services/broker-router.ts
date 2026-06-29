@@ -406,6 +406,13 @@ export async function routeOrder(
   correlationId?: string | null,
   webhookFiredAt?: number | null,
 ): Promise<BrokerResult> {
+  // F5 FIX: capture request timestamp at function entry so it is stable for the
+  // entire call (even if the function awaits for several seconds before reaching
+  // the idempotency key construction).  When signal.barTimestamp is missing we
+  // fall back to `req_<epoch>` instead of null, ensuring EVERY order gets a
+  // stable idempotency key and DLQ replay / network retry cannot double-submit.
+  const _routeOrderRequestTs = Date.now();
+
   // ── F-2: Kill switch supremacy — FIRST gate, no exceptions ─────────────────
   // isHaltedForProduction() is fail-CLOSED: DB error → returns true → blocks.
   // This gate fires BEFORE pipeline check, account lookup, or anything else.
@@ -982,16 +989,20 @@ export async function routeOrder(
     // barTs). A TradingView retry of the same bar produces the same key →
     // TradersPost deduplicates server-side → no duplicate live order.
     // correlationId is still passed for tracing/audit linkage only.
-    const idempotencyInputs: IdempotencyKeyInputs | null =
-      signal.barTimestamp
-        ? {
-            accountId,
-            strategyId: payload.strategyId ?? signal.strategyId ?? "tf",
-            ticker: signal.ticker,
-            action: signal.action,
-            barTs: signal.barTimestamp,
-          }
-        : null;
+    //
+    // F5 FIX: when signal.barTimestamp is absent (e.g. manual trigger, DLQ
+    // replay without bar context), use `req_<epoch>` as the barTs so that
+    // idempotencyInputs is NEVER null.  The `req_` prefix distinguishes
+    // request-scoped keys from bar-scoped keys in audit logs.
+    // _routeOrderRequestTs is captured once at function entry (above).
+    const idempotencyBarTs = signal.barTimestamp ?? `req_${_routeOrderRequestTs}`;
+    const idempotencyInputs: IdempotencyKeyInputs = {
+      accountId,
+      strategyId: payload.strategyId ?? signal.strategyId ?? "tf",
+      ticker: signal.ticker,
+      action: signal.action,
+      barTs: idempotencyBarTs,
+    };
 
     // FINDING #4 FIX: Wrap the HTTP submission in the TradersPost circuit
     // breaker. CircuitOpenError fast-fails here; the catch block below converts

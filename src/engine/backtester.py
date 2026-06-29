@@ -880,8 +880,9 @@ def _apply_static_styleC_management(
         direction_str = str(row["Direction"])
         entry_idx = int(row["Entry Idx"]) if "Entry Idx" in row.index else 0
         original_exit_idx = int(row["Exit Idx"]) if "Exit Idx" in row.index else min(entry_idx + 1, len(high_np) - 1)
-        # Safety cap: no trade held longer than MAX_HOLD_BARS (~16h on 5m)
-        MAX_HOLD_BARS = 200
+        # Safety cap: no trade held longer than MAX_HOLD_BARS (~16h on 5m).
+        # M-1 fix: read from env so 1-min backtests can raise the cap beyond ~3.3h.
+        MAX_HOLD_BARS = int(os.environ.get("BACKTEST_MAX_HOLD_BARS", "200"))
         if original_exit_idx - entry_idx > MAX_HOLD_BARS:
             original_exit_idx = entry_idx + MAX_HOLD_BARS
         is_short = "Short" in direction_str
@@ -1382,8 +1383,8 @@ def _apply_adaptive_management(
         entry_idx = int(row["Entry Idx"]) if "Entry Idx" in row.index else 0
         original_exit_idx = int(row["Exit Idx"]) if "Exit Idx" in row.index else min(entry_idx + 1, len(high_np) - 1)
 
-        # Safety cap (same as static_styleC)
-        MAX_HOLD_BARS = 200
+        # Safety cap (same as static_styleC). M-1 fix: env-overridable.
+        MAX_HOLD_BARS = int(os.environ.get("BACKTEST_MAX_HOLD_BARS", "200"))
         if original_exit_idx - entry_idx > MAX_HOLD_BARS:
             original_exit_idx = entry_idx + MAX_HOLD_BARS
         is_short = "Short" in direction_str
@@ -1660,6 +1661,7 @@ FREQ_MAP = {
     "1h": "1h",
     "4hour": "4h",
     "4h": "4h",
+    "4hr": "4h",   # H6 fix: "4hr" alias missing — falls through to "1D" → ~6× wrong annualization
     "daily": "1D",
     "1D": "1D",
     # DSL Timeframe enum aliases (M2 fix — strategy_schema.py uses these)
@@ -2073,6 +2075,7 @@ def _compute_long_short_split(trades_list: list[dict]) -> dict:
 BARS_PER_DAY = {
     "1min": 1380, "5min": 172, "15min": 92, "30min": 46,
     "1hour": 23, "1h": 23, "4hour": 6, "4h": 6,
+    "4hr": 6,     # H6 fix: "4hr" alias — mirrors "4h" / "4hour"
     "daily": 1, "1D": 1,
 }
 
@@ -2185,6 +2188,9 @@ def _apply_max_trades_per_day(
     reached, all subsequent entries that day are masked out. Earlier entries
     within the day are kept (first-come, first-served).
 
+    M-3 fix: vectorized via pandas groupby cumsum (same class as 06-28 vectorizations).
+    Byte-identical output to the original O(n) loop.
+
     Args:
         long_entries: Boolean array of long entry signals (post-roll)
         short_entries: Boolean array of short entry signals (post-roll)
@@ -2197,60 +2203,99 @@ def _apply_max_trades_per_day(
     if max_trades <= 0:
         return long_entries, short_entries
 
-    filtered_long = long_entries.copy()
-    filtered_short = short_entries.copy()
     n = len(long_entries)
+    if n == 0:
+        return long_entries.copy(), short_entries.copy()
 
-    # Extract date for each bar
-    daily_counts: dict[str, int] = {}
-    suppressed = 0
+    try:
+        # ── Vectorized path (M-3) ─────────────────────────────────────────────
+        # Extract "YYYY-MM-DD" day key from each bar's timestamp — same str[:10] as
+        # the original loop, so identical bucketing.
+        day_strings = np.array([str(t)[:10] for t in timestamps], dtype=object)
 
-    for i in range(n):
-        has_long = bool(filtered_long[i])
-        has_short = bool(filtered_short[i])
-        if not has_long and not has_short:
-            continue
+        # Per-bar combined entry count (0, 1, or 2 — handles same-bar L+S).
+        combined = long_entries.astype(np.int32) + short_entries.astype(np.int32)
 
-        # Get calendar date string from timestamp
-        ts = timestamps[i]
-        try:
-            day_key = str(ts)[:10]  # "YYYY-MM-DD" from any datetime-like
-        except Exception:
-            continue
-
-        count = daily_counts.get(day_key, 0)
-
-        # F-9 FIX: Both long and short branches were writing daily_counts independently,
-        # causing a double-write when both signals fire on the same bar (same-bar L+S).
-        # Pattern before: long writes count+1, then short sees the old local `count`
-        # and also writes count+1 — net result: two fills counted as one.
-        # Fix: accumulate in local var and write ONCE after both branches.
-        new_count = count
-
-        if has_long:
-            if new_count < max_trades:
-                new_count += 1
-            else:
-                filtered_long[i] = False
-                suppressed += 1
-
-        if has_short:
-            if new_count < max_trades:
-                new_count += 1
-            else:
-                filtered_short[i] = False
-                suppressed += 1
-
-        # Single write after both branches so same-bar L+S is counted correctly.
-        daily_counts[day_key] = new_count
-
-    if suppressed > 0:
-        print(
-            f"max_trades_per_day={max_trades}: suppressed {suppressed} entries",
-            file=sys.stderr,
+        # Per-day cumulative sum including this bar.
+        # pd.Series.groupby preserves original row order within each group, so
+        # cumsum() matches the sequential left-to-right counting of the old loop.
+        day_series = pd.Series(day_strings)
+        day_cumsum = (
+            pd.DataFrame({"day": day_strings, "combined": combined.astype(np.int64)})
+            .groupby("day", sort=False)["combined"]
+            .cumsum()
+            .to_numpy(dtype=np.int64)
         )
 
-    return filtered_long, filtered_short
+        # Count BEFORE this bar = (cumulative at this bar) − (entries AT this bar).
+        count_before = day_cumsum - combined
+
+        # Long fills if slot (count_before + 1) ≤ max_trades.
+        long_fills = long_entries & (count_before < max_trades)
+        # After long, the slot pointer advances by 1 when long filled.
+        count_after_long = count_before + long_fills.astype(np.int32)
+        # Short fills using the post-long slot pointer.
+        short_fills = short_entries & (count_after_long < max_trades)
+
+        suppressed = int((long_entries & ~long_fills).sum() + (short_entries & ~short_fills).sum())
+        if suppressed > 0:
+            print(
+                f"max_trades_per_day={max_trades}: suppressed {suppressed} entries",
+                file=sys.stderr,
+            )
+        return long_fills, short_fills
+
+    except Exception as _mtd_exc:
+        # ── Fallback: original O(n) loop ─────────────────────────────────────
+        print(
+            f"[_apply_max_trades_per_day] vectorized path failed ({_mtd_exc!r}); "
+            f"falling back to O(n) loop",
+            file=sys.stderr,
+        )
+        filtered_long = long_entries.copy()
+        filtered_short = short_entries.copy()
+
+        daily_counts: dict[str, int] = {}
+        suppressed = 0
+
+        for i in range(n):
+            has_long = bool(filtered_long[i])
+            has_short = bool(filtered_short[i])
+            if not has_long and not has_short:
+                continue
+
+            ts = timestamps[i]
+            try:
+                day_key = str(ts)[:10]
+            except Exception:
+                continue
+
+            count = daily_counts.get(day_key, 0)
+            new_count = count
+
+            if has_long:
+                if new_count < max_trades:
+                    new_count += 1
+                else:
+                    filtered_long[i] = False
+                    suppressed += 1
+
+            if has_short:
+                if new_count < max_trades:
+                    new_count += 1
+                else:
+                    filtered_short[i] = False
+                    suppressed += 1
+
+            daily_counts[day_key] = new_count
+
+        if suppressed > 0:
+            print(
+                f"max_trades_per_day={max_trades}: suppressed {suppressed} entries",
+                file=sys.stderr,
+            )
+
+        return filtered_long, filtered_short
 
 
 # ─── Wave 21 E.3 — Stop ceiling per symbol ───────────────────────────────────
@@ -3790,7 +3835,16 @@ def run_backtest(
         # We use ATR-scaled estimates for now; exact P&L enforcement is in E.4.
         # Wave 24: for multi-symbol runs the caller should concatenate P&L arrays before
         # passing here. For the single-symbol case, use a zero array (degenerate).
+        # H7 fix: when _cs_bar_pnls is all-zeros, apply_cross_symbol_dll_to_entries never
+        # fires because cumulative session P&L stays 0 → DLL threshold never crossed.
+        # Emit a visible audit row so non-enforcement is NOT silent.
         _cs_bar_pnls = np.zeros(len(entries_pd), dtype=float)
+        print(json.dumps({
+            "event": "backtest.cross_symbol_dll_degenerate_skip",
+            "reason": "single_symbol_zero_pnl_proxy",
+            "symbol": getattr(config, "symbol", "unknown"),
+            "note": "cross-symbol DLL cannot enforce on single-symbol backtest; paper-side uses real multi-symbol P&L",
+        }), file=sys.stderr)
         _cs_el = entries_pd.to_numpy().astype(bool)
         _cs_es = short_entries_pd.to_numpy().astype(bool)
         _cs_xl = exits_pd.to_numpy().astype(bool)

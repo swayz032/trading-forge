@@ -27,12 +27,14 @@ vi.mock("../db/index.js", () => ({
 }));
 
 vi.mock("../routes/sse.js", () => ({ broadcastSSE: vi.fn() }));
-vi.mock("../index.js", () => ({
+// A-3 fix: alert-service.ts now imports logger from ../lib/logger.js (not ../index.js).
+// Mock the leaf module so the spy intercepts calls inside alert-service.ts.
+vi.mock("../lib/logger.js", () => ({
   logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
 import { createAlert } from "./alert-service.js";
-import { logger } from "../index.js";
+import { logger } from "../lib/logger.js";
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 

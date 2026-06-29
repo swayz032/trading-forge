@@ -649,6 +649,24 @@ def _run_walk_forward_cpcv(
     # Paths with sufficient data to participate in the multi-model bootstrap
     _eligible_paths = [p for p in per_path_oos_pnls if len(p) >= _WRC_MIN_OBS]
     if len(_eligible_paths) >= 2:
+        # M-2 fix (2026-06-29): exclude paths significantly shorter than the mean to
+        # prevent degenerate matrix truncation — a single 21-obs path dragging all
+        # other paths down to 21 observations silently collapses the bootstrap power.
+        # Floor = max(30, mean_len * 0.5): generous enough not to drop valid paths in
+        # normal unequal-embargo scenarios, strict enough to exclude truly stunted paths.
+        _all_path_lens = [len(p) for p in _eligible_paths]
+        _mean_path_len_m2 = sum(_all_path_lens) / len(_all_path_lens)
+        _path_floor_m2 = max(30.0, _mean_path_len_m2 * 0.5)
+        _paths_pre_floor = _eligible_paths[:]
+        _eligible_paths = [p for p in _eligible_paths if len(p) >= _path_floor_m2]
+        for _ex_path in _paths_pre_floor:
+            if len(_ex_path) < _path_floor_m2:
+                print(
+                    f"  WRC/SPA (CPCV): walk_forward.wrc_spa_short_path_excluded "
+                    f"path_len={len(_ex_path)} floor={_path_floor_m2:.0f} mean={_mean_path_len_m2:.0f}",
+                    file=sys.stderr,
+                )
+    if len(_eligible_paths) >= 2:
         try:
             from src.engine.statistics.hansens_spa import (
                 hansens_spa_multi as _spa_multi,
@@ -660,6 +678,14 @@ def _run_walk_forward_cpcv(
             # Using min-length avoids padding artifacts; shorter paths typically
             # arise from CPCV embargo stripping at fold boundaries (small loss).
             _min_path_len = min(len(p) for p in _eligible_paths)
+            # M-2: emit stderr warning when min truncation exceeds 50% of mean — still
+            # degenerate even after the floor filter if ALL remaining paths are short.
+            if _eligible_paths and _min_path_len < 0.5 * (sum(len(p) for p in _eligible_paths) / len(_eligible_paths)):
+                print(
+                    f"  WRC/SPA (CPCV): WARNING min_path_len={_min_path_len} < 0.5*mean "
+                    f"after floor filter — bootstrap power severely reduced",
+                    file=sys.stderr,
+                )
             _perf_matrix = np.array(
                 [p[:_min_path_len] for p in _eligible_paths], dtype=float
             )  # (L, T)
@@ -819,6 +845,14 @@ def _run_walk_forward_cpcv(
         # (unless PROMOTION_GRANDFATHER_PRE_PASS_E=true is explicitly set).
         "wrc_result": _cpcv_wrc_result,
         "spa_result": _cpcv_spa_result,
+        # C1 fix (2026-06-29): param_stability_status lets TS parameter-drift gate
+        # distinguish CPCV-exempt (honest "not computable") from genuine legacy-null
+        # (grandfather-pass) and plain-WF computed value.
+        # Modeled on the wfe_status: "cpcv_not_applicable" precedent above.
+        # Do NOT compute a fake param_stability — emit the honest exempt sentinel.
+        # TS consumer: read param_stability_status === "cpcv_not_applicable" and route
+        # to a distinct cpcv-exempt audit action instead of the legacy_null path.
+        "param_stability_status": "cpcv_not_applicable",
     }
 
 
@@ -1931,6 +1965,10 @@ def run_walk_forward(
         "n_splits": len(windows),
         "is_ratio": is_ratio,
         "param_stability": param_stability,
+        # C1 fix (2026-06-29): non-exempt sentinel so TS gate can distinguish
+        # a real computed param_stability from the CPCV "cpcv_not_applicable"
+        # sentinel and from genuine legacy-null (absent key / null).
+        "param_stability_status": "computed",
         "prop_compliance": prop_compliance,
         "execution_time_ms": elapsed_ms,
         # Wave 24 Pass 1 — Item 10: wf_metadata for downstream promotion gate.

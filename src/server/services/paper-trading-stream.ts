@@ -10,7 +10,7 @@ import { initSmtBarBufferProvider } from "./smt-live-service.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-interface Bar {
+export interface Bar {
   symbol: string;
   timestamp: string;
   open: number;
@@ -36,6 +36,16 @@ interface SharedSocket {
 /** sessionId → set of symbols the session subscribes to */
 const sessionSymbols = new Map<string, Set<string>>();
 
+/**
+ * F12: Per-symbol POC cache keyed by bar ISO timestamp.
+ * getDevelopingSessionPoc runs a DB query on every call; with multiple sessions
+ * subscribed to the same symbol this can fire dozens of times per bar.
+ * Cache key = `${symbol}:${barTimestamp}` provides a 1-bar TTL automatically —
+ * each new bar timestamp invalidates the prior entry for that symbol.
+ * Map is bounded: old keys are evicted when the cache exceeds 50 entries.
+ */
+const pocCacheByBar = new Map<string, number | null>();
+
 /** symbol → shared WebSocket connection info */
 const sharedSockets = new Map<string, SharedSocket>();
 
@@ -44,6 +54,49 @@ const barBuffer = new Map<string, Bar[]>();
 
 /** Per-session lock to prevent concurrent evaluateSignals calls */
 const sessionLocks = new Map<string, Promise<void>>();
+
+// ── F3: Median ATR helper (exported for tests) ────────────────────────────────
+
+/**
+ * Compute the median true-range over a bar window using Wilder's formula.
+ * True range = max(H-L, |H-prevClose|, |L-prevClose|) per bar.
+ * First bar in the window has no prevClose; it falls back to H-L.
+ *
+ * Exported so tests can verify overnight-gap handling without requiring a
+ * full barBuffer setup or running the bar loop.
+ */
+export function computeMedianTrueRangeFromWindow(
+  window: ReadonlyArray<{ high: number; low: number; close: number }>,
+): number | undefined {
+  if (window.length < 1) return undefined;
+  const trueRanges = window.map((b, i) => {
+    const hl = (b.high ?? b.close) - (b.low ?? b.close);
+    if (i === 0) return hl;
+    const prevClose = window[i - 1].close;
+    return Math.max(
+      hl,
+      Math.abs((b.high ?? b.close) - prevClose),
+      Math.abs((b.low  ?? b.close) - prevClose),
+    );
+  });
+  const sorted = [...trueRanges].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  const median = sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+  return median > 0 ? median : undefined;
+}
+
+// ── F12: POC cache test helpers ────────────────────────────────────────────────
+
+/**
+ * @internal Exported for testing only — allows tests to inspect or reset the
+ * per-bar POC cache between test runs to prevent cross-test contamination.
+ */
+export function _testClearPocCache(): void { pocCacheByBar.clear(); }
+export function _testGetPocCacheSize(): number { return pocCacheByBar.size; }
+export function _testGetPocCacheValue(symbol: string, barTimestamp: string): number | null | undefined {
+  return pocCacheByBar.get(`${symbol}:${barTimestamp}`);
+}
+export function _testSetBarBuffer(symbol: string, bars: Bar[]): void { barBuffer.set(symbol, bars); }
 
 const BAR_BUFFER_SIZE = 200;
 
@@ -140,7 +193,8 @@ function sessionsForSymbol(symbol: string): string[] {
  * This function never throws — any error returns undefined so processSessionBar
  * can proceed without exitBarContext (falls back to legacy ATR-only exits).
  */
-async function buildExitBarContext(bar: Bar): Promise<StyleExitBarContext | undefined> {
+/** @internal exported for tests — production entry point is processSessionBar */
+export async function buildExitBarContext(bar: Bar): Promise<StyleExitBarContext | undefined> {
   try {
     // Use the local barBuffer map (paper-trading-stream.ts owns the streaming buffer).
     // This is the same buffer used by evaluateSignals (passed as getBarBuffer(symbol)).
@@ -149,7 +203,22 @@ async function buildExitBarContext(bar: Bar): Promise<StyleExitBarContext | unde
     // ATR returns NaN when buffer is too short — clamp to 0 (HOLD guard in handlers)
     const atr14 = Number.isFinite(atr) ? atr : 0;
 
-    const poc = await getDevelopingSessionPoc(bar.symbol).catch(() => null);
+    // F12: cache POC by bar timestamp to avoid a DB round-trip on every bar for every
+    // session subscribed to the same symbol. Key = "symbol:isoTimestamp" gives a
+    // 1-bar TTL automatically — a new bar timestamp evicts the prior symbol entry.
+    const pocCacheKey = `${bar.symbol}:${bar.timestamp}`; // bar.timestamp is always a string
+    let poc: number | null;
+    if (pocCacheByBar.has(pocCacheKey)) {
+      poc = pocCacheByBar.get(pocCacheKey)!;
+    } else {
+      poc = await getDevelopingSessionPoc(bar.symbol).catch(() => null);
+      pocCacheByBar.set(pocCacheKey, poc);
+      // Evict oldest entry when the cache grows beyond 50 keys (bounded memory)
+      if (pocCacheByBar.size > 50) {
+        const oldest = pocCacheByBar.keys().next().value;
+        if (oldest !== undefined) pocCacheByBar.delete(oldest);
+      }
+    }
 
     // ET time for time-stop evaluation (HH:MM from bar timestamp)
     const barDate = new Date(bar.timestamp);

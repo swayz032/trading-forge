@@ -102,6 +102,22 @@ function setCachedLayer(layer: number, decision: HaltDecision): void {
 // Dynamic import is retained to avoid a kill-switch ↔ paper-execution circular dep.
 const FORCE_CLOSE_TIMEOUT_MS = parseInt(process.env.FORCE_CLOSE_TIMEOUT_MS ?? "10000", 10);
 
+// F3 FIX: in-flight guard for Layer-2 DLL-95% force-close.
+//
+// Root cause: runLayerWithTimeout has a 100ms budget for L2. _confirmedForceClose
+// takes up to FORCE_CLOSE_TIMEOUT_MS (10s). When the 100ms expires, the layer
+// returns fail-OPEN *without* setting the layer cache, so the next signal
+// immediately re-enters checkLayer2DailyLoss and calls _confirmedForceClose again.
+// Under a sustained DLL breach this creates concurrent force-close calls that:
+//   a) flood the audit log with duplicate rows
+//   b) race on paper position state
+//   c) may cause double-broker orders
+//
+// The guard makes the second (and subsequent) concurrent L2 evaluations return
+// {halted:true, reason:"force_close_in_progress"} immediately until the first
+// completes. This does NOT suppress the halt result — L2 is still reported HALTED.
+let _forceCloseInFlight = false;
+
 /**
  * Awaited force-close with wall-clock timeout and CRITICAL escalation on failure.
  * On timeout or call failure, writes paper.force_flatten_kill_switch_failed audit
@@ -268,7 +284,20 @@ async function checkLayer2DailyLoss(): Promise<HaltDecision> {
       // axis), so this sub-check does NOT double-fire with Layer 3.
       // Ordering: force_close (95%) > halt (67%) > reduce_size (60%) > none.
       if (dayPnl < 0 && Math.abs(dayPnl) >= DLL_FORCE_CLOSE_PCT * dll) {
+        // F3 FIX: concurrent L2 evaluations (caused by the 100ms runLayerWithTimeout
+        // returning fail-OPEN before the 10s _confirmedForceClose finishes) must NOT
+        // all call _confirmedForceClose. The first call sets the in-flight flag;
+        // subsequent calls return HALTED immediately without re-entering the close.
+        if (_forceCloseInFlight) {
+          logger.warn(
+            { session_id: session.id, firm_id: firmId, day_pnl: dayPnl },
+            "kill-switch L2: force-close already in-flight — skipping concurrent invocation (F3 fix)",
+          );
+          decision = { halted: true, reason: "force_close_in_progress", layer: 2 };
+          break;
+        }
         const fcCorrelationId = randomUUID();
+        _forceCloseInFlight = true;
         logger.warn(
           { session_id: session.id, firm_id: firmId, day_pnl: dayPnl, dll, threshold_pct: DLL_FORCE_CLOSE_PCT },
           "kill-switch L2: DLL at 95% — force-closing all positions (M-1 fix)"
@@ -306,7 +335,15 @@ async function checkLayer2DailyLoss(): Promise<HaltDecision> {
         // leaving positions open at a 95% breach). _confirmedForceClose writes the
         // paper.force_flatten_kill_switch_failed audit + a CRITICAL Discord alert on
         // timeout/failure, and is the same helper used by the production-halt path.
-        const _fcOk = await _confirmedForceClose(`dll_force_close_at_95pct:${session.id}`, fcCorrelationId);
+        // F3 FIX: the try/finally ensures _forceCloseInFlight is always cleared
+        // when the close attempt ends (success, failure, or timeout), so subsequent
+        // L2 evaluations can re-enter if the breach persists into the next cycle.
+        let _fcOk = false;
+        try {
+          _fcOk = await _confirmedForceClose(`dll_force_close_at_95pct:${session.id}`, fcCorrelationId);
+        } finally {
+          _forceCloseInFlight = false;
+        }
         // Completion observability (phase-0 deep-scan): record a success audit row ONLY
         // when the force-close actually completed. On failure/timeout, _confirmedForceClose
         // already wrote paper.force_flatten_kill_switch_failed + fired a CRITICAL Discord —

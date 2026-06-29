@@ -533,6 +533,16 @@ function calculateSlippage(
   return slippageTicks * orderMod * sessionMult * spec.tickSize;
 }
 
+/**
+ * F10: Centralise the ASIA→ASIAN session-name remap that calculateSlippage expects.
+ * classifySessionType() emits "ASIA"; calculateSlippage multiplier map uses "ASIAN".
+ * Previously each call site had an inline ternary — this helper is the single source.
+ * Exported for direct unit testing.
+ */
+export function toSlippageSession(session: ReturnType<typeof classifySessionType>): string {
+  return session === "ASIA" ? "ASIAN" : session;
+}
+
 // ─── Gap 7: Latency Simulation ───────────────────────────────
 
 function applyLatency(signalPrice: number, symbol: string, latencyMs: number, atr?: number): number {
@@ -1170,7 +1180,10 @@ export async function openPosition(sessionId: string, params: {
           .from(paperTrades)
           .where(and(
             eq(paperTrades.sessionId, sessionId),
-            sql`to_char(${paperTrades.exitTime} AT TIME ZONE 'America/New_York' + interval '7 hours', 'YYYY-MM-DD') = ${todayEtDateStr}`,
+            // F2: use entryTime (same convention as compliance gate ~line 1617 and toFuturesTradingDayString).
+            // exitTime caused boundary-straddling trades (entered before 17:00 ET, closed after) to count
+            // toward the WRONG trading day, silently undercounting or overcounting against the daily cap.
+            sql`to_char(${paperTrades.entryTime} AT TIME ZONE 'America/New_York' + interval '7 hours', 'YYYY-MM-DD') = ${todayEtDateStr}`,
           ));
         const tradesToday = tradesTodayRow?.count ?? 0;
 
@@ -1828,7 +1841,7 @@ export async function openPosition(sessionId: string, params: {
     };
   }
 
-  const slippageSession = sessionAtOrder === "ASIA" ? "ASIAN" : sessionAtOrder;
+  const slippageSession = toSlippageSession(sessionAtOrder); // F10: centralized remap
   const slippage = calculateSlippage(params.symbol, 1, params.atr, medianAtrEstimate, orderType, slippageSession);
   const actualEntry = params.side === "long"
     ? priceAfterLatency + slippage
@@ -1846,6 +1859,16 @@ export async function openPosition(sessionId: string, params: {
   // the ExitPlan in the exit_plan column at INSERT time. Fail-soft: any error falls
   // back to static_styleC for this position (never blocks the trade).
   let exitPlanForInsert: ExitPlanWithRuntimeState | null = null;
+  // F8: defer the signal.exit_plan_persisted audit write until after the position INSERT
+  // so entityId can carry the real position.id (prior code wrote entityId: null).
+  // Payload is captured here and the write fires immediately after .returning().
+  let pendingExitPlanAudit: {
+    strategy_id: string;
+    tp1_source: string;
+    tp1_level_type: string | null;
+    runner_trail_method: string;
+    scaling: { tp1_pct: number; tp2_pct: number; runner_pct: number };
+  } | null = null;
   const adaptiveInput = params.adaptiveExitInput;
   const exitStyle = adaptiveInput?.strategy?.exit_plan_config?.exit_style ?? "static_styleC";
 
@@ -1886,30 +1909,18 @@ export async function openPosition(sessionId: string, params: {
         runtime_state: {},
       } as ExitPlanWithRuntimeState;
 
-      // Audit: signal.exit_plan_persisted (§10b mandate)
-      db.insert(auditLog).values({
-        action: "signal.exit_plan_persisted",
-        entityType: "paper_position",
-        entityId: null, // position id not yet known at compute time
-        decisionAuthority: "system",
-        input: {
-          sessionId,
-          strategy_id: adaptiveInput.strategy.id,
-          symbol: params.symbol,
-        } as Record<string, unknown>,
-        result: {
-          tp1_source: exitPlanRaw.tp1.source,
-          tp1_level_type: exitPlanRaw.tp1.level_type ?? null,
-          runner_trail_method: exitPlanRaw.runner.trail_method,
-          scaling: {
-            tp1_pct: exitPlanRaw.scaling.tp1_pct,
-            tp2_pct: exitPlanRaw.scaling.tp2_pct,
-            runner_pct: exitPlanRaw.scaling.runner_pct,
-          },
-        } as Record<string, unknown>,
-        status: "success",
-        correlationId,
-      }).catch((err) => logger.warn({ err }, "signal.exit_plan_persisted audit write failed (non-blocking)"));
+      // F8: capture audit payload — will fire after position INSERT with the real position.id
+      pendingExitPlanAudit = {
+        strategy_id: adaptiveInput.strategy.id,
+        tp1_source: exitPlanRaw.tp1.source,
+        tp1_level_type: exitPlanRaw.tp1.level_type ?? null,
+        runner_trail_method: exitPlanRaw.runner.trail_method,
+        scaling: {
+          tp1_pct: exitPlanRaw.scaling.tp1_pct,
+          tp2_pct: exitPlanRaw.scaling.tp2_pct,
+          runner_pct: exitPlanRaw.scaling.runner_pct,
+        },
+      };
     } catch (exitPlanErr) {
       // Fail-soft: computeExitPlan threw (e.g. liquidity service unavailable).
       // Log + fall through to static_styleC for this position.
@@ -2067,6 +2078,25 @@ export async function openPosition(sessionId: string, params: {
     return fallbackStop;
   })();
 
+  // F9: capture entry-time macroRegime for journal replay-correctness.
+  // closePosition reads pos.exitPlan.entryRegime instead of querying the latest snapshot at
+  // close time, so the journal reflects the regime at entry (not exit). Fail-soft.
+  let entryMacroRegimeCapture: string | null = null;
+  try {
+    const [macroSnap] = await dbConn
+      .select({ macroRegime: macroSnapshots.macroRegime })
+      .from(macroSnapshots)
+      .orderBy(desc(macroSnapshots.snapshotDate))
+      .limit(1);
+    entryMacroRegimeCapture = macroSnap?.macroRegime ?? null;
+  } catch { /* non-blocking — journal enrichment degrades gracefully */ }
+
+  // Merge entryRegime into the exitPlan JSONB blob. JSONB accepts arbitrary JSON;
+  // the extra field sits alongside the typed ExitPlan fields with no migration needed.
+  const exitPlanForDb: ExitPlanWithRuntimeState | undefined = entryMacroRegimeCapture != null
+    ? ({ ...(exitPlanForInsert ?? {}), entryRegime: entryMacroRegimeCapture } as unknown as ExitPlanWithRuntimeState)
+    : (exitPlanForInsert ?? undefined);
+
   const [position] = await dbConn.insert(paperPositions).values({
     sessionId,
     symbol: params.symbol,
@@ -2079,8 +2109,8 @@ export async function openPosition(sessionId: string, params: {
     implementationShortfall: String(implementationShortfall),
     fillRatio: "1.0",
     fillProbability: capturedFillProbability !== null ? String(capturedFillProbability) : null,
-    // Wave 25.5 Track 1: persist adaptive exit plan when available
-    exitPlan: exitPlanForInsert ?? undefined,
+    // Wave 25.5 Track 1: persist adaptive exit plan when available (exitPlanForDb carries entryRegime via F9)
+    exitPlan: exitPlanForDb,
     // BL-1 / H-1 fix (migration 0179): initialise stop and running high/low at entry
     // FINDING #7 FIX: always a number now (never null) — guaranteed by fallback logic above.
     initialStopPrice: String(initialStopPriceForInsert),
@@ -2090,6 +2120,30 @@ export async function openPosition(sessionId: string, params: {
     // recover the signal→trade trace when invoked externally (force-close, time-stop).
     correlationId,
   }).returning();
+
+  // F8: write signal.exit_plan_persisted audit NOW that position.id is known.
+  // Prior code wrote entityId: null because the INSERT hadn't run yet at audit time.
+  if (pendingExitPlanAudit != null) {
+    db.insert(auditLog).values({
+      action: "signal.exit_plan_persisted",
+      entityType: "paper_position",
+      entityId: position.id,
+      decisionAuthority: "system",
+      input: {
+        sessionId,
+        strategy_id: pendingExitPlanAudit.strategy_id,
+        symbol: params.symbol,
+      } as Record<string, unknown>,
+      result: {
+        tp1_source: pendingExitPlanAudit.tp1_source,
+        tp1_level_type: pendingExitPlanAudit.tp1_level_type,
+        runner_trail_method: pendingExitPlanAudit.runner_trail_method,
+        scaling: pendingExitPlanAudit.scaling,
+      } as Record<string, unknown>,
+      status: "success",
+      correlationId,
+    }).catch((err) => logger.warn({ err, positionId: position.id }, "signal.exit_plan_persisted audit write failed (non-blocking)"));
+  }
 
   const executionResult: ExecutionResult = {
     positionId: position.id,
@@ -2219,9 +2273,7 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
   // P1-10: Use stop_limit as default exit order type to match CLAUDE.md prohibition on stop-market.
   const closeTimestamp = context?.barTimestamp ?? new Date();
   const sessionAtClose = classifySessionType(closeTimestamp);
-  const exitSlippageSession = sessionAtClose === "ASIA" ? "ASIAN"
-    : sessionAtClose === "CME_HALT" ? "CME_HALT"
-    : sessionAtClose;
+  const exitSlippageSession = toSlippageSession(sessionAtClose); // F10: centralized remap
   // BL-8 fix: use rolling median ATR from context when available (passed from exitBarContext.medianAtr14).
   // Falls back to atr * 0.85 estimate when no rolling median is provided (legacy callers, tests, forceClose).
   // The backtest uses np.nanmedian(atr_values) over the full bar series; rolling median over last 100 bars
@@ -2287,14 +2339,22 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
   const dayOfWeek = entryDate.getUTCDay(); // 0=Sun JS standard
   const sessionType = classifySessionType(entryDate);
 
-  // macroRegime — query latest snapshot (non-blocking)
+  // F9: macroRegime — prefer entry-time regime stored in pos.exitPlan.entryRegime.
+  // This was stamped at openPosition() so the journal reflects the regime AT ENTRY,
+  // not at close time. Falls back to the latest snapshot for positions predating F9.
   let macroRegime: string | null = null;
   try {
-    const [snap] = await dbConn.select({ macroRegime: macroSnapshots.macroRegime })
-      .from(macroSnapshots)
-      .orderBy(desc(macroSnapshots.snapshotDate))
-      .limit(1);
-    macroRegime = snap?.macroRegime ?? null;
+    const entryRegime = (pos.exitPlan as unknown as Record<string, unknown> | null)?.entryRegime;
+    if (typeof entryRegime === "string" && entryRegime.length > 0) {
+      macroRegime = entryRegime;
+    } else {
+      // Fallback: query latest snapshot (pre-F9 positions or no exitPlan)
+      const [snap] = await dbConn.select({ macroRegime: macroSnapshots.macroRegime })
+        .from(macroSnapshots)
+        .orderBy(desc(macroSnapshots.snapshotDate))
+        .limit(1);
+      macroRegime = snap?.macroRegime ?? null;
+    }
   } catch (err) {
     logger.warn({ positionId, err }, "Journal enrichment: macroRegime query failed (non-blocking)");
   }
@@ -3324,9 +3384,7 @@ async function bookPartialClose(
     // Exit slippage on the partial close (same session-aware formula as closePosition)
     const closeTimestamp = new Date();
     const sessionAtClose = classifySessionType(closeTimestamp);
-    const exitSlippageSession = sessionAtClose === "ASIA" ? "ASIAN"
-      : sessionAtClose === "CME_HALT" ? "CME_HALT"
-      : sessionAtClose;
+    const exitSlippageSession = toSlippageSession(sessionAtClose); // F10: centralized remap
     // FINDING #4 FIX: prefer the passed-in rolling median (from exitBarContext.medianAtr14)
     // over the constant 0.85× ATR estimate. The 0.85 factor was an approximation that
     // systematically understated slippage vs the backtest np.nanmedian model.
@@ -3367,10 +3425,19 @@ async function bookPartialClose(
         correlationId: correlationId ?? null,
       });
 
-      // Atomic equity credit — same additive-SQL pattern as closePosition
+      // F1 + F12(drizzle): typed ::numeric cast + realizedPeakEquity + totalTrades,
+      // matching the closePosition transaction pattern. Prior code used a raw-string
+      // column reference ("current_equity") which bypassed Drizzle's schema binding and
+      // omitted realizedPeakEquity / totalTrades entirely — causing kill-switch and
+      // promotion-gate reads to ignore partial-close equity on the same session.
       await tx
         .update(paperSessions)
-        .set({ currentEquity: sql`current_equity + ${String(netPnl)}` })
+        .set({
+          currentEquity:      sql`${paperSessions.currentEquity}::numeric + ${netPnl}`,
+          peakEquity:         sql`GREATEST(${paperSessions.peakEquity}::numeric, ${paperSessions.currentEquity}::numeric + ${netPnl})`,
+          realizedPeakEquity: sql`GREATEST(${paperSessions.realizedPeakEquity}::numeric, ${paperSessions.currentEquity}::numeric + ${netPnl})`,
+          totalTrades:        sql`COALESCE(${paperSessions.totalTrades}, 0) + 1`,
+        })
         .where(eq(paperSessions.id, pos.sessionId));
     });
 
@@ -3381,6 +3448,25 @@ async function bookPartialClose(
       },
       "paper.partial_close: P&L booked and equity credited",
     );
+
+    // F1: update dailyPnlBreakdown atomically so the kill-switch sees today's partial-close
+    // P&L immediately, not just at full close. Uses same jsonb_set pattern as checkConsistencyRule.
+    try {
+      const todayKey = toFuturesTradingDayString();
+      const jsonPath = `{${todayKey}}`;
+      await db.update(paperSessions).set({
+        dailyPnlBreakdown: sql`jsonb_set(
+          COALESCE(${paperSessions.dailyPnlBreakdown}, '{}'::jsonb),
+          ${jsonPath}::text[],
+          (COALESCE((${paperSessions.dailyPnlBreakdown}->>${todayKey})::numeric, 0) + ${netPnl})::text::jsonb
+        )`,
+      }).where(eq(paperSessions.id, pos.sessionId));
+    } catch (dailyPnlErr) {
+      logger.warn(
+        { err: dailyPnlErr, positionId: pos.id },
+        "bookPartialClose: dailyPnlBreakdown update failed (non-blocking — kill-switch may lag)",
+      );
+    }
 
     db.insert(auditLog).values({
       action: `paper.partial_close.${exitReason.toLowerCase()}`,
@@ -4172,11 +4258,58 @@ export async function updatePositionPrices(
         const handlerResult = await callExitHandler(pos, exitBarContext, stratId, correlationId);
         const atr14ForClose = exitBarContext.atr14[pos.symbol];
         const medianAtr14ForClose = exitBarContext.medianAtr14?.[pos.symbol]; // BL-8 fix
-        const positionClosed = await applyExitDecision(
+        let positionClosed = await applyExitDecision(
           pos, handlerResult,
           (pos.currentExitStyle ?? "C") as "D" | "C",  // Wave 24: Style D dead — default C
           stratId, currentPrice, atr14ForClose, correlationId, medianAtr14ForClose,
         );
+
+        // F4: same-bar TP1+TP2 sequential evaluation for Style C within-bar sweeps.
+        // When TP1 partially closed (not a full close), re-invoke the handler exactly ONCE
+        // with the post-TP1 position state — Style C has 2 TP legs so this caps at 1
+        // re-invocation and prevents infinite loops.
+        // NOTE: Python re-callable contract (style_c_handler.py with tp1_filled=true) is
+        // owned by the Python track. This TS side dispatches a second call when TP1 fills
+        // and books FILL_TP2 if the handler returns it. If Python is not yet re-callable,
+        // callExitHandler will return HOLD and this block is a no-op (safe default).
+        //
+        // IMPORTANT: do NOT do a DB round-trip here to re-read the updated position.
+        // bookPartialClose is fire-and-forget (not awaited) and runs synchronously until its
+        // first await (db.select for firmId). In the mock and in production under certain
+        // ordering, that concurrent select races this re-read and can consume the wrong slot.
+        // Constructing the updated position in memory is both race-free and more efficient —
+        // we know exactly what applyExitDecision wrote: tp1Filled=true + contracts decremented.
+        if (!positionClosed && handlerResult.decision === "FILL_TP1_50PCT") {
+          try {
+            const tp1ExitStyle   = (pos.currentExitStyle ?? "C") as "D" | "C";
+            const tp1Fraction    = tp1ExitStyle === "C" ? 0.33 : 0.50;
+            const tp1ClosedCount = Math.max(1, Math.floor(pos.contracts * tp1Fraction));
+            // Guard: tp1ClosedCount < pos.contracts is always true here (full close returns
+            // positionClosed=true which prevents entering this block). Kept as a safety fence.
+            if (tp1ClosedCount < pos.contracts) {
+              const updatedPos = {
+                ...pos,
+                tp1Filled: true,
+                contracts: pos.contracts - tp1ClosedCount,
+              } as typeof pos;
+              const tp2Result = await callExitHandler(updatedPos, exitBarContext, stratId, correlationId);
+              if (tp2Result.decision !== "HOLD") {
+                const tp2Closed = await applyExitDecision(
+                  updatedPos, tp2Result,
+                  (updatedPos.currentExitStyle ?? "C") as "D" | "C",
+                  stratId, currentPrice, atr14ForClose, correlationId, medianAtr14ForClose,
+                );
+                if (tp2Closed) positionClosed = true;
+              }
+            }
+          } catch (tp2Err) {
+            logger.warn(
+              { positionId: pos.id, err: String(tp2Err), correlationId },
+              "F4: same-bar TP2 re-invocation failed (non-blocking — position holds current state)",
+            );
+          }
+        }
+
         if (positionClosed) {
           closedByExitHandler.add(pos.id);
           // Closed positions must NOT contribute to the MTM equity delta below —

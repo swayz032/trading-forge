@@ -83,6 +83,12 @@ export interface WalkForwardResultsInput {
     drift_classification?: string | null;
     drift_confidence?: number | null;
   } | null;
+  /**
+   * param_stability_status: top-level walk_forward output key (C1 consumer side, 2026-06-29).
+   * "cpcv_not_applicable" on the CPCV path → parameter-drift-gate returns the DISTINCT
+   * cpcv_exempt result instead of legacy_null. Absent/"computed" → normal drift logic.
+   */
+  param_stability_status?: string | null;
   /** wf_metadata: DSR gate inputs (FIX 7 / Wave A, 2026-06-22) */
   wf_metadata?: WalkForwardDsrInput | null;
   /** wf_metadata.mode and n_paths for CPCV orchestrator gate */
@@ -655,8 +661,12 @@ export function evaluatePaperToDeployReadyGates(
     const driftConfidence = paramStability?.drift_confidence != null
       ? Number(paramStability.drift_confidence)
       : null;
+    // C1 (2026-06-29): thread param_stability_status so the CPCV path resolves to the
+    // distinct cpcv_exempt result (non-block, distinct audit) instead of legacy_null.
+    // Mirrors the WFE cpcv_exempt handling in Gate 4 above (non-blocking → log + continue).
+    const paramStabilityStatus = (wfr?.param_stability_status as string | null | undefined) ?? null;
 
-    const driftResult = evaluateParameterDriftGate(driftClassification, driftConfidence);
+    const driftResult = evaluateParameterDriftGate(driftClassification, driftConfidence, paramStabilityStatus);
 
     if (driftResult.auditAction) {
       const isBlock = driftResult.status === "blocked" || driftResult.status === "blocked_classifier_error";

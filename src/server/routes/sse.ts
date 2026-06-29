@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { logger } from "../index.js";
+import { logger } from "../lib/logger.js";
 
 const router = Router();
 
@@ -35,7 +35,10 @@ function pushToRingBuffer(entry: BufferedEvent): void {
 // ─── SSE heartbeat ────────────────────────────────────────────
 // Keeps connections alive through proxies and removes stale clients.
 const HEARTBEAT_INTERVAL_MS = 30_000;
-setInterval(() => {
+// F8 FIX: capture the interval handle and unref() it so test runners (Jest/Vitest)
+// exit cleanly. unref() is a Node.js-specific method; we guard for environments
+// (e.g. some Bun builds) that may not expose it.
+const _heartbeatInterval = setInterval(() => {
   for (const client of clients) {
     if (client.writableEnded || client.destroyed) {
       clients.delete(client);
@@ -48,6 +51,9 @@ setInterval(() => {
     }
   }
 }, HEARTBEAT_INTERVAL_MS);
+if (typeof _heartbeatInterval.unref === "function") {
+  _heartbeatInterval.unref();
+}
 
 // ─── GET /api/sse/events — SSE stream ────────────────────────
 router.get("/events", (req: Request, res: Response) => {
