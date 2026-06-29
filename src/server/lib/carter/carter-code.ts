@@ -62,6 +62,10 @@ async function git(args: string[], cwd: string): Promise<string> {
       // commit author is clear and the commit doesn't fail with "unknown author".
       "-c", "user.name=Carter (Trading Forge voice agent)",
       "-c", "user.email=carter@trading-forge.local",
+      // Push over HTTPS using gh's authenticated credential helper — the service
+      // account has no SSH key/known_hosts, so the SSH `origin` fails host-key
+      // verification. gh is logged in (keyring); this lets HTTPS pushes work.
+      "-c", "credential.helper=!gh auth git-credential",
       ...args,
     ],
     { cwd, maxBuffer: 8 * 1024 * 1024 },
@@ -133,7 +137,7 @@ async function saveCodeDraft(params: unknown): Promise<unknown> {
       `${p.rationale ?? ""}\n\n— Drafted by Carter (voice agent) for review. ` +
       `Do NOT merge without review. Nothing in the live system has changed.`;
     await git(["commit", "-m", `carter draft: ${p.summary}`, "-m", body, "--no-verify"], wt);
-    await git(["push", "origin", branch], wt);
+    await git(["push", "https://github.com/swayz032/trading-forge.git", branch], wt);
 
     // Draft PR (best-effort — branch is pushed regardless).
     let prUrl: string | null = null;
