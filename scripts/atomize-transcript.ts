@@ -83,7 +83,7 @@ async function classifyBatch(clauses: SegmentedClause[]): Promise<GemmaResult[]>
 }
 
 interface PerClause { is_decision: boolean; atom_type: string; object_canonical: string; classification: string }
-async function extractAtoms(clauses: SegmentedClause[]): Promise<{ clauseLedger: Clause[]; atoms: DecisionAtom[]; rows: Array<{ c: SegmentedClause; cls: string; atomIds: string[] }>; byClause: Map<string, PerClause> }> {
+async function extractAtoms(clauses: SegmentedClause[]): Promise<{ clauseLedger: Clause[]; atoms: DecisionAtom[]; rows: Array<{ c: SegmentedClause; cls: string; atomIds: string[] }>; byClause: Map<string, PerClause>; unresolvedDeps: number }> {
   const byId = new Map(clauses.map((c) => [c.id, c]));
   const results: GemmaResult[] = [];
   for (let i = 0; i < clauses.length; i += BATCH) {
