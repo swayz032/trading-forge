@@ -3290,6 +3290,35 @@ export const agentJobs = pgTable(
 export type AgentJob = typeof agentJobs.$inferSelect;
 export type NewAgentJob = typeof agentJobs.$inferInsert;
 
+// ─── workflow_backups ──────────────────────────────────────────────────────────
+// Deep-scan #4 backend-DR (2026-06-29): durable sink for the n8n `3A-workflow-backup`
+// workflow (migration 0184). Railway n8n is ephemeral sqlite with no volume — a wipe
+// loses all 32 workflows (Wave-9 incident). 3A now POSTs the FULL node graph to
+// POST /api/admin/workflow-backup → this table. content_hash dedups identical
+// consecutive backups so the table holds a history of DISTINCT versions.
+export const workflowBackups = pgTable(
+  "workflow_backups",
+  {
+    id:           uuid("id").primaryKey().defaultRandom(),
+    workflowId:   text("workflow_id").notNull(),
+    workflowName: text("workflow_name"),
+    active:       boolean("active"),
+    nodeCount:    integer("node_count"),
+    fullJson:     jsonb("full_json").notNull(),
+    contentHash:  text("content_hash").notNull(),
+    source:       text("source").notNull().default("n8n_3a_backup"),
+    createdAt:    timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("idx_workflow_backups_workflow_id").on(table.workflowId),
+    index("idx_workflow_backups_created_at_desc").on(table.createdAt.desc()),
+    index("idx_workflow_backups_wf_hash").on(table.workflowId, table.contentHash),
+  ],
+);
+
+export type WorkflowBackup = typeof workflowBackups.$inferSelect;
+export type NewWorkflowBackup = typeof workflowBackups.$inferInsert;
+
 // ─── live_order_pine_dedup ─────────────────────────────────────────────────────
 // Dedup table for Pine bar-close alerts arriving at live-order.ts.
 // Backed by migration 0170 (Pass 1 Track C, 2026-06-22).

@@ -57,6 +57,7 @@ import { deeparRoutes } from "./routes/deepar.js";
 import { healthDashboardRoutes } from "./routes/health-dashboard.js";
 import { validationCadenceRoutes } from "./routes/validation-cadence.js";
 import { adminRoutes } from "./routes/admin.js";
+import { adminWorkflowBackupRoutes } from "./routes/admin-workflow-backup.js";
 import { adminFrozenPolicyOverrideRoutes } from "./routes/admin-frozen-policy-override.js";
 import { adminRecoveryRoutes } from "./routes/admin-recovery.js";
 import { slumdawgRoutes } from "./routes/slumdawg.js";
@@ -529,6 +530,8 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/admin", adminFrozenPolicyOverrideRoutes);
 // Vacation-survival A-5: HMAC-gated recovery endpoints (clear cache / clear stuck session).
 app.use("/api/admin", adminRecoveryRoutes);
+// Deep-scan #4 backend-DR: durable sink for the n8n 3A-workflow-backup (workflow_backups table).
+app.use("/api/admin", adminWorkflowBackupRoutes);
 // Wave 26 Pass G — Slumdawg Analyst (Anam.ai) read-only API surface.
 app.use("/api/admin/slumdawg", slumdawgRoutes);
 // 2026-05-27 — Slumhouse portal (friend-facing read-only, Discord OAuth).

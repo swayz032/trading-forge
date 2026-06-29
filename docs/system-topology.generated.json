@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-29T04:15:51.573Z",
+  "generatedAt": "2026-06-29T07:31:07.510Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -20,7 +20,7 @@
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 29,
-    "databaseTables": 108,
+    "databaseTables": 109,
     "registrySubsystems": 71
   },
   "routes": [
@@ -927,7 +927,8 @@
     "tradingview_markers",
     "transcript_fetch_outcomes",
     "walk_forward_windows",
-    "weekly_drift_reports"
+    "weekly_drift_reports",
+    "workflow_backups"
   ],
   "registryCoverage": {
     "registryEntries": 71,
@@ -990,7 +991,7 @@
       "routes": 78,
       "schedulerJobs": 103,
       "engineSubsystems": 29,
-      "databaseTables": 108
+      "databaseTables": 109
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
@@ -7785,7 +7786,8 @@
           "n8n_execution_log",
           "system journal",
           "system_journal",
-          "workflow exports"
+          "workflow exports",
+          "workflow_backups"
         ],
         "closedLoopStatus": "learning_active",
         "learningMode": "active_learning",
@@ -14684,7 +14686,8 @@
         "n8n_execution_log",
         "system journal",
         "system_journal",
-        "workflow exports"
+        "workflow exports",
+        "workflow_backups"
       ],
       "closedLoopStatus": "learning_active",
       "learningMode": "active_learning",
