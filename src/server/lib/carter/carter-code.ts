@@ -54,10 +54,18 @@ async function git(args: string[], cwd: string): Promise<string> {
   // `-c safe.directory=*` (per-invocation, not persisted) avoids git's "dubious
   // ownership" refusal — the TradingForgeAPI service can run as a different Windows
   // user than the repo owner, and worktrees live in TEMP. Read-only trust flag.
-  const { stdout } = await execFileAsync("git", ["-c", "safe.directory=*", ...args], {
-    cwd,
-    maxBuffer: 8 * 1024 * 1024,
-  });
+  const { stdout } = await execFileAsync(
+    "git",
+    [
+      "-c", "safe.directory=*",
+      // The service account has no git identity; stamp drafts as Carter so the
+      // commit author is clear and the commit doesn't fail with "unknown author".
+      "-c", "user.name=Carter (Trading Forge voice agent)",
+      "-c", "user.email=carter@trading-forge.local",
+      ...args,
+    ],
+    { cwd, maxBuffer: 8 * 1024 * 1024 },
+  );
   return stdout.trim();
 }
 
