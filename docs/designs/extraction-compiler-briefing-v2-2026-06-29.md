@@ -55,9 +55,22 @@ want conviction / body-close strength" → 4 atoms (`WAIT_CONFIRMATION`, `WAIT_D
 layer. That's exactly why filtering fails (you can't *delete* a valid sub-feature) and why **compression**
 (merge/alias/preserve) is the natural operation.
 
-**Leading hypothesis to falsify next:** `"noise" = FalsePositive + OverFragmentation`, with
-`OverFragmentation ≫ FalsePositive` (GPT estimate 70–90% of the "noise"). If true, the dominant fix is a
-**semantic compression layer**, and most "noise" atoms should be *merged*, not deleted.
+**Hypothesis CONFIRMED by atom audit** (psH, the 34 extracted atoms tallied by type):
+`"noise" = FalsePositive + OverFragmentation` with `OverFragmentation ≫ FalsePositive` — measured:
+
+| gold decision | gold | extracted | fragments (sub-features of ONE decision) |
+|---|---|---|---|
+| WAIT_STRUCTURE (range + break) | 2 | **11** | candle formation×3, price action×2, price structure, price levels, "continuously re-", first-15min, 5min-close, *risk amount* |
+| WAIT_CONFIRMATION (engulfing)   | 1 | **6**  | price action×2, indicator, direction, candle open, candle close-above |
+| WAIT_RETEST (retest 15m high)   | 1 | **4**  | 5min retest, 5min high, 15min high, *risk reward ratio* |
+| ENTER (+EXCEPTION downside)     | 2 | 3      | entry+*profit target*, downside, *profit taking level* |
+| WAIT_SESSION                    | 1 | 1      | session ✓ (the one clean 1:1 match) |
+
+GPT's exact illustration reproduced: `WAIT_CONFIRMATION` fragmented 6→1, `WAIT_STRUCTURE` 11→2. Of the ~26 noise
+atoms: **~85% over-fragmentation** (sub-features of one real decision), **~12% framework leaks** (`risk amount`,
+`risk reward ratio`, `profit target`, `profit taking level` — `framework_owned` that the gate should have caught),
+**~3% true false-positives**. The dominant fix is a **semantic compression layer** (merge, not delete);
+the secondary fix is a small gate tightening on the framework-leak vocabulary (orthogonal, cheap).
 
 ## 3. The new fork (this is the question for the collaborator)
 
