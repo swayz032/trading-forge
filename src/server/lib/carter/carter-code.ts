@@ -51,7 +51,13 @@ interface SaveCodeDraftParams {
 }
 
 async function git(args: string[], cwd: string): Promise<string> {
-  const { stdout } = await execFileAsync("git", args, { cwd, maxBuffer: 8 * 1024 * 1024 });
+  // `-c safe.directory=*` (per-invocation, not persisted) avoids git's "dubious
+  // ownership" refusal — the TradingForgeAPI service can run as a different Windows
+  // user than the repo owner, and worktrees live in TEMP. Read-only trust flag.
+  const { stdout } = await execFileAsync("git", ["-c", "safe.directory=*", ...args], {
+    cwd,
+    maxBuffer: 8 * 1024 * 1024,
+  });
   return stdout.trim();
 }
 
@@ -130,7 +136,13 @@ async function saveCodeDraft(params: unknown): Promise<unknown> {
           "pr", "create", "--draft", "--head", branch, "--base", baseBranch,
           "--title", `Carter draft: ${p.summary}`, "--body", body,
         ],
-        { cwd: wt, maxBuffer: 2 * 1024 * 1024 },
+        // GIT_CONFIG_* injects safe.directory=* into gh's internal git (same
+        // dubious-ownership avoidance as the git() helper above).
+        {
+          cwd: wt,
+          maxBuffer: 2 * 1024 * 1024,
+          env: { ...process.env, GIT_CONFIG_COUNT: "1", GIT_CONFIG_KEY_0: "safe.directory", GIT_CONFIG_VALUE_0: "*" },
+        },
       );
       prUrl = stdout.trim() || null;
     } catch {
