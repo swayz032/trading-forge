@@ -445,20 +445,23 @@
            rounded edges (the Apple-immersive glow). Both ride cheap OPACITY off
            --carter-voice, so it brightens when he speaks but the rim stays put. */
     .cc-glow {
-      position: absolute; inset: 0; z-index: 2; pointer-events: none; border-radius: 54px;
+      /* Inset a hair so the crisp line clears the iPhone's rounded corners
+         (consistent all around — no tucking), and an OUTER bloom bleeds the glow
+         back OUT to the very screen edge so it still reaches the edge (no gap).
+         One blended luminous lime edge: outer bloom + crisp line + inward glow. */
+      position: absolute; inset: 5px; z-index: 2; pointer-events: none; border-radius: 46px;
       opacity: calc(0.62 + var(--carter-voice) * 0.38);
-      /* ONE blended luminous edge: a crisp bright lime LINE flush at the very
-         edge (visible border) → bleeding into a wide immersive inward glow.
-         Border + glow are the same stack, so they read as one. */
       box-shadow:
-        inset 0 0 2px 1px  rgba(163, 255, 18, 0.95),   /* the visible border line */
-        inset 0 0 24px 2px rgba(163, 255, 18, 0.78),   /* tight inner glow */
-        inset 0 0 65px 6px rgba(140, 255, 70, 0.50),   /* mid immersive bloom */
-        inset 0 0 160px 0  rgba(120, 230, 60, 0.32);   /* wide immersive light-bleed */
+        0 0 14px 2px rgba(163, 255, 18, 0.55),          /* outer glow → reaches the screen edge */
+        0 0 44px 8px rgba(120, 230, 60, 0.30),
+        inset 0 0 1.5px 1px rgba(163, 255, 18, 0.95),   /* visible crisp border line */
+        inset 0 0 24px 2px  rgba(163, 255, 18, 0.72),   /* inner glow */
+        inset 0 0 65px 6px  rgba(140, 255, 70, 0.48),   /* mid immersive bloom */
+        inset 0 0 155px 0   rgba(120, 230, 60, 0.30);   /* wide immersive light-bleed */
       transition: opacity 0.10s linear; will-change: opacity;
     }
     .cc-glow::before, .cc-glow::after {
-      content: ""; position: absolute; inset: 0; border-radius: 54px;
+      content: ""; position: absolute; inset: 0; border-radius: 46px;
       padding: 3.5px;   /* CONSTANT — flowing lime color over the edge line */
       background: conic-gradient(from var(--cc-spin),
         #a3ff12, #c6ff5a, #5dff8f, #19c37d, #7dffb0, #a3ff12, #c6ff3a, #a3ff12);
@@ -493,12 +496,14 @@
       .cc-calling-name { font-size: 42px; }
       .cc-hangup { width: 64px; height: 64px; }
       .cc-hangup svg { width: 28px; height: 28px; }
-      /* lighter bloom on phones — same blended border+glow, smaller blur radii */
+      /* lighter bloom on phones — same blended outer+line+inward stack */
       .cc-glow { box-shadow:
-        inset 0 0 2px 1px  rgba(163,255,18,0.95),
-        inset 0 0 18px 2px rgba(163,255,18,0.75),
-        inset 0 0 50px 5px rgba(140,255,70,0.45),
-        inset 0 0 110px 0  rgba(120,230,60,0.28); }
+        0 0 12px 2px rgba(163,255,18,0.55),
+        0 0 36px 7px rgba(120,230,60,0.28),
+        inset 0 0 1.5px 1px rgba(163,255,18,0.95),
+        inset 0 0 18px 2px  rgba(163,255,18,0.72),
+        inset 0 0 48px 5px  rgba(140,255,70,0.45),
+        inset 0 0 110px 0   rgba(120,230,60,0.28); }
       .cc-glow::after { filter: blur(9px) saturate(1.4) brightness(1.2); }
     }
     @media (prefers-reduced-motion: reduce) {
