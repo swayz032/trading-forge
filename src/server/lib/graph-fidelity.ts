@@ -42,8 +42,8 @@ export function scoreSGF(compiled: CompiledGraph, gold: GoldGraph): SGF {
   }
   const ER = gold.edges.length ? edgeHit / gold.edges.length : 1;
 
-  // REACHABILITY — is some ENTER reachable in the compiled spine
-  const RG = compiled.atoms.some((a) => a.type === "ENTER" && compiled.reachable.has(a.id)) ? 1 : 0;
+  // REACHABILITY — is some executable TERMINAL (ENTER or ENABLE_ENTRY) reachable in the compiled spine
+  const RG = compiled.atoms.some((a) => (a.type === "ENTER" || a.type === "ENABLE_ENTRY") && compiled.reachable.has(a.id)) ? 1 : 0;
 
   // TOPOLOGY FIDELITY — fraction of gold AND-groups / OR-branches preserved (+1 free if gold has none)
   const features = (gold.andGroups ?? []).length + (gold.orBranches ?? []).length;

@@ -103,11 +103,12 @@ export function compileGraph(atoms: DecisionAtom[], transcript: string): Compile
   for (const e of edges) if (e.role === "prerequisite" || e.role === "and") (spine.get(e.from) ?? spine.set(e.from, new Set()).get(e.from)!).add(e.to);
   for (const a of ordered) a.depends_on = [...(spine.get(a.id) ?? [])];
 
-  // reachability: atoms in some ENTER's spine closure
+  // reachability: atoms in some TERMINAL's spine closure. ENABLE_ENTRY is a valid executable terminal — many
+  // ICT/confluence strategies arm entry ("look for the short") without a literal ENTER atom (operator/GPT).
   const byId = new Map(ordered.map((a) => [a.id, a]));
   const reachable = new Set<string>();
   const visit = (id: string) => { if (reachable.has(id) || !byId.has(id)) return; reachable.add(id); for (const d of byId.get(id)!.depends_on) visit(d); };
-  ordered.filter((a) => a.type === "ENTER").forEach((e) => visit(e.id));
+  ordered.filter((a) => a.type === "ENTER" || a.type === "ENABLE_ENTRY").forEach((e) => visit(e.id));
 
   return { atoms: ordered, edges, andGroups, orBranches, reachable };
 }

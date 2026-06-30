@@ -20,10 +20,13 @@
 import { canonKey, type AtomType, type DecisionAtom, type Predicate } from "./decision-atom.js";
 import { rankOf } from "./graph-compiler.js";
 
-const ALWAYS_NODE: ReadonlySet<AtomType> = new Set(["ENTER", "INVALIDATE", "EXCEPTION", "RESET", "WAIT_SESSION", "FILTER", "WAIT_BIAS"]);
-// SPECIFIC = a discriminating token that makes an atom its OWN decision (NOT bare above/below/high/low/close —
-// those appear in generic descriptions too and were over-anchoring).
-const SPECIFIC = /\b(\d+\s*min|\d+m\b|fifteen|five|thirty|sixty|session|new ?york|london|asian|range|engulf|sweep|mss|bos|choch|fvg|order ?block|retest|reclaim|pullback|vwap|ema|cci|rsi|macd|poc|liquidity|fair ?value|pd[hl]|pw[hl])\b/i;
+const ALWAYS_NODE: ReadonlySet<AtomType> = new Set(["ENTER", "ENABLE_ENTRY", "INVALIDATE", "EXCEPTION", "RESET", "WAIT_SESSION", "FILTER", "WAIT_BIAS"]);
+// SPECIFIC = a STRATEGY-DOMAIN object carrying an executable decision (operator/GPT: target objects must be
+// domain objects, not generic surface detail). Covers SMC / indicators / levels / sessions / triggers across
+// ICT, indicator-crossover, price-action and session-liquidity styles.
+const SPECIFIC = /\b(\d+\s*min|\d+\s*m\b|fifteen|five|thirty|sixty|hourly|daily|weekly|session|new ?york|london|asia|asian|tokyo|killzone|midnight|sweep|liquidity|mss|bos|choch|market structure|structure break|break|breakout|broke|displacement|order ?block|fvg|fair ?value|imbalance|supply|demand|swing|fib|premium|discount|retrace|equilibrium|dealing range|range|two ?line|two ?level|level|opening|reclaim|vwap|ema|sma|cci|rsi|macd|moving average|cross|oscillat|zero line|poc|volume profile|engulf|confirm|retest|pullback|rejection|reversal|weakness|strength|bias|bullish|bearish|direction|invalidat|pd[hl]|pw[hl])\b/i;
+// GENERIC_DENY = vague surface detail that must NEVER anchor even if it brushes a domain token (it was over-anchoring).
+const GENERIC_DENY = /^(price action|candle formation|candle pattern|price structure|price levels?|price movement|movement|the move|setup|condition|state|waiting state|time ?frame change|thing|something|price continuously[a-z ]*)$/i;
 const FRAMEWORK = /\b(risk|reward|r ?: ?r|profit|target|stop ?loss|sizing|position size|lot|pips?|take ?profit)\b/i;
 const ENTRY_ACTION = /\b(enter|entry|take (the )?trade|go long|go short|buy|sell)\b/i;
 
@@ -31,7 +34,9 @@ const WINDOW = 4000; // chars — generics fold onto same-TYPE nodes (type-prese
 
 const isFramework = (a: DecisionAtom) => FRAMEWORK.test(a.object) || FRAMEWORK.test(a.object_canonical);
 const isSpecific = (a: DecisionAtom) => SPECIFIC.test(a.object) || SPECIFIC.test(a.object_canonical);
-const isAnchor = (a: DecisionAtom) => ALWAYS_NODE.has(a.type) || isSpecific(a);
+const isGenericDeny = (a: DecisionAtom) => GENERIC_DENY.test(a.object_canonical);
+// anchor = always-node type, OR a domain-specific object that is NOT vague surface detail.
+const isAnchor = (a: DecisionAtom) => ALWAYS_NODE.has(a.type) || (isSpecific(a) && !isGenericDeny(a));
 const isEntry = (a: DecisionAtom) => ENTRY_ACTION.test(a.object) || ENTRY_ACTION.test(a.object_canonical);
 // A pure-framework leak: framework vocabulary AND not a real entry action AND not otherwise specific.
 const isFrameworkLeak = (a: DecisionAtom) => isFramework(a) && !isEntry(a) && !isSpecific(a);
