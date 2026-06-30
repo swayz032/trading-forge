@@ -1398,6 +1398,26 @@ def run_walk_forward(
     else:
         agg_sharpe = 0.0
 
+    # F-4 (2026-06-29): Return-based Sharpe — sibling to dollar-P&L agg_sharpe.
+    # Uses daily_pnl / equity_at_day_start (from STARTING_CAPITAL seed).
+    # Additive metric: never replaces agg_sharpe; emitted as sharpe_ratio_returns.
+    agg_sharpe_returns: float = 0.0
+    if len(all_oos_pnls) > 1:
+        _wf_eq = float(50_000.0)  # Canonical STARTING_CAPITAL for WF aggregation
+        _wf_ret_daily: list[float] = []
+        for _wf_pnl in all_oos_pnls:
+            if _wf_eq > 0:
+                _wf_ret_daily.append(float(_wf_pnl) / _wf_eq)
+            _wf_eq += float(_wf_pnl)
+        if len(_wf_ret_daily) > 1:
+            _wf_ret_arr = np.array(_wf_ret_daily, dtype=np.float64)
+            _wf_ret_std = float(np.std(_wf_ret_arr, ddof=1))
+            agg_sharpe_returns = (
+                float(np.mean(_wf_ret_arr) / _wf_ret_std * np.sqrt(252))
+                if _wf_ret_std > 0
+                else 0.0
+            )
+
     # Daily stats from aggregated OOS
     winning_days = sum(1 for p in all_oos_pnls if p > 0)
     total_days = len(all_oos_pnls)
@@ -1921,6 +1941,9 @@ def run_walk_forward(
         "oos_metrics": {
             "total_return": round(total_return, 2),
             "sharpe_ratio": round(agg_sharpe, 4),
+            # F-4 (2026-06-29): return-based Sharpe — normalised sibling to sharpe_ratio.
+            # Uses daily_pnl / equity_at_day_start; additive; never replaces sharpe_ratio.
+            "sharpe_ratio_returns": round(agg_sharpe_returns, 4),
             "max_drawdown": round(max_dd, 2),
             "win_rate": round(agg_win_rate, 4),
             "profit_factor": round(agg_pf, 4),

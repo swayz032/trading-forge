@@ -4412,6 +4412,37 @@ def run_backtest(
     else:
         sharpe = 0.0
 
+    # ─── F-4 (2026-06-29): Return-based Sharpe (sibling to dollar-P&L Sharpe) ──
+    # sharpe_ratio_returns: Sharpe computed on daily PERCENT returns of account equity.
+    # Complements the existing dollar-P&L sharpe_ratio which is scale-sensitive
+    # (a strategy doubling the account looks 2× better in dollar Sharpe but the
+    # same in return Sharpe).  Returns-based Sharpe is normalisation-safe for
+    # multi-period comparison and critic scoring.
+    #
+    # Computation: daily_return = daily_pnl / equity_at_day_start
+    #   equity evolves as: equity_t+1 = equity_t + daily_pnl_t
+    #   Starting equity = STARTING_CAPITAL (same anchor used for total_return).
+    #
+    # Note: Never pass slippage/fees to vectorbt for futures — P&L is computed
+    # ourselves here; sharpe_returns uses the same self-computed daily_pnl_values.
+    sharpe_returns: float = 0.0
+    if len(daily_pnl_values) > 1:
+        _eq = float(STARTING_CAPITAL)
+        _ret_daily: list[float] = []
+        for _dpnl in daily_pnl_values:
+            if _eq > 0:
+                _ret_daily.append(float(_dpnl) / _eq)
+            # Advance equity regardless (0-return day if equity ≤ 0)
+            _eq += float(_dpnl)
+        if len(_ret_daily) > 1:
+            _ret_arr = np.array(_ret_daily, dtype=np.float64)
+            _ret_std = float(np.std(_ret_arr, ddof=1))
+            sharpe_returns = (
+                float(np.mean(_ret_arr) / _ret_std * np.sqrt(252))
+                if _ret_std > 0
+                else 0.0
+            )
+
     # ─── A13: Information Ratio vs market benchmark ───────────────
     # Benchmark selection:
     #   ES, NQ, MES, MNQ → SPX (S&P 500 index daily price changes)
@@ -4659,6 +4690,9 @@ def run_backtest(
     result = {
         "total_return": round(total_return, 6),
         "sharpe_ratio": round(sharpe, 4),
+        # F-4 (2026-06-29): return-based Sharpe — additive sibling to dollar-P&L sharpe_ratio.
+        # Uses daily_pnl / equity_at_day_start (normalised); never replaces sharpe_ratio.
+        "sharpe_ratio_returns": round(sharpe_returns, 4),
         "max_drawdown": round(max_dd, 6),
         "win_rate": round(win_rate, 4),
         "win_rate_per_trade": round(win_rate_per_trade, 4),
