@@ -364,8 +364,15 @@ export async function pollRunAndStore(args: PollArgs): Promise<void> {
             ? await ollamaSynthesize(
                 `What are people on ${platform} actually saying about "${topic}"? Give me the findings: the main themes, the problems they hit, what's working, and the useful takeaways — in plain English, like a sharp colleague briefing me. Cite posts inline as [n].`,
                 items.map((it) => ({ title: it.title, url: it.url, snippet: it.snippet, provider: platform })),
-              ).catch(() => null)
+              ).catch((e) => {
+                logger.warn({ err: e instanceof Error ? e.message : String(e) }, "apify-research: synth threw");
+                return null;
+              })
             : null;
+        logger.info(
+          { platform, topic, model: process.env.CARTER_RESEARCH_MODEL ?? "(default)", summaryLen: summary ? summary.length : 0 },
+          "apify-research: synth done",
+        );
         await insertMemory({
           kind: "research",
           topic,
@@ -564,6 +571,7 @@ export async function getLatestResearch(
     platform: ResearchPlatform | null;
     status: string;
     headline?: string;
+    summary?: string;
     items?: ResearchItem[];
     note: string;
   }> = [];
@@ -601,6 +609,7 @@ export async function getLatestResearch(
       platform,
       status,
       ...(typeof parsed.headline === "string" ? { headline: parsed.headline } : {}),
+      ...(typeof parsed.summary === "string" ? { summary: parsed.summary } : {}),
       ...(Array.isArray(parsed.items) ? { items: (parsed.items as ResearchItem[]).slice(0, SUMMARY_ITEM_CAP) } : {}),
       note,
     });
