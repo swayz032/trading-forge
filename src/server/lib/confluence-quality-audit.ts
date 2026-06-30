@@ -54,6 +54,9 @@ import { broadcastSSE, FACTORY_EVENTS } from "../routes/sse.js";
 import { notifyWarning } from "../services/notification-service.js";
 import { appendFamilyGradePostscript } from "./notification-helpers.js";
 import { logger } from "./logger.js";
+// Pure provenance helpers live in a leaf module (test-isolation + lighter hot path); re-exported for back-compat.
+import { AUTO_FLOOR_FACTORS, tagFactorSources, evidenceBackedFactorCount, type FactorSource } from "./confluence-provenance.js";
+export { AUTO_FLOOR_FACTORS, tagFactorSources, evidenceBackedFactorCount, type FactorSource };
 
 // ─── Auto-floor factor set ────────────────────────────────────────────────────
 
@@ -67,10 +70,7 @@ import { logger } from "./logger.js";
  * when rawConfluenceFactors.length < 2). If a new auto-floor factor is added
  * there, add it here too.
  */
-export const AUTO_FLOOR_FACTORS: ReadonlySet<string> = new Set([
-  "regime_match",
-  "structural_setup",
-]);
+// AUTO_FLOOR_FACTORS moved to ./confluence-provenance.js (imported + re-exported above).
 
 // ─── Factor quality classification ───────────────────────────────────────────
 
@@ -98,23 +98,8 @@ export function classifyFactorQuality(factors: string[]): FactorQuality {
 }
 
 // ─── Factor source tagging ────────────────────────────────────────────────────
-
-export type FactorSource = "extracted" | "auto_floor" | "kb_inferred";
-
-/**
- * Tag each factor with its source.
- * "auto_floor"   — in AUTO_FLOOR_FACTORS (added by graduator floor logic)
- * "extracted"    — LLM extracted this from the transcript
- * "kb_inferred"  — future path: derived from KB overlap (not yet implemented;
- *                  reserved for B2's Gate 2 extension)
- */
-export function tagFactorSources(factors: string[]): Record<string, FactorSource> {
-  const result: Record<string, FactorSource> = {};
-  for (const f of factors) {
-    result[f] = AUTO_FLOOR_FACTORS.has(f) ? "auto_floor" : "extracted";
-  }
-  return result;
-}
+// FactorSource / tagFactorSources / evidenceBackedFactorCount live in ./confluence-provenance.js
+// (leaf module) and are imported + re-exported at the top of this file for backward-compat.
 
 // ─── Per-session idempotency guard for thin-confluence Discord ────────────────
 // Prevents duplicate Discord warnings when a cron runs the same row twice

@@ -31,6 +31,7 @@ import { getSessionShapeScore } from "./volume-profile-service.js";
 import { evaluateConfirmingIndicators, type ConfirmingIndicator } from "./confirming-indicator-evaluator.js";
 // W23H.4: confluence-weighted sizing — replaces legacy dynamic_atr block
 import { computeRiskDerivedContracts, type RiskSizingInputs } from "../lib/risk-sizing.js";
+import { evidenceBackedFactorCount } from "../lib/confluence-provenance.js";
 // W23H.4: audit row writer for sizing.confluence_multiplier_applied
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 // W23H.3: per-strategy allowed_entry_windows time gates
@@ -5008,7 +5009,13 @@ export async function evaluateSignals(
         rawConfigForSizing.entry_quality ??
         (rawConfigForSizing.strategy as Record<string, unknown> | undefined)?.entry_quality
       ) as { confirming_indicators?: string[] } | undefined;
-      const confluenceCount = (entryQualityForSizing?.confirming_indicators?.length ?? 0) + 1;
+      // HARDENING 2026-06-30 (confluence→sizing): size only on EVIDENCE-BACKED confirmations. Auto-floor
+      // confluences (graduator-injected regime_match / structural_setup — AUTO_FLOOR_FACTORS) are Trading
+      // Forge overlay, NOT the YouTube-extracted edge, and must NEVER justify the 1.5×/2× size upsize.
+      // Excluding them only ever REDUCES size (fail-safe). NOTE: this gates on PROVENANCE (evidence-backed);
+      // gating additionally on per-bar SATISFACTION is a tracked follow-up (needs Stage-2 result threading).
+      const confirmingForSizing = entryQualityForSizing?.confirming_indicators ?? [];
+      const confluenceCount = evidenceBackedFactorCount(confirmingForSizing) + 1;
 
       // Per-strategy confluence_size_multiplier_map from config (set by framework-overlay W23H.4)
       const confluenceSizeMultiplierMap = (rawPositionSize?.confluence_size_multiplier as Record<number, number> | undefined) ?? undefined;
