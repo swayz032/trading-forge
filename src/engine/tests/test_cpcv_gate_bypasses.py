@@ -1,4 +1,4 @@
-"""test_cpcv_gate_bypasses.py — 2026-06-28 hardening
+"""test_cpcv_gate_bypasses.py — 2026-06-28 hardening + H-4 (2026-06-29)
 
 Verifies the three CPCV promotion-gate bypasses are now EXPLICIT and AUDITABLE
 rather than silently grandfather-PASSing through legacy-null paths.
@@ -12,11 +12,12 @@ Bypass 2 — PBO IS==OOS degenerate input:
     returns degenerate=True; walk_forward.py overrides degenerate_reason to
     "cpcv_is_sharpe_unavailable" (distinguishable from generic degenerate).
 
-Bypass 3 — BIF IS Sharpe unavailable:
-    backtest_inflation_factor.compute_bif() is called with OOS-mean as IS proxy;
-    walk_forward.py stamps bif_reliable=False on the result dict so the TS BIF
-    gate can emit a non-blocking audit-warn rather than treating BIF≈1.0 as a
-    genuine clean-gate pass.
+Bypass 3 — BIF IS Sharpe (H-4 update, 2026-06-29):
+    The M1 limitation (BIF ≈ 1.0 because IS proxy = OOS mean) is CLOSED by H-4.
+    walk_forward.py now runs per-fold IS backtests (cached) and emits bif_reliable=True.
+    The BIF gate can now BLOCK genuinely overfit CPCV strategies.
+    Pre-H-4 backtests stored in DB may still carry bif_reliable=False +
+    bif_proxy_basis="oos_mean_not_is"; lifecycle-service.ts routes those via legacy path.
 
 DO NOT import backtester, walk_forward, or vectorbt — the JIT hangs at collection
 time on the Skytech tower. Tests use the pure-function modules directly and simulate
@@ -30,7 +31,6 @@ from __future__ import annotations
 
 import math
 import unittest
-
 
 # ── Bypass 3 tests: BIF with genuine IS/OOS divergence ───────────────────────
 
@@ -108,56 +108,71 @@ class TestBifGenuineOverfit(unittest.TestCase):
         self.assertAlmostEqual(result["bif"], 1.0, places=4)
 
 
-# ── Bypass 3 — oos_mean_not_is produces BIF≈1.0 (the M1 limitation) ──────────
+# ── Bypass 3 — H-4 closed the M1 limitation; bif_reliable=True in CPCV mode ──
 
-class TestBifCpcvProxyLimitation(unittest.TestCase):
-    """Prove that feeding is_sharpe=oos_mean (the CPCV proxy) produces BIF≈1.0.
+class TestBifCpcvH4Reliable(unittest.TestCase):
+    """H-4 (2026-06-29): BIF is now reliable in CPCV mode.
 
-    This confirms the M1 limitation: when both is_sharpe and wf_sharpe derive
-    from the same OOS series, BIF is always ≈1.0 and the block gate never fires.
-    bif_reliable=False must be present to make this explicit.
+    walk_forward.py runs per-fold IS backtests and emits bif_reliable=True.
+    A genuinely overfit strategy (IS >> OOS) now produces BIF > 4.0 and BLOCKS.
+
+    Historical note: the pre-H-4 M1 proxy used is_sharpe=mean(path_OOS_sharpes)
+    from the same OOS series as wf_sharpe → BIF ≈ 1.0 always. That path is gone
+    for new backtests but pre-H-4 DB rows may still carry bif_reliable=False.
     """
 
-    def test_oos_mean_proxy_produces_bif_near_1(self):
-        """When is_sharpe == wf_sharpe (same OOS series), BIF≈1.0."""
+    def test_genuine_overfit_produces_blocking_bif(self):
+        """BIF with true IS >> OOS must exceed block threshold."""
         from src.engine.statistics.backtest_inflation_factor import compute_bif
 
-        oos_mean = 1.2
-        result = compute_bif(is_sharpe=oos_mean, wf_sharpe=oos_mean, k_eff=15.0)
-        result["bif_proxy_basis"] = "oos_mean_not_is"
-        result["bif_reliable"] = False
+        # Simulate what H-4 produces: IS=3.0 from IS fold data, OOS=0.3 from agg.
+        result = compute_bif(is_sharpe=3.0, wf_sharpe=0.3, k_eff=15.0)
+        result["bif_reliable"] = True  # H-4: caller stamps True, not False
 
-        self.assertAlmostEqual(result["bif"], 1.0, places=4,
-                               msg="OOS-mean proxy must produce BIF≈1.0")
-        self.assertNotEqual(result["verdict"], "block",
-                            "BIF≈1.0 must not produce a block verdict")
-        self.assertFalse(result["bif_reliable"],
-                         "bif_reliable must be False for the proxy case")
+        self.assertGreaterEqual(result["bif"], 4.0,
+                                "Genuine overfit must exceed block threshold")
+        self.assertEqual(result["verdict"], "block")
+        self.assertTrue(result["bif_reliable"],
+                        "bif_reliable must be True in H-4 CPCV mode")
 
-    def test_bif_reliable_false_survives_wf_metadata_construction(self):
-        """Simulate the wf_metadata dict that walk_forward.py builds post-fix.
-
-        The wf_metadata dict now carries bif_reliable so downstream TS consumers
-        can distinguish 'BIF clean' from 'BIF not applicable'.
-        """
+    def test_h4_bif_reliable_true_survives_wf_metadata_construction(self):
+        """H-4: wf_metadata carries bif_reliable=True (not False) for CPCV mode."""
         from src.engine.statistics.backtest_inflation_factor import compute_bif
 
-        bif_result = compute_bif(is_sharpe=1.1, wf_sharpe=1.0, k_eff=15.0)
-        bif_result["bif_proxy_basis"] = "oos_mean_not_is"
-        bif_result["bif_reliable"] = False
+        bif_result = compute_bif(is_sharpe=3.0, wf_sharpe=0.3, k_eff=15.0)
+        bif_result["bif_reliable"] = True  # H-4 stamps True
+        # bif_proxy_basis is NOT stamped in H-4
 
         wf_metadata = {
             "mode": "cpcv",
             "n_folds": 6,
             "n_paths": 15,
-            "bif_proxy_basis": bif_result.get("bif_proxy_basis"),
+            # H-4: bif_proxy_basis is absent (not written)
             "bif_reliable": bif_result.get("bif_reliable", True),
         }
 
-        self.assertEqual(wf_metadata["bif_proxy_basis"], "oos_mean_not_is")
-        self.assertFalse(wf_metadata["bif_reliable"],
-                         "wf_metadata.bif_reliable must be False for CPCV mode")
+        self.assertTrue(wf_metadata["bif_reliable"],
+                        "wf_metadata.bif_reliable must be True in H-4 CPCV mode")
         self.assertEqual(wf_metadata["mode"], "cpcv")
+        self.assertNotIn("bif_proxy_basis", wf_metadata,
+                         "bif_proxy_basis must not be in wf_metadata for H-4 CPCV")
+
+    def test_legacy_pre_h4_caller_can_still_stamp_false(self):
+        """Backward compat: caller can still stamp bif_reliable=False (pre-H-4 data).
+
+        Pre-H-4 backtests stored in DB carry bif_reliable=False. The bif-gate.ts
+        evaluateBifGate handles this via the legacy cpcv_unmeasured path.
+        """
+        from src.engine.statistics.backtest_inflation_factor import compute_bif
+
+        result = compute_bif(is_sharpe=1.0, wf_sharpe=1.0, k_eff=15.0)
+        result["bif_proxy_basis"] = "oos_mean_not_is"  # legacy: M1 proxy
+        result["bif_reliable"] = False  # legacy: pre-H-4
+
+        self.assertFalse(result["bif_reliable"])
+        self.assertEqual(result["bif_proxy_basis"], "oos_mean_not_is")
+        # BIF≈1.0 was the M1 proxy artifact; not a real IS measurement
+        self.assertAlmostEqual(result["bif"], 1.0, places=4)
 
 
 # ── Bypass 2 tests: PBO degenerate case ──────────────────────────────────────
@@ -332,7 +347,10 @@ class TestWfeCpcvExplicitExemption(unittest.TestCase):
         pbo_overall: object,
         pbo_degenerate_reason: object,
     ) -> dict:
-        """Minimal CPCV return dict mirroring post-fix walk_forward.py structure."""
+        """Minimal CPCV return dict mirroring H-4 walk_forward.py structure.
+
+        H-4 change: bif_proxy_basis is no longer emitted; bif_reliable=True.
+        """
         return {
             "wfe_overall": None,
             "wfe_status": "cpcv_not_applicable",
@@ -340,7 +358,7 @@ class TestWfeCpcvExplicitExemption(unittest.TestCase):
                 "mode": "cpcv",
                 "n_folds": 6,
                 "n_paths": 15,
-                "bif_proxy_basis": bif_result.get("bif_proxy_basis"),
+                # H-4: bif_proxy_basis not emitted; bif_reliable=True
                 "bif_reliable": bif_result.get("bif_reliable", True),
             },
             "pbo_overall": pbo_overall,
@@ -354,9 +372,8 @@ class TestWfeCpcvExplicitExemption(unittest.TestCase):
         """wfe_overall must be None (not absent) in CPCV return dict."""
         from src.engine.statistics.backtest_inflation_factor import compute_bif
 
-        bif = compute_bif(is_sharpe=1.0, wf_sharpe=1.0, k_eff=15.0)
-        bif["bif_proxy_basis"] = "oos_mean_not_is"
-        bif["bif_reliable"] = False
+        bif = compute_bif(is_sharpe=1.5, wf_sharpe=0.5, k_eff=15.0)
+        bif["bif_reliable"] = True  # H-4
 
         result = self._simulate_cpcv_return(bif, None, "cpcv_is_sharpe_unavailable")
 
@@ -370,9 +387,8 @@ class TestWfeCpcvExplicitExemption(unittest.TestCase):
         """wfe_status must equal 'cpcv_not_applicable' to distinguish from legacy_null."""
         from src.engine.statistics.backtest_inflation_factor import compute_bif
 
-        bif = compute_bif(is_sharpe=1.0, wf_sharpe=1.0, k_eff=15.0)
-        bif["bif_proxy_basis"] = "oos_mean_not_is"
-        bif["bif_reliable"] = False
+        bif = compute_bif(is_sharpe=1.5, wf_sharpe=0.5, k_eff=15.0)
+        bif["bif_reliable"] = True  # H-4
 
         result = self._simulate_cpcv_return(bif, None, "cpcv_is_sharpe_unavailable")
 
@@ -380,30 +396,39 @@ class TestWfeCpcvExplicitExemption(unittest.TestCase):
         self.assertEqual(result["wfe_status"], "cpcv_not_applicable",
                          "wfe_status must be 'cpcv_not_applicable' not legacy_null")
 
-    def test_cpcv_return_wf_metadata_bif_reliable_false(self):
-        """wf_metadata.bif_reliable must be False for CPCV mode."""
+    def test_cpcv_return_wf_metadata_bif_reliable_true(self):
+        """H-4: wf_metadata.bif_reliable must be True for CPCV mode (H-4 new backtests)."""
         from src.engine.statistics.backtest_inflation_factor import compute_bif
 
-        bif = compute_bif(is_sharpe=1.0, wf_sharpe=1.0, k_eff=15.0)
-        bif["bif_proxy_basis"] = "oos_mean_not_is"
-        bif["bif_reliable"] = False
+        bif = compute_bif(is_sharpe=1.5, wf_sharpe=0.5, k_eff=15.0)
+        bif["bif_reliable"] = True  # H-4 stamps True
 
         result = self._simulate_cpcv_return(bif, None, "cpcv_is_sharpe_unavailable")
 
         meta = result["wf_metadata"]
         self.assertIn("bif_reliable", meta,
                       "wf_metadata.bif_reliable key must be present")
-        self.assertFalse(meta["bif_reliable"],
-                         "wf_metadata.bif_reliable must be False in CPCV mode")
-        self.assertEqual(meta["bif_proxy_basis"], "oos_mean_not_is")
+        self.assertTrue(meta["bif_reliable"],
+                        "wf_metadata.bif_reliable must be True in H-4 CPCV mode")
+        self.assertNotIn("bif_proxy_basis", meta,
+                         "bif_proxy_basis must not be in wf_metadata for H-4 CPCV")
 
     def test_cpcv_return_pbo_degenerate_reason_is_cpcv_specific(self):
-        """pbo_degenerate_reason must equal 'cpcv_is_sharpe_unavailable'."""
+        """pbo_degenerate_reason must equal 'cpcv_is_sharpe_unavailable'.
+
+        The BIF dict here is manually stamped with the pre-H-4 legacy sentinel
+        (bif_proxy_basis="oos_mean_not_is", bif_reliable=False) to simulate an
+        old DB row.  The assertion targets pbo_degenerate_reason only — the BIF
+        state is incidental to this particular test.
+        """
         from src.engine.statistics.backtest_inflation_factor import compute_bif
 
+        # Pre-H-4 simulation: stamp legacy sentinel so _simulate_cpcv_return builds
+        # a result that looks like a pre-H-4 record (bif_reliable=False).
+        # New CPCV backtests (post-H-4) will never emit bif_proxy_basis.
         bif = compute_bif(is_sharpe=1.0, wf_sharpe=1.0, k_eff=15.0)
-        bif["bif_proxy_basis"] = "oos_mean_not_is"
-        bif["bif_reliable"] = False
+        bif["bif_proxy_basis"] = "oos_mean_not_is"  # pre-H-4 legacy only
+        bif["bif_reliable"] = False                  # pre-H-4 legacy only
 
         result = self._simulate_cpcv_return(bif, None, "cpcv_is_sharpe_unavailable")
 
@@ -436,24 +461,33 @@ class TestWfeCpcvExplicitExemption(unittest.TestCase):
                          "Legacy result without wfe_status must NOT match exemption check")
 
 
-# ── Integration: all three bypass labels present together ─────────────────────
+# ── Integration: bypass labels — pre-H-4 legacy and post-H-4 active-gate ──────
 
 class TestAllThreeBypassLabelsPresent(unittest.TestCase):
-    """Integration test: a single CPCV result carries all three explicit audit labels.
+    """Integration tests for CPCV bypass label audit state.
 
-    This is the state after the 2026-06-28 hardening fix — no gate is silently
-    grandfather-PASSing without an auditable label in the output dict.
+    Two scenarios:
+    1. Pre-H-4 legacy (2026-06-28 hardening): BIF was advisory-only (bif_reliable=False,
+       bif_proxy_basis="oos_mean_not_is") — three gate bypasses in total.
+    2. Post-H-4 active (2026-06-29): BIF gate is now a real hard-block gate
+       (bif_reliable=True, no bif_proxy_basis) — only WFE + PBO are bypassed;
+       BIF enforces hard verdict.
     """
 
-    def test_all_three_bypass_labels_in_combined_result(self):
-        """A correctly assembled CPCV return dict carries all three bypass labels."""
-        from src.engine.statistics.backtest_inflation_factor import compute_bif
-        from src.engine.pbo_gate import compute_pbo_from_cpcv_paths
+    def test_pre_h4_legacy_three_bypass_labels_in_combined_result(self):
+        """Pre-H-4 legacy: a CPCV result stamped with the old M1 proxy sentinel
+        carries all three bypass labels (WFE, PBO, BIF advisory).
 
-        # --- Bypass 3: BIF labeled oos_mean_not_is + bif_reliable=False
+        This simulates how pre-H-4 DB rows look to backward-compat consumers.
+        New backtests (post-H-4) never emit bif_proxy_basis or bif_reliable=False.
+        """
+        from src.engine.pbo_gate import compute_pbo_from_cpcv_paths
+        from src.engine.statistics.backtest_inflation_factor import compute_bif
+
+        # --- Bypass 3 (pre-H-4 only): BIF labeled oos_mean_not_is + bif_reliable=False
         bif_result = compute_bif(is_sharpe=1.1, wf_sharpe=1.0, k_eff=15.0)
-        bif_result["bif_proxy_basis"] = "oos_mean_not_is"
-        bif_result["bif_reliable"] = False
+        bif_result["bif_proxy_basis"] = "oos_mean_not_is"  # pre-H-4 legacy sentinel
+        bif_result["bif_reliable"] = False                  # pre-H-4 legacy only
 
         # --- Bypass 2: PBO degenerate (is==oos), reason overridden
         degenerate_paths = [
@@ -488,10 +522,70 @@ class TestAllThreeBypassLabelsPresent(unittest.TestCase):
         self.assertEqual(cpcv_return["pbo_degenerate_reason"], "cpcv_is_sharpe_unavailable")
         self.assertIsNone(cpcv_return["pbo_overall"])
 
-        # Bypass 3 assertions
+        # Bypass 3 assertions (pre-H-4 legacy: BIF was advisory-only)
         self.assertEqual(cpcv_return["wf_metadata"]["bif_proxy_basis"], "oos_mean_not_is")
         self.assertFalse(cpcv_return["wf_metadata"]["bif_reliable"])
         self.assertFalse(cpcv_return["bif_detail"]["bif_reliable"])
+
+    def test_post_h4_bif_is_active_gate_not_bypassed(self):
+        """Post-H-4 (2026-06-29): BIF gate is a genuine hard-block gate.
+
+        After H-4, CPCV runs emit bif_reliable=True (true IS data, not OOS proxy).
+        Only WFE and PBO are still bypassed in CPCV mode; BIF is an active gate.
+        bif_proxy_basis is NOT emitted for new backtests.
+        """
+        from src.engine.pbo_gate import compute_pbo_from_cpcv_paths
+        from src.engine.statistics.backtest_inflation_factor import compute_bif
+
+        # Post-H-4 BIF: genuine IS Sharpe → bif_reliable=True, no bif_proxy_basis
+        bif_result = compute_bif(is_sharpe=1.5, wf_sharpe=1.0, k_eff=15.0)
+        # NOTE: bif_proxy_basis is deliberately NOT set — H-4 never emits it
+        bif_result["bif_reliable"] = True  # H-4: genuine IS data
+
+        # WFE bypass still applies in CPCV
+        # PBO bypass still applies in CPCV
+        degenerate_paths = [
+            {"is_sharpe": s, "oos_sharpe": s, "is_returns": [], "oos_returns": []}
+            for s in [1.0, 1.2, 0.8, 1.5, 0.6, 1.1, 0.9, 1.3, 0.7, 1.4, 1.6, 0.5, 0.8, 1.2, 1.1]
+        ]
+        gate = compute_pbo_from_cpcv_paths(degenerate_paths)
+        if gate.get("degenerate"):
+            gate["degenerate_reason"] = "cpcv_is_sharpe_unavailable"
+        pbo_degenerate_reason = gate.get("degenerate_reason")
+
+        cpcv_return = {
+            "wfe_overall": None,
+            "wfe_status": "cpcv_not_applicable",
+            "wf_metadata": {
+                "mode": "cpcv",
+                # bif_proxy_basis NOT present — H-4 never emits it
+                "bif_reliable": bif_result.get("bif_reliable", True),
+            },
+            "pbo_overall": None,
+            "pbo_degenerate_reason": pbo_degenerate_reason,
+            "bif": bif_result.get("bif"),
+            "bif_detail": bif_result,
+        }
+
+        # WFE + PBO still bypassed (unchanged from pre-H-4)
+        self.assertIsNone(cpcv_return["wfe_overall"])
+        self.assertEqual(cpcv_return["wfe_status"], "cpcv_not_applicable")
+        self.assertIsNone(cpcv_return["pbo_overall"])
+        self.assertEqual(cpcv_return["pbo_degenerate_reason"], "cpcv_is_sharpe_unavailable")
+
+        # BIF is now an ACTIVE gate, not a bypass
+        self.assertTrue(cpcv_return["wf_metadata"]["bif_reliable"],
+                        "H-4: bif_reliable must be True (genuine IS data)")
+        self.assertNotIn("bif_proxy_basis", cpcv_return["wf_metadata"],
+                         "H-4: bif_proxy_basis must NOT be emitted for new CPCV backtests")
+        self.assertTrue(cpcv_return["bif_detail"]["bif_reliable"])
+        # BIF value is present and the gate can block on it
+        self.assertIsNotNone(cpcv_return["bif"])
+        self.assertIn(
+            cpcv_return["bif_detail"]["verdict"],
+            ("clean", "warn", "block"),
+            "H-4 BIF must have a real verdict (not advisory-only)"
+        )
 
 
 if __name__ == "__main__":

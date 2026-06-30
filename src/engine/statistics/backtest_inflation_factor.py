@@ -97,14 +97,14 @@ def compute_bif(
                     IS Sharpe from run_walk_forward() (_combined_is_sharpe),
                     which is the same value used by the WFE gate — no new
                     IS backtest required.
-                    For CPCV mode: pass mean(path_OOS_sharpes) as a documented
-                    proxy for the IS Sharpe (M1 limitation: both this proxy and
-                    wf_sharpe derive from the same concatenated OOS series, so
-                    BIF ≈ 1.0 and the block gate never fires in default CPCV mode).
-                    The result dict carries bif_proxy_basis="oos_mean_not_is" so the
-                    TS BIF gate can emit a non-blocking audit warn.
-                    Per-path IS Sharpes (true IS fold data) are a Wave 30 carry-forward;
-                    see comment in _run_walk_forward_cpcv().
+                    For CPCV mode (H-4, 2026-06-29): pass mean(per_path_is_sharpes)
+                    — the mean of true per-path IS Sharpes computed from cached
+                    per-fold IS backtests in _run_walk_forward_cpcv(). Each IS fold
+                    is backtest-run independently and cached by (fold_idx, strip_start,
+                    strip_end) so the same fold is not re-run across paths. This gives
+                    a genuine IS/OOS comparison with bif_reliable=True.
+                    Previous M1 proxy (pre-H-4): mean(path_OOS_sharpes) from the same
+                    OOS series as wf_sharpe → BIF ≈ 1.0 by construction; no longer used.
         wf_sharpe:  Walk-forward (OOS) aggregate Sharpe ratio — agg_sharpe
                     from run_walk_forward() or _run_walk_forward_cpcv().
         k_eff:      Effective number of independent trials tested.

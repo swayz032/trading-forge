@@ -281,6 +281,11 @@ def _run_walk_forward_cpcv(
     # Multi-model WRC/SPA: each path's daily P&L series tracked separately so
     # whites_reality_check_multi / hansens_spa_multi can build the (L, T) matrix.
     per_path_oos_pnls: list[list[float]] = []
+    # H-4 BIF (2026-06-29): per-path true IS Sharpes, computed from IS fold data.
+    # Cache avoids re-running the same fold+strip combination across multiple paths.
+    # Key = (fold_idx, strip_start, strip_end) — uniquely identifies the IS fold slice.
+    per_path_is_sharpes: list[float] = []
+    _is_fold_bif_cache: dict[tuple, dict] = {}
 
     _shared_req = BacktestRequest(
         strategy=config,
@@ -408,6 +413,66 @@ def _run_walk_forward_cpcv(
                 if isinstance(rec, dict)
             ]
         all_oos_equity.extend(_raw_eq)
+
+        # H-4 BIF (2026-06-29): per-fold IS backtest to get true per-path IS Sharpe.
+        # Run each IS fold as an independent backtest (no warmup_data) and cache the
+        # result by (fold_idx, strip_start, strip_end) — the same fold with the same
+        # strip pattern recurs across multiple paths and can be reused directly.
+        # Per-path IS Sharpe is computed from the concatenated daily_pnls of all IS folds.
+        _path_is_daily_pnls: list[float] = []
+        for _bif_fi in sorted(is_fold_indices):
+            _bif_fold_df = folds[_bif_fi]
+            _bif_strip_s, _bif_strip_e = _cpcv_fold_embargo_strips(
+                fold_idx=_bif_fi,
+                test_fold_set=test_fold_set,
+                n_splits=n_splits,
+                embargo_bars=embargo_bars,
+                is_test_fold=False,
+            )
+            _bif_cache_key = (_bif_fi, _bif_strip_s, _bif_strip_e)
+            if _bif_cache_key in _is_fold_bif_cache:
+                _bif_fold_result = _is_fold_bif_cache[_bif_cache_key]
+            else:
+                _bif_eff_len = len(_bif_fold_df) - _bif_strip_s - _bif_strip_e
+                if _bif_eff_len > 0:
+                    _bif_fold_data = _bif_fold_df.slice(_bif_strip_s, _bif_eff_len)
+                    # Deterministic seed: base + 30000 + fold_idx*100 + strips.
+                    # +30000 offset keeps IS fold seeds separate from OOS path seeds
+                    # (which use base_seed + n_paths, i.e. base + 0..14 typically).
+                    _bif_fold_seed = (
+                        _base_seed + 30000 + _bif_fi * 100
+                        + _bif_strip_s + _bif_strip_e
+                    )
+                    os.environ["BACKTEST_WINDOW_SEED"] = str(_bif_fold_seed)
+                    np.random.seed(_bif_fold_seed)
+                    try:
+                        _bif_fold_result = run_backtest(_shared_req, data=_bif_fold_data)
+                    except Exception as _bif_fold_exc:
+                        print(
+                            f"  BIF IS fold {_bif_fi} (strips={_bif_strip_s},"
+                            f"{_bif_strip_e}) backtest failed ({_bif_fold_exc!r})"
+                            f" — empty result for fold (IS Sharpe degrades).",
+                            file=sys.stderr,
+                        )
+                        _bif_fold_result = {}
+                else:
+                    _bif_fold_result = {}
+                _is_fold_bif_cache[_bif_cache_key] = _bif_fold_result
+            _path_is_daily_pnls.extend(_bif_fold_result.get("daily_pnls", []))
+
+        # Per-path IS Sharpe from concatenated IS fold P&L series.
+        # If std=0 (degenerate / all same pnl), Sharpe is 0.0 (no positive IS edge claim).
+        if _path_is_daily_pnls:
+            _path_is_pnl_arr = np.array(_path_is_daily_pnls)
+            _path_is_std = float(np.std(_path_is_pnl_arr, ddof=1))
+            _path_is_sharpe = (
+                float(np.mean(_path_is_pnl_arr) / _path_is_std * np.sqrt(252))
+                if _path_is_std > 0 else 0.0
+            )
+        else:
+            _path_is_sharpe = 0.0
+        per_path_is_sharpes.append(_path_is_sharpe)
+
         n_paths += 1
 
     if not path_sharpes:
@@ -513,46 +578,35 @@ def _run_walk_forward_cpcv(
 
     elapsed_ms = int((time.time() - start_time) * 1000)
 
-    # ── Wave 3 Track 3A: BIF computation (CPCV mode) ─────────────────────────
+    # ── H-4 (2026-06-29): BIF computation (CPCV mode) ───────────────────────────
     # K_eff = n_paths (C(6,2)=15 combinatorial paths per default CPCV config).
-    # IS Sharpe proxy = mean(path_OOS_sharpes) — uses the same OOS series as
-    # agg_sharpe (M1 limitation: BIF ≈ 1.0, block gate never fires in default
-    # CPCV mode).  The result dict carries bif_proxy_basis="oos_mean_not_is" so
-    # the TS BIF gate can emit a non-blocking audit warn.
-    # Per-path IS Sharpes (using true IS fold data) are a Wave 30 carry-forward
-    # per the comment at the top of the CPCV combinations loop.
+    # IS Sharpe = mean(per_path_is_sharpes) — mean of the per-path IS Sharpes
+    # computed above from genuine IS fold data (per-fold backtests, cached).
+    # bif_reliable=True because IS data is disjoint from the OOS data used for
+    # agg_sharpe — the Wave-30 carry-forward is now complete.
+    # PREVIOUS (M1 proxy): IS Sharpe = mean(path_OOS_sharpes) from the same OOS
+    # series as agg_sharpe → BIF ≈ 1.0 by construction, gate never fired.
     _cpcv_bif_result: dict = {}
     try:
         from src.engine.statistics.backtest_inflation_factor import (
             compute_bif as _cpcv_compute_bif,
         )
-        # B4 fix: use mean of path OOS Sharpes as the IS-Sharpe proxy, not max.
-        # max(path_sharpes) overstates IS performance because it cherry-picks the
-        # best CPCV path — this deflates BIF (IS/OOS gap appears small) when the
-        # true per-path IS Sharpe is unknown (pooled across folds).
-        # WAVE 30 carry-forward: derive true per-path IS Sharpe from IS fold data.
-        _cpcv_bif_is_sharpe = float(np.mean(path_sharpes)) if path_sharpes else 0.0
+        # H-4: use mean of true per-path IS Sharpes (from per-fold IS backtests).
+        _cpcv_bif_is_sharpe = float(np.mean(per_path_is_sharpes)) if per_path_is_sharpes else 0.0
         _cpcv_bif_k_eff = float(max(n_paths, 1))
         _cpcv_bif_result = _cpcv_compute_bif(
             is_sharpe=_cpcv_bif_is_sharpe,
             wf_sharpe=agg_sharpe,
             k_eff=_cpcv_bif_k_eff,
         )
-        # M1 fix 2026-06-28: tag the BIF result so the TS BIF gate can emit a
-        # non-blocking audit warn. In CPCV mode both is_sharpe and wf_sharpe
-        # derive from the same OOS series → BIF ≈ 1.0 (near-no-op).
-        # TS gate reads bif_proxy_basis from wf_metadata.bif_proxy_basis.
-        _cpcv_bif_result["bif_proxy_basis"] = "oos_mean_not_is"
-        # BYPASS 3 EXPLICIT AUDIT (2026-06-28 hardening): IS Sharpe is unavailable
-        # in CPCV mode without running a separate IS backtest per path (Wave 30
-        # carry-forward). bif_reliable=False surfaces this fact explicitly so the
-        # TS BIF gate logs a documented audit-warn rather than treating BIF≈1.0 as
-        # a genuine clean-gate pass. The gate must NOT block on an unreliable BIF.
-        _cpcv_bif_result["bif_reliable"] = False
+        # H-4: IS Sharpe is from genuine per-fold IS data — BIF is reliable.
+        # bif_proxy_basis is NOT stamped (no longer an OOS proxy).
+        _cpcv_bif_result["bif_reliable"] = True
         print(
-            f"  BIF (CPCV): {_cpcv_bif_result.get('bif', 'N/A'):.4f} "
-            f"(IS_proxy={_cpcv_bif_is_sharpe:.4f}, WF={agg_sharpe:.4f}, "
-            f"K_eff={_cpcv_bif_k_eff:.0f}) "
+            f"  BIF (CPCV H-4): {_cpcv_bif_result.get('bif', 'N/A'):.4f} "
+            f"(IS_true={_cpcv_bif_is_sharpe:.4f}, WF={agg_sharpe:.4f}, "
+            f"K_eff={_cpcv_bif_k_eff:.0f}, "
+            f"n_is_folds_cached={len(_is_fold_bif_cache)}) "
             f"→ {_cpcv_bif_result.get('verdict', 'N/A')}",
             file=sys.stderr,
         )
@@ -810,12 +864,11 @@ def _run_walk_forward_cpcv(
             # When DSR computation fails, _dsr_result has dsr_pass=False, dsr_unavailable=True.
             "dsr_pass": _dsr_result.get("dsr_pass"),
             "dsr_unavailable": _dsr_result.get("dsr_unavailable", False),
-            # M1 fix 2026-06-28: surface bif_proxy_basis so the TS BIF gate can
-            # emit a non-blocking audit warn.  "oos_mean_not_is" signals that both
-            # is_sharpe and wf_sharpe derive from the same OOS series → BIF ≈ 1.0.
-            "bif_proxy_basis": _cpcv_bif_result.get("bif_proxy_basis"),
-            # BYPASS 3 EXPLICIT AUDIT: bif_reliable=False when IS Sharpe unavailable.
-            # TS BIF gate must not block on an unreliable BIF≈1.0 value.
+            # H-4 (2026-06-29): bif_reliable=True — IS Sharpe is now from genuine
+            # per-fold IS data (not an OOS proxy). bif_proxy_basis is NOT emitted.
+            # Pre-H-4 backtests stored in the DB may still carry bif_reliable=False +
+            # bif_proxy_basis="oos_mean_not_is"; lifecycle-service.ts handles those
+            # via the legacy path in bif-gate.ts evaluateBifGate(opts.bifReliable=false).
             "bif_reliable": _cpcv_bif_result.get("bif_reliable", True),
             # BYPASS 2 EXPLICIT AUDIT (merge 2026-06-29): surface the CPCV-specific
             # degenerate reason INSIDE wf_metadata so it survives backtest-service
@@ -831,9 +884,8 @@ def _run_walk_forward_cpcv(
         "pbo_overall": _cpcv_pbo_overall,
         "pbo_overall_p_value": _cpcv_pbo_p_value,
         "pbo_audit_actions": _cpcv_pbo_audit_actions,
-        # Wave 3 Track 3A — BIF (Backtest Inflation Factor): selection-bias ratio.
-        # In CPCV mode IS Sharpe tracking is a Wave 30 carry-forward; we use
-        # max(path_sharpes) as a documented proxy for the best-looking path.
+        # H-4 (2026-06-29) — BIF (Backtest Inflation Factor): selection-bias ratio.
+        # IS Sharpe = mean(per_path_is_sharpes) from genuine per-fold IS backtests.
         # K_eff = n_paths (C(6,2)=15 default combinatorial paths).
         # TS gate contract: reads "bif" and "k_eff" from this dict.
         "bif": _cpcv_bif_result.get("bif"),
