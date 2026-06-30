@@ -125,23 +125,37 @@ across price-action / ICT-confluence / indicator-crossover / session-liquidity s
   backed) / `kb_inferred` (archetype-implied) / `auto_floor`/`default` (TF overlay — **never count as extraction
   recall, never upsize confidence without audit evidence**).
 
-## 8. The production hardening frontier (next pass — behind tests/parity, NOT yet started)
+## 8. The production hardening frontier — ✅ COMPLETE (side mission, shipped to `hardening/phase-0`)
 
-| # | item | severity | fix |
-|---|---|---|---|
-| **1** | **Confluence→sizing bug** (`paper-signal-service.ts:5011`) | **HIGH (capital)** | size multiplier (3 factors=1.5×, 4+=2×, `risk-sizing.ts:67`) keys on **configured** `confirming_indicators.length`, NOT satisfied+evidence-backed count → auto-floor/default confluences can upsize 1.5–2× without confirming. Size on the SATISFIED, evidence-backed count only. |
-| 2 | Extractor-prompt risk-field tension | MED | `transcript-extractor.md` (lines 130, 136-140, 126-127) makes stop/targets effectively required + threatens rejection, while the overlay discards them → pressure to invent. Make framework-owned risk fields optional-with-`extraction_gap_reason`; reject only on missing source-owned entry logic. **Parity-gated** (`tsx scripts/wave26-gemma4-smoke-test.ts --parity-only` must PASS). |
-| 3 | Provenance taxonomy + recall accounting | MED | enforce the §7 4-tier label; never count `auto_floor`/`default` as extraction recall. |
-| 4 | Two-mode backtest reporting | validation | report `source_entry_only` (YT entry + TF risk) vs `tf_institutional_overlay` (+ default confluence gate). Keep the overlay only if it improves WF + DSR/PBO + MC + paper **without starving trades** (ablation; Bailey/LdP PBO+DSR, Harvey/Liu/Zhu — every added condition raises out-of-sample overfit risk). |
+All four landed behind tests/parity (commits `7cf50b3` + `a6a3176`; tsc 0 repo-wide; only the relevant files
+committed — a parallel agent's in-flight drift on the shared branch was left untouched):
 
-Item 1 leads (only one that risks live capital). Default confluences should be **soft weighted filters**; hard
-blocks only for real safety (macro blackout / no-data / invalid session / prop-firm risk).
+| # | item | severity | what shipped | verify |
+|---|---|---|---|---|
+| **1** | **Confluence→sizing bug** (`paper-signal-service.ts`) | **HIGH (capital)** | size multiplier (3 factors=1.5×, 4+=2×) keyed on **configured** `confirming_indicators.length` → auto-floor confluences (`regime_match`/`structural_setup`, TF overlay) could upsize live position 1.5–2× without being real edge. **FIX:** size on `evidenceBackedFactorCount()` (non-auto_floor) only — fail-safe (only ever *reduces* size). Pure helpers extracted to leaf `confluence-provenance.ts` (test-isolation + lighter hot path). | 4 new + 8 existing sizing tests GREEN |
+| 2 | Extractor-prompt risk-field tension | MED | `transcript-extractor.md` made stop/targets effectively required + threatened rejection while the overlay discards them → pressure to **invent**. **FIX:** framework-owned stop/target/sizing now optional-with-`extraction_gap_reason`; rejection fires ONLY on missing **source-owned** entry logic (entry_sequence / trigger / direction). | **parity gate v10/v11 PASS** on all fixtures (the stop/targets checks). v12 FAIL is pre-existing fixture-data debt (missing `speaker_concepts`), untouched, test-documented as operator-acceptable. |
+| 3 | Provenance recall accounting | MED | `tf_extraction_confluence_depth_histogram` is named *extraction* depth but observed the RAW count incl auto_floor. **FIX:** now observes `evidenceBackedFactorCount()` — auto_floor never counted as extraction recall. (`classifyFactorQuality` already excluded it; this closed the last telemetry site.) | tsc 0 |
+| 4 | Two-mode backtest ablation | validation | **FIX:** `TF_CONFLUENCE_OVERLAY_DISABLED` env toggle on `apply_eligibility_gate` (backtester.py; default OFF → overlay on; `gate_stats.mode` stamped) + `scripts/confluence-overlay-ablation.py` runs `source_entry_only` vs `tf_institutional_overlay` and emits a **KEEP/LOOSEN** verdict — keep the overlay only if it improves risk-adjusted return **without starving trades** (Bailey/LdP PBO+DSR, Harvey/Liu/Zhu). | py_compile OK; runs on the tower (engine doesn't run in sandbox) |
 
-## 9. The one question for the collaborator
+Net: the production pipeline no longer conflates source-owned edge / framework-owned risk / provenance —
+auto_floor overlay can't inflate sizing or extraction-recall metrics, the extractor isn't pressured to invent
+risk fields, and the confluence overlay is honestly labeled + ablation-checkable before it reaches the backtester.
 
-The compiler architecture is validated. The next pass is **production hardening**, led by the confluence→sizing
-fix. Is the priority order in §8 right (sizing → extractor-prompt → provenance → two-mode backtest), and is there
-anything in the production pipeline's source-vs-framework-vs-provenance separation we're still conflating before
-strategies reach the Python/Databento backtester? The goal: the backtester must only receive strategies whose
-**source-owned executable decisions survived compression and are reachable in the compiled graph**, with the
-TF institutional overlay clearly labeled and ablation-validated, never silently inflating the result.
+## 9. Back to the real mission — open compiler frontier
+
+The compiler architecture is validated (n=4) and the production-hardening side mission is closed. The remaining
+north-star work:
+
+1. **MKsj raw-atom determinism** — N-sample union (union raw atoms across passes → stable canonical hash on the
+   36K transcript). Low priority: the *executable* strategy is already stable (NodeRecall 100% both passes); only
+   the raw-atom hash wobbles (§6.1).
+2. **Widen the corpus** beyond n=4 to confirm generalization on more YouTube styles (the bar stays: rawNR=100,
+   source-owned compNR≥85, Reach=YES, TopoFid=100, Δ=0).
+3. **Backtester hand-off** — wire the validated compiled graph (source-owned executable nodes, reachable) into
+   the Python/Databento engine, with the TF institutional overlay clearly labeled + ablation-validated (§8 #4),
+   never silently inflating the result.
+
+**Question for the collaborator:** of those three, which is the highest-leverage next step — close determinism
+(N-sample union), prove breadth (widen corpus), or start the backtester hand-off? And for the hand-off: what's
+the minimal contract the Databento engine needs from the compiled graph (entry trigger + confluences + direction
++ session + timeframe + symbol + invalidation) such that nothing source-owned is lost in translation?
