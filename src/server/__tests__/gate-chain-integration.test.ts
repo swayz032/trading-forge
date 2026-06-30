@@ -1212,10 +1212,15 @@ function shadowSignals_19long1short(): ShadowSignal[] {
 describe("BIF gate — backtests.bif numeric column round-trip + string-coercion (PGlite)", () => {
   let ctx: TestDb;
 
-  const STRAT_ID    = "ba000001-0000-0000-0000-000000000001";
-  const BT_CLEAN    = "ba000001-0000-0000-0000-000000000010"; // bif=1.5 → clean PASS
-  const BT_BLOCK    = "ba000001-0000-0000-0000-000000000011"; // bif=5.0 → BLOCK (>4.0)
-  const BT_LEGACY   = "ba000001-0000-0000-0000-000000000012"; // bif=null → grandfather PASS
+  const STRAT_ID         = "ba000001-0000-0000-0000-000000000001";
+  const BT_CLEAN         = "ba000001-0000-0000-0000-000000000010"; // bif=1.5 → clean PASS
+  const BT_BLOCK         = "ba000001-0000-0000-0000-000000000011"; // bif=5.0 → BLOCK (>4.0)
+  const BT_LEGACY        = "ba000001-0000-0000-0000-000000000012"; // bif=null → grandfather PASS
+  // H-4 (2026-06-29): CPCV backtests now have bif_reliable=true (genuine IS fold data).
+  // Unlike the pre-H-4 era (where { bifReliable: false } gave an advisory cpcv_unmeasured pass),
+  // evaluateBifGate is now called without { bifReliable: false } → high BIF actually BLOCKS.
+  const BT_CPCV_H4_BLOCK = "ba000001-0000-0000-0000-000000000013"; // CPCV H-4: bif=5.0, bif_reliable=true → BLOCK
+  const BT_CPCV_H4_CLEAN = "ba000001-0000-0000-0000-000000000014"; // CPCV H-4: bif=1.05, bif_reliable=true → clean PASS
 
   beforeAll(async () => {
     ctx = await createTestDb();
@@ -1232,6 +1237,26 @@ describe("BIF gate — backtests.bif numeric column round-trip + string-coercion
       { id: BT_LEGACY, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
         startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
         bif: null, kEff: null },
+      // H-4: CPCV backtest with genuine IS data → high BIF blocks.
+      // wf_metadata.bif_reliable=true; no bif_proxy_basis emitted.
+      { id: BT_CPCV_H4_BLOCK, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        bif: "5.0", kEff: "15",
+        walkForwardResults: {
+          mode: "cpcv",
+          wf_metadata: { mode: "cpcv", bif_reliable: true },
+          // no bif_proxy_basis — H-4 never emits it
+        } as unknown as import("../services/backtest-service.js").WfResultsBlob,
+      },
+      // H-4: CPCV backtest with genuine IS data → low BIF passes cleanly.
+      { id: BT_CPCV_H4_CLEAN, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        bif: "1.05", kEff: "15",
+        walkForwardResults: {
+          mode: "cpcv",
+          wf_metadata: { mode: "cpcv", bif_reliable: true },
+        } as unknown as import("../services/backtest-service.js").WfResultsBlob,
+      },
     ]);
   });
   afterAll(async () => { await ctx.close(); });
@@ -1273,6 +1298,55 @@ describe("BIF gate — backtests.bif numeric column round-trip + string-coercion
     const result = evaluateBifGate(rawBif, null);
     expect(result.passed).toBe(true);
     expect(result.reason).toBe("bif.legacy_null_pre_wave3");
+  });
+
+  // ── H-4 (2026-06-29): CPCV with genuine IS data — BIF is now a real gate ────
+  // Before H-4, lifecycle-service.ts passed { bifReliable: false } to evaluateBifGate
+  // for CPCV strategies, routing to an advisory cpcv_unmeasured pass (BIF ≈ 1.0 by
+  // construction). After H-4, evaluateBifGate is called without { bifReliable: false }
+  // so high-BIF CPCV strategies are BLOCKED.
+
+  it("H-4 CPCV BLOCK: bif=5.0 with bif_reliable=true and no bif_proxy_basis → hard BLOCK", async () => {
+    // Read the H-4 CPCV backtest from PGlite
+    const [row] = await ctx.db
+      .select({ bif: backtests.bif, kEff: backtests.kEff, walkForwardResults: backtests.walkForwardResults })
+      .from(backtests).where(eq(backtests.id, BT_CPCV_H4_BLOCK));
+
+    const wfMeta = (row?.walkForwardResults as { wf_metadata?: Record<string, unknown> } | null)?.wf_metadata ?? null;
+    const bifReliable = wfMeta?.bif_reliable;
+    const bifProxyBasis = (wfMeta?.bif_proxy_basis as string | null | undefined) ?? null;
+
+    // H-4 contract: bif_reliable=true and no bif_proxy_basis
+    expect(bifReliable).toBe(true);
+    expect(bifProxyBasis).toBeNull();
+
+    // lifecycle-service.ts post-H-4: calls evaluateBifGate WITHOUT { bifReliable: false }
+    // because bif_reliable is now true for all new CPCV backtests.
+    const bifNum = row?.bif != null ? Number(row.bif) : null;
+    const kEffNum = row?.kEff != null ? Number(row.kEff) : null;
+    const result = evaluateBifGate(bifNum, kEffNum);  // no { bifReliable: false }
+
+    // Must BLOCK — not advisory-pass as pre-H-4 would have done
+    expect(result.passed).toBe(false);
+    expect(result.reason).toBe("bif.blocked_exceeds_threshold");
+  });
+
+  it("H-4 CPCV CLEAN: bif=1.05 with bif_reliable=true and no bif_proxy_basis → clean PASS", async () => {
+    const [row] = await ctx.db
+      .select({ bif: backtests.bif, kEff: backtests.kEff, walkForwardResults: backtests.walkForwardResults })
+      .from(backtests).where(eq(backtests.id, BT_CPCV_H4_CLEAN));
+
+    const wfMeta = (row?.walkForwardResults as { wf_metadata?: Record<string, unknown> } | null)?.wf_metadata ?? null;
+    const bifReliable = wfMeta?.bif_reliable;
+
+    expect(bifReliable).toBe(true);
+
+    const bifNum = row?.bif != null ? Number(row.bif) : null;
+    const kEffNum = row?.kEff != null ? Number(row.kEff) : null;
+    const result = evaluateBifGate(bifNum, kEffNum);
+
+    expect(result.passed).toBe(true);
+    expect(result.reason).toBe("bif.clean");
   });
 });
 

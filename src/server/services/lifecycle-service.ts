@@ -568,37 +568,12 @@ export class LifecycleService {
             frozenPolicyHash: frozenShadowRow?.frozenPolicyHash ?? null,
           },
         };
-        // hardening/phase-0: BIF CPCV-unmeasured pre-check.
-        // walk_forward.py emits bif_reliable=false in wf_metadata when mode="cpcv".
-        // paper-to-deploy-ready-gates.ts (Gate 6.5) cannot be edited (paper-*.ts restriction),
-        // so we emit the distinct lifecycle.bif_cpcv_unmeasured audit here — BEFORE the
-        // evaluator runs — so the exemption is visible in the audit trail.
-        // The evaluator still runs normally; in CPCV mode bif ≈ 1.0 (proxy-based) which
-        // passes the BIF threshold cleanly (1.0 < 2.0 warn floor) — the proxy-basis warn
-        // emitted by evaluatePaperToDeployReadyGates Gate 6.5 complements this audit row.
-        {
-          const p2dWfMeta = ((wfResults?.wf_metadata as Record<string, unknown> | null) ?? null);
-          const bifReliable = p2dWfMeta?.bif_reliable;
-          if (bifReliable === false) {
-            // numeric() returns string — always Number() before compare (F-6)
-            const bifNum = latestBtP2D?.bif != null ? Number(latestBtP2D.bif) : null;
-            const kEffNum = latestBtP2D?.kEff != null ? Number(latestBtP2D.kEff) : null;
-            const bifProxyBasis = (p2dWfMeta?.bif_proxy_basis as string | null | undefined) ?? null;
-            const bifCpcvResult = evaluateBifGate(bifNum, kEffNum, { bifReliable: false, proxyBasis: bifProxyBasis });
-            await db.insert(auditLog).values({
-              action: "lifecycle.bif_cpcv_unmeasured",
-              entityId: id,
-              entityType: "strategy",
-              status: "success",
-              decisionAuthority: "gate",
-              input: { fromState, toState },
-              result: bifCpcvResult.auditPayload as Record<string, unknown>,
-              correlationId,
-            }).catch((auditErr) => {
-              logger.warn({ strategyId: id, err: auditErr }, "lifecycle.bif_cpcv_unmeasured audit insert failed (non-blocking)");
-            });
-          }
-        }
+        // H-4 (2026-06-29): bif_cpcv_unmeasured advisory block REMOVED.
+        // New CPCV backtests emit bif_reliable=True (genuine per-fold IS Sharpe,
+        // not OOS proxy). Pre-H-4 records (bif_reliable=false) are legacy; they
+        // are still handled by the legacy-null path in bif-gate.ts. The advisory
+        // skip for pre-H-4 bif_proxy_basis records remains in paper-to-deploy-
+        // ready-gates.ts Gate 6.5 (DO NOT CHANGE that file per paper-*.ts restriction).
 
         const gatePdrResult = await evaluatePaperToDeployReadyGates(pdrInput);
 
@@ -607,29 +582,21 @@ export class LifecycleService {
         // inputs provides the BIF-specific outcome label without changing gate logic.
         // outcome label is mapped to short-form: clean | warn | blocked | legacy_null.
         // The counter increment is non-blocking — errors never affect promotion outcome.
+        // H-4 (2026-06-29): bifReliableForCounter removed — CPCV strategies now have
+        // genuine IS data (bif_reliable=True); the cpcv_unmeasured counter label is retired.
         try {
-          // Finding 5 fix 2026-06-29 (filed as F-4 by accuracy-validator / M-1 by backtest-core):
-          // pass bifReliable so this counter call sees the SAME CPCV verdict the gate verdict uses.
-          // wf_metadata.bif_reliable===false (CPCV mode) → the gate returns reason
-          // "bif.cpcv_unmeasured"; without threading bifReliable here, CPCV strategies were
-          // silently counted as outcome="clean". Map that distinct reason to its own label.
-          const bifReliableForCounter =
-            ((wfResults?.wf_metadata as Record<string, unknown> | null)?.bif_reliable) === false;
           // numeric() returns string — always Number() before compare (F-6)
           const bifResult = evaluateBifGate(
             latestBtP2D?.bif != null ? Number(latestBtP2D.bif) : null,
             latestBtP2D?.kEff != null ? Number(latestBtP2D.kEff) : null,
-            bifReliableForCounter ? { bifReliable: false } : undefined,
           );
-          const bifOutcome = bifResult.reason === "bif.cpcv_unmeasured"
-            ? "cpcv_unmeasured"
-            : !bifResult.passed
-              ? "blocked"
-              : bifResult.legacyNull
-                ? "legacy_null"
-                : bifResult.reason === "bif.warn_above_warn_threshold"
-                  ? "warn"
-                  : "clean";
+          const bifOutcome = !bifResult.passed
+            ? "blocked"
+            : bifResult.legacyNull
+              ? "legacy_null"
+              : bifResult.reason === "bif.warn_above_warn_threshold"
+                ? "warn"
+                : "clean";
           bifGateEvaluationsTotal.labels({ outcome: bifOutcome }).inc();
         } catch (_bifCounterErr) { /* non-blocking — counter failures never prevent promotion */ }
 
@@ -4215,15 +4182,16 @@ export class LifecycleService {
           continue;
         }
 
-        // ── Deep-scan #5 H1 (2026-06-29): BIF gate on the AUTONOMOUS cron path ──
-        // The cron calls promoteStrategy(..., {skipPaperToDeployReadyEvaluator:true}), so the
-        // pure evaluator's Gate 6.5 (which holds BIF) never ran here — BIF was enforced ONLY on
-        // the manual dashboard PATCH path (_promoteStrategyInner). This block makes the autonomous
-        // cron path — the PRIMARY promotion path — enforce BIF identically. Mirrors the manual
-        // path (lifecycle-service.ts ~558-631) + bif-gate.ts. CPCV mode (bif_reliable=false) →
-        // advisory cpcv_unmeasured pass (BIF≈1.0 structural, Wave 30 carry-forward); bif>4.0 →
-        // HARD block; legacy-null → grandfather pass; infra read error → fail-OPEN (additive
-        // signal — a DB blip shouldn't block, but a real bif>4 still blocks).
+        // ── Deep-scan #5 H1 + H-4 (2026-06-29): BIF gate on the AUTONOMOUS cron path ──
+        // H1 (DS#5): The cron calls promoteStrategy(..., {skipPaperToDeployReadyEvaluator:true}),
+        // so Gate 6.5 (BIF) never ran here — BIF was enforced ONLY on the manual dashboard
+        // PATCH path. This block makes the autonomous cron path — the PRIMARY path — enforce
+        // BIF identically.
+        // H-4 (2026-06-29): bif_cpcv_unmeasured advisory path RETIRED. CPCV backtests now
+        // emit bif_reliable=True (genuine per-fold IS Sharpe), so BIF can block overfit
+        // strategies in CPCV mode. bif>4.0 → HARD block; legacy-null → grandfather pass;
+        // infra read error → fail-OPEN (additive signal — a DB blip shouldn't block,
+        // but a real bif>4 still blocks).
         try {
           const [latestBtForBif] = await db
             .select({
@@ -4242,7 +4210,9 @@ export class LifecycleService {
             .limit(1);
 
           const bifWfMeta = ((latestBtForBif?.walkForwardResults as import("./backtest-service.js").WfResultsBlob | null)?.wf_metadata as Record<string, unknown> | null) ?? null;
-          const bifReliableFalse = bifWfMeta?.bif_reliable === false;
+          // H-4 (2026-06-29): bifReliableFalse removed — CPCV strategies now have genuine
+          // IS data (bif_reliable=True). The bif_proxy_basis key is still passed for pre-H-4
+          // legacy records (non-blocking advisory warn in evaluateBifGate).
           const bifProxyBasis = (bifWfMeta?.bif_proxy_basis as string | null | undefined) ?? null;
           // numeric() returns string — always Number() before compare (F-6)
           const bifNum = latestBtForBif?.bif != null ? Number(latestBtForBif.bif) : null;
@@ -4251,18 +4221,17 @@ export class LifecycleService {
           const bifResult = evaluateBifGate(
             bifNum,
             kEffNum,
-            bifReliableFalse ? { bifReliable: false, proxyBasis: bifProxyBasis } : { proxyBasis: bifProxyBasis },
+            { proxyBasis: bifProxyBasis },
           );
 
-          const bifOutcome = bifResult.reason === "bif.cpcv_unmeasured"
-            ? "cpcv_unmeasured"
-            : !bifResult.passed
-              ? "blocked"
-              : bifResult.legacyNull
-                ? "legacy_null"
-                : bifResult.reason === "bif.warn_above_warn_threshold"
-                  ? "warn"
-                  : "clean";
+          // H-4 (2026-06-29): cpcv_unmeasured outcome label retired.
+          const bifOutcome = !bifResult.passed
+            ? "blocked"
+            : bifResult.legacyNull
+              ? "legacy_null"
+              : bifResult.reason === "bif.warn_above_warn_threshold"
+                ? "warn"
+                : "clean";
           try { bifGateEvaluationsTotal.labels({ outcome: bifOutcome }).inc(); } catch { /* non-blocking counter */ }
 
           await db.insert(auditLog).values({
@@ -4296,7 +4265,8 @@ export class LifecycleService {
             await this._maybeAutoGraveyard(s.id, "bif_blocked", { bif: bifResult.auditPayload.bif, threshold: bifResult.auditPayload.block_threshold }, "PAPER", correlationId);
             continue;
           }
-          // Gate passed (clean / warn / cpcv_unmeasured / legacy) — reset consecutive counter
+          // Gate passed (clean / warn / legacy) — reset consecutive counter
+          // H-4 (2026-06-29): cpcv_unmeasured outcome retired; CPCV strategies now fully evaluated
           this._resetHardGateCounter(s.id, "bif_blocked", correlationId);
           gateEvidenceStatuses.push(bifResult.legacyNull ? "legacy_null" : "complete");
         } catch (bifErr) {
