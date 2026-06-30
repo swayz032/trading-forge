@@ -13,7 +13,7 @@
 - **Vision (image/PDF)** — confirmed EL ConvAI supports multimodal **through the SDK we already run** (`@elevenlabs/client@1.14.0` exports `uploadFile` + `sendMultimodalMessage`; agent `file_input` already enabled). Wired an **attach button** in the voice control row → `uploadFile` → `sendMultimodalMessage` into the live conversation so EL GPT-5.4 sees it. Prompt teaches chart/backtest/error/PDF reads (advise-only; strategies still YouTube-door). **Attach upload still failing live — instrumented to surface the real error (next operator try reveals it).**
 - **Discord** — `notifyInfo` ping on research completion (apify-research-service).
 - **Inbox visual** — full-bleed, thick static green border, **glow removed**, **black bubbles w/ thin green border** (per operator).
-- **Human-like reports** — root cause: `ollamaSynthesize` defaulted to `deepseek-r1:14b` (not on tower) → silent fallback to count+links. Pointed at `gemma4:e2b` (`CARTER_RESEARCH_MODEL`), bumped synth timeout 12s→60s (`CARTER_RESEARCH_SYNTH_TIMEOUT_MS`), wired synthesis into the apify poller (stores `summary`); inbox renders the brief + "Sources"; fail-soft to per-post snippets.
+- **Human-like reports — FIXED end-to-end (3 root causes).** (1) `ollamaSynthesize` defaulted to `deepseek-r1:14b` (not on tower) → silent fallback to count+links → pointed at `gemma4:e2b` (`CARTER_RESEARCH_MODEL`) + bumped synth timeout 12s→60s. (2) Ollama wedged (below). (3) `get_research_result` (the voice tool) **stripped the `summary`** even though it was synthesized + stored + returned by the inbox UI — added it to the result builder so Carter SPEAKS the findings. Verified live: scans now store a 1308–2196-char brief; `get_research_result has_summary:True`; inbox renders the brief + "Sources"; fail-soft to per-post snippets if synth ever returns null.
 - **★ Ollama un-wedged (tower infra)** — gemma4 inference hung >340s. Root cause was NOT the classic cold-load (pin `OLLAMA_KEEP_ALIVE=-1` was already set) — an **orphaned `llama-server.exe` (Ollama couldn't `TerminateProcess`: "Access is denied") was holding ~2.9GB VRAM**, so every fresh load OOM'd (`cudaMalloc failed`). Fix: killed all ollama procs → relaunched `ollama app.exe` → **killed the orphaned llama-server (freed 2.9GB → 6.8GB free)** → patient warm call. gemma now responds ~6s, pinned (`expires 2318`). **Synthesis verified producing a real cited findings brief.** This also un-blocks the transcript extractor (same model).
 
 **Verification:** tsc 0 (carter-inbox + apify-research). office.html module compiles. Live: gemma `/api/chat` HTTP 200 ~6s; synthesis brief proven; research scan fired (runId HTIN9Iywkgimiknsw) to leave a synthesized report in the inbox. Pushed `334075e..4295e93`. New env: `CARTER_RESEARCH_MODEL=gemma4:e2b`, `CARTER_RESEARCH_SYNTH_TIMEOUT_MS=60000`, `APIFY_REDDIT_TOKEN`, `GITHUB_TOKEN`.
@@ -21,8 +21,8 @@
 **Known-facts updates:** Ollama wedge can also be an **orphaned llama-server holding VRAM** (not just the cold-load spiral) — symptom `cudaMalloc OOM` + `TerminateProcess: Access is denied`; fix = kill the orphan PID + relaunch (see [[reference_ollama_coldload_spiral_fix]]).
 
 **Carry-forward for next session:**
-- **Image attach** still erroring live — operator's next send surfaces the real error (likely auth / WebRTC connection-type / size); fix from there.
-- Old research rows (pre-synthesis) show snippets, not briefs — only NEW scans synthesize.
+- **Image attach** still erroring live — operator's next send surfaces the real error (likely auth / WebRTC connection-type / size); fix from there. (ONLY remaining open item.)
+- Old research rows (pre-synthesis) show snippets, not briefs — only NEW scans synthesize (3 fresh scans this session all synthesized correctly).
 - Tower GPU is shared with desktop apps (Chrome/Edge/ChatGPT) — gemma has ~6.8GB headroom now but a future orphan could recur; the kill-orphan remediation is the fix.
 
 ---
