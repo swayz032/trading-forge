@@ -19,6 +19,7 @@ import { canonicalHash, checkIdempotence } from "../src/server/lib/decision-grap
 import { compileGraph } from "../src/server/lib/graph-compiler.js";
 import { scoreSGF, atomPurity, GOLD } from "../src/server/lib/graph-fidelity.js";
 import { compressAtoms } from "../src/server/lib/predicate-compression.js";
+import { ledgerD } from "../src/server/lib/handoff-conservation.js";
 
 const VIDEO = process.argv[2] ?? "psH--oXkD8M";
 const OLLAMA = process.env.OLLAMA_URL ?? "http://localhost:11434";
@@ -193,6 +194,13 @@ const FRAMEWORK_OBJ = /\b(risk|reward|stop|target|profit|size|sizing|position|lo
     const erUp = comped.ER > base.ER + 0.05, nrHeld = comped.NR >= base.NR - 0.01;
     console.log(`  VERDICT: ${erUp && nrHeld ? "COMPRESSION VALIDATED — ER up + NR held" : !nrHeld ? "FAILED — NodeRecall dropped (over-merge)" : "INCONCLUSIVE — ER not materially up"}`);
   } else console.log(`  (no gold for ${VIDEO})`);
+
+  // ── Ledger D — graph→engine HANDOFF conservation (the Databento hand-off gate) ──
+  const dD = ledgerD(compiledC);
+  console.log(`\nLEDGER D — graph→engine HANDOFF conservation (source-owned → Databento spec):`);
+  console.log(`  ${dD.invariants.map((i) => `${i.ok ? "✓" : "✗"} ${i.name}${i.ok ? "" : "[" + i.offenders.slice(0, 4).join(",") + "]"}`).join("  ")}`);
+  console.log(`  engine spec: ${dD.spec.entry_conditions.length} entry conds (${dD.spec.and_groups.length} AND-groups, ${dD.spec.or_branches.length} OR-branches), ${dD.spec.invalidations.length} invalidation, dir=${dD.spec.direction}, trigger=${dD.spec.entry_trigger_id ? "set" : "NONE"} -> HANDOFF ${dD.ok ? "CONSERVED" : "VIOLATED"}`);
+
   console.log(`\nCANONICAL GRAPH: ${canonicalHash(graph)} (${new Set(compiled.atoms.map(canonKey)).size} distinct atoms)`);
   console.log(`ATOM STABILITY (2 passes): countA=${p1.atoms.length} countB=${p2.atoms.length} Δ=${Math.abs(p1.atoms.length - p2.atoms.length)} | canonical-key diff=${keyDiff.length} ${keyDiff.length ? "[" + keyDiff.slice(0, 6).join(", ") + "]" : ""} -> ${stab.idempotent && keyDiff.length === 0 ? "STABLE" : "UNSTABLE"}`);
 
