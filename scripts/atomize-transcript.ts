@@ -22,7 +22,9 @@ import { compressAtoms } from "../src/server/lib/predicate-compression.js";
 
 const VIDEO = process.argv[2] ?? "psH--oXkD8M";
 const OLLAMA = process.env.OLLAMA_URL ?? "http://localhost:11434";
-const MODEL = process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4:e2b";
+// Research harness default = e4b-it-qat (4.5B active, 100% GPU on 8GB, deterministic across passes + richer
+// objects than e2b). Production extractor stays gemma4:e2b behind the 5-fixture parity gate. Override via env.
+const MODEL = process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4:e4b-it-qat";
 const BATCH = 6;
 
 const ATOM_TYPES: AtomType[] = ["WAIT_SESSION","FILTER","WAIT_BIAS","WAIT_STRUCTURE","VERIFY_STRUCTURE","WAIT_RETEST","WAIT_CONFIRMATION","CONFIRM_DIRECTION","ENABLE_ENTRY","ENTER","INVALIDATE","EXCEPTION","RESET","EXIT_HINT"];

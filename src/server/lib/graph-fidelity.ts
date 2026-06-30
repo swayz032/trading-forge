@@ -12,26 +12,33 @@
 import type { DecisionAtom, AtomType } from "./decision-atom.js";
 import type { CompiledGraph, EdgeRole } from "./graph-compiler.js";
 
-export interface GoldNode { key: string; type: AtomType; keywords: string[] } // keywords: any-one match against object_canonical
+// types = the SET of acceptable atom types (gemma's type labels are noisy — a "break" may be tagged
+// WAIT_STRUCTURE / WAIT_CONFIRMATION / VERIFY_STRUCTURE across runs; NodeRecall must measure DECISION capture,
+// not label precision). keywords = distinguishing CONCEPT tokens (de-aliased so each gold node is separable).
+export interface GoldNode { key: string; types: AtomType[]; keywords: string[] }
 export interface GoldEdge { from: string; to: string; role: EdgeRole }
 export interface GoldGraph { nodes: GoldNode[]; edges: GoldEdge[]; andGroups?: string[][]; orBranches?: string[][] }
 export interface SGF { NR: number; ER: number; RG: number; TF: number; SGF: number; matched: Map<string, string> }
 
-const matchAtom = (g: GoldNode, atoms: DecisionAtom[]): DecisionAtom | undefined =>
-  atoms.find((a) => a.type === g.type && g.keywords.some((k) => a.object_canonical.includes(k)));
+// match the gold node to the FIRST unclaimed atom whose type is acceptable AND whose object carries a concept token
+const matchAtom = (g: GoldNode, atoms: DecisionAtom[], claimed: Set<string>): DecisionAtom | undefined =>
+  atoms.find((a) => !claimed.has(a.id) && g.types.includes(a.type) && g.keywords.some((k) => a.object_canonical.includes(k)));
+
+/** Atom Purity = gold atoms / extracted atoms. The fraction of extracted atoms that are essential. Low AP = pollution. */
+export const atomPurity = (extractedCount: number, gold: GoldGraph): number => gold.nodes.length / Math.max(1, extractedCount);
 
 export function scoreSGF(compiled: CompiledGraph, gold: GoldGraph): SGF {
-  // NODE RECALL — map each gold node to a compiled atom by type + keyword
-  const matched = new Map<string, string>(); // goldKey -> atomId
-  for (const g of gold.nodes) { const a = matchAtom(g, compiled.atoms); if (a) matched.set(g.key, a.id); }
+  // NODE RECALL — map each gold node to a DISTINCT compiled atom (claimed-set prevents one atom satisfying two)
+  const matched = new Map<string, string>(); const claimed = new Set<string>();
+  for (const g of gold.nodes) { const a = matchAtom(g, compiled.atoms, claimed); if (a) { matched.set(g.key, a.id); claimed.add(a.id); } }
   const NR = gold.nodes.length ? matched.size / gold.nodes.length : 1;
 
-  // EDGE RECALL — a gold edge is satisfied if both endpoints matched AND a compiled spine edge connects them
-  const spine = new Set(compiled.edges.filter((e) => e.role === "prerequisite" || e.role === "and").map((e) => `${e.from}->${e.to}`));
+  // EDGE RECALL — a gold edge is satisfied if both endpoints matched AND a compiled edge (any role) connects them
+  const edgeSet = new Set(compiled.edges.map((e) => `${e.from}->${e.to}`));
   let edgeHit = 0;
   for (const e of gold.edges) {
     const f = matched.get(e.from), t = matched.get(e.to);
-    if (f && t && (spine.has(`${f}->${t}`) || spine.has(`${t}->${f}`))) edgeHit++;
+    if (f && t && (edgeSet.has(`${f}->${t}`) || edgeSet.has(`${t}->${f}`))) edgeHit++;
   }
   const ER = gold.edges.length ? edgeHit / gold.edges.length : 1;
 
@@ -50,25 +57,26 @@ export function scoreSGF(compiled: CompiledGraph, gold: GoldGraph): SGF {
 
 // ── GOLD GRAPHS (hand-built from manual audit; the yardstick) ────────────────────────────────────────────────
 export const GOLD: Record<string, GoldGraph> = {
-  // psH — price-action opening-range breakout (NY 15m). Largely LINEAR + one bidirectional exception.
+  // psH — price-action opening-range breakout (NY 15m). NODE granularity: 7 executable decisions; "strong candle /
+  // engulfing / no-wick" are PREDICATES of the break/confirm nodes, NOT separate gold nodes. Types are SETS
+  // (gemma labels the break as STRUCTURE or CONFIRMATION across runs); keywords are de-aliased CONCEPT tokens.
   "psH--oXkD8M": {
     nodes: [
-      { key: "session", type: "WAIT_SESSION", keywords: ["new york", "york", "session"] },
-      { key: "range", type: "WAIT_STRUCTURE", keywords: ["15", "fifteen", "minute", "candle", "mark", "high", "low", "range"] },
-      { key: "break", type: "WAIT_STRUCTURE", keywords: ["5", "five", "break", "above", "direction"] },
-      { key: "verify", type: "VERIFY_STRUCTURE", keywords: ["strong", "candle", "wick", "engulf"] },
-      { key: "retest", type: "WAIT_RETEST", keywords: ["retest", "pullback", "high", "15"] },
-      { key: "confirm", type: "WAIT_CONFIRMATION", keywords: ["engulf", "signal", "buyer", "confirm"] },
-      { key: "enter", type: "ENTER", keywords: ["enter", "long", "entry", "trade"] },
-      { key: "fail", type: "EXCEPTION", keywords: ["fail", "downside", "reject", "indecision", "short", "low"] },
+      { key: "session", types: ["WAIT_SESSION", "FILTER", "WAIT_BIAS"], keywords: ["new york", "york", "session"] },
+      { key: "range", types: ["WAIT_STRUCTURE", "VERIFY_STRUCTURE"], keywords: ["range", "opening", "first", "mark", "fifteen", "low and high"] },
+      { key: "break", types: ["WAIT_STRUCTURE", "WAIT_CONFIRMATION", "VERIFY_STRUCTURE", "CONFIRM_DIRECTION"], keywords: ["break", "breakout", "broke", "move away", "displacement", "strong move", "above"] },
+      { key: "retest", types: ["WAIT_RETEST", "WAIT_STRUCTURE"], keywords: ["retest", "pullback", "rejection", "reject"] },
+      { key: "confirm", types: ["WAIT_CONFIRMATION", "CONFIRM_DIRECTION", "ENABLE_ENTRY"], keywords: ["engulf", "buyer", "buying", "confirm", "signal", "closed candle"] },
+      { key: "enter", types: ["ENTER", "ENABLE_ENTRY"], keywords: ["enter", "long", "take trade", "trade entry", "entry"] },
+      { key: "downside", types: ["EXCEPTION", "INVALIDATE", "RESET", "ENTER"], keywords: ["downside", "short", "fail", "reverse", "towards downside"] },
     ],
     edges: [
       { from: "range", to: "session", role: "prerequisite" },
       { from: "break", to: "range", role: "prerequisite" },
-      { from: "verify", to: "break", role: "prerequisite" },
       { from: "retest", to: "break", role: "prerequisite" },
       { from: "confirm", to: "retest", role: "prerequisite" },
       { from: "enter", to: "confirm", role: "prerequisite" },
+      { from: "downside", to: "range", role: "exception" },
     ],
   },
 };
