@@ -272,11 +272,15 @@ export function emitFactorQualityClassified(
       .inc();
   } catch { /* counter unavailable — ignore */ }
 
-  // 2. Confluence depth histogram — observe factor count
+  // 2. Confluence depth histogram — observe EVIDENCE-BACKED factor count (NOT raw length).
+  // HARDENING 2026-06-30 (#3 provenance recall accounting): this metric is named "extraction" depth, so it must
+  // reflect the YouTube-extracted edge — auto_floor confluences (regime_match / structural_setup, TF overlay) are
+  // NOT extraction recall and must not inflate the histogram. classifyFactorQuality already excludes them; this
+  // closes the one telemetry site that still counted the raw total.
   try {
     // Cap at 5 (bucket ceiling); each factor beyond 5 increments the +Inf bucket.
     extractionConfluenceDepthHistogram.observe(
-      Math.min(payload.confluence_factors.length, 5),
+      Math.min(evidenceBackedFactorCount(payload.confluence_factors), 5),
     );
   } catch { /* histogram unavailable — ignore */ }
 

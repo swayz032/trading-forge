@@ -200,6 +200,15 @@ def apply_eligibility_gate(
 
     gate_stats = {"total": 0, "take": 0, "reduce": 0, "skip": 0, "skip_reasons": {}}
 
+    # ABLATION TOGGLE (2026-06-30, #4 two-mode backtest reporting): when TF_CONFLUENCE_OVERLAY_DISABLED=true the
+    # institutional confluence overlay (this 7-layer A+ eligibility gate) is OFF, so the backtest measures the PURE
+    # YouTube source entry + Trading Forge risk/exit/sizing ("source_entry_only" mode). Default OFF — the overlay
+    # stays ON for all normal/production backtests. Used by scripts/confluence-overlay-ablation.py to compare modes.
+    if os.environ.get("TF_CONFLUENCE_OVERLAY_DISABLED", "").lower() == "true":
+        gate_stats["mode"] = "source_entry_only"
+        return entry_signals, exit_signals, gate_stats
+    gate_stats["mode"] = "tf_institutional_overlay"
+
     # Backward compatible: no HTF cache → passthrough
     if htf_cache is None or len(htf_cache) == 0:
         return entry_signals, exit_signals, gate_stats
