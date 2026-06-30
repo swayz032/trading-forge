@@ -79,4 +79,56 @@ export const GOLD: Record<string, GoldGraph> = {
       { from: "downside", to: "range", role: "exception" },
     ],
   },
+
+  // l-2 — ICT FOUR-CONFLUENCE (daily/4h, shorts): structure + premium/discount fib + supply/demand + liquidity -> short.
+  "l-2iKbcm5UI": {
+    nodes: [
+      { key: "structure", types: ["WAIT_BIAS", "WAIT_STRUCTURE", "FILTER"], keywords: ["market structure", "swing", "bearish", "lower high", "lower low", "structure break", "range"] },
+      { key: "discount", types: ["WAIT_RETEST", "FILTER", "WAIT_STRUCTURE"], keywords: ["premium", "discount", "fib", "retrace", "fifty", "0.5", "half"] },
+      { key: "supply", types: ["VERIFY_STRUCTURE", "WAIT_STRUCTURE", "FILTER"], keywords: ["supply", "demand", "reversal", "zone"] },
+      { key: "liquidity", types: ["FILTER", "WAIT_STRUCTURE", "WAIT_RETEST"], keywords: ["liquidity", "bump", "taken out", "sweep"] },
+      { key: "enter", types: ["ENTER", "ENABLE_ENTRY"], keywords: ["short", "sell", "enter", "trade", "position"] },
+    ],
+    edges: [
+      { from: "discount", to: "structure", role: "prerequisite" },
+      { from: "supply", to: "discount", role: "prerequisite" },
+      { from: "liquidity", to: "supply", role: "prerequisite" },
+      { from: "enter", to: "liquidity", role: "prerequisite" },
+    ],
+  },
+
+  // h6T — EMA10/20 CROSSOVER + CCI CONFIRMATION (both directions): cross + CCI-confirm (+ optional pullback) -> enter.
+  "h6TnE7QClJg": {
+    nodes: [
+      { key: "ema_cross", types: ["WAIT_STRUCTURE", "WAIT_CONFIRMATION", "CONFIRM_DIRECTION", "FILTER"], keywords: ["ema", "cross", "moving average", "10", "20", "momentum"] },
+      { key: "cci_confirm", types: ["WAIT_CONFIRMATION", "VERIFY_STRUCTURE", "CONFIRM_DIRECTION", "FILTER"], keywords: ["cci", "zero", "commodity", "confirm", "hundred", "strength"] },
+      { key: "retest", types: ["WAIT_RETEST", "WAIT_STRUCTURE"], keywords: ["pullback", "pull back", "retest", "back to"] },
+      { key: "enter", types: ["ENTER", "ENABLE_ENTRY"], keywords: ["enter", "buy", "sell", "trade", "close of", "confirmation candle"] },
+    ],
+    edges: [
+      { from: "cci_confirm", to: "ema_cross", role: "prerequisite" },
+      { from: "retest", to: "ema_cross", role: "prerequisite" },
+      { from: "enter", to: "cci_confirm", role: "prerequisite" },
+    ],
+  },
+
+  // MKsj — TWO-LINE 15m reversal (Forex vs USD): session+TF / two lines (17:00 + midnight open) / above-or-below bias /
+  // Asia-sweep / weakness-reversal -> enter. Denser strategy (~6 executable decisions).
+  "MKsjbL0WNjg": {
+    nodes: [
+      { key: "session", types: ["WAIT_SESSION", "FILTER"], keywords: ["session", "asia", "london", "new york", "time", "15 minute", "forex", "dollar"] },
+      { key: "lines", types: ["WAIT_STRUCTURE", "FILTER"], keywords: ["line", "level", "open", "midnight", "17", "two lines"] },
+      { key: "bias", types: ["WAIT_BIAS", "FILTER", "WAIT_STRUCTURE"], keywords: ["bias", "above both", "below both", "direction", "sell", "buy"] },
+      { key: "sweep", types: ["WAIT_STRUCTURE", "VERIFY_STRUCTURE"], keywords: ["sweep", "liquidity", "higher low", "breakout", "asia"] },
+      { key: "weakness", types: ["WAIT_CONFIRMATION", "VERIFY_STRUCTURE", "CONFIRM_DIRECTION"], keywords: ["weakness", "reversal", "overextended", "engulf", "wick", "reverse"] },
+      { key: "enter", types: ["ENTER", "ENABLE_ENTRY"], keywords: ["enter", "trade", "entry", "position", "catch"] },
+    ],
+    edges: [
+      { from: "lines", to: "session", role: "prerequisite" },
+      { from: "bias", to: "lines", role: "prerequisite" },
+      { from: "sweep", to: "bias", role: "prerequisite" },
+      { from: "weakness", to: "sweep", role: "prerequisite" },
+      { from: "enter", to: "weakness", role: "prerequisite" },
+    ],
+  },
 };
