@@ -20,6 +20,7 @@ import { compileGraph } from "../src/server/lib/graph-compiler.js";
 import { scoreSGF, atomPurity, GOLD } from "../src/server/lib/graph-fidelity.js";
 import { compressAtoms } from "../src/server/lib/predicate-compression.js";
 import { ledgerD } from "../src/server/lib/handoff-conservation.js";
+import { spineDensity, densifySpine } from "../src/server/lib/spine-density.js";
 
 const VIDEO = process.argv[2] ?? "psH--oXkD8M";
 const OLLAMA = process.env.OLLAMA_URL ?? "http://localhost:11434";
@@ -200,6 +201,15 @@ const FRAMEWORK_OBJ = /\b(risk|reward|stop|target|profit|size|sizing|position|lo
   console.log(`\nLEDGER D — graph→engine HANDOFF conservation (source-owned → Databento spec):`);
   console.log(`  ${dD.invariants.map((i) => `${i.ok ? "✓" : "✗"} ${i.name}${i.ok ? "" : "[" + i.offenders.slice(0, 4).join(",") + "]"}`).join("  ")}`);
   console.log(`  engine spec: ${dD.spec.entry_conditions.length} entry conds (${dD.spec.and_groups.length} AND-groups, ${dD.spec.or_branches.length} OR-branches), ${dD.spec.invalidations.length} invalidation, dir=${dD.spec.direction}, trigger=${dD.spec.entry_trigger_id ? "set" : "NONE"} -> HANDOFF ${dD.ok ? "CONSERVED" : "VIOLATED"}`);
+
+  // ── SPINE DENSITY — executable fidelity (does the engine require the intended logic before entry?) ──
+  const sdBase = spineDensity(compiledC);
+  const densified = densifySpine(compiledC);
+  const sdRef = spineDensity(densified);
+  const dDref = ledgerD(densified); // compiler refinement must KEEP all 5 conservation invariants
+  console.log(`\nSPINE DENSITY — BASELINE -> DENSIFIED (orphan-confluence attach; Ledger D must stay CONSERVED):`);
+  console.log(`  reachable:    ${(sdBase.reachable_pct * 100).toFixed(0)}% -> ${(sdRef.reachable_pct * 100).toFixed(0)}%   confluence-in-chain: ${(sdBase.confluence_in_chain_pct * 100).toFixed(0)}% -> ${(sdRef.confluence_in_chain_pct * 100).toFixed(0)}%`);
+  console.log(`  orphans:      ${sdBase.orphan_count} -> ${sdRef.orphan_count}   avg-depth: ${sdBase.avg_depth} -> ${sdRef.avg_depth}   | densified Ledger D: ${dDref.ok ? "CONSERVED" : "VIOLATED"}`);
 
   console.log(`\nCANONICAL GRAPH: ${canonicalHash(graph)} (${new Set(compiled.atoms.map(canonKey)).size} distinct atoms)`);
   console.log(`ATOM STABILITY (2 passes): countA=${p1.atoms.length} countB=${p2.atoms.length} Δ=${Math.abs(p1.atoms.length - p2.atoms.length)} | canonical-key diff=${keyDiff.length} ${keyDiff.length ? "[" + keyDiff.slice(0, 6).join(", ") + "]" : ""} -> ${stab.idempotent && keyDiff.length === 0 ? "STABLE" : "UNSTABLE"}`);
