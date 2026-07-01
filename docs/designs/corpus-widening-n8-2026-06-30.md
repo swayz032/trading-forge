@@ -47,7 +47,33 @@ diagnostic** (what % of source-owned confluence atoms reach the terminal) + a gr
 orphan same-rank confluences to the nearest downstream entry chain, re-verified against Ledger D (must stay
 CONSERVED) on all 8.
 
-## Status
+## Spine-density refinement — DONE (compiler rule, not a patch; n=8 all lift to 100%)
 
-Backtester hand-off: **built, unit-tested (5 vitest), conservation-proven on n=8.** Corpus generalization:
-**demonstrated** (conservation + determinism), with the spine-density heuristic as the identified next refinement.
+Built `spine-density.ts`: the metric (`reachable_pct` / `confluence_in_chain_pct` / `orphan_count` / `avg_depth`)
++ `densifySpine()` — a graph-COMPILER rule (not the extractor) that attaches orphan confluence nodes to the
+nearest downstream executable step as a prerequisite, only when grammar-supported (precondition type) and only
+via prerequisite edges (atoms / AND-groups / OR-branches / framework untouched). n=8, baseline → densified:
+
+| transcript | reachable | confluence-in-chain | orphans | avg-depth | densified Ledger D |
+|---|---|---|---|---|---|
+| psH | 44% → **100%** | 40% → 100% | 9 → 0 | 0.86 → 1.5 | CONSERVED |
+| l-2 | 25% → **100%** | 28% → 100% | 24 → 0 | 0.75 → 1.63 | CONSERVED |
+| h6T | 65% → **100%** | 56% → 100% | 11 → 0 | 1.0 → 1.19 | CONSERVED |
+| MKsj | 48% → **100%** | 43% → 100% | 58 → 0 | 0.83 → 1.39 | CONSERVED |
+| e-QmGJU1XYc | **32% → 100%** | 100% → 100% | **15 → 0** | 1.0 → 1.27 | CONSERVED |
+| 9dErM4MFCTY | 45% → **100%** | 30% → 100% | 11 → 0 | 0.56 → 1.4 | CONSERVED |
+| qwLbJfBTZYA | 45% → **100%** | 40% → 100% | 31 → 0 | 0.92 → 1.8 | CONSERVED |
+| 8PYgFVB0GHE | 37% → **100%** | 33% → 100% | 52 → 0 | 1.23 → 1.66 | CONSERVED |
+
+**Every one of the 8 lifts to 100% reachable / 100% confluence-in-chain / 0 orphans, and Ledger D stays CONSERVED
+on all 8.** NodeRecall regression check on the validated 4: **unchanged** (psH 86% known break/confirm, l-2/h6T/MKsj
+100%) — densification adds only prerequisite edges, so node-capture is untouched. This is an ARCHITECTURE
+improvement (a general compiler rule), not a transcript-specific patch: e-QmGJU1XYc — the strategy whose confluences
+floated off-spine (3/43) — now requires 100% of its executable logic before entry, without violating conservation.
+
+## Status — DONE
+
+Backtester hand-off + corpus widening + spine-density refinement all complete. The compiler now produces a graph
+that is **conserved end-to-end into the engine AND full-fidelity on the prerequisite spine.** Spine Density is now
+a **first-class metric** alongside Node Recall / Compressed Recall / Reachability / Topology Fidelity / Determinism
+/ Ledger D Conservation. `densifySpine` is the canonical compiler step feeding the Databento hand-off.

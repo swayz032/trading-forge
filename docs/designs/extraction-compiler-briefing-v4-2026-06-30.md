@@ -11,6 +11,11 @@ Extract **100% of the trading strategy + every executable step a YouTube educato
 *executably* — from the **transcript**, so a deterministic **Python / Databento backtest engine** tests the REAL
 strategy with **no human interpretation**.
 
+**Precise formulation (2026-06-30, refined after the hand-off + spine-density proofs):** *Faithfully compile 100%
+of a YouTube educator's executable strategy into a deterministic decision graph that is conserved end-to-end into
+the backtest engine with no human interpretation and no semantic loss.* This is a more exact description of what is
+now built: not "extraction" but **compilation with end-to-end conservation + full prerequisite-spine fidelity**.
+
 - **Two-stage ownership.** Extraction owns the **entry edge** (setup / entry trigger / confluences / invalidation
   / session / direction / symbol / timeframe / ordered steps). The **framework-overlay** (operator-canonical)
   owns stop / take-profit / position-sizing / risk. Those are `framework_owned` — never extraction's job.
