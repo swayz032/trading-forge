@@ -12217,6 +12217,27 @@ Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal
 
 **Carry-forward:** engine has ZERO open code findings — 100% of known audit items closed. Remaining to a true 10 is EVIDENCE, not code: first backtest wave → ladder → paper → funded. Operator-side: UPS+Kasa, secret rotation, `S3_BACKUP_BUCKET` isolated bucket. Optional polish: bar-by-bar AVWAP section in the parity CI gate; SSE catalog ratchet; n8n retry-backoff normalization.
 
+### Session Log — 2026-07-02 Deep-scan #9 — WALK-FORWARD + MONTE CARLO graded (READ-ONLY, 2 auditors + parent spot-checks, post-fix-wave state)
+
+**Mission:** Operator: "GRADE WALK FORWARD AND MONTE CARLO NOW" — focused methodology-level grading on phase-0 19293a1 (engine100 + both deepscan8 waves included).
+
+**Grades:** Walk-Forward **7.5/10**, Monte Carlo **8.0/10**. Parent CONFIRMED all 3 grade-movers in code before accepting.
+
+**Confirmed findings (fix-wave candidates):**
+- **MC-HIGH: DLL enforcement DEAD in production "both" mode** — every DLL breach check in simulate_firm_survival gates on `granularity == "day"` (monte_carlo.py:958/964/997/1018) but "both" mode passes trade-granularity paths → daily-loss-limit contributes ZERO breach events to the ruin CI B14 gates on. Fix = aggregate trade paths to daily P&L before survival sim.
+- **MC-HIGH: GPU path silently degrades to IID bootstrap** (monte_carlo.py:280-283) even when _safe_autocorrelation mandates block bootstrap — no warning emitted.
+- **MC-MED: worst-firm selected by point_estimate not ci_high** (monte_carlo.py:2007-2010 — comment claims "most conservative" but B14 gates ci_high; high-variance firm can slip through).
+- **MC-MED: CANDIDATE→TESTING auto-promote reads terminal-negative scalar** (backtest-service.ts:2623) not firm-breach CI.
+- **WF-HIGH: WFE unenforced AND uncomputed on default CPCV mode** (`wfe_status="cpcv_not_applicable"` → unconditional cpcv_exempt pass; when E1 per-path IS backtests also fail, WFE+PBO+BIF are ALL exempt simultaneously). Known Wave-30 carry-forward, but E1 per_path_is_sharpes data now exists to compute a CPCV WFE advisory.
+- **WF-MED: DSR expected-max formula algebraically reduces to sqrt(2 ln N)** (risk_metrics.py:539-544 — the γ correction terms cancel exactly: x(1−γ/x²)+γ/x = x). Overstates E[maxSR] by 14-58% at production N — undocumented EXTRA conservatism; genuinely-edged strategies can fail DSR unnecessarily. Fix = full Bailey 2014 Eq.2 quantile form.
+- **WF-MED: risk_metrics.compute_pbo() warn-signal uses OOS values as IS proxy** (:684-693) — measures temporal OOS consistency, not IS→OOS predictive validity; the 0.5 warn threshold is epistemically wrong (lifecycle HARD gate uses correct pbo_gate.py Bailey — unaffected).
+- WF-LOWs: drift-classifier confidences hardcoded (0.85/0.5) with misattributed citations; embargo_bars=20 fixed, not calibrated to trade-label horizon; CPCV K_eff=n_paths overstates path independence (informational only).
+
+**Verified-good highlights:** CPCV bilateral purge+embargo strips correct (LdP Ch.7); lifecycle PBO = correct Bailey rank formula w/ NaN fail-closed; WRC/SPA shared-index multi-model bootstrap correct + Šidák; DSR n_trials honest (max(paths, trial_n_total)); BCa replace=True + 5000-cap principled; EOD trailing-DD ratchet correct; PPW-2004 block length; PCG64DXSM everywhere; all CPCV-exempt paths distinct + auditable; quantum challenger-only isolation intact.
+
+**Carry-forward:** fix wave for the above on operator direction (MC DLL granularity is the capital-relevant one — B14 currently easier than the live Topstep risk desk for DLL-sensitive strategies).
+
+---
 ### Session Log — 2026-07-02 Deep-scan #8 FIX WAVE — all backtesting findings closed (isolated worktree, 5 parallel tracks, MERGED → phase-0)
 
 **Mission:** Operator: "MAKE EVERYTHING 10/10" — close every deep-scan #8 backtesting finding.
