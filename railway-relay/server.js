@@ -19,6 +19,47 @@ if (!TOKEN) { console.error("FATAL: RELAY_TOKEN env var required"); process.exit
 const REQUEST_TIMEOUT_MS = Number(process.env.RELAY_REQUEST_TIMEOUT_MS || 90000);
 const MAX_BODY_BYTES = Number(process.env.RELAY_MAX_BODY_BYTES || 50 * 1024 * 1024); // 50 MB
 
+// Deep-scan #6 S1 (2026-07-01): the /__ollama prefix forwards straight to the tower's
+// Ollama (localhost:11434) which has NO auth of its own. Before this, ANY internet caller
+// could hit /__ollama/api/* — inference (compute theft) AND destructive model management
+// (/api/pull, /api/delete, ...) which can wedge the extraction pipeline. Two-layer fix:
+//   (1) UNCONDITIONALLY block destructive Ollama management endpoints (never used by the
+//       legitimate inference callers — n8n chat + backend). Closes the wedge/delete vector
+//       with zero risk to inference. No config required.
+//   (2) OPTIONAL bearer gate on the whole /__ollama (+ /__oc sidecar) prefix via
+//       OLLAMA_PROXY_TOKEN. When set, callers must send X-Relay-Proxy-Token; when unset,
+//       inference stays open (back-compat) but a one-time warning is logged. Set the env +
+//       add the header to the n8n Ollama HTTP nodes to fully lock inference down too.
+const OLLAMA_PROXY_TOKEN = process.env.OLLAMA_PROXY_TOKEN || null;
+// Ollama write/management endpoints — never needed by inference; always refused via the relay.
+const OLLAMA_BLOCKED_RE = /^\/__ollama\/(api\/(pull|push|create|copy|delete|blobs)\b|v1\/(models\/.*\/delete))/i;
+const PROXY_GATED_PREFIX_RE = /^\/(__ollama|__oc)\b/i;
+let _ollamaTokenWarned = false;
+
+function guardSensitiveProxy(req, res) {
+  const url = req.url || "";
+  if (OLLAMA_BLOCKED_RE.test(url)) {
+    res.writeHead(403, { "content-type": "application/json" });
+    res.end(JSON.stringify({ error: "ollama_management_endpoint_blocked" }));
+    console.warn("BLOCKED destructive ollama proxy call:", req.method, url.split("?")[0]);
+    return true; // handled (blocked)
+  }
+  if (PROXY_GATED_PREFIX_RE.test(url)) {
+    if (OLLAMA_PROXY_TOKEN) {
+      const presented = req.headers["x-relay-proxy-token"];
+      if (presented !== OLLAMA_PROXY_TOKEN) {
+        res.writeHead(401, { "content-type": "application/json" });
+        res.end(JSON.stringify({ error: "proxy_token_required" }));
+        return true; // handled (rejected)
+      }
+    } else if (!_ollamaTokenWarned) {
+      _ollamaTokenWarned = true;
+      console.warn("SECURITY: OLLAMA_PROXY_TOKEN unset — /__ollama inference is open (management endpoints still blocked). Set the env + n8n header to lock down.");
+    }
+  }
+  return false; // not handled — continue normal forwarding
+}
+
 let tower = null;          // current WS connection from tower (singleton)
 const pending = new Map(); // requestId -> { res, timer }
 
@@ -32,6 +73,9 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { "content-type": "application/json" });
     return res.end(JSON.stringify({ ok: true, tower: !!tower, pending: pending.size }));
   }
+
+  // S1: refuse destructive Ollama proxy calls + enforce optional proxy token (before tower check).
+  if (guardSensitiveProxy(req, res)) return;
 
   if (!tower || tower.readyState !== 1) {
     res.writeHead(503, { "content-type": "application/json" });

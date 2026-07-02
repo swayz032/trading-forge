@@ -1,10 +1,14 @@
 name: CI
 
+# Deep-scan #6 S5 (2026-07-01): the active codebase lives on hardening/phase-0
+# (long-lived integration branch), NOT main — so CI never actually ran on the code
+# being shipped. Trigger on the hardening line + PRs targeting it so the gates run
+# where the work happens, not just on the near-dormant main.
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, "hardening/**"]
   pull_request:
-    branches: [main]
+    branches: [main, develop, "hardening/**"]
 
 env:
   NODE_VERSION: "22"
