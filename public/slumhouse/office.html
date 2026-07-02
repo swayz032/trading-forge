@@ -823,6 +823,13 @@
         { id: 'vacation_mode', eyebrow: 'Away', title: 'Vacation Mode',
           on: 'Fully hands-off while you are away — the bot can put strategies live and un-pause itself on its own.',
           off: 'You are in control — the bot waits for your OK before going live or un-pausing.' },
+        // Layer-4 Office P0 (2026-07-02): the recovery switch existed on the
+        // backend (momentary — clears a safety auto-halt) but had no card, so it
+        // was unreachable from the UI. Momentary handling already lives in
+        // onToggle (s.momentary + confirmAction).
+        { id: 'recovery', eyebrow: 'Safety stop', title: 'Recovery',
+          on: 'Press to clear the safety stop after the bot halted itself — it goes straight back to work.',
+          off: 'Nothing to clear — the bot has not halted itself. (Turns RED when a safety halt is active.)' },
         { id: 'live_execution', eyebrow: 'Real money', title: 'Live Execution',
           on: 'Trades REAL money in your funded account.',
           off: 'Practice mode only (paper) — no real money at risk.',

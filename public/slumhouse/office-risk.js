@@ -18,9 +18,9 @@
  * on the `office:unlocked` document event, sleeps on `office:locked`.
  */
 (function () {
-  var POLL_MS = 10000;      // fetch cadence
-  var TICK_MS = 1000;       // "as of Xs ago" label refresh
-  var STALE_MS = 30000;     // older than this ⇒ degraded card
+  var POLL_MS = (window.__OFFICE_RISK_POLL_MS | 0) || 10000;   // fetch cadence (test override)
+  var TICK_MS = 1000;                                          // "as of Xs ago" label refresh
+  var STALE_MS = (window.__OFFICE_RISK_STALE_MS | 0) || 30000; // older ⇒ degraded (test override)
 
   var root = document.getElementById('of-risk');
   if (!root) return;
