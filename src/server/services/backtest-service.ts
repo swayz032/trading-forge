@@ -36,6 +36,14 @@ import { notifyCritical } from "./notification-service.js";
 import { computeFirmRulesVersion } from "../lib/firm-rules-version.js";
 // Wave 27.5 Pass C.2 — compliance gate enforcement mode env knob
 import { resolveComplianceMode, isResearchBacktest } from "../lib/compliance-mode.js";
+// Layer 4 research conveyor item 3 (2026-07-02): provenance stamping hard gate
+import {
+  buildProvenanceStamp,
+  assertProvenanceStamp,
+  deriveSpecProvenanceRef,
+  ProvenanceStampError,
+  type ProvenanceStampOptions,
+} from "../lib/provenance-stamp.js";
 // RL kill-switch: RL training is an AUTONOMOUS loop — requires AUTOPILOT (mode >= 2)
 import { readLearningLoopMode } from "../lib/learning-loop-mode.js";
 // Wave hardening 2026-06-22 (G1a) — buildBacktestArgs extracted so tests can
@@ -469,6 +477,52 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
   const { mode: resolvedComplianceMode, source: complianceModeSource } =
     resolveComplianceMode(configRecord);
 
+  // Layer 4 research conveyor item 3 (2026-07-02): build + assert provenance stamp.
+  // HARD GATE: assertProvenanceStamp throws ProvenanceStampError when enforcement is ON
+  // (default) and any required field is missing. The gate is fail-closed by design.
+  // Set PROVENANCE_ALLOW_LEGACY_BACKFILL=true ONLY for legacy row backfill.
+  let provenanceStampValue: ReturnType<typeof buildProvenanceStamp> | null = null;
+  try {
+    const stampOpts: ProvenanceStampOptions = {
+      symbol: config.strategy.symbol,
+      timeframe: config.strategy.timeframe,
+      startDate: config.start_date,
+      endDate: config.end_date,
+      dataSource: "databento",
+      specProvenanceRef: deriveSpecProvenanceRef(configRecord),
+    };
+    const builtStamp = buildProvenanceStamp(stampOpts);
+    provenanceStampValue = assertProvenanceStamp(builtStamp, stampOpts);
+  } catch (err) {
+    if (err instanceof ProvenanceStampError) {
+      // Write audit row for the refusal so operators can diagnose missing provenance
+      void insertAuditRowSafe({
+        action: "backtest.provenance_stamp_refused",
+        entityType: "strategy",
+        entityId: strategyId,
+        status: "failure",
+        input: {
+          strategyId,
+          symbol: config.strategy.symbol,
+          missingFields: err.missingFields,
+          provenance_stamp_enforce: process.env["PROVENANCE_STAMP_ENFORCE"] ?? "true",
+          provenance_allow_legacy_backfill:
+            process.env["PROVENANCE_ALLOW_LEGACY_BACKFILL"] ?? "false",
+        },
+        result: { refused: true, reason: "missing_provenance_stamp_fields" },
+        correlationId,
+        decisionAuthority: "system",
+      });
+      logger.error(
+        { fn: "runBacktest", strategyId, missingFields: err.missingFields, correlationId },
+        "Backtest insert refused — provenance stamp missing required fields (fail-closed gate). " +
+          "Set PROVENANCE_ALLOW_LEGACY_BACKFILL=true to allow legacy rows.",
+      );
+      throw err;
+    }
+    throw err;
+  }
+
   const [row] = await db
     .insert(backtests)
     .values({
@@ -482,6 +536,7 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       config: configRecord,
       firmRulesVersion: firmRulesVersionStamp,
       complianceMode: resolvedComplianceMode,
+      provenanceStamp: provenanceStampValue as unknown as Record<string, unknown>,
     })
     .returning();
 
