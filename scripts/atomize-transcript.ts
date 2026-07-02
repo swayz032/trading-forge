@@ -61,6 +61,15 @@ rule is NOT a decision — even if it mentions indicators or price.
   "this setup has a high win rate" / "you stop trusting yourself"  -> NO (justification / motivation)
   "the engulfing candle confirms buyers"  -> YES only if it introduces a confirmation rule not already stated, else explanation.
 
+EXECUTION CONTEXT IS A DECISION (3-video audit fix 2026-07-02 — the gate was dropping these): a clause that
+DECLARES the instrument/market ("we trade this on crude oil"), the operating timeframe ("we're on the 30-minute
+chart", "drop down to the 5-minute"), the session, or a NAMED REFERENCE LEVEL the rules operate on (pre-market
+high/low, overnight high/low, opening-range high/low, gap fill, volume-profile level) CHANGES the engine's
+behavior — removing it changes what the engine runs on. -> is_decision=true (WAIT_SESSION for market/timeframe/
+session declarations; WAIT_STRUCTURE or FILTER for named reference levels).
+NEGATIVE RULES ARE DECISIONS: "if it fails / can't hold / doesn't retest -> we do NOT trade it / would not have
+entered" introduces an INVALIDATE or EXCEPTION rule — never classify it observation/example.
+
 OWNERSHIP BOUNDARY: stop-loss, take-profit, target, position size, risk amount, and risk/reward are
 FRAMEWORK-OWNED (outside the strategy edge). They are valid concepts but NEVER decision atoms — classify them
 "framework_owned".
