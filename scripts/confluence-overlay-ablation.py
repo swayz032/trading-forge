@@ -58,7 +58,7 @@ def _run_mode(strategy_class_path: str, mode: str, start_date: str, end_date: st
             end_date=end_date,
             slippage_ticks=1.0,
             commission_per_side=0.62,
-            firm_key="topstep",
+            firm_key="topstep_50k",
             skip_eligibility_gate=overlay_disabled,   # matches the env toggle for the direct call
             max_trades_per_day=2,
             use_performance_gate=False,
