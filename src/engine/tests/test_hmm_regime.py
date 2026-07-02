@@ -32,7 +32,7 @@ from src.engine.context.hmm_regime import (
 
 # ─── Synthetic regime-switching data ──────────────────────────────────────────
 
-def _make_synthetic_ohlc(n_per_regime: int = 120, seed: int = 42) -> "pd.DataFrame":
+def _make_synthetic_ohlc(n_per_regime: int = 120, seed: int = 42) -> "pd.DataFrame":  # noqa: F821 — pd imported locally; string annotation not evaluated
     """Generate a synthetic OHLC DataFrame with 3 clear regimes.
 
     Regime 0 — trending up:   mean log-return = +0.002

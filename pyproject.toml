@@ -1,9 +1,13 @@
-# deepscan6 O4 (2026-07-01): explicit ruff + mypy config so the Python static-analysis
-# surface is stable and CI-consistent (was pre-commit-only, and pre-commit is bypassed by
-# the mandated `git commit --no-verify`). CI runs these as ADVISORY (continue-on-error)
-# today because the engine carries ~454 pre-existing ruff findings (mostly cosmetic
-# f-string prefixes) — flip CI to blocking after the one-time burn-down (`ruff check
-# --fix src/engine` clears ~302 automatically). The gate now at least SURFACES regressions.
+# deepscan6 O4 (2026-07-01, burn-down 2026-07-02): explicit ruff + mypy config so the
+# Python static-analysis surface is stable and CI-consistent (was pre-commit-only, and
+# pre-commit is bypassed by the mandated `git commit --no-verify`).
+# CI split (ci.yml): the BUG-DETECTION subset (F821 undefined-name, F811 redefinition,
+# F823, F63/F7 syntax+comparison bugs, E9, F50x string-format bugs) is CLEAN + BLOCKING.
+# The broad STYLE set below (E/W/I/UP/B, ~1000 pre-existing cosmetic findings — mostly
+# Optional[X]→X|None modernizations across 295 files) stays ADVISORY pending a verifiable
+# burn-down (`ruff check --fix src/engine`; NOT done in one sweep because engine pytest
+# collection hangs on vectorbt, so a 295-file unverifiable rewrite of the money engine
+# was judged too risky). Two harmless string-annotation F821s carry documented noqa.
 [tool.ruff]
 line-length = 120
 target-version = "py312"

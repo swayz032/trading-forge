@@ -183,7 +183,6 @@ class TestTimezoneETClassification:
         """02:30 ET = 07:30 UTC.  Without tz conversion, raw .hour gives 7 → not
         in London window (2-5).  With ET conversion, hour=2 → 'london' session."""
         from src.engine.context.session_context import _get_session, _to_et
-        from zoneinfo import ZoneInfo
 
         # 07:30 UTC = 03:30 ET in summer (EDT, UTC-4)
         ts_utc = dt.datetime(2026, 5, 20, 7, 30, tzinfo=dt.timezone.utc)

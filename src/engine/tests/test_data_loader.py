@@ -231,7 +231,6 @@ class TestVerifyRatioAdjustedSource:
 
     def test_raw_path_raises_by_default(self):
         """Raw (unadjusted) path raises ValueError when adjusted=True and no ALLOW_RAW_DATA env var."""
-        import os
         env_backup = os.environ.pop("ALLOW_RAW_DATA", None)
         try:
             with pytest.raises(ValueError, match="does not appear to be ratio-adjusted"):

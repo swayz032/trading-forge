@@ -261,7 +261,7 @@ def generate_signals(
     config: StrategyConfig,
     fill_rate: float = 1.0,
     fill_rate_seed: int | None = None,
-    event_mask: "np.ndarray | None" = None,
+    event_mask: "np.ndarray | None" = None,  # noqa: F821 — np imported locally below (deferred heavy import); string annotation never evaluated at runtime
 ) -> pl.DataFrame:
     """Generate entry/exit boolean signal columns from strategy config.
 

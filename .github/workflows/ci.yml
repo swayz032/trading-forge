@@ -160,10 +160,14 @@ jobs:
       - name: Verify system map freshness
         run: npm run system-map:check
 
-      # deepscan6 O4/O5 (2026-07-01): Python static-analysis + dependency audit gates.
-      # ADVISORY (continue-on-error) until the pre-existing ~454 ruff findings are burned
-      # down (`ruff check --fix src/engine`) and mypy is triaged — then flip to blocking.
-      - name: Python lint — ruff (advisory)
+      # deepscan6 O4 (2026-07-01, burn-down 2026-07-02): Python static-analysis gates.
+      # The BUG-DETECTION subset (undefined names, redefinitions, syntax/comparison bugs)
+      # is CLEAN and BLOCKING — a real regression here fails CI. The broad STYLE set
+      # (E/W/I/UP/B, ~1000 pre-existing cosmetic findings) stays ADVISORY until the
+      # cosmetic burn-down (`ruff check --fix src/engine`, mostly Optional[X]→X|None).
+      - name: Python lint — ruff bug-detection (BLOCKING)
+        run: python -m ruff check src/engine --select F821,F811,F823,F706,F707,E9,F63,F7,F501,F502,F506,F522
+      - name: Python lint — ruff full style (advisory)
         continue-on-error: true
         run: python -m ruff check src/engine
       - name: Python type-check — mypy (advisory)
