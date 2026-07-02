@@ -74,6 +74,7 @@ import { runStrategyStaleDetector } from "./services/strategy-stale-detector.js"
 import { isOffRthTrainingWindow } from "./lib/quantum-rl-training-runner.js";
 // W29 Pass B.3: Regime drift detector — daily 18:00 ET sweep
 import { runRegimeDriftDetector } from "./services/regime-drift-detector-service.js";
+import { runStrategyAgeRevalidation } from "./services/strategy-revalidation-service.js";
 // W29 Pass D.3: A/B comparison weekly digest — Friday 17:00 ET
 import { runAbComparisonWeeklyDigest } from "./services/ab-comparison-weekly-digest-service.js";
 // W0.1: Nightly off-tower database backup (hardware-failure safety net)
@@ -164,6 +165,10 @@ const NEVER_DISABLE_JOBS = new Set([
 // deepscan6 A2: once-per-hour-per-signature dedup for the n8n-health-check Discord WARN
 // (the 15-min cron would otherwise spam a persistently-failing workflow set).
 const _n8nHealthAlertDedup = new Map<string, number>();
+
+// deepscan6 R1: 6h/strategy dedup for the rolling-Sharpe decay REVIEW Discord WARN
+// (the 4h rolling-sharpe cron would otherwise re-alert a decaying strategy every run).
+const _sharpeDecayAlertDedup = new Map<string, number>();
 
 function getJobHealth(name: string): JobHealth {
   let health = jobHealthTracker.get(name);
@@ -5117,6 +5122,40 @@ except Exception as e:
   });
   _scheduledJobs.add("regime-drift-detector");
 
+  // deepscan6 R2: strategy-age re-validation gate — daily 07:00 ET sweep of DEPLOYED
+  // strategies; WARN at > 365d since last CPCV+PBO+WFE freeze, force re-validation (demote
+  // for re-CPCV) at > 548d (~18mo). Reuses frozen_policy_set_at (no new table). Pipeline-gate
+  // exempt (monitoring must run even when paused). 07:00 ET dodges the 18:00 ET cron cluster.
+  _PIPELINE_GATE_EXEMPT.add("strategy-age-revalidation");
+  registerJob("strategy-age-revalidation", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "strategy-age-revalidation" }, "cron tick start");
+    await runStrategyAgeRevalidation();
+  });
+  // 07:00 ET = 11:00 UTC (EDT, UTC-4) or 12:00 UTC (EST, UTC-5) — DST-safe double-fire + guard.
+  cron.schedule("33 11,12 * * *", async () => {
+    if (!_tryAcquireJobLock("strategy-age-revalidation")) return;
+    try {
+      const now = new Date();
+      const etHour = parseInt(
+        now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+        10,
+      );
+      if (etHour !== 7) {
+        logger.debug({ etHour }, "Scheduler: strategy-age-revalidation cron fired but not 07:00 ET — skipping (DST guard)");
+        return;
+      }
+      logger.info("Scheduler: strategy-age-revalidation (07:00 ET confirmed)");
+      const t0sar = Date.now();
+      await withRetry("strategy-age-revalidation", SCHEDULER_JOBS["strategy-age-revalidation"].run, 1);
+      markJobRun("strategy-age-revalidation");
+      emitJobComplete("strategy-age-revalidation", Date.now() - t0sar);
+    } finally {
+      _releaseJobLock("strategy-age-revalidation");
+    }
+  });
+  _scheduledJobs.add("strategy-age-revalidation");
+
   // ─── Wave 26 Pass L Tweak 2: MCL pre-EIA stop tightening — Wed 10:00 ET ───
   //
   // 30 minutes before the weekly EIA crude oil inventory release at 10:30 ET,
@@ -6293,9 +6332,51 @@ async function updateRollingSharpe() {
           );
         } else {
           logger.info(
-            { strategyId: strat.id, name: strat.name, liveSharpe, btSharpe },
+            { strategyId: strat.id, name: strat.name, liveSharpe },
             "Rolling Sharpe within expected range",
           );
+        }
+
+        // deepscan6 R1: institutional-standard rolling-Sharpe DECAY BANDS (ratio-based),
+        // additive to the absolute >2σ drift + <1.0 demotion above. AI has compressed alpha
+        // half-lives to ~18mo; a strategy silently earning 0.6× its backtest Sharpe is decaying
+        // even if still >1.0 absolute. WARN < SHARPE_DECAY_WARN_RATIO (0.7×), REVIEW <
+        // SHARPE_DECAY_REVIEW_RATIO (0.5×). Audit every run (durable signal); Discord only the
+        // severe REVIEW band, deduped 6h/strategy (the <1.0 inline path handles demotion).
+        if (btSharpe > 0) {
+          const decayRatio = liveSharpe / btSharpe;
+          const warnRatio = Number(process.env["SHARPE_DECAY_WARN_RATIO"] ?? "0.7");
+          const reviewRatio = Number(process.env["SHARPE_DECAY_REVIEW_RATIO"] ?? "0.5");
+          if (decayRatio < reviewRatio) {
+            await insertAuditRowSafe({
+              action: "strategy.sharpe_decay_review", entityType: "strategy", entityId: strat.id,
+              decisionAuthority: "gate", status: "warning",
+              input: { liveSharpe, btSharpe, decayRatio, reviewRatio } as Record<string, unknown>,
+              result: { band: "review", note: "live Sharpe < 0.5x backtest baseline" } as Record<string, unknown>,
+              correlationId: null,
+            }).catch(() => {});
+            const now = Date.now();
+            const last = _sharpeDecayAlertDedup.get(strat.id) ?? 0;
+            if (now - last >= 6 * 60 * 60 * 1000) {
+              _sharpeDecayAlertDedup.set(strat.id, now);
+              notifyWarning(
+                `Strategy edge decaying: ${strat.name}`,
+                appendFamilyGradePostscript(
+                  `${strat.name} live rolling Sharpe ${liveSharpe.toFixed(2)} is only ${(decayRatio * 100).toFixed(0)}% of its backtest baseline ${btSharpe.toFixed(2)} (< ${reviewRatio}× review floor).`,
+                  "This bot's recent live results are much weaker than what its test predicted — its edge may be fading.",
+                  "It's flagged for review. The system may auto-pause it; you don't need to act, but mention it to Tony.",
+                ),
+              );
+            }
+          } else if (decayRatio < warnRatio) {
+            await insertAuditRowSafe({
+              action: "strategy.sharpe_decay_warn", entityType: "strategy", entityId: strat.id,
+              decisionAuthority: "gate", status: "warning",
+              input: { liveSharpe, btSharpe, decayRatio, warnRatio } as Record<string, unknown>,
+              result: { band: "warn", note: "live Sharpe < 0.7x backtest baseline" } as Record<string, unknown>,
+              correlationId: null,
+            }).catch(() => {});
+          }
         }
       } else {
         logger.info(
