@@ -34,11 +34,11 @@ import click
 import numpy as np
 import pandas as pd
 import polars as pl
+
 # vectorbt is NOT imported at module level — lazy-import inside each run path.
 # Both run_backtest() (DSL) and run_class_backtest() (class-based) lazy-import
 # vectorbt at call time so non-vectorbt code paths pay zero JIT startup cost.
 # The Numba JIT cache is pinned via determinism.py → NUMBA_CACHE_DIR (Fix A).
-
 from src.engine.analytics import compute_full_analytics
 from src.engine.config import (
     CONTRACT_SPECS,
@@ -803,6 +803,234 @@ def _apply_backtest_parity_gates(
     return out, parity_stats
 
 
+def _apply_naked_management(
+    trades_records,
+    high_np: np.ndarray,
+    low_np: np.ndarray,
+    close_np: np.ndarray,
+    atr_np: np.ndarray,
+    spec,
+    df,
+    open_np: Optional[np.ndarray] = None,
+    atr_stop_multiplier: float = 1.5,
+) -> list[dict]:
+    """Exit Policy A — 'naked': session-EOD time exit ONLY.
+
+    layer4-replay counterfactual axis (2026-07-02): measures the P&L when the
+    ONLY exit management is the 15:55 ET hard flatten.  No stop loss, no TP,
+    no trailing stop.  The DLL circuit breaker and firm kill-switch are NOT
+    modeled here — they operate at the entry-signal layer (apply_dll_halt),
+    which runs before this function and is not part of the experiment.
+
+    Entry fills are inherited from vectorbt (next-bar fill convention).
+    Exit: 15:55 ET time-stop (close of the flatten bar), or the original
+    vectorbt signal exit if no 15:55 bar is reached first.
+
+    This function is deterministic: same inputs → same outputs.
+    """
+    from datetime import datetime as _dt
+    from datetime import timezone as _tz
+
+    from src.engine.exits.style_d_handler import _is_time_stop
+
+    managed_trades = []
+    ts_col = "ts_event"
+    has_ts = ts_col in df.columns
+
+    for _, row in trades_records.iterrows():
+        entry_p = float(row["Avg Entry Price"])
+        original_exit_p = float(row["Avg Exit Price"])
+        size = float(row["Size"])
+        direction_str = str(row["Direction"])
+        entry_idx = int(row["Entry Idx"]) if "Entry Idx" in row.index else 0
+        original_exit_idx = int(row["Exit Idx"]) if "Exit Idx" in row.index else min(entry_idx + 1, len(high_np) - 1)
+        MAX_HOLD_BARS = int(os.environ.get("BACKTEST_MAX_HOLD_BARS", "200"))
+        if original_exit_idx - entry_idx > MAX_HOLD_BARS:
+            original_exit_idx = entry_idx + MAX_HOLD_BARS
+
+        atr_at_entry = float(atr_np[entry_idx]) if entry_idx < len(atr_np) and not np.isnan(atr_np[entry_idx]) else 1.0
+        _stop_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
+        risk_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+
+        exit_price = original_exit_p
+        exit_idx = original_exit_idx
+        exit_reason = "signal"
+
+        for bar in range(entry_idx + 1, original_exit_idx):
+            if bar >= len(high_np):
+                break
+            # 15:55 ET hard flatten — the ONLY management applied in Policy A
+            if has_ts and bar < len(df):
+                try:
+                    _raw_ts = df[ts_col][bar]
+                    _dt_val = (
+                        _raw_ts if isinstance(_raw_ts, _dt)
+                        else _dt.fromisoformat(str(_raw_ts))
+                    )
+                    _dt_utc = (
+                        _dt_val.astimezone(_tz.utc)
+                        if _dt_val.tzinfo is not None
+                        else _dt_val.replace(tzinfo=_tz.utc)
+                    )
+                    if _is_time_stop(_dst_correct_et_hour(_dt_utc)):
+                        exit_price = float(close_np[bar]) if bar < len(close_np) else original_exit_p
+                        exit_reason = "time_stop"
+                        exit_idx = bar
+                        break
+                except Exception:
+                    pass
+
+        managed_trades.append({
+            "entry_idx": entry_idx,
+            "entry_price": entry_p,
+            "original_exit_idx": original_exit_idx,
+            "original_exit_price": original_exit_p,
+            "size": size,
+            "direction": direction_str,
+            "risk_points": round(risk_points, 2),
+            "exit_price": exit_price,
+            "exit_idx": exit_idx,
+            "exit_reason": exit_reason,
+            "gap_through_stop_count": 0,
+            # Policy A audit label
+            "exit_policy": "naked",
+        })
+
+    return managed_trades
+
+
+def _apply_stop_only_management(
+    trades_records,
+    high_np: np.ndarray,
+    low_np: np.ndarray,
+    close_np: np.ndarray,
+    atr_np: np.ndarray,
+    spec,
+    df,
+    open_np: Optional[np.ndarray] = None,
+    atr_stop_multiplier: float = 1.5,
+) -> list[dict]:
+    """Exit Policy B — 'stop_only': initial stop loss + 15:55 ET time-stop.
+
+    layer4-replay counterfactual axis (2026-07-02): measures the P&L when the
+    ONLY management is the initial stop loss (no TP advancement, no trailing,
+    no partials, no BE move).  Isolates the value of TP/trailing overlay on top
+    of a raw stop.
+
+    Gap-fill stop logic is preserved (same as static_styleC): if the bar opens
+    beyond the stop price, we fill at bar open.
+
+    15:55 ET time-stop is always applied — it is an invariant, not overlay.
+    """
+    from datetime import datetime as _dt
+    from datetime import timezone as _tz
+
+    from src.engine.exits.style_d_handler import _is_time_stop
+
+    managed_trades = []
+    ts_col = "ts_event"
+    has_ts = ts_col in df.columns
+
+    for _, row in trades_records.iterrows():
+        entry_p = float(row["Avg Entry Price"])
+        original_exit_p = float(row["Avg Exit Price"])
+        size = float(row["Size"])
+        direction_str = str(row["Direction"])
+        entry_idx = int(row["Entry Idx"]) if "Entry Idx" in row.index else 0
+        original_exit_idx = int(row["Exit Idx"]) if "Exit Idx" in row.index else min(entry_idx + 1, len(high_np) - 1)
+        MAX_HOLD_BARS = int(os.environ.get("BACKTEST_MAX_HOLD_BARS", "200"))
+        if original_exit_idx - entry_idx > MAX_HOLD_BARS:
+            original_exit_idx = entry_idx + MAX_HOLD_BARS
+
+        is_short = "Short" in direction_str
+        atr_at_entry = float(atr_np[entry_idx]) if entry_idx < len(atr_np) and not np.isnan(atr_np[entry_idx]) else 1.0
+        _stop_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
+        risk_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+
+        # Initial stop — FIXED for the whole trade (no trailing, no BE move)
+        if is_short:
+            initial_stop = entry_p + risk_points
+        else:
+            initial_stop = entry_p - risk_points
+
+        exit_price = original_exit_p
+        exit_idx = original_exit_idx
+        exit_reason = "signal"
+        gap_count = 0
+
+        for bar in range(entry_idx + 1, original_exit_idx):
+            if bar >= len(high_np):
+                break
+
+            bar_high = float(high_np[bar])
+            bar_low = float(low_np[bar])
+            bar_open = (
+                float(open_np[bar])
+                if open_np is not None and bar < len(open_np)
+                else bar_low
+            )
+
+            # 15:55 ET hard flatten (invariant, not part of the stop_only overlay)
+            if has_ts and bar < len(df):
+                try:
+                    _raw_ts = df[ts_col][bar]
+                    _dt_val = (
+                        _raw_ts if isinstance(_raw_ts, _dt)
+                        else _dt.fromisoformat(str(_raw_ts))
+                    )
+                    _dt_utc = (
+                        _dt_val.astimezone(_tz.utc)
+                        if _dt_val.tzinfo is not None
+                        else _dt_val.replace(tzinfo=_tz.utc)
+                    )
+                    if _is_time_stop(_dst_correct_et_hour(_dt_utc)):
+                        exit_price = float(close_np[bar]) if bar < len(close_np) else bar_open
+                        exit_reason = "time_stop"
+                        exit_idx = bar
+                        break
+                except Exception:
+                    pass
+
+            # Initial stop loss (gap-fill logic preserved)
+            if not is_short and bar_low <= initial_stop:
+                if bar_open < initial_stop:
+                    exit_price = bar_open
+                    gap_count += 1
+                else:
+                    exit_price = initial_stop
+                exit_reason = "stop_loss"
+                exit_idx = bar
+                break
+            elif is_short and bar_high >= initial_stop:
+                if bar_open > initial_stop:
+                    exit_price = bar_open
+                    gap_count += 1
+                else:
+                    exit_price = initial_stop
+                exit_reason = "stop_loss"
+                exit_idx = bar
+                break
+
+        managed_trades.append({
+            "entry_idx": entry_idx,
+            "entry_price": entry_p,
+            "original_exit_idx": original_exit_idx,
+            "original_exit_price": original_exit_p,
+            "size": size,
+            "direction": direction_str,
+            "risk_points": round(risk_points, 2),
+            "exit_price": exit_price,
+            "exit_idx": exit_idx,
+            "exit_reason": exit_reason,
+            "gap_through_stop_count": gap_count,
+            "initial_stop": round(initial_stop, 4),
+            # Policy B audit label
+            "exit_policy": "stop_only",
+        })
+
+    return managed_trades
+
+
 def _apply_trade_management(
     trades_records,
     high_np: np.ndarray,
@@ -816,13 +1044,19 @@ def _apply_trade_management(
     atr_stop_multiplier: float = 1.5,
     exit_engine: str = "static_styleC",
     adaptive_ctx=None,  # type: Optional[AdaptiveExitContext]
+    exit_policy: str = "full_overlay",  # layer4-replay: "naked" | "stop_only" | "full_overlay"
 ) -> list[dict]:
     """Bar-by-bar trade management dispatcher.
 
     Wave 25 Gap B: branches on exit_engine to route to either the static Style C
     path (existing, unchanged) or the new adaptive path (Python mirror of TS engine).
 
-    Routing:
+    layer4-replay (2026-07-02): exit_policy="naked"|"stop_only"|"full_overlay" (default).
+      "naked"        → _apply_naked_management()   — EOD time-stop only (no stop/TP/trail)
+      "stop_only"    → _apply_stop_only_management() — initial stop only (no TP/trail/partials)
+      "full_overlay" → existing dispatch below (ZERO behavior change — Policy C = production default)
+
+    Routing (when exit_policy="full_overlay"):
       exit_engine="static_styleC" (default) → _apply_static_styleC_management()
         Existing behavior: 6pt max SL, structural TP via DOL, BE+trail progression.
         Wave 1 Track 1A: passes liquidity_snapshot (from adaptive_ctx if available)
@@ -832,13 +1066,27 @@ def _apply_trade_management(
         delta-div early-exit, 15:55 ET hard flatten.
       exit_engine="adaptive" + adaptive_ctx=None → graceful fallback to static_styleC.
 
-    Hard invariants (CLAUDE.md §4 — both paths):
-      - 15:55 ET hard flatten ALWAYS applies (static: enforced by time_stop logic
-        in _apply_static_styleC_management; adaptive: enforced in _apply_adaptive_management)
-      - BE+1 on TP1 fill (adaptive: applied when tp1 is hit)
+    Hard invariants (CLAUDE.md §4 — ALL paths including naked and stop_only):
+      - 15:55 ET hard flatten ALWAYS applies
+      - BE+1 on TP1 fill (adaptive: applied when tp1 is hit; naked/stop_only: not applicable)
 
     Returns list of managed trade dicts with updated exit_price, exit_idx, exit_reason.
     """
+    # layer4-replay: counterfactual exit policy dispatch (ADDITIVE — no restructure of existing paths)
+    if exit_policy == "naked":
+        return _apply_naked_management(
+            trades_records, high_np, low_np, close_np, atr_np,
+            spec, df, open_np=open_np,
+            atr_stop_multiplier=atr_stop_multiplier,
+        )
+    if exit_policy == "stop_only":
+        return _apply_stop_only_management(
+            trades_records, high_np, low_np, close_np, atr_np,
+            spec, df, open_np=open_np,
+            atr_stop_multiplier=atr_stop_multiplier,
+        )
+    # exit_policy="full_overlay" (default) — fall through to existing dispatch below
+
     # Gap B: branch on exit_engine
     if exit_engine == "adaptive" and adaptive_ctx is not None:
         return _apply_adaptive_management(
@@ -1833,6 +2081,7 @@ def _compute_daily_pnls(
         # index has timezone info. Fall back to UTC calendar date when tz info is absent
         # (e.g. daily data, synthetic test data) to preserve backward compatibility.
         from datetime import timedelta as _td
+
         import pandas as _pd
 
         daily = {}
@@ -5607,6 +5856,7 @@ def run_class_backtest(
     warmup_data: Optional[pl.DataFrame] = None,
     exit_engine: str = "static_styleC",
     adaptive_ctx=None,  # type: Optional[AdaptiveExitContext] — Wave 25 Gap B
+    exit_policy: str = "full_overlay",  # layer4-replay: "naked" | "stop_only" | "full_overlay"
 ) -> dict:
     """Run a backtest using a BaseStrategy class instance.
 
@@ -6040,6 +6290,7 @@ def run_class_backtest(
             atr_stop_multiplier=_cls_stop_mult,
             exit_engine=exit_engine,
             adaptive_ctx=adaptive_ctx,
+            exit_policy=exit_policy,
         )
         {m["exit_reason"] for m in managed_trades}
         tp_count = sum(1 for m in managed_trades if m["exit_reason"] == "take_profit")
@@ -6620,6 +6871,8 @@ def run_class_backtest(
         "governor": governor_result,
         # W25.17: echo which exit engine was used so A/B harness can tag results correctly.
         "exit_engine": exit_engine,
+        # layer4-replay (2026-07-02): echo exit policy for counterfactual tagging.
+        "exit_policy": exit_policy,
         "run_receipt": _build_run_receipt(strategy._config if hasattr(strategy, '_config') else StrategyConfig(
             name=strategy.name, symbol=strategy.symbol, timeframe=strategy.timeframe,
             indicators=[], entry_long="", entry_short="", exit="",
