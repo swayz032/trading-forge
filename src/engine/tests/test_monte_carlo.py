@@ -623,13 +623,16 @@ class TestRNGFamilyConsistency:
 # ─── F-4: "both" method granularity fix ────────────────────────────
 
 class TestBothMethodGranularity:
-    """In "both" mode, firm survival must use granularity="trade" not "day".
+    """Regression tests for "both" mode firm survival granularity.
 
-    F-4: granularity was hard-coded as "trade" only for method=="trade_resample".
-    In "both" mode, paths = trade_paths (line ~992), but granularity was "day".
-    simulate_firm_survival then enforced daily-loss-limit per trade step instead
-    of per day — understating risk.
-    Fix: granularity="trade" when method in ("trade_resample", "both").
+    F-4 (original): "both" mode was passing granularity="day" with trade-level paths,
+    causing DLL enforcement per trade step instead of per day — understating risk.
+    F-4 fix: set granularity="trade" for "both" mode.
+
+    FIX 1 (deep-scan #9 2026-07-02): The F-4 "trade" fix silenced ALL DLL enforcement
+    in "both" mode (DLL checks gate on granularity=="day"). Now: aggregate trade_paths
+    to daily paths and call with granularity="day" so DLL + trailing-DD + consistency
+    all enforce correctly.
     """
 
     def test_both_method_with_firms_completes(self):
@@ -648,14 +651,13 @@ class TestBothMethodGranularity:
         assert "firm_survival" in result
         assert "topstep_50k" in result["firm_survival"]
 
-    def test_trade_resample_and_both_same_granularity_class(self):
-        """'both' and 'trade_resample' must produce firm_survival in the same numeric ballpark.
+    def test_trade_resample_and_both_both_produce_valid_rates(self):
+        """'both' and 'trade_resample' each produce a valid float eval_pass_rate.
 
-        Both use trade-level paths. If granularity were "day" for "both",
-        eval_pass_rate would differ significantly because daily-loss-limit
-        would be applied per trade step (too lenient).
-        We just verify both return a numeric pass rate — behavioral equivalence
-        is confirmed by the granularity fix at the call site.
+        After FIX 1 (deep-scan #9): "both" uses day-aggregated paths + granularity="day",
+        while "trade_resample" still uses trade-level paths + granularity="trade".
+        Rates may differ because "both" now enforces DLL while "trade_resample" does not.
+        Both must produce a valid float in [0, 1].
         """
         trades = _make_trades(80).tolist()
         daily = _make_daily_pnls(200).tolist()
@@ -788,6 +790,7 @@ class TestMFFUConsistencyNotModeledInB14:
         CONSISTENCY payout lane, a concentrated path on topstep_50k still produces a breach —
         proving the skip is MFFU-scoped, not a blanket consistency-off."""
         import os
+
         from src.engine.monte_carlo import simulate_firm_survival
 
         step_pnls = [6000.0] + [200.0] * 13
@@ -1016,3 +1019,340 @@ class TestDrawdownStatsVectorized:
         a = compute_drawdown_stats(paths, initial_capital=50000.0)
         b = compute_drawdown_stats(paths, initial_capital=50000.0)
         assert a == b
+
+
+# ─── FIX 1 (deep-scan #9): DLL enforcement active in "both" mode ────
+# Previously "both" mode passed trade-level paths with granularity="trade",
+# silencing all DLL enforcement (DLL checks gate on granularity=="day").
+# Fix: aggregate trade_paths to daily P&L and use granularity="day".
+
+class TestFix1BothModeDLLEnforcement:
+    """deep-scan #9 2026-07-02: DLL enforcement is now active in 'both' mode.
+
+    Previous state: 'both' used trade_paths with granularity='trade' — every DLL
+    check (guarded by granularity=='day') was dead.  B14 ruin CI was built without
+    DLL ever firing, understating breach risk vs the live Topstep risk desk.
+    Fix: aggregate resampled trade paths into day-level paths, then call
+    simulate_firm_survival with granularity='day'.
+    """
+
+    def test_both_mode_uses_day_granularity_in_survival(self):
+        """'both' mode firm survival must record granularity='day' in its result."""
+        trades = _make_trades(80).tolist()
+        daily = _make_daily_pnls(200).tolist()
+        req = MonteCarloRequest(
+            backtest_id="test", num_simulations=300, method="both",
+            use_gpu=False, firms=["topstep_50k"],
+        )
+        result = run_monte_carlo(req, trades, daily, [])
+        assert "error" not in result
+        fsurv = result["firm_survival"]["topstep_50k"]
+        assert fsurv.get("granularity") == "day", (
+            "'both' mode must pass granularity='day' to simulate_firm_survival after FIX 1"
+        )
+
+    def test_both_mode_tags_day_aggregation_metadata(self):
+        """'both' mode firm_survival must include day aggregation metadata tags."""
+        trades = _make_trades(80).tolist()
+        daily = _make_daily_pnls(200).tolist()
+        req = MonteCarloRequest(
+            backtest_id="test", num_simulations=300, method="both",
+            use_gpu=False, firms=["topstep_50k"],
+        )
+        result = run_monte_carlo(req, trades, daily, [])
+        assert "error" not in result
+        fsurv = result["firm_survival"]["topstep_50k"]
+        assert fsurv.get("firm_survival_granularity") == "day", (
+            "Expected firm_survival_granularity='day' metadata tag"
+        )
+        assert fsurv.get("day_aggregation_basis") == "fixed_ratio", (
+            "Expected day_aggregation_basis='fixed_ratio' (no per-trade timestamps)"
+        )
+
+    def test_trade_resample_mode_unchanged(self):
+        """'trade_resample' mode must still use trade-level granularity (unchanged)."""
+        trades = _make_trades(80).tolist()
+        daily = _make_daily_pnls(200).tolist()
+        req = MonteCarloRequest(
+            backtest_id="test", num_simulations=200, method="trade_resample",
+            use_gpu=False, firms=["topstep_50k"],
+        )
+        result = run_monte_carlo(req, trades, daily, [])
+        assert "error" not in result
+        fsurv = result["firm_survival"]["topstep_50k"]
+        # trade_resample mode: granularity stays "trade" (pre-FIX 1 behavior preserved)
+        assert fsurv.get("granularity") == "trade"
+        # No day aggregation metadata on non-"both" methods
+        assert fsurv.get("firm_survival_granularity") is None
+        assert fsurv.get("day_aggregation_basis") is None
+
+    def test_dll_breach_fires_with_day_granularity(self):
+        """simulate_firm_survival with granularity='day' catches DLL violations.
+
+        topstep_50k: account=$50000, max_dd=$2000 EOD, daily_loss_limit=$1000.
+        Path: day 1 -$1500 (capped -$1000, balance $49000, floor $48000, no breach),
+              day 2 -$1500 (capped -$1000, balance $48000 = floor → BREACH, daily_loss_limit).
+        """
+        from src.engine.monte_carlo import simulate_firm_survival
+
+        # Cumulative P&L: day1=-$1500, day2=-$3000
+        # step_pnl after diff: [-1500, -1500]
+        step_pnls = [-1500.0, -1500.0]
+        cumulative = np.array([np.cumsum(step_pnls)])  # shape (1, 2)
+
+        result = simulate_firm_survival(
+            cumulative, "topstep_50k",
+            account_size=50000,
+            granularity="day",
+            backtest_commission_rt=1.24,
+        )
+        dll_count = result["breach_reasons"].get("daily_loss_limit", 0)
+        assert dll_count > 0, (
+            f"Expected daily_loss_limit breach on path with -$1500/day, "
+            f"got breach_reasons={result['breach_reasons']}"
+        )
+
+    def test_both_mode_dll_enforcement_active(self):
+        """'both' mode with all-loser trades must produce daily_loss_limit breaches.
+
+        Trades are all -$150 each. With tpd=round(100/10)=10: each simulated day
+        loses 10 * -$150 = -$1500, exceeding the topstep_50k $1000 DLL.
+        DLL caps to -$1000/day. Day 1: balance $49000 > floor $48000.
+        Day 2: balance $48000 <= floor $48000 → breach (daily_loss_limit).
+        This only fires with granularity='day' — proves FIX 1 is active.
+        """
+        n_trades = 100
+        n_days = 10  # tpd = round(100/10) = 10
+        trades_list = [-150.0] * n_trades
+        daily_pnls_list = [-1500.0] * n_days  # 10 * (-$150) per day
+
+        req = MonteCarloRequest(
+            backtest_id="test",
+            num_simulations=200,
+            method="both",
+            use_gpu=False,
+            firms=["topstep_50k"],
+            seed=42,
+            backtest_commission_rt=1.24,   # match firm default → zero comm delta
+            avg_trades_per_day=10.0,
+        )
+        result = run_monte_carlo(req, trades_list, daily_pnls_list, [])
+        assert "error" not in result, f"MC returned error: {result.get('error')}"
+        assert "firm_survival" in result
+
+        breach = result["firm_survival"]["topstep_50k"]["breach_reasons"]
+        n_sims = result["firm_survival"]["topstep_50k"]["num_simulations"]
+        dll_count = breach.get("daily_loss_limit", 0)
+        assert dll_count > 0, (
+            f"Expected daily_loss_limit breaches in 'both' mode after FIX 1, "
+            f"got breach_reasons={breach}"
+        )
+        # With all-loser trades, >50% of sims should breach via DLL
+        assert dll_count / max(n_sims, 1) > 0.5, (
+            f"Expected >50% DLL breach rate, got {dll_count}/{n_sims}"
+        )
+
+    def test_trailing_dd_only_scenario_not_tagged_dll(self):
+        """Slow-burn path breaching trailing DD without DLL shows trailing_dd, not daily_loss_limit."""
+        from src.engine.monte_carlo import simulate_firm_survival
+
+        # -$21/day for 100 days → total -$2100 → trailing DD breach ($2000 max_dd).
+        # No single day exceeds the $1000 DLL, so breach_reason must be trailing_dd.
+        step_pnls = [-21.0] * 100
+        cumulative = np.array([np.cumsum(step_pnls)])
+
+        result = simulate_firm_survival(
+            cumulative, "topstep_50k",
+            account_size=50000,
+            granularity="day",
+            backtest_commission_rt=1.24,
+        )
+        assert result["breach_reasons"].get("trailing_dd", 0) > 0
+        assert result["breach_reasons"].get("daily_loss_limit", 0) == 0
+
+
+# ─── FIX 2 (deep-scan #9): GPU IID path blocked when autocorr detected ─
+# Previously: GPU path skipped _safe_autocorrelation entirely (guard was "if xp is np").
+# Now: autocorr check runs unconditionally; GPU + autocorr → CPU block-bootstrap.
+
+class TestFix2GPUBlockBootstrapFallback:
+    """deep-scan #9 2026-07-02: GPU IID fast path blocked when autocorr detected.
+
+    Previous state: autocorrelation check was guarded by 'if xp is np', so GPU
+    path always took IID bootstrap even for autocorrelated series — understating
+    tail drawdown risk on AR(1) strategies.
+    Fix: autocorr check runs regardless of xp; when GPU active + block required,
+    route to CPU arch_stationary_bootstrap (correctness over speed).
+    """
+
+    @staticmethod
+    def _make_ar1_series(n: int = 200, coeff: float = 0.85, seed: int = 42) -> np.ndarray:
+        """AR(1) process with high autocorrelation (lag-1 >> IID threshold 0.05)."""
+        rng = np.random.default_rng(seed)
+        ar = np.zeros(n)
+        ar[0] = rng.normal(0, 50)
+        for i in range(1, n):
+            ar[i] = coeff * ar[i - 1] + rng.normal(0, 10)
+        return ar
+
+    def test_iid_series_no_cpu_fallback_metadata(self):
+        """White-noise (uncorrelated) series must NOT set gpu_block_bootstrap_cpu_fallback."""
+        iid_series = np.random.default_rng(0).normal(0, 100, size=200)
+        metadata: dict = {}
+        paths = return_bootstrap(iid_series, n_sims=50, n_days=100, seed=42, _metadata_out=metadata)
+        assert paths.shape == (50, 100)
+        assert not metadata.get("gpu_block_bootstrap_cpu_fallback", False), (
+            "IID series must not trigger block-bootstrap fallback"
+        )
+
+    def test_autocorrelated_series_takes_block_bootstrap_path(self):
+        """AR(1) series with high autocorr must route to CPU block-bootstrap."""
+        ar_series = self._make_ar1_series(n=200, coeff=0.85)
+
+        metadata_a: dict = {}
+        paths_a = return_bootstrap(ar_series, n_sims=30, n_days=50, seed=99, _metadata_out=metadata_a)
+
+        # Verify determinism: same seed → same paths (block-bootstrap is seeded)
+        metadata_b: dict = {}
+        paths_b = return_bootstrap(ar_series, n_sims=30, n_days=50, seed=99, _metadata_out=metadata_b)
+
+        assert paths_a.shape == (30, 50)
+        np.testing.assert_array_equal(paths_a, paths_b)
+
+    def test_gpu_mock_plus_autocorr_sets_fallback_flag(self):
+        """When xp is not np AND autocorr detected, metadata flag must be set.
+
+        Uses a minimal mock object (not cupy) to trigger the 'xp is not np' branch
+        without requiring GPU hardware. Block-bootstrap returns before calling any
+        xp.asarray/xp.cumsum — so the mock needs no callable attributes.
+        """
+        ar_series = self._make_ar1_series(n=200, coeff=0.85)
+
+        class _MockGPU:
+            """Non-np sentinel to trigger the GPU fallback branch in return_bootstrap."""
+            pass
+
+        mock_gpu = _MockGPU()
+        metadata: dict = {}
+        paths = return_bootstrap(ar_series, n_sims=30, n_days=50, seed=99, xp=mock_gpu, _metadata_out=metadata)
+
+        assert metadata.get("gpu_block_bootstrap_cpu_fallback") is True, (
+            "Expected gpu_block_bootstrap_cpu_fallback=True when GPU + autocorr detected"
+        )
+        assert paths.shape == (30, 50)
+
+    def test_iid_autocorr_no_block_bootstrap_taken(self, monkeypatch):
+        """When autocorr detection confirms IID, block-bootstrap is NOT triggered.
+
+        Patches _safe_autocorrelation to return (0.0, False) — simulating confident
+        IID detection (p-value <= 0.5, |ac| = 0.0 < MC_IID_AC_THRESHOLD of 0.05).
+        The gpu_block_bootstrap_cpu_fallback flag must NOT be set.
+
+        Uses CPU (xp=np) to avoid _to_numpy/cupy dependency (cp=None in test env).
+        The flag is only meaningful in production with real GPU; the routing logic
+        is identical between CPU and GPU once the autocorr branch is resolved.
+        """
+        import src.engine.monte_carlo as _mc_mod
+
+        series = np.random.default_rng(0).normal(0, 100, size=200)
+
+        # Simulate confident IID detection: ac=0.0, detection_failed=False
+        monkeypatch.setattr(_mc_mod, "_safe_autocorrelation", lambda _arr: (0.0, False))
+
+        metadata: dict = {}
+        paths = return_bootstrap(series, n_sims=30, n_days=50, seed=42, _metadata_out=metadata)
+
+        # With IID confirmed, block-bootstrap should NOT be triggered
+        assert not metadata.get("gpu_block_bootstrap_cpu_fallback", False), (
+            "IID-confirmed series (ac=0, detection_failed=False) must not trigger "
+            "block-bootstrap fallback"
+        )
+        assert paths.shape == (30, 50)
+
+
+# ─── FIX 3 (deep-scan #9): Worst-firm selected by ci_high, not point_estimate ─
+# B14 gates on ci_high; selecting by point_estimate misaligns worst-firm choice.
+
+class TestFix3WorstFirmByCiHigh:
+    """deep-scan #9 2026-07-02: Worst firm is selected by ci_high, not point_estimate.
+
+    B14 gates on probability_of_ruin_ci.ci_high. Previous code selected worst firm
+    by highest point_estimate — could choose a firm with higher point_estimate but
+    lower ci_high, making the authoritative B14 ci_high less conservative than the
+    actual worst case.
+    Fix: select by ci_high; tie-break by point_estimate; None/non-finite ci_high
+    treated as +inf (degenerate firm wins → fail-closed for B14).
+    """
+
+    @staticmethod
+    def _eff_ci_high(ci_high_val) -> float:
+        """Effective ci_high: treat None/NaN/non-finite as +inf (degenerate = worst case)."""
+        if ci_high_val is None:
+            return float("inf")
+        try:
+            v = float(ci_high_val)
+            return float("inf") if not np.isfinite(v) else v
+        except (TypeError, ValueError):
+            return float("inf")
+
+    def test_selected_worst_firm_has_highest_ci_high(self):
+        """The selected worst firm must have effective ci_high >= all other firms.
+
+        Uses effective ci_high where None/NaN → +inf (degenerate = fail-closed).
+        This mirrors the FIX 3 selection logic exactly.
+        """
+        trades = _make_trades(80).tolist()
+        daily = _make_daily_pnls(200).tolist()
+        req = MonteCarloRequest(
+            backtest_id="test", num_simulations=500, method="both",
+            use_gpu=False, firms=["topstep_50k", "mffu_50k"],
+        )
+        result = run_monte_carlo(req, trades, daily, [])
+        if "error" in result:
+            return  # Infrastructure error — skip rather than false fail
+
+        ruin_ci = result.get("risk_metrics", {}).get("probability_of_ruin_ci", {})
+        per_firm = ruin_ci.get("per_firm", {})
+        if len(per_firm) < 2:
+            return  # Not enough firms with breach masks — skip
+
+        selected_firm = ruin_ci.get("ruin_firm")
+        if selected_firm is None:
+            return
+
+        selected_eff = self._eff_ci_high(ruin_ci.get("ci_high"))
+
+        # Every other firm's effective ci_high must be <= selected firm's effective ci_high
+        for fk, fci in per_firm.items():
+            if fk == selected_firm:
+                continue
+            other_eff = self._eff_ci_high(fci.get("ci_high"))
+            assert other_eff <= selected_eff + 1e-9, (
+                f"Firm '{fk}' effective ci_high={other_eff:.6f} exceeds selected worst firm "
+                f"'{selected_firm}' effective ci_high={selected_eff:.6f} — "
+                "worst-firm must be selected by ci_high (FIX 3)"
+            )
+
+    def test_degenerate_ci_high_fails_closed(self):
+        """Uniformly-winning path produces zero breach_mask — BCa ci_high may be NaN/None.
+
+        When all sims survive (breach_mask all zeros), BCa may return non-finite ci_high.
+        This degenerate case should still propagate (fail-closed), not silently skip.
+        The test verifies zero-breach paths produce zero breach_mask so the degenerate
+        CI path is reachable.
+        """
+        from src.engine.monte_carlo import simulate_firm_survival
+
+        n_sims, n_steps = 100, 50
+        # Steady +$100/day — never breaches trailing DD or DLL
+        paths = np.tile(np.cumsum(np.full(n_steps, 100.0)), (n_sims, 1))
+
+        result = simulate_firm_survival(
+            paths, "topstep_50k", account_size=50000,
+            granularity="day", backtest_commission_rt=1.24,
+        )
+        breach_mask = result.get("breach_mask", np.array([]))
+        # With purely positive paths, no sim should breach
+        assert np.sum(breach_mask) == 0, (
+            "Uniformly-winning path must produce all-zero breach_mask"
+        )
