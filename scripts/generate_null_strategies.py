@@ -38,7 +38,6 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 
@@ -75,7 +74,7 @@ _ENTRY_CONDITION_PAIRS: list[tuple[str, str]] = [
 # Production calibration should use RTH windows to match real strategy conditions.
 # The smoke test (--smoke flag) passes allow_entry_windows=None to avoid
 # needing RTH-correct synthetic timestamps.
-_ENTRY_WINDOWS_POOL: list[Optional[list[str]]] = [
+_ENTRY_WINDOWS_POOL: list[list[str] | None] = [
     ["09:45-15:30 ET"],          # Full RTH core (avoids first 15m noise)
     ["09:30-12:00 ET"],          # AM session only
     ["13:00-15:30 ET"],          # PM session only
@@ -116,7 +115,10 @@ def generate_null_spec(
         dict that can be passed to BacktestRequest.model_validate().
         Includes extra "_null_calibration_meta" key (stripped before validation).
     """
-    rng = _make_rng(seed + strategy_index * 97)  # non-overlapping streams
+    # RNG stream seeded with non-overlapping offset (exposed for callers that
+    # need random variation beyond index arithmetic; unused by generate_null_spec
+    # itself which uses deterministic index selection).
+    _rng = _make_rng(seed + strategy_index * 97)  # noqa: F841
 
     symbol_idx = strategy_index % len(_SYMBOL_POOL)
     timeframe_idx = (strategy_index // len(_SYMBOL_POOL)) % len(_TIMEFRAME_POOL)
@@ -209,7 +211,7 @@ def generate_null_specs(
     ]
 
 
-def validate_spec(spec: dict, allow_fixed_1: bool = True) -> tuple[bool, Optional[str]]:
+def validate_spec(spec: dict, allow_fixed_1: bool = True) -> tuple[bool, str | None]:
     """Validate a null spec against BacktestRequest Pydantic model.
 
     Strips _null_calibration_meta before validation (it's not a BacktestRequest field).
