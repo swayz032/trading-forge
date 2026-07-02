@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-06-29T07:31:07.510Z`.
+Updated automatically from the repo on `2026-07-02T05:40:42.544Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -12,12 +12,12 @@ Updated automatically from the repo on `2026-06-29T07:31:07.510Z`.
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `ci_gate, kill_switch, operator, operator_hmac_override, operator_invoke_for_cohort_validation, operator_opt_in_per_strategy, operator-approve, operator-halt-only, operator-only-recovery, tradingview_deploy`
 - API routes tracked: `78`
-- Scheduler jobs tracked: `103`
+- Scheduler jobs tracked: `104`
 - Current live Trading Forge n8n workflows tracked: `28`
 - Canonical workflows tracked: `28`
 - Duplicate workflow variants collapsed: `0`
 - Engine subsystems tracked: `29`
-- Database tables tracked: `109`
+- Database tables tracked: `110`
 
 ### Subsystem Runtime States
 - `active`: `65`
@@ -55,9 +55,9 @@ Updated automatically from the repo on `2026-06-29T07:31:07.510Z`.
 ### Registry Coverage
 - Registry subsystems tracked: `71`
 - Route coverage: `78/78`
-- Scheduler coverage: `103/103`
+- Scheduler coverage: `104/104`
 - Engine coverage: `29/29`
-- Database coverage: `109/109`
+- Database coverage: `110/110`
 - Autonomous subsystems with audit coverage: `63/63`
 - Autonomous subsystems with audit actions: `63/63`
 - Autonomous subsystems with telemetry evidence: `63/63`
@@ -325,6 +325,7 @@ Updated automatically from the repo on `2026-06-29T07:31:07.510Z`.
 - `c11-h41-weekly`
 - `c11-treasury-auctions`
 - `candidate-backtest-conveyor`
+- `carter-analyst-daily`
 - `cloud-qmc-poll`
 - `cme-status-poll`
 - `compliance-rule-drift`
@@ -492,6 +493,7 @@ Updated automatically from the repo on `2026-06-29T07:31:07.510Z`.
 - `bias_state`
 - `broker_accounts`
 - `carter_issues`
+- `carter_memory`
 - `cloud_qmc_runs`
 - `compliance_drift_log`
 - `compliance_reviews`
