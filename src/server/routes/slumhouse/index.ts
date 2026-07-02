@@ -15,6 +15,7 @@ import path from "node:path";
 import { authRouter, handleLaunch } from "./auth.js";
 import { adminMappingRouter } from "./admin-mapping.js";
 import { adminOfficeRouter } from "./admin.js";
+import { deployApprovalsRouter } from "./deploy-approvals.js";
 import { cribApiRouter } from "./api/crib.js";
 import { kitchenApiRouter } from "./api/kitchen.js";
 import { recipeApiRouter } from "./api/recipe.js";
@@ -118,6 +119,9 @@ slumhouseRouter.use(carterInboxRouter);
 
 // The Office — operator-only passcode-gated admin endpoints (auth/status/logout).
 slumhouseRouter.use(adminOfficeRouter);
+// Layer-4 Office P0 (2026-07-02): DEPLOY_READY → DEPLOYED approval card
+// (requireAdminSession + audit + fail-closed evidence check per route).
+slumhouseRouter.use(deployApprovalsRouter);
 
 // Static SPA assets (CSS, JS, HTML, images) — served last so /slumhouse/api/*
 // matches the API routes above first.
