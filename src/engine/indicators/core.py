@@ -771,6 +771,35 @@ def compute_htf_indicators(
                 lower.alias(f"donchian_lower_{cfg.period}{suffix}"),
             ])
 
+        elif cfg.type == "vwap_with_bands":
+            # FIX 4 (2026-07-02): add vwap_with_bands to HTF dispatch.
+            # Reuses compute_vwap_with_bands() (LTF impl); emits 5 suffixed columns.
+            # Session-reset semantics preserved (18:00 ET Globex boundary).
+            htf_with_bands = compute_vwap_with_bands(result)
+            band_cols = [
+                "vwap",
+                "vwap_band_1s_upper",
+                "vwap_band_1s_lower",
+                "vwap_band_2s_upper",
+                "vwap_band_2s_lower",
+            ]
+            result = result.with_columns([
+                htf_with_bands[c].alias(f"{c}{suffix}") for c in band_cols
+            ])
+
+        elif cfg.type == "anchored_vwap":
+            # FIX 4 (2026-07-02): add anchored_vwap to HTF dispatch.
+            # Reuses compute_anchored_vwap() (LTF impl); requires cfg.anchor_ts.
+            # The output column name is anchored_vwap_<anchor_iso>{suffix}.
+            # If anchor_ts is not set, skip silently (same guard as LTF path).
+            if cfg.anchor_ts is not None:
+                htf_anchored = compute_anchored_vwap(result, cfg.anchor_ts)
+                iso_raw = cfg.anchor_ts.isoformat()
+                col_name = "anchored_vwap_" + iso_raw.replace(":", "_").split(".")[0]
+                result = result.with_columns(
+                    htf_anchored[col_name].alias(f"{col_name}{suffix}")
+                )
+
     return result
 
 
