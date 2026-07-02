@@ -64,7 +64,10 @@ export async function requireSlumhouseUser(
   // ver.epoch = 0 for v1 legacy tokens; user.sessionEpoch = 0 by default.
   // After POST /slumhouse/admin/revoke-sessions, user.sessionEpoch is incremented,
   // so v1 tokens (epoch=0) are also rejected once the DB epoch exceeds 0.
-  if (ver.epoch !== user.sessionEpoch) {
+  // Null-safe (deep-scan #12): a nullish epoch on either side normalizes to 0 so
+  // a legacy token (epoch=0/absent) or a row read before migration 0187 applied
+  // is NOT falsely treated as revoked. Only a genuine increment causes a mismatch.
+  if ((ver.epoch ?? 0) !== (user.sessionEpoch ?? 0)) {
     res.status(401).json({ error: "session_revoked" });
     return;
   }
