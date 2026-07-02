@@ -12458,6 +12458,15 @@ Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal
 
 ---
 
+### Session Log — 2026-07-02 Band B spec→production bridge MERGED (parent close)
+
+**Mission:** Build the roadmap's unclaimed Band B (docs/designs/institutional-10of10-roadmap-2026-07-02.md on the extraction branch, graded 2.0/10) — the bridge from certified compiler spec artifacts to production strategy rows. Gates Phase 2 volume.
+**Work completed:** 13 commits on `hardening/specbridge-2026-07-02`, MERGED → origin/hardening/phase-0 (d606ae4, FF). B1 converter (`spec-onboarding-service.ts` + `scripts/onboard-compiled-specs.ts`, artifact-contract consumption — NO extraction-branch code imports; spec_hash + video id on every row; feeds provenance_stamp.spec_provenance_ref → educator-sentence→backtest-row chain CLOSED); B2 playbook registration in-transaction (`playbook-registration.ts`; unregistered = overlay silently bypasses) + `apply_eligibility_gate()` honesty fix in backtester.py + `scripts/backfill-playbook-registration.ts` instrument for the ~100 pre-existing possibly-unregistered strategies (dry-run default, operator --apply); B3 ×3 symbol split w/ per-symbol ceilings + framework-overlay authoritative; B4 full-ladder CANDIDATE entry through the SAME Gate 1/2/3 + critic + auditor helpers (no raw INSERTs, evolution-INSERT lesson honored; unmappable specs → needs_archetype_queue honestly, never faked dispatch — 25-sample split: 6 mapped / 19 queued); B5 retirement WIRED not fired (`retire-old-library.ts` was BROKEN SINCE INCEPTION — unsigned body vs HMAC-required route, fixed + dry-run clean 117 planned/0 failed; G5's 4 unresolved IDs surfaced in docs/spec-onboarding-runbook.md, operator decision). Bonus root-cause: 9-hop circular-import chain severed at source (graveyard-gate/model-router/graduator logger → ../lib/logger.js per the pinned leaf-module rule) so the CLI runs standalone (real run: 25 specs, exit 0); nopt --dir flag-collision fixed (--specs-dir); archetype-matcher word-boundary false-positive ("keynotes"→"ote") fixed.
+**Verification:** tsc 0; production-isolation CLEAN, 2026-compliance OK, system-map PASS, archetype-lockstep 39/39; 50 new tests GREEN; full-vitest failure set BYTE-IDENTICAL to clean d86489b baseline (84 files/171 tests pre-existing both sides — zero introduced, zero masked).
+**Carry-forward:** (1) operator: run `scripts/backfill-playbook-registration.ts` dry-run against prod DB, review, then --apply (existing library's Mode A/B validity depends on it); (2) onboarding sequence when the 40-video batch lands: manifest → `onboard-compiled-specs.ts --apply` → verify counts → `retire-old-library.ts --apply` (runbook); (3) Band C next: execution semantics for the 19-of-25-class queued specs (hybrid archetype-mapping per roadmap C1); (4) spec-artifact contract ambiguities for the extraction agent (in runbook): no timeframe field, no direction-both sub-graph split, one options/equity sample in the corpus.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### pglite test-harness DDL drifts from schema.ts and silently breaks ALL DB-backed gate tests (pinned 2026-06-28)
