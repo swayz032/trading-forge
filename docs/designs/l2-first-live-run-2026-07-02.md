@@ -79,3 +79,40 @@ Family-granularity grounding (same-family conditions share one boolean) · frame
 Style-C overlay · daily bars (sessions vacuous) · single symbol · n=12. The path to production-grade: per-condition
 evaluators via the real engine primitives (structure_engine / liquidity_levels), the real framework overlay
 (Style C 33/33/34 + structural stops), intraday TFs, then the full institutional gate battery.
+
+---
+
+# v2 addendum (same day) — educator's timeframe + Style-C-lite overlay + funnel
+
+Operator + GPT review of v1 was correct on both counts: the daily 1.5xATR stop (~98 pts = $488/contract; $4.4K at
+base-9 sizing) is an ILLEGAL trade under the production framework, and 12 trades/8yr was a daily-bar artifact of
+an intraday strategy. v2: **15-minute ratio_adj bars (73,801, 2023→2026), true 4H-resampled bias, Style-C-lite
+overlay (stop 1.5xATR15m with the §4 14-pt CEILING → SKIP; 3 units TP1@1R→BE / TP2@2R / runner; RTH-only entries;
+15:55 ET flatten).**
+
+## Funnel (where candidate bars disappear — GPT's request)
+
+| stage (cumulative AND) | bars surviving | % of 73,801 |
+|---|---|---|
+| RTH entry window | 18,875 | 25.6% |
+| + bearish 4H structure | 5,847 | 7.9% |
+| + premium zone retrace | 3,014 | 4.1% |
+| + liquidity sweep/supply touch | 1,854 | 2.5% |
+| + bearish price action | **551 armed** | 0.75% |
+| → entries (1-at-a-time; **230 skipped by stop ceiling**) | **220 trades** | — |
+
+## v2 outcomes
+
+| metric | v1 (daily, placeholder) | **v2 (15m, Style-C-lite)** |
+|---|---|---|
+| trades | 12 / 8yr | **220 / 3yr (~1.4/week)** |
+| risk per trade | ~$490–$980 @1 lot (illegal) | **$81–$210 @3 lots (avg $158)** — sane vs a $1–2K DLL |
+| stop-ceiling skips | n/a | 230 (the §4 skip rule firing live) |
+| P&L | +102 pts | +164 pts (+$821 @3 lots), 45.5% obs. win rate, +0.75 pts/trade expectancy, $3,011 max DD |
+| Ledger G | TRACEABLE 12/12 | **TRACEABLE 220/220, 31/31 provenance** |
+
+**Honest read:** expectancy is thin and drawdown exceeds cumulative profit — the measured truth of a SHORT-ONLY
+strategy on ES through a mostly-bull 2023–2026. That is a statement about the strategy-in-regime, not the
+pipeline: the chain now executes at the educator's cadence, at legal risk sizes, with every one of 220 trades
+traceable to his words. Edge assessment belongs to the institutional gate battery (WF/CPCV/PBO/DSR/B14), not
+this harness.

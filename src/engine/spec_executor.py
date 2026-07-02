@@ -1,27 +1,30 @@
 """
-SPEC EXECUTOR (2026-07-02) — the first LIVE execution of a compiled EngineStrategySpec against real market bars.
+SPEC EXECUTOR v2 (2026-07-02) — live execution of a compiled EngineStrategySpec on the educator's INTENDED
+timeframe with a faithful Style-C-lite framework overlay + per-condition FUNNEL instrumentation.
 
-Closes the final leg of the compiler pipeline (operator/GPT): Transcript → … → EngineStrategySpec →
-**grounded evaluators → Ledger E interpreter → entries on real Databento bars**, with LEDGER G
-(execution traceability): every armed/blocked decision and every trade traces back through condition ids →
-transcript spans → the educator's original words.
+v1 (committed 997ad65) proved the chain on daily bars with a placeholder exit; the operator + GPT review found
+its two artifacts: (a) daily 1.5xATR stops = ~100 ES pts = $488/contract — an ILLEGAL trade under the production
+framework (14-pt MES stop ceiling -> SKIP; sizing derives contracts FROM risk); (b) daily bars under-sample an
+intraday educator's opportunity set by orders of magnitude. v2 fixes both and adds the funnel GPT specified:
 
-Honest v1 scope (documented, not hidden):
-  - GROUNDING GRANULARITY: conditions evaluate at semantic-FAMILY granularity (mirrors condition-grounding.ts):
-    same-family conditions share one per-bar boolean. Family evaluators are minimal, deterministic, stdlib+
-    candle_patterns implementations of the engine primitives the grounding audit cited.
-  - TRIGGER conditions (entry_execution) are the ACTION, not a market condition (grounding registry) — they are
-    satisfied when evaluated; arming therefore reduces to market conditions + or-branches + invalidation veto,
-    via the SAME evaluate_spec() proven by Ledger E (604/604 TS==Python).
-  - FRAMEWORK-V1 EXIT (explicitly overlay-owned, NOT source logic): stop = entry + 1.5×ATR14, TP = 2R,
-    time-stop MAX_HOLD_BARS. 1 contract, MES $5/pt, no commissions. This validates the CHAIN, not a promotion.
-  - Session/timeframe conditions are vacuous on daily bars (always satisfied; reported).
-  - Only ENGINE-SAFE imports (data_loader + candle_patterns + spec_interpreter) — never backtester/vectorbt.
+  - TIMEFRAME: 15min ratio_adj bars (the educator executes on 4H bias + 15m entries — his own words).
+    HTF BIAS: 15m bars resampled to true 4H aggregates; bearish-structure evaluated on the 4H series.
+  - STYLE-C-LITE OVERLAY (faithful to CLAUDE.md S4, simplified partials):
+      stop = max(1.5xATR15m, structural buffer)  |  CEILING 14 MES pts -> stop wider => SKIP TRADE (counted)
+      3 units: TP1 @1R close 1/3 + stop->BE  |  TP2 @2R close 1/3  |  runner exits at BE-stop or 15:55 ET flatten
+      RTH-only entries (09:30-15:30 ET) — the session_time family is now REAL, not vacuous.
+      Sizing sanity is REPORTED in dollars (risk/trade at 3 MES must be sane vs a $1-2K personal DLL).
+  - FUNNEL: per family {bars evaluated, times passed, pass rate} + sequential conjunction funnel showing exactly
+    where candidate bars disappear (GPT: "that tells you exactly where trades disappear").
+  - Unchanged from v1: grounded family evaluators -> the LEDGER-E-PROVEN evaluate_spec() -> +1-bar entries ->
+    LEDGER G per-trade traces quoting the educator's verbatim transcript words.
+
+Engine-safe imports only (data_loader + candle_patterns + spec_interpreter — never backtester/vectorbt).
 
 Usage (tower):
   python -m src.engine.spec_executor tmp/generalization/l-2iKbcm5UI.spec.json \
       --transcript tmp/generalization/l-2iKbcm5UI.transcript.txt \
-      --local-path <path to MES daily parquet> --start 2023-01-01 --end 2025-12-01
+      --local-path <ES ratio_adj 15min parquet> --timeframe 15min --start 2023-01-01 --end 2026-02-28
 """
 from __future__ import annotations
 
@@ -31,25 +34,25 @@ import re
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from src.engine.indicators.candle_patterns import (
-    detect_strength,
     detect_weakness,
     is_bearish_engulfing,
-    is_rejection_lower,
     is_rejection_upper,
 )
 from src.engine.spec_interpreter import evaluate_spec
 
 MES_POINT_VALUE = 5.0
+UNITS = 3                      # Style-C-lite 3 units (1/3 TP1, 1/3 TP2, 1/3 runner)
 ATR_PERIOD = 14
-STOP_ATR_MULT = 1.5     # framework-v1 (overlay-owned)
-TP_R_MULT = 2.0         # framework-v1 (overlay-owned)
-MAX_HOLD_BARS = 10      # framework-v1 time-stop
-SWING_LOOKBACK = 10     # structure evaluator half-window
-RANGE_LOOKBACK = 20     # dealing-range window (premium/discount)
-ZONE_TOL_ATR = 0.5      # supply-zone touch tolerance
+STOP_ATR_MULT = 1.5            # S4 floor: 1.5 x exec-TF ATR
+STOP_CEILING_PTS = 14.0        # S4 MES ceiling — wider structural stop => SKIP TRADE
+SWING_LOOKBACK = 10            # swing half-window (per aggregated-TF bar)
+RANGE_LOOKBACK = 20            # dealing-range window (exec TF)
+ZONE_TOL_ATR = 0.5
+BARS_PER_4H = 16               # 16 x 15m = 4H
+RTH_ENTRY = ("09:30", "15:30")  # entry window ET
+FLATTEN_ET = "15:55"           # hard EOD flatten (framework invariant)
 
 
-# ─── Family router (mirrors condition-grounding.ts families; first match wins) ────────────────────────────────
 FAMILY_PATTERNS: List[Tuple[str, str]] = [
     ("meta_state", r"confluences? (met|satisfied|aligned)|all (the )?confluences"),
     ("liquidity", r"sweep|swept|liquidity|stop (hunt|run)|taken out|raid|equal (high|low)|eqh|eql|pd[hl]|levels?\b|lines?\b|zones?\b"),
@@ -69,103 +72,123 @@ def family_of(obj: str) -> str:
     return "unclassified"
 
 
+def hhmm(ts: str) -> str:
+    return ts[11:16]
+
+
+def day_of(ts: str) -> str:
+    return ts[:10]
+
+
 class FamilyEvaluators:
-    """Per-bar grounded family evaluators over OHLC arrays (short-side; l-2 is a short confluence strategy)."""
+    """Grounded per-bar family evaluators (short-side). 4H bias from resampled aggregates; exec confluences on 15m."""
 
-    def __init__(self, opens: List[float], highs: List[float], lows: List[float], closes: List[float]):
-        self.o, self.h, self.l, self.c = opens, highs, lows, closes
-        self.atr = self._compute_atr()
+    def __init__(self, ts: List[str], o: List[float], h: List[float], l: List[float], c: List[float], intraday: bool):
+        self.ts, self.o, self.h, self.l, self.c, self.intraday = ts, o, h, l, c, intraday
+        self.atr = self._atr(h, l, c)
+        # ── true 4H resample for HTF bias (educator's top-down: 4H structure, 15m execution) ──
+        if intraday:
+            n4 = len(c) // BARS_PER_4H
+            self.h4 = [max(h[k * BARS_PER_4H:(k + 1) * BARS_PER_4H]) for k in range(n4)]
+            self.l4 = [min(l[k * BARS_PER_4H:(k + 1) * BARS_PER_4H]) for k in range(n4)]
+        else:
+            self.h4, self.l4 = h, l
 
-    def _compute_atr(self) -> List[float]:
-        trs: List[float] = [0.0]
-        for i in range(1, len(self.c)):
-            trs.append(max(self.h[i] - self.l[i], abs(self.h[i] - self.c[i - 1]), abs(self.l[i] - self.c[i - 1])))
-        atr: List[float] = []
-        for i in range(len(trs)):
-            window = trs[max(0, i - ATR_PERIOD + 1):i + 1]
-            atr.append(sum(window) / len(window) if window else 0.0)
+    @staticmethod
+    def _atr(h: List[float], l: List[float], c: List[float]) -> List[float]:
+        atr: List[float] = [0.0]
+        prev = h[0] - l[0]
+        for i in range(1, len(c)):
+            tr = max(h[i] - l[i], abs(h[i] - c[i - 1]), abs(l[i] - c[i - 1]))
+            prev = prev + (tr - prev) / ATR_PERIOD  # Wilder-style running ATR (O(1)/bar)
+            atr.append(prev)
         return atr
 
-    def bearish_structure(self, i: int) -> bool:
-        """bias_direction + market_structure: lower highs AND lower lows across two adjacent swing windows."""
+    def bearish_structure_4h(self, i: int) -> bool:
+        """bias/market_structure: lower highs AND lower lows across two adjacent swing windows on the 4H series."""
+        j = (i // BARS_PER_4H) if self.intraday else i
         k = SWING_LOOKBACK
-        if i < 2 * k:
+        if j < 2 * k:
             return False
-        recent_h, prior_h = max(self.h[i - k + 1:i + 1]), max(self.h[i - 2 * k + 1:i - k + 1])
-        recent_l, prior_l = min(self.l[i - k + 1:i + 1]), min(self.l[i - 2 * k + 1:i - k + 1])
-        return recent_h < prior_h and recent_l < prior_l
+        rh, ph = max(self.h4[j - k + 1:j + 1]), max(self.h4[j - 2 * k + 1:j - k + 1])
+        rl, pl = min(self.l4[j - k + 1:j + 1]), min(self.l4[j - 2 * k + 1:j - k + 1])
+        return rh < ph and rl < pl
 
     def premium_quadrant(self, i: int) -> bool:
-        """ict_zone: close retraced into the PREMIUM half of the dealing range (short-friendly, DailyDealing model)."""
         if i < RANGE_LOOKBACK:
             return False
         rh = max(self.h[i - RANGE_LOOKBACK + 1:i + 1])
         rl = min(self.l[i - RANGE_LOOKBACK + 1:i + 1])
-        if rh <= rl:
-            return False
-        return self.c[i] >= rl + 0.5 * (rh - rl)
+        return rh > rl and self.c[i] >= rl + 0.5 * (rh - rl)
 
-    def supply_zone_touch(self, i: int) -> bool:
-        """liquidity (levels/zones): bar reaches the recent swing-high supply zone (within ZONE_TOL_ATR × ATR)."""
+    def supply_or_sweep(self, i: int) -> bool:
         k = RANGE_LOOKBACK
         if i < k + 3:
             return False
-        zone_high = max(self.h[i - k:i - 2])  # exclude the last 2 bars (the approach itself)
-        return self.h[i] >= zone_high - ZONE_TOL_ATR * self.atr[i]
-
-    def sweep_weakness(self, i: int) -> bool:
-        """liquidity sweep: high taken + close back below with bearish character (candle_patterns detector)."""
-        return detect_weakness(self.o, self.h, self.l, self.c, i, lookback=SWING_LOOKBACK)
+        zone_high = max(self.h[i - k:i - 2])
+        touched = self.h[i] >= zone_high - ZONE_TOL_ATR * self.atr[i]
+        return touched or detect_weakness(self.o, self.h, self.l, self.c, i, lookback=SWING_LOOKBACK)
 
     def bearish_price_action(self, i: int) -> bool:
-        """price_action: bearish engulfing OR upper rejection OR sweep-weakness at bar i."""
         if i < 1:
             return False
         return (
             is_bearish_engulfing(self.o[i - 1], self.c[i - 1], self.o[i], self.c[i])
             or is_rejection_upper(self.o[i], self.h[i], self.l[i], self.c[i])
-            or self.sweep_weakness(i)
+            or detect_weakness(self.o, self.h, self.l, self.c, i, lookback=SWING_LOOKBACK)
         )
 
+    def in_rth_entry_window(self, i: int) -> bool:
+        if not self.intraday:
+            return True
+        t = hhmm(self.ts[i])
+        return RTH_ENTRY[0] <= t < RTH_ENTRY[1]
+
     def evaluate_family(self, fam: str, i: int) -> Tuple[bool, str]:
-        """Return (satisfied, evaluator_name) for a family at bar i (short-side)."""
-        if fam == "bias_direction" or fam == "market_structure":
-            return self.bearish_structure(i), "bearish_structure(lower-highs+lower-lows swings)"
+        if fam in ("bias_direction", "market_structure"):
+            return self.bearish_structure_4h(i), "bearish_structure(4H resample: lower-highs+lower-lows swings)"
         if fam == "ict_zone":
-            return self.premium_quadrant(i), "premium_quadrant(DailyDealing 50% model)"
+            return self.premium_quadrant(i), "premium_quadrant(DailyDealing 50% model, exec TF)"
         if fam == "liquidity":
-            return (self.supply_zone_touch(i) or self.sweep_weakness(i)), "supply_zone_touch|detect_weakness"
+            return self.supply_or_sweep(i), "supply_zone_touch|detect_weakness"
         if fam == "price_action":
             return self.bearish_price_action(i), "bearish_engulfing|rejection_upper|detect_weakness"
         if fam == "session_time":
+            if self.intraday:
+                return self.in_rth_entry_window(i), "rth_entry_window(09:30-15:30 ET)"
             return True, "vacuous_on_daily_bars"
         if fam == "entry_execution":
             return True, "trigger_action(order placement — not a market condition)"
         if fam == "meta_state":
-            return True, "meta_state('confluences met' = conjunction of the independently-required confluences — no market content)"
+            return True, "meta_state('confluences met' = conjunction of the required confluences)"
         return False, "UNGROUNDED(unclassified — never satisfied, reported)"
 
+def _eval_family(ev: FamilyEvaluators, fam: str, i: int) -> Tuple[bool, str]:
+    return ev.evaluate_family(fam, i)
 
-def run(spec_path: str, transcript_path: str, local_path: str, start: str, end: str, out_prefix: str) -> Dict[str, Any]:
-    from src.engine.data_loader import load_ohlcv  # engine-safe; local_path takes priority (offline)
+
+def run(spec_path: str, transcript_path: str, local_path: str, timeframe: str, start: str, end: str, out_prefix: str) -> Dict[str, Any]:
+    from src.engine.data_loader import load_ohlcv
 
     artifact = json.load(open(spec_path, encoding="utf-8"))
     spec = artifact["spec"]
     transcript = open(transcript_path, encoding="utf-8").read()
+    intraday = timeframe != "daily"
 
-    df = load_ohlcv("MES", "daily", start, end, local_path=local_path, ignore_quality_gate=True)
-    ts = [str(x) for x in df["ts_event"].to_list()] if "ts_event" in df.columns else [str(x) for x in df[df.columns[0]].to_list()]
+    df = load_ohlcv("MES", timeframe, start, end, local_path=local_path, ignore_quality_gate=True)
+    ts = [str(x) for x in df["ts_event"].to_list()]
     o = [float(x) for x in df["open"].to_list()]
     h = [float(x) for x in df["high"].to_list()]
     l = [float(x) for x in df["low"].to_list()]
     c = [float(x) for x in df["close"].to_list()]
-    ev = FamilyEvaluators(o, h, l, c)
+    ev = FamilyEvaluators(ts, o, h, l, c, intraday)
 
     conds = spec["entry_conditions"] + spec["invalidations"]
     cond_family = {cnd["id"]: family_of(cnd["object"]) for cnd in conds}
-    cond_evaluator: Dict[str, str] = {}
+    families = sorted({f for f in cond_family.values()})
+    market_fams = [f for f in ("bias_direction", "market_structure", "ict_zone", "liquidity", "price_action", "session_time") if f in families]
 
-    # ── Ledger G precheck: provenance completeness (condition → transcript span → evidence matches) ──
+    # Ledger G provenance (span is ground truth; quotes = transcript slices)
     prov_ok = prov_total = 0
     cond_quote: Dict[str, Optional[str]] = {}
     for cnd in conds:
@@ -176,107 +199,140 @@ def run(spec_path: str, transcript_path: str, local_path: str, start: str, end: 
         if quote:
             prov_ok += 1
 
-    warmup = 2 * RANGE_LOOKBACK
-    decisions: List[Dict[str, Any]] = []
+    warmup = max(2 * SWING_LOOKBACK * (BARS_PER_4H if intraday else 1), 2 * RANGE_LOOKBACK)
+    funnel_eval: Dict[str, int] = {f: 0 for f in market_fams}
+    funnel_pass: Dict[str, int] = {f: 0 for f in market_fams}
+    seq_order = [f for f in ("session_time", "bias_direction", "ict_zone", "liquidity", "price_action") if f in market_fams]
+    seq_pass: Dict[str, int] = {f: 0 for f in seq_order}
+    seq_total = 0
+
     trades: List[Dict[str, Any]] = []
-    blocked_hist: Dict[str, int] = {}
     position: Optional[Dict[str, Any]] = None
-    armed_count = invalidation_fires = 0
+    armed_count = skipped_ceiling = 0
+    sample_armed: List[Dict[str, Any]] = []
 
     for i in range(warmup, len(c) - 1):
-        # per-bar satisfied set at FAMILY granularity
-        satisfied: Set[str] = set()
         fam_results: Dict[str, Tuple[bool, str]] = {}
-        for cnd in conds:
-            fam = cond_family[cnd["id"]]
-            if fam not in fam_results:
-                fam_results[fam] = ev.evaluate_family(fam, i)
-            ok, name = fam_results[fam]
-            cond_evaluator[cnd["id"]] = name
-            if ok:
-                satisfied.add(cnd["id"])
+        for fam in families:
+            fam_results[fam] = _eval_family(ev, fam, i)
+        for fam in market_fams:
+            funnel_eval[fam] += 1
+            if fam_results[fam][0]:
+                funnel_pass[fam] += 1
+        seq_total += 1
+        ok_so_far = True
+        for fam in seq_order:
+            ok_so_far = ok_so_far and fam_results[fam][0]
+            if ok_so_far:
+                seq_pass[fam] += 1
+
+        satisfied: Set[str] = {cid for cid, fam in cond_family.items() if fam_results[fam][0]}
         decision = evaluate_spec(spec, satisfied)
-        if any(b.startswith("invalidated:") for b in decision["blocked_by"]):
-            invalidation_fires += 1
-        decisions.append({"ts": ts[i], "armed": decision["armed"], "blocked_by": decision["blocked_by"][:4],
-                          "families_true": sorted(f for f, (okv, _) in fam_results.items() if okv)})
         if decision["armed"]:
             armed_count += 1
 
-        # ── position management (framework-v1 overlay exit; runs before new entries) ──
+        # ── Style-C-lite position management (runs every bar) ──
         if position is not None:
-            position["bars_held"] += 1
-            exit_price = exit_reason = None
-            if h[i] >= position["stop"]:
-                exit_price, exit_reason = position["stop"], "stop(framework-v1 1.5xATR)"
-            elif l[i] <= position["tp"]:
-                exit_price, exit_reason = position["tp"], "tp(framework-v1 2R)"
-            elif position["bars_held"] >= MAX_HOLD_BARS:
-                exit_price, exit_reason = c[i], "time_stop(framework-v1)"
-            if exit_price is not None:
-                pnl_pts = position["entry"] - exit_price  # short
-                trades.append({**position, "exit_ts": ts[i], "exit": exit_price, "exit_reason": exit_reason,
-                               "pnl_points": round(pnl_pts, 2), "pnl_usd": round(pnl_pts * MES_POINT_VALUE, 2)})
+            p = position
+            exit_now: List[Tuple[float, int, str]] = []  # (price, units, reason)
+            if h[i] >= p["stop"]:
+                exit_now.append((p["stop"], p["units_left"], f"stop({'BE' if p['be'] else '1.5xATR'})"))
+            else:
+                if not p["tp1_done"] and l[i] <= p["tp1"]:
+                    exit_now.append((p["tp1"], 1, "tp1(1R, stop->BE)"))
+                if not p["tp2_done"] and l[i] <= p["tp2"]:
+                    exit_now.append((p["tp2"], 1, "tp2(2R)"))
+            eod = intraday and hhmm(ts[i]) >= FLATTEN_ET
+            if eod and p["units_left"] > 0 and not exit_now:
+                exit_now.append((c[i], p["units_left"], "eod_flatten(15:55 ET)"))
+            for price, units, reason in exit_now:
+                units = min(units, p["units_left"])
+                if units <= 0:
+                    continue
+                pnl = (p["entry"] - price) * units
+                p["fills"].append({"ts": ts[i], "price": round(price, 2), "units": units, "reason": reason,
+                                   "pnl_points": round(pnl, 2)})
+                p["pnl_points"] += pnl
+                p["units_left"] -= units
+                if reason.startswith("tp1"):
+                    p["tp1_done"], p["be"], p["stop"] = True, True, p["entry"]
+                if reason.startswith("tp2"):
+                    p["tp2_done"] = True
+            if p["units_left"] <= 0:
+                p["exit_ts"] = ts[i]
+                p["pnl_usd"] = round(p["pnl_points"] * MES_POINT_VALUE, 2)
+                p["pnl_points"] = round(p["pnl_points"], 2)
+                trades.append(p)
                 position = None
 
-        # ── entry: armed + flat → SHORT at next bar open (+1-bar engine convention) ──
-        if decision["armed"] and position is None:
-            entry = o[i + 1]
-            stop = entry + STOP_ATR_MULT * ev.atr[i]
-            risk = stop - entry
-            position = {
-                "entry_ts": ts[i + 1], "signal_ts": ts[i], "entry": entry, "stop": round(stop, 2),
-                "tp": round(entry - TP_R_MULT * risk, 2), "bars_held": 0, "direction": "short",
-                # Ledger G trade trace: which nodes were true, via which evaluator, back to the transcript
-                "trace": [{
-                    "condition_id": cid,
-                    "evaluator": cond_evaluator[cid],
-                    "transcript_quote": (cond_quote.get(cid) or "")[:160] or None,
-                } for cid in sorted(satisfied) if cond_family[cid] != "entry_execution"][:12],
-            }
-        if not decision["armed"]:
-            for b in decision["blocked_by"][:2]:
-                key = b if b.startswith(("or:", "invalidated:", "no_trigger")) else cond_family.get(b, "unknown")
-                blocked_hist[key] = blocked_hist.get(key, 0) + 1
+        # ── entry: armed + flat + RTH window → SHORT next bar open; S4 CEILING gate ──
+        if decision["armed"] and position is None and ev.in_rth_entry_window(i):
+            stop_dist = STOP_ATR_MULT * ev.atr[i]
+            if stop_dist > STOP_CEILING_PTS:
+                skipped_ceiling += 1
+            else:
+                entry = o[i + 1]
+                position = {
+                    "signal_ts": ts[i], "entry_ts": ts[i + 1], "entry": entry, "direction": "short",
+                    "stop": round(entry + stop_dist, 2), "risk_points": round(stop_dist, 2),
+                    "risk_usd_3lots": round(stop_dist * MES_POINT_VALUE * UNITS, 2),
+                    "tp1": round(entry - stop_dist, 2), "tp2": round(entry - 2 * stop_dist, 2),
+                    "tp1_done": False, "tp2_done": False, "be": False,
+                    "units_left": UNITS, "pnl_points": 0.0, "fills": [],
+                    "trace": [{"condition_id": cid, "evaluator": fam_results[cond_family[cid]][1],
+                               "transcript_quote": (cond_quote.get(cid) or "")[:160] or None}
+                              for cid in sorted(satisfied)
+                              if cond_family[cid] not in ("entry_execution", "meta_state")][:10],
+                }
+                if len(sample_armed) < 3:
+                    sample_armed.append({"ts": ts[i], "families_true": sorted(f for f in market_fams if fam_results[f][0])})
 
-    # ── Ledger G verdict ──
     trades_traceable = sum(1 for t in trades if t["trace"] and all(x["transcript_quote"] for x in t["trace"]))
-    ledger_g = {
-        "conditions_with_verified_provenance": f"{prov_ok}/{prov_total}",
-        "trades_fully_traceable": f"{trades_traceable}/{len(trades)}",
-        "verdict": "TRACEABLE" if (prov_ok == prov_total and trades_traceable == len(trades)) else "GAPS",
-    }
-
     wins = [t for t in trades if t["pnl_points"] > 0]
     total_pts = sum(t["pnl_points"] for t in trades)
-    equity, peak, max_dd = 0.0, 0.0, 0.0
+    equity = peak = max_dd = 0.0
     for t in trades:
         equity += t["pnl_usd"]; peak = max(peak, equity); max_dd = max(max_dd, peak - equity)
+    risks = [t["risk_usd_3lots"] for t in trades]
 
     report = {
         "specification": {
             "video": artifact["video"], "spec_hash": artifact["spec_hash"],
             "graph_canonical_hash": artifact["graph_canonical_hash"], "ledger_d": artifact["ledger_d"],
             "conditions": len(spec["entry_conditions"]), "and_groups": len(spec["and_groups"]),
-            "or_branches": len(spec["or_branches"]), "invalidations": len(spec["invalidations"]),
-            "direction": spec["direction"], "bars": len(c), "window": f"{ts[0]} .. {ts[-1]}",
-            "framework_v1_exit": f"stop {STOP_ATR_MULT}xATR{ATR_PERIOD} / tp {TP_R_MULT}R / time-stop {MAX_HOLD_BARS} bars (overlay-owned)",
+            "timeframe": timeframe, "bars": len(c), "window": f"{ts[0]} .. {ts[-1]}",
+            "overlay": f"Style-C-lite: stop 1.5xATR({timeframe}) CEILING {STOP_CEILING_PTS}pt->SKIP | 3 units TP1@1R(BE)/TP2@2R/runner | RTH entries | 15:55 flatten",
+        },
+        "funnel": {
+            "per_family": {f: {"evaluated": funnel_eval[f], "passed": funnel_pass[f],
+                               "pass_rate_pct": round(100 * funnel_pass[f] / max(1, funnel_eval[f]), 1)}
+                           for f in market_fams},
+            "sequential_conjunction": [{"stage": f, "bars_surviving": seq_pass[f],
+                                        "pct_of_all": round(100 * seq_pass[f] / max(1, seq_total), 2)}
+                                       for f in seq_order],
+            "bars_total": seq_total,
         },
         "execution": {
-            "bars_evaluated": len(decisions), "armed_setups": armed_count, "entries": len(trades),
-            "invalidation_vetoes": invalidation_fires, "blocked_reason_histogram": dict(sorted(blocked_hist.items(), key=lambda kv: -kv[1])),
+            "armed_setups": armed_count, "entries": len(trades),
+            "skipped_by_stop_ceiling": skipped_ceiling,
         },
         "market_outputs": {
-            "trades": len(trades), "total_pnl_points": round(total_pts, 2),
-            "total_pnl_usd_1lot": round(total_pts * MES_POINT_VALUE, 2),
+            "trades": len(trades),
+            "total_pnl_points_3lots": round(total_pts, 2),
+            "total_pnl_usd_3lots": round(total_pts * MES_POINT_VALUE, 2),
             "win_rate_observed_pct": round(100 * len(wins) / len(trades), 1) if trades else None,
             "expectancy_points_per_trade": round(total_pts / len(trades), 3) if trades else None,
             "max_drawdown_usd": round(max_dd, 2),
+            "risk_per_trade_usd_3lots": {"min": min(risks) if risks else None, "max": max(risks) if risks else None,
+                                          "avg": round(sum(risks) / len(risks), 2) if risks else None},
         },
-        "ledger_g": ledger_g,
-        "trades": trades,
-        "sample_blocked_decisions": [d for d in decisions if not d["armed"]][:5],
-        "sample_armed_decisions": [d for d in decisions if d["armed"]][:5],
+        "ledger_g": {
+            "conditions_with_verified_provenance": f"{prov_ok}/{prov_total}",
+            "trades_fully_traceable": f"{trades_traceable}/{len(trades)}",
+            "verdict": "TRACEABLE" if (prov_ok == prov_total and trades_traceable == len(trades)) else "GAPS",
+        },
+        "sample_armed": sample_armed,
+        "trades": trades[:200],
     }
     json.dump(report, open(f"{out_prefix}.json", "w", encoding="utf-8"), indent=1)
     return report
@@ -287,13 +343,14 @@ def main() -> int:
     ap.add_argument("spec_path")
     ap.add_argument("--transcript", required=True)
     ap.add_argument("--local-path", required=True)
+    ap.add_argument("--timeframe", default="15min")
     ap.add_argument("--start", default="2023-01-01")
-    ap.add_argument("--end", default="2025-12-01")
-    ap.add_argument("--out", default="tmp/generalization/l2-live-run")
+    ap.add_argument("--end", default="2026-02-28")
+    ap.add_argument("--out", default="tmp/generalization/l2-live-run-v2")
     a = ap.parse_args()
-    r = run(a.spec_path, a.transcript, a.local_path, a.start, a.end, a.out)
-    print(json.dumps({k: r[k] for k in ("specification", "execution", "market_outputs", "ledger_g")}, indent=1))
-    print(f"\nfull report: {a.out}.json  ({len(r['trades'])} trades)")
+    r = run(a.spec_path, a.transcript, a.local_path, a.timeframe, a.start, a.end, a.out)
+    print(json.dumps({k: r[k] for k in ("specification", "funnel", "execution", "market_outputs", "ledger_g")}, indent=1))
+    print(f"\nfull report: {a.out}.json  ({r['market_outputs']['trades']} trades)")
     return 0
 
 
