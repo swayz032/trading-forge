@@ -32,9 +32,13 @@ scripts/*.d.ts
 scripts/*.d.ts.map
 scripts/*.js
 scripts/*.js.map
+
+# Carter agent audit output (live API snapshot — do not commit)
+scripts/carter/agent-baseline.json
 Trading_forge_frontend/amber-vision-main/tsconfig.*.tsbuildinfo
 .clawhub/
 data_cache/
+.numba_cache/
 backups/
 logs/
 models/
@@ -47,3 +51,21 @@ CTemp*
 npm-cache-tf/
 *.pid
 *.bak
+
+# Runtime session/credential persistence files (survive NSSM restart) — never commit (deepscan 2026-06-28)
+.bw-session-runtime
+.cookie-runtime-*
+
+# Operational dumps / scratch that leak the attack surface — never commit (deep-scan #6 S2, 2026-07-01)
+# n8n workflow-graph dumps expose node bodies, relay endpoints, and the HMAC scheme. Export
+# n8n via the tracked workflows/n8n/*.json backups (ID-stable), never ad-hoc root dumps.
+*all-wf.json
+wf_full/
+wf_live.json
+wf_live_*.json
+brave_disc.json
+active_ids.txt
+all_ids.txt
+Userstonio*
+scripts/_tmp_*
+workflows/n8n-prefix/

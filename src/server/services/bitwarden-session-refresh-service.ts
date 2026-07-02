@@ -16,10 +16,12 @@
  */
 
 import { randomUUID } from "node:crypto";
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { exec, execFile } from "child_process";
 import { promisify } from "util";
 import { logger } from "../lib/logger.js";
-import { AlertFactory } from "./alert-service.js";
+import { AlertFactory, createAlert } from "./alert-service.js";
 import { notifyCritical } from "./notification-service.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
@@ -103,6 +105,18 @@ export async function refreshBwSession(): Promise<string> {
 
   // Mutate in-process so all subsequent bw CLI calls use the new session
   process.env["BW_SESSION"] = newToken;
+
+  // H4: Persist the refreshed token to .bw-session-runtime so that an NSSM
+  // restart loads the fresh session instead of the stale value baked into .env.
+  // load-env.ts overrides BW_SESSION from this file at boot after dotenv runs.
+  const runtimePath = join(process.cwd(), ".bw-session-runtime");
+  try {
+    writeFileSync(runtimePath, newToken, { encoding: "utf8" });
+    logger.info({ runtimePath }, "bitwarden-refresh: BW_SESSION persisted to .bw-session-runtime");
+  } catch (writeErr) {
+    logger.warn({ err: writeErr }, "bitwarden-refresh: failed to write .bw-session-runtime — NSSM restart may load stale token");
+  }
+
   logger.info("bitwarden-refresh: BW_SESSION refreshed successfully");
   return newToken;
 }
@@ -133,6 +147,36 @@ export async function runBwSessionRefreshCheck(): Promise<BwRefreshResult> {
 
   if (hoursRemaining === null) {
     logger.warn("bitwarden-refresh: could not determine expiry — skipping refresh");
+
+    // A-14: emit a visible warning so unknown_expiry is queryable via audit_log
+    // and not invisible forever. Each daily occurrence is its own audit row and
+    // alert — repeated warnings across days are the "escalation" mechanism.
+    await insertAuditRow({
+      action: "credential.bw_session_expiry_unknown",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: {} as Record<string, unknown>,
+      result: { reason: "bw_status_returned_null_or_failed" } as Record<string, unknown>,
+      status: "warning",
+      correlationId: cronCorrelationId,
+    }).catch((auditErr) => {
+      logger.warn({ err: auditErr }, "bitwarden-refresh: audit write for unknown_expiry failed");
+    });
+
+    await createAlert({
+      type: "system",
+      severity: "warning",
+      title: "Bitwarden: session expiry check inconclusive",
+      message:
+        "bw status returned null or failed — session expiry cannot be determined. " +
+        "The session may be approaching expiry. If this alert fires repeatedly, " +
+        "run 'bw login' manually on the Skytech tower and update BW_SESSION in .env.",
+      metadata: { event: "bw_session_expiry_unknown", correlationId: cronCorrelationId },
+    }).catch((alertErr) => {
+      logger.warn({ err: alertErr }, "bitwarden-refresh: alert for unknown_expiry failed");
+    });
+
     return { status: "unknown_expiry", hoursRemaining: null };
   }
 

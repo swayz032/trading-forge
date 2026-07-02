@@ -12,7 +12,7 @@ import { randomUUID, createHmac, timingSafeEqual } from "crypto";
 import { desc, eq, and, sql, count, gte } from "drizzle-orm";
 import { getMode, setMode } from "../services/pipeline-control-service.js";
 import { db } from "../db/index.js";
-import { agentHealthReports, dataIntegrityFindings, liquidityLevels, needsArchetypeQueue, strategies } from "../db/schema.js";
+import { agentHealthReports, dataIntegrityFindings, liquidityLevels, needsArchetypeQueue, strategies, systemParameters } from "../db/schema.js";
 import { AgentService } from "../services/agent-service.js";
 import { getPhaseRecord, setPhaseOverride, type PhaseValue } from "../services/harsh-regime-phase-service.js";
 import { notifyCritical, notifyWarning } from "../services/notification-service.js";
@@ -20,6 +20,12 @@ import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { insertAuditRow, insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { logger } from "../lib/logger.js";
 import { getStrategySourceUrls } from "../lib/strategy-source-resolver.js";
+import {
+  parseLearningLoopMode,
+  LEARNING_LOOP_MODE_PARAM,
+  MODE_OBSERVE,
+  MODE_AUTOPILOT,
+} from "../lib/learning-loop-mode.js";
 
 export const adminRoutes = Router();
 
@@ -389,6 +395,83 @@ adminRoutes.post("/operator-mark-present", async (req, res) => {
   } catch (err) {
     req.log?.error({ err, correlationId }, "operator-mark-present: failed");
     res.status(500).json({ error: "operator_mark_present_failed", correlationId });
+  }
+});
+
+// ─── GET /kill-switch ────────────────────────────────────────────
+// Read-only exposure of the `system_parameters.auto_patch_loop_enabled`
+// flag for the Layer-14 nightly intelligence orchestrator (n8n 14A-master).
+// This is the SAME operator-phone-tappable halt that gates the Wave 26
+// pattern-aggregator and Wave 27 quantum-replay loops (CLAUDE.md §13).
+//
+// 3-MODE semantics (NUMERIC current_value — see lib/learning-loop-mode.ts):
+//   0 = OFF        — nothing autonomous, no nightly advisory.
+//   1 = OBSERVE    — nightly ADVISORY intelligence runs; NO autonomous changes.
+//   2 = AUTOPILOT  — advisory + autonomous mutation loops.
+// FAIL-CLOSED: absent row / non-numeric / read error → mode 0 (OFF).
+//
+// BACKWARD-COMPAT CONTRACT: `enabled` historically meant "autonomous loop ON".
+// It is preserved EXACTLY as `enabled = autonomous_on` (mode >= 2). OBSERVE
+// (mode 1) MUST report enabled:false — 14A and every autonomous reader gate on
+// `enabled`/`autonomous_on`, so OBSERVE must not wake them. `advisory_on` is the
+// additive signal for advisory-only consumers (the nightly intelligence run).
+adminRoutes.get("/kill-switch", async (req, res) => {
+  try {
+    const rows = await db
+      .select({ val: systemParameters.currentValue })
+      .from(systemParameters)
+      .where(eq(systemParameters.paramName, LEARNING_LOOP_MODE_PARAM))
+      .limit(1);
+    const raw = rows.length > 0 ? rows[0].val : null;
+    // Derive via the shared clamp/validate helper — the single source of truth
+    // for mode interpretation across every reader.
+    const mode = parseLearningLoopMode(raw);
+    const advisoryOn = mode >= MODE_OBSERVE;
+    const autonomousOn = mode >= MODE_AUTOPILOT;
+    const enabled = autonomousOn; // backward-compat: enabled === autonomous_on
+    // GAP 5 fix: fire-and-forget audit row so Layer-14 read events are reconstructable.
+    // Previously the 14A nightly orchestrator could read this endpoint repeatedly with
+    // no trace in audit_log — silent reads are not reconstructable after an incident.
+    // Fail-soft: insertAuditRowSafe never throws; response is never blocked.
+    void insertAuditRowSafe({
+      action: "kill_switch.autonomous_loop_read",
+      entityType: "system",
+      status: "info",
+      result: {
+        enabled,
+        mode,
+        advisory_on: advisoryOn,
+        autonomous_on: autonomousOn,
+        raw: raw ?? null,
+        key: LEARNING_LOOP_MODE_PARAM,
+      },
+      correlationId: req.id,
+    });
+    res.json({
+      key: LEARNING_LOOP_MODE_PARAM,
+      mode,
+      advisory_on: advisoryOn,
+      autonomous_on: autonomousOn,
+      enabled,
+      raw: raw ?? null,
+      source: "system_parameters",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    req.log.error({ err }, "Admin: failed to read kill-switch");
+    // FAIL-CLOSED on error: report mode 0 / enabled=false so the autonomous loop
+    // stays halted when we cannot confirm it was explicitly enabled.
+    res.status(200).json({
+      key: LEARNING_LOOP_MODE_PARAM,
+      mode: 0,
+      advisory_on: false,
+      autonomous_on: false,
+      enabled: false,
+      raw: null,
+      source: "error_fail_closed",
+      error: String(err),
+      timestamp: new Date().toISOString(),
+    });
   }
 });
 

@@ -830,12 +830,39 @@ def simulate_firm_survival(
         "tpt_50pct": 0.50,
         "alpha_50pct": 0.50,
         "mffu_50pct": 0.50,
+        "mffu_50pct_sim_payout": 0.50,  # deepscan5 2026-06-29 — recognized rule name (firm_config
+                                        # uses this for mffu_50k); explicitly skipped in B14 below
+                                        # (sim-payout-stage only). Mapped (not silently absent) so a
+                                        # typo'd rule name would surface, not silently skip.
         "ffn_40pct": 0.40,
         "tradeify_40pct": 0.40,
         "earn2trade_consistency": 0.50,
         # apex_50pct_funded: applies only to funded payouts, not eval sim
     }
     consistency_ratio = _consistency_map.get(firm.get("consistency_rule"), None)
+
+    # FINDING-4 fix: Topstep STANDARD payout lane has consistency as OPT-IN (default OFF).
+    # Operator runs STANDARD lane (no per-day cap at payout request).
+    # The firm_config sets consistency_rule="topstep_50pct" because the RULE EXISTS at Topstep,
+    # but it only applies when the operator is in the CONSISTENCY payout lane.
+    # Default: TOPSTEP_PAYOUT_LANE=standard → skip the 50% best-day cap in B14 simulation.
+    # Set TOPSTEP_PAYOUT_LANE=consistency to re-enable when operator switches lanes.
+    _topstep_payout_lane = _os.environ.get("TOPSTEP_PAYOUT_LANE", "standard").strip().lower()
+    if (
+        consistency_ratio is not None
+        and firm_key == "topstep_50k"
+        and _topstep_payout_lane == "standard"
+    ):
+        consistency_ratio = None  # FINDING-4 fix: standard lane has no consistency cap
+
+    # deepscan5 2026-06-29: MFFU Builder consistency (mffu_50pct_sim_payout) applies ONLY at the
+    # discrete SIM-FUNDED payout stage — NONE at eval, NONE live (firm_config.py mffu_50k). The
+    # B14 eval+funded survival sim does not model that discrete payout gate, so MFFU consistency
+    # is intentionally NOT enforced here. This is an EXPLICIT, auditable skip (mirrors the Topstep
+    # standard-lane skip above) — NOT a silent map-miss. Re-enabling requires modeling the
+    # sim-payout stage as a distinct event, not flipping this skip.
+    if consistency_ratio is not None and firm_key == "mffu_50k":
+        consistency_ratio = None
 
     # Per-firm commission per round trip per contract
     firm_comms = FIRM_COMMISSIONS.get(firm_key, {})
@@ -999,7 +1026,16 @@ def simulate_firm_survival(
                 _firm_rules_all = _FR
             except ImportError:
                 pass
-            _payout_cycle = _firm_rules_all.get(firm_key, {}).get("payout_cycle_days", None)
+            _firm_entry_rules = _firm_rules_all.get(firm_key, {})
+            # Prefer explicit consistency_window_days over payout_cycle_days.
+            # payout_cycle_days drives PAYOUT FREQUENCY; consistency_window_days drives the
+            # sliding-window check independently. A 2-day payout cycle (MFFU Builder) would
+            # trivially fire the 50% cap on any non-uniform pair of positive days.
+            # When consistency_window_days is None (or absent) the full-path fallback runs.
+            if "consistency_window_days" in _firm_entry_rules:
+                _payout_cycle = _firm_entry_rules["consistency_window_days"]
+            else:
+                _payout_cycle = _firm_entry_rules.get("payout_cycle_days", None)
 
             if _payout_cycle is not None and _payout_cycle > 0:
                 # Sliding-window consistency: any payout-cycle window where
@@ -1930,7 +1966,8 @@ def run_monte_carlo(
             else:
                 # FIX 4 (2026-06-22): No firm models in this MC run.
                 # Do NOT silently write probability_of_ruin_ci with terminal<=0 basis —
-                # the B14 gate reads ci_high and blocks when ci_high > 0.40, but the
+                # the B14 gate reads ci_high and blocks when ci_high > B14_RUIN_CI_HIGH_THRESHOLD
+                # (default 0.20, tightened 2026-06-22 from 0.40), but the
                 # terminal<=0 ruin definition is categorically different from firm-breach
                 # ruin and may be materially lower (trading a trending strategy can show
                 # 0% terminal loss while EOD trailing DD already closed the account).

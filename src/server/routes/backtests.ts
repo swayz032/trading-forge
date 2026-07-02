@@ -399,7 +399,10 @@ function getStagePrompt(stage: number): string {
 }
 
 // ─── POST /api/backtests/matrix — Cross-matrix testing ────────────
-backtestRoutes.post("/matrix", async (req, res) => {
+// Wave 2 Track 2A: idempotencyMiddleware deduplicates identical POSTs by
+// X-Idempotency-Key (fail-open — no key ⇒ pass straight through). Closes the
+// Strategy Deep Analysis Pipeline webhook double-fire → duplicate matrix run.
+backtestRoutes.post("/matrix", idempotencyMiddleware, async (req, res) => {
   const schema = z.object({
     strategyId: z.string().uuid(),
   });

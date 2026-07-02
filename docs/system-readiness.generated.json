@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-24T19:45:33.529Z",
+  "generatedAt": "2026-07-02T06:01:23.625Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -55,8 +55,8 @@
     "workflow-source-missing:Weekly_Strategy_Hunt_sAIrnCVB4iOsodsy"
   ],
   "subsystemCounts": {
-    "total": 69,
-    "ready": 45,
+    "total": 71,
+    "ready": 47,
     "blocked": 17,
     "manualGated": 2,
     "experimental": 5
@@ -207,6 +207,49 @@
         "live_order.blocked_kill_switch",
         "live_order.blocked_replay",
         "live_order.routed"
+      ]
+    },
+    {
+      "id": "candidate_backtest_conveyor",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "operator_only",
+      "blockers": [],
+      "requiredEvidence": [
+        "audit_log:lifecycle.candidate_conveyor_enqueued",
+        "factory:candidate_backtest_enqueued SSE",
+        "lifecycle.candidate_conveyor_enqueued",
+        "SELECT COUNT(*) FROM audit_log WHERE action = 'lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '24 hours'",
+        "tf_candidate_conveyor_enqueued_total",
+        "tf_candidate_conveyor_enqueued_total (Prometheus counter)"
+      ]
+    },
+    {
+      "id": "carter_voice_agent",
+      "status": "ready",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "operator_only",
+      "blockers": [],
+      "requiredEvidence": [
+        "/api/health",
+        "/api/sse",
+        "audit_log:carter.conversation_logged",
+        "audit_log:carter.tool_invoked",
+        "carter_issues:recent-entry",
+        "carter-conversation-log-history",
+        "carter-issue-watcher-history",
+        "carter-tool-invocation-history",
+        "carter.conversation_logged",
+        "carter.tool_failed",
+        "carter.tool_invoked"
       ]
     },
     {
@@ -1038,7 +1081,12 @@
         "audit_log.lifecycle.regime_drift_demotion",
         "audit_log.regime_drift_detector.*",
         "audit_log.regime_drift_detector.completed",
+        "audit_log.strategy_revalidation.completed",
         "audit_log.strategy.regime_drift_detected",
+        "audit_log.strategy.revalidation_due",
+        "audit_log.strategy.revalidation_forced",
+        "audit_log.strategy.sharpe_decay_review",
+        "audit_log.strategy.sharpe_decay_warn",
         "lifecycle.regime_drift_demotion",
         "regime_drift_detector.completed",
         "regime_drift_detector.dry_run",
@@ -1046,6 +1094,7 @@
         "regime_drift_detector.skipped_dst_guard",
         "regime_drift_detector.skipped_lock_contention",
         "scheduler:regime-drift-detector:21,22-utc",
+        "scheduler:strategy-age-revalidation:11,12-utc",
         "SELECT * FROM audit_log WHERE action = 'regime_drift_detector.completed' ORDER BY created_at DESC LIMIT 7",
         "SELECT * FROM audit_log WHERE action IN ('strategy.regime_drift_detected','lifecycle.regime_drift_demotion') ORDER BY created_at DESC LIMIT 20",
         "strategy.regime_drift_detected"

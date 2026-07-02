@@ -51,8 +51,41 @@ def _apply_env_vars() -> None:
         os.environ[key] = value
 
 
-# Apply immediately at module import so MKL sees the vars before numpy loads.
+def _apply_numba_cache_dir() -> None:
+    """Pin a persistent on-disk Numba JIT cache directory (perf, accuracy-neutral).
+
+    WHY: vectorbt + the engine's @njit hot functions are ``cache=True``, but with
+    no explicit ``NUMBA_CACHE_DIR`` Numba writes per-function ``.nbi``/``.nbc``
+    files into each package's ``__pycache__`` (site-packages). That works until a
+    walk-forward run spawns multiple ProcessPoolExecutor workers (Windows = spawn,
+    so every worker is a fresh interpreter that re-imports + re-JITs from scratch):
+    they then race to compile and write the SAME cache files concurrently, and a
+    package reinstall silently invalidates the lot. Centralising the cache in one
+    stable, writable, repo-local directory makes the cache survive reinstalls and
+    lets every spawned worker share one validated cache (cold ~7s → warm ~2.4s).
+
+    This ONLY affects compilation caching — it can never change a numerical result,
+    so it is safe to apply unconditionally at module load (before Numba imports).
+    Respects an explicit operator override if NUMBA_CACHE_DIR is already set.
+    """
+    if os.environ.get("NUMBA_CACHE_DIR"):
+        return  # operator/CI override wins — don't clobber
+    try:
+        # determinism.py lives at <repo>/src/engine/determinism.py
+        repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        cache_dir = os.path.join(repo_root, ".numba_cache")
+        os.makedirs(cache_dir, exist_ok=True)
+        os.environ["NUMBA_CACHE_DIR"] = cache_dir
+    except OSError:
+        # Never fail an engine entry-point over a cache-dir setup problem;
+        # Numba falls back to its default __pycache__ location.
+        pass
+
+
+# Apply immediately at module import so MKL sees the vars before numpy loads
+# and Numba sees NUMBA_CACHE_DIR before it is imported anywhere.
 _apply_env_vars()
+_apply_numba_cache_dir()
 
 
 # ─── Runtime enforcement via threadpoolctl ────────────────────────────────────

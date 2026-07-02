@@ -123,6 +123,11 @@ const VAULT_CREDENTIALS: ReadonlyArray<{
 
   // ─── Supadata ──────────────────────────────────────────────
   { envKey: "SUPADATA_API_KEY",       bwFieldName: "SUPADATA_API_KEY",       required: false },
+
+  // ─── Carter voice agent (ElevenLabs) ───────────────────────
+  { envKey: "CARTER_AGENT_ID",               bwFieldName: "CARTER_AGENT_ID",               required: false },
+  { envKey: "CARTER_TOOLS_HMAC_SECRET",      bwFieldName: "CARTER_TOOLS_HMAC_SECRET",      required: false },
+  { envKey: "CARTER_POST_CALL_WEBHOOK_SECRET", bwFieldName: "CARTER_POST_CALL_WEBHOOK_SECRET", required: false },
 ] as const;
 
 // ─── Module-level state ──────────────────────────────────────────────────────

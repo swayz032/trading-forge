@@ -214,17 +214,17 @@ STATIC_EVENTS: dict[str, list[dict]] = {
         {"date": "2025-06-18", "time_et": "14:00"},
         {"date": "2025-07-30", "time_et": "14:00"},
         {"date": "2025-09-17", "time_et": "14:00"},
-        {"date": "2025-11-05", "time_et": "14:00"},
-        {"date": "2025-12-17", "time_et": "14:00"},
+        {"date": "2025-10-29", "time_et": "14:00"},  # corrected from 2025-11-05 (D1)
+        {"date": "2025-12-10", "time_et": "14:00"},  # corrected from 2025-12-17 (D1)
         # 2026
         {"date": "2026-01-28", "time_et": "14:00"},
         {"date": "2026-03-18", "time_et": "14:00"},
-        {"date": "2026-05-06", "time_et": "14:00"},
+        {"date": "2026-04-29", "time_et": "14:00"},  # corrected from 2026-05-06 (D1)
         {"date": "2026-06-17", "time_et": "14:00"},
         {"date": "2026-07-29", "time_et": "14:00"},
         {"date": "2026-09-16", "time_et": "14:00"},
-        {"date": "2026-11-04", "time_et": "14:00"},
-        {"date": "2026-12-16", "time_et": "14:00"},
+        {"date": "2026-10-28", "time_et": "14:00"},  # corrected from 2026-11-04 (D1)
+        {"date": "2026-12-09", "time_et": "14:00"},  # corrected from 2026-12-16 (D1)
         # 2027
         {"date": "2027-01-27", "time_et": "14:00"},
         {"date": "2027-03-17", "time_et": "14:00"},
@@ -267,12 +267,12 @@ STATIC_EVENTS: dict[str, list[dict]] = {
         {"date": "2026-01-14", "time_et": "08:30"},
         {"date": "2026-02-11", "time_et": "08:30"},
         {"date": "2026-03-11", "time_et": "08:30"},
-        {"date": "2026-04-14", "time_et": "08:30"},
+        {"date": "2026-04-10", "time_et": "08:30"},  # corrected from 2026-04-14 (D1)
         {"date": "2026-05-12", "time_et": "08:30"},
         {"date": "2026-06-10", "time_et": "08:30"},
         {"date": "2026-07-14", "time_et": "08:30"},
         {"date": "2026-08-12", "time_et": "08:30"},
-        {"date": "2026-09-15", "time_et": "08:30"},
+        {"date": "2026-09-11", "time_et": "08:30"},  # corrected from 2026-09-15 (D1)
         {"date": "2026-10-13", "time_et": "08:30"},
         {"date": "2026-11-10", "time_et": "08:30"},
         {"date": "2026-12-10", "time_et": "08:30"},
@@ -325,7 +325,7 @@ STATIC_EVENTS: dict[str, list[dict]] = {
         {"date": "2026-04-03", "time_et": "08:30"},
         {"date": "2026-05-01", "time_et": "08:30"},
         {"date": "2026-06-05", "time_et": "08:30"},
-        {"date": "2026-07-02", "time_et": "08:30"},
+        {"date": "2026-07-10", "time_et": "08:30"},  # corrected from 2026-07-02 (D1 — Jul 3 is observed Independence Day, push to Jul 10)
         {"date": "2026-08-07", "time_et": "08:30"},
         {"date": "2026-09-04", "time_et": "08:30"},
         {"date": "2026-10-02", "time_et": "08:30"},

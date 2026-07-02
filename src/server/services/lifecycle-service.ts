@@ -3,12 +3,23 @@
  *
  * Valid transitions:
  * CANDIDATE → TESTING → SHADOW → PAPER → DEPLOY_READY → DEPLOYED → DECLINING → RETIRED → GRAVEYARD
- * CANDIDATE → SHADOW (fast-track; skips TESTING for tier-qualified strategies)
  * DECLINING → TESTING (retry)
  * TESTING → DECLINING (catastrophic failure)
  * PAPER → DECLINING (drift demotion)
  * Every state → GRAVEYARD (terminal burial)
- * Note: CANDIDATE→PAPER is INVALID (F-3 fix 2026-06-23). All paths to PAPER require SHADOW first.
+ *
+ * Canonical autonomous ladder (H1/H2/H3 fix 2026-06-29): the tier-qualified fast-track
+ * (backtest-service.ts) now routes CANDIDATE → TESTING → SHADOW (it no longer jumps
+ * CANDIDATE → SHADOW). Every strategy entering TESTING via the autonomous path is flagged
+ * shadowModeEnabled=true and is driven TESTING → SHADOW by Gate 1.5 in checkAutoPromotions —
+ * so the Wave 29 PBO < 0.15 gate (TESTING → SHADOW) and the SHADOW → PAPER divergence gate
+ * BOTH fire on the default path. CANDIDATE → SHADOW remains in VALID_TRANSITIONS as a
+ * legacy/manual edge but no autonomous driver uses it.
+ *
+ * Note: CANDIDATE → PAPER is INVALID (F-3 fix 2026-06-23). TESTING → PAPER remains a
+ * VALID edge but is the LEGACY direct path, taken only by shadowModeEnabled=false strategies
+ * via Gate 2; every shadowModeEnabled=true strategy reaches PAPER only through SHADOW. So on
+ * the autonomous path, all routes to PAPER require SHADOW first.
  *
  * DEPLOY_READY is the "strategy library" — strategies that passed paper trading
  * and are ready for human review. Only manual approval moves them to DEPLOYED.
@@ -30,11 +41,11 @@ import { logger } from "../lib/logger.js";
 import { insertAuditRow, insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { evolveStrategy } from "./evolution-service.js";
 import { AlertFactory } from "./alert-service.js";
-import { broadcastSSE, LIFECYCLE_GATE_EVENTS } from "../routes/sse.js";
+import { broadcastSSE, LIFECYCLE_GATE_EVENTS, WAVE29_EVENTS } from "../routes/sse.js";
 import { compileDualPineExport } from "./pine-export-service.js";
 import { agentCoordinator } from "./agent-coordinator-service.js";
 import { tracer } from "../lib/tracing.js";
-import { strategyPromotions, pboBlocksTotal, lifecycleShadowPromotionsTotal } from "../lib/metrics-registry.js";
+import { strategyPromotions, pboBlocksTotal, lifecycleShadowPromotionsTotal, autoGraveyardTotal, bifGateEvaluationsTotal, auditWriteFailuresTotal } from "../lib/metrics-registry.js";
 import { evaluateMultiFirmEligibility } from "./multi-firm-promotion-service.js";
 import { killSwitch } from "../production/kill-switch.js";
 import { evaluateB14CiGate, evaluateDsrWalkForwardGate } from "../lib/b14-ci-gate.js";
@@ -61,6 +72,10 @@ import {
   evaluateFrozenPolicyDriftAtPromotion,
   freezePolicyForStrategy,
 } from "../lib/frozen-policy-contract.js";
+// Wave 3 Track 3B — BIF (Backtest Inflation Factor) promotion gate (PAPER → DEPLOY_READY).
+// Reads backtests.bif / backtests.kEff stamped from Python WF result fields `bif` / `k_eff`.
+// Hard-blocks when bif > BIF_BLOCK_THRESHOLD (default 4.0). Grandfather-passes on null.
+import { evaluateBifGate } from "../lib/bif-gate.js";
 
 const VALID_STATES = [
   "CANDIDATE",
@@ -82,12 +97,27 @@ const VALID_STATES = [
 type LifecycleState = (typeof VALID_STATES)[number];
 
 interface PromoteStrategyOptions {
-  actor?: "system" | "human_release";
+  actor?: "system" | "human_release" | "operator_absent_mode";
   reason?: string;
   /** Parent strategy ID for evolution-driven promotions (e.g., gen+1 child created by evolution-service). */
   parentStrategyId?: string;
   /** HTTP request correlation ID (req.id) or scheduler-generated UUID for end-to-end tracing. */
   correlationId?: string;
+  /**
+   * Double-evaluation guard (2026-06-29, fix #4): when the checkAutoPromotions cron
+   * drives PAPER → DEPLOY_READY it has ALREADY run the full inline gate stack (including
+   * the on-demand B14 survival-twin replay — a Python subprocess — and every hard gate).
+   * Setting this true skips the PAPER → DEPLOY_READY evaluator block inside
+   * _promoteStrategyInner so the survival-twin subprocess does NOT fire a SECOND time and
+   * the per-gate audit rows are not duplicated per tick. Manual PATCH /:id/lifecycle does
+   * NOT set this — that path relies on the evaluator as its sole gate stack.
+   * TODO(consolidation): the cleaner end-state is to replace the cron's ~1400-line inline
+   * PAPER → DEPLOY_READY block with a single evaluatePaperToDeployReadyGates() call (keeping
+   * the cron-only side effects — _maybeAutoGraveyard, _resetHardGateCounter, gateEvidenceStatuses,
+   * composite-shadow Discord — as a thin wrapper around the evaluator result). Deferred here
+   * as too invasive to do without behavior-change risk; this guard removes the duplicate work.
+   */
+  skipPaperToDeployReadyEvaluator?: boolean;
 }
 
 const VALID_TRANSITIONS: Record<LifecycleState, LifecycleState[]> = {
@@ -375,7 +405,18 @@ export class LifecycleService {
     // B8: DEPLOY_READY → PILOT requires human approval (same authority as DEPLOYED).
     // This prevents system-auto promotion into the canary track — a human must decide
     // to enter the canary window for each strategy.
-    if (fromState === "DEPLOY_READY" && toState === "PILOT" && options.actor !== "human_release") {
+    // Deep-scan 2026-06-28 (C-1): the operator-absent (vacation) autopilot is the
+    // ONE authorized exception — actor="operator_absent_mode" promotes Tier-1
+    // strategies (rolling Sharpe >= floor AND all autopilot gates passed, enforced
+    // in operator-absent-mode-service.ts) while the operator is away. Plain
+    // actor="system" is still blocked. Previously this gate blocked even the
+    // vacation autopilot, making the documented §3 feature dead code.
+    if (
+      fromState === "DEPLOY_READY" &&
+      toState === "PILOT" &&
+      options.actor !== "human_release" &&
+      options.actor !== "operator_absent_mode"
+    ) {
       const error = "Only manual release authority can promote DEPLOY_READY -> PILOT (canary track requires human approval)";
       logger.warn({ id, fromState, toState, actor: options.actor ?? "system" }, error);
       return { success: false, error };
@@ -415,7 +456,12 @@ export class LifecycleService {
     }
 
     // Pass 5 Track C: PAPER → DEPLOY_READY evaluator in _promoteStrategyInner
-    if (fromState === "PAPER" && toState === "DEPLOY_READY") {
+    // Fix #4 (2026-06-29): the checkAutoPromotions cron sets skipPaperToDeployReadyEvaluator=true
+    // because it already ran the full inline gate stack (incl. on-demand survival-twin replay).
+    // Skipping here prevents the survival-twin Python subprocess from firing a SECOND time and
+    // avoids duplicate per-gate audit rows per tick. The manual PATCH path leaves the flag unset
+    // so the evaluator remains its authoritative gate stack.
+    if (fromState === "PAPER" && toState === "DEPLOY_READY" && !options.skipPaperToDeployReadyEvaluator) {
       try {
         const { evaluatePaperToDeployReadyGates } = await import("../lib/paper-to-deploy-ready-gates.js");
         // Load gate inputs
@@ -424,6 +470,9 @@ export class LifecycleService {
           id: backtests.id, walkForwardResults: backtests.walkForwardResults,
           gateResult: backtests.gateResult, b15Battery: backtests.b15Battery,
           wrcResult: backtests.wrcResult, spaResult: backtests.spaResult,
+          // H1 fix 2026-06-28: fetch bif + kEff so the BIF gate in evaluatePaperToDeployReadyGates
+          // runs on the manual PATCH /:id/lifecycle path (previously only ran in the cron sweep).
+          bif: backtests.bif, kEff: backtests.kEff,
         }).from(backtests).where(and(eq(backtests.strategyId, id), eq(backtests.status, "completed"))).orderBy(desc(backtests.createdAt)).limit(1);
 
         const [latestMcP2D] = latestBtP2D ? await db.select({
@@ -440,6 +489,23 @@ export class LifecycleService {
         const wfResults = latestBtP2D?.walkForwardResults as Record<string, unknown> | null | undefined;
         const gateResultBlob = latestBtP2D?.gateResult as Record<string, unknown> | null | undefined;
         const survivalTwin = gateResultBlob?.survival_twin as { passed?: boolean } | null | undefined;
+
+        // Honest B14 Survival Twin: survival_twin is only ever written by the manual
+        // replay tool, so for every normal strategy it is ABSENT and Gate 1 used to
+        // silently auto-pass. Evaluate it ON DEMAND via the replay harness so the gate
+        // actually runs. Fail-soft: a slow/broken replay degrades to
+        // advisory_not_evaluated (the B14 ci_high ruin gate remains the hard ruin
+        // guard) — never a new freeze surface, never a false block.
+        let survivalTwinOnDemand:
+          import("../lib/paper-to-deploy-ready-gates.js").OnDemandSurvivalReplayResult | null = null;
+        if (!survivalTwin && latestBtP2D?.id) {
+          const { resolveSurvivalTwinOnDemand } = await import("../lib/paper-to-deploy-ready-gates.js");
+          survivalTwinOnDemand = await resolveSurvivalTwinOnDemand({
+            strategyId: id,
+            backtestId: latestBtP2D.id,
+          });
+        }
+
         const mcRm = (latestMcP2D?.riskMetrics as Record<string, unknown> | null) ?? {};
         const ruinCi = (mcRm.probability_of_ruin_ci ?? null) as Record<string, unknown> | null;
         const wrcResult = latestBtP2D?.wrcResult as Record<string, unknown> | null | undefined;
@@ -452,7 +518,12 @@ export class LifecycleService {
         const pdrInput: import("../lib/paper-to-deploy-ready-gates.js").PaperToDeployReadyGateInput = {
           strategyId: id,
           correlationId,
-          b14SurvivalTwin: { survival_twin: (survivalTwin ?? null) as import("../lib/paper-to-deploy-ready-gates.js").B14SurvivalTwinInput["survival_twin"] },
+          // Hardening 2026-06-27 (phantom-gate fix): pass b15HardGateEnabled explicitly so the
+          // operator's B15_BATTERY_ENABLED=false escape hatch is honored on the direct-promotion
+          // path (_promoteStrategyInner). Previously omitted → pure evaluator defaulted to true,
+          // silently ignoring the env flag when this path was used instead of the cron sweep.
+          b15HardGateEnabled: (process.env.B15_BATTERY_ENABLED ?? "true") === "true",
+          b14SurvivalTwin: { survival_twin: (survivalTwin ?? null) as import("../lib/paper-to-deploy-ready-gates.js").B14SurvivalTwinInput["survival_twin"], onDemandReplay: survivalTwinOnDemand },
           mcRuinCi: {
             probability_of_ruin_ci: ruinCi as import("../lib/b14-ci-gate.js").RuinCiDict | null,
             probability_of_ruin: latestMcP2D?.probabilityOfRuin != null ? Number(latestMcP2D.probabilityOfRuin) : null,
@@ -464,14 +535,30 @@ export class LifecycleService {
                 wfe_overall: (wfResults.wfe_overall as number | null | undefined) ?? null,
                 wfe_status: (wfResults.wfe_status as string | null | undefined) ?? null,
                 param_stability: (wfResults.param_stability as { drift_classification?: string | null; drift_confidence?: number | null } | null | undefined) ?? null,
+                // C1 (2026-06-29): thread the top-level param_stability_status key so the
+                // CPCV path resolves to cpcv_exempt (distinct audit) not legacy_null.
+                param_stability_status: (wfResults.param_stability_status as string | null | undefined) ?? null,
                 wf_metadata: ((wfResults.wf_metadata as Record<string, unknown> | null) ?? null) as import("../lib/b14-ci-gate.js").WalkForwardDsrInput | null,
                 wf_metadata_mode: ((wfResults.wf_metadata as Record<string, unknown> | null)?.mode as string | null) ?? null,
-                wf_metadata_n_paths: ((wfResults.wf_metadata as Record<string, unknown> | null)?.n_paths as number | null) ?? null,
+                // Finding 3 fix 2026-06-29: read n_paths ONLY when mode==="cpcv", matching the
+                // cron sweep's inline orchestrator read (lifecycle-service.ts:~3980). Without this
+                // guard the consolidated mapping fed a plain-WF window_count into Gate 7's CPCV
+                // n_paths check, so the SAME backtest row could yield different CPCV verdicts on
+                // the cron path vs the manual PATCH path. The guard makes the verdict identical.
+                wf_metadata_n_paths: (() => {
+                  const m = wfResults.wf_metadata as Record<string, unknown> | null;
+                  return m?.mode === "cpcv" && m.n_paths != null ? Number(m.n_paths) : null;
+                })(),
               }
             : null,
           orchGates: {
             wrcPValue: (wrcResult?.p_value as number | null | undefined) ?? null,
             spaConsistentP: (spaResult?.spa_consistent_p as number | null | undefined) ?? null,
+          },
+          // H1 fix 2026-06-28: wire BIF gate inputs from backtests row.
+          bifInput: {
+            bif: latestBtP2D?.bif != null ? Number(latestBtP2D.bif) : null,
+            kEff: latestBtP2D?.kEff != null ? Number(latestBtP2D.kEff) : null,
           },
           compositeShadow: null,  // _promoteStrategyInner does not pre-fetch composite shadow; observability only
           frozenPolicy: {
@@ -480,7 +567,68 @@ export class LifecycleService {
             frozenPolicyHash: frozenShadowRow?.frozenPolicyHash ?? null,
           },
         };
+        // hardening/phase-0: BIF CPCV-unmeasured pre-check.
+        // walk_forward.py emits bif_reliable=false in wf_metadata when mode="cpcv".
+        // paper-to-deploy-ready-gates.ts (Gate 6.5) cannot be edited (paper-*.ts restriction),
+        // so we emit the distinct lifecycle.bif_cpcv_unmeasured audit here — BEFORE the
+        // evaluator runs — so the exemption is visible in the audit trail.
+        // The evaluator still runs normally; in CPCV mode bif ≈ 1.0 (proxy-based) which
+        // passes the BIF threshold cleanly (1.0 < 2.0 warn floor) — the proxy-basis warn
+        // emitted by evaluatePaperToDeployReadyGates Gate 6.5 complements this audit row.
+        {
+          const p2dWfMeta = ((wfResults?.wf_metadata as Record<string, unknown> | null) ?? null);
+          const bifReliable = p2dWfMeta?.bif_reliable;
+          if (bifReliable === false) {
+            const bifNum = latestBtP2D?.bif != null ? Number(latestBtP2D.bif) : null;
+            const kEffNum = latestBtP2D?.kEff != null ? Number(latestBtP2D.kEff) : null;
+            const bifProxyBasis = (p2dWfMeta?.bif_proxy_basis as string | null | undefined) ?? null;
+            const bifCpcvResult = evaluateBifGate(bifNum, kEffNum, { bifReliable: false, proxyBasis: bifProxyBasis });
+            await db.insert(auditLog).values({
+              action: "lifecycle.bif_cpcv_unmeasured",
+              entityId: id,
+              entityType: "strategy",
+              status: "success",
+              decisionAuthority: "gate",
+              input: { fromState, toState },
+              result: bifCpcvResult.auditPayload as Record<string, unknown>,
+              correlationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: id, err: auditErr }, "lifecycle.bif_cpcv_unmeasured audit insert failed (non-blocking)");
+            });
+          }
+        }
+
         const gatePdrResult = await evaluatePaperToDeployReadyGates(pdrInput);
+
+        // Finding 3 fix: emit bifGateEvaluationsTotal Prometheus counter.
+        // evaluateBifGate is pure/synchronous (no I/O); calling it here with the same
+        // inputs provides the BIF-specific outcome label without changing gate logic.
+        // outcome label is mapped to short-form: clean | warn | blocked | legacy_null.
+        // The counter increment is non-blocking — errors never affect promotion outcome.
+        try {
+          // Finding 5 fix 2026-06-29 (filed as F-4 by accuracy-validator / M-1 by backtest-core):
+          // pass bifReliable so this counter call sees the SAME CPCV verdict the gate verdict uses.
+          // wf_metadata.bif_reliable===false (CPCV mode) → the gate returns reason
+          // "bif.cpcv_unmeasured"; without threading bifReliable here, CPCV strategies were
+          // silently counted as outcome="clean". Map that distinct reason to its own label.
+          const bifReliableForCounter =
+            ((wfResults?.wf_metadata as Record<string, unknown> | null)?.bif_reliable) === false;
+          const bifResult = evaluateBifGate(
+            latestBtP2D?.bif != null ? Number(latestBtP2D.bif) : null,
+            latestBtP2D?.kEff != null ? Number(latestBtP2D.kEff) : null,
+            bifReliableForCounter ? { bifReliable: false } : undefined,
+          );
+          const bifOutcome = bifResult.reason === "bif.cpcv_unmeasured"
+            ? "cpcv_unmeasured"
+            : !bifResult.passed
+              ? "blocked"
+              : bifResult.legacyNull
+                ? "legacy_null"
+                : bifResult.reason === "bif.warn_above_warn_threshold"
+                  ? "warn"
+                  : "clean";
+          bifGateEvaluationsTotal.labels({ outcome: bifOutcome }).inc();
+        } catch (_bifCounterErr) { /* non-blocking — counter failures never prevent promotion */ }
 
         if (!gatePdrResult.passed) {
           logger.warn({ strategyId: id, reason: gatePdrResult.reason, fromState, toState }, "PAPER→DEPLOY_READY blocked by evaluatePaperToDeployReadyGates");
@@ -490,9 +638,30 @@ export class LifecycleService {
             input: { fromState, toState }, result: gatePdrResult.auditPayload ?? { reason: gatePdrResult.reason },
             correlationId,
           }).catch((e) => { logger.warn({ err: e }, "PAPER→DEPLOY_READY evaluator audit failed (non-blocking)"); });
-          broadcastSSE("lifecycle:paper_to_deploy_ready_blocked", { strategyId: id, reason: gatePdrResult.reason, passed: false });
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.PAPER_TO_DEPLOY_READY_BLOCKED, { strategyId: id, reason: gatePdrResult.reason, passed: false });
           strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
           return { success: false, error: gatePdrResult.reason ?? "PAPER→DEPLOY_READY gate failed" };
+        }
+
+        // Honest survival-twin audit on the PROCEED path — makes an un-evaluated (or
+        // on-demand-passed) gate VISIBLE rather than masquerading as protection. Block
+        // paths are already audited above via gatePdrResult.auditAction (which carries
+        // the survival-twin block action when the twin itself was the blocker).
+        if (gatePdrResult.survivalTwin) {
+          const stv = gatePdrResult.survivalTwin;
+          const stAction =
+            stv.status === "survival_twin_passed"
+              ? "lifecycle.b14_survival_twin_evaluated"
+              : "lifecycle.b14_survival_twin_advisory_not_evaluated";
+          await db.insert(auditLog).values({
+            action: stAction,
+            entityId: id, entityType: "strategy",
+            status: stv.status === "survival_twin_passed" ? "success" : "warning",
+            decisionAuthority: "gate",
+            input: { fromState, toState, evaluated_via: stv.evaluatedVia },
+            result: { survival_twin_status: stv.status, reason: stv.auditReason, per_firm: stv.perFirm ?? null, replay_error: stv.replayError ?? null },
+            correlationId,
+          }).catch((e) => { logger.warn({ err: e }, "PAPER→DEPLOY_READY survival-twin audit failed (non-blocking)"); });
         }
       } catch (pdrGateErr) {
         // F-1 Hardening 2026-06-23: Fail-CLOSED on infrastructure errors.
@@ -527,7 +696,7 @@ export class LifecycleService {
             input: { fromState, toState }, result: shadowGateResult.auditPayload ?? { reason: shadowGateResult.reason },
             correlationId,
           }).catch((e) => { logger.warn({ err: e }, "SHADOW→PAPER evaluator audit failed (non-blocking)"); });
-          broadcastSSE("lifecycle:shadow_to_paper_blocked", { strategyId: id, reason: shadowGateResult.reason, passed: false });
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.SHADOW_TO_PAPER_BLOCKED, { strategyId: id, reason: shadowGateResult.reason, passed: false });
           return { success: false, error: shadowGateResult.reason ?? "SHADOW→PAPER gate failed" };
         }
       } catch (shadowGateErr) {
@@ -972,6 +1141,14 @@ export class LifecycleService {
 
     // ── Wave 24 Pass 1 — Item 18: PBO overfit gate (TESTING → PAPER) ────────
     // PBO > 0.5 = more likely overfit than not. Block promotion. (Item 18, W24P1)
+    //
+    // DEPRECATED belt-and-suspenders (2026-06-29): the AUTHORITATIVE PBO gate is the
+    // Wave 29 Pass A.2 gate below (reads walkForwardResults.pbo_overall @ PBO_OVERFIT_THRESHOLD_PCT
+    // 0.15, CPCV-aware, fires on TESTING → SHADOW *and* TESTING → PAPER). This W24 layer
+    // reads a DIFFERENT, coarser signal — resultExtras.invariants.pbo_flag @ 0.5 — and is
+    // retained only as a secondary catch on the legacy TESTING → PAPER edge. Its threshold
+    // is NOT loosened (stricter W29 gate wins on the canonical SHADOW path). If the W24
+    // pbo_flag producer is ever removed, delete this block — do NOT relax 0.15 to 0.5.
     if (fromState === "TESTING" && toState === "PAPER" && promotionEvidence.backtestId) {
       try {
         const [btExtrasPbo] = await (tx ?? db)
@@ -1054,24 +1231,48 @@ export class LifecycleService {
           const wfMeta = btExtrasPboW29.walkForwardResults as Record<string, unknown> | null | undefined;
           const pboOverall = wfMeta?.pbo_overall as number | null | undefined;
           const pboOverallPValue = wfMeta?.pbo_overall_p_value as number | null | undefined;
+          // Merge 2026-06-29: adopted the phase-0 cpcv_exempt approach (proceed with an
+          // explicit honest audit) over the deepscan-wiring BLOCK approach — CPCV is the
+          // default WF_MODE so BLOCK-on-degenerate would strangle the whole pipeline.
+          // pbo_degenerate_reason is nested inside wf_metadata (the sub-object inside
+          // walkForwardResults) — walk_forward.py emits "cpcv_is_sharpe_unavailable" there
+          // and backtest-service persists the wf_metadata sub-dict wholesale, so this read
+          // matches the producer end-to-end (verified during merge).
+          const innerWfMeta = (wfMeta?.wf_metadata as Record<string, unknown> | null) ?? null;
+          const pboDegenReason = (innerWfMeta?.pbo_degenerate_reason as string | null | undefined) ?? null;
 
           const pboGateResult = evaluatePboGate(
-            { pbo_overall: pboOverall, pbo_p_value: pboOverallPValue },
+            { pbo_overall: pboOverall, pbo_p_value: pboOverallPValue, pbo_degenerate_reason: pboDegenReason },
           );
 
           if (!pboGateResult.ok) {
+            // Finding 6 fix 2026-06-29 (Track B coordination): a plain-WF degenerate PBO
+            // (pbo_degenerate_reason="plain_wf_is_unavailable") must route to a DISTINCT
+            // audit action so it is never conflated with the generic overfit block. The
+            // pbo-gate.ts evaluator returns reason "lifecycle.pbo_plain_wf_degenerate_block"
+            // for that case; the NaN sample-size guard and the real overfit block both keep
+            // the canonical "lifecycle.pbo_overfit_block" action.
+            const pboBlockAction =
+              pboGateResult.reason === "lifecycle.pbo_plain_wf_degenerate_block"
+                ? "lifecycle.pbo_plain_wf_degenerate_block"
+                : "lifecycle.pbo_overfit_block";
             const pboError =
-              `lifecycle.pbo_overfit_block: strategy ${id} has PBO=${pboGateResult.pbo?.toFixed(4) ?? "?"} ` +
-              `which exceeds threshold ${pboGateResult.threshold} (Wave 29 institutional gate). ` +
-              `Strategy appears overfit — block promotion to ${toState}. ` +
-              `Re-run backtest with more CPCV folds or reduce parameter search space.`;
+              pboBlockAction === "lifecycle.pbo_plain_wf_degenerate_block"
+                ? `lifecycle.pbo_plain_wf_degenerate_block: strategy ${id} has a degenerate/unavailable ` +
+                  `plain-WF PBO (plain_wf_is_unavailable) — strategy is UN-VALIDATED, block promotion to ${toState}. ` +
+                  `Re-run the backtest (CPCV preferred) to produce a measurable PBO.`
+                : `lifecycle.pbo_overfit_block: strategy ${id} has PBO=${pboGateResult.pbo?.toFixed(4) ?? "?"} ` +
+                  `which exceeds threshold ${pboGateResult.threshold} (Wave 29 institutional gate). ` +
+                  `Strategy appears overfit — block promotion to ${toState}. ` +
+                  `Re-run backtest with more CPCV folds or reduce parameter search space.`;
             logger.warn(
-              { strategyId: id, fromState, toState, pbo: pboGateResult.pbo, threshold: pboGateResult.threshold, backtestId: promotionEvidence.backtestId },
+              { strategyId: id, fromState, toState, pbo: pboGateResult.pbo, threshold: pboGateResult.threshold, reason: pboGateResult.reason, backtestId: promotionEvidence.backtestId },
               pboError,
             );
-            // Emit lifecycle.pbo_overfit_block audit (canonical Wave 29 action name)
+            // Emit the resolved block audit action (canonical Wave 29 overfit action OR
+            // the distinct plain-WF-degenerate action per Finding 6).
             insertAuditRow({
-              action: "lifecycle.pbo_overfit_block",
+              action: pboBlockAction,
               entityType: "strategy",
               entityId: id,
               decisionAuthority: "gate",
@@ -1081,7 +1282,7 @@ export class LifecycleService {
               correlationId: options.correlationId ?? null,
             }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.pbo_overfit_block audit row write failed"));
             // Emit SSE event lifecycle:pbo_evaluated
-            broadcastSSE("lifecycle:pbo_evaluated", {
+            broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
               strategyId: id,
               fromState,
               toState,
@@ -1113,7 +1314,9 @@ export class LifecycleService {
             return { success: false, error: pboError };
           }
 
-          // Legacy null or pbo passes — emit lifecycle.pbo_unavailable_legacy warn if needed
+          // Legacy null or pbo passes — emit the appropriate audit action:
+          //   - legacyNull=true     → genuine pre-Wave-29 backtest, no pbo_overall field
+          //   - cpcv_is_unavailable → CPCV mode structural limitation (distinct from legacy)
           if (pboGateResult.legacyNull) {
             insertAuditRow({
               action: "lifecycle.pbo_unavailable_legacy",
@@ -1125,10 +1328,24 @@ export class LifecycleService {
               result: pboGateResult.auditPayload as Record<string, unknown>,
               correlationId: options.correlationId ?? null,
             }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.pbo_unavailable_legacy audit row write failed"));
+          } else if (pboGateResult.reason === "lifecycle.pbo_cpcv_is_unavailable") {
+            // hardening/phase-0: CPCV mode — PBO structurally unavailable (not legacy missing).
+            // Emit lifecycle.pbo_cpcv_is_unavailable so the audit trail distinguishes this
+            // exemption from both a real PBO pass and the generic grandfather window.
+            insertAuditRow({
+              action: "lifecycle.pbo_cpcv_is_unavailable",
+              entityType: "strategy",
+              entityId: id,
+              decisionAuthority: "gate",
+              status: "success",
+              input: { fromState, toState, backtestId: promotionEvidence.backtestId } as Record<string, unknown>,
+              result: pboGateResult.auditPayload as Record<string, unknown>,
+              correlationId: options.correlationId ?? null,
+            }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "lifecycle.pbo_cpcv_is_unavailable audit row write failed"));
           }
 
           // Emit SSE event lifecycle:pbo_evaluated on every evaluation
-          broadcastSSE("lifecycle:pbo_evaluated", {
+          broadcastSSE(WAVE29_EVENTS.PBO_EVALUATED, {
             strategyId: id,
             fromState,
             toState,
@@ -1351,7 +1568,9 @@ export class LifecycleService {
       }
     }
 
-    // Pass 4.5 Track B — Archetype gateway-mode bypass gate (TESTING → PAPER).
+    // Pass 4.5 Track B — Archetype gateway-mode bypass gate (→ PAPER).
+    // H2 fix 2026-06-28: changed fromState === "TESTING" to toState === "PAPER"
+    // so SHADOW→PAPER also runs this check (previously only TESTING→PAPER did).
     // If the strategy uses an archetype: entry_indicator AND the server is configured
     // for Path B (LIVE_ORDER_GATEWAY_URL set), the strategy's compiled Pine output
     // MUST carry the canonical TF-gateway payload markers to prove the alert will be
@@ -1360,7 +1579,7 @@ export class LifecycleService {
     // in-process gate stack and fire directly to the broker without kill-switch,
     // compliance, or firm-cap protection.
     // Fail-CLOSED: if compileDualPineExport throws, block promotion.
-    if (fromState === "TESTING" && toState === "PAPER") {
+    if (toState === "PAPER") {
       const stratCfg = (strategy.config ?? {}) as Record<string, unknown>;
       const entryIndicator = typeof stratCfg.entry_indicator === "string" ? stratCfg.entry_indicator : "";
       if (entryIndicator.startsWith("archetype:") && !process.env.LIVE_ORDER_GATEWAY_URL) {
@@ -1934,7 +2153,15 @@ export class LifecycleService {
     });
 
     // Fire alert for visibility
-    AlertFactory.decayAlert(strategyId, "retire").catch(() => {});
+    // H3 fix 2026-06-28: replaced bare .catch(() => {}) with logger.error so
+    // DB-write failures are visible in logs.  Fire-and-forget semantic preserved
+    // (no re-throw; strategy retirement continues regardless).
+    AlertFactory.decayAlert(strategyId, "retire").catch((err) =>
+      logger.error(
+        { err, strategyId, context: "decay-alert-db-write" },
+        "AlertFactory.decayAlert failed — alert not persisted",
+      )
+    );
 
     logger.info(
       { strategyId, failureModes, name: strategy.name },
@@ -1993,16 +2220,39 @@ export class LifecycleService {
         if (!latestBt.walkForwardResults) continue;
 
         const tier = latestBt.tier;
-        if (!tier || tier === "REJECTED") continue;
+        // TRANSIENT: no tier data yet — skip without counting toward burial
+        if (!tier) continue;
+        // HARD: strategy was explicitly scored and rejected
+        if (tier === "REJECTED") {
+          await this._maybeAutoGraveyard(s.id, "tier_rejected", { tier }, "CANDIDATE", correlationId);
+          continue;
+        }
+        // Gate passed — reset consecutive counter
+        this._resetHardGateCounter(s.id, "tier_rejected", correlationId);
 
         const forgeScore = s.forgeScore ? parseFloat(String(s.forgeScore)) : 0;
-        if (forgeScore < 50) continue;
+        if (forgeScore < 50) {
+          await this._maybeAutoGraveyard(s.id, "forge_score_below_floor", { forgeScore, floor: 50 }, "CANDIDATE", correlationId);
+          continue;
+        }
+        // Gate passed — reset consecutive counter
+        this._resetHardGateCounter(s.id, "forge_score_below_floor", correlationId);
 
         const result = await this.promoteStrategy(s.id, "CANDIDATE", "TESTING", { correlationId: correlationId ?? undefined });
         if (result.success) {
           promoted.push(s.id);
 
-          broadcastSSE("lifecycle:promoted", {
+          // H1/H2/H3 (2026-06-29): flag for the SHADOW path. The canonical ladder is
+          // CANDIDATE → TESTING → SHADOW → PAPER; every strategy entering TESTING via the
+          // autonomous cron is destined for SHADOW (skew measurement) before PAPER. Setting
+          // shadowModeEnabled here makes Gate 1.5 (TESTING → SHADOW) the sole driver and
+          // makes Gate 2 (legacy TESTING → PAPER) skip these strategies — preventing the
+          // dual-driver race. Mirrors the backtest-service fast-track which also flags it.
+          await db.update(strategies).set({ shadowModeEnabled: true }).where(eq(strategies.id, s.id)).catch((flagErr) => {
+            logger.warn({ strategyId: s.id, err: flagErr }, "Gate 1: shadowModeEnabled flag set failed (non-blocking — Gate 1.5 keys on it)");
+          });
+
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
             strategyId: s.id,
             from: "CANDIDATE",
             to: "TESTING",
@@ -2032,9 +2282,64 @@ export class LifecycleService {
     }
 
     // ──────────────────────────────────────────────────────────────
-    // Gate 2: TESTING → PAPER
+    // Gate 1.5: TESTING → SHADOW  (H1/H2/H3, 2026-06-29)
+    // The single canonical driver for the TESTING → SHADOW hop. Keyed on
+    // shadowModeEnabled=true (set by the backtest-service fast-track AND Gate 1
+    // above). promoteStrategy(TESTING → SHADOW) fires the existing Wave 29 Pass A.2
+    // PBO < 0.15 hard gate — a PBO block HOLDS the strategy at TESTING (it is NOT
+    // silently promoted) and this driver retries on the next tick once a fresh
+    // backtest clears PBO. This closes the orphan TESTING → SHADOW transition (no
+    // driver previously performed it) and routes the default autonomous path through
+    // BOTH Wave 29 hard gates (PBO here, SHADOW → PAPER divergence at Gate 2.5).
+    // The optimistic WHERE lifecycleState=fromState guard inside promoteStrategy is the
+    // final backstop against any double-drive with the in-process fast-track hop.
+    // ──────────────────────────────────────────────────────────────
+    const testingShadowStrategies = await db
+      .select()
+      .from(strategies)
+      .where(
+        and(
+          eq(strategies.lifecycleState, "TESTING"),
+          eq(strategies.shadowModeEnabled, true),
+        ),
+      );
+
+    for (const s of testingShadowStrategies) {
+      try {
+        const shadowResult = await this.promoteStrategy(s.id, "TESTING", "SHADOW", { correlationId: correlationId ?? undefined });
+        if (shadowResult.success) {
+          promoted.push(s.id);
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
+            strategyId: s.id,
+            from: "TESTING",
+            to: "SHADOW",
+            name: s.name,
+          });
+          logger.info({ id: s.id }, "Auto-promoted TESTING → SHADOW (Gate 1.5)");
+        } else {
+          // Non-success is the expected outcome on a PBO block — promoteStrategy's PBO
+          // gate already wrote lifecycle.pbo_overfit_block audit + lifecycle:pbo_evaluated
+          // SSE. Strategy stays at TESTING; retried next tick after re-backtest.
+          logger.info(
+            { id: s.id, reason: shadowResult.error },
+            "TESTING → SHADOW held (Gate 1.5) — PBO block or transient; will retry",
+          );
+        }
+      } catch (err) {
+        logger.error({ strategyId: s.id, err }, "Error checking TESTING → SHADOW promotion (Gate 1.5)");
+      }
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // Gate 2: TESTING → PAPER  (LEGACY path — shadowModeEnabled=false only)
     // Requires: completed backtest with WF, MC survival > 0.70, non-REJECTED tier
     // Prop compliance is checked if data exists but does NOT block if absent
+    //
+    // H1/H2/H3 (2026-06-29): shadowModeEnabled=true strategies are routed exclusively
+    // through Gate 1.5 (TESTING → SHADOW). They are SKIPPED here so the legacy direct
+    // TESTING → PAPER edge never double-drives a strategy already destined for SHADOW.
+    // This is the deterministic routing the VALID_TRANSITIONS TESTING comment describes
+    // ("SHADOW vs PAPER depending on whether shadow_mode_enabled=true").
     // ──────────────────────────────────────────────────────────────
     const testingStrategies = await db
       .select()
@@ -2043,6 +2348,8 @@ export class LifecycleService {
 
     for (const s of testingStrategies) {
       try {
+        // H1/H2/H3: skip shadow-destined strategies — Gate 1.5 owns them.
+        if (s.shadowModeEnabled) continue;
         // Find latest completed backtest with walk-forward
         const [latestBt] = await db
           .select()
@@ -2118,8 +2425,11 @@ export class LifecycleService {
             { id: s.id, survivalRate: survivalRate.toFixed(3) },
             "TESTING → PAPER blocked: MC survival rate <= 0.70",
           );
+          await this._maybeAutoGraveyard(s.id, "mc_survival_below_floor", { survivalRate, floor: 0.70 }, "TESTING", tickCorrelationId);
           continue;
         }
+        // Gate passed — reset consecutive counter
+        this._resetHardGateCounter(s.id, "mc_survival_below_floor", tickCorrelationId);
 
         // Prop compliance: check backtests.propCompliance if present, but don't block if absent
         // The propCompliance field is a per-firm results blob set during backtest
@@ -2245,7 +2555,12 @@ export class LifecycleService {
                   error: gateErr instanceof Error ? gateErr.message : String(gateErr),
                 },
                 correlationId,
-              }).catch(() => {});
+              }).catch((auditErr) => {
+                // Deep-scan #5 H3 (2026-06-29): was silently swallowed — a gate-BLOCK decision
+                // dropped with zero visibility if the DB was under pressure.
+                logger.warn({ err: auditErr, correlationId }, "compliance_gate_error audit insert failed (non-blocking)");
+                auditWriteFailuresTotal.labels({ action: "lifecycle.compliance_gate_error" }).inc();
+              });
               broadcastSSE("strategy:compliance_blocked", {
                 strategyId: s.id,
                 name: s.name,
@@ -2299,7 +2614,12 @@ export class LifecycleService {
               },
               correlationId,
             });
+            await this._maybeAutoGraveyard(s.id, "survival_score_below_threshold", { rawSurvivalScore, floor: 60 }, "TESTING", tickCorrelationId);
             continue;
+          }
+          // Gate passed (rawSurvivalScore >= 60) — reset consecutive counter
+          if (rawSurvivalScore !== null) {
+            this._resetHardGateCounter(s.id, "survival_score_below_threshold", tickCorrelationId);
           }
         } else {
           // Permissive fallback: legacy backtests written before gateResult was persisted
@@ -2359,7 +2679,11 @@ export class LifecycleService {
               } as Record<string, unknown>,
               status: "failure",
               correlationId,
-            }).catch(() => {});
+            }).catch((auditErr) => {
+              // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
+              logger.warn({ err: auditErr, correlationId }, "exportability_block audit insert failed (non-blocking)");
+              auditWriteFailuresTotal.labels({ action: "lifecycle.exportability_block" }).inc();
+            });
 
             // SSE so the dashboard can surface the block to the operator
             broadcastSSE("strategy:exportability_blocked", {
@@ -2373,6 +2697,12 @@ export class LifecycleService {
             });
 
             exportabilityBlocked = true;
+            // HARD gate: exportability check ran and the strategy genuinely cannot be exported.
+            // Infra errors (catch below) are TRANSIENT and do NOT count toward burial.
+            await this._maybeAutoGraveyard(s.id, "exportability_blocked", { score: exportCheck.score, band: exportCheck.band }, "TESTING", tickCorrelationId);
+          } else {
+            // Gate passed — reset consecutive counter
+            this._resetHardGateCounter(s.id, "exportability_blocked", tickCorrelationId);
           }
         } catch (err) {
           // Pass 8 Track A (2026-06-23): Convert fail-OPEN to fail-CLOSED.
@@ -2489,8 +2819,37 @@ export class LifecycleService {
                 "B14 CI gate BLOCKED TESTING→PAPER: probability_of_ruin_ci.ci_high exceeds threshold",
               );
               strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+              await this._maybeAutoGraveyard(s.id, "b14_ci_high", { ciHigh: b14CiResultTp.auditPayload.ci_high, threshold: b14CiResultTp.auditPayload.threshold }, "TESTING", tickCorrelationId);
               continue;
             }
+            // Gate passed — reset consecutive counter
+            this._resetHardGateCounter(s.id, "b14_ci_high", tickCorrelationId);
+          } else {
+            // Deep-scan #5 H2a (2026-06-29): the `if (mcRunForB14Tp)` had NO else, so an
+            // absent MC run silently SKIPPED the ruin gate entirely (only a DB read error
+            // hit the fail-closed catch below). MC auto-fires after every completed backtest
+            // (backtest-service.ts:1734), so by TESTING→PAPER the latest backtest has an MC
+            // run — an absent one means MC errored or is still pending, a genuine failure
+            // that must BLOCK (retries next cron cycle once MC completes), not slip through.
+            const b14TpNoMc = evaluateB14CiGate(null, null);
+            await db.insert(auditLog).values({
+              action: "b14.gate_evaluated",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "failure",
+              decisionAuthority: "gate",
+              input: { fromState: "TESTING", toState: "PAPER" },
+              result: { ...b14TpNoMc.auditPayload, note: "no completed MC run for latest backtest — fail-closed (MC auto-fires post-backtest; absent = errored/pending)" },
+              correlationId: tickCorrelationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate (TESTING→PAPER no-MC fail-closed) audit insert failed (non-blocking)");
+            });
+            logger.warn(
+              { strategyId: s.id, transition: "TESTING→PAPER" },
+              "B14 CI gate BLOCKED TESTING→PAPER: no completed MC run for latest backtest (fail-closed)",
+            );
+            strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+            continue;
           }
         } catch (b14TpErr) {
           // F-6 Hardening 2026-06-23: Fail-CLOSED on B14 CI gate infrastructure error.
@@ -2537,11 +2896,18 @@ export class LifecycleService {
 
           if (wfeResultTp.auditAction) {
             const isBlockTp = wfeResultTp.status === "blocked";
+            // hardening/phase-0: cpcv_exempt is a known, intentional pass — emit "success"
+            // rather than "warning" so the audit trail is unambiguous.  All other non-block
+            // statuses (legacy_null, degenerate_is_block is never reached here) keep "warning".
+            const wfeAuditStatusTp: "failure" | "warning" | "success" =
+              isBlockTp ? "failure"
+              : wfeResultTp.status === "cpcv_exempt" ? "success"
+              : "warning";
             await db.insert(auditLog).values({
               action: wfeResultTp.auditAction,
               entityId: s.id,
               entityType: "strategy",
-              status: isBlockTp ? "failure" : "warning",
+              status: wfeAuditStatusTp,
               decisionAuthority: "gate",
               input: { fromState: "TESTING", toState: "PAPER" },
               result: {
@@ -2561,8 +2927,11 @@ export class LifecycleService {
                 "WFE gate BLOCKED TESTING→PAPER: wfe_overall below hard floor",
               );
               strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+              await this._maybeAutoGraveyard(s.id, "wfe_hard_floor", { wfeOverall: wfeResultTp.wfeOverall, hardFloor: wfeResultTp.hardFloor }, "TESTING", tickCorrelationId);
               continue;
             }
+            // Gate passed (or warn-only) — reset consecutive counter
+            this._resetHardGateCounter(s.id, "wfe_hard_floor", tickCorrelationId);
           }
         } catch (wfeTpErr) {
           // Fail-open: WFE gate read failure is non-blocking
@@ -2577,8 +2946,10 @@ export class LifecycleService {
           const driftConfidenceTp = paramStabilityTp?.drift_confidence != null
             ? Number(paramStabilityTp.drift_confidence)
             : null;
+          // C1 (2026-06-29): top-level param_stability_status → cpcv_exempt on CPCV path.
+          const paramStabilityStatusTp = (driftWfResultsTp?.param_stability_status as string | null | undefined) ?? null;
 
-          const driftResultTp = evaluateParameterDriftGate(driftClassificationTp, driftConfidenceTp);
+          const driftResultTp = evaluateParameterDriftGate(driftClassificationTp, driftConfidenceTp, paramStabilityStatusTp);
 
           broadcastSSE(LIFECYCLE_GATE_EVENTS.PARAMETER_DRIFT_EVALUATED, {
             strategyId: s.id,
@@ -2613,8 +2984,11 @@ export class LifecycleService {
                 "Parameter drift gate BLOCKED TESTING→PAPER: overfit_drift with high confidence",
               );
               strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+              await this._maybeAutoGraveyard(s.id, "parameter_overfit_drift", { classification: driftResultTp.classification, confidence: driftResultTp.confidence }, "TESTING", tickCorrelationId);
               continue;
             }
+            // Gate passed (or warn-only) — reset consecutive counter
+            this._resetHardGateCounter(s.id, "parameter_overfit_drift", tickCorrelationId);
           }
         } catch (driftTpErr) {
           // Fail-open: drift gate read failure is non-blocking
@@ -2668,8 +3042,15 @@ export class LifecycleService {
               `DSR gate BLOCKED TESTING→PAPER: ${dsrGateResultTp.reason}`,
             );
             strategyPromotions.labels({ from_state: "TESTING", to_state: "PAPER", actor: "system_gate" }).inc();
+            // blocked_dsr_floor = genuine Sharpe failure (HARD).
+            // blocked_dsr_unavailable = computation infra failure (TRANSIENT — do not count toward burial).
+            if (dsrGateResultTp.status === "blocked_dsr_floor") {
+              await this._maybeAutoGraveyard(s.id, "dsr_blocked_floor", { dsr: dsrGateResultTp.auditPayload.dsr, status: dsrGateResultTp.status }, "TESTING", tickCorrelationId);
+            }
             continue;
           }
+          // Gate passed — reset consecutive counter
+          this._resetHardGateCounter(s.id, "dsr_blocked_floor", tickCorrelationId);
         } catch (dsrTpErr) {
           // Fail-open: DSR gate read failure is non-blocking for TESTING→PAPER.
           // The gate failing to evaluate is distinct from dsr_pass=false — we
@@ -2681,7 +3062,7 @@ export class LifecycleService {
         if (result.success) {
           promoted.push(s.id);
 
-          broadcastSSE("lifecycle:promoted", {
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
             strategyId: s.id,
             from: "TESTING",
             to: "PAPER",
@@ -2780,7 +3161,7 @@ export class LifecycleService {
               logger.warn({ strategyId: s.id, err: auditErr }, "shadow divergence block audit insert failed (non-blocking)");
             });
 
-            broadcastSSE("lifecycle:shadow_divergence_evaluated", {
+            broadcastSSE(WAVE29_EVENTS.SHADOW_DIVERGENCE_EVALUATED, {
               strategyId: s.id,
               ok: false,
               divergence_pct: divergenceResult.divergence_pct,
@@ -2807,8 +3188,15 @@ export class LifecycleService {
               } catch (_promErr) { /* non-blocking */ }
             }
 
+            // insufficient_samples = not enough data yet (TRANSIENT).
+            // Real divergence = strategy behaviour genuinely differs from backtest (HARD).
+            if (!isInsufficientSamples) {
+              await this._maybeAutoGraveyard(s.id, "shadow_divergence", { divergence_pct: divergenceResult.divergence_pct, sample_size: divergenceResult.sample_size, reason: divergenceResult.reason }, "SHADOW", correlationId);
+            }
             continue; // BLOCK SHADOW → PAPER
           }
+          // Gate passed — reset consecutive counter
+          this._resetHardGateCounter(s.id, "shadow_divergence", correlationId);
 
           // ok: true — PROMOTE to PAPER
           logger.info(
@@ -2838,7 +3226,7 @@ export class LifecycleService {
             logger.warn({ strategyId: s.id, err: auditErr }, "shadow promotion passed audit insert failed (non-blocking)");
           });
 
-          broadcastSSE("lifecycle:shadow_divergence_evaluated", {
+          broadcastSSE(WAVE29_EVENTS.SHADOW_DIVERGENCE_EVALUATED, {
             strategyId: s.id,
             ok: true,
             divergence_pct: divergenceResult.divergence_pct,
@@ -3169,6 +3557,8 @@ export class LifecycleService {
               logger.warn({ strategyId: s.id, err: auditErr }, "A7 audit insert failed (non-blocking)");
             });
             strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+            // Check ran successfully and the strategy is a signal duplicate — HARD gate.
+            await this._maybeAutoGraveyard(s.id, "signal_correlation", { maxSimilarity: sigCorrelationResult.maxSimilarity, blockingStrategyId: sigCorrelationResult.blockingStrategyId, reason: sigCorrelationResult.reason }, "PAPER", correlationId);
             continue;
           }
 
@@ -3181,6 +3571,8 @@ export class LifecycleService {
             },
             "A7 signal correlation gate: PASSED",
           );
+          // Gate passed — reset consecutive counter
+          this._resetHardGateCounter(s.id, "signal_correlation", correlationId);
         } catch (sigCorrelationErr) {
           // Fail-closed on infrastructure error — same policy as Frankenstein gate.
           // A broken correlation check is safer treated as a failed gate than an
@@ -3204,7 +3596,11 @@ export class LifecycleService {
               threshold: 0.85,
             },
             correlationId,
-          }).catch(() => {});
+          }).catch((auditErr) => {
+            // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
+            logger.warn({ err: auditErr, correlationId }, "A7 gate fail-closed audit insert failed (non-blocking)");
+            auditWriteFailuresTotal.labels({ action: "lifecycle.a7_gate_error" }).inc();
+          });
           strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
           continue;
         }
@@ -3216,7 +3612,7 @@ export class LifecycleService {
         //
         // Wave 27.5 Pass B.2: B14 now ALSO reads probability_of_ruin_ci.ci_high from
         // the latest MC run (Pass A introduced BCa CI bootstrap). When ci_high > threshold
-        // (default 0.40, env B14_RUIN_CI_HIGH_THRESHOLD), the gate hard-blocks.
+        // (default 0.20, env B14_RUIN_CI_HIGH_THRESHOLD — tightened 2026-06-22), the gate hard-blocks.
         // Falls back to scalar probability_of_ruin for pre-Pass-A MC runs.
         const b14HardGateEnabled = (process.env.B14_HARD_GATE_ENABLED ?? "true") !== "false";
         if (b14HardGateEnabled) {
@@ -3237,10 +3633,12 @@ export class LifecycleService {
               .orderBy(desc(backtests.createdAt))
               .limit(1);
 
+            let survivalTwinPresentB14 = false;
             if (latestBtForB14?.gateResult) {
               const b14Gate = latestBtForB14.gateResult as Record<string, unknown>;
               // survival_twin.passed=false → HARD block.
               const survivalTwin = b14Gate.survival_twin as Record<string, unknown> | undefined;
+              survivalTwinPresentB14 = survivalTwin != null;
 
               // Hardening 2026-06-22 (F-4): REMOVED the full-history daily-P&L consistency
               // reimplementation (max/sum over entire backtest history). That check used the
@@ -3277,9 +3675,50 @@ export class LifecycleService {
                   logger.warn({ strategyId: s.id, err: auditErr }, "B14 audit insert failed (non-blocking)");
                 });
                 strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+                await this._maybeAutoGraveyard(s.id, "b14_survival_twin_failed", { survivalTwin: survivalTwin as Record<string, unknown> | undefined }, "PAPER", correlationId);
+                continue;
+              }
+              // Gate passed (survival_twin not failed) — reset consecutive counter
+              this._resetHardGateCounter(s.id, "b14_survival_twin_failed", correlationId);
+            }
+
+            // HONESTY FIX (autonomous-promotion path): survival_twin is only ever
+            // written by the manual replay tool, so on the cron auto-promote path it is
+            // ABSENT for every normal strategy and this gate used to silently auto-pass.
+            // Evaluate it ON DEMAND via the replay harness. Fail-soft: blocked → skip
+            // promotion; advisory_not_evaluated → allow through with a distinct audit so
+            // it is visibly un-evaluated; passed → allow through. The B14 ci_high ruin
+            // gate below remains the hard ruin guard (defense-in-depth).
+            if (!survivalTwinPresentB14 && latestBtForB14?.id) {
+              const { resolveSurvivalTwinOnDemand } = await import("../lib/paper-to-deploy-ready-gates.js");
+              const od = await resolveSurvivalTwinOnDemand({ strategyId: s.id, backtestId: latestBtForB14.id });
+              await db.insert(auditLog).values({
+                action: od.status === "blocked"
+                  ? "lifecycle.b14_survival_twin_replay_blocked"
+                  : od.status === "passed"
+                    ? "lifecycle.b14_survival_twin_evaluated"
+                    : "lifecycle.b14_survival_twin_advisory_not_evaluated",
+                entityId: s.id, entityType: "strategy",
+                status: od.status === "blocked" ? "failure" : od.status === "passed" ? "success" : "warning",
+                decisionAuthority: "gate",
+                input: { fromState: "PAPER", toState: "DEPLOY_READY", evaluated_via: "on_demand_replay" },
+                result: { survival_twin_status: od.status, reason: od.reason, per_firm: od.perFirm ?? null, replay_error: od.error ?? null },
+                correlationId,
+              }).catch((auditErr) => {
+                logger.warn({ strategyId: s.id, err: auditErr }, "B14 survival-twin on-demand audit insert failed (non-blocking)");
+              });
+
+              if (od.status === "blocked") {
+                logger.warn(
+                  { strategyId: s.id, reason: od.reason, perFirm: od.perFirm, transition: "PAPER→DEPLOY_READY" },
+                  "B14 Survival Twin ON-DEMAND REPLAY BLOCKED PAPER→DEPLOY_READY promotion",
+                );
+                strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+                await this._maybeAutoGraveyard(s.id, "b14_survival_twin_replay_blocked", { reason: od.reason, perFirm: od.perFirm }, "PAPER", correlationId);
                 continue;
               }
             }
+
             // Track A.2: B14 survival twin gate evidence
             // If we reach this point without continuing, the survival twin either passed
             // or there was no data (legacy). Push the appropriate evidence status.
@@ -3350,8 +3789,11 @@ export class LifecycleService {
                     "B14 CI gate BLOCKED: probability_of_ruin_ci.ci_high exceeds institutional threshold",
                   );
                   strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+                  await this._maybeAutoGraveyard(s.id, "b14_ci_high", { ciHigh: b14CiResult.auditPayload.ci_high, threshold: b14CiResult.auditPayload.threshold }, "PAPER", correlationId);
                   continue;
                 }
+                // Gate passed — reset consecutive counter
+                this._resetHardGateCounter(s.id, "b14_ci_high", correlationId);
 
                 if (b14CiResult.legacyFallback) {
                   logger.warn(
@@ -3365,11 +3807,41 @@ export class LifecycleService {
                   gateEvidenceStatuses.push("complete");
                 }
               } else {
-                // No MC run — evidence incomplete
+                // Deep-scan #5 H2b (2026-06-29): the previous code only pushed
+                // "data_unavailable" to the evidence aggregate and the comment FALSELY
+                // claimed evaluateB14CiGate(null,null) blocked fail-CLOSED — no such call
+                // existed, so a strategy missing ONLY its MC run (1 incomplete gate) sailed
+                // past the ≥3-incomplete aggregate and promoted toward live capital with NO
+                // ruin evidence. The manual PATCH path (_promoteStrategyInner via the pure
+                // evaluator) ALREADY hard-blocks absent MC here; this makes the autonomous
+                // cron path match. evaluateB14CiGate(null,null) returns passed=false.
+                const b14NoMcResult = evaluateB14CiGate(null, null);
+                await db.insert(auditLog).values({
+                  action: "b14.gate_evaluated",
+                  entityId: s.id,
+                  entityType: "strategy",
+                  status: "failure",
+                  decisionAuthority: "gate",
+                  input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+                  result: { ...b14NoMcResult.auditPayload, note: "no completed MC run for latest backtest — fail-closed" },
+                  correlationId,
+                }).catch((auditErr) => {
+                  logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate (no-MC fail-closed) audit insert failed (non-blocking)");
+                });
+                broadcastSSE(LIFECYCLE_GATE_EVENTS.B14_EVALUATED, {
+                  strategyId: s.id,
+                  ...b14NoMcResult.auditPayload,
+                  passed: false,
+                  reason: b14NoMcResult.reason,
+                });
+                logger.warn(
+                  { strategyId: s.id, transition: "PAPER→DEPLOY_READY" },
+                  "B14 CI gate BLOCKED: no completed MC run for latest backtest (fail-closed; re-run MC to promote)",
+                );
+                strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
                 gateEvidenceStatuses.push("data_unavailable");
+                continue;
               }
-              // No MC run at all for this backtest → evaluateB14CiGate(null,null) blocks
-              // fail-CLOSED per hardening 2026-06-22 (F-1). No fall-through needed.
             }
           } catch (b14Err) {
             // Hardening 2026-06-22 (F-2): DB hiccup in B14 gate must BLOCK promotion,
@@ -3457,9 +3929,24 @@ export class LifecycleService {
               });
               if (b15HardGateEnabled) {
                 strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+                await this._maybeAutoGraveyard(s.id, "b15_battery_failed", { sdr: b15.sdr, psi: b15.psi, rws: b15.rws, failures: b15.failures }, "PAPER", correlationId);
                 continue;
               }
             }
+            // Battery ran and passed (or no battery data) — reset consecutive counter
+            if (latestBtForB15?.b15Battery && (latestBtForB15.b15Battery as Record<string, unknown>).passed !== false) {
+              this._resetHardGateCounter(s.id, "b15_battery_failed", correlationId);
+            }
+          } else if (b15HardGateEnabled) {
+            // Hardening 2026-06-27 (phantom-gate fix): producer default now ON; a null b15Battery
+            // on a fresh backtest means the Python battery sentinel was not emitted (data-collection
+            // failure or pre-fix backtest). Emit a documented warn + PROCEED — matches the
+            // lifecycle.wfe_unavailable_legacy grandfather pattern (not a hard block for missing data).
+            // Operator action: re-run the backtest to populate battery data, then retry promotion.
+            logger.warn(
+              { strategyId: s.id },
+              "B15 Parameter Robustness Battery gate: no battery data on latest backtest — lifecycle.b15_unavailable_legacy (warn; promotion continues; re-run backtest to populate battery)",
+            );
           }
         } catch (b15Err) {
           // Fail-open: B15 gate read failure is non-blocking (pre-B15 strategies may not have data).
@@ -3513,8 +4000,11 @@ export class LifecycleService {
           const driftConfidence = paramStability?.drift_confidence != null
             ? Number(paramStability.drift_confidence)
             : null;
+          // C1 (2026-06-29): top-level param_stability_status → cpcv_exempt on CPCV path
+          // (distinct lifecycle.parameter_drift_cpcv_exempt audit, not legacy_null).
+          const paramStabilityStatus = (driftWfResults?.param_stability_status as string | null | undefined) ?? null;
 
-          const driftResult = evaluateParameterDriftGate(driftClassification, driftConfidence);
+          const driftResult = evaluateParameterDriftGate(driftClassification, driftConfidence, paramStabilityStatus);
 
           broadcastSSE(LIFECYCLE_GATE_EVENTS.PARAMETER_DRIFT_EVALUATED, {
             strategyId: s.id,
@@ -3556,8 +4046,17 @@ export class LifecycleService {
             });
             if (isBlock) {
               strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
-              continue;
+              // O1-fix-4: wrap graveyard write so a DB hiccup cannot swallow the block decision.
+              // The `continue` fires regardless of whether _maybeAutoGraveyard succeeds or throws.
+              try {
+                await this._maybeAutoGraveyard(s.id, "parameter_overfit_drift", { classification: driftResult.classification, confidence: driftResult.confidence }, "PAPER", correlationId);
+              } catch (graveyardErr) {
+                logger.warn({ strategyId: s.id, err: graveyardErr }, "parameter_drift _maybeAutoGraveyard threw (non-blocking) — block decision preserved");
+              }
+              continue; // block decision wins regardless of graveyard write outcome
             }
+            // Gate passed (or warn-only) — reset consecutive counter
+            this._resetHardGateCounter(s.id, "parameter_overfit_drift", correlationId);
             // Track A.2: push parameter drift status
             gateEvidenceStatuses.push(driftResult.status ?? "legacy_null");
           } else {
@@ -3570,6 +4069,19 @@ export class LifecycleService {
             { strategyId: s.id, err: driftErr },
             "Parameter drift gate: read failed (non-blocking — promotion continues)",
           );
+          // O1-fix-1: emit observable audit row so this fail-open is not silent.
+          await db.insert(auditLog).values({
+            action: "lifecycle.parameter_drift_infra_error_proceeded",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "warning",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: { error: driftErr instanceof Error ? driftErr.message : String(driftErr), note: "infra read failure — fail-open, promotion continues" },
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "parameter_drift_infra_error_proceeded audit insert failed (non-blocking)");
+          });
           gateEvidenceStatuses.push("data_unavailable");
         }
 
@@ -3629,8 +4141,20 @@ export class LifecycleService {
                 `DSR gate BLOCKED PAPER→DEPLOY_READY: ${dsrGateResult.reason}`,
               );
               strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
-              continue;
+              // blocked_dsr_floor = genuine Sharpe failure (HARD).
+              // blocked_dsr_unavailable = computation infra failure (TRANSIENT).
+              if (dsrGateResult.status === "blocked_dsr_floor") {
+                // O1-fix-5: wrap graveyard write so a DB hiccup cannot swallow the block decision.
+                try {
+                  await this._maybeAutoGraveyard(s.id, "dsr_blocked_floor", { dsr: dsrGateResult.auditPayload.dsr, status: dsrGateResult.status }, "PAPER", correlationId);
+                } catch (graveyardErr) {
+                  logger.warn({ strategyId: s.id, err: graveyardErr }, "dsr _maybeAutoGraveyard threw (non-blocking) — block decision preserved");
+                }
+              }
+              continue; // block decision wins regardless of graveyard write outcome
             }
+            // Gate passed — reset consecutive counter
+            this._resetHardGateCounter(s.id, "dsr_blocked_floor", correlationId);
             // Track A.2: push DSR status
             gateEvidenceStatuses.push(dsrGateResult.status ?? "legacy_proceed");
           } else {
@@ -3643,6 +4167,128 @@ export class LifecycleService {
             { strategyId: s.id, err: dsrPdrErr },
             "DSR gate (PAPER→DEPLOY_READY): read failed (non-blocking — promotion continues)",
           );
+          // O1-fix-2: emit observable audit row so this fail-open is not silent.
+          await db.insert(auditLog).values({
+            action: "lifecycle.dsr_infra_error_proceeded",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "warning",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: { error: dsrPdrErr instanceof Error ? dsrPdrErr.message : String(dsrPdrErr), note: "infra read failure — fail-open, promotion continues" },
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "dsr_infra_error_proceeded audit insert failed (non-blocking)");
+          });
+          gateEvidenceStatuses.push("data_unavailable");
+        }
+
+        // ── Deep-scan #5 H1 (2026-06-29): BIF gate on the AUTONOMOUS cron path ──
+        // The cron calls promoteStrategy(..., {skipPaperToDeployReadyEvaluator:true}), so the
+        // pure evaluator's Gate 6.5 (which holds BIF) never ran here — BIF was enforced ONLY on
+        // the manual dashboard PATCH path (_promoteStrategyInner). This block makes the autonomous
+        // cron path — the PRIMARY promotion path — enforce BIF identically. Mirrors the manual
+        // path (lifecycle-service.ts ~558-631) + bif-gate.ts. CPCV mode (bif_reliable=false) →
+        // advisory cpcv_unmeasured pass (BIF≈1.0 structural, Wave 30 carry-forward); bif>4.0 →
+        // HARD block; legacy-null → grandfather pass; infra read error → fail-OPEN (additive
+        // signal — a DB blip shouldn't block, but a real bif>4 still blocks).
+        try {
+          const [latestBtForBif] = await db
+            .select({
+              bif: backtests.bif,
+              kEff: backtests.kEff,
+              walkForwardResults: backtests.walkForwardResults,
+            })
+            .from(backtests)
+            .where(
+              and(
+                eq(backtests.strategyId, s.id),
+                eq(backtests.status, "completed"),
+              ),
+            )
+            .orderBy(desc(backtests.createdAt))
+            .limit(1);
+
+          const bifWfMeta = ((latestBtForBif?.walkForwardResults as Record<string, unknown> | null)?.wf_metadata as Record<string, unknown> | null) ?? null;
+          const bifReliableFalse = bifWfMeta?.bif_reliable === false;
+          const bifProxyBasis = (bifWfMeta?.bif_proxy_basis as string | null | undefined) ?? null;
+          const bifNum = latestBtForBif?.bif != null ? Number(latestBtForBif.bif) : null;
+          const kEffNum = latestBtForBif?.kEff != null ? Number(latestBtForBif.kEff) : null;
+
+          const bifResult = evaluateBifGate(
+            bifNum,
+            kEffNum,
+            bifReliableFalse ? { bifReliable: false, proxyBasis: bifProxyBasis } : { proxyBasis: bifProxyBasis },
+          );
+
+          const bifOutcome = bifResult.reason === "bif.cpcv_unmeasured"
+            ? "cpcv_unmeasured"
+            : !bifResult.passed
+              ? "blocked"
+              : bifResult.legacyNull
+                ? "legacy_null"
+                : bifResult.reason === "bif.warn_above_warn_threshold"
+                  ? "warn"
+                  : "clean";
+          try { bifGateEvaluationsTotal.labels({ outcome: bifOutcome }).inc(); } catch { /* non-blocking counter */ }
+
+          await db.insert(auditLog).values({
+            action: "bif.gate_evaluated",
+            entityId: s.id,
+            entityType: "strategy",
+            status: bifResult.passed
+              ? (bifResult.reason === "bif.warn_above_warn_threshold" ? "warning" : "success")
+              : "failure",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: bifResult.auditPayload as Record<string, unknown>,
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "BIF gate audit insert (PAPER→DEPLOY_READY) failed (non-blocking)");
+          });
+
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.BIF_EVALUATED, {
+            strategyId: s.id,
+            ...bifResult.auditPayload,
+            passed: bifResult.passed,
+            reason: bifResult.reason,
+          });
+
+          if (!bifResult.passed) {
+            logger.warn(
+              { strategyId: s.id, bif: bifResult.auditPayload.bif, threshold: bifResult.auditPayload.block_threshold, transition: "PAPER→DEPLOY_READY" },
+              "BIF gate BLOCKED PAPER→DEPLOY_READY: bif exceeds block threshold (synthetic overfit; IS edge does not transfer to OOS)",
+            );
+            strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+            // O1-fix-6: wrap graveyard write so a DB hiccup cannot swallow the block decision.
+            try {
+              await this._maybeAutoGraveyard(s.id, "bif_blocked", { bif: bifResult.auditPayload.bif, threshold: bifResult.auditPayload.block_threshold }, "PAPER", correlationId);
+            } catch (graveyardErr) {
+              logger.warn({ strategyId: s.id, err: graveyardErr }, "bif _maybeAutoGraveyard threw (non-blocking) — block decision preserved");
+            }
+            continue; // block decision wins regardless of graveyard write outcome
+          }
+          // Gate passed (clean / warn / cpcv_unmeasured / legacy) — reset consecutive counter
+          this._resetHardGateCounter(s.id, "bif_blocked", correlationId);
+          gateEvidenceStatuses.push(bifResult.legacyNull ? "legacy_null" : "complete");
+        } catch (bifErr) {
+          logger.warn(
+            { strategyId: s.id, err: bifErr },
+            "BIF gate (PAPER→DEPLOY_READY): read failed (non-blocking — promotion continues)",
+          );
+          // O1-fix-3: emit observable audit row so this fail-open is not silent.
+          await db.insert(auditLog).values({
+            action: "lifecycle.bif_infra_error_proceeded",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "warning",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: { error: bifErr instanceof Error ? bifErr.message : String(bifErr), note: "infra read failure — fail-open, promotion continues" },
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "bif_infra_error_proceeded audit insert failed (non-blocking)");
+          });
           gateEvidenceStatuses.push("data_unavailable");
         }
 
@@ -3757,9 +4403,28 @@ export class LifecycleService {
                 }).catch((auditErr) => {
                   logger.warn({ strategyId: s.id, gate, err: auditErr }, "Pass E gate_failed audit insert failed (non-blocking)");
                 });
+                // data_available: false → strategy just lacks data yet (TRANSIENT); don't count toward burial.
+                // data_available: true → gate evaluated against real data and failed (HARD).
+                // Fail-safe: undefined/null data_available is treated as TRANSIENT (don't bury on uncertainty).
+                if (gateRes.data_available === true) {
+                  // Use a stable gate name by prefixing with "promotion_gate_"
+                  await this._maybeAutoGraveyard(
+                    s.id,
+                    `promotion_gate_${gate}`,
+                    { gate, value: gateRes.value, threshold: gateRes.threshold, reason: gateRes.reason },
+                    "PAPER",
+                    correlationId,
+                  );
+                }
               }
               strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
               continue;
+            }
+            // All orchestrator gates cleared — reset consecutive counters for gates that had data_available
+            for (const gate of gatesToEvaluate) {
+              if (orchResult.gate_results[gate].data_available === true) {
+                this._resetHardGateCounter(s.id, `promotion_gate_${gate}`, correlationId);
+              }
             }
 
             // All Pass E gates cleared — write gates_cleared audit (advisory, not blocking)
@@ -3950,7 +4615,11 @@ export class LifecycleService {
                 note: "composite shadow gate threw — promotion proceeds via Wave 27.5 hard gates alone",
               },
               correlationId,
-            }).catch(() => {});
+            }).catch((auditErr) => {
+              // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
+              logger.warn({ err: auditErr, correlationId }, "composite_shadow_evaluation_error audit insert failed (non-blocking)");
+              auditWriteFailuresTotal.labels({ action: "composite.shadow_evaluation_error" }).inc();
+            });
           }
           // Track A.2: composite shadow gate is observability-only and always runs —
           // evidence is always "complete" (the evaluator itself handles missing data).
@@ -4052,7 +4721,11 @@ export class LifecycleService {
                 input: { fromState: "PAPER", toState: "DEPLOY_READY" },
                 result: { error: freezeMsg, note: "first-time freeze write failed — promotion blocked; retries next cron cycle" },
                 correlationId,
-              }).catch(() => {});
+              }).catch((auditErr) => {
+                // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
+                logger.warn({ err: auditErr, correlationId }, "frozen_policy.hash_compute_failed (freeze-write) audit insert failed (non-blocking)");
+                auditWriteFailuresTotal.labels({ action: "frozen_policy.hash_compute_failed" }).inc();
+              });
               continue;
             }
           }
@@ -4072,7 +4745,11 @@ export class LifecycleService {
             input: { fromState: "PAPER", toState: "DEPLOY_READY" },
             result: { error: msg, note: "hash compute exception — promotion blocked until manual investigation" },
             correlationId,
-          }).catch(() => {});
+          }).catch((auditErr) => {
+            // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
+            logger.warn({ err: auditErr, correlationId }, "frozen_policy.hash_compute_failed (exception) audit insert failed (non-blocking)");
+            auditWriteFailuresTotal.labels({ action: "frozen_policy.hash_compute_failed" }).inc();
+          });
         }
 
         if (frozenPolicyBlocked) continue; // already continued above; guard for clarity
@@ -4226,14 +4903,25 @@ export class LifecycleService {
           }
           // Evidence is adequate — compute composite score and proceed.
           // Score is persisted into lifecycle_transitions.result after successful promotion.
-          const compositeEvidenceScore = 1.0 - (incompleteCount / 8.0);
+          // Finding 4 fix 2026-06-29: derive the denominator from the actual number of
+          // tracked gates, NOT a hardcoded 8. After F-5 removed the inline standalone WFE
+          // gate, gateEvidenceStatuses.length is no longer 8, so `/ 8.0` produced a score
+          // inconsistent with total_gates (gateEvidenceStatuses.length) reported in the
+          // audit/SSE payloads above. Math.max(1, …) guards the (theoretically impossible)
+          // zero-length case so the score can never divide by zero.
+          const evidenceDenominator = Math.max(1, gateEvidenceStatuses.length);
+          const compositeEvidenceScore = 1.0 - (incompleteCount / evidenceDenominator);
           logger.info(
             { strategyId: s.id, compositeEvidenceScore, incompleteCount, total: gateEvidenceStatuses.length },
             "Track A.2: composite_evidence_score computed — promotion proceeding",
           );
         }
 
-        const result = await this.promoteStrategy(s.id, "PAPER", "DEPLOY_READY", { correlationId: correlationId ?? undefined });
+        // Fix #4 (2026-06-29): skipPaperToDeployReadyEvaluator=true — the inline gate
+        // stack above already evaluated every PAPER → DEPLOY_READY gate (incl. the
+        // on-demand B14 survival-twin replay). This commit-only call must NOT re-run the
+        // evaluator (would fire a second survival-twin Python subprocess + duplicate audits).
+        const result = await this.promoteStrategy(s.id, "PAPER", "DEPLOY_READY", { correlationId: correlationId ?? undefined, skipPaperToDeployReadyEvaluator: true });
         if (result.success) {
           promoted.push(s.id);
 
@@ -4250,7 +4938,26 @@ export class LifecycleService {
           AlertFactory.deployReady(
             s.id,
             `Strategy "${s.name}" is DEPLOY_READY — Sharpe ${rollingSharpe.toFixed(2)}, ${tradingDays} trading days. Awaiting your approval.`,
-          ).catch(() => {});
+          ).catch((e) => {
+            logger.error(
+              { err: e, strategyId: s.id, correlationId },
+              "AlertFactory.deployReady failed — operator will not receive DEPLOY_READY notification",
+            );
+            insertAuditRowSafe({
+              action: "lifecycle.deploy_ready_alert_failed",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "failure",
+              decisionAuthority: "lifecycle_service",
+              input: { rollingSharpe, tradingDays },
+              result: { error: String(e) },
+              correlationId: correlationId ?? null,
+            }).catch((auditErr) => {
+              // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
+              logger.warn({ err: auditErr, correlationId }, "deploy_ready_alert_failed audit insert failed (non-blocking)");
+              auditWriteFailuresTotal.labels({ action: "lifecycle.deploy_ready_alert_failed" }).inc();
+            });
+          });
 
           logger.info(
             { id: s.id, rollingSharpe, tradingDays },
@@ -4309,6 +5016,201 @@ export class LifecycleService {
     }
 
     return promoted;
+  }
+
+  // ── Auto-Graveyard helpers ─────────────────────────────────────────────────
+  //
+  // Design: two audit-log action types per gate encode the consecutive-fail state
+  // without JSONB parsing.  Counter resets whenever the gate passes OR the
+  // strategy is promoted to a different state (it leaves the gate's evaluation set).
+  //
+  //   lifecycle.hard_gate_fail.<gate>   — written at each HARD gate block
+  //   lifecycle.hard_gate_reset.<gate>  — written when gate passes this tick
+  //
+  // Consecutive count = rows of "fail.<gate>" for this strategy
+  //   WHERE created_at > most-recent "reset.<gate>" row (or epoch if none).
+  //
+  // Threshold: LIFECYCLE_GATE_FAIL_GRAVEYARD_THRESHOLD env (default 3).
+  // Fail-safe: any gate NOT in the HARD allowlist must NOT be passed here.
+
+  /**
+   * Record a hard gate failure for (strategyId, gate).
+   * Count consecutive failures since last reset; if threshold is reached and the
+   * strategy is not already in GRAVEYARD, promote it to GRAVEYARD.
+   *
+   * MUST only be called at explicitly identified HARD gate `continue` sites —
+   * never at transient/infra-error sites.
+   */
+  private async _maybeAutoGraveyard(
+    strategyId: string,
+    gate: string,
+    metrics: Record<string, unknown>,
+    fromState: LifecycleState,
+    correlationId: string | null,
+  ): Promise<void> {
+    const threshold = parseInt(process.env.LIFECYCLE_GATE_FAIL_GRAVEYARD_THRESHOLD ?? "3", 10);
+    const failAction = `lifecycle.hard_gate_fail.${gate}`;
+    const resetAction = `lifecycle.hard_gate_reset.${gate}`;
+
+    // Step 1: Persist this hard gate failure (non-blocking on error)
+    await db.insert(auditLog).values({
+      action: failAction,
+      entityType: "strategy",
+      entityId: strategyId,
+      status: "failure",
+      decisionAuthority: "gate",
+      input: { fromState, gate } as Record<string, unknown>,
+      result: { gate, ...metrics } as Record<string, unknown>,
+      correlationId,
+    }).catch((auditErr: unknown) => {
+      logger.warn({ strategyId, gate, err: auditErr }, "_maybeAutoGraveyard: fail audit insert failed (non-blocking)");
+    });
+
+    // Step 2: Find most-recent reset row to bound the consecutive count
+    const [lastReset] = await db
+      .select({ createdAt: auditLog.createdAt })
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.action, resetAction),
+          eq(auditLog.entityId, strategyId),
+        ),
+      )
+      .orderBy(desc(auditLog.createdAt))
+      .limit(1);
+
+    const sinceCutoff: Date = lastReset?.createdAt ?? new Date(0);
+
+    // Step 3: Count consecutive failures since last reset
+    const failRows = await db
+      .select({ id: auditLog.id })
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.action, failAction),
+          eq(auditLog.entityId, strategyId),
+          gte(auditLog.createdAt, sinceCutoff),
+        ),
+      );
+    const consecutiveFailures = failRows.length;
+
+    if (consecutiveFailures < threshold) {
+      logger.debug(
+        { strategyId, gate, consecutiveFailures, threshold },
+        `auto-graveyard: ${consecutiveFailures}/${threshold} consecutive hard failures — not yet at threshold`,
+      );
+      return;
+    }
+
+    // Step 4: Double-bury guard — re-read current state (may have changed this tick)
+    const [current] = await db
+      .select({ lifecycleState: strategies.lifecycleState })
+      .from(strategies)
+      .where(eq(strategies.id, strategyId));
+
+    if (!current || current.lifecycleState === "GRAVEYARD") {
+      logger.debug(
+        { strategyId, gate },
+        "auto-graveyard: strategy already in GRAVEYARD or missing — no double-bury",
+      );
+      return;
+    }
+
+    // Step 5: Promote to GRAVEYARD
+    logger.warn(
+      { strategyId, gate, consecutiveFailures, threshold, fromState },
+      `AUTO-GRAVEYARD: ${consecutiveFailures} consecutive hard failures on gate "${gate}" — archiving strategy`,
+    );
+
+    const graveyardResult = await this.promoteStrategy(
+      strategyId,
+      fromState,
+      "GRAVEYARD",
+      {
+        actor: "system",
+        reason: `hard_gate_fail:${gate}`,
+        correlationId: correlationId ?? undefined,
+      },
+    );
+
+    if (graveyardResult.success) {
+      // Durable audit row for the auto-graveyard event
+      await db.insert(auditLog).values({
+        action: "lifecycle.auto_graveyard",
+        entityType: "strategy",
+        entityId: strategyId,
+        status: "success",
+        decisionAuthority: "gate",
+        input: { fromState, toState: "GRAVEYARD", gate } as Record<string, unknown>,
+        result: {
+          gate,
+          metrics,
+          consecutiveFailures,
+          fromState,
+          threshold,
+        } as Record<string, unknown>,
+        correlationId,
+      }).catch((auditErr: unknown) => {
+        logger.warn({ strategyId, gate, err: auditErr }, "lifecycle.auto_graveyard audit insert failed (non-blocking)");
+      });
+
+      // Prometheus
+      autoGraveyardTotal.labels({ gate }).inc();
+
+      // SSE
+      broadcastSSE(LIFECYCLE_GATE_EVENTS.AUTO_GRAVEYARD, {
+        strategyId,
+        gate,
+        consecutiveFailures,
+        threshold,
+        fromState,
+        metrics,
+        correlationId,
+      });
+
+      // Discord WARN (family-grade, non-blocking)
+      try {
+        notifyWarning(
+          `Auto-Graveyard: strategy ${strategyId} archived`,
+          appendFamilyGradePostscript(
+            `Strategy ${strategyId} (state ${fromState}) was auto-archived to GRAVEYARD after ${consecutiveFailures} consecutive hard failures on gate \`${gate}\`.`,
+            "A strategy that kept failing quality checks was automatically archived and will no longer trade.",
+            "No action needed — the bot handled this. View the strategy audit log for details.",
+          ),
+          { strategyId, gate, consecutiveFailures, fromState },
+        );
+      } catch (_discordErr) { /* non-blocking */ }
+    } else {
+      logger.error(
+        { strategyId, gate, error: graveyardResult.error },
+        "auto-graveyard: promoteStrategy to GRAVEYARD FAILED — strategy remains in current state",
+      );
+    }
+  }
+
+  /**
+   * Record a hard gate PASS (reset the consecutive-failure counter for this gate).
+   * Fire-and-forget — never blocks promotion on audit write failure.
+   *
+   * Call immediately after the hard gate check code block falls through (i.e. passes).
+   */
+  private _resetHardGateCounter(
+    strategyId: string,
+    gate: string,
+    correlationId: string | null,
+  ): void {
+    db.insert(auditLog).values({
+      action: `lifecycle.hard_gate_reset.${gate}`,
+      entityType: "strategy",
+      entityId: strategyId,
+      status: "success",
+      decisionAuthority: "gate",
+      input: { gate } as Record<string, unknown>,
+      result: { gate, reason: "gate_passed" } as Record<string, unknown>,
+      correlationId,
+    }).catch((auditErr: unknown) => {
+      logger.warn({ strategyId, gate, err: auditErr }, "_resetHardGateCounter: audit insert failed (non-blocking)");
+    });
   }
 
   /**
@@ -4622,7 +5524,7 @@ export class LifecycleService {
           });
           if (killResult.success) {
             result.killed++;
-            broadcastSSE("lifecycle:promoted", {
+            broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
               strategyId: s.id,
               from: "PILOT",
               to: "GRAVEYARD",
@@ -4681,7 +5583,7 @@ export class LifecycleService {
           });
           if (promoteResult.success) {
             result.promoted++;
-            broadcastSSE("lifecycle:promoted", {
+            broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
               strategyId: s.id,
               from: "PILOT",
               to: "DEPLOYED",
@@ -4734,7 +5636,11 @@ export class LifecycleService {
                   input: { fromState: "PILOT", toState: "DEPLOYED" },
                   result: { error: errMsg, attempts: 3, note: "Pine compile failed after 3 retries (30s/2m/10m)" },
                   correlationId: correlationId ?? null,
-                }).catch(() => {});
+                }).catch((auditErr) => {
+                  // Deep-scan #5 H3 (2026-06-29): was silently swallowed.
+                  logger.warn({ err: auditErr, correlationId }, "deployed_pine_compile_failed audit insert failed (non-blocking)");
+                  auditWriteFailuresTotal.labels({ action: "lifecycle.deployed_pine_compile_failed" }).inc();
+                });
                 notifyWarning(
                   `Pine Compile Failed: strategy ${s.name} DEPLOYED but no TradingView artifact`,
                   appendFamilyGradePostscript(
@@ -4775,7 +5681,7 @@ export class LifecycleService {
           });
           if (failResult.success) {
             result.killed++;
-            broadcastSSE("lifecycle:promoted", {
+            broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTED, {
               strategyId: s.id,
               from: "PILOT",
               to: "GRAVEYARD",

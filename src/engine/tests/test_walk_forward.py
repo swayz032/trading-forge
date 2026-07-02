@@ -15,7 +15,6 @@ from src.engine.config import (
 from src.engine.optimizer import optimize_strategy
 from src.engine.walk_forward import run_walk_forward, split_walk_forward_windows
 
-
 # ─── Helpers ───────────────────────────────────────────────────────
 
 def _make_synthetic_data(n: int = 300) -> pl.DataFrame:
@@ -59,18 +58,20 @@ def _make_config() -> BacktestRequest:
 
 class TestSplitWindows:
     def test_correct_number_of_splits(self):
-        data = _make_synthetic_data(300)
+        # 1000 bars: 700 IS warmup, 300 OOS / 5 = 60 bars/split > default embargo=20
+        # (300-bar data had 18-bar OOS chunks which are smaller than embargo=20 → 0 windows)
+        data = _make_synthetic_data(1000)
         windows = split_walk_forward_windows(data, n_splits=5, is_ratio=0.7)
         assert len(windows) == 5
 
     def test_is_larger_than_oos(self):
-        data = _make_synthetic_data(300)
+        data = _make_synthetic_data(1000)
         windows = split_walk_forward_windows(data, n_splits=5, is_ratio=0.7)
         for is_data, oos_data in windows:
             assert len(is_data) >= len(oos_data)
 
     def test_no_overlap_between_is_and_oos(self):
-        data = _make_synthetic_data(300)
+        data = _make_synthetic_data(1000)
         windows = split_walk_forward_windows(data, n_splits=3, is_ratio=0.7)
         for is_data, oos_data in windows:
             is_end = is_data["ts_event"][-1]
@@ -78,7 +79,7 @@ class TestSplitWindows:
             assert oos_start > is_end
 
     def test_covers_all_data(self):
-        data = _make_synthetic_data(300)
+        data = _make_synthetic_data(1000)
         windows = split_walk_forward_windows(data, n_splits=5, is_ratio=0.7)
         # OOS windows should collectively cover later portion of data
         total_oos = sum(len(oos) for _, oos in windows)
@@ -159,8 +160,34 @@ class TestEmbargo:
             # OOS should have same or fewer bars
             assert len(oos_emb) <= len(oos_no)
 
-    def test_embargo_zero_is_default(self):
-        """embargo_bars=0 should produce same results as no embargo."""
+    def test_default_embargo_is_20(self):
+        """Wave C hardening: default embargo_bars changed from 0→20 to protect ad-hoc callers.
+
+        Default call must produce same windows as explicit embargo_bars=20
+        (NOT the old 0 default).  Production callers pass embargo_bars
+        explicitly and are unaffected.
+        """
+        n = 500
+        dates = [datetime(2023, 1, 1) + timedelta(hours=i) for i in range(n)]
+        df = pl.DataFrame({
+            "ts_event": dates,
+            "open": [100.0] * n,
+            "high": [101.0] * n,
+            "low": [99.0] * n,
+            "close": [100.5] * n,
+            "volume": [1000] * n,
+        })
+
+        windows_default = split_walk_forward_windows(df, n_splits=3)
+        windows_explicit_20 = split_walk_forward_windows(df, n_splits=3, embargo_bars=20)
+
+        assert len(windows_default) == len(windows_explicit_20)
+        for (is_d, oos_d), (is_e, oos_e) in zip(windows_default, windows_explicit_20):
+            assert len(is_d) == len(is_e), "IS sizes must match default vs explicit-20"
+            assert len(oos_d) == len(oos_e), "OOS sizes must match default vs explicit-20"
+
+    def test_default_embargo_produces_gap_vs_zero(self):
+        """Default embargo=20 creates shorter OOS windows than explicit embargo=0."""
         n = 500
         dates = [datetime(2023, 1, 1) + timedelta(hours=i) for i in range(n)]
         df = pl.DataFrame({
@@ -175,10 +202,14 @@ class TestEmbargo:
         windows_default = split_walk_forward_windows(df, n_splits=3)
         windows_zero = split_walk_forward_windows(df, n_splits=3, embargo_bars=0)
 
+        # Default (embargo=20) must produce a tighter OOS than embargo=0
         assert len(windows_default) == len(windows_zero)
-        for (is_d, oos_d), (is_z, oos_z) in zip(windows_default, windows_zero):
-            assert len(is_d) == len(is_z)
-            assert len(oos_d) == len(oos_z)
+        oos_default = sum(len(oos) for _, oos in windows_default)
+        oos_zero = sum(len(oos) for _, oos in windows_zero)
+        assert oos_default < oos_zero, (
+            f"Default (embargo=20) OOS bars={oos_default} must be < "
+            f"explicit-0 OOS bars={oos_zero}"
+        )
 
     def test_embargo_no_overlap(self):
         """IS end + embargo gap + OOS start should not overlap."""
@@ -235,9 +266,10 @@ class TestF12ClassWFOptimizeGuard:
 
     def test_optimize_true_raises(self):
         """Calling with optimize=True must raise NotImplementedError."""
-        from src.engine.walk_forward import run_walk_forward_class
-        from src.engine.strategy_base import BaseStrategy
         import polars as pl
+
+        from src.engine.strategy_base import BaseStrategy
+        from src.engine.walk_forward import run_walk_forward_class
 
         class _DummyStrategy(BaseStrategy):
             name = "dummy"
@@ -262,9 +294,10 @@ class TestF12ClassWFOptimizeGuard:
 
     def test_optimize_false_does_not_raise_not_implemented(self):
         """optimize=False (default) must not raise NotImplementedError with Wave 24."""
-        from src.engine.walk_forward import run_walk_forward_class
-        from src.engine.strategy_base import BaseStrategy
         import polars as pl
+
+        from src.engine.strategy_base import BaseStrategy
+        from src.engine.walk_forward import run_walk_forward_class
 
         # We only test that the error is NOT a NotImplementedError from the guard.
         # The function may still raise other errors (data load, etc.) — that's OK.

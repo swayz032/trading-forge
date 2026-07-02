@@ -1,6 +1,7 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema.js";
+import { logger } from "../lib/logger.js";
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -31,3 +32,103 @@ export const client = postgres(connectionString, {
   },
 });
 export const db = drizzle(client, { schema });
+
+// ─── A-9: Postgres connection health monitoring ───────────────────────────────
+//
+// postgres.js (the `postgres` npm package) reconnects transparently — there is
+// no Pool.on('error') event emitter like node-postgres (`pg`). Connection errors
+// only surface at query time. Without monitoring, a 30-day run could silently
+// experience frequent reconnects with zero visibility.
+//
+// We detect connectivity loss via periodic SELECT 1 health probes:
+//   • Success after prior failure  → log recovery + write audit row
+//   • Failure with alert cooldown  → log error + write audit row + Discord warning
+//   • Probe itself is fail-soft    → never throws, never crashes the process
+//
+// Audit rows use raw client.unsafe() to avoid circular import (this IS the db
+// module — importing notification-service or audit-log-helper creates a cycle).
+// Discord notification uses a dynamic import for the same reason.
+
+let _dbHealthy = true;
+let _lastDbReconnectAlertAt = 0; // epoch ms
+
+const DB_HEALTH_PROBE_INTERVAL_MS = 5 * 60 * 1000;    // 5 min between probes
+const DB_RECONNECT_ALERT_COOLDOWN_MS = 60 * 60 * 1000; // 1 alert per hour max
+const DB_HEALTH_BOOT_DELAY_MS = 30_000;                 // 30s before first probe
+
+/** Exported for testing only. Not part of the public API. */
+export async function runDbHealthProbe(): Promise<void> {
+  try {
+    await client.unsafe("SELECT 1");
+    if (!_dbHealthy) {
+      _dbHealthy = true;
+      logger.info("db-pool: A-9: connection recovered — SELECT 1 succeeded after prior failure");
+      // Write recovery audit row using raw client (avoids circular import)
+      void client
+        .unsafe(
+          "INSERT INTO audit_log (id, action, entity_type, decision_authority, input, result, status) " +
+          "VALUES (gen_random_uuid(), $1, 'system', 'system', '{}', '{}', 'success')",
+          ["db_pool.connection_recovered"],
+        )
+        .catch((auditErr: unknown) => {
+          logger.warn({ err: auditErr }, "db-pool: A-9: recovery audit row failed (non-blocking)");
+        });
+    }
+  } catch (err: unknown) {
+    const wasHealthy = _dbHealthy;
+    _dbHealthy = false;
+    const errorMsg = err instanceof Error ? err.message : String(err);
+
+    logger.error(
+      { err, wasHealthy },
+      "db-pool: A-9: SELECT 1 health probe FAILED — Postgres connection may be lost",
+    );
+
+    // Rate-limited audit + alert (1/hour max to avoid flooding during sustained outage)
+    const now = Date.now();
+    if (now - _lastDbReconnectAlertAt > DB_RECONNECT_ALERT_COOLDOWN_MS) {
+      _lastDbReconnectAlertAt = now;
+
+      // Write error audit row using raw client
+      void client
+        .unsafe(
+          "INSERT INTO audit_log (id, action, entity_type, decision_authority, input, result, status) " +
+          "VALUES (gen_random_uuid(), $1, 'system', 'system', $2, '{}', 'warning')",
+          [
+            "db_pool.connection_error",
+            JSON.stringify({ error: errorMsg, was_healthy: wasHealthy }),
+          ],
+        )
+        .catch((auditErr: unknown) => {
+          logger.warn({ err: auditErr }, "db-pool: A-9: error audit row failed (non-blocking)");
+        });
+
+      // Dynamic import for notification service — breaks potential circular dep chain
+      void import("../services/notification-service.js")
+        .then(({ notifyWarning }) => {
+          notifyWarning(
+            "DB Pool: Postgres connection health probe failing",
+            `SELECT 1 health probe failed: ${errorMsg}. ` +
+              `The Postgres connection pool may be experiencing reconnects. ` +
+              `This is surfaced proactively for 30-day unattended operation — ` +
+              `check database server status and network connectivity.`,
+            { error: errorMsg, wasHealthy },
+          );
+        })
+        .catch((notifyErr: unknown) => {
+          logger.warn({ err: notifyErr }, "db-pool: A-9: connection error notification failed (non-blocking)");
+        });
+    }
+  }
+}
+
+// Start health monitoring after a boot delay (allows the app to fully
+// initialize and run initial migrations before the first probe fires).
+// Both timers are unref'd so they don't prevent clean process exit.
+const _dbHealthBootTimer = setTimeout(() => {
+  const probeInterval = setInterval(() => { void runDbHealthProbe(); }, DB_HEALTH_PROBE_INTERVAL_MS);
+  probeInterval.unref();
+  // Run first probe immediately after boot delay (don't wait 5min for first signal)
+  void runDbHealthProbe();
+}, DB_HEALTH_BOOT_DELAY_MS);
+_dbHealthBootTimer.unref();

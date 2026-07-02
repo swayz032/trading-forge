@@ -40,6 +40,15 @@ export interface PboGateInput {
   pbo_overall?: number | null;
   /** p-value from binomial test on PBO; null when scipy unavailable or n < 10. */
   pbo_p_value?: number | null;
+  /**
+   * CPCV-exempt reason (hardening/phase-0): walk_forward.py emits
+   * pbo_degenerate_reason="cpcv_is_sharpe_unavailable" inside wf_metadata when
+   * mode="cpcv". In CPCV mode the PBO rank-comparison requires per-path IS Sharpe
+   * values that CPCV does not produce (all paths share OOS data). This is NOT a
+   * legacy null — it is a known structural limitation of CPCV. Caller reads this
+   * from wf_metadata.pbo_degenerate_reason and passes it here.
+   */
+  pbo_degenerate_reason?: string | null;
 }
 
 export interface PboGateResult {
@@ -60,6 +69,8 @@ export interface PboGateResult {
     threshold: number;
     blocked: boolean;
     legacy_null: boolean;
+    /** Present when the gate exempted this result due to CPCV structural limitation. */
+    cpcv_exempt?: boolean;
   };
 }
 
@@ -112,6 +123,68 @@ export function evaluatePboGate(
   const effectiveThreshold = opts?.threshold ?? getPboLifecycleThreshold();
   const pboRaw = backtestResult.pbo_overall;
   const pValueRaw = backtestResult.pbo_p_value ?? null;
+
+  // ── Plain-WF degenerate path (Track B coordination — 2026-06-29) ────────────
+  // walk_forward.py writes pbo_degenerate_reason="plain_wf_is_unavailable" into the
+  // PLAIN-WF wf_metadata when a plain-WF run produces a degenerate PBO (the IS/OOS
+  // rank comparison could not be computed). Unlike CPCV — which has a structural
+  // excuse (all paths share OOS data) — plain WF has NO such excuse: it RAN and came
+  // back unusable, so the strategy is UN-VALIDATED, not measurement-limited. This is
+  // therefore distinct from BOTH the CPCV-exempt PROCEED and the legacy-null
+  // grandfather PROCEED. Fail-CLOSED → BLOCK with a distinct reason so the audit row
+  // is never confused with either PROCEED path.
+  // NOTE: the string "plain_wf_is_unavailable" must match Track B's walk_forward.py
+  // emitter EXACTLY — do not rename without coordinating the Python side.
+  if (pboRaw == null && backtestResult.pbo_degenerate_reason === "plain_wf_is_unavailable") {
+    logger.warn(
+      { threshold: effectiveThreshold, pbo_degenerate_reason: backtestResult.pbo_degenerate_reason },
+      "PBO gate: BLOCKED — plain-WF PBO is degenerate/unavailable (plain_wf_is_unavailable); " +
+        "fail-CLOSED (lifecycle.pbo_plain_wf_degenerate_block) — NOT CPCV-exempt, NOT legacy grandfather",
+    );
+    return {
+      ok: false,
+      pbo: null,
+      threshold: effectiveThreshold,
+      reason: "lifecycle.pbo_plain_wf_degenerate_block",
+      legacyNull: false,
+      auditPayload: {
+        pbo: null,
+        pbo_p_value: pValueRaw,
+        threshold: effectiveThreshold,
+        blocked: true,
+        legacy_null: false,
+      },
+    };
+  }
+
+  // ── CPCV-exempt path (hardening/phase-0) ───────────────────────────────────
+  // walk_forward.py emits pbo_degenerate_reason="cpcv_is_sharpe_unavailable" in
+  // wf_metadata when mode="cpcv". PBO rank-comparison requires per-path IS Sharpe
+  // which CPCV does not produce. This is NOT a legacy null — the producer explicitly
+  // signals the structural limitation. Return a DISTINCT result so the audit row
+  // uses "lifecycle.pbo_cpcv_is_unavailable" instead of the generic legacy action.
+  // legacyNull=false so callers can distinguish this from the grandfather window.
+  if (pboRaw == null && backtestResult.pbo_degenerate_reason === "cpcv_is_sharpe_unavailable") {
+    logger.warn(
+      { threshold: effectiveThreshold, pbo_degenerate_reason: backtestResult.pbo_degenerate_reason },
+      "PBO gate: pbo_overall unavailable due to CPCV structural limitation — proceeding with CPCV-exempt audit (lifecycle.pbo_cpcv_is_unavailable)",
+    );
+    return {
+      ok: true,
+      pbo: null,
+      threshold: effectiveThreshold,
+      reason: "lifecycle.pbo_cpcv_is_unavailable",
+      legacyNull: false,
+      auditPayload: {
+        pbo: null,
+        pbo_p_value: pValueRaw,
+        threshold: effectiveThreshold,
+        blocked: false,
+        legacy_null: false,
+        cpcv_exempt: true,
+      },
+    };
+  }
 
   // ── Legacy null path ───────────────────────────────────────────────────────
   // Pre-Wave-29 backtests do not have pbo_overall. We proceed with a warn.

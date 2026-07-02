@@ -53,6 +53,17 @@ from src.engine.walk_forward_regime_context import classify_parameter_drift
 # PBO > threshold = strategy more likely overfit than not.
 _PBO_OVERFIT_THRESHOLD_DEFAULT = 0.5
 
+# ── F-4: DSR N_total wiring ───────────────────────────────────────────────────
+# Env var: DSR_USE_NTOTAL (default "true")
+# When true: CPCV DSR uses effective_n_trials = max(n_paths, trial_n_total)
+# where trial_n_total is the cumulative mutation proposal count for the strategy
+# (from research_trial_counter via BacktestRequest.trial_n_total).
+# This prevents 2–5× Sharpe inflation caused by treating each CPCV run as if
+# only n_paths (15) trials were ever proposed for the strategy.
+# Fail-closed default: true. Override DSR_USE_NTOTAL=false to revert to legacy
+# behaviour (n_trials = n_paths only) — for diagnostic use only.
+_DSR_USE_NTOTAL: bool = os.getenv("DSR_USE_NTOTAL", "true").lower() != "false"
+
 # ─── OOS Window Minimums ─────────────────────────────────────────
 # Below these thresholds, OOS results are statistically unreliable.
 MIN_OOS_TRADES = 30
@@ -95,7 +106,7 @@ def split_walk_forward_windows(
     data: pl.DataFrame,
     n_splits: int = 5,
     is_ratio: float = 0.7,
-    embargo_bars: int = 0,
+    embargo_bars: int = 20,
 ) -> list[tuple[pl.DataFrame, pl.DataFrame]]:
     """Split data into anchored walk-forward windows.
 
@@ -115,7 +126,11 @@ def split_walk_forward_windows(
         data: Full OHLCV DataFrame
         n_splits: Number of walk-forward windows
         is_ratio: Fraction of total data reserved as minimum IS warmup (default 0.7)
-        embargo_bars: Bars to skip between IS and OOS to prevent leakage (default 0)
+        embargo_bars: Bars to skip between IS and OOS to prevent leakage (default 20).
+            Changed from 0 to 20 in Wave C hardening so ad-hoc callers don't
+            accidentally run with zero embargo. Production callers
+            (run_walk_forward, run_walk_forward_class) pass embargo_bars
+            explicitly and are unaffected by this default.
 
     Returns:
         List of (is_data, oos_data) tuples
@@ -139,6 +154,67 @@ def split_walk_forward_windows(
         windows.append((is_data, oos_data))
 
     return windows
+
+
+def _cpcv_fold_embargo_strips(
+    fold_idx: int,
+    test_fold_set: set,
+    n_splits: int,
+    embargo_bars: int,
+    is_test_fold: bool,
+) -> tuple:
+    """Compute (strip_start, strip_end) bar counts for a CPCV fold.
+
+    Pure function — no I/O, no polars, no backtester import — unit-testable
+    in isolation without triggering vectorbt JIT loading.
+
+    For OOS (test) folds, strip only at IS-facing boundaries:
+      - Strip START  when left  neighbor (fold_idx-1) is an IS fold AND exists
+      - Strip END    when right neighbor (fold_idx+1) is an IS fold AND exists
+    For IS (training) folds, strip only at OOS-facing boundaries:
+      - Strip START  when left  neighbor (fold_idx-1) is an OOS fold AND exists
+      - Strip END    when right neighbor (fold_idx+1) is an OOS fold AND exists
+
+    Contiguous OOS↔OOS or IS↔IS boundaries produce zero strip — no leakage
+    can cross a same-role boundary.  Data-boundary folds (fold_idx=0 or
+    fold_idx=n_splits-1) produce zero strip toward the absent neighbor.
+
+    Args:
+        fold_idx:      Index of the fold being examined (0 .. n_splits-1).
+        test_fold_set: Set of fold indices designated as OOS for this path.
+        n_splits:      Total number of CPCV folds.
+        embargo_bars:  Number of bars to strip per IS↔OOS boundary.
+        is_test_fold:  True → computing strips for an OOS fold;
+                       False → computing strips for an IS fold.
+
+    Returns:
+        (strip_start, strip_end) — non-negative integer pair.
+    """
+    if is_test_fold:
+        # OOS fold: strip the edge that faces IS territory
+        strip_start = (
+            embargo_bars
+            if fold_idx > 0 and (fold_idx - 1) not in test_fold_set
+            else 0
+        )
+        strip_end = (
+            embargo_bars
+            if fold_idx < n_splits - 1 and (fold_idx + 1) not in test_fold_set
+            else 0
+        )
+    else:
+        # IS fold: strip the edge that faces OOS territory
+        strip_start = (
+            embargo_bars
+            if fold_idx > 0 and (fold_idx - 1) in test_fold_set
+            else 0
+        )
+        strip_end = (
+            embargo_bars
+            if fold_idx < n_splits - 1 and (fold_idx + 1) in test_fold_set
+            else 0
+        )
+    return strip_start, strip_end
 
 
 def _run_walk_forward_cpcv(
@@ -202,6 +278,9 @@ def _run_walk_forward_cpcv(
     all_oos_pnls: list[float] = []
     all_oos_pnl_records: list[dict] = []
     all_oos_equity: list[float] = []
+    # Multi-model WRC/SPA: each path's daily P&L series tracked separately so
+    # whites_reality_check_multi / hansens_spa_multi can build the (L, T) matrix.
+    per_path_oos_pnls: list[list[float]] = []
 
     _shared_req = BacktestRequest(
         strategy=config,
@@ -217,28 +296,71 @@ def _run_walk_forward_cpcv(
 
     for test_fold_indices in _combos(range(n_splits), k_test_groups):
         is_fold_indices = [fi for fi in range(n_splits) if fi not in test_fold_indices]
+        test_fold_set = set(test_fold_indices)
 
-        # IS data = concatenation of IS folds (must be temporally ordered)
-        is_fold_dfs = [folds[fi] for fi in sorted(is_fold_indices)]
-        if is_fold_dfs:
-            is_data = pl.concat(is_fold_dfs)
+        # IS data — bilateral IS-side purge (Wave C hardening).
+        # López de Prado AFML Ch.7: IS bars temporally adjacent to an OOS fold
+        # boundary carry forward label information from the OOS window (Style C
+        # runners can hold across the fold edge, option expiry / roll effects can
+        # propagate backwards).  Purge those bars from each IS fold on the side(s)
+        # that face an OOS fold, using _cpcv_fold_embargo_strips() for the math.
+        #
+        # Previous behaviour (pre-Wave C): no IS-side strip — is_data included ALL
+        # embargo-adjacent IS bars, making WFE and PBO mildly optimistic.
+        is_fold_dfs_purged: list[pl.DataFrame] = []
+        for fi in sorted(is_fold_indices):
+            fold_df = folds[fi]
+            strip_start, strip_end = _cpcv_fold_embargo_strips(
+                fold_idx=fi,
+                test_fold_set=test_fold_set,
+                n_splits=n_splits,
+                embargo_bars=embargo_bars,
+                is_test_fold=False,
+            )
+            effective_len = len(fold_df) - strip_start - strip_end
+            if effective_len > 0:
+                is_fold_dfs_purged.append(fold_df.slice(strip_start, effective_len))
+            else:
+                print(
+                    f"  CPCV: IS fold {fi} too small ({len(fold_df)} bars <= "
+                    f"purge start={strip_start}+end={strip_end}) — skipping.",
+                    file=sys.stderr,
+                )
+        if is_fold_dfs_purged:
+            is_data = pl.concat(is_fold_dfs_purged)
         else:
-            continue
+            continue  # No usable IS data after purge — skip this path
 
-        # OOS data = concatenation of test folds with embargo strip applied.
-        # For each test fold, we drop the first embargo_bars rows to implement
-        # the temporal purge (labels from the IS side cannot overlap OOS).
+        # OOS data — bilateral embargo strip (Wave C hardening: adds OOS-end strip).
+        # - Strip START: bars adjacent to the preceding IS fold (was already present).
+        # - Strip END  : bars adjacent to the following IS fold (NEW — was missing).
+        # Contiguous OOS↔OOS boundaries receive zero strip — no IS contamination
+        # crosses that edge.  _cpcv_fold_embargo_strips() encodes the adjacency rule.
+        #
+        # Previous behaviour (pre-Wave C): only the START was stripped.
+        # fold_df.slice(embargo_bars, len(fold_df) - embargo_bars) kept the last
+        # embargo_bars rows intact, leaving IS→OOS leakage at the OOS-end boundary.
         oos_parts: list[pl.DataFrame] = []
         for ti in sorted(test_fold_indices):
             fold_df = folds[ti]
-            if len(fold_df) > embargo_bars:
-                oos_parts.append(fold_df.slice(embargo_bars, len(fold_df) - embargo_bars))
+            strip_start, strip_end = _cpcv_fold_embargo_strips(
+                fold_idx=ti,
+                test_fold_set=test_fold_set,
+                n_splits=n_splits,
+                embargo_bars=embargo_bars,
+                is_test_fold=True,
+            )
+            effective_len = len(fold_df) - strip_start - strip_end
+            if effective_len > 0:
+                oos_parts.append(fold_df.slice(strip_start, effective_len))
             else:
-                # FIX 6 (2026-06-22): fold too small after purge — skip entirely.
-                # Previous code appended the raw unembargoed fold, introducing IS→OOS
-                # lookahead leakage across the embargo boundary for short folds.
+                # FIX 6 (2026-06-22) extended: bilateral check — fold too small after
+                # full bilateral embargo strip — skip entirely.
+                # Pre-Wave C: only tested start-strip (len > embargo_bars).
+                # Now: len must exceed start_strip + end_strip (stricter, correct).
                 print(
-                    f"  CPCV: fold {ti} too small ({len(fold_df)} bars <= embargo {embargo_bars}) "
+                    f"  CPCV: fold {ti} too small ({len(fold_df)} bars <= "
+                    f"purge start={strip_start}+end={strip_end}) "
                     f"— skipping to preserve embargo integrity.",
                     file=sys.stderr,
                 )
@@ -270,7 +392,10 @@ def _run_walk_forward_cpcv(
         path_sharpes.append(float(path_result.get("sharpe_ratio", 0.0)))
         path_returns.append(float(path_result.get("total_return", 0.0)))
         all_oos_trades.extend(path_result.get("trades", []))
-        all_oos_pnls.extend(path_result.get("daily_pnls", []))
+        _path_daily_pnls = list(path_result.get("daily_pnls", []))
+        all_oos_pnls.extend(_path_daily_pnls)
+        # Track per-path series for multi-model WRC/SPA (White 2000 / Hansen 2005)
+        per_path_oos_pnls.append(_path_daily_pnls)
         all_oos_pnl_records.extend(path_result.get("daily_pnl_records", []))
         # equity_bars is raw float[] equity per bar; equity_curve is list[dict] (daily agg).
         # Use equity_bars for drawdown math to avoid dict → float cast error.
@@ -300,6 +425,12 @@ def _run_walk_forward_cpcv(
             "trades": [],
             "daily_pnls": [],
             "windows": [],
+            # Wave 3 Track 3A: BIF absent on empty-path early return.
+            "bif": None,
+            "k_eff": 0,
+            # WRC/SPA: no paths completed → unavailable.
+            "wrc_result": {"available": False, "reason": "no CPCV paths completed"},
+            "spa_result": {"available": False, "reason": "no CPCV paths completed"},
             "execution_time_ms": int((time.time() - start_time) * 1000),
         }
 
@@ -329,18 +460,37 @@ def _run_walk_forward_cpcv(
 
     # ── PSR / DSR across CPCV paths ──────────────────────────────────────────
     # PSR = fraction of paths where path Sharpe > Sharpe* (the expected max under null).
-    # DSR computed with n_trials = n_paths (each path = an independent trial in CPCV).
+    # F-4 DSR n_trials: use effective_n_trials = max(n_paths, trial_n_total) when
+    # DSR_USE_NTOTAL=true (default). trial_n_total is the cumulative mutation count for
+    # this strategy across all evolution cycles — using it as the denominator prevents
+    # the 2–5× Sharpe inflation that occurs when treating each run as if only n_paths
+    # (15 CPCV paths) trials were ever proposed. Fail-safe: trial_n_total < 1 → treated
+    # as 1, so effective_n_trials never drops below n_paths.
+    _trial_n_total: int = max(1, getattr(request, "trial_n_total", 1))
+    _effective_n_trials: int = (
+        max(n_paths, _trial_n_total) if _DSR_USE_NTOTAL else n_paths
+    )
     try:
         from src.engine.risk_metrics import compute_deflated_sharpe_ratio as _cpcv_dsr
 
         _n_obs = len(all_oos_pnls)
         _dsr_result = _cpcv_dsr(
             observed_sharpe=agg_sharpe,
-            n_trials=n_paths,
+            n_trials=_effective_n_trials,
             n_observations=max(_n_obs, 2),
         )
         _psr = float(sum(1 for s in path_sharpes if s > 0) / max(len(path_sharpes), 1))
         _dsr_val = _dsr_result.get("dsr")
+        # FIX (2026-06-29): compute_deflated_sharpe_ratio returns the gate under
+        # "passes", but wf_metadata + the TS consumer expect "dsr_pass". On the
+        # success path _dsr_result is the raw helper output (no "dsr_pass" key), so
+        # the prior _dsr_result.get("dsr_pass") at wf_metadata-build returned None on
+        # EVERY successful CPCV run → DSR gate silently un-enforced. Normalise here.
+        _dsr_passes_raw = _dsr_result.get("passes")
+        _dsr_result["dsr_pass"] = (
+            bool(_dsr_passes_raw) if _dsr_passes_raw is not None else None
+        )
+        _dsr_result.setdefault("dsr_unavailable", False)
     except Exception as _dsr_exc:
         # FIX 7 (2026-06-22): emit walk_forward.dsr_computation_failed audit signal
         # and set dsr_pass=False so TS consumer can block instead of silently proceeding.
@@ -363,6 +513,56 @@ def _run_walk_forward_cpcv(
 
     elapsed_ms = int((time.time() - start_time) * 1000)
 
+    # ── Wave 3 Track 3A: BIF computation (CPCV mode) ─────────────────────────
+    # K_eff = n_paths (C(6,2)=15 combinatorial paths per default CPCV config).
+    # IS Sharpe proxy = mean(path_OOS_sharpes) — uses the same OOS series as
+    # agg_sharpe (M1 limitation: BIF ≈ 1.0, block gate never fires in default
+    # CPCV mode).  The result dict carries bif_proxy_basis="oos_mean_not_is" so
+    # the TS BIF gate can emit a non-blocking audit warn.
+    # Per-path IS Sharpes (using true IS fold data) are a Wave 30 carry-forward
+    # per the comment at the top of the CPCV combinations loop.
+    _cpcv_bif_result: dict = {}
+    try:
+        from src.engine.statistics.backtest_inflation_factor import (
+            compute_bif as _cpcv_compute_bif,
+        )
+        # B4 fix: use mean of path OOS Sharpes as the IS-Sharpe proxy, not max.
+        # max(path_sharpes) overstates IS performance because it cherry-picks the
+        # best CPCV path — this deflates BIF (IS/OOS gap appears small) when the
+        # true per-path IS Sharpe is unknown (pooled across folds).
+        # WAVE 30 carry-forward: derive true per-path IS Sharpe from IS fold data.
+        _cpcv_bif_is_sharpe = float(np.mean(path_sharpes)) if path_sharpes else 0.0
+        _cpcv_bif_k_eff = float(max(n_paths, 1))
+        _cpcv_bif_result = _cpcv_compute_bif(
+            is_sharpe=_cpcv_bif_is_sharpe,
+            wf_sharpe=agg_sharpe,
+            k_eff=_cpcv_bif_k_eff,
+        )
+        # M1 fix 2026-06-28: tag the BIF result so the TS BIF gate can emit a
+        # non-blocking audit warn. In CPCV mode both is_sharpe and wf_sharpe
+        # derive from the same OOS series → BIF ≈ 1.0 (near-no-op).
+        # TS gate reads bif_proxy_basis from wf_metadata.bif_proxy_basis.
+        _cpcv_bif_result["bif_proxy_basis"] = "oos_mean_not_is"
+        # BYPASS 3 EXPLICIT AUDIT (2026-06-28 hardening): IS Sharpe is unavailable
+        # in CPCV mode without running a separate IS backtest per path (Wave 30
+        # carry-forward). bif_reliable=False surfaces this fact explicitly so the
+        # TS BIF gate logs a documented audit-warn rather than treating BIF≈1.0 as
+        # a genuine clean-gate pass. The gate must NOT block on an unreliable BIF.
+        _cpcv_bif_result["bif_reliable"] = False
+        print(
+            f"  BIF (CPCV): {_cpcv_bif_result.get('bif', 'N/A'):.4f} "
+            f"(IS_proxy={_cpcv_bif_is_sharpe:.4f}, WF={agg_sharpe:.4f}, "
+            f"K_eff={_cpcv_bif_k_eff:.0f}) "
+            f"→ {_cpcv_bif_result.get('verdict', 'N/A')}",
+            file=sys.stderr,
+        )
+    except Exception as _cpcv_bif_exc:
+        print(
+            f"  BIF (CPCV): computation failed ({_cpcv_bif_exc!r}) — "
+            f"skipping (non-blocking, bif=None in output).",
+            file=sys.stderr,
+        )
+
     # ── Wave 29 Pass A.2: compute pbo_overall from CPCV paths ────────────────
     # In CPCV mode, path_sharpes ARE the per-path OOS Sharpes.
     # We treat each path's OOS Sharpe as both is_sharpe and oos_sharpe when
@@ -372,6 +572,12 @@ def _run_walk_forward_cpcv(
     _cpcv_pbo_overall: Optional[float] = None
     _cpcv_pbo_p_value: Optional[float] = None
     _cpcv_pbo_audit_actions: list[str] = []
+    # BYPASS 2 EXPLICIT AUDIT (2026-06-28 hardening): track the degenerate reason
+    # so the TS lifecycle gate receives a distinct "cpcv_is_sharpe_unavailable"
+    # label rather than the generic legacy-null grandfather-PASS path.
+    # (Merge 2026-06-29: adopted over the deepscan-wiring BLOCK approach — CPCV is the
+    # default WF_MODE, so BLOCK-on-degenerate would strangle the whole pipeline.)
+    _cpcv_pbo_degenerate_reason: Optional[str] = None
     try:
         from src.engine.pbo_gate import compute_pbo_from_cpcv_paths as _cpcv_pbo_fn
         _cpcv_path_dicts = [
@@ -379,6 +585,14 @@ def _run_walk_forward_cpcv(
             for s in path_sharpes
         ]
         _cpcv_gate = _cpcv_pbo_fn(_cpcv_path_dicts)
+        # Override the generic degenerate reason with a CPCV-specific auditable
+        # label so the TS lifecycle gate can distinguish this case from other
+        # degenerate-PBO paths (e.g., a genuine IS==OOS backtest outcome).
+        # The generic pbo_gate message correctly explains WHY is==oos, but the
+        # "cpcv_is_sharpe_unavailable" label is more actionable for gate routing.
+        if _cpcv_gate.get("degenerate"):
+            _cpcv_gate["degenerate_reason"] = "cpcv_is_sharpe_unavailable"
+        _cpcv_pbo_degenerate_reason = _cpcv_gate.get("degenerate_reason")
         _cpcv_pbo_val = _cpcv_gate.get("pbo")
         if _cpcv_pbo_val is not None and not (
             isinstance(_cpcv_pbo_val, float) and (_cpcv_pbo_val != _cpcv_pbo_val)
@@ -391,8 +605,167 @@ def _run_walk_forward_cpcv(
             _cpcv_pbo_audit_actions.append("walk_forward.pbo_computed")
             if _cpcv_pbo_val > _pbo_threshold_cpcv:
                 _cpcv_pbo_audit_actions.append("walk_forward.pbo_high_overfit_risk")
+        elif _cpcv_gate.get("degenerate"):
+            # CPCV mode uses is_sharpe == oos_sharpe (no per-path IS data) → pbo_gate.py
+            # fires the degenerate guard → pbo=None. The degenerate_reason
+            # ("cpcv_is_sharpe_unavailable") is already set at line 583-585; the TS
+            # lifecycle gate PROCEEDS with an explicit cpcv_exempt audit (NOT a silent
+            # grandfather-pass, and NOT a BLOCK — CPCV is the default WF_MODE, so blocking
+            # would strangle the whole pipeline; Wave 30 per-path IS Sharpe is the real fix).
+            _cpcv_pbo_audit_actions.append("walk_forward.pbo_cpcv_degenerate")
+            print(
+                "  PBO (cpcv gate): degenerate — IS==OOS for all paths "
+                "(per-path IS unavailable in CPCV mode); emitting "
+                "pbo_degenerate_reason='cpcv_is_sharpe_unavailable' "
+                "→ TS gate PROCEEDS with cpcv_exempt audit "
+                "(walk_forward.pbo_cpcv_degenerate)",
+                file=sys.stderr,
+            )
     except Exception as _cpcv_pbo_exc:
         print(f"  PBO (cpcv gate): computation failed ({_cpcv_pbo_exc}).", file=sys.stderr)
+
+    # ── WRC + SPA — multi-model data-snooping guard (White 2000 / Hansen 2005) ─
+    # Upgraded from single-series to proper multiple-comparison construction:
+    #   Model universe: the L = n_paths CPCV OOS series (each path is one "model")
+    #   Observed stat:  max_k(mean(excess_k)) — max mean excess return across paths
+    #   Bootstrap null: shared time-index resample applied to ALL L series jointly,
+    #                   preserving cross-path correlation
+    #   Šidák:          if n_total_trials > n_paths, inflate p for additional snooping
+    #
+    # This is the correct institutional construction: a single-series test is
+    # mathematically equivalent to a t-test on the mean and is blind to having
+    # selected the winner from L path candidates.  The multi-model null builds
+    # the distribution of the MAX statistic — not one series' mean — so a path
+    # that was lucky best-of-L gets a higher p-value than one with genuine
+    # positive edge on every fold.
+    #
+    # Fail-soft: emit {available: false, reason} when insufficient data.
+    # NEVER emit a fake-passing p-value on insufficient data.
+    # Key contract: p_value and spa_consistent_p are preserved for TS gate.
+    _WRC_MIN_OBS = 20  # floor below which stationary bootstrap is unreliable
+    _cpcv_wrc_result: dict = {}
+    _cpcv_spa_result: dict = {}
+    _rng_seed_cpcv = int(os.environ.get("BACKTEST_SEED", "42"))
+    # Paths with sufficient data to participate in the multi-model bootstrap
+    _eligible_paths = [p for p in per_path_oos_pnls if len(p) >= _WRC_MIN_OBS]
+    if len(_eligible_paths) >= 2:
+        # M-2 fix (2026-06-29): exclude paths significantly shorter than the mean to
+        # prevent degenerate matrix truncation — a single 21-obs path dragging all
+        # other paths down to 21 observations silently collapses the bootstrap power.
+        # Floor = max(30, mean_len * 0.5): generous enough not to drop valid paths in
+        # normal unequal-embargo scenarios, strict enough to exclude truly stunted paths.
+        _all_path_lens = [len(p) for p in _eligible_paths]
+        _mean_path_len_m2 = sum(_all_path_lens) / len(_all_path_lens)
+        _path_floor_m2 = max(30.0, _mean_path_len_m2 * 0.5)
+        _paths_pre_floor = _eligible_paths[:]
+        _eligible_paths = [p for p in _eligible_paths if len(p) >= _path_floor_m2]
+        for _ex_path in _paths_pre_floor:
+            if len(_ex_path) < _path_floor_m2:
+                print(
+                    f"  WRC/SPA (CPCV): walk_forward.wrc_spa_short_path_excluded "
+                    f"path_len={len(_ex_path)} floor={_path_floor_m2:.0f} mean={_mean_path_len_m2:.0f}",
+                    file=sys.stderr,
+                )
+    if len(_eligible_paths) >= 2:
+        try:
+            from src.engine.statistics.hansens_spa import (
+                hansens_spa_multi as _spa_multi,
+            )
+            from src.engine.statistics.whites_reality_check import (
+                whites_reality_check_multi as _wrc_multi,
+            )
+            # Truncate all paths to minimum length so the matrix is rectangular.
+            # Using min-length avoids padding artifacts; shorter paths typically
+            # arise from CPCV embargo stripping at fold boundaries (small loss).
+            _min_path_len = min(len(p) for p in _eligible_paths)
+            # M-2: emit stderr warning when min truncation exceeds 50% of mean — still
+            # degenerate even after the floor filter if ALL remaining paths are short.
+            if _eligible_paths and _min_path_len < 0.5 * (sum(len(p) for p in _eligible_paths) / len(_eligible_paths)):
+                print(
+                    f"  WRC/SPA (CPCV): WARNING min_path_len={_min_path_len} < 0.5*mean "
+                    f"after floor filter — bootstrap power severely reduced",
+                    file=sys.stderr,
+                )
+            _perf_matrix = np.array(
+                [p[:_min_path_len] for p in _eligible_paths], dtype=float
+            )  # (L, T)
+            _bench_matrix = np.zeros_like(_perf_matrix)
+            _cpcv_wrc_result = _wrc_multi(
+                performance_matrix=_perf_matrix,
+                benchmark_matrix=_bench_matrix,
+                n_total_trials=_trial_n_total,
+                k_eff=n_paths,
+                rng_seed=_rng_seed_cpcv,
+            )
+            _cpcv_spa_result = _spa_multi(
+                performance_matrix=_perf_matrix,
+                benchmark_matrix=_bench_matrix,
+                n_total_trials=_trial_n_total,
+                k_eff=n_paths,
+                rng_seed=_rng_seed_cpcv + 1,
+            )
+            print(
+                f"  WRC multi (CPCV): p={_cpcv_wrc_result.get('p_value', 'N/A'):.4f} "
+                f"{'PASS' if _cpcv_wrc_result.get('passed') else 'FAIL'} | "
+                f"SPA consistent_p={_cpcv_spa_result.get('spa_consistent_p', 'N/A'):.4f} "
+                f"{'PASS' if _cpcv_spa_result.get('passed') else 'FAIL'} "
+                f"(n_models={len(_eligible_paths)}, T={_min_path_len}, "
+                f"n_total={_trial_n_total}, sidak={_cpcv_wrc_result.get('sidak_adjusted')})",
+                file=sys.stderr,
+            )
+        except Exception as _cpcv_wrc_exc:
+            print(
+                f"  WRC/SPA multi (CPCV): computation failed ({_cpcv_wrc_exc!r}) — "
+                f"emitting available=false (non-blocking).",
+                file=sys.stderr,
+            )
+            _cpcv_wrc_result = {"available": False, "reason": str(_cpcv_wrc_exc)}
+            _cpcv_spa_result = {"available": False, "reason": str(_cpcv_wrc_exc)}
+    elif len(all_oos_pnls) >= _WRC_MIN_OBS:
+        # Fallback: < 2 eligible paths but concatenated series is long enough.
+        # Use single-series (backward-compat); no multi-model correction possible.
+        try:
+            from src.engine.statistics.hansens_spa import hansens_spa as _spa_fn
+            from src.engine.statistics.whites_reality_check import (
+                whites_reality_check as _wrc_fn,
+            )
+            _benchmark_zeros = [0.0] * len(all_oos_pnls)
+            _cpcv_wrc_result = _wrc_fn(
+                strategy_returns=all_oos_pnls,
+                benchmark_returns=_benchmark_zeros,
+                rng_seed=_rng_seed_cpcv,
+            )
+            _cpcv_spa_result = _spa_fn(
+                strategy_returns=all_oos_pnls,
+                benchmark_returns=_benchmark_zeros,
+                rng_seed=_rng_seed_cpcv + 1,
+            )
+            print(
+                f"  WRC single (CPCV fallback, <2 eligible paths): "
+                f"p={_cpcv_wrc_result.get('p_value', 'N/A'):.4f} "
+                f"{'PASS' if _cpcv_wrc_result.get('passed') else 'FAIL'} | "
+                f"SPA consistent_p={_cpcv_spa_result.get('spa_consistent_p', 'N/A'):.4f} "
+                f"(n_obs={len(all_oos_pnls)})",
+                file=sys.stderr,
+            )
+        except Exception as _cpcv_wrc_exc2:
+            print(
+                f"  WRC/SPA single (CPCV fallback): computation failed ({_cpcv_wrc_exc2!r}) — "
+                f"emitting available=false (non-blocking).",
+                file=sys.stderr,
+            )
+            _cpcv_wrc_result = {"available": False, "reason": str(_cpcv_wrc_exc2)}
+            _cpcv_spa_result = {"available": False, "reason": str(_cpcv_wrc_exc2)}
+    else:
+        _insufficient_reason = (
+            f"insufficient OOS observations: {len(all_oos_pnls)} < {_WRC_MIN_OBS} minimum"
+        )
+        _cpcv_wrc_result = {"available": False, "reason": _insufficient_reason}
+        _cpcv_spa_result = {"available": False, "reason": _insufficient_reason}
+        print(
+            f"  WRC/SPA (CPCV): skipped — {_insufficient_reason}",
+            file=sys.stderr,
+        )
 
     return {
         "confidence": "OK" if total_trades >= MIN_OOS_TRADES else "LOW",
@@ -415,6 +788,15 @@ def _run_walk_forward_cpcv(
         "n_splits": n_splits,
         "is_ratio": 1.0 - (k_test_groups / n_splits),
         "execution_time_ms": elapsed_ms,
+        # BYPASS 1 EXPLICIT AUDIT (2026-06-28 hardening): WFE is mathematically
+        # undefined in CPCV mode because there is no single pooled IS Sharpe to
+        # divide against the OOS aggregate. The plain-WF path produces wfe_overall
+        # from _combined_is_sharpe; CPCV has no such value without extra IS backtests.
+        # Emitting wfe_overall=None + wfe_status="cpcv_not_applicable" lets the TS
+        # wfe-gate.ts emit a documented exemption audit action instead of routing
+        # through the legacy_null grandfather-PASS path silently.
+        "wfe_overall": None,
+        "wfe_status": "cpcv_not_applicable",
         "wf_metadata": {
             "mode": "cpcv",
             "n_folds": n_splits,
@@ -428,11 +810,49 @@ def _run_walk_forward_cpcv(
             # When DSR computation fails, _dsr_result has dsr_pass=False, dsr_unavailable=True.
             "dsr_pass": _dsr_result.get("dsr_pass"),
             "dsr_unavailable": _dsr_result.get("dsr_unavailable", False),
+            # M1 fix 2026-06-28: surface bif_proxy_basis so the TS BIF gate can
+            # emit a non-blocking audit warn.  "oos_mean_not_is" signals that both
+            # is_sharpe and wf_sharpe derive from the same OOS series → BIF ≈ 1.0.
+            "bif_proxy_basis": _cpcv_bif_result.get("bif_proxy_basis"),
+            # BYPASS 3 EXPLICIT AUDIT: bif_reliable=False when IS Sharpe unavailable.
+            # TS BIF gate must not block on an unreliable BIF≈1.0 value.
+            "bif_reliable": _cpcv_bif_result.get("bif_reliable", True),
+            # BYPASS 2 EXPLICIT AUDIT (merge 2026-06-29): surface the CPCV-specific
+            # degenerate reason INSIDE wf_metadata so it survives backtest-service
+            # persistence (which stores the wf_metadata sub-dict wholesale) and is read
+            # by lifecycle-service at wf_metadata.pbo_degenerate_reason. Placing it at
+            # the top level would NOT be persisted (backtest-service cherry-picks only
+            # pbo_overall/pbo_overall_p_value there) → the cpcv_exempt path would never
+            # fire and the gate would silently grandfather-PASS. "cpcv_is_sharpe_unavailable"
+            # is distinguishable from the generic legacy_null grandfather-PASS.
+            "pbo_degenerate_reason": _cpcv_pbo_degenerate_reason,
         },
         # Wave 29 Pass A.2 — pbo_overall for TESTING → SHADOW/PAPER lifecycle gate.
         "pbo_overall": _cpcv_pbo_overall,
         "pbo_overall_p_value": _cpcv_pbo_p_value,
         "pbo_audit_actions": _cpcv_pbo_audit_actions,
+        # Wave 3 Track 3A — BIF (Backtest Inflation Factor): selection-bias ratio.
+        # In CPCV mode IS Sharpe tracking is a Wave 30 carry-forward; we use
+        # max(path_sharpes) as a documented proxy for the best-looking path.
+        # K_eff = n_paths (C(6,2)=15 default combinatorial paths).
+        # TS gate contract: reads "bif" and "k_eff" from this dict.
+        "bif": _cpcv_bif_result.get("bif"),
+        "k_eff": _cpcv_bif_result.get("k_eff"),
+        "bif_detail": _cpcv_bif_result,
+        # WRC / SPA — data-snooping guard on concatenated CPCV OOS P&L series.
+        # TS gate contract: reads wrc_result.p_value / spa_result.spa_consistent_p.
+        # When available=False the TS gate treats these as null → fail-CLOSED
+        # (unless PROMOTION_GRANDFATHER_PRE_PASS_E=true is explicitly set).
+        "wrc_result": _cpcv_wrc_result,
+        "spa_result": _cpcv_spa_result,
+        # C1 fix (2026-06-29): param_stability_status lets TS parameter-drift gate
+        # distinguish CPCV-exempt (honest "not computable") from genuine legacy-null
+        # (grandfather-pass) and plain-WF computed value.
+        # Modeled on the wfe_status: "cpcv_not_applicable" precedent above.
+        # Do NOT compute a fake param_stability — emit the honest exempt sentinel.
+        # TS consumer: read param_stability_status === "cpcv_not_applicable" and route
+        # to a distinct cpcv-exempt audit action instead of the legacy_null path.
+        "param_stability_status": "cpcv_not_applicable",
     }
 
 
@@ -622,6 +1042,9 @@ def run_walk_forward(
     # WF Fix 1: bar-level equity accumulator for intraday max DD computation.
     all_oos_equity_bars: list[float] = []
     all_oos_trades: list[dict] = []
+    # Multi-model WRC/SPA: per-window deduplicated P&L series (same dedup applied
+    # in accumulation below) so the (L, T) matrix reflects what was actually added.
+    per_window_oos_pnls: list[list[float]] = []
     # WFE accumulators — collect IS daily P&Ls for combined-fold IS Sharpe.
     # We run a lightweight IS backtest (no optimization, fixed config) so we
     # can compute WFE = combined_OOS_Sharpe / combined_IS_Sharpe.
@@ -893,6 +1316,8 @@ def run_walk_forward(
         # result is to add nothing (empty list), not to re-add the raw un-deduped data.
         _deduped_pnls = [r.get("pnl", 0.0) for r in _deduped_records]
         all_oos_pnls.extend(_deduped_pnls if len(_deduped_pnls) > 0 else [])
+        # Track per-window deduplicated series for multi-model WRC/SPA.
+        per_window_oos_pnls.append(list(_deduped_pnls))
         all_oos_equity.extend(oos_result.get("equity_curve", []))
         # WF Fix 1: collect raw bar-level equity for accurate intraday max DD.
         # equity_bars is a list[float] of bar-level equity values from the backtest result.
@@ -1147,6 +1572,15 @@ def run_walk_forward(
         # This value feeds the TESTING → SHADOW/PAPER lifecycle gate in pbo-gate.ts.
         # pbo_overall is additive to the existing pbo/pbo_pass/pbo_p_value keys —
         # downstream consumers that read the old keys are unaffected.
+        #
+        # FIX-1 (2026-06-29): track degenerate reason for wf_metadata injection.
+        # When IS==OOS in plain-WF (per-window IS Sharpe unavailable), the TS gate
+        # must BLOCK on the EXACT string "plain_wf_is_unavailable" — distinct from
+        # "cpcv_is_sharpe_unavailable" (CPCV exempt path) and distinct from the
+        # legacy-null grandfather-PROCEED path.  Placing the reason inside
+        # wf_metadata ensures backtest-service persists it (it stores wf_metadata
+        # wholesale) and lifecycle-service reads it at wf_metadata.pbo_degenerate_reason.
+        _plain_wf_pbo_degenerate_reason: Optional[str] = None
         try:
             from src.engine.pbo_gate import (
                 _build_cpcv_paths_from_window_results as _build_paths,
@@ -1176,13 +1610,31 @@ def run_walk_forward(
                         file=sys.stderr,
                     )
             else:
-                # NaN = sample-size guard fired
-                print(
-                    f"  PBO (gate): NaN — sample-size guard fired "
-                    f"(n_paths={pbo_gate_result.get('n_paths', 0)} < "
-                    f"{pbo_gate_result.get('sample_size_guard_threshold', 4)})",
-                    file=sys.stderr,
-                )
+                # pbo_overall_val is None (degenerate) or NaN (sample-size guard).
+                if _pbo_overall_val is None and pbo_gate_result.get("degenerate"):
+                    # FINDING-1 fix: degenerate IS==OOS case (plain-mode fallback also uses
+                    # is_sharpe=oos_sharpe when per-window IS unavailable). Emit audit action;
+                    # pbo_degenerate=True propagated to TS via the result dict below.
+                    # FIX-1 (2026-06-29): set degenerate reason for wf_metadata injection.
+                    # The EXACT string "plain_wf_is_unavailable" is the TS pbo-gate.ts
+                    # contract to route to BLOCK (distinct from cpcv_is_sharpe_unavailable).
+                    _plain_wf_pbo_degenerate_reason = "plain_wf_is_unavailable"
+                    pbo_audit_actions.append("walk_forward.pbo_cpcv_degenerate")
+                    print(
+                        "  PBO (gate): degenerate — IS==OOS for all paths "
+                        "(per-window IS Sharpe unavailable); emitting pbo_degenerate=True "
+                        "and pbo_degenerate_reason='plain_wf_is_unavailable' "
+                        "→ TS will BLOCK (walk_forward.pbo_cpcv_degenerate)",
+                        file=sys.stderr,
+                    )
+                else:
+                    # NaN = sample-size guard fired
+                    print(
+                        f"  PBO (gate): NaN — sample-size guard fired "
+                        f"(n_paths={pbo_gate_result.get('n_paths', 0)} < "
+                        f"{pbo_gate_result.get('sample_size_guard_threshold', 4)})",
+                        file=sys.stderr,
+                    )
         except Exception as _gate_pbo_exc:
             print(f"  PBO (gate): computation failed ({_gate_pbo_exc}).", file=sys.stderr)
             pbo_gate_result = None
@@ -1207,6 +1659,12 @@ def run_walk_forward(
     # we skip the accumulated path and use the opt score as combined IS Sharpe.
     _combined_is_sharpe: Optional[float] = None
 
+    # FINDING-3 fix: track WFE IS Sharpe basis to surface inflation visibility.
+    # optimizer_best_score_mean = IS is the cherry-picked optimizer best score (inflated vs base config)
+    # base_config_daily_pnls    = IS is from base-config backtests (unoptimized, correct denominator)
+    # unavailable               = IS Sharpe could not be computed (wfe_overall will be None)
+    _wfe_is_basis: str = "unavailable"
+
     # Check if all windows used optimizer IS scores (no raw IS daily P&Ls accumulated)
     _opt_is_sharpes = [
         w.get("_is_sharpe_opt")
@@ -1219,12 +1677,25 @@ def run_walk_forward(
 
     if _opt_is_sharpes:
         # When optimizer IS scores are available, use their mean as the combined IS Sharpe.
-        # This matches the semantic intent (IS Sharpe = optimizer-selected Sharpe).
+        # FINDING-3 note: optimizer.best_score is the cherry-picked maximum across parameter
+        # trials — higher than base-config IS Sharpe. WFE = OOS/IS is therefore deflated
+        # (conservative but misleading). wfe_is_basis="optimizer_best_score_mean" exposes
+        # this so operators know the WFE denominator is inflated.
         _combined_is_sharpe = float(np.mean(_opt_is_sharpes))
+        _wfe_is_basis = "optimizer_best_score_mean"  # FINDING-3 fix
+        print(
+            f"  WFE IS-basis: optimizer_best_score_mean "
+            f"({len(_opt_is_sharpes)} windows; mean={_combined_is_sharpe:.4f}) — "
+            f"IS Sharpe is optimizer-selected (cherry-picked max); "
+            f"WFE may be deflated vs base-config denominator. "
+            f"(walk_forward.wfe_is_basis_optimizer)",
+            file=sys.stderr,
+        )
     elif len(all_is_pnls) > 1:
         _is_pnl_arr = np.array(all_is_pnls)
         _is_std = float(np.std(_is_pnl_arr, ddof=1))
         _combined_is_sharpe = float(np.mean(_is_pnl_arr) / _is_std * np.sqrt(252)) if _is_std > 0 else 0.0
+        _wfe_is_basis = "base_config_daily_pnls"  # FINDING-3 fix
 
     if _combined_is_sharpe is not None and _combined_is_sharpe > 0:
         _wfe_dict = compute_wfe(is_sharpe=_combined_is_sharpe, oos_sharpe=agg_sharpe)
@@ -1269,6 +1740,162 @@ def run_walk_forward(
             file=sys.stderr,
         )
 
+    # ── Wave 3 Track 3A: BIF computation (plain/purged_embargo mode) ─────────────
+    # IS Sharpe  = _combined_is_sharpe — same value already computed for WFE;
+    #              no additional IS backtests required.
+    # OOS Sharpe = agg_sharpe (combined-fold OOS, not per-window average).
+    # K_eff      = len(windows) — each WF window is an independent IS/OOS draw.
+    # Reuses the same Sharpe pair as the WFE gate; pure derivation, no I/O.
+    _bif_result: dict = {}
+    try:
+        from src.engine.statistics.backtest_inflation_factor import (
+            compute_bif as _compute_bif,
+        )
+        _bif_is_sharpe = _combined_is_sharpe if _combined_is_sharpe is not None else 0.0
+        # B7 fix: k_eff counts only non-LOW-confidence windows (floored at 1).
+        # LOW-confidence windows have too few OOS trades to be reliable IS/OOS draws;
+        # counting them inflates k_eff which artificially reduces BIF.
+        _bif_k_eff = float(max(len([w for w in window_results if w.get("confidence") != "LOW"]), 1))
+        _bif_result = _compute_bif(
+            is_sharpe=_bif_is_sharpe,
+            wf_sharpe=agg_sharpe,
+            k_eff=_bif_k_eff,
+        )
+        print(
+            f"  BIF: {_bif_result.get('bif', 'N/A'):.4f} "
+            f"(IS={_bif_is_sharpe:.4f}, WF={agg_sharpe:.4f}, "
+            f"K_eff={_bif_k_eff:.0f}) "
+            f"→ {_bif_result.get('verdict', 'N/A')}",
+            file=sys.stderr,
+        )
+    except Exception as _bif_exc:
+        print(
+            f"  BIF: computation failed ({_bif_exc!r}) — "
+            f"skipping (non-blocking, bif=None in output).",
+            file=sys.stderr,
+        )
+
+    # ── WRC + SPA — multi-model data-snooping guard (plain/purged_embargo WF) ─
+    # Upgraded to proper multiple-comparison construction (White 2000 / Hansen 2005).
+    # Model universe: each WF window is one "model" (its OOS P&L series).
+    # k_eff = len(windows) — each window is an independent IS/OOS draw.
+    # n_total_trials from request.trial_n_total applies Šidák for scout snooping.
+    # Fail-soft on insufficient data — NEVER a fake passing p-value.
+    _WRC_MIN_OBS_PLAIN = 20
+    _plain_wrc_result: dict = {}
+    _plain_spa_result: dict = {}
+    _rng_seed_plain = int(os.environ.get("BACKTEST_SEED", "42"))
+    _trial_n_total_plain: int = max(1, getattr(request, "trial_n_total", 1))
+    _k_eff_plain: int = max(len(windows), 1)
+    # Windows with sufficient deduplicated OOS P&L series
+    _eligible_windows = [p for p in per_window_oos_pnls if len(p) >= _WRC_MIN_OBS_PLAIN]
+    # Deep-scan #5 MED (2026-06-29): mirror the CPCV-path M-2 floor (line ~659).
+    # The plain-WF path used a raw min(len) truncation, so a single barely-eligible
+    # 20-obs window dragged every other window down to 20 points → degenerate matrix /
+    # spurious WRC p-value. Exclude windows significantly shorter than the mean.
+    # WRC/SPA is non-blocking (unavailable → grandfather-pass), so stricter eligibility
+    # is the conservative direction — it never relaxes a gate.
+    if len(_eligible_windows) >= 2:
+        _all_window_lens = [len(w) for w in _eligible_windows]
+        _mean_window_len = sum(_all_window_lens) / len(_all_window_lens)
+        _window_floor = max(30.0, _mean_window_len * 0.5)
+        _windows_pre_floor = _eligible_windows[:]
+        _eligible_windows = [w for w in _eligible_windows if len(w) >= _window_floor]
+        for _ex_window in _windows_pre_floor:
+            if len(_ex_window) < _window_floor:
+                print(
+                    f"  WRC/SPA (plain): walk_forward.wrc_spa_short_path_excluded "
+                    f"window_len={len(_ex_window)} floor={_window_floor:.0f} mean={_mean_window_len:.0f}",
+                    file=sys.stderr,
+                )
+    if len(_eligible_windows) >= 2:
+        try:
+            from src.engine.statistics.hansens_spa import (
+                hansens_spa_multi as _spa_multi_plain,
+            )
+            from src.engine.statistics.whites_reality_check import (
+                whites_reality_check_multi as _wrc_multi_plain,
+            )
+            _min_window_len = min(len(w) for w in _eligible_windows)
+            _perf_matrix_plain = np.array(
+                [w[:_min_window_len] for w in _eligible_windows], dtype=float
+            )  # (L, T)
+            _bench_matrix_plain = np.zeros_like(_perf_matrix_plain)
+            _plain_wrc_result = _wrc_multi_plain(
+                performance_matrix=_perf_matrix_plain,
+                benchmark_matrix=_bench_matrix_plain,
+                n_total_trials=_trial_n_total_plain,
+                k_eff=_k_eff_plain,
+                rng_seed=_rng_seed_plain,
+            )
+            _plain_spa_result = _spa_multi_plain(
+                performance_matrix=_perf_matrix_plain,
+                benchmark_matrix=_bench_matrix_plain,
+                n_total_trials=_trial_n_total_plain,
+                k_eff=_k_eff_plain,
+                rng_seed=_rng_seed_plain + 1,
+            )
+            print(
+                f"  WRC multi (plain): p={_plain_wrc_result.get('p_value', 'N/A'):.4f} "
+                f"{'PASS' if _plain_wrc_result.get('passed') else 'FAIL'} | "
+                f"SPA consistent_p={_plain_spa_result.get('spa_consistent_p', 'N/A'):.4f} "
+                f"{'PASS' if _plain_spa_result.get('passed') else 'FAIL'} "
+                f"(n_models={len(_eligible_windows)}, T={_min_window_len}, "
+                f"n_total={_trial_n_total_plain}, sidak={_plain_wrc_result.get('sidak_adjusted')})",
+                file=sys.stderr,
+            )
+        except Exception as _plain_wrc_exc:
+            print(
+                f"  WRC/SPA multi (plain): computation failed ({_plain_wrc_exc!r}) — "
+                f"emitting available=false (non-blocking).",
+                file=sys.stderr,
+            )
+            _plain_wrc_result = {"available": False, "reason": str(_plain_wrc_exc)}
+            _plain_spa_result = {"available": False, "reason": str(_plain_wrc_exc)}
+    elif len(all_oos_pnls) >= _WRC_MIN_OBS_PLAIN:
+        # Fallback: < 2 eligible windows but concatenated series is long enough.
+        try:
+            from src.engine.statistics.hansens_spa import hansens_spa as _spa_fn_plain
+            from src.engine.statistics.whites_reality_check import (
+                whites_reality_check as _wrc_fn_plain,
+            )
+            _bm_zeros_plain = [0.0] * len(all_oos_pnls)
+            _plain_wrc_result = _wrc_fn_plain(
+                strategy_returns=all_oos_pnls,
+                benchmark_returns=_bm_zeros_plain,
+                rng_seed=_rng_seed_plain,
+            )
+            _plain_spa_result = _spa_fn_plain(
+                strategy_returns=all_oos_pnls,
+                benchmark_returns=_bm_zeros_plain,
+                rng_seed=_rng_seed_plain + 1,
+            )
+            print(
+                f"  WRC single (plain fallback, <2 eligible windows): "
+                f"p={_plain_wrc_result.get('p_value', 'N/A'):.4f} "
+                f"{'PASS' if _plain_wrc_result.get('passed') else 'FAIL'} "
+                f"(n_obs={len(all_oos_pnls)})",
+                file=sys.stderr,
+            )
+        except Exception as _plain_wrc_exc2:
+            print(
+                f"  WRC/SPA single (plain fallback): computation failed ({_plain_wrc_exc2!r}) — "
+                f"emitting available=false (non-blocking).",
+                file=sys.stderr,
+            )
+            _plain_wrc_result = {"available": False, "reason": str(_plain_wrc_exc2)}
+            _plain_spa_result = {"available": False, "reason": str(_plain_wrc_exc2)}
+    else:
+        _plain_insufficient = (
+            f"insufficient OOS observations: {len(all_oos_pnls)} < {_WRC_MIN_OBS_PLAIN} minimum"
+        )
+        _plain_wrc_result = {"available": False, "reason": _plain_insufficient}
+        _plain_spa_result = {"available": False, "reason": _plain_insufficient}
+        print(
+            f"  WRC/SPA (plain): skipped — {_plain_insufficient}",
+            file=sys.stderr,
+        )
+
     # ─── Prop firm compliance on aggregated OOS results ─────
     prop_compliance = None
     if all_oos_pnl_records and all_oos_trades:
@@ -1280,6 +1907,59 @@ def run_walk_forward(
             symbol=symbol, account_size=50_000,
             overnight_hold=_overnight_hold,
         )
+
+    # ─── FIX-2 (2026-06-29): DSR for plain-WF path ──────────────────────────
+    # CPCV path computes DSR via n_paths (15 combinations as proxy for n_trials).
+    # Plain-WF path had no DSR computation, so wf_metadata.dsr_pass was always
+    # absent → TS consumer saw undefined → silent legacy-null path (no gate).
+    #
+    # Wire compute_deflated_sharpe_ratio using:
+    #   observed_sharpe = agg_sharpe (combined OOS aggregate)
+    #   n_trials        = max(n_splits, trial_n_total) — n_splits as the floor
+    #                     (each fold is an independent IS/OOS evaluation;
+    #                      trial_n_total from request when optimization is active)
+    #   n_observations  = len(all_oos_pnls) (total OOS daily PnL count)
+    # On any failure: emit dsr_unavailable=True so it is auditable, not silent.
+    _plain_wf_dsr_result: dict = {}
+    _plain_wf_n_trials: int = max(
+        len(windows),
+        max(1, getattr(request, "trial_n_total", 1)),
+    )
+    # _plain_wf_dsr_pass: bool|None — read separately because compute_deflated_sharpe_ratio
+    # returns the gate under key "passes" (not "dsr_pass").  We normalise to "dsr_pass"
+    # in wf_metadata to match the CPCV path contract consumed by lifecycle-service.ts.
+    _plain_wf_dsr_pass: Optional[bool] = None
+    _plain_wf_dsr_unavailable: bool = False
+    try:
+        from src.engine.risk_metrics import compute_deflated_sharpe_ratio as _plain_dsr_fn
+        _plain_wf_dsr_result = _plain_dsr_fn(
+            observed_sharpe=agg_sharpe,
+            n_trials=_plain_wf_n_trials,
+            n_observations=max(len(all_oos_pnls), 2),
+        )
+        # compute_deflated_sharpe_ratio returns "passes" (bool); map to dsr_pass for wf_metadata.
+        _plain_wf_dsr_pass_raw = _plain_wf_dsr_result.get("passes")
+        _plain_wf_dsr_pass = bool(_plain_wf_dsr_pass_raw) if _plain_wf_dsr_pass_raw is not None else None
+        print(
+            f"  DSR (plain WF): dsr={_plain_wf_dsr_result.get('dsr')} "
+            f"passes={_plain_wf_dsr_pass} "
+            f"(n_trials={_plain_wf_n_trials}, n_obs={len(all_oos_pnls)})",
+            file=sys.stderr,
+        )
+    except Exception as _plain_wf_dsr_exc:
+        print(
+            f"  DSR (plain WF): computation failed ({_plain_wf_dsr_exc!r}) — "
+            f"emitting dsr_unavailable=True (auditable, not silent).",
+            file=sys.stderr,
+        )
+        _plain_wf_dsr_result = {
+            "dsr": None,
+            "passes": None,
+            "error": str(_plain_wf_dsr_exc),
+            "error_type": type(_plain_wf_dsr_exc).__name__,
+        }
+        _plain_wf_dsr_pass = False
+        _plain_wf_dsr_unavailable = True
 
     return {
         "confidence": overall_confidence,
@@ -1304,17 +1984,36 @@ def run_walk_forward(
         "n_splits": len(windows),
         "is_ratio": is_ratio,
         "param_stability": param_stability,
+        # C1 fix (2026-06-29): non-exempt sentinel so TS gate can distinguish
+        # a real computed param_stability from the CPCV "cpcv_not_applicable"
+        # sentinel and from genuine legacy-null (absent key / null).
+        "param_stability_status": "computed",
         "prop_compliance": prop_compliance,
         "execution_time_ms": elapsed_ms,
         # Wave 24 Pass 1 — Item 10: wf_metadata for downstream promotion gate.
         # mode: "plain" | "purged_embargo" | "cpcv"
         # purge_window: bars excluded between IS and OOS (purged_embargo mode)
         # embargo_pct: % of dataset embargoed after each OOS fold (approx)
+        #
+        # FIX-1 (2026-06-29): pbo_degenerate_reason — contract with pbo-gate.ts.
+        #   "plain_wf_is_unavailable" → TS pbo-gate.ts routes to BLOCK.
+        #   None → no degenerate case; standard pbo_overall logic applies.
+        #
+        # FIX-2 (2026-06-29): dsr_pass / dsr_unavailable — mirrors CPCV wf_metadata
+        #   contract (FIX 7, 2026-06-22).  dsr_pass=None = missing (legacy null);
+        #   dsr_pass=False = failed or unavailable; dsr_pass=True = passed.
+        #   dsr_unavailable=True signals computation failure (auditable, not silent).
         "wf_metadata": {
             "mode": _resolved_mode,
             "n_folds": len(windows),
             "embargo_pct": _embargo_pct if _resolved_mode == "purged_embargo" else 0.0,
             "purge_window": _purge_window if _resolved_mode == "purged_embargo" else 0,
+            "pbo_degenerate_reason": _plain_wf_pbo_degenerate_reason,
+            "dsr": _plain_wf_dsr_result.get("dsr"),
+            # dsr_pass: normalised from compute_deflated_sharpe_ratio's "passes" key.
+            # None = computation skipped / result absent; False = gate failed or unavailable.
+            "dsr_pass": _plain_wf_dsr_pass,
+            "dsr_unavailable": _plain_wf_dsr_unavailable,
         },
         # Wave 27.5 Pass B HIGH #1 — WFE fields (all optional; additive; backward compat)
         "wfe_overall": wfe_overall,
@@ -1322,6 +2021,11 @@ def run_walk_forward(
         "wfe_hard_floor": _wfe_hard_floor,
         "wfe_warn_floor": _wfe_warn_floor,
         "wfe_per_window": wfe_per_window,
+        # FINDING-3 fix: WFE IS-Sharpe basis tag.
+        # "optimizer_best_score_mean" = IS is cherry-picked optimizer max (deflates WFE vs base).
+        # "base_config_daily_pnls"    = IS is honest base-config IS run.
+        # "unavailable"               = IS Sharpe could not be computed (wfe_overall absent).
+        "wfe_is_basis": _wfe_is_basis,
         # Wave 27.5 Pass B HIGH #3 — PBO auto-wire (additive; None when < 4 windows)
         "pbo": pbo_result.get("pbo") if pbo_result else None,
         "pbo_pass": pbo_result.get("pbo_pass") if pbo_result else None,
@@ -1347,10 +2051,32 @@ def run_walk_forward(
             if pbo_gate_result
             else None
         ),
+        # FINDING-1 fix: discriminator flag so pbo-gate.ts can distinguish
+        # plain-mode CPCV-style degenerate (BLOCK via pbo_cpcv_degenerate_block) from
+        # genuine legacy-null (PROCEED via pbo_unavailable_legacy).
+        "pbo_degenerate": (
+            pbo_gate_result.get("degenerate", False)
+            if pbo_gate_result
+            else False
+        ),
         # Audit action names for the TS backtest-service to write to audit_log.
         # Contains: "walk_forward.pbo_computed" and optionally
-        #           "walk_forward.pbo_high_overfit_risk"
+        #           "walk_forward.pbo_high_overfit_risk" or "walk_forward.pbo_cpcv_degenerate"
         "pbo_audit_actions": pbo_audit_actions,
+        # Wave 3 Track 3A — BIF (Backtest Inflation Factor): IS/OOS Sharpe ratio.
+        # is_sharpe = _combined_is_sharpe (same as WFE input; no extra backtests).
+        # wf_sharpe = agg_sharpe (combined-fold OOS aggregate).
+        # k_eff     = n_splits (WF windows = independent IS/OOS draws).
+        # TS gate contract: reads "bif" (float) and "k_eff" (float) from this dict.
+        "bif": _bif_result.get("bif"),
+        "k_eff": _bif_result.get("k_eff"),
+        "bif_detail": _bif_result,
+        # WRC / SPA — data-snooping guard on concatenated plain/purged_embargo OOS P&L.
+        # TS gate contract: reads wrc_result.p_value / spa_result.spa_consistent_p.
+        # When available=False the TS gate treats these as null → fail-CLOSED
+        # (unless PROMOTION_GRANDFATHER_PRE_PASS_E=true is explicitly set).
+        "wrc_result": _plain_wrc_result,
+        "spa_result": _plain_spa_result,
     }
 
 

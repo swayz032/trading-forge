@@ -366,12 +366,36 @@ export async function recheckOllamaHealth(): Promise<{ healthy: boolean; reason?
  * ladder exhaustion (Step C). Does NOT affect the circuit breaker — callers
  * should call recheckOllamaHealth() on recovery to re-enable local routing.
  */
+let _lastOllamaUnhealthyNotifyMs = 0;
 export function setOllamaUnhealthy(reason: string): void {
+  const wasHealthy = OLLAMA_HEALTHY;
   OLLAMA_HEALTHY = false;
   logger.warn(
     { reason },
     "model-router: OLLAMA_HEALTHY set false by production caller — cloud fallback active",
   );
+  // Deep-scan #5 A-4 (2026-06-29): local Ollama going unhealthy was log-only — the operator
+  // got NO Discord ping even though cloud fallback now incurs cost and OLLAMA_HEALTHY has a
+  // documented stuck-false history. Fire a deduped warning (on the healthy→unhealthy edge,
+  // and at most once per OLLAMA_UNHEALTHY_NOTIFY_COOLDOWN_MS). Dynamic import avoids any
+  // static import cycle through this low-level module; fully fail-soft.
+  const cooldownMs = Number(process.env.OLLAMA_UNHEALTHY_NOTIFY_COOLDOWN_MS ?? 30 * 60 * 1000);
+  const now = Date.now();
+  if (wasHealthy || now - _lastOllamaUnhealthyNotifyMs > cooldownMs) {
+    _lastOllamaUnhealthyNotifyMs = now;
+    Promise.all([import("./notification-service.js"), import("../lib/notification-helpers.js")])
+      .then(([{ notifyWarning }, { appendFamilyGradePostscript }]) =>
+        notifyWarning(
+          "Local LLM (Ollama) unhealthy — cloud fallback active",
+          appendFamilyGradePostscript(
+            `model-router set OLLAMA_HEALTHY=false (reason: ${reason}). Transcript extraction is now routing to the cloud fallback (incurs cost). The system auto-rechecks on recovery; if this persists, the tower's Ollama may need a restart or model re-pull.`,
+            "The bot's local AI model went offline, so it switched to the paid cloud AI to keep working.",
+            "Nothing is broken — trading is unaffected. If this alert repeats for hours, tell Tony the tower may need a restart.",
+          ),
+        ),
+      )
+      .catch((e) => logger.warn({ err: e }, "model-router: ollama-unhealthy Discord notify failed (non-blocking)"));
+  }
 }
 
 /**
@@ -2775,6 +2799,20 @@ interface LocalLlmDownOpts {
 }
 
 async function emitLocalLlmDownSignal(opts: LocalLlmDownOpts): Promise<void> {
+  // H6: inline Ollama health recheck before firing the EXTRACTION LOST alert.
+  // The boot-time probe (checkTranscriptExtractorOllamaHealth at T+0) can catch
+  // gemma4:e2b during a 7GB cold-load and mark OLLAMA_HEALTHY=false as a false
+  // negative. A runtime recheck here (2–5s) aborts the spurious critical alert
+  // and resets OLLAMA_HEALTHY=true so the next extraction call routes locally.
+  const _h6Recheck = await recheckOllamaHealth();
+  if (_h6Recheck.healthy) {
+    logger.info(
+      { fallback_reason: opts.fallback_reason },
+      "model-router: EXTRACTION LOST alert aborted — Ollama recheck healthy; boot-time false-negative corrected",
+    );
+    return;
+  }
+
   const { messages, fallback_reason } = opts;
 
   // Best-effort: extract source_url from the user message JSON payload.
@@ -3083,5 +3121,8 @@ export async function callScoutExtractLlm(
   logger.error({ role }, "callScoutExtractLlm: both Ollama primary and cloud fallback exhausted");
   return null;
 }
+
+/** Test helper: call emitLocalLlmDownSignal directly. Production code never calls this. */
+export const __emitLocalLlmDownSignalForTests = emitLocalLlmDownSignal;
 
 export { MODEL_CONFIGS, KB_MANIFEST, FEWSHOT_ROLES };

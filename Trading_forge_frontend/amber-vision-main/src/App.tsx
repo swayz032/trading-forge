@@ -7,6 +7,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { ErrorBoundary } from "@/components/forge/ErrorBoundary";
 import Dashboard from "@/pages/Dashboard";
 import Strategies from "@/pages/Strategies";
+import StrategyLibrary from "@/pages/StrategyLibrary";
 import StrategyDetail from "@/pages/StrategyDetail";
 import Backtests from "@/pages/Backtests";
 import BacktestDetail from "@/pages/BacktestDetail";
@@ -44,6 +45,7 @@ const App = () => (
             <Route element={<AppLayout />}>
               <Route path="/" element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
               <Route path="/strategies" element={<ErrorBoundary><Strategies /></ErrorBoundary>} />
+              <Route path="/library" element={<ErrorBoundary><StrategyLibrary /></ErrorBoundary>} />
               <Route path="/strategies/:id" element={<ErrorBoundary><StrategyDetail /></ErrorBoundary>} />
               <Route path="/backtests" element={<ErrorBoundary><Backtests /></ErrorBoundary>} />
               <Route path="/backtests/:id" element={<ErrorBoundary><BacktestDetail /></ErrorBoundary>} />

@@ -19,6 +19,8 @@ import { cribApiRouter } from "./api/crib.js";
 import { kitchenApiRouter } from "./api/kitchen.js";
 import { recipeApiRouter } from "./api/recipe.js";
 import { anamSessionRouter } from "./api/anam-session.js";
+import { carterSessionRouter } from "./api/carter-session.js";
+import { carterInboxRouter } from "./api/carter-inbox.js";
 import { verifySession } from "../../lib/slumhouse/session.js";
 
 export const slumhouseRouter = Router();
@@ -111,6 +113,8 @@ slumhouseRouter.use(cribApiRouter);
 slumhouseRouter.use(kitchenApiRouter);
 slumhouseRouter.use(recipeApiRouter);
 slumhouseRouter.use(anamSessionRouter);
+slumhouseRouter.use(carterSessionRouter);
+slumhouseRouter.use(carterInboxRouter);
 
 // The Office — operator-only passcode-gated admin endpoints (auth/status/logout).
 slumhouseRouter.use(adminOfficeRouter);

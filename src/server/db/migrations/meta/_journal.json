@@ -1248,6 +1248,76 @@
       "when": 1782374400000,
       "tag": "0175_seed_auto_patch_loop_disabled",
       "breakpoints": true
+    },
+    {
+      "idx": 179,
+      "version": "7",
+      "when": 1782547200000,
+      "tag": "0176_system_journal_generation_prompt_version_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 180,
+      "version": "7",
+      "when": 1782614957607,
+      "tag": "0177_backtests_bif",
+      "breakpoints": true
+    },
+    {
+      "idx": 181,
+      "version": "7",
+      "when": 1782701357607,
+      "tag": "0178_research_trial_counter",
+      "breakpoints": true
+    },
+    {
+      "idx": 182,
+      "version": "7",
+      "when": 1782701417607,
+      "tag": "0179_paper_positions_stop_ohlc",
+      "breakpoints": true
+    },
+    {
+      "idx": 183,
+      "version": "7",
+      "when": 1782787817607,
+      "tag": "0180_paper_trades_correlation_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 184,
+      "version": "7",
+      "when": 1782874217607,
+      "tag": "0181_carter_issues",
+      "breakpoints": true
+    },
+    {
+      "idx": 185,
+      "version": "7",
+      "when": 1782960617607,
+      "tag": "0182_enabled_firms_topstep_primary",
+      "breakpoints": true
+    },
+    {
+      "idx": 186,
+      "version": "7",
+      "when": 1783047017607,
+      "tag": "0183_agent_jobs_started_at",
+      "breakpoints": true
+    },
+    {
+      "idx": 187,
+      "version": "7",
+      "when": 1783047017608,
+      "tag": "0184_workflow_backups",
+      "breakpoints": true
+    },
+    {
+      "idx": 188,
+      "version": "7",
+      "when": 1783133417607,
+      "tag": "0185_carter_memory",
+      "breakpoints": true
     }
   ]
 }

@@ -18,10 +18,14 @@
  *     3. Read synchronously by buildPromptSync() via _appendixCache.get(promptType)
  *   No async in the hot path. No breaking change to callers.
  *
- * Kill switch: system_parameters row with paramName="auto_patch_loop_enabled".
- *   Value "true" (exact string) enables the loop.  Any other value, a missing
- *   row, or a DB error disables the loop (FAIL-CLOSED) and emits
- *   auto_patch.loop_halted_skip.  Default seed value is "false" (disabled).
+ * Kill switch (3-MODE — lib/learning-loop-mode.ts): system_parameters row with
+ *   paramName="auto_patch_loop_enabled". This is an AUTONOMOUS loop, so it runs
+ *   ONLY at AUTOPILOT (numeric value = 2 → autonomousOn). OBSERVE (value = 1)
+ *   runs nightly ADVISORY intelligence only and does NOT wake this loop. Any
+ *   other value, a missing row, or a DB error disables the loop (FAIL-CLOSED)
+ *   and emits auto_patch.loop_halted_skip. Store 2 to enable autonomy, 1 for
+ *   observe-only, 0 to disable (never the string "true"/"false" — current_value
+ *   is a NUMERIC column).
  *
  * Min-sample guard: env PATTERN_AGGREGATOR_MIN_CRITIQUES (default 10).
  *   Fewer critiques than the threshold → audit + return "insufficient_samples".
@@ -40,6 +44,7 @@ import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { notifyWarning } from "./notification-service.js";
 import { logger } from "../lib/logger.js";
+import { readLearningLoopMode } from "../lib/learning-loop-mode.js";
 
 // ─── Constants ─────────────────────────────────────────────────
 
@@ -459,27 +464,30 @@ export async function runPatternAggregator(dryRun: boolean = false): Promise<Pat
 /**
  * Read kill switch from system_parameters.
  * FAIL-CLOSED: returns true (enabled) ONLY when the row is present AND
- * its value is exactly the string "true".  An absent row, any other
- * value, or a DB error all return false (disabled) so the LLM-mutation
+ * Number(current_value) >= 1.  An absent row, any value that parses to
+ * less than 1, or a DB error all return false (disabled) so the LLM-mutation
  * loop never fires without explicit operator opt-in.
+ *
+ * NOTE: current_value is a NUMERIC column — never store the string "true".
+ * Store 1 to enable, 0 to disable.
  *
  * F-5 fix (Wave B): inverted from the previous fail-open semantic.
  */
 async function _readKillSwitch(): Promise<boolean> {
+  // 3-MODE gate (lib/learning-loop-mode.ts): the autonomous mutation loop runs
+  // ONLY at AUTOPILOT (mode 2 → autonomousOn). OBSERVE (mode 1) runs nightly
+  // ADVISORY intelligence only and MUST NOT wake this loop — so we gate on
+  // `autonomousOn` (mode >= 2), NOT advisoryOn (mode >= 1).
+  // readLearningLoopMode() is fail-CLOSED: absent row / non-numeric ("true",
+  // "false") / DB error all resolve to mode 0 → autonomousOn=false → halt.
   try {
-    const rows = await db
-      .select({ currentValue: systemParameters.currentValue })
-      .from(systemParameters)
-      .where(eq(systemParameters.paramName, KILL_SWITCH_PARAM))
-      .limit(1);
-
-    // Absent row → DISABLED (fail-closed).
-    if (rows.length === 0) return false;
-    // Only the exact string "true" enables the loop.
-    return String(rows[0].currentValue).trim() === "true";
+    const { autonomousOn } = await readLearningLoopMode();
+    return autonomousOn;
   } catch (err) {
+    // Defense-in-depth — readLearningLoopMode is already fail-closed and does
+    // not throw, but a future contract change must never fail OPEN here.
     logger.warn({ err }, "Pattern aggregator: failed to read kill switch — defaulting to disabled (fail-closed)");
-    return false; // fail-closed
+    return false;
   }
 }
 
@@ -672,8 +680,9 @@ async function _maybeEmitReadinessNudge(eligibleCritiques: number): Promise<void
     `Learning loop READY but OFF — ${eligibleCritiques} trade critiques have accumulated ` +
     `(threshold ${MIN_CRITIQUES}). The bot can start improving its own strategy generator, ` +
     `but it's currently disabled for safety. ` +
-    `To turn it ON: set system_parameters.auto_patch_loop_enabled = 'true'. ` +
-    `Leaving it OFF is safe — the bot just won't self-improve.`;
+    `To turn it ON (AUTOPILOT): set system_parameters.auto_patch_loop_enabled = 2 (numeric). ` +
+    `Set = 1 for OBSERVE (nightly advisory intelligence only, no autonomous changes); ` +
+    `= 0 is fully OFF. Leaving it OFF is safe — the bot just won't self-improve.`;
 
   const fullBody = appendFamilyGradePostscript(
     operatorBody,

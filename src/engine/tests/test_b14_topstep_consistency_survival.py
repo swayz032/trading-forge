@@ -75,7 +75,15 @@ class TestTopstepConsistencyInSurvivalSim:
 
     After the fix: consistency_fail_rate must be near 1.0 (every spiky path
     fails — all n_sims identical).
+
+    FINDING-4 note: Topstep standard lane (default) disables the consistency cap.
+    These tests verify consistency-lane behavior, so they force TOPSTEP_PAYOUT_LANE=consistency.
     """
+
+    @pytest.fixture(autouse=True)
+    def _force_consistency_lane(self, monkeypatch):
+        """Force Topstep consistency payout lane so the 50% cap is active."""
+        monkeypatch.setenv("TOPSTEP_PAYOUT_LANE", "consistency")
 
     def test_topstep_spiky_paths_yield_high_consistency_fail_rate(self):
         """[FAILING BEFORE FIX] Spiky paths (day-0 = 60%+ of profit) → high consistency breach."""
@@ -286,7 +294,15 @@ class TestPayoutDenialExposed:
     This is the payout_denial metric: consistency violation = payout denied.
     The field is named "consistency_fail_rate" in the output schema.
     It must be non-zero when Topstep's 50% rule is violated.
+
+    FINDING-4 note: Standard lane (default) disables Topstep consistency cap.
+    These tests verify the rule fires when requested, so force consistency lane.
     """
+
+    @pytest.fixture(autouse=True)
+    def _force_consistency_lane(self, monkeypatch):
+        """Force Topstep consistency payout lane so the 50% cap is active."""
+        monkeypatch.setenv("TOPSTEP_PAYOUT_LANE", "consistency")
 
     def test_consistency_fail_rate_key_present(self):
         """consistency_fail_rate must exist in simulate_firm_survival output."""
@@ -445,8 +461,14 @@ class TestReplayDeterminism:
 class TestBothFirmsParityOnSamePaths:
     """Both Topstep and MFFU must enforce the 50% rule on the same spiky paths."""
 
-    def test_both_firms_flag_spiky_distribution(self):
-        """[FAILING BEFORE FIX] Both Topstep and MFFU must report consistency breaches."""
+    def test_both_firms_flag_spiky_distribution(self, monkeypatch):
+        """[FAILING BEFORE FIX] Both Topstep and MFFU must report consistency breaches.
+
+        FINDING-4 note: Topstep standard lane (default) disables consistency.
+        This test explicitly verifies consistency-lane behavior — force the lane.
+        """
+        monkeypatch.setenv("TOPSTEP_PAYOUT_LANE", "consistency")
+
         from src.engine.monte_carlo import simulate_firm_survival
 
         n_sims, n_steps = 400, 30

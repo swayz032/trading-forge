@@ -7,6 +7,21 @@ import {
   AreaSeries,
 } from "lightweight-charts";
 
+/**
+ * Entry/exit marker shape consumed by `src/lib/tradeMarkers.ts`. Mirrors the
+ * lightweight-charts `SeriesMarker<Time>` contract for the fields we use. The
+ * lightweight-charts types aren't re-exported cleanly here (see the `@ts-ignore`
+ * on the import above), so we define the structural type we rely on locally.
+ */
+export interface ChartMarker {
+  time: number;
+  position: "aboveBar" | "belowBar" | "inBar";
+  color: string;
+  shape: "arrowUp" | "arrowDown" | "circle" | "square";
+  text?: string;
+  size?: number;
+}
+
 interface LightweightChartProps {
   type?: "candlestick" | "line" | "area";
   data: any[];

@@ -24,6 +24,7 @@ import { db } from "../db/index.js";
 import { dataIntegrityFindings } from "../db/schema.js";
 import { createAlert } from "./alert-service.js";
 import { logger } from "../lib/logger.js";
+import { insertAuditRow } from "../lib/audit-log-helper.js";
 
 // ─── Finding shape ────────────────────────────────────────────────────────────
 
@@ -723,8 +724,22 @@ export async function runFullDataIntegritySuite(): Promise<{
         },
       },
     ];
-    // Best-effort persist the error finding
-    await persistFindings(reconciliationFindings).catch(() => {});
+    // FINDING #10 FIX: structured error logging + audit row instead of silent swallow
+    await persistFindings(reconciliationFindings).catch(async (persistErr: unknown) => {
+      const msg = persistErr instanceof Error ? persistErr.message : String(persistErr);
+      logger.error({ err: persistErr }, "data-integrity: persistFindings (recon error) failed — writing DLQ audit row");
+      await insertAuditRow({
+        action: "data_integrity.persist_findings_failed",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { stage: "reconciliation_error", findings_count: reconciliationFindings.length } as Record<string, unknown>,
+        result: { error: msg, dropped: true } as Record<string, unknown>,
+        status: "error",
+      }).catch((auditErr: unknown) => {
+        logger.error({ err: auditErr }, "data-integrity: DLQ audit row write also failed");
+      });
+    });
   }
 
   try {
@@ -743,7 +758,22 @@ export async function runFullDataIntegritySuite(): Promise<{
         },
       },
     ];
-    await persistFindings(driftFindings).catch(() => {});
+    // FINDING #10 FIX: structured error logging + audit row instead of silent swallow
+    await persistFindings(driftFindings).catch(async (persistErr: unknown) => {
+      const msg = persistErr instanceof Error ? persistErr.message : String(persistErr);
+      logger.error({ err: persistErr }, "data-integrity: persistFindings (drift error) failed — writing DLQ audit row");
+      await insertAuditRow({
+        action: "data_integrity.persist_findings_failed",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { stage: "drift_detection_error", findings_count: driftFindings.length } as Record<string, unknown>,
+        result: { error: msg, dropped: true } as Record<string, unknown>,
+        status: "error",
+      }).catch((auditErr: unknown) => {
+        logger.error({ err: auditErr }, "data-integrity: DLQ audit row write also failed");
+      });
+    });
   }
 
   const allFindings = [...reconciliationFindings, ...driftFindings];

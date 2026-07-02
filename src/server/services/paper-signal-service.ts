@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { db } from "../db/index.js";
-import { paperSessions, paperPositions, paperTrades, strategies, paperSignalLogs, skipDecisions, shadowSignals, preMarketSessions, brokerAccounts, lifecycleShadowSignals } from "../db/schema.js";
-import { openPosition, closePosition } from "./paper-execution-service.js";
+import { paperSessions, paperPositions, paperTrades, strategies, paperSignalLogs, skipDecisions, shadowSignals, preMarketSessions, brokerAccounts, lifecycleShadowSignals, accountStrategyAssignments } from "../db/schema.js";
+import { openPosition, closePosition, forceCloseAllPositions } from "./paper-execution-service.js";
 import { checkRiskGate } from "./paper-risk-gate.js";
 import { evaluateContextGate } from "./context-gate-service.js";
 import { checkAntiSetupGate, type AntiSetupGateResult } from "./anti-setup-gate-service.js";
@@ -31,6 +31,7 @@ import { getSessionShapeScore } from "./volume-profile-service.js";
 import { evaluateConfirmingIndicators, type ConfirmingIndicator } from "./confirming-indicator-evaluator.js";
 // W23H.4: confluence-weighted sizing — replaces legacy dynamic_atr block
 import { computeRiskDerivedContracts, type RiskSizingInputs } from "../lib/risk-sizing.js";
+import { evidenceBackedFactorCount } from "../lib/confluence-provenance.js";
 // W23H.4: audit row writer for sizing.confluence_multiplier_applied
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 // W23H.3: per-strategy allowed_entry_windows time gates
@@ -73,7 +74,7 @@ import { getDecayTelemetryThreshold } from "../lib/confluence-decay.js";
 import { getNearestLiquidity } from "./liquidity-map-service.js";
 import { notifyCritical } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
-import { shadowSignalsTotal } from "../lib/metrics-registry.js";
+import { shadowSignalsTotal, auditWriteFailuresTotal } from "../lib/metrics-registry.js";
 // Wave 26 Group B Task 3: SMT live bridge — wires Python compute_smt_divergence()
 // into Path C SignalContext. Fail-soft: returns null snapshot on any error →
 // evalSmtConfirmation returns reason="smt_unavailable" (same fail-open as before).
@@ -370,9 +371,10 @@ interface StrategyConfig {
 }
 
 interface StopLossConfig {
-  type: "atr" | "fixed";
+  type: "atr" | "fixed" | "absolute_level";
   multiplier?: number;   // for ATR stop
-  amount?: number;        // for fixed stop
+  amount?: number;        // for fixed stop (distance from entry)
+  level?: number;         // for absolute_level stop (exact stop PRICE, not distance)
   atr_period?: number;    // default 14
 }
 
@@ -1048,6 +1050,35 @@ export function VWAP(bars: Bar[]): number {
   return cumulativeTPV / cumulativeVolume;
 }
 
+/**
+ * Filter a bar buffer to bars belonging to the SAME CME Globex trading session
+ * as the last bar in the buffer.
+ *
+ * CME Globex session rule: trading day N runs from 18:00 ET on day N-1 through
+ * 17:00 ET on day N. This mirrors the backtester's _assign_globex_session_id()
+ * in core.py (bars at ET hour >= 18 belong to the NEXT calendar day's session_id).
+ *
+ * Uses toFuturesTradingDayString (CME +7h shift: 17:00 ET → midnight next day)
+ * to assign each bar to a Globex day key. Bars sharing the same key as the last
+ * bar are in the current session.
+ *
+ * Parity: closes the VWAP reset gap vs backtester. The paper-trading-stream bar
+ * buffer resets at ET midnight (toEasternDateString), NOT at the 18:00 ET Globex
+ * boundary. Filtering here ensures VWAP only spans the current Globex session,
+ * matching core.py::compute_vwap_with_bands().
+ *
+ * Exported for unit testing.
+ */
+export function filterToGlobexSession(bars: Bar[]): Bar[] {
+  if (bars.length === 0) return bars;
+  const currentSessionKey = toFuturesTradingDayString(
+    new Date(bars[bars.length - 1].timestamp),
+  );
+  return bars.filter(
+    (b) => toFuturesTradingDayString(new Date(b.timestamp)) === currentSessionKey,
+  );
+}
+
 export function BollingerBands(
   closes: number[],
   period: number,
@@ -1080,7 +1111,7 @@ interface ICTBridgeResult {
   error?: string;
 }
 
-function computeIndicators(barBuffer: Bar[]): IndicatorValues {
+export function computeIndicators(barBuffer: Bar[]): IndicatorValues {
   const closes = barBuffer.map((b) => b.close);
   const vals: IndicatorValues = {};
 
@@ -1104,8 +1135,13 @@ function computeIndicators(barBuffer: Bar[]): IndicatorValues {
     vals[`atr_${p}`] = ATR(barBuffer, p);
   }
 
-  // VWAP (full buffer = intraday assumption; caller resets buffer daily)
-  vals["vwap"] = VWAP(barBuffer);
+  // VWAP: session-resetting at 18:00 ET Globex boundary (parity with backtester
+  // compute_vwap_with_bands/_assign_globex_session_id in core.py). The bar buffer
+  // resets at ET midnight (toEasternDateString), NOT 18:00 ET —
+  // filterToGlobexSession() corrects this so VWAP spans only the current CME
+  // trading session, eliminating pre-session bars from contaminating the anchor.
+  const sessionBarsForVwap = filterToGlobexSession(barBuffer);
+  vals["vwap"] = sessionBarsForVwap.length > 0 ? VWAP(sessionBarsForVwap) : NaN;
 
   // Bollinger Bands at common periods
   for (const p of [20]) {
@@ -1125,6 +1161,21 @@ function computeIndicators(barBuffer: Bar[]): IndicatorValues {
     vals["low"] = currentBar.low;
     vals["close"] = currentBar.close;
     vals["volume"] = currentBar.volume;
+  }
+
+  // volume_rolling_mean_20: 20-bar rolling mean of bar volume.
+  // Enables evalDeltaOrVolumeSignature (delta_or_volume_signature factor, weight 0.08)
+  // to evaluate the volume spike condition rather than falling through to
+  // "volume_rolling_mean_unavailable_pending_accumulation".
+  // Parity: matches backtester rolling mean over the last 20 bars.
+  // Absent for the first 19 bars of any session — that is expected and handled by
+  // evalDeltaOrVolumeSignature's existing fallback path.
+  const volSeries = barBuffer
+    .map((b) => b.volume)
+    .filter((v) => Number.isFinite(v));
+  if (volSeries.length >= 20) {
+    vals["volume_rolling_mean_20"] =
+      volSeries.slice(-20).reduce((s, v) => s + v, 0) / 20;
   }
 
   return vals;
@@ -1433,7 +1484,23 @@ async function fetchICTIndicators(
 
 // ─── Stop-Loss Check ────────────────────────────────────────
 
-function checkStopLoss(
+/**
+ * Evaluate whether a stop-loss has been hit for an open position.
+ *
+ * Exported for unit testing only — callers outside this module should not
+ * import this function directly.
+ *
+ * Stop types:
+ *   "atr"            — dynamic: stop DISTANCE = multiplier × ATR
+ *   "fixed"          — static: stop DISTANCE = config.amount (subtracted from entryPrice)
+ *   "absolute_level" — static: stop LEVEL = config.level (exact price, not a distance)
+ *
+ * The "absolute_level" type is used for the BE+1tick override after TP1 fills
+ * (Style C). It carries the exact stop PRICE rather than a distance from entry,
+ * preventing the sign inversion that the "fixed"/"atr" types produce when the
+ * stop is ABOVE entry (i.e., BE+1tick for a long is entry+1tick, not entry-1tick).
+ */
+export function checkStopLoss(
   position: { side: string; entryPrice: string },
   bar: Bar,
   stopConfig: StopLossConfig | undefined,
@@ -1442,6 +1509,19 @@ function checkStopLoss(
   if (!stopConfig) return { hit: false, stopPrice: 0 };
 
   const entryPrice = Number(position.entryPrice);
+
+  // Defect 1 fix: absolute_level carries the exact stop PRICE — no arithmetic needed.
+  // Used for BE+1tick override after Style C TP1 fills (tp1BeStopMap mechanism).
+  if (stopConfig.type === "absolute_level") {
+    const level = stopConfig.level ?? 0;
+    if (level === 0) return { hit: false, stopPrice: 0 };
+    if (position.side === "long") {
+      return { hit: bar.low <= level, stopPrice: level };
+    } else {
+      return { hit: bar.high >= level, stopPrice: level };
+    }
+  }
+
   let stopDistance: number;
 
   if (stopConfig.type === "atr") {
@@ -1457,6 +1537,7 @@ function checkStopLoss(
     }
     stopDistance = atrVal * (stopConfig.multiplier ?? 2);
   } else {
+    // "fixed" type: amount is the distance from entry price
     stopDistance = stopConfig.amount ?? 0;
     if (stopDistance === 0) return { hit: false, stopPrice: 0 };
   }
@@ -1752,7 +1833,11 @@ export async function evaluateSignals(
   barBuffer: Bar[],
   context?: { correlationId?: string },
 ): Promise<void> {
-  const correlationId = context?.correlationId;
+  // FIX MED-2 (2026-06-29): self-generate correlationId when caller omits it.
+  // Previously: context?.correlationId was always undefined → paper_trades.correlation_id
+  // was always NULL (migration 0180 column never populated). Now every bar cycle
+  // threads a real UUID through all downstream audit rows + closePosition + paper_trades.
+  const correlationId = context?.correlationId ?? randomUUID();
   const span = tracer.startSpan("paper.signal_evaluation");
   span.setAttribute("symbol", symbol);
   span.setAttribute("session_id", sessionId);
@@ -2426,7 +2511,10 @@ export async function evaluateSignals(
                     } as Record<string, unknown>,
                     result: { reducedContracts } as Record<string, unknown>,
                     correlationId: fillCorrelationId,
-                  }).catch(() => {});
+                  }).catch((e: unknown) => {
+                    logger.warn({ e, action: "pending_entry.contracts_reduced_news_window" }, "audit write failed — non-blocking");
+                    auditWriteFailuresTotal.labels({ action: "pending_entry.contracts_reduced_news_window" }).inc();
+                  });
                   logger.info(
                     {
                       sessionId,
@@ -2444,8 +2532,27 @@ export async function evaluateSignals(
             }
           }
         } catch (_macroErr) {
-          // Fail-OPEN: calendar/news failure is non-blocking (same as signal-time policy).
-          // Don't drop a pending entry just because the calendar service hiccuped.
+          // Fail-CLOSED: calendar/news check failure — cannot confirm the T1 window is clear.
+          // Drop the pending entry (consistent with Gate 3 lunch-blackout fail-CLOSED policy
+          // and the institutional rule that unknown macro risk = block, not allow).
+          pendingDropReason = "macro_news_check_error";
+          logger.warn(
+            { sessionId, symbol, correlationId: fillCorrelationId },
+            "H3 Gate 4: T1 news check error at fill time — dropping pending entry (fail-CLOSED)",
+          );
+          insertAuditRow({
+            action: "paper.fill_blocked_news_check_error",
+            entityType: "paper_session",
+            entityId: sessionId,
+            decisionAuthority: "system",
+            status: "warning",
+            input: { sessionId, symbol, side: pendingEntry.side } as Record<string, unknown>,
+            result: { reason: "macro_news_check_error", failClosed: true } as Record<string, unknown>,
+            correlationId: fillCorrelationId,
+          }).catch((e: unknown) => {
+            logger.warn({ e, action: "paper.fill_blocked_news_check_error" }, "audit write failed — non-blocking");
+            auditWriteFailuresTotal.labels({ action: "paper.fill_blocked_news_check_error" }).inc();
+          });
         }
       }
 
@@ -2538,7 +2645,11 @@ export async function evaluateSignals(
           } as Record<string, unknown>,
           result: { dropped: true, reason: pendingDropReason } as Record<string, unknown>,
           correlationId: fillCorrelationId,
-        }).catch(() => {});
+        }).catch((e: unknown) => {
+          const _dropAct = `pending_entry.dropped_${pendingDropReason}`;
+          logger.warn({ e, action: _dropAct }, "audit write failed — non-blocking");
+          auditWriteFailuresTotal.labels({ action: "pending_entry.dropped" }).inc();
+        });
 
         // Propagate span attribute then short-circuit — skip to next bar
         span.setAttribute("pending_entry_dropped", true);
@@ -2867,9 +2978,16 @@ export async function evaluateSignals(
     // C-3: When Style C TP1 has been crossed, override the stop config with the
     // BE+1tick level stored in tp1BeStopMap. This ensures the risk guarantee
     // (stop moves to break-even after TP1 fills) is honored every bar.
+    //
+    // Defect 1 fix: use type:"absolute_level" (not type:"fixed") so checkStopLoss
+    // receives the EXACT stop PRICE rather than a distance.  The old type:"fixed"
+    // path computed stopLevel = entryPrice - distance = entryPrice - 1tick, which
+    // is BELOW entry for a long — 2 ticks wrong.  type:"absolute_level" evaluates
+    // bar.low <= level directly, which is the correct parity with backtester.py
+    // (be_stop = entry_p + tick; hit when bar.low <= be_stop).
     const tp1BeStop = tp1BeStopMap.get(openPos.id);
     const effectiveStopConfig: StopLossConfig | undefined = tp1BeStop != null
-      ? { type: "fixed", amount: Math.abs(Number(openPos.entryPrice) - tp1BeStop) }
+      ? { type: "absolute_level", level: tp1BeStop }
       : config.stop_loss;
     const stopResult = checkStopLoss(openPos, bar, effectiveStopConfig, indicators);
     stopHit = stopResult.hit;
@@ -3005,7 +3123,12 @@ export async function evaluateSignals(
     try {
       const today = toFuturesTradingDayString(new Date(bar.timestamp));
       const [pmSession] = await db
-        .select({ blackoutWindows: preMarketSessions.blackoutWindows })
+        .select({
+          blackoutWindows: preMarketSessions.blackoutWindows,
+          // Gap 3 (observable): read first_30min_volume_ratio so we can surface
+          // the null → tells operator the DAL is not yet wired.
+          first30minVolumeRatio: preMarketSessions.first30minVolumeRatio,
+        })
         .from(preMarketSessions)
         .where(and(
           eq(preMarketSessions.sessionDate, today),
@@ -3067,6 +3190,19 @@ export async function evaluateSignals(
           }
         }
       }
+
+      // ── Parity Gap 3 (observable): first_30min_volume_ratio null diagnostics ──
+      // first_30min_volume_ratio is structurally null until priorSessionVolume is
+      // wired in pre-market-routine.ts. Log at debug so the paper/backtest
+      // divergence is discoverable in telemetry without blocking trading.
+      // delta_or_volume_signature uses volume_rolling_mean_20 from the bar buffer
+      // as the operative volume reference when this ratio is unavailable.
+      if (pmSession !== undefined && pmSession.first30minVolumeRatio === null) {
+        logger.debug(
+          { sessionId, symbol, correlationId, sessionDate: today },
+          "paper-parity: first_30min_volume_ratio null (priorSessionVolume DAL not wired); delta_or_volume_signature uses bar-derived volume_rolling_mean_20",
+        );
+      }
     } catch (blackoutErr) {
       // Fail-open: query/parse errors → no block
       logger.warn({ err: blackoutErr, sessionId, symbol }, "W23H.F: pre-market blackout gate error — fail-open, proceeding");
@@ -3105,15 +3241,51 @@ export async function evaluateSignals(
             status: "warning",
             input: { firmId, sessionDate, combinedPnL: dllResult.combinedPnL },
             result: { dll_pct: dllResult.dllPct, by_symbol: dllResult.pnLBySymbol, threshold: dllResult.forceCloseThreshold },
-          }).catch(() => {});
-          // Force-close path: trigger forceCloseAllPositions via dynamic import
-          // (same pattern as kill-switch.ts → paper-execution-service.ts).
-          // Fire-and-forget: new entry is already blocked; close completes async.
-          import("./paper-execution-service.js")
-            .then(({ forceCloseAllPositions }) =>
-              forceCloseAllPositions(`cross_symbol_dll_force_close:${firmId}:${dllResult.dllPct.toFixed(3)}`)
-            )
-            .catch((err: unknown) => logger.error({ err, sessionId, firmId }, "W23H.F: forceCloseAllPositions dynamic import failed"));
+          }).catch((e: unknown) => {
+            logger.warn({ e, action: "cross_symbol_force_close_triggered" }, "audit write failed — non-blocking");
+            auditWriteFailuresTotal.labels({ action: "cross_symbol_force_close_triggered" }).inc();
+          });
+          // Force-close path: await forceCloseAllPositions (static import — no circular
+          // dependency: paper-signal-service already imports paper-execution-service at
+          // the top; paper-execution-service only dynamically imports paper-signal-service
+          // for updateGovernorOnTrade which runs on a DIFFERENT code path).
+          // FINDING #2 FIX: prior fire-and-forget dynamic import meant a module-load
+          // failure or thrown exception silently swallowed — positions stayed open past
+          // the firm DLL breach with no audit row and no operator alert.
+          try {
+            await forceCloseAllPositions(
+              `cross_symbol_dll_force_close:${firmId}:${dllResult.dllPct.toFixed(3)}`
+            );
+          } catch (fcErr: unknown) {
+            const fcMsg = fcErr instanceof Error ? fcErr.message : String(fcErr);
+            logger.error(
+              { err: fcErr, sessionId, firmId, dllPct: dllResult.dllPct },
+              "W23H.F: forceCloseAllPositions FAILED — positions may still be open past firm DLL; manual close required",
+            );
+            insertAuditRow({
+              action: "cross_symbol_force_close_failed",
+              entityType: "paper_session",
+              entityId: sessionId,
+              decisionAuthority: "system",
+              status: "error",
+              input: { firmId, dllPct: dllResult.dllPct, combinedPnL: dllResult.combinedPnL } as Record<string, unknown>,
+              result: { error: fcMsg, requiresManualClose: true } as Record<string, unknown>,
+            }).catch((e: unknown) => {
+              logger.warn({ e, action: "cross_symbol_force_close_failed" }, "audit write failed — non-blocking");
+              auditWriteFailuresTotal.labels({ action: "cross_symbol_force_close_failed" }).inc();
+            });
+            notifyCritical(
+              "CRITICAL: Cross-symbol DLL force-close FAILED",
+              // Deep-scan #5 (2026-06-29): family-grade postscript (was the unwrapped
+              // notifyCritical the postscript lint flagged — pre-existing at HEAD).
+              appendFamilyGradePostscript(
+                `firm: ${firmId} dllPct: ${dllResult.dllPct.toFixed(3)} — Positions may still be open past the breach threshold. Manual close required immediately. err: ${fcMsg}`,
+                "The bot tried to auto-close all positions after hitting the daily loss limit but the close FAILED.",
+                "URGENT: open positions may still be live past the safety limit. Call Tony now and/or flatten manually in the broker.",
+              ),
+              { firmId, dllPct: dllResult.dllPct, sessionId, error: fcMsg },
+            );
+          }
         } else if (dllResult.action === "halt") {
           dllHaltBlocked = true;
           span.setAttribute("cross_symbol_dll_halt", true);
@@ -3130,7 +3302,10 @@ export async function evaluateSignals(
             status: "warning",
             input: { firmId, sessionDate, combinedPnL: dllResult.combinedPnL },
             result: { dll_pct: dllResult.dllPct, by_symbol: dllResult.pnLBySymbol, threshold: dllResult.haltThreshold },
-          }).catch(() => {});
+          }).catch((e: unknown) => {
+            logger.warn({ e, action: "cross_symbol_dll_halt_triggered" }, "audit write failed — non-blocking");
+            auditWriteFailuresTotal.labels({ action: "cross_symbol_dll_halt_triggered" }).inc();
+          });
           db.insert(paperSignalLogs).values({
             sessionId,
             symbol,
@@ -3166,7 +3341,10 @@ export async function evaluateSignals(
             status: "warning",
             input: { firmId, sessionDate, combinedPnL: dllResult.combinedPnL } as Record<string, unknown>,
             result: { dll_pct: dllResult.dllPct, reduce_factor: dllResult.reduceSizeFactor, reduce_threshold: dllResult.reduceThreshold } as Record<string, unknown>,
-          }).catch(() => {});
+          }).catch((e: unknown) => {
+            logger.warn({ e, action: "sizing.dll_reduce_size_band_entered" }, "audit write failed — non-blocking");
+            auditWriteFailuresTotal.labels({ action: "sizing.dll_reduce_size_band_entered" }).inc();
+          });
         }
       } catch (dllErr) {
         // Fail-CLOSED: loss-throttling gate must not allow entry when data is unavailable.
@@ -3182,7 +3360,10 @@ export async function evaluateSignals(
           input: { sessionId, symbol, error: String(dllErr) } as Record<string, unknown>,
           result: { blocked: true, reason: "cross_symbol_dll_gate_error" } as Record<string, unknown>,
           correlationId: correlationId ?? null,
-        }).catch(() => {});
+        }).catch((e: unknown) => {
+          logger.warn({ e, action: "consistency.cross_symbol_dll_failclosed" }, "audit write failed — non-blocking");
+          auditWriteFailuresTotal.labels({ action: "consistency.cross_symbol_dll_failclosed" }).inc();
+        });
       }
     }
 
@@ -3240,7 +3421,10 @@ export async function evaluateSignals(
           status: "info",
           input: { symbol, perSessionCap, envDefault: getDailyTradeCapEnvDefault(), trades_today: tradesToday },
           result: { effective_cap: capResult.effectiveCap, reason: capResult.reason },
-        }).catch(() => {});
+        }).catch((e: unknown) => {
+          logger.warn({ e, action: "consistency.daily_trade_cap_blocked" }, "audit write failed — non-blocking");
+          auditWriteFailuresTotal.labels({ action: "consistency.daily_trade_cap_blocked" }).inc();
+        });
       }
     } catch (capErr) {
       // Fail-OPEN per CLAUDE.md §4 documented policy: let trade slip rather than
@@ -3255,7 +3439,10 @@ export async function evaluateSignals(
         input: { sessionId, symbol, error: String(capErr) } as Record<string, unknown>,
         result: { allowed: true, reason: "daily_trade_cap_db_error_fail_open" } as Record<string, unknown>,
         correlationId: correlationId ?? null,
-      }).catch(() => {});
+      }).catch((e: unknown) => {
+        logger.warn({ e, action: "consistency.daily_trade_cap_failopen" }, "audit write failed — non-blocking");
+        auditWriteFailuresTotal.labels({ action: "consistency.daily_trade_cap_failopen" }).inc();
+      });
     }
 
     // ─── Wave 26 Pass K Phase 2 (2026-05-26) — Lunch Blackout Gate (11:30-13:30 ET) ──
@@ -3301,7 +3488,10 @@ export async function evaluateSignals(
           status: "info",
           input: { symbol, window_spec: lunchResult.windowSpec, bar_timestamp: bar.timestamp, per_strategy_disabled: perStrategyDisabled },
           result: { reason: lunchResult.reason, per_strategy_override_applied: lunchResult.perStrategyOverrideApplied },
-        }).catch(() => {});
+        }).catch((e: unknown) => {
+          logger.warn({ e, action: "consistency.lunch_blackout_blocked" }, "audit write failed — non-blocking");
+          auditWriteFailuresTotal.labels({ action: "consistency.lunch_blackout_blocked" }).inc();
+        });
       } else if (lunchResult.perStrategyOverrideApplied) {
         // Per-strategy override fired — emit info audit for observability (operator
         // can monitor which strategies are bypassing the institutional default).
@@ -3313,7 +3503,10 @@ export async function evaluateSignals(
           status: "info",
           input: { symbol, strategy_id: sessionConfig.strategyId, window_spec: lunchResult.windowSpec },
           result: { reason: lunchResult.reason },
-        }).catch(() => {});
+        }).catch((e: unknown) => {
+          logger.warn({ e, action: "consistency.lunch_blackout_per_strategy_override" }, "audit write failed — non-blocking");
+          auditWriteFailuresTotal.labels({ action: "consistency.lunch_blackout_per_strategy_override" }).inc();
+        });
       }
     } catch (lunchErr) {
       // Fail-CLOSED: the lunch blackout gate guards a known-bad time window. An
@@ -3330,7 +3523,10 @@ export async function evaluateSignals(
         input: { sessionId, symbol, error: String(lunchErr) } as Record<string, unknown>,
         result: { blocked: true, reason: "lunch_blackout_gate_unexpected_error" } as Record<string, unknown>,
         correlationId: correlationId ?? null,
-      }).catch(() => {});
+      }).catch((e: unknown) => {
+        logger.warn({ e, action: "consistency.lunch_blackout_failclosed" }, "audit write failed — non-blocking");
+        auditWriteFailuresTotal.labels({ action: "consistency.lunch_blackout_failclosed" }).inc();
+      });
     }
 
     // ─── FIX A (2026-06-22): Consistency gate — Topstep + MFFU 50% single-day rule ──
@@ -3380,7 +3576,10 @@ export async function evaluateSignals(
             input: { sessionId, symbol, firmId: sessionFirmId } as Record<string, unknown>,
             result: { blocked: true, reason: consistencyResult.reason } as Record<string, unknown>,
             correlationId: correlationId ?? null,
-          }).catch(() => {});
+          }).catch((e: unknown) => {
+            logger.warn({ e, action: "consistency.50pct_blocked" }, "audit write failed — non-blocking");
+            auditWriteFailuresTotal.labels({ action: "consistency.50pct_blocked" }).inc();
+          });
         } else {
           // Emit gate_cleared or 40pct_warned depending on gate state
           const auditAction = consistencyResult.reason === "ok"
@@ -3401,7 +3600,10 @@ export async function evaluateSignals(
             input: { sessionId, symbol, firmId: sessionFirmId } as Record<string, unknown>,
             result: { blocked: false, reason: consistencyResult.reason } as Record<string, unknown>,
             correlationId: correlationId ?? null,
-          }).catch(() => {});
+          }).catch((e: unknown) => {
+            logger.warn({ e, action: auditAction }, "audit write failed — non-blocking");
+            auditWriteFailuresTotal.labels({ action: auditAction }).inc();
+          });
         }
       } catch (consistencyErr) {
         // Fail-OPEN: payout-eligibility gate — a DB error does NOT block entry.
@@ -3420,7 +3622,10 @@ export async function evaluateSignals(
           input: { sessionId, symbol, firmId: sessionFirmId, error: String(consistencyErr) } as Record<string, unknown>,
           result: { blocked: false, reason: "consistency_gate_db_error_fail_open" } as Record<string, unknown>,
           correlationId: correlationId ?? null,
-        }).catch(() => {});
+        }).catch((e: unknown) => {
+          logger.warn({ e, action: "consistency.gate_failopen" }, "audit write failed — non-blocking");
+          auditWriteFailuresTotal.labels({ action: "consistency.gate_failopen" }).inc();
+        });
       }
     }
 
@@ -3553,7 +3758,10 @@ export async function evaluateSignals(
           input: { sessionId, symbol, firmId: sessionRow.firmId, side: config.side } as Record<string, unknown>,
           result: { blocked: true, conflictUnderlying: hedge.conflictUnderlying, conflictSide: hedge.conflictSide } as Record<string, unknown>,
           correlationId: correlationId ?? null,
-        }).catch(() => {});
+        }).catch((e: unknown) => {
+          logger.warn({ e, action: "compliance.cross_account_hedge_blocked" }, "audit write failed — non-blocking");
+          auditWriteFailuresTotal.labels({ action: "compliance.cross_account_hedge_blocked" }).inc();
+        });
       }
     }
 
@@ -3586,7 +3794,10 @@ export async function evaluateSignals(
           input: { sessionId, symbol, firmId: sessionRow.firmId, side: config.side } as Record<string, unknown>,
           result: { blocked: true, conflictUnderlying: intra.conflictUnderlying, conflictSide: intra.conflictSide } as Record<string, unknown>,
           correlationId: correlationId ?? null,
-        }).catch(() => {});
+        }).catch((e: unknown) => {
+          logger.warn({ e, action: "compliance.intra_account_hedge_blocked" }, "audit write failed — non-blocking");
+          auditWriteFailuresTotal.labels({ action: "compliance.intra_account_hedge_blocked" }).inc();
+        });
       }
     }
 
@@ -3620,7 +3831,10 @@ export async function evaluateSignals(
           input: { sessionId, symbol, price: bar.close } as Record<string, unknown>,
           result: { blocked: true, reason: lock.reason } as Record<string, unknown>,
           correlationId: correlationId ?? null,
-        }).catch(() => {});
+        }).catch((e: unknown) => {
+          logger.warn({ e, action: "compliance.price_lock_limit_blocked" }, "audit write failed — non-blocking");
+          auditWriteFailuresTotal.labels({ action: "compliance.price_lock_limit_blocked" }).inc();
+        });
       }
     }
 
@@ -3952,6 +4166,51 @@ export async function evaluateSignals(
               ).catch(() => null),
             ]);
 
+            // ── Parity Gap 1 (observable): SMT snapshot availability diagnostics ──────
+            // When smtSnapshot is null (Python threw, caught by .catch(() => null)), or
+            // when all fields are null (insufficient bars / no divergence detected), log
+            // so the gap is visible in telemetry without blocking the stream.
+            // evalSmtConfirmation will return satisfied=false, reason="smt_unavailable".
+            // ── Deep-Scan H12: SMT null-fallback contamination marker ────────────
+            // When the live bridge yields no usable divergence the smt_confirmation
+            // factor fail-OPENS (entry allowed as if no bearish divergence exists).
+            // That overstates edge and silently contaminates PAPER → DEPLOY_READY
+            // gate inputs. Stamp a data-source provenance flag on the journal entry
+            // and emit a parity-diagnostic SSE so the contamination is measurable
+            // without requiring the live bridge to be built.
+            const smtNullFallback =
+              smtSnapshot === null ||
+              (smtSnapshot.score === null && smtSnapshot.direction === null);
+            const smtDataSource: "live_bridge" | "null_fallback" =
+              smtNullFallback ? "null_fallback" : "live_bridge";
+
+            if (smtSnapshot === null) {
+              logger.info(
+                { sessionId, symbol, correlationId },
+                "paper-parity: smt_confirmation unavailable — smtSnapshot null (Python error or bar buffer miss); smt_confirmation factor scores 0 this bar",
+              );
+            } else if (smtSnapshot.score === null && smtSnapshot.direction === null) {
+              logger.debug(
+                { sessionId, symbol, correlationId, stale: smtSnapshot.stale },
+                "paper-parity: smt_score null (insufficient bars or no divergence detected); evalSmtConfirmation returns smt_unavailable",
+              );
+            }
+
+            if (smtNullFallback) {
+              broadcastSSE("PAPER_PARITY_DEGRADED", {
+                source: "smt_live_bridge",
+                sessionId,
+                strategyId: sessionConfig.strategyId,
+                symbol,
+                smt_data_source: smtDataSource,
+                smt_snapshot_null: smtSnapshot === null,
+                stale: smtSnapshot?.stale ?? false,
+                price: bar.close,
+                timestamp: bar.timestamp,
+                correlationId: correlationId ?? null,
+              });
+            }
+
             const weightedCtx: WeightedSignalContext = {
               strategyId: sessionConfig.strategyId,
               bar: {
@@ -4157,6 +4416,8 @@ export async function evaluateSignals(
                   _hard_block: weightedResult.hardBlockTriggered,
                   _weights_source: weightedResult.weightsSource,
                   _a_plus_factor_source: "weighted",
+                  _smt_data_source: smtDataSource,
+                  _smt_null_fallback: smtNullFallback,
                 },
                 acted: false,
                 reason: `signal.weighted_score_rejected: score=${weightedResult.score.toFixed(4)} threshold=${weightedResult.threshold} hard_block=${weightedResult.hardBlockTriggered} weights_source=${weightedResult.weightsSource}`,
@@ -4184,6 +4445,8 @@ export async function evaluateSignals(
                   _weighted_threshold: weightedResult.threshold,
                   _weights_source: weightedResult.weightsSource,
                   _a_plus_factor_source: "weighted",
+                  _smt_data_source: smtDataSource,
+                  _smt_null_fallback: smtNullFallback,
                 },
                 acted: true,
                 reason: `signal.confluence_score_evaluated: score=${weightedResult.score.toFixed(4)} threshold=${weightedResult.threshold} weights_source=${weightedResult.weightsSource}`,
@@ -4746,7 +5009,13 @@ export async function evaluateSignals(
         rawConfigForSizing.entry_quality ??
         (rawConfigForSizing.strategy as Record<string, unknown> | undefined)?.entry_quality
       ) as { confirming_indicators?: string[] } | undefined;
-      const confluenceCount = (entryQualityForSizing?.confirming_indicators?.length ?? 0) + 1;
+      // HARDENING 2026-06-30 (confluence→sizing): size only on EVIDENCE-BACKED confirmations. Auto-floor
+      // confluences (graduator-injected regime_match / structural_setup — AUTO_FLOOR_FACTORS) are Trading
+      // Forge overlay, NOT the YouTube-extracted edge, and must NEVER justify the 1.5×/2× size upsize.
+      // Excluding them only ever REDUCES size (fail-safe). NOTE: this gates on PROVENANCE (evidence-backed);
+      // gating additionally on per-bar SATISFACTION is a tracked follow-up (needs Stage-2 result threading).
+      const confirmingForSizing = entryQualityForSizing?.confirming_indicators ?? [];
+      const confluenceCount = evidenceBackedFactorCount(confirmingForSizing) + 1;
 
       // Per-strategy confluence_size_multiplier_map from config (set by framework-overlay W23H.4)
       const confluenceSizeMultiplierMap = (rawPositionSize?.confluence_size_multiplier as Record<number, number> | undefined) ?? undefined;
@@ -4857,7 +5126,10 @@ export async function evaluateSignals(
             input: { sessionId, symbol, accountBalance, drawdownRoom: sizingInputs.currentDrawdownRoom } as Record<string, unknown>,
             result: { finalContracts: 0, rejectionReason: sizingResult.rejectionReason ?? "zero_contracts" } as Record<string, unknown>,
             correlationId: correlationId ?? null,
-          }).catch(() => {});
+          }).catch((e: unknown) => {
+            logger.warn({ e, action: "signal.skipped_zero_size" }, "audit write failed — non-blocking");
+            auditWriteFailuresTotal.labels({ action: "signal.skipped_zero_size" }).inc();
+          });
         } else {
           baseContracts = sizingResult.finalContracts;
         }
@@ -4939,7 +5211,10 @@ export async function evaluateSignals(
             entityType: "paper_session", entityId: sessionId, decisionAuthority: "system", status: "warning",
             input: { sessionId, symbol, preReduceContracts, factor: dllReduceSizeFactor } as Record<string, unknown>,
             result: { contracts: baseContracts } as Record<string, unknown>,
-          }).catch(() => {});
+          }).catch((e: unknown) => {
+            logger.warn({ e, action: "sizing.dll_reduce_size_applied" }, "audit write failed — non-blocking");
+            auditWriteFailuresTotal.labels({ action: "sizing.dll_reduce_size_applied" }).inc();
+          });
         }
       }
 
@@ -5382,7 +5657,54 @@ export async function evaluateSignals(
             .limit(1);
 
           const routingDecision = strategyForRouting[0]?.paperAccountRouting ?? "baseline";
-          const targetSubAccount = routingDecision === "rl-challenger"
+
+          // ── Family invariant assertion (Fix LOW-5, 2026-06-28) ───────────────────
+          // A/B rl-challenger routing is OPERATOR-ONLY (CLAUDE.md §13 + feedback
+          // family_not_part_of_operator_scaling). account_strategy_assignments.
+          // released_to_family=true marks a strategy distributed to a family member;
+          // if such a strategy somehow has paper_account_routing='rl-challenger'
+          // (operator tooling error), we refuse the routing and fall back to baseline.
+          // This is a code-level assertion: normal flows never set rl-challenger on a
+          // family strategy, but the DB column is mutable, so we verify here.
+          let effectiveRoutingDecision = routingDecision;
+          if (routingDecision === "rl-challenger") {
+            const familyAssignment = await db
+              .select({ releasedToFamily: accountStrategyAssignments.releasedToFamily })
+              .from(accountStrategyAssignments)
+              .where(eq(accountStrategyAssignments.strategyId, sessionConfig.strategyId))
+              .limit(1);
+            const isFamilyStrategy = familyAssignment[0]?.releasedToFamily === true;
+            if (isFamilyStrategy) {
+              logger.warn(
+                {
+                  strategyId: sessionConfig.strategyId,
+                  paperAccountRouting: routingDecision,
+                  correlationId: correlationId ?? null,
+                },
+                "paper-signal-service: FAMILY INVARIANT VIOLATION — strategy has paper_account_routing=rl-challenger but is released to family; overriding to baseline (family strategies must never route to rl-challenger)",
+              );
+              insertAuditRow({
+                action: "quantum_rl.family_routing_override",
+                entityType: "strategy",
+                entityId: sessionConfig.strategyId,
+                decisionAuthority: "system",
+                result: {
+                  db_routing: routingDecision,
+                  effective_routing: "baseline",
+                  reason: "family_strategy_must_not_route_to_rl_challenger",
+                  correlation_id: correlationId ?? null,
+                } as Record<string, unknown>,
+                status: "warning",
+                correlationId: correlationId ?? null,
+              }).catch((err: unknown) =>
+                logger.warn({ err }, "audit_log insert failed for quantum_rl.family_routing_override"),
+              );
+              effectiveRoutingDecision = "baseline";
+            }
+          }
+          // ── End family invariant assertion ────────────────────────────────────────
+
+          const targetSubAccount = effectiveRoutingDecision === "rl-challenger"
             ? "slumdawg-rl-challenger"
             : "slumdawg-baseline";
 
@@ -5421,7 +5743,7 @@ export async function evaluateSignals(
           // lifecycle state. Skip (not throw) so the bar-eval loop + audit row continue.
           const PAPER_PLUS_STATES = ["PAPER", "DEPLOY_READY", "PILOT", "DEPLOYED"];
           const lcStateForRouting = sessionConfig.lifecycleState ?? "";
-          if (routingDecision === "rl-challenger" && resolvedAccountId !== null) {
+          if (effectiveRoutingDecision === "rl-challenger" && resolvedAccountId !== null) {
             if (!PAPER_PLUS_STATES.includes(lcStateForRouting)) {
               logger.warn(
                 {
@@ -5457,7 +5779,8 @@ export async function evaluateSignals(
             entityId: sessionConfig.strategyId,
             decisionAuthority: "system",
             result: {
-              paper_account_routing: routingDecision,
+              paper_account_routing: routingDecision,          // raw DB value
+              effective_routing: effectiveRoutingDecision,     // after family-invariant override
               target_sub_account: targetSubAccount,
               resolved_account_id: resolvedAccountId,
               routing_called: routingCalled,

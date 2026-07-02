@@ -38,7 +38,7 @@ import { eq, desc, and } from "drizzle-orm";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
-import { AlertFactory } from "../services/alert-service.js";
+import { AlertFactory, createAlert } from "../services/alert-service.js";
 import { isExchangeHalted } from "../services/exchange-status-service.js";
 import { isFirmSuspended } from "../services/prop-firm-health-service.js";
 import { isConnectivityDegraded } from "../lib/network-failover.js";
@@ -54,8 +54,19 @@ export const ALL_LAYERS_ENFORCED_ON_SIGNAL_PATH = true;
 
 // ─── DLL / trailing-DD thresholds (match paper-execution-service) ─────────────
 const DLL_HALT_PCT        = parseFloat(process.env.DLL_HALT_PCT        ?? "0.67");
+// DLL_WARN_PCT: alert threshold between halt (67%) and force-close (95%).
+// Fires once per session via dll80PctWarnedSessionIds dedup below (A-5 fix).
+const DLL_WARN_PCT        = parseFloat(process.env.DLL_WARN_PCT        ?? "0.80");
 const DLL_FORCE_CLOSE_PCT = parseFloat(process.env.DLL_FORCE_CLOSE_PCT ?? "0.95");
 const TRAILING_DD_BUFFER_DOLLARS = 200; // force-close trigger: $200 inside max drawdown
+
+// ─── Per-session 80% DLL warn dedup ──────────────────────────────────────────
+// Prevents re-firing the 80% approach warning on every bar check within the 1s
+// layer cache TTL. Session IDs are unique per trading session; the Set persists
+// for the process lifetime (acceptable — sessions are per-trading-day, and the
+// process restarts at most once per day). Tests can use unique session IDs to
+// avoid cross-test interference; no explicit clear hook is required.
+const dll80PctWarnedSessionIds = new Set<string>();
 
 // ─── Per-layer cache (1s TTL for signal-path budget) ─────────────────────────
 // Each entry holds the last HaltDecision returned and its expiry timestamp.
@@ -83,6 +94,78 @@ function getCachedLayer(layer: number): HaltDecision | null {
 /** Store a layer result in cache for 1s. */
 function setCachedLayer(layer: number, decision: HaltDecision): void {
   layerCache.set(layer, { decision, expiresAt: Date.now() + LAYER_CACHE_TTL_MS });
+}
+
+// ─── FINDING #1 FIX: confirmed force-close ───────────────────────────────────
+// forceCloseAllPositions was fire-and-forget at both the 95% DLL trigger (Layer 2)
+// and the production HALT path (setMode). Positions could remain open past firm DLL.
+// Dynamic import is retained to avoid a kill-switch ↔ paper-execution circular dep.
+const FORCE_CLOSE_TIMEOUT_MS = parseInt(process.env.FORCE_CLOSE_TIMEOUT_MS ?? "10000", 10);
+
+// F3 FIX: in-flight guard for Layer-2 DLL-95% force-close.
+//
+// Root cause: runLayerWithTimeout has a 100ms budget for L2. _confirmedForceClose
+// takes up to FORCE_CLOSE_TIMEOUT_MS (10s). When the 100ms expires, the layer
+// returns fail-OPEN *without* setting the layer cache, so the next signal
+// immediately re-enters checkLayer2DailyLoss and calls _confirmedForceClose again.
+// Under a sustained DLL breach this creates concurrent force-close calls that:
+//   a) flood the audit log with duplicate rows
+//   b) race on paper position state
+//   c) may cause double-broker orders
+//
+// The guard makes the second (and subsequent) concurrent L2 evaluations return
+// {halted:true, reason:"force_close_in_progress"} immediately until the first
+// completes. This does NOT suppress the halt result — L2 is still reported HALTED.
+let _forceCloseInFlight = false;
+
+/**
+ * Awaited force-close with wall-clock timeout and CRITICAL escalation on failure.
+ * On timeout or call failure, writes paper.force_flatten_kill_switch_failed audit
+ * and fires a CRITICAL Discord alert so the operator knows positions may be open.
+ */
+async function _confirmedForceClose(reason: string, correlationId: string): Promise<boolean> {
+  const timeoutMs = FORCE_CLOSE_TIMEOUT_MS > 0 ? FORCE_CLOSE_TIMEOUT_MS : 10_000;
+  try {
+    await Promise.race([
+      import("../services/paper-execution-service.js").then(({ forceCloseAllPositions }) =>
+        forceCloseAllPositions(reason)
+      ),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error(`forceCloseAllPositions timed out after ${timeoutMs}ms`)),
+          timeoutMs,
+        )
+      ),
+    ]);
+    logger.info({ reason, correlationId }, "kill-switch: forceCloseAllPositions completed");
+    return true;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error(
+      { err, reason, correlationId },
+      "kill-switch: forceCloseAllPositions FAILED — positions may still be open"
+    );
+    AlertFactory.systemError(
+      "kill-switch-force-flatten-failed",
+      new Error(
+        `forceCloseAllPositions failed: ${msg}. Reason: ${reason}. CorrelationId: ${correlationId}. ` +
+        `IMMEDIATE ACTION REQUIRED — manually close all open positions.`
+      )
+    );
+    insertAuditRow({
+      action: "paper.force_flatten_kill_switch_failed",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { reason, correlationId } as Record<string, unknown>,
+      result: { error: msg, positions_may_be_open: true } as Record<string, unknown>,
+      status: "error",
+      correlationId,
+    }).catch((auditErr) =>
+      logger.error({ err: auditErr }, "kill-switch: force_flatten_failed audit write also failed")
+    );
+    return false;
+  }
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -194,6 +277,137 @@ async function checkLayer2DailyLoss(): Promise<HaltDecision> {
       const breakdown = session.dailyPnlBreakdown as Record<string, number> | null ?? {};
       const dayPnl = breakdown[today] ?? 0;
 
+      // ── M-1 FIX: 95% DLL force-close (highest band — check first) ───────────
+      // Python compliance_gate.py:562 force-closes at 95% DLL. Without this
+      // check, paper holds tail exposure that backtests would have closed —
+      // a parity break. Layer 3 force-closes on trailing-DD $200 buffer (different
+      // axis), so this sub-check does NOT double-fire with Layer 3.
+      // Ordering: force_close (95%) > halt (67%) > reduce_size (60%) > none.
+      if (dayPnl < 0 && Math.abs(dayPnl) >= DLL_FORCE_CLOSE_PCT * dll) {
+        // F3 FIX: concurrent L2 evaluations (caused by the 100ms runLayerWithTimeout
+        // returning fail-OPEN before the 10s _confirmedForceClose finishes) must NOT
+        // all call _confirmedForceClose. The first call sets the in-flight flag;
+        // subsequent calls return HALTED immediately without re-entering the close.
+        if (_forceCloseInFlight) {
+          logger.warn(
+            { session_id: session.id, firm_id: firmId, day_pnl: dayPnl },
+            "kill-switch L2: force-close already in-flight — skipping concurrent invocation (F3 fix)",
+          );
+          decision = { halted: true, reason: "force_close_in_progress", layer: 2 };
+          break;
+        }
+        const fcCorrelationId = randomUUID();
+        _forceCloseInFlight = true;
+        logger.warn(
+          { session_id: session.id, firm_id: firmId, day_pnl: dayPnl, dll, threshold_pct: DLL_FORCE_CLOSE_PCT },
+          "kill-switch L2: DLL at 95% — force-closing all positions (M-1 fix)"
+        );
+        // Audit — status PENDING until the close actually confirms. Deep-scan
+        // 2026-06-28: this row used to pre-write status:"success" BEFORE the
+        // fire-and-forget close ran, so a failed close left a misleading
+        // "success" row and no alert. Now: pending → completed/failed below.
+        insertAuditRow({
+          action: "sizing.dll_force_close",
+          entityType: "system",
+          entityId: session.id,
+          decisionAuthority: "system",
+          input: { session_id: session.id, firm_id: firmId, day_pnl: dayPnl, dll, threshold_pct: DLL_FORCE_CLOSE_PCT } as Record<string, unknown>,
+          result: { action: "force_close", outcome: "triggered" } as Record<string, unknown>,
+          status: "pending",
+          correlationId: fcCorrelationId,
+        }).catch((auditErr) =>
+          logger.error({ err: auditErr }, "kill-switch L2: dll 95pct force-close trigger audit failed (non-blocking)")
+        );
+        // SSE — consistent with existing force-close path in setMode("HALT")
+        broadcastSSE("kill_switch:dll_force_close", {
+          session_id: session.id,
+          firm_id: firmId,
+          day_pnl: dayPnl,
+          dll,
+          threshold_pct: DLL_FORCE_CLOSE_PCT,
+          correlationId: fcCorrelationId,
+          forced_at: new Date().toISOString(),
+        });
+        // MERGE 2026-06-29: both deep-scan sessions hardened this DLL-95 force-close.
+        // Adopted the deepscan-wiring version: an AWAITED force-close with a
+        // FORCE_CLOSE_TIMEOUT_MS (10s) guard — this fixes the ACTUAL hang risk (a
+        // fire-and-forget .then()/.catch() never fires its catch if the close hangs,
+        // leaving positions open at a 95% breach). _confirmedForceClose writes the
+        // paper.force_flatten_kill_switch_failed audit + a CRITICAL Discord alert on
+        // timeout/failure, and is the same helper used by the production-halt path.
+        // F3 FIX: the try/finally ensures _forceCloseInFlight is always cleared
+        // when the close attempt ends (success, failure, or timeout), so subsequent
+        // L2 evaluations can re-enter if the breach persists into the next cycle.
+        let _fcOk = false;
+        try {
+          _fcOk = await _confirmedForceClose(`dll_force_close_at_95pct:${session.id}`, fcCorrelationId);
+        } finally {
+          _forceCloseInFlight = false;
+        }
+        // Completion observability (phase-0 deep-scan): record a success audit row ONLY
+        // when the force-close actually completed. On failure/timeout, _confirmedForceClose
+        // already wrote paper.force_flatten_kill_switch_failed + fired a CRITICAL Discord —
+        // so we must NOT also emit a "completed" row (would falsely mark success while
+        // positions may still be open).
+        if (_fcOk) {
+          insertAuditRow({
+            action: "sizing.dll_force_close_completed",
+            entityType: "system",
+            entityId: session.id,
+            decisionAuthority: "system",
+            input: { session_id: session.id, firm_id: firmId } as Record<string, unknown>,
+            result: { action: "force_close", outcome: "completed" } as Record<string, unknown>,
+            status: "success",
+            correlationId: fcCorrelationId,
+          }).catch((auditErr) =>
+            logger.error({ err: auditErr }, "kill-switch L2: dll 95pct force-close completed-audit failed (non-blocking)")
+          );
+        }
+        decision = {
+          halted: true,
+          layer: 2,
+          reason: "dll_force_close_at_95pct",
+          detail: { session_id: session.id, firm_id: firmId, day_pnl: dayPnl, dll, threshold_pct: DLL_FORCE_CLOSE_PCT },
+        };
+        break;
+      }
+
+      // ── A-5 FIX: 80% DLL approach warning (once per session, deduped) ────────
+      // No alert exists between the 67% halt and 95% force-close. Families see a
+      // force-close with no prior warning. This warning fires once per session
+      // (deduped via dll80PctWarnedSessionIds) when losses are between 67-95%.
+      // Does NOT halt on its own — falls through to the 67% halt check below.
+      if (dayPnl < 0 && Math.abs(dayPnl) >= DLL_WARN_PCT * dll && !dll80PctWarnedSessionIds.has(session.id)) {
+        dll80PctWarnedSessionIds.add(session.id);
+        const warnCorrelationId = randomUUID();
+        insertAuditRow({
+          action: "sizing.dll_80pct_approach_warned",
+          entityType: "system",
+          entityId: session.id,
+          decisionAuthority: "system",
+          input: { session_id: session.id, firm_id: firmId, day_pnl: dayPnl, dll, threshold_pct: DLL_WARN_PCT } as Record<string, unknown>,
+          result: { warned: true } as Record<string, unknown>,
+          status: "success",
+          correlationId: warnCorrelationId,
+        }).catch((auditErr) =>
+          logger.error({ err: auditErr }, "kill-switch L2: dll 80pct warn audit failed (non-blocking)")
+        );
+        createAlert({
+          type: "system",
+          severity: "warning",
+          title: `DLL approach: ${Math.round(DLL_WARN_PCT * 100)}% of daily safety limit reached`,
+          message:
+            "Trading losses today are at 80% of the safety limit. " +
+            "The bot already stopped taking new trades. " +
+            "It is still holding its current position. " +
+            "No action needed — it will exit automatically if losses continue.",
+          metadata: { session_id: session.id, firm_id: firmId, day_pnl: dayPnl, dll },
+        }).catch((alertErr) =>
+          logger.error({ err: alertErr }, "kill-switch L2: dll 80pct approach alert failed (non-blocking)")
+        );
+      }
+
+      // ── Existing 67% halt ──────────────────────────────────────────────────
       if (dayPnl < 0 && Math.abs(dayPnl) >= DLL_HALT_PCT * dll) {
         const reason = `dll_at_${Math.round(DLL_HALT_PCT * 100)}pct_personal_threshold`;
         decision = {
@@ -417,26 +631,32 @@ async function checkLayer7FirmSuspension(correlationId: string): Promise<HaltDec
       decision = {
         halted: true,
         layer: 7,
-        reason: "firm_suspended",
+        // Name the suspended firm(s) so the operator knows WHICH firm halted the
+        // bot without drilling into detail (deep-scan 2026-06-28).
+        reason: `firm_suspended:${suspendedFirms.join(",")}`,
         detail: { suspended_firms: suspendedFirms },
       };
+      // Audit ONLY on actual suspension (deep-scan 2026-06-28). The old code
+      // wrote a "checked firms, nothing suspended" row on every per-second
+      // signal-path eval (up to ~23k+ rows/day RTH), burying real suspension
+      // events in the append-only trust spine. The clean-state result is already
+      // visible via the kill-switch status report + SSE; it does not need an
+      // immutable audit row. Suspension (a real event) still always audits.
+      insertAuditRow({
+        action: "kill_switch.c2_multi_firm_check",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { firms_checked: firmsChecked } as Record<string, unknown>,
+        result: { suspended_firms: suspendedFirms, halted: decision.halted } as Record<string, unknown>,
+        status: "success",
+        correlationId,
+      }).catch((auditErr) =>
+        logger.error({ err: auditErr }, "kill-switch L7: audit_log write failed (non-blocking)"),
+      );
     } else {
       decision = { halted: false };
     }
-
-    // Audit row for every evaluation (non-blocking)
-    insertAuditRow({
-      action: "kill_switch.c2_multi_firm_check",
-      entityType: "system",
-      entityId: null,
-      decisionAuthority: "system",
-      input: { firms_checked: firmsChecked } as Record<string, unknown>,
-      result: { suspended_firms: suspendedFirms, halted: decision.halted } as Record<string, unknown>,
-      status: "success",
-      correlationId,
-    }).catch((auditErr) =>
-      logger.error({ err: auditErr }, "kill-switch L7: audit_log write failed (non-blocking)"),
-    );
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     logger.error({ err }, "C2 multi-firm suspension check FAILED — blocking entries (fail-closed, Layer 7)");
@@ -840,13 +1060,8 @@ class KillSwitch {
           `Force-flattening all open paper positions.`
         )
       );
-      import("../services/paper-execution-service.js")
-        .then(({ forceCloseAllPositions }) =>
-          forceCloseAllPositions(`production_halt:${reason}`)
-        )
-        .catch((err) =>
-          logger.error({ err, reason, setBy }, "kill-switch: forceCloseAllPositions dynamic import or call failed")
-        );
+      // FINDING #1 FIX: awaited force-close with timeout and CRITICAL escalation on failure
+      await _confirmedForceClose(`production_halt:${reason}`, modeChangeCorrelationId);
     }
   }
 

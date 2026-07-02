@@ -32,8 +32,13 @@
  *   This allows 5 runs/month (5 × 120s = 600s budget exhausted).
  */
 
-import { spawn } from "child_process";
+import { spawn, execFile } from "child_process";
+import { promisify } from "util";
 import { writeFileSync, unlinkSync } from "fs";
+
+// FINDING #9 FIX: promisified execFile to replace spawnSync inside async path.
+// spawnSync blocks the Node event loop up to 5s — freezes broker-router/kill-switch/SSE.
+const execFileAsync = promisify(execFile);
 import { tmpdir } from "os";
 import { randomUUID } from "crypto";
 import { resolve as pathResolve } from "path";
@@ -212,16 +217,16 @@ async function checkIbmBudget(): Promise<{
     };
   }
 
-  // Budget check via Python (2x pessimism: estimated 60s → 120s budget consumed)
+  // Budget check via Python (2x pessimism: estimated 60s → 120s budget consumed).
+  // FINDING #9 FIX: replaced spawnSync (blocks Node event loop up to 5s) with
+  // execFileAsync (awaited, non-blocking). Timeout semantics preserved (5000ms).
+  let configPath: string | null = null;
   try {
-    const configPath = `${tmpdir()}/cloud_qmc_budget_${randomUUID()}.json`;
+    configPath = `${tmpdir()}/cloud_qmc_budget_${randomUUID()}.json`;
     writeFileSync(configPath, JSON.stringify({ action: "budget_check", estimated_seconds: 60 }));
 
-    // Use inline Python for fast budget check (avoids subprocess overhead)
-    const { spawnSync } = await import("child_process");
-    const result = spawnSync(
-      process.platform === "win32" ? "python" : "python3",
-      ["-c", `
+    const pythonBin = process.platform === "win32" ? "python" : "python3";
+    const inlineScript = `
 import json, sys
 sys.path.insert(0, '${PROJECT_ROOT.replace(/\\/g, "/")}')
 from src.engine.cloud_backend import CloudBudgetTracker
@@ -229,13 +234,17 @@ t = CloudBudgetTracker()
 remaining = t.get_remaining()
 allowed = t.can_run_ibm(60, 600)
 print(json.dumps({"allowed": allowed, "ibm_seconds_remaining": remaining["ibm_seconds_remaining"]}))
-`],
-      { cwd: PROJECT_ROOT, encoding: "utf-8", timeout: 5000 },
-    );
-    unlinkSync(configPath);
+`;
+    const { stdout } = await execFileAsync(pythonBin, ["-c", inlineScript], {
+      cwd: PROJECT_ROOT,
+      encoding: "utf-8",
+      timeout: 5000,
+    });
 
-    if (result.status === 0 && result.stdout) {
-      const budgetResult = JSON.parse(result.stdout.trim());
+    if (configPath) { try { unlinkSync(configPath); } catch { /* non-fatal cleanup */ } configPath = null; }
+
+    if (stdout) {
+      const budgetResult = JSON.parse(stdout.trim());
       return {
         allowed: budgetResult.allowed,
         reason: budgetResult.allowed ? "budget_ok" : "budget_exhausted",
@@ -243,6 +252,7 @@ print(json.dumps({"allowed": allowed, "ibm_seconds_remaining": remaining["ibm_se
       };
     }
   } catch (err) {
+    if (configPath) { try { unlinkSync(configPath); } catch { /* non-fatal cleanup */ } }
     logger.warn({ err }, "cloud-qmc: budget check failed — treating as budget_exhausted for safety");
   }
 

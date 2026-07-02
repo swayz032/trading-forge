@@ -42,7 +42,7 @@ interface PnLStatus {
   severity: OverallSeverity;
 }
 
-interface DrawdownStatus {
+export interface DrawdownStatus {
   bufferRemaining: number | null;
   firmLimit: number | null;
   usedPct: number | null;
@@ -176,7 +176,7 @@ const FIRM_DLL_PCT: Record<string, number> = {
 };
 const DEFAULT_DLL_PCT = 0.05; // Unknown firm — use tightest default
 
-async function buildDrawdownDistance(): Promise<DrawdownStatus> {
+export async function buildDrawdownDistance(): Promise<DrawdownStatus> {
   try {
     const activeSessions = await db
       .select({
@@ -349,7 +349,7 @@ function worstOf(...severities: OverallSeverity[]): OverallSeverity {
 
 // ─── Main status builder ──────────────────────────────────────────────────────
 
-async function buildProductionStatus(): Promise<ProductionStatusResponse> {
+export async function buildProductionStatus(): Promise<ProductionStatusResponse> {
   const generatedAt = new Date().toISOString();
 
   // All queries run in parallel for sub-100ms response

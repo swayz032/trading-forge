@@ -31,6 +31,8 @@ import { dataRoutes } from "./routes/data.js";
 import { indicatorRoutes } from "./routes/indicators.js";
 import { backtestRoutes } from "./routes/backtests.js";
 import { agentRoutes } from "./routes/agent.js";
+import { carterWebhookRouter } from "./routes/carter-webhook.js";
+import { carterToolsRouter } from "./routes/carter-tools.js";
 import { monteCarloRoutes } from "./routes/monte-carlo.js";
 import complianceRoutes from "./routes/compliance.js";
 import { compilerRoutes } from "./routes/compiler.js";
@@ -67,6 +69,7 @@ import { deeparRoutes } from "./routes/deepar.js";
 import { healthDashboardRoutes } from "./routes/health-dashboard.js";
 import { validationCadenceRoutes } from "./routes/validation-cadence.js";
 import { adminRoutes } from "./routes/admin.js";
+import { adminWorkflowBackupRoutes } from "./routes/admin-workflow-backup.js";
 import { adminFrozenPolicyOverrideRoutes } from "./routes/admin-frozen-policy-override.js";
 import { adminRecoveryRoutes } from "./routes/admin-recovery.js";
 import { slumdawgRoutes } from "./routes/slumdawg.js";
@@ -106,6 +109,7 @@ import { compositeHealthRoutes } from "./routes/composite-health.js";
 import { abComparisonRoutes } from "./routes/ab-comparison.js";
 import { liveOrderRoutes } from "./routes/live-order.js";
 import { fillCallbackRoutes } from "./routes/fill-callback.js";
+import { leakDetectionRoutes } from "./routes/leak-detection.js";
 import { runPendingMigrations } from "./lib/boot-migration-runner.js";
 import { checkStartupSecrets } from "./lib/startup-config-check.js";
 
@@ -211,6 +215,13 @@ async function checkPythonDependencies(): Promise<void> {
     };
   }
 }
+
+// Carter post-call webhook — MOUNTED BEFORE express.json AND before the Bearer
+// authMiddleware. ElevenLabs calls this server-to-server with its own HMAC in the
+// `ElevenLabs-Signature` header (the HMAC is the auth, like /api/health is exempt).
+// It must run before express.json so its own express.raw parser can verify the
+// signature over the EXACT raw body bytes (re-serialized JSON would not match).
+app.use("/api/carter/webhook", carterWebhookRouter);
 
 // Middleware
 app.use(express.json({ limit: "10mb" }));
@@ -403,6 +414,7 @@ app.get("/api/health", async (_req, res) => {
     youtubeDataApiConfigured: Boolean(process.env.YOUTUBE_DATA_API_KEY),
     apifyConfigured:          Boolean(process.env.APIFY_API_KEY),
     apifyUserIdSet:           Boolean(process.env.APIFY_USER_ID),
+    carterConfigured:         Boolean(process.env.ELEVENLABS_API_KEY && process.env.CARTER_AGENT_ID),
   };
 
   res.json({
@@ -440,6 +452,12 @@ app.get("/api/health", async (_req, res) => {
     responseMs: Date.now() - startMs,
   });
 });
+
+// Carter tools-plane router — own Bearer auth (CARTER_TOOLS_HMAC_SECRET), NOT the
+// general authMiddleware. Mounted AFTER express.json (needs JSON body parsing)
+// and AFTER the webhook mount (so /api/carter/webhook is not shadowed) but BEFORE
+// the general /api authMiddleware so tools-plane auth is self-contained.
+app.use("/api/carter", carterToolsRouter);
 
 // Auth gate
 app.use("/api", authMiddleware);
@@ -526,6 +544,8 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/admin", adminFrozenPolicyOverrideRoutes);
 // Vacation-survival A-5: HMAC-gated recovery endpoints (clear cache / clear stuck session).
 app.use("/api/admin", adminRecoveryRoutes);
+// Deep-scan #4 backend-DR: durable sink for the n8n 3A-workflow-backup (workflow_backups table).
+app.use("/api/admin", adminWorkflowBackupRoutes);
 // Wave 26 Pass G — Slumdawg Analyst (Anam.ai) read-only API surface.
 app.use("/api/admin/slumdawg", slumdawgRoutes);
 // 2026-05-27 — Slumhouse portal (friend-facing read-only, Discord OAuth).
@@ -591,6 +611,10 @@ app.use("/api/live-order", liveOrderRoutes);
 // Flag-gated: SERVER_MEDIATED_EXECUTION_ENABLED=true (default OFF).
 app.use("/api/broker/fill-callback", fillCallbackRoutes);
 
+// Wave 4 Track 4B: Layer 15 Leak Detection — ADVISORY-ONLY, no lifecycle gate authority.
+// POST /api/leak-detection/run — called by 3AM orchestrator (Track 4A).
+app.use("/api/leak-detection", leakDetectionRoutes);
+
 // 404 handler for API routes — returns JSON instead of Express default HTML
 app.use("/api", (_req, res) => {
   res.status(404).json({ error: "Not found" });
@@ -626,6 +650,11 @@ process.on("uncaughtException", (err) => {
 
 export const server = app.listen(port, () => {
   logger.info(`Trading Forge running on http://localhost:${port}`);
+
+  // O8: Single correlationId for all boot-sequence audit rows so startup events
+  // are traceable as a group. Convention matches the existing boot-${Date.now()}
+  // pattern already used at line ~858 (ensureRegimeBankPopulated call).
+  const bootCorrelationId = `boot-${Date.now()}`;
 
   // ─── Production HTTP server timeouts ─────────────────────────
   // Without these, a single slow/stuck client can hold a connection open
@@ -722,6 +751,50 @@ export const server = app.listen(port, () => {
     logger.error({ err }, "startup-import-failed: paper-signal-service failed to load — position state maps NOT restored");
   });
 
+  // ─── Fix 2 (2026-06-29): Orphaned paper-position startup recovery ───────────
+  // Covers a DIFFERENT failure mode from H2 above: positions OPEN in DB with NO
+  // active session (session was stopped or server crashed between session end and
+  // position close). Must run AFTER initializePositionStateMaps (H2) so HWM state
+  // is restored before orphan detection, and BEFORE initScheduler so audit rows
+  // are visible on the first scheduler pass. Fail-open: DB errors never block boot.
+  import("./services/paper-execution-service.js").then(({ recoverOrphanedPositionsAtStartup }) => {
+    recoverOrphanedPositionsAtStartup().then(({ orphansFound }) => {
+      if (orphansFound > 0) {
+        import("./services/notification-service.js").then(({ notifyCritical }) => {
+          notifyCritical(
+            `[CRITICAL] ${orphansFound} orphaned paper position(s) detected at startup`,
+            `What happened: ${orphansFound} position(s) were open in the database with no active session when the server restarted.\nAuto-remediation attempted: yes — stuckSessionIds populated; blocked sessions prevent duplicate opens.\nWhy it failed: sessions were not active at restart; positions require manual review.\nYour action: Review audit_log for paper.orphaned_position_detected entries and close positions via the dashboard or call clearStuckSessionId() after confirming each is closed.`,
+          );
+        }).catch((notifyErr: unknown) => {
+          logger.error({ err: notifyErr }, "Startup: notification-service import failed during orphan CRITICAL alert (non-blocking)");
+        });
+        // Write consolidated CRITICAL audit row (individual orphan rows already written
+        // inside recoverOrphanedPositionsAtStartup).
+        import("./db/schema.js").then(({ auditLog: auditLogTable }) => {
+          void db.insert(auditLogTable).values({
+            action: "paper.orphaned_positions_startup_critical",
+            entityType: "paper_position",
+            entityId: null,
+            decisionAuthority: "system",
+            input: { orphansFound } as Record<string, unknown>,
+            result: { autoRemediationAttempted: true, stuckSessionIdsPopulated: true } as Record<string, unknown>,
+            status: "error",
+          }).catch((dbErr: unknown) => {
+            logger.error({ err: dbErr }, "Startup: orphan CRITICAL audit row write failed (non-blocking)");
+          });
+        }).catch((schemaErr: unknown) => {
+          logger.error({ err: schemaErr }, "Startup: db/schema import failed during orphan audit write (non-blocking)");
+        });
+      } else {
+        logger.info("Startup: no orphaned paper positions detected");
+      }
+    }).catch((err: unknown) => {
+      logger.error({ err }, "Startup: recoverOrphanedPositionsAtStartup failed (non-blocking — orphans will be re-detected on next open attempt)");
+    });
+  }).catch((err: unknown) => {
+    logger.error({ err }, "startup-import-failed: paper-execution-service import failed during orphan recovery (non-blocking)");
+  });
+
   // Paper session recovery is handled by the scheduler `resumeActivePaperSessions`
   // job (scheduler.ts — see the resumeActivePaperSessions function), which runs
   // on scheduler boot and writes the canonical `session.recovered` audit rows.
@@ -760,6 +833,26 @@ export const server = app.listen(port, () => {
   }).catch((err) => {
     logger.info({ err }, "model-router import failed during appendix warm — non-blocking");
   });
+
+  // ─── H5: 60s post-boot Ollama recheck ────────────────────────────────────────
+  // The boot-time probe runs at T+0 when gemma4:e2b (7GB) may still be cold-
+  // loading into VRAM, leaving OLLAMA_HEALTHY stuck false and routing all
+  // extraction to cloud. This one-shot re-probe fires after the cold-load
+  // window and corrects the flag before the first extraction cron fires.
+  setTimeout(() => {
+    import("./services/model-router.js").then(({ recheckOllamaHealth }) => {
+      recheckOllamaHealth().then((r) => {
+        logger.info(
+          { healthy: r.healthy, reason: r.reason },
+          "model-router: 60s post-boot Ollama recheck complete",
+        );
+      }).catch((err: unknown) => {
+        logger.warn({ err }, "model-router: 60s post-boot Ollama recheck threw");
+      });
+    }).catch((err: unknown) => {
+      logger.warn({ err }, "model-router: 60s post-boot Ollama recheck import failed");
+    });
+  }, 60_000);
 
   // ─── Discord fanout audit boot probe (Pass 1 Track D) ────────────────────────
   // Probes all configured Discord webhooks so production-status.ts reads
@@ -807,6 +900,17 @@ export const server = app.listen(port, () => {
     });
   }
 
+  // ─── Carter proactive issue watcher (Wave 4 backend, 2026-06-28) ────────────
+  // PIPELINE-GATE EXEMPT: starts unconditionally — NOT gated behind isActive().
+  // FAIL-SOFT: any startup error is caught here so it never crashes the API.
+  import("./services/carter-issue-watcher.js").then(({ startCarterIssueWatcher }) => {
+    startCarterIssueWatcher().catch((err: unknown) => {
+      logger.warn({ err }, "carter-issue-watcher: startup failed (non-fatal — watcher disabled for this session)");
+    });
+  }).catch((err: unknown) => {
+    logger.warn({ err }, "carter-issue-watcher: import failed at boot (non-fatal)");
+  });
+
   // ─── Track 3 completion audit record (written once, idempotent guard) ────────
   // trading-forge-architect signed off Track 3 — Stop/TP/Sizing Framework as
   // complete. This is the canonical persistence record for that sign-off.
@@ -842,7 +946,7 @@ export const server = app.listen(port, () => {
             follow_ups: ["highSinceEntry/lowSinceEntry watermarks", "Track 2 developingSessionPoc"],
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Track 3 completion audit_log row written (benchmark persistence)");
       } else {
@@ -894,7 +998,7 @@ export const server = app.listen(port, () => {
             ],
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Track 2 completion audit_log row written (benchmark persistence)");
       } else {
@@ -945,7 +1049,7 @@ export const server = app.listen(port, () => {
             ],
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Track 1 completion audit_log row written (benchmark persistence)");
       } else {
@@ -1003,7 +1107,7 @@ export const server = app.listen(port, () => {
             follow_ups: [],
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Track 5 completion audit_log row written (benchmark persistence)");
       } else {
@@ -1051,7 +1155,7 @@ export const server = app.listen(port, () => {
             follow_ups: [],
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Pass 1 Track 1 completion audit_log row written (benchmark persistence)");
       } else {
@@ -1101,7 +1205,7 @@ export const server = app.listen(port, () => {
             golden_fixture_cleanup: "fixed in Pass 1 closing audit",
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Pass 1 Track 2 completion audit_log row written (benchmark persistence)");
       } else {
@@ -1149,7 +1253,7 @@ export const server = app.listen(port, () => {
             ci_lint: "scripts/verify-2026-rules-compliance.mjs",
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Pass 1 Track 3 completion audit_log row written (benchmark persistence)");
       } else {
@@ -1168,7 +1272,7 @@ export const server = app.listen(port, () => {
   //   - Production isolation lint CLEAN (4 files, 0 violations)
   //   - killSwitch.isHaltedForProduction() is FIRST gate in openPosition() (paper-execution-service.ts:549, fail-CLOSED)
   //   - Auto-HALT on drift severity=red wired (drift-detector.ts → killSwitch.setMode('HALT'))
-  //   - forceCloseAllPositions wired via dynamic import (no circular dep, swallowed errors)
+  //   - forceCloseAllPositions wired via static import in paper-signal-service.ts, awaited with notifyCritical on failure
   //   - All 4 reconciliation source comparisons present; fail-CLOSED on any data fetch error
   //   - 2 new crons in scheduler: daily-reconciliation (4:15 PM ET), weekly-drift-detection
   //     (Sunday 6 PM ET); both bypass pipelineGate (safety signals)
@@ -1209,7 +1313,7 @@ export const server = app.listen(port, () => {
             ],
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Track 4 completion audit_log row written (benchmark persistence)");
       } else {
@@ -1266,7 +1370,7 @@ export const server = app.listen(port, () => {
             ],
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Pass 2 Track 4 completion audit_log row written (benchmark persistence)");
       }
@@ -1317,7 +1421,7 @@ export const server = app.listen(port, () => {
             follow_ups: ["enabled_firms read from instance_config not yet wired"],
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Pass 2 Track 5 completion audit_log row written (benchmark persistence)");
       }
@@ -1363,7 +1467,7 @@ export const server = app.listen(port, () => {
             ],
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Pass 2 Track 6 completion audit_log row written (benchmark persistence)");
       }
@@ -1408,7 +1512,7 @@ export const server = app.listen(port, () => {
             pipeline_pause_guarded: true,
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Pass 3 Track 7 completion audit_log row written (benchmark persistence)");
       }
@@ -1454,7 +1558,7 @@ export const server = app.listen(port, () => {
             pipeline_pause_guarded: true,
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Pass 3 Track 8 completion audit_log row written (benchmark persistence)");
       }

@@ -26,6 +26,15 @@ export interface EmbedResponse {
 
 import { CircuitBreakerRegistry, CircuitOpenError } from "../lib/circuit-breaker.js";
 
+// FINDING #8 FIX: per-chunk deadline for streaming responses.
+// The initial connect has a 120s AbortController timeout, but after connection is
+// established, mid-stream stalls hang the caller indefinitely (reader.read() never
+// resolves). OLLAMA_STREAM_CHUNK_TIMEOUT_MS is env-overridable; default 30s.
+const OLLAMA_STREAM_CHUNK_TIMEOUT_MS = parseInt(
+  process.env.OLLAMA_STREAM_CHUNK_TIMEOUT_MS ?? "30000",
+  10,
+);
+
 // Model routing: task type → model name
 const MODEL_ROUTES: Record<string, string> = {
   fast: "deepseek-r1:14b",
@@ -256,8 +265,22 @@ export class OllamaClient {
     const decoder = new TextDecoder();
 
     try {
+      // FINDING #8 FIX: per-chunk deadline — cancel reader if no chunk arrives within
+      // OLLAMA_STREAM_CHUNK_TIMEOUT_MS. Without this, a mid-stream stall hangs forever.
       while (true) {
-        const { done, value } = await reader.read();
+        let chunkTimer: ReturnType<typeof setTimeout> | null = null;
+        const chunkOrTimeout = await Promise.race([
+          reader.read(),
+          new Promise<never>((_, reject) => {
+            chunkTimer = setTimeout(
+              () => reject(new Error(`Ollama stream stalled: no chunk for ${OLLAMA_STREAM_CHUNK_TIMEOUT_MS}ms`)),
+              OLLAMA_STREAM_CHUNK_TIMEOUT_MS,
+            );
+          }),
+        ]).finally(() => {
+          if (chunkTimer !== null) clearTimeout(chunkTimer);
+        });
+        const { done, value } = chunkOrTimeout;
         if (done) break;
         const chunk = decoder.decode(value, { stream: true });
         for (const line of chunk.split("\n").filter(Boolean)) {
@@ -269,6 +292,10 @@ export class OllamaClient {
           }
         }
       }
+    } catch (err) {
+      // Cancel the reader on stall/error so downstream callers are not left hanging
+      reader.cancel().catch(() => {});
+      throw err;
     } finally {
       reader.releaseLock();
     }

@@ -124,6 +124,10 @@ describe("wfResults ingestion — WFE + PBO gate-input key contract (G1b)", () =
    * Simulate what walk_forward.py produces at line 1252 (the top-level dict that
    * gets stored into backtests.walkForwardResults JSONB). This is a READ-ONLY view
    * of the Python output — we do NOT call the actual Python runner here.
+   *
+   * C1 fix 2026-06-28: wf_metadata is a top-level sibling of oos_metrics in the
+   * Python output.  Before the fix it was absent from WfResultsShape and therefore
+   * discarded during ingestion, silently disabling the DSR and CPCV n_paths gates.
    */
   const pythonWalkForwardOutput = {
     confidence: "high",
@@ -135,6 +139,16 @@ describe("wfResults ingestion — WFE + PBO gate-input key contract (G1b)", () =
     wfe_status: "pass",
     pbo_overall: 0.12,
     pbo_overall_p_value: 0.03,
+    // C1 fix: wf_metadata sub-object (sibling of oos_metrics in walk_forward.py output).
+    // DSR gate reads: wf_metadata.dsr_pass, wf_metadata.dsr_unavailable, wf_metadata.dsr
+    // CPCV orchestrator reads: wf_metadata.mode, wf_metadata.n_paths
+    wf_metadata: {
+      mode: "cpcv",
+      n_paths: 15,
+      dsr_pass: true,
+      dsr_unavailable: false,
+      dsr: 0.62,
+    },
   };
 
   it("wfe_overall survives object spread (gate-readable)", () => {
@@ -199,15 +213,28 @@ describe("wfResults ingestion — WFE + PBO gate-input key contract (G1b)", () =
   it("all gate-input keys are present in a realistic Python output object", () => {
     // This is the single comprehensive assertion that a Python-shaped result
     // (as produced by walk_forward.py:1252) satisfies all lifecycle gate read paths.
+    //
+    // C1 fix 2026-06-28: added wf_metadata (top-level key); DSR gate reads
+    // wf_metadata.dsr_pass and CPCV orchestrator reads wf_metadata.n_paths.
+    // Before the fix, WfResultsShape in backtest-service.ts did not include
+    // wf_metadata, so the key was silently dropped at ingestion time.
     const requiredGateKeys = [
-      "wfe_overall",      // wfe-gate.ts reads wf.wfe_overall
-      "wfe_status",       // wfe-gate.ts reads wf.wfe_status
-      "pbo_overall",      // pbo-gate.ts reads wf.pbo_overall
+      "wfe_overall",         // wfe-gate.ts reads wf.wfe_overall
+      "wfe_status",          // wfe-gate.ts reads wf.wfe_status
+      "pbo_overall",         // pbo-gate.ts reads wf.pbo_overall
       "pbo_overall_p_value", // pbo-gate.ts reads wf.pbo_overall_p_value
-      "param_stability",  // parameter-drift-gate reads wf.param_stability
+      "param_stability",     // parameter-drift-gate reads wf.param_stability
+      "wf_metadata",         // DSR gate + CPCV orchestrator read wf.wf_metadata.{dsr_pass,n_paths}
     ] as const;
     for (const key of requiredGateKeys) {
       expect(Object.prototype.hasOwnProperty.call(pythonWalkForwardOutput, key)).toBe(true);
     }
+
+    // Assert that the wf_metadata sub-object carries the nested keys that the
+    // DSR gate (dsr_pass) and CPCV orchestrator (n_paths) actually read.
+    // These are not top-level keys so we check them separately.
+    const meta = pythonWalkForwardOutput.wf_metadata;
+    expect(Object.prototype.hasOwnProperty.call(meta, "n_paths")).toBe(true);
+    expect(Object.prototype.hasOwnProperty.call(meta, "dsr_pass")).toBe(true);
   });
 });

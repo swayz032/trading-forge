@@ -109,6 +109,25 @@ class StyleCState(BaseModel):
     vp_shape: Optional[str] = None
     macro_state: Optional[str] = None
 
+    # C2 fix: intrabar high/low for limit-touch TP detection.
+    # When supplied by the paper engine (via StyleExitBarContext.currentBarHigh/Low),
+    # price_reached() uses bar_high (long TP) / bar_low (short TP) to match the
+    # backtester's intrabar limit-fill semantics (backtester.py:1248/1260):
+    #   long:  bar_high >= tp_price  (touch from below)
+    #   short: bar_low  <= tp_price  (touch from above)
+    # Backward-compatible: when None, falls back to current_price (close-based).
+    bar_high: Optional[float] = None  # intrabar high — for TP fill touch detection
+    bar_low: Optional[float] = None   # intrabar low  — for TP fill touch detection
+
+    # H5b fix: Chandelier(14, 2.0) fallback for runner when developing_session_poc is None.
+    # Caller must maintain and pass the running high/low since entry and the current ATR(14).
+    # Fallback trail: long = high_since_entry - 2.0 * atr14
+    #                 short = low_since_entry + 2.0 * atr14
+    # When any of these is None, runner returns HOLD (no Chandelier trail available).
+    high_since_entry: Optional[float] = None  # running high since position opened
+    low_since_entry: Optional[float] = None   # running low since position opened
+    atr14: Optional[float] = None             # current ATR(14) for Chandelier multiplier
+
 
 # ─── Main handler ─────────────────────────────────────────────────────────────
 
@@ -135,6 +154,8 @@ def evaluate_exit(state: StyleCState) -> ExitDecision:
         "entry_price": state.entry_price,
         "stop_pts": state.stop_pts,
         "current_price": state.current_price,
+        "bar_high": state.bar_high,
+        "bar_low": state.bar_low,
         "position_pct_open": state.position_pct_open,
         "tp1_filled": state.tp1_filled,
         "tp2_filled": state.tp2_filled,
@@ -171,9 +192,18 @@ def evaluate_exit(state: StyleCState) -> ExitDecision:
         tp2_price = state.entry_price + sign * risk_pts * TP2_AT_R_C
 
         def price_reached(target: float) -> bool:
+            # C2 fix: use intrabar high/low for limit-order TP touch detection
+            # when bar context is supplied by the paper engine, mirroring
+            # backtester.py:1248/1260 semantics:
+            #   long:  bar_high >= target  (price touched limit from below intrabar)
+            #   short: bar_low  <= target  (price touched limit from above intrabar)
+            # Falls back to current_price (close) when bar_high/bar_low absent,
+            # preserving backward-compat for callers that don't supply OHLC context.
             if state.direction == "long":
-                return state.current_price >= target
-            return state.current_price <= target
+                probe = state.bar_high if state.bar_high is not None else state.current_price
+                return probe >= target
+            probe = state.bar_low if state.bar_low is not None else state.current_price
+            return probe <= target
 
         # ── Priority 1: Time-stop ──────────────────────────────────────────────
         if _is_time_stop(state.current_time_et):
@@ -195,6 +225,9 @@ def evaluate_exit(state: StyleCState) -> ExitDecision:
             )
 
         # ── Priority 3: TP2 fill at 2.0R ──────────────────────────────────────
+        # H5a re-callable contract: this handler is a pure function — no internal
+        # mutable state. A same-bar call with tp1_filled=True (set by caller after
+        # booking TP1) immediately evaluates TP2, enabling one-bar TP1+TP2 sweeps.
         if price_reached(tp2_price) and state.tp1_filled and not state.tp2_filled:
             evidence["trigger"] = "tp2_fill"
             evidence["tp2_price"] = tp2_price
@@ -204,18 +237,27 @@ def evaluate_exit(state: StyleCState) -> ExitDecision:
                 decision="FILL_TP2", evidence=evidence, handler_version=HANDLER_VERSION
             )
 
-        # ── Priority 4: POC trail for runner ──────────────────────────────────
-        if state.tp1_filled and state.tp2_filled and state.developing_session_poc is not None:
-            poc = state.developing_session_poc
-            # Check if POC trail has been breached (price moved through POC)
-            poc_breached = (
-                state.current_price <= poc if state.direction == "long"
-                else state.current_price >= poc
-            )
-            if poc_breached:
-                evidence["trigger"] = "poc_trail_breached"
+        # ── Priority 4: runner trail (POC primary / Chandelier fallback) ──────
+        if state.tp1_filled and state.tp2_filled:
+            if state.developing_session_poc is not None:
+                poc = state.developing_session_poc
+                poc_breached = (
+                    state.current_price <= poc if state.direction == "long"
+                    else state.current_price >= poc
+                )
+                if poc_breached:
+                    evidence["trigger"] = "poc_trail_breached"
+                    evidence["developing_session_poc"] = poc
+                    logger.debug("style_c: TIGHTEN_TRAIL_TO_X (POC breach) poc=%.4f", poc)
+                    return ExitDecision(
+                        decision="TIGHTEN_TRAIL_TO_X",
+                        new_stop=poc,
+                        evidence=evidence,
+                        handler_version=HANDLER_VERSION,
+                    )
+                evidence["trigger"] = "poc_trail_update"
                 evidence["developing_session_poc"] = poc
-                logger.debug("style_c: TIGHTEN_TRAIL_TO_X (POC breach) poc=%.4f", poc)
+                logger.debug("style_c: TIGHTEN_TRAIL_TO_X (POC update) poc=%.4f", poc)
                 return ExitDecision(
                     decision="TIGHTEN_TRAIL_TO_X",
                     new_stop=poc,
@@ -223,16 +265,51 @@ def evaluate_exit(state: StyleCState) -> ExitDecision:
                     handler_version=HANDLER_VERSION,
                 )
 
-            # POC not yet breached — emit updated trail level
-            evidence["trigger"] = "poc_trail_update"
-            evidence["developing_session_poc"] = poc
-            logger.debug("style_c: TIGHTEN_TRAIL_TO_X (POC update) poc=%.4f", poc)
-            return ExitDecision(
-                decision="TIGHTEN_TRAIL_TO_X",
-                new_stop=poc,
-                evidence=evidence,
-                handler_version=HANDLER_VERSION,
-            )
+            # H5b fix: Chandelier(14, 2.0) fallback when developing_session_poc is None.
+            # CLAUDE.md §4: Style C runner trails Chandelier when VP feed unavailable.
+            # trail = high_since_entry - 2.0 * ATR14 (long)
+            #       = low_since_entry  + 2.0 * ATR14 (short)
+            if (
+                state.high_since_entry is not None
+                and state.low_since_entry is not None
+                and state.atr14 is not None
+                and state.atr14 > 0
+            ):
+                if state.direction == "long":
+                    chandelier_trail = state.high_since_entry - 2.0 * state.atr14
+                else:
+                    chandelier_trail = state.low_since_entry + 2.0 * state.atr14
+
+                trail_breached = (
+                    state.current_price <= chandelier_trail if state.direction == "long"
+                    else state.current_price >= chandelier_trail
+                )
+                evidence["trigger"] = "chandelier_fallback_trail"
+                evidence["chandelier_trail"] = chandelier_trail
+                evidence["high_since_entry"] = state.high_since_entry
+                evidence["low_since_entry"] = state.low_since_entry
+                evidence["atr14"] = state.atr14
+                if trail_breached:
+                    logger.debug(
+                        "style_c: TIGHTEN_TRAIL_TO_X (Chandelier breach) trail=%.4f",
+                        chandelier_trail,
+                    )
+                    return ExitDecision(
+                        decision="TIGHTEN_TRAIL_TO_X",
+                        new_stop=chandelier_trail,
+                        evidence=evidence,
+                        handler_version=HANDLER_VERSION,
+                    )
+                logger.debug(
+                    "style_c: TIGHTEN_TRAIL_TO_X (Chandelier update) trail=%.4f",
+                    chandelier_trail,
+                )
+                return ExitDecision(
+                    decision="TIGHTEN_TRAIL_TO_X",
+                    new_stop=chandelier_trail,
+                    evidence=evidence,
+                    handler_version=HANDLER_VERSION,
+                )
 
         # ── Default: Hold ─────────────────────────────────────────────────────
         evidence["trigger"] = "hold"

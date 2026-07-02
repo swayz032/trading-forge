@@ -176,7 +176,14 @@ async function getLiveDal(): Promise<PreMarketDataAccessLayer> {
         signal: AbortSignal.timeout(8000),
       });
       if (!resp.ok) {
-        throw new Error(`getDailyBars HTTP ${resp.status} for ${symbol}`);
+        // Non-fatal — degrade (warn + empty) instead of failing the WHOLE pre-market
+        // routine, mirroring getOvernightBars below. NOTE (2026-06-29): the
+        // /api/bars/:symbol data endpoint is not currently served (404 for every
+        // symbol), so the pre-market routine runs DEGRADED (no daily-bar context)
+        // until that endpoint is wired — see hardening follow-up. This stops the
+        // daily `pre_market_routine.errored` noise the Carter analyst surfaced.
+        logger.warn({ symbol, status: resp.status }, "pre-market-routine: daily bars unavailable (degraded)");
+        return [];
       }
       const body = (await resp.json()) as { bars?: DailyBar[] };
       return body.bars ?? [];

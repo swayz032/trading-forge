@@ -130,6 +130,59 @@ describe("evaluateParameterDriftGate — null classification → legacy proceed"
   });
 });
 
+// ─── C1 (2026-06-29): CPCV-exempt path (param_stability_status) ───────────────
+
+describe("evaluateParameterDriftGate — param_stability_status='cpcv_not_applicable' → cpcv_exempt", () => {
+  it("returns DISTINCT cpcv_exempt (not legacy_null) when status is cpcv_not_applicable + null classification", () => {
+    // CPCV path: classifier is N/A so classification is null, but the producer
+    // explicitly signals the exemption via param_stability_status.
+    const result = evaluateParameterDriftGate(null, null, "cpcv_not_applicable");
+    expect(result.status).toBe<ParameterDriftGateStatus>("cpcv_exempt");
+    expect(result.status).not.toBe("legacy_null");
+    expect(result.passed).toBe(true);
+    expect(result.auditAction).toBe("lifecycle.parameter_drift_cpcv_exempt");
+    expect(result.auditAction).not.toBe("lifecycle.parameter_drift_unavailable");
+  });
+
+  it("cpcv_not_applicable takes PRECEDENCE over a present classification (mirrors wfe-gate)", () => {
+    // Even if a stray classification rides along, the CPCV exemption wins — the
+    // drift formula is structurally N/A in CPCV mode.
+    const result = evaluateParameterDriftGate("overfit_drift", 0.99, "cpcv_not_applicable");
+    expect(result.status).toBe<ParameterDriftGateStatus>("cpcv_exempt");
+    expect(result.passed).toBe(true);
+    expect(result.auditAction).toBe("lifecycle.parameter_drift_cpcv_exempt");
+  });
+
+  it("ABSENT status (undefined) → genuine legacy_null path is UNCHANGED", () => {
+    const result = evaluateParameterDriftGate(null, null, undefined);
+    expect(result.status).toBe<ParameterDriftGateStatus>("legacy_null");
+    expect(result.auditAction).toBe("lifecycle.parameter_drift_unavailable");
+  });
+
+  it("status='computed' (plain WF) does NOT trigger cpcv_exempt — real overfit_drift still BLOCKS", () => {
+    const result = evaluateParameterDriftGate("overfit_drift", 0.90, "computed");
+    expect(result.status).toBe<ParameterDriftGateStatus>("blocked");
+    expect(result.passed).toBe(false);
+    expect(result.auditAction).toBe("lifecycle.parameter_overfit_drift_block");
+  });
+
+  it("status='computed' with stable classification → passed (no false cpcv_exempt)", () => {
+    const result = evaluateParameterDriftGate("stable", 0.80, "computed");
+    expect(result.status).toBe<ParameterDriftGateStatus>("passed");
+    expect(result.passed).toBe(true);
+    expect(result.auditAction).toBeNull();
+  });
+
+  it("cpcv_exempt is distinct from legacy_null in audit trail (the C1 contract)", () => {
+    const cpcv = evaluateParameterDriftGate(null, null, "cpcv_not_applicable");
+    const legacy = evaluateParameterDriftGate(null, null);
+    expect(cpcv.status).not.toBe(legacy.status);
+    expect(cpcv.auditAction).not.toBe(legacy.auditAction);
+    expect(cpcv.passed).toBe(true);
+    expect(legacy.passed).toBe(true);
+  });
+});
+
 // ─── Forward-compat: unknown classification ───────────────────────────────────
 
 describe("evaluateParameterDriftGate — unknown classification → passed (safe default)", () => {

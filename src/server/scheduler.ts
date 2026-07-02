@@ -11,10 +11,16 @@
 
 import cron from "node-cron";
 import { randomUUID } from "crypto";
+// Fix 1 (2026-06-29): non-blocking subprocess for n8n-workflow-sync.
+// execSync freezes V8's event loop for up to 60s — no HTTP/WS/SSE/cron/DLL
+// signals are processed during that window. execFileAsync is non-blocking.
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+const execFileAsync = promisify(execFile);
 import { cronJobsConcurrent } from "./lib/metrics-registry.js";
 import { eq, and, gte, lte, desc, inArray, isNull, isNotNull, min, sql } from "drizzle-orm";
 import { db } from "./db/index.js";
-import { strategies, paperSessions, paperPositions, paperTrades, paperSignalLogs, backtests, systemJournal, skipDecisions, auditLog, dayArchetypes, tournamentResults, macroSnapshots, macroFeatures, macroRegimeStates, lifecycleTransitions, harshRegimePhase, strategyExports, strategyExportArtifacts } from "./db/schema.js";
+import { strategies, paperSessions, paperPositions, paperTrades, paperSignalLogs, backtests, agentJobs, systemJournal, skipDecisions, auditLog, dayArchetypes, tournamentResults, macroSnapshots, macroFeatures, macroRegimeStates, lifecycleTransitions, harshRegimePhase, strategyExports, strategyExportArtifacts } from "./db/schema.js";
 import { broadcastSSE } from "./routes/sse.js";
 import { logger } from "./lib/logger.js";
 import { LifecycleService } from "./services/lifecycle-service.js";
@@ -60,12 +66,15 @@ import { runConsistencyDailyDigest } from "./services/consistency-tracker-servic
 import { runQuantumReplayWeeklyAnalysis } from "./services/quantum-replay-weekly-service.js";
 // W28 Pass A.4: Composite health daily digest — 5:00 PM ET daily
 import { runCompositeHealthDailyDigest } from "./services/composite-health-digest-service.js";
+// Carter Analyst: daily insight-bundle aggregator — 08:00 ET daily (data-only, no LLM)
+import { runCarterAnalystSweep } from "./services/carter-analyst-service.js";
 // W26 Pass G Pass D: Strategy stale detector — 04:00 ET daily
 import { runStrategyStaleDetector } from "./services/strategy-stale-detector.js";
 // W29 Pass C.2: Quantum RL training window cron
 import { isOffRthTrainingWindow } from "./lib/quantum-rl-training-runner.js";
 // W29 Pass B.3: Regime drift detector — daily 18:00 ET sweep
 import { runRegimeDriftDetector } from "./services/regime-drift-detector-service.js";
+import { runStrategyAgeRevalidation } from "./services/strategy-revalidation-service.js";
 // W29 Pass D.3: A/B comparison weekly digest — Friday 17:00 ET
 import { runAbComparisonWeeklyDigest } from "./services/ab-comparison-weekly-digest-service.js";
 // W0.1: Nightly off-tower database backup (hardware-failure safety net)
@@ -144,10 +153,22 @@ const NEVER_DISABLE_JOBS = new Set([
   // Heartbeat safety jobs — must fire even if other subsystems are broken
   "heartbeat-write",
   "heartbeat-stale-check",
+  // deepscan6 A5: the OOH heartbeat covers the ~64h off-RTH blind spot the RTH-only
+  // stale-check leaves — it must be as un-disableable as its RTH sibling, or a
+  // repeated transient failure could silence the ONLY vacation-window liveness probe.
+  "heartbeat-ooh-check",
   // Credential-safety jobs — transient vendor outage must not permanently disable these
   "bw-session-refresh",
   "prop-firm-cookie-refresh",
 ]);
+
+// deepscan6 A2: once-per-hour-per-signature dedup for the n8n-health-check Discord WARN
+// (the 15-min cron would otherwise spam a persistently-failing workflow set).
+const _n8nHealthAlertDedup = new Map<string, number>();
+
+// deepscan6 R1: 6h/strategy dedup for the rolling-Sharpe decay REVIEW Discord WARN
+// (the 4h rolling-sharpe cron would otherwise re-alert a decaying strategy every run).
+const _sharpeDecayAlertDedup = new Map<string, number>();
 
 function getJobHealth(name: string): JobHealth {
   let health = jobHealthTracker.get(name);
@@ -362,15 +383,64 @@ function markJobRun(name: string) {
 // the next interval fires, both run concurrently. For long-running jobs (sweep,
 // scout discovery, suite runs) this stacks subprocesses and DB transactions.
 const _inFlightJobs = new Set<string>();
+
+// FINDING #2 FIX: wall-clock watchdog — force-release lock + CRITICAL Discord if job hangs.
+// A hung fn() would hold the lock indefinitely; callers see "still in-flight" forever.
+// MAX_JOB_DURATION_MS env-overridable; default 30 min (longest legit job is DeepAR ~10 min).
+const MAX_JOB_DURATION_MS = parseInt(process.env.MAX_JOB_DURATION_MS ?? String(30 * 60 * 1000), 10);
+const _jobWatchdogs = new Map<string, ReturnType<typeof setTimeout>>();
+
 function _tryAcquireJobLock(name: string): boolean {
   if (_inFlightJobs.has(name)) {
     logger.warn({ jobName: name }, "cron tick skipped — previous tick still in-flight");
     return false;
   }
   _inFlightJobs.add(name);
+  // Start wall-clock watchdog — fires if the job holds its lock past MAX_JOB_DURATION_MS
+  const watchdog = setTimeout(() => {
+    logger.error(
+      { jobName: name, maxMs: MAX_JOB_DURATION_MS },
+      "scheduler: job hung past wall-clock limit — force-releasing lock",
+    );
+    _inFlightJobs.delete(name);
+    _jobWatchdogs.delete(name);
+    notifyCritical(
+      `[scheduler.job_hung] ${name} exceeded max duration`,
+      // Deep-scan #5 (2026-06-29): family-grade postscript on the job-hung watchdog alert
+      // (was the lone unwrapped notifyCritical in scheduler.ts the postscript lint flagged).
+      appendFamilyGradePostscript(
+        `Job "${name}" held its lock for >${MAX_JOB_DURATION_MS}ms without completing. ` +
+        `Lock was force-released. Check for deadlocks, hung subprocesses, or DB connection exhaustion.`,
+        "A scheduled background job got stuck and the bot force-released it so other jobs keep running.",
+        "Trading is unaffected. If you see this repeatedly for the same job, tell Tony.",
+      ),
+      { jobName: name, maxMs: MAX_JOB_DURATION_MS },
+    );
+    insertAuditRowSafe({
+      action: "scheduler.job_hung",
+      entityType: "scheduler_job",
+      entityId: name,
+      decisionAuthority: "system",
+      result: { maxMs: MAX_JOB_DURATION_MS, forcedRelease: true },
+      status: "error",
+    }).catch((auditErr: unknown) => {
+      logger.error({ auditErr }, "scheduler: job_hung audit write failed");
+    });
+  }, MAX_JOB_DURATION_MS);
+  // Allow process to exit without waiting for watchdog timers
+  if ((watchdog as unknown as { unref?: () => void }).unref) {
+    (watchdog as unknown as { unref: () => void }).unref();
+  }
+  _jobWatchdogs.set(name, watchdog);
   return true;
 }
 function _releaseJobLock(name: string): void {
+  // FINDING #2 FIX: clear watchdog before releasing lock so it does not fire after completion
+  const watchdog = _jobWatchdogs.get(name);
+  if (watchdog) {
+    clearTimeout(watchdog);
+    _jobWatchdogs.delete(name);
+  }
   _inFlightJobs.delete(name);
 }
 
@@ -431,6 +501,10 @@ const _PIPELINE_GATE_EXEMPT = new Set<string>([
   // paused. The digest is a pure observability signal for the operator — strategy
   // health monitoring must continue regardless of pipeline gate state.
   "composite-health-daily-digest",      // W28A.4: composite strategy health digest
+  // Carter Analyst: the daily insight aggregator is a pure observability signal —
+  // it must assemble the operator's morning briefing bundle even when the pipeline
+  // is paused. Data-only (no LLM, no mutation beyond the insight memory + audit).
+  "carter-analyst-daily",               // Carter proactive Analyst insight sweep
   // W29 Pass B.3: regime drift detection must fire even when pipeline is paused.
   // Regime drift continues regardless of operator intent to pause research. A
   // DEPLOYED strategy losing its trained regime during a pipeline pause is still
@@ -557,7 +631,12 @@ export async function reconcileMissedRuns() {
           await meta.run();
           markJobRun(name);
         } catch (err) {
+          // F4 FIX: surface catchup failures in scheduler health so
+          // /api/admin/scheduler/health reflects them (lastError + consecutiveFailures).
+          // Previously the bare catch only logged, leaving health showing null/0.
           logger.error({ err, job: name }, "Scheduler: catchup run failed");
+          schedulerLastError[name] = err instanceof Error ? err.message : String(err);
+          recordJobFailure(name, err);
         }
       }
     } else if (meta.lastRunAt.getTime() + meta.intervalMs < now) {
@@ -567,7 +646,10 @@ export async function reconcileMissedRuns() {
         await meta.run();
         markJobRun(name);
       } catch (err) {
+        // F4 FIX: same as above — propagate catchup failures to health state.
         logger.error({ err, job: name }, "Scheduler: catchup run failed");
+        schedulerLastError[name] = err instanceof Error ? err.message : String(err);
+        recordJobFailure(name, err);
       }
     }
   }
@@ -608,9 +690,17 @@ function registerDLQHandlers(): void {
 
   // ── sqa_optimization:failure / qubo_timing:failure / tensor_prediction:failure /
   //    rl_training:failure ── these are all fire-and-forget analytics runs that
-  //    failed AFTER the primary backtest committed. Re-run from the backtestId in
-  //    metadata. A simple no-op retry logs the attempt; the analytics are not
-  //    business-critical but we do want them retried once.
+  //    failed AFTER the primary backtest committed.
+  //
+  // F2 FIX: each handler now THROWS after logging so the DLQ item stays in
+  // needs_retry state and escalates to CRITICAL after maxRetries. The previous
+  // silent return caused the DLQ to mark the item "resolved" with zero retry,
+  // producing invisible analytics data loss.
+  //
+  // We cannot auto-rerun these sub-runs without the original backtest config, so
+  // the throw escalates to operator attention after the retry budget is consumed.
+  // Operators can trigger a full re-backtest from the UI if the analytics data
+  // is needed for a promotion decision.
   for (const opType of [
     "sqa_optimization:failure",
     "qubo_timing:failure",
@@ -621,13 +711,14 @@ function registerDLQHandlers(): void {
       const meta = (item.metadata ?? {}) as Record<string, unknown>;
       logger.info(
         { dlqId: item.id, operationType: opType, backtestId: meta.backtestId },
-        "DLQ retry: analytics sub-run — re-trigger deferred (no auto-rerun implemented, marking resolved)",
+        "DLQ retry: analytics sub-run — no auto-rerun implemented; throwing to keep item in needs_retry (F2 fix)",
       );
-      // Analytics sub-runs (SQA/QUBO/Tensor/RL) require the original backtest
-      // config to re-invoke. Rather than duplicating that logic here, we log the
-      // retry attempt and resolve the DLQ item so it doesn't escalate indefinitely.
-      // Operators can trigger a full re-backtest from the UI if the analytics data
-      // is needed for a promotion decision.
+      // Throw so the DLQ service keeps this item in needs_retry and escalates
+      // to CRITICAL after maxRetries instead of silently marking it resolved.
+      throw new Error(
+        `${opType}: no auto-rerun available for analytics sub-run (backtestId=${meta.backtestId ?? "unknown"}). ` +
+        `Trigger a full re-backtest from the UI to regenerate analytics data.`,
+      );
     });
   }
 
@@ -742,16 +833,50 @@ export function initScheduler() {
     const demoted = await lifecycle.checkAutoDemotions({ correlationId });
     // B8: PILOT canary sweep — runs alongside regular auto-promotion check
     const pilotResult = await lifecycle.checkPilotAutoPromotions({ correlationId });
-    if (promoted.length > 0 || demoted.length > 0 || pilotResult.promoted > 0 || pilotResult.killed > 0) {
+
+    // Deep-scan 2026-06-28 (C-1): operator-absent (vacation) Tier-1 auto-promote.
+    // runOperatorAbsentAutoPromote was EXPORTED but never called from any cron, so
+    // the documented §3 vacation feature (DEPLOY_READY -> PILOT while away) never
+    // fired. It self-guards (no-ops unless operator-absent mode is active AND the
+    // pipeline is unpaused), so it is safe to call every tick.
+    let absentPromoted: string[] = [];
+    try {
+      const { runOperatorAbsentAutoPromote } = await import("./services/operator-absent-mode-service.js");
+      const absentResult = await runOperatorAbsentAutoPromote(correlationId);
+      absentPromoted = absentResult.promoted;
+      if (absentResult.errors.length > 0) {
+        notifyWarning(
+          `Operator-absent Tier-1 auto-promote: ${absentResult.errors.length} error(s)`,
+          appendFamilyGradePostscript(
+            `${absentResult.errors.length} vacation DEPLOY_READY->PILOT auto-promotion(s) failed: ${absentResult.errors.map((e) => `${e.strategyId} (${e.reason})`).join("; ")}.`,
+            `${absentResult.errors.length} automatic promotion(s) during vacation mode did not complete. The bot is still running safely.`,
+            "No action needed right now — Tony will review when back.",
+          ),
+          { errors: absentResult.errors, correlationId },
+        );
+      }
+    } catch (absentErr) {
+      const absentErrMsg = absentErr instanceof Error ? absentErr.message : String(absentErr);
+      logger.error({ err: absentErr, correlationId }, "lifecycle-auto-check: operator-absent auto-promote sweep failed (non-blocking)");
+      // A-1 FIX: emit a CRITICAL Discord alert so the operator sees the sweep failure
+      // even while on vacation. Without this, a DB hiccup during the sweep would
+      // silently skip all DEPLOY_READY → PILOT auto-promotions with no visibility.
+      AlertFactory.notifyAbsentAutoPromoteFailed(absentErrMsg, correlationId).catch(
+        (alertErr) => logger.error({ err: alertErr }, "lifecycle-auto-check: absent auto-promote Discord alert failed (non-blocking)"),
+      );
+    }
+
+    if (promoted.length > 0 || demoted.length > 0 || pilotResult.promoted > 0 || pilotResult.killed > 0 || absentPromoted.length > 0) {
       broadcastSSE("lifecycle:auto-check", {
         promoted,
         demoted,
         pilotPromoted: pilotResult.promoted,
         pilotKilled: pilotResult.killed,
+        operatorAbsentPromoted: absentPromoted,
         timestamp: new Date().toISOString(),
       });
     }
-    logger.info({ promoted: promoted.length, demoted: demoted.length, pilotSwept: pilotResult.swept, pilotPromoted: pilotResult.promoted, pilotKilled: pilotResult.killed, correlationId }, "Lifecycle auto-check complete");
+    logger.info({ promoted: promoted.length, demoted: demoted.length, pilotSwept: pilotResult.swept, pilotPromoted: pilotResult.promoted, pilotKilled: pilotResult.killed, operatorAbsentPromoted: absentPromoted.length, correlationId }, "Lifecycle auto-check complete");
 
     // Discord: WARNING if strategies were demoted — system health degraded
     if (demoted.length > 0) {
@@ -993,6 +1118,27 @@ export function initScheduler() {
   });
   _scheduledJobs.add("heartbeat-stale-check");
 
+  // FINDING #6 FIX: secondary off-RTH heartbeat check every 4h.
+  // The primary heartbeat-stale-check is RTH-only (isEtRth gate), leaving a ~64h blind spot
+  // after a Friday-evening crash. This check fires at 4h intervals and sends a WARNING
+  // (not CRITICAL auto-restart) when the last heartbeat is >8h old outside RTH.
+  registerJob("heartbeat-ooh-check", 4 * 60 * 60 * 1000, async () => {
+    const { runOffRthHeartbeatCheck } = await import("./services/dead-mans-heartbeat-service.js");
+    await runOffRthHeartbeatCheck();
+  });
+  cron.schedule("0 */4 * * *", async () => {
+    if (!_tryAcquireJobLock("heartbeat-ooh-check")) return;
+    try {
+      const t0 = Date.now();
+      await withRetry("heartbeat-ooh-check", SCHEDULER_JOBS["heartbeat-ooh-check"].run, 1);
+      markJobRun("heartbeat-ooh-check");
+      emitJobComplete("heartbeat-ooh-check", Date.now() - t0);
+    } finally {
+      _releaseJobLock("heartbeat-ooh-check");
+    }
+  });
+  _scheduledJobs.add("heartbeat-ooh-check");
+
   // ─── Pass 6 / Track C F-6: n8n execution-log scraper every 5 min ───
   // Pulls execution telemetry from n8n on Railway via REST API and writes
   // it into n8n_execution_log so the health/stats endpoints have data.
@@ -1078,7 +1224,12 @@ export function initScheduler() {
           AlertFactory.systemError(
             "python-pool-saturation",
             `Python subprocess pool backlogged for >=60s: queued=${stats.queued}, active=${stats.active}, cap=${stats.cap}`,
-          ).catch(() => {});
+          ).catch((alertErr) =>
+            logger.error(
+              { err: alertErr, context: "python-pool-saturation" },
+              "AlertFactory.systemError failed — alert not persisted",
+            ),
+          );
           logger.warn(
             { queued: stats.queued, active: stats.active, cap: stats.cap, ticks: poolSaturationTicks },
             "python-pool-saturation: alert fired — 60s sustained backpressure",
@@ -2083,10 +2234,21 @@ export function initScheduler() {
 
   // ─── DLQ escalation — every hour ──────────────────────────
   registerJob("dlq-escalation", 60 * 60 * 1000, async () => {
-    const { escalateDLQ } = await import("./lib/dlq-service.js");
+    const { escalateDLQ, escalateDLQByAge } = await import("./lib/dlq-service.js");
     const count = await escalateDLQ();
     if (count > 0) {
-      logger.warn({ escalated: count }, "DLQ items escalated");
+      logger.warn({ escalated: count }, "DLQ items escalated (retry-exhausted)");
+    }
+    // deepscan6 O2: age-SLO escalation — catches items that can never reach maxRetries
+    // (handler-less operationTypes like scheduler:* / agent:*) so the backlog can't rot
+    // silently forever (was 2,033 items / 63d old / 0 escalations at audit time).
+    try {
+      const agedCount = await escalateDLQByAge();
+      if (agedCount > 0) {
+        logger.warn({ escalated: agedCount }, "DLQ items escalated (age-SLO breach)");
+      }
+    } catch (ageErr) {
+      logger.warn({ err: String(ageErr) }, "dlq-escalation: age-SLO sweep failed (non-blocking)");
     }
   });
 
@@ -2284,6 +2446,63 @@ export function initScheduler() {
       logger.error({ table: "critic_candidates", err }, "stale-pending-sweeper: error sweeping table");
     }
 
+    // FINDING #5 FIX: backtests stuck 'running' >90min block conveyor re-enqueue.
+    // A Python SIGKILL/OOM leaves status='running' forever — conveyor's NOT-EXISTS-running
+    // guard never re-enqueues the strategy → strategy silently stranded indefinitely.
+    // Marking failed allows the conveyor to re-enqueue after the 24h cooling-off period.
+    try {
+      const backtestsResult = await db
+        .update(backtests)
+        .set({ status: "failed", errorMessage: "stale-pending-sweeper: marked failed after 90min running (Python OOM/SIGKILL guard)" })
+        .where(_and(_eq(backtests.status, "running"), lt(backtests.createdAt, cutoff90)));
+      const backtestsSwept = (backtestsResult as any)?.rowCount ?? 0;
+      if (backtestsSwept > 0) {
+        totalSwept += backtestsSwept;
+        logger.warn({ table: "backtests", swept: backtestsSwept, thresholdMin: 90 }, "stale-pending-sweeper: marked stale running backtests as failed");
+        await db.insert(auditLog).values({
+          action: "stale-pending-sweeper.swept",
+          entityType: "backtests",
+          entityId: null,
+          input: { cutoff: cutoff90.toISOString(), threshold_min: 90 },
+          result: { swept: backtestsSwept, note: "conveyor will re-enqueue after 24h cooling-off" },
+          status: "success",
+          correlationId,
+        });
+      }
+    } catch (err) {
+      logger.error({ table: "backtests", err }, "stale-pending-sweeper: error sweeping backtests");
+    }
+
+    // Fix 3d (2026-06-29): agent_jobs — use COALESCE(started_at, created_at) so the
+    // 90-min threshold is measured from actual execution start, not job creation.
+    // Sweeps both 'pending' (never picked up) and 'running' (picked up but timed out).
+    // Migration 0183 added started_at; routes/agent.ts sets it on pickup.
+    try {
+      const agentJobsResult = await db
+        .update(agentJobs)
+        .set({ status: "failure", errorMessage: "stale-pending-sweeper: marked failure after 90min without completion (COALESCE(started_at, created_at) threshold)" })
+        .where(_and(
+          _or(_eq(agentJobs.status, "pending"), _eq(agentJobs.status, "running")),
+          sql`COALESCE(${agentJobs.startedAt}, ${agentJobs.createdAt}) < ${cutoff90}`,
+        ));
+      const agentJobsSwept = (agentJobsResult as any)?.rowCount ?? 0;
+      if (agentJobsSwept > 0) {
+        totalSwept += agentJobsSwept;
+        logger.warn({ table: "agent_jobs", swept: agentJobsSwept, thresholdMin: 90, keyed_on: "coalesce_started_at_created_at" }, "stale-pending-sweeper: marked stale agent_jobs as failure");
+        await db.insert(auditLog).values({
+          action: "stale-pending-sweeper.swept",
+          entityType: "agent_jobs",
+          entityId: null,
+          input: { cutoff: cutoff90.toISOString(), threshold_min: 90, keyed_on: "coalesce_started_at_created_at" },
+          result: { swept: agentJobsSwept },
+          status: "success",
+          correlationId,
+        });
+      }
+    } catch (err) {
+      logger.error({ table: "agent_jobs", err }, "stale-pending-sweeper: error sweeping agent_jobs");
+    }
+
     if (totalSwept === 0) {
       logger.debug("stale-pending-sweeper: no orphaned rows");
     }
@@ -2307,16 +2526,17 @@ export function initScheduler() {
   // snapshot — verified registered at the daily session-end block.
 
   // ─── n8n workflow sync — daily at 2:15 AM ET ─────────────────
+  // Fix 1 (2026-06-29): was execSync, which blocked V8's event loop for up to
+  // 60s (no HTTP/WS/SSE/cron/DLL signals processed). Now uses execFileAsync
+  // (non-blocking) — static import at file top, mirrors cloud-qmc-service.ts.
   registerJob("n8n-workflow-sync", 24 * 60 * 60 * 1000, async () => {
-    const { execSync } = await import("child_process");
     try {
-      const output = execSync("npx tsx scripts/n8n-workflow-sync.ts", {
+      const { stdout } = await execFileAsync("npx", ["tsx", "scripts/n8n-workflow-sync.ts"], {
         cwd: process.cwd(),
         timeout: 60000,
-        encoding: "utf-8",
         env: process.env as Record<string, string>,
       });
-      logger.info({ output: output.slice(-500) }, "n8n workflow sync completed");
+      logger.info({ output: stdout.slice(-500) }, "n8n workflow sync completed");
     } catch (err) {
       logger.error({ err }, "n8n workflow sync failed");
       throw err;
@@ -2660,6 +2880,28 @@ except Exception as e:
     if (failing.length > 0) {
       broadcastSSE("n8n:health-alert", { failing });
       logger.warn({ failing }, "n8n health check: workflows with recent failures");
+      // deepscan6 A2: previously SSE + warn-log ONLY — invisible to an operator on
+      // vacation. Fire a family-grade Discord WARN, deduped to once/hour per failing
+      // signature so a persistently-broken workflow doesn't spam every 15 min.
+      try {
+        const sig = failing.map((f) => f.workflowName).sort().join(",");
+        const now = Date.now();
+        const last = _n8nHealthAlertDedup.get(sig) ?? 0;
+        if (now - last >= 60 * 60 * 1000) {
+          _n8nHealthAlertDedup.set(sig, now);
+          const lines = failing.map((f) => `• ${f.workflowName}: ${f.failures}/${f.total} runs failed (last hour)`).join("\n");
+          notifyWarning(
+            "n8n workflows failing",
+            appendFamilyGradePostscript(
+              `${failing.length} n8n workflow(s) had failures in the last hour:\n${lines}`,
+              "One of the background automations is erroring.",
+              "It won't stop your trades. Check the n8n dashboard when you can, or ping Tony.",
+            ),
+          );
+        }
+      } catch (alertErr) {
+        logger.warn({ err: String(alertErr) }, "n8n health check: Discord alert failed (non-blocking)");
+      }
     } else {
       logger.debug({ workflowCount: stats.length }, "n8n health check: all workflows healthy");
     }
@@ -2879,9 +3121,18 @@ except Exception as e:
       });
       let stdout = "";
       let stderr = "";
+      // Deep-scan #5 M2 (2026-06-29): explicit kill timeout so a hung child doesn't hold the
+      // job lock until the 30-min MAX_JOB_DURATION_MS watchdog fires. Mirrors _runN8nDriftAudit.
+      const _killTimeoutMs = Number(process.env.DATABENTO_REFRESH_TIMEOUT_MS ?? 20 * 60 * 1000);
+      const _killTimer = setTimeout(() => {
+        try { proc.kill("SIGTERM"); } catch { /* already exited */ }
+        rej(new Error(`databento-weekly-refresh exceeded ${_killTimeoutMs}ms — SIGTERM sent`));
+      }, _killTimeoutMs);
+      _killTimer.unref?.();
       proc.stdout?.on("data", (d: Buffer) => (stdout += d.toString()));
       proc.stderr?.on("data", (d: Buffer) => (stderr += d.toString()));
       proc.on("close", (code: number | null) => {
+        clearTimeout(_killTimer);
         if (stderr.trim()) logger.debug({ job: "databento-weekly-refresh" }, stderr.slice(0, 2000));
         if (code === 0) {
           logger.info({ job: "databento-weekly-refresh", output: stdout.slice(0, 1000) }, "Databento refresh complete");
@@ -2890,7 +3141,7 @@ except Exception as e:
           rej(new Error(`refresh-databento.mjs exited ${code}: ${stderr.slice(0, 500)}`));
         }
       });
-      proc.on("error", rej);
+      proc.on("error", (e) => { clearTimeout(_killTimer); rej(e); });
     });
   });
 
@@ -3497,7 +3748,7 @@ except Exception as e:
   });
   _scheduledJobs.add("harsh-regime-phase-activation-check");
 
-  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), regen-declining-sweep (2 AM ET daily — B4 W13), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h), cme-status-poll (60s — C1 W15), prop-firm-health-check (15m — C2 W15), prop-firm-dashboard-snapshot (1h — C2 W15), validation-cadence-monthly (1st of month 3:30 AM UTC — C7 W16, bypasses pipeline gate), bias-engine-session-start (9:30 AM ET weekdays — W23 Gap-Fix-B, NOT pipeline-gated), bias-engine-refresh-10am-et (10:00 AM ET weekdays — W23 Gap-Fix-B, fail-open, NOT pipeline-gated), harsh-regime-phase-activation-check (03:00 UTC daily — W23D, 90-day clock from first PAPER, NOT pipeline-gated), bw-session-refresh (every 6h — W24P1, NOT pipeline-gated), prop-firm-cookie-refresh (every 1h — W24P1, NOT pipeline-gated), weekly-drift-2sigma-check (Sunday 18:00 ET — W24P1, pipeline-gate-EXEMPT W25P2), n8n-drift-detector-weekly (Sunday 19:00 ET — W25P2-A2, pipeline-gate-EXEMPT), n8n-drift-detector-monthly (1st of month 09:00 ET — W25P2-A2, pipeline-gate-EXEMPT), pre-market-briefing-discord (14:00 UTC daily — W25.5d, pipeline-gate-EXEMPT), naked-poc-sync-daily (4:30 PM ET weekdays — W25.6-P3A3, pipeline-gate-EXEMPT), liquidity-map-refresh (every 30min RTH Mon-Fri — W25.6-P3A1, pipeline-gate-EXEMPT), quantum-replay-weekly-analysis (Sunday 19:00 ET — W27P1.5-A2, pipeline-gate-EXEMPT, kill-switch=auto_patch_loop_enabled), strategy-stale-detector (04:00 ET daily — W26PassG-PassD, pipeline-gated, GRAVEYARD-never)");
+  logger.info("Scheduler initialized: rolling Sharpe (4h), pre-market prep (6:00 AM ET weekdays), paper-vs-backtest (1h), lifecycle (6h), decay monitor (2:00 AM ET daily), stale-session-check (5m), metrics-heartbeat (60s), pipeline-resume-drain (30s), deepar-train (2:30 AM ET), deepar-predict (6:00 AM ET), deepar-validate (6:30 AM ET), regret-score-fill (11:00 PM ET), agent-health-sweep (2h), portfolio-correlation (daily), meta-parameter-review (monthly), anti-setup-mine (Mon 12AM ET), anti-setup-effectiveness (Mon 12AM ET), dlq-retry (15m), dlq-escalation (1h), idempotency-cleanup (3 AM ET daily), n8n-workflow-sync (2:15 AM ET daily), system-map-drift (4 AM ET daily), compliance-rule-drift (Sun midnight ET weekly), disabled-job-probe (30m), metrics-collector (30m), funnel-snapshot (1 AM ET daily), n8n-health-check (15m), resource-snapshot (5m), session-analytics-rollup (11:45 PM ET daily), graveyard-pattern-extraction (Sun 9 PM ET weekly), critic-feedback (Sun 1 AM ET weekly), regen-declining-sweep (2 AM ET daily — B4 W13), prompt-ab-resolution (Sun 11 PM ET weekly), databento-weekly-refresh (Sun 9 PM ET weekly — B1 W9), data-integrity-suite (4:00 AM ET daily — A8 W11), contract-roll-sweep (4:30 PM ET weekdays — bypasses pipeline gate), tournament-staleness-check (6h), cme-status-poll (60s — C1 W15), prop-firm-health-check (15m — C2 W15), prop-firm-dashboard-snapshot (1h — C2 W15), validation-cadence-monthly (1st of month 3:30 AM UTC — C7 W16, bypasses pipeline gate), bias-engine-session-start (9:30 AM ET weekdays — W23 Gap-Fix-B, NOT pipeline-gated), bias-engine-refresh-10am-et (10:00 AM ET weekdays — W23 Gap-Fix-B, fail-open, NOT pipeline-gated), harsh-regime-phase-activation-check (03:00 UTC daily — W23D, 90-day clock from first PAPER, NOT pipeline-gated), bw-session-refresh (every 6h — W24P1, NOT pipeline-gated), prop-firm-cookie-refresh (every 1h — W24P1, NOT pipeline-gated), weekly-drift-2sigma-check (Sunday 18:00 ET — W24P1, pipeline-gate-EXEMPT W25P2), n8n-drift-detector-weekly (Sunday 19:00 ET — W25P2-A2, pipeline-gate-EXEMPT), n8n-drift-detector-monthly (1st of month 09:00 ET — W25P2-A2, pipeline-gate-EXEMPT), pre-market-briefing-discord (14:00 UTC daily — W25.5d, pipeline-gate-EXEMPT), naked-poc-sync-daily (4:30 PM ET weekdays — W25.6-P3A3, pipeline-gate-EXEMPT), liquidity-map-refresh (every 30min RTH Mon-Fri — W25.6-P3A1, pipeline-gate-EXEMPT), quantum-replay-weekly-analysis (Sunday 19:00 ET — W27P1.5-A2, pipeline-gate-EXEMPT, kill-switch=auto_patch_loop_enabled), strategy-stale-detector (04:00 ET daily — W26PassG-PassD, pipeline-gated, GRAVEYARD-never), candidate-backtest-conveyor (45s — 2026-06-28, pipeline-gated, enqueue-only, MAX_CONCURRENT_BACKTESTS slots)");
 
   // ─── Wave 24 Pass 1 Item 1: BW session refresh — every 6 hours ────────────────
   // CATASTROPHIC GAP: runBwSessionRefreshCheck existed but had ZERO callers in
@@ -4088,10 +4339,20 @@ except Exception as e:
 
         let stdoutBuf = "";
         let stderrBuf = "";
+        // Deep-scan #5 M2 (2026-06-29): per-symbol kill timeout so a hung Python child
+        // can't hold the job lock until the 30-min watchdog. Per-symbol failure is already
+        // non-blocking (caught below), so a SIGTERM here just skips that symbol.
+        const _pocKillMs = Number(process.env.NAKED_POC_SYNC_TIMEOUT_MS ?? 5 * 60 * 1000);
+        const _pocKillTimer = setTimeout(() => {
+          try { proc.kill("SIGTERM"); } catch { /* already exited */ }
+          reject(new Error(`naked-poc-sync-daily: ${sym} exceeded ${_pocKillMs}ms — SIGTERM sent`));
+        }, _pocKillMs);
+        _pocKillTimer.unref?.();
         proc.stdout?.on("data", (d: Buffer) => { stdoutBuf += d.toString(); });
         proc.stderr?.on("data", (d: Buffer) => { stderrBuf += d.toString(); });
 
         proc.on("close", (code: number | null) => {
+          clearTimeout(_pocKillTimer);
           if (code === 0) {
             logger.info(
               { symbol: sym, sessionDate: isoDate, stdout: stdoutBuf.slice(0, 2000) },
@@ -4109,6 +4370,7 @@ except Exception as e:
         });
 
         proc.on("error", (err: Error) => {
+          clearTimeout(_pocKillTimer);
           logger.error(
             { symbol: sym, sessionDate: isoDate, err: String(err) },
             "naked-poc-sync-daily: failed to spawn Python process",
@@ -4607,6 +4869,48 @@ except Exception as e:
   });
   _scheduledJobs.add("composite-health-daily-digest");
 
+  // ─── Carter Analyst: daily insight-bundle sweep — 08:00 ET daily ────────────
+  //
+  // DATA AGGREGATOR ONLY (no LLM). Gathers pipeline diagnosis + hardening
+  // opportunities + recent lifecycle decisions into one bounded insight bundle,
+  // stores it as a kind='insight' carter_memory row, and posts a family-grade
+  // Discord digest. Carter's gpt-5.4 brain reads the bundle via get_daily_insights
+  // on connect and synthesizes the spoken briefing.
+  //
+  // 08:00 ET = 12:00 UTC (EDT, UTC-4) or 13:00 UTC (EST, UTC-5). Schedule
+  // "0 12,13 * * *" covers both offsets; the in-handler ET-hour guard fires
+  // only at hour=8. Pipeline-gate EXEMPT (in _PIPELINE_GATE_EXEMPT) — the morning
+  // briefing must assemble even when the operator pauses research.
+  registerJob("carter-analyst-daily", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "carter-analyst-daily" }, "cron tick start");
+    await runCarterAnalystSweep();
+  });
+
+  cron.schedule("0 12,13 * * *", async () => {
+    if (!_tryAcquireJobLock("carter-analyst-daily")) return;
+    try {
+      const now = new Date();
+      const etHour = parseInt(
+        now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+        10,
+      );
+      if (etHour !== 8) {
+        logger.debug({ etHour }, "Scheduler: carter-analyst-daily cron fired but not 08:00 ET — skipping");
+        return;
+      }
+      // NOT pipeline-gated — observability signal (in _PIPELINE_GATE_EXEMPT)
+      logger.info("Scheduler: carter-analyst-daily (8:00 AM ET confirmed)");
+      const t0ca = Date.now();
+      await withRetry("carter-analyst-daily", SCHEDULER_JOBS["carter-analyst-daily"].run, 1);
+      markJobRun("carter-analyst-daily");
+      emitJobComplete("carter-analyst-daily", Date.now() - t0ca);
+    } finally {
+      _releaseJobLock("carter-analyst-daily");
+    }
+  });
+  _scheduledJobs.add("carter-analyst-daily");
+
   // ─── W26 Pass G Pass D: Strategy STALE detector — 04:00 ET daily ──────────
   //
   // Scans all ACTIVE strategies (CANDIDATE / PAPER / DEPLOY_READY / PILOT) for
@@ -4817,6 +5121,40 @@ except Exception as e:
     }
   });
   _scheduledJobs.add("regime-drift-detector");
+
+  // deepscan6 R2: strategy-age re-validation gate — daily 07:00 ET sweep of DEPLOYED
+  // strategies; WARN at > 365d since last CPCV+PBO+WFE freeze, force re-validation (demote
+  // for re-CPCV) at > 548d (~18mo). Reuses frozen_policy_set_at (no new table). Pipeline-gate
+  // exempt (monitoring must run even when paused). 07:00 ET dodges the 18:00 ET cron cluster.
+  _PIPELINE_GATE_EXEMPT.add("strategy-age-revalidation");
+  registerJob("strategy-age-revalidation", 24 * 60 * 60 * 1000, async () => {
+    const correlationId = randomUUID();
+    logger.info({ correlationId, jobName: "strategy-age-revalidation" }, "cron tick start");
+    await runStrategyAgeRevalidation();
+  });
+  // 07:00 ET = 11:00 UTC (EDT, UTC-4) or 12:00 UTC (EST, UTC-5) — DST-safe double-fire + guard.
+  cron.schedule("33 11,12 * * *", async () => {
+    if (!_tryAcquireJobLock("strategy-age-revalidation")) return;
+    try {
+      const now = new Date();
+      const etHour = parseInt(
+        now.toLocaleString("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }),
+        10,
+      );
+      if (etHour !== 7) {
+        logger.debug({ etHour }, "Scheduler: strategy-age-revalidation cron fired but not 07:00 ET — skipping (DST guard)");
+        return;
+      }
+      logger.info("Scheduler: strategy-age-revalidation (07:00 ET confirmed)");
+      const t0sar = Date.now();
+      await withRetry("strategy-age-revalidation", SCHEDULER_JOBS["strategy-age-revalidation"].run, 1);
+      markJobRun("strategy-age-revalidation");
+      emitJobComplete("strategy-age-revalidation", Date.now() - t0sar);
+    } finally {
+      _releaseJobLock("strategy-age-revalidation");
+    }
+  });
+  _scheduledJobs.add("strategy-age-revalidation");
 
   // ─── Wave 26 Pass L Tweak 2: MCL pre-EIA stop tightening — Wed 10:00 ET ───
   //
@@ -5503,6 +5841,34 @@ except Exception as e:
   });
   _scheduledJobs.add("deployed-pine-artifact-check");
 
+  // ─── Candidate backtest conveyor — every 45 seconds ──────────────────────
+  // Pipeline-gated: only runs when mode=ACTIVE. Finds CANDIDATE strategies
+  // with no completed/running backtest and no failed backtest in the last 24h,
+  // then enqueues walk-forward backtests up to the remaining slot budget
+  // (MAX_CONCURRENT_BACKTESTS − currently-running backtests).
+  //
+  // HARD CONTRACT (paper-engine-authority Pass 5):
+  //   Conveyor ONLY enqueues backtests. NEVER touches paper streams,
+  //   TradersPost, or the broker path. SHADOW table invariant
+  //   traderspost_webhook_called=false is never at risk here.
+  //
+  // Phase 3b: fire-and-forget checkAutoPromotions() after enqueue loop.
+  registerJob("candidate-backtest-conveyor", 45 * 1000, async () => {
+    const { runCandidateBacktestConveyor } = await import("./services/candidate-backtest-conveyor-service.js");
+    await runCandidateBacktestConveyor();
+  });
+
+  cron.schedule("*/45 * * * * *", async () => {
+    if (!_tryAcquireJobLock("candidate-backtest-conveyor")) return;
+    try {
+      const t0conv = Date.now();
+      await withRetry("candidate-backtest-conveyor", SCHEDULER_JOBS["candidate-backtest-conveyor"].run, 1);
+      markJobRun("candidate-backtest-conveyor");
+      emitJobComplete("candidate-backtest-conveyor", Date.now() - t0conv);
+    } finally { _releaseJobLock("candidate-backtest-conveyor"); }
+  });
+  _scheduledJobs.add("candidate-backtest-conveyor");
+
   // ─── Track C F-8: boot-time drift detection ────────────────
   // Compare SCHEDULER_JOBS registry against _scheduledJobs (populated by every
   // cron.schedule body). Catches the F-1/F-2 class of bug — a job registered
@@ -6000,7 +6366,12 @@ async function updateRollingSharpe() {
             "DRIFT ALERT: Live Sharpe deviates > 2σ from backtest",
           );
           // Persist alert to DB + broadcast SSE
-          AlertFactory.driftAlert(strat.id, "Sharpe", deviation / oneSigma).catch(() => {});
+          AlertFactory.driftAlert(strat.id, "Sharpe", deviation / oneSigma).catch((alertErr) =>
+            logger.error(
+              { err: alertErr, context: "rolling-sharpe-drift" },
+              "AlertFactory.driftAlert failed — alert not persisted",
+            ),
+          );
         } else if (deviation > oneSigma) {
           logger.warn(
             { strategyId: strat.id, name: strat.name, liveSharpe, btSharpe, deviation, threshold: oneSigma },
@@ -6008,9 +6379,51 @@ async function updateRollingSharpe() {
           );
         } else {
           logger.info(
-            { strategyId: strat.id, name: strat.name, liveSharpe, btSharpe },
+            { strategyId: strat.id, name: strat.name, liveSharpe },
             "Rolling Sharpe within expected range",
           );
+        }
+
+        // deepscan6 R1: institutional-standard rolling-Sharpe DECAY BANDS (ratio-based),
+        // additive to the absolute >2σ drift + <1.0 demotion above. AI has compressed alpha
+        // half-lives to ~18mo; a strategy silently earning 0.6× its backtest Sharpe is decaying
+        // even if still >1.0 absolute. WARN < SHARPE_DECAY_WARN_RATIO (0.7×), REVIEW <
+        // SHARPE_DECAY_REVIEW_RATIO (0.5×). Audit every run (durable signal); Discord only the
+        // severe REVIEW band, deduped 6h/strategy (the <1.0 inline path handles demotion).
+        if (btSharpe > 0) {
+          const decayRatio = liveSharpe / btSharpe;
+          const warnRatio = Number(process.env["SHARPE_DECAY_WARN_RATIO"] ?? "0.7");
+          const reviewRatio = Number(process.env["SHARPE_DECAY_REVIEW_RATIO"] ?? "0.5");
+          if (decayRatio < reviewRatio) {
+            await insertAuditRowSafe({
+              action: "strategy.sharpe_decay_review", entityType: "strategy", entityId: strat.id,
+              decisionAuthority: "gate", status: "warning",
+              input: { liveSharpe, btSharpe, decayRatio, reviewRatio } as Record<string, unknown>,
+              result: { band: "review", note: "live Sharpe < 0.5x backtest baseline" } as Record<string, unknown>,
+              correlationId: null,
+            }).catch(() => {});
+            const now = Date.now();
+            const last = _sharpeDecayAlertDedup.get(strat.id) ?? 0;
+            if (now - last >= 6 * 60 * 60 * 1000) {
+              _sharpeDecayAlertDedup.set(strat.id, now);
+              notifyWarning(
+                `Strategy edge decaying: ${strat.name}`,
+                appendFamilyGradePostscript(
+                  `${strat.name} live rolling Sharpe ${liveSharpe.toFixed(2)} is only ${(decayRatio * 100).toFixed(0)}% of its backtest baseline ${btSharpe.toFixed(2)} (< ${reviewRatio}× review floor).`,
+                  "This bot's recent live results are much weaker than what its test predicted — its edge may be fading.",
+                  "It's flagged for review. The system may auto-pause it; you don't need to act, but mention it to Tony.",
+                ),
+              );
+            }
+          } else if (decayRatio < warnRatio) {
+            await insertAuditRowSafe({
+              action: "strategy.sharpe_decay_warn", entityType: "strategy", entityId: strat.id,
+              decisionAuthority: "gate", status: "warning",
+              input: { liveSharpe, btSharpe, decayRatio, warnRatio } as Record<string, unknown>,
+              result: { band: "warn", note: "live Sharpe < 0.7x backtest baseline" } as Record<string, unknown>,
+              correlationId: null,
+            }).catch(() => {});
+          }
         }
       } else {
         logger.info(
@@ -6192,7 +6605,12 @@ async function comparePaperToBacktest() {
         });
         // Persist alert to DB
         const worstMetric = deviations.reduce((w, d) => d.sigmas > w.sigmas ? d : w, deviations[0]);
-        AlertFactory.driftAlert(session.strategyId, worstMetric.metric, maxDeviation).catch(() => {});
+        AlertFactory.driftAlert(session.strategyId, worstMetric.metric, maxDeviation).catch((alertErr) =>
+          logger.error(
+            { err: alertErr, context: "paper-vs-backtest-deviation" },
+            "AlertFactory.driftAlert failed — alert not persisted",
+          ),
+        );
         logger.warn(
           { strategyId: session.strategyId, sessionId: session.id, maxDeviation, deviations },
           "Paper-vs-backtest deviation alert triggered",
@@ -6346,7 +6764,12 @@ async function runDailyDecayMonitor(): Promise<void> {
               toState: targetState,
               message: `Strategy "${strat.name}" demoted to ${targetState} — decay score ${decayScore}`,
             });
-            AlertFactory.decayAlert(strat.id, "demotion").catch(() => {});
+            AlertFactory.decayAlert(strat.id, "demotion").catch((alertErr) =>
+              logger.error(
+                { err: alertErr, context: "decay-monitor-demotion" },
+                "AlertFactory.decayAlert failed — alert not persisted",
+              ),
+            );
             logger.warn(
               { strategyId: strat.id, name: strat.name, decayScore, fromState: currentState, toState: targetState },
               "Decay monitor: strategy demoted due to elevated decay score",
@@ -6366,7 +6789,12 @@ async function runDailyDecayMonitor(): Promise<void> {
             lifecycleState: currentState,
             message: `Strategy "${strat.name}" has elevated decay score ${decayScore} (state: ${currentState} — alert only)`,
           });
-          AlertFactory.decayAlert(strat.id, decayScore > 90 ? "quarantine" : "watch").catch(() => {});
+          AlertFactory.decayAlert(strat.id, decayScore > 90 ? "quarantine" : "watch").catch((alertErr) =>
+            logger.error(
+              { err: alertErr, context: "decay-monitor-alert-only" },
+              "AlertFactory.decayAlert failed — alert not persisted",
+            ),
+          );
           logger.warn(
             { strategyId: strat.id, name: strat.name, decayScore, lifecycleState: currentState },
             "Decay monitor: elevated decay score — alert only (no demotion path for this state)",
@@ -6982,7 +7410,12 @@ export async function onPaperTradeClose(sessionId: string, strategyId: string) {
         message: `Strategy drifting: ${maxDeviation.toFixed(1)}σ from backtest expectations`,
       });
       // Persist alert to DB
-      AlertFactory.driftAlert(strategyId, "live_drift", maxDeviation).catch(() => {});
+      AlertFactory.driftAlert(strategyId, "live_drift", maxDeviation).catch((alertErr) =>
+        logger.error(
+          { err: alertErr, context: "post-trade-live-drift" },
+          "AlertFactory.driftAlert failed — alert not persisted",
+        ),
+      );
       logger.warn({ strategyId, maxDeviation, alerts: driftAlerts }, "Strategy drift detected after paper trade");
     }
 
@@ -7005,7 +7438,12 @@ export async function onPaperTradeClose(sessionId: string, strategyId: string) {
             decayScore,
             message: `Decay score ${decayScore} — strategy losing edge`,
           });
-          AlertFactory.decayAlert(strategyId, decayScore > 80 ? "quarantine" : "watch").catch(() => {});
+          AlertFactory.decayAlert(strategyId, decayScore > 80 ? "quarantine" : "watch").catch((alertErr) =>
+            logger.error(
+              { err: alertErr, context: "post-trade-decay-check" },
+              "AlertFactory.decayAlert failed — alert not persisted",
+            ),
+          );
           logger.warn({ strategyId, decayScore }, "Auto decay check: elevated decay score");
         }
       })

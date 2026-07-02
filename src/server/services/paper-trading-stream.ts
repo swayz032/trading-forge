@@ -10,7 +10,7 @@ import { initSmtBarBufferProvider } from "./smt-live-service.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-interface Bar {
+export interface Bar {
   symbol: string;
   timestamp: string;
   open: number;
@@ -36,6 +36,16 @@ interface SharedSocket {
 /** sessionId → set of symbols the session subscribes to */
 const sessionSymbols = new Map<string, Set<string>>();
 
+/**
+ * F12: Per-symbol POC cache keyed by bar ISO timestamp.
+ * getDevelopingSessionPoc runs a DB query on every call; with multiple sessions
+ * subscribed to the same symbol this can fire dozens of times per bar.
+ * Cache key = `${symbol}:${barTimestamp}` provides a 1-bar TTL automatically —
+ * each new bar timestamp invalidates the prior entry for that symbol.
+ * Map is bounded: old keys are evicted when the cache exceeds 50 entries.
+ */
+const pocCacheByBar = new Map<string, number | null>();
+
 /** symbol → shared WebSocket connection info */
 const sharedSockets = new Map<string, SharedSocket>();
 
@@ -44,6 +54,49 @@ const barBuffer = new Map<string, Bar[]>();
 
 /** Per-session lock to prevent concurrent evaluateSignals calls */
 const sessionLocks = new Map<string, Promise<void>>();
+
+// ── F3: Median ATR helper (exported for tests) ────────────────────────────────
+
+/**
+ * Compute the median true-range over a bar window using Wilder's formula.
+ * True range = max(H-L, |H-prevClose|, |L-prevClose|) per bar.
+ * First bar in the window has no prevClose; it falls back to H-L.
+ *
+ * Exported so tests can verify overnight-gap handling without requiring a
+ * full barBuffer setup or running the bar loop.
+ */
+export function computeMedianTrueRangeFromWindow(
+  window: ReadonlyArray<{ high: number; low: number; close: number }>,
+): number | undefined {
+  if (window.length < 1) return undefined;
+  const trueRanges = window.map((b, i) => {
+    const hl = (b.high ?? b.close) - (b.low ?? b.close);
+    if (i === 0) return hl;
+    const prevClose = window[i - 1].close;
+    return Math.max(
+      hl,
+      Math.abs((b.high ?? b.close) - prevClose),
+      Math.abs((b.low  ?? b.close) - prevClose),
+    );
+  });
+  const sorted = [...trueRanges].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  const median = sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+  return median > 0 ? median : undefined;
+}
+
+// ── F12: POC cache test helpers ────────────────────────────────────────────────
+
+/**
+ * @internal Exported for testing only — allows tests to inspect or reset the
+ * per-bar POC cache between test runs to prevent cross-test contamination.
+ */
+export function _testClearPocCache(): void { pocCacheByBar.clear(); }
+export function _testGetPocCacheSize(): number { return pocCacheByBar.size; }
+export function _testGetPocCacheValue(symbol: string, barTimestamp: string): number | null | undefined {
+  return pocCacheByBar.get(`${symbol}:${barTimestamp}`);
+}
+export function _testSetBarBuffer(symbol: string, bars: Bar[]): void { barBuffer.set(symbol, bars); }
 
 const BAR_BUFFER_SIZE = 200;
 
@@ -61,8 +114,36 @@ function getMassiveFetcher() {
   return createMassiveFetcher({ apiKey });
 }
 
-/** Track last bar date per symbol for session boundary detection */
+/** Track last bar's Globex session key per symbol for session boundary detection */
 const lastBarDate = new Map<string, string>();
+
+/**
+ * Globex session date key (M-2 fix).
+ *
+ * The raw bar buffer must reset on the CME Globex session boundary (18:00 ET),
+ * NOT ET calendar midnight. Parity with the backtester's
+ * `_assign_globex_session_id()` in src/engine/indicators/core.py: bars at ET
+ * hour >= 18 belong to the NEXT calendar day's session.
+ *
+ * A +6h instant shift maps 18:00 ET → ET-calendar-midnight of the next day, so a
+ * plain ET-date format yields the correct Globex session date:
+ *   18:00 ET + 6h = 00:00 ET next day  → next session date
+ *   17:59 ET + 6h = 23:59 ET same day  → current session date
+ * (CME has no bars in the 17:00–18:00 ET maintenance pause, so this is exact, and
+ * it agrees with paper-signal-service.ts::filterToGlobexSession's +7h/17:00 key on
+ * every real bar — the filter path stays correct as defense-in-depth.)
+ *
+ * Prior code keyed on toEasternDateString (ET calendar midnight) and only stayed
+ * correct because filterToGlobexSession() re-filtered the buffer before every VWAP
+ * read. Keying the buffer itself on the Globex boundary makes it correct regardless
+ * of read-path order — any future callsite computing VWAP before the filter no
+ * longer contaminates the next session's anchor with 17:00–18:00 ET bars.
+ *
+ * Exported for unit testing.
+ */
+export function toGlobexSessionDateString(date: Date): string {
+  return toEasternDateString(new Date(date.getTime() + 6 * 3600_000));
+}
 
 function pushBar(symbol: string, bar: Bar) {
   let buf = barBuffer.get(symbol);
@@ -71,17 +152,17 @@ function pushBar(symbol: string, bar: Bar) {
     barBuffer.set(symbol, buf);
   }
 
-  // Session boundary reset: detect ET date change → clear buffer for VWAP freshness.
-  // Futures sessions reset at 6 PM ET (Globex open), which aligns with the ET date
-  // boundary for evening-to-overnight trading.  Using UTC date change would cause
-  // the VWAP to reset at midnight UTC (7 PM ET in winter, 8 PM ET in summer) —
-  // mid-session for overnight traders.  ET date change matches actual session logic.
-  const barEtDate = toEasternDateString(new Date(bar.timestamp));
-  const prevEtDate = lastBarDate.get(symbol);
-  if (prevEtDate && barEtDate !== prevEtDate) {
-    buf.length = 0; // Reset buffer on new ET trading day (Globex session boundary)
+  // Session boundary reset: detect Globex session change → clear buffer for VWAP
+  // freshness. Futures sessions reset at 18:00 ET (Globex open after the 17:00–18:00
+  // maintenance pause). Keying on toGlobexSessionDateString (18:00 ET boundary)
+  // instead of toEasternDateString (ET calendar midnight) makes the raw buffer
+  // correct independent of call order — see toGlobexSessionDateString docstring.
+  const barSessionKey = toGlobexSessionDateString(new Date(bar.timestamp));
+  const prevSessionKey = lastBarDate.get(symbol);
+  if (prevSessionKey && barSessionKey !== prevSessionKey) {
+    buf.length = 0; // Reset buffer on new Globex trading session (18:00 ET boundary)
   }
-  lastBarDate.set(symbol, barEtDate);
+  lastBarDate.set(symbol, barSessionKey);
 
   buf.push(bar);
   if (buf.length > BAR_BUFFER_SIZE) {
@@ -112,7 +193,8 @@ function sessionsForSymbol(symbol: string): string[] {
  * This function never throws — any error returns undefined so processSessionBar
  * can proceed without exitBarContext (falls back to legacy ATR-only exits).
  */
-async function buildExitBarContext(bar: Bar): Promise<StyleExitBarContext | undefined> {
+/** @internal exported for tests — production entry point is processSessionBar */
+export async function buildExitBarContext(bar: Bar): Promise<StyleExitBarContext | undefined> {
   try {
     // Use the local barBuffer map (paper-trading-stream.ts owns the streaming buffer).
     // This is the same buffer used by evaluateSignals (passed as getBarBuffer(symbol)).
@@ -121,7 +203,22 @@ async function buildExitBarContext(bar: Bar): Promise<StyleExitBarContext | unde
     // ATR returns NaN when buffer is too short — clamp to 0 (HOLD guard in handlers)
     const atr14 = Number.isFinite(atr) ? atr : 0;
 
-    const poc = await getDevelopingSessionPoc(bar.symbol).catch(() => null);
+    // F12: cache POC by bar timestamp to avoid a DB round-trip on every bar for every
+    // session subscribed to the same symbol. Key = "symbol:isoTimestamp" gives a
+    // 1-bar TTL automatically — a new bar timestamp evicts the prior symbol entry.
+    const pocCacheKey = `${bar.symbol}:${bar.timestamp}`; // bar.timestamp is always a string
+    let poc: number | null;
+    if (pocCacheByBar.has(pocCacheKey)) {
+      poc = pocCacheByBar.get(pocCacheKey)!;
+    } else {
+      poc = await getDevelopingSessionPoc(bar.symbol).catch(() => null);
+      pocCacheByBar.set(pocCacheKey, poc);
+      // Evict oldest entry when the cache grows beyond 50 keys (bounded memory)
+      if (pocCacheByBar.size > 50) {
+        const oldest = pocCacheByBar.keys().next().value;
+        if (oldest !== undefined) pocCacheByBar.delete(oldest);
+      }
+    }
 
     // ET time for time-stop evaluation (HH:MM from bar timestamp)
     const barDate = new Date(bar.timestamp);
@@ -133,6 +230,52 @@ async function buildExitBarContext(bar: Bar): Promise<StyleExitBarContext | unde
     });
     const currentTimeEt = etFormatter.format(barDate);
 
+    // H-2 fix: last2barSwingLow/High from the buffer — prior 2 bars before the current bar.
+    // buf[buf.length-1] = current bar (just pushed by pushBar before processSessionBar).
+    // buf[buf.length-2] = previous bar, buf[buf.length-3] = 2 bars ago.
+    // "last 2-bar swing" = min/max low/high of those 2 prior bars (not the current bar).
+    let last2barSwingLow: number | undefined = undefined;
+    let last2barSwingHigh: number | undefined = undefined;
+    if (buf.length >= 3) {
+      const prevBar1 = buf[buf.length - 2];
+      const prevBar2 = buf[buf.length - 3];
+      // Both bars must have valid OHLC fields (backfill bars always do; unit test stubs may omit high/low)
+      if (prevBar1.low != null && prevBar2.low != null) {
+        last2barSwingLow  = Math.min(prevBar1.low,  prevBar2.low);
+        last2barSwingHigh = Math.max(prevBar1.high, prevBar2.high);
+      }
+    }
+
+    // BL-8 fix: compute rolling median ATR from the last 100 bars of the buffer.
+    // The backtest uses np.nanmedian(atr_values) over all bars; paper previously used
+    // atr * 0.85 (constant ratio ~1.176 regardless of regime volatility).
+    // A 100-bar window approximates the backtest median over the recent regime.
+    // min 14 bars required (ATR warmup); falls back to undefined (no ATR scaling).
+    //
+    // FIX MED-4 (2026-06-29): use Wilder True Range instead of |high-low| proxy.
+    // |H-L| underestimates ATR on gap-open bars (CME Globex gap days, EIA on MCL)
+    // → slippage was underestimated → paper P&L optimistically biased vs live.
+    // True Range = max(|H-L|, |H-prevClose|, |L-prevClose|), matching backtester.py.
+    // Fallback: when no prevClose is available (first bar in window), use |H-L|.
+    let medianAtr14Val: number | undefined = undefined;
+    if (buf.length >= 14) {
+      const window = buf.slice(-100);  // last 100 bars (or fewer on session start)
+      const trueRanges = window.map((b, i) => {
+        const h = b.high ?? b.close;
+        const l = b.low ?? b.close;
+        const hl = Math.abs(h - l);
+        if (i === 0) return hl; // no prevClose for first window bar — fallback
+        const prevC = window[i - 1].close;
+        return Math.max(hl, Math.abs(h - prevC), Math.abs(l - prevC));
+      });
+      const sortedRanges = [...trueRanges].sort((a, b) => a - b);
+      const mid = Math.floor(sortedRanges.length / 2);
+      medianAtr14Val = sortedRanges.length % 2 === 0
+        ? (sortedRanges[mid - 1] + sortedRanges[mid]) / 2
+        : sortedRanges[mid];
+      if (medianAtr14Val <= 0) medianAtr14Val = undefined;
+    }
+
     const ctx: StyleExitBarContext = {
       currentTimeEt,
       atr14: { [bar.symbol]: atr14 },
@@ -140,6 +283,17 @@ async function buildExitBarContext(bar: Bar): Promise<StyleExitBarContext | unde
       // Handlers fallback to unit-vol (barVol=1) when this map is absent or zero.
       barVol: { [bar.symbol]: bar.volume > 0 ? bar.volume : 1 },
       ...(poc != null ? { developingSessionPoc: { [bar.symbol]: poc } } : {}),
+      // H-2 fix: swing data from bar buffer (populated when buffer has ≥3 bars)
+      ...(last2barSwingLow  != null ? { last2barSwingLow:  { [bar.symbol]: last2barSwingLow  } } : {}),
+      ...(last2barSwingHigh != null ? { last2barSwingHigh: { [bar.symbol]: last2barSwingHigh } } : {}),
+      // BL-8 fix: rolling median ATR for slippage ATR-scaling (replaces atr*0.85 constant)
+      ...(medianAtr14Val != null ? { medianAtr14: { [bar.symbol]: medianAtr14Val } } : {}),
+      // C2 fix: current bar OHLC extremes for intrabar TP touch detection.
+      // Passed to style_c_handler.py as bar_high/bar_low so price_reached() uses the
+      // bar's intrabar high (longs) / low (shorts) instead of bar close, matching
+      // backtester.py:1248/1260. Bar.high/Bar.low are always numbers per the Bar interface.
+      currentBarHigh: { [bar.symbol]: bar.high },
+      currentBarLow:  { [bar.symbol]: bar.low  },
     };
     return ctx;
   } catch (err) {
@@ -163,7 +317,14 @@ async function processSessionBar(sessionId: string, bar: Bar) {
   // Every downstream call that accepts a correlationId receives this value.
   const correlationId = randomUUID();
 
-  const priceMap = { [bar.symbol]: bar.close };
+  // BL-1 / H-1 fix: pass full OHLC bar so updatePositionPrices can:
+  //   (a) detect intrabar stop breaches using bar.low (longs) / bar.high (shorts)
+  //   (b) update highSinceEntryPrice / lowSinceEntryPrice running trackers
+  // Prior code sent only bar.close — the high/low fields were always equal to close
+  // in normalizePriceUpdate (the number-fallback path).
+  const priceMap: Record<string, import("./paper-execution-service.js").PriceBarUpdate> = {
+    [bar.symbol]: { close: bar.close, high: bar.high, low: bar.low, volume: bar.volume },
+  };
 
   // Build exit bar context for Track 3 Style C/adaptive runner trail dispatch.
   // Includes true bar volume (Wave 26 AVWAP wiring). Fail-soft: if context build

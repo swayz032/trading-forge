@@ -30,6 +30,43 @@ const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 /** Hard timeout for the PowerShell script (OFF wait 30s + ON + margins). */
 const SCRIPT_TIMEOUT_MS = 75_000; // 75 seconds
 
+// ─── A-12: Daily KASA cycle cap ──────────────────────────────────────────────
+// Prevents a boot-loop from firing KASA repeatedly during a 30-day unattended run.
+// Cap defaults to 2 per 24h; overrideable via KASA_DAILY_CYCLE_CAP env var.
+const KASA_DAILY_CYCLE_CAP = Math.max(
+  1,
+  parseInt(process.env["KASA_DAILY_CYCLE_CAP"] ?? "2", 10) || 2,
+);
+
+/**
+ * DB-backed count of KASA power-cycle attempts in the last 24h.
+ * Counts 'recovery.remote_power_cycle_triggered' audit rows — written BEFORE
+ * each cycle — so even cycles that crash mid-script are counted.
+ * Returns 0 on error (fail-open: better to attempt one extra cycle than to
+ * skip recovery because the count query is broken).
+ */
+async function countKasaCyclesLast24h(): Promise<number> {
+  try {
+    const { auditLog } = await import("../db/schema.js");
+    const { and, eq, gte, count } = await import("drizzle-orm");
+    const { db } = await import("../db/index.js");
+    const windowStart = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const rows = await db
+      .select({ n: count() })
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.action, "recovery.remote_power_cycle_triggered"),
+          gte(auditLog.createdAt, windowStart),
+        ),
+      );
+    return Number(rows[0]?.n ?? 0);
+  } catch (err) {
+    logger.warn({ err }, "remote-power-cycle: daily cap count query failed (fail-open → counting 0)");
+    return 0;
+  }
+}
+
 /**
  * Invoke the TP-Link Kasa smart-plug power-cycle script.
  *
@@ -89,6 +126,56 @@ export async function triggerRemotePowerCycle(
       `remote_power_cycle_partial_config: KASA_DEVICE_IP/USERNAME/PASSWORD must all be set or all absent. ` +
       `Missing: ${missingVars.join(", ")}`,
     );
+  }
+
+  // ─── A-12: Daily KASA cycle cap ──────────────────────────────────────────────
+  // Check BEFORE writing the cycle audit row so cap is enforced against cycles
+  // that have already had their audit row written (the count query targets the
+  // 'recovery.remote_power_cycle_triggered' action, written pre-script).
+  const cyclesInLast24h = await countKasaCyclesLast24h();
+  if (cyclesInLast24h >= KASA_DAILY_CYCLE_CAP) {
+    const capCorrelationId = randomUUID();
+    logger.error(
+      { cyclesInLast24h, cap: KASA_DAILY_CYCLE_CAP, reason, correlationId: capCorrelationId },
+      "remote-power-cycle: daily KASA cap reached — blocking cycle to prevent boot-loop destruction",
+    );
+
+    try {
+      const { auditLog } = await import("../db/schema.js");
+      const { db } = await import("../db/index.js");
+      await db.insert(auditLog).values({
+        action: "recovery.remote_power_cycle_cap_reached",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: {
+          reason,
+          parentCorrelationId: correlationId,
+          cyclesInLast24h,
+          cap: KASA_DAILY_CYCLE_CAP,
+        } as Record<string, unknown>,
+        result: { status: "cap_blocked", capCorrelationId } as Record<string, unknown>,
+        status: "failure",
+        correlationId: capCorrelationId,
+      });
+    } catch (auditErr) {
+      logger.error({ auditErr, capCorrelationId }, "remote-power-cycle: cap-reached audit write failed");
+    }
+
+    notifyCritical(
+      `Heartbeat: KASA daily cap reached (${cyclesInLast24h}/${KASA_DAILY_CYCLE_CAP}) — cycle BLOCKED`,
+      appendFamilyGradePostscript(
+        `Remote power-cycle was requested but the daily cap of ${KASA_DAILY_CYCLE_CAP} cycles in 24h has ` +
+          `been reached (${cyclesInLast24h} already fired). The cycle was BLOCKED to prevent equipment ` +
+          `damage from a boot-loop. Trigger reason: ${reason}. Audit ID: ${capCorrelationId}. ` +
+          `Manual intervention required — check NSSM event log and power-cycle manually if needed.`,
+        "The trading system tried to restart the computer too many times today. The automatic restart was blocked to protect the hardware.",
+        "Call Tony immediately. If the trading is stopped, you may manually power-cycle the tower by holding the power button for 5 seconds, but only after calling Tony.",
+      ),
+      { cyclesInLast24h, cap: KASA_DAILY_CYCLE_CAP, reason, capCorrelationId, parentCorrelationId: correlationId },
+    );
+
+    return false;
   }
 
   const cycleCorrelationId = randomUUID();

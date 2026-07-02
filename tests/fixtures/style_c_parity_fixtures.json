@@ -1,0 +1,89 @@
+{
+  "_comment": "Shared Style C exit parity fixtures (2026-06-29 deep-scan #4). Run through BOTH src/engine/exits/style_c_handler.py::evaluate_exit AND src/server/lib/style-c-exit-evaluator.ts::evaluateStyleCExit. Both MUST produce the same decision + new_stop. Gates the STYLE_C_EXIT_TS_NATIVE=true flip. entry=4500 stop_pts=10 → long tp1=4510 tp2=4520; short tp1=4490 tp2=4480. NaN/Inf cases are asserted inline in each test (JSON cannot encode NaN).",
+  "fixtures": [
+    {
+      "name": "long_tp1_hit_intrabar_high",
+      "state": { "direction": "long", "entry_price": 4500, "stop_pts": 10, "current_price": 4505, "current_time_et": "10:00", "tp1_filled": false, "tp2_filled": false, "bar_high": 4510, "bar_low": 4502, "developing_session_poc": null },
+      "expected_decision": "FILL_TP1_50PCT",
+      "expected_new_stop": null
+    },
+    {
+      "name": "long_tp1_not_reached_holds",
+      "state": { "direction": "long", "entry_price": 4500, "stop_pts": 10, "current_price": 4505, "current_time_et": "10:00", "tp1_filled": false, "tp2_filled": false, "bar_high": 4509, "bar_low": 4502, "developing_session_poc": null },
+      "expected_decision": "HOLD",
+      "expected_new_stop": null
+    },
+    {
+      "name": "long_tp2_hit_after_tp1",
+      "state": { "direction": "long", "entry_price": 4500, "stop_pts": 10, "current_price": 4515, "current_time_et": "10:00", "tp1_filled": true, "tp2_filled": false, "bar_high": 4520, "bar_low": 4512, "developing_session_poc": null },
+      "expected_decision": "FILL_TP2",
+      "expected_new_stop": null
+    },
+    {
+      "name": "long_tp1_priority_over_tp2_when_tp1_unfilled",
+      "state": { "direction": "long", "entry_price": 4500, "stop_pts": 10, "current_price": 4518, "current_time_et": "10:00", "tp1_filled": false, "tp2_filled": false, "bar_high": 4520, "bar_low": 4512, "developing_session_poc": null },
+      "expected_decision": "FILL_TP1_50PCT",
+      "expected_new_stop": null
+    },
+    {
+      "name": "short_tp1_hit_intrabar_low",
+      "state": { "direction": "short", "entry_price": 4500, "stop_pts": 10, "current_price": 4495, "current_time_et": "10:00", "tp1_filled": false, "tp2_filled": false, "bar_high": 4498, "bar_low": 4490, "developing_session_poc": null },
+      "expected_decision": "FILL_TP1_50PCT",
+      "expected_new_stop": null
+    },
+    {
+      "name": "short_tp2_hit_after_tp1",
+      "state": { "direction": "short", "entry_price": 4500, "stop_pts": 10, "current_price": 4485, "current_time_et": "10:00", "tp1_filled": true, "tp2_filled": false, "bar_high": 4488, "bar_low": 4480, "developing_session_poc": null },
+      "expected_decision": "FILL_TP2",
+      "expected_new_stop": null
+    },
+    {
+      "name": "runner_trail_update_poc_not_breached_long",
+      "state": { "direction": "long", "entry_price": 4500, "stop_pts": 10, "current_price": 4535, "current_time_et": "10:00", "tp1_filled": true, "tp2_filled": true, "bar_high": 4536, "bar_low": 4533, "developing_session_poc": 4530 },
+      "expected_decision": "TIGHTEN_TRAIL_TO_X",
+      "expected_new_stop": 4530
+    },
+    {
+      "name": "runner_trail_breached_long",
+      "state": { "direction": "long", "entry_price": 4500, "stop_pts": 10, "current_price": 4525, "current_time_et": "10:00", "tp1_filled": true, "tp2_filled": true, "bar_high": 4527, "bar_low": 4524, "developing_session_poc": 4530 },
+      "expected_decision": "TIGHTEN_TRAIL_TO_X",
+      "expected_new_stop": 4530
+    },
+    {
+      "name": "time_stop_at_1555_takes_priority_over_tp1",
+      "state": { "direction": "long", "entry_price": 4500, "stop_pts": 10, "current_price": 4505, "current_time_et": "15:55", "tp1_filled": false, "tp2_filled": false, "bar_high": 4510, "bar_low": 4502, "developing_session_poc": null },
+      "expected_decision": "TIME_STOP_FLATTEN",
+      "expected_new_stop": null
+    },
+    {
+      "name": "time_stop_before_1554_no_flatten",
+      "state": { "direction": "long", "entry_price": 4500, "stop_pts": 10, "current_price": 4505, "current_time_et": "15:54", "tp1_filled": false, "tp2_filled": false, "bar_high": 4505, "bar_low": 4502, "developing_session_poc": null },
+      "expected_decision": "HOLD",
+      "expected_new_stop": null
+    },
+    {
+      "name": "hold_default_no_trigger",
+      "state": { "direction": "long", "entry_price": 4500, "stop_pts": 10, "current_price": 4505, "current_time_et": "10:00", "tp1_filled": false, "tp2_filled": false, "bar_high": 4508, "bar_low": 4502, "developing_session_poc": null },
+      "expected_decision": "HOLD",
+      "expected_new_stop": null
+    },
+    {
+      "name": "stop_pts_zero_holds",
+      "state": { "direction": "long", "entry_price": 4500, "stop_pts": 0, "current_price": 4505, "current_time_et": "10:00", "tp1_filled": false, "tp2_filled": false, "bar_high": 4510, "bar_low": 4502, "developing_session_poc": null },
+      "expected_decision": "HOLD",
+      "expected_new_stop": null
+    },
+    {
+      "name": "bar_high_null_falls_back_to_current_price_long",
+      "state": { "direction": "long", "entry_price": 4500, "stop_pts": 10, "current_price": 4510, "current_time_et": "10:00", "tp1_filled": false, "tp2_filled": false, "bar_high": null, "bar_low": null, "developing_session_poc": null },
+      "expected_decision": "FILL_TP1_50PCT",
+      "expected_new_stop": null
+    },
+    {
+      "name": "tp1_already_filled_no_refire_tp2_not_reached",
+      "state": { "direction": "long", "entry_price": 4500, "stop_pts": 10, "current_price": 4512, "current_time_et": "10:00", "tp1_filled": true, "tp2_filled": false, "bar_high": 4515, "bar_low": 4511, "developing_session_poc": null },
+      "expected_decision": "HOLD",
+      "expected_new_stop": null
+    }
+  ]
+}

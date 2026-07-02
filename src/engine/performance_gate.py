@@ -102,11 +102,16 @@ def check_performance_gate(stats: dict, firm_key: str | None = None) -> tuple[bo
             f"Strategy earns ${stats['avg_daily_pnl'] * 20:.0f}/month — not worth one account."
         )
 
-    # Daily survival: 60%+ winning days
-    win_rate = stats["winning_days"] / stats["total_trading_days"]
-    if win_rate < 0.60:
+    # Daily survival: 60%+ positive days.
+    # FIX-4 (2026-06-29): renamed win_rate → daily_positive_days_rate to distinguish
+    # this DAY-LEVEL consistency check from trade-level win rate.  Trade-level win rate
+    # is never a gate (per CLAUDE.md PIN).  This variable measures the fraction of
+    # calendar trading days that were net-positive, which is a legitimate institutional
+    # daily-survival consistency gate — completely unrelated to per-trade hit rate.
+    daily_positive_days_rate = stats["winning_days"] / stats["total_trading_days"]
+    if daily_positive_days_rate < 0.60:
         rejections.append(
-            f"Win rate by days {win_rate:.0%} < 60% minimum. "
+            f"Daily positive-day rate {daily_positive_days_rate:.0%} < 60% minimum. "
             f"{stats['total_trading_days'] - stats['winning_days']} losing days "
             f"out of {stats['total_trading_days']} — too inconsistent."
         )
@@ -307,8 +312,9 @@ def compute_forge_score(
     # ── Daily survival (0-22): 60% = 0, 80%+ = 22
     # Reduced from 25 to 22 to accommodate survival_score component
     total_days = max(stats["total_trading_days"], 1)
-    win_rate = stats["winning_days"] / total_days
-    daily_survival = min(22, max(0, (win_rate - 0.60) / 0.20 * 22))
+    # day-level rate (not trade-level win rate — see FIX-4 in check_performance_gate)
+    daily_positive_days_rate = stats["winning_days"] / total_days
+    daily_survival = min(22, max(0, (daily_positive_days_rate - 0.60) / 0.20 * 22))
 
     # ── Drawdown vs prop firm (0-18): $2,000 = 0 (tightest 50K firm), $500 = 18
     # Reduced from 20 to 18 to accommodate survival_score component

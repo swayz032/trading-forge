@@ -153,6 +153,11 @@ export const MES_QUERY_TEMPLATES: string[] = [
   "MCL crude oil inventory report fade",
   "MCL crude oil ATR breakout setup",
   "MCL crude oil session high low fade",
+  // 2026-06-27 operator keyword extension — YouTube-led discovery pivot.
+  "MES day trading strategy rules",
+  "MES structural trade setup",
+  "MES macro setup entry criteria",
+  "MES market structure shift",
 ];
 
 // W23F.E — MNQ group (Nasdaq / NQ / QQQ / tech futures vocabulary)
@@ -189,6 +194,8 @@ export const MNQ_QUERY_TEMPLATES: string[] = [
   // ── Funded trader / prop firm specific
   "Topstep funded trader MNQ Nasdaq strategy windowed",
   "MFFU funded MNQ Nasdaq consistency rules",
+  // 2026-06-27 operator keyword extension — YouTube-led discovery pivot.
+  "MNQ intraday trend following",
 ];
 
 // W23F.E — MCL group (crude / WTI / CL / oil vocabulary)
@@ -225,6 +232,9 @@ export const MCL_QUERY_TEMPLATES: string[] = [
   // ── Funded trader / prop firm specific
   "Topstep funded trader MCL crude oil windowed strategy",
   "MFFU funded MCL micro crude consistency rules",
+  // 2026-06-27 operator keyword extension — YouTube-led discovery pivot.
+  "MCL session trading setup",
+  "MCL intraday trend continuation",
 ];
 
 // ─── W23F.V (2026-05-19) — Operator-curated discovery query set ──────────────
@@ -242,7 +252,8 @@ export const MCL_QUERY_TEMPLATES: string[] = [
 // + per-symbol liquidity caps. Format invariants preserved.
 //
 // DO NOT MODIFY without operator sign-off — these are the production query set.
-const OPERATOR_QUERY_TEMPLATES: string[] = [
+// Exported for unit testing (keyword-presence assertions in test suite).
+export const OPERATOR_QUERY_TEMPLATES: string[] = [
   "futures trading strategies rules",
   "futures 4 hr strategy",
   "futures 15min strategy",
@@ -251,6 +262,14 @@ const OPERATOR_QUERY_TEMPLATES: string[] = [
   "futures indicators",
   "futures trading A+ setups",
   "futures trend trading strategy",
+  // 2026-06-27 operator keyword extension — YouTube-led discovery pivot.
+  // "Opening Range Breakout 15 min" SKIPPED — near-duplicate of
+  // "opening range breakout 15 minute MES rules" in MES_QUERY_TEMPLATES.
+  "futures intraday momentum setup",
+  "Initial Balance breakout futures",
+  "VWAP deviation bands day trade",
+  "naked POC futures target strategy",
+  "first hour futures trading strategy",
 ];
 
 // Symbol-agnostic shared across all symbol groups via getQueryTemplatesForGroup.
@@ -324,6 +343,67 @@ export async function resolveCycleIndex(): Promise<number> {
     logger.warn({ err: e instanceof Error ? e.message : String(e) }, "autonomous-scout: cycle index read failed, defaulting to 0 (MES)");
     return 0;
   }
+}
+
+// ─── 2026-06-27 daily-rotating-subset (freshness mechanism) ──────────────────
+//
+// Each 4h cycle fires only a deterministic window (wrap-around slice) of the full
+// query pool rather than all queries at once. Benefits:
+//   - YouTube API quota spread across the full keyword set over multiple cycles
+//   - Each cycle surfaces different vocabulary → reduces SEO-monoculture bias
+//   - No randomness: replay-deterministic, testable, auditable
+//
+// Default SCOUT_KEYWORD_SUBSET_SIZE = 16.
+// At a ~80-110 combined query pool per group (post-2026-06-27 extension), a
+// 16-query window rotates the entire pool every ~5-7 cycles (20-28 hours at the
+// 4h cron cadence). Operator can raise the env var to fire more queries per cycle
+// or lower it to stay tighter under quota limits.
+//
+// Fail-open contract: if the env var is missing / unparseable, or subsetSize >=
+// pool.length, the full pool fires unchanged (identical to pre-2026-06-27 behavior).
+
+/**
+ * Default rotating-subset size when SCOUT_KEYWORD_SUBSET_SIZE env var is absent
+ * or unparseable. Named constant — never use a bare magic number.
+ */
+const DEFAULT_SCOUT_KEYWORD_SUBSET_SIZE = 16;
+
+/**
+ * Returns a deterministic wrap-around window of `subsetSize` queries from `pool`
+ * starting at `(cycleIndex % pool.length)`.
+ *
+ * Fail-open: returns a copy of the full pool when:
+ *   - pool is empty
+ *   - subsetSize <= 0, NaN, or non-finite
+ *   - subsetSize >= pool.length (no slicing needed)
+ *
+ * Pure function — no I/O, no Math.random(), no Date.now(). Deterministic for
+ * replay and tests: identical (pool, cycleIndex, subsetSize) → identical output.
+ *
+ * Exported for unit testing.
+ */
+export function getRotatingQuerySubset(
+  pool: string[],
+  cycleIndex: number,
+  subsetSize: number,
+): string[] {
+  if (
+    !pool.length ||
+    !Number.isFinite(subsetSize) ||
+    subsetSize <= 0 ||
+    subsetSize >= pool.length
+  ) {
+    return [...pool];
+  }
+  const n = pool.length;
+  const size = Math.floor(subsetSize);
+  // Use double-modulo to handle any negative cycleIndex safely.
+  const offset = ((cycleIndex % n) + n) % n;
+  const result: string[] = [];
+  for (let i = 0; i < size; i++) {
+    result.push(pool[(offset + i) % n]);
+  }
+  return result;
 }
 
 const REDDIT_SUBS = ["FuturesTrading", "Daytrading", "algotrading"];
@@ -832,7 +912,10 @@ async function _fetchYouTubeOrder(
 // W23G.6 (2026-05-19) — eligibility now uses combined_score (title + description
 // at half weight) rather than title-only score. Threshold unchanged at > -3 but
 // applied to combined_score.
-async function fetchYouTubeTopVideos(
+// Exported so carter-actions.ts can call YouTube discovery without re-implementing
+// the two-pass captioned+uncaptioned strategy. Returns candidate list (title+url) only —
+// callers MUST NOT auto-extract transcripts; that is the autonomous-cycle's job.
+export async function fetchYouTubeTopVideos(
   conceptName: string,
   cycleCorrelationId?: string,
 ): Promise<Array<{ url: string; title: string; source_pass: "captioned" | "uncaptioned"; sourceQuery: string; titleScore: number; combinedScore: number; videoId: string }>> {
@@ -1181,7 +1264,22 @@ export async function runAutonomousScoutCycle(): Promise<CycleResult> {
   const symbolGroup = pickSymbolGroupForCycle(cycleIndex);
   const discoveryQueries = getQueryTemplatesForGroup(symbolGroup);
 
-  logger.info({ queries: discoveryQueries.length, cycleIndex, symbolGroup }, "autonomous-scout: cycle starting");
+  // 2026-06-27: daily-rotating-subset freshness mechanism. Each cycle fires a
+  // deterministic wrap-around window of SCOUT_KEYWORD_SUBSET_SIZE queries from
+  // the combined pool, offset by cycleIndex. Prevents every 4h tick from
+  // re-firing the same high-SEO queries; spreads YouTube API quota across the
+  // full keyword set over multiple cycles. Fail-open: full pool fires when the
+  // env var is absent, unparseable, or >= pool length.
+  const resolvedSubsetSize = (() => {
+    const raw = Number(process.env.SCOUT_KEYWORD_SUBSET_SIZE);
+    return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : DEFAULT_SCOUT_KEYWORD_SUBSET_SIZE;
+  })();
+  const activeQueries = getRotatingQuerySubset(discoveryQueries, cycleIndex, resolvedSubsetSize);
+  const subsetOffset = cycleIndex % Math.max(1, discoveryQueries.length);
+  logger.info(
+    { poolSize: discoveryQueries.length, subsetSize: activeQueries.length, subsetOffset, cycleIndex, symbolGroup },
+    "autonomous-scout: cycle starting",
+  );
 
   // W23F.E — emit audit row at cycle start so the rotation state is durable.
   // The count of these rows drives the next cycle's symbol group selection.
@@ -1192,7 +1290,9 @@ export async function runAutonomousScoutCycle(): Promise<CycleResult> {
     result: {
       cycle_index: cycleIndex,
       seeded_symbol: symbolGroup,
-      query_count: discoveryQueries.length,
+      query_count: activeQueries.length,
+      pool_size: discoveryQueries.length,
+      subset_offset: subsetOffset,
     } as Record<string, unknown>,
     status: "success",
     decisionAuthority: "scheduler",
@@ -1224,9 +1324,11 @@ export async function runAutonomousScoutCycle(): Promise<CycleResult> {
     logger.warn({ err: e instanceof Error ? e.message : String(e) }, "autonomous-scout: failed to load existing canonicals, falling back to per-cycle dedup only");
   }
 
-  // Shuffle queries so we don't always pick from the same query first.
+  // Shuffle the active rotating subset so we don't always pick from offset position first.
   // W23F.E: shuffle within the selected symbol group's query list.
-  const queriesShuffled = [...discoveryQueries].sort(() => Math.random() - 0.5);
+  // 2026-06-27: shuffles the rotating subset (not the full pool) so intra-cycle
+  // order varies while the cross-cycle rotation remains deterministic.
+  const queriesShuffled = [...activeQueries].sort(() => Math.random() - 0.5);
 
   // Step 1 — discover concepts from Brave + Exa in parallel per query.
   // Pass 21 (2026-05-12 v2): added Exa neural search alongside Brave.
@@ -1725,7 +1827,7 @@ export async function runAutonomousScoutCycle(): Promise<CycleResult> {
   const finishedAt = new Date().toISOString();
   const result: CycleResult = {
     startedAt, finishedAt, durationMs: Date.now() - t0,
-    queriesRun: discoveryQueries.length,
+    queriesRun: activeQueries.length,
     conceptsDiscovered: concepts.length,
     webMentions, youtubeMentions, redditMentions, errors,
     symbolGroup,  // W23F.E

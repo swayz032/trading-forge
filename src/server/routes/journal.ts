@@ -257,6 +257,17 @@ journalRoutes.post("/", idempotencyMiddleware, async (req, res) => {
     status,
   } = req.body;
 
+  // Deep-scan #4 fix: `system_journal.source` is NOT NULL. A missing source used to
+  // throw inside the insert → opaque 500 that onError:continueRegularOutput swallowed,
+  // so n8n journal writers silently persisted nothing while looking green. Fail LOUD
+  // with a clear 400 so a malformed writer is visible instead of silently dropped.
+  if (typeof source !== "string" || source.trim() === "") {
+    return res.status(400).json({
+      error: "missing_source",
+      message: "journal entry requires a non-empty `source` field",
+    });
+  }
+
   try {
     const [row] = await db
       .insert(systemJournal)

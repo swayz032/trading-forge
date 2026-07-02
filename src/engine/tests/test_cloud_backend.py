@@ -16,9 +16,7 @@ from __future__ import annotations
 
 import json
 import os
-import tempfile
 from pathlib import Path
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -39,7 +37,6 @@ from src.engine.hardware_profile import (
     get_hardware_profile,
     select_backend,
 )
-
 
 # ─── Fixtures ────────────────────────────────────────────────────────────────
 
@@ -685,3 +682,236 @@ class TestIAEWatchdogRunner:
             watchdog_interval=1,
         )
         assert result is not None
+
+
+# ─── MED-FIX: IBM channel env-driven + CRN wiring ────────────────────────────
+#
+# Three hardcoded channel="ibm_quantum_platform" sites were replaced with
+# os.environ.get("IBM_QUANTUM_CHANNEL", "ibm_cloud") so the post-2023 IBM Cloud
+# (CRN-based) account works correctly.  These tests verify that env drives the
+# channel and that IBM_QUANTUM_CRN replaces the legacy "open-instance" placeholder.
+
+
+class TestIBMChannelEnvDriven:
+    """get_ibm_sampler, poll_ibm_job, and hardware_profile._list_ibm must read
+    IBM_QUANTUM_CHANNEL (default 'ibm_cloud') rather than hardcoding the legacy
+    'ibm_quantum_platform' string.  IBM_QUANTUM_CRN must replace 'open-instance'
+    when provided.
+    """
+
+    # ── helpers ──────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _inject_mock_ibm(cb_module):
+        """Inject mock QiskitRuntimeService + SamplerV2 into cb_module.
+        Returns (mock_qs_cls, originals_dict) for later restore."""
+        mock_qs_cls = MagicMock()
+        mock_svc = MagicMock()
+        mock_backend = MagicMock()
+        mock_svc.backend.return_value = mock_backend
+        mock_qs_cls.return_value = mock_svc
+        mock_sampler_cls = MagicMock()
+        mock_sampler_cls.return_value = MagicMock()
+
+        originals = {
+            "IBM_RUNTIME_AVAILABLE": cb_module.IBM_RUNTIME_AVAILABLE,
+        }
+        cb_module.IBM_RUNTIME_AVAILABLE = True
+        cb_module.QiskitRuntimeService = mock_qs_cls
+        cb_module.SamplerV2 = mock_sampler_cls
+        return mock_qs_cls, originals
+
+    @staticmethod
+    def _restore_ibm(cb_module, originals):
+        cb_module.IBM_RUNTIME_AVAILABLE = originals["IBM_RUNTIME_AVAILABLE"]
+        try:
+            from qiskit_ibm_runtime import QiskitRuntimeService as _real
+            cb_module.QiskitRuntimeService = _real
+        except ImportError:
+            if hasattr(cb_module, "QiskitRuntimeService"):
+                del cb_module.QiskitRuntimeService
+
+    # ── get_ibm_sampler ───────────────────────────────────────────────────────
+
+    def test_get_ibm_sampler_defaults_to_ibm_cloud_channel(self):
+        """Without IBM_QUANTUM_CHANNEL set, get_ibm_sampler must use 'ibm_cloud'."""
+        import src.engine.cloud_backend as cb
+        mock_qs_cls, originals = self._inject_mock_ibm(cb)
+        try:
+            env_clean = {
+                k: v for k, v in os.environ.items()
+                if k not in ("IBM_QUANTUM_CHANNEL", "IBM_QUANTUM_CRN", "IBM_QUANTUM_INSTANCE")
+            }
+            with patch.dict(os.environ, env_clean, clear=True):
+                cb.get_ibm_sampler("ibm_torino", "tok", "open-instance")
+            call_kwargs = mock_qs_cls.call_args.kwargs
+            assert call_kwargs["channel"] == "ibm_cloud", (
+                f"Expected channel='ibm_cloud', got '{call_kwargs['channel']}'. "
+                "MED-FIX: channel must default to 'ibm_cloud' for post-2023 IBM Cloud accounts."
+            )
+        finally:
+            self._restore_ibm(cb, originals)
+
+    def test_get_ibm_sampler_reads_ibm_quantum_channel_env(self):
+        """IBM_QUANTUM_CHANNEL env must override the default channel."""
+        import src.engine.cloud_backend as cb
+        mock_qs_cls, originals = self._inject_mock_ibm(cb)
+        try:
+            with patch.dict(os.environ, {"IBM_QUANTUM_CHANNEL": "ibm_quantum_platform"}, clear=False):
+                cb.get_ibm_sampler("ibm_torino", "tok", "open-instance")
+            call_kwargs = mock_qs_cls.call_args.kwargs
+            assert call_kwargs["channel"] == "ibm_quantum_platform", (
+                "IBM_QUANTUM_CHANNEL env should override the 'ibm_cloud' default."
+            )
+        finally:
+            self._restore_ibm(cb, originals)
+
+    def test_get_ibm_sampler_resolves_crn_when_open_instance_passed(self):
+        """When instance='open-instance', IBM_QUANTUM_CRN env must be substituted."""
+        import src.engine.cloud_backend as cb
+        mock_qs_cls, originals = self._inject_mock_ibm(cb)
+        try:
+            crn = "crn:v1:bluemix:public:quantum-computing:us-east:a/abc:xyz::"
+            with patch.dict(os.environ, {"IBM_QUANTUM_CRN": crn}, clear=False):
+                cb.get_ibm_sampler("ibm_torino", "tok", "open-instance")
+            call_kwargs = mock_qs_cls.call_args.kwargs
+            assert call_kwargs["instance"] == crn, (
+                f"Expected instance='{crn}', got '{call_kwargs['instance']}'. "
+                "IBM_QUANTUM_CRN must replace 'open-instance' placeholder."
+            )
+        finally:
+            self._restore_ibm(cb, originals)
+
+    def test_get_ibm_sampler_keeps_explicit_instance(self):
+        """Explicit non-default instance string must be preserved unchanged."""
+        import src.engine.cloud_backend as cb
+        mock_qs_cls, originals = self._inject_mock_ibm(cb)
+        try:
+            real_crn = "crn:v1:bluemix:public:quantum-computing:us-east:a/explicit::"
+            env_clean = {k: v for k, v in os.environ.items() if k not in ("IBM_QUANTUM_CRN", "IBM_QUANTUM_INSTANCE")}
+            with patch.dict(os.environ, env_clean, clear=True):
+                cb.get_ibm_sampler("ibm_torino", "tok", real_crn)
+            call_kwargs = mock_qs_cls.call_args.kwargs
+            assert call_kwargs["instance"] == real_crn, (
+                f"Explicit instance '{real_crn}' must not be overridden by env."
+            )
+        finally:
+            self._restore_ibm(cb, originals)
+
+    # ── poll_ibm_job ──────────────────────────────────────────────────────────
+
+    def test_poll_ibm_job_uses_ibm_cloud_channel_by_default(self):
+        """poll_ibm_job must use channel='ibm_cloud' by default."""
+        import src.engine.cloud_backend as cb
+        mock_qs_cls, originals = self._inject_mock_ibm(cb)
+        try:
+            mock_svc = mock_qs_cls.return_value
+            mock_job = MagicMock()
+            mock_job.status.return_value = "QUEUED"
+            mock_svc.job.return_value = mock_job
+
+            env = {k: v for k, v in os.environ.items()
+                   if k not in ("IBM_QUANTUM_CHANNEL", "IBM_QUANTUM_CRN", "IBM_QUANTUM_INSTANCE")}
+            env["QUANTUM_CLOUD_ENABLED"] = "true"
+            env["IBM_QUANTUM_TOKEN"] = "fake-token"
+            with patch.dict(os.environ, env, clear=True):
+                cb.poll_ibm_job("job-123", "ibm_fez")
+
+            call_kwargs = mock_qs_cls.call_args.kwargs
+            assert call_kwargs["channel"] == "ibm_cloud", (
+                f"poll_ibm_job expected channel='ibm_cloud', got '{call_kwargs['channel']}'. "
+                "MED-FIX: poll_ibm_job channel must be env-driven."
+            )
+        finally:
+            self._restore_ibm(cb, originals)
+
+    def test_poll_ibm_job_resolves_crn_from_env(self):
+        """poll_ibm_job must substitute IBM_QUANTUM_CRN for 'open-instance'."""
+        import src.engine.cloud_backend as cb
+        mock_qs_cls, originals = self._inject_mock_ibm(cb)
+        try:
+            mock_svc = mock_qs_cls.return_value
+            mock_job = MagicMock()
+            mock_job.status.return_value = "QUEUED"
+            mock_svc.job.return_value = mock_job
+
+            crn = "crn:v1:bluemix:public:quantum-computing:us-east:a/poll-test::"
+            env = {"QUANTUM_CLOUD_ENABLED": "true", "IBM_QUANTUM_TOKEN": "t", "IBM_QUANTUM_CRN": crn}
+            with patch.dict(os.environ, env, clear=False):
+                cb.poll_ibm_job("job-456", "ibm_fez")
+
+            call_kwargs = mock_qs_cls.call_args.kwargs
+            assert call_kwargs["instance"] == crn, (
+                f"Expected instance='{crn}', got '{call_kwargs['instance']}'. "
+                "poll_ibm_job must read IBM_QUANTUM_CRN instead of 'open-instance'."
+            )
+        finally:
+            self._restore_ibm(cb, originals)
+
+    # ── hardware_profile._list_ibm ────────────────────────────────────────────
+    # NOTE: hardware_profile imports QiskitRuntimeService inline inside the
+    # `if ibm_token: try: from qiskit_ibm_runtime import QiskitRuntimeService`
+    # block — it is NOT a module-level attribute.  Patching sys.modules so the
+    # inline `from qiskit_ibm_runtime import QiskitRuntimeService` resolves to
+    # our mock is the correct approach.
+
+    @staticmethod
+    def _make_qiskit_module_mock():
+        """Return (mock_qs_cls, mock_qiskit_module) for sys.modules injection."""
+        mock_qs_cls = MagicMock()
+        mock_svc = MagicMock()
+        mock_svc.backends.return_value = []
+        mock_qs_cls.return_value = mock_svc
+        mock_qiskit_mod = MagicMock()
+        mock_qiskit_mod.QiskitRuntimeService = mock_qs_cls
+        return mock_qs_cls, mock_qiskit_mod
+
+    def test_hardware_profile_detect_cloud_uses_ibm_cloud_channel(self):
+        """detect_cloud_backends must probe IBM with channel='ibm_cloud' by default.
+        Uses sys.modules injection because QiskitRuntimeService is imported inline
+        inside the function body (not a module-level attribute of hardware_profile).
+        """
+        import sys
+
+        import src.engine.hardware_profile as hp
+
+        mock_qs_cls, mock_qiskit_mod = self._make_qiskit_module_mock()
+
+        env_clean = {
+            k: v for k, v in os.environ.items()
+            if k not in ("IBM_QUANTUM_CHANNEL", "IBM_QUANTUM_CRN", "IBM_QUANTUM_INSTANCE")
+        }
+        env_clean["IBM_QUANTUM_TOKEN"] = "fake-token"
+
+        with patch.dict(sys.modules, {"qiskit_ibm_runtime": mock_qiskit_mod}):
+            with patch.dict(os.environ, env_clean, clear=True):
+                hp.detect_cloud_backends()
+
+        if mock_qs_cls.called:
+            call_kwargs = mock_qs_cls.call_args.kwargs
+            assert call_kwargs.get("channel") == "ibm_cloud", (
+                f"hardware_profile expected channel='ibm_cloud', got '{call_kwargs.get('channel')}'. "
+                "MED-FIX: hardware_profile IBM probe must use env-driven channel."
+            )
+
+    def test_hardware_profile_detect_cloud_resolves_crn(self):
+        """detect_cloud_backends must pass IBM_QUANTUM_CRN as instance when set.
+        Uses sys.modules injection for the same reason as the channel test above.
+        """
+        import sys
+
+        import src.engine.hardware_profile as hp
+
+        mock_qs_cls, mock_qiskit_mod = self._make_qiskit_module_mock()
+
+        crn = "crn:v1:bluemix:public:quantum-computing:us-east:a/hp-test::"
+
+        with patch.dict(sys.modules, {"qiskit_ibm_runtime": mock_qiskit_mod}):
+            with patch.dict(os.environ, {"IBM_QUANTUM_TOKEN": "fake-token", "IBM_QUANTUM_CRN": crn}, clear=False):
+                hp.detect_cloud_backends()
+
+        if mock_qs_cls.called:
+            call_kwargs = mock_qs_cls.call_args.kwargs
+            assert call_kwargs.get("instance") == crn, (
+                f"Expected instance='{crn}', got '{call_kwargs.get('instance')}'."
+            )

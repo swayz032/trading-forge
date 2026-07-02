@@ -92,6 +92,15 @@ try {
 
   provider.register();
   tracer = trace.getTracer("trading-forge");
+
+  // The file header promises a warning whenever OTel is not configured. Emit it now
+  // so the absence of traces is never silent in production (O3 observability fix).
+  if (!OTEL_AVAILABLE && !isDev) {
+    console.warn(
+      "[tracing] OTEL_EXPORTER_OTLP_ENDPOINT is not set — OpenTelemetry spans will be " +
+      "discarded (no-op mode). Set OTEL_EXPORTER_OTLP_ENDPOINT to enable trace export.",
+    );
+  }
 } catch (err) {
   // OTel packages failed to load — fall back to no-op rather than crashing the server
   console.warn("[tracing] Failed to initialize OpenTelemetry — falling back to no-op", err);

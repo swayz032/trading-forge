@@ -11,6 +11,7 @@ import { OllamaClient } from "./ollama-client.js";
 import { GraveyardGate } from "./graveyard-gate.js";
 import { logger } from "../lib/logger.js";
 import { callOpenAI } from "./model-router.js";
+import { getActiveVersionIdForGeneration } from "./prompt-evolution-service.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { captureToDLQ } from "../lib/dlq-service.js";
 import { runPythonModule } from "../lib/python-runner.js";
@@ -1875,6 +1876,13 @@ Respond in strict JSON:
 
     logger.info({ count: scouted.length, limit }, "Pipeline-resume drain: starting scouted-idea drain");
 
+    // Fetch the active strategy_proposer prompt version ONCE per drain run.
+    // Every strategy generated in this batch is stamped with this version ID on
+    // its system_journal row so the A/B comparator can attribute by real prompt
+    // instead of the old hashToVariant() coin-flip.  Fail-safe: null if no
+    // versioned prompt is active or on DB error — never blocks generation.
+    const generationPromptVersionId = await getActiveVersionIdForGeneration("strategy_proposer");
+
     let drained = 0;
     let failed = 0;
     const errors: string[] = [];
@@ -2184,11 +2192,17 @@ Rules:
           bucketId: overrideOptions?.bucketId ?? journalBucketId,
         }, { correlationId: drainCorrelationId });
 
-        // Link the journal entry to the new strategy (so it stops appearing in drain queue)
+        // Link the journal entry to the new strategy (so it stops appearing in drain queue).
+        // Also stamp generationPromptVersionId so the A/B comparator can attribute this
+        // strategy to the real prompt version that generated it (not a coin-flip).
         if (result.strategyId) {
           await db
             .update(systemJournal)
-            .set({ strategyId: result.strategyId, status: result.status === "completed" ? "tested" : "failed" })
+            .set({
+              strategyId: result.strategyId,
+              status: result.status === "completed" ? "tested" : "failed",
+              generationPromptVersionId,
+            })
             .where(eq(systemJournal.id, entry.id));
           drained++;
         } else if (result.status === "compile_failed") {

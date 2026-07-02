@@ -21,8 +21,11 @@ describe("getCommissionPerSide", () => {
   // Alpha Futures + Tradeify removed per migration 0097 (CLAUDE.md §6 — Topstep + MFFU only).
   // Both now return the 0.62 fallback; dedicated test cases removed to prevent misleading failures.
 
-  it("returns 0.62 for MFFU", () => {
-    expect(getCommissionPerSide("mffu")).toBe(0.62);
+  it("returns 0.95 for MFFU (MES/MNQ $1.90 RT ÷ 2 — verified myfundedfutures.com 2026 + firm-config.ts:109)", () => {
+    // 2026-06-29: corrected from stale 0.62. MFFU MES/MNQ round-trip is $1.90 = $0.95/side
+    // (MCL $1.16 RT = $0.58/side; single firm value is $0.95). The old 0.62 was the generic
+    // micro fallback wrongly applied to MFFU — see docs/prop-firm-rules-2026-mffu.md:243.
+    expect(getCommissionPerSide("mffu")).toBe(0.95);
   });
 
   it("returns 0.62 for TPT", () => {
@@ -87,8 +90,8 @@ describe("Round-trip commission arithmetic", () => {
   it("commission makes a break-even gross trade a net loser", () => {
     // A $0 gross trade still costs commission (expected behaviour — models real trading)
     const grossPnl = 0.00;
-    const commission = getCommissionPerSide("mffu") * 2 * 1; // 1.24
+    const commission = getCommissionPerSide("mffu") * 2 * 1; // 1.90 ($0.95/side × 2, MFFU MES/MNQ $1.90 RT)
     const netPnl = grossPnl - commission;
-    expect(netPnl).toBeCloseTo(-1.24, 4);
+    expect(netPnl).toBeCloseTo(-1.90, 4);
   });
 });

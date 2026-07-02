@@ -182,6 +182,23 @@ export function compareShadowToBacktest(
     };
   }
 
+  // ── Baseline-availability gate (2026-06-29 deep-scan #4) ─────────────────────
+  // An empty backtest baseline (0-trade backtest, or a pre-Wave-29 backtest with
+  // no expected_signals) cannot validate divergence. BLOCK fail-closed with an
+  // HONEST reason instead of the misleading 100% "divergence" the comparator would
+  // otherwise report — every shadow signal would be marked unmatched against the
+  // empty baseline, surfacing as `divergence_exceeds_threshold: 100.0%` and hiding
+  // the real cause (no baseline). Same gate outcome (ok=false → block); clearer audit.
+  if (backtestExpected.length === 0) {
+    return {
+      ok: false,
+      divergence_pct: 0,
+      sample_size: sampleSize,
+      per_signal_violations: [],
+      reason: "backtest_baseline_unavailable",
+    };
+  }
+
   const violations: PerSignalViolation[] = [];
 
   for (let si = 0; si < shadowSignals.length; si++) {

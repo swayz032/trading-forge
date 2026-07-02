@@ -61,16 +61,38 @@ Common failure causes by job:
 ### Kill switch (halts autonomous loops without disabling jobs)
 
 To pause the `pattern-aggregator` and `quantum-replay-weekly-analysis` loops without
-disabling the jobs themselves, flip the shared kill switch:
+disabling the jobs themselves, flip the shared kill switch.
+
+The `auto_patch_loop_enabled` parameter uses **numeric mode values**:
+- `0` = OFF — all autonomous mutation loops halted immediately
+- `1` = OBSERVE — loops run but write no mutations (advisory-only, read-safe)
+- `2` = AUTOPILOT — full autonomous loop enabled (normal production state)
+
+To halt all autonomous loops (OFF):
 
 ```sql
-UPDATE system_parameters SET value = 'false' WHERE key = 'auto_patch_loop_enabled';
+UPDATE system_parameters SET current_value = '0' WHERE param_name = 'auto_patch_loop_enabled';
 ```
 
-To re-engage:
+To resume at AUTOPILOT:
 
 ```sql
-UPDATE system_parameters SET value = 'true' WHERE key = 'auto_patch_loop_enabled';
+UPDATE system_parameters SET current_value = '2' WHERE param_name = 'auto_patch_loop_enabled';
+```
+
+To engage advisory-only OBSERVE mode (no mutations, loops still run):
+
+```sql
+UPDATE system_parameters SET current_value = '1' WHERE param_name = 'auto_patch_loop_enabled';
+```
+
+**Important:** the columns are `param_name` and `current_value` (NOT `key` and `value`).
+Using wrong column names returns "column does not exist" and silently does nothing.
+
+Verify the current mode before and after:
+
+```sql
+SELECT param_name, current_value FROM system_parameters WHERE param_name = 'auto_patch_loop_enabled';
 ```
 
 This is the operator's phone-tappable halt for all autonomous mutation loops.

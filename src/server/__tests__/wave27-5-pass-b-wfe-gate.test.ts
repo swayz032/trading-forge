@@ -221,3 +221,67 @@ describe("evaluateWfeGate — result payload (SSE surface)", () => {
     }
   });
 });
+
+// ─── CPCV-exempt path (hardening/phase-0) ────────────────────────────────────
+//
+// walk_forward.py emits wfe_status="cpcv_not_applicable" when mode="cpcv".
+// This is NOT a legacy null and NOT a degenerate IS failure — the WFE ratio is
+// structurally inapplicable to CPCV paths. The gate MUST:
+//   - return status="cpcv_exempt" (not "legacy_null")
+//   - return passed=true (do NOT block)
+//   - return auditAction="lifecycle.wfe_cpcv_exempt" (distinct from "lifecycle.wfe_unavailable_legacy")
+//
+// Critical regression guard: a plain-WF backtest with wfe_overall=0.30 (below floor)
+// MUST still BLOCK regardless of any wfe_status changes to other paths.
+
+describe("evaluateWfeGate — CPCV-exempt path (hardening/phase-0)", () => {
+  it("wfe_status=cpcv_not_applicable + null wfeOverall → cpcv_exempt, passed=true, distinct auditAction", () => {
+    const result = evaluateWfeGate(null, 0.70, 0.50, "cpcv_not_applicable");
+    expect(result.status).toBe<WfeGateStatus>("cpcv_exempt");
+    expect(result.passed).toBe(true);
+    expect(result.auditAction).toBe("lifecycle.wfe_cpcv_exempt");
+    expect(result.wfeOverall).toBeNull();
+  });
+
+  it("wfe_status=cpcv_not_applicable takes precedence over low numeric wfeOverall (0.30 would block)", () => {
+    // Producer sets wfe_overall=None in Python → arrives as null.
+    // Test ensures that even if a stale/wrong numeric value arrives with the CPCV status,
+    // the wfe_status label takes precedence.
+    const result = evaluateWfeGate(0.30, 0.70, 0.50, "cpcv_not_applicable");
+    expect(result.status).toBe<WfeGateStatus>("cpcv_exempt");
+    expect(result.passed).toBe(true);
+    expect(result.auditAction).toBe("lifecycle.wfe_cpcv_exempt");
+  });
+
+  it("cpcv_exempt is NOT legacy_null — distinct status for distinct audit trail", () => {
+    const cpcvResult = evaluateWfeGate(null, 0.70, 0.50, "cpcv_not_applicable");
+    const legacyResult = evaluateWfeGate(null, 0.70, 0.50, null);
+    expect(cpcvResult.status).toBe<WfeGateStatus>("cpcv_exempt");
+    expect(legacyResult.status).toBe<WfeGateStatus>("legacy_null");
+    expect(cpcvResult.auditAction).not.toBe(legacyResult.auditAction);
+    expect(cpcvResult.auditAction).toBe("lifecycle.wfe_cpcv_exempt");
+    expect(legacyResult.auditAction).toBe("lifecycle.wfe_unavailable_legacy");
+  });
+
+  it("cpcv_exempt does NOT affect degenerate_is path (regression: degenerate_is still BLOCKS)", () => {
+    // degenerate_is is checked AFTER cpcv_not_applicable — they cannot fire simultaneously.
+    // Regression guard: wfe_status="degenerate_is" must still block.
+    const degResult = evaluateWfeGate(0.90, 0.70, 0.50, "degenerate_is");
+    expect(degResult.status).toBe<WfeGateStatus>("degenerate_is_block");
+    expect(degResult.passed).toBe(false);
+  });
+
+  it("regression: plain-WF wfe_overall=0.30 (no wfe_status) → BLOCKED, not exempt", () => {
+    const result = evaluateWfeGate(0.30, 0.70, 0.50, null);
+    expect(result.status).toBe<WfeGateStatus>("blocked");
+    expect(result.passed).toBe(false);
+    expect(result.auditAction).toBe("lifecycle.wfe_hard_floor_block");
+  });
+
+  it("regression: plain-WF wfe_overall=0.80 (no wfe_status) → PASSED normally", () => {
+    const result = evaluateWfeGate(0.80, 0.70, 0.50, null);
+    expect(result.status).toBe<WfeGateStatus>("passed");
+    expect(result.passed).toBe(true);
+    expect(result.auditAction).toBeNull();
+  });
+});

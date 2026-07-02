@@ -1306,6 +1306,7 @@
       "critic_candidates",
       "critic_optimization_runs",
       "mutation_outcomes",
+      "research_trial_counter",
       "system_parameter_history",
       "system_parameters"
     ],
@@ -1918,6 +1919,7 @@
       "/api/deployed-strategy-starvation",
       "/api/dlq",
       "/api/health",
+      "/api/leak-detection",
       "/api/metrics",
       "/api/sse",
       "/api/validation-cadence",
@@ -2013,7 +2015,8 @@
     ],
     "engine_subsystems": [],
     "database_tables": [
-      "n8n_execution_log"
+      "n8n_execution_log",
+      "workflow_backups"
     ],
     "learning_from": [
       "system_journal",
@@ -2095,7 +2098,8 @@
       "audit_log:live_order.routed"
     ],
     "scheduler_jobs": [
-      "broker-error-budget-check"
+      "broker-error-budget-check",
+      "position-drift-reconcile"
     ],
     "routes": [
       "/api/broker-accounts",
@@ -2198,6 +2202,7 @@
     ],
     "scheduler_jobs": [
       "bw-session-refresh",
+      "heartbeat-ooh-check",
       "heartbeat-stale-check",
       "heartbeat-write",
       "prop-firm-cookie-refresh"
@@ -4805,16 +4810,25 @@
       "audit_log.regime_drift_detector.*",
       "audit_log.strategy.regime_drift_detected",
       "audit_log.lifecycle.regime_drift_demotion",
-      "scheduler:regime-drift-detector:21,22-utc"
+      "scheduler:regime-drift-detector:21,22-utc",
+      "audit_log.strategy.revalidation_due",
+      "audit_log.strategy.revalidation_forced",
+      "audit_log.strategy_revalidation.completed",
+      "audit_log.strategy.sharpe_decay_warn",
+      "audit_log.strategy.sharpe_decay_review",
+      "scheduler:strategy-age-revalidation:11,12-utc"
     ],
     "scheduler_jobs": [
-      "regime-drift-detector"
+      "regime-drift-detector",
+      "strategy-age-revalidation"
     ],
     "routes": [],
     "engine_subsystems": [
       "src/server/services/regime-drift-detector-service.ts::runRegimeDriftDetector",
       "src/server/services/regime-drift-detector-service.ts::demoteOnPersistentDrift",
-      "scheduler.ts::regime-drift-detector-cron"
+      "scheduler.ts::regime-drift-detector-cron",
+      "src/server/services/strategy-revalidation-service.ts::runStrategyAgeRevalidation",
+      "scheduler.ts::rolling-sharpe-decay-bands"
     ],
     "database_tables": [
       "strategies",
@@ -5278,5 +5292,154 @@
     "learning_boundary": "production",
     "deployment_authority": "operator_only",
     "criticality": "medium"
+  },
+  {
+    "id": "candidate_backtest_conveyor",
+    "domain": "qualification",
+    "owner_surface": "node",
+    "automation_mode": "autonomous",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "scheduler",
+    "automation_scope": "Automatically enqueues walk-forward backtests for CANDIDATE strategies when pipeline mode is ACTIVE. Slot-bounded by MAX_CONCURRENT_BACKTESTS (default 3). Never touches paper streams, TradersPost, or broker path.",
+    "data_sources": [
+      "strategies table (lifecycleState=CANDIDATE)",
+      "backtests table (running count for slot math)",
+      "MAX_CONCURRENT_BACKTESTS env var"
+    ],
+    "reads_from": [
+      "strategies",
+      "backtests"
+    ],
+    "writes_to": [
+      "backtests",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log"
+    ],
+    "audit_actions": [
+      "lifecycle.candidate_conveyor_enqueued"
+    ],
+    "metrics_surfaces": [
+      "tf_candidate_conveyor_enqueued_total (Prometheus counter)"
+    ],
+    "telemetry_sources": [
+      "factory:candidate_backtest_enqueued SSE",
+      "tf_candidate_conveyor_enqueued_total"
+    ],
+    "scheduler_jobs": [
+      "candidate-backtest-conveyor"
+    ],
+    "routes": [],
+    "engine_subsystems": [
+      "candidate-backtest-conveyor-service"
+    ],
+    "database_tables": [
+      "strategies",
+      "backtests",
+      "audit_log"
+    ],
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:lifecycle.candidate_conveyor_enqueued",
+      "tf_candidate_conveyor_enqueued_total"
+    ],
+    "evidence_queries": [
+      "SELECT COUNT(*) FROM audit_log WHERE action = 'lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '24 hours'"
+    ],
+    "failure_visibility": ["scheduler logs", "tf_candidate_conveyor_enqueued_total Prometheus", "audit_log:lifecycle.candidate_conveyor_enqueued"],
+    "recovery_mode": "scheduler-retry-with-per-strategy-isolation",
+    "health_check": "SELECT COUNT(*) FROM audit_log WHERE action='lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '1 hour'",
+    "ownership_boundary": "internal-only",
+    "learning_boundary": "production",
+    "deployment_authority": "operator_only",
+    "criticality": "medium"
+  },
+  {
+    "id": "carter_voice_agent",
+    "domain": "operations",
+    "owner_surface": "node",
+    "automation_mode": "operator-controlled",
+    "manual_gate": "none",
+    "runtime_state": "active",
+    "decision_authority": "advisory",
+    "automation_scope": "Operator nerve-center voice agent (ElevenLabs WebRTC). REPORTS on every subsystem and RUNS capital-safe work only (backtests, Monte Carlo, scout discovery, research) via a registry-driven read+run tool dispatcher. May PROPOSE risky actions but NEVER bypasses a promotion, compliance, or risk gate — the gates remain authoritative. Operator-assist/advisory, not a lifecycle gate. Not in the live-trade path.",
+    "data_sources": [
+      "ElevenLabs post-call transcript webhook",
+      "Carter tool registry (read+run tools)",
+      "subsystem read surfaces (status, lifecycle, backtests, scout)"
+    ],
+    "reads_from": [
+      "strategies",
+      "backtests",
+      "audit_log",
+      "carter_issues",
+      "carter_memory"
+    ],
+    "writes_to": [
+      "carter_issues",
+      "carter_memory",
+      "audit_log"
+    ],
+    "audit_tables": [
+      "audit_log",
+      "carter_issues"
+    ],
+    "audit_actions": [
+      "carter.tool_invoked",
+      "carter.tool_failed",
+      "carter.conversation_logged"
+    ],
+    "metrics_surfaces": [
+      "/api/health"
+    ],
+    "telemetry_sources": [
+      "/api/sse",
+      "audit_log:carter.tool_invoked",
+      "audit_log:carter.conversation_logged"
+    ],
+    "scheduler_jobs": [
+      "carter-analyst-daily"
+    ],
+    "routes": [
+      "/api/carter",
+      "/api/carter/webhook",
+      "/slumhouse/api/carter-session"
+    ],
+    "engine_subsystems": [],
+    "database_tables": [
+      "carter_issues",
+      "carter_memory"
+    ],
+    "learning_from": [],
+    "learning_assets": [],
+    "learning_writes_to": [],
+    "failure_visibility": [
+      "/api/sse",
+      "/api/alerts",
+      "audit_log",
+      "carter_issues"
+    ],
+    "recovery_mode": "fail-soft",
+    "health_check": "/api/health",
+    "status": "active",
+    "self_evolving": false,
+    "proof_mode": "active-runtime",
+    "freshness_signals": [
+      "audit_log:carter.tool_invoked",
+      "carter_issues:recent-entry"
+    ],
+    "evidence_queries": [
+      "carter-tool-invocation-history",
+      "carter-conversation-log-history",
+      "carter-issue-watcher-history"
+    ],
+    "ownership_boundary": "repo-runtime",
+    "learning_boundary": "none",
+    "deployment_authority": "operator_only",
+    "criticality": "important"
   }
 ]

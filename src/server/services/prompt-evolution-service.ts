@@ -521,7 +521,17 @@ async function resolveOneTest(test: typeof promptAbTests.$inferSelect): Promise<
   const stddevA = computeStdDev(metricsA.forgeScores);
   const forgeScoreDiff = metricsB.avgForgeScore - metricsA.avgForgeScore;
 
-  if (stddevA > 0 && forgeScoreDiff < -ROLLBACK_STDDEV_THRESHOLD * stddevA) {
+  if (stddevA === 0) {
+    // Zero-variance guard: when all variant-A forge scores are identical, the
+    // stddev-based threshold (stddevA > 0 && diff < -k*stddevA) can never fire
+    // because 0 > 0 is false.  Fall back to mean-delta comparison instead.
+    // Conservative bias: rollback only when B mean is strictly below A mean.
+    // If equal, fall through to the promotion check (tie → extend or keep A).
+    if (metricsA.forgeScores.length > 0 && forgeScoreDiff < 0) {
+      await concludeTest(test, "A", metricsA, metricsB, "rollback_b_worse_zero_variance");
+      return;
+    }
+  } else if (forgeScoreDiff < -ROLLBACK_STDDEV_THRESHOLD * stddevA) {
     // B is significantly worse — rollback to A
     await concludeTest(test, "A", metricsA, metricsB, "rollback_b_worse_2stddev");
     return;
@@ -641,33 +651,21 @@ async function concludeTest(
 }
 
 /**
- * Collect performance metrics for strategies that were generated
- * while a specific prompt version was active.
+ * Collect performance metrics for strategies that were generated with a
+ * specific prompt version, as identified by the real stamp written at
+ * generation time (system_journal.generation_prompt_version_id).
  *
- * Since we can't retroactively know which version each strategy used
- * (unless we tag them), we use the deterministic hash-based split:
- * strategies whose ID hashes to the same variant as this version
- * are attributed to it.
+ * Legacy entries (null stamp, pre-migration 0176) are EXCLUDED from the
+ * comparison — exclusion is safer than coin-flipping them into a variant.
+ * The old hashToVariant approach is retained only as a documented fallback
+ * comment; it is no longer used for attribution.
  */
 async function collectVariantMetrics(
   versionId: string,
   testStartedAt: Date,
 ): Promise<VariantMetrics> {
-  // First, figure out if this is version A or B in the test
-  const tests = await db
-    .select()
-    .from(promptAbTests)
-    .where(sql`${promptAbTests.versionAId} = ${versionId} OR ${promptAbTests.versionBId} = ${versionId}`)
-    .limit(1);
-
-  if (tests.length === 0) {
-    return { totalStrategies: 0, passedStrategies: 0, passRate: 0, avgForgeScore: 0, forgeScores: [] };
-  }
-
-  const isVariantA = tests[0].versionAId === versionId;
-  const targetVariant: "A" | "B" = isVariantA ? "A" : "B";
-
-  // Get all journal entries since the test started
+  // Get all journal entries since the test started, selecting the real
+  // generation_prompt_version_id stamp alongside the performance fields.
   const entries = await db
     .select({
       id: systemJournal.id,
@@ -675,6 +673,7 @@ async function collectVariantMetrics(
       forgeScore: systemJournal.forgeScore,
       tier: systemJournal.tier,
       status: systemJournal.status,
+      generationPromptVersionId: systemJournal.generationPromptVersionId,
     })
     .from(systemJournal)
     .where(
@@ -684,11 +683,16 @@ async function collectVariantMetrics(
       ),
     );
 
-  // Filter to entries that hash to this variant
-  const variantEntries = entries.filter((entry) => {
-    const id = entry.strategyId ?? entry.id;
-    return hashToVariant(id) === targetVariant;
-  });
+  // Keep only entries whose real stamped version matches versionId.
+  // Entries with null generationPromptVersionId are legacy (generated before
+  // migration 0176 introduced the stamp) — EXCLUDED, not coin-flipped.
+  // Excluding conservatively underestimates sample count but never
+  // contaminates signal with pre-versioning noise.
+  const variantEntries = entries.filter(
+    (entry) =>
+      entry.generationPromptVersionId !== null &&
+      entry.generationPromptVersionId === versionId,
+  );
 
   const forgeScores: number[] = [];
   let passedCount = 0;
@@ -739,6 +743,53 @@ function computeStdDev(values: number[]): number {
   const variance = values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / (values.length - 1);
   return Math.sqrt(variance);
 }
+
+/**
+ * Return the currently-active prompt_versions.id for the given promptType.
+ *
+ * Called immediately before the strategy_proposer LLM invocation so each
+ * generated strategy can be stamped (system_journal.generation_prompt_version_id)
+ * with the exact prompt version that produced it.  The stamp feeds
+ * collectVariantMetrics() which now attributes strategies by real stamp
+ * rather than the old coin-flip hashToVariant().
+ *
+ * Returns null when:
+ *   - No versioned prompt is active (base prompt, no A/B in flight)
+ *   - DB error (fail-safe — never blocks strategy generation)
+ *
+ * Callers treat null as "pre-versioning legacy" and exclude the strategy
+ * from A/B comparisons rather than forcing it into a random bucket.
+ */
+export async function getActiveVersionIdForGeneration(promptType: string): Promise<string | null> {
+  try {
+    const activeVersions = await db
+      .select({ id: promptVersions.id })
+      .from(promptVersions)
+      .where(
+        and(
+          eq(promptVersions.promptType, promptType),
+          eq(promptVersions.isActive, true),
+        ),
+      )
+      .orderBy(desc(promptVersions.version))
+      .limit(1);
+
+    return activeVersions.length > 0 ? activeVersions[0].id : null;
+  } catch (err) {
+    logger.warn(
+      { err, promptType },
+      "Prompt evolution: getActiveVersionIdForGeneration failed — returning null (non-blocking)",
+    );
+    return null;
+  }
+}
+
+// ─── Test-Only Exports ─────────────────────────────────────────
+// NOT for production import — only used by vitest to exercise private functions.
+// Prefixed with __ to signal test-only scope (same convention as model-router.ts).
+
+/** Test-only: exposes collectVariantMetrics so tests can verify stamp-based attribution. */
+export const __collectVariantMetricsForTest = collectVariantMetrics;
 
 /**
  * Legacy persistence: upsert to system_parameters for backward compatibility.

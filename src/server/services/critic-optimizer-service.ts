@@ -41,6 +41,7 @@ import {
   deeparForecasts,
   alerts,
   walkForwardWindows,
+  researchTrialCounter,
 } from "../db/schema.js";
 import { db } from "../db/index.js";
 import { runPythonModule } from "../lib/python-runner.js";
@@ -57,6 +58,8 @@ import { MAX_GENERATIONS as _MAX_GENERATIONS_SHARED } from "../lib/lifecycle-con
 import { assertCrossValidatedSource } from "./agent-service.js";
 import { sqaRegistry } from "../lib/sqa-promise-registry.js";
 import { CANONICAL_PARAM_RANGES } from "../lib/param-ranges.js";
+import { notifyWarning } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 const PROJECT_ROOT = resolve(import.meta.dirname ?? ".", "../../..");
 
@@ -189,6 +192,106 @@ interface EvidencePacket {
    * "same sources → same ranking". Populated by EvidenceCollector.settle().
    */
   _settled_with_sources?: string[];
+  /**
+   * R2 Wave 4 Track 4C: cumulative trial count for this strategy across all
+   * prior evolution cycles. Injected into Python prompt for DSR/PBO correction
+   * so multi-night loops don't inflate significance by assuming N=1.
+   */
+  trial_n_total: number;
+}
+
+// ─── Wave 4 Track 4C — Research Governance ──────────────────────────────────
+
+/** R8: Pre-commit governance metadata persisted with each critic candidate. */
+interface GovernanceMeta {
+  precommit_status: "complete" | "incomplete" | "advisory";
+  missing_fields: string[];
+  sample_tag?: "INSUFFICIENT_SAMPLE";
+  lookahead_violation?: boolean;
+  trial_n_total?: number;
+  economic_rationale?: string | null;
+  declared_param_space_size?: number | null;
+  min_sample_size?: number | null;
+  target_regime?: string | null;
+  declared_failure_mode?: string | null;
+}
+
+/**
+ * R5: Minimum trading-day sample size before a strategy has sufficient evidence.
+ * Corresponds to ~3 calendar months of active trading days.
+ */
+const GOVERNANCE_MIN_SAMPLE_DAYS = Number(process.env.GOVERNANCE_MIN_SAMPLE_DAYS ?? "63");
+
+/**
+ * R3: Lookahead guard instruction prepended to all critic evaluator prompts.
+ * Instructs the LLM to restrict its evaluation to only the provided evidence
+ * and not draw on training-time knowledge about market outcomes.
+ */
+export const LOOKAHEAD_GUARD_INSTRUCTION =
+  "GOVERNANCE INSTRUCTION — EVALUATE ONLY PROVIDED DATA:\n" +
+  "Base your evaluation ONLY on the strategy data, metrics, and parameters\n" +
+  "explicitly provided below. Do NOT use any knowledge from your training\n" +
+  "about price movements, market outcomes, or strategy performance on any\n" +
+  "specific date. Cite only the data provided in this prompt.\n\n";
+
+/**
+ * R8: Build governance metadata for a candidate from its raw Python output and evidence.
+ *
+ * For candidates from parameter_evolver.py: Python already built governance_meta
+ * with full 5-field validation — trust and forward it.
+ *
+ * For candidates from critic_optimizer.py: Python does NOT emit governance_meta.
+ * F-6 INSTITUTIONAL FIX (option b, fail-closed): validate the 5 mandatory governance
+ * fields on this path too. Since critic_optimizer.py never emits those fields, ALL
+ * candidates from this path resolve to precommit_status="incomplete" and are BLOCKED
+ * at the replay gate. critic_optimizer.py must be updated to emit the 5 fields before
+ * its candidates can proceed past replay. The "advisory" bypass is REMOVED.
+ *
+ * The 5 mandatory fields are:
+ *   economic_rationale, declared_param_space_size, min_sample_size,
+ *   target_regime, declared_failure_mode
+ *
+ * Exported for testability.
+ */
+export function buildCandidateGovernanceMeta(
+  candidate: {
+    changed_params?: Record<string, number>;
+    reasoning?: string;
+    governance_meta?: Record<string, unknown>;
+    [key: string]: unknown;
+  },
+  evidence: Pick<EvidencePacket, "backtest_metrics" | "trial_n_total">,
+): GovernanceMeta {
+  // parameter_evolver.py path: Python validated the 5 fields and set precommit_status.
+  const pyMeta = candidate.governance_meta as Record<string, unknown> | undefined;
+  if (pyMeta && typeof pyMeta.precommit_status === "string") {
+    return {
+      ...(pyMeta as unknown as GovernanceMeta),
+      trial_n_total: evidence.trial_n_total ?? 1,
+    };
+  }
+
+  // critic_optimizer.py path: governance_meta absent.
+  // F-6: validate the 5 mandatory fields — they will ALL be absent, so status becomes
+  // "incomplete" → blocked at replay. This is intentional: fail-closed until
+  // critic_optimizer.py is updated to emit the governance fields.
+  const totalTrades = Number((evidence.backtest_metrics as Record<string, unknown>)?.total_trades ?? 0);
+  const missingFields: string[] = [];
+  if (!candidate.economic_rationale) missingFields.push("economic_rationale");
+  if (candidate.declared_param_space_size == null) missingFields.push("declared_param_space_size");
+  if (candidate.min_sample_size == null) missingFields.push("min_sample_size");
+  if (!candidate.target_regime) missingFields.push("target_regime");
+  if (!candidate.declared_failure_mode) missingFields.push("declared_failure_mode");
+
+  const meta: GovernanceMeta = {
+    precommit_status: missingFields.length === 0 ? "complete" : "incomplete",
+    missing_fields: missingFields,
+    trial_n_total: evidence.trial_n_total ?? 1,
+  };
+  if (totalTrades < GOVERNANCE_MIN_SAMPLE_DAYS) {
+    meta.sample_tag = "INSUFFICIENT_SAMPLE";
+  }
+  return meta;
 }
 
 interface CriticResult {
@@ -606,6 +709,7 @@ export async function triggerCriticOptimizerAsync(
       // and-suspenders so a stray combinatoric explosion or cross-source
       // merge in the Python optimizer can never persist a strategy proposal
       // that violates CLAUDE.md.
+      let asyncCandidatesInserted = 0;
       for (const candidate of criticResult.candidates) {
         const changedKeys = Object.keys(candidate.changed_params ?? {});
         if (changedKeys.length > 5) {
@@ -615,6 +719,8 @@ export async function triggerCriticOptimizerAsync(
           );
           continue;
         }
+        // R8 + R5 Wave 4 Track 4C: build pre-commit governance metadata.
+        const govMeta = buildCandidateGovernanceMeta(candidate as any, evidence);
         await db.insert(criticCandidates).values({
           runId: run.id,
           strategyId,
@@ -629,10 +735,39 @@ export async function triggerCriticOptimizerAsync(
           reasoning: candidate.reasoning,
           replayStatus: "pending",
           governanceLabels: criticResult.governance as any,
+          governanceMeta: govMeta as any,
           // P2-2: audit provenance
           criticModelVersion: CRITIC_MODEL_VERSION,
           evidenceRunIds: evidence._evidence_run_ids as any,
         });
+        asyncCandidatesInserted++;
+      }
+
+      // R2 Wave 4 Track 4C: increment cumulative trial counter so DSR/PBO
+      // can use the correct N_total denominator in future cycles.
+      if (asyncCandidatesInserted > 0) {
+        try {
+          await db
+            .insert(researchTrialCounter)
+            .values({ strategyId, nTotal: asyncCandidatesInserted, lastUpdatedAt: new Date() })
+            .onConflictDoUpdate({
+              target: researchTrialCounter.strategyId,
+              set: {
+                nTotal: sql`${researchTrialCounter.nTotal} + ${asyncCandidatesInserted}`,
+                lastUpdatedAt: new Date(),
+              },
+            });
+          await logAudit(
+            "research_governance.trial_counted",
+            "critic_optimization",
+            run.id,
+            { strategy_id: strategyId },
+            { candidates_added: asyncCandidatesInserted, path: "async" },
+            correlationId,
+          );
+        } catch (trialErr) {
+          logger.error({ strategyId, runId: run.id, err: trialErr }, "R2: research trial counter UPSERT failed — non-fatal");
+        }
       }
 
       await db
@@ -764,7 +899,9 @@ async function callOllamaCriticFallback(userMessage: string): Promise<CriticEval
  * DEFAULT_CRITIC_EVALUATION. Cloud failure no longer silently disables the gate.
  */
 async function callCriticEvaluator(evidence: EvidencePacket, correlationId?: string): Promise<CriticEvaluation> {
-  const userMessage = JSON.stringify({
+  // R3 Wave 4 Track 4C: prepend lookahead guard so the LLM evaluates ONLY the
+  // data supplied in this call and does not draw on training-time price knowledge.
+  const evidenceJson = JSON.stringify({
     backtest_metrics: evidence.backtest_metrics,
     walk_forward: evidence.walk_forward,
     sqa_result: evidence.sqa_result,
@@ -777,6 +914,7 @@ async function callCriticEvaluator(evidence: EvidencePacket, correlationId?: str
     param_ranges: evidence.param_ranges,
     daily_pnls: evidence.daily_pnls,
   }, null, 2);
+  const userMessage = LOOKAHEAD_GUARD_INSTRUCTION + evidenceJson;
 
   // ── Path 1: OpenAI (primary) ─────────────────────────────────────────
   try {
@@ -990,6 +1128,7 @@ export async function triggerCriticOptimizer(
     // 6. Persist candidates
     // P1-drift-2 defense-in-depth: reject any candidate with >5 changed params.
     // See async path above for full rationale (CLAUDE.md max-5-params rule).
+    let syncCandidatesInserted = 0;
     for (const candidate of criticResult.candidates) {
       const changedKeys = Object.keys(candidate.changed_params ?? {});
       if (changedKeys.length > 5) {
@@ -999,6 +1138,8 @@ export async function triggerCriticOptimizer(
         );
         continue;
       }
+      // R8 + R5 Wave 4 Track 4C: build pre-commit governance metadata.
+      const govMeta = buildCandidateGovernanceMeta(candidate as any, evidence);
       await db.insert(criticCandidates).values({
         runId: run.id,
         strategyId,
@@ -1013,10 +1154,38 @@ export async function triggerCriticOptimizer(
         reasoning: candidate.reasoning,
         replayStatus: "pending",
         governanceLabels: criticResult.governance as any,
+        governanceMeta: govMeta as any,
         // P2-2: audit provenance
         criticModelVersion: CRITIC_MODEL_VERSION,
         evidenceRunIds: evidence._evidence_run_ids as any,
       });
+      syncCandidatesInserted++;
+    }
+
+    // R2 Wave 4 Track 4C: increment cumulative trial counter.
+    if (syncCandidatesInserted > 0) {
+      try {
+        await db
+          .insert(researchTrialCounter)
+          .values({ strategyId, nTotal: syncCandidatesInserted, lastUpdatedAt: new Date() })
+          .onConflictDoUpdate({
+            target: researchTrialCounter.strategyId,
+            set: {
+              nTotal: sql`${researchTrialCounter.nTotal} + ${syncCandidatesInserted}`,
+              lastUpdatedAt: new Date(),
+            },
+          });
+        await logAudit(
+          "research_governance.trial_counted",
+          "critic_optimization",
+          run.id,
+          { strategy_id: strategyId },
+          { candidates_added: syncCandidatesInserted, path: "sync" },
+          correlationId,
+        );
+      } catch (trialErr) {
+        logger.error({ strategyId, runId: run.id, err: trialErr }, "R2: research trial counter UPSERT failed — non-fatal");
+      }
     }
 
     // H5: include the GPT-5-mini evaluation in evidenceSources on the normal path
@@ -1716,6 +1885,20 @@ async function collectEvidence(
       liveRollingSharpe != null ? "live_sharpe" : null,
       deeparEvidence ? "deepar" : null,
     ].filter((s): s is string => s !== null).sort(),
+    // R2 Wave 4 Track 4C: cumulative trial count for DSR/PBO correction.
+    // Read from research_trial_counter; default 1 if not yet tracked.
+    trial_n_total: await (async () => {
+      try {
+        const [row] = await db
+          .select({ nTotal: researchTrialCounter.nTotal })
+          .from(researchTrialCounter)
+          .where(eq(researchTrialCounter.strategyId, strategyId))
+          .limit(1);
+        return row?.nTotal ?? 1;
+      } catch {
+        return 1; // non-fatal — conservative default
+      }
+    })(),
   };
 }
 
@@ -1931,6 +2114,10 @@ async function replayCandidatesAsync(
   // can be negative or >1). strat.forgeScore is always 0-100, matching replayForgeScore.
   const parentForgeScore = Number(strat.forgeScore ?? 0);
 
+  // B2 fix: hoisted so it's in scope at all 2 runBacktest call sites below.
+  // Populated inside the C-3 try block; defaults to 1 (no deflation) on any error.
+  let _replayTrialNTotal: number = 1;
+
   // ─── C-3: Evidence drift audit ─────────────────────────────────────────────
   // Read _settled_with_sources from the persisted evidence packet on this run.
   // Compare against the current collector's source set (if still active).
@@ -1944,6 +2131,8 @@ async function replayCandidatesAsync(
       .limit(1);
 
     const persistedSources: string[] = (runRow?.evidencePacket as any)?._settled_with_sources ?? [];
+    // B2 fix: assign trial_n_total from evidence packet (hoisted variable above).
+    _replayTrialNTotal = (runRow?.evidencePacket as any)?.trial_n_total ?? 1;
     const activeCollector = getEvidenceCollector(runId);
     // Use the public hasSource() API — collected is private.
     // This yields the subset of ALL_EVIDENCE_SOURCES that have reported to the collector.
@@ -1999,6 +2188,105 @@ async function replayCandidatesAsync(
     // ─── Replay each candidate sequentially ───────────────────────────
     for (const candidate of candidates) {
       try {
+        // R8 Wave 4 Track 4C: Pre-commit governance gate.
+        // A candidate whose governance_meta marks precommit_status="incomplete"
+        // lacks the 5 mandatory governance fields (economic_rationale,
+        // declared_param_space_size, min_sample_size, target_regime,
+        // declared_failure_mode). It must NOT be queued for replay — kept as
+        // "skipped_precommit_incomplete" so the audit trail is accurate.
+        // F-6: the "advisory" bypass for the critic_optimizer.py path is REMOVED.
+        // Both code paths now validate the 5 fields — see buildCandidateGovernanceMeta.
+        const candidateGovMeta = (candidate.governanceMeta as GovernanceMeta | null) ?? null;
+        if (candidateGovMeta?.precommit_status === "incomplete") {
+          logger.warn(
+            { runId, candidateId: candidate.id, missingFields: candidateGovMeta.missing_fields },
+            "R8: candidate lacks pre-commit governance declaration — skipping (precommit_incomplete)",
+          );
+          await db
+            .update(criticCandidates)
+            .set({
+              replayStatus: "skipped_precommit_incomplete",
+              governanceLabels: {
+                ...(candidate.governanceLabels as Record<string, unknown> ?? {}),
+                precommit_status: "incomplete",
+                missing_fields: candidateGovMeta.missing_fields,
+                skip_reason: "precommit_incomplete",
+              } as any,
+            })
+            .where(eq(criticCandidates.id, candidate.id));
+          await logAudit(
+            "research_governance.precommit_incomplete",
+            "critic_optimization",
+            runId,
+            { candidateId: candidate.id, strategyId },
+            { missing_fields: candidateGovMeta.missing_fields },
+            correlationId,
+          );
+          broadcastSSE("critic:replay_complete", { runId, candidateId: candidate.id, status: "skipped_precommit_incomplete" });
+          // GAP 2 fix — R8: emit Discord WARN so governance blocks are visible to the operator.
+          // Previously this block was silent on Discord; operator had no signal that the
+          // critic produced governance-incomplete candidates without querying audit_log.
+          void notifyWarning(
+            "R8: Critic governance block — candidate skipped (precommit_incomplete)",
+            appendFamilyGradePostscript(
+              `Critic candidate ${candidate.id} for strategy ${strategyId} was skipped because it is missing mandatory governance fields: ${(candidateGovMeta.missing_fields ?? []).join(", ")}. Run ID: ${runId}.`,
+              "The trading research system blocked a proposed parameter change because required safety information was missing from it.",
+              "No action needed. The system is protecting itself automatically. Let Tony know if this alert keeps firing repeatedly.",
+            ),
+            { runId, candidateId: candidate.id, strategyId, missingFields: candidateGovMeta.missing_fields },
+          );
+          continue;
+        }
+
+        // R3 F-5 mirror: Block candidates with lookahead_violation=true.
+        // parameter_evolver.py HARD mode already excludes these before they reach the
+        // DB when LOOKAHEAD_GUARD_HARD=true. This gate is the TS-layer defence for
+        // candidates that arrive via soft mode or legacy data with the flag already set.
+        if (candidateGovMeta?.lookahead_violation === true) {
+          logger.warn(
+            {
+              runId,
+              candidateId: candidate.id,
+              reasons: (candidateGovMeta as any).lookahead_violation_reasons,
+            },
+            "R3: candidate has lookahead_violation=true — skipping (lookahead_blocked)",
+          );
+          await db
+            .update(criticCandidates)
+            .set({
+              replayStatus: "skipped_lookahead_violation",
+              governanceLabels: {
+                ...(candidate.governanceLabels as Record<string, unknown> ?? {}),
+                lookahead_violation: true,
+                skip_reason: "lookahead_violation",
+              } as any,
+            })
+            .where(eq(criticCandidates.id, candidate.id));
+          await logAudit(
+            "research_governance.lookahead_violation_blocked",
+            "critic_optimization",
+            runId,
+            { candidateId: candidate.id, strategyId },
+            { reasons: (candidateGovMeta as any).lookahead_violation_reasons },
+            correlationId,
+          );
+          broadcastSSE("critic:replay_complete", { runId, candidateId: candidate.id, status: "skipped_lookahead_violation" });
+          // GAP 2 fix — R3: emit Discord WARN so lookahead violations are visible to the operator.
+          // Lookahead violations = LLM fabricating market knowledge (institutional red flag).
+          // Previously silent on Discord; operator could not detect systematic violations
+          // without querying audit_log. Now surfaces as an actionable warning signal.
+          void notifyWarning(
+            "R3: Critic governance block — candidate skipped (lookahead_violation)",
+            appendFamilyGradePostscript(
+              `Critic candidate ${candidate.id} for strategy ${strategyId} was blocked because it contains a lookahead violation — the proposed parameter change references future market data that would not be available at trade time. Violation reasons: ${JSON.stringify((candidateGovMeta as any).lookahead_violation_reasons ?? [])}. Run ID: ${runId}.`,
+              "The trading research system blocked a proposed change because it was based on information that would not exist at the time of a real trade. This is an important integrity check.",
+              "No action needed. The system caught and blocked this automatically. If Tony sees this alert often, it may indicate a problem with the research pipeline that he should investigate.",
+            ),
+            { runId, candidateId: candidate.id, strategyId, reasons: (candidateGovMeta as any).lookahead_violation_reasons },
+          );
+          continue;
+        }
+
         await db
           .update(criticCandidates)
           .set({ replayStatus: "running" })
@@ -2078,6 +2366,7 @@ async function replayCandidatesAsync(
           mode: "walkforward",
           optimizer: undefined, // Don't re-trigger SQA/critic on replay
           suppressAutoPromote: true,
+          trial_n_total: _replayTrialNTotal,
         } as any, undefined, undefined, correlationId);
 
         // Update candidate with replay results
@@ -2262,6 +2551,7 @@ async function replayCandidatesAsync(
             mode: "walkforward",
             optimizer: undefined,
             suppressAutoPromote: true,
+            trial_n_total: _replayTrialNTotal,
           } as any, undefined, undefined, correlationId).catch((err: unknown) =>
             logger.error({ err, childId }, "Auto-backtest for critic child failed"),
           );
@@ -2458,6 +2748,15 @@ export async function manualReplayCandidates(
   // can be negative or >1) and cannot be compared against replayForgeScore directly.
   const parentForgeScore = Number(strat.forgeScore ?? 0);
 
+  // B2 fix: fetch trial_n_total from persisted evidence packet so DSR deflation
+  // receives the correct cumulative mutation count during manual replay.
+  const [_manualRunRow] = await db
+    .select({ evidencePacket: criticOptimizationRuns.evidencePacket })
+    .from(criticOptimizationRuns)
+    .where(eq(criticOptimizationRuns.id, runId))
+    .limit(1);
+  const _manualTrialNTotal: number = (_manualRunRow?.evidencePacket as any)?.trial_n_total ?? 1;
+
   let bestCandidate: { id: string; compositeScore: number; backtestId: string } | null = null;
 
   try {
@@ -2505,6 +2804,7 @@ export async function manualReplayCandidates(
           mode: "walkforward",
           optimizer: undefined,
           suppressAutoPromote: true,
+          trial_n_total: _manualTrialNTotal,
         } as any, undefined, undefined, correlationId);
 
         const rr = replayResult as any;
@@ -2706,6 +3006,7 @@ export async function manualReplayCandidates(
               mode: "walkforward",
               optimizer: undefined,
               suppressAutoPromote: true,
+              trial_n_total: _manualTrialNTotal,
             } as any, undefined, undefined, correlationId).catch((err: unknown) =>
               logger.error({ err, childId }, "Auto-backtest for critic child (manual replay) failed"),
             );

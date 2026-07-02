@@ -6,6 +6,7 @@ import { db } from "../db/index.js";
 import { monteCarloRuns, stressTestRuns, backtests, strategies } from "../db/schema.js";
 import { runMonteCarlo } from "../services/monte-carlo-service.js";
 import { isActive as isPipelineActive } from "../services/pipeline-control-service.js";
+import { idempotencyMiddleware } from "../middleware/idempotency.js";
 
 export const monteCarloRoutes = Router();
 
@@ -24,7 +25,10 @@ const mcRequestSchema = z.object({
 });
 
 // ─── POST /api/monte-carlo — Run MC on a backtest (async) ────────
-monteCarloRoutes.post("/", async (req, res) => {
+// Wave 2 Track 2A: idempotencyMiddleware deduplicates identical POSTs by
+// X-Idempotency-Key (fail-open — no key ⇒ pass straight through). Closes the
+// Strategy Deep Analysis Pipeline webhook double-fire → duplicate MC run.
+monteCarloRoutes.post("/", idempotencyMiddleware, async (req, res) => {
   // FIX 5 — pipeline pause gate. MC spawns a Python subprocess and writes a
   // monte_carlo_runs row; both are pipeline-side-effects that must not run
   // when the pipeline is PAUSED/VACATION. 423 (Locked) signals "the resource

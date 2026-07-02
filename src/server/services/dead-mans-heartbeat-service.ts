@@ -33,7 +33,7 @@ import { db } from "../db/index.js";
 import { logger } from "../lib/logger.js";
 import { AlertFactory } from "./alert-service.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
-import { notifyCritical } from "./notification-service.js";
+import { notifyCritical, notifyWarning } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 const HEARTBEAT_TABLE = "system_health_heartbeat";
@@ -112,6 +112,63 @@ async function hasSchemaDriftAlertedToday(): Promise<boolean> {
     return rows.length > 0;
   } catch (err) {
     logger.warn({ err }, "dead-mans-heartbeat: schema-drift dedup lookup failed (fail-open — may double-alert)");
+    return false;
+  }
+}
+
+// ─── A-8: DB-backed stale-alert dedup (survives NSSM restarts) ───────────────
+//
+// The in-memory variables _lastAlertedForTs / _alertFiredAt are reset to null
+// on every NSSM restart. Without DB backing, a restart during an active stale
+// window causes a duplicate Discord spam alert.
+//
+// hasStaleAlertFiredForWindow() queries audit_log for any
+// dead_mans_heartbeat.stale_detected row written AFTER the stale heartbeat
+// timestamp (lastAt). If found, the current process should NOT re-alert.
+// On DB error: fail-open (may double-alert once, but never silently skip).
+async function hasStaleAlertFiredForWindow(lastAt: Date): Promise<boolean> {
+  try {
+    const { auditLog } = await import("../db/schema.js");
+    const { and, eq, gte } = await import("drizzle-orm");
+    const rows = await db
+      .select({ id: auditLog.id })
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.action, "dead_mans_heartbeat.stale_detected"),
+          gte(auditLog.createdAt, lastAt),
+        ),
+      )
+      .limit(1);
+    return rows.length > 0;
+  } catch (err) {
+    logger.warn({ err }, "dead-mans-heartbeat: stale-alert dedup DB lookup failed (fail-open — may double-alert once)");
+    return false;
+  }
+}
+
+// hasRefreshStaleAlertFiredWithinWindow() queries audit_log for any alert row
+// matching `action` written within the last `windowMs` milliseconds.
+// Used for BW + cookie refresh staleness dedup after restart.
+// On DB error: fail-open (may double-alert once).
+async function hasRefreshStaleAlertFiredWithinWindow(action: string, windowMs: number): Promise<boolean> {
+  try {
+    const { auditLog } = await import("../db/schema.js");
+    const { and, eq, gte } = await import("drizzle-orm");
+    const windowStart = new Date(Date.now() - windowMs);
+    const rows = await db
+      .select({ id: auditLog.id })
+      .from(auditLog)
+      .where(
+        and(
+          eq(auditLog.action, action),
+          gte(auditLog.createdAt, windowStart),
+        ),
+      )
+      .limit(1);
+    return rows.length > 0;
+  } catch (err) {
+    logger.warn({ err, action }, "dead-mans-heartbeat: refresh-stale dedup DB lookup failed (fail-open — may double-alert once)");
     return false;
   }
 }
@@ -318,8 +375,18 @@ export async function runHeartbeatStaleCheck(): Promise<void> {
   const now = Date.now();
 
   if (!lastAt) {
-    // No heartbeat ever written this session — not necessarily stale (first RTH start)
-    logger.debug("dead-mans-heartbeat: no heartbeat row yet — cannot determine stale state");
+    // FINDING #6 FIX: null lastAt during RTH = no heartbeat ever written → WARNING.
+    // An empty table during trading hours means the backend may never have started its
+    // heartbeat loop, or the table was truncated. Cannot verify liveness — fire WARNING.
+    logger.warn("dead-mans-heartbeat: no heartbeat rows in table during RTH — treating as stale (WARNING)");
+    notifyWarning(
+      "[dead-mans-heartbeat] No heartbeat rows written during RTH",
+      "The system_health_heartbeat table has no rows during trading hours. " +
+      "This may indicate: (1) the backend just started and has not yet written its first heartbeat " +
+      "(expected within 15 min of RTH open), (2) the heartbeat-write cron is not registered, " +
+      "or (3) the migration was not applied. " +
+      "If this persists beyond 30 min during RTH, investigate immediately.",
+    );
     return;
   }
 
@@ -337,10 +404,23 @@ export async function runHeartbeatStaleCheck(): Promise<void> {
 
   // STALE — check dedup before alerting
   if (_lastAlertedForTs && lastAt.getTime() === _lastAlertedForTs.getTime()) {
-    // Already alerted for this exact stale heartbeat — skip
+    // Fast-path: in-memory cache says we already alerted for this stale window
     logger.debug(
       { minutesSince, lastAlertedFor: _lastAlertedForTs.toISOString() },
       "dead-mans-heartbeat: stale already alerted — skipping duplicate",
+    );
+    return;
+  }
+
+  // A-8: DB-backed dedup — survives NSSM restarts.
+  // After a restart _lastAlertedForTs is null; check audit_log to avoid re-alerting
+  // for the same stale window that already fired before the restart.
+  if (!_lastAlertedForTs && (await hasStaleAlertFiredForWindow(lastAt))) {
+    _lastAlertedForTs = lastAt;
+    _alertFiredAt = new Date(); // approximate — exact time is not critical
+    logger.debug(
+      { lastAt: lastAt.toISOString() },
+      "dead-mans-heartbeat: DB dedup: stale alert already recorded for this window (restart-safe) — skipping",
     );
     return;
   }
@@ -384,6 +464,83 @@ export async function runHeartbeatStaleCheck(): Promise<void> {
   // After the stale alert fires, autonomously attempt self-restart so a hung
   // backend heals without operator intervention during a 14-day vacation.
   await attemptAutoRestart(lastAt, minutesSince, cronCorrelationId);
+}
+
+// ─── FINDING #6 FIX: secondary out-of-RTH heartbeat check ───────────────────
+// The primary runHeartbeatStaleCheck() is RTH-only (isEtRth gate), leaving a
+// ~64h blind spot after a Friday-evening crash. This function runs every 4h
+// and fires a WARNING (not CRITICAL auto-restart) when the last heartbeat is
+// older than OOH_STALE_THRESHOLD_MS (default 8h) outside of RTH.
+
+const OOH_STALE_THRESHOLD_MS = parseInt(
+  process.env.OOH_STALE_THRESHOLD_MS ?? String(8 * 60 * 60 * 1000),
+  10,
+);
+
+// Dedup: one OOH WARNING per stale window (reset when heartbeat becomes fresh)
+let _lastOohAlertedForTs: Date | null = null;
+
+/**
+ * Out-of-RTH stale check. Only fires during non-RTH hours.
+ * Sends a WARNING (not CRITICAL auto-restart) if the last heartbeat is older
+ * than OOH_STALE_THRESHOLD_MS — catches Friday-evening crash scenarios.
+ * Registered in scheduler.ts at 4h interval ("heartbeat-ooh-check" job).
+ */
+export async function runOffRthHeartbeatCheck(): Promise<void> {
+  if (isEtRth()) {
+    // Primary RTH check handles this window — no-op
+    logger.debug("dead-mans-heartbeat: off-rth check skipped — inside RTH");
+    return;
+  }
+
+  const lastAt = await getLastHeartbeatAt();
+
+  if (!lastAt) {
+    // No heartbeat rows yet — normal if backend just started outside RTH.
+    // The RTH check will handle it at next market open.
+    logger.debug("dead-mans-heartbeat: off-rth check — no heartbeat rows (expected pre-RTH)");
+    return;
+  }
+
+  const ageMs = Date.now() - lastAt.getTime();
+
+  if (ageMs <= OOH_STALE_THRESHOLD_MS) {
+    // Fresh — reset dedup state if we previously alerted
+    if (_lastOohAlertedForTs) {
+      _lastOohAlertedForTs = null;
+      logger.debug({ ageMs }, "dead-mans-heartbeat: off-rth check — heartbeat fresh, clearing dedup");
+    }
+    return;
+  }
+
+  // Stale OOH — check dedup before alerting
+  if (_lastOohAlertedForTs && lastAt.getTime() === _lastOohAlertedForTs.getTime()) {
+    logger.debug(
+      { ageMs, lastOohAlertedFor: _lastOohAlertedForTs.toISOString() },
+      "dead-mans-heartbeat: off-rth check — already alerted for this stale window",
+    );
+    return;
+  }
+
+  const hoursSince = Math.round(ageMs / (60 * 60 * 1000));
+  _lastOohAlertedForTs = lastAt;
+
+  logger.warn(
+    { lastAt: lastAt.toISOString(), hoursSince, thresholdH: OOH_STALE_THRESHOLD_MS / (60 * 60 * 1000) },
+    "dead-mans-heartbeat: off-rth check — STALE HEARTBEAT OUTSIDE RTH (WARNING)",
+  );
+
+  notifyWarning(
+    `[dead-mans-heartbeat] Backend stale outside RTH — ${hoursSince}h since last heartbeat`,
+    appendFamilyGradePostscript(
+      `The last recorded heartbeat was ${hoursSince}h ago (${lastAt.toISOString()}). ` +
+      `This is outside trading hours but exceeds the ${OOH_STALE_THRESHOLD_MS / 3_600_000}h threshold. ` +
+      `If today is a weekend or holiday this may be normal. ` +
+      `If the backend should be running, check that the tower is powered on and restart the backend.`,
+      "Backend may have crashed overnight or over the weekend.",
+      "Check the tower is on. Restart the backend service if needed.",
+    ),
+  );
 }
 
 // ─── Auto-restart constants (A-1) ────────────────────────────────────────────
@@ -707,8 +864,12 @@ export async function runScheduledRefreshStalenessCheck(): Promise<void> {
   if (bwLastAt) {
     const ageMs = now - bwLastAt.getTime();
     if (ageMs > BW_HEARTBEAT_STALE_MS) {
-      // Dedup: only alert once per stale window
-      if (!_lastBwAlertAt || now - _lastBwAlertAt.getTime() > BW_HEARTBEAT_STALE_MS) {
+      // A-8: DB-backed dedup survives NSSM restarts.
+      // When _lastBwAlertAt is null (post-restart), query DB before re-alerting.
+      const shouldFireBwAlert = _lastBwAlertAt !== null
+        ? now - _lastBwAlertAt.getTime() > BW_HEARTBEAT_STALE_MS
+        : !(await hasRefreshStaleAlertFiredWithinWindow("dead_mans_heartbeat.bw_refresh_stale", BW_HEARTBEAT_STALE_MS));
+      if (shouldFireBwAlert) {
         _lastBwAlertAt = new Date();
         const ageHours = (ageMs / (60 * 60 * 1000)).toFixed(1);
         logger.error(
@@ -752,7 +913,11 @@ export async function runScheduledRefreshStalenessCheck(): Promise<void> {
   if (cookieLastAt) {
     const ageMs = now - cookieLastAt.getTime();
     if (ageMs > COOKIE_HEARTBEAT_STALE_MS) {
-      if (!_lastCookieAlertAt || now - _lastCookieAlertAt.getTime() > COOKIE_HEARTBEAT_STALE_MS) {
+      // A-8: DB-backed dedup survives NSSM restarts (same pattern as BW above).
+      const shouldFireCookieAlert = _lastCookieAlertAt !== null
+        ? now - _lastCookieAlertAt.getTime() > COOKIE_HEARTBEAT_STALE_MS
+        : !(await hasRefreshStaleAlertFiredWithinWindow("dead_mans_heartbeat.cookie_refresh_stale", COOKIE_HEARTBEAT_STALE_MS));
+      if (shouldFireCookieAlert) {
         _lastCookieAlertAt = new Date();
         const ageHours = (ageMs / (60 * 60 * 1000)).toFixed(1);
         logger.error(

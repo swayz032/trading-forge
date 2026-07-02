@@ -3,7 +3,11 @@ import { db } from "../db/index.js";
 import { backtests, paperTrades, complianceReviews, paperSessions, strategies } from "../db/schema.js";
 import { eq, desc, and, isNull, inArray } from "drizzle-orm";
 import { broadcastSSE } from "../routes/sse.js";
-import { logger } from "../index.js";
+// Deep-scan #5 H4a (2026-06-29): logger from the leaf module, NOT ../index.js.
+// Importing from ../index.js drags the whole Express bootstrap graph into any
+// module that loads drift-detection-service, breaking test isolation on partial mocks.
+import { logger } from "../lib/logger.js";
+import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 
 export interface DriftReport {
   strategyId: string;
@@ -133,6 +137,19 @@ export async function detectDrift(strategyId: string, sessionId: string): Promis
     broadcastSSE("drift:alert", { strategyId, sessionId, alerts, correlationId });
     logger.warn({ strategyId, alerts, correlationId }, "Drift detected in paper trading");
 
+    // Deep-scan #5 H4c (2026-06-29): persist drift evidence durably. SSE + logs are
+    // ephemeral (offline client / log rotation) — the demotion action is audited by
+    // promoteStrategy() but the TRIGGERING evidence (which metrics, by how much) was not.
+    await insertAuditRowSafe({
+      action: "drift.alert_triggered",
+      entityType: "strategy",
+      entityId: strategyId,
+      status: "warning",
+      input: { sessionId },
+      result: { alerts },
+      correlationId,
+    });
+
     // Auto-demote from PAPER to DECLINING if any GATED metric (NOT winRate) exceeds 2σ.
     // maxDrift is derived from alerts[] which can only contain avgTradePnl and maxDrawdown
     // after the winRate severity cap above.
@@ -181,8 +198,12 @@ export async function detectStructuralBreaks(
       pnlBreaks: result.pnl_breaks?.breakpoints ?? [],
       sharpeBreaks: result.sharpe_breaks?.breakpoints ?? [],
     };
-  } catch {
-    // Fallback: no structural breaks detected (changepoint module may not be available)
+  } catch (err) {
+    // Deep-scan #5 H4b (2026-06-29): was a SILENT empty catch — a real Python crash
+    // (OOM / timeout / import error) was indistinguishable from "module not available",
+    // and callers received edgeDeathDetected:false as if the check passed (silent
+    // false-negative on an edge-death signal). Log it so the failure is visible.
+    logger.warn({ err }, "detectStructuralBreaks: changepoint call failed — returning no-break default (edge-death check did NOT run)");
     return { edgeDeathDetected: false, deathDay: null, pnlBreaks: [], sharpeBreaks: [] };
   }
 }
@@ -236,10 +257,12 @@ export async function cascadeRevalidation(firm: string): Promise<{
         ),
       );
 
+    // Deep-scan #5 L3 (2026-06-29): hoist the dynamic import out of the loop —
+    // the module is stable; importing per-iteration is wasted work.
+    const { LifecycleService } = await import("./lifecycle-service.js");
+    const lifecycle = new LifecycleService();
     for (const strat of deployedStrats) {
       try {
-        const { LifecycleService } = await import("./lifecycle-service.js");
-        const lifecycle = new LifecycleService();
         await lifecycle.promoteStrategy(strat.id, "DEPLOYED", "DECLINING");
         pausedStrategies.push(strat.id);
         logger.warn({ strategyId: strat.id, firm }, "Strategy demoted to DECLINING due to compliance cascade");
@@ -260,8 +283,12 @@ export async function cascadeRevalidation(firm: string): Promise<{
               eq(paperSessions.status, "active"),
             ),
           );
-      } catch {
-        // Non-blocking
+      } catch (err) {
+        // Deep-scan #5 H4d (2026-06-29): was a SILENT catch. If the pause fails, a
+        // strategy whose compliance reviews were just invalidated keeps executing under
+        // stale compliance assumptions with zero visibility. Log it loudly (non-blocking
+        // so the cascade still pauses the other sessions).
+        logger.error({ strategyId: stratId, firm, err }, "cascadeRevalidation: failed to pause paper session — strategy may continue under invalidated compliance");
       }
     }
   }

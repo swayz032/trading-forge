@@ -738,53 +738,75 @@ class TestEODTrailingHWMFix:
 
 # ─── F-6: MFFU sliding-window consistency check ────────────────────
 
-class TestMFFUSlidingWindowConsistency:
-    """F-6: MFFU consistency must use per-payout-period windows, not full-path total.
+class TestMFFUConsistencyNotModeledInB14:
+    """deepscan5 2026-06-29: MFFU Builder consistency (mffu_50pct_sim_payout) applies ONLY at the
+    discrete SIM-FUNDED payout stage — NONE at eval, NONE live (firm_config.py mffu_50k). The B14
+    eval+funded survival sim does not model that discrete payout gate, so simulate_firm_survival
+    EXPLICITLY SKIPS MFFU consistency (mirrors the Topstep standard-lane skip).
 
-    MFFU pays out every 14 days (payout_cycle_days=14 in FIRM_RULES).
-    A single day accounting for > 50% of a 14-day window's profit is a
-    violation even if it's < 50% of the full eval path profit.
+    SUPERSEDES the prior `TestMFFUSlidingWindowConsistency` class: that class assumed MFFU did a
+    14-day sliding-window B14 consistency check, which predates the Builder reconfiguration
+    (rule renamed mffu_50pct → mffu_50pct_sim_payout, payout_cycle_days 14 → 2,
+    consistency_window_days → None). These tests lock in the current intended behavior: a path
+    that WOULD violate a 50% best-day cap produces NO consistency breach for mffu_50k, because the
+    rule is intentionally not enforced in B14.
     """
 
-    def test_full_path_ok_but_window_violated(self):
-        """A day that is < 50% of full-path but > 50% of its 14-day window must violate."""
+    def test_concentrated_path_does_not_breach_consistency(self):
+        """A path where the single best day is >50% of total profit (would violate a 50% cap)
+        must NOT produce a consistency breach for mffu_50k — MFFU consistency is sim-payout-only,
+        not modeled in the B14 eval+funded sim."""
         from src.engine.monte_carlo import simulate_firm_survival
 
-        # 28 steps (2 payout cycles of 14 days each).
-        # Window 1: one big day $2000, then $200/day for 13 more days = window total $4600.
-        # $2000 / $4600 ≈ 43.5% — just under the 50% threshold → should NOT violate window 1.
-        # Window 2: one massive day $3000, then $100/day for 13 more days = window total $4300.
-        # $3000 / $4300 ≈ 69.8% — OVER 50% → must violate window 2.
-        # Full-path total = $4600 + $4300 = $8900; best day = $3000; $3000/$8900 ≈ 33.7% < 50%
-        # → old code (full-path check) would NOT flag this. New code (window) must flag it.
-        window_1 = [2000.0] + [200.0] * 13   # 14 days
-        window_2 = [3000.0] + [100.0] * 13   # 14 days
-        step_pnls = window_1 + window_2
-        cumulative = np.array([np.cumsum(step_pnls)])  # shape (1, 28)
+        # Best day $6000 of $8600 total ≈ 69.8% > 50% — a full-path 50% cap WOULD flag this.
+        step_pnls = [6000.0] + [200.0] * 13  # 14 days
+        cumulative = np.array([np.cumsum(step_pnls)])
 
         result = simulate_firm_survival(
             cumulative, "mffu_50k", account_size=50000,
             backtest_commission_rt=1.24,
         )
-        # Must detect a consistency violation in window 2
-        assert result["breach_reasons"].get("consistency", 0) > 0
-
-    def test_both_windows_ok_no_violation(self):
-        """When no 14-day window is violated, consistency check must pass."""
-        from src.engine.monte_carlo import simulate_firm_survival
-
-        # Both windows: best day is exactly 40% of window total — under 50% threshold.
-        # Window 1: $2000 + $3000/day×13 = $2000 + $39000 total, best=$39000... let's
-        # keep it simple: $400/day for 14 days, then $400/day for 14 days = even split.
-        step_pnls = [400.0] * 28
-        cumulative = np.array([np.cumsum(step_pnls)])  # (1, 28)
-
-        result = simulate_firm_survival(
-            cumulative, "mffu_50k", account_size=50000,
-            backtest_commission_rt=1.24,
-        )
-        # Uniform $400/day means each day is 1/14 of its window ≈ 7.1% < 50% → no violation.
+        # Intentionally NOT enforced in B14 → zero consistency breaches.
         assert result["breach_reasons"].get("consistency", 0) == 0
+
+    def test_uniform_path_also_no_consistency_breach(self):
+        """A uniform path (no concentration) also produces no consistency breach — confirms the
+        skip is unconditional for mffu_50k, not accidentally path-dependent."""
+        from src.engine.monte_carlo import simulate_firm_survival
+
+        step_pnls = [400.0] * 28
+        cumulative = np.array([np.cumsum(step_pnls)])
+
+        result = simulate_firm_survival(
+            cumulative, "mffu_50k", account_size=50000,
+            backtest_commission_rt=1.24,
+        )
+        assert result["breach_reasons"].get("consistency", 0) == 0
+
+    def test_topstep_consistency_lane_still_fires(self):
+        """Regression guard: the explicit MFFU skip must NOT disable Topstep consistency. In the
+        CONSISTENCY payout lane, a concentrated path on topstep_50k still produces a breach —
+        proving the skip is MFFU-scoped, not a blanket consistency-off."""
+        import os
+        from src.engine.monte_carlo import simulate_firm_survival
+
+        step_pnls = [6000.0] + [200.0] * 13
+        cumulative = np.array([np.cumsum(step_pnls)])
+
+        _prev = os.environ.get("TOPSTEP_PAYOUT_LANE")
+        os.environ["TOPSTEP_PAYOUT_LANE"] = "consistency"
+        try:
+            result = simulate_firm_survival(
+                cumulative, "topstep_50k", account_size=50000,
+                backtest_commission_rt=1.24,
+            )
+        finally:
+            if _prev is None:
+                os.environ.pop("TOPSTEP_PAYOUT_LANE", None)
+            else:
+                os.environ["TOPSTEP_PAYOUT_LANE"] = _prev
+        # Topstep consistency-lane full-path 50% cap still fires (skip is MFFU-scoped).
+        assert result["breach_reasons"].get("consistency", 0) > 0
 
 
 # ─── F-7: max_drawdown_p5 positive sign convention ─────────────────

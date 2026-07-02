@@ -75,11 +75,10 @@ export const pythonSubprocessQueued = new Gauge({
 // ─── Lifecycle counters ────────────────────────────────────────────────────────
 // These are incremented by the relevant service calls. The metrics.ts scrape
 // endpoint does not need to refresh these — counters accumulate in memory.
+// Declared at registry init so Prometheus sees them from first scrape (value 0)
+// even before the first event, which prevents "no data" gaps in dashboards.
 //
-// TODO: wire increment calls in lifecycle-service, backtest-service, and
-// paper-engine once those files are in scope for instrumentation. The counters
-// are declared here so Prometheus sees them from first scrape (value 0) even
-// before the first event, which prevents "no data" gaps in dashboards.
+// Wired: lifecycle-service.ts (strategyPromotions), backtest-service.ts (backtestRuns), paper-execution-service.ts (paperTrades).
 
 export const strategyPromotions = new Counter({
   name: "tf_strategy_promotions_total",
@@ -305,9 +304,18 @@ export const shadowSignalsTotal = new Counter({
 //   Incremented per RL training epoch completion (quantum_rl.training_completed audit).
 //   regime label = institutional regime the policy was trained on.
 //   Cardinality: 6 regime values × 1 counter = 6 time series max.
+//
+//   AUDIT NOTE — F-2 (2026-06-28): The increment site in backtest-service.ts
+//   always passes {regime: "combined"} — the RL training loop aggregates across
+//   institutional regimes per epoch and does not decompose by regime at the
+//   individual-epoch level. The label is retained for forward-compatibility
+//   (per-regime epoch breakdown is a future enhancement). "combined" is the
+//   ONLY value currently emitted; per-regime series remain at zero and are
+//   NOT zero-initialised (that would create misleading "0" regime signals).
+//   See the zero-init at end of file which pre-seeds only "combined".
 export const rlTrainingEpochsTotal = new Counter({
   name: "tf_rl_training_epochs_total",
-  help: "Total RL training epochs completed, labelled by institutional regime",
+  help: "Total RL training epochs completed, labelled by institutional regime (regime=combined is the only currently-emitted value — per-regime breakdown is a future enhancement; see audit note F-2 2026-06-28)",
   labelNames: ["regime"] as const,
   registers: [promRegistry],
 });
@@ -376,6 +384,25 @@ export const lifecycleShadowPromotionsTotal = new Counter({
   labelNames: ["outcome"] as const,
   registers: [promRegistry],
 });
+// Zero-initialize all four outcome labels so Prometheus sees value=0 from first
+// scrape instead of "no data".  Without this, Grafana shows blank panels for
+// the `blocked_unavailable` series until the first DB-error path fires in prod.
+// Outcome labels (closed set):
+//   passed                   → divergence gate cleared; strategy promoted to PAPER
+//   blocked_divergence        → divergence_pct ≥ SHADOW_DIVERGENCE_THRESHOLD_PCT
+//   blocked_insufficient_samples → sample_size < SHADOW_DIVERGENCE_MIN_SAMPLE
+//   blocked_unavailable      → fail-closed DB-error path (divergence inputs unavailable)
+(function () {
+  const SHADOW_OUTCOMES = [
+    "passed",
+    "blocked_divergence",
+    "blocked_insufficient_samples",
+    "blocked_unavailable",
+  ] as const;
+  for (const outcome of SHADOW_OUTCOMES) {
+    lifecycleShadowPromotionsTotal.labels({ outcome }).inc(0);
+  }
+})();
 
 // Pass 1 Track D: counts warning-severity alerts routed to Discord via notification-service.
 // Answers "how many non-critical alerts reached Discord?" on the observability dashboard.
@@ -467,3 +494,219 @@ export const pineShadowRefusalsTotal = new Counter({
   labelNames: ["blocked_at"] as const,
   registers: [promRegistry],
 });
+
+// ─── Wave 4 Track 4B — Layer 15 Leak Detection counters (2026-06-27) ──────────
+//
+// tf_layer15_leak_detections_total{category, severity}
+//   Incremented by leak-detection-service.ts on every leak finding emitted.
+//
+//   category label (closed set — 6 Layer 15 taxonomy buckets):
+//     "execution_slippage"   — avg(|slippage|) z-score vs 60d baseline
+//     "allocation_drift"     — contracts-used z-score vs 60d baseline
+//     "regime"               — current regime outside trained/preferred regimes
+//     "attribution_opacity"  — trade critique data_completeness='minimal' or missing fields
+//     "subsystem_consensus"  — composite health score drop + ≥N subsystems regressed
+//     "mc_distribution_breach" — realized paper metrics vs promotion-time MC distribution
+//
+//   severity label (closed set):
+//     "info"    — signal detected; monitor
+//     "warning" — signal elevated; investigate soon
+//     "high"    — action needed; Discord WARN fires
+//
+//   Cardinality: 6 categories × 3 severities = 18 time series — safe.
+//
+//   GAP 4 fix: zero-initialized at registry startup for all 18 label combinations
+//   so Prometheus sees value=0 from first scrape instead of "no data".
+//   Without this, Grafana shows blank panels for categories that haven't fired yet
+//   (e.g. "mc_distribution_breach" before the first live promotion).
+//
+//   Operational question answered: "Which leak category fires most often at high
+//   severity?" — informs where to prioritise debugging effort across strategies.
+//
+// ADVISORY-ONLY: these counters reflect observation signals. No hard-gate or
+// lifecycle-promotion decision is derived from them.
+export const layer15LeakDetectionsTotal = new Counter({
+  name: "tf_layer15_leak_detections_total",
+  help: "Total Layer 15 leak findings emitted, labelled by category and severity",
+  labelNames: ["category", "severity"] as const,
+  registers: [promRegistry],
+});
+
+// Zero-init all 6 × 3 = 18 label combinations so Prometheus sees value=0 from
+// first scrape. prom-client Counters do not pre-register label sets automatically;
+// without this, Grafana shows "no data" for categories that have not yet fired.
+(function _zeroInitLayer15Labels() {
+  const LAYER15_CATEGORIES = [
+    "execution_slippage",
+    "allocation_drift",
+    "regime",
+    "attribution_opacity",
+    "subsystem_consensus",
+    "mc_distribution_breach",
+  ] as const;
+  const LAYER15_SEVERITIES = ["info", "warning", "high"] as const;
+  for (const category of LAYER15_CATEGORIES) {
+    for (const severity of LAYER15_SEVERITIES) {
+      layer15LeakDetectionsTotal.labels({ category, severity }).inc(0);
+    }
+  }
+})();
+
+// tf_layer15_run_duration_ms
+//   Histogram of end-to-end leak detection run durations.
+//   Buckets cover from a sub-second fast-path (all strategies clean) through a
+//   worst-case multi-strategy deep scan (~60s for 50+ strategies).
+//   Operational question answered: "Is the 3AM orchestrator completing its
+//   leak scan before market open at 09:30 ET?"
+export const layer15RunDurationMs = new Histogram({
+  name: "tf_layer15_run_duration_ms",
+  help: "End-to-end Layer 15 leak detection run duration in milliseconds",
+  buckets: [100, 500, 1000, 2500, 5000, 10000, 20000, 30000, 60000],
+  registers: [promRegistry],
+});
+
+// ─── Candidate backtest conveyor counter (2026-06-28) ─────────────────────────
+//
+// tf_candidate_conveyor_enqueued_total
+//   Incremented by candidate-backtest-conveyor-service.ts each time a CANDIDATE
+//   strategy is successfully handed to runBacktest() (status !== "skipped").
+//   No labels — single time series, minimal cardinality.
+//   Cardinality: 1. Lets dashboards answer "how many automated backtests have
+//   been enqueued since boot?" without a full audit_log scan.
+export const candidateConveyorEnqueuedTotal = new Counter({
+  name: "tf_candidate_conveyor_enqueued_total",
+  help: "Total backtests enqueued by the candidate backtest conveyor",
+  registers: [promRegistry],
+});
+
+// ─── Wave 4 Track 4B — BIF gate evaluation counter (2026-06-28) ───────────────
+//
+// tf_bif_gate_evaluations_total{outcome}
+//   Incremented by lifecycle-service.ts at every BIF gate evaluation at the
+//   PAPER → DEPLOY_READY lifecycle transition, immediately after evaluateBifGate()
+//   resolves.
+//
+//   outcome label (closed set — mirrors BIF gate reason codes from bif-gate.ts):
+//     "clean"       — bif ≤ BIF_WARN_THRESHOLD (2.0): no overfitting concern
+//     "warn"        — BIF_WARN_THRESHOLD < bif ≤ BIF_BLOCK_THRESHOLD: elevated bias, promotion allowed
+//     "blocked"     — bif > BIF_BLOCK_THRESHOLD (4.0): hard block, synthetic overfit
+//     "legacy_null" — bif absent (pre-Wave-3 backtest): grandfather pass, promoted with warn audit
+//
+//   Cardinality: 4 outcome values = 4 time series — safe.
+//   Declared at registry init so Prometheus sees zero values from first scrape
+//   (no "no data" gaps in Grafana before the first promotion attempt).
+//
+//   Operational question answered: "How often does the BIF gate block vs pass
+//   promotions, and is the system still processing legacy-null backtests?"
+//   Lets dashboards detect a systematic cluster of blocked promotions that indicate
+//   the autonomous scout is generating over-fit strategy candidates.
+export const bifGateEvaluationsTotal = new Counter({
+  name: "tf_bif_gate_evaluations_total",
+  help: "Total BIF gate evaluations at PAPER→DEPLOY_READY, labelled by gate outcome",
+  labelNames: ["outcome"] as const,
+  registers: [promRegistry],
+});
+
+// ── Auto-Graveyard (Production Hardening) ────────────────────────────────────
+//   Incremented each time checkAutoPromotions() auto-promotes a strategy to
+//   GRAVEYARD after LIFECYCLE_GATE_FAIL_GRAVEYARD_THRESHOLD (default 3)
+//   consecutive hard gate failures for the same (strategy, gate) pair.
+//   Labels: gate — the name of the hard gate that triggered burial, e.g.
+//     "mc_survival_below_floor", "b14_ci_high", "wfe_hard_floor", etc.
+//   Cardinality: N_gate_names (bounded — closed allowlist in lifecycle-service).
+//   Lets dashboards answer "how many strategies were buried per gate type?"
+//   without scanning audit_log.
+export const autoGraveyardTotal = new Counter({
+  name: "tf_auto_graveyard_total",
+  help: "Total auto-graveyard promotions triggered by consecutive hard gate failures, labelled by gate name",
+  labelNames: ["gate"] as const,
+  registers: [promRegistry],
+});
+
+// ─── Audit write failure counter (2026-06-29) ─────────────────────────────────
+//
+// tf_audit_write_failures_total{action}
+//   Incremented in every non-blocking insertAuditRow() .catch() handler on the
+//   execution path (paper-signal-service.ts). Previously these were silent swallows
+//   (.catch(() => {})). Each failure now logs a structured warn AND increments this
+//   counter so DB pressure, pool exhaustion, or post-migration schema mismatches
+//   become visible on the metrics dashboard without blocking signal evaluation.
+//
+//   action label: the audit_log action string of the row that failed to write.
+//   Cardinality: ~25 distinct action values — safe (bounded by the known audit
+//   actions on the execution path).
+//
+//   Operational question answered: "Are audit writes silently failing during a
+//   session?" — a spike here under DB load is the early signal that the session's
+//   audit_log trail may be incomplete (DLL breach, cooldown, position open rows
+//   missing). Allows targeting an investigation before the session ends.
+export const auditWriteFailuresTotal = new Counter({
+  name: "tf_audit_write_failures_total",
+  help: "Total non-blocking insertAuditRow() failures on the execution path, labelled by audit action",
+  labelNames: ["action"] as const,
+  registers: [promRegistry],
+});
+
+// Deep-scan #5 M1 (2026-06-29): live SSE client count was logged on connect/disconnect
+// but invisible to Prometheus — could not alert on "0 SSE clients while paper engine
+// active" or detect unbounded client accumulation. Set from sse.ts on every mutation.
+export const sseClientsConnected = new Gauge({
+  name: "tf_sse_clients_connected",
+  help: "Number of currently-connected SSE clients (dashboard live-event subscribers)",
+  registers: [promRegistry],
+});
+
+// ─── Wave 29 quantum observability zero-init (2026-06-28) ──────────────────────
+//
+// Fix MED-1: Zero-initialise closed-label-set Wave 29 counters so Prometheus sees
+// value=0 from first scrape instead of "no data". Without this Grafana shows blank
+// panels for label combinations that have not yet fired (e.g. the "manual" kill-switch
+// reason, or "blocked_insufficient_samples" shadow-promotion outcome, or any PBO
+// block regime before the first TESTING→SHADOW promotion attempt).
+//
+// Pattern mirrors the layer15 zero-init IIFE (lines ~510-525).
+//
+// Intentionally EXCLUDED from zero-init:
+//   tf_regime_drift_detections_total{from_regime, to_regime} — 36-combo sparse
+//   matrix; zero-initialising all combinations creates misleading gauge noise.
+//
+//   tf_rl_training_epochs_total{regime} — see audit note F-2: only "combined" is
+//   ever emitted; regime-specific values are never populated today.
+(function _zeroInitWave29QuantumLabels() {
+  // tf_rl_kill_switch_total{reason} — 3 closed values
+  const RL_KILL_SWITCH_REASONS = [
+    "sharpe_gap_30pct",
+    "insufficient_samples",
+    "manual",
+  ] as const;
+  for (const reason of RL_KILL_SWITCH_REASONS) {
+    rlKillSwitchTotal.labels({ reason }).inc(0);
+  }
+
+  // tf_lifecycle_shadow_promotions_total{outcome} — 3 closed values
+  const SHADOW_PROMOTION_OUTCOMES = [
+    "passed",
+    "blocked_divergence",
+    "blocked_insufficient_samples",
+  ] as const;
+  for (const outcome of SHADOW_PROMOTION_OUTCOMES) {
+    lifecycleShadowPromotionsTotal.labels({ outcome }).inc(0);
+  }
+
+  // tf_pbo_blocks_total{regime} — 6 institutional regimes
+  const INSTITUTIONAL_REGIMES = [
+    "TRENDING",
+    "EXPANSION",
+    "RANGE_BOUND",
+    "COMPRESSION",
+    "HIGH_VOL_MACRO",
+    "LOW_LIQ_CHOP",
+  ] as const;
+  for (const regime of INSTITUTIONAL_REGIMES) {
+    pboBlocksTotal.labels({ regime }).inc(0);
+  }
+
+  // tf_rl_training_epochs_total{regime} — only zero-init the aggregate "combined"
+  // label (the only value ever emitted by the increment site; see audit note F-2).
+  rlTrainingEpochsTotal.labels({ regime: "combined" }).inc(0);
+})();

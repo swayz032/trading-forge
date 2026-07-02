@@ -22,9 +22,18 @@ import { logger } from "../lib/logger.js";
 export function idempotencyMiddleware(req: Request, res: Response, next: NextFunction): void {
   // P1-2: dual-read header. Prefer canonical `x-idempotency-key`; fall back
   // to legacy `idempotency-key` for backwards compatibility.
+  // Deep-scan #5 L1 (2026-06-29): also accept a body `idempotency_key` field as a
+  // final fallback. Several live n8n journal-writer nodes (Daily Portfolio Monitor,
+  // Monthly Robustness Check) compute an idempotency_key but place it in the JSON body
+  // rather than the header, so retries (retryOnFail) could duplicate `logged` rows.
+  // express.json() runs before this route-level middleware, so req.body is parsed here.
   const headerCanonical = req.headers["x-idempotency-key"];
   const headerLegacy = req.headers["idempotency-key"];
-  const key = (headerCanonical || headerLegacy) as string | undefined;
+  const bodyKey =
+    req.body && typeof req.body === "object" && typeof (req.body as Record<string, unknown>).idempotency_key === "string"
+      ? ((req.body as Record<string, unknown>).idempotency_key as string)
+      : undefined;
+  const key = (headerCanonical || headerLegacy || bodyKey) as string | undefined;
 
   if (!key || (req.method !== "POST" && req.method !== "PATCH")) {
     next();

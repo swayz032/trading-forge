@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import os
 import sys
+from functools import lru_cache
 
 import numpy as np
 import polars as pl
@@ -41,9 +42,29 @@ DEFAULT_FILL_CONFIG = {
 }
 
 # ─── Volume-Based Partial Fill (HIGH #6) ─────────────────────────
-# Env var defaults — read at module import time for performance.
-_PARTIAL_FILL_ENABLED = os.environ.get("BACKTEST_PARTIAL_FILL_ENABLED", "true").lower() in ("true", "1", "yes")
-_PARTIAL_FILL_VOLUME_THRESHOLD = float(os.environ.get("BACKTEST_PARTIAL_FILL_VOLUME_THRESHOLD", "0.1"))
+# M-5 fix (2026-06-29): replaced module-level frozen reads with lru_cache getter
+# functions so tests can call cache_clear() + set env → get the new value.
+# Module-level frozen reads were a test-isolation hazard: patch.dict(os.environ, ...)
+# did not affect _PARTIAL_FILL_ENABLED / _PARTIAL_FILL_VOLUME_THRESHOLD after import.
+#
+# Usage in tests:
+#   import fill_model
+#   fill_model._get_partial_fill_enabled.cache_clear()
+#   fill_model._get_partial_fill_volume_threshold.cache_clear()
+#   os.environ["BACKTEST_PARTIAL_FILL_ENABLED"] = "false"
+#   # now the getter returns False for the lifetime of this test
+
+
+@lru_cache(maxsize=1)
+def _get_partial_fill_enabled() -> bool:
+    """Read BACKTEST_PARTIAL_FILL_ENABLED at call time (cached; clear for tests)."""
+    return os.environ.get("BACKTEST_PARTIAL_FILL_ENABLED", "true").lower() in ("true", "1", "yes")
+
+
+@lru_cache(maxsize=1)
+def _get_partial_fill_volume_threshold() -> float:
+    """Read BACKTEST_PARTIAL_FILL_VOLUME_THRESHOLD at call time (cached; clear for tests)."""
+    return float(os.environ.get("BACKTEST_PARTIAL_FILL_VOLUME_THRESHOLD", "0.1"))
 
 
 def compute_fill_probabilities(
@@ -253,7 +274,7 @@ def compute_fill_probabilities_v2(
 def compute_volume_based_fill_ratios(
     df: pl.DataFrame,
     order_quantities: np.ndarray,
-    volume_threshold: float = _PARTIAL_FILL_VOLUME_THRESHOLD,
+    volume_threshold: float | None = None,
 ) -> np.ndarray:
     """Compute per-bar fill ratio based on order size relative to bar volume.
 
@@ -284,10 +305,14 @@ def compute_volume_based_fill_ratios(
         Float array of fill ratios in [0.5, 1.0] per bar.
         Values are 1.0 for bars with no entry or sufficient volume.
     """
+    # M-5: resolve default via getter (re-reads env; cache_clear() in tests → isolation)
+    if volume_threshold is None:
+        volume_threshold = _get_partial_fill_volume_threshold()
+
     n = len(df)
     fill_ratios = np.ones(n, dtype=np.float64)
 
-    if not _PARTIAL_FILL_ENABLED:
+    if not _get_partial_fill_enabled():
         return fill_ratios
 
     # Get volume array — if absent (e.g. test fixture), return all 1.0
@@ -323,7 +348,7 @@ def apply_volume_partial_fills(
     entries: np.ndarray,
     sizes: np.ndarray,
     df: pl.DataFrame,
-    volume_threshold: float = _PARTIAL_FILL_VOLUME_THRESHOLD,
+    volume_threshold: float | None = None,
 ) -> tuple[np.ndarray, np.ndarray, dict]:
     """Apply volume-based fill ratio to sizes at entry bars.
 
@@ -347,7 +372,11 @@ def apply_volume_partial_fills(
     P&L contract: caller (backtester.py) uses adjusted_sizes in the futures P&L
     formula — never pass to vectorbt slippage/fees.
     """
-    if not _PARTIAL_FILL_ENABLED:
+    # M-5: resolve default via getter
+    if volume_threshold is None:
+        volume_threshold = _get_partial_fill_volume_threshold()
+
+    if not _get_partial_fill_enabled():
         return sizes.copy(), np.ones(len(sizes), dtype=np.float64), {
             "enabled": False,
             "total_orders": 0,

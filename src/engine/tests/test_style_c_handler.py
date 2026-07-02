@@ -367,3 +367,203 @@ def test_handler_version_present():
     decision = evaluate_exit(state)
     assert decision.handler_version == HANDLER_VERSION
     assert HANDLER_VERSION.startswith("style_c_v")
+
+
+# ─── C2 fix: Intrabar high/low TP touch detection ────────────────────────────
+# Tests that bar_high / bar_low are used for TP fill detection (not bar close).
+# Mirrors backtester.py:1248/1260 limit-fill semantics.
+
+def test_tp1_fires_on_bar_high_not_close_long():
+    """C2 fix: Long TP1 fires when bar_high touches +1R even if close is below."""
+    # Close stays below TP1 — would NOT fire under old close-based logic.
+    # Bar high touches TP1 exactly — MUST fire under intrabar semantics.
+    state = _make_state(
+        entry_price=5000.0,
+        stop_pts=10.0,
+        current_price=5009.0,   # close: 0.9R — below TP1 (5010)
+        bar_high=5010.0,        # intrabar high: exactly 1R — touch!
+        bar_low=4998.0,
+        tp1_filled=False,
+    )
+    decision = evaluate_exit(state)
+    assert decision.decision == "FILL_TP1_50PCT", (
+        f"Expected TP1 fill on bar_high touch but got {decision.decision}. "
+        "C2: intrabar high must be used for long TP detection."
+    )
+    assert decision.evidence["tp1_fraction"] == TP1_FRACTION_C
+
+
+def test_tp2_fires_on_bar_low_not_close_short():
+    """C2 fix: Short TP2 fires when bar_low touches -2R even if close is above."""
+    # Close stays above TP2 — would NOT fire under old close-based logic.
+    # Bar low touches TP2 exactly — MUST fire under intrabar semantics.
+    state = _make_state(
+        direction="short",
+        entry_price=5000.0,
+        stop_pts=10.0,
+        current_price=4981.0,   # close: 1.9R down — above TP2 (4980)
+        bar_high=4985.0,
+        bar_low=4980.0,         # intrabar low: exactly -2R — touch!
+        tp1_filled=True,
+        tp2_filled=False,
+    )
+    decision = evaluate_exit(state)
+    assert decision.decision == "FILL_TP2", (
+        f"Expected TP2 fill on bar_low touch but got {decision.decision}. "
+        "C2: intrabar low must be used for short TP detection."
+    )
+    assert decision.evidence["tp2_fraction"] == TP2_FRACTION_C
+
+
+def test_tp1_no_false_fire_when_bar_high_below_target_long():
+    """C2 fix: Long TP1 does NOT fire when bar_high is still below +1R."""
+    state = _make_state(
+        entry_price=5000.0,
+        stop_pts=10.0,
+        current_price=5008.0,   # close: 0.8R
+        bar_high=5009.5,        # bar high: 0.95R — still below TP1 (5010)
+        bar_low=4998.0,
+        tp1_filled=False,
+    )
+    decision = evaluate_exit(state)
+    assert decision.decision == "HOLD", (
+        f"Expected HOLD when bar_high < TP1 but got {decision.decision}."
+    )
+
+
+def test_backward_compat_close_based_when_no_bar_context_long():
+    """C2 backward-compat: when bar_high is None, falls back to current_price (close)."""
+    # current_price is exactly at TP1 — must fire under close-based fallback.
+    state = _make_state(
+        entry_price=5000.0,
+        stop_pts=10.0,
+        current_price=5010.0,   # exactly at TP1
+        bar_high=None,          # no intrabar context supplied
+        bar_low=None,
+        tp1_filled=False,
+    )
+    decision = evaluate_exit(state)
+    assert decision.decision == "FILL_TP1_50PCT", (
+        f"Backward-compat: expected TP1 via close-based fallback but got {decision.decision}."
+    )
+
+
+def test_bar_high_low_in_audit_evidence():
+    """C2 fix: bar_high / bar_low are included in audit evidence for traceability."""
+    state = _make_state(
+        entry_price=5000.0,
+        stop_pts=10.0,
+        current_price=5009.0,   # close below TP1
+        bar_high=5010.0,        # high touches TP1
+        bar_low=4998.0,
+        tp1_filled=False,
+    )
+    decision = evaluate_exit(state)
+    assert "bar_high" in decision.evidence
+    assert "bar_low"  in decision.evidence
+    assert decision.evidence["bar_high"] == 5010.0
+    assert decision.evidence["bar_low"]  == 4998.0
+# ─── Test 15: Style C NEVER emits MOVE_STOP_TO_BE (Defect 2 parity contract) ──
+
+# Background: Only style_d_handler emits MOVE_STOP_TO_BE.  Style C uses the
+# TS-side tp1BeStopMap mechanism (absolute_level stop config) for the BE+1tick
+# guarantee.  A misleading comment in paper-execution-service.ts previously
+# claimed Python made this decision — Defect 2 corrects that comment.
+# These tests lock the contract so the Python handler cannot silently add
+# MOVE_STOP_TO_BE in the future without a corresponding TS-side removal.
+
+_ALL_STYLE_C_DECISIONS = {"FILL_TP1_50PCT", "FILL_TP2", "TIGHTEN_TRAIL_TO_X",
+                           "TIME_STOP_FLATTEN", "HOLD"}
+
+
+def _assert_no_move_stop_to_be(state: StyleCState) -> None:
+    decision = evaluate_exit(state)
+    assert decision.decision != "MOVE_STOP_TO_BE", (
+        f"Style C must never emit MOVE_STOP_TO_BE (TS-side tp1BeStopMap handles this). "
+        f"Got decision={decision.decision!r} for state={state!r}"
+    )
+    assert decision.decision in _ALL_STYLE_C_DECISIONS, (
+        f"Unexpected Style C decision={decision.decision!r}"
+    )
+
+
+def test_no_move_stop_to_be_at_tp1_fill_long():
+    """Long TP1 fills: FILL_TP1_50PCT emitted — NEVER MOVE_STOP_TO_BE."""
+    state = _make_state(
+        direction="long",
+        entry_price=5000.0,
+        stop_pts=10.0,
+        current_price=5010.0,   # exactly +1R
+        tp1_filled=False,
+        tp2_filled=False,
+    )
+    decision = evaluate_exit(state)
+    assert decision.decision == "FILL_TP1_50PCT"
+    _assert_no_move_stop_to_be(state)
+
+
+def test_no_move_stop_to_be_at_tp1_fill_short():
+    """Short TP1 fills: FILL_TP1_50PCT emitted — NEVER MOVE_STOP_TO_BE."""
+    state = _make_state(
+        direction="short",
+        entry_price=5000.0,
+        stop_pts=10.0,
+        current_price=4990.0,   # exactly +1R short-side
+        tp1_filled=False,
+        tp2_filled=False,
+    )
+    decision = evaluate_exit(state)
+    assert decision.decision == "FILL_TP1_50PCT"
+    _assert_no_move_stop_to_be(state)
+
+
+def test_no_move_stop_to_be_after_tp1_with_poc_trail():
+    """After TP1 fill, POC trail updates TIGHTEN_TRAIL_TO_X — NEVER MOVE_STOP_TO_BE."""
+    state = _make_state(
+        direction="long",
+        entry_price=5000.0,
+        stop_pts=10.0,
+        current_price=5025.0,
+        tp1_filled=True,
+        tp2_filled=True,
+        developing_session_poc=5015.0,
+    )
+    # Emit TIGHTEN_TRAIL_TO_X (POC update path) — must not be MOVE_STOP_TO_BE
+    decision = evaluate_exit(state)
+    assert decision.decision == "TIGHTEN_TRAIL_TO_X"
+    _assert_no_move_stop_to_be(state)
+
+
+def test_no_move_stop_to_be_during_hold():
+    """Hold state: HOLD emitted — NEVER MOVE_STOP_TO_BE."""
+    state = _make_state(
+        direction="long",
+        entry_price=5000.0,
+        stop_pts=10.0,
+        current_price=5002.0,   # below 1R
+        tp1_filled=False,
+        tp2_filled=False,
+    )
+    decision = evaluate_exit(state)
+    assert decision.decision == "HOLD"
+    _assert_no_move_stop_to_be(state)
+
+
+def test_all_style_c_reachable_decisions_exclude_move_stop_to_be():
+    """Exhaustive: every reachable Style C decision is not MOVE_STOP_TO_BE."""
+    # Scenario set covers all 5 reachable paths:
+    scenarios = [
+        # HOLD — below TP1
+        _make_state(current_price=5002.0),
+        # FILL_TP1_50PCT — exactly at 1R
+        _make_state(current_price=5010.0, tp1_filled=False),
+        # FILL_TP2 — at 2R with TP1 already filled
+        _make_state(current_price=5020.0, tp1_filled=True, tp2_filled=False),
+        # TIME_STOP_FLATTEN
+        _make_state(current_price=5002.0, current_time_et="15:55"),
+        # TIGHTEN_TRAIL_TO_X — both filled, POC present
+        _make_state(current_price=5025.0, tp1_filled=True, tp2_filled=True,
+                    developing_session_poc=5015.0),
+    ]
+    for state in scenarios:
+        _assert_no_move_stop_to_be(state)

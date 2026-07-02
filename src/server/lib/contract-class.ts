@@ -195,3 +195,48 @@ export function getCommissionPerSide(
     ? DEFAULT_MINI_COMMISSION_PER_SIDE
     : DEFAULT_MICRO_COMMISSION_PER_SIDE;
 }
+
+// ─── Stop ceiling table ───────────────────────────────────────────────────────
+
+/**
+ * Per-symbol maximum stop distance in price POINTS.
+ * This is the canonical TS mirror of Python `_STOP_CEILING_TABLE` in
+ * `src/engine/risk/margin_expansion.py`.
+ *
+ * Updated values (Wave 1 Track 1B — 2026-06-27):
+ *   MNQ: 40pt → 62pt   (wider ceiling matches realistic MNQ ATR)
+ *   MCL: 0.25pt → 1.00pt  (1.00pt = 100 ticks; old 0.25pt = 25 ticks was too tight)
+ *
+ * Environment overrides (same env names as Python side — required for parity):
+ *   STOP_CEILING_PTS_MES  default 14   (MES structural ceiling per CLAUDE.md §4)
+ *   STOP_CEILING_PTS_MNQ  default 62   (MNQ ceiling, calibrated to 2026 ATR data)
+ *   STOP_CEILING_PTS_MCL  default 1.00 (MCL ceiling in points; 1pt = $100/contract)
+ *
+ * Unit: POINTS throughout. For MCL: 1 point = 100 ticks = $100 per contract.
+ * Never confuse with TICKS — the MCL pointDollarValue is $100/pt, tick_value is $1.
+ *
+ * Usage:
+ *   const ceiling = getStopCeilingPts("MNQ");  // → 62 (or env override)
+ *   const stopPts = Math.min(stopMultiplier * atr, ceiling);
+ */
+const STOP_CEILING_TABLE: Record<string, number> = {
+  MES: parseFloat(process.env.STOP_CEILING_PTS_MES ?? "14"),
+  MNQ: parseFloat(process.env.STOP_CEILING_PTS_MNQ ?? "62"),
+  MCL: parseFloat(process.env.STOP_CEILING_PTS_MCL ?? "1.00"),
+} as const;
+
+/**
+ * Resolve the stop ceiling in price points for a given symbol.
+ * Returns the symbol-specific ceiling, or the MES default (14) for unknown symbols.
+ *
+ * Mirrors Python: `_STOP_CEILING_TABLE.get(symbol, _STOP_CEILING_TABLE["MES"])`.
+ * Case-insensitive. Never throws.
+ *
+ * @param symbol  Contract symbol (e.g. "MES", "MNQ", "MCL"). Case-insensitive.
+ * @returns Ceiling stop distance in price POINTS.
+ */
+export function getStopCeilingPts(symbol: string): number {
+  if (!symbol) return STOP_CEILING_TABLE["MES"] ?? 14;
+  const key = symbol.toUpperCase();
+  return STOP_CEILING_TABLE[key] ?? STOP_CEILING_TABLE["MES"] ?? 14;
+}

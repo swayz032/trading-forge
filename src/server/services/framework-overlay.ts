@@ -113,8 +113,12 @@ const FRAMEWORK = {
   },
   // Hard flatten 15:55 ET — every strategy with session_filter=RTH_ONLY needs this
   timeStop: { type: "hard_flatten", flat_at: "15:55 ET" },
-  // Structural stop ceilings per CLAUDE.md §4
-  stopCeilingPts: { MES: 14, MNQ: 40, MCL: 25 } as Record<string, number>,
+  // Structural stop ceilings per CLAUDE.md §4 — in POINTS. Wave 1 (2026-06-27)
+  // recalibrated MNQ 40→62 and MCL 0.25→1.00pt to 2026 ATR. NOTE: this field is
+  // documentary only — the LIVE source of truth is getStopCeilingPts() in
+  // contract-class.ts (TS) and STOP_CEILING_PTS_* env in backtester.py /
+  // gate_block_analyzer.py (Python). Keep these in sync to avoid drift.
+  stopCeilingPts: { MES: 14, MNQ: 62, MCL: 1.0 } as Record<string, number>,
   // ATR floor multiplier — stop_distance must be >= 1.5 * current_tf ATR
   stopFloorAtrMultiple: 1.5,
   // 67% personal DLL of firm DLL

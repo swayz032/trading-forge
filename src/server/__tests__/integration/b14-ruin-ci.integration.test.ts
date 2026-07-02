@@ -18,13 +18,13 @@
  *
  * WHAT IS TESTED:
  *   1. Insert a monte_carlo_runs row with risk_metrics JSONB containing
- *      probability_of_ruin_ci.ci_high = 0.55 (above threshold 0.40).
+ *      probability_of_ruin_ci.ci_high = 0.55 (above threshold 0.20).
  *   2. SELECT the row via Drizzle and extract risk_metrics.probability_of_ruin_ci.
  *   3. Call evaluateB14CiGate(ruinCi, scalar) and assert:
- *      - passed = false (blocked because 0.55 > 0.40)
+ *      - passed = false (blocked because 0.55 > 0.20; deep-scan #5 F-3: comment said 0.40, threshold was tightened to 0.20 on 2026-06-22 — assertion was always correct)
  *      - legacyFallback = false (ci_high was available, scalar NOT used)
  *      - auditPayload.ci_high = 0.55 (key path round-tripped correctly)
- *   4. Repeat with ci_high = 0.35 (below threshold) and assert passed = true.
+ *   4. Repeat with ci_high = 0.15 (below the 0.20 threshold) and assert passed = true.
  */
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
@@ -49,7 +49,7 @@ const riskMetricsHigh = {
   probability_of_ruin_ci: {
     point_estimate: 0.52,
     ci_low: 0.45,
-    ci_high: 0.55,           // above threshold 0.40 → gate should BLOCK
+    ci_high: 0.55,           // above threshold 0.20 → gate should BLOCK
     ci_method: "bca",
     n_resamples: 5000,
     standard_error: 0.03,
@@ -58,11 +58,11 @@ const riskMetricsHigh = {
 };
 
 const riskMetricsLow = {
-  probability_of_ruin: 0.28,
+  probability_of_ruin: 0.12,
   probability_of_ruin_ci: {
-    point_estimate: 0.28,
-    ci_low: 0.22,
-    ci_high: 0.35,           // below threshold 0.40 → gate should PASS
+    point_estimate: 0.12,
+    ci_low: 0.08,
+    ci_high: 0.15,           // below threshold 0.20 (tightened 2026-06-22) → gate should PASS
     ci_method: "bca",
     n_resamples: 5000,
     standard_error: 0.02,
@@ -139,7 +139,7 @@ describe("b14-ruin-ci.integration — ci_high key-path round-trip", () => {
     expect(rm.probability_of_ruin_ci.n_resamples).toBe(5000);
   });
 
-  it("B14 gate blocks when ci_high > 0.40 (ci_high = 0.55)", async () => {
+  it("B14 gate blocks when ci_high > 0.20 (ci_high = 0.55)", async () => {
     // Read the row and extract the ruinCi dict — this is the key path under test
     const [row] = await ctx.db
       .select({ riskMetrics: monteCarloRuns.riskMetrics })
@@ -151,7 +151,7 @@ describe("b14-ruin-ci.integration — ci_high key-path round-trip", () => {
 
     const result = evaluateB14CiGate(ruinCi, rm.probability_of_ruin);
 
-    // Should be BLOCKED — ci_high = 0.55 > threshold 0.40
+    // Should be BLOCKED — ci_high = 0.55 > threshold 0.20
     expect(result.passed).toBe(false);
 
     // Critically: the BCa ci_high was used — NOT the scalar fallback.
@@ -165,7 +165,7 @@ describe("b14-ruin-ci.integration — ci_high key-path round-trip", () => {
     expect(result.auditPayload.legacy_ruin_scalar_fallback).toBe(false);
   });
 
-  it("B14 gate passes when ci_high <= 0.40 (ci_high = 0.35)", async () => {
+  it("B14 gate passes when ci_high <= 0.20 (ci_high = 0.15)", async () => {
     const [row] = await ctx.db
       .select({ riskMetrics: monteCarloRuns.riskMetrics })
       .from(monteCarloRuns)
@@ -176,10 +176,10 @@ describe("b14-ruin-ci.integration — ci_high key-path round-trip", () => {
 
     const result = evaluateB14CiGate(ruinCi, rm.probability_of_ruin);
 
-    // Should PASS — ci_high = 0.35 ≤ threshold 0.40
+    // Should PASS — ci_high = 0.15 ≤ threshold 0.20 (tightened from 0.40 on 2026-06-22)
     expect(result.passed).toBe(true);
     expect(result.legacyFallback).toBe(false);
-    expect(result.auditPayload.ci_high).toBeCloseTo(0.35, 4);
+    expect(result.auditPayload.ci_high).toBeCloseTo(0.15, 4);
     expect(result.auditPayload.blocked).toBe(false);
   });
 

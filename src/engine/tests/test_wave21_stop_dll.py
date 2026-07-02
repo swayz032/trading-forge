@@ -13,9 +13,10 @@ Tests pin:
 import numpy as np
 import pytest
 
-from src.engine.backtester import _apply_dsl_stop_loss_and_time_stop, _get_stop_ceiling_for_symbol
-from src.engine.sizing import compute_risk_derived_contracts
-
+from src.engine.backtester import (
+    _apply_dsl_stop_loss_and_time_stop,
+    _get_stop_ceiling_for_symbol,
+)
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -49,9 +50,12 @@ def _run_stop_logic(
     entry_short = np.zeros(n, dtype=bool)
     exit_short = np.zeros(n, dtype=bool)
 
-    # All bars: price = entry_price, ATR = atr
-    high_np = np.full(n, entry_price + 0.5)
-    low_np = np.full(n, entry_price - 0.5)
+    # All bars: price = entry_price, ATR = atr.
+    # Low is 0.05 below close — well above any qualifying stop distance — so the
+    # C-6 intrabar-stop-breach check never fires for valid test entries.
+    high_np = np.full(n, entry_price + 0.05)
+    low_np = np.full(n, entry_price - 0.05)
+    close_np = np.full(n, entry_price)   # C3 FIX: close_np required as entry ref price
     atr_np = np.full(n, atr)
 
     ts = _make_timestamps(n, base_hour=base_hour)
@@ -61,6 +65,7 @@ def _run_stop_logic(
         high_np, low_np, atr_np, ts,
         stop_multiplier=stop_mult,
         symbol=symbol,
+        close_np=close_np,
     )
 
 
@@ -92,23 +97,39 @@ class TestStopCeilingSkip:
         el_out, _, _, _, meta = _run_stop_logic([5], atr=atr, symbol="MES")
         assert len(meta["skipped_trades"]) == 0, "stop == ceiling should NOT be skipped"
 
-    def test_mnq_ceiling_40pt(self):
-        # ATR=30, mult=1.5 → stop=45 > MNQ ceiling 40 → SKIPPED
+    def test_mnq_ceiling_62pt(self):
+        # Wave 1 Track 1A 2026-06-27: MNQ ceiling updated 40 → 62.
+        # ATR=42, mult=1.5 → stop=63 > new MNQ ceiling 62 → SKIPPED
+        el_out, _, _, _, meta = _run_stop_logic([5], atr=42.0, symbol="MNQ")
+        assert bool(el_out[5]) is False, "stop=63 > ceiling=62 must be skipped"
+        assert meta["skipped_trades"][0]["ceiling"] == pytest.approx(62.0)
+
+    def test_mnq_previously_skipped_now_allowed(self):
+        # Old ceiling 40 would skip ATR=30 (stop=45); new ceiling 62 allows it.
+        # ATR=30, mult=1.5 → stop=45 < new ceiling 62 → NOT skipped
         el_out, _, _, _, meta = _run_stop_logic([5], atr=30.0, symbol="MNQ")
-        assert bool(el_out[5]) is False
-        assert meta["skipped_trades"][0]["ceiling"] == 40.0
+        assert bool(el_out[5]) is True, "stop=45 < new ceiling=62 must NOT be skipped"
+        assert len(meta["skipped_trades"]) == 0
 
     def test_mnq_normal_atr_not_skipped(self):
-        # ATR=20, mult=1.5 → stop=30 < MNQ ceiling 40 → NOT skipped
+        # ATR=20, mult=1.5 → stop=30 < MNQ ceiling 62 → NOT skipped
         el_out, _, _, _, meta = _run_stop_logic([5], atr=20.0, symbol="MNQ")
         assert bool(el_out[5]) is True
         assert len(meta["skipped_trades"]) == 0
 
-    def test_mcl_ceiling_025pt(self):
-        # ATR=0.2, mult=1.5 → stop=0.3 > MCL ceiling 0.25 → SKIPPED
+    def test_mcl_ceiling_100pt(self):
+        # Wave 1 Track 1A 2026-06-27: MCL ceiling updated 0.25 → 1.00.
+        # ATR=0.7, mult=1.5 → stop=1.05 > new MCL ceiling 1.00 → SKIPPED
+        el_out, _, _, _, meta = _run_stop_logic([5], atr=0.7, symbol="MCL")
+        assert bool(el_out[5]) is False, "stop=1.05 > ceiling=1.00 must be skipped"
+        assert meta["skipped_trades"][0]["ceiling"] == pytest.approx(1.00)
+
+    def test_mcl_previously_skipped_now_allowed(self):
+        # Old ceiling 0.25 would skip ATR=0.2 (stop=0.3); new ceiling 1.00 allows it.
+        # ATR=0.2, mult=1.5 → stop=0.3 < new MCL ceiling 1.00 → NOT skipped
         el_out, _, _, _, meta = _run_stop_logic([5], atr=0.2, symbol="MCL")
-        assert bool(el_out[5]) is False
-        assert meta["skipped_trades"][0]["ceiling"] == pytest.approx(0.25)
+        assert bool(el_out[5]) is True, "stop=0.3 < new ceiling=1.00 must NOT be skipped"
+        assert len(meta["skipped_trades"]) == 0
 
     def test_multiple_entries_some_skipped(self):
         # Three entries on two different sessions (different days).
@@ -122,11 +143,13 @@ class TestStopCeilingSkip:
         entry_short = np.zeros(n, dtype=bool)
         exit_short = np.zeros(n, dtype=bool)
 
-        # Price: ATR stop = 4*1.5=6 from entry high of 5001 → stop=4995.
-        # Bar 8 has low=4994 < 4995 → ATR stop fires → position closes before bar 12.
-        high_np = np.full(n, 5001.0)
-        low_np = np.full(n, 4999.0)
-        low_np[8] = 4994.0     # triggers ATR stop for position from bar 2
+        # Entry close = 5001.0, MES floor=6pt → stop = 5001 - 6 = 4995.
+        # Bar 8 low=4994 < 4995 → ATR stop fires → position closes before bar 12.
+        # ATR=10 at bar 12 → stop=15 > MES ceiling=14 → skipped.
+        close_np = np.full(n, 5001.0)  # C3 FIX: close_np is entry ref price
+        high_np = np.full(n, 5001.5)
+        low_np = np.full(n, 5000.5)   # normal bars: well above stop=4995
+        low_np[8] = 4994.0            # bar 8: low < 4995 → ATR stop fires
 
         atr_np = np.full(n, 4.0)
         atr_np[12] = 10.0      # spike ATR on bar 12
@@ -144,6 +167,7 @@ class TestStopCeilingSkip:
         el_out, _, _, _, meta = _apply_dsl_stop_loss_and_time_stop(
             entry_long, exit_long, entry_short, exit_short,
             high_np, low_np, atr_np, ts, stop_multiplier=1.5, symbol="MES",
+            close_np=close_np,
         )
         assert bool(el_out[2]) is True    # normal ATR — should enter
         assert bool(el_out[12]) is False  # high ATR — should be skipped
@@ -151,13 +175,27 @@ class TestStopCeilingSkip:
         assert meta["atr_stop_exits"] >= 1  # ATR stop from bar 2 fired at bar 8
 
     def test_get_stop_ceiling_for_symbol_table(self):
-        assert _get_stop_ceiling_for_symbol("MES") == 14.0
-        assert _get_stop_ceiling_for_symbol("ES") == 14.0
-        assert _get_stop_ceiling_for_symbol("MNQ") == 40.0
-        assert _get_stop_ceiling_for_symbol("NQ") == 40.0
-        assert _get_stop_ceiling_for_symbol("MCL") == pytest.approx(0.25)
-        assert _get_stop_ceiling_for_symbol("CL") == pytest.approx(0.25)
+        # Wave 1 Track 1A 2026-06-27: MNQ 40→62, MCL 0.25→1.00
+        assert _get_stop_ceiling_for_symbol("MES") == pytest.approx(14.0)
+        assert _get_stop_ceiling_for_symbol("ES") == pytest.approx(14.0)
+        assert _get_stop_ceiling_for_symbol("MNQ") == pytest.approx(62.0)   # was 40.0
+        assert _get_stop_ceiling_for_symbol("NQ") == pytest.approx(62.0)    # was 40.0
+        assert _get_stop_ceiling_for_symbol("MCL") == pytest.approx(1.00)   # was 0.25
+        assert _get_stop_ceiling_for_symbol("CL") == pytest.approx(1.00)    # was 0.25
         assert _get_stop_ceiling_for_symbol("UNKNOWN") == 14.0  # fallback to MES default
+
+    def test_get_stop_ceiling_env_override(self, monkeypatch):
+        """Env override beats baked defaults — both gates share the same env var."""
+        monkeypatch.setenv("STOP_CEILING_PTS_MNQ", "55")
+        assert _get_stop_ceiling_for_symbol("MNQ") == pytest.approx(55.0)
+        assert _get_stop_ceiling_for_symbol("NQ") == pytest.approx(55.0)
+
+    def test_gate_block_analyzer_ceiling_in_sync(self):
+        """gate_block_analyzer and backtester must agree on every ceiling value."""
+        from src.engine.gate_block_analyzer import STRUCTURAL_STOP_CEILING_PTS
+        assert STRUCTURAL_STOP_CEILING_PTS["MES"] == pytest.approx(_get_stop_ceiling_for_symbol("MES"))
+        assert STRUCTURAL_STOP_CEILING_PTS["MNQ"] == pytest.approx(_get_stop_ceiling_for_symbol("MNQ"))
+        assert STRUCTURAL_STOP_CEILING_PTS["MCL"] == pytest.approx(_get_stop_ceiling_for_symbol("MCL"))
 
 
 # ─── E.5: 15:55 ET time-stop tests ───────────────────────────────────────────
@@ -200,6 +238,7 @@ class TestTimestop1555ET:
         el_out, exit_l_out, _, _, meta = _apply_dsl_stop_loss_and_time_stop(
             entry_long, exit_long, entry_short, exit_short,
             high_np, low_np, atr_np, ts_list, stop_multiplier=1.5, symbol="MES",
+            ts_et_timestamps=ts_list,  # ET-native path: detect 15:55 ET directly (FIX-6)
         )
 
         assert bool(exit_l_out[bar_1555]) is True, "Exit signal must be set at 15:55 ET bar"
@@ -230,6 +269,7 @@ class TestTimestop1555ET:
         _, exit_l_out, _, _, meta = _apply_dsl_stop_loss_and_time_stop(
             entry_long, exit_long, entry_short, exit_short,
             high_np, low_np, atr_np, ts_list, stop_multiplier=1.5, symbol="MES",
+            ts_et_timestamps=ts_list,  # ET-native path: detect 15:55 ET directly (FIX-6)
         )
 
         # Find 15:55 bar
@@ -268,6 +308,7 @@ class TestTimestop1555ET:
         _, _, _, exit_s_out, meta = _apply_dsl_stop_loss_and_time_stop(
             entry_long, exit_long, entry_short, exit_short,
             high_np, low_np, atr_np, ts_list, stop_multiplier=1.5, symbol="MES",
+            ts_et_timestamps=ts_list,  # ET-native path: detect 15:55 ET directly (FIX-6)
         )
         assert meta["time_stop_exits"] >= 1, "Short position must also be closed at 15:55 ET"
 

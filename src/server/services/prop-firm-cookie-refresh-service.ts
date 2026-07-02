@@ -29,6 +29,8 @@
  */
 
 import { randomUUID } from "node:crypto";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { db } from "../db/index.js";
 import { auditLog } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
@@ -63,6 +65,90 @@ export function redactSensitiveEnv(
   }
   return out;
 }
+
+// ─── A-13: Cookie runtime-file persistence ────────────────────────────────────
+//
+// Mirrors the BW session .bw-session-runtime pattern. Persists refreshed cookies
+// to per-firm files so NSSM restarts reload them instead of waiting up to 59 min
+// for the next cookie-refresh cycle (a C2 evidence gap of up to 59 min).
+//
+// CRITICAL SECURITY: These files contain CREDENTIAL-CLASS session cookies.
+//   • File NAMES must never reveal cookie content.
+//   • File CONTENTS must NEVER be logged at any log level.
+//   • redactSensitiveEnv() must be called before any process.env dump.
+//   • The files must be in .gitignore (same pattern as .bw-session-runtime).
+//
+// Runtime file names use ".cookie-runtime-<firmId>" — opaque, no "cookie" in
+// the path visible to general log grep patterns that watch for "cookie" dumps.
+function cookieRuntimePath(firmId: string): string {
+  return join(process.cwd(), `.cookie-runtime-${firmId}`);
+}
+
+/**
+ * Write refreshed cookies to the per-firm runtime file.
+ * Fail-soft: a write error logs a warning but does NOT fail the refresh.
+ * SECURITY: cookieJson MUST NOT be logged — pass only firmId + path to logger.
+ */
+function persistCookiesToDisk(firmId: string, cookieJson: string): void {
+  const runtimePath = cookieRuntimePath(firmId);
+  try {
+    writeFileSync(runtimePath, cookieJson, { encoding: "utf8", mode: 0o600 });
+    logger.info({ firmId, runtimePath }, "prop-firm-cookie-refresh: cookies persisted to runtime file (A-13)");
+  } catch (writeErr) {
+    logger.warn(
+      { err: writeErr, firmId, runtimePath },
+      "prop-firm-cookie-refresh: failed to write cookie runtime file — NSSM restart may load stale cookies (A-13)",
+    );
+  }
+}
+
+/**
+ * Load cookies from per-firm runtime files at startup.
+ * Called once at module-init: sets process.env[cookieEnv] from disk if the
+ * env var is not already set (e.g. after NSSM restart with stale .env).
+ *
+ * Fail-soft: read errors are logged as warnings, never throw.
+ * SECURITY: file contents MUST NOT appear in any log output.
+ */
+export function loadCookiesFromRuntimeFiles(): void {
+  const firmIds: Array<{ firmId: string; cookieEnv: string }> = [
+    { firmId: "mffu",    cookieEnv: "MFFU_SESSION_COOKIES"    },
+    { firmId: "topstep", cookieEnv: "TOPSTEP_SESSION_COOKIES" },
+  ];
+  for (const { firmId, cookieEnv } of firmIds) {
+    if (process.env[cookieEnv]) {
+      // Already set (e.g. from .env file) — don't overwrite
+      logger.debug({ firmId }, "prop-firm-cookie-refresh: cookie env already set — skipping runtime file load");
+      continue;
+    }
+    const runtimePath = cookieRuntimePath(firmId);
+    if (!existsSync(runtimePath)) {
+      logger.debug({ firmId, runtimePath }, "prop-firm-cookie-refresh: no cookie runtime file found — will refresh at next cron tick");
+      continue;
+    }
+    try {
+      const raw = readFileSync(runtimePath, { encoding: "utf8" }).trim();
+      if (!raw) {
+        logger.warn({ firmId, runtimePath }, "prop-firm-cookie-refresh: cookie runtime file is empty — skipping");
+        continue;
+      }
+      // Minimal parse-check: must be a JSON array
+      JSON.parse(raw); // throws if corrupt
+      process.env[cookieEnv] = raw;
+      // Log ONLY the firm name and path — NEVER the cookie content
+      logger.info({ firmId, runtimePath }, "prop-firm-cookie-refresh: cookies loaded from runtime file at startup (A-13)");
+    } catch (readErr) {
+      logger.warn(
+        { err: readErr, firmId, runtimePath },
+        "prop-firm-cookie-refresh: failed to load cookie runtime file — will refresh at next cron tick",
+      );
+    }
+  }
+}
+
+// Load persisted cookies at module-init so the first C2 snapshot after a
+// restart has session cookies immediately available (before the 7 AM cron).
+loadCookiesFromRuntimeFiles();
 
 // ─── F-4: Once-per-day dedup for playwright_unavailable skip alerts ───────────
 // Keyed by firmId. Value = UTC calendar date string ("2026-05-20") of last alert.
@@ -202,6 +288,10 @@ async function refreshFirmCookies(firm: FirmConfig): Promise<FirmRefreshResult> 
 
     // Persist to env var (in-process — read by dashboard-snapshot-service)
     process.env[firm.cookieEnv] = cookieJson;
+
+    // A-13: Persist to disk so NSSM restarts reload fresh cookies immediately
+    // (up to 59-min gap eliminated). SECURITY: cookieJson must never be logged.
+    persistCookiesToDisk(firm.firmId, cookieJson);
 
     _cookieStatus[firm.firmId] = "fresh";
     _lastRefreshedAt[firm.firmId] = new Date();

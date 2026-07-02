@@ -21,6 +21,7 @@
 
 import { logger } from "../lib/logger.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
+import { CircuitBreakerRegistry, CircuitOpenError } from "../lib/circuit-breaker.js";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -60,6 +61,13 @@ const WARNING_BATCH_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
 const METADATA_FIELD_LIMIT = 10;
 const FIELD_VALUE_MAX_LENGTH = 1024;
 const DESCRIPTION_MAX_LENGTH = 4000;
+
+// FINDING #7 FIX: Discord circuit breaker — fast-fails during outage instead of
+// stalling event loop 10s per call (the existing AbortSignal.timeout(10_000)).
+// broker-router fires CRITICAL alerts synchronously; a Discord outage without CB
+// blocks the hot path. 3-fail threshold, 60s cooldown (env-overridable).
+const DISCORD_CB_FAILURE_THRESHOLD = parseInt(process.env.DISCORD_CB_FAILURE_THRESHOLD ?? "3", 10);
+const DISCORD_CB_COOLDOWN_MS = parseInt(process.env.DISCORD_CB_COOLDOWN_MS ?? "60000", 10);
 
 // ─── Internal state ───────────────────────────────────────────────────────────
 
@@ -160,12 +168,32 @@ async function sendWebhook(
 
   recordCall();
 
-  const response = await fetch(webhookUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-    signal: AbortSignal.timeout(10_000),
+  // FINDING #7 FIX: wrap fetch in circuit breaker — fast-fails when Discord is down
+  const cb = CircuitBreakerRegistry.get("discord", {
+    failureThreshold: DISCORD_CB_FAILURE_THRESHOLD,
+    cooldownMs: DISCORD_CB_COOLDOWN_MS,
   });
+
+  let response: Response;
+  try {
+    response = await cb.call(() =>
+      fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(10_000),
+      })
+    );
+  } catch (err) {
+    if (err instanceof CircuitOpenError) {
+      logger.warn(
+        { endpoint: "discord", reopensAt: err.reopensAt.toISOString() },
+        "NotificationService: Discord circuit OPEN — skipping webhook (fast-fail)",
+      );
+      return;
+    }
+    throw err;
+  }
 
   // Track A F-3: Detect 429 (rate-limited by Discord) separately from other
   // HTTP errors. Parse Retry-After from header or body. Write audit_log row so

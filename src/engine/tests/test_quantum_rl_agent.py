@@ -404,7 +404,10 @@ class TestTrainQuantumAgentRewardShape:
     """Reward formula: R = realized_R - α*max(0, ci_high - 0.40) - β*drawdown_penalty."""
 
     def test_reward_formula_explicit(self):
-        """Direct test of compute_shaped_reward with known inputs."""
+        """Direct test of compute_shaped_reward with known inputs.
+
+        Threshold is 0.20 (B14_RUIN_CI_HIGH_THRESHOLD default, tightened 2026-06-22).
+        """
         n = 10
         prices = _make_prices(n)
         features = _make_features(n)
@@ -419,20 +422,25 @@ class TestTrainQuantumAgentRewardShape:
         env.reset()
 
         # realized_R=1.0, ci_high=0.5, drawdown=0.0
-        # R = 1.0 - 0.5*max(0, 0.5 - 0.40) - 0.3*0.0
-        # R = 1.0 - 0.5*0.10 - 0 = 1.0 - 0.05 = 0.95
+        # _RL_CI_HIGH_THRESHOLD = 0.20 (env default, tightened from 0.40 on 2026-06-22)
+        # R = 1.0 - 0.5*max(0, 0.5 - 0.20) - 0.3*0.0
+        # R = 1.0 - 0.5*0.30 - 0 = 1.0 - 0.15 = 0.85
         shaped, ci_penalty, dd_penalty = env.compute_shaped_reward(
             realized_r=1.0,
             ci_high=0.5,
             drawdown_penalty=0.0,
         )
-        assert shaped == pytest.approx(0.95, abs=1e-9), (
-            f"Reward formula result {shaped} != expected 0.95. "
+        assert shaped == pytest.approx(0.85, abs=1e-9), (
+            f"Reward formula result {shaped} != expected 0.85 (threshold=0.20). "
             f"ci_penalty={ci_penalty}, dd_penalty={dd_penalty}"
         )
 
     def test_reward_formula_no_ci_penalty_when_ci_below_threshold(self):
-        """When ci_high < 0.40, ci_high penalty component is zero."""
+        """When ci_high < threshold (0.20), ci_high penalty component is zero.
+
+        Uses ci_high=0.10 which is clearly below the tightened 0.20 threshold
+        (previously tested 0.30 against old 0.40 threshold — updated 2026-06-22).
+        """
         n = 10
         prices = _make_prices(n)
         features = _make_features(n)
@@ -440,9 +448,9 @@ class TestTrainQuantumAgentRewardShape:
                          reward_alpha=0.5, reward_beta=0.3)
         env.reset()
         shaped, ci_penalty, dd_penalty = env.compute_shaped_reward(
-            realized_r=1.0, ci_high=0.30, drawdown_penalty=0.0
+            realized_r=1.0, ci_high=0.10, drawdown_penalty=0.0
         )
-        # ci_high=0.30 < threshold 0.40 → penalty=0
+        # ci_high=0.10 < threshold 0.20 → penalty=0
         assert ci_penalty == pytest.approx(0.0, abs=1e-9)
         assert shaped == pytest.approx(1.0, abs=1e-9)
 
@@ -454,9 +462,16 @@ class TestTrainQuantumAgentRewardShape:
         """Default beta comes from QUANTUM_RL_REWARD_BETA env (default 0.3)."""
         assert _RL_REWARD_BETA_DEFAULT == pytest.approx(0.3)
 
-    def test_ci_high_threshold_constant(self):
-        """_RL_CI_HIGH_THRESHOLD must match B14 0.40 threshold."""
-        assert _RL_CI_HIGH_THRESHOLD == pytest.approx(0.40)
+    def test_ci_high_threshold_tracks_env(self):
+        """_RL_CI_HIGH_THRESHOLD reads B14_RUIN_CI_HIGH_THRESHOLD env (default 0.20).
+
+        Tightened from 0.40 → 0.20 on 2026-06-22 to match production gate.
+        When B14_RUIN_CI_HIGH_THRESHOLD is not set in the test environment,
+        the module resolves to the 0.20 default.
+        """
+        import os
+        expected = float(os.environ.get("B14_RUIN_CI_HIGH_THRESHOLD", "0.20"))
+        assert _RL_CI_HIGH_THRESHOLD == pytest.approx(expected)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -546,14 +561,14 @@ class TestCloudOptInGateMissingToken:
 
         with patch.dict(os.environ, env, clear=True):
             if PENNYLANE_AVAILABLE:
-                circuit, n_params, backend_label = _build_vqc_policy_ibm(n_qubits=2, n_layers=1)
+                circuit, n_params, backend_label = _build_vqc_policy_ibm(n_qubits=2, n_layers=1, opt_in_cloud=True)
                 # Without token, should fall back to default.qubit
                 assert backend_label == "default.qubit", (
                     f"Expected 'default.qubit' fallback, got '{backend_label}'"
                 )
             else:
                 # PennyLane unavailable — function returns (None, 0, "unavailable")
-                circuit, n_params, backend_label = _build_vqc_policy_ibm(n_qubits=2, n_layers=1)
+                circuit, n_params, backend_label = _build_vqc_policy_ibm(n_qubits=2, n_layers=1, opt_in_cloud=True)
                 assert backend_label == "unavailable"
 
 
@@ -656,4 +671,124 @@ class TestNoStrategiesTableMutation:
         assert "quantum_rl_runs" in content, (
             "quantum_rl_runs table not referenced in quantum_rl_agent.py — "
             "RL runs are not being persisted"
+        )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Group 14 — TestCloudPathFallbackAudit
+# LOW-FIX: when IBM gates are open but the cloud path falls back to local sim,
+# emit 'quantum_rl.cloud_path_fallback' (warning) to audit_log so the event
+# is queryable — mirrors the existing cloud_path_engaged success case.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class TestCloudPathFallbackAudit:
+    """quantum_rl.cloud_path_fallback must be emitted when IBM was attempted but
+    the path resolved to local sim.  cloud_path_engaged is already tested
+    implicitly via the IBM opt-in gate tests; these tests cover the fallback path."""
+
+    def test_cloud_path_fallback_action_in_source(self):
+        """'quantum_rl.cloud_path_fallback' must appear in quantum_rl_agent.py."""
+        source_path = pathlib.Path(
+            "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/quantum_rl_agent.py"
+        )
+        if not source_path.exists():
+            pytest.skip("quantum_rl_agent.py not found")
+        content = source_path.read_text(encoding="utf-8")
+        assert "quantum_rl.cloud_path_fallback" in content, (
+            "LOW-FIX: audit action 'quantum_rl.cloud_path_fallback' not found in source. "
+            "The fallback visibility fix was not applied."
+        )
+
+    def test_ibm_quantum_channel_env_documented_in_source(self):
+        """IBM_QUANTUM_CHANNEL must be listed as a read env var in the source."""
+        source_path = pathlib.Path(
+            "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/quantum_rl_agent.py"
+        )
+        if not source_path.exists():
+            pytest.skip("quantum_rl_agent.py not found")
+        content = source_path.read_text(encoding="utf-8")
+        assert "IBM_QUANTUM_CHANNEL" in content, (
+            "IBM_QUANTUM_CHANNEL env var is documented in docstring but should now appear "
+            "as a referenced env var in the source (both via cloud_backend.py read-through "
+            "and the updated docstring in _build_vqc_policy_ibm)."
+        )
+
+    def test_ibm_cloud_channel_default_in_docstring(self):
+        """_build_vqc_policy_ibm docstring must mention 'ibm_cloud' as default channel."""
+        source_path = pathlib.Path(
+            "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/quantum_rl_agent.py"
+        )
+        if not source_path.exists():
+            pytest.skip("quantum_rl_agent.py not found")
+        content = source_path.read_text(encoding="utf-8")
+        # Updated docstring should say ibm_cloud is the default channel
+        assert "ibm_cloud" in content, (
+            "Docstring must mention 'ibm_cloud' as the correct post-2023 IBM Cloud channel."
+        )
+
+    def test_cloud_path_fallback_emitted_when_ibm_gates_open_but_falls_back(self):
+        """When IBM gates are open (opt_in=True, token set, cloud_enabled != false) but
+        _build_vqc_policy_ibm returns a local backend label, _emit_audit_row must be
+        called with action='quantum_rl.cloud_path_fallback'.
+
+        Strategy: patch _REGIME_MIN_BARS=0 so the per-regime loop body executes even
+        with empty bar lists (DATABASE_URL="" skips DB load); training_epochs=0 skips
+        TradingEnv instantiation; _build_vqc_policy_ibm returns local label.
+        """
+        import src.engine.quantum_rl_agent as rl_mod
+        from src.engine.quantum_rl_agent import train_regime_conditioned_policies
+
+        captured_actions = []
+
+        def _fake_emit(action, entity_type, entity_id, status, result, db_url=None):
+            captured_actions.append(action)
+
+        with (
+            patch.object(rl_mod, "_REGIME_MIN_BARS", 0),
+            patch("src.engine.quantum_rl_agent._build_vqc_policy_ibm",
+                  return_value=(None, 0, "default.qubit")),
+            patch("src.engine.quantum_rl_agent._emit_audit_row", side_effect=_fake_emit),
+            patch.dict(os.environ, {
+                "QUANTUM_RL_IBM_CLOUD_OPT_IN": "true",
+                "QUANTUM_CLOUD_ENABLED": "true",
+                "IBM_QUANTUM_TOKEN": "fake-token-for-fallback-test",
+                "DATABASE_URL": "",
+            }),
+        ):
+            train_regime_conditioned_policies(
+                strategy_id=9999,
+                training_epochs=0,
+                seed=0,
+            )
+
+        assert "quantum_rl.cloud_path_fallback" in captured_actions, (
+            f"Expected 'quantum_rl.cloud_path_fallback' in audit actions but got: {captured_actions}. "
+            "LOW-FIX: fallback audit must fire when IBM was gated-open but backend resolved to local sim."
+        )
+
+    def test_cloud_path_fallback_not_emitted_when_opt_in_false(self):
+        """When QUANTUM_RL_IBM_CLOUD_OPT_IN=false, no fallback audit should fire."""
+        from src.engine.quantum_rl_agent import train_regime_conditioned_policies
+
+        captured_actions = []
+
+        def _fake_emit(action, entity_type, entity_id, status, result, db_url=None):
+            captured_actions.append(action)
+
+        with patch("src.engine.quantum_rl_agent._emit_audit_row", side_effect=_fake_emit):
+            with patch.dict(os.environ, {
+                "QUANTUM_RL_IBM_CLOUD_OPT_IN": "false",
+                "QUANTUM_CLOUD_ENABLED": "true",
+                "IBM_QUANTUM_TOKEN": "fake-token",
+                "DATABASE_URL": "",
+            }):
+                train_regime_conditioned_policies(
+                    strategy_id=8888,
+                    training_epochs=1,
+                    seed=0,
+                )
+
+        assert "quantum_rl.cloud_path_fallback" not in captured_actions, (
+            "Fallback audit must NOT fire when QUANTUM_RL_IBM_CLOUD_OPT_IN=false — "
+            "IBM was never attempted so there is nothing to fall back from."
         )

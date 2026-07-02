@@ -27,6 +27,7 @@ import {
   isUnconfiguredSlumdawgSecret,
   verifySlumdawgHmac,
 } from "../slumdawg-hmac.js";
+import { idempotencyMiddleware } from "../middleware/idempotency.js";
 
 export const slumdawgRoutes = Router();
 
@@ -363,7 +364,11 @@ slumdawgRoutes.get("/lifecycle", lifecycleHandler);
 slumdawgRoutes.get("/lifecycle/:name", lifecycleHandler);
 
 // ─── 5) POST /slumdawg/ingest-youtube ───────────────────────────────────
-slumdawgRoutes.post("/ingest-youtube", async (req, res) => {
+// Wave 2 Track 2A: idempotencyMiddleware (runs AFTER the router-level
+// requireSlumdawgAuth HMAC gate) deduplicates identical POSTs by
+// X-Idempotency-Key (fail-open — no key ⇒ pass straight through). Closes the
+// Slumdawg gateway webhook double-fire → duplicate YouTube ingestion.
+slumdawgRoutes.post("/ingest-youtube", idempotencyMiddleware, async (req, res) => {
   try {
     const url = String((req.body as any)?.url ?? "").trim();
     if (!url || !/youtu/i.test(url)) {

@@ -1,10 +1,14 @@
 name: CI
 
+# Deep-scan #6 S5 (2026-07-01): the active codebase lives on hardening/phase-0
+# (long-lived integration branch), NOT main — so CI never actually ran on the code
+# being shipped. Trigger on the hardening line + PRs targeting it so the gates run
+# where the work happens, not just on the near-dormant main.
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, "hardening/**"]
   pull_request:
-    branches: [main]
+    branches: [main, develop, "hardening/**"]
 
 env:
   NODE_VERSION: "22"
@@ -32,6 +36,20 @@ jobs:
       - name: System map drift gate
         run: npm run system-map:check
       - run: npm run lint
+
+      # deepscan6 O5 (2026-07-01): dependency vulnerability scanning. ADVISORY today
+      # (continue-on-error) so a newly-disclosed CVE surfaces in CI without blocking the
+      # pipeline; triage high/critical findings and flip to blocking once the baseline is clean.
+      - name: Dependency audit — npm (advisory)
+        continue-on-error: true
+        run: npm audit --audit-level=high
+
+      # deepscan6 O10 (2026-07-01): SSE broadcast-vs-frontend-catalog drift visibility.
+      # ADVISORY — surfaces server events missing from the typed catalog so a renamed
+      # event can't silently stop feeding a dashboard tile.
+      - name: SSE contract drift (advisory)
+        continue-on-error: true
+        run: npm run check:sse-contract
 
       # ─── Hard gates (fail-closed) ──────────────────────────────────────────
       # These run in the lint job because lint is the upstream dependency of every
@@ -137,10 +155,27 @@ jobs:
           npm ci
           python -m pip install --upgrade pip
           pip install -r src/engine/requirements.txt
-          pip install pytest pytest-cov
+          pip install pytest pytest-cov ruff mypy pip-audit
 
       - name: Verify system map freshness
         run: npm run system-map:check
+
+      # deepscan6 O4 (2026-07-01, burn-down 2026-07-02): Python static-analysis gates.
+      # The BUG-DETECTION subset (undefined names, redefinitions, syntax/comparison bugs)
+      # is CLEAN and BLOCKING — a real regression here fails CI. The broad STYLE set
+      # (E/W/I/UP/B, ~1000 pre-existing cosmetic findings) stays ADVISORY until the
+      # cosmetic burn-down (`ruff check --fix src/engine`, mostly Optional[X]→X|None).
+      - name: Python lint — ruff bug-detection (BLOCKING)
+        run: python -m ruff check src/engine --select F821,F811,F823,F706,F707,E9,F63,F7,F501,F502,F506,F522
+      - name: Python lint — ruff full style (advisory)
+        continue-on-error: true
+        run: python -m ruff check src/engine
+      - name: Python type-check — mypy (advisory)
+        continue-on-error: true
+        run: python -m mypy src/engine || true
+      - name: Dependency audit — pip (advisory)
+        continue-on-error: true
+        run: python -m pip_audit -r src/engine/requirements.txt || true
 
       - name: Run pytest with coverage
         run: |

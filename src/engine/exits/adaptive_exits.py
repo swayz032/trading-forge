@@ -39,6 +39,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from typing import Optional
 
 # ─── Day-trader-only liquidity filter ─────────────────────────────────────────
@@ -352,29 +353,32 @@ def _get_runner_trail_method(regime: str) -> str:
 # ─── Pre-lunch time check ──────────────────────────────────────────────────────
 
 def _is_at_or_after_pre_lunch_et(bar_ts: datetime) -> bool:
-    """Return True if bar timestamp is at or after 11:30 ET.
+    """Return True if bar timestamp is at or after 11:30 ET (DST-correct).
 
     PARITY: mirrors isAtOrAfterPreLunchET() in adaptive-exit-engine.ts.
-    Handles both EDT (UTC-4) and EST (UTC-5) offsets.
-    11:30 ET = 15:30 UTC (EDT) or 16:30 UTC (EST).
-    We use the more conservative UTC check: 15:30 UTC covers EDT case.
-    For production correctness with DST, caller should pass tz-aware datetime.
+
+    H5c fix (2026-06-29): replaced the UTC-offset approximation with a ZoneInfo
+    conversion so the check is correct year-round.
+
+    Previous implementation:
+        return utc_hour > 15 or (utc_hour == 15 and utc_minute >= 30)
+    This checked ">= 15:30 UTC" which equals 11:30 EDT (summer, UTC-4) but fires at
+    10:30 ET in EST winter (UTC-5) — one full hour too early, incorrectly suppressing
+    the session window every November→March.
+
+    Fix: convert bar_ts to America/New_York via zoneinfo.ZoneInfo (stdlib ≥3.9) and
+    compare (et.hour, et.minute) >= (11, 30). DST transitions are handled by the OS
+    timezone database.
     """
     try:
-        # Normalize to UTC
+        _ET = ZoneInfo("America/New_York")
         if bar_ts.tzinfo is None:
-            # Assume UTC
-            utc_hour = bar_ts.hour
-            utc_minute = bar_ts.minute
+            # Assume UTC if naive — attach tzinfo before converting
+            bar_ts_aware = bar_ts.replace(tzinfo=timezone.utc)
         else:
-            utc_dt = bar_ts.astimezone(timezone.utc)
-            utc_hour = utc_dt.hour
-            utc_minute = utc_dt.minute
-
-        # 11:30 ET (EDT = UTC-4) → 15:30 UTC
-        # 11:30 ET (EST = UTC-5) → 16:30 UTC
-        # Conservative: treat 15:30 UTC as the threshold (covers EDT most of the year)
-        return utc_hour > 15 or (utc_hour == 15 and utc_minute >= 30)
+            bar_ts_aware = bar_ts
+        et = bar_ts_aware.astimezone(_ET)
+        return (et.hour, et.minute) >= (11, 30)
     except Exception:
         return False
 

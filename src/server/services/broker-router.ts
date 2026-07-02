@@ -13,6 +13,7 @@
  *   - Pipeline paused          → { success: false, reason: "pipeline_paused" }
  *   - Firm not enabled         → { success: false, reason: "account_not_found" }
  *   - Compliance violation     → { success: false, reason: "compliance_violation" }
+ *   - Firm↔broker_type drift   → { success: false, reason: "firm_broker_mismatch" }
  *   - Any unexpected error     → { success: false, reason: "internal_error" }
  *
  * Every route attempt (success or failure) writes one audit_log row and emits
@@ -114,6 +115,183 @@ CircuitBreakerRegistry.setOnStateChange((name, _from, to) => {
   }
 });
 
+// ─── A-11: Proactive TradersPost API key validity probe ──────────────────────
+//
+// Detects API key revocation BEFORE the first live order fails with 401.
+// Strategy: POST a minimal payload (only apiKey, no action/ticker) to the
+// TradersPost webhook URL on a slow cadence.
+//   • HTTP 401/403 → key is revoked/invalid  → emit warning + audit row
+//   • HTTP 4xx (not 401/403) → key is valid, payload rejected (expected)
+//   • HTTP 5xx / timeout / network error → probe_failed (don't emit warning)
+//
+// No new scheduler cron is added — probe fires:
+//   (a) Once at boot (via setImmediate after module load) — primary signal.
+//   (b) Lazily inside routeOrder() for the traderspost path — when the per-account
+//       probe result is >4h old, a non-blocking async re-probe is fired. The
+//       in-flight probe doesn't delay the current order; the NEXT order sees
+//       the updated result.
+//
+// SECURITY: apiKey must NEVER appear in log output.
+
+const TP_PROBE_BASE_URL =
+  process.env.TRADERSPOST_WEBHOOK_URL ?? "https://traderspost.io/trading/webhook";
+const TP_PROBE_TIMEOUT_MS = 5_000;
+const TP_PROBE_CACHE_TTL_MS = 4 * 60 * 60 * 1000; // 4 hours
+
+interface TpProbeResult {
+  result: "valid" | "revoked" | "probe_failed";
+  probedAt: Date;
+}
+// Per-account probe cache (keyed by accountId)
+const _tpKeyProbeCache = new Map<string, TpProbeResult>();
+
+/**
+ * Probe a single TradersPost API key.
+ * Does NOT use the circuit breaker (health check, not an order attempt).
+ * Returns:
+ *   "valid"        — key accepted (we got 4xx other than 401/403)
+ *   "revoked"      — 401/403 received
+ *   "probe_failed" — network/timeout/5xx (inconclusive, no alert)
+ */
+async function probeSingleTradersPostKey(
+  apiKey: string,
+  accountId: string,
+): Promise<"valid" | "revoked" | "probe_failed"> {
+  // Minimal payload: include only apiKey. TradersPost should reject on missing
+  // required fields (400/422) if the key is valid, or reject on the key itself (401).
+  const payload = JSON.stringify({ apiKey });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), TP_PROBE_TIMEOUT_MS);
+
+  let probeResult: "valid" | "revoked" | "probe_failed";
+  try {
+    const resp = await fetch(TP_PROBE_BASE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      // SECURITY: payload contains apiKey — must never be logged
+      body: payload,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (resp.status === 401 || resp.status === 403) {
+      probeResult = "revoked";
+    } else if (resp.status >= 400 && resp.status < 500) {
+      // 400/422 = key valid, payload incomplete — expected for our probe
+      probeResult = "valid";
+    } else {
+      // 5xx or 2xx (unexpected but treat as inconclusive)
+      logger.debug(
+        { accountId, statusCode: resp.status },
+        "broker-router: TP key probe inconclusive status code",
+      );
+      probeResult = "probe_failed";
+    }
+  } catch (fetchErr: unknown) {
+    clearTimeout(timeoutId);
+    const isAbort = fetchErr instanceof Error && fetchErr.name === "AbortError";
+    logger.debug(
+      { accountId, isAbort },
+      "broker-router: TP key probe network/timeout error (inconclusive)",
+    );
+    probeResult = "probe_failed";
+  }
+
+  // Cache the result
+  _tpKeyProbeCache.set(accountId, { result: probeResult, probedAt: new Date() });
+
+  if (probeResult === "revoked") {
+    logger.warn(
+      { accountId },
+      "broker-router: A-11: TradersPost API key probe returned 401/403 — key may be revoked",
+    );
+    // Emit warning alert (non-blocking — don't await)
+    notifyWarning(
+      "TradersPost API Key May Be Revoked",
+      // Deep-scan #5 (2026-06-29): family-grade postscript (was the unwrapped notifyWarning
+      // the postscript lint flagged — pre-existing at HEAD, fixed here).
+      appendFamilyGradePostscript(
+        `Proactive key validity probe for broker account ${accountId} received HTTP 401/403 from TradersPost. ` +
+          `The API key may have been revoked. The next live order will fail with 'credential_load_error' or HTTP 401. ` +
+          `Check TradersPost account settings and re-generate the API key if needed.`,
+        "The bot's connection key to the broker (TradersPost) looks like it stopped working.",
+        "No trade was lost — this is an early warning. Tell Tony to re-generate the TradersPost API key.",
+      ),
+      { accountId, probeUrl: TP_PROBE_BASE_URL },
+    );
+    // Audit row (fire-and-forget)
+    void db
+      .insert(auditLog)
+      .values({
+        action: "broker_router.traderspost_key_probe_revoked",
+        entityType: "broker_account",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { accountId, probeUrl: TP_PROBE_BASE_URL } as Record<string, unknown>,
+        result: { probeResult, probedAt: new Date().toISOString() } as Record<string, unknown>,
+        status: "warning",
+        correlationId: null,
+      })
+      .catch((auditErr: unknown) => {
+        logger.warn(
+          { err: auditErr, accountId },
+          "broker-router: TP key probe revoked audit row write failed (non-blocking)",
+        );
+      });
+  } else if (probeResult === "valid") {
+    logger.debug({ accountId }, "broker-router: TP key probe result: valid");
+  }
+
+  return probeResult;
+}
+
+/**
+ * Probe all enabled TradersPost accounts.
+ * Called at boot (setImmediate) and on demand. Fail-soft — never throws.
+ */
+export async function probeTradersPostApiKeys(): Promise<void> {
+  try {
+    const accounts = await db
+      .select({ accountId: brokerAccounts.accountId, enabled: brokerAccounts.enabled })
+      .from(brokerAccounts)
+      .where(eq(brokerAccounts.brokerType, "traderspost"));
+
+    const enabledAccounts = accounts.filter((a) => a.enabled);
+    if (enabledAccounts.length === 0) {
+      logger.debug("broker-router: A-11: no enabled TradersPost accounts to probe");
+      return;
+    }
+
+    logger.info(
+      { count: enabledAccounts.length },
+      "broker-router: A-11: probing TradersPost API keys for enabled accounts",
+    );
+
+    for (const account of enabledAccounts) {
+      try {
+        const creds = await loadBrokerCredentials(account.accountId);
+        await probeSingleTradersPostKey(creds.apiKey, account.accountId);
+      } catch (credErr: unknown) {
+        // Credential load failure is already surfaced at order-time — don't double-alert
+        logger.debug(
+          { accountId: account.accountId, err: credErr },
+          "broker-router: A-11: could not load credentials for probe (non-blocking)",
+        );
+      }
+    }
+  } catch (err: unknown) {
+    logger.warn({ err }, "broker-router: A-11: probeTradersPostApiKeys failed (non-blocking)");
+  }
+}
+
+// Boot-time probe — fires after module load (setImmediate gives the server
+// time to finish starting before we hit the vault and the TradersPost endpoint).
+setImmediate(() => {
+  void probeTradersPostApiKeys().catch((e: unknown) => {
+    logger.warn({ err: e }, "broker-router: A-11: boot-time key probe failed silently (non-blocking)");
+  });
+});
+
 // ─── F-5: killSwitch import verification (module-load time) ───────────────────
 // killSwitch is exported as a named `const killSwitch = new KillSwitch()` from
 // ../production/kill-switch.js. If that file ever migrates to a default export
@@ -152,6 +330,7 @@ export type BrokerResultReason =
   | "pipeline_paused"
   | "production_halt"
   | "compliance_violation"
+  | "firm_broker_mismatch"
   | "topstepx_not_configured"
   | "traderspost_circuit_open"
   | "internal_error"
@@ -233,6 +412,13 @@ export async function routeOrder(
   correlationId?: string | null,
   webhookFiredAt?: number | null,
 ): Promise<BrokerResult> {
+  // F5 FIX: capture request timestamp at function entry so it is stable for the
+  // entire call (even if the function awaits for several seconds before reaching
+  // the idempotency key construction).  When signal.barTimestamp is missing we
+  // fall back to `req_<epoch>` instead of null, ensuring EVERY order gets a
+  // stable idempotency key and DLQ replay / network retry cannot double-submit.
+  const _routeOrderRequestTs = Date.now();
+
   // ── F-2: Kill switch supremacy — FIRST gate, no exceptions ─────────────────
   // isHaltedForProduction() is fail-CLOSED: DB error → returns true → blocks.
   // This gate fires BEFORE pipeline check, account lookup, or anything else.
@@ -380,6 +566,112 @@ export async function routeOrder(
     broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...nullFirmResult, correlationId: correlationId ?? null });
     await writeAuditLog(accountId, signal, nullFirmResult, correlationId);
     return nullFirmResult;
+  }
+
+  // ── F-3: firm_id ↔ broker_type routing invariant (FAIL-CLOSED) ─────────────
+  // TOPOLOGY + COMPLIANCE SAFETY. Dispatch (below) keys purely on
+  // broker_accounts.broker_type, but nothing upstream guarantees broker_type
+  // actually matches the firm. A Topstep account row mis-seeded as
+  // broker_type='traderspost' would silently route Topstep orders through
+  // TradersPost — a topology violation (CLAUDE.md §7: Topstep uses TopstepX ONLY
+  // since the 2026-01-12 Tradovate/NinjaTrader lockdown) AND a compliance
+  // violation (orders crossing the wrong broker/firm boundary).
+  //
+  // Canonical mapping (CLAUDE.md §7):
+  //   topstep        ⇒ topstepx
+  //   mffu / others  ⇒ traderspost
+  //
+  // On mismatch we REFUSE the order, write a CRITICAL audit row
+  // (broker_router.firm_broker_mismatch), fire a Discord critical, and do NOT
+  // route. firmId is guaranteed non-null/non-empty here (the null-firm guard
+  // above already fail-CLOSED on missing firmId). This runs BEFORE the
+  // enabled-firms check so a mis-seeded row is surfaced as the specific topology
+  // violation rather than masked as a generic enabled-firms block.
+  //
+  // SCOPE: this invariant enforces consistency only between the two KNOWN
+  // routing targets (traderspost / topstepx). A genuinely-unknown broker_type
+  // (DB CHECK-constraint violation) is a DIFFERENT failure and falls through to
+  // the dedicated `unknown_broker_type` handler at the dispatch tail — we do not
+  // conflate "wrong known broker" with "broker_type we don't recognize at all".
+  {
+    const KNOWN_BROKER_TYPES = ["traderspost", "topstepx"] as const;
+    const invariantFirmKey = account.firmId.toLowerCase().replace(/_\d+k$/, "");
+    const expectedBrokerType = invariantFirmKey === "topstep" ? "topstepx" : "traderspost";
+    if (
+      (KNOWN_BROKER_TYPES as readonly string[]).includes(account.brokerType) &&
+      account.brokerType !== expectedBrokerType
+    ) {
+      const result: BrokerResult = {
+        success: false,
+        reason: "firm_broker_mismatch",
+        accountId,
+        firmId: account.firmId,
+        brokerType: account.brokerType,
+        error: `firm_broker_mismatch: firm '${account.firmId}' (key '${invariantFirmKey}') requires broker_type '${expectedBrokerType}' but the broker_accounts row is configured as '${account.brokerType}'`,
+      };
+      logger.error(
+        {
+          accountId,
+          firmId: account.firmId,
+          firmKey: invariantFirmKey,
+          brokerType: account.brokerType,
+          expectedBrokerType,
+          correlationId,
+        },
+        "broker-router: BLOCKED — firm↔broker_type mismatch (topology + compliance violation, fail-CLOSED)",
+      );
+      await db
+        .insert(auditLog)
+        .values({
+          action: "broker_router.firm_broker_mismatch",
+          entityType: "broker_account",
+          entityId: null,
+          decisionAuthority: "system",
+          input: {
+            accountId,
+            firmId: account.firmId,
+            ticker: signal.ticker,
+            action: signal.action,
+          } as Record<string, unknown>,
+          result: {
+            blocked: true,
+            firmId: account.firmId,
+            firmKey: invariantFirmKey,
+            brokerType: account.brokerType,
+            expectedBrokerType,
+            error:
+              "firm_id and broker_type are inconsistent — refusing to route to the wrong broker (topology/compliance violation)",
+          } as Record<string, unknown>,
+          status: "blocked",
+          correlationId: correlationId ?? null,
+        })
+        .catch((err: unknown) => {
+          logger.error({ err }, "broker-router: firm_broker_mismatch audit_log write failed (non-blocking)");
+        });
+      // CRITICAL Discord — a mis-seeded broker_accounts row is a capital-routing
+      // safety event: orders would otherwise hit the wrong broker entirely.
+      notifyCritical(
+        "Broker Routing Topology Violation",
+        appendFamilyGradePostscript(
+          `Account ${accountId} (firm: ${account.firmId}) has broker_type='${account.brokerType}' but firm ` +
+            `'${invariantFirmKey}' requires '${expectedBrokerType}'. The order was REFUSED — routing it would ` +
+            `send orders to the WRONG broker (topology + compliance violation). Fix the broker_accounts row so ` +
+            `broker_type matches the firm, then re-enable the account.`,
+          "A trading account is pointed at the wrong broker — orders are safely blocked, not mis-routed.",
+          "Tell Tony: 'A trading account is pointed at the wrong broker.' If you cannot reach him, do nothing — orders are safely blocked, not sent to the wrong place.",
+        ),
+        {
+          accountId,
+          firmId: account.firmId,
+          brokerType: account.brokerType,
+          expectedBrokerType,
+          correlationId: correlationId ?? null,
+        },
+      );
+      broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...result, correlationId: correlationId ?? null });
+      await writeAuditLog(accountId, signal, result, correlationId);
+      return result;
+    }
   }
 
   // ── F-3: Enabled-firms enforcement ─────────────────────────────────────────
@@ -678,6 +970,23 @@ export async function routeOrder(
       return result;
     }
 
+    // ── A-11: Lazy periodic re-probe (no new cron needed) ────────────────────
+    // If the probe cache for this account is stale (>4h or never probed),
+    // fire an async re-probe. It doesn't block the current order — the NEXT
+    // order call will see the refreshed result. On revocation we've already
+    // emitted a warning alert via probeSingleTradersPostKey.
+    const cachedProbe = _tpKeyProbeCache.get(accountId);
+    const needsReprobe =
+      !cachedProbe || Date.now() - cachedProbe.probedAt.getTime() > TP_PROBE_CACHE_TTL_MS;
+    if (needsReprobe) {
+      void probeSingleTradersPostKey(apiKey, accountId).catch((probeErr: unknown) => {
+        logger.debug(
+          { accountId, err: probeErr },
+          "broker-router: A-11: lazy re-probe failed silently (non-blocking)",
+        );
+      });
+    }
+
     // ── Build + submit webhook ────────────────────────────────────────────────
     const payload = buildWebhookPayload(apiKey, signal);
 
@@ -686,16 +995,20 @@ export async function routeOrder(
     // barTs). A TradingView retry of the same bar produces the same key →
     // TradersPost deduplicates server-side → no duplicate live order.
     // correlationId is still passed for tracing/audit linkage only.
-    const idempotencyInputs: IdempotencyKeyInputs | null =
-      signal.barTimestamp
-        ? {
-            accountId,
-            strategyId: payload.strategyId ?? signal.strategyId ?? "tf",
-            ticker: signal.ticker,
-            action: signal.action,
-            barTs: signal.barTimestamp,
-          }
-        : null;
+    //
+    // F5 FIX: when signal.barTimestamp is absent (e.g. manual trigger, DLQ
+    // replay without bar context), use `req_<epoch>` as the barTs so that
+    // idempotencyInputs is NEVER null.  The `req_` prefix distinguishes
+    // request-scoped keys from bar-scoped keys in audit logs.
+    // _routeOrderRequestTs is captured once at function entry (above).
+    const idempotencyBarTs = signal.barTimestamp ?? `req_${_routeOrderRequestTs}`;
+    const idempotencyInputs: IdempotencyKeyInputs = {
+      accountId,
+      strategyId: payload.strategyId ?? signal.strategyId ?? "tf",
+      ticker: signal.ticker,
+      action: signal.action,
+      barTs: idempotencyBarTs,
+    };
 
     // FINDING #4 FIX: Wrap the HTTP submission in the TradersPost circuit
     // breaker. CircuitOpenError fast-fails here; the catch block below converts

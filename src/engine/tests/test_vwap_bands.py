@@ -148,17 +148,64 @@ class TestVwapBandsMath:
             )
 
     def test_vwap_column_matches_compute_vwap(self):
-        """vwap column from compute_vwap_with_bands must equal compute_vwap() output."""
+        """vwap column from compute_vwap_with_bands must equal compute_vwap() output.
+
+        Both functions use identical 18:00 ET Globex session reset (D3 fix 2026-07-01).
+        Prior to D3, compute_vwap used midnight calendar reset while compute_vwap_with_bands
+        used 18:00 ET Globex reset, making them diverge on 24h data spanning 18:00 ET.
+        """
         bars = _make_bars(datetime(2026, 1, 2, 9, 30), count=78)
         legacy = compute_vwap(bars)
         bands = compute_vwap_with_bands(bars)
-        # Both use Globex session reset. When bars are all on the same calendar date
-        # AND in the same Globex session the values should match closely.
-        # Tolerate floating-point differences up to 1e-6.
         for i in range(len(bars)):
             assert abs(bands["vwap"][i] - legacy[i]) < 1e-6, (
                 f"VWAP mismatch at bar {i}: bands={bands['vwap'][i]}, legacy={legacy[i]}"
             )
+
+    def test_vwap_equivalence_across_globex_18_boundary(self):
+        """compute_vwap and compute_vwap_with_bands vwap must agree across 18:00 ET reset.
+
+        This is the critical D3 regression test. Before the fix, compute_vwap used
+        dt.date() (midnight reset) while compute_vwap_with_bands used _assign_globex_session_id
+        (18:00 ET reset). On bars spanning 18:00 ET, the two functions produced different
+        cumulative sums after the boundary, making one backtest carry two conflicting VWAPs.
+
+        After D3 fix, both functions reset at 18:00 ET so they must agree on every bar
+        including those in the overnight period after 18:00.
+        """
+        rows = [
+            # Late-day bars in Globex session 1 (Jan 2 session)
+            {"ts": datetime(2026, 1, 2, 15, 0), "high": 5002.0, "low": 4998.0, "close": 5000.0, "volume": 1000.0},
+            {"ts": datetime(2026, 1, 2, 15, 5), "high": 5004.0, "low": 5000.0, "close": 5002.0, "volume": 1500.0},
+            {"ts": datetime(2026, 1, 2, 17, 55), "high": 5010.0, "low": 5005.0, "close": 5008.0, "volume": 800.0},
+            # 18:00 ET — new Globex session (Jan 3 session). Both functions must reset here.
+            {"ts": datetime(2026, 1, 2, 18, 0), "high": 5020.0, "low": 5015.0, "close": 5018.0, "volume": 2000.0},
+            {"ts": datetime(2026, 1, 2, 18, 5), "high": 5022.0, "low": 5018.0, "close": 5020.0, "volume": 1200.0},
+            # Next day morning (still Jan 3 Globex session)
+            {"ts": datetime(2026, 1, 3, 9, 30), "high": 5025.0, "low": 5020.0, "close": 5022.0, "volume": 900.0},
+        ]
+        bars = _make_bars_varying(rows)
+        legacy = compute_vwap(bars)
+        bands = compute_vwap_with_bands(bars)
+
+        for i in range(len(bars)):
+            assert abs(bands["vwap"][i] - legacy[i]) < 1e-6, (
+                f"VWAP mismatch at bar {i} (ts={rows[i]['ts']}): "
+                f"compute_vwap_with_bands={bands['vwap'][i]:.6f}, "
+                f"compute_vwap={legacy[i]:.6f}"
+            )
+
+        # Explicit check: bar at 18:00 ET (index 3) must be the start of a fresh session.
+        # Its VWAP must equal its own typical price (no carry-forward from prior bars).
+        expected_tp_at_18 = (5020.0 + 5015.0 + 5018.0) / 3.0
+        assert abs(legacy[3] - expected_tp_at_18) < 1e-6, (
+            f"compute_vwap did not reset at 18:00 ET: "
+            f"got {legacy[3]:.6f}, expected tp={expected_tp_at_18:.6f}"
+        )
+        assert abs(bands["vwap"][3] - expected_tp_at_18) < 1e-6, (
+            f"compute_vwap_with_bands did not reset at 18:00 ET: "
+            f"got {bands['vwap'][3]:.6f}, expected tp={expected_tp_at_18:.6f}"
+        )
 
 
 class TestVwapBandsSessionReset:

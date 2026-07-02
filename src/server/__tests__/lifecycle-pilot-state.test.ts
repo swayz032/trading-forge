@@ -117,7 +117,14 @@ describe("B8 PILOT actor guard", () => {
     toState: string,
     actor: string,
   ): { allowed: boolean; error?: string } {
-    if (fromState === "DEPLOY_READY" && toState === "PILOT" && actor !== "human_release") {
+    // Deep-scan 2026-06-28 (C-1): mirrors _promoteStrategyInner — human_release OR
+    // operator_absent_mode (vacation autopilot) may promote DEPLOY_READY -> PILOT.
+    if (
+      fromState === "DEPLOY_READY" &&
+      toState === "PILOT" &&
+      actor !== "human_release" &&
+      actor !== "operator_absent_mode"
+    ) {
       return {
         allowed: false,
         error: "Only manual release authority can promote DEPLOY_READY -> PILOT (canary track requires human approval)",
@@ -134,6 +141,11 @@ describe("B8 PILOT actor guard", () => {
 
   it("allows DEPLOY_READY → PILOT with actor='human_release'", () => {
     const result = checkPilotActorGuard("DEPLOY_READY", "PILOT", "human_release");
+    expect(result.allowed).toBe(true);
+  });
+
+  it("allows DEPLOY_READY → PILOT with actor='operator_absent_mode' (C-1 vacation autopilot)", () => {
+    const result = checkPilotActorGuard("DEPLOY_READY", "PILOT", "operator_absent_mode");
     expect(result.allowed).toBe(true);
   });
 

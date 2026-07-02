@@ -2295,6 +2295,12 @@ agentRoutes.post("/robustness", async (req, res) => {
     logger.warn({ err, jobId: job.id }, "Failed to write robustness.submitted audit event");
   });
 
+  // Fix 3c (2026-06-29): set started_at on pickup so the stale-pending-sweeper
+  // measures elapsed time from actual execution start (not job creation).
+  void db.update(agentJobs).set({ status: "running", startedAt: new Date(), updatedAt: new Date() })
+    .where(eq(agentJobs.id, job.id))
+    .catch((dbErr) => { logger.warn({ err: dbErr, jobId: job.id }, "agent.robustness: failed to set started_at on pickup"); });
+
   // Fire and forget — update the mutable agent_jobs row when the run
   // finishes. These UPDATEs now succeed because agent_jobs has no
   // append-only trigger.
@@ -2384,6 +2390,12 @@ agentRoutes.post("/find-strategies", async (req, res) => {
 
   // Fire and forget — generate strategies via Ollama, validate, backtest
   (async () => {
+    // Fix 3c (2026-06-29): set started_at on pickup so the stale-pending-sweeper
+    // measures elapsed time from actual execution start (not job creation).
+    void db.update(agentJobs).set({ status: "running", startedAt: new Date(), updatedAt: new Date() })
+      .where(eq(agentJobs.id, job.id))
+      .catch((dbErr) => { logger.warn({ err: dbErr, jobId: job.id }, "agent.find-strategies: failed to set started_at on pickup"); });
+
     const ollama = new OllamaClient();
     const results: Array<{ name: string; status: string; error?: string }> = [];
 

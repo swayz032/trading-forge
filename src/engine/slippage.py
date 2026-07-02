@@ -19,6 +19,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+from functools import lru_cache
 
 import numpy as np
 import polars as pl
@@ -30,18 +31,29 @@ from src.engine.config import ContractSpec
 # 'round' — round to nearest integer → neutral estimate
 # 'floor' — always round down in absolute terms → best-case (optimistic, not recommended)
 _VALID_ROUNDING_MODES = {"ceil", "round", "floor"}
-_ROUNDING_MODE = os.environ.get("SLIPPAGE_TICK_ROUNDING_MODE", "ceil").lower()
-if _ROUNDING_MODE not in _VALID_ROUNDING_MODES:
-    print(
-        json.dumps({
-            "event": "slippage.invalid_rounding_mode",
-            "mode": _ROUNDING_MODE,
-            "fallback": "ceil",
-            "valid": sorted(_VALID_ROUNDING_MODES),
-        }),
-        file=sys.stderr,
-    )
-    _ROUNDING_MODE = "ceil"
+
+
+# Deep-scan #5 MED (2026-06-29): was a module-level constant frozen at import time, so
+# tests that set SLIPPAGE_TICK_ROUNDING_MODE after import never saw the change (unlike
+# fill_model.py which already used lru_cache getters). Mirror that pattern so tests can:
+#   os.environ["SLIPPAGE_TICK_ROUNDING_MODE"] = "round"
+#   slippage._get_rounding_mode.cache_clear()
+# Production behavior is unchanged — default resolves to 'ceil' (conservative) once.
+@lru_cache(maxsize=1)
+def _get_rounding_mode() -> str:
+    mode = os.environ.get("SLIPPAGE_TICK_ROUNDING_MODE", "ceil").lower()
+    if mode not in _VALID_ROUNDING_MODES:
+        print(
+            json.dumps({
+                "event": "slippage.invalid_rounding_mode",
+                "mode": mode,
+                "fallback": "ceil",
+                "valid": sorted(_VALID_ROUNDING_MODES),
+            }),
+            file=sys.stderr,
+        )
+        return "ceil"
+    return mode
 
 
 def _ceil_ticks(ticks: np.ndarray) -> np.ndarray:
@@ -100,6 +112,16 @@ def compute_slippage(
     so fractional ticks are never gifted back to the trader.
     Rounding mode controlled by SLIPPAGE_TICK_ROUNDING_MODE env var (default: ceil).
     """
+    # L-1 fix (2026-06-29): hard guard — stop/stop_market orders are prohibited by
+    # CLAUDE.md §13.  If any caller passes these, the error surfaces immediately
+    # instead of silently computing a 2× slippage value that hides the contract violation.
+    # Use stop_limit instead (base slippage × 1.0, no modifier).
+    if order_type in ("stop", "stop_market"):
+        raise ValueError(
+            f"stop/stop_market orders are prohibited per CLAUDE.md §13; "
+            f"received order_type={order_type!r}. Use stop_limit instead."
+        )
+
     atr_col = f"atr_{atr_period}"
     if atr_col not in df.columns:
         from src.engine.indicators.core import compute_atr
@@ -120,13 +142,16 @@ def compute_slippage(
     # C1 FIX: round per configured mode (default: ceiling on abs value).
     # Fractional ticks must never be silently gifted back to the trader.
     raw_ticks = base_ticks * (atr_values / median_atr)
-    slippage_ticks = _round_ticks_by_mode(raw_ticks, _ROUNDING_MODE)
+    slippage_ticks = _round_ticks_by_mode(raw_ticks, _get_rounding_mode())
     slippage_dollars = slippage_ticks * contract_spec.tick_value
 
-    # Order-type slippage modifier
-    if order_type == "stop" or order_type == "stop_market":
-        slippage_dollars = slippage_dollars * 2.0  # Stop-market: 2x slippage
-    elif order_type == "limit":
+    # Order-type slippage modifier.
+    # NOTE (2026-06-29 reconcile): "stop" and "stop_market" are already rejected by
+    # the L-1 guard at the top of this function — matching fill_model.py:217's
+    # ban-BOTH contract (use stop_limit). The earlier FIX-3 here that re-raised only
+    # stop_market and kept "stop" at 2x was wrong (fill_model bans both) and dead
+    # (the L-1 guard raised first); removed to keep slippage<->fill_model in lockstep.
+    if order_type == "limit":
         # Limit orders: slippage = half-spread only (better fill)
         slippage_dollars = slippage_dollars * 0.5
     elif order_type == "stop_limit":

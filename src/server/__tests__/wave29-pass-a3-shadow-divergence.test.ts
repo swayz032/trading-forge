@@ -125,6 +125,21 @@ describe("compareShadowToBacktest — pure-function gate", () => {
     expect(result.divergence_pct).toBe(0);
   });
 
+  it("4b. Empty backtest baseline (≥20 shadow) → ok: false, reason: backtest_baseline_unavailable (NOT 100% divergence) — deep-scan #4 2026-06-29", () => {
+    const shadow = buildShadowSignals(20);
+    const expected: ExpectedSignal[] = []; // 0-trade backtest / pre-Wave-29 — no baseline
+
+    const result = compareShadowToBacktest(shadow, expected);
+
+    // Fail-closed BLOCK with an HONEST reason — previously every signal was marked
+    // unmatched against the empty baseline → misleading "divergence_exceeds_threshold: 100.0%".
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe("backtest_baseline_unavailable");
+    expect(result.divergence_pct).toBe(0);
+    expect(result.sample_size).toBe(20);
+    expect(result.per_signal_violations).toHaveLength(0);
+  });
+
   it("5. 20 signals with 3 mismatches → divergence_pct: 0.15, ok: false", () => {
     const shadow = buildShadowSignals(20);
     // Mismatches on indices 0, 1, 2: direction flipped

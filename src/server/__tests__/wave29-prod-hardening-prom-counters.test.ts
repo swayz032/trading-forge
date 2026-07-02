@@ -195,6 +195,30 @@ describe("Counter #2 — lifecycleShadowPromotionsTotal", () => {
     const after = await getCounterValue("tf_lifecycle_shadow_promotions_total", { outcome: "blocked_insufficient_samples" });
     expect(after).toBe(before + 1);
   });
+
+  it("increments with outcome=blocked_unavailable (fail-closed DB-error path — Finding 6 fix)", async () => {
+    const before = await getCounterValue("tf_lifecycle_shadow_promotions_total", { outcome: "blocked_unavailable" });
+    lifecycleShadowPromotionsTotal.labels({ outcome: "blocked_unavailable" }).inc();
+    const after = await getCounterValue("tf_lifecycle_shadow_promotions_total", { outcome: "blocked_unavailable" });
+    expect(after).toBe(before + 1);
+  });
+
+  it("blocked_unavailable is zero-initialized at registry startup (Finding 6 fix — prevents 'no data' on first scrape)", async () => {
+    // The IIFE in metrics-registry.ts must call .inc(0) for all 4 outcome labels so
+    // Prometheus reports value=0 from startup, not "no data" until first DB-error path fires.
+    const metrics = await promRegistry.getMetricsAsJSON();
+    const shadowMetric = metrics.find((m) => m.name === "tf_lifecycle_shadow_promotions_total");
+    expect(shadowMetric).toBeDefined();
+    const values = (shadowMetric as any)?.values ?? [];
+    const unavailableEntry = values.find(
+      (v: any) => v.labels?.outcome === "blocked_unavailable",
+    );
+    expect(
+      unavailableEntry,
+      "blocked_unavailable must be zero-initialized by IIFE in metrics-registry.ts",
+    ).toBeDefined();
+    expect(unavailableEntry?.value).toBeGreaterThanOrEqual(0);
+  });
 });
 
 // ─── §3: Counter #3 — rlKillSwitchTotal ─────────────────────────────────────

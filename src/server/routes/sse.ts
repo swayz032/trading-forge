@@ -1,10 +1,18 @@
 import { Router, Request, Response } from "express";
-import { logger } from "../index.js";
+import { logger } from "../lib/logger.js";
+import { sseClientsConnected } from "../lib/metrics-registry.js";
 
 const router = Router();
 
 // ─── Connected clients ────────────────────────────────────────
 const clients: Set<Response> = new Set();
+
+// Deep-scan #5 M1 (2026-06-29): mirror clients.size into the Prometheus gauge after
+// every mutation so the operator can alert on "0 SSE clients while paper engine active"
+// or unbounded client accumulation. Never throws — a metric set must never break SSE.
+function _syncSseClientGauge(): void {
+  try { sseClientsConnected.set(clients.size); } catch { /* non-blocking */ }
+}
 
 // ─── Event sequence counter ───────────────────────────────────
 // Monotonically increasing integer attached to every SSE event.
@@ -35,7 +43,10 @@ function pushToRingBuffer(entry: BufferedEvent): void {
 // ─── SSE heartbeat ────────────────────────────────────────────
 // Keeps connections alive through proxies and removes stale clients.
 const HEARTBEAT_INTERVAL_MS = 30_000;
-setInterval(() => {
+// F8 FIX: capture the interval handle and unref() it so test runners (Jest/Vitest)
+// exit cleanly. unref() is a Node.js-specific method; we guard for environments
+// (e.g. some Bun builds) that may not expose it.
+const _heartbeatInterval = setInterval(() => {
   for (const client of clients) {
     if (client.writableEnded || client.destroyed) {
       clients.delete(client);
@@ -48,6 +59,9 @@ setInterval(() => {
     }
   }
 }, HEARTBEAT_INTERVAL_MS);
+if (typeof _heartbeatInterval.unref === "function") {
+  _heartbeatInterval.unref();
+}
 
 // ─── GET /api/sse/events — SSE stream ────────────────────────
 router.get("/events", (req: Request, res: Response) => {
@@ -109,17 +123,44 @@ router.get("/events", (req: Request, res: Response) => {
   }
 
   clients.add(res);
+  _syncSseClientGauge();
   logger.info(`SSE client connected (${clients.size} total)`);
 
   res.on("error", () => {
     clients.delete(res);
+    _syncSseClientGauge();
   });
 
   req.on("close", () => {
     clients.delete(res);
+    _syncSseClientGauge();
     logger.info(`SSE client disconnected (${clients.size} total)`);
   });
 });
+
+// ─── Internal SSE broadcast listeners (Carter issue watcher et al.) ──────────
+// Additive hook for in-process subscribers that need to react to SSE events
+// without going through the external HTTP SSE stream. Listeners are registered
+// via onSseBroadcast() and receive the ORIGINAL data object BEFORE JSON
+// serialization (no need to JSON.parse on the receiving end).
+//
+// Design invariant: listener errors are caught inside broadcastSSE() and MUST
+// NOT abort the broadcast chain. A buggy or crashing internal listener must
+// never prevent external SSE clients from receiving their event.
+const _internalSseListeners: Array<(event: string, data: unknown) => void> = [];
+
+/**
+ * Register an in-process listener that fires on every broadcastSSE() call.
+ * The callback receives (eventName, originalDataObject) before serialization.
+ * Errors thrown by the callback are caught and swallowed — callers should be
+ * fail-soft internally.
+ *
+ * Note: there is no deregistration API. Listeners are expected to be long-lived
+ * (registered once at service startup, alive for the process lifetime).
+ */
+export function onSseBroadcast(cb: (event: string, data: unknown) => void): void {
+  _internalSseListeners.push(cb);
+}
 
 // ─── broadcastSSE ─────────────────────────────────────────────
 // Exported for use throughout the server. Assigns a sequence number to every
@@ -132,6 +173,13 @@ router.get("/events", (req: Request, res: Response) => {
 // A throw here would propagate to the caller and can abort the post-commit
 // broadcast entirely, leaving other clients without the event.
 export function broadcastSSE(event: string, data: unknown): void {
+  // ── Notify internal in-process subscribers BEFORE external fan-out ──
+  // Listeners receive the original data object (no JSON.parse needed).
+  // Errors are caught so a crashing listener cannot abort the broadcast chain.
+  for (const listener of _internalSseListeners) {
+    try { listener(event, data); } catch { /* swallow — must not abort broadcast */ }
+  }
+
   const seq = ++eventSeq;
 
   // Pass 5 Track A F-10: SERIALIZE FIRST. Push the serialized string into the
@@ -183,6 +231,7 @@ export function broadcastSSE(event: string, data: unknown): void {
   for (const dead of deadClients) {
     clients.delete(dead);
   }
+  if (deadClients.size > 0) _syncSseClientGauge();
 }
 
 // ─── POST /api/sse/broadcast — n8n / external broadcast ──────
@@ -423,6 +472,20 @@ export const LIFECYCLE_GATE_EVENTS = {
   // Pass 7 Track A.2 — evidence completeness gate blocked promotion
   // (>= 3 of 8 tracked gates lack institutional-quality data)
   PROMOTION_EVIDENCE_INCOMPLETE: "lifecycle:promotion_evidence_incomplete",
+  // Wave 3 Track 3B — BIF (Bias Information Factor) gate evaluated at PAPER → DEPLOY_READY
+  BIF_EVALUATED: "lifecycle:bif_evaluated",
+  // Auto-Graveyard: N consecutive hard gate failures → archived to GRAVEYARD
+  // Payload: { strategyId, gate, consecutiveFailures, threshold, fromState, metrics, correlationId }
+  AUTO_GRAVEYARD: "lifecycle:auto_graveyard",
+  // PAPER → DEPLOY_READY blocked by evaluatePaperToDeployReadyGates composite gate
+  // Payload: { strategyId, reason, passed: false }
+  PAPER_TO_DEPLOY_READY_BLOCKED: "lifecycle:paper_to_deploy_ready_blocked",
+  // SHADOW → PAPER blocked by shadow divergence gate
+  // Payload: { strategyId, reason, passed: false }
+  SHADOW_TO_PAPER_BLOCKED: "lifecycle:shadow_to_paper_blocked",
+  // Strategy successfully promoted between lifecycle states (CANDIDATE→TESTING, TESTING→PAPER, SHADOW→PAPER, PAPER→DEPLOY_READY, PILOT→DEPLOYED, PILOT→GRAVEYARD)
+  // Payload: { strategyId, from, to, name, ...transition-specific fields }
+  PROMOTED: "lifecycle:promoted",
 } as const;
 
 export type LifecycleGateEventName =

@@ -245,6 +245,50 @@ export async function fireDiscordCritical(title: string, message: string): Promi
   }
 }
 
+// ─── Post-apply object verification (deepscan6 O6) ──────────────────────────────
+// The runner keys idempotency on drizzle.__drizzle_migrations (when/hash) — it does NOT
+// verify that a migration actually produced its schema objects. The pinned "phantom-apply"
+// class (0146/0148, strategy_health_scores, quantum_rl_runs) shipped a journal row marked
+// applied while the table/column was missing, and only surfaced when a LATER migration
+// collided and halted boot. This adds a cheap post-apply check: parse CREATE TABLE targets
+// out of the just-applied SQL and confirm they exist in information_schema. A mismatch is a
+// LOUD, AUDITED signal (not a boot-block — a parser false-negative must not fail-close boot).
+
+export function extractCreatedTables(statements: string[]): string[] {
+  const tables = new Set<string>();
+  const re = /create\s+table\s+(?:if\s+not\s+exists\s+)?["']?([a-z0-9_]+(?:\.[a-z0-9_]+)?)["']?/gi;
+  for (const stmt of statements) {
+    let m: RegExpExecArray | null;
+    re.lastIndex = 0;
+    while ((m = re.exec(stmt)) !== null) {
+      const raw = m[1];
+      const name = raw.includes(".") ? raw.split(".").pop()! : raw;
+      // Skip the migrations bookkeeping table itself.
+      if (name.toLowerCase() === "__drizzle_migrations") continue;
+      tables.add(name.toLowerCase());
+    }
+  }
+  return [...tables];
+}
+
+async function findMissingTables(tables: string[]): Promise<string[]> {
+  const missing: string[] = [];
+  for (const t of tables) {
+    try {
+      const res = await db.execute<{ exists: number }>(
+        sql`SELECT 1 AS exists FROM information_schema.tables WHERE table_name = ${t} LIMIT 1`,
+      );
+      const rows =
+        (res as { rows?: unknown[] }).rows ?? (res as unknown as unknown[]);
+      if (!Array.isArray(rows) || rows.length === 0) missing.push(t);
+    } catch (verifyErr) {
+      // A verification-query failure is itself worth surfacing, but must not block boot.
+      logger.warn({ table: t, err: String(verifyErr) }, "boot-migration: post-apply verify query failed");
+    }
+  }
+  return missing;
+}
+
 // ─── Core migration runner ────────────────────────────────────────────────────
 
 /**
@@ -365,7 +409,37 @@ export async function runPendingMigrations(): Promise<void> {
     const sqlFilePath = path.join(migrationsDir, `${entry.tag}.sql`);
 
     if (!fs.existsSync(sqlFilePath)) {
-      logger.warn({ tag: entry.tag, sqlFilePath }, "boot-migration: SQL file missing — skipping entry");
+      // Deep-scan 2026-06-28: a journal entry whose .sql file is missing used to
+      // be a SILENT logger.warn skip — an invisible, permanent schema gap (git
+      // conflict / incomplete push / renamed-away migration). Now it writes an
+      // audit row + fires Discord CRITICAL so the gap is attributable at boot,
+      // not at a downstream "column does not exist" runtime error. Default stays
+      // SKIP-AND-CONTINUE (not fail-closed) so a benign journal/disk drift can
+      // never brick the live autonomous boot during a vacation; set
+      // BOOT_MIGRATION_FAIL_ON_MISSING_SQL=true to opt into hard-fail boot block.
+      logger.error({ tag: entry.tag, sqlFilePath }, "boot-migration: SQL file MISSING for pending journal entry — schema may be incomplete");
+      await insertAuditRowSafe({
+        action: "boot_migration.sql_file_missing",
+        entityType: "migration",
+        entityId: entry.tag,
+        decisionAuthority: "system",
+        input: { tag: entry.tag, idx: entry.idx, sqlFilePath } as Record<string, unknown>,
+        result: { skipped: true } as Record<string, unknown>,
+        status: "error",
+        errorMessage: `boot-migration SQL file missing: ${sqlFilePath}`,
+      });
+      await fireDiscordCritical(
+        "Boot migration SQL file missing",
+        `Migration ${entry.tag} is pending in the journal but its .sql file is missing (${sqlFilePath}). The database schema may be incomplete. Investigate before relying on any feature that touches this migration's tables/columns.`,
+      );
+      const failOnMissing =
+        (process.env.BOOT_MIGRATION_FAIL_ON_MISSING_SQL ?? "false").toLowerCase() === "true";
+      if (failOnMissing) {
+        throw new Error(
+          `boot-migration: SQL file missing for pending journal entry ${entry.tag} (${sqlFilePath}). ` +
+            `Restore the file or set BOOT_MIGRATION_FAIL_ON_MISSING_SQL=false to skip and continue.`,
+        );
+      }
       continue;
     }
 
@@ -457,6 +531,36 @@ export async function runPendingMigrations(): Promise<void> {
         status: "success",
         correlationId: null,
       });
+
+      // O6: verify the migration's CREATE TABLE targets actually exist post-commit.
+      // Loud + audited on mismatch; never blocks boot (avoid false-close on parser gaps).
+      try {
+        const expectedTables = extractCreatedTables(statements);
+        const missingTables = expectedTables.length ? await findMissingTables(expectedTables) : [];
+        if (missingTables.length > 0) {
+          logger.error(
+            { tag: entry.tag, missingTables },
+            "boot-migration: POST-APPLY VERIFICATION FAILED — migration committed but table(s) missing (phantom-apply)",
+          );
+          await insertAuditRowSafe({
+            action: "migration.post_apply_verification_failed",
+            entityType: "system",
+            entityId: null,
+            decisionAuthority: "gate",
+            input: { migration_name: entry.tag, journal_idx: entry.idx, expected_tables: expectedTables } as Record<string, unknown>,
+            result: { missing_tables: missingTables } as Record<string, unknown>,
+            status: "warning",
+            correlationId: null,
+          });
+          await fireDiscordCritical(
+            `Migration verification mismatch: ${entry.tag}`,
+            `Migration ${entry.tag} committed but expected table(s) are missing from the DB: ${missingTables.join(", ")}.\n\n` +
+              `This is the phantom-apply class (journal says applied, schema object absent). Investigate before the next migration collides. Not blocking boot.`,
+          );
+        }
+      } catch (verifyOuterErr) {
+        logger.warn({ tag: entry.tag, err: String(verifyOuterErr) }, "boot-migration: post-apply verification skipped (non-blocking)");
+      }
     } catch (err) {
       const durationMs = Date.now() - startTs;
       const errMsg = err instanceof Error ? err.message : String(err);

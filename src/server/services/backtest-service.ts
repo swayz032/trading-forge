@@ -8,7 +8,7 @@
  */
 
 import { eq, and, sql } from "drizzle-orm";
-import { backtests, backtestTrades, stressTestRuns, strategies, paperSessions, auditLog, walkForwardWindows, strategyNames, sqaOptimizationRuns, quboTimingRuns, tensorPredictions, rlTrainingRuns, monteCarloRuns, backtestProvenance } from "../db/schema.js";
+import { backtests, backtestTrades, stressTestRuns, strategies, paperSessions, auditLog, walkForwardWindows, strategyNames, sqaOptimizationRuns, quboTimingRuns, tensorPredictions, rlTrainingRuns, monteCarloRuns, backtestProvenance, researchTrialCounter } from "../db/schema.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { startStream } from "./paper-trading-stream.js";
 import { runMonteCarlo } from "./monte-carlo-service.js";
@@ -36,6 +36,8 @@ import { notifyCritical } from "./notification-service.js";
 import { computeFirmRulesVersion } from "../lib/firm-rules-version.js";
 // Wave 27.5 Pass C.2 — compliance gate enforcement mode env knob
 import { resolveComplianceMode, isResearchBacktest } from "../lib/compliance-mode.js";
+// RL kill-switch: RL training is an AUTONOMOUS loop — requires AUTOPILOT (mode >= 2)
+import { readLearningLoopMode } from "../lib/learning-loop-mode.js";
 // Wave hardening 2026-06-22 (G1a) — buildBacktestArgs extracted so tests can
 // import it without the full service chain. Re-exported for backward compat.
 import { buildBacktestArgs } from "../lib/backtest-args.js";
@@ -199,6 +201,12 @@ interface BacktestConfig {
   overnight_hold?: boolean;       // True = swing strategy; gates overnight margin checks in prop sim
   fill_rate?: number;             // Fraction of orders that fill (0.0–1.0); default 1.0
   spread_multiplier?: number;     // Multiplier on bid-ask spread for slippage model; default 1.0
+  // B2 fix: cumulative mutation count across all critic iterations for this strategy.
+  // Python walk_forward.py reads this as request.trial_n_total and uses
+  // max(n_paths, trial_n_total) as n_trials for DSR deflation — ensuring the
+  // bar tightens with every candidate evaluated, not just within one replay batch.
+  // Default 1 = no deflation (single initial backtest, backward-compatible).
+  trial_n_total?: number;
 }
 
 /**
@@ -257,6 +265,27 @@ interface BacktestResult {
   wfe_status?: string | null;
   pbo_overall?: number | null;
   pbo_overall_p_value?: number | null;
+  // C1 consumer-side (2026-06-29): top-level param_stability_status emitted by
+  // walk_forward.py — "cpcv_not_applicable" on the CPCV path, "computed" on plain WF.
+  // Declared + persisted into walkForwardResults so parameter-drift-gate resolves to
+  // the distinct cpcv_exempt result instead of a silent legacy_null. Was previously
+  // absent → cherry-picked wfResults would have dropped it (silent producer/consumer
+  // disconnect — the exact failure mode this fix closes).
+  param_stability_status?: string | null;
+  // FINDING-1 (deepscan 2026-06-28): CPCV-degenerate discriminator from walk_forward.py.
+  pbo_degenerate?: boolean | null;
+  // Wave 3 Track 3B — BIF gate fields (contract with Python side: result.bif / result.k_eff).
+  // `bif`   — Bias Information Factor; quantifies IS→OOS overfitting transfer gap.
+  // `k_eff` — Effective parameter count; companion metric for audit payload.
+  // Both optional (null when Python has not yet emitted them — pre-Wave-3 backtests).
+  bif?: number | null;
+  k_eff?: number | null;
+  // WRC / SPA — data-snooping guard results.
+  // Python walk_forward.py emits these at both CPCV and plain/purged_embargo WF paths.
+  // Contract: wrc_result.p_value → wrcResult JSONB → evaluateWrcGate()
+  //           spa_result.spa_consistent_p → spaResult JSONB → evaluateSpaGate()
+  wrc_result?: Record<string, unknown> | null;
+  spa_result?: Record<string, unknown> | null;
   information_ratio?: number | null;         // A13: Information Ratio (vs benchmark); null when benchmark data insufficient
   prop_compliance?: Record<string, unknown>;
   crisis_results?: Record<string, unknown>;
@@ -268,6 +297,12 @@ interface BacktestResult {
   gate_rejections?: Record<string, unknown>;
   daily_pnl_records?: Array<{ date: string; pnl: number }>;
   oos_metrics?: Record<string, unknown>;
+  // C1 fix 2026-06-28: wf_metadata is a top-level sibling of oos_metrics in the
+  // Python walk_forward.py output (emitted at walk_forward.py:~1252).
+  // Contains: { mode, n_paths, dsr_pass, dsr_unavailable, dsr }.
+  // Previously absent from BacktestResult — silently discarded during WfResultsShape
+  // construction, disabling the DSR gate (fail-OPEN) and CPCV n_paths gate (fail-CLOSED).
+  wf_metadata?: Record<string, unknown> | null;
   confidence?: string;
   windows?: Array<Record<string, unknown>>;
   n_splits?: number;
@@ -298,6 +333,14 @@ interface BacktestResult {
     warnings: Array<string>;
     [key: string]: unknown;
   };
+  // F-1 (point-in-time integrity telemetry):
+  //   tp2_liquidity_unavailable=true means this backtest used +2.0R structural TP2
+  //   (not liquidity-mapped TP2) because point-in-time historical liquidity levels
+  //   are not stored. The PAPER path gets real liquidity via getNearestLiquidity().
+  //   This parity gap is expected and intentional. See backtest-service.ts comment
+  //   at the adaptive_exit_context injection block for full rationale.
+  tp2_liquidity_source?: string;
+  tp2_liquidity_unavailable?: boolean;
 }
 
 interface SqaOptimizationResult {
@@ -430,8 +473,8 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     const mode = config.mode ?? "single";
 
     // ── Wave 25 Gap B: Adaptive exit context injection ─────────────────────
-    // When exit_engine="adaptive", populate config.adaptive_exit_context with
-    // a liquidity snapshot so the Python backtest path has real levels to work with.
+    // When exit_engine="adaptive", populate config.adaptive_exit_context so the
+    // Python backtester receives a valid AdaptiveExitContext object.
     //
     // Contract (from src/engine/config.py AdaptiveExitContext):
     //   adaptive_exit_context.liquidity_snapshot: list of {level_type, price,
@@ -440,25 +483,64 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     //   adaptive_exit_context.pre_lunch_threshold_r: float (default 0.3)
     //   adaptive_exit_context.delta_div_threshold: float (default 0.6)
     //
-    // This stub populates an EMPTY snapshot (length 0) which causes the Python
-    // adaptive path to fall back to R-multiple targets (+1R / +2R) — still
-    // divergent from Style C because the regime-dependent scaling and trail method
-    // ARE applied regardless of liquidity snapshot availability.
+    // POINT-IN-TIME INTEGRITY (look-ahead prevention):
+    //   getNearestLiquidity() reads the CURRENT liquidity_levels table — today's live
+    //   market structure (current PDH/PDL/untouched OBs). Using those levels on
+    //   historical bars is look-ahead bias: a backtest for 2024-01 cannot know what
+    //   the PDH was at each historical bar using today's data.
     //
-    // TODO (Wave 26): Call getNearestLiquidity(symbol, ...) here to populate
-    // real levels. Tracked as adaptive_exit_liquidity_wiring in known-gaps.
-    // Operator runs: ADAPTIVE_WIRED=true python -m scripts.wave25_exit_engine_ab_report
-    //   --days 30 --strategies silver_bullet,power_of_3
-    // to validate the A/B harness produces non-zero deltas.
+    //   There is no point-in-time liquidity snapshot store — we cannot replay "what
+    //   were the intraday liquidity levels on bar X at timestamp T?". Therefore:
+    //     * liquidity_snapshot is intentionally [] for ALL historical backtests.
+    //     * Python structural_targets.compute_single_tp() falls through to the
+    //       +2.0R structural fallback — correct for replay; NOT a bug.
+    //     * The PAPER path (paper-signal-service.ts) DOES call getNearestLiquidity()
+    //       because it evaluates each bar at the current moment in live execution.
+    //
+    //   tp2_liquidity_unavailable=true is added to the context so downstream reviewers
+    //   can distinguish "backtest used R-multiple TP2" from "paper used liquidity-mapped
+    //   TP2" — parity gap is expected and documented here as intentional.
     const exitEngine = (config as unknown as Record<string, unknown>)["exit_engine"];
     if (exitEngine === "adaptive" && !(config as unknown as Record<string, unknown>)["adaptive_exit_context"]) {
       const exitPlanConfig = ((config as unknown as Record<string, unknown>)["strategy"] as Record<string, unknown> | null | undefined)?.["exit_plan_config"] as Record<string, unknown> | null | undefined;
       (config as unknown as Record<string, unknown>)["adaptive_exit_context"] = {
-        liquidity_snapshot: [],  // TODO W26: fill from getNearestLiquidity()
+        // Empty by design — point-in-time historical liquidity not available.
+        // Python falls back to +2.0R structural target. See comment above.
+        liquidity_snapshot: [],
+        tp2_liquidity_unavailable: true,
+        tp2_liquidity_source: "backtest_no_historical_levels",
         regime_at_entry: null,   // Python backtester uses per-bar classify_institutional_regime
         pre_lunch_threshold_r: (exitPlanConfig?.["pre_lunch_threshold_r"] as number | null) ?? 0.3,
         delta_div_threshold: (exitPlanConfig?.["delta_div_threshold"] as number | null) ?? 0.6,
       };
+    }
+
+    // F-4 fix 2026-06-28: populate trial_n_total from research_trial_counter when
+    // not already set by the caller (critic-optimizer-service.ts sets it on replay
+    // paths; standard backtest launch paths never set it → Python defaults to 1 →
+    // effective_n_trials = n_paths only → no cumulative deflation across critic loops).
+    // Fail-soft: if the lookup errors or the row is absent, default to 1 (single
+    // trial — backward-compatible, no extra deflation).
+    if ((config as BacktestConfig).trial_n_total == null) {
+      try {
+        const [trialRow] = await db
+          .select({ nTotal: researchTrialCounter.nTotal })
+          .from(researchTrialCounter)
+          .where(eq(researchTrialCounter.strategyId, strategyId))
+          .limit(1);
+        (config as BacktestConfig & { trial_n_total?: number }).trial_n_total =
+          trialRow?.nTotal != null && trialRow.nTotal > 0 ? trialRow.nTotal : 1;
+        logger.info(
+          { strategyId, trial_n_total: (config as BacktestConfig & { trial_n_total?: number }).trial_n_total },
+          "F-4: trial_n_total resolved from research_trial_counter for DSR deflation",
+        );
+      } catch (trialLookupErr) {
+        logger.warn(
+          { strategyId, err: trialLookupErr },
+          "F-4: trial_n_total lookup failed — defaulting to 1 (no cumulative deflation)",
+        );
+        (config as BacktestConfig & { trial_n_total?: number }).trial_n_total = 1;
+      }
     }
 
     const result = await CircuitBreakerRegistry.get("python-backtest").call(() =>
@@ -506,12 +588,38 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       windows?: Array<Record<string, unknown>>;
       n_splits?: number;
       param_stability?: Record<string, unknown>;
+      // C1 (2026-06-29): top-level param_stability_status sibling of param_stability.
+      // Must be persisted so parameter-drift-gate distinguishes CPCV-exempt from legacy_null.
+      param_stability_status?: string | null;
       // Wave 27.5 Pass B — WFE gate inputs (walk_forward.py:1252)
       wfe_overall?: number | null;
       wfe_status?: string | null;
       // Wave 29 Pass A.2 — PBO gate inputs (walk_forward.py:1272)
       pbo_overall?: number | null;
       pbo_overall_p_value?: number | null;
+      // FINDING-1 (deepscan 2026-06-28): CPCV-degenerate discriminator.
+      pbo_degenerate?: boolean | null;
+      // C1 fix 2026-06-28 — wf_metadata sibling emitted by walk_forward.py.
+      // Contains DSR gate inputs (dsr_pass, dsr_unavailable, dsr) and CPCV
+      // orchestrator inputs (mode, n_paths).  Was previously discarded here,
+      // silently disabling the DSR gate (fail-OPEN) and starving the CPCV
+      // n_paths gate (fail-CLOSED) on the walkForwardResults JSONB column.
+      //
+      // hardening/phase-0 CPCV-exempt fields (nested inside wf_metadata):
+      //   pbo_degenerate_reason?: "cpcv_is_sharpe_unavailable"
+      //     — walk_forward.py emits this when mode="cpcv". PBO rank-comparison
+      //       is structurally unavailable in CPCV mode. Read by lifecycle-service.ts
+      //       PBO gate to emit "lifecycle.pbo_cpcv_is_unavailable" instead of
+      //       the generic "lifecycle.pbo_unavailable_legacy".
+      //   bif_reliable?: false
+      //     — walk_forward.py emits this when mode="cpcv". BIF IS-Sharpe proxy
+      //       and OOS agg_sharpe both derive from OOS data → BIF ≈ 1.0 structurally.
+      //       Read by lifecycle-service.ts _promoteStrategyInner BIF pre-check to
+      //       emit "lifecycle.bif_cpcv_unmeasured" audit before evaluatePaperToDeployReadyGates.
+      //
+      // Both fields are carried verbatim through this JSONB blob — no separate
+      // top-level key needed; lifecycle-service.ts drills into wf_metadata directly.
+      wf_metadata?: Record<string, unknown> | null;
     };
     const wfResults: WfResultsShape | null = result.oos_metrics
       ? {
@@ -519,10 +627,18 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           windows: result.windows as Array<Record<string, unknown>>,
           n_splits: result.n_splits,
           param_stability: result.param_stability,
+          // C1 (2026-06-29): carry param_stability_status into the persisted JSONB blob
+          // so the CPCV cpcv_exempt path survives end-to-end (producer → DB → gate).
+          param_stability_status: result.param_stability_status as string | null | undefined,
           wfe_overall: result.wfe_overall as number | null | undefined,
           wfe_status: result.wfe_status as string | null | undefined,
           pbo_overall: result.pbo_overall as number | null | undefined,
           pbo_overall_p_value: result.pbo_overall_p_value as number | null | undefined,
+          // Merge 2026-06-29: the CPCV-degenerate discriminator now rides INSIDE
+          // wf_metadata as pbo_degenerate_reason ("cpcv_is_sharpe_unavailable"), persisted
+          // wholesale below and read by lifecycle at wf_metadata.pbo_degenerate_reason.
+          // (Superseded the deepscan-wiring top-level pbo_degenerate boolean.)
+          wf_metadata: result.wf_metadata as Record<string, unknown> | null | undefined,
         }
       : (() => {
           const wfr = result.walk_forward_results as WfResultsShape | null | undefined;
@@ -638,6 +754,27 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           // A13: Information Ratio — written once on backtest completion.
           // Null when engine returned null (insufficient benchmark data or < 2 bars).
           informationRatio: result.information_ratio != null ? String(result.information_ratio) : null,
+          // Wave 3 Track 3B — BIF gate fields.
+          // Python WF result carries `bif` (Bias Information Factor) and `k_eff`
+          // (effective parameter count) at the top level of the result dict.
+          // Fail-soft: null when the Python side has not yet emitted the field
+          // (pre-Wave-3 backtests); lifecycle gate treats null as a grandfather pass.
+          bif: result.bif != null ? String(result.bif) : null,
+          kEff: result.k_eff != null ? String(result.k_eff) : null,
+          // WRC / SPA — data-snooping guard results wired from Python walk_forward.py.
+          // Python emits these at both CPCV and plain/purged_embargo WF paths.
+          // Contract (producer → DB → gate):
+          //   wrc_result.p_value         → backtests.wrc_result (JSONB) → wrcPValue gate
+          //   spa_result.spa_consistent_p → backtests.spa_result (JSONB) → spaConsistentP gate
+          // Fail-soft: null when available=false (insufficient OOS obs or computation error).
+          // Gate in promotion-gate-orchestrator.ts reads:
+          //   (wrcResult?.p_value as number | null) → evaluateWrcGate()
+          //   (spaResult?.spa_consistent_p as number | null) → evaluateSpaGate()
+          // When null → fail-CLOSED unless PROMOTION_GRANDFATHER_PRE_PASS_E=true.
+          wrcResult:
+            (result.wrc_result as Record<string, unknown> | null | undefined) ?? null,
+          spaResult:
+            (result.spa_result as Record<string, unknown> | null | undefined) ?? null,
         })
         .where(eq(backtests.id, backtestId));
 
@@ -1799,10 +1936,48 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       })();
     }
 
-    // ─── Auto RL training (fire-and-forget) ───
+    // ─── Auto RL training (fire-and-forget) — LEGACY PATH ───────────────────
     // Requires 50+ daily P&L samples for a meaningful training episode set.
+    // Writes to `rl_training_runs` (consumed by critic-optimizer-service.ts).
+    // Kill switch: RL training is an AUTONOMOUS loop → requires AUTOPILOT (mode>=2).
+    // Off-RTH guard: mirrors the C.2 path to prevent dual GPU subprocesses during RTH.
+    // NOTE: `rl_training_runs` IS consumed by the critic — see critic-optimizer-service.ts
+    // line ~1393. This legacy path is retained (not retired) but gated identically to C.2.
     if (result.tier && result.tier !== "REJECTED" && result.daily_pnls?.length >= 50) {
-      (async () => {
+      void (async () => {
+        // ── Kill-switch gate (AUTOPILOT required — autonomous loop) ──────────
+        const rlLegacyMode = await readLearningLoopMode();
+        if (!rlLegacyMode.autonomousOn) {
+          logger.info(
+            { strategyId, backtestId, mode: rlLegacyMode.mode },
+            "backtest-service: RL legacy training skipped — kill switch not AUTOPILOT",
+          );
+          await db.insert(auditLog).values({
+            action: "quantum_rl.training_loop_halted_skip",
+            entityType: "strategy",
+            entityId: String(strategyId),
+            status: "success",
+            correlationId: correlationId ?? null,
+            result: {
+              reason: "kill_switch_not_autopilot",
+              mode: rlLegacyMode.mode,
+              path: "legacy_rl_training_runs",
+              backtest_id: backtestId,
+            },
+          }).catch((auditErr) =>
+            logger.warn({ err: String(auditErr), strategyId }, "backtest-service: RL legacy halt audit failed"),
+          );
+          return;
+        }
+        // ── Off-RTH guard (no GPU subprocess during live-market hours) ───────
+        const { isOffRthTrainingWindow } = await import("../lib/quantum-rl-training-runner.js");
+        if (!isOffRthTrainingWindow()) {
+          logger.info(
+            { strategyId, backtestId },
+            "backtest-service: RL legacy training skipped — within RTH window",
+          );
+          return;
+        }
         // Insert running row before Python call
         const [rlRow] = await db.insert(rlTrainingRuns).values({
           strategyId,
@@ -1879,12 +2054,37 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     // Uses quantum-rl-training-runner.ts (mirrors quantum-replay-runner.ts pattern).
     // ET-hour guard: only off-RTH windows {6,7,8,16,17} — enforced inside runner.
     // Circuit breaker: 5 consecutive failures → 1h cooldown.
+    // Kill switch: RL training is an AUTONOMOUS loop → requires AUTOPILOT (mode>=2).
     // governance: challenger_only, training_mode=true, never blocks lifecycle.
     {
       const entryQuality = (config as unknown as Record<string, unknown>)["entry_quality"] as Record<string, unknown> | undefined;
       const trainRlPolicy = entryQuality?.train_rl_policy === true;
       if (!config.suppressAutoPromote && trainRlPolicy && result.tier && result.tier !== "REJECTED") {
         void (async () => {
+          // ── Kill-switch gate (AUTOPILOT required — autonomous loop) ──────────
+          const rlC2Mode = await readLearningLoopMode();
+          if (!rlC2Mode.autonomousOn) {
+            logger.info(
+              { strategyId, backtestId, mode: rlC2Mode.mode },
+              "backtest-service: RL C.2 training skipped — kill switch not AUTOPILOT",
+            );
+            await db.insert(auditLog).values({
+              action: "quantum_rl.training_loop_halted_skip",
+              entityType: "strategy",
+              entityId: String(strategyId),
+              status: "success",
+              correlationId: correlationId ?? null,
+              result: {
+                reason: "kill_switch_not_autopilot",
+                mode: rlC2Mode.mode,
+                path: "c2_quantum_rl_runs",
+                backtest_id: backtestId,
+              },
+            }).catch((auditErr) =>
+              logger.warn({ err: String(auditErr), strategyId }, "backtest-service: RL C.2 halt audit failed"),
+            );
+            return;
+          }
           try {
             const { runRlTrainingForStrategy, deriveRlTrainingSeed, _getRlConsecutiveFailuresForTests } = await import("../lib/quantum-rl-training-runner.js");
             const rlSeed = deriveRlTrainingSeed(strategyId);
@@ -2484,28 +2684,42 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             }).where(eq(strategies.id, strategyId));
           }
 
-          // ── Single path lifecycle write: CANDIDATE → SHADOW via LifecycleService ──
-          // F-3 fix (2026-06-23): routes to SHADOW (not PAPER). No paper session is
-          // created here — paper sessions are created when SHADOW→PAPER fires via the
-          // A.3 divergence gate in checkAutoPromotions (≥20 signals, <5% divergence).
-          // The lifecycle write atomically sets shadow_mode_enabled=true so the signal
-          // interceptor (paper-signal-service) begins capturing signals immediately.
+          // ── Single path lifecycle write: CANDIDATE → TESTING via LifecycleService ──
+          // H1/H2/H3 fix (2026-06-29): the canonical fast-track now routes
+          // CANDIDATE → TESTING → SHADOW (NOT CANDIDATE → SHADOW directly). The
+          // CANDIDATE → TESTING hop lands here (atomic with the Forge-name claim);
+          // the TESTING → SHADOW hop runs immediately AFTER this tx commits so the
+          // existing PBO < 0.15 lifecycle gate (keyed on TESTING → SHADOW/PAPER) and
+          // the SHADOW → PAPER divergence gate both fire on the default autonomous
+          // path via ONE canonical driver. shadowModeEnabled is flagged true here so
+          // the Gate 1.5 TESTING → SHADOW cron driver (checkAutoPromotions) retries
+          // the second hop if it does not complete in-process (PBO block, transient
+          // failure, process death between commit and the immediate hop).
           // Cast tx to typeof db — Drizzle's PgTransaction is structurally compatible
           // with the db handle for query/insert/update/select but lacks `$client`.
           // This matches the pattern used in src/server/lib/db-locks.ts.
           const promoteResult = await lifecycle.promoteStrategy(
             strategyId,
             "CANDIDATE",
-            "SHADOW",
-            { actor: "system", reason: "tier-qualified-shadow-entry" },
+            "TESTING",
+            { actor: "system", reason: "tier-qualified-testing-entry" },
             tx as unknown as typeof db,
           );
           if (!promoteResult.success) {
             promotionError = promoteResult.error;
             // Throwing inside tx triggers rollback — Forge name claim reverts so we
-            // don't end up with a claimed name for a non-SHADOW strategy.
+            // don't end up with a claimed name for a non-promoted strategy.
             throw new Error(`Lifecycle promotion failed: ${promoteResult.error}`);
           }
+
+          // Flag for SHADOW so the Gate 1.5 TESTING → SHADOW cron driver picks this
+          // strategy up (and the immediate in-process hop below knows it is destined
+          // for SHADOW). promoteStrategy(... → SHADOW) re-asserts this at SHADOW entry;
+          // setting it here makes the flag durable across the CANDIDATE → TESTING hop
+          // so a deferred second hop is never orphaned at TESTING.
+          await tx.update(strategies).set({
+            shadowModeEnabled: true,
+          }).where(eq(strategies.id, strategyId));
 
           // Auto-promote context audit row — captures backtest+MC+tier metadata so
           // observers can join lifecycle audit row to its triggering backtest. The
@@ -2518,7 +2732,8 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             entityId: strategyId,
             input: { backtestId, tier: result.tier },
             result: {
-              toState: "SHADOW",
+              toState: "TESTING",
+              shadowDestination: "SHADOW",
               mcSurvivalRate,
               forgeScore: result.forge_score,
             },
@@ -2534,31 +2749,67 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
         if (!promotionSucceeded) {
           logger.warn(
             { strategyId, backtestId, error: promotionError },
-            "Auto-promote transaction rolled back — strategy not promoted to SHADOW",
+            "Auto-promote transaction rolled back — strategy not promoted to TESTING",
           );
           return { id: backtestId, status: "completed", ...result };
         }
 
-        // NOTE (F-3): No stream start here. Streams are started when SHADOW→PAPER
-        // fires via the A.3 divergence gate in checkAutoPromotions. In SHADOW state
-        // the signal interceptor captures signals but does NOT open TradersPost orders.
-
-        // Broadcast SHADOW entry event (outside transaction — SSE is best-effort)
+        // Broadcast TESTING entry event (outside transaction — SSE is best-effort)
         broadcastSSE("strategy:promoted", {
           strategyId,
           tier: result.tier,
           forgeScore: result.forge_score,
-          toState: "SHADOW",
-          // paperSessionId not yet set — created at SHADOW→PAPER divergence gate
+          toState: "TESTING",
         });
 
-        logger.info({
-          strategyId,
-          tier: result.tier,
-          toState: "SHADOW",
-        }, "Strategy fast-tracked to SHADOW — skew measurement begins (F-3)");
+        // ── Immediate second hop: TESTING → SHADOW (fires the PBO < 0.15 gate) ──
+        // H1/H2/H3 (2026-06-29): the canonical CANDIDATE → TESTING → SHADOW ladder.
+        // promoteStrategy(TESTING → SHADOW) runs the existing Wave 29 Pass A.2 PBO
+        // lifecycle gate; a PBO block correctly HOLDS the strategy at TESTING (it is
+        // NOT silently promoted) and the Gate 1.5 cron driver retries on later ticks
+        // once a fresh backtest clears PBO. A transient failure here is likewise
+        // recovered by Gate 1.5 (shadowModeEnabled was flagged in the tx above).
+        // NOTE (F-3): no stream start here. Streams start at SHADOW → PAPER via the
+        // A.3 divergence gate in checkAutoPromotions. In SHADOW the signal interceptor
+        // captures signals but does NOT open TradersPost orders.
+        try {
+          const shadowHop = await lifecycle.promoteStrategy(
+            strategyId,
+            "TESTING",
+            "SHADOW",
+            { actor: "system", reason: "tier-qualified-shadow-entry", correlationId: correlationId ?? undefined },
+          );
+          if (shadowHop.success) {
+            broadcastSSE("strategy:promoted", {
+              strategyId,
+              tier: result.tier,
+              forgeScore: result.forge_score,
+              toState: "SHADOW",
+              // paperSessionId not yet set — created at SHADOW→PAPER divergence gate
+            });
+            logger.info(
+              { strategyId, tier: result.tier, toState: "SHADOW" },
+              "Strategy fast-tracked CANDIDATE → TESTING → SHADOW — skew measurement begins (H1/H2/H3)",
+            );
+          } else {
+            // PBO block (or transient) — strategy correctly held at TESTING. The PBO
+            // gate already wrote its own audit + SSE inside promoteStrategy. Gate 1.5
+            // (checkAutoPromotions) is the durable retry driver.
+            logger.info(
+              { strategyId, tier: result.tier, error: shadowHop.error },
+              "TESTING → SHADOW hop did not complete in-process (PBO block or transient) — held at TESTING; Gate 1.5 cron will retry",
+            );
+          }
+        } catch (shadowHopErr) {
+          // Non-fatal: the strategy is durably at TESTING with shadowModeEnabled=true;
+          // Gate 1.5 will drive TESTING → SHADOW on the next cron tick.
+          logger.warn(
+            { strategyId, err: shadowHopErr },
+            "TESTING → SHADOW immediate hop threw (non-fatal — Gate 1.5 cron will retry)",
+          );
+        }
       } catch (promoErr) {
-        logger.error(promoErr, "Failed to fast-track strategy to SHADOW");
+        logger.error(promoErr, "Failed to fast-track strategy through TESTING → SHADOW");
       }
     }
 

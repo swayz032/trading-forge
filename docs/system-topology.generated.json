@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-24T19:45:33.529Z",
+  "generatedAt": "2026-07-02T06:01:23.625Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -15,13 +15,13 @@
     ]
   },
   "counts": {
-    "routes": 75,
-    "schedulerJobs": 102,
+    "routes": 78,
+    "schedulerJobs": 105,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 29,
-    "databaseTables": 106,
-    "registrySubsystems": 69
+    "databaseTables": 110,
+    "registrySubsystems": 71
   },
   "routes": [
     "/api/ab-comparison",
@@ -41,6 +41,8 @@
     "/api/broker-accounts",
     "/api/broker-error-budget",
     "/api/broker/fill-callback",
+    "/api/carter",
+    "/api/carter/webhook",
     "/api/cloud-qmc",
     "/api/compiler",
     "/api/compliance",
@@ -59,6 +61,7 @@
     "/api/health",
     "/api/indicators",
     "/api/journal",
+    "/api/leak-detection",
     "/api/library-diversity",
     "/api/live-order",
     "/api/macro",
@@ -116,6 +119,8 @@
     "c11-fred-daily",
     "c11-h41-weekly",
     "c11-treasury-auctions",
+    "candidate-backtest-conveyor",
+    "carter-analyst-daily",
     "cloud-qmc-poll",
     "cme-status-poll",
     "compliance-rule-drift",
@@ -144,6 +149,7 @@
     "funnel-snapshot",
     "graveyard-pattern-extraction",
     "harsh-regime-phase-activation-check",
+    "heartbeat-ooh-check",
     "heartbeat-stale-check",
     "heartbeat-write",
     "hmm-regime-weekly-refit",
@@ -163,7 +169,6 @@
     "naked-poc-sync-daily",
     "narrative-state-tracker",
     "nightly-critique",
-    "ollama-keepwarm-watchdog",
     "paper-journal-recon-daily",
     "paper-vs-backtest",
     "pattern-aggregator",
@@ -191,6 +196,7 @@
     "session-analytics-rollup",
     "stale-pending-sweeper",
     "stale-session-check",
+    "strategy-age-revalidation",
     "strategy-stale-detector",
     "synthetic-regime-bank-populate",
     "system-map-drift",
@@ -832,6 +838,8 @@
     "bias_decisions",
     "bias_state",
     "broker_accounts",
+    "carter_issues",
+    "carter_memory",
     "cloud_qmc_runs",
     "compliance_drift_log",
     "compliance_reviews",
@@ -887,6 +895,7 @@
     "quantum_run_costs",
     "qubo_timing_runs",
     "regime_hmm_models",
+    "research_trial_counter",
     "rl_training_runs",
     "scout_drain_samples",
     "server_mediated_orders",
@@ -921,37 +930,38 @@
     "tradingview_markers",
     "transcript_fetch_outcomes",
     "walk_forward_windows",
-    "weekly_drift_reports"
+    "weekly_drift_reports",
+    "workflow_backups"
   ],
   "registryCoverage": {
-    "registryEntries": 69,
-    "autonomousSubsystems": 62,
+    "registryEntries": 71,
+    "autonomousSubsystems": 63,
     "selfEvolvingSubsystems": 9,
     "proofStatusCounts": {
-      "runtime-proven": 63,
+      "runtime-proven": 65,
       "partially-proven": 1,
       "offline-by-design": 0,
       "experimental": 5,
       "drifted": 0
     },
     "runtimeStateCounts": {
-      "active": 63,
+      "active": 65,
       "experimental": 5,
       "scaffold": 1
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
       "partially_active_preprod": 0,
-      "active_preprod": 64,
+      "active_preprod": 66,
       "experimental_preprod": 5
     },
     "launchTargetCounts": {
-      "runtime_proven_autonomous": 62,
+      "runtime_proven_autonomous": 64,
       "runtime_proven_manual_gate": 2,
       "experimental_challenger": 5
     },
     "closedLoopCounts": {
-      "not_collecting": 56,
+      "not_collecting": 58,
       "collecting_only": 0,
       "learning_active": 8,
       "learning_blocked": 0,
@@ -959,13 +969,13 @@
     },
     "learningModeCounts": {
       "active_learning": 7,
-      "deterministic_instrumented": 55,
+      "deterministic_instrumented": 57,
       "manual_gate_only": 2,
       "shadow_experimental": 5
     },
     "operatingClassCounts": {
       "adaptive": 7,
-      "deterministic_instrumented": 60,
+      "deterministic_instrumented": 62,
       "manual_gated": 2
     },
     "manualGates": [
@@ -981,10 +991,10 @@
       "tradingview_deploy"
     ],
     "coveredCounts": {
-      "routes": 75,
-      "schedulerJobs": 102,
+      "routes": 78,
+      "schedulerJobs": 105,
       "engineSubsystems": 29,
-      "databaseTables": 106
+      "databaseTables": 110
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
@@ -1009,14 +1019,15 @@
     "manualGateViolations": [],
     "preprodIntegrity": {
       "status": "incomplete",
-      "automationComplete": 57,
-      "dataCollectionComplete": 69,
-      "auditabilityComplete": 69,
-      "failureVisibilityComplete": 69,
-      "authorityCorrect": 69,
+      "automationComplete": 58,
+      "dataCollectionComplete": 71,
+      "auditabilityComplete": 71,
+      "failureVisibilityComplete": 71,
+      "authorityCorrect": 71,
       "learningActive": 8,
       "incompleteSubsystems": [
         "adaptive_exit_engine",
+        "carter_voice_agent",
         "exit_engine_ab_harness",
         "phase5_contract_spec_scaffold",
         "slumhouse_frontend",
@@ -1028,7 +1039,7 @@
     "productionConvergence": {
       "status": "blocked",
       "targetStateCounts": {
-        "production_autonomous": 62,
+        "production_autonomous": 64,
         "production_manual_gate": 2,
         "production_experimental": 5,
         "production_not_intended": 0
@@ -1038,6 +1049,8 @@
         "ab_comparison",
         "backtest_qualification",
         "broker_abstraction_layer",
+        "candidate_backtest_conveyor",
+        "carter_voice_agent",
         "cohort_audit_report_service",
         "compliance_governance",
         "composite_shadow_gate",
@@ -1863,7 +1876,8 @@
           "/api/strategy-assignments"
         ],
         "schedulerJobs": [
-          "broker-error-budget-check"
+          "broker-error-budget-check",
+          "position-drift-reconcile"
         ],
         "healthCheck": "/api/health/dashboard",
         "freshnessSignals": [
@@ -1873,6 +1887,187 @@
         "evidenceQueries": [
           "broker-order-routing-audit",
           "broker-credentials-loaded-audit"
+        ],
+        "coverageGaps": []
+      },
+      {
+        "id": "candidate_backtest_conveyor",
+        "domain": "qualification",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "scheduler",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "production",
+        "deploymentAuthority": "operator_only",
+        "criticality": "medium",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
+        ],
+        "runtimeEvidence": [
+          "audit_log:lifecycle.candidate_conveyor_enqueued",
+          "factory:candidate_backtest_enqueued SSE",
+          "lifecycle.candidate_conveyor_enqueued",
+          "tf_candidate_conveyor_enqueued_total",
+          "tf_candidate_conveyor_enqueued_total (Prometheus counter)"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "backtests",
+          "backtests table (running count for slot math)",
+          "MAX_CONCURRENT_BACKTESTS env var",
+          "strategies",
+          "strategies table (lifecycleState=CANDIDATE)"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": true,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log:lifecycle.candidate_conveyor_enqueued",
+          "factory:candidate_backtest_enqueued SSE",
+          "lifecycle.candidate_conveyor_enqueued",
+          "SELECT COUNT(*) FROM audit_log WHERE action = 'lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '24 hours'",
+          "tf_candidate_conveyor_enqueued_total",
+          "tf_candidate_conveyor_enqueued_total (Prometheus counter)"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [],
+        "schedulerJobs": [
+          "candidate-backtest-conveyor"
+        ],
+        "healthCheck": "SELECT COUNT(*) FROM audit_log WHERE action='lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '1 hour'",
+        "freshnessSignals": [
+          "audit_log:lifecycle.candidate_conveyor_enqueued",
+          "tf_candidate_conveyor_enqueued_total"
+        ],
+        "evidenceQueries": [
+          "SELECT COUNT(*) FROM audit_log WHERE action = 'lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '24 hours'"
+        ],
+        "coverageGaps": []
+      },
+      {
+        "id": "carter_voice_agent",
+        "domain": "operations",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "operator-controlled",
+        "decisionAuthority": "advisory",
+        "manualGate": "none",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "repo-runtime",
+        "learningBoundary": "none",
+        "deploymentAuthority": "operator_only",
+        "criticality": "important",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "route contract reachable",
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
+        ],
+        "runtimeEvidence": [
+          "/api/health",
+          "/api/sse",
+          "audit_log:carter.conversation_logged",
+          "audit_log:carter.tool_invoked",
+          "carter_issues:recent-entry",
+          "carter.conversation_logged",
+          "carter.tool_failed",
+          "carter.tool_invoked"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "backtests",
+          "Carter tool registry (read+run tools)",
+          "carter_issues",
+          "carter_memory",
+          "ElevenLabs post-call transcript webhook",
+          "strategies",
+          "subsystem read surfaces (status, lifecycle, backtests, scout)"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": true,
+        "automationStatus": "incomplete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "/api/health",
+          "/api/sse",
+          "audit_log:carter.conversation_logged",
+          "audit_log:carter.tool_invoked",
+          "carter_issues:recent-entry",
+          "carter-conversation-log-history",
+          "carter-issue-watcher-history",
+          "carter-tool-invocation-history",
+          "carter.conversation_logged",
+          "carter.tool_failed",
+          "carter.tool_invoked"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [
+          "/api/carter",
+          "/api/carter/webhook",
+          "/slumhouse/api/carter-session"
+        ],
+        "schedulerJobs": [
+          "carter-analyst-daily"
+        ],
+        "healthCheck": "/api/health",
+        "freshnessSignals": [
+          "audit_log:carter.tool_invoked",
+          "carter_issues:recent-entry"
+        ],
+        "evidenceQueries": [
+          "carter-tool-invocation-history",
+          "carter-conversation-log-history",
+          "carter-issue-watcher-history"
         ],
         "coverageGaps": []
       },
@@ -2695,6 +2890,7 @@
           "journal critique history",
           "mutation outcomes",
           "mutation_outcomes",
+          "research_trial_counter",
           "system parameters",
           "system_journal",
           "system_parameter_history",
@@ -3937,6 +4133,7 @@
           "/api/deployed-strategy-starvation",
           "/api/dlq",
           "/api/health",
+          "/api/leak-detection",
           "/api/metrics",
           "/api/sse",
           "/api/validation-cadence",
@@ -3955,8 +4152,6 @@
           "idempotency-cleanup",
           "metrics-collector",
           "metrics-heartbeat",
-          "ollama-keepwarm-watchdog",
-          "position-drift-reconcile",
           "pre-trading-day-health-check",
           "python-pool-saturation-check",
           "regime-coverage-check",
@@ -4089,6 +4284,7 @@
         ],
         "schedulerJobs": [
           "bw-session-refresh",
+          "heartbeat-ooh-check",
           "heartbeat-stale-check",
           "heartbeat-write",
           "prop-firm-cookie-refresh"
@@ -5246,7 +5442,12 @@
           "audit_log.lifecycle.regime_drift_demotion",
           "audit_log.regime_drift_detector.*",
           "audit_log.regime_drift_detector.completed",
+          "audit_log.strategy_revalidation.completed",
           "audit_log.strategy.regime_drift_detected",
+          "audit_log.strategy.revalidation_due",
+          "audit_log.strategy.revalidation_forced",
+          "audit_log.strategy.sharpe_decay_review",
+          "audit_log.strategy.sharpe_decay_warn",
           "lifecycle.regime_drift_demotion",
           "regime_drift_detector.completed",
           "regime_drift_detector.dry_run",
@@ -5254,6 +5455,7 @@
           "regime_drift_detector.skipped_dst_guard",
           "regime_drift_detector.skipped_lock_contention",
           "scheduler:regime-drift-detector:21,22-utc",
+          "scheduler:strategy-age-revalidation:11,12-utc",
           "strategy.regime_drift_detected"
         ],
         "dataCollectionCoverage": [
@@ -5285,7 +5487,12 @@
           "audit_log.lifecycle.regime_drift_demotion",
           "audit_log.regime_drift_detector.*",
           "audit_log.regime_drift_detector.completed",
+          "audit_log.strategy_revalidation.completed",
           "audit_log.strategy.regime_drift_detected",
+          "audit_log.strategy.revalidation_due",
+          "audit_log.strategy.revalidation_forced",
+          "audit_log.strategy.sharpe_decay_review",
+          "audit_log.strategy.sharpe_decay_warn",
           "lifecycle.regime_drift_demotion",
           "regime_drift_detector.completed",
           "regime_drift_detector.dry_run",
@@ -5293,6 +5500,7 @@
           "regime_drift_detector.skipped_dst_guard",
           "regime_drift_detector.skipped_lock_contention",
           "scheduler:regime-drift-detector:21,22-utc",
+          "scheduler:strategy-age-revalidation:11,12-utc",
           "SELECT * FROM audit_log WHERE action = 'regime_drift_detector.completed' ORDER BY created_at DESC LIMIT 7",
           "SELECT * FROM audit_log WHERE action IN ('strategy.regime_drift_detected','lifecycle.regime_drift_demotion') ORDER BY created_at DESC LIMIT 20",
           "strategy.regime_drift_detected"
@@ -5300,7 +5508,8 @@
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
         "routes": [],
         "schedulerJobs": [
-          "regime-drift-detector"
+          "regime-drift-detector",
+          "strategy-age-revalidation"
         ],
         "healthCheck": "src/server/__tests__/wave29-pass-b3-regime-drift.test.ts",
         "freshnessSignals": [
@@ -7597,7 +7806,8 @@
           "n8n_execution_log",
           "system journal",
           "system_journal",
-          "workflow exports"
+          "workflow exports",
+          "workflow_backups"
         ],
         "closedLoopStatus": "learning_active",
         "learningMode": "active_learning",
@@ -8583,7 +8793,8 @@
         "/api/strategy-assignments"
       ],
       "schedulerJobs": [
-        "broker-error-budget-check"
+        "broker-error-budget-check",
+        "position-drift-reconcile"
       ],
       "healthCheck": "/api/health/dashboard",
       "freshnessSignals": [
@@ -8593,6 +8804,187 @@
       "evidenceQueries": [
         "broker-order-routing-audit",
         "broker-credentials-loaded-audit"
+      ],
+      "coverageGaps": []
+    },
+    {
+      "id": "candidate_backtest_conveyor",
+      "domain": "qualification",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "scheduler",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "production",
+      "deploymentAuthority": "operator_only",
+      "criticality": "medium",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
+      ],
+      "runtimeEvidence": [
+        "audit_log:lifecycle.candidate_conveyor_enqueued",
+        "factory:candidate_backtest_enqueued SSE",
+        "lifecycle.candidate_conveyor_enqueued",
+        "tf_candidate_conveyor_enqueued_total",
+        "tf_candidate_conveyor_enqueued_total (Prometheus counter)"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "backtests",
+        "backtests table (running count for slot math)",
+        "MAX_CONCURRENT_BACKTESTS env var",
+        "strategies",
+        "strategies table (lifecycleState=CANDIDATE)"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": true,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log:lifecycle.candidate_conveyor_enqueued",
+        "factory:candidate_backtest_enqueued SSE",
+        "lifecycle.candidate_conveyor_enqueued",
+        "SELECT COUNT(*) FROM audit_log WHERE action = 'lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '24 hours'",
+        "tf_candidate_conveyor_enqueued_total",
+        "tf_candidate_conveyor_enqueued_total (Prometheus counter)"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [],
+      "schedulerJobs": [
+        "candidate-backtest-conveyor"
+      ],
+      "healthCheck": "SELECT COUNT(*) FROM audit_log WHERE action='lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '1 hour'",
+      "freshnessSignals": [
+        "audit_log:lifecycle.candidate_conveyor_enqueued",
+        "tf_candidate_conveyor_enqueued_total"
+      ],
+      "evidenceQueries": [
+        "SELECT COUNT(*) FROM audit_log WHERE action = 'lifecycle.candidate_conveyor_enqueued' AND created_at > NOW() - INTERVAL '24 hours'"
+      ],
+      "coverageGaps": []
+    },
+    {
+      "id": "carter_voice_agent",
+      "domain": "operations",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "operator-controlled",
+      "decisionAuthority": "advisory",
+      "manualGate": "none",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "repo-runtime",
+      "learningBoundary": "none",
+      "deploymentAuthority": "operator_only",
+      "criticality": "important",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "route contract reachable",
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
+      ],
+      "runtimeEvidence": [
+        "/api/health",
+        "/api/sse",
+        "audit_log:carter.conversation_logged",
+        "audit_log:carter.tool_invoked",
+        "carter_issues:recent-entry",
+        "carter.conversation_logged",
+        "carter.tool_failed",
+        "carter.tool_invoked"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "backtests",
+        "Carter tool registry (read+run tools)",
+        "carter_issues",
+        "carter_memory",
+        "ElevenLabs post-call transcript webhook",
+        "strategies",
+        "subsystem read surfaces (status, lifecycle, backtests, scout)"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": true,
+      "automationStatus": "incomplete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "/api/health",
+        "/api/sse",
+        "audit_log:carter.conversation_logged",
+        "audit_log:carter.tool_invoked",
+        "carter_issues:recent-entry",
+        "carter-conversation-log-history",
+        "carter-issue-watcher-history",
+        "carter-tool-invocation-history",
+        "carter.conversation_logged",
+        "carter.tool_failed",
+        "carter.tool_invoked"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [
+        "/api/carter",
+        "/api/carter/webhook",
+        "/slumhouse/api/carter-session"
+      ],
+      "schedulerJobs": [
+        "carter-analyst-daily"
+      ],
+      "healthCheck": "/api/health",
+      "freshnessSignals": [
+        "audit_log:carter.tool_invoked",
+        "carter_issues:recent-entry"
+      ],
+      "evidenceQueries": [
+        "carter-tool-invocation-history",
+        "carter-conversation-log-history",
+        "carter-issue-watcher-history"
       ],
       "coverageGaps": []
     },
@@ -9415,6 +9807,7 @@
         "journal critique history",
         "mutation outcomes",
         "mutation_outcomes",
+        "research_trial_counter",
         "system parameters",
         "system_journal",
         "system_parameter_history",
@@ -10657,6 +11050,7 @@
         "/api/deployed-strategy-starvation",
         "/api/dlq",
         "/api/health",
+        "/api/leak-detection",
         "/api/metrics",
         "/api/sse",
         "/api/validation-cadence",
@@ -10675,8 +11069,6 @@
         "idempotency-cleanup",
         "metrics-collector",
         "metrics-heartbeat",
-        "ollama-keepwarm-watchdog",
-        "position-drift-reconcile",
         "pre-trading-day-health-check",
         "python-pool-saturation-check",
         "regime-coverage-check",
@@ -10809,6 +11201,7 @@
       ],
       "schedulerJobs": [
         "bw-session-refresh",
+        "heartbeat-ooh-check",
         "heartbeat-stale-check",
         "heartbeat-write",
         "prop-firm-cookie-refresh"
@@ -11966,7 +12359,12 @@
         "audit_log.lifecycle.regime_drift_demotion",
         "audit_log.regime_drift_detector.*",
         "audit_log.regime_drift_detector.completed",
+        "audit_log.strategy_revalidation.completed",
         "audit_log.strategy.regime_drift_detected",
+        "audit_log.strategy.revalidation_due",
+        "audit_log.strategy.revalidation_forced",
+        "audit_log.strategy.sharpe_decay_review",
+        "audit_log.strategy.sharpe_decay_warn",
         "lifecycle.regime_drift_demotion",
         "regime_drift_detector.completed",
         "regime_drift_detector.dry_run",
@@ -11974,6 +12372,7 @@
         "regime_drift_detector.skipped_dst_guard",
         "regime_drift_detector.skipped_lock_contention",
         "scheduler:regime-drift-detector:21,22-utc",
+        "scheduler:strategy-age-revalidation:11,12-utc",
         "strategy.regime_drift_detected"
       ],
       "dataCollectionCoverage": [
@@ -12005,7 +12404,12 @@
         "audit_log.lifecycle.regime_drift_demotion",
         "audit_log.regime_drift_detector.*",
         "audit_log.regime_drift_detector.completed",
+        "audit_log.strategy_revalidation.completed",
         "audit_log.strategy.regime_drift_detected",
+        "audit_log.strategy.revalidation_due",
+        "audit_log.strategy.revalidation_forced",
+        "audit_log.strategy.sharpe_decay_review",
+        "audit_log.strategy.sharpe_decay_warn",
         "lifecycle.regime_drift_demotion",
         "regime_drift_detector.completed",
         "regime_drift_detector.dry_run",
@@ -12013,6 +12417,7 @@
         "regime_drift_detector.skipped_dst_guard",
         "regime_drift_detector.skipped_lock_contention",
         "scheduler:regime-drift-detector:21,22-utc",
+        "scheduler:strategy-age-revalidation:11,12-utc",
         "SELECT * FROM audit_log WHERE action = 'regime_drift_detector.completed' ORDER BY created_at DESC LIMIT 7",
         "SELECT * FROM audit_log WHERE action IN ('strategy.regime_drift_detected','lifecycle.regime_drift_demotion') ORDER BY created_at DESC LIMIT 20",
         "strategy.regime_drift_detected"
@@ -12020,7 +12425,8 @@
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
       "routes": [],
       "schedulerJobs": [
-        "regime-drift-detector"
+        "regime-drift-detector",
+        "strategy-age-revalidation"
       ],
       "healthCheck": "src/server/__tests__/wave29-pass-b3-regime-drift.test.ts",
       "freshnessSignals": [
@@ -14317,7 +14723,8 @@
         "n8n_execution_log",
         "system journal",
         "system_journal",
-        "workflow exports"
+        "workflow exports",
+        "workflow_backups"
       ],
       "closedLoopStatus": "learning_active",
       "learningMode": "active_learning",

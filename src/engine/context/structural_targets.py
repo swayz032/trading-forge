@@ -175,15 +175,78 @@ def compute_single_tp(
     nearest_untested_ob: Optional[float] = None,
     nearest_unfilled_fvg: Optional[float] = None,
     atr: float = 0.0,
+    # Wave 1 Track 1A 2026-06-27: liquidity-mapped TP2 for static_styleC
+    liquidity_snapshot: Optional[list] = None,  # list of dicts or LiquidityLevelSnapshot objects
 ) -> Optional[float]:
     """Single structural TP using DOL hierarchy. Returns None if no target >= 2R.
 
     Priority: BSL/SSL > old high/low > untested OB > unfilled FVG > 3×ATR fallback.
     Hard rule: TP must be >= 2R from entry. If nothing qualifies, return None (skip trade).
+
+    Wave 1 Track 1A liquidity-mapped TP2 (static_styleC):
+        If a qualified INTRADAY level from liquidity_snapshot exists within the
+        configurable band around +2.0R (default [+1.4R, +2.6R]), it is returned
+        directly as the TP2 anchor — BEFORE the structural candidate scan.
+        This allows the static exit style to use the same intraday DOL targets
+        that the adaptive engine uses.
+        Backward-compat: no snapshot or no qualifying level → existing logic unchanged.
     """
+    import os as _os
+
     risk = abs(entry_price - stop_price)
     if risk < 1e-9:
         return None
+
+    # ── Wave 1 Track 1A: liquidity-mapped TP2 (BEFORE structural candidates) ──
+    # Band: [+1.4R, +2.6R] around entry (env-configurable).
+    # Only INTRADAY level types allowed (INTRADAY_ALLOWED_LEVEL_TYPES from adaptive_exits).
+    # A concrete intraday level in this zone is a better anchor than the abstract +2.0R.
+    # Backward-compat: falls through to existing logic when no level qualifies.
+    if liquidity_snapshot:
+        try:
+            from src.engine.exits.adaptive_exits import (
+                INTRADAY_ALLOWED_LEVEL_TYPES as _ALLOWED,
+            )
+        except ImportError:
+            _ALLOWED = frozenset()
+
+        _band_low_r = float(_os.environ.get("STATIC_TP2_LIQ_BAND_LOW_R", "1.4"))
+        _band_high_r = float(_os.environ.get("STATIC_TP2_LIQ_BAND_HIGH_R", "2.6"))
+        _band_low_dist = risk * _band_low_r
+        _band_high_dist = risk * _band_high_r
+
+        _liq_candidates: List[tuple] = []  # (dist_from_entry, price)
+        for level in liquidity_snapshot:
+            # Support both plain-dict (from JSON) and LiquidityLevelSnapshot dataclass
+            if isinstance(level, dict):
+                lt = level.get("level_type", "")
+                lp = level.get("price")
+            else:
+                lt = getattr(level, "level_type", "")
+                lp = getattr(level, "price", None)
+
+            if not lt or lt not in _ALLOWED or lp is None:
+                continue
+            lp = float(lp)
+
+            if direction == "long":
+                if lp <= entry_price:
+                    continue
+                dist = lp - entry_price
+            else:
+                if lp >= entry_price:
+                    continue
+                dist = entry_price - lp
+
+            if _band_low_dist <= dist <= _band_high_dist:
+                _liq_candidates.append((dist, lp))
+
+        if _liq_candidates:
+            # Return the nearest qualifying intraday level in the band
+            _liq_candidates.sort(key=lambda x: x[0])
+            return _liq_candidates[0][1]
+
+    # ── Existing structural candidate scan (unchanged) ──
     min_tp_distance = risk * 2.0
 
     candidates: List[float] = []

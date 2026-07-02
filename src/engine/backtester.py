@@ -34,7 +34,10 @@ import click
 import numpy as np
 import pandas as pd
 import polars as pl
-import vectorbt as vbt
+# vectorbt is NOT imported at module level — lazy-import inside each run path.
+# Both run_backtest() (DSL) and run_class_backtest() (class-based) lazy-import
+# vectorbt at call time so non-vectorbt code paths pay zero JIT startup cost.
+# The Numba JIT cache is pinned via determinism.py → NUMBA_CACHE_DIR (Fix A).
 
 from src.engine.analytics import compute_full_analytics
 from src.engine.config import (
@@ -197,6 +200,15 @@ def apply_eligibility_gate(
 
     gate_stats = {"total": 0, "take": 0, "reduce": 0, "skip": 0, "skip_reasons": {}}
 
+    # ABLATION TOGGLE (2026-06-30, #4 two-mode backtest reporting): when TF_CONFLUENCE_OVERLAY_DISABLED=true the
+    # institutional confluence overlay (this 7-layer A+ eligibility gate) is OFF, so the backtest measures the PURE
+    # YouTube source entry + Trading Forge risk/exit/sizing ("source_entry_only" mode). Default OFF — the overlay
+    # stays ON for all normal/production backtests. Used by scripts/confluence-overlay-ablation.py to compare modes.
+    if os.environ.get("TF_CONFLUENCE_OVERLAY_DISABLED", "").lower() == "true":
+        gate_stats["mode"] = "source_entry_only"
+        return entry_signals, exit_signals, gate_stats
+    gate_stats["mode"] = "tf_institutional_overlay"
+
     # Backward compatible: no HTF cache → passthrough
     if htf_cache is None or len(htf_cache) == 0:
         return entry_signals, exit_signals, gate_stats
@@ -294,7 +306,11 @@ def apply_eligibility_gate(
                 in_killzone=session.ny_killzone_active or session.london_killzone_active,
             )
 
-            # Structural stop (with 6pt cap)
+            # Structural stop — per-symbol ceiling (Wave 1 fix 2026-06-27)
+            # BUG was: max_stop_points=6.0 hardcoded (MES only) and symbol not
+            # passed → sweep buffer also defaulted to MES 3-tick for ALL symbols.
+            # FIX: use _get_stop_ceiling_for_symbol(symbol) so MNQ gets 62pt,
+            # MCL gets 1.0pt, MES stays 14pt — matching the DSL path at :2064.
             atr_val = float(atr_np[idx]) if not np.isnan(atr_np[idx]) else 1.0
             stop_plan = compute_structural_stop(
                 direction=direction,
@@ -302,7 +318,8 @@ def apply_eligibility_gate(
                 point_value=point_value,
                 atr=atr_val,
                 tick_size=tick_size,
-                max_stop_points=6.0,
+                symbol=symbol,
+                max_stop_points=_get_stop_ceiling_for_symbol(symbol),
             )
 
             # Structural targets
@@ -349,11 +366,16 @@ def apply_eligibility_gate(
             # Dedupe by error type per bar to avoid log explosion on systematic failures.
             # seen_errors is captured from the outer function scope (closure).
             exc_type_key = type(exc).__name__
-            if not hasattr(_apply_eligibility_gate, "_seen_errors"):  # noqa: F821
-                _apply_eligibility_gate._seen_errors = set()  # noqa: F821
+            # M1 FIX (deepscan5 2026-06-29): the function is `apply_eligibility_gate` (no
+            # leading underscore). The old `_apply_eligibility_gate` references were an
+            # undefined name → NameError inside the except block (the noqa: F821 silenced the
+            # linter, not the runtime). This error-recovery path is only reached when the gate
+            # loop itself throws, so it slept until then; now it correctly dedupes by error type.
+            if not hasattr(apply_eligibility_gate, "_seen_errors"):
+                apply_eligibility_gate._seen_errors = set()
             error_bar_key = (exc_type_key, int(idx))
-            if error_bar_key not in _apply_eligibility_gate._seen_errors:  # noqa: F821
-                _apply_eligibility_gate._seen_errors.add(error_bar_key)  # noqa: F821
+            if error_bar_key not in apply_eligibility_gate._seen_errors:
+                apply_eligibility_gate._seen_errors.add(error_bar_key)
                 print(
                     f"eligibility_gate_error bar={idx}: {exc_type_key}: {exc}",
                     file=sys.stderr,
@@ -746,7 +768,8 @@ def _apply_trade_management(
     Routing:
       exit_engine="static_styleC" (default) → _apply_static_styleC_management()
         Existing behavior: 6pt max SL, structural TP via DOL, BE+trail progression.
-        Preserved verbatim — no changes.
+        Wave 1 Track 1A: passes liquidity_snapshot (from adaptive_ctx if available)
+        to compute_single_tp for liquidity-mapped TP2.
       exit_engine="adaptive" + adaptive_ctx provided → _apply_adaptive_management()
         Adaptive exits: liquidity-mapped TP1/TP2, regime-scaling, pre-lunch partial,
         delta-div early-exit, 15:55 ET hard flatten.
@@ -767,11 +790,22 @@ def _apply_trade_management(
             atr_stop_multiplier=atr_stop_multiplier,
         )
 
-    # Default / fallback: static Style C (existing path, unchanged)
+    # Wave 1 Track 1A: extract liquidity snapshot for static TP2 mapping.
+    # adaptive_ctx may be set even when exit_engine=static_styleC (e.g. caller
+    # provides context for TP2 mapping but prefers the static exit rules).
+    # Falls through gracefully when no context available.
+    _static_liq_snapshot: Optional[list] = None
+    if adaptive_ctx is not None and hasattr(adaptive_ctx, "liquidity_snapshot"):
+        _raw_snap = adaptive_ctx.liquidity_snapshot
+        if _raw_snap:
+            _static_liq_snapshot = list(_raw_snap)
+
+    # Default / fallback: static Style C (existing path)
     return _apply_static_styleC_management(
         trades_records, high_np, low_np, close_np, atr_np,
         spec, htf_cache, df, open_np=open_np,
         atr_stop_multiplier=atr_stop_multiplier,
+        liquidity_snapshot=_static_liq_snapshot,
     )
 
 
@@ -786,16 +820,30 @@ def _apply_static_styleC_management(
     df,
     open_np: Optional[np.ndarray] = None,
     atr_stop_multiplier: float = 1.5,
+    liquidity_snapshot: Optional[list] = None,  # Wave 1 Track 1A: intraday levels for TP2 mapping
 ) -> list[dict]:
-    """Style C static trade management — PRESERVED VERBATIM from original _apply_trade_management.
+    """Style C static trade management.
 
-    Rules:
-    - Stop loss: max 6 points from entry
-    - Take profit: single structural TP via DOL hierarchy (>= 2R or skip)
-    - After 1R profit: move stop to breakeven
-    - After 2R profit: trail 1R behind price, min 2pt breathing room
-    - Exit priority per bar: TP hit > trailing stop hit > original exit
-    - Safety cap: MAX_HOLD_BARS (200) — ~16h on 5m, forces exit if nothing else triggers
+    Two code paths controlled by env flag BACKTEST_STATIC_C_PARTIALS_ENABLED:
+
+    FLAG OFF (default) — byte-identical with all historical runs:
+      - Single structural TP via DOL hierarchy (>= 2R or skip)
+      - After 1R: move stop to BE+1 tick
+      - After 2R: trail 1R behind price, min 2pt breathing room
+      - Exit priority per bar: TP hit > trailing stop hit > original exit
+
+    FLAG ON — 33/33/34 partial blending path matching paper/live economics:
+      - TP1 at +1.0R (33%), TP2 at +2.0R (33%), runner 34% Chandelier(14,2.0) trail
+      - BE+1 tick on TP1 fill; Chandelier runner trail after TP2 fill
+      - Blended exit: tp1_pct*tp1 + tp2_pct*tp2 + runner_pct*close (or stop if stopped out)
+      - 15:55 ET hard flatten ALWAYS applied
+      - Audit fields: static_c_tp1_price, static_c_tp2_price, static_c_tp1_filled, static_c_tp2_filled
+
+    Common invariants (both paths):
+      - MAX_HOLD_BARS=200 safety cap (~16h on 5m)
+      - Zero-volume trade-critical guard per bar (W27.5 P-D.5)
+      - Gap-fill stop logic (fill at bar open when gap through stop)
+      - F-3 loop convention: range(entry_idx+1, original_exit_idx) — exclusive of signal exit bar
 
     Returns list of managed trade dicts with updated exit_price, exit_idx, exit_reason.
     """
@@ -819,6 +867,26 @@ def _apply_static_styleC_management(
     )
     _symbol_static: str = getattr(spec, "symbol", None) or "UNKNOWN"
 
+    # BACKTEST_STATIC_C_PARTIALS_ENABLED (default OFF).
+    # OFF (default): byte-identical with all historical runs — existing single-TP path.
+    # ON: 33/33/34 TP1/TP2/Chandelier-runner path matching paper/live Style C economics.
+    # This flag is read ONCE per call so callers can toggle it between calls deterministically.
+    _USE_PARTIALS: bool = (
+        os.environ.get("BACKTEST_STATIC_C_PARTIALS_ENABLED", "").lower() in ("1", "true", "yes")
+    )
+    if _USE_PARTIALS:
+        from datetime import datetime as _sc_dt
+        from datetime import timezone as _sc_tz
+
+        from src.engine.exits.style_c_handler import (  # noqa: PLC0415
+            RUNNER_FRACTION_C,
+            TP1_AT_R_C,
+            TP1_FRACTION_C,
+            TP2_AT_R_C,
+            TP2_FRACTION_C,
+        )
+        from src.engine.exits.style_d_handler import _is_time_stop  # noqa: PLC0415
+
     for _, row in trades_records.iterrows():
         entry_p = float(row["Avg Entry Price"])
         original_exit_p = float(row["Avg Exit Price"])
@@ -826,8 +894,9 @@ def _apply_static_styleC_management(
         direction_str = str(row["Direction"])
         entry_idx = int(row["Entry Idx"]) if "Entry Idx" in row.index else 0
         original_exit_idx = int(row["Exit Idx"]) if "Exit Idx" in row.index else min(entry_idx + 1, len(high_np) - 1)
-        # Safety cap: no trade held longer than MAX_HOLD_BARS (~16h on 5m)
-        MAX_HOLD_BARS = 200
+        # Safety cap: no trade held longer than MAX_HOLD_BARS (~16h on 5m).
+        # M-1 fix: read from env so 1-min backtests can raise the cap beyond ~3.3h.
+        MAX_HOLD_BARS = int(os.environ.get("BACKTEST_MAX_HOLD_BARS", "200"))
         if original_exit_idx - entry_idx > MAX_HOLD_BARS:
             original_exit_idx = entry_idx + MAX_HOLD_BARS
         is_short = "Short" in direction_str
@@ -835,7 +904,12 @@ def _apply_static_styleC_management(
         atr_at_entry = float(atr_np[entry_idx]) if entry_idx < len(atr_np) and not np.isnan(atr_np[entry_idx]) else 1.0
         # L3 FIX: Use atr_stop_multiplier from config rather than hardcoded 2.0.
         # The W23-D R-multiple gate depends on this matching the strategy's actual stop multiplier.
-        risk_points = min(6.0, atr_at_entry * atr_stop_multiplier)
+        # C4 FIX (deepscan5 2026-06-29): per-symbol ceiling, not a flat 6.0pt cap.
+        # The eligibility gate uses _get_stop_ceiling_for_symbol (14 MES / 62 MNQ / 1.0 MCL);
+        # the management loop must match or MNQ trades get a noise-level 6pt stop (5m ATR ~30-80pt)
+        # → every MNQ Style C/adaptive trade was stopped on noise. MES/MCL unchanged in practice.
+        _stop_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
+        risk_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
         # Min breathing room: 2pt for MES/ES (tick_size=0.25), scaled for other instruments
         tick = spec.tick_size if spec else 0.25
         min_trail = max(2.0, tick * 8)  # 8 ticks minimum breathing room
@@ -844,6 +918,206 @@ def _apply_static_styleC_management(
             initial_stop = entry_p + risk_points
         else:
             initial_stop = entry_p - risk_points
+
+        if _USE_PARTIALS:
+            # ────────────────────────────────────────────────────────────────────
+            # Style C 33/33/34 partial blending path
+            # (BACKTEST_STATIC_C_PARTIALS_ENABLED=true)
+            #
+            # Matches paper/live economics:
+            #   TP1 = +1.0R (33%) → move stop to BE+1 tick
+            #   TP2 = +2.0R (33%) → switch runner to Chandelier(14, 2.0) trail
+            #   Runner (34%) trails until Chandelier stop fires or signal exit
+            #
+            # Blending (mirror _apply_adaptive_management lines 1333-1354):
+            #   - stop/trail/time exit → single price (no blend)
+            #   - both TPs filled → tp1_pct*tp1 + tp2_pct*tp2 + runner_pct*close
+            #   - only TP1 filled  → tp1_pct*tp1 + (tp2_pct+runner_pct)*exit
+            #   - no TPs filled    → original exit price
+            # ────────────────────────────────────────────────────────────────────
+            sign = -1 if is_short else 1
+            tp1_price_p = entry_p + sign * risk_points * TP1_AT_R_C
+            tp2_price_p = entry_p + sign * risk_points * TP2_AT_R_C
+
+            tp1_filled_p = False
+            tp2_filled_p = False
+            trail_stop_p = initial_stop
+            exit_price_p = original_exit_p
+            exit_idx_p = original_exit_idx
+            exit_reason_p = "signal"
+            gap_count_p = 0
+
+            for bar in range(entry_idx + 1, original_exit_idx):
+                if bar >= len(high_np):
+                    break
+
+                bar_high = float(high_np[bar])
+                bar_low = float(low_np[bar])
+                bar_open = (
+                    float(open_np[bar])
+                    if open_np is not None and bar < len(open_np)
+                    else bar_low
+                )
+
+                # ── Zero-volume trade-critical guard (W27.5 P-D.5) ────────────
+                if _vol_np_static is not None and bar < len(_vol_np_static):
+                    _active_tp_p = (
+                        tp1_price_p if not tp1_filled_p
+                        else (tp2_price_p if not tp2_filled_p
+                              else (float("inf") if not is_short else float("-inf")))
+                    )
+                    _sc_candidate = (
+                        (not is_short and (bar_low <= trail_stop_p or bar_high >= _active_tp_p))
+                        or (is_short and (bar_high >= trail_stop_p or bar_low <= _active_tp_p))
+                    )
+                    if _sc_candidate:
+                        try:
+                            _bar_ts_str_p = str(df[ts_col][bar]) if has_ts else f"idx={bar}"
+                            _skip_p = check_zero_volume_trade_critical(
+                                bar_volume=float(_vol_np_static[bar]),
+                                bar_timestamp=_bar_ts_str_p,
+                                symbol=_symbol_static,
+                                attempted_action="stop_or_tp_trigger",
+                            )
+                            if _skip_p:
+                                continue
+                        except ZeroVolumeOnTradeCriticalBar:
+                            raise
+
+                # ── 15:55 ET hard flatten (CLAUDE.md §4 invariant) ────────────
+                if has_ts and bar < len(df):
+                    try:
+                        _raw_ts_p = df[ts_col][bar]
+                        _dt_p = (
+                            _raw_ts_p
+                            if isinstance(_raw_ts_p, _sc_dt)
+                            else _sc_dt.fromisoformat(str(_raw_ts_p))
+                        )
+                        _dt_utc_p = (
+                            _dt_p.astimezone(_sc_tz.utc)
+                            if _dt_p.tzinfo is not None
+                            else _dt_p.replace(tzinfo=_sc_tz.utc)
+                        )
+                        if _is_time_stop(_dst_correct_et_hour(_dt_utc_p)):
+                            exit_price_p = (
+                                float(close_np[bar]) if bar < len(close_np) else bar_open
+                            )
+                            exit_reason_p = "time_stop"
+                            exit_idx_p = bar
+                            break
+                    except Exception:
+                        pass  # timestamp unavailable — skip time-stop check this bar
+
+                # ── Stop loss / trailing stop (gap-fill logic preserved) ───────
+                if not is_short and bar_low <= trail_stop_p:
+                    if bar_open < trail_stop_p:
+                        exit_price_p = bar_open
+                        gap_count_p += 1
+                    else:
+                        exit_price_p = trail_stop_p
+                    exit_reason_p = (
+                        "trailing_stop" if trail_stop_p > initial_stop else "stop_loss"
+                    )
+                    exit_idx_p = bar
+                    break
+                elif is_short and bar_high >= trail_stop_p:
+                    if bar_open > trail_stop_p:
+                        exit_price_p = bar_open
+                        gap_count_p += 1
+                    else:
+                        exit_price_p = trail_stop_p
+                    exit_reason_p = (
+                        "trailing_stop" if trail_stop_p < initial_stop else "stop_loss"
+                    )
+                    exit_idx_p = bar
+                    break
+
+                # ── TP1 fill at +1.0R (intrabar high/low detection) ───────────
+                if not tp1_filled_p:
+                    tp1_hit = (
+                        (not is_short and bar_high >= tp1_price_p)
+                        or (is_short and bar_low <= tp1_price_p)
+                    )
+                    if tp1_hit:
+                        tp1_filled_p = True
+                        # INVARIANT: BE+1 tick on TP1 fill (CLAUDE.md §4)
+                        if not is_short:
+                            trail_stop_p = max(trail_stop_p, entry_p + tick)
+                        else:
+                            trail_stop_p = min(trail_stop_p, entry_p - tick)
+
+                # ── TP2 fill at +2.0R (intrabar high/low detection) ───────────
+                if tp1_filled_p and not tp2_filled_p:
+                    tp2_hit = (
+                        (not is_short and bar_high >= tp2_price_p)
+                        or (is_short and bar_low <= tp2_price_p)
+                    )
+                    if tp2_hit:
+                        tp2_filled_p = True
+
+                # ── Chandelier(14, 2.0) runner trail after TP2 ───────────────
+                # developing_session_poc unavailable per-bar in backtest (no intraday VP).
+                # Falls back to Chandelier ATR trail — same fallback as adaptive path.
+                if tp2_filled_p:
+                    atr_at_bar = (
+                        float(atr_np[bar])
+                        if bar < len(atr_np) and not np.isnan(atr_np[bar])
+                        else atr_at_entry
+                    )
+                    if not is_short:
+                        new_trail = bar_high - (2.0 * atr_at_bar)
+                        trail_stop_p = max(trail_stop_p, new_trail)
+                    else:
+                        new_trail = bar_low + (2.0 * atr_at_bar)
+                        trail_stop_p = min(trail_stop_p, new_trail)
+
+            # ── Blended exit price (mirrors adaptive path lines 1333-1354) ────
+            if exit_reason_p in ("stop_loss", "trailing_stop", "time_stop"):
+                final_exit_p = exit_price_p
+            elif tp1_filled_p and tp2_filled_p:
+                runner_exit_p = (
+                    float(close_np[exit_idx_p]) if exit_idx_p < len(close_np) else tp2_price_p
+                )
+                final_exit_p = (
+                    TP1_FRACTION_C * tp1_price_p
+                    + TP2_FRACTION_C * tp2_price_p
+                    + RUNNER_FRACTION_C * runner_exit_p
+                )
+                exit_reason_p = "take_profit"
+            elif tp1_filled_p:
+                runner_exit_p = (
+                    float(close_np[exit_idx_p]) if exit_idx_p < len(close_np) else exit_price_p
+                )
+                final_exit_p = (
+                    TP1_FRACTION_C * tp1_price_p
+                    + (TP2_FRACTION_C + RUNNER_FRACTION_C) * runner_exit_p
+                )
+                exit_reason_p = "take_profit"
+            else:
+                final_exit_p = exit_price_p
+
+            managed_p = {
+                "entry_idx": entry_idx,
+                "entry_price": entry_p,
+                "original_exit_idx": original_exit_idx,
+                "original_exit_price": original_exit_p,
+                "size": size,
+                "direction": direction_str,
+                "risk_points": round(risk_points, 2),
+                "exit_price": final_exit_p,
+                "exit_idx": exit_idx_p,
+                "exit_reason": exit_reason_p,
+                "trail_stop_final": round(trail_stop_p, 4),
+                "gap_through_stop_count": gap_count_p,
+                # Audit fields (partials path only)
+                "static_c_partials_enabled": True,
+                "static_c_tp1_price": round(tp1_price_p, 4),
+                "static_c_tp2_price": round(tp2_price_p, 4),
+                "static_c_tp1_filled": tp1_filled_p,
+                "static_c_tp2_filled": tp2_filled_p,
+            }
+            managed_trades.append(managed_p)
+            continue  # skip flag-OFF path below
 
         # Compute structural TP via DOL hierarchy
         # Get HTF data for weekly high/low as BSL/SSL
@@ -861,6 +1135,8 @@ def _apply_static_styleC_management(
             nearest_old_high=htf.prev_day_high if htf and not is_short else None,
             nearest_old_low=htf.prev_day_low if htf and is_short else None,
             atr=atr_at_entry,
+            # Wave 1 Track 1A: intraday levels for TP2 mapping (None = no change)
+            liquidity_snapshot=liquidity_snapshot,
         )
 
         # Build managed trade record
@@ -1126,15 +1402,20 @@ def _apply_adaptive_management(
         entry_idx = int(row["Entry Idx"]) if "Entry Idx" in row.index else 0
         original_exit_idx = int(row["Exit Idx"]) if "Exit Idx" in row.index else min(entry_idx + 1, len(high_np) - 1)
 
-        # Safety cap (same as static_styleC)
-        MAX_HOLD_BARS = 200
+        # Safety cap (same as static_styleC). M-1 fix: env-overridable.
+        MAX_HOLD_BARS = int(os.environ.get("BACKTEST_MAX_HOLD_BARS", "200"))
         if original_exit_idx - entry_idx > MAX_HOLD_BARS:
             original_exit_idx = entry_idx + MAX_HOLD_BARS
         is_short = "Short" in direction_str
         direction = "short" if is_short else "long"
 
         atr_at_entry = float(atr_np[entry_idx]) if entry_idx < len(atr_np) and not np.isnan(atr_np[entry_idx]) else 1.0
-        risk_points = min(6.0, atr_at_entry * atr_stop_multiplier)
+        # C4 FIX (deepscan5 2026-06-29): per-symbol ceiling, not a flat 6.0pt cap.
+        # The eligibility gate uses _get_stop_ceiling_for_symbol (14 MES / 62 MNQ / 1.0 MCL);
+        # the management loop must match or MNQ trades get a noise-level 6pt stop (5m ATR ~30-80pt)
+        # → every MNQ Style C/adaptive trade was stopped on noise. MES/MCL unchanged in practice.
+        _stop_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
+        risk_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
         tick = spec.tick_size if spec else 0.25
 
         # Initial stop price
@@ -1404,6 +1685,7 @@ FREQ_MAP = {
     "1h": "1h",
     "4hour": "4h",
     "4h": "4h",
+    "4hr": "4h",   # H6 fix: "4hr" alias missing — falls through to "1D" → ~6× wrong annualization
     "daily": "1D",
     "1D": "1D",
     # DSL Timeframe enum aliases (M2 fix — strategy_schema.py uses these)
@@ -1493,27 +1775,62 @@ def _compute_daily_pnls(
         # index has timezone info. Fall back to UTC calendar date when tz info is absent
         # (e.g. daily data, synthetic test data) to preserve backward compatibility.
         from datetime import timedelta as _td
+        import pandas as _pd
+
         daily = {}
-        for i, v in enumerate(equity):
-            ts = index[i]
+        # PERF (2026-06-28): vectorized CME trading-day grouping for a pandas
+        # DatetimeIndex. The per-element loop below boxed every timestamp
+        # (pandas Timestamp._box_func), costing ~1.8s per 149k-bar call and
+        # dominating walk-forward CPU (N_windows x n_trials calls). The
+        # vectorized branch produces BYTE-IDENTICAL day strings + last-value-
+        # per-day grouping (proven on real MES data) and falls back to the
+        # original loop verbatim for object / non-DatetimeIndex inputs.
+        _vec_ok = False
+        if isinstance(index, _pd.DatetimeIndex) and len(index) == len(equity):
             try:
-                # Attempt CME trading-day calculation using ET timezone.
-                if hasattr(ts, "tz_convert") and ts.tzinfo is not None:
-                    et_ts = ts.tz_convert("America/New_York")
-                    if et_ts.hour >= 17:
-                        trading_day = (et_ts + _td(days=1)).date()
-                    else:
-                        trading_day = et_ts.date()
-                    day_str = str(trading_day)
-                elif hasattr(ts, "date"):
-                    # No timezone info — fall back to UTC calendar date (daily data path).
-                    day_str = str(ts.date())
+                if index.tz is not None:
+                    _et = index.tz_convert("America/New_York")
+                    # hour >= 17 ET belongs to the NEXT CME trading day (+1 day,
+                    # absolute 24h — identical to et_ts + timedelta(days=1)).
+                    _shifted = _et + _pd.to_timedelta(
+                        np.asarray(_et.hour >= 17, dtype="int64"), unit="D"
+                    )
+                    _day_arr = _shifted.strftime("%Y-%m-%d")
                 else:
-                    day_str = str(ts)
+                    # No tz info — calendar date (matches str(ts.date())).
+                    _day_arr = index.strftime("%Y-%m-%d")
+                _ser = _pd.Series(
+                    np.asarray(equity, dtype="float64"),
+                    index=_pd.Index(np.asarray(_day_arr)),
+                )
+                # last value wins per day (matches dict-overwrite semantics)
+                _last = _ser.groupby(level=0, sort=False).last()
+                daily = {str(_k): float(_v) for _k, _v in _last.items()}
+                _vec_ok = True
             except Exception:
-                # Defensive fallback: any conversion failure reverts to UTC string slice.
-                day_str = str(ts)[:10] if len(str(ts)) >= 10 else str(ts)
-            daily[day_str] = float(v)
+                daily = {}
+                _vec_ok = False
+        if not _vec_ok:
+            for i, v in enumerate(equity):
+                ts = index[i]
+                try:
+                    # Attempt CME trading-day calculation using ET timezone.
+                    if hasattr(ts, "tz_convert") and ts.tzinfo is not None:
+                        et_ts = ts.tz_convert("America/New_York")
+                        if et_ts.hour >= 17:
+                            trading_day = (et_ts + _td(days=1)).date()
+                        else:
+                            trading_day = et_ts.date()
+                        day_str = str(trading_day)
+                    elif hasattr(ts, "date"):
+                        # No timezone info — fall back to UTC calendar date (daily data path).
+                        day_str = str(ts.date())
+                    else:
+                        day_str = str(ts)
+                except Exception:
+                    # Defensive fallback: any conversion failure reverts to UTC string slice.
+                    day_str = str(ts)[:10] if len(str(ts)) >= 10 else str(ts)
+                daily[day_str] = float(v)
 
     sorted_days = sorted(daily.items())
     if len(sorted_days) < 1:
@@ -1541,6 +1858,30 @@ def _compute_monthly_returns(equity: np.ndarray, index) -> list[dict]:
     """
     if len(equity) < 2:
         return []
+
+    import pandas as _pd
+
+    # PERF (2026-06-28): vectorized (year, month) grouping for a pandas
+    # DatetimeIndex — avoids per-timestamp boxing (~2.4s per 149k-bar call).
+    # first/last value per month, sorted by (year, month) — byte-identical to
+    # the per-element loop below (retained as fallback for non-DatetimeIndex).
+    if isinstance(index, _pd.DatetimeIndex) and len(index) == len(equity):
+        try:
+            _eq = np.asarray(equity, dtype="float64")
+            _mi = _pd.MultiIndex.from_arrays(
+                [np.asarray(index.year), np.asarray(index.month)]
+            )
+            _grp = _pd.Series(_eq, index=_mi).groupby(level=[0, 1], sort=True)
+            _first = _grp.first()
+            _last = _grp.last()
+            results = []
+            for _key in _first.index:
+                _year, _month = int(_key[0]), int(_key[1])
+                _pnl = float(_last.loc[_key]) - float(_first.loc[_key])
+                results.append({"year": _year, "month": _month, "pnl": round(_pnl, 2)})
+            return results
+        except Exception:
+            pass  # fall through to the per-element loop
 
     # Group equity by (year, month), take first and last value per month
     monthly: dict[tuple[int, int], list[float]] = {}
@@ -1583,12 +1924,35 @@ def _aggregate_equity_daily(equity: np.ndarray, index, ts_et_index=None) -> list
             day_str = ts_str[:10] if len(ts_str) >= 10 else ts_str
             daily[day_str] = round(float(v), 2)
     else:
-        for i, v in enumerate(equity):
-            if hasattr(index[i], "date"):
-                day_str = str(index[i].date())
-            else:
-                day_str = str(index[i])
-            daily[day_str] = round(float(v), 2)  # last value wins
+        import pandas as _pd
+
+        # PERF (2026-06-28): vectorized calendar-day grouping for a pandas
+        # DatetimeIndex — avoids per-timestamp boxing (~1.8s per 149k-bar call).
+        # strftime on a tz-aware index yields the LOCAL date, identical to
+        # str(index[i].date()). last value wins; first-appearance (chronological)
+        # order preserved via groupby(sort=False) to match dict-insertion order.
+        _vec_ok = False
+        if isinstance(index, _pd.DatetimeIndex) and len(index) == len(equity):
+            try:
+                _day_arr = index.strftime("%Y-%m-%d")
+                _ser = _pd.Series(
+                    np.asarray(equity, dtype="float64"),
+                    index=_pd.Index(np.asarray(_day_arr)),
+                )
+                _last = _ser.groupby(level=0, sort=False).last()
+                for _k, _v in _last.items():
+                    daily[str(_k)] = round(float(_v), 2)
+                _vec_ok = True
+            except Exception:
+                daily = {}
+                _vec_ok = False
+        if not _vec_ok:
+            for i, v in enumerate(equity):
+                if hasattr(index[i], "date"):
+                    day_str = str(index[i].date())
+                else:
+                    day_str = str(index[i])
+                daily[day_str] = round(float(v), 2)  # last value wins
 
     return [{"time": k, "value": v} for k, v in daily.items()]
 
@@ -1735,6 +2099,7 @@ def _compute_long_short_split(trades_list: list[dict]) -> dict:
 BARS_PER_DAY = {
     "1min": 1380, "5min": 172, "15min": 92, "30min": 46,
     "1hour": 23, "1h": 23, "4hour": 6, "4h": 6,
+    "4hr": 6,     # H6 fix: "4hr" alias — mirrors "4h" / "4hour"
     "daily": 1, "1D": 1,
 }
 
@@ -1847,6 +2212,9 @@ def _apply_max_trades_per_day(
     reached, all subsequent entries that day are masked out. Earlier entries
     within the day are kept (first-come, first-served).
 
+    M-3 fix: vectorized via pandas groupby cumsum (same class as 06-28 vectorizations).
+    Byte-identical output to the original O(n) loop.
+
     Args:
         long_entries: Boolean array of long entry signals (post-roll)
         short_entries: Boolean array of short entry signals (post-roll)
@@ -1859,88 +2227,201 @@ def _apply_max_trades_per_day(
     if max_trades <= 0:
         return long_entries, short_entries
 
-    filtered_long = long_entries.copy()
-    filtered_short = short_entries.copy()
     n = len(long_entries)
+    if n == 0:
+        return long_entries.copy(), short_entries.copy()
 
-    # Extract date for each bar
-    daily_counts: dict[str, int] = {}
-    suppressed = 0
+    try:
+        # ── Vectorized path (M-3) ─────────────────────────────────────────────
+        # Extract "YYYY-MM-DD" day key from each bar's timestamp — same str[:10] as
+        # the original loop, so identical bucketing.
+        day_strings = np.array([str(t)[:10] for t in timestamps], dtype=object)
 
-    for i in range(n):
-        has_long = bool(filtered_long[i])
-        has_short = bool(filtered_short[i])
-        if not has_long and not has_short:
-            continue
+        # Per-bar combined entry count (0, 1, or 2 — handles same-bar L+S).
+        combined = long_entries.astype(np.int32) + short_entries.astype(np.int32)
 
-        # Get calendar date string from timestamp
-        ts = timestamps[i]
-        try:
-            day_key = str(ts)[:10]  # "YYYY-MM-DD" from any datetime-like
-        except Exception:
-            continue
-
-        count = daily_counts.get(day_key, 0)
-
-        # F-9 FIX: Both long and short branches were writing daily_counts independently,
-        # causing a double-write when both signals fire on the same bar (same-bar L+S).
-        # Pattern before: long writes count+1, then short sees the old local `count`
-        # and also writes count+1 — net result: two fills counted as one.
-        # Fix: accumulate in local var and write ONCE after both branches.
-        new_count = count
-
-        if has_long:
-            if new_count < max_trades:
-                new_count += 1
-            else:
-                filtered_long[i] = False
-                suppressed += 1
-
-        if has_short:
-            if new_count < max_trades:
-                new_count += 1
-            else:
-                filtered_short[i] = False
-                suppressed += 1
-
-        # Single write after both branches so same-bar L+S is counted correctly.
-        daily_counts[day_key] = new_count
-
-    if suppressed > 0:
-        print(
-            f"max_trades_per_day={max_trades}: suppressed {suppressed} entries",
-            file=sys.stderr,
+        # Per-day cumulative sum including this bar.
+        # DataFrame.groupby(sort=False) preserves original row order within each group,
+        # so cumsum() matches the sequential left-to-right counting of the old loop.
+        day_cumsum = (
+            pd.DataFrame({"day": day_strings, "combined": combined.astype(np.int64)})
+            .groupby("day", sort=False)["combined"]
+            .cumsum()
+            .to_numpy(dtype=np.int64)
         )
 
-    return filtered_long, filtered_short
+        # Count BEFORE this bar = (cumulative at this bar) − (entries AT this bar).
+        count_before = day_cumsum - combined
+
+        # Long fills if slot (count_before + 1) ≤ max_trades.
+        long_fills = long_entries & (count_before < max_trades)
+        # After long, the slot pointer advances by 1 when long filled.
+        count_after_long = count_before + long_fills.astype(np.int32)
+        # Short fills using the post-long slot pointer.
+        short_fills = short_entries & (count_after_long < max_trades)
+
+        suppressed = int((long_entries & ~long_fills).sum() + (short_entries & ~short_fills).sum())
+        if suppressed > 0:
+            print(
+                f"max_trades_per_day={max_trades}: suppressed {suppressed} entries",
+                file=sys.stderr,
+            )
+        return long_fills, short_fills
+
+    except Exception as _mtd_exc:
+        # ── Fallback: original O(n) loop ─────────────────────────────────────
+        print(
+            f"[_apply_max_trades_per_day] vectorized path failed ({_mtd_exc!r}); "
+            f"falling back to O(n) loop",
+            file=sys.stderr,
+        )
+        filtered_long = long_entries.copy()
+        filtered_short = short_entries.copy()
+
+        daily_counts: dict[str, int] = {}
+        suppressed = 0
+
+        for i in range(n):
+            has_long = bool(filtered_long[i])
+            has_short = bool(filtered_short[i])
+            if not has_long and not has_short:
+                continue
+
+            ts = timestamps[i]
+            try:
+                day_key = str(ts)[:10]
+            except Exception:
+                continue
+
+            count = daily_counts.get(day_key, 0)
+            new_count = count
+
+            if has_long:
+                if new_count < max_trades:
+                    new_count += 1
+                else:
+                    filtered_long[i] = False
+                    suppressed += 1
+
+            if has_short:
+                if new_count < max_trades:
+                    new_count += 1
+                else:
+                    filtered_short[i] = False
+                    suppressed += 1
+
+            daily_counts[day_key] = new_count
+
+        if suppressed > 0:
+            print(
+                f"max_trades_per_day={max_trades}: suppressed {suppressed} entries",
+                file=sys.stderr,
+            )
+
+        return filtered_long, filtered_short
 
 
 # ─── Wave 21 E.3 — Stop ceiling per symbol ───────────────────────────────────
 # Per CLAUDE.md §4: structural stops have a CEILING per instrument.
 # If stop_distance > ceiling → SKIP THE TRADE (never clamp).
-# MCL ceiling is 0.25 points (25 ticks × $0.01/tick = $0.25/pt).
-_STOP_CEILING_TABLE: dict[str, float] = {
-    "MES": 14.0,
-    "ES":  14.0,   # micro alias
-    "MNQ": 40.0,
-    "NQ":  40.0,   # micro alias
-    "MCL": 0.25,
-    "CL":  0.25,   # micro alias
+#
+# Wave 1 Track 1A 2026-06-27 recalibration:
+#   MNQ / NQ: 40 → 62  (MNQ ATR in normal/high-vol can reach 50-60pt; 40 over-skipped)
+#   MCL / CL: 0.25 → 1.00  (1pt = 100 ticks; old 0.25 = 25 ticks was far too tight)
+#   MES / ES: 14.0 (unchanged)
+#
+# IMPORTANT: reads the SAME env vars as gate_block_analyzer.STRUCTURAL_STOP_CEILING_PTS
+# so the two tables can NEVER diverge.  Any change here must also update the defaults
+# in gate_block_analyzer.py (env var keys: STOP_CEILING_PTS_MES / _MNQ / _MCL).
+_STOP_CEILING_DEFAULTS: dict[str, tuple[str, float]] = {
+    # symbol → (env_var_key, default_value)
+    "MES": ("STOP_CEILING_PTS_MES", 14.0),
+    "ES":  ("STOP_CEILING_PTS_MES", 14.0),   # micro alias — shares MES env var
+    "MNQ": ("STOP_CEILING_PTS_MNQ", 62.0),
+    "NQ":  ("STOP_CEILING_PTS_MNQ", 62.0),   # mini alias — shares MNQ env var
+    "MCL": ("STOP_CEILING_PTS_MCL", 1.00),
+    "CL":  ("STOP_CEILING_PTS_MCL", 1.00),   # mini alias — shares MCL env var
 }
-_STOP_CEILING_DEFAULT: float = 14.0  # fallback to MES ceiling
+_STOP_CEILING_DEFAULT: float = 14.0  # fallback for unknown symbols (MES default)
+
+
+def _symbol_of_spec(spec) -> str:
+    """Reverse-lookup a ContractSpec's symbol (ContractSpec has NO .symbol field — the symbol is the
+    CONTRACT_SPECS dict KEY). Identity match is exact because CONTRACT_SPECS[sym] returns the registry
+    object itself. Fixes the deepscan5 C4 regression where spec.symbol raised AttributeError and broke
+    every class-based Style C/adaptive backtest. Falls back to MES (per-symbol ceilings unchanged)."""
+    if spec is not None:
+        for _sym, _sp in CONTRACT_SPECS.items():
+            if _sp is spec:
+                return _sym
+    return "MES"
 
 
 def _get_stop_ceiling_for_symbol(symbol: str) -> float:
     """Return the maximum allowed stop distance (in points) for a given symbol.
 
-    Per CLAUDE.md §4:
-        MES / ES  → 14 points
-        MNQ / NQ  → 40 points
-        MCL / CL  → 0.25 points (25 ticks)
+    Reads env vars (STOP_CEILING_PTS_MES / _MNQ / _MCL) so this function and
+    gate_block_analyzer.STRUCTURAL_STOP_CEILING_PTS share a single source of truth
+    and can never diverge.
 
-    Unknown symbols fall back to the MES default (14 points).
+    Wave 1 Track 1A 2026-06-27 defaults:
+        MES / ES  → 14.0 points (STOP_CEILING_PTS_MES, unchanged)
+        MNQ / NQ  → 62.0 points (STOP_CEILING_PTS_MNQ, was 40)
+        MCL / CL  →  1.0 points (STOP_CEILING_PTS_MCL, was 0.25)
+
+    Unknown symbols fall back to the MES default (14.0 points).
     """
-    return _STOP_CEILING_TABLE.get(symbol.upper(), _STOP_CEILING_DEFAULT)
+    sym = symbol.upper()
+    if sym not in _STOP_CEILING_DEFAULTS:
+        return _STOP_CEILING_DEFAULT
+    env_key, default = _STOP_CEILING_DEFAULTS[sym]
+    raw = os.environ.get(env_key)
+    if raw is not None:
+        try:
+            return float(raw)
+        except ValueError:
+            return default
+    return default
+
+
+# ─── Wave 1 Track 1A — Stop floor per symbol ─────────────────────────────────
+# A floor widens a stop that is too tight (prevents trivial fills from noise).
+# Floor is applied BEFORE the ceiling check.  Precedence:
+#   compute structural/ATR stop → apply floor (widen up) → apply ceiling (skip if over).
+# Only MES has a default floor (6.0 pt).  MNQ/MCL floors are opt-in via env.
+# A floor widens — it never skips (that is the ceiling's job).
+_STOP_FLOOR_ENV_MAP: dict[str, tuple[str, Optional[float]]] = {
+    "MES": ("STOP_FLOOR_PTS_MES", 6.0),
+    "ES":  ("STOP_FLOOR_PTS_MES", 6.0),   # micro alias
+    "MNQ": ("STOP_FLOOR_PTS_MNQ", None),   # no default — opt-in via env
+    "NQ":  ("STOP_FLOOR_PTS_MNQ", None),
+    "MCL": ("STOP_FLOOR_PTS_MCL", None),   # no default — opt-in via env
+    "CL":  ("STOP_FLOOR_PTS_MCL", None),
+}
+
+
+def _get_stop_floor_for_symbol(symbol: str) -> Optional[float]:
+    """Return the minimum stop distance (floor) in points for a given symbol.
+
+    Returns None when no floor applies (unknown symbol or opt-in env unset for MNQ/MCL).
+
+    Wave 1 Track 1A 2026-06-27 defaults:
+        MES / ES  → 6.0 points (STOP_FLOOR_PTS_MES)
+        MNQ / NQ  → None unless STOP_FLOOR_PTS_MNQ is set
+        MCL / CL  → None unless STOP_FLOOR_PTS_MCL is set
+    """
+    sym = symbol.upper()
+    if sym not in _STOP_FLOOR_ENV_MAP:
+        return None
+    env_key, default = _STOP_FLOOR_ENV_MAP[sym]
+    raw = os.environ.get(env_key)
+    if raw is not None:
+        try:
+            v = float(raw)
+            return v if v > 0.0 else None  # 0 or negative = no floor
+        except ValueError:
+            return default
+    return default
 
 
 def _apply_dsl_stop_loss_and_time_stop(
@@ -1956,6 +2437,7 @@ def _apply_dsl_stop_loss_and_time_stop(
     symbol: str = "MES",
     close_np: Optional[np.ndarray] = None,
     ts_et_timestamps: Optional[list] = None,
+    vix_np: Optional[np.ndarray] = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, dict]:
     """Enforce ATR stop ceiling and 15:55 ET time-stop for DSL strategies.
 
@@ -1984,6 +2466,7 @@ def _apply_dsl_stop_loss_and_time_stop(
             time_stop_exits: int — number of 15:55 ET time-stop exit signals set
     """
     ceiling = _get_stop_ceiling_for_symbol(symbol)
+    floor = _get_stop_floor_for_symbol(symbol)  # Wave 1 Track 1A: None → no floor for this symbol
 
     entry_long_out = entry_long.copy()
     exit_long_out = exit_long.copy()
@@ -2005,10 +2488,34 @@ def _apply_dsl_stop_loss_and_time_stop(
     short_entry_price: float = 0.0
     short_stop_price: float = 0.0
 
+    # B5 fix: import VIX multiplier here (only when vix_np was passed).
+    # The import is inside the function to avoid a circular-dependency risk at module
+    # load time.  It is a no-op when VIX_TIERED_ATR_ENABLED=false (default).
+    _vix_mult_fn = None
+    if vix_np is not None:
+        try:
+            from src.engine.margin_expansion import (  # noqa: E402
+                apply_vix_atr_multiplier as _vix_mult_fn,
+            )
+        except Exception:
+            _vix_mult_fn = None  # fail-open: no VIX scaling if import fails
+
     for i in range(n):
         ts_str = str(timestamps[i]) if timestamps is not None and i < len(timestamps) else ""
         atr = float(atr_np[i]) if not np.isnan(atr_np[i]) else 0.0
-        stop_dist = stop_multiplier * atr
+        # B5 fix: apply VIX-tiered multiplier per-bar (no look-ahead).
+        # When vix_np is None or the per-bar VIX is NaN, _bar_stop_mult = stop_multiplier.
+        _bar_stop_mult = stop_multiplier
+        if _vix_mult_fn is not None and vix_np is not None and i < len(vix_np):
+            _bar_vix = float(vix_np[i]) if not np.isnan(vix_np[i]) else None
+            _bar_stop_mult = _vix_mult_fn(stop_multiplier, _bar_vix)
+        stop_dist = _bar_stop_mult * atr
+
+        # ── Wave 1 Track 1A: stop floor — widen stop_dist if too tight ──────
+        # Precedence: ATR stop → floor (widen) → ceiling (skip).
+        # `floor` is computed once above the loop; None → no floor for this symbol.
+        if floor is not None and stop_dist < floor:
+            stop_dist = floor
 
         # ── E.5: 15:55 ET time-stop ────────────────────────────────
         # H1 FIX: Use ts_et column for DST-safe time comparison when available.
@@ -2082,7 +2589,13 @@ def _apply_dsl_stop_loss_and_time_stop(
                 # C3 FIX: use close_np[i] (bar close) as the entry reference price,
                 # NOT high_np[i]. The previous use of high_np inflated the stop price
                 # for longs, making breaches look wider than they were.
-                _long_ep = float(close_np[i]) if not np.isnan(close_np[i]) else 0.0
+                # close_np is Optional[...]=None — guard it: fall back to high_np
+                # (pre-C3 reference) when a caller omits the close array.
+                _long_ep = (
+                    float(close_np[i])
+                    if close_np is not None and not np.isnan(close_np[i])
+                    else (float(high_np[i]) if not np.isnan(high_np[i]) else 0.0)
+                )
                 _long_sp = _long_ep - stop_dist
                 # C-6 FIX: gap-down bars can produce a phantom entry that immediately
                 # stops out on the same bar. If the bar's low already violates the
@@ -2126,7 +2639,12 @@ def _apply_dsl_stop_loss_and_time_stop(
                 })
             else:
                 # C3 FIX: use close_np[i] for short entry reference (mirror of long fix).
-                _short_ep = float(close_np[i]) if not np.isnan(close_np[i]) else 0.0
+                # Guard the Optional close_np: fall back to low_np (pre-C3 mirror) when omitted.
+                _short_ep = (
+                    float(close_np[i])
+                    if close_np is not None and not np.isnan(close_np[i])
+                    else (float(low_np[i]) if not np.isnan(low_np[i]) else 0.0)
+                )
                 _short_sp = _short_ep + stop_dist
                 # C-6 FIX: mirror of long phantom-entry guard.
                 # Gap-up bars can fire a short entry that immediately stops out.
@@ -2821,29 +3339,56 @@ def run_backtest(
     # Apply expansion to the max_contracts cap BEFORE sizing so simulated
     # P&L reflects actual tradeable position limits in high-vol regimes.
     # Backward compat: when VIX column is absent, skip silently + emit audit.
+    # M2 fix 2026-06-28: replaced whole-window peak (look-ahead) with a 30-bar
+    # rolling trailing max applied per-bar.  Pre-sizing uses last-bar rolling max;
+    # a per-bar post-cap is applied after compute_position_sizes().  Mirrors the
+    # per-bar VIX ATR path in _apply_static_styleC_management (vix_np array).
     _margin_expansion_audit_dsl: dict = {}
+    # Initialized here so post-sizing per-bar cap can reference even when VIX absent.
+    _vix_rolling_max_np: Optional[np.ndarray] = None
+    _base_mc_for_vix_perbar: int = max_contracts if max_contracts is not None else 100
     if "vix" in df.columns:
         from src.engine.margin_expansion import (
             apply_vix_margin_expansion,
             get_vix_expansion_audit,
         )
-        # Use the peak VIX in the backtest window for a conservative cap.
-        # Rationale: CME margin requirements are regime-level policy changes
-        # (announced days ahead), not bar-by-bar — peak represents the worst
-        # sustained regime the backtest faced.
         _vix_np = df["vix"].to_numpy()
-        _vix_np_clean = _vix_np[~np.isnan(_vix_np)]
-        _peak_vix = float(np.max(_vix_np_clean)) if len(_vix_np_clean) > 0 else 0.0
-        _base_mc = max_contracts if max_contracts is not None else 100  # sentinel if no firm cap
-        _expanded_mc = apply_vix_margin_expansion(_base_mc, _peak_vix)
-        _margin_expansion_audit_dsl = get_vix_expansion_audit(_base_mc, _expanded_mc, _peak_vix)
+        # M2: rolling 30-bar trailing max — no look-ahead (each bar uses only past bars).
+        # CME margin regime changes are announced days ahead; 30-bar window
+        # approximates "current announced regime" without using future VIX spikes.
+        _VIX_MARGIN_ROLLING_WINDOW: int = int(os.environ.get("VIX_MARGIN_ROLLING_WINDOW", "30"))
+        # fill_nan(0.0): Polars NaN ≠ null; NaN propagates through rolling_max.
+        # Treat missing VIX as 0.0 (no expansion) so NaN bars never starve the window.
+        # min_samples is the Polars ≥1.21 spelling of min_periods.
+        _vix_rolling_max_np = (
+            pl.Series("_vix_rm_", _vix_np, dtype=pl.Float64)
+            .fill_nan(0.0)
+            .rolling_max(window_size=_VIX_MARGIN_ROLLING_WINDOW, min_samples=1)
+            .to_numpy()
+        )
+        # Scalar for pre-sizing max_contracts override and audit:
+        # last bar's rolling max (end-of-window view; no look-ahead since sizing
+        # runs after all data is available, and the last-bar value only uses the
+        # final 30 bars — not future data relative to earlier entries).
+        _last_rolling_vix = (
+            float(_vix_rolling_max_np[-1])
+            if len(_vix_rolling_max_np) > 0 and not np.isnan(_vix_rolling_max_np[-1])
+            else 0.0
+        )
+        _base_mc = max_contracts if max_contracts is not None else 100
+        _base_mc_for_vix_perbar = _base_mc  # preserve original for vectorized per-bar cap
+        _expanded_mc = apply_vix_margin_expansion(_base_mc, _last_rolling_vix)
+        _margin_expansion_audit_dsl = get_vix_expansion_audit(_base_mc, _expanded_mc, _last_rolling_vix)
+        # M2 marker: auditors and downstream consumers can identify the rolling-max basis.
+        _margin_expansion_audit_dsl["vix_cap_basis"] = "rolling_max_30bar"
         if _expanded_mc != _base_mc:
             # Only override if we have an actual firm cap to constrain.
             # If max_contracts was None (no firm cap), we don't impose one.
             if max_contracts is not None:
                 max_contracts = _expanded_mc
                 print(
-                    f"[margin-expansion] VIX={_peak_vix:.1f} → max_contracts {_base_mc} → {_expanded_mc}",
+                    f"[margin-expansion] rolling-30bar[last] VIX={_last_rolling_vix:.1f} "
+                    f"→ max_contracts {_base_mc} → {_expanded_mc}",
                     file=sys.stderr,
                 )
     else:
@@ -2909,6 +3454,30 @@ def run_backtest(
     )
     # Defense-in-depth: replace any inf/nan sizes with 1 contract
     sizes = np.where(np.isfinite(sizes), sizes, 1.0)
+
+    # M2 fix 2026-06-28: per-bar rolling-max VIX cap — applied AFTER compute_position_sizes
+    # so that each bar's size is bounded by the VIX margin regime AT THAT BAR (no look-ahead).
+    # Uses the rolling 30-bar max series computed in the VIX margin expansion block above.
+    # Vectorized numpy approach mirrors the thresholds in margin_expansion.py.
+    if _vix_rolling_max_np is not None:
+        _m2_thr30 = float(os.environ.get("MARGIN_VIX_THRESHOLD_30", "30.0"))
+        _m2_thr50 = float(os.environ.get("MARGIN_VIX_THRESHOLD_50", "50.0"))
+        _m2_mult30 = float(os.environ.get("MARGIN_VIX_MULTIPLIER_30", "0.5"))
+        _m2_mult50 = float(os.environ.get("MARGIN_VIX_MULTIPLIER_50", "0.25"))
+        _base_mc_f = float(_base_mc_for_vix_perbar)
+        _vix_perbar_cap = np.where(
+            _vix_rolling_max_np > _m2_thr50,
+            np.maximum(1.0, np.floor(_base_mc_f * _m2_mult50)),
+            np.where(
+                _vix_rolling_max_np > _m2_thr30,
+                np.maximum(1.0, np.floor(_base_mc_f * _m2_mult30)),
+                _base_mc_f,
+            ),
+        )
+        # NaN VIX bars: no expansion (treat as low-VIX → full cap)
+        _vix_perbar_cap = np.where(np.isnan(_vix_perbar_cap), _base_mc_f, _vix_perbar_cap)
+        sizes = np.minimum(sizes, _vix_perbar_cap)
+
     over_risk_count = int(np.sum(over_risk))
     if over_risk_count > 0:
         print(
@@ -3301,7 +3870,16 @@ def run_backtest(
         # We use ATR-scaled estimates for now; exact P&L enforcement is in E.4.
         # Wave 24: for multi-symbol runs the caller should concatenate P&L arrays before
         # passing here. For the single-symbol case, use a zero array (degenerate).
+        # H7 fix: when _cs_bar_pnls is all-zeros, apply_cross_symbol_dll_to_entries never
+        # fires because cumulative session P&L stays 0 → DLL threshold never crossed.
+        # Emit a visible audit row so non-enforcement is NOT silent.
         _cs_bar_pnls = np.zeros(len(entries_pd), dtype=float)
+        print(json.dumps({
+            "event": "backtest.cross_symbol_dll_degenerate_skip",
+            "reason": "single_symbol_zero_pnl_proxy",
+            "symbol": getattr(config, "symbol", "unknown"),
+            "note": "cross-symbol DLL cannot enforce on single-symbol backtest; paper-side uses real multi-symbol P&L",
+        }), file=sys.stderr)
         _cs_el = entries_pd.to_numpy().astype(bool)
         _cs_es = short_entries_pd.to_numpy().astype(bool)
         _cs_xl = exits_pd.to_numpy().astype(bool)
@@ -3359,6 +3937,18 @@ def run_backtest(
 
         _guard_stop_mult = float(getattr(config.stop_loss, "multiplier", 1.5)) if hasattr(config, "stop_loss") and config.stop_loss else 1.5
 
+        # ── Wave 1 Track 1A: VIX-tiered ATR multiplier (default OFF) ──────────
+        # B5 fix: pass the raw per-bar VIX array into _apply_dsl_stop_loss_and_time_stop
+        # so each bar's stop multiplier uses the VIX value from THAT bar, not the
+        # peak-of-window value which introduces look-ahead bias (January bars seeing
+        # October's VIX spike).
+        # The margin-expansion peak-of-window path in margin_expansion.py is LEFT
+        # UNCHANGED — it has a documented CME-regime rationale and uses a different
+        # code path not touched here.
+        _vix_np_for_stop: Optional[np.ndarray] = None
+        if "vix" in df.columns:
+            _vix_np_for_stop = df["vix"].to_numpy()
+
         # E.3 + E.5
         (
             _guard_entry_long,
@@ -3379,6 +3969,7 @@ def run_backtest(
             symbol=config.symbol,
             close_np=_guard_close_np,
             ts_et_timestamps=_guard_ts_et,
+            vix_np=_vix_np_for_stop,
         )
         _dsl_guards_meta["stop_ceiling_skips"] = len(_dsl_sl_meta.get("skipped_trades", []))
         _dsl_guards_meta["time_stop_exits"] = _dsl_sl_meta.get("time_stop_exits", 0)
@@ -3440,6 +4031,11 @@ def run_backtest(
         )
 
     # ─── Run vectorbt Portfolio (long + short) ────────────────
+    # Lazy import: vectorbt is NOT at module level — JIT cache pinned in
+    # determinism.py → NUMBA_CACHE_DIR (Fix A) so first call compiles once;
+    # every subsequent call (warm cache) imports in ~2.4s.
+    import vectorbt as vbt  # noqa: PLC0415 — intentional lazy import for perf
+
     # vectorbt handles SIGNAL TIMING only — no slippage/fees.
     # We compute all P&L ourselves with correct futures math:
     #   dollar_pnl = price_diff × contracts × point_value - slippage - commission
@@ -3507,6 +4103,12 @@ def run_backtest(
     losers = np.array([])
     avg_winner = 0.0
     avg_loser = 0.0
+    # C2 FIX (deepscan5 2026-06-29): hoist exit-slippage accumulator defaults out of the
+    # `if trades_records is not None:` block. They are referenced unconditionally in the
+    # result dict ("exit_slippage_session_applied"), so a zero-trade backtest raised
+    # UnboundLocalError. Wave 27.5 Pass C.1 added the refs without zero-trade defaults.
+    _h5_entry_slips: list[float] = []
+    _h5_exit_slips: list[float] = []
 
     # C4 FIX: Apply _apply_trade_management to vectorbt trades so that stop/TP
     # price overrides are used for P&L computation rather than vectorbt's bar-close
@@ -3664,7 +4266,8 @@ def run_backtest(
             atr_col_name = "atr_14"
             atr_at_entry = float(df[atr_col_name][entry_idx]) if atr_col_name in df.columns and entry_idx < len(df) else 0.0
             sl_mult = float(config.stop_loss.multiplier) if hasattr(config, "stop_loss") and config.stop_loss else 1.5  # L3 fix: use config multiplier, fall back to 1.5
-            risk_points = min(atr_at_entry * sl_mult, 6.0)  # 6pt max cap
+            # C4 FIX (deepscan5 2026-06-29): per-symbol ceiling, not flat 6.0pt (see mgmt loops above).
+            risk_points = min(atr_at_entry * sl_mult, _get_stop_ceiling_for_symbol(_symbol_of_spec(spec)))
             risk_dollars = risk_points * spec.point_value
             if risk_dollars > 0 and size > 0:
                 reward_dollars = net_pnl / size
@@ -5236,6 +5839,9 @@ def run_class_backtest(
     # vectorbt handles SIGNAL TIMING only — no slippage/fees.
     # We compute all P&L ourselves with correct futures math.
     # Same-bar stop+signal exit convention applies here too — see run_backtest comment.
+    # Lazy import: JIT cache pinned via determinism.py → NUMBA_CACHE_DIR (Fix A);
+    # warm-cache import is ~2.4s, not 30 min. This is the AUDITED engine path.
+    import vectorbt as vbt  # noqa: PLC0415 — intentional lazy import for perf
     try:
         pf = vbt.Portfolio.from_signals(
             close=close_pd,
@@ -5285,7 +5891,12 @@ def run_class_backtest(
     atr_np = df["atr_14"].to_numpy() if "atr_14" in df.columns else np.full(len(df), 1.0)
     managed_trades = []
     # L3: pass strategy's actual stop multiplier so risk_points is accurate
-    _cls_stop_mult = float(strategy.config.stop_loss.multiplier) if hasattr(strategy.config, "stop_loss") and strategy.config.stop_loss else 1.5
+    # Guard: strategies without a config attribute (raw BaseStrategy subclasses) fall back to 1.5×.
+    _cls_stop_mult = (
+        float(strategy.config.stop_loss.multiplier)
+        if hasattr(strategy, "config") and hasattr(strategy.config, "stop_loss") and strategy.config.stop_loss
+        else 1.5
+    )
     if trades_records is not None:
         managed_trades = _apply_trade_management(
             trades_records, high_np, low_np, close_np, atr_np,
@@ -5345,7 +5956,11 @@ def run_class_backtest(
                 exit_p = float(row["Avg Exit Price"])
                 exit_idx = int(row["Exit Idx"]) if "Exit Idx" in row.index else min(entry_idx + 1, len(slippage_clean) - 1)
                 exit_reason = "signal"
-                risk_pts = min(float(atr_np[entry_idx]) * 2.0, 6.0) if entry_idx < len(atr_np) else 6.0
+                # C4 + M2 FIX (deepscan5 2026-06-29): per-symbol ceiling (was flat 6.0pt) AND
+                # config stop multiplier _cls_stop_mult (was hardcoded 2.0, overstating risk 33%
+                # for the Slumdawg 1.5× default — understated R:R on the class path).
+                _cls_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
+                risk_pts = min(float(atr_np[entry_idx]) * _cls_stop_mult, _cls_ceiling) if entry_idx < len(atr_np) else _cls_ceiling
 
             # H2 FIX (class path): Floor size to integer contracts — brokers charge
             # per integer contract only. FLOOR is conservative (can't trade 0.3 contracts).
@@ -5914,8 +6529,10 @@ def _load_strategy_class(class_path: str) -> BaseStrategy:
     type=click.Choice(["static_styleC", "adaptive"]),
     help=(
         "W25.17 A/B flag: which exit engine to use. "
-        "'static_styleC' (default) = existing Style C 33/33/34 TP1/TP2/runner path — "
-        "backward-compat; existing CI runs unchanged. "
+        "'static_styleC' (default) = single structural-TP path via DOL hierarchy — "
+        "byte-identical with all historical CI runs. "
+        "Set BACKTEST_STATIC_C_PARTIALS_ENABLED=true to enable 33/33/34 TP1/TP2/runner "
+        "Chandelier blending that matches paper/live Style C economics. "
         "'adaptive' = adaptive exit engine (P7.A1+A2 TS path); "
         "Python harness stubs until framework-overlay wiring lands in P7.A5."
     ),
@@ -6032,6 +6649,17 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                 exit_engine=exit_engine,
                 adaptive_ctx=_adaptive_ctx,
             )
+            # F-1 (point-in-time integrity telemetry): propagate tp2 liquidity flags
+            # from the adaptive_exit_context config to the result dict so downstream
+            # analytics can identify backtests that used R-multiple TP2 fallback vs
+            # live liquidity-mapped TP2 (paper-only). These flags are set by
+            # backtest-service.ts when it correctly withholds point-in-time levels.
+            _raw_ae_ctx = config.get("adaptive_exit_context") if isinstance(config, dict) else None
+            if isinstance(_raw_ae_ctx, dict) and _raw_ae_ctx.get("tp2_liquidity_unavailable"):
+                result["tp2_liquidity_source"] = _raw_ae_ctx.get(
+                    "tp2_liquidity_source", "backtest_no_historical_levels"
+                )
+                result["tp2_liquidity_unavailable"] = True
     else:
         # DSL expression-based strategy path (original)
         try:

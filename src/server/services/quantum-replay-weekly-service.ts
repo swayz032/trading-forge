@@ -12,7 +12,9 @@
  *   - quantum_replay.weekly_analysis_skipped_no_data  (zero replay rows — info)
  *   - quantum_replay.weekly_analysis_loop_halted_skip (kill switch off — info)
  *
- * Kill switch: system_parameters.auto_patch_loop_enabled = "false" halts the job.
+ * Kill switch (3-MODE — lib/learning-loop-mode.ts): this AUTONOMOUS cron runs
+ * ONLY at AUTOPILOT (system_parameters.auto_patch_loop_enabled = 2). OBSERVE
+ * (= 1, advisory-only) and OFF (= 0 / absent / non-numeric) halt the job.
  * Timeout: QUANTUM_REPLAY_WEEKLY_TIMEOUT_MS env var (default 600000 = 10 min).
  */
 
@@ -24,6 +26,7 @@ import { logger } from "../lib/logger.js";
 import { insertAuditRow, insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { notifyWarning, notifyInfo } from "../services/notification-service.js";
+import { parseLearningLoopMode, MODE_AUTOPILOT } from "../lib/learning-loop-mode.js";
 
 // ─── Public types ─────────────────────────────────────────────────────────────
 
@@ -73,8 +76,18 @@ async function _readKillSwitch(): Promise<boolean> {
       .where(eq(systemParameters.paramName, KILL_SWITCH_PARAM))
       .limit(1);
 
-    if (rows.length === 0) return true; // missing = enabled (fail-open)
-    return String(rows[0].currentValue).trim() !== "false";
+    // 3-MODE contract (lib/learning-loop-mode.ts), fail-CLOSED — must match
+    // pattern-aggregator-service.ts so ONE flip of auto_patch_loop_enabled gates
+    // BOTH autonomous loops. This is an AUTONOMOUS loop, so it runs ONLY at
+    // AUTOPILOT (mode 2). OBSERVE (mode 1) runs nightly ADVISORY intelligence
+    // only and MUST NOT wake this cron — hence `>= MODE_AUTOPILOT`, not `>= 1`.
+    // NOTE: we derive via the shared parseLearningLoopMode() rather than
+    // readLearningLoopMode() on purpose — this reader THROWS on DB error so the
+    // caller (_readKillSwitchFailClosed) can write the quantum_replay
+    // .kill_switch_read_failed critical audit. readLearningLoopMode swallows DB
+    // errors (returns OFF) and would lose that observability on a critical path.
+    if (rows.length === 0) return false; // missing = DISABLED (fail-closed)
+    return parseLearningLoopMode(rows[0].currentValue) >= MODE_AUTOPILOT;
   } catch (err) {
     // Fail-CLOSED: if we cannot read the kill switch, treat it as DISENGAGED
     // (loop halted). Institutional rule: if you can't read the kill switch,
@@ -287,7 +300,7 @@ export async function runQuantumReplayWeeklyAnalysis(): Promise<WeeklyAnalysisRe
   if (!killSwitchEnabled) {
     logger.info(
       { job: "quantum-replay-weekly-analysis", correlationId },
-      "quantum-replay-weekly: kill switch disengaged (auto_patch_loop_enabled=false) — skipping",
+      "quantum-replay-weekly: kill switch disengaged (auto_patch_loop_enabled < 2 / not AUTOPILOT) — skipping",
     );
     await insertAuditRow({
       action: "quantum_replay.weekly_analysis_loop_halted_skip",

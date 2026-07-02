@@ -207,6 +207,14 @@ export const backtests = pgTable(
     // { spa_lower_p, spa_consistent_p, spa_upper_p, passed, threshold, n_obs, n_bootstrap, block_length }
     // Null for backtests run before Pass E. Migration: 0155_wrc_spa_promotion_gates.sql.
     spaResult: jsonb("spa_result"),
+    // Wave 3 Track 3B — BIF gate persistence (migration 0177_backtests_bif.sql)
+    // `bif`   — Backtest Inflation Factor from Python WF result. Lower = better IS→OOS transfer.
+    //           Gate threshold: BIF_WARN_THRESHOLD (default 2.0) / BIF_BLOCK_THRESHOLD (default 4.0).
+    // `k_eff` — Effective parameter count; companion metric surfaced in audit payload.
+    // Both stamped by backtest-service.ts at UPDATE completion; null for pre-Wave-3 backtests
+    // (lifecycle gate treats null as legacy grandfather pass, never blocks on missing data).
+    bif: numeric("bif"),
+    kEff: numeric("k_eff"),
     errorMessage: text("error_message"),
     executionTimeMs: integer("execution_time_ms"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -372,6 +380,9 @@ export const systemJournal = pgTable(
     tier: text("tier"), // TIER_1 | TIER_2 | TIER_3 | REJECTED
     analystNotes: text("analyst_notes"), // Ollama Analyst self-critique
     parentJournalId: uuid("parent_journal_id"), // Links refinements to original
+    // Migration 0176: Real prompt-version stamp for A/B test attribution.
+    // NULL = pre-stamp legacy entry; comparator EXCLUDES nulls (never coin-flips).
+    generationPromptVersionId: text("generation_prompt_version_id"),
     status: text("status").notNull().default("tested"), // tested | promoted | archived | failed | scouted | flagged
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
@@ -787,6 +798,16 @@ export const paperPositions = pgTable(
     fillRatio: numeric("fill_ratio").default("1.0"),         // Gap 8: TCA — intended vs filled
     trailHwm: numeric("trail_hwm"),                          // H2: trail stop high-water mark (persisted so restarts don't lose it)
     barsHeld: integer("bars_held").notNull().default(0),     // H2: bars held counter (persisted so restarts don't lose it)
+    // BL-1 fix (migration 0179): initial stop price set at entry for intrabar stop-breach detection.
+    // Compared to adversePrice (bar low for longs, bar high for shorts) each bar before the Python handler.
+    // Null when no ATR is available at open time (market-open race) — stop breach skipped for those bars.
+    initialStopPrice: numeric("initial_stop_price"),
+    // H-1 fix (migration 0179): running high/low since entry for chandelier/structure trail.
+    // Updated every bar in updatePositionPrices from the bar's high/low.
+    // Chandelier formula: highSinceEntryPrice - 2*ATR (long) | lowSinceEntryPrice + 2*ATR (short).
+    // Null until first bar update — falls back to entryPrice.
+    highSinceEntryPrice: numeric("high_since_entry_price"),
+    lowSinceEntryPrice: numeric("low_since_entry_price"),
     fillProbability: numeric("fill_probability"),            // Phase 1.1: fill probability used at entry (null for market orders that bypass the model)
     mae: numeric("mae"),                                     // Maximum Adverse Excursion ($) — per-bar watermark, accumulated by updatePositionPrices (migration 0034)
     mfe: numeric("mfe"),                                     // Maximum Favorable Excursion ($) — per-bar watermark, accumulated by updatePositionPrices (migration 0034)
@@ -810,6 +831,10 @@ export const paperPositions = pgTable(
     // Contains ExitPlan + runtime_state for per-bar runner trail state.
     // Migration: 0145_paper_positions_exit_plan.sql (idx 147).
     exitPlan: jsonb("exit_plan").$type<ExitPlanWithRuntimeState>(),
+    // BL-9 (migration 0180): persist the entry-time correlation_id so closePosition() can
+    // recover the signal→trade trace when called externally (force-close, time-stop).
+    // NULL for positions opened before migration 0180 is applied.
+    correlationId: text("correlation_id"),
   },
   (table) => [
     index("paper_positions_session_idx").on(table.sessionId),
@@ -854,6 +879,10 @@ export const paperTrades = pgTable(
     skipSignal: text("skip_signal"),                  // Most recent skipDecisions.decision for the ET trading day (TRADE | REDUCE | SKIP)
     fillProbability: numeric("fill_probability"),     // Fill probability used at entry (copied from paperPositions)
     rollSpreadCost: numeric("roll_spread_cost"),      // Estimated calendar spread cost when position held across a CME roll date (null = pre-migration or no roll crossed)
+    // BL-9 (migration 0180): end-to-end signal→trade traceability.
+    // Populated from the originating signal's correlationId (carried via paperPositions.correlationId).
+    // NULL for trades closed before migration 0180 is applied.
+    correlationId: text("correlation_id"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => [
@@ -1219,6 +1248,21 @@ export const criticCandidates = pgTable("critic_candidates", {
       rl?: string[];
     }>(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    // R8 Wave 4 Track 4C: pre-commit governance metadata (5-field declaration).
+    // Missing fields → precommit_status: "incomplete" → candidate skipped at replay.
+    // Sample adequacy: sample_tag "INSUFFICIENT_SAMPLE" when total_trades < 63.
+    governanceMeta: jsonb("governance_meta").$type<{
+      precommit_status?: "complete" | "incomplete" | "advisory";
+      missing_fields?: string[];
+      sample_tag?: "INSUFFICIENT_SAMPLE";
+      lookahead_violation?: boolean;
+      trial_n_total?: number;
+      economic_rationale?: string | null;
+      declared_param_space_size?: number | null;
+      min_sample_size?: number | null;
+      target_regime?: string | null;
+      declared_failure_mode?: string | null;
+    }>().notNull().default({}),
 },
 (table) => [
     index("critic_cand_run_idx").on(table.runId),
@@ -1226,6 +1270,17 @@ export const criticCandidates = pgTable("critic_candidates", {
     index("critic_cand_status_idx").on(table.replayStatus),
     index("critic_cand_selected_idx").on(table.selected),
 ]);
+
+// ─── R2 Wave 4 Track 4C: Research Trial Counter ───────────────────────────────
+// Tracks cumulative LLM proposal emissions per strategy across all evolution
+// cycles. N_total is injected into DSR/PBO calculations so multi-night loops
+// don't inflate significance by treating each night as an independent experiment.
+
+export const researchTrialCounter = pgTable("research_trial_counter", {
+    strategyId: uuid("strategy_id").primaryKey().references(() => strategies.id, { onDelete: "cascade" }),
+    nTotal: integer("n_total").notNull().default(0),
+    lastUpdatedAt: timestamp("last_updated_at").defaultNow().notNull(),
+});
 
 // ─── DeepAR Forecasts (Regime Prediction) ────────────────────────────
 
@@ -3219,6 +3274,10 @@ export const agentJobs = pgTable(
     correlationId: text("correlation_id"),
     createdAt:     timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt:     timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    // Fix 3b (2026-06-29): records actual pickup/execution start time so the
+    // stale-pending-sweeper can use COALESCE(started_at, created_at) as the
+    // threshold — preventing false failures on jobs with long queue delays.
+    startedAt:     timestamp("started_at", { withTimezone: true }),
   },
   (table) => [
     index("idx_agent_jobs_action").on(table.action),
@@ -3230,6 +3289,35 @@ export const agentJobs = pgTable(
 
 export type AgentJob = typeof agentJobs.$inferSelect;
 export type NewAgentJob = typeof agentJobs.$inferInsert;
+
+// ─── workflow_backups ──────────────────────────────────────────────────────────
+// Deep-scan #4 backend-DR (2026-06-29): durable sink for the n8n `3A-workflow-backup`
+// workflow (migration 0184). Railway n8n is ephemeral sqlite with no volume — a wipe
+// loses all 32 workflows (Wave-9 incident). 3A now POSTs the FULL node graph to
+// POST /api/admin/workflow-backup → this table. content_hash dedups identical
+// consecutive backups so the table holds a history of DISTINCT versions.
+export const workflowBackups = pgTable(
+  "workflow_backups",
+  {
+    id:           uuid("id").primaryKey().defaultRandom(),
+    workflowId:   text("workflow_id").notNull(),
+    workflowName: text("workflow_name"),
+    active:       boolean("active"),
+    nodeCount:    integer("node_count"),
+    fullJson:     jsonb("full_json").notNull(),
+    contentHash:  text("content_hash").notNull(),
+    source:       text("source").notNull().default("n8n_3a_backup"),
+    createdAt:    timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("idx_workflow_backups_workflow_id").on(table.workflowId),
+    index("idx_workflow_backups_created_at_desc").on(table.createdAt.desc()),
+    index("idx_workflow_backups_wf_hash").on(table.workflowId, table.contentHash),
+  ],
+);
+
+export type WorkflowBackup = typeof workflowBackups.$inferSelect;
+export type NewWorkflowBackup = typeof workflowBackups.$inferInsert;
 
 // ─── live_order_pine_dedup ─────────────────────────────────────────────────────
 // Dedup table for Pine bar-close alerts arriving at live-order.ts.
@@ -3266,3 +3354,56 @@ export const liveOrderPineDedup = pgTable(
 
 export type LiveOrderPineDedup = typeof liveOrderPineDedup.$inferSelect;
 export type NewLiveOrderPineDedup = typeof liveOrderPineDedup.$inferInsert;
+
+// ─── Carter Issues ────────────────────────────────────────────────────────────
+// Persistent store for the proactive Carter issue watcher (Wave 4, 2026-06-28).
+// The in-memory map in carter-issues-store.ts is the primary runtime source;
+// this table is the persistence layer hydrated at boot and updated fire-and-forget.
+// Issues are keyed by issue_key (stable per-issue-class identifier).
+// Backed by migration 0181.
+export const carterIssues = pgTable(
+  "carter_issues",
+  {
+    id:          bigserial("id", { mode: "number" }).primaryKey(),
+    issueKey:    text("issue_key").notNull().unique(),
+    severity:    text("severity").notNull(), // 'critical' | 'warning' | 'info'
+    title:       text("title").notNull(),
+    detail:      text("detail"),
+    sourceEvent: text("source_event"),
+    firstSeen:   timestamp("first_seen", { withTimezone: true }).notNull().defaultNow(),
+    lastSeen:    timestamp("last_seen", { withTimezone: true }).notNull().defaultNow(),
+    resolved:    boolean("resolved").notNull().default(false),
+    resolvedAt:  timestamp("resolved_at", { withTimezone: true }),
+  },
+  (t) => ({
+    openIdx: index("carter_issues_open_idx").on(t.resolved, t.severity),
+  }),
+);
+
+export type CarterIssueRow = typeof carterIssues.$inferSelect;
+export type NewCarterIssueRow = typeof carterIssues.$inferInsert;
+
+// ─── carter_memory — persistent continuity store for the Carter voice agent ────
+// Carter remembers across calls: decisions / preferences / facts / open_threads
+// (voice-written via the `remember` tool) plus best-effort call_summary rows
+// (webhook-written on post_call_transcription). The `recall` tool reads it back,
+// newest-first, optionally filtered by topic. Backed by migration 0185.
+export const carterMemory = pgTable(
+  "carter_memory",
+  {
+    id:            bigserial("id", { mode: "number" }).primaryKey(),
+    createdAt:     timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    kind:          text("kind").notNull(), // 'decision'|'preference'|'fact'|'open_thread'|'call_summary'
+    topic:         text("topic"),
+    content:       text("content").notNull(),
+    correlationId: text("correlation_id"),
+    source:        text("source").notNull().default("voice"), // 'voice' | 'webhook'
+  },
+  (t) => ({
+    createdAtIdx: index("carter_memory_created_at_idx").on(t.createdAt),
+    kindIdx:      index("carter_memory_kind_idx").on(t.kind),
+  }),
+);
+
+export type CarterMemoryRow = typeof carterMemory.$inferSelect;
+export type NewCarterMemoryRow = typeof carterMemory.$inferInsert;

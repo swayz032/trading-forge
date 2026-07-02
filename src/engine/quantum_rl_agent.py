@@ -83,12 +83,24 @@ RL_RUNS_GOVERNANCE = {
 # ─── RL Reward Hyperparameters ────────────────────────────────────
 # α: ci_high penalty coefficient — default 0.5, override via QUANTUM_RL_REWARD_ALPHA
 # β: drawdown penalty coefficient — default 0.3, override via QUANTUM_RL_REWARD_BETA
-# Reward formula: realized_R − α × max(0, ci_high − 0.40) − β × drawdown_penalty
-# CFA Institute Nov 2025 institutional consensus: ci_high at 0.40 threshold per
-# Wave 27.5 Pass A B14_RUIN_CI_HIGH_THRESHOLD.
+# Reward formula: realized_R − α × max(0, ci_high − _RL_CI_HIGH_THRESHOLD) − β × drawdown_penalty
+#
+# _RL_CI_HIGH_THRESHOLD reads B14_RUIN_CI_HIGH_THRESHOLD from env (default 0.20,
+# tightened from 0.40 on 2026-06-22) so it always tracks the production gate in
+# b14-ci-gate.ts::getB14CiHighThreshold(). Single source of truth.
+#
+# NOTE on frozen-policy SHA-256 contract (Wave 29 Pass B):
+#   The frozen-policy hash covers {entry_quality, position_size, stop_loss,
+#   take_profit, exit_plan_config}. Reward hyperparameters are NOT in that slice,
+#   so changing this constant does NOT invalidate any existing frozen_policy_hash.
+#   However, existing trained policies in quantum_rl_runs were shaped by the prior
+#   0.40 anchor. Those policies are NOT automatically retrained — the operator must
+#   trigger new training runs (off-RTH cron) to benefit from the tighter anchor.
 _RL_REWARD_ALPHA_DEFAULT = 0.5
 _RL_REWARD_BETA_DEFAULT = 0.3
-_RL_CI_HIGH_THRESHOLD = 0.40  # Must match B14_RUIN_CI_HIGH_THRESHOLD env default
+_RL_CI_HIGH_THRESHOLD: float = float(
+    os.environ.get("B14_RUIN_CI_HIGH_THRESHOLD", "0.20")
+)  # Tightened 0.40 → 0.20 on 2026-06-22; tracks production gate default
 _RL_DRAWDOWN_WINDOW = 20       # Rolling window for drawdown penalty computation
 
 # ─── Kill-switch dormancy threshold ───────────────────────────────
@@ -619,9 +631,10 @@ class TradingEnv:
       Short signals against HTF trend are architecturally impossible in this env.
 
     Reward formula (CFA Institute Nov 2025 institutional consensus):
-      R = realized_R − α × max(0, ci_high − 0.40) − β × drawdown_penalty
+      R = realized_R − α × max(0, ci_high − _RL_CI_HIGH_THRESHOLD) − β × drawdown_penalty
       α = QUANTUM_RL_REWARD_ALPHA env (default 0.5)
       β = QUANTUM_RL_REWARD_BETA env (default 0.3)
+      _RL_CI_HIGH_THRESHOLD = B14_RUIN_CI_HIGH_THRESHOLD env (default 0.20, tightened 2026-06-22)
 
     Backward-compat: reset() and step() signatures preserved from original toy env.
     Legacy callers passing raw features arrays still work (production state loading
@@ -761,7 +774,7 @@ class TradingEnv:
     ) -> tuple[float, float, float]:
         """Compute shaped reward with ci_high and drawdown penalties.
 
-        Formula: R = realized_R − α × max(0, ci_high − 0.40) − β × drawdown_penalty
+        Formula: R = realized_R − α × max(0, ci_high − _RL_CI_HIGH_THRESHOLD) − β × drawdown_penalty
 
         Args:
             realized_r: raw realized reward (P&L change)
@@ -791,7 +804,7 @@ class TradingEnv:
         LONG/FLAT only. No short entries. Position is 0 (flat) or 1 (long).
 
         Reward is shaped per formula:
-          R = realized_R − α × max(0, ci_high − 0.40) − β × drawdown_penalty
+          R = realized_R − α × max(0, ci_high − _RL_CI_HIGH_THRESHOLD) − β × drawdown_penalty
 
         Signature preserved for backward-compat with training loop callers.
         """
@@ -1372,11 +1385,18 @@ def _build_vqc_policy_ibm(n_qubits: int, n_layers: int, opt_in_cloud: bool) -> t
     If any gate is closed, falls through to local PennyLane default.qubit.
     On any IBM API error: logs WARN, falls back to local PennyLane simulator.
     Emits audit 'quantum_rl.cloud_path_engaged' on successful IBM use.
+    The caller (train_regime_conditioned_policies) emits
+    'quantum_rl.cloud_path_fallback' (warning) when the IBM gates were open
+    but the cloud path fell back to local sim — so "tried IBM, fell back"
+    is queryable via audit_log alongside the cloud_path_engaged success case.
 
     Env vars read (documented for env inventory):
       QUANTUM_CLOUD_ENABLED   — if "false", cloud is disabled (gate 2)
       IBM_QUANTUM_TOKEN       — IBM credential (gate 3)
-      IBM_QUANTUM_CHANNEL     — should be "ibm_cloud" (NOT "ibm_quantum")
+      IBM_QUANTUM_CHANNEL     — channel passed to QiskitRuntimeService;
+                                defaults "ibm_cloud" (post-2023 IBM Cloud CRN
+                                accounts MUST use "ibm_cloud", NOT the legacy
+                                "ibm_quantum" or "ibm_quantum_platform" values)
 
     Args:
         n_qubits:      number of qubits for the VQC circuit
@@ -1725,6 +1745,36 @@ def train_regime_conditioned_policies(
                     "governance_labels": RL_RUNS_GOVERNANCE,
                 },
             )
+
+        # LOW-FIX: fallback audit — IBM gates were open (token present +
+        # opt_in_cloud + QUANTUM_CLOUD_ENABLED) but the cloud path resolved to
+        # local sim.  Emit 'quantum_rl.cloud_path_fallback' so "tried IBM, fell
+        # back to local" is queryable in audit_log alongside cloud_path_engaged.
+        # _emit_audit_row is already fail-soft; this block adds a belt-and-
+        # suspenders try/except to guarantee the training loop is never crashed
+        # by a fallback audit failure.
+        try:
+            _ibm_attempted = (
+                opt_in_cloud
+                and os.environ.get("QUANTUM_CLOUD_ENABLED", "").lower() != "false"
+                and bool(os.environ.get("IBM_QUANTUM_TOKEN", ""))
+            )
+            if _ibm_attempted and backend_label in ("default.qubit", "unavailable", "local"):
+                _emit_audit_row(
+                    action="quantum_rl.cloud_path_fallback",
+                    entity_type="strategy",
+                    entity_id=str(strategy_id),
+                    status="warning",
+                    result={
+                        "backend_label": backend_label,
+                        "strategy_id": strategy_id,
+                        "regime": regime,
+                        "fallback_reason": "ibm_path_failed_or_budget_exhausted",
+                        "governance_labels": RL_RUNS_GOVERNANCE,
+                    },
+                )
+        except Exception:
+            pass  # never crash the training loop on a fallback audit failure
 
         # Train policy via REINFORCE
         params = rng.standard_normal(n_params) * 0.1

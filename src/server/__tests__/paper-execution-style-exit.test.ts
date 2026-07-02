@@ -87,12 +87,15 @@ function makePosition(overrides: Record<string, unknown> = {}) {
   };
 }
 
-const BASE_BAR_CTX = {
+const BASE_BAR_CTX: StyleExitBarContext = {
   currentTimeEt: "14:30",
   atr14: { MES: 7.0 },
   highSinceEntry: { MES: 4514.0 },
   lowSinceEntry: { MES: 4498.0 },
   last2barSwingLow: { MES: 4505.0 },
+  // C2 fix: include currentBarHigh/Low in base context — intrabar TP detection
+  currentBarHigh: { MES: 4514.0 },
+  currentBarLow:  { MES: 4498.0 },
 };
 
 function makeExitResult(decision: string, new_stop?: number) {
@@ -332,6 +335,110 @@ describe("PAPER_EXIT_EVENTS constant names", () => {
       expect(val).toMatch(/^paper:exit:/);
       expect(val).toBe(events[key as keyof typeof events]);
     }
+  });
+});
+
+// ─── C2 fix: Intrabar TP touch detection (StyleExitBarContext) ────────────────
+// Tests that the "Wave 1 Track 1B" static_styleC TP2 pre-check logic uses
+// currentBarHigh/Low for intrabar detection instead of close-based currentPrice.
+// This mirrors backtester.py:1248/1260 limit-fill semantics.
+
+describe("C2 fix: StyleExitBarContext.currentBarHigh/Low — intrabar TP touch detection", () => {
+
+  // Replicate the Wave 1 Track 1B TP2 pre-check logic extracted from callExitHandler.
+  // This is pure arithmetic logic — tested without spawning the service.
+  function isTP2Reached(params: {
+    side: string;
+    currentPriceNum: number;
+    barHighForTp2: number | null;
+    barLowForTp2: number | null;
+    storedTp2Price: number;
+  }): boolean {
+    const { side, currentPriceNum, barHighForTp2, barLowForTp2, storedTp2Price } = params;
+    if (side === "long") {
+      return (barHighForTp2 !== null ? barHighForTp2 : currentPriceNum) >= storedTp2Price;
+    }
+    return (barLowForTp2 !== null ? barLowForTp2 : currentPriceNum) <= storedTp2Price;
+  }
+
+  it("C2-ts-1: long TP2 fires when barHigh >= storedTp2Price even if close < target", () => {
+    // Bar close is below TP2 — old close-based logic would NOT fire.
+    // Bar high touches TP2 — intrabar logic MUST fire.
+    const reached = isTP2Reached({
+      side: "long",
+      currentPriceNum: 5027.0,   // close: 1.35R — below TP2 (5028 = 2×14pt)
+      barHighForTp2: 5028.0,     // bar high: exactly 2R — touch!
+      barLowForTp2: 5010.0,
+      storedTp2Price: 5028.0,
+    });
+    expect(reached).toBe(true);
+  });
+
+  it("C2-ts-2: short TP2 fires when barLow <= storedTp2Price even if close > target", () => {
+    // Bar close is above TP2 — old close-based logic would NOT fire.
+    // Bar low touches TP2 — intrabar logic MUST fire.
+    const reached = isTP2Reached({
+      side: "short",
+      currentPriceNum: 4773.0,   // close: 1.9R down — above TP2 (4772)
+      barHighForTp2: 4785.0,
+      barLowForTp2: 4772.0,      // bar low: exactly -2R — touch!
+      storedTp2Price: 4772.0,
+    });
+    expect(reached).toBe(true);
+  });
+
+  it("C2-ts-3: long TP2 does NOT fire when barHigh is still below target", () => {
+    const reached = isTP2Reached({
+      side: "long",
+      currentPriceNum: 5026.0,   // close below TP2
+      barHighForTp2: 5027.5,     // bar high: still below TP2 (5028)
+      barLowForTp2: 5010.0,
+      storedTp2Price: 5028.0,
+    });
+    expect(reached).toBe(false);
+  });
+
+  it("C2-ts-4: backward compat — when barHighForTp2=null, long TP2 uses close price", () => {
+    // No intrabar data: fall back to close-based detection (legacy behavior).
+    const reachedClose = isTP2Reached({
+      side: "long",
+      currentPriceNum: 5028.0,   // close exactly at TP2
+      barHighForTp2: null,        // no intrabar context
+      barLowForTp2: null,
+      storedTp2Price: 5028.0,
+    });
+    expect(reachedClose).toBe(true);
+
+    const notReachedClose = isTP2Reached({
+      side: "long",
+      currentPriceNum: 5027.9,   // close just below TP2
+      barHighForTp2: null,
+      barLowForTp2: null,
+      storedTp2Price: 5028.0,
+    });
+    expect(notReachedClose).toBe(false);
+  });
+
+  it("C2-ts-5: StyleExitBarContext type includes currentBarHigh/Low fields", () => {
+    // Type-level guard: confirm the fields compile and are accepted.
+    const ctx: StyleExitBarContext = {
+      currentTimeEt: "09:45",
+      atr14: { MNQ: 14.0 },
+      currentBarHigh: { MNQ: 19500.0 },
+      currentBarLow:  { MNQ: 19480.0 },
+    };
+    expect(ctx.currentBarHigh?.["MNQ"]).toBe(19500.0);
+    expect(ctx.currentBarLow?.["MNQ"]).toBe(19480.0);
+  });
+
+  it("C2-ts-6: StyleExitBarContext without currentBarHigh/Low compiles (legacy compat)", () => {
+    // Legacy callers that don't supply currentBarHigh/Low should still type-check.
+    const ctx: StyleExitBarContext = {
+      currentTimeEt: "10:00",
+      atr14: { MES: 7.0 },
+    };
+    expect(ctx.currentBarHigh).toBeUndefined();
+    expect(ctx.currentBarLow).toBeUndefined();
   });
 });
 

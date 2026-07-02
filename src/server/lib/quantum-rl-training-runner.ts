@@ -31,7 +31,12 @@ import { spawn, execSync, type ChildProcess } from "child_process";
 import { existsSync } from "fs";
 import { resolve as pathResolve } from "path";
 import { createHash } from "crypto";
+import { eq } from "drizzle-orm";
+import { db } from "../db/index.js";
+import { systemParameters, auditLog } from "../db/schema.js";
 import { logger } from "./logger.js";
+import { notifyCritical } from "../services/notification-service.js";
+import { appendFamilyGradePostscript } from "./notification-helpers.js";
 
 const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 
@@ -68,7 +73,20 @@ export function isOffRthTrainingWindow(): boolean {
   return _OFF_RTH_ET_HOURS.has(_getCurrentEtHour());
 }
 
-// ── Circuit breaker ───────────────────────────────────────────────────────────
+// ── Circuit breaker (persisted — mirrors quantum-replay-runner.ts Fix 10) ────
+//
+// Prior to this fix, breaker state was in module-level closure variables that
+// reset to zero on every process restart. A crash-looping RL training job could
+// open the breaker, restart the process, and immediately fire again (audit gap).
+//
+// Fix: breaker state is persisted to system_parameters using two rows:
+//   quantum_rl_circuit_open            — "1" when open, "0" when closed
+//   quantum_rl_consecutive_failures    — integer failure count
+//
+// On module init (first call to runRlTrainingForStrategy) the in-memory state
+// is loaded from DB. On open/close, the DB rows are updated fire-and-forget
+// (non-blocking). On DB failure the in-memory state is still mutated so the
+// current process behaves correctly even if persist fails.
 const _failureThreshold = Math.max(
   1,
   parseInt(process.env.QUANTUM_RL_TRAINING_FAILURE_THRESHOLD ?? "5", 10) || 5,
@@ -81,9 +99,94 @@ const _circuitBreakerCooldownMs = Math.max(
 let _consecutiveFailures = 0;
 let _circuitOpen = false;
 let _circuitOpenedAt: number | null = null;
+let _rlBreakerStateLoaded = false; // true once DB init has been attempted
 
-function _isCircuitOpen(): boolean {
-  if (!_circuitOpen) return false;
+const _RL_PARAM_OPEN = "quantum_rl_circuit_open";
+const _RL_PARAM_FAILURES = "quantum_rl_consecutive_failures";
+
+/** Persist circuit breaker state to system_parameters (fire-and-forget, never throws). */
+async function _persistRlBreakerState(): Promise<void> {
+  try {
+    const pairs: Array<[string, string]> = [
+      [_RL_PARAM_OPEN, _circuitOpen ? "1" : "0"],
+      [_RL_PARAM_FAILURES, String(_consecutiveFailures)],
+    ];
+    for (const [paramName, val] of pairs) {
+      const [row] = await db
+        .select({ id: systemParameters.id })
+        .from(systemParameters)
+        .where(eq(systemParameters.paramName, paramName));
+      if (row) {
+        await db
+          .update(systemParameters)
+          .set({ currentValue: val, updatedAt: new Date() })
+          .where(eq(systemParameters.paramName, paramName));
+      } else {
+        await db.insert(systemParameters).values({
+          paramName,
+          currentValue: val,
+          domain: "scheduler",
+          description:
+            paramName === _RL_PARAM_OPEN
+              ? "quantum-rl-training-runner circuit breaker open flag. 0=closed 1=open."
+              : "quantum-rl-training-runner consecutive failure count. Resets to 0 on success.",
+        });
+      }
+    }
+  } catch (persistErr) {
+    logger.warn(
+      { err: String(persistErr) },
+      "quantum-rl-training-runner: circuit breaker DB persist failed (non-blocking)",
+    );
+  }
+}
+
+/**
+ * Load circuit breaker state from system_parameters on first call.
+ * Fire-and-forget (never throws). Populates _consecutiveFailures and _circuitOpen.
+ * Subsequent calls are no-ops.
+ */
+async function _initRlBreakerStateFromDb(): Promise<void> {
+  if (_rlBreakerStateLoaded) return;
+  _rlBreakerStateLoaded = true;
+  try {
+    const rows = await db
+      .select({ paramName: systemParameters.paramName, currentValue: systemParameters.currentValue })
+      .from(systemParameters)
+      .where(eq(systemParameters.domain, "scheduler"));
+
+    for (const row of rows) {
+      if (row.paramName === _RL_PARAM_OPEN) {
+        _circuitOpen = row.currentValue === "1";
+      }
+      if (row.paramName === _RL_PARAM_FAILURES) {
+        const n = parseInt(String(row.currentValue), 10);
+        _consecutiveFailures = Number.isFinite(n) ? n : 0;
+      }
+    }
+
+    if (_circuitOpen) {
+      logger.warn(
+        { consecutiveFailures: _consecutiveFailures, threshold: _failureThreshold },
+        "quantum-rl-training-runner: circuit breaker was OPEN from prior session — auto-fire will be skipped until cooldown expires",
+      );
+    }
+  } catch (initErr) {
+    logger.warn(
+      { err: String(initErr) },
+      "quantum-rl-training-runner: circuit breaker DB init failed — starting with safe defaults (non-blocking)",
+    );
+  }
+}
+
+/**
+ * Check if the circuit is currently open.
+ * Returns { isOpen, justReset } — justReset=true when the cooldown expired this call.
+ * Callers that see justReset=true should emit a `quantum_rl.training_circuit_breaker_closed`
+ * audit row so recovery is visible in audit_log.
+ */
+function _isCircuitOpen(): { isOpen: boolean; justReset: boolean } {
+  if (!_circuitOpen) return { isOpen: false, justReset: false };
   // Auto-reset after cooldown
   if (_circuitOpenedAt !== null && Date.now() - _circuitOpenedAt >= _circuitBreakerCooldownMs) {
     _consecutiveFailures = 0;
@@ -91,21 +194,26 @@ function _isCircuitOpen(): boolean {
     _circuitOpenedAt = null;
     logger.info(
       { cooldownMs: _circuitBreakerCooldownMs },
-      "quantum-rl-training-runner: circuit breaker RESET after cooldown",
+      "quantum-rl-training-runner: circuit breaker RESET after cooldown — resuming auto-fire",
     );
-    return false;
+    _persistRlBreakerState().catch(() => { /* already logged inside */ });
+    return { isOpen: false, justReset: true };
   }
-  return true;
+  return { isOpen: true, justReset: false };
 }
 
 function _recordRlSuccess(): void {
   _consecutiveFailures = 0;
   _circuitOpen = false;
   _circuitOpenedAt = null;
+  _persistRlBreakerState().catch(() => { /* already logged inside */ });
 }
 
-/** Returns true when the circuit was newly opened by this failure. */
-function _recordRlFailure(): boolean {
+/**
+ * Record a failure. Returns true when the circuit was NEWLY opened by this failure.
+ * Caller should emit `quantum_rl.training_circuit_breaker_opened` audit + Discord on true.
+ */
+function _recordRlFailure(lastError?: string): boolean {
   _consecutiveFailures++;
   if (!_circuitOpen && _consecutiveFailures >= _failureThreshold) {
     _circuitOpen = true;
@@ -114,16 +222,33 @@ function _recordRlFailure(): boolean {
       { consecutiveFailures: _consecutiveFailures, threshold: _failureThreshold, cooldownMs: _circuitBreakerCooldownMs },
       "quantum-rl-training-runner: circuit breaker OPENED",
     );
-    return true;
+    // Discord escalation when circuit opens — operator on vacation won't know RL training stopped.
+    // Mirrors quantum-replay-runner.ts notifyCritical pattern.
+    try {
+      notifyCritical(
+        "Quantum-RL Training Circuit Breaker OPEN",
+        appendFamilyGradePostscript(
+          `Quantum-RL training circuit breaker OPEN after ${_consecutiveFailures} consecutive failures; auto-fire halted for ${Math.round(_circuitBreakerCooldownMs / 60_000)} min cooldown. Last error: ${lastError ?? "unknown"}`,
+          "The quantum RL training background job stopped after repeated failures.",
+          "No action needed — the bot will keep trading normally. Call Tony if this persists more than 2 hours.",
+        ),
+        { consecutiveFailures: _consecutiveFailures, threshold: _failureThreshold },
+      );
+    } catch (_discordErr) { /* non-blocking */ }
+    _persistRlBreakerState().catch(() => { /* already logged inside */ });
+    return true; // newly opened
   }
+  _persistRlBreakerState().catch(() => { /* already logged inside */ });
   return false;
 }
 
-/** Reset circuit state — exposed for tests only. */
+/** Reset circuit state — exposed for tests only. Also persists the reset. */
 export function _resetRlCircuitBreakerForTests(): void {
   _consecutiveFailures = 0;
   _circuitOpen = false;
   _circuitOpenedAt = null;
+  _rlBreakerStateLoaded = false; // allow re-init from DB in integration tests
+  _persistRlBreakerState().catch(() => { /* already logged inside */ });
 }
 
 /** Expose consecutive failure count for tests. */
@@ -197,6 +322,9 @@ export async function runRlTrainingForStrategy(
   trainingEpochs: number = 200,
   correlationId?: string,
 ): Promise<RlTrainingAutoFireResult> {
+  // ── Load persisted breaker state on first call (DB-durability fix) ──────
+  await _initRlBreakerStateFromDb();
+
   // ── ET-hour guard ────────────────────────────────────────────────────────
   const etHour = _getCurrentEtHour();
   if (!_OFF_RTH_ET_HOURS.has(etHour)) {
@@ -213,7 +341,26 @@ export async function runRlTrainingForStrategy(
   }
 
   // ── Circuit breaker check ────────────────────────────────────────────────
-  if (_isCircuitOpen()) {
+  const { isOpen, justReset } = _isCircuitOpen();
+
+  // Emit recovery audit when the 1h cooldown just expired — makes recovery visible.
+  if (justReset) {
+    db.insert(auditLog).values({
+      action: "quantum_rl.training_circuit_breaker_closed",
+      entityType: "strategy",
+      entityId: String(strategyId),
+      status: "success",
+      correlationId: correlationId ?? null,
+      result: { reason: "cooldown_expired", cooldown_ms: _circuitBreakerCooldownMs },
+    }).catch((auditErr) =>
+      logger.warn(
+        { err: String(auditErr), strategyId },
+        "quantum-rl-training-runner: circuit_breaker_closed audit row failed (non-blocking)",
+      ),
+    );
+  }
+
+  if (isOpen) {
     logger.warn(
       { strategyId, correlationId, consecutiveFailures: _consecutiveFailures },
       "quantum-rl-training-runner: circuit open — skipping auto-fire",
@@ -256,7 +403,7 @@ export async function runRlTrainingForStrategy(
         cwd: PROJECT_ROOT,
       });
     } catch (spawnErr) {
-      _recordRlFailure();
+      _recordRlFailure(String(spawnErr));
       reject(spawnErr);
       return;
     }
@@ -286,7 +433,7 @@ export async function runRlTrainingForStrategy(
           try { proc.kill("SIGKILL"); } catch { /* already dead */ }
         }, 2000);
       }
-      _recordRlFailure();
+      _recordRlFailure(`timed out after ${timeoutMs}ms`);
       reject(new Error(`quantum-rl-training-runner timed out after ${timeoutMs}ms for strategyId=${strategyId}`));
     }, timeoutMs);
 
@@ -335,7 +482,7 @@ export async function runRlTrainingForStrategy(
           { strategyId, correlationId, code, durationMs, errMsg: errMsg.slice(0, 300) },
           "quantum-rl-training-runner: subprocess exited with non-zero code",
         );
-        _recordRlFailure();
+        _recordRlFailure(`exit ${code}: ${errMsg.slice(0, 200)}`);
         reject(new Error(`quantum_rl_agent train failed (exit ${code}) for strategyId=${strategyId}: ${errMsg.slice(0, 200)}`));
       }
     });
@@ -345,7 +492,7 @@ export async function runRlTrainingForStrategy(
       if (settled) return;
       settled = true;
       logger.error({ strategyId, correlationId, err }, "quantum-rl-training-runner: spawn error");
-      _recordRlFailure();
+      _recordRlFailure(String(err));
       reject(err);
     });
   });
