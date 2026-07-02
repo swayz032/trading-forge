@@ -30,11 +30,13 @@ lines.push(`indicator-catalog DSL archetypes / killzone / htf_narrative / bias_e
 lines.push(`bar-comparisons). Statuses: native (evaluator exists) / composite (combinable from existing) /`);
 lines.push(`needs_new (no path) / ambiguous (too vague to bind).`);
 lines.push(``);
-lines.push(`## Overall Groundability Coverage`);
+lines.push(`## Overall coverage (two metrics — GPT 2026-06-30 split)`);
 lines.push(``);
-lines.push(`**${overall.coverage_pct}%** of ${overall.total} conditions ground to existing engine machinery` +
-  ` (native ${overall.by_status.native} + composite ${overall.by_status.composite});` +
-  ` needs_new ${overall.by_status.needs_new}, ambiguous ${overall.by_status.ambiguous}.`);
+lines.push(`- **Groundability Coverage: ${overall.coverage_pct}%** — grounded / ALL ${overall.total} compiler-emitted conditions` +
+  ` (native ${overall.by_status.native} + composite ${overall.by_status.composite};` +
+  ` needs_new ${overall.by_status.needs_new}, ambiguous ${overall.by_status.ambiguous}).`);
+lines.push(`- **Executable Coverage: ${overall.executable_coverage_pct}%** — grounded / ${overall.total - overall.by_status.ambiguous} MEANINGFUL executable` +
+  ` conditions (ambiguous tail excluded: semantic noise is a COMPRESSION quality issue, not an engine deficiency).`);
 lines.push(``);
 lines.push(`## By semantic family`);
 lines.push(``);
@@ -50,11 +52,11 @@ for (const [fam, counts] of Object.entries(overall.by_family).sort((a, b) => {
 lines.push(``);
 lines.push(`## Per transcript`);
 lines.push(``);
-lines.push(`| transcript | conditions | coverage | needs_new | ambiguous |`);
-lines.push(`|---|---|---|---|---|`);
+lines.push(`| transcript | conditions | groundability | executable | needs_new | ambiguous |`);
+lines.push(`|---|---|---|---|---|---|`);
 for (const [video, conds] of Object.entries(vocab)) {
   const r = groundabilityCoverage(conds.map((c) => c.object));
-  lines.push(`| ${video} | ${r.total} | ${r.coverage_pct}% | ${r.by_status.needs_new} | ${r.by_status.ambiguous} |`);
+  lines.push(`| ${video} | ${r.total} | ${r.coverage_pct}% | ${r.executable_coverage_pct}% | ${r.by_status.needs_new} | ${r.by_status.ambiguous} |`);
 }
 lines.push(``);
 lines.push(`## Ungroundable conditions (the explicit work queue — nothing silently dropped)`);

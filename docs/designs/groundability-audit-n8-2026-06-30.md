@@ -6,9 +6,10 @@ indicator-catalog DSL archetypes / killzone / htf_narrative / bias_engine / smt_
 bar-comparisons). Statuses: native (evaluator exists) / composite (combinable from existing) /
 needs_new (no path) / ambiguous (too vague to bind).
 
-## Overall Groundability Coverage
+## Overall coverage (two metrics — GPT 2026-06-30 split)
 
-**72.7%** of 410 conditions ground to existing engine machinery (native 235 + composite 63); needs_new 30, ambiguous 82.
+- **Groundability Coverage: 77.8%** — grounded / ALL 410 compiler-emitted conditions (native 256 + composite 63; needs_new 9, ambiguous 82).
+- **Executable Coverage: 97.3%** — grounded / 328 MEANINGFUL executable conditions (ambiguous tail excluded: semantic noise is a COMPRESSION quality issue, not an engine deficiency).
 
 ## By semantic family
 
@@ -19,7 +20,7 @@ needs_new (no path) / ambiguous (too vague to bind).
 | entry_execution | 57 | 0 | 0 | 0 | 57 | 100.0% |
 | session_time | 42 | 13 | 0 | 0 | 55 | 100.0% |
 | bias_direction | 50 | 0 | 0 | 0 | 50 | 100.0% |
-| price_action | 1 | 9 | 21 | 0 | 31 | 32.3% |
+| price_action | 22 | 9 | 0 | 0 | 31 | 100.0% |
 | ict_zone | 0 | 25 | 0 | 0 | 25 | 100.0% |
 | indicator | 13 | 4 | 7 | 0 | 24 | 70.8% |
 | liquidity | 14 | 5 | 0 | 0 | 19 | 100.0% |
@@ -27,21 +28,20 @@ needs_new (no path) / ambiguous (too vague to bind).
 
 ## Per transcript
 
-| transcript | conditions | coverage | needs_new | ambiguous |
-|---|---|---|---|---|
-| psH--oXkD8M | 17 | 88.2% | 1 | 1 |
-| l-2iKbcm5UI | 32 | 100% | 0 | 0 |
-| h6TnE7QClJg | 31 | 67.7% | 7 | 3 |
-| MKsjbL0WNjg | 119 | 67.2% | 21 | 18 |
-| e-QmGJU1XYc | 28 | 64.3% | 0 | 10 |
-| 9dErM4MFCTY | 20 | 75% | 0 | 5 |
-| qwLbJfBTZYA | 61 | 72.1% | 0 | 17 |
-| 8PYgFVB0GHE | 102 | 71.6% | 1 | 28 |
+| transcript | conditions | groundability | executable | needs_new | ambiguous |
+|---|---|---|---|---|---|
+| psH--oXkD8M | 17 | 94.1% | 100% | 0 | 1 |
+| l-2iKbcm5UI | 32 | 100% | 100% | 0 | 0 |
+| h6TnE7QClJg | 31 | 67.7% | 75% | 7 | 3 |
+| MKsjbL0WNjg | 119 | 84% | 99% | 1 | 18 |
+| e-QmGJU1XYc | 28 | 64.3% | 100% | 0 | 10 |
+| 9dErM4MFCTY | 20 | 75% | 100% | 0 | 5 |
+| qwLbJfBTZYA | 61 | 72.1% | 100% | 0 | 17 |
+| 8PYgFVB0GHE | 102 | 71.6% | 98.6% | 1 | 28 |
 
 ## Ungroundable conditions (the explicit work queue — nothing silently dropped)
 
-### needs_new (30)
-- [price_action] price rejection 15m candle high — no native candle-pattern evaluator (bounce_off_level embeds rejection internally; standalone detector unbuilt)
+### needs_new (9)
 - [indicator] cci crossing zero line upwards — REJECTED by indicator-catalog policy ('fails diversity gate vs RSI') — never silently proxy
 - [indicator] when cci drops below zero bearish momentum is building — REJECTED by indicator-catalog policy ('fails diversity gate vs RSI') — never silently proxy
 - [indicator] cci indicator — REJECTED by indicator-catalog policy ('fails diversity gate vs RSI') — never silently proxy
@@ -49,27 +49,7 @@ needs_new (no path) / ambiguous (too vague to bind).
 - [indicator] cci lines to monitor — REJECTED by indicator-catalog policy ('fails diversity gate vs RSI') — never silently proxy
 - [indicator] cci — REJECTED by indicator-catalog policy ('fails diversity gate vs RSI') — never silently proxy
 - [indicator] cci below zero — REJECTED by indicator-catalog policy ('fails diversity gate vs RSI') — never silently proxy
-- [price_action] focus weakness — educator-idiolect 'weakness' (reversal-rejection concept, MKsj two-line) — detector requires explicit definition
-- [price_action] weakness definition 1 — educator-idiolect 'weakness' (reversal-rejection concept, MKsj two-line) — detector requires explicit definition
-- [price_action] weakness definition 2 — educator-idiolect 'weakness' (reversal-rejection concept, MKsj two-line) — detector requires explicit definition
-- [price_action] weakness definition 3 — educator-idiolect 'weakness' (reversal-rejection concept, MKsj two-line) — detector requires explicit definition
-- [price_action] rejection — no native candle-pattern evaluator (bounce_off_level embeds rejection internally; standalone detector unbuilt)
-- [price_action] spot weakness — educator-idiolect 'weakness' (reversal-rejection concept, MKsj two-line) — detector requires explicit definition
-- [price_action] bearish candle close — no native candle-pattern evaluator (bounce_off_level embeds rejection internally; standalone detector unbuilt)
-- [price_action] bullish candle close — no native candle-pattern evaluator (bounce_off_level embeds rejection internally; standalone detector unbuilt)
-- [price_action] bullish candle close with weakness — no native candle-pattern evaluator (bounce_off_level embeds rejection internally; standalone detector unbuilt)
-- [price_action] price weakness — educator-idiolect 'weakness' (reversal-rejection concept, MKsj two-line) — detector requires explicit definition
-- [price_action] weakness and opposite closure same candle — educator-idiolect 'weakness' (reversal-rejection concept, MKsj two-line) — detector requires explicit definition
-- [price_action] low with weakness — educator-idiolect 'weakness' (reversal-rejection concept, MKsj two-line) — detector requires explicit definition
-- [price_action] weakness below both lines — educator-idiolect 'weakness' (reversal-rejection concept, MKsj two-line) — detector requires explicit definition
-- [price_action] valid high taken with weakness closing lower — educator-idiolect 'weakness' (reversal-rejection concept, MKsj two-line) — detector requires explicit definition
-- [price_action] weakness — educator-idiolect 'weakness' (reversal-rejection concept, MKsj two-line) — detector requires explicit definition
-- [price_action] confirmation candle — no native candle-pattern evaluator (bounce_off_level embeds rejection internally; standalone detector unbuilt)
 - [risk_framework] entry point target definition — framework-overlay.ts (overlay-owned — must NOT be an entry condition)
-- [price_action] weakness into key level — educator-idiolect 'weakness' (reversal-rejection concept, MKsj two-line) — detector requires explicit definition
-- [price_action] weakness — educator-idiolect 'weakness' (reversal-rejection concept, MKsj two-line) — detector requires explicit definition
-- [price_action] price having weakness from level — educator-idiolect 'weakness' (reversal-rejection concept, MKsj two-line) — detector requires explicit definition
-- [price_action] weakness within structure — educator-idiolect 'weakness' (reversal-rejection concept, MKsj two-line) — detector requires explicit definition
 - [risk_framework] stop loss level — framework-overlay.ts (overlay-owned — must NOT be an entry condition)
 
 ### ambiguous (82)

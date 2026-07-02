@@ -18,8 +18,10 @@ describe("condition grounding — classifier", () => {
     expect(c.evaluator).toMatch(/REJECTED by indicator-catalog policy/);
   });
 
-  it("educator-idiolect 'weakness' is an explicit needs_new, not silently absorbed", () => {
-    expect(classifyCondition("valid high taken with weakness closing lower")).toMatchObject({ family: "price_action", status: "needs_new" });
+  it("educator-idiolect 'weakness' grounds to the sweep-and-reject detector (built 2026-06-30)", () => {
+    const c = classifyCondition("valid high taken with weakness closing lower");
+    expect(c).toMatchObject({ family: "price_action", status: "native" });
+    expect(c.evaluator).toMatch(/candle_patterns\.detect_weakness/);
   });
 
   it("vague meta-objects stay honestly ambiguous (no coverage stuffing)", () => {

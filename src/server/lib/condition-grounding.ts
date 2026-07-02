@@ -82,8 +82,8 @@ const REGISTRY: RegistryEntry[] = [
 
   // ── price action / candles ──
   { pattern: /\b(engulf|pin ?bar|doji|hammer|wick|rejection|strong candle|confirmation candle|candle (close|body|pattern|formation))\b/i,
-    family: "price_action", status: "needs_new", evaluator: "no native candle-pattern evaluator (bounce_off_level embeds rejection internally; standalone detector unbuilt)" },
-  { pattern: /\bweakness\b/i, family: "price_action", status: "needs_new", evaluator: "educator-idiolect 'weakness' (reversal-rejection concept, MKsj two-line) — detector requires explicit definition" },
+    family: "price_action", status: "native", evaluator: "candle_patterns.py (is_*_engulfing / is_rejection_* / is_strong_close — built 2026-06-30 per audit priority)" },
+  { pattern: /\bweakness\b/i, family: "price_action", status: "native", evaluator: "candle_patterns.detect_weakness (sweep-and-reject: high taken, close back below, bearish character) + detect_strength mirror" },
   { pattern: /\bclose[sd]? (above|below|over|under|through|lower|higher)\b/i, family: "price_action", status: "native", evaluator: "DSL bar-close comparison (close > X — engine +1-bar shift makes this safe)" },
   { pattern: /\b(retest|pull ?back|bounce|tap|touch)\b/i, family: "price_action", status: "composite", evaluator: "bounce_off_level archetype + level-proximity (proximity_atr_mult)" },
   { pattern: /\breversal\b/i, family: "price_action", status: "composite", evaluator: "structure_engine CHoCH (counter-trend break = reversal signal)" },
@@ -113,7 +113,13 @@ export interface CoverageReport {
   total: number;
   by_status: Record<Groundability, number>;
   by_family: Record<string, Record<Groundability, number>>;
-  coverage_pct: number;               // (native + composite) / total — the Groundability Coverage metric
+  /** Groundability Coverage = (native + composite) / ALL compiler-emitted conditions. */
+  coverage_pct: number;
+  /** Executable Coverage (GPT 2026-06-30) = (native + composite) / MEANINGFUL executable conditions —
+   *  excludes the ambiguous tail (semantic noise the compiler should have compressed into predicates), so
+   *  compiler-quality issues don't masquerade as engine deficiencies. Converges with coverage_pct as
+   *  compression improves. */
+  executable_coverage_pct: number;
   ungrounded: Array<{ object: string; status: Groundability; family: SemanticFamily }>;
 }
 
@@ -129,9 +135,12 @@ export function groundabilityCoverage(objects: string[]): CoverageReport {
     if (c.status === "needs_new" || c.status === "ambiguous") ungrounded.push({ object: o, status: c.status, family: c.family });
   }
   const total = objects.length;
+  const grounded = by_status.native + by_status.composite;
+  const executableTotal = total - by_status.ambiguous; // meaningful executable conditions
   return {
     total, by_status, by_family,
-    coverage_pct: total ? Math.round(((by_status.native + by_status.composite) / total) * 1000) / 10 : 100,
+    coverage_pct: total ? Math.round((grounded / total) * 1000) / 10 : 100,
+    executable_coverage_pct: executableTotal ? Math.round((grounded / executableTotal) * 1000) / 10 : 100,
     ungrounded,
   };
 }
