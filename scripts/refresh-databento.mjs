@@ -38,7 +38,7 @@ const symbolArg = args.find((a) => a.startsWith("--symbols="))?.split("=")[1]
 const timeframeArg = args.find((a) => a.startsWith("--timeframes="))?.split("=")[1]
   ?? args[args.indexOf("--timeframes") + 1];
 
-const DEFAULT_SYMBOLS = "ES,NQ,MES,MNQ,CL";
+const DEFAULT_SYMBOLS = "ES,NQ,MES,MNQ,CL,MCL";
 const DEFAULT_TIMEFRAMES = "5min,15min,1hour,daily";
 
 const SYMBOLS = symbolArg && !symbolArg.startsWith("--") ? symbolArg : DEFAULT_SYMBOLS;
