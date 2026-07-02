@@ -32,7 +32,12 @@
 - **O4 burn-down**: ruff BUG-DETECTION subset (F821/F811/F63/F7/E9/F50x) now CLEAN + BLOCKING in CI (fixed 2 string-annotation F821 via noqa + 4 test F811); broad STYLE set stays advisory (295-file Optional→X|None sweep judged too risky to ship unverified since engine pytest collection hangs on vectorbt).
 - **GitHub repo made PRIVATE by operator** (closes S2 fully).
 
-**Operator-only remaining (I can't do from code):** run DR restore drill (psql/pg_dump NOT installed on tower — `db-restore.ps1` + runbook ready); DB TLS + secret rotation (Railway — did NOT auto-rotate live secrets, too destructive unattended); relay redeploy to activate S1 (Railway CLI present, attempted post-merge); A4 full-tower-outage alert needs an external uptime probe (inherently off-tower) + `DISCORD_WEBHOOK_URL` on Railway n8n.
+**Follow-up 2 (operator supplied a valid Railway project token + "you can do this") — 2026-07-02:**
+- **S1 DEPLOYED + LIVE:** `railway up` from worktree railway-relay/ redeployed tf-relay; verified `/__ollama/api/{pull,delete,push,create}` → 403 `ollama_management_endpoint_blocked`, `/api/tags` → 200, `/__relay/health` ok tower:true. The unauth-public-control HIGH is CLOSED in prod. (.env RAILWAY_TOKEN was stale; the operator-supplied one worked, scoped trading-forge/production/tf-relay.)
+- **DR restore drill RUN + PASSED:** downloaded portable pg17 binaries (prod server is PostgreSQL **17.10** — a v16 pg_dump REFUSES: key finding), pg_dump'd prod → 293 MB backup (FIRST real one, seeded in backups/db), restored into a fresh scratch pg17 cluster → **117/117 strategies exact, 77,774 audit rows (prod 77,775 = +1 live), data current to dump time**. Only 3 pgvector tables skipped (need `CREATE EXTENSION vector` on target — RAG data, rebuildable). Documented in `docs/disaster-recovery-db.md`.
+- **Secret rotation NOT auto-done** (rotating ~132 live secrets unattended = a dead bot if one propagation fails — genuinely operator-with-watching regardless of authorization; principled hold).
+
+**Operator-only remaining:** install pg17 client on the tower so the nightly backup CRON runs (drill proved the path end-to-end; the tower still lacks the binary); rotate secrets with you watching; A4 external uptime probe (off-tower signup) OR the Railway-n8n off-tower monitor. Rotate the Railway project token pasted this session.
 
 **Verification:** tsc 0 (whole repo, all agents+parent together); 3 CI hard gates GREEN + postscript PASS; tier1 parity GREEN; ~69 vitest + 39 pytest GREEN (targeted); live n8n re-GET verified. Pushed UNMERGED → `origin/hardening/deepscan6-fixwave-2026-07-01`.
 

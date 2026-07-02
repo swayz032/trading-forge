@@ -6,6 +6,17 @@
 > backup. This runbook closes that: how to get a *real* backup, how to restore it, and a
 > drill checklist to prove it works.
 
+## ✅ Drill RUN + PASSED 2026-07-02 (deepscan6)
+
+The full backup→restore cycle was executed and verified:
+- **Backup:** `pg_dump` (v17) of prod → `backups/db/tf-db-backup-2026-07-02T02-32-40.sql` (293 MB, 289 tables, 205 data blocks, 51s). This is the FIRST real data backup — the cron had never produced one (pg_dump absent).
+- **Restore:** into a fresh scratch pg17 cluster → **117/117 strategies** (exact), **77,774 audit_log rows** (prod had 77,775 — +1 from the ~4 min the live system moved on), restored `audit_log` max timestamp = the dump time (data is current). 122/125 public tables.
+- **Only gap:** the 3 `pgvector`-dependent tables (`langchain_pg_embedding`, `vectors_5a/5c_strategy_gen`) failed to restore because the scratch cluster lacked the `vector` extension. These are RAG/embedding tables (rebuildable), NOT trading data. A real restore target must have `pgvector` installed (`CREATE EXTENSION vector;`) to restore those 3.
+
+**KEY FINDING:** the prod server is **PostgreSQL 17.10**, so the tower needs the **pg17** client — a v16 `pg_dump` REFUSES with `server version mismatch`. Install PostgreSQL **17** (not just "latest").
+
+**Re-run cadence:** quarterly. Log each run in `AGENT-LOGS.md`.
+
 ## Current state (as found)
 
 - `db-backup-service.ts` runs a 24h `db-backup` cron. It invokes `pg_dump` to
