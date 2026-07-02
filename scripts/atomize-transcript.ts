@@ -57,18 +57,12 @@ INTRODUCES a new entry / wait / confirmation / filter / invalidation / exit-trig
 A clause that merely DISCUSSES, explains, defines, recaps, justifies, motivates, warns, or gives an example of a
 rule is NOT a decision — even if it mentions indicators or price.
   "wait for the EMA10 to cross above the EMA20"  -> YES (the engine changes)
+  "we trade this on crude oil" / "we're sitting on the 30-minute chart today"  -> YES (WAIT_SESSION — execution context: removing it changes what the engine runs on)
+  "mark the high and low of the first 30 minutes" / "the pre-market high" / "the gap fill"  -> YES (WAIT_STRUCTURE / FILTER — a price LEVEL, never WAIT_SESSION)
+  "it could not hold below, so we are not shorting it" / "no retest, we would not have entered"  -> YES (INVALIDATE — a negative rule, not an observation)
   "this is called a liquidity sweep" / "CCI measures deviation from average"  -> NO (terminology / explanation)
   "this setup has a high win rate" / "you stop trusting yourself"  -> NO (justification / motivation)
   "the engulfing candle confirms buyers"  -> YES only if it introduces a confirmation rule not already stated, else explanation.
-
-EXECUTION CONTEXT IS A DECISION (3-video audit fix 2026-07-02 — the gate was dropping these): a clause that
-DECLARES the instrument/market ("we trade this on crude oil"), the operating timeframe ("we're on the 30-minute
-chart", "drop down to the 5-minute"), the session, or a NAMED REFERENCE LEVEL the rules operate on (pre-market
-high/low, overnight high/low, opening-range high/low, gap fill, volume-profile level) CHANGES the engine's
-behavior — removing it changes what the engine runs on. -> is_decision=true (WAIT_SESSION for market/timeframe/
-session declarations; WAIT_STRUCTURE or FILTER for named reference levels).
-NEGATIVE RULES ARE DECISIONS: "if it fails / can't hold / doesn't retest -> we do NOT trade it / would not have
-entered" introduces an INVALIDATE or EXCEPTION rule — never classify it observation/example.
 
 OWNERSHIP BOUNDARY: stop-loss, take-profit, target, position size, risk amount, and risk/reward are
 FRAMEWORK-OWNED (outside the strategy edge). They are valid concepts but NEVER decision atoms — classify them
@@ -154,7 +148,16 @@ const FRAMEWORK_OBJ = /\b(risk|reward|stop|target|profit|size|sizing|position|lo
   }
 
   // Phase B — the DETERMINISTIC GRAPH COMPILER builds the edges (it owns the graph; gemma does not).
-  const compiled = compileGraph(p1.atoms, transcript);
+  // N-SAMPLE UNION (2026-07-02, 6-video audit): between-pass label variance on borderline clauses was the
+  // dominant residual error (e.g. retest typed INVALIDATE in pass A, WAIT_RETEST in pass B). Pass B already
+  // exists for the stability check — union its atoms (canonical-key dedup, transcript-span order) instead of
+  // discarding them. Recall-safe superset; the deterministic compiler + compression absorb near-duplicates.
+  const p1Keys = new Set(p1.atoms.map((a) => canonKey(a)));
+  const p2Only = p2.atoms.filter((a) => !p1Keys.has(canonKey(a)));
+  const unionAtoms = [...p1.atoms, ...p2Only].sort(
+    (x, y) => (x.provenance?.transcript_span?.start ?? 0) - (y.provenance?.transcript_span?.start ?? 0));
+  const compiled = compileGraph(unionAtoms, transcript);
+  const compiledP1 = compileGraph(p1.atoms, transcript);  // stability compares the raw passes, never the union
   const compiled2 = compileGraph(p2.atoms, transcript);
   const A = ledgerA(p1.clauseLedger), B = ledgerB(p1.clauseLedger, compiled.atoms);
   const graph: DecisionGraph = { atoms: compiled.atoms }; const C = ledgerC(graph);  // on the COMPILED graph
@@ -162,8 +165,8 @@ const FRAMEWORK_OBJ = /\b(risk|reward|stop|target|profit|size|sizing|position|lo
   const connected = compiled.reachable.size;
   const isolated = compiled.atoms.filter((a) => !compiled.reachable.has(a.id));
   const isoFramework = isolated.filter((a) => FRAMEWORK_OBJ.test(a.object) || a.type === "EXIT_HINT").length;
-  const stab = checkIdempotence([{ atoms: compiled.atoms }, { atoms: compiled2.atoms }]);
-  const keysA = new Set(compiled.atoms.map(canonKey)), keysB = new Set(compiled2.atoms.map(canonKey));
+  const stab = checkIdempotence([{ atoms: compiledP1.atoms }, { atoms: compiled2.atoms }]);
+  const keysA = new Set(compiledP1.atoms.map(canonKey)), keysB = new Set(compiled2.atoms.map(canonKey));
   const keyDiff = [...keysA].filter((k) => !keysB.has(k)).concat([...keysB].filter((k) => !keysA.has(k)));
 
   console.log(`\nSUMMARY`);
