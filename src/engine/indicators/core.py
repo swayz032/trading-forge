@@ -182,28 +182,34 @@ def compute_bbands(
 def compute_vwap(df: pl.DataFrame) -> pl.Series:
     """VWAP: cumulative(typical_price × volume) / cumulative(volume).
 
-    Resets daily based on ts_event date.
+    Resets at the 18:00 ET Globex session boundary — identical session logic to
+    compute_vwap_with_bands. Previous behavior reset at calendar midnight (dt.date()),
+    which diverged from compute_vwap_with_bands on 24h data spanning 18:00 ET.
+    (D3 fix 2026-07-01)
+
+    Input column priority: ts_et (ET wall-clock) > ts_event.  Callers supplying
+    UTC data must pass ts_et — ts_event is assumed to be ET wall-clock when ts_et
+    is absent (same contract as _assign_globex_session_id).
     """
     typical_price = (df["high"] + df["low"] + df["close"]) / 3.0
     tp_vol = typical_price * df["volume"]
 
-    # Extract date for daily reset (prefer ET timezone if available)
-    ts_col = "ts_et" if "ts_et" in df.columns else "ts_event"
-    dates = df[ts_col].dt.date()
+    # Use Globex 18:00 ET session reset — matches compute_vwap_with_bands exactly.
+    session_id = _assign_globex_session_id(df)
 
     # Build a temporary DataFrame for grouped cumsum
     temp = pl.DataFrame({
-        "date": dates,
+        "session_id": session_id,
         "tp_vol": tp_vol,
         "volume": df["volume"],
     })
 
     result = temp.with_columns([
-        pl.col("tp_vol").cum_sum().over("date").alias("cum_tp_vol"),
-        pl.col("volume").cum_sum().over("date").alias("cum_vol"),
+        pl.col("tp_vol").cum_sum().over("session_id").alias("cum_tp_vol"),
+        pl.col("volume").cum_sum().over("session_id").alias("cum_vol"),
     ])
 
-    # Guard: zero-volume bars at day start → cum_vol=0 → NaN/inf; fill forward from last valid VWAP
+    # Guard: zero-volume bars at session start → cum_vol=0 → NaN/inf; fill forward
     safe_cum_vol = result["cum_vol"].replace(0, None)
     vwap = (result["cum_tp_vol"] / safe_cum_vol).fill_null(strategy="forward").fill_null(0.0)
     return vwap
@@ -269,7 +275,7 @@ def compute_vwap_with_bands(
     """Computes session VWAP + 1-sigma + 2-sigma bands using cumulative TPV math.
 
     Adds columns:
-        vwap               — session VWAP (backward-compat: same values as compute_vwap)
+        vwap               — session VWAP (18:00 ET Globex reset; identical to compute_vwap)
         vwap_band_1s_upper — VWAP + 1*sigma
         vwap_band_1s_lower — VWAP - 1*sigma
         vwap_band_2s_upper — VWAP + 2*sigma

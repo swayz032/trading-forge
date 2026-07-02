@@ -166,3 +166,59 @@ class TestParityWithStaticEvents:
         canonical = self._filter_static("FOMC_MINUTES")
         assert not (canonical - live), f"FOMC_MINUTES missing from live: {canonical - live}"
         assert not (live - canonical), f"FOMC_MINUTES extra in live: {live - canonical}"
+
+    def test_fomc_parity_2026(self):
+        """Inline FOMC 2026 dates in _ECONOMIC_EVENTS must match STATIC_EVENTS.
+
+        Extended parity (D2): guards the 4th-copy divergence where calendar_filter
+        had 3 wrong FOMC 2026 dates (05-06/11-04/12-16) while STATIC_EVENTS was
+        corrected. Both must agree so the live blackout uses the same FOMC schedule
+        as the backtest event mask.
+        """
+        live = self._filter_list("FOMC")
+        canonical = self._filter_static("FOMC")
+        missing = canonical - live
+        extra = live - canonical
+        assert not missing, f"FOMC in STATIC_EVENTS but missing from calendar_filter: {sorted(missing)}"
+        assert not extra, f"FOMC in calendar_filter but not in STATIC_EVENTS: {sorted(extra)}"
+
+    def test_cpi_parity_2026(self):
+        """Inline CPI 2026 dates in _ECONOMIC_EVENTS must match STATIC_EVENTS.
+
+        Extended parity (D2): calendar_filter had 3 wrong CPI 2026 dates
+        (05-13/09-09/11-12). After D2 correction both sources must agree.
+        """
+        live = {e for e in self._filter_list("CPI") if e[0].startswith("2026")}
+        canonical = {e for e in self._filter_static("CPI") if e[0].startswith("2026")}
+        missing = canonical - live
+        extra = live - canonical
+        assert not missing, f"CPI 2026 in STATIC_EVENTS but missing from calendar_filter: {sorted(missing)}"
+        assert not extra, f"CPI 2026 in calendar_filter but not in STATIC_EVENTS: {sorted(extra)}"
+
+    def test_nfp_parity_2026(self):
+        """Inline NFP 2026 dates in _ECONOMIC_EVENTS must match STATIC_EVENTS.
+
+        Extended parity (D2): calendar_filter had NFP Jan 2026 as 2026-01-09
+        (second Friday) while STATIC_EVENTS has 2026-01-02 (correct first Friday).
+        After D2 correction both sources must agree for all 12 months.
+        """
+        live = {e for e in self._filter_list("NFP") if e[0].startswith("2026")}
+        canonical = {e for e in self._filter_static("NFP") if e[0].startswith("2026")}
+        missing = canonical - live
+        extra = live - canonical
+        assert not missing, f"NFP 2026 in STATIC_EVENTS but missing from calendar_filter: {sorted(missing)}"
+        assert not extra, f"NFP 2026 in calendar_filter but not in STATIC_EVENTS: {sorted(extra)}"
+
+    def test_fomc_2026_correct_dates(self):
+        """Spot-check the 3 previously wrong FOMC 2026 dates are now correct.
+
+        This test names the exact dates so a future accidental revert is immediately
+        visible rather than hidden behind a parity pass.
+        """
+        fomc_2026 = {e[0] for e in _ECONOMIC_EVENTS if e[2] == "FOMC" and e[0].startswith("2026")}
+        assert "2026-04-29" in fomc_2026, "FOMC 2026-04-29 missing (was wrong as 2026-05-06)"
+        assert "2026-10-28" in fomc_2026, "FOMC 2026-10-28 missing (was wrong as 2026-11-04)"
+        assert "2026-12-09" in fomc_2026, "FOMC 2026-12-09 missing (was wrong as 2026-12-16)"
+        assert "2026-05-06" not in fomc_2026, "Wrong FOMC date 2026-05-06 still present"
+        assert "2026-11-04" not in fomc_2026, "Wrong FOMC date 2026-11-04 still present"
+        assert "2026-12-16" not in fomc_2026, "Wrong FOMC date 2026-12-16 still present"
