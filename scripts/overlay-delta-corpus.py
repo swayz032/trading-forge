@@ -46,8 +46,11 @@ def discover_class(name: str) -> str | None:
         mod = importlib.import_module(mod_path)
     except Exception:
         return None
+    import inspect
     for attr in dir(mod):
-        if attr.endswith("Strategy") and attr != "Strategy":
+        obj = getattr(mod, attr)
+        if (inspect.isclass(obj) and attr.endswith("Strategy") and obj.__module__ == mod_path
+                and not inspect.isabstract(obj)):
             return f"{mod_path}.{attr}"
     return None
 
@@ -125,6 +128,7 @@ def main() -> int:
         "note": "single-backtest core; full WF/CPCV/PBO/DSR under both modes is the follow-through; LOW_N strategies excluded from means",
     }
     report = {"summary": summary, "strategies": rows}
+    os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     json.dump(report, open(args.out, "w", encoding="utf-8"), indent=1)
     print("\n=== CORPUS SUMMARY ===")
     print(json.dumps(summary, indent=1))
