@@ -28,6 +28,9 @@ export interface EngineCondition {
   type: AtomType;        // source atom type (setup/structure/confirmation/…)
   object: string;        // object_canonical — the discriminating concept
   role: "spine" | "confluence" | "trigger" | "invalidation";
+  /** Transcript provenance (Ledger G execution traceability: trade → condition → clause). Additive/optional. */
+  span?: { start: number; end: number };
+  evidence?: string;
 }
 
 /** The minimal, source-faithful contract handed to the Databento engine. Framework risk is labelled, not required. */
@@ -74,13 +77,14 @@ export function compileToEngineSpec(graph: CompiledGraph): EngineStrategySpec {
     if (TERMINAL.has(a.type) || ENTRY_ACTION.test(a.object_canonical)) {
       // first reachable terminal becomes the trigger; any others fold in as triggers too
       if (entry_trigger_id === null && graph.reachable.has(a.id)) entry_trigger_id = a.id;
-      entry_conditions.push({ id: a.id, type: a.type, object: a.object_canonical, role: "trigger" });
+      entry_conditions.push({ id: a.id, type: a.type, object: a.object_canonical, role: "trigger", span: a.provenance.transcript_span, evidence: a.provenance.evidence_quote });
     } else if (INVALIDATION.has(a.type)) {
-      invalidations.push({ id: a.id, type: a.type, object: a.object_canonical, role: "invalidation" });
+      invalidations.push({ id: a.id, type: a.type, object: a.object_canonical, role: "invalidation", span: a.provenance.transcript_span, evidence: a.provenance.evidence_quote });
     } else {
       entry_conditions.push({
         id: a.id, type: a.type, object: a.object_canonical,
         role: inAndGroup.has(a.id) ? "confluence" : "spine",
+        span: a.provenance.transcript_span, evidence: a.provenance.evidence_quote,
       });
     }
   }

@@ -207,6 +207,24 @@ const FRAMEWORK_OBJ = /\b(risk|reward|stop|target|profit|size|sizing|position|lo
 
   // ── Ledger D — graph→engine HANDOFF conservation on the DENSIFIED graph (the Databento hand-off gate) ──
   const dD = ledgerD(densified);
+
+  // ── --emit-spec: persist the EngineStrategySpec artifact (hashed) for live engine execution + Ledger G ──
+  if (process.argv.includes("--emit-spec")) {
+    const { createHash } = await import("crypto");
+    const { writeFileSync } = await import("fs");
+    const specJson = JSON.stringify(dD.spec);
+    const artifact = {
+      video: VIDEO,
+      spec_hash: createHash("sha256").update(specJson).digest("hex"),
+      graph_canonical_hash: canonicalHash(graph),
+      ledger_d: dD.ok ? "CONSERVED" : "VIOLATED",
+      transcript_chars: transcript.length,
+      spec: dD.spec,
+    };
+    const outPath = join("tmp/generalization", `${VIDEO}.spec.json`);
+    writeFileSync(outPath, JSON.stringify(artifact, null, 1));
+    console.log(`\nSPEC ARTIFACT: ${outPath} (spec_hash=${artifact.spec_hash.slice(0, 16)}…, ledger_d=${artifact.ledger_d})`);
+  }
   console.log(`\nLEDGER D — graph→engine HANDOFF conservation (DENSIFIED source-owned → Databento spec):`);
   console.log(`  ${dD.invariants.map((i) => `${i.ok ? "✓" : "✗"} ${i.name}${i.ok ? "" : "[" + i.offenders.slice(0, 4).join(",") + "]"}`).join("  ")}`);
   console.log(`  engine spec: ${dD.spec.entry_conditions.length} entry conds (${dD.spec.and_groups.length} AND-groups, ${dD.spec.or_branches.length} OR-branches), ${dD.spec.invalidations.length} invalidation, dir=${dD.spec.direction}, trigger=${dD.spec.entry_trigger_id ? "set" : "NONE"} -> HANDOFF ${dD.ok ? "CONSERVED" : "VIOLATED"}`);
