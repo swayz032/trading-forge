@@ -23,6 +23,8 @@ const {
   dbInsertMock,
   dbUpdateMock,
   dbSelectMock,
+  dbTransactionMock,
+  runMonteCarloMock,
   isPipelineActiveMock,
   runPythonModuleMock,
   circuitBreakerCallMock,
@@ -47,6 +49,21 @@ const {
   const selectFromMock = vi.fn(() => ({ where: selectWhereMock }));
   const dbSelectMock = vi.fn(() => ({ from: selectFromMock }));
 
+  // ── db.transaction mock ─────────────────────────────────────────────────────
+  // Calls the callback with a tx object backed by the same insert/update/select mocks.
+  // Needed for the B10 test where the main success path reaches db.transaction at line 770.
+  // The closure captures the mock references — beforeEach re-implementations are reflected.
+  const dbTransactionMock = vi.fn(async (fn: (tx: Record<string, unknown>) => unknown) =>
+    fn({ insert: dbInsertMock, update: dbUpdateMock, select: dbSelectMock }),
+  );
+
+  // ── runMonteCarlo mock (shared reference for vi.mock below) ─────────────────
+  // Must return a Promise so the fire-and-forget MC trigger IIFE can call .then()
+  // on the result. With the db.transaction mock now in place, tests that reach
+  // the MC trigger section (tier="PASS", daily_pnls present) need runMonteCarlo
+  // to return a resolved value to avoid unhandled rejection on undefined.then().
+  const runMonteCarloMock = vi.fn().mockResolvedValue({ id: "mc-mock-id", status: "completed" });
+
   const isPipelineActiveMock = vi.fn().mockResolvedValue(true);
   const runPythonModuleMock = vi.fn();
   const circuitBreakerCallMock = vi.fn((fn: () => unknown) => fn());
@@ -67,6 +84,8 @@ const {
     dbInsertMock,
     dbUpdateMock,
     dbSelectMock,
+    dbTransactionMock,
+    runMonteCarloMock,
     isPipelineActiveMock,
     runPythonModuleMock,
     circuitBreakerCallMock,
@@ -82,6 +101,7 @@ vi.mock("../db/index.js", () => ({
     insert: dbInsertMock,
     update: dbUpdateMock,
     select: dbSelectMock,
+    transaction: dbTransactionMock,
   },
 }));
 
@@ -105,7 +125,7 @@ vi.mock("../db/schema.js", () => ({
 
 vi.mock("../routes/sse.js", () => ({ broadcastSSE: broadcastSSEMock }));
 vi.mock("./paper-trading-stream.js", () => ({ startStream: vi.fn() }));
-vi.mock("./monte-carlo-service.js", () => ({ runMonteCarlo: vi.fn() }));
+vi.mock("./monte-carlo-service.js", () => ({ runMonteCarlo: runMonteCarloMock }));
 vi.mock("./quantum-mc-service.js", () => ({ runQuantumMC: vi.fn().mockResolvedValue({ id: "qmc-1", status: "completed" }) }));
 vi.mock("../../data/loaders/duckdb-service.js", () => ({ queryInfo: vi.fn().mockResolvedValue({ rows: [] }) }));
 vi.mock("../../shared/firm-config.js", () => ({ getFirmLimit: vi.fn().mockReturnValue(50000) }));
@@ -145,6 +165,15 @@ vi.mock("../lib/audit-log-helper.js", () => ({
   insertAuditRow: insertAuditRowSpy,
 }));
 vi.mock("./notification-service.js", () => ({ notifyCritical: vi.fn() }));
+// Disable quantum replay in all tests — the auto-fire IIFE does a dynamic import and returns
+// early when isQuantumReplayEnabled() returns false. Without this mock, the import fails, the
+// IIFE catch-block fires, and db.insert().values().catch() throws because the plain-object
+// mock result lacks a .catch() method, producing unhandled rejections.
+vi.mock("../lib/quantum-replay-runner.js", () => ({
+  isQuantumReplayEnabled: vi.fn(() => false),
+  runQuantumReplayForBacktest: vi.fn().mockResolvedValue({ status: "skipped", rowsWritten: 0, durationMs: 0 }),
+  _getConsecutiveFailuresForTests: vi.fn(() => 0),
+}));
 vi.mock("../lib/firm-rules-version.js", () => ({ computeFirmRulesVersion: vi.fn(() => "v1-mock") }));
 vi.mock("../lib/compliance-mode.js", () => ({
   resolveComplianceMode: vi.fn(() => ({ mode: "strict", source: "default" })),
@@ -337,10 +366,11 @@ describe("FIX 5 — structured Python error envelopes", () => {
     expect(result.error).toBe("backtester crashed");
   });
 
-  it("treats {status:'ok'} as success (NOT blocked by envelope check)", async () => {
-    // A result with status:'ok' but no .error should NOT be treated as failure.
-    // It should proceed through the success path (and likely trigger IIFEs etc.)
-    // We make the post-envelope success path throw so we can stop early.
+  it("treats {status:'ok'} as failure under allowlist semantics (not in KNOWN_SUCCESS)", async () => {
+    // Under the allowlist conversion (wave-2 FIX 1), ANY present top-level status
+    // not in KNOWN_SUCCESS (intentionally empty — backtester.py emits no status on
+    // the happy path) is treated as failure. The previous denylist let 'ok' fall
+    // through to success; the allowlist now correctly intercepts it.
     runPythonModuleMock.mockResolvedValue({
       status: "ok",
       sharpe: 1.5,
@@ -360,8 +390,182 @@ describe("FIX 5 — structured Python error envelopes", () => {
       "corr-env-004",
     );
 
-    // The envelope check should NOT intercept a {status:"ok"} result
-    expect(result.error).not.toContain("python_envelope_status");
+    // Allowlist: any present top-level status not in KNOWN_SUCCESS → failure
+    expect(result.status).toBe("failed");
+    expect(result.error).toBe("python_envelope_status:ok");
+  });
+
+  it("treats any unknown/future envelope status as failure (allowlist future-proofing)", async () => {
+    // Simulates a future Python module emitting a status value not yet enumerated.
+    // Under the old denylist this would silently fall through to success processing.
+    // Under the allowlist it correctly fails.
+    runPythonModuleMock.mockResolvedValue({ status: "future_new_status" });
+
+    const result = await runBacktest(
+      "strat-env",
+      makeConfig() as never,
+      undefined,
+      undefined,
+      "corr-env-005",
+    );
+
+    expect(result.status).toBe("failed");
+    expect(result.error).toBe("python_envelope_status:future_new_status");
+  });
+
+  it("does NOT intercept nested sub-object statuses — top-level key only", async () => {
+    // A result with NO top-level status but WITH nested status fields inside sub-objects.
+    // The allowlist check must only read (result as {status?:string}).status
+    // and must never dig into gate_result.status, parity_shadow.status, etc.
+    runPythonModuleMock.mockResolvedValue({
+      // No top-level 'status' key — the true happy-path shape
+      sharpe: 1.5,
+      total_return: 0.10,
+      max_drawdown: 0.05,
+      tier: "PASS",
+      total_trades: 10,
+      win_rate: 0.6,
+      daily_pnls: [100, 200, -50],
+      // Nested sub-objects with their own status fields — must be ignored
+      gate_result: { status: "unknown" },
+      parity_shadow: { status: "diverged" },
+    });
+
+    const result = await runBacktest(
+      "strat-env",
+      makeConfig() as never,
+      undefined,
+      undefined,
+      "corr-env-006",
+    );
+
+    // Envelope check must NOT intercept nested sub-object statuses.
+    // Use ?? "" to guard against result.error being undefined on a full success path.
+    expect(result.error ?? "").not.toContain("python_envelope_status");
+  });
+
+  it("passes through when top-level status is absent (the happy-path shape — no status field)", async () => {
+    // backtester.py emits no top-level 'status' key on success (verified by grep).
+    // A result with no top-level status field must NOT be blocked by the envelope check.
+    runPythonModuleMock.mockResolvedValue({
+      sharpe: 2.0,
+      total_return: 0.25,
+      max_drawdown: 0.08,
+      tier: "PASS",
+      total_trades: 50,
+      win_rate: 0.62,
+      daily_pnls: [100, 200, -50, 300, 150],
+      // Deliberately no 'status' key at top level
+    });
+
+    const result = await runBacktest(
+      "strat-env",
+      makeConfig() as never,
+      undefined,
+      undefined,
+      "corr-env-007",
+    );
+
+    // No top-level status → not intercepted by the envelope guard.
+    // Use ?? "" to guard against result.error being undefined on a full success path.
+    expect(result.error ?? "").not.toContain("python_envelope_status");
+  });
+});
+
+describe("FIX 2 — B10 MRP regime data unavailable audit", () => {
+  // All 5 trades have null macroRegime → bucket into UNKNOWN → no named regime keys.
+  const UNKNOWN_REGIME_TRADES = [
+    { pnl: "100", macroRegime: null },
+    { pnl: "200", macroRegime: null },
+    { pnl: "-50", macroRegime: null },
+    { pnl: "150", macroRegime: null },
+    { pnl: "80", macroRegime: null },
+  ];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    isPipelineActiveMock.mockResolvedValue(true);
+
+    // db.insert for backtests row creation
+    dbInsertMock.mockImplementation(() => ({
+      values: vi.fn(() => ({
+        returning: vi.fn().mockResolvedValue([{ id: "bt-b10-id", strategyId: "strat-b10" }]),
+      })),
+    }));
+
+    // db.update: all updates succeed (mrp_sharpe write, backtest status update, etc.)
+    dbUpdateMock.mockImplementation(() => ({
+      set: vi.fn(() => ({ where: vi.fn().mockResolvedValue([]) })),
+    }));
+
+    // db.select: dual-mode mock that handles two different query shapes in one setup:
+    //  - Research trial counter: .where().limit(1) → .limit() throws → caught in F-4
+    //    try/catch → defaults trial_n_total=1 (main flow continues normally).
+    //  - B10 trades query: await .where() directly (no .limit()) → resolves to
+    //    UNKNOWN_REGIME_TRADES so all trades have null macroRegime.
+    //  - Any other .where() direct-await calls in fire-and-forget IIFEs also receive
+    //    UNKNOWN_REGIME_TRADES, which those IIFEs handle gracefully.
+    // dbSelectMock typed from hoisted factory ({where: () => {limit:...}}).
+    // The dual-mode implementation returns a Promise (for B10 direct await) decorated
+    // with .limit() (for research trial counter). Cast bypasses the structural mismatch.
+    (dbSelectMock as MockInstance).mockImplementation(() => ({
+      from: vi.fn(() => ({
+        where: vi.fn(() => {
+          // Return a Promise (for direct await) that also has .limit() (for counter query).
+          const p = Promise.resolve(UNKNOWN_REGIME_TRADES);
+          (p as unknown as Record<string, unknown>)["limit"] = vi
+            .fn()
+            .mockRejectedValue(new Error("NO_TRIAL_TABLE_B10"));
+          return p;
+        }),
+      })),
+    }));
+  });
+
+  it("fires exactly one b10_regime_data_unavailable audit row when all trades are UNKNOWN regime", async () => {
+    // Happy-path result: no top-level status key (true backtester.py shape on success).
+    // All 5 mock trades have null macroRegime, so byRegime = {UNKNOWN: [...]},
+    // regimeSharpes = {}, and the FIX 2 condition fires.
+    runPythonModuleMock.mockResolvedValue({
+      sharpe: 1.8,
+      total_return: 0.15,
+      max_drawdown: 0.07,
+      tier: "PASS",
+      total_trades: 5,
+      win_rate: 0.6,
+      daily_pnls: [100, 200, -50, 150, 80],
+    });
+
+    await runBacktest(
+      "strat-b10",
+      makeConfig() as never,
+      undefined,
+      undefined,
+      "corr-b10-001",
+    );
+
+    // Allow the fire-and-forget B10 IIFE to settle.
+    // B10's first await (db.select) is a resolved Promise → runs on next microtask.
+    // After that, all B10 steps are synchronous (void insertAuditRowSafe, logger, return).
+    // setTimeout(0) schedules a macrotask, which fires only after all pending microtasks.
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+    // Exactly ONE b10_regime_data_unavailable audit row must have been fired
+    const b10Calls = (insertAuditRowSafeSpy as MockInstance).mock.calls.filter(
+      (call) => (call[0] as Record<string, unknown>)["action"] === "backtest.b10_regime_data_unavailable",
+    );
+    expect(b10Calls).toHaveLength(1);
+
+    const row = b10Calls[0]![0] as Record<string, unknown>;
+    expect(row["action"]).toBe("backtest.b10_regime_data_unavailable");
+    expect(row["entityType"]).toBe("backtest");
+    // status NOT NULL — must be "info" per the FIX 2 spec
+    expect(row["status"]).toBe("info");
+    const input = row["input"] as Record<string, unknown>;
+    expect(input["reason"]).toBe("macro_regime_null_all_windows");
+    expect(input["backtestId"]).toBeDefined();
+    // No "payload" column in audit_log schema
+    expect(row["payload"]).toBeUndefined();
   });
 });
 

@@ -448,9 +448,12 @@ confluence gate, multi-TF gating, ICT/SMT/volume-profile, or the RL challenger. 
 **`faithful` flag HARD-blocks** any Pine that would misrepresent the strategy (correct behavior).
 So the institutional path for FULL Slumdawg is **TF engine → broker-router → (TopstepX | TradersPost)
 DIRECT** — preserving everything. **TradingView Pine is for (a) the FAMILY's SIMPLE strategies
-(different per member, §9) and (b) a visual monitor**, NOT for executing full Slumdawg. Known parity
-gaps still open: no automated Strategy-Tester-vs-broker P&L reconciliation harness; no Pine-vs-engine
-result-equivalence test; VWAP session-reset divergence (paper TS vs backtest vs Pine).
+(different per member, §9) and (b) a visual monitor**, NOT for executing full Slumdawg. Parity-gap
+status (deep-scan #8 w2, 2026-07-02): Strategy-Tester-vs-broker P&L reconciliation harness SHIPPED —
+`npx tsx scripts/pine-broker-reconcile.ts --strategy <id> --csv <tester-export.csv>` (2-tick tolerance
+per §8, both TradingView export shapes, `pine_parity.reconciliation_run` audit row); VWAP session-reset
+unified to Globex 18:00 ET (deep-scan #6 Track D). Still open: no static Pine-vs-engine
+result-equivalence test — the runtime reconciliation harness is the operating control for deployed bots.
 
 ### Cost split (lean — don't double-pay)
 - **Topstep accounts → TopstepX** ($14.50/mo sub covers Topstep accounts + the TopstepX copier). No TradersPost.

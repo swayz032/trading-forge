@@ -139,3 +139,47 @@ class TestGetVixExpansionAudit:
         audit = get_vix_expansion_audit(10, 10, 20.0)
         for key in ("vix_level", "base_max", "expanded_max", "multiplier", "tier_triggered", "expansion_applied"):
             assert key in audit, f"Missing required key: {key}"
+
+
+class TestLruCacheIsolation:
+    """Cache-clear test-isolation: env override → cache_clear → new value visible."""
+
+    def test_vix_expansion_env_cache_clear_picks_up_threshold_change(self, monkeypatch):
+        import src.engine.margin_expansion as me
+        me._get_vix_expansion_env.cache_clear()
+        t30, m30, t50, m50 = me._get_vix_expansion_env()
+        assert t30 == 30.0
+        assert m30 == 0.5
+        assert t50 == 50.0
+        assert m50 == 0.25
+
+        monkeypatch.setenv("MARGIN_VIX_THRESHOLD_30", "25.0")
+        me._get_vix_expansion_env.cache_clear()
+        t30_new, _, _, _ = me._get_vix_expansion_env()
+        assert t30_new == 25.0  # override visible after clear
+
+        me._get_vix_expansion_env.cache_clear()  # restore
+
+    def test_vix_expansion_env_stale_cache_ignores_change(self, monkeypatch):
+        """Without cache_clear(), env change is NOT visible (demonstrates why clear is needed)."""
+        import src.engine.margin_expansion as me
+        me._get_vix_expansion_env.cache_clear()
+        t30_before, _, _, _ = me._get_vix_expansion_env()  # primes cache
+
+        monkeypatch.setenv("MARGIN_VIX_THRESHOLD_30", "99.0")
+        # Without cache_clear(), still returns original value
+        t30_stale, _, _, _ = me._get_vix_expansion_env()
+        assert t30_stale == t30_before  # stale cache ignores env change
+
+        me._get_vix_expansion_env.cache_clear()  # restore
+
+    def test_vix_expansion_env_multiplier_override(self, monkeypatch):
+        import src.engine.margin_expansion as me
+        me._get_vix_expansion_env.cache_clear()
+
+        monkeypatch.setenv("MARGIN_VIX_MULTIPLIER_50", "0.10")
+        me._get_vix_expansion_env.cache_clear()
+        _, _, _, m50_new = me._get_vix_expansion_env()
+        assert m50_new == 0.10  # override visible after clear
+
+        me._get_vix_expansion_env.cache_clear()  # restore

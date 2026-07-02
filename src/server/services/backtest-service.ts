@@ -590,14 +590,28 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       }),
     );
 
-    // FIX 5 (deepscan8): also treat structured Python error envelopes as failures.
-    // extrapolation_exceeded / rule_version_mismatch previously fell through as
-    // phantom successes — now detected and persisted as explicit failures.
+    // FIX 5 / FIX 1 (deepscan8 wave-2): ALLOWLIST — any present top-level result.status
+    // not in the known-success set is treated as failure, future-proofing against new
+    // Python envelope statuses not yet enumerated in this check.
+    //
+    // Analysis: backtester.py emits NO top-level 'status' key on the happy path
+    // (grep: zero occurrences of "status" in src/engine/backtester.py). The two known
+    // failure statuses originate in monte_carlo.py: 'extrapolation_exceeded' (date
+    // range exceeds available data) and 'rule_version_mismatch' (prop-firm rule hash
+    // drift detected). The happy-path result has no top-level status field at all.
+    //
+    // Nested sub-object statuses (gate_result.status, parity_shadow.status,
+    // cross_validation checks inside wfResults, etc.) are NOT read here — top-level
+    // key only. See the WfResultsShape type below for the nested fields.
+    //
+    // KNOWN_SUCCESS is intentionally empty: the happy path carries no status field.
+    // Any future Python module that emits a new top-level status value will correctly
+    // fail here until it is explicitly added to KNOWN_SUCCESS.
+    const _PYTHON_ENVELOPE_KNOWN_SUCCESS = new Set<string>();
     const _pythonEnvelopeStatus = (result as { status?: string }).status;
     if (
       result.error ||
-      _pythonEnvelopeStatus === "extrapolation_exceeded" ||
-      _pythonEnvelopeStatus === "rule_version_mismatch"
+      (_pythonEnvelopeStatus != null && !_PYTHON_ENVELOPE_KNOWN_SUCCESS.has(_pythonEnvelopeStatus))
     ) {
       const errorMsg = result.error ?? `python_envelope_status:${_pythonEnvelopeStatus}`;
       await db
@@ -1510,6 +1524,23 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
         }
 
         if (Object.keys(regimeSharpes).length === 0) {
+          // FIX 2 (deepscan8 wave-2): emit ONE info audit row when ALL trades bucketed
+          // into the UNKNOWN regime — distinguishes "Python never emitted macroRegime"
+          // from "named regimes present but below the 3-trade minimum."
+          // Fired only when there are no named regime keys at all (every trade had
+          // null macroRegime, meaning Python did not compute regime context for this run).
+          const _namedRegimeKeys = Object.keys(byRegime).filter((k) => k !== "UNKNOWN");
+          if (_namedRegimeKeys.length === 0 && (byRegime["UNKNOWN"]?.length ?? 0) > 0) {
+            void insertAuditRowSafe({
+              action: "backtest.b10_regime_data_unavailable",
+              entityType: "backtest",
+              entityId: backtestId,
+              status: "info",
+              input: { backtestId, reason: "macro_regime_null_all_windows" },
+              correlationId: correlationId ?? undefined,
+              decisionAuthority: "system",
+            });
+          }
           logger.debug(
             { backtestId, regimeGroups: Object.keys(byRegime) },
             "B10 MRP: no regime groups with >= 3 trades — MRP not computed",

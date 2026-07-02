@@ -98,18 +98,51 @@ class TestItemisationDisabled:
     """BACKTEST_ROLL_SPREAD_ITEMIZED=false returns Decimal('0')."""
 
     def test_disabled_returns_zero(self, monkeypatch):
-        monkeypatch.setenv("BACKTEST_ROLL_SPREAD_ITEMIZED", "false")
-        # Must re-import the module to pick up the patched env var
-        import importlib
-
         import src.engine.roll_spread_cost as rsc
-        importlib.reload(rsc)
-        # After reload, _ROLL_SPREAD_ITEMIZED should be False
-        assert rsc._ROLL_SPREAD_ITEMIZED is False
+        monkeypatch.setenv("BACKTEST_ROLL_SPREAD_ITEMIZED", "false")
+        rsc._get_roll_spread_itemized.cache_clear()
+        assert rsc._get_roll_spread_itemized() is False
         cost = rsc.compute_roll_spread_cost("MES", date(2024, 3, 14), 10)
         assert cost == Decimal("0"), "Itemisation disabled → zero roll cost"
-        # Restore
-        importlib.reload(rsc)
+        rsc._get_roll_spread_itemized.cache_clear()  # restore for subsequent tests
+
+
+class TestLruCacheIsolation:
+    """Cache-clear test-isolation: env override → cache_clear → new value visible."""
+
+    def test_itemized_cache_clear_picks_up_env_change(self, monkeypatch):
+        import src.engine.roll_spread_cost as rsc
+        rsc._get_roll_spread_itemized.cache_clear()
+        assert rsc._get_roll_spread_itemized() is True  # default
+
+        monkeypatch.setenv("BACKTEST_ROLL_SPREAD_ITEMIZED", "false")
+        rsc._get_roll_spread_itemized.cache_clear()
+        assert rsc._get_roll_spread_itemized() is False  # override visible after clear
+
+        rsc._get_roll_spread_itemized.cache_clear()  # restore
+
+    def test_roll_ticks_cache_clear_picks_up_env_change(self, monkeypatch):
+        import src.engine.roll_spread_cost as rsc
+        rsc._get_default_roll_ticks.cache_clear()
+        assert rsc._get_default_roll_ticks()["MES"] == 3.0  # default
+
+        monkeypatch.setenv("ROLL_SPREAD_MES_TICKS", "5.0")
+        rsc._get_default_roll_ticks.cache_clear()
+        assert rsc._get_default_roll_ticks()["MES"] == 5.0  # override visible after clear
+
+        rsc._get_default_roll_ticks.cache_clear()  # restore
+
+    def test_stale_cache_ignores_env_change(self, monkeypatch):
+        """Without cache_clear(), env change is NOT visible (demonstrates why clear is needed)."""
+        import src.engine.roll_spread_cost as rsc
+        rsc._get_roll_spread_itemized.cache_clear()
+        assert rsc._get_roll_spread_itemized() is True  # primes cache
+
+        monkeypatch.setenv("BACKTEST_ROLL_SPREAD_ITEMIZED", "false")
+        # Without cache_clear(), still returns True (stale)
+        assert rsc._get_roll_spread_itemized() is True
+
+        rsc._get_roll_spread_itemized.cache_clear()  # restore
 
 
 class TestBuildRollSpreadAudit:
