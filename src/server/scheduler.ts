@@ -2889,7 +2889,8 @@ except Exception as e:
             "n8n workflows failing",
             appendFamilyGradePostscript(
               `${failing.length} n8n workflow(s) had failures in the last hour:\n${lines}`,
-              "One of the background automations is erroring. It won't stop your trades, but check the n8n dashboard when you can — or ping Tony.",
+              "One of the background automations is erroring.",
+              "It won't stop your trades. Check the n8n dashboard when you can, or ping Tony.",
             ),
           );
         }

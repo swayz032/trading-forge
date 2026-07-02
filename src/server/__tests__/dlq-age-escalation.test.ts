@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { readFileSync, resolve as _resolve } from "fs";
+import { readFileSync } from "fs";
 import { resolve } from "path";
 import { fileURLToPath } from "url";
 

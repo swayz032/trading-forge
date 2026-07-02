@@ -4046,8 +4046,14 @@ export class LifecycleService {
             });
             if (isBlock) {
               strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
-              await this._maybeAutoGraveyard(s.id, "parameter_overfit_drift", { classification: driftResult.classification, confidence: driftResult.confidence }, "PAPER", correlationId);
-              continue;
+              // O1-fix-4: wrap graveyard write so a DB hiccup cannot swallow the block decision.
+              // The `continue` fires regardless of whether _maybeAutoGraveyard succeeds or throws.
+              try {
+                await this._maybeAutoGraveyard(s.id, "parameter_overfit_drift", { classification: driftResult.classification, confidence: driftResult.confidence }, "PAPER", correlationId);
+              } catch (graveyardErr) {
+                logger.warn({ strategyId: s.id, err: graveyardErr }, "parameter_drift _maybeAutoGraveyard threw (non-blocking) — block decision preserved");
+              }
+              continue; // block decision wins regardless of graveyard write outcome
             }
             // Gate passed (or warn-only) — reset consecutive counter
             this._resetHardGateCounter(s.id, "parameter_overfit_drift", correlationId);
@@ -4063,6 +4069,19 @@ export class LifecycleService {
             { strategyId: s.id, err: driftErr },
             "Parameter drift gate: read failed (non-blocking — promotion continues)",
           );
+          // O1-fix-1: emit observable audit row so this fail-open is not silent.
+          await db.insert(auditLog).values({
+            action: "lifecycle.parameter_drift_infra_error_proceeded",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "warning",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: { error: driftErr instanceof Error ? driftErr.message : String(driftErr), note: "infra read failure — fail-open, promotion continues" },
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "parameter_drift_infra_error_proceeded audit insert failed (non-blocking)");
+          });
           gateEvidenceStatuses.push("data_unavailable");
         }
 
@@ -4125,9 +4144,14 @@ export class LifecycleService {
               // blocked_dsr_floor = genuine Sharpe failure (HARD).
               // blocked_dsr_unavailable = computation infra failure (TRANSIENT).
               if (dsrGateResult.status === "blocked_dsr_floor") {
-                await this._maybeAutoGraveyard(s.id, "dsr_blocked_floor", { dsr: dsrGateResult.auditPayload.dsr, status: dsrGateResult.status }, "PAPER", correlationId);
+                // O1-fix-5: wrap graveyard write so a DB hiccup cannot swallow the block decision.
+                try {
+                  await this._maybeAutoGraveyard(s.id, "dsr_blocked_floor", { dsr: dsrGateResult.auditPayload.dsr, status: dsrGateResult.status }, "PAPER", correlationId);
+                } catch (graveyardErr) {
+                  logger.warn({ strategyId: s.id, err: graveyardErr }, "dsr _maybeAutoGraveyard threw (non-blocking) — block decision preserved");
+                }
               }
-              continue;
+              continue; // block decision wins regardless of graveyard write outcome
             }
             // Gate passed — reset consecutive counter
             this._resetHardGateCounter(s.id, "dsr_blocked_floor", correlationId);
@@ -4143,6 +4167,19 @@ export class LifecycleService {
             { strategyId: s.id, err: dsrPdrErr },
             "DSR gate (PAPER→DEPLOY_READY): read failed (non-blocking — promotion continues)",
           );
+          // O1-fix-2: emit observable audit row so this fail-open is not silent.
+          await db.insert(auditLog).values({
+            action: "lifecycle.dsr_infra_error_proceeded",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "warning",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: { error: dsrPdrErr instanceof Error ? dsrPdrErr.message : String(dsrPdrErr), note: "infra read failure — fail-open, promotion continues" },
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "dsr_infra_error_proceeded audit insert failed (non-blocking)");
+          });
           gateEvidenceStatuses.push("data_unavailable");
         }
 
@@ -4223,8 +4260,13 @@ export class LifecycleService {
               "BIF gate BLOCKED PAPER→DEPLOY_READY: bif exceeds block threshold (synthetic overfit; IS edge does not transfer to OOS)",
             );
             strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
-            await this._maybeAutoGraveyard(s.id, "bif_blocked", { bif: bifResult.auditPayload.bif, threshold: bifResult.auditPayload.block_threshold }, "PAPER", correlationId);
-            continue;
+            // O1-fix-6: wrap graveyard write so a DB hiccup cannot swallow the block decision.
+            try {
+              await this._maybeAutoGraveyard(s.id, "bif_blocked", { bif: bifResult.auditPayload.bif, threshold: bifResult.auditPayload.block_threshold }, "PAPER", correlationId);
+            } catch (graveyardErr) {
+              logger.warn({ strategyId: s.id, err: graveyardErr }, "bif _maybeAutoGraveyard threw (non-blocking) — block decision preserved");
+            }
+            continue; // block decision wins regardless of graveyard write outcome
           }
           // Gate passed (clean / warn / cpcv_unmeasured / legacy) — reset consecutive counter
           this._resetHardGateCounter(s.id, "bif_blocked", correlationId);
@@ -4234,6 +4276,19 @@ export class LifecycleService {
             { strategyId: s.id, err: bifErr },
             "BIF gate (PAPER→DEPLOY_READY): read failed (non-blocking — promotion continues)",
           );
+          // O1-fix-3: emit observable audit row so this fail-open is not silent.
+          await db.insert(auditLog).values({
+            action: "lifecycle.bif_infra_error_proceeded",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "warning",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: { error: bifErr instanceof Error ? bifErr.message : String(bifErr), note: "infra read failure — fail-open, promotion continues" },
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "bif_infra_error_proceeded audit insert failed (non-blocking)");
+          });
           gateEvidenceStatuses.push("data_unavailable");
         }
 
