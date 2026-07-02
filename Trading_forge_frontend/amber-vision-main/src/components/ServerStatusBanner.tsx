@@ -4,21 +4,23 @@ import { sseClient } from "@/lib/sse-client";
 import type { SSEEvent, SSEEventData } from "@/types/sse-events";
 
 /**
- * Banner shown when the backend broadcasts `system:shutdown` (graceful drain
- * before SIGTERM/SIGINT) and while we wait for SSE to come back online.
+ * Banner shown in two cases:
+ *   1. Graceful shutdown — backend broadcasts `system:shutdown` before SIGTERM/SIGINT.
+ *   2. Unexpected disconnect — SSE connection dropped (crash / network loss / proxy
+ *      killed the keep-alive). Shows "Disconnected — data may be stale since HH:MM"
+ *      until the connection reopens.
  *
- * Connection model: previously this component owned its own EventSource so it
- * could survive independently of `useSSE` consumers. Now it shares the global
- * `sseClient` singleton (one EventSource per tab) and uses
- * `onConnectionStateChange` to detect "we're back" after a shutdown.
+ * Without the disconnect banner the SPA serves stale React Query cache with no
+ * indicator — operator makes decisions on data that is hours old. (Deep-scan #12
+ * Track R FIX 2.)
  *
- * Reconnect strategy: the singleton handles backoff (1s/2s/4s/8s/16s/30s cap)
- * and replays missed events via `Last-Event-ID`. We treat the next "open"
- * connection-state callback after a shutdown as the "we're back" signal and
- * clear the banner.
+ * Connection model: shares the global `sseClient` singleton (one EventSource per
+ * tab). `onConnectionStateChange` provides 'open'/'closed' transitions. The
+ * singleton owns reconnect/backoff (1s→30s cap); we just track state transitions
+ * and show/hide the appropriate banner.
  */
 
-const RECONNECT_GRACE_MS = 60 * 1000; // hide after 60s if we never get a clean re-open
+const RECONNECT_GRACE_MS = 60 * 1000; // hide shutdown banner after 60s if no clean re-open
 
 type ShutdownState = SSEEventData<"system:shutdown"> & {
   receivedAt: number;
@@ -26,6 +28,7 @@ type ShutdownState = SSEEventData<"system:shutdown"> & {
 
 export function ServerStatusBanner() {
   const [state, setState] = useState<ShutdownState | null>(null);
+  const [disconnectSince, setDisconnectSince] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const sawShutdownRef = useRef(false);
 
@@ -44,13 +47,25 @@ export function ServerStatusBanner() {
 
     const unsubscribe = sseClient.subscribe(["system:shutdown"], handleEvent);
 
-    // If the connection comes back open after we've seen a shutdown, drop the
-    // banner — the server has clearly recovered. (Initial open during normal
-    // boot is harmless: `sawShutdownRef.current` stays false and we no-op.)
     const unsubscribeConnState = sseClient.onConnectionStateChange((connState) => {
-      if (connState === "open" && sawShutdownRef.current) {
-        sawShutdownRef.current = false;
-        setState(null);
+      if (connState === "open") {
+        // Connection recovered — clear both banners.
+        if (sawShutdownRef.current) {
+          sawShutdownRef.current = false;
+          setState(null);
+        }
+        setDisconnectSince(null);
+        setDismissed(false);
+      } else if (connState === "closed") {
+        // Unexpected disconnect — surface a persistent stale-data warning.
+        // Only activate if we don't already have a shutdown banner (shutdown is
+        // more specific and should take precedence).
+        if (!sawShutdownRef.current) {
+          setDisconnectSince(
+            new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          );
+          setDismissed(false);
+        }
       }
     });
 
@@ -60,8 +75,8 @@ export function ServerStatusBanner() {
     };
   }, []);
 
-  // Auto-clear after the grace window so we don't strand the banner if the
-  // EventSource never sees a fresh `open` (e.g. user backgrounded the tab).
+  // Auto-clear shutdown banner after the grace window if the EventSource never
+  // sees a fresh `open` (e.g. user backgrounded the tab).
   useEffect(() => {
     if (!state) return;
     const remaining = RECONNECT_GRACE_MS - (Date.now() - state.receivedAt);
@@ -73,34 +88,70 @@ export function ServerStatusBanner() {
     return () => clearTimeout(t);
   }, [state]);
 
-  if (!state || dismissed) return null;
+  if (dismissed) return null;
 
-  return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="w-full bg-amber-700 text-white border-b border-amber-900 shadow-lg"
-    >
-      <div className="flex items-center gap-3 px-4 py-2.5 max-w-[1800px] mx-auto">
-        <CloudOff className="w-5 h-5 shrink-0 animate-pulse" />
-        <div className="flex-1 min-w-0">
-          <span className="font-bold uppercase tracking-wider text-xs sm:text-sm">
-            Server going offline
-          </span>
-          <span className="ml-3 font-mono text-xs opacity-90">
-            reason: {state.reason}
-            {state.signal ? ` · signal ${state.signal}` : ""} · reconnecting…
-          </span>
+  // ── Shutdown banner (graceful drain) ──────────────────────────────────────
+  if (state) {
+    return (
+      <div
+        role="status"
+        aria-live="polite"
+        className="w-full bg-amber-700 text-white border-b border-amber-900 shadow-lg"
+      >
+        <div className="flex items-center gap-3 px-4 py-2.5 max-w-[1800px] mx-auto">
+          <CloudOff className="w-5 h-5 shrink-0 animate-pulse" />
+          <div className="flex-1 min-w-0">
+            <span className="font-bold uppercase tracking-wider text-xs sm:text-sm">
+              Server going offline
+            </span>
+            <span className="ml-3 font-mono text-xs opacity-90">
+              reason: {state.reason}
+              {state.signal ? ` · signal ${state.signal}` : ""} · reconnecting…
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDismissed(true)}
+            className="p-1 rounded hover:bg-amber-800 transition-colors shrink-0"
+            aria-label="Dismiss server status banner"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => setDismissed(true)}
-          className="p-1 rounded hover:bg-amber-800 transition-colors shrink-0"
-          aria-label="Dismiss server status banner"
-        >
-          <X className="w-4 h-4" />
-        </button>
       </div>
-    </div>
-  );
+    );
+  }
+
+  // ── Disconnect banner (crash / network drop / proxy timeout) ─────────────
+  if (disconnectSince) {
+    return (
+      <div
+        role="alert"
+        aria-live="assertive"
+        className="w-full bg-amber-700 text-white border-b border-amber-900 shadow-lg"
+      >
+        <div className="flex items-center gap-3 px-4 py-2.5 max-w-[1800px] mx-auto">
+          <CloudOff className="w-5 h-5 shrink-0 animate-pulse" />
+          <div className="flex-1 min-w-0">
+            <span className="font-bold uppercase tracking-wider text-xs sm:text-sm">
+              Disconnected
+            </span>
+            <span className="ml-3 font-mono text-xs opacity-90">
+              data may be stale since {disconnectSince} · reconnecting…
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDismissed(true)}
+            className="p-1 rounded hover:bg-amber-800 transition-colors shrink-0"
+            aria-label="Dismiss disconnected banner"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 }
