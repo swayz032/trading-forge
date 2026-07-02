@@ -1,6 +1,6 @@
 # A12 — 12-Category Code Audit Report
 
-**Generated:** 2026-06-23 22:24:19 UTC  
+**Generated:** 2026-07-02 18:36:33 UTC  
 **Auditor:** W12 Team B (trading-forge-architect)  
 **Plan:** PART A §A12 of `C:\Users\tonio\.claude\plans\reflective-dancing-moth.md`  
 **Scope:** Read-only static + numerical audit of existing Trading Forge code.  
@@ -8,8 +8,8 @@
 
 ## Summary
 
-- PASS:    9/12
-- FAIL:    3/12
+- PASS:    7/12
+- FAIL:    5/12
 - UNKNOWN: 0/12
 
 | Cat | Category | Status |
@@ -17,17 +17,17 @@
 |  1 | Source data integrity | **PASS** |
 |  2 | Timestamp correctness | **PASS** |
 |  3 | Indicator math | **PASS** |
-|  4 | Backtest fill assumptions | **PASS** |
+|  4 | Backtest fill assumptions | **FAIL** |
 |  5 | PnL math (CRITICAL) | **FAIL** |
 |  6 | Walk-forward leakage | **PASS** |
 |  7 | Monte Carlo accuracy | **PASS** |
 |  8 | Paper-vs-backtest parity | **FAIL** |
-|  9 | Daily PnL aggregation | **PASS** |
+|  9 | Daily PnL aggregation | **FAIL** |
 | 10 | Compliance accuracy | **FAIL** |
 | 11 | DB write integrity | **PASS** |
 | 12 | Source-of-truth conflicts | **PASS** |
 
-**Verdict:** 3 categories FAIL. Open bug-fix tickets per the per-category sections below before W13.
+**Verdict:** 5 categories FAIL. Open bug-fix tickets per the per-category sections below before W13.
 
 ---
 
@@ -84,18 +84,22 @@
 
 ### Cat 4 — Backtest fill assumptions
 
-**Status:** **PASS**
+**Status:** **FAIL**
 
 **Evidence:**
 
 - limit fill prob @ RSI extreme: OK
-  - slippage 2x for stop/stop_market: OK
+  - slippage 2x for stop/stop_market: MISSING
   - slippage 0.5x for limit: OK
   - stop_market raises ValueError: OK
   - ATR-scaled slippage: OK
   - liquidity overnight 3x: OK
   - liquidity rth_core 1x: OK
   - slippage subtracted from PnL (long pays ASK approx): OK
+
+**Fix PR Description:**
+
+> Restore fill/slippage semantics: slippage.py missing 2x multiplier for stop orders
 
 ---
 
@@ -192,14 +196,18 @@
 
 ### Cat 9 — Daily PnL aggregation
 
-**Status:** **PASS**
+**Status:** **FAIL**
 
 **Evidence:**
 
 - toEasternDateString uses calendar ET midnight: no
   - consecutive losses streak resets on win: OK
   - peakEquity HWM updated from MARKED-TO-MARKET (unrealized) equity: no
-  - checkConsistencyRule called after trade close: OK
+  - checkConsistencyRule called after trade close: MISSING
+
+**Fix PR Description:**
+
+> Fix daily P&L aggregation: (1) Add a 5pm ET cutoff helper for futures trading day attribution; (2) Track HWM on a CLOSED-equity column (e.g., realizedPeakEquity) separately from marked-to-market peak so prop firm trailing DD is correct; (3) Update kill switch and dailyPnlBreakdown to key on the futures day, not calendar day.
 
 ---
 
@@ -237,7 +245,7 @@
 **Evidence:**
 
 - critical PnL fields using numeric(): 19/19 OK
-  - schema.ts jsonb() usages: 156
+  - schema.ts jsonb() usages: 159
   - db-locks.ts uses pg_advisory_xact_lock: OK
   - paper-execution-service uses withSessionLock >=2 times: OK
   - migrations using float8/double precision: none
