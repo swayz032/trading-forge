@@ -114,7 +114,10 @@ export interface CoverageVerdict {
 
 // ─── Shared normalization ─────────────────────────────────────────────────────
 
-function normalize(s: string): string {
+// Track O (deepscan11, 2026-07-02) — exported so extraction-grounding.ts can
+// reuse the same normalization for numeric param grounding checks without
+// duplicating the digit-boundary split logic.
+export function normalize(s: string): string {
   return s
     .toLowerCase()
     .replace(/[-_]/g, " ")
@@ -134,8 +137,9 @@ function emphasisRank(e: SpeakerItem["emphasis_level"]): number {
  *  FIX 1 (5-URL audit 2026-06-22): NUMBERS are load-bearing mechanic tokens for Fib/zone
  *  strategies (25/50/75 levels, % ratios). Keep any token containing a digit (len>=2),
  *  plus normal words len>=4. Without this, "25 50 75 levels" was falsely SHALLOW even
- *  though the extraction captured "Fibonacci retracements (25%, 50%, 75%)". */
-function contentTokens(s: string): string[] {
+ *  though the extraction captured "Fibonacci retracements (25%, 50%, 75%)".
+ *  Track O (deepscan11, 2026-07-02) — exported for extraction-grounding.ts reuse. */
+export function contentTokens(s: string): string[] {
   const seen = new Set<string>();
   for (const w of normalize(s).split(" ")) {
     const isNumeric = /\d/.test(w);
