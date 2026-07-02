@@ -3,6 +3,38 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-07-01/02 Deep-scan #6 FIX WAVE — 20 findings fixed (isolated worktree, 4 parallel subagents + parent + live n8n), pushed UNMERGED
+
+**Mission:** Operator (after the deep-scan #6 grading): "fix ALL findings and issues except the Kasa plug (not bought yet)." Also answered the engine question — bar-based (not tick) fills are a known, pessimistic, acceptable-for-micro-futures trade-off, NOT a rebuild trigger.
+
+**Method:** isolated worktree `.worktrees/deepscan6-fixwave` (branch `hardening/deepscan6-fixwave-2026-07-01`, off `a6a3176`, node_modules junctioned). 4 parallel specialist edit-agents on DISJOINT file scopes (paper-parity=money-path, accuracy-validator=lifecycle, backtest-core=engine calendars/VWAP, observability=DLQ/OTel/boot) + parent-driven security/CI/scheduler/n8n + live n8n REST edits. Incremental commit per wave. Track C (lifecycle) hit the session limit mid-run — its disk edits survived and were recovered + tested + committed by the parent (the "agent dies, disk survives" pattern).
+
+**Shipped — code (11 commits, pushed; tsc 0 errors; 3 CI hard gates GREEN; postscript PASS; ~69 vitest + 39 pytest new/verified GREEN):**
+- **S1** relay `/__ollama` hardening (`railway-relay/server.js`): unconditional block of destructive Ollama mgmt endpoints + optional `OLLAMA_PROXY_TOKEN` gate. Closes the unauth public-control HIGH (needs relay redeploy).
+- **S2** scrub 3 committed dump artifacts + gitignore the class. **S5** CI triggers on `hardening/**` (was main-only).
+- **A2/A3/A5** n8n-health Discord WARN (hourly dedup); relay sustained-disconnect + recovery Discord ping (direct to discord.com); `heartbeat-ooh-check` → NEVER_DISABLE_JOBS.
+- **O4/O5** ruff+mypy config + ADVISORY CI gates (ruff/mypy/npm-audit/pip-audit; ~454 pre-existing ruff findings → advisory until burn-down).
+- **O6** boot-migration post-apply CREATE TABLE verification vs information_schema (phantom-apply catch, non-blocking, 4 vitest).
+- **M1+O7** `dailyPnlBreakdown` + partial-close audit moved INSIDE the close transactions (crash-safe DLL; Track B, 16 vitest).
+- **O2/O3/O8** DLQ age-SLO escalation + ORDER BY + cron wiring; OTel no-op warn; boot `boot-<epoch>` correlationId (Track E, 8 vitest).
+- **O1** 3 PAPER→DEPLOY_READY fail-open infra-error paths now AUDITED + block decisions survive graveyard-write failure; BIF stays fail-open per pin (Track C, 4 vitest).
+- **D1/D2/D3** corrected wrong FOMC/CPI/NFP dates across 3 calendars (Fed 2026 = 04-29/10-28/12-09) + drift test + parity extended + `compute_vwap` unified to Globex 18:00 ET (Track D, 39 pytest + 37 vitest; tier1 parity GREEN=232).
+- **O10** derived SSE broadcast-vs-catalog drift check (`check:sse-contract` + advisory CI) — surfaces 39 uncatalogued server events.
+- **S3** guarded `db-restore.ps1` + `docs/disaster-recovery-db.md` (backup gap, restore steps, quarterly drill).
+
+**Shipped — LIVE n8n (REST PUT, GET-verified, both active):**
+- **M2** Watchdog (`pajWJxqX37zKkooV`) self-restart now consumes upstream `$json.signature`/`timestamp`/`reason` instead of `require('crypto')` in the expression sandbox — fixes the dead-on-arrival HIGH (live exec 66757 was erroring) + latent HMAC timestamp mismatch. 6 nodes intact.
+- **M3** X-Idempotency-Key header hoisted onto all 4 journal nodes in Daily Portfolio Monitor (`eZSbajXAi7v7tGPx`) + Monthly Robustness Check (`RIK5eQ0rFEG78Vtd`).
+
+**Deliberately NOT built (operator decision, NOT silently skipped):** **R1** rolling live-Sharpe decay alarm + **R2** strategy-age re-validation gate — NET-NEW SUBSYSTEMS; CLAUDE.md §2 mandates "no new subsystems for 90 days." Advisory monitors, not defects. Flagged for go/defer.
+
+**Operator-only follow-ups:** make repo private (files scrubbed); run DR restore drill; DB TLS + secret rotation (Railway); relay redeploy to activate S1; burn down ruff to flip O4/O5 blocking; A4 full-tower-outage alert needs external uptime probe + `DISCORD_WEBHOOK_URL` on Railway.
+
+**Verification:** tsc 0 (whole repo, all agents+parent together); 3 CI hard gates GREEN + postscript PASS; tier1 parity GREEN; ~69 vitest + 39 pytest GREEN (targeted); live n8n re-GET verified. Pushed UNMERGED → `origin/hardening/deepscan6-fixwave-2026-07-01`.
+
+**Carry-forward:** MERGE branch → phase-0 after review (disjoint from carter). Operator: R1/R2 go/defer + the operator-only list. Detail in memory [[project_deepscan6_grading_2026_07_01]].
+
+---
 ### Session Log — 2026-06-29 Carter inbox UX wave — Slumdawg Lobby, vision (image/PDF), Discord, human-like reports + Ollama un-wedge
 
 **Mission:** Operator iterating on the Carter Office UX — (1) a deliverables **inbox** (research/insights/alerts as chat bubbles), (2) a **Slumdawg Lobby** entry screen, (3) **vision** (show Carter a chart/PDF), (4) make research reports **human-like findings** not raw links, plus visual polish and a Discord ping.
