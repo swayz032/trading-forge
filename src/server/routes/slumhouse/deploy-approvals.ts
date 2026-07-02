@@ -37,14 +37,25 @@ import { backtests, monteCarloRuns, strategies } from "../../db/schema.js";
 import { adminSessionFromCookie } from "../../lib/slumhouse/admin-session.js";
 import { insertAuditRowSafe } from "../../lib/audit-log-helper.js";
 import { logger } from "../../lib/logger.js";
-import { LifecycleService } from "../../services/lifecycle-service.js";
+import type { LifecycleService } from "../../services/lifecycle-service.js";
 import { getWfeHardFloor } from "../../lib/wfe-gate.js";
 import { getPboLifecycleThreshold } from "../../lib/pbo-gate.js";
 import { getB14CiHighThreshold } from "../../lib/b14-ci-gate.js";
 
 export const deployApprovalsRouter = Router();
 
-const lifecycleService = new LifecycleService();
+// Dynamic import + lazy singleton — lifecycle-service transitively pulls the
+// Express bootstrap (several services import logger from ../index.js), and a
+// static edge here makes the slumhouse router import circular with
+// src/server/index.ts → routes/strategies.ts → new LifecycleService().
+let _lifecycleService: LifecycleService | null = null;
+async function getLifecycleService(): Promise<LifecycleService> {
+  if (!_lifecycleService) {
+    const { LifecycleService } = await import("../../services/lifecycle-service.js");
+    _lifecycleService = new LifecycleService();
+  }
+  return _lifecycleService;
+}
 
 function requireAdminSession(req: Request, res: Response): boolean {
   if (!adminSessionFromCookie(req.headers.cookie)) {
@@ -363,7 +374,7 @@ deployApprovalsRouter.post(
     }
 
     // EXISTING promotion path — human release authority, all gates intact.
-    const result = await lifecycleService.promoteStrategy(strategyId, "DEPLOY_READY", "DEPLOYED", {
+    const result = await (await getLifecycleService()).promoteStrategy(strategyId, "DEPLOY_READY", "DEPLOYED", {
       actor: "human_release",
       reason: "office_deploy_approval",
       correlationId,
@@ -403,7 +414,7 @@ deployApprovalsRouter.post(
 
     // EXISTING demotion edge (DEPLOY_READY → PAPER) through the same promotion
     // machinery — mirrors POST /api/strategies/:id/reject-deploy.
-    const result = await lifecycleService.promoteStrategy(strategyId, "DEPLOY_READY", "PAPER", {
+    const result = await (await getLifecycleService()).promoteStrategy(strategyId, "DEPLOY_READY", "PAPER", {
       actor: "human_release",
       reason: `office_deploy_rejection: ${reason}`,
       correlationId,
