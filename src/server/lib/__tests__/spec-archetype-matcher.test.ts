@@ -23,6 +23,34 @@ describe("spec-archetype-matcher — matchArchetype", () => {
     expect(result.archetypeKey).toBe("fvg");
   });
 
+  it("REGRESSION (found via live CLI dry-run): word-boundary-padded keywords (' ote ', ' bos ', ' mss ') must NOT substring-match inside unrelated words", () => {
+    // 'keynotes' contains the bare substring 'ote' but is NOT the ICT 'OTE'
+    // (optimal trade entry) concept. Before the fix, normalize(kw).trim()
+    // stripped the deliberate word-boundary padding off " ote ", degrading
+    // it to a bare "ote" substring check that matched "keynotes" — routing
+    // an unrelated VWAP spec to archetype:ict_ote.
+    const conds: SpecEntryConditionLike[] = [
+      { object: "vwap levels anchored to fed meetings or company keynotes", role: "confluence" },
+    ];
+    const result = matchArchetype(conds);
+    expect(result.matched).toBe(false);
+
+    // Same class of bug for the other two padded tokens: "compose" contains
+    // "mss"? No — pick real false-positive-prone words instead.
+    const bosConds: SpecEntryConditionLike[] = [{ object: "the sky is boston blue today", role: "spine" }];
+    expect(matchArchetype(bosConds).matched).toBe(false);
+  });
+
+  it("still matches the padded tokens correctly as standalone words", () => {
+    const oteConds: SpecEntryConditionLike[] = [{ object: "wait for the ote zone to form", role: "spine" }];
+    expect(matchArchetype(oteConds).matched).toBe(true);
+    expect(matchArchetype(oteConds).archetypeKey).toBe("ict_ote");
+
+    const bosConds: SpecEntryConditionLike[] = [{ object: "confirm bos before entry", role: "spine" }];
+    expect(matchArchetype(bosConds).matched).toBe(true);
+    expect(matchArchetype(bosConds).archetypeKey).toBe("break_of_structure");
+  });
+
   it("does NOT match generic VWAP/EMA vocabulary — routes honestly to unmapped", () => {
     // Mirrors the 1HFoStW_wsc.spec.json sample shape (VWAP mean-reversion, no ICT vocabulary).
     const conds: SpecEntryConditionLike[] = [

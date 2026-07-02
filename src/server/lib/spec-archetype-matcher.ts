@@ -156,7 +156,19 @@ export function matchArchetype(entryConditions: SpecEntryConditionLike[]): Arche
     if (!keywords || keywords.length === 0) continue;
     let score = 0;
     for (const kw of keywords) {
-      if (haystack.includes(normalize(kw).trim())) score += 1;
+      // BUG FIX (verified via a live CLI dry-run this session): do NOT
+      // .trim() the normalized keyword here. normalize() deliberately wraps
+      // both the haystack and every keyword in word-boundary spaces so a
+      // padded token like " ote " only matches a standalone "ote" word, not
+      // any substring containing it. Calling .trim() here stripped that
+      // padding right back off, turning " ote " into a bare "ote" substring
+      // check that false-positive-matched words like "keynotes" (contains
+      // "ote"), routing a VWAP mean-reversion spec to archetype:ict_ote —
+      // exactly the false-positive-dispatch failure mode this module's own
+      // module-doc warns against. Confirmed fixed: 1HFoStW_wsc.spec.json
+      // (VWAP mean reversion, no ICT vocabulary) now correctly returns
+      // matched=false.
+      if (haystack.includes(normalize(kw))) score += 1;
     }
     if (score > 0) scores.push({ key, score });
   }
