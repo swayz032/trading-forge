@@ -198,7 +198,7 @@ def apply_eligibility_gate(
     from src.engine.context.structural_stops import compute_structural_stop
     from src.engine.context.structural_targets import compute_targets
 
-    gate_stats = {"total": 0, "take": 0, "reduce": 0, "skip": 0, "skip_reasons": {}}
+    gate_stats = {"total": 0, "take": 0, "reduce": 0, "skip": 0, "skip_reasons": {}, "skipped_signals": []}
 
     # ABLATION TOGGLE (2026-06-30, #4 two-mode backtest reporting): when TF_CONFLUENCE_OVERLAY_DISABLED=true the
     # institutional confluence overlay (this 7-layer A+ eligibility gate) is OFF, so the backtest measures the PURE
@@ -355,6 +355,9 @@ def apply_eligibility_gate(
                 gate_stats["skip"] += 1
                 reason = decision.reasoning[0] if decision.reasoning else "unknown"
                 gate_stats["skip_reasons"][reason] = gate_stats["skip_reasons"].get(reason, 0) + 1
+                # per-signal attribution (2026-07-02 overlay research): first rejecting reason + bar idx —
+                # lets the ablation join rejected signals to Mode A counterfactual trades (A+ retention analysis)
+                gate_stats["skipped_signals"].append({"bar_idx": int(idx), "reason": reason})
             elif decision.action == "REDUCE":
                 gate_stats["reduce"] += 1
                 # Keep signal but note it was reduced
@@ -384,6 +387,7 @@ def apply_eligibility_gate(
             filtered[idx] = False
             gate_stats["skip"] += 1
             gate_stats["skip_reasons"]["context_error"] = gate_stats["skip_reasons"].get("context_error", 0) + 1
+            gate_stats["skipped_signals"].append({"bar_idx": int(idx), "reason": "context_error"})
 
     return filtered, exit_signals, gate_stats
 
