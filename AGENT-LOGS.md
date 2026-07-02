@@ -12116,6 +12116,27 @@ Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal
 **Carry-forward for next session:**
 - Operator decides on Pro membership (research sidecar only if bought; never in production path). Engine-switch question is CLOSED (keep custom; vectorbt 1.0.0 pinned and parity-proven).
 
+### Session Log — 2026-07-02 Deep-scan #7 (7-auditor, READ-ONLY grading) — overall ~8.0/10, up from #6's 7.5
+
+**Mission:** Operator: "deep scan my codebase and see if all systems are institutional grade." READ-ONLY grading pass, no fixes.
+
+**Method:** verified deepscan6 fixwave MERGED into HEAD first (ancestor check), then 7 parallel read-only auditors (architect / backtest-core / paper-parity / accuracy-validator / observability-reliability / autonomous-readiness / n8n-orchestration), each carrying the must-not-misdiagnose pins + instructions to VERIFY deepscan5/6 fixes rather than re-report.
+
+**Grades:** architecture 8.5 · n8n 8.5 · backtest engine 8.5 · paper/money-path 8.5 · gate-chain 8.0 · observability/DR 7.9 · autonomy 7.0 → **overall ~8.0/10**. All 3 CI hard gates GREEN, whole-repo tsc 0, system-map driftItems=[]. ALL deepscan5/6 fixes verified surviving the merge (S1 relay hardening now PERMANENT via main merge — the railway-redeploy-reverts hazard is CLOSED). Two prior n8n HIGHs RESOLVED (lifecycleState camelCase live; 20/20 workflows backed on disk).
+
+**Top findings (no fixes applied — operator to green-light a fix wave):**
+- CRITICAL DS7-C1: `db-backup` cron not in NEVER_DISABLE_JOBS (scheduler.ts:148-163) — 5 fails permanently disable the only backup job.
+- CRITICAL DS7-C2: Windows forced reboot → sticky pipeline pause, NO auto-resume (windows-health-check-service.ts) — the single most likely 30-day-vacation breaker (~day 14-21).
+- HIGH F-1/F-2 (+MED F-3): manual PATCH PAPER→DEPLOY_READY path lacks compliance-drift gate AND never stamps frozen-policy hash (`needsFirstTimeFreeze` ignored by `_promoteStrategyInner`; only cron calls freezePolicyForStrategy at :4705) → frozen-policy drift gate permanently inert for manually-promoted strategies. Cron path proven CLEAN (17/17 producer→consumer key MATCH, 53/53 pglite).
+- HIGH correlationId-null cluster: paper-signal-service.ts:3236/:3265/:3297/:3336/:3416 (DLL force-close/halt/reduce rows), carter-actions.ts:789 + promoteStrategy undefined, paper-execution-service.ts:3341 (SME exit).
+- HIGH autonomy: pre-trading-day-health-check auto-disableable; TradingForgeAPI NSSM log rotation unverified; scout fire-and-forget silent-dark (A-2 debt).
+- MED standouts: NEVER_DISABLE_JOBS guard also suppresses the CRITICAL alert (scheduler.ts:208 — comment claims otherwise); SSE catalog regressed 39→186 uncatalogued (advisory exits 0); cross-symbol DLL excludes stopped sessions (cross-symbol-pnl.ts:76); PERSONAL_DLL_DOLLARS default $1,000 vs Topstep-50K $1,340; S3 backups share the data-lake bucket; NEEDS_* states outside the state machine; BIF blind in CPCV (documented Wave 30 carry-forward).
+- Cross-agent verification: engine auditor's B14 key concern REFUTED by gate-chain table (b14-ci-gate reads risk_metrics.probability_of_ruin_ci — the correctly-overridden firm-breach key).
+
+**Verification:** read-only; CI gates run read-only and GREEN; live n8n audited via GET-only REST (20 active workflows, 100% error-sink, 95/95 bounded retries).
+
+**Carry-forward:** operator decision on the fix wave; recommended order: DS7-C1 (two-word) → NEVER_DISABLE_JOBS alert-suppression (5-line) → F-2 frozen-policy stamp → F-1 compliance-drift on manual path → DS7-C2 auto-resume → correlationId cluster → PERSONAL_DLL_DOLLARS=1340 env + NSSM rotation (operator/tower). Full detail in memory [[project_deepscan7_2026_07_02]].
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### pglite test-harness DDL drifts from schema.ts and silently breaks ALL DB-backed gate tests (pinned 2026-06-28)
