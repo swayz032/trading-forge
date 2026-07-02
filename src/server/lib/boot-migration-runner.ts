@@ -51,6 +51,14 @@ import { insertAuditRowSafe } from "./audit-log-helper.js";
 
 const execFileAsync = promisify(execFile);
 
+// deepscan6 (2026-07-02): configurable pg_dump path — the tower has no system PostgreSQL
+// client and the prod server is v17.10 (needs pg17 pg_dump). Point at a portable binary via
+// PG_DUMP_PATH; falls back to "pg_dump" on PATH. Keeps the pre-migration backup functional.
+// Resolved at CALL time (not module load) so it is correct regardless of dotenv load order.
+function pgDumpBin(): string {
+  return process.env["PG_DUMP_PATH"] || "pg_dump";
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface JournalEntry {
@@ -115,7 +123,7 @@ function resolveJournalPath(): string {
  */
 export async function checkPgDumpAvailable(): Promise<boolean> {
   try {
-    await execFileAsync("pg_dump", ["--version"], { timeout: 5000 });
+    await execFileAsync(pgDumpBin(), ["--version"], { timeout: 5000 });
     return true;
   } catch {
     return false;
@@ -138,7 +146,7 @@ export async function takePgDumpBackup(
   // pg_dump uses PGPASSWORD env var for non-interactive auth
   const pgPassword = extractPgPassword(databaseUrl);
   await execFileAsync(
-    "pg_dump",
+    pgDumpBin(),
     ["--schema-only", "--schema=public", `--file=${filePath}`],
     {
       env: { ...process.env, PGPASSWORD: pgPassword },
