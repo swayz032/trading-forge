@@ -26,8 +26,52 @@ import {
   MODE_OBSERVE,
   MODE_AUTOPILOT,
 } from "../lib/learning-loop-mode.js";
+import { adminSessionFromCookie } from "../lib/slumhouse/admin-session.js";
 
 export const adminRoutes = Router();
+
+// ─── Layer-4 Office P0 (2026-07-02): pipeline mutation guard ─────────────────
+//
+// ARCHITECTURE DECISION (operator, pinned): the Slumhouse Office is the ONLY
+// control room; the React SPA is a read-only observation deck. The SPA's
+// pause/resume dispatch was removed, and these generic pipeline mutations are
+// now Office/operator-only. A request passes when it presents:
+//   - a valid Slumhouse Office admin session cookie (slumhouse_admin_sid), OR
+//   - a direct loopback connection (operator curl on the tower / runbooks)
+//     with NO x-forwarded-for header (relay-forwarded traffic arrives on
+//     loopback but carries forwarding headers — it must show the Office cookie).
+//
+// Known callers audited 2026-07-02: React SPA usePipelineMode (mutations
+// REMOVED this pass — read-only now), operator runbook curls (localhost —
+// still allowed), crons/services (call setMode() in-process, never HTTP —
+// unaffected), n8n workflows (none call these routes). The Office Bot Power
+// switch uses /slumhouse/admin/switch, not these routes. GET /pipeline/status
+// stays open (read-only display feed for the SPA).
+function requirePipelineControlAuthority(req: Request, res: Response): boolean {
+  if (adminSessionFromCookie(req.headers.cookie)) return true;
+
+  const forwarded = req.headers["x-forwarded-for"];
+  const remote = req.socket?.remoteAddress ?? "";
+  const isLoopback =
+    remote === "127.0.0.1" || remote === "::1" || remote === "::ffff:127.0.0.1";
+  if (isLoopback && !forwarded) return true;
+
+  void insertAuditRowSafe({
+    action: "admin.pipeline_mutation_blocked",
+    entityType: "system",
+    entityId: null,
+    decisionAuthority: "gate",
+    input: { path: req.path, remote, forwarded: forwarded ?? null } as Record<string, unknown>,
+    result: {} as Record<string, unknown>,
+    status: "warning",
+    correlationId: req.id ?? null,
+  });
+  res.status(401).json({
+    error: "office_only",
+    message: "Pipeline controls live in the Slumhouse Office (/slumhouse/office.html).",
+  });
+  return false;
+}
 
 // ─── Wave 24 Pass 1 Item 8: POST /self-restart — HMAC-authenticated self-restart ─
 //
@@ -495,6 +539,7 @@ adminRoutes.get("/pipeline/status", async (req, res) => {
 
 // ─── POST /pipeline/start ────────────────────────────────────────
 adminRoutes.post("/pipeline/start", async (req, res) => {
+  if (!requirePipelineControlAuthority(req, res)) return;
   try {
     const reason = (req.body as { reason?: string })?.reason ?? "Manual start";
     const result = await setMode("ACTIVE", reason, req.id ?? null);
@@ -1110,6 +1155,7 @@ adminRoutes.post("/scout/run-autonomous-cycle", async (req, res) => {
 
 // ─── POST /pipeline/pause ────────────────────────────────────────
 adminRoutes.post("/pipeline/pause", async (req, res) => {
+  if (!requirePipelineControlAuthority(req, res)) return;
   try {
     const reason = (req.body as { reason?: string })?.reason ?? "Manual pause";
     const result = await setMode("PAUSED", reason, req.id ?? null);
@@ -1122,6 +1168,7 @@ adminRoutes.post("/pipeline/pause", async (req, res) => {
 
 // ─── POST /pipeline/vacation ─────────────────────────────────────
 adminRoutes.post("/pipeline/vacation", async (req, res) => {
+  if (!requirePipelineControlAuthority(req, res)) return;
   try {
     const reason = (req.body as { reason?: string })?.reason ?? "Vacation mode";
     const result = await setMode("VACATION", reason, req.id ?? null);

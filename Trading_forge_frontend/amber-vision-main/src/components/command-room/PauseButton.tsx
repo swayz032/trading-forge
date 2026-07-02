@@ -1,20 +1,20 @@
 /**
- * Big red wall pause button.
+ * Big red wall button — READ-ONLY STATUS INDICATOR.
+ *
+ * ARCHITECTURE DECISION (operator, 2026-07-02, pinned): the Slumhouse Office
+ * is the ONLY control room. This button no longer pauses or resumes anything —
+ * it renders the live pipeline mode and points the operator at The Office
+ * ("Bot Power" switch) for control. The pause/resume dispatch was removed in
+ * the Layer-4 Office P0 pass.
  *
  * Visual states:
  *   - ACTIVE   → emerald LED ring lit, button cap dim (system running)
  *   - PAUSED   → red dome cap glowing, ring dim (system stopped)
- *   - VACATION → amber dome (manual operator override; toggle returns to ACTIVE)
- *
- * Clicking toggles ACTIVE ↔ PAUSED via usePipelineMode. Vacation has to be set
- * elsewhere (operator dashboard) — the room button intentionally doesn't enter
- * vacation, only the binary run/stop toggle.
- *
- * Performance: the button is a few low-poly primitives. Animation is a single
- * y-position lerp on press. Materials use emissiveIntensity (no shader work).
+ *   - VACATION → amber dome
+ *   - UNKNOWN  → dim amber (fail-closed — never mistake for ACTIVE)
  */
 
-import { useRef, useState, useCallback } from "react";
+import { useRef } from "react";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
@@ -27,11 +27,6 @@ interface PauseButtonProps {
   rotationY?: number;
 }
 
-/** Window (ms) within which a second click confirms the pause action.
- *  Long enough to let the operator read "CONFIRM PAUSE" but short enough that
- *  an accidental double-click cannot trip it. */
-const CONFIRM_WINDOW_MS = 3000;
-
 const STATE_COLOURS: Record<PipelineModeOrUnknown, { dome: string; ring: string; emit: number }> = {
   ACTIVE:   { dome: "#5b1212", ring: "#10B981", emit: 1.4 },
   PAUSED:   { dome: "#dc2626", ring: "#1f2937", emit: 2.4 },
@@ -43,28 +38,10 @@ const STATE_COLOURS: Record<PipelineModeOrUnknown, { dome: string; ring: string;
 
 export function PauseButton({ position = [0, 1.4, -7.4], rotationY = 0 }: PauseButtonProps) {
   const { invalidate } = useThree();
-  const { mode, isPending, isActive, isUnknown, toggle } = usePipelineMode();
+  const { mode, isActive, isUnknown } = usePipelineMode();
   const domeRef = useRef<THREE.Mesh>(null!);
   const pressed = useRef(0);
   const colours = STATE_COLOURS[mode];
-
-  // 2-step confirmation gate. First click on an ACTIVE button arms the
-  // confirmation state for CONFIRM_WINDOW_MS; second click within the window
-  // actually pauses. Resume (PAUSED → ACTIVE) is one-click.
-  const [armed, setArmed] = useState(false);
-  const armTimer = useRef<number | null>(null);
-
-  const clearArmTimer = useCallback(() => {
-    if (armTimer.current !== null) {
-      window.clearTimeout(armTimer.current);
-      armTimer.current = null;
-    }
-  }, []);
-
-  const disarm = useCallback(() => {
-    clearArmTimer();
-    setArmed(false);
-  }, [clearArmTimer]);
 
   useFrame(() => {
     if (!domeRef.current) return;
@@ -76,32 +53,12 @@ export function PauseButton({ position = [0, 1.4, -7.4], rotationY = 0 }: PauseB
     if (pressed.current > 0) pressed.current -= 1;
   });
 
+  // Read-only: a click gives the tactile press animation but mutates NOTHING.
+  // The label below tells the operator where the real switch lives.
   const onClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
-    if (isPending || isUnknown) return;
     pressed.current = 12; // ~12 frames of press animation
     invalidate();
-
-    if (isActive) {
-      // Two-step pause: arm on first click, fire on second click within window.
-      if (!armed) {
-        setArmed(true);
-        clearArmTimer();
-        armTimer.current = window.setTimeout(() => {
-          armTimer.current = null;
-          setArmed(false);
-          invalidate();
-        }, CONFIRM_WINDOW_MS);
-        return;
-      }
-      disarm();
-      toggle();
-      return;
-    }
-
-    // Resume (PAUSED → ACTIVE / VACATION → ACTIVE) is one-click; no confirm.
-    disarm();
-    toggle();
   };
 
   const onOver = (e: ThreeEvent<PointerEvent>) => {
@@ -137,7 +94,7 @@ export function PauseButton({ position = [0, 1.4, -7.4], rotationY = 0 }: PauseB
         <meshStandardMaterial color="#11181f" metalness={0.7} roughness={0.4} />
       </mesh>
 
-      {/* Big red dome (the actual button cap) — animated on press */}
+      {/* Big red dome (the status cap) — press animation only, no control */}
       <mesh
         ref={domeRef}
         position={[0, 0, 0.05]}
@@ -175,35 +132,25 @@ export function PauseButton({ position = [0, 1.4, -7.4], rotationY = 0 }: PauseB
         <div>
           <div
             style={{
-              color: armed
+              color: isUnknown
                 ? "#f59e0b"
-                : isUnknown
-                  ? "#f59e0b"
-                  : isActive
-                    ? "#10B981"
-                    : "#ef4444",
+                : isActive
+                  ? "#10B981"
+                  : "#ef4444",
               fontWeight: 700,
             }}
           >
-            {armed
-              ? "CONFIRM PAUSE"
-              : isUnknown
-                ? "STATUS UNKNOWN"
-                : mode === "PAUSED"
-                  ? "PAUSED"
-                  : mode === "VACATION"
-                    ? "VACATION"
-                    : "ACTIVE"}
+            {isUnknown
+              ? "STATUS UNKNOWN"
+              : mode === "PAUSED"
+                ? "PAUSED"
+                : mode === "VACATION"
+                  ? "VACATION"
+                  : "ACTIVE"}
           </div>
           <div>TRADING FORGE</div>
           <div style={{ marginTop: 2, opacity: 0.6 }}>
-            {armed
-              ? `click again within ${Math.round(CONFIRM_WINDOW_MS / 1000)}s`
-              : isUnknown
-                ? "retrying…"
-                : isActive
-                  ? "click to pause"
-                  : "click to resume"}
+            {isUnknown ? "retrying…" : "read-only — controls live in The Office"}
           </div>
         </div>
       </Html>

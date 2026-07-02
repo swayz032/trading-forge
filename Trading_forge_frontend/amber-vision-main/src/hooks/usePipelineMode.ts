@@ -1,17 +1,17 @@
 /**
- * usePipelineMode — read + mutate the global Trading Forge pipeline state.
+ * usePipelineMode — READ-ONLY view of the global Trading Forge pipeline state.
  *
- * Backend endpoints (existing — no new routes added by Command Room):
- *   GET  /api/admin/pipeline/status   → { mode: "ACTIVE" | "PAUSED" | "VACATION", subsystems, timestamp }
- *   POST /api/admin/pipeline/start    → mode = "ACTIVE"
- *   POST /api/admin/pipeline/pause    → mode = "PAUSED" (body: { reason?: string })
- *   POST /api/admin/pipeline/vacation → mode = "VACATION"
+ * ARCHITECTURE DECISION (operator, 2026-07-02, pinned): the Slumhouse Office
+ * (public/slumhouse/office.html) is the ONLY control room. This React SPA is a
+ * read-only observation deck — the pause/resume mutations that used to live
+ * here (POST /api/admin/pipeline/pause|start) were REMOVED in the Layer-4
+ * Office P0 pass. Pipeline control is the Office "Bot Power" switch.
  *
- * The Command Room red button toggles between ACTIVE ↔ PAUSED. Vacation mode
- * is a separate operator decision (not exposed in the 3D scene).
+ * Backend endpoint (read side only):
+ *   GET /api/admin/pipeline/status → { mode: "ACTIVE" | "PAUSED" | "VACATION", subsystems, timestamp }
  */
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 export type PipelineMode = "ACTIVE" | "PAUSED" | "VACATION";
 
@@ -44,28 +44,7 @@ async function fetchStatus(): Promise<PipelineStatus> {
   return res.json();
 }
 
-async function postPause(reason: string): Promise<{ mode: PipelineMode }> {
-  const res = await fetch("/api/admin/pipeline/pause", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ reason }),
-  });
-  if (!res.ok) throw new Error(`pause failed ${res.status}`);
-  return res.json();
-}
-
-async function postStart(): Promise<{ mode: PipelineMode }> {
-  const res = await fetch("/api/admin/pipeline/start", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-  });
-  if (!res.ok) throw new Error(`start failed ${res.status}`);
-  return res.json();
-}
-
 export function usePipelineMode() {
-  const qc = useQueryClient();
-
   const status = useQuery({
     queryKey: STATUS_QUERY_KEY,
     queryFn: fetchStatus,
@@ -74,52 +53,18 @@ export function usePipelineMode() {
     refetchInterval: 15_000,
   });
 
-  const pause = useMutation({
-    mutationFn: (reason?: string) => postPause(reason ?? "Command Room red button"),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: STATUS_QUERY_KEY });
-    },
-  });
-
-  const start = useMutation({
-    mutationFn: postStart,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: STATUS_QUERY_KEY });
-    },
-  });
-
   // Fail-closed: until we hear ACTIVE from the backend, the UI must surface
   // "UNKNOWN" — never silently assume the bot is running.
   const mode: PipelineModeOrUnknown = status.data?.mode ?? "UNKNOWN";
-  const isActive = mode === "ACTIVE";
-  const isPaused = mode === "PAUSED";
-  const isVacation = mode === "VACATION";
-  const isUnknown = mode === "UNKNOWN";
-  const isPending = pause.isPending || start.isPending;
-
-  const toggle = () => {
-    if (isPending) return;
-    // Fail-closed: don't dispatch state-mutating calls while UNKNOWN —
-    // operator must wait for status to resolve, otherwise we could pause a
-    // bot that's already paused or resume one that's intentionally halted.
-    if (isUnknown) return;
-    if (isActive) {
-      pause.mutate("Command Room red button");
-    } else {
-      start.mutate();
-    }
-  };
 
   return {
     mode,
-    isActive,
-    isPaused,
-    isVacation,
-    isUnknown,
+    isActive: mode === "ACTIVE",
+    isPaused: mode === "PAUSED",
+    isVacation: mode === "VACATION",
+    isUnknown: mode === "UNKNOWN",
     isLoading: status.isLoading,
-    isPending,
-    error: status.error ?? pause.error ?? start.error,
-    toggle,
+    error: status.error,
     refetch: status.refetch,
   };
 }

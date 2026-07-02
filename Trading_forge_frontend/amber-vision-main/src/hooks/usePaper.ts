@@ -1,4 +1,14 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+/**
+ * usePaper — READ-ONLY paper-trading data hooks.
+ *
+ * ARCHITECTURE DECISION (operator, 2026-07-02, pinned): the Slumhouse Office
+ * is the ONLY control room; this React SPA is a read-only observation deck.
+ * The start/stop/stop-all mutations (POST /paper/start, /paper/stop,
+ * /paper/streams/stop-all) were REMOVED from this file in the Layer-4 Office
+ * P0 pass. Session lifecycle is driven by the autonomous conveyor + the
+ * Office; humans watch here.
+ */
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
 import type { PaperSession, PaperPosition, PaperTrade } from "@/types/api";
 
@@ -28,23 +38,6 @@ export function usePaperTrades() {
   return useQuery({
     queryKey: ["paper", "trades"],
     queryFn: () => api.get<PaperTrade[]>("/paper/trades"),
-  });
-}
-
-export function useStartPaperSession() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (data: { strategyId?: string; startingCapital?: string; config?: any }) =>
-      api.post<PaperSession>("/paper/start", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["paper"] }),
-  });
-}
-
-export function useStopPaperSession() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (sessionId: string) => api.post<PaperSession>("/paper/stop", { sessionId }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["paper"] }),
   });
 }
 
@@ -113,13 +106,5 @@ export function usePaperBars(symbol: string | undefined) {
     queryFn: () => api.get<BarData[]>(`/paper/bars/${symbol}`),
     enabled: !!symbol,
     refetchInterval: 5000, // refresh bars every 5s for live chart
-  });
-}
-
-export function useStopAllStreams() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: () => api.post("/paper/streams/stop-all", {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["paper"] }),
   });
 }

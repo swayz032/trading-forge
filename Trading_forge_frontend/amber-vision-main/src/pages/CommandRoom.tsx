@@ -23,7 +23,7 @@ import { usePipelineMode } from "@/hooks/usePipelineMode";
 
 export default function CommandRoom() {
   const [hidden, setHidden] = useState(typeof document !== "undefined" && document.hidden);
-  const { mode, isActive, isPaused, isVacation, isPending } = usePipelineMode();
+  const { mode, isActive, isPaused, isVacation } = usePipelineMode();
 
   useEffect(() => {
     const onVis = () => setHidden(document.hidden);
@@ -78,7 +78,9 @@ export default function CommandRoom() {
                 }}
               />
               {stateLabel}
-              {isPending && <span className="opacity-60">…</span>}
+            </div>
+            <div className="text-[10px] tracking-[0.14em] text-text-secondary opacity-70">
+              READ-ONLY · CONTROLS LIVE IN THE OFFICE
             </div>
           </div>
         </div>

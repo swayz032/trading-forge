@@ -10,7 +10,7 @@ import {
   AreaChart, Area, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
-import { ArrowLeft, Play, Pause, Copy, FlaskConical, Zap, Shuffle } from "lucide-react";
+import { ArrowLeft, Play, Copy, FlaskConical, Shuffle, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/forge/Pagination";
 import { toast } from "sonner";
@@ -19,7 +19,6 @@ import { useStrategy } from "@/hooks/useStrategies";
 import { useBacktests, useBacktestTrades, useBacktestEquity, useRunBacktest } from "@/hooks/useBacktests";
 import { useOhlcv } from "@/hooks/useData";
 import { useMonteCarlo, useMonteCarloRun, useRunMC } from "@/hooks/useMonteCarlo";
-import { useStartPaperSession } from "@/hooks/usePaper";
 import { num, timeAgo } from "@/lib/utils";
 import type { BacktestTrade, Backtest } from "@/types/api";
 
@@ -184,7 +183,6 @@ export default function StrategyDetail() {
   }, [equityData, latestBacktest]);
 
   const runBacktest = useRunBacktest();
-  const startPaper = useStartPaperSession();
 
   if (loadingStrategy) {
     return (
@@ -224,16 +222,8 @@ export default function StrategyDetail() {
     );
   };
 
-  const handleStartPaper = () => {
-    if (!id) return;
-    startPaper.mutate(
-      { strategyId: id },
-      {
-        onSuccess: () => toast.success("Paper session started"),
-        onError: (e) => toast.error(`Paper start failed: ${e.message}`),
-      }
-    );
-  };
+  // REMOVED (Layer-4 Office P0, 2026-07-02): Start Paper control - the
+  // Slumhouse Office is the ONLY control room; this page is read-only.
 
   const tradeColumns = [
     { key: "entryTime", header: "Date", mono: true,
@@ -312,18 +302,16 @@ export default function StrategyDetail() {
             <Button variant="outline" size="sm" className="text-xs border-border/30 text-text-secondary hover:text-foreground" onClick={handleRunBacktest} disabled={runBacktest.isPending}>
               <FlaskConical className="w-3.5 h-3.5 mr-1" /> Run Backtest
             </Button>
-            <Button variant="outline" size="sm" className="text-xs border-border/30 text-text-secondary hover:text-foreground" onClick={handleStartPaper} disabled={startPaper.isPending}>
-              <Zap className="w-3.5 h-3.5 mr-1" /> Start Paper
-            </Button>
-            {status === "active" ? (
-              <Button size="sm" className="text-xs bg-loss/10 text-loss hover:bg-loss/20 border-0">
-                <Pause className="w-3.5 h-3.5 mr-1" /> Pause
-              </Button>
-            ) : (
-              <Button size="sm" className="text-xs bg-profit/10 text-profit hover:bg-profit/20 border-0">
-                <Play className="w-3.5 h-3.5 mr-1" /> Activate
-              </Button>
-            )}
+            {/* Layer-4 Office P0: Start Paper / Pause / Activate controls removed —
+                the Slumhouse Office is the ONLY control room. */}
+            <a
+              href="/slumhouse/office.html"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-2 border border-border/30 text-xs text-text-secondary hover:text-foreground transition-colors"
+              title="Start/stop and go-live decisions happen in the Slumhouse Office"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              Controls live in The Office
+            </a>
           </div>
         </div>
       </motion.div>
