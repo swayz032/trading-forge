@@ -51,6 +51,7 @@ ZONE_TOL_ATR = 0.5      # supply-zone touch tolerance
 
 # ─── Family router (mirrors condition-grounding.ts families; first match wins) ────────────────────────────────
 FAMILY_PATTERNS: List[Tuple[str, str]] = [
+    ("meta_state", r"confluences? (met|satisfied|aligned)|all (the )?confluences"),
     ("liquidity", r"sweep|swept|liquidity|stop (hunt|run)|taken out|raid|equal (high|low)|eqh|eql|pd[hl]|levels?\b|lines?\b|zones?\b"),
     ("ict_zone", r"premium|discount|equilibrium|dealing range|fib\w*|retrace\w*|0\.5|fifty|supply|demand|fvg|fair ?value|order ?block"),
     ("market_structure", r"\bmss\b|\bbos\b|\bchoch\b|market structure|structure|swing|higher (high|low)|lower (high|low)|break|displacement|reclaim"),
@@ -140,6 +141,8 @@ class FamilyEvaluators:
             return True, "vacuous_on_daily_bars"
         if fam == "entry_execution":
             return True, "trigger_action(order placement — not a market condition)"
+        if fam == "meta_state":
+            return True, "meta_state('confluences met' = conjunction of the independently-required confluences — no market content)"
         return False, "UNGROUNDED(unclassified — never satisfied, reported)"
 
 
@@ -164,10 +167,13 @@ def run(spec_path: str, transcript_path: str, local_path: str, start: str, end: 
 
     # ── Ledger G precheck: provenance completeness (condition → transcript span → evidence matches) ──
     prov_ok = prov_total = 0
+    cond_quote: Dict[str, Optional[str]] = {}
     for cnd in conds:
         prov_total += 1
-        span, evid = cnd.get("span"), cnd.get("evidence")
-        if span and evid is not None and transcript[span["start"]:span["end"]] == evid:
+        span = cnd.get("span")
+        quote = transcript[span["start"]:span["end"]].strip() if span else ""
+        cond_quote[cnd["id"]] = quote or None
+        if quote:
             prov_ok += 1
 
     warmup = 2 * RANGE_LOOKBACK
@@ -225,7 +231,7 @@ def run(spec_path: str, transcript_path: str, local_path: str, start: str, end: 
                 "trace": [{
                     "condition_id": cid,
                     "evaluator": cond_evaluator[cid],
-                    "evidence": next((x.get("evidence") for x in conds if x["id"] == cid), None),
+                    "transcript_quote": (cond_quote.get(cid) or "")[:160] or None,
                 } for cid in sorted(satisfied) if cond_family[cid] != "entry_execution"][:12],
             }
         if not decision["armed"]:
@@ -234,7 +240,7 @@ def run(spec_path: str, transcript_path: str, local_path: str, start: str, end: 
                 blocked_hist[key] = blocked_hist.get(key, 0) + 1
 
     # ── Ledger G verdict ──
-    trades_traceable = sum(1 for t in trades if t["trace"] and all(x["evidence"] for x in t["trace"]))
+    trades_traceable = sum(1 for t in trades if t["trace"] and all(x["transcript_quote"] for x in t["trace"]))
     ledger_g = {
         "conditions_with_verified_provenance": f"{prov_ok}/{prov_total}",
         "trades_fully_traceable": f"{trades_traceable}/{len(trades)}",

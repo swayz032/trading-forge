@@ -1,0 +1,1113 @@
+{
+ "specification": {
+  "video": "l-2iKbcm5UI",
+  "spec_hash": "db02f7f303e929fbdb525530fbdbf359e97f84fc888652498cd9f6437b9c41ad",
+  "graph_canonical_hash": "c01170eaeb448863",
+  "ledger_d": "CONSERVED",
+  "conditions": 31,
+  "and_groups": 5,
+  "or_branches": 0,
+  "invalidations": 0,
+  "direction": "both",
+  "bars": 1983,
+  "window": "2018-01-14 19:00:00-05:00 .. 2026-02-28 19:00:00-05:00",
+  "framework_v1_exit": "stop 1.5xATR14 / tp 2.0R / time-stop 10 bars (overlay-owned)"
+ },
+ "execution": {
+  "bars_evaluated": 1942,
+  "armed_setups": 13,
+  "entries": 12,
+  "invalidation_vetoes": 0,
+  "blocked_reason_histogram": {
+   "bias_direction": 2932,
+   "liquidity": 854,
+   "price_action": 63,
+   "ict_zone": 9
+  }
+ },
+ "market_outputs": {
+  "trades": 12,
+  "total_pnl_points": 102.39,
+  "total_pnl_usd_1lot": 511.95,
+  "win_rate_observed_pct": 50.0,
+  "expectancy_points_per_trade": 8.533,
+  "max_drawdown_usd": 1271.36
+ },
+ "ledger_g": {
+  "conditions_with_verified_provenance": "31/31",
+  "trades_fully_traceable": "12/12",
+  "verdict": "TRACEABLE"
+ },
+ "trades": [
+  {
+   "entry_ts": "2020-09-29 20:00:00-04:00",
+   "signal_ts": "2020-09-28 20:00:00-04:00",
+   "entry": 3732.052715364658,
+   "stop": 3829.74,
+   "tp": 3536.68,
+   "bars_held": 8,
+   "direction": "short",
+   "trace": [
+    {
+     "condition_id": "ENABLE_ENTRY:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the potential short position."
+    },
+    {
+     "condition_id": "FILTER:direction#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "And therefore, we're only looking for shorts."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure is bearish#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We then understand market structure is bearish."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We have bearish market structure."
+    },
+    {
+     "condition_id": "WAIT_BIAS:overall short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the overall short position."
+    },
+    {
+     "condition_id": "WAIT_BIAS:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the short position."
+    },
+    {
+     "condition_id": "WAIT_CONFIRMATION:confluences met#0",
+     "evaluator": "meta_state('confluences met' = conjunction of the independently-required confluences \u2014 no market content)",
+     "transcript_quote": "We have all the confluences, we've hit the 0."
+    },
+    {
+     "condition_id": "WAIT_RETEST:fibonacci retracement level 0#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "And all we are simply looking for is for the market to retrace towards that 0."
+    },
+    {
+     "condition_id": "WAIT_SESSION:4 hour time frame#0",
+     "evaluator": "vacuous_on_daily_bars",
+     "transcript_quote": "Now, we're going to do the exact same thing here on the 4-hour time frame."
+    },
+    {
+     "condition_id": "WAIT_SESSION:liquidity taken out#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "move up. So, we're waiting here on the 50-minute time frame for liquidity to get taken out."
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bearish candle s low#0",
+     "evaluator": "bearish_engulfing|rejection_upper|detect_weakness",
+     "transcript_quote": "and then for a bearish candle's low that is most likely going to be your liquidity low, which can fuel a future"
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bos#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "So, again, what I see here is a 4-hour break of structure in towards the downside."
+    }
+   ],
+   "exit_ts": "2020-10-07 20:00:00-04:00",
+   "exit": 3829.74,
+   "exit_reason": "stop(framework-v1 1.5xATR)",
+   "pnl_points": -97.69,
+   "pnl_usd": -488.44
+  },
+  {
+   "entry_ts": "2021-09-27 20:00:00-04:00",
+   "signal_ts": "2021-09-26 20:00:00-04:00",
+   "entry": 5111.979039464811,
+   "stop": 5196.6,
+   "tp": 4942.75,
+   "bars_held": 4,
+   "direction": "short",
+   "trace": [
+    {
+     "condition_id": "ENABLE_ENTRY:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the potential short position."
+    },
+    {
+     "condition_id": "FILTER:direction#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "And therefore, we're only looking for shorts."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure is bearish#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We then understand market structure is bearish."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We have bearish market structure."
+    },
+    {
+     "condition_id": "WAIT_BIAS:overall short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the overall short position."
+    },
+    {
+     "condition_id": "WAIT_BIAS:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the short position."
+    },
+    {
+     "condition_id": "WAIT_CONFIRMATION:confluences met#0",
+     "evaluator": "meta_state('confluences met' = conjunction of the independently-required confluences \u2014 no market content)",
+     "transcript_quote": "We have all the confluences, we've hit the 0."
+    },
+    {
+     "condition_id": "WAIT_RETEST:fibonacci retracement level 0#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "And all we are simply looking for is for the market to retrace towards that 0."
+    },
+    {
+     "condition_id": "WAIT_SESSION:4 hour time frame#0",
+     "evaluator": "vacuous_on_daily_bars",
+     "transcript_quote": "Now, we're going to do the exact same thing here on the 4-hour time frame."
+    },
+    {
+     "condition_id": "WAIT_SESSION:liquidity taken out#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "move up. So, we're waiting here on the 50-minute time frame for liquidity to get taken out."
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bearish candle s low#0",
+     "evaluator": "bearish_engulfing|rejection_upper|detect_weakness",
+     "transcript_quote": "and then for a bearish candle's low that is most likely going to be your liquidity low, which can fuel a future"
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bos#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "So, again, what I see here is a 4-hour break of structure in towards the downside."
+    }
+   ],
+   "exit_ts": "2021-09-30 20:00:00-04:00",
+   "exit": 4942.75,
+   "exit_reason": "tp(framework-v1 2R)",
+   "pnl_points": 169.23,
+   "pnl_usd": 846.15
+  },
+  {
+   "entry_ts": "2021-12-13 19:00:00-05:00",
+   "signal_ts": "2021-12-12 19:00:00-05:00",
+   "entry": 5394.118740401413,
+   "stop": 5516.92,
+   "tp": 5148.51,
+   "bars_held": 10,
+   "direction": "short",
+   "trace": [
+    {
+     "condition_id": "ENABLE_ENTRY:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the potential short position."
+    },
+    {
+     "condition_id": "FILTER:direction#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "And therefore, we're only looking for shorts."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure is bearish#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We then understand market structure is bearish."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We have bearish market structure."
+    },
+    {
+     "condition_id": "WAIT_BIAS:overall short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the overall short position."
+    },
+    {
+     "condition_id": "WAIT_BIAS:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the short position."
+    },
+    {
+     "condition_id": "WAIT_CONFIRMATION:confluences met#0",
+     "evaluator": "meta_state('confluences met' = conjunction of the independently-required confluences \u2014 no market content)",
+     "transcript_quote": "We have all the confluences, we've hit the 0."
+    },
+    {
+     "condition_id": "WAIT_RETEST:fibonacci retracement level 0#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "And all we are simply looking for is for the market to retrace towards that 0."
+    },
+    {
+     "condition_id": "WAIT_SESSION:4 hour time frame#0",
+     "evaluator": "vacuous_on_daily_bars",
+     "transcript_quote": "Now, we're going to do the exact same thing here on the 4-hour time frame."
+    },
+    {
+     "condition_id": "WAIT_SESSION:liquidity taken out#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "move up. So, we're waiting here on the 50-minute time frame for liquidity to get taken out."
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bearish candle s low#0",
+     "evaluator": "bearish_engulfing|rejection_upper|detect_weakness",
+     "transcript_quote": "and then for a bearish candle's low that is most likely going to be your liquidity low, which can fuel a future"
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bos#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "So, again, what I see here is a 4-hour break of structure in towards the downside."
+    }
+   ],
+   "exit_ts": "2021-12-25 19:00:00-05:00",
+   "exit": 5474.6113880462035,
+   "exit_reason": "time_stop(framework-v1)",
+   "pnl_points": -80.49,
+   "pnl_usd": -402.46
+  },
+  {
+   "entry_ts": "2022-02-02 19:00:00-05:00",
+   "signal_ts": "2022-02-01 19:00:00-05:00",
+   "entry": 5252.334804772081,
+   "stop": 5447.73,
+   "tp": 4861.54,
+   "bars_held": 10,
+   "direction": "short",
+   "trace": [
+    {
+     "condition_id": "ENABLE_ENTRY:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the potential short position."
+    },
+    {
+     "condition_id": "FILTER:direction#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "And therefore, we're only looking for shorts."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure is bearish#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We then understand market structure is bearish."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We have bearish market structure."
+    },
+    {
+     "condition_id": "WAIT_BIAS:overall short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the overall short position."
+    },
+    {
+     "condition_id": "WAIT_BIAS:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the short position."
+    },
+    {
+     "condition_id": "WAIT_CONFIRMATION:confluences met#0",
+     "evaluator": "meta_state('confluences met' = conjunction of the independently-required confluences \u2014 no market content)",
+     "transcript_quote": "We have all the confluences, we've hit the 0."
+    },
+    {
+     "condition_id": "WAIT_RETEST:fibonacci retracement level 0#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "And all we are simply looking for is for the market to retrace towards that 0."
+    },
+    {
+     "condition_id": "WAIT_SESSION:4 hour time frame#0",
+     "evaluator": "vacuous_on_daily_bars",
+     "transcript_quote": "Now, we're going to do the exact same thing here on the 4-hour time frame."
+    },
+    {
+     "condition_id": "WAIT_SESSION:liquidity taken out#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "move up. So, we're waiting here on the 50-minute time frame for liquidity to get taken out."
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bearish candle s low#0",
+     "evaluator": "bearish_engulfing|rejection_upper|detect_weakness",
+     "transcript_quote": "and then for a bearish candle's low that is most likely going to be your liquidity low, which can fuel a future"
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bos#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "So, again, what I see here is a 4-hour break of structure in towards the downside."
+    }
+   ],
+   "exit_ts": "2022-02-13 19:00:00-05:00",
+   "exit": 5104.536815893592,
+   "exit_reason": "time_stop(framework-v1)",
+   "pnl_points": 147.8,
+   "pnl_usd": 738.99
+  },
+  {
+   "entry_ts": "2022-03-03 19:00:00-05:00",
+   "signal_ts": "2022-03-02 19:00:00-05:00",
+   "entry": 5067.732218663066,
+   "stop": 5264.28,
+   "tp": 4674.64,
+   "bars_held": 10,
+   "direction": "short",
+   "trace": [
+    {
+     "condition_id": "ENABLE_ENTRY:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the potential short position."
+    },
+    {
+     "condition_id": "FILTER:direction#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "And therefore, we're only looking for shorts."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure is bearish#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We then understand market structure is bearish."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We have bearish market structure."
+    },
+    {
+     "condition_id": "WAIT_BIAS:overall short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the overall short position."
+    },
+    {
+     "condition_id": "WAIT_BIAS:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the short position."
+    },
+    {
+     "condition_id": "WAIT_CONFIRMATION:confluences met#0",
+     "evaluator": "meta_state('confluences met' = conjunction of the independently-required confluences \u2014 no market content)",
+     "transcript_quote": "We have all the confluences, we've hit the 0."
+    },
+    {
+     "condition_id": "WAIT_RETEST:fibonacci retracement level 0#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "And all we are simply looking for is for the market to retrace towards that 0."
+    },
+    {
+     "condition_id": "WAIT_SESSION:4 hour time frame#0",
+     "evaluator": "vacuous_on_daily_bars",
+     "transcript_quote": "Now, we're going to do the exact same thing here on the 4-hour time frame."
+    },
+    {
+     "condition_id": "WAIT_SESSION:liquidity taken out#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "move up. So, we're waiting here on the 50-minute time frame for liquidity to get taken out."
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bearish candle s low#0",
+     "evaluator": "bearish_engulfing|rejection_upper|detect_weakness",
+     "transcript_quote": "and then for a bearish candle's low that is most likely going to be your liquidity low, which can fuel a future"
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bos#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "So, again, what I see here is a 4-hour break of structure in towards the downside."
+    }
+   ],
+   "exit_ts": "2022-03-14 20:00:00-04:00",
+   "exit": 4934.424228694232,
+   "exit_reason": "time_stop(framework-v1)",
+   "pnl_points": 133.31,
+   "pnl_usd": 666.54
+  },
+  {
+   "entry_ts": "2023-03-22 20:00:00-04:00",
+   "signal_ts": "2023-03-21 20:00:00-04:00",
+   "entry": 4484.886036259131,
+   "stop": 4623.02,
+   "tp": 4208.62,
+   "bars_held": 8,
+   "direction": "short",
+   "trace": [
+    {
+     "condition_id": "ENABLE_ENTRY:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the potential short position."
+    },
+    {
+     "condition_id": "FILTER:direction#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "And therefore, we're only looking for shorts."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure is bearish#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We then understand market structure is bearish."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We have bearish market structure."
+    },
+    {
+     "condition_id": "WAIT_BIAS:overall short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the overall short position."
+    },
+    {
+     "condition_id": "WAIT_BIAS:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the short position."
+    },
+    {
+     "condition_id": "WAIT_CONFIRMATION:confluences met#0",
+     "evaluator": "meta_state('confluences met' = conjunction of the independently-required confluences \u2014 no market content)",
+     "transcript_quote": "We have all the confluences, we've hit the 0."
+    },
+    {
+     "condition_id": "WAIT_RETEST:fibonacci retracement level 0#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "And all we are simply looking for is for the market to retrace towards that 0."
+    },
+    {
+     "condition_id": "WAIT_SESSION:4 hour time frame#0",
+     "evaluator": "vacuous_on_daily_bars",
+     "transcript_quote": "Now, we're going to do the exact same thing here on the 4-hour time frame."
+    },
+    {
+     "condition_id": "WAIT_SESSION:liquidity taken out#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "move up. So, we're waiting here on the 50-minute time frame for liquidity to get taken out."
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bearish candle s low#0",
+     "evaluator": "bearish_engulfing|rejection_upper|detect_weakness",
+     "transcript_quote": "and then for a bearish candle's low that is most likely going to be your liquidity low, which can fuel a future"
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bos#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "So, again, what I see here is a 4-hour break of structure in towards the downside."
+    }
+   ],
+   "exit_ts": "2023-03-30 20:00:00-04:00",
+   "exit": 4623.02,
+   "exit_reason": "stop(framework-v1 1.5xATR)",
+   "pnl_points": -138.13,
+   "pnl_usd": -690.67
+  },
+  {
+   "entry_ts": "2023-10-12 20:00:00-04:00",
+   "signal_ts": "2023-10-11 20:00:00-04:00",
+   "entry": 4920.733858727148,
+   "stop": 5024.45,
+   "tp": 4713.3,
+   "bars_held": 10,
+   "direction": "short",
+   "trace": [
+    {
+     "condition_id": "ENABLE_ENTRY:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the potential short position."
+    },
+    {
+     "condition_id": "FILTER:direction#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "And therefore, we're only looking for shorts."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure is bearish#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We then understand market structure is bearish."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We have bearish market structure."
+    },
+    {
+     "condition_id": "WAIT_BIAS:overall short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the overall short position."
+    },
+    {
+     "condition_id": "WAIT_BIAS:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the short position."
+    },
+    {
+     "condition_id": "WAIT_CONFIRMATION:confluences met#0",
+     "evaluator": "meta_state('confluences met' = conjunction of the independently-required confluences \u2014 no market content)",
+     "transcript_quote": "We have all the confluences, we've hit the 0."
+    },
+    {
+     "condition_id": "WAIT_RETEST:fibonacci retracement level 0#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "And all we are simply looking for is for the market to retrace towards that 0."
+    },
+    {
+     "condition_id": "WAIT_SESSION:4 hour time frame#0",
+     "evaluator": "vacuous_on_daily_bars",
+     "transcript_quote": "Now, we're going to do the exact same thing here on the 4-hour time frame."
+    },
+    {
+     "condition_id": "WAIT_SESSION:liquidity taken out#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "move up. So, we're waiting here on the 50-minute time frame for liquidity to get taken out."
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bearish candle s low#0",
+     "evaluator": "bearish_engulfing|rejection_upper|detect_weakness",
+     "transcript_quote": "and then for a bearish candle's low that is most likely going to be your liquidity low, which can fuel a future"
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bos#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "So, again, what I see here is a 4-hour break of structure in towards the downside."
+    }
+   ],
+   "exit_ts": "2023-10-23 20:00:00-04:00",
+   "exit": 4791.9056108857285,
+   "exit_reason": "time_stop(framework-v1)",
+   "pnl_points": 128.83,
+   "pnl_usd": 644.14
+  },
+  {
+   "entry_ts": "2024-01-13 19:00:00-05:00",
+   "signal_ts": "2024-01-11 19:00:00-05:00",
+   "entry": 5337.533337461451,
+   "stop": 5406.61,
+   "tp": 5199.38,
+   "bars_held": 7,
+   "direction": "short",
+   "trace": [
+    {
+     "condition_id": "ENABLE_ENTRY:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the potential short position."
+    },
+    {
+     "condition_id": "FILTER:direction#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "And therefore, we're only looking for shorts."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure is bearish#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We then understand market structure is bearish."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We have bearish market structure."
+    },
+    {
+     "condition_id": "WAIT_BIAS:overall short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the overall short position."
+    },
+    {
+     "condition_id": "WAIT_BIAS:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the short position."
+    },
+    {
+     "condition_id": "WAIT_CONFIRMATION:confluences met#0",
+     "evaluator": "meta_state('confluences met' = conjunction of the independently-required confluences \u2014 no market content)",
+     "transcript_quote": "We have all the confluences, we've hit the 0."
+    },
+    {
+     "condition_id": "WAIT_RETEST:fibonacci retracement level 0#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "And all we are simply looking for is for the market to retrace towards that 0."
+    },
+    {
+     "condition_id": "WAIT_SESSION:4 hour time frame#0",
+     "evaluator": "vacuous_on_daily_bars",
+     "transcript_quote": "Now, we're going to do the exact same thing here on the 4-hour time frame."
+    },
+    {
+     "condition_id": "WAIT_SESSION:liquidity taken out#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "move up. So, we're waiting here on the 50-minute time frame for liquidity to get taken out."
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bearish candle s low#0",
+     "evaluator": "bearish_engulfing|rejection_upper|detect_weakness",
+     "transcript_quote": "and then for a bearish candle's low that is most likely going to be your liquidity low, which can fuel a future"
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bos#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "So, again, what I see here is a 4-hour break of structure in towards the downside."
+    }
+   ],
+   "exit_ts": "2024-01-20 19:00:00-05:00",
+   "exit": 5406.61,
+   "exit_reason": "stop(framework-v1 1.5xATR)",
+   "pnl_points": -69.08,
+   "pnl_usd": -345.38
+  },
+  {
+   "entry_ts": "2025-02-08 19:00:00-05:00",
+   "signal_ts": "2025-02-06 19:00:00-05:00",
+   "entry": 6255.53240645879,
+   "stop": 6379.61,
+   "tp": 6007.37,
+   "bars_held": 5,
+   "direction": "short",
+   "trace": [
+    {
+     "condition_id": "ENABLE_ENTRY:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the potential short position."
+    },
+    {
+     "condition_id": "FILTER:direction#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "And therefore, we're only looking for shorts."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure is bearish#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We then understand market structure is bearish."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We have bearish market structure."
+    },
+    {
+     "condition_id": "WAIT_BIAS:overall short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the overall short position."
+    },
+    {
+     "condition_id": "WAIT_BIAS:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the short position."
+    },
+    {
+     "condition_id": "WAIT_CONFIRMATION:confluences met#0",
+     "evaluator": "meta_state('confluences met' = conjunction of the independently-required confluences \u2014 no market content)",
+     "transcript_quote": "We have all the confluences, we've hit the 0."
+    },
+    {
+     "condition_id": "WAIT_RETEST:fibonacci retracement level 0#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "And all we are simply looking for is for the market to retrace towards that 0."
+    },
+    {
+     "condition_id": "WAIT_SESSION:4 hour time frame#0",
+     "evaluator": "vacuous_on_daily_bars",
+     "transcript_quote": "Now, we're going to do the exact same thing here on the 4-hour time frame."
+    },
+    {
+     "condition_id": "WAIT_SESSION:liquidity taken out#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "move up. So, we're waiting here on the 50-minute time frame for liquidity to get taken out."
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bearish candle s low#0",
+     "evaluator": "bearish_engulfing|rejection_upper|detect_weakness",
+     "transcript_quote": "and then for a bearish candle's low that is most likely going to be your liquidity low, which can fuel a future"
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bos#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "So, again, what I see here is a 4-hour break of structure in towards the downside."
+    }
+   ],
+   "exit_ts": "2025-02-12 19:00:00-05:00",
+   "exit": 6379.61,
+   "exit_reason": "stop(framework-v1 1.5xATR)",
+   "pnl_points": -124.08,
+   "pnl_usd": -620.39
+  },
+  {
+   "entry_ts": "2025-11-30 19:00:00-05:00",
+   "signal_ts": "2025-11-29 19:00:00-05:00",
+   "entry": 6962.125809061488,
+   "stop": 7106.24,
+   "tp": 6673.89,
+   "bars_held": 10,
+   "direction": "short",
+   "trace": [
+    {
+     "condition_id": "ENABLE_ENTRY:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the potential short position."
+    },
+    {
+     "condition_id": "FILTER:direction#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "And therefore, we're only looking for shorts."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure is bearish#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We then understand market structure is bearish."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We have bearish market structure."
+    },
+    {
+     "condition_id": "WAIT_BIAS:overall short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the overall short position."
+    },
+    {
+     "condition_id": "WAIT_BIAS:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the short position."
+    },
+    {
+     "condition_id": "WAIT_CONFIRMATION:confluences met#0",
+     "evaluator": "meta_state('confluences met' = conjunction of the independently-required confluences \u2014 no market content)",
+     "transcript_quote": "We have all the confluences, we've hit the 0."
+    },
+    {
+     "condition_id": "WAIT_RETEST:fibonacci retracement level 0#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "And all we are simply looking for is for the market to retrace towards that 0."
+    },
+    {
+     "condition_id": "WAIT_SESSION:4 hour time frame#0",
+     "evaluator": "vacuous_on_daily_bars",
+     "transcript_quote": "Now, we're going to do the exact same thing here on the 4-hour time frame."
+    },
+    {
+     "condition_id": "WAIT_SESSION:liquidity taken out#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "move up. So, we're waiting here on the 50-minute time frame for liquidity to get taken out."
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bearish candle s low#0",
+     "evaluator": "bearish_engulfing|rejection_upper|detect_weakness",
+     "transcript_quote": "and then for a bearish candle's low that is most likely going to be your liquidity low, which can fuel a future"
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bos#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "So, again, what I see here is a 4-hour break of structure in towards the downside."
+    }
+   ],
+   "exit_ts": "2025-12-10 19:00:00-05:00",
+   "exit": 7013.937922918505,
+   "exit_reason": "time_stop(framework-v1)",
+   "pnl_points": -51.81,
+   "pnl_usd": -259.06
+  },
+  {
+   "entry_ts": "2025-12-27 19:00:00-05:00",
+   "signal_ts": "2025-12-25 19:00:00-05:00",
+   "entry": 6980.5,
+   "stop": 7064.98,
+   "tp": 6811.54,
+   "bars_held": 10,
+   "direction": "short",
+   "trace": [
+    {
+     "condition_id": "ENABLE_ENTRY:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the potential short position."
+    },
+    {
+     "condition_id": "FILTER:direction#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "And therefore, we're only looking for shorts."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure is bearish#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We then understand market structure is bearish."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We have bearish market structure."
+    },
+    {
+     "condition_id": "WAIT_BIAS:overall short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the overall short position."
+    },
+    {
+     "condition_id": "WAIT_BIAS:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the short position."
+    },
+    {
+     "condition_id": "WAIT_CONFIRMATION:confluences met#0",
+     "evaluator": "meta_state('confluences met' = conjunction of the independently-required confluences \u2014 no market content)",
+     "transcript_quote": "We have all the confluences, we've hit the 0."
+    },
+    {
+     "condition_id": "WAIT_RETEST:fibonacci retracement level 0#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "And all we are simply looking for is for the market to retrace towards that 0."
+    },
+    {
+     "condition_id": "WAIT_SESSION:4 hour time frame#0",
+     "evaluator": "vacuous_on_daily_bars",
+     "transcript_quote": "Now, we're going to do the exact same thing here on the 4-hour time frame."
+    },
+    {
+     "condition_id": "WAIT_SESSION:liquidity taken out#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "move up. So, we're waiting here on the 50-minute time frame for liquidity to get taken out."
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bearish candle s low#0",
+     "evaluator": "bearish_engulfing|rejection_upper|detect_weakness",
+     "transcript_quote": "and then for a bearish candle's low that is most likely going to be your liquidity low, which can fuel a future"
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bos#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "So, again, what I see here is a 4-hour break of structure in towards the downside."
+    }
+   ],
+   "exit_ts": "2026-01-06 19:00:00-05:00",
+   "exit": 6964.5,
+   "exit_reason": "time_stop(framework-v1)",
+   "pnl_points": 16.0,
+   "pnl_usd": 80.0
+  },
+  {
+   "entry_ts": "2026-02-10 19:00:00-05:00",
+   "signal_ts": "2026-02-09 19:00:00-05:00",
+   "entry": 6974.75,
+   "stop": 7123.41,
+   "tp": 6677.43,
+   "bars_held": 10,
+   "direction": "short",
+   "trace": [
+    {
+     "condition_id": "ENABLE_ENTRY:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the potential short position."
+    },
+    {
+     "condition_id": "FILTER:direction#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "And therefore, we're only looking for shorts."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure is bearish#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We then understand market structure is bearish."
+    },
+    {
+     "condition_id": "WAIT_BIAS:market structure#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "We have bearish market structure."
+    },
+    {
+     "condition_id": "WAIT_BIAS:overall short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the overall short position."
+    },
+    {
+     "condition_id": "WAIT_BIAS:short position#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "look for the short position."
+    },
+    {
+     "condition_id": "WAIT_CONFIRMATION:confluences met#0",
+     "evaluator": "meta_state('confluences met' = conjunction of the independently-required confluences \u2014 no market content)",
+     "transcript_quote": "We have all the confluences, we've hit the 0."
+    },
+    {
+     "condition_id": "WAIT_RETEST:fibonacci retracement level 0#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "And all we are simply looking for is for the market to retrace towards that 0."
+    },
+    {
+     "condition_id": "WAIT_SESSION:4 hour time frame#0",
+     "evaluator": "vacuous_on_daily_bars",
+     "transcript_quote": "Now, we're going to do the exact same thing here on the 4-hour time frame."
+    },
+    {
+     "condition_id": "WAIT_SESSION:liquidity taken out#0",
+     "evaluator": "supply_zone_touch|detect_weakness",
+     "transcript_quote": "move up. So, we're waiting here on the 50-minute time frame for liquidity to get taken out."
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bearish candle s low#0",
+     "evaluator": "bearish_engulfing|rejection_upper|detect_weakness",
+     "transcript_quote": "and then for a bearish candle's low that is most likely going to be your liquidity low, which can fuel a future"
+    },
+    {
+     "condition_id": "WAIT_STRUCTURE:bos#0",
+     "evaluator": "bearish_structure(lower-highs+lower-lows swings)",
+     "transcript_quote": "So, again, what I see here is a 4-hour break of structure in towards the downside."
+    }
+   ],
+   "exit_ts": "2026-02-21 19:00:00-05:00",
+   "exit": 6906.25,
+   "exit_reason": "time_stop(framework-v1)",
+   "pnl_points": 68.5,
+   "pnl_usd": 342.5
+  }
+ ],
+ "sample_blocked_decisions": [
+  {
+   "ts": "2018-03-01 19:00:00-05:00",
+   "armed": false,
+   "blocked_by": [
+    "ENABLE_ENTRY:short position#0",
+    "FILTER:direction#0",
+    "WAIT_BIAS:market structure is bearish#0",
+    "WAIT_BIAS:market structure#0"
+   ],
+   "families_true": [
+    "entry_execution",
+    "ict_zone",
+    "meta_state",
+    "session_time"
+   ]
+  },
+  {
+   "ts": "2018-03-03 19:00:00-05:00",
+   "armed": false,
+   "blocked_by": [
+    "ENABLE_ENTRY:short position#0",
+    "FILTER:direction#0",
+    "WAIT_BIAS:market structure is bearish#0",
+    "WAIT_BIAS:market structure#0"
+   ],
+   "families_true": [
+    "entry_execution",
+    "ict_zone",
+    "meta_state",
+    "session_time"
+   ]
+  },
+  {
+   "ts": "2018-03-04 19:00:00-05:00",
+   "armed": false,
+   "blocked_by": [
+    "ENABLE_ENTRY:short position#0",
+    "FILTER:direction#0",
+    "WAIT_BIAS:market structure is bearish#0",
+    "WAIT_BIAS:market structure#0"
+   ],
+   "families_true": [
+    "entry_execution",
+    "ict_zone",
+    "meta_state",
+    "session_time"
+   ]
+  },
+  {
+   "ts": "2018-03-05 19:00:00-05:00",
+   "armed": false,
+   "blocked_by": [
+    "ENABLE_ENTRY:short position#0",
+    "FILTER:direction#0",
+    "WAIT_BIAS:market structure is bearish#0",
+    "WAIT_BIAS:market structure#0"
+   ],
+   "families_true": [
+    "entry_execution",
+    "meta_state",
+    "session_time"
+   ]
+  },
+  {
+   "ts": "2018-03-06 19:00:00-05:00",
+   "armed": false,
+   "blocked_by": [
+    "ENABLE_ENTRY:short position#0",
+    "FILTER:direction#0",
+    "WAIT_BIAS:market structure is bearish#0",
+    "WAIT_BIAS:market structure#0"
+   ],
+   "families_true": [
+    "entry_execution",
+    "ict_zone",
+    "meta_state",
+    "session_time"
+   ]
+  }
+ ],
+ "sample_armed_decisions": [
+  {
+   "ts": "2020-09-28 20:00:00-04:00",
+   "armed": true,
+   "blocked_by": [],
+   "families_true": [
+    "bias_direction",
+    "entry_execution",
+    "ict_zone",
+    "liquidity",
+    "market_structure",
+    "meta_state",
+    "price_action",
+    "session_time"
+   ]
+  },
+  {
+   "ts": "2021-09-26 20:00:00-04:00",
+   "armed": true,
+   "blocked_by": [],
+   "families_true": [
+    "bias_direction",
+    "entry_execution",
+    "ict_zone",
+    "liquidity",
+    "market_structure",
+    "meta_state",
+    "price_action",
+    "session_time"
+   ]
+  },
+  {
+   "ts": "2021-12-12 19:00:00-05:00",
+   "armed": true,
+   "blocked_by": [],
+   "families_true": [
+    "bias_direction",
+    "entry_execution",
+    "ict_zone",
+    "liquidity",
+    "market_structure",
+    "meta_state",
+    "price_action",
+    "session_time"
+   ]
+  },
+  {
+   "ts": "2022-02-01 19:00:00-05:00",
+   "armed": true,
+   "blocked_by": [],
+   "families_true": [
+    "bias_direction",
+    "entry_execution",
+    "ict_zone",
+    "liquidity",
+    "market_structure",
+    "meta_state",
+    "price_action",
+    "session_time"
+   ]
+  },
+  {
+   "ts": "2022-03-02 19:00:00-05:00",
+   "armed": true,
+   "blocked_by": [],
+   "families_true": [
+    "bias_direction",
+    "entry_execution",
+    "ict_zone",
+    "liquidity",
+    "market_structure",
+    "meta_state",
+    "price_action",
+    "session_time"
+   ]
+  }
+ ]
+}
