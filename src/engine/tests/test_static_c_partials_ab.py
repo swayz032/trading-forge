@@ -145,7 +145,9 @@ def _call_static_c(flag_value: bool, trades_df, highs, lows, closes, atrs, df_ba
         if flag_value:
             os.environ["BACKTEST_STATIC_C_PARTIALS_ENABLED"] = "true"
         else:
-            os.environ.pop("BACKTEST_STATIC_C_PARTIALS_ENABLED", None)
+            # Explicit opt-out required since default is now ON (2026-07-02).
+            # Popping the env var would enable partials via the "1" default.
+            os.environ["BACKTEST_STATIC_C_PARTIALS_ENABLED"] = "false"
         return _apply_static_styleC_management(
             trades_records=trades_df,
             high_np=highs,
@@ -186,8 +188,8 @@ class TestGoldenMetricsAreEnvFlagIndependent:
         gross_wins   = sum(t["gross_pnl"] for t in trades if t["gross_pnl"] > 0)
         gross_losses = abs(sum(t["gross_pnl"] for t in trades if t["gross_pnl"] < 0))
 
-        # Compute with flag OFF
-        os.environ.pop("BACKTEST_STATIC_C_PARTIALS_ENABLED", None)
+        # Compute with flag OFF (explicit opt-out — default is ON since 2026-07-02)
+        os.environ["BACKTEST_STATIC_C_PARTIALS_ENABLED"] = "false"
         pf_off = gross_wins / gross_losses if gross_losses > 0 else float("inf")
 
         # Compute with flag ON

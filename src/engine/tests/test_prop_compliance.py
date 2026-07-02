@@ -197,3 +197,85 @@ class TestRankFirms:
         rankings = rank_firms_for_strategy(stats)
         firm_names = [r["firm"] for r in rankings]
         assert len(firm_names) == 0  # All firms now $2K — none survive $2,800 DD
+
+
+# ─── FIX 4 (2026-07-02): MFFU consistency stage-scoping ──────────────────────
+
+class TestMFFUConsistencyStageScoping:
+    """MFFU 50% consistency is SIM-PAYOUT-stage-only (firm_config.py §MFFU).
+    MC survival sim skips it; enforce_mffu_consistency=True activates it.
+    Topstep consistency is always enforced regardless of the parameter.
+    """
+
+    def _good_stats(self) -> dict:
+        """Baseline stats that pass all hard gates except what we test."""
+        return {
+            "avg_daily_pnl": 250,
+            "max_drawdown": 1500,
+            "trades_overnight": False,
+            "consistency_ratio": 0.10,
+        }
+
+    def test_mffu_daily_loss_limit_is_1000_not_none(self):
+        """MFFU daily_loss_limit must be 1000 (firm_config.py:148), not None."""
+        from src.engine.prop_compliance import FIRM_CONFIGS
+        mffu = FIRM_CONFIGS["mffu_50k"]
+        assert mffu["daily_loss_limit"] == 1000, (
+            f"MFFU daily_loss_limit must be 1000 (per firm_config.py:148), "
+            f"got {mffu['daily_loss_limit']!r}"
+        )
+
+    def test_mffu_consistency_skipped_by_default(self):
+        """MFFU consistency check is skipped when enforce_mffu_consistency=False (default).
+
+        A strategy with one dominant day (>50% of profit) must still PASS MFFU
+        when the default MC context is used — consistency only gates at sim-payout.
+        """
+        # 1 big day > 50% of total profit → would fail consistency check if enforced
+        # day0 = 900 / (900+100+100+50+50+100+100+100+100+100) = 900/1700 ≈ 53% > 50%
+        pnls = [900, 100, 100, 50, 50, 100, 100, 100, 100, 100]
+        results = run_prop_compliance(pnls, self._good_stats())  # default: skip MFFU
+        # MFFU must pass — consistency check skipped outside sim-payout
+        mffu_failures = results["mffu_50k"]["failures"]
+        consistency_fail = [f for f in mffu_failures if "consistency" in f.lower()]
+        assert len(consistency_fail) == 0, (
+            f"MFFU consistency must be skipped outside sim-payout stage. "
+            f"Got failures: {consistency_fail}"
+        )
+
+    def test_mffu_consistency_enforced_when_opted_in(self):
+        """MFFU consistency check is enforced when enforce_mffu_consistency=True."""
+        # Same dominant-day scenario — now opt-in at sim-payout stage
+        # day0 = 900/1700 ≈ 53% > 50% threshold
+        pnls = [900, 100, 100, 50, 50, 100, 100, 100, 100, 100]
+        results = run_prop_compliance(
+            pnls, self._good_stats(), enforce_mffu_consistency=True
+        )
+        mffu_failures = results["mffu_50k"]["failures"]
+        consistency_fail = [f for f in mffu_failures if "consistency" in f.lower()]
+        assert len(consistency_fail) > 0, (
+            "MFFU consistency violation must be reported when enforce_mffu_consistency=True. "
+            f"Failures were: {mffu_failures}"
+        )
+
+    def test_topstep_consistency_always_enforced(self):
+        """Topstep consistency must be enforced regardless of enforce_mffu_consistency.
+
+        enforce_mffu_consistency only gates the MFFU check. Topstep is always checked.
+        """
+        # day0 = 900/1700 ≈ 53% > 50% threshold for both MFFU and Topstep
+        pnls = [900, 100, 100, 50, 50, 100, 100, 100, 100, 100]
+        # Default (MFFU skip)
+        results_default = run_prop_compliance(pnls, self._good_stats())
+        # Explicit opt-in
+        results_optin = run_prop_compliance(
+            pnls, self._good_stats(), enforce_mffu_consistency=True
+        )
+        # Topstep must have consistency failure in BOTH cases
+        for label, results in [("default", results_default), ("opt-in", results_optin)]:
+            ts_failures = results["topstep_50k"]["failures"]
+            ts_consistency = [f for f in ts_failures if "consistency" in f.lower()]
+            assert len(ts_consistency) > 0, (
+                f"Topstep consistency must be enforced ({label}). "
+                f"Failures were: {ts_failures}"
+            )

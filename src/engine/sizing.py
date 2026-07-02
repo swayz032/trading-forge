@@ -63,7 +63,7 @@ Wave 25 Pass 2 — Inst-10 Drawdown-Room Cap (Topstep only):
   Adds a new term to the min() chain (Topstep trailing-DD only):
     drawdownRoomCap = floor(currentDrawdownRoom × DRAWDOWN_ROOM_RISK_PCT / stopDollarsPerContract)
   where currentDrawdownRoom = max(0, balance - trailingFloor).
-  DRAWDOWN_ROOM_RISK_PCT default 0.01 (1%) per 2026 funded-trader consensus.
+  DRAWDOWN_ROOM_RISK_PCT default 0.08 (8%) per 2026 funded-trader consensus.
   Parity: identical to TypeScript risk-sizing.ts drawdownRoomCap computation.
   NOT applied for MFFU (static 2% rule is correct for that firm).
   New RiskSizingResult fields: drawdown_room_cap (Optional[int]), drawdown_room_cap_binding (bool).
