@@ -104,6 +104,59 @@ const _dirname = path.dirname(_filename);
 // We rely on the migrations dir relative to where the file lives during dev.
 // In production (dist/), migrations are copied as data files. We use env var
 // override if MIGRATIONS_DIR is set, otherwise resolve relative to this file.
+
+// ─── FIX 2 (deepscan10): boot-failure counter (file-based) ──────────────────
+// Persists a respawn-counter so NSSM-driven crash-loops during vacation are
+// escalated via Discord. DB is unavailable when migrations fail — use sync fs.
+// Path: <repo-root>/bin/boot-migration-failures.json  { attempt: number }
+
+const _bootFailureCounterPath = path.resolve(_dirname, "..", "..", "..", "..", "bin", "boot-migration-failures.json");
+
+/**
+ * Pure predicate: true when the boot-failure attempt count should trigger a
+ * Discord escalation. Fires on attempt 1, 3, and every 10th thereafter.
+ * Exported for unit-test coverage of cadence logic.
+ */
+export function shouldAlertBootFailure(attempt: number): boolean {
+  return attempt === 1 || attempt === 3 || attempt % 10 === 0;
+}
+
+function _readBootFailureCount(): number {
+  try {
+    const raw = fs.readFileSync(_bootFailureCounterPath, "utf8");
+    const parsed: unknown = JSON.parse(raw);
+    if (
+      parsed !== null &&
+      typeof parsed === "object" &&
+      "attempt" in parsed &&
+      typeof (parsed as { attempt: unknown }).attempt === "number"
+    ) {
+      return (parsed as { attempt: number }).attempt;
+    }
+  } catch {
+    // File missing or corrupt — treat as 0
+  }
+  return 0;
+}
+
+function _writeBootFailureCount(attempt: number): void {
+  try {
+    const dir = path.dirname(_bootFailureCounterPath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(_bootFailureCounterPath, JSON.stringify({ attempt }), "utf8");
+  } catch (e) {
+    logger.warn({ err: e, path: _bootFailureCounterPath }, "boot-migration: failed to write failure counter (non-fatal)");
+  }
+}
+
+function _resetBootFailureCount(): void {
+  try {
+    if (fs.existsSync(_bootFailureCounterPath)) fs.unlinkSync(_bootFailureCounterPath);
+  } catch (e) {
+    logger.warn({ err: e, path: _bootFailureCounterPath }, "boot-migration: failed to reset failure counter (non-fatal)");
+  }
+}
+
 function resolveMigrationsDir(): string {
   if (process.env.MIGRATIONS_DIR) return process.env.MIGRATIONS_DIR;
   // Go up from lib/ → server/ → src/ → root
@@ -437,6 +490,9 @@ export async function runPendingMigrations(
       { total: journal.entries.length },
       "boot-migration: no pending migrations — boot proceeds",
     );
+    // FIX 2 (deepscan10): clean boot = reset the crash-loop counter so the
+    // next real failure starts the cadence fresh.
+    _resetBootFailureCount();
     return;
   }
 
@@ -694,6 +750,18 @@ export async function runPendingMigrations(
         criticalMsg,
       );
 
+      // FIX 2 (deepscan10): increment file-based crash-loop counter and
+      // send an escalation alert on the configured cadence (1, 3, every 10th)
+      // so a vacation-mode NSSM respawn loop never runs silently for 14 days.
+      const _failureAttempt = _readBootFailureCount() + 1;
+      _writeBootFailureCount(_failureAttempt);
+      if (shouldAlertBootFailure(_failureAttempt)) {
+        await fireDiscordCritical(
+          `BOOT BLOCKED — Migration Crash-Loop: ${_failureAttempt} attempt(s)`,
+          `boot-migration has failed ${_failureAttempt} time(s) in a row.\n\nLatest failure: ${entry.tag} — ${errMsg}\n\nNSSM will respawn the backend automatically. On vacation, this loop continues until manually resolved. Check the Railway log and the bin/boot-migration-failures.json counter.`,
+        );
+      }
+
       // Throw to block boot (fail-closed)
       throw new Error(`boot-migration: failed to apply ${entry.tag}: ${errMsg}`);
     }
@@ -703,4 +771,6 @@ export async function runPendingMigrations(
     { applied: pending.length, tags: pending.map((e) => e.tag) },
     "boot-migration: all pending migrations applied — boot proceeds",
   );
+  // FIX 2 (deepscan10): successful boot = reset crash-loop counter
+  _resetBootFailureCount();
 }

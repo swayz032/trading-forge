@@ -31,7 +31,7 @@
  */
 
 import { logger } from "../lib/logger.js";
-import { insertAuditRow } from "../lib/audit-log-helper.js";
+import { insertAuditRow, insertAuditRowSafe } from "../lib/audit-log-helper.js";
 
 // ─── Configuration ─────────────────────────────────────────────────────────────
 
@@ -58,6 +58,14 @@ const _cache: Record<string, InternalReading> = {
 
 /** True once the WS subscription has been started (prevents double-init). */
 let _subscriptionStarted = false;
+
+// ─── FIX 5 (deepscan10): WS disconnect observability state ──────────────────
+// _wsDisconnectLastAuditAt: 1-hour dedupe so a flapping connection doesn't
+//   flood the audit table with disconnect rows.
+// _wsDisconnectStartedAt: epoch-ms when the last disconnect fired, used to
+//   compute outage duration in the reconnect audit row.
+let _wsDisconnectLastAuditAt: number | null = null;
+let _wsDisconnectStartedAt: number | null = null;
 
 // ─── Public interfaces ────────────────────────────────────────────────────────
 
@@ -186,13 +194,51 @@ export async function startInternalsSubscription(): Promise<void> {
         status: "success",
         decisionAuthority: "system",
       });
+      // FIX 5 (deepscan10): if we're reconnecting after a disconnect, emit a
+      // reconnected audit row with the outage duration so post-incident analysis
+      // can answer "how long was internals data unavailable?"
+      if (_wsDisconnectStartedAt !== null) {
+        const outageDurationMs = Date.now() - _wsDisconnectStartedAt;
+        _wsDisconnectStartedAt = null;
+        _wsDisconnectLastAuditAt = null; // reset dedupe so next disconnect gets audited
+        void insertAuditRowSafe({
+          action: "market_internals.ws_reconnected",
+          entityType: "market_internals",
+          entityId: null,
+          decisionAuthority: "system",
+          input: null,
+          result: { symbols: subscribedSymbols, outageDurationMs } as Record<string, unknown>,
+          status: "info",
+        });
+        logger.info(
+          { outageDurationMs },
+          "market-internals-service: WebSocket reconnected — outage duration recorded",
+        );
+      }
     });
 
     ws.on("disconnected", () => {
+      const now = Date.now();
+      _wsDisconnectStartedAt = now;
       logger.warn(
         {},
         "market-internals-service: WebSocket disconnected — stale snapshots will be returned until reconnect",
       );
+      // FIX 5 (deepscan10): audit the disconnect with 1h dedupe so a flapping
+      // connection doesn't flood audit_log, but every sustained outage is recorded.
+      const _WS_AUDIT_COOLDOWN_MS = 60 * 60 * 1000;
+      if (_wsDisconnectLastAuditAt === null || now - _wsDisconnectLastAuditAt >= _WS_AUDIT_COOLDOWN_MS) {
+        _wsDisconnectLastAuditAt = now;
+        void insertAuditRowSafe({
+          action: "market_internals.ws_disconnected",
+          entityType: "market_internals",
+          entityId: null,
+          decisionAuthority: "system",
+          input: null,
+          result: { symbols: [TICK_SYMBOL, ADD_SYMBOL, VOLD_SYMBOL, TRIN_SYMBOL] } as Record<string, unknown>,
+          status: "warning",
+        });
+      }
     });
 
     ws.on("reconnecting", ({ attempt, delayMs }: { attempt: number; delayMs: number }) => {
@@ -230,6 +276,9 @@ export function __resetInternalsForTests(): void {
     _cache[sym] = { value: null, asOf: null };
   }
   _subscriptionStarted = false;
+  // FIX 5 (deepscan10): reset WS observability state for test isolation
+  _wsDisconnectLastAuditAt = null;
+  _wsDisconnectStartedAt = null;
 }
 
 /**

@@ -410,6 +410,30 @@ async function withRetry(
   } catch (dlqErr) {
     logger.error({ err: dlqErr, job: name }, "Failed to capture to DLQ — error suppressed");
   }
+
+  // FIX 4 (deepscan10): databento-specific alert on withRetry exhaustion.
+  // DLQ entry alone is invisible during vacation — emit audit row + Discord WARN
+  // so the operator knows the weekly Databento cache is now stale.
+  if (name === "databento-weekly-refresh") {
+    void insertAuditRowSafe({
+      action: "databento_refresh.failed",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { attempts: attempt, maxRetries } as Record<string, unknown>,
+      result: { error: lastErr instanceof Error ? lastErr.message : String(lastErr) } as Record<string, unknown>,
+      status: "error",
+    });
+    notifyWarning(
+      "Databento Weekly Refresh Failed After All Retries",
+      appendFamilyGradePostscript(
+        `databento-weekly-refresh exhausted all ${attempt} attempt(s). The Databento market-data cache is now stale. Next scheduled retry: following Sunday 9 PM ET. Last error: ${lastErr instanceof Error ? lastErr.message : String(lastErr)}`,
+        "The weekly market data update failed. The bot may use slightly stale reference data until the next attempt next Sunday.",
+        "No action needed immediately — the bot retries automatically next Sunday. Call Tony if this repeats for 2 or more weeks in a row.",
+      ),
+      { job: name, attempts: attempt, maxRetries },
+    );
+  }
   } finally {
     cronJobsConcurrent.dec();
   }
@@ -539,6 +563,11 @@ function _releaseJobLock(name: string): void {
 // unscheduled drift (Track C F-1/F-2 class of bug — dead-jobs that look healthy
 // in the registry but never fire).
 const _scheduledJobs = new Set<string>();
+
+// ─── FIX 4 (deepscan10): databento pipeline-paused skip dedupe ───────────────
+// Emit one audit row per calendar day when databento refresh is skipped because
+// the pipeline is not ACTIVE — so vacation-stale data is queryable.
+let _databentoSkipLastAuditDay: string | null = null;
 
 // ─── Track C F-6: jobs that MUST fire even when pipeline is paused ────────
 // Heartbeat must alert operator even when pipeline gates research throughput.
@@ -1464,6 +1493,26 @@ export function initScheduler(bootCorrelationId: string | null = null) {
   } finally { _releaseJobLock("pre-trading-day-health-check"); }
   });
   _scheduledJobs.add("pre-trading-day-health-check");
+
+  // ─── FIX 3 (deepscan10): Weekend auto-resume cron ────────────────────────────
+  // The weekday cron above ("0 12,13 * * 1-5") misses Friday-evening reboots:
+  // a reboot pause set after Friday 8 AM ET would not be auto-resumed until
+  // Monday 8 AM ET — ~72h of silent trading halt. This cron fires hourly on
+  // Sat/Sun and lets maybeAutoResumeAfterReboot() decide via its three guards
+  // (provenance row, pipeline mode, latest mode-change ownership). No-op if the
+  // pipeline was never paused by a reboot or was already operator-resumed.
+  // NOT pipelineGated: must run even when pipeline is PAUSED so it can resume it.
+  cron.schedule("0 * * * 0,6", async () => {
+    try {
+      const { maybeAutoResumeAfterReboot } = await import("./services/windows-health-check-service.js");
+      const result = await maybeAutoResumeAfterReboot();
+      if (result.resumed) {
+        logger.info({ outcome: result.outcome }, "Scheduler: weekend auto-resume check — pipeline resumed after reboot pause");
+      }
+    } catch (err) {
+      logger.error({ err }, "Scheduler: weekend auto-resume check failed (non-fatal)");
+    }
+  });
 
   // ─── W25 Gap 8: Every hour — Broker error budget check (RTH + post-market) ──
   // Aggregates route_rejected / compliance_rejected from audit_log over rolling
@@ -3267,7 +3316,25 @@ except Exception as e:
     });
     // Only fire on Sunday 21:00 ET (which is Mon 01:00 or 02:00 UTC)
     if (!etStr.includes("Sun") || !etStr.includes("21")) return;
-    if (!(await pipelineGate("databento-weekly-refresh"))) return;
+    if (!(await pipelineGate("databento-weekly-refresh"))) {
+      // FIX 4 (deepscan10): audit the skip so vacation-stale data is queryable.
+      // Deduped to one row per calendar day so a long vacation doesn't spam.
+      const _skipDay = new Date().toISOString().slice(0, 10);
+      if (_databentoSkipLastAuditDay !== _skipDay) {
+        _databentoSkipLastAuditDay = _skipDay;
+        void insertAuditRowSafe({
+          action: "databento_refresh.skipped_pipeline_paused",
+          entityType: "system",
+          entityId: null,
+          decisionAuthority: "system",
+          input: { reason: "pipeline_not_active", date: _skipDay } as Record<string, unknown>,
+          result: { skipped: true } as Record<string, unknown>,
+          status: "info",
+        });
+        logger.info({ date: _skipDay }, "Scheduler: databento-weekly-refresh skipped — pipeline not ACTIVE (audit row written)");
+      }
+      return;
+    }
     logger.info("Scheduler: Databento weekly refresh (Sunday 9 PM ET)");
     const t0dbr = Date.now();
     await withRetry("databento-weekly-refresh", SCHEDULER_JOBS["databento-weekly-refresh"].run);
@@ -5952,6 +6019,22 @@ except Exception as e:
   // ─── I3: Resume active paper sessions after restart ───────
   resumeActivePaperSessions().catch((err) => {
     logger.error({ err }, "Scheduler: paper session resume failed");
+  });
+
+  // ─── FIX 3 (deepscan10): Boot-time auto-resume check ────────────────────────
+  // If the server was rebooted (NSSM restart) while a reboot-pause was active,
+  // the pipeline stays PAUSED until the next weekday 8 AM ET cron. This boot-time
+  // call gives an immediate recovery path: if RebootPending is cleared AND the
+  // latest pipeline mode-change is still our reboot pause, resume now.
+  // The three guards inside maybeAutoResumeAfterReboot() make this idempotent.
+  import("./services/windows-health-check-service.js").then(({ maybeAutoResumeAfterReboot }) => {
+    return maybeAutoResumeAfterReboot();
+  }).then((result) => {
+    if (result.resumed) {
+      logger.info({ outcome: result.outcome }, "Scheduler: boot-time auto-resume check — pipeline resumed after reboot pause");
+    }
+  }).catch((err) => {
+    logger.error({ err }, "Scheduler: boot-time auto-resume check failed (non-fatal)");
   });
 }
 
