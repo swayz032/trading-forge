@@ -281,6 +281,12 @@ def _run_walk_forward_cpcv(
     # Multi-model WRC/SPA: each path's daily P&L series tracked separately so
     # whites_reality_check_multi / hansens_spa_multi can build the (L, T) matrix.
     per_path_oos_pnls: list[list[float]] = []
+    # E1 (deep-scan #7 2026-07-02): track true per-path IS Sharpes for BIF + PBO.
+    # Each entry corresponds to the same index in path_sharpes (OOS).
+    # Populated by running a lightweight IS backtest per CPCV path.
+    # When an IS backtest fails, the entry is skipped (path count stays aligned
+    # by only appending when BOTH IS and OOS succeed for the same path index).
+    per_path_is_sharpes: list[float] = []
 
     _shared_req = BacktestRequest(
         strategy=config,
@@ -396,6 +402,21 @@ def _run_walk_forward_cpcv(
         all_oos_pnls.extend(_path_daily_pnls)
         # Track per-path series for multi-model WRC/SPA (White 2000 / Hansen 2005)
         per_path_oos_pnls.append(_path_daily_pnls)
+
+        # E1: lightweight IS backtest to capture true per-path IS Sharpe.
+        # Runs on IS data (warmup_data=None — no preceding warmup for pure IS eval).
+        # Appended only when the IS backtest succeeds so per_path_is_sharpes stays
+        # aligned: if length < len(path_sharpes) after the loop, the IS basis is
+        # partially available and we fall back to the OOS proxy for BIF/PBO.
+        try:
+            _is_bt_result = run_backtest(_shared_req, data=is_data)
+            per_path_is_sharpes.append(float(_is_bt_result.get("sharpe_ratio", 0.0)))
+        except Exception as _is_bt_exc:
+            print(
+                f"  CPCV: IS backtest for path {n_paths} failed ({_is_bt_exc!r}). "
+                f"Per-path IS Sharpe unavailable for this path.",
+                file=sys.stderr,
+            )
         all_oos_pnl_records.extend(path_result.get("daily_pnl_records", []))
         # equity_bars is raw float[] equity per bar; equity_curve is list[dict] (daily agg).
         # Use equity_bars for drawdown math to avoid dict → float cast error.
@@ -526,33 +547,42 @@ def _run_walk_forward_cpcv(
         from src.engine.statistics.backtest_inflation_factor import (
             compute_bif as _cpcv_compute_bif,
         )
-        # B4 fix: use mean of path OOS Sharpes as the IS-Sharpe proxy, not max.
-        # max(path_sharpes) overstates IS performance because it cherry-picks the
-        # best CPCV path — this deflates BIF (IS/OOS gap appears small) when the
-        # true per-path IS Sharpe is unknown (pooled across folds).
-        # WAVE 30 carry-forward: derive true per-path IS Sharpe from IS fold data.
-        _cpcv_bif_is_sharpe = float(np.mean(path_sharpes)) if path_sharpes else 0.0
+        # E1 (deep-scan #7 2026-07-02): use true per-path IS Sharpes when available.
+        # When all 15 IS backtests succeeded, per_path_is_sharpes has one entry per
+        # OOS path; use mean(per_path_is_sharpes) as the genuine IS basis so BIF
+        # reflects real IS/OOS divergence instead of always returning ≈1.0.
+        # When IS backtests partially or fully failed, fall back to the OOS-proxy
+        # (oos_mean_not_is) with bif_reliable=False as before.
+        _has_full_is = (
+            len(per_path_is_sharpes) > 0
+            and len(per_path_is_sharpes) == len(path_sharpes)
+        )
+        if _has_full_is:
+            _cpcv_bif_is_sharpe = float(np.mean(per_path_is_sharpes))
+            _cpcv_bif_reliable = True
+            _cpcv_bif_proxy_basis = "cpcv_per_path_is"
+        else:
+            # Partial IS coverage or none: fall back to OOS-mean proxy.
+            # B4 fix: use mean (not max) of path OOS Sharpes to avoid cherry-picking.
+            _cpcv_bif_is_sharpe = float(np.mean(path_sharpes)) if path_sharpes else 0.0
+            _cpcv_bif_reliable = False
+            _cpcv_bif_proxy_basis = "oos_mean_not_is"
         _cpcv_bif_k_eff = float(max(n_paths, 1))
         _cpcv_bif_result = _cpcv_compute_bif(
             is_sharpe=_cpcv_bif_is_sharpe,
             wf_sharpe=agg_sharpe,
             k_eff=_cpcv_bif_k_eff,
         )
-        # M1 fix 2026-06-28: tag the BIF result so the TS BIF gate can emit a
-        # non-blocking audit warn. In CPCV mode both is_sharpe and wf_sharpe
-        # derive from the same OOS series → BIF ≈ 1.0 (near-no-op).
-        # TS gate reads bif_proxy_basis from wf_metadata.bif_proxy_basis.
-        _cpcv_bif_result["bif_proxy_basis"] = "oos_mean_not_is"
-        # BYPASS 3 EXPLICIT AUDIT (2026-06-28 hardening): IS Sharpe is unavailable
-        # in CPCV mode without running a separate IS backtest per path (Wave 30
-        # carry-forward). bif_reliable=False surfaces this fact explicitly so the
-        # TS BIF gate logs a documented audit-warn rather than treating BIF≈1.0 as
-        # a genuine clean-gate pass. The gate must NOT block on an unreliable BIF.
-        _cpcv_bif_result["bif_reliable"] = False
+        # Tag reliability so the TS BIF gate can route correctly:
+        #   bif_reliable=True  → real IS basis, gate may block on BIF ≥ threshold.
+        #   bif_reliable=False → proxy basis, gate must NOT block (audit-warn only).
+        _cpcv_bif_result["bif_proxy_basis"] = _cpcv_bif_proxy_basis
+        _cpcv_bif_result["bif_reliable"] = _cpcv_bif_reliable
         print(
             f"  BIF (CPCV): {_cpcv_bif_result.get('bif', 'N/A'):.4f} "
-            f"(IS_proxy={_cpcv_bif_is_sharpe:.4f}, WF={agg_sharpe:.4f}, "
-            f"K_eff={_cpcv_bif_k_eff:.0f}) "
+            f"(IS_{'true' if _has_full_is else 'proxy'}={_cpcv_bif_is_sharpe:.4f}, "
+            f"WF={agg_sharpe:.4f}, K_eff={_cpcv_bif_k_eff:.0f}, "
+            f"reliable={_cpcv_bif_reliable}) "
             f"→ {_cpcv_bif_result.get('verdict', 'N/A')}",
             file=sys.stderr,
         )
@@ -580,10 +610,20 @@ def _run_walk_forward_cpcv(
     _cpcv_pbo_degenerate_reason: Optional[str] = None
     try:
         from src.engine.pbo_gate import compute_pbo_from_cpcv_paths as _cpcv_pbo_fn
-        _cpcv_path_dicts = [
-            {"is_sharpe": s, "oos_sharpe": s, "is_returns": [], "oos_returns": []}
-            for s in path_sharpes
-        ]
+        # E1: use true per-path IS Sharpes when available to make PBO non-degenerate.
+        # When IS backtests fully succeeded, is_sharpe diverges from oos_sharpe,
+        # allowing the rank-based PBO formula to produce a genuine estimate.
+        if _has_full_is and len(per_path_is_sharpes) == len(path_sharpes):
+            _cpcv_path_dicts = [
+                {"is_sharpe": is_s, "oos_sharpe": oos_s, "is_returns": [], "oos_returns": []}
+                for is_s, oos_s in zip(per_path_is_sharpes, path_sharpes)
+            ]
+        else:
+            # Fallback: IS==OOS for all paths → degenerate guard fires → pbo=None.
+            _cpcv_path_dicts = [
+                {"is_sharpe": s, "oos_sharpe": s, "is_returns": [], "oos_returns": []}
+                for s in path_sharpes
+            ]
         _cpcv_gate = _cpcv_pbo_fn(_cpcv_path_dicts)
         # Override the generic degenerate reason with a CPCV-specific auditable
         # label so the TS lifecycle gate can distinguish this case from other
@@ -1346,9 +1386,14 @@ def run_walk_forward(
             # Optimizer provided IS Sharpe directly — no daily_pnls to accumulate.
             # We stash this on window_detail for per-window WFE reporting.
             window_results[i]["_is_sharpe_opt"] = _is_res_i["_is_sharpe_from_opt"]
+            # E2: no IS daily_pnls available for PBO when optimizer path was used.
+            window_results[i]["_is_daily_pnls"] = []
         else:
             _is_pnls_i = _is_res_i.get("daily_pnls", [])
             all_is_pnls.extend(_is_pnls_i)
+            # E2: stash per-window IS daily pnls for _build_cpcv_paths_from_window_results.
+            # Cleaned up from window_results before the final return (like _is_sharpe_opt).
+            window_results[i]["_is_daily_pnls"] = list(_is_pnls_i)
 
         # ── Collect per-window regime for parameter stability regime-context ─
         # Strategy's preferred_regime field is the lightweight fallback when
@@ -1671,9 +1716,13 @@ def run_walk_forward(
         for w in window_results
         if w.get("_is_sharpe_opt") is not None
     ]
-    # Clean up _is_sharpe_opt from window_results (internal field, not schema output)
+    # Clean up internal fields from window_results (not schema output)
     for w in window_results:
         w.pop("_is_sharpe_opt", None)
+        # E2: _is_daily_pnls was threaded in for _build_cpcv_paths_from_window_results;
+        # remove before the final return so the schema output stays stable.
+        # pbo_gate reads it before this cleanup (called at the PBO block above).
+        w.pop("_is_daily_pnls", None)
 
     if _opt_is_sharpes:
         # When optimizer IS scores are available, use their mean as the combined IS Sharpe.
@@ -1696,6 +1745,22 @@ def run_walk_forward(
         _is_std = float(np.std(_is_pnl_arr, ddof=1))
         _combined_is_sharpe = float(np.mean(_is_pnl_arr) / _is_std * np.sqrt(252)) if _is_std > 0 else 0.0
         _wfe_is_basis = "base_config_daily_pnls"  # FINDING-3 fix
+
+    # E3 (deep-scan #7 2026-07-02): always compute WFE from base-config IS Sharpe for
+    # cross-run comparability.  The canonical wfe_overall uses _combined_is_sharpe which
+    # shifts between runs (optimizer_best_score_mean vs base_config_daily_pnls).
+    # wfe_overall_base_basis uses all_is_pnls (base-config IS backtest) as the denominator
+    # regardless of whether optimize=True was used — a stable reference across runs.
+    # Additive: no gate changes; emitted alongside existing wfe_overall.
+    _wfe_overall_base_basis: Optional[float] = None
+    if len(all_is_pnls) > 1:
+        _is_pnl_arr_base = np.array(all_is_pnls)
+        _is_std_base = float(np.std(_is_pnl_arr_base, ddof=1))
+        if _is_std_base > 0:
+            _is_sharpe_base = float(np.mean(_is_pnl_arr_base) / _is_std_base * np.sqrt(252))
+            if _is_sharpe_base > 0:
+                _wfe_base_dict = compute_wfe(is_sharpe=_is_sharpe_base, oos_sharpe=agg_sharpe)
+                _wfe_overall_base_basis = _wfe_base_dict["wfe"]
 
     if _combined_is_sharpe is not None and _combined_is_sharpe > 0:
         _wfe_dict = compute_wfe(is_sharpe=_combined_is_sharpe, oos_sharpe=agg_sharpe)
@@ -2026,6 +2091,10 @@ def run_walk_forward(
         # "base_config_daily_pnls"    = IS is honest base-config IS run.
         # "unavailable"               = IS Sharpe could not be computed (wfe_overall absent).
         "wfe_is_basis": _wfe_is_basis,
+        # E3 (deep-scan #7 2026-07-02): WFE using base-config IS Sharpe as denominator.
+        # Stable cross-run variant: always uses all_is_pnls (base-config IS backtest)
+        # regardless of whether optimize=True was used.  None when IS pnls unavailable.
+        "wfe_overall_base_basis": _wfe_overall_base_basis,
         # Wave 27.5 Pass B HIGH #3 — PBO auto-wire (additive; None when < 4 windows)
         "pbo": pbo_result.get("pbo") if pbo_result else None,
         "pbo_pass": pbo_result.get("pbo_pass") if pbo_result else None,

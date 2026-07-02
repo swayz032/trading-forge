@@ -891,6 +891,24 @@ def simulate_firm_survival(
     # This is the CORRECT ruin event for a prop firm (not terminal<=0).
     breach_mask = np.zeros(n_sims, dtype=np.uint8)
 
+    # E4 (deep-scan #7 2026-07-02): shadow consistency-lane counter for Topstep
+    # standard-lane runs.  Counts sims that WOULD fail the 50% best-day cap if the
+    # operator switches to the Topstep consistency payout lane.  Advisory only —
+    # never changes eval_pass_rate or breach_mask.
+    _topstep_shadow_breach_count = 0
+    _run_topstep_shadow = (
+        firm_key == "topstep_50k"
+        and _topstep_payout_lane == "standard"
+    )
+    # Cache firm rules for shadow check (loaded once outside the hot sim loop)
+    _shadow_firm_entry_rules: dict = {}
+    if _run_topstep_shadow:
+        try:
+            from src.engine.firm_config import FIRM_RULES as _FR_shadow
+            _shadow_firm_entry_rules = _FR_shadow.get(firm_key, {})
+        except ImportError:
+            pass
+
     six_months_bars = 126  # ~6 months of trading days (no shortcut for short sims)
 
     # For realtime trailing firms (e.g. Tradeify), simulate intraday equity
@@ -1073,6 +1091,32 @@ def simulate_firm_survival(
                     breach_reason = "consistency"
                     consistency_fail_count += 1
 
+        # E4: shadow consistency-lane breach for Topstep standard lane (advisory).
+        # Runs AFTER the real consistency block; does NOT alter passed_eval or breached.
+        if _run_topstep_shadow and passed_eval and not breached:
+            _shadow_ratio_val = 0.50
+            if "consistency_window_days" in _shadow_firm_entry_rules:
+                _shadow_payout_cycle = _shadow_firm_entry_rules["consistency_window_days"]
+            else:
+                _shadow_payout_cycle = _shadow_firm_entry_rules.get("payout_cycle_days", None)
+
+            _shadow_violated = False
+            if _shadow_payout_cycle is not None and _shadow_payout_cycle > 0:
+                for _sw_start in range(0, n_steps, _shadow_payout_cycle):
+                    _sw_end = min(_sw_start + _shadow_payout_cycle, n_steps)
+                    _sw_window = _adjusted_step_pnls[_sw_start:_sw_end]
+                    _sw_total = sum(_w for _w in _sw_window if _w > 0)
+                    _sw_best = max((_w for _w in _sw_window if _w > 0), default=0.0)
+                    if _sw_total > 0 and _sw_best / _sw_total > _shadow_ratio_val:
+                        _shadow_violated = True
+                        break
+            else:
+                _shadow_total_profit = balance - account_size
+                if _shadow_total_profit > 0 and best_day_pnl / _shadow_total_profit > _shadow_ratio_val:
+                    _shadow_violated = True
+            if _shadow_violated:
+                _topstep_shadow_breach_count += 1
+
         if passed_eval and not breached:
             eval_passed_count += 1
             if pass_step is not None:
@@ -1130,6 +1174,22 @@ def simulate_firm_survival(
         # "never_hit_target" is excluded — account is not closed, just not profitable.
         # Additive field — all existing keys above are unchanged.
         "breach_mask": breach_mask,
+        # E4 (deep-scan #7 2026-07-02): Topstep consistency-lane shadow advisory.
+        # Only populated when firm_key="topstep_50k" and TOPSTEP_PAYOUT_LANE=standard.
+        # breach_rate = fraction of eval-passing sims that WOULD fail the 50% best-day
+        # cap if the operator switches to the Topstep consistency payout lane.
+        # This is ADVISORY ONLY — the gated ruin numbers (eval_pass_rate, breach_mask)
+        # are unchanged.  Emit None when not applicable (other firms, consistency lane).
+        "topstep_consistency_lane_shadow": (
+            {
+                "breach_rate": round(_topstep_shadow_breach_count / max(n_sims, 1), 4),
+                "n_shadow_breaches": _topstep_shadow_breach_count,
+                "lane_simulated": "consistency",
+                "consistency_ratio": 0.50,
+            }
+            if _run_topstep_shadow
+            else None
+        ),
     }
 
 

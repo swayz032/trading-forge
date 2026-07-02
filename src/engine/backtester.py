@@ -4218,7 +4218,16 @@ def run_backtest(
             # On rollover days the entry bar carries an extra spread cost (2-4 ticks)
             # that the generic 1.5-tick slippage model underestimates.
             # Deduct BEFORE generic slippage; generic slippage still applies on top.
+            #
+            # E7 (deep-scan #7 2026-07-02): also deduct when the EXIT bar lands on a
+            # rollover day (pre-fix: only the entry side was deducted).
+            # Guard: entry and exit on the SAME rollover day → one deduction per side
+            # is correct (entry-side + exit-side both deducted), but since both bars
+            # share the same date the same roll spread applies to each crossing.
+            # Same-day guard: exit_idx == entry_idx → single bar straddles entry+exit;
+            # both use the same roll price so only one deduction (entry side only).
             _roll_cost_usd = 0.0
+            # Entry-side roll spread
             if _has_rollover_col and entry_idx < len(df):
                 try:
                     _is_roll_day = bool(df["is_rollover_day"][entry_idx])
@@ -4230,13 +4239,36 @@ def run_backtest(
                         from datetime import date as _date_cls
                         _roll_date = _date_cls.fromisoformat(_roll_ts_str[:10])
                         _roll_cost = compute_roll_spread_cost(config.symbol, _roll_date, int_size)
-                        _roll_cost_usd = float(_roll_cost)
+                        _roll_cost_usd += float(_roll_cost)
                         _roll_spread_audit_rows.append(
                             build_roll_spread_audit(config.symbol, _roll_date, int_size, _roll_cost)
                         )
                     except Exception as _re:
                         print(
-                            f"[roll-spread] Error computing roll cost at bar {entry_idx}: {_re}",
+                            f"[roll-spread] Error computing entry-side roll cost at bar {entry_idx}: {_re}",
+                            file=sys.stderr,
+                        )
+            # Exit-side roll spread (E7): only when exit is on a DIFFERENT bar than entry.
+            # Same-bar entry+exit (exit_idx == entry_idx) already accounted for by the
+            # entry-side deduction above (same rollover day, same spread — do not double-deduct).
+            if _has_rollover_col and exit_idx < len(df) and exit_idx != entry_idx:
+                try:
+                    _is_roll_day_exit = bool(df["is_rollover_day"][exit_idx])
+                except Exception:
+                    _is_roll_day_exit = False
+                if _is_roll_day_exit:
+                    try:
+                        _roll_ts_str_exit = str(_ts_et_list_roll[exit_idx]) if exit_idx < len(_ts_et_list_roll) else ""
+                        from datetime import date as _date_cls_exit
+                        _roll_date_exit = _date_cls_exit.fromisoformat(_roll_ts_str_exit[:10])
+                        _roll_cost_exit = compute_roll_spread_cost(config.symbol, _roll_date_exit, int_size)
+                        _roll_cost_usd += float(_roll_cost_exit)
+                        _roll_spread_audit_rows.append(
+                            build_roll_spread_audit(config.symbol, _roll_date_exit, int_size, _roll_cost_exit)
+                        )
+                    except Exception as _re_exit:
+                        print(
+                            f"[roll-spread] Error computing exit-side roll cost at bar {exit_idx}: {_re_exit}",
                             file=sys.stderr,
                         )
 
@@ -5985,7 +6017,9 @@ def run_class_backtest(
             comm_cost = commission * int_size * 2
 
             # MED #5 (Wave 27.5 Pass D.1) — Itemised roll spread cost (class backtest path).
+            # E7 (deep-scan #7 2026-07-02): mirror function-path fix — also deduct exit-side.
             _roll_cost_usd_cls = 0.0
+            # Entry-side roll spread (class path)
             if _has_rollover_col_cls and entry_idx < len(df):
                 try:
                     _is_roll_day_cls = bool(df["is_rollover_day"][entry_idx])
@@ -5997,13 +6031,34 @@ def run_class_backtest(
                         from datetime import date as _date_cls2
                         _roll_date_cls = _date_cls2.fromisoformat(_roll_ts_str_cls[:10])
                         _roll_cost_cls = compute_roll_spread_cost(symbol, _roll_date_cls, int_size)
-                        _roll_cost_usd_cls = float(_roll_cost_cls)
+                        _roll_cost_usd_cls += float(_roll_cost_cls)
                         _roll_spread_audit_rows_cls.append(
                             build_roll_spread_audit(symbol, _roll_date_cls, int_size, _roll_cost_cls)
                         )
                     except Exception as _re_cls:
                         print(
-                            f"[roll-spread] Error computing roll cost at bar {entry_idx}: {_re_cls}",
+                            f"[roll-spread] Error computing entry-side roll cost at bar {entry_idx}: {_re_cls}",
+                            file=sys.stderr,
+                        )
+            # Exit-side roll spread (E7 class path): skip when exit_idx == entry_idx (same bar).
+            if _has_rollover_col_cls and exit_idx < len(df) and exit_idx != entry_idx:
+                try:
+                    _is_roll_day_cls_exit = bool(df["is_rollover_day"][exit_idx])
+                except Exception:
+                    _is_roll_day_cls_exit = False
+                if _is_roll_day_cls_exit:
+                    try:
+                        _roll_ts_str_cls_exit = str(_ts_et_list_roll_cls[exit_idx]) if exit_idx < len(_ts_et_list_roll_cls) else ""
+                        from datetime import date as _date_cls3
+                        _roll_date_cls_exit = _date_cls3.fromisoformat(_roll_ts_str_cls_exit[:10])
+                        _roll_cost_cls_exit = compute_roll_spread_cost(symbol, _roll_date_cls_exit, int_size)
+                        _roll_cost_usd_cls += float(_roll_cost_cls_exit)
+                        _roll_spread_audit_rows_cls.append(
+                            build_roll_spread_audit(symbol, _roll_date_cls_exit, int_size, _roll_cost_cls_exit)
+                        )
+                    except Exception as _re_cls_exit:
+                        print(
+                            f"[roll-spread] Error computing exit-side roll cost at bar {exit_idx}: {_re_cls_exit}",
                             file=sys.stderr,
                         )
 
