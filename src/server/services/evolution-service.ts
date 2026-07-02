@@ -25,6 +25,10 @@ import { runPythonModule } from "../lib/python-runner.js";
 import { CircuitBreakerRegistry, CircuitOpenError } from "../lib/circuit-breaker.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { MAX_GENERATIONS as _MAX_GENERATIONS_SHARED, COOLDOWN_DAYS as _COOLDOWN_DAYS_SHARED } from "../lib/lifecycle-constants.js";
+// FIX 1 (deepscan11 Track P, 2026-07-02): assertCrossValidatedSource enforces that
+// evolved children carry an exempted source. "evolved" is added to EXEMPT_SOURCES
+// in agent-service.ts so this call passes by exemption (not by cross-validated tag).
+import { assertCrossValidatedSource } from "./agent-service.js";
 // Dynamic import to avoid circular dependency (lifecycle-service imports evolution-service)
 async function getLifecycleService() {
   const { LifecycleService } = await import("./lifecycle-service.js");
@@ -500,6 +504,53 @@ export async function evolveStrategy(
     const newName = `${strategy.name.replace(/ \(gen\d+\)$/, "")} (gen${strategy.generation + 1})`;
     const lifecycle = await getLifecycleService();
 
+    // ─── FIX 1: graduated-strategy auditor gate (FAIL-CLOSED) ────────────────
+    // Evolution is a 3rd strategy-creation path (alongside graduation and clone).
+    // All other creation sites (7 of them) call auditGraduatedConfig before
+    // INSERT — this one previously did not, letting children with invalid param
+    // ranges or framework violations enter the conveyor unchecked.
+    //
+    // The audit runs OUTSIDE the transaction so the rejection row persists even
+    // though no child row was ever written.
+    const { auditGraduatedConfig: _auditEvolvedConfig, formatAuditResult: _fmtEvolvedAudit } =
+      await import("./graduated-strategy-auditor.js");
+    const evolvedTags = [...(strategy.tags ?? []), "evolved"];
+    const evolvedConfigAudit = _auditEvolvedConfig({
+      conceptName: strategy.name,
+      symbol: strategy.symbol,
+      config: newConfig,
+    });
+    if (!evolvedConfigAudit.passed) {
+      logger.error(
+        { strategyId, defects: evolvedConfigAudit.defects, warnings: evolvedConfigAudit.warnings },
+        `evolution: evolved child config rejected by schema auditor — ${_fmtEvolvedAudit(evolvedConfigAudit)}`,
+      );
+      await db.insert(auditLog).values({
+        action: "evolution.child_rejected_by_auditor",
+        entityType: "strategy",
+        entityId: strategyId,
+        input: {
+          parentStrategyId: strategyId,
+          parentGeneration: strategy.generation,
+          attemptedMutation: best.mutation,
+        } as Record<string, unknown>,
+        result: {
+          defects: evolvedConfigAudit.defects,
+          warnings: evolvedConfigAudit.warnings,
+          note: "evolved child config failed schema auditor gate; child INSERT aborted",
+        } as Record<string, unknown>,
+        status: "failure",
+        decisionAuthority: "gate",
+        correlationId: correlationId ?? null,
+      }).catch((auditErr: unknown) => {
+        logger.warn({ err: auditErr, strategyId }, "evolution.child_rejected_by_auditor audit write failed (non-blocking)");
+      });
+      return { status: "aborted", error: `Evolved child rejected by schema auditor: ${evolvedConfigAudit.defects.map((d: { code: string }) => d.code).join(",")}` };
+    }
+    // Source provenance check: "evolved" is an explicit exemption in agent-service.ts.
+    // This mirrors the pattern used in critic-optimizer-service.ts (line 1982).
+    assertCrossValidatedSource("evolved", evolvedTags);
+
     // H1 + atomicity: insert child strategy, run lifecycle promotion, and write
     // the strategy.evolved audit row inside a single db.transaction() so a
     // partial failure (e.g. audit insert fails after the child row landed)
@@ -523,6 +574,8 @@ export async function evolveStrategy(
     try {
       evolvedId = await db.transaction(async (tx) => {
         // Insert evolved strategy as CANDIDATE — proper gate via promoteStrategy() below.
+        // FIX 1: add source: "evolved" so assertCrossValidatedSource exemption is
+        // applied if the insert row is ever re-validated by Layer 2 auditor.
         const [evolved] = await (tx as unknown as typeof db)
           .insert(strategies)
           .values({
@@ -535,7 +588,8 @@ export async function evolveStrategy(
             preferredRegime: strategy.preferredRegime,
             parentStrategyId: strategyId,
             generation: strategy.generation + 1,
-            tags: [...(strategy.tags ?? []), "evolved"],
+            source: "evolved",
+            tags: evolvedTags,
           })
           .returning();
 

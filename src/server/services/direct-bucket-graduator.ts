@@ -2662,10 +2662,6 @@ export async function graduateBucketDirectly(opts: {
     const buildV11ConfigAdditions = (): Record<string, unknown> => ({
       // v11 entry sequence — array of ordered entry steps with indicators_needed
       ...(v11EntrySequence.length > 0 ? { entry_sequence: v11EntrySequence } : {}),
-      // v11 stop_loss — overrides any prior auto-injected stop_loss
-      ...(v11StopLoss !== null ? { stop_loss: v11StopLoss } : {}),
-      // v11 targets — overrides exit_plan_config.targets if richer
-      ...(v11Targets.length > 0 ? { targets: v11Targets } : {}),
       // v11 filters — avoid_when conditions + min_rr
       ...(v11Filters.length > 0 ? { filters: v11Filters } : {}),
       // v11 indicators_used — explicit indicator roles list
@@ -2680,6 +2676,22 @@ export async function graduateBucketDirectly(opts: {
       ...(v11ItfTf ? { itf_tf: v11ItfTf } : {}),
       // lifecycle_metadata for NEEDS_REVISION path
       ...(v11LifecycleMetadata ? { lifecycle_metadata: v11LifecycleMetadata } : {}),
+      // FIX 4 (deepscan11 Track P, 2026-07-02): v11 stop_loss and targets moved
+      // under extraction_hints namespace. Previously these were stamped at the
+      // top level of config JSONB (e.g. config.stop_loss, config.targets) which
+      // is confusable with config.strategy.stop_loss — the field the paper engine
+      // and backtester ACTUALLY read as the operational stop config. At top level
+      // they also bypassed auditGraduatedConfig (auditor runs before v11 additions
+      // are merged). Under extraction_hints the namespace is unambiguous:
+      //   - paper-signal-service reads config.stop_loss (operational) — unchanged
+      //   - backtester reads config.strategy.stop_loss (compiled) — unchanged
+      //   - extraction_hints.stop_loss is queryable for provenance analysis
+      ...(v11StopLoss !== null || v11Targets.length > 0 ? {
+        extraction_hints: {
+          ...(v11StopLoss !== null ? { stop_loss: v11StopLoss } : {}),
+          ...(v11Targets.length > 0 ? { targets: v11Targets } : {}),
+        },
+      } : {}),
     });
 
     // Wave 26 Pass F (2026-05-25) — REVISED multi-symbol approach. Instead of
@@ -2874,6 +2886,42 @@ export async function graduateBucketDirectly(opts: {
           ?? (entryIndicator?.startsWith("archetype:")
               ? entryIndicator.slice("archetype:".length)
               : undefined);
+
+        // ─── FIX 2 (deepscan11 Track P, 2026-07-02): per-variant auditor gate ──
+        // The leader's Layer 1 audit (above) only checks the leader's symbol. Variant
+        // rows are inserted with per-market framework overlays (different base_contracts,
+        // liquidity_cap, stop ceilings) — a valid leader config can produce an invalid
+        // variant config. Run the auditor on each variant before INSERT. A defective
+        // variant writes graduation.variant_rejected_by_auditor and continues (leader
+        // + clean variants still graduate; only the bad variant is skipped).
+        const variantAudit = auditGraduatedConfig({
+          conceptName,
+          symbol: variantMarket,
+          config: variantConfig as any,
+        });
+        if (!variantAudit.passed) {
+          logger.error(
+            { bucketId, strategyName, variantMarket, defects: variantAudit.defects },
+            `direct-graduator FIX2: variant ${variantMarket} REJECTED by auditor — ${formatAuditResult(variantAudit)}`
+          );
+          await db.insert(auditLog).values({
+            action: "graduation.variant_rejected_by_auditor",
+            entityType: "strategy_pending_bucket",
+            entityId: bucketId,
+            input: { bucket_id: bucketId, concept_name: conceptName, leader_strategy_id: inserted.id, variant_market: variantMarket } as Record<string, unknown>,
+            result: {
+              defects: variantAudit.defects,
+              warnings: variantAudit.warnings,
+              variant_market: variantMarket,
+              variant_name: variantName,
+            } as Record<string, unknown>,
+            status: "failure",
+            decisionAuthority: "system",
+            correlationId: correlationId ?? null,
+          }).catch((e: unknown) => logger.warn({ err: e, variantMarket, bucketId }, "variant_rejected_by_auditor audit write failed"));
+          continue; // skip this variant — other variants and the leader are unaffected
+        }
+
         const [variantInserted] = await db.insert(strategies).values({
           name: variantName,
           description: thesis,
