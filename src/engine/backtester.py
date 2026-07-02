@@ -315,6 +315,26 @@ def apply_eligibility_gate(
     point_value = spec.point_value if spec else 5.0
     tick_size = spec.tick_size if spec else 0.25
 
+    # PER-LAYER ABLATION DISABLE (layer4-ablation 2026-07-02):
+    # TF_OVERLAY_DISABLE_LAYERS=no_trade,kill_zone lets the ablation harness
+    # in scripts/filter-ablation-cpcv.py measure the marginal OOS DSR contribution
+    # of each gate layer by running the gate with exactly one layer's veto disabled.
+    # Default: empty string -> nothing disabled -> byte-identical to baseline run.
+    # See src/engine/ablation_layers.py for the canonical layer registry.
+    # FAIL-SAFE: ImportError (e.g. module not yet installed) -> no layers disabled.
+    try:
+        from src.engine.ablation_layers import ABLATION_LAYER_MAP as _ABLATION_LAYER_MAP
+        _disable_env = os.environ.get("TF_OVERLAY_DISABLE_LAYERS", "")
+        _disabled_layers: set = {x.strip() for x in _disable_env.split(",") if x.strip()}
+        # Precompute active (disabled) layer prefix pairs for O(k) per-signal check.
+        _active_ablation = [
+            (name, prefix) for name, prefix in _ABLATION_LAYER_MAP.items()
+            if name in _disabled_layers
+        ] if _disabled_layers else []
+    except ImportError:
+        _disabled_layers = set()
+        _active_ablation = []
+
     for idx in signal_indices:
         entry_price = float(close_np[idx])
 
@@ -404,9 +424,25 @@ def apply_eligibility_gate(
             )
 
             if decision.action == "SKIP":
+                reason = decision.reasoning[0] if decision.reasoning else "unknown"
+                # Ablation override: if this rejection came from a layer that is
+                # currently disabled by TF_OVERLAY_DISABLE_LAYERS, treat the signal
+                # as TAKE and record the override count in gate_stats["ablation_overrides"].
+                # This is the leave-one-filter-out mechanism; gate evaluation still ran
+                # in full — we just ignore the veto for the disabled layer.
+                if _active_ablation:
+                    _matched = next(
+                        (name for name, prefix in _active_ablation if reason.startswith(prefix)),
+                        None,
+                    )
+                    if _matched is not None:
+                        gate_stats["take"] += 1
+                        _ao = gate_stats.setdefault("ablation_overrides", {})
+                        _ao[_matched] = _ao.get(_matched, 0) + 1
+                        # Signal passes through — do NOT set filtered[idx]=False
+                        continue
                 filtered[idx] = False
                 gate_stats["skip"] += 1
-                reason = decision.reasoning[0] if decision.reasoning else "unknown"
                 gate_stats["skip_reasons"][reason] = gate_stats["skip_reasons"].get(reason, 0) + 1
                 # per-signal attribution (2026-07-02 overlay research): first rejecting reason + bar idx —
                 # lets the ablation join rejected signals to Mode A counterfactual trades (A+ retention analysis)
