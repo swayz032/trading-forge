@@ -3,6 +3,34 @@
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
+### Session Log — 2026-07-02 Layer-4 NULL-STRATEGY GATE CALIBRATION harness (item 2 of L4 research conveyor)
+
+**Mission:** Build the null-strategy gate calibration harness — measure the gate battery's (WF/CPCV + DSR + PBO + WRC/SPA + B14) false-pass rate before evaluating ~200 compiled strategies. Generate zero-edge null strategies, run them through the exact battery, report the noise floor.
+
+**Hard file boundary (no parallel agent collisions):** Did NOT edit `src/engine/backtester.py`, `scripts/overlay-*.py`, or `scripts/confluence-overlay-ablation.py`.
+
+**Work completed (5 commits, 9f40919→93a4522 on `hardening/layer4-institutional-2026-07-02`, NOT pushed):**
+- **`scripts/generate_null_strategies.py`** — seeded null spec generator. PCG64DXSM RNG; same (index, seed) always produces identical specs. Entry conditions `close > open` / `open > close` (zero predictive content at Style C 1R/2R/3R targets). MES=3-5pt / MNQ=4-6pt / MCL=0.10-0.20pt (all within symbol stop ceilings). `exit_engine="static_styleC"`, `firm_key="topstep_50k"`, `max_trades_per_day=1`. `validate_spec()` wraps BacktestRequest.model_validate() for pre-run gate.
+- **`src/engine/null_calibration_guard.py`** — governance marker following `replay_mode` precedent (Wave 27 Pass 1). `build_null_calibration_labels()` / `validate_null_calibration_labels()` (fail-closed ValueError) / `is_null_calibration_row()`. Null rows MUST NEVER appear alongside real strategy rows.
+- **`scripts/null_gate_calibration.py`** — full-battery runner. CPCV → gate extraction → resumable JSONL manifest → calibration report with Wilson score CIs. Synthetic OHLCV for smoke mode (no S3). **Smoke batch 3/3: 0 errors, 0/3 full-battery passes (correct: nulls should fail).** Gate names: wf_cpcv_paths / dsr / pbo / wrc / spa / full_battery / b14_mc. `--smoke`, `--n`, `--seed`, `--include-mc`, `--manifest` CLI flags.
+- **`docs/gate-battery-calibration.md`** — decision artifact: standing rule, calibration run instructions, null design rationale, gate table with pass conditions, known battery weaknesses (DSR lenient γ cancel, PBO degenerate in default CPCV, DLL dead in "both" mode), isolation SQL query. Results table PENDING operator full batch run (N=100, seed=42).
+- **`src/engine/tests/test_null_gate_calibration.py`** — 44/44 tests passing (345s, includes smoke runs against real engine). 6 classes: determinism (5), structural validity (9), Wilson CI known-answer (7), calibration guard (11), smoke path (5), calibration report math (7).
+
+**Critical CPCV schema facts discovered (corrected in runner):**
+- `wf_metadata["dsr"]` is a raw float (DSR test statistic), NOT a dict. Boolean gate is at `wf_metadata["dsr_pass"]`.
+- `pbo_overall` is at TOP LEVEL of wf_result, not inside `wf_metadata`.
+- `wrc_result` and `spa_result` are at TOP LEVEL of wf_result (not in wf_metadata).
+- Equity curve key: `equity_curve` (not `equity_bars`).
+- In default CPCV mode PBO reports `degenerate_reason="cpcv_is_sharpe_unavailable"` — lifecycle gate uses `cpcv_exempt` audit (Wave 30 carry-forward).
+- DSR formula: γ correction terms cancel → reduces to `sqrt(2*ln(N))`. Direction: lenient (makes DSR easier to pass than correct Bailey 2014 Eq.2).
+
+**Test fix:** `wilson_ci(100, 100)` upper bound is `0.9999999999999999` not exactly `1.0` — use `math.isclose(hi, 1.0, rel_tol=1e-9)`.
+
+**Verification:** 5 commits hook-clean (ruff PASS); 44/44 tests GREEN; smoke 3/3 complete; ruff auto-fixed F401/I001/UP045/F841/B007 across all 3 new Python files.
+
+**Carry-forward (operator-scheduled):** Run full calibration batch: `TF_ALLOW_FIXED_1=true python scripts/null_gate_calibration.py --n 100 --seed 42` → fill `docs/gate-battery-calibration.md` results table → establish noise floor before ~200 compiled strategy evaluations.
+
+---
 ### Session Log — 2026-07-02 Layer-4 OFFICE P0 institutional hardening (approval card + risk-truth + SPA read-only-ification + Playwright E2E)
 
 **Mission:** Execute OFFICE P0 (Master Plan Phase 3) on `hardening/layer4-institutional-2026-07-02`: enforce the pinned architecture decision — the Slumhouse Office is the ONLY control room; the React SPA is a read-only observation deck.
