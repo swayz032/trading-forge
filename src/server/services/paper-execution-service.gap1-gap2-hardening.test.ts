@@ -256,6 +256,44 @@ vi.mock("../lib/db-locks.js", () => ({
       delete: vi.fn(() => ({
         where: vi.fn(() => Promise.resolve(undefined)),
       })),
+      // FIX 3 (Track M): openPosition wraps position INSERT + paper.trade_open audit in
+      // dbConn.transaction(). The tx mock exposes insert with .returning() for the position
+      // INSERT and a standard insert for the audit INSERT.
+      transaction: vi.fn(async (fn: (tx: unknown) => unknown) => {
+        let insertCallIdx = 0;
+        const txMock = {
+          insert: vi.fn(() => {
+            insertCallIdx++;
+            return {
+              values: vi.fn((row: Record<string, unknown>) => {
+                auditRows.push(row);
+                if (insertCallIdx === 1) {
+                  // First insert = paperPositions — must return position row with .returning()
+                  return {
+                    returning: vi.fn(() =>
+                      Promise.resolve([{ id: "tx-pos-1", sessionId: "sess-sticky", symbol: "MES" }]),
+                    ),
+                    catch: vi.fn(),
+                  };
+                }
+                // Subsequent inserts = auditLog — no returning needed
+                return { returning: vi.fn(() => Promise.resolve([])), catch: vi.fn() };
+              }),
+            };
+          }),
+          update: vi.fn((table: unknown) => ({
+            set: vi.fn((setArgs: unknown) => ({
+              where: vi.fn((whereArgs: unknown) => {
+                dbUpdateCalls.push({ table: String(table), set: setArgs, where: whereArgs });
+                return Promise.resolve(undefined);
+              }),
+            })),
+          })),
+          select: vi.fn(() => makeSelectChain([])),
+          delete: vi.fn(() => ({ where: vi.fn(() => Promise.resolve(undefined)) })),
+        };
+        return fn(txMock);
+      }),
     };
     return fn(fakeConn);
   }),

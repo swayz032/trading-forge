@@ -168,6 +168,47 @@ async function _confirmedForceClose(reason: string, correlationId: string): Prom
   }
 }
 
+/**
+ * FIX 2 (Track M): Deduplication wrapper for force-close calls.
+ *
+ * Both the L2 DLL-95% path (checkLayer2DailyLoss) and the production-HALT
+ * path (setMode("HALT")) can trigger force-close concurrently — e.g. a DLL
+ * breach fires at the same moment the operator manually sets HALT. Without
+ * this wrapper, both paths call _confirmedForceClose independently, racing on
+ * paper position state and potentially issuing double-broker orders.
+ *
+ * _safeForceClose is idempotent: the second concurrent caller writes a
+ * "kill_switch.force_close_deduped" audit row and returns false immediately.
+ * The first caller manages _forceCloseInFlight via try/finally.
+ */
+async function _safeForceClose(trigger: string, correlationId: string): Promise<boolean> {
+  if (_forceCloseInFlight) {
+    logger.warn(
+      { trigger, correlationId },
+      "kill-switch: force-close already in-flight — skip concurrent invocation (_safeForceClose dedup, FIX 2)",
+    );
+    insertAuditRow({
+      action: "kill_switch.force_close_deduped",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { trigger, correlationId } as Record<string, unknown>,
+      result: { skipped: true, reason: "force_close_already_in_flight" } as Record<string, unknown>,
+      status: "success",
+      correlationId,
+    }).catch((auditErr) =>
+      logger.error({ err: auditErr }, "kill-switch: force_close_deduped audit write failed"),
+    );
+    return false;
+  }
+  _forceCloseInFlight = true;
+  try {
+    return await _confirmedForceClose(trigger, correlationId);
+  } finally {
+    _forceCloseInFlight = false;
+  }
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type { ProductionMode };
@@ -297,15 +338,13 @@ async function checkLayer2DailyLoss(): Promise<HaltDecision> {
           break;
         }
         const fcCorrelationId = randomUUID();
-        _forceCloseInFlight = true;
         logger.warn(
           { session_id: session.id, firm_id: firmId, day_pnl: dayPnl, dll, threshold_pct: DLL_FORCE_CLOSE_PCT },
           "kill-switch L2: DLL at 95% — force-closing all positions (M-1 fix)"
         );
-        // Audit — status PENDING until the close actually confirms. Deep-scan
-        // 2026-06-28: this row used to pre-write status:"success" BEFORE the
-        // fire-and-forget close ran, so a failed close left a misleading
-        // "success" row and no alert. Now: pending → completed/failed below.
+        // Audit — status PENDING until the close actually confirms. The
+        // pending → completed/failed pattern prevents a misleading "success" row
+        // when a failed close leaves positions open.
         insertAuditRow({
           action: "sizing.dll_force_close",
           entityType: "system",
@@ -328,22 +367,11 @@ async function checkLayer2DailyLoss(): Promise<HaltDecision> {
           correlationId: fcCorrelationId,
           forced_at: new Date().toISOString(),
         });
-        // MERGE 2026-06-29: both deep-scan sessions hardened this DLL-95 force-close.
-        // Adopted the deepscan-wiring version: an AWAITED force-close with a
-        // FORCE_CLOSE_TIMEOUT_MS (10s) guard — this fixes the ACTUAL hang risk (a
-        // fire-and-forget .then()/.catch() never fires its catch if the close hangs,
-        // leaving positions open at a 95% breach). _confirmedForceClose writes the
-        // paper.force_flatten_kill_switch_failed audit + a CRITICAL Discord alert on
-        // timeout/failure, and is the same helper used by the production-halt path.
-        // F3 FIX: the try/finally ensures _forceCloseInFlight is always cleared
-        // when the close attempt ends (success, failure, or timeout), so subsequent
-        // L2 evaluations can re-enter if the breach persists into the next cycle.
-        let _fcOk = false;
-        try {
-          _fcOk = await _confirmedForceClose(`dll_force_close_at_95pct:${session.id}`, fcCorrelationId);
-        } finally {
-          _forceCloseInFlight = false;
-        }
+        // FIX 2 (Track M): _safeForceClose manages the _forceCloseInFlight sentinel
+        // and deduplicates concurrent calls (e.g. L2 and setMode("HALT") racing).
+        // It sets the flag before calling _confirmedForceClose and clears it in
+        // finally — same semantics as the prior inline try/finally, consolidated.
+        const _fcOk = await _safeForceClose(`dll_force_close_at_95pct:${session.id}`, fcCorrelationId);
         // Completion observability (phase-0 deep-scan): record a success audit row ONLY
         // when the force-close actually completed. On failure/timeout, _confirmedForceClose
         // already wrote paper.force_flatten_kill_switch_failed + fired a CRITICAL Discord —
@@ -761,7 +789,13 @@ async function runLayerWithTimeout(
       }).catch((auditErr) =>
         logger.error({ err: auditErr }, `kill-switch L${layer}: timeout audit_log write failed`),
       );
-      resolve({ halted: false });
+      // FIX 1b (Track M): if a force-close started during this layer's budget
+      // window, return HALTED rather than fail-OPEN. This closes the one-entry
+      // window that exists when L2 times out at 100ms while _confirmedForceClose
+      // is still running (up to FORCE_CLOSE_TIMEOUT_MS = 10s).
+      resolve(_forceCloseInFlight
+        ? { halted: true, reason: "layer_timeout_force_close_pending" }
+        : { halted: false });
     }, LAYER_CHECK_TIMEOUT_MS);
     // Prevent the timeout timer from keeping Node alive if the check resolves first
     if (typeof timer.unref === "function") timer.unref();
@@ -795,6 +829,18 @@ class KillSwitch {
     opts: { correlationId?: string } = {},
   ): Promise<HaltDecision> {
     const correlationId = opts.correlationId ?? randomUUID();
+
+    // FIX 1a (Track M): fast-path — when a force-close is already in flight,
+    // skip all layer checks and return HALTED immediately. Without this guard,
+    // runLayerWithTimeout returns halted:false at 100ms (fail-OPEN budget),
+    // giving L2 DLL-95% one entry window while the 10s force-close is running.
+    if (_forceCloseInFlight) {
+      logger.warn(
+        { correlationId },
+        "kill-switch: force-close in-flight — fast-path halt, all layers bypassed (Track M FIX 1a)",
+      );
+      return { halted: true, layer: 2, reason: "force_close_in_flight" };
+    }
 
     // ── Layer 1: Manual halt — no timeout needed (5s cached state read) ──
     let state: SystemState;
@@ -1064,8 +1110,9 @@ class KillSwitch {
           `CorrelationId: ${modeChangeCorrelationId}`
         )
       );
-      // FINDING #1 FIX: awaited force-close with timeout and CRITICAL escalation on failure
-      await _confirmedForceClose(`production_halt:${reason}`, modeChangeCorrelationId);
+      // FINDING #1 FIX: awaited force-close with timeout and CRITICAL escalation on failure.
+      // FIX 2 (Track M): _safeForceClose deduplicates concurrent L2+setMode force-close calls.
+      await _safeForceClose(`production_halt:${reason}`, modeChangeCorrelationId);
     }
   }
 
@@ -1205,3 +1252,16 @@ class KillSwitch {
 // ─── Singleton ────────────────────────────────────────────────────────────────
 
 export const killSwitch = new KillSwitch();
+
+// ─── Test seams (Track M FIX 1 + FIX 2) ─────────────────────────────────────
+// Exposed for vitest only — do NOT use in production code.
+
+/** Set _forceCloseInFlight for test isolation of FIX 1a / FIX 1b / FIX 2 scenarios. */
+export function _setForceCloseInFlightForTests(value: boolean): void {
+  _forceCloseInFlight = value;
+}
+
+/** Read _forceCloseInFlight for test assertions. */
+export function _getForceCloseInFlightForTests(): boolean {
+  return _forceCloseInFlight;
+}

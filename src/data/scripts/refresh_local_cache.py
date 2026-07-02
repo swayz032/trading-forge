@@ -96,7 +96,30 @@ def get_cache_dir() -> Path:
 
 
 def get_parquet_path(symbol: str, timeframe: str) -> Path:
-    return get_cache_dir() / symbol / f"{timeframe}.parquet"
+    # FIX 1 (deep-scan #10 2026-07-02): align writer path to data_loader._cache_path contract.
+    # data_loader reads from data_cache/{sym}/ratio_adj/{tf}.parquet (adjusted=True default).
+    # Old flat path data_cache/{sym}/{tf}.parquet was NEVER found by the loader — phantom cache.
+    # Databento continuous contracts (.c.0) are server-side ratio-adjusted; ratio_adj/ is correct.
+    return get_cache_dir() / symbol / "ratio_adj" / f"{timeframe}.parquet"
+
+
+def _migrate_legacy_flat_cache(symbol: str, timeframe: str) -> None:
+    """Move legacy flat-path cache to ratio_adj subdir if present (FIX 1, deep-scan #10).
+
+    On first refresh after the path fix, any file at data_cache/{sym}/{tf}.parquet is
+    relocated to data_cache/{sym}/ratio_adj/{tf}.parquet via os.replace() so history is
+    preserved. The sidecar is NOT migrated (it will be written on next refresh write).
+    """
+    legacy = get_cache_dir() / symbol / f"{timeframe}.parquet"
+    dest = get_parquet_path(symbol, timeframe)
+    if legacy.exists() and not dest.exists():
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        os.replace(str(legacy), str(dest))
+        print(
+            f"INFO: migrated legacy flat cache {legacy.name} → ratio_adj/{legacy.name} "
+            f"for {symbol}/{timeframe}",
+            file=sys.stderr,
+        )
 
 
 def get_latest_ts(symbol: str, timeframe: str) -> datetime | None:
@@ -122,12 +145,55 @@ def get_latest_ts(symbol: str, timeframe: str) -> datetime | None:
 
 
 def resample_1m_to_tf(df_1m: pl.DataFrame, every: str) -> pl.DataFrame:
-    """Resample 1-min OHLCV DataFrame to the given Polars 'every' interval."""
+    """Resample 1-min OHLCV DataFrame to the given Polars 'every' interval.
+
+    For daily bars (every == "1d"), uses CME Globex session-aligned aggregation
+    (deep-scan #10 FIX 3 2026-07-02). UTC-midnight anchoring via group_by_dynamic
+    produces ~332 wrong bars/yr with incorrect PDH/PDL boundaries.
+
+    CME trading-day derivation:
+        UTC ts → convert_time_zone("America/New_York") → offset_by("6h") → .date()
+    The 18:00 ET session open + 6h → 00:00 next calendar date = CME trading day.
+    DST is transparent: the ET conversion handles spring-forward/fall-back correctly
+    so the session boundary is always at 18:00 wall-clock ET regardless of UTC offset.
+
+    A "trading_day" column is added as the v2 schema signature; its absence in an
+    existing file triggers a full rebuild (see refresh_symbol_timeframe).
+
+    Intraday timeframes use the unchanged group_by_dynamic path.
+    """
     # Ensure ts_event is Datetime with UTC
     if df_1m["ts_event"].dtype.time_zone != "UTC":
         df_1m = df_1m.with_columns(
             pl.col("ts_event").dt.convert_time_zone("UTC")
         )
+
+    if every == "1d":
+        # CME trading-day grouping: one bar per Globex session (18:00 ET → 17:00 ET next day)
+        resampled = (
+            df_1m.with_columns(
+                pl.col("ts_event")
+                .dt.convert_time_zone("America/New_York")
+                .dt.offset_by("6h")
+                .dt.date()
+                .alias("trading_day")
+            )
+            .sort("ts_event")
+            .group_by("trading_day")
+            .agg(
+                pl.col("ts_event").first().alias("ts_event"),  # session open in UTC
+                pl.col("open").first(),
+                pl.col("high").max(),
+                pl.col("low").min(),
+                pl.col("close").last(),
+                pl.col("volume").sum(),
+            )
+            .filter(pl.col("volume") > 0)
+            .sort("ts_event")
+        )
+        return resampled
+
+    # Intraday: existing group_by_dynamic (unchanged)
     resampled = (
         df_1m.sort("ts_event")
         .group_by_dynamic("ts_event", every=every)
@@ -222,6 +288,34 @@ def atomic_write_parquet(df: pl.DataFrame, dest: Path) -> None:
     os.replace(str(tmp), str(dest))
 
 
+def _write_refresh_sidecar(dest: Path, dbn_symbol: str, df: pl.DataFrame) -> None:
+    """Write provenance sidecar alongside a cached parquet (FIX 7, deep-scan #10 2026-07-02).
+
+    Schema: {source, adjusted, written_at, dataset_hash}
+    Mirrors the sidecar written by data_loader._write_cache_sidecar so the read-time
+    check in data_loader can verify the cache was written from ratio-adjusted data.
+    """
+    import datetime as _dt
+    import hashlib as _hl
+    import io as _io
+    sidecar = dest.parent / f"{dest.name}.provenance.json"
+    buf = _io.BytesIO()
+    df.sort("ts_event").select(
+        [c for c in ["ts_event", "open", "high", "low", "close", "volume"] if c in df.columns]
+    ).write_csv(buf)
+    dataset_hash = _hl.sha256(buf.getvalue()).hexdigest()
+    payload = json.dumps({
+        "source": f"databento:continuous:{dbn_symbol}",
+        "adjusted": True,  # Databento .c.0 continuous contracts are server-side ratio-adjusted
+        "written_at": _dt.datetime.utcnow().isoformat() + "Z",
+        "dataset_hash": dataset_hash,
+    })
+    try:
+        sidecar.write_text(payload, encoding="utf-8")
+    except Exception as _e:
+        print(f"Sidecar write failed (non-fatal): {_e}", file=sys.stderr)
+
+
 def refresh_symbol_timeframe(
     symbol: str,
     timeframe: str,
@@ -251,7 +345,27 @@ def refresh_symbol_timeframe(
             "message": f"Unknown timeframe: {timeframe}. Known: {list(TIMEFRAME_EVERY.keys())}",
         }
 
+    # FIX 1 (deep-scan #10 2026-07-02): migrate legacy flat-path cache file to ratio_adj subdir
+    _migrate_legacy_flat_cache(symbol, timeframe)
+
     parquet_path = get_parquet_path(symbol, timeframe)
+
+    # FIX 3 (deep-scan #10 2026-07-02): force rebuild for daily files missing trading_day column.
+    # UTC-midnight anchored daily bars (old format) produce ~332 wrong bars/yr.
+    # The trading_day column is the v2 schema signature for CME-session-aligned daily bars.
+    if timeframe == "daily" and parquet_path.exists():
+        try:
+            _daily_cols = pl.read_parquet(str(parquet_path), n_rows=0).columns
+            if "trading_day" not in _daily_cols:
+                print(
+                    f"[FIX3] {symbol}/daily: stale UTC-midnight anchored cache "
+                    f"(missing 'trading_day' column) — removing for CME-session rebuild",
+                    file=sys.stderr,
+                )
+                parquet_path.unlink()
+        except Exception as _schema_err:
+            print(f"[FIX3] {symbol}/daily: schema check failed ({_schema_err!r}) — proceeding", file=sys.stderr)
+
     latest_ts = get_latest_ts(symbol, timeframe)
 
     if latest_ts is not None:
@@ -445,6 +559,8 @@ def refresh_symbol_timeframe(
             "status": "error",
             "message": f"Write failed: {e}",
         }
+    # FIX 7 (deep-scan #10): write provenance sidecar after successful cache write
+    _write_refresh_sidecar(parquet_path, dbn_symbol=dbn_symbol, df=df_merged)
 
     # --- Validation: latest bar must be within 24h of now ---
     now_utc = datetime.now(timezone.utc)

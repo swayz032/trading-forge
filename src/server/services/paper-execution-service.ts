@@ -1329,31 +1329,79 @@ export async function openPosition(sessionId: string, params: {
             // flag provides defense-in-depth but the primary protection is forceClose.
             if (!killResult.force_close) {
               const todayKeyForSticky = toFuturesTradingDayString();
-              try {
-                await dbConn.update(paperSessions).set({
-                  config: sql`jsonb_set(
-                    COALESCE(${paperSessions.config}, '{}'::jsonb),
-                    '{dailyLossHaltedAt}',
-                    ${JSON.stringify(todayKeyForSticky)}::jsonb
-                  )`,
-                }).where(eq(paperSessions.id, sessionId));
-                dbConn.insert(auditLog).values({
-                  action: "kill_switch.dll_halt_sticky_engaged",
-                  entityType: "paper_session",
-                  entityId: sessionId,
-                  decisionAuthority: "system",
-                  input: { sessionId, daily_pnl_pct: killResult.daily_pnl_pct, halt_pct: killResult.halt_pct_used ?? _effectiveHaltPct } as Record<string, unknown>,
-                  result: { halted_at: todayKeyForSticky, daily_pnl_pct: killResult.daily_pnl_pct } as Record<string, unknown>,
-                  status: "success",
-                  correlationId,
-                }).catch((err: unknown) => logger.error({ err }, "kill_switch.dll_halt_sticky_engaged audit write failed (non-blocking)"));
-              } catch (stickyErr) {
-                // Non-blocking — the kill switch already blocks the entry above.
-                // Log the failure but do not re-throw; the session is still halted this call.
-                logger.error(
-                  { sessionId, err: stickyErr },
-                  "Kill switch (GAP-1): failed to persist sticky halt flag to session config (non-blocking — halt still active this call)",
-                );
+              // FIX 5 (Track M): retry sticky DLL halt flag write once. If the retry
+              // also fails, treat the current entry as fail-closed (return early with
+              // a rejection result + CRITICAL log + audit). Without this, a transient
+              // DB hiccup leaves the session without a sticky halt flag — the Python
+              // kill-switch 5s cache expiry could silently re-enable trading.
+              let stickyWriteOk = false;
+              for (let attempt = 1; attempt <= 2; attempt++) {
+                try {
+                  await dbConn.update(paperSessions).set({
+                    config: sql`jsonb_set(
+                      COALESCE(${paperSessions.config}, '{}'::jsonb),
+                      '{dailyLossHaltedAt}',
+                      ${JSON.stringify(todayKeyForSticky)}::jsonb
+                    )`,
+                  }).where(eq(paperSessions.id, sessionId));
+                  dbConn.insert(auditLog).values({
+                    action: "kill_switch.dll_halt_sticky_engaged",
+                    entityType: "paper_session",
+                    entityId: sessionId,
+                    decisionAuthority: "system",
+                    input: { sessionId, daily_pnl_pct: killResult.daily_pnl_pct, halt_pct: killResult.halt_pct_used ?? _effectiveHaltPct } as Record<string, unknown>,
+                    result: { halted_at: todayKeyForSticky, daily_pnl_pct: killResult.daily_pnl_pct } as Record<string, unknown>,
+                    status: "success",
+                    correlationId,
+                  }).catch((err: unknown) => logger.error({ err }, "kill_switch.dll_halt_sticky_engaged audit write failed (non-blocking)"));
+                  stickyWriteOk = true;
+                  break;
+                } catch (stickyErr) {
+                  if (attempt === 1) {
+                    logger.warn(
+                      { sessionId, err: stickyErr, attempt },
+                      "Kill switch (GAP-1 FIX 5): sticky halt flag write failed — retrying once",
+                    );
+                  } else {
+                    // Second failure: fail-closed — block this entry and escalate.
+                    logger.error(
+                      { sessionId, err: stickyErr },
+                      "CRITICAL: Kill switch (GAP-1 FIX 5): sticky halt flag write failed on retry — fail-closed, blocking entry",
+                    );
+                    dbConn.insert(auditLog).values({
+                      action: "paper.dll_sticky_flag_write_failed_fail_closed",
+                      entityType: "paper_session",
+                      entityId: sessionId,
+                      decisionAuthority: "system",
+                      input: { sessionId, daily_pnl_pct: killResult.daily_pnl_pct } as Record<string, unknown>,
+                      result: { attempts: 2, reason: stickyErr instanceof Error ? stickyErr.message : String(stickyErr) } as Record<string, unknown>,
+                      status: "error",
+                      correlationId,
+                    }).catch((auditErr: unknown) => logger.error({ err: auditErr }, "paper.dll_sticky_flag_write_failed_fail_closed audit write also failed"));
+                    openSpan.setAttribute("kill_switch_tripped", true);
+                    openSpan.setAttribute("kill_switch_sticky_write_failed", true);
+                    openSpan.end();
+                    return {
+                      position: null,
+                      executionResult: {
+                        positionId: "",
+                        entryPrice: 0,
+                        contracts: params.contracts,
+                        slippage: 0,
+                        expectedPrice: arrivalPrice,
+                        actualPrice: 0,
+                        arrivalPrice,
+                        implementationShortfall: 0,
+                        fillRatio: 0,
+                        filled: false,
+                      } satisfies ExecutionResult,
+                    };
+                  }
+                }
+              }
+              if (!stickyWriteOk) {
+                // Unreachable after the fail-closed return above, but TypeScript needs it.
+                logger.error({ sessionId }, "Kill switch (GAP-1 FIX 5): sticky write loop exited without success or fail-closed — should not happen");
               }
             }
 
@@ -2054,7 +2102,13 @@ export async function openPosition(sessionId: string, params: {
     ? ({ ...(exitPlanForInsert ?? {}), entryRegime: entryMacroRegimeCapture } as unknown as ExitPlanWithRuntimeState)
     : (exitPlanForInsert ?? undefined);
 
-  const [position] = await dbConn.insert(paperPositions).values({
+  // FIX 3 (Track M): wrap position INSERT + paper.trade_open audit INSERT in a single
+  // transaction so they are atomic. Previously a crash between the two writes left an
+  // open paper_positions row with no audit trail — the promotion gate has no evidence
+  // the trade was actually entered and the journal is incomplete for replay.
+  // SHADOW-signal insert and SSE/Discord stay OUTSIDE (observability, fail-soft).
+  const [position] = await dbConn.transaction(async (tx) => {
+    const [pos] = await tx.insert(paperPositions).values({
     sessionId,
     symbol: params.symbol,
     side: params.side,
@@ -2077,6 +2131,30 @@ export async function openPosition(sessionId: string, params: {
     // recover the signal→trade trace when invoked externally (force-close, time-stop).
     correlationId,
   }).returning();
+    // Audit trail — paper.trade_open inside the transaction so position row and
+    // audit row are atomically consistent. Failure rolls back both writes.
+    await tx.insert(auditLog).values({
+      action: "paper.trade_open",
+      entityType: "paper_position",
+      entityId: pos.id,
+      input: {
+        sessionId,
+        symbol: params.symbol,
+        direction: params.side,
+        contracts: params.contracts,
+        entryPrice: params.signalPrice,
+      },
+      result: {
+        fillPrice: actualEntry,
+        slippage,
+        implementationShortfall,
+      },
+      status: "success",
+      decisionAuthority: "agent",
+      correlationId,
+    });
+    return [pos];
+  });
 
   // F8: write signal.exit_plan_persisted audit NOW that position.id is known.
   // Prior code wrote entityId: null because the INSERT hadn't run yet at audit time.
@@ -2138,31 +2216,7 @@ export async function openPosition(sessionId: string, params: {
     logger.warn({ sessionId, err: shadowErr }, "Shadow signal write failed (non-blocking)");
   }
 
-  // Audit trail — paper trade open
-  try {
-    await dbConn.insert(auditLog).values({
-      action: "paper.trade_open",
-      entityType: "paper_position",
-      entityId: position.id,
-      input: {
-        sessionId,
-        symbol: params.symbol,
-        direction: params.side,
-        contracts: params.contracts,
-        entryPrice: params.signalPrice,
-      },
-      result: {
-        fillPrice: actualEntry,
-        slippage,
-        implementationShortfall,
-      },
-      status: "success",
-      decisionAuthority: "agent",
-      correlationId,
-    });
-  } catch (auditErr) {
-    logger.warn({ sessionId, positionId: position.id, err: auditErr }, "Audit log write failed for paper.trade_open (non-blocking)");
-  }
+  // paper.trade_open audit is now inside the openPosition transaction above (FIX 3).
 
   return { position, executionResult };
     }); // end withSessionLock

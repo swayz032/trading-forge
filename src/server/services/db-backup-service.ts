@@ -57,10 +57,15 @@ import { fileURLToPath } from "node:url";
 import { S3Client, PutObjectCommand, HeadBucketCommand } from "@aws-sdk/client-s3";
 import { logger } from "../lib/logger.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
-import { notifyCritical } from "./notification-service.js";
+import { notifyCritical, notifyWarning } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 const execFileAsync = promisify(execFile);
+
+// ─── FIX 1 (deepscan10): disabled-path alert dedupe ─────────────────────────
+// Emits audit + Discord WARN at most once per 24h when DB_BACKUP_ENABLED=false,
+// so vacation-mode disablement is always queryable and never invisible.
+let _disabledAlertLastAt: number | null = null;
 
 // deepscan6 (2026-07-02): the tower has no system-installed PostgreSQL client, so the prod
 // server is v17.10 and needs the pg17 pg_dump specifically (a v16 pg_dump REFUSES with a
@@ -297,6 +302,32 @@ export async function runDbBackup(): Promise<DbBackupResult> {
   const enabled = (process.env["DB_BACKUP_ENABLED"] ?? "true").toLowerCase();
   if (enabled === "false" || enabled === "0") {
     logger.info("db-backup: disabled via DB_BACKUP_ENABLED=false — skipping");
+    // FIX 1 (deepscan10): disabled path must never be silent — emit audit row +
+    // Discord WARN once per 24h so the operator can query audit_log for
+    // db_backup.disabled_by_env and know the backup has been off continuously.
+    const _DISABLED_ALERT_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    if (_disabledAlertLastAt === null || now - _disabledAlertLastAt >= _DISABLED_ALERT_COOLDOWN_MS) {
+      _disabledAlertLastAt = now;
+      void insertAuditRowSafe({
+        action: "db_backup.disabled_by_env",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { DB_BACKUP_ENABLED: "false" } as Record<string, unknown>,
+        result: { outcome: "skipped_disabled" } as Record<string, unknown>,
+        status: "warning",
+      });
+      notifyWarning(
+        "DB Backup Disabled by Environment Variable",
+        appendFamilyGradePostscript(
+          "DB_BACKUP_ENABLED=false — the nightly database backup is intentionally skipped by environment configuration. If this is expected for vacation mode, no action needed. Restore DB_BACKUP_ENABLED=true to re-enable automated backups.",
+          "The automated database backup is turned off. Trading data is NOT being backed up off-tower right now.",
+          "No action needed if Tony disabled this on purpose. Call Tony if backups should be running.",
+        ),
+        { envVar: "DB_BACKUP_ENABLED", value: "false" },
+      );
+    }
     return { status: "disabled", durationMs: 0 };
   }
 

@@ -49,7 +49,7 @@ from src.engine.config import (
     StrategyConfig,
 )
 from src.engine.cross_validation import run_cross_validation
-from src.engine.data_loader import compute_dataset_hash, flag_rollover_days, load_ohlcv
+from src.engine.data_loader import EMPIRICAL_BARS_PER_DAY, compute_dataset_hash, flag_rollover_days, load_ohlcv
 from src.engine.decay.half_life import fit_decay
 from src.engine.decay.sub_signals import composite_decay_score
 from src.engine.firm_config import (
@@ -225,6 +225,7 @@ def apply_eligibility_gate(
     htf_cache=None,
     spec=None,
     strategy_name: str = "",
+    passthrough_reason: str = "",
 ):
     """Apply 7-layer eligibility gate to filter signals (A+ only).
 
@@ -254,11 +255,16 @@ def apply_eligibility_gate(
     if os.environ.get("TF_CONFLUENCE_OVERLAY_DISABLED", "").lower() == "true":
         gate_stats["mode"] = "source_entry_only"
         return entry_signals, exit_signals, gate_stats
-    gate_stats["mode"] = "tf_institutional_overlay"
 
-    # Backward compatible: no HTF cache → passthrough
+    # Backward compatible: no HTF cache → passthrough (fail-soft is correct — a data blip
+    # should not kill the run). FIX 2 (deep-scan #10): make passthrough LOUD and queryable
+    # so the operator can see it in gate_stats rather than silently getting the wrong mode label.
     if htf_cache is None or len(htf_cache) == 0:
+        gate_stats["mode"] = "passthrough_htf_unavailable"
+        gate_stats["passthrough_reason"] = passthrough_reason or "htf_cache_none_or_empty"
         return entry_signals, exit_signals, gate_stats
+
+    gate_stats["mode"] = "tf_institutional_overlay"
 
     # Unregistered strategy bypass: if strategy_name doesn't appear in ANY
     # playbook's allowed_strategies, skip the gate entirely. This prevents
@@ -2148,11 +2154,13 @@ def _compute_long_short_split(trades_list: list[dict]) -> dict:
 # RTH-only figures (390min = 78 5min bars) are wrong for futures which trade
 # nearly 24h. data_loader.py:323 uses 172 5min bars for Globex.
 # Aligned here to eliminate false "too few bars" warnings.
+# FIX 4 (deep-scan #10 F-11): use EMPIRICAL_BARS_PER_DAY from data_loader as single source.
+# Previous "15min": 92 was theoretical; empirical CME data shows 58. Using 92 caused false
+# bar-count alarms on real CME ratio-adjusted data. data_loader.EMPIRICAL_BARS_PER_DAY
+# documents the measurement methodology (10.6 years of CME Globex continuous data).
 BARS_PER_DAY = {
-    "1min": 1380, "5min": 172, "15min": 92, "30min": 46,
-    "1hour": 23, "1h": 23, "4hour": 6, "4h": 6,
-    "4hr": 6,     # H6 fix: "4hr" alias — mirrors "4h" / "4hour"
-    "daily": 1, "1D": 1,
+    **EMPIRICAL_BARS_PER_DAY,  # empirical values from data_loader (15min=58, 5min=172, etc.)
+    "4hr": 4,  # "4hr" alias — mirrors EMPIRICAL_BARS_PER_DAY["4hour"]
 }
 
 
@@ -2960,7 +2968,16 @@ def run_backtest(
     range_pop()
 
     # ─── Validate bar count ──────────────────────────────────
-    _validate_bar_count(data, config.timeframe, request.start_date, request.end_date)
+    # FIX 4 (deep-scan #10): derive date span from actual data, not request dates.
+    # When run_backtest is called with explicit data= (CPCV IS-eval in walk_forward.py),
+    # the request carries OOS dates but data holds IS bars — deriving from data prevents
+    # spurious "expected 251 got 664" warnings that fire on every CPCV path.
+    _val_start = request.start_date
+    _val_end = request.end_date
+    if "ts_event" in data.columns and len(data) > 0:
+        _val_start = str(data["ts_event"][0])[:10]
+        _val_end = str(data["ts_event"][-1])[:10]
+    _validate_bar_count(data, config.timeframe, _val_start, _val_end)
 
     # ─── Flag rollover days (Task 7.1) ───────────────────────
     data = flag_rollover_days(data, config.symbol)
@@ -3604,6 +3621,7 @@ def run_backtest(
     # evaluates bias/playbook/location/structural-TP for every DSL signal.
     _dsl_htf_cache: Optional[dict] = None
     _dsl_strategy_name = getattr(config, "name", "") or ""
+    _dsl_htf_passthrough_reason: str = ""  # FIX 2 (deep-scan #10): captured for gate disclosure
     try:
         _daily_data_for_htf = load_ohlcv(
             config.symbol, "daily",
@@ -3629,18 +3647,31 @@ def run_backtest(
                 file=sys.stderr,
             )
         else:
+            _dsl_htf_passthrough_reason = f"daily_bars={len(_daily_data_for_htf)}_lt_200"
             print(
                 f"  DSL backtest: daily bars={len(_daily_data_for_htf)} < 200 — "
                 f"HTF cache skipped (passthrough mode)",
                 file=sys.stderr,
             )
     except Exception as _htf_build_err:
+        _dsl_htf_passthrough_reason = f"{type(_htf_build_err).__name__}:{str(_htf_build_err)[:120]}"
         print(
             f"  DSL backtest: HTF cache build failed ({_htf_build_err!r}) — "
             f"eligibility gate + structural TP run in passthrough mode",
             file=sys.stderr,
         )
         _dsl_htf_cache = None
+
+    # FIX 2 (deep-scan #10): emit structured passthrough event when HTF cache is unavailable.
+    # Mirrors cross_symbol_dll_degenerate_skip pattern — queryable by operator/monitoring.
+    _dsl_htf_passthrough = _dsl_htf_cache is None or len(_dsl_htf_cache) == 0
+    if _dsl_htf_passthrough:
+        print(json.dumps({
+            "event": "backtest.htf_passthrough_engaged",
+            "symbol": getattr(config, "symbol", "unknown"),
+            "reason": _dsl_htf_passthrough_reason or "htf_cache_none_or_empty",
+            "note": "eligibility gate running in passthrough mode; all signals pass unfiltered",
+        }), file=sys.stderr)
 
     # ─── Eligibility gate (Wave 2.8 integration point) ─────────
     entries_np = df["entry_long"].to_numpy()
@@ -3652,6 +3683,7 @@ def run_backtest(
             firm_key=request.firm_key,
             htf_cache=_dsl_htf_cache,
             strategy_name=_dsl_strategy_name,
+            passthrough_reason=_dsl_htf_passthrough_reason,  # FIX 2 (deep-scan #10)
         )
         # Update DataFrame with filtered signals
         df = df.with_columns([
@@ -3668,6 +3700,7 @@ def run_backtest(
                 firm_key=request.firm_key,
                 htf_cache=_dsl_htf_cache,
                 strategy_name=_dsl_strategy_name,
+                passthrough_reason=_dsl_htf_passthrough_reason,  # FIX 2 (deep-scan #10)
             )
             df = df.with_columns([
                 pl.Series("entry_short", short_entries_np),
@@ -4941,6 +4974,9 @@ def run_backtest(
         # Additive key — consumers that do not read it are unaffected.
         # modeled=False for all current single-symbol backtest paths (zero P&L proxy).
         "cross_symbol_dll": _cs_dll_disclosure,
+        # FIX 2 (deep-scan #10): HTF passthrough disclosure — True when eligibility gate
+        # ran in passthrough mode (htf_cache unavailable). Additive; TS persists it.
+        "htf_passthrough": _dsl_htf_passthrough,
     }
     # Also embed parity gate stats in run_receipt for backward-compat TS readers.
     # This is done after the result dict is built to avoid mutating run_receipt template.
