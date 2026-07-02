@@ -29,6 +29,17 @@ now built: not "extraction" but **compilation with end-to-end conservation + ful
    is **achieved for the validated pipeline**; remaining work is evaluator families, corpus breadth, and continued
    per-strategy ledger validation — not extraction correctness.
 
+**Adopted design refinements (GPT 2026-07-02, after the live runs):**
+- **"Mirror candidate by default"** replaces "bidirectional by default": compile the source side exactly as
+  taught; when the logic is structurally mirrorable, generate the mirror as an INDEPENDENT candidate hypothesis
+  that must independently pass the gate battery — never assume the mirror is valid. Evidence: l-2 v3 run — the
+  educator's short side +164 pts while the naive long mirror lost −896 pts (Ledger G traceable both).
+- **Two-mode doctrine (standing invariant):** Mode A (source + TF risk framework only) is the permanent baseline
+  and is NEVER lost; Mode B (+ TF institutional confluence overlay) must EARN its place against Mode A on
+  expectancy / drawdown / Sharpe / CPCV / PBO / DSR / gate survival (`confluence-overlay-ablation.py`).
+- **Phase shift:** correctness is proven (Ledgers A–G); the next milestone class is **proving value added** —
+  does the Trading Forge overlay create measurable value beyond faithfully executing the educator's strategy?
+
 - **Two-stage ownership.** Extraction owns the **entry edge** (setup / entry trigger / confluences / invalidation
   / session / direction / symbol / timeframe / ordered steps). The **framework-overlay** (operator-canonical)
   owns stop / take-profit / position-sizing / risk. Those are `framework_owned` — never extraction's job.
