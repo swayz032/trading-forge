@@ -188,3 +188,31 @@ north-star work:
 (N-sample union), prove breadth (widen corpus), or start the backtester hand-off? And for the hand-off: what's
 the minimal contract the Databento engine needs from the compiled graph (entry trigger + confluences + direction
 + session + timeframe + symbol + invalidation) such that nothing source-owned is lost in translation?
+
+---
+
+# OVERLAY RESEARCH STATE (2026-07-02 close — GPT final assessment, ADOPTED)
+
+**Finding:** for practical purposes the regime router IS the overlay (~99% of rejections = "NO_TRADE playbook
+active"). It is a RISK-EXPOSURE FILTER, not an edge detector: removes net-losing populations (2.4:1
+losers:winners, Sharpe/DD/losing-streak all improve) but kept-vs-removed avg quality is identical (−47 vs −50
+pts) — it cuts volume by regime, it does not discriminate quality within TRADE windows.
+
+**DECISION: OVERLAY FROZEN.** Do not loosen/tighten any layer, the retention floor, or the router. The
+mitigation baseline is negative-expectancy — optimizing the overlay around it would tune it to rescue a
+strategy with no edge.
+
+**STANDING PROTOCOL (activates when the conveyor produces gate-passed, positive-expectancy strategies —
+library is currently all-CANDIDATE by design):** run `scripts/overlay-attribution.py` + Δ_overlay on each
+gate-passed strategy and answer GPT's four questions:
+  1. Does the regime router still cut ~2.4 losers per winner?
+  2. Does it preserve >80% of A+ trades (≥14 pt winners)?
+  3. Does it improve EXPECTANCY, not just drawdown?
+  4. Do the improvements survive WF/CPCV/PBO/DSR under both modes?
+YES across profitable strategies → overlay demonstrably adds value where it matters. NO → the refinement
+target is precisely the regime router's discrimination WITHIN allowed windows (where the 11-factor
+institutional confluences should earn their keep) — never a global loosening.
+
+**Project maturity (GPT):** compiler validated · execution traceable (Ledgers A–G) · overlay no longer a
+black box (dominant component identified) · research instruments built (Δ_overlay corpus sweep, per-layer
+attribution + A+ retention + daily bands). Next gains come from evidence accumulation, not architecture.
