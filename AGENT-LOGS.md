@@ -12315,6 +12315,37 @@ Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal
 
 ---
 
+### Session Log — 2026-07-02 Layer 4 provenance stamping hard gate
+
+**Mission:** Build provenance stamping as a persistence-time hard gate (Layer 4 research conveyor item 3) — every persisted backtest row gets a 5-field stamp; persistence refuses writes missing any stamp field (fail-closed).
+
+**Work completed:**
+- Created `src/server/lib/provenance-stamp.ts` — DB-FREE library exporting `ENGINE_VERSION = "8.1.0"`, `GATE_BATTERY_VERSION = "2026-07-02.1"`, `computeOverlayConfigHash()`, `buildProvenanceStamp()`, `assertProvenanceStamp()`, `buildLegacyProvenanceStamp()`, `validateProvenanceStamp()`, `ProvenanceStampError` (with `missingFields[]`), `deriveSpecProvenanceRef()`, env gates (`isProvenanceEnforced()`, `isLegacyBackfillAllowed()`). SHA-256 canonical-sorted-JSON pattern mirrors frozen-policy-hash.ts.
+- Created migration `src/server/db/migrations/0186_backtest_provenance_stamp.sql` — idempotent `ADD COLUMN IF NOT EXISTS provenance_stamp JSONB` + 3 `CREATE INDEX IF NOT EXISTS` indexes (engine_version, gate_battery, null-check).
+- Updated `src/server/db/migrations/meta/_journal.json` — added idx=189 entry for 0186_backtest_provenance_stamp.
+- Updated `src/server/db/schema.ts` — added `provenanceStamp: jsonb("provenance_stamp")` to backtests table after `kEff`.
+- Updated `src/server/services/backtest-service.ts` — import block + stamp building + `assertProvenanceStamp` hard gate + audit row on `ProvenanceStampError` + `provenanceStamp` field in INSERT `.values({...})`.
+- Updated `src/server/__tests__/helpers/pglite-db.ts` — added `provenance_stamp JSONB` to backtests DDL.
+- Created `src/server/__tests__/provenance-stamp.integration.test.ts` — 34 tests across 5 suites (A: DB round-trip; B: hard gate refusal; C: hash stability; D: legacy backfill path; E: deriveSpecProvenanceRef). All tests use bb00 UUID namespace.
+
+**Verification:**
+- tsc 0 errors
+- `npx vitest run provenance-stamp.integration.test.ts` — 34/34 pass
+- system-map:sync completed
+
+**Known-facts updates:**
+- `ENGINE_VERSION = "8.1.0"` (deepscan8: StyleC partials default ON, BIF gate, T→P gates, envelope allowlist)
+- `GATE_BATTERY_VERSION = "2026-07-02.1"` (same deepscan8 gate batch)
+- Hard gate env: `PROVENANCE_STAMP_ENFORCE=true` (default ON), `PROVENANCE_ALLOW_LEGACY_BACKFILL=false` (default OFF)
+- `TestDb.close()` is the shutdown method — NOT `cleanup()` (pglite-db.ts pattern)
+- Strategy UUIDs in test files must be full valid UUIDs — appending letters like `+ "b"` produces invalid UUIDs that PGlite rejects
+
+**Carry-forward for next session:**
+- Commits with "layer4-provenance:" prefix pending (do NOT push)
+- Layer 4 conveyor remaining items: filter ablation, volume
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### pglite test-harness DDL drifts from schema.ts and silently breaks ALL DB-backed gate tests (pinned 2026-06-28)
