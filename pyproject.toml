@@ -1,3 +1,27 @@
+# deepscan6 O4 (2026-07-01): explicit ruff + mypy config so the Python static-analysis
+# surface is stable and CI-consistent (was pre-commit-only, and pre-commit is bypassed by
+# the mandated `git commit --no-verify`). CI runs these as ADVISORY (continue-on-error)
+# today because the engine carries ~454 pre-existing ruff findings (mostly cosmetic
+# f-string prefixes) — flip CI to blocking after the one-time burn-down (`ruff check
+# --fix src/engine` clears ~302 automatically). The gate now at least SURFACES regressions.
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = [
+    "E501",  # line-length (formatter's job; not a correctness signal)
+    "E741",  # ambiguous var names (l/I/O) — pervasive in math code
+]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+follow_imports = "silent"
+warn_unused_ignores = false
+check_untyped_defs = false
+
 [tool.pytest.ini_options]
 testpaths = ["src/engine/tests", "tests/python"]
 python_files = ["test_*.py"]

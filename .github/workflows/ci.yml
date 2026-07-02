@@ -37,6 +37,13 @@ jobs:
         run: npm run system-map:check
       - run: npm run lint
 
+      # deepscan6 O5 (2026-07-01): dependency vulnerability scanning. ADVISORY today
+      # (continue-on-error) so a newly-disclosed CVE surfaces in CI without blocking the
+      # pipeline; triage high/critical findings and flip to blocking once the baseline is clean.
+      - name: Dependency audit — npm (advisory)
+        continue-on-error: true
+        run: npm audit --audit-level=high
+
       # ─── Hard gates (fail-closed) ──────────────────────────────────────────
       # These run in the lint job because lint is the upstream dependency of every
       # other job (test-node / test-python / test-parity all `needs: lint`). A gate
@@ -141,10 +148,23 @@ jobs:
           npm ci
           python -m pip install --upgrade pip
           pip install -r src/engine/requirements.txt
-          pip install pytest pytest-cov
+          pip install pytest pytest-cov ruff mypy pip-audit
 
       - name: Verify system map freshness
         run: npm run system-map:check
+
+      # deepscan6 O4/O5 (2026-07-01): Python static-analysis + dependency audit gates.
+      # ADVISORY (continue-on-error) until the pre-existing ~454 ruff findings are burned
+      # down (`ruff check --fix src/engine`) and mypy is triaged — then flip to blocking.
+      - name: Python lint — ruff (advisory)
+        continue-on-error: true
+        run: python -m ruff check src/engine
+      - name: Python type-check — mypy (advisory)
+        continue-on-error: true
+        run: python -m mypy src/engine || true
+      - name: Dependency audit — pip (advisory)
+        continue-on-error: true
+        run: python -m pip_audit -r src/engine/requirements.txt || true
 
       - name: Run pytest with coverage
         run: |
