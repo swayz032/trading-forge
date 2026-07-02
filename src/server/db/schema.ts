@@ -215,6 +215,13 @@ export const backtests = pgTable(
     // (lifecycle gate treats null as legacy grandfather pass, never blocks on missing data).
     bif: numeric("bif"),
     kEff: numeric("k_eff"),
+    // Layer 4 research conveyor item 3 (2026-07-02): provenance stamp
+    // 5-field stamp capturing what made this backtest run reproducible and comparable.
+    // { engine_version, data_snapshot_id, gate_battery_version, overlay_config_hash, spec_provenance_ref }
+    // NULL on pre-2026-07-02 rows (non-comparable; backfill with PROVENANCE_ALLOW_LEGACY_BACKFILL=true).
+    // HARD GATE: persistence refused when PROVENANCE_STAMP_ENFORCE=true (default) and stamp missing.
+    // Applied migration: 0186_backtest_provenance_stamp.sql (idx 189).
+    provenanceStamp: jsonb("provenance_stamp"),
     errorMessage: text("error_message"),
     executionTimeMs: integer("execution_time_ms"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
