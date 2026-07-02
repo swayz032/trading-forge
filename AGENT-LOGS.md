@@ -12193,6 +12193,30 @@ Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal
 - Remaining carry-forwards from deepscan7 still outstanding: operator env (buy UPS+Kasa, rotate secrets, set `S3_BACKUP_BUCKET`); SSE catalog 186 uncatalogued; BIF-blind-in-CPCV Wave 30; n8n retry-backoff normalization.
 - Work ONLY in isolated worktree; no commits made this session (working files on disk, uncommitted).
 
+### Session Log — 2026-07-02 ENGINE-100 MASTER CLOSE — every remaining engine finding + both parity gaps CLOSED (MERGED → phase-0 cc32f4a, DEPLOYED)
+
+**Mission:** Operator: "Make it 100%" — close all remaining backtest-engine audit findings from deep-scan #7 plus the two paper↔backtest parity gaps. (This entry is the parent master close; the trackF per-agent entry above is subsumed — its "BIF-blind Wave 30 outstanding" carry-forward line is now STALE: E1 closed it this same session.)
+
+**Method:** worktree branch `hardening/engine-100-2026-07-02` off 8fba6e0; 2 parallel tracks (backtest-core Python stats + paper-parity TS alignment); commits b044db9 (trackE) + cc32f4a (trackF); FF-merged → origin/hardening/phase-0 (cc32f4a); tower self-restarted (engine100-deploy) + health OK.
+
+**Shipped — trackE (Python stats; ALL output keys additive, no renames):**
+- **E1 BIF REAL in CPCV** (was blind — IS proxy == OOS mean → BIF≈1.0 always): per-path IS backtests; BIF = mean(per-path IS Sharpe)/WF OOS; `bif_reliable=true` + `bif_proxy_basis="cpcv_per_path_is"`; fallback preserves old tagging. Per-path IS also makes PBO non-degenerate in CPCV. **Closes the Wave 30 carry-forward.**
+- **E2** plain-WF non-optimize PBO real via `window_results[i]["_is_daily_pnls"]` (priority: optimizer best_score > _is_daily_pnls > OOS fallback).
+- **E3** additive `wfe_overall_base_basis` (stable cross-run denominator); `wfe_overall` unchanged.
+- **E4** Topstep standard-lane B14 emits advisory `risk_metrics["topstep_consistency_lane_shadow"]` — payout-lane switch no longer blind; gated metrics unchanged.
+- **E5** `MC_LO_AC_SAMPLE` env (default 1000; 0=full). **E6** Lo-Sharpe near-zero std guard (<1e-8 → 0.0, was 1e-10 divide → ~2.5e13). **E7** exit-day roll spread deducted (same-day guard; both paths). **E8** DSR CPCV-IID conservatism documented deliberate.
+- 71/71 new pytest GREEN; ruff BUG-subset clean.
+
+**Shipped — trackF:** (detail in the per-agent entry above) AVWAP trail 1×tick + static_styleC TP2 flat +2.0R, parity fixtures rewritten, gate OVERALL PASS, 14 new vitest.
+
+**Verification (combined tree):** whole-repo tsc 0; 3 CI hard gates GREEN (driftItems=[]); `check:ts-python-exit-parity` PASS; 71 pytest + 35 vitest GREEN; pre-existing fails re-proven vs clean HEAD (pbo_wired StrategyConfig.exit fixture drift, mini_safety_guard, playbook hysteresis, hypothesis-missing, skip_trade INSTRUMENT_STOP_CONFIG, weight_trainer — none in touched modules).
+
+**Known-facts updates:**
+- **BIF/PBO/paper-Sharpe values are NOT comparable across the 2026-07-02 boundary** — E1/E7/F-a/F-b all shift metrics conservative. Any future "BIF regressed / paper Sharpe dropped vs June" diagnosis must check this boundary FIRST. Expect the now-toothed BIF 4.0 gate to actually block on the first backtest wave — that is the gate working, not a regression.
+- CPCV now costs ~2× compute (per-path IS backtests) — documented Wave 30 trade-off, accepted for real BIF teeth.
+
+**Carry-forward:** engine has ZERO open code findings — 100% of known audit items closed. Remaining to a true 10 is EVIDENCE, not code: first backtest wave → ladder → paper → funded. Operator-side: UPS+Kasa, secret rotation, `S3_BACKUP_BUCKET` isolated bucket. Optional polish: bar-by-bar AVWAP section in the parity CI gate; SSE catalog ratchet; n8n retry-backoff normalization.
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### pglite test-harness DDL drifts from schema.ts and silently breaks ALL DB-backed gate tests (pinned 2026-06-28)
