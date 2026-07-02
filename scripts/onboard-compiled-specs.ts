@@ -7,10 +7,23 @@
  * batch's expected output shape — takes a directory, not hardcoded filenames.
  *
  * Usage:
- *   npx tsx scripts/onboard-compiled-specs.ts --dir <path>                  # dry run (default)
- *   npx tsx scripts/onboard-compiled-specs.ts --dir <path> --apply          # writes to DB
- *   npx tsx scripts/onboard-compiled-specs.ts --dir <path> --manifest <path.json>
- *   npx tsx scripts/onboard-compiled-specs.ts --dir <path> --timeframe 15m
+ *   npx tsx scripts/onboard-compiled-specs.ts --specs-dir <path>                  # dry run (default)
+ *   npx tsx scripts/onboard-compiled-specs.ts --specs-dir <path> --apply          # writes to DB
+ *   npx tsx scripts/onboard-compiled-specs.ts --specs-dir <path> --manifest <path.json>
+ *   npx tsx scripts/onboard-compiled-specs.ts --specs-dir <path> --timeframe 15m
+ *
+ * FLAG NAMING NOTE: this CLI dynamically imports spec-onboarding-service.ts,
+ * which (via direct-bucket-graduator.ts / agent-service.ts) transitively
+ * loads `duckdb`. duckdb's `@mapbox/node-pre-gyp` binding loader parses the
+ * FULL `process.argv` through `nopt` with its own configDefs (`help, arch,
+ * debug, directory, proxy, loglevel, acl`) and shorthand `-C = --directory`.
+ * `nopt` abbreviation-matches unrecognized long flags against known ones —
+ * a flag named `--dir` was silently expanded to node-pre-gyp's own
+ * `--directory`, corrupting its `package_json_path` lookup
+ * (`path.join(opts.directory, package_json_path)` against an already-
+ * absolute path). Verified this session. Never name a CLI flag here as a
+ * prefix of `help`/`arch`/`debug`/`directory`/`proxy`/`loglevel`/`acl` —
+ * hence `--specs-dir`, not `--dir`.
  *
  * Exit code: 0 if every spec produced at least one non-rejected row (inserted,
  * skipped_duplicate, or dry_run_planned); 1 if ANY spec had zero successful
@@ -39,7 +52,7 @@ function parseArgs(argv: string[]): Args {
     return argv[idx + 1];
   };
   return {
-    dir: get("--dir") ?? "tmp/generalization",
+    dir: get("--specs-dir") ?? "tmp/generalization",
     manifest: get("--manifest"),
     apply: argv.includes("--apply"),
     timeframe: get("--timeframe") ?? "5m",
