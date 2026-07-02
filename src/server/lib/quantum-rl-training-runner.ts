@@ -28,8 +28,9 @@
  */
 
 import { spawn, execSync, type ChildProcess } from "child_process";
-import { existsSync } from "fs";
-import { resolve as pathResolve } from "path";
+import { existsSync, mkdirSync } from "fs";
+import { resolve as pathResolve, join as pathJoin } from "path";
+import { tmpdir } from "os";
 import { createHash } from "crypto";
 import { eq } from "drizzle-orm";
 import { db } from "../db/index.js";
@@ -37,8 +38,14 @@ import { systemParameters, auditLog } from "../db/schema.js";
 import { logger } from "./logger.js";
 import { notifyCritical } from "../services/notification-service.js";
 import { appendFamilyGradePostscript } from "./notification-helpers.js";
+// FIX 7 (deepscan8): register spawned process with graceful-shutdown set
+import { registerExternalPythonSubprocess } from "./python-runner.js";
 
 const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
+
+// FIX 2 (deepscan8): per-pid Numba JIT-cache dir — avoids multi-worker collisions
+const _NUMBA_CACHE_DIR = pathJoin(tmpdir(), `tf-numba-cache-${process.pid}`);
+try { mkdirSync(_NUMBA_CACHE_DIR, { recursive: true }); } catch { /* ignore — Numba falls back */ }
 
 // ── Platform-correct Python interpreter (mirrors quantum-replay-runner.ts) ──
 const SYSTEM_PYTHON_WIN = "C:\\Program Files\\Python313\\python.exe";
@@ -289,11 +296,16 @@ function _buildTrainingEnv(): NodeJS.ProcessEnv {
     // Serialize with VRAM ceiling (RTX 5060 8GB) — training runs alone
     MAX_CONCURRENT_BACKTESTS: "1",
     PYTHONUSERSITE: "1",
+    // FIX 8 (deepscan8): operator-overridable user-site path
     PYTHONPATH: [
-      "C:\\Users\\tonio\\AppData\\Roaming\\Python\\Python313\\site-packages",
+      process.env.TF_PYTHON_USER_SITE ?? "C:\\Users\\tonio\\AppData\\Roaming\\Python\\Python313\\site-packages",
       "C:\\Program Files\\Python313\\Lib\\site-packages",
       process.env.PYTHONPATH ?? "",
     ].filter(Boolean).join(";"),
+    // FIX 1 (deepscan8): trigger enable_determinism() inside Python at startup
+    DETERMINISM_MODE: "true",
+    // FIX 2 (deepscan8): per-pid Numba JIT-cache dir
+    NUMBA_CACHE_DIR: _NUMBA_CACHE_DIR,
   };
 }
 
@@ -402,6 +414,8 @@ export async function runRlTrainingForStrategy(
         env: _buildTrainingEnv(),
         cwd: PROJECT_ROOT,
       });
+      // FIX 7 (deepscan8): register with graceful-shutdown process set
+      registerExternalPythonSubprocess(proc);
     } catch (spawnErr) {
       _recordRlFailure(String(spawnErr));
       reject(spawnErr);

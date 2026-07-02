@@ -1,12 +1,19 @@
 import { spawn, type ChildProcess } from "child_process";
 import { logger } from "./logger.js";
 import { parsePythonJson } from "../../shared/utils.js";
-import { resolve as pathResolve } from "path";
-import { writeFileSync, unlinkSync, existsSync } from "fs";
+import { resolve as pathResolve, join as pathJoin } from "path";
+import { writeFileSync, unlinkSync, existsSync, mkdirSync } from "fs";
 import { tmpdir } from "os";
 import { randomUUID } from "crypto";
 
 const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
+
+// FIX 2 (deepscan8): per-pid Numba JIT-cache dir — each Node process gets its own
+// collision-free cache so concurrent walk-forward workers never race on the same .nbi/.nbc files.
+// Python determinism.py respects this: if NUMBA_CACHE_DIR is already set in env, it defers.
+// Fail-soft: if mkdir fails Numba falls back to __pycache__ (no engine failure).
+const _NUMBA_CACHE_DIR = pathJoin(tmpdir(), `tf-numba-cache-${process.pid}`);
+try { mkdirSync(_NUMBA_CACHE_DIR, { recursive: true }); } catch { /* ignore — Numba falls back */ }
 
 // G5.1: Python subprocess concurrency cap.
 // Without a cap, agent batch + matrix backtest + auto fire-and-forget runs can
@@ -80,6 +87,16 @@ const _activeSubprocesses = new Set<ChildProcess>();
 function _registerSubprocess(child: ChildProcess): void {
   _activeSubprocesses.add(child);
   child.once("exit", () => _activeSubprocesses.delete(child));
+}
+
+/**
+ * FIX 7 (deepscan8): Register a ChildProcess spawned OUTSIDE runPythonModule
+ * (e.g. quantum-replay-runner, quantum-rl-training-runner) into the shared
+ * _activeSubprocesses set so gracefullyShutdownPythonSubprocesses() drains it
+ * on server SIGTERM. Call immediately after spawn() in the external runner's try block.
+ */
+export function registerExternalPythonSubprocess(child: ChildProcess): void {
+  _registerSubprocess(child);
 }
 
 /**
@@ -329,10 +346,17 @@ export async function runPythonModule<T = Record<string, unknown>>(
       // is empty. PYTHONPATH explicitly adds tonio's user-site to module search.
       PYTHONUSERSITE: "1",
       PYTHONPATH: [
-        "C:\\Users\\tonio\\AppData\\Roaming\\Python\\Python313\\site-packages",
+        process.env.TF_PYTHON_USER_SITE ?? "C:\\Users\\tonio\\AppData\\Roaming\\Python\\Python313\\site-packages",
         "C:\\Program Files\\Python313\\Lib\\site-packages",
         process.env.PYTHONPATH ?? "",
       ].filter(Boolean).join(";"),
+      // FIX 1 (deepscan8): trigger enable_determinism() inside Python at startup.
+      // backtester.py checks DETERMINISM_MODE=true and calls enable_determinism() which
+      // applies threadpoolctl limits + np.random.seed(42) for full float-order determinism.
+      DETERMINISM_MODE: "true",
+      // FIX 2 (deepscan8): per-pid Numba JIT-cache dir (computed at module init, dir created above).
+      // Prevents concurrent WF workers racing on shared __pycache__ .nbi/.nbc files.
+      NUMBA_CACHE_DIR: _NUMBA_CACHE_DIR,
     };
     return await new Promise((resolve, reject) => {
       const proc = spawn(pythonCmd, finalArgs, {
