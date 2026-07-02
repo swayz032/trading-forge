@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-02T06:01:23.625Z",
+  "generatedAt": "2026-07-02T07:04:40.280Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,7 +16,7 @@
   },
   "counts": {
     "routes": 78,
-    "schedulerJobs": 105,
+    "schedulerJobs": 106,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 29,
@@ -169,6 +169,7 @@
     "naked-poc-sync-daily",
     "narrative-state-tracker",
     "nightly-critique",
+    "ollama-keepwarm-watchdog",
     "paper-journal-recon-daily",
     "paper-vs-backtest",
     "pattern-aggregator",
@@ -992,7 +993,7 @@
     ],
     "coveredCounts": {
       "routes": 78,
-      "schedulerJobs": 105,
+      "schedulerJobs": 106,
       "engineSubsystems": 29,
       "databaseTables": 110
     },
@@ -4152,6 +4153,8 @@
           "idempotency-cleanup",
           "metrics-collector",
           "metrics-heartbeat",
+          "ollama-keepwarm-watchdog",
+          "position-drift-reconcile",
           "pre-trading-day-health-check",
           "python-pool-saturation-check",
           "regime-coverage-check",
@@ -11069,6 +11072,8 @@
         "idempotency-cleanup",
         "metrics-collector",
         "metrics-heartbeat",
+        "ollama-keepwarm-watchdog",
+        "position-drift-reconcile",
         "pre-trading-day-health-check",
         "python-pool-saturation-check",
         "regime-coverage-check",
