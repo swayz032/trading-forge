@@ -16,6 +16,19 @@ of a YouTube educator's executable strategy into a deterministic decision graph 
 the backtest engine with no human interpretation and no semantic loss.* This is a more exact description of what is
 now built: not "extraction" but **compilation with end-to-end conservation + full prerequisite-spine fidelity**.
 
+**The evidence-based accuracy claim (2026-07-02, canonical — do NOT overclaim beyond this):**
+1. *Source-owned extraction:* **yes, on the validated corpus** — measured recall vs human-built references, not
+   subjective judgment.
+2. *End-to-end semantic preservation:* **yes** — six ledgers (A transcript / B decision / C graph / D handoff /
+   E interpreter parity / F grounding) prove no silent additions or losses within the validated pipeline.
+3. *Engine executability:* **~97% grounded**; the gap is explicitly identified (primarily the CCI product-policy
+   decision), never silently approximated.
+4. *Universal applicability:* **not provable** — no finite corpus can. The stronger claim: **every processed
+   strategy generates its own measurable proof of fidelity** (what was extracted, how it was preserved, what
+   grounds, and exactly where any gap is). The mission — "the backtest tests what the educator actually taught" —
+   is **achieved for the validated pipeline**; remaining work is evaluator families, corpus breadth, and continued
+   per-strategy ledger validation — not extraction correctness.
+
 - **Two-stage ownership.** Extraction owns the **entry edge** (setup / entry trigger / confluences / invalidation
   / session / direction / symbol / timeframe / ordered steps). The **framework-overlay** (operator-canonical)
   owns stop / take-profit / position-sizing / risk. Those are `framework_owned` — never extraction's job.
