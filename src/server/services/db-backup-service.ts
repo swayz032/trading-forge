@@ -61,6 +61,12 @@ import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 const execFileAsync = promisify(execFile);
 
+// deepscan6 (2026-07-02): the tower has no system-installed PostgreSQL client, so the prod
+// server is v17.10 and needs the pg17 pg_dump specifically (a v16 pg_dump REFUSES with a
+// version mismatch). Rather than require a machine-scope install (admin/UAC), point at a
+// portable pg_dump via PG_DUMP_PATH. Falls back to bare "pg_dump" on PATH when unset.
+const PG_DUMP = process.env["PG_DUMP_PATH"] || "pg_dump";
+
 // ─── Path resolution ──────────────────────────────────────────────────────────
 
 const _filename = fileURLToPath(import.meta.url);
@@ -101,7 +107,7 @@ function getS3Prefix(): string {
 
 export async function checkPgDumpAvailable(): Promise<boolean> {
   try {
-    await execFileAsync("pg_dump", ["--version"], { timeout: 5_000 });
+    await execFileAsync(PG_DUMP, ["--version"], { timeout: 5_000 });
     return true;
   } catch {
     return false;
@@ -136,7 +142,7 @@ export async function runPgDump(
   const pgPassword = extractPgPassword(databaseUrl);
 
   await execFileAsync(
-    "pg_dump",
+    PG_DUMP,
     [
       "--format=plain",   // Plain SQL — compatible with psql / pg_restore --format=plain
       "--no-password",    // Credentials come from PGPASSWORD env, not interactive prompt
