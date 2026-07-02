@@ -83,6 +83,30 @@ export interface RegisterResult {
  * transaction) decide whether a failed registration should roll back the
  * DB insert.
  */
+/**
+ * Parses all 4 category list literals out of `filePath` and returns the union
+ * of every name currently registered (across all categories). Read-only —
+ * safe to call from a reporting/scan tool (e.g. the registration-bypass
+ * backfill instrument) without any risk of mutating the file. Shared by
+ * `registerStrategiesInPlaybook` below so there is exactly one parser for
+ * this file's shape, not a second copy per caller.
+ */
+export function readAllRegisteredNames(filePath: string): Set<string> {
+  const source = readFileSync(filePath, "utf-8");
+  const allNamesPresent = new Set<string>();
+  for (const cat of PLAYBOOK_CATEGORIES) {
+    const re = new RegExp(`^${cat}\\s*=\\s*\\[([^\\]]*)\\]`, "m");
+    const m = source.match(re);
+    if (m) {
+      for (const tok of m[1].split(",")) {
+        const cleaned = tok.trim().replace(/^["']|["']$/g, "");
+        if (cleaned) allNamesPresent.add(cleaned);
+      }
+    }
+  }
+  return allNamesPresent;
+}
+
 export function registerStrategiesInPlaybook(
   filePath: string,
   strategyNames: string[],
@@ -99,19 +123,7 @@ export function registerStrategiesInPlaybook(
     return { ok: false, category, added: [], alreadyPresent: [], reason: `read_failed: ${String(err)}` };
   }
 
-  // Find all 4 category list literals so we can detect cross-category dupes.
-  const listPattern = /^(CONTINUATION_STRATS|REVERSAL_STRATS|MEAN_REV_STRATS|ORB_STRATS)\s*=\s*\[([^\]]*)\]/m;
-  const allNamesPresent = new Set<string>();
-  for (const cat of PLAYBOOK_CATEGORIES) {
-    const re = new RegExp(`^${cat}\\s*=\\s*\\[([^\\]]*)\\]`, "m");
-    const m = source.match(re);
-    if (m) {
-      for (const tok of m[1].split(",")) {
-        const cleaned = tok.trim().replace(/^["']|["']$/g, "");
-        if (cleaned) allNamesPresent.add(cleaned);
-      }
-    }
-  }
+  const allNamesPresent = readAllRegisteredNames(filePath);
 
   const targetMatch = source.match(new RegExp(`^${category}\\s*=\\s*\\[([^\\]]*)\\]`, "m"));
   if (!targetMatch) {

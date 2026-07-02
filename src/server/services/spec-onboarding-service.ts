@@ -37,13 +37,8 @@ import { randomUUID } from "node:crypto";
 import { db } from "../db/index.js";
 import { strategies, needsArchetypeQueue } from "../db/schema.js";
 import { and, eq, sql } from "drizzle-orm";
-import {
-  auditBidirectionalCompleteness,
-  classifyFactorSources,
-} from "./direct-bucket-graduator.js";
 import { applyFrameworkOverlay, type StrategySource } from "./framework-overlay.js";
 import { auditGraduatedConfig, formatAuditResult } from "./graduated-strategy-auditor.js";
-import { runDslQualityCritic, assertCrossValidatedSource } from "./agent-service.js";
 import { inferSymbolSet } from "../lib/wave25-strategy-defaults.js";
 import { matchArchetype, type ArchetypeMatchResult } from "../lib/spec-archetype-matcher.js";
 import {
@@ -52,6 +47,91 @@ import {
   type PlaybookCategory,
 } from "../lib/playbook-registration.js";
 import { logger } from "../lib/logger.js";
+
+// ─── Lazy dynamic imports (sever static circular-import edges) ─────────────
+//
+// direct-bucket-graduator.ts imports `logger` from "../index.js" (the full
+// Express app entrypoint — mounts every route, constructs `new AgentService()`
+// at module scope in routes/agent.ts) instead of "../lib/logger.js". A STATIC
+// top-level import of direct-bucket-graduator.ts's Gate 1/2 helpers from any
+// fresh standalone entry point (this CLI/service — not src/server/index.ts
+// itself, and not a vitest suite where vi.mock intercepts the edge) triggers
+// a genuine Node ESM circular-import TDZ: direct-bucket-graduator.ts ->
+// ../index.js -> routes/agent.ts -> agent-service.ts (AgentService class
+// referenced before its own module finishes evaluating) -> back to
+// direct-bucket-graduator.ts (deriveEntryIndicator). Verified this session —
+// confirmed via `npx tsx scripts/onboard-compiled-specs.ts` crashing with
+// "Cannot access 'AgentService' before initialization" at routes/agent.ts:102.
+//
+// Same failure class + same fix as the Office deploy-approvals router
+// (src/server/routes/slumhouse/deploy-approvals.ts:47-58, "sever static
+// lifecycle-service edge"): type-only static imports for shapes we need +
+// dynamic `await import(...)` at call time, cached in a module-level
+// singleton so the cost is paid once per process, not once per spec.
+// agent-service.ts gets the same treatment — it independently reaches the
+// same cycle through its own large import graph (confirmed empirically: a
+// bare static import of agent-service.ts alone reproduces the same crash).
+import type {
+  auditBidirectionalCompleteness as AuditBidirectionalCompletenessFn,
+  classifyFactorSources as ClassifyFactorSourcesFn,
+} from "./direct-bucket-graduator.js";
+import type { runDslQualityCritic as RunDslQualityCriticFn } from "./agent-service.js";
+
+type GraduatorModule = typeof import("./direct-bucket-graduator.js");
+let _graduatorModule: GraduatorModule | null = null;
+async function getGraduatorModule(): Promise<GraduatorModule> {
+  if (!_graduatorModule) {
+    _graduatorModule = await import("./direct-bucket-graduator.js");
+  }
+  return _graduatorModule;
+}
+
+type AgentServiceModule = typeof import("./agent-service.js");
+let _agentServiceModule: AgentServiceModule | null = null;
+async function getAgentServiceModule(): Promise<AgentServiceModule> {
+  if (!_agentServiceModule) {
+    _agentServiceModule = await import("./agent-service.js");
+  }
+  return _agentServiceModule;
+}
+
+// ─── Single-entry-point guard (deep-scan #11 mandate) — LOCAL MIRROR ───────
+//
+// assertCrossValidatedSource() in agent-service.ts is the canonical, single
+// enforcement point for "no strategy row lands in `strategies` unless it came
+// from cross-validation or an operator-initiated clone/regen." It is trivial
+// and pure (a 3-branch set-membership check, zero I/O), but agent-service.ts
+// itself is NOT safely dynamic-importable from a standalone entry point: its
+// own import of backtest-service.ts reaches (via paper-trading-stream.ts ->
+// paper-execution-service.ts -> scheduler.ts -> lifecycle-service.ts -> {
+// adversarial-stress-service.ts | frankenstein-service.ts |
+// pine-export-service.ts | agent-coordinator-service.ts |
+// multi-firm-promotion-service.ts}) all the way to src/server/index.ts ->
+// routes/agent.ts -> agent-service.ts — a genuine, deep, pre-existing
+// circular reference confirmed via a full transitive-import trace this
+// session. Unlike the DSL quality critic below (optional, already
+// fail-open-on-any-throw by documented design), this guard is an
+// unconditional, security-relevant check that must NEVER silently fail open
+// on an infra/import error — so it is not routed through the same
+// dynamic-import-inside-try/catch pattern.
+//
+// This is a DELIBERATE, DOCUMENTED, BYTE-IDENTICAL mirror of
+// agent-service.ts's exported `assertCrossValidatedSource` (verified against
+// its source at the time of writing) — not a divergent reimplementation. If
+// agent-service.ts's version changes, this one must change with it. Fixing
+// this properly means applying the SAME "sever static edge, dynamic-import
+// at call time" pattern one level deeper inside agent-service.ts itself
+// (its own edge to backtest-service.ts) — a legitimate, larger architectural
+// fix flagged in docs/spec-onboarding-runbook.md, out of scope for this band.
+function assertCrossValidatedSourceLocal(source: string, tags: string[]): void {
+  const EXEMPT_SOURCES = new Set(["clone", "b4_regen", "evolved"]);
+  if (EXEMPT_SOURCES.has(source)) return;
+  if (source === "graduated_bucket") return;
+  if (tags.includes("cross-validated")) return;
+  throw new Error(
+    `strategy_insert_violation: only graduated_bucket source or cross-validated tag is allowed; got source=${source}`,
+  );
+}
 
 // Mirrors the private BIDIR_SENTINEL constant in direct-bucket-graduator.ts
 // (not exported there — this is a documented, deliberate literal match, same
@@ -352,6 +432,7 @@ export async function onboardSpecArtifact(
     );
 
     // ── Gate 1: Bidirectional completeness ──────────────────────────────────
+    const { auditBidirectionalCompleteness } = await getGraduatorModule();
     const gate1 = auditBidirectionalCompleteness({
       direction: spec.direction,
       archetype: archetypeMatch.matched ? (archetypeMatch.archetypeKey as string) : null,
@@ -410,6 +491,7 @@ export async function onboardSpecArtifact(
       exitStyle: "static_styleC",
     });
 
+    const { classifyFactorSources } = await getGraduatorModule();
     const { factor_sources, factor_quality, mergedFactors } = classifyFactorSources(
       confluenceFactors,
       confluenceFactors,
@@ -453,6 +535,7 @@ export async function onboardSpecArtifact(
     let criticAccepted = true;
     if (!opts.skipDslCritic) {
       try {
+        const { runDslQualityCritic } = await getAgentServiceModule();
         const critic = await runDslQualityCritic(
           { dsl: finalConfig, sourceFind: { title: conceptName, source: sourceUrl, description: conceptName } },
           `spec:${specHash}:${symbol}`,
@@ -485,7 +568,7 @@ export async function onboardSpecArtifact(
     ];
 
     // ── Single-entry-point guard (deep-scan #11 mandate) ───────────────────
-    assertCrossValidatedSource("spec_onboarding", tags);
+    assertCrossValidatedSourceLocal("spec_onboarding", tags);
 
     if (opts.dryRun) {
       perSymbol.push({
