@@ -13,14 +13,14 @@ this work; gates Phase 2 volume).
      → produces N *.spec.json artifacts + a manifest (this worktree does not own that
        branch; treat its output strictly as a JSON contract, never as code to import)
 
-2. npx tsx scripts/onboard-compiled-specs.ts --dir <path-to-specs>
+2. npx tsx scripts/onboard-compiled-specs.ts --specs-dir <path-to-specs>
      → DRY RUN (default). Prints, per spec: concept name, archetype match (or
        "UNMAPPED -> needs_archetype_queue"), confluence factors, and the per-symbol
        (MES/MNQ/MCL) outcome. Review this output BEFORE step 3. A "REJECTED" line
        is Gate 1 (bidirectional completeness) or the auditor doing its job — that is
        success, not a bug, if the spec artifact was genuinely malformed.
 
-3. npx tsx scripts/onboard-compiled-specs.ts --dir <path-to-specs> --apply
+3. npx tsx scripts/onboard-compiled-specs.ts --specs-dir <path-to-specs> --apply
      → Writes strategies rows. Each row passes Gate 1 -> framework overlay ->
        auditor -> DSL critic (skipped by default in batch mode; pass
        --with-dsl-critic to enable the live LLM call) -> playbook registration
@@ -153,58 +153,53 @@ explicitly rather than have silently assumed by whoever builds the next layer:
    options/equity-sourced specs so this bridge can skip or flag them, is a coordination
    decision for the extraction agent, not something this band silently decided.
 
-## Verified during this session: `scripts/onboard-compiled-specs.ts` cannot run standalone yet
+## RESOLVED this session: `scripts/onboard-compiled-specs.ts` now runs standalone
 
-Running the CLI directly (`npx tsx scripts/onboard-compiled-specs.ts --dir <path>`, even in
-default dry-run mode) currently fails with:
+An earlier draft of this runbook documented the CLI crashing with `ReferenceError: Cannot
+access 'AgentService' before initialization` at `routes/agent.ts:102` on every invocation,
+including default dry-run. This has been fixed — a full transitive-import trace located every
+edge in the cycle, and each was severed at the root:
 
+1. `graveyard-gate.ts`, `model-router.ts`, and `direct-bucket-graduator.ts` each imported
+   `logger` from `../index.js` (the full Express app bootstrap) instead of `../lib/logger.js`
+   (behaviorally equivalent pino config). Swapped all three.
+2. `direct-bucket-graduator.ts`'s own `runDslQualityCritic` import (used only inside one
+   try/catch'd call site in the main graduation flow — never by Gate 1/Gate 2, which is all
+   this bridge needs) was converted to a lazy dynamic import at that call site.
+3. `spec-onboarding-service.ts`'s imports of `auditBidirectionalCompleteness` /
+   `classifyFactorSources` (direct-bucket-graduator.ts) and the optional DSL critic
+   (agent-service.ts) were converted to lazy dynamic imports, same pattern as the Office
+   deploy-approvals router (`src/server/routes/slumhouse/deploy-approvals.ts:47-58`).
+4. `assertCrossValidatedSource` — called unconditionally, so it cannot safely be routed
+   through a dynamic import that might throw on agent-service.ts's own deep import chain
+   (agent-service.ts → backtest-service.ts → … → scheduler.ts → lifecycle-service.ts → 5
+   services → index.ts, confirmed too deep to sever without restructuring agent-service.ts
+   itself) — is mirrored locally in `spec-onboarding-service.ts` as
+   `assertCrossValidatedSourceLocal`, documented as a deliberate byte-for-byte parity mirror,
+   not a divergent reimplementation.
+5. A separate, unrelated bug surfaced by the first real CLI invocation: `duckdb`'s
+   `@mapbox/node-pre-gyp` binding loader parses the FULL `process.argv` via `nopt`, which
+   abbreviation-matches unrecognized flags against its own known options (`help, arch, debug,
+   directory, proxy, loglevel, acl`). The CLI's `--dir` flag collided with `--directory`,
+   corrupting `duckdb`'s own package.json path lookup. Renamed to `--specs-dir` (no prefix
+   collision) — this note is here so nobody reintroduces a colliding flag name later.
+
+**Verified real invocation (this session):**
 ```
-ReferenceError: Cannot access 'AgentService' before initialization
-    at src/server/routes/agent.ts:102
+npx tsx scripts/onboard-compiled-specs.ts --specs-dir tmp/generalization
 ```
+exits 0 against all 25 sample specs: 6 archetype-mapped (5× `fvg`, 1× `break_of_structure`),
+19 routed to `needs_archetype_queue`, 0 specs with zero successful rows, 75 `dry_run_planned`
+rows (25 specs × 3 symbols). This run also caught and fixed a real false-positive bug in the
+archetype matcher (see git log — a word-boundary-padded keyword match had lost its padding,
+routing a VWAP mean-reversion spec to `archetype:ict_ote` via a bare "ote" substring hit on
+"keynotes").
 
-Root cause (verified, pre-existing, NOT introduced by this band): `spec-onboarding-service.ts`
-imports `auditBidirectionalCompleteness`/`classifyFactorSources` from
-`direct-bucket-graduator.ts` — per this band's explicit mandate to reuse gates, not copy them.
-`direct-bucket-graduator.ts` in turn imports `logger` from `../index.js` (the full app
-entrypoint — should be `../lib/logger.js`, a separate but functionally-identical pino instance)
-plus `broadcastSSE` from `../routes/sse.js` and `notify` from `./notification-service.js`. When
-`src/server/index.ts` loads, it imports `routes/agent.ts`, which does `const agentService = new
-AgentService()` at module scope — and under a FRESH standalone entry point (any script that
-isn't `src/server/index.ts` itself), the module-evaluation order lets `routes/agent.ts`
-reference `AgentService` before `agent-service.ts` finishes initializing (a genuine circular
-import: `direct-bucket-graduator.ts` → `index.ts` → `routes/agent.ts` → `agent-service.ts`, and
-back through `routes/agent.ts` → `direct-bucket-graduator.ts` for `deriveEntryIndicator`).
-Verified this is load-order-dependent, not a Node/tsx version issue: pre-importing
-`agent-service.ts` first does not avoid it.
+Zero regressions verified via before/after baseline diff (git stash) against 5 representative
+existing suites touching the edited files: identical 5 failed / 89 passed before and after
+(all 5 pre-existing, unrelated to these changes). `check:archetype-lockstep` still 39/39 PASS.
 
-This is not specific to my onboarding logic — it is a property of importing these two gate
-helper functions from ANY standalone script. `retire-old-library.ts` (fetch-only, no gate
-imports) is unaffected and ran cleanly during this session's B5 verification. The onboarding
-CLI is, structurally, the first standalone entry point in this codebase to import
-`direct-bucket-graduator.ts`'s pure gate functions directly rather than going through
-`src/server/index.ts`'s own load order (where the circularity resolves silently) or through a
-vitest suite (where `vi.mock` intercepts the problematic edges — the established pattern this
-codebase already uses for exactly this class of entanglement, e.g.
-`composite-shadow.integration.test.ts`).
-
-**What this means practically:** the onboarding logic itself is fully verified — 13 pglite
-integration tests exercise `onboardSpecArtifact()` end-to-end (mapped + unmapped archetypes,
-Gate 1 refusal, idempotency, dry-run, ×3 fan-out, playbook registration) against real
-corpus-derived fixtures, using the same `vi.mock` pattern as this codebase's other DB
-integration suites. What is NOT yet verified is the raw CLI process running standalone via
-`npx tsx` outside a test harness — that requires either (a) breaking the
-`direct-bucket-graduator.ts` ↔ `index.ts` ↔ `routes/agent.ts` circular import (a real, valuable,
-but separate architectural fix — likely lazy-instantiating `AgentService` in `routes/agent.ts`
-and pointing `direct-bucket-graduator.ts`'s `logger` import at `../lib/logger.js` instead of
-`../index.js`), or (b) running the CLI through a process that already has `src/server/index.ts`
-fully loaded (e.g. as an admin-triggered route rather than a bare script). Flagging this
-explicitly as a coordination item rather than silently declaring the CLI "done" — do not run
-`scripts/onboard-compiled-specs.ts` standalone against production data until this is resolved
-or worked around; the DB-writing logic underneath it is correct and tested, the process
-entry point is not yet.
-
-## Systemic finding beyond this band's scope (flagged, not fixed here)
+## Systemic finding beyond this band's scope — NOW INSTRUMENTED, not just flagged
 
 `apply_eligibility_gate()` in `src/engine/backtester.py` bypasses the 7-layer
 institutional confluence overlay for ANY strategy whose exact database `name` doesn't
@@ -213,8 +208,7 @@ normalized-match one of the ~15 hand-typed strings in
 concept+market+timeframe composites (e.g. `orb_mnq_15m`), and `ALL_STRATS` entries are
 bare concept keys (e.g. `"iofed"`, `"breaker"`), this appears to affect **the large
 majority of the ~100 pre-existing graduated strategies**, not just newly onboarded
-ones — a verified deep-scan finding this session, and a much larger fix than this
-band's remit. This bridge:
+ones — a verified deep-scan finding this session. This bridge:
 
 - Fixed the **mislabeling** half of the bug (`src/engine/backtester.py`
   `apply_eligibility_gate()` was stamping `gate_stats["mode"]="tf_institutional_overlay"`
@@ -226,7 +220,14 @@ band's remit. This bridge:
 - **Registers every spec-onboarded strategy's exact row name** into
   `playbook_router.py`'s `ALL_STRATS` at onboarding time (`playbook-registration.ts`),
   so this bridge does not reproduce the bug for its own output.
-- Does **not** retrofit the pre-existing ~100 graduated strategies — that population-
-  wide registration gap is a separate, larger finding for a dedicated pass (likely
-  `trading-forge-architect` + `backtest-core` coordination), not something silently
-  patched as a side effect of Band B.
+- **NEW — `scripts/backfill-playbook-registration.ts`**: scans every existing `strategies`
+  row and reports registered / unregistered / unresolvable against `ALL_STRATS`, using the
+  EXACT `apply_eligibility_gate()` normalization (including its documented left/right
+  asymmetry — `"strategy"` substring stripped only on the incoming name, never on the
+  registry side). Dry-run by default; `--apply` registers every unregistered row's exact name
+  into its archetype-derived category. **Does NOT auto-apply** — registering ~100
+  pre-existing strategies changes research-run semantics for the existing library
+  (previously-unfiltered Mode A/B runs will start seeing the overlay), so this is an operator
+  decision, converted from "flagged" to "instrumented and operator-decidable," not silently
+  resolved. Run `npx tsx scripts/backfill-playbook-registration.ts` first, review the report,
+  then decide whether/when to `--apply`.
