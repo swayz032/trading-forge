@@ -26,7 +26,7 @@ import {
   MODE_OBSERVE,
   MODE_AUTOPILOT,
 } from "../lib/learning-loop-mode.js";
-import { adminSessionFromCookie } from "../lib/slumhouse/admin-session.js";
+import { requireOfficeControlAuthority } from "../lib/office-control-guard.js";
 
 export const adminRoutes = Router();
 
@@ -35,11 +35,10 @@ export const adminRoutes = Router();
 // ARCHITECTURE DECISION (operator, pinned): the Slumhouse Office is the ONLY
 // control room; the React SPA is a read-only observation deck. The SPA's
 // pause/resume dispatch was removed, and these generic pipeline mutations are
-// now Office/operator-only. A request passes when it presents:
-//   - a valid Slumhouse Office admin session cookie (slumhouse_admin_sid), OR
-//   - a direct loopback connection (operator curl on the tower / runbooks)
-//     with NO x-forwarded-for header (relay-forwarded traffic arrives on
-//     loopback but carries forwarding headers — it must show the Office cookie).
+// now Office/operator-only via the SHARED requireOfficeControlAuthority guard
+// (lib/office-control-guard.ts — Office admin cookie OR direct loopback with
+// no x-forwarded-for; 401 office_only + blocked-attempt audit row otherwise).
+// The same guard protects POST /api/strategies/:id/deploy + /reject-deploy.
 //
 // Known callers audited 2026-07-02: React SPA usePipelineMode (mutations
 // REMOVED this pass — read-only now), operator runbook curls (localhost —
@@ -48,29 +47,7 @@ export const adminRoutes = Router();
 // switch uses /slumhouse/admin/switch, not these routes. GET /pipeline/status
 // stays open (read-only display feed for the SPA).
 function requirePipelineControlAuthority(req: Request, res: Response): boolean {
-  if (adminSessionFromCookie(req.headers.cookie)) return true;
-
-  const forwarded = req.headers["x-forwarded-for"];
-  const remote = req.socket?.remoteAddress ?? "";
-  const isLoopback =
-    remote === "127.0.0.1" || remote === "::1" || remote === "::ffff:127.0.0.1";
-  if (isLoopback && !forwarded) return true;
-
-  void insertAuditRowSafe({
-    action: "admin.pipeline_mutation_blocked",
-    entityType: "system",
-    entityId: null,
-    decisionAuthority: "gate",
-    input: { path: req.path, remote, forwarded: forwarded ?? null } as Record<string, unknown>,
-    result: {} as Record<string, unknown>,
-    status: "warning",
-    correlationId: req.id ?? null,
-  });
-  res.status(401).json({
-    error: "office_only",
-    message: "Pipeline controls live in the Slumhouse Office (/slumhouse/office.html).",
-  });
-  return false;
+  return requireOfficeControlAuthority(req, res, "admin.pipeline_mutation_blocked");
 }
 
 // ─── Wave 24 Pass 1 Item 8: POST /self-restart — HMAC-authenticated self-restart ─
