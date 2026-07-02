@@ -17,7 +17,7 @@ import { atomId, canonObject, canonKey, type AtomType, type DecisionAtom, type D
 import { ledgerA, ledgerB, ledgerC, structuralHallucinations, type Clause, type ClauseDisposition } from "../src/server/lib/conservation-ledgers.js";
 import { canonicalHash, checkIdempotence } from "../src/server/lib/decision-graph-canonical.js";
 import { compileGraph } from "../src/server/lib/graph-compiler.js";
-import { scoreSGF, atomPurity, GOLD } from "../src/server/lib/graph-fidelity.js";
+import { scoreSGF, atomPurity, goldClaimTable, GOLD } from "../src/server/lib/graph-fidelity.js";
 import { compressAtoms } from "../src/server/lib/predicate-compression.js";
 import { ledgerD } from "../src/server/lib/handoff-conservation.js";
 import { spineDensity, densifySpine } from "../src/server/lib/spine-density.js";
@@ -188,7 +188,8 @@ const FRAMEWORK_OBJ = /\b(risk|reward|stop|target|profit|size|sizing|position|lo
   console.log(`  edges: ${compiled.edges.length} (${Object.entries(edgeRoles).map(([k, v]) => `${k}=${v}`).join(" | ") || "none"}) | AND-groups ${compiled.andGroups.length} | OR-branches ${compiled.orBranches.length}`);
   console.log(`  connectivity: CONNECTED(reach ENTER) ${connected}/${compiled.atoms.length} | isolated ${isolated.length} (framework ${isoFramework}, other ${isolated.length - isoFramework})`);
   // ── SEMANTIC COMPRESSION — lift supporting PREDICATES out of the graph; recompile on decision NODES only ──
-  const clones = p1.atoms.map((a) => ({ ...a, depends_on: [] as string[] }));
+  // UNION feeds the compression/spec path too (2026-07-02 — was p1-only, silently bypassing the union)
+  const clones = unionAtoms.map((a) => ({ ...a, depends_on: [] as string[] }));
   const comp = compressAtoms(clones, transcript);
   const compiledC = compileGraph(comp.nodes, transcript);
   const totalPreds = comp.nodes.reduce((s, n) => s + (n.predicates?.length ?? 0), 0);
@@ -204,6 +205,8 @@ const FRAMEWORK_OBJ = /\b(risk|reward|stop|target|profit|size|sizing|position|lo
     console.log(`  EdgeRecall:  ${(base.ER * 100).toFixed(0)}% -> ${(comped.ER * 100).toFixed(0)}%`);
     console.log(`  Reachable:   ${base.RG ? "YES" : "NO"} -> ${comped.RG ? "YES" : "NO"}    TopologyFid: ${(base.TF * 100).toFixed(0)}% -> ${(comped.TF * 100).toFixed(0)}%`);
     console.log(`  SGF:         ${(base.SGF * 100).toFixed(0)}% -> ${(comped.SGF * 100).toFixed(0)}%`);
+    for (const row of goldClaimTable(gold, compiledC.atoms))
+      console.log(`  gold[${row.key}]: ${row.matched ?? "*** MISS ***"}`);
     const erUp = comped.ER > base.ER + 0.05, nrHeld = comped.NR >= base.NR - 0.01;
     console.log(`  VERDICT: ${erUp && nrHeld ? "COMPRESSION VALIDATED — ER up + NR held" : !nrHeld ? "FAILED — NodeRecall dropped (over-merge)" : "INCONCLUSIVE — ER not materially up"}`);
   } else console.log(`  (no gold for ${VIDEO})`);

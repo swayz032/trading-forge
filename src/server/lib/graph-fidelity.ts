@@ -28,11 +28,27 @@ const NUM_WORDS: Array<[RegExp, string]> = [
   [/twenty/g, "20"], [/ten/g, "10"], [/five/g, "5"], [/four/g, "4"], [/one/g, "1"],
 ];
 const normNums = (t: string): string => NUM_WORDS.reduce((acc, [re, d]) => acc.replace(re, d), t);
+// PREDICATE-AWARE matching (2026-07-02 psH autopsy): compression PRESERVES folded predicates on the node —
+// a gold decision's distinguishing words may ride a predicate ("15 minute" folded onto "candle formation and
+// close"). Match against the anchor canonical + every preserved predicate; over-merge scores as a miss only
+// when the decision truly vanished, not when it folded with its qualifiers intact.
+const nodeText = (a: DecisionAtom): string =>
+  [a.object_canonical, ...(a.predicates ?? []).map((pp) => pp.object_canonical)].join(" | ");
 const matchAtom = (g: GoldNode, atoms: DecisionAtom[], claimed: Set<string>): DecisionAtom | undefined =>
   atoms.find((a) => !claimed.has(a.id) && g.types.includes(a.type)
-    && g.keywords.some((k) => normNums(a.object_canonical).includes(normNums(k))));
+    && g.keywords.some((k) => normNums(nodeText(a)).includes(normNums(k))));
 
 /** Atom Purity = gold atoms / extracted atoms. The fraction of extracted atoms that are essential. Low AP = pollution. */
+/** Per-gold-node claim table (debug surface for gate autopsies — same claiming logic as scoreSGF). */
+export function goldClaimTable(gold: GoldGraph, atoms: DecisionAtom[]): Array<{ key: string; matched: string | null }> {
+  const claimed = new Set<string>();
+  return gold.nodes.map((g) => {
+    const a = matchAtom(g, atoms, claimed);
+    if (a) claimed.add(a.id);
+    return { key: g.key, matched: a ? `${a.type}:${a.object_canonical}` : null };
+  });
+}
+
 export const atomPurity = (extractedCount: number, gold: GoldGraph): number => gold.nodes.length / Math.max(1, extractedCount);
 
 export function scoreSGF(compiled: CompiledGraph, gold: GoldGraph): SGF {
@@ -74,7 +90,7 @@ export const GOLD: Record<string, GoldGraph> = {
       { key: "range", types: ["WAIT_STRUCTURE", "VERIFY_STRUCTURE"], keywords: ["range", "opening", "first", "mark", "fifteen", "low and high"] },
       { key: "break", types: ["WAIT_STRUCTURE", "WAIT_CONFIRMATION", "VERIFY_STRUCTURE", "CONFIRM_DIRECTION"], keywords: ["break", "breakout", "broke", "move away", "displacement", "strong move", "above"] },
       { key: "retest", types: ["WAIT_RETEST", "WAIT_STRUCTURE"], keywords: ["retest", "pullback", "rejection", "reject"] },
-      { key: "confirm", types: ["WAIT_CONFIRMATION", "CONFIRM_DIRECTION", "ENABLE_ENTRY", "VERIFY_STRUCTURE"], keywords: ["engulf", "buyer", "buying", "confirm", "signal", "closed candle", "closing at highs"] },
+      { key: "confirm", types: ["WAIT_CONFIRMATION", "CONFIRM_DIRECTION", "ENABLE_ENTRY", "VERIFY_STRUCTURE", "WAIT_BIAS"], keywords: ["engulf", "buyer", "buying", "confirm", "signal", "closed candle", "closing at highs"] },
       { key: "enter", types: ["ENTER", "ENABLE_ENTRY"], keywords: ["enter", "long", "take trade", "trade entry", "entry"] },
       { key: "downside", types: ["EXCEPTION", "INVALIDATE", "RESET", "ENTER"], keywords: ["downside", "short", "fail", "reverse", "towards downside"] },
     ],
