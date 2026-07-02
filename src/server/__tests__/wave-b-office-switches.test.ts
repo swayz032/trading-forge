@@ -58,6 +58,15 @@ vi.mock("../services/dead-mans-heartbeat-service.js", () => ({
   clearOperatorAbsenceMarkers: vi.fn(async () => ({ clearedSince: null, clearedPending: null })),
 }));
 
+// V-3 (deepscan7): vacation_mode now reads the TRUE effective state via
+// operatorAbsentModeActive() (env override OR operator_absent_since) instead of
+// selecting system_state directly. Mock the service so the switch tests drive
+// it explicitly (this test previously fed a raw ts row that the route no longer
+// reads — mock-drift fixed 2026-07-02, layer4-office pass).
+vi.mock("../services/operator-absent-mode-service.js", () => ({
+  operatorAbsentModeActive: vi.fn(async () => false),
+}));
+
 vi.mock("../lib/logger.js", () => ({
   logger: {
     error: vi.fn(),
@@ -74,6 +83,7 @@ import { getMode, setMode } from "../services/pipeline-control-service.js";
 import { adminSessionFromCookie } from "../lib/slumhouse/admin-session.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { clearOperatorAbsenceMarkers } from "../services/dead-mans-heartbeat-service.js";
+import { operatorAbsentModeActive } from "../services/operator-absent-mode-service.js";
 import { getSwitchStates, postSwitch } from "../routes/slumhouse/admin.js";
 
 // ── Test helpers ─────────────────────────────────────────────────────────────
@@ -408,9 +418,9 @@ describe("vacation_mode GET — operator_absent_since state", () => {
   });
 
   it("operatorAbsentSince non-null → on:true, state:running, status:AWAY, dangerOn:true", async () => {
+    vi.mocked(operatorAbsentModeActive).mockResolvedValue(true);
     buildSelectMock([
       [{ val: "0" }],                         // learning_loop
-      [{ ts: new Date("2026-06-27T00:00Z") }], // vacation_mode — absent
     ]);
     const res = makeRes();
     await getSwitchStates(makeReq(), res as any);
@@ -422,9 +432,9 @@ describe("vacation_mode GET — operator_absent_since state", () => {
   });
 
   it("operatorAbsentSince null → on:false, state:paused, status:HOME", async () => {
+    vi.mocked(operatorAbsentModeActive).mockResolvedValue(false);
     buildSelectMock([
       [{ val: "0" }],
-      [{ ts: null }],
     ]);
     const res = makeRes();
     await getSwitchStates(makeReq(), res as any);
@@ -435,6 +445,7 @@ describe("vacation_mode GET — operator_absent_since state", () => {
   });
 
   it("absent system_state row → on:false (fail-closed)", async () => {
+    vi.mocked(operatorAbsentModeActive).mockRejectedValue(new Error("db_down")); // fail-closed path
     buildSelectMock([[{ val: "0" }], []]); // no system_state row
     const res = makeRes();
     await getSwitchStates(makeReq(), res as any);
