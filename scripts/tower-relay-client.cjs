@@ -97,6 +97,33 @@ if (!SERVER || !TOKEN) {
 
 let backoffMs = 1000;
 
+// deepscan6 A3: sustained-disconnect Discord alert. Before this, a tower→relay
+// disconnect only logged to the pm2 log — invisible on vacation, so the remote-access
+// path could be down for hours unnoticed. We alert DIRECTLY to discord.com (not through
+// the relay, which is the thing that's down) once an outage persists past a threshold,
+// and send a recovery ping on reconnect. Fail-soft; no-op if DISCORD_WEBHOOK_URL unset.
+const https = require("https");
+const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || null;
+const RELAY_DISCONNECT_ALERT_MS = parseInt(process.env.RELAY_DISCONNECT_ALERT_MS || "300000", 10); // 5 min
+let disconnectedSince = null;
+let outageAlerted = false;
+
+function postDiscord(content) {
+  if (!DISCORD_WEBHOOK_URL) return;
+  try {
+    const u = new URL(DISCORD_WEBHOOK_URL);
+    const payload = JSON.stringify({ content: String(content).slice(0, 1800) });
+    const req = https.request(
+      { method: "POST", hostname: u.hostname, path: u.pathname + u.search,
+        headers: { "content-type": "application/json", "content-length": Buffer.byteLength(payload) }, timeout: 8000 },
+      (res) => { res.on("data", () => {}); res.on("end", () => {}); },
+    );
+    req.on("error", (e) => console.warn(`[${new Date().toISOString()}] discord alert failed: ${e.message}`));
+    req.on("timeout", () => req.destroy());
+    req.write(payload); req.end();
+  } catch (e) { console.warn(`[${new Date().toISOString()}] discord alert error: ${e.message}`); }
+}
+
 function connect() {
   // F-7: Close any existing open connection before opening a new one (singleton).
   if (currentWs && currentWs.readyState === WebSocket.OPEN) {
@@ -118,6 +145,13 @@ function connect() {
   ws.on("open", () => {
     console.log(`[${new Date().toISOString()}] connected`);
     backoffMs = 1000;
+    // deepscan6 A3: if we alerted an outage, announce recovery + reset outage state.
+    if (outageAlerted && disconnectedSince) {
+      const downMin = Math.round((Date.now() - disconnectedSince) / 60000);
+      postDiscord(`✅ Tower relay reconnected after ~${downMin} min offline. Remote access restored.`);
+    }
+    disconnectedSince = null;
+    outageAlerted = false;
     heartbeat(ws);
   });
 
@@ -138,6 +172,15 @@ function connect() {
       return;
     }
     console.log(`[${new Date().toISOString()}] disconnected code=${code} reason=${reason}; reconnecting in ${backoffMs}ms`);
+    // deepscan6 A3: track outage duration; alert once when it crosses the threshold.
+    if (disconnectedSince === null) disconnectedSince = Date.now();
+    if (!outageAlerted && Date.now() - disconnectedSince >= RELAY_DISCONNECT_ALERT_MS) {
+      outageAlerted = true;
+      const downMin = Math.round((Date.now() - disconnectedSince) / 60000);
+      postDiscord(
+        `⚠️ Tower relay OFFLINE for ~${downMin}+ min (last code=${code}). Remote access to the tower is down — the bot's safety stack still runs locally, but you can't reach it remotely. It keeps auto-retrying; if this persists, check the tower/pm2 or ping Tony.`,
+      );
+    }
     setTimeout(connect, backoffMs);
     backoffMs = Math.min(backoffMs * 2, 30000);
   });

@@ -152,10 +152,18 @@ const NEVER_DISABLE_JOBS = new Set([
   // Heartbeat safety jobs — must fire even if other subsystems are broken
   "heartbeat-write",
   "heartbeat-stale-check",
+  // deepscan6 A5: the OOH heartbeat covers the ~64h off-RTH blind spot the RTH-only
+  // stale-check leaves — it must be as un-disableable as its RTH sibling, or a
+  // repeated transient failure could silence the ONLY vacation-window liveness probe.
+  "heartbeat-ooh-check",
   // Credential-safety jobs — transient vendor outage must not permanently disable these
   "bw-session-refresh",
   "prop-firm-cookie-refresh",
 ]);
+
+// deepscan6 A2: once-per-hour-per-signature dedup for the n8n-health-check Discord WARN
+// (the 15-min cron would otherwise spam a persistently-failing workflow set).
+const _n8nHealthAlertDedup = new Map<string, number>();
 
 function getJobHealth(name: string): JobHealth {
   let health = jobHealthTracker.get(name);
@@ -2856,6 +2864,27 @@ except Exception as e:
     if (failing.length > 0) {
       broadcastSSE("n8n:health-alert", { failing });
       logger.warn({ failing }, "n8n health check: workflows with recent failures");
+      // deepscan6 A2: previously SSE + warn-log ONLY — invisible to an operator on
+      // vacation. Fire a family-grade Discord WARN, deduped to once/hour per failing
+      // signature so a persistently-broken workflow doesn't spam every 15 min.
+      try {
+        const sig = failing.map((f) => f.workflowName).sort().join(",");
+        const now = Date.now();
+        const last = _n8nHealthAlertDedup.get(sig) ?? 0;
+        if (now - last >= 60 * 60 * 1000) {
+          _n8nHealthAlertDedup.set(sig, now);
+          const lines = failing.map((f) => `• ${f.workflowName}: ${f.failures}/${f.total} runs failed (last hour)`).join("\n");
+          notifyWarning(
+            "n8n workflows failing",
+            appendFamilyGradePostscript(
+              `${failing.length} n8n workflow(s) had failures in the last hour:\n${lines}`,
+              "One of the background automations is erroring. It won't stop your trades, but check the n8n dashboard when you can — or ping Tony.",
+            ),
+          );
+        }
+      } catch (alertErr) {
+        logger.warn({ err: String(alertErr) }, "n8n health check: Discord alert failed (non-blocking)");
+      }
     } else {
       logger.debug({ workflowCount: stats.length }, "n8n health check: all workflows healthy");
     }
