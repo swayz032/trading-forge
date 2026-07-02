@@ -313,6 +313,17 @@ export interface PaperToDeployReadyGateResult {
   needsFirstTimeFreeze?: boolean;
 
   /**
+   * (deepscan7 F-3 2026-07-02) Evidence-completeness surface for the caller's
+   * ≥3-incomplete governor (Track A.2 parity with the cron's gateEvidenceStatuses).
+   * Only populated on PASS returns — a blocked result never reaches the governor.
+   * incompleteGateCount counts statuses containing "legacy" or equal to
+   * "data_unavailable", matching the cron's predicate exactly.
+   */
+  incompleteGateCount?: number;
+  /** Per-gate evidence statuses in canonical gate order (PASS returns only). */
+  gateEvidenceStatuses?: string[];
+
+  /**
    * Honest B14 Survival Twin verdict. Distinguishes survival_twin_passed /
    * survival_twin_blocked / survival_twin_advisory_not_evaluated instead of
    * conflating "data absent" with "passed". The caller writes an honest audit row
@@ -362,6 +373,14 @@ export function evaluatePaperToDeployReadyGates(
   // Honest survival-twin verdict — set by Gate 1 below and threaded onto the
   // gate-1 / final-pass / frozen-policy returns for the caller to audit.
   let survivalTwinVerdict: SurvivalTwinVerdict | undefined;
+
+  // (deepscan7 F-3 2026-07-02) Track A.2 evidence-completeness parity: mirror the
+  // cron's gateEvidenceStatuses pushes so the manual path can enforce the same
+  // ≥3-incomplete governor. Only pass-through (non-blocking) gate outcomes push —
+  // a blocking gate returns before any governor could run.
+  const gateEvidenceStatuses: string[] = [];
+  const countIncompleteEvidence = () =>
+    gateEvidenceStatuses.filter((st) => st.includes("legacy") || st === "data_unavailable").length;
 
   // ──────────────────────────────────────────────────────────────────────────
   // Gate 1 — B14 Survival Twin (fail-CLOSED on infra error; HONEST 3-state otherwise)
@@ -515,6 +534,18 @@ export function evaluatePaperToDeployReadyGates(
     );
   }
 
+  // (deepscan7 F-3 2026-07-02) Gate-1 evidence status. Cron parity:
+  //   enabled + twin evaluated (present or on-demand pass) → complete
+  //   enabled + advisory_not_evaluated                      → legacy_unavailable
+  //   disabled → twin + CI both incomplete (cron pushes two legacy_proceed).
+  if (b14HardGateEnabled) {
+    gateEvidenceStatuses.push(
+      survivalTwinVerdict?.status === "survival_twin_passed" ? "complete" : "legacy_unavailable",
+    );
+  } else {
+    gateEvidenceStatuses.push("legacy_proceed", "legacy_proceed");
+  }
+
   // ──────────────────────────────────────────────────────────────────────────
   // Gate 2 — B14 CI gate (fail-CLOSED when MC data absent)
   // Source: lifecycle-service.ts:2881-2956 + F-1 hardening 2026-06-22
@@ -559,6 +590,8 @@ export function evaluatePaperToDeployReadyGates(
           "evaluatePaperToDeployReadyGates: B14 CI gate: using legacy scalar fallback (pre-Pass-A MC run)",
         );
       }
+      // (deepscan7 F-3 2026-07-02) cron parity: legacy scalar fallback = incomplete evidence.
+      gateEvidenceStatuses.push(b14CiResult.legacyFallback ? "legacy_null" : "complete");
     }
     // No MC run at all: b14McDataAvailable=false → evaluateB14CiGate(null,null) blocks fail-CLOSED.
     // Represented here as !mcAvailable → evaluateB14CiGate with nulls.
@@ -578,6 +611,9 @@ export function evaluatePaperToDeployReadyGates(
           failedGate: "b14_ci",
         };
       }
+      // (deepscan7 F-3 2026-07-02) defensive: a null-input pass (should be unreachable —
+      // the null gate is fail-CLOSED) still records the evidence gap.
+      gateEvidenceStatuses.push("data_unavailable");
     }
   }
 
@@ -694,6 +730,8 @@ export function evaluatePaperToDeployReadyGates(
         "evaluatePaperToDeployReadyGates: Parameter drift advisory — promotion continues",
       );
     }
+    // (deepscan7 F-3 2026-07-02) cron parity (lifecycle-service Track A.2 push).
+    gateEvidenceStatuses.push(driftResult.auditAction ? (driftResult.status ?? "legacy_null") : "complete");
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -729,6 +767,8 @@ export function evaluatePaperToDeployReadyGates(
         "evaluatePaperToDeployReadyGates: DSR gate: pre-Wave-A backtest — proceeding with legacy warn",
       );
     }
+    // (deepscan7 F-3 2026-07-02) cron parity (lifecycle-service Track A.2 push).
+    gateEvidenceStatuses.push(dsrResult.auditAction ? (dsrResult.status ?? "legacy_proceed") : "complete");
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -766,6 +806,9 @@ export function evaluatePaperToDeployReadyGates(
       );
       // Advisory-only: do not call evaluateBifGate with a misleading ≈1.0 value.
       // Promotion continues; audit shows bif_unavailable_cpcv explicitly.
+      // (deepscan7 F-3 2026-07-02) cron parity: CPCV structural unavailability is NOT a
+      // legacy gap (cron's push resolves to "complete" for cpcv_unmeasured — legacyNull=false).
+      gateEvidenceStatuses.push("complete");
     } else {
       const bifResult = evaluateBifGate(bifNum, kEffNum, { proxyBasis: bifProxyBasis });
 
@@ -792,6 +835,8 @@ export function evaluatePaperToDeployReadyGates(
           "evaluatePaperToDeployReadyGates: BIF gate passed",
         );
       }
+      // (deepscan7 F-3 2026-07-02) cron parity (lifecycle-service Track A.2 push).
+      gateEvidenceStatuses.push(bifResult.legacyNull ? "legacy_null" : "complete");
     }
   }
 
@@ -851,6 +896,12 @@ export function evaluatePaperToDeployReadyGates(
         failedGate: "wave26_orchestrator",
       };
     }
+
+    // (deepscan7 F-3 2026-07-02) cron parity: orchestrator evidence availability.
+    const orchDataAvailable = gatesToEvaluate.every(
+      (g) => orchResult.gate_results[g].data_available !== false,
+    );
+    gateEvidenceStatuses.push(orchDataAvailable ? "complete" : "legacy_proceed");
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -914,6 +965,9 @@ export function evaluatePaperToDeployReadyGates(
         agreement: "shadow_no_opinion",
       };
     }
+    // (deepscan7 F-3 2026-07-02) cron parity: composite shadow is observability-only and
+    // always runs — evidence is always "complete" (lifecycle-service.ts Track A.2 push).
+    gateEvidenceStatuses.push("complete");
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -972,6 +1026,11 @@ export function evaluatePaperToDeployReadyGates(
       };
     }
 
+    // (deepscan7 F-3 2026-07-02) cron parity: frozen-policy evidence — strategy with a
+    // stamped hash is "complete"; first-time-freeze candidates are "legacy_proceed"
+    // (lifecycle-service.ts Track A.2 push keyed on s.frozenPolicyHash).
+    gateEvidenceStatuses.push(input.frozenPolicy.frozenPolicyHash != null ? "complete" : "legacy_proceed");
+
     // First-time freeze: driftResult.ok=true AND frozenHash=null
     if (driftResult.ok && driftResult.frozenHash === null) {
       // Signal caller to freeze the policy BEFORE the promotion DB write.
@@ -990,6 +1049,8 @@ export function evaluatePaperToDeployReadyGates(
         needsFirstTimeFreeze: true,
         survivalTwin: survivalTwinVerdict,
         shadowEvaluation,
+        incompleteGateCount: countIncompleteEvidence(),
+        gateEvidenceStatuses: [...gateEvidenceStatuses],
       };
     }
   }
@@ -1009,6 +1070,8 @@ export function evaluatePaperToDeployReadyGates(
     reason: "all_gates_passed",
     survivalTwin: survivalTwinVerdict,
     shadowEvaluation,
+    incompleteGateCount: countIncompleteEvidence(),
+    gateEvidenceStatuses: [...gateEvidenceStatuses],
   };
 }
 
