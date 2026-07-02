@@ -155,3 +155,32 @@ place against the source-only baseline.**
   standalone harness cannot faithfully replicate the overlay's DB-backed services and must not fake them.
 - Comparison harness already built: `scripts/confluence-overlay-ablation.py` (KEEP/LOOSEN verdict on expectancy /
   drawdown / trade-count / gate survival). Every overlay component must beat Mode A to keep its place.
+
+---
+
+# Mode A vs Mode B — first VALID production-path ablation (ict_swing, 2026-07-02)
+
+Seven-attempt gauntlet, every stop a guard working or a real bug fixed (ratio-adjust refusal ×2, cache TTL,
+firm-key validation, **the spec.symbol regression that was breaking ALL class-based Style-C backtests — found
+live, fixed, pushed `a323d29`**, fixed-1 sizing gate, and the unregistered-strategy bypass that voided the first
+comparison — compiled strategies MUST be playbook-registered or the 7-layer overlay silently no-ops: an
+onboarding requirement for the corpus).
+
+Valid run: `ict_swing` (playbook-registered), 1H ratio_adj ES 2023→2025, identical data + 1-lot sizing both modes.
+**Gate engagement proven: raw=23 signals → gate=6.**
+
+| metric | Mode A (source only) | Mode B (+ TF overlay) |
+|---|---|---|
+| trades | 8 | 3 |
+| total P&L | −$1,830 | −$1,114 |
+| max drawdown | $2,726 | **$1,415** |
+| obs. win rate | 25% | 33.3% |
+| Sharpe / PF | −0.41 / 0.52 | −0.57 / 0.19 |
+
+**VERDICT: LOOSEN — overlay starves trades (3 < 40% floor of 8).**
+
+Honest read: (1) the overlay behaved exactly like a defensive filter — halved drawdown and loss, raised win
+rate — but cut trade count 62%, tripping the starvation rule; (2) **n=8 vs n=3 is statistically meaningless** —
+this validates the HARNESS end-to-end, not a conclusion about the overlay; (3) the result is consistent with the
+§13 "death by a thousand filters" doctrine and gate_block_analyzer's purpose. The statistical answer requires
+higher-frequency strategies, the compiled corpus, and the full WF/CPCV/PBO/DSR battery under both modes.
