@@ -26,9 +26,13 @@
 - **M2** Watchdog (`pajWJxqX37zKkooV`) self-restart now consumes upstream `$json.signature`/`timestamp`/`reason` instead of `require('crypto')` in the expression sandbox — fixes the dead-on-arrival HIGH (live exec 66757 was erroring) + latent HMAC timestamp mismatch. 6 nodes intact.
 - **M3** X-Idempotency-Key header hoisted onto all 4 journal nodes in Daily Portfolio Monitor (`eZSbajXAi7v7tGPx`) + Monthly Robustness Check (`RIK5eQ0rFEG78Vtd`).
 
-**Deliberately NOT built (operator decision, NOT silently skipped):** **R1** rolling live-Sharpe decay alarm + **R2** strategy-age re-validation gate — NET-NEW SUBSYSTEMS; CLAUDE.md §2 mandates "no new subsystems for 90 days." Advisory monitors, not defects. Flagged for go/defer.
+**Follow-up wave (operator: "finish all of this") — DONE 2026-07-02:**
+- **R1** rolling-Sharpe RATIO decay bands (WARN 0.7× / REVIEW 0.5× vs backtest baseline) added INLINE to the existing `rolling-sharpe` job (it already did >2σ drift + <1.0 demotion; the research gap was the ratio bands) — NOT a new subsystem. `strategy.sharpe_decay_{warn,review}` audits + deduped Discord (4 vitest).
+- **R2** `strategy-revalidation-service.ts` + `strategy-age-revalidation` daily 07:00 ET cron — WARN >365d / force re-CPCV (two-step demote) >548d via existing `frozen_policy_set_at` (NO new table). Registered in subsystem registry under `regime_drift_detector` (5 vitest).
+- **O4 burn-down**: ruff BUG-DETECTION subset (F821/F811/F63/F7/E9/F50x) now CLEAN + BLOCKING in CI (fixed 2 string-annotation F821 via noqa + 4 test F811); broad STYLE set stays advisory (295-file Optional→X|None sweep judged too risky to ship unverified since engine pytest collection hangs on vectorbt).
+- **GitHub repo made PRIVATE by operator** (closes S2 fully).
 
-**Operator-only follow-ups:** make repo private (files scrubbed); run DR restore drill; DB TLS + secret rotation (Railway); relay redeploy to activate S1; burn down ruff to flip O4/O5 blocking; A4 full-tower-outage alert needs external uptime probe + `DISCORD_WEBHOOK_URL` on Railway.
+**Operator-only remaining (I can't do from code):** run DR restore drill (psql/pg_dump NOT installed on tower — `db-restore.ps1` + runbook ready); DB TLS + secret rotation (Railway — did NOT auto-rotate live secrets, too destructive unattended); relay redeploy to activate S1 (Railway CLI present, attempted post-merge); A4 full-tower-outage alert needs an external uptime probe (inherently off-tower) + `DISCORD_WEBHOOK_URL` on Railway n8n.
 
 **Verification:** tsc 0 (whole repo, all agents+parent together); 3 CI hard gates GREEN + postscript PASS; tier1 parity GREEN; ~69 vitest + 39 pytest GREEN (targeted); live n8n re-GET verified. Pushed UNMERGED → `origin/hardening/deepscan6-fixwave-2026-07-01`.
 
