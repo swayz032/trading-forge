@@ -87,3 +87,26 @@ export function oddsOuttaHundred(p: number): string {
   const n = Math.round(clamped * 100);
   return `${n} outta 100`;
 }
+
+/**
+ * unmappedAccountDisclosure — plain-English copy when the user has no
+ * broker_account_id (account not yet linked to a Slumhouse user).
+ *
+ * Callers surface this when `accountUnmapped: true` so the UI can show
+ * an honest "no data" state instead of a misleading "$0 today" banner.
+ */
+export function unmappedAccountDisclosure(): string {
+  return "Your account isn't linked yet — there's no live trading data to show. Ask your admin to connect your account.";
+}
+
+/**
+ * liveModeDataDisclosure — plain-English copy when execution_mode=live but
+ * the live broker tape is not yet wired to this view.
+ *
+ * Callers surface this when live mode suppresses paper numbers so the UI
+ * cannot show a misleading "$0 today" (which reads as "I made nothing").
+ * The broker statement is the source of truth in this state.
+ */
+export function liveModeDataDisclosure(): string {
+  return "Live trading is ON — the live tape isn't wired to this view yet. Your broker statement is the source of truth for today's P&L.";
+}
