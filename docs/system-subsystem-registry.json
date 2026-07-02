@@ -4808,16 +4808,25 @@
       "audit_log.regime_drift_detector.*",
       "audit_log.strategy.regime_drift_detected",
       "audit_log.lifecycle.regime_drift_demotion",
-      "scheduler:regime-drift-detector:21,22-utc"
+      "scheduler:regime-drift-detector:21,22-utc",
+      "audit_log.strategy.revalidation_due",
+      "audit_log.strategy.revalidation_forced",
+      "audit_log.strategy_revalidation.completed",
+      "audit_log.strategy.sharpe_decay_warn",
+      "audit_log.strategy.sharpe_decay_review",
+      "scheduler:strategy-age-revalidation:11,12-utc"
     ],
     "scheduler_jobs": [
-      "regime-drift-detector"
+      "regime-drift-detector",
+      "strategy-age-revalidation"
     ],
     "routes": [],
     "engine_subsystems": [
       "src/server/services/regime-drift-detector-service.ts::runRegimeDriftDetector",
       "src/server/services/regime-drift-detector-service.ts::demoteOnPersistentDrift",
-      "scheduler.ts::regime-drift-detector-cron"
+      "scheduler.ts::regime-drift-detector-cron",
+      "src/server/services/strategy-revalidation-service.ts::runStrategyAgeRevalidation",
+      "scheduler.ts::rolling-sharpe-decay-bands"
     ],
     "database_tables": [
       "strategies",

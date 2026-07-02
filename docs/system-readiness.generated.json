@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-02T05:40:42.544Z",
+  "generatedAt": "2026-07-02T06:01:23.625Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
@@ -1081,7 +1081,12 @@
         "audit_log.lifecycle.regime_drift_demotion",
         "audit_log.regime_drift_detector.*",
         "audit_log.regime_drift_detector.completed",
+        "audit_log.strategy_revalidation.completed",
         "audit_log.strategy.regime_drift_detected",
+        "audit_log.strategy.revalidation_due",
+        "audit_log.strategy.revalidation_forced",
+        "audit_log.strategy.sharpe_decay_review",
+        "audit_log.strategy.sharpe_decay_warn",
         "lifecycle.regime_drift_demotion",
         "regime_drift_detector.completed",
         "regime_drift_detector.dry_run",
@@ -1089,6 +1094,7 @@
         "regime_drift_detector.skipped_dst_guard",
         "regime_drift_detector.skipped_lock_contention",
         "scheduler:regime-drift-detector:21,22-utc",
+        "scheduler:strategy-age-revalidation:11,12-utc",
         "SELECT * FROM audit_log WHERE action = 'regime_drift_detector.completed' ORDER BY created_at DESC LIMIT 7",
         "SELECT * FROM audit_log WHERE action IN ('strategy.regime_drift_detected','lifecycle.regime_drift_demotion') ORDER BY created_at DESC LIMIT 20",
         "strategy.regime_drift_detected"

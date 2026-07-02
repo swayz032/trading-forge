@@ -365,7 +365,6 @@ class TestPremarketIntegration:
         monkeypatch.setenv("QUANTUM_ENTROPY_FILTER_ENABLED", "true")
         from src.engine.skip_engine import premarket_analyzer
         # Force reimport so env var is picked up
-        import importlib
         importlib.reload(premarket_analyzer)
         signals = premarket_analyzer.collect_premarket_signals(
             strategy_id="test-strat",

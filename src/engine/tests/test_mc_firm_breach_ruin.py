@@ -285,7 +285,6 @@ class TestTerminalNegativeCiPreserved:
         # Simulate a firm breach mask with a DIFFERENT rate (60% breach)
         mask = np.zeros(300, dtype=float)
         mask[:180] = 1.0  # 60% deterministic breach rate
-        from src.engine.mc_confidence import compute_mc_confidence_intervals
         firm_ruin_ci = compute_mc_confidence_intervals(mask, lambda m, axis=0: np.mean(m, axis=axis), seed=42, n_resamples=499)
         firm_ruin_ci.update({"ruin_basis": "firm_breach", "ruin_firm": "topstep_50k"})
 

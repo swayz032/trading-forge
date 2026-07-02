@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-02T05:40:42.544Z",
+  "generatedAt": "2026-07-02T06:01:23.625Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,7 +16,7 @@
   },
   "counts": {
     "routes": 78,
-    "schedulerJobs": 104,
+    "schedulerJobs": 105,
     "workflowFiles": 28,
     "canonicalWorkflows": 28,
     "engineSubsystems": 29,
@@ -196,6 +196,7 @@
     "session-analytics-rollup",
     "stale-pending-sweeper",
     "stale-session-check",
+    "strategy-age-revalidation",
     "strategy-stale-detector",
     "synthetic-regime-bank-populate",
     "system-map-drift",
@@ -991,7 +992,7 @@
     ],
     "coveredCounts": {
       "routes": 78,
-      "schedulerJobs": 104,
+      "schedulerJobs": 105,
       "engineSubsystems": 29,
       "databaseTables": 110
     },
@@ -5441,7 +5442,12 @@
           "audit_log.lifecycle.regime_drift_demotion",
           "audit_log.regime_drift_detector.*",
           "audit_log.regime_drift_detector.completed",
+          "audit_log.strategy_revalidation.completed",
           "audit_log.strategy.regime_drift_detected",
+          "audit_log.strategy.revalidation_due",
+          "audit_log.strategy.revalidation_forced",
+          "audit_log.strategy.sharpe_decay_review",
+          "audit_log.strategy.sharpe_decay_warn",
           "lifecycle.regime_drift_demotion",
           "regime_drift_detector.completed",
           "regime_drift_detector.dry_run",
@@ -5449,6 +5455,7 @@
           "regime_drift_detector.skipped_dst_guard",
           "regime_drift_detector.skipped_lock_contention",
           "scheduler:regime-drift-detector:21,22-utc",
+          "scheduler:strategy-age-revalidation:11,12-utc",
           "strategy.regime_drift_detected"
         ],
         "dataCollectionCoverage": [
@@ -5480,7 +5487,12 @@
           "audit_log.lifecycle.regime_drift_demotion",
           "audit_log.regime_drift_detector.*",
           "audit_log.regime_drift_detector.completed",
+          "audit_log.strategy_revalidation.completed",
           "audit_log.strategy.regime_drift_detected",
+          "audit_log.strategy.revalidation_due",
+          "audit_log.strategy.revalidation_forced",
+          "audit_log.strategy.sharpe_decay_review",
+          "audit_log.strategy.sharpe_decay_warn",
           "lifecycle.regime_drift_demotion",
           "regime_drift_detector.completed",
           "regime_drift_detector.dry_run",
@@ -5488,6 +5500,7 @@
           "regime_drift_detector.skipped_dst_guard",
           "regime_drift_detector.skipped_lock_contention",
           "scheduler:regime-drift-detector:21,22-utc",
+          "scheduler:strategy-age-revalidation:11,12-utc",
           "SELECT * FROM audit_log WHERE action = 'regime_drift_detector.completed' ORDER BY created_at DESC LIMIT 7",
           "SELECT * FROM audit_log WHERE action IN ('strategy.regime_drift_detected','lifecycle.regime_drift_demotion') ORDER BY created_at DESC LIMIT 20",
           "strategy.regime_drift_detected"
@@ -5495,7 +5508,8 @@
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
         "routes": [],
         "schedulerJobs": [
-          "regime-drift-detector"
+          "regime-drift-detector",
+          "strategy-age-revalidation"
         ],
         "healthCheck": "src/server/__tests__/wave29-pass-b3-regime-drift.test.ts",
         "freshnessSignals": [
@@ -12345,7 +12359,12 @@
         "audit_log.lifecycle.regime_drift_demotion",
         "audit_log.regime_drift_detector.*",
         "audit_log.regime_drift_detector.completed",
+        "audit_log.strategy_revalidation.completed",
         "audit_log.strategy.regime_drift_detected",
+        "audit_log.strategy.revalidation_due",
+        "audit_log.strategy.revalidation_forced",
+        "audit_log.strategy.sharpe_decay_review",
+        "audit_log.strategy.sharpe_decay_warn",
         "lifecycle.regime_drift_demotion",
         "regime_drift_detector.completed",
         "regime_drift_detector.dry_run",
@@ -12353,6 +12372,7 @@
         "regime_drift_detector.skipped_dst_guard",
         "regime_drift_detector.skipped_lock_contention",
         "scheduler:regime-drift-detector:21,22-utc",
+        "scheduler:strategy-age-revalidation:11,12-utc",
         "strategy.regime_drift_detected"
       ],
       "dataCollectionCoverage": [
@@ -12384,7 +12404,12 @@
         "audit_log.lifecycle.regime_drift_demotion",
         "audit_log.regime_drift_detector.*",
         "audit_log.regime_drift_detector.completed",
+        "audit_log.strategy_revalidation.completed",
         "audit_log.strategy.regime_drift_detected",
+        "audit_log.strategy.revalidation_due",
+        "audit_log.strategy.revalidation_forced",
+        "audit_log.strategy.sharpe_decay_review",
+        "audit_log.strategy.sharpe_decay_warn",
         "lifecycle.regime_drift_demotion",
         "regime_drift_detector.completed",
         "regime_drift_detector.dry_run",
@@ -12392,6 +12417,7 @@
         "regime_drift_detector.skipped_dst_guard",
         "regime_drift_detector.skipped_lock_contention",
         "scheduler:regime-drift-detector:21,22-utc",
+        "scheduler:strategy-age-revalidation:11,12-utc",
         "SELECT * FROM audit_log WHERE action = 'regime_drift_detector.completed' ORDER BY created_at DESC LIMIT 7",
         "SELECT * FROM audit_log WHERE action IN ('strategy.regime_drift_detected','lifecycle.regime_drift_demotion') ORDER BY created_at DESC LIMIT 20",
         "strategy.regime_drift_detected"
@@ -12399,7 +12425,8 @@
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
       "routes": [],
       "schedulerJobs": [
-        "regime-drift-detector"
+        "regime-drift-detector",
+        "strategy-age-revalidation"
       ],
       "healthCheck": "src/server/__tests__/wave29-pass-b3-regime-drift.test.ts",
       "freshnessSignals": [
