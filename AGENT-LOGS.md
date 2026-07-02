@@ -12217,6 +12217,46 @@ Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal
 
 **Carry-forward:** engine has ZERO open code findings — 100% of known audit items closed. Remaining to a true 10 is EVIDENCE, not code: first backtest wave → ladder → paper → funded. Operator-side: UPS+Kasa, secret rotation, `S3_BACKUP_BUCKET` isolated bucket. Optional polish: bar-by-bar AVWAP section in the parity CI gate; SSE catalog ratchet; n8n retry-backoff normalization.
 
+### Session Log — 2026-07-02 Deep-scan #8 FIX WAVE — all backtesting findings closed (isolated worktree, 5 parallel tracks, MERGED → phase-0)
+
+**Mission:** Operator: "MAKE EVERYTHING 10/10" — close every deep-scan #8 backtesting finding.
+
+**Method:** isolated worktree `.worktrees/deepscan8-fixwave` (branch `hardening/deepscan8-fixwave-2026-07-02` off engine100 tip 5970798, node_modules junctioned). 5 parallel edit-agents on disjoint file scopes; parent verified + committed per track (explicit paths) + pushed incrementally. BIF-dark-under-CPCV dropped from scope — already fixed by the parallel engine100 wave (per-path IS Sharpe, bif_reliable=true).
+
+**Shipped (5 commits fd4f497→42fa442, then merged → phase-0):**
+- **Track A** structural stop skip-not-clamp per §4: StopPlan.skip_trade + INSTRUMENT_STOP_CONFIG per-symbol ceilings (14/62/1.00, env-overridable at call time), eligibility Check 0 SKIP, context_runner.py passes symbol (LIVE paper-signal context-gate path — was MES 3-tick + 6pt clamp for ALL symbols), test_skip_trade_propagation.py resurrected at current canon (37 pytest).
+- **Track B** BACKTEST_STATIC_C_PARTIALS_ENABLED default ON — backtests now grade 33/33/34 Style C exits matching paper (A/B delta evidence: +2R winner 2.000R single-TP → 1.783R blended; explicit-false opt-out preserved; HISTORICAL BACKTESTS NOT COMPARABLE without re-run). DST last-resort fallback EST/EDT-correct (_dst_us_rule_offset + warn log). MFFU consistency sim-payout-stage scoping + DLL 1000 data-fix. sizing docstring 0.08. (41 pytest + 4 new prop_compliance; 3 prop_compliance fails PRE-EXIST on base = stale 8-firm-era tests.)
+- **Track C** DETERMINISM_MODE=true + per-pid NUMBA_CACHE_DIR in ALL 3 Python env builders (enable_determinism now actually fires; per-run seed re-applies after and wins — two-level determinism verified); .catch() + logging on QUBO/legacy-RL/C.2-RL IIFEs; synthetic `bt-auto-` correlationId for automated runs; extrapolation_exceeded/rule_version_mismatch envelopes now FAIL the backtest row (no more phantom-success); pipeline_pause_refusal/bypass audits; registerExternalPythonSubprocess → quantum runners in SIGTERM drain; TF_PYTHON_USER_SITE de-hardcode (17 vitest).
+- **Track D** TESTING→PAPER gate parity: compliance-drift check (resolveComplianceDriftForPromotion, fail-CLOSED) + frozen-policy baseline stamp on BOTH manual PATCH and cron paths — P→DR drift detection now has a real T→P baseline; Suite 9 wrong-key disconnect test + Suite 11 T→P chain round-trip (gate-chain 47→62 tests; 185 lifecycle tests 0 regressions).
+- **Track E** per-symbol commission overrides (MCL topstep 0.77 / mffu 0.58 per firm_config.py) + roll-calendar spread_estimate aligned to Python per-side tick model (MES 3.75/MNQ 2.00/MCL 2.00 — prior TS values 47-200% off) + mc:completed SSE ruin = firm-breach ci point_estimate with ruin_basis field (70 vitest incl. 14 new parity tests).
+
+**Verification (integrated branch):** 78 pytest + 149 vitest GREEN across all touched suites; tsc 0; production-isolation CLEAN; 2026-compliance OK; system-map:check driftItems=[]; exit-parity Overall PASS; tier1-parity PASS 232.
+
+**Known-facts updates:** engine100 wave (same day, parallel session) already fixed BIF-CPCV + AVWAP-cushion + TP2-liquidity-snap — agent memories claiming those as open gaps are STALE.
+
+**Carry-forward for next session:** (1) historical backtest metrics pre-partials-flip are optimistic vs new runs — re-run before comparing; (2) FIX 5 envelope check is a 2-status denylist — convert to positive-allowlist in a future pass; (3) cross-symbol DLL remains inactive on single-symbol backtests (portfolio-level backtest = larger feature); (4) Pine Strategy-Tester-vs-broker reconciliation harness still absent (documented §7 gap); (5) main-tree untracked docs/ artifacts belong to other sessions — left untouched.
+
+---
+### Session Log — 2026-07-02 Deep-scan #8 — BACKTESTING stack graded (READ-ONLY, 4 parallel auditors + parent cross-verification)
+
+**Mission:** Operator: "deep scan and grade the backtesting and see if it's institutional grade." READ-ONLY grading pass — no fixes.
+
+**Work completed:**
+- 4 parallel read-only auditors: backtest-core (execution core 8.4/10), accuracy-validator (statistics/gates 7.5/10 + 14-key gate-chain truth table, ALL MATCH), paper-parity (parity/costs 6.8/10, 34-row parity matrix), observability-reliability (orchestration 7.5/10, 10-item silent-failure inventory).
+- Parent cross-verified the 3 contested findings against code. **Overall grade: 7.4/10 — institutional-grade core, not yet institutional-grade end-to-end.**
+- Top confirmed findings: (1) `BACKTEST_STATIC_C_PARTIALS_ENABLED` default OFF (backtester.py:879) — backtests grade single-structural-TP exits while paper runs Style C 33/33/34 via Python style_c_handler → structurally different P&L feeding B14/WFE/PBO (known-deliberate pending parity validation, A/B harness exists at test_static_c_partials_ab.py — still the #1 validity gap). (2) **UPGRADED**: `compute_structural_stop()` (structural_stops.py:231-238) CLAMPS to ceiling instead of §4 SKIP; StopPlan has NO skip_trade field; eligibility_gate never checks `_capped_`; `test_skip_trade_propagation.py` FAILS AT COLLECTION (imports non-existent `INSTRUMENT_STOP_CONFIG` — a skip_trade version of structural_stops existed somewhere and production LOST it); backtester.py:315 caller passes per-symbol ceilings (Wave 1 fix held) but context_runner.py:228 caller omits symbol+ceiling → MES 3-tick buffer + 6.0pt clamp for ALL symbols, and context_runner is LIVE via context-gate-service.ts → paper-signal-service.ts:6. (3) `DETERMINISM_MODE` documented in python-runner.ts:307 but never set in any of the 3 Python env builders → Python `enable_determinism()` never fires (replay verdicts on potentially non-deterministic math); NUMBA_CACHE_DIR also absent at runtime. (4) BIF gate structurally pass-always under default CPCV (`bif_reliable=false` → `bif.cpcv_unmeasured`, known Wave 30 carry-forward). (5) Deep-scan #7 F-1/F-2 confirmed precisely: compliance-drift gate + frozen-policy freeze both absent at TESTING→PAPER (only at PAPER→DEPLOY_READY). (6) MEDs: MCL Topstep commission $0.77 (py) vs $0.62 (TS class-based); roll-spread unit conventions don't reconcile (ticks-per-side vs $-per-roll); 3 uncaught fire-and-forget IIFEs in backtest-service.ts (QUBO :1773, RL :1947/:2063); quantum runners bypass the python-runner semaphore; correlationId null on all automated backtest triggers (TODO at backtest-service.ts:32); SSE mc:completed uses terminal-negative ruin scalar not firm-breach CI.
+- Verified-good highlights: all 14 producer→DB→gate key chains MATCH (zero wrong-key disconnects); np.roll +1 entry shift + HTF +1 shift held; equity-vs-trades reconciliation assertion; manual P&L with locked micro point values; 15:55 flatten redundant coverage; B14 firm-breach basis correct on all 3 lifecycle paths; both CI parity gates PASS (2026-compliance, tier1-parity 232 events).
+
+**Verification:** READ-ONLY — no code changes. Parent ran: grep call-site traces, structural_stops.py + backtester.py + context_runner.py + paper-execution-service.ts reads, `pytest test_skip_trade_propagation.py` (collection ERROR, ImportError INSTRUMENT_STOP_CONFIG), both parity CI gates (PASS, via auditor 3).
+
+**Known-facts updates:** test_skip_trade_propagation.py is DEAD AT COLLECTION and the §4 skip-not-clamp mandate is unguarded in compute_structural_stop — check git history / unmerged branches for the lost INSTRUMENT_STOP_CONFIG+skip_trade version before rewriting from scratch.
+
+**Carry-forward for next session:**
+- Fix wave candidates (operator to prioritize): flip/validate BACKTEST_STATIC_C_PARTIALS_ENABLED via the A/B harness; restore skip_trade SKIP semantics in structural_stops + fix context_runner.py:228 per-symbol args (LIVE path); set DETERMINISM_MODE + per-subprocess NUMBA_CACHE_DIR in all 3 env builders; add compliance-drift + frozen-policy freeze at TESTING→PAPER; BIF per-fold IS Sharpe under CPCV (Wave 30); MCL commission override in contract-class.ts; .catch() on the 3 IIFEs; synthetic correlationId at automated call boundaries.
+- Deep-scan #7's 2 CRIT vacation-mode findings remain open (separate band, not backtesting).
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### pglite test-harness DDL drifts from schema.ts and silently breaks ALL DB-backed gate tests (pinned 2026-06-28)
