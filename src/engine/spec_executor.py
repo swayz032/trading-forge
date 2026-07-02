@@ -34,8 +34,11 @@ import re
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from src.engine.indicators.candle_patterns import (
+    detect_strength,
     detect_weakness,
     is_bearish_engulfing,
+    is_bullish_engulfing,
+    is_rejection_lower,
     is_rejection_upper,
 )
 from src.engine.spec_interpreter import evaluate_spec
@@ -104,38 +107,53 @@ class FamilyEvaluators:
             atr.append(prev)
         return atr
 
-    def bearish_structure_4h(self, i: int) -> bool:
-        """bias/market_structure: lower highs AND lower lows across two adjacent swing windows on the 4H series."""
+    def structure_4h(self, i: int, side: int) -> bool:
+        """bias/market_structure on the 4H series: short=lower highs+lower lows; long=higher highs+higher lows."""
         j = (i // BARS_PER_4H) if self.intraday else i
         k = SWING_LOOKBACK
         if j < 2 * k:
             return False
         rh, ph = max(self.h4[j - k + 1:j + 1]), max(self.h4[j - 2 * k + 1:j - k + 1])
         rl, pl = min(self.l4[j - k + 1:j + 1]), min(self.l4[j - 2 * k + 1:j - k + 1])
-        return rh < ph and rl < pl
+        return (rh < ph and rl < pl) if side < 0 else (rh > ph and rl > pl)
 
-    def premium_quadrant(self, i: int) -> bool:
+    def quadrant(self, i: int, side: int) -> bool:
+        """ict_zone: short=retrace into PREMIUM half; long=retrace into DISCOUNT half (DailyDealing model)."""
         if i < RANGE_LOOKBACK:
             return False
         rh = max(self.h[i - RANGE_LOOKBACK + 1:i + 1])
         rl = min(self.l[i - RANGE_LOOKBACK + 1:i + 1])
-        return rh > rl and self.c[i] >= rl + 0.5 * (rh - rl)
+        if rh <= rl:
+            return False
+        mid = rl + 0.5 * (rh - rl)
+        return self.c[i] >= mid if side < 0 else self.c[i] <= mid
 
-    def supply_or_sweep(self, i: int) -> bool:
+    def zone_or_sweep(self, i: int, side: int) -> bool:
+        """liquidity: short=supply-zone touch or sweep-weakness; long=demand-zone touch or sweep-strength."""
         k = RANGE_LOOKBACK
         if i < k + 3:
             return False
-        zone_high = max(self.h[i - k:i - 2])
-        touched = self.h[i] >= zone_high - ZONE_TOL_ATR * self.atr[i]
-        return touched or detect_weakness(self.o, self.h, self.l, self.c, i, lookback=SWING_LOOKBACK)
+        if side < 0:
+            zone_high = max(self.h[i - k:i - 2])
+            touched = self.h[i] >= zone_high - ZONE_TOL_ATR * self.atr[i]
+            return touched or detect_weakness(self.o, self.h, self.l, self.c, i, lookback=SWING_LOOKBACK)
+        zone_low = min(self.l[i - k:i - 2])
+        touched = self.l[i] <= zone_low + ZONE_TOL_ATR * self.atr[i]
+        return touched or detect_strength(self.o, self.h, self.l, self.c, i, lookback=SWING_LOOKBACK)
 
-    def bearish_price_action(self, i: int) -> bool:
+    def side_price_action(self, i: int, side: int) -> bool:
         if i < 1:
             return False
+        if side < 0:
+            return (
+                is_bearish_engulfing(self.o[i - 1], self.c[i - 1], self.o[i], self.c[i])
+                or is_rejection_upper(self.o[i], self.h[i], self.l[i], self.c[i])
+                or detect_weakness(self.o, self.h, self.l, self.c, i, lookback=SWING_LOOKBACK)
+            )
         return (
-            is_bearish_engulfing(self.o[i - 1], self.c[i - 1], self.o[i], self.c[i])
-            or is_rejection_upper(self.o[i], self.h[i], self.l[i], self.c[i])
-            or detect_weakness(self.o, self.h, self.l, self.c, i, lookback=SWING_LOOKBACK)
+            is_bullish_engulfing(self.o[i - 1], self.c[i - 1], self.o[i], self.c[i])
+            or is_rejection_lower(self.o[i], self.h[i], self.l[i], self.c[i])
+            or detect_strength(self.o, self.h, self.l, self.c, i, lookback=SWING_LOOKBACK)
         )
 
     def in_rth_entry_window(self, i: int) -> bool:
@@ -144,15 +162,16 @@ class FamilyEvaluators:
         t = hhmm(self.ts[i])
         return RTH_ENTRY[0] <= t < RTH_ENTRY[1]
 
-    def evaluate_family(self, fam: str, i: int) -> Tuple[bool, str]:
+    def evaluate_family(self, fam: str, i: int, side: int = -1) -> Tuple[bool, str]:
+        tag = "short" if side < 0 else "long"
         if fam in ("bias_direction", "market_structure"):
-            return self.bearish_structure_4h(i), "bearish_structure(4H resample: lower-highs+lower-lows swings)"
+            return self.structure_4h(i, side), f"structure_4h[{tag}](4H swings)"
         if fam == "ict_zone":
-            return self.premium_quadrant(i), "premium_quadrant(DailyDealing 50% model, exec TF)"
+            return self.quadrant(i, side), f"quadrant[{tag}](DailyDealing 50% model)"
         if fam == "liquidity":
-            return self.supply_or_sweep(i), "supply_zone_touch|detect_weakness"
+            return self.zone_or_sweep(i, side), f"zone_touch|sweep[{tag}]"
         if fam == "price_action":
-            return self.bearish_price_action(i), "bearish_engulfing|rejection_upper|detect_weakness"
+            return self.side_price_action(i, side), f"price_action[{tag}]"
         if fam == "session_time":
             if self.intraday:
                 return self.in_rth_entry_window(i), "rth_entry_window(09:30-15:30 ET)"
@@ -163,8 +182,8 @@ class FamilyEvaluators:
             return True, "meta_state('confluences met' = conjunction of the required confluences)"
         return False, "UNGROUNDED(unclassified — never satisfied, reported)"
 
-def _eval_family(ev: FamilyEvaluators, fam: str, i: int) -> Tuple[bool, str]:
-    return ev.evaluate_family(fam, i)
+def _eval_family(ev: FamilyEvaluators, fam: str, i: int, side: int = -1) -> Tuple[bool, str]:
+    return ev.evaluate_family(fam, i, side)
 
 
 def run(spec_path: str, transcript_path: str, local_path: str, timeframe: str, start: str, end: str, out_prefix: str) -> Dict[str, Any]:
@@ -212,35 +231,49 @@ def run(spec_path: str, transcript_path: str, local_path: str, timeframe: str, s
     sample_armed: List[Dict[str, Any]] = []
 
     for i in range(warmup, len(c) - 1):
-        fam_results: Dict[str, Tuple[bool, str]] = {}
-        for fam in families:
-            fam_results[fam] = _eval_family(ev, fam, i)
+        # evaluate BOTH sides (spec direction=both — production bidirectional convention)
+        side_results: Dict[int, Dict[str, Tuple[bool, str]]] = {}
+        side_decision: Dict[int, Dict[str, Any]] = {}
+        for side in (-1, 1):
+            fr = {fam: _eval_family(ev, fam, i, side) for fam in families}
+            side_results[side] = fr
+            side_decision[side] = evaluate_spec(spec, {cid for cid, fam in cond_family.items() if fr[fam][0]})
+        # funnel instrumentation counts EITHER-side passes (bidirectional opportunity set)
         for fam in market_fams:
             funnel_eval[fam] += 1
-            if fam_results[fam][0]:
+            if side_results[-1][fam][0] or side_results[1][fam][0]:
                 funnel_pass[fam] += 1
         seq_total += 1
-        ok_so_far = True
+        cum = True
         for fam in seq_order:
-            ok_so_far = ok_so_far and fam_results[fam][0]
-            if ok_so_far:
+            cum = cum and (side_results[-1][fam][0] or side_results[1][fam][0])
+            if cum:
                 seq_pass[fam] += 1
 
-        satisfied: Set[str] = {cid for cid, fam in cond_family.items() if fam_results[fam][0]}
-        decision = evaluate_spec(spec, satisfied)
-        if decision["armed"]:
+        armed_short = side_decision[-1]["armed"]
+        armed_long = side_decision[1]["armed"]
+        arm_side = 0
+        if armed_short != armed_long:  # both-armed = conflicting read -> stand aside
+            arm_side = -1 if armed_short else 1
+        if arm_side != 0:
             armed_count += 1
+        fam_results = side_results[arm_side if arm_side != 0 else -1]
+        satisfied: Set[str] = {cid for cid, fam in cond_family.items() if fam_results[fam][0]}
 
         # ── Style-C-lite position management (runs every bar) ──
         if position is not None:
             p = position
+            sgn = p["sgn"]
             exit_now: List[Tuple[float, int, str]] = []  # (price, units, reason)
-            if h[i] >= p["stop"]:
+            stop_hit = h[i] >= p["stop"] if sgn < 0 else l[i] <= p["stop"]
+            tp1_hit = (l[i] <= p["tp1"]) if sgn < 0 else (h[i] >= p["tp1"])
+            tp2_hit = (l[i] <= p["tp2"]) if sgn < 0 else (h[i] >= p["tp2"])
+            if stop_hit:
                 exit_now.append((p["stop"], p["units_left"], f"stop({'BE' if p['be'] else '1.5xATR'})"))
             else:
-                if not p["tp1_done"] and l[i] <= p["tp1"]:
+                if not p["tp1_done"] and tp1_hit:
                     exit_now.append((p["tp1"], 1, "tp1(1R, stop->BE)"))
-                if not p["tp2_done"] and l[i] <= p["tp2"]:
+                if not p["tp2_done"] and tp2_hit:
                     exit_now.append((p["tp2"], 1, "tp2(2R)"))
             eod = intraday and hhmm(ts[i]) >= FLATTEN_ET
             if eod and p["units_left"] > 0 and not exit_now:
@@ -249,7 +282,7 @@ def run(spec_path: str, transcript_path: str, local_path: str, timeframe: str, s
                 units = min(units, p["units_left"])
                 if units <= 0:
                     continue
-                pnl = (p["entry"] - price) * units
+                pnl = (price - p["entry"]) * p["sgn"] * units
                 p["fills"].append({"ts": ts[i], "price": round(price, 2), "units": units, "reason": reason,
                                    "pnl_points": round(pnl, 2)})
                 p["pnl_points"] += pnl
@@ -266,17 +299,19 @@ def run(spec_path: str, transcript_path: str, local_path: str, timeframe: str, s
                 position = None
 
         # ── entry: armed + flat + RTH window → SHORT next bar open; S4 CEILING gate ──
-        if decision["armed"] and position is None and ev.in_rth_entry_window(i):
+        if arm_side != 0 and position is None and ev.in_rth_entry_window(i):
+            sgn = arm_side
             stop_dist = STOP_ATR_MULT * ev.atr[i]
             if stop_dist > STOP_CEILING_PTS:
                 skipped_ceiling += 1
             else:
                 entry = o[i + 1]
                 position = {
-                    "signal_ts": ts[i], "entry_ts": ts[i + 1], "entry": entry, "direction": "short",
-                    "stop": round(entry + stop_dist, 2), "risk_points": round(stop_dist, 2),
+                    "signal_ts": ts[i], "entry_ts": ts[i + 1], "entry": entry,
+                    "direction": "short" if sgn < 0 else "long", "sgn": sgn,
+                    "stop": round(entry - sgn * stop_dist, 2), "risk_points": round(stop_dist, 2),
                     "risk_usd_3lots": round(stop_dist * MES_POINT_VALUE * UNITS, 2),
-                    "tp1": round(entry - stop_dist, 2), "tp2": round(entry - 2 * stop_dist, 2),
+                    "tp1": round(entry + sgn * stop_dist, 2), "tp2": round(entry + sgn * 2 * stop_dist, 2),
                     "tp1_done": False, "tp2_done": False, "be": False,
                     "units_left": UNITS, "pnl_points": 0.0, "fills": [],
                     "trace": [{"condition_id": cid, "evaluator": fam_results[cond_family[cid]][1],
@@ -325,6 +360,12 @@ def run(spec_path: str, transcript_path: str, local_path: str, timeframe: str, s
             "max_drawdown_usd": round(max_dd, 2),
             "risk_per_trade_usd_3lots": {"min": min(risks) if risks else None, "max": max(risks) if risks else None,
                                           "avg": round(sum(risks) / len(risks), 2) if risks else None},
+            "by_direction": {d: {
+                "trades": len([t for t in trades if t["direction"] == d]),
+                "pnl_points": round(sum(t["pnl_points"] for t in trades if t["direction"] == d), 2),
+                "win_rate_pct": round(100 * len([t for t in trades if t["direction"] == d and t["pnl_points"] > 0])
+                                      / max(1, len([t for t in trades if t["direction"] == d])), 1),
+            } for d in ("short", "long")},
         },
         "ledger_g": {
             "conditions_with_verified_provenance": f"{prov_ok}/{prov_total}",

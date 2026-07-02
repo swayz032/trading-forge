@@ -116,3 +116,42 @@ strategy on ES through a mostly-bull 2023–2026. That is a statement about the 
 pipeline: the chain now executes at the educator's cadence, at legal risk sizes, with every one of 220 trades
 traceable to his words. Edge assessment belongs to the institutional gate battery (WF/CPCV/PBO/DSR/B14), not
 this harness.
+
+---
+
+# v3 addendum — bidirectional run (production direction convention) + the mirror finding
+
+Operator question: "doesn't my overlay make strategies bidirectional and add other confluences?" — **yes on both**
+(bidirectional-by-default extraction convention + Wave-26 completeness gate; the 11-factor TF confluence overlay
+stacks on top in production). v1/v2 were deliberately `source_entry_only` + short-only — the pure-YouTube baseline.
+v3 mirrors every evaluator (bullish structure / discount quadrant / demand-zone + sweep-strength / bullish PA) and
+arms whichever side clears (stand-aside on conflicting reads).
+
+## v3 result (15m, 2023→2026, Style-C-lite, both directions)
+
+| | trades | P&L (pts @3 lots) | obs. win rate |
+|---|---|---|---|
+| **short (educator's taught side)** | 220 | **+164.3** | 45.5% |
+| **long (naive mirror)** | 342 | **−895.7** | 46.8% |
+| total | 562 | −731.4 (−$3,657) | 46.3% |
+
+Ledger G: TRACEABLE 562/562, 31/31. Shorts are IDENTICAL to v2 (+164.3 / 220) — a clean consistency check.
+
+## The finding: naive direction-mirroring must EARN its place
+
+The educator's short-side logic held positive expectancy even through bull years; the mechanical long mirror lost
+heavily. Mirroring is a HYPOTHESIS, not a free upgrade — exactly why the production architecture (a) has the
+bidirectional-completeness gate with a deliberate long-only/short-only sentinel escape, and (b) sends each
+strategy through the gate battery where a losing mirror side gets killed on evidence. This run is that principle
+demonstrated with data — and it generalizes GPT's rule: **every enhancement (mirroring included) has to earn its
+place against the source-only baseline.**
+
+## Two-mode doctrine (GPT 2026-07-02 — STANDING INVARIANT, never lose the baseline)
+
+- **Mode A — source_entry_only**: the educator's strategy + TF risk framework only. The permanent baseline;
+  this research harness runs Mode A by construction, and the production toggle is `TF_CONFLUENCE_OVERLAY_DISABLED`.
+- **Mode B — production**: source entry + TF institutional confluence overlay (11-factor gate, regime, killzones,
+  liquidity map, macro/lunch blackouts) + real Style-C framework. Mode B lives in the PRODUCTION engine — the
+  standalone harness cannot faithfully replicate the overlay's DB-backed services and must not fake them.
+- Comparison harness already built: `scripts/confluence-overlay-ablation.py` (KEEP/LOOSEN verdict on expectancy /
+  drawdown / trade-count / gate survival). Every overlay component must beat Mode A to keep its place.
