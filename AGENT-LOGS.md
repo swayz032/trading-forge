@@ -12217,6 +12217,27 @@ Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal
 
 **Carry-forward:** engine has ZERO open code findings — 100% of known audit items closed. Remaining to a true 10 is EVIDENCE, not code: first backtest wave → ladder → paper → funded. Operator-side: UPS+Kasa, secret rotation, `S3_BACKUP_BUCKET` isolated bucket. Optional polish: bar-by-bar AVWAP section in the parity CI gate; SSE catalog ratchet; n8n retry-backoff normalization.
 
+### Session Log — 2026-07-02 Deep-scan #10 — EXECUTION PATH + DATA LAYER + VACATION AUTONOMY graded (READ-ONLY, 4 auditors + parent verification)
+
+**Mission:** Operator approved grading the paper/live execution path + the 2 ranked alternatives (data layer first-ever grade; vacation autonomy incl. deep-scan #7's 2 open CRITs). Branch phase-0 eaad526.
+
+**Grades:** paper signal→order→journal **7.5/10** (0 CRIT — capital never at risk) · execution safety (kill-switch/broker-router) **8.5/10** · data layer **6.8/10** (1 CRIT) · vacation autonomy **7.8/10**. Parent CONFIRMED all 3 grade-movers in code.
+
+**Confirmed findings (fix-wave priority order):**
+1. **DATA-CRIT: local cache is a PHANTOM** — refresh writes `data_cache/{sym}/{tf}.parquet` (src/data/scripts/refresh_local_cache.py:99) but loader reads `data_cache/{sym}/ratio_adj/{tf}.parquet` (data_loader.py:84-91, adjusted=True default) — paths NEVER agree; every ratio-adj load hits S3; entire cache infra dead weight. VERIFIED byte-for-byte.
+2. **DATA-HIGH: HTF-fail → silent gate bypass** — backtester.py:257-261 sets gate_stats.mode="tf_institutional_overlay" BEFORE the htf_cache-None check; passthrough (7-layer eligibility gate OFF) ships with the institutional label, no audit row. This is the prod defect behind the S3-403 symptom.
+3. **DATA-HIGH: daily bars UTC-midnight-anchored** — resample_1m_to_tf group_by_dynamic lacks session alignment → ~332 daily bars/yr; PDH/PDL fed to bias engine computed from wrong session boundaries. ALSO root cause of the bar-count warnings (plus CPCV OOS-dates-with-IS-data compounding at walk_forward.py:412).
+4. **SAFETY-HIGH: kill-switch 100ms fail-OPEN race** — runLayerWithTimeout (kill-switch.ts:740-771) resolves {halted:false} on timeout while L2 force-close takes up to 10s → one entry window at the 95% DLL boundary. VERIFIED (line 764). Fix = module-level _isForceClosePending boolean.
+5. SAFETY-MED: setMode("HALT") bypasses _forceCloseInFlight → concurrent double force-close possible.
+6. PAPER-MED: openPosition() NOT transactional (position INSERT + trade_open audit separate; close path IS atomic 5-write) — crash breaks 90-day reconstruction. PAPER-MED: kill-switch not checked at bar-N signal time (capital safe at N+1 fill; violates first-gate standard at signal granularity).
+7. AUTONOMY: CRIT-1 CONFIRMED OPEN — DB_BACKUP_ENABLED=false silently succeeds (db-backup-service.ts:297-301; ~3-line fix); CRIT-2 core CLOSED in eaad526 (residual: weekday-only auto-resume → Friday reboot = 72h blast radius); NEW: boot-migration failure crash-loops NSSM with a single one-time alert (14-day offline risk on vacation).
+8. Smaller: databento refresh failure = DLQ-only no Discord; MCL absent from DEFAULT_SYMBOLS; compute_dataset_hash() never called (no data provenance in results); holiday detection Python-subprocess-only fail-open; secret_check proof mode static-token replay surface; GAP-1 sticky-flag write non-blocking; Massive WS disconnect unaudited.
+
+**Verified-good:** closePosition 5-write atomic tx; SHADOW invariant double-enforced; kill-switch genuinely FIRST in openPosition + routeOrder + live-order lifecycle gate; NO broker bypass path (submitWebhookOrder imported ONLY by broker-router); heartbeat guard rails intact; NO LLM on execution path; DLL ladder fail-closed w/ awaited force-close; ratio-adj S3 enforcement airtight; rollover math CME-correct; live-trade correlationId threads.
+
+**Carry-forward:** fix wave on operator direction, priority: data cache-path+passthrough-disclosure (CRIT chain) → kill-switch races → session-aligned daily resample → openPosition tx + bar-N halt check → CRIT-1 backup + migration crash-loop escalation + weekend resume → the smaller list.
+
+---
 ### Session Log — 2026-07-02 Deep-scan #9 — WALK-FORWARD + MONTE CARLO graded (READ-ONLY, 2 auditors + parent spot-checks, post-fix-wave state)
 
 **Mission:** Operator: "GRADE WALK FORWARD AND MONTE CARLO NOW" — focused methodology-level grading on phase-0 19293a1 (engine100 + both deepscan8 waves included).
