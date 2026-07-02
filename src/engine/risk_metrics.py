@@ -532,15 +532,20 @@ def compute_deflated_sharpe_ratio(
 
     gamma = 0.5772156649  # Euler-Mascheroni constant
 
-    # Expected max Sharpe under null (from N independent trials)
+    # Expected max Sharpe under null (from N independent trials).
+    # FIX 2 (deep-scan #9): Bailey-López de Prado (2014) full formula replaces the
+    # prior no-op approximation. The old formula sqrt(2L)*(1-γ/(2L)) + γ/sqrt(2L)
+    # algebraically reduces to sqrt(2L) (terms cancel); it was a no-op not a correction.
+    # Bailey 2014: E[maxSR] ≈ (1-γ)·Φ⁻¹(1-1/N) + γ·Φ⁻¹(1-1/(N·e))
+    # where Φ⁻¹ = norm.ppf (probit), γ = Euler-Mascheroni 0.5772156649.
+    # This LOWERS E[maxSR] relative to sqrt(2·ln N): N=4 1.665→1.053, N=15 2.328→1.769.
+    # DSR pass-rate increases (less punitive), which is the correct calibrated direction.
     if n_trials <= 1:
         sr_expected_max = 0.0
     else:
-        log_n = math.log(n_trials)
         sr_expected_max = (
-            math.sqrt(2 * log_n)
-            * (1 - gamma / (2 * log_n))
-            + gamma / math.sqrt(2 * log_n)
+            (1 - gamma) * sp_stats.norm.ppf(1.0 - 1.0 / n_trials)
+            + gamma * sp_stats.norm.ppf(1.0 - 1.0 / (n_trials * math.e))
         )
 
     # Corrected standard deviation of Sharpe for non-normality
@@ -635,6 +640,7 @@ def compute_information_ratio(
 def compute_pbo(
     walk_forward_windows: list[dict],
     metric: str = "sharpe_ratio",
+    is_metric_values: list[float] | None = None,
 ) -> dict:
     """Probability of Backtest Overfitting — combinatorial analysis of WF windows.
 
@@ -645,21 +651,46 @@ def compute_pbo(
     Simplified single-strategy version: checks if OOS performance degrades
     relative to what IS ranking would predict.
 
+    FIX 3 (deep-scan #9): accept real IS values via `is_metric_values`. When the
+    caller does not supply IS values (is_metric_values=None), return
+    {"pbo": None, "reason": "is_values_unavailable"} rather than silently using
+    OOS values as IS proxy. The OOS-as-IS proxy produced PBO≈0.5 regardless of
+    actual overfitting because the "IS" and "OOS" halves were drawn from the same
+    OOS series.
+
     Package boundary: this function is wired into walk_forward.py aggregation
     (Wave 27.5 Pass B HIGH #3). It is always called when >= 4 WF windows are
     present — callers no longer need to invoke it manually.
 
+    Args:
+        walk_forward_windows : list[dict] of window result dicts (for OOS metric extraction).
+        metric               : key within oos_metrics to use as OOS ranking value.
+        is_metric_values     : list[float] of per-window IS metric values (same length as
+                               walk_forward_windows). When None, returns is_values_unavailable.
+
     Returns dict with keys:
-      pbo            : float in [0, 1], or None when insufficient windows
+      pbo            : float in [0, 1], or None when insufficient windows / unavailable
       interpretation : human-readable band label
       n_combinations : number of C(M, M//2) combos evaluated
+      reason         : present only when pbo=None; "is_values_unavailable" or sample-size note
 
     The caller (walk_forward.py) adds:
-      pbo_pass       : bool — pbo <= PBO_OVERFIT_THRESHOLD (default 0.5)
+      pbo_pass       : bool | None — pbo <= PBO_OVERFIT_THRESHOLD (default 0.5);
+                       None when pbo itself is None (unavailable-not-pass)
       pbo_threshold  : the threshold used
-      pbo_p_value    : None (reserved for Bayesian extension)
+      pbo_p_value    : binomial test p-value (Wave 27.5 Pass D.4)
     """
     from itertools import combinations
+
+    # FIX 3: require real IS values — OOS-as-IS proxy is not valid.
+    if is_metric_values is None:
+        return {
+            "pbo": None,
+            "reason": "is_values_unavailable",
+            "interpretation": "IS metric values not provided; cannot compute valid PBO.",
+            "n_combinations": 0,
+            "pbo_p_value": None,
+        }
 
     n_windows = len(walk_forward_windows)
     if n_windows < 4:
@@ -670,6 +701,18 @@ def compute_pbo(
             "pbo_p_value": None,  # Insufficient data
         }
 
+    if len(is_metric_values) != n_windows:
+        return {
+            "pbo": None,
+            "reason": "is_values_length_mismatch",
+            "interpretation": (
+                f"is_metric_values length {len(is_metric_values)} != "
+                f"n_windows {n_windows}; cannot compute valid PBO."
+            ),
+            "n_combinations": 0,
+            "pbo_p_value": None,
+        }
+
     # Extract OOS metric values per window
     oos_values = []
     for w in walk_forward_windows:
@@ -677,19 +720,24 @@ def compute_pbo(
         val = metrics.get(metric, 0)
         oos_values.append(float(val))
 
+    # IS metric values are caller-supplied (real per-window IS performance).
+    # Previously this was oos_values (OOS-as-IS proxy) — FIX 3 removes that proxy.
+    is_values = [float(v) for v in is_metric_values]
+
     half = n_windows // 2
     n_overfit = 0
     n_combos = 0
 
-    # For each combination of windows as "IS proxy"
+    # For each combination of windows as "IS" half
     for is_indices in combinations(range(n_windows), half):
         oos_indices = [i for i in range(n_windows) if i not in is_indices]
 
-        # IS performance = mean of selected windows' OOS metrics (proxy for IS ranking)
-        is_mean = sum(oos_values[i] for i in is_indices) / len(is_indices)
+        # IS performance = mean of IS metric values for selected windows
+        is_mean = sum(is_values[i] for i in is_indices) / len(is_indices)
+        # OOS performance = mean of OOS metric values for remaining windows
         oos_mean = sum(oos_values[i] for i in oos_indices) / len(oos_indices)
 
-        # Overfit = IS looks better than OOS
+        # Overfit = IS looks better than OOS (IS ranking does not predict OOS)
         if is_mean > oos_mean:
             n_overfit += 1
         n_combos += 1
