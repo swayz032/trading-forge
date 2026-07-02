@@ -712,6 +712,13 @@
       </div>
       <div class="of-dots" id="of-dots"></div>
     </section>
+
+    <!-- Layer-4 Office P0 (2026-07-02): risk-truth card + go-live approval cards.
+         Rendered by /slumhouse/office-risk.js + /slumhouse/office-approvals.js
+         (plain scripts, no build step). They wake on the `office:unlocked`
+         document event and sleep on `office:locked`. -->
+    <section id="of-risk" class="of-hide"></section>
+    <section id="of-approvals" class="of-hide"></section>
   </div>
 
   <!-- ═══ CARTER CONNECT OVERLAY (full-screen, hidden by default) ═══ -->
@@ -1040,11 +1047,15 @@
         shellSec.classList.remove('of-hide');
         lockBtn.classList.remove('of-hide');
         initCarousel();
+        // Layer-4 Office P0: wake the risk-truth + approvals modules.
+        document.dispatchEvent(new CustomEvent('office:unlocked'));
       }
       function showLocked() {
         shellSec.classList.add('of-hide');
         lockBtn.classList.add('of-hide');
         lockSec.classList.remove('of-hide');
+        // Layer-4 Office P0: hide + stop the risk-truth + approvals modules.
+        document.dispatchEvent(new CustomEvent('office:locked'));
         input.value = '';                 // never leave a passcode sitting in the box
         // clear again after any late browser autofill, then focus
         setTimeout(function () { input.value = ''; input.focus(); }, 60);
@@ -1106,6 +1117,10 @@
       });
     })();
   </script>
+
+  <!-- Layer-4 Office P0: risk-truth + go-live approvals (no build step) -->
+  <script src="/slumhouse/office-risk.js" defer></script>
+  <script src="/slumhouse/office-approvals.js" defer></script>
 
   <!-- ElevenLabs ConvAI browser SDK — pinned to @elevenlabs/client@1.14.0 -->
   <script type="importmap">
