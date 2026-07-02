@@ -145,6 +145,7 @@ CREATE TABLE IF NOT EXISTS backtests (
   compliance_mode       TEXT,
   wrc_result            JSONB,
   spa_result            JSONB,
+  provenance_stamp      JSONB,
   error_message         TEXT,
   execution_time_ms     INTEGER,
   created_at            TIMESTAMPTZ DEFAULT NOW()
