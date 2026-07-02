@@ -44,6 +44,13 @@ jobs:
         continue-on-error: true
         run: npm audit --audit-level=high
 
+      # deepscan6 O10 (2026-07-01): SSE broadcast-vs-frontend-catalog drift visibility.
+      # ADVISORY — surfaces server events missing from the typed catalog so a renamed
+      # event can't silently stop feeding a dashboard tile.
+      - name: SSE contract drift (advisory)
+        continue-on-error: true
+        run: npm run check:sse-contract
+
       # ─── Hard gates (fail-closed) ──────────────────────────────────────────
       # These run in the lint job because lint is the upstream dependency of every
       # other job (test-node / test-python / test-parity all `needs: lint`). A gate
