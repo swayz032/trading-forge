@@ -1,0 +1,578 @@
+{
+ "summary": {
+  "window": "2023-01-01..2025-12-01",
+  "strategies_attempted": 15,
+  "ok": 14,
+  "usable_for_aggregate (n_source>=20)": 8,
+  "verdicts": {
+   "LOOSEN": 12,
+   "KEEP": 2
+  },
+  "aggregate_deltas": {
+   "d_expectancy_avg_r": {
+    "mean": 0.015,
+    "median": -0.005,
+    "n": 8
+   },
+   "d_sharpe": {
+    "mean": 1.1546,
+    "median": 1.1093,
+    "n": 8
+   },
+   "d_profit_factor": {
+    "mean": 0.006,
+    "median": -0.0006,
+    "n": 8
+   },
+   "d_max_dd": {
+    "mean": -73280.6675,
+    "median": -45372.61,
+    "n": 8
+   },
+   "trade_retention_pct": {
+    "mean": 35.325,
+    "median": 37.15,
+    "n": 8
+   }
+  },
+  "note": "single-backtest core; full WF/CPCV/PBO/DSR under both modes is the follow-through; LOW_N strategies excluded from means"
+ },
+ "strategies": [
+  {
+   "strategy": "ote",
+   "status": "NO_CLASS"
+  },
+  {
+   "strategy": "ict_swing",
+   "status": "OK",
+   "verdict": "LOOSEN",
+   "reason": "overlay starves trades: 3 < 3.2 (40% of source 8)",
+   "mode_a": {
+    "mode": "source_entry_only",
+    "error": null,
+    "total_pnl": -1830.040187,
+    "sharpe": -0.4138,
+    "profit_factor": 0.5179,
+    "max_dd": 2725.51509,
+    "avg_r": -0.45,
+    "win_rate_pct": 25.0,
+    "trade_count": 8
+   },
+   "mode_b": {
+    "mode": "tf_institutional_overlay",
+    "error": null,
+    "total_pnl": -1114.281347,
+    "sharpe": -0.5724,
+    "profit_factor": 0.1933,
+    "max_dd": 1414.946078,
+    "avg_r": -0.54,
+    "win_rate_pct": 33.3,
+    "trade_count": 3
+   },
+   "delta": {
+    "d_expectancy_avg_r": -0.09,
+    "d_sharpe": -0.1586,
+    "d_profit_factor": -0.3246,
+    "d_max_dd": -1310.57,
+    "trade_retention_pct": 37.5,
+    "n_source": 8,
+    "n_overlay": 3,
+    "low_n": true
+   }
+  },
+  {
+   "strategy": "propulsion",
+   "status": "OK",
+   "verdict": "LOOSEN",
+   "reason": "overlay does NOT improve risk-adjusted return (Sharpe -0.90\u2192-0.90, PF 0.00\u21920.00) \u2014 added conditions not earning their overfit cost",
+   "mode_a": {
+    "mode": "source_entry_only",
+    "error": null,
+    "total_pnl": -3041.756357,
+    "sharpe": -0.9016,
+    "profit_factor": 0.0,
+    "max_dd": 3041.756357,
+    "avg_r": -1.42,
+    "win_rate_pct": 0.0,
+    "trade_count": 5
+   },
+   "mode_b": {
+    "mode": "tf_institutional_overlay",
+    "error": null,
+    "total_pnl": -3041.756357,
+    "sharpe": -0.9016,
+    "profit_factor": 0.0,
+    "max_dd": 3041.756357,
+    "avg_r": -1.42,
+    "win_rate_pct": 0.0,
+    "trade_count": 5
+   },
+   "delta": {
+    "d_expectancy_avg_r": 0.0,
+    "d_sharpe": 0.0,
+    "d_profit_factor": 0.0,
+    "d_max_dd": 0.0,
+    "trade_retention_pct": 100.0,
+    "n_source": 5,
+    "n_overlay": 5,
+    "low_n": true
+   }
+  },
+  {
+   "strategy": "power_of_3",
+   "status": "OK",
+   "verdict": "LOOSEN",
+   "reason": "overlay starves trades: 85 < 98.4 (40% of source 246)",
+   "mode_a": {
+    "mode": "source_entry_only",
+    "error": null,
+    "total_pnl": -97754.351655,
+    "sharpe": -3.0746,
+    "profit_factor": 0.392,
+    "max_dd": 99716.74941,
+    "avg_r": -0.56,
+    "win_rate_pct": 21.9,
+    "trade_count": 246
+   },
+   "mode_b": {
+    "mode": "tf_institutional_overlay",
+    "error": null,
+    "total_pnl": -33780.5219,
+    "sharpe": -1.8335,
+    "profit_factor": 0.3797,
+    "max_dd": 37678.090319,
+    "avg_r": -0.55,
+    "win_rate_pct": 21.2,
+    "trade_count": 85
+   },
+   "delta": {
+    "d_expectancy_avg_r": 0.01,
+    "d_sharpe": 1.2411,
+    "d_profit_factor": -0.0123,
+    "d_max_dd": -62038.66,
+    "trade_retention_pct": 34.6,
+    "n_source": 246,
+    "n_overlay": 85,
+    "low_n": false
+   }
+  },
+  {
+   "strategy": "quarterly_swing",
+   "status": "OK",
+   "verdict": "KEEP",
+   "reason": "overlay improves risk-adjusted return (Sharpe -1.01\u2192-0.74, PF 0.00\u21920.00) and preserves 2/5 trades",
+   "mode_a": {
+    "mode": "source_entry_only",
+    "error": null,
+    "total_pnl": -1982.037282,
+    "sharpe": -1.0052,
+    "profit_factor": 0.0,
+    "max_dd": 1982.037282,
+    "avg_r": -0.81,
+    "win_rate_pct": 0.0,
+    "trade_count": 5
+   },
+   "mode_b": {
+    "mode": "tf_institutional_overlay",
+    "error": null,
+    "total_pnl": -1349.878367,
+    "sharpe": -0.7431,
+    "profit_factor": 0.0,
+    "max_dd": 1349.878367,
+    "avg_r": -1.47,
+    "win_rate_pct": 0.0,
+    "trade_count": 2
+   },
+   "delta": {
+    "d_expectancy_avg_r": -0.66,
+    "d_sharpe": 0.2621,
+    "d_profit_factor": 0.0,
+    "d_max_dd": -632.16,
+    "trade_retention_pct": 40.0,
+    "n_source": 5,
+    "n_overlay": 2,
+    "low_n": true
+   }
+  },
+  {
+   "strategy": "silver_bullet",
+   "status": "OK",
+   "verdict": "LOOSEN",
+   "reason": "overlay starves trades: 8 < 12.8 (40% of source 32)",
+   "mode_a": {
+    "mode": "source_entry_only",
+    "error": null,
+    "total_pnl": -954.436713,
+    "sharpe": -0.0836,
+    "profit_factor": 0.9363,
+    "max_dd": 7117.110911,
+    "avg_r": -0.05,
+    "win_rate_pct": 34.4,
+    "trade_count": 32
+   },
+   "mode_b": {
+    "mode": "tf_institutional_overlay",
+    "error": null,
+    "total_pnl": -639.245385,
+    "sharpe": -0.1249,
+    "profit_factor": 0.8316,
+    "max_dd": 2436.574456,
+    "avg_r": -0.1,
+    "win_rate_pct": 37.5,
+    "trade_count": 8
+   },
+   "delta": {
+    "d_expectancy_avg_r": -0.05,
+    "d_sharpe": -0.0413,
+    "d_profit_factor": -0.1047,
+    "d_max_dd": -4680.54,
+    "trade_retention_pct": 25.0,
+    "n_source": 32,
+    "n_overlay": 8,
+    "low_n": false
+   }
+  },
+  {
+   "strategy": "breaker",
+   "status": "OK",
+   "verdict": "LOOSEN",
+   "reason": "overlay starves trades: 423 < 454.4 (40% of source 1136)",
+   "mode_a": {
+    "mode": "source_entry_only",
+    "error": null,
+    "total_pnl": -332570.945459,
+    "sharpe": -5.2155,
+    "profit_factor": 0.4773,
+    "max_dd": 336152.161436,
+    "avg_r": -0.43,
+    "win_rate_pct": 26.4,
+    "trade_count": 1136
+   },
+   "mode_b": {
+    "mode": "tf_institutional_overlay",
+    "error": null,
+    "total_pnl": -107050.197816,
+    "sharpe": -2.7362,
+    "profit_factor": 0.5228,
+    "max_dd": 111727.391584,
+    "avg_r": -0.35,
+    "win_rate_pct": 27.7,
+    "trade_count": 423
+   },
+   "delta": {
+    "d_expectancy_avg_r": 0.08,
+    "d_sharpe": 2.4793,
+    "d_profit_factor": 0.0455,
+    "d_max_dd": -224424.77,
+    "trade_retention_pct": 37.2,
+    "n_source": 1136,
+    "n_overlay": 423,
+    "low_n": false
+   }
+  },
+  {
+   "strategy": "eqhl_raid",
+   "status": "OK",
+   "verdict": "LOOSEN",
+   "reason": "overlay starves trades: 112 < 117.2 (40% of source 293)",
+   "mode_a": {
+    "mode": "source_entry_only",
+    "error": null,
+    "total_pnl": -90807.040331,
+    "sharpe": -2.5414,
+    "profit_factor": 0.4849,
+    "max_dd": 97804.999525,
+    "avg_r": -0.44,
+    "win_rate_pct": 31.4,
+    "trade_count": 293
+   },
+   "mode_b": {
+    "mode": "tf_institutional_overlay",
+    "error": null,
+    "total_pnl": -41652.789914,
+    "sharpe": -2.1,
+    "profit_factor": 0.3854,
+    "max_dd": 45793.57637,
+    "avg_r": -0.52,
+    "win_rate_pct": 24.1,
+    "trade_count": 112
+   },
+   "delta": {
+    "d_expectancy_avg_r": -0.08,
+    "d_sharpe": 0.4414,
+    "d_profit_factor": -0.0995,
+    "d_max_dd": -52011.42,
+    "trade_retention_pct": 38.2,
+    "n_source": 293,
+    "n_overlay": 112,
+    "low_n": false
+   }
+  },
+  {
+   "strategy": "london_raid",
+   "status": "OK",
+   "verdict": "LOOSEN",
+   "reason": "overlay starves trades: 1 < 2.4 (40% of source 6)",
+   "mode_a": {
+    "mode": "source_entry_only",
+    "error": null,
+    "total_pnl": 427.497631,
+    "sharpe": 0.0652,
+    "profit_factor": 1.1298,
+    "max_dd": 2466.321567,
+    "avg_r": 0.11,
+    "win_rate_pct": 33.3,
+    "trade_count": 6
+   },
+   "mode_b": {
+    "mode": "tf_institutional_overlay",
+    "error": null,
+    "total_pnl": 911.558564,
+    "sharpe": 0.5265,
+    "profit_factor": 999.99,
+    "max_dd": 281.025,
+    "avg_r": 1.24,
+    "win_rate_pct": 100.0,
+    "trade_count": 1
+   },
+   "delta": {
+    "d_expectancy_avg_r": 1.13,
+    "d_sharpe": 0.4613,
+    "d_profit_factor": 998.8602,
+    "d_max_dd": -2185.3,
+    "trade_retention_pct": 16.7,
+    "n_source": 6,
+    "n_overlay": 1,
+    "low_n": true
+   }
+  },
+  {
+   "strategy": "judas_swing",
+   "status": "OK",
+   "verdict": "LOOSEN",
+   "reason": "overlay starves trades: 56 < 60.4 (40% of source 151)",
+   "mode_a": {
+    "mode": "source_entry_only",
+    "error": null,
+    "total_pnl": -36811.937432,
+    "sharpe": -1.8212,
+    "profit_factor": 0.4959,
+    "max_dd": 43868.617272,
+    "avg_r": -0.35,
+    "win_rate_pct": 25.2,
+    "trade_count": 151
+   },
+   "mode_b": {
+    "mode": "tf_institutional_overlay",
+    "error": null,
+    "total_pnl": -10355.462779,
+    "sharpe": -0.8437,
+    "profit_factor": 0.5989,
+    "max_dd": 12533.961735,
+    "avg_r": -0.27,
+    "win_rate_pct": 28.6,
+    "trade_count": 56
+   },
+   "delta": {
+    "d_expectancy_avg_r": 0.08,
+    "d_sharpe": 0.9775,
+    "d_profit_factor": 0.103,
+    "d_max_dd": -31334.66,
+    "trade_retention_pct": 37.1,
+    "n_source": 151,
+    "n_overlay": 56,
+    "low_n": false
+   }
+  },
+  {
+   "strategy": "mitigation",
+   "status": "OK",
+   "verdict": "LOOSEN",
+   "reason": "overlay starves trades: 347 < 418.0 (40% of source 1045)",
+   "mode_a": {
+    "mode": "source_entry_only",
+    "error": null,
+    "total_pnl": -255283.070724,
+    "sharpe": -3.9804,
+    "profit_factor": 0.5627,
+    "max_dd": 257747.439101,
+    "avg_r": -0.37,
+    "win_rate_pct": 29.7,
+    "trade_count": 1045
+   },
+   "mode_b": {
+    "mode": "tf_institutional_overlay",
+    "error": null,
+    "total_pnl": -90217.688993,
+    "sharpe": -2.3358,
+    "profit_factor": 0.5619,
+    "max_dd": 92891.049585,
+    "avg_r": -0.39,
+    "win_rate_pct": 30.0,
+    "trade_count": 347
+   },
+   "delta": {
+    "d_expectancy_avg_r": -0.02,
+    "d_sharpe": 1.6446,
+    "d_profit_factor": -0.0008,
+    "d_max_dd": -164856.39,
+    "trade_retention_pct": 33.2,
+    "n_source": 1045,
+    "n_overlay": 347,
+    "low_n": false
+   }
+  },
+  {
+   "strategy": "ny_lunch_reversal",
+   "status": "OK",
+   "verdict": "KEEP",
+   "reason": "overlay improves risk-adjusted return (Sharpe -0.74\u2192-0.60, PF 0.39\u21920.35) and preserves 9/19 trades",
+   "mode_a": {
+    "mode": "source_entry_only",
+    "error": null,
+    "total_pnl": -8106.430433,
+    "sharpe": -0.7357,
+    "profit_factor": 0.3889,
+    "max_dd": 12854.342255,
+    "avg_r": -0.59,
+    "win_rate_pct": 15.8,
+    "trade_count": 19
+   },
+   "mode_b": {
+    "mode": "tf_institutional_overlay",
+    "error": null,
+    "total_pnl": -5901.105303,
+    "sharpe": -0.6008,
+    "profit_factor": 0.3529,
+    "max_dd": 9233.7433,
+    "avg_r": -0.93,
+    "win_rate_pct": 22.2,
+    "trade_count": 9
+   },
+   "delta": {
+    "d_expectancy_avg_r": -0.34,
+    "d_sharpe": 0.1349,
+    "d_profit_factor": -0.036,
+    "d_max_dd": -3620.6,
+    "trade_retention_pct": 47.4,
+    "n_source": 19,
+    "n_overlay": 9,
+    "low_n": true
+   }
+  },
+  {
+   "strategy": "midnight_open",
+   "status": "OK",
+   "verdict": "LOOSEN",
+   "reason": "overlay starves trades: 68 < 68.4 (40% of source 171)",
+   "mode_a": {
+    "mode": "source_entry_only",
+    "error": null,
+    "total_pnl": -56349.737308,
+    "sharpe": -3.4618,
+    "profit_factor": 0.2286,
+    "max_dd": 57850.470097,
+    "avg_r": -0.51,
+    "win_rate_pct": 29.2,
+    "trade_count": 171
+   },
+   "mode_b": {
+    "mode": "tf_institutional_overlay",
+    "error": null,
+    "total_pnl": -17498.51107,
+    "sharpe": -1.6621,
+    "profit_factor": 0.3461,
+    "max_dd": 19116.672805,
+    "avg_r": -0.38,
+    "win_rate_pct": 33.8,
+    "trade_count": 68
+   },
+   "delta": {
+    "d_expectancy_avg_r": 0.13,
+    "d_sharpe": 1.7997,
+    "d_profit_factor": 0.1175,
+    "d_max_dd": -38733.8,
+    "trade_retention_pct": 39.8,
+    "n_source": 171,
+    "n_overlay": 68,
+    "low_n": false
+   }
+  },
+  {
+   "strategy": "iofed",
+   "status": "OK",
+   "verdict": "LOOSEN",
+   "reason": "overlay starves trades: 7 < 7.6 (40% of source 19)",
+   "mode_a": {
+    "mode": "source_entry_only",
+    "error": null,
+    "total_pnl": -8603.183502,
+    "sharpe": -1.4555,
+    "profit_factor": 0.1721,
+    "max_dd": 8603.183502,
+    "avg_r": -0.68,
+    "win_rate_pct": 10.5,
+    "trade_count": 19
+   },
+   "mode_b": {
+    "mode": "tf_institutional_overlay",
+    "error": null,
+    "total_pnl": -5060.786838,
+    "sharpe": -1.2957,
+    "profit_factor": 0.0,
+    "max_dd": 5060.786838,
+    "avg_r": -1.0,
+    "win_rate_pct": 0.0,
+    "trade_count": 7
+   },
+   "delta": {
+    "d_expectancy_avg_r": -0.32,
+    "d_sharpe": 0.1598,
+    "d_profit_factor": -0.1721,
+    "d_max_dd": -3542.4,
+    "trade_retention_pct": 36.8,
+    "n_source": 19,
+    "n_overlay": 7,
+    "low_n": true
+   }
+  },
+  {
+   "strategy": "ict_scalp",
+   "status": "OK",
+   "verdict": "LOOSEN",
+   "reason": "overlay starves trades: 18 < 19.2 (40% of source 48)",
+   "mode_a": {
+    "mode": "source_entry_only",
+    "error": null,
+    "total_pnl": -15408.976763,
+    "sharpe": -1.8156,
+    "profit_factor": 0.2504,
+    "max_dd": 15712.826498,
+    "avg_r": -0.52,
+    "win_rate_pct": 33.3,
+    "trade_count": 48
+   },
+   "mode_b": {
+    "mode": "tf_institutional_overlay",
+    "error": null,
+    "total_pnl": -6180.090271,
+    "sharpe": -1.1213,
+    "profit_factor": 0.2499,
+    "max_dd": 7547.722755,
+    "avg_r": -0.55,
+    "win_rate_pct": 38.9,
+    "trade_count": 18
+   },
+   "delta": {
+    "d_expectancy_avg_r": -0.03,
+    "d_sharpe": 0.6943,
+    "d_profit_factor": -0.0005,
+    "d_max_dd": -8165.1,
+    "trade_retention_pct": 37.5,
+    "n_source": 48,
+    "n_overlay": 18,
+    "low_n": false
+   }
+  }
+ ]
+}
