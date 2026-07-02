@@ -415,6 +415,9 @@ tradingViewWebhookRoutes.post(
     const durationMs = Date.now() - startedAt;
 
     // 8. Audit log row (non-blocking)
+    // FIX 7 (Track M): include proof_mode so the audit row records which auth
+    // path accepted this signal ("hmac_canonical" | "secret_check"). Useful for
+    // diagnosing auth failures and verifying Pine export migration completeness.
     await writeAuditRow({
       action: "tradingview_marker.received",
       strategyId: strategy_id,
@@ -427,6 +430,7 @@ tradingViewWebhookRoutes.post(
         signal,
         firmId,
         hmacValidated: true,
+        proof_mode: proofMode,
         idempotent: markerId === null, // null = duplicate — row already existed
       },
       durationMs,

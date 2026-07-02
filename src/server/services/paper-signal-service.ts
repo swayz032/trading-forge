@@ -58,6 +58,11 @@ import { resolveNewsAction } from "../lib/news-policy.js";
 // synced), replacing the hardcoded/projected Python list. Covers FOMC/FOMC_MINUTES/CPI/NFP +
 // EIA, product-scoped, hardcoded fail-safe fallback.
 import { getT1ReleaseWindow } from "../lib/economic-calendar-loader.js";
+// FIX 6 (Track M): in-process CME full-closure date fallback for the outer calendar catch.
+// When getCachedSignalCalendarStatus + getT1ReleaseWindow both throw, the Python subprocess
+// is unavailable. The Tier-1 event checker (FIX B) handles economic events; this module
+// handles holiday detection so CME-closure days are blocked even during outages.
+import { checkCmeHolidayFallback } from "../lib/cme-holidays.js";
 // Topstep Prohibited Conduct (2026-06-23): cross-account hedging (opposite positions across
 // the operator's multiple accounts) + holding within 2% of a product's price-lock limit.
 import { checkCrossAccountHedge, checkIntraAccountHedge, symbolToUnderlying } from "../lib/cross-account-hedge-gate.js";
@@ -617,6 +622,11 @@ export function __clearPendingEntryQueueForTests(): void {
 // structured WARNING once per session so operators can act on it.
 // Resolution: set TF_BACKTEST_SKIP_MODE=enforce to align both sides.
 const parityWarnedSessions = new Set<string>();
+
+// FIX 4 (Track M): dedup set for signal.entry_eval_skipped_halted audit rows.
+// Prevents flooding the audit_log on every bar when the system is halted.
+// Key: `${sessionId}:${YYYY-MM-DD}` — resets naturally at midnight when the key changes.
+const _haltedEntryAuditDedup = new Set<string>();
 
 /**
  * Return the current governor state for a session.
@@ -2305,21 +2315,52 @@ export async function evaluateSignals(
       }
     }
   } catch (calErr) {
-    // Calendar check is non-blocking — trading continues (fail-open).
-    // BUT the failure must be VISIBLE: a silent swallow hides a broken risk guard.
-    // Log at error level so the operator can see the guard is down.
+    // Calendar check failed. The failure must be VISIBLE — log at error level.
     logger.error(
       { sessionId, symbol, err: calErr },
-      "Calendar guard DOWN — Python calendar_filter failed; trading continues unblocked",
+      "Calendar guard DOWN — Python calendar_filter failed",
     );
+    // FIX 6 (Track M): in-process CME holiday fallback. The Python subprocess is
+    // unavailable. The Tier-1 event checker already runs inside
+    // getCachedSignalCalendarStatus's inner catch (FIX B) — but that inner handler
+    // only fires when the Python call itself fails. The OUTER catch here fires when
+    // is_holiday was never consulted (entire cal block threw). Check the static
+    // CME closure table so we never trade on a full market-closure day.
+    const holidayCheck = checkCmeHolidayFallback(bar.timestamp);
+    if (holidayCheck.isHoliday) {
+      calendarBlocked = true;
+      calendarBlockReason = `holiday_fallback:${holidayCheck.holidayName ?? "unknown"}`;
+      logger.warn(
+        { sessionId, symbol, date: holidayCheck.date, holiday: holidayCheck.holidayName },
+        "FIX 6: calendar guard DOWN — in-process CME holiday table BLOCKED (fail-CLOSED for known market closure)",
+      );
+      insertAuditRow({
+        action: "signal.holiday_blocked_fallback",
+        entityType: "signal",
+        entityId: sessionId,
+        decisionAuthority: "system",
+        input: { sessionId, symbol, date: holidayCheck.date, holiday: holidayCheck.holidayName } as Record<string, unknown>,
+        result: { blocked: true, reason: "cme_holiday_in_process_fallback", calendar_guard_down: true } as Record<string, unknown>,
+        status: "success",
+        correlationId: correlationId ?? null,
+      }).catch((err: unknown) =>
+        logger.warn({ err, sessionId }, "audit insert failed for signal.holiday_blocked_fallback"),
+      );
+    }
     // Broadcast SSE so the dashboard can surface a warning banner immediately.
     broadcastSSE("alert:calendar_guard_down", {
       sessionId,
       symbol,
+      holidayBlocked: holidayCheck.isHoliday,
+      holidayName: holidayCheck.holidayName,
       error: calErr instanceof Error ? calErr.message : String(calErr),
       timestamp: bar.timestamp,
     });
     span.setAttribute("calendar_guard_down", true);
+    if (holidayCheck.isHoliday) {
+      span.setAttribute("calendar_guard_down_holiday_blocked", true);
+    }
+    // Non-holiday: trading continues (fail-open), consistent with prior behavior.
   }
 
   // (Phase 3: EIA is now handled inside getT1ReleaseWindow above — product-scoped to crude
@@ -3044,6 +3085,42 @@ export async function evaluateSignals(
     // Position still open: bars-held counter updated above; HWM updated inside checkTrailStop.
   } else if (entrySignal && !sessionFiltered && !windowFiltered && !cooldownActive && !isShadow && !skipBlocked && !ictBridgeBlocked) {
     // ─── No position: check for entry ────────────────────────
+
+    // ─── FIX 4 (Track M): Kill-switch halt check at bar-N signal time ────────
+    // Management paths (position close, trail-stop, bar-to-bar price updates)
+    // run in the `if (openPos)` branch ABOVE and must continue unaffected.
+    // Only new-entry evaluation is blocked here.
+    // isHaltedForProduction() has a 5s internal cache — cheap per-bar call.
+    {
+      const haltedAtEntry = await killSwitch.isHaltedForProduction({ correlationId: correlationId ?? undefined });
+      if (haltedAtEntry) {
+        logger.debug(
+          { sessionId, symbol },
+          "kill-switch: system halted — skipping new-entry evaluation (FIX 4, management paths unaffected)",
+        );
+        // Per-session-per-day dedup: write audit once per session per day to avoid
+        // flooding on every bar when halted. Key resets when the date changes.
+        const haltAuditKey = `${sessionId}:${new Date().toISOString().slice(0, 10)}`;
+        if (!_haltedEntryAuditDedup.has(haltAuditKey)) {
+          _haltedEntryAuditDedup.add(haltAuditKey);
+          insertAuditRow({
+            action: "signal.entry_eval_skipped_halted",
+            entityType: "signal",
+            entityId: sessionId,
+            decisionAuthority: "system",
+            input: { sessionId, symbol } as Record<string, unknown>,
+            result: { skipped: true, reason: "kill_switch_halted" } as Record<string, unknown>,
+            status: "success",
+            correlationId: correlationId ?? null,
+          }).catch((err: unknown) =>
+            logger.warn({ err, sessionId }, "audit insert failed for signal.entry_eval_skipped_halted"),
+          );
+        }
+        span.setAttribute("entry_skipped_kill_switch_halted", true);
+        span.end();
+        return;
+      }
+    }
 
     // ─── W23H.H Stage 0: Per-account symbol whitelist ────────────────────────
     // Block entry if the symbol is not in broker_accounts.enabled_symbols for
