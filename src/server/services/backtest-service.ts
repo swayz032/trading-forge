@@ -2620,18 +2620,31 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             if (mcResult.status === "completed") {
               // Narrowed: completed branch carries the full MCResult including risk_metrics
               const mcCompleted = mcResult as { id: string; status: "completed"; risk_metrics?: Record<string, unknown> };
-              const ruinRaw = mcCompleted.risk_metrics?.probability_of_ruin;
+              // Prefer firm-breach basis (probability_of_ruin_ci.point_estimate) when present
+              // and finite; fall back to the terminal-negative scalar for legacy runs.
+              // NOTE: 0.70 survival threshold here is a coarse early filter; B14 hard gate uses ci_high at 0.20.
+              const ruinCi = mcCompleted.risk_metrics?.probability_of_ruin_ci as Record<string, unknown> | undefined;
+              const ruinPe = ruinCi != null && typeof ruinCi.point_estimate === "number" && Number.isFinite(ruinCi.point_estimate)
+                ? (ruinCi.point_estimate as number)
+                : null;
+              const ruinFallback = mcCompleted.risk_metrics?.probability_of_ruin;
+              const ruinRaw = ruinPe !== null ? ruinPe : ruinFallback;
+              const ruinBasis = ruinPe !== null
+                ? "firm_breach_ci_point_estimate"
+                : ruinFallback != null
+                  ? "terminal_negative_scalar"
+                  : "unavailable";
               if (ruinRaw != null) {
                 const ruin = Number(ruinRaw);
                 mcSurvivalRate = 1 - ruin;
                 mcPassed = mcSurvivalRate >= 0.70;
                 logger.info(
-                  { backtestId, strategyId, mcId: mcCompleted.id, survivalRate: mcSurvivalRate.toFixed(4), passed: mcPassed },
+                  { backtestId, strategyId, mcId: mcCompleted.id, survivalRate: mcSurvivalRate.toFixed(4), passed: mcPassed, ruinBasis },
                   "Auto-promote MC gate evaluated",
                 );
               } else {
                 mcUnavailable = true;
-                logger.warn({ backtestId, mcId: mcCompleted.id }, "Auto-promote MC gate: completed but probability_of_ruin missing, blocking promotion");
+                logger.warn({ backtestId, mcId: mcCompleted.id, ruinBasis }, "Auto-promote MC gate: completed but probability_of_ruin missing, blocking promotion");
               }
             } else {
               // MC failed → block promotion
