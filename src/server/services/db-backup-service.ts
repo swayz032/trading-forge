@@ -24,6 +24,7 @@
  *   DB_BACKUP_OFFTOWER_TARGET      (default: "s3" — "s3" | "none")
  *   DB_BACKUP_ENABLED              (default: "true")
  *   S3_BUCKET                      (already in .env — used for off-tower push)
+ *   S3_BACKUP_BUCKET               (optional — dedicated backup bucket; falls back to S3_BUCKET)
  *   S3_BACKUP_PREFIX               (default: "db-backups/")
  *   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION (already in .env)
  *
@@ -104,6 +105,14 @@ export function getOfftowerTarget(): "s3" | "none" {
 
 function getS3Prefix(): string {
   return process.env["S3_BACKUP_PREFIX"] ?? "db-backups/";
+}
+
+// deepscan7 M4 2026-07-02: optional dedicated backup bucket — when
+// S3_BACKUP_BUCKET is set, backups go there instead of the shared data-lake
+// S3_BUCKET (blast-radius isolation: data-lake credentials/lifecycle rules
+// can't touch backups). Falls back to S3_BUCKET unchanged when unset.
+export function getBackupBucket(): string | undefined {
+  return process.env["S3_BACKUP_BUCKET"] || process.env["S3_BUCKET"];
 }
 
 // ─── pg_dump helpers ──────────────────────────────────────────────────────────
@@ -254,7 +263,7 @@ export function isOfftowerConfigured(): boolean {
   const target = getOfftowerTarget();
   if (target === "none") return false;
   // S3 target: needs bucket name + AWS credentials
-  const bucket = process.env["S3_BUCKET"];
+  const bucket = getBackupBucket();
   const key = process.env["AWS_ACCESS_KEY_ID"];
   const secret = process.env["AWS_SECRET_ACCESS_KEY"];
   return Boolean(bucket && key && secret);
@@ -415,7 +424,7 @@ export async function runDbBackup(): Promise<DbBackupResult> {
       correlationId,
     });
   } else if (offtowerTarget === "s3") {
-    const bucket = process.env["S3_BUCKET"] as string;
+    const bucket = getBackupBucket() as string;
     const prefix = getS3Prefix();
     try {
       offtowerUrl = await pushToS3(dumpResult.filePath, bucket, prefix, filename);

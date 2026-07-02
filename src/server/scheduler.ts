@@ -143,7 +143,10 @@ const FAILURE_DISABLE_THRESHOLD = 5;
  * Credential-safety and dead-man jobs are now included so a transient vendor
  * outage (e.g. Bitwarden 12h maintenance → 5 failures over 30h) cannot
  * silently disable them and leave the vault session expired during vacation.
- * The CRITICAL alert still fires at 5 failures — disabling is suppressed only.
+ * The CRITICAL alert still fires when consecutiveFailures crosses 5 (and
+ * re-fires every 10th failure thereafter to avoid spam) — disabling is
+ * suppressed only. (deepscan7 M1 2026-07-02: the alert was previously inside
+ * the disable branch and never fired for these jobs; fixed in recordJobFailure.)
  */
 const NEVER_DISABLE_JOBS = new Set([
   // Original dead-man / monitoring infrastructure
@@ -160,6 +163,13 @@ const NEVER_DISABLE_JOBS = new Set([
   // Credential-safety jobs — transient vendor outage must not permanently disable these
   "bw-session-refresh",
   "prop-firm-cookie-refresh",
+  // deepscan7 DS7-C1 2026-07-02: the ONLY backup job — 5 consecutive nightly
+  // pg_dump failures (e.g. S3 outage, portable pg_dump path broken) must never
+  // permanently disable it; a disabled backup job = silent total-loss exposure.
+  "db-backup",
+  // deepscan7 DS7-H1 2026-07-02: Windows reboot-pending probing must never go
+  // dark — it is _PIPELINE_GATE_EXEMPT but was still auto-disableable.
+  "pre-trading-day-health-check",
 ]);
 
 // deepscan6 A2: once-per-hour-per-signature dedup for the n8n-health-check Discord WARN
@@ -169,6 +179,63 @@ const _n8nHealthAlertDedup = new Map<string, number>();
 // deepscan6 R1: 6h/strategy dedup for the rolling-Sharpe decay REVIEW Discord WARN
 // (the 4h rolling-sharpe cron would otherwise re-alert a decaying strategy every run).
 const _sharpeDecayAlertDedup = new Map<string, number>();
+
+// deepscan7 DS7-H3 2026-07-02: the autonomous-scout run is fire-and-forget and
+// routed persistent failures only to logger.error — the research pipeline could
+// be silently dark for 30 days. Track consecutive failures here; after 3 in a
+// row fire a DEDUPED Discord WARN (re-notify at most once per 24h) + audit row.
+const SCOUT_FAILURE_ALERT_THRESHOLD = 3;
+const SCOUT_FAILURE_ALERT_INTERVAL_MS = 24 * 60 * 60 * 1000;
+let _scoutConsecutiveFailures = 0;
+let _scoutLastFailureAlertAt = 0;
+
+function recordScoutRunSuccess(): void {
+  if (_scoutConsecutiveFailures > 0) {
+    logger.info(
+      { previousFailures: _scoutConsecutiveFailures },
+      "autonomous-scout-discovery: recovered after consecutive failures",
+    );
+  }
+  _scoutConsecutiveFailures = 0;
+}
+
+async function recordScoutRunFailure(err: unknown): Promise<void> {
+  _scoutConsecutiveFailures++;
+  const lastError = err instanceof Error ? err.message : String(err);
+  logger.error(
+    { err: lastError, consecutiveFailures: _scoutConsecutiveFailures },
+    "autonomous-scout-discovery: cycle failed",
+  );
+  if (_scoutConsecutiveFailures < SCOUT_FAILURE_ALERT_THRESHOLD) return;
+  const now = Date.now();
+  if (now - _scoutLastFailureAlertAt < SCOUT_FAILURE_ALERT_INTERVAL_MS) return;
+  _scoutLastFailureAlertAt = now;
+
+  notifyWarning(
+    "Scheduler: autonomous scout failing repeatedly",
+    appendFamilyGradePostscript(
+      `The autonomous scout cycle has failed ${_scoutConsecutiveFailures} times in a row (once-daily cron — that is ~${_scoutConsecutiveFailures} days dark).\nLast error: ${lastError}\nThe research pipeline is producing no new strategy candidates until this recovers.`,
+      `The bot's research assistant (which finds new strategy ideas) has failed ${_scoutConsecutiveFailures} days in a row. The bot keeps trading its existing strategies normally.`,
+      "No action needed right now. Tell Tony: 'the strategy scout keeps failing.' He will investigate.",
+    ),
+    { job: "autonomous-scout-discovery", consecutiveFailures: _scoutConsecutiveFailures },
+  );
+
+  await insertAuditRowSafe({
+    action: "scout.consecutive_failure_alert",
+    entityType: "system",
+    entityId: null,
+    decisionAuthority: "system",
+    input: {
+      job: "autonomous-scout-discovery",
+      consecutiveFailures: _scoutConsecutiveFailures,
+      alertThreshold: SCOUT_FAILURE_ALERT_THRESHOLD,
+    } as Record<string, unknown>,
+    result: { lastError, notified: true } as Record<string, unknown>,
+    status: "warning",
+    correlationId: randomUUID(),
+  });
+}
 
 function getJobHealth(name: string): JobHealth {
   let health = jobHealthTracker.get(name);
@@ -205,25 +272,47 @@ function recordJobFailure(name: string, error: unknown): void {
     );
   }
 
-  if (health.consecutiveFailures >= FAILURE_DISABLE_THRESHOLD && !health.disabled && !NEVER_DISABLE_JOBS.has(name)) {
-    health.disabled = true;
-    health.disabledAt = new Date();
-    health.disableReason = `Auto-disabled after ${health.consecutiveFailures} consecutive failures`;
+  if (health.consecutiveFailures >= FAILURE_DISABLE_THRESHOLD && !health.disabled) {
+    if (!NEVER_DISABLE_JOBS.has(name)) {
+      health.disabled = true;
+      health.disabledAt = new Date();
+      health.disableReason = `Auto-disabled after ${health.consecutiveFailures} consecutive failures`;
 
-    notifyCritical(
-      `Scheduler: ${name} AUTO-DISABLED`,
-      appendFamilyGradePostscript(
-        `Job "${name}" disabled after ${health.consecutiveFailures} consecutive failures.\nLast error: ${error instanceof Error ? error.message : String(error)}\nTo re-enable: see docs/admin-runbook.md#scheduler-re-enable`,
-        `A background maintenance job (${name}) has been automatically disabled after failing too many times. The bot continues trading, but this maintenance function is paused.`,
-        "No immediate action needed. Tell Tony: 'A scheduler job was auto-disabled.' He will re-enable it when ready.",
-      ),
-      { job: name, consecutiveFailures: health.consecutiveFailures },
-    );
+      notifyCritical(
+        `Scheduler: ${name} AUTO-DISABLED`,
+        appendFamilyGradePostscript(
+          `Job "${name}" disabled after ${health.consecutiveFailures} consecutive failures.\nLast error: ${error instanceof Error ? error.message : String(error)}\nTo re-enable: see docs/admin-runbook.md#scheduler-re-enable`,
+          `A background maintenance job (${name}) has been automatically disabled after failing too many times. The bot continues trading, but this maintenance function is paused.`,
+          "No immediate action needed. Tell Tony: 'A scheduler job was auto-disabled.' He will re-enable it when ready.",
+        ),
+        { job: name, consecutiveFailures: health.consecutiveFailures },
+      );
 
-    logger.error(
-      { job: name, consecutiveFailures: health.consecutiveFailures },
-      "Scheduler: job AUTO-DISABLED due to repeated failures",
-    );
+      logger.error(
+        { job: name, consecutiveFailures: health.consecutiveFailures },
+        "Scheduler: job AUTO-DISABLED due to repeated failures",
+      );
+    } else if ((health.consecutiveFailures - FAILURE_DISABLE_THRESHOLD) % 10 === 0) {
+      // deepscan7 M1 2026-07-02: never-disable jobs previously never fired this
+      // CRITICAL (both the disable AND the alert sat behind the same guard, so
+      // e.g. db-backup could fail forever with only a single WARN at 3). Fire
+      // at the exact threshold crossing, then re-fire every 10th failure —
+      // never every tick — so a multi-day outage stays visible without spam.
+      notifyCritical(
+        `Scheduler: ${name} failing persistently (never-disable job)`,
+        appendFamilyGradePostscript(
+          `Job "${name}" has failed ${health.consecutiveFailures} times in a row.\nLast error: ${error instanceof Error ? error.message : String(error)}\nThis job is critical infrastructure and is NEVER auto-disabled — it will keep retrying, but the underlying failure needs investigation.`,
+          `A critical background job (${name}) keeps failing. The bot continues trading, but this safety function is not working.`,
+          "No immediate action needed. Tell Tony: 'A critical scheduler job keeps failing.' He should investigate soon.",
+        ),
+        { job: name, consecutiveFailures: health.consecutiveFailures, neverDisable: true },
+      );
+
+      logger.error(
+        { job: name, consecutiveFailures: health.consecutiveFailures },
+        "Scheduler: never-disable job failing persistently — disabling suppressed, CRITICAL fired",
+      );
+    }
   }
 }
 
@@ -603,6 +692,16 @@ export const _testOnly = {
    * requiring a server boot or cron tick.
    */
   resumeActivePaperSessions,
+  // deepscan7 DS7-H3 2026-07-02: scout consecutive-failure tracker test seams.
+  recordScoutRunFailure,
+  recordScoutRunSuccess,
+  resetScoutFailureTracker(): void {
+    _scoutConsecutiveFailures = 0;
+    _scoutLastFailureAlertAt = 0;
+  },
+  getScoutFailureState(): { consecutiveFailures: number; lastAlertAt: number } {
+    return { consecutiveFailures: _scoutConsecutiveFailures, lastAlertAt: _scoutLastFailureAlertAt };
+  },
 };
 
 export async function reconcileMissedRuns() {
@@ -739,9 +838,16 @@ function registerDLQHandlers(): void {
   );
 }
 
-export function initScheduler() {
+// deepscan7 D2 (2026-07-02): optional boot correlationId threads the single boot
+// trace (boot.started → migrations → scheduler → boot.completed) into scheduler
+// startup logging. initScheduler writes no startup audit row today; if one is
+// added later it MUST carry this id. Default preserved — no caller breaks.
+export function initScheduler(bootCorrelationId: string | null = null) {
   if (initialized) return;
   initialized = true;
+  if (bootCorrelationId) {
+    logger.info({ correlationId: bootCorrelationId }, "Scheduler: initializing (boot-correlated)");
+  }
 
   // ─── Emit scheduler:job-complete after each successful job ───
   function emitJobComplete(name: string, durationMs: number) {
@@ -1031,8 +1137,11 @@ export function initScheduler() {
     logger.info({ todayKey, hourUtc }, "autonomous-scout-discovery: firing once-daily cycle");
     const { runAutonomousScoutCycle } = await import("./services/autonomous-scout-runner.js");
     runAutonomousScoutCycle()
-      .then((result) => logger.info({ result }, "autonomous-scout-discovery: cycle complete"))
-      .catch((err) => logger.error({ err: err instanceof Error ? err.message : String(err) }, "autonomous-scout-discovery: cycle failed"));
+      .then((result) => {
+        recordScoutRunSuccess();
+        logger.info({ result }, "autonomous-scout-discovery: cycle complete");
+      })
+      .catch((err) => void recordScoutRunFailure(err));
   });
 
   // ─── Track C F-1: cron driver for autonomous-scout-discovery ────────────
@@ -5291,7 +5400,9 @@ except Exception as e:
       // NOT pipeline-gated — safety signal (in _PIPELINE_GATE_EXEMPT)
       logger.info("Scheduler: db-backup (02:00 AM ET confirmed)");
       const t0db = Date.now();
-      await withRetry("db-backup", SCHEDULER_JOBS["db-backup"].run, 1);
+      // deepscan7 L2 2026-07-02: 3 retries like other jobs — the only backup
+      // job should not give up after a single transient pg_dump/S3 hiccup.
+      await withRetry("db-backup", SCHEDULER_JOBS["db-backup"].run, 3);
       markJobRun("db-backup");
       emitJobComplete("db-backup", Date.now() - t0db);
     } finally {
