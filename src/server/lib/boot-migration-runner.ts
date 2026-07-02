@@ -297,6 +297,66 @@ async function findMissingTables(tables: string[]): Promise<string[]> {
   return missing;
 }
 
+// deepscan7 D1 (2026-07-02): the O6 check above only covers CREATE TABLE targets.
+// Pure-ALTER migrations (ADD COLUMN — the exact class behind the 0146/0148
+// phantom-applies) previously received ZERO post-apply verification: the journal
+// said applied while the column was missing, surfacing only when a later
+// migration collided or a runtime query hit "column does not exist". Mirror the
+// O6 approach: parse ALTER TABLE ... ADD COLUMN targets and verify each
+// (table, column) pair against information_schema.columns. Same NON-BLOCKING
+// contract — mismatch is a loud, audited warning, never a boot block.
+
+export interface AlteredColumn {
+  table: string;
+  column: string;
+}
+
+export function extractAlteredColumns(statements: string[]): AlteredColumn[] {
+  const seen = new Set<string>();
+  const out: AlteredColumn[] = [];
+  const alterRe = /alter\s+table\s+(?:if\s+exists\s+)?(?:only\s+)?["']?([a-z0-9_]+(?:\.[a-z0-9_]+)?)["']?/gi;
+  const addColRe = /add\s+column\s+(?:if\s+not\s+exists\s+)?["']?([a-z0-9_]+)["']?/gi;
+  for (const stmt of statements) {
+    // A single breakpoint-split chunk may still hold several ;-separated statements.
+    for (const piece of stmt.split(";")) {
+      alterRe.lastIndex = 0;
+      const alterMatch = alterRe.exec(piece);
+      if (!alterMatch) continue;
+      const rawTable = alterMatch[1];
+      const table = (rawTable.includes(".") ? rawTable.split(".").pop()! : rawTable).toLowerCase();
+      if (table === "__drizzle_migrations") continue;
+      addColRe.lastIndex = 0;
+      let colMatch: RegExpExecArray | null;
+      while ((colMatch = addColRe.exec(piece)) !== null) {
+        const column = colMatch[1].toLowerCase();
+        const key = `${table}.${column}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push({ table, column });
+      }
+    }
+  }
+  return out;
+}
+
+async function findMissingColumns(columns: AlteredColumn[]): Promise<AlteredColumn[]> {
+  const missing: AlteredColumn[] = [];
+  for (const c of columns) {
+    try {
+      const res = await db.execute<{ exists: number }>(
+        sql`SELECT 1 AS exists FROM information_schema.columns WHERE table_name = ${c.table} AND column_name = ${c.column} LIMIT 1`,
+      );
+      const rows =
+        (res as { rows?: unknown[] }).rows ?? (res as unknown as unknown[]);
+      if (!Array.isArray(rows) || rows.length === 0) missing.push(c);
+    } catch (verifyErr) {
+      // Same non-blocking contract as findMissingTables.
+      logger.warn({ table: c.table, column: c.column, err: String(verifyErr) }, "boot-migration: post-apply column verify query failed");
+    }
+  }
+  return missing;
+}
+
 // ─── Core migration runner ────────────────────────────────────────────────────
 
 /**
@@ -308,7 +368,12 @@ async function findMissingTables(tables: string[]): Promise<string[]> {
  *   - No pending migrations exist
  *   - Journal file is absent (bare repo / test environment)
  */
-export async function runPendingMigrations(): Promise<void> {
+export async function runPendingMigrations(
+  // deepscan7 D1 (2026-07-02): optional boot correlationId so migration.* audit
+  // rows join the same boot trace as boot.started/boot.completed (was hardcoded
+  // null). Default preserves prior behavior for any caller not threading one.
+  correlationId: string | null = null,
+): Promise<void> {
   // ─── Kill-switch gate ───────────────────────────────────────────────────────
   const enabled = (process.env.BOOT_MIGRATION_ENABLED ?? "true").toLowerCase();
   if (enabled === "false" || enabled === "0") {
@@ -435,6 +500,7 @@ export async function runPendingMigrations(): Promise<void> {
         result: { skipped: true } as Record<string, unknown>,
         status: "error",
         errorMessage: `boot-migration SQL file missing: ${sqlFilePath}`,
+        correlationId,
       });
       await fireDiscordCritical(
         "Boot migration SQL file missing",
@@ -537,32 +603,46 @@ export async function runPendingMigrations(): Promise<void> {
         } as Record<string, unknown>,
         result: { duration_ms: durationMs, hash } as Record<string, unknown>,
         status: "success",
-        correlationId: null,
+        correlationId,
       });
 
       // O6: verify the migration's CREATE TABLE targets actually exist post-commit.
+      // deepscan7 D1 (2026-07-02): extended to ALTER TABLE ... ADD COLUMN targets —
+      // the pure-ALTER class (0146/0148) previously got zero verification.
       // Loud + audited on mismatch; never blocks boot (avoid false-close on parser gaps).
       try {
         const expectedTables = extractCreatedTables(statements);
         const missingTables = expectedTables.length ? await findMissingTables(expectedTables) : [];
-        if (missingTables.length > 0) {
+        const expectedColumns = extractAlteredColumns(statements);
+        const missingColumns = expectedColumns.length ? await findMissingColumns(expectedColumns) : [];
+        if (missingTables.length > 0 || missingColumns.length > 0) {
           logger.error(
-            { tag: entry.tag, missingTables },
-            "boot-migration: POST-APPLY VERIFICATION FAILED — migration committed but table(s) missing (phantom-apply)",
+            { tag: entry.tag, missingTables, missingColumns },
+            "boot-migration: POST-APPLY VERIFICATION FAILED — migration committed but schema object(s) missing (phantom-apply)",
           );
           await insertAuditRowSafe({
             action: "migration.post_apply_verification_failed",
             entityType: "system",
             entityId: null,
             decisionAuthority: "gate",
-            input: { migration_name: entry.tag, journal_idx: entry.idx, expected_tables: expectedTables } as Record<string, unknown>,
-            result: { missing_tables: missingTables } as Record<string, unknown>,
+            input: {
+              migration_name: entry.tag,
+              journal_idx: entry.idx,
+              expected_tables: expectedTables,
+              expected_columns: expectedColumns,
+            } as Record<string, unknown>,
+            result: { missing_tables: missingTables, missing_columns: missingColumns } as Record<string, unknown>,
             status: "warning",
-            correlationId: null,
+            correlationId,
           });
+          const missingColumnDescs = missingColumns.map((c) => `${c.table}.${c.column}`);
+          const missingParts = [
+            ...(missingTables.length ? [`table(s): ${missingTables.join(", ")}`] : []),
+            ...(missingColumnDescs.length ? [`column(s): ${missingColumnDescs.join(", ")}`] : []),
+          ];
           await fireDiscordCritical(
             `Migration verification mismatch: ${entry.tag}`,
-            `Migration ${entry.tag} committed but expected table(s) are missing from the DB: ${missingTables.join(", ")}.\n\n` +
+            `Migration ${entry.tag} committed but expected schema object(s) are missing from the DB — ${missingParts.join("; ")}.\n\n` +
               `This is the phantom-apply class (journal says applied, schema object absent). Investigate before the next migration collides. Not blocking boot.`,
           );
         }
@@ -605,7 +685,7 @@ export async function runPendingMigrations(): Promise<void> {
         } as Record<string, unknown>,
         result: { error: errMsg, duration_ms: durationMs } as Record<string, unknown>,
         status: "failure",
-        correlationId: null,
+        correlationId,
       });
 
       // Discord CRITICAL — fire-and-forget, never blocks

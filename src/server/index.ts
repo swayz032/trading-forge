@@ -100,6 +100,35 @@ import { fillCallbackRoutes } from "./routes/fill-callback.js";
 import { leakDetectionRoutes } from "./routes/leak-detection.js";
 import { runPendingMigrations } from "./lib/boot-migration-runner.js";
 import { checkStartupSecrets } from "./lib/startup-config-check.js";
+import { insertAuditRowSafe } from "./lib/audit-log-helper.js";
+
+// ─── Boot correlation (deepscan7 D2 / obs-M5, 2026-07-02) ─────────
+// ONE bootCorrelationId minted BEFORE migrations/scheduler/regime-bank so every
+// boot-sequence audit row (boot.started, migration.*, track_completed,
+// regime-bank self-heal, boot.completed) is traceable as a single group.
+// Previously the id was minted inside the app.listen callback (missing the
+// migration runner entirely) and ensureRegimeBankPopulated minted its OWN
+// second `boot-${epoch}` string — fragmented boot traces.
+const bootCorrelationId = `boot-${Date.now()}`;
+
+// boot.started — written before migrations so a migration-blocked boot still
+// leaves an attributable trace. insertAuditRowSafe never throws (a DB that is
+// down here will fail the migration runner loudly anyway).
+await insertAuditRowSafe({
+  action: "boot.started",
+  entityType: "system",
+  entityId: null,
+  decisionAuthority: "system",
+  input: {
+    version: process.env.npm_package_version ?? "dev",
+    node_env: process.env.NODE_ENV ?? null,
+    port: Number(process.env.PORT) || 4000,
+    pid: process.pid,
+  } as Record<string, unknown>,
+  result: { phase: "pre_migrations" } as Record<string, unknown>,
+  status: "info",
+  correlationId: bootCorrelationId,
+});
 
 // ─── Boot migration runner ────────────────────────────────────────
 // Apply any pending Drizzle migrations BEFORE app.listen() and BEFORE any
@@ -107,7 +136,7 @@ import { checkStartupSecrets } from "./lib/startup-config-check.js";
 // gate that prevents vacation-mode migration drift from breaking production.
 // Throws on failure to block boot (fail-closed). No-ops when all applied.
 // Controlled by BOOT_MIGRATION_ENABLED env var (default: true).
-await runPendingMigrations();
+await runPendingMigrations(bootCorrelationId);
 
 // ─── Vacation-survival A-8: Boot-time secret validation ──────────
 // Emits WARN log + Discord notify when ADMIN_RESTART_HMAC_SECRET is unset
@@ -637,10 +666,24 @@ process.on("uncaughtException", (err) => {
 export const server = app.listen(port, () => {
   logger.info(`Trading Forge running on http://localhost:${port}`);
 
-  // O8: Single correlationId for all boot-sequence audit rows so startup events
-  // are traceable as a group. Convention matches the existing boot-${Date.now()}
-  // pattern already used at line ~858 (ensureRegimeBankPopulated call).
-  const bootCorrelationId = `boot-${Date.now()}`;
+  // deepscan7 D2 (2026-07-02): bootCorrelationId is now the SINGLE module-level id
+  // minted before migrations (top of this file) — the local re-mint that used to
+  // live here fragmented the boot trace. boot.completed closes the trace group.
+  void insertAuditRowSafe({
+    action: "boot.completed",
+    entityType: "system",
+    entityId: null,
+    decisionAuthority: "system",
+    input: {
+      version: process.env.npm_package_version ?? "dev",
+      node_env: process.env.NODE_ENV ?? null,
+      port,
+      pid: process.pid,
+    } as Record<string, unknown>,
+    result: { phase: "listening", uptime_seconds: Math.round(process.uptime()) } as Record<string, unknown>,
+    status: "info",
+    correlationId: bootCorrelationId,
+  });
 
   // ─── Production HTTP server timeouts ─────────────────────────
   // Without these, a single slow/stuck client can hold a connection open
@@ -860,7 +903,9 @@ export const server = app.listen(port, () => {
   // If bank is populated → logs + emits skipped audit. Never blocks app.listen.
   // Governance: CHALLENGER-ONLY / ADVISORY — populate output is advisory only.
   import("./services/synthetic-regime-bank-service.js").then(({ ensureRegimeBankPopulated }) => {
-    ensureRegimeBankPopulated(`boot-${Date.now()}`).catch((err: unknown) => {
+    // deepscan7 D2 (2026-07-02): reuse the single boot id (was a second self-minted
+    // `boot-${Date.now()}` that split the boot trace into two correlation groups).
+    ensureRegimeBankPopulated(bootCorrelationId).catch((err: unknown) => {
       logger.warn({ err }, "synthetic_regime_bank: boot self-heal failed (non-blocking)");
     });
   }).catch((err: unknown) => {
@@ -876,8 +921,8 @@ export const server = app.listen(port, () => {
     initAgentCoordination();
   } else {
     import("./scheduler.js").then(({ initScheduler }) => {
-      initScheduler();
-      logger.info("Scheduler initialized");
+      initScheduler(bootCorrelationId);
+      logger.info({ correlationId: bootCorrelationId }, "Scheduler initialized");
       // Wire typed agent event bus AFTER scheduler so cross-domain handlers
       // can subscribe to lifecycle/risk/compliance/health events.
       initAgentCoordination();
