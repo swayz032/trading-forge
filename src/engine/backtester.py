@@ -264,16 +264,28 @@ def apply_eligibility_gate(
         gate_stats["passthrough_reason"] = passthrough_reason or "htf_cache_none_or_empty"
         return entry_signals, exit_signals, gate_stats
 
-    gate_stats["mode"] = "tf_institutional_overlay"
-
     # Unregistered strategy bypass: if strategy_name doesn't appear in ANY
     # playbook's allowed_strategies, skip the gate entirely. This prevents
     # new/unregistered strategies from being silently killed during backtesting.
+    #
+    # HONESTY FIX (Band B / spec-onboarding-bridge, 2026-07-02): this check MUST
+    # run BEFORE gate_stats["mode"] is stamped "tf_institutional_overlay" — a
+    # verified deep-scan finding this session was that the mode label was set
+    # unconditionally at this point, so an unregistered-strategy bypass produced
+    # a gate_stats blob indistinguishable from a run where the 7-layer overlay
+    # genuinely executed. Every Mode A/B research run and every onboarded
+    # strategy backtest was silently unfiltered with no queryable signal.
+    # Mirrors the sibling fix already shipped for the htf_cache passthrough
+    # above (gate_stats["mode"] = "passthrough_htf_unavailable").
     from src.engine.context.playbook_router import ALL_STRATS
     strat_normalized = strategy_name.lower().replace("strategy", "").strip().replace("_", "")
     all_normalized = [s.lower().replace("_", "") for s in ALL_STRATS]
     if strat_normalized and strat_normalized not in all_normalized:
+        gate_stats["mode"] = "passthrough_strategy_unregistered"
+        gate_stats["passthrough_reason"] = f"strategy_name={strategy_name!r} not in playbook_router.ALL_STRATS"
         return entry_signals, exit_signals, gate_stats
+
+    gate_stats["mode"] = "tf_institutional_overlay"
 
     filtered = entry_signals.copy()
     signal_indices = np.where(entry_signals)[0]
