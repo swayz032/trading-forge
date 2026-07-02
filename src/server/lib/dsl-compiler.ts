@@ -52,7 +52,10 @@
 import { logger } from "./logger.js";
 
 export interface PrimitiveIndicator {
-  type: "sma" | "ema" | "rsi" | "atr" | "macd" | "bbands" | "vwap" | "adx" | "adr" | "opening_range_breakout" | "donchian";
+  // FIX 4 (2026-07-02): added "vwap_with_bands" and "anchored_vwap" to match
+  // the Python IndicatorConfig VALID_INDICATOR_TYPES set (config.py) and the
+  // LTF dispatch in compute_indicators() (core.py lines 630-636).
+  type: "sma" | "ema" | "rsi" | "atr" | "macd" | "bbands" | "vwap" | "adx" | "adr" | "opening_range_breakout" | "donchian" | "vwap_with_bands" | "anchored_vwap";
   period?: number;
   fast?: number;
   slow?: number;
@@ -61,6 +64,8 @@ export interface PrimitiveIndicator {
   // ORB-specific (opening_range_breakout)
   range_minutes?: number;
   session_start_et?: string;
+  // anchored_vwap-specific: the timestamp from which cumulative VWAP accumulates
+  anchor_ts?: Date;
 }
 
 /** One confirming indicator in a confluence strategy. All fields required. */
@@ -79,6 +84,12 @@ export interface CompiledStrategy {
   compileNotes: string[];
   /** Set to true when a bias_timeframe was present but could not be compiled (MTF unsupported) */
   mtfUnsupported?: boolean;
+  /**
+   * FIX 3 (2026-07-02): Structured compiler warnings for programmatic downstream consumption.
+   * Populated when a semantic downgrade occurs (e.g. N-of-M → AND-all).
+   * Graduates also surface these via compileNotes in the audit row.
+   */
+  compiler_warnings?: string[];
 }
 
 export interface DslCompileInput {
@@ -244,7 +255,7 @@ function compileConfirmingIndicator(
     );
     return {
       longClause, shortClause,
-      indicators: [{ type: "opening_range_breakout" as any, period: rangeMin, range_minutes: rangeMin, session_start_et: sessionStart }],
+      indicators: [{ type: "opening_range_breakout", period: rangeMin, range_minutes: rangeMin, session_start_et: sessionStart }],
     };
   }
 
@@ -291,11 +302,18 @@ export function compileDslToEngine(input: DslCompileInput): CompiledStrategy | n
     const period = num(p.period, defaultPeriod);
     const oversold = num(p.oversold, defaultOversold);
     const overbought = num(p.overbought, defaultOverbought);
-    notes.push(`${ind}{period=${period},over=${oversold}/${overbought}} → rsi_${period} thresholds`);
+    // FIX 2 (2026-07-02): rsi_reversal prose intent is "bounce from oversold" —
+    // the entry fires when RSI CROSSES BACK ABOVE the oversold level, NOT while
+    // it sits below it (which would fire every bar in an oversold regime).
+    // Previous: `rsi_${period} < ${oversold}` — LEVEL: fires every oversold bar.
+    // Fixed:   `rsi_${period} crosses_above ${oversold}` — fires on the cross-back.
+    // Same fix for short: crosses_below overbought (was `> overbought` every bar).
+    // Scope: FUTURE compiles only — existing rows keep old grammar (schema version unchanged).
+    notes.push(`${ind}{period=${period},over=${oversold}/${overbought}} → rsi_${period} crosses threshold (crosses_above ${oversold} / crosses_below ${overbought})`);
     return {
       indicators: [{ type: "rsi", period }],
-      entry_long:  dir === "short" ? "high < low" : `rsi_${period} < ${oversold}`,
-      entry_short: dir === "long"  ? "high < low" : `rsi_${period} > ${overbought}`,
+      entry_long:  dir === "short" ? "high < low" : `rsi_${period} crosses_above ${oversold}`,
+      entry_short: dir === "long"  ? "high < low" : `rsi_${period} crosses_below ${overbought}`,
       compileNotes: notes,
     };
   }
@@ -353,7 +371,7 @@ export function compileDslToEngine(input: DslCompileInput): CompiledStrategy | n
       "F-7 fix: compute_donchian() in core.py (rolling_max/min shift(1), no lookahead).",
     );
     return {
-      indicators: [{ type: "atr" as any, period: 14 }, { type: "donchian" as any, period }],
+      indicators: [{ type: "atr", period: 14 }, { type: "donchian", period }],
       entry_long:  dir === "short" ? "high < low" : `close > donchian_upper_${period}`,
       entry_short: dir === "long"  ? "high < low" : `close < donchian_lower_${period}`,
       compileNotes: notes,
@@ -371,7 +389,7 @@ export function compileDslToEngine(input: DslCompileInput): CompiledStrategy | n
     notes.push(`session_open_breakout{range_minutes=${rangeMinutes}} → opening_range_breakout indicator → close > orh_${rangeMinutes}m`);
     return {
       indicators: [
-        { type: "opening_range_breakout" as any, period: rangeMinutes, range_minutes: rangeMinutes, session_start_et: sessionStartEt },
+        { type: "opening_range_breakout", period: rangeMinutes, range_minutes: rangeMinutes, session_start_et: sessionStartEt },
         { type: "atr", period: 14 },
       ],
       entry_long:  dir === "short" ? "high < low" : `close > orh_${rangeMinutes}m`,
@@ -593,12 +611,18 @@ export function applyConfluenceToCompiled(
   const totalFactors = 1 + confirmings.length; // primary + all confirmings
   const satisfiedTarget = input.min_factors_satisfied ?? totalFactors;
 
+  // FIX 3 (2026-07-02): N-of-M semantic disclosure.
+  // Engine grammar does not support OR-counting semantics; when min_factors_satisfied < total,
+  // we AND-chain all conditions (conservative fallback). This is now DISCLOSED via:
+  //   1. compileNotes — surfaced in the graduator audit row via compile_notes field (line 2192).
+  //   2. compiler_warnings — structured field for programmatic downstream consumers.
+  const compilerWarnings: string[] = [];
   if (satisfiedTarget < totalFactors) {
     // Partial-satisfaction (N-of-M) is not natively expressible in the grammar
     // without counting semantics. Fall back to AND-chain (conservative; requires all).
-    notes.push(
-      `confluence.min_factors_satisfied=${satisfiedTarget}/${totalFactors}: OR-counting not supported in grammar — AND-chaining all conditions (conservative fallback; requires all factors)`,
-    );
+    const warningMsg = `n_of_m_downgraded_to_and_all: requested ${satisfiedTarget}/${totalFactors} factors satisfied; grammar requires all — AND-chaining all conditions (conservative; avoids broken OR-counting grammar)`;
+    notes.push(`confluence.min_factors_satisfied=${satisfiedTarget}/${totalFactors}: ${warningMsg}`);
+    compilerWarnings.push(warningMsg);
   }
 
   // Deduplicate indicators by type+period (avoids duplicate ema_9, ema_21 in array)
@@ -631,6 +655,8 @@ export function applyConfluenceToCompiled(
     entry_long: finalEntryLong,
     entry_short: finalEntryShort,
     compileNotes: notes,
+    // FIX 3: include compiler_warnings when N-of-M downgrade occurred
+    ...(compilerWarnings.length > 0 ? { compiler_warnings: compilerWarnings } : {}),
     // mtfUnsupported removed (W23H.1): MTF is now supported via AND-gate.
     // The field is still in CompiledStrategy type for backward compat with callers
     // that may read it. When bias_timeframe is set and bias_condition is non-empty,

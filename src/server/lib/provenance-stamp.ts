@@ -202,6 +202,15 @@ export interface ProvenanceStamp {
   stamped_at: string;
   /** true ONLY for legacy backfill rows (PROVENANCE_ALLOW_LEGACY_BACKFILL=true) */
   legacy?: boolean;
+  /**
+   * FIX 5 (deepscan11 Track P, 2026-07-02): honesty flag.
+   * false when spec_provenance_ref === "none" — i.e., the strategy was manually
+   * crafted with no extraction-chain lineage. Additive only: no blocking effect.
+   * Callers (e.g. backtest-service.ts) emit provenance.ungrounded_stamp info audit
+   * on the first encounter per strategy so ungrounded-lineage backtests are
+   * queryable without silencing the promotion-gate inputs.
+   */
+  spec_grounded: boolean;
 }
 
 export interface ProvenanceStampOptions {
@@ -241,6 +250,9 @@ export function buildProvenanceStamp(opts: ProvenanceStampOptions): ProvenanceSt
     spec_provenance_ref: opts.specProvenanceRef,
     git_sha: gitSha,
     stamped_at: new Date().toISOString(),
+    // FIX 5: false when strategy has no extraction-chain lineage ("none" sentinel).
+    // Callers use this to emit a deduped provenance.ungrounded_stamp info audit.
+    spec_grounded: opts.specProvenanceRef !== "none",
   };
 }
 
@@ -344,6 +356,8 @@ export function buildLegacyProvenanceStamp(
     git_sha: gitSha,
     stamped_at: new Date().toISOString(),
     legacy: true,
+    // Legacy rows are never extraction-chain grounded — set false conservatively.
+    spec_grounded: false,
   };
 }
 

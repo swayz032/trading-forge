@@ -53,6 +53,12 @@ import { buildBacktestArgs } from "../lib/backtest-args.js";
 import { randomUUID } from "node:crypto";
 export { buildBacktestArgs };
 
+// FIX 5 (deepscan11 Track P, 2026-07-02): dedupe set for provenance.ungrounded_stamp
+// info audit. We only want to emit once per strategy per process lifetime — not once
+// per backtest run. This is process-local; across restarts the audit is re-emitted
+// at most once, which is acceptable for an info-level signal.
+const _ungroundedStampLogged = new Set<string>();
+
 /**
  * Normalize gate_result from Python into a stable JSONB shape.
  *
@@ -493,6 +499,26 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     };
     const builtStamp = buildProvenanceStamp(stampOpts);
     provenanceStampValue = assertProvenanceStamp(builtStamp, stampOpts);
+    // FIX 5: emit a deduped info audit row when the strategy has no extraction-chain
+    // lineage (spec_provenance_ref === "none"). This makes ungrounded strategies
+    // queryable via audit_log without blocking or distorting any gate output.
+    if (!builtStamp.spec_grounded && strategyId && !_ungroundedStampLogged.has(strategyId)) {
+      _ungroundedStampLogged.add(strategyId);
+      void insertAuditRowSafe({
+        action: "provenance.ungrounded_stamp",
+        entityType: "strategy",
+        entityId: strategyId,
+        status: "info",
+        input: { strategyId, spec_provenance_ref: builtStamp.spec_provenance_ref } as Record<string, unknown>,
+        result: { note: "strategy has no extraction-chain lineage; spec_grounded=false" } as Record<string, unknown>,
+        correlationId,
+        decisionAuthority: "system",
+      });
+      logger.info(
+        { fn: "runBacktest", strategyId, spec_provenance_ref: builtStamp.spec_provenance_ref, correlationId },
+        "provenance.ungrounded_stamp: strategy has no extraction-chain lineage — manually crafted (info only, not blocking)",
+      );
+    }
   } catch (err) {
     if (err instanceof ProvenanceStampError) {
       // Write audit row for the refusal so operators can diagnose missing provenance

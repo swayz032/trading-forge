@@ -27,7 +27,7 @@
  *     "openclaw" from the Python compiler (which is wrong for graduated_bucket
  *     and any future source we add).
  */
-import { logger } from "../index.js";
+import { logger } from "../lib/logger.js";
 
 export type StrategySource = "ollama" | "openclaw" | "manual" | "graduated_bucket";
 
@@ -180,6 +180,13 @@ interface OverlayResult {
   config: CompiledConfig;
   warnings: string[];
   appliedRules: string[];
+  /**
+   * FIX 1 (2026-07-02): Structured audit events emitted during overlay.
+   * Callers that have DB access (e.g. agent-service.ts) write these to audit_log.
+   * Callers without DB access (pure pipeline) may ignore — all information is also
+   * in warnings/appliedRules for log visibility.
+   */
+  overlayAuditRows?: Array<{ action: string; status: string; data: Record<string, unknown> }>;
 }
 
 /**
@@ -213,6 +220,7 @@ export function applyFrameworkOverlay(input: OverlayInput): OverlayResult {
   const cfg: CompiledConfig = JSON.parse(JSON.stringify(input.compiled));
   const warnings: string[] = [];
   const applied: string[] = [];
+  const overlayAuditRows: Array<{ action: string; status: string; data: Record<string, unknown> }> = [];
 
   cfg.metadata = cfg.metadata ?? {};
   if (cfg.metadata.source !== input.source) {
@@ -228,6 +236,25 @@ export function applyFrameworkOverlay(input: OverlayInput): OverlayResult {
   if (cfg.exit_type === "fixed_target") {
     cfg.exit_type = "trailing_stop";
     applied.push("exit_type: fixed_target → trailing_stop (Style C normalize)");
+  }
+
+  // FIX 1 (2026-07-02): exit_type allowlist enforcement.
+  // The engine's ExitType enum (src/engine/compiler/strategy_schema.py) accepts exactly:
+  //   "fixed_target" (already normalized above), "trailing_stop", "time_exit", "indicator_signal".
+  // Any other LLM-supplied string (e.g. "momentum_exit", "atr_trailing") passes through to engine
+  // dispatch today, silently causing compile-reject downstream. Normalize to "trailing_stop".
+  // Archetype sentinel strategies with exit_type undefined are unaffected (undefined check guards).
+  const VALID_EXIT_TYPES = new Set(["fixed_target", "trailing_stop", "time_exit", "indicator_signal"]);
+  if (cfg.exit_type !== undefined && cfg.exit_type !== null && !VALID_EXIT_TYPES.has(cfg.exit_type as string)) {
+    const originalExitType = cfg.exit_type as string;
+    cfg.exit_type = "trailing_stop";
+    applied.push(`exit_type: '${originalExitType}' → trailing_stop (not in valid ExitType enum; normalized)`);
+    warnings.push(`exit_type '${originalExitType}' is not a valid engine ExitType — normalized to trailing_stop`);
+    overlayAuditRows.push({
+      action: "graduation.exit_type_normalized",
+      status: "warning",
+      data: { original_exit_type: originalExitType, normalized_to: "trailing_stop" },
+    });
   }
 
   const styleCExitProse = `Style C 33/33/33: TP1 ${Math.round(FRAMEWORK.styleC.tp1_size_pct * 100)}% @ ${FRAMEWORK.styleC.tp1_at_r}R / TP2 ${Math.round(FRAMEWORK.styleC.tp2_size_pct * 100)}% @ ${FRAMEWORK.styleC.tp2_at_r}R / runner ${Math.round(FRAMEWORK.styleC.runner_size_pct * 100)}% trails ${FRAMEWORK.styleC.runner_trail_primary} (Chandelier fallback). BE+1tick stop on TP1 fill.`;
@@ -481,7 +508,12 @@ export function applyFrameworkOverlay(input: OverlayInput): OverlayResult {
     "framework-overlay applied",
   );
 
-  return { config: cfg, warnings, appliedRules: applied };
+  return {
+    config: cfg,
+    warnings,
+    appliedRules: applied,
+    ...(overlayAuditRows.length > 0 ? { overlayAuditRows } : {}),
+  };
 }
 
 export const __frameworkDefaults = FRAMEWORK;
