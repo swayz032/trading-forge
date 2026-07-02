@@ -1,6 +1,6 @@
 import { db } from "../db/index.js";
 import { deadLetterQueue } from "../db/schema.js";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, asc, lt } from "drizzle-orm";
 import { logger } from "../lib/logger.js";
 import { notifyCritical } from "../services/notification-service.js";
 import { appendFamilyGradePostscript } from "./notification-helpers.js";
@@ -61,7 +61,17 @@ export async function retryDLQItem(id: string): Promise<boolean> {
 
   const handler = retryHandlers.get(item.operationType);
   if (!handler) {
-    logger.warn({ dlqId: id, operationType: item.operationType }, "No retry handler registered for operation type");
+    // Increment retryCount so handler-less items eventually reach maxRetries and
+    // become eligible for escalateDLQ. Without this, retryCount stays at 0 forever
+    // and escalateDLQ (which gates on retryCount >= maxRetries) can never fire.
+    // Age-based escalation via escalateDLQByAge also catches them as a backstop.
+    await db.update(deadLetterQueue)
+      .set({ retryCount: item.retryCount + 1, lastFailedAt: new Date() })
+      .where(eq(deadLetterQueue.id, id));
+    logger.warn(
+      { dlqId: id, operationType: item.operationType, retryCount: item.retryCount + 1 },
+      "No retry handler registered — retryCount incremented for escalation eligibility",
+    );
     return false;
   }
 
@@ -100,6 +110,7 @@ export async function retryAllUnresolved(): Promise<{ attempted: number; resolve
       eq(deadLetterQueue.escalated, false),
       sql`${deadLetterQueue.retryCount} < ${deadLetterQueue.maxRetries}`,
     ))
+    .orderBy(asc(deadLetterQueue.createdAt)) // oldest-first so stale items drain before new ones
     .limit(50); // Process in batches
 
   let resolved = 0;
@@ -148,6 +159,52 @@ export async function escalateDLQ(): Promise<number> {
     logger.error(
       { dlqId: item.id, operationType: item.operationType, retryCount: item.retryCount },
       "DLQ item escalated — max retries exceeded",
+    );
+  }
+
+  return items.length;
+}
+
+/**
+ * Escalate items that have exceeded the age SLO, regardless of retryCount.
+ *
+ * Complements escalateDLQ (which gates on retryCount >= maxRetries) for items
+ * that can never accumulate retries — specifically handler-less operationTypes
+ * such as "scheduler:*" and "agent:*" that have no registered retry handler.
+ *
+ * Configured by DLQ_MAX_AGE_HOURS env var (default: 48h).
+ */
+export async function escalateDLQByAge(): Promise<number> {
+  const maxAgeHours = Number(process.env.DLQ_MAX_AGE_HOURS ?? 48);
+  const cutoff = new Date(Date.now() - maxAgeHours * 60 * 60 * 1000);
+
+  const items = await db.select().from(deadLetterQueue)
+    .where(and(
+      eq(deadLetterQueue.resolved, false),
+      eq(deadLetterQueue.escalated, false),
+      lt(deadLetterQueue.createdAt, cutoff),
+    ));
+
+  for (const item of items) {
+    await db.update(deadLetterQueue)
+      .set({ escalated: true })
+      .where(eq(deadLetterQueue.id, item.id));
+
+    const ageHours = Math.round((Date.now() - item.createdAt.getTime()) / (60 * 60 * 1000));
+
+    notifyCritical(
+      `DLQ Age-SLO Breach: ${item.operationType}`,
+      appendFamilyGradePostscript(
+        `Operation ${item.operationType} has been unresolved for ${ageHours}h (SLO: ${maxAgeHours}h).\nEntity: ${item.entityType}/${item.entityId}\nRetries: ${item.retryCount}/${item.maxRetries}\nError: ${item.errorMessage}`,
+        `A background task has been stuck for over ${ageHours} hours.`,
+        "No action needed — the bot flagged this automatically. Call Tony if trades aren't happening.",
+      ),
+      { dlqId: item.id, operationType: item.operationType, entityId: item.entityId, ageHours },
+    );
+
+    logger.error(
+      { dlqId: item.id, operationType: item.operationType, ageHours, maxAgeHours },
+      "DLQ item escalated — age SLO exceeded",
     );
   }
 

@@ -637,6 +637,11 @@ process.on("uncaughtException", (err) => {
 export const server = app.listen(port, () => {
   logger.info(`Trading Forge running on http://localhost:${port}`);
 
+  // O8: Single correlationId for all boot-sequence audit rows so startup events
+  // are traceable as a group. Convention matches the existing boot-${Date.now()}
+  // pattern already used at line ~858 (ensureRegimeBankPopulated call).
+  const bootCorrelationId = `boot-${Date.now()}`;
+
   // ─── Production HTTP server timeouts ─────────────────────────
   // Without these, a single slow/stuck client can hold a connection open
   // indefinitely, eventually exhausting the Node.js connection pool or causing
@@ -927,7 +932,7 @@ export const server = app.listen(port, () => {
             follow_ups: ["highSinceEntry/lowSinceEntry watermarks", "Track 2 developingSessionPoc"],
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Track 3 completion audit_log row written (benchmark persistence)");
       } else {
@@ -979,7 +984,7 @@ export const server = app.listen(port, () => {
             ],
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Track 2 completion audit_log row written (benchmark persistence)");
       } else {
@@ -1030,7 +1035,7 @@ export const server = app.listen(port, () => {
             ],
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Track 1 completion audit_log row written (benchmark persistence)");
       } else {
@@ -1088,7 +1093,7 @@ export const server = app.listen(port, () => {
             follow_ups: [],
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Track 5 completion audit_log row written (benchmark persistence)");
       } else {
@@ -1136,7 +1141,7 @@ export const server = app.listen(port, () => {
             follow_ups: [],
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Pass 1 Track 1 completion audit_log row written (benchmark persistence)");
       } else {
@@ -1186,7 +1191,7 @@ export const server = app.listen(port, () => {
             golden_fixture_cleanup: "fixed in Pass 1 closing audit",
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Pass 1 Track 2 completion audit_log row written (benchmark persistence)");
       } else {
@@ -1234,7 +1239,7 @@ export const server = app.listen(port, () => {
             ci_lint: "scripts/verify-2026-rules-compliance.mjs",
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Pass 1 Track 3 completion audit_log row written (benchmark persistence)");
       } else {
@@ -1294,7 +1299,7 @@ export const server = app.listen(port, () => {
             ],
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Track 4 completion audit_log row written (benchmark persistence)");
       } else {
@@ -1351,7 +1356,7 @@ export const server = app.listen(port, () => {
             ],
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Pass 2 Track 4 completion audit_log row written (benchmark persistence)");
       }
@@ -1402,7 +1407,7 @@ export const server = app.listen(port, () => {
             follow_ups: ["enabled_firms read from instance_config not yet wired"],
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Pass 2 Track 5 completion audit_log row written (benchmark persistence)");
       }
@@ -1448,7 +1453,7 @@ export const server = app.listen(port, () => {
             ],
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Pass 2 Track 6 completion audit_log row written (benchmark persistence)");
       }
@@ -1493,7 +1498,7 @@ export const server = app.listen(port, () => {
             pipeline_pause_guarded: true,
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Pass 3 Track 7 completion audit_log row written (benchmark persistence)");
       }
@@ -1539,7 +1544,7 @@ export const server = app.listen(port, () => {
             pipeline_pause_guarded: true,
           } as Record<string, unknown>,
           status: "success",
-          correlationId: null,
+          correlationId: bootCorrelationId,
         });
         logger.info("Pass 3 Track 8 completion audit_log row written (benchmark persistence)");
       }

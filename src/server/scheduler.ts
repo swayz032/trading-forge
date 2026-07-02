@@ -2229,10 +2229,21 @@ export function initScheduler() {
 
   // ─── DLQ escalation — every hour ──────────────────────────
   registerJob("dlq-escalation", 60 * 60 * 1000, async () => {
-    const { escalateDLQ } = await import("./lib/dlq-service.js");
+    const { escalateDLQ, escalateDLQByAge } = await import("./lib/dlq-service.js");
     const count = await escalateDLQ();
     if (count > 0) {
-      logger.warn({ escalated: count }, "DLQ items escalated");
+      logger.warn({ escalated: count }, "DLQ items escalated (retry-exhausted)");
+    }
+    // deepscan6 O2: age-SLO escalation — catches items that can never reach maxRetries
+    // (handler-less operationTypes like scheduler:* / agent:*) so the backlog can't rot
+    // silently forever (was 2,033 items / 63d old / 0 escalations at audit time).
+    try {
+      const agedCount = await escalateDLQByAge();
+      if (agedCount > 0) {
+        logger.warn({ escalated: agedCount }, "DLQ items escalated (age-SLO breach)");
+      }
+    } catch (ageErr) {
+      logger.warn({ err: String(ageErr) }, "dlq-escalation: age-SLO sweep failed (non-blocking)");
     }
   });
 

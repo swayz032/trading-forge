@@ -1128,7 +1128,8 @@ export async function openPosition(sessionId: string, params: {
   //   single scalar — derive from today's breakdown key instead).
   //   consecutiveLosses is computed from the last N trades.
   //
-  // NOTE: dailyPnlBreakdown is updated AFTER trade close (checkConsistencyRule).
+  // NOTE: dailyPnlBreakdown is written INSIDE the close transaction (M1 fix, deepscan-6).
+  // checkConsistencyRule re-reads it after the tx for the consistency check only.
   // For the kill switch, read today's value from the JSONB column directly.
   {
     const killCacheKey = `session:${sessionId}`;
@@ -2478,6 +2479,21 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
         correlationId,
       });
 
+      // 5. Daily P&L breakdown — inside tx so DLL gates see accurate realized P&L even on crash.
+      //    M1 fix (deepscan-6): was written outside the tx via checkConsistencyRule (non-blocking).
+      //    checkConsistencyRule now only re-reads the already-committed value for its consistency check.
+      {
+        const todayKey = toFuturesTradingDayString();
+        const jsonPath = `{${todayKey}}`;
+        await tx.update(paperSessions).set({
+          dailyPnlBreakdown: sql`jsonb_set(
+            COALESCE(${paperSessions.dailyPnlBreakdown}, '{}'::jsonb),
+            ${jsonPath}::text[],
+            (COALESCE((${paperSessions.dailyPnlBreakdown}->>${todayKey})::numeric, 0) + ${netPnl})::text::jsonb
+          )`,
+        }).where(eq(paperSessions.id, pos.sessionId));
+      }
+
       return [insertedTrade];
     });
     trade = tradeRow;
@@ -2560,7 +2576,7 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
     // Gap 4: Consistency rule check + daily P&L tracking (net P&L — matches what the firm sees)
     // Wrapped individually so one failure doesn't block the other or the SSE broadcast.
     try {
-      await checkConsistencyRule(session, netPnl);
+      await checkConsistencyRule(session);
     } catch (consistencyErr) {
       logger.error({ positionId, sessionId: pos.sessionId, err: consistencyErr }, "checkConsistencyRule failed (non-blocking)");
     }
@@ -2686,27 +2702,15 @@ export async function closePosition(positionId: string, exitSignalPrice: number,
 
 async function checkConsistencyRule(
   session: typeof paperSessions.$inferSelect,
-  tradePnl: number,
 ): Promise<void> {
   if (!session.firmId) return;
   const firmConfig = getFirmAccount(session.firmId);
   if (!firmConfig?.consistencyRule) return;
 
-  // Update daily P&L breakdown atomically — increment today's value in SQL.
-  // Use CME futures trading-day key (5pm ET cutoff): trades closed 17:00–23:59 ET
-  // belong to the NEXT trading day. This key must match the kill-switch lookup key.
+  // M1 fix (deepscan-6): dailyPnlBreakdown is now written INSIDE the closePosition transaction.
+  // This function re-reads the already-committed value for the consistency-rule check only.
+  // Use CME futures trading-day key (5pm ET cutoff) — must match the key written in the tx.
   const today = toFuturesTradingDayString();
-
-  const jsonPath = `{${today}}`;
-  await db.update(paperSessions).set({
-    dailyPnlBreakdown: sql`jsonb_set(
-      COALESCE(${paperSessions.dailyPnlBreakdown}, '{}'::jsonb),
-      ${jsonPath}::text[],
-      (COALESCE((${paperSessions.dailyPnlBreakdown}->>${today})::numeric, 0) + ${tradePnl})::text::jsonb
-    )`,
-  }).where(eq(paperSessions.id, session.id));
-
-  // Re-read breakdown for consistency check (reflects atomic update)
   const [updated] = await db.select({ dailyPnlBreakdown: paperSessions.dailyPnlBreakdown })
     .from(paperSessions).where(eq(paperSessions.id, session.id));
   const breakdown = (updated?.dailyPnlBreakdown ?? {}) as Record<string, number>;
@@ -3461,6 +3465,34 @@ async function bookPartialClose(
           .set(positionStateUpdate)
           .where(eq(paperPositions.id, pos.id));
       }
+
+      // M1 (deepscan-6): dailyPnlBreakdown inside tx so kill-switch sees accurate partial-close
+      // P&L even on a crash between trade commit and a follow-up update.
+      // Was a non-blocking try/catch OUTSIDE the tx — a crash left the DLL gate reading a stale value.
+      {
+        const todayKey = toFuturesTradingDayString();
+        const jsonPath = `{${todayKey}}`;
+        await tx.update(paperSessions).set({
+          dailyPnlBreakdown: sql`jsonb_set(
+            COALESCE(${paperSessions.dailyPnlBreakdown}, '{}'::jsonb),
+            ${jsonPath}::text[],
+            (COALESCE((${paperSessions.dailyPnlBreakdown}->>${todayKey})::numeric, 0) + ${netPnl})::text::jsonb
+          )`,
+        }).where(eq(paperSessions.id, pos.sessionId));
+      }
+
+      // O7 (deepscan-6): success-path audit inside tx (fail-closed), matching closePosition pattern.
+      // Was fire-and-forget .catch() AFTER the tx commit — a crash left no audit record of the partial close.
+      await tx.insert(auditLog).values({
+        action: `paper.partial_close.${exitReason.toLowerCase()}`,
+        entityType: "paper_position",
+        entityId: pos.id,
+        decisionAuthority: "system",
+        input: { positionId: pos.id, contractsToClose, exitPrice, atr, correlationId } as Record<string, unknown>,
+        result: { grossPnl, exitCommission, netPnl, actualExit, slippage } as Record<string, unknown>,
+        status: "success",
+        correlationId: correlationId ?? null,
+      });
     });
 
     logger.info(
@@ -3470,36 +3502,6 @@ async function bookPartialClose(
       },
       "paper.partial_close: P&L booked and equity credited",
     );
-
-    // F1: update dailyPnlBreakdown atomically so the kill-switch sees today's partial-close
-    // P&L immediately, not just at full close. Uses same jsonb_set pattern as checkConsistencyRule.
-    try {
-      const todayKey = toFuturesTradingDayString();
-      const jsonPath = `{${todayKey}}`;
-      await db.update(paperSessions).set({
-        dailyPnlBreakdown: sql`jsonb_set(
-          COALESCE(${paperSessions.dailyPnlBreakdown}, '{}'::jsonb),
-          ${jsonPath}::text[],
-          (COALESCE((${paperSessions.dailyPnlBreakdown}->>${todayKey})::numeric, 0) + ${netPnl})::text::jsonb
-        )`,
-      }).where(eq(paperSessions.id, pos.sessionId));
-    } catch (dailyPnlErr) {
-      logger.warn(
-        { err: dailyPnlErr, positionId: pos.id },
-        "bookPartialClose: dailyPnlBreakdown update failed (non-blocking — kill-switch may lag)",
-      );
-    }
-
-    db.insert(auditLog).values({
-      action: `paper.partial_close.${exitReason.toLowerCase()}`,
-      entityType: "paper_position",
-      entityId: pos.id,
-      decisionAuthority: "system",
-      input: { positionId: pos.id, contractsToClose, exitPrice, atr, correlationId } as Record<string, unknown>,
-      result: { grossPnl, exitCommission, netPnl, actualExit, slippage } as Record<string, unknown>,
-      status: "success",
-      correlationId: correlationId ?? null,
-    }).catch((err) => logger.warn({ err }, "bookPartialClose: audit write failed (non-blocking)"));
 
   } catch (err) {
     // Deep-scan #5 MED (2026-06-29): RE-THROW on transaction failure. The transaction now
