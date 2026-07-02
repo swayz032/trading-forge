@@ -83,6 +83,17 @@ def evaluate_signal(
 
     # ─── Hard SKIP checks ─────────────────────────────────────
 
+    # Check 0 (deep-scan #8 2026-07-02): structural stop exceeds per-symbol ceiling.
+    # Fires BEFORE all other gate checks. A ceiling breach means the structural
+    # invalidation level is too far away — no valid stop exists for this setup.
+    # structural_stops.compute_structural_stop() sets skip_trade=True in this case.
+    if stop_plan.skip_trade:
+        reasoning.append(f"SKIP_TRADE: {stop_plan.stop_reason}")
+        return EligibilityDecision(
+            action="SKIP", confidence=0.0, reasoning=reasoning,
+            bias_state=bias_state, playbook=playbook.playbook,
+        )
+
     # 1. NO_TRADE playbook
     if playbook.playbook == "NO_TRADE":
         reasoning.append("NO_TRADE playbook active")

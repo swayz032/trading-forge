@@ -20,9 +20,10 @@
  * - `getCommissionPerSide(symbol, firmId)` → number
  *   Symbol-aware replacement for the legacy helper.
  *   Resolution order:
- *     1. Firm-and-class-specific override table (COMMISSION_RATES_BY_CLASS)
- *     2. Contract-class default (micro: 0.62, mini: 6.20)
- *     3. Generic fallback for unknown symbols (DEFAULT_MICRO_COMMISSION_PER_SIDE)
+ *     1. Firm-and-symbol-specific override table (COMMISSION_RATES_BY_SYMBOL)
+ *     2. Firm-and-class-specific override table (COMMISSION_RATES_BY_CLASS)
+ *     3. Contract-class default (micro: 0.62, mini: 6.20)
+ *     4. Generic fallback for unknown symbols (DEFAULT_MICRO_COMMISSION_PER_SIDE)
  *   Emits audit row `commission.symbol_class_unknown` when class lookup fails.
  *   Emits info audit row `commission.mini_class_detected` on any mini symbol
  *   (Phase 5 visibility gate — operator awareness before minis go LIVE).
@@ -108,18 +109,35 @@ export const DEFAULT_MINI_COMMISSION_PER_SIDE = 6.20;
  */
 const COMMISSION_RATES_BY_CLASS: Record<string, number> = {
   // Topstep — AUTHORITATIVE TopstepX/ProjectX all-in round-turn ÷ 2 (2026-06-23 correction;
-  // was $0.37 — too low). MES/MNQ = $0.62/side ($1.24 RT). NOTE: this is class-based, so MCL
-  // ($0.77/side, $1.54 RT) is slightly under-estimated here — the BACKTEST (firm_config.py)
-  // has the exact per-symbol value; this TS rate is live/paper estimation (broker is
-  // authoritative for real fills). TODO: per-symbol override if MCL estimation precision matters.
+  // was $0.37 — too low). MES/MNQ = $0.62/side ($1.24 RT). MCL has a per-symbol override in
+  // COMMISSION_RATES_BY_SYMBOL — this class rate applies only to non-MCL micros.
   "topstep.micro": 0.62,
   "topstep.mini":  1.90,  // ES/NQ $3.80 RT ÷ 2 (NOT 10× micro — commissions ~3× not 10×)
   // MFFU — AUTHORITATIVE MFFU instrument list all-in round-turn ÷ 2 (2026-06-23 correction;
   // was a flat $0.62 = TopstepX's value, wrong for MFFU). MES/MNQ = $0.95/side ($1.90 RT).
-  // Class-based, so MCL ($0.58/side, $1.16 RT) is slightly over-estimated here — the BACKTEST
-  // (firm_config.py) has the exact per-symbol value; this TS rate is live/paper estimation.
+  // MCL has a per-symbol override in COMMISSION_RATES_BY_SYMBOL — class rate applies only to
+  // non-MCL micros.
   "mffu.micro":    0.95,
   "mffu.mini":     2.34,  // ES/NQ $4.68 RT ÷ 2 (CL is $2.46 — see firm_config per-symbol)
+} as const;
+
+/**
+ * Per-firm, per-symbol commission overrides — win over class-based defaults.
+ * Key format: `${firmId}.${symbol.toUpperCase()}` (lower-cased firmId).
+ *
+ * MCL (Micro Crude Oil) carries different exchange + NFA fees than equity micros
+ * (MES/MNQ), so its all-in rate diverges from the class average in both directions
+ * depending on the firm. Values mirror firm_config.py::FIRM_COMMISSIONS exactly.
+ *
+ * Topstep: MCL $0.77/side ($1.54 RT) vs MES/MNQ class $0.62/side
+ * MFFU:    MCL $0.58/side ($1.16 RT) vs MES/MNQ class $0.95/side
+ *
+ * Source of truth: src/engine/firm_config.py — update BOTH files when rates change.
+ */
+const COMMISSION_RATES_BY_SYMBOL: Record<string, number> = {
+  // deep-scan #8 2026-07-02: per-symbol MCL overrides — class rate was wrong for MCL
+  "topstep.MCL": 0.77,  // firm_config.py FIRM_COMMISSIONS["topstep_50k"]["MCL"] $1.54 RT ÷ 2
+  "mffu.MCL":    0.58,  // firm_config.py FIRM_COMMISSIONS["mffu_50k"]["MCL"]    $1.16 RT ÷ 2
 } as const;
 
 // ─── Audit callback type ──────────────────────────────────────────────────────
@@ -179,6 +197,15 @@ export function getCommissionPerSide(
       fallback_rate: DEFAULT_MICRO_COMMISSION_PER_SIDE,
     });
     return DEFAULT_MICRO_COMMISSION_PER_SIDE;
+  }
+
+  // ── Firm + symbol specific override (wins over class-based) ────────────────
+  if (firmKey) {
+    const symbolKey = `${firmKey}.${symbol.toUpperCase()}`;
+    const symbolOverride = COMMISSION_RATES_BY_SYMBOL[symbolKey];
+    if (symbolOverride !== undefined) {
+      return symbolOverride;
+    }
   }
 
   // ── Firm + class specific override ─────────────────────────────────────────

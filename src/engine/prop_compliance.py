@@ -63,7 +63,7 @@ FIRM_CONFIGS = {
         "payout_split": 0.80,
         "payout_split_tiers": None,
         "ongoing_fee": 0,
-        "daily_loss_limit": None,
+        "daily_loss_limit": 1000,  # firm_config.py:148 — $1K daily limit (matches Topstep)
         "min_payout_days": 5,
         "min_trading_days": 5,
     },
@@ -231,6 +231,7 @@ def run_prop_compliance(
     daily_pnls: list[float],
     stats: dict,
     backtester_commission_per_side: float = 0.62,
+    enforce_mffu_consistency: bool = False,
 ) -> dict[str, dict]:
     """Simulate strategy against all prop firms.
 
@@ -245,6 +246,10 @@ def run_prop_compliance(
         backtester_commission_per_side: The per-side commission the backtester
             already deducted (default $0.62 = MES/micro baseline). Used to
             compute only the DELTA when adjusting for per-firm rates (H4 fix).
+        enforce_mffu_consistency: When False (default), the MFFU 50% consistency
+            check is skipped — per firm_config.py §MFFU it is SIM-PAYOUT-stage-only
+            and MC survival sim deliberately omits it. Pass True only at sim-payout
+            evaluation stage. Topstep consistency is always enforced regardless.
 
     Returns:
         dict mapping firm_key → compliance result
@@ -310,18 +315,23 @@ def run_prop_compliance(
             )
 
         # Check consistency rules (using net PnLs).
-        # Active rules: any firm whose consistency_rule contains "50pct"
-        # (currently both MFFU "mffu_50pct" and Topstep "topstep_50pct").
-        # The 50% best-day cap is enforced at eval pass-request time for both firms.
+        # Active rules: any firm whose consistency_rule contains "50pct".
+        # Topstep ("topstep_50pct"): always enforced — eval pass-request gate.
+        # MFFU ("mffu_50pct"): SIM-PAYOUT stage only (firm_config.py §MFFU);
+        #   MC survival sim skips it intentionally. The caller must pass
+        #   enforce_mffu_consistency=True to activate the MFFU check.
         if isinstance(firm.get("consistency_rule"), str) and "50pct" in firm["consistency_rule"]:
-            cons_passed, worst_pct = check_tpt_consistency(net_pnls)
-            if not cons_passed:
-                passed = False
-                firm_label = "MFFU" if firm["consistency_rule"] == "mffu_50pct" else "Topstep"
-                failures.append(
-                    f"{firm_label} 50% consistency violation: "
-                    f"best day = {worst_pct:.0%} of total profit"
-                )
+            if firm_key == "mffu_50k" and not enforce_mffu_consistency:
+                pass  # Skip — MFFU consistency is SIM-PAYOUT-stage-only
+            else:
+                cons_passed, worst_pct = check_tpt_consistency(net_pnls)
+                if not cons_passed:
+                    passed = False
+                    firm_label = "MFFU" if firm["consistency_rule"] == "mffu_50pct" else "Topstep"
+                    failures.append(
+                        f"{firm_label} 50% consistency violation: "
+                        f"best day = {worst_pct:.0%} of total profit"
+                    )
 
         # Calculate ROI estimates
         avg_daily = stats.get("avg_daily_pnl", 0)

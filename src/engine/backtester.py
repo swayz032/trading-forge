@@ -118,6 +118,45 @@ from src.engine.strategy_base import BaseStrategy
 # must apply shift(1) to the higher-TF columns BEFORE the merge/join.
 
 
+def _dst_us_rule_offset(utc_dt) -> int:
+    """Return the US ET UTC offset (-4 EDT or -5 EST) using the US DST rule.
+
+    US DST rule: clocks spring forward (UTC-5 → UTC-4) at 02:00 ET on the
+    second Sunday of March, and fall back (UTC-4 → UTC-5) at 02:00 ET on
+    the first Sunday of November.
+
+    For the last-resort path (no zoneinfo/pytz), we approximate using UTC
+    dates — the ±1h at the exact 02:00 boundary is acceptable given this is
+    only engaged when both tz libraries are absent.
+
+    Returns:
+        -4 during EDT (summer daylight saving time)
+        -5 during EST (winter standard time)
+    """
+    import datetime as _dt_mod
+
+    year = utc_dt.year
+
+    # Second Sunday of March
+    march_1 = _dt_mod.date(year, 3, 1)
+    days_to_first_sun_mar = (6 - march_1.weekday()) % 7  # days until Sunday
+    second_sun_march = march_1 + _dt_mod.timedelta(days=days_to_first_sun_mar + 7)
+
+    # First Sunday of November
+    nov_1 = _dt_mod.date(year, 11, 1)
+    days_to_first_sun_nov = (6 - nov_1.weekday()) % 7
+    first_sun_nov = nov_1 + _dt_mod.timedelta(days=days_to_first_sun_nov)
+
+    # Determine date of the UTC datetime (works for both date and datetime objects)
+    utc_date = utc_dt.date() if hasattr(utc_dt, "date") and callable(utc_dt.date) else (
+        _dt_mod.date(utc_dt.year, utc_dt.month, utc_dt.day)
+    )
+
+    if second_sun_march <= utc_date < first_sun_nov:
+        return -4  # EDT (summer)
+    return -5  # EST (winter)
+
+
 def _dst_correct_et_hour(utc_dt) -> str:
     """Convert a UTC datetime to 'HH:MM' ET string, DST-correct.
 
@@ -129,8 +168,9 @@ def _dst_correct_et_hour(utc_dt) -> str:
     for pre-lunch (11:30) and time-stop (15:55) checks on winter bars.
 
     New behavior: Use Python's built-in zoneinfo (3.9+) or pytz fallback
-    for DST-correct America/New_York conversion. Falls back to UTC-4 only
-    when both are unavailable (legacy environments).
+    for DST-correct America/New_York conversion. Falls back to _dst_us_rule_offset()
+    when both are unavailable — correct for both EST and EDT (no longer
+    hardcoded UTC-4 which was wrong in winter).
 
     This function is module-level so tests can import and verify it directly.
     The DSL static-styleC path already handles DST correctly via the ts_et column
@@ -162,9 +202,16 @@ def _dst_correct_et_hour(utc_dt) -> str:
     except Exception:
         pass
 
-    # Last resort: UTC-4 (EDT) arithmetic — imprecise in winter, preserved for
-    # backward-compat on environments without zoneinfo/pytz.
-    et_hour = (utc_dt.hour - 4) % 24
+    # Last resort: US DST rule (second Sunday of March → first Sunday of November).
+    # FIX 2 (2026-07-02): replaces the hardcoded UTC-4 (EDT) which was wrong in
+    # winter (EST = UTC-5), causing 15:55 time-stop to fire at 14:55 UTC in January.
+    import logging as _logging
+    _logging.getLogger(__name__).warning(
+        "_dst_correct_et_hour: last-resort fallback engaged — both zoneinfo and pytz "
+        "unavailable. Install zoneinfo (Python 3.9+) or pytz for production accuracy."
+    )
+    utc_offset = _dst_us_rule_offset(utc_dt)
+    et_hour = (utc_dt.hour + utc_offset) % 24
     return f"{et_hour:02d}:{utc_dt.minute:02d}"
 
 
@@ -830,18 +877,19 @@ def _apply_static_styleC_management(
 
     Two code paths controlled by env flag BACKTEST_STATIC_C_PARTIALS_ENABLED:
 
-    FLAG OFF (default) — byte-identical with all historical runs:
-      - Single structural TP via DOL hierarchy (>= 2R or skip)
-      - After 1R: move stop to BE+1 tick
-      - After 2R: trail 1R behind price, min 2pt breathing room
-      - Exit priority per bar: TP hit > trailing stop hit > original exit
-
-    FLAG ON — 33/33/34 partial blending path matching paper/live economics:
+    FLAG ON (default from 2026-07-02) — 33/33/34 partial blending path matching paper/live economics:
       - TP1 at +1.0R (33%), TP2 at +2.0R (33%), runner 34% Chandelier(14,2.0) trail
       - BE+1 tick on TP1 fill; Chandelier runner trail after TP2 fill
       - Blended exit: tp1_pct*tp1 + tp2_pct*tp2 + runner_pct*close (or stop if stopped out)
       - 15:55 ET hard flatten ALWAYS applied
       - Audit fields: static_c_tp1_price, static_c_tp2_price, static_c_tp1_filled, static_c_tp2_filled
+
+    FLAG OFF (opt-out, set BACKTEST_STATIC_C_PARTIALS_ENABLED=0/false/no) — single-TP path:
+      - Single structural TP via DOL hierarchy (>= 2R or skip)
+      - After 1R: move stop to BE+1 tick
+      - After 2R: trail 1R behind price, min 2pt breathing room
+      - Exit priority per bar: TP hit > trailing stop hit > original exit
+      - Byte-identical with pre-2026-07-02 historical runs
 
     Common invariants (both paths):
       - MAX_HOLD_BARS=200 safety cap (~16h on 5m)
@@ -871,12 +919,12 @@ def _apply_static_styleC_management(
     )
     _symbol_static: str = getattr(spec, "symbol", None) or "UNKNOWN"
 
-    # BACKTEST_STATIC_C_PARTIALS_ENABLED (default OFF).
-    # OFF (default): byte-identical with all historical runs — existing single-TP path.
-    # ON: 33/33/34 TP1/TP2/Chandelier-runner path matching paper/live Style C economics.
+    # BACKTEST_STATIC_C_PARTIALS_ENABLED (default ON from 2026-07-02).
+    # ON (default): 33/33/34 TP1/TP2/Chandelier-runner path matching paper/live Style C economics.
+    # OFF (opt-out): byte-identical with pre-2026-07-02 runs — set "0", "false", or "no".
     # This flag is read ONCE per call so callers can toggle it between calls deterministically.
     _USE_PARTIALS: bool = (
-        os.environ.get("BACKTEST_STATIC_C_PARTIALS_ENABLED", "").lower() in ("1", "true", "yes")
+        os.environ.get("BACKTEST_STATIC_C_PARTIALS_ENABLED", "1").lower() not in ("0", "false", "no")
     )
     if _USE_PARTIALS:
         from datetime import datetime as _sc_dt
@@ -6588,10 +6636,10 @@ def _load_strategy_class(class_path: str) -> BaseStrategy:
     type=click.Choice(["static_styleC", "adaptive"]),
     help=(
         "W25.17 A/B flag: which exit engine to use. "
-        "'static_styleC' (default) = single structural-TP path via DOL hierarchy — "
-        "byte-identical with all historical CI runs. "
-        "Set BACKTEST_STATIC_C_PARTIALS_ENABLED=true to enable 33/33/34 TP1/TP2/runner "
-        "Chandelier blending that matches paper/live Style C economics. "
+        "'static_styleC' (default) = 33/33/34 TP1/TP2/Chandelier-runner path "
+        "(BACKTEST_STATIC_C_PARTIALS_ENABLED ON by default since 2026-07-02). "
+        "Set BACKTEST_STATIC_C_PARTIALS_ENABLED=0 to disable partials and revert "
+        "to the single-TP DOL path (byte-identical with pre-2026-07-02 CI runs). "
         "'adaptive' = adaptive exit engine (P7.A1+A2 TS path); "
         "Python harness stubs until framework-overlay wiring lands in P7.A5."
     ),

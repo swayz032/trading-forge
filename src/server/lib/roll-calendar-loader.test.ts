@@ -49,7 +49,7 @@ describe("computeRollSpreadCost — position closes on the roll date", () => {
       utc("2026-03-10"),        // entry before roll
       new Date("2026-03-12T00:00:00Z"),  // exit exactly at roll midnight
     );
-    expect(result.estimatedSpreadCost).toBe(2);  // MES = $2/contract
+    expect(result.estimatedSpreadCost).toBe(3.75);  // MES = $3.75/contract (3 ticks × $1.25)
     expect(result.rollDates).toContain("2026-03-12");
   });
 
@@ -89,37 +89,38 @@ describe("computeRollSpreadCost — unknown symbol", () => {
 describe("computeRollSpreadCost — multiple rolls crossed", () => {
   it("sums spread cost across all crossed roll dates", () => {
     // MES quarterly rolls: 2026-03-12 and 2026-06-11
-    // 1 contract × ($2 + $2) = $4
+    // 1 contract × ($3.75 + $3.75) = $7.50
     const result = computeRollSpreadCost(
       "MES",
       1,
       utc("2026-01-01"),   // entry before first roll
       utc("2026-07-01"),   // exit after second roll
     );
-    expect(result.estimatedSpreadCost).toBe(4);
+    expect(result.estimatedSpreadCost).toBe(7.5);
     expect(result.rollDates).toContain("2026-03-12");
     expect(result.rollDates).toContain("2026-06-11");
     expect(result.rollDates).toHaveLength(2);
   });
 
   it("scales spread cost by number of contracts", () => {
-    // 3 contracts × $2 per MES roll × 2 rolls = $12
+    // 3 contracts × $3.75 per MES roll × 2 rolls = $22.50
     const result = computeRollSpreadCost(
       "MES",
       3,
       utc("2026-01-01"),
       utc("2026-07-01"),
     );
-    expect(result.estimatedSpreadCost).toBe(12);
+    expect(result.estimatedSpreadCost).toBe(22.5);
     expect(result.contractsRolled).toBe(3);
   });
 
   it("uses abs(contracts) so short positions pay the same spread", () => {
-    // Short position: -2 contracts; abs(-2) = 2
+    // Short position: -2 contracts; abs(-2) = 2; MES: 2 × $3.75 = $7.50
     const long = computeRollSpreadCost("MES", 2, utc("2026-01-01"), utc("2026-04-01"));
     const short = computeRollSpreadCost("MES", -2, utc("2026-01-01"), utc("2026-04-01"));
     expect(long.estimatedSpreadCost).toBe(short.estimatedSpreadCost);
     expect(short.contractsRolled).toBe(2);
+    expect(long.estimatedSpreadCost).toBe(7.5);
   });
 });
 
@@ -182,14 +183,14 @@ describe("computeRollSpreadCost — CL (crude, monthly)", () => {
     expect(result.rollDates).toContain("2026-03-24");
   });
 
-  it("MCL: same roll date as CL but lower spread ($4/contract)", () => {
+  it("MCL: same roll date as CL but lower spread ($2/contract; 2 ticks × $1.00/tick)", () => {
     const result = computeRollSpreadCost(
       "MCL",
       1,
       utc("2026-03-20"),
       utc("2026-03-25"),
     );
-    expect(result.estimatedSpreadCost).toBe(4);
+    expect(result.estimatedSpreadCost).toBe(2);
   });
 });
 

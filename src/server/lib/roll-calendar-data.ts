@@ -12,17 +12,18 @@
  *   or run the inline Python used to generate this file:
  *     from src.engine.roll_calendar import _equity_quarterly_roll_day, _crude_roll_day, _gold_roll_day
  *
- * Spread estimates (USD per contract) represent the typical bid/ask spread cost
- * of rolling front-month -> back-month for retail traders. These are conservative
- * mid-market estimates; actual cost varies with liquidity conditions (~±30%).
+ * Spread estimates (USD per contract) represent the calendar-spread bid/ask cost
+ * charged ONCE per roll crossing. Semantics match src/engine/roll_spread_cost.py:
+ * per-SIDE ticks × tick value (one leg of the calendar spread, not round-trip).
+ * See roll_spread_cost.py for canonical tick values and derivation.
  *
- * Standard estimates (retail-side, round-trip roll cost):
- *   ES  → $8/contract   (E-mini S&P 500, quarterly)
- *   MES → $2/contract   (Micro E-mini S&P 500, quarterly)
- *   NQ  → $10/contract  (E-mini Nasdaq-100, quarterly)
- *   MNQ → $3/contract   (Micro E-mini Nasdaq-100, quarterly)
+ * Per-roll cost (per-side per crossing — Python roll_spread_cost.py canonical):
+ *   ES  → $8/contract   (E-mini S&P 500, quarterly; ~3 ticks × $2.50/tick)
+ *   MES → $3.75/contract (Micro E-mini S&P 500; 3 ticks × $1.25/tick)
+ *   NQ  → $10/contract  (E-mini Nasdaq-100, quarterly; ~5 ticks × $5.00/tick)
+ *   MNQ → $2.00/contract (Micro E-mini Nasdaq-100; 4 ticks × $0.50/tick)
  *   CL  → $15/contract  (Crude Oil, monthly)
- *   MCL → $4/contract   (Micro Crude Oil, monthly)
+ *   MCL → $2.00/contract (Micro Crude Oil; 2 ticks × $1.00/tick)
  *   GC  → $12/contract  (Gold, bi-monthly)
  */
 
@@ -62,19 +63,20 @@ export const rollCalendar: Record<string, RollDate[]> = {
   ],
 
   // ── MES: Micro E-mini S&P 500, same roll dates as ES ─────────────────────
+  // 3 ticks × $1.25/tick = $3.75/contract per roll (roll_spread_cost.py canonical)
   MES: [
-    { roll_date: "2024-03-14", spread_estimate: 2 },
-    { roll_date: "2024-06-13", spread_estimate: 2 },
-    { roll_date: "2024-09-12", spread_estimate: 2 },
-    { roll_date: "2024-12-12", spread_estimate: 2 },
-    { roll_date: "2025-03-13", spread_estimate: 2 },
-    { roll_date: "2025-06-12", spread_estimate: 2 },
-    { roll_date: "2025-09-11", spread_estimate: 2 },
-    { roll_date: "2025-12-11", spread_estimate: 2 },
-    { roll_date: "2026-03-12", spread_estimate: 2 },
-    { roll_date: "2026-06-11", spread_estimate: 2 },
-    { roll_date: "2026-09-10", spread_estimate: 2 },
-    { roll_date: "2026-12-10", spread_estimate: 2 },
+    { roll_date: "2024-03-14", spread_estimate: 3.75 },
+    { roll_date: "2024-06-13", spread_estimate: 3.75 },
+    { roll_date: "2024-09-12", spread_estimate: 3.75 },
+    { roll_date: "2024-12-12", spread_estimate: 3.75 },
+    { roll_date: "2025-03-13", spread_estimate: 3.75 },
+    { roll_date: "2025-06-12", spread_estimate: 3.75 },
+    { roll_date: "2025-09-11", spread_estimate: 3.75 },
+    { roll_date: "2025-12-11", spread_estimate: 3.75 },
+    { roll_date: "2026-03-12", spread_estimate: 3.75 },
+    { roll_date: "2026-06-11", spread_estimate: 3.75 },
+    { roll_date: "2026-09-10", spread_estimate: 3.75 },
+    { roll_date: "2026-12-10", spread_estimate: 3.75 },
   ],
 
   // ── NQ: E-mini Nasdaq-100, quarterly ─────────────────────────────────────
@@ -94,19 +96,20 @@ export const rollCalendar: Record<string, RollDate[]> = {
   ],
 
   // ── MNQ: Micro E-mini Nasdaq-100, same roll dates as NQ ──────────────────
+  // 4 ticks × $0.50/tick = $2.00/contract per roll (roll_spread_cost.py canonical)
   MNQ: [
-    { roll_date: "2024-03-14", spread_estimate: 3 },
-    { roll_date: "2024-06-13", spread_estimate: 3 },
-    { roll_date: "2024-09-12", spread_estimate: 3 },
-    { roll_date: "2024-12-12", spread_estimate: 3 },
-    { roll_date: "2025-03-13", spread_estimate: 3 },
-    { roll_date: "2025-06-12", spread_estimate: 3 },
-    { roll_date: "2025-09-11", spread_estimate: 3 },
-    { roll_date: "2025-12-11", spread_estimate: 3 },
-    { roll_date: "2026-03-12", spread_estimate: 3 },
-    { roll_date: "2026-06-11", spread_estimate: 3 },
-    { roll_date: "2026-09-10", spread_estimate: 3 },
-    { roll_date: "2026-12-10", spread_estimate: 3 },
+    { roll_date: "2024-03-14", spread_estimate: 2 },
+    { roll_date: "2024-06-13", spread_estimate: 2 },
+    { roll_date: "2024-09-12", spread_estimate: 2 },
+    { roll_date: "2024-12-12", spread_estimate: 2 },
+    { roll_date: "2025-03-13", spread_estimate: 2 },
+    { roll_date: "2025-06-12", spread_estimate: 2 },
+    { roll_date: "2025-09-11", spread_estimate: 2 },
+    { roll_date: "2025-12-11", spread_estimate: 2 },
+    { roll_date: "2026-03-12", spread_estimate: 2 },
+    { roll_date: "2026-06-11", spread_estimate: 2 },
+    { roll_date: "2026-09-10", spread_estimate: 2 },
+    { roll_date: "2026-12-10", spread_estimate: 2 },
   ],
 
   // ── CL: Crude Oil, monthly ────────────────────────────────────────────────
@@ -154,46 +157,47 @@ export const rollCalendar: Record<string, RollDate[]> = {
   ],
 
   // ── MCL: Micro Crude Oil, same roll dates as CL ───────────────────────────
+  // 2 ticks × $1.00/tick = $2.00/contract per roll (roll_spread_cost.py canonical)
   MCL: [
     // 2024
-    { roll_date: "2024-01-24", spread_estimate: 4 },
-    { roll_date: "2024-02-23", spread_estimate: 4 },
-    { roll_date: "2024-03-22", spread_estimate: 4 },
-    { roll_date: "2024-04-24", spread_estimate: 4 },
-    { roll_date: "2024-05-24", spread_estimate: 4 },
-    { roll_date: "2024-06-24", spread_estimate: 4 },
-    { roll_date: "2024-07-24", spread_estimate: 4 },
-    { roll_date: "2024-08-23", spread_estimate: 4 },
-    { roll_date: "2024-09-24", spread_estimate: 4 },
-    { roll_date: "2024-10-24", spread_estimate: 4 },
-    { roll_date: "2024-11-22", spread_estimate: 4 },
-    { roll_date: "2024-12-24", spread_estimate: 4 },
+    { roll_date: "2024-01-24", spread_estimate: 2 },
+    { roll_date: "2024-02-23", spread_estimate: 2 },
+    { roll_date: "2024-03-22", spread_estimate: 2 },
+    { roll_date: "2024-04-24", spread_estimate: 2 },
+    { roll_date: "2024-05-24", spread_estimate: 2 },
+    { roll_date: "2024-06-24", spread_estimate: 2 },
+    { roll_date: "2024-07-24", spread_estimate: 2 },
+    { roll_date: "2024-08-23", spread_estimate: 2 },
+    { roll_date: "2024-09-24", spread_estimate: 2 },
+    { roll_date: "2024-10-24", spread_estimate: 2 },
+    { roll_date: "2024-11-22", spread_estimate: 2 },
+    { roll_date: "2024-12-24", spread_estimate: 2 },
     // 2025
-    { roll_date: "2025-01-24", spread_estimate: 4 },
-    { roll_date: "2025-02-24", spread_estimate: 4 },
-    { roll_date: "2025-03-24", spread_estimate: 4 },
-    { roll_date: "2025-04-24", spread_estimate: 4 },
-    { roll_date: "2025-05-23", spread_estimate: 4 },
-    { roll_date: "2025-06-24", spread_estimate: 4 },
-    { roll_date: "2025-07-24", spread_estimate: 4 },
-    { roll_date: "2025-08-22", spread_estimate: 4 },
-    { roll_date: "2025-09-24", spread_estimate: 4 },
-    { roll_date: "2025-10-24", spread_estimate: 4 },
-    { roll_date: "2025-11-24", spread_estimate: 4 },
-    { roll_date: "2025-12-24", spread_estimate: 4 },
+    { roll_date: "2025-01-24", spread_estimate: 2 },
+    { roll_date: "2025-02-24", spread_estimate: 2 },
+    { roll_date: "2025-03-24", spread_estimate: 2 },
+    { roll_date: "2025-04-24", spread_estimate: 2 },
+    { roll_date: "2025-05-23", spread_estimate: 2 },
+    { roll_date: "2025-06-24", spread_estimate: 2 },
+    { roll_date: "2025-07-24", spread_estimate: 2 },
+    { roll_date: "2025-08-22", spread_estimate: 2 },
+    { roll_date: "2025-09-24", spread_estimate: 2 },
+    { roll_date: "2025-10-24", spread_estimate: 2 },
+    { roll_date: "2025-11-24", spread_estimate: 2 },
+    { roll_date: "2025-12-24", spread_estimate: 2 },
     // 2026
-    { roll_date: "2026-01-23", spread_estimate: 4 },
-    { roll_date: "2026-02-24", spread_estimate: 4 },
-    { roll_date: "2026-03-24", spread_estimate: 4 },
-    { roll_date: "2026-04-24", spread_estimate: 4 },
-    { roll_date: "2026-05-22", spread_estimate: 4 },
-    { roll_date: "2026-06-24", spread_estimate: 4 },
-    { roll_date: "2026-07-24", spread_estimate: 4 },
-    { roll_date: "2026-08-24", spread_estimate: 4 },
-    { roll_date: "2026-09-24", spread_estimate: 4 },
-    { roll_date: "2026-10-23", spread_estimate: 4 },
-    { roll_date: "2026-11-24", spread_estimate: 4 },
-    { roll_date: "2026-12-24", spread_estimate: 4 },
+    { roll_date: "2026-01-23", spread_estimate: 2 },
+    { roll_date: "2026-02-24", spread_estimate: 2 },
+    { roll_date: "2026-03-24", spread_estimate: 2 },
+    { roll_date: "2026-04-24", spread_estimate: 2 },
+    { roll_date: "2026-05-22", spread_estimate: 2 },
+    { roll_date: "2026-06-24", spread_estimate: 2 },
+    { roll_date: "2026-07-24", spread_estimate: 2 },
+    { roll_date: "2026-08-24", spread_estimate: 2 },
+    { roll_date: "2026-09-24", spread_estimate: 2 },
+    { roll_date: "2026-10-23", spread_estimate: 2 },
+    { roll_date: "2026-11-24", spread_estimate: 2 },
+    { roll_date: "2026-12-24", spread_estimate: 2 },
   ],
 
   // ── GC: Gold, bi-monthly (delivery months: Feb/Apr/Jun/Aug/Oct/Dec) ──────

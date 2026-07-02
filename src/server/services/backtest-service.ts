@@ -41,6 +41,8 @@ import { readLearningLoopMode } from "../lib/learning-loop-mode.js";
 // Wave hardening 2026-06-22 (G1a) — buildBacktestArgs extracted so tests can
 // import it without the full service chain. Re-exported for backward compat.
 import { buildBacktestArgs } from "../lib/backtest-args.js";
+// FIX 4 (deepscan8): synthesize correlationId when caller omits it
+import { randomUUID } from "node:crypto";
 export { buildBacktestArgs };
 
 /**
@@ -388,6 +390,10 @@ interface RlTrainingResult {
 const BACKTEST_TIMEOUT_MS = 30 * 60 * 1000;
 
 export async function runBacktest(strategyId: string, config: BacktestConfig, strategyClass?: string, externalId?: string, correlationId?: string, actor: "operator" | "automated" = "automated") {
+  // FIX 4 (deepscan8): synthesize correlationId when caller omits it so every
+  // audit row and trace span is attributable even for fire-and-forget callers.
+  correlationId ??= `bt-auto-${Date.now()}-${randomUUID().slice(0, 8)}`;
+
   // ─── Pipeline pause guard ─────────────────────────────────────
   // Pause stops the AUTOMATED engine (scout-fed flow, schedulers, n8n drains)
   // from churning fresh candidates through backtest. It does NOT block the
@@ -400,12 +406,40 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
   // actor="operator" bypasses the guard with audit row (POST /api/backtests
   // route passes this). actor="automated" (default) preserves Wave 6 fix:
   // returns { status:"skipped", id:null } so callers don't get ghost IDs.
-  if (actor !== "operator" && !(await isPipelineActive())) {
-    logger.info(
-      { fn: "runBacktest", strategyId, symbol: config.strategy.symbol, actor },
-      "Skipped: pipeline paused (automated caller)",
-    );
-    return { id: null as unknown as string, status: "skipped", error: "pipeline_paused" };
+  // FIX 6 (deepscan8): write audit rows for refusal (automated blocked) and
+  // bypass (operator allowed through while paused) so operators can audit
+  // who ran backtests during a pause window.
+  const _pipelineActive = await isPipelineActive();
+  if (!_pipelineActive) {
+    if (actor !== "operator") {
+      // REFUSAL — automated caller blocked
+      void insertAuditRowSafe({
+        action: "backtest.pipeline_pause_refusal",
+        entityType: "strategy",
+        entityId: strategyId,
+        status: "success",
+        input: { actor, strategyId, symbol: config.strategy.symbol },
+        result: { skipped: true, reason: "pipeline_paused" },
+        correlationId,
+        decisionAuthority: "system",
+      });
+      logger.info(
+        { fn: "runBacktest", strategyId, symbol: config.strategy.symbol, actor, correlationId },
+        "Skipped: pipeline paused (automated caller)",
+      );
+      return { id: null as unknown as string, status: "skipped", error: "pipeline_paused" };
+    }
+    // BYPASS — operator allowed through while paused; write audit trail
+    void insertAuditRowSafe({
+      action: "backtest.pipeline_pause_bypass",
+      entityType: "strategy",
+      entityId: strategyId,
+      status: "success",
+      input: { actor, strategyId, symbol: config.strategy.symbol },
+      result: { bypassed: true, reason: "operator_override" },
+      correlationId,
+      decisionAuthority: "operator",
+    });
   }
 
   const backtestSpan = tracer.startSpan("backtest.run");
@@ -556,12 +590,21 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       }),
     );
 
-    if (result.error) {
+    // FIX 5 (deepscan8): also treat structured Python error envelopes as failures.
+    // extrapolation_exceeded / rule_version_mismatch previously fell through as
+    // phantom successes — now detected and persisted as explicit failures.
+    const _pythonEnvelopeStatus = (result as { status?: string }).status;
+    if (
+      result.error ||
+      _pythonEnvelopeStatus === "extrapolation_exceeded" ||
+      _pythonEnvelopeStatus === "rule_version_mismatch"
+    ) {
+      const errorMsg = result.error ?? `python_envelope_status:${_pythonEnvelopeStatus}`;
       await db
         .update(backtests)
         .set({
           status: "failed",
-          errorMessage: result.error,
+          errorMessage: errorMsg,
           executionTimeMs: result.execution_time_ms,
         })
         .where(eq(backtests.id, backtestId));
@@ -570,8 +613,8 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       backtestSpan.setAttribute("errorFromPython", true);
       backtestSpan.end();
       backtestRuns.labels({ status: "failed", mode, tier: "none" }).inc();
-      broadcastSSE("backtest:failed", { backtestId, strategyId, error: result.error });
-      return { id: backtestId, status: "failed", error: result.error };
+      broadcastSSE("backtest:failed", { backtestId, strategyId, error: errorMsg });
+      return { id: backtestId, status: "failed", error: errorMsg };
     }
 
     // Walk-forward returns metrics nested under oos_metrics — unwrap for DB storage
@@ -1822,7 +1865,11 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             metadata: { backtestId, strategyId, quboRowId: quboRow.id, correlationId: correlationId ?? null },
           }).catch(() => {});
         }
-      })();
+        // FIX 3 (deepscan8): catch applied inside IIFE, but outer catch guards
+        // against any rejection that escapes the inner try/catch (e.g. db.insert).
+      })().catch((e: unknown) =>
+        logger.error({ backtestId, strategyId, err: e }, "Auto QUBO timing IIFE uncaught rejection"),
+      );
     }
 
     // ─── Auto tensor signal evaluation (fire-and-forget) ───
@@ -2046,7 +2093,10 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             metadata: { backtestId, strategyId, rlRowId: rlRow.id, correlationId: correlationId ?? null },
           }).catch(() => {});
         }
-      })();
+        // FIX 3 (deepscan8): catch unhandled rejections from the legacy RL IIFE
+      })().catch((e: unknown) =>
+        logger.error({ strategyId, backtestId, err: e }, "Auto RL training IIFE uncaught rejection"),
+      );
     }
 
     // ─── W29 Pass C.2: Regime-conditioned RL training auto-fire ─────────────────
@@ -2151,7 +2201,10 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
               result: { error: String(rlTrainErr), strategy_id: strategyId, backtest_id: backtestId },
             });
           }
-        })();
+          // FIX 3 (deepscan8): catch unhandled rejections from the C.2 RL IIFE
+        })().catch((e: unknown) =>
+          logger.error({ strategyId, backtestId, err: e }, "RL C.2 training IIFE uncaught rejection"),
+        );
       }
     }
 

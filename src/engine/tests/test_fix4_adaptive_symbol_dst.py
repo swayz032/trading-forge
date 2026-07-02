@@ -161,3 +161,93 @@ class TestFix4SymbolFromSpec:
         assert "FIX 4" in source, (
             "FIX 4 documentation comment not found in backtester.py."
         )
+
+
+# ─── Test C: _dst_us_rule_offset fallback helper (FIX 2, 2026-07-02) ─────────
+# Tests the extracted US DST rule used by the last-resort fallback in
+# _dst_correct_et_hour(). Import is direct — no full backtester load needed.
+
+class TestDstUsRuleOffset:
+    """Unit tests for _dst_us_rule_offset() — last-resort DST rule for fallback path.
+
+    This tests the extracted helper directly (no JIT-triggering backtester import).
+    The helper returns -4 (EDT) in summer and -5 (EST) in winter.
+    """
+
+    def _load_rule_offset(self):
+        """Import _dst_us_rule_offset with vectorbt mocked to avoid JIT hang."""
+        _vbt_mock = MagicMock()
+        _vbt_mock.Portfolio = MagicMock()
+        _patches = {
+            "vectorbt": _vbt_mock,
+            "vectorbt.portfolio": _vbt_mock,
+            "vectorbt.portfolio.base": _vbt_mock,
+        }
+        for mod, mock in _patches.items():
+            if mod not in sys.modules:
+                sys.modules[mod] = mock
+        from src.engine.backtester import _dst_us_rule_offset  # noqa: PLC0415
+        return _dst_us_rule_offset
+
+    def test_january_returns_est_offset(self):
+        """January is well within EST (UTC-5) — winter standard time."""
+        fn = self._load_rule_offset()
+        utc_dt = datetime.datetime(2024, 1, 15, 20, 55, tzinfo=datetime.timezone.utc)
+        offset = fn(utc_dt)
+        assert offset == -5, (
+            f"January (EST) must return UTC offset -5, got {offset}. "
+            "Old hardcoded UTC-4 would return -4 here (wrong for winter)."
+        )
+
+    def test_july_returns_edt_offset(self):
+        """July is well within EDT (UTC-4) — summer daylight saving time."""
+        fn = self._load_rule_offset()
+        utc_dt = datetime.datetime(2024, 7, 15, 19, 55, tzinfo=datetime.timezone.utc)
+        offset = fn(utc_dt)
+        assert offset == -4, (
+            f"July (EDT) must return UTC offset -4, got {offset}."
+        )
+
+    def test_fallback_winter_1555_computes_correctly(self):
+        """Fallback: UTC 20:55 in January must give ET hour 15 (not 16 with old UTC-4).
+
+        The time-stop fires at 15:55 ET. Old UTC-4 fallback gave 16:55 in winter
+        (missing the flatten trigger). The US DST rule gives the correct 15:55.
+        """
+        fn = self._load_rule_offset()
+        utc_dt = datetime.datetime(2024, 1, 15, 20, 55, tzinfo=datetime.timezone.utc)
+        offset = fn(utc_dt)
+        et_hour = (utc_dt.hour + offset) % 24
+        assert et_hour == 15, (
+            f"UTC 20:55 in January must give ET hour 15 (EST), got {et_hour}. "
+            "UTC-4 fallback gives 16 — misses the 15:55 EOD flatten trigger."
+        )
+
+    def test_fallback_summer_1555_computes_correctly(self):
+        """Fallback: UTC 19:55 in July must give ET hour 15 (correct for EDT)."""
+        fn = self._load_rule_offset()
+        utc_dt = datetime.datetime(2024, 7, 15, 19, 55, tzinfo=datetime.timezone.utc)
+        offset = fn(utc_dt)
+        et_hour = (utc_dt.hour + offset) % 24
+        assert et_hour == 15, (
+            f"UTC 19:55 in July must give ET hour 15 (EDT), got {et_hour}."
+        )
+
+    def test_december_returns_est_offset(self):
+        """December is also in EST — verify consistent winter behavior."""
+        fn = self._load_rule_offset()
+        utc_dt = datetime.datetime(2024, 12, 10, 14, 0, tzinfo=datetime.timezone.utc)
+        offset = fn(utc_dt)
+        assert offset == -5, (
+            f"December (EST) must return UTC offset -5, got {offset}."
+        )
+
+    def test_march_before_spring_forward_is_est(self):
+        """Early March (before the second Sunday) is still EST."""
+        fn = self._load_rule_offset()
+        # March 1 is always before the second Sunday of March
+        utc_dt = datetime.datetime(2024, 3, 1, 20, 0, tzinfo=datetime.timezone.utc)
+        offset = fn(utc_dt)
+        assert offset == -5, (
+            f"Early March (before spring-forward) must be EST (-5), got {offset}."
+        )
