@@ -12262,6 +12262,26 @@ Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal
 
 **Carry-forward:** engine has ZERO open code findings — 100% of known audit items closed. Remaining to a true 10 is EVIDENCE, not code: first backtest wave → ladder → paper → funded. Operator-side: UPS+Kasa, secret rotation, `S3_BACKUP_BUCKET` isolated bucket. Optional polish: bar-by-bar AVWAP section in the parity CI gate; SSE catalog ratchet; n8n retry-backoff normalization.
 
+### Session Log — 2026-07-02 Deep-scan #11 — STRATEGY FACTORY graded (READ-ONLY, 3 auditors + parent verification)
+
+**Mission:** Operator: "execute" on grading the strategy factory (scout→extraction→graduation→overlay→DSL compile) — the last ungraded code band. Branch phase-0 97b2a81 (incl. today's layer4 conveyor wave).
+
+**Grades:** extraction fidelity **~5.5/10** (3 CRIT — weakest band in the system) · graduation/conveyor **8.0/10** · overlay/DSL semantics **7.5/10**. Factory overall **≈7.0**. Parent CONFIRMED the grade-movers.
+
+**Confirmed findings (fix-wave priority):**
+1. **EXTR-CRIT: parity gate certifies the WRONG MODEL** — wave26-gemma4-smoke-test.ts:36 defaults TRANSCRIPT_EXTRACTOR_LOCAL_MODEL to `qwen2.5-coder:7b` (REMOVED as canonical 2026-05-26; not on the tower) — VERIFIED :36. The gate can pass while never testing gemma4:e2b, AND its fixtures validate the legacy v12 path while production runs the MINIMAL prompt.
+2. **EXTR-CRIT: production extraction has ZERO content-grounding verification** — TRANSCRIPT_EXTRACTOR_USE_LEGACY defaults false (model-router.ts:505/2283, VERIFIED) → minimal prompt/schema has NO transcript_quote/verbatim fields; the v12 prompt's claim "the route validates transcript_quote as substring" was NEVER implemented anywhere. GBNF enforces shape, not provenance — hallucinated params flow to strategy rows un-grounded (downstream gates catch STRUCTURE, not truth).
+3. **EXTR-HIGH: YouTube quota math 18K units/day vs 10K free tier** (stale "2400/day" comment) — quota dies ~midday, 403 → silent `[]` + logger.warn only; zero-extract cycles entirely silent (no Discord).
+4. **GRAD-HIGH: evolution-service.ts:527 is the ONE ungated strategy INSERT** (no source guard, no auditGraduatedConfig; child enters conveyor at TESTING never having passed Gate 1/2/3). Other 7 creation sites verified gated.
+5. **OVERLAY-MED: exit_type is conditional passthrough not allowlist** (only "fixed_target" converts — hallucinated exit_type survives to engine dispatch). **GRAD-MED: v11 writes un-audited top-level config.stop_loss/targets** — parent VERIFIED engine reads strategy.stop_loss (overlay copy) so NOT a live defect, but dual-location ambiguity + auditor blind spot. **GRAD-MED: variant fan-out rows skip symbol-specific auditor checks. GRAD-MED: conveyor has no ORDER BY (starvation via perpetually-skipped strategies).**
+6. **DSL semantic gaps:** rsi_reversal compiles to LEVEL (`rsi_14 < 30`, fires every oversold bar) not CROSS (`crosses_above 30`) vs prose intent — 1-line fix; N-of-M confluence silently downgrades to AND-all-M (no warning anywhere); critic invocation exceptions fail-OPEN (deliberate, but unreviewed DSL reaches compute); HTF dispatch + TS type union missing vwap_with_bands/anchored_vwap (3 `as any` casts); Python ARCHETYPE_CLASS_MAP lockstep = comment-convention only; minimal-schema empty_reason audit always null (rejected_strategies[] unread).
+7. Provenance "hard gate" (mig 0186) records but cannot fire on normally-built stamps (spec_provenance_ref="none" passes) — enforcement softer than framing.
+
+**Verified-good:** Gate1/auditor fail-closed no-poison; entry_quality single-writer CLEAN; fingerprint convergence both directions + GRADUATION_DAILY_CAP; name-from-symbols[0] held; 34/34 archetype registry keys resolve; overlay replaces ALL sizing/exit canon values (engine reads the overlay copy — VERIFIED); np.roll/sentinel/name-layer conventions coherent across all 4 layers; critic budget fail-CLOSED; Reddit sort=relevance held; dedupe + OPENAI budget enforced; title scoring HARD_REJECT live.
+
+**Carry-forward:** fix wave on operator direction — priority: parity-gate model+fixtures → production content-grounding (minimal-path transcript_quote + route substring enforcement) → YouTube quota budget + zero-extract alerting → evolution INSERT gating → exit_type allowlist + conveyor ORDER BY + variant re-audit → DSL semantics (rsi cross, N-of-M warning) + type parity + lockstep CI.
+
+---
 ### Session Log — 2026-07-02 Deep-scan #10 — EXECUTION PATH + DATA LAYER + VACATION AUTONOMY graded (READ-ONLY, 4 auditors + parent verification)
 
 **Mission:** Operator approved grading the paper/live execution path + the 2 ranked alternatives (data layer first-ever grade; vacation autonomy incl. deep-scan #7's 2 open CRITs). Branch phase-0 eaad526.
