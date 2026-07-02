@@ -32,26 +32,47 @@ import hashlib
 import os
 from datetime import date
 from decimal import Decimal
+from functools import lru_cache
 
 # ─── Env flag ────────────────────────────────────────────────────────────────
+# deep-scan #8 wave 2 FIX 2: replaced module-level frozen reads with lru_cache
+# getter functions so tests can call cache_clear() + set env → get the new value.
+# Module-level frozen reads were a test-isolation hazard: monkeypatch(os.environ)
+# after import had no effect on _ROLL_SPREAD_ITEMIZED / _DEFAULT_ROLL_TICKS.
+#
+# Usage in tests:
+#   import src.engine.roll_spread_cost as rsc
+#   rsc._get_roll_spread_itemized.cache_clear()
+#   rsc._get_default_roll_ticks.cache_clear()
+#   os.environ["BACKTEST_ROLL_SPREAD_ITEMIZED"] = "false"
+#   # now the getter returns False for the lifetime of this test
+#   rsc._get_roll_spread_itemized.cache_clear()  # restore after test
 
-_ROLL_SPREAD_ITEMIZED: bool = os.environ.get(
-    "BACKTEST_ROLL_SPREAD_ITEMIZED", "true"
-).lower() in ("true", "1", "yes")
 
-# ─── Per-symbol tick table (CME published, 2026 institutional standard) ──────
-# Values are HALF-SPREAD (per-side cost of the roll in ticks).
-# Read from env first so operators can override via deployment config.
+@lru_cache(maxsize=1)
+def _get_roll_spread_itemized() -> bool:
+    """Read BACKTEST_ROLL_SPREAD_ITEMIZED at call time (cached; clear for tests)."""
+    return os.environ.get(
+        "BACKTEST_ROLL_SPREAD_ITEMIZED", "true"
+    ).lower() in ("true", "1", "yes")
 
-_DEFAULT_ROLL_TICKS: dict[str, float] = {
-    "MES": float(os.environ.get("ROLL_SPREAD_MES_TICKS", "3.0")),
-    "MNQ": float(os.environ.get("ROLL_SPREAD_MNQ_TICKS", "4.0")),
-    "MCL": float(os.environ.get("ROLL_SPREAD_MCL_TICKS", "2.0")),
-    # Micro-alias full-size symbols (CONTRACT_SPECS maps these to micro specs)
-    "ES": float(os.environ.get("ROLL_SPREAD_ES_TICKS", "3.0")),
-    "NQ": float(os.environ.get("ROLL_SPREAD_NQ_TICKS", "4.0")),
-    "CL": float(os.environ.get("ROLL_SPREAD_CL_TICKS", "2.0")),
-}
+
+@lru_cache(maxsize=1)
+def _get_default_roll_ticks() -> dict:
+    """Read ROLL_SPREAD_*_TICKS env vars at call time (cached; clear for tests).
+
+    Values are HALF-SPREAD (per-side cost of the roll in ticks).
+    Read from env so operators can override via deployment config.
+    """
+    return {
+        "MES": float(os.environ.get("ROLL_SPREAD_MES_TICKS", "3.0")),
+        "MNQ": float(os.environ.get("ROLL_SPREAD_MNQ_TICKS", "4.0")),
+        "MCL": float(os.environ.get("ROLL_SPREAD_MCL_TICKS", "2.0")),
+        # Micro-alias full-size symbols (CONTRACT_SPECS maps these to micro specs)
+        "ES": float(os.environ.get("ROLL_SPREAD_ES_TICKS", "3.0")),
+        "NQ": float(os.environ.get("ROLL_SPREAD_NQ_TICKS", "4.0")),
+        "CL": float(os.environ.get("ROLL_SPREAD_CL_TICKS", "2.0")),
+    }
 
 # Fallback tick size and tick value per symbol for USD conversion.
 # Mirrors CONTRACT_SPECS without creating a circular import.
@@ -92,7 +113,8 @@ def _get_roll_ticks(symbol: str) -> float:
 
     Falls back to MES if symbol not in the table.
     """
-    return _DEFAULT_ROLL_TICKS.get(symbol.upper(), _DEFAULT_ROLL_TICKS["MES"])
+    ticks = _get_default_roll_ticks()
+    return ticks.get(symbol.upper(), ticks["MES"])
 
 
 def _ticks_to_usd(symbol: str, ticks: float) -> Decimal:
@@ -124,7 +146,7 @@ def compute_roll_spread_cost(
         Total cost in USD as a Decimal (always ≥ 0).
         Returns Decimal("0") when itemisation is disabled.
     """
-    if not _ROLL_SPREAD_ITEMIZED:
+    if not _get_roll_spread_itemized():
         return Decimal("0")
 
     if contracts <= 0:
@@ -167,5 +189,5 @@ def build_roll_spread_audit(
         "ticks_charged": round(actual_ticks, 3),
         "contracts": contracts,
         "total_cost_usd": float(total_cost_usd),
-        "itemized": _ROLL_SPREAD_ITEMIZED,
+        "itemized": _get_roll_spread_itemized(),
     }

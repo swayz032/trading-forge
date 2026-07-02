@@ -3909,9 +3909,19 @@ def run_backtest(
     # backtester currently runs one symbol at a time, we track the single-symbol
     # session P&L from sizes × close prices as an approximation. The guard fires
     # when this single symbol's session loss exceeds 67% of the firm DLL.
+    #
+    # deep-scan #8 wave 2 FIX 1: stamp result["cross_symbol_dll"] unconditionally
+    # so consumers (critic, paper, prop-sim) can see that the guard used a zero-proxy.
+    _cs_symbol = getattr(config, "symbol", "unknown")
+    _cs_dll_disclosure: dict = {
+        "modeled": False,
+        "reason": "guard_error_or_skipped",
+        "symbols": [_cs_symbol],
+    }
     try:
         from src.engine.context.cross_symbol_dll import (
             apply_cross_symbol_dll_to_entries,
+            build_cs_dll_disclosure,
         )
         _cs_firm_dll = 1000.0
         if request.firm_key:
@@ -3925,7 +3935,9 @@ def run_backtest(
         # H7 fix: when _cs_bar_pnls is all-zeros, apply_cross_symbol_dll_to_entries never
         # fires because cumulative session P&L stays 0 → DLL threshold never crossed.
         # Emit a visible audit row so non-enforcement is NOT silent.
+        # FIX 1: build disclosure block stamped unconditionally into result dict.
         _cs_bar_pnls = np.zeros(len(entries_pd), dtype=float)
+        _cs_dll_disclosure = build_cs_dll_disclosure([_cs_symbol], sibling_pnls_real=False)
         print(json.dumps({
             "event": "backtest.cross_symbol_dll_degenerate_skip",
             "reason": "single_symbol_zero_pnl_proxy",
@@ -4925,6 +4937,10 @@ def run_backtest(
             "long": _parity_long,
             "short": _parity_short,
         },
+        # deep-scan #8 wave 2 FIX 1: unconditional cross-symbol DLL modeling disclosure.
+        # Additive key — consumers that do not read it are unaffected.
+        # modeled=False for all current single-symbol backtest paths (zero P&L proxy).
+        "cross_symbol_dll": _cs_dll_disclosure,
     }
     # Also embed parity gate stats in run_receipt for backward-compat TS readers.
     # This is done after the result dict is built to avoid mutating run_receipt template.

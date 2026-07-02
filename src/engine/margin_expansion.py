@@ -23,13 +23,34 @@ from __future__ import annotations
 
 import math
 import os
+from functools import lru_cache
 
 # ─── Env-configurable thresholds ─────────────────────────────────────────────
+# deep-scan #8 wave 2 FIX 2: replaced module-level frozen reads with lru_cache
+# getter so tests can call cache_clear() + set env → get the new value.
+# Module-level frozen reads were a test-isolation hazard.
+#
+# Usage in tests:
+#   import src.engine.margin_expansion as me
+#   me._get_vix_expansion_env.cache_clear()
+#   os.environ["MARGIN_VIX_THRESHOLD_30"] = "25.0"
+#   # now _get_vix_expansion_env() returns 25.0 for threshold_30
+#   me._get_vix_expansion_env.cache_clear()  # restore after test
 
-_VIX_THRESHOLD_30: float = float(os.environ.get("MARGIN_VIX_THRESHOLD_30", "30.0"))
-_VIX_MULTIPLIER_30: float = float(os.environ.get("MARGIN_VIX_MULTIPLIER_30", "0.5"))
-_VIX_THRESHOLD_50: float = float(os.environ.get("MARGIN_VIX_THRESHOLD_50", "50.0"))
-_VIX_MULTIPLIER_50: float = float(os.environ.get("MARGIN_VIX_MULTIPLIER_50", "0.25"))
+
+@lru_cache(maxsize=1)
+def _get_vix_expansion_env() -> tuple:
+    """Read VIX margin expansion env vars at call time (cached; clear for tests).
+
+    Returns:
+        (threshold_30, multiplier_30, threshold_50, multiplier_50)
+    """
+    return (
+        float(os.environ.get("MARGIN_VIX_THRESHOLD_30", "30.0")),
+        float(os.environ.get("MARGIN_VIX_MULTIPLIER_30", "0.5")),
+        float(os.environ.get("MARGIN_VIX_THRESHOLD_50", "50.0")),
+        float(os.environ.get("MARGIN_VIX_MULTIPLIER_50", "0.25")),
+    )
 
 
 def apply_vix_margin_expansion(
@@ -60,10 +81,11 @@ def apply_vix_margin_expansion(
     Returns:
         Adjusted contract count (int, ≥ 1).
     """
-    threshold_30 = env_threshold_30 if env_threshold_30 is not None else _VIX_THRESHOLD_30
-    multiplier_30 = env_multiplier_30 if env_multiplier_30 is not None else _VIX_MULTIPLIER_30
-    threshold_50 = env_threshold_50 if env_threshold_50 is not None else _VIX_THRESHOLD_50
-    multiplier_50 = env_multiplier_50 if env_multiplier_50 is not None else _VIX_MULTIPLIER_50
+    _t30, _m30, _t50, _m50 = _get_vix_expansion_env()
+    threshold_30 = env_threshold_30 if env_threshold_30 is not None else _t30
+    multiplier_30 = env_multiplier_30 if env_multiplier_30 is not None else _m30
+    threshold_50 = env_threshold_50 if env_threshold_50 is not None else _t50
+    multiplier_50 = env_multiplier_50 if env_multiplier_50 is not None else _m50
 
     if vix_level > threshold_50:
         expanded = int(math.floor(base_max_contracts * multiplier_50))
@@ -98,12 +120,13 @@ def get_vix_expansion_audit(
         env_threshold_30, env_multiplier_30, env_threshold_50, env_multiplier_50:
             Override values (same as apply_vix_margin_expansion — for test parity).
     """
-    threshold_30 = env_threshold_30 if env_threshold_30 is not None else _VIX_THRESHOLD_30
-    multiplier_30 = env_multiplier_30 if env_multiplier_30 is not None else _VIX_MULTIPLIER_30
-    threshold_50 = env_threshold_50 if env_threshold_50 is not None else _VIX_THRESHOLD_50
+    _t30, _m30, _t50, _m50 = _get_vix_expansion_env()
+    threshold_30 = env_threshold_30 if env_threshold_30 is not None else _t30
+    multiplier_30 = env_multiplier_30 if env_multiplier_30 is not None else _m30
+    threshold_50 = env_threshold_50 if env_threshold_50 is not None else _t50
 
     if vix_level > threshold_50:
-        multiplier_used = env_multiplier_50 if env_multiplier_50 is not None else _VIX_MULTIPLIER_50
+        multiplier_used = env_multiplier_50 if env_multiplier_50 is not None else _m50
         tier_triggered = "emergency_50"
     elif vix_level > threshold_30:
         multiplier_used = multiplier_30
@@ -144,14 +167,14 @@ _VIX_ATR_MULT_HIGH: float = float(os.environ.get("VIX_ATR_MULT_HIGH", "2.5"))  #
 
 def apply_vix_atr_multiplier(
     base_mult: float,
-    vix: "float | None",
+    vix: float | None,
     *,
-    enabled: "bool | None" = None,
-    tier_low: "float | None" = None,
-    tier_mid: "float | None" = None,
-    mult_low: "float | None" = None,
-    mult_mid: "float | None" = None,
-    mult_high: "float | None" = None,
+    enabled: bool | None = None,
+    tier_low: float | None = None,
+    tier_mid: float | None = None,
+    mult_low: float | None = None,
+    mult_mid: float | None = None,
+    mult_high: float | None = None,
 ) -> float:
     """Return the VIX-adjusted ATR stop multiplier.
 
