@@ -10,6 +10,15 @@
  *
  * Handler functions are exported individually so tests can call them with
  * mocked req/res (matches the codebase's no-supertest convention).
+ *
+ * FIX 3 (deep-scan #12): Cookies are now HOST-ONLY (no domain attribute).
+ * The previous ".up.railway.app" domain caused slumhouse_sid to be sent to ALL
+ * co-tenant Railway apps serving a /slumhouse-prefixed path — a session leakage
+ * risk. Omitting the domain attribute scopes the cookie to the exact origin host.
+ *
+ * FIX 4 (deep-scan #12): The session token now embeds the user's revocation epoch
+ * (from slumhouse_users.session_epoch). requireSlumhouseUser compares the epoch in
+ * the token against the DB value to detect revoked sessions.
  */
 import { Router, type Request, type Response } from "express";
 import { eq, sql } from "drizzle-orm";
@@ -21,14 +30,6 @@ import { logger } from "../../lib/logger.js";
 import { insertAuditRowSafe } from "../../lib/audit-log-helper.js";
 
 const SESSION_TTL_SEC = 60 * 60 * 24 * 14; // 14 days
-
-function cookieDomain(req: Request): string | undefined {
-  const host = String(req.headers.host ?? "");
-  if (host.endsWith(".up.railway.app")) {
-    return ".up.railway.app";
-  }
-  return undefined;
-}
 
 export async function handleLogin(_req: Request, res: Response): Promise<void> {
   // Falls back to DISCORD_APPLICATION_ID — same value Discord shows in the dev portal.
@@ -93,26 +94,41 @@ export async function handleCallback(req: Request, res: Response): Promise<void>
         .catch((e: unknown) => logger.warn({ err: e }, "slumhouse_last_seen_update_failed"));
     }
 
-  const sid = signSession({ discordUserId: discordUser.id, ttlSec: SESSION_TTL_SEC });
-  const domain = cookieDomain(req);
-  res.cookie(COOKIE_NAME, sid, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: SESSION_TTL_SEC * 1000,
-    path: "/slumhouse",
-    domain,
-  });
+    // FIX 4: Fetch the current revocation epoch so the minted token is bound to
+    // the user's current epoch. If the epoch is later incremented (revoke), this
+    // token becomes invalid. New users have epoch=0 by default.
+    const epochRows = await db
+      .select({ sessionEpoch: slumhouseUsers.sessionEpoch })
+      .from(slumhouseUsers)
+      .where(eq(slumhouseUsers.discordUserId, discordUser.id))
+      .catch(() => []);
+    const epoch = epochRows[0]?.sessionEpoch ?? 0;
+
+    const sid = signSession({ discordUserId: discordUser.id, ttlSec: SESSION_TTL_SEC, epoch });
+
+    // FIX 3: Cookies are HOST-ONLY — omit the domain attribute entirely.
+    // The previous ".up.railway.app" value caused session cookies to be sent to
+    // all co-tenant Railway apps, leaking the session. Host-only scoping is
+    // enforced by the browser when no domain attribute is set.
+    res.cookie(COOKIE_NAME, sid, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: SESSION_TTL_SEC * 1000,
+      path: "/slumhouse",
+      // domain intentionally omitted (host-only, FIX 3)
+    });
 
     // One-shot welcome cookie — Crib reads + clears it on load to fire the
     // welcome modal. Fires once per login (sign out + back in = fires again).
+    // FIX 3: also host-only (no domain attribute).
     res.cookie("slumhouse_welcome", "1", {
       httpOnly: false,             // frontend JS reads it
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
       maxAge: 60_000,              // 1 minute — Crib clears it on first read
       path: "/slumhouse",
-      domain,
+      // domain intentionally omitted (host-only, FIX 3)
     });
 
     await insertAuditRowSafe({
@@ -133,12 +149,13 @@ export async function handleCallback(req: Request, res: Response): Promise<void>
 }
 
 export function handleLogout(_req: Request, res: Response): void {
-  const domain = cookieDomain(_req);
+  // FIX 3: host-only (no domain attribute) — must match the attributes used when
+  // the cookie was set so the browser correctly clears it.
   res.cookie(COOKIE_NAME, "", {
     httpOnly: true,
     expires: new Date(0),
     path: "/slumhouse",
-    domain,
+    // domain intentionally omitted (host-only, FIX 3)
   });
   res.redirect(302, "/slumhouse/login.html");
 }

@@ -3227,6 +3227,10 @@ export const slumhouseUsers = pgTable(
     brokerAccountId: uuid("broker_account_id"),
     createdAt:       timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     lastSeenAt:      timestamp("last_seen_at", { withTimezone: true }),
+    // FIX 4 (deep-scan #12, migration 0187): per-user session revocation epoch.
+    // Increment via POST /slumhouse/admin/revoke-sessions to invalidate all
+    // currently-signed tokens for this user (or all users if no user_id given).
+    sessionEpoch:    integer("session_epoch").notNull().default(0),
   },
   (table) => [
     index("idx_slumhouse_users_broker").on(table.brokerAccountId),

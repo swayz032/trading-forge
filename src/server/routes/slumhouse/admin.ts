@@ -6,9 +6,10 @@
  * the operator has verified the page shell + background.
  *
  * Routes (all under /slumhouse/admin):
- *   POST /slumhouse/admin/auth    { passcode }  → sets slumhouse_admin_sid cookie
- *   POST /slumhouse/admin/logout                 → clears the cookie
- *   GET  /slumhouse/admin/status                 → { configured, unlocked }
+ *   POST /slumhouse/admin/auth           { passcode }  → sets slumhouse_admin_sid cookie
+ *   POST /slumhouse/admin/logout                       → clears the cookie
+ *   GET  /slumhouse/admin/status                       → { configured, unlocked }
+ *   POST /slumhouse/admin/revoke-sessions { discord_user_id? } → bump session epoch
  *
  * Security:
  *   - Passcode compared timing-safe against SLUMHOUSE_ADMIN_PASSCODE (env). Unset
@@ -16,6 +17,13 @@
  *   - Separate from the friend Discord session — Discord identity grants nothing here.
  *   - Per-IP brute-force throttle (in-memory): lock out after too many failures.
  *   - Every auth attempt audited (slumhouse_admin.auth_*).
+ *   - FIX 2 (deep-scan #12): Discord identity is threaded into the admin token when
+ *     the operator enters the passcode while also holding a friend session. All
+ *     subsequent control-mutation audit rows carry actor_discord_id.
+ *   - FIX 4 (deep-scan #12): POST /slumhouse/admin/revoke-sessions increments
+ *     session_epoch in slumhouse_users to invalidate outstanding tokens.
+ *   - FIX 5 (deep-scan #12): State-mutating POSTs validate the Origin header
+ *     against SLUMHOUSE_ALLOWED_ORIGINS (defense-in-depth alongside sameSite:lax).
  */
 import { Router, type Request, type Response } from "express";
 import {
@@ -25,13 +33,16 @@ import {
   isAdminConfigured,
   signAdminSession,
   adminSessionFromCookie,
+  adminDiscordUserIdFromCookie,
 } from "../../lib/slumhouse/admin-session.js";
+import { verifySession, COOKIE_NAME } from "../../lib/slumhouse/session.js";
+import { checkSlumhouseOrigin } from "../../lib/slumhouse/require-session.js";
 import { insertAuditRowSafe } from "../../lib/audit-log-helper.js";
 import { logger } from "../../lib/logger.js";
 import { getMode, setMode } from "../../services/pipeline-control-service.js";
 import { db } from "../../db/index.js";
-import { systemParameters, systemState } from "../../db/schema.js";
-import { eq } from "drizzle-orm";
+import { systemParameters, systemState, slumhouseUsers } from "../../db/schema.js";
+import { eq, sql } from "drizzle-orm";
 import { clearOperatorAbsenceMarkers } from "../../services/dead-mans-heartbeat-service.js";
 import { operatorAbsentModeActive } from "../../services/operator-absent-mode-service.js";
 import {
@@ -108,6 +119,7 @@ function setAdminCookie(res: Response, token: string): void {
     sameSite: "lax",
     maxAge: ADMIN_SESSION_TTL_SEC * 1000,
     path: "/slumhouse",
+    // domain intentionally omitted — host-only (consistent with FIX 3 in auth.ts)
   });
 }
 
@@ -119,6 +131,9 @@ adminOfficeRouter.get("/slumhouse/admin/status", (req: Request, res: Response) =
 });
 
 adminOfficeRouter.post("/slumhouse/admin/auth", async (req: Request, res: Response) => {
+  // FIX 5: Origin check — defense-in-depth on the passcode endpoint.
+  if (!checkSlumhouseOrigin(req, res)) return;
+
   const now = Date.now();
   const key = clientKey(req);
 
@@ -145,13 +160,33 @@ adminOfficeRouter.post("/slumhouse/admin/auth", async (req: Request, res: Respon
   const passcode = typeof req.body?.passcode === "string" ? req.body.passcode : "";
   if (checkPasscode(passcode)) {
     clearFails(key);
-    setAdminCookie(res, signAdminSession());
+
+    // FIX 2: Thread Discord identity into the admin session token if the operator
+    // also holds a valid friend session (slumhouse_sid cookie). This is optional —
+    // the Office works without a Discord session. When present, the Discord user ID
+    // appears in all subsequent control-mutation audit rows as actor_discord_id.
+    let discordIdentity: string | undefined;
+    try {
+      const slumhouseCookieMatch = (req.headers.cookie ?? "").match(
+        /(?:^|;\s*)slumhouse_sid=([^;]+)/,
+      );
+      if (slumhouseCookieMatch) {
+        const ver = verifySession(decodeURIComponent(slumhouseCookieMatch[1]));
+        if (ver.ok) {
+          discordIdentity = ver.discordUserId;
+        }
+      }
+    } catch {
+      // non-critical — proceed without Discord identity
+    }
+
+    setAdminCookie(res, signAdminSession(ADMIN_SESSION_TTL_SEC, discordIdentity));
     await insertAuditRowSafe({
       action: "slumhouse_admin.auth_success",
       entityType: "system",
       entityId: null,
       decisionAuthority: "human",
-      input: { ip: key } as Record<string, unknown>,
+      input: { ip: key, actor_discord_id: discordIdentity ?? null } as Record<string, unknown>,
       result: {} as Record<string, unknown>,
       status: "success",
       correlationId: null,
@@ -307,8 +342,14 @@ adminOfficeRouter.get("/slumhouse/admin/switches", getSwitchStates);
 // Named so tests can import the handler directly.
 export async function postSwitch(req: Request, res: Response): Promise<void> {
   if (!requireAdminSession(req, res)) return;
+  // FIX 5: Origin check on every state-mutating control POST.
+  if (!checkSlumhouseOrigin(req, res)) return;
+
   const id = typeof req.body?.id === "string" ? req.body.id : "";
   const on = req.body?.on === true;
+
+  // FIX 2: Extract Discord identity from admin session cookie for audit trail.
+  const actorDiscordId = adminDiscordUserIdFromCookie(req.headers.cookie) ?? null;
 
   // ── bot_power ─────────────────────────────────────────────────────────────
   // DO NOT modify this block — bot_power wiring is production-verified.
@@ -326,7 +367,7 @@ export async function postSwitch(req: Request, res: Response): Promise<void> {
       entityType: "system",
       entityId: null,
       decisionAuthority: "human",
-      input: { switch: id, on } as Record<string, unknown>,
+      input: { switch: id, on, actor_discord_id: actorDiscordId } as Record<string, unknown>,
       result: { mode: newMode } as Record<string, unknown>,
       status: "success",
       correlationId: null,
@@ -383,7 +424,7 @@ export async function postSwitch(req: Request, res: Response): Promise<void> {
       entityType: "system",
       entityId: null,
       decisionAuthority: "human",
-      input: { switch: id, mode: targetMode, on } as Record<string, unknown>,
+      input: { switch: id, mode: targetMode, on, actor_discord_id: actorDiscordId } as Record<string, unknown>,
       result: { value: newVal, mode: targetMode, label } as Record<string, unknown>,
       status: "success",
       correlationId: null,
@@ -425,7 +466,7 @@ export async function postSwitch(req: Request, res: Response): Promise<void> {
       entityType: "system",
       entityId: null,
       decisionAuthority: "human",
-      input: { switch: id, on } as Record<string, unknown>,
+      input: { switch: id, on, actor_discord_id: actorDiscordId } as Record<string, unknown>,
       result: { operatorAbsent: on } as Record<string, unknown>,
       status: "success",
       correlationId: null,
@@ -455,7 +496,7 @@ export async function postSwitch(req: Request, res: Response): Promise<void> {
       entityType: "system",
       entityId: null,
       decisionAuthority: "human",
-      input: { switch: id } as Record<string, unknown>,
+      input: { switch: id, actor_discord_id: actorDiscordId } as Record<string, unknown>,
       result: { cleared, error: clearErr ? String(clearErr) : null } as Record<string, unknown>,
       status: clearErr !== null && cleared.length === 0 ? "warning" : "success",
       correlationId: null,
@@ -480,7 +521,7 @@ export async function postSwitch(req: Request, res: Response): Promise<void> {
       entityType: "system",
       entityId: null,
       decisionAuthority: "human",
-      input: { switch: id, on } as Record<string, unknown>,
+      input: { switch: id, on, actor_discord_id: actorDiscordId } as Record<string, unknown>,
       result: { mode: on ? "live" : "paper" } as Record<string, unknown>,
       status: "success",
       correlationId: null,
@@ -500,3 +541,62 @@ export async function postSwitch(req: Request, res: Response): Promise<void> {
 }
 
 adminOfficeRouter.post("/slumhouse/admin/switch", postSwitch);
+
+// ─── FIX 4: Session revocation endpoint ────────────────────────────────────
+/**
+ * POST /slumhouse/admin/revoke-sessions
+ * Body: { discord_user_id?: string }
+ *
+ * Increments session_epoch in slumhouse_users for a specific user or ALL users.
+ * All existing session tokens signed under the previous epoch are immediately
+ * rejected by requireSlumhouseUser. The user must re-authenticate to obtain a
+ * token signed under the new epoch.
+ *
+ * Design: per-user epoch (not global) so the operator can revoke one leaked
+ * session without forcing all friends to log in again.
+ */
+export async function postRevokeSessions(req: Request, res: Response): Promise<void> {
+  if (!requireAdminSession(req, res)) return;
+  // FIX 5: Origin check.
+  if (!checkSlumhouseOrigin(req, res)) return;
+
+  const actorDiscordId = adminDiscordUserIdFromCookie(req.headers.cookie) ?? null;
+  const { discord_user_id } = req.body ?? {};
+
+  if (discord_user_id && typeof discord_user_id === "string") {
+    // Per-user revoke.
+    await db
+      .update(slumhouseUsers)
+      .set({ sessionEpoch: sql`session_epoch + 1` })
+      .where(eq(slumhouseUsers.discordUserId, discord_user_id));
+
+    await insertAuditRowSafe({
+      action: "slumhouse_admin.sessions_revoked",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "human",
+      input: { discord_user_id, actor_discord_id: actorDiscordId } as Record<string, unknown>,
+      result: { scope: "single_user" } as Record<string, unknown>,
+      status: "success",
+      correlationId: null,
+    });
+    res.json({ ok: true, revoked: discord_user_id, scope: "single_user" });
+  } else {
+    // Global revoke — all users.
+    await db.update(slumhouseUsers).set({ sessionEpoch: sql`session_epoch + 1` });
+
+    await insertAuditRowSafe({
+      action: "slumhouse_admin.sessions_revoked",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "human",
+      input: { discord_user_id: null, actor_discord_id: actorDiscordId } as Record<string, unknown>,
+      result: { scope: "all_users" } as Record<string, unknown>,
+      status: "success",
+      correlationId: null,
+    });
+    res.json({ ok: true, revoked: "all", scope: "all_users" });
+  }
+}
+
+adminOfficeRouter.post("/slumhouse/admin/revoke-sessions", postRevokeSessions);
