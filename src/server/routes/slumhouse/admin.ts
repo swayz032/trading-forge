@@ -447,6 +447,31 @@ export async function postSwitch(req: Request, res: Response): Promise<void> {
   // on=true  → set operator_absent_since = now (mirrors heartbeat-service set-since).
   // on=false → clear both absence columns (mirrors /operator-mark-present route).
   if (id === "vacation_mode") {
+    // deep-scan #12 (F-1): when OPERATOR_ABSENT_AUTOPROMOTE=true forces vacation
+    // mode ON at the env layer, clearing the DB marker does NOT change the
+    // effective state — operatorAbsentModeActive() short-circuits on the env var
+    // (operator-absent-mode-service.ts:34), so the switch would silently revert
+    // to ON on the next re-fetch. Refuse the OFF toggle honestly instead of
+    // reporting a success that immediately un-does itself.
+    if (!on && process.env["OPERATOR_ABSENT_AUTOPROMOTE"] === "true") {
+      await insertAuditRowSafe({
+        action: "slumhouse_admin.switch_toggle_refused",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "human",
+        input: { switch: id, on, reason: "env_forces_on", actor_discord_id: actorDiscordId } as Record<string, unknown>,
+        result: { blocked: true, env: "OPERATOR_ABSENT_AUTOPROMOTE" } as Record<string, unknown>,
+        status: "warning",
+        correlationId: null,
+      });
+      res.status(409).json({
+        ok: false,
+        id,
+        error: "env_forces_vacation_on",
+        message: "Vacation mode is forced ON by the OPERATOR_ABSENT_AUTOPROMOTE environment variable. Unset it (and restart the backend) to turn vacation mode off from here.",
+      });
+      return;
+    }
     try {
       if (on) {
         await db
