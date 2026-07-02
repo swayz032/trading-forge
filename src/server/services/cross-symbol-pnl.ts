@@ -25,6 +25,14 @@
 
 import { logger } from "../lib/logger.js";
 
+// deepscan7 paper-MED-1 (2026-07-02): the firm-level DLL aggregate must include
+// sessions stopped/paused mid-day — an "active"-only filter let a sibling session
+// under-count firm losses already realized today by a session the operator (or a
+// halt path) stopped after taking losses. Day-scoping stays in the per-session
+// dailyPnlBreakdown[sessionDate] read, so a stopped session with only prior-day
+// losses still contributes 0 to today's aggregate.
+export const DLL_AGGREGATE_SESSION_STATUSES = ["active", "stopped", "paused"] as const;
+
 export interface AccountSessionPnL {
   firmId: string;
   sessionDate: string;
@@ -57,7 +65,7 @@ export async function getAccountSessionCumulativePnL(
     // Lazy imports to avoid top-level DB bootstrap in tests
     const { db } = await import("../db/index.js");
     const { paperPositions, paperSessions } = await import("../db/schema.js");
-    const { eq, and, isNull, sql } = await import("drizzle-orm");
+    const { eq, and, isNull, inArray, sql } = await import("drizzle-orm");
 
     // ── 1. Realized P&L: sum paper_trades.pnl for today ──────────────────────
     // We use the dailyPnlBreakdown JSONB on each session (already maintained by
@@ -72,7 +80,7 @@ export async function getAccountSessionCumulativePnL(
       .from(paperSessions)
       .where(and(
         eq(paperSessions.firmId, firmId),
-        eq(paperSessions.status, "active"),
+        inArray(paperSessions.status, [...DLL_AGGREGATE_SESSION_STATUSES]),
       ));
 
     let totalRealized = 0;
@@ -99,7 +107,9 @@ export async function getAccountSessionCumulativePnL(
       .where(and(
         isNull(paperPositions.closedAt),
         eq(paperSessions.firmId, firmId),
-        eq(paperSessions.status, "active"),
+        // deepscan7 paper-MED-1: a paused session's open positions are live firm
+        // exposure — count their MTM toward the firm DLL like the active set.
+        inArray(paperSessions.status, [...DLL_AGGREGATE_SESSION_STATUSES]),
       ));
 
     let totalMtm = 0;

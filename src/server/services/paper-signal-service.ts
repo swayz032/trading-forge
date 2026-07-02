@@ -3241,6 +3241,7 @@ export async function evaluateSignals(
             status: "warning",
             input: { firmId, sessionDate, combinedPnL: dllResult.combinedPnL },
             result: { dll_pct: dllResult.dllPct, by_symbol: dllResult.pnLBySymbol, threshold: dllResult.forceCloseThreshold },
+            correlationId: correlationId ?? null,
           }).catch((e: unknown) => {
             logger.warn({ e, action: "cross_symbol_force_close_triggered" }, "audit write failed — non-blocking");
             auditWriteFailuresTotal.labels({ action: "cross_symbol_force_close_triggered" }).inc();
@@ -3270,6 +3271,7 @@ export async function evaluateSignals(
               status: "error",
               input: { firmId, dllPct: dllResult.dllPct, combinedPnL: dllResult.combinedPnL } as Record<string, unknown>,
               result: { error: fcMsg, requiresManualClose: true } as Record<string, unknown>,
+              correlationId: correlationId ?? null,
             }).catch((e: unknown) => {
               logger.warn({ e, action: "cross_symbol_force_close_failed" }, "audit write failed — non-blocking");
               auditWriteFailuresTotal.labels({ action: "cross_symbol_force_close_failed" }).inc();
@@ -3302,6 +3304,7 @@ export async function evaluateSignals(
             status: "warning",
             input: { firmId, sessionDate, combinedPnL: dllResult.combinedPnL },
             result: { dll_pct: dllResult.dllPct, by_symbol: dllResult.pnLBySymbol, threshold: dllResult.haltThreshold },
+            correlationId: correlationId ?? null,
           }).catch((e: unknown) => {
             logger.warn({ e, action: "cross_symbol_dll_halt_triggered" }, "audit write failed — non-blocking");
             auditWriteFailuresTotal.labels({ action: "cross_symbol_dll_halt_triggered" }).inc();
@@ -3341,6 +3344,7 @@ export async function evaluateSignals(
             status: "warning",
             input: { firmId, sessionDate, combinedPnL: dllResult.combinedPnL } as Record<string, unknown>,
             result: { dll_pct: dllResult.dllPct, reduce_factor: dllResult.reduceSizeFactor, reduce_threshold: dllResult.reduceThreshold } as Record<string, unknown>,
+            correlationId: correlationId ?? null,
           }).catch((e: unknown) => {
             logger.warn({ e, action: "sizing.dll_reduce_size_band_entered" }, "audit write failed — non-blocking");
             auditWriteFailuresTotal.labels({ action: "sizing.dll_reduce_size_band_entered" }).inc();
@@ -3421,6 +3425,7 @@ export async function evaluateSignals(
           status: "info",
           input: { symbol, perSessionCap, envDefault: getDailyTradeCapEnvDefault(), trades_today: tradesToday },
           result: { effective_cap: capResult.effectiveCap, reason: capResult.reason },
+          correlationId: correlationId ?? null,
         }).catch((e: unknown) => {
           logger.warn({ e, action: "consistency.daily_trade_cap_blocked" }, "audit write failed — non-blocking");
           auditWriteFailuresTotal.labels({ action: "consistency.daily_trade_cap_blocked" }).inc();

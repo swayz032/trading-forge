@@ -3302,6 +3302,11 @@ async function callExitHandler(
 async function _resolveSmeContextForExit(
   sessionId: string,
   positionId: string,
+  // deepscan7 obs-H3 (2026-07-02): entry-time correlation_id persisted on
+  // paper_positions (BL-9, migration 0180) — callers pass pos.correlationId so
+  // SME exit audit rows join the signal→entry trace. Legacy pre-0180 rows (null)
+  // fall back to a fresh UUID below so the exit trace is never null-correlated.
+  entryCorrelationId?: string | null,
 ): Promise<import("./server-mediated-executor.js").LiveExecutionContext | null> {
   try {
     const { isServerMediatedExecutionEnabled } = await import("./server-mediated-executor.js");
@@ -3338,7 +3343,7 @@ async function _resolveSmeContextForExit(
       lifecycleState: strat.lifecycleState,
       sessionId,
       strategyId: sess.strategyId,
-      correlationId: null, // exit decisions don't carry a correlationId from signal chain
+      correlationId: entryCorrelationId ?? randomUUID(), // deepscan7 obs-H3: entry trace (BL-9) or fresh UUID — never null
     };
   } catch (err) {
     logger.warn(
@@ -3640,7 +3645,7 @@ async function applyExitDecision(
         );
         broadcastSSE(PAPER_EXIT_EVENTS.TP1_FILLED, exitPayloadBase);
         // SME Phase 0: fire live TP1 partial exit (fire-and-forget, isolated)
-        _resolveSmeContextForExit(pos.sessionId, pos.id).then((smeCtx) => {
+        _resolveSmeContextForExit(pos.sessionId, pos.id, pos.correlationId).then((smeCtx) => {
           if (!smeCtx) return;
           return import("./server-mediated-executor.js").then(({ routeLiveExitPartial }) =>
             routeLiveExitPartial({
@@ -3666,7 +3671,7 @@ async function applyExitDecision(
         );
         broadcastSSE(PAPER_EXIT_EVENTS.TP1_FILLED, exitPayloadBase);
         // SME Phase 0: full close = flatten
-        _resolveSmeContextForExit(pos.sessionId, pos.id).then((smeCtx) => {
+        _resolveSmeContextForExit(pos.sessionId, pos.id, pos.correlationId).then((smeCtx) => {
           if (!smeCtx) return;
           return import("./server-mediated-executor.js").then(({ routeLiveFlatten }) =>
             routeLiveFlatten({
@@ -3742,7 +3747,7 @@ async function applyExitDecision(
         );
         broadcastSSE(PAPER_EXIT_EVENTS.TP2_FILLED, exitPayloadBase);
         // SME Phase 0: fire live TP2 partial exit (fire-and-forget, isolated)
-        _resolveSmeContextForExit(pos.sessionId, pos.id).then((smeCtx) => {
+        _resolveSmeContextForExit(pos.sessionId, pos.id, pos.correlationId).then((smeCtx) => {
           if (!smeCtx) return;
           return import("./server-mediated-executor.js").then(({ routeLiveExitPartial }) =>
             routeLiveExitPartial({
@@ -3767,7 +3772,7 @@ async function applyExitDecision(
         );
         broadcastSSE(PAPER_EXIT_EVENTS.TP2_FILLED, exitPayloadBase);
         // SME Phase 0: full close = flatten
-        _resolveSmeContextForExit(pos.sessionId, pos.id).then((smeCtx) => {
+        _resolveSmeContextForExit(pos.sessionId, pos.id, pos.correlationId).then((smeCtx) => {
           if (!smeCtx) return;
           return import("./server-mediated-executor.js").then(({ routeLiveFlatten }) =>
             routeLiveFlatten({
@@ -3807,7 +3812,7 @@ async function applyExitDecision(
       broadcastSSE(PAPER_EXIT_EVENTS.BE_STOP_MOVED, exitPayloadBase);
       // SME Phase 0: fire live BE stop move (fire-and-forget, isolated)
       if (new_stop != null) {
-        _resolveSmeContextForExit(pos.sessionId, pos.id).then((smeCtx) => {
+        _resolveSmeContextForExit(pos.sessionId, pos.id, pos.correlationId).then((smeCtx) => {
           if (!smeCtx) return;
           return import("./server-mediated-executor.js").then(({ routeLiveExitModify }) =>
             routeLiveExitModify({
@@ -3849,7 +3854,7 @@ async function applyExitDecision(
         );
         broadcastSSE(PAPER_EXIT_EVENTS.TRAIL_TIGHTENED, exitPayloadBase);
         // SME Phase 0: fire live trail update (fire-and-forget, isolated)
-        _resolveSmeContextForExit(pos.sessionId, pos.id).then((smeCtx) => {
+        _resolveSmeContextForExit(pos.sessionId, pos.id, pos.correlationId).then((smeCtx) => {
           if (!smeCtx) return;
           return import("./server-mediated-executor.js").then(({ routeLiveExitModify }) =>
             routeLiveExitModify({
@@ -3893,7 +3898,7 @@ async function applyExitDecision(
       // SME Phase 0: fire live 15:55 flatten (fire-and-forget; closePosition already ran paper sim)
       {
         const _smeContractsAtFlatten = pos.contracts; // capture before close mutates
-        _resolveSmeContextForExit(pos.sessionId, pos.id).then((smeCtx) => {
+        _resolveSmeContextForExit(pos.sessionId, pos.id, pos.correlationId).then((smeCtx) => {
           if (!smeCtx) return;
           return import("./server-mediated-executor.js").then(({ routeLiveFlatten }) =>
             routeLiveFlatten({

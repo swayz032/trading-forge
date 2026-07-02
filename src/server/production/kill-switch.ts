@@ -1053,11 +1053,15 @@ class KillSwitch {
         { reason, setBy },
         "kill-switch: HALT activated — force-flattening all open paper positions"
       );
+      // deepscan7 obs-M6 (2026-07-02): surface the mode-change correlationId in the
+      // operator alert so audit_log can be queried directly from the Discord message
+      // (the audit row above already carries it; the alert body previously omitted it).
       AlertFactory.systemError(
         "production-halt-activated",
         new Error(
           `Production mode set to HALT by ${setBy}: ${reason}. ` +
-          `Force-flattening all open paper positions.`
+          `Force-flattening all open paper positions. ` +
+          `CorrelationId: ${modeChangeCorrelationId}`
         )
       );
       // FINDING #1 FIX: awaited force-close with timeout and CRITICAL escalation on failure
