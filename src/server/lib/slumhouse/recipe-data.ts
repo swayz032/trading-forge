@@ -14,6 +14,8 @@
 import { sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { formatBag, lifecycleToStation, oddsOuttaHundred } from "./translate.js";
+import { getB14CiHighThreshold } from "../b14-ci-gate.js";
+import { getWfeHardFloor } from "../wfe-gate.js";
 
 export interface RecipeData {
   identity: { id: string; name: string; symbol: string; stationStreet: string; lifecycleState: string };
@@ -129,12 +131,21 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
   const worstDay = dailyList.length > 0 ? Math.min(...dailyList.map((d) => d.pnl)) : 0;
   const winningDays = dailyList.filter((d) => d.pnl > 0).length;
 
-  // Monte Carlo extraction (defensive — different MC versions emit different keys)
-  const ciHigh = Number(
-    mcOut?.probability_of_ruin_ci?.ci_high
-      ?? mcOut?.probability_of_ruin
-      ?? 0
-  );
+  // Monte Carlo extraction (defensive — different MC versions emit different keys).
+  //
+  // ciHighRaw tracks whether MC has run at all (null = no MC run, gates fail-closed).
+  // ciHigh (numeric, default 0) is kept for downstream display math that needs a number
+  // (blowUpOdds, survivalScore, ruinPct).  verdictGreen MUST use ciHighRaw to avoid
+  // showing green when MC simply hasn't been run yet (0 would pass the < threshold check).
+  const ciHighRaw: number | null = mcOut != null
+    ? (mcOut?.probability_of_ruin_ci?.ci_high != null
+        ? Number(mcOut.probability_of_ruin_ci.ci_high)
+        : mcOut?.probability_of_ruin != null
+          ? Number(mcOut.probability_of_ruin)
+          : null)
+    : null;
+  const ciHigh = ciHighRaw ?? 0;
+  const b14Threshold = getB14CiHighThreshold();
   const worstYear = Number(mcOut?.percentile_5 ?? mcOut?.worst_year ?? 0);
   const bestYear = Number(mcOut?.percentile_95 ?? mcOut?.best_year ?? 0);
   const medianYear = Number(mcOut?.percentile_50 ?? mcOut?.median_year ?? 0);
@@ -169,7 +180,9 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
     {
       name: "Surprise Test",
       sentence: surpriseSentence(wfe),
-      status: wfe >= 0.70 ? "pass" : wfe >= 0.50 ? "warn" : wfe > 0 ? "fail" : "warn",
+      // Use getWfeHardFloor() (default 0.70, env WFE_HARD_FLOOR) — same constant the
+      // lifecycle gate enforces, not a hardcoded copy that can drift from the real gate.
+      status: wfe >= getWfeHardFloor() ? "pass" : wfe >= 0.50 ? "warn" : wfe > 0 ? "fail" : "warn",
     },
     {
       name: "Sloppy Bot Test",
@@ -235,7 +248,12 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
       worstYear: formatBag(worstYear),
       bestYear: formatBag(bestYear),
       medianYear: formatBag(medianYear),
-      verdictGreen: ciHigh < 0.40,
+      // FIX 1 (2026-07-02 deep-scan #12 Track T):
+      // The real B14 gate threshold is 0.20 (tightened from 0.40 on 2026-06-22).
+      // The gate uses strict > (blocked when ci_high > threshold), so verdictGreen
+      // mirrors ci_high <= threshold.  ciHighRaw !== null guards the missing-MC case
+      // (no MC run → ciHighRaw=null → verdictGreen=false rather than misleading green).
+      verdictGreen: ciHighRaw !== null && ciHighRaw <= b14Threshold,
       survivalScore: Math.round((1 - Math.min(1, Math.max(0, ciHigh))) * 100),
       worstYearRaw: worstYear,
       bestYearRaw: bestYear,

@@ -24,13 +24,27 @@ const mockState = vi.hoisted(() => ({
   killSwitchMode: "PAPER" as string,
   haltedLayers: [] as number[],
 
-  // DB
+  // DB — reconRows is returned for ALL db.select() calls (both dailyReconciliation
+  // and paperSessions queries). Tests that exercise buildDrawdownDistance directly
+  // should load paper-session-shaped rows here.
   reconRows: [] as Array<Record<string, unknown>>,
   alertRows: [] as Array<{ created_at: string }>,
   dbShouldThrow: false,
+
+  // CME-day key returned by the mocked toFuturesTradingDayString
+  cmeDayKey: "2026-07-02",
 }));
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
+
+// deep-scan #12 F-1: mock toFuturesTradingDayString so tests are not time-sensitive
+// to the 19:00–23:59 ET CME-vs-UTC-day boundary. The controlled key is updated per-test
+// via mockState.cmeDayKey.
+vi.mock("../services/paper-risk-gate.js", () => ({
+  toFuturesTradingDayString: vi.fn(() => mockState.cmeDayKey),
+  toEasternDateString: vi.fn(() => mockState.cmeDayKey),
+  invalidateDailyLossCache: vi.fn(),
+}));
 
 vi.mock("../production/kill-switch.js", () => ({
   killSwitch: {
@@ -153,7 +167,7 @@ vi.mock("../lib/logger.js", () => ({
 
 // ─── Import route and helpers ─────────────────────────────────────────────────
 
-import { _invalidateStatusCacheForTests } from "../routes/production-status.js";
+import { _invalidateStatusCacheForTests, buildDrawdownDistance } from "../routes/production-status.js";
 import type { ProductionStatusResponse } from "../routes/production-status.js";
 
 // ─── Mock Express req/res ─────────────────────────────────────────────────────
@@ -189,6 +203,7 @@ beforeEach(() => {
   mockState.reconRows = [];
   mockState.alertRows = [];
   mockState.dbShouldThrow = false;
+  mockState.cmeDayKey = "2026-07-02";
 
   _invalidateStatusCacheForTests();
   vi.clearAllMocks();
@@ -418,6 +433,75 @@ describe("ProductionStatus — GET /api/production/status", () => {
     expect(src).not.toMatch(/quantum[_-]/i);
     expect(src).not.toMatch(/scout-.*-service/);
     expect(src).not.toMatch(/synthetic.market.simulator/i);
+  });
+
+  // ── Test 11: deep-scan #12 F-1 — CME-day key parity ─────────────────────
+  // Verifies that buildDrawdownDistance() reads dailyPnlBreakdown using the
+  // CME futures trading-day key (from toFuturesTradingDayString), NOT a raw
+  // UTC date slice. The bug window is 19:00–23:59 ET where the UTC date has
+  // already advanced to D+1 while the breakdown still holds D.
+  it("buildDrawdownDistance reads dayPnl under CME-day key, not UTC key", async () => {
+    // CME day = "2026-07-02"; if the UTC bug were present the UTC date would be
+    // "2026-07-03" and breakdown["2026-07-03"] would be undefined → dayPnl = 0.
+    mockState.cmeDayKey = "2026-07-02";
+
+    // MFFU session: $300 loss logged under the CME key only.
+    // With the UTC bug: dayPnl = 0, bufferRemaining = 1000 (full buffer — wrong).
+    // With the CME fix:  dayPnl = -300, sessionLoss = 300, bufferRemaining = 700.
+    mockState.reconRows = [
+      {
+        id: "session-f1",
+        firmId: "mffu",
+        startingCapital: "50000",
+        currentEquity: "49700",
+        realizedPeakEquity: "50000",
+        // Key is the CME trading-day string, NOT a UTC slice
+        dailyPnlBreakdown: { "2026-07-02": -300 },
+      },
+    ];
+
+    const result = await buildDrawdownDistance();
+
+    // firmLimit = 50000 * 0.02 = 1000; sessionLoss = 300; bufferRemaining = 700
+    expect(result.firmLimit).toBe(1000);
+    expect(result.bufferRemaining).toBe(700);
+    expect(result.usedPct).toBeCloseTo(0.3, 3);
+    expect(result.severity).toBe("green");
+    expect(result.dllModel).toBe("daily_dll_pct");
+  });
+
+  // ── Test 12: deep-scan #12 F-2 — Topstep trailing-DD HWM model ──────────
+  // Verifies that buildDrawdownDistance() uses realizedPeakEquity + TOPSTEP_TRAILING_DD_BY_SIZE
+  // for Topstep sessions, NOT startingCapital * 0.05 (the old estimate).
+  // Prior behaviour: firmLimit = 50000 * 0.05 = $2500, understating usage.
+  // Correct behaviour: firmLimit = $2000 (trailing-DD amount), matching the gate.
+  it("buildDrawdownDistance uses trailing-DD HWM model for Topstep, not 5% estimate", async () => {
+    mockState.cmeDayKey = "2026-07-02";
+
+    // Topstep 50K session: peakEquity = $51000, currentEquity = $49000.
+    // sessionLoss = 51000 - 49000 = $2000.
+    // Trailing-DD amount for 50K account = $2000 (TOPSTEP_TRAILING_DD_BY_SIZE[50000]).
+    // firmLimit = $2000 (not $2500 = 50000 * 0.05 from the old estimate).
+    // usedPct = 2000 / 2000 = 1.0 → severity = "red".
+    mockState.reconRows = [
+      {
+        id: "session-f2",
+        firmId: "topstep",
+        startingCapital: "50000",
+        currentEquity: "49000",
+        realizedPeakEquity: "51000",
+        dailyPnlBreakdown: {},
+      },
+    ];
+
+    const result = await buildDrawdownDistance();
+
+    // Must use trailing-DD amount ($2000), not 5%-of-capital ($2500)
+    expect(result.firmLimit).toBe(2000);
+    expect(result.bufferRemaining).toBe(0);
+    expect(result.usedPct).toBeCloseTo(1.0, 3);
+    expect(result.severity).toBe("red");
+    expect(result.dllModel).toBe("trailing_dd_hwm");
   });
 
 });

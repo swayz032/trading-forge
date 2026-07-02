@@ -13,7 +13,7 @@
  * Auth guard tests verify requireAdminSession enforces 401 before any DB work.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // ── Mocks (hoisted by vitest before imports) ─────────────────────────────────
 
@@ -30,10 +30,24 @@ vi.mock("../db/schema.js", () => ({
     operatorAbsentSince: "operatorAbsentSince",
     id: "id",
   },
+  // deep-scan #12 Track S: admin.ts now threads actor identity + revocation.
+  slumhouseUsers: { discordUserId: "discordUserId", sessionEpoch: "sessionEpoch" },
 }));
 
 vi.mock("drizzle-orm", () => ({
   eq: vi.fn((_col: unknown, _val: unknown) => "__eq__"),
+  sql: vi.fn(() => "__sql__"),
+}));
+
+// deep-scan #12 Track S: postSwitch now checks Origin allowlist; allow in unit
+// tests (the real checkSlumhouseOrigin has dedicated coverage in the auth suite).
+vi.mock("../lib/slumhouse/require-session.js", () => ({
+  checkSlumhouseOrigin: vi.fn(() => true),
+}));
+
+vi.mock("../lib/slumhouse/session.js", () => ({
+  verifySession: vi.fn(() => null),
+  COOKIE_NAME: "slumhouse_sid",
 }));
 
 vi.mock("../services/pipeline-control-service.js", () => ({
@@ -48,6 +62,7 @@ vi.mock("../lib/slumhouse/admin-session.js", () => ({
   isAdminConfigured:    vi.fn(() => true),
   signAdminSession:     vi.fn(),
   adminSessionFromCookie: vi.fn(),
+  adminDiscordUserIdFromCookie: vi.fn(() => null),
 }));
 
 vi.mock("../lib/audit-log-helper.js", () => ({
@@ -190,6 +205,44 @@ describe("Auth guard — 401 without admin session", () => {
     const res = makeRes();
     await postSwitch(req, res as any);
     expect(res.status).toHaveBeenCalledWith(401);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// vacation_mode — env-forced-on honesty (deep-scan #12 F-1)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("vacation_mode OFF refused when env forces ON (deep-scan #12 F-1)", () => {
+  const prevEnv = process.env["OPERATOR_ABSENT_AUTOPROMOTE"];
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(adminSessionFromCookie).mockReturnValue(true);
+    buildInsertMock();
+    buildUpdateMock();
+  });
+  afterEach(() => {
+    if (prevEnv === undefined) delete process.env["OPERATOR_ABSENT_AUTOPROMOTE"];
+    else process.env["OPERATOR_ABSENT_AUTOPROMOTE"] = prevEnv;
+  });
+
+  it("returns 409 (not silent success) when OFF-toggled while OPERATOR_ABSENT_AUTOPROMOTE=true", async () => {
+    process.env["OPERATOR_ABSENT_AUTOPROMOTE"] = "true";
+    const req = makeReq({ body: { id: "vacation_mode", on: false } });
+    const res = makeRes();
+    await postSwitch(req, res as any);
+    expect(res.getStatus()).toBe(409);
+    expect(res.getBody().error).toBe("env_forces_vacation_on");
+    // Must NOT have cleared the DB marker (no silent revert)
+    expect((db as any).update).not.toHaveBeenCalled();
+  });
+
+  it("allows OFF toggle normally when env is unset", async () => {
+    delete process.env["OPERATOR_ABSENT_AUTOPROMOTE"];
+    buildUpdateMock();
+    const req = makeReq({ body: { id: "vacation_mode", on: false } });
+    const res = makeRes();
+    await postSwitch(req, res as any);
+    expect(res.getStatus()).not.toBe(409);
   });
 });
 

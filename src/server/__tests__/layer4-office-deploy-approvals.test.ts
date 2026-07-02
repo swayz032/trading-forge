@@ -349,3 +349,96 @@ describe("POST reject — reason required + DEPLOY_READY→PAPER", () => {
     expect(res.getBody().newState).toBe("PAPER");
   });
 });
+
+// ── FIX 4: certifiedGates transparency block (Track T) ───────────────────────
+// buildDeployEvidence must return a certifiedGates block that makes the
+// freshly_rechecked / certified_only split explicit so consumers know which
+// gates are fresh vs. certified-at-PAPER→DEPLOY_READY.
+
+describe("buildDeployEvidence — certifiedGates transparency block", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("full evidence ⇒ certifiedGates with both lists + ISO timestamp", async () => {
+    buildSelectMock([[GOOD_BT], [GOOD_MC]]);
+    const ev = await buildDeployEvidence("s1");
+
+    expect(ev.certifiedGates).not.toBeNull();
+    const cg = ev.certifiedGates!;
+
+    // freshlyRechecked MUST include the 4 gates that are always re-derived
+    expect(cg.freshlyRechecked).toContain("pbo");
+    expect(cg.freshlyRechecked).toContain("b14");
+    expect(cg.freshlyRechecked).toContain("wfe");
+    expect(cg.freshlyRechecked).toContain("staleness");
+
+    // certifiedOnly MUST include the 6 gates that ran at PAPER→DEPLOY_READY
+    expect(cg.certifiedOnly).toContain("b15");
+    expect(cg.certifiedOnly).toContain("bif");
+    expect(cg.certifiedOnly).toContain("compliance");
+    expect(cg.certifiedOnly).toContain("param_drift");
+    expect(cg.certifiedOnly).toContain("frozen_policy");
+    expect(cg.certifiedOnly).toContain("shadow_divergence");
+
+    // certifiedFrom is an ISO-8601 timestamp string
+    expect(typeof cg.certifiedFrom).toBe("string");
+    expect(() => new Date(cg.certifiedFrom!)).not.toThrow();
+    const parsed = new Date(cg.certifiedFrom!);
+    expect(Number.isFinite(parsed.getTime())).toBe(true);
+
+    // certifiedValues has the right shape (null when not in GOOD_BT extras)
+    expect(cg.certifiedValues).toHaveProperty("b15_passed");
+    expect(cg.certifiedValues).toHaveProperty("compliance_pass_rate");
+    expect(cg.certifiedValues).toHaveProperty("param_stability_status");
+    expect(cg.certifiedValues).toHaveProperty("frozen_policy_hash");
+    expect(cg.certifiedValues).toHaveProperty("bif_passed");
+
+    // note is a plain-English string explaining the split
+    expect(typeof cg.note).toBe("string");
+    expect(cg.note.length).toBeGreaterThan(10);
+  });
+
+  it("certifiedGates is null when no completed backtest exists", async () => {
+    buildSelectMock([[]]); // no backtest
+    const ev = await buildDeployEvidence("s1");
+    expect(ev.certifiedGates).toBeNull();
+  });
+
+  it("certifiedValues.b15_passed reflects result_extras.b15_passed from the backtest", async () => {
+    const bt = {
+      ...GOOD_BT,
+      resultExtras: { deflated_sharpe: 1.8, b15_passed: true, compliance_pass_rate: 0.98 },
+    };
+    buildSelectMock([[bt], [GOOD_MC]]);
+    const ev = await buildDeployEvidence("s1");
+    const cg = ev.certifiedGates!;
+    expect(cg.certifiedValues.b15_passed).toBe(true);
+    expect(cg.certifiedValues.compliance_pass_rate).toBeCloseTo(0.98);
+  });
+
+  it("certifiedValues fields are null when backtest predates gates (no matching JSON keys)", async () => {
+    // GOOD_BT has no b15/bif/compliance/param keys in resultExtras
+    buildSelectMock([[GOOD_BT], [GOOD_MC]]);
+    const ev = await buildDeployEvidence("s1");
+    const cg = ev.certifiedGates!;
+    expect(cg.certifiedValues.b15_passed).toBeNull();
+    expect(cg.certifiedValues.bif_passed).toBeNull();
+    expect(cg.certifiedValues.compliance_pass_rate).toBeNull();
+    expect(cg.certifiedValues.param_stability_status).toBeNull();
+    expect(cg.certifiedValues.frozen_policy_hash).toBeNull();
+  });
+
+  it("existing evidence shape unchanged — certifiedGates is additive", async () => {
+    buildSelectMock([[GOOD_BT], [GOOD_MC]]);
+    const ev = await buildDeployEvidence("s1");
+    // The existing 5-metric evidence array is untouched
+    expect(ev.evidence).toHaveLength(5);
+    expect(ev.evidence.map((m) => m.key)).toEqual(
+      expect.arrayContaining(["regime_tests", "pbo", "b14", "wfe", "dsr"]),
+    );
+    // approvable / blockers still work normally
+    expect(ev.approvable).toBe(true);
+    expect(ev.blockers).toHaveLength(0);
+  });
+});

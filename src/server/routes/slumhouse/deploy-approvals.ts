@@ -82,6 +82,40 @@ export interface EvidenceMetric {
   hard: boolean;
 }
 
+/**
+ * Certified-gates transparency block.
+ *
+ * `buildDeployEvidence` freshly re-checks 4 gates (pbo, b14, wfe, staleness)
+ * from the current backtest + MC run.  Six more gates ran at PAPER→DEPLOY_READY
+ * and are NOT re-checked here (b15, bif, compliance, param_drift, frozen_policy,
+ * shadow_divergence).  This block makes that split explicit so the UI can show
+ * "4 re-checked now / 6 certified on <date>" rather than implying everything
+ * is fresh.
+ *
+ * Values come from the same JSONB the promotion gates read (walk_forward_results
+ * + result_extras on the backtest used at certification time).  Fields are null
+ * when the backtest predates the gate or the gate did not persist its output.
+ */
+export interface CertifiedGates {
+  /** Gates freshly re-derived from current backtest + MC run on every call. */
+  freshlyRechecked: string[];
+  /** Gates that ran only at PAPER→DEPLOY_READY; not re-derived here. */
+  certifiedOnly: string[];
+  /** Known values for certified-only gates from the stored backtest JSONB. */
+  certifiedValues: {
+    b15_passed: boolean | null;
+    b15_status: string | null;
+    bif_passed: boolean | null;
+    compliance_pass_rate: number | null;
+    param_stability_status: string | null;
+    frozen_policy_hash: string | null;
+  };
+  /** ISO timestamp of the backtest record used for certification. */
+  certifiedFrom: string | null;
+  /** Human-readable note explaining the freshly_rechecked / certified_only split. */
+  note: string;
+}
+
 export interface DeployApprovalEntry {
   id: string;
   name: string;
@@ -94,6 +128,8 @@ export interface DeployApprovalEntry {
   evidence: EvidenceMetric[];
   approvable: boolean;
   blockers: string[];
+  /** Certified-gates transparency block. Null when no completed backtest exists. */
+  certifiedGates: CertifiedGates | null;
 }
 
 function stalenessDays(): number {
@@ -114,6 +150,10 @@ function pct(v: number): string {
 /**
  * Build the plain-English evidence card for one strategy. Pure derivation from
  * the latest completed backtest + its latest Monte-Carlo run.
+ *
+ * Returns a `certifiedGates` transparency block distinguishing which gates are
+ * freshly re-checked here vs. which ran only at PAPER→DEPLOY_READY (see
+ * CertifiedGates for the full split and data provenance).
  */
 export async function buildDeployEvidence(strategyId: string): Promise<{
   backtestId: string | null;
@@ -122,6 +162,7 @@ export async function buildDeployEvidence(strategyId: string): Promise<{
   evidence: EvidenceMetric[];
   approvable: boolean;
   blockers: string[];
+  certifiedGates: CertifiedGates | null;
 }> {
   const blockers: string[] = [];
   const evidence: EvidenceMetric[] = [];
@@ -147,6 +188,7 @@ export async function buildDeployEvidence(strategyId: string): Promise<{
       evidence: [],
       approvable: false,
       blockers: ["No completed backtest on file — run a fresh test before this can go live."],
+      certifiedGates: null,
     };
   }
 
@@ -277,6 +319,41 @@ export async function buildDeployEvidence(strategyId: string): Promise<{
   const anyHardMissing = evidence.some((m) => m.hard && m.missing);
   const evidenceState: "ok" | "stale" | "missing" = anyHardMissing ? "missing" : stale ? "stale" : "ok";
 
+  // ── Certified-gates transparency block (FIX 4 — deep-scan #12 Track T) ────
+  // Six gates ran at PAPER→DEPLOY_READY and are NOT re-derived on every call to
+  // buildDeployEvidence.  Their values come from the same JSONB the lifecycle
+  // gates read (walk_forward_results + result_extras from the backtest used at
+  // certification time).  Null values mean the backtest predates that gate or
+  // the gate did not persist its output into the backtest JSON.
+  //
+  // NOTE: shadow_divergence_pct lives in lifecycle_shadow_signals (separate table,
+  // not in backtest JSONB) so it is not surfaced here; the audit_log row written
+  // by the shadow gate at PAPER→DEPLOY_READY is the authoritative record.
+  const certifiedGates: CertifiedGates = {
+    freshlyRechecked: ["pbo", "b14", "wfe", "staleness"],
+    certifiedOnly: ["b15", "bif", "compliance", "param_drift", "frozen_policy", "shadow_divergence"],
+    certifiedValues: {
+      b15_passed: extras?.b15_passed != null ? Boolean(extras.b15_passed) : null,
+      b15_status: extras?.b15_status != null ? String(extras.b15_status) : null,
+      bif_passed:
+        extras?.bif_passed != null ? Boolean(extras.bif_passed)
+        : wfr?.bif_passed != null ? Boolean(wfr.bif_passed)
+        : null,
+      compliance_pass_rate:
+        extras?.compliance_pass_rate != null ? Number(extras.compliance_pass_rate) : null,
+      param_stability_status:
+        wfr?.param_stability_status != null ? String(wfr.param_stability_status)
+        : extras?.param_stability_status != null ? String(extras.param_stability_status)
+        : null,
+      frozen_policy_hash:
+        wfr?.frozen_policy_hash != null ? String(wfr.frozen_policy_hash)
+        : extras?.frozen_policy_hash != null ? String(extras.frozen_policy_hash)
+        : null,
+    },
+    certifiedFrom: bt.createdAt ? new Date(bt.createdAt).toISOString() : null,
+    note: "freshly_rechecked gates are re-derived from the current backtest + MC run. certified_only gates ran at PAPER→DEPLOY_READY; values come from the backtest JSONB stored at certification time (null = gate predates this backtest or did not persist output).",
+  };
+
   return {
     backtestId: bt.id,
     backtestAgeDays: ageDays,
@@ -284,6 +361,7 @@ export async function buildDeployEvidence(strategyId: string): Promise<{
     evidence,
     approvable: blockers.length === 0,
     blockers,
+    certifiedGates,
   };
 }
 
@@ -322,6 +400,7 @@ deployApprovalsRouter.get(
             evidence: [],
             approvable: false,
             blockers: ["Could not read the evidence — approval disabled until it loads clean."],
+            certifiedGates: null,
           });
         }
       }

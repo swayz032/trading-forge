@@ -1,5 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
+// ─── Mock execution-mode for live-mode tests ──────────────────────────────
+// Default: returns "paper" (matches natural env behavior; existing tests unaffected).
+let _mockMode: "paper" | "live" = "paper";
+vi.mock("../../lib/execution-mode.js", () => ({
+  getExecutionMode: vi.fn(() => Promise.resolve(_mockMode)),
+  isLiveExecutionConfigured: vi.fn(() => false),
+}));
+
 // ─── Mock the DB.execute pipeline ─────────────────────────────────────────
 // assembleCribData issues 8 queries in deterministic order for the legacy DB
 // fallback path. We route by
@@ -177,5 +185,89 @@ describe("crib-data", () => {
     expect(data.banner.todayBag).toBe("+$0");
     expect(data.banner.openNow).toBe(0);
     expect(data.banner.inPot).toBe(0);
+  });
+
+  // ── FIX 2: Unmapped user — accountUnmapped flag + disclosure (Track T) ────
+  // When brokerAccountId is null, account-scoped data is unavailable.
+  // The response MUST carry an explicit flag + plain-English copy, NOT "$0".
+
+  it("sets accountUnmapped=true and accountDisclosure copy when brokerAccountId is null", async () => {
+    // With null brokerAccountId, canReadAccountScopedData=false and the 3 account
+    // queries (today, open, sparkPnl) are skipped. Only 5 db.execute calls fire:
+    // pot → kill → discord-fallback → potRows → crew
+    const unmappedQueryOrder = ["pot", "kill", "discord", "potRows", "crew"] as const;
+    let j = 0;
+    mocks.execute.mockReset();
+    mocks.execute.mockImplementation(() => {
+      const key = unmappedQueryOrder[j++];
+      return Promise.resolve(responses[key as QueryKey] ?? []);
+    });
+
+    const { assembleCribData } = await import("../../lib/slumhouse/crib-data.js");
+    const data = await assembleCribData({ brokerAccountId: null });
+
+    // Disclosure flags
+    expect(data.accountUnmapped).toBe(true);
+    expect(data.accountDataAvailable).toBe(false);
+    expect(typeof data.accountDisclosure).toBe("string");
+    expect(data.accountDisclosure).not.toBeNull();
+    // Copy must explain why — not just "$0"
+    expect(data.accountDisclosure!.toLowerCase()).toMatch(/linked|connect|account/);
+
+    // Account-scoped metrics zeroed (no account to read from)
+    expect(data.banner.todayBag).toBe("+$0");
+    expect(data.banner.openNow).toBe(0);
+
+    // Global data still populated (inPot, discordFeed, pot, crew)
+    expect(data.banner.inPot).toBe(14);
+    expect(data.pot).toHaveLength(2);
+    expect(data.crew).toHaveLength(2);
+  });
+
+  it("sets accountUnmapped=false and accountDisclosure=null for a mapped user in paper mode", async () => {
+    const { assembleCribData } = await import("../../lib/slumhouse/crib-data.js");
+    const data = await assembleCribData({ brokerAccountId: "00000000-0000-0000-0000-000000000001" });
+
+    expect(data.accountUnmapped).toBe(false);
+    expect(data.accountDataAvailable).toBe(true);
+    expect(data.accountDisclosure).toBeNull();
+    // Banner has real data
+    expect(data.banner.todayBag).toBe("+$2,847");
+  });
+
+  // ── FIX 3: Live mode — data-suppressed disclosure (Track T) ──────────────
+  // When execution_mode=live AND the user IS mapped, account-scoped data is
+  // suppressed (no live tape yet). Must carry liveModeDataDisclosure, not "$0".
+
+  it("sets accountDataAvailable=false and live-mode disclosure when execution_mode=live", async () => {
+    _mockMode = "live";
+
+    // In live mode, canReadAccountScopedData=false even with a valid account ID.
+    // Same 5-query order as the unmapped case (account queries are skipped).
+    const liveQueryOrder = ["pot", "kill", "discord", "potRows", "crew"] as const;
+    let k = 0;
+    mocks.execute.mockReset();
+    mocks.execute.mockImplementation(() => {
+      const key = liveQueryOrder[k++];
+      return Promise.resolve(responses[key as QueryKey] ?? []);
+    });
+
+    const { assembleCribData } = await import("../../lib/slumhouse/crib-data.js");
+    const data = await assembleCribData({ brokerAccountId: "00000000-0000-0000-0000-000000000001" });
+
+    // User IS mapped but live mode suppresses tape
+    expect(data.accountUnmapped).toBe(false);
+    expect(data.accountDataAvailable).toBe(false);
+    expect(typeof data.accountDisclosure).toBe("string");
+    expect(data.accountDisclosure!.toLowerCase()).toMatch(/live|broker/);
+
+    expect(data.executionMode).toBe("live");
+    expect(data.executionModeLabel).toBe("LIVE");
+
+    // Account-scoped data suppressed
+    expect(data.banner.todayBag).toBe("+$0");
+    expect(data.banner.openNow).toBe(0);
+
+    _mockMode = "paper"; // reset
   });
 });

@@ -1129,6 +1129,173 @@ export interface SignalAPlusRejectedData {
   timestamp: number | string;
 }
 
+// ─── Deep-scan #12 Track R: Safety-critical + operational SSE interfaces ─────
+// Payload shapes derived from broadcastSSE() call sites in src/server/.
+
+/** kill_switch:dll_force_close — DLL 95% breach force-close triggered (kill-switch.ts) */
+export interface KillSwitchDllForceCloseData {
+  session_id: string;
+  firm_id: string;
+  day_pnl: number;
+  dll: number;
+}
+
+/** kill_switch:layer_halted — Kill-switch layer fired and halted trading (kill-switch.ts) */
+export interface KillSwitchLayerHaltedData {
+  layer: number;
+  reason: string;
+  detail: Record<string, unknown>;
+  correlationId: string | null;
+}
+
+/** kill_switch:c1_cme_eval_failed — CME eval failed at layer 6; trading halted (kill-switch.ts) */
+export interface KillSwitchC1CmeEvalFailedData {
+  error_message: string;
+  layer: number;
+  halted: boolean;
+  timestamp: string;
+}
+
+/** quantum_rl:kill_switch_engaged — RL kill switch engaged; Sharpe gap > 30% (rl-signal-fetcher.ts) */
+export interface QuantumRlKillSwitchEngagedData {
+  strategy_id: number;
+  reason: string;
+  sharpe_gap_ratio: number;
+  sessions_evaluated: number;
+}
+
+/** exchange:outage-detected — CME / exchange outage detected; entry blocked (exchange-status-service.ts) */
+export interface ExchangeOutageDetectedData {
+  exchange: string;
+  reason: string;
+  affectedSymbols: string[];
+  outageId: string;
+}
+
+/** exchange:outage-resolved — CME / exchange outage resolved; entry block lifted (exchange-status-service.ts) */
+export interface ExchangeOutageResolvedData {
+  exchange: string;
+  outageId: string;
+  note: string;
+}
+
+/** broker:degraded — TradersPost circuit breaker opened (broker-router.ts) */
+export interface BrokerDegradedData {
+  broker: string;
+  reason: string;
+  failureThreshold: number;
+  cooldownMs: number;
+}
+
+/** risk:dd_velocity_autopause — DD velocity breach exceeded threshold; session auto-paused (dd-velocity-gate.ts) */
+export interface RiskDdVelocityAutopauseData {
+  sessionId: string | null;
+  firmId: string;
+  rollingDDPct: number;
+  windowMinutes: number;
+  windowPeakEquity: number;
+  currentEquity: number;
+  effectiveThreshold: number;
+  topstepTightenApplied: boolean;
+}
+
+/** risk:dd_velocity_warning — DD velocity above warning threshold; not yet paused (dd-velocity-gate.ts) */
+export interface RiskDdVelocityWarningData {
+  sessionId: string | null;
+  firmId: string;
+  rollingDDPct: number;
+  windowMinutes: number;
+}
+
+/** paper:position-stop-breached — Paper position closed at stop level (paper-execution-service.ts) */
+export interface PaperPositionStopBreachedData {
+  positionId: string;
+  sessionId: string;
+  symbol: string;
+  side: string;
+  stopLevel: number;
+  adversePrice: number;
+  currentPrice: number;
+}
+
+/** paper:auto_restart_exhausted — Paper session auto-restart cap reached; manual action required (scheduler.ts) */
+export interface PaperAutoRestartExhaustedData {
+  sessionId: string;
+  strategyId: number;
+  restartCount: number;
+}
+
+/** paper:auto_restarted — Paper session stream successfully restarted (scheduler.ts) */
+export interface PaperAutoRestartedData {
+  sessionId: string;
+  strategyId: number;
+  restartAttempt: number;
+  symbols: string[];
+}
+
+/** fill_reconciliation:drift_detected — Position qty drift between server and broker (fill-reconciliation-service.ts) */
+export interface FillReconciliationDriftDetectedData {
+  accountId: string;
+  symbol: string;
+  serverNetQty: number;
+  brokerPositionQty: number;
+  correlationId?: string | null;
+}
+
+/** fill_reconciliation:unmatched_fill — Fill event received with no matching server order (fill-reconciliation-service.ts) */
+export interface FillReconciliationUnmatchedFillData {
+  symbol: string;
+  filled_qty: number;
+  broker_order_ref: string | null;
+  correlationId: string | null;
+}
+
+/** PAPER_PARITY_DEGRADED — Paper signal parity degraded; SMT live bridge used null fallback (paper-signal-service.ts) */
+export interface PaperParityDegradedData {
+  source: string;
+  sessionId: string;
+  strategyId: number;
+  symbol: string;
+}
+
+/** backtest:truthiness_failure — Backtest truthiness invariant or parity check failed (backtest-service.ts) */
+export interface BacktestTruthinessFailureData {
+  backtestId: string;
+  strategyId: number;
+  type: "invariant" | "parity" | "parity_skip";
+  severity: string;
+}
+
+/** compliance:rejected — Order rejected for compliance rule violation (broker-router.ts) */
+export interface ComplianceRejectedData {
+  firmId: string;
+  symbol: string;
+  reason: string;
+  correlationId: string | null;
+}
+
+/** signal:macro_gate_eval_failed — C11 macro gate evaluation failed; signal fail-closed (paper-signal-service.ts) */
+export interface SignalMacroGateEvalFailedData {
+  sessionId: string;
+  symbol: string;
+  error_message: string;
+}
+
+/** monte_carlo:trades_fallback_used — MC bootstrap uses daily P&L because trade records sparse (monte-carlo-service.ts) */
+export interface MonteCarloTradesFallbackUsedData {
+  backtestId: string;
+  tradeCount: number;
+  minRequired: number;
+  message: string;
+}
+
+/** pending_bucket:killed — Pending bucket killed by operator or automation (agent.ts) */
+export interface PendingBucketKilledData {
+  bucket_id: string;
+  reason: string;
+  correlation_id: string | null;
+}
+
 // ─── Discriminated union ──────────────────────────────────────────────
 
 export type SSEEvent =
@@ -1290,7 +1457,30 @@ export type SSEEvent =
   | { type: "compliance:drift_detected"; data: ComplianceDriftDetectedData }
   // ─── Wave 23 Track C: bias engine + A+ gate (2026-05-19) ───────
   | { type: "bias_engine:strategy_selected"; data: BiasEngineStrategySelectedData }
-  | { type: "signal:a_plus_rejected"; data: SignalAPlusRejectedData };
+  | { type: "signal:a_plus_rejected"; data: SignalAPlusRejectedData }
+  // ─── Deep-scan #12 Track R: Safety-critical events (sticky persistent toast) ──
+  | { type: "kill_switch:dll_force_close"; data: KillSwitchDllForceCloseData }
+  | { type: "kill_switch:layer_halted"; data: KillSwitchLayerHaltedData }
+  | { type: "kill_switch:c1_cme_eval_failed"; data: KillSwitchC1CmeEvalFailedData }
+  | { type: "quantum_rl:kill_switch_engaged"; data: QuantumRlKillSwitchEngagedData }
+  | { type: "exchange:outage-detected"; data: ExchangeOutageDetectedData }
+  | { type: "broker:degraded"; data: BrokerDegradedData }
+  | { type: "risk:dd_velocity_autopause"; data: RiskDdVelocityAutopauseData }
+  | { type: "paper:position-stop-breached"; data: PaperPositionStopBreachedData }
+  | { type: "paper:auto_restart_exhausted"; data: PaperAutoRestartExhaustedData }
+  | { type: "fill_reconciliation:drift_detected"; data: FillReconciliationDriftDetectedData }
+  | { type: "fill_reconciliation:unmatched_fill"; data: FillReconciliationUnmatchedFillData }
+  // ─── Deep-scan #12 Track R: Operationally-significant events (warning/info toast) ──
+  | { type: "exchange:outage-resolved"; data: ExchangeOutageResolvedData }
+  | { type: "risk:dd_velocity_warning"; data: RiskDdVelocityWarningData }
+  | { type: "PAPER_PARITY_DEGRADED"; data: PaperParityDegradedData }
+  | { type: "backtest:truthiness_failure"; data: BacktestTruthinessFailureData }
+  | { type: "compliance:rejected"; data: ComplianceRejectedData }
+  | { type: "signal:macro_gate_eval_failed"; data: SignalMacroGateEvalFailedData }
+  | { type: "paper:auto_restarted"; data: PaperAutoRestartedData }
+  // ─── Deep-scan #12 Track R: Dot-normalized events (colon form — server updated) ──
+  | { type: "monte_carlo:trades_fallback_used"; data: MonteCarloTradesFallbackUsedData }
+  | { type: "pending_bucket:killed"; data: PendingBucketKilledData };
 
 export type SSEEventType = SSEEvent["type"];
 

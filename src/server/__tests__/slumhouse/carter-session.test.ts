@@ -73,14 +73,14 @@ describe("carter-session token-mint route", () => {
     expect(res.body.error).toBe("elevenlabs_no_token");
   });
 
-  it("wires requireSlumhouseUserOrAdmin middleware on the POST route", async () => {
+  it("wires requireAdminSession middleware on the POST route (FIX 1)", async () => {
     const { carterSessionRouter } = await import("../../routes/slumhouse/api/carter-session.js");
     const layer = (carterSessionRouter as any).stack.find(
       (l: any) => l.route?.path === "/slumhouse/api/carter-session",
     );
     expect(layer).toBeTruthy();
     const handlerNames: string[] = layer.route.stack.map((s: any) => s.handle.name);
-    expect(handlerNames).toContain("requireSlumhouseUserOrAdmin");
+    expect(handlerNames).toContain("requireAdminSession");
     expect(handlerNames).toContain("postCarterSession");
   });
 });

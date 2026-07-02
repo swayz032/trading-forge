@@ -4186,7 +4186,7 @@ agentRoutes.post("/pending-bucket/:id/kill", async (req, res) => {
     });
 
     // SSE
-    broadcastSSE("pending_bucket.killed", {
+    broadcastSSE("pending_bucket:killed", {
       bucket_id:      bucketId,
       reason,
       correlation_id: correlationId,

@@ -112,7 +112,7 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {},
       { backtestId, tradeCount: tradePnls.length, minRequired: MIN_TRADE_COUNT },
       "monte_carlo.trades_fallback_used: backtest_trades too sparse — falling back to daily_pnls for MC bootstrap",
     );
-    broadcastSSE("monte_carlo.trades_fallback_used", {
+    broadcastSSE("monte_carlo:trades_fallback_used", {
       backtestId,
       tradeCount: tradePnls.length,
       minRequired: MIN_TRADE_COUNT,
