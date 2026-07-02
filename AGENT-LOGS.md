@@ -12137,6 +12137,27 @@ Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal
 
 **Carry-forward:** operator decision on the fix wave; recommended order: DS7-C1 (two-word) → NEVER_DISABLE_JOBS alert-suppression (5-line) → F-2 frozen-policy stamp → F-1 compliance-drift on manual path → DS7-C2 auto-resume → correlationId cluster → PERSONAL_DLL_DOLLARS=1340 env + NSSM rotation (operator/tower). Full detail in memory [[project_deepscan7_2026_07_02]].
 
+### Session Log — 2026-07-02 Deep-scan #7 FIX WAVE — both CRITs + all manual-path/correlationId HIGHs closed (isolated worktree, 4 parallel tracks, MERGED → phase-0, deployed)
+
+**Mission:** Operator: "Start step 1" — execute the deep-scan #7 fix wave (everything code-fixable; UPS/Kasa/secrets remain operator-side).
+
+**Method:** isolated worktree `.worktrees/deepscan7-fixwave` (branch `hardening/deepscan7-fixwave-2026-07-02` off c67c4ae, node_modules junctioned), 4 parallel edit-agents on disjoint scopes + parent. 4 commits (1c1546e trackA / 9634051 trackB / b39deee trackC / 0ff672e trackD), FF-MERGED → origin/hardening/phase-0 (0ff672e), tower self-restarted (HMAC, reason deepscan7-fixwave-deploy).
+
+**Shipped:**
+- **trackA (CRITICALs):** DS7-C1 `db-backup` + DS7-H1 `pre-trading-day-health-check` → NEVER_DISABLE_JOBS; M1 alert-suppression fixed (protected jobs now notifyCritical at 5/15/25, disable still suppressed; lying comment corrected); DS7-C2 Windows-reboot sticky pause now AUTO-RESUMES tower-locally (provenance via system_parameters marker + pipeline.mode_change ownership check; operator pauses NEVER auto-resumed; operator-pause-after-reboot-pause transfers ownership); A5 scout 3-strike deduped Discord WARN + `scout.consecutive_failure_alert` audit; A4 db-backup retry 1→3; A7 `S3_BACKUP_BUCKET` env (falls back to S3_BUCKET). 29 tests.
+- **trackB (manual-path gate parity):** F-2 `_promoteStrategyInner` honors `needsFirstTimeFreeze` → `freezePolicyForStrategy` before promotion write (fail-CLOSED on freeze failure); F-1 compliance-drift extracted to shared `resolveComplianceDriftForPromotion()` used by BOTH cron + manual (same audit/SSE/fail-CLOSED); F-3 evidence governor (≥3 incomplete → block) on manual path via `incompleteGateCount`; obs-H2 Carter actions mint + thread correlationId into checkAutoPromotions/promoteStrategy; NEEDS_REVISION/NEEDS_ARCHETYPE added to VALID_STATES + transitions (→CANDIDATE/→GRAVEYARD only). 24 tests; gate-chain 53/53.
+- **trackC (money-path correlation + DLL):** 5 DLL-gate audit rows thread in-scope correlationId (paper-signal :3244/:3274/:3307/:3347/:3428); SME exit reads `paper_positions.correlation_id` (already persisted since mig 0180 — exit path just never read it; UUID fallback for legacy, never null; 7 call sites); cross-symbol DLL aggregate includes stopped/paused sessions' SAME-DAY losses (`DLL_AGGREGATE_SESSION_STATUSES`, both realized + open-MTM queries); HALT Discord alert carries modeChangeCorrelationId. 22 tests.
+- **trackD (boot obs):** boot-migration post-apply verification extended to `ALTER TABLE ADD COLUMN` vs information_schema.columns (the 0146/0148 phantom-apply class); ONE bootCorrelationId minted pre-migrations + `boot.started`/`boot.completed` audit rows + threaded to runner/initScheduler/ensureRegimeBankPopulated. 10 tests.
+- **Parent:** `.env PERSONAL_DLL_DOLLARS=1340` (Topstep-50K 67%×$2K; was MFFU-calibrated $1,000 default → premature halts); NSSM rotation VERIFIED already configured (AppRotateFiles=1/10MB — DS7-H2 closes by verification, no change).
+
+**Verification:** whole-repo tsc 0; 3 CI hard gates GREEN in worktree (driftItems=[], isolation CLEAN, compliance OK); 138/138 combined (85 new deepscan7 + 53 gate-chain); per-track suites: lifecycle 223/223, carter 257/257, money-path 260, scheduler/windows/backup 83+29. Pre-existing fails proven at clean HEAD and untouched: m1-a5-dll-force-close-warn (status assert), paper-risk-gate.dll-halt (2), wave24-boot-migration:571 (stale warn-vs-error assert).
+
+**Known-facts updates:**
+- PS 5.1 `Get-Date -UFormat %s` returns LOCAL-time epoch (4h drift on ET tower) → self-restart 401 timestamp_drift. Use `[DateTimeOffset]::UtcNow.ToUnixTimeSeconds()` for HMAC signing.
+- `paper_positions.correlation_id` EXISTS since migration 0180 (BL-9) — any "exit rows can't have correlationId" claim is stale; the column was simply unread by the SME exit path until this wave.
+
+**Carry-forward:** NOT code-fixable this wave (operator): buy UPS+Kasa; rotate ~132 secrets watched; set `S3_BACKUP_BUCKET` to a NEW isolated bucket + IAM (env plumbing now ready). Deferred (documented, advisory): SSE catalog 186 uncatalogued (ratchet candidate); BIF-blind-in-CPCV Wave 30; AVWAP-trail + TP2-liquidity parity gaps; n8n retry-backoff normalization pass.
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### pglite test-harness DDL drifts from schema.ts and silently breaks ALL DB-backed gate tests (pinned 2026-06-28)
