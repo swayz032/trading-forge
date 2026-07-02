@@ -33,14 +33,6 @@
    "object": "strong move away from level"
   },
   {
-   "type": "WAIT_SESSION",
-   "object": "waiting state"
-  },
-  {
-   "type": "WAIT_SESSION",
-   "object": "time frame change"
-  },
-  {
    "type": "WAIT_STRUCTURE",
    "object": "candle breakout"
   },
@@ -269,10 +261,6 @@
    "object": "moving averages"
   },
   {
-   "type": "WAIT_SESSION",
-   "object": "search bar"
-  },
-  {
    "type": "FILTER",
    "object": "ema or exponential moving average"
   },
@@ -283,10 +271,6 @@
   {
    "type": "FILTER",
    "object": "ema length"
-  },
-  {
-   "type": "FILTER",
-   "object": "ema10 length"
   },
   {
    "type": "WAIT_BIAS",
@@ -328,10 +312,6 @@
  "MKsjbL0WNjg": [
   {
    "type": "WAIT_SESSION",
-   "object": "time window definition"
-  },
-  {
-   "type": "WAIT_SESSION",
    "object": "trading hours filter"
   },
   {
@@ -349,18 +329,6 @@
   {
    "type": "WAIT_BIAS",
    "object": "reversal trade"
-  },
-  {
-   "type": "WAIT_CONFIRMATION",
-   "object": "weakness definition 1"
-  },
-  {
-   "type": "WAIT_CONFIRMATION",
-   "object": "weakness definition 2"
-  },
-  {
-   "type": "WAIT_CONFIRMATION",
-   "object": "weakness definition 3"
   },
   {
    "type": "WAIT_CONFIRMATION",
@@ -393,10 +361,6 @@
   {
    "type": "ENTER",
    "object": "sell entry"
-  },
-  {
-   "type": "WAIT_SESSION",
-   "object": "trade execution"
   },
   {
    "type": "WAIT_STRUCTURE",
@@ -448,15 +412,7 @@
   },
   {
    "type": "WAIT_SESSION",
-   "object": "framework application time"
-  },
-  {
-   "type": "WAIT_SESSION",
    "object": "mark 17 and midnight open prices"
-  },
-  {
-   "type": "WAIT_SESSION",
-   "object": "wait"
   },
   {
    "type": "WAIT_SESSION",
@@ -861,10 +817,6 @@
    "object": "downtrend"
   },
   {
-   "type": "WAIT_STRUCTURE",
-   "object": "demand zone definition"
-  },
-  {
    "type": "WAIT_BIAS",
    "object": "downtrend entry condition"
   },
@@ -883,10 +835,6 @@
   {
    "type": "WAIT_BIAS",
    "object": "trading in direction trend which raises probability you winning trade by lot"
-  },
-  {
-   "type": "FILTER",
-   "object": "trade execution"
   },
   {
    "type": "WAIT_CONFIRMATION",
@@ -1017,14 +965,6 @@
    "object": "presence two things"
   },
   {
-   "type": "WAIT_SESSION",
-   "object": "entry condition"
-  },
-  {
-   "type": "WAIT_SESSION",
-   "object": "entry"
-  },
-  {
    "type": "WAIT_CONFIRMATION",
    "object": "entry trigger"
   },
@@ -1083,10 +1023,6 @@
   {
    "type": "WAIT_BIAS",
    "object": "hourly bias"
-  },
-  {
-   "type": "WAIT_SESSION",
-   "object": "time frame change"
   },
   {
    "type": "WAIT_STRUCTURE",
@@ -1231,10 +1167,6 @@
   {
    "type": "FILTER",
    "object": "market open time"
-  },
-  {
-   "type": "WAIT_SESSION",
-   "object": "trade opportunity"
   },
   {
    "type": "WAIT_SESSION",
@@ -1581,10 +1513,6 @@
   {
    "type": "WAIT_BIAS",
    "object": "lar song"
-  },
-  {
-   "type": "FILTER",
-   "object": "trade execution"
   },
   {
    "type": "WAIT_BIAS",

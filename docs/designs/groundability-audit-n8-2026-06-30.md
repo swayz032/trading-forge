@@ -8,21 +8,21 @@ needs_new (no path) / ambiguous (too vague to bind).
 
 ## Overall coverage (two metrics — GPT 2026-06-30 split)
 
-- **Groundability Coverage: 77.8%** — grounded / ALL 410 compiler-emitted conditions (native 256 + composite 63; needs_new 9, ambiguous 82).
-- **Executable Coverage: 97.3%** — grounded / 328 MEANINGFUL executable conditions (ambiguous tail excluded: semantic noise is a COMPRESSION quality issue, not an engine deficiency).
+- **Groundability Coverage: 77.8%** — grounded / ALL 392 compiler-emitted conditions (native 244 + composite 61; needs_new 9, ambiguous 78).
+- **Executable Coverage: 97.1%** — grounded / 314 MEANINGFUL executable conditions (ambiguous tail excluded: semantic noise is a COMPRESSION quality issue, not an engine deficiency).
 
 ## By semantic family
 
 | family | native | composite | needs_new | ambiguous | total | grounded |
 |---|---|---|---|---|---|---|
-| unclassified | 0 | 0 | 0 | 82 | 82 | 0.0% |
+| unclassified | 0 | 0 | 0 | 78 | 78 | 0.0% |
 | market_structure | 58 | 7 | 0 | 0 | 65 | 100.0% |
-| entry_execution | 57 | 0 | 0 | 0 | 57 | 100.0% |
-| session_time | 42 | 13 | 0 | 0 | 55 | 100.0% |
+| session_time | 40 | 12 | 0 | 0 | 52 | 100.0% |
+| entry_execution | 51 | 0 | 0 | 0 | 51 | 100.0% |
 | bias_direction | 50 | 0 | 0 | 0 | 50 | 100.0% |
-| price_action | 22 | 9 | 0 | 0 | 31 | 100.0% |
-| ict_zone | 0 | 25 | 0 | 0 | 25 | 100.0% |
-| indicator | 13 | 4 | 7 | 0 | 24 | 70.8% |
+| price_action | 19 | 9 | 0 | 0 | 28 | 100.0% |
+| ict_zone | 0 | 24 | 0 | 0 | 24 | 100.0% |
+| indicator | 12 | 4 | 7 | 0 | 23 | 69.6% |
 | liquidity | 14 | 5 | 0 | 0 | 19 | 100.0% |
 | risk_framework | 0 | 0 | 2 | 0 | 2 | 0.0% |
 
@@ -30,14 +30,14 @@ needs_new (no path) / ambiguous (too vague to bind).
 
 | transcript | conditions | groundability | executable | needs_new | ambiguous |
 |---|---|---|---|---|---|
-| psH--oXkD8M | 17 | 94.1% | 100% | 0 | 1 |
+| psH--oXkD8M | 15 | 100% | 100% | 0 | 0 |
 | l-2iKbcm5UI | 32 | 100% | 100% | 0 | 0 |
-| h6TnE7QClJg | 31 | 67.7% | 75% | 7 | 3 |
-| MKsjbL0WNjg | 119 | 84% | 99% | 1 | 18 |
-| e-QmGJU1XYc | 28 | 64.3% | 100% | 0 | 10 |
+| h6TnE7QClJg | 29 | 69% | 74.1% | 7 | 2 |
+| MKsjbL0WNjg | 112 | 84.8% | 99% | 1 | 16 |
+| e-QmGJU1XYc | 26 | 61.5% | 100% | 0 | 10 |
 | 9dErM4MFCTY | 20 | 75% | 100% | 0 | 5 |
-| qwLbJfBTZYA | 61 | 72.1% | 100% | 0 | 17 |
-| 8PYgFVB0GHE | 102 | 71.6% | 98.6% | 1 | 28 |
+| qwLbJfBTZYA | 57 | 70.2% | 100% | 0 | 17 |
+| 8PYgFVB0GHE | 101 | 71.3% | 98.6% | 1 | 28 |
 
 ## Ungroundable conditions (the explicit work queue — nothing silently dropped)
 
@@ -52,15 +52,11 @@ needs_new (no path) / ambiguous (too vague to bind).
 - [risk_framework] entry point target definition — framework-overlay.ts (overlay-owned — must NOT be an entry condition)
 - [risk_framework] stop loss level — framework-overlay.ts (overlay-owned — must NOT be an entry condition)
 
-### ambiguous (82)
-- waiting state
+### ambiguous (78)
 - trade
 - three fast steps
-- search bar
 - specific pattern
 - new year continuation
-- framework application time
-- wait
 - stop day
 - current validity
 - next day so day we have one trade is valid
@@ -113,7 +109,11 @@ needs_new (no path) / ambiguous (too vague to bind).
 - s p 500
 - downtrend
 - but it didn t
-- … +22 more
+- downtrend continuation
+- exits
+- es market
+- index activity
+- … +18 more
 
 ## Next (Stage 3 — Ledger F live)
 

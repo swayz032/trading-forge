@@ -26,7 +26,11 @@ const ALWAYS_NODE: ReadonlySet<AtomType> = new Set(["ENTER", "ENABLE_ENTRY", "IN
 // ICT, indicator-crossover, price-action and session-liquidity styles.
 const SPECIFIC = /\b(\d+\s*min|\d+\s*m\b|fifteen|five|thirty|sixty|hourly|daily|weekly|session|new ?york|london|asia|asian|tokyo|killzone|midnight|sweep|liquidity|mss|bos|choch|market structure|structure break|break|breakout|broke|displacement|order ?block|fvg|fair ?value|imbalance|supply|demand|swing|fib|premium|discount|retrace|equilibrium|dealing range|range|two ?line|two ?level|level|opening|reclaim|vwap|ema|sma|cci|rsi|macd|moving average|cross|oscillat|zero line|poc|volume profile|engulf|confirm|retest|pullback|rejection|reversal|weakness|strength|bias|bullish|bearish|direction|invalidat|pd[hl]|pw[hl])\b/i;
 // GENERIC_DENY = vague surface detail that must NEVER anchor even if it brushes a domain token (it was over-anchoring).
-const GENERIC_DENY = /^(price action|candle formation|candle pattern|price structure|price levels?|price movement|movement|the move|setup|condition|state|waiting state|time ?frame change|thing|something|price continuously[a-z ]*)$/i;
+// 2026-06-30 ambiguous-tail refinement (groundability audit: 82 process-meta objects polluting the vocabulary):
+// added PROCESS-META language — objects describing the ACT/STATE of trading ("waiting state", "entry condition met",
+// "weakness definition 2") rather than a market phenomenon. Terminal types are DENY-EXEMPT (see isAnchor) so an
+// ENTER:"trade entry" or an invalidation can never be dropped by this list.
+const GENERIC_DENY = /^(price action|candle formation|candle pattern|price structure|price levels?|price movement|movement|the move|setup|condition|state|waiting state|time ?frame change|thing|something|price continuously[a-z ]*|trade|entry|wait|waiting|trade (entry|execution|opportunit(y|ies))|entry (opportunity|point|signal)|entry condition( met| definition)?|search bar|specific pattern|three fast steps|framework application( time)?|[a-z0-9 ]* definitions? ?\d*)$/i;
 const FRAMEWORK = /\b(risk|reward|r ?: ?r|profit|target|stop ?loss|sizing|position size|lot|pips?|take ?profit)\b/i;
 const ENTRY_ACTION = /\b(enter|entry|take (the )?trade|go long|go short|buy|sell)\b/i;
 
@@ -35,8 +39,12 @@ const WINDOW = 4000; // chars — generics fold onto same-TYPE nodes (type-prese
 const isFramework = (a: DecisionAtom) => FRAMEWORK.test(a.object) || FRAMEWORK.test(a.object_canonical);
 const isSpecific = (a: DecisionAtom) => SPECIFIC.test(a.object) || SPECIFIC.test(a.object_canonical);
 const isGenericDeny = (a: DecisionAtom) => GENERIC_DENY.test(a.object_canonical);
-// anchor = always-node type, OR a domain-specific object that is NOT vague surface detail.
-const isAnchor = (a: DecisionAtom) => ALWAYS_NODE.has(a.type) || (isSpecific(a) && !isGenericDeny(a));
+// Terminals + invalidation family are DENY-EXEMPT: dropping an entry or invalidation node breaks reachability,
+// so process-meta denial applies only to precondition-type anchors (WAIT_SESSION/FILTER/WAIT_BIAS + specifics).
+const DENY_EXEMPT: ReadonlySet<AtomType> = new Set(["ENTER", "ENABLE_ENTRY", "INVALIDATE", "EXCEPTION", "RESET"]);
+// anchor = (always-node type OR domain-specific object) AND (terminal-exempt OR not process-meta/vague).
+const isAnchor = (a: DecisionAtom) =>
+  (ALWAYS_NODE.has(a.type) || isSpecific(a)) && (DENY_EXEMPT.has(a.type) || !isGenericDeny(a));
 const isEntry = (a: DecisionAtom) => ENTRY_ACTION.test(a.object) || ENTRY_ACTION.test(a.object_canonical);
 // A pure-framework leak: framework vocabulary AND not a real entry action AND not otherwise specific.
 const isFrameworkLeak = (a: DecisionAtom) => isFramework(a) && !isEntry(a) && !isSpecific(a);
