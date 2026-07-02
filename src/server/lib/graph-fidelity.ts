@@ -21,8 +21,16 @@ export interface GoldGraph { nodes: GoldNode[]; edges: GoldEdge[]; andGroups?: s
 export interface SGF { NR: number; ER: number; RG: number; TF: number; SGF: number; matched: Map<string, string> }
 
 // match the gold node to the FIRST unclaimed atom whose type is acceptable AND whose object carries a concept token
+// Numeral<->word normalization (2026-07-02): "15" and "fifteen" are the same concept token — gemma emits either
+// across runs. Normalizing both sides prevents false gold misses on timeframe-qualified objects.
+const NUM_WORDS: Array<[RegExp, string]> = [
+  [/fifteen/g, "15"], [/thirty/g, "30"], [/sixty/g, "60"], [/forty[- ]?five/g, "45"],
+  [/twenty/g, "20"], [/ten/g, "10"], [/five/g, "5"], [/four/g, "4"], [/one/g, "1"],
+];
+const normNums = (t: string): string => NUM_WORDS.reduce((acc, [re, d]) => acc.replace(re, d), t);
 const matchAtom = (g: GoldNode, atoms: DecisionAtom[], claimed: Set<string>): DecisionAtom | undefined =>
-  atoms.find((a) => !claimed.has(a.id) && g.types.includes(a.type) && g.keywords.some((k) => a.object_canonical.includes(k)));
+  atoms.find((a) => !claimed.has(a.id) && g.types.includes(a.type)
+    && g.keywords.some((k) => normNums(a.object_canonical).includes(normNums(k))));
 
 /** Atom Purity = gold atoms / extracted atoms. The fraction of extracted atoms that are essential. Low AP = pollution. */
 export const atomPurity = (extractedCount: number, gold: GoldGraph): number => gold.nodes.length / Math.max(1, extractedCount);
@@ -66,7 +74,7 @@ export const GOLD: Record<string, GoldGraph> = {
       { key: "range", types: ["WAIT_STRUCTURE", "VERIFY_STRUCTURE"], keywords: ["range", "opening", "first", "mark", "fifteen", "low and high"] },
       { key: "break", types: ["WAIT_STRUCTURE", "WAIT_CONFIRMATION", "VERIFY_STRUCTURE", "CONFIRM_DIRECTION"], keywords: ["break", "breakout", "broke", "move away", "displacement", "strong move", "above"] },
       { key: "retest", types: ["WAIT_RETEST", "WAIT_STRUCTURE"], keywords: ["retest", "pullback", "rejection", "reject"] },
-      { key: "confirm", types: ["WAIT_CONFIRMATION", "CONFIRM_DIRECTION", "ENABLE_ENTRY"], keywords: ["engulf", "buyer", "buying", "confirm", "signal", "closed candle"] },
+      { key: "confirm", types: ["WAIT_CONFIRMATION", "CONFIRM_DIRECTION", "ENABLE_ENTRY", "VERIFY_STRUCTURE"], keywords: ["engulf", "buyer", "buying", "confirm", "signal", "closed candle", "closing at highs"] },
       { key: "enter", types: ["ENTER", "ENABLE_ENTRY"], keywords: ["enter", "long", "take trade", "trade entry", "entry"] },
       { key: "downside", types: ["EXCEPTION", "INVALIDATE", "RESET", "ENTER"], keywords: ["downside", "short", "fail", "reverse", "towards downside"] },
     ],
