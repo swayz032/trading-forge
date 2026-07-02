@@ -1,14 +1,23 @@
 """Test skip_trade sentinel propagation from structural_stops through eligibility_gate.
 
+Canonical ceiling values (deep-scan #8 2026-07-02; Wave 1 2026-06-27):
+  MES = 14 pt ceiling   (was 6pt hardcoded before Wave 1)
+  MNQ = 62 pt ceiling   (was 40pt stale in prior test — corrected here)
+  MCL = 1.00 pt ceiling (100 ticks at $0.01/tick; was 0.25pt/25-tick stale)
+
 Covers:
-  1. MES stop > 14pt ceiling → skip_trade=True → eligibility SKIP
-  2. MNQ stop > 40pt ceiling → skip_trade=True → eligibility SKIP
-  3. MCL stop > 25 ticks (0.25 pts) → skip_trade=True → eligibility SKIP
-  4. Valid MES stop within 14pt ceiling → passes through to normal gate logic
-  5. Check 0 fires before other gate checks (structural_stop_exceeds_ceiling reason)
-  6. Valid MNQ stop within ceiling → passes
-  7. ATR fallback with large ATR exceeding ceiling → skip
-  8. skip_trade=False is not confused with skip_trade=True
+  1. INSTRUMENT_STOP_CONFIG canonical values match Wave 1 recal
+  2. MES stop > 14pt → skip_trade=True + stop_price un-clamped
+  3. skip_trade=True StopPlan → evaluate_signal SKIP with ceiling reason
+  4. MNQ stop > 62pt → skip_trade=True (was 40pt — stale; now 62pt)
+  5. MCL stop > 1.00pt → skip_trade=True (was 0.25pt — stale; now 1.00pt)
+  6. MES at-ceiling boundary (distance == 14.0pt) → skip_trade=False
+  7. Below-ceiling stop: price preserved un-clamped, no ceiling SKIP from gate
+  8. Check 0 fires before NO_TRADE playbook (ceiling skip is first reasoning entry)
+  9. MNQ within 62pt ceiling → skip_trade=False
+  10. ATR fallback oversized triggers ceiling (22.5pt > MES 14pt)
+  11. skip_trade=False distinct from True — gate does not produce ceiling SKIP
+  12. No explicit max_stop_points → per-symbol ceiling from INSTRUMENT_STOP_CONFIG
 """
 from __future__ import annotations
 
@@ -17,51 +26,50 @@ from unittest.mock import MagicMock
 
 from src.engine.context.structural_stops import (
     StopPlan,
-    compute_structural_stop,
     INSTRUMENT_STOP_CONFIG,
     SKIP_TRADE,
+    compute_structural_stop,
 )
 from src.engine.context.eligibility_gate import evaluate_signal
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
-def _make_stop_plan(skip: bool, symbol: str = "MES", stop_price: float = 4486.0) -> StopPlan:
-    """Build a minimal StopPlan for testing."""
+def _make_stop_plan(skip: bool, stop_price: float = 4486.0) -> StopPlan:
+    """Build a minimal StopPlan for testing the eligibility gate skip path."""
     return StopPlan(
         stop_price=stop_price,
         stop_reason=SKIP_TRADE if skip else "swing_point",
-        buffer=0.25,
+        buffer=0.75,
         risk_dollars=abs(4500.0 - stop_price) * 5.0,
         session_adjustment=1.0,
+        buffer_ticks=3,
+        sweep_aware_buffer=True,
         skip_trade=skip,
     )
 
 
 def _make_bias_state():
-    """Minimal DailyBiasState mock with numeric fields."""
     bs = MagicMock()
     bs.bias = "BULLISH"
-    bs.net_bias = 1          # positive = bullish (numeric for > 0 check in gate)
+    bs.net_bias = 1
     bs.playbook = "TREND_CONTINUATION"
     bs.confidence = 0.8
-    bs.bias_confidence = 0.8   # numeric for < comparison in gate
+    bs.bias_confidence = 0.8
     bs.no_trade_reasons = []
     return bs
 
 
 def _make_playbook(action: str = "TAKE"):
-    """Minimal PlaybookDecision mock."""
     pd = MagicMock()
     pd.action = action
     pd.playbook = "TREND_CONTINUATION"
     pd.allowed_strategies = ["breaker", "silver_bullet"]
-    pd.confidence_modifier = 1.0   # numeric for min/max in gate
+    pd.confidence_modifier = 1.0
     return pd
 
 
 def _make_location():
-    """Minimal LocationScore mock with high confluence."""
     loc = MagicMock()
     loc.score = 85
     loc.swept_liquidity = True
@@ -76,24 +84,35 @@ def _make_target_plan():
     tp.tp2 = 4525.0
     tp.tp3 = 4535.0
     tp.r_multiple_tp2 = 3.5
-    tp.rr_achieved = 3.5        # numeric for < comparison in gate
-    tp.min_rr_ratio = 2.0       # numeric for < comparison in gate
+    tp.rr_achieved = 3.5
+    tp.min_rr_ratio = 2.0
     return tp
 
 
 def _make_session():
-    """Minimal SessionContext mock with kill zone active."""
     s = MagicMock()
     s.ny_killzone_active = True
     s.london_killzone_active = False
     return s
 
 
-# ─── Test 1: MES stop > 14pt ceiling → skip_trade=True ───────────────────────
+# ─── 1. INSTRUMENT_STOP_CONFIG canonical values ──────────────────────────────
 
-def test_mes_exceeds_14pt_ceiling_returns_skip_trade():
-    """compute_structural_stop returns skip_trade=True when swing distance > 14pt for MES."""
-    # Entry 4500, swing_low 4479 → 21pt > 14pt ceiling for MES
+def test_instrument_stop_config_canonical_values():
+    """INSTRUMENT_STOP_CONFIG must hold Wave 1 / deep-scan #8 canonical values."""
+    assert INSTRUMENT_STOP_CONFIG["MES"] == 14.0, "MES ceiling must be 14pt"
+    assert INSTRUMENT_STOP_CONFIG["MNQ"] == 62.0, "MNQ ceiling must be 62pt (was 40pt — stale)"
+    assert INSTRUMENT_STOP_CONFIG["MCL"] == 1.00, "MCL ceiling must be 1.00pt (was 0.25pt — stale)"
+    assert INSTRUMENT_STOP_CONFIG["ES"] == INSTRUMENT_STOP_CONFIG["MES"]
+    assert INSTRUMENT_STOP_CONFIG["NQ"] == INSTRUMENT_STOP_CONFIG["MNQ"]
+    assert INSTRUMENT_STOP_CONFIG["CL"] == INSTRUMENT_STOP_CONFIG["MCL"]
+
+
+# ─── 2+3. MES > 14pt ceiling ─────────────────────────────────────────────────
+
+def test_mes_exceeds_14pt_ceiling_sets_skip_trade():
+    """Swing-point stop 21.75pt > 14pt MES ceiling → skip_trade=True, stop_price un-clamped."""
+    # Entry 4500, swing_low 4479; buffer=3×0.25=0.75; stop=4478.25; distance=21.75pt > 14pt
     result = compute_structural_stop(
         symbol="MES",
         direction="long",
@@ -101,17 +120,23 @@ def test_mes_exceeds_14pt_ceiling_returns_skip_trade():
         point_value=5.0,
         atr=8.0,
         tick_size=0.25,
-        nearest_swing_low=4479.0,  # 21pt below entry — exceeds 14pt ceiling
+        nearest_swing_low=4479.0,
     )
     assert result.skip_trade is True, (
-        f"MES 21pt stop must set skip_trade=True; got skip_trade={result.skip_trade}, "
-        f"stop_price={result.stop_price}, reason={result.stop_reason}"
+        f"MES 21.75pt stop must set skip_trade=True; "
+        f"got skip_trade={result.skip_trade}, stop_price={result.stop_price}, "
+        f"reason={result.stop_reason}"
     )
+    # True stop price preserved — NOT clamped to 4500-14=4486
+    assert result.stop_price < 4486.0, (
+        f"stop_price must be below ceiling line 4486.0 (un-clamped); got {result.stop_price}"
+    )
+    assert "exceeds_ceiling" in result.stop_reason
 
 
 def test_mes_skip_trade_propagates_to_eligibility_skip():
-    """skip_trade=True StopPlan → evaluate_signal returns SKIP action."""
-    stop_plan = _make_stop_plan(skip=True, symbol="MES", stop_price=4479.0)
+    """skip_trade=True StopPlan → evaluate_signal SKIP with ceiling reasoning."""
+    stop_plan = _make_stop_plan(skip=True, stop_price=4478.25)
 
     decision = evaluate_signal(
         signal={"direction": "long", "strategy_name": "breaker", "entry_price": 4500.0},
@@ -125,16 +150,22 @@ def test_mes_skip_trade_propagates_to_eligibility_skip():
         max_trades_hit=False,
     )
 
-    assert decision.action == "SKIP", f"Expected SKIP got {decision.action}"
-    skip_reasons = [r for r in decision.reasoning if "SKIP_TRADE" in r or "ceiling" in r.lower() or "structural_stop" in r.lower()]
-    assert len(skip_reasons) > 0, f"Expected a ceiling-related skip reason in {decision.reasoning}"
+    assert decision.action == "SKIP", f"Expected SKIP, got {decision.action}"
+    ceiling_reasons = [
+        r for r in decision.reasoning
+        if "SKIP_TRADE" in r or "ceiling" in r.lower() or "structural_stop" in r.lower()
+    ]
+    assert len(ceiling_reasons) > 0, (
+        f"Expected ceiling-related skip reason; got {decision.reasoning}"
+    )
 
 
-# ─── Test 2: MNQ stop > 40pt ceiling → skip_trade=True ───────────────────────
+# ─── 4. MNQ > 62pt ceiling (canonical; old test used stale 40pt) ─────────────
 
-def test_mnq_exceeds_40pt_ceiling_returns_skip_trade():
-    """compute_structural_stop returns skip_trade=True when swing distance > 40pt for MNQ."""
-    # Entry 15000, swing_high 15055 → 55pt > 40pt ceiling for MNQ short
+def test_mnq_exceeds_62pt_ceiling_sets_skip_trade():
+    """Swing-point stop 71.25pt > 62pt MNQ ceiling → skip_trade=True."""
+    # Entry 15000 short, swing_high 15070; buffer=5×0.25=1.25; stop=15071.25
+    # distance=71.25pt > 62pt MNQ ceiling
     result = compute_structural_stop(
         symbol="MNQ",
         direction="short",
@@ -142,16 +173,20 @@ def test_mnq_exceeds_40pt_ceiling_returns_skip_trade():
         point_value=2.0,
         atr=20.0,
         tick_size=0.25,
-        nearest_swing_high=15055.0,  # 55pt above entry — exceeds 40pt ceiling
+        nearest_swing_high=15070.0,
     )
     assert result.skip_trade is True, (
-        f"MNQ 55pt stop must set skip_trade=True; got stop_price={result.stop_price}"
+        f"MNQ 71.25pt stop must set skip_trade=True; "
+        f"got skip_trade={result.skip_trade}, "
+        f"distance={abs(15000.0 - result.stop_price):.2f}pt (ceiling=62pt)"
     )
+    assert result.stop_price > 15062.0, "stop_price must be above 62pt-ceiling line (un-clamped)"
+    assert "exceeds_ceiling" in result.stop_reason
 
 
 def test_mnq_skip_trade_propagates_to_eligibility_skip():
-    """MNQ skip_trade=True StopPlan → evaluate_signal returns SKIP."""
-    stop_plan = _make_stop_plan(skip=True, symbol="MNQ", stop_price=15055.0)
+    """MNQ skip_trade=True StopPlan → evaluate_signal SKIP."""
+    stop_plan = _make_stop_plan(skip=True, stop_price=15071.25)
 
     decision = evaluate_signal(
         signal={"direction": "short", "strategy_name": "breaker", "entry_price": 15000.0},
@@ -165,28 +200,32 @@ def test_mnq_skip_trade_propagates_to_eligibility_skip():
     assert decision.action == "SKIP"
 
 
-# ─── Test 3: MCL stop > 25 ticks → skip_trade=True ───────────────────────────
+# ─── 5. MCL > 1.00pt ceiling (canonical; old test used stale 0.25pt/25ticks) ─
 
-def test_mcl_exceeds_25tick_ceiling_returns_skip_trade():
-    """compute_structural_stop returns skip_trade=True when distance > 0.25pt for MCL."""
-    # Entry 80.00, swing_low 79.40 → 0.60pt > 0.25pt ceiling (60 ticks > 25 tick ceiling)
+def test_mcl_exceeds_100tick_ceiling_sets_skip_trade():
+    """Swing-point stop 1.52pt > 1.00pt MCL ceiling (100 ticks) → skip_trade=True."""
+    # Entry 80.00, swing_low 78.50; buffer=2×0.01=0.02; stop=78.48; distance=1.52pt > 1.00pt
     result = compute_structural_stop(
         symbol="MCL",
         direction="long",
         entry_price=80.00,
         point_value=100.0,
-        atr=0.10,
+        atr=0.30,
         tick_size=0.01,
-        nearest_swing_low=79.40,  # 0.60pt below entry > 0.25pt ceiling
+        nearest_swing_low=78.50,
     )
     assert result.skip_trade is True, (
-        f"MCL 60-tick stop must set skip_trade=True; got stop_price={result.stop_price}"
+        f"MCL 1.52pt stop must set skip_trade=True (ceiling=1.00pt); "
+        f"got skip_trade={result.skip_trade}, "
+        f"distance={abs(80.0 - result.stop_price):.3f}pt"
     )
+    assert result.stop_price < 79.00, "stop_price must be below 1.00pt ceiling line (un-clamped)"
+    assert "exceeds_ceiling" in result.stop_reason
 
 
 def test_mcl_skip_trade_propagates_to_eligibility_skip():
-    """MCL skip_trade=True StopPlan → evaluate_signal returns SKIP."""
-    stop_plan = _make_stop_plan(skip=True, symbol="MCL", stop_price=79.40)
+    """MCL skip_trade=True StopPlan → evaluate_signal SKIP."""
+    stop_plan = _make_stop_plan(skip=True, stop_price=78.48)
 
     decision = evaluate_signal(
         signal={"direction": "long", "strategy_name": "breaker", "entry_price": 80.00},
@@ -200,11 +239,11 @@ def test_mcl_skip_trade_propagates_to_eligibility_skip():
     assert decision.action == "SKIP"
 
 
-# ─── Test 4: Valid MES stop within 14pt ceiling passes through ───────────────
+# ─── 6. At-ceiling boundary → NOT skipped ────────────────────────────────────
 
-def test_mes_within_ceiling_passes_through():
-    """MES stop 12pt (within 14pt ceiling) → skip_trade=False."""
-    # Entry 4500, swing_low 4488 → 12pt < 14pt ceiling
+def test_mes_at_ceiling_boundary_not_skipped():
+    """MES stop exactly at 14.0pt distance → skip_trade=False (boundary is inclusive)."""
+    # swing_low 4486.75; buffer=3×0.25=0.75; stop=4486.0; distance=14.0pt = ceiling
     result = compute_structural_stop(
         symbol="MES",
         direction="long",
@@ -212,12 +251,36 @@ def test_mes_within_ceiling_passes_through():
         point_value=5.0,
         atr=6.0,
         tick_size=0.25,
-        nearest_swing_low=4488.0,  # 12pt below entry — within 14pt ceiling
+        nearest_swing_low=4486.75,
     )
-    assert result.skip_trade is False, f"MES 12pt stop must NOT set skip_trade; got {result}"
+    distance = abs(4500.0 - result.stop_price)
+    assert result.skip_trade is False, (
+        f"At-ceiling boundary (distance={distance:.4f}pt) must NOT skip; "
+        f"skip_trade={result.skip_trade}"
+    )
 
-    # evaluate_signal must NOT produce ceiling-based SKIP
-    stop_plan = _make_stop_plan(skip=False, symbol="MES", stop_price=4488.0)
+
+# ─── 7. Below-ceiling: price preserved un-clamped, no gate ceiling SKIP ──────
+
+def test_mes_below_ceiling_stop_price_preserved_unclamped():
+    """MES stop 12.75pt < 14pt ceiling → skip_trade=False, stop_price exact structural level."""
+    # swing_low 4488; buffer=0.75; stop=4487.25; distance=12.75pt < 14pt
+    result = compute_structural_stop(
+        symbol="MES",
+        direction="long",
+        entry_price=4500.0,
+        point_value=5.0,
+        atr=6.0,
+        tick_size=0.25,
+        nearest_swing_low=4488.0,
+    )
+    assert result.skip_trade is False
+    assert abs(result.stop_price - 4487.25) < 1e-9, (
+        f"Stop price must be exact structural level 4487.25; got {result.stop_price}"
+    )
+
+    # Gate must NOT produce ceiling SKIP
+    stop_plan = _make_stop_plan(skip=False, stop_price=4487.25)
     decision = evaluate_signal(
         signal={"direction": "long", "strategy_name": "breaker", "entry_price": 4500.0},
         bias_state=_make_bias_state(),
@@ -227,42 +290,44 @@ def test_mes_within_ceiling_passes_through():
         target_plan=_make_target_plan(),
         session=_make_session(),
     )
-    ceiling_reasons = [r for r in decision.reasoning if "SKIP_TRADE" in r or "structural_stop_exceeds" in r]
-    assert len(ceiling_reasons) == 0, f"Valid stop should not produce ceiling skip reason: {ceiling_reasons}"
+    ceiling_reasons = [
+        r for r in decision.reasoning
+        if "SKIP_TRADE" in r or "structural_stop_exceeds" in r
+    ]
+    assert len(ceiling_reasons) == 0, f"Valid stop must not produce ceiling skip: {ceiling_reasons}"
 
 
-# ─── Test 5: Check 0 fires before other gate checks ──────────────────────────
+# ─── 8. Check 0 fires before NO_TRADE playbook ───────────────────────────────
 
-def test_check0_skip_fires_before_other_checks():
-    """skip_trade=True short-circuits before playbook/confluence/kill zone checks."""
-    # Even with NO_TRADE playbook, ceiling check fires first
+def test_check0_fires_before_no_trade_playbook():
+    """skip_trade=True fires BEFORE NO_TRADE playbook check; ceiling reason is first."""
     pd = _make_playbook()
     pd.playbook = "NO_TRADE"
     pd.allowed_strategies = []
 
-    stop_plan_ceiling = _make_stop_plan(skip=True, symbol="MES", stop_price=4479.0)
+    stop_plan = _make_stop_plan(skip=True, stop_price=4478.25)
     decision = evaluate_signal(
         signal={"direction": "long", "strategy_name": "breaker", "entry_price": 4500.0},
         bias_state=_make_bias_state(),
         playbook=pd,
         location=_make_location(),
-        stop_plan=stop_plan_ceiling,
+        stop_plan=stop_plan,
         target_plan=_make_target_plan(),
         session=_make_session(),
     )
     assert decision.action == "SKIP"
-    # The ceiling skip reason must be the FIRST reasoning entry (Check 0 priority)
     assert len(decision.reasoning) > 0
-    assert "SKIP_TRADE" in decision.reasoning[0] or "structural_stop" in decision.reasoning[0].lower(), (
-        f"Check 0 ceiling reason must be first. Got: {decision.reasoning}"
+    first = decision.reasoning[0]
+    assert "SKIP_TRADE" in first or "structural_stop" in first.lower(), (
+        f"Check 0 ceiling reason must be FIRST reasoning entry. Got: {decision.reasoning}"
     )
 
 
-# ─── Test 6: Valid MNQ stop within ceiling → no ceiling skip ─────────────────
+# ─── 9. MNQ within 62pt ceiling → skip_trade=False ──────────────────────────
 
-def test_mnq_within_ceiling_passes_through():
-    """MNQ stop 35pt (within 40pt ceiling) → skip_trade=False."""
-    # Entry 15000, swing_high 14965 → 35pt < 40pt ceiling
+def test_mnq_within_62pt_ceiling_not_skipped():
+    """MNQ stop 39.25pt < 62pt ceiling → skip_trade=False."""
+    # swing_low 14962; buffer=1.25; stop=14960.75; distance=39.25pt
     result = compute_structural_stop(
         symbol="MNQ",
         direction="long",
@@ -270,50 +335,96 @@ def test_mnq_within_ceiling_passes_through():
         point_value=2.0,
         atr=20.0,
         tick_size=0.25,
-        nearest_swing_low=14965.0,  # 35pt below entry — within 40pt ceiling
+        nearest_swing_low=14962.0,
     )
-    assert result.skip_trade is False, f"MNQ 35pt stop should NOT set skip_trade; got {result}"
+    assert result.skip_trade is False, (
+        f"MNQ 39.25pt stop must NOT set skip_trade (ceiling=62pt); "
+        f"got skip_trade={result.skip_trade}"
+    )
 
 
-# ─── Test 7: ATR fallback with oversized ATR triggers ceiling ────────────────
+# ─── 10. ATR fallback oversized triggers ceiling ─────────────────────────────
 
 def test_atr_fallback_oversized_triggers_ceiling():
-    """When ATR-derived stop floor would exceed ceiling, skip_trade is set."""
-    # MES ceiling = 14pt. If we pass a very large ATR, the floor = 1.5 × ATR.
-    # If floor > ceiling AND no structural levels provided, handler must skip.
+    """ATR fallback 22.5pt (1.5 × ATR=15) > MES 14pt ceiling → skip_trade=True."""
     result = compute_structural_stop(
         symbol="MES",
         direction="long",
         entry_price=4500.0,
         point_value=5.0,
-        atr=15.0,          # 1.5 × 15 = 22.5pt floor > 14pt ceiling
+        atr=15.0,       # 1.5 × 15 = 22.5pt ATR floor > 14pt ceiling
         tick_size=0.25,
-        # No structural levels → ATR fallback at 22.5pt — exceeds 14pt ceiling
+        # No structural levels → ATR fallback fires
     )
-    # Either skip_trade=True (ceiling exceeded) or stop placed within 14pt (ATR floor capped)
-    # The implementation must NOT silently cap — it must set skip_trade=True
-    stop_distance = abs(result.stop_price - 4500.0)
-    assert result.skip_trade is True or stop_distance <= 14.0, (
-        f"ATR fallback of {stop_distance:.2f}pt (1.5×15=22.5) should trigger ceiling; "
-        f"skip_trade={result.skip_trade}"
+    assert result.skip_trade is True, (
+        f"ATR fallback 22.5pt must trigger skip (MES ceiling=14pt); "
+        f"skip_trade={result.skip_trade}, "
+        f"stop_distance={abs(result.stop_price - 4500.0):.2f}pt"
+    )
+    # True ATR stop preserved un-clamped
+    assert abs(result.stop_price - 4477.5) < 1e-9, (
+        f"stop_price must be un-clamped ATR stop (4477.5); got {result.stop_price}"
     )
 
 
-# ─── Test 8: skip_trade=False is distinct from skip_trade=True ───────────────
+# ─── 11. skip_trade=False does not produce ceiling SKIP ──────────────────────
 
-def test_skip_trade_false_is_not_confused_with_true():
-    """Ensure skip_trade=False StopPlan does not accidentally produce ceiling SKIP."""
-    stop_plan_valid = _make_stop_plan(skip=False, symbol="MES", stop_price=4492.0)
-    assert stop_plan_valid.skip_trade is False
+def test_skip_trade_false_does_not_produce_ceiling_skip():
+    """skip_trade=False StopPlan must never cause ceiling SKIP in the gate."""
+    stop_plan = _make_stop_plan(skip=False, stop_price=4492.0)
+    assert stop_plan.skip_trade is False
 
     decision = evaluate_signal(
         signal={"direction": "long", "strategy_name": "breaker", "entry_price": 4500.0},
         bias_state=_make_bias_state(),
         playbook=_make_playbook(),
         location=_make_location(),
-        stop_plan=stop_plan_valid,
+        stop_plan=stop_plan,
         target_plan=_make_target_plan(),
         session=_make_session(),
     )
-    ceiling_reasons = [r for r in decision.reasoning if "SKIP_TRADE" in r or "structural_stop_exceeds" in r]
+    ceiling_reasons = [
+        r for r in decision.reasoning
+        if "SKIP_TRADE" in r or "structural_stop_exceeds" in r
+    ]
     assert len(ceiling_reasons) == 0, f"Valid stop must not produce ceiling skip: {ceiling_reasons}"
+
+
+# ─── 12. No explicit max_stop_points → per-symbol from INSTRUMENT_STOP_CONFIG ─
+
+def test_no_max_stop_points_uses_per_symbol_ceiling_mnq():
+    """MNQ 50.25pt stop: valid under 62pt ceiling, would fail 14pt MES ceiling.
+    No max_stop_points passed → must resolve as MNQ 62pt (not MES 14pt).
+    """
+    # swing_low 14951; buffer=1.25; stop=14949.75; distance=50.25pt
+    result = compute_structural_stop(
+        symbol="MNQ",
+        direction="long",
+        entry_price=15000.0,
+        point_value=2.0,
+        atr=20.0,
+        tick_size=0.25,
+        nearest_swing_low=14951.0,
+        # max_stop_points NOT passed → uses INSTRUMENT_STOP_CONFIG["MNQ"] = 62pt
+    )
+    distance = abs(15000.0 - result.stop_price)
+    assert result.skip_trade is False, (
+        f"MNQ 50.25pt stop is valid under 62pt ceiling; skip_trade must be False. "
+        f"If True, the ceiling was wrongly resolved as MES 14pt (symbol not passed). "
+        f"distance={distance:.2f}pt"
+    )
+
+
+def test_mes_stop_uses_mes_14pt_not_mnq_ceiling():
+    """MES 12pt stop must use MES 14pt ceiling, not cross-contaminate MNQ 62pt."""
+    result = compute_structural_stop(
+        symbol="MES",
+        direction="long",
+        entry_price=4500.0,
+        point_value=5.0,
+        atr=5.0,
+        tick_size=0.25,
+        nearest_swing_low=4488.75,  # stop=4488.0; distance=12pt < 14pt MES ceiling
+    )
+    assert result.skip_trade is False
+    assert abs(result.stop_price - 4488.0) < 1e-9
