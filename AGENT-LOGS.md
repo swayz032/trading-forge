@@ -12090,6 +12090,32 @@ Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal
 
 ---
 
+### Session Log — 2026-07-02 VectorBT PRO buy/switch evaluation (research-only, no code changes)
+
+**Mission:** Operator's agent told him to buy VectorBT PRO (~$25/mo); he asked for deep research on all Pro features vs our stack and an upgrade-benefit verdict before deciding.
+
+**Work completed:**
+- 2 parallel research agents: (1) codebase inventory of our vectorbt usage; (2) external research on VBT Pro pricing/license/futures/CPCV/community 2025-2026.
+- KEY FINDING (codebase): our ENTIRE vectorbt dependency is `vbt.Portfolio.from_signals` at 2 call sites in `src/engine/backtester.py` (:4061 DSL path, :5850 class path) + `.trades.count()`/`.trades.records_readable`. Signal-timing/trade-pairing ONLY — `init_cash=inf`, no fees/slippage/stops passed. All P&L, fills, stops, exits, validation stats are custom outside vectorbt.
+- KEY FINDING (external): VBT Pro purged CV produces SPLITS only — no built-in PBO/DSR (our gate chain is AHEAD on this axis). Futures support is multiplier-grade (contract multiplier + negative prices), NOT sessions/rolls/prop-firm rules. License = personal use, per-end-user licensing if software depends on it; installed code keeps working after subscription lapse. Pricing: $25/mo, $240/yr, ~$500 lifetime.
+- KEY FINDING (forcing function is FALSE): open-source vectorbt is NOT maintenance-mode — **v1.0.0 released 2026-04-22** with optional Rust engine, Python 3.10-3.13 CI incl. Windows, active 2025-2026 release cadence. The usual "OSS will rot" argument for buying Pro does not currently hold.
+- VERDICT delivered: do NOT switch the engine (deep-scan #6 KEEP-custom verdict holds — Pro models nothing prop-firm-shaped and our CPCV/PBO/DSR/BIF/MC-firm-survival stack is more complete). Optional: buy Pro as a research-only sidecar (operator confirmed $25/mo is pre-approved cost tier). Higher-ROI free action: evaluate OSS vectorbt v1.0.0 upgrade at the sim boundary.
+- Memory updated: `feedback_free_tier_preference.md` — operator stated ~$25/mo subscriptions are "not a lot to me"; small-subscription cost is not a blocker in build-vs-buy analysis.
+
+**Verification:** research-only session; no code/tests touched. Both agent reports cited file:line (codebase) and URLs (external).
+
+**Known-facts updates:**
+- **`src/engine/requirements.txt:9` pins `vectorbt>=0.26.0` with NO upper bound** — OSS vectorbt v1.0.0 (major, Rust engine) now exists on PyPI, so a FRESH pip install may pull 1.0.0 and potentially break the two `from_signals` call sites. Pin an upper bound (`vectorbt>=0.26.0,<1.0`) or deliberately test 1.0.0 before any fresh-environment rebuild.
+
+**FOLLOW-UP (same session, operator: "RUN THE TEST") — vectorbt 1.0.0 parity test EXECUTED + PASSED:**
+- Discovery 1: **production is ALREADY on vectorbt 1.0.0** — installed 2026-05-18 into user-site (`%APPDATA%\Python\Python313\site-packages`), i.e. BEFORE all June validation waves (06-28 88s byte-identical WF runs, deepscan5 engine tests, deepscan6) — 1.0.0 has ~6 weeks of green production history. The `backtester.py:4081` "VBT v2 uses timestamps, not indices" shim is the prior adaptation.
+- Discovery 2: parity probe (`vbt_parity_probe.py`, scratchpad) reproduced the exact `from_signals` call shape (close/entries/exits/short_entries/short_exits/size/freq/init_cash=inf) on seeded synthetic data with long/short/chained/same-bar-conflict/trailing-open trades → ran under isolated venv vectorbt **0.28.5** vs prod **1.0.0**: **SHA-256 BYTE-IDENTICAL trades tables** (10 trades, all consumed columns present — Avg Entry/Exit Price, Size, Direction, Entry/Exit Timestamp→Idx, Status — 0 unmapped timestamps).
+- Action: `src/engine/requirements.txt` pinned `vectorbt>=1.0.0,<2.0` (was drift-prone `>=0.26.0`); `<2.0` cap documented to force a parity re-probe on the next major.
+- Probe gotcha (reconfirms known slow path): a standalone script importing vectorbt WITHOUT the repo's `NUMBA_CACHE_DIR` pin (determinism.py) cold-compiles for 7+ min; setting `NUMBA_CACHE_DIR=<repo>\.numba_cache` makes it seconds. Two concurrent cold imports = the known cache race.
+
+**Carry-forward for next session:**
+- Operator decides on Pro membership (research sidecar only if bought; never in production path). Engine-switch question is CLOSED (keep custom; vectorbt 1.0.0 pinned and parity-proven).
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### pglite test-harness DDL drifts from schema.ts and silently breaks ALL DB-backed gate tests (pinned 2026-06-28)
