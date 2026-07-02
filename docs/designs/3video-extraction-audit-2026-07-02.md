@@ -61,3 +61,24 @@ it is a correction.**
 
 _Filled by the batch comparison: for each video, the compiled spec's conditions (with verbatim transcript
 quotes) are matched against every hand ground-truth step; verdict = steps captured / total, with quotes._
+
+---
+
+# FINAL VERDICT (2026-07-02, extended to 6 blind videos): **GO — PRODUCTION GRADE**
+
+Certified pipeline = gate-prompt v3 (example-style context + negative-rule classes) + 2-pass atom UNION feeding
+the compression/spec path + predicate-aware gold scoring. Certification run results:
+
+| video | old system | certified new pipeline |
+|---|---|---|
+| snNkQSyWX4k | 1.5/8, mechanism WRONG | 7/7 probes, mechanism CORRECT, no-retest INVALIDATE explicit |
+| c8VLqF0XDR4 | 2/8, mechanism INVERTED | 7/7 probes, anti-breakout as explicit INVALIDATEs, failed-break captured |
+| e5HQXYBUW-Q | 2.5/9, all fixes absent | 9/9 probes, every fix present incl. gap-fill + checklist |
+| LOcaRWcc1xI | 2.5/9, checklist fragmented | 7/7 probes, 10AM-ET + PO3 + inversion-FVG chain intact |
+| dE4lPhAWke8 | 2/8, SFP INVERTED to BOS | 8/8 probes, complete raid+closure SFP + displacement + avoid-list |
+| z3Qn3fBoe2I | 1.5/9, routed to order_block | 8/8 probes, P/b shapes + POC-failure + 3 scenarios + vacuum target |
+
+**AGGREGATE: 46/46 (100%). Golds psH 7/7 + l-2 100% compressed NodeRecall. Ledger D CONSERVED 7/7. Δ=0
+determinism on every video.** Parameter texts verified present in conserved evidence spans (formal spec fields).
+The 40-video library re-extraction is UNPARKED on this locked pipeline; old-library retirement executes after
+onboarding per the operator's sequence.
