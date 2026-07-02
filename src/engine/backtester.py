@@ -908,7 +908,7 @@ def _apply_static_styleC_management(
         # The eligibility gate uses _get_stop_ceiling_for_symbol (14 MES / 62 MNQ / 1.0 MCL);
         # the management loop must match or MNQ trades get a noise-level 6pt stop (5m ATR ~30-80pt)
         # → every MNQ Style C/adaptive trade was stopped on noise. MES/MCL unchanged in practice.
-        _stop_ceiling = _get_stop_ceiling_for_symbol(spec.symbol if spec else "MES")
+        _stop_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
         risk_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
         # Min breathing room: 2pt for MES/ES (tick_size=0.25), scaled for other instruments
         tick = spec.tick_size if spec else 0.25
@@ -1414,7 +1414,7 @@ def _apply_adaptive_management(
         # The eligibility gate uses _get_stop_ceiling_for_symbol (14 MES / 62 MNQ / 1.0 MCL);
         # the management loop must match or MNQ trades get a noise-level 6pt stop (5m ATR ~30-80pt)
         # → every MNQ Style C/adaptive trade was stopped on noise. MES/MCL unchanged in practice.
-        _stop_ceiling = _get_stop_ceiling_for_symbol(spec.symbol if spec else "MES")
+        _stop_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
         risk_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
         tick = spec.tick_size if spec else 0.25
 
@@ -2343,6 +2343,18 @@ _STOP_CEILING_DEFAULTS: dict[str, tuple[str, float]] = {
     "CL":  ("STOP_CEILING_PTS_MCL", 1.00),   # mini alias — shares MCL env var
 }
 _STOP_CEILING_DEFAULT: float = 14.0  # fallback for unknown symbols (MES default)
+
+
+def _symbol_of_spec(spec) -> str:
+    """Reverse-lookup a ContractSpec's symbol (ContractSpec has NO .symbol field — the symbol is the
+    CONTRACT_SPECS dict KEY). Identity match is exact because CONTRACT_SPECS[sym] returns the registry
+    object itself. Fixes the deepscan5 C4 regression where spec.symbol raised AttributeError and broke
+    every class-based Style C/adaptive backtest. Falls back to MES (per-symbol ceilings unchanged)."""
+    if spec is not None:
+        for _sym, _sp in CONTRACT_SPECS.items():
+            if _sp is spec:
+                return _sym
+    return "MES"
 
 
 def _get_stop_ceiling_for_symbol(symbol: str) -> float:
@@ -4255,7 +4267,7 @@ def run_backtest(
             atr_at_entry = float(df[atr_col_name][entry_idx]) if atr_col_name in df.columns and entry_idx < len(df) else 0.0
             sl_mult = float(config.stop_loss.multiplier) if hasattr(config, "stop_loss") and config.stop_loss else 1.5  # L3 fix: use config multiplier, fall back to 1.5
             # C4 FIX (deepscan5 2026-06-29): per-symbol ceiling, not flat 6.0pt (see mgmt loops above).
-            risk_points = min(atr_at_entry * sl_mult, _get_stop_ceiling_for_symbol(spec.symbol if spec else "MES"))
+            risk_points = min(atr_at_entry * sl_mult, _get_stop_ceiling_for_symbol(_symbol_of_spec(spec)))
             risk_dollars = risk_points * spec.point_value
             if risk_dollars > 0 and size > 0:
                 reward_dollars = net_pnl / size
@@ -5947,7 +5959,7 @@ def run_class_backtest(
                 # C4 + M2 FIX (deepscan5 2026-06-29): per-symbol ceiling (was flat 6.0pt) AND
                 # config stop multiplier _cls_stop_mult (was hardcoded 2.0, overstating risk 33%
                 # for the Slumdawg 1.5× default — understated R:R on the class path).
-                _cls_ceiling = _get_stop_ceiling_for_symbol(spec.symbol if spec else "MES")
+                _cls_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
                 risk_pts = min(float(atr_np[entry_idx]) * _cls_stop_mult, _cls_ceiling) if entry_idx < len(atr_np) else _cls_ceiling
 
             # H2 FIX (class path): Floor size to integer contracts — brokers charge
