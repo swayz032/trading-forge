@@ -12158,6 +12158,41 @@ Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal
 
 **Carry-forward:** NOT code-fixable this wave (operator): buy UPS+Kasa; rotate ~132 secrets watched; set `S3_BACKUP_BUCKET` to a NEW isolated bucket + IAM (env plumbing now ready). Deferred (documented, advisory): SSE catalog 186 uncatalogued (ratchet candidate); BIF-blind-in-CPCV Wave 30; AVWAP-trail + TP2-liquidity parity gaps; n8n retry-backoff normalization pass.
 
+### Session Log — 2026-07-02 ENGINE-100 Track F (F-a AVWAP cushion + F-b static_styleC TP2 parity fix)
+
+**Mission:** Close the two paper↔backtest parity gaps (F-a AVWAP runner-trail cushion, F-b static_styleC TP2 price) that were carried forward from deepscan7.
+
+**Work completed:**
+
+- **GAP F-a (AVWAP cushion):** `paper-execution-service.ts` anchored_vwap trail case replaced `ATR_TRAIL_CUSHION_MULTIPLIER * atrAtEntry` (1×ATR14) with `CONTRACT_SPECS[symbol].tickSize` (1×tick). Canonical: `backtester.py:1568/1571` uses `avwap_price - tick` / `avwap_price + tick`. MES/MNQ tick=0.25, MCL tick=0.01. `ATR_TRAIL_CUSHION_MULTIPLIER` kept for `developing_poc`, `structure_trail`, and `default` cases — only the `anchored_vwap` branch was changed. `CONTRACT_SPECS` was already imported at line 13.
+
+- **GAP F-b (static_styleC TP2):** `paper-execution-service.ts` `openPosition()` "Wave 1 Track 1B" block completely replaced. Previously: called `getNearestLiquidity()`, snapped TP2 to nearest intraday level within `[1.4R, 2.6R]`. Now: flat `entry ± 2.0 × stopDistance` matching `style_c_handler.py:85` (`TP2_AT_R_C = 2.0`). Removed `STATIC_STYLEC_TP2_MIN_R`, `STATIC_STYLEC_TP2_MAX_R`, `STATIC_STYLEC_INTRADAY_TYPES`, and `getNearestLiquidity()` call. Persisted key `static_styleC_tp2_price` kept as-is (C2 intrabar TP2 pre-check reads it). Audit evidence updated: `trigger="tp2_fill_flat_2r"`, `handler_version="static_styleC_flat_2r_v1"`.
+
+- **Parity script coherence fix:** `scripts/wave26-ts-python-exit-parity.ts` inline `computeStaticStyleCTp2Pure()` function + all 6 `STYLEC_TP2_ASSERTIONS` entries rewrote to flat +2.0R. Old liquidity-lookup code (`MockLiquidityCandidate`, candidates loop) removed. Section header updated.
+
+- **New tests — F-a:** `src/server/__tests__/engine100-trackf-avwap-cushion.test.ts` — 7 tests (Fa-1→Fa-7): long/short MES single-bar, two-bar vol-weighted sequences, MNQ, MCL (0.01 tick), and ATR regression guard proving large ATR has no influence.
+
+- **New tests — F-b:** `src/server/__tests__/engine100-trackf-static-stylec-tp2.test.ts` — 7 tests (Fb-1→Fb-7): long/short flat 2.0R, liquidity-present non-regression, adaptive-path non-regression, audit trigger strings, MNQ (62pt stop), MCL (0.50pt stop).
+
+- **Updated tests:** `src/server/__tests__/wave25-5-track1-position-open-wiring.test.ts` — T5/T5b/T5d/T6 assertions and comments updated from `avwap - atr` to `avwap - 0.25` tick cushion.
+
+**Verification:**
+- `npx tsc --noEmit`: 0 errors
+- `npm run check:ts-python-exit-parity`: OVERALL PASS (5 adaptive regime fixtures, 9 VIX-tier assertions, 6 static_styleC TP2 flat +2.0R assertions — all PASS)
+- `engine100-trackf-avwap-cushion.test.ts`: 7/7 PASS
+- `engine100-trackf-static-stylec-tp2.test.ts`: 7/7 PASS
+- `wave25-5-track1-position-open-wiring.test.ts`: 41/41 PASS (no regression)
+- Pre-existing failures at clean HEAD (8fba6e0) unchanged: m1-a5-dll-force-close-warn (status assert), paper-risk-gate.dll-halt (2), wave24-boot-migration:571 (stale warn-vs-error assert) — none of these touched by Track F
+
+**Known-facts updates:**
+- AVWAP runner-trail cushion in paper engine: `1×tick` (NOT ATR14) — matches `backtester.py:1568/1571`. The `ATR_TRAIL_CUSHION_MULTIPLIER` constant still exists and is used for other trail modes; only `anchored_vwap` branch bypasses it.
+- `static_styleC TP2` in paper engine: always `entry ± 2.0 × stopDistance` (`source="r_multiple"`) — liquidity-mapped TP is ADAPTIVE-path only. Persisted key `static_styleC_tp2_price` now always holds flat +2.0R price.
+
+**Carry-forward for next session:**
+- "AVWAP-trail + TP2-liquidity parity gaps" from deepscan7 carry-forward (line 12159 above) are now CLOSED by this session.
+- Remaining carry-forwards from deepscan7 still outstanding: operator env (buy UPS+Kasa, rotate secrets, set `S3_BACKUP_BUCKET`); SSE catalog 186 uncatalogued; BIF-blind-in-CPCV Wave 30; n8n retry-backoff normalization.
+- Work ONLY in isolated worktree; no commits made this session (working files on disk, uncommitted).
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### pglite test-harness DDL drifts from schema.ts and silently breaks ALL DB-backed gate tests (pinned 2026-06-28)

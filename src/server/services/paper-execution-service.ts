@@ -1946,79 +1946,33 @@ export async function openPosition(sessionId: string, params: {
       exitPlanForInsert = null;
     }
   } else if (exitStyle === "static_styleC" && adaptiveInput != null) {
-    // ── Wave 1 Track 1B: static_styleC TP2 liquidity injection ─────────────────
-    // Give static_styleC the same in-band liquidity lookup that adaptive gets.
-    // Band: [STATIC_STYLEC_TP2_MIN_R, STATIC_STYLEC_TP2_MAX_R] (default +1.4R..+2.6R).
-    // Falls back to +2.0R when no qualified intraday level in band.
-    // Fully backward-compatible: no stored TP2 = Python handles at +2.0R as before.
+    // ── F-b parity fix: static_styleC TP2 = flat +2.0R ─────────────────────────
+    // CLAUDE.md §4 canonical: static Style C TP2 ALWAYS = +2.0R flat.
+    // Liquidity-mapped TPs belong exclusively to exit_style="adaptive".
+    // Prior code (Wave 1 Track 1B) injected a liquidity-mapped TP2 within [1.4R..2.6R],
+    // causing paper TP2 to fire at a different price than Python style_c_handler.py
+    // (which always uses TP2_AT_R_C = 2.0), inflating or deflating paper Sharpe
+    // vs backtest (paper/backtest parity gap F-b).
+    // Storing the flat +2.0R price enables the C2 intrabar TP2 touch-detection
+    // path in updatePositionPrices without spawning a Python subprocess.
     try {
-      const tp2MinR = parseFloat(process.env.STATIC_STYLEC_TP2_MIN_R ?? "1.4");
-      const tp2MaxR = parseFloat(process.env.STATIC_STYLEC_TP2_MAX_R ?? "2.6");
       const stopDistance = Math.abs(actualEntry - adaptiveInput.entry.stop);
 
       if (stopDistance > 0) {
-        // Replicate INTRADAY_ALLOWED_LEVEL_TYPES from adaptive-exit-engine.ts (not exported).
-        // Day-trader mandate: PWH/PWL/PMH/PML excluded (multi-day DOL — blows EOD-DD buffer).
-        const STATIC_STYLEC_INTRADAY_TYPES = new Set([
-          "pdh", "pdl",
-          "asian_high", "asian_low",
-          "london_high", "london_low",
-          "hod", "lod",
-          "naked_poc",
-          "untouched_fvg",
-          "untouched_ob",
-          "eqh", "eql",
-        ]);
-
-        const direction = params.side === "long" ? "above" : "below";
-        // Search up to tp2MaxR × stopDistance from entry price
-        const maxSearchDistance = stopDistance * tp2MaxR;
-
-        const { getNearestLiquidity } = await import("./liquidity-map-service.js");
-        const candidates = await getNearestLiquidity(
-          params.symbol,
-          actualEntry,
-          direction as "above" | "below",
-          maxSearchDistance,
-        );
-
-        // Filter: intraday types only + R in [tp2MinR, tp2MaxR]
-        let tp2Price: number | null = null;
-        let tp2Source: "liquidity" | "r_multiple" = "r_multiple";
-        let tp2LevelType: string | null = null;
-        let tp2RMultiple = 2.0;
-
-        for (const candidate of candidates) {
-          if (!STATIC_STYLEC_INTRADAY_TYPES.has(candidate.level_type)) continue;
-          const rMult = Math.abs(candidate.price - actualEntry) / stopDistance;
-          if (rMult >= tp2MinR && rMult <= tp2MaxR) {
-            tp2Price = candidate.price;
-            tp2Source = "liquidity";
-            tp2LevelType = candidate.level_type;
-            tp2RMultiple = rMult;
-            break; // nearest qualifying level wins
-          }
-        }
-
-        // If no qualifying level found, default to +2.0R (Python's native computation)
-        if (tp2Price === null) {
-          tp2Price = params.side === "long"
-            ? actualEntry + 2.0 * stopDistance
-            : actualEntry - 2.0 * stopDistance;
-        }
+        const tp2Price = params.side === "long"
+          ? actualEntry + 2.0 * stopDistance
+          : actualEntry - 2.0 * stopDistance;
 
         exitPlanForInsert = {
           static_styleC_tp2_price: tp2Price,
-          static_styleC_tp2_source: tp2Source,
-          static_styleC_tp2_level_type: tp2LevelType,
-          static_styleC_tp2_r_multiple: tp2RMultiple,
+          static_styleC_tp2_source: "r_multiple",
+          static_styleC_tp2_level_type: null,
+          static_styleC_tp2_r_multiple: 2.0,
           runtime_state: {},
         } as unknown as import("../db/jsonb-shapes.js").ExitPlanWithRuntimeState;
 
         db.insert(auditLog).values({
-          action: tp2Source === "liquidity"
-            ? "signal.static_styleC_tp2_liquidity_mapped"
-            : "signal.static_styleC_tp2_r_multiple_fallback",
+          action: "signal.static_styleC_tp2_flat_2r",
           entityType: "paper_position",
           entityId: null,
           decisionAuthority: "system",
@@ -2026,14 +1980,13 @@ export async function openPosition(sessionId: string, params: {
             sessionId,
             symbol: params.symbol,
             side: params.side,
+            entry_price: actualEntry,
             stop_distance: stopDistance,
-            tp2_band: [tp2MinR, tp2MaxR],
           } as Record<string, unknown>,
           result: {
             tp2_price: tp2Price,
-            tp2_r_multiple: tp2RMultiple,
-            tp2_source: tp2Source,
-            tp2_level_type: tp2LevelType,
+            tp2_r_multiple: 2.0,
+            tp2_source: "r_multiple",
           } as Record<string, unknown>,
           status: "success",
           correlationId,
@@ -2043,7 +1996,7 @@ export async function openPosition(sessionId: string, params: {
       const reason = tp2Err instanceof Error ? tp2Err.message : String(tp2Err);
       logger.warn(
         { sessionId, symbol: params.symbol, err: reason },
-        "Wave1Track1B: static_styleC TP2 liquidity lookup failed — Python +2.0R fallback will apply",
+        "static_styleC TP2 flat-2R computation failed — Python +2.0R fallback will apply",
       );
       exitPlanForInsert = null; // no stored TP2 → Python handles TP2 at 2.0R
     }
@@ -3131,10 +3084,10 @@ async function callExitHandler(
     };
   }
 
-  // ── Wave 1 Track 1B: static_styleC TP2 liquidity pre-check ──────────────────
-  // If a liquidity-mapped TP2 was stored at position open (static_styleC only),
-  // check if current price has reached it BEFORE calling Python. This allows TP2
-  // to fire at the liquidity level (may be < 2.0R) rather than Python's fixed 2.0R.
+  // ── F-b parity fix: static_styleC TP2 flat +2.0R pre-check ─────────────────
+  // If a flat-2R TP2 price was stored at position open (static_styleC only),
+  // check if the current bar has reached it BEFORE calling Python. This mirrors
+  // Python style_c_handler.py TP2_AT_R_C = 2.0 with C2 intrabar detection.
   // Fully backward-compatible: only fires when stored TP2 exists. When no stored TP2,
   // Python handles it at 2.0R as before.
   if (exitStyle === "C" && !(pos.tp2Filled ?? false) && (pos.tp1Filled ?? false)) {
@@ -3156,20 +3109,20 @@ async function callExitHandler(
       if (tp2Reached) {
         logger.debug(
           { positionId: pos.id, storedTp2Price, currentPriceNum, barHighForTp2, barLowForTp2, side: pos.side },
-          "Wave1Track1B: static_styleC TP2 reached at liquidity-mapped price (pre-check firing)",
+          "F-b: static_styleC TP2 reached at flat +2.0R (pre-check firing)",
         );
         return {
           decision: "FILL_TP2",
           new_stop: null,
           evidence: {
-            trigger: "tp2_fill_liquidity_mapped",
+            trigger: "tp2_fill_flat_2r",
             tp2_price: storedTp2Price,
             tp2_fraction: 0.33,
-            tp2_source: (storedPlan?.["static_styleC_tp2_source"] as string | undefined) ?? "liquidity",
+            tp2_source: (storedPlan?.["static_styleC_tp2_source"] as string | undefined) ?? "r_multiple",
             tp2_level_type: (storedPlan?.["static_styleC_tp2_level_type"] as string | null | undefined) ?? null,
-            handler_version: "static_styleC_liquidity_mapped_v1",
+            handler_version: "static_styleC_flat_2r_v1",
           },
-          handler_version: "static_styleC_liquidity_mapped_v1",
+          handler_version: "static_styleC_flat_2r_v1",
         };
       }
     }
@@ -4138,8 +4091,10 @@ export async function updatePositionPrices(
           case "anchored_vwap": {
             // Per-position running ΣP·V / ΣV from entry timestamp.
             // State: exit_plan.runtime_state.{ sum_pv, sum_v }
-            // Trail = anchored VWAP - (ATR_TRAIL_CUSHION_MULTIPLIER × atrAtEntry) for longs
-            //        anchored VWAP + cushion for shorts
+            // F-a parity fix: trail = anchored VWAP - 1×tickSize for longs
+            //                       = anchored VWAP + 1×tickSize for shorts
+            // Matches backtester.py lines 1568/1571: avwap_price - tick / avwap_price + tick.
+            // Prior cushion (1×ATR14) was too wide, inflating paper Sharpe vs backtest.
             const prevState = exitPlanRow.runtime_state ?? {};
             const prevSumPv = prevState.sum_pv ?? 0;
             const prevSumV  = prevState.sum_v  ?? 0;
@@ -4154,8 +4109,9 @@ export async function updatePositionPrices(
             const newSumPv = prevSumPv + barMid * barVol;
             const newSumV  = prevSumV  + barVol;
             const avwap = newSumV > 0 ? newSumPv / newSumV : currentPrice;
-            const cushion = ATR_TRAIL_CUSHION_MULTIPLIER * atrAtEntry;
-            computedTrail = pos.side === "long" ? avwap - cushion : avwap + cushion;
+            // 1×tick cushion per-symbol — mirrors backtester.py avwap_price ± tick.
+            const avwapTickCushion = CONTRACT_SPECS[pos.symbol as keyof typeof CONTRACT_SPECS]?.tickSize ?? 0.25;
+            computedTrail = pos.side === "long" ? avwap - avwapTickCushion : avwap + avwapTickCushion;
             updatedRuntimeState = { ...prevState, sum_pv: newSumPv, sum_v: newSumV, avwap };
             break;
           }

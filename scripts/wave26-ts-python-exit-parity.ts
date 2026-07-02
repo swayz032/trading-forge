@@ -420,46 +420,22 @@ for (const a of VIX_TIER_ASSERTIONS) {
 }
 console.log(`  VIX-tier: ${vixTierAllPassed ? "ALL PASS" : "FAILURES DETECTED"}`);
 
-// ── B. static_styleC TP2 liquidity lookup (pure-function layer) ───────────────
-// Tests the in-band selection logic without a live DB (liquidity candidates passed inline).
-
-interface MockLiquidityCandidate {
-  price: number;
-  level_type: string;
-}
-
-// Mirrors INTRADAY_ALLOWED_LEVEL_TYPES from adaptive-exit-engine.ts
-const STYLEC_TP2_INTRADAY_TYPES = new Set([
-  "pdh", "pdl", "asian_high", "asian_low", "london_high", "london_low",
-  "hod", "lod", "naked_poc", "untouched_fvg", "untouched_ob", "eqh", "eql",
-]);
+// ── B. static_styleC TP2 flat +2.0R (pure-function layer) ────────────────────
+// F-b parity fix (ENGINE-100 Track F): static_styleC TP2 is ALWAYS flat +2.0R.
+// Liquidity-mapped TPs belong exclusively to exit_style="adaptive".
+// Prior code (Wave 1 Track 1B) selected in-band liquidity levels — removed.
+// Python style_c_handler.py TP2_AT_R_C = 2.0 (line 85) is now the parity anchor.
 
 function computeStaticStyleCTp2Pure(
   entry: number,
   stopPrice: number,
   direction: "long" | "short",
-  candidates: MockLiquidityCandidate[],
-  tp2MinR = 1.4,
-  tp2MaxR = 2.6,
-): { tp2_price: number; tp2_source: "liquidity" | "r_multiple"; tp2_r: number } {
+): { tp2_price: number; tp2_source: "r_multiple"; tp2_r: number } {
   const stopDistance = Math.abs(entry - stopPrice);
-  if (stopDistance <= 0) {
-    const fallback = direction === "long" ? entry + 2.0 : entry - 2.0;
-    return { tp2_price: fallback, tp2_source: "r_multiple", tp2_r: 2.0 };
-  }
-
-  for (const c of candidates) {
-    if (!STYLEC_TP2_INTRADAY_TYPES.has(c.level_type)) continue;
-    const rMult = Math.abs(c.price - entry) / stopDistance;
-    if (rMult >= tp2MinR && rMult <= tp2MaxR) {
-      return { tp2_price: c.price, tp2_source: "liquidity", tp2_r: rMult };
-    }
-  }
-
-  const fallbackPrice = direction === "long"
+  const tp2Price = direction === "long"
     ? entry + 2.0 * stopDistance
     : entry - 2.0 * stopDistance;
-  return { tp2_price: fallbackPrice, tp2_source: "r_multiple", tp2_r: 2.0 };
+  return { tp2_price: tp2Price, tp2_source: "r_multiple", tp2_r: 2.0 };
 }
 
 interface StyleCTp2Assertion {
@@ -467,68 +443,54 @@ interface StyleCTp2Assertion {
   entry: number;
   stop: number;
   direction: "long" | "short";
-  candidates: MockLiquidityCandidate[];
   expectedTp2Price: number;
-  expectedSource: "liquidity" | "r_multiple";
 }
 
 const STYLEC_TP2_ASSERTIONS: StyleCTp2Assertion[] = [
   {
-    name: "in-band liquidity level at 1.6R → picked over +2.0R fallback",
+    name: "long — flat +2.0R (entry=5000, stop=4994 → TP2=5012)",
     entry: 5000.0, stop: 4994.0,  // 6pt stop
     direction: "long",
-    candidates: [{ price: 5009.6, level_type: "pdh" }],  // 9.6pt above = 1.6R ✓ in [1.4, 2.6]
-    expectedTp2Price: 5009.6,
-    expectedSource: "liquidity",
+    expectedTp2Price: 5012.0,  // 5000 + 2.0 * 6 = 5012 (same regardless of liquidity)
   },
   {
-    name: "no candidate in band → +2.0R fallback",
+    name: "long — pdh at 1.6R present → still flat +2.0R (5012, not 5009.6)",
     entry: 5000.0, stop: 4994.0,
     direction: "long",
-    candidates: [{ price: 5005.0, level_type: "pdh" }],  // 5pt = 0.83R, below 1.4R threshold
-    expectedTp2Price: 5012.0,  // 5000 + 2.0 * 6 = 5012
-    expectedSource: "r_multiple",
+    expectedTp2Price: 5012.0,  // F-b fix: liquidity ignored, always flat +2.0R
   },
   {
-    name: "excluded level type (pwh_iso) → +2.0R fallback",
+    name: "long — excluded level type (pwh_iso) present → flat +2.0R",
     entry: 5000.0, stop: 4994.0,
     direction: "long",
-    candidates: [{ price: 5009.6, level_type: "pwh_iso" }],  // excluded
     expectedTp2Price: 5012.0,
-    expectedSource: "r_multiple",
   },
   {
-    name: "level too far (3.0R > tp2MaxR 2.6) → +2.0R fallback",
+    name: "long — far level at 3.0R present → flat +2.0R",
     entry: 5000.0, stop: 4994.0,
     direction: "long",
-    candidates: [{ price: 5018.0, level_type: "hod" }],  // 18pt = 3.0R > 2.6
     expectedTp2Price: 5012.0,
-    expectedSource: "r_multiple",
   },
   {
-    name: "short direction — in-band level below entry",
+    name: "short — flat -2.0R (entry=5000, stop=5006 → TP2=4988)",
     entry: 5000.0, stop: 5006.0,  // 6pt stop above entry
     direction: "short",
-    candidates: [{ price: 4990.4, level_type: "pdl" }],  // 9.6pt below = 1.6R ✓
-    expectedTp2Price: 4990.4,
-    expectedSource: "liquidity",
+    expectedTp2Price: 4988.0,  // 5000 - 2.0 * 6 = 4988 (same regardless of liquidity)
   },
   {
-    name: "short direction — no qualifying level → +2.0R fallback",
+    name: "short — pdl at 1.6R present → still flat -2.0R (4988, not 4990.4)",
     entry: 5000.0, stop: 5006.0,
     direction: "short",
-    candidates: [],
-    expectedTp2Price: 4988.0,  // 5000 - 2.0 * 6 = 4988
-    expectedSource: "r_multiple",
+    expectedTp2Price: 4988.0,  // F-b fix: liquidity ignored, always flat -2.0R
   },
 ];
 
-console.log("\n─── static_styleC TP2 liquidity assertions (TS-only, Python deferred) ───");
+console.log("\n─── static_styleC TP2 flat +2.0R assertions (TS-only; F-b parity fix) ───");
 let styleCTp2AllPassed = true;
 for (const a of STYLEC_TP2_ASSERTIONS) {
-  const result = computeStaticStyleCTp2Pure(a.entry, a.stop, a.direction, a.candidates);
+  const result = computeStaticStyleCTp2Pure(a.entry, a.stop, a.direction);
   const pricePassed = Math.abs(result.tp2_price - a.expectedTp2Price) <= PRICE_TOLERANCE;
-  const sourcePassed = result.tp2_source === a.expectedSource;
+  const sourcePassed = result.tp2_source === "r_multiple";
   const passed = pricePassed && sourcePassed;
   if (!passed) {
     styleCTp2AllPassed = false;
@@ -536,12 +498,12 @@ for (const a of STYLEC_TP2_ASSERTIONS) {
   }
   const detail = passed
     ? "PASS"
-    : `FAIL (tp2_price=${result.tp2_price} expected=${a.expectedTp2Price} source=${result.tp2_source} expected=${a.expectedSource})`;
+    : `FAIL (tp2_price=${result.tp2_price} expected=${a.expectedTp2Price} source=${result.tp2_source})`;
   console.log(`  [${a.name}] ${detail}`);
 }
 console.log(`  static_styleC TP2: ${styleCTp2AllPassed ? "ALL PASS" : "FAILURES DETECTED"}`);
-console.log("\n  NOTE: Python parity for VIX-tier + static_styleC TP2 is DEFERRED.");
-console.log("        Run after Track 1A (Python agent) wires Python equivalents.");
+console.log("\n  NOTE: Python parity for VIX-tier is DEFERRED.");
+console.log("        static_styleC TP2 Python parity is COMPLETE — style_c_handler.py TP2_AT_R_C=2.0.");
 
 // ─── JSON report ──────────────────────────────────────────────────────────
 const reportPath = path.join("docs", "wave26-ts-python-exit-parity-report.json");
