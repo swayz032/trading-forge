@@ -1,0 +1,1658 @@
+{
+ "psH--oXkD8M": [
+  {
+   "type": "WAIT_SESSION",
+   "object": "market direction clarity"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "session start"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "new york session"
+  },
+  {
+   "type": "VERIFY_STRUCTURE",
+   "object": "15 minute low and high"
+  },
+  {
+   "type": "WAIT_RETEST",
+   "object": "if you decided to even take 5 minute retest because you would"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "direction"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "break above 15m high with strong candle"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "strong move away from level"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "waiting state"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "time frame change"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "candle breakout"
+  },
+  {
+   "type": "ENTER",
+   "object": "trade entry"
+  },
+  {
+   "type": "ENABLE_ENTRY",
+   "object": "entry condition met"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "move fails while waiting direction"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "sellers pushing price down reversal continuation"
+  },
+  {
+   "type": "WAIT_RETEST",
+   "object": "price rejection 15m candle high"
+  },
+  {
+   "type": "ENTER",
+   "object": "trade towards downside"
+  }
+ ],
+ "l-2iKbcm5UI": [
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "swing high low identification"
+  },
+  {
+   "type": "WAIT_RETEST",
+   "object": "fibonacci level 0"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "fibonacci level 5"
+  },
+  {
+   "type": "ENABLE_ENTRY",
+   "object": "trade opportunity"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "supply and demand"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "v shape reversal in towards downside"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "overall impulse towards downside"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "bumps in road liquidity"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "retracement into daily area supply"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "impulsive phase towards downside"
+  },
+  {
+   "type": "FILTER",
+   "object": "directional bias"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "structure break"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "market structure break"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "market structure is bearish"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "market structure"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "liquidity high"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "overall short position"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "market retrace towards daily supply zone"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "short position"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "liquidity"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "market structure"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "4 hour bos"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "liquidity low"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "bearish candle s low"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "liquidity taken out"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "supply zone"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "supply zone formation"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "liquidity highs taken out"
+  },
+  {
+   "type": "ENABLE_ENTRY",
+   "object": "short position"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "bearish mss"
+  },
+  {
+   "type": "ENABLE_ENTRY",
+   "object": "entry opportunity"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "internal liquidity supply zone"
+  }
+ ],
+ "h6TnE7QClJg": [
+  {
+   "type": "ENTER",
+   "object": "trade"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "ema 10 cross above ema 20"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "ema 10 cross below ema 20"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "three fast steps"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "momentum strength"
+  },
+  {
+   "type": "ENTER",
+   "object": "entry"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "cci crossing zero line upwards"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "when cci drops below zero bearish momentum is building"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "and when it falls below minus 100 s strong bearish"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "ema crossover"
+  },
+  {
+   "type": "ENTER",
+   "object": "trade entry"
+  },
+  {
+   "type": "ENABLE_ENTRY",
+   "object": "momentum build in real time"
+  },
+  {
+   "type": "FILTER",
+   "object": "ema crossover trade"
+  },
+  {
+   "type": "FILTER",
+   "object": "cci indicator"
+  },
+  {
+   "type": "FILTER",
+   "object": "cci sma line signal line"
+  },
+  {
+   "type": "FILTER",
+   "object": "cci lines to monitor"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "moving averages"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "search bar"
+  },
+  {
+   "type": "FILTER",
+   "object": "ema or exponential moving average"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "ema"
+  },
+  {
+   "type": "FILTER",
+   "object": "ema length"
+  },
+  {
+   "type": "FILTER",
+   "object": "ema10 length"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "ema10 cross above ema 20"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "cci"
+  },
+  {
+   "type": "ENABLE_ENTRY",
+   "object": "entry condition"
+  },
+  {
+   "type": "WAIT_RETEST",
+   "object": "price retest"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "ema10 cross below ema 20"
+  },
+  {
+   "type": "FILTER",
+   "object": "cci below zero"
+  },
+  {
+   "type": "ENTER",
+   "object": "entry signal"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "timeframe selection"
+  },
+  {
+   "type": "FILTER",
+   "object": "timeframe selection"
+  }
+ ],
+ "MKsjbL0WNjg": [
+  {
+   "type": "WAIT_SESSION",
+   "object": "time window definition"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "trading hours filter"
+  },
+  {
+   "type": "FILTER",
+   "object": "timeframe"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "specific pattern"
+  },
+  {
+   "type": "FILTER",
+   "object": "focus weakness"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "reversal trade"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "weakness definition 1"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "weakness definition 2"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "weakness definition 3"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "rejection"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "candle open time"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "bearish candle"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "opening price candle"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "bias direction"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "direction"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "price position relative to levels"
+  },
+  {
+   "type": "ENTER",
+   "object": "sell entry"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "trade execution"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "london sweep asia high low"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "london high"
+  },
+  {
+   "type": "ENABLE_ENTRY",
+   "object": "sell buy opportunity"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "london sweep asia higher low"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "new year continuation"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "asia ranging"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "london taking high breaking structure other side"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "new york session arrival and direction alignment"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "price action relative to asia session high low"
+  },
+  {
+   "type": "ENTER",
+   "object": "sell"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "new york session open"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "spot weakness"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "framework application time"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "mark 17 and midnight open prices"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "wait"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "price location relative to levels"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "bearish candle close"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "bearish candle"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "bullish candle"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "bullish candle close"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "bullish candle close with weakness"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "price weakness"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "weakness and opposite closure same candle"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "session start time"
+  },
+  {
+   "type": "FILTER",
+   "object": "session boundary"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "asia session completion"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "low with weakness"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "london start"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "session start"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "asia high range"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "asia high"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "price movement above asia high"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "asia high break"
+  },
+  {
+   "type": "ENABLE_ENTRY",
+   "object": "trade opportunity"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "close bearish"
+  },
+  {
+   "type": "ENTER",
+   "object": "limit order"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "limit order placement"
+  },
+  {
+   "type": "ENABLE_ENTRY",
+   "object": "entry condition definition"
+  },
+  {
+   "type": "WAIT_RETEST",
+   "object": "retracement requirement"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "weakness below both lines"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "valid high taken with weakness closing lower"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "retracement"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "weakness"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "gam box or fib from low to high"
+  },
+  {
+   "type": "ENTER",
+   "object": "entry"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "london and new york sessions"
+  },
+  {
+   "type": "ENABLE_ENTRY",
+   "object": "high probability higher low taken"
+  },
+  {
+   "type": "ENTER",
+   "object": "gam box entry"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "price direction"
+  },
+  {
+   "type": "EXIT_HINT",
+   "object": "stop day"
+  },
+  {
+   "type": "ENTER",
+   "object": "entry point"
+  },
+  {
+   "type": "FILTER",
+   "object": "directional bias"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "session state"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "new york session start"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "low break"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "confirmation candle"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "current validity"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "next day so day we have one trade is valid"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "london starting"
+  },
+  {
+   "type": "ENABLE_ENTRY",
+   "object": "entry condition"
+  },
+  {
+   "type": "WAIT_RETEST",
+   "object": "retracement to 50"
+  },
+  {
+   "type": "ENTER",
+   "object": "entry point target definition"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "entry timing"
+  },
+  {
+   "type": "EXIT_HINT",
+   "object": "end trading day"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "asia session until midnight"
+  },
+  {
+   "type": "ENTER",
+   "object": "buy signal"
+  },
+  {
+   "type": "ENTER",
+   "object": "sell signal"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "london close relative to confirmation candle"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "price reversal"
+  },
+  {
+   "type": "ENABLE_ENTRY",
+   "object": "valid"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "trading activity"
+  },
+  {
+   "type": "ENTER",
+   "object": "i ll take it"
+  },
+  {
+   "type": "ENTER",
+   "object": "i could still take it"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "now you don t need to take it"
+  },
+  {
+   "type": "ENTER",
+   "object": "okay 50 because i think is still high probability"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "sell at 50 current price"
+  },
+  {
+   "type": "FILTER",
+   "object": "avoid retracement to 50"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "limit order"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "new york session"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "price relative to lines"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "and then midnight here below both we could have opportunities to buy and above we could have opportunities to sell"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "longs"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "price action below lines and distance 17"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "price action going higher from current point"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "trade direction"
+  },
+  {
+   "type": "WAIT_RETEST",
+   "object": "retracement above opening price 17"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "reversal"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "bullish candle"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "long entry"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "price reversal"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "continuation higher"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "weakness into key level"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "weakness"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "weakness inside fvg"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "price having weakness from level"
+  },
+  {
+   "type": "ENTER",
+   "object": "and then i would be buying"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "bearish bias within structure"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "bearish structure"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "bullish structure"
+  },
+  {
+   "type": "FILTER",
+   "object": "weakness within structure"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "bearish structure"
+  }
+ ],
+ "e-QmGJU1XYc": [
+  {
+   "type": "INVALIDATE",
+   "object": "low"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "price break high"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "uptrend"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "short trades"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "low break"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "break previous high"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "low break previous high"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "price break previous high"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "low validation"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "supply and demand zones"
+  },
+  {
+   "type": "WAIT_RETEST",
+   "object": "price"
+  },
+  {
+   "type": "VERIFY_STRUCTURE",
+   "object": "previous high break"
+  },
+  {
+   "type": "FILTER",
+   "object": "trade direction"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "downtrend"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "demand zone definition"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "downtrend entry condition"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "downtrend confirmation"
+  },
+  {
+   "type": "ENTER",
+   "object": "entry trigger"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "price to come up to supply"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "trading in direction trend which raises probability you winning trade by lot"
+  },
+  {
+   "type": "FILTER",
+   "object": "trade execution"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "steps 1 and 2"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "trade execution"
+  },
+  {
+   "type": "FILTER",
+   "object": "areas demand"
+  },
+  {
+   "type": "WAIT_RETEST",
+   "object": "area"
+  },
+  {
+   "type": "ENTER",
+   "object": "trade"
+  },
+  {
+   "type": "FILTER",
+   "object": "price"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "trade"
+  }
+ ],
+ "9dErM4MFCTY": [
+  {
+   "type": "WAIT_SESSION",
+   "object": "timeframe"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "start time"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "time"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "volume profile over range"
+  },
+  {
+   "type": "FILTER",
+   "object": "rows layout setting"
+  },
+  {
+   "type": "FILTER",
+   "object": "volume settings"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "break value area level"
+  },
+  {
+   "type": "FILTER",
+   "object": "first three candles"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "candle closure outside range"
+  },
+  {
+   "type": "ENTER",
+   "object": "rule number one is we re going to enter candle closure through either value area high which is right here or value area low"
+  },
+  {
+   "type": "CONFIRM_DIRECTION",
+   "object": "since we closed through high we re going to be looking long or buy"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "long position selection"
+  },
+  {
+   "type": "ENTER",
+   "object": "entry point"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "entry time constraint"
+  },
+  {
+   "type": "ENTER",
+   "object": "long position entry"
+  },
+  {
+   "type": "ENTER",
+   "object": "trade entry"
+  },
+  {
+   "type": "ENTER",
+   "object": "trade execution"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "stop out event within trading window before 11 00 m"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "confirmation in other direction"
+  },
+  {
+   "type": "FILTER",
+   "object": "loss limit per direction"
+  }
+ ],
+ "qwLbJfBTZYA": [
+  {
+   "type": "FILTER",
+   "object": "timeframe selection"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "previous candle closure"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "break reversal confirmation"
+  },
+  {
+   "type": "FILTER",
+   "object": "presence two things"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "entry condition"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "entry"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "entry trigger"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "session"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "crt new york session forms with trend"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "crt new york session"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "current trend higher time frame"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "crt"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "trading session end"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "overall trend"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "trend continuation"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "mnq mes"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "uptrend"
+  },
+  {
+   "type": "FILTER",
+   "object": "trend direction"
+  },
+  {
+   "type": "FILTER",
+   "object": "position type"
+  },
+  {
+   "type": "FILTER",
+   "object": "short entry"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "hourly bias"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "time frame change"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "bullish crt"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "market open time"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "appearance"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "timeframes"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "timeframe selection"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "candle high break"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "price break"
+  },
+  {
+   "type": "ENTER",
+   "object": "entry"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "crt new york session"
+  },
+  {
+   "type": "FILTER",
+   "object": "news events"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "break middle candle"
+  },
+  {
+   "type": "ENABLE_ENTRY",
+   "object": "entry condition"
+  },
+  {
+   "type": "ENTER",
+   "object": "entry placement"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "trading activity"
+  },
+  {
+   "type": "ENTER",
+   "object": "entry execution"
+  },
+  {
+   "type": "FILTER",
+   "object": "volume"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "validity"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "new york session start"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "price location"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "time constraint"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "trading session"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "market activity"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "trading session"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "wednesday"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "bias still remains bullish"
+  },
+  {
+   "type": "FILTER",
+   "object": "market state"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "first bullish crt"
+  },
+  {
+   "type": "ENABLE_ENTRY",
+   "object": "trade execution"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "price break middle candle"
+  },
+  {
+   "type": "ENABLE_ENTRY",
+   "object": "entry trigger"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "market condition"
+  },
+  {
+   "type": "ENTER",
+   "object": "entry condition"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "entry condition"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "price break"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "trading right off open"
+  },
+  {
+   "type": "FILTER",
+   "object": "market open time"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "trade opportunity"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "session start continuation"
+  },
+  {
+   "type": "ENTER",
+   "object": "price break middle candle"
+  }
+ ],
+ "8PYgFVB0GHE": [
+  {
+   "type": "WAIT_SESSION",
+   "object": "trade upload to tradzella"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "execution"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "draw and liquidity"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "draw and liquidity levels"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "draw liquidity"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "price reversal"
+  },
+  {
+   "type": "ENTER",
+   "object": "so they re entering into market right here"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "and then instantly reverse"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "bos or inverse fvg"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "sell orders fill"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "bos"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "breakup structure or inverse fvg to upside"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "liquidity draw push above"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "bos to downside or inverse value gap"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "market open"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "s p 500"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "session high"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "bos to downside or inverse fvg to downside"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "bullish gap to downside"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "five minute gap to downside"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "retrace"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "5minute retrace"
+  },
+  {
+   "type": "VERIFY_STRUCTURE",
+   "object": "bos to upside one minute"
+  },
+  {
+   "type": "VERIFY_STRUCTURE",
+   "object": "bos or inverse value gap back in case down towards direction we want to be"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "bos up"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "bos to upside"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "trend"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "trend"
+  },
+  {
+   "type": "VERIFY_STRUCTURE",
+   "object": "bos"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "bos to upside"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "bos to downside"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "trend structure"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "downtrend"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "bos bos"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "fvg fvg"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "no it closed underneath it disrespecting current order flow and current market structure price action right"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "but it didn t"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "downtrend continuation"
+  },
+  {
+   "type": "WAIT_RETEST",
+   "object": "five minute retrace"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "one minute bos to upside"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "bos back down to downside"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "continuation trend"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "bos to downside"
+  },
+  {
+   "type": "EXIT_HINT",
+   "object": "exits"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "session lows"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "bos to downside"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "sweep"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "equilibrium or fvg filling"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "bos"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "bos or inverse fvg fill"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "sweep and 5m bos"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "1m bos to upside"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "1m bos to downside"
+  },
+  {
+   "type": "ENTER",
+   "object": "entry point"
+  },
+  {
+   "type": "FILTER",
+   "object": "es market"
+  },
+  {
+   "type": "FILTER",
+   "object": "index activity"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "timeframe"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "break back up"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "break structure to downside"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "price break structure to downside"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "price break structure back to upside or give us fvg"
+  },
+  {
+   "type": "FILTER",
+   "object": "gap presence"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "gap presence"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "but we end up inversing"
+  },
+  {
+   "type": "VERIFY_STRUCTURE",
+   "object": "gap and breaking structure same exact candle which is going to be one right here"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "price movement"
+  },
+  {
+   "type": "ENTER",
+   "object": "buys"
+  },
+  {
+   "type": "ENTER",
+   "object": "nasdaq"
+  },
+  {
+   "type": "FILTER",
+   "object": "answer is always going to be no"
+  },
+  {
+   "type": "ENTER",
+   "object": "short position"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "stop loss level"
+  },
+  {
+   "type": "WAIT_RETEST",
+   "object": "gap fill"
+  },
+  {
+   "type": "EXIT_HINT",
+   "object": "exit underneath hourly 4hour draws liquidity"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "hourly lows manipulation"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "5m minute inverse value gap to upside"
+  },
+  {
+   "type": "WAIT_CONFIRMATION",
+   "object": "five minute value gap fill"
+  },
+  {
+   "type": "ENABLE_ENTRY",
+   "object": "entry"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "bos bos"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "bos to upside"
+  },
+  {
+   "type": "FILTER",
+   "object": "indexes alignment"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "break structure to upside 5minute"
+  },
+  {
+   "type": "FILTER",
+   "object": "es is bearish"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "correlation"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "lar song"
+  },
+  {
+   "type": "FILTER",
+   "object": "trade execution"
+  },
+  {
+   "type": "WAIT_BIAS",
+   "object": "market circumstances alignment"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "trading activity"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "index alignment"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "nasdaq break structure"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "trade opportunity"
+  },
+  {
+   "type": "WAIT_RETEST",
+   "object": "fiveminute retrace"
+  },
+  {
+   "type": "ENTER",
+   "object": "trade entry"
+  },
+  {
+   "type": "VERIFY_STRUCTURE",
+   "object": "bos bos"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "1 minute break structure down"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "five minute structure back to upside"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "trading session day"
+  },
+  {
+   "type": "FILTER",
+   "object": "s p 500 and nasdaq alignment"
+  },
+  {
+   "type": "INVALIDATE",
+   "object": "trade opportunity based structure break"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "es break structure to upside"
+  },
+  {
+   "type": "ENTER",
+   "object": "entry trigger"
+  },
+  {
+   "type": "WAIT_STRUCTURE",
+   "object": "break structure"
+  },
+  {
+   "type": "WAIT_SESSION",
+   "object": "state"
+  }
+ ]
+}
