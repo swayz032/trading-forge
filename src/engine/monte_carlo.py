@@ -32,7 +32,6 @@ else:
 import json
 import sys
 import time
-from typing import Optional
 
 import numpy as np
 
@@ -162,6 +161,7 @@ def return_bootstrap(
     n_days: int,
     seed: int = 42,
     xp=None,
+    _metadata_out: dict | None = None,
 ) -> np.ndarray:
     """Bootstrap daily returns to generate simulated equity paths.
 
@@ -246,12 +246,27 @@ def return_bootstrap(
     _IID_AC_THRESHOLD = float(_os.environ.get("MC_IID_AC_THRESHOLD", "0.05"))
     _use_block = False
 
-    if xp is np and len(daily_returns) >= 2:
+    # FIX 2 (deep-scan #9 2026-07-02): Run autocorr check unconditionally — not just
+    # when xp is np. Previously: GPU path skipped detection entirely and always took
+    # the IID fast path, even for autocorrelated series, understating tail drawdown.
+    # Now: detect autocorrelation regardless of xp; when GPU is active and block
+    # bootstrap is required, route to CPU arch_stationary_bootstrap for correctness.
+    if len(daily_returns) >= 2:
         _ac_val, _ac_failed = _safe_autocorrelation(daily_returns)
         if _ac_failed or abs(_ac_val) >= _IID_AC_THRESHOLD:
             _use_block = True
 
     if _use_block:
+        if xp is not np:
+            # Block bootstrap required but GPU active — correctness over speed.
+            import sys as _sys
+            print(
+                "[return_bootstrap] GPU active but autocorrelation requires block bootstrap — "
+                "routing to CPU block-bootstrap path (correctness over speed).",
+                file=_sys.stderr,
+            )
+            if _metadata_out is not None:
+                _metadata_out["gpu_block_bootstrap_cpu_fallback"] = True
         # Route through stationary block bootstrap (preserves autocorrelation structure)
         _block_len = optimal_block_length(daily_returns)
         paths = arch_stationary_bootstrap(
@@ -502,7 +517,7 @@ def arch_stationary_bootstrap(
     trades: np.ndarray,
     n_sims: int,
     seed: int = 42,
-    block_length: Optional[int] = None,
+    block_length: int | None = None,
 ) -> np.ndarray:
     """Dependence-aware stationary bootstrap using arch StationaryBootstrap.
 
@@ -941,8 +956,8 @@ def simulate_firm_survival(
         peak_equity = account_size
         breached = False
         passed_eval = False
-        pass_step: Optional[int] = None
-        breach_reason: Optional[str] = None
+        pass_step: int | None = None
+        breach_reason: str | None = None
         best_day_pnl = 0.0
         # C-8 FIX: collect commission+DLL-adjusted step P&Ls so the sliding-window
         # consistency check can reuse them directly instead of re-applying adjustments
@@ -1476,6 +1491,7 @@ def run_monte_carlo(
     daily_arr = np.array(daily_pnls, dtype=np.float64)
 
     warnings: list[str] = []
+    _rb_metadata: dict = {}  # FIX 2: receives return_bootstrap CPU-fallback metadata
 
     # Step 3: Minimum trade count gate
     MIN_TRADES_IID = 30
@@ -1513,7 +1529,7 @@ def run_monte_carlo(
             except ValueError:
                 _trim_mult = None
 
-    _outlier_trim_audit: Optional[dict] = None
+    _outlier_trim_audit: dict | None = None
     if _trim_mult is not None and _trim_mult > 0:
         trades_arr, _trim_audit_payload = trim_trade_outliers(
             trades_arr, trim_multiplier=_trim_mult,
@@ -1542,7 +1558,7 @@ def run_monte_carlo(
                 pass  # Audit write failure must not block MC
 
     # 8.2 — Apply stress testing if requested
-    stress_applied: Optional[str] = None
+    stress_applied: str | None = None
     if request.stress_level > 0:
         params = _get_stress_params(request.stress_level)
         trades_arr = stress_test_trades(trades_arr, seed=request.seed + 200, **params)
@@ -1569,7 +1585,7 @@ def run_monte_carlo(
         periods_per_year = periods_per_year_daily
 
     # Generate paths based on method
-    both_metrics: Optional[dict] = None
+    both_metrics: dict | None = None
 
     if request.method == "trade_resample":
         paths = trade_resample(trades_arr, request.num_simulations, seed=request.seed, xp=xp)
@@ -1598,7 +1614,7 @@ def run_monte_carlo(
         # a structured error result so the TS bridge gets a parseable JSON error
         # rather than a Python exception / non-zero exit.
         try:
-            paths = return_bootstrap(daily_arr, request.num_simulations, _survival_horizon, seed=request.seed, xp=xp)
+            paths = return_bootstrap(daily_arr, request.num_simulations, _survival_horizon, seed=request.seed, xp=xp, _metadata_out=_rb_metadata)
         except ExtrapolationExceededError as _extrap_err:
             # Write audit row (best-effort)
             try:
@@ -1765,7 +1781,7 @@ def run_monte_carlo(
 
         trade_paths = trade_resample(trades_arr, n_trade, seed=request.seed, xp=xp)
         n_days = len(daily_pnls)
-        return_paths = return_bootstrap(daily_arr, n_return, n_days, seed=request.seed + 1, xp=xp)
+        return_paths = return_bootstrap(daily_arr, n_return, n_days, seed=request.seed + 1, xp=xp, _metadata_out=_rb_metadata)
         computed_block_len = optimal_block_length(trades_arr)
         arch_paths = arch_stationary_bootstrap(
             trades_arr, n_arch,
@@ -1850,13 +1866,8 @@ def run_monte_carlo(
     }
 
     # 8.4 — Per-firm survival simulation
-    firm_survival: Optional[dict[str, dict]] = None
+    firm_survival: dict[str, dict] | None = None
     if request.firms:
-        # F-4: "both" mode uses trade_paths (line 992), so granularity must be
-        # "trade" — not "day".  Passing "day" to simulate_firm_survival with
-        # trade-level paths causes daily-loss-limit enforcement per trade instead
-        # of per day, understating drawdown risk.
-        granularity = "trade" if request.method in ("trade_resample", "both") else "day"
         # Fix 4: propagate actual backtest commission (round-trip) to survival sim.
         # MonteCarloRequest.backtest_commission_rt is optional — getattr with None fallback
         # ensures backward compat if callers haven't updated to pass the new field yet.
@@ -1864,15 +1875,51 @@ def run_monte_carlo(
         # F-12 FIX: pass observed avg_trades_per_day from the backtest so commission
         # delta math uses the real trade frequency instead of the hardcoded 3/day default.
         _avg_tpd = getattr(request, "avg_trades_per_day", 1.5)
+
+        # FIX 1 (deep-scan #9 2026-07-02): "both" mode must pass DAY-level paths to
+        # simulate_firm_survival so DLL enforcement fires correctly.
+        # Previous behavior (F-4 comment): "both" used trade_paths with granularity="trade",
+        # silencing every DLL check (which gates on granularity=="day"). B14's ruin CI was
+        # computed without DLL ever triggering — easier than the live Topstep risk desk.
+        # New behavior: aggregate resampled trade paths into daily P&L via fixed-ratio
+        # chunking (trades_per_day = round(n_trades / n_days)), then call with
+        # granularity="day" so trailing-DD + DLL + consistency ALL enforce.
+        # No per-trade timestamps in MonteCarloRequest → fixed-ratio fallback is the only path.
+        if request.method == "both":
+            _n_trades_total = trade_paths.shape[1]
+            _n_days_hist = max(1, len(daily_pnls))
+            _tpd_agg = max(1, round(_n_trades_total / _n_days_hist))
+            _n_days_agg = max(1, _n_trades_total // _tpd_agg)
+            # Convert cumulative trade paths → per-trade step P&L → chunk into days → cumsum
+            _trade_step_pnl = np.diff(trade_paths, axis=1, prepend=0)          # (n_sims, n_trades)
+            _truncated_steps = _trade_step_pnl[:, :_n_days_agg * _tpd_agg]     # trim to multiple
+            _daily_step = _truncated_steps.reshape(
+                trade_paths.shape[0], _n_days_agg, _tpd_agg
+            ).sum(axis=2)                                                         # (n_sims, n_days_agg)
+            _firm_paths = np.cumsum(_daily_step, axis=1)                         # (n_sims, n_days_agg)
+            _firm_granularity = "day"
+            _day_agg_basis: str | None = "fixed_ratio"
+        else:
+            # Non-"both" methods: keep existing behavior unchanged.
+            # return_bootstrap / block_bootstrap / arch_stationary → daily paths → "day"
+            # trade_resample → trade-level paths → "trade" (DLL not enforced; pre-existing design)
+            _firm_paths = paths
+            _firm_granularity = "trade" if request.method == "trade_resample" else "day"
+            _day_agg_basis = None
+
         firm_survival = {}
         for firm_key in request.firms:
-            firm_survival[firm_key] = simulate_firm_survival(
-                paths, firm_key,
+            _fsurv = simulate_firm_survival(
+                _firm_paths, firm_key,
                 account_size=request.initial_capital,
-                granularity=granularity,
+                granularity=_firm_granularity,
                 backtest_commission_rt=_bt_comm_rt,
                 daily_trades_per_day=int(round(max(1.0, float(_avg_tpd)))),
             )
+            if _day_agg_basis is not None:
+                _fsurv["firm_survival_granularity"] = _firm_granularity
+                _fsurv["day_aggregation_basis"] = _day_agg_basis
+            firm_survival[firm_key] = _fsurv
 
     elapsed_ms = int((time.perf_counter() - start_time) * 1000)
 
@@ -1888,6 +1935,10 @@ def run_monte_carlo(
         "convergence": convergence,
         "warnings": warnings,
     }
+
+    # FIX 2 (deep-scan #9 2026-07-02): propagate return_bootstrap CPU fallback flag
+    if _rb_metadata.get("gpu_block_bootstrap_cpu_fallback"):
+        result["gpu_block_bootstrap_cpu_fallback"] = True
 
     if stress_applied:
         result["stress_applied"] = stress_applied
@@ -2004,8 +2055,35 @@ def run_monte_carlo(
                     _firm_ruin_ci["ruin_basis"] = "firm_breach"
                     _firm_ruin_ci["ruin_firm"] = _fk
                     per_firm_ruin_cis[_fk] = _firm_ruin_ci
-                    # Select worst firm = highest breach-rate point estimate (most conservative)
-                    if worst_ci is None or _firm_ruin_ci["point_estimate"] > worst_ci["point_estimate"]:
+                    # FIX 3 (deep-scan #9 2026-07-02): Select worst firm by ci_high, not
+                    # point_estimate. B14 gates on ci_high; using point_estimate misaligns
+                    # worst-firm selection with the actual gating criterion.
+                    # Non-finite/None ci_high → +inf so a degenerate firm wins (fail-closed:
+                    # B14 receives a non-finite ci_high and blocks the promotion).
+                    # Tie-break by point_estimate for determinism.
+                    _this_ci_high = _firm_ruin_ci.get("ci_high")
+                    _this_ci_high_val = (
+                        float("inf")
+                        if (_this_ci_high is None or not np.isfinite(float(_this_ci_high)))
+                        else float(_this_ci_high)
+                    )
+                    if worst_ci is None:
+                        _worst_ci_high_val = float("inf")
+                    else:
+                        _wch = worst_ci.get("ci_high")
+                        _worst_ci_high_val = (
+                            float("inf")
+                            if (_wch is None or not np.isfinite(float(_wch)))
+                            else float(_wch)
+                        )
+                    if (
+                        worst_ci is None
+                        or _this_ci_high_val > _worst_ci_high_val
+                        or (
+                            _this_ci_high_val == _worst_ci_high_val
+                            and _firm_ruin_ci.get("point_estimate", 0.0) > worst_ci.get("point_estimate", 0.0)
+                        )
+                    ):
                         worst_firm_key = _fk
                         worst_ci = _firm_ruin_ci
 

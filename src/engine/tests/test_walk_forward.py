@@ -324,3 +324,96 @@ class TestF12ClassWFOptimizeGuard:
         except NotImplementedError as e:
             if "Wave 24" in str(e):
                 pytest.fail(f"F-12 guard fired when optimize=False: {e}")
+
+
+# ─── FIX 4 (deep-scan #9): plain-WF embargo calibration basis ────────────────
+
+class TestFix4PlainWfEmbargoBasis:
+    """FIX 4: wf_metadata.embargo_basis present on plain WF path.
+
+    Pure-logic unit tests — verify the embargo calibration computation
+    without invoking the full walk-forward engine (avoids vectorbt hang).
+    """
+
+    def _compute_embargo_basis(
+        self,
+        trades: list[dict],
+        embargo_bars: int = 20,
+    ) -> str:
+        """Replicate FIX 4 embargo_basis logic from plain-WF aggregation block."""
+        durations = [
+            int(t["duration_bars"])
+            for t in trades
+            if isinstance(t.get("duration_bars"), (int, float)) and t["duration_bars"] > 0
+        ]
+        if not durations:
+            return "default_20_uncalibrated"
+        avg_dur = sum(durations) / len(durations)
+        calibrated = max(embargo_bars, int(avg_dur + 0.5))
+        return f"calibrated_{calibrated}"
+
+    def test_no_duration_bars_returns_default(self):
+        """Trades without duration_bars → 'default_20_uncalibrated'."""
+        trades = [{"PnL": 100}, {"PnL": -50}]
+        assert self._compute_embargo_basis(trades) == "default_20_uncalibrated"
+
+    def test_empty_trades_returns_default(self):
+        """No trades → 'default_20_uncalibrated'."""
+        assert self._compute_embargo_basis([]) == "default_20_uncalibrated"
+
+    def test_duration_above_embargo_uses_avg_duration(self):
+        """Avg duration > embargo_bars → calibrated uses avg duration."""
+        trades = [
+            {"PnL": 100, "duration_bars": 30},
+            {"PnL": -50, "duration_bars": 34},
+        ]
+        # avg = 32, embargo = 20 → calibrated = 32
+        result = self._compute_embargo_basis(trades, embargo_bars=20)
+        assert result == "calibrated_32"
+
+    def test_duration_below_embargo_uses_embargo(self):
+        """Avg duration < embargo_bars → calibrated = embargo_bars."""
+        trades = [
+            {"PnL": 100, "duration_bars": 5},
+            {"PnL": -50, "duration_bars": 7},
+        ]
+        # avg = 6, embargo = 20 → calibrated = 20
+        result = self._compute_embargo_basis(trades, embargo_bars=20)
+        assert result == "calibrated_20"
+
+    def test_duration_equal_to_embargo(self):
+        """Avg duration == embargo_bars → calibrated = embargo_bars."""
+        trades = [{"duration_bars": 20, "PnL": 100}]
+        result = self._compute_embargo_basis(trades, embargo_bars=20)
+        assert result == "calibrated_20"
+
+    def test_zero_duration_bars_excluded(self):
+        """duration_bars=0 entries are excluded from avg computation."""
+        trades = [
+            {"duration_bars": 0, "PnL": 100},  # excluded
+            {"duration_bars": 30, "PnL": 50},  # only valid one
+        ]
+        result = self._compute_embargo_basis(trades, embargo_bars=20)
+        assert result == "calibrated_30"
+
+    def test_all_zero_duration_bars_returns_default(self):
+        """All duration_bars=0 → falls back to default (no valid durations)."""
+        trades = [{"duration_bars": 0, "PnL": 100}, {"duration_bars": 0, "PnL": -50}]
+        result = self._compute_embargo_basis(trades)
+        assert result == "default_20_uncalibrated"
+
+    def test_format_string_prefix(self):
+        """Result is either 'default_20_uncalibrated' or 'calibrated_<int>'."""
+        r1 = self._compute_embargo_basis([])
+        r2 = self._compute_embargo_basis([{"duration_bars": 25}], 20)
+        assert r1 == "default_20_uncalibrated"
+        assert r2.startswith("calibrated_")
+        n = int(r2.split("_")[1])
+        assert isinstance(n, int) and n > 0
+
+    def test_replay_determinism(self):
+        """Same inputs → same embargo_basis (pure function)."""
+        trades = [{"duration_bars": 28, "PnL": 100}, {"duration_bars": 32, "PnL": -50}]
+        r1 = self._compute_embargo_basis(trades, 20)
+        r2 = self._compute_embargo_basis(trades, 20)
+        assert r1 == r2

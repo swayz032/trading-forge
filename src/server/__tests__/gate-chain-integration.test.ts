@@ -1907,3 +1907,193 @@ describe("T→P gate chain — compliance-drift propCompliance parsing + freeze 
     expect(result.frozenHash).toBeNull();
   });
 });
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Suite 12 — CPCV per-path IS WFE gate — wfe_status="cpcv_per_path_is" round-trip (PGlite)
+//
+// Deep-scan #9 FIX K (2026-07-02): walk_forward.py CPCV mode with per-path IS Sharpe
+// available now emits wfe_status="cpcv_per_path_is" + a real wfe_overall. This is distinct
+// from:
+//   - "cpcv_not_applicable" (CPCV ran but IS Sharpe unavailable → gate exempt; Suite 5)
+//   - "degenerate_is"      (WF ran but IS windows non-positive → hard block; Suite 1)
+// The cpcv_per_path_is path MUST enforce the same WFE hard floor (0.70) as plain-WF
+// and surface wfeBasis="cpcv_per_path_is" in the returned detail for audit traceability.
+// wf_metadata.wfe_cpcv_basis captures the CPCV metadata written by the producer.
+//
+// Suite 12 IDs use prefix "c1"
+// ════════════════════════════════════════════════════════════════════════════════
+describe("WFE gate — cpcv_per_path_is status floor enforcement + basis surfacing (Suite 12 — PGlite)", () => {
+  let ctx: TestDb;
+
+  const STRAT_ID    = "c1000001-0000-0000-0000-000000000001";
+  const BT_BLOCK65  = "c1000001-0000-0000-0000-000000000010"; // cpcv_per_path_is + wfe_overall=0.65 → BLOCK
+  const BT_PASS80   = "c1000001-0000-0000-0000-000000000011"; // cpcv_per_path_is + wfe_overall=0.80 → PASS
+  const BT_WRONGKEY = "c1000001-0000-0000-0000-000000000012"; // wfe_status_WRONGKEY → fallback to plain-WF numeric eval
+
+  beforeAll(async () => {
+    ctx = await createTestDb();
+
+    await ctx.db.insert(strategies).values({
+      id: STRAT_ID,
+      name: "cpcv-per-path-is-wfe-test",
+      symbol: "MES",
+      timeframe: "5m",
+      config: {},
+    });
+
+    await ctx.db.insert(backtests).values([
+      {
+        id: BT_BLOCK65,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // PRODUCER: CPCV ran with per-path IS Sharpe; wfe_overall=0.65 (below 0.70 hard floor).
+        // wf_metadata.wfe_cpcv_basis captures the CPCV computation metadata for audit traceability.
+        walkForwardResults: {
+          wfe_overall: 0.65,
+          wfe_status: "cpcv_per_path_is",
+          wf_metadata: {
+            wfe_cpcv_basis: {
+              n_paths_with_is: 4,
+              is_basis: "per_path_is_sharpe_mean",
+              oos_basis: "agg_sharpe",
+            },
+          },
+        },
+      },
+      {
+        id: BT_PASS80,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // PRODUCER: same CPCV per-path IS mode; wfe_overall=0.80 (above 0.70 floor) → PASS.
+        walkForwardResults: {
+          wfe_overall: 0.80,
+          wfe_status: "cpcv_per_path_is",
+          wf_metadata: {
+            wfe_cpcv_basis: {
+              n_paths_with_is: 4,
+              is_basis: "per_path_is_sharpe_mean",
+              oos_basis: "agg_sharpe",
+            },
+          },
+        },
+      },
+      {
+        id: BT_WRONGKEY,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // DISCONNECT DOCUMENTATION: producer writes wfe_status_WRONGKEY instead of wfe_status.
+        // Consumer reads wfe_status → undefined → null → gate falls through to the plain-WF
+        // numeric evaluation path. wfe_overall=0.65 < 0.70 → BLOCKS via wfe_hard_floor_block
+        // WITHOUT the cpcv_per_path_is basis recorded (wfeBasis is absent — basis invisible).
+        walkForwardResults: {
+          wfe_overall: 0.65,
+          wfe_status_WRONGKEY: "cpcv_per_path_is",  // wrong key
+          wf_metadata: {
+            wfe_cpcv_basis: {
+              n_paths_with_is: 4,
+              is_basis: "per_path_is_sharpe_mean",
+              oos_basis: "agg_sharpe",
+            },
+          },
+        },
+      },
+    ]);
+  });
+
+  afterAll(async () => { await ctx.close(); });
+
+  async function selectWfr(btId: string) {
+    const [row] = await ctx.db
+      .select({ wfr: backtests.walkForwardResults })
+      .from(backtests)
+      .where(eq(backtests.id, btId));
+    return row?.wfr as Record<string, unknown> | null;
+  }
+
+  it("JSONB round-trip: cpcv_per_path_is shape (wfe_overall + wfe_status + wf_metadata.wfe_cpcv_basis) preserved", async () => {
+    const wfr = await selectWfr(BT_BLOCK65);
+    expect(wfr?.wfe_overall).toBe(0.65);
+    expect(wfr?.wfe_status).toBe("cpcv_per_path_is");
+    const meta = wfr?.wf_metadata as Record<string, unknown>;
+    const basis = meta?.wfe_cpcv_basis as Record<string, unknown>;
+    expect(basis?.n_paths_with_is).toBe(4);
+    expect(basis?.is_basis).toBe("per_path_is_sharpe_mean");
+    expect(basis?.oos_basis).toBe("agg_sharpe");
+  });
+
+  it("BLOCK: cpcv_per_path_is + wfe_overall=0.65 (below 0.70 hard floor) → gate status=blocked + wfeBasis surfaced", async () => {
+    const wfr = await selectWfr(BT_BLOCK65);
+    const wfeOverall = (wfr?.wfe_overall ?? null) as number | null;
+    const wfeStatus = (wfr?.wfe_status ?? null) as string | null;
+
+    expect(wfeStatus).toBe("cpcv_per_path_is");
+    expect(wfeOverall).toBe(0.65);
+
+    const result = evaluateWfeGate(wfeOverall, undefined, undefined, wfeStatus);
+
+    expect(result.passed).toBe(false);
+    expect(result.status).toBe("blocked");
+    expect(result.wfeOverall).toBe(0.65);
+    expect(result.auditAction).toBe("lifecycle.wfe_hard_floor_block");
+    // CPCV basis MUST be surfaced so audit writers can record the evaluation path.
+    expect(result.wfeBasis).toBe("cpcv_per_path_is");
+    // Regression: must NOT produce cpcv_exempt or legacy_null (different statuses).
+    expect(result.status).not.toBe("cpcv_exempt");
+    expect(result.status).not.toBe("legacy_null");
+  });
+
+  it("PASS: cpcv_per_path_is + wfe_overall=0.80 (above 0.70 hard floor) → gate status=passed + wfeBasis surfaced", async () => {
+    const wfr = await selectWfr(BT_PASS80);
+    const wfeOverall = (wfr?.wfe_overall ?? null) as number | null;
+    const wfeStatus = (wfr?.wfe_status ?? null) as string | null;
+
+    expect(wfeStatus).toBe("cpcv_per_path_is");
+    expect(wfeOverall).toBe(0.80);
+
+    const result = evaluateWfeGate(wfeOverall, undefined, undefined, wfeStatus);
+
+    expect(result.passed).toBe(true);
+    expect(result.status).toBe("passed");
+    expect(result.wfeOverall).toBe(0.80);
+    expect(result.auditAction).toBeNull();
+    // Basis MUST be present even on the happy path so callers know this was cpcv_per_path_is.
+    expect(result.wfeBasis).toBe("cpcv_per_path_is");
+  });
+
+  it("DISCONNECT (wrong key): wfe_status_WRONGKEY → consumer reads wfe_status=null → plain-WF numeric eval; cpcv basis is invisible", async () => {
+    const wfr = await selectWfr(BT_WRONGKEY);
+
+    // Confirm the wrong key IS present in the stored JSONB
+    expect((wfr as any)?.wfe_status_WRONGKEY).toBe("cpcv_per_path_is");
+
+    // Consumer reads wfe_status (the correct key) → undefined → null
+    const wfeOverall = (wfr?.wfe_overall ?? null) as number | null;
+    const wfeStatus = (wfr?.wfe_status ?? null) as string | null;
+
+    expect(wfeStatus).toBeNull();   // correct key absent → consumer sees null
+    expect(wfeOverall).toBe(0.65);  // the numeric value IS present
+
+    const result = evaluateWfeGate(wfeOverall, undefined, undefined, wfeStatus);
+
+    // Gate falls through to plain-WF numeric eval: wfe_overall=0.65 < 0.70 → BLOCKS.
+    // Correct outcome, but WITHOUT the cpcv_per_path_is basis — the CPCV context is lost.
+    expect(result.passed).toBe(false);
+    expect(result.status).toBe("blocked");
+    expect(result.auditAction).toBe("lifecycle.wfe_hard_floor_block");
+    // CRITICAL: wfeBasis is absent — the producer's CPCV context is INVISIBLE to the consumer.
+    // This documents the producer→consumer key-name sensitivity for wfe_status.
+    expect(result.wfeBasis).toBeUndefined();
+  });
+});

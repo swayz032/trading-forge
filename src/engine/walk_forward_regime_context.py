@@ -24,9 +24,44 @@ Backward compat: the legacy `fragile` boolean flag is preserved.
 
 from __future__ import annotations
 
+import os
 import sys
 from dataclasses import dataclass, field
+from functools import lru_cache
 from typing import Optional
+
+
+# ── FIX 5 (deep-scan #9): env-overridable threshold getters ──────────────────
+# These are heuristic defaults, not externally cited constants. Thresholds are
+# chosen to match the existing 30%/30%/85% defaults and are env-overridable for
+# testing and institutional tuning. Use cache_clear() in tests that override
+# env vars between calls (each getter is read once and cached per process).
+
+@lru_cache(maxsize=None)
+def _get_cv_threshold() -> float:
+    """CV fragile threshold from PARAM_DRIFT_CV_THRESHOLD env (default 0.30)."""
+    try:
+        return float(os.environ.get("PARAM_DRIFT_CV_THRESHOLD", "0.30"))
+    except (ValueError, TypeError):
+        return 0.30
+
+
+@lru_cache(maxsize=None)
+def _get_rho_threshold() -> float:
+    """Spearman rho threshold from PARAM_DRIFT_RHO_THRESHOLD env (default 0.30)."""
+    try:
+        return float(os.environ.get("PARAM_DRIFT_RHO_THRESHOLD", "0.30"))
+    except (ValueError, TypeError):
+        return 0.30
+
+
+@lru_cache(maxsize=None)
+def _get_overfit_confidence() -> float:
+    """Overfit-drift confidence from PARAM_DRIFT_OVERFIT_CONFIDENCE env (default 0.85)."""
+    try:
+        return float(os.environ.get("PARAM_DRIFT_OVERFIT_CONFIDENCE", "0.85"))
+    except (ValueError, TypeError):
+        return 0.85
 
 
 @dataclass
@@ -140,8 +175,8 @@ def _spearman_rho(x: list[float], y: list[float]) -> Optional[float]:
 def classify_parameter_drift(
     per_window_params: list[dict],
     per_window_regimes: list[Optional[str]],
-    spearman_threshold: float = 0.3,
-    cv_fragile_threshold: float = 0.30,
+    spearman_threshold: float | None = None,
+    cv_fragile_threshold: float | None = None,
 ) -> ParameterDriftClassification:
     """Classify whether parameter drift is regime-driven or overfit noise.
 
@@ -158,19 +193,27 @@ def classify_parameter_drift(
         Spearman calculation.
         Example: ["TRENDING", "RANGE_BOUND", "TRENDING"]
 
-    spearman_threshold : float
+    spearman_threshold : float | None
         Minimum absolute Spearman rho required to classify as REGIME_DRIVEN.
-        Institutional default 0.3 per Bailey et al. 2025.
+        Heuristic default 0.30 (env: PARAM_DRIFT_RHO_THRESHOLD). Pass an explicit
+        float to override the env default for a single call.
 
-    cv_fragile_threshold : float
+    cv_fragile_threshold : float | None
         Coefficient of variation above which a param is considered "jittery".
-        Default 0.30 (30%) matches the existing binary FRAGILE definition.
+        Heuristic default 0.30 (env: PARAM_DRIFT_CV_THRESHOLD). Pass an explicit
+        float to override the env default for a single call.
 
     Returns
     -------
     ParameterDriftClassification
         See class docstring for field definitions.
     """
+    # FIX 5: resolve env-overridable defaults. Explicit caller args take precedence.
+    if spearman_threshold is None:
+        spearman_threshold = _get_rho_threshold()
+    if cv_fragile_threshold is None:
+        cv_fragile_threshold = _get_cv_threshold()
+    overfit_confidence = _get_overfit_confidence()
     n_windows = len(per_window_params)
 
     # ── Degenerate input ──────────────────────────────────────────────────────
@@ -297,7 +340,7 @@ def classify_parameter_drift(
         # Stable regime but params jitter → OVERFIT_DRIFT
         return ParameterDriftClassification(
             classification="overfit_drift",
-            confidence=0.85,
+            confidence=overfit_confidence,
             fragile=True,
             warning=(
                 f"Fragile params {fragile_params} (CV > {cv_fragile_threshold:.0%}) but regime "

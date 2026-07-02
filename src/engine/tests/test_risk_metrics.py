@@ -333,3 +333,149 @@ class TestPermutationTest:
         for key in ["actual_sharpe", "actual_path_score", "p_value", "has_edge",
                      "n_permutations", "interpretation"]:
             assert key in result
+
+
+# ─── FIX 2 (deep-scan #9): DSR Bailey-López de Prado formula ─────────────────
+
+class TestDeflatedSharpeRatioBailey2014:
+    """FIX 2: Bailey 2014 expected-max formula replaces the algebraic no-op.
+
+    Before: sqrt(2L)*(1-γ/(2L)) + γ/sqrt(2L) = sqrt(2L) (terms cancel).
+    After:  (1-γ)·Φ⁻¹(1-1/N) + γ·Φ⁻¹(1-1/(N·e)) — full Bailey 2014 formula.
+
+    Numeric pins (verified with scipy.stats.norm.ppf):
+      N=4:  old ≈ 1.6651, new ≈ 1.053
+      N=15: old ≈ 2.328,  new ≈ 1.769
+    Lower E[maxSR] → higher DSR statistic → easier to pass (less punitive).
+    """
+
+    def _get_expected_max(self, n_trials: int) -> float:
+        from src.engine.risk_metrics import compute_deflated_sharpe_ratio
+        # Use a high observed Sharpe so the output is driven by expected_max, not clipping
+        result = compute_deflated_sharpe_ratio(
+            observed_sharpe=10.0, n_trials=n_trials, n_observations=252
+        )
+        return result["sr_expected_max"]
+
+    def test_n1_sr_expected_max_is_zero(self):
+        """n_trials=1 guard: no selection bias → sr_expected_max=0.0."""
+        val = self._get_expected_max(1)
+        assert val == pytest.approx(0.0, abs=1e-9), f"Expected 0.0 for n=1, got {val}"
+
+    def test_n4_expected_max_approx_new_formula(self):
+        """N=4: new formula gives ~1.053, old no-op gave ~1.665."""
+        val = self._get_expected_max(4)
+        # New formula: ~1.053 (lower, correct direction)
+        assert val == pytest.approx(1.053, abs=0.01), (
+            f"N=4 sr_expected_max={val:.4f}, expected ~1.053 (Bailey 2014). "
+            f"If ~1.665, old no-op formula is still in use."
+        )
+
+    def test_n15_expected_max_approx_new_formula(self):
+        """N=15: new formula gives ~1.769, old no-op gave ~2.328."""
+        val = self._get_expected_max(15)
+        assert val == pytest.approx(1.769, abs=0.02), (
+            f"N=15 sr_expected_max={val:.4f}, expected ~1.769 (Bailey 2014). "
+            f"If ~2.328, old no-op formula is still in use."
+        )
+
+    def test_new_formula_lower_than_sqrt2lnn(self):
+        """New formula is strictly lower than old sqrt(2·ln N) for N>=2."""
+        import math
+        for n in [2, 4, 8, 15, 30]:
+            val = self._get_expected_max(n)
+            old_val = math.sqrt(2.0 * math.log(n))
+            assert val < old_val, (
+                f"N={n}: new formula ({val:.4f}) should be < old sqrt(2lnN) ({old_val:.4f})"
+            )
+
+    def test_dsr_pass_key_present(self):
+        """dsr_pass key (wf_metadata contract) can be derived from 'passes' key."""
+        from src.engine.risk_metrics import compute_deflated_sharpe_ratio
+        result = compute_deflated_sharpe_ratio(
+            observed_sharpe=2.0, n_trials=15, n_observations=252
+        )
+        assert "passes" in result, "'passes' key must be present in DSR result"
+        assert "dsr" in result
+        assert "sr_expected_max" in result
+
+    def test_replay_determinism_dsr(self):
+        """Same inputs → same sr_expected_max (no randomness)."""
+        val1 = self._get_expected_max(10)
+        val2 = self._get_expected_max(10)
+        assert val1 == pytest.approx(val2, rel=1e-9)
+
+
+# ─── FIX 3 (deep-scan #9): compute_pbo requires real IS values ────────────────
+
+class TestComputePboWithIsValues:
+    """FIX 3: compute_pbo accepts is_metric_values; None → is_values_unavailable.
+
+    Before: used OOS values as IS proxy → IS==OOS → PBO≈0.5 regardless of overfitting.
+    After:  requires real IS values; returns unavailable when IS not provided.
+    """
+
+    def _make_windows(self, oos_sharpes: list[float]) -> list[dict]:
+        return [
+            {"oos_metrics": {"sharpe_ratio": s}, "confidence": "OK"}
+            for s in oos_sharpes
+        ]
+
+    def test_none_is_values_returns_unavailable(self):
+        """When is_metric_values=None: return is_values_unavailable, pbo=None."""
+        from src.engine.risk_metrics import compute_pbo
+        windows = self._make_windows([0.5, 0.8, 1.0, 0.6])
+        result = compute_pbo(windows, is_metric_values=None)
+        assert result["pbo"] is None
+        assert result.get("reason") == "is_values_unavailable"
+        assert result["n_combinations"] == 0
+
+    def test_provided_is_values_compute_pbo(self):
+        """When is_metric_values provided: pbo is a float in [0, 1]."""
+        from src.engine.risk_metrics import compute_pbo
+        windows = self._make_windows([0.5, 0.8, 1.0, 0.6])
+        # IS > OOS for all windows → overfit signal
+        is_vals = [1.5, 2.0, 1.8, 1.6]
+        result = compute_pbo(windows, is_metric_values=is_vals)
+        assert result["pbo"] is not None
+        assert isinstance(result["pbo"], float)
+        assert 0.0 <= result["pbo"] <= 1.0
+
+    def test_length_mismatch_returns_unavailable(self):
+        """is_metric_values length mismatch → length_mismatch reason."""
+        from src.engine.risk_metrics import compute_pbo
+        windows = self._make_windows([0.5, 0.8, 1.0, 0.6])
+        result = compute_pbo(windows, is_metric_values=[1.0, 1.0])  # wrong length
+        assert result["pbo"] is None
+        assert "mismatch" in result.get("reason", "")
+
+    def test_fewer_than_4_windows_still_none(self):
+        """< 4 windows → pbo=None (insufficient sample, not unavailable)."""
+        from src.engine.risk_metrics import compute_pbo
+        windows = self._make_windows([0.5, 0.8, 1.0])
+        is_vals = [1.0, 1.5, 1.2]
+        result = compute_pbo(windows, is_metric_values=is_vals)
+        assert result["pbo"] is None
+        # no reason key for sample-size guard (not an unavailable case)
+        assert result.get("reason") != "is_values_unavailable"
+
+    def test_pbo_high_when_is_above_oos(self):
+        """IS consistently above OOS → high overfit probability."""
+        from src.engine.risk_metrics import compute_pbo
+        # 8 windows: IS always > OOS
+        oos = [0.3 + 0.1 * i for i in range(8)]
+        is_v = [1.5 + 0.1 * i for i in range(8)]
+        windows = self._make_windows(oos)
+        result = compute_pbo(windows, is_metric_values=is_v)
+        assert result["pbo"] is not None
+        # IS always beats OOS → pbo should be > 0
+        assert result["pbo"] > 0.0
+
+    def test_replay_determinism_pbo(self):
+        """Same inputs → same pbo (pure function)."""
+        from src.engine.risk_metrics import compute_pbo
+        windows = self._make_windows([0.5, 0.8, 1.0, 0.6, 0.7, 0.9])
+        is_v = [1.5, 2.0, 1.8, 1.6, 1.7, 1.9]
+        r1 = compute_pbo(windows, is_metric_values=is_v)
+        r2 = compute_pbo(windows, is_metric_values=is_v)
+        assert r1["pbo"] == r2["pbo"]
