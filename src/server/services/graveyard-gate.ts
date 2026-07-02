@@ -2,7 +2,16 @@ import { eq, desc } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { strategyGraveyard } from "../db/schema.js";
 import { OllamaClient } from "./ollama-client.js";
-import { logger } from "../index.js";
+// Band B (spec-onboarding-bridge, 2026-07-02) — was `from "../index.js"`. That
+// pulled in the full Express app bootstrap (routes/agent.ts -> agent-service.ts,
+// which imports THIS file) purely to get a `logger` object. Confirmed circular
+// dependency: any standalone entry point that imports agent-service.ts (not
+// going through src/server/index.ts as the true root) hit a Node ESM TDZ
+// ReferenceError ("Cannot access 'AgentService' before initialization") at
+// routes/agent.ts:102. `../lib/logger.js` is the same pino config (LOG_LEVEL,
+// dev pino-pretty transport) plus a test-runtime silence guard — behaviorally
+// equivalent, zero functional change, severs the edge.
+import { logger } from "../lib/logger.js";
 
 const SIMILARITY_THRESHOLD = 0.85;
 

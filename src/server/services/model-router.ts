@@ -18,7 +18,10 @@
 import { createHash } from "crypto";
 import { readdirSync, readFileSync } from "fs";
 import { resolve } from "path";
-import { logger } from "../index.js";
+// Band B (spec-onboarding-bridge, 2026-07-02) — was `from "../index.js"`. Same
+// circular-import fix as graveyard-gate.ts (see its comment): `../lib/logger.js`
+// is behaviorally equivalent (identical pino config + test-runtime silence).
+import { logger } from "../lib/logger.js";
 import { CircuitBreakerRegistry, CircuitOpenError } from "../lib/circuit-breaker.js";
 
 const PROJECT_ROOT = resolve(import.meta.dirname ?? ".", "../../..");

@@ -31,7 +31,33 @@ import { eq, sql } from "drizzle-orm";
 import { applyFrameworkOverlay } from "./framework-overlay.js";
 import { compileDslToEngine, compileDslWithConfluence } from "../lib/dsl-compiler.js";
 import type { ConfirmingIndicator } from "../lib/dsl-compiler.js";
-import { runDslQualityCritic } from "./agent-service.js";
+// Band B (spec-onboarding-bridge, 2026-07-02) — was a static top-level import.
+// agent-service.ts's own import graph (agent-service.ts -> backtest-service.ts
+// -> paper-trading-stream.ts -> paper-execution-service.ts -> scheduler.ts ->
+// lifecycle-service.ts -> {adversarial-stress-service.ts | frankenstein-
+// service.ts | pine-export-service.ts | agent-coordinator-service.ts |
+// multi-firm-promotion-service.ts} -> src/server/index.ts -> routes/agent.ts
+// -> agent-service.ts) is a genuine, deep, pre-existing circular reference —
+// confirmed via a full transitive-import trace this session, NOT specific to
+// this file. `auditBidirectionalCompleteness` (Gate 1) and
+// `classifyFactorSources` (Gate 2) — the two functions a new standalone
+// spec-onboarding CLI needs to reuse from this file — have ZERO functional
+// dependency on `runDslQualityCritic`; it is used only in the main
+// `graduateBucket`-style orchestration flow below (inside a try/catch that
+// already fail-opens on any throw, so deferring the import here changes
+// nothing about that flow's behavior). Loading Gate 1/2 as a standalone
+// import should not force-load the entire scheduler/lifecycle/index.ts
+// bootstrap purely because of a sibling static import elsewhere in this
+// file. Type-only import for the call signature; dynamic `await import(...)`
+// at the actual call site below.
+import type { runDslQualityCritic as RunDslQualityCriticFn } from "./agent-service.js";
+let _runDslQualityCritic: typeof RunDslQualityCriticFn | null = null;
+async function getRunDslQualityCritic(): Promise<typeof RunDslQualityCriticFn> {
+  if (!_runDslQualityCritic) {
+    ({ runDslQualityCritic: _runDslQualityCritic } = await import("./agent-service.js"));
+  }
+  return _runDslQualityCritic;
+}
 // Track A F-6: insertAuditRowSafe migrated for select call sites. Remaining
 // db.insert(auditLog) call sites retain raw pattern until incremental migration.
 // TODO: correlation_id not threaded through all call sites in this file.
@@ -222,7 +248,16 @@ const REQUIRED_PARAMS_BY_INDICATOR_FULL: Record<string, string[]> = {
 };
 import { auditGraduatedConfig, formatAuditResult } from "./graduated-strategy-auditor.js";
 import { computeWideConceptFingerprintHash } from "./strategy-fingerprint.js";
-import { logger } from "../index.js";
+// Band B (spec-onboarding-bridge, 2026-07-02) — was `from "../index.js"`. Same
+// circular-import fix as graveyard-gate.ts / model-router.ts (see their
+// comments): this file is itself imported by routes/agent.ts
+// (`deriveEntryIndicator`), so importing `logger` from the full app
+// entrypoint made ANY standalone script that imports this file's Gate 1/2
+// helpers (spec-onboarding-service.ts, this session) circularly re-enter
+// routes/agent.ts -> agent-service.ts before AgentService finishes
+// initializing. `../lib/logger.js` is behaviorally equivalent (identical
+// pino config + test-runtime silence guard) and carries no such edge.
+import { logger } from "../lib/logger.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { notify } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
@@ -2424,6 +2459,7 @@ export async function graduateBucketDirectly(opts: {
   let criticAccepted = true;
   let criticResult: { score: number; concerns: unknown[]; reasoning: string; source: string } | null = null;
   try {
+    const runDslQualityCritic = await getRunDslQualityCritic();
     const critic = await runDslQualityCritic(
       {
         dsl: overlayed.config as Record<string, unknown>,
