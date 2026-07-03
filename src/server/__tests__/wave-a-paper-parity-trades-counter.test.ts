@@ -9,7 +9,7 @@ const mockPaperTradesCounter = { labels: mockLabels };
 vi.mock("../lib/metrics-registry.js", () => ({
   paperTrades: mockPaperTradesCounter,
   strategyPromotions: { labels: vi.fn().mockReturnValue({ inc: vi.fn() }) },
-  pboBLocksTotal: { labels: vi.fn().mockReturnValue({ inc: vi.fn() }) },
+  pboBlocksTotal: { labels: vi.fn().mockReturnValue({ inc: vi.fn() }) },
   lifecycleShadowPromotionsTotal: { labels: vi.fn().mockReturnValue({ inc: vi.fn() }) },
 }));
 

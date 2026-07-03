@@ -85,7 +85,7 @@ import {
   strategyPromotions,
   backtestRuns,
   // Wave 29 D.1 new counters
-  pboBLocksTotal,
+  pboBlocksTotal,
   shadowSignalsTotal,
   rlTrainingEpochsTotal,
   rlKillSwitchTotal,
@@ -197,8 +197,8 @@ describe("Wave 29 D.1 — backward-compat: existing Prom counters preserved", ()
 // ─── §3: Counter increment semantics ─────────────────────────────────────────
 
 describe("Wave 29 D.1 — counter increments", () => {
-  it("pboBLocksTotal increments with regime label", async () => {
-    pboBLocksTotal.labels({ regime: "TRENDING" }).inc();
+  it("pboBlocksTotal increments with regime label", async () => {
+    pboBlocksTotal.labels({ regime: "TRENDING" }).inc();
     const metrics = await promRegistry.getMetricsAsJSON();
     const pboMetric = metrics.find((m) => m.name === "tf_pbo_blocks_total");
     expect(pboMetric).toBeDefined();
@@ -318,7 +318,7 @@ describe("Wave 29 D.1 — label cardinality bounded (closed sets)", () => {
     ] as const;
     // Increment all valid regimes — should all succeed without error
     for (const regime of VALID_REGIMES) {
-      expect(() => pboBLocksTotal.labels({ regime }).inc()).not.toThrow();
+      expect(() => pboBlocksTotal.labels({ regime }).inc()).not.toThrow();
       expect(() => rlTrainingEpochsTotal.labels({ regime }).inc()).not.toThrow();
     }
   });

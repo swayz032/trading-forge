@@ -131,6 +131,47 @@ class TestSweepMath:
         assert result["retention_2x"] == pytest.approx(expected, abs=1e-4)
         assert result["retention_2x"] == pytest.approx(1.0 / 1.1111, abs=1e-3)
 
+    def test_retention_null_when_already_dead_at_1x(self):
+        """FIX (2026-07-03, deep-scan #15 FIX-3): sign-guard on retention_2x.
+
+        A strategy with negative (non-positive) expectancy at 1x already has no
+        edge to retain. Before the fix, `e2x/e1x` on two negative numbers could
+        produce a misleadingly POSITIVE ratio (e.g. e1x=-0.10, e2x=-0.05 -> 0.5,
+        reading as "retained 50% of edge" when there was none). retention_2x
+        must be None whenever expectancy_r_raw at 1x <= 0 — regardless of what
+        expectancy_r_raw at 2x is.
+        """
+        gross = [10.0, -20.0] * 15  # same fixture as TestBreaksAt: dies at 1x
+        slip = [1.0, 1.0] * 15
+        result = _css(gross, slip, min_trades=1)
+        assert result["expectancy_r"]["1x"] < 0
+        assert result["retention_2x"] is None
+
+    def test_retention_uses_raw_not_rounded_expectancy(self):
+        """FIX (2026-07-03, deep-scan #15 FIX-3): retention_2x must be computed
+        from `expectancy_r_raw` (the same unrounded values `breaks_at` uses),
+        not the 4dp-rounded `expectancy_r` display dict.
+
+        gross=[100006, -100000], slip=[0,0] (comm/roll default to zero via
+        `_css`): net_pnl is IDENTICAL at 1x and 2x (slippage term is zero, so
+        scaling it by the multiple changes nothing). mean_pnl = 3, r_unit =
+        100000 (single loser's abs value) -> expectancy_r_raw = 3/100000 =
+        0.00003 at BOTH 1x and 2x -> raw ratio = 1.0 exactly.
+
+        The DISPLAY value `expectancy_r["1x"]` rounds 0.00003 down to 0.0000
+        (4dp). If retention_2x were (incorrectly) computed from that rounded
+        dict, the old `if e1x != 0` guard would see 0.0 and force
+        retention_2x=None even though a real, computable, positive edge exists.
+        Using the raw value correctly produces retention_2x == 1.0.
+        """
+        result = _css(
+            gross=[100006.0, -100000.0], slip=[0.0, 0.0],
+            multiples=[1.0, 2.0], min_trades=1,
+        )
+        assert result["expectancy_r"]["1x"] == 0.0  # display value rounds to zero
+        assert result["retention_2x"] is not None
+        assert result["retention_2x"] == pytest.approx(1.0, abs=1e-6)
+
     def test_custom_multiples_sweep(self):
         """Non-default multiples list (e.g. [1.0, 1.5, 2.5]) formats keys correctly."""
         result = _css(

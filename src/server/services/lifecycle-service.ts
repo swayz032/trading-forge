@@ -82,6 +82,15 @@ import { evaluateBifGate } from "../lib/bif-gate.js";
 // operator opts in; hard-blocks when breaks_at <= SLIPPAGE_SURVIVAL_BLOCK_MULT
 // once enabled. Grandfather-passes on legacy null.
 import { evaluateSlippageSurvivalGate } from "../lib/slippage-survival-gate.js";
+// deep-scan #15 FIX M1: shared evidence-completeness roll-up accounting.
+// isIncompleteEvidenceStatus + *EvidenceBucket keep the cron path and the
+// manual/deferred path (paper-to-deploy-ready-gates.ts) in lockstep and ensure a
+// "malformed" (broken-producer) gate status counts as INCOMPLETE, not "complete".
+import {
+  isIncompleteEvidenceStatus,
+  slippageEvidenceBucket,
+  bifEvidenceBucket,
+} from "../lib/evidence-completeness.js";
 
 const VALID_STATES = [
   "CANDIDATE",
@@ -5360,7 +5369,10 @@ export class LifecycleService {
           }
           // Gate passed (clean / warn / cpcv_unmeasured / legacy) — reset consecutive counter
           this._resetHardGateCounter(s.id, "bif_blocked", correlationId);
-          gateEvidenceStatuses.push(bifResult.legacyNull ? "legacy_null" : "complete");
+          // FIX M1: route through the shared bucket helper. A malformed/producer-error
+          // BIF reason books INCOMPLETE "malformed" instead of a false "complete"
+          // (BIF coerces garbage bif → legacyNull today, so this is forward-safe).
+          gateEvidenceStatuses.push(bifEvidenceBucket(bifResult.legacyNull, bifResult.reason));
         } catch (bifErr) {
           logger.warn(
             { strategyId: s.id, err: bifErr },
@@ -5446,7 +5458,11 @@ export class LifecycleService {
             continue; // block decision wins regardless of graveyard write outcome
           }
           this._resetHardGateCounter(s.id, "slippage_survival_blocked", correlationId);
-          gateEvidenceStatuses.push(slippageSurvivalResult.status === "legacy_null" ? "legacy_null" : "complete");
+          // FIX M1: a malformed (wrong-key / broken-producer) slippage_survival row
+          // now books INCOMPLETE "malformed" — previously it was silently booked
+          // "complete", letting a broken-producer strategy dodge the >=3-incomplete
+          // governor. legacy_null keeps its existing bucket; genuine passes → "complete".
+          gateEvidenceStatuses.push(slippageEvidenceBucket(slippageSurvivalResult.status));
         } catch (slippageSurvivalErr) {
           logger.warn(
             { strategyId: s.id, err: slippageSurvivalErr },
@@ -5940,7 +5956,7 @@ export class LifecycleService {
         // block promotion this cycle (strategy retries next cron pass).
         {
           const incompleteCount = gateEvidenceStatuses.filter(
-            (st) => st.includes("legacy") || st === "data_unavailable",
+            isIncompleteEvidenceStatus,
           ).length;
           if (incompleteCount >= 3) {
             logger.warn(
@@ -6162,7 +6178,7 @@ export class LifecycleService {
           // Fire-and-forget — must never block the promotion success path.
           {
             const incompleteCountFinal = gateEvidenceStatuses.filter(
-              (st) => st.includes("legacy") || st === "data_unavailable",
+              isIncompleteEvidenceStatus,
             ).length;
             const compositeEvidenceScoreFinal = 1.0 - (incompleteCountFinal / 8.0);
             db.execute(

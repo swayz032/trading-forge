@@ -36,6 +36,7 @@ import {
   real,
   index,
   uniqueIndex,
+  check,
   customType,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
@@ -2690,6 +2691,15 @@ export const brokerAccounts = pgTable(
   (table) => [
     index("broker_accounts_firm_idx").on(table.firmId),
     index("broker_accounts_enabled_idx").on(table.enabled),
+    // deep-scan #15 FIX M3 (migration 0190): firm↔broker_type topology invariant.
+    // normalized firm 'topstep' ⇒ broker_type 'topstepx' (never traderspost);
+    // any other firm (e.g. 'mffu') ⇒ broker_type 'traderspost'. Enforces CLAUDE.md §7
+    // at the DB level so a mis-seeded row can never be persisted.
+    check(
+      "broker_accounts_firm_broker_topology_chk",
+      sql`(lower(regexp_replace(${table.firmId}, '_[0-9]+k$', ''))  = 'topstep' AND ${table.brokerType} = 'topstepx')
+        OR (lower(regexp_replace(${table.firmId}, '_[0-9]+k$', '')) <> 'topstep' AND ${table.brokerType} = 'traderspost')`,
+    ),
   ],
 );
 

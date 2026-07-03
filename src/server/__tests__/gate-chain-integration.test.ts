@@ -45,6 +45,8 @@ import { evaluatePboGate } from "../lib/pbo-gate.js";
 import { evaluateDsrWalkForwardGate } from "../lib/b14-ci-gate.js";
 import { evaluateBifGate } from "../lib/bif-gate.js";
 import { evaluateSlippageSurvivalGate } from "../lib/slippage-survival-gate.js";
+// deep-scan #15 FIX M1: shared evidence-completeness roll-up accounting.
+import { isIncompleteEvidenceStatus, slippageEvidenceBucket } from "../lib/evidence-completeness.js";
 import { evaluateParameterDriftGate } from "../lib/parameter-drift-gate.js";
 // Deep-scan #5 F-2 (2026-06-29): import the PURE frozen-policy fns from the DB-free module
 // (frozen-policy-hash.js) NOT frozen-policy-contract.js — the latter imports ../db/index.js,
@@ -2262,5 +2264,128 @@ describe("Slippage-Survival gate — backtests.slippage_survival JSONB round-tri
     expect(result.status).not.toBe("clean");
     expect(result.reason).toBe("slippage_survival.malformed_missing_breaks_at");
     expect(result.auditPayload.breaks_at).toBeNull();
+  });
+
+  // ── FIX M1 (deep-scan #15): evidence-completeness ROLL-UP accounting ──────────
+  // A malformed slippage row must be counted as INCOMPLETE evidence in the
+  // >=3-incomplete promotion governor — NOT silently booked as "complete". This
+  // rounds the DB row → real gate → real bucket helper → real incomplete predicate,
+  // exactly the path the cron uses (lifecycle-service.ts) to accumulate
+  // gateEvidenceStatuses before the lifecycle.promotion_evidence_incomplete block.
+  it("FIX M1: a malformed slippage_survival row (trades, no breaks_at) is booked INCOMPLETE (not complete)", async () => {
+    const ss = await selectSlippageSurvival(BT_WRONGKEY);
+    // Sanity: the row has trades but no breaks_at key (the malformed shape).
+    expect((ss as any)?.n_trades).toBe(100);
+    expect(Object.prototype.hasOwnProperty.call(ss ?? {}, "breaks_at")).toBe(false);
+
+    // Real gate → real bucket helper (the exact push the cron makes at line ~5449).
+    const gateResult = evaluateSlippageSurvivalGate(ss as any, { enabled: true });
+    const bucket = slippageEvidenceBucket(gateResult.status);
+
+    // The malformed row books the INCOMPLETE "malformed" bucket, NOT "complete".
+    expect(gateResult.status).toBe("malformed");
+    expect(bucket).toBe("malformed");
+    expect(bucket).not.toBe("complete");
+    expect(isIncompleteEvidenceStatus(bucket)).toBe(true);
+  });
+
+  it("FIX M1: malformed slippage pushes a 2-legacy gate stack to the >=3-incomplete governor threshold", async () => {
+    const ss = await selectSlippageSurvival(BT_WRONGKEY);
+    const gateResult = evaluateSlippageSurvivalGate(ss as any, { enabled: true });
+
+    // Two earlier gates already grandfather-passed on legacy evidence; the malformed
+    // slippage gate is the third INCOMPLETE → triggers lifecycle.promotion_evidence_incomplete.
+    const gateEvidenceStatuses = [
+      "legacy_null",                              // e.g. a pre-Wave-3 BIF
+      "legacy_proceed",                           // e.g. a legacy orchestrator gate
+      slippageEvidenceBucket(gateResult.status),  // FIX M1: malformed → INCOMPLETE
+    ];
+    const incompleteCount = gateEvidenceStatuses.filter(isIncompleteEvidenceStatus).length;
+    expect(incompleteCount).toBe(3);
+    expect(incompleteCount >= 3).toBe(true);
+
+    // Regression contrast: the OLD accounting booked malformed as "complete" → only
+    // 2 incomplete → the broken-producer strategy would have DODGED the governor.
+    const oldBuggy = ["legacy_null", "legacy_proceed", "complete"];
+    expect(oldBuggy.filter(isIncompleteEvidenceStatus).length).toBe(2);
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Suite 14 — FIX M3: broker_accounts firm↔broker_type topology CHECK constraint
+// (migration 0190, mirrored in pglite CORE_DDL) round-trip through PGlite
+// ════════════════════════════════════════════════════════════════════════════════
+
+describe("FIX M3: broker_accounts firm↔broker_type topology CHECK constraint (PGlite)", () => {
+  let ctx: TestDb;
+
+  beforeAll(async () => { ctx = await createTestDb(); });
+  afterAll(async () => { await ctx.close(); });
+
+  it("ACCEPTS topstep + topstepx (valid topology)", async () => {
+    await expect(
+      ctx.pg.query(
+        `INSERT INTO broker_accounts (firm_id, broker_type) VALUES ($1, $2)`,
+        ["topstep", "topstepx"],
+      ),
+    ).resolves.toBeDefined();
+  });
+
+  it("ACCEPTS topstep_50k + topstepx (suffix normalized)", async () => {
+    await expect(
+      ctx.pg.query(
+        `INSERT INTO broker_accounts (firm_id, broker_type) VALUES ($1, $2)`,
+        ["topstep_50k", "topstepx"],
+      ),
+    ).resolves.toBeDefined();
+  });
+
+  it("ACCEPTS mffu + traderspost (valid topology)", async () => {
+    await expect(
+      ctx.pg.query(
+        `INSERT INTO broker_accounts (firm_id, broker_type) VALUES ($1, $2)`,
+        ["mffu", "traderspost"],
+      ),
+    ).resolves.toBeDefined();
+  });
+
+  it("REJECTS topstep + traderspost (the M3 core violation — Topstep never TradersPost)", async () => {
+    await expect(
+      ctx.pg.query(
+        `INSERT INTO broker_accounts (firm_id, broker_type) VALUES ($1, $2)`,
+        ["topstep", "traderspost"],
+      ),
+    ).rejects.toThrow();
+  });
+
+  it("REJECTS topstep_50k + traderspost (suffix normalized violation)", async () => {
+    await expect(
+      ctx.pg.query(
+        `INSERT INTO broker_accounts (firm_id, broker_type) VALUES ($1, $2)`,
+        ["topstep_50k", "traderspost"],
+      ),
+    ).rejects.toThrow();
+  });
+
+  it("REJECTS mffu + topstepx (only Topstep may route TopstepX)", async () => {
+    await expect(
+      ctx.pg.query(
+        `INSERT INTO broker_accounts (firm_id, broker_type) VALUES ($1, $2)`,
+        ["mffu", "topstepx"],
+      ),
+    ).rejects.toThrow();
+  });
+
+  it("REJECTS an UPDATE that would flip a valid topstep row to traderspost", async () => {
+    const [row] = (await ctx.pg.query<{ account_id: string }>(
+      `INSERT INTO broker_accounts (firm_id, broker_type) VALUES ($1, $2) RETURNING account_id`,
+      ["topstep", "topstepx"],
+    )).rows;
+    await expect(
+      ctx.pg.query(
+        `UPDATE broker_accounts SET broker_type = 'traderspost' WHERE account_id = $1`,
+        [row.account_id],
+      ),
+    ).rejects.toThrow();
   });
 });

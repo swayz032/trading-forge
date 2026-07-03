@@ -258,7 +258,7 @@ import { computeWideConceptFingerprintHash } from "./strategy-fingerprint.js";
 // initializing. `../lib/logger.js` is behaviorally equivalent (identical
 // pino config + test-runtime silence guard) and carries no such edge.
 import { logger } from "../lib/logger.js";
-import { broadcastSSE } from "../routes/sse.js";
+import { broadcastSSE, FACTORY_EVENTS } from "../routes/sse.js";
 import { notify } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
@@ -2275,6 +2275,29 @@ export async function graduateBucketDirectly(opts: {
     bucketId,
   });
 
+  // Deep-scan #15 FIX-3 (2026-07-03): FRAMEWORK_OVERLAY_APPLIED was declared in
+  // sse.ts's FACTORY_EVENTS catalog with full payload docs but had ZERO
+  // broadcastSSE call sites anywhere in the repo — a documented-but-dead event.
+  // applyFrameworkOverlay() itself stays a pure function (no I/O — see its own
+  // module docstring); the caller (here) is the correct place to turn its
+  // return value into an observable event. Fires once per overlay application
+  // (leader row only — variants re-apply the same overlay per-market and are
+  // not separately broadcast to avoid one graduation flooding N events).
+  // Fire-and-forget: never blocks or fails graduation.
+  try {
+    broadcastSSE(FACTORY_EVENTS.FRAMEWORK_OVERLAY_APPLIED, {
+      concept_name: conceptName,
+      symbol: market,
+      source: "graduated_bucket",
+      bucket_id: bucketId,
+      applied_rules: overlayed.appliedRules,
+      warnings: overlayed.warnings,
+      correlation_id: correlationId ?? null,
+    });
+  } catch (sseErr) {
+    logger.warn({ sseErr }, "direct-graduator: factory:framework_overlay_applied SSE broadcast failed (non-blocking)");
+  }
+
   // ─── Wave 26 Pass G B2 (2026-05-26): GATE 1 — BIDIRECTIONAL COMPLETENESS ──
   // When direction === "both" the compiled engine config must have coherent
   // entry expressions on BOTH sides. Extractions that only captured one
@@ -3064,6 +3087,29 @@ export async function graduateBucketDirectly(opts: {
       },
       "direct-graduator: strategy created from bucket"
     );
+
+    // Deep-scan #15 FIX-3 (2026-07-03): STRATEGY_CREATED was declared in
+    // sse.ts's FACTORY_EVENTS catalog with full payload docs but had ZERO
+    // broadcastSSE call sites anywhere in the repo — a documented-but-dead
+    // event. This is the real strategy-row-created completion point (leader
+    // row + any fan-out variants for this bucket). Fire-and-forget; never
+    // blocks or fails graduation.
+    try {
+      broadcastSSE(FACTORY_EVENTS.STRATEGY_CREATED, {
+        strategy_id: inserted.id,
+        name: strategyName,
+        symbol: market,
+        symbols: symbolsArray,
+        source: "graduated_bucket",
+        bucket_id: bucketId,
+        concept_name: conceptName,
+        fan_out_strategy_ids: fanOutStrategyIds,
+        entry_quality_provenance: entryQualityBlock.extraction_provenance,
+        correlation_id: correlationId ?? null,
+      });
+    } catch (sseErr) {
+      logger.warn({ sseErr }, "direct-graduator: factory:strategy_created SSE broadcast failed (non-blocking)");
+    }
 
     // Wave 23F Track D: audit entry_quality attachment
     await db.insert(auditLog).values({

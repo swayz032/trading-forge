@@ -1296,6 +1296,88 @@ export interface PendingBucketKilledData {
   correlation_id: string | null;
 }
 
+// ─── Wave 29 Passes A/C/D: SHADOW stage + PBO gate + RL A/B routing ──────────
+// These 5 are members of the backend's `WAVE29_EVENTS` catalog
+// (src/server/routes/sse.ts:383-396) that had real broadcastSSE() call sites
+// but NO frontend type — `quantum_rl:kill_switch_engaged` (the 6th member) was
+// already typed above as `QuantumRlKillSwitchEngagedData`. Shapes below are
+// copied from the actual call sites, not guessed:
+//   signal:shadow_logged                 — paper-signal-service.ts (~5640)
+//   lifecycle:pbo_evaluated               — lifecycle-service.ts (~1541, ~1604)
+//   lifecycle:shadow_divergence_evaluated — lifecycle-service.ts (~4254, ~4319)
+//   signal:rl_ab_routed                   — paper-signal-service.ts (~5912)
+//   quantum_rl:training_completed         — backtest-service.ts (~2365)
+
+/** signal:shadow_logged — SHADOW-stage signal logged; TradersPost webhook is
+ *  intentionally SKIPPED (shadow invariant). Fired instead of the normal
+ *  pending-entry queue path. */
+export interface SignalShadowLoggedData {
+  sessionId: string;
+  strategyId: number | string;
+  symbol: string;
+  direction: string | null;
+  entryPrice: number;
+  intendedSize: number;
+  killzone: string | null;
+  regime: string | null;
+  lifecycleState: "SHADOW";
+  traderspostWebhookCalled: false;
+  barTimestamp: string | number;
+  correlationId: string | null;
+}
+
+/** lifecycle:pbo_evaluated — Probability-of-Backtest-Overfitting gate
+ *  evaluated at TESTING → SHADOW / TESTING → PAPER. `blocked=true` means the
+ *  promotion was refused (pbo > threshold); `legacy_null` marks a pre-Wave-29
+ *  backtest with no computable PBO (grandfathered PASS). */
+export interface LifecyclePboEvaluatedData {
+  strategyId: string;
+  fromState: string;
+  toState: string;
+  pbo: number | null;
+  threshold: number;
+  blocked: boolean;
+  legacy_null?: boolean;
+}
+
+/** lifecycle:shadow_divergence_evaluated — shadow-vs-backtest signal
+ *  divergence gate evaluated at SHADOW → PAPER. `ok=false` means the
+ *  promotion was blocked (divergence too high, or insufficient sample —
+ *  see `reason`). */
+export interface LifecycleShadowDivergenceEvaluatedData {
+  strategyId: string;
+  ok: boolean;
+  divergence_pct: number | null;
+  sample_size: number;
+  reason?: string;
+}
+
+/** signal:rl_ab_routed — signal routed to one of the two A/B paper
+ *  sub-accounts (slumdawg-baseline vs slumdawg-rl-challenger). Advisory
+ *  observability only — never gates promotion (CLAUDE.md §12). */
+export interface SignalRlAbRoutedData {
+  sessionId: string;
+  strategyId: number | string;
+  symbol: string;
+  routing: string;
+  targetSubAccount: string;
+  resolvedAccountId: string | null;
+  routingCalled: boolean;
+  routingSuccess: boolean;
+  side: string | null;
+  contracts: number;
+  signalBar: string | number;
+}
+
+/** quantum_rl:training_completed — RL training epoch batch completed for a
+ *  strategy (fires post-subprocess-success only; failed runs do not emit). */
+export interface QuantumRlTrainingCompletedData {
+  strategy_id: number | string;
+  regimes_trained: number;
+  duration_ms: number;
+  correlation_id: string | null;
+}
+
 // ─── Discriminated union ──────────────────────────────────────────────
 
 export type SSEEvent =
@@ -1480,7 +1562,13 @@ export type SSEEvent =
   | { type: "paper:auto_restarted"; data: PaperAutoRestartedData }
   // ─── Deep-scan #12 Track R: Dot-normalized events (colon form — server updated) ──
   | { type: "monte_carlo:trades_fallback_used"; data: MonteCarloTradesFallbackUsedData }
-  | { type: "pending_bucket:killed"; data: PendingBucketKilledData };
+  | { type: "pending_bucket:killed"; data: PendingBucketKilledData }
+  // ─── Deep-scan #15 FIX-3 (H4): Wave 29 catalog completeness ────────────
+  | { type: "signal:shadow_logged"; data: SignalShadowLoggedData }
+  | { type: "lifecycle:pbo_evaluated"; data: LifecyclePboEvaluatedData }
+  | { type: "lifecycle:shadow_divergence_evaluated"; data: LifecycleShadowDivergenceEvaluatedData }
+  | { type: "signal:rl_ab_routed"; data: SignalRlAbRoutedData }
+  | { type: "quantum_rl:training_completed"; data: QuantumRlTrainingCompletedData };
 
 export type SSEEventType = SSEEvent["type"];
 

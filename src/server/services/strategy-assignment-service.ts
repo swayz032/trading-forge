@@ -101,9 +101,20 @@ const DEFAULT_ENABLED_FIRMS = ["topstep", "mffu"] as const;
 let enabledFirmsCache: { value: string[]; expiresAt: number } | null = null;
 const ENABLED_FIRMS_TTL_MS = 60_000;
 
+// deep-scan #15 FIX (getEnabledFirms hardening): last SUCCESSFULLY-READ enabled
+// set. On a DB read error we return THIS (the last operator-confirmed allowlist)
+// rather than blindly resetting to DEFAULT_ENABLED_FIRMS — a transient read error
+// must NEVER silently re-enable a firm the operator intentionally disabled. Only a
+// true cold start (no confirmed read yet this process) falls back to DEFAULT.
+let lastConfirmedEnabledFirms: string[] | null = null;
+
 /**
  * Returns the currently-enabled firms for this Trading Forge instance.
  * Cached for 60s. Callers should treat the array as read-only.
+ *
+ * FAIL-SAFE (deep-scan #15): a DB read error does NOT expand the enabled set.
+ * It returns the last-known-good confirmed set (or DEFAULT only on cold start)
+ * and emits a loud audit row so the degraded read is never silent.
  *
  * Test helpers reset the cache via `__resetEnabledFirmsCache()` (exported).
  */
@@ -113,32 +124,79 @@ export async function getEnabledFirms(): Promise<string[]> {
     return enabledFirmsCache.value;
   }
 
-  let value: string[] = [...DEFAULT_ENABLED_FIRMS];
   try {
     const [row] = await db
       .select({ enabledFirms: instanceConfig.enabledFirms })
       .from(instanceConfig)
       .where(eq(instanceConfig.id, 1))
       .limit(1);
+
+    let value: string[];
     if (row && Array.isArray(row.enabledFirms) && row.enabledFirms.length > 0) {
       value = (row.enabledFirms as unknown[])
         .filter((v): v is string => typeof v === "string");
+    } else {
+      // Row missing or empty is a legitimate "instance not configured yet" state —
+      // DEFAULT is the correct answer here (NOT a read error). Record it as confirmed.
+      value = [...DEFAULT_ENABLED_FIRMS];
     }
-  } catch (err) {
-    logger.warn(
-      { err: err instanceof Error ? err.message : String(err) },
-      "strategy-assignment: instance_config read failed; using default enabled_firms",
-    );
-    // fall through with DEFAULT_ENABLED_FIRMS
-  }
 
-  enabledFirmsCache = { value, expiresAt: now + ENABLED_FIRMS_TTL_MS };
-  return value;
+    // Successful read → this is now the last-known-good.
+    lastConfirmedEnabledFirms = value;
+    enabledFirmsCache = { value, expiresAt: now + ENABLED_FIRMS_TTL_MS };
+    return value;
+  } catch (err) {
+    // ── FAIL-SAFE: DB read error ─────────────────────────────────────────────
+    // Do NOT reset to DEFAULT — that could re-enable a firm the operator disabled.
+    // Prefer the last-known-good confirmed set; only cold-start falls back to DEFAULT.
+    const usingLastKnownGood = lastConfirmedEnabledFirms !== null;
+    const value = usingLastKnownGood
+      ? [...(lastConfirmedEnabledFirms as string[])]
+      : [...DEFAULT_ENABLED_FIRMS];
+
+    logger.error(
+      {
+        err: err instanceof Error ? err.message : String(err),
+        usingLastKnownGood,
+        enabledFirms: value,
+      },
+      "strategy-assignment: instance_config read FAILED — fail-safe enabled_firms " +
+        (usingLastKnownGood
+          ? "(returning last-known-good confirmed set — NOT re-expanding to default)"
+          : "(cold start — no confirmed read yet; using conservative default)"),
+    );
+
+    // Loud audit so the degraded read is observable, not silent.
+    db.insert(auditLog).values({
+      action: "enabled_firms.read_error_failsafe",
+      entityType: "instance_config",
+      entityId: null,
+      decisionAuthority: "system",
+      input: {},
+      result: {
+        error: err instanceof Error ? err.message : String(err),
+        usingLastKnownGood,
+        returnedEnabledFirms: value,
+        note: usingLastKnownGood
+          ? "returned last-known-good confirmed set — a read error must not re-enable a disabled firm"
+          : "cold start — no prior confirmed read; used conservative DEFAULT_ENABLED_FIRMS",
+      },
+      status: "warning",
+    }).catch((auditErr: unknown) => {
+      logger.warn({ err: auditErr }, "strategy-assignment: enabled_firms.read_error_failsafe audit insert failed (non-blocking)");
+    });
+
+    // Cache with a SHORT TTL so we retry the DB soon rather than pinning the
+    // degraded value for a full 60s window.
+    enabledFirmsCache = { value, expiresAt: now + 5_000 };
+    return value;
+  }
 }
 
-/** Test-only: reset the 60s cache. Safe in production (no-op outside tests). */
+/** Test-only: reset the 60s cache + last-known-good. Safe in production (no-op outside tests). */
 export function __resetEnabledFirmsCache(): void {
   enabledFirmsCache = null;
+  lastConfirmedEnabledFirms = null;
 }
 
 // ─── Collaborative-trading detection ─────────────────────────────────────────

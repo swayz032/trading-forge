@@ -262,14 +262,31 @@ def compute_slippage_survival(
             breaks_at = m
             break
 
-    # retention_2x = expectancy_r.2x / expectancy_r.1x — fragility telemetry.
-    # Only computable when both 1.0x and 2.0x are present in the sweep.
+    # retention_2x = expectancy_r_raw.2x / expectancy_r_raw.1x — fragility
+    # telemetry. Only computable when both 1.0x and 2.0x are present in the sweep.
+    #
+    # Two review-pass fixes (2026-07-03):
+    #   1. RAW not rounded — uses `expectancy_r_raw` (the same unrounded values
+    #      `breaks_at` decides on above), not the 4dp-rounded `expectancy_r`
+    #      display dict. A tiny positive raw expectancy that rounds to 0.0000
+    #      at display precision must not be treated as zero here (same
+    #      raw-vs-rounded rationale as the min_pf boundary fix documented in
+    #      the module docstring / min_pf param doc).
+    #   2. Sign guard — retention_2x is only meaningful as a "how much of the
+    #      edge survived" ratio when there WAS an edge (positive expectancy) at
+    #      1x. A non-positive e1x_raw means the strategy is already dead (or
+    #      exactly break-even) at baseline slippage; e2x/e1x on two negative
+    #      numbers can produce a misleadingly POSITIVE ratio (e.g. e1x=-0.10,
+    #      e2x=-0.05 -> 0.5, reading as "retained 50% of edge" when there was no
+    #      edge to retain). Report None instead of fabricating a ratio with no
+    #      coherent slippage-fragility meaning. Does NOT change the `breaks_at`
+    #      block decision above, which is independently computed on raw values.
     retention_2x: float | None = None
     if 1.0 in multiples_list and 2.0 in multiples_list:
-        e1x = expectancy_r[_format_multiple_key(1.0)]
-        e2x = expectancy_r[_format_multiple_key(2.0)]
-        if e1x != 0:
-            retention_2x = round(e2x / e1x, 4)
+        e1x_raw = expectancy_r_raw[_format_multiple_key(1.0)]
+        e2x_raw = expectancy_r_raw[_format_multiple_key(2.0)]
+        if e1x_raw > 0:
+            retention_2x = round(e2x_raw / e1x_raw, 4)
 
     insufficient_sample = n_trades < min_trades
     if insufficient_sample:

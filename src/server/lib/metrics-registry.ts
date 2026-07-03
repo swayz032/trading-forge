@@ -276,16 +276,18 @@ export const pboBlocksTotal = new Counter({
   labelNames: ["regime"] as const,
   registers: [promRegistry],
 });
-/**
- * @deprecated Use `pboBlocksTotal` (corrected camelCase). lifecycle-service.ts has been
- * updated (cf1, 2026-06-24) to use the canonical name directly.
- * Sub-carry-forward: wave29-prod-hardening-prom-counters.test.ts, wave29-pass-d1-observability.test.ts,
- * wave-a-paper-parity-trades-counter.test.ts, wave-a-paper-parity-promotions-counter.test.ts,
- * wave-a-paper-parity-auto-promo-gates.test.ts, and wave-b-paper-parity-pbo-regime-label.test.ts
- * still import this alias and are not in the cf1 owned-file list.
- * Remove this alias once those test files are updated to import pboBlocksTotal.
- */
-export const pboBLocksTotal = pboBlocksTotal;
+// CF1.1 CLOSED (deepscan15 2026-07-03): the deprecated `pboBLocksTotal` (capital-L
+// typo) alias has been removed. All real consumers were already migrated to the
+// canonical `pboBlocksTotal` (lifecycle-service.ts, cf1 2026-06-24); the only
+// remaining references were the 6 test files below, which have been updated in the
+// same commit to import `pboBlocksTotal` directly:
+//   wave29-prod-hardening-prom-counters.test.ts, wave29-pass-d1-observability.test.ts,
+//   wave-a-paper-parity-trades-counter.test.ts, wave-a-paper-parity-promotions-counter.test.ts,
+//   wave-a-paper-parity-auto-promo-gates.test.ts
+// (wave-b-paper-parity-pbo-regime-label.test.ts used an unrelated local variable of
+// the same name — never imported the alias — no change needed there.)
+// No Prometheus double-registration risk: the alias was a bare JS const reference to
+// the same Counter instance, not a second `new Counter(...)` registration.
 
 // tf_shadow_signals_total{strategy_id, divergence_bucket}
 //   Incremented on each shadow signal write (lifecycle.shadow_signal_logged audit).

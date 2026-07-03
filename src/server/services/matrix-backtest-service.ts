@@ -82,7 +82,12 @@ async function runWithConcurrency(
           mode: "walkforward" as const,
         };
 
-        const result = await runBacktest(strategyId, config as any) as any;
+        // FIX H1 (deepscan15 2026-07-03): thread the matrix run's own id through as
+        // correlationId so this automated backtest trigger is reconstructable in the
+        // 90-day audit trail (previously runBacktest was called with no correlationId
+        // arg at all, so every matrix-triggered backtest was untraceable back to its
+        // matrix run). matrixId is stable across all combos in this matrix run.
+        const result = await runBacktest(strategyId, config as any, undefined, undefined, matrixId) as any;
         const matrixResult: MatrixResult = {
           symbol: combo.symbol,
           timeframe: combo.timeframe,

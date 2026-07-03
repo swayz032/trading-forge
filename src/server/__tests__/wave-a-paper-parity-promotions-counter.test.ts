@@ -8,7 +8,7 @@ vi.mock("../lib/metrics-registry.js", () => {
   const labels = vi.fn().mockReturnValue({ inc });
   return {
     strategyPromotions: { labels },
-    pboBLocksTotal: { labels: vi.fn().mockReturnValue({ inc: vi.fn() }) },
+    pboBlocksTotal: { labels: vi.fn().mockReturnValue({ inc: vi.fn() }) },
     lifecycleShadowPromotionsTotal: { labels: vi.fn().mockReturnValue({ inc: vi.fn() }) },
   };
 });

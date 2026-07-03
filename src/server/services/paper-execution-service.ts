@@ -10,7 +10,11 @@ import { logger } from "../lib/logger.js";
 // TODO: correlation_id not threaded through most call sites in this file.
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { onPaperTradeClose } from "../scheduler.js";
-import { getFirmAccount, CONTRACT_SPECS } from "../../shared/firm-config.js";
+import { CONTRACT_SPECS } from "../../shared/firm-config.js";
+// deep-scan #15 FIX M4: the authoritative single-day consistency rule lives in
+// consistency-tracker-service.ts (40% warn / 50% block firm-wide, false-positive
+// guard). checkConsistencyRule DEFERS to it so the two can never disagree.
+import { CONSISTENCY_RULE_FIRMS, getConsistencyState } from "./consistency-tracker-service.js";
 // Wave 27.5 Pass D.2: symbol-aware commission — replaces the legacy symbol-agnostic
 // getCommissionPerSide(firmId) for position-close P&L calculations.
 import { getCommissionPerSide as getCommissionPerSideBySymbol, getStopCeilingPts } from "../lib/contract-class.js";
@@ -2737,41 +2741,69 @@ async function checkConsistencyRule(
   session: typeof paperSessions.$inferSelect,
 ): Promise<void> {
   if (!session.firmId) return;
-  const firmConfig = getFirmAccount(session.firmId);
-  if (!firmConfig?.consistencyRule) return;
+  // FIX M4 (deep-scan #15): only firms that actually enforce the single-day
+  // consistency rule (Topstep + MFFU). Mirrors the tracker's CONSISTENCY_RULE_FIRMS.
+  if (!CONSISTENCY_RULE_FIRMS.includes(session.firmId)) return;
 
-  // M1 fix (deepscan-6): dailyPnlBreakdown is now written INSIDE the closePosition transaction.
-  // This function re-reads the already-committed value for the consistency-rule check only.
-  // Use CME futures trading-day key (5pm ET cutoff) — must match the key written in the tx.
-  const today = toFuturesTradingDayString();
-  const [updated] = await db.select({ dailyPnlBreakdown: paperSessions.dailyPnlBreakdown })
-    .from(paperSessions).where(eq(paperSessions.id, session.id));
-  const breakdown = (updated?.dailyPnlBreakdown ?? {}) as Record<string, number>;
-
-  // Check consistency: no single day > X% of total profit
-  const breakdownValues = Object.values(breakdown);
-  if (breakdownValues.length === 0) return; // no data yet
-  const totalPnl = breakdownValues.reduce((sum, v) => sum + v, 0);
-  if (totalPnl <= 0) return; // only applies when profitable
-
-  const maxDayPnl = Math.max(...breakdownValues);
-  const maxDayRatio = maxDayPnl / totalPnl;
-
-  if (maxDayRatio > firmConfig.consistencyRule) {
-    const maxDay = Object.entries(breakdown).find(([, v]) => v === maxDayPnl)?.[0] ?? "unknown";
-    const pctStr = (maxDayRatio * 100).toFixed(1);
-    const limitPct = (firmConfig.consistencyRule * 100).toFixed(0);
-    const warning = `Consistency rule: ${pctStr}% from single day (${maxDay}) exceeds ${limitPct}% limit for ${session.firmId}`;
-    logger.warn({ sessionId: session.id, maxDayRatio, limit: firmConfig.consistencyRule }, warning);
-    broadcastSSE("paper:consistency-warning", {
-      sessionId: session.id,
-      firmId: session.firmId,
-      maxDayRatio,
-      limit: firmConfig.consistencyRule,
-      maxDay,
-      message: warning,
-    });
+  // FIX M4: DEFER to the authoritative consistency tracker (single source of
+  // truth) instead of this service's own local single-threshold consistency ratio.
+  // The two previously ran parallel, differently-defined calcs (this one:
+  // session-local dailyPnlBreakdown vs the firm-config single-threshold ratio; the
+  // tracker: firm-wide 40%/50% concentration with a false-positive guard) and could
+  // DISAGREE for the same session. Now both read the same computation.
+  //
+  // dryRun=true suppresses the tracker's OWN audit_log rows + Discord (those are
+  // owned by the entry gate `shouldBlockNewEntry` and the daily-digest cron, so we
+  // do not double-emit). We only re-broadcast the `paper:consistency-warning` SSE
+  // that the Office/dashboard depends on.
+  //
+  // A distinct, non-UUID cache key ("paper-close:<firm>") keeps this dry-run read
+  // from poisoning the tracker's 5s cache shared by the authoritative UUID-keyed
+  // callers (a cache hit there would suppress their real non-dry-run audit path).
+  let state: Awaited<ReturnType<typeof getConsistencyState>>;
+  try {
+    state = await getConsistencyState(`paper-close:${session.firmId}`, new Date(), true);
+  } catch (err) {
+    logger.warn(
+      { sessionId: session.id, firmId: session.firmId, err },
+      "checkConsistencyRule: authoritative consistency tracker read failed (non-blocking)",
+    );
+    return;
   }
+
+  if (state.gateState === "ok") return;
+
+  // Backward-compatible SSE payload: keep sessionId/firmId + the legacy
+  // maxDayRatio/limit/maxDay fields the dashboard reads, now sourced from the
+  // authoritative tracker, plus the richer gateState/concentration fields.
+  const limit = state.gateState === "block_50" ? 0.5 : 0.4;
+  const maxDayRatio = state.currentConcentrationPct / 100;
+  const maxDay = state.highestDayDate ?? "unknown";
+  const warning =
+    `Consistency ${state.gateState === "block_50" ? "BLOCK" : "WARN"} (authoritative): ` +
+    `${state.currentConcentrationPct.toFixed(1)}% single-day concentration ` +
+    `(highest $${state.highestDayProfit.toFixed(2)} on ${maxDay} / cumulative ` +
+    `$${state.cycleCumulativeProfit.toFixed(2)}) for ${session.firmId}`;
+
+  logger.warn(
+    { sessionId: session.id, firmId: session.firmId, gateState: state.gateState, currentConcentrationPct: state.currentConcentrationPct },
+    warning,
+  );
+
+  broadcastSSE("paper:consistency-warning", {
+    sessionId: session.id,
+    firmId: session.firmId,
+    // Authoritative fields from the single source of truth (consistency-tracker-service).
+    gateState: state.gateState,
+    currentConcentrationPct: state.currentConcentrationPct,
+    highestDayDate: state.highestDayDate,
+    falsePositiveSuspected: state.falsePositiveSuspected,
+    // Backward-compatible fields the existing dashboard payload carried.
+    maxDayRatio,
+    limit,
+    maxDay,
+    message: warning,
+  });
 }
 
 // ─── Gap 5: Rolling Sharpe + Decay Detection ─────────────────

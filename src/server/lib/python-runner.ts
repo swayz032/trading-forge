@@ -140,6 +140,32 @@ export async function gracefullyShutdownPythonSubprocesses(timeoutMs = 5_000): P
   }
 }
 
+/**
+ * FIX H2 (deepscan15 2026-07-03): Exported acquire/release pair so bespoke external
+ * spawners that call `child_process.spawn` directly (quantum-mc-service.ts,
+ * quantum-rl-training-runner.ts) still count toward the SAME lane accounting that
+ * backs MAX_PYTHON_SUBPROCESSES / MAX_PYTHON_SUBPROCESSES_EXECUTION and the
+ * pythonSubprocess{Active,Queued} stats read by getPythonSubprocessStats() / /api/health.
+ *
+ * Without this, those spawners bypass the semaphore entirely: the tower can run
+ * MAX_PYTHON_SUBPROCESSES (backtest lane) PLUS N untracked quantum subprocesses
+ * simultaneously, while /api/health reports the backtest lane as "not saturated" —
+ * a false-green health signal during real capacity exhaustion.
+ *
+ * Contract: acquire BEFORE spawn(), release in the SAME settle path (finally / all
+ * resolve+reject branches) that would otherwise leak the slot forever. Prefer
+ * `lane: "backtest"` for batch/analysis subprocesses (quantum MC, RL training) —
+ * these are not on the capital-safety critical path, so they must never draw from
+ * the reserved "execution" lane.
+ */
+export async function acquireExternalPythonSlot(lane: PythonLane = "backtest"): Promise<void> {
+  await _acquirePythonSlot(lane);
+}
+
+export function releaseExternalPythonSlot(lane: PythonLane = "backtest"): void {
+  _releasePythonSlot(lane);
+}
+
 /** Observability hook — used by /api/health and metrics endpoints.
  * `active`/`queued`/`cap` report the BACKTEST lane (the historical contract — existing
  * callers + the /api/health backtestConcurrency block read these). Per-lane detail under

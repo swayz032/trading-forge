@@ -338,6 +338,28 @@ CREATE TABLE IF NOT EXISTS paper_trades (
   roll_spread_cost  NUMERIC,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- deep-scan #15 FIX M3: broker_accounts with the firm↔broker_type topology CHECK
+-- constraint (migration 0190). Mirrored here so the gate-chain integration test can
+-- exercise the DB-level invariant (topstep MUST route topstepx, never traderspost;
+-- mffu/others MUST route traderspost). CORE_DDL creates the table fresh so the CHECK
+-- validates immediately (production migration uses NOT VALID for existing-row safety).
+CREATE TABLE IF NOT EXISTS broker_accounts (
+  account_id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  firm_id             TEXT NOT NULL,
+  broker_type         TEXT NOT NULL,
+  api_key_vault_ref   TEXT,
+  account_id_external TEXT,
+  enabled             BOOLEAN NOT NULL DEFAULT TRUE,
+  enabled_symbols     TEXT[] NOT NULL DEFAULT ARRAY['MES'],
+  dll_opted_in        BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT broker_accounts_firm_broker_topology_chk CHECK (
+    (lower(regexp_replace(firm_id, '_[0-9]+k$', ''))  = 'topstep' AND broker_type = 'topstepx')
+    OR
+    (lower(regexp_replace(firm_id, '_[0-9]+k$', '')) <> 'topstep' AND broker_type = 'traderspost')
+  )
+);
 `;
 
 // ─── Factory ──────────────────────────────────────────────────────────────────

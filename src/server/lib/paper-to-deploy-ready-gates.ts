@@ -51,6 +51,8 @@ import { evaluateParameterDriftGate } from "./parameter-drift-gate.js";
 import { evaluatePromotionGates, type StrategyPromotionData } from "./promotion-gate-orchestrator.js";
 // H1 fix 2026-06-28: import BIF gate so both manual and cron paths enforce it.
 import { evaluateBifGate } from "./bif-gate.js";
+// deep-scan #15 FIX M1: shared evidence-completeness roll-up (cron/manual parity).
+import { isIncompleteEvidenceStatus, bifEvidenceBucket } from "./evidence-completeness.js";
 import {
   evaluateFrozenPolicyDriftAtPromotion,
   type FrozenPolicyDriftResult,
@@ -379,8 +381,10 @@ export function evaluatePaperToDeployReadyGates(
   // ≥3-incomplete governor. Only pass-through (non-blocking) gate outcomes push —
   // a blocking gate returns before any governor could run.
   const gateEvidenceStatuses: string[] = [];
+  // FIX M1: use the shared predicate so the manual path counts a "malformed"
+  // (broken-producer) status as INCOMPLETE, identical to the cron path.
   const countIncompleteEvidence = () =>
-    gateEvidenceStatuses.filter((st) => st.includes("legacy") || st === "data_unavailable").length;
+    gateEvidenceStatuses.filter(isIncompleteEvidenceStatus).length;
 
   // ──────────────────────────────────────────────────────────────────────────
   // Gate 1 — B14 Survival Twin (fail-CLOSED on infra error; HONEST 3-state otherwise)
@@ -836,7 +840,8 @@ export function evaluatePaperToDeployReadyGates(
         );
       }
       // (deepscan7 F-3 2026-07-02) cron parity (lifecycle-service Track A.2 push).
-      gateEvidenceStatuses.push(bifResult.legacyNull ? "legacy_null" : "complete");
+      // FIX M1: route through the shared bucket helper (malformed → INCOMPLETE).
+      gateEvidenceStatuses.push(bifEvidenceBucket(bifResult.legacyNull, bifResult.reason));
     }
   }
 

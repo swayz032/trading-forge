@@ -1048,6 +1048,38 @@ function dispatchSideEffects(event: SSEEvent, qc: QueryClient): void {
       break;
     }
 
+    // ─── Deep-scan #15 FIX-3 (H4): Wave 29 catalog completeness ─────────
+    // Minimal wiring only (cache invalidation, no new toast/dashboard UI) —
+    // these events were type-unreachable before this pass. A dedicated
+    // dashboard surface for SHADOW/PBO/RL-A-B observability is a separate,
+    // larger effort (see CLAUDE.md Wave 29 observability-surface entries);
+    // this just keeps the discriminated union honest and the data reachable
+    // for any consumer that wants to `switch` on these types directly.
+    case "signal:shadow_logged": {
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      break;
+    }
+
+    case "lifecycle:pbo_evaluated": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      break;
+    }
+
+    case "lifecycle:shadow_divergence_evaluated": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      break;
+    }
+
+    case "signal:rl_ab_routed": {
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      break;
+    }
+
+    case "quantum_rl:training_completed": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      break;
+    }
+
     default: {
       // Exhaustiveness check — TypeScript will complain if any union member
       // isn't handled. At runtime, log unknown event names so the dev

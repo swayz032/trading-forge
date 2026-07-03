@@ -35,7 +35,12 @@ import { notifyCritical, notifyWarning } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { killSwitch } from "../production/kill-switch.js";
 import { getEnabledFirms } from "./strategy-assignment-service.js";
-import { getFirmLimit, CONTRACT_CAP_MAX } from "../../shared/firm-config.js";
+import { getFirmLimit, CONTRACT_CAP_MAX, getFirmAccount, CONTRACT_SPECS, DEFAULT_ACCOUNT_SIZE } from "../../shared/firm-config.js";
+// deep-scan #15 FIX M3: shared firm↔broker_type topology invariant (single source
+// of truth for the F-3 dispatch guard AND the insert/update-time guard).
+import { validateFirmBrokerTopology } from "../lib/firm-broker-topology.js";
+// deep-scan #15 FIX M5: route-level MFFU 2%-per-trade enforcement helpers.
+import { getStopCeilingPts } from "../lib/contract-class.js";
 import { CircuitBreakerRegistry, CircuitOpenError } from "../lib/circuit-breaker.js";
 import { traderspostRejectsTotal } from "../lib/metrics-registry.js";
 
@@ -353,6 +358,28 @@ export const BROKER_ORDER_ROUTED_EVENT = "broker:order_routed";
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
+/**
+ * FIX M5: resolve a CONTRACT_SPECS entry (symbol root + point value) from a
+ * TradingView-style ticker (e.g. "MESU2026", "MES", "ES1!"). Micros are matched
+ * BEFORE minis so "MCLF2026" resolves to MCL (not CL) and "MESU2026" to MES (not
+ * ES). Returns null when no known contract root matches — the caller then skips
+ * the 2% check rather than guessing a point value (which would risk a false block).
+ */
+function resolveRouteContractSpec(ticker: string | null | undefined): { symbol: string; pointValue: number } | null {
+  const upper = (ticker ?? "").toUpperCase();
+  if (!upper) return null;
+  // Micros first (MES/MNQ/MCL), then minis (ES/NQ/CL) — longest-prefix-first intent.
+  for (const key of ["MES", "MNQ", "MCL", "ES", "NQ", "CL"] as const) {
+    if (upper.startsWith(key)) {
+      const s = CONTRACT_SPECS[key];
+      if (s && typeof s.pointValue === "number") return { symbol: key, pointValue: s.pointValue };
+    }
+  }
+  const direct = CONTRACT_SPECS[upper];
+  if (direct && typeof direct.pointValue === "number") return { symbol: upper, pointValue: direct.pointValue };
+  return null;
+}
+
 async function writeAuditLog(
   accountId: string,
   signal: WebhookSignal,
@@ -595,8 +622,11 @@ export async function routeOrder(
   // conflate "wrong known broker" with "broker_type we don't recognize at all".
   {
     const KNOWN_BROKER_TYPES = ["traderspost", "topstepx"] as const;
-    const invariantFirmKey = account.firmId.toLowerCase().replace(/_\d+k$/, "");
-    const expectedBrokerType = invariantFirmKey === "topstep" ? "topstepx" : "traderspost";
+    // FIX M3: derive the invariant from the shared helper so the runtime dispatch
+    // guard and the write-time guard / DB CHECK constraint can never drift.
+    const topology = validateFirmBrokerTopology(account.firmId, account.brokerType);
+    const invariantFirmKey = topology.firmKey;
+    const expectedBrokerType = topology.expectedBrokerType;
     if (
       (KNOWN_BROKER_TYPES as readonly string[]).includes(account.brokerType) &&
       account.brokerType !== expectedBrokerType
@@ -788,6 +818,122 @@ export async function routeOrder(
     } catch (clampErr) {
       // Firm-cap clamp failure is non-fatal — log and proceed
       logger.error({ err: clampErr, accountId, correlationId }, "broker-router: route-time cap clamp failed — proceeding without clamp");
+    }
+  }
+
+  // ── FIX M5: route-level MFFU 2%-per-trade enforcement ──────────────────────
+  // The F-5 Python compliance gate below passes intended_max_loss + account_balance
+  // as NULL (they are not available at route time), so the 2%-per-trade rule is
+  // structurally SKIPPED there. A caller reaching routeOrder() DIRECTLY (manual
+  // order / future automation) therefore bypasses the 2% rule entirely — the
+  // richer paper-execution-service check never runs for that path.
+  //
+  // This block closes that gap: it derives the intended max loss from the signal's
+  // own risk geometry (quantity × stop-distance × point value) and enforces the
+  // firm's 2% rule against the firm's NOMINAL account size. Nominal size is the
+  // conservative basis — live funded equity is >= nominal, so a nominal-basis 2%
+  // ceiling is TIGHTER (never looser) than the live-balance ceiling. Only fires for
+  // entry actions on firms that carry the 2% rule (MFFU). Exits add no per-trade risk.
+  if (signal.action === "enter_long" || signal.action === "enter_short") {
+    try {
+      const firmKey = account.firmId.toLowerCase().replace(/_\d+k$/, "");
+      const acct = getFirmAccount(firmKey);
+      const twoPctRule = acct?.twoPercentRulePct;
+      const contracts = typeof signal.quantity === "number" ? signal.quantity : NaN;
+      const spec = resolveRouteContractSpec(signal.ticker);
+
+      if (
+        acct &&
+        typeof twoPctRule === "number" &&
+        twoPctRule > 0 &&
+        Number.isFinite(contracts) &&
+        contracts > 0 &&
+        spec
+      ) {
+        // Stop distance: prefer the signal's real entry↔stop geometry; fall back to
+        // the firm/symbol stop ceiling (conservative upper bound) when either price
+        // is missing so the check still runs rather than silently skipping.
+        const hasPrices =
+          typeof signal.price === "number" &&
+          Number.isFinite(signal.price) &&
+          typeof signal.stopPrice === "number" &&
+          Number.isFinite(signal.stopPrice) &&
+          signal.price !== signal.stopPrice;
+        const stopDistancePts = hasPrices
+          ? Math.abs((signal.price as number) - (signal.stopPrice as number))
+          : getStopCeilingPts(spec.symbol);
+
+        const intendedMaxLoss = contracts * stopDistancePts * spec.pointValue;
+        const accountBalance = acct.accountSize ?? DEFAULT_ACCOUNT_SIZE;
+        const maxAllowedLoss = twoPctRule * accountBalance;
+
+        if (intendedMaxLoss > maxAllowedLoss) {
+          const result: BrokerResult = {
+            success: false,
+            reason: "compliance_violation",
+            accountId,
+            firmId: account.firmId,
+            brokerType: account.brokerType,
+            error:
+              `two_percent_rule_block: intended max loss $${intendedMaxLoss.toFixed(2)} ` +
+              `exceeds ${(twoPctRule * 100).toFixed(1)}% of account $${accountBalance.toFixed(0)} ` +
+              `(cap $${maxAllowedLoss.toFixed(2)})`,
+          };
+          logger.warn(
+            {
+              accountId,
+              firmId: account.firmId,
+              contracts,
+              stopDistancePts,
+              pointValue: spec.pointValue,
+              intendedMaxLoss,
+              accountBalance,
+              maxAllowedLoss,
+              twoPctRule,
+              stopBasis: hasPrices ? "signal_geometry" : "stop_ceiling_fallback",
+              correlationId,
+            },
+            "broker-router: BLOCKED — route-level MFFU 2%-per-trade rule (intended loss exceeds 2% of account)",
+          );
+          await db.insert(auditLog).values({
+            action: "broker_router.two_percent_rule_block",
+            entityType: "broker_account",
+            entityId: null,
+            decisionAuthority: "system",
+            input: {
+              accountId,
+              firmId: account.firmId,
+              ticker: signal.ticker,
+              action: signal.action,
+              quantity: contracts,
+            } as Record<string, unknown>,
+            result: {
+              intendedMaxLoss,
+              accountBalance,
+              maxAllowedLoss,
+              twoPctRule,
+              stopDistancePts,
+              pointValue: spec.pointValue,
+              stopBasis: hasPrices ? "signal_geometry" : "stop_ceiling_fallback",
+            } as Record<string, unknown>,
+            status: "blocked",
+            correlationId: correlationId ?? null,
+          }).catch((err: unknown) => {
+            logger.error({ err, accountId, correlationId }, "broker-router: two_percent_rule_block audit write failed (non-blocking)");
+          });
+          broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...result, correlationId: correlationId ?? null });
+          await writeAuditLog(accountId, signal, result, correlationId);
+          return result;
+        }
+      }
+    } catch (twoPctErr) {
+      // Fail-OPEN: this is a route-level defense-in-depth guard. A bug here must
+      // not block legitimate orders — paper-execution-service remains the primary
+      // 2% enforcement path. Log so the skipped check is visible.
+      logger.error(
+        { err: twoPctErr, accountId, firmId: account.firmId, correlationId },
+        "broker-router: route-level 2% check threw — proceeding (fail-open; paper-execution-service is primary)",
+      );
     }
   }
 

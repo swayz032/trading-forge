@@ -11,6 +11,12 @@ import { parsePythonJson } from "../../shared/utils.js";
 import { compilePineExport } from "./pine-export-service.js";
 import { tracer } from "../lib/tracing.js";
 import { recordCost, completeCost } from "../lib/quantum-cost-tracker.js";
+// FIX H2 (deepscan15 2026-07-03): route this bespoke spawn through the shared
+// python-runner semaphore accounting so it counts toward MAX_PYTHON_SUBPROCESSES
+// and the pythonSubprocess{Active,Queued} stats — previously this spawn bypassed
+// the semaphore entirely (see acquireExternalPythonSlot JSDoc for the false-green
+// /api/health failure mode this closes).
+import { acquireExternalPythonSlot, releaseExternalPythonSlot } from "../lib/python-runner.js";
 
 const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 
@@ -45,58 +51,66 @@ export interface QuantumRuntimeStatus {
   authorityBoundary: "challenger_only";
 }
 
-function runPythonQuantumMC(configPath: string, timeoutMs: number = 300_000): Promise<QuantumResult> {
-  return new Promise((resolve, reject) => {
-    const pythonCmd = process.platform === "win32" ? "python" : "python3";
-    const args = ["-m", "src.engine.quantum_mc", "--input-json", configPath];
+async function runPythonQuantumMC(configPath: string, timeoutMs: number = 300_000): Promise<QuantumResult> {
+  // FIX H2 (deepscan15): acquire a backtest-lane slot BEFORE spawning so this
+  // subprocess counts toward MAX_PYTHON_SUBPROCESSES / getPythonSubprocessStats().
+  // Released in the finally below regardless of resolve/reject/timeout path.
+  await acquireExternalPythonSlot("backtest");
+  try {
+    return await new Promise<QuantumResult>((resolve, reject) => {
+      const pythonCmd = process.platform === "win32" ? "python" : "python3";
+      const args = ["-m", "src.engine.quantum_mc", "--input-json", configPath];
 
-    const proc = spawn(pythonCmd, args, {
-      env: { ...process.env },
-      cwd: PROJECT_ROOT,
-    });
+      const proc = spawn(pythonCmd, args, {
+        env: { ...process.env },
+        cwd: PROJECT_ROOT,
+      });
 
-    const TIMEOUT_MS = timeoutMs;
-    let settled = false;
-    const timer = setTimeout(() => {
-      if (!settled) {
-        settled = true;
-        proc.kill("SIGTERM");
-        reject(new Error(`Quantum MC timed out after ${TIMEOUT_MS / 1000}s`));
-      }
-    }, TIMEOUT_MS);
-
-    let stdout = "";
-    let stderr = "";
-
-    proc.stdout.on("data", (data) => (stdout += data.toString()));
-    proc.stderr.on("data", (data) => {
-      stderr += data.toString();
-      logger.info({ component: "quantum-mc-engine" }, data.toString().trim());
-    });
-
-    proc.on("close", (code) => {
-      clearTimeout(timer);
-      if (settled) return;
-      settled = true;
-      if (code === 0) {
-        try {
-          resolve(parsePythonJson<QuantumResult>(stdout));
-        } catch {
-          reject(new Error(`Failed to parse quantum MC output: ${stdout.slice(0, 500)}`));
+      const TIMEOUT_MS = timeoutMs;
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          proc.kill("SIGTERM");
+          reject(new Error(`Quantum MC timed out after ${TIMEOUT_MS / 1000}s`));
         }
-      } else {
-        reject(new Error(`Quantum MC failed (exit ${code}): ${stderr.slice(0, 500)}`));
-      }
-    });
+      }, TIMEOUT_MS);
 
-    proc.on("error", (err) => {
-      clearTimeout(timer);
-      if (!settled) {
+      let stdout = "";
+      let stderr = "";
+
+      proc.stdout.on("data", (data) => (stdout += data.toString()));
+      proc.stderr.on("data", (data) => {
+        stderr += data.toString();
+        logger.info({ component: "quantum-mc-engine" }, data.toString().trim());
+      });
+
+      proc.on("close", (code) => {
+        clearTimeout(timer);
+        if (settled) return;
         settled = true;
-        reject(err);
-      }
+        if (code === 0) {
+          try {
+            resolve(parsePythonJson<QuantumResult>(stdout));
+          } catch {
+            reject(new Error(`Failed to parse quantum MC output: ${stdout.slice(0, 500)}`));
+          }
+        } else {
+          reject(new Error(`Quantum MC failed (exit ${code}): ${stderr.slice(0, 500)}`));
+        }
+      });
+
+      proc.on("error", (err) => {
+        clearTimeout(timer);
+        if (!settled) {
+          settled = true;
+          reject(err);
+        }
+      });
     });
-  });
+  } finally {
+    releaseExternalPythonSlot("backtest");
+  }
 }
 
 export async function runQuantumMC(

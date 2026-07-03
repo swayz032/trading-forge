@@ -39,7 +39,11 @@ import { logger } from "./logger.js";
 import { notifyCritical } from "../services/notification-service.js";
 import { appendFamilyGradePostscript } from "./notification-helpers.js";
 // FIX 7 (deepscan8): register spawned process with graceful-shutdown set
-import { registerExternalPythonSubprocess } from "./python-runner.js";
+// FIX H2 (deepscan15 2026-07-03): acquire/release a shared python-runner semaphore
+// slot around this bespoke spawn so it counts toward MAX_PYTHON_SUBPROCESSES and
+// the pythonSubprocess{Active,Queued} stats — previously this spawn bypassed the
+// semaphore entirely.
+import { registerExternalPythonSubprocess, acquireExternalPythonSlot, releaseExternalPythonSlot } from "./python-runner.js";
 
 const PROJECT_ROOT = pathResolve(import.meta.dirname ?? ".", "../../..");
 
@@ -407,7 +411,13 @@ export async function runRlTrainingForStrategy(
 
   const start = Date.now();
 
-  return new Promise<RlTrainingAutoFireResult>((resolve, reject) => {
+  // FIX H2 (deepscan15): acquire a backtest-lane slot BEFORE spawning so this
+  // subprocess counts toward MAX_PYTHON_SUBPROCESSES / getPythonSubprocessStats().
+  // Released once the wrapped promise settles (resolve or reject), covering the
+  // timeout / close / spawn-error paths below.
+  await acquireExternalPythonSlot("backtest");
+  try {
+    return await new Promise<RlTrainingAutoFireResult>((resolve, reject) => {
     let proc: ChildProcess;
     try {
       proc = spawn(pythonCmd, args, {
@@ -509,5 +519,8 @@ export async function runRlTrainingForStrategy(
       _recordRlFailure(String(err));
       reject(err);
     });
-  });
+    });
+  } finally {
+    releaseExternalPythonSlot("backtest");
+  }
 }
