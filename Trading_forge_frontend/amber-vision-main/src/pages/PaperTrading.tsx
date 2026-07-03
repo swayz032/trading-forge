@@ -1,10 +1,10 @@
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
-  Play, Pause, DollarSign, TrendingUp, TrendingDown, BarChart3, Clock,
+  Play, DollarSign, TrendingUp, TrendingDown, BarChart3, Clock,
   Activity, Loader2, Wifi, WifiOff, Zap, ShieldCheck, ShieldX,
-  Radio, ChevronDown, StopCircle, Signal, Target, AlertTriangle,
-  ChevronLeft, ChevronRight, Calendar,
+  Radio, Signal, Target, AlertTriangle,
+  ChevronLeft, ChevronRight, Calendar, Lock,
 } from "lucide-react";
 import { StatusBadge } from "@/components/forge/StatusBadge";
 import { ForgeTable } from "@/components/forge/ForgeTable";
@@ -14,13 +14,11 @@ import { Button } from "@/components/ui/button";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
 import {
   usePaperSessions, usePaperPositions, usePaperTrades,
-  useStartPaperSession, useStopPaperSession,
-  usePaperStreams, usePaperSignals, usePaperSignalStats, useStopAllStreams, usePaperBars,
+  usePaperStreams, usePaperSignals, usePaperSignalStats, usePaperBars,
 } from "@/hooks/usePaper";
 import { useStrategies } from "@/hooks/useStrategies";
 import { useSSE } from "@/hooks/useSSE";
 import { num, fmtCurrency, timeAgo } from "@/lib/utils";
-import { toast } from "sonner";
 
 // ── Helpers ─────────────────────────────────────────────────
 
@@ -56,12 +54,7 @@ export default function PaperTrading() {
   const { data: trades, isLoading: tradesLoading } = usePaperTrades();
   const { data: streams } = usePaperStreams();
   const { data: allStrategies } = useStrategies();
-  const startSession = useStartPaperSession();
-  const stopSession = useStopPaperSession();
-  const stopAll = useStopAllStreams();
-
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
-  const [showStrategyPicker, setShowStrategyPicker] = useState(false);
   const [tradePage, setTradePage] = useState(1);
   const [signalLimit, setSignalLimit] = useState(SIGNAL_BATCH);
 
@@ -86,14 +79,6 @@ export default function PaperTrading() {
     return streamInfo?.symbols?.[0];
   }, [activeSession, streams]);
   const { data: liveBars } = usePaperBars(activeSymbol);
-
-  // Strategies eligible for paper trading (PAPER lifecycle or any TIER strategy)
-  const eligibleStrategies = useMemo(() => {
-    const strats = allStrategies ?? [];
-    return strats.filter((s) =>
-      s.lifecycleState === "PAPER" || s.lifecycleState === "BACKTEST" || s.forgeScore
-    );
-  }, [allStrategies]);
 
   // ── KPIs ────────────────────────────────────────────────────
 
@@ -236,36 +221,10 @@ export default function PaperTrading() {
     };
   }, [stoppedSessions, closedTrades]);
 
-  // ── Actions ─────────────────────────────────────────────────
-
-  const handleStart = (strategyId?: string) => {
-    toast.info("Starting paper trading session...");
-    startSession.mutate(
-      { strategyId, startingCapital: "50000" },
-      {
-        onSuccess: () => {
-          toast.success("Paper trading session started \u2014 stream connecting");
-          setShowStrategyPicker(false);
-        },
-        onError: (err: any) => toast.error(`Failed: ${err.message}`),
-      },
-    );
-  };
-
-  const handleStop = (sessionId: string) => {
-    toast.info("Stopping session...");
-    stopSession.mutate(sessionId, {
-      onSuccess: () => toast.success("Session stopped, stream disconnected"),
-      onError: (err: any) => toast.error(`Failed: ${err.message}`),
-    });
-  };
-
-  const handleStopAll = () => {
-    stopAll.mutate(undefined, {
-      onSuccess: () => toast.success("All streams stopped"),
-      onError: (err: any) => toast.error(`Failed: ${err.message}`),
-    });
-  };
+  // ── Actions ─────────────────────────────────────────────────────
+  // REMOVED (Layer-4 Office P0, 2026-07-02): start/stop/stop-all controls.
+  // The Slumhouse Office is the ONLY control room — this page is a read-only
+  // observation deck. Sessions are driven by the autonomous conveyor + Office.
 
   // ── Render ──────────────────────────────────────────────────
 
@@ -308,73 +267,15 @@ export default function PaperTrading() {
             </div>
           )}
 
-          {activeSessions.length > 0 && (
-            <Button size="sm" variant="outline" className="text-xs text-loss border-loss/30 hover:bg-loss/10" onClick={handleStopAll}>
-              <StopCircle className="w-3.5 h-3.5 mr-1" /> Stop All
-            </Button>
-          )}
-
-          <div className="relative">
-            <Button
-              size="sm"
-              className="text-xs bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={() => setShowStrategyPicker(!showStrategyPicker)}
-              disabled={startSession.isPending}
-            >
-              <Play className="w-3.5 h-3.5 mr-1" /> Start Session
-              <ChevronDown className="w-3 h-3 ml-1" />
-            </Button>
-
-            <AnimatePresence>
-              {showStrategyPicker && (
-                <motion.div
-                  initial={{ opacity: 0, y: -4, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -4, scale: 0.95 }}
-                  className="absolute right-0 top-full mt-2 z-50 w-72 bg-surface border border-border rounded-lg shadow-2xl overflow-hidden"
-                >
-                  <div className="p-3 border-b border-border/50">
-                    <p className="text-xs font-medium text-text-secondary">Select Strategy to Paper Trade</p>
-                  </div>
-                  <div className="max-h-64 overflow-y-auto">
-                    {eligibleStrategies.length === 0 ? (
-                      <p className="text-xs text-text-muted p-4 text-center">No eligible strategies. Run backtests first.</p>
-                    ) : (
-                      eligibleStrategies.map((s) => (
-                        <button
-                          key={s.id}
-                          onClick={() => handleStart(s.id)}
-                          className="w-full text-left px-3 py-2.5 hover:bg-surface-2 transition-colors border-b border-border/20 last:border-0"
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-foreground truncate">{s.name}</span>
-                            <StatusBadge variant={s.lifecycleState === "PAPER" ? "profit" : "amber"}>
-                              {s.lifecycleState}
-                            </StatusBadge>
-                          </div>
-                          <div className="flex items-center gap-3 mt-1">
-                            <span className="text-[10px] font-mono text-text-muted">{s.symbol}</span>
-                            <span className="text-[10px] font-mono text-text-muted">{s.timeframe}</span>
-                            {s.forgeScore && (
-                              <span className="text-[10px] font-mono text-primary">Score: {Number(s.forgeScore).toFixed(0)}</span>
-                            )}
-                          </div>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                  <div className="p-2 border-t border-border/50">
-                    <button
-                      onClick={() => handleStart()}
-                      className="w-full text-center text-xs text-text-muted hover:text-foreground py-1.5 transition-colors"
-                    >
-                      Start without strategy (manual mode)
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          {/* Layer-4 Office P0: controls removed — observation deck only */}
+          <a
+            href="/slumhouse/office.html"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-2 border border-border/30 text-xs text-text-secondary hover:text-foreground transition-colors"
+            title="Start/stop lives in the Slumhouse Office"
+          >
+            <Lock className="w-3.5 h-3.5" />
+            Controls live in The Office
+          </a>
         </div>
       </div>
 
@@ -440,14 +341,7 @@ export default function PaperTrading() {
                     <span className={`font-mono text-sm font-semibold ${sessionPnl >= 0 ? "text-profit" : "text-loss"}`}>
                       {fmtCurrency(sessionPnl)}
                     </span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-xs h-7 px-2 text-loss border-loss/30 hover:bg-loss/10"
-                      onClick={(e) => { e.stopPropagation(); handleStop(session.id); }}
-                    >
-                      <Pause className="w-3 h-3" />
-                    </Button>
+                    {/* Layer-4 Office P0: per-session stop removed — Office only */}
                   </div>
                 </div>
               );

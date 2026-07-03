@@ -78,6 +78,14 @@ export const strategies = pgTable("strategies", {
   // applies the FOREIGN KEY constraint at the database level.
   parentStrategyId: uuid("parent_strategy_id")
     .references((): AnyPgColumn => strategies.id, { onDelete: "set null" }),
+  // deepscan14 H4: evolution's 7-day cooldown previously keyed on parentStrategyId
+  // (one generation up), so gen2→gen3 mutations bypassed it — their parent is gen1,
+  // not the gen0 lineage root. Stamped at every evolution INSERT going forward with
+  // the TRUE root of the chain; legacy pre-fix rows read as NULL and fall back to a
+  // live parent-chain walk in evolution-service.ts. Applied migration:
+  // 0188_backtests_idempotency_lineage_root.sql.
+  lineageRootId: uuid("lineage_root_id")
+    .references((): AnyPgColumn => strategies.id, { onDelete: "set null" }),
   // Track E F-2: generation is capped at MAX_GENERATIONS (3) in service code.
   // A DB CHECK constraint (generation >= 0 AND generation <= 3) is applied via
   // migration 0125b (Track B) to enforce the cap at the database layer.
@@ -215,9 +223,22 @@ export const backtests = pgTable(
     // (lifecycle gate treats null as legacy grandfather pass, never blocks on missing data).
     bif: numeric("bif"),
     kEff: numeric("k_eff"),
+    // Layer 4 research conveyor item 3 (2026-07-02): provenance stamp
+    // 5-field stamp capturing what made this backtest run reproducible and comparable.
+    // { engine_version, data_snapshot_id, gate_battery_version, overlay_config_hash, spec_provenance_ref }
+    // NULL on pre-2026-07-02 rows (non-comparable; backfill with PROVENANCE_ALLOW_LEGACY_BACKFILL=true).
+    // HARD GATE: persistence refused when PROVENANCE_STAMP_ENFORCE=true (default) and stamp missing.
+    // Applied migration: 0186_backtest_provenance_stamp.sql (idx 189).
+    provenanceStamp: jsonb("provenance_stamp"),
     errorMessage: text("error_message"),
     executionTimeMs: integer("execution_time_ms"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    // deepscan14 E7: n8n retry / dual-fire has no way to detect "this backtest was
+    // already enqueued" — every insert is a bare random-UUID row, so a duplicate
+    // fire silently double-counts downstream MC/WFE/pattern-aggregator stats.
+    // NULL for callers that don't supply a key (no behavior change for them).
+    // Applied migration: 0188_backtests_idempotency_lineage_root.sql.
+    idempotencyKey: text("idempotency_key"),
   },
   (table) => [
     index("backtests_strategy_idx").on(table.strategyId),
@@ -225,6 +246,12 @@ export const backtests = pgTable(
     index("backtests_tier_idx").on(table.tier),
     index("backtests_strategy_status_idx").on(table.strategyId, table.status),
     index("backtests_strategy_tier_idx").on(table.strategyId, table.tier),
+    // Partial index: only enforced when caller supplies a key. Rows with NULL
+    // idempotencyKey are unaffected (Postgres treats NULLs as distinct anyway,
+    // but the explicit WHERE keeps intent obvious and matches the migration).
+    uniqueIndex("backtests_idempotency_key_uq")
+      .on(table.idempotencyKey)
+      .where(sql`idempotency_key IS NOT NULL`),
   ]
 );
 
@@ -706,12 +733,12 @@ export const tournamentResults = pgTable(
     tournamentDate: timestamp("tournament_date").notNull(),
     candidateName: text("candidate_name").notNull(),
     candidateDsl: jsonb("candidate_dsl").notNull(),
-    proposerOutput: jsonb("proposer_output"), // qwen3 proposer reasoning
+    proposerOutput: jsonb("proposer_output"), // tournament proposer reasoning (LLM output)
     compilerPass: boolean("compiler_pass"),
     graveyardPass: boolean("graveyard_pass"),
     criticOutput: jsonb("critic_output"), // llama3.1:8b critic assessment
     prosecutorOutput: jsonb("prosecutor_output"), // llama3.1:8b prosecutor findings
-    promoterOutput: jsonb("promoter_output"), // qwen3 final decision
+    promoterOutput: jsonb("promoter_output"), // tournament promoter final decision (LLM output)
     finalVerdict: text("final_verdict").notNull(), // PROMOTE | REVISE | KILL
     revisionNotes: text("revision_notes"),
     backtestId: uuid("backtest_id").references(() => backtests.id, { onDelete: "set null" }),
@@ -1238,7 +1265,7 @@ export const criticCandidates = pgTable("critic_candidates", {
     selected: boolean("selected").default(false), // was this the survivor?
     governanceLabels: jsonb("governance_labels").notNull().default({}),
     // P2-2: critic model version and run IDs for full audit provenance
-    criticModelVersion: text("critic_model_version"), // e.g. "deepseek-r1:14b@2026-04"
+    criticModelVersion: text("critic_model_version"), // e.g. "gemma4:e4b-it-qat@2026-04"
     evidenceRunIds: jsonb("evidence_run_ids").$type<{
       mc?: string[];
       sqa?: string[];
@@ -3220,6 +3247,10 @@ export const slumhouseUsers = pgTable(
     brokerAccountId: uuid("broker_account_id"),
     createdAt:       timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     lastSeenAt:      timestamp("last_seen_at", { withTimezone: true }),
+    // FIX 4 (deep-scan #12, migration 0187): per-user session revocation epoch.
+    // Increment via POST /slumhouse/admin/revoke-sessions to invalidate all
+    // currently-signed tokens for this user (or all users if no user_id given).
+    sessionEpoch:    integer("session_epoch").notNull().default(0),
   },
   (table) => [
     index("idx_slumhouse_users_broker").on(table.brokerAccountId),

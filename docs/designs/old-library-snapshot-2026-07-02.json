@@ -1,0 +1,592 @@
+{
+ "snapshot_at": "2026-07-02",
+ "reason": "old-extractor thin library pre-re-extraction",
+ "count": 117,
+ "strategies": [
+  {
+   "id": "358ab809-e0e4-4b75-88c7-4fea642419a0",
+   "name": "ict_power_of_3_mes_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "e80fe4a7-f446-464b-8d50-bc5b16325d26",
+   "name": "multi_confluence_short_setup_mes_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "2c7a8b68-5777-4402-9f87-594068a31f7d",
+   "name": "four_h_crt_timed_mes_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "7bf3f2f7-601e-4708-bbe8-c058576ec3ef",
+   "name": "ict_silver_bullet_ny_am_mes_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "edee9c56-c2c7-4573-ad0d-6495f5606194",
+   "name": "first_candle_rule_nasdaq_mes_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "f590c5dc-e6ea-40ce-8251-db47845b374f",
+   "name": "extreme_band_reversal_strategy_mes_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "c0c46773-2eee-4482-b870-525977b5a549",
+   "name": "top_down_bias_oil_mes_1h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "bba304a8-49e2-4428-ad15-3dd42f842f4c",
+   "name": "orb_mnq_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "a5ec2c7a-db10-402c-bd6d-be294eccc3d9",
+   "name": "extreme_band_reversal_strategy_mcl_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "cb66c7c2-0d4d-446c-924a-efd075df90d0",
+   "name": "4h_pattern_entry_model_mnq_1m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "cb2386f6-e591-44fb-80e8-79569a4920b9",
+   "name": "200_ma_ceiling_floor_mcl_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "26abb80f-a833-4e7d-b8f8-239f740b56ea",
+   "name": "master_institutional_supply_demand_mnq_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "0811f34f-a980-476d-a30c-cd620d473477",
+   "name": "first_candle_rule_nasdaq_mnq_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "26de9d6f-455d-4944-b247-49329e15ac6a",
+   "name": "top_down_bias_oil_mcl_1h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "28c4fcd2-af28-4f1d-b6b4-8cbe8b1b5c50",
+   "name": "daily_bias_market_structure_mes_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "1ad97a9f-e54a-435e-af89-6dc922ce4767",
+   "name": "daily_bias_market_structure_mcl_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "9f1e932f-89fa-4d5a-b1b5-cd30c86a4b03",
+   "name": "4h_candle_box_continuation_mes_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "a0cb227d-a2ee-428c-b622-2e97a060651e",
+   "name": "4h_candle_box_continuation_mnq_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "8174a9c3-75bb-4685-87b1-7bf188d5ad7f",
+   "name": "4h_candle_box_continuation_mcl_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "ec487d7f-1ab0-4159-930a-bd4773686f84",
+   "name": "first_15_min_open_mes_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "1088d93c-5d79-42f1-829c-c66d4951091f",
+   "name": "vacuum_volume_profile_trap_mes_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "d6de9233-dea7-4d94-8c71-54e3f56493f8",
+   "name": "vacuum_volume_profile_trap_mnq_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "2c585f6d-3369-4c02-aaf3-54ddb34d98f2",
+   "name": "vacuum_volume_profile_trap_mcl_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "49cb661b-f732-4e18-ac61-534a8d8e63e7",
+   "name": "vwap_magnet_principle_mes_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "f1201fdb-8382-46ee-971c-bd6ad85744ca",
+   "name": "candle_range_theory_mnq_1m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "0e77ec79-8280-4f03-918c-e828584484c7",
+   "name": "candle_range_theory_mes_1m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "d5f8ec54-ae55-45ad-a25a-b059c2ea0b21",
+   "name": "candle_range_theory_mcl_1m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "0dc8028c-f329-43d3-9003-bd90ccc00605",
+   "name": "orb_mes_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "81a3728c-58ea-4d45-9bae-6f4dbfb92cf9",
+   "name": "bounce_off_level_mes_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "d865c68a-c9b9-47e8-bcfb-7e748ca7dbda",
+   "name": "ma_trend_following_20_mes_1h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "90ddd240-f623-41e2-b3ce-5b363c27729a",
+   "name": "bounce_off_level_mnq_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "ffc4b0d3-4be8-42f9-8efc-0f6a76ac9596",
+   "name": "ema_crossover_4h_retrace_mes_4h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "e14f7b35-6f2d-4b30-a9ed-13bac94520af",
+   "name": "bounce_off_level_mcl_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "d3481678-3e9b-492e-a535-98a5f35003d9",
+   "name": "orb_mes_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "d2f43ca7-11b9-4aaf-90da-397a8d2d522d",
+   "name": "vwap_institutional_anchor_mcl_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "7d9db82d-31f2-4480-ad45-6117afbe5d88",
+   "name": "orb_mes_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "ae3b18ab-c22d-4c0c-811c-d2caaeb7f23d",
+   "name": "4h_5m_bias_entry_mnq_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "ba6ff27b-10e6-4e64-97fb-e4fb8a6d29f3",
+   "name": "one_candle_setup_nasdaq_mes_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "a550be6d-aef7-4d05-b478-a61950d2243b",
+   "name": "4h_5m_bias_entry_mcl_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "133e8f9c-adeb-4074-a13e-afb4b5444c2f",
+   "name": "ema_crossover_4h_retrace_mnq_4h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "fe44619d-7996-42f8-b93c-1c7d36d45152",
+   "name": "ema_crossover_4h_retrace_mcl_4h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "d5c12a49-e0d6-46e7-85f5-c6c262b16a9b",
+   "name": "first_15_min_open_mnq_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "edcc898d-c29c-430c-a35b-cecdea9e69ce",
+   "name": "first_candle_rule_nasdaq_mcl_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "08abb0f4-b264-46d7-a652-f41345ce3273",
+   "name": "one_candle_setup_nasdaq_mnq_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "da21f735-1848-4ff3-93b0-426f1c0324db",
+   "name": "4h_5m_bias_entry_mes_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "01ea33a4-f0ae-48dd-9fc7-3bf4401ac144",
+   "name": "break_and_bounce_scalping_mes_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "3667977c-6c13-416d-bd33-9e77aeac8ffa",
+   "name": "vwap_institutional_anchor_mes_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "bbfab0b9-0e73-4d1b-aae5-4d7efe969911",
+   "name": "break_and_retest_strategy_mes_1m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "68804b84-42f8-4079-9323-58b3c34fbab6",
+   "name": "trendline_bounce_setup_mes_4h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "6512e941-1eb5-4615-b5c9-f8140563f1b2",
+   "name": "one_candle_setup_nasdaq_mcl_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "7cf1eeb5-10ac-4e69-9197-53eb291da30c",
+   "name": "top_down_bias_oil_mnq_1h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "cc83fe99-b62f-4397-ac35-f228d97376ea",
+   "name": "top_down_trendline_breakout_mes_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "ff2e5e31-d4e8-4974-974c-0971e47e62f1",
+   "name": "4h_pattern_entry_model_mes_1m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "e6eecf72-22b2-415f-a478-6f4528028937",
+   "name": "demand_supply_zone_entry_mes_4h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "a5973a8e-76f7-4356-b0b8-36edcb9571f3",
+   "name": "major_structure_level_identification_mes_4h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "c1c9d2bc-4f85-4385-85e0-74a65c196750",
+   "name": "multi_timeframe_fib_strategy_mes_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "98196715-fbf1-4989-82ca-0b16b1712c3c",
+   "name": "fib_retracement_setup_mes_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "2bfd0d4f-5800-4292-a424-f6facbf996a5",
+   "name": "market_structure_scalping_mes_1m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "ee38a36d-f4c4-424e-9426-dc109918d776",
+   "name": "vacuum_volume_profile_strategy_mes_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "542046b6-3a76-4a0f-a1d2-9c6227f4cc64",
+   "name": "break_and_bounce_scalping_mnq_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "a3074ff6-745d-4d28-8816-84083850969d",
+   "name": "break_and_bounce_scalping_mcl_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "c432e683-5a54-41fd-87c8-b25043a96a1d",
+   "name": "vwap_magnet_principle_mnq_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "3a8f70a5-cb99-434a-b8de-179b50bfeebf",
+   "name": "vwap_magnet_principle_mcl_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "f24d304f-1de2-4bd7-adcb-01f5bb8a0b35",
+   "name": "vwap_institutional_anchor_mnq_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "339d5527-5c9d-4e00-9f5c-6850ce21acf9",
+   "name": "daily_bias_market_structure_mnq_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "5da2017f-07f7-4264-aa06-ac0c68f5fa0b",
+   "name": "orb_mcl_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "9e9680af-6f4b-4fc7-85d5-3e5933f513a3",
+   "name": "ma_trend_following_20_mcl_1h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "9f0ba4c3-38f8-482a-a27b-48ff64894f89",
+   "name": "top_down_trendline_breakout_mnq_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "d4eb10e6-d19c-4046-a9c0-f0ffc7da93be",
+   "name": "top_down_trendline_breakout_mcl_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "f25ed4ee-b353-45cb-81b8-b474451bc7b6",
+   "name": "orb_mnq_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "d9e519b0-2ba3-473e-8507-00fd27fa9d86",
+   "name": "orb_mcl_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "0d78109a-0679-40be-acbf-348a99e25e2b",
+   "name": "market_structure_shift_mes_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "4f91f20e-7564-4e47-b018-5301c84b5770",
+   "name": "orb_mnq_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "0ef0add3-451a-4c39-a391-478b5725027c",
+   "name": "orb_mcl_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "31641601-91c8-4e4e-9d66-eb175362a908",
+   "name": "break_and_retest_strategy_mnq_1m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "aa01e847-04cf-4473-9453-bb95a53d2946",
+   "name": "break_and_retest_strategy_mcl_1m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "915f6c02-105b-4996-964f-23efdd921201",
+   "name": "trendline_bounce_setup_mnq_4h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "2c82aeba-cfb8-4dbe-b925-6c695afa133d",
+   "name": "market_structure_shift_mnq_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "22ed1ab9-c4d2-4c19-a4cf-96ecc0cd0892",
+   "name": "multi_confluence_short_setup_mnq_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "64114b8a-4ec0-44ba-9e8a-c8e281ecbbf4",
+   "name": "4h_pattern_entry_model_mcl_1m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "e0f97d99-f093-4121-b051-a0df17fb2707",
+   "name": "demand_supply_zone_entry_mnq_4h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "fd7b341f-863a-49b1-8c37-1780e67af3cc",
+   "name": "demand_supply_zone_entry_mcl_4h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "e7a82b11-2ff6-481f-aee3-4948fea153f8",
+   "name": "major_structure_level_identification_mnq_4h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "1ce8739b-1111-46f9-99d8-55a6a5a3145a",
+   "name": "multi_timeframe_fib_strategy_mcl_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "ac6d78cf-cff6-4961-a5bf-53f6229686c2",
+   "name": "fib_retracement_setup_mnq_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "4e8b4f42-a49c-45a6-ac56-709db408019e",
+   "name": "market_structure_shift_mcl_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "299b4b82-2ed1-4699-b35b-2594a32b869f",
+   "name": "fib_retracement_setup_mcl_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "258ea007-33c5-4026-bc8b-3795a68c70e7",
+   "name": "market_structure_scalping_mnq_1m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "ef7d6aff-108a-4c15-bb0f-24723e76ec6b",
+   "name": "market_structure_scalping_mcl_1m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "c2556e8c-598b-4865-9b18-d0145b8be9cb",
+   "name": "vacuum_volume_profile_strategy_mnq_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "a4bbe09a-05e5-443b-847d-8e3094968c7a",
+   "name": "vacuum_volume_profile_strategy_mcl_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "844867dd-d963-482e-841e-37b0065184b6",
+   "name": "first_15_min_open_mcl_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "c593839b-2019-4888-bbfb-41200026bcab",
+   "name": "sma_crossover_scalp_crude_mcl_30m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "9bb7c012-e4d2-418a-a5f9-624b38daa4bb",
+   "name": "extreme_band_reversal_strategy_mnq_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "7759ba42-9603-4269-9d36-c54eef27c6ac",
+   "name": "sma_crossover_scalp_crude_mes_30m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "84aba50d-38f9-45bf-9cd0-910d1d16bf24",
+   "name": "sma_crossover_scalp_crude_mnq_30m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "22cee320-8c1c-4f6a-b497-87e34c78b46c",
+   "name": "daily_bias_liquidity_reversal_mes_1m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "bf29cd09-9d1e-4bd1-825f-6d19dfe054e3",
+   "name": "daily_bias_liquidity_reversal_mnq_1m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "9bf676dc-1939-4377-834f-76aa0f7d303d",
+   "name": "daily_bias_liquidity_reversal_mcl_1m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "3da9c785-f353-4ff9-96a8-5597aa4769d4",
+   "name": "200_ma_ceiling_floor_mes_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "68bc24f3-eaa7-432b-9fe8-7c35f9d14840",
+   "name": "ma_trend_following_20_mnq_1h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "25fabffd-e79d-41f0-a676-72354418a781",
+   "name": "trendline_bounce_setup_mcl_4h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "543ff268-2a09-4913-bad7-6bec39f7f969",
+   "name": "200_ma_ceiling_floor_mnq_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "de07ce23-d640-490b-9e06-a231ee552396",
+   "name": "ema10_20_cci_confirmation_mes_1h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "ea7062d2-7da3-4553-8f19-5d4836276978",
+   "name": "ema10_20_cci_confirmation_mnq_1h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "a413b40d-f46c-4c3e-8ca8-63abaf1f57f9",
+   "name": "master_institutional_supply_demand_mcl_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "6e0c1a44-9dad-4ff0-b4b7-7e1eae5df88d",
+   "name": "fvg_retrace_mes_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "1671daf5-0741-4617-bfb9-914c8a22c943",
+   "name": "multi_timeframe_fib_strategy_mnq_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "fb769339-05ab-40de-8776-ca6a26af2ec3",
+   "name": "master_institutional_supply_demand_mes_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "bec8a2a2-2a53-469a-bcc1-7759bf52bcef",
+   "name": "ema10_20_cci_confirmation_mcl_1h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "477d5081-5aa7-4be3-a86c-944069f35bc3",
+   "name": "fvg_retrace_mnq_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "652d45d0-9f22-49df-9c38-763a3fafa57a",
+   "name": "fvg_retrace_mcl_15m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "6f42a2cc-9a9e-4eff-8dd7-022a139d156d",
+   "name": "ict_power_of_3_mes_4h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "9f7393de-e621-48c7-adfd-1bb37998b4f8",
+   "name": "multi_confluence_short_setup_mcl_5m",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "5281991c-4dc9-4c6f-8708-aa1af09e7c8c",
+   "name": "major_structure_level_identification_mcl_4h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "703cbf4c-8133-4ec7-8364-8cb77d99640d",
+   "name": "ict_power_of_3_mnq_4h",
+   "state": "CANDIDATE"
+  },
+  {
+   "id": "75baa944-666d-4ab6-8633-700fd0bd9665",
+   "name": "ict_power_of_3_mcl_4h",
+   "state": "CANDIDATE"
+  }
+ ]
+}

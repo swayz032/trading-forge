@@ -26,8 +26,29 @@ import {
   MODE_OBSERVE,
   MODE_AUTOPILOT,
 } from "../lib/learning-loop-mode.js";
+import { requireOfficeControlAuthority } from "../lib/office-control-guard.js";
 
 export const adminRoutes = Router();
+
+// ─── Layer-4 Office P0 (2026-07-02): pipeline mutation guard ─────────────────
+//
+// ARCHITECTURE DECISION (operator, pinned): the Slumhouse Office is the ONLY
+// control room; the React SPA is a read-only observation deck. The SPA's
+// pause/resume dispatch was removed, and these generic pipeline mutations are
+// now Office/operator-only via the SHARED requireOfficeControlAuthority guard
+// (lib/office-control-guard.ts — Office admin cookie OR direct loopback with
+// no x-forwarded-for; 401 office_only + blocked-attempt audit row otherwise).
+// The same guard protects POST /api/strategies/:id/deploy + /reject-deploy.
+//
+// Known callers audited 2026-07-02: React SPA usePipelineMode (mutations
+// REMOVED this pass — read-only now), operator runbook curls (localhost —
+// still allowed), crons/services (call setMode() in-process, never HTTP —
+// unaffected), n8n workflows (none call these routes). The Office Bot Power
+// switch uses /slumhouse/admin/switch, not these routes. GET /pipeline/status
+// stays open (read-only display feed for the SPA).
+function requirePipelineControlAuthority(req: Request, res: Response): boolean {
+  return requireOfficeControlAuthority(req, res, "admin.pipeline_mutation_blocked");
+}
 
 // ─── Wave 24 Pass 1 Item 8: POST /self-restart — HMAC-authenticated self-restart ─
 //
@@ -314,7 +335,7 @@ adminRoutes.post("/ollama-health-recheck", async (req, res) => {
     notifyWarning(
       "Ollama Health Restored",
       appendFamilyGradePostscript(
-        `OLLAMA_HEALTHY reset to true via runtime recheck. transcript_extractor routing restored to local gemma4:e2b. Reason: ${reason}`,
+        `OLLAMA_HEALTHY reset to true via runtime recheck. transcript_extractor routing restored to local gemma4:e4b-it-qat. Reason: ${reason}`,
         "The local AI model is working again.",
         "No action needed — the bot's AI features are restored.",
       ),
@@ -495,6 +516,7 @@ adminRoutes.get("/pipeline/status", async (req, res) => {
 
 // ─── POST /pipeline/start ────────────────────────────────────────
 adminRoutes.post("/pipeline/start", async (req, res) => {
+  if (!requirePipelineControlAuthority(req, res)) return;
   try {
     const reason = (req.body as { reason?: string })?.reason ?? "Manual start";
     const result = await setMode("ACTIVE", reason, req.id ?? null);
@@ -1110,6 +1132,7 @@ adminRoutes.post("/scout/run-autonomous-cycle", async (req, res) => {
 
 // ─── POST /pipeline/pause ────────────────────────────────────────
 adminRoutes.post("/pipeline/pause", async (req, res) => {
+  if (!requirePipelineControlAuthority(req, res)) return;
   try {
     const reason = (req.body as { reason?: string })?.reason ?? "Manual pause";
     const result = await setMode("PAUSED", reason, req.id ?? null);
@@ -1122,6 +1145,7 @@ adminRoutes.post("/pipeline/pause", async (req, res) => {
 
 // ─── POST /pipeline/vacation ─────────────────────────────────────
 adminRoutes.post("/pipeline/vacation", async (req, res) => {
+  if (!requirePipelineControlAuthority(req, res)) return;
   try {
     const reason = (req.body as { reason?: string })?.reason ?? "Vacation mode";
     const result = await setMode("VACATION", reason, req.id ?? null);

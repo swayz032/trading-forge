@@ -8,14 +8,28 @@
  * is not a capability we want to expose to a hostile friend.
  *
  * Mirrors anam-session.ts (the Anam persona token mint) almost exactly.
+ *
+ * FIX 1 (deep-scan #12): Guard changed from requireSlumhouseUserOrAdmin to
+ * requireAdminSession (admin-only). A plain Discord friend session is no longer
+ * sufficient to mint Carter tokens. The Carter voice agent's mutation tools
+ * (bot-power toggle, promotion request, save_code_draft) are operator-only
+ * capabilities — any Discord member should not be able to drive them.
+ *
+ * FIX 5 (deep-scan #12): Origin check applied as defense-in-depth.
  */
-import { Router, type Response } from "express";
-import { requireSlumhouseUserOrAdmin, type SlumhouseRequest } from "../../../lib/slumhouse/require-session.js";
+import { Router, type Request, type Response } from "express";
+import {
+  requireAdminSession,
+  checkSlumhouseOrigin,
+} from "../../../lib/slumhouse/require-session.js";
 
 const CARTER_AGENT_ID = process.env.CARTER_AGENT_ID;
 const ELEVENLABS_CONVERSATION_TOKEN_URL = "https://api.elevenlabs.io/v1/convai/conversation/token";
 
-export async function postCarterSession(req: SlumhouseRequest, res: Response): Promise<void> {
+export async function postCarterSession(req: Request, res: Response): Promise<void> {
+  // FIX 5: Origin check before minting.
+  if (!checkSlumhouseOrigin(req, res)) return;
+
   const apiKey = process.env.ELEVENLABS_API_KEY;
   if (!apiKey) {
     res.status(503).json({ error: "elevenlabs_api_key_missing" });
@@ -43,6 +57,7 @@ export async function postCarterSession(req: SlumhouseRequest, res: Response): P
 }
 
 export const carterSessionRouter = Router();
-// Auth accepts EITHER the Discord Slumhouse session OR the Office admin session
-// (the Carter connect page lives inside the operator-only Office).
-carterSessionRouter.post("/slumhouse/api/carter-session", requireSlumhouseUserOrAdmin, postCarterSession);
+// FIX 1 (deep-scan #12): Admin-ONLY. A plain Discord friend session (requireSlumhouseUserOrAdmin)
+// was not sufficient — any Discord member could drive Carter's mutation tools. The Carter
+// connect page lives inside the operator-only Office, so only the admin session is valid here.
+carterSessionRouter.post("/slumhouse/api/carter-session", requireAdminSession, postCarterSession);

@@ -215,8 +215,14 @@ def _build_cpcv_paths_from_window_results(window_results: list[dict]) -> list[di
 
     Plain-mode WF windows have a single IS/OOS split per window.
     We treat each window as a "path" with its OOS Sharpe as oos_sharpe.
-    IS Sharpe comes from the optimization best_score when available,
-    otherwise from the window's oos_metrics (graceful fallback).
+    IS Sharpe resolution order (highest priority first):
+      1. Optimizer best_score (most accurate — IS is cherry-picked from trials).
+      2. Per-window IS daily P&Ls stored under _is_daily_pnls (walk_forward.py
+         threads these in during assembly when IS backtests are run for WFE).
+         Avoids the degenerate IS==OOS case that fires pbo=None for non-optimize
+         plain-WF runs.  (E2, deep-scan #7 2026-07-02)
+      3. OOS Sharpe as a last-resort fallback (triggers degenerate guard in
+         compute_pbo_from_cpcv_paths → pbo=None → TS gate BLOCKS).
 
     This allows compute_pbo_from_cpcv_paths to be called from plain-mode WF
     as well as CPCV mode.
@@ -224,22 +230,41 @@ def _build_cpcv_paths_from_window_results(window_results: list[dict]) -> list[di
     IMPORTANT: This function is called by walk_forward.py aggregation ONLY.
     It does not do any purging — purging is the caller's responsibility.
     """
+    import math as _math
+
+    import numpy as _np
+
     paths: list[dict] = []
     for w in window_results:
         oos_metrics = w.get("oos_metrics", {})
         oos_sharpe = float(oos_metrics.get("sharpe_ratio", 0.0))
 
-        # IS Sharpe: prefer optimizer score (most accurate), fall back to OOS
+        # IS Sharpe: prefer optimizer score (most accurate), then IS daily pnls, then OOS
         is_sharpe: float
         opt = w.get("optimization")
         if opt and opt.get("best_sharpe") is not None:
             is_sharpe = float(opt["best_sharpe"])
         else:
-            # For non-optimization WF, IS Sharpe is not directly available
-            # per window. Use OOS Sharpe as a conservative estimate.
-            # (The overall IS Sharpe is computed at the aggregation level
-            # from all_is_pnls — not accessible per-window here.)
-            is_sharpe = oos_sharpe
+            # E2 fix: use per-window IS daily P&Ls when available to compute real IS Sharpe.
+            # walk_forward.py stores them under _is_daily_pnls during window assembly.
+            # This breaks the degenerate IS==OOS condition for non-optimize plain-WF runs.
+            _is_pnls = w.get("_is_daily_pnls") or []
+            if len(_is_pnls) > 1:
+                _is_arr = _np.array(_is_pnls, dtype=float)
+                _is_std = float(_np.std(_is_arr, ddof=1))
+                if _is_std > 1e-10:
+                    _is_sharpe_computed = float(_np.mean(_is_arr) / _is_std * _np.sqrt(252))
+                    if _math.isfinite(_is_sharpe_computed):
+                        is_sharpe = _is_sharpe_computed
+                    else:
+                        is_sharpe = oos_sharpe
+                else:
+                    is_sharpe = oos_sharpe
+            else:
+                # For non-optimization WF without IS daily P&Ls, IS Sharpe is not directly
+                # available per window. Use OOS Sharpe as a conservative estimate.
+                # This triggers the degenerate guard → pbo=None → TS gate BLOCKS.
+                is_sharpe = oos_sharpe
 
         paths.append({
             "is_sharpe": is_sharpe,

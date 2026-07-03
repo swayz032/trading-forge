@@ -104,6 +104,59 @@ const _dirname = path.dirname(_filename);
 // We rely on the migrations dir relative to where the file lives during dev.
 // In production (dist/), migrations are copied as data files. We use env var
 // override if MIGRATIONS_DIR is set, otherwise resolve relative to this file.
+
+// ─── FIX 2 (deepscan10): boot-failure counter (file-based) ──────────────────
+// Persists a respawn-counter so NSSM-driven crash-loops during vacation are
+// escalated via Discord. DB is unavailable when migrations fail — use sync fs.
+// Path: <repo-root>/bin/boot-migration-failures.json  { attempt: number }
+
+const _bootFailureCounterPath = path.resolve(_dirname, "..", "..", "..", "..", "bin", "boot-migration-failures.json");
+
+/**
+ * Pure predicate: true when the boot-failure attempt count should trigger a
+ * Discord escalation. Fires on attempt 1, 3, and every 10th thereafter.
+ * Exported for unit-test coverage of cadence logic.
+ */
+export function shouldAlertBootFailure(attempt: number): boolean {
+  return attempt === 1 || attempt === 3 || attempt % 10 === 0;
+}
+
+function _readBootFailureCount(): number {
+  try {
+    const raw = fs.readFileSync(_bootFailureCounterPath, "utf8");
+    const parsed: unknown = JSON.parse(raw);
+    if (
+      parsed !== null &&
+      typeof parsed === "object" &&
+      "attempt" in parsed &&
+      typeof (parsed as { attempt: unknown }).attempt === "number"
+    ) {
+      return (parsed as { attempt: number }).attempt;
+    }
+  } catch {
+    // File missing or corrupt — treat as 0
+  }
+  return 0;
+}
+
+function _writeBootFailureCount(attempt: number): void {
+  try {
+    const dir = path.dirname(_bootFailureCounterPath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(_bootFailureCounterPath, JSON.stringify({ attempt }), "utf8");
+  } catch (e) {
+    logger.warn({ err: e, path: _bootFailureCounterPath }, "boot-migration: failed to write failure counter (non-fatal)");
+  }
+}
+
+function _resetBootFailureCount(): void {
+  try {
+    if (fs.existsSync(_bootFailureCounterPath)) fs.unlinkSync(_bootFailureCounterPath);
+  } catch (e) {
+    logger.warn({ err: e, path: _bootFailureCounterPath }, "boot-migration: failed to reset failure counter (non-fatal)");
+  }
+}
+
 function resolveMigrationsDir(): string {
   if (process.env.MIGRATIONS_DIR) return process.env.MIGRATIONS_DIR;
   // Go up from lib/ → server/ → src/ → root
@@ -297,6 +350,130 @@ async function findMissingTables(tables: string[]): Promise<string[]> {
   return missing;
 }
 
+// deepscan7 D1 (2026-07-02): the O6 check above only covers CREATE TABLE targets.
+// Pure-ALTER migrations (ADD COLUMN — the exact class behind the 0146/0148
+// phantom-applies) previously received ZERO post-apply verification: the journal
+// said applied while the column was missing, surfacing only when a later
+// migration collided or a runtime query hit "column does not exist". Mirror the
+// O6 approach: parse ALTER TABLE ... ADD COLUMN targets and verify each
+// (table, column) pair against information_schema.columns. Same NON-BLOCKING
+// contract — mismatch is a loud, audited warning, never a boot block.
+
+export interface AlteredColumn {
+  table: string;
+  column: string;
+}
+
+export function extractAlteredColumns(statements: string[]): AlteredColumn[] {
+  const seen = new Set<string>();
+  const out: AlteredColumn[] = [];
+  const alterRe = /alter\s+table\s+(?:if\s+exists\s+)?(?:only\s+)?["']?([a-z0-9_]+(?:\.[a-z0-9_]+)?)["']?/gi;
+  const addColRe = /add\s+column\s+(?:if\s+not\s+exists\s+)?["']?([a-z0-9_]+)["']?/gi;
+  for (const stmt of statements) {
+    // A single breakpoint-split chunk may still hold several ;-separated statements.
+    for (const piece of stmt.split(";")) {
+      alterRe.lastIndex = 0;
+      const alterMatch = alterRe.exec(piece);
+      if (!alterMatch) continue;
+      const rawTable = alterMatch[1];
+      const table = (rawTable.includes(".") ? rawTable.split(".").pop()! : rawTable).toLowerCase();
+      if (table === "__drizzle_migrations") continue;
+      addColRe.lastIndex = 0;
+      let colMatch: RegExpExecArray | null;
+      while ((colMatch = addColRe.exec(piece)) !== null) {
+        const column = colMatch[1].toLowerCase();
+        const key = `${table}.${column}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push({ table, column });
+      }
+    }
+  }
+  return out;
+}
+
+async function findMissingColumns(columns: AlteredColumn[]): Promise<AlteredColumn[]> {
+  const missing: AlteredColumn[] = [];
+  for (const c of columns) {
+    try {
+      const res = await db.execute<{ exists: number }>(
+        sql`SELECT 1 AS exists FROM information_schema.columns WHERE table_name = ${c.table} AND column_name = ${c.column} LIMIT 1`,
+      );
+      const rows =
+        (res as { rows?: unknown[] }).rows ?? (res as unknown as unknown[]);
+      if (!Array.isArray(rows) || rows.length === 0) missing.push(c);
+    } catch (verifyErr) {
+      // Same non-blocking contract as findMissingTables.
+      logger.warn({ table: c.table, column: c.column, err: String(verifyErr) }, "boot-migration: post-apply column verify query failed");
+    }
+  }
+  return missing;
+}
+
+// ─── deepscan14 F2: orphan .sql file detection ───────────────────────────────
+// Symmetric counterpart to the "journal entry, .sql missing" check further down
+// (loud since 2026-06-28). Diffs migrations/*.sql on disk against journal.entries
+// tags; any .sql file with no matching tag is an orphan that `pending` (computed
+// strictly from the journal) can never see. Non-blocking by design — see the
+// call-site comment above for why this must never fail-close boot.
+
+export function findOrphanSqlFiles(migrationsDir: string, journal: Journal): string[] {
+  const journalTags = new Set(journal.entries.map((e) => e.tag));
+  let files: string[];
+  try {
+    files = fs.readdirSync(migrationsDir);
+  } catch {
+    return [];
+  }
+  const orphans: string[] = [];
+  for (const f of files) {
+    if (!f.toLowerCase().endsWith(".sql")) continue;
+    const tag = f.slice(0, -4); // strip ".sql"
+    if (!journalTags.has(tag)) orphans.push(tag);
+  }
+  return orphans.sort();
+}
+
+export async function checkForOrphanSqlFiles(journal: Journal, correlationId: string | null): Promise<void> {
+  const migrationsDir = resolveMigrationsDir();
+  const orphans = findOrphanSqlFiles(migrationsDir, journal);
+  if (orphans.length === 0) return;
+
+  logger.warn(
+    { orphanTags: orphans, migrationsDir },
+    "boot-migration: orphan .sql file(s) found with NO matching _journal.json entry — these will NEVER auto-apply",
+  );
+  // Both dispatches are individually guarded — insertAuditRowSafe is documented as
+  // "never throws" but a mocked/misbehaving implementation must not be able to
+  // escape this non-blocking check and take down boot.
+  try {
+    await insertAuditRowSafe({
+      action: "boot_migration.orphan_sql_file_no_journal_entry",
+      entityType: "migration",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { orphanTags: orphans, migrationsDir } as Record<string, unknown>,
+      result: { count: orphans.length } as Record<string, unknown>,
+      status: "warning",
+      correlationId,
+    });
+  } catch (auditErr) {
+    logger.warn({ err: String(auditErr) }, "boot-migration: orphan-sql-file audit row write failed (non-blocking)");
+  }
+  try {
+    await fireDiscordCritical(
+      "Boot migration: orphan .sql file(s) with no journal entry",
+      `${orphans.length} migration .sql file(s) exist on disk with NO corresponding entry in ` +
+        `meta/_journal.json — they will NEVER be applied by boot-migration-runner:\n\n` +
+        orphans.map((t) => `  • ${t}.sql`).join("\n") +
+        `\n\nRegister them in _journal.json (or delete if they're stale/abandoned drafts). ` +
+        `Not blocking boot.`,
+    );
+  } catch (discordErr) {
+    logger.warn({ err: String(discordErr) }, "boot-migration: orphan-sql-file Discord dispatch failed (non-blocking)");
+  }
+}
+
 // ─── Core migration runner ────────────────────────────────────────────────────
 
 /**
@@ -308,7 +485,12 @@ async function findMissingTables(tables: string[]): Promise<string[]> {
  *   - No pending migrations exist
  *   - Journal file is absent (bare repo / test environment)
  */
-export async function runPendingMigrations(): Promise<void> {
+export async function runPendingMigrations(
+  // deepscan7 D1 (2026-07-02): optional boot correlationId so migration.* audit
+  // rows join the same boot trace as boot.started/boot.completed (was hardcoded
+  // null). Default preserves prior behavior for any caller not threading one.
+  correlationId: string | null = null,
+): Promise<void> {
   // ─── Kill-switch gate ───────────────────────────────────────────────────────
   const enabled = (process.env.BOOT_MIGRATION_ENABLED ?? "true").toLowerCase();
   if (enabled === "false" || enabled === "0") {
@@ -332,6 +514,22 @@ export async function runPendingMigrations(): Promise<void> {
   }
 
   const journal: Journal = JSON.parse(readUtf8StripBom(journalPath));
+
+  // ─── deepscan14 F2: orphan .sql file with no journal entry ──────────────────
+  // The opposite gap from the "journal entry, file missing" case below (which is
+  // already loud): a .sql file dropped on disk without a corresponding
+  // meta/_journal.json entry is INVISIBLE to `pending` (computed strictly from
+  // journal.entries below) — it silently never applies, no error, no warning,
+  // no audit row. This happens from a bad merge, a forgotten
+  // `drizzle-kit generate` journal write, or a manually-copied migration file.
+  // Non-blocking (skip-and-continue) — the same fail-open contract as the
+  // missing-file case, because an unreachable migration is a schema gap the
+  // operator needs to see, not a reason to brick autonomous boot.
+  try {
+    await checkForOrphanSqlFiles(journal, correlationId);
+  } catch (orphanCheckErr) {
+    logger.warn({ err: String(orphanCheckErr) }, "boot-migration: orphan-sql-file check itself failed (non-blocking)");
+  }
 
   // ─── Bootstrap __drizzle_migrations table ───────────────────────────────────
   // First deploy may not have the tracking table yet (drizzle creates it on
@@ -372,6 +570,9 @@ export async function runPendingMigrations(): Promise<void> {
       { total: journal.entries.length },
       "boot-migration: no pending migrations — boot proceeds",
     );
+    // FIX 2 (deepscan10): clean boot = reset the crash-loop counter so the
+    // next real failure starts the cadence fresh.
+    _resetBootFailureCount();
     return;
   }
 
@@ -435,6 +636,7 @@ export async function runPendingMigrations(): Promise<void> {
         result: { skipped: true } as Record<string, unknown>,
         status: "error",
         errorMessage: `boot-migration SQL file missing: ${sqlFilePath}`,
+        correlationId,
       });
       await fireDiscordCritical(
         "Boot migration SQL file missing",
@@ -537,32 +739,46 @@ export async function runPendingMigrations(): Promise<void> {
         } as Record<string, unknown>,
         result: { duration_ms: durationMs, hash } as Record<string, unknown>,
         status: "success",
-        correlationId: null,
+        correlationId,
       });
 
       // O6: verify the migration's CREATE TABLE targets actually exist post-commit.
+      // deepscan7 D1 (2026-07-02): extended to ALTER TABLE ... ADD COLUMN targets —
+      // the pure-ALTER class (0146/0148) previously got zero verification.
       // Loud + audited on mismatch; never blocks boot (avoid false-close on parser gaps).
       try {
         const expectedTables = extractCreatedTables(statements);
         const missingTables = expectedTables.length ? await findMissingTables(expectedTables) : [];
-        if (missingTables.length > 0) {
+        const expectedColumns = extractAlteredColumns(statements);
+        const missingColumns = expectedColumns.length ? await findMissingColumns(expectedColumns) : [];
+        if (missingTables.length > 0 || missingColumns.length > 0) {
           logger.error(
-            { tag: entry.tag, missingTables },
-            "boot-migration: POST-APPLY VERIFICATION FAILED — migration committed but table(s) missing (phantom-apply)",
+            { tag: entry.tag, missingTables, missingColumns },
+            "boot-migration: POST-APPLY VERIFICATION FAILED — migration committed but schema object(s) missing (phantom-apply)",
           );
           await insertAuditRowSafe({
             action: "migration.post_apply_verification_failed",
             entityType: "system",
             entityId: null,
             decisionAuthority: "gate",
-            input: { migration_name: entry.tag, journal_idx: entry.idx, expected_tables: expectedTables } as Record<string, unknown>,
-            result: { missing_tables: missingTables } as Record<string, unknown>,
+            input: {
+              migration_name: entry.tag,
+              journal_idx: entry.idx,
+              expected_tables: expectedTables,
+              expected_columns: expectedColumns,
+            } as Record<string, unknown>,
+            result: { missing_tables: missingTables, missing_columns: missingColumns } as Record<string, unknown>,
             status: "warning",
-            correlationId: null,
+            correlationId,
           });
+          const missingColumnDescs = missingColumns.map((c) => `${c.table}.${c.column}`);
+          const missingParts = [
+            ...(missingTables.length ? [`table(s): ${missingTables.join(", ")}`] : []),
+            ...(missingColumnDescs.length ? [`column(s): ${missingColumnDescs.join(", ")}`] : []),
+          ];
           await fireDiscordCritical(
             `Migration verification mismatch: ${entry.tag}`,
-            `Migration ${entry.tag} committed but expected table(s) are missing from the DB: ${missingTables.join(", ")}.\n\n` +
+            `Migration ${entry.tag} committed but expected schema object(s) are missing from the DB — ${missingParts.join("; ")}.\n\n` +
               `This is the phantom-apply class (journal says applied, schema object absent). Investigate before the next migration collides. Not blocking boot.`,
           );
         }
@@ -605,7 +821,7 @@ export async function runPendingMigrations(): Promise<void> {
         } as Record<string, unknown>,
         result: { error: errMsg, duration_ms: durationMs } as Record<string, unknown>,
         status: "failure",
-        correlationId: null,
+        correlationId,
       });
 
       // Discord CRITICAL — fire-and-forget, never blocks
@@ -613,6 +829,18 @@ export async function runPendingMigrations(): Promise<void> {
         `BOOT BLOCKED — Migration Failed: ${entry.tag}`,
         criticalMsg,
       );
+
+      // FIX 2 (deepscan10): increment file-based crash-loop counter and
+      // send an escalation alert on the configured cadence (1, 3, every 10th)
+      // so a vacation-mode NSSM respawn loop never runs silently for 14 days.
+      const _failureAttempt = _readBootFailureCount() + 1;
+      _writeBootFailureCount(_failureAttempt);
+      if (shouldAlertBootFailure(_failureAttempt)) {
+        await fireDiscordCritical(
+          `BOOT BLOCKED — Migration Crash-Loop: ${_failureAttempt} attempt(s)`,
+          `boot-migration has failed ${_failureAttempt} time(s) in a row.\n\nLatest failure: ${entry.tag} — ${errMsg}\n\nNSSM will respawn the backend automatically. On vacation, this loop continues until manually resolved. Check the Railway log and the bin/boot-migration-failures.json counter.`,
+        );
+      }
 
       // Throw to block boot (fail-closed)
       throw new Error(`boot-migration: failed to apply ${entry.tag}: ${errMsg}`);
@@ -623,4 +851,6 @@ export async function runPendingMigrations(): Promise<void> {
     { applied: pending.length, tags: pending.map((e) => e.tag) },
     "boot-migration: all pending migrations applied — boot proceeds",
   );
+  // FIX 2 (deepscan10): successful boot = reset crash-loop counter
+  _resetBootFailureCount();
 }

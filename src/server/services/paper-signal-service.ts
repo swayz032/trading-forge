@@ -58,6 +58,11 @@ import { resolveNewsAction } from "../lib/news-policy.js";
 // synced), replacing the hardcoded/projected Python list. Covers FOMC/FOMC_MINUTES/CPI/NFP +
 // EIA, product-scoped, hardcoded fail-safe fallback.
 import { getT1ReleaseWindow } from "../lib/economic-calendar-loader.js";
+// FIX 6 (Track M): in-process CME full-closure date fallback for the outer calendar catch.
+// When getCachedSignalCalendarStatus + getT1ReleaseWindow both throw, the Python subprocess
+// is unavailable. The Tier-1 event checker (FIX B) handles economic events; this module
+// handles holiday detection so CME-closure days are blocked even during outages.
+import { checkCmeHolidayFallback } from "../lib/cme-holidays.js";
 // Topstep Prohibited Conduct (2026-06-23): cross-account hedging (opposite positions across
 // the operator's multiple accounts) + holding within 2% of a product's price-lock limit.
 import { checkCrossAccountHedge, checkIntraAccountHedge, symbolToUnderlying } from "../lib/cross-account-hedge-gate.js";
@@ -618,6 +623,11 @@ export function __clearPendingEntryQueueForTests(): void {
 // Resolution: set TF_BACKTEST_SKIP_MODE=enforce to align both sides.
 const parityWarnedSessions = new Set<string>();
 
+// FIX 4 (Track M): dedup set for signal.entry_eval_skipped_halted audit rows.
+// Prevents flooding the audit_log on every bar when the system is halted.
+// Key: `${sessionId}:${YYYY-MM-DD}` — resets naturally at midnight when the key changes.
+const _haltedEntryAuditDedup = new Set<string>();
+
 /**
  * Return the current governor state for a session.
  * Initialises to NORMAL if not yet tracked.
@@ -849,6 +859,13 @@ interface SignalLogEntry {
   strategySide: "long" | "short";   // actual strategy side for correct signal logging
   fillMiss?: boolean;               // true when fill probability model rejected the order
 }
+
+// deepscan14 D2: rate-limit price-lock gate-inactive telemetry to once per
+// session per day (not per-signal). The gate is evaluated on every signal, but
+// "the settlement feed is missing" is a slow-moving fact — flooding audit_log
+// once per signal would bury the one row that matters. Keyed by sessionId,
+// value is the last UTC day-string (YYYY-MM-DD) telemetry fired for that session.
+const priceLockGateInactiveTelemetryLastFired = new Map<string, string>();
 
 // ─── Session Config Cache ───────────────────────────────────
 
@@ -2305,21 +2322,52 @@ export async function evaluateSignals(
       }
     }
   } catch (calErr) {
-    // Calendar check is non-blocking — trading continues (fail-open).
-    // BUT the failure must be VISIBLE: a silent swallow hides a broken risk guard.
-    // Log at error level so the operator can see the guard is down.
+    // Calendar check failed. The failure must be VISIBLE — log at error level.
     logger.error(
       { sessionId, symbol, err: calErr },
-      "Calendar guard DOWN — Python calendar_filter failed; trading continues unblocked",
+      "Calendar guard DOWN — Python calendar_filter failed",
     );
+    // FIX 6 (Track M): in-process CME holiday fallback. The Python subprocess is
+    // unavailable. The Tier-1 event checker already runs inside
+    // getCachedSignalCalendarStatus's inner catch (FIX B) — but that inner handler
+    // only fires when the Python call itself fails. The OUTER catch here fires when
+    // is_holiday was never consulted (entire cal block threw). Check the static
+    // CME closure table so we never trade on a full market-closure day.
+    const holidayCheck = checkCmeHolidayFallback(bar.timestamp);
+    if (holidayCheck.isHoliday) {
+      calendarBlocked = true;
+      calendarBlockReason = `holiday_fallback:${holidayCheck.holidayName ?? "unknown"}`;
+      logger.warn(
+        { sessionId, symbol, date: holidayCheck.date, holiday: holidayCheck.holidayName },
+        "FIX 6: calendar guard DOWN — in-process CME holiday table BLOCKED (fail-CLOSED for known market closure)",
+      );
+      insertAuditRow({
+        action: "signal.holiday_blocked_fallback",
+        entityType: "signal",
+        entityId: sessionId,
+        decisionAuthority: "system",
+        input: { sessionId, symbol, date: holidayCheck.date, holiday: holidayCheck.holidayName } as Record<string, unknown>,
+        result: { blocked: true, reason: "cme_holiday_in_process_fallback", calendar_guard_down: true } as Record<string, unknown>,
+        status: "success",
+        correlationId: correlationId ?? null,
+      }).catch((err: unknown) =>
+        logger.warn({ err, sessionId }, "audit insert failed for signal.holiday_blocked_fallback"),
+      );
+    }
     // Broadcast SSE so the dashboard can surface a warning banner immediately.
     broadcastSSE("alert:calendar_guard_down", {
       sessionId,
       symbol,
+      holidayBlocked: holidayCheck.isHoliday,
+      holidayName: holidayCheck.holidayName,
       error: calErr instanceof Error ? calErr.message : String(calErr),
       timestamp: bar.timestamp,
     });
     span.setAttribute("calendar_guard_down", true);
+    if (holidayCheck.isHoliday) {
+      span.setAttribute("calendar_guard_down_holiday_blocked", true);
+    }
+    // Non-holiday: trading continues (fail-open), consistent with prior behavior.
   }
 
   // (Phase 3: EIA is now handled inside getT1ReleaseWindow above — product-scoped to crude
@@ -3045,6 +3093,42 @@ export async function evaluateSignals(
   } else if (entrySignal && !sessionFiltered && !windowFiltered && !cooldownActive && !isShadow && !skipBlocked && !ictBridgeBlocked) {
     // ─── No position: check for entry ────────────────────────
 
+    // ─── FIX 4 (Track M): Kill-switch halt check at bar-N signal time ────────
+    // Management paths (position close, trail-stop, bar-to-bar price updates)
+    // run in the `if (openPos)` branch ABOVE and must continue unaffected.
+    // Only new-entry evaluation is blocked here.
+    // isHaltedForProduction() has a 5s internal cache — cheap per-bar call.
+    {
+      const haltedAtEntry = await killSwitch.isHaltedForProduction({ correlationId: correlationId ?? undefined });
+      if (haltedAtEntry) {
+        logger.debug(
+          { sessionId, symbol },
+          "kill-switch: system halted — skipping new-entry evaluation (FIX 4, management paths unaffected)",
+        );
+        // Per-session-per-day dedup: write audit once per session per day to avoid
+        // flooding on every bar when halted. Key resets when the date changes.
+        const haltAuditKey = `${sessionId}:${new Date().toISOString().slice(0, 10)}`;
+        if (!_haltedEntryAuditDedup.has(haltAuditKey)) {
+          _haltedEntryAuditDedup.add(haltAuditKey);
+          insertAuditRow({
+            action: "signal.entry_eval_skipped_halted",
+            entityType: "signal",
+            entityId: sessionId,
+            decisionAuthority: "system",
+            input: { sessionId, symbol } as Record<string, unknown>,
+            result: { skipped: true, reason: "kill_switch_halted" } as Record<string, unknown>,
+            status: "success",
+            correlationId: correlationId ?? null,
+          }).catch((err: unknown) =>
+            logger.warn({ err, sessionId }, "audit insert failed for signal.entry_eval_skipped_halted"),
+          );
+        }
+        span.setAttribute("entry_skipped_kill_switch_halted", true);
+        span.end();
+        return;
+      }
+    }
+
     // ─── W23H.H Stage 0: Per-account symbol whitelist ────────────────────────
     // Block entry if the symbol is not in broker_accounts.enabled_symbols for
     // this session's firmId. Default is ['MES'] — operator must opt-in to add
@@ -3241,6 +3325,7 @@ export async function evaluateSignals(
             status: "warning",
             input: { firmId, sessionDate, combinedPnL: dllResult.combinedPnL },
             result: { dll_pct: dllResult.dllPct, by_symbol: dllResult.pnLBySymbol, threshold: dllResult.forceCloseThreshold },
+            correlationId: correlationId ?? null,
           }).catch((e: unknown) => {
             logger.warn({ e, action: "cross_symbol_force_close_triggered" }, "audit write failed — non-blocking");
             auditWriteFailuresTotal.labels({ action: "cross_symbol_force_close_triggered" }).inc();
@@ -3270,6 +3355,7 @@ export async function evaluateSignals(
               status: "error",
               input: { firmId, dllPct: dllResult.dllPct, combinedPnL: dllResult.combinedPnL } as Record<string, unknown>,
               result: { error: fcMsg, requiresManualClose: true } as Record<string, unknown>,
+              correlationId: correlationId ?? null,
             }).catch((e: unknown) => {
               logger.warn({ e, action: "cross_symbol_force_close_failed" }, "audit write failed — non-blocking");
               auditWriteFailuresTotal.labels({ action: "cross_symbol_force_close_failed" }).inc();
@@ -3302,6 +3388,7 @@ export async function evaluateSignals(
             status: "warning",
             input: { firmId, sessionDate, combinedPnL: dllResult.combinedPnL },
             result: { dll_pct: dllResult.dllPct, by_symbol: dllResult.pnLBySymbol, threshold: dllResult.haltThreshold },
+            correlationId: correlationId ?? null,
           }).catch((e: unknown) => {
             logger.warn({ e, action: "cross_symbol_dll_halt_triggered" }, "audit write failed — non-blocking");
             auditWriteFailuresTotal.labels({ action: "cross_symbol_dll_halt_triggered" }).inc();
@@ -3341,6 +3428,7 @@ export async function evaluateSignals(
             status: "warning",
             input: { firmId, sessionDate, combinedPnL: dllResult.combinedPnL } as Record<string, unknown>,
             result: { dll_pct: dllResult.dllPct, reduce_factor: dllResult.reduceSizeFactor, reduce_threshold: dllResult.reduceThreshold } as Record<string, unknown>,
+            correlationId: correlationId ?? null,
           }).catch((e: unknown) => {
             logger.warn({ e, action: "sizing.dll_reduce_size_band_entered" }, "audit write failed — non-blocking");
             auditWriteFailuresTotal.labels({ action: "sizing.dll_reduce_size_band_entered" }).inc();
@@ -3421,6 +3509,7 @@ export async function evaluateSignals(
           status: "info",
           input: { symbol, perSessionCap, envDefault: getDailyTradeCapEnvDefault(), trades_today: tradesToday },
           result: { effective_cap: capResult.effectiveCap, reason: capResult.reason },
+          correlationId: correlationId ?? null,
         }).catch((e: unknown) => {
           logger.warn({ e, action: "consistency.daily_trade_cap_blocked" }, "audit write failed — non-blocking");
           auditWriteFailuresTotal.labels({ action: "consistency.daily_trade_cap_blocked" }).inc();
@@ -3810,6 +3899,28 @@ export async function evaluateSignals(
     if (!priceLockBlocked) {
       const refSettlement = (indicators["prior_settlement"] ?? indicators["daily_reference"] ?? null) as number | null;
       const lock = checkPriceLockLimit(symbolToUnderlying(symbol), bar.close, refSettlement);
+
+      // deepscan14 D2: `lock.inactive` means "no settlement feed — nothing was
+      // checked", distinct from `lock.blocked=false` meaning "checked, price is
+      // clear." Surface it as rate-limited (once/session/day) telemetry so the
+      // operator can see the gate is dark instead of reading it as a clean pass.
+      if (lock.inactive) {
+        const todayKey = new Date().toISOString().slice(0, 10);
+        if (priceLockGateInactiveTelemetryLastFired.get(sessionId) !== todayKey) {
+          priceLockGateInactiveTelemetryLastFired.set(sessionId, todayKey);
+          insertAuditRow({
+            action: "price_lock.gate_inactive_no_feed",
+            entityType: "paper_session", entityId: sessionId, decisionAuthority: "system", status: "success",
+            input: { sessionId, symbol } as Record<string, unknown>,
+            result: { inactive: true, reason: lock.reason ?? "no_reference" } as Record<string, unknown>,
+            correlationId: correlationId ?? null,
+          }).catch((e: unknown) => {
+            logger.warn({ e, action: "price_lock.gate_inactive_no_feed" }, "audit write failed — non-blocking");
+            auditWriteFailuresTotal.labels({ action: "price_lock.gate_inactive_no_feed" }).inc();
+          });
+        }
+      }
+
       if (lock.blocked) {
         priceLockBlocked = true;
         span.setAttribute("price_lock_limit_blocked", true);

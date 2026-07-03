@@ -36,12 +36,28 @@ import { notifyCritical } from "./notification-service.js";
 import { computeFirmRulesVersion } from "../lib/firm-rules-version.js";
 // Wave 27.5 Pass C.2 — compliance gate enforcement mode env knob
 import { resolveComplianceMode, isResearchBacktest } from "../lib/compliance-mode.js";
+// Layer 4 research conveyor item 3 (2026-07-02): provenance stamping hard gate
+import {
+  buildProvenanceStamp,
+  assertProvenanceStamp,
+  deriveSpecProvenanceRef,
+  ProvenanceStampError,
+  type ProvenanceStampOptions,
+} from "../lib/provenance-stamp.js";
 // RL kill-switch: RL training is an AUTONOMOUS loop — requires AUTOPILOT (mode >= 2)
 import { readLearningLoopMode } from "../lib/learning-loop-mode.js";
 // Wave hardening 2026-06-22 (G1a) — buildBacktestArgs extracted so tests can
 // import it without the full service chain. Re-exported for backward compat.
 import { buildBacktestArgs } from "../lib/backtest-args.js";
+// FIX 4 (deepscan8): synthesize correlationId when caller omits it
+import { randomUUID } from "node:crypto";
 export { buildBacktestArgs };
+
+// FIX 5 (deepscan11 Track P, 2026-07-02): dedupe set for provenance.ungrounded_stamp
+// info audit. We only want to emit once per strategy per process lifetime — not once
+// per backtest run. This is process-local; across restarts the audit is re-emitted
+// at most once, which is acceptable for an info-level signal.
+const _ungroundedStampLogged = new Set<string>();
 
 /**
  * Normalize gate_result from Python into a stable JSONB shape.
@@ -387,7 +403,43 @@ interface RlTrainingResult {
 // killing runs that are genuinely completing.
 const BACKTEST_TIMEOUT_MS = 30 * 60 * 1000;
 
-export async function runBacktest(strategyId: string, config: BacktestConfig, strategyClass?: string, externalId?: string, correlationId?: string, actor: "operator" | "automated" = "automated") {
+export async function runBacktest(strategyId: string, config: BacktestConfig, strategyClass?: string, externalId?: string, correlationId?: string, actor: "operator" | "automated" = "automated", idempotencyKey?: string) {
+  // FIX 4 (deepscan8): synthesize correlationId when caller omits it so every
+  // audit row and trace span is attributable even for fire-and-forget callers.
+  correlationId ??= `bt-auto-${Date.now()}-${randomUUID().slice(0, 8)}`;
+
+  // ─── deepscan14 E7: idempotency-key dedup ─────────────────────────────
+  // n8n retry / dual-fire previously enqueued a second full backtest row for
+  // the same logical request (bare random-UUID insert, no dedup key) —
+  // silently double-counting downstream MC/WFE/pattern-aggregator stats.
+  // Callers that supply idempotencyKey get short-circuited here to the
+  // existing row instead of starting a second run. Callers that don't
+  // supply one keep prior behavior unchanged.
+  if (idempotencyKey) {
+    const [existingByKey] = await db
+      .select({ id: backtests.id, status: backtests.status })
+      .from(backtests)
+      .where(eq(backtests.idempotencyKey, idempotencyKey))
+      .limit(1);
+    if (existingByKey) {
+      void insertAuditRowSafe({
+        action: "backtest.duplicate_enqueue_deduped",
+        entityType: "strategy",
+        entityId: strategyId,
+        status: "success",
+        input: { strategyId, idempotencyKey },
+        result: { existingBacktestId: existingByKey.id, existingStatus: existingByKey.status },
+        correlationId,
+        decisionAuthority: "system",
+      });
+      logger.info(
+        { fn: "runBacktest", strategyId, idempotencyKey, existingBacktestId: existingByKey.id },
+        "Duplicate backtest enqueue detected via idempotency_key — returning existing row instead of re-running",
+      );
+      return { id: existingByKey.id, status: existingByKey.status, deduped: true };
+    }
+  }
+
   // ─── Pipeline pause guard ─────────────────────────────────────
   // Pause stops the AUTOMATED engine (scout-fed flow, schedulers, n8n drains)
   // from churning fresh candidates through backtest. It does NOT block the
@@ -400,12 +452,40 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
   // actor="operator" bypasses the guard with audit row (POST /api/backtests
   // route passes this). actor="automated" (default) preserves Wave 6 fix:
   // returns { status:"skipped", id:null } so callers don't get ghost IDs.
-  if (actor !== "operator" && !(await isPipelineActive())) {
-    logger.info(
-      { fn: "runBacktest", strategyId, symbol: config.strategy.symbol, actor },
-      "Skipped: pipeline paused (automated caller)",
-    );
-    return { id: null as unknown as string, status: "skipped", error: "pipeline_paused" };
+  // FIX 6 (deepscan8): write audit rows for refusal (automated blocked) and
+  // bypass (operator allowed through while paused) so operators can audit
+  // who ran backtests during a pause window.
+  const _pipelineActive = await isPipelineActive();
+  if (!_pipelineActive) {
+    if (actor !== "operator") {
+      // REFUSAL — automated caller blocked
+      void insertAuditRowSafe({
+        action: "backtest.pipeline_pause_refusal",
+        entityType: "strategy",
+        entityId: strategyId,
+        status: "success",
+        input: { actor, strategyId, symbol: config.strategy.symbol },
+        result: { skipped: true, reason: "pipeline_paused" },
+        correlationId,
+        decisionAuthority: "system",
+      });
+      logger.info(
+        { fn: "runBacktest", strategyId, symbol: config.strategy.symbol, actor, correlationId },
+        "Skipped: pipeline paused (automated caller)",
+      );
+      return { id: null as unknown as string, status: "skipped", error: "pipeline_paused" };
+    }
+    // BYPASS — operator allowed through while paused; write audit trail
+    void insertAuditRowSafe({
+      action: "backtest.pipeline_pause_bypass",
+      entityType: "strategy",
+      entityId: strategyId,
+      status: "success",
+      input: { actor, strategyId, symbol: config.strategy.symbol },
+      result: { bypassed: true, reason: "operator_override" },
+      correlationId,
+      decisionAuthority: "operator",
+    });
   }
 
   const backtestSpan = tracer.startSpan("backtest.run");
@@ -435,21 +515,139 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
   const { mode: resolvedComplianceMode, source: complianceModeSource } =
     resolveComplianceMode(configRecord);
 
-  const [row] = await db
-    .insert(backtests)
-    .values({
-      ...(externalId ? { id: externalId } : {}),
-      strategyId,
+  // Layer 4 research conveyor item 3 (2026-07-02): build + assert provenance stamp.
+  // HARD GATE: assertProvenanceStamp throws ProvenanceStampError when enforcement is ON
+  // (default) and any required field is missing. The gate is fail-closed by design.
+  // Set PROVENANCE_ALLOW_LEGACY_BACKFILL=true ONLY for legacy row backfill.
+  let provenanceStampValue: ReturnType<typeof buildProvenanceStamp> | null = null;
+  try {
+    const stampOpts: ProvenanceStampOptions = {
       symbol: config.strategy.symbol,
       timeframe: config.strategy.timeframe,
-      startDate: new Date(config.start_date),
-      endDate: new Date(config.end_date),
-      status: "running",
-      config: configRecord,
-      firmRulesVersion: firmRulesVersionStamp,
-      complianceMode: resolvedComplianceMode,
-    })
-    .returning();
+      startDate: config.start_date,
+      endDate: config.end_date,
+      dataSource: "databento",
+      specProvenanceRef: deriveSpecProvenanceRef(configRecord),
+    };
+    const builtStamp = buildProvenanceStamp(stampOpts);
+    provenanceStampValue = assertProvenanceStamp(builtStamp, stampOpts);
+    // FIX 5: emit a deduped info audit row when the strategy has no extraction-chain
+    // lineage (spec_provenance_ref === "none"). This makes ungrounded strategies
+    // queryable via audit_log without blocking or distorting any gate output.
+    if (!builtStamp.spec_grounded && strategyId && !_ungroundedStampLogged.has(strategyId)) {
+      _ungroundedStampLogged.add(strategyId);
+      void insertAuditRowSafe({
+        action: "provenance.ungrounded_stamp",
+        entityType: "strategy",
+        entityId: strategyId,
+        status: "info",
+        input: { strategyId, spec_provenance_ref: builtStamp.spec_provenance_ref } as Record<string, unknown>,
+        result: { note: "strategy has no extraction-chain lineage; spec_grounded=false" } as Record<string, unknown>,
+        correlationId,
+        decisionAuthority: "system",
+      });
+      logger.info(
+        { fn: "runBacktest", strategyId, spec_provenance_ref: builtStamp.spec_provenance_ref, correlationId },
+        "provenance.ungrounded_stamp: strategy has no extraction-chain lineage — manually crafted (info only, not blocking)",
+      );
+    }
+  } catch (err) {
+    if (err instanceof ProvenanceStampError) {
+      // Write audit row for the refusal so operators can diagnose missing provenance
+      void insertAuditRowSafe({
+        action: "backtest.provenance_stamp_refused",
+        entityType: "strategy",
+        entityId: strategyId,
+        status: "failure",
+        input: {
+          strategyId,
+          symbol: config.strategy.symbol,
+          missingFields: err.missingFields,
+          provenance_stamp_enforce: process.env["PROVENANCE_STAMP_ENFORCE"] ?? "true",
+          provenance_allow_legacy_backfill:
+            process.env["PROVENANCE_ALLOW_LEGACY_BACKFILL"] ?? "false",
+        },
+        result: { refused: true, reason: "missing_provenance_stamp_fields" },
+        correlationId,
+        decisionAuthority: "system",
+      });
+      logger.error(
+        { fn: "runBacktest", strategyId, missingFields: err.missingFields, correlationId },
+        "Backtest insert refused — provenance stamp missing required fields (fail-closed gate). " +
+          "Set PROVENANCE_ALLOW_LEGACY_BACKFILL=true to allow legacy rows.",
+      );
+      throw err;
+    }
+    throw err;
+  }
+
+  // deepscan14 E7: race-safety net. The pre-check above closes the common case;
+  // this handles the narrow window where two near-simultaneous calls both pass
+  // the pre-check before either INSERT lands. onConflictDoNothing on the
+  // partial unique index means the loser's insert is a no-op instead of a
+  // thrown unique-violation; we then re-select the winner's row so both
+  // callers converge on the same backtest instead of creating a second.
+  //
+  // The insert chain is branched (not a single chain with a conditional
+  // .onConflictDoNothing(idempotencyKey ? {...} : undefined)) so that callers
+  // WITHOUT an idempotencyKey get the byte-identical pre-existing chain shape —
+  // several existing test suites mock `db.insert().values().returning()` and
+  // do not implement `.onConflictDoNothing()`, and calling it unconditionally
+  // (even with `undefined`) broke those mocks.
+  const insertValues = {
+    ...(externalId ? { id: externalId } : {}),
+    strategyId,
+    symbol: config.strategy.symbol,
+    timeframe: config.strategy.timeframe,
+    startDate: new Date(config.start_date),
+    endDate: new Date(config.end_date),
+    status: "running",
+    config: configRecord,
+    firmRulesVersion: firmRulesVersionStamp,
+    complianceMode: resolvedComplianceMode,
+    provenanceStamp: provenanceStampValue as unknown as Record<string, unknown>,
+    ...(idempotencyKey ? { idempotencyKey } : {}),
+  };
+
+  const insertedRows = idempotencyKey
+    ? await db
+        .insert(backtests)
+        .values(insertValues)
+        // The arbiter target must restate the partial index's predicate (Postgres
+        // requires an exact predicate match to infer a partial unique index for
+        // ON CONFLICT) — matches migration 0188's `WHERE idempotency_key IS NOT NULL`.
+        .onConflictDoNothing({ target: backtests.idempotencyKey, where: sql`idempotency_key IS NOT NULL` })
+        .returning()
+    : await db.insert(backtests).values(insertValues).returning();
+
+  let row = insertedRows[0];
+  if (!row && idempotencyKey) {
+    // Lost the race — another caller's insert won. Converge on their row.
+    const [winnerRow] = await db
+      .select()
+      .from(backtests)
+      .where(eq(backtests.idempotencyKey, idempotencyKey))
+      .limit(1);
+    if (!winnerRow) {
+      throw new Error(
+        `runBacktest: idempotencyKey ${idempotencyKey} conflicted on insert but no existing row was found`,
+      );
+    }
+    void insertAuditRowSafe({
+      action: "backtest.duplicate_enqueue_deduped",
+      entityType: "strategy",
+      entityId: strategyId,
+      status: "success",
+      input: { strategyId, idempotencyKey, race: true },
+      result: { existingBacktestId: winnerRow.id, existingStatus: winnerRow.status },
+      correlationId,
+      decisionAuthority: "system",
+    });
+    return { id: winnerRow.id, status: winnerRow.status, deduped: true };
+  }
+  if (!row) {
+    throw new Error("runBacktest: insert returned no row");
+  }
 
   // Log research-mode override at INSERT time so operators can audit which backtests
   // were run in shadow mode (potentially over-optimistic P&L estimates).
@@ -556,12 +754,35 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       }),
     );
 
-    if (result.error) {
+    // FIX 5 / FIX 1 (deepscan8 wave-2): ALLOWLIST — any present top-level result.status
+    // not in the known-success set is treated as failure, future-proofing against new
+    // Python envelope statuses not yet enumerated in this check.
+    //
+    // Analysis: backtester.py emits NO top-level 'status' key on the happy path
+    // (grep: zero occurrences of "status" in src/engine/backtester.py). The two known
+    // failure statuses originate in monte_carlo.py: 'extrapolation_exceeded' (date
+    // range exceeds available data) and 'rule_version_mismatch' (prop-firm rule hash
+    // drift detected). The happy-path result has no top-level status field at all.
+    //
+    // Nested sub-object statuses (gate_result.status, parity_shadow.status,
+    // cross_validation checks inside wfResults, etc.) are NOT read here — top-level
+    // key only. See the WfResultsShape type below for the nested fields.
+    //
+    // KNOWN_SUCCESS is intentionally empty: the happy path carries no status field.
+    // Any future Python module that emits a new top-level status value will correctly
+    // fail here until it is explicitly added to KNOWN_SUCCESS.
+    const _PYTHON_ENVELOPE_KNOWN_SUCCESS = new Set<string>();
+    const _pythonEnvelopeStatus = (result as { status?: string }).status;
+    if (
+      result.error ||
+      (_pythonEnvelopeStatus != null && !_PYTHON_ENVELOPE_KNOWN_SUCCESS.has(_pythonEnvelopeStatus))
+    ) {
+      const errorMsg = result.error ?? `python_envelope_status:${_pythonEnvelopeStatus}`;
       await db
         .update(backtests)
         .set({
           status: "failed",
-          errorMessage: result.error,
+          errorMessage: errorMsg,
           executionTimeMs: result.execution_time_ms,
         })
         .where(eq(backtests.id, backtestId));
@@ -570,8 +791,8 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
       backtestSpan.setAttribute("errorFromPython", true);
       backtestSpan.end();
       backtestRuns.labels({ status: "failed", mode, tier: "none" }).inc();
-      broadcastSSE("backtest:failed", { backtestId, strategyId, error: result.error });
-      return { id: backtestId, status: "failed", error: result.error };
+      broadcastSSE("backtest:failed", { backtestId, strategyId, error: errorMsg });
+      return { id: backtestId, status: "failed", error: errorMsg };
     }
 
     // Walk-forward returns metrics nested under oos_metrics — unwrap for DB storage
@@ -1467,6 +1688,23 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
         }
 
         if (Object.keys(regimeSharpes).length === 0) {
+          // FIX 2 (deepscan8 wave-2): emit ONE info audit row when ALL trades bucketed
+          // into the UNKNOWN regime — distinguishes "Python never emitted macroRegime"
+          // from "named regimes present but below the 3-trade minimum."
+          // Fired only when there are no named regime keys at all (every trade had
+          // null macroRegime, meaning Python did not compute regime context for this run).
+          const _namedRegimeKeys = Object.keys(byRegime).filter((k) => k !== "UNKNOWN");
+          if (_namedRegimeKeys.length === 0 && (byRegime["UNKNOWN"]?.length ?? 0) > 0) {
+            void insertAuditRowSafe({
+              action: "backtest.b10_regime_data_unavailable",
+              entityType: "backtest",
+              entityId: backtestId,
+              status: "info",
+              input: { backtestId, reason: "macro_regime_null_all_windows" },
+              correlationId: correlationId ?? undefined,
+              decisionAuthority: "system",
+            });
+          }
           logger.debug(
             { backtestId, regimeGroups: Object.keys(byRegime) },
             "B10 MRP: no regime groups with >= 3 trades — MRP not computed",
@@ -1822,7 +2060,11 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             metadata: { backtestId, strategyId, quboRowId: quboRow.id, correlationId: correlationId ?? null },
           }).catch(() => {});
         }
-      })();
+        // FIX 3 (deepscan8): catch applied inside IIFE, but outer catch guards
+        // against any rejection that escapes the inner try/catch (e.g. db.insert).
+      })().catch((e: unknown) =>
+        logger.error({ backtestId, strategyId, err: e }, "Auto QUBO timing IIFE uncaught rejection"),
+      );
     }
 
     // ─── Auto tensor signal evaluation (fire-and-forget) ───
@@ -2046,7 +2288,10 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             metadata: { backtestId, strategyId, rlRowId: rlRow.id, correlationId: correlationId ?? null },
           }).catch(() => {});
         }
-      })();
+        // FIX 3 (deepscan8): catch unhandled rejections from the legacy RL IIFE
+      })().catch((e: unknown) =>
+        logger.error({ strategyId, backtestId, err: e }, "Auto RL training IIFE uncaught rejection"),
+      );
     }
 
     // ─── W29 Pass C.2: Regime-conditioned RL training auto-fire ─────────────────
@@ -2151,7 +2396,10 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
               result: { error: String(rlTrainErr), strategy_id: strategyId, backtest_id: backtestId },
             });
           }
-        })();
+          // FIX 3 (deepscan8): catch unhandled rejections from the C.2 RL IIFE
+        })().catch((e: unknown) =>
+          logger.error({ strategyId, backtestId, err: e }, "RL C.2 training IIFE uncaught rejection"),
+        );
       }
     }
 
@@ -2536,18 +2784,31 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
             if (mcResult.status === "completed") {
               // Narrowed: completed branch carries the full MCResult including risk_metrics
               const mcCompleted = mcResult as { id: string; status: "completed"; risk_metrics?: Record<string, unknown> };
-              const ruinRaw = mcCompleted.risk_metrics?.probability_of_ruin;
+              // Prefer firm-breach basis (probability_of_ruin_ci.point_estimate) when present
+              // and finite; fall back to the terminal-negative scalar for legacy runs.
+              // NOTE: 0.70 survival threshold here is a coarse early filter; B14 hard gate uses ci_high at 0.20.
+              const ruinCi = mcCompleted.risk_metrics?.probability_of_ruin_ci as Record<string, unknown> | undefined;
+              const ruinPe = ruinCi != null && typeof ruinCi.point_estimate === "number" && Number.isFinite(ruinCi.point_estimate)
+                ? (ruinCi.point_estimate as number)
+                : null;
+              const ruinFallback = mcCompleted.risk_metrics?.probability_of_ruin;
+              const ruinRaw = ruinPe !== null ? ruinPe : ruinFallback;
+              const ruinBasis = ruinPe !== null
+                ? "firm_breach_ci_point_estimate"
+                : ruinFallback != null
+                  ? "terminal_negative_scalar"
+                  : "unavailable";
               if (ruinRaw != null) {
                 const ruin = Number(ruinRaw);
                 mcSurvivalRate = 1 - ruin;
                 mcPassed = mcSurvivalRate >= 0.70;
                 logger.info(
-                  { backtestId, strategyId, mcId: mcCompleted.id, survivalRate: mcSurvivalRate.toFixed(4), passed: mcPassed },
+                  { backtestId, strategyId, mcId: mcCompleted.id, survivalRate: mcSurvivalRate.toFixed(4), passed: mcPassed, ruinBasis },
                   "Auto-promote MC gate evaluated",
                 );
               } else {
                 mcUnavailable = true;
-                logger.warn({ backtestId, mcId: mcCompleted.id }, "Auto-promote MC gate: completed but probability_of_ruin missing, blocking promotion");
+                logger.warn({ backtestId, mcId: mcCompleted.id, ruinBasis }, "Auto-promote MC gate: completed but probability_of_ruin missing, blocking promotion");
               }
             } else {
               // MC failed → block promotion

@@ -354,10 +354,12 @@ describe("F-5 — Double WFE evaluation removed from PAPER→DEPLOY_READY cron p
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
     // After F-5 fix, the standalone WFE gate block at PAPER→DEPLOY_READY that references
     // WFE_HARD_FLOOR should be gone. The TESTING→PAPER WFE call is unaffected.
-    // Count evaluateWfeGate calls in lifecycle-service.ts total — should be only the TESTING→PAPER one
+    // Count evaluateWfeGate calls in lifecycle-service.ts total.
     const allWfeCalls = (src.match(/evaluateWfeGate\(/g) ?? []).length;
-    // TESTING→PAPER = 1 call; PAPER→DEPLOY_READY standalone = 0 (removed by F-5)
-    expect(allWfeCalls).toBeLessThanOrEqual(1);
+    // TESTING→PAPER = 1 call; PAPER→DEPLOY_READY standalone = 0 (removed by F-5);
+    // deepscan14 H1 = 1 call added at SHADOW→PAPER (Gate 2.5) to restore the full
+    // pre-paper gate stack on the canonical Wave 29 ladder. So total is now 2.
+    expect(allWfeCalls).toBeLessThanOrEqual(2);
   });
 });
 

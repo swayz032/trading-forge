@@ -24,6 +24,7 @@
  *   DB_BACKUP_OFFTOWER_TARGET      (default: "s3" — "s3" | "none")
  *   DB_BACKUP_ENABLED              (default: "true")
  *   S3_BUCKET                      (already in .env — used for off-tower push)
+ *   S3_BACKUP_BUCKET               (optional — dedicated backup bucket; falls back to S3_BUCKET)
  *   S3_BACKUP_PREFIX               (default: "db-backups/")
  *   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION (already in .env)
  *
@@ -56,10 +57,15 @@ import { fileURLToPath } from "node:url";
 import { S3Client, PutObjectCommand, HeadBucketCommand } from "@aws-sdk/client-s3";
 import { logger } from "../lib/logger.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
-import { notifyCritical } from "./notification-service.js";
+import { notifyCritical, notifyWarning } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 const execFileAsync = promisify(execFile);
+
+// ─── FIX 1 (deepscan10): disabled-path alert dedupe ─────────────────────────
+// Emits audit + Discord WARN at most once per 24h when DB_BACKUP_ENABLED=false,
+// so vacation-mode disablement is always queryable and never invisible.
+let _disabledAlertLastAt: number | null = null;
 
 // deepscan6 (2026-07-02): the tower has no system-installed PostgreSQL client, so the prod
 // server is v17.10 and needs the pg17 pg_dump specifically (a v16 pg_dump REFUSES with a
@@ -104,6 +110,14 @@ export function getOfftowerTarget(): "s3" | "none" {
 
 function getS3Prefix(): string {
   return process.env["S3_BACKUP_PREFIX"] ?? "db-backups/";
+}
+
+// deepscan7 M4 2026-07-02: optional dedicated backup bucket — when
+// S3_BACKUP_BUCKET is set, backups go there instead of the shared data-lake
+// S3_BUCKET (blast-radius isolation: data-lake credentials/lifecycle rules
+// can't touch backups). Falls back to S3_BUCKET unchanged when unset.
+export function getBackupBucket(): string | undefined {
+  return process.env["S3_BACKUP_BUCKET"] || process.env["S3_BUCKET"];
 }
 
 // ─── pg_dump helpers ──────────────────────────────────────────────────────────
@@ -254,7 +268,7 @@ export function isOfftowerConfigured(): boolean {
   const target = getOfftowerTarget();
   if (target === "none") return false;
   // S3 target: needs bucket name + AWS credentials
-  const bucket = process.env["S3_BUCKET"];
+  const bucket = getBackupBucket();
   const key = process.env["AWS_ACCESS_KEY_ID"];
   const secret = process.env["AWS_SECRET_ACCESS_KEY"];
   return Boolean(bucket && key && secret);
@@ -288,6 +302,32 @@ export async function runDbBackup(): Promise<DbBackupResult> {
   const enabled = (process.env["DB_BACKUP_ENABLED"] ?? "true").toLowerCase();
   if (enabled === "false" || enabled === "0") {
     logger.info("db-backup: disabled via DB_BACKUP_ENABLED=false — skipping");
+    // FIX 1 (deepscan10): disabled path must never be silent — emit audit row +
+    // Discord WARN once per 24h so the operator can query audit_log for
+    // db_backup.disabled_by_env and know the backup has been off continuously.
+    const _DISABLED_ALERT_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    if (_disabledAlertLastAt === null || now - _disabledAlertLastAt >= _DISABLED_ALERT_COOLDOWN_MS) {
+      _disabledAlertLastAt = now;
+      void insertAuditRowSafe({
+        action: "db_backup.disabled_by_env",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { DB_BACKUP_ENABLED: "false" } as Record<string, unknown>,
+        result: { outcome: "skipped_disabled" } as Record<string, unknown>,
+        status: "warning",
+      });
+      notifyWarning(
+        "DB Backup Disabled by Environment Variable",
+        appendFamilyGradePostscript(
+          "DB_BACKUP_ENABLED=false — the nightly database backup is intentionally skipped by environment configuration. If this is expected for vacation mode, no action needed. Restore DB_BACKUP_ENABLED=true to re-enable automated backups.",
+          "The automated database backup is turned off. Trading data is NOT being backed up off-tower right now.",
+          "No action needed if Tony disabled this on purpose. Call Tony if backups should be running.",
+        ),
+        { envVar: "DB_BACKUP_ENABLED", value: "false" },
+      );
+    }
     return { status: "disabled", durationMs: 0 };
   }
 
@@ -415,7 +455,7 @@ export async function runDbBackup(): Promise<DbBackupResult> {
       correlationId,
     });
   } else if (offtowerTarget === "s3") {
-    const bucket = process.env["S3_BUCKET"] as string;
+    const bucket = getBackupBucket() as string;
     const prefix = getS3Prefix();
     try {
       offtowerUrl = await pushToS3(dumpResult.filePath, bucket, prefix, filename);

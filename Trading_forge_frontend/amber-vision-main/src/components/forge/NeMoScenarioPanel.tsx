@@ -69,7 +69,7 @@ export function NeMoScenarioPanel() {
 
   const fetchData = async () => {
     try {
-      const result = await api.get<ApiResponse>("/api/nemo-scenarios/recent?limit=10");
+      const result = await api.get<ApiResponse>("/nemo-scenarios/recent?limit=10");
       setData(result);
       setError(null);
     } catch (err) {

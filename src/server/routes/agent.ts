@@ -41,6 +41,9 @@ import { quarantineExtraction } from "../lib/quarantine-extraction.js";
 import { runParallelDiscovery } from "../services/parallel-broker.js";
 import { runExaDiscovery } from "../services/exa-broker.js";
 import { runBraveDiscovery } from "../services/brave-search-broker.js";
+// Track O (deepscan11, 2026-07-02): grounding enforcement — verifies numeric params
+// are present in the source transcript before accepting into the conveyor.
+import { checkNumericGrounding } from "../lib/extraction-grounding.js";
 import { broadcastSSE } from "./sse.js";
 import { notifyInfo } from "../services/notification-service.js";
 import {
@@ -795,8 +798,8 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
   //   - video_id: last segment of sourceUrl (YouTube video ID when available,
   //     URL hash otherwise — deterministic regardless of URL format)
   //   - transcript_hash: SHA-256(markdown) truncated to 16 hex chars (64-bit)
-  //   - extractor_version: local model name (e.g. "gemma4:e2b")
-  const _extractorVersion = process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4:e2b";
+  //   - extractor_version: local model name (e.g. "gemma4:e4b-it-qat")
+  const _extractorVersion = process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4:e4b-it-qat";
   const _transcriptHash = createHash("sha256").update(markdown, "utf8").digest("hex").slice(0, 16);
   const _videoId = (() => {
     try {
@@ -841,6 +844,10 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
 
   let lastEmptyReason: string | null = null;
   let lastEmptyReasonDetail: string | null = null;
+  // Track O (deepscan11, 2026-07-02): capture rejected_strategies from minimal
+  // schema responses. Minimal schema emits rejected_strategies[] (with reason enum)
+  // instead of the legacy empty_reason string — needed for FIX 5 audit visibility.
+  let lastRejectedStrategies: Array<{ name?: string | null; reason: string; detail?: string | null }> = [];
   async function extractFromChunk(chunk: string): Promise<unknown[] | typeof NON_JSON_SENTINEL | null> {
     const userPayload = JSON.stringify({
       youtube_url: sourceUrl,
@@ -862,6 +869,9 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
         empty_reason?: unknown;
         empty_reason_detail?: unknown;
         instrument_classification?: unknown;
+        // Track O (deepscan11, 2026-07-02): minimal schema uses rejected_strategies[]
+        // instead of empty_reason string — capture for FIX 5 audit visibility.
+        rejected_strategies?: unknown;
       };
       // W23G.2 — capture instrument_classification from the first chunk that provides it.
       if (lastInstrumentClassification === null && typeof obj.instrument_classification === "string") {
@@ -938,9 +948,24 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
         const rawReason = typeof obj.empty_reason === "string" ? obj.empty_reason : null;
         lastEmptyReason = rawReason && VALID_EMPTY_REASONS.has(rawReason) ? rawReason : (rawReason ? "other" : null);
         lastEmptyReasonDetail = typeof obj.empty_reason_detail === "string" ? obj.empty_reason_detail.slice(0, 500) : null;
+        // Track O (deepscan11, 2026-07-02) FIX 5: minimal schema uses rejected_strategies[]
+        // (with reason enum) instead of empty_reason string. Capture the reasons so the
+        // scout_extract.empty_reasoned audit row is diagnosable from minimal-path responses.
+        if (Array.isArray(obj.rejected_strategies)) {
+          lastRejectedStrategies = (obj.rejected_strategies as Array<Record<string, unknown>>)
+            .slice(0, 5)
+            .map((r) => ({
+              name: typeof r["name"] === "string" ? r["name"] : null,
+              reason: typeof r["reason"] === "string" ? r["reason"] : "unknown",
+              detail: typeof r["detail"] === "string" ? r["detail"].slice(0, 300) : null,
+            }));
+        } else {
+          lastRejectedStrategies = [];
+        }
       } else {
         lastEmptyReason = null;
         lastEmptyReasonDetail = null;
+        lastRejectedStrategies = [];
       }
       return strategies;
     } catch {
@@ -1299,6 +1324,15 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
             empty_reason: llmReason,
             empty_reason_detail: lastEmptyReasonDetail,
             transcript_length: markdown.length,
+            // Track O (deepscan11, 2026-07-02) FIX 5: minimal schema emits
+            // rejected_strategies[] instead of empty_reason. Include here so
+            // empty cycles are diagnosable from both legacy and minimal paths.
+            rejected_strategy_reasons: lastRejectedStrategies.length > 0
+              ? lastRejectedStrategies.map((r) => r.reason)
+              : null,
+            rejected_strategies_detail: lastRejectedStrategies.length > 0
+              ? lastRejectedStrategies
+              : null,
           },
           correlationId: (req as { id?: string }).id ?? null,
         });
@@ -1664,7 +1698,7 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       //
       // TIER 1 (v13 Pass 1 LLM call) — small focused Gemma call that ONLY
       //   extracts speaker_concepts. Tiny schema = high compliance even on
-      //   gemma4:e2b's 2B-effective brain. Works on ANY domain (Volume Profile,
+      //   gemma4:e4b-it-qat's 2B-effective brain. Works on ANY domain (Volume Profile,
       //   Wyckoff, options flow) — not constrained to a hardcoded catalog.
       //   Research: arXiv 2604.05158 + MasterPrompting 2026-05-12 benchmark.
       //
@@ -1732,6 +1766,85 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       const extractionGapReasonV11 = typeof s.extraction_gap_reason === "string"
         ? s.extraction_gap_reason.slice(0, 500)
         : (s.extraction_gap_reason === null ? null : undefined);
+
+      // Track O (deepscan11, 2026-07-02) — Numeric grounding enforcement.
+      // If the LLM emitted numeric params (periods, thresholds, ATR multiples, etc.)
+      // that appear NOWHERE in the transcript, the extraction hallucinated them.
+      // Reject: 0% of numeric tokens grounded → quarantine with audit row.
+      // Partial: some grounded → accept with audit row for calibration.
+      // Error: helper threw → fail-open (log but proceed — don't strangle conveyor).
+      try {
+        const groundingResult = checkNumericGrounding(sMerged as Record<string, unknown>, markdown);
+        if (groundingResult.status === "reject") {
+          // 0% of numeric params grounded — strategy is hallucinated, quarantine it
+          logger.warn(
+            { sourceUrl, concept, failed_params: groundingResult.failed_params, all_candidates: groundingResult.all_candidates },
+            "scout-extract: grounding rejected — numeric params not found in transcript",
+          );
+          insertAuditRow({
+            action: "extraction.grounding_rejected",
+            entityType: "scout_extract",
+            entityId: sourceUrl,
+            status: "warning",
+            input: { source_url: sourceUrl, concept_name: concept },
+            result: {
+              failed_params: groundingResult.failed_params,
+              all_candidates: groundingResult.all_candidates,
+              grounded_pct: groundingResult.grounded_pct,
+            },
+            correlationId,
+          }).catch((e) => {
+            logger.warn({ err: e instanceof Error ? e.message : String(e) }, "extraction.grounding_rejected audit failed (non-blocking)");
+          });
+          continue; // quarantine — do not add to ideas
+        } else if (groundingResult.status === "partial") {
+          // Some grounded, some not — accept but emit calibration audit
+          logger.info(
+            { sourceUrl, concept, grounded_pct: groundingResult.grounded_pct, failed_params: groundingResult.failed_params },
+            "scout-extract: grounding partial — some numeric params not found in transcript (accepted)",
+          );
+          insertAuditRow({
+            action: "extraction.grounding_partial",
+            entityType: "scout_extract",
+            entityId: sourceUrl,
+            status: "info",
+            input: { source_url: sourceUrl, concept_name: concept },
+            result: {
+              grounded_pct: groundingResult.grounded_pct,
+              failed_params: groundingResult.failed_params,
+              all_candidates: groundingResult.all_candidates,
+            },
+            correlationId,
+          }).catch((e) => {
+            logger.warn({ err: e instanceof Error ? e.message : String(e) }, "extraction.grounding_partial audit failed (non-blocking)");
+          });
+          // fall through — accept with partial grounding
+        } else if (groundingResult.status === "error") {
+          // Helper bug — fail-open, log but don't reject
+          logger.warn(
+            { sourceUrl, concept, error: groundingResult.error },
+            "scout-extract: grounding check failed (error) — proceeding without grounding enforcement",
+          );
+          insertAuditRow({
+            action: "extraction.grounding_check_failed",
+            entityType: "scout_extract",
+            entityId: sourceUrl,
+            status: "warning",
+            input: { source_url: sourceUrl, concept_name: concept },
+            result: { error: groundingResult.error },
+            correlationId,
+          }).catch((e) => {
+            logger.warn({ err: e instanceof Error ? e.message : String(e) }, "extraction.grounding_check_failed audit failed (non-blocking)");
+          });
+          // fail-open — proceed
+        }
+      } catch (groundingErr) {
+        // Outer guard — if checkNumericGrounding itself throws unexpectedly, fail-open
+        logger.warn(
+          { err: groundingErr instanceof Error ? groundingErr.message : String(groundingErr), sourceUrl },
+          "scout-extract: grounding check outer guard threw — proceeding (fail-open)",
+        );
+      }
 
       // Wave 26 Pass I v12 (2026-05-26) — speaker_concepts vocabulary preservation.
       // Gemma emits speaker's exact terms (4H Candle Box, Hidden Level, IRS Model,
@@ -2354,7 +2467,7 @@ agentRoutes.post("/robustness", async (req, res) => {
 });
 
 // ─── POST /api/agent/find-strategies ───────────────────────────────
-// Fire-and-forget — calls Ollama qwen2.5-coder:7b model to generate DSL strategies,
+// Fire-and-forget — calls Ollama gemma4:e4b-it-qat model to generate DSL strategies,
 // validates each, then submits valid ones for backtest via agentService.runStrategy.
 
 agentRoutes.post("/find-strategies", async (req, res) => {
@@ -2418,7 +2531,7 @@ Focus on proven edges: trend following, mean reversion, volatility expansion, or
 Target: $250+/day avg P&L, 60%+ win days, profit factor >= 1.75, max drawdown <= $2,000.${avoidBlock}
 Output ONLY the DSL JSON object, nothing else.`;
 
-        const response = await ollama.generate("qwen2.5-coder:7b", prompt, {
+        const response = await ollama.generate("gemma4:e4b-it-qat", prompt, {
           temperature: 0.7 + (i * 0.05), // Vary temperature for diversity
           num_ctx: 8192,
         });
@@ -4073,7 +4186,7 @@ agentRoutes.post("/pending-bucket/:id/kill", async (req, res) => {
     });
 
     // SSE
-    broadcastSSE("pending_bucket.killed", {
+    broadcastSSE("pending_bucket:killed", {
       bucket_id:      bucketId,
       reason,
       correlation_id: correlationId,

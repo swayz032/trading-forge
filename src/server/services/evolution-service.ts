@@ -3,7 +3,7 @@
  *
  * When a strategy enters DECLINING:
  * 1. Load strategy config + last Optuna robust ranges
- * 2. Call Python parameter_evolver (which calls Ollama qwen2.5-coder:7b, env-overridable via PARAMETER_EVOLVER_MODEL)
+ * 2. Call Python parameter_evolver (which calls Ollama gemma4:e4b-it-qat, env-overridable via PARAMETER_EVOLVER_MODEL)
  * 3. Backtest each mutation (walk-forward)
  * 4. If any mutation beats parent OOS Sharpe by >= 10%, create new strategy (gen+1)
  * 5. If none beat parent, retire the strategy
@@ -15,7 +15,7 @@
  * - New variant must beat parent OOS Sharpe by >= 10%
  */
 
-import { eq, and, gte, desc, ne, isNotNull } from "drizzle-orm";
+import { eq, and, or, gte, desc, ne, isNotNull } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { strategies, backtests, auditLog, mutationOutcomes } from "../db/schema.js";
 import { runBacktest } from "./backtest-service.js";
@@ -25,6 +25,10 @@ import { runPythonModule } from "../lib/python-runner.js";
 import { CircuitBreakerRegistry, CircuitOpenError } from "../lib/circuit-breaker.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { MAX_GENERATIONS as _MAX_GENERATIONS_SHARED, COOLDOWN_DAYS as _COOLDOWN_DAYS_SHARED } from "../lib/lifecycle-constants.js";
+// FIX 1 (deepscan11 Track P, 2026-07-02): assertCrossValidatedSource enforces that
+// evolved children carry an exempted source. "evolved" is added to EXEMPT_SOURCES
+// in agent-service.ts so this call passes by exemption (not by cross-validated tag).
+import { assertCrossValidatedSource } from "./agent-service.js";
 // Dynamic import to avoid circular dependency (lifecycle-service imports evolution-service)
 async function getLifecycleService() {
   const { LifecycleService } = await import("./lifecycle-service.js");
@@ -35,6 +39,38 @@ async function getLifecycleService() {
 const MAX_GENERATIONS = _MAX_GENERATIONS_SHARED;
 const IMPROVEMENT_THRESHOLD = 0.10; // 10% improvement required
 const COOLDOWN_DAYS = _COOLDOWN_DAYS_SHARED;
+
+// deepscan14 H4: resolve the TRUE lineage root by walking the parent chain.
+// Prior cooldown logic (`strategy.parentStrategyId ?? strategyId`) only looked
+// one generation up, so a gen2 strategy's "root" resolved to gen1 instead of
+// gen0 — the gen2→gen3 cooldown check then queried for children of gen1 only,
+// missing the whole gen0 lineage's evolution history. Used as a fallback for
+// legacy rows created before `lineageRootId` was stamped at INSERT time (see
+// the child-insert site below); new rows short-circuit via the stamped column.
+// Cycle-guarded (corrupted parentStrategyId chains must not hang this forever).
+export async function resolveLineageRootByWalking(startParentId: string): Promise<string> {
+  let currentId = startParentId;
+  const visited = new Set<string>();
+  for (let i = 0; i < 50; i++) {
+    if (visited.has(currentId)) {
+      logger.warn(
+        { fn: "resolveLineageRootByWalking", startParentId, cycleAt: currentId },
+        "Lineage parent-chain cycle detected — stopping walk at current node",
+      );
+      break;
+    }
+    visited.add(currentId);
+    const [row] = await db
+      .select({ parentStrategyId: strategies.parentStrategyId, lineageRootId: strategies.lineageRootId })
+      .from(strategies)
+      .where(eq(strategies.id, currentId));
+    if (!row) break;
+    if (row.lineageRootId) return row.lineageRootId; // ancestor already stamped — shortcut
+    if (!row.parentStrategyId) break; // currentId IS the root
+    currentId = row.parentStrategyId;
+  }
+  return currentId;
+}
 
 interface MutationResult {
   params: Record<string, number>;
@@ -122,20 +158,23 @@ export async function evolveStrategy(
   }
 
   // Guardrail: cooldown — check if we evolved this lineage within 7 days.
-  // Track E F-6: current query only looks one level up (parentStrategyId = rootId).
-  // This means generation 2→3 mutations bypass cooldown because their parentStrategyId
-  // points to gen-1, not gen-0. Full fix requires a lineageRootId column (migration
-  // 0125b, Track B) so ALL children in a lineage inherit the root's ID and the
-  // WHERE clause can filter on lineageRootId. Until that column exists, this
-  // implementation catches the common case (gen 0→1 mutations) but NOT deeper chains.
-  // TODO: replace with lineageRootId filter after migration 0125b is applied.
-  const rootId = strategy.parentStrategyId ?? strategyId;
+  // deepscan14 H4 fix: resolve the TRUE lineage root (migration 0188 added
+  // `lineageRootId`, stamped at every evolution INSERT below). Prefer the
+  // stamped column; fall back to a live parent-chain walk for legacy rows
+  // created before this fix (never stamped). Closes the gen2→gen3 cooldown
+  // bypass — the old code checked only one generation up, so deeper mutations
+  // in the same lineage slipped past the 7-day guardrail entirely.
+  const rootId = strategy.lineageRootId
+    ?? (strategy.parentStrategyId ? await resolveLineageRootByWalking(strategy.parentStrategyId) : strategyId);
   const recentEvolutions = await db
     .select()
     .from(strategies)
     .where(
       and(
-        eq(strategies.parentStrategyId, rootId),
+        // lineageRootId catches every stamped descendant at any depth; parentStrategyId
+        // is kept as an OR arm so legacy direct gen0→gen1 children (never stamped) are
+        // still caught — same coverage the pre-fix code had, now additive not exclusive.
+        or(eq(strategies.lineageRootId, rootId), eq(strategies.parentStrategyId, rootId)),
         gte(strategies.createdAt, new Date(Date.now() - COOLDOWN_DAYS * 24 * 60 * 60 * 1000)),
       ),
     );
@@ -297,7 +336,7 @@ export async function evolveStrategy(
 
   // H12: Two breakers wrap the evolver call — outer "python-evolution" tracks
   // Python-bridge health, inner "ollama" tracks Ollama health. parameter_evolver
-  // calls Ollama qwen3 internally; if Ollama is down every evolution call would
+  // calls Ollama gemma4:e4b-it-qat internally; if Ollama is down every evolution call would
   // crash raw, so the dedicated breaker fast-fails further calls instead. On
   // circuit-open we mark the run as DEFERRED (not failed) — the strategy stays
   // in its current lifecycle state and the next scheduler tick will retry once
@@ -500,6 +539,53 @@ export async function evolveStrategy(
     const newName = `${strategy.name.replace(/ \(gen\d+\)$/, "")} (gen${strategy.generation + 1})`;
     const lifecycle = await getLifecycleService();
 
+    // ─── FIX 1: graduated-strategy auditor gate (FAIL-CLOSED) ────────────────
+    // Evolution is a 3rd strategy-creation path (alongside graduation and clone).
+    // All other creation sites (7 of them) call auditGraduatedConfig before
+    // INSERT — this one previously did not, letting children with invalid param
+    // ranges or framework violations enter the conveyor unchecked.
+    //
+    // The audit runs OUTSIDE the transaction so the rejection row persists even
+    // though no child row was ever written.
+    const { auditGraduatedConfig: _auditEvolvedConfig, formatAuditResult: _fmtEvolvedAudit } =
+      await import("./graduated-strategy-auditor.js");
+    const evolvedTags = [...(strategy.tags ?? []), "evolved"];
+    const evolvedConfigAudit = _auditEvolvedConfig({
+      conceptName: strategy.name,
+      symbol: strategy.symbol,
+      config: newConfig,
+    });
+    if (!evolvedConfigAudit.passed) {
+      logger.error(
+        { strategyId, defects: evolvedConfigAudit.defects, warnings: evolvedConfigAudit.warnings },
+        `evolution: evolved child config rejected by schema auditor — ${_fmtEvolvedAudit(evolvedConfigAudit)}`,
+      );
+      await db.insert(auditLog).values({
+        action: "evolution.child_rejected_by_auditor",
+        entityType: "strategy",
+        entityId: strategyId,
+        input: {
+          parentStrategyId: strategyId,
+          parentGeneration: strategy.generation,
+          attemptedMutation: best.mutation,
+        } as Record<string, unknown>,
+        result: {
+          defects: evolvedConfigAudit.defects,
+          warnings: evolvedConfigAudit.warnings,
+          note: "evolved child config failed schema auditor gate; child INSERT aborted",
+        } as Record<string, unknown>,
+        status: "failure",
+        decisionAuthority: "gate",
+        correlationId: correlationId ?? null,
+      }).catch((auditErr: unknown) => {
+        logger.warn({ err: auditErr, strategyId }, "evolution.child_rejected_by_auditor audit write failed (non-blocking)");
+      });
+      return { status: "aborted", error: `Evolved child rejected by schema auditor: ${evolvedConfigAudit.defects.map((d: { code: string }) => d.code).join(",")}` };
+    }
+    // Source provenance check: "evolved" is an explicit exemption in agent-service.ts.
+    // This mirrors the pattern used in critic-optimizer-service.ts (line 1982).
+    assertCrossValidatedSource("evolved", evolvedTags);
+
     // H1 + atomicity: insert child strategy, run lifecycle promotion, and write
     // the strategy.evolved audit row inside a single db.transaction() so a
     // partial failure (e.g. audit insert fails after the child row landed)
@@ -523,6 +609,8 @@ export async function evolveStrategy(
     try {
       evolvedId = await db.transaction(async (tx) => {
         // Insert evolved strategy as CANDIDATE — proper gate via promoteStrategy() below.
+        // FIX 1: add source: "evolved" so assertCrossValidatedSource exemption is
+        // applied if the insert row is ever re-validated by Layer 2 auditor.
         const [evolved] = await (tx as unknown as typeof db)
           .insert(strategies)
           .values({
@@ -534,8 +622,14 @@ export async function evolveStrategy(
             lifecycleState: "CANDIDATE",
             preferredRegime: strategy.preferredRegime,
             parentStrategyId: strategyId,
+            // deepscan14 H4: stamp the resolved TRUE root so descendants at any
+            // depth resolve their cooldown lineage without needing to walk the
+            // chain again. `rootId` above already resolved to strategyId's own
+            // lineage root (or strategyId itself when strategy IS the gen0 root).
+            lineageRootId: rootId,
             generation: strategy.generation + 1,
-            tags: [...(strategy.tags ?? []), "evolved"],
+            source: "evolved",
+            tags: evolvedTags,
           })
           .returning();
 

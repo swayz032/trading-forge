@@ -826,6 +826,228 @@ function dispatchSideEffects(event: SSEEvent, qc: QueryClient): void {
       break;
     }
 
+    // ─── Deep-scan #12 Track R: Safety-critical events (sticky persistent toast) ──
+    // These represent immediate trading risk — toast must NEVER auto-dismiss.
+
+    case "kill_switch:dll_force_close": {
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const d = event.data;
+      const shortSess = String(d.session_id).slice(0, 8);
+      toast.error(
+        `KILL SWITCH — DLL force-close: session ${shortSess} · firm ${d.firm_id} · day P&L $${d.day_pnl}`,
+        { duration: Infinity, important: true },
+      );
+      break;
+    }
+
+    case "kill_switch:layer_halted": {
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const d = event.data;
+      toast.error(
+        `KILL SWITCH — Layer ${d.layer} halted: ${d.reason}`,
+        { duration: Infinity, important: true },
+      );
+      break;
+    }
+
+    case "kill_switch:c1_cme_eval_failed": {
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const d = event.data;
+      toast.error(
+        `KILL SWITCH — CME eval failed (layer ${d.layer}): ${d.error_message}`,
+        { duration: Infinity, important: true },
+      );
+      break;
+    }
+
+    case "quantum_rl:kill_switch_engaged": {
+      qc.invalidateQueries({ queryKey: ["strategies"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const d = event.data;
+      const gapPct = (d.sharpe_gap_ratio * 100).toFixed(1);
+      toast.error(
+        `RL KILL SWITCH — strategy ${d.strategy_id}: ${d.reason} · Sharpe gap ${gapPct}% over ${d.sessions_evaluated} sessions`,
+        { duration: Infinity, important: true },
+      );
+      break;
+    }
+
+    case "exchange:outage-detected": {
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const d = event.data;
+      toast.error(
+        `EXCHANGE OUTAGE — ${d.exchange}: ${d.reason} · affected: ${d.affectedSymbols.join(", ")}`,
+        { duration: Infinity, important: true },
+      );
+      break;
+    }
+
+    case "broker:degraded": {
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const d = event.data;
+      toast.error(
+        `BROKER DEGRADED — ${d.broker}: ${d.reason}`,
+        { duration: Infinity, important: true },
+      );
+      break;
+    }
+
+    case "risk:dd_velocity_autopause": {
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const d = event.data;
+      toast.error(
+        `DD VELOCITY AUTOPAUSE — ${d.firmId}: ${d.rollingDDPct.toFixed(2)}% in ${d.windowMinutes}min · threshold ${d.effectiveThreshold.toFixed(2)}%`,
+        { duration: Infinity, important: true },
+      );
+      break;
+    }
+
+    case "paper:position-stop-breached": {
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const d = event.data;
+      toast.error(
+        `STOP BREACHED — ${d.symbol} ${d.side} · stop ${d.stopLevel} · current ${d.currentPrice}`,
+        { duration: Infinity, important: true },
+      );
+      break;
+    }
+
+    case "paper:auto_restart_exhausted": {
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const d = event.data;
+      const shortSess2 = String(d.sessionId).slice(0, 8);
+      toast.error(
+        `AUTO-RESTART EXHAUSTED — session ${shortSess2} (${d.restartCount} attempts) · manual intervention required`,
+        { duration: Infinity, important: true },
+      );
+      break;
+    }
+
+    case "fill_reconciliation:drift_detected": {
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const d = event.data;
+      toast.error(
+        `FILL DRIFT — ${d.symbol}: server qty ${d.serverNetQty} vs broker qty ${d.brokerPositionQty}`,
+        { duration: Infinity, important: true },
+      );
+      break;
+    }
+
+    case "fill_reconciliation:unmatched_fill": {
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const d = event.data;
+      toast.error(
+        `UNMATCHED FILL — ${d.symbol} qty ${d.filled_qty} · broker ref: ${d.broker_order_ref ?? "??"}`,
+        { duration: Infinity, important: true },
+      );
+      break;
+    }
+
+    // ─── Operationally-significant events (warning/info toast + cache invalidation) ──
+
+    case "exchange:outage-resolved": {
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const d = event.data;
+      toast.success(
+        `Exchange outage resolved — ${d.exchange} · ${d.note}`,
+        { duration: 8_000 },
+      );
+      break;
+    }
+
+    case "risk:dd_velocity_warning": {
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const d = event.data;
+      toast.warning(
+        `DD velocity warning — ${d.firmId}: ${d.rollingDDPct.toFixed(2)}% in ${d.windowMinutes}min`,
+        { duration: 10_000 },
+      );
+      break;
+    }
+
+    case "PAPER_PARITY_DEGRADED": {
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const d = event.data;
+      const shortSess3 = String(d.sessionId).slice(0, 8);
+      toast.warning(
+        `Paper parity degraded (${d.source}) — session ${shortSess3} · ${d.symbol}`,
+        { duration: 10_000 },
+      );
+      break;
+    }
+
+    case "backtest:truthiness_failure": {
+      qc.invalidateQueries({ queryKey: ["backtests"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const d = event.data;
+      const shortBt = String(d.backtestId).slice(0, 8);
+      toast.error(
+        `Backtest truthiness failure [${d.type}/${d.severity}] — backtest ${shortBt}`,
+        { duration: 10_000 },
+      );
+      break;
+    }
+
+    case "compliance:rejected": {
+      qc.invalidateQueries({ queryKey: ["compliance"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const d = event.data;
+      toast.warning(
+        `Compliance rejected — ${d.symbol} (${d.firmId}): ${d.reason}`,
+        { duration: 10_000 },
+      );
+      break;
+    }
+
+    case "signal:macro_gate_eval_failed": {
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      qc.invalidateQueries({ queryKey: ["alerts"] });
+      const d = event.data;
+      toast.warning(
+        `Macro gate eval failed — ${d.symbol}: ${d.error_message}`,
+        { duration: 10_000 },
+      );
+      break;
+    }
+
+    case "paper:auto_restarted": {
+      qc.invalidateQueries({ queryKey: ["paper"] });
+      const d = event.data;
+      toast(
+        `Paper session restarted (attempt ${d.restartAttempt}) — ${d.symbols.join(", ")}`,
+        { duration: 6_000 },
+      );
+      break;
+    }
+
+    case "monte_carlo:trades_fallback_used": {
+      qc.invalidateQueries({ queryKey: ["monte-carlo"] });
+      const d = event.data;
+      toast.warning(
+        `MC bootstrap: trade records sparse (${d.tradeCount} < ${d.minRequired}) — using daily P&L aggregates; drawdown estimates may be understated`,
+        { duration: 8_000 },
+      );
+      break;
+    }
+
+    case "pending_bucket:killed": {
+      qc.invalidateQueries({ queryKey: ["pending-buckets"] });
+      break;
+    }
+
     default: {
       // Exhaustiveness check — TypeScript will complain if any union member
       // isn't handled. At runtime, log unknown event names so the dev

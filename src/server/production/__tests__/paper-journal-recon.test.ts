@@ -192,6 +192,7 @@ describe("runPaperJournalRecon — clean runs", () => {
 
     setResponses(
       [strategy],
+      [{ cnt: "1" }], // deepscan14 C1: broker-tape-source-active global probe — tape IS active
       [{ id: "trade-1", pnl: "100", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
       [{ cnt: "1" }],
       [{ cnt: "1" }],
@@ -219,6 +220,7 @@ describe("runPaperJournalRecon — drift detection", () => {
 
     setResponses(
       [strategy],
+      [{ cnt: "1" }], // deepscan14 C1: broker-tape-source-active global probe — tape IS active
       [
         { id: "trade-a", pnl: "50", contracts: 1, exitTime: tradeDate, entryTime: tradeDate },
         { id: "trade-b", pnl: "75", contracts: 1, exitTime: tradeDate, entryTime: tradeDate },
@@ -250,6 +252,7 @@ describe("runPaperJournalRecon — drift detection", () => {
 
     setResponses(
       [strategy],
+      [{ cnt: "1" }], // deepscan14 C1: broker-tape-source-active global probe — tape IS active
       [{ id: "trade-x", pnl: "200", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
       [{ cnt: "1" }],
       [{ cnt: "1" }],
@@ -276,6 +279,7 @@ describe("runPaperJournalRecon — drift detection", () => {
 
     setResponses(
       [strategy],
+      [{ cnt: "1" }], // deepscan14 C1: broker-tape-source-active global probe — tape IS active
       [{ id: "trade-y", pnl: "100.00", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
       [{ cnt: "1" }],
       [{ cnt: "1" }],
@@ -293,12 +297,16 @@ describe("runPaperJournalRecon — drift detection", () => {
     expect(evalRow?.status).toBe("success");
   });
 
-  it("6. missing broker row — missing_broker_data warn audit, no Discord", async () => {
+  it("6. missing broker row (tape source otherwise active) — missing_broker_data warn audit, no Discord", async () => {
     const strategy = { id: "strat-5", name: "broker_offline_strategy", symbol: "MCL" };
     const tradeDate = new Date("2026-06-23T11:00:00Z");
 
     setResponses(
       [strategy],
+      // deepscan14 C1: broker-tape-source-active global probe returns "active"
+      // (some OTHER row exists in production_trades) — so THIS strategy's
+      // zero-count-today is a genuine per-day miss, not the structural gap.
+      [{ cnt: "1" }],
       [{ id: "trade-z", pnl: "50", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
       [{ cnt: "0" }],
       [{ cnt: "1" }],
@@ -348,6 +356,7 @@ describe("runPaperJournalRecon — multi-strategy", () => {
 
     setResponses(
       [s1, s2],
+      [{ cnt: "1" }], // deepscan14 C1: broker-tape-source-active global probe (once per run)
       // s1 (clean)
       [{ id: "t1", pnl: "100", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
       [{ cnt: "1" }],
@@ -375,6 +384,118 @@ describe("runPaperJournalRecon — multi-strategy", () => {
     expect(mismatch?.countMismatch).toBe(true);
 
     expect(state.criticalAlerts).toHaveLength(1);
+  });
+
+});
+
+// ─── deepscan14 C1 — broker-tape-source-active detection ────────────────────
+//
+// production_trades (the broker-tape proxy this recon joins against) has never
+// been populated by any real TradersPost ingest pipeline. Before this fix, every
+// missingBrokerData case wrote the SAME `missing_broker_data` warn regardless of
+// whether the gap was structural (no ingest exists) or a genuine per-day miss —
+// making "verified nothing" indistinguishable from "checked, all clean."
+//
+// These tests verify the new distinct `inactive_no_broker_tape` action fires
+// when the global broker-tape-source probe finds zero rows anywhere, and that
+// the top-level result surfaces `brokerTapeSourceActive` / `reconciliationInactive`
+// so callers can no longer read `hasDrift: false` as "passing."
+
+describe("runPaperJournalRecon — deepscan14 C1: broker-tape-source-active detection", () => {
+
+  it("13. tape source globally EMPTY — inactive_no_broker_tape (NOT missing_broker_data), reconciliationInactive=true", async () => {
+    const strategy = { id: "strat-c1a", name: "no_ingest_strategy", symbol: "MES" };
+    const tradeDate = new Date("2026-07-01T15:00:00Z");
+
+    setResponses(
+      [strategy],
+      [{ cnt: "0" }], // global probe: production_trades has ZERO rows anywhere
+      [{ id: "trade-c1a", pnl: "100", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
+      [{ cnt: "0" }], // per-strategy broker count — also zero (consistent with "nothing ingested")
+      [{ cnt: "1" }],
+    );
+
+    const result = await runPaperJournalRecon(new Date("2026-07-01"));
+
+    expect(result.brokerTapeSourceActive).toBe(false);
+    expect(result.reconciliationInactive).toBe(true);
+    // hasDrift stays false — missingBrokerData strategies are excluded from
+    // the mismatch calc by design (nothing to compare against), but that must
+    // NOT be read as "clean."
+    expect(result.hasDrift).toBe(false);
+
+    const inactiveRow = state.auditRows.find(
+      (r) => r.action === "paper_reconciliation.inactive_no_broker_tape"
+    );
+    expect(inactiveRow).toBeDefined();
+    expect(inactiveRow?.status).toBe("success"); // warning maps to "success" per writeAuditRow's statusMapped
+    expect((inactiveRow as unknown as { affected_strategy_ids: string[] }).affected_strategy_ids).toContain("strat-c1a");
+
+    // The old per-strategy warn must NOT fire in the structural-gap case.
+    const legacyWarnRow = state.auditRows.find(
+      (r) => r.action === "paper_reconciliation.missing_broker_data"
+    );
+    expect(legacyWarnRow).toBeUndefined();
+
+    // Top-level evaluated row must carry the honesty fields too (queryable
+    // without needing to find the dedicated inactive row).
+    const evalRow = state.auditRows.find((r) => r.action === "paper_reconciliation.evaluated");
+    expect((evalRow as unknown as { broker_tape_source_active: boolean }).broker_tape_source_active).toBe(false);
+    expect((evalRow as unknown as { reconciliation_inactive: boolean }).reconciliation_inactive).toBe(true);
+  });
+
+  it("14. global probe query THROWS — fail-LOUD: treated as inactive, not silently active", async () => {
+    const strategy = { id: "strat-c1b", name: "probe_error_strategy", symbol: "MNQ" };
+    const tradeDate = new Date("2026-07-01T14:00:00Z");
+
+    setResponses(
+      [strategy],
+      [], // unused — throwOnCallIdx intercepts this call
+      [{ id: "trade-c1b", pnl: "50", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
+      [{ cnt: "0" }],
+      [{ cnt: "1" }],
+    );
+    state.throwOnCallIdx = 1; // the global broker-tape-source-active probe call
+
+    const result = await runPaperJournalRecon(new Date("2026-07-01"));
+
+    // Fail-loud contract: a probe error must NOT silently assume the tape is
+    // healthy — it must default to inactive (conservative).
+    expect(result.brokerTapeSourceActive).toBe(false);
+    expect(result.reconciliationInactive).toBe(true);
+
+    const inactiveRow = state.auditRows.find(
+      (r) => r.action === "paper_reconciliation.inactive_no_broker_tape"
+    );
+    expect(inactiveRow).toBeDefined();
+  });
+
+  it("15. tape source ACTIVE elsewhere, this strategy's day is a genuine miss — old missing_broker_data path unaffected", async () => {
+    const strategy = { id: "strat-c1c", name: "genuine_miss_strategy", symbol: "MCL" };
+    const tradeDate = new Date("2026-07-01T13:00:00Z");
+
+    setResponses(
+      [strategy],
+      [{ cnt: "1" }], // global probe: tape source IS populated (elsewhere)
+      [{ id: "trade-c1c", pnl: "25", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
+      [{ cnt: "0" }], // this strategy/day: genuinely zero broker rows
+      [{ cnt: "1" }],
+    );
+
+    const result = await runPaperJournalRecon(new Date("2026-07-01"));
+
+    expect(result.brokerTapeSourceActive).toBe(true);
+    expect(result.reconciliationInactive).toBe(false);
+
+    const legacyWarnRow = state.auditRows.find(
+      (r) => r.action === "paper_reconciliation.missing_broker_data"
+    );
+    expect(legacyWarnRow).toBeDefined();
+
+    const inactiveRow = state.auditRows.find(
+      (r) => r.action === "paper_reconciliation.inactive_no_broker_tape"
+    );
+    expect(inactiveRow).toBeUndefined();
   });
 
 });
@@ -445,6 +566,7 @@ describe("Finding 3 — broker P&L SUM must be per-strategy, not combined", () =
     // 8: broker P&L SUM for strat-f3b ($400 — per-strategy, no drift)
     setResponses(
       [stratA, stratB],
+      [{ cnt: "1" }], // deepscan14 C1: broker-tape-source-active global probe (once per run)
       // strategy A
       [{ id: "ta-1", pnl: "100", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
       [{ cnt: "1" }],  // broker count A
@@ -480,6 +602,7 @@ describe("Finding 3 — broker P&L SUM must be per-strategy, not combined", () =
     // strategy B: paper=$200, broker=$50  (drift=$150, exceeds MNQ 2-tick=$1 tolerance)
     setResponses(
       [stratA, stratB],
+      [{ cnt: "1" }], // deepscan14 C1: broker-tape-source-active global probe (once per run)
       // A
       [{ id: "ta-2", pnl: "100", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
       [{ cnt: "1" }], [{ cnt: "1" }],

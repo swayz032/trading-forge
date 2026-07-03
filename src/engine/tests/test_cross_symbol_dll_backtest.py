@@ -188,3 +188,88 @@ class TestApplyCrossSymbolDll:
         )
         assert "entries_suppressed" in meta
         assert "force_close_events" in meta
+
+
+# ─── build_cs_dll_disclosure (deep-scan #8 wave 2 FIX 1) ─────────────────────
+
+class TestBuildCsDllDisclosure:
+    """Disclosure block for result['cross_symbol_dll'] — FIX 1 contract tests."""
+
+    def test_single_symbol_modeled_false(self):
+        from src.engine.context.cross_symbol_dll import build_cs_dll_disclosure
+        d = build_cs_dll_disclosure(["MES"])
+        assert d["modeled"] is False
+        assert d["reason"] == "single_symbol_no_sibling_pnl"
+        assert d["symbols"] == ["MES"]
+
+    def test_default_sibling_pnls_false(self):
+        from src.engine.context.cross_symbol_dll import build_cs_dll_disclosure
+        d = build_cs_dll_disclosure(["MNQ"])
+        assert d["modeled"] is False
+
+    def test_multi_symbol_real_modeled_true(self):
+        from src.engine.context.cross_symbol_dll import build_cs_dll_disclosure
+        d = build_cs_dll_disclosure(["MES", "MNQ"], sibling_pnls_real=True)
+        assert d["modeled"] is True
+        assert d["reason"] == "multi_symbol_real"
+        assert "MES" in d["symbols"]
+        assert "MNQ" in d["symbols"]
+
+    def test_multi_symbol_sibling_false_stays_unmodeled(self):
+        from src.engine.context.cross_symbol_dll import build_cs_dll_disclosure
+        d = build_cs_dll_disclosure(["MES", "MNQ"], sibling_pnls_real=False)
+        assert d["modeled"] is False
+        assert d["reason"] == "single_symbol_no_sibling_pnl"
+
+    def test_single_symbol_with_real_pnl_flag_still_unmodeled(self):
+        """Single-symbol list + sibling_pnls_real=True: still unmodeled (no sibling)."""
+        from src.engine.context.cross_symbol_dll import build_cs_dll_disclosure
+        d = build_cs_dll_disclosure(["MES"], sibling_pnls_real=True)
+        # len(symbols)==1 → cannot be multi_symbol_real
+        assert d["modeled"] is False
+
+    def test_disclosure_has_required_keys(self):
+        from src.engine.context.cross_symbol_dll import build_cs_dll_disclosure
+        d = build_cs_dll_disclosure(["MES"])
+        assert "modeled" in d
+        assert "reason" in d
+        assert "symbols" in d
+
+    def test_symbols_list_is_copied(self):
+        """Returned symbols list is independent of input (copy, not reference)."""
+        from src.engine.context.cross_symbol_dll import build_cs_dll_disclosure
+        src_list = ["MES"]
+        d = build_cs_dll_disclosure(src_list)
+        src_list.append("MNQ")
+        assert d["symbols"] == ["MES"], "Disclosure symbols should not reflect post-call mutation"
+
+    def test_guard_fires_on_synthetic_dll_breach(self):
+        """apply_cross_symbol_dll_to_entries fires when real P&L breaches DLL.
+
+        This covers the 'real P&L path' that build_cs_dll_disclosure would mark
+        as modeled=True — guard suppresses entries after the loss threshold.
+        """
+        from src.engine.context.cross_symbol_dll import (
+            apply_cross_symbol_dll_to_entries,
+            build_cs_dll_disclosure,
+        )
+        n = 5
+        el = np.zeros(n, dtype=bool)
+        el[0] = True  # entry before loss
+        el[4] = True  # entry after loss — should be suppressed
+        es = np.zeros(n, dtype=bool)
+        xl = np.zeros(n, dtype=bool)
+        xs = np.zeros(n, dtype=bool)
+        pnls = np.zeros(n)
+        pnls[2] = -700.0  # cumulative -$700 > 67% of $1000 DLL → halt
+        ts = ["2024-01-31T09:00:00"] * n
+
+        out_el, out_es, out_xl, out_xs, meta = apply_cross_symbol_dll_to_entries(
+            el, es, xl, xs, pnls, ts, firm_dll=1000.0,
+        )
+        disclosure = build_cs_dll_disclosure(["MES", "MNQ"], sibling_pnls_real=True)
+
+        assert out_el[0] is np.bool_(True)   # before loss → allowed
+        assert out_el[4] is np.bool_(False)  # after loss → suppressed
+        assert meta["entries_suppressed"] >= 1
+        assert disclosure["modeled"] is True  # real P&L path → disclosed as modeled

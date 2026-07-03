@@ -100,4 +100,174 @@ describe("recipe-data", () => {
     const r = await assembleRecipeData({ strategyId: "s1" });
     expect(r.otherTests.find((t) => t.name === "Sloppy Bot Test")?.status).toBe("fail");
   });
+
+  // ── FIX 1: B14 threshold parity (deep-scan #12 Track T) ──────────────────
+  // The gate threshold is 0.20 (tightened from 0.40 on 2026-06-22). Any
+  // ci_high > 0.20 must produce verdictGreen=false, even if it was < 0.40.
+
+  it("verdictGreen=false when ci_high=0.30 (was TRUE under old 0.40 hardcode, gate BLOCKS)", async () => {
+    setupQueries({
+      mc: [{ result_json: JSON.stringify({
+        probability_of_ruin_ci: { ci_high: 0.30 },
+        percentile_5: -1000, percentile_50: 20000, percentile_95: 50000,
+      }) }],
+    });
+    const { assembleRecipeData } = await import("../../lib/slumhouse/recipe-data.js");
+    const r = await assembleRecipeData({ strategyId: "s1" });
+    expect(r.monteCarlo.verdictGreen).toBe(false);
+  });
+
+  it("verdictGreen=true at boundary ci_high=0.20 (gate passes: NOT blocked)", async () => {
+    // Gate uses strict > so ci_high exactly equal to threshold is NOT blocked.
+    setupQueries({
+      mc: [{ result_json: JSON.stringify({
+        probability_of_ruin_ci: { ci_high: 0.20 },
+        percentile_5: -500, percentile_50: 18000, percentile_95: 42000,
+      }) }],
+    });
+    const { assembleRecipeData } = await import("../../lib/slumhouse/recipe-data.js");
+    const r = await assembleRecipeData({ strategyId: "s1" });
+    expect(r.monteCarlo.verdictGreen).toBe(true);
+  });
+
+  it("verdictGreen=false when ci_high=0.21 (just over the 0.20 threshold)", async () => {
+    setupQueries({
+      mc: [{ result_json: JSON.stringify({
+        probability_of_ruin_ci: { ci_high: 0.21 },
+      }) }],
+    });
+    const { assembleRecipeData } = await import("../../lib/slumhouse/recipe-data.js");
+    const r = await assembleRecipeData({ strategyId: "s1" });
+    expect(r.monteCarlo.verdictGreen).toBe(false);
+  });
+
+  it("verdictGreen=false when MC has not run (no mc row, ciHighRaw=null)", async () => {
+    // Previously: ciHigh defaulted to 0 → verdictGreen = 0 < 0.40 = true (misleading).
+    // Now: ciHighRaw = null → verdictGreen = false (unknown/missing, not promising).
+    setupQueries({ mc: [] });
+    const { assembleRecipeData } = await import("../../lib/slumhouse/recipe-data.js");
+    const r = await assembleRecipeData({ strategyId: "s1" });
+    expect(r.monteCarlo.verdictGreen).toBe(false);
+  });
+
+  it("verdictGreen respects B14_RUIN_CI_HIGH_THRESHOLD env override", async () => {
+    const originalEnv = process.env.B14_RUIN_CI_HIGH_THRESHOLD;
+    process.env.B14_RUIN_CI_HIGH_THRESHOLD = "0.30";
+    try {
+      setupQueries({
+        mc: [{ result_json: JSON.stringify({
+          probability_of_ruin_ci: { ci_high: 0.25 },
+        }) }],
+      });
+      const { assembleRecipeData } = await import("../../lib/slumhouse/recipe-data.js");
+      const r = await assembleRecipeData({ strategyId: "s1" });
+      // 0.25 <= 0.30 → verdictGreen=true with the overridden threshold
+      expect(r.monteCarlo.verdictGreen).toBe(true);
+    } finally {
+      if (originalEnv === undefined) delete process.env.B14_RUIN_CI_HIGH_THRESHOLD;
+      else process.env.B14_RUIN_CI_HIGH_THRESHOLD = originalEnv;
+    }
+  });
+
+  // ── FIX 1: WFE threshold parity ───────────────────────────────────────────
+  it("Surprise Test=pass when WFE at hard floor 0.70 (gate boundary: >= floor)", async () => {
+    setupQueries({
+      backtest: [{
+        total_pnl: 0, trade_count: 0, daily_pnls: "[]", equity_curve: "[]",
+        result_extras: JSON.stringify({ wfe_overall: 0.70, b15_passed: true, b10_pass: true, frankenstein_pass: true, compliance_pass_rate: 1, a14_severity: "pass" }),
+      }],
+    });
+    const { assembleRecipeData } = await import("../../lib/slumhouse/recipe-data.js");
+    const r = await assembleRecipeData({ strategyId: "s1" });
+    expect(r.otherTests.find((t) => t.name === "Surprise Test")?.status).toBe("pass");
+  });
+
+  it("Surprise Test=warn when WFE=0.69 (below floor — gate would block, display shows warn)", async () => {
+    setupQueries({
+      backtest: [{
+        total_pnl: 0, trade_count: 0, daily_pnls: "[]", equity_curve: "[]",
+        result_extras: JSON.stringify({ wfe_overall: 0.69, b15_passed: true, b10_pass: true, frankenstein_pass: true, compliance_pass_rate: 1, a14_severity: "pass" }),
+      }],
+    });
+    const { assembleRecipeData } = await import("../../lib/slumhouse/recipe-data.js");
+    const r = await assembleRecipeData({ strategyId: "s1" });
+    expect(r.otherTests.find((t) => t.name === "Surprise Test")?.status).toBe("warn");
+  });
+
+  // ── Deep-scan #13 Task 12: prose must match gate status, missing = untested ──
+
+  it("Sloppy Bot Test sentence does NOT claim success when b15 failed", async () => {
+    setupQueries({
+      backtest: [{
+        total_pnl: 0, trade_count: 0, daily_pnls: "[]", equity_curve: "[]",
+        result_extras: JSON.stringify({ b15_passed: false, wfe_overall: 0.8, b10_pass: true, frankenstein_pass: true, compliance_pass_rate: 1, a14_severity: "pass" }),
+      }],
+    });
+    const { assembleRecipeData } = await import("../../lib/slumhouse/recipe-data.js");
+    const r = await assembleRecipeData({ strategyId: "s1" });
+    const sloppy = r.otherTests.find((t) => t.name === "Sloppy Bot Test");
+    expect(sloppy?.status).toBe("fail");
+    expect(sloppy?.sentence).not.toContain("Still cashed out");
+  });
+
+  it("Every Mood Test is warn+untested when b10_pass is absent (not fabricated pass)", async () => {
+    setupQueries({
+      backtest: [{
+        total_pnl: 0, trade_count: 0, daily_pnls: "[]", equity_curve: "[]",
+        // b10_pass intentionally omitted — untested, must NOT default to pass
+        result_extras: JSON.stringify({ b15_passed: true, wfe_overall: 0.8, frankenstein_pass: true, compliance_pass_rate: 1, a14_severity: "pass" }),
+      }],
+    });
+    const { assembleRecipeData } = await import("../../lib/slumhouse/recipe-data.js");
+    const r = await assembleRecipeData({ strategyId: "s1" });
+    const mood = r.otherTests.find((t) => t.name === "Every Mood Test");
+    expect(mood?.status).toBe("warn");
+    expect(mood?.status).not.toBe("pass");
+    expect(mood?.sentence.toLowerCase()).toContain("hasn't taken this test yet");
+  });
+
+  it("Every Mood Test is fail with a losing sentence when b10_pass is false", async () => {
+    setupQueries({
+      backtest: [{
+        total_pnl: 0, trade_count: 0, daily_pnls: "[]", equity_curve: "[]",
+        result_extras: JSON.stringify({ b15_passed: true, wfe_overall: 0.8, b10_pass: false, frankenstein_pass: true, compliance_pass_rate: 1, a14_severity: "pass" }),
+      }],
+    });
+    const { assembleRecipeData } = await import("../../lib/slumhouse/recipe-data.js");
+    const r = await assembleRecipeData({ strategyId: "s1" });
+    const mood = r.otherTests.find((t) => t.name === "Every Mood Test");
+    expect(mood?.status).toBe("fail");
+    expect(mood?.sentence).not.toContain("Won every one");
+  });
+
+  it("Real or Lucky is warn+untested when frankenstein_pass is absent (not fabricated pass)", async () => {
+    setupQueries({
+      backtest: [{
+        total_pnl: 0, trade_count: 0, daily_pnls: "[]", equity_curve: "[]",
+        // frankenstein_pass intentionally omitted — untested, must NOT default to pass
+        result_extras: JSON.stringify({ b15_passed: true, wfe_overall: 0.8, b10_pass: true, compliance_pass_rate: 1, a14_severity: "pass" }),
+      }],
+    });
+    const { assembleRecipeData } = await import("../../lib/slumhouse/recipe-data.js");
+    const r = await assembleRecipeData({ strategyId: "s1" });
+    const rol = r.otherTests.find((t) => t.name === "Real or Lucky");
+    expect(rol?.status).toBe("warn");
+    expect(rol?.status).not.toBe("pass");
+    expect(rol?.sentence.toLowerCase()).toContain("hasn't taken this test yet");
+    expect(rol?.sentence).not.toContain("Got real game");
+  });
+
+  it("Plays Clean sentence does NOT claim clean when compliance is below 1.0", async () => {
+    setupQueries({
+      backtest: [{
+        total_pnl: 0, trade_count: 0, daily_pnls: "[]", equity_curve: "[]",
+        result_extras: JSON.stringify({ b15_passed: true, wfe_overall: 0.8, b10_pass: true, frankenstein_pass: true, compliance_pass_rate: 0.90, a14_severity: "pass" }),
+      }],
+    });
+    const { assembleRecipeData } = await import("../../lib/slumhouse/recipe-data.js");
+    const r = await assembleRecipeData({ strategyId: "s1" });
+    const clean = r.otherTests.find((t) => t.name === "Plays Clean");
+    expect(clean?.status).toBe("fail");
+    expect(clean?.sentence).not.toContain("Won't get the account shut down");
+  });
 });

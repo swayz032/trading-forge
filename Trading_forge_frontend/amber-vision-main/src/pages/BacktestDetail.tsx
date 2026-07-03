@@ -166,34 +166,19 @@ export default function BacktestDetail() {
     });
   }, [equityCurve]);
 
-  // MAE/MFE scatter from trades — use explicit fields or estimate from P&L
+  // MAE/MFE scatter — ONLY from explicitly recorded per-trade fields.
+  // Deep-scan #13: the old fallback estimated MAE/MFE from P&L (e.g. winner
+  // mae = |pnl|*0.2), which fabricates excursion data indistinguishable from
+  // real. When the fields are absent we render nothing and say why.
   const maeMfeData = useMemo(() => {
     if (!trades || !Array.isArray(trades)) return [];
-    // First try explicit mae/mfe fields
     const explicit = trades.filter((t) => t.mae != null && t.mfe != null);
-    if (explicit.length > 0) {
-      return explicit.map((t) => ({
-        mae: num(t.mae),
-        mfe: num(t.mfe),
-        pnl: num(t.pnl),
-        profitable: num(t.pnl) > 0,
-      }));
-    }
-    // Fallback: estimate from P&L — for losers, MAE ≈ |pnl|, MFE ≈ small
-    // For winners, MAE ≈ small fraction, MFE ≈ pnl. Not perfect but gives a visual sense.
-    // MAE/MFE are both positive magnitudes ($ distance from entry).
-    return trades
-      .filter((t) => t.pnl != null && num(t.pnl) !== 0)
-      .map((t) => {
-        const pnl = num(t.pnl);
-        const isWin = pnl > 0;
-        return {
-          mae: isWin ? Math.abs(pnl) * 0.2 : Math.abs(pnl),
-          mfe: isWin ? Math.abs(pnl) : Math.abs(pnl) * 0.15,
-          pnl,
-          profitable: isWin,
-        };
-      });
+    return explicit.map((t) => ({
+      mae: num(t.mae),
+      mfe: num(t.mfe),
+      pnl: num(t.pnl),
+      profitable: num(t.pnl) > 0,
+    }));
   }, [trades]);
 
   // Monthly heatmap — prefer backtest.monthlyReturns JSONB, fallback to computing from trades
@@ -285,7 +270,7 @@ export default function BacktestDetail() {
   const dailyPnls = useMemo(() => {
     if (!trades || !Array.isArray(trades)) return [];
     const dayMap = new Map<string, { pnl: number; trades: number; balance: number }>();
-    let runningBalance = 50_000; // starting capital (prop firm default)
+    let runningBalance = DEFAULT_STARTING_CAPITAL; // simulated $50K start (labeled in the calendar header)
     trades.forEach((t: any) => {
       const exitDate = t.exitTime ? new Date(t.exitTime) : null;
       if (!exitDate || isNaN(exitDate.getTime()) || exitDate.getFullYear() < 1971) return;
@@ -343,7 +328,10 @@ export default function BacktestDetail() {
   }
 
   const totalReturnRatio = num(backtest.totalReturn);
-  const totalReturnDollars = totalReturnRatio * 50_000; // vectorbt returns ratio, convert to $ (prop firm 50K)
+  // Simulated dollars on the assumed prop-firm account — the "$50K sim" label
+  // on the KPI tile discloses the assumption (deep-scan #13: an undisclosed
+  // ratio→dollar conversion reads as fabricated P&L).
+  const totalReturnDollars = totalReturnRatio * DEFAULT_STARTING_CAPITAL;
   const sharpeRatio = num(backtest.sharpeRatio);
   const winRate = num(backtest.winRate);
   const profitFactor = num(backtest.profitFactor);
@@ -371,7 +359,7 @@ export default function BacktestDetail() {
       {/* Metric Strip */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.4 }} className="grid grid-cols-3 md:grid-cols-6 gap-3">
         {[
-          { label: "P&L", value: `${totalReturnDollars >= 0 ? "+" : ""}$${Math.abs(totalReturnDollars).toLocaleString("en-US", { maximumFractionDigits: 0 })}`, cls: totalReturnDollars >= 0 ? "text-profit" : "text-loss" },
+          { label: "P&L · $50K sim", value: `${totalReturnDollars >= 0 ? "+" : ""}$${Math.abs(totalReturnDollars).toLocaleString("en-US", { maximumFractionDigits: 0 })}`, cls: totalReturnDollars >= 0 ? "text-profit" : "text-loss" },
           { label: "Sharpe", value: sharpeRatio.toFixed(2), cls: sharpeRatio >= 1.5 ? "text-profit" : "text-foreground" },
           { label: "Win Rate", value: `${winRate.toFixed(1)}%`, cls: "text-foreground" },
           { label: "Profit Factor", value: profitFactor.toFixed(2), cls: "text-foreground" },
@@ -476,7 +464,7 @@ export default function BacktestDetail() {
               </ScatterChart>
             </ResponsiveContainer>
           ) : (
-            <EmptyChartShell type="line" height={280} label="MAE / MFE preview" hint="Trades populate this scatter once a backtest completes" />
+            <EmptyChartShell type="line" height={280} label="MAE / MFE not recorded" hint="Excursion data requires per-trade mae/mfe fields — re-run on an engine version that persists them" />
           )}
         </motion.div>
 
@@ -720,7 +708,10 @@ export default function BacktestDetail() {
           {/* Calendar Tab */}
           <TabsContent value="calendar" className="space-y-4">
             {dailyPnls.length > 0 ? (
-              <PnLCalendar dailyPnls={dailyPnls} />
+              <>
+                <p className="text-[11px] text-text-muted">Running balance simulated from a ${(DEFAULT_STARTING_CAPITAL / 1000).toFixed(0)}K start.</p>
+                <PnLCalendar dailyPnls={dailyPnls} />
+              </>
             ) : (
               <div className="forge-card p-8 text-center">
                 <CalendarDays className="w-8 h-8 text-text-muted/40 mx-auto mb-3" />

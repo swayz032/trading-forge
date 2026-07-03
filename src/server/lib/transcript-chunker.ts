@@ -1,8 +1,8 @@
 /**
- * Wave 26 Pass L (2026-05-27) — Chunked transcript extraction for gemma4:e2b.
+ * Wave 26 Pass L (2026-05-27) — Chunked transcript extraction for gemma4:e4b-it-qat.
  *
  * PROBLEM
- *   RTX 5060 8 GB VRAM hosts gemma4:e2b (~5.5-7 GB resident). At
+ *   RTX 5060 8 GB VRAM hosts gemma4:e4b-it-qat (~5.5-7 GB resident). At
  *   TRANSCRIPT_EXTRACTOR_NUM_CTX=32768 the KV cache + activations push past
  *   the ~1 GB headroom on 24K-37K-char transcripts. Failure mode:
  *     `GGML_ASSERT(ctx->mem_buffer != NULL) failed`
@@ -14,7 +14,7 @@
  * SOLUTION
  *   1. Split long transcripts into 2-3 overlapping ~10K-char chunks
  *      (overlap ~1K to preserve cross-chunk context for the LLM).
- *   2. Run each chunk through gemma4:e2b SEPARATELY at a SAFE per-chunk ctx
+ *   2. Run each chunk through gemma4:e4b-it-qat SEPARATELY at a SAFE per-chunk ctx
  *      (default 12288 = ~3K tokens chunk input + ~3K prompt + 4K output;
  *      fits comfortably in the ~1 GB VRAM headroom).
  *   3. Sequential, never parallel — single Ollama instance per GPU.
@@ -59,12 +59,12 @@ import { callScoutExtractLlm, setChunkedNumCtxOverride } from "../services/model
 export const DEFAULT_CHUNK_CHARS = 10_000;
 /** Default cross-chunk overlap. Preserves mid-strategy phrasing across boundaries. */
 export const DEFAULT_OVERLAP_CHARS = 1_000;
-/** Default per-chunk num_ctx for gemma4:e2b on 8 GB VRAM. */
+/** Default per-chunk num_ctx for gemma4:e4b-it-qat on 8 GB VRAM. */
 export const DEFAULT_CHUNK_NUM_CTX = 12_288;
 /** Transcripts shorter than this skip chunking entirely (use full window).
  *  Wave 26 Pass L (2026-05-27): lowered 14_000 → 12_000 after FqxEKDxemtI
  *  (14,000 chars exact — sat right at the boundary) hit OOM on single-pass.
- *  Videos in the 12-14K band sit on the VRAM edge for gemma4:e2b on 8GB. */
+ *  Videos in the 12-14K band sit on the VRAM edge for gemma4:e4b-it-qat on 8GB. */
 export const CHUNKING_THRESHOLD_CHARS = 12_000;
 
 export interface ChunkerOptions {

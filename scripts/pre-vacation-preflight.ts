@@ -71,6 +71,13 @@ export interface PreflightDeps {
   countAppliedMigrations(): Promise<number>;
   /** Number of entries in meta/_journal.json. */
   countJournalMigrations(): Promise<number>;
+  // deepscan14 F2: optional so pre-existing deps mocks elsewhere keep type-checking
+  // without modification — when either hook is absent, the orphan-file sub-check
+  // inside checkNoPendingMigrations is silently skipped.
+  /** Migration tags (basename minus .sql) for every .sql file found on disk. */
+  listMigrationSqlTagsOnDisk?(): Promise<string[]>;
+  /** Every tag registered in meta/_journal.json. */
+  listJournalMigrationTags?(): Promise<string[]>;
   /** Read system_state row. */
   getSystemState(): Promise<{
     productionMode: string;
@@ -306,6 +313,33 @@ async function checkNoPendingMigrations(deps: PreflightDeps): Promise<CheckResul
   try {
     const applied = await deps.countAppliedMigrations();
     const journal = await deps.countJournalMigrations();
+
+    // deepscan14 F2: symmetric disk-vs-journal diff. The applied/journal COUNT
+    // comparison below cannot see a .sql file that has no journal entry at all —
+    // boot-migration-runner computes `pending` strictly from journal.entries, so
+    // an orphan file is invisible to it (never applies, no error). Catch that
+    // class here too, before the operator leaves for vacation.
+    if (deps.listMigrationSqlTagsOnDisk && deps.listJournalMigrationTags) {
+      const [diskTags, journalTags] = await Promise.all([
+        deps.listMigrationSqlTagsOnDisk(),
+        deps.listJournalMigrationTags(),
+      ]);
+      const journalTagSet = new Set(journalTags);
+      const orphans = diskTags.filter((t) => !journalTagSet.has(t)).sort();
+      if (orphans.length > 0) {
+        return {
+          name,
+          status: "FAIL",
+          detail:
+            `Applied=${applied}, journal=${journal}. ${orphans.length} orphan .sql file(s) with NO ` +
+            `journal entry: ${orphans.slice(0, 5).join(", ")}${orphans.length > 5 ? ", ..." : ""}.`,
+          remediation:
+            "Register the orphan migration file(s) in src/server/db/migrations/meta/_journal.json " +
+            "(or delete if stale/abandoned drafts). They will NEVER auto-apply until registered.",
+        };
+      }
+    }
+
     if (applied === journal) {
       return { name, status: "PASS", detail: `${applied}/${journal} migrations applied.` };
     }
@@ -750,6 +784,21 @@ export async function makeProductionDeps(): Promise<PreflightDeps> {
       const buf = await fs.readFile(journalPath, "utf8");
       const j = JSON.parse(buf) as { entries?: unknown[] };
       return Array.isArray(j.entries) ? j.entries.length : 0;
+    },
+
+    async listMigrationSqlTagsOnDisk() {
+      const migrationsDir = path.resolve(process.cwd(), "src/server/db/migrations");
+      const entries = await fs.readdir(migrationsDir);
+      return entries.filter((f) => f.toLowerCase().endsWith(".sql")).map((f) => f.slice(0, -4));
+    },
+
+    async listJournalMigrationTags() {
+      const journalPath = path.resolve(process.cwd(), "src/server/db/migrations/meta/_journal.json");
+      const buf = await fs.readFile(journalPath, "utf8");
+      const j = JSON.parse(buf) as { entries?: Array<{ tag?: unknown }> };
+      return Array.isArray(j.entries)
+        ? j.entries.map((e) => e.tag).filter((t): t is string => typeof t === "string")
+        : [];
     },
 
     async getSystemState() {

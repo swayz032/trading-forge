@@ -1,0 +1,116 @@
+{
+ "c8VLqF0XDR4": [
+  {
+   "name": "orb_mnq_5m",
+   "symbol": "MNQ",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "session_open_breakout",
+   "direction": "both",
+   "confluence_factors": "[\"regime_match\",\"structural_setup\",\"killzone_active\",\"opening_range_breakout\",\"first_30min_volume_above_avg\"]",
+   "factor_quality": "rich"
+  },
+  {
+   "name": "orb_mes_5m",
+   "symbol": "MES",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "session_open_breakout",
+   "direction": "both",
+   "confluence_factors": "[\"killzone_active\",\"opening_range_breakout\",\"first_30min_volume_above_avg\"]",
+   "factor_quality": "rich"
+  },
+  {
+   "name": "orb_mcl_5m",
+   "symbol": "MCL",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "session_open_breakout",
+   "direction": "both",
+   "confluence_factors": "[\"regime_match\",\"structural_setup\",\"killzone_active\",\"opening_range_breakout\",\"first_30min_volume_above_avg\"]",
+   "factor_quality": "rich"
+  },
+  {
+   "name": "orb_mnq_15m",
+   "symbol": "MNQ",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "session_open_breakout",
+   "direction": "both",
+   "confluence_factors": "[\"structural_setup\",\"regime_match\",\"killzone_active\",\"opening_range_breakout\",\"first_30min_volume_above_avg\"]",
+   "factor_quality": "rich"
+  },
+  {
+   "name": "orb_mcl_15m",
+   "symbol": "MCL",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "session_open_breakout",
+   "direction": "both",
+   "confluence_factors": "[\"structural_setup\",\"regime_match\",\"killzone_active\",\"opening_range_breakout\",\"first_30min_volume_above_avg\"]",
+   "factor_quality": "rich"
+  },
+  {
+   "name": "orb_mnq_15m",
+   "symbol": "MNQ",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "session_open_breakout",
+   "direction": "both",
+   "confluence_factors": "[\"structural_setup\",\"volume_confirmation\",\"killzone_active\",\"opening_range_breakout\",\"first_30min_volume_above_avg\"]",
+   "factor_quality": "rich"
+  },
+  {
+   "name": "orb_mcl_15m",
+   "symbol": "MCL",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "session_open_breakout",
+   "direction": "both",
+   "confluence_factors": "[\"structural_setup\",\"volume_confirmation\",\"killzone_active\",\"opening_range_breakout\",\"first_30min_volume_above_avg\"]",
+   "factor_quality": "rich"
+  }
+ ],
+ "e5HQXYBUW-Q": [
+  {
+   "name": "orb_mes_15m",
+   "symbol": "MES",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "session_open_breakout",
+   "direction": "both",
+   "confluence_factors": "[\"killzone_active\",\"opening_range_breakout\",\"first_30min_volume_above_avg\"]",
+   "factor_quality": "rich"
+  },
+  {
+   "name": "orb_mes_15m",
+   "symbol": "MES",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "session_open_breakout",
+   "direction": "both",
+   "confluence_factors": "[\"killzone_active\",\"opening_range_breakout\",\"first_30min_volume_above_avg\"]",
+   "factor_quality": "rich"
+  }
+ ],
+ "snNkQSyWX4k": [
+  {
+   "name": "sma_crossover_scalp_crude_mcl_30m",
+   "symbol": "MCL",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "sma_crossover",
+   "direction": "both",
+   "confluence_factors": "[\"structural_setup\",\"regime_match\"]",
+   "factor_quality": "fallback_only"
+  },
+  {
+   "name": "sma_crossover_scalp_crude_mes_30m",
+   "symbol": "MES",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "sma_crossover",
+   "direction": "both",
+   "confluence_factors": "[\"structural_setup\",\"regime_match\"]",
+   "factor_quality": "fallback_only"
+  },
+  {
+   "name": "sma_crossover_scalp_crude_mnq_30m",
+   "symbol": "MNQ",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "sma_crossover",
+   "direction": "both",
+   "confluence_factors": "[\"structural_setup\",\"regime_match\"]",
+   "factor_quality": "fallback_only"
+  }
+ ]
+}

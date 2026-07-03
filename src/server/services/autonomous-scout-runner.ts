@@ -35,11 +35,103 @@ import { randomUUID } from "crypto";
 // Track C adds the scheduler-level gate; this ensures the cron action itself
 // respects pause even when called directly (e.g. operator manual trigger, tests).
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
+import { notifyWarning } from "../services/notification-service.js";
+import { insertAuditRow } from "../lib/audit-log-helper.js";
 
 const BACKEND_URL = `http://localhost:${process.env.PORT ?? 4000}`;
 const BRAVE_API_KEY = process.env.BRAVE_SEARCH_API_KEY || process.env.BRAVE_API_KEY || "";
 const YOUTUBE_API_KEY = process.env.YOUTUBE_DATA_API_KEY || "";
 const EXA_API_KEY = process.env.EXA_API_KEY || "";
+
+// ─── Track O (deepscan11, 2026-07-02) — YouTube quota budget enforcement ────
+//
+// Real quota math (corrected from stale "2400/day" comment):
+//   fetchYouTubeTopVideos = 2 passes × 3 orders = 6 API calls × 100 units = 600 units/concept
+//   TARGET_CONCEPTS default = 5 concepts/cycle
+//   Cron cadence = every 4 hours = 6 cycles/day
+//   Total: 5 × 600 × 6 = 18,000 units/day (EXCEEDS 10K free tier by 80%)
+//
+// Mitigation: YOUTUBE_DAILY_QUOTA_BUDGET cap (default 9000) enforced per UTC day.
+// On budget exhaustion: skip further YT searches, emit audit row + deduped Discord WARN.
+// On HTTP 403/quota response: same audit + Discord, and skip remaining calls.
+
+const YOUTUBE_DAILY_QUOTA_BUDGET = (() => {
+  const raw = Number(process.env.YOUTUBE_DAILY_QUOTA_BUDGET);
+  return Number.isFinite(raw) && raw > 0 ? Math.floor(raw) : 9_000;
+})();
+
+// 100 units per YouTube Data API search.list call (Google's official quota cost).
+const YOUTUBE_QUOTA_UNITS_PER_CALL = 100;
+
+/** In-memory quota state — resets at UTC day boundary. Not durable across restarts. */
+const _ytQuotaState = {
+  usedUnits: 0,
+  utcDay: "",          // YYYY-MM-DD of the current UTC day
+  warnedToday: false,  // deduplication: only one Discord WARN per UTC day
+};
+
+function _ytQuotaUtcDay(): string {
+  return new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+}
+
+function _ensureYtDayReset(): void {
+  const today = _ytQuotaUtcDay();
+  if (_ytQuotaState.utcDay !== today) {
+    _ytQuotaState.usedUnits = 0;
+    _ytQuotaState.utcDay = today;
+    _ytQuotaState.warnedToday = false;
+  }
+}
+
+/** Record N units consumed; returns true if the budget is still available. */
+function _ytConsumeQuota(units: number): boolean {
+  _ensureYtDayReset();
+  _ytQuotaState.usedUnits += units;
+  return _ytQuotaState.usedUnits <= YOUTUBE_DAILY_QUOTA_BUDGET;
+}
+
+function _ytBudgetRemaining(): number {
+  _ensureYtDayReset();
+  return Math.max(0, YOUTUBE_DAILY_QUOTA_BUDGET - _ytQuotaState.usedUnits);
+}
+
+/** Emit audit + deduped-daily Discord WARN on quota exhaustion. */
+async function _emitYtQuotaExhausted(correlationId?: string): Promise<void> {
+  _ensureYtDayReset();
+  try {
+    await insertAuditRow({
+      action: "scout.youtube_quota_exhausted",
+      entityType: "scout_cycle",
+      entityId: correlationId ?? "quota_check",
+      status: "warning",
+      input: { budget: YOUTUBE_DAILY_QUOTA_BUDGET },
+      result: {
+        used_units: _ytQuotaState.usedUnits,
+        budget: YOUTUBE_DAILY_QUOTA_BUDGET,
+        utc_day: _ytQuotaState.utcDay,
+      },
+    });
+  } catch (e) {
+    logger.warn({ err: e instanceof Error ? e.message : String(e) }, "autonomous-scout: scout.youtube_quota_exhausted audit write failed (non-blocking)");
+  }
+  if (!_ytQuotaState.warnedToday) {
+    _ytQuotaState.warnedToday = true;
+    notifyWarning(
+      "YouTube quota exhausted",
+      `YouTube Data API daily budget of ${YOUTUBE_DAILY_QUOTA_BUDGET} units reached (${_ytQuotaState.usedUnits} used). YouTube layer disabled for the rest of the UTC day. Resets at midnight UTC.`,
+      { used_units: _ytQuotaState.usedUnits, budget: YOUTUBE_DAILY_QUOTA_BUDGET, utc_day: _ytQuotaState.utcDay },
+    );
+  }
+}
+
+// ─── Track O (deepscan11, 2026-07-02) — Zero-extract cycle tracking ──────────
+// When 3+ consecutive cycles produce 0 total mentions, emit a deduped-daily Discord WARN.
+
+const _zeroExtractState = {
+  consecutiveZeroCycles: 0,
+  warnedToday: false,
+  lastWarnUtcDay: "",
+};
 
 // ─── W23F.E — Symbol-tagged query template groups ────────────────────────────
 //
@@ -815,10 +907,19 @@ async function fetchWebPageBody(url: string): Promise<string> {
 
 // W23G.5 (2026-05-19) — Multi-order YouTube sampling + per-channel cap.
 //
-// Quota math: 8 queries × 3 calls × 100 units = 2400/day (well inside 10K free
-// tier; previous single-call was 800/day). The 3 calls per query are fired in
-// parallel (Promise.all) so cycle time is bounded by the slowest call, not
-// the sum.
+// Track O (deepscan11 2026-07-02) — CORRECTED quota math:
+//   Per concept: 2 passes (captioned + uncaptioned) × 3 orders (relevance/viewCount/date)
+//     = 6 API calls × 100 units = 600 units/concept
+//   Per cycle: TARGET_CONCEPTS (default 5) × 600 = 3,000 units/cycle
+//   Per day: 6 cycles (every 4h) × 3,000 = 18,000 units/day
+//   Free tier cap: 10,000 units/day → EXCEEDS by 80%
+//
+// Mitigation: YOUTUBE_DAILY_QUOTA_BUDGET (default 9000) enforced in-memory per UTC day.
+// Budget guard fires at concept granularity in fetchYouTubeTopVideos(), not per-call.
+//
+// (Previous stale comment said "8 queries × 3 calls × 100 = 2400/day" — this was
+// based on the pre-W23G.4 single-pass design and did not account for the second pass
+// or the cycles/day factor. 2400 was wrong by ~7.5×.)
 //
 // Discovery order semantics:
 //   relevance(25) — YouTube's default ranking; surfaces SEO-dominant content
@@ -872,9 +973,18 @@ async function _fetchYouTubeOrder(
     paramObj.videoCaption = "closedCaption";
   }
   const params = new URLSearchParams(paramObj);
+  // Track O (deepscan11, 2026-07-02): count quota before sending so we know the
+  // units were consumed even if the response fails.
+  _ytConsumeQuota(YOUTUBE_QUOTA_UNITS_PER_CALL);
   const res = await fetch(`${base}?${params.toString()}`, { signal: AbortSignal.timeout(20_000) });
   if (!res.ok) {
-    logger.warn({ status: res.status, query, order }, "autonomous-scout: YouTube API call failed");
+    // Track O (deepscan11, 2026-07-02): on 403/quota — emit audit + Discord WARN
+    if (res.status === 403 || res.status === 429) {
+      logger.warn({ status: res.status, query, order }, "autonomous-scout: YouTube API quota/auth error — emitting scout.youtube_quota_exhausted");
+      _emitYtQuotaExhausted().catch(() => {});
+    } else {
+      logger.warn({ status: res.status, query, order }, "autonomous-scout: YouTube API call failed");
+    }
     return [];
   }
   const j = (await res.json()) as any;
@@ -921,6 +1031,17 @@ export async function fetchYouTubeTopVideos(
 ): Promise<Array<{ url: string; title: string; source_pass: "captioned" | "uncaptioned"; sourceQuery: string; titleScore: number; combinedScore: number; videoId: string }>> {
   if (!YOUTUBE_API_KEY) {
     logger.warn({ conceptName }, "autonomous-scout: YOUTUBE_DATA_API_KEY not set — YouTube layer disabled");
+    return [];
+  }
+  // Track O (deepscan11, 2026-07-02): budget guard — each concept costs 6 calls × 100 = 600 units.
+  // Check BEFORE making any calls so we don't burn quota and then skip.
+  const UNITS_PER_CONCEPT = 6 * YOUTUBE_QUOTA_UNITS_PER_CALL; // 6 API calls × 100 = 600
+  if (_ytBudgetRemaining() < UNITS_PER_CONCEPT) {
+    logger.warn(
+      { conceptName, budgetRemaining: _ytBudgetRemaining(), budgetTotal: YOUTUBE_DAILY_QUOTA_BUDGET },
+      "autonomous-scout: YouTube daily budget exhausted — skipping YouTube layer for this concept",
+    );
+    await _emitYtQuotaExhausted(cycleCorrelationId);
     return [];
   }
   const human = conceptName.replace(/_/g, " ");
@@ -1834,5 +1955,62 @@ export async function runAutonomousScoutCycle(): Promise<CycleResult> {
     cycleIndex,   // W23F.E
   };
   logger.info(result, "autonomous-scout: cycle complete");
+
+  // Track O (deepscan11, 2026-07-02) FIX 4 — zero-extract cycle visibility.
+  // When the full cycle yields 0 total layer mentions, emit an audit row and
+  // track consecutive zeroes. On 3+ consecutive zero cycles, emit a deduped-daily
+  // Discord WARN so the operator knows the conveyor is stalled.
+  const totalMentions = webMentions + youtubeMentions + redditMentions;
+  if (totalMentions === 0 && concepts.length >= 0) {
+    // Cycle produced no extracts (could be 0 concepts or 0 from existing concepts)
+    _zeroExtractState.consecutiveZeroCycles += 1;
+    try {
+      await insertAuditRow({
+        action: "scout.cycle_zero_extracts",
+        entityType: "scout_cycle",
+        entityId: correlationId,
+        status: "info",
+        result: {
+          consecutive_zero_cycles: _zeroExtractState.consecutiveZeroCycles,
+          web_mentions: webMentions,
+          youtube_mentions: youtubeMentions,
+          reddit_mentions: redditMentions,
+          concepts_discovered: concepts.length,
+          queries_run: activeQueries.length,
+          cycle_index: cycleIndex,
+          symbol_group: symbolGroup,
+        },
+      });
+    } catch (e) {
+      logger.warn({ err: e instanceof Error ? e.message : String(e) }, "autonomous-scout: scout.cycle_zero_extracts audit write failed (non-blocking)");
+    }
+    // Deduped-daily Discord WARN on 3+ consecutive zero-extract cycles
+    if (_zeroExtractState.consecutiveZeroCycles >= 3) {
+      const today = _ytQuotaUtcDay();
+      if (_zeroExtractState.lastWarnUtcDay !== today) {
+        _zeroExtractState.lastWarnUtcDay = today;
+        _zeroExtractState.warnedToday = false;
+      }
+      if (!_zeroExtractState.warnedToday) {
+        _zeroExtractState.warnedToday = true;
+        notifyWarning(
+          "Scout conveyor stalled — 3+ consecutive zero-extract cycles",
+          `The autonomous scout cycle has produced 0 layer mentions for ${_zeroExtractState.consecutiveZeroCycles} consecutive cycles. ` +
+          `Latest cycle: ${cycleIndex}, symbol group: ${symbolGroup}. ` +
+          `Check Brave/Exa API keys, YouTube API quota, and pipeline status.`,
+          {
+            consecutive_zero_cycles: _zeroExtractState.consecutiveZeroCycles,
+            cycle_index: cycleIndex,
+            symbol_group: symbolGroup,
+            correlation_id: correlationId,
+          },
+        );
+      }
+    }
+  } else {
+    // Non-zero cycle — reset consecutive counter
+    _zeroExtractState.consecutiveZeroCycles = 0;
+  }
+
   return result;
 }

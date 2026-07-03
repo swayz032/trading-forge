@@ -1,8 +1,17 @@
 import { eq, desc } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { strategyGraveyard } from "../db/schema.js";
+import { strategyGraveyard, auditLog } from "../db/schema.js";
 import { OllamaClient } from "./ollama-client.js";
-import { logger } from "../index.js";
+// Band B (spec-onboarding-bridge, 2026-07-02) — was `from "../index.js"`. That
+// pulled in the full Express app bootstrap (routes/agent.ts -> agent-service.ts,
+// which imports THIS file) purely to get a `logger` object. Confirmed circular
+// dependency: any standalone entry point that imports agent-service.ts (not
+// going through src/server/index.ts as the true root) hit a Node ESM TDZ
+// ReferenceError ("Cannot access 'AgentService' before initialization") at
+// routes/agent.ts:102. `../lib/logger.js` is the same pino config (LOG_LEVEL,
+// dev pino-pretty transport) plus a test-runtime silence guard — behaviorally
+// equivalent, zero functional change, severs the edge.
+import { logger } from "../lib/logger.js";
 
 const SIMILARITY_THRESHOLD = 0.85;
 
@@ -35,6 +44,14 @@ export interface GraveyardCheckResult {
   matchedGraveyardId: string | null;
   matchedName: string | null;
   reason: string;
+  /**
+   * deepscan14 D3: true when the check could not meaningfully evaluate ANY graveyard
+   * entry because every stored embedding has a different dimensionality than the
+   * candidate's (e.g. current embedder is gemma-dim, stored entries are nomic-768).
+   * `blocked=false` in this state means "gate INACTIVE" — NOT "checked, no match".
+   * Absent/false = the gate ran a real comparison.
+   */
+  inactive?: boolean;
 }
 
 export interface RelevantFailure {
@@ -146,6 +163,7 @@ export class GraveyardGate {
         matchedGraveyardId: null,
         matchedName: null,
         reason: "Embedding service unavailable — gate bypassed",
+        inactive: true,
       };
     }
 
@@ -167,12 +185,27 @@ export class GraveyardGate {
     let maxSimilarity = 0;
     let matchedId: string | null = null;
     let matchedName: string | null = null;
+    // deepscan14 D3: track dimension mismatches separately from "no embedding at
+    // all" so we can tell "compared every entry, none matched" apart from
+    // "compared nothing because every embedding is the wrong shape."
+    let entriesWithEmbedding = 0;
+    let dimMismatchCount = 0;
 
     for (const entry of graveyardEntries) {
       if (!entry.embedding) continue;
 
       const graveyardEmbedding = entry.embedding as number[];
       if (!Array.isArray(graveyardEmbedding) || graveyardEmbedding.length === 0) continue;
+      entriesWithEmbedding++;
+
+      if (graveyardEmbedding.length !== candidateEmbedding.length) {
+        // cosineSimilarity() would silently return 0 for this pair — that's
+        // indistinguishable from "genuinely dissimilar." Count it explicitly
+        // instead so a system-wide embedder swap surfaces as gate-inactive
+        // rather than as a clean "no match" pass.
+        dimMismatchCount++;
+        continue;
+      }
 
       let similarity = cosineSimilarity(candidateEmbedding, graveyardEmbedding);
 
@@ -194,6 +227,41 @@ export class GraveyardGate {
       }
     }
 
+    // deepscan14 D3: if every entry that HAD an embedding was skipped for a
+    // dimension mismatch, the gate compared nothing at all — that is gate-INACTIVE,
+    // not "checked, no match." (e.g. a candidate embedded with gemma against a
+    // graveyard whose embeddings are all nomic-768.) Distinguish it loudly.
+    const allMismatched = entriesWithEmbedding > 0 && dimMismatchCount === entriesWithEmbedding;
+
+    if (allMismatched) {
+      logger.warn(
+        { candidateDim: candidateEmbedding.length, entriesWithEmbedding, dimMismatchCount },
+        "Graveyard gate INACTIVE — every stored embedding has a different dimensionality than the candidate; nothing was compared",
+      );
+      db.insert(auditLog).values({
+        action: "graveyard.similarity_gate_inactive_dim_mismatch",
+        entityType: "strategy_graveyard",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { candidateEmbeddingDim: candidateEmbedding.length } as Record<string, unknown>,
+        result: { entriesWithEmbedding, dimMismatchCount } as Record<string, unknown>,
+        status: "success",
+        correlationId: null,
+      }).catch((err: unknown) => {
+        logger.warn({ err }, "graveyard-gate: audit write failed for dim-mismatch telemetry — non-blocking");
+      });
+
+      return {
+        blocked: false,
+        similarity: 0,
+        matchedGraveyardId: null,
+        matchedName: null,
+        reason: `Gate INACTIVE: all ${entriesWithEmbedding} graveyard embedding(s) have a different dimensionality ` +
+          `than the candidate (candidate dim=${candidateEmbedding.length}) — embedder mismatch, nothing was compared`,
+        inactive: true,
+      };
+    }
+
     const blocked = maxSimilarity > threshold;
 
     if (blocked) {
@@ -211,6 +279,7 @@ export class GraveyardGate {
       reason: blocked
         ? `Blocked: ${(maxSimilarity * 100).toFixed(1)}% similar to dead strategy "${matchedName}"`
         : `Passed: max similarity ${(maxSimilarity * 100).toFixed(1)}% (threshold: ${(threshold * 100).toFixed(0)}%)`,
+      inactive: false,
     };
   }
 }

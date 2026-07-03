@@ -143,7 +143,10 @@ const FAILURE_DISABLE_THRESHOLD = 5;
  * Credential-safety and dead-man jobs are now included so a transient vendor
  * outage (e.g. Bitwarden 12h maintenance → 5 failures over 30h) cannot
  * silently disable them and leave the vault session expired during vacation.
- * The CRITICAL alert still fires at 5 failures — disabling is suppressed only.
+ * The CRITICAL alert still fires when consecutiveFailures crosses 5 (and
+ * re-fires every 10th failure thereafter to avoid spam) — disabling is
+ * suppressed only. (deepscan7 M1 2026-07-02: the alert was previously inside
+ * the disable branch and never fired for these jobs; fixed in recordJobFailure.)
  */
 const NEVER_DISABLE_JOBS = new Set([
   // Original dead-man / monitoring infrastructure
@@ -160,6 +163,13 @@ const NEVER_DISABLE_JOBS = new Set([
   // Credential-safety jobs — transient vendor outage must not permanently disable these
   "bw-session-refresh",
   "prop-firm-cookie-refresh",
+  // deepscan7 DS7-C1 2026-07-02: the ONLY backup job — 5 consecutive nightly
+  // pg_dump failures (e.g. S3 outage, portable pg_dump path broken) must never
+  // permanently disable it; a disabled backup job = silent total-loss exposure.
+  "db-backup",
+  // deepscan7 DS7-H1 2026-07-02: Windows reboot-pending probing must never go
+  // dark — it is _PIPELINE_GATE_EXEMPT but was still auto-disableable.
+  "pre-trading-day-health-check",
 ]);
 
 // deepscan6 A2: once-per-hour-per-signature dedup for the n8n-health-check Discord WARN
@@ -169,6 +179,112 @@ const _n8nHealthAlertDedup = new Map<string, number>();
 // deepscan6 R1: 6h/strategy dedup for the rolling-Sharpe decay REVIEW Discord WARN
 // (the 4h rolling-sharpe cron would otherwise re-alert a decaying strategy every run).
 const _sharpeDecayAlertDedup = new Map<string, number>();
+
+// deepscan14 E6: once-per-hour-per-table dedup for the stale-pending-sweeper's
+// own failure signal. Each per-table sweep catch used to be logger.error only —
+// if the sweeper itself starts failing every 5 min (e.g. a schema drift on one
+// table), orphaned rows accumulate silently with zero operator-visible signal.
+const _stalePendingSweepFailureAlertDedup = new Map<string, number>();
+
+/**
+ * deepscan14 E6: writes an audit row + a rate-limited (once/hour/table) Discord
+ * WARN when a single stale-pending-sweeper sub-sweep throws. Never throws itself
+ * — a failure recording its own failure must not take down the sweeper cron.
+ */
+async function _recordStalePendingSweepFailure(
+  tableName: string,
+  err: unknown,
+  correlationId: string,
+): Promise<void> {
+  const errMsg = err instanceof Error ? err.message : String(err);
+  try {
+    await db.insert(auditLog).values({
+      action: "stale_pending_sweep.table_sweep_failed",
+      entityType: tableName,
+      entityId: null,
+      input: { table: tableName },
+      result: { error: errMsg },
+      status: "error",
+      correlationId,
+    });
+  } catch (auditErr) {
+    logger.error({ table: tableName, err: auditErr }, "stale-pending-sweeper: failed to write table_sweep_failed audit row (non-blocking)");
+  }
+
+  const now = Date.now();
+  const last = _stalePendingSweepFailureAlertDedup.get(tableName) ?? 0;
+  if (now - last < 60 * 60 * 1000) return;
+  _stalePendingSweepFailureAlertDedup.set(tableName, now);
+  try {
+    notifyWarning(
+      "Stale-pending sweep failing",
+      appendFamilyGradePostscript(
+        `stale-pending-sweeper: the sub-sweep for table "${tableName}" is failing. Latest error: ${errMsg}`,
+        "One of the background cleanup jobs is erroring repeatedly.",
+        "It won't stop your trades, but orphaned rows may pile up unnoticed. Ping Tony if this repeats.",
+      ),
+    );
+  } catch (notifyErr) {
+    logger.error({ table: tableName, err: notifyErr }, "stale-pending-sweeper: Discord WARN dispatch failed (non-blocking)");
+  }
+}
+
+// deepscan7 DS7-H3 2026-07-02: the autonomous-scout run is fire-and-forget and
+// routed persistent failures only to logger.error — the research pipeline could
+// be silently dark for 30 days. Track consecutive failures here; after 3 in a
+// row fire a DEDUPED Discord WARN (re-notify at most once per 24h) + audit row.
+const SCOUT_FAILURE_ALERT_THRESHOLD = 3;
+const SCOUT_FAILURE_ALERT_INTERVAL_MS = 24 * 60 * 60 * 1000;
+let _scoutConsecutiveFailures = 0;
+let _scoutLastFailureAlertAt = 0;
+
+function recordScoutRunSuccess(): void {
+  if (_scoutConsecutiveFailures > 0) {
+    logger.info(
+      { previousFailures: _scoutConsecutiveFailures },
+      "autonomous-scout-discovery: recovered after consecutive failures",
+    );
+  }
+  _scoutConsecutiveFailures = 0;
+}
+
+async function recordScoutRunFailure(err: unknown): Promise<void> {
+  _scoutConsecutiveFailures++;
+  const lastError = err instanceof Error ? err.message : String(err);
+  logger.error(
+    { err: lastError, consecutiveFailures: _scoutConsecutiveFailures },
+    "autonomous-scout-discovery: cycle failed",
+  );
+  if (_scoutConsecutiveFailures < SCOUT_FAILURE_ALERT_THRESHOLD) return;
+  const now = Date.now();
+  if (now - _scoutLastFailureAlertAt < SCOUT_FAILURE_ALERT_INTERVAL_MS) return;
+  _scoutLastFailureAlertAt = now;
+
+  notifyWarning(
+    "Scheduler: autonomous scout failing repeatedly",
+    appendFamilyGradePostscript(
+      `The autonomous scout cycle has failed ${_scoutConsecutiveFailures} times in a row (once-daily cron — that is ~${_scoutConsecutiveFailures} days dark).\nLast error: ${lastError}\nThe research pipeline is producing no new strategy candidates until this recovers.`,
+      `The bot's research assistant (which finds new strategy ideas) has failed ${_scoutConsecutiveFailures} days in a row. The bot keeps trading its existing strategies normally.`,
+      "No action needed right now. Tell Tony: 'the strategy scout keeps failing.' He will investigate.",
+    ),
+    { job: "autonomous-scout-discovery", consecutiveFailures: _scoutConsecutiveFailures },
+  );
+
+  await insertAuditRowSafe({
+    action: "scout.consecutive_failure_alert",
+    entityType: "system",
+    entityId: null,
+    decisionAuthority: "system",
+    input: {
+      job: "autonomous-scout-discovery",
+      consecutiveFailures: _scoutConsecutiveFailures,
+      alertThreshold: SCOUT_FAILURE_ALERT_THRESHOLD,
+    } as Record<string, unknown>,
+    result: { lastError, notified: true } as Record<string, unknown>,
+    status: "warning",
+    correlationId: randomUUID(),
+  });
+}
 
 function getJobHealth(name: string): JobHealth {
   let health = jobHealthTracker.get(name);
@@ -205,25 +321,47 @@ function recordJobFailure(name: string, error: unknown): void {
     );
   }
 
-  if (health.consecutiveFailures >= FAILURE_DISABLE_THRESHOLD && !health.disabled && !NEVER_DISABLE_JOBS.has(name)) {
-    health.disabled = true;
-    health.disabledAt = new Date();
-    health.disableReason = `Auto-disabled after ${health.consecutiveFailures} consecutive failures`;
+  if (health.consecutiveFailures >= FAILURE_DISABLE_THRESHOLD && !health.disabled) {
+    if (!NEVER_DISABLE_JOBS.has(name)) {
+      health.disabled = true;
+      health.disabledAt = new Date();
+      health.disableReason = `Auto-disabled after ${health.consecutiveFailures} consecutive failures`;
 
-    notifyCritical(
-      `Scheduler: ${name} AUTO-DISABLED`,
-      appendFamilyGradePostscript(
-        `Job "${name}" disabled after ${health.consecutiveFailures} consecutive failures.\nLast error: ${error instanceof Error ? error.message : String(error)}\nTo re-enable: see docs/admin-runbook.md#scheduler-re-enable`,
-        `A background maintenance job (${name}) has been automatically disabled after failing too many times. The bot continues trading, but this maintenance function is paused.`,
-        "No immediate action needed. Tell Tony: 'A scheduler job was auto-disabled.' He will re-enable it when ready.",
-      ),
-      { job: name, consecutiveFailures: health.consecutiveFailures },
-    );
+      notifyCritical(
+        `Scheduler: ${name} AUTO-DISABLED`,
+        appendFamilyGradePostscript(
+          `Job "${name}" disabled after ${health.consecutiveFailures} consecutive failures.\nLast error: ${error instanceof Error ? error.message : String(error)}\nTo re-enable: see docs/admin-runbook.md#scheduler-re-enable`,
+          `A background maintenance job (${name}) has been automatically disabled after failing too many times. The bot continues trading, but this maintenance function is paused.`,
+          "No immediate action needed. Tell Tony: 'A scheduler job was auto-disabled.' He will re-enable it when ready.",
+        ),
+        { job: name, consecutiveFailures: health.consecutiveFailures },
+      );
 
-    logger.error(
-      { job: name, consecutiveFailures: health.consecutiveFailures },
-      "Scheduler: job AUTO-DISABLED due to repeated failures",
-    );
+      logger.error(
+        { job: name, consecutiveFailures: health.consecutiveFailures },
+        "Scheduler: job AUTO-DISABLED due to repeated failures",
+      );
+    } else if ((health.consecutiveFailures - FAILURE_DISABLE_THRESHOLD) % 10 === 0) {
+      // deepscan7 M1 2026-07-02: never-disable jobs previously never fired this
+      // CRITICAL (both the disable AND the alert sat behind the same guard, so
+      // e.g. db-backup could fail forever with only a single WARN at 3). Fire
+      // at the exact threshold crossing, then re-fire every 10th failure —
+      // never every tick — so a multi-day outage stays visible without spam.
+      notifyCritical(
+        `Scheduler: ${name} failing persistently (never-disable job)`,
+        appendFamilyGradePostscript(
+          `Job "${name}" has failed ${health.consecutiveFailures} times in a row.\nLast error: ${error instanceof Error ? error.message : String(error)}\nThis job is critical infrastructure and is NEVER auto-disabled — it will keep retrying, but the underlying failure needs investigation.`,
+          `A critical background job (${name}) keeps failing. The bot continues trading, but this safety function is not working.`,
+          "No immediate action needed. Tell Tony: 'A critical scheduler job keeps failing.' He should investigate soon.",
+        ),
+        { job: name, consecutiveFailures: health.consecutiveFailures, neverDisable: true },
+      );
+
+      logger.error(
+        { job: name, consecutiveFailures: health.consecutiveFailures },
+        "Scheduler: never-disable job failing persistently — disabling suppressed, CRITICAL fired",
+      );
+    }
   }
 }
 
@@ -320,6 +458,30 @@ async function withRetry(
     });
   } catch (dlqErr) {
     logger.error({ err: dlqErr, job: name }, "Failed to capture to DLQ — error suppressed");
+  }
+
+  // FIX 4 (deepscan10): databento-specific alert on withRetry exhaustion.
+  // DLQ entry alone is invisible during vacation — emit audit row + Discord WARN
+  // so the operator knows the weekly Databento cache is now stale.
+  if (name === "databento-weekly-refresh") {
+    void insertAuditRowSafe({
+      action: "databento_refresh.failed",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { attempts: attempt, maxRetries } as Record<string, unknown>,
+      result: { error: lastErr instanceof Error ? lastErr.message : String(lastErr) } as Record<string, unknown>,
+      status: "error",
+    });
+    notifyWarning(
+      "Databento Weekly Refresh Failed After All Retries",
+      appendFamilyGradePostscript(
+        `databento-weekly-refresh exhausted all ${attempt} attempt(s). The Databento market-data cache is now stale. Next scheduled retry: following Sunday 9 PM ET. Last error: ${lastErr instanceof Error ? lastErr.message : String(lastErr)}`,
+        "The weekly market data update failed. The bot may use slightly stale reference data until the next attempt next Sunday.",
+        "No action needed immediately — the bot retries automatically next Sunday. Call Tony if this repeats for 2 or more weeks in a row.",
+      ),
+      { job: name, attempts: attempt, maxRetries },
+    );
   }
   } finally {
     cronJobsConcurrent.dec();
@@ -450,6 +612,11 @@ function _releaseJobLock(name: string): void {
 // unscheduled drift (Track C F-1/F-2 class of bug — dead-jobs that look healthy
 // in the registry but never fire).
 const _scheduledJobs = new Set<string>();
+
+// ─── FIX 4 (deepscan10): databento pipeline-paused skip dedupe ───────────────
+// Emit one audit row per calendar day when databento refresh is skipped because
+// the pipeline is not ACTIVE — so vacation-stale data is queryable.
+let _databentoSkipLastAuditDay: string | null = null;
 
 // ─── Track C F-6: jobs that MUST fire even when pipeline is paused ────────
 // Heartbeat must alert operator even when pipeline gates research throughput.
@@ -603,6 +770,16 @@ export const _testOnly = {
    * requiring a server boot or cron tick.
    */
   resumeActivePaperSessions,
+  // deepscan7 DS7-H3 2026-07-02: scout consecutive-failure tracker test seams.
+  recordScoutRunFailure,
+  recordScoutRunSuccess,
+  resetScoutFailureTracker(): void {
+    _scoutConsecutiveFailures = 0;
+    _scoutLastFailureAlertAt = 0;
+  },
+  getScoutFailureState(): { consecutiveFailures: number; lastAlertAt: number } {
+    return { consecutiveFailures: _scoutConsecutiveFailures, lastAlertAt: _scoutLastFailureAlertAt };
+  },
 };
 
 export async function reconcileMissedRuns() {
@@ -739,9 +916,16 @@ function registerDLQHandlers(): void {
   );
 }
 
-export function initScheduler() {
+// deepscan7 D2 (2026-07-02): optional boot correlationId threads the single boot
+// trace (boot.started → migrations → scheduler → boot.completed) into scheduler
+// startup logging. initScheduler writes no startup audit row today; if one is
+// added later it MUST carry this id. Default preserved — no caller breaks.
+export function initScheduler(bootCorrelationId: string | null = null) {
   if (initialized) return;
   initialized = true;
+  if (bootCorrelationId) {
+    logger.info({ correlationId: bootCorrelationId }, "Scheduler: initializing (boot-correlated)");
+  }
 
   // ─── Emit scheduler:job-complete after each successful job ───
   function emitJobComplete(name: string, durationMs: number) {
@@ -1031,8 +1215,11 @@ export function initScheduler() {
     logger.info({ todayKey, hourUtc }, "autonomous-scout-discovery: firing once-daily cycle");
     const { runAutonomousScoutCycle } = await import("./services/autonomous-scout-runner.js");
     runAutonomousScoutCycle()
-      .then((result) => logger.info({ result }, "autonomous-scout-discovery: cycle complete"))
-      .catch((err) => logger.error({ err: err instanceof Error ? err.message : String(err) }, "autonomous-scout-discovery: cycle failed"));
+      .then((result) => {
+        recordScoutRunSuccess();
+        logger.info({ result }, "autonomous-scout-discovery: cycle complete");
+      })
+      .catch((err) => void recordScoutRunFailure(err));
   });
 
   // ─── Track C F-1: cron driver for autonomous-scout-discovery ────────────
@@ -1355,6 +1542,26 @@ export function initScheduler() {
   } finally { _releaseJobLock("pre-trading-day-health-check"); }
   });
   _scheduledJobs.add("pre-trading-day-health-check");
+
+  // ─── FIX 3 (deepscan10): Weekend auto-resume cron ────────────────────────────
+  // The weekday cron above ("0 12,13 * * 1-5") misses Friday-evening reboots:
+  // a reboot pause set after Friday 8 AM ET would not be auto-resumed until
+  // Monday 8 AM ET — ~72h of silent trading halt. This cron fires hourly on
+  // Sat/Sun and lets maybeAutoResumeAfterReboot() decide via its three guards
+  // (provenance row, pipeline mode, latest mode-change ownership). No-op if the
+  // pipeline was never paused by a reboot or was already operator-resumed.
+  // NOT pipelineGated: must run even when pipeline is PAUSED so it can resume it.
+  cron.schedule("0 * * * 0,6", async () => {
+    try {
+      const { maybeAutoResumeAfterReboot } = await import("./services/windows-health-check-service.js");
+      const result = await maybeAutoResumeAfterReboot();
+      if (result.resumed) {
+        logger.info({ outcome: result.outcome }, "Scheduler: weekend auto-resume check — pipeline resumed after reboot pause");
+      }
+    } catch (err) {
+      logger.error({ err }, "Scheduler: weekend auto-resume check failed (non-fatal)");
+    }
+  });
 
   // ─── W25 Gap 8: Every hour — Broker error budget check (RTH + post-market) ──
   // Aggregates route_rejected / compliance_rejected from audit_log over rolling
@@ -2379,6 +2586,7 @@ export function initScheduler() {
         }
       } catch (err) {
         logger.error({ table: sweep.name, err }, "stale-pending-sweeper: error sweeping table");
+        await _recordStalePendingSweepFailure(sweep.name, err, correlationId);
       }
     }
 
@@ -2416,6 +2624,7 @@ export function initScheduler() {
       }
     } catch (err) {
       logger.error({ table: "critic_optimization_runs", err }, "stale-pending-sweeper: error sweeping table");
+      await _recordStalePendingSweepFailure("critic_optimization_runs", err, correlationId);
     }
 
     try {
@@ -2444,6 +2653,7 @@ export function initScheduler() {
       }
     } catch (err) {
       logger.error({ table: "critic_candidates", err }, "stale-pending-sweeper: error sweeping table");
+      await _recordStalePendingSweepFailure("critic_candidates", err, correlationId);
     }
 
     // FINDING #5 FIX: backtests stuck 'running' >90min block conveyor re-enqueue.
@@ -2471,6 +2681,7 @@ export function initScheduler() {
       }
     } catch (err) {
       logger.error({ table: "backtests", err }, "stale-pending-sweeper: error sweeping backtests");
+      await _recordStalePendingSweepFailure("backtests", err, correlationId);
     }
 
     // Fix 3d (2026-06-29): agent_jobs — use COALESCE(started_at, created_at) so the
@@ -2501,6 +2712,7 @@ export function initScheduler() {
       }
     } catch (err) {
       logger.error({ table: "agent_jobs", err }, "stale-pending-sweeper: error sweeping agent_jobs");
+      await _recordStalePendingSweepFailure("agent_jobs", err, correlationId);
     }
 
     if (totalSwept === 0) {
@@ -3158,7 +3370,25 @@ except Exception as e:
     });
     // Only fire on Sunday 21:00 ET (which is Mon 01:00 or 02:00 UTC)
     if (!etStr.includes("Sun") || !etStr.includes("21")) return;
-    if (!(await pipelineGate("databento-weekly-refresh"))) return;
+    if (!(await pipelineGate("databento-weekly-refresh"))) {
+      // FIX 4 (deepscan10): audit the skip so vacation-stale data is queryable.
+      // Deduped to one row per calendar day so a long vacation doesn't spam.
+      const _skipDay = new Date().toISOString().slice(0, 10);
+      if (_databentoSkipLastAuditDay !== _skipDay) {
+        _databentoSkipLastAuditDay = _skipDay;
+        void insertAuditRowSafe({
+          action: "databento_refresh.skipped_pipeline_paused",
+          entityType: "system",
+          entityId: null,
+          decisionAuthority: "system",
+          input: { reason: "pipeline_not_active", date: _skipDay } as Record<string, unknown>,
+          result: { skipped: true } as Record<string, unknown>,
+          status: "info",
+        });
+        logger.info({ date: _skipDay }, "Scheduler: databento-weekly-refresh skipped — pipeline not ACTIVE (audit row written)");
+      }
+      return;
+    }
     logger.info("Scheduler: Databento weekly refresh (Sunday 9 PM ET)");
     const t0dbr = Date.now();
     await withRetry("databento-weekly-refresh", SCHEDULER_JOBS["databento-weekly-refresh"].run);
@@ -5291,7 +5521,9 @@ except Exception as e:
       // NOT pipeline-gated — safety signal (in _PIPELINE_GATE_EXEMPT)
       logger.info("Scheduler: db-backup (02:00 AM ET confirmed)");
       const t0db = Date.now();
-      await withRetry("db-backup", SCHEDULER_JOBS["db-backup"].run, 1);
+      // deepscan7 L2 2026-07-02: 3 retries like other jobs — the only backup
+      // job should not give up after a single transient pg_dump/S3 hiccup.
+      await withRetry("db-backup", SCHEDULER_JOBS["db-backup"].run, 3);
       markJobRun("db-backup");
       emitJobComplete("db-backup", Date.now() - t0db);
     } finally {
@@ -5888,6 +6120,22 @@ except Exception as e:
   // ─── I3: Resume active paper sessions after restart ───────
   resumeActivePaperSessions().catch((err) => {
     logger.error({ err }, "Scheduler: paper session resume failed");
+  });
+
+  // ─── FIX 3 (deepscan10): Boot-time auto-resume check ────────────────────────
+  // If the server was rebooted (NSSM restart) while a reboot-pause was active,
+  // the pipeline stays PAUSED until the next weekday 8 AM ET cron. This boot-time
+  // call gives an immediate recovery path: if RebootPending is cleared AND the
+  // latest pipeline mode-change is still our reboot pause, resume now.
+  // The three guards inside maybeAutoResumeAfterReboot() make this idempotent.
+  import("./services/windows-health-check-service.js").then(({ maybeAutoResumeAfterReboot }) => {
+    return maybeAutoResumeAfterReboot();
+  }).then((result) => {
+    if (result.resumed) {
+      logger.info({ outcome: result.outcome }, "Scheduler: boot-time auto-resume check — pipeline resumed after reboot pause");
+    }
+  }).catch((err) => {
+    logger.error({ err }, "Scheduler: boot-time auto-resume check failed (non-fatal)");
   });
 }
 

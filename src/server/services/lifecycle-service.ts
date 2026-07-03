@@ -79,6 +79,13 @@ import { evaluateBifGate } from "../lib/bif-gate.js";
 
 const VALID_STATES = [
   "CANDIDATE",
+  // (deepscan7 architect-M2 2026-07-02) NEEDS_REVISION / NEEDS_ARCHETYPE were written by
+  // raw SQL (direct-bucket-graduator.ts / strategy-stale-detector.ts) but absent from the
+  // state machine — write-only dead-ends with no lifecycle_transitions rows and no exit
+  // path. Registered here (additive, NO gate logic) so promoteStrategy can route them
+  // back to CANDIDATE (rework loop) or GRAVEYARD (abandon).
+  "NEEDS_REVISION",
+  "NEEDS_ARCHETYPE",
   "TESTING",
   // Wave 29 Pass A.1: SHADOW stage sits between TESTING and PAPER.
   // Signals fire Pine alerts (TradingView) but TradersPost webhook is OFF.
@@ -129,10 +136,17 @@ const VALID_TRANSITIONS: Record<LifecycleState, LifecycleState[]> = {
   // TESTING is still skippable (tier-qualified fast-track; SHADOW is the mandatory skew layer).
   // A manual PATCH /:id/lifecycle {from:CANDIDATE,to:PAPER} is now correctly REJECTED as
   // an invalid transition — fail-closed by design (gate to real money).
-  CANDIDATE: ["TESTING", "SHADOW", "GRAVEYARD"],  // SHADOW is the fast-track for tier-qualified strategies (backtest-service.ts F-3)
+  // (deepscan7 architect-M2 2026-07-02) NEEDS_REVISION / NEEDS_ARCHETYPE added as valid
+  // rework detours (graduator/stale-detector write them via raw SQL). No gate logic on
+  // these edges by design — they are research-side rework states, not capital paths.
+  CANDIDATE: ["TESTING", "SHADOW", "NEEDS_REVISION", "NEEDS_ARCHETYPE", "GRAVEYARD"],  // SHADOW is the fast-track for tier-qualified strategies (backtest-service.ts F-3)
   // Wave 29 Pass A.1: TESTING can go to SHADOW (new path) OR directly to PAPER (legacy path preserved).
   // Both routes are valid depending on whether shadow_mode_enabled=true on the strategy.
-  TESTING: ["SHADOW", "PAPER", "DECLINING", "GRAVEYARD"],
+  TESTING: ["SHADOW", "PAPER", "DECLINING", "NEEDS_REVISION", "GRAVEYARD"],
+  // (deepscan7 architect-M2 2026-07-02) rework states loop back to CANDIDATE only (or GRAVEYARD).
+  // NEEDS_REVISION → PAPER (or any capital-ward state) stays INVALID — must re-enter the ladder.
+  NEEDS_REVISION: ["CANDIDATE", "GRAVEYARD"],
+  NEEDS_ARCHETYPE: ["CANDIDATE", "GRAVEYARD"],
   // Wave 29 Pass A.1: SHADOW → PAPER after A.3 divergence gate clears (≥20 signals, <5% divergence).
   // SHADOW → DEPLOY_READY direct is INVALID — must go through PAPER first (full paper history required).
   SHADOW: ["PAPER", "DECLINING", "GRAVEYARD"],
@@ -226,6 +240,22 @@ export async function findFirmsWithComplianceDrift(firmNames: string[]): Promise
     }
   }
   return driftFirms;
+}
+
+/**
+ * (deepscan7 F-1 2026-07-02) Shared PAPER→DEPLOY_READY compliance-drift resolver.
+ * Extracted from the checkAutoPromotions inline block so the manual PATCH path
+ * (_promoteStrategyInner) runs the IDENTICAL drift determination — previously the
+ * manual path had no compliance-drift gate at all. Throws on infra error so each
+ * call site can apply the cron's fail-CLOSED handling (block + drift_check_infra_error).
+ */
+export async function resolveComplianceDriftForPromotion(
+  propCompliance: unknown,
+): Promise<{ driftFirms: string[]; qualifyingFirms: string[] }> {
+  const qualifyingFirms = passingFirmNamesFromCompliance(propCompliance);
+  if (qualifyingFirms.length === 0) return { driftFirms: [], qualifyingFirms };
+  const driftFirms = await findFirmsWithComplianceDrift(qualifyingFirms);
+  return { driftFirms, qualifyingFirms };
 }
 
 /**
@@ -473,7 +503,77 @@ export class LifecycleService {
           // H1 fix 2026-06-28: fetch bif + kEff so the BIF gate in evaluatePaperToDeployReadyGates
           // runs on the manual PATCH /:id/lifecycle path (previously only ran in the cron sweep).
           bif: backtests.bif, kEff: backtests.kEff,
+          // (deepscan7 F-1 2026-07-02) propCompliance feeds the compliance-drift hard block below.
+          propCompliance: backtests.propCompliance,
         }).from(backtests).where(and(eq(backtests.strategyId, id), eq(backtests.status, "completed"))).orderBy(desc(backtests.createdAt)).limit(1);
+
+        // ── (deepscan7 F-1 2026-07-02) Compliance-drift HARD block — cron-path parity ──
+        // The autonomous cron blocks PAPER→DEPLOY_READY when any firm the strategy
+        // passes compliance against has a drift-detected ruleset; the manual PATCH
+        // path previously had ZERO drift references, so a human could promote a
+        // strategy against stale firm rules. Same shared resolver, same audit action
+        // + block reason, and the cron's fail-CLOSED behavior on infra error
+        // (lifecycle.drift_check_infra_error + block, manual override required).
+        // Runs BEFORE the evaluator so a drift block never spends an on-demand
+        // survival-twin Python replay.
+        if (latestBtP2D?.propCompliance) {
+          let driftFirms: string[];
+          let qualifyingFirms: string[];
+          try {
+            ({ driftFirms, qualifyingFirms } = await resolveComplianceDriftForPromotion(latestBtP2D.propCompliance));
+          } catch (driftCheckErr) {
+            const errMsg = driftCheckErr instanceof Error ? driftCheckErr.message : String(driftCheckErr);
+            logger.warn(
+              { strategyId: id, err: driftCheckErr },
+              "PAPER → DEPLOY_READY drift-check threw (manual path) — blocking promotion (fail-closed, manual override required)",
+            );
+            await db.insert(auditLog).values({
+              action: "lifecycle.drift_check_infra_error",
+              entityId: id,
+              entityType: "strategy",
+              status: "failure",
+              decisionAuthority: "gate",
+              input: { fromState, toState },
+              result: {
+                reason: "drift_check_infrastructure_error",
+                error: errMsg,
+                note: "Manual operator override required — cannot verify compliance ruleset integrity",
+              },
+              correlationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: id, err: auditErr }, "lifecycle.drift_check_infra_error audit insert failed (non-blocking)");
+            });
+            return { success: false, error: `drift_check_infrastructure_error: ${errMsg}` };
+          }
+          if (driftFirms.length > 0) {
+            logger.warn(
+              { strategyId: id, driftFirms, transition: "PAPER→DEPLOY_READY" },
+              "PAPER → DEPLOY_READY blocked (manual path): compliance ruleset drift detected",
+            );
+            await db.insert(auditLog).values({
+              action: "lifecycle.promotion_blocked_compliance_drift",
+              entityId: id,
+              entityType: "strategy",
+              status: "failure",
+              decisionAuthority: "gate",
+              input: { fromState, toState },
+              result: {
+                firms_with_drift: driftFirms,
+                qualifying_firms: qualifyingFirms,
+                reason: "compliance ruleset drift_detected — promotion held until human revalidation",
+              },
+              correlationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: id, err: auditErr }, "compliance-drift audit insert failed (non-blocking)");
+            });
+            broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
+              strategyId: id,
+              drift_firms: driftFirms,
+              correlation_id: correlationId,
+            });
+            return { success: false, error: "compliance ruleset drift_detected — promotion held until human revalidation" };
+          }
+        }
 
         const [latestMcP2D] = latestBtP2D ? await db.select({
           probabilityOfRuin: monteCarloRuns.probabilityOfRuin,
@@ -662,6 +762,104 @@ export class LifecycleService {
             result: { survival_twin_status: stv.status, reason: stv.auditReason, per_firm: stv.perFirm ?? null, replay_error: stv.replayError ?? null },
             correlationId,
           }).catch((e) => { logger.warn({ err: e }, "PAPER→DEPLOY_READY survival-twin audit failed (non-blocking)"); });
+        }
+
+        // ── (deepscan7 F-2 2026-07-02) First-time frozen-policy freeze — cron-path parity ──
+        // evaluatePaperToDeployReadyGates returns needsFirstTimeFreeze=true with an explicit
+        // caller contract ("call freezePolicyForStrategy() BEFORE the promotion DB write");
+        // the manual path never read it, so manually-promoted strategies reached DEPLOY_READY
+        // with frozenPolicyHash=null — the frozen-policy drift gate then grandfathered them
+        // forever. Mirrors the cron call site: same regime resolution (biasState.regimeLabel,
+        // UNKNOWN fallback), same fail-CLOSED block + frozen_policy.hash_compute_failed audit
+        // on a failed freeze write. freezePolicyForStrategy emits frozen_policy.set itself.
+        if (gatePdrResult.needsFirstTimeFreeze) {
+          let currentRegime = "UNKNOWN";
+          try {
+            const { biasState: biasStateTable } = await import("../db/schema.js");
+            const biasStateRows = await db
+              .select({ regimeLabel: biasStateTable.regimeLabel })
+              .from(biasStateTable)
+              .limit(1)
+              .catch(() => [] as { regimeLabel: string }[]);
+            if (biasStateRows.length > 0 && typeof biasStateRows[0].regimeLabel === "string") {
+              currentRegime = biasStateRows[0].regimeLabel;
+            }
+          } catch {
+            // Regime lookup error is non-fatal — UNKNOWN is a valid regime label.
+          }
+
+          try {
+            await freezePolicyForStrategy(id, currentRegime);
+            logger.info(
+              { strategyId: id, regime: currentRegime },
+              "Frozen-policy first-time freeze: hash stamped successfully (manual path)",
+            );
+          } catch (freezeErr) {
+            // Hash was not stamped — cannot verify policy integrity. Block (fail-CLOSED
+            // per CLAUDE.md §12, identical to the cron path).
+            const freezeMsg = freezeErr instanceof Error ? freezeErr.message : String(freezeErr);
+            logger.warn({ strategyId: id, err: freezeErr }, "frozen_policy first-time freeze failed (manual path) — blocking promotion until hash is stamped (fail-CLOSED per CLAUDE.md §12)");
+            await db.insert(auditLog).values({
+              action: "frozen_policy.hash_compute_failed",
+              entityId: id,
+              entityType: "strategy",
+              status: "blocked",
+              decisionAuthority: "gate",
+              input: { fromState, toState },
+              result: { error: freezeMsg, note: "first-time freeze write failed — promotion blocked; retry once the DB write succeeds" },
+              correlationId,
+            }).catch((auditErr) => {
+              logger.warn({ err: auditErr, correlationId }, "frozen_policy.hash_compute_failed (manual freeze-write) audit insert failed (non-blocking)");
+              auditWriteFailuresTotal.labels({ action: "frozen_policy.hash_compute_failed" }).inc();
+            });
+            return { success: false, error: `frozen_policy.first_time_freeze_failed: ${freezeMsg}` };
+          }
+        }
+
+        // ── (deepscan7 F-3 2026-07-02) Evidence-completeness governor — cron-path parity ──
+        // The cron blocks PAPER→DEPLOY_READY when ≥3 tracked gates report incomplete
+        // (legacy/data_unavailable) evidence; the manual path enforced no such floor,
+        // so a hand-promoted strategy could clear the stack on grandfather passes alone.
+        // Same ≥3 threshold, same lifecycle.promotion_evidence_incomplete audit action.
+        // Runs AFTER the first-time freeze, mirroring the cron's gate ordering.
+        {
+          const incompleteCount = gatePdrResult.incompleteGateCount ?? 0;
+          const evidenceStatuses = gatePdrResult.gateEvidenceStatuses ?? [];
+          if (incompleteCount >= 3) {
+            logger.warn(
+              { strategyId: id, incompleteCount, gateEvidenceStatuses: evidenceStatuses, transition: "PAPER→DEPLOY_READY" },
+              "lifecycle.promotion_evidence_incomplete (manual path): too many gates lack institutional data — blocking promotion",
+            );
+            await db.insert(auditLog).values({
+              action: "lifecycle.promotion_evidence_incomplete",
+              entityId: id,
+              entityType: "strategy",
+              status: "warn",
+              decisionAuthority: "gate",
+              input: { fromState, toState },
+              result: {
+                incomplete_count: incompleteCount,
+                total_gates: evidenceStatuses.length,
+                gate_evidence_statuses: evidenceStatuses,
+                note: "Strategy must complete institutional-grade backtests before promotion proceeds",
+              },
+              correlationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: id, err: auditErr }, "promotion_evidence_incomplete audit insert failed (non-blocking)");
+            });
+            broadcastSSE(LIFECYCLE_GATE_EVENTS.PROMOTION_EVIDENCE_INCOMPLETE, {
+              strategyId: id,
+              strategy_name: strategy.name,
+              incomplete_count: incompleteCount,
+              total_gates: evidenceStatuses.length,
+              gate_evidence_statuses: evidenceStatuses,
+              correlation_id: correlationId,
+            });
+            return {
+              success: false,
+              error: `promotion_evidence_incomplete: ${incompleteCount}/${evidenceStatuses.length} gates lack institutional data — run a full backtest first`,
+            };
+          }
         }
       } catch (pdrGateErr) {
         // F-1 Hardening 2026-06-23: Fail-CLOSED on infrastructure errors.
@@ -1361,11 +1559,20 @@ export class LifecycleService {
       }
     }
 
-    // ── Wave 24 Pass 1 — Item 19: Honest DSR gate (TESTING → PAPER) ─────────
+    // ── Wave 24 Pass 1 — Item 19: Honest DSR gate (→ PAPER) ─────────────────
     // Honest DSR (multiple-testing corrected) < threshold → block. (Item 19, W24P1)
     // Uses DSR_HONEST_THRESHOLD env (default 1.5). Old "dsr" field preserved for
     // back-compat; this gate reads dsr_honest.dsr_passed which is the honest value.
-    if (fromState === "TESTING" && toState === "PAPER" && promotionEvidence.backtestId) {
+    //
+    // deepscan14 H2 FIX: was `fromState === "TESTING" && toState === "PAPER"` —
+    // the default ladder now reaches PAPER via SHADOW → PAPER too (Wave 29), and
+    // this function (_promoteStrategyInner) runs for every promoteStrategy() call
+    // regardless of fromState, so gating on fromState==="TESTING" silently skipped
+    // the honest-DSR check for every shadow-routed strategy. Generalized to
+    // toState==="PAPER" — the only two edges into PAPER are TESTING→PAPER (legacy)
+    // and SHADOW→PAPER (canonical), so this is equivalent to explicitly listing
+    // both and is consistent with the sibling archetype-gateway gate (line ~1780).
+    if (toState === "PAPER" && promotionEvidence.backtestId) {
       try {
         const [btExtrasDsr] = await (tx ?? db)
           .select({ resultExtras: backtests.resultExtras })
@@ -1439,7 +1646,12 @@ export class LifecycleService {
     // to PAPER. The `fromState === "CANDIDATE"` arm below is now dead code but
     // is preserved as defense-in-depth — if VALID_TRANSITIONS ever re-adds
     // CANDIDATE→PAPER, the Frankenstein gate would still apply.
-    if ((fromState === "TESTING" || fromState === "CANDIDATE") && toState === "PAPER") {
+    //
+    // deepscan14 bonus fix (same class as A1/H2): added `fromState === "SHADOW"` —
+    // this condition previously excluded SHADOW → PAPER, so curve-fit detection
+    // (N-shuffle Frankenstein test, a documented CLAUDE.md §12 hard gate) never
+    // ran for any strategy promoted via the canonical SHADOW ladder.
+    if ((fromState === "TESTING" || fromState === "CANDIDATE" || fromState === "SHADOW") && toState === "PAPER") {
       if (promotionEvidence.backtestId) {
         try {
           const frankResult = await getLatestFrankensteinRun(promotionEvidence.backtestId);
@@ -1712,6 +1924,140 @@ export class LifecycleService {
           }).catch((auditErr: unknown) => logger.error({ err: auditErr, strategyId: id }, "archetype_gateway_bypass_blocked audit row write failed (compile error path)"));
           return { success: false, error: blockReason };
         }
+      }
+    }
+
+    // ── (deepscan8 Track D 2026-07-02) Compliance-drift HARD block — T→P manual-path parity ──
+    // The cron T→P gate (P0-1, lines ~2649-2689) blocks when any firm the strategy passes
+    // compliance against has driftDetected=true. The manual PATCH path had no equivalent,
+    // so a human could promote a TESTING strategy against a stale ruleset. Mirrors the
+    // P→DR manual gate (lines 510-575) exactly: same shared resolver, same audit action
+    // (lifecycle.promotion_blocked_compliance_drift), same fail-CLOSED try/catch for infra
+    // errors (lifecycle.drift_check_infra_error + block). Uses the shared
+    // resolveComplianceDriftForPromotion wrapper for exact parity.
+    if (fromState === "TESTING" && toState === "PAPER") {
+      const correlationIdTp = options.correlationId ?? randomUUID();
+      const [latestBtTp] = await db
+        .select({ propCompliance: backtests.propCompliance })
+        .from(backtests)
+        .where(and(eq(backtests.strategyId, id), eq(backtests.status, "completed")))
+        .orderBy(desc(backtests.createdAt))
+        .limit(1);
+
+      if (latestBtTp?.propCompliance) {
+        let driftFirmsTp: string[];
+        let qualifyingFirmsTp: string[];
+        try {
+          ({ driftFirms: driftFirmsTp, qualifyingFirms: qualifyingFirmsTp } =
+            await resolveComplianceDriftForPromotion(latestBtTp.propCompliance));
+        } catch (driftCheckErr) {
+          const errMsg = driftCheckErr instanceof Error ? driftCheckErr.message : String(driftCheckErr);
+          logger.warn(
+            { strategyId: id, err: driftCheckErr },
+            "TESTING → PAPER drift-check threw (manual path) — blocking promotion (fail-closed, manual override required)",
+          );
+          await db.insert(auditLog).values({
+            action: "lifecycle.drift_check_infra_error",
+            entityId: id,
+            entityType: "strategy",
+            status: "failure",
+            decisionAuthority: "gate",
+            input: { fromState, toState },
+            result: {
+              reason: "drift_check_infrastructure_error",
+              error: errMsg,
+              note: "Manual operator override required — cannot verify compliance ruleset integrity",
+            },
+            correlationId: correlationIdTp,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: id, err: auditErr }, "lifecycle.drift_check_infra_error (T→P manual) audit insert failed (non-blocking)");
+          });
+          return { success: false, error: `drift_check_infrastructure_error: ${errMsg}` };
+        }
+        if (driftFirmsTp.length > 0) {
+          logger.warn(
+            { strategyId: id, driftFirms: driftFirmsTp, transition: "TESTING→PAPER" },
+            "TESTING → PAPER blocked (manual path): compliance ruleset drift detected",
+          );
+          await db.insert(auditLog).values({
+            action: "lifecycle.promotion_blocked_compliance_drift",
+            entityId: id,
+            entityType: "strategy",
+            status: "failure",
+            decisionAuthority: "gate",
+            input: { fromState, toState },
+            result: {
+              firms_with_drift: driftFirmsTp,
+              qualifying_firms: qualifyingFirmsTp,
+              reason: "compliance ruleset drift_detected — promotion held until human revalidation",
+            },
+            correlationId: correlationIdTp,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: id, err: auditErr }, "compliance-drift (T→P manual) audit insert failed (non-blocking)");
+          });
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
+            strategyId: id,
+            drift_firms: driftFirmsTp,
+            correlation_id: correlationIdTp,
+          });
+          return { success: false, error: "compliance ruleset drift_detected — promotion held until human revalidation" };
+        }
+      }
+    }
+
+    // ── (deepscan8 Track D 2026-07-02) Frozen-policy baseline stamp — T→P manual path ──
+    // P→DR first-time freeze (deepscan7 F-2) stamps frozenPolicyHash at DEPLOY_READY gate time,
+    // but by then the strategy has already spent weeks in PAPER where config may have been
+    // mutated. Stamping at TESTING→PAPER means the P→DR drift check (evaluateFrozenPolicyDriftAtPromotion)
+    // compares against the TRUE pre-PAPER baseline — any config change made during PAPER becomes
+    // detectable. First-freeze-null tolerance at P→DR stays for legacy strategies already in PAPER.
+    // Fail-CLOSED: block the manual promotion if the freeze write fails (mirrors P→DR freeze pattern).
+    if (fromState === "TESTING" && toState === "PAPER") {
+      const correlationIdFreeze = options.correlationId ?? randomUUID();
+      let currentRegimeTp = "UNKNOWN";
+      try {
+        const { biasState: biasStateTable } = await import("../db/schema.js");
+        const biasStateRows = await db
+          .select({ regimeLabel: biasStateTable.regimeLabel })
+          .from(biasStateTable)
+          .limit(1)
+          .catch(() => [] as { regimeLabel: string }[]);
+        if (biasStateRows.length > 0 && typeof biasStateRows[0].regimeLabel === "string") {
+          currentRegimeTp = biasStateRows[0].regimeLabel;
+        }
+      } catch {
+        // Regime lookup error is non-fatal — UNKNOWN is a valid regime label.
+      }
+
+      try {
+        await freezePolicyForStrategy(id, currentRegimeTp);
+        logger.info(
+          { strategyId: id, regime: currentRegimeTp },
+          "Frozen-policy T→P baseline stamp: hash stamped successfully (manual path)",
+        );
+      } catch (freezeErr) {
+        const freezeMsg = freezeErr instanceof Error ? freezeErr.message : String(freezeErr);
+        logger.warn(
+          { strategyId: id, err: freezeErr },
+          "frozen_policy T→P baseline stamp failed (manual path) — blocking promotion (fail-CLOSED per CLAUDE.md §12)",
+        );
+        await db.insert(auditLog).values({
+          action: "frozen_policy.hash_compute_failed",
+          entityId: id,
+          entityType: "strategy",
+          status: "blocked",
+          decisionAuthority: "gate",
+          input: { fromState, toState },
+          result: {
+            error: freezeMsg,
+            note: "T→P baseline freeze write failed (manual path) — promotion blocked; retry once the DB write succeeds",
+          },
+          correlationId: correlationIdFreeze,
+        }).catch((auditErr) => {
+          logger.warn({ err: auditErr, correlationId: correlationIdFreeze }, "frozen_policy.hash_compute_failed (T→P manual freeze-write) audit insert failed (non-blocking)");
+          auditWriteFailuresTotal.labels({ action: "frozen_policy.hash_compute_failed" }).inc();
+        });
+        return { success: false, error: `frozen_policy.tp_baseline_stamp_failed: ${freezeMsg}` };
       }
     }
 
@@ -2003,7 +2349,16 @@ export class LifecycleService {
     //   3. If stopStream throws → audit paper.stop_stream_failed_on_transition (warn) but
     //      DO NOT block the transition — strategy IS in PAPER state in DB; the stream
     //      not stopping is smaller than dual-stream corruption from not awaiting.
-    if (fromState === "TESTING" && toState === "PAPER") {
+    //
+    // deepscan14 A1 FIX: was `fromState === "TESTING" && toState === "PAPER"` — the
+    // default ladder now reaches PAPER via SHADOW → PAPER too (Wave 29), and the
+    // internal Massive-WS sim stream stays alive through SHADOW (it's how shadow
+    // signals get generated). Gating this on fromState==="TESTING" only meant
+    // SHADOW → PAPER never stopped the stream, so it kept writing fills into
+    // paper_positions/paper_trades after TradersPost became the live journal —
+    // dual-stream P&L corruption. Generalized to toState==="PAPER" to mirror the
+    // sibling H2 fix already at the archetype-gateway gate above (line ~1780).
+    if (toState === "PAPER") {
       let activeSessId: string | null = null;
       let streamStopped = false;
       try {
@@ -2448,21 +2803,19 @@ export class LifecycleService {
         }
         // If propCompliance is null/undefined, skip this check — don't block on missing optional data
 
-        // P0-1: Compliance-drift gate. TESTING→PAPER puts a strategy on the
-        // live-track; if any firm whose rules it qualified for has
-        // driftDetected=true on its latest ruleset, the static
-        // backtests.propCompliance result is no longer trustworthy. Block the
-        // promotion (audit row, no SSE — drift is a system-wide guard, not a
-        // strategy-specific event) and let the next scheduler tick retry once
-        // the human revalidates the ruleset.
-        {
-          const passingFirmNames = passingFirmNamesFromCompliance(latestBt.propCompliance);
-          if (passingFirmNames.length > 0) {
-            const driftFirms = await findFirmsWithComplianceDrift(passingFirmNames);
+        // ── (deepscan8 Track D 2026-07-02) P0-1: Compliance-drift gate — parity upgrade ──
+        // Upgraded from the older findFirmsWithComplianceDrift direct call to the shared
+        // resolveComplianceDriftForPromotion wrapper (same underlying logic, same audit
+        // action). Added explicit try/catch so infra errors emit lifecycle.drift_check_infra_error
+        // instead of silently falling through to the outer catch with a generic log.
+        // Mirrors the P→DR cron implementation (lines 3679-3736) exactly.
+        try {
+          if (latestBt.propCompliance) {
+            const { driftFirms, qualifyingFirms } = await resolveComplianceDriftForPromotion(latestBt.propCompliance);
             if (driftFirms.length > 0) {
               logger.warn(
                 { strategyId: s.id, driftFirms, transition: "TESTING→PAPER" },
-                "TESTING → PAPER blocked: compliance ruleset drift detected",
+                "TESTING → PAPER blocked (cron path): compliance ruleset drift detected",
               );
               await db.insert(auditLog).values({
                 action: "lifecycle.promotion_blocked_compliance_drift",
@@ -2473,12 +2826,12 @@ export class LifecycleService {
                 input: { fromState: "TESTING", toState: "PAPER" },
                 result: {
                   firms_with_drift: driftFirms,
-                  qualifying_firms: passingFirmNames,
+                  qualifying_firms: qualifyingFirms,
                   reason: "compliance ruleset drift_detected — promotion held until human revalidation",
                 },
                 correlationId,
               }).catch((auditErr) => {
-                logger.warn({ strategyId: s.id, err: auditErr }, "compliance-drift audit insert failed (non-blocking)");
+                logger.warn({ strategyId: s.id, err: auditErr }, "compliance-drift (T→P cron) audit insert failed (non-blocking)");
               });
               broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
                 strategyId: s.id,
@@ -2488,6 +2841,29 @@ export class LifecycleService {
               continue;
             }
           }
+        } catch (driftCheckErrTp) {
+          const errMsg = driftCheckErrTp instanceof Error ? driftCheckErrTp.message : String(driftCheckErrTp);
+          logger.warn(
+            { strategyId: s.id, err: driftCheckErrTp, transition: "TESTING→PAPER" },
+            "TESTING → PAPER drift-check threw (cron path) — blocking promotion (fail-closed)",
+          );
+          await db.insert(auditLog).values({
+            action: "lifecycle.drift_check_infra_error",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "failure",
+            decisionAuthority: "gate",
+            input: { fromState: "TESTING", toState: "PAPER" },
+            result: {
+              reason: "drift_check_infrastructure_error",
+              error: errMsg,
+              note: "Cron will retry next tick once the underlying error is resolved",
+            },
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "lifecycle.drift_check_infra_error (T→P cron) audit insert failed (non-blocking)");
+          });
+          continue;
         }
 
         // P0-2 part 2: Compliance gate at promotion time. The same
@@ -3058,6 +3434,60 @@ export class LifecycleService {
           logger.warn({ strategyId: s.id, err: dsrTpErr }, "DSR gate (TESTING→PAPER): read failed (non-blocking — promotion continues)");
         }
 
+        // ── (deepscan8 Track D 2026-07-02) Frozen-policy baseline stamp — T→P cron path ──
+        // Stamps frozen_policy_hash at TESTING→PAPER so the P→DR drift check
+        // (evaluateFrozenPolicyDriftAtPromotion) compares against the TRUE config baseline
+        // from before PAPER, not whatever was in place after potential PAPER mutations.
+        // First-freeze-null tolerance at P→DR stays for legacy strategies already in PAPER.
+        // Fail-CLOSED: skip this strategy cycle if the freeze write fails (matches P→DR cron pattern).
+        {
+          let currentRegimeTpCron = "UNKNOWN";
+          try {
+            const { biasState: biasStateTable } = await import("../db/schema.js");
+            const biasStateRows = await db
+              .select({ regimeLabel: biasStateTable.regimeLabel })
+              .from(biasStateTable)
+              .limit(1)
+              .catch(() => [] as { regimeLabel: string }[]);
+            if (biasStateRows.length > 0 && typeof biasStateRows[0].regimeLabel === "string") {
+              currentRegimeTpCron = biasStateRows[0].regimeLabel;
+            }
+          } catch {
+            // Regime lookup error is non-fatal — UNKNOWN is a valid regime label.
+          }
+
+          try {
+            await freezePolicyForStrategy(s.id, currentRegimeTpCron);
+            logger.info(
+              { strategyId: s.id, regime: currentRegimeTpCron },
+              "Frozen-policy T→P baseline stamp: hash stamped successfully (cron path)",
+            );
+          } catch (freezeErrTpCron) {
+            const freezeMsg = freezeErrTpCron instanceof Error ? freezeErrTpCron.message : String(freezeErrTpCron);
+            logger.warn(
+              { strategyId: s.id, err: freezeErrTpCron },
+              "frozen_policy T→P baseline stamp failed (cron path) — skipping this cycle (fail-CLOSED per CLAUDE.md §12)",
+            );
+            await db.insert(auditLog).values({
+              action: "frozen_policy.hash_compute_failed",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "blocked",
+              decisionAuthority: "gate",
+              input: { fromState: "TESTING", toState: "PAPER" },
+              result: {
+                error: freezeMsg,
+                note: "T→P baseline freeze write failed (cron path) — cron retries next cycle",
+              },
+              correlationId: tickCorrelationId,
+            }).catch((auditErr) => {
+              logger.warn({ err: auditErr, correlationId: tickCorrelationId }, "frozen_policy.hash_compute_failed (T→P cron freeze-write) audit insert failed (non-blocking)");
+              auditWriteFailuresTotal.labels({ action: "frozen_policy.hash_compute_failed" }).inc();
+            });
+            continue; // skip this strategy; cron retries next cycle once the DB write succeeds
+          }
+        }
+
         const result = await this.promoteStrategy(s.id, "TESTING", "PAPER", { correlationId: correlationId ?? undefined });
         if (result.success) {
           promoted.push(s.id);
@@ -3120,6 +3550,608 @@ export class LifecycleService {
 
       for (const s of shadowStrategies) {
         try {
+          // ── deepscan14 H1: full pre-paper gate stack (SHADOW → PAPER) ───────────
+          // Wave 29 inserted the mandatory SHADOW stage into the default ladder
+          // (CANDIDATE → TESTING → SHADOW → PAPER) but the institutional pre-paper
+          // gate stack (staleness, MC survival > 0.70, prop compliance, compliance
+          // drift, C4 survival score, exportability, B14 ci_high, WFE, parameter
+          // drift, DSR walk-forward, frozen-policy freeze) only ever ran on Gate 2
+          // (the LEGACY TESTING → PAPER cron path, ~2704-3466). Every
+          // shadowModeEnabled=true strategy SKIPS Gate 2 entirely
+          // (`if (s.shadowModeEnabled) continue;` above) and was reaching PAPER via
+          // this block with ONLY the shadow-signal divergence check below —
+          // silently bypassing every hard gate that protects live-paper capital.
+          // This block calls the SAME pure evaluator functions Gate 2 calls (no
+          // gate math re-implemented) so SHADOW → PAPER and the legacy
+          // TESTING → PAPER edge are gated identically. BIF is intentionally NOT
+          // duplicated here: BIF only ever evaluates at PAPER → DEPLOY_READY
+          // (evaluatePaperToDeployReadyGates), so it already applies uniformly to
+          // strategies regardless of which edge got them into PAPER.
+          const [latestBtSh] = await db
+            .select()
+            .from(backtests)
+            .where(
+              and(
+                eq(backtests.strategyId, s.id),
+                eq(backtests.status, "completed"),
+              ),
+            )
+            .orderBy(desc(backtests.createdAt))
+            .limit(1);
+
+          if (!latestBtSh) continue;
+          if (!latestBtSh.walkForwardResults) continue;
+
+          const tierSh = latestBtSh.tier;
+          if (!tierSh || tierSh === "REJECTED") continue;
+
+          // Staleness (HIGH #14) — SHADOW → PAPER
+          {
+            const stalenessDaysSh = parseInt(process.env.BACKTEST_STALENESS_DAYS ?? "30", 10);
+            const ageMsSh = Date.now() - new Date(latestBtSh.createdAt).getTime();
+            const ageDaysSh = ageMsSh / (1000 * 60 * 60 * 24);
+            if (ageDaysSh > stalenessDaysSh) {
+              logger.warn({ strategyId: s.id, ageDays: ageDaysSh.toFixed(1), stalenessDays: stalenessDaysSh }, "SHADOW → PAPER blocked (auto-check): backtest too old");
+              await db.insert(auditLog).values({
+                action: "lifecycle.backtest_stale",
+                entityType: "strategy",
+                entityId: s.id,
+                status: "failure",
+                decisionAuthority: "gate",
+                input: { fromState: "SHADOW", toState: "PAPER" },
+                result: {
+                  reason: "backtest_too_old",
+                  age_days: parseFloat(ageDaysSh.toFixed(1)),
+                  limit_days: stalenessDaysSh,
+                  backtest_created_at: latestBtSh.createdAt,
+                },
+                correlationId: tickCorrelationId,
+              }).catch((auditErr) => {
+                logger.warn({ strategyId: s.id, err: auditErr }, "lifecycle.backtest_stale (SHADOW→PAPER) audit insert failed (non-blocking)");
+              });
+              broadcastSSE(LIFECYCLE_GATE_EVENTS.BACKTEST_STALE, {
+                strategyId: s.id,
+                age_days: parseFloat(ageDaysSh.toFixed(1)),
+                limit_days: stalenessDaysSh,
+                correlation_id: tickCorrelationId,
+              });
+              continue;
+            }
+          }
+
+          // MC survival rate > 0.70 — SHADOW → PAPER
+          const [mcRunSh] = await db
+            .select({
+              probabilityOfRuin: monteCarloRuns.probabilityOfRuin,
+            })
+            .from(monteCarloRuns)
+            .where(eq(monteCarloRuns.backtestId, latestBtSh.id))
+            .orderBy(desc(monteCarloRuns.createdAt))
+            .limit(1);
+
+          if (!mcRunSh) continue;
+
+          const ruinProbSh = mcRunSh.probabilityOfRuin != null ? parseFloat(String(mcRunSh.probabilityOfRuin)) : null;
+          if (ruinProbSh === null) continue;
+
+          const survivalRateSh = 1 - ruinProbSh;
+          if (survivalRateSh <= 0.70) {
+            logger.debug(
+              { id: s.id, survivalRate: survivalRateSh.toFixed(3) },
+              "SHADOW → PAPER blocked: MC survival rate <= 0.70",
+            );
+            await this._maybeAutoGraveyard(s.id, "mc_survival_below_floor", { survivalRate: survivalRateSh, floor: 0.70 }, "SHADOW", tickCorrelationId);
+            continue;
+          }
+          this._resetHardGateCounter(s.id, "mc_survival_below_floor", tickCorrelationId);
+
+          // Prop compliance: don't block if absent (soft check) — SHADOW → PAPER
+          if (latestBtSh.propCompliance) {
+            const propResultsSh = latestBtSh.propCompliance as Record<string, { passed?: boolean; pass?: boolean }>;
+            const anyPassingSh = Object.values(propResultsSh).some(
+              (r) => r.passed === true || r.pass === true,
+            );
+            if (!anyPassingSh) {
+              logger.debug({ id: s.id }, "SHADOW → PAPER blocked: no passing prop compliance result");
+              continue;
+            }
+          }
+
+          // Compliance-drift gate — SHADOW → PAPER
+          try {
+            if (latestBtSh.propCompliance) {
+              const { driftFirms: driftFirmsSh, qualifyingFirms: qualifyingFirmsSh } = await resolveComplianceDriftForPromotion(latestBtSh.propCompliance);
+              if (driftFirmsSh.length > 0) {
+                logger.warn(
+                  { strategyId: s.id, driftFirms: driftFirmsSh, transition: "SHADOW→PAPER" },
+                  "SHADOW → PAPER blocked (cron path): compliance ruleset drift detected",
+                );
+                await db.insert(auditLog).values({
+                  action: "lifecycle.promotion_blocked_compliance_drift",
+                  entityId: s.id,
+                  entityType: "strategy",
+                  status: "failure",
+                  decisionAuthority: "gate",
+                  input: { fromState: "SHADOW", toState: "PAPER" },
+                  result: {
+                    firms_with_drift: driftFirmsSh,
+                    qualifying_firms: qualifyingFirmsSh,
+                    reason: "compliance ruleset drift_detected — promotion held until human revalidation",
+                  },
+                  correlationId: tickCorrelationId,
+                }).catch((auditErr) => {
+                  logger.warn({ strategyId: s.id, err: auditErr }, "compliance-drift (SHADOW→PAPER cron) audit insert failed (non-blocking)");
+                });
+                broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
+                  strategyId: s.id,
+                  drift_firms: driftFirmsSh,
+                  correlation_id: tickCorrelationId,
+                });
+                continue;
+              }
+            }
+          } catch (driftCheckErrSh) {
+            const errMsg = driftCheckErrSh instanceof Error ? driftCheckErrSh.message : String(driftCheckErrSh);
+            logger.warn(
+              { strategyId: s.id, err: driftCheckErrSh, transition: "SHADOW→PAPER" },
+              "SHADOW → PAPER drift-check threw (cron path) — blocking promotion (fail-closed)",
+            );
+            await db.insert(auditLog).values({
+              action: "lifecycle.drift_check_infra_error",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "failure",
+              decisionAuthority: "gate",
+              input: { fromState: "SHADOW", toState: "PAPER" },
+              result: {
+                reason: "drift_check_infrastructure_error",
+                error: errMsg,
+                note: "Cron will retry next tick once the underlying error is resolved",
+              },
+              correlationId: tickCorrelationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "lifecycle.drift_check_infra_error (SHADOW→PAPER cron) audit insert failed (non-blocking)");
+            });
+            continue;
+          }
+
+          // C4: Survival score gate — require survival_score >= 60 — SHADOW → PAPER
+          const gateResultSh = latestBtSh.gateResult as Record<string, unknown> | null | undefined;
+          if (gateResultSh && typeof gateResultSh === "object") {
+            const componentsSh = (gateResultSh.components as Record<string, number> | undefined) ?? undefined;
+            const rawSurvivalScoreSh = componentsSh?.raw_survival_score ?? componentsSh?.survival_score ?? null;
+            if (rawSurvivalScoreSh !== null && rawSurvivalScoreSh < 60) {
+              logger.debug({ id: s.id, rawSurvivalScore: rawSurvivalScoreSh }, "SHADOW → PAPER blocked: survival-score-below-threshold");
+              await db.insert(auditLog).values({
+                action: "strategy.lifecycle.blocked",
+                entityId: s.id,
+                entityType: "strategy",
+                status: "failure",
+                decisionAuthority: "gate",
+                result: {
+                  reason: "survival-score-below-threshold",
+                  survival_score: rawSurvivalScoreSh,
+                  minimum_required: 60,
+                  from: "SHADOW",
+                  to: "PAPER",
+                },
+                correlationId: tickCorrelationId,
+              });
+              await this._maybeAutoGraveyard(s.id, "survival_score_below_threshold", { rawSurvivalScore: rawSurvivalScoreSh, floor: 60 }, "SHADOW", tickCorrelationId);
+              continue;
+            }
+            if (rawSurvivalScoreSh !== null) {
+              this._resetHardGateCounter(s.id, "survival_score_below_threshold", tickCorrelationId);
+            }
+          } else {
+            logger.warn(
+              { strategyId: s.id, backtestId: latestBtSh.id },
+              "SHADOW → PAPER: survival-score-gate-missing-data (gateResult absent on latest backtest, defaulting to permissive)",
+            );
+            await db.insert(auditLog).values({
+              action: "survival-score-gate-missing-data",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "success",
+              decisionAuthority: "gate",
+              input: { fromState: "SHADOW", toState: "PAPER" },
+              result: {
+                backtestId: latestBtSh.id,
+                note: "gateResult JSONB missing on latest backtest — survival-score gate skipped, promotion proceeded",
+              },
+              correlationId: tickCorrelationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "survival-score-gate-missing-data (SHADOW→PAPER) audit insert failed (non-blocking)");
+            });
+          }
+
+          // H2: Pine exportability pre-check — BLOCKING — SHADOW → PAPER
+          let exportabilityBlockedSh = false;
+          try {
+            const { checkExportability } = await import("./pine-export-service.js");
+            const exportCheckSh = await checkExportability(s.id);
+            if (!exportCheckSh.ok) {
+              logger.warn({
+                strategyId: s.id,
+                score: exportCheckSh.score,
+                band: exportCheckSh.band,
+                deductions: exportCheckSh.deductions,
+                reasons: (exportCheckSh as Record<string, unknown>).reasons,
+              }, "SHADOW→PAPER: BLOCKED — strategy has Pine exportability issues");
+
+              await db.insert(auditLog).values({
+                action: "strategy.lifecycle.exportability_blocked",
+                entityType: "strategy",
+                entityId: s.id,
+                decisionAuthority: "gate",
+                input: { fromState: "SHADOW", toState: "PAPER" },
+                result: {
+                  reasons: (exportCheckSh as Record<string, unknown>).reasons ?? null,
+                  score: exportCheckSh.score,
+                  band: exportCheckSh.band,
+                  deductions: exportCheckSh.deductions,
+                } as Record<string, unknown>,
+                status: "failure",
+                correlationId: tickCorrelationId,
+              }).catch((auditErr) => {
+                logger.warn({ err: auditErr, correlationId: tickCorrelationId }, "exportability_block (SHADOW→PAPER) audit insert failed (non-blocking)");
+                auditWriteFailuresTotal.labels({ action: "lifecycle.exportability_block" }).inc();
+              });
+
+              broadcastSSE("strategy:exportability_blocked", {
+                strategyId: s.id,
+                name: s.name,
+                fromState: "SHADOW",
+                toState: "PAPER",
+                score: exportCheckSh.score,
+                band: exportCheckSh.band,
+                reasons: (exportCheckSh as Record<string, unknown>).reasons ?? null,
+              });
+
+              exportabilityBlockedSh = true;
+              await this._maybeAutoGraveyard(s.id, "exportability_blocked", { score: exportCheckSh.score, band: exportCheckSh.band }, "SHADOW", tickCorrelationId);
+            } else {
+              this._resetHardGateCounter(s.id, "exportability_blocked", tickCorrelationId);
+            }
+          } catch (exportErrSh) {
+            const infraErrMsgSh = exportErrSh instanceof Error ? exportErrSh.message : String(exportErrSh);
+            logger.warn(
+              { err: exportErrSh, strategyId: s.id, correlationId: tickCorrelationId },
+              "checkExportability infra error (SHADOW→PAPER) — strategy skipped this cycle (fail-CLOSED)",
+            );
+            db.insert(auditLog).values({
+              action: "strategy.lifecycle.exportability_infra_error",
+              entityType: "strategy",
+              entityId: s.id,
+              decisionAuthority: "gate",
+              input: { fromState: "SHADOW", toState: "PAPER" },
+              result: {
+                reason: "infra_failure_in_outer_catch",
+                errorMessage: infraErrMsgSh,
+              } as Record<string, unknown>,
+              status: "warn",
+              correlationId: tickCorrelationId,
+            }).catch((auditErr) => {
+              logger.warn({ auditErr, strategyId: s.id }, "exportability_infra_error (SHADOW→PAPER) audit insert failed (non-blocking)");
+            });
+            broadcastSSE("strategy:exportability_infra_error", {
+              strategyId: s.id,
+              name: s.name,
+              reason: "infra_failure_in_outer_catch",
+              errorMessage: infraErrMsgSh,
+              correlationId: tickCorrelationId,
+            });
+            exportabilityBlockedSh = true;
+          }
+          if (exportabilityBlockedSh) continue;
+
+          // B14 CI gate — SHADOW → PAPER
+          try {
+            const [mcRunForB14Sh] = await db
+              .select({
+                probabilityOfRuin: monteCarloRuns.probabilityOfRuin,
+                riskMetrics: monteCarloRuns.riskMetrics,
+              })
+              .from(monteCarloRuns)
+              .where(
+                and(
+                  eq(monteCarloRuns.backtestId, latestBtSh.id),
+                  eq(monteCarloRuns.status, "completed"),
+                ),
+              )
+              .orderBy(desc(monteCarloRuns.createdAt))
+              .limit(1);
+
+            if (mcRunForB14Sh) {
+              const rmSh = (mcRunForB14Sh.riskMetrics as Record<string, unknown> | null) ?? {};
+              const ruinCiSh = (rmSh.probability_of_ruin_ci ?? null) as Record<string, unknown> | null;
+              const pointEstimateSh = mcRunForB14Sh.probabilityOfRuin != null
+                ? Number(mcRunForB14Sh.probabilityOfRuin)
+                : null;
+
+              const b14CiResultSh = evaluateB14CiGate(ruinCiSh, pointEstimateSh);
+
+              await db.insert(auditLog).values({
+                action: "b14.gate_evaluated",
+                entityId: s.id,
+                entityType: "strategy",
+                status: b14CiResultSh.passed ? "success" : "failure",
+                decisionAuthority: "gate",
+                input: { fromState: "SHADOW", toState: "PAPER" },
+                result: b14CiResultSh.auditPayload,
+                correlationId: tickCorrelationId,
+              }).catch((auditErr) => {
+                logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate (SHADOW→PAPER) audit insert failed (non-blocking)");
+              });
+
+              broadcastSSE(LIFECYCLE_GATE_EVENTS.B14_EVALUATED, {
+                strategyId: s.id,
+                ...b14CiResultSh.auditPayload,
+                passed: b14CiResultSh.passed,
+                reason: b14CiResultSh.reason,
+                legacyFallback: b14CiResultSh.legacyFallback,
+              });
+
+              if (!b14CiResultSh.passed) {
+                logger.warn(
+                  { strategyId: s.id, ciHigh: b14CiResultSh.auditPayload.ci_high, transition: "SHADOW→PAPER" },
+                  "B14 CI gate BLOCKED SHADOW→PAPER: probability_of_ruin_ci.ci_high exceeds threshold",
+                );
+                strategyPromotions.labels({ from_state: "SHADOW", to_state: "PAPER", actor: "system_gate" }).inc();
+                await this._maybeAutoGraveyard(s.id, "b14_ci_high", { ciHigh: b14CiResultSh.auditPayload.ci_high, threshold: b14CiResultSh.auditPayload.threshold }, "SHADOW", tickCorrelationId);
+                continue;
+              }
+              this._resetHardGateCounter(s.id, "b14_ci_high", tickCorrelationId);
+            } else {
+              const b14ShNoMc = evaluateB14CiGate(null, null);
+              await db.insert(auditLog).values({
+                action: "b14.gate_evaluated",
+                entityId: s.id,
+                entityType: "strategy",
+                status: "failure",
+                decisionAuthority: "gate",
+                input: { fromState: "SHADOW", toState: "PAPER" },
+                result: { ...b14ShNoMc.auditPayload, note: "no completed MC run for latest backtest — fail-closed (MC auto-fires post-backtest; absent = errored/pending)" },
+                correlationId: tickCorrelationId,
+              }).catch((auditErr) => {
+                logger.warn({ strategyId: s.id, err: auditErr }, "B14 CI gate (SHADOW→PAPER no-MC fail-closed) audit insert failed (non-blocking)");
+              });
+              logger.warn(
+                { strategyId: s.id, transition: "SHADOW→PAPER" },
+                "B14 CI gate BLOCKED SHADOW→PAPER: no completed MC run for latest backtest (fail-closed)",
+              );
+              strategyPromotions.labels({ from_state: "SHADOW", to_state: "PAPER", actor: "system_gate" }).inc();
+              continue;
+            }
+          } catch (b14ShErr) {
+            const b14ShErrMsg = b14ShErr instanceof Error ? b14ShErr.message : String(b14ShErr);
+            logger.warn({ strategyId: s.id, err: b14ShErr }, "B14 CI gate (SHADOW→PAPER): read failed — blocking promotion (fail-closed)");
+            await db.insert(auditLog).values({
+              action: "b14.gate_error_fail_closed",
+              entityId: s.id,
+              entityType: "strategy",
+              status: "failure",
+              decisionAuthority: "gate",
+              input: { fromState: "SHADOW", toState: "PAPER" },
+              result: {
+                reason: "b14.gate_error_fail_closed",
+                error: b14ShErrMsg,
+                note: "B14 CI gate threw on SHADOW→PAPER path — promotion blocked; retries next cron cycle",
+              },
+              correlationId: tickCorrelationId,
+            }).catch((auditErr) => {
+              logger.warn({ strategyId: s.id, err: auditErr }, "B14 fail-closed audit insert (SHADOW→PAPER) failed (non-blocking)");
+            });
+            strategyPromotions.labels({ from_state: "SHADOW", to_state: "PAPER", actor: "system_gate" }).inc();
+            continue;
+          }
+
+          // WFE gate — SHADOW → PAPER
+          try {
+            const wfResultsSh = (latestBtSh.walkForwardResults as Record<string, unknown> | null) ?? null;
+            const wfeOverallSh = wfResultsSh?.wfe_overall != null ? Number(wfResultsSh.wfe_overall) : null;
+            const wfeStatusSh = wfResultsSh?.wfe_status != null ? String(wfResultsSh.wfe_status) : null;
+
+            const wfeResultSh = evaluateWfeGate(wfeOverallSh, undefined, undefined, wfeStatusSh);
+
+            broadcastSSE(LIFECYCLE_GATE_EVENTS.WFE_EVALUATED, {
+              strategyId: s.id,
+              wfe_overall: wfeResultSh.wfeOverall,
+              status: wfeResultSh.status,
+              hard_floor: wfeResultSh.hardFloor,
+              warn_floor: wfeResultSh.warnFloor,
+              passed: wfeResultSh.passed,
+            });
+
+            if (wfeResultSh.auditAction) {
+              const isBlockSh = wfeResultSh.status === "blocked";
+              const wfeAuditStatusSh: "failure" | "warning" | "success" =
+                isBlockSh ? "failure"
+                : wfeResultSh.status === "cpcv_exempt" ? "success"
+                : "warning";
+              await db.insert(auditLog).values({
+                action: wfeResultSh.auditAction,
+                entityId: s.id,
+                entityType: "strategy",
+                status: wfeAuditStatusSh,
+                decisionAuthority: "gate",
+                input: { fromState: "SHADOW", toState: "PAPER" },
+                result: {
+                  wfe_overall: wfeResultSh.wfeOverall,
+                  hard_floor: wfeResultSh.hardFloor,
+                  warn_floor: wfeResultSh.warnFloor,
+                  status: wfeResultSh.status,
+                },
+                correlationId: tickCorrelationId,
+              }).catch((auditErr) => {
+                logger.warn({ strategyId: s.id, err: auditErr }, "WFE gate (SHADOW→PAPER) audit insert failed (non-blocking)");
+              });
+
+              if (isBlockSh) {
+                logger.warn(
+                  { strategyId: s.id, wfeOverall: wfeResultSh.wfeOverall, transition: "SHADOW→PAPER" },
+                  "WFE gate BLOCKED SHADOW→PAPER: wfe_overall below hard floor",
+                );
+                strategyPromotions.labels({ from_state: "SHADOW", to_state: "PAPER", actor: "system_gate" }).inc();
+                await this._maybeAutoGraveyard(s.id, "wfe_hard_floor", { wfeOverall: wfeResultSh.wfeOverall, hardFloor: wfeResultSh.hardFloor }, "SHADOW", tickCorrelationId);
+                continue;
+              }
+              this._resetHardGateCounter(s.id, "wfe_hard_floor", tickCorrelationId);
+            }
+          } catch (wfeShErr) {
+            logger.warn({ strategyId: s.id, err: wfeShErr }, "WFE gate (SHADOW→PAPER): read failed (non-blocking — promotion continues)");
+          }
+
+          // Parameter drift gate — SHADOW → PAPER
+          try {
+            const driftWfResultsSh = (latestBtSh.walkForwardResults as Record<string, unknown> | null) ?? null;
+            const paramStabilitySh = (driftWfResultsSh?.param_stability as Record<string, unknown> | null) ?? null;
+            const driftClassificationSh = (paramStabilitySh?.drift_classification as string | null) ?? null;
+            const driftConfidenceSh = paramStabilitySh?.drift_confidence != null
+              ? Number(paramStabilitySh.drift_confidence)
+              : null;
+            const paramStabilityStatusSh = (driftWfResultsSh?.param_stability_status as string | null | undefined) ?? null;
+
+            const driftResultSh = evaluateParameterDriftGate(driftClassificationSh, driftConfidenceSh, paramStabilityStatusSh);
+
+            broadcastSSE(LIFECYCLE_GATE_EVENTS.PARAMETER_DRIFT_EVALUATED, {
+              strategyId: s.id,
+              classification: driftResultSh.classification,
+              confidence: driftResultSh.confidence,
+              status: driftResultSh.status,
+              passed: driftResultSh.passed,
+            });
+
+            if (driftResultSh.auditAction) {
+              const isBlockDriftSh = driftResultSh.status === "blocked";
+              await db.insert(auditLog).values({
+                action: driftResultSh.auditAction,
+                entityId: s.id,
+                entityType: "strategy",
+                status: isBlockDriftSh ? "failure" : "warning",
+                decisionAuthority: "gate",
+                input: { fromState: "SHADOW", toState: "PAPER" },
+                result: {
+                  classification: driftResultSh.classification,
+                  confidence: driftResultSh.confidence,
+                  status: driftResultSh.status,
+                },
+                correlationId: tickCorrelationId,
+              }).catch((auditErr) => {
+                logger.warn({ strategyId: s.id, err: auditErr }, "Parameter drift gate (SHADOW→PAPER) audit insert failed (non-blocking)");
+              });
+
+              if (isBlockDriftSh) {
+                logger.warn(
+                  { strategyId: s.id, classification: driftResultSh.classification, transition: "SHADOW→PAPER" },
+                  "Parameter drift gate BLOCKED SHADOW→PAPER: overfit_drift with high confidence",
+                );
+                strategyPromotions.labels({ from_state: "SHADOW", to_state: "PAPER", actor: "system_gate" }).inc();
+                await this._maybeAutoGraveyard(s.id, "parameter_overfit_drift", { classification: driftResultSh.classification, confidence: driftResultSh.confidence }, "SHADOW", tickCorrelationId);
+                continue;
+              }
+              this._resetHardGateCounter(s.id, "parameter_overfit_drift", tickCorrelationId);
+            }
+          } catch (driftShErr) {
+            logger.warn({ strategyId: s.id, err: driftShErr }, "Parameter drift gate (SHADOW→PAPER): read failed (non-blocking — promotion continues)");
+          }
+
+          // DSR walk-forward gate — SHADOW → PAPER (H2: honest-DSR parity)
+          try {
+            const wfMetaSh = (latestBtSh.walkForwardResults as Record<string, unknown> | null) ?? null;
+            const wfMetaObjSh = (wfMetaSh?.wf_metadata as Record<string, unknown> | null) ?? null;
+
+            const dsrGateResultSh = evaluateDsrWalkForwardGate(
+              wfMetaObjSh as { dsr_pass?: boolean | null; dsr_unavailable?: boolean | null; dsr?: number | null } | null,
+            );
+
+            if (dsrGateResultSh.auditAction) {
+              const isBlockDsrSh = !dsrGateResultSh.passed;
+              await db.insert(auditLog).values({
+                action: dsrGateResultSh.auditAction,
+                entityId: s.id,
+                entityType: "strategy",
+                status: isBlockDsrSh ? "failure" : "warning",
+                decisionAuthority: "gate",
+                input: { fromState: "SHADOW", toState: "PAPER" } as Record<string, unknown>,
+                result: dsrGateResultSh.auditPayload as Record<string, unknown>,
+                correlationId: tickCorrelationId,
+              }).catch((auditErr: unknown) => {
+                logger.warn({ strategyId: s.id, err: auditErr }, "DSR gate (SHADOW→PAPER) audit insert failed (non-blocking)");
+              });
+            }
+
+            if (!dsrGateResultSh.passed) {
+              logger.warn(
+                {
+                  strategyId: s.id,
+                  status: dsrGateResultSh.status,
+                  dsr: dsrGateResultSh.auditPayload.dsr,
+                  transition: "SHADOW→PAPER",
+                },
+                `DSR gate BLOCKED SHADOW→PAPER: ${dsrGateResultSh.reason}`,
+              );
+              strategyPromotions.labels({ from_state: "SHADOW", to_state: "PAPER", actor: "system_gate" }).inc();
+              if (dsrGateResultSh.status === "blocked_dsr_floor") {
+                await this._maybeAutoGraveyard(s.id, "dsr_blocked_floor", { dsr: dsrGateResultSh.auditPayload.dsr, status: dsrGateResultSh.status }, "SHADOW", tickCorrelationId);
+              }
+              continue;
+            }
+            this._resetHardGateCounter(s.id, "dsr_blocked_floor", tickCorrelationId);
+          } catch (dsrShErr) {
+            logger.warn({ strategyId: s.id, err: dsrShErr }, "DSR gate (SHADOW→PAPER): read failed (non-blocking — promotion continues)");
+          }
+
+          // Frozen-policy baseline stamp — SHADOW → PAPER cron path
+          {
+            let currentRegimeShCron = "UNKNOWN";
+            try {
+              const { biasState: biasStateTable } = await import("../db/schema.js");
+              const biasStateRowsSh = await db
+                .select({ regimeLabel: biasStateTable.regimeLabel })
+                .from(biasStateTable)
+                .limit(1)
+                .catch(() => [] as { regimeLabel: string }[]);
+              if (biasStateRowsSh.length > 0 && typeof biasStateRowsSh[0].regimeLabel === "string") {
+                currentRegimeShCron = biasStateRowsSh[0].regimeLabel;
+              }
+            } catch {
+              // Regime lookup error is non-fatal — UNKNOWN is a valid regime label.
+            }
+
+            try {
+              await freezePolicyForStrategy(s.id, currentRegimeShCron);
+              logger.info(
+                { strategyId: s.id, regime: currentRegimeShCron },
+                "Frozen-policy SHADOW→PAPER baseline stamp: hash stamped successfully (cron path)",
+              );
+            } catch (freezeErrShCron) {
+              const freezeMsgSh = freezeErrShCron instanceof Error ? freezeErrShCron.message : String(freezeErrShCron);
+              logger.warn(
+                { strategyId: s.id, err: freezeErrShCron },
+                "frozen_policy SHADOW→PAPER baseline stamp failed (cron path) — skipping this cycle (fail-CLOSED per CLAUDE.md §12)",
+              );
+              await db.insert(auditLog).values({
+                action: "frozen_policy.hash_compute_failed",
+                entityId: s.id,
+                entityType: "strategy",
+                status: "blocked",
+                decisionAuthority: "gate",
+                input: { fromState: "SHADOW", toState: "PAPER" },
+                result: {
+                  error: freezeMsgSh,
+                  note: "SHADOW→PAPER baseline freeze write failed (cron path) — cron retries next cycle",
+                },
+                correlationId: tickCorrelationId,
+              }).catch((auditErr) => {
+                logger.warn({ err: auditErr, correlationId: tickCorrelationId }, "frozen_policy.hash_compute_failed (SHADOW→PAPER cron freeze-write) audit insert failed (non-blocking)");
+                auditWriteFailuresTotal.labels({ action: "frozen_policy.hash_compute_failed" }).inc();
+              });
+              continue; // skip this strategy; cron retries next cycle once the DB write succeeds
+            }
+          }
+          // ── end deepscan14 H1 full pre-paper gate stack ─────────────────────────
+
           const { shadowSignals: sSignals, backtestExpected } = await loadDivergenceInputs(s.id, 20);
 
           const divergenceResult = compareShadowToBacktest(sSignals, backtestExpected);
@@ -3375,37 +4407,37 @@ export class LifecycleService {
           }
 
           if (latestBt?.propCompliance) {
-            const passingFirmNames = passingFirmNamesFromCompliance(latestBt.propCompliance);
-            if (passingFirmNames.length > 0) {
-              const driftFirms = await findFirmsWithComplianceDrift(passingFirmNames);
-              if (driftFirms.length > 0) {
-                logger.warn(
-                  { strategyId: s.id, driftFirms, transition: "PAPER→DEPLOY_READY" },
-                  "PAPER → DEPLOY_READY blocked: compliance ruleset drift detected",
-                );
-                await db.insert(auditLog).values({
-                  action: "lifecycle.promotion_blocked_compliance_drift",
-                  entityId: s.id,
-                  entityType: "strategy",
-                  status: "failure",
-                  decisionAuthority: "gate",
-                  input: { fromState: "PAPER", toState: "DEPLOY_READY" },
-                  result: {
-                    firms_with_drift: driftFirms,
-                    qualifying_firms: passingFirmNames,
-                    reason: "compliance ruleset drift_detected — promotion held until human revalidation",
-                  },
-                  correlationId,
-                }).catch((auditErr) => {
-                  logger.warn({ strategyId: s.id, err: auditErr }, "compliance-drift audit insert failed (non-blocking)");
-                });
-                broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
-                  strategyId: s.id,
-                  drift_firms: driftFirms,
-                  correlation_id: correlationId,
-                });
-                continue;
-              }
+            // (deepscan7 F-1 2026-07-02) drift determination extracted to the shared
+            // resolveComplianceDriftForPromotion helper so the manual PATCH path runs
+            // the identical check. Behavior unchanged on this cron path.
+            const { driftFirms, qualifyingFirms } = await resolveComplianceDriftForPromotion(latestBt.propCompliance);
+            if (driftFirms.length > 0) {
+              logger.warn(
+                { strategyId: s.id, driftFirms, transition: "PAPER→DEPLOY_READY" },
+                "PAPER → DEPLOY_READY blocked: compliance ruleset drift detected",
+              );
+              await db.insert(auditLog).values({
+                action: "lifecycle.promotion_blocked_compliance_drift",
+                entityId: s.id,
+                entityType: "strategy",
+                status: "failure",
+                decisionAuthority: "gate",
+                input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+                result: {
+                  firms_with_drift: driftFirms,
+                  qualifying_firms: qualifyingFirms,
+                  reason: "compliance ruleset drift_detected — promotion held until human revalidation",
+                },
+                correlationId,
+              }).catch((auditErr) => {
+                logger.warn({ strategyId: s.id, err: auditErr }, "compliance-drift audit insert failed (non-blocking)");
+              });
+              broadcastSSE(LIFECYCLE_GATE_EVENTS.COMPLIANCE_DRIFT_BLOCKED, {
+                strategyId: s.id,
+                drift_firms: driftFirms,
+                correlation_id: correlationId,
+              });
+              continue;
             }
           }
         } catch (driftCheckErr) {

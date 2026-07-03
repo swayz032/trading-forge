@@ -1318,6 +1318,27 @@
       "when": 1783133417607,
       "tag": "0185_carter_memory",
       "breakpoints": true
+    },
+    {
+      "idx": 189,
+      "version": "7",
+      "when": 1783219817607,
+      "tag": "0186_backtest_provenance_stamp",
+      "breakpoints": true
+    },
+    {
+      "idx": 190,
+      "version": "7",
+      "when": 1783306217607,
+      "tag": "0187_slumhouse_session_epoch",
+      "breakpoints": true
+    },
+    {
+      "idx": 191,
+      "version": "7",
+      "when": 1783392617607,
+      "tag": "0188_backtests_idempotency_lineage_root",
+      "breakpoints": true
     }
   ]
 }

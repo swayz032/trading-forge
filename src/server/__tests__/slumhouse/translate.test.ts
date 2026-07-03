@@ -5,6 +5,8 @@ import {
   formatBag,
   betSize,
   oddsOuttaHundred,
+  unmappedAccountDisclosure,
+  liveModeDataDisclosure,
 } from "../../lib/slumhouse/translate.js";
 
 describe("slumhouse translate", () => {
@@ -95,6 +97,33 @@ describe("slumhouse translate", () => {
     });
     it("handles NaN", () => {
       expect(oddsOuttaHundred(NaN)).toBe("0 outta 100");
+    });
+  });
+
+  // ── FIX 2 + FIX 3 disclosure functions ────────────────────────────────────
+  describe("unmappedAccountDisclosure", () => {
+    it("returns a non-empty plain-English string", () => {
+      const msg = unmappedAccountDisclosure();
+      expect(typeof msg).toBe("string");
+      expect(msg.length).toBeGreaterThan(10);
+    });
+    it("mentions account linking", () => {
+      // Ensures the copy is actionable (tells the user WHY, not just '$0')
+      const msg = unmappedAccountDisclosure();
+      expect(msg.toLowerCase()).toMatch(/linked|connect|account/);
+    });
+  });
+
+  describe("liveModeDataDisclosure", () => {
+    it("returns a non-empty plain-English string", () => {
+      const msg = liveModeDataDisclosure();
+      expect(typeof msg).toBe("string");
+      expect(msg.length).toBeGreaterThan(10);
+    });
+    it("mentions live trading and broker", () => {
+      // Ensures the copy explains the source of truth in live mode
+      const msg = liveModeDataDisclosure();
+      expect(msg.toLowerCase()).toMatch(/live|broker/);
     });
   });
 });

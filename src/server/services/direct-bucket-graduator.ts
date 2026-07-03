@@ -31,7 +31,33 @@ import { eq, sql } from "drizzle-orm";
 import { applyFrameworkOverlay } from "./framework-overlay.js";
 import { compileDslToEngine, compileDslWithConfluence } from "../lib/dsl-compiler.js";
 import type { ConfirmingIndicator } from "../lib/dsl-compiler.js";
-import { runDslQualityCritic } from "./agent-service.js";
+// Band B (spec-onboarding-bridge, 2026-07-02) — was a static top-level import.
+// agent-service.ts's own import graph (agent-service.ts -> backtest-service.ts
+// -> paper-trading-stream.ts -> paper-execution-service.ts -> scheduler.ts ->
+// lifecycle-service.ts -> {adversarial-stress-service.ts | frankenstein-
+// service.ts | pine-export-service.ts | agent-coordinator-service.ts |
+// multi-firm-promotion-service.ts} -> src/server/index.ts -> routes/agent.ts
+// -> agent-service.ts) is a genuine, deep, pre-existing circular reference —
+// confirmed via a full transitive-import trace this session, NOT specific to
+// this file. `auditBidirectionalCompleteness` (Gate 1) and
+// `classifyFactorSources` (Gate 2) — the two functions a new standalone
+// spec-onboarding CLI needs to reuse from this file — have ZERO functional
+// dependency on `runDslQualityCritic`; it is used only in the main
+// `graduateBucket`-style orchestration flow below (inside a try/catch that
+// already fail-opens on any throw, so deferring the import here changes
+// nothing about that flow's behavior). Loading Gate 1/2 as a standalone
+// import should not force-load the entire scheduler/lifecycle/index.ts
+// bootstrap purely because of a sibling static import elsewhere in this
+// file. Type-only import for the call signature; dynamic `await import(...)`
+// at the actual call site below.
+import type { runDslQualityCritic as RunDslQualityCriticFn } from "./agent-service.js";
+let _runDslQualityCritic: typeof RunDslQualityCriticFn | null = null;
+async function getRunDslQualityCritic(): Promise<typeof RunDslQualityCriticFn> {
+  if (!_runDslQualityCritic) {
+    ({ runDslQualityCritic: _runDslQualityCritic } = await import("./agent-service.js"));
+  }
+  return _runDslQualityCritic;
+}
 // Track A F-6: insertAuditRowSafe migrated for select call sites. Remaining
 // db.insert(auditLog) call sites retain raw pattern until incremental migration.
 // TODO: correlation_id not threaded through all call sites in this file.
@@ -222,7 +248,16 @@ const REQUIRED_PARAMS_BY_INDICATOR_FULL: Record<string, string[]> = {
 };
 import { auditGraduatedConfig, formatAuditResult } from "./graduated-strategy-auditor.js";
 import { computeWideConceptFingerprintHash } from "./strategy-fingerprint.js";
-import { logger } from "../index.js";
+// Band B (spec-onboarding-bridge, 2026-07-02) — was `from "../index.js"`. Same
+// circular-import fix as graveyard-gate.ts / model-router.ts (see their
+// comments): this file is itself imported by routes/agent.ts
+// (`deriveEntryIndicator`), so importing `logger` from the full app
+// entrypoint made ANY standalone script that imports this file's Gate 1/2
+// helpers (spec-onboarding-service.ts, this session) circularly re-enter
+// routes/agent.ts -> agent-service.ts before AgentService finishes
+// initializing. `../lib/logger.js` is behaviorally equivalent (identical
+// pino config + test-runtime silence guard) and carries no such edge.
+import { logger } from "../lib/logger.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { notify } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
@@ -2424,6 +2459,7 @@ export async function graduateBucketDirectly(opts: {
   let criticAccepted = true;
   let criticResult: { score: number; concerns: unknown[]; reasoning: string; source: string } | null = null;
   try {
+    const runDslQualityCritic = await getRunDslQualityCritic();
     const critic = await runDslQualityCritic(
       {
         dsl: overlayed.config as Record<string, unknown>,
@@ -2662,10 +2698,6 @@ export async function graduateBucketDirectly(opts: {
     const buildV11ConfigAdditions = (): Record<string, unknown> => ({
       // v11 entry sequence — array of ordered entry steps with indicators_needed
       ...(v11EntrySequence.length > 0 ? { entry_sequence: v11EntrySequence } : {}),
-      // v11 stop_loss — overrides any prior auto-injected stop_loss
-      ...(v11StopLoss !== null ? { stop_loss: v11StopLoss } : {}),
-      // v11 targets — overrides exit_plan_config.targets if richer
-      ...(v11Targets.length > 0 ? { targets: v11Targets } : {}),
       // v11 filters — avoid_when conditions + min_rr
       ...(v11Filters.length > 0 ? { filters: v11Filters } : {}),
       // v11 indicators_used — explicit indicator roles list
@@ -2680,6 +2712,22 @@ export async function graduateBucketDirectly(opts: {
       ...(v11ItfTf ? { itf_tf: v11ItfTf } : {}),
       // lifecycle_metadata for NEEDS_REVISION path
       ...(v11LifecycleMetadata ? { lifecycle_metadata: v11LifecycleMetadata } : {}),
+      // FIX 4 (deepscan11 Track P, 2026-07-02): v11 stop_loss and targets moved
+      // under extraction_hints namespace. Previously these were stamped at the
+      // top level of config JSONB (e.g. config.stop_loss, config.targets) which
+      // is confusable with config.strategy.stop_loss — the field the paper engine
+      // and backtester ACTUALLY read as the operational stop config. At top level
+      // they also bypassed auditGraduatedConfig (auditor runs before v11 additions
+      // are merged). Under extraction_hints the namespace is unambiguous:
+      //   - paper-signal-service reads config.stop_loss (operational) — unchanged
+      //   - backtester reads config.strategy.stop_loss (compiled) — unchanged
+      //   - extraction_hints.stop_loss is queryable for provenance analysis
+      ...(v11StopLoss !== null || v11Targets.length > 0 ? {
+        extraction_hints: {
+          ...(v11StopLoss !== null ? { stop_loss: v11StopLoss } : {}),
+          ...(v11Targets.length > 0 ? { targets: v11Targets } : {}),
+        },
+      } : {}),
     });
 
     // Wave 26 Pass F (2026-05-25) — REVISED multi-symbol approach. Instead of
@@ -2874,6 +2922,42 @@ export async function graduateBucketDirectly(opts: {
           ?? (entryIndicator?.startsWith("archetype:")
               ? entryIndicator.slice("archetype:".length)
               : undefined);
+
+        // ─── FIX 2 (deepscan11 Track P, 2026-07-02): per-variant auditor gate ──
+        // The leader's Layer 1 audit (above) only checks the leader's symbol. Variant
+        // rows are inserted with per-market framework overlays (different base_contracts,
+        // liquidity_cap, stop ceilings) — a valid leader config can produce an invalid
+        // variant config. Run the auditor on each variant before INSERT. A defective
+        // variant writes graduation.variant_rejected_by_auditor and continues (leader
+        // + clean variants still graduate; only the bad variant is skipped).
+        const variantAudit = auditGraduatedConfig({
+          conceptName,
+          symbol: variantMarket,
+          config: variantConfig as any,
+        });
+        if (!variantAudit.passed) {
+          logger.error(
+            { bucketId, strategyName, variantMarket, defects: variantAudit.defects },
+            `direct-graduator FIX2: variant ${variantMarket} REJECTED by auditor — ${formatAuditResult(variantAudit)}`
+          );
+          await db.insert(auditLog).values({
+            action: "graduation.variant_rejected_by_auditor",
+            entityType: "strategy_pending_bucket",
+            entityId: bucketId,
+            input: { bucket_id: bucketId, concept_name: conceptName, leader_strategy_id: inserted.id, variant_market: variantMarket } as Record<string, unknown>,
+            result: {
+              defects: variantAudit.defects,
+              warnings: variantAudit.warnings,
+              variant_market: variantMarket,
+              variant_name: variantName,
+            } as Record<string, unknown>,
+            status: "failure",
+            decisionAuthority: "system",
+            correlationId: correlationId ?? null,
+          }).catch((e: unknown) => logger.warn({ err: e, variantMarket, bucketId }, "variant_rejected_by_auditor audit write failed"));
+          continue; // skip this variant — other variants and the leader are unaffected
+        }
+
         const [variantInserted] = await db.insert(strategies).values({
           name: variantName,
           description: thesis,

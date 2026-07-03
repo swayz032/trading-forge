@@ -120,7 +120,7 @@ class SSEClient {
     }
 
     try {
-      this.eventSource = new EventSource(this.url);
+      this.eventSource = new EventSource(this.url, { withCredentials: true });
     } catch (err) {
       // Construction can throw on insane URLs / sandbox restrictions.
       if (import.meta.env.DEV) {

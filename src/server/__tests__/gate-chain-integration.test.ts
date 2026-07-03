@@ -1389,6 +1389,116 @@ describe("SPA gate — backtests.spa_result.spa_consistent_p key round-trip + di
   });
 });
 
+// ════════════════════════════════════════════════════════════════════════════════
+// Suite 9 — Parameter-drift gate — param_stability.drift_classification WRONG-KEY disconnect (PGlite)
+//
+// (deepscan8 Track D 2026-07-02)
+// Documents the key-name sensitivity that produces a silent grandfather pass when
+// the Python producer drifts from `drift_classification` to `drift_classification_WRONGKEY`.
+// The consumer (lifecycle-service.ts / evaluateParameterDriftGate) reads
+//   walk_forward_results.param_stability.drift_classification
+// A WRONG-KEY row has `drift_classification_WRONGKEY` instead — consumer sees null →
+// route to legacy_null → grandfather pass even if the real classification was "overfit_drift".
+// This is the Suite 9 disconnect guard mandated by deep-scan #8 Track D.
+// Suite 9 IDs use prefix "97"
+// ════════════════════════════════════════════════════════════════════════════════
+describe("Parameter-drift gate — param_stability.drift_classification WRONG-KEY disconnect (Suite 9 — PGlite)", () => {
+  let ctx: TestDb;
+
+  const STRAT_ID    = "97000001-0000-0000-0000-000000000001";
+  const BT_WRONGKEY = "97000001-0000-0000-0000-000000000010"; // drift_classification_WRONGKEY → legacy_null
+  const BT_CORRECT  = "97000001-0000-0000-0000-000000000011"; // drift_classification=overfit_drift → BLOCK (regression guard)
+
+  beforeAll(async () => {
+    ctx = await createTestDb();
+    await ctx.db.insert(strategies).values({
+      id: STRAT_ID, name: "param-drift-wrongkey-test", symbol: "MES", timeframe: "5m", config: {},
+    });
+    await ctx.db.insert(backtests).values([
+      {
+        id: BT_WRONGKEY, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        // DISCONNECT: producer writes `drift_classification_WRONGKEY` instead of `drift_classification`.
+        // Consumer reads `param_stability.drift_classification` → undefined → null → legacy_null PASS.
+        // The real classification was "overfit_drift" (blocking) but the gate never sees it.
+        walkForwardResults: {
+          param_stability_status: "computed",
+          param_stability: { drift_classification_WRONGKEY: "overfit_drift", drift_confidence: 0.80 },
+        },
+      },
+      {
+        id: BT_CORRECT, strategyId: STRAT_ID, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        // Regression guard: correct key → gate must BLOCK.
+        walkForwardResults: {
+          param_stability_status: "computed",
+          param_stability: { drift_classification: "overfit_drift", drift_confidence: 0.80 },
+        },
+      },
+    ]);
+  });
+
+  afterAll(async () => { await ctx.close(); });
+
+  async function selectWfr(btId: string) {
+    const [row] = await ctx.db
+      .select({ wfr: backtests.walkForwardResults })
+      .from(backtests)
+      .where(eq(backtests.id, btId));
+    return row?.wfr as Record<string, unknown> | null;
+  }
+
+  it("DISCONNECT (wrong key): producer writes drift_classification_WRONGKEY; consumer reads drift_classification=null → legacy_null PASS", async () => {
+    const wfr = await selectWfr(BT_WRONGKEY);
+
+    // Confirm the wrong key IS present in the stored JSONB
+    const ps = (wfr?.param_stability as Record<string, unknown> | null) ?? null;
+    expect((ps as Record<string, unknown>)?.drift_classification_WRONGKEY).toBe("overfit_drift");
+    expect((ps as Record<string, unknown>)?.drift_confidence).toBe(0.80);
+
+    // Consumer reads the correct key → undefined → null
+    const classification = (ps?.drift_classification as string | null | undefined) ?? null;
+    const confidence = (ps?.drift_confidence as number | null | undefined) != null
+      ? Number(ps?.drift_confidence)
+      : null;
+    const status = (wfr?.param_stability_status as string | null | undefined) ?? null;
+
+    // The wrong key means classification is null even though confidence is present
+    expect(classification).toBeNull();
+
+    const result = evaluateParameterDriftGate(classification, confidence, status);
+
+    // Gate sees null classification → legacy_null grandfather pass.
+    // The real classification was "overfit_drift" (blocking) but the gate never saw it.
+    // This is a SILENT PRODUCER→CONSUMER KEY DISCONNECT.
+    expect(result.status).toBe("legacy_null");
+    expect(result.passed).toBe(true);
+    expect(result.auditAction).toBe("lifecycle.parameter_drift_unavailable");
+    // Document: drift_classification_WRONGKEY → legacy_null even with drift_confidence=0.80
+    // This is the exact vulnerability Suite 9 exists to document.
+  });
+
+  it("regression: correct key drift_classification=overfit_drift + confidence 0.80 → gate BLOCKS (wrong-key fix must not weaken this)", async () => {
+    const wfr = await selectWfr(BT_CORRECT);
+    const ps = (wfr?.param_stability as Record<string, unknown> | null) ?? null;
+    const classification = (ps?.drift_classification as string | null | undefined) ?? null;
+    const confidence = (ps?.drift_confidence as number | null | undefined) != null
+      ? Number(ps?.drift_confidence)
+      : null;
+    const status = (wfr?.param_stability_status as string | null | undefined) ?? null;
+
+    expect(classification).toBe("overfit_drift");
+    expect(confidence).toBe(0.80);
+
+    const result = evaluateParameterDriftGate(classification, confidence, status);
+
+    // Regression guard: the correct key must still block.
+    expect(result.status).toBe("blocked");
+    expect(result.passed).toBe(false);
+    expect(result.auditAction).toBe("lifecycle.parameter_overfit_drift_block");
+  });
+});
+
 // ── Parameter-drift CPCV-exempt round-trip (C1 — deep-scan #4 net-new guard) ──────
 // Re-added 2026-06-29 after the merge reconciliation dropped FIX-T's original guard.
 // Guards the C1 fix: walk_forward.py CPCV path now emits param_stability_status=
@@ -1565,5 +1675,425 @@ describe("Frozen-policy gate — strategies.frozen_policy_hash round-trip + drif
     });
     expect(result.ok).toBe(true);
     expect(result.frozenHash).toBeNull();
+  });
+});
+
+// ── Suite 11 local helper: mirror of passingFirmNamesFromCompliance from lifecycle-service.ts ──
+// Cannot import lifecycle-service.ts in gate-chain tests because it imports
+// ../db/index.js at module-load time, which throws on missing DATABASE_URL
+// (same trap as frozen-policy-contract.js per deep-scan #5 F-2 comment above).
+// This inline copy must stay in sync with the source; any change to
+// FIRM_KEY_TO_FIRM_NAME or the boolean-check logic in lifecycle-service.ts
+// must be mirrored here.
+const FIRM_KEY_TO_FIRM_NAME_LOCAL: Record<string, string> = {
+  topstep_50k: "Topstep",
+  mffu_50k: "MFFU",
+};
+function parseFirmNamesFromCompliance(propCompliance: unknown): string[] {
+  if (!propCompliance || typeof propCompliance !== "object") return [];
+  const propResults = propCompliance as Record<string, { passed?: boolean; pass?: boolean }>;
+  const names = new Set<string>();
+  for (const [firmKey, result] of Object.entries(propResults)) {
+    const passing = result?.passed === true || result?.pass === true;
+    if (!passing) continue;
+    const firmName = FIRM_KEY_TO_FIRM_NAME_LOCAL[firmKey];
+    if (firmName) {
+      names.add(firmName);
+    } else {
+      const prefix = firmKey.split("_")[0];
+      if (prefix) names.add(prefix);
+    }
+  }
+  return [...names];
+}
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Suite 11 — T→P gate chain coverage (deepscan8 Track D 2026-07-02)
+//
+// Covers the two gates added to TESTING→PAPER by Track D:
+//   (A) Compliance-drift propCompliance JSONB parsing chain — proves backtests.prop_compliance
+//       stores and retrieves the passing-firms shape that passingFirmNamesFromCompliance reads.
+//       Documents that a WRONG propCompliance key (no firm marked passed=true) yields
+//       qualifyingFirms=[] and resolveComplianceDriftForPromotion short-circuits (no DB hit).
+//   (B) Freeze-at-T→P then mutate then P→DR drift-block round-trip — proves the key
+//       behavioral contract: stamping frozenPolicyHash at TESTING→PAPER means any config
+//       change during PAPER is detectable by evaluateFrozenPolicyDriftAtPromotion at P→DR.
+//
+// Suite 11 IDs use prefix "d8"
+// ════════════════════════════════════════════════════════════════════════════════
+describe("T→P gate chain — compliance-drift propCompliance parsing + freeze baseline stamp (deepscan8 Track D — PGlite)", () => {
+  let ctx: TestDb;
+
+  // Part A: propCompliance JSONB round-trip
+  const STRAT_COMP   = "d8000001-0000-0000-0000-000000000001";
+  const BT_PASSING   = "d8000001-0000-0000-0000-000000000010"; // topstep_50k passed=true
+  const BT_NO_PASS   = "d8000001-0000-0000-0000-000000000011"; // all firms failed → qualifyingFirms=[]
+  const BT_WRONGCOMP = "d8000001-0000-0000-0000-000000000012"; // wrong propCompliance shape
+
+  // Part B: freeze baseline + P→DR drift detection
+  const STRAT_FREEZE = "d8000001-0000-0000-0000-000000000002";
+
+  const POLICY_CONFIG_PRE = {
+    entry_quality: { use_weighted_scoring: true, min_factors_satisfied: 2 },
+    position_size: { type: "risk_derived_pyramid", base_contracts: 9 },
+    stop_loss: { type: "atr", multiplier: 1.5 },
+    take_profit: { style: "c", partials: [{ at_r: 1.0, size_pct: 0.33 }] },
+    exit_plan_config: { exit_style: "static_styleC" },
+  };
+
+  // Simulates operator mutating base_contracts during PAPER (9 → 12)
+  const POLICY_CONFIG_MUTATED = {
+    ...POLICY_CONFIG_PRE,
+    position_size: { type: "risk_derived_pyramid", base_contracts: 12 },
+  };
+
+  beforeAll(async () => {
+    ctx = await createTestDb();
+
+    await ctx.db.insert(strategies).values([
+      { id: STRAT_COMP,   name: "comp-chain-test",   symbol: "MES", timeframe: "5m", config: {} },
+      { id: STRAT_FREEZE, name: "freeze-chain-test",  symbol: "MES", timeframe: "5m", config: POLICY_CONFIG_PRE },
+    ]);
+
+    await ctx.db.insert(backtests).values([
+      {
+        id: BT_PASSING, strategyId: STRAT_COMP, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        // PRODUCER: topstep_50k firm passes → passingFirmNamesFromCompliance should return ["Topstep"]
+        propCompliance: { topstep_50k: { passed: true, tier: "50k" } },
+      },
+      {
+        id: BT_NO_PASS, strategyId: STRAT_COMP, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        // PRODUCER: all firms failed → resolveComplianceDriftForPromotion short-circuits (qualifyingFirms=[])
+        propCompliance: { topstep_50k: { passed: false }, mffu_50k: { pass: false } },
+      },
+      {
+        id: BT_WRONGCOMP, strategyId: STRAT_COMP, symbol: "MES", timeframe: "5m",
+        startDate: new Date("2025-01-01"), endDate: new Date("2025-06-01"), status: "completed",
+        // PRODUCER: wrong shape — no `passed` or `pass` boolean → zero qualifying firms
+        propCompliance: { topstep_50k: { result: "pass" } },
+      },
+    ]);
+  });
+
+  afterAll(async () => { await ctx.close(); });
+
+  // ── Part A: propCompliance JSONB parsing chain ─────────────────────────────
+
+  it("Part A: propCompliance JSONB round-trip — topstep_50k.passed=true preserved", async () => {
+    const [row] = await ctx.db
+      .select({ propCompliance: backtests.propCompliance })
+      .from(backtests).where(eq(backtests.id, BT_PASSING));
+    const pc = row?.propCompliance as Record<string, unknown> | null;
+    expect(pc).not.toBeNull();
+    const ts = pc?.topstep_50k as Record<string, unknown> | undefined;
+    expect(ts?.passed).toBe(true);
+  });
+
+  it("Part A: passingFirmNamesFromCompliance reads topstep_50k.passed=true → non-empty qualifying list", async () => {
+    const [row] = await ctx.db
+      .select({ propCompliance: backtests.propCompliance })
+      .from(backtests).where(eq(backtests.id, BT_PASSING));
+    const pc = row?.propCompliance;
+
+    // Mirror lifecycle-service.ts passingFirmNamesFromCompliance (inlined — cannot import
+    // lifecycle-service.ts in gate-chain tests because it imports ../db/index.js which
+    // requires DATABASE_URL at load time; same trap as frozen-policy-contract.js per
+    // deep-scan #5 F-2 comment in this file).
+    const qualifying = parseFirmNamesFromCompliance(pc);
+
+    // topstep_50k → prefix "topstep" qualifies (FIRM_KEY_TO_FIRM_NAME or fallback prefix)
+    expect(qualifying.length).toBeGreaterThan(0);
+  });
+
+  it("Part A: all-failed propCompliance → passingFirmNamesFromCompliance returns [] → resolveComplianceDriftForPromotion short-circuits", async () => {
+    const [row] = await ctx.db
+      .select({ propCompliance: backtests.propCompliance })
+      .from(backtests).where(eq(backtests.id, BT_NO_PASS));
+    const pc = row?.propCompliance;
+
+    const qualifying = parseFirmNamesFromCompliance(pc);
+
+    // No firm passes → resolveComplianceDriftForPromotion returns { driftFirms: [], qualifyingFirms: [] }
+    // and never queries the DB for drift status (short-circuits).
+    expect(qualifying).toHaveLength(0);
+  });
+
+  it("Part A: WRONG propCompliance shape (result key, not passed/pass) → zero qualifying firms", async () => {
+    const [row] = await ctx.db
+      .select({ propCompliance: backtests.propCompliance })
+      .from(backtests).where(eq(backtests.id, BT_WRONGCOMP));
+    const pc = row?.propCompliance;
+
+    const qualifying = parseFirmNamesFromCompliance(pc);
+
+    // `result: "pass"` is not a boolean `passed` or `pass` → gate is not triggered.
+    // Documents the sensitivity: only boolean passed===true or pass===true qualifies.
+    expect(qualifying).toHaveLength(0);
+  });
+
+  // ── Part B: Freeze-at-T→P baseline → mutate → P→DR drift detection ─────────
+
+  it("Part B: freeze baseline at T→P → hash stamped on strategies.frozen_policy_hash (CORE_DDL contract)", async () => {
+    // Simulate what freezePolicyForStrategy does: compute hash from current config, write to DB
+    const preHash = computeFrozenPolicyHash({ config: POLICY_CONFIG_PRE });
+
+    await ctx.db.update(strategies)
+      .set({ frozenPolicyHash: preHash })
+      .where(eq(strategies.id, STRAT_FREEZE));
+
+    const [row] = await ctx.db
+      .select({ frozenPolicyHash: strategies.frozenPolicyHash })
+      .from(strategies).where(eq(strategies.id, STRAT_FREEZE));
+
+    expect(row?.frozenPolicyHash).toBe(preHash);
+    expect(row?.frozenPolicyHash).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("Part B: config mutation during PAPER → P→DR drift check detects mismatch (the T→P baseline stamp contract)", async () => {
+    // State: strategy was frozen at T→P with POLICY_CONFIG_PRE (base_contracts=9)
+    const preHash = computeFrozenPolicyHash({ config: POLICY_CONFIG_PRE });
+    await ctx.db.update(strategies)
+      .set({ frozenPolicyHash: preHash })
+      .where(eq(strategies.id, STRAT_FREEZE));
+
+    // Simulate operator mutating config during PAPER (base_contracts: 9 → 12)
+    await ctx.db.update(strategies)
+      .set({ config: POLICY_CONFIG_MUTATED })
+      .where(eq(strategies.id, STRAT_FREEZE));
+
+    // At P→DR: evaluateFrozenPolicyDriftAtPromotion runs on the mutated config
+    const [row] = await ctx.db
+      .select({ id: strategies.id, config: strategies.config, frozenPolicyHash: strategies.frozenPolicyHash })
+      .from(strategies).where(eq(strategies.id, STRAT_FREEZE));
+
+    const result = evaluateFrozenPolicyDriftAtPromotion({
+      id: row!.id,
+      config: row!.config,
+      frozenPolicyHash: row!.frozenPolicyHash,
+    });
+
+    // CRITICAL: P→DR drift check MUST detect the mismatch.
+    // Without T→P freeze, frozenPolicyHash would be null → first-freeze pass → drift invisible.
+    // WITH T→P freeze, the hash was stamped before PAPER config mutations → drift is caught.
+    expect(result.ok).toBe(false);
+    expect(result.reason).toContain("frozen_policy.hash_mismatch");
+    expect(result.currentHash).not.toBe(result.frozenHash);
+    expect(result.frozenHash).toBe(preHash);
+  });
+
+  it("Part B: without T→P baseline stamp (null hash) → P→DR first-freeze pass (legacy behavior preserved)", async () => {
+    // Simulate a strategy that reached PAPER without a T→P freeze (legacy path, pre-deepscan8)
+    await ctx.db.update(strategies)
+      .set({ frozenPolicyHash: null, config: POLICY_CONFIG_MUTATED })
+      .where(eq(strategies.id, STRAT_FREEZE));
+
+    const [row] = await ctx.db
+      .select({ id: strategies.id, config: strategies.config, frozenPolicyHash: strategies.frozenPolicyHash })
+      .from(strategies).where(eq(strategies.id, STRAT_FREEZE));
+
+    expect(row?.frozenPolicyHash).toBeNull();
+
+    const result = evaluateFrozenPolicyDriftAtPromotion({
+      id: row!.id,
+      config: row!.config,
+      frozenPolicyHash: row!.frozenPolicyHash,
+    });
+
+    // Legacy tolerance: null hash → first-freeze pass at P→DR (the grandfathered legacy path).
+    // deepscan8 Track D closes this gap for NEW promotions but preserves backward compat.
+    expect(result.ok).toBe(true);
+    expect(result.frozenHash).toBeNull();
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════════
+// Suite 12 — CPCV per-path IS WFE gate — wfe_status="cpcv_per_path_is" round-trip (PGlite)
+//
+// Deep-scan #9 FIX K (2026-07-02): walk_forward.py CPCV mode with per-path IS Sharpe
+// available now emits wfe_status="cpcv_per_path_is" + a real wfe_overall. This is distinct
+// from:
+//   - "cpcv_not_applicable" (CPCV ran but IS Sharpe unavailable → gate exempt; Suite 5)
+//   - "degenerate_is"      (WF ran but IS windows non-positive → hard block; Suite 1)
+// The cpcv_per_path_is path MUST enforce the same WFE hard floor (0.70) as plain-WF
+// and surface wfeBasis="cpcv_per_path_is" in the returned detail for audit traceability.
+// wf_metadata.wfe_cpcv_basis captures the CPCV metadata written by the producer.
+//
+// Suite 12 IDs use prefix "c1"
+// ════════════════════════════════════════════════════════════════════════════════
+describe("WFE gate — cpcv_per_path_is status floor enforcement + basis surfacing (Suite 12 — PGlite)", () => {
+  let ctx: TestDb;
+
+  const STRAT_ID    = "c1000001-0000-0000-0000-000000000001";
+  const BT_BLOCK65  = "c1000001-0000-0000-0000-000000000010"; // cpcv_per_path_is + wfe_overall=0.65 → BLOCK
+  const BT_PASS80   = "c1000001-0000-0000-0000-000000000011"; // cpcv_per_path_is + wfe_overall=0.80 → PASS
+  const BT_WRONGKEY = "c1000001-0000-0000-0000-000000000012"; // wfe_status_WRONGKEY → fallback to plain-WF numeric eval
+
+  beforeAll(async () => {
+    ctx = await createTestDb();
+
+    await ctx.db.insert(strategies).values({
+      id: STRAT_ID,
+      name: "cpcv-per-path-is-wfe-test",
+      symbol: "MES",
+      timeframe: "5m",
+      config: {},
+    });
+
+    await ctx.db.insert(backtests).values([
+      {
+        id: BT_BLOCK65,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // PRODUCER: CPCV ran with per-path IS Sharpe; wfe_overall=0.65 (below 0.70 hard floor).
+        // wf_metadata.wfe_cpcv_basis captures the CPCV computation metadata for audit traceability.
+        walkForwardResults: {
+          wfe_overall: 0.65,
+          wfe_status: "cpcv_per_path_is",
+          wf_metadata: {
+            wfe_cpcv_basis: {
+              n_paths_with_is: 4,
+              is_basis: "per_path_is_sharpe_mean",
+              oos_basis: "agg_sharpe",
+            },
+          },
+        },
+      },
+      {
+        id: BT_PASS80,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // PRODUCER: same CPCV per-path IS mode; wfe_overall=0.80 (above 0.70 floor) → PASS.
+        walkForwardResults: {
+          wfe_overall: 0.80,
+          wfe_status: "cpcv_per_path_is",
+          wf_metadata: {
+            wfe_cpcv_basis: {
+              n_paths_with_is: 4,
+              is_basis: "per_path_is_sharpe_mean",
+              oos_basis: "agg_sharpe",
+            },
+          },
+        },
+      },
+      {
+        id: BT_WRONGKEY,
+        strategyId: STRAT_ID,
+        symbol: "MES",
+        timeframe: "5m",
+        startDate: new Date("2025-01-01"),
+        endDate: new Date("2025-06-01"),
+        status: "completed",
+        // DISCONNECT DOCUMENTATION: producer writes wfe_status_WRONGKEY instead of wfe_status.
+        // Consumer reads wfe_status → undefined → null → gate falls through to the plain-WF
+        // numeric evaluation path. wfe_overall=0.65 < 0.70 → BLOCKS via wfe_hard_floor_block
+        // WITHOUT the cpcv_per_path_is basis recorded (wfeBasis is absent — basis invisible).
+        walkForwardResults: {
+          wfe_overall: 0.65,
+          wfe_status_WRONGKEY: "cpcv_per_path_is",  // wrong key
+          wf_metadata: {
+            wfe_cpcv_basis: {
+              n_paths_with_is: 4,
+              is_basis: "per_path_is_sharpe_mean",
+              oos_basis: "agg_sharpe",
+            },
+          },
+        },
+      },
+    ]);
+  });
+
+  afterAll(async () => { await ctx.close(); });
+
+  async function selectWfr(btId: string) {
+    const [row] = await ctx.db
+      .select({ wfr: backtests.walkForwardResults })
+      .from(backtests)
+      .where(eq(backtests.id, btId));
+    return row?.wfr as Record<string, unknown> | null;
+  }
+
+  it("JSONB round-trip: cpcv_per_path_is shape (wfe_overall + wfe_status + wf_metadata.wfe_cpcv_basis) preserved", async () => {
+    const wfr = await selectWfr(BT_BLOCK65);
+    expect(wfr?.wfe_overall).toBe(0.65);
+    expect(wfr?.wfe_status).toBe("cpcv_per_path_is");
+    const meta = wfr?.wf_metadata as Record<string, unknown>;
+    const basis = meta?.wfe_cpcv_basis as Record<string, unknown>;
+    expect(basis?.n_paths_with_is).toBe(4);
+    expect(basis?.is_basis).toBe("per_path_is_sharpe_mean");
+    expect(basis?.oos_basis).toBe("agg_sharpe");
+  });
+
+  it("BLOCK: cpcv_per_path_is + wfe_overall=0.65 (below 0.70 hard floor) → gate status=blocked + wfeBasis surfaced", async () => {
+    const wfr = await selectWfr(BT_BLOCK65);
+    const wfeOverall = (wfr?.wfe_overall ?? null) as number | null;
+    const wfeStatus = (wfr?.wfe_status ?? null) as string | null;
+
+    expect(wfeStatus).toBe("cpcv_per_path_is");
+    expect(wfeOverall).toBe(0.65);
+
+    const result = evaluateWfeGate(wfeOverall, undefined, undefined, wfeStatus);
+
+    expect(result.passed).toBe(false);
+    expect(result.status).toBe("blocked");
+    expect(result.wfeOverall).toBe(0.65);
+    expect(result.auditAction).toBe("lifecycle.wfe_hard_floor_block");
+    // CPCV basis MUST be surfaced so audit writers can record the evaluation path.
+    expect(result.wfeBasis).toBe("cpcv_per_path_is");
+    // Regression: must NOT produce cpcv_exempt or legacy_null (different statuses).
+    expect(result.status).not.toBe("cpcv_exempt");
+    expect(result.status).not.toBe("legacy_null");
+  });
+
+  it("PASS: cpcv_per_path_is + wfe_overall=0.80 (above 0.70 hard floor) → gate status=passed + wfeBasis surfaced", async () => {
+    const wfr = await selectWfr(BT_PASS80);
+    const wfeOverall = (wfr?.wfe_overall ?? null) as number | null;
+    const wfeStatus = (wfr?.wfe_status ?? null) as string | null;
+
+    expect(wfeStatus).toBe("cpcv_per_path_is");
+    expect(wfeOverall).toBe(0.80);
+
+    const result = evaluateWfeGate(wfeOverall, undefined, undefined, wfeStatus);
+
+    expect(result.passed).toBe(true);
+    expect(result.status).toBe("passed");
+    expect(result.wfeOverall).toBe(0.80);
+    expect(result.auditAction).toBeNull();
+    // Basis MUST be present even on the happy path so callers know this was cpcv_per_path_is.
+    expect(result.wfeBasis).toBe("cpcv_per_path_is");
+  });
+
+  it("DISCONNECT (wrong key): wfe_status_WRONGKEY → consumer reads wfe_status=null → plain-WF numeric eval; cpcv basis is invisible", async () => {
+    const wfr = await selectWfr(BT_WRONGKEY);
+
+    // Confirm the wrong key IS present in the stored JSONB
+    expect((wfr as any)?.wfe_status_WRONGKEY).toBe("cpcv_per_path_is");
+
+    // Consumer reads wfe_status (the correct key) → undefined → null
+    const wfeOverall = (wfr?.wfe_overall ?? null) as number | null;
+    const wfeStatus = (wfr?.wfe_status ?? null) as string | null;
+
+    expect(wfeStatus).toBeNull();   // correct key absent → consumer sees null
+    expect(wfeOverall).toBe(0.65);  // the numeric value IS present
+
+    const result = evaluateWfeGate(wfeOverall, undefined, undefined, wfeStatus);
+
+    // Gate falls through to plain-WF numeric eval: wfe_overall=0.65 < 0.70 → BLOCKS.
+    // Correct outcome, but WITHOUT the cpcv_per_path_is basis — the CPCV context is lost.
+    expect(result.passed).toBe(false);
+    expect(result.status).toBe("blocked");
+    expect(result.auditAction).toBe("lifecycle.wfe_hard_floor_block");
+    // CRITICAL: wfeBasis is absent — the producer's CPCV context is INVISIBLE to the consumer.
+    // This documents the producer→consumer key-name sensitivity for wfe_status.
+    expect(result.wfeBasis).toBeUndefined();
   });
 });

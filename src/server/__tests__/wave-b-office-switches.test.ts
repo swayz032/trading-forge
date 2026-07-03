@@ -13,7 +13,7 @@
  * Auth guard tests verify requireAdminSession enforces 401 before any DB work.
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // ── Mocks (hoisted by vitest before imports) ─────────────────────────────────
 
@@ -30,10 +30,24 @@ vi.mock("../db/schema.js", () => ({
     operatorAbsentSince: "operatorAbsentSince",
     id: "id",
   },
+  // deep-scan #12 Track S: admin.ts now threads actor identity + revocation.
+  slumhouseUsers: { discordUserId: "discordUserId", sessionEpoch: "sessionEpoch" },
 }));
 
 vi.mock("drizzle-orm", () => ({
   eq: vi.fn((_col: unknown, _val: unknown) => "__eq__"),
+  sql: vi.fn(() => "__sql__"),
+}));
+
+// deep-scan #12 Track S: postSwitch now checks Origin allowlist; allow in unit
+// tests (the real checkSlumhouseOrigin has dedicated coverage in the auth suite).
+vi.mock("../lib/slumhouse/require-session.js", () => ({
+  checkSlumhouseOrigin: vi.fn(() => true),
+}));
+
+vi.mock("../lib/slumhouse/session.js", () => ({
+  verifySession: vi.fn(() => null),
+  COOKIE_NAME: "slumhouse_sid",
 }));
 
 vi.mock("../services/pipeline-control-service.js", () => ({
@@ -48,6 +62,7 @@ vi.mock("../lib/slumhouse/admin-session.js", () => ({
   isAdminConfigured:    vi.fn(() => true),
   signAdminSession:     vi.fn(),
   adminSessionFromCookie: vi.fn(),
+  adminDiscordUserIdFromCookie: vi.fn(() => null),
 }));
 
 vi.mock("../lib/audit-log-helper.js", () => ({
@@ -56,6 +71,15 @@ vi.mock("../lib/audit-log-helper.js", () => ({
 
 vi.mock("../services/dead-mans-heartbeat-service.js", () => ({
   clearOperatorAbsenceMarkers: vi.fn(async () => ({ clearedSince: null, clearedPending: null })),
+}));
+
+// V-3 (deepscan7): vacation_mode now reads the TRUE effective state via
+// operatorAbsentModeActive() (env override OR operator_absent_since) instead of
+// selecting system_state directly. Mock the service so the switch tests drive
+// it explicitly (this test previously fed a raw ts row that the route no longer
+// reads — mock-drift fixed 2026-07-02, layer4-office pass).
+vi.mock("../services/operator-absent-mode-service.js", () => ({
+  operatorAbsentModeActive: vi.fn(async () => false),
 }));
 
 vi.mock("../lib/logger.js", () => ({
@@ -74,6 +98,7 @@ import { getMode, setMode } from "../services/pipeline-control-service.js";
 import { adminSessionFromCookie } from "../lib/slumhouse/admin-session.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { clearOperatorAbsenceMarkers } from "../services/dead-mans-heartbeat-service.js";
+import { operatorAbsentModeActive } from "../services/operator-absent-mode-service.js";
 import { getSwitchStates, postSwitch } from "../routes/slumhouse/admin.js";
 
 // ── Test helpers ─────────────────────────────────────────────────────────────
@@ -180,6 +205,44 @@ describe("Auth guard — 401 without admin session", () => {
     const res = makeRes();
     await postSwitch(req, res as any);
     expect(res.status).toHaveBeenCalledWith(401);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// vacation_mode — env-forced-on honesty (deep-scan #12 F-1)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("vacation_mode OFF refused when env forces ON (deep-scan #12 F-1)", () => {
+  const prevEnv = process.env["OPERATOR_ABSENT_AUTOPROMOTE"];
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(adminSessionFromCookie).mockReturnValue(true);
+    buildInsertMock();
+    buildUpdateMock();
+  });
+  afterEach(() => {
+    if (prevEnv === undefined) delete process.env["OPERATOR_ABSENT_AUTOPROMOTE"];
+    else process.env["OPERATOR_ABSENT_AUTOPROMOTE"] = prevEnv;
+  });
+
+  it("returns 409 (not silent success) when OFF-toggled while OPERATOR_ABSENT_AUTOPROMOTE=true", async () => {
+    process.env["OPERATOR_ABSENT_AUTOPROMOTE"] = "true";
+    const req = makeReq({ body: { id: "vacation_mode", on: false } });
+    const res = makeRes();
+    await postSwitch(req, res as any);
+    expect(res.getStatus()).toBe(409);
+    expect(res.getBody().error).toBe("env_forces_vacation_on");
+    // Must NOT have cleared the DB marker (no silent revert)
+    expect((db as any).update).not.toHaveBeenCalled();
+  });
+
+  it("allows OFF toggle normally when env is unset", async () => {
+    delete process.env["OPERATOR_ABSENT_AUTOPROMOTE"];
+    buildUpdateMock();
+    const req = makeReq({ body: { id: "vacation_mode", on: false } });
+    const res = makeRes();
+    await postSwitch(req, res as any);
+    expect(res.getStatus()).not.toBe(409);
   });
 });
 
@@ -408,9 +471,9 @@ describe("vacation_mode GET — operator_absent_since state", () => {
   });
 
   it("operatorAbsentSince non-null → on:true, state:running, status:AWAY, dangerOn:true", async () => {
+    vi.mocked(operatorAbsentModeActive).mockResolvedValue(true);
     buildSelectMock([
       [{ val: "0" }],                         // learning_loop
-      [{ ts: new Date("2026-06-27T00:00Z") }], // vacation_mode — absent
     ]);
     const res = makeRes();
     await getSwitchStates(makeReq(), res as any);
@@ -422,9 +485,9 @@ describe("vacation_mode GET — operator_absent_since state", () => {
   });
 
   it("operatorAbsentSince null → on:false, state:paused, status:HOME", async () => {
+    vi.mocked(operatorAbsentModeActive).mockResolvedValue(false);
     buildSelectMock([
       [{ val: "0" }],
-      [{ ts: null }],
     ]);
     const res = makeRes();
     await getSwitchStates(makeReq(), res as any);
@@ -435,6 +498,7 @@ describe("vacation_mode GET — operator_absent_since state", () => {
   });
 
   it("absent system_state row → on:false (fail-closed)", async () => {
+    vi.mocked(operatorAbsentModeActive).mockRejectedValue(new Error("db_down")); // fail-closed path
     buildSelectMock([[{ val: "0" }], []]); // no system_state row
     const res = makeRes();
     await getSwitchStates(makeReq(), res as any);

@@ -34,11 +34,11 @@ import click
 import numpy as np
 import pandas as pd
 import polars as pl
+
 # vectorbt is NOT imported at module level — lazy-import inside each run path.
 # Both run_backtest() (DSL) and run_class_backtest() (class-based) lazy-import
 # vectorbt at call time so non-vectorbt code paths pay zero JIT startup cost.
 # The Numba JIT cache is pinned via determinism.py → NUMBA_CACHE_DIR (Fix A).
-
 from src.engine.analytics import compute_full_analytics
 from src.engine.config import (
     CONTRACT_SPECS,
@@ -49,7 +49,7 @@ from src.engine.config import (
     StrategyConfig,
 )
 from src.engine.cross_validation import run_cross_validation
-from src.engine.data_loader import compute_dataset_hash, flag_rollover_days, load_ohlcv
+from src.engine.data_loader import EMPIRICAL_BARS_PER_DAY, compute_dataset_hash, flag_rollover_days, load_ohlcv
 from src.engine.decay.half_life import fit_decay
 from src.engine.decay.sub_signals import composite_decay_score
 from src.engine.firm_config import (
@@ -118,6 +118,45 @@ from src.engine.strategy_base import BaseStrategy
 # must apply shift(1) to the higher-TF columns BEFORE the merge/join.
 
 
+def _dst_us_rule_offset(utc_dt) -> int:
+    """Return the US ET UTC offset (-4 EDT or -5 EST) using the US DST rule.
+
+    US DST rule: clocks spring forward (UTC-5 → UTC-4) at 02:00 ET on the
+    second Sunday of March, and fall back (UTC-4 → UTC-5) at 02:00 ET on
+    the first Sunday of November.
+
+    For the last-resort path (no zoneinfo/pytz), we approximate using UTC
+    dates — the ±1h at the exact 02:00 boundary is acceptable given this is
+    only engaged when both tz libraries are absent.
+
+    Returns:
+        -4 during EDT (summer daylight saving time)
+        -5 during EST (winter standard time)
+    """
+    import datetime as _dt_mod
+
+    year = utc_dt.year
+
+    # Second Sunday of March
+    march_1 = _dt_mod.date(year, 3, 1)
+    days_to_first_sun_mar = (6 - march_1.weekday()) % 7  # days until Sunday
+    second_sun_march = march_1 + _dt_mod.timedelta(days=days_to_first_sun_mar + 7)
+
+    # First Sunday of November
+    nov_1 = _dt_mod.date(year, 11, 1)
+    days_to_first_sun_nov = (6 - nov_1.weekday()) % 7
+    first_sun_nov = nov_1 + _dt_mod.timedelta(days=days_to_first_sun_nov)
+
+    # Determine date of the UTC datetime (works for both date and datetime objects)
+    utc_date = utc_dt.date() if hasattr(utc_dt, "date") and callable(utc_dt.date) else (
+        _dt_mod.date(utc_dt.year, utc_dt.month, utc_dt.day)
+    )
+
+    if second_sun_march <= utc_date < first_sun_nov:
+        return -4  # EDT (summer)
+    return -5  # EST (winter)
+
+
 def _dst_correct_et_hour(utc_dt) -> str:
     """Convert a UTC datetime to 'HH:MM' ET string, DST-correct.
 
@@ -129,8 +168,9 @@ def _dst_correct_et_hour(utc_dt) -> str:
     for pre-lunch (11:30) and time-stop (15:55) checks on winter bars.
 
     New behavior: Use Python's built-in zoneinfo (3.9+) or pytz fallback
-    for DST-correct America/New_York conversion. Falls back to UTC-4 only
-    when both are unavailable (legacy environments).
+    for DST-correct America/New_York conversion. Falls back to _dst_us_rule_offset()
+    when both are unavailable — correct for both EST and EDT (no longer
+    hardcoded UTC-4 which was wrong in winter).
 
     This function is module-level so tests can import and verify it directly.
     The DSL static-styleC path already handles DST correctly via the ts_et column
@@ -162,10 +202,44 @@ def _dst_correct_et_hour(utc_dt) -> str:
     except Exception:
         pass
 
-    # Last resort: UTC-4 (EDT) arithmetic — imprecise in winter, preserved for
-    # backward-compat on environments without zoneinfo/pytz.
-    et_hour = (utc_dt.hour - 4) % 24
+    # Last resort: US DST rule (second Sunday of March → first Sunday of November).
+    # FIX 2 (2026-07-02): replaces the hardcoded UTC-4 (EDT) which was wrong in
+    # winter (EST = UTC-5), causing 15:55 time-stop to fire at 14:55 UTC in January.
+    import logging as _logging
+    _logging.getLogger(__name__).warning(
+        "_dst_correct_et_hour: last-resort fallback engaged — both zoneinfo and pytz "
+        "unavailable. Install zoneinfo (Python 3.9+) or pytz for production accuracy."
+    )
+    utc_offset = _dst_us_rule_offset(utc_dt)
+    et_hour = (utc_dt.hour + utc_offset) % 24
     return f"{et_hour:02d}:{utc_dt.minute:02d}"
+
+
+def _et_time_ge_flatten(et_str: str, flatten_hour: int = 15, flatten_minute: int = 55) -> bool:
+    """True if the ET time embedded in `et_str` is >= flatten_hour:flatten_minute.
+
+    deepscan14 B1: replaces an exact-substring match (`"15:55" in et_str`) that never
+    fires for exec timeframes whose bar grid doesn't land on the :55 minute (15m/30m/1h/4h
+    grids run ...15:30, 15:45, 16:00 — the literal "15:55" substring never appears), which
+    silently skipped the 15:55 ET hard flatten on those timeframes. Mirrors the inequality
+    semantics of `_is_time_stop()` in `src/engine/exits/style_d_handler.py` — fires on the
+    FIRST bar at or after the flatten time, not only on an exact match.
+
+    Parses "HH:MM" via regex so it accepts both a bare "HH:MM" string and a full
+    datetime-string repr (e.g. "2026-01-15 15:55:00" or ISO "...T15:55:00-05:00").
+    """
+    if not et_str:
+        return False
+    import re as _re_module
+    m = _re_module.search(r"(\d{1,2}):(\d{2})", et_str)
+    if not m:
+        return False
+    try:
+        hh = int(m.group(1))
+        mm = int(m.group(2))
+    except ValueError:
+        return False
+    return (hh, mm) >= (flatten_hour, flatten_minute)
 
 
 def apply_eligibility_gate(
@@ -178,6 +252,7 @@ def apply_eligibility_gate(
     htf_cache=None,
     spec=None,
     strategy_name: str = "",
+    passthrough_reason: str = "",
 ):
     """Apply 7-layer eligibility gate to filter signals (A+ only).
 
@@ -198,7 +273,7 @@ def apply_eligibility_gate(
     from src.engine.context.structural_stops import compute_structural_stop
     from src.engine.context.structural_targets import compute_targets
 
-    gate_stats = {"total": 0, "take": 0, "reduce": 0, "skip": 0, "skip_reasons": {}}
+    gate_stats = {"total": 0, "take": 0, "reduce": 0, "skip": 0, "skip_reasons": {}, "skipped_signals": []}
 
     # ABLATION TOGGLE (2026-06-30, #4 two-mode backtest reporting): when TF_CONFLUENCE_OVERLAY_DISABLED=true the
     # institutional confluence overlay (this 7-layer A+ eligibility gate) is OFF, so the backtest measures the PURE
@@ -207,20 +282,37 @@ def apply_eligibility_gate(
     if os.environ.get("TF_CONFLUENCE_OVERLAY_DISABLED", "").lower() == "true":
         gate_stats["mode"] = "source_entry_only"
         return entry_signals, exit_signals, gate_stats
-    gate_stats["mode"] = "tf_institutional_overlay"
 
-    # Backward compatible: no HTF cache → passthrough
+    # Backward compatible: no HTF cache → passthrough (fail-soft is correct — a data blip
+    # should not kill the run). FIX 2 (deep-scan #10): make passthrough LOUD and queryable
+    # so the operator can see it in gate_stats rather than silently getting the wrong mode label.
     if htf_cache is None or len(htf_cache) == 0:
+        gate_stats["mode"] = "passthrough_htf_unavailable"
+        gate_stats["passthrough_reason"] = passthrough_reason or "htf_cache_none_or_empty"
         return entry_signals, exit_signals, gate_stats
 
     # Unregistered strategy bypass: if strategy_name doesn't appear in ANY
     # playbook's allowed_strategies, skip the gate entirely. This prevents
     # new/unregistered strategies from being silently killed during backtesting.
+    #
+    # HONESTY FIX (Band B / spec-onboarding-bridge, 2026-07-02): this check MUST
+    # run BEFORE gate_stats["mode"] is stamped "tf_institutional_overlay" — a
+    # verified deep-scan finding this session was that the mode label was set
+    # unconditionally at this point, so an unregistered-strategy bypass produced
+    # a gate_stats blob indistinguishable from a run where the 7-layer overlay
+    # genuinely executed. Every Mode A/B research run and every onboarded
+    # strategy backtest was silently unfiltered with no queryable signal.
+    # Mirrors the sibling fix already shipped for the htf_cache passthrough
+    # above (gate_stats["mode"] = "passthrough_htf_unavailable").
     from src.engine.context.playbook_router import ALL_STRATS
     strat_normalized = strategy_name.lower().replace("strategy", "").strip().replace("_", "")
     all_normalized = [s.lower().replace("_", "") for s in ALL_STRATS]
     if strat_normalized and strat_normalized not in all_normalized:
+        gate_stats["mode"] = "passthrough_strategy_unregistered"
+        gate_stats["passthrough_reason"] = f"strategy_name={strategy_name!r} not in playbook_router.ALL_STRATS"
         return entry_signals, exit_signals, gate_stats
+
+    gate_stats["mode"] = "tf_institutional_overlay"
 
     filtered = entry_signals.copy()
     signal_indices = np.where(entry_signals)[0]
@@ -261,6 +353,26 @@ def apply_eligibility_gate(
 
     point_value = spec.point_value if spec else 5.0
     tick_size = spec.tick_size if spec else 0.25
+
+    # PER-LAYER ABLATION DISABLE (layer4-ablation 2026-07-02):
+    # TF_OVERLAY_DISABLE_LAYERS=no_trade,kill_zone lets the ablation harness
+    # in scripts/filter-ablation-cpcv.py measure the marginal OOS DSR contribution
+    # of each gate layer by running the gate with exactly one layer's veto disabled.
+    # Default: empty string -> nothing disabled -> byte-identical to baseline run.
+    # See src/engine/ablation_layers.py for the canonical layer registry.
+    # FAIL-SAFE: ImportError (e.g. module not yet installed) -> no layers disabled.
+    try:
+        from src.engine.ablation_layers import ABLATION_LAYER_MAP as _ABLATION_LAYER_MAP
+        _disable_env = os.environ.get("TF_OVERLAY_DISABLE_LAYERS", "")
+        _disabled_layers: set = {x.strip() for x in _disable_env.split(",") if x.strip()}
+        # Precompute active (disabled) layer prefix pairs for O(k) per-signal check.
+        _active_ablation = [
+            (name, prefix) for name, prefix in _ABLATION_LAYER_MAP.items()
+            if name in _disabled_layers
+        ] if _disabled_layers else []
+    except ImportError:
+        _disabled_layers = set()
+        _active_ablation = []
 
     for idx in signal_indices:
         entry_price = float(close_np[idx])
@@ -351,10 +463,29 @@ def apply_eligibility_gate(
             )
 
             if decision.action == "SKIP":
+                reason = decision.reasoning[0] if decision.reasoning else "unknown"
+                # Ablation override: if this rejection came from a layer that is
+                # currently disabled by TF_OVERLAY_DISABLE_LAYERS, treat the signal
+                # as TAKE and record the override count in gate_stats["ablation_overrides"].
+                # This is the leave-one-filter-out mechanism; gate evaluation still ran
+                # in full — we just ignore the veto for the disabled layer.
+                if _active_ablation:
+                    _matched = next(
+                        (name for name, prefix in _active_ablation if reason.startswith(prefix)),
+                        None,
+                    )
+                    if _matched is not None:
+                        gate_stats["take"] += 1
+                        _ao = gate_stats.setdefault("ablation_overrides", {})
+                        _ao[_matched] = _ao.get(_matched, 0) + 1
+                        # Signal passes through — do NOT set filtered[idx]=False
+                        continue
                 filtered[idx] = False
                 gate_stats["skip"] += 1
-                reason = decision.reasoning[0] if decision.reasoning else "unknown"
                 gate_stats["skip_reasons"][reason] = gate_stats["skip_reasons"].get(reason, 0) + 1
+                # per-signal attribution (2026-07-02 overlay research): first rejecting reason + bar idx —
+                # lets the ablation join rejected signals to Mode A counterfactual trades (A+ retention analysis)
+                gate_stats["skipped_signals"].append({"bar_idx": int(idx), "reason": reason})
             elif decision.action == "REDUCE":
                 gate_stats["reduce"] += 1
                 # Keep signal but note it was reduced
@@ -384,6 +515,7 @@ def apply_eligibility_gate(
             filtered[idx] = False
             gate_stats["skip"] += 1
             gate_stats["skip_reasons"]["context_error"] = gate_stats["skip_reasons"].get("context_error", 0) + 1
+            gate_stats["skipped_signals"].append({"bar_idx": int(idx), "reason": "context_error"})
 
     return filtered, exit_signals, gate_stats
 
@@ -746,6 +878,234 @@ def _apply_backtest_parity_gates(
     return out, parity_stats
 
 
+def _apply_naked_management(
+    trades_records,
+    high_np: np.ndarray,
+    low_np: np.ndarray,
+    close_np: np.ndarray,
+    atr_np: np.ndarray,
+    spec,
+    df,
+    open_np: Optional[np.ndarray] = None,
+    atr_stop_multiplier: float = 1.5,
+) -> list[dict]:
+    """Exit Policy A — 'naked': session-EOD time exit ONLY.
+
+    layer4-replay counterfactual axis (2026-07-02): measures the P&L when the
+    ONLY exit management is the 15:55 ET hard flatten.  No stop loss, no TP,
+    no trailing stop.  The DLL circuit breaker and firm kill-switch are NOT
+    modeled here — they operate at the entry-signal layer (apply_dll_halt),
+    which runs before this function and is not part of the experiment.
+
+    Entry fills are inherited from vectorbt (next-bar fill convention).
+    Exit: 15:55 ET time-stop (close of the flatten bar), or the original
+    vectorbt signal exit if no 15:55 bar is reached first.
+
+    This function is deterministic: same inputs → same outputs.
+    """
+    from datetime import datetime as _dt
+    from datetime import timezone as _tz
+
+    from src.engine.exits.style_d_handler import _is_time_stop
+
+    managed_trades = []
+    ts_col = "ts_event"
+    has_ts = ts_col in df.columns
+
+    for _, row in trades_records.iterrows():
+        entry_p = float(row["Avg Entry Price"])
+        original_exit_p = float(row["Avg Exit Price"])
+        size = float(row["Size"])
+        direction_str = str(row["Direction"])
+        entry_idx = int(row["Entry Idx"]) if "Entry Idx" in row.index else 0
+        original_exit_idx = int(row["Exit Idx"]) if "Exit Idx" in row.index else min(entry_idx + 1, len(high_np) - 1)
+        MAX_HOLD_BARS = int(os.environ.get("BACKTEST_MAX_HOLD_BARS", "200"))
+        if original_exit_idx - entry_idx > MAX_HOLD_BARS:
+            original_exit_idx = entry_idx + MAX_HOLD_BARS
+
+        atr_at_entry = float(atr_np[entry_idx]) if entry_idx < len(atr_np) and not np.isnan(atr_np[entry_idx]) else 1.0
+        _stop_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
+        risk_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+
+        exit_price = original_exit_p
+        exit_idx = original_exit_idx
+        exit_reason = "signal"
+
+        for bar in range(entry_idx + 1, original_exit_idx):
+            if bar >= len(high_np):
+                break
+            # 15:55 ET hard flatten — the ONLY management applied in Policy A
+            if has_ts and bar < len(df):
+                try:
+                    _raw_ts = df[ts_col][bar]
+                    _dt_val = (
+                        _raw_ts if isinstance(_raw_ts, _dt)
+                        else _dt.fromisoformat(str(_raw_ts))
+                    )
+                    _dt_utc = (
+                        _dt_val.astimezone(_tz.utc)
+                        if _dt_val.tzinfo is not None
+                        else _dt_val.replace(tzinfo=_tz.utc)
+                    )
+                    if _is_time_stop(_dst_correct_et_hour(_dt_utc)):
+                        exit_price = float(close_np[bar]) if bar < len(close_np) else original_exit_p
+                        exit_reason = "time_stop"
+                        exit_idx = bar
+                        break
+                except Exception:
+                    pass
+
+        managed_trades.append({
+            "entry_idx": entry_idx,
+            "entry_price": entry_p,
+            "original_exit_idx": original_exit_idx,
+            "original_exit_price": original_exit_p,
+            "size": size,
+            "direction": direction_str,
+            "risk_points": round(risk_points, 2),
+            "exit_price": exit_price,
+            "exit_idx": exit_idx,
+            "exit_reason": exit_reason,
+            "gap_through_stop_count": 0,
+            # Policy A audit label
+            "exit_policy": "naked",
+        })
+
+    return managed_trades
+
+
+def _apply_stop_only_management(
+    trades_records,
+    high_np: np.ndarray,
+    low_np: np.ndarray,
+    close_np: np.ndarray,
+    atr_np: np.ndarray,
+    spec,
+    df,
+    open_np: Optional[np.ndarray] = None,
+    atr_stop_multiplier: float = 1.5,
+) -> list[dict]:
+    """Exit Policy B — 'stop_only': initial stop loss + 15:55 ET time-stop.
+
+    layer4-replay counterfactual axis (2026-07-02): measures the P&L when the
+    ONLY management is the initial stop loss (no TP advancement, no trailing,
+    no partials, no BE move).  Isolates the value of TP/trailing overlay on top
+    of a raw stop.
+
+    Gap-fill stop logic is preserved (same as static_styleC): if the bar opens
+    beyond the stop price, we fill at bar open.
+
+    15:55 ET time-stop is always applied — it is an invariant, not overlay.
+    """
+    from datetime import datetime as _dt
+    from datetime import timezone as _tz
+
+    from src.engine.exits.style_d_handler import _is_time_stop
+
+    managed_trades = []
+    ts_col = "ts_event"
+    has_ts = ts_col in df.columns
+
+    for _, row in trades_records.iterrows():
+        entry_p = float(row["Avg Entry Price"])
+        original_exit_p = float(row["Avg Exit Price"])
+        size = float(row["Size"])
+        direction_str = str(row["Direction"])
+        entry_idx = int(row["Entry Idx"]) if "Entry Idx" in row.index else 0
+        original_exit_idx = int(row["Exit Idx"]) if "Exit Idx" in row.index else min(entry_idx + 1, len(high_np) - 1)
+        MAX_HOLD_BARS = int(os.environ.get("BACKTEST_MAX_HOLD_BARS", "200"))
+        if original_exit_idx - entry_idx > MAX_HOLD_BARS:
+            original_exit_idx = entry_idx + MAX_HOLD_BARS
+
+        is_short = "Short" in direction_str
+        atr_at_entry = float(atr_np[entry_idx]) if entry_idx < len(atr_np) and not np.isnan(atr_np[entry_idx]) else 1.0
+        _stop_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
+        risk_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+
+        # Initial stop — FIXED for the whole trade (no trailing, no BE move)
+        if is_short:
+            initial_stop = entry_p + risk_points
+        else:
+            initial_stop = entry_p - risk_points
+
+        exit_price = original_exit_p
+        exit_idx = original_exit_idx
+        exit_reason = "signal"
+        gap_count = 0
+
+        for bar in range(entry_idx + 1, original_exit_idx):
+            if bar >= len(high_np):
+                break
+
+            bar_high = float(high_np[bar])
+            bar_low = float(low_np[bar])
+            bar_open = (
+                float(open_np[bar])
+                if open_np is not None and bar < len(open_np)
+                else bar_low
+            )
+
+            # 15:55 ET hard flatten (invariant, not part of the stop_only overlay)
+            if has_ts and bar < len(df):
+                try:
+                    _raw_ts = df[ts_col][bar]
+                    _dt_val = (
+                        _raw_ts if isinstance(_raw_ts, _dt)
+                        else _dt.fromisoformat(str(_raw_ts))
+                    )
+                    _dt_utc = (
+                        _dt_val.astimezone(_tz.utc)
+                        if _dt_val.tzinfo is not None
+                        else _dt_val.replace(tzinfo=_tz.utc)
+                    )
+                    if _is_time_stop(_dst_correct_et_hour(_dt_utc)):
+                        exit_price = float(close_np[bar]) if bar < len(close_np) else bar_open
+                        exit_reason = "time_stop"
+                        exit_idx = bar
+                        break
+                except Exception:
+                    pass
+
+            # Initial stop loss (gap-fill logic preserved)
+            if not is_short and bar_low <= initial_stop:
+                if bar_open < initial_stop:
+                    exit_price = bar_open
+                    gap_count += 1
+                else:
+                    exit_price = initial_stop
+                exit_reason = "stop_loss"
+                exit_idx = bar
+                break
+            elif is_short and bar_high >= initial_stop:
+                if bar_open > initial_stop:
+                    exit_price = bar_open
+                    gap_count += 1
+                else:
+                    exit_price = initial_stop
+                exit_reason = "stop_loss"
+                exit_idx = bar
+                break
+
+        managed_trades.append({
+            "entry_idx": entry_idx,
+            "entry_price": entry_p,
+            "original_exit_idx": original_exit_idx,
+            "original_exit_price": original_exit_p,
+            "size": size,
+            "direction": direction_str,
+            "risk_points": round(risk_points, 2),
+            "exit_price": exit_price,
+            "exit_idx": exit_idx,
+            "exit_reason": exit_reason,
+            "gap_through_stop_count": gap_count,
+            "initial_stop": round(initial_stop, 4),
+            # Policy B audit label
+            "exit_policy": "stop_only",
+        })
+
+    return managed_trades
+
+
 def _apply_trade_management(
     trades_records,
     high_np: np.ndarray,
@@ -759,13 +1119,19 @@ def _apply_trade_management(
     atr_stop_multiplier: float = 1.5,
     exit_engine: str = "static_styleC",
     adaptive_ctx=None,  # type: Optional[AdaptiveExitContext]
+    exit_policy: str = "full_overlay",  # layer4-replay: "naked" | "stop_only" | "full_overlay"
 ) -> list[dict]:
     """Bar-by-bar trade management dispatcher.
 
     Wave 25 Gap B: branches on exit_engine to route to either the static Style C
     path (existing, unchanged) or the new adaptive path (Python mirror of TS engine).
 
-    Routing:
+    layer4-replay (2026-07-02): exit_policy="naked"|"stop_only"|"full_overlay" (default).
+      "naked"        → _apply_naked_management()   — EOD time-stop only (no stop/TP/trail)
+      "stop_only"    → _apply_stop_only_management() — initial stop only (no TP/trail/partials)
+      "full_overlay" → existing dispatch below (ZERO behavior change — Policy C = production default)
+
+    Routing (when exit_policy="full_overlay"):
       exit_engine="static_styleC" (default) → _apply_static_styleC_management()
         Existing behavior: 6pt max SL, structural TP via DOL, BE+trail progression.
         Wave 1 Track 1A: passes liquidity_snapshot (from adaptive_ctx if available)
@@ -775,13 +1141,27 @@ def _apply_trade_management(
         delta-div early-exit, 15:55 ET hard flatten.
       exit_engine="adaptive" + adaptive_ctx=None → graceful fallback to static_styleC.
 
-    Hard invariants (CLAUDE.md §4 — both paths):
-      - 15:55 ET hard flatten ALWAYS applies (static: enforced by time_stop logic
-        in _apply_static_styleC_management; adaptive: enforced in _apply_adaptive_management)
-      - BE+1 on TP1 fill (adaptive: applied when tp1 is hit)
+    Hard invariants (CLAUDE.md §4 — ALL paths including naked and stop_only):
+      - 15:55 ET hard flatten ALWAYS applies
+      - BE+1 on TP1 fill (adaptive: applied when tp1 is hit; naked/stop_only: not applicable)
 
     Returns list of managed trade dicts with updated exit_price, exit_idx, exit_reason.
     """
+    # layer4-replay: counterfactual exit policy dispatch (ADDITIVE — no restructure of existing paths)
+    if exit_policy == "naked":
+        return _apply_naked_management(
+            trades_records, high_np, low_np, close_np, atr_np,
+            spec, df, open_np=open_np,
+            atr_stop_multiplier=atr_stop_multiplier,
+        )
+    if exit_policy == "stop_only":
+        return _apply_stop_only_management(
+            trades_records, high_np, low_np, close_np, atr_np,
+            spec, df, open_np=open_np,
+            atr_stop_multiplier=atr_stop_multiplier,
+        )
+    # exit_policy="full_overlay" (default) — fall through to existing dispatch below
+
     # Gap B: branch on exit_engine
     if exit_engine == "adaptive" and adaptive_ctx is not None:
         return _apply_adaptive_management(
@@ -826,18 +1206,19 @@ def _apply_static_styleC_management(
 
     Two code paths controlled by env flag BACKTEST_STATIC_C_PARTIALS_ENABLED:
 
-    FLAG OFF (default) — byte-identical with all historical runs:
-      - Single structural TP via DOL hierarchy (>= 2R or skip)
-      - After 1R: move stop to BE+1 tick
-      - After 2R: trail 1R behind price, min 2pt breathing room
-      - Exit priority per bar: TP hit > trailing stop hit > original exit
-
-    FLAG ON — 33/33/34 partial blending path matching paper/live economics:
+    FLAG ON (default from 2026-07-02) — 33/33/34 partial blending path matching paper/live economics:
       - TP1 at +1.0R (33%), TP2 at +2.0R (33%), runner 34% Chandelier(14,2.0) trail
       - BE+1 tick on TP1 fill; Chandelier runner trail after TP2 fill
       - Blended exit: tp1_pct*tp1 + tp2_pct*tp2 + runner_pct*close (or stop if stopped out)
       - 15:55 ET hard flatten ALWAYS applied
       - Audit fields: static_c_tp1_price, static_c_tp2_price, static_c_tp1_filled, static_c_tp2_filled
+
+    FLAG OFF (opt-out, set BACKTEST_STATIC_C_PARTIALS_ENABLED=0/false/no) — single-TP path:
+      - Single structural TP via DOL hierarchy (>= 2R or skip)
+      - After 1R: move stop to BE+1 tick
+      - After 2R: trail 1R behind price, min 2pt breathing room
+      - Exit priority per bar: TP hit > trailing stop hit > original exit
+      - Byte-identical with pre-2026-07-02 historical runs
 
     Common invariants (both paths):
       - MAX_HOLD_BARS=200 safety cap (~16h on 5m)
@@ -867,12 +1248,12 @@ def _apply_static_styleC_management(
     )
     _symbol_static: str = getattr(spec, "symbol", None) or "UNKNOWN"
 
-    # BACKTEST_STATIC_C_PARTIALS_ENABLED (default OFF).
-    # OFF (default): byte-identical with all historical runs — existing single-TP path.
-    # ON: 33/33/34 TP1/TP2/Chandelier-runner path matching paper/live Style C economics.
+    # BACKTEST_STATIC_C_PARTIALS_ENABLED (default ON from 2026-07-02).
+    # ON (default): 33/33/34 TP1/TP2/Chandelier-runner path matching paper/live Style C economics.
+    # OFF (opt-out): byte-identical with pre-2026-07-02 runs — set "0", "false", or "no".
     # This flag is read ONCE per call so callers can toggle it between calls deterministically.
     _USE_PARTIALS: bool = (
-        os.environ.get("BACKTEST_STATIC_C_PARTIALS_ENABLED", "").lower() in ("1", "true", "yes")
+        os.environ.get("BACKTEST_STATIC_C_PARTIALS_ENABLED", "1").lower() not in ("0", "false", "no")
     )
     if _USE_PARTIALS:
         from datetime import datetime as _sc_dt
@@ -1775,6 +2156,7 @@ def _compute_daily_pnls(
         # index has timezone info. Fall back to UTC calendar date when tz info is absent
         # (e.g. daily data, synthetic test data) to preserve backward compatibility.
         from datetime import timedelta as _td
+
         import pandas as _pd
 
         daily = {}
@@ -2096,11 +2478,13 @@ def _compute_long_short_split(trades_list: list[dict]) -> dict:
 # RTH-only figures (390min = 78 5min bars) are wrong for futures which trade
 # nearly 24h. data_loader.py:323 uses 172 5min bars for Globex.
 # Aligned here to eliminate false "too few bars" warnings.
+# FIX 4 (deep-scan #10 F-11): use EMPIRICAL_BARS_PER_DAY from data_loader as single source.
+# Previous "15min": 92 was theoretical; empirical CME data shows 58. Using 92 caused false
+# bar-count alarms on real CME ratio-adjusted data. data_loader.EMPIRICAL_BARS_PER_DAY
+# documents the measurement methodology (10.6 years of CME Globex continuous data).
 BARS_PER_DAY = {
-    "1min": 1380, "5min": 172, "15min": 92, "30min": 46,
-    "1hour": 23, "1h": 23, "4hour": 6, "4h": 6,
-    "4hr": 6,     # H6 fix: "4hr" alias — mirrors "4h" / "4hour"
-    "daily": 1, "1D": 1,
+    **EMPIRICAL_BARS_PER_DAY,  # empirical values from data_loader (15min=58, 5min=172, etc.)
+    "4hr": 4,  # "4hr" alias — mirrors EMPIRICAL_BARS_PER_DAY["4hour"]
 }
 
 
@@ -2527,7 +2911,7 @@ def _apply_dsl_stop_loss_and_time_stop(
         if ts_et_timestamps is not None:
             if i < len(ts_et_timestamps) and ts_et_timestamps[i] is not None:
                 et_str = str(ts_et_timestamps[i])
-                is_1555 = "15:55" in et_str
+                is_1555 = _et_time_ge_flatten(et_str)
             elif i < len(ts_et_timestamps):
                 raise ValueError(
                     f"H1: ts_et_timestamps was provided but bar {i} has None value. "
@@ -2535,7 +2919,7 @@ def _apply_dsl_stop_loss_and_time_stop(
                 )
             else:
                 # ts_et_timestamps shorter than signal array — defensive fallback
-                is_1555 = "15:55" in ts_str
+                is_1555 = _et_time_ge_flatten(ts_str)
         else:
             # Legacy path: ts_et not available.
             # FIX 6 (2026-06-22): Old code did `"15:55" in ts_str` on the raw UTC
@@ -2555,10 +2939,10 @@ def _apply_dsl_stop_loss_and_time_stop(
                     # Assume UTC for tz-naive timestamps from historical Parquet data
                     _utc_dt = _utc_dt.replace(tzinfo=_dt_module.timezone.utc)
                 _et_str_converted = _dst_correct_et_hour(_utc_dt)
-                _legacy_is_1555 = "15:55" in _et_str_converted
+                _legacy_is_1555 = _et_time_ge_flatten(_et_str_converted)
             except Exception:
                 # Non-ISO string (e.g. integer nanoseconds) — fall back to raw search
-                _legacy_is_1555 = "15:55" in ts_str
+                _legacy_is_1555 = _et_time_ge_flatten(ts_str)
             is_1555 = _legacy_is_1555
         if is_1555:
             if in_long:
@@ -2908,7 +3292,16 @@ def run_backtest(
     range_pop()
 
     # ─── Validate bar count ──────────────────────────────────
-    _validate_bar_count(data, config.timeframe, request.start_date, request.end_date)
+    # FIX 4 (deep-scan #10): derive date span from actual data, not request dates.
+    # When run_backtest is called with explicit data= (CPCV IS-eval in walk_forward.py),
+    # the request carries OOS dates but data holds IS bars — deriving from data prevents
+    # spurious "expected 251 got 664" warnings that fire on every CPCV path.
+    _val_start = request.start_date
+    _val_end = request.end_date
+    if "ts_event" in data.columns and len(data) > 0:
+        _val_start = str(data["ts_event"][0])[:10]
+        _val_end = str(data["ts_event"][-1])[:10]
+    _validate_bar_count(data, config.timeframe, _val_start, _val_end)
 
     # ─── Flag rollover days (Task 7.1) ───────────────────────
     data = flag_rollover_days(data, config.symbol)
@@ -3319,13 +3712,40 @@ def run_backtest(
     # Tradeify backtests to use the contract spec default instead of the $0.62
     # firm rate, making P&L wrong for that firm. The correct test is whether a
     # firm was specified at all — if no firm, use the contract spec default.
+    #
+    # deepscan14 B2: the E7.1 fix only closed the Tradeify (firm_key set) case.
+    # It left the no-firm case ambiguous: `BacktestRequest.commission_per_side`
+    # is a pydantic field with default 0.62, so an explicit `commission_per_side:
+    # 0.62` in the request JSON is byte-identical to "caller didn't set it" —
+    # both silently resolved to spec.default_commission. The clean fix is to
+    # change the field default to `Optional[float] = None` (src/engine/config.py,
+    # out of scope for this track), so the ambiguity disappears entirely at the
+    # schema level. Until that lands, use pydantic v2's `model_fields_set` to
+    # distinguish "key present in the request payload" from "key omitted, using
+    # the class default" WITHOUT touching config.py — `model_fields_set` is
+    # populated at `BacktestRequest.model_validate(config)` from the keys
+    # actually present in the parsed JSON, so an explicit `"commission_per_side":
+    # 0.62` in the payload is correctly NOT overridden, while an omitted key
+    # (defaulted to 0.62 by pydantic) is.
+    # KNOWN CARRY-FORWARD: walk_forward.py's run_walk_forward() reconstructs a
+    # fresh `_shared_req = BacktestRequest(..., commission_per_side=request.
+    # commission_per_side, ...)` per OOS window — that reconstruction always
+    # explicitly sets the field (it's a plain kwarg forward), so
+    # model_fields_set can't distinguish origin at that layer. This is a no-op
+    # in practice for the current MES/MNQ/MCL universe because
+    # spec.default_commission == 0.62 for all three (ContractSpec base default),
+    # so the "wrong" branch and the "right" branch produce the same commission
+    # value. It only diverges for ES/NQ/CL mini specs (default_commission=3.70),
+    # which are gated off entirely by TF_PHASE_5_ENABLED=false. Full closure
+    # requires the config.py schema-default change described above.
     commission = request.commission_per_side
     if request.firm_key and request.firm_key in FIRM_COMMISSIONS:
         commission = get_commission_per_side(request.firm_key, config.symbol)
-    elif request.firm_key is None and request.commission_per_side == 0.62:
+    elif request.firm_key is None and "commission_per_side" not in request.model_fields_set:
         # No firm specified and no explicit commission override — use contract spec default.
-        # Only apply when commission equals the pydantic field default (0.62) to avoid
-        # silently overriding an explicit commission_per_side value from the caller.
+        commission = spec.default_commission
+    # Safety net: commission must never be None at the P&L-math boundary.
+    if commission is None:
         commission = spec.default_commission
 
     # ─── Firm contract cap (Task 3.12) ────────────────────────
@@ -3552,6 +3972,7 @@ def run_backtest(
     # evaluates bias/playbook/location/structural-TP for every DSL signal.
     _dsl_htf_cache: Optional[dict] = None
     _dsl_strategy_name = getattr(config, "name", "") or ""
+    _dsl_htf_passthrough_reason: str = ""  # FIX 2 (deep-scan #10): captured for gate disclosure
     try:
         _daily_data_for_htf = load_ohlcv(
             config.symbol, "daily",
@@ -3577,18 +3998,31 @@ def run_backtest(
                 file=sys.stderr,
             )
         else:
+            _dsl_htf_passthrough_reason = f"daily_bars={len(_daily_data_for_htf)}_lt_200"
             print(
                 f"  DSL backtest: daily bars={len(_daily_data_for_htf)} < 200 — "
                 f"HTF cache skipped (passthrough mode)",
                 file=sys.stderr,
             )
     except Exception as _htf_build_err:
+        _dsl_htf_passthrough_reason = f"{type(_htf_build_err).__name__}:{str(_htf_build_err)[:120]}"
         print(
             f"  DSL backtest: HTF cache build failed ({_htf_build_err!r}) — "
             f"eligibility gate + structural TP run in passthrough mode",
             file=sys.stderr,
         )
         _dsl_htf_cache = None
+
+    # FIX 2 (deep-scan #10): emit structured passthrough event when HTF cache is unavailable.
+    # Mirrors cross_symbol_dll_degenerate_skip pattern — queryable by operator/monitoring.
+    _dsl_htf_passthrough = _dsl_htf_cache is None or len(_dsl_htf_cache) == 0
+    if _dsl_htf_passthrough:
+        print(json.dumps({
+            "event": "backtest.htf_passthrough_engaged",
+            "symbol": getattr(config, "symbol", "unknown"),
+            "reason": _dsl_htf_passthrough_reason or "htf_cache_none_or_empty",
+            "note": "eligibility gate running in passthrough mode; all signals pass unfiltered",
+        }), file=sys.stderr)
 
     # ─── Eligibility gate (Wave 2.8 integration point) ─────────
     entries_np = df["entry_long"].to_numpy()
@@ -3600,6 +4034,7 @@ def run_backtest(
             firm_key=request.firm_key,
             htf_cache=_dsl_htf_cache,
             strategy_name=_dsl_strategy_name,
+            passthrough_reason=_dsl_htf_passthrough_reason,  # FIX 2 (deep-scan #10)
         )
         # Update DataFrame with filtered signals
         df = df.with_columns([
@@ -3616,6 +4051,7 @@ def run_backtest(
                 firm_key=request.firm_key,
                 htf_cache=_dsl_htf_cache,
                 strategy_name=_dsl_strategy_name,
+                passthrough_reason=_dsl_htf_passthrough_reason,  # FIX 2 (deep-scan #10)
             )
             df = df.with_columns([
                 pl.Series("entry_short", short_entries_np),
@@ -3857,9 +4293,19 @@ def run_backtest(
     # backtester currently runs one symbol at a time, we track the single-symbol
     # session P&L from sizes × close prices as an approximation. The guard fires
     # when this single symbol's session loss exceeds 67% of the firm DLL.
+    #
+    # deep-scan #8 wave 2 FIX 1: stamp result["cross_symbol_dll"] unconditionally
+    # so consumers (critic, paper, prop-sim) can see that the guard used a zero-proxy.
+    _cs_symbol = getattr(config, "symbol", "unknown")
+    _cs_dll_disclosure: dict = {
+        "modeled": False,
+        "reason": "guard_error_or_skipped",
+        "symbols": [_cs_symbol],
+    }
     try:
         from src.engine.context.cross_symbol_dll import (
             apply_cross_symbol_dll_to_entries,
+            build_cs_dll_disclosure,
         )
         _cs_firm_dll = 1000.0
         if request.firm_key:
@@ -3873,7 +4319,9 @@ def run_backtest(
         # H7 fix: when _cs_bar_pnls is all-zeros, apply_cross_symbol_dll_to_entries never
         # fires because cumulative session P&L stays 0 → DLL threshold never crossed.
         # Emit a visible audit row so non-enforcement is NOT silent.
+        # FIX 1: build disclosure block stamped unconditionally into result dict.
         _cs_bar_pnls = np.zeros(len(entries_pd), dtype=float)
+        _cs_dll_disclosure = build_cs_dll_disclosure([_cs_symbol], sibling_pnls_real=False)
         print(json.dumps({
             "event": "backtest.cross_symbol_dll_degenerate_skip",
             "reason": "single_symbol_zero_pnl_proxy",
@@ -3908,7 +4356,9 @@ def run_backtest(
     # never called from run_backtest() — they fired in class-based paths only.
     # Fix: apply them here, just before the vectorbt call, so DSL backtests
     # honour CLAUDE.md §4:
-    #   E.3 — ATR stop ceiling (14pt MES / 40pt MNQ / 25-tick MCL)
+    #   E.3 — ATR stop ceiling (14pt MES / 62pt MNQ / 100-tick MCL, deepscan14 B3:
+    #         comment previously said 40pt MNQ / 25-tick MCL — stale since the Wave 1
+    #         2026-06-27 recalibration; live values come from _get_stop_ceiling_for_symbol())
     #   E.5 — 15:55 ET hard time-stop
     #   E.4 — 67% personal DLL halt + 95% force-close
     #
@@ -4214,7 +4664,16 @@ def run_backtest(
             # On rollover days the entry bar carries an extra spread cost (2-4 ticks)
             # that the generic 1.5-tick slippage model underestimates.
             # Deduct BEFORE generic slippage; generic slippage still applies on top.
+            #
+            # E7 (deep-scan #7 2026-07-02): also deduct when the EXIT bar lands on a
+            # rollover day (pre-fix: only the entry side was deducted).
+            # Guard: entry and exit on the SAME rollover day → one deduction per side
+            # is correct (entry-side + exit-side both deducted), but since both bars
+            # share the same date the same roll spread applies to each crossing.
+            # Same-day guard: exit_idx == entry_idx → single bar straddles entry+exit;
+            # both use the same roll price so only one deduction (entry side only).
             _roll_cost_usd = 0.0
+            # Entry-side roll spread
             if _has_rollover_col and entry_idx < len(df):
                 try:
                     _is_roll_day = bool(df["is_rollover_day"][entry_idx])
@@ -4226,13 +4685,36 @@ def run_backtest(
                         from datetime import date as _date_cls
                         _roll_date = _date_cls.fromisoformat(_roll_ts_str[:10])
                         _roll_cost = compute_roll_spread_cost(config.symbol, _roll_date, int_size)
-                        _roll_cost_usd = float(_roll_cost)
+                        _roll_cost_usd += float(_roll_cost)
                         _roll_spread_audit_rows.append(
                             build_roll_spread_audit(config.symbol, _roll_date, int_size, _roll_cost)
                         )
                     except Exception as _re:
                         print(
-                            f"[roll-spread] Error computing roll cost at bar {entry_idx}: {_re}",
+                            f"[roll-spread] Error computing entry-side roll cost at bar {entry_idx}: {_re}",
+                            file=sys.stderr,
+                        )
+            # Exit-side roll spread (E7): only when exit is on a DIFFERENT bar than entry.
+            # Same-bar entry+exit (exit_idx == entry_idx) already accounted for by the
+            # entry-side deduction above (same rollover day, same spread — do not double-deduct).
+            if _has_rollover_col and exit_idx < len(df) and exit_idx != entry_idx:
+                try:
+                    _is_roll_day_exit = bool(df["is_rollover_day"][exit_idx])
+                except Exception:
+                    _is_roll_day_exit = False
+                if _is_roll_day_exit:
+                    try:
+                        _roll_ts_str_exit = str(_ts_et_list_roll[exit_idx]) if exit_idx < len(_ts_et_list_roll) else ""
+                        from datetime import date as _date_cls_exit
+                        _roll_date_exit = _date_cls_exit.fromisoformat(_roll_ts_str_exit[:10])
+                        _roll_cost_exit = compute_roll_spread_cost(config.symbol, _roll_date_exit, int_size)
+                        _roll_cost_usd += float(_roll_cost_exit)
+                        _roll_spread_audit_rows.append(
+                            build_roll_spread_audit(config.symbol, _roll_date_exit, int_size, _roll_cost_exit)
+                        )
+                    except Exception as _re_exit:
+                        print(
+                            f"[roll-spread] Error computing exit-side roll cost at bar {exit_idx}: {_re_exit}",
                             file=sys.stderr,
                         )
 
@@ -4841,6 +5323,13 @@ def run_backtest(
             "long": _parity_long,
             "short": _parity_short,
         },
+        # deep-scan #8 wave 2 FIX 1: unconditional cross-symbol DLL modeling disclosure.
+        # Additive key — consumers that do not read it are unaffected.
+        # modeled=False for all current single-symbol backtest paths (zero P&L proxy).
+        "cross_symbol_dll": _cs_dll_disclosure,
+        # FIX 2 (deep-scan #10): HTF passthrough disclosure — True when eligibility gate
+        # ran in passthrough mode (htf_cache unavailable). Additive; TS persists it.
+        "htf_passthrough": _dsl_htf_passthrough,
     }
     # Also embed parity gate stats in run_receipt for backward-compat TS readers.
     # This is done after the result dict is built to avoid mutating run_receipt template.
@@ -5459,7 +5948,11 @@ def run_class_backtest(
     start_date: str,
     end_date: str,
     slippage_ticks: float = 1.0,
-    commission_per_side: float = 0.62,
+    # deepscan14 B2: default changed 0.62 → None. This is a plain Python param
+    # (no pydantic layer), so None is an unambiguous "caller didn't pass a
+    # commission" sentinel — unlike the old 0.62 default, which was
+    # indistinguishable from an explicit `commission_per_side=0.62` call.
+    commission_per_side: Optional[float] = None,
     firm_key: Optional[str] = None,
     data: Optional[pl.DataFrame] = None,
     fixed_contracts: Optional[int] = None,
@@ -5471,6 +5964,7 @@ def run_class_backtest(
     warmup_data: Optional[pl.DataFrame] = None,
     exit_engine: str = "static_styleC",
     adaptive_ctx=None,  # type: Optional[AdaptiveExitContext] — Wave 25 Gap B
+    exit_policy: str = "full_overlay",  # layer4-replay: "naked" | "stop_only" | "full_overlay"
 ) -> dict:
     """Run a backtest using a BaseStrategy class instance.
 
@@ -5644,10 +6138,20 @@ def run_class_backtest(
     # explicit Tradeify $0.62 fee because 0.62 happened to equal the parameter
     # default sentinel. Mirrors the run_backtest fix at line ~931 — only fall back
     # to the contract spec when no firm was specified.
+    # deepscan14 B2: the comment above overstated what the code actually did —
+    # this branch had NO `== 0.62` guard at all (`elif firm_key is None:`
+    # unconditionally), so it discarded ANY explicit commission_per_side
+    # whenever firm_key was unset, not just the 0.62 sentinel. Fixed by testing
+    # `commission_per_side is None` (the new unambiguous default) instead of
+    # testing `firm_key is None` alone.
     commission = commission_per_side
     if firm_key:
         commission = get_commission_per_side(firm_key, symbol)
-    elif firm_key is None:  # No firm specified — use contract spec default
+    elif firm_key is None and commission_per_side is None:
+        # No firm specified and no explicit commission override — use contract spec default.
+        commission = spec.default_commission
+    # Safety net: commission must never be None at the P&L-math boundary.
+    if commission is None:
         commission = spec.default_commission
 
     # ─── Firm contract cap ─────────────────────────────────────
@@ -5904,6 +6408,7 @@ def run_class_backtest(
             atr_stop_multiplier=_cls_stop_mult,
             exit_engine=exit_engine,
             adaptive_ctx=adaptive_ctx,
+            exit_policy=exit_policy,
         )
         {m["exit_reason"] for m in managed_trades}
         tp_count = sum(1 for m in managed_trades if m["exit_reason"] == "take_profit")
@@ -5981,7 +6486,9 @@ def run_class_backtest(
             comm_cost = commission * int_size * 2
 
             # MED #5 (Wave 27.5 Pass D.1) — Itemised roll spread cost (class backtest path).
+            # E7 (deep-scan #7 2026-07-02): mirror function-path fix — also deduct exit-side.
             _roll_cost_usd_cls = 0.0
+            # Entry-side roll spread (class path)
             if _has_rollover_col_cls and entry_idx < len(df):
                 try:
                     _is_roll_day_cls = bool(df["is_rollover_day"][entry_idx])
@@ -5993,13 +6500,34 @@ def run_class_backtest(
                         from datetime import date as _date_cls2
                         _roll_date_cls = _date_cls2.fromisoformat(_roll_ts_str_cls[:10])
                         _roll_cost_cls = compute_roll_spread_cost(symbol, _roll_date_cls, int_size)
-                        _roll_cost_usd_cls = float(_roll_cost_cls)
+                        _roll_cost_usd_cls += float(_roll_cost_cls)
                         _roll_spread_audit_rows_cls.append(
                             build_roll_spread_audit(symbol, _roll_date_cls, int_size, _roll_cost_cls)
                         )
                     except Exception as _re_cls:
                         print(
-                            f"[roll-spread] Error computing roll cost at bar {entry_idx}: {_re_cls}",
+                            f"[roll-spread] Error computing entry-side roll cost at bar {entry_idx}: {_re_cls}",
+                            file=sys.stderr,
+                        )
+            # Exit-side roll spread (E7 class path): skip when exit_idx == entry_idx (same bar).
+            if _has_rollover_col_cls and exit_idx < len(df) and exit_idx != entry_idx:
+                try:
+                    _is_roll_day_cls_exit = bool(df["is_rollover_day"][exit_idx])
+                except Exception:
+                    _is_roll_day_cls_exit = False
+                if _is_roll_day_cls_exit:
+                    try:
+                        _roll_ts_str_cls_exit = str(_ts_et_list_roll_cls[exit_idx]) if exit_idx < len(_ts_et_list_roll_cls) else ""
+                        from datetime import date as _date_cls3
+                        _roll_date_cls_exit = _date_cls3.fromisoformat(_roll_ts_str_cls_exit[:10])
+                        _roll_cost_cls_exit = compute_roll_spread_cost(symbol, _roll_date_cls_exit, int_size)
+                        _roll_cost_usd_cls += float(_roll_cost_cls_exit)
+                        _roll_spread_audit_rows_cls.append(
+                            build_roll_spread_audit(symbol, _roll_date_cls_exit, int_size, _roll_cost_cls_exit)
+                        )
+                    except Exception as _re_cls_exit:
+                        print(
+                            f"[roll-spread] Error computing exit-side roll cost at bar {exit_idx}: {_re_cls_exit}",
                             file=sys.stderr,
                         )
 
@@ -6461,6 +6989,8 @@ def run_class_backtest(
         "governor": governor_result,
         # W25.17: echo which exit engine was used so A/B harness can tag results correctly.
         "exit_engine": exit_engine,
+        # layer4-replay (2026-07-02): echo exit policy for counterfactual tagging.
+        "exit_policy": exit_policy,
         "run_receipt": _build_run_receipt(strategy._config if hasattr(strategy, '_config') else StrategyConfig(
             name=strategy.name, symbol=strategy.symbol, timeframe=strategy.timeframe,
             indicators=[], entry_long="", entry_short="", exit="",
@@ -6529,10 +7059,10 @@ def _load_strategy_class(class_path: str) -> BaseStrategy:
     type=click.Choice(["static_styleC", "adaptive"]),
     help=(
         "W25.17 A/B flag: which exit engine to use. "
-        "'static_styleC' (default) = single structural-TP path via DOL hierarchy — "
-        "byte-identical with all historical CI runs. "
-        "Set BACKTEST_STATIC_C_PARTIALS_ENABLED=true to enable 33/33/34 TP1/TP2/runner "
-        "Chandelier blending that matches paper/live Style C economics. "
+        "'static_styleC' (default) = 33/33/34 TP1/TP2/Chandelier-runner path "
+        "(BACKTEST_STATIC_C_PARTIALS_ENABLED ON by default since 2026-07-02). "
+        "Set BACKTEST_STATIC_C_PARTIALS_ENABLED=0 to disable partials and revert "
+        "to the single-TP DOL path (byte-identical with pre-2026-07-02 CI runs). "
         "'adaptive' = adaptive exit engine (P7.A1+A2 TS path); "
         "Python harness stubs until framework-overlay wiring lands in P7.A5."
     ),
@@ -6574,7 +7104,12 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                 start_date=config.get("start_date", "2010-01-01"),
                 end_date=config.get("end_date", "2030-12-31"),
                 slippage_ticks=config.get("slippage_ticks", 1.0),
-                commission_per_side=config.get("commission_per_side", 0.62),
+                # deepscan14 B2: omit the 0.62 fallback here — `.get()` with no
+                # default returns None when the key is absent, which now flows
+                # through as an unambiguous "not provided" sentinel into
+                # run_class_backtest()/run_walk_forward_class() (vs. an explicit
+                # commission_per_side value in the JSON, which is preserved).
+                commission_per_side=config.get("commission_per_side"),
                 firm_key=config.get("firm_key"),
                 embargo_bars=config.get("embargo_bars", 0),
             )
@@ -6643,7 +7178,12 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                 start_date=config.get("start_date", "2010-01-01"),
                 end_date=config.get("end_date", "2030-12-31"),
                 slippage_ticks=config.get("slippage_ticks", 1.0),
-                commission_per_side=config.get("commission_per_side", 0.62),
+                # deepscan14 B2: omit the 0.62 fallback here — `.get()` with no
+                # default returns None when the key is absent, which now flows
+                # through as an unambiguous "not provided" sentinel into
+                # run_class_backtest()/run_walk_forward_class() (vs. an explicit
+                # commission_per_side value in the JSON, which is preserved).
+                commission_per_side=config.get("commission_per_side"),
                 firm_key=config.get("firm_key"),
                 skip_eligibility_gate=False,
                 exit_engine=exit_engine,
@@ -6660,6 +7200,82 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                     "tp2_liquidity_source", "backtest_no_historical_levels"
                 )
                 result["tp2_liquidity_unavailable"] = True
+    elif isinstance(config, dict) and config.get("compiled_spec"):
+        # ─── Band C: compiled-spec condition-family dispatch ──────────────
+        # Onboarded specs that did NOT match a named archetype (Band B) but
+        # DID clear the Band C binding-plan coverage threshold are executed
+        # here via SpecConditionStrategy — the same run_class_backtest() path
+        # every archetype strategy uses. ZERO effect on any pre-existing
+        # strategy_class or DSL-expression backtest (this branch only
+        # triggers when config["compiled_spec"] is present and strategy_class
+        # is not — additive, byte-identical for everything else).
+        from src.engine.spec_condition_compiler import from_compiled_spec
+
+        _spec_trace_enabled = os.environ.get("TF_SPEC_TRACE", "").strip().lower() in ("1", "true", "yes")
+        _strategy_cfg_for_spec = config.get("strategy", {}) if isinstance(config.get("strategy"), dict) else {}
+        # Overlay-visibility fix (Band C follow-up): config["strategy"]["name"]
+        # is the exact DB strategies.name value the /api/backtests route
+        # resolves (src/server/routes/backtests.ts:188, `name: strat!.name`)
+        # when no inline config is supplied — the SAME string spec-onboarding-
+        # service.ts's B2 playbook registration writes into playbook_router.py.
+        # Threading it through here is what makes apply_eligibility_gate()'s
+        # registered-strategy check actually match for condition-compiled
+        # strategies; see SpecConditionStrategy.__init__ for the full contract.
+        strategy = from_compiled_spec(
+            config["compiled_spec"],
+            symbol=_strategy_cfg_for_spec.get("symbol", "MES"),
+            timeframe=_strategy_cfg_for_spec.get("timeframe", "5m"),
+            trace=_spec_trace_enabled,
+            strategy_name=_strategy_cfg_for_spec.get("name"),
+        )
+        if mode == "walkforward":
+            from src.engine.walk_forward import run_walk_forward_class
+
+            result = run_walk_forward_class(
+                strategy=strategy,
+                start_date=config.get("start_date", "2010-01-01"),
+                end_date=config.get("end_date", "2030-12-31"),
+                slippage_ticks=config.get("slippage_ticks", 1.0),
+                # deepscan14 B2: omit the 0.62 fallback here — `.get()` with no
+                # default returns None when the key is absent, which now flows
+                # through as an unambiguous "not provided" sentinel into
+                # run_class_backtest()/run_walk_forward_class() (vs. an explicit
+                # commission_per_side value in the JSON, which is preserved).
+                commission_per_side=config.get("commission_per_side"),
+                firm_key=config.get("firm_key"),
+                embargo_bars=config.get("embargo_bars", 0),
+            )
+        else:
+            result = run_class_backtest(
+                strategy=strategy,
+                start_date=config.get("start_date", "2010-01-01"),
+                end_date=config.get("end_date", "2030-12-31"),
+                slippage_ticks=config.get("slippage_ticks", 1.0),
+                # deepscan14 B2: omit the 0.62 fallback here — `.get()` with no
+                # default returns None when the key is absent, which now flows
+                # through as an unambiguous "not provided" sentinel into
+                # run_class_backtest()/run_walk_forward_class() (vs. an explicit
+                # commission_per_side value in the JSON, which is preserved).
+                commission_per_side=config.get("commission_per_side"),
+                firm_key=config.get("firm_key"),
+                skip_eligibility_gate=False,
+                exit_engine=exit_engine,
+                adaptive_ctx=None,
+            )
+        # Governance propagation (C1 mandate): honest approximation flag on
+        # every result produced by an approximation=True evaluator binding.
+        if "error" not in result:
+            gov = result.get("governance_labels")
+            if not isinstance(gov, dict):
+                gov = {}
+            gov["approximation"] = bool(strategy.approximation)
+            gov["spec_condition_compiled"] = True
+            gov["spec_hash"] = strategy.spec_hash
+            result["governance_labels"] = gov
+            # C3: trace is strictly additive — absent entirely when the flag
+            # is off, so off-path results stay byte-identical.
+            if _spec_trace_enabled:
+                result["spec_trace"] = strategy.last_trace
     else:
         # DSL expression-based strategy path (original)
         try:

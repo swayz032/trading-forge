@@ -96,7 +96,7 @@ function loadCriticSystemPrompt(): string {
 }
 
 // P2-2: critic model version stored on each candidate for audit provenance.
-const CRITIC_MODEL_VERSION = process.env.CRITIC_MODEL_VERSION ?? "deepseek-r1:14b";
+const CRITIC_MODEL_VERSION = process.env.CRITIC_MODEL_VERSION ?? "gemma4:e4b-it-qat";
 
 const MAX_REPLAY_CANDIDATES = 3;
 const EVIDENCE_WAIT_MS = 5 * 60 * 1000; // 5 minutes
@@ -851,7 +851,7 @@ function parseCriticEvaluationResponse(raw: string): CriticEvaluation {
 }
 
 /**
- * Call Ollama (deepseek-r1:14b) as fallback critic evaluator.
+ * Call Ollama (gemma4:e4b-it-qat) as fallback critic evaluator.
  * Returns null on any error so the caller can fall through to DEFAULT_CRITIC_EVALUATION.
  */
 async function callOllamaCriticFallback(userMessage: string): Promise<CriticEvaluation | null> {
@@ -859,7 +859,7 @@ async function callOllamaCriticFallback(userMessage: string): Promise<CriticEval
     const systemPrompt = loadCriticSystemPrompt();
     const ollama = new OllamaClient();
     const chatResponse = await ollama.chat(
-      "deepseek-r1:14b",
+      "gemma4:e4b-it-qat",
       [
         ...(systemPrompt ? [{ role: "system" as const, content: systemPrompt }] : []),
         { role: "user" as const, content: userMessage },
@@ -895,7 +895,7 @@ async function callOllamaCriticFallback(userMessage: string): Promise<CriticEval
 
 /**
  * Call GPT-5-mini critic evaluator to pre-screen evidence before candidate generation.
- * Fix 2: On OpenAI null/failure, tries Ollama (deepseek-r1:14b) before falling back to
+ * Fix 2: On OpenAI null/failure, tries Ollama (gemma4:e4b-it-qat) before falling back to
  * DEFAULT_CRITIC_EVALUATION. Cloud failure no longer silently disables the gate.
  */
 async function callCriticEvaluator(evidence: EvidencePacket, correlationId?: string): Promise<CriticEvaluation> {
@@ -958,7 +958,7 @@ async function callCriticEvaluator(evidence: EvidencePacket, correlationId?: str
     logger.warn({ err }, "Critic evaluator: OpenAI call threw — trying Ollama fallback");
   }
 
-  // ── Path 2: Ollama fallback (deepseek-r1:14b) ───────────────────────
+  // ── Path 2: Ollama fallback (gemma4:e4b-it-qat) ───────────────────────
   const ollamaResult = await callOllamaCriticFallback(userMessage);
   if (ollamaResult) {
     try {
@@ -966,7 +966,7 @@ async function callCriticEvaluator(evidence: EvidencePacket, correlationId?: str
         action: "critic.llm_call",
         entityType: "critic_evaluation",
         entityId: null,
-        input: { provider: "ollama", model: "deepseek-r1:14b", tokens_input_approx: Math.ceil(userMessage.length / 4) },
+        input: { provider: "ollama", model: "gemma4:e4b-it-qat", tokens_input_approx: Math.ceil(userMessage.length / 4) },
         result: { evaluation: ollamaResult.evaluation, confidence: ollamaResult.confidence },
         status: "success",
         decisionAuthority: "agent",

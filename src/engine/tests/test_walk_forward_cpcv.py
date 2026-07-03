@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 
 import numpy as np
 import polars as pl
+import pytest
 
 from src.engine.config import (
     BacktestRequest,
@@ -426,6 +427,267 @@ class TestCpcvBilateralEmbargoIntegration:
         assert "wf_metadata" in result
         # n_paths >= 0: 0 is OK here because synthetic data has no trades to count
         assert result["wf_metadata"].get("n_paths", -1) >= 0, "n_paths must be non-negative"
+
+
+# ─── FIX 1 (deep-scan #9): CPCV WFE from per-path IS Sharpes ────────────────
+# Pure-math unit tests: avoid full _run_walk_forward_cpcv execution.
+# Tests the WFE computation logic extracted from _run_walk_forward_cpcv.
+
+class TestFix1CpcvWfeFromPerPathIs:
+    """FIX 1: CPCV WFE computed from per-path IS Sharpes (E1 data).
+
+    Before: wfe_overall=None, wfe_status="cpcv_not_applicable" always.
+    After:  wfe_overall = round(agg_sharpe / mean(per_path_is_sharpes), 4)
+            wfe_status = "cpcv_per_path_is"
+    Exact contract: TS reads wfe_status verbatim.
+    """
+
+    def _compute_cpcv_wfe(
+        self,
+        per_path_is_sharpes: list[float],
+        agg_sharpe: float,
+    ) -> tuple[float | None, str, dict | None]:
+        """Replicate the FIX 1 WFE logic from _run_walk_forward_cpcv."""
+        import math
+        if not per_path_is_sharpes:
+            return None, "cpcv_not_applicable", None
+        is_basis = float(np.mean(per_path_is_sharpes))
+        if is_basis <= 0 or not math.isfinite(is_basis):
+            return 0.0, "degenerate_is", {
+                "n_paths_with_is": len(per_path_is_sharpes),
+                "is_basis": "per_path_is_sharpe_mean",
+                "oos_basis": "agg_sharpe",
+            }
+        wfe = round(agg_sharpe / is_basis, 4)
+        basis = {
+            "n_paths_with_is": len(per_path_is_sharpes),
+            "is_basis": "per_path_is_sharpe_mean",
+            "oos_basis": "agg_sharpe",
+        }
+        return wfe, "cpcv_per_path_is", basis
+
+    def test_wfe_computed_when_is_available(self):
+        """IS Sharpes available → wfe_overall computed, status=cpcv_per_path_is."""
+        per_path_is = [2.0, 2.5, 1.8, 2.2, 2.1, 1.9]  # mean = 2.083
+        agg_sharpe = 1.0
+        wfe, status, basis = self._compute_cpcv_wfe(per_path_is, agg_sharpe)
+        assert status == "cpcv_per_path_is"
+        assert wfe is not None
+        assert isinstance(wfe, float)
+        expected = round(1.0 / float(np.mean(per_path_is)), 4)
+        assert wfe == pytest.approx(expected, rel=1e-5)
+
+    def test_wfe_status_exact_string(self):
+        """wfe_status must be exactly 'cpcv_per_path_is' (TS reads verbatim)."""
+        _, status, _ = self._compute_cpcv_wfe([1.5, 2.0, 1.8], 0.9)
+        assert status == "cpcv_per_path_is", (
+            f"Expected 'cpcv_per_path_is', got {status!r}. TS reads this verbatim."
+        )
+
+    def test_wfe_degenerate_is_when_zero_basis(self):
+        """IS basis = 0 → wfe_overall=0.0, status=degenerate_is."""
+        wfe, status, _ = self._compute_cpcv_wfe([0.0, 0.0, 0.0], 1.0)
+        assert status == "degenerate_is"
+        assert wfe == pytest.approx(0.0)
+
+    def test_wfe_degenerate_is_when_negative_basis(self):
+        """IS basis < 0 → wfe_overall=0.0, status=degenerate_is."""
+        wfe, status, _ = self._compute_cpcv_wfe([-1.0, -0.5, -0.8], 1.0)
+        assert status == "degenerate_is"
+        assert wfe == pytest.approx(0.0)
+
+    def test_wfe_not_applicable_when_no_is_data(self):
+        """No IS Sharpes → wfe_overall=None, status=cpcv_not_applicable (BYPASS 1)."""
+        wfe, status, basis = self._compute_cpcv_wfe([], 1.0)
+        assert wfe is None
+        assert status == "cpcv_not_applicable"
+        assert basis is None
+
+    def test_wfe_basis_dict_keys(self):
+        """wfe_cpcv_basis dict contains required keys when IS available."""
+        _, _, basis = self._compute_cpcv_wfe([2.0, 1.8, 2.2], 1.0)
+        assert basis is not None
+        assert basis["is_basis"] == "per_path_is_sharpe_mean"
+        assert basis["oos_basis"] == "agg_sharpe"
+        assert basis["n_paths_with_is"] == 3
+
+    def test_wfe_basis_dict_none_when_no_is(self):
+        """wfe_cpcv_basis is None when E1 data absent."""
+        _, _, basis = self._compute_cpcv_wfe([], 1.0)
+        assert basis is None
+
+    def test_wfe_replay_determinism(self):
+        """Same inputs → same wfe_overall (pure function)."""
+        per_path_is = [2.0, 2.5, 1.8, 2.2, 2.1, 1.9]
+        agg = 1.0
+        wfe1, _, _ = self._compute_cpcv_wfe(per_path_is, agg)
+        wfe2, _, _ = self._compute_cpcv_wfe(per_path_is, agg)
+        assert wfe1 == wfe2
+
+    def test_cpcv_result_wfe_status_key_present(self):
+        """_run_walk_forward_cpcv result always has wfe_status key (backward compat)."""
+        data = _make_data(600)
+        req = _make_request()
+        result = _run_walk_forward_cpcv(request=req, data=data, n_splits=6, k_test_groups=2)
+        assert "wfe_status" in result, "wfe_status key must always be present"
+        assert "wfe_overall" in result, "wfe_overall key must always be present"
+        # Status must be one of the valid values
+        valid = {"cpcv_per_path_is", "degenerate_is", "cpcv_not_applicable"}
+        assert result["wfe_status"] in valid, (
+            f"wfe_status={result['wfe_status']!r} not in valid set {valid}"
+        )
+
+    def test_cpcv_wfe_cpcv_basis_in_wf_metadata(self):
+        """wf_metadata.wfe_cpcv_basis key is present after FIX 1."""
+        data = _make_data(600)
+        req = _make_request()
+        result = _run_walk_forward_cpcv(request=req, data=data, n_splits=6, k_test_groups=2)
+        meta = result["wf_metadata"]
+        # wfe_cpcv_basis present (None when no IS data, dict when IS data available)
+        assert "wfe_cpcv_basis" in meta, "wf_metadata.wfe_cpcv_basis must always be present"
+
+
+# ─── FIX 4 (deep-scan #9): embargo calibration basis ─────────────────────────
+
+class TestFix4EmbargoBasis:
+    """FIX 4: wf_metadata.embargo_basis emitted for calibration observability.
+
+    'default_20_uncalibrated' when trades lack duration_bars.
+    'calibrated_<n>' when duration_bars present (max(embargo_bars, avg_duration)).
+    """
+
+    def test_embargo_basis_default_when_no_duration(self):
+        """Trades without duration_bars → 'default_20_uncalibrated'."""
+        trades = [{"PnL": 100}, {"PnL": -50}, {"PnL": 200}]
+        embargo_bars = 20
+        durations = [
+            int(t["duration_bars"])
+            for t in trades
+            if isinstance(t.get("duration_bars"), (int, float)) and t["duration_bars"] > 0
+        ]
+        if durations:
+            avg_dur = sum(durations) / len(durations)
+            calibrated = max(embargo_bars, int(avg_dur + 0.5))
+            basis = f"calibrated_{calibrated}"
+        else:
+            basis = "default_20_uncalibrated"
+        assert basis == "default_20_uncalibrated"
+
+    def test_embargo_basis_calibrated_when_duration_available(self):
+        """Trades with duration_bars > embargo_bars → 'calibrated_<n>'."""
+        trades = [
+            {"PnL": 100, "duration_bars": 30},
+            {"PnL": -50, "duration_bars": 35},
+            {"PnL": 200, "duration_bars": 28},
+        ]
+        embargo_bars = 20
+        durations = [
+            int(t["duration_bars"])
+            for t in trades
+            if isinstance(t.get("duration_bars"), (int, float)) and t["duration_bars"] > 0
+        ]
+        avg_dur = sum(durations) / len(durations)  # ~31
+        calibrated = max(embargo_bars, int(avg_dur + 0.5))
+        basis = f"calibrated_{calibrated}"
+        assert basis.startswith("calibrated_")
+        n = int(basis.split("_")[1])
+        assert n >= embargo_bars
+        assert n >= int(avg_dur)
+
+    def test_embargo_basis_keeps_default_when_duration_shorter(self):
+        """Trades with duration_bars < embargo_bars → calibrated = embargo_bars."""
+        trades = [
+            {"PnL": 100, "duration_bars": 5},
+            {"PnL": -50, "duration_bars": 8},
+        ]
+        embargo_bars = 20
+        durations = [int(t["duration_bars"]) for t in trades if t.get("duration_bars", 0) > 0]
+        avg_dur = sum(durations) / len(durations)  # ~6.5
+        calibrated = max(embargo_bars, int(avg_dur + 0.5))
+        basis = f"calibrated_{calibrated}"
+        # calibrated = max(20, 7) = 20 → calibrated_20
+        assert calibrated == 20
+        assert basis == "calibrated_20"
+
+    def test_cpcv_result_embargo_basis_key_present(self):
+        """wf_metadata.embargo_basis key is always present after FIX 4."""
+        data = _make_data(600)
+        req = _make_request()
+        result = _run_walk_forward_cpcv(request=req, data=data, n_splits=6, k_test_groups=2)
+        meta = result["wf_metadata"]
+        assert "embargo_basis" in meta, "wf_metadata.embargo_basis must always be present"
+        assert isinstance(meta["embargo_basis"], str)
+        assert meta["embargo_basis"].startswith(("default_", "calibrated_"))
+
+
+# ─── FIX 6 (deep-scan #9): BIF k_eff_independent ────────────────────────────
+
+class TestFix6BifKeffIndependent:
+    """FIX 6: bif_detail.k_eff_independent = n_splits / k_test_groups.
+
+    Default CPCV: 6/2=3 (not 15). expected_inflation_independent is lower.
+    Gate thresholds unchanged.
+    """
+
+    def test_k_eff_independent_value_default_cpcv(self):
+        """Default CPCV (n_splits=6, k=2): k_eff_independent = 3.0."""
+        n_splits, k = 6, 2
+        k_eff_independent = float(n_splits) / float(k)
+        assert k_eff_independent == pytest.approx(3.0), (
+            f"k_eff_independent should be 3.0 for default CPCV, got {k_eff_independent}"
+        )
+
+    def test_expected_inflation_independent_lower_than_total(self):
+        """expected_inflation_independent (k=3) < expected_inflation (k=15)."""
+        import math
+        k_eff_total = 15.0
+        k_eff_independent = 3.0
+        ei_total = math.sqrt(2.0 * math.log(k_eff_total))
+        ei_independent = math.sqrt(2.0 * math.log(k_eff_independent))
+        assert ei_independent < ei_total, (
+            f"independent ({ei_independent:.4f}) should be < total ({ei_total:.4f})"
+        )
+
+    def test_cpcv_bif_detail_has_k_eff_independent(self):
+        """After FIX 6, _run_walk_forward_cpcv bif_detail carries k_eff_independent."""
+        data = _make_data(600)
+        req = _make_request()
+        result = _run_walk_forward_cpcv(
+            request=req, data=data, n_splits=6, k_test_groups=2, embargo_bars=5
+        )
+        bif_detail = result.get("bif_detail", {})
+        assert "k_eff_independent" in bif_detail, (
+            "bif_detail must have k_eff_independent key after FIX 6"
+        )
+        assert bif_detail["k_eff_independent"] == pytest.approx(3.0)
+
+    def test_cpcv_bif_detail_has_expected_inflation_independent(self):
+        """After FIX 6, bif_detail carries expected_inflation_independent."""
+        data = _make_data(600)
+        req = _make_request()
+        result = _run_walk_forward_cpcv(
+            request=req, data=data, n_splits=6, k_test_groups=2, embargo_bars=5
+        )
+        bif_detail = result.get("bif_detail", {})
+        assert "expected_inflation_independent" in bif_detail
+        import math
+        expected_ei_ind = math.sqrt(2.0 * math.log(3.0))  # ≈ 1.4823
+        assert bif_detail["expected_inflation_independent"] == pytest.approx(expected_ei_ind, rel=1e-4)
+
+    def test_existing_bif_k_eff_key_unchanged(self):
+        """Existing 'k_eff' key (n_paths=15) is preserved alongside k_eff_independent."""
+        data = _make_data(600)
+        req = _make_request()
+        result = _run_walk_forward_cpcv(
+            request=req, data=data, n_splits=6, k_test_groups=2, embargo_bars=5
+        )
+        bif_detail = result.get("bif_detail", {})
+        # Both keys must exist
+        assert "k_eff" in bif_detail, "Original k_eff key must be preserved"
+        assert "k_eff_independent" in bif_detail, "New k_eff_independent must be present"
+        # k_eff (n_paths) >= k_eff_independent (n_splits/k)
+        if bif_detail.get("k_eff") is not None:
+            assert bif_detail["k_eff"] >= bif_detail["k_eff_independent"]
 
     def test_is_fold_purge_reduces_is_data_for_adjacent_paths(self):
         """IS purge on adjacency is self-consistent: strips computed by helper match

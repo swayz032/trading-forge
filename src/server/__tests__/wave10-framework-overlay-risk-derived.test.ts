@@ -32,7 +32,7 @@ describe("Wave 10 Task 2: framework-overlay risk_derived_pyramid", () => {
       });
       const ps = result.config.strategy?.position_size as Record<string, unknown>;
       expect(ps.type).toBe("risk_derived_pyramid");
-      expect(ps.base_contracts).toBe(6);
+      expect(ps.base_contracts).toBe(9);  // canonical MES=9 (updated from 6, deepscan11 9/9/18)
       expect(ps.tier_increment).toBe(3);
       expect(ps.tier_threshold_dollars).toBe(3000);
       expect(ps.personal_dll_pct).toBe(0.67);
@@ -61,14 +61,14 @@ describe("Wave 10 Task 2: framework-overlay risk_derived_pyramid", () => {
       expect("target_risk_dollars" in ps).toBe(false);
     });
 
-    it("MNQ uses base_contracts=6 per framework", () => {
+    it("MNQ uses base_contracts=9 per framework", () => {
       const result = applyFrameworkOverlay({
         compiled: makeMinimalConfig() as Parameters<typeof applyFrameworkOverlay>[0]["compiled"],
         source: "graduated_bucket",
         symbol: "MNQ",
       });
       const ps = result.config.strategy?.position_size as Record<string, unknown>;
-      expect(ps.base_contracts).toBe(6);
+      expect(ps.base_contracts).toBe(9);  // canonical MNQ=9 (updated from 6, deepscan11 9/9/18)
     });
   });
 
@@ -139,7 +139,7 @@ describe("Wave 10 Task 2: framework-overlay risk_derived_pyramid", () => {
         symbol: "MES",
       });
       const ps = result.config.strategy?.position_size as Record<string, unknown>;
-      expect(ps.base_contracts).toBe(6);  // framework canonical MES=6
+      expect(ps.base_contracts).toBe(9);  // framework canonical MES=9 (9/9/18)
       expect(ps.tier_increment).toBe(3);  // framework canonical increment=3
       expect(ps.tier_threshold_dollars).toBe(3000);  // framework canonical threshold=3000
     });

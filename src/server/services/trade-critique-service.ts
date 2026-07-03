@@ -6,7 +6,7 @@
  *
  * Design:
  *   - Cloud-first GPT-5.4 (literal model string, operator-specified)
- *   - Ollama deepseek-r1:14b fallback
+ *   - Ollama gemma4:e4b-it-qat fallback
  *   - MAX_CONCURRENT_CRITIQUES=3 (env: TRADE_CRITIQUE_CONCURRENCY) backpressure
  *   - 3-strike consecutive-failure Discord WARN via system_parameters
  *   - Dual-output: technical_diagnosis + plain_english_summary
@@ -558,7 +558,7 @@ async function _runCritiqueInternal(
     // Ollama fallback
     logger.info({ positionId }, "trade_critique: cloud unavailable, falling back to Ollama");
     const fallback = getFallback("trade_critique");
-    const fallbackModel = fallback?.model ?? "deepseek-r1:14b";
+    const fallbackModel = fallback?.model ?? "gemma4:e4b-it-qat";
     const systemPrompt = loadSystemPrompt("trade_critique");
     const fullPrompt = systemPrompt ? `${systemPrompt}\n\nUser input:\n${userPrompt}` : userPrompt;
     try {

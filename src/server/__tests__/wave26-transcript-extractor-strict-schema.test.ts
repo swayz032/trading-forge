@@ -316,7 +316,7 @@ describe("wave26-transcript-extractor-strict-schema", () => {
     await callScoutExtractLlm(SAMPLE_TRANSCRIPT_MESSAGES, undefined, CLOUD_NO_OP);
 
     expect(capturedChatBodies.length).toBeGreaterThan(0);
-    expect(capturedChatBodies[0]!.model).toBe("gemma4:e2b");
+    expect(capturedChatBodies[0]!.model).toBe("gemma4:e4b-it-qat");
   });
 
   // ── S11: Default strict schema = true → format is schema object ──────────────

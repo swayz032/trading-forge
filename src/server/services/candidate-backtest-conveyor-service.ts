@@ -28,7 +28,7 @@
  */
 
 import { randomUUID } from "crypto";
-import { and, eq, sql } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { auditLog, backtests, strategies } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
@@ -36,6 +36,19 @@ import { candidateConveyorEnqueuedTotal } from "../lib/metrics-registry.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { notifyWarning } from "./notification-service.js";
 import { getMode as getPipelineMode } from "./pipeline-control-service.js";
+
+// FIX 3 (deepscan11 Track P, 2026-07-02): skip-cooldown map.
+//
+// A CANDIDATE that returns "skipped" from runBacktest (e.g. mid-tick pipeline
+// pause, resource constraint) would otherwise be re-selected every tick and
+// monopolise conveyor slots while making no progress. The 24-hour cooldown
+// ensures a perpetually-skipped strategy backs off so other CANDIDATES can run.
+//
+// Key: strategy UUID. Value: epoch-ms timestamp when the cooldown started.
+// Process-local and deliberately NOT persisted — a process restart is a valid
+// reset. The cooldown is purely a throughput guard, not a correctness gate.
+const _skipCooldown = new Map<string, number>();
+const SKIP_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 export async function runCandidateBacktestConveyor(): Promise<void> {
   // ── 1. Pipeline gate ──────────────────────────────────────────────────────
@@ -108,6 +121,10 @@ export async function runCandidateBacktestConveyor(): Promise<void> {
           )`,
         ),
       )
+      // FIX 3: FIFO ordering — oldest CANDIDATE strategies are backtest-promoted
+      // first. Without this, Postgres returns candidates in undefined heap order,
+      // so newly-graduated strategies can starve older ones.
+      .orderBy(asc(strategies.createdAt))
       .limit(slots);
   } catch (err) {
     logger.error({ err }, "candidate-backtest-conveyor: failed to query eligible strategies — aborting tick");
@@ -134,6 +151,22 @@ export async function runCandidateBacktestConveyor(): Promise<void> {
   // running) is never exceeded. The next tick then picks up the next batch.
   const outcomes = await Promise.allSettled(
     candidates.map(async (s) => {
+      // FIX 3: prune expired cooldown entries and check per-strategy cooldown.
+      // A strategy in cooldown was skipped on a recent tick; skip it again and
+      // let the slot go to the next eligible candidate.
+      const cooldownStart = _skipCooldown.get(s.id);
+      if (cooldownStart !== undefined) {
+        if (Date.now() - cooldownStart < SKIP_COOLDOWN_MS) {
+          logger.debug(
+            { strategyId: s.id, strategyName: s.name, cooldownStart },
+            "candidate-backtest-conveyor: strategy in skip-cooldown, bypassing slot",
+          );
+          return 0;
+        }
+        // Cooldown expired — remove it and allow re-try
+        _skipCooldown.delete(s.id);
+      }
+
       // Spread REAL strategy config + force walkforward mode.
       // MUST NOT use a stub config like lifecycle-service.ts FIX-3 (line 4284).
       // dates auto-resolve inside runBacktest via resolveDataRange(symbol).
@@ -153,10 +186,36 @@ export async function runCandidateBacktestConveyor(): Promise<void> {
       );
 
       if (!result || result.status === "skipped") {
+        // FIX 3: record skip-cooldown so this strategy backs off for 24 hours.
+        // This prevents a perpetually-skipped strategy from monopolising conveyor
+        // slots every tick while making no progress.
+        const now = Date.now();
+        _skipCooldown.set(s.id, now);
         logger.debug(
           { strategyId: s.id, strategyName: s.name, reason: result?.error ?? "unknown" },
-          "candidate-backtest-conveyor: runBacktest returned skipped — pipeline may have just paused",
+          "candidate-backtest-conveyor: runBacktest returned skipped — pipeline may have just paused; skip-cooldown set",
         );
+        // Non-blocking info audit — skip-cooldown entry queryable via audit_log.
+        db.insert(auditLog)
+          .values({
+            action: "conveyor.candidate_skip_cooldown",
+            entityType: "strategy",
+            entityId: s.id,
+            status: "info",
+            decisionAuthority: "scheduler",
+            input: { strategyName: s.name, symbol: s.symbol } as Record<string, unknown>,
+            result: {
+              skip_reason: result?.error ?? "unknown",
+              cooldown_until: new Date(now + SKIP_COOLDOWN_MS).toISOString(),
+            } as Record<string, unknown>,
+            correlationId,
+          })
+          .catch((auditErr: unknown) => {
+            logger.warn(
+              { auditErr, strategyId: s.id },
+              "candidate-backtest-conveyor: conveyor.candidate_skip_cooldown audit write failed (non-blocking)",
+            );
+          });
         return 0;
       }
 

@@ -10,16 +10,16 @@ import {
   AreaChart, Area, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
-import { ArrowLeft, Play, Pause, Copy, FlaskConical, Zap, Shuffle } from "lucide-react";
+import { ArrowLeft, Play, Copy, FlaskConical, Shuffle, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/forge/Pagination";
 import { toast } from "sonner";
 
+import { EvidenceTab } from "@/components/strategy/evidence/EvidenceTab";
 import { useStrategy } from "@/hooks/useStrategies";
 import { useBacktests, useBacktestTrades, useBacktestEquity, useRunBacktest } from "@/hooks/useBacktests";
 import { useOhlcv } from "@/hooks/useData";
 import { useMonteCarlo, useMonteCarloRun, useRunMC } from "@/hooks/useMonteCarlo";
-import { useStartPaperSession } from "@/hooks/usePaper";
 import { num, timeAgo } from "@/lib/utils";
 import type { BacktestTrade, Backtest } from "@/types/api";
 
@@ -184,7 +184,6 @@ export default function StrategyDetail() {
   }, [equityData, latestBacktest]);
 
   const runBacktest = useRunBacktest();
-  const startPaper = useStartPaperSession();
 
   if (loadingStrategy) {
     return (
@@ -224,16 +223,8 @@ export default function StrategyDetail() {
     );
   };
 
-  const handleStartPaper = () => {
-    if (!id) return;
-    startPaper.mutate(
-      { strategyId: id },
-      {
-        onSuccess: () => toast.success("Paper session started"),
-        onError: (e) => toast.error(`Paper start failed: ${e.message}`),
-      }
-    );
-  };
+  // REMOVED (Layer-4 Office P0, 2026-07-02): Start Paper control - the
+  // Slumhouse Office is the ONLY control room; this page is read-only.
 
   const tradeColumns = [
     { key: "entryTime", header: "Date", mono: true,
@@ -312,18 +303,16 @@ export default function StrategyDetail() {
             <Button variant="outline" size="sm" className="text-xs border-border/30 text-text-secondary hover:text-foreground" onClick={handleRunBacktest} disabled={runBacktest.isPending}>
               <FlaskConical className="w-3.5 h-3.5 mr-1" /> Run Backtest
             </Button>
-            <Button variant="outline" size="sm" className="text-xs border-border/30 text-text-secondary hover:text-foreground" onClick={handleStartPaper} disabled={startPaper.isPending}>
-              <Zap className="w-3.5 h-3.5 mr-1" /> Start Paper
-            </Button>
-            {status === "active" ? (
-              <Button size="sm" className="text-xs bg-loss/10 text-loss hover:bg-loss/20 border-0">
-                <Pause className="w-3.5 h-3.5 mr-1" /> Pause
-              </Button>
-            ) : (
-              <Button size="sm" className="text-xs bg-profit/10 text-profit hover:bg-profit/20 border-0">
-                <Play className="w-3.5 h-3.5 mr-1" /> Activate
-              </Button>
-            )}
+            {/* Layer-4 Office P0: Start Paper / Pause / Activate controls removed —
+                the Slumhouse Office is the ONLY control room. */}
+            <a
+              href="/slumhouse/office.html"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-2 border border-border/30 text-xs text-text-secondary hover:text-foreground transition-colors"
+              title="Start/stop and go-live decisions happen in the Slumhouse Office"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              Controls live in The Office
+            </a>
           </div>
         </div>
       </motion.div>
@@ -361,7 +350,7 @@ export default function StrategyDetail() {
       >
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList className="bg-surface-1 border border-border/20 p-1 rounded-lg">
-            {["Overview", "Backtests", "Monte Carlo", "Trades", "Config"].map((tab) => (
+            {["Overview", "Backtests", "Monte Carlo", "Trades", "Evidence", "Config"].map((tab) => (
               <TabsTrigger
                 key={tab}
                 value={tab.toLowerCase().replace(" ", "-")}
@@ -502,16 +491,30 @@ export default function StrategyDetail() {
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {(() => {
                     const last = fanData.length > 0 ? fanData[fanData.length - 1] : null;
-                    const probabilityOfRuin = num(mcRun.probabilityOfRuin);
+                    // Canonical ruin metric is the BCa CI upper bound (0-1 fraction),
+                    // the same value the B14 gate blocks on at > 0.20. Reading the
+                    // scalar probabilityOfRuin is the CLAUDE.md §13 anti-pattern — it's
+                    // only shown, labeled "legacy", when the CI is absent (pre-W27.5 MC).
+                    const ciHigh = typeof mcRun.riskMetrics?.probability_of_ruin_ci?.ci_high === "number"
+                      ? (mcRun.riskMetrics.probability_of_ruin_ci.ci_high as number)
+                      : null;
+                    const scalar = num(mcRun.probabilityOfRuin);
+                    const scalarFrac = scalar > 1 ? scalar / 100 : scalar; // normalize to 0-1
+                    const isLegacy = ciHigh == null;
+                    const ruin = ciHigh ?? scalarFrac;
                     return [
                       { label: "Median Terminal", value: last ? `$${(last.p50 / 1000).toFixed(1)}k` : "—" },
                       { label: "Mean Terminal", value: last ? `$${(last.mean / 1000).toFixed(1)}k` : "—" },
                       { label: "5th / 95th Pct", value: last ? `$${(last.p5 / 1000).toFixed(0)}k / $${(last.p95 / 1000).toFixed(0)}k` : "—" },
-                      { label: "Risk of Ruin", value: `${probabilityOfRuin.toFixed(2)}%`, variant: probabilityOfRuin > 5 ? "loss" : "profit" },
+                      {
+                        label: isLegacy ? "Ruin (legacy pt est.)" : "Ruin CI 95% upper",
+                        value: `${(ruin * 100).toFixed(1)}%`,
+                        variant: ruin > 0.20 ? "loss" : isLegacy ? "warn" : "profit",
+                      },
                     ].map((k) => (
                       <div key={k.label} className="forge-card p-4">
                         <span className="text-[10px] uppercase tracking-widest text-text-muted block mb-1">{k.label}</span>
-                        <span className={`text-lg font-mono font-bold ${k.variant === "loss" ? "text-loss" : k.variant === "profit" ? "text-profit" : "text-foreground"}`}>
+                        <span className={`text-lg font-mono font-bold ${k.variant === "loss" ? "text-loss" : k.variant === "warn" ? "text-amber-400" : k.variant === "profit" ? "text-profit" : "text-foreground"}`}>
                           {k.value}
                         </span>
                       </div>
@@ -617,6 +620,17 @@ export default function StrategyDetail() {
                 <p className="text-sm text-text-muted text-center py-8">No configuration</p>
               )}
             </div>
+          </TabsContent>
+
+          {/* deep-scan #13: EvidenceTab was built + tested + backed by a live
+              endpoint (/api/strategies/:id/evidence) but never mounted, so the
+              video→spec→strategy provenance chain was unreachable. */}
+          <TabsContent value="evidence">
+            <EvidenceTab
+              strategyId={id!}
+              strategySource={(strategy as any)?.source ?? null}
+              strategyTags={(strategy as any)?.tags ?? null}
+            />
           </TabsContent>
         </Tabs>
       </motion.div>

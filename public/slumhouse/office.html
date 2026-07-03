@@ -712,6 +712,17 @@
       </div>
       <div class="of-dots" id="of-dots"></div>
     </section>
+
+    <!-- Layer-4 Office P0 (2026-07-02): risk-truth card + go-live approval cards.
+         Rendered by /slumhouse/office-risk.js + /slumhouse/office-approvals.js
+         (plain scripts, no build step). They wake on the `office:unlocked`
+         document event and sleep on `office:locked`. -->
+    <section id="of-risk" class="of-hide"></section>
+    <!-- deep-scan #13 (2026-07-03): conveyor visibility — the Office gates the
+         strategy-finder via Bot Power but could not see it. Rendered by
+         /slumhouse/office-conveyor.js (polls /api/scout/health same-origin). -->
+    <section id="of-conveyor" class="of-hide"></section>
+    <section id="of-approvals" class="of-hide"></section>
   </div>
 
   <!-- ═══ CARTER CONNECT OVERLAY (full-screen, hidden by default) ═══ -->
@@ -816,6 +827,13 @@
         { id: 'vacation_mode', eyebrow: 'Away', title: 'Vacation Mode',
           on: 'Fully hands-off while you are away — the bot can put strategies live and un-pause itself on its own.',
           off: 'You are in control — the bot waits for your OK before going live or un-pausing.' },
+        // Layer-4 Office P0 (2026-07-02): the recovery switch existed on the
+        // backend (momentary — clears a safety auto-halt) but had no card, so it
+        // was unreachable from the UI. Momentary handling already lives in
+        // onToggle (s.momentary + confirmAction).
+        { id: 'recovery', eyebrow: 'Safety stop', title: 'Recovery',
+          on: 'Press to clear the safety stop after the bot halted itself — it goes straight back to work.',
+          off: 'Nothing to clear — the bot has not halted itself. (Turns RED when a safety halt is active.)' },
         { id: 'live_execution', eyebrow: 'Real money', title: 'Live Execution',
           on: 'Trades REAL money in your funded account.',
           off: 'Practice mode only (paper) — no real money at risk.',
@@ -1040,11 +1058,15 @@
         shellSec.classList.remove('of-hide');
         lockBtn.classList.remove('of-hide');
         initCarousel();
+        // Layer-4 Office P0: wake the risk-truth + approvals modules.
+        document.dispatchEvent(new CustomEvent('office:unlocked'));
       }
       function showLocked() {
         shellSec.classList.add('of-hide');
         lockBtn.classList.add('of-hide');
         lockSec.classList.remove('of-hide');
+        // Layer-4 Office P0: hide + stop the risk-truth + approvals modules.
+        document.dispatchEvent(new CustomEvent('office:locked'));
         input.value = '';                 // never leave a passcode sitting in the box
         // clear again after any late browser autofill, then focus
         setTimeout(function () { input.value = ''; input.focus(); }, 60);
@@ -1106,6 +1128,11 @@
       });
     })();
   </script>
+
+  <!-- Layer-4 Office P0: risk-truth + go-live approvals (no build step) -->
+  <script src="/slumhouse/office-risk.js" defer></script>
+  <script src="/slumhouse/office-conveyor.js" defer></script>
+  <script src="/slumhouse/office-approvals.js" defer></script>
 
   <!-- ElevenLabs ConvAI browser SDK — pinned to @elevenlabs/client@1.14.0 -->
   <script type="importmap">

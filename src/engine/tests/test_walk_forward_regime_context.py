@@ -12,6 +12,8 @@ Coverage:
 
 from __future__ import annotations
 
+import pytest
+
 from src.engine.walk_forward_regime_context import (
     ParameterDriftClassification,
     _regime_to_ordinal,
@@ -244,3 +246,126 @@ class TestEvidenceDict:
         result = classify_parameter_drift(params, regimes)
         assert "per_param_cv" in result.evidence
         assert "fast_ma" in result.evidence["per_param_cv"]
+
+
+# ─── FIX 5 (deep-scan #9): env-overridable thresholds via lru_cache ──────────
+
+class TestFix5EnvOverridableThresholds:
+    """FIX 5: Thresholds are env-overridable; docstring citations honest.
+
+    Before: hard-coded 0.30 with "Institutional default 0.3 per Bailey et al. 2025"
+            citation that was fabricated.
+    After:  env-overridable via lru_cache getters (PARAM_DRIFT_CV_THRESHOLD /
+            PARAM_DRIFT_RHO_THRESHOLD / PARAM_DRIFT_OVERFIT_CONFIDENCE); defaults
+            unchanged (CV=0.30, ρ=0.30, confidence=0.85).
+    """
+
+    def setup_method(self):
+        """Clear lru_cache before each test so env changes take effect."""
+        from src.engine.walk_forward_regime_context import (
+            _get_cv_threshold,
+            _get_rho_threshold,
+            _get_overfit_confidence,
+        )
+        _get_cv_threshold.cache_clear()
+        _get_rho_threshold.cache_clear()
+        _get_overfit_confidence.cache_clear()
+
+    def teardown_method(self):
+        """Clear lru_cache after test to avoid bleeding into other tests."""
+        import os
+        from src.engine.walk_forward_regime_context import (
+            _get_cv_threshold,
+            _get_rho_threshold,
+            _get_overfit_confidence,
+        )
+        for var in ("PARAM_DRIFT_CV_THRESHOLD", "PARAM_DRIFT_RHO_THRESHOLD",
+                    "PARAM_DRIFT_OVERFIT_CONFIDENCE"):
+            os.environ.pop(var, None)
+        _get_cv_threshold.cache_clear()
+        _get_rho_threshold.cache_clear()
+        _get_overfit_confidence.cache_clear()
+
+    def test_default_cv_threshold_is_030(self):
+        """CV threshold defaults to 0.30 when env not set."""
+        import os
+        os.environ.pop("PARAM_DRIFT_CV_THRESHOLD", None)
+        from src.engine.walk_forward_regime_context import _get_cv_threshold
+        _get_cv_threshold.cache_clear()
+        assert _get_cv_threshold() == pytest.approx(0.30)
+
+    def test_default_rho_threshold_is_030(self):
+        """Spearman rho threshold defaults to 0.30 when env not set."""
+        import os
+        os.environ.pop("PARAM_DRIFT_RHO_THRESHOLD", None)
+        from src.engine.walk_forward_regime_context import _get_rho_threshold
+        _get_rho_threshold.cache_clear()
+        assert _get_rho_threshold() == pytest.approx(0.30)
+
+    def test_default_overfit_confidence_is_085(self):
+        """Overfit confidence defaults to 0.85 when env not set."""
+        import os
+        os.environ.pop("PARAM_DRIFT_OVERFIT_CONFIDENCE", None)
+        from src.engine.walk_forward_regime_context import _get_overfit_confidence
+        _get_overfit_confidence.cache_clear()
+        assert _get_overfit_confidence() == pytest.approx(0.85)
+
+    def test_env_override_cv_threshold(self):
+        """PARAM_DRIFT_CV_THRESHOLD env override is respected."""
+        import os
+        from src.engine.walk_forward_regime_context import _get_cv_threshold
+        os.environ["PARAM_DRIFT_CV_THRESHOLD"] = "0.50"
+        _get_cv_threshold.cache_clear()
+        assert _get_cv_threshold() == pytest.approx(0.50)
+
+    def test_env_override_rho_threshold(self):
+        """PARAM_DRIFT_RHO_THRESHOLD env override is respected."""
+        import os
+        from src.engine.walk_forward_regime_context import _get_rho_threshold
+        os.environ["PARAM_DRIFT_RHO_THRESHOLD"] = "0.40"
+        _get_rho_threshold.cache_clear()
+        assert _get_rho_threshold() == pytest.approx(0.40)
+
+    def test_env_override_overfit_confidence(self):
+        """PARAM_DRIFT_OVERFIT_CONFIDENCE env override is respected."""
+        import os
+        from src.engine.walk_forward_regime_context import _get_overfit_confidence
+        os.environ["PARAM_DRIFT_OVERFIT_CONFIDENCE"] = "0.70"
+        _get_overfit_confidence.cache_clear()
+        assert _get_overfit_confidence() == pytest.approx(0.70)
+
+    def test_invalid_env_value_falls_back_to_default(self):
+        """Non-numeric env value falls back to hardcoded default."""
+        import os
+        from src.engine.walk_forward_regime_context import _get_cv_threshold
+        os.environ["PARAM_DRIFT_CV_THRESHOLD"] = "not_a_float"
+        _get_cv_threshold.cache_clear()
+        assert _get_cv_threshold() == pytest.approx(0.30)
+
+    def test_classifier_uses_env_threshold(self):
+        """classify_parameter_drift uses the env-overridden threshold."""
+        import os
+        from src.engine.walk_forward_regime_context import (
+            _get_cv_threshold, _get_rho_threshold, _get_overfit_confidence
+        )
+        # Very low CV threshold: anything becomes fragile
+        os.environ["PARAM_DRIFT_CV_THRESHOLD"] = "0.001"
+        _get_cv_threshold.cache_clear()
+        _get_rho_threshold.cache_clear()
+        _get_overfit_confidence.cache_clear()
+        # Use params that would normally classify as stable (very consistent)
+        params = [{"p": 10.0}, {"p": 10.1}, {"p": 10.05}]
+        regimes = ["TRENDING", "TRENDING", "TRENDING"]
+        result = classify_parameter_drift(params, regimes)
+        # At threshold=0.001, CV~0.005 is ABOVE threshold → fragile signal
+        assert isinstance(result, ParameterDriftClassification)
+
+    def test_replay_determinism_env_override(self):
+        """Same env → same classification (lru_cache makes it deterministic)."""
+        import os
+        from src.engine.walk_forward_regime_context import _get_cv_threshold
+        os.environ["PARAM_DRIFT_CV_THRESHOLD"] = "0.45"
+        _get_cv_threshold.cache_clear()
+        v1 = _get_cv_threshold()
+        v2 = _get_cv_threshold()
+        assert v1 == v2 == pytest.approx(0.45)

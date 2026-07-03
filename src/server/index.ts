@@ -112,6 +112,35 @@ import { fillCallbackRoutes } from "./routes/fill-callback.js";
 import { leakDetectionRoutes } from "./routes/leak-detection.js";
 import { runPendingMigrations } from "./lib/boot-migration-runner.js";
 import { checkStartupSecrets } from "./lib/startup-config-check.js";
+import { insertAuditRowSafe } from "./lib/audit-log-helper.js";
+
+// ─── Boot correlation (deepscan7 D2 / obs-M5, 2026-07-02) ─────────
+// ONE bootCorrelationId minted BEFORE migrations/scheduler/regime-bank so every
+// boot-sequence audit row (boot.started, migration.*, track_completed,
+// regime-bank self-heal, boot.completed) is traceable as a single group.
+// Previously the id was minted inside the app.listen callback (missing the
+// migration runner entirely) and ensureRegimeBankPopulated minted its OWN
+// second `boot-${epoch}` string — fragmented boot traces.
+const bootCorrelationId = `boot-${Date.now()}`;
+
+// boot.started — written before migrations so a migration-blocked boot still
+// leaves an attributable trace. insertAuditRowSafe never throws (a DB that is
+// down here will fail the migration runner loudly anyway).
+await insertAuditRowSafe({
+  action: "boot.started",
+  entityType: "system",
+  entityId: null,
+  decisionAuthority: "system",
+  input: {
+    version: process.env.npm_package_version ?? "dev",
+    node_env: process.env.NODE_ENV ?? null,
+    port: Number(process.env.PORT) || 4000,
+    pid: process.pid,
+  } as Record<string, unknown>,
+  result: { phase: "pre_migrations" } as Record<string, unknown>,
+  status: "info",
+  correlationId: bootCorrelationId,
+});
 
 // ─── Boot migration runner ────────────────────────────────────────
 // Apply any pending Drizzle migrations BEFORE app.listen() and BEFORE any
@@ -119,7 +148,7 @@ import { checkStartupSecrets } from "./lib/startup-config-check.js";
 // gate that prevents vacation-mode migration drift from breaking production.
 // Throws on failure to block boot (fail-closed). No-ops when all applied.
 // Controlled by BOOT_MIGRATION_ENABLED env var (default: true).
-await runPendingMigrations();
+await runPendingMigrations(bootCorrelationId);
 
 // ─── Vacation-survival A-8: Boot-time secret validation ──────────
 // Emits WARN log + Discord notify when ADMIN_RESTART_HMAC_SECRET is unset
@@ -459,6 +488,14 @@ app.get("/api/health", async (_req, res) => {
 // the general /api authMiddleware so tools-plane auth is self-contained.
 app.use("/api/carter", carterToolsRouter);
 
+// deep-scan #13: inbound webhooks from EXTERNAL senders (TradingView Pine alerts,
+// broker fill callbacks) carry their OWN HMAC auth and cannot send the /api Bearer.
+// Mount them BEFORE the general authMiddleware — same pattern as /api/carter/webhook
+// — so activating the Bearer gate does not 401 broker execution. Each router
+// validates its own HMAC (TRADINGVIEW webhook secret / BROKER_FILL_HMAC_SECRET).
+app.use("/api/tradingview", tradingViewWebhookRoutes);
+app.use("/api/broker/fill-callback", fillCallbackRoutes);
+
 // Auth gate
 app.use("/api", authMiddleware);
 
@@ -570,9 +607,9 @@ app.use("/api/bias-state", biasStateRoutes);
 // Track 5 Pass 2: Strategy Selection UI + Publish-to-Family Gate
 app.use("/api/strategy-assignments", strategyAssignmentRoutes);
 
-// Track 8 Pass 3: TradingView Marker Collector — HMAC-validated Pine alert webhooks
-// Rate-limited via strictRateLimit (already applied inside the route handler per account_id).
-app.use("/api/tradingview", tradingViewWebhookRoutes);
+// Track 8 Pass 3: TradingView Marker Collector — HMAC-validated Pine alert webhooks.
+// deep-scan #13: mounted ABOVE the auth gate (see near authMiddleware) so external
+// Pine alerts (own HMAC, no Bearer) are not 401'd by the API_KEY gate.
 
 // W23H.2: Pre-market routine state — daily 8:30 AM ET pre-market context per symbol
 app.use("/api/pre-market", preMarketRoutes);
@@ -607,9 +644,9 @@ app.use("/api/live-order", liveOrderRoutes);
 
 // Phase 1 Fill Reconciliation: broker fill callback + admin reconcile-clear.
 // POST /api/broker/fill-callback — HMAC-gated; requires BROKER_FILL_HMAC_SECRET.
-// POST /api/broker/fill-callback/reconcile-clear — admin clear of needs_reconcile block.
+// deep-scan #13: mounted ABOVE the auth gate (see near authMiddleware) so external
+// broker fill callbacks (own HMAC, no Bearer) are not 401'd by the API_KEY gate.
 // Flag-gated: SERVER_MEDIATED_EXECUTION_ENABLED=true (default OFF).
-app.use("/api/broker/fill-callback", fillCallbackRoutes);
 
 // Wave 4 Track 4B: Layer 15 Leak Detection — ADVISORY-ONLY, no lifecycle gate authority.
 // POST /api/leak-detection/run — called by 3AM orchestrator (Track 4A).
@@ -651,10 +688,24 @@ process.on("uncaughtException", (err) => {
 export const server = app.listen(port, () => {
   logger.info(`Trading Forge running on http://localhost:${port}`);
 
-  // O8: Single correlationId for all boot-sequence audit rows so startup events
-  // are traceable as a group. Convention matches the existing boot-${Date.now()}
-  // pattern already used at line ~858 (ensureRegimeBankPopulated call).
-  const bootCorrelationId = `boot-${Date.now()}`;
+  // deepscan7 D2 (2026-07-02): bootCorrelationId is now the SINGLE module-level id
+  // minted before migrations (top of this file) — the local re-mint that used to
+  // live here fragmented the boot trace. boot.completed closes the trace group.
+  void insertAuditRowSafe({
+    action: "boot.completed",
+    entityType: "system",
+    entityId: null,
+    decisionAuthority: "system",
+    input: {
+      version: process.env.npm_package_version ?? "dev",
+      node_env: process.env.NODE_ENV ?? null,
+      port,
+      pid: process.pid,
+    } as Record<string, unknown>,
+    result: { phase: "listening", uptime_seconds: Math.round(process.uptime()) } as Record<string, unknown>,
+    status: "info",
+    correlationId: bootCorrelationId,
+  });
 
   // ─── Production HTTP server timeouts ─────────────────────────
   // Without these, a single slow/stuck client can hold a connection open
@@ -823,7 +874,7 @@ export const server = app.listen(port, () => {
     warmAppendixCache().catch((err) => {
       logger.info({ err }, "Appendix cache warm failed at boot — starting empty (non-blocking)");
     });
-    // ─── Wave 26: Ollama health check for transcript_extractor gemma4:e2b ─────
+    // ─── Wave 26: Ollama health check for transcript_extractor gemma4:e4b-it-qat ─────
     // Sets OLLAMA_HEALTHY module flag. If Ollama is down or model is missing,
     // transcript_extractor routes to cloud fallback. Fail-open: any error is
     // swallowed here; the check itself logs WARN.
@@ -835,7 +886,7 @@ export const server = app.listen(port, () => {
   });
 
   // ─── H5: 60s post-boot Ollama recheck ────────────────────────────────────────
-  // The boot-time probe runs at T+0 when gemma4:e2b (7GB) may still be cold-
+  // The boot-time probe runs at T+0 when gemma4:e4b-it-qat (7GB) may still be cold-
   // loading into VRAM, leaving OLLAMA_HEALTHY stuck false and routing all
   // extraction to cloud. This one-shot re-probe fires after the cold-load
   // window and corrects the flag before the first extraction cron fires.
@@ -874,7 +925,9 @@ export const server = app.listen(port, () => {
   // If bank is populated → logs + emits skipped audit. Never blocks app.listen.
   // Governance: CHALLENGER-ONLY / ADVISORY — populate output is advisory only.
   import("./services/synthetic-regime-bank-service.js").then(({ ensureRegimeBankPopulated }) => {
-    ensureRegimeBankPopulated(`boot-${Date.now()}`).catch((err: unknown) => {
+    // deepscan7 D2 (2026-07-02): reuse the single boot id (was a second self-minted
+    // `boot-${Date.now()}` that split the boot trace into two correlation groups).
+    ensureRegimeBankPopulated(bootCorrelationId).catch((err: unknown) => {
       logger.warn({ err }, "synthetic_regime_bank: boot self-heal failed (non-blocking)");
     });
   }).catch((err: unknown) => {
@@ -890,8 +943,8 @@ export const server = app.listen(port, () => {
     initAgentCoordination();
   } else {
     import("./scheduler.js").then(({ initScheduler }) => {
-      initScheduler();
-      logger.info("Scheduler initialized");
+      initScheduler(bootCorrelationId);
+      logger.info({ correlationId: bootCorrelationId }, "Scheduler initialized");
       // Wire typed agent event bus AFTER scheduler so cross-domain handlers
       // can subscribe to lifecycle/risk/compliance/health events.
       initAgentCoordination();
@@ -1074,7 +1127,7 @@ export const server = app.listen(port, () => {
   //   - Track 2 VP routing preserved (hysteresis layer wraps _compute_proposed_playbook
   //     which calls _route_vp_conditional unchanged)
   //   - 9th GPT-5-mini role registered (bias_engine_evaluator, 25k tokens/day,
-  //     deepseek-r1:14b fallback, anti-pattern-catalog KB + 4 few-shot examples)
+  //     gemma4:e4b-it-qat fallback, anti-pattern-catalog KB + 4 few-shot examples)
   // Same idempotency / non-blocking pattern as Tracks 1, 2, and 3.
   import("./db/schema.js").then(async ({ auditLog: auditLogTable }) => {
     try {

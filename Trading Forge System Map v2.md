@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-07-02T07:04:40.280Z`.
+Updated automatically from the repo on `2026-07-03T19:55:50.389Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -1069,6 +1069,31 @@ Updated automatically from the repo on `2026-07-02T07:04:40.280Z`.
 - **Emitter:** `src/server/services/paper-signal-service.ts` (Wave 23.C)
 - **Payload shape:** `{ sessionId, symbol, strategyId, satisfiedCount, minRequired, factorResults, timestamp }`
 - **Purpose:** A+ confluence gate blocked a signal entry; insufficient factors satisfied.
+
+### deep-scan #12 (2026-07-02) — frontend-safety catalog additions
+
+11 safety-critical events (sticky non-dismissable toasts in `useSSE.dispatchSideEffects`) + operational-significance events, added to the `sse-events.ts` union so the operator SPA is no longer blind to kill-switch / DLL / outage state. `check:sse-contract` now HARD-FAILS if any safety-pattern event is server-only.
+
+### kill_switch:dll_force_close
+### kill_switch:layer_halted
+### kill_switch:c1_cme_eval_failed
+### quantum_rl:kill_switch_engaged
+### exchange:outage-detected
+### exchange:outage-resolved
+### broker:degraded
+### risk:dd_velocity_autopause
+### risk:dd_velocity_warning
+### paper:position-stop-breached
+### paper:auto_restart_exhausted
+### paper:auto_restarted
+### fill_reconciliation:drift_detected
+### fill_reconciliation:unmatched_fill
+### PAPER_PARITY_DEGRADED
+### backtest:truthiness_failure
+### compliance:rejected
+### signal:macro_gate_eval_failed
+### monte_carlo:trades_fallback_used
+### pending_bucket:killed
 
 ---
 

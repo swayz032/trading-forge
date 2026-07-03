@@ -297,7 +297,12 @@ describe("request_promotion — gates are authoritative, never forced", () => {
     const token = await proposeToken("request_promotion", params);
     const out = await CARTER_CONFIRM_HANDLERS.confirm_request_promotion(params, token) as { executed?: boolean };
     expect(out.executed).toBe(true);
-    expect(mocks.promote).toHaveBeenCalledWith("s1", "PAPER", "DEPLOY_READY", { actor: "system" });
+    // (deepscan7 obs-H2 2026-07-02) promoteStrategy now also receives a per-action
+    // correlationId UUID (threading tested in deepscan7-carter-correlation.test.ts).
+    expect(mocks.promote).toHaveBeenCalledWith(
+      "s1", "PAPER", "DEPLOY_READY",
+      expect.objectContaining({ actor: "system", correlationId: expect.any(String) }),
+    );
     expectAuditExecuted();
   });
 

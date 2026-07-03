@@ -7,10 +7,19 @@
  * (SLUMHOUSE_ADMIN_PASSCODE) — never by Discord identity. A friend signed into
  * Discord still cannot reach the Office without the passcode.
  *
- * Token format: `admin:<expUnixSec>:<sigBase64Url>`
+ * Token format v1 (no Discord, 3-part): `admin:<expUnixSec>:<sigBase64Url>`
  *   sig = HMAC-SHA256(SLUMHOUSE_SESSION_SECRET, `admin:<expUnixSec>`)
  *
- * FAIL-CLOSED: if SLUMHOUSE_ADMIN_PASSCODE is unset (or <6 chars), the Office is
+ * Token format v2 (with Discord, 4-part): `admin:<discordUserId>:<expUnixSec>:<sigBase64Url>`
+ *   sig = HMAC-SHA256(SLUMHOUSE_SESSION_SECRET, `admin:<discordUserId>:<expUnixSec>`)
+ *
+ * FIX 2 (deep-scan #12): When the browser that enters the admin passcode ALSO holds
+ * a valid friend Discord session (slumhouse_sid), the Discord user ID is encoded in
+ * the admin token. Every control mutation audit row subsequently carries
+ * actor_discord_id so the audit trail shows WHO made the change, not just that an
+ * admin did. Tokens without Discord identity continue to work (backward-compat).
+ *
+ * FAIL-CLOSED: if SLUMHOUSE_ADMIN_PASSCODE is unset (or <4 chars), the Office is
  * permanently locked — checkPasscode() always returns false. There is no default
  * passcode and no bypass. Set a strong value in `.env` to enable the Office.
  */
@@ -21,7 +30,9 @@ export const ADMIN_COOKIE_NAME = "slumhouse_admin_sid";
 /** Default admin session lifetime — short, re-enter the passcode after it lapses. */
 export const ADMIN_SESSION_TTL_SEC = 60 * 60 * 4; // 4 hours
 
-type VerifyResult = { ok: true } | { ok: false; reason: string };
+type VerifyResult =
+  | { ok: true; discordUserId?: string }
+  | { ok: false; reason: string };
 
 function sessionSecret(): string {
   const s = process.env.SLUMHOUSE_SESSION_SECRET;
@@ -57,9 +68,22 @@ export function checkPasscode(input: string): boolean {
   return timingSafeEqual(a, b);
 }
 
-export function signAdminSession(ttlSec: number = ADMIN_SESSION_TTL_SEC): string {
+/**
+ * Sign an admin session token.
+ *
+ * @param ttlSec     Session lifetime in seconds (defaults to ADMIN_SESSION_TTL_SEC).
+ * @param discordUserId  Optional Discord user ID to embed for audit trail (FIX 2).
+ *   When provided, emits 4-part token `admin:<discordUserId>:<exp>:<sig>`.
+ *   When omitted, emits 3-part token `admin:<exp>:<sig>` (backward-compat).
+ */
+export function signAdminSession(
+  ttlSec: number = ADMIN_SESSION_TTL_SEC,
+  discordUserId?: string,
+): string {
   const exp = Math.floor(Date.now() / 1000) + ttlSec;
-  const payload = `admin:${exp}`;
+  const payload = discordUserId
+    ? `admin:${discordUserId}:${exp}`
+    : `admin:${exp}`;
   const sig = createHmac("sha256", sessionSecret()).update(payload).digest("base64url");
   return `${payload}:${sig}`;
 }
@@ -67,12 +91,35 @@ export function signAdminSession(ttlSec: number = ADMIN_SESSION_TTL_SEC): string
 export function verifyAdminSession(token: string): VerifyResult {
   if (!token) return { ok: false, reason: "empty" };
   const parts = token.split(":");
-  if (parts.length !== 3) return { ok: false, reason: "malformed" };
+  // base64url and numeric fields contain no colons — length is deterministic.
+  if (parts.length !== 3 && parts.length !== 4) {
+    return { ok: false, reason: "malformed" };
+  }
 
-  const [scope, expStr, sig] = parts;
-  if (scope !== "admin" || !expStr || !sig) return { ok: false, reason: "malformed" };
+  const scope = parts[0];
+  if (scope !== "admin") return { ok: false, reason: "malformed" };
 
-  const payload = `admin:${expStr}`;
+  let discordUserId: string | undefined;
+  let expStr: string;
+  let sig: string;
+
+  if (parts.length === 4) {
+    // v2 format: admin:<discordUserId>:<exp>:<sig>
+    discordUserId = parts[1];
+    expStr = parts[2];
+    sig = parts[3];
+  } else {
+    // v1 format: admin:<exp>:<sig>
+    discordUserId = undefined;
+    expStr = parts[1];
+    sig = parts[2];
+  }
+
+  if (!expStr || !sig) return { ok: false, reason: "malformed" };
+
+  const payload = discordUserId
+    ? `admin:${discordUserId}:${expStr}`
+    : `admin:${expStr}`;
   const expected = createHmac("sha256", sessionSecret()).update(payload).digest("base64url");
 
   if (sig.length !== expected.length) return { ok: false, reason: "sig_length" };
@@ -84,10 +131,10 @@ export function verifyAdminSession(token: string): VerifyResult {
   if (!Number.isFinite(exp) || exp < Math.floor(Date.now() / 1000)) {
     return { ok: false, reason: "expired" };
   }
-  return { ok: true };
+  return { ok: true, discordUserId };
 }
 
-/** Extract + verify the admin session from a raw Cookie header. */
+/** Extract + verify the admin session from a raw Cookie header. Returns true/false. */
 export function adminSessionFromCookie(cookieHeader: string | undefined): boolean {
   const raw = cookieHeader ?? "";
   const match = raw.match(/(?:^|;\s*)slumhouse_admin_sid=([^;]+)/);
@@ -96,5 +143,25 @@ export function adminSessionFromCookie(cookieHeader: string | undefined): boolea
     return verifyAdminSession(decodeURIComponent(match[1])).ok;
   } catch {
     return false;
+  }
+}
+
+/**
+ * Extract the Discord user ID threaded into the admin session cookie (FIX 2).
+ * Returns undefined when the cookie is absent, invalid, or was minted without a
+ * Discord identity (admin unlocked without an active friend session).
+ */
+export function adminDiscordUserIdFromCookie(
+  cookieHeader: string | undefined,
+): string | undefined {
+  const raw = cookieHeader ?? "";
+  const match = raw.match(/(?:^|;\s*)slumhouse_admin_sid=([^;]+)/);
+  if (!match) return undefined;
+  try {
+    const result = verifyAdminSession(decodeURIComponent(match[1]));
+    if (result.ok) return result.discordUserId;
+    return undefined;
+  } catch {
+    return undefined;
   }
 }

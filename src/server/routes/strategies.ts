@@ -9,6 +9,7 @@ import { broadcastSSE } from "./sse.js";
 import { LifecycleService } from "../services/lifecycle-service.js";
 import { isActive as isPipelineActive } from "../services/pipeline-control-service.js";
 import { assertCrossValidatedSource } from "../services/agent-service.js";
+import { requireOfficeControlAuthority } from "../lib/office-control-guard.js";
 
 export const strategyRoutes = Router();
 const lifecycleService = new LifecycleService();
@@ -638,7 +639,19 @@ strategyRoutes.patch("/:id/lifecycle", async (req, res) => {
 });
 
 // POST /api/strategies/:id/deploy — Human approves deployment (DEPLOY_READY → DEPLOYED)
+//
+// Layer-4 Office P0 follow-up (2026-07-02): Office/operator-only via the shared
+// requireOfficeControlAuthority guard (Office admin cookie OR direct loopback
+// without x-forwarded-for). Callers audited: React SPA (NO callers — DeployReady.tsx
+// is read-only, no api.post to this route anywhere in the SPA), n8n workflows
+// (none — fetch-deployed/check-any-deployed nodes are DB reads about DEPLOYED
+// strategies), crons/services/Carter (call lifecycleService.promoteStrategy
+// in-process, never HTTP), the Office deploy-approvals router (also in-process
+// promoteStrategy — verified), operator runbook curl on localhost (docs/
+// first-strategy-launch-runbook.md — passes the loopback allowance). The Office
+// approval card is the canonical UI for this decision.
 strategyRoutes.post("/:id/deploy", async (req, res) => {
+  if (!requireOfficeControlAuthority(req, res, "strategy.deploy_mutation_blocked")) return;
   const strategyId = req.params.id;
 
   // Capture pre-deploy metrics snapshot for the audit record before the transition
@@ -789,7 +802,10 @@ strategyRoutes.post("/:id/deploy", async (req, res) => {
 });
 
 // POST /api/strategies/:id/reject-deploy — Send strategy back to paper (DEPLOY_READY → PAPER)
+// Layer-4 Office P0 follow-up (2026-07-02): same Office/operator-only guard as
+// /:id/deploy above — see that route's caller audit.
 strategyRoutes.post("/:id/reject-deploy", async (req, res) => {
+  if (!requireOfficeControlAuthority(req, res, "strategy.deploy_mutation_blocked")) return;
   const result = await lifecycleService.promoteStrategy(req.params.id, "DEPLOY_READY", "PAPER", {
     actor: "human_release",
     reason: "manual_deploy_rejection",

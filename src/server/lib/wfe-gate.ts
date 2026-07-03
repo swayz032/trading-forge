@@ -23,6 +23,13 @@
  *     - wfe_overall undefined/null AND wfe_status absent/undefined → genuine legacy
  *       (pre-W27.5 backtests where the key was never written) → grandfather pass.
  *
+ * Deep-scan #9 FIX K (2026-07-02) — CPCV per-path IS contract:
+ *   When walk_forward.py runs CPCV mode AND per-path IS Sharpe is available, it
+ *   emits wfe_status="cpcv_per_path_is" + a REAL numeric wfe_overall.  This is
+ *   distinct from "cpcv_not_applicable" (IS Sharpe unavailable → gate exempt).
+ *   The gate ENFORCES the same WFE_HARD_FLOOR as plain-WF and surfaces
+ *   wfeBasis="cpcv_per_path_is" in the result for audit traceability.
+ *
  * NOTE on WFE_WARN_FLOOR: The floor is retained as a named constant and env knob
  * so callers can observe how deep below the hard floor a strategy is, but it no
  * longer controls a "warn-and-allow" path. Any value below WFE_HARD_FLOOR blocks.
@@ -63,6 +70,15 @@ export interface WfeGateResult {
     | "lifecycle.wfe_unavailable_legacy"
     | "lifecycle.wfe_cpcv_exempt"           // CPCV mode: WFE formula is not applicable; PASS with distinct audit
     | null; // null = passes, no audit needed for happy path (optional caller choice)
+  /**
+   * Identifies the WFE computation basis when the producer used a non-standard evaluation
+   * path.  Present only when wfe_status was a known CPCV variant; undefined on plain-WF,
+   * legacy-null, and degenerate-IS paths.  Callers that write audit rows should include
+   * this field so the evaluation basis is traceable.
+   *
+   * Deep-scan #9 FIX K (2026-07-02): populated for wfe_status="cpcv_per_path_is".
+   */
+  wfeBasis?: string;
 }
 
 function parseFloorEnv(key: string, defaultVal: number): number {
@@ -99,6 +115,9 @@ export function getWfeWarnFloor(): number {
  *                    (G2a hardening 2026-06-22 — producer emits 0.0 + "degenerate_is"
  *                    when IS windows yield non-positive / absent Sharpe; this MUST NOT
  *                    be treated as a legacy null / grandfather pass).
+ *                    When "cpcv_per_path_is" the gate ENFORCES the same hard floor as
+ *                    plain-WF (deep-scan #9 FIX K 2026-07-02 — CPCV ran with per-path
+ *                    IS Sharpe; wfe_overall is a real value and must be evaluated).
  */
 export function evaluateWfeGate(
   wfeOverall: number | null | undefined,
@@ -140,8 +159,53 @@ export function evaluateWfeGate(
     };
   }
 
+  // Deep-scan #9 FIX K (2026-07-02) — CPCV per-path IS path:
+  // walk_forward.py CPCV mode emitted wfe_status="cpcv_per_path_is" AND a real
+  // numeric wfe_overall (IS Sharpe computed per path and aggregated).  This is distinct
+  // from "cpcv_not_applicable" (no per-path IS available → gate exempt) and from
+  // "degenerate_is" (WF ran but IS windows non-positive → hard block regardless of value).
+  // ENFORCE the same WFE_HARD_FLOOR as plain-WF; surface wfeBasis="cpcv_per_path_is"
+  // in the returned detail so callers can record the evaluation basis in audit rows.
+  if (wfeStatus === "cpcv_per_path_is") {
+    if (wfeOverall == null) {
+      // Fail-closed: producer claimed per_path_is but emitted no wfe_overall — BLOCK.
+      return {
+        status: "blocked",
+        passed: false,
+        wfeOverall: null,
+        hardFloor: effectiveHardFloor,
+        warnFloor: effectiveWarnFloor,
+        wfeBasis: "cpcv_per_path_is",
+        auditAction: "lifecycle.wfe_hard_floor_block",
+      };
+    }
+    const wfeCpcv = Number(wfeOverall);
+    if (wfeCpcv >= effectiveHardFloor) {
+      return {
+        status: "passed",
+        passed: true,
+        wfeOverall: wfeCpcv,
+        hardFloor: effectiveHardFloor,
+        warnFloor: effectiveWarnFloor,
+        wfeBasis: "cpcv_per_path_is",
+        auditAction: null,
+      };
+    }
+    // Below hard floor — BLOCK.  Same audit action as plain-WF; wfeBasis distinguishes
+    // the evaluation path for lifecycle audit rows.
+    return {
+      status: "blocked",
+      passed: false,
+      wfeOverall: wfeCpcv,
+      hardFloor: effectiveHardFloor,
+      warnFloor: effectiveWarnFloor,
+      wfeBasis: "cpcv_per_path_is",
+      auditAction: "lifecycle.wfe_hard_floor_block",
+    };
+  }
+
   // Legacy path — wfe_overall key genuinely absent (pre-Pass-B.1 backtest).
-  // Only reached when wfeStatus is NOT "degenerate_is" (checked above).
+  // Only reached when wfeStatus is NOT "degenerate_is" or "cpcv_per_path_is" (checked above).
   if (wfeOverall == null) {
     return {
       status: "legacy_null",

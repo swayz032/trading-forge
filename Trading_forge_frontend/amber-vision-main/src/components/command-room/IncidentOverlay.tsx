@@ -112,7 +112,7 @@ export function IncidentOverlay() {
   // Wire SSE listener once
   useEffect(() => {
     if (sourceRef.current) return;
-    const es = new EventSource("/api/sse/events");
+    const es = new EventSource("/api/sse/events", { withCredentials: true });
     sourceRef.current = es;
 
     const handlers = WATCHED_EVENTS.map((evName) => {

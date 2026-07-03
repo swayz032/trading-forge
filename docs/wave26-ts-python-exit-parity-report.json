@@ -1,0 +1,373 @@
+{
+  "run_date": "2026-06-28T18:53:58.829Z",
+  "overall_passed": true,
+  "price_tolerance": 0.01,
+  "scaling_tolerance": 0.001,
+  "fixtures": [
+    {
+      "fixture": "long+TRENDING_UP",
+      "ts_plan": {
+        "tp1_price": 4006,
+        "tp2_price": 4012,
+        "runner_trail_method": "anchored_vwap",
+        "scaling_tp1_pct": 0.2,
+        "scaling_tp2_pct": 0.3,
+        "scaling_runner_pct": 0.5,
+        "pre_lunch_threshold_r": 0.3
+      },
+      "py_plan": {
+        "tp1_price": 4006,
+        "tp2_price": 4012,
+        "runner_trail_method": "anchored_vwap",
+        "scaling_tp1_pct": 0.2,
+        "scaling_tp2_pct": 0.3,
+        "scaling_runner_pct": 0.5,
+        "pre_lunch_threshold_r": 0.3
+      },
+      "checks": [
+        {
+          "field": "tp1.price",
+          "ts_val": 4006,
+          "py_val": 4006,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.price",
+          "ts_val": 4012,
+          "py_val": 4012,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "runner_trail_method",
+          "ts_val": "anchored_vwap",
+          "py_val": "anchored_vwap",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.tp1_pct",
+          "ts_val": 0.2,
+          "py_val": 0.2,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.tp2_pct",
+          "ts_val": 0.3,
+          "py_val": 0.3,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.runner_pct",
+          "ts_val": 0.5,
+          "py_val": 0.5,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "pre_lunch_threshold_r",
+          "ts_val": "0.3",
+          "py_val": "0.3",
+          "passed": true,
+          "reason": "OK"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "fixture": "short+TRENDING_DOWN",
+      "ts_plan": {
+        "tp1_price": 3994,
+        "tp2_price": 3988,
+        "runner_trail_method": "anchored_vwap",
+        "scaling_tp1_pct": 0.2,
+        "scaling_tp2_pct": 0.3,
+        "scaling_runner_pct": 0.5,
+        "pre_lunch_threshold_r": 0.3
+      },
+      "py_plan": {
+        "tp1_price": 3994,
+        "tp2_price": 3988,
+        "runner_trail_method": "anchored_vwap",
+        "scaling_tp1_pct": 0.2,
+        "scaling_tp2_pct": 0.3,
+        "scaling_runner_pct": 0.5,
+        "pre_lunch_threshold_r": 0.3
+      },
+      "checks": [
+        {
+          "field": "tp1.price",
+          "ts_val": 3994,
+          "py_val": 3994,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.price",
+          "ts_val": 3988,
+          "py_val": 3988,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "runner_trail_method",
+          "ts_val": "anchored_vwap",
+          "py_val": "anchored_vwap",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.tp1_pct",
+          "ts_val": 0.2,
+          "py_val": 0.2,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.tp2_pct",
+          "ts_val": 0.3,
+          "py_val": 0.3,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.runner_pct",
+          "ts_val": 0.5,
+          "py_val": 0.5,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "pre_lunch_threshold_r",
+          "ts_val": "0.3",
+          "py_val": "0.3",
+          "passed": true,
+          "reason": "OK"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "fixture": "long+RANGE_BOUND",
+      "ts_plan": {
+        "tp1_price": 5256,
+        "tp2_price": 5262,
+        "runner_trail_method": "developing_poc",
+        "scaling_tp1_pct": 0.5,
+        "scaling_tp2_pct": 0.3,
+        "scaling_runner_pct": 0.2,
+        "pre_lunch_threshold_r": 0.3
+      },
+      "py_plan": {
+        "tp1_price": 5256,
+        "tp2_price": 5262,
+        "runner_trail_method": "developing_poc",
+        "scaling_tp1_pct": 0.5,
+        "scaling_tp2_pct": 0.3,
+        "scaling_runner_pct": 0.2,
+        "pre_lunch_threshold_r": 0.3
+      },
+      "checks": [
+        {
+          "field": "tp1.price",
+          "ts_val": 5256,
+          "py_val": 5256,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.price",
+          "ts_val": 5262,
+          "py_val": 5262,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "runner_trail_method",
+          "ts_val": "developing_poc",
+          "py_val": "developing_poc",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.tp1_pct",
+          "ts_val": 0.5,
+          "py_val": 0.5,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.tp2_pct",
+          "ts_val": 0.3,
+          "py_val": 0.3,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.runner_pct",
+          "ts_val": 0.2,
+          "py_val": 0.2,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "pre_lunch_threshold_r",
+          "ts_val": "0.3",
+          "py_val": "0.3",
+          "passed": true,
+          "reason": "OK"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "fixture": "long+HIGH_VOL_MACRO",
+      "ts_plan": {
+        "tp1_price": 4506,
+        "tp2_price": 4512,
+        "runner_trail_method": "chandelier",
+        "scaling_tp1_pct": 0.6,
+        "scaling_tp2_pct": 0.3,
+        "scaling_runner_pct": 0.1,
+        "pre_lunch_threshold_r": 0.5
+      },
+      "py_plan": {
+        "tp1_price": 4506,
+        "tp2_price": 4512,
+        "runner_trail_method": "chandelier",
+        "scaling_tp1_pct": 0.6,
+        "scaling_tp2_pct": 0.3,
+        "scaling_runner_pct": 0.1,
+        "pre_lunch_threshold_r": 0.5
+      },
+      "checks": [
+        {
+          "field": "tp1.price",
+          "ts_val": 4506,
+          "py_val": 4506,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.price",
+          "ts_val": 4512,
+          "py_val": 4512,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "runner_trail_method",
+          "ts_val": "chandelier",
+          "py_val": "chandelier",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.tp1_pct",
+          "ts_val": 0.6,
+          "py_val": 0.6,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.tp2_pct",
+          "ts_val": 0.3,
+          "py_val": 0.3,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.runner_pct",
+          "ts_val": 0.1,
+          "py_val": 0.1,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "pre_lunch_threshold_r",
+          "ts_val": "0.5",
+          "py_val": "0.5",
+          "passed": true,
+          "reason": "OK"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "fixture": "long+COMPRESSION",
+      "ts_plan": {
+        "tp1_price": 4256,
+        "tp2_price": 4262,
+        "runner_trail_method": "structure_trail",
+        "scaling_tp1_pct": 0.5,
+        "scaling_tp2_pct": 0.3,
+        "scaling_runner_pct": 0.2,
+        "pre_lunch_threshold_r": 0.3
+      },
+      "py_plan": {
+        "tp1_price": 4256,
+        "tp2_price": 4262,
+        "runner_trail_method": "structure_trail",
+        "scaling_tp1_pct": 0.5,
+        "scaling_tp2_pct": 0.3,
+        "scaling_runner_pct": 0.2,
+        "pre_lunch_threshold_r": 0.3
+      },
+      "checks": [
+        {
+          "field": "tp1.price",
+          "ts_val": 4256,
+          "py_val": 4256,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "tp2.price",
+          "ts_val": 4262,
+          "py_val": 4262,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "runner_trail_method",
+          "ts_val": "structure_trail",
+          "py_val": "structure_trail",
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.tp1_pct",
+          "ts_val": 0.5,
+          "py_val": 0.5,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.tp2_pct",
+          "ts_val": 0.3,
+          "py_val": 0.3,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "scaling.runner_pct",
+          "ts_val": 0.2,
+          "py_val": 0.2,
+          "passed": true,
+          "reason": "OK"
+        },
+        {
+          "field": "pre_lunch_threshold_r",
+          "ts_val": "0.3",
+          "py_val": "0.3",
+          "passed": true,
+          "reason": "OK"
+        }
+      ],
+      "passed": true
+    }
+  ]
+}

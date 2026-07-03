@@ -45,7 +45,7 @@ import {
 import { isActive as isPipelineActive, setMode } from "../../services/pipeline-control-service.js";
 import { getBacktestConcurrencyStats } from "../../routes/backtests.js";
 import { insertAuditRowSafe } from "../../lib/audit-log-helper.js";
-import { createHmac } from "node:crypto";
+import { createHmac, randomUUID } from "node:crypto";
 import { issueConfirmation, verifyConfirmation } from "./carter-confirm.js";
 // Wave 7 — RESEARCH lane (NON-strategy). Leaf imports only; carter-research pulls
 // the logger leaf + the pure reddit-cross-extract helper (no heavy graph).
@@ -773,20 +773,30 @@ function tokenGate(
   return null;
 }
 
-/** Write the canonical voice-agent action-executed audit row. */
+/**
+ * Write the canonical voice-agent action-executed audit row.
+ *
+ * (deepscan7 obs-H2 2026-07-02) correlationId was hard-set null on every Carter
+ * action row, so lifecycle.promoted rows spawned by request_promotion /
+ * request_lifecycle_check were null-correlated and un-reconstructable. Every
+ * action row now carries a correlationId: handlers that fan out into lifecycle
+ * calls mint ONE crypto.randomUUID() and thread it through both the audit row
+ * and the lifecycle context; handlers that don't pass one get a fresh UUID here.
+ */
 async function auditActionExecuted(
   action: string,
   params: unknown,
   result: unknown,
   status: "success" | "failure" = "success",
   errorMessage?: string,
+  correlationId?: string | null,
 ): Promise<void> {
   await insertAuditRowSafe({
     action: "carter.action_executed",
     entityType: "voice_agent_action",
     status,
     decisionAuthority: "voice_agent",
-    correlationId: null,
+    correlationId: correlationId ?? randomUUID(),
     input: { action, params } as Record<string, unknown>,
     result: (result ?? {}) as Record<string, unknown>,
     ...(errorMessage ? { errorMessage } : {}),
@@ -1072,9 +1082,13 @@ async function confirmRequestLifecycleCheck(params: unknown, token?: string): Pr
 
   const { LifecycleService } = await import("../../services/lifecycle-service.js");
   const svc = new LifecycleService();
+  // (deepscan7 obs-H2 2026-07-02) one UUID per Carter action — threaded into the sweep
+  // context (mirrors the scheduler's tickCorrelationId threading) so every lifecycle.promoted
+  // row this sweep produces shares the correlationId of the carter.action_executed row.
+  const correlationId = randomUUID();
   const [promotions, demotions] = await Promise.all([
-    svc.checkAutoPromotions({}),
-    svc.checkAutoDemotions({}),
+    svc.checkAutoPromotions({ correlationId }),
+    svc.checkAutoDemotions({ correlationId }),
   ]);
 
   const result = {
@@ -1082,8 +1096,8 @@ async function confirmRequestLifecycleCheck(params: unknown, token?: string): Pr
     promotions: promotions.length,
     demotions: demotions.length,
   };
-  await auditActionExecuted("request_lifecycle_check", clean, result);
-  logger.info(result, "carter: request_lifecycle_check executed");
+  await auditActionExecuted("request_lifecycle_check", clean, result, "success", undefined, correlationId);
+  logger.info({ ...result, correlationId }, "carter: request_lifecycle_check executed");
   return result;
 }
 
@@ -1118,6 +1132,10 @@ async function confirmRequestPromotion(params: unknown, token?: string): Promise
 
   const { LifecycleService } = await import("../../services/lifecycle-service.js");
   const svc = new LifecycleService();
+  // (deepscan7 obs-H2 2026-07-02) one UUID per Carter action — threaded into promoteStrategy
+  // options so the lifecycle.promoted / gate-block audit rows share the correlationId of the
+  // carter.action_executed row (previously undefined → null-correlated promotion rows).
+  const correlationId = randomUUID();
   // GUARDRAIL: actor="system" (NOT human_release) — Carter is non-human authority,
   // so human-required promotions (DEPLOY_READY → DEPLOYED / PILOT) stay blocked inside
   // promoteStrategy. The voice-agent attribution lives on the audit row, not the gate actor.
@@ -1125,20 +1143,20 @@ async function confirmRequestPromotion(params: unknown, token?: string): Promise
     strategyId,
     fromState as Parameters<InstanceType<typeof LifecycleService>["promoteStrategy"]>[1],
     toState as Parameters<InstanceType<typeof LifecycleService>["promoteStrategy"]>[2],
-    { actor: "system" },
+    { actor: "system", correlationId },
   );
 
   // GUARDRAIL: a gate block is RETURNED, never forced or bypassed.
   if (!result.success) {
     const blocked = { blocked: true, reason: result.error ?? "promotion_blocked", strategyId, fromState, toState };
-    await auditActionExecuted("request_promotion", clean, blocked, "failure", result.error);
+    await auditActionExecuted("request_promotion", clean, blocked, "failure", result.error, correlationId);
     logger.warn(blocked, "carter: request_promotion blocked by gate (not forced)");
     return blocked;
   }
 
   const ok = { executed: true, strategyId, fromState, toState };
-  await auditActionExecuted("request_promotion", clean, ok);
-  logger.info(ok, "carter: request_promotion executed");
+  await auditActionExecuted("request_promotion", clean, ok, "success", undefined, correlationId);
+  logger.info({ ...ok, correlationId }, "carter: request_promotion executed");
   return ok;
 }
 

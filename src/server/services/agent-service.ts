@@ -21,6 +21,8 @@ import { validateRawLLMResponse, validateDSLOutput } from "./llm-output-validato
 import { sandboxCheckCode } from "./llm-sandbox-service.js";
 // C9: DSL diversity check (W17 Team B) — pre-backtest template similarity gate
 import { checkDslDiversity, persistDslFeatureVector, auditDslDiversityRejection } from "./dsl-diversity-service.js";
+// FIX 6 (2026-07-02): Discord WARN for dsl_critic fail-open invocation visibility
+import { notifyWarning } from "./notification-service.js";
 // Pass 4 — Scout substance validation (Tier-1 regex + Tier-2 LLM auditor + premium format)
 import {
   tier1RegexFilter,
@@ -134,6 +136,22 @@ export function __resetDslCriticBudgetForTests(): void {
   dslQualityCriticBudget.count = 0;
 }
 
+// FIX 6 (2026-07-02): Dedup-daily Discord WARN for dsl_critic fail-open visibility.
+// Only one Discord WARN fires per day regardless of how many fail-open events occur.
+// This prevents Discord spam when LLM is degraded. The audit_log row fires on EVERY
+// fail-open event for full queryability.
+const _criticFailOpenDiscordSent: { day: string } = { day: "" };
+function _shouldSendCriticFailOpenDiscord(): boolean {
+  const today = todayKey();
+  if (_criticFailOpenDiscordSent.day === today) return false;
+  _criticFailOpenDiscordSent.day = today;
+  return true;
+}
+/** Test helper — reset the dedup state between test runs. */
+export function __resetCriticFailOpenDiscordForTests(): void {
+  _criticFailOpenDiscordSent.day = "";
+}
+
 export interface DslQualityCriticResult {
   accept: boolean;
   score: number;
@@ -145,7 +163,7 @@ export interface DslQualityCriticResult {
 /**
  * P2E (Wave 9, 2026-05-17) — Ollama fallback path for dsl_quality_critic.
  * Called when cloud budget is exhausted AND OLLAMA_DSL_CRITIC_FALLBACK=true.
- * Uses qwen2.5-coder:7b (local, zero cost) with same JSON output contract.
+ * Uses gemma4:e4b-it-qat (local, zero cost) with same JSON output contract.
  * Returns DslQualityCriticResult or null on failure (caller then fails-CLOSED).
  */
 export async function runDslQualityCriticOllama(
@@ -155,7 +173,7 @@ export async function runDslQualityCriticOllama(
   try {
     const ollama = new OllamaClient("http://localhost:11434");
     const prompt = `You are a DSL quality critic for futures trading strategies. Given this strategy DSL and source context, evaluate quality and output JSON with: { score: 0-10, accept: boolean, concerns: [], reasoning: string }. Accept if score >= 7. Be strict — reject over-fit parameters, missing stops, or unrealistic risk.\n\nStrategy DSL:\n${JSON.stringify(payload.dsl, null, 2)}\n\nSource:\n${JSON.stringify(payload.sourceFind)}\n\nRespond with only valid JSON.`;
-    const res = await ollama.generate("qwen2.5-coder:7b", prompt, { temperature: 0.1 }, true);
+    const res = await ollama.generate("gemma4:e4b-it-qat", prompt, { temperature: 0.1 }, true);
     const raw = res.response;
     if (!raw) return null;
     let parsed: { score?: number; accept?: boolean; concerns?: unknown[]; reasoning?: string };
@@ -180,6 +198,33 @@ export async function runDslQualityCriticOllama(
   } catch (err) {
     logger.warn({ err, journalId }, "dsl_quality_critic_ollama: Ollama call failed");
     return null;
+  }
+}
+
+/**
+ * FIX 6 (2026-07-02): Emit dsl_critic.invocation_failed_fail_open audit row
+ * + a deduped-daily Discord WARN when a critic invocation fails open.
+ * Called from within runDslQualityCritic fail-open paths.
+ */
+async function _emitCriticFailOpenAudit(journalId: string, reason: string): Promise<void> {
+  // Always write audit row — every fail-open event is queryable
+  insertAuditRow({
+    action: "dsl_critic.invocation_failed_fail_open",
+    entityType: "system_journal",
+    entityId: journalId,
+    input: { journal_id: journalId } as Record<string, unknown>,
+    result: { reason, accept: true, source: "fail_open" } as Record<string, unknown>,
+    status: "warning",
+    decisionAuthority: "system",
+  }).catch((auditErr: unknown) => logger.warn({ err: auditErr }, "dsl_critic fail-open audit write failed"));
+
+  // Deduped-daily Discord WARN — fire once per day to avoid spam
+  if (_shouldSendCriticFailOpenDiscord()) {
+    notifyWarning(
+      "DSL Critic Fail-Open",
+      `DSL quality critic invocation failed (fail-open) — strategies passing WITHOUT critic review. Reason: ${reason}. Check audit_log action=dsl_critic.invocation_failed_fail_open for full event list.`,
+      { journal_id: journalId, reason },
+    );
   }
 }
 
@@ -257,11 +302,15 @@ export async function runDslQualityCritic(
     );
   } catch (err) {
     logger.warn({ err, journalId }, "dsl_quality_critic: LLM call threw, failing open");
+    // FIX 6: emit audit row + deduped-daily Discord WARN so fail-open is queryable
+    void _emitCriticFailOpenAudit(journalId, "llm_threw_fail_open");
     return { accept: true, score: 6, concerns: [], reasoning: "llm_threw_fail_open", source: "fail_open" };
   }
 
   if (!raw) {
     logger.warn({ journalId }, "dsl_quality_critic: LLM returned null, failing open");
+    // FIX 6: emit audit row + deduped-daily Discord WARN
+    void _emitCriticFailOpenAudit(journalId, "llm_null_fail_open");
     return { accept: true, score: 6, concerns: [], reasoning: "llm_null_fail_open", source: "fail_open" };
   }
 
@@ -270,6 +319,8 @@ export async function runDslQualityCritic(
     parsed = JSON.parse(raw);
   } catch {
     logger.warn({ journalId }, "dsl_quality_critic: non-JSON response, failing open");
+    // FIX 6: emit audit row + deduped-daily Discord WARN
+    void _emitCriticFailOpenAudit(journalId, "critic_parse_failed_fail_open");
     return {
       accept: true,
       score: 6,
@@ -410,11 +461,13 @@ export interface ScoutIdea {
 // ALLOWED without cross-validation tags:
 //   - source='clone'  → operator-initiated; inherits parent's cross-validated tag
 //   - source='b4_regen' → regen from declining strategy; inherits parent's provenance
+//   - source='evolved' → LLM-guided mutation child; passes auditGraduatedConfig
+//                        before INSERT (FIX 1, deepscan11 Track P, 2026-07-02)
 //
 // BLOCKED: any other source not in the cross-validated exemption list.
 export function assertCrossValidatedSource(source: string, tags: string[]): void {
-  const EXEMPT_SOURCES = new Set(["clone", "b4_regen"]);
-  if (EXEMPT_SOURCES.has(source)) return;  // operator-initiated clone/regen exempted
+  const EXEMPT_SOURCES = new Set(["clone", "b4_regen", "evolved"]);
+  if (EXEMPT_SOURCES.has(source)) return;  // operator-initiated clone/regen/evolved exempted
   if (source === "graduated_bucket") return; // canonical cross-validated path
   if (tags.includes("cross-validated")) return; // inherited cross-validated tag
   throw new Error(
@@ -1066,6 +1119,20 @@ export class AgentService {
       finalConfig = overlayed.config as Record<string, unknown>;
       if (overlayed.warnings.length > 0) {
         logger.warn({ warnings: overlayed.warnings, strategyName: dslName }, "framework-overlay flagged production-DSL issues");
+      }
+      // FIX 1 (2026-07-02): write overlay audit rows (e.g. graduation.exit_type_normalized)
+      if (overlayed.overlayAuditRows && overlayed.overlayAuditRows.length > 0) {
+        for (const auditEvent of overlayed.overlayAuditRows) {
+          insertAuditRow({
+            action: auditEvent.action,
+            entityType: "strategy",
+            entityId: null,
+            input: { dsl_name: dslName, source: strategySource } as Record<string, unknown>,
+            result: auditEvent.data as Record<string, unknown>,
+            status: auditEvent.status as "warning" | "success" | "failure" | "rejected" | "accepted",
+            decisionAuthority: "system",
+          }).catch((auditErr) => logger.warn({ err: auditErr }, `overlay audit write failed for ${auditEvent.action}`));
+        }
       }
     } catch (overlayErr) {
       logger.warn({ err: overlayErr, strategyName: dslName }, "framework-overlay failed — falling through to raw compiled config");
@@ -1941,7 +2008,7 @@ Rules:
 - Output ONLY the JSON object`;
 
         // Pass 4 — route through model-router strategy_proposer role.
-        // GPT-5-mini primary, Ollama qwen2.5-coder:7b deterministic fallback
+        // GPT-5-mini primary, Ollama gemma4:e4b-it-qat deterministic fallback
         // (configured in MODEL_CONFIGS.strategy_proposer.fallback). The new
         // strategy-proposer.md prompt allows refusal output:
         //   {reject: true, reason: "insufficient_signal", missing: [...]}
@@ -1954,7 +2021,7 @@ Rules:
 
         // Cloud unavailable / circuit open → fallback to Ollama deterministically.
         if (!proposerResponse) {
-          const ollamaResp = await this.ollama.generate("qwen2.5-coder:7b", prompt, undefined, true);
+          const ollamaResp = await this.ollama.generate("gemma4:e4b-it-qat", prompt, undefined, true);
           proposerResponse = ollamaResp.response;
         }
 

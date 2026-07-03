@@ -7,6 +7,7 @@ import { Pagination } from "@/components/forge/Pagination";
 import { Button } from "@/components/ui/button";
 import { useAgentJobs, useFindStrategies } from "@/hooks/useAgent";
 import { useScoutFunnel } from "@/hooks/useJournal";
+import { QueryErrorBanner } from "@/components/forge/QueryErrorBanner";
 import { num, timeAgo } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -62,7 +63,7 @@ export default function Agents() {
   const [typeFilter, setTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
-  const { data: jobsResponse, isLoading: jobsLoading } = useAgentJobs({
+  const { data: jobsResponse, isLoading: jobsLoading, isError: jobsError } = useAgentJobs({
     limit: PAGE_SIZE,
     offset: (page - 1) * PAGE_SIZE,
     type: typeFilter || undefined,
@@ -244,7 +245,9 @@ export default function Agents() {
       </div>
 
       {/* Agent Job Cards Grid */}
-      {isLoading ? (
+      {jobsError ? (
+        <QueryErrorBanner message="Agent jobs unavailable — backend unreachable" queryKey={["agent"]} />
+      ) : isLoading ? (
         <div className="flex items-center justify-center py-12 text-text-muted gap-2">
           <Loader2 className="w-4 h-4 animate-spin" />
           <span className="text-sm">Loading agent jobs...</span>

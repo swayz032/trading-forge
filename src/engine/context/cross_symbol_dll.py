@@ -89,10 +89,10 @@ def evaluate_cross_symbol_dll(
 
 def apply_cross_symbol_dll_to_bar(
     bar_idx: int,
-    entry_long: "np.ndarray",
-    entry_short: "np.ndarray",
-    exit_long: "np.ndarray",
-    exit_short: "np.ndarray",
+    entry_long: np.ndarray,
+    entry_short: np.ndarray,
+    exit_long: np.ndarray,
+    exit_short: np.ndarray,
     bar_dollar_pnl: float,
     state: CrossSymbolDllState,
     firm_dll: float,
@@ -150,6 +150,44 @@ def apply_cross_symbol_dll_to_bar(
         state.entries_suppressed += 1
 
     return state
+
+
+def build_cs_dll_disclosure(
+    symbols: list,
+    *,
+    sibling_pnls_real: bool = False,
+) -> dict:
+    """Build result['cross_symbol_dll'] disclosure block (deep-scan #8 wave 2 FIX 1).
+
+    The DLL guard is applied bar-by-bar via apply_cross_symbol_dll_to_entries().
+    This block documents whether the P&L data passed to that guard was real
+    (multi-symbol concatenated) or a zero proxy (single-symbol backtest only).
+
+    For all current backtester.py call paths: modeled=False because the
+    zero-P&L proxy means the 67%/95% thresholds are never crossed by the
+    cross-symbol guard.  The per-bar DLL halt (E.4) still enforces using
+    ATR-scaled intrabar estimates, but is not the cross-symbol guard path.
+
+    Args:
+        symbols:            List of symbols in this backtest run.
+        sibling_pnls_real:  True only when caller passed real concatenated
+            sibling P&L arrays.  Currently always False — no code path in
+            backtester.py assembles multi-symbol P&L before this guard runs.
+
+    Returns:
+        dict with keys: modeled (bool), reason (str), symbols (list)
+    """
+    if sibling_pnls_real and len(symbols) > 1:
+        return {
+            "modeled": True,
+            "reason": "multi_symbol_real",
+            "symbols": list(symbols),
+        }
+    return {
+        "modeled": False,
+        "reason": "single_symbol_no_sibling_pnl",
+        "symbols": list(symbols),
+    }
 
 
 def apply_cross_symbol_dll_to_entries(

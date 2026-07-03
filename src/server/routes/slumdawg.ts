@@ -377,9 +377,14 @@ slumdawgRoutes.post("/ingest-youtube", idempotencyMiddleware, async (req, res) =
     }
     // Proxy to existing operator-ingest endpoint (preserves all validation, day-trader filter, Gemma routing).
     const PORT = process.env.PORT ?? "4000";
+    // This is a tower self-call through the /api gate — send the shared API_KEY
+    // Bearer so it survives auth activation (deep-scan #13). Omitted when unset
+    // (dev: authMiddleware dev-bypass ignores it).
+    const _ingestHeaders: Record<string, string> = { "Content-Type": "application/json" };
+    if (process.env.API_KEY) _ingestHeaders["Authorization"] = `Bearer ${process.env.API_KEY}`;
     const ingest = await fetch(`http://127.0.0.1:${PORT}/api/admin/scout/operator-ingest`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: _ingestHeaders,
       body: JSON.stringify({ url }),
       signal: AbortSignal.timeout(180_000),
     });

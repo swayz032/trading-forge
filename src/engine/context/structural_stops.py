@@ -104,6 +104,46 @@ for _base, _alias in [("MES", "ES"), ("MNQ", "NQ"), ("MCL", "CL")]:
         _EFFECTIVE_BUFFER_TICKS[_alias] = _EFFECTIVE_BUFFER_TICKS[_base]
 
 
+# ─── Per-symbol stop ceiling config (Wave 1 2026-06-27; deep-scan #8 2026-07-02) ─
+# When structural distance > ceiling → SKIP TRADE, never clamp. Per CLAUDE.md §4.
+# MES=14pt / MNQ=62pt / MCL=1.00pt (100 ticks at $0.01/tick)
+# Env overrides: STOP_CEILING_PTS_MES, STOP_CEILING_PTS_MNQ, STOP_CEILING_PTS_MCL
+# Overrides are read AT CALL TIME (not frozen at import) for test isolation.
+INSTRUMENT_STOP_CONFIG: dict[str, float] = {
+    "MES": 14.0,
+    "ES":  14.0,
+    "MNQ": 62.0,
+    "NQ":  62.0,
+    "MCL": 1.00,
+    "CL":  1.00,
+}
+
+# Sentinel: stop_reason prefix when skip_trade=True (deep-scan #8 2026-07-02)
+SKIP_TRADE: str = "structural_stop_exceeds_ceiling"
+
+
+def _get_effective_ceiling(symbol: str, max_stop_points: float) -> float:
+    """Return effective stop ceiling for this call.
+
+    Priority: explicit max_stop_points arg → env var → INSTRUMENT_STOP_CONFIG.
+    Env var overrides are read at call time (not frozen at import) so tests can
+    isolate ceiling values by patching os.environ without module reload.
+    """
+    if max_stop_points > 0:
+        return max_stop_points
+    sym = symbol.upper()
+    env_key = f"STOP_CEILING_PTS_{sym}"
+    raw = os.environ.get(env_key)
+    if raw is not None:
+        try:
+            val = float(raw)
+            if val > 0:
+                return val
+        except (ValueError, TypeError):
+            pass
+    return INSTRUMENT_STOP_CONFIG.get(sym, 14.0)  # MES default for unknown symbols
+
+
 def get_sweep_buffer_ticks(symbol: str) -> Optional[int]:
     """Return the sweep-aware buffer in ticks for the symbol, or None if unknown."""
     return _EFFECTIVE_BUFFER_TICKS.get(symbol.upper())
@@ -147,6 +187,8 @@ class StopPlan:
     # W24-P2 Item 20 additions
     buffer_ticks: int         # ticks used for buffer (0 = legacy fallback)
     sweep_aware_buffer: bool  # True when sweep-aware path was used
+    # deep-scan #8 2026-07-02: skip-not-clamp per CLAUDE.md §4
+    skip_trade: bool = False  # True when structural distance > per-symbol ceiling
 
 
 def compute_structural_stop(
@@ -166,7 +208,7 @@ def compute_structural_stop(
     sweep_wick_low: Optional[float] = None,    # Wick of a recent sweep candle
     sweep_wick_high: Optional[float] = None,
     session_transition: bool = False,
-    max_stop_points: float = 6.0,
+    max_stop_points: float = 0.0,  # 0 = resolve per-symbol from INSTRUMENT_STOP_CONFIG
 ) -> StopPlan:
     """Compute structural stop placement with sweep-aware buffer (W24-P2 Item 20).
 
@@ -228,14 +270,15 @@ def compute_structural_stop(
             stop_price = entry_price + (atr * 1.5 * session_adj)
             stop_reason = "atr_fallback"
 
-    # Enforce max risk cap (default 6 points on MES)
+    # deep-scan #8 2026-07-02: skip-not-clamp per CLAUDE.md §4.
+    # Structural distance > ceiling = trade has too much structural risk.
+    # SKIP the trade; never fabricate a tighter stop at an arbitrary price.
+    effective_ceiling = _get_effective_ceiling(symbol, max_stop_points)
     distance = abs(entry_price - stop_price)
-    if max_stop_points > 0 and distance > max_stop_points:
-        if direction == "long":
-            stop_price = entry_price - max_stop_points
-        else:
-            stop_price = entry_price + max_stop_points
-        stop_reason = f"{stop_reason}_capped_{max_stop_points:.0f}pt"
+    skip_trade_flag = False
+    if effective_ceiling > 0 and distance > effective_ceiling:
+        skip_trade_flag = True
+        stop_reason = f"{stop_reason}_exceeds_ceiling_{effective_ceiling:.2f}pt"
 
     risk_per_contract = abs(entry_price - stop_price) * point_value
 
@@ -247,4 +290,5 @@ def compute_structural_stop(
         session_adjustment=session_adj,
         buffer_ticks=buffer_ticks,
         sweep_aware_buffer=sweep_aware,
+        skip_trade=skip_trade_flag,
     )

@@ -6,7 +6,9 @@ polars>=1.0.0             # Primary data layer — 5-10x faster than Pandas for 
 pyarrow>=15.0.0           # Parquet support
 duckdb>=1.0.0             # Query Parquet on S3 directly with SQL, zero-copy
 scipy>=1.12.0             # Statistical functions, EVT, QMC, BCa intervals
-vectorbt>=0.26.0          # Backtesting framework (Pandas boundary only)
+vectorbt>=1.0.0,<2.0      # Backtesting framework (Pandas boundary only). v1.0.0 parity-proven
+                          # vs 0.28.5 (byte-identical trades table, 2026-07-02 probe) and live in
+                          # prod since 2026-05-18. <2.0 cap: next major must re-run the parity probe.
 pydantic>=2.6.0           # Config validation
 click>=8.1.0              # CLI
 optuna>=3.6.0             # Bayesian param search for robustness testing (TPE sampler)

@@ -474,3 +474,88 @@ def _mine_streak(
                 "impact_if_filtered": _pnl_impact(group),
             })
     return results
+
+
+if __name__ == "__main__":
+    # deepscan14 D1: CLI entrypoint. Before this existed, `scheduler.ts` invoked
+    # `python -m src.engine.anti_setups.miner --config <tmpfile>` (scheduler.ts,
+    # "anti-setup-mine" weekly cron) against a module with NO `__main__` block —
+    # the process ran and exited 0 with ZERO stdout, `parsePythonJson("")` threw,
+    # the exception was swallowed as a non-blocking `logger.warn`, and the
+    # `db.insert(auditLog, action:"anti_setup.mined")` write was never reached.
+    # `checkAntiSetupGate` (anti-setup-gate-service.ts) reads that audit_log row —
+    # with no row ever written, the gate returned blocked:false forever, silently
+    # indistinguishable from "mined, found nothing to block."
+    #
+    # Mirrors the --config file-path CLI convention used by
+    # src/engine/decay/quarantine.py and src/engine/decay/half_life.py.
+    #
+    # Config shape: the scheduler currently writes only
+    # `{"strategy_id": "<uuid>", "_metadata": {"correlationId": "..."}}` —
+    # it does NOT supply `trades`/`bars` (mine_anti_setups needs real trade/bar
+    # history, which would require this CLI to pull from Postgres/S3 itself;
+    # miner.py is a pure library with no DB connector today). Rather than
+    # fabricate a result or silently emit an empty "mined, clean" envelope
+    # (the exact false-green this fix exists to close), we emit an explicit
+    # gate_status="inactive" envelope whenever trades/bars are absent from the
+    # config, so audit_log carries an honest, queryable "nothing was mined"
+    # signal instead of a false-clean one. When a future caller DOES supply
+    # `trades` (+ optional `bars`), this CLI runs the real miner.
+    import argparse
+    import json
+    import sys
+
+    _parser = argparse.ArgumentParser(description="Anti-setup miner CLI")
+    _parser.add_argument("--config", required=True, help="Path to JSON config file")
+    _args = _parser.parse_args()
+
+    try:
+        with open(_args.config) as _f:
+            _cfg = json.load(_f)
+    except Exception as _e:
+        print(json.dumps({"error": f"Failed to read config: {_e}"}))
+        sys.exit(1)
+
+    _trades = _cfg.get("trades")
+    _bars = _cfg.get("bars")
+
+    if not isinstance(_trades, list) or len(_trades) == 0:
+        # No trade history in the config — cannot mine anything. This is the
+        # documented data-plumbing gap (deepscan14 D1 follow-up): the scheduler
+        # only passes strategy_id today; a DB/S3 loader needs to be wired
+        # (either here in Python, or by having the scheduler fetch trades/bars
+        # in TS and pass them through --config) before real mining can run.
+        print(json.dumps({
+            "anti_setups": [],
+            "gate_status": "inactive",
+            "reason": (
+                "no trades/bars supplied in config (only strategy_id was provided); "
+                "mine_anti_setups() requires real trade history and this CLI has no "
+                "DB/S3 loader wired yet — see deepscan14 D1 follow-up"
+            ),
+            "strategy_id": _cfg.get("strategy_id"),
+        }))
+        sys.exit(0)
+
+    try:
+        _result = mine_anti_setups(
+            _trades,
+            _bars if isinstance(_bars, list) else [],
+            min_sample_size=int(_cfg.get("min_sample_size", 20)),
+            min_failure_rate=float(_cfg.get("min_failure_rate", 0.65)),
+        )
+        print(json.dumps({
+            "anti_setups": _result,
+            "gate_status": "active",
+            "strategy_id": _cfg.get("strategy_id"),
+        }))
+    except Exception as _e:
+        # Fail-loud, non-empty stdout — never let a mining exception collapse
+        # back to the empty-stdout false-green this fix exists to close.
+        print(json.dumps({
+            "anti_setups": [],
+            "gate_status": "error",
+            "reason": f"mine_anti_setups failed: {_e}",
+            "strategy_id": _cfg.get("strategy_id"),
+        }))
+        sys.exit(1)

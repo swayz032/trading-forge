@@ -28,6 +28,7 @@ import { getCookieStatus } from "../services/prop-firm-cookie-refresh-service.js
 import { getDiscordWebhookHealth } from "../services/discord-fanout-audit-service.js";
 import type { DiscordWebhookHealth } from "../services/discord-fanout-audit-service.js";
 import { toFuturesTradingDayString } from "../services/paper-risk-gate.js";
+import { TOPSTEP_TRAILING_DD_BY_SIZE } from "../../shared/firm-config.js";
 
 export const productionStatusRoutes = Router();
 
@@ -47,6 +48,13 @@ export interface DrawdownStatus {
   firmLimit: number | null;
   usedPct: number | null;
   severity: OverallSeverity;
+  /** deep-scan #12 F-2: which DLL model produced firmLimit.
+   *  "trailing_dd_hwm" = Topstep EOD trailing-DD anchored on realizedPeakEquity.
+   *  "daily_dll_pct"   = MFFU fixed % daily loss limit.
+   *  "estimate_5pct"   = unknown firm — conservative 5% estimate.
+   *  null              = no active session / error state.
+   */
+  dllModel: "trailing_dd_hwm" | "daily_dll_pct" | "estimate_5pct" | null;
 }
 
 interface ReconStatus {
@@ -167,12 +175,14 @@ async function buildPnlToday(): Promise<PnLStatus> {
 }
 
 // Track A F-4: Wire drawdownDistance to actual session DLL state.
-// Per-firm DLL defaults (% of starting capital): Topstep trailing-DD uses
-// the equity HWM; MFFU uses a fixed 2% daily. We use a conservative 5%
-// firm DLL estimate when firmId is unknown (tightest safe default).
+// deep-scan #12 F-2: Topstep uses EOD trailing drawdown (not a fixed % of capital).
+// It is handled separately in buildDrawdownDistance() via TOPSTEP_TRAILING_DD_BY_SIZE
+// and realizedPeakEquity — tagged dllModel:"trailing_dd_hwm".
+// MFFU uses a fixed 2% daily loss limit — tagged dllModel:"daily_dll_pct".
+// Unknown firms fall back to the conservative 5% estimate — tagged dllModel:"estimate_5pct".
 const FIRM_DLL_PCT: Record<string, number> = {
-  mffu: 0.02,       // MFFU 2% daily loss limit
-  topstep: 0.05,    // Topstep trailing-DD buffer (conservative daily estimate)
+  mffu: 0.02,       // MFFU 2% daily loss limit (dailyLossLimit = $1K on 50K account)
+  // topstep intentionally absent — uses trailing_dd_hwm model, not a fixed %
 };
 const DEFAULT_DLL_PCT = 0.05; // Unknown firm — use tightest default
 
@@ -184,6 +194,10 @@ export async function buildDrawdownDistance(): Promise<DrawdownStatus> {
         firmId: paperSessions.firmId,
         startingCapital: paperSessions.startingCapital,
         currentEquity: paperSessions.currentEquity,
+        // deep-scan #12 F-2: realizedPeakEquity is the authoritative trailing-DD HWM
+        // (closed-equity only). Required to mirror the Topstep gate formula in
+        // paper-risk-gate.ts §session drawdown limit. peakEquity (MTM) over-tightens.
+        realizedPeakEquity: paperSessions.realizedPeakEquity,
         dailyPnlBreakdown: paperSessions.dailyPnlBreakdown,
       })
       .from(paperSessions)
@@ -197,29 +211,61 @@ export async function buildDrawdownDistance(): Promise<DrawdownStatus> {
         firmLimit: null,
         usedPct: null,
         severity: "yellow",
+        dllModel: null,
       };
     }
 
-    // Compute worst-case DLL usage across all active sessions
-    const todayUtcKey = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+    // deep-scan #12 F-1: use CME futures trading-day key, not UTC calendar date.
+    // dailyPnlBreakdown is written with keys from toFuturesTradingDayString (17:00 ET
+    // roll). During 19:00–23:59 ET the UTC date advances to D+1 while the breakdown
+    // still holds D — using toISOString().slice(0,10) here returned 0 for that window.
+    // Mirrors buildPnlToday() which already used this same pattern. (deep-scan #12 F-1)
+    const todayCmeKey = toFuturesTradingDayString(new Date());
+
     let worstUsedPct = 0;
     let worstFirmLimit: number | null = null;
     let worstBufferRemaining: number | null = null;
+    let worstDllModel: DrawdownStatus["dllModel"] = null;
 
     for (const session of activeSessions) {
+      const firmId = session.firmId ?? "";
       const startingCapital = Number(session.startingCapital ?? 50000);
-      const dllPct = FIRM_DLL_PCT[session.firmId ?? ""] ?? DEFAULT_DLL_PCT;
-      const firmLimit = startingCapital * dllPct;
+      let firmLimit: number;
+      let sessionLoss: number;
+      let sessionDllModel: DrawdownStatus["dllModel"];
 
-      // Extract today's P&L from the JSON breakdown map
-      const breakdown = (session.dailyPnlBreakdown ?? {}) as Record<string, number>;
-      const dayPnl = breakdown[todayUtcKey] ?? 0;
-      const usedPct = Math.abs(dayPnl) / firmLimit;
+      if (firmId === "topstep") {
+        // deep-scan #12 F-2: Topstep uses EOD trailing drawdown anchored on
+        // realizedPeakEquity (closed-equity HWM), not a fixed % of starting capital.
+        // Formula mirrors paper-risk-gate.ts §session drawdown limit exactly:
+        //   sessionLoss = realizedPeakEquity - currentEquity
+        //   firmLimit   = TOPSTEP_TRAILING_DD_BY_SIZE[accountSize] ?? 2000
+        // Fall back to startingCapital for sessions that predate migration 0075.
+        const rawRealizedPeak = Number(session.realizedPeakEquity ?? 0);
+        const peakEquity = rawRealizedPeak > 0 ? rawRealizedPeak : startingCapital;
+        const currentEquity = Number(session.currentEquity ?? startingCapital);
+        firmLimit = TOPSTEP_TRAILING_DD_BY_SIZE[startingCapital] ?? 2000;
+        sessionLoss = Math.max(0, peakEquity - currentEquity);
+        sessionDllModel = "trailing_dd_hwm";
+      } else {
+        // MFFU: fixed 2% daily loss limit measured against today's P&L breakdown.
+        // Unknown firms: conservative 5% estimate, same daily-breakdown approach.
+        const dllPct = FIRM_DLL_PCT[firmId] ?? DEFAULT_DLL_PCT;
+        firmLimit = startingCapital * dllPct;
+        const breakdown = (session.dailyPnlBreakdown ?? {}) as Record<string, number>;
+        const dayPnl = breakdown[todayCmeKey] ?? 0;
+        // DLL tracks loss (negative P&L). dayPnl > 0 means no loss against the limit.
+        sessionLoss = Math.max(0, -dayPnl);
+        sessionDllModel = firmId === "mffu" ? "daily_dll_pct" : "estimate_5pct";
+      }
+
+      const usedPct = sessionLoss / firmLimit;
 
       if (usedPct > worstUsedPct) {
         worstUsedPct = usedPct;
         worstFirmLimit = firmLimit;
-        worstBufferRemaining = firmLimit - Math.abs(dayPnl);
+        worstBufferRemaining = firmLimit - sessionLoss;
+        worstDllModel = sessionDllModel;
       }
     }
 
@@ -232,10 +278,11 @@ export async function buildDrawdownDistance(): Promise<DrawdownStatus> {
       firmLimit: worstFirmLimit !== null ? Math.round(worstFirmLimit * 100) / 100 : null,
       usedPct: Math.round(worstUsedPct * 1000) / 1000,
       severity,
+      dllModel: worstDllModel,
     };
   } catch (err) {
     logger.warn({ err }, "production-status: drawdown distance query failed");
-    return { bufferRemaining: null, firmLimit: null, usedPct: null, severity: "yellow" };
+    return { bufferRemaining: null, firmLimit: null, usedPct: null, severity: "yellow", dllModel: null };
   }
 }
 
@@ -394,7 +441,10 @@ export async function buildProductionStatus(): Promise<ProductionStatusResponse>
 // ─── Route: GET /api/production/status ───────────────────────────────────────
 
 productionStatusRoutes.get(
-  "/",
+  // deep-scan #13: both frontends (ProductionStatusPanel.tsx + office-risk.js)
+  // poll /api/production/status, but the router mounts at /api/production, so
+  // "/status" was a 404 and the operator's 6-question panel silently aged out.
+  ["/", "/status"],
   async (_req: Request, res: Response): Promise<void> => {
     const requestStart = Date.now();
 
@@ -433,7 +483,7 @@ productionStatusRoutes.get(
             severity: "red",
           },
           pnlToday: { todayPnl: null, expectedPnl: null, delta: null, severity: "red" },
-          drawdownDistance: { bufferRemaining: null, firmLimit: null, usedPct: null, severity: "red" },
+          drawdownDistance: { bufferRemaining: null, firmLimit: null, usedPct: null, severity: "red", dllModel: null },
           lastCleanReconciliation: { lastCleanDate: null, ageHours: null, severity: "red" },
           killSwitchLayers: {
             overall_halted: true,

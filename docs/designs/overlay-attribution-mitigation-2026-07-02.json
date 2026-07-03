@@ -1,0 +1,93 @@
+{
+ "strategy": "src.engine.strategies.mitigation.MitigationStrategy",
+ "window": "2023-01-01..2025-12-01",
+ "aplus_definition_pts": 14.0,
+ "mode_a": {
+  "trades": 1045,
+  "sharpe": -3.9804,
+  "max_dd": 257747.439101
+ },
+ "mode_b": {
+  "trades": 347,
+  "sharpe": -2.3358,
+  "max_dd": 92891.049585
+ },
+ "aplus_retention": {
+  "aplus_in_source": 304,
+  "aplus_kept_by_overlay": 101,
+  "aplus_retention_pct": 33.2,
+  "aplus_REMOVED_by_overlay": 203
+ },
+ "removed_set": {
+  "removed_trades": 707,
+  "missed_winners": 207,
+  "missed_losers": 500,
+  "removed_avg_pnl_pts": -49.7,
+  "removed_total_pnl_pts": -35139.88,
+  "kept_avg_pnl_pts": -47.09
+ },
+ "per_layer": [
+  {
+   "layer_reason": "NO_TRADE playbook active",
+   "rejected_signals": 908,
+   "counterfactual_trades_joined": 704,
+   "avg_pnl_if_taken_pts": -49.64,
+   "missed_winners": 207,
+   "missed_losers": 497,
+   "missed_aplus": 203
+  },
+  {
+   "layer_reason": "Strategy 'mitigation' not in playbook 'MEAN_REVERSION_LONG' ",
+   "rejected_signals": 5,
+   "counterfactual_trades_joined": 3,
+   "avg_pnl_if_taken_pts": 38.62,
+   "missed_winners": 1,
+   "missed_losers": 2,
+   "missed_aplus": 1
+  },
+  {
+   "layer_reason": "Strategy 'mitigation' not in playbook 'ORB_LONG' (allowed: [",
+   "rejected_signals": 3,
+   "counterfactual_trades_joined": 2,
+   "avg_pnl_if_taken_pts": -46.78,
+   "missed_winners": 0,
+   "missed_losers": 2,
+   "missed_aplus": 0
+  },
+  {
+   "layer_reason": "Strategy 'mitigation' not in playbook 'ORB_SHORT' (allowed: ",
+   "rejected_signals": 1,
+   "counterfactual_trades_joined": 0,
+   "avg_pnl_if_taken_pts": null,
+   "missed_winners": 0,
+   "missed_losers": 0,
+   "missed_aplus": 0
+  }
+ ],
+ "daily_bands": [
+  {
+   "mode": "Mode A (source only)",
+   "days": 909,
+   "pct_days_in_14_24_band": 1.0,
+   "pct_days_above_24": 26.6,
+   "pct_flat_or_no_trade": 16.8,
+   "pct_losing_days": 54.1,
+   "avg_losing_day_pts": -201.66,
+   "worst_day_pts": -1485.05,
+   "max_consecutive_losing_days": 12,
+   "avg_day_pts": -56.17
+  },
+  {
+   "mode": "Mode B (+overlay)",
+   "days": 909,
+   "pct_days_in_14_24_band": 0.4,
+   "pct_days_above_24": 9.1,
+   "pct_flat_or_no_trade": 70.2,
+   "pct_losing_days": 20.0,
+   "avg_losing_day_pts": -196.3,
+   "worst_day_pts": -1028.52,
+   "max_consecutive_losing_days": 8,
+   "avg_day_pts": -19.85
+  }
+ ]
+}

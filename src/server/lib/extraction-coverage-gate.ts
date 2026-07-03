@@ -34,7 +34,7 @@ import { chunkTranscript } from "./transcript-chunker.js";
 
 /** Max speaker_items after UNION across windows. windows × ~8 → 24 covers a dense 37K transcript. */
 const COVERAGE_ENUM_MAX_ITEMS = Number(process.env.COVERAGE_ENUM_MAX_ITEMS) || 24;
-/** Per-window enumeration size. ~12K chars ≈ 3K tokens — fits gemma4:e2b 8GB headroom. */
+/** Per-window enumeration size. ~12K chars ≈ 3K tokens — fits gemma4:e4b-it-qat 8GB headroom. */
 const COVERAGE_ENUM_WINDOW_CHARS = Number(process.env.COVERAGE_ENUM_WINDOW_CHARS) || 12_000;
 /** Cross-window overlap so a mechanic taught across a boundary isn't split. */
 const COVERAGE_ENUM_OVERLAP_CHARS = Number(process.env.COVERAGE_ENUM_OVERLAP_CHARS) || 2_000;
@@ -114,7 +114,10 @@ export interface CoverageVerdict {
 
 // ─── Shared normalization ─────────────────────────────────────────────────────
 
-function normalize(s: string): string {
+// Track O (deepscan11, 2026-07-02) — exported so extraction-grounding.ts can
+// reuse the same normalization for numeric param grounding checks without
+// duplicating the digit-boundary split logic.
+export function normalize(s: string): string {
   return s
     .toLowerCase()
     .replace(/[-_]/g, " ")
@@ -134,8 +137,9 @@ function emphasisRank(e: SpeakerItem["emphasis_level"]): number {
  *  FIX 1 (5-URL audit 2026-06-22): NUMBERS are load-bearing mechanic tokens for Fib/zone
  *  strategies (25/50/75 levels, % ratios). Keep any token containing a digit (len>=2),
  *  plus normal words len>=4. Without this, "25 50 75 levels" was falsely SHALLOW even
- *  though the extraction captured "Fibonacci retracements (25%, 50%, 75%)". */
-function contentTokens(s: string): string[] {
+ *  though the extraction captured "Fibonacci retracements (25%, 50%, 75%)".
+ *  Track O (deepscan11, 2026-07-02) — exported for extraction-grounding.ts reuse. */
+export function contentTokens(s: string): string[] {
   const seen = new Set<string>();
   for (const w of normalize(s).split(" ")) {
     const isNumeric = /\d/.test(w);
@@ -269,7 +273,7 @@ function parseSpeakerItems(raw: string | null, fullTranscript: string): SpeakerI
 /**
  * Enumerate all speaker-named tools/indicators across the FULL transcript via sliding
  * windows, UNIONed by normalized name (highest emphasis wins), capped at
- * COVERAGE_ENUM_MAX_ITEMS. Routes via callScoutExtractLlm (local-first gemma4:e2b).
+ * COVERAGE_ENUM_MAX_ITEMS. Routes via callScoutExtractLlm (local-first gemma4:e4b-it-qat).
  *
  * Sequential per window (single GPU, no parallel Ollama). Per-window failures are
  * tolerated (that window contributes nothing). @throws never — returns [] on total failure.

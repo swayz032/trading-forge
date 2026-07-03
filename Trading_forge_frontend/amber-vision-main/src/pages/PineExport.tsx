@@ -40,7 +40,7 @@ export default function PineExport() {
       setLoading(true);
       setFetchError(null);
       try {
-        const resp = await fetch("/api/account-strategy-assignments");
+        const resp = await fetch("/api/strategy-assignments");
         if (!resp.ok) {
           const body = await resp.json().catch(() => ({})) as { error?: string };
           setFetchError(body.error ?? `HTTP ${resp.status}`);

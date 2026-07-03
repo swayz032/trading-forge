@@ -281,12 +281,15 @@ export default function Settings() {
                     n8n
                   </span>
                   <span className="text-[11px] text-text-muted">
-                    Workflow orchestration
+                    Workflow orchestration (n8n-production-84ff.up.railway.app)
                   </span>
                 </div>
               </div>
-              <StatusBadge variant="info" dot>
-                Local Docker
+              {/* deep-scan #13: was a hardcoded always-green "Local Docker" dot —
+                  wrong host (n8n runs on Railway) and never reflected real health.
+                  No dot = no fabricated liveness claim; this card doesn't poll n8n. */}
+              <StatusBadge variant="neutral">
+                Railway — not monitored here
               </StatusBadge>
             </div>
           </div>
@@ -303,7 +306,7 @@ export default function Settings() {
                     Ollama
                   </span>
                   <span className="text-[11px] text-text-muted">
-                    Local LLM — Qwen2.5-Coder:14b
+                    Local LLM — gemma4:e4b-it-qat
                   </span>
                 </div>
               </div>

@@ -368,7 +368,7 @@ export async function ollamaSynthesize(
   fetchImpl: typeof fetch = fetch,
 ): Promise<string | null> {
   if (sources.length === 0) return null;
-  const model = process.env.CARTER_RESEARCH_MODEL ?? "deepseek-r1:14b";
+  const model = process.env.CARTER_RESEARCH_MODEL ?? "gemma4:e4b-it-qat";
   const numbered = sources
     .map((s, i) => `[${i + 1}] ${s.title}\nURL: ${s.url}\n${(s.snippet ?? "").slice(0, 500)}`)
     .join("\n\n");

@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e:office": "playwright test --config playwright.office.config.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

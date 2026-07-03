@@ -66,6 +66,18 @@ export function fmtPoints(pts: number): string {
  *  (matches the $50K eval baseline referenced across BacktestDetail). */
 export const DEFAULT_STARTING_CAPITAL = 50_000;
 
+/**
+ * backtests.totalReturn is a vectorbt RATIO (backtest-service.ts:857).
+ * Deep-scan #13: rendering it as dollars via magnitude-sniffing fabricated
+ * P&L. Always render as a percentage; dollar views must label the assumed
+ * capital explicitly.
+ */
+export function formatReturnPct(ratio: number): string {
+  const pct = ratio * 100;
+  const sign = pct > 0 ? "+" : "";
+  return `${sign}${pct.toFixed(1)}%`;
+}
+
 /** Format a backtest period as "Mon D, YYYY – Mon D, YYYY". Falls back to the
  *  raw string when a date can't be parsed. */
 export function fmtDateRange(start: string, end: string): string {

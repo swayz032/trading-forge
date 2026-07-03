@@ -281,6 +281,12 @@ def _run_walk_forward_cpcv(
     # Multi-model WRC/SPA: each path's daily P&L series tracked separately so
     # whites_reality_check_multi / hansens_spa_multi can build the (L, T) matrix.
     per_path_oos_pnls: list[list[float]] = []
+    # E1 (deep-scan #7 2026-07-02): track true per-path IS Sharpes for BIF + PBO.
+    # Each entry corresponds to the same index in path_sharpes (OOS).
+    # Populated by running a lightweight IS backtest per CPCV path.
+    # When an IS backtest fails, the entry is skipped (path count stays aligned
+    # by only appending when BOTH IS and OOS succeed for the same path index).
+    per_path_is_sharpes: list[float] = []
 
     _shared_req = BacktestRequest(
         strategy=config,
@@ -396,6 +402,21 @@ def _run_walk_forward_cpcv(
         all_oos_pnls.extend(_path_daily_pnls)
         # Track per-path series for multi-model WRC/SPA (White 2000 / Hansen 2005)
         per_path_oos_pnls.append(_path_daily_pnls)
+
+        # E1: lightweight IS backtest to capture true per-path IS Sharpe.
+        # Runs on IS data (warmup_data=None — no preceding warmup for pure IS eval).
+        # Appended only when the IS backtest succeeds so per_path_is_sharpes stays
+        # aligned: if length < len(path_sharpes) after the loop, the IS basis is
+        # partially available and we fall back to the OOS proxy for BIF/PBO.
+        try:
+            _is_bt_result = run_backtest(_shared_req, data=is_data)
+            per_path_is_sharpes.append(float(_is_bt_result.get("sharpe_ratio", 0.0)))
+        except Exception as _is_bt_exc:
+            print(
+                f"  CPCV: IS backtest for path {n_paths} failed ({_is_bt_exc!r}). "
+                f"Per-path IS Sharpe unavailable for this path.",
+                file=sys.stderr,
+            )
         all_oos_pnl_records.extend(path_result.get("daily_pnl_records", []))
         # equity_bars is raw float[] equity per bar; equity_curve is list[dict] (daily agg).
         # Use equity_bars for drawdown math to avoid dict → float cast error.
@@ -513,6 +534,23 @@ def _run_walk_forward_cpcv(
 
     elapsed_ms = int((time.time() - start_time) * 1000)
 
+    # FIX 4 (deep-scan #9): embargo calibration — emit embargo_basis for observability.
+    # López de Prado AFML Ch.7: embargo should be >= avg_trade_duration to prevent
+    # labels from crossing IS/OOS boundaries. embargo_bars=20 is an uncalibrated default.
+    # When trades carry a duration_bars key, compute the calibrated recommendation.
+    # This is ADDITIVE metadata only: the actual embargo used for this run is unchanged
+    # (cannot retroactively adjust; the calibrated value guides future run parameters).
+    _embargo_basis_cpcv: str = "default_20_uncalibrated"
+    _trade_durations_cpcv = [
+        int(t["duration_bars"])
+        for t in all_oos_trades
+        if isinstance(t.get("duration_bars"), (int, float)) and t["duration_bars"] > 0
+    ]
+    if _trade_durations_cpcv:
+        _avg_dur_cpcv = sum(_trade_durations_cpcv) / len(_trade_durations_cpcv)
+        _calibrated_cpcv = max(embargo_bars, int(_avg_dur_cpcv + 0.5))
+        _embargo_basis_cpcv = f"calibrated_{_calibrated_cpcv}"
+
     # ── Wave 3 Track 3A: BIF computation (CPCV mode) ─────────────────────────
     # K_eff = n_paths (C(6,2)=15 combinatorial paths per default CPCV config).
     # IS Sharpe proxy = mean(path_OOS_sharpes) — uses the same OOS series as
@@ -526,33 +564,58 @@ def _run_walk_forward_cpcv(
         from src.engine.statistics.backtest_inflation_factor import (
             compute_bif as _cpcv_compute_bif,
         )
-        # B4 fix: use mean of path OOS Sharpes as the IS-Sharpe proxy, not max.
-        # max(path_sharpes) overstates IS performance because it cherry-picks the
-        # best CPCV path — this deflates BIF (IS/OOS gap appears small) when the
-        # true per-path IS Sharpe is unknown (pooled across folds).
-        # WAVE 30 carry-forward: derive true per-path IS Sharpe from IS fold data.
-        _cpcv_bif_is_sharpe = float(np.mean(path_sharpes)) if path_sharpes else 0.0
+        # E1 (deep-scan #7 2026-07-02): use true per-path IS Sharpes when available.
+        # When all 15 IS backtests succeeded, per_path_is_sharpes has one entry per
+        # OOS path; use mean(per_path_is_sharpes) as the genuine IS basis so BIF
+        # reflects real IS/OOS divergence instead of always returning ≈1.0.
+        # When IS backtests partially or fully failed, fall back to the OOS-proxy
+        # (oos_mean_not_is) with bif_reliable=False as before.
+        _has_full_is = (
+            len(per_path_is_sharpes) > 0
+            and len(per_path_is_sharpes) == len(path_sharpes)
+        )
+        if _has_full_is:
+            _cpcv_bif_is_sharpe = float(np.mean(per_path_is_sharpes))
+            _cpcv_bif_reliable = True
+            _cpcv_bif_proxy_basis = "cpcv_per_path_is"
+        else:
+            # Partial IS coverage or none: fall back to OOS-mean proxy.
+            # B4 fix: use mean (not max) of path OOS Sharpes to avoid cherry-picking.
+            _cpcv_bif_is_sharpe = float(np.mean(path_sharpes)) if path_sharpes else 0.0
+            _cpcv_bif_reliable = False
+            _cpcv_bif_proxy_basis = "oos_mean_not_is"
         _cpcv_bif_k_eff = float(max(n_paths, 1))
+        # FIX 6 (deep-scan #9): k_eff_independent = n_splits / k_test_groups (= 3 for
+        # default CPCV C(6,2)). The 15 combinatorial paths are NOT independent — they
+        # share folds. The independent count is the number of distinct IS/OOS partition
+        # groups: n_splits / k_test_groups = 6/2 = 3. Using n_paths=15 overstates
+        # independence and deflates BIF via expected_inflation. This key is additive:
+        # existing gate thresholds are unchanged; expected_inflation_independent is emitted
+        # for observability.
+        _cpcv_bif_k_eff_independent = float(n_splits) / float(max(k_test_groups, 1))
         _cpcv_bif_result = _cpcv_compute_bif(
             is_sharpe=_cpcv_bif_is_sharpe,
             wf_sharpe=agg_sharpe,
             k_eff=_cpcv_bif_k_eff,
         )
-        # M1 fix 2026-06-28: tag the BIF result so the TS BIF gate can emit a
-        # non-blocking audit warn. In CPCV mode both is_sharpe and wf_sharpe
-        # derive from the same OOS series → BIF ≈ 1.0 (near-no-op).
-        # TS gate reads bif_proxy_basis from wf_metadata.bif_proxy_basis.
-        _cpcv_bif_result["bif_proxy_basis"] = "oos_mean_not_is"
-        # BYPASS 3 EXPLICIT AUDIT (2026-06-28 hardening): IS Sharpe is unavailable
-        # in CPCV mode without running a separate IS backtest per path (Wave 30
-        # carry-forward). bif_reliable=False surfaces this fact explicitly so the
-        # TS BIF gate logs a documented audit-warn rather than treating BIF≈1.0 as
-        # a genuine clean-gate pass. The gate must NOT block on an unreliable BIF.
-        _cpcv_bif_result["bif_reliable"] = False
+        # Tag reliability so the TS BIF gate can route correctly:
+        #   bif_reliable=True  → real IS basis, gate may block on BIF ≥ threshold.
+        #   bif_reliable=False → proxy basis, gate must NOT block (audit-warn only).
+        _cpcv_bif_result["bif_proxy_basis"] = _cpcv_bif_proxy_basis
+        _cpcv_bif_result["bif_reliable"] = _cpcv_bif_reliable
+        # FIX 6 additive keys: honest k_eff and expected_inflation from independent count.
+        import math as _math_bif
+        _cpcv_bif_result["k_eff_independent"] = _cpcv_bif_k_eff_independent
+        _k_ind_clamped = max(_cpcv_bif_k_eff_independent, 1.0)
+        _cpcv_bif_result["expected_inflation_independent"] = (
+            _math_bif.sqrt(2.0 * _math_bif.log(_k_ind_clamped))
+            if _k_ind_clamped > 1.0 else 0.0
+        )
         print(
             f"  BIF (CPCV): {_cpcv_bif_result.get('bif', 'N/A'):.4f} "
-            f"(IS_proxy={_cpcv_bif_is_sharpe:.4f}, WF={agg_sharpe:.4f}, "
-            f"K_eff={_cpcv_bif_k_eff:.0f}) "
+            f"(IS_{'true' if _has_full_is else 'proxy'}={_cpcv_bif_is_sharpe:.4f}, "
+            f"WF={agg_sharpe:.4f}, K_eff={_cpcv_bif_k_eff:.0f}, "
+            f"reliable={_cpcv_bif_reliable}) "
             f"→ {_cpcv_bif_result.get('verdict', 'N/A')}",
             file=sys.stderr,
         )
@@ -580,10 +643,20 @@ def _run_walk_forward_cpcv(
     _cpcv_pbo_degenerate_reason: Optional[str] = None
     try:
         from src.engine.pbo_gate import compute_pbo_from_cpcv_paths as _cpcv_pbo_fn
-        _cpcv_path_dicts = [
-            {"is_sharpe": s, "oos_sharpe": s, "is_returns": [], "oos_returns": []}
-            for s in path_sharpes
-        ]
+        # E1: use true per-path IS Sharpes when available to make PBO non-degenerate.
+        # When IS backtests fully succeeded, is_sharpe diverges from oos_sharpe,
+        # allowing the rank-based PBO formula to produce a genuine estimate.
+        if _has_full_is and len(per_path_is_sharpes) == len(path_sharpes):
+            _cpcv_path_dicts = [
+                {"is_sharpe": is_s, "oos_sharpe": oos_s, "is_returns": [], "oos_returns": []}
+                for is_s, oos_s in zip(per_path_is_sharpes, path_sharpes)
+            ]
+        else:
+            # Fallback: IS==OOS for all paths → degenerate guard fires → pbo=None.
+            _cpcv_path_dicts = [
+                {"is_sharpe": s, "oos_sharpe": s, "is_returns": [], "oos_returns": []}
+                for s in path_sharpes
+            ]
         _cpcv_gate = _cpcv_pbo_fn(_cpcv_path_dicts)
         # Override the generic degenerate reason with a CPCV-specific auditable
         # label so the TS lifecycle gate can distinguish this case from other
@@ -767,6 +840,51 @@ def _run_walk_forward_cpcv(
             file=sys.stderr,
         )
 
+    # FIX 1 (deep-scan #9): CPCV WFE — compute from per-path IS Sharpes (E1 data).
+    # Previous: always emitted wfe_overall=None, wfe_status="cpcv_not_applicable"
+    # regardless of whether per_path_is_sharpes was populated.
+    # New: when E1 IS backtests succeeded (_has_full_is=True), compute
+    #   wfe_overall = agg_sharpe / mean(per_path_is_sharpes)
+    #   wfe_status  = "cpcv_per_path_is"
+    # When IS basis is non-positive or non-finite:
+    #   wfe_overall = 0.0, wfe_status = "degenerate_is"
+    # When E1 data absent (_has_full_is=False): keep cpcv_not_applicable unchanged.
+    import math as _math_wfe_cpcv
+    _cpcv_wfe_overall: Optional[float] = None
+    _cpcv_wfe_status: str = "cpcv_not_applicable"
+    _cpcv_wfe_basis: Optional[dict] = None
+
+    if _has_full_is and per_path_is_sharpes:
+        _cpcv_is_basis = float(np.mean(per_path_is_sharpes))
+        if _cpcv_is_basis <= 0 or not _math_wfe_cpcv.isfinite(_cpcv_is_basis):
+            _cpcv_wfe_overall = 0.0
+            _cpcv_wfe_status = "degenerate_is"
+            print(
+                "  WFE (CPCV): IS basis <= 0 or non-finite — emitting wfe_overall=0.0 "
+                "(degenerate_is); TS gate will BLOCK.",
+                file=sys.stderr,
+            )
+        else:
+            _cpcv_wfe_overall = round(agg_sharpe / _cpcv_is_basis, 4)
+            _cpcv_wfe_status = "cpcv_per_path_is"
+            print(
+                f"  WFE (CPCV): {_cpcv_wfe_overall:.4f} "
+                f"(OOS={agg_sharpe:.4f} / IS_mean={_cpcv_is_basis:.4f}, "
+                f"n_paths_with_is={len(per_path_is_sharpes)}, status=cpcv_per_path_is)",
+                file=sys.stderr,
+            )
+        _cpcv_wfe_basis = {
+            "n_paths_with_is": len(per_path_is_sharpes),
+            "is_basis": "per_path_is_sharpe_mean",
+            "oos_basis": "agg_sharpe",
+        }
+    else:
+        print(
+            "  WFE (CPCV): per-path IS Sharpes unavailable — "
+            "wfe_overall=None, wfe_status=cpcv_not_applicable (BYPASS 1 preserved).",
+            file=sys.stderr,
+        )
+
     return {
         "confidence": "OK" if total_trades >= MIN_OOS_TRADES else "LOW",
         "low_confidence_windows": 0,
@@ -788,15 +906,12 @@ def _run_walk_forward_cpcv(
         "n_splits": n_splits,
         "is_ratio": 1.0 - (k_test_groups / n_splits),
         "execution_time_ms": elapsed_ms,
-        # BYPASS 1 EXPLICIT AUDIT (2026-06-28 hardening): WFE is mathematically
-        # undefined in CPCV mode because there is no single pooled IS Sharpe to
-        # divide against the OOS aggregate. The plain-WF path produces wfe_overall
-        # from _combined_is_sharpe; CPCV has no such value without extra IS backtests.
-        # Emitting wfe_overall=None + wfe_status="cpcv_not_applicable" lets the TS
-        # wfe-gate.ts emit a documented exemption audit action instead of routing
-        # through the legacy_null grandfather-PASS path silently.
-        "wfe_overall": None,
-        "wfe_status": "cpcv_not_applicable",
+        # FIX 1: wfe_overall computed from per-path IS Sharpes when E1 data available.
+        # status="cpcv_per_path_is" → TS gate applies WFE floor check.
+        # status="degenerate_is" → TS gate blocks (IS basis non-positive).
+        # status="cpcv_not_applicable" (fallback) → TS gate emits BYPASS 1 exempt audit.
+        "wfe_overall": _cpcv_wfe_overall,
+        "wfe_status": _cpcv_wfe_status,
         "wf_metadata": {
             "mode": "cpcv",
             "n_folds": n_splits,
@@ -826,6 +941,10 @@ def _run_walk_forward_cpcv(
             # fire and the gate would silently grandfather-PASS. "cpcv_is_sharpe_unavailable"
             # is distinguishable from the generic legacy_null grandfather-PASS.
             "pbo_degenerate_reason": _cpcv_pbo_degenerate_reason,
+            # FIX 1: WFE CPCV basis descriptor (None when E1 data absent).
+            "wfe_cpcv_basis": _cpcv_wfe_basis,
+            # FIX 4: embargo calibration basis for observability.
+            "embargo_basis": _embargo_basis_cpcv,
         },
         # Wave 29 Pass A.2 — pbo_overall for TESTING → SHADOW/PAPER lifecycle gate.
         "pbo_overall": _cpcv_pbo_overall,
@@ -1346,9 +1465,14 @@ def run_walk_forward(
             # Optimizer provided IS Sharpe directly — no daily_pnls to accumulate.
             # We stash this on window_detail for per-window WFE reporting.
             window_results[i]["_is_sharpe_opt"] = _is_res_i["_is_sharpe_from_opt"]
+            # E2: no IS daily_pnls available for PBO when optimizer path was used.
+            window_results[i]["_is_daily_pnls"] = []
         else:
             _is_pnls_i = _is_res_i.get("daily_pnls", [])
             all_is_pnls.extend(_is_pnls_i)
+            # E2: stash per-window IS daily pnls for _build_cpcv_paths_from_window_results.
+            # Cleaned up from window_results before the final return (like _is_sharpe_opt).
+            window_results[i]["_is_daily_pnls"] = list(_is_pnls_i)
 
         # ── Collect per-window regime for parameter stability regime-context ─
         # Strategy's preferred_regime field is the lightweight fallback when
@@ -1520,9 +1644,55 @@ def run_walk_forward(
     if len(window_results) >= 4:
         try:
             from src.engine.risk_metrics import compute_pbo as _compute_pbo
-            pbo_result = _compute_pbo(window_results)
+            # FIX 3 (deep-scan #9): thread real IS metric values to compute_pbo so it
+            # uses IS→OOS ranking (not OOS-as-IS proxy). _is_sharpe_opt and
+            # _is_daily_pnls are still in window_results here (cleanup is at line ~1800).
+            # Priority: optimizer IS Sharpe > IS daily P&Ls > fallback to OOS.
+            # Only pass is_metric_values when at least one window has real IS data;
+            # otherwise compute_pbo receives None and returns is_values_unavailable.
+            _pbo_raw_is: list[float] = []
+            _pbo_has_real_is = False
+            for _w_pbo in window_results:
+                _opt_s_pbo = _w_pbo.get("_is_sharpe_opt")
+                if _opt_s_pbo is not None:
+                    _pbo_raw_is.append(float(_opt_s_pbo))
+                    _pbo_has_real_is = True
+                    continue
+                _ipnls_pbo = _w_pbo.get("_is_daily_pnls", [])
+                if isinstance(_ipnls_pbo, list) and len(_ipnls_pbo) >= 2:
+                    _ip_arr = np.array(_ipnls_pbo, dtype=float)
+                    _ip_std = float(np.std(_ip_arr, ddof=1))
+                    if _ip_std > 0:
+                        _pbo_raw_is.append(float(np.mean(_ip_arr) / _ip_std * np.sqrt(252)))
+                        _pbo_has_real_is = True
+                    else:
+                        # zero variance: use OOS as fallback for this window only
+                        _pbo_raw_is.append(float(_w_pbo.get("oos_metrics", {}).get("sharpe_ratio", 0.0)))
+                else:
+                    # no IS data for this window: fallback to OOS
+                    _pbo_raw_is.append(float(_w_pbo.get("oos_metrics", {}).get("sharpe_ratio", 0.0)))
+
+            # Pass IS values only when real IS data existed for at least one window.
+            # When no real IS data at all, is_metric_values=None → is_values_unavailable.
+            _pbo_is_values_to_pass: list[float] | None = (
+                _pbo_raw_is if _pbo_has_real_is and len(_pbo_raw_is) == len(window_results)
+                else None
+            )
+            pbo_result = _compute_pbo(window_results, is_metric_values=_pbo_is_values_to_pass)
             _pbo_val = pbo_result.get("pbo")
-            _pbo_pass = (_pbo_val is None) or (_pbo_val <= _pbo_threshold)
+            _pbo_reason = pbo_result.get("reason", "")
+            # FIX 3: is_values_unavailable means IS→OOS ranking impossible — not a pass.
+            # pbo_pass=None (unavailable-not-pass) signals the TS gate to emit a distinct
+            # audit action instead of silently treating None as grandfather-pass.
+            if _pbo_reason == "is_values_unavailable":
+                _pbo_pass: bool | None = None
+                print(
+                    "  PBO: IS values unavailable — emitting pbo_pass=None "
+                    "(unavailable-not-pass; TS gate treats as unavailable).",
+                    file=sys.stderr,
+                )
+            else:
+                _pbo_pass = (_pbo_val is None) or (_pbo_val <= _pbo_threshold)
             pbo_result["pbo_pass"] = _pbo_pass
             pbo_result["pbo_threshold"] = _pbo_threshold
             # pbo_p_value is now populated by compute_pbo() (Wave 27.5 Pass D.4).
@@ -1671,9 +1841,13 @@ def run_walk_forward(
         for w in window_results
         if w.get("_is_sharpe_opt") is not None
     ]
-    # Clean up _is_sharpe_opt from window_results (internal field, not schema output)
+    # Clean up internal fields from window_results (not schema output)
     for w in window_results:
         w.pop("_is_sharpe_opt", None)
+        # E2: _is_daily_pnls was threaded in for _build_cpcv_paths_from_window_results;
+        # remove before the final return so the schema output stays stable.
+        # pbo_gate reads it before this cleanup (called at the PBO block above).
+        w.pop("_is_daily_pnls", None)
 
     if _opt_is_sharpes:
         # When optimizer IS scores are available, use their mean as the combined IS Sharpe.
@@ -1696,6 +1870,22 @@ def run_walk_forward(
         _is_std = float(np.std(_is_pnl_arr, ddof=1))
         _combined_is_sharpe = float(np.mean(_is_pnl_arr) / _is_std * np.sqrt(252)) if _is_std > 0 else 0.0
         _wfe_is_basis = "base_config_daily_pnls"  # FINDING-3 fix
+
+    # E3 (deep-scan #7 2026-07-02): always compute WFE from base-config IS Sharpe for
+    # cross-run comparability.  The canonical wfe_overall uses _combined_is_sharpe which
+    # shifts between runs (optimizer_best_score_mean vs base_config_daily_pnls).
+    # wfe_overall_base_basis uses all_is_pnls (base-config IS backtest) as the denominator
+    # regardless of whether optimize=True was used — a stable reference across runs.
+    # Additive: no gate changes; emitted alongside existing wfe_overall.
+    _wfe_overall_base_basis: Optional[float] = None
+    if len(all_is_pnls) > 1:
+        _is_pnl_arr_base = np.array(all_is_pnls)
+        _is_std_base = float(np.std(_is_pnl_arr_base, ddof=1))
+        if _is_std_base > 0:
+            _is_sharpe_base = float(np.mean(_is_pnl_arr_base) / _is_std_base * np.sqrt(252))
+            if _is_sharpe_base > 0:
+                _wfe_base_dict = compute_wfe(is_sharpe=_is_sharpe_base, oos_sharpe=agg_sharpe)
+                _wfe_overall_base_basis = _wfe_base_dict["wfe"]
 
     if _combined_is_sharpe is not None and _combined_is_sharpe > 0:
         _wfe_dict = compute_wfe(is_sharpe=_combined_is_sharpe, oos_sharpe=agg_sharpe)
@@ -1908,6 +2098,20 @@ def run_walk_forward(
             overnight_hold=_overnight_hold,
         )
 
+    # FIX 4 (deep-scan #9): embargo calibration for plain-WF — emit embargo_basis.
+    # Same logic as CPCV path: when trades carry duration_bars, compute the calibrated
+    # value for future run guidance. Additive metadata; does not change current run.
+    _embargo_basis_plain: str = "default_20_uncalibrated"
+    _trade_durations_plain = [
+        int(t["duration_bars"])
+        for t in all_oos_trades
+        if isinstance(t.get("duration_bars"), (int, float)) and t["duration_bars"] > 0
+    ]
+    if _trade_durations_plain:
+        _avg_dur_plain = sum(_trade_durations_plain) / len(_trade_durations_plain)
+        _calibrated_plain = max(embargo_bars, int(_avg_dur_plain + 0.5))
+        _embargo_basis_plain = f"calibrated_{_calibrated_plain}"
+
     # ─── FIX-2 (2026-06-29): DSR for plain-WF path ──────────────────────────
     # CPCV path computes DSR via n_paths (15 combinations as proxy for n_trials).
     # Plain-WF path had no DSR computation, so wf_metadata.dsr_pass was always
@@ -2014,6 +2218,10 @@ def run_walk_forward(
             # None = computation skipped / result absent; False = gate failed or unavailable.
             "dsr_pass": _plain_wf_dsr_pass,
             "dsr_unavailable": _plain_wf_dsr_unavailable,
+            # FIX 4: embargo calibration basis (deep-scan #9).
+            # "default_20_uncalibrated" — no trade duration data available.
+            # "calibrated_<n>" — n = max(embargo_bars, avg_trade_duration_bars).
+            "embargo_basis": _embargo_basis_plain,
         },
         # Wave 27.5 Pass B HIGH #1 — WFE fields (all optional; additive; backward compat)
         "wfe_overall": wfe_overall,
@@ -2026,6 +2234,10 @@ def run_walk_forward(
         # "base_config_daily_pnls"    = IS is honest base-config IS run.
         # "unavailable"               = IS Sharpe could not be computed (wfe_overall absent).
         "wfe_is_basis": _wfe_is_basis,
+        # E3 (deep-scan #7 2026-07-02): WFE using base-config IS Sharpe as denominator.
+        # Stable cross-run variant: always uses all_is_pnls (base-config IS backtest)
+        # regardless of whether optimize=True was used.  None when IS pnls unavailable.
+        "wfe_overall_base_basis": _wfe_overall_base_basis,
         # Wave 27.5 Pass B HIGH #3 — PBO auto-wire (additive; None when < 4 windows)
         "pbo": pbo_result.get("pbo") if pbo_result else None,
         "pbo_pass": pbo_result.get("pbo_pass") if pbo_result else None,
@@ -2080,6 +2292,45 @@ def run_walk_forward(
     }
 
 
+def _default_class_wf_skip_eligibility_gate() -> bool:
+    """Default for run_walk_forward_class's `skip_eligibility_gate` param.
+
+    HISTORY (verified this session, backtest-core investigation triggered by
+    E1's Mode A/B harness finding): this function has ALWAYS hardcoded the
+    class-path OOS eligibility gate OFF, with the documented rationale
+    "the gate is a live-trading filter (kill zones, bias, sweeps); applying
+    it in backtests kills 90%+ of signals... gate will be re-enabled when the
+    bias engine and context layer are properly calibrated." That rationale is
+    real and is NOT being overridden here — the DEFAULT stays skip=True,
+    preserving byte-identical results for every existing caller (archetype
+    walk-forwards, Band C spec-condition walk-forwards) that doesn't opt in.
+
+    THE BUG this fixes: the skip was a hardcoded LITERAL (`skip_eligibility_gate=True`),
+    not a parameter — so `apply_eligibility_gate()` (which is what actually
+    reads `TF_CONFLUENCE_OVERLAY_DISABLED`, see backtester.py's ABLATION
+    TOGGLE comment) was NEVER EVEN CALLED for class-path OOS windows. The
+    Mode A/B ablation toggle was silently dead on this path — Mode A and
+    Mode B produced byte-identical results for every class-based (archetype
+    or Band C condition-compiled) strategy, regardless of the env var.
+
+    THE FIX: `skip_eligibility_gate` is now a real parameter (see
+    run_walk_forward_class signature) so a caller doing a genuine Mode A/B
+    comparison can pass `skip_eligibility_gate=False` and let
+    `apply_eligibility_gate()`'s OWN internal ablation-toggle branch decide
+    Mode A ("tf_institutional_overlay") vs Mode B ("source_entry_only") —
+    exactly the same mechanism the DSL-spec path already uses via
+    `run_backtest(..., use_eligibility_gate=True)`'s default. This function
+    additionally reads `TF_CLASS_WF_ELIGIBILITY_GATE_ENABLED` so callers that
+    can't easily thread a new kwarg through (e.g. the backtester.py CLI) can
+    opt in via env var instead — mirrors how every other ablation/opt-in
+    toggle in this codebase is read (TF_CONFLUENCE_OVERLAY_DISABLED itself,
+    DETERMINISM_MODE, etc.).
+    """
+    return os.environ.get("TF_CLASS_WF_ELIGIBILITY_GATE_ENABLED", "").strip().lower() not in (
+        "1", "true", "yes",
+    )
+
+
 def run_walk_forward_class(
     strategy: BaseStrategy,
     start_date: str,
@@ -2091,6 +2342,7 @@ def run_walk_forward_class(
     is_ratio: float = 0.5,
     embargo_bars: int = 20,
     optimize: bool = False,
+    skip_eligibility_gate: Optional[bool] = None,
 ) -> dict:
     """Walk-forward validation for class-based (BaseStrategy) strategies.
 
@@ -2101,7 +2353,20 @@ def run_walk_forward_class(
         optimize: If True, raise NotImplementedError (Wave 24 carry-forward).
             Class-based strategies do not yet support per-window Optuna tuning.
             Callers must not silently fall through to fixed-param OOS — fail loudly.
+        skip_eligibility_gate: When True (the default, preserving legacy
+            behavior), every OOS window bypasses `apply_eligibility_gate()`
+            entirely — the documented "gate kills 90%+ of signals on
+            uncalibrated context" workaround. When explicitly set to False
+            (or left None with `TF_CLASS_WF_ELIGIBILITY_GATE_ENABLED=true`
+            set), the gate actually runs, which makes the
+            `TF_CONFLUENCE_OVERLAY_DISABLED` Mode A/B ablation toggle
+            meaningful for class-based strategies — see
+            `_default_class_wf_skip_eligibility_gate()` for the full history.
+            `None` (default) resolves via the env var so existing callers
+            that don't pass this kwarg are completely unaffected.
     """
+    if skip_eligibility_gate is None:
+        skip_eligibility_gate = _default_class_wf_skip_eligibility_gate()
     # F-12 FIX: Fail loudly if caller requests optimization on class strategies.
     # Previously the function ran silently with fixed params when optimize was not even
     # a parameter — callers who expected optimization got unreproduced results.
@@ -2186,11 +2451,16 @@ def run_walk_forward_class(
         # context — indicators are correctly initialized at the OOS boundary.
         # IS rows are stripped inside run_class_backtest() after compute(), before
         # signal execution. This mirrors the run_backtest() E7.2 warmup fix.
-        # Eligibility gate OFF for backtesting — test the STRATEGY, not the gate.
-        # The gate is a live-trading filter (kill zones, bias, sweeps). Applying it
-        # in backtests kills 90%+ of signals, producing statistically meaningless
-        # results (4-122 trades over 2 years). Gate will be re-enabled when
-        # the bias engine and context layer are properly calibrated.
+        # Eligibility gate OFF by DEFAULT for backtesting — test the STRATEGY, not
+        # the gate. The gate is a live-trading filter (kill zones, bias, sweeps).
+        # Applying it in backtests kills 90%+ of signals, producing statistically
+        # meaningless results (4-122 trades over 2 years). Gate will be re-enabled
+        # by default when the bias engine and context layer are properly
+        # calibrated. `skip_eligibility_gate` is now a real parameter (see
+        # _default_class_wf_skip_eligibility_gate docstring) rather than a
+        # hardcoded literal — a caller doing a genuine Mode A/B ablation
+        # comparison can opt in and the TF_CONFLUENCE_OVERLAY_DISABLED toggle
+        # becomes meaningful again for class-based strategies.
         # F-5 FIX: Derive OOS window date boundaries from oos_data timestamps so that
         # run_class_backtest's bar-count validation and any internal date-range logic
         # reference the WINDOW range, not the full backtest range.
@@ -2220,7 +2490,7 @@ def run_walk_forward_class(
             data=oos_data,
             htf_cache=htf_cache,
             daily_data=daily_data,
-            skip_eligibility_gate=True,
+            skip_eligibility_gate=skip_eligibility_gate,
             warmup_data=is_data,
         )
 

@@ -10,6 +10,7 @@
 import { sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { getExecutionMode } from "../execution-mode.js";
+import { unmappedAccountDisclosure, liveModeDataDisclosure } from "./translate.js";
 
 export type CribData = {
   banner: {
@@ -48,6 +49,24 @@ export type CribData = {
    * "PAPER · practice" (paper mode) or "LIVE" (live mode).
    */
   executionModeLabel: string;
+  /**
+   * False when account-scoped data (todayBag, openNow, sparklines) is unavailable.
+   * Two causes: user has no broker_account_id (accountUnmapped=true) OR
+   * execution_mode=live and the live tape is not wired yet.
+   * Consumer must check accountDisclosure for the reason.
+   */
+  accountDataAvailable: boolean;
+  /**
+   * True when the user has no broker_account_id mapping.
+   * In this state todayBag/openNow are zeroed — NOT real trading data.
+   */
+  accountUnmapped: boolean;
+  /**
+   * Plain-English disclosure when account data is unavailable.
+   * Null when all data is available normally (mapped user, paper mode).
+   * Consumers MUST surface this copy instead of displaying a bare $0.
+   */
+  accountDisclosure: string | null;
 };
 
 const FRESH_DISCORD_FEED_STATUSES = new Set([
@@ -198,6 +217,18 @@ export async function assembleCribData(args: { brokerAccountId: string | null })
   // NEVER fall back to paper numbers while claiming live — return zeroed instead.
   const mode = await getExecutionMode().catch(() => "paper" as const);
   const canReadAccountScopedData = Boolean(brokerAccountId) && mode !== "live";
+
+  // ─── Account-data availability disclosure (FIX 2 + FIX 3) ───────────────
+  // When data is unavailable, the consumer MUST surface accountDisclosure
+  // instead of displaying a bare $0 (which reads as "I lost nothing").
+  const accountUnmapped = !brokerAccountId;
+  const liveModeSuppressed = Boolean(brokerAccountId) && mode === "live";
+  const accountDataAvailable = !accountUnmapped && !liveModeSuppressed;
+  const accountDisclosure: string | null = accountUnmapped
+    ? unmappedAccountDisclosure()
+    : liveModeSuppressed
+      ? liveModeDataDisclosure()
+      : null;
 
   // 1. Today's closed P&L + W/L counts for THIS account's assigned strategies
   const todayRow = canReadAccountScopedData
@@ -369,6 +400,9 @@ export async function assembleCribData(args: { brokerAccountId: string | null })
     })),
     executionMode: mode,
     executionModeLabel: mode === "live" ? "LIVE" : "PAPER · practice",
+    accountDataAvailable,
+    accountUnmapped,
+    accountDisclosure,
   };
 }
 

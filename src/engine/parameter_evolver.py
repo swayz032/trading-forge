@@ -28,9 +28,9 @@ import requests
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434/api/generate")
 # Pass 21 (2026-05-12) retired qwen3-coder:30b (18GB, can't load on RTX 5060 8GB
-# VRAM). qwen2.5-coder:7b is the canonical local model across all roles. Env
+# VRAM). gemma4:e4b-it-qat is the canonical local model across all roles. Env
 # override allows operator to flip to a larger model without code edit.
-MODEL = os.getenv("PARAMETER_EVOLVER_MODEL", "qwen2.5-coder:7b")
+MODEL = os.getenv("PARAMETER_EVOLVER_MODEL", "gemma4:e4b-it-qat")
 
 # ─── Wave 4 Track 4C — Research Governance Constants ────────────────────────
 

@@ -60,6 +60,14 @@ export interface PriceLockResult {
   reason?: "near_up_limit" | "near_down_limit" | "no_reference";
   limitUp?: number;
   limitDown?: number;
+  /**
+   * deepscan14 D2: true when this result reflects a fail-open with NO settlement
+   * feed to check against (reason="no_reference") — i.e. the gate did not evaluate
+   * anything. `blocked=false` alone is ambiguous with "checked, price is clear";
+   * `inactive=true` disambiguates it as "nothing was checked." Absent/false on
+   * every other branch = a real evaluation happened.
+   */
+  inactive?: boolean;
 }
 
 /**
@@ -83,7 +91,7 @@ export function checkPriceLockLimit(
     !Number.isFinite(currentPrice) ||
     currentPrice <= 0
   ) {
-    return { blocked: false, reason: "no_reference" }; // fail-open
+    return { blocked: false, reason: "no_reference", inactive: true }; // fail-open, gate INACTIVE
   }
   const pct = limitPctFor((underlying || "").toUpperCase());
   const limitUp = referenceSettlement * (1 + pct);

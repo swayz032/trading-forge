@@ -112,7 +112,7 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {},
       { backtestId, tradeCount: tradePnls.length, minRequired: MIN_TRADE_COUNT },
       "monte_carlo.trades_fallback_used: backtest_trades too sparse — falling back to daily_pnls for MC bootstrap",
     );
-    broadcastSSE("monte_carlo.trades_fallback_used", {
+    broadcastSSE("monte_carlo:trades_fallback_used", {
       backtestId,
       tradeCount: tradePnls.length,
       minRequired: MIN_TRADE_COUNT,
@@ -349,18 +349,33 @@ export async function runMonteCarlo(backtestId: string, options: MCOptions = {},
     });
 
     // ─── Broadcast MC completion SSE ──────────────────────────────
+    // deep-scan #8 2026-07-02: prefer firm-breach ci.point_estimate when present;
+    // fall back to terminal-negative scalar for legacy runs. Column write is
+    // unchanged — all downstream consumers (carter, lifecycle, critic) expect
+    // the terminal-negative probability_of_ruin scalar in the DB column.
     {
-      const ruin = Number(result.risk_metrics.probability_of_ruin ?? 1);
+      type RuinCi = { point_estimate?: number; ruin_basis?: string } | null | undefined;
+      const ruinCi = result.risk_metrics.probability_of_ruin_ci as RuinCi;
+      const usingCi = ruinCi?.point_estimate != null;
+      const ruin = usingCi
+        ? Number(ruinCi!.point_estimate)
+        : Number(result.risk_metrics.probability_of_ruin ?? 1);
+      const ruinBasis = usingCi ? (ruinCi?.ruin_basis ?? "firm_breach") : "terminal_negative_legacy";
       broadcastSSE("mc:completed", {
         backtestId,
         strategyId: bt.strategyId ?? null,
         survivalRate: parseFloat((1 - ruin).toFixed(4)),
+        ruin_basis: ruinBasis,
       });
     }
 
     // ─── Auto Cross Matrix if MC survival is strong (fire-and-forget) ───
     if (bt.strategyId && result.risk_metrics) {
-      const ruin = Number(result.risk_metrics.probability_of_ruin ?? 1);
+      type RuinCi = { point_estimate?: number } | null | undefined;
+      const ruinCi = result.risk_metrics.probability_of_ruin_ci as RuinCi;
+      const ruin = ruinCi?.point_estimate != null
+        ? Number(ruinCi.point_estimate)
+        : Number(result.risk_metrics.probability_of_ruin ?? 1);
       const survivalRate = 1 - ruin;
       if (survivalRate > 0.8) {
         runMatrix(bt.strategyId).then((matrixResult) => {

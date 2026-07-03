@@ -225,12 +225,16 @@ def run_evaluate(config: dict) -> dict:
     point_value = config.get("point_value", 5.0)  # MES default
     tick_size = config.get("tick_size", 0.25)
 
+    # symbol drives both the sweep buffer (MES=3t/MNQ=5t/MCL=2t) and the
+    # stop ceiling (MES=14pt/MNQ=62pt/MCL=1.00pt). Without it every symbol
+    # was evaluated as MES — ceiling and buffer mismatch for MNQ/MCL.
     stop_plan = compute_structural_stop(
         direction=direction,
         entry_price=entry_price,
         point_value=point_value,
         atr=atr,
         tick_size=tick_size,
+        symbol=config.get("symbol", "MES"),
         nearest_ob_below=struct.get("nearest_ob_below"),
         nearest_ob_above=struct.get("nearest_ob_above"),
         nearest_fvg_below=struct.get("nearest_fvg_below"),

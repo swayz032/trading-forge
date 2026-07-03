@@ -262,7 +262,7 @@ export async function runPromptEvolution(): Promise<void> {
   } else {
     logger.info("Prompt evolution: cloud unavailable, falling back to Ollama");
     const fallback = getFallback("nightly_review");
-    const fallbackModel = fallback?.model ?? "deepseek-r1:14b";
+    const fallbackModel = fallback?.model ?? "gemma4:e4b-it-qat";
     const ollama = new OllamaClient();
     const systemPrompt = loadSystemPrompt("nightly_review");
     const fullPrompt = systemPrompt ? `${systemPrompt}\n\n${analysisPrompt}` : analysisPrompt;

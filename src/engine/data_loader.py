@@ -77,8 +77,91 @@ CACHE_DIR = Path(os.environ.get(
 # 24 hours TTL for local cache files
 CACHE_TTL_SECONDS: float = float(os.environ.get("DATA_CACHE_TTL_SECONDS", str(24 * 3600)))
 
+# ─── Empirical bars-per-day (single source of truth, deep-scan #10 FIX 4/F-11) ──
+# Derived from 10.6 years of CME Globex ratio-adjusted continuous contract data.
+# These are OBSERVED averages including weekend halts, 60-min daily maintenance,
+# US holidays, and half-days — NOT theoretical maxima (which are higher).
+# Used by both validate_bars (here) and _validate_bar_count (backtester.py) so the
+# two bar-count checks stay consistent. backtester.py imports this dict directly.
+EMPIRICAL_BARS_PER_DAY: dict[str, int] = {
+    "1min": 860, "5min": 172, "15min": 58, "30min": 29,
+    "1hour": 14, "1h": 14, "4hour": 4, "4h": 4,
+    "daily": 1, "1D": 1,
+}
+
 # Process-level bust flag: set True once per process when BACKTEST_CACHE_BUST=1
 _cache_busted: bool = False
+
+# ─── FIX 7 (deep-scan #10): cache sidecar provenance helpers ─────────────────
+# Tracks which legacy files have already logged their "no sidecar" INFO to avoid
+# per-request spam across a warm-cache run.
+_sidecar_info_emitted: set = set()
+
+
+def _write_cache_sidecar(
+    cache_file: Path,
+    source: str,
+    adjusted: bool,
+    dataset_hash: str,
+) -> None:
+    """Write provenance JSON alongside a cache parquet (deep-scan #10 FIX 7).
+
+    Guards against cache poisoning: a subsequent read can verify that the file
+    written under the ratio_adj/ path is genuinely ratio-adjusted.
+
+    Schema: {source, adjusted, written_at, dataset_hash}
+    File name: <parquet_name>.provenance.json (e.g. ratio_adj/15min.parquet.provenance.json)
+    """
+    import datetime as _dt
+    import json as _json
+    sidecar = cache_file.parent / f"{cache_file.name}.provenance.json"
+    payload = {
+        "source": source,
+        "adjusted": adjusted,
+        "written_at": _dt.datetime.utcnow().isoformat() + "Z",
+        "dataset_hash": dataset_hash,
+    }
+    try:
+        sidecar.write_text(_json.dumps(payload), encoding="utf-8")
+    except Exception as _e:
+        print(f"Cache sidecar write failed (non-fatal): {_e}", file=sys.stderr)
+
+
+def _check_cache_sidecar(cache_file: Path, adjusted: bool) -> bool:
+    """Return True if the cache file is safe to serve; False → treat as cache miss.
+
+    FIX 7 (deep-scan #10): prevents poisoned cache from serving raw data under a
+    ratio_adj path. Checks the sidecar written by _write_cache_sidecar.
+
+    Rules:
+    - Sidecar absent (legacy cache) → allow with one-time INFO per file per process.
+    - Sidecar present, adjusted=False for a ratio_adj-path read → WARN, return False.
+    - Sidecar present, consistent → return True.
+    """
+    import json as _json
+    sidecar = cache_file.parent / f"{cache_file.name}.provenance.json"
+    if not sidecar.exists():
+        _key = str(cache_file)
+        if _key not in _sidecar_info_emitted:
+            _sidecar_info_emitted.add(_key)
+            print(
+                f"INFO: Cache sidecar absent for {cache_file.name} (legacy cache file) — "
+                f"allowing read; run a cache refresh to generate provenance",
+                file=sys.stderr,
+            )
+        return True
+    try:
+        data = _json.loads(sidecar.read_text(encoding="utf-8"))
+        if adjusted and not data.get("adjusted", True):
+            print(
+                f"WARN: Cache sidecar for {cache_file.name} says adjusted=false "
+                f"(expected adjusted=true for ratio_adj path) — treating as cache miss",
+                file=sys.stderr,
+            )
+            return False
+    except Exception as _e:
+        print(f"Cache sidecar read failed (non-fatal): {_e}", file=sys.stderr)
+    return True
 
 
 def _cache_path(symbol: str, timeframe: str, adjusted: bool = True) -> Path:
@@ -217,6 +300,17 @@ def sync_from_s3(symbol: str, timeframe: str) -> Path:
 
     size_kb = cache_file.stat().st_size / 1024
     print(f"Cached to {cache_file} ({size_kb:.0f} KB)", file=sys.stderr)
+    # FIX 7 (deep-scan #10): write provenance sidecar after S3 sync
+    try:
+        _sync_df = pl.read_parquet(str(cache_file))
+        _write_cache_sidecar(
+            cache_file,
+            source=s3_path,
+            adjusted=True,  # sync_from_s3 always fetches ratio-adjusted consolidated data
+            dataset_hash=compute_dataset_hash(_sync_df),
+        )
+    except Exception as _sc_err:
+        print(f"sync_from_s3 sidecar write failed (non-fatal): {_sc_err}", file=sys.stderr)
     return cache_file
 
 
@@ -475,10 +569,8 @@ def validate_bars(
     # days. Using empirical floors avoids false "62% coverage" failures on
     # otherwise-clean data.
     coverage_pct = -1.0  # Sentinel: not yet computed
-    bars_per_day_map = {
-        "1min": 860, "5min": 172, "15min": 58, "30min": 29,
-        "1hour": 14, "1h": 14, "4hour": 4, "4h": 4, "daily": 1, "1D": 1,
-    }
+    # FIX 4 (deep-scan #10 F-11): use module-level EMPIRICAL_BARS_PER_DAY (single source)
+    bars_per_day_map = EMPIRICAL_BARS_PER_DAY
     # Threshold tunable via env. Default 80 keeps strict reporting; hard-fail
     # uses a separate (lower) hard floor — see _DATA_COVERAGE_HARD_FAIL_PCT.
     coverage_warn_threshold = float(os.environ.get("DATA_COVERAGE_WARN_PCT", "80"))
@@ -614,8 +706,17 @@ def load_ohlcv(
         # HIGH-2(a): pass adjusted so raw and ratio_adj resolve to separate cache paths.
         cache_file = _cache_path(data_symbol, timeframe, adjusted=adjusted)
         if _is_cache_fresh(cache_file):
-            source = str(cache_file)
-            print(f"Loading {data_symbol} {timeframe} from local cache ({cache_file})", file=sys.stderr)
+            # FIX 7 (deep-scan #10): verify provenance sidecar before serving from cache
+            if _check_cache_sidecar(cache_file, adjusted):
+                source = str(cache_file)
+                print(f"Loading {data_symbol} {timeframe} from local cache ({cache_file})", file=sys.stderr)
+            else:
+                # Sidecar indicates cache is poisoned — fall through to S3
+                source = _consolidated_s3_path(data_symbol, timeframe, adjusted=adjusted)
+                print(
+                    f"Loading {data_symbol} {timeframe} from S3 (cache sidecar mismatch)",
+                    file=sys.stderr,
+                )
         elif cache_file.exists():
             # Cache exists but is stale (> 24h) — re-fetch from S3
             print(
@@ -660,7 +761,17 @@ def load_ohlcv(
                 WHERE ts_event >= '{start}' AND ts_event < '{end}T23:59:59.999999999'
                 ORDER BY ts_event
             """
-            pdf = con.execute(legacy_sql).fetchdf()
+            try:
+                pdf = con.execute(legacy_sql).fetchdf()
+            except Exception as _leg_err:
+                # FIX 8 (deep-scan #10 F-12): sanitize DuckDB error to avoid leaking S3 bucket paths
+                _bucket = os.environ.get("S3_BUCKET", "trading-forge-data")
+                _detail = str(_leg_err)
+                print(f"[debug] Legacy DuckDB error {data_symbol} {timeframe}: {_detail}", file=sys.stderr)
+                _sanitized = _detail.replace(legacy, "[s3-path-redacted]").replace(_bucket, "[bucket]")
+                raise RuntimeError(
+                    f"Failed to load {data_symbol} {timeframe} from S3 (legacy path): {_sanitized}"
+                ) from None
         else:
             raise
 
@@ -705,6 +816,8 @@ def load_ohlcv(
                 _os_m4.replace(str(tmp_cache), str(cache_file))
                 size_kb = cache_file.stat().st_size / 1024
                 print(f"Cache atomic-write: {data_symbol} {timeframe} → {cache_file} ({size_kb:.0f} KB)", file=sys.stderr)
+                # FIX 7 (deep-scan #10): write provenance sidecar alongside the cache file
+                _write_cache_sidecar(cache_file, source=source, adjusted=adjusted, dataset_hash=compute_dataset_hash(df))
             except Exception as e:
                 # Clean up temp file if atomic replace failed
                 try:
@@ -757,6 +870,9 @@ def load_ohlcv(
     # Pass the pre-dedup SOURCE duplicate count so the report reflects what the
     # source data actually contained, not the already-deduped DataFrame.
     quality_report = validate_bars(df, symbol, timeframe, source_duplicate_timestamps=deduped)
+    # FIX 6 (deep-scan #10): populate dataset_hash — compute_dataset_hash() was implemented
+    # but never wired into the quality report; field was always "".
+    quality_report.dataset_hash = compute_dataset_hash(df)
     if quality_report.warnings:
         for w in quality_report.warnings:
             print(f"DATA QUALITY [{symbol} {timeframe}]: {w}", file=sys.stderr)
@@ -777,6 +893,7 @@ def load_ohlcv(
         "large_gap_bars": quality_report.large_gap_bars,
         "passed": quality_report.passed,
         "warnings": quality_report.warnings,
+        "dataset_hash": quality_report.dataset_hash,  # FIX 6: now real (was "")
     }
     print(f"DATA_QUALITY_REPORT_JSON {_json.dumps(_qr_payload)}", file=sys.stderr)
 

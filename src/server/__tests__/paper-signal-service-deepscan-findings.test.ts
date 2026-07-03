@@ -104,8 +104,10 @@ describe("F2 — Cross-symbol DLL force-close must be awaited + fail-CLOSED on e
     // The error path must call notifyCritical with a CRITICAL message
     const auditIdx = SRC.indexOf('"cross_symbol_force_close_failed"');
     expect(auditIdx).toBeGreaterThan(-1);
-    // notifyCritical must appear within 500 chars after the failed audit action
-    const window = SRC.slice(auditIdx, auditIdx + 500);
+    // notifyCritical must appear within 900 chars after the failed audit action
+    // (deepscan7 obs-H1 2026-07-02: the audit row gained a correlationId line,
+    // pushing notifyCritical past the old 500-char window; CRLF counts 2/line).
+    const window = SRC.slice(auditIdx, auditIdx + 900);
     expect(window).toContain("notifyCritical(");
   });
 

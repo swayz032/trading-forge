@@ -1,0 +1,317 @@
+{
+ "LOcaRWcc1xI": [
+  {
+   "name": "ict_power_of_3_mes_15m",
+   "symbol": "MES",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "archetype:ict_power_of_3",
+   "direction": "both",
+   "confluence_factors": "[\"asian_range_swept\",\"manipulation_phase_done\",\"displacement_confirmed\",\"liquidity_target_clear\"]",
+   "factor_quality": "rich"
+  },
+  {
+   "name": "4h_pattern_entry_model_mnq_1m",
+   "symbol": "MNQ",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "archetype:fvg_retrace",
+   "direction": "both",
+   "confluence_factors": "[\"fvg_present_or_ob\",\"market_structure_aligned\"]",
+   "factor_quality": "rich"
+  },
+  {
+   "name": "4h_pattern_entry_model_mes_1m",
+   "symbol": "MES",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "archetype:fvg_retrace",
+   "direction": "both",
+   "confluence_factors": "[\"fvg_present_or_ob\",\"market_structure_aligned\"]",
+   "factor_quality": "rich"
+  },
+  {
+   "name": "4h_pattern_entry_model_mcl_1m",
+   "symbol": "MCL",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "archetype:fvg_retrace",
+   "direction": "both",
+   "confluence_factors": "[\"fvg_present_or_ob\",\"market_structure_aligned\"]",
+   "factor_quality": "rich"
+  },
+  {
+   "name": "fvg_retrace_mes_15m",
+   "symbol": "MES",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "archetype:fvg_retrace",
+   "direction": "both",
+   "confluence_factors": "[\"fvg_present_or_ob\",\"market_structure_aligned\"]",
+   "factor_quality": "rich"
+  }
+ ],
+ "dE4lPhAWke8": [
+  {
+   "name": "daily_bias_market_structure_mes_5m",
+   "symbol": "MES",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "archetype:break_of_structure",
+   "direction": "both",
+   "confluence_factors": "[\"market_structure_aligned\",\"displacement_confirmed\",\"htf_bias_aligned\"]",
+   "factor_quality": "rich"
+  },
+  {
+   "name": "daily_bias_market_structure_mcl_5m",
+   "symbol": "MCL",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "archetype:break_of_structure",
+   "direction": "both",
+   "confluence_factors": "[\"market_structure_aligned\",\"displacement_confirmed\",\"htf_bias_aligned\"]",
+   "factor_quality": "rich"
+  },
+  {
+   "name": "daily_bias_market_structure_mnq_5m",
+   "symbol": "MNQ",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "archetype:break_of_structure",
+   "direction": "both",
+   "confluence_factors": "[\"market_structure_aligned\",\"displacement_confirmed\",\"htf_bias_aligned\"]",
+   "factor_quality": "rich"
+  },
+  {
+   "name": "market_structure_shift_mes_15m",
+   "symbol": "MES",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "archetype:market_structure_shift",
+   "direction": "both",
+   "confluence_factors": "[\"market_structure_aligned\",\"displacement_confirmed\"]",
+   "factor_quality": "rich"
+  },
+  {
+   "name": "market_structure_shift_mnq_15m",
+   "symbol": "MNQ",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "archetype:market_structure_shift",
+   "direction": "both",
+   "confluence_factors": "[\"market_structure_aligned\",\"displacement_confirmed\"]",
+   "factor_quality": "rich"
+  },
+  {
+   "name": "market_structure_shift_mcl_15m",
+   "symbol": "MCL",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "archetype:market_structure_shift",
+   "direction": "both",
+   "confluence_factors": "[\"market_structure_aligned\",\"displacement_confirmed\"]",
+   "factor_quality": "rich"
+  },
+  {
+   "name": "fvg_retrace_mnq_15m",
+   "symbol": "MNQ",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "archetype:fvg_retrace",
+   "direction": "both",
+   "confluence_factors": "[\"fvg_present_or_ob\",\"market_structure_aligned\"]",
+   "factor_quality": "rich"
+  },
+  {
+   "name": "fvg_retrace_mcl_15m",
+   "symbol": "MCL",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "archetype:fvg_retrace",
+   "direction": "both",
+   "confluence_factors": "[\"fvg_present_or_ob\",\"market_structure_aligned\"]",
+   "factor_quality": "rich"
+  }
+ ],
+ "z3Qn3fBoe2I": [
+  {
+   "name": "vacuum_volume_profile_trap_mes_15m",
+   "symbol": "MES",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "archetype:order_block",
+   "direction": "both",
+   "entry_sequence": [
+    {
+     "name": "market_phase",
+     "rule": "Market Phase (mentioned 3× in transcript)",
+     "step": 1,
+     "source": "speaker_concept",
+     "speaker_term": "Market Phase",
+     "indicators_needed": []
+    },
+    {
+     "name": "rebalance_retest",
+     "rule": "Rebalance/Retest (mentioned 1× in transcript)",
+     "step": 2,
+     "source": "speaker_concept",
+     "speaker_term": "Rebalance/Retest",
+     "indicators_needed": []
+    }
+   ],
+   "confluence_factors": [
+    "regime_match",
+    "structural_setup",
+    "fvg_present_or_ob",
+    "market_structure_aligned"
+   ],
+   "factor_quality": "rich",
+   "stop_loss": {
+    "anchor": "atr_multiple",
+    "source": "synthesized_from_prose",
+    "rationale": "ATR-multiple stop (1.5× ATR). Framework-overlay will apply structural ceilings per CLAUDE.md §4.",
+    "buffer_atr": 1.5
+   },
+   "targets": [
+    {
+     "type": "atr_multiple",
+     "priority": 1,
+     "rationale": "R-multiple fallback (3R). Framework-overlay applies adaptive engine when liquidity_target_clear satisfied.",
+     "r_multiple": 3
+    }
+   ],
+   "filters": [
+    {
+     "type": "speaker_filter",
+     "source": "speaker_concept",
+     "condition": "news_avoid_fomc_cpi_nfp_",
+     "rationale": "News Avoid (FOMC/CPI/NFP) (mentioned 3× in transcript)",
+     "speaker_term": "News Avoid (FOMC/CPI/NFP)"
+    }
+   ]
+  },
+  {
+   "name": "vacuum_volume_profile_trap_mnq_15m",
+   "symbol": "MNQ",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "archetype:order_block",
+   "direction": "both",
+   "entry_sequence": [
+    {
+     "name": "market_phase",
+     "rule": "Market Phase (mentioned 3× in transcript)",
+     "step": 1,
+     "source": "speaker_concept",
+     "speaker_term": "Market Phase",
+     "indicators_needed": []
+    },
+    {
+     "name": "rebalance_retest",
+     "rule": "Rebalance/Retest (mentioned 1× in transcript)",
+     "step": 2,
+     "source": "speaker_concept",
+     "speaker_term": "Rebalance/Retest",
+     "indicators_needed": []
+    }
+   ],
+   "confluence_factors": [
+    "regime_match",
+    "structural_setup",
+    "fvg_present_or_ob",
+    "market_structure_aligned"
+   ],
+   "factor_quality": "rich",
+   "stop_loss": {
+    "anchor": "atr_multiple",
+    "source": "synthesized_from_prose",
+    "rationale": "ATR-multiple stop (1.5× ATR). Framework-overlay will apply structural ceilings per CLAUDE.md §4.",
+    "buffer_atr": 1.5
+   },
+   "targets": [
+    {
+     "type": "atr_multiple",
+     "priority": 1,
+     "rationale": "R-multiple fallback (3R). Framework-overlay applies adaptive engine when liquidity_target_clear satisfied.",
+     "r_multiple": 3
+    }
+   ],
+   "filters": [
+    {
+     "type": "speaker_filter",
+     "source": "speaker_concept",
+     "condition": "news_avoid_fomc_cpi_nfp_",
+     "rationale": "News Avoid (FOMC/CPI/NFP) (mentioned 3× in transcript)",
+     "speaker_term": "News Avoid (FOMC/CPI/NFP)"
+    }
+   ]
+  },
+  {
+   "name": "vacuum_volume_profile_trap_mcl_15m",
+   "symbol": "MCL",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "archetype:order_block",
+   "direction": "both",
+   "entry_sequence": [
+    {
+     "name": "market_phase",
+     "rule": "Market Phase (mentioned 3× in transcript)",
+     "step": 1,
+     "source": "speaker_concept",
+     "speaker_term": "Market Phase",
+     "indicators_needed": []
+    },
+    {
+     "name": "rebalance_retest",
+     "rule": "Rebalance/Retest (mentioned 1× in transcript)",
+     "step": 2,
+     "source": "speaker_concept",
+     "speaker_term": "Rebalance/Retest",
+     "indicators_needed": []
+    }
+   ],
+   "confluence_factors": [
+    "regime_match",
+    "structural_setup",
+    "fvg_present_or_ob",
+    "market_structure_aligned"
+   ],
+   "factor_quality": "rich",
+   "stop_loss": {
+    "anchor": "atr_multiple",
+    "source": "synthesized_from_prose",
+    "rationale": "ATR-multiple stop (1.5× ATR). Framework-overlay will apply structural ceilings per CLAUDE.md §4.",
+    "buffer_atr": 1.5
+   },
+   "targets": [
+    {
+     "type": "atr_multiple",
+     "priority": 1,
+     "rationale": "R-multiple fallback (3R). Framework-overlay applies adaptive engine when liquidity_target_clear satisfied.",
+     "r_multiple": 3
+    }
+   ],
+   "filters": [
+    {
+     "type": "speaker_filter",
+     "source": "speaker_concept",
+     "condition": "news_avoid_fomc_cpi_nfp_",
+     "rationale": "News Avoid (FOMC/CPI/NFP) (mentioned 3× in transcript)",
+     "speaker_term": "News Avoid (FOMC/CPI/NFP)"
+    }
+   ]
+  },
+  {
+   "name": "vacuum_volume_profile_strategy_mes_15m",
+   "symbol": "MES",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "archetype:order_block",
+   "direction": "both",
+   "confluence_factors": "[\"fvg_present_or_ob\",\"market_structure_aligned\"]",
+   "factor_quality": "rich"
+  },
+  {
+   "name": "vacuum_volume_profile_strategy_mnq_15m",
+   "symbol": "MNQ",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "archetype:order_block",
+   "direction": "both",
+   "confluence_factors": "[\"fvg_present_or_ob\",\"market_structure_aligned\"]",
+   "factor_quality": "rich"
+  },
+  {
+   "name": "vacuum_volume_profile_strategy_mcl_15m",
+   "symbol": "MCL",
+   "lifecycle": "CANDIDATE",
+   "entry_indicator": "archetype:order_block",
+   "direction": "both",
+   "confluence_factors": "[\"fvg_present_or_ob\",\"market_structure_aligned\"]",
+   "factor_quality": "rich"
+  }
+ ]
+}
