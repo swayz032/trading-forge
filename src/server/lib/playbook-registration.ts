@@ -65,6 +65,46 @@ export function deriveCategoryFromArchetype(archetypeKey: string | null): Playbo
   return "CONTINUATION_STRATS";
 }
 
+/**
+ * Band C category heuristic for condition-compiled specs (no named archetype).
+ * Mirrors `deriveCategoryFromArchetype`'s keyword philosophy: unambiguous
+ * ICT/SMC/mean-reversion vocabulary in the spec's spine + trigger condition
+ * `object` text routes to the matching category; anything else falls back to
+ * the same documented CONTINUATION_STRATS default `deriveCategoryFromArchetype`
+ * uses for an unmapped/null archetype. This is NOT a new category system — it
+ * feeds the SAME 4 `PLAYBOOK_CATEGORIES` list literals in playbook_router.py
+ * via the same `registerStrategiesInPlaybook` mechanism.
+ */
+export interface ConditionSpecForCategory {
+  entry_conditions?: Array<{ object?: string | null; role?: string | null }> | null;
+}
+
+const REVERSAL_KEYWORDS = [
+  "reversal", "reclaim", "fade", "sweep", "spring", "upthrust", "rejection", "reject",
+];
+const MEAN_REV_KEYWORDS = [
+  "mean reversion", "lunch reversal", "midnight open", "vwap reversion", "revert to mean",
+];
+const ORB_KEYWORDS = [
+  "scalp", "opening range", "orb", "breakout", "break out",
+];
+
+export function deriveCategoryFromConditionSpec(spec: ConditionSpecForCategory): PlaybookCategory {
+  const conditions = (spec.entry_conditions ?? []).filter(
+    (c) => c.role === "spine" || c.role === "trigger",
+  );
+  const haystack = conditions
+    .map((c) => (typeof c.object === "string" ? c.object.toLowerCase() : ""))
+    .join(" | ");
+
+  if (haystack.trim().length === 0) return "CONTINUATION_STRATS";
+
+  if (MEAN_REV_KEYWORDS.some((kw) => haystack.includes(kw))) return "MEAN_REV_STRATS";
+  if (REVERSAL_KEYWORDS.some((kw) => haystack.includes(kw))) return "REVERSAL_STRATS";
+  if (ORB_KEYWORDS.some((kw) => haystack.includes(kw))) return "ORB_STRATS";
+  return "CONTINUATION_STRATS";
+}
+
 export interface RegisterResult {
   ok: boolean;
   category: PlaybookCategory;

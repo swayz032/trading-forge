@@ -264,6 +264,28 @@ def test_candle_confirmation_check_shapes():
 
 # ─── Governance / get_params / get_default_config sanity ──────────────────
 
+# ─── Overlay-visibility contract (Band C follow-up, closes B2-class bug) ───
+
+def test_strategy_name_defaults_to_synthetic_marker_when_not_provided():
+    """Ad-hoc/test usage without a DB-resolved name gets a synthetic,
+    intentionally-unregistered marker — fails safe (passthrough), never
+    accidentally collides with a real registered playbook name."""
+    spec = _minimal_compiled_spec()
+    strategy = from_compiled_spec(spec)
+    assert strategy.name.startswith("spec_conditions:")
+
+
+def test_strategy_name_uses_provided_db_name_when_given():
+    """This is the overlay-visibility fix: when backtester.py threads
+    config['strategy']['name'] (the exact DB strategies.name value Band B's
+    B2 playbook registration writes into playbook_router.py), the runtime
+    strategy instance's .name must match EXACTLY so
+    apply_eligibility_gate()'s registered-strategy check succeeds."""
+    spec = _minimal_compiled_spec()
+    strategy = from_compiled_spec(spec, strategy_name="buying_opportunity_mes_5m")
+    assert strategy.name == "buying_opportunity_mes_5m"
+
+
 def test_get_params_and_default_config_contain_spec_hash():
     spec = _minimal_compiled_spec()
     strategy = from_compiled_spec(spec)

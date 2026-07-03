@@ -7133,11 +7133,20 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
 
         _spec_trace_enabled = os.environ.get("TF_SPEC_TRACE", "").strip().lower() in ("1", "true", "yes")
         _strategy_cfg_for_spec = config.get("strategy", {}) if isinstance(config.get("strategy"), dict) else {}
+        # Overlay-visibility fix (Band C follow-up): config["strategy"]["name"]
+        # is the exact DB strategies.name value the /api/backtests route
+        # resolves (src/server/routes/backtests.ts:188, `name: strat!.name`)
+        # when no inline config is supplied — the SAME string spec-onboarding-
+        # service.ts's B2 playbook registration writes into playbook_router.py.
+        # Threading it through here is what makes apply_eligibility_gate()'s
+        # registered-strategy check actually match for condition-compiled
+        # strategies; see SpecConditionStrategy.__init__ for the full contract.
         strategy = from_compiled_spec(
             config["compiled_spec"],
             symbol=_strategy_cfg_for_spec.get("symbol", "MES"),
             timeframe=_strategy_cfg_for_spec.get("timeframe", "5m"),
             trace=_spec_trace_enabled,
+            strategy_name=_strategy_cfg_for_spec.get("name"),
         )
         if mode == "walkforward":
             from src.engine.walk_forward import run_walk_forward_class

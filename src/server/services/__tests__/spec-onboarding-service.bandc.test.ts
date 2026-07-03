@@ -12,12 +12,18 @@
  * same pglite bootstrap pattern.
  */
 import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { spawnSync } from "node:child_process";
 import { eq } from "drizzle-orm";
 import { createTestDb } from "../../__tests__/helpers/pglite-db.js";
 import type { TestDb } from "../../__tests__/helpers/pglite-db.js";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+// repo root: src/server/services/__tests__ -> up 4 levels
+const REPO_ROOT = join(__dirname, "..", "..", "..", "..");
 
 let injectedDb: TestDb["db"] | null = null;
 
@@ -201,5 +207,88 @@ describe("spec-onboarding-service — Band C condition-family-compiler routing",
     expect(matching.length).toBe(1);
     // Per-condition reason (not a blanket rejection message) is appended.
     expect(matching[0].verbatimDescription).toContain("control_flow_reset_unsupported");
+  });
+
+  it("OVERLAY-VISIBLE: a condition-compiled onboarded strategy's REGISTERED name makes apply_eligibility_gate's Mode A/B toggle meaningful (closes the B2-class overlay-bypass bug)", async () => {
+    // 1. Run the REAL onboarding pipeline end-to-end (same as the
+    //    CONDITION-COMPILED test above) -- this is what B2 playbook
+    //    registration actually writes to playbookRouterPath.
+    const result = await onboardSpecArtifact(conditionCompilableSpec("hash_ov_001", "ovVid001"), {
+      dryRun: false,
+      timeframe: "5m",
+      playbookRouterPath,
+      skipDslCritic: true,
+    });
+    expect(result.conditionCompiled).toBe(true);
+
+    const mesResult = result.perSymbol.find((p) => p.symbol === "MES")!;
+    expect(mesResult.status).toBe("inserted");
+    const registeredName = mesResult.strategyName;
+
+    // 2. Prove the EXACT registered name landed in playbook_router.py (the
+    //    same file apply_eligibility_gate's ALL_STRATS check reads from in
+    //    production) -- not just that registration reported ok=true.
+    const routerSource = readFileSync(playbookRouterPath, "utf-8");
+    expect(routerSource).toContain(registeredName);
+    const category = mesResult.playbookCategory!;
+    expect(routerSource).toMatch(new RegExp(`${category}\\s*=\\s*\\[[^\\]]*"${registeredName}"`));
+
+    // 3. Prove that name, once passed as SpecConditionStrategy.name (the
+    //    Band C engine-side fix -- backtester.py threads config.strategy.name
+    //    into from_compiled_spec(strategy_name=...)), makes
+    //    apply_eligibility_gate() actually distinguish Mode A from Mode B.
+    //    Non-mocked: real Python subprocess, real apply_eligibility_gate.
+    // apply_eligibility_gate() does `from src.engine.context.playbook_router
+    // import ALL_STRATS` -- a hardcoded module import, not a path parameter.
+    // The temp playbookRouterPath file exercises the SAME text-parsing
+    // registerStrategiesInPlaybook() writes to (proving the write mechanism
+    // works), but production's actual ALL_STRATS lives in the real module.
+    // To prove the EXACT registered content (not just a hand-written fixture
+    // name) satisfies the gate without mutating the real production source
+    // file during a test run, this driver loads the temp file as a module
+    // and monkeypatches the real module's ALL_STRATS to that parsed content
+    // before calling the gate -- the same value production would have after
+    // a real registration write.
+    const driver = `
+import json, sys
+sys.path.insert(0, ${JSON.stringify(REPO_ROOT)})
+import numpy as np
+import polars as pl
+import importlib.util
+
+spec = importlib.util.spec_from_file_location("temp_playbook_router", ${JSON.stringify(playbookRouterPath)})
+temp_router = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(temp_router)
+
+import src.engine.context.playbook_router as real_router
+real_router.ALL_STRATS = temp_router.ALL_STRATS
+
+from src.engine.backtester import apply_eligibility_gate
+
+assert ${JSON.stringify(registeredName)} in real_router.ALL_STRATS, "registered name not found in parsed playbook content"
+
+n = 50
+df = pl.DataFrame({"close": np.linspace(5000, 5010, n), "ts_event": [None] * n})
+entries = np.zeros(n, dtype=bool)
+entries[10] = True
+exits = np.zeros(n, dtype=bool)
+htf_cache = {"2026-01-05": object()}
+
+import os
+os.environ.pop("TF_CONFLUENCE_OVERLAY_DISABLED", None)
+_, _, stats_a = apply_eligibility_gate(entries, exits, df, "long", "MES", htf_cache=htf_cache, strategy_name=${JSON.stringify(registeredName)})
+
+os.environ["TF_CONFLUENCE_OVERLAY_DISABLED"] = "true"
+_, _, stats_b = apply_eligibility_gate(entries, exits, df, "long", "MES", htf_cache=htf_cache, strategy_name=${JSON.stringify(registeredName)})
+
+print(json.dumps({"mode_a": stats_a.get("mode"), "mode_b": stats_b.get("mode")}))
+`;
+    const proc = spawnSync("python", ["-c", driver], { encoding: "utf-8", cwd: REPO_ROOT });
+    expect(proc.status, `python driver stderr: ${proc.stderr}`).toBe(0);
+    const parsed = JSON.parse(proc.stdout.trim());
+
+    expect(parsed.mode_a).toBe("tf_institutional_overlay");
+    expect(parsed.mode_b).toBe("source_entry_only");
+    expect(parsed.mode_a).not.toBe(parsed.mode_b);
   });
 });

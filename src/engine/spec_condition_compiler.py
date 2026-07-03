@@ -155,6 +155,7 @@ class SpecConditionStrategy(BaseStrategy):
         timeframe: str = "5m",
         trace: bool = False,
         binding_plan: BindingPlan | None = None,
+        strategy_name: str | None = None,
     ) -> None:
         self.compiled_spec = compiled_spec
         self.spec = compiled_spec.get("spec", {}) if "spec" in compiled_spec else compiled_spec
@@ -163,7 +164,27 @@ class SpecConditionStrategy(BaseStrategy):
         self.timeframe = timeframe
         self.trace_enabled = trace
         self.binding_plan = binding_plan or compile_binding_plan(self.spec)
-        self.name = f"spec_conditions:{self.spec_hash[:12] if self.spec_hash else 'unknown'}"
+        # OVERLAY-VISIBILITY CONTRACT (Band C follow-up, closes the same bug
+        # class B2 closed for archetype-mapped onboards): `apply_eligibility_gate()`
+        # in backtester.py checks `strategy_name` against playbook_router.py's
+        # ALL_STRATS to decide whether the 7-layer institutional confluence
+        # overlay applies AT ALL — an unregistered name passes through
+        # unconditionally regardless of TF_CONFLUENCE_OVERLAY_DISABLED (both
+        # Mode A and Mode B look identical: gate never runs). spec-onboarding-
+        # service.ts's B2 playbook registration writes the EXACT DB
+        # `strategies.name` (e.g. "buying_opportunity_mes_5m") into
+        # playbook_router.py — so this class's runtime `.name` MUST equal that
+        # same string, not a synthetic hash-based marker, or registration is
+        # silently ineffective. `strategy_name` is threaded from
+        # `config["strategy"]["name"]` in backtester.py's compiled_spec
+        # dispatch branch (which the /api/backtests route resolves from
+        # `strategies.name` when no inline strategy config is supplied — the
+        # same DB column Band B registers). Falls back to a synthetic
+        # spec_hash-based marker ONLY when no name is supplied (ad-hoc/test
+        # usage) — that fallback is INTENTIONALLY unregistered/unmatched so it
+        # fails safe (passthrough) rather than accidentally colliding with a
+        # real registered name.
+        self.name = strategy_name if strategy_name else f"spec_conditions:{self.spec_hash[:12] if self.spec_hash else 'unknown'}"
         # Governance propagation (C1 mandate): any result produced by this
         # strategy MUST carry approximation=True through to governance_labels
         # so downstream verdicts stay honest.
@@ -474,9 +495,21 @@ class SpecConditionStrategy(BaseStrategy):
 
 
 def from_compiled_spec(
-    compiled_spec: dict[str, Any], symbol: str = "MES", timeframe: str = "5m", trace: bool = False
+    compiled_spec: dict[str, Any],
+    symbol: str = "MES",
+    timeframe: str = "5m",
+    trace: bool = False,
+    strategy_name: str | None = None,
 ) -> SpecConditionStrategy:
     """Factory mirroring the `_load_strategy_class` -> `cls()` pattern in
     backtester.py, but parameterized with the actual spec payload since this
-    strategy class is spec-instance-specific (not a fixed archetype)."""
-    return SpecConditionStrategy(compiled_spec=compiled_spec, symbol=symbol, timeframe=timeframe, trace=trace)
+    strategy class is spec-instance-specific (not a fixed archetype).
+
+    `strategy_name` should be the exact DB `strategies.name` value (the same
+    string spec-onboarding-service.ts's B2 playbook registration writes into
+    playbook_router.py) so the eligibility-gate overlay-visibility contract
+    holds — see SpecConditionStrategy.__init__ docstring comment.
+    """
+    return SpecConditionStrategy(
+        compiled_spec=compiled_spec, symbol=symbol, timeframe=timeframe, trace=trace, strategy_name=strategy_name
+    )

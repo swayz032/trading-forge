@@ -45,6 +45,7 @@ import { compileBindingPlan, type BindingPlan } from "../lib/spec-family-binding
 import {
   registerStrategiesInPlaybook,
   deriveCategoryFromArchetype,
+  deriveCategoryFromConditionSpec,
   type PlaybookCategory,
 } from "../lib/playbook-registration.js";
 import { logger } from "../lib/logger.js";
@@ -440,7 +441,16 @@ export async function onboardSpecArtifact(
     opts.symbols ?? (inferSymbolSet(null, conceptName, "MES") as SymbolCode[]);
   const timeframe = opts.timeframe ?? "5m";
   const sourceUrl = `https://www.youtube.com/watch?v=${video}`;
-  const category = deriveCategoryFromArchetype(archetypeMatch.matched ? archetypeMatch.archetypeKey : null);
+  // Band C: condition-compiled specs (no named archetype, binding plan cleared
+  // coverage) get a RESOLVED category from spine+trigger condition vocabulary,
+  // not the blanket CONTINUATION_STRATS default `deriveCategoryFromArchetype(null)`
+  // would otherwise produce. Registers into the SAME 4 playbook_router.py
+  // category lists via the same registerStrategiesInPlaybook mechanism below.
+  const category = archetypeMatch.matched
+    ? deriveCategoryFromArchetype(archetypeMatch.archetypeKey)
+    : conditionCompiled
+      ? deriveCategoryFromConditionSpec(spec)
+      : deriveCategoryFromArchetype(null);
 
   const perSymbol: PerSymbolOnboardResult[] = [];
 
