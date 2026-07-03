@@ -2292,6 +2292,45 @@ def run_walk_forward(
     }
 
 
+def _default_class_wf_skip_eligibility_gate() -> bool:
+    """Default for run_walk_forward_class's `skip_eligibility_gate` param.
+
+    HISTORY (verified this session, backtest-core investigation triggered by
+    E1's Mode A/B harness finding): this function has ALWAYS hardcoded the
+    class-path OOS eligibility gate OFF, with the documented rationale
+    "the gate is a live-trading filter (kill zones, bias, sweeps); applying
+    it in backtests kills 90%+ of signals... gate will be re-enabled when the
+    bias engine and context layer are properly calibrated." That rationale is
+    real and is NOT being overridden here — the DEFAULT stays skip=True,
+    preserving byte-identical results for every existing caller (archetype
+    walk-forwards, Band C spec-condition walk-forwards) that doesn't opt in.
+
+    THE BUG this fixes: the skip was a hardcoded LITERAL (`skip_eligibility_gate=True`),
+    not a parameter — so `apply_eligibility_gate()` (which is what actually
+    reads `TF_CONFLUENCE_OVERLAY_DISABLED`, see backtester.py's ABLATION
+    TOGGLE comment) was NEVER EVEN CALLED for class-path OOS windows. The
+    Mode A/B ablation toggle was silently dead on this path — Mode A and
+    Mode B produced byte-identical results for every class-based (archetype
+    or Band C condition-compiled) strategy, regardless of the env var.
+
+    THE FIX: `skip_eligibility_gate` is now a real parameter (see
+    run_walk_forward_class signature) so a caller doing a genuine Mode A/B
+    comparison can pass `skip_eligibility_gate=False` and let
+    `apply_eligibility_gate()`'s OWN internal ablation-toggle branch decide
+    Mode A ("tf_institutional_overlay") vs Mode B ("source_entry_only") —
+    exactly the same mechanism the DSL-spec path already uses via
+    `run_backtest(..., use_eligibility_gate=True)`'s default. This function
+    additionally reads `TF_CLASS_WF_ELIGIBILITY_GATE_ENABLED` so callers that
+    can't easily thread a new kwarg through (e.g. the backtester.py CLI) can
+    opt in via env var instead — mirrors how every other ablation/opt-in
+    toggle in this codebase is read (TF_CONFLUENCE_OVERLAY_DISABLED itself,
+    DETERMINISM_MODE, etc.).
+    """
+    return os.environ.get("TF_CLASS_WF_ELIGIBILITY_GATE_ENABLED", "").strip().lower() not in (
+        "1", "true", "yes",
+    )
+
+
 def run_walk_forward_class(
     strategy: BaseStrategy,
     start_date: str,
@@ -2303,6 +2342,7 @@ def run_walk_forward_class(
     is_ratio: float = 0.5,
     embargo_bars: int = 20,
     optimize: bool = False,
+    skip_eligibility_gate: Optional[bool] = None,
 ) -> dict:
     """Walk-forward validation for class-based (BaseStrategy) strategies.
 
@@ -2313,7 +2353,20 @@ def run_walk_forward_class(
         optimize: If True, raise NotImplementedError (Wave 24 carry-forward).
             Class-based strategies do not yet support per-window Optuna tuning.
             Callers must not silently fall through to fixed-param OOS — fail loudly.
+        skip_eligibility_gate: When True (the default, preserving legacy
+            behavior), every OOS window bypasses `apply_eligibility_gate()`
+            entirely — the documented "gate kills 90%+ of signals on
+            uncalibrated context" workaround. When explicitly set to False
+            (or left None with `TF_CLASS_WF_ELIGIBILITY_GATE_ENABLED=true`
+            set), the gate actually runs, which makes the
+            `TF_CONFLUENCE_OVERLAY_DISABLED` Mode A/B ablation toggle
+            meaningful for class-based strategies — see
+            `_default_class_wf_skip_eligibility_gate()` for the full history.
+            `None` (default) resolves via the env var so existing callers
+            that don't pass this kwarg are completely unaffected.
     """
+    if skip_eligibility_gate is None:
+        skip_eligibility_gate = _default_class_wf_skip_eligibility_gate()
     # F-12 FIX: Fail loudly if caller requests optimization on class strategies.
     # Previously the function ran silently with fixed params when optimize was not even
     # a parameter — callers who expected optimization got unreproduced results.
@@ -2398,11 +2451,16 @@ def run_walk_forward_class(
         # context — indicators are correctly initialized at the OOS boundary.
         # IS rows are stripped inside run_class_backtest() after compute(), before
         # signal execution. This mirrors the run_backtest() E7.2 warmup fix.
-        # Eligibility gate OFF for backtesting — test the STRATEGY, not the gate.
-        # The gate is a live-trading filter (kill zones, bias, sweeps). Applying it
-        # in backtests kills 90%+ of signals, producing statistically meaningless
-        # results (4-122 trades over 2 years). Gate will be re-enabled when
-        # the bias engine and context layer are properly calibrated.
+        # Eligibility gate OFF by DEFAULT for backtesting — test the STRATEGY, not
+        # the gate. The gate is a live-trading filter (kill zones, bias, sweeps).
+        # Applying it in backtests kills 90%+ of signals, producing statistically
+        # meaningless results (4-122 trades over 2 years). Gate will be re-enabled
+        # by default when the bias engine and context layer are properly
+        # calibrated. `skip_eligibility_gate` is now a real parameter (see
+        # _default_class_wf_skip_eligibility_gate docstring) rather than a
+        # hardcoded literal — a caller doing a genuine Mode A/B ablation
+        # comparison can opt in and the TF_CONFLUENCE_OVERLAY_DISABLED toggle
+        # becomes meaningful again for class-based strategies.
         # F-5 FIX: Derive OOS window date boundaries from oos_data timestamps so that
         # run_class_backtest's bar-count validation and any internal date-range logic
         # reference the WINDOW range, not the full backtest range.
@@ -2432,7 +2490,7 @@ def run_walk_forward_class(
             data=oos_data,
             htf_cache=htf_cache,
             daily_data=daily_data,
-            skip_eligibility_gate=True,
+            skip_eligibility_gate=skip_eligibility_gate,
             warmup_data=is_data,
         )
 
