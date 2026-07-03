@@ -410,6 +410,70 @@ async function findMissingColumns(columns: AlteredColumn[]): Promise<AlteredColu
   return missing;
 }
 
+// ─── deepscan14 F2: orphan .sql file detection ───────────────────────────────
+// Symmetric counterpart to the "journal entry, .sql missing" check further down
+// (loud since 2026-06-28). Diffs migrations/*.sql on disk against journal.entries
+// tags; any .sql file with no matching tag is an orphan that `pending` (computed
+// strictly from the journal) can never see. Non-blocking by design — see the
+// call-site comment above for why this must never fail-close boot.
+
+export function findOrphanSqlFiles(migrationsDir: string, journal: Journal): string[] {
+  const journalTags = new Set(journal.entries.map((e) => e.tag));
+  let files: string[];
+  try {
+    files = fs.readdirSync(migrationsDir);
+  } catch {
+    return [];
+  }
+  const orphans: string[] = [];
+  for (const f of files) {
+    if (!f.toLowerCase().endsWith(".sql")) continue;
+    const tag = f.slice(0, -4); // strip ".sql"
+    if (!journalTags.has(tag)) orphans.push(tag);
+  }
+  return orphans.sort();
+}
+
+export async function checkForOrphanSqlFiles(journal: Journal, correlationId: string | null): Promise<void> {
+  const migrationsDir = resolveMigrationsDir();
+  const orphans = findOrphanSqlFiles(migrationsDir, journal);
+  if (orphans.length === 0) return;
+
+  logger.warn(
+    { orphanTags: orphans, migrationsDir },
+    "boot-migration: orphan .sql file(s) found with NO matching _journal.json entry — these will NEVER auto-apply",
+  );
+  // Both dispatches are individually guarded — insertAuditRowSafe is documented as
+  // "never throws" but a mocked/misbehaving implementation must not be able to
+  // escape this non-blocking check and take down boot.
+  try {
+    await insertAuditRowSafe({
+      action: "boot_migration.orphan_sql_file_no_journal_entry",
+      entityType: "migration",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { orphanTags: orphans, migrationsDir } as Record<string, unknown>,
+      result: { count: orphans.length } as Record<string, unknown>,
+      status: "warning",
+      correlationId,
+    });
+  } catch (auditErr) {
+    logger.warn({ err: String(auditErr) }, "boot-migration: orphan-sql-file audit row write failed (non-blocking)");
+  }
+  try {
+    await fireDiscordCritical(
+      "Boot migration: orphan .sql file(s) with no journal entry",
+      `${orphans.length} migration .sql file(s) exist on disk with NO corresponding entry in ` +
+        `meta/_journal.json — they will NEVER be applied by boot-migration-runner:\n\n` +
+        orphans.map((t) => `  • ${t}.sql`).join("\n") +
+        `\n\nRegister them in _journal.json (or delete if they're stale/abandoned drafts). ` +
+        `Not blocking boot.`,
+    );
+  } catch (discordErr) {
+    logger.warn({ err: String(discordErr) }, "boot-migration: orphan-sql-file Discord dispatch failed (non-blocking)");
+  }
+}
+
 // ─── Core migration runner ────────────────────────────────────────────────────
 
 /**
@@ -450,6 +514,22 @@ export async function runPendingMigrations(
   }
 
   const journal: Journal = JSON.parse(readUtf8StripBom(journalPath));
+
+  // ─── deepscan14 F2: orphan .sql file with no journal entry ──────────────────
+  // The opposite gap from the "journal entry, file missing" case below (which is
+  // already loud): a .sql file dropped on disk without a corresponding
+  // meta/_journal.json entry is INVISIBLE to `pending` (computed strictly from
+  // journal.entries below) — it silently never applies, no error, no warning,
+  // no audit row. This happens from a bad merge, a forgotten
+  // `drizzle-kit generate` journal write, or a manually-copied migration file.
+  // Non-blocking (skip-and-continue) — the same fail-open contract as the
+  // missing-file case, because an unreachable migration is a schema gap the
+  // operator needs to see, not a reason to brick autonomous boot.
+  try {
+    await checkForOrphanSqlFiles(journal, correlationId);
+  } catch (orphanCheckErr) {
+    logger.warn({ err: String(orphanCheckErr) }, "boot-migration: orphan-sql-file check itself failed (non-blocking)");
+  }
 
   // ─── Bootstrap __drizzle_migrations table ───────────────────────────────────
   // First deploy may not have the tracking table yet (drizzle creates it on

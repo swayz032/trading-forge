@@ -180,6 +180,55 @@ const _n8nHealthAlertDedup = new Map<string, number>();
 // (the 4h rolling-sharpe cron would otherwise re-alert a decaying strategy every run).
 const _sharpeDecayAlertDedup = new Map<string, number>();
 
+// deepscan14 E6: once-per-hour-per-table dedup for the stale-pending-sweeper's
+// own failure signal. Each per-table sweep catch used to be logger.error only —
+// if the sweeper itself starts failing every 5 min (e.g. a schema drift on one
+// table), orphaned rows accumulate silently with zero operator-visible signal.
+const _stalePendingSweepFailureAlertDedup = new Map<string, number>();
+
+/**
+ * deepscan14 E6: writes an audit row + a rate-limited (once/hour/table) Discord
+ * WARN when a single stale-pending-sweeper sub-sweep throws. Never throws itself
+ * — a failure recording its own failure must not take down the sweeper cron.
+ */
+async function _recordStalePendingSweepFailure(
+  tableName: string,
+  err: unknown,
+  correlationId: string,
+): Promise<void> {
+  const errMsg = err instanceof Error ? err.message : String(err);
+  try {
+    await db.insert(auditLog).values({
+      action: "stale_pending_sweep.table_sweep_failed",
+      entityType: tableName,
+      entityId: null,
+      input: { table: tableName },
+      result: { error: errMsg },
+      status: "error",
+      correlationId,
+    });
+  } catch (auditErr) {
+    logger.error({ table: tableName, err: auditErr }, "stale-pending-sweeper: failed to write table_sweep_failed audit row (non-blocking)");
+  }
+
+  const now = Date.now();
+  const last = _stalePendingSweepFailureAlertDedup.get(tableName) ?? 0;
+  if (now - last < 60 * 60 * 1000) return;
+  _stalePendingSweepFailureAlertDedup.set(tableName, now);
+  try {
+    notifyWarning(
+      "Stale-pending sweep failing",
+      appendFamilyGradePostscript(
+        `stale-pending-sweeper: the sub-sweep for table "${tableName}" is failing. Latest error: ${errMsg}`,
+        "One of the background cleanup jobs is erroring repeatedly.",
+        "It won't stop your trades, but orphaned rows may pile up unnoticed. Ping Tony if this repeats.",
+      ),
+    );
+  } catch (notifyErr) {
+    logger.error({ table: tableName, err: notifyErr }, "stale-pending-sweeper: Discord WARN dispatch failed (non-blocking)");
+  }
+}
+
 // deepscan7 DS7-H3 2026-07-02: the autonomous-scout run is fire-and-forget and
 // routed persistent failures only to logger.error — the research pipeline could
 // be silently dark for 30 days. Track consecutive failures here; after 3 in a
@@ -2537,6 +2586,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
         }
       } catch (err) {
         logger.error({ table: sweep.name, err }, "stale-pending-sweeper: error sweeping table");
+        await _recordStalePendingSweepFailure(sweep.name, err, correlationId);
       }
     }
 
@@ -2574,6 +2624,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
       }
     } catch (err) {
       logger.error({ table: "critic_optimization_runs", err }, "stale-pending-sweeper: error sweeping table");
+      await _recordStalePendingSweepFailure("critic_optimization_runs", err, correlationId);
     }
 
     try {
@@ -2602,6 +2653,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
       }
     } catch (err) {
       logger.error({ table: "critic_candidates", err }, "stale-pending-sweeper: error sweeping table");
+      await _recordStalePendingSweepFailure("critic_candidates", err, correlationId);
     }
 
     // FINDING #5 FIX: backtests stuck 'running' >90min block conveyor re-enqueue.
@@ -2629,6 +2681,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
       }
     } catch (err) {
       logger.error({ table: "backtests", err }, "stale-pending-sweeper: error sweeping backtests");
+      await _recordStalePendingSweepFailure("backtests", err, correlationId);
     }
 
     // Fix 3d (2026-06-29): agent_jobs — use COALESCE(started_at, created_at) so the
@@ -2659,6 +2712,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
       }
     } catch (err) {
       logger.error({ table: "agent_jobs", err }, "stale-pending-sweeper: error sweeping agent_jobs");
+      await _recordStalePendingSweepFailure("agent_jobs", err, correlationId);
     }
 
     if (totalSwept === 0) {

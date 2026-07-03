@@ -156,14 +156,18 @@ describe("B6 — await stopStream before returning from TESTING→PAPER transiti
     expect(authorityIdx).toBeGreaterThan(stopFailedIdx);
   });
 
-  it("does NOT call stopStream for non-TESTING→PAPER transitions", () => {
-    // The stopStream call is guarded by `if (fromState === "TESTING" && toState === "PAPER")`.
-    // Verify the guard still exists in the B6 block.
+  it("calls stopStream for ANY transition into PAPER (deepscan14 A1 — includes SHADOW→PAPER)", () => {
+    // deepscan14 A1: the guard was generalized from
+    // `fromState === "TESTING" && toState === "PAPER"` to `toState === "PAPER"`
+    // because the Wave 29 default ladder reaches PAPER via SHADOW→PAPER, and the
+    // internal sim stream must stop on that edge too (dual-stream P&L corruption fix).
     const b6BlockIdx = src.indexOf("B6 FIX");
     expect(b6BlockIdx).toBeGreaterThan(-1);
-    // The if-guard is ~1168 chars from the B6 FIX comment; use 1400 window
-    const block = src.slice(b6BlockIdx, b6BlockIdx + 1400);
-    expect(block).toContain('fromState === "TESTING" && toState === "PAPER"');
+    // The if-guard sits after the verbose deepscan14 A1 comment; use a generous window
+    const block = src.slice(b6BlockIdx, b6BlockIdx + 3000);
+    expect(block).toContain('if (toState === "PAPER")');
+    // And it must NOT have reverted to the old fromState-restricted guard as the live condition.
+    expect(block).not.toContain('if (fromState === "TESTING" && toState === "PAPER")');
   });
 });
 

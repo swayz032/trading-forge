@@ -15,7 +15,7 @@
  * - New variant must beat parent OOS Sharpe by >= 10%
  */
 
-import { eq, and, gte, desc, ne, isNotNull } from "drizzle-orm";
+import { eq, and, or, gte, desc, ne, isNotNull } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { strategies, backtests, auditLog, mutationOutcomes } from "../db/schema.js";
 import { runBacktest } from "./backtest-service.js";
@@ -39,6 +39,38 @@ async function getLifecycleService() {
 const MAX_GENERATIONS = _MAX_GENERATIONS_SHARED;
 const IMPROVEMENT_THRESHOLD = 0.10; // 10% improvement required
 const COOLDOWN_DAYS = _COOLDOWN_DAYS_SHARED;
+
+// deepscan14 H4: resolve the TRUE lineage root by walking the parent chain.
+// Prior cooldown logic (`strategy.parentStrategyId ?? strategyId`) only looked
+// one generation up, so a gen2 strategy's "root" resolved to gen1 instead of
+// gen0 — the gen2→gen3 cooldown check then queried for children of gen1 only,
+// missing the whole gen0 lineage's evolution history. Used as a fallback for
+// legacy rows created before `lineageRootId` was stamped at INSERT time (see
+// the child-insert site below); new rows short-circuit via the stamped column.
+// Cycle-guarded (corrupted parentStrategyId chains must not hang this forever).
+export async function resolveLineageRootByWalking(startParentId: string): Promise<string> {
+  let currentId = startParentId;
+  const visited = new Set<string>();
+  for (let i = 0; i < 50; i++) {
+    if (visited.has(currentId)) {
+      logger.warn(
+        { fn: "resolveLineageRootByWalking", startParentId, cycleAt: currentId },
+        "Lineage parent-chain cycle detected — stopping walk at current node",
+      );
+      break;
+    }
+    visited.add(currentId);
+    const [row] = await db
+      .select({ parentStrategyId: strategies.parentStrategyId, lineageRootId: strategies.lineageRootId })
+      .from(strategies)
+      .where(eq(strategies.id, currentId));
+    if (!row) break;
+    if (row.lineageRootId) return row.lineageRootId; // ancestor already stamped — shortcut
+    if (!row.parentStrategyId) break; // currentId IS the root
+    currentId = row.parentStrategyId;
+  }
+  return currentId;
+}
 
 interface MutationResult {
   params: Record<string, number>;
@@ -126,20 +158,23 @@ export async function evolveStrategy(
   }
 
   // Guardrail: cooldown — check if we evolved this lineage within 7 days.
-  // Track E F-6: current query only looks one level up (parentStrategyId = rootId).
-  // This means generation 2→3 mutations bypass cooldown because their parentStrategyId
-  // points to gen-1, not gen-0. Full fix requires a lineageRootId column (migration
-  // 0125b, Track B) so ALL children in a lineage inherit the root's ID and the
-  // WHERE clause can filter on lineageRootId. Until that column exists, this
-  // implementation catches the common case (gen 0→1 mutations) but NOT deeper chains.
-  // TODO: replace with lineageRootId filter after migration 0125b is applied.
-  const rootId = strategy.parentStrategyId ?? strategyId;
+  // deepscan14 H4 fix: resolve the TRUE lineage root (migration 0188 added
+  // `lineageRootId`, stamped at every evolution INSERT below). Prefer the
+  // stamped column; fall back to a live parent-chain walk for legacy rows
+  // created before this fix (never stamped). Closes the gen2→gen3 cooldown
+  // bypass — the old code checked only one generation up, so deeper mutations
+  // in the same lineage slipped past the 7-day guardrail entirely.
+  const rootId = strategy.lineageRootId
+    ?? (strategy.parentStrategyId ? await resolveLineageRootByWalking(strategy.parentStrategyId) : strategyId);
   const recentEvolutions = await db
     .select()
     .from(strategies)
     .where(
       and(
-        eq(strategies.parentStrategyId, rootId),
+        // lineageRootId catches every stamped descendant at any depth; parentStrategyId
+        // is kept as an OR arm so legacy direct gen0→gen1 children (never stamped) are
+        // still caught — same coverage the pre-fix code had, now additive not exclusive.
+        or(eq(strategies.lineageRootId, rootId), eq(strategies.parentStrategyId, rootId)),
         gte(strategies.createdAt, new Date(Date.now() - COOLDOWN_DAYS * 24 * 60 * 60 * 1000)),
       ),
     );
@@ -587,6 +622,11 @@ export async function evolveStrategy(
             lifecycleState: "CANDIDATE",
             preferredRegime: strategy.preferredRegime,
             parentStrategyId: strategyId,
+            // deepscan14 H4: stamp the resolved TRUE root so descendants at any
+            // depth resolve their cooldown lineage without needing to walk the
+            // chain again. `rootId` above already resolved to strategyId's own
+            // lineage root (or strategyId itself when strategy IS the gen0 root).
+            lineageRootId: rootId,
             generation: strategy.generation + 1,
             source: "evolved",
             tags: evolvedTags,
