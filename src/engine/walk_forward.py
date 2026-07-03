@@ -2336,7 +2336,16 @@ def run_walk_forward_class(
     start_date: str,
     end_date: str,
     slippage_ticks: float = 1.0,
-    commission_per_side: float = 0.62,
+    # deepscan14-cf FIX 1 (B2 full closure): default changed 0.62 → None. This
+    # is a plain Python function param (no pydantic model_fields_set to lean
+    # on), so a `float = 0.62` default was indistinguishable from an explicit
+    # `commission_per_side=0.62` call — the exact same ambiguity Track 4 fixed
+    # on the sibling `run_class_backtest()` (this function's only caller for
+    # this kwarg, forwarded verbatim at the `run_class_backtest(...)` call
+    # below). None flows straight through to run_class_backtest's own
+    # firm-override -> explicit-value -> spec.default_commission resolution
+    # net, so behavior for every existing MES/MNQ/MCL caller is unchanged.
+    commission_per_side: Optional[float] = None,
     firm_key: Optional[str] = None,
     n_splits: int = 8,
     is_ratio: float = 0.5,

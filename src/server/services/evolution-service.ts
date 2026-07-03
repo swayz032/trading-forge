@@ -238,7 +238,14 @@ export async function evolveStrategy(
   // Load prior mutation outcomes for this strategy lineage to feed the LLM
   // context. We use the root lineage ID so outcomes from parent generations
   // inform child generation mutations.
-  const lineageRootId = strategy.parentStrategyId ?? strategyId;
+  // deepscan14-cf H4b: this used to independently recompute
+  // `strategy.parentStrategyId ?? strategyId` — the same one-hop bug the
+  // cooldown check above was fixed for (H4). A gen2 strategy's mutation
+  // history query resolved to its gen1 parent instead of the true gen0 root,
+  // so gen2->gen3 mutations never saw gen0's outcomes. Reuse `rootId`
+  // (already resolved above via the stamped lineageRootId column / walk) so
+  // both checks agree on the same root and no second DB walk is spent.
+  const lineageRootId = rootId;
   const priorMutationOutcomes = await db
     .select({
       paramName: mutationOutcomes.paramName,

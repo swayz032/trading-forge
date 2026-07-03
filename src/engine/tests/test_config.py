@@ -126,6 +126,13 @@ class TestStrategyConfig:
 
 class TestBacktestRequest:
     def test_default_commission(self):
+        # deepscan14-cf FIX 1 (B2 full closure): the raw pydantic field default
+        # is now None, not 0.62 — an omitted commission_per_side must be an
+        # unambiguous sentinel distinguishable from an explicit `0.62` in the
+        # request payload (see config.py field comment). The EFFECTIVE 0.62
+        # MES commission is resolved downstream in backtester.py (firm override
+        # -> explicit value -> spec.default_commission fallback when None),
+        # not baked into the schema default anymore.
         cfg = StrategyConfig(
             name="Test",
             symbol="MES",
@@ -142,7 +149,8 @@ class TestBacktestRequest:
             start_date="2023-01-01",
             end_date="2023-06-30",
         )
-        assert req.commission_per_side == 0.62
+        assert req.commission_per_side is None
+        assert "commission_per_side" not in req.model_fields_set
         assert req.slippage_ticks == 1.0
 
 

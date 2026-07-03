@@ -216,14 +216,24 @@ describe("closePosition — roll spread cost applied", () => {
     wireDbMocks(pos);
 
     // Capture the values passed to tx.insert(paperTrades).values(...)
+    // deepscan14-cf: tx.insert() is called TWICE inside the transaction since the
+    // H5 fix (2026-06-23) moved the audit-log insert inside the tx for atomicity
+    // (see paper-execution-service.ts closePosition, call 1 = paperTrades, call 4 =
+    // auditLog). A single shared `.mockReturnValue({...})` object made the auditLog
+    // insert's values() overwrite capturedTradeValues, so this only captures the
+    // FIRST insert's values (paperTrades) and leaves later inserts (auditLog) alone.
     let capturedTradeValues: Record<string, unknown> | null = null;
     (db as any).transaction = vi.fn(async (cb: (tx: unknown) => Promise<unknown>) => {
       const tx = {
-        insert: vi.fn().mockReturnValue({
-          values: vi.fn(function(vals: Record<string, unknown>) {
-            capturedTradeValues = vals;
-            return { returning: vi.fn().mockResolvedValue([{ id: "trade-1", pnl: "0" }]) };
-          }),
+        insert: vi.fn(function () {
+          return {
+            values: vi.fn(function(vals: Record<string, unknown>) {
+              if (capturedTradeValues === null) {
+                capturedTradeValues = vals;
+              }
+              return { returning: vi.fn().mockResolvedValue([{ id: "trade-1", pnl: "0" }]) };
+            }),
+          };
         }),
         update: vi.fn().mockReturnValue({
           set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
@@ -234,22 +244,27 @@ describe("closePosition — roll spread cost applied", () => {
 
     // exitSignalPrice = 5010, entryPrice = 5000
     // grossPnl = (actualExit - 5000) × 5 × 1 (after exit slippage deduction)
-    // commission = 0 (mocked), MES roll 2026-03-12 crossed: rollSpreadCost = $2
+    // commission = 0 (mocked), MES roll 2026-03-12 crossed: rollSpreadCost = $3.75
+    // (deep-scan14-cf FIX 2: roll-calendar-data.ts canonically mirrors
+    // roll_spread_cost.py's Wave 27.5 Pass D recalibration — MES = 3 ticks ×
+    // $1.25/tick = $3.75/contract per roll side, not the pre-recalibration $2.
+    // Test was stale against the code; code matches the cited 2025-2026 CME
+    // institutional-standard roll spread table. See roll_spread_cost.py header.)
     // netPnl = grossPnl - commission - rollSpreadCost
-    // We verify rollSpreadCost is persisted as "2" and that pnl = grossPnl - 2
-    // (slippage affects grossPnl but the roll cost is always exactly $2 for 1 MES contract).
+    // We verify rollSpreadCost is persisted as "3.75" and that pnl = grossPnl - 3.75
+    // (slippage affects grossPnl but the roll cost is always exactly $3.75 for 1 MES contract).
     await closePosition("pos-roll-1", 5010);
 
     expect(capturedTradeValues).not.toBeNull();
-    expect(capturedTradeValues!["rollSpreadCost"]).toBe("2");
-    // pnl = grossPnl - 0 commission - 2 rollSpreadCost
+    expect(capturedTradeValues!["rollSpreadCost"]).toBe("3.75");
+    // pnl = grossPnl - 0 commission - 3.75 rollSpreadCost
     // grossPnl is whatever slippage produces; we only care that the roll deduction is applied.
     // Wave hardening 2026-06-22: netPnl = grossPnl - commission - rollSpreadCost.
     // Read the real per-trade commission (MES default $0.62/side => $1.24 RT) from the
     // captured row rather than assuming commission=0.
     const grossPnlFromTrade = Number(capturedTradeValues!["grossPnl"]);
     const commissionFromTrade = Number(capturedTradeValues!["commission"]);
-    expect(Number(capturedTradeValues!["pnl"])).toBeCloseTo(grossPnlFromTrade - commissionFromTrade - 2, 2);
+    expect(Number(capturedTradeValues!["pnl"])).toBeCloseTo(grossPnlFromTrade - commissionFromTrade - 3.75, 2);
   });
 });
 
@@ -262,14 +277,20 @@ describe("closePosition — no roll in hold window", () => {
     const pos = makePosition({ entryTime: new Date("2026-12-15T14:00:00Z") });
     wireDbMocks(pos);
 
+    // deepscan14-cf: see Test 1 comment — only capture the FIRST tx.insert() call
+    // (paperTrades) so the later in-tx auditLog insert doesn't clobber it.
     let capturedTradeValues: Record<string, unknown> | null = null;
     (db as any).transaction = vi.fn(async (cb: (tx: unknown) => Promise<unknown>) => {
       const tx = {
-        insert: vi.fn().mockReturnValue({
-          values: vi.fn(function(vals: Record<string, unknown>) {
-            capturedTradeValues = vals;
-            return { returning: vi.fn().mockResolvedValue([{ id: "trade-2", pnl: "0" }]) };
-          }),
+        insert: vi.fn(function () {
+          return {
+            values: vi.fn(function(vals: Record<string, unknown>) {
+              if (capturedTradeValues === null) {
+                capturedTradeValues = vals;
+              }
+              return { returning: vi.fn().mockResolvedValue([{ id: "trade-2", pnl: "0" }]) };
+            }),
+          };
         }),
         update: vi.fn().mockReturnValue({
           set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
@@ -317,7 +338,7 @@ describe("closePosition — SSE paper:roll-spread-applied", () => {
       expect.objectContaining({
         symbol: "MES",
         contracts: 1,
-        costUsd: 2,
+        costUsd: 3.75,
         rollDates: expect.arrayContaining(["2026-03-12"]),
       }),
     );
@@ -374,6 +395,6 @@ describe("closePosition — return value rollSpreadCost", () => {
     const result = await closePosition("pos-roll-1", 5010);
 
     expect(result).not.toBeNull();
-    expect(result!.rollSpreadCost).toBe(2);
+    expect(result!.rollSpreadCost).toBe(3.75);
   });
 });
