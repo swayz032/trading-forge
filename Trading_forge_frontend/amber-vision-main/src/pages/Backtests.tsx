@@ -9,7 +9,7 @@ import { FlaskConical, TrendingUp, Calendar, Clock } from "lucide-react";
 import { useBacktests } from "@/hooks/useBacktests";
 import { useStrategies } from "@/hooks/useStrategies";
 import { useSSE } from "@/hooks/useSSE";
-import { num, timeAgo } from "@/lib/utils";
+import { num, timeAgo, formatReturnPct } from "@/lib/utils";
 import type { Backtest, Strategy } from "@/types/api";
 
 function fmtDuration(ms: number | null | undefined): string {
@@ -119,14 +119,15 @@ export default function Backtests() {
         }
       } },
     { key: "totalTrades", header: "Trades", align: "right" as const, mono: true, sortable: true },
-    { key: "pnl", header: "P&L", align: "right" as const, mono: true, sortable: true,
+    { key: "pnl", header: "Return", align: "right" as const, mono: true, sortable: true,
       render: (r: any) => {
         if (r.status !== "completed") return <span className="text-text-muted">--</span>;
-        const totalReturn = num(r.totalReturn);
-        const pnl = Math.abs(totalReturn) < 10 ? totalReturn * 50_000 : totalReturn;
+        // totalReturn is a vectorbt ratio — render honestly as a %, never as
+        // fabricated dollars against an assumed account (deep-scan #13).
+        const ratio = num(r.totalReturn);
         return (
-          <span className={pnl >= 0 ? "text-profit" : "text-loss"}>
-            {pnl >= 0 ? "+" : ""}${Math.abs(pnl).toLocaleString("en-US", { maximumFractionDigits: 0 })}
+          <span className={ratio >= 0 ? "text-profit" : "text-loss"}>
+            {formatReturnPct(ratio)}
           </span>
         );
       } },
