@@ -11955,6 +11955,14 @@ Deferred files (other-agent territory, not touched): scheduler.ts, paper-journal
 
 ---
 
+### Session Log — 2026-07-03 Corpus complete + provenance chain + cert lock
+
+**Mission:** finish the 40-video certified re-extraction; align spec artifacts with phase-0's provenance_stamp chain (the "tag" for early extractions); lock the certified pipeline against silent drift.
+**Work completed:** 40/40 videos CONSERVED (38 Δ=0, 2 benign Δ=2), specs committed at corpus/specs/ + manifest (9776b38); extraction_provenance block wired into the runner (pipeline commit + prompt sha256 + model digest + 2-pass-union + certified_gate) and BACKFILLED onto all 81 existing artifacts with provenance_backfilled=true (895ce11) — spec_provenance_ref on backtest rows now resolves end-to-end to verbatim transcript spans; scripts/check-extraction-cert.ts + certification-lock.json hash 6 pipeline surfaces + the gate prompt, drift = exit 1 with re-gate instructions.
+**Verification:** cert check EXTRACTION CERT OK post-relock; tsc 0; manifest 40 CONSERVED; other agent's HMAC fix to retire-old-library.ts reviewed and preserved.
+**Known-facts updates:** heredoc-written `` becomes literal 0x08 backspace bytes (use python raw strings + grep-verify edits on disk before launching runs); background-job python asserts can fail silently while the job continues on old code.
+**Carry-forward for next session:** Band B onboarding (spec→strategies converter + playbook registration + ×3 split + full CANDIDATE ladder) → then operator-gated retire-old-library.ts --apply (needs ADMIN_PROMOTE_HMAC_SECRET); 4 unresolved strategies from 117→40 mapping need manual review.
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### `git add <paths>` + `git commit` is UNSAFE on the shared index — use `git commit -- <paths>` (pinned 2026-06-23)
