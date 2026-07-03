@@ -490,16 +490,30 @@ export default function StrategyDetail() {
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {(() => {
                     const last = fanData.length > 0 ? fanData[fanData.length - 1] : null;
-                    const probabilityOfRuin = num(mcRun.probabilityOfRuin);
+                    // Canonical ruin metric is the BCa CI upper bound (0-1 fraction),
+                    // the same value the B14 gate blocks on at > 0.20. Reading the
+                    // scalar probabilityOfRuin is the CLAUDE.md §13 anti-pattern — it's
+                    // only shown, labeled "legacy", when the CI is absent (pre-W27.5 MC).
+                    const ciHigh = typeof mcRun.riskMetrics?.probability_of_ruin_ci?.ci_high === "number"
+                      ? (mcRun.riskMetrics.probability_of_ruin_ci.ci_high as number)
+                      : null;
+                    const scalar = num(mcRun.probabilityOfRuin);
+                    const scalarFrac = scalar > 1 ? scalar / 100 : scalar; // normalize to 0-1
+                    const isLegacy = ciHigh == null;
+                    const ruin = ciHigh ?? scalarFrac;
                     return [
                       { label: "Median Terminal", value: last ? `$${(last.p50 / 1000).toFixed(1)}k` : "—" },
                       { label: "Mean Terminal", value: last ? `$${(last.mean / 1000).toFixed(1)}k` : "—" },
                       { label: "5th / 95th Pct", value: last ? `$${(last.p5 / 1000).toFixed(0)}k / $${(last.p95 / 1000).toFixed(0)}k` : "—" },
-                      { label: "Risk of Ruin", value: `${probabilityOfRuin.toFixed(2)}%`, variant: probabilityOfRuin > 5 ? "loss" : "profit" },
+                      {
+                        label: isLegacy ? "Ruin (legacy pt est.)" : "Ruin CI 95% upper",
+                        value: `${(ruin * 100).toFixed(1)}%`,
+                        variant: ruin > 0.20 ? "loss" : isLegacy ? "warn" : "profit",
+                      },
                     ].map((k) => (
                       <div key={k.label} className="forge-card p-4">
                         <span className="text-[10px] uppercase tracking-widest text-text-muted block mb-1">{k.label}</span>
-                        <span className={`text-lg font-mono font-bold ${k.variant === "loss" ? "text-loss" : k.variant === "profit" ? "text-profit" : "text-foreground"}`}>
+                        <span className={`text-lg font-mono font-bold ${k.variant === "loss" ? "text-loss" : k.variant === "warn" ? "text-amber-400" : k.variant === "profit" ? "text-profit" : "text-foreground"}`}>
                           {k.value}
                         </span>
                       </div>
