@@ -6,7 +6,17 @@ import { config as dotenvConfig } from "dotenv";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 
+// The service manager (NSSM) is the authority for NODE_ENV. dotenv override:true
+// exists to keep rotated SECRETS fresh — it must not let a stale
+// NODE_ENV=development in .env downgrade a production process and silently
+// activate the auth dev bypass (deep-scan #13 CRITICAL).
+const _preExistingNodeEnv = process.env["NODE_ENV"];
+
 dotenvConfig({ override: true });
+
+if (_preExistingNodeEnv) {
+  process.env["NODE_ENV"] = _preExistingNodeEnv;
+}
 
 // H4: Override BW_SESSION from .bw-session-runtime if it exists.
 // bitwarden-session-refresh-service writes this file after a successful refresh.
