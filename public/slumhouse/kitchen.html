@@ -28,9 +28,10 @@
     .kv-hero-art {
       display: block;
       width: 100%;
-      aspect-ratio: 1983 / 793; /* matches the banner render — shows full, edge-to-edge, uncropped */
+      height: 230px;               /* less tall */
       background-image: url('/slumhouse/images/slumdawg-kitchen.png');
-      background-size: cover;
+      background-size: contain;    /* keep the FULL image, never crop (blends into black bg) */
+      background-repeat: no-repeat;
       background-position: center;
     }
 
@@ -172,7 +173,7 @@
     }
     @media (max-width: 640px) {
       .kv-hero { margin-bottom: 20px; }
-      .kv-hero-art { aspect-ratio: 1983 / 793; }
+      .kv-hero-art { height: 130px; }
 
       .kv-section-label { font-size: 10px; margin-bottom: 12px; }
       .kv-pipeline { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 24px; }
@@ -252,7 +253,6 @@
     <nav class="sh-nav">
       <a class="sh-pill" href="/slumhouse/crib.html">The Crib</a>
       <a class="sh-pill active" href="/slumhouse/kitchen.html">The Kitchen</a>
-      <a class="sh-pill" href="/slumhouse/menu.html">The Menu</a>
       <a class="sh-pill" href="/slumhouse/recipe.html">The Recipe</a>
       <a class="sh-pill" href="/slumhouse/office.html">The Office</a>
     </nav>
