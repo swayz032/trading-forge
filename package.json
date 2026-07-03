@@ -22,6 +22,7 @@
     "check:family-grade-postscript": "tsx scripts/check-family-grade-postscript.ts",
     "check:sse-contract": "node scripts/check-sse-contract.mjs",
     "check:ts-python-exit-parity": "npx tsx scripts/wave26-ts-python-exit-parity.ts",
+    "check:spec-binding-plan-parity": "npx tsx scripts/check-spec-binding-plan-parity.ts",
     "check:ts-python-tier1-parity": "npx tsx scripts/check-ts-python-tier1-parity.ts",
     "check:ts-python-pm-factor-parity": "npx tsx scripts/check-ts-python-pm-factor-parity.ts",
     "check:ts-python-firm-rules-version": "npx tsx scripts/check-ts-python-firm-rules-version.ts",
