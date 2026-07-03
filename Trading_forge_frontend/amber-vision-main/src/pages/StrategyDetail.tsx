@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/forge/Pagination";
 import { toast } from "sonner";
 
+import { EvidenceTab } from "@/components/strategy/evidence/EvidenceTab";
 import { useStrategy } from "@/hooks/useStrategies";
 import { useBacktests, useBacktestTrades, useBacktestEquity, useRunBacktest } from "@/hooks/useBacktests";
 import { useOhlcv } from "@/hooks/useData";
@@ -349,7 +350,7 @@ export default function StrategyDetail() {
       >
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList className="bg-surface-1 border border-border/20 p-1 rounded-lg">
-            {["Overview", "Backtests", "Monte Carlo", "Trades", "Config"].map((tab) => (
+            {["Overview", "Backtests", "Monte Carlo", "Trades", "Evidence", "Config"].map((tab) => (
               <TabsTrigger
                 key={tab}
                 value={tab.toLowerCase().replace(" ", "-")}
@@ -619,6 +620,17 @@ export default function StrategyDetail() {
                 <p className="text-sm text-text-muted text-center py-8">No configuration</p>
               )}
             </div>
+          </TabsContent>
+
+          {/* deep-scan #13: EvidenceTab was built + tested + backed by a live
+              endpoint (/api/strategies/:id/evidence) but never mounted, so the
+              video→spec→strategy provenance chain was unreachable. */}
+          <TabsContent value="evidence">
+            <EvidenceTab
+              strategyId={id!}
+              strategySource={(strategy as any)?.source ?? null}
+              strategyTags={(strategy as any)?.tags ?? null}
+            />
           </TabsContent>
         </Tabs>
       </motion.div>
