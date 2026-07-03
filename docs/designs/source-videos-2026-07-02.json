@@ -1,0 +1,508 @@
+{
+ "strategies": 117,
+ "unique_videos": 40,
+ "unresolved_strategies": [
+  "bounce_off_level_mcl_5m",
+  "bounce_off_level_mnq_5m",
+  "ict_power_of_3_mcl_4h",
+  "ict_power_of_3_mnq_4h"
+ ],
+ "videos": {
+  "gddYspvW0_w": {
+   "strategies": [
+    "200_ma_ceiling_floor_mcl_15m",
+    "200_ma_ceiling_floor_mcl_15m",
+    "200_ma_ceiling_floor_mcl_15m",
+    "200_ma_ceiling_floor_mes_15m",
+    "200_ma_ceiling_floor_mes_15m",
+    "200_ma_ceiling_floor_mes_15m",
+    "200_ma_ceiling_floor_mnq_15m",
+    "200_ma_ceiling_floor_mnq_15m",
+    "200_ma_ceiling_floor_mnq_15m",
+    "ma_trend_following_20_mcl_1h",
+    "ma_trend_following_20_mcl_1h",
+    "ma_trend_following_20_mcl_1h",
+    "ma_trend_following_20_mes_1h",
+    "ma_trend_following_20_mes_1h",
+    "ma_trend_following_20_mes_1h",
+    "ma_trend_following_20_mnq_1h",
+    "ma_trend_following_20_mnq_1h",
+    "ma_trend_following_20_mnq_1h"
+   ]
+  },
+  "aHLIE_TXjpo": {
+   "strategies": [
+    "4h_5m_bias_entry_mcl_5m",
+    "4h_5m_bias_entry_mcl_5m",
+    "4h_5m_bias_entry_mcl_5m",
+    "4h_5m_bias_entry_mes_5m",
+    "4h_5m_bias_entry_mes_5m",
+    "4h_5m_bias_entry_mes_5m",
+    "4h_5m_bias_entry_mnq_5m",
+    "4h_5m_bias_entry_mnq_5m",
+    "4h_5m_bias_entry_mnq_5m"
+   ]
+  },
+  "iU8ww5MC2FQ": {
+   "strategies": [
+    "4h_candle_box_continuation_mcl_15m",
+    "4h_candle_box_continuation_mcl_15m",
+    "4h_candle_box_continuation_mcl_15m",
+    "4h_candle_box_continuation_mes_15m",
+    "4h_candle_box_continuation_mes_15m",
+    "4h_candle_box_continuation_mes_15m",
+    "4h_candle_box_continuation_mnq_15m",
+    "4h_candle_box_continuation_mnq_15m",
+    "4h_candle_box_continuation_mnq_15m"
+   ]
+  },
+  "LOcaRWcc1xI": {
+   "strategies": [
+    "4h_pattern_entry_model_mcl_1m",
+    "4h_pattern_entry_model_mcl_1m",
+    "4h_pattern_entry_model_mcl_1m",
+    "4h_pattern_entry_model_mes_1m",
+    "4h_pattern_entry_model_mes_1m",
+    "4h_pattern_entry_model_mes_1m",
+    "4h_pattern_entry_model_mnq_1m",
+    "4h_pattern_entry_model_mnq_1m",
+    "4h_pattern_entry_model_mnq_1m",
+    "fvg_retrace_mcl_15m",
+    "fvg_retrace_mes_15m",
+    "fvg_retrace_mes_15m",
+    "fvg_retrace_mes_15m",
+    "fvg_retrace_mnq_15m",
+    "ict_power_of_3_mes_15m",
+    "ict_power_of_3_mes_15m",
+    "ict_power_of_3_mes_15m"
+   ]
+  },
+  "N7uP9V0Iktc": {
+   "strategies": [
+    "bounce_off_level_mes_5m",
+    "bounce_off_level_mes_5m",
+    "bounce_off_level_mes_5m"
+   ]
+  },
+  "xTTDH5iRhJc": {
+   "strategies": [
+    "break_and_bounce_scalping_mcl_5m",
+    "break_and_bounce_scalping_mcl_5m",
+    "break_and_bounce_scalping_mcl_5m",
+    "break_and_bounce_scalping_mes_5m",
+    "break_and_bounce_scalping_mes_5m",
+    "break_and_bounce_scalping_mes_5m",
+    "break_and_bounce_scalping_mnq_5m",
+    "break_and_bounce_scalping_mnq_5m",
+    "break_and_bounce_scalping_mnq_5m"
+   ]
+  },
+  "mNcoaNdAyIE": {
+   "strategies": [
+    "break_and_retest_strategy_mcl_1m",
+    "break_and_retest_strategy_mcl_1m",
+    "break_and_retest_strategy_mcl_1m",
+    "break_and_retest_strategy_mes_1m",
+    "break_and_retest_strategy_mes_1m",
+    "break_and_retest_strategy_mes_1m",
+    "break_and_retest_strategy_mnq_1m",
+    "break_and_retest_strategy_mnq_1m",
+    "break_and_retest_strategy_mnq_1m"
+   ]
+  },
+  "UBvfsImdI2U": {
+   "strategies": [
+    "candle_range_theory_mcl_1m",
+    "candle_range_theory_mcl_1m",
+    "candle_range_theory_mcl_1m",
+    "candle_range_theory_mes_1m",
+    "candle_range_theory_mes_1m",
+    "candle_range_theory_mes_1m",
+    "candle_range_theory_mnq_1m",
+    "candle_range_theory_mnq_1m",
+    "candle_range_theory_mnq_1m"
+   ]
+  },
+  "N7SM8a7Dc9s": {
+   "strategies": [
+    "daily_bias_liquidity_reversal_mcl_1m",
+    "daily_bias_liquidity_reversal_mcl_1m",
+    "daily_bias_liquidity_reversal_mcl_1m",
+    "daily_bias_liquidity_reversal_mes_1m",
+    "daily_bias_liquidity_reversal_mes_1m",
+    "daily_bias_liquidity_reversal_mes_1m",
+    "daily_bias_liquidity_reversal_mnq_1m",
+    "daily_bias_liquidity_reversal_mnq_1m",
+    "daily_bias_liquidity_reversal_mnq_1m"
+   ]
+  },
+  "dE4lPhAWke8": {
+   "strategies": [
+    "daily_bias_market_structure_mcl_5m",
+    "daily_bias_market_structure_mes_5m",
+    "daily_bias_market_structure_mnq_5m",
+    "fvg_retrace_mcl_15m",
+    "fvg_retrace_mnq_15m",
+    "market_structure_shift_mcl_15m",
+    "market_structure_shift_mes_15m",
+    "market_structure_shift_mnq_15m"
+   ]
+  },
+  "m-G1ag77aVc": {
+   "strategies": [
+    "demand_supply_zone_entry_mcl_4h",
+    "demand_supply_zone_entry_mcl_4h",
+    "demand_supply_zone_entry_mcl_4h",
+    "demand_supply_zone_entry_mes_4h",
+    "demand_supply_zone_entry_mes_4h",
+    "demand_supply_zone_entry_mes_4h",
+    "demand_supply_zone_entry_mnq_4h",
+    "demand_supply_zone_entry_mnq_4h",
+    "demand_supply_zone_entry_mnq_4h"
+   ]
+  },
+  "h6TnE7QClJg": {
+   "strategies": [
+    "ema10_20_cci_confirmation_mcl_1h",
+    "ema10_20_cci_confirmation_mcl_1h",
+    "ema10_20_cci_confirmation_mcl_1h",
+    "ema10_20_cci_confirmation_mes_1h",
+    "ema10_20_cci_confirmation_mes_1h",
+    "ema10_20_cci_confirmation_mes_1h",
+    "ema10_20_cci_confirmation_mnq_1h",
+    "ema10_20_cci_confirmation_mnq_1h",
+    "ema10_20_cci_confirmation_mnq_1h"
+   ]
+  },
+  "HfZTCZTDfWk": {
+   "strategies": [
+    "ema_crossover_4h_retrace_mcl_4h",
+    "ema_crossover_4h_retrace_mcl_4h",
+    "ema_crossover_4h_retrace_mcl_4h",
+    "ema_crossover_4h_retrace_mes_4h",
+    "ema_crossover_4h_retrace_mes_4h",
+    "ema_crossover_4h_retrace_mes_4h",
+    "ema_crossover_4h_retrace_mnq_4h",
+    "ema_crossover_4h_retrace_mnq_4h",
+    "ema_crossover_4h_retrace_mnq_4h"
+   ]
+  },
+  "FqxEKDxemtI": {
+   "strategies": [
+    "extreme_band_reversal_strategy_mcl_15m",
+    "extreme_band_reversal_strategy_mcl_15m",
+    "extreme_band_reversal_strategy_mcl_15m",
+    "extreme_band_reversal_strategy_mes_15m",
+    "extreme_band_reversal_strategy_mes_15m",
+    "extreme_band_reversal_strategy_mes_15m",
+    "extreme_band_reversal_strategy_mnq_15m",
+    "extreme_band_reversal_strategy_mnq_15m",
+    "extreme_band_reversal_strategy_mnq_15m"
+   ]
+  },
+  "E8Wg6tFPYjo": {
+   "strategies": [
+    "fib_retracement_setup_mcl_15m",
+    "fib_retracement_setup_mcl_15m",
+    "fib_retracement_setup_mcl_15m",
+    "fib_retracement_setup_mes_15m",
+    "fib_retracement_setup_mes_15m",
+    "fib_retracement_setup_mes_15m",
+    "fib_retracement_setup_mnq_15m",
+    "fib_retracement_setup_mnq_15m",
+    "fib_retracement_setup_mnq_15m",
+    "fvg_retrace_mcl_15m",
+    "fvg_retrace_mnq_15m",
+    "multi_timeframe_fib_strategy_mcl_15m",
+    "multi_timeframe_fib_strategy_mcl_15m",
+    "multi_timeframe_fib_strategy_mcl_15m",
+    "multi_timeframe_fib_strategy_mes_15m",
+    "multi_timeframe_fib_strategy_mes_15m",
+    "multi_timeframe_fib_strategy_mes_15m",
+    "multi_timeframe_fib_strategy_mnq_15m",
+    "multi_timeframe_fib_strategy_mnq_15m",
+    "multi_timeframe_fib_strategy_mnq_15m"
+   ]
+  },
+  "NMUd0oX_7Pg": {
+   "strategies": [
+    "first_15_min_open_mcl_5m",
+    "first_15_min_open_mes_5m",
+    "first_15_min_open_mes_5m",
+    "first_15_min_open_mes_5m",
+    "first_15_min_open_mnq_5m"
+   ]
+  },
+  "Qxlu8v_6G3Y": {
+   "strategies": [
+    "first_candle_rule_nasdaq_mcl_15m",
+    "first_candle_rule_nasdaq_mes_15m",
+    "first_candle_rule_nasdaq_mes_15m",
+    "first_candle_rule_nasdaq_mes_15m",
+    "first_candle_rule_nasdaq_mnq_15m"
+   ]
+  },
+  "KXWRtV2LOVc": {
+   "strategies": [
+    "four_h_crt_timed_mes_15m",
+    "four_h_crt_timed_mes_15m",
+    "four_h_crt_timed_mes_15m"
+   ]
+  },
+  "FAKWJ-1NlLE": {
+   "strategies": [
+    "fvg_retrace_mcl_15m",
+    "fvg_retrace_mnq_15m",
+    "ict_silver_bullet_ny_am_mes_15m",
+    "ict_silver_bullet_ny_am_mes_15m",
+    "ict_silver_bullet_ny_am_mes_15m"
+   ]
+  },
+  "bQp37aD1JLE": {
+   "strategies": [
+    "fvg_retrace_mcl_15m",
+    "fvg_retrace_mnq_15m"
+   ]
+  },
+  "x1ydP8bC7OE": {
+   "strategies": [
+    "fvg_retrace_mcl_15m",
+    "fvg_retrace_mnq_15m"
+   ]
+  },
+  "nV9gknhy2Ew": {
+   "strategies": [
+    "ict_power_of_3_mes_4h",
+    "ict_power_of_3_mes_4h",
+    "ict_power_of_3_mes_4h",
+    "market_structure_shift_mcl_15m",
+    "market_structure_shift_mes_15m",
+    "market_structure_shift_mnq_15m"
+   ]
+  },
+  "lRMFcsqhYBU": {
+   "strategies": [
+    "major_structure_level_identification_mcl_4h",
+    "major_structure_level_identification_mcl_4h",
+    "major_structure_level_identification_mcl_4h",
+    "major_structure_level_identification_mes_4h",
+    "major_structure_level_identification_mes_4h",
+    "major_structure_level_identification_mes_4h",
+    "major_structure_level_identification_mnq_4h",
+    "major_structure_level_identification_mnq_4h",
+    "major_structure_level_identification_mnq_4h"
+   ]
+  },
+  "7ieYBa7Z-Hg": {
+   "strategies": [
+    "market_structure_scalping_mcl_1m",
+    "market_structure_scalping_mcl_1m",
+    "market_structure_scalping_mcl_1m",
+    "market_structure_scalping_mes_1m",
+    "market_structure_scalping_mes_1m",
+    "market_structure_scalping_mes_1m",
+    "market_structure_scalping_mnq_1m",
+    "market_structure_scalping_mnq_1m",
+    "market_structure_scalping_mnq_1m"
+   ]
+  },
+  "75DJN5UVQnw": {
+   "strategies": [
+    "master_institutional_supply_demand_mcl_5m",
+    "master_institutional_supply_demand_mes_5m",
+    "master_institutional_supply_demand_mes_5m",
+    "master_institutional_supply_demand_mes_5m",
+    "master_institutional_supply_demand_mnq_5m"
+   ]
+  },
+  "l-2iKbcm5UI": {
+   "strategies": [
+    "multi_confluence_short_setup_mcl_5m",
+    "multi_confluence_short_setup_mcl_5m",
+    "multi_confluence_short_setup_mcl_5m",
+    "multi_confluence_short_setup_mes_5m",
+    "multi_confluence_short_setup_mes_5m",
+    "multi_confluence_short_setup_mes_5m",
+    "multi_confluence_short_setup_mnq_5m",
+    "multi_confluence_short_setup_mnq_5m",
+    "multi_confluence_short_setup_mnq_5m"
+   ]
+  },
+  "sVkmZklJDHI": {
+   "strategies": [
+    "one_candle_setup_nasdaq_mcl_5m",
+    "one_candle_setup_nasdaq_mes_5m",
+    "one_candle_setup_nasdaq_mes_5m",
+    "one_candle_setup_nasdaq_mes_5m",
+    "one_candle_setup_nasdaq_mnq_5m"
+   ]
+  },
+  "oDLt9zh33LE": {
+   "strategies": [
+    "orb_mcl_15m",
+    "orb_mcl_15m",
+    "orb_mcl_5m",
+    "orb_mes_5m",
+    "orb_mes_5m",
+    "orb_mes_5m",
+    "orb_mnq_15m",
+    "orb_mnq_15m",
+    "orb_mnq_5m"
+   ]
+  },
+  "jlShztsY3oA": {
+   "strategies": [
+    "orb_mcl_15m",
+    "orb_mcl_15m",
+    "orb_mcl_5m",
+    "orb_mes_15m",
+    "orb_mes_15m",
+    "orb_mes_15m",
+    "orb_mes_15m",
+    "orb_mes_15m",
+    "orb_mes_15m",
+    "orb_mnq_15m",
+    "orb_mnq_15m",
+    "orb_mnq_5m"
+   ]
+  },
+  "e5HQXYBUW-Q": {
+   "strategies": [
+    "orb_mcl_15m",
+    "orb_mcl_15m",
+    "orb_mcl_5m",
+    "orb_mes_15m",
+    "orb_mes_15m",
+    "orb_mes_15m",
+    "orb_mes_15m",
+    "orb_mes_15m",
+    "orb_mes_15m",
+    "orb_mnq_15m",
+    "orb_mnq_15m",
+    "orb_mnq_5m"
+   ]
+  },
+  "c8VLqF0XDR4": {
+   "strategies": [
+    "orb_mcl_15m",
+    "orb_mcl_15m",
+    "orb_mcl_5m",
+    "orb_mes_5m",
+    "orb_mes_5m",
+    "orb_mes_5m",
+    "orb_mnq_15m",
+    "orb_mnq_15m",
+    "orb_mnq_5m"
+   ]
+  },
+  "WV1fyudd7fw": {
+   "strategies": [
+    "orb_mcl_15m",
+    "orb_mcl_15m",
+    "orb_mcl_5m",
+    "orb_mnq_15m",
+    "orb_mnq_15m",
+    "orb_mnq_5m"
+   ]
+  },
+  "deymRD3kSD0": {
+   "strategies": [
+    "orb_mcl_15m",
+    "orb_mcl_15m",
+    "orb_mcl_5m",
+    "orb_mes_5m",
+    "orb_mes_5m",
+    "orb_mes_5m",
+    "orb_mnq_15m",
+    "orb_mnq_15m",
+    "orb_mnq_5m"
+   ]
+  },
+  "snNkQSyWX4k": {
+   "strategies": [
+    "sma_crossover_scalp_crude_mcl_30m",
+    "sma_crossover_scalp_crude_mcl_30m",
+    "sma_crossover_scalp_crude_mcl_30m",
+    "sma_crossover_scalp_crude_mes_30m",
+    "sma_crossover_scalp_crude_mes_30m",
+    "sma_crossover_scalp_crude_mes_30m",
+    "sma_crossover_scalp_crude_mnq_30m",
+    "sma_crossover_scalp_crude_mnq_30m",
+    "sma_crossover_scalp_crude_mnq_30m"
+   ]
+  },
+  "dHmOosYof48": {
+   "strategies": [
+    "top_down_bias_oil_mcl_1h",
+    "top_down_bias_oil_mes_1h",
+    "top_down_bias_oil_mes_1h",
+    "top_down_bias_oil_mes_1h",
+    "top_down_bias_oil_mnq_1h"
+   ]
+  },
+  "qLtq73bTPBA": {
+   "strategies": [
+    "top_down_trendline_breakout_mcl_15m",
+    "top_down_trendline_breakout_mcl_15m",
+    "top_down_trendline_breakout_mcl_15m",
+    "top_down_trendline_breakout_mes_15m",
+    "top_down_trendline_breakout_mes_15m",
+    "top_down_trendline_breakout_mes_15m",
+    "top_down_trendline_breakout_mnq_15m",
+    "top_down_trendline_breakout_mnq_15m",
+    "top_down_trendline_breakout_mnq_15m"
+   ]
+  },
+  "VTEQ2fhGLqE": {
+   "strategies": [
+    "trendline_bounce_setup_mcl_4h",
+    "trendline_bounce_setup_mcl_4h",
+    "trendline_bounce_setup_mcl_4h",
+    "trendline_bounce_setup_mes_4h",
+    "trendline_bounce_setup_mes_4h",
+    "trendline_bounce_setup_mes_4h",
+    "trendline_bounce_setup_mnq_4h",
+    "trendline_bounce_setup_mnq_4h",
+    "trendline_bounce_setup_mnq_4h"
+   ]
+  },
+  "z3Qn3fBoe2I": {
+   "strategies": [
+    "vacuum_volume_profile_strategy_mcl_15m",
+    "vacuum_volume_profile_strategy_mes_15m",
+    "vacuum_volume_profile_strategy_mnq_15m",
+    "vacuum_volume_profile_trap_mcl_15m",
+    "vacuum_volume_profile_trap_mes_15m",
+    "vacuum_volume_profile_trap_mes_15m",
+    "vacuum_volume_profile_trap_mes_15m",
+    "vacuum_volume_profile_trap_mnq_15m"
+   ]
+  },
+  "1HFoStW_wsc": {
+   "strategies": [
+    "vwap_institutional_anchor_mcl_15m",
+    "vwap_institutional_anchor_mcl_15m",
+    "vwap_institutional_anchor_mcl_15m",
+    "vwap_institutional_anchor_mes_15m",
+    "vwap_institutional_anchor_mes_15m",
+    "vwap_institutional_anchor_mes_15m",
+    "vwap_institutional_anchor_mnq_15m",
+    "vwap_institutional_anchor_mnq_15m",
+    "vwap_institutional_anchor_mnq_15m"
+   ]
+  },
+  "ktkqq7QsN9Q": {
+   "strategies": [
+    "vwap_magnet_principle_mcl_5m",
+    "vwap_magnet_principle_mcl_5m",
+    "vwap_magnet_principle_mcl_5m",
+    "vwap_magnet_principle_mes_5m",
+    "vwap_magnet_principle_mes_5m",
+    "vwap_magnet_principle_mes_5m",
+    "vwap_magnet_principle_mnq_5m",
+    "vwap_magnet_principle_mnq_5m",
+    "vwap_magnet_principle_mnq_5m"
+   ]
+  }
+ }
+}
