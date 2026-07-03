@@ -41,6 +41,7 @@ import { applyFrameworkOverlay, type StrategySource } from "./framework-overlay.
 import { auditGraduatedConfig, formatAuditResult } from "./graduated-strategy-auditor.js";
 import { inferSymbolSet } from "../lib/wave25-strategy-defaults.js";
 import { matchArchetype, type ArchetypeMatchResult } from "../lib/spec-archetype-matcher.js";
+import { compileBindingPlan, type BindingPlan } from "../lib/spec-family-bindings.js";
 import {
   registerStrategiesInPlaybook,
   deriveCategoryFromArchetype,
@@ -309,12 +310,21 @@ export function buildDirectionalEntries(
   direction: string,
   archetypeKey: string | null,
   triggerText: string,
+  // Band C: when the spec didn't match a named archetype but the condition-
+  // family binding plan cleared the coverage threshold (see
+  // spec-family-bindings.ts::compileBindingPlan), this marker routes the
+  // strategy to SpecConditionStrategy in the Python engine instead of
+  // needs_archetype. Takes priority over the archetypeKey-null fallback but
+  // never overrides an actual archetype match.
+  conditionCompiledMarker: string | null = null,
 ): { entry_long: string; entry_short: string } {
   const marker = archetypeKey
     ? `archetype_dispatch:${archetypeKey}`
-    : triggerText.length > 0
-      ? `pending_archetype:${normalizeFactorToken(triggerText)}`
-      : "";
+    : conditionCompiledMarker
+      ? conditionCompiledMarker
+      : triggerText.length > 0
+        ? `pending_archetype:${normalizeFactorToken(triggerText)}`
+        : "";
 
   if (direction === "long") return { entry_long: marker, entry_short: BIDIR_SENTINEL };
   if (direction === "short") return { entry_long: BIDIR_SENTINEL, entry_short: marker };
@@ -364,6 +374,10 @@ export interface OnboardSpecResult {
   ok: boolean;
   reason?: string;
   archetypeMatch?: ArchetypeMatchResult;
+  /** Band C: set only when archetypeMatch did not match — the condition-family binding decision. */
+  bindingPlan?: BindingPlan | null;
+  /** Band C: true when routed to spec_conditions dispatch (archetype unmatched but binding plan compiled). */
+  conditionCompiled?: boolean;
   conceptName?: string;
   confluenceFactors?: string[];
   perSymbol: PerSymbolOnboardResult[];
@@ -393,9 +407,34 @@ export async function onboardSpecArtifact(
   const archetypeMatch = matchArchetype(spec.entry_conditions);
   const { conceptName, triggerText } = deriveConceptName(spec, video);
   const confluenceFactors = deriveConfluenceFactors(spec);
+
+  // ── Band C: condition-family compiler fallback ──────────────────────────
+  // When no named archetype matches, don't fall straight to needs_archetype —
+  // first ask whether the individual condition FAMILIES (WAIT_SESSION,
+  // INVALIDATE, etc.) clear the binding-plan coverage threshold against
+  // EXISTING engine primitives (spec-family-bindings.ts, mirrored in
+  // src/engine/spec_family_bindings.py). This is a pure, synchronous,
+  // no-I/O function — safe to call inline here, no Python subprocess needed.
+  // Honesty preserved: an insufficiently-bound spec (e.g. the trigger
+  // condition itself can't bind, or too few spine conditions bind) still
+  // routes to needs_archetype_queue with PER-CONDITION reasons attached
+  // (see queueReasons below) — never a blanket blind accept.
+  let bindingPlan: BindingPlan | null = null;
+  let conditionCompiled = false;
+  if (!archetypeMatch.matched) {
+    bindingPlan = compileBindingPlan({
+      entry_conditions: spec.entry_conditions,
+      invalidations: spec.invalidations,
+      entry_trigger_id: spec.entry_trigger_id,
+    });
+    conditionCompiled = bindingPlan.compiled;
+  }
+
   const entryIndicator = archetypeMatch.matched
     ? `archetype:${archetypeMatch.archetypeKey}`
-    : `needs_archetype:${normalizeFactorToken(conceptName)}`;
+    : conditionCompiled
+      ? `spec_conditions:${specHash.slice(0, 12)}`
+      : `needs_archetype:${normalizeFactorToken(conceptName)}`;
 
   const symbols: SymbolCode[] =
     opts.symbols ?? (inferSymbolSet(null, conceptName, "MES") as SymbolCode[]);
@@ -418,7 +457,7 @@ export async function onboardSpecArtifact(
           strategyId: existing.id,
           strategyName,
           lifecycleState: "unknown",
-          needsArchetype: !archetypeMatch.matched,
+          needsArchetype: !archetypeMatch.matched && !conditionCompiled,
         });
         continue;
       }
@@ -429,6 +468,7 @@ export async function onboardSpecArtifact(
       spec.direction,
       archetypeMatch.matched ? (archetypeMatch.archetypeKey as string) : null,
       triggerText,
+      conditionCompiled ? `spec_conditions:${specHash.slice(0, 12)}` : null,
     );
 
     // ── Gate 1: Bidirectional completeness ──────────────────────────────────
@@ -446,7 +486,7 @@ export async function onboardSpecArtifact(
         status: "rejected_gate1",
         strategyName,
         lifecycleState: "n/a",
-        needsArchetype: !archetypeMatch.matched,
+        needsArchetype: !archetypeMatch.matched && !conditionCompiled,
         reason: gate1.reason ?? "gate1_failed",
       });
       continue;
@@ -514,6 +554,22 @@ export async function onboardSpecArtifact(
         graph_canonical_hash: artifact.graph_canonical_hash,
         ledger_d: artifact.ledger_d,
         spec,
+        // Band C: audit-visible summary of the binding-plan decision (the
+        // Python engine recomputes the full plan itself at backtest time via
+        // spec_family_bindings.compile_binding_plan — this summary is for
+        // fast operator/audit inspection without a recompute).
+        ...(bindingPlan
+          ? {
+              binding_plan_summary: {
+                compiled: bindingPlan.compiled,
+                approximation_used: bindingPlan.approximationUsed,
+                spine_bound: bindingPlan.spineBound,
+                spine_total: bindingPlan.spineTotal,
+                trigger_bound: bindingPlan.triggerBound,
+                queue_reasons: bindingPlan.queueReasons,
+              },
+            }
+          : {}),
       },
     };
 
@@ -525,7 +581,7 @@ export async function onboardSpecArtifact(
         status: "rejected_auditor",
         strategyName,
         lifecycleState: "n/a",
-        needsArchetype: !archetypeMatch.matched,
+        needsArchetype: !archetypeMatch.matched && !conditionCompiled,
         reason: formatAuditResult(auditResult),
       });
       continue;
@@ -552,19 +608,23 @@ export async function onboardSpecArtifact(
         status: "rejected_dsl_critic",
         strategyName,
         lifecycleState: "n/a",
-        needsArchetype: !archetypeMatch.matched,
+        needsArchetype: !archetypeMatch.matched && !conditionCompiled,
         reason: "dsl_quality_critic_rejected",
       });
       continue;
     }
 
-    const lifecycleState = archetypeMatch.matched ? "CANDIDATE" : "NEEDS_ARCHETYPE";
+    const lifecycleState = archetypeMatch.matched || conditionCompiled ? "CANDIDATE" : "NEEDS_ARCHETYPE";
     const tags = [
       "cross-validated",
       "spec-onboarding",
       `spec_hash:${specHash}`,
       `spec_video:${video}`,
-      archetypeMatch.matched ? `archetype:${archetypeMatch.archetypeKey}` : "needs_archetype",
+      archetypeMatch.matched
+        ? `archetype:${archetypeMatch.archetypeKey}`
+        : conditionCompiled
+          ? "condition_compiled"
+          : "needs_archetype",
     ];
 
     // ── Single-entry-point guard (deep-scan #11 mandate) ───────────────────
@@ -576,7 +636,7 @@ export async function onboardSpecArtifact(
         status: "dry_run_planned",
         strategyName,
         lifecycleState,
-        needsArchetype: !archetypeMatch.matched,
+        needsArchetype: !archetypeMatch.matched && !conditionCompiled,
         playbookCategory: category,
       });
       continue;
@@ -610,25 +670,35 @@ export async function onboardSpecArtifact(
         status: "registration_failed",
         strategyName,
         lifecycleState,
-        needsArchetype: !archetypeMatch.matched,
+        needsArchetype: !archetypeMatch.matched && !conditionCompiled,
         reason: regResult.reason,
       });
       continue;
     }
 
     // ── needs_archetype_queue routing (honest parking, never silently dropped) ──
-    if (!archetypeMatch.matched) {
+    // Band C: only queues when NEITHER a named archetype matched NOR the
+    // condition-family binding plan cleared coverage. Per-condition binding
+    // reasons (never a blanket rejection) are appended to verbatimDescription
+    // when a binding plan was computed.
+    if (!archetypeMatch.matched && !conditionCompiled) {
       const spineAndTriggerObjects = spec.entry_conditions
         .filter((c) => c.role === "spine" || c.role === "trigger")
         .map((c) => c.object)
         .filter(Boolean)
         .join(" | ");
       const trigger = spec.entry_conditions.find((c) => c.id === spec.entry_trigger_id);
+      const reasonSuffix =
+        bindingPlan && bindingPlan.queueReasons.length > 0
+          ? ` [unbindable: ${bindingPlan.queueReasons
+              .map((r) => `${r.type}:"${r.object}" (${r.reason})`)
+              .join("; ")}]`
+          : "";
       await db
         .insert(needsArchetypeQueue)
         .values({
           speakerTerm: normalizeFactorToken(conceptName),
-          verbatimDescription: spineAndTriggerObjects || conceptName,
+          verbatimDescription: (spineAndTriggerObjects || conceptName) + reasonSuffix,
           transcriptQuote: trigger?.evidence ?? null,
           sourceUrl,
           extractionCount: 1,
@@ -645,7 +715,7 @@ export async function onboardSpecArtifact(
       strategyId: inserted.id,
       strategyName,
       lifecycleState,
-      needsArchetype: !archetypeMatch.matched,
+      needsArchetype: !archetypeMatch.matched && !conditionCompiled,
       playbookCategory: category,
     });
   }
@@ -655,6 +725,8 @@ export async function onboardSpecArtifact(
     specHash,
     ok: true,
     archetypeMatch,
+    bindingPlan,
+    conditionCompiled,
     conceptName,
     confluenceFactors,
     perSymbol,
