@@ -618,24 +618,42 @@
       }
       function board(sub) { return '<div class="kv-menu-empty"><div class="kv-menu-empty-board"><div class="kv-menu-empty-inner"><div class="kv-menu-empty-headline">The Menu</div><div class="kv-menu-empty-divider"></div><div class="kv-menu-empty-sub">' + sub + '</div></div><div class="kv-menu-empty-stamp">Slumdawg ☆ Kitchen</div></div></div>'; }
       var PER_PAGE = 7;
-      var ps = { list: [], page: 0 };
+      var ps = { list: [], page: 0, title: "The Menu" };
+      // Group same-name plays into families → one menu line per unique title (no dupes).
+      function groupFamilies(list) {
+        var byTitle = {}, order = [];
+        list.forEach(function (d) {
+          var t = premiumTitle(d.name);
+          if (!byTitle[t]) { byTitle[t] = { title: t, variants: [] }; order.push(t); }
+          byTitle[t].variants.push(d);
+        });
+        return order.map(function (t) {
+          var fam = byTitle[t];
+          fam.champion = fam.variants.slice().sort(function (a, b) {
+            return (STAGE_FRONTIER[String(b.lifecycleState).toUpperCase()] || 0) - (STAGE_FRONTIER[String(a.lifecycleState).toUpperCase()] || 0);
+          })[0];
+          return fam;
+        });
+      }
       function renderBoardPage() {
         var list = ps.list, totalPages = Math.max(1, Math.ceil(list.length / PER_PAGE));
         if (ps.page >= totalPages) ps.page = totalPages - 1;
         if (ps.page < 0) ps.page = 0;
         var start = ps.page * PER_PAGE, items = list.slice(start, start + PER_PAGE);
-        var itemsHtml = items.map(function (d, idx) {
-          return '<a class="kv-mitem" href="#" data-i="' + (start + idx) + '"><span class="n">' + String(start + idx + 1).padStart(2, "0") + '</span><span class="nm">' + esc(premiumTitle(d.name)) + '</span><span class="dots"></span><span class="tag">' + esc(d.tag || "") + '</span></a>';
+        var itemsHtml = items.map(function (fam, idx) {
+          var n = fam.variants.length;
+          var right = n > 1 ? (n + " cuts") : esc(fam.champion.tag || "");
+          return '<a class="kv-mitem" href="#" data-i="' + (start + idx) + '"><span class="n">' + String(start + idx + 1).padStart(2, "0") + '</span><span class="nm">' + esc(fam.title) + '</span><span class="dots"></span><span class="tag">' + right + '</span></a>';
         }).join("");
         var pagesHtml = totalPages > 1 ? ('<div class="kv-pages"><span class="kv-pg-btn' + (ps.page === 0 ? " off" : "") + '" data-pg="-1">‹ prev</span><span class="kv-pg-lbl">Page ' + (ps.page + 1) + ' / ' + totalPages + '</span><span class="kv-pg-btn' + (ps.page >= totalPages - 1 ? " off" : "") + '" data-pg="1">next ›</span></div>') : "";
         rows.innerHTML = '<div class="kv-board"><div class="kv-board-title">' + esc(ps.title || "The Menu") + '</div><div class="kv-board-rule"></div>' + itemsHtml + '</div>' + pagesHtml;
-        rows.querySelectorAll(".kv-mitem").forEach(function (a) { a.addEventListener("click", function (e) { e.preventDefault(); plate(ps.list[+a.getAttribute("data-i")]); }); });
+        rows.querySelectorAll(".kv-mitem").forEach(function (a) { a.addEventListener("click", function (e) { e.preventDefault(); plate(ps.list[+a.getAttribute("data-i")].champion); }); });
         rows.querySelectorAll(".kv-pg-btn").forEach(function (b) { b.addEventListener("click", function () { ps.page += (+b.getAttribute("data-pg")); renderBoardPage(); document.getElementById("kv-menu-tabs").scrollIntoView({ behavior: "smooth", block: "nearest" }); }); });
       }
       function renderDishes(list) {
         if (!list) { rows.innerHTML = board("Couldn't reach the kitchen. Try again."); return; }
         if (!list.length) { rows.innerHTML = board("Nothing on this menu yet…"); return; }
-        ps.list = list; ps.page = 0; renderBoardPage();
+        ps.list = groupFamilies(list); ps.page = 0; renderBoardPage();
       }
       async function loadTab(tab) {
         ps.title = tab.label;
