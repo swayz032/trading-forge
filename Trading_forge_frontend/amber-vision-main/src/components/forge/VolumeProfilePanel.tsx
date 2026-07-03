@@ -97,7 +97,7 @@ function SymbolVPCard({ symbol }: { symbol: string }) {
 
     async function fetchLevels() {
       try {
-        const data = await api.get<VPLevels>(`/api/volume-profile/latest?symbol=${symbol}`);
+        const data = await api.get<VPLevels>(`/volume-profile/latest?symbol=${symbol}`);
         if (!cancelled) {
           setLevels(data);
           setError(null);

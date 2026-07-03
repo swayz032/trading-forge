@@ -174,7 +174,8 @@ export function LibraryDiversityPanel() {
   const fetchData = async () => {
     try {
       const res = await api.get<{ success: boolean; data: LibraryDiversity }>(
-        "/api/library-diversity"
+        // api-client prepends /api — path must be bare (deep-scan #13: double-/api 404)
+        "/library-diversity"
       );
       if (res.success) setData(res.data);
     } catch (err) {
