@@ -28,10 +28,9 @@
     .kv-hero-art {
       display: block;
       width: 100%;
-      height: 230px;               /* less tall */
+      height: 230px;               /* less tall, but full-width edge-to-edge (no side bars) */
       background-image: url('/slumhouse/images/slumdawg-kitchen.png');
-      background-size: contain;    /* keep the FULL image, never crop (blends into black bg) */
-      background-repeat: no-repeat;
+      background-size: cover;      /* spans the full page width; trims a little top/bottom */
       background-position: center;
     }
 
