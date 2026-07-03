@@ -82,6 +82,59 @@
     }
     .kv-stage-visual svg { width: 100%; height: 100%; display: block; }
 
+    /* ─── Gate-card progress bar — comes alive when you tap a dish ─────── */
+    .kv-gates-wrap { margin-bottom: 32px; }
+    .kv-gates-idle {
+      color: var(--mute); font-size: 13px; text-align: center; line-height: 1.6;
+      padding: 40px 24px; border: 1px dashed rgba(255,255,255,0.09); border-radius: 16px;
+      background: radial-gradient(600px 200px at 50% 0%, rgba(163,255,18,0.04), transparent 70%);
+    }
+    .kv-gates-title { display: none; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+    .kv-gates-title b { font-size: 16px; font-weight: 800; color: var(--ink); }
+    .kv-gates-title span { font-size: 11px; color: var(--mute); font-family: ui-monospace, monospace; }
+    .kv-gates {
+      display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 14px;
+      scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; scrollbar-width: thin;
+    }
+    .kv-gates::-webkit-scrollbar { height: 6px; }
+    .kv-gates::-webkit-scrollbar-thumb { background: rgba(163,255,18,0.25); border-radius: 3px; }
+    .kv-gate {
+      flex: 0 0 148px; scroll-snap-align: start; position: relative;
+      background: #000; border: 1px solid rgba(255,255,255,0.05); border-radius: 16px;
+      padding: 14px 14px 18px; min-height: 194px;
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.015), 0 8px 28px rgba(0,0,0,0.55);
+      opacity: 0; transform: translateY(12px) scale(0.98);
+    }
+    .kv-gate.live { animation: kv-gate-in 0.5s cubic-bezier(0.2,0.7,0.3,1) forwards; }
+    @keyframes kv-gate-in { to { opacity: 1; transform: none; } }
+    .kv-gate-num { font-size: 9px; color: var(--mute); letter-spacing: 0.14em; text-transform: uppercase; align-self: flex-start; }
+    .kv-gate-title { font-size: 13px; font-weight: 800; color: var(--ink); line-height: 1.15; }
+    .kv-gate-sub { font-size: 10px; color: var(--dim); margin-top: 4px; line-height: 1.3; }
+    .kv-gate-state { font-size: 8.5px; margin-top: auto; padding-top: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--mute); }
+
+    /* v6 matte-black premium orb inside each gate card */
+    .kv-gate-orb { position: relative; width: 54px; height: 54px; border-radius: 50%; margin: 16px 0 12px; }
+    .kv-gate-orb .b { position: absolute; inset: -2px; border-radius: 50%; background: conic-gradient(from 215deg,#333a33,#545c54 24%,#333a33 50%,#454d45 74%,#333a33); box-shadow: 0 6px 14px rgba(0,0,0,0.55); }
+    .kv-gate-orb .o { position: absolute; inset: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 800; color: #454d45;
+      background: radial-gradient(circle at 50% 32%,#1b1f1a,#121611 34%,#0a0d0a 66%,#060806 100%);
+      box-shadow: inset 0 -8px 14px rgba(0,0,0,0.9), inset 0 6px 12px rgba(255,255,255,0.02), inset 0 0 0 1px rgba(255,255,255,0.03); }
+    .kv-gate.pass .kv-gate-orb .b { background: conic-gradient(from 215deg,#2f4a08,#b4ff2e 26%,#2f4a08 52%,#a6f21e 76%,#2f4a08); }
+    .kv-gate.pass .kv-gate-orb .o { color: #b4ff2e; } .kv-gate.pass .kv-gate-title { color: #b4ff2e; } .kv-gate.pass .kv-gate-state { color: #7fae2a; }
+    .kv-gate.now .kv-gate-orb .b { background: conic-gradient(from 215deg,#5c3f0d,#ffce5c 26%,#5c3f0d 52%,#ffe08a 76%,#5c3f0d); }
+    .kv-gate.now .kv-gate-orb .o { color: #ffce5c; } .kv-gate.now .kv-gate-title { color: #ffce5c; } .kv-gate.now .kv-gate-state { color: #c99a3a; }
+    .kv-gate.now .kv-gate-orb { animation: kv-orb-cook 2.4s ease-in-out infinite; }
+    @keyframes kv-orb-cook { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+    .kv-gate.fail .kv-gate-orb .b { background: conic-gradient(from 215deg,#4a1010,#ff6b6b 26%,#4a1010 52%,#ff9a9a 76%,#4a1010); }
+    .kv-gate.fail .kv-gate-orb .o { color: #ff6b6b; } .kv-gate.fail .kv-gate-title { color: #ff6b6b; } .kv-gate.fail .kv-gate-state { color: #c65656; }
+
+    /* Menu category tabs (chalkboard-themed) */
+    .kv-menu-tabs { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 22px; }
+    .kv-mtab { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 7px 14px; border-radius: 999px; cursor: pointer;
+      color: var(--dim); background: rgba(163,255,18,0.04); border: 1px solid rgba(163,255,18,0.14); transition: all 0.15s; }
+    .kv-mtab:hover { color: var(--ink); border-color: rgba(163,255,18,0.3); }
+    .kv-mtab.active { color: #0a0d0a; background: var(--lime); border-color: var(--lime); text-shadow: none; }
+
     /* ─── "Today's Menu" — 3D chalkboard restaurant menu ─────────────── */
     .kv-menu {
       position: relative;
@@ -271,13 +324,18 @@
       <div class="kv-hero-art" role="img" aria-label="Slumdawg Traders Kitchen"></div>
     </div>
 
-    <div class="kv-section-label">The pipeline · click a station</div>
-    <div id="kv-pipeline" class="kv-pipeline"></div>
+    <div class="kv-section-label">The journey · tap a dish to plate it</div>
+    <div class="kv-gates-wrap">
+      <div id="kv-gates-idle" class="kv-gates-idle">Tap a play on the menu below to watch it move through the kitchen — one gate at a time.</div>
+      <div id="kv-gates-title" class="kv-gates-title"><b id="kv-gates-name"></b><span id="kv-gates-tag"></span></div>
+      <div id="kv-gates" class="kv-gates" style="display:none"></div>
+    </div>
 
     <div class="kv-menu">
-      <div class="kv-menu-mark">— TODAY'S MENU —</div>
-      <div class="kv-menu-h">On the Menu</div>
-      <div class="kv-menu-cap">Plays that survived the kitchen · running for real money right now</div>
+      <div class="kv-menu-mark">— THE MENU —</div>
+      <div class="kv-menu-h">The Menu</div>
+      <div class="kv-menu-cap">Tap a play to see how far it's cooked</div>
+      <div id="kv-menu-tabs" class="kv-menu-tabs"></div>
       <div id="kv-menu-rows"></div>
     </div>
   </div>
@@ -414,60 +472,113 @@
     }
 
     (async () => {
-      const k = await SH.fetchJSON("/slumhouse/api/kitchen");
-      const m = await SH.fetchJSON("/slumhouse/api/kitchen/menu");
-      if (!k || !m) return;
-
-      const pipe = document.getElementById("kv-pipeline");
-      for (const s of k.stages) {
-        const card = SH.el("div", { class: "kv-stage" },
-          SH.el("div", { class: "kv-stage-head" },
-            SH.el("div", { class: "kv-stage-name" }, s.name),
-            SH.el("div", { class: "kv-stage-real" }, s.subtitle)
-          ),
-          SH.el("div", { class: "kv-stage-mid" },
-            SH.el("div", { class: "kv-stage-num" }, String(s.count)),
-            SH.el("div", { class: "kv-stage-num-lbl" }, s.countLabel)
-          )
-        );
-        const visual = document.createElement("div");
-        visual.className = "kv-stage-visual";
-        visual.innerHTML = kitchenVisual(s.name);
-        card.appendChild(visual);
-        pipe.appendChild(card);
-      }
-
-      const rows = document.getElementById("kv-menu-rows");
-      if (m.dishes.length === 0) {
-        rows.innerHTML = `
-          <div class="kv-menu-empty">
-            <div class="kv-menu-empty-board">
-              <div class="kv-menu-empty-inner">
-                <div class="kv-menu-empty-headline">Today's Menu</div>
-                <div class="kv-menu-empty-divider"></div>
-                <div class="kv-menu-empty-sub">Kitchen's still cooking…</div>
-              </div>
-              <div class="kv-menu-empty-stamp">Slumdawg ☆ Kitchen</div>
-            </div>
-          </div>`;
-      } else {
-        m.dishes.forEach((d, i) => {
-          rows.appendChild(SH.el("a", { class: "kv-dish", href: `/slumhouse/recipe.html?id=${encodeURIComponent(d.id)}` },
-            SH.el("div", { class: "kv-dish-num-c" }, String(i + 1).padStart(2, "0")),
-            SH.el("div", {},
-              SH.el("div", { class: "kv-dish-name" }, d.dishName),
-              d.slumdawgNote ? SH.el("div", { class: "kv-dish-note" }, `Slumdawg's note: "${d.slumdawgNote}"`) : null
-            ),
-            SH.el("div", {},
-              SH.el("div", { class: "kv-dish-stat-big" }, d.monthMade),
-              SH.el("div", { class: "kv-dish-stat-cap" }, "made this month"),
-              SH.el("div", { class: "kv-dish-stat-sub" },
-                d.plays > 0 ? `${d.plays} plays · ~$${Math.round(d.avgPerPlay)} each` : "no plays yet"
-              )
-            )
-          ));
+      // ── Gate journey, coarse from lifecycle stage (mirrors gate-journey.ts) ──
+      const GATE_DEFS = [
+        { label: "Profitable",  sub: "made money in testing" },
+        { label: "Holds Up",    sub: "works on unseen data" },
+        { label: "Real Edge",   sub: "not just luck" },
+        { label: "Crash-Proof", sub: "survives a bad day" },
+        { label: "Paper Trial", sub: "fake money" },
+        { label: "Live Match",  sub: "live = the test" },
+        { label: "Rule-Safe",   sub: "won't break firm rules" },
+        { label: "Live Money",  sub: "on the menu" },
+      ];
+      const STAGE_FRONTIER = { CANDIDATE:0, TESTING:1, SHADOW:4, PAPER:4, DEPLOY_READY:6, PILOT:7, DEPLOYED:7, GRAVEYARD:2, DECLINING:2 };
+      const ICON = { pass:"✓", now:"▸", fail:"✗", wait:"·" };
+      const WORD = { pass:"cleared", now:"cooking now", fail:"failed here", wait:"not yet" };
+      function journeyForStage(state) {
+        const st = String(state || "").toUpperCase();
+        const frontier = STAGE_FRONTIER[st] != null ? STAGE_FRONTIER[st] : 0;
+        const dead = st === "GRAVEYARD" || st === "DECLINING";
+        return GATE_DEFS.map(function (d, i) {
+          var status = i < frontier ? "pass" : (i === frontier ? (dead ? "fail" : (st === "DEPLOYED" ? "pass" : "now")) : "wait");
+          return { label: d.label, sub: d.sub, status: status };
         });
       }
+
+      const idle = document.getElementById("kv-gates-idle");
+      const titleEl = document.getElementById("kv-gates-title");
+      const gatesEl = document.getElementById("kv-gates");
+
+      function plate(dish) {
+        const gates = journeyForStage(dish.lifecycleState);
+        document.getElementById("kv-gates-name").textContent = dish.name || "This play";
+        document.getElementById("kv-gates-tag").textContent = dish.tag || "";
+        gatesEl.innerHTML = "";
+        gates.forEach(function (g, i) {
+          const orb = document.createElement("div");
+          orb.className = "kv-gate-orb";
+          orb.innerHTML = '<div class="b"></div><div class="o">' + (ICON[g.status] || "·") + '</div>';
+          const card = SH.el("div", { class: "kv-gate " + g.status },
+            SH.el("div", { class: "kv-gate-num" }, "Gate " + (i + 1)),
+            orb,
+            SH.el("div", { class: "kv-gate-title" }, g.label),
+            SH.el("div", { class: "kv-gate-sub" }, g.sub),
+            SH.el("div", { class: "kv-gate-state" }, WORD[g.status])
+          );
+          gatesEl.appendChild(card);
+        });
+        idle.style.display = "none";
+        titleEl.style.display = "flex";
+        gatesEl.style.display = "flex";
+        const cards = gatesEl.children;
+        for (var i = 0; i < cards.length; i++) {
+          (function (el, delay) { setTimeout(function () { el.classList.add("live"); }, delay); })(cards[i], i * 85);
+        }
+        titleEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      // ── Menu categories (chalkboard tabs) ──
+      const rows = document.getElementById("kv-menu-rows");
+      const TABS = [
+        { label: "Now Serving", url: "/slumhouse/api/menu/now-serving",       kind: "dishes" },
+        { label: "MES",         url: "/slumhouse/api/menu/kitchen?symbol=MES", kind: "families" },
+        { label: "MNQ",         url: "/slumhouse/api/menu/kitchen?symbol=MNQ", kind: "families" },
+        { label: "MCL",         url: "/slumhouse/api/menu/kitchen?symbol=MCL", kind: "families" },
+        { label: "Graveyard",   url: "/slumhouse/api/menu/graveyard",          kind: "families" },
+      ];
+      function normalize(kind, data) {
+        if (!data) return null;
+        if (kind === "dishes") return (data.dishes || []).map(function (d) { return { id:d.id, name:d.premiumName, tag:d.variantTag, lifecycleState:d.lifecycleState }; });
+        const out = [];
+        (data.families || []).forEach(function (f) {
+          (f.variants && f.variants.length ? f.variants : [f.champion]).forEach(function (v) {
+            if (v) out.push({ id:v.id, name:v.premiumName, tag:(v.variantTag || "") + (v.killReason ? " · " + v.killReason : ""), lifecycleState:v.lifecycleState });
+          });
+        });
+        return out;
+      }
+      function board(sub) { return '<div class="kv-menu-empty"><div class="kv-menu-empty-board"><div class="kv-menu-empty-inner"><div class="kv-menu-empty-headline">The Menu</div><div class="kv-menu-empty-divider"></div><div class="kv-menu-empty-sub">' + sub + '</div></div><div class="kv-menu-empty-stamp">Slumdawg ☆ Kitchen</div></div></div>'; }
+      function renderDishes(list) {
+        rows.innerHTML = "";
+        if (!list) { rows.innerHTML = board("Couldn't reach the kitchen. Try again."); return; }
+        if (list.length === 0) { rows.innerHTML = board("Nothing on this menu yet…"); return; }
+        list.forEach(function (d, i) {
+          const a = SH.el("a", { class: "kv-dish", href: "#" },
+            SH.el("div", { class: "kv-dish-num-c" }, String(i + 1).padStart(2, "0")),
+            SH.el("div", {}, SH.el("div", { class: "kv-dish-name" }, d.name), d.tag ? SH.el("div", { class: "kv-dish-note" }, d.tag) : null),
+            SH.el("div", {}, SH.el("div", { class: "kv-dish-stat-cap" }, "tap to plate →"))
+          );
+          a.addEventListener("click", function (e) { e.preventDefault(); plate(d); });
+          rows.appendChild(a);
+        });
+      }
+      async function loadTab(tab) {
+        rows.innerHTML = board("Plating…");
+        const data = await SH.fetchJSON(tab.url);
+        renderDishes(normalize(tab.kind, data));
+      }
+      const tabsEl = document.getElementById("kv-menu-tabs");
+      TABS.forEach(function (t, i) {
+        const b = SH.el("div", { class: "kv-mtab" + (i === 0 ? " active" : "") }, t.label);
+        b.addEventListener("click", function () {
+          tabsEl.querySelectorAll(".kv-mtab").forEach(function (x) { x.classList.remove("active"); });
+          b.classList.add("active");
+          loadTab(t);
+        });
+        tabsEl.appendChild(b);
+      });
+      loadTab(TABS[0]);
     })();
   </script>
 </body>
