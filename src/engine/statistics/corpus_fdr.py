@@ -31,7 +31,8 @@ DESIGN CONSTRAINTS (mirrors src/engine/walk_forward_regime_context.py):
     (not approximated) standard-normal CDF, and the inverse (probit) is
     obtained via deterministic bisection on that exact CDF (fixed iteration
     count/tolerance -> still fully deterministic and replay-safe).
-  - Env-overridable thresholds via lru_cache getters, same pattern as
+  - Env-overridable thresholds via cached getters (functools.cache, equivalent
+    to lru_cache(maxsize=None)), same pattern as
     walk_forward_regime_context.py's `_get_cv_threshold()` etc.
   - Never fabricate. Missing evidence is reported as missing, not defaulted
     to a value that could silently bias the FDR calculation (see the p-value
@@ -74,13 +75,11 @@ from __future__ import annotations
 import math
 import os
 from dataclasses import dataclass, field
-from functools import lru_cache
-from typing import Optional
+from functools import cache
 
+# ── Env-overridable constants (cached getters, mirrors walk_forward_regime_context.py) ──
 
-# ── Env-overridable constants (lru_cache getters, mirrors walk_forward_regime_context.py) ──
-
-@lru_cache(maxsize=None)
+@cache
 def _get_default_q_research() -> float:
     """Research-triage FDR level (default 0.10). Env: CORPUS_FDR_Q_RESEARCH."""
     try:
@@ -89,7 +88,7 @@ def _get_default_q_research() -> float:
         return 0.10
 
 
-@lru_cache(maxsize=None)
+@cache
 def _get_default_q_promotion() -> float:
     """Promotion-relevant FDR level (default 0.05). Env: CORPUS_FDR_Q_PROMOTION."""
     try:
@@ -98,7 +97,7 @@ def _get_default_q_promotion() -> float:
         return 0.05
 
 
-@lru_cache(maxsize=None)
+@cache
 def _get_default_population(default: int = 200) -> float:
     """Default corpus-size projection when caller doesn't supply one. Env: CORPUS_FDR_POPULATION."""
     try:
@@ -176,7 +175,7 @@ class PValueDerivation:
     detail : dict
         Diagnostic trail (which raw fields were inspected/used).
     """
-    p_value: Optional[float]
+    p_value: float | None
     source: str
     detail: dict = field(default_factory=dict)
 
@@ -246,7 +245,7 @@ class BHResult:
     num_rejected: int
     reject_mask: list  # list[bool], same order as input p_values
     adjusted_p_values: list  # list[float], BH step-up adjusted (a.k.a. q-values), same order
-    critical_p_at_cutoff: Optional[float]
+    critical_p_at_cutoff: float | None
 
 
 def benjamini_hochberg(p_values: list[float], q: float) -> BHResult:
@@ -393,7 +392,7 @@ def compute_sharpe_haircut(observed_sharpe: float, n_trials: float) -> dict:
 
 @dataclass
 class FamilyFDRResult:
-    educator_id: Optional[str]
+    educator_id: str | None
     n_strategies: int
     n_with_pvalue: int
     n_excluded_missing_pvalue: int
@@ -485,7 +484,7 @@ def _family_result_to_dict(f: FamilyFDRResult) -> dict:
 
 def expected_false_discoveries(
     corpus_size: int,
-    calibration_report: Optional[dict],
+    calibration_report: dict | None,
 ) -> dict:
     """E[FD] = corpus_size x measured full-battery false-pass rate.
 
@@ -624,9 +623,9 @@ def attach_regime_breakdown(strategy_record: dict) -> dict:
 
 def build_corpus_report(
     strategy_records: list[dict],
-    calibration_report: Optional[dict],
-    q_research: Optional[float] = None,
-    q_promotion: Optional[float] = None,
+    calibration_report: dict | None,
+    q_research: float | None = None,
+    q_promotion: float | None = None,
 ) -> dict:
     """Assemble the full D2+D4 corpus report from pre-loaded strategy records.
 

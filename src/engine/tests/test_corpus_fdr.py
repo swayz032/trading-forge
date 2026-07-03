@@ -18,8 +18,6 @@ Covers:
 
 from __future__ import annotations
 
-import math
-
 import pytest
 
 from src.engine.statistics.corpus_fdr import (
@@ -30,7 +28,6 @@ from src.engine.statistics.corpus_fdr import (
     derive_pvalue_for_strategy,
     expected_false_discoveries,
 )
-
 
 # ── Benjamini-Hochberg: hand-computed fixture ──────────────────────────────────
 
@@ -73,7 +70,7 @@ class TestBenjaminiHochbergFixture:
         result = benjamini_hochberg(self.FIXTURE_P, q=0.05)
         order = sorted(range(len(self.FIXTURE_P)), key=lambda i: self.FIXTURE_P[i])
         adj_sorted = [result.adjusted_p_values[i] for i in order]
-        for a, b in zip(adj_sorted, adj_sorted[1:]):
+        for a, b in zip(adj_sorted, adj_sorted[1:], strict=False):
             assert b >= a - 1e-9
 
     def test_adjusted_p_values_in_zero_one_range(self):
@@ -145,14 +142,14 @@ class TestSharpeHaircut:
         observed = 1.2
         trial_counts = [1, 2, 5, 15, 50, 200]
         haircuts = [compute_sharpe_haircut(observed, float(n))["haircut_sharpe"] for n in trial_counts]
-        for a, b in zip(haircuts, haircuts[1:]):
+        for a, b in zip(haircuts, haircuts[1:], strict=False):
             assert b <= a + 1e-9, f"haircut_sharpe not monotone non-increasing: {haircuts}"
 
     def test_monotonicity_haircut_pct_non_decreasing(self):
         observed = 1.2
         trial_counts = [1, 2, 5, 15, 50, 200]
         pcts = [compute_sharpe_haircut(observed, float(n))["haircut_pct"] for n in trial_counts]
-        for a, b in zip(pcts, pcts[1:]):
+        for a, b in zip(pcts, pcts[1:], strict=False):
             assert b >= a - 1e-9, f"haircut_pct not monotone non-decreasing: {pcts}"
 
     def test_large_n_trials_can_eliminate_modest_edge(self):
