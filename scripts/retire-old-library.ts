@@ -34,6 +34,13 @@ import { createHmac } from "node:crypto";
 
 const API = process.env.TF_API_BASE ?? "http://localhost:4000";
 const APPLY = process.argv.includes("--apply");
+// Auth for the now-gated /api surface (deep-scan #13 auth hardening). Office admin
+// cookie (operator auth path) or Bearer API_KEY; empty when neither is set (open dev).
+const AUTH_HEADERS: Record<string, string> = process.env.TF_ADMIN_COOKIE
+  ? { Cookie: `slumhouse_admin_sid=${process.env.TF_ADMIN_COOKIE}` }
+  : process.env.API_KEY
+    ? { Authorization: `Bearer ${process.env.API_KEY}` }
+    : {};
 const REASON = "old-extractor thin library retired post-re-extraction (6-video audit 2026-07-02: mechanisms wrong/inverted on 5 of 6; entry_sequence null across all)";
 
 function signLifecycleRequest(strategyId: string, fromState: string, toState: string, secret: string) {
@@ -72,7 +79,7 @@ async function main(): Promise<number> {
       const { timestamp, signature } = signLifecycleRequest(s.id, fromState, toState, secret as string);
       const r = await fetch(`${API}/api/strategies/${s.id}/lifecycle`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...AUTH_HEADERS },
         body: JSON.stringify({ fromState, toState, timestamp, signature, reason: REASON }),
       });
       if (r.ok) { ok++; console.log(`  retired: ${s.name}`); }
