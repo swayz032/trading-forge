@@ -612,7 +612,20 @@ class BacktestRequest(BaseModel):
     start_date: str  # YYYY-MM-DD
     end_date: str    # YYYY-MM-DD
     slippage_ticks: float = 1.0
-    commission_per_side: float = 0.62  # MES micro default (was 4.50 ES full-size — 7x too high)
+    # deepscan14-cf FIX 1 (B2 full closure): default changed 0.62 → None.
+    # 0.62 (MES micro default; was 4.50 ES full-size — 7x too high) is still the
+    # EFFECTIVE fallback value, but it must no longer live as the pydantic field
+    # default: a caller explicitly passing `commission_per_side: 0.62` was
+    # byte-identical to a caller omitting the key entirely, so backtester.py
+    # could not tell "operator wants exactly 0.62" apart from "operator didn't
+    # set anything, use the contract spec default" — both silently resolved to
+    # spec.default_commission (correct only by coincidence for MES/MNQ/MCL,
+    # where spec.default_commission also happens to be 0.62). None is an
+    # unambiguous "caller omitted commission" sentinel; backtester.py's
+    # model_fields_set check (run_backtest) plus its `if commission is None`
+    # defensive net resolve None → spec.default_commission, so effective
+    # behavior for every existing MES/MNQ/MCL caller is byte-identical.
+    commission_per_side: Optional[float] = None
     mode: Literal["single", "walkforward"] = "single"
     walk_forward_splits: int = 5
     embargo_bars: int = 0  # Bars to skip between IS/OOS (prevents data leakage)

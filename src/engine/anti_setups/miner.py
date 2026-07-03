@@ -6,8 +6,10 @@ Mines historical losing trades to find common environmental conditions.
 from __future__ import annotations
 
 import math
+import os
 import statistics
-from typing import Any
+import sys
+from typing import Any, Optional
 
 # --- Multiple-testing correction (Bonferroni) ---
 # We run 8 independent miners against the same trade population.
@@ -476,8 +478,214 @@ def _mine_streak(
     return results
 
 
+def _get_miner_db_connection():
+    """Return a psycopg2 connection using the DATABASE_URL env var.
+
+    Mirrors the connection pattern in src/engine/replay/db_loader.py
+    (deepscan14-cf D1 follow-up) rather than importing it directly — the
+    replay package's `__init__.py` is intentionally minimal to dodge a
+    circular-import cycle through quantum_mc.py (see db_loader.py docstring),
+    and pulling that surface into the anti-setup miner isn't worth the risk.
+    """
+    try:
+        import psycopg2
+    except ImportError as e:
+        raise ImportError(
+            "psycopg2 is required to load real trades for anti-setup mining. "
+            "Install with: pip install psycopg2-binary"
+        ) from e
+
+    db_url = os.environ.get("DATABASE_URL")
+    if not db_url:
+        raise RuntimeError(
+            "DATABASE_URL environment variable is not set; cannot load "
+            "paper_trades for anti-setup mining."
+        )
+    return psycopg2.connect(db_url)
+
+
+def _load_closed_trades_for_strategy(
+    strategy_id: str,
+) -> tuple[list[dict], Optional[str], Optional[str]]:
+    """Load CLOSED paper_trades for a strategy from Postgres (deepscan14-cf D1).
+
+    `strategy_id` lives on `paper_sessions`, not `paper_trades` directly, so
+    this joins through the session row. Also reads `symbol`/`timeframe` off
+    `strategies` so the caller can subsequently load matching OHLCV bars.
+
+    Returns (trades, symbol, timeframe):
+      - trades: dicts shaped for mine_anti_setups() — entry_time (ISO string),
+        pnl (float), plus day_of_week / regime when the paper_trades columns
+        carry them (hourOfDay/dayOfWeek/macroRegime are computed at
+        trade-close time already; no re-derivation needed here). Note:
+        paper_trades has no per-trade atr/volume/archetype/days_to_event
+        columns today, so `_mine_volatility`/`_mine_volume`/`_mine_archetype`/
+        `_mine_event_proximity` will legitimately find nothing to group on
+        those dimensions until those columns exist — an honest partial mine,
+        not a bug.
+      - symbol/timeframe: from the strategies row, or None if not found.
+
+    An empty trades list is a legitimate, honest result (strategy hasn't
+    closed any paper trades yet) — NOT an error. DB connectivity failures
+    (missing DATABASE_URL, psycopg2 unavailable, connection refused) raise
+    and propagate to the caller, which folds them into the same honest
+    "inactive" envelope rather than fabricating a result.
+    """
+    import psycopg2.extras
+
+    conn = _get_miner_db_connection()
+    try:
+        with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
+            cur.execute(
+                "SELECT symbol, timeframe FROM strategies WHERE id = %s LIMIT 1",
+                (strategy_id,),
+            )
+            strat_row = cur.fetchone()
+            symbol = strat_row["symbol"] if strat_row else None
+            timeframe = strat_row["timeframe"] if strat_row else None
+
+            cur.execute(
+                """
+                SELECT
+                    pt.entry_time,
+                    pt.pnl,
+                    pt.day_of_week,
+                    pt.macro_regime
+                FROM paper_trades pt
+                JOIN paper_sessions ps ON ps.id = pt.session_id
+                WHERE ps.strategy_id = %s
+                ORDER BY pt.entry_time ASC
+                """,
+                (strategy_id,),
+            )
+            rows = cur.fetchall()
+    finally:
+        conn.close()
+
+    trades: list[dict] = []
+    for row in rows:
+        entry_time = row["entry_time"]
+        entry_time_str = entry_time.isoformat() if hasattr(entry_time, "isoformat") else str(entry_time)
+        pnl_raw = row["pnl"]
+        trade: dict[str, Any] = {
+            "entry_time": entry_time_str,
+            "pnl": float(pnl_raw) if pnl_raw is not None else 0.0,
+        }
+        if row["day_of_week"] is not None:
+            trade["day_of_week"] = row["day_of_week"]
+        if row["macro_regime"] is not None:
+            trade["regime"] = row["macro_regime"]
+        trades.append(trade)
+
+    return trades, symbol, timeframe
+
+
+def _load_bars_with_atr_for_symbol(
+    symbol: Optional[str],
+    timeframe: Optional[str],
+    trades: list[dict],
+) -> list[dict]:
+    """Best-effort OHLCV+ATR bar load spanning the trades' date range.
+
+    Only `_mine_volatility` consults `bars`, and only as a fallback when
+    individual trades carry no `atr` field (paper_trades doesn't persist
+    per-trade ATR today) — so a failure here must never block the other
+    miners. Any exception (missing S3 creds, data_loader import failure,
+    symbol/timeframe absent) is swallowed and logged to stderr; the caller
+    proceeds with bars=[].
+    """
+    if not symbol or not timeframe or not trades:
+        return []
+
+    entry_times = [t["entry_time"] for t in trades if t.get("entry_time")]
+    if not entry_times:
+        return []
+
+    try:
+        start = min(entry_times)[:10]
+        end = max(entry_times)[:10]
+
+        from src.engine.data_loader import load_ohlcv
+        from src.engine.indicators.core import compute_atr
+
+        df = load_ohlcv(symbol, timeframe, start, end, ignore_quality_gate=True)
+        if df.is_empty():
+            return []
+        atr_series = compute_atr(df, period=14)
+        return [{"atr": v} for v in atr_series.to_list() if v is not None]
+    except Exception as exc:  # pragma: no cover — best-effort enrichment only
+        print(f"[anti_setup_miner] bar load failed (non-fatal, bars=[]): {exc}", file=sys.stderr)
+        return []
+
+
+def run_miner_cli(cfg: dict) -> dict:
+    """Core CLI logic, factored out of `__main__` for direct in-process testing
+    (deepscan14-cf) — subprocess tests can't monkeypatch a fresh interpreter's
+    DB layer, so this lets tests exercise the DB-load branch without a live
+    Postgres by patching `_load_closed_trades_for_strategy` directly.
+
+    Returns the JSON-serializable envelope dict (`__main__` prints it as-is).
+    Never raises for expected states (no trades, DB unavailable, mining
+    error) — each produces a structured envelope with gate_status
+    "inactive" | "active" | "error".
+    """
+    trades = cfg.get("trades")
+    bars = cfg.get("bars")
+    strategy_id = cfg.get("strategy_id")
+    db_load_error: str | None = None
+
+    if not isinstance(trades, list) or len(trades) == 0:
+        if strategy_id:
+            try:
+                trades, db_symbol, db_timeframe = _load_closed_trades_for_strategy(str(strategy_id))
+                bars = _load_bars_with_atr_for_symbol(db_symbol, db_timeframe, trades) if trades else []
+            except Exception as db_exc:
+                db_load_error = str(db_exc)
+                trades = []
+                bars = []
+        else:
+            trades = []
+
+    if not isinstance(trades, list) or len(trades) == 0:
+        reason = (
+            "no trades/bars supplied in config and no CLOSED paper_trades found "
+            "in Postgres yet for this strategy_id — honest 'nothing to mine yet', "
+            "not a failure"
+        )
+        if db_load_error:
+            reason = f"DB load failed ({db_load_error}) — no trades/bars available to mine"
+        return {
+            "anti_setups": [],
+            "gate_status": "inactive",
+            "reason": reason,
+            "strategy_id": strategy_id,
+        }
+
+    try:
+        result = mine_anti_setups(
+            trades,
+            bars if isinstance(bars, list) else [],
+            min_sample_size=int(cfg.get("min_sample_size", 20)),
+            min_failure_rate=float(cfg.get("min_failure_rate", 0.65)),
+        )
+        return {
+            "anti_setups": result,
+            "gate_status": "active",
+            "strategy_id": strategy_id,
+        }
+    except Exception as e:
+        # Fail-loud, non-empty stdout — never let a mining exception collapse
+        # back to the empty-stdout false-green this fix exists to close.
+        return {
+            "anti_setups": [],
+            "gate_status": "error",
+            "reason": f"mine_anti_setups failed: {e}",
+            "strategy_id": strategy_id,
+        }
+
+
 if __name__ == "__main__":
-    # deepscan14 D1: CLI entrypoint. Before this existed, `scheduler.ts` invoked
+    # deepscan14-cf D1: CLI entrypoint. Before this existed, `scheduler.ts` invoked
     # `python -m src.engine.anti_setups.miner --config <tmpfile>` (scheduler.ts,
     # "anti-setup-mine" weekly cron) against a module with NO `__main__` block —
     # the process ran and exited 0 with ZERO stdout, `parsePythonJson("")` threw,
@@ -490,20 +698,17 @@ if __name__ == "__main__":
     # Mirrors the --config file-path CLI convention used by
     # src/engine/decay/quarantine.py and src/engine/decay/half_life.py.
     #
-    # Config shape: the scheduler currently writes only
-    # `{"strategy_id": "<uuid>", "_metadata": {"correlationId": "..."}}` —
-    # it does NOT supply `trades`/`bars` (mine_anti_setups needs real trade/bar
-    # history, which would require this CLI to pull from Postgres/S3 itself;
-    # miner.py is a pure library with no DB connector today). Rather than
-    # fabricate a result or silently emit an empty "mined, clean" envelope
-    # (the exact false-green this fix exists to close), we emit an explicit
-    # gate_status="inactive" envelope whenever trades/bars are absent from the
-    # config, so audit_log carries an honest, queryable "nothing was mined"
-    # signal instead of a false-clean one. When a future caller DOES supply
-    # `trades` (+ optional `bars`), this CLI runs the real miner.
+    # Config shape: the scheduler writes `{"strategy_id": "<uuid>", "_metadata":
+    # {...}}` — it does NOT supply `trades`/`bars` inline. This CLI now loads
+    # real CLOSED paper_trades (+ best-effort OHLCV/ATR bars) from Postgres for
+    # that strategy_id (see _load_closed_trades_for_strategy /
+    # _load_bars_with_atr_for_symbol above), so mining is genuinely ACTIVE
+    # rather than permanently honest-inactive. The gate_status="inactive"
+    # envelope is preserved for the two honest "nothing to mine" cases: the
+    # strategy has zero closed paper trades yet, or the DB is unreachable in
+    # this environment — never a fabricated result.
     import argparse
     import json
-    import sys
 
     _parser = argparse.ArgumentParser(description="Anti-setup miner CLI")
     _parser.add_argument("--config", required=True, help="Path to JSON config file")
@@ -516,46 +721,7 @@ if __name__ == "__main__":
         print(json.dumps({"error": f"Failed to read config: {_e}"}))
         sys.exit(1)
 
-    _trades = _cfg.get("trades")
-    _bars = _cfg.get("bars")
-
-    if not isinstance(_trades, list) or len(_trades) == 0:
-        # No trade history in the config — cannot mine anything. This is the
-        # documented data-plumbing gap (deepscan14 D1 follow-up): the scheduler
-        # only passes strategy_id today; a DB/S3 loader needs to be wired
-        # (either here in Python, or by having the scheduler fetch trades/bars
-        # in TS and pass them through --config) before real mining can run.
-        print(json.dumps({
-            "anti_setups": [],
-            "gate_status": "inactive",
-            "reason": (
-                "no trades/bars supplied in config (only strategy_id was provided); "
-                "mine_anti_setups() requires real trade history and this CLI has no "
-                "DB/S3 loader wired yet — see deepscan14 D1 follow-up"
-            ),
-            "strategy_id": _cfg.get("strategy_id"),
-        }))
-        sys.exit(0)
-
-    try:
-        _result = mine_anti_setups(
-            _trades,
-            _bars if isinstance(_bars, list) else [],
-            min_sample_size=int(_cfg.get("min_sample_size", 20)),
-            min_failure_rate=float(_cfg.get("min_failure_rate", 0.65)),
-        )
-        print(json.dumps({
-            "anti_setups": _result,
-            "gate_status": "active",
-            "strategy_id": _cfg.get("strategy_id"),
-        }))
-    except Exception as _e:
-        # Fail-loud, non-empty stdout — never let a mining exception collapse
-        # back to the empty-stdout false-green this fix exists to close.
-        print(json.dumps({
-            "anti_setups": [],
-            "gate_status": "error",
-            "reason": f"mine_anti_setups failed: {_e}",
-            "strategy_id": _cfg.get("strategy_id"),
-        }))
+    _envelope = run_miner_cli(_cfg)
+    print(json.dumps(_envelope))
+    if _envelope.get("gate_status") == "error":
         sys.exit(1)
