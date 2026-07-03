@@ -37,7 +37,7 @@ function useBrokerErrorBudgetSseInvalidator(): void {
 
     let es: EventSource | null = null;
     try {
-      es = new EventSource(url, { withCredentials: false });
+      es = new EventSource(url, { withCredentials: true });
     } catch {
       return;
     }
