@@ -604,7 +604,14 @@
         return;
       }
       const r = await SH.fetchJSON(`/slumhouse/api/recipe/${encodeURIComponent(id)}`);
-      if (!r) return;
+      if (!r) {
+        // deep-scan #13: fetchJSON returns null on any non-auth error (auth 401/403
+        // already redirect to login). Without this the page sat on "Loading…" forever.
+        document.getElementById("r-app").innerHTML =
+          '<p style="color:#e6674c;padding:40px 0">Couldn\'t reach the kitchen — recipe data is unavailable right now. ' +
+          '<a href="javascript:location.reload()" style="color:var(--lime)">Try again</a></p>';
+        return;
+      }
       render(r);
     })();
 
