@@ -2808,6 +2808,141 @@ def _get_stop_floor_for_symbol(symbol: str) -> Optional[float]:
     return default
 
 
+# ── Slippage-Survival Gate (Wave A, 2026-07-03) — engine producer ──────────
+# Design spec: docs/superpowers/specs/2026-07-03-slippage-survival-gate-design.md
+#
+# The engine ALWAYS computes + emits this block (cheap — reuses per-trade
+# GrossPnL/SlippageCost already computed by the P&L loop). Gate ENABLE and
+# BLOCK-multiple threshold logic live entirely on the TS side
+# (src/server/lib/slippage-survival-gate.ts) — this module does NOT read
+# SLIPPAGE_SURVIVAL_GATE_ENABLED or SLIPPAGE_SURVIVAL_BLOCK_MULT. It only
+# reads the sweep-shape config (which multiples to test, and the survival
+# thresholds the pure sweep math itself needs to compute `breaks_at`):
+#   SLIPPAGE_SURVIVAL_MULTIPLES    (default "1,2,3")
+#   SLIPPAGE_SURVIVAL_MIN_PF       (default 1.0)
+#   SLIPPAGE_SURVIVAL_MIN_TRADES   (default 20)
+def _parse_slippage_survival_multiples() -> list[float]:
+    """Parse SLIPPAGE_SURVIVAL_MULTIPLES ("1,2,3") into an ascending, positive-only float list.
+
+    Review-pass fix (2026-07-03): `breaks_at` short-circuits on the FIRST
+    not-alive multiple in the order the list is iterated — a misconfigured
+    env var like "3,2,1" would evaluate 3x before 1x/2x and report the wrong
+    `breaks_at`. Sorting ascending here (not just documenting "callers must
+    pass ascending") makes this correct-by-construction regardless of how
+    the env var is set. Non-positive values (0 or negative multiples are not
+    a meaningful stress level) are dropped.
+    """
+    raw = os.environ.get("SLIPPAGE_SURVIVAL_MULTIPLES", "1,2,3")
+    try:
+        parsed = [float(x.strip()) for x in raw.split(",") if x.strip() != ""]
+        positive_sorted = sorted(m for m in parsed if m > 0)
+        return positive_sorted if positive_sorted else [1.0, 2.0, 3.0]
+    except (ValueError, TypeError):
+        return [1.0, 2.0, 3.0]
+
+
+def _parse_slippage_survival_min_pf() -> float:
+    """Parse SLIPPAGE_SURVIVAL_MIN_PF (default 1.0).
+
+    Review-pass fix (2026-07-03): guard against a negative override (would
+    make every multiple trivially "alive" on the PF leg of the alive-check,
+    since profit factor is never negative) — fall back to the institutional
+    default rather than accepting a nonsensical threshold, matching the
+    defensiveness already present on the TS-side env readers.
+    """
+    try:
+        parsed = float(os.environ.get("SLIPPAGE_SURVIVAL_MIN_PF", "1.0"))
+        return parsed if parsed >= 0 else 1.0
+    except (ValueError, TypeError):
+        return 1.0
+
+
+def _parse_slippage_survival_min_trades() -> int:
+    """Parse SLIPPAGE_SURVIVAL_MIN_TRADES (default 20).
+
+    Review-pass fix (2026-07-03): guard against a negative override (would
+    make `insufficient_sample` structurally impossible to trigger, since
+    `n_trades < negative` is never true for a non-negative trade count) —
+    fall back to the institutional default, matching the TS-side pattern.
+    """
+    try:
+        parsed = int(float(os.environ.get("SLIPPAGE_SURVIVAL_MIN_TRADES", "20")))
+        return parsed if parsed >= 0 else 20
+    except (ValueError, TypeError):
+        return 20
+
+
+def _compute_slippage_survival_block(trades_list: list[dict]) -> dict:
+    """Build the `result["slippage_survival"]` JSONB block for a completed backtest.
+
+    Sources per-trade gross P&L + per-trade slippage/commission/roll dollars
+    from the SAME "GrossPnL" / "SlippageCost" / "CommissionCost" /
+    "RollSpreadCost" keys the P&L loop already writes onto each trade dict
+    (see run_backtest()/run_class_backtest() trade-construction loops) — no
+    new per-trade capture needed, no re-run of the backtest.
+
+    Review-pass fix (2026-07-03): commission + roll are now threaded through
+    so the sweep's net_pnl_M holds them FIXED and stresses only slippage
+    (`net_pnl_M = gross - commission - roll - M*slippage`) — the v1 formula
+    silently omitted commission/roll, inflating the 1x baseline relative to
+    the trade's TRUE realized net and letting fee-heavy net-losers show
+    "alive at 1x". "CommissionCost"/"RollSpreadCost" default to 0.0 when
+    absent from a trade dict (some paths legitimately have no roll cost —
+    e.g. no rollover day in the backtest window); "GrossPnL"/"SlippageCost"
+    are NOT given this leniency here because by construction every trade in
+    `trades_list` was JUST written by the SAME function call that builds
+    this block (backtester.py:4771-4775 / :6577-6581) — there is no
+    realistic path for those two keys to be absent in this direct-call
+    context (unlike the WF aggregate case in walk_forward.py, which
+    explicitly checks for and reports missing Gross/Slippage keys as an
+    error envelope rather than defaulting).
+
+    Calls the pure helper `compute_slippage_survival()` (no I/O, no clock)
+    and then additively stamps `computed_at` here in the caller — the pure
+    helper is required to stay clock-free for the replay-determinism
+    contract; the wall-clock timestamp is purely informational/audit
+    metadata and must never affect the sweep math itself.
+
+    Fail-soft: a computation error never aborts the primary backtest result;
+    it degrades to a documented error envelope so the failure is VISIBLE
+    (audit-able) rather than silently absent (the #1 pinned producer-gate
+    disconnect failure class).
+    """
+    from datetime import datetime, timezone
+
+    try:
+        from src.engine.statistics.slippage_survival import compute_slippage_survival
+
+        gross_pnls = [float(t.get("GrossPnL", 0.0)) for t in trades_list]
+        slippage_dollars = [float(t.get("SlippageCost", 0.0)) for t in trades_list]
+        commission_dollars = [float(t.get("CommissionCost", 0.0)) for t in trades_list]
+        roll_dollars = [float(t.get("RollSpreadCost", 0.0)) for t in trades_list]
+
+        block = compute_slippage_survival(
+            gross_pnls=gross_pnls,
+            slippage_dollars=slippage_dollars,
+            commission_dollars=commission_dollars,
+            roll_dollars=roll_dollars,
+            multiples=_parse_slippage_survival_multiples(),
+            min_pf=_parse_slippage_survival_min_pf(),
+            min_trades=_parse_slippage_survival_min_trades(),
+        )
+        block["computed_at"] = datetime.now(timezone.utc).isoformat()
+        return block
+    except Exception as _ss_err:
+        print(
+            f"WARNING: slippage_survival computation failed (non-fatal, "
+            f"degraded envelope emitted): {_ss_err}",
+            file=sys.stderr,
+        )
+        return {
+            "schema_version": 1,
+            "error": str(_ss_err)[:300],
+            "n_trades": len(trades_list) if isinstance(trades_list, list) else 0,
+            "computed_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+
 def _apply_dsl_stop_loss_and_time_stop(
     entry_long: np.ndarray,
     exit_long: np.ndarray,
@@ -5366,6 +5501,12 @@ def run_backtest(
     if "_roll_spread_audit_rows" in dir():
         result["roll_spread_costs"] = _roll_spread_audit_rows  # noqa: F821
 
+    # ─── Slippage-Survival Gate (Wave A, 2026-07-03) — engine producer ─────────
+    # ALWAYS computed + emitted (cheap fixed-signal re-price sweep over the
+    # already-computed per-trade GrossPnL/SlippageCost). Gate enable/threshold
+    # logic lives on the TS side; see _compute_slippage_survival_block() docstring.
+    result["slippage_survival"] = _compute_slippage_survival_block(trades_list)
+
     # ─── Pass B-2: Invariant Harness (always runs — cheap pure validation) ───
     # Runs AFTER result dict is fully assembled, BEFORE determinism check.
     # Catches balance-arithmetic drift, P&L sum mismatches, metric corruption.
@@ -6906,6 +7047,12 @@ def run_class_backtest(
         information_ratio_class = None
     # ─────────────────────────────────────────────────────────────
 
+    # ─── Slippage-Survival Gate (Wave A, 2026-07-03) — engine producer ─────────
+    # ALWAYS computed + emitted (class/archetype backtest path). Mirrors the
+    # run_backtest() DSL-path wiring above; see _compute_slippage_survival_block()
+    # docstring for the full contract + fail-soft rationale.
+    _slippage_survival_block_cls = _compute_slippage_survival_block(trades_list)
+
     return {
         "total_return": round(total_return, 6),
         "sharpe_ratio": round(sharpe, 4),
@@ -7004,6 +7151,8 @@ def run_class_backtest(
         },
         # MED #5 (Wave 27.5 Pass D.1) — Roll spread cost audit (class backtest path).
         "roll_spread_costs": _roll_spread_audit_rows_cls,
+        # Slippage-Survival Gate (Wave A, 2026-07-03) — see block computed above.
+        "slippage_survival": _slippage_survival_block_cls,
     }
 
 

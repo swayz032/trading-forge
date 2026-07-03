@@ -607,6 +607,29 @@ export const bifGateEvaluationsTotal = new Counter({
   registers: [promRegistry],
 });
 
+// ─── Wave A — Slippage-Survival gate block counter (2026-07-03) ───────────────
+//
+// tf_slippage_survival_blocks_total{breaks_at}
+//   Incremented by lifecycle-service.ts each time the Slippage-Survival gate
+//   BLOCKS a PAPER → DEPLOY_READY promotion (evaluateSlippageSurvivalGate()
+//   returns passed=false). Only fires on the blocked outcome — this is a
+//   "blocks" counter, not a full outcome counter (mirrors the name/shape the
+//   design spec specifies: `tf_slippage_survival_blocks_total{breaks_at}`).
+//
+//   breaks_at label — the smallest slippage multiple (stringified, e.g. "1",
+//   "1.5", "2") where the producer's re-price sweep found the edge died.
+//   Cardinality: bounded by SLIPPAGE_SURVIVAL_MULTIPLES (default 3 sweep
+//   points) — safe.
+//
+//   Operational question answered: "How many strategies are being blocked for
+//   living on optimistic fills, and at which slippage multiple do they break?"
+export const slippageSurvivalBlocksTotal = new Counter({
+  name: "tf_slippage_survival_blocks_total",
+  help: "Total Slippage-Survival gate blocks at PAPER→DEPLOY_READY, labelled by the breaks_at multiple",
+  labelNames: ["breaks_at"] as const,
+  registers: [promRegistry],
+});
+
 // ── Auto-Graveyard (Production Hardening) ────────────────────────────────────
 //   Incremented each time checkAutoPromotions() auto-promotes a strategy to
 //   GRAVEYARD after LIFECYCLE_GATE_FAIL_GRAVEYARD_THRESHOLD (default 3)

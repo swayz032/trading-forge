@@ -45,7 +45,7 @@ import { broadcastSSE, LIFECYCLE_GATE_EVENTS, WAVE29_EVENTS } from "../routes/ss
 import { compileDualPineExport } from "./pine-export-service.js";
 import { agentCoordinator } from "./agent-coordinator-service.js";
 import { tracer } from "../lib/tracing.js";
-import { strategyPromotions, pboBlocksTotal, lifecycleShadowPromotionsTotal, autoGraveyardTotal, bifGateEvaluationsTotal, auditWriteFailuresTotal } from "../lib/metrics-registry.js";
+import { strategyPromotions, pboBlocksTotal, lifecycleShadowPromotionsTotal, autoGraveyardTotal, bifGateEvaluationsTotal, slippageSurvivalBlocksTotal, auditWriteFailuresTotal } from "../lib/metrics-registry.js";
 import { evaluateMultiFirmEligibility } from "./multi-firm-promotion-service.js";
 import { killSwitch } from "../production/kill-switch.js";
 import { evaluateB14CiGate, evaluateDsrWalkForwardGate } from "../lib/b14-ci-gate.js";
@@ -76,6 +76,12 @@ import {
 // Reads backtests.bif / backtests.kEff stamped from Python WF result fields `bif` / `k_eff`.
 // Hard-blocks when bif > BIF_BLOCK_THRESHOLD (default 4.0). Grandfather-passes on null.
 import { evaluateBifGate } from "../lib/bif-gate.js";
+// Wave A — Slippage-Survival promotion gate (PAPER → DEPLOY_READY).
+// Reads backtests.slippageSurvival JSONB (Python fixed-signal re-price sweep).
+// Default-OFF (SLIPPAGE_SURVIVAL_GATE_ENABLED=false) — advisory-only until the
+// operator opts in; hard-blocks when breaks_at <= SLIPPAGE_SURVIVAL_BLOCK_MULT
+// once enabled. Grandfather-passes on legacy null.
+import { evaluateSlippageSurvivalGate } from "../lib/slippage-survival-gate.js";
 
 const VALID_STATES = [
   "CANDIDATE",
@@ -505,6 +511,9 @@ export class LifecycleService {
           bif: backtests.bif, kEff: backtests.kEff,
           // (deepscan7 F-1 2026-07-02) propCompliance feeds the compliance-drift hard block below.
           propCompliance: backtests.propCompliance,
+          // Wave A (2026-07-03) — Slippage-Survival gate input; manual-path parity with the
+          // cron sweep block below.
+          slippageSurvival: backtests.slippageSurvival,
         }).from(backtests).where(and(eq(backtests.strategyId, id), eq(backtests.status, "completed"))).orderBy(desc(backtests.createdAt)).limit(1);
 
         // ── (deepscan7 F-1 2026-07-02) Compliance-drift HARD block — cron-path parity ──
@@ -695,6 +704,55 @@ export class LifecycleService {
             }).catch((auditErr) => {
               logger.warn({ strategyId: id, err: auditErr }, "lifecycle.bif_cpcv_unmeasured audit insert failed (non-blocking)");
             });
+          }
+        }
+
+        // ── Wave A (2026-07-03) — Slippage-Survival gate, manual-path enforcement ──
+        // paper-to-deploy-ready-gates.ts is the shared pure evaluator owned by the
+        // Pass 5 Track A carve-out; rather than touch it, this gate is enforced
+        // inline here (manual PATCH path) and again in the cron sweep below —
+        // mirroring the BIF gate's dual-call-site pattern (manual + cron parity).
+        // Advisory-only while SLIPPAGE_SURVIVAL_GATE_ENABLED=false (default).
+        {
+          const slippageSurvivalResultP2D = evaluateSlippageSurvivalGate(
+            (latestBtP2D?.slippageSurvival ?? null) as import("../lib/slippage-survival-gate.js").SlippageSurvivalDict | null,
+          );
+
+          await db.insert(auditLog).values({
+            action: "slippage_survival.gate_evaluated",
+            entityId: id,
+            entityType: "strategy",
+            status: slippageSurvivalResultP2D.passed
+              ? (slippageSurvivalResultP2D.status === "clean" || slippageSurvivalResultP2D.status === "disabled" ? "success" : "warning")
+              : "failure",
+            decisionAuthority: "gate",
+            input: { fromState, toState },
+            result: slippageSurvivalResultP2D.auditPayload as Record<string, unknown>,
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: id, err: auditErr }, "slippage_survival.gate_evaluated audit insert (manual path) failed (non-blocking)");
+          });
+
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.SLIPPAGE_SURVIVAL_EVALUATED, {
+            strategyId: id,
+            ...slippageSurvivalResultP2D.auditPayload,
+            passed: slippageSurvivalResultP2D.passed,
+            reason: slippageSurvivalResultP2D.reason,
+            // §2 correlation_id mandate: thread the same id the audit row carries so
+            // an SSE consumer can stitch a block back to its triggering backtest.
+            correlationId,
+          });
+
+          if (!slippageSurvivalResultP2D.passed) {
+            try {
+              slippageSurvivalBlocksTotal.labels({ breaks_at: String(slippageSurvivalResultP2D.auditPayload.breaks_at) }).inc();
+            } catch { /* non-blocking counter */ }
+            logger.warn(
+              { strategyId: id, breaks_at: slippageSurvivalResultP2D.auditPayload.breaks_at, threshold: slippageSurvivalResultP2D.auditPayload.block_mult, transition: "PAPER→DEPLOY_READY" },
+              "Slippage-Survival gate BLOCKED PAPER→DEPLOY_READY (manual path): edge dies at or below block multiple (living on optimistic fills)",
+            );
+            strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+            return { success: false, error: slippageSurvivalResultP2D.reason };
           }
         }
 
@@ -5320,6 +5378,91 @@ export class LifecycleService {
             correlationId,
           }).catch((auditErr) => {
             logger.warn({ strategyId: s.id, err: auditErr }, "bif_infra_error_proceeded audit insert failed (non-blocking)");
+          });
+          gateEvidenceStatuses.push("data_unavailable");
+        }
+
+        // ── Wave A (2026-07-03) — Slippage-Survival gate, cron-path enforcement ──
+        // Mirrors the BIF block immediately above (same fetch/evaluate/audit/SSE/
+        // block/reset-counter shape). Default-OFF via SLIPPAGE_SURVIVAL_GATE_ENABLED
+        // (advisory-only — never alters flow while disabled); legacy-null and
+        // insufficient-sample both grandfather-pass with a warn. See design spec:
+        // docs/superpowers/specs/2026-07-03-slippage-survival-gate-design.md
+        try {
+          const [latestBtForSlippage] = await db
+            .select({ slippageSurvival: backtests.slippageSurvival })
+            .from(backtests)
+            .where(
+              and(
+                eq(backtests.strategyId, s.id),
+                eq(backtests.status, "completed"),
+              ),
+            )
+            .orderBy(desc(backtests.createdAt))
+            .limit(1);
+
+          const slippageSurvivalResult = evaluateSlippageSurvivalGate(
+            (latestBtForSlippage?.slippageSurvival ?? null) as import("../lib/slippage-survival-gate.js").SlippageSurvivalDict | null,
+          );
+
+          await db.insert(auditLog).values({
+            action: "slippage_survival.gate_evaluated",
+            entityId: s.id,
+            entityType: "strategy",
+            status: slippageSurvivalResult.passed
+              ? (slippageSurvivalResult.status === "clean" || slippageSurvivalResult.status === "disabled" ? "success" : "warning")
+              : "failure",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: slippageSurvivalResult.auditPayload as Record<string, unknown>,
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "slippage_survival.gate_evaluated audit insert (PAPER→DEPLOY_READY) failed (non-blocking)");
+          });
+
+          broadcastSSE(LIFECYCLE_GATE_EVENTS.SLIPPAGE_SURVIVAL_EVALUATED, {
+            strategyId: s.id,
+            ...slippageSurvivalResult.auditPayload,
+            passed: slippageSurvivalResult.passed,
+            reason: slippageSurvivalResult.reason,
+            // §2 correlation_id mandate: thread the same id the audit row carries.
+            correlationId,
+          });
+
+          if (!slippageSurvivalResult.passed) {
+            try {
+              slippageSurvivalBlocksTotal.labels({ breaks_at: String(slippageSurvivalResult.auditPayload.breaks_at) }).inc();
+            } catch { /* non-blocking counter */ }
+            logger.warn(
+              { strategyId: s.id, breaks_at: slippageSurvivalResult.auditPayload.breaks_at, threshold: slippageSurvivalResult.auditPayload.block_mult, transition: "PAPER→DEPLOY_READY" },
+              "Slippage-Survival gate BLOCKED PAPER→DEPLOY_READY: edge dies at or below block multiple (living on optimistic fills)",
+            );
+            strategyPromotions.labels({ from_state: "PAPER", to_state: "DEPLOY_READY", actor: "system_gate" }).inc();
+            try {
+              await this._maybeAutoGraveyard(s.id, "slippage_survival_blocked", { breaks_at: slippageSurvivalResult.auditPayload.breaks_at, threshold: slippageSurvivalResult.auditPayload.block_mult }, "PAPER", correlationId);
+            } catch (graveyardErr) {
+              logger.warn({ strategyId: s.id, err: graveyardErr }, "slippage_survival _maybeAutoGraveyard threw (non-blocking) — block decision preserved");
+            }
+            continue; // block decision wins regardless of graveyard write outcome
+          }
+          this._resetHardGateCounter(s.id, "slippage_survival_blocked", correlationId);
+          gateEvidenceStatuses.push(slippageSurvivalResult.status === "legacy_null" ? "legacy_null" : "complete");
+        } catch (slippageSurvivalErr) {
+          logger.warn(
+            { strategyId: s.id, err: slippageSurvivalErr },
+            "Slippage-Survival gate (PAPER→DEPLOY_READY): read failed (non-blocking — promotion continues)",
+          );
+          await db.insert(auditLog).values({
+            action: "lifecycle.slippage_survival_infra_error_proceeded",
+            entityId: s.id,
+            entityType: "strategy",
+            status: "warning",
+            decisionAuthority: "gate",
+            input: { fromState: "PAPER", toState: "DEPLOY_READY" },
+            result: { error: slippageSurvivalErr instanceof Error ? slippageSurvivalErr.message : String(slippageSurvivalErr), note: "infra read failure — fail-open, promotion continues" },
+            correlationId,
+          }).catch((auditErr) => {
+            logger.warn({ strategyId: s.id, err: auditErr }, "slippage_survival_infra_error_proceeded audit insert failed (non-blocking)");
           });
           gateEvidenceStatuses.push("data_unavailable");
         }

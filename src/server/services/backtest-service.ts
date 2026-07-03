@@ -296,6 +296,9 @@ interface BacktestResult {
   // Both optional (null when Python has not yet emitted them — pre-Wave-3 backtests).
   bif?: number | null;
   k_eff?: number | null;
+  // Wave A (2026-07-03) — slippage-survival sweep block emitted by the engine
+  // (src/engine/statistics/slippage_survival.py). Persisted to backtests.slippage_survival.
+  slippage_survival?: Record<string, unknown> | null;
   // WRC / SPA — data-snooping guard results.
   // Python walk_forward.py emits these at both CPCV and plain/purged_embargo WF paths.
   // Contract: wrc_result.p_value → wrcResult JSONB → evaluateWrcGate()
@@ -982,6 +985,12 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
           // (pre-Wave-3 backtests); lifecycle gate treats null as a grandfather pass.
           bif: result.bif != null ? String(result.bif) : null,
           kEff: result.k_eff != null ? String(result.k_eff) : null,
+          // Wave A — Slippage-survival gate (2026-07-03). Python emits
+          // `result.slippage_survival` (fixed-signal re-price sweep 1x/2x/3x) at the
+          // run_backtest / run_class_backtest top level. Fail-soft: null → the gate
+          // grandfather-passes (legacy). Producer→DB→gate contract in
+          // docs/superpowers/specs/2026-07-03-slippage-survival-gate-design.md.
+          slippageSurvival: (result.slippage_survival as Record<string, unknown> | null | undefined) ?? null,
           // WRC / SPA — data-snooping guard results wired from Python walk_forward.py.
           // Python emits these at both CPCV and plain/purged_embargo WF paths.
           // Contract (producer → DB → gate):

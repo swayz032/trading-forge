@@ -34,7 +34,12 @@ from typing import Optional
 import numpy as np
 import polars as pl
 
-from src.engine.backtester import BARS_PER_DAY, run_backtest, run_class_backtest
+from src.engine.backtester import (
+    BARS_PER_DAY,
+    _compute_slippage_survival_block,
+    run_backtest,
+    run_class_backtest,
+)
 from src.engine.config import BacktestRequest
 from src.engine.cross_validation import (
     compute_wfe,
@@ -68,6 +73,78 @@ _DSR_USE_NTOTAL: bool = os.getenv("DSR_USE_NTOTAL", "true").lower() != "false"
 # Below these thresholds, OOS results are statistically unreliable.
 MIN_OOS_TRADES = 30
 MIN_OOS_DAYS = 60
+
+
+# ─── Slippage-Survival Gate (Wave A follow-up, 2026-07-03) ────────────────────
+# Design spec: docs/superpowers/specs/2026-07-03-slippage-survival-gate-design.md
+#
+# PAPER → DEPLOY_READY promotion candidates are WF/CPCV-validated — the single-
+# backtest wiring in src/engine/backtester.py (run_backtest()/run_class_backtest())
+# populates result["slippage_survival"] on a PER-WINDOW/PER-PATH basis, but that
+# per-window dict is never itself persisted; only the aggregated OOS result is.
+# Without this forwarding, every WF-mode backtest (i.e. every promotion candidate)
+# would silently carry slippage_survival=None at the top level, making the gate
+# permanently inert exactly where it's needed.
+#
+# This computes the SAME contract shape over the AGGREGATE OOS trade set
+# (all_oos_trades) — mirrors how WF already aggregates win_rate/gross_wins/PF
+# from all_oos_trades rather than averaging per-window values.
+def _compute_wf_slippage_survival(all_oos_trades: list[dict]) -> dict:
+    """Build the aggregate-OOS `slippage_survival` block for a WF/CPCV result.
+
+    Reuses `_compute_slippage_survival_block()` from backtester.py (same pure
+    sweep + same SLIPPAGE_SURVIVAL_MULTIPLES/MIN_PF/MIN_TRADES env config) —
+    that helper is already generic over any `list[dict]` of trades carrying
+    "GrossPnL"/"SlippageCost"/"CommissionCost"/"RollSpreadCost" keys, so no
+    duplicate parsing logic is needed here; the review-pass fix (2026-07-03)
+    that threads commission + roll into the sweep (held FIXED, only slippage
+    scaled by the stress multiple — see `compute_slippage_survival()`
+    docstring) is inherited automatically through this delegation.
+
+    Defensive check (explicitly requested, not optional — DELIBERATELY
+    narrower than the friction fields): every OOS trade in this aggregate
+    was produced by a per-window run_backtest()/run_class_backtest() call,
+    which ALWAYS writes "GrossPnL"/"SlippageCost" onto each trade dict (see
+    backtester.py's trade-construction loops). If any trade is missing
+    either key, that indicates a fold produced trades via a path this wiring
+    doesn't know about (or a shape drift) — this is a real gap, not something
+    to silently paper over with `.get(key, 0.0)` defaults that would fabricate
+    a misleadingly all-zero (or partially-zero) sweep. Report it loudly
+    instead. "CommissionCost"/"RollSpreadCost" are NOT part of this check —
+    those two legitimately default to 0.0 on some trades (e.g. no rollover
+    day in the window) and `_compute_slippage_survival_block()` already
+    treats them that way; only Gross/Slippage absence is a genuine
+    shape-drift signal worth an error envelope.
+    """
+    if not all_oos_trades:
+        # Emit even on 0 trades — insufficient_sample=true, same contract shape.
+        return _compute_slippage_survival_block([])
+
+    _missing_keys_count = sum(
+        1 for t in all_oos_trades
+        if "GrossPnL" not in t or "SlippageCost" not in t
+    )
+    if _missing_keys_count > 0:
+        from datetime import datetime, timezone
+
+        print(
+            f"WARNING: slippage_survival (WF aggregate): {_missing_keys_count} of "
+            f"{len(all_oos_trades)} OOS trades are missing 'GrossPnL'/'SlippageCost' "
+            f"keys — a fold produced trades via an unexpected path. Emitting an "
+            f"error envelope instead of a silently-defaulted (misleading) sweep.",
+            file=sys.stderr,
+        )
+        return {
+            "schema_version": 1,
+            "error": (
+                f"{_missing_keys_count} of {len(all_oos_trades)} OOS trades missing "
+                "GrossPnL/SlippageCost keys — cannot compute an honest sweep"
+            ),
+            "n_trades": len(all_oos_trades),
+            "computed_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+    return _compute_slippage_survival_block(all_oos_trades)
 
 
 # ─── Parallel window worker (module-level required for pickling on Windows) ──────────
@@ -453,6 +530,10 @@ def _run_walk_forward_cpcv(
             "wrc_result": {"available": False, "reason": "no CPCV paths completed"},
             "spa_result": {"available": False, "reason": "no CPCV paths completed"},
             "execution_time_ms": int((time.time() - start_time) * 1000),
+            # Slippage-Survival Gate (Wave A follow-up, 2026-07-03): zero CPCV paths
+            # completed → same "emit even on 0 trades" contract as the main return
+            # below (insufficient_sample=true, breaks_at=null), never silently absent.
+            "slippage_survival": _compute_wf_slippage_survival([]),
         }
 
     # ── Aggregate from all paths ─────────────────────────────────────────────
@@ -972,6 +1053,13 @@ def _run_walk_forward_cpcv(
         # TS consumer: read param_stability_status === "cpcv_not_applicable" and route
         # to a distinct cpcv-exempt audit action instead of the legacy_null path.
         "param_stability_status": "cpcv_not_applicable",
+        # Slippage-Survival Gate (Wave A follow-up, 2026-07-03): computed on the
+        # AGGREGATE OOS trade set (all_oos_trades) — mirrors how win_rate/PF are
+        # already aggregated from all_oos_trades above rather than averaged
+        # per-path. Forwarded to the TOP LEVEL so backtest-service.ts's
+        # `result.slippage_survival ?? null` cherry-pick finds it on CPCV-mode
+        # WF results (the promotion-candidate path), not just single backtests.
+        "slippage_survival": _compute_wf_slippage_survival(all_oos_trades),
     }
 
 
@@ -2289,6 +2377,14 @@ def run_walk_forward(
         # (unless PROMOTION_GRANDFATHER_PRE_PASS_E=true is explicitly set).
         "wrc_result": _plain_wrc_result,
         "spa_result": _plain_spa_result,
+        # Slippage-Survival Gate (Wave A follow-up, 2026-07-03): computed on the
+        # AGGREGATE OOS trade set (all_oos_trades) — mirrors how win_rate/PF are
+        # already aggregated from all_oos_trades above rather than averaged
+        # per-window. Forwarded to the TOP LEVEL so backtest-service.ts's
+        # `result.slippage_survival ?? null` cherry-pick finds it on plain/
+        # purged_embargo-mode WF results (the promotion-candidate path), not
+        # just single backtests.
+        "slippage_survival": _compute_wf_slippage_survival(all_oos_trades),
     }
 
 
@@ -2679,4 +2775,14 @@ def run_walk_forward_class(
         "sanity_checks": sanity,
         "cross_validation": cross_val,
         "prop_compliance": prop_compliance,
+        # Slippage-Survival Gate (Wave A follow-up, 2026-07-03) — ADDITIVE beyond
+        # the two return dicts explicitly requested (_run_walk_forward_cpcv +
+        # run_walk_forward): run_walk_forward_class() is a THIRD, separate WF
+        # entry point for archetype/class-based strategies (called from
+        # backtester.py main() at ~line 7135/7257 — a real PAPER→DEPLOY_READY
+        # promotion path, not a dead code path). Leaving it out would silently
+        # reintroduce the exact gap being closed, just for archetype strategies
+        # instead of DSL strategies. Same aggregate-OOS-trades contract as the
+        # other two.
+        "slippage_survival": _compute_wf_slippage_survival(all_oos_trades),
     }

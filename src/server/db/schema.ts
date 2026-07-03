@@ -230,6 +230,16 @@ export const backtests = pgTable(
     // HARD GATE: persistence refused when PROVENANCE_STAMP_ENFORCE=true (default) and stamp missing.
     // Applied migration: 0186_backtest_provenance_stamp.sql (idx 189).
     provenanceStamp: jsonb("provenance_stamp"),
+    // Slippage-Survival Gate (Wave A, 2026-07-03) — design spec:
+    // docs/superpowers/specs/2026-07-03-slippage-survival-gate-design.md
+    // Producer (Python, src/engine/statistics/slippage_survival.py) writes a
+    // fixed-signal re-price sweep at 1x/2x/3x slippage multiples:
+    //   { schema_version, multiples, pf, expectancy_r, breaks_at, retention_2x,
+    //     n_trades, insufficient_sample, computed_at }
+    // Consumer: src/server/lib/slippage-survival-gate.ts (pure reader), wired at
+    // PAPER → DEPLOY_READY. NULL on pre-2026-07-03 rows (legacy grandfather PASS).
+    // Applied migration: 0189_backtests_slippage_survival.sql (idx 192).
+    slippageSurvival: jsonb("slippage_survival"),
     errorMessage: text("error_message"),
     executionTimeMs: integer("execution_time_ms"),
     createdAt: timestamp("created_at").defaultNow().notNull(),

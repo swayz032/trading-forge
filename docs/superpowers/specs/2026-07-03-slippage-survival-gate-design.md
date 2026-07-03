@@ -12,8 +12,15 @@ Prove a strategy's edge survives elevated slippage before it reaches live capita
 
 **Fixed-signal re-price.** Hold the backtest's realized trades fixed; re-apply slippage at 1×/2×/3×; recompute PF + expectancy on each stressed net-P&L series. Isolates the slippage variable precisely (cost-sensitivity analysis holding signals fixed — standard institutional technique). Reuses the per-trade slippage the engine already deducts — nearly free.
 
+**Formula (review-pass fix, 2026-07-03):**
+```
+net_pnl_M[trade] = gross_pnl[trade] - commission[trade] - roll[trade] - M × slippage_dollars[trade]
+```
+Commission and roll-spread cost are held **FIXED** at their real realized values at every stress multiple — **only slippage is scaled by M**. This makes the M=1.0 sweep byte-identical to the trade's actual realized net P&L (`gross - slip - comm - roll`, the same formula the backtester already uses per trade). The original v1 formula (`gross_pnl - M*slippage`, omitting commission/roll entirely) inflated the 1x PF/expectancy baseline relative to the strategy's TRUE realized net — a fee-heavy net-loser could show "alive at 1x" and grandfather past the gate. Holding non-slippage frictions fixed and stressing only the named variable (slippage) is what makes this a *slippage*-survival gate rather than a generic cost-survival gate.
+
 - **Rejected — full re-run** (`slippage_ticks × N`): faithful to fill/stop decision changes but 2× compute and *conflates* slippage-fragility with signal-change. Documented as the v2 upgrade.
 - **Known limitation (v1):** fixed trades ignore the 2nd-order effect where higher slippage could trip a stop. Acceptable for a cost-fragility gate; recorded honestly.
+- **Boundary precision:** the `breaks_at` alive-check (`pf[Mx] >= min_pf AND expectancy_r[Mx] > 0`) is evaluated on the RAW unrounded PF/expectancy values, not the 4dp-rounded values stored in the JSONB `pf`/`expectancy_r` fields — a raw PF of 0.99996 must not round to 1.0 and incorrectly pass a `min_pf=1.0` floor.
 
 ## The contract (producer ⇄ consumer — must not drift)
 
@@ -45,8 +52,8 @@ Engine writes `backtests.slippage_survival` JSONB. Exact shape both sides agree 
    - legacy null (no `slippage_survival` on backtest) → PASS + `slippage_survival.unavailable_legacy` warn (grandfather window).
    - `insufficient_sample` → PASS + warn.
    - `breaks_at != null AND breaks_at <= SLIPPAGE_SURVIVAL_BLOCK_MULT (2.0)` → **BLOCK**.
-   - `breaks_at == 3.0` (survives 2×, dies at 3×) → PASS + WARN.
-   - else → PASS.
+   - `breaks_at != null AND breaks_at > SLIPPAGE_SURVIVAL_BLOCK_MULT` (survives the block multiple but dies at a higher swept multiple) → PASS + WARN (`warn_breaks_at_above_block`). Generalized from a hardcoded `== 3.0` (review-pass fix) so telemetry stays accurate if the sweep points are tuned.
+   - `breaks_at == null` (survives every swept multiple) → PASS (`clean`).
 4. **Observability** — audit `slippage_survival.gate_evaluated`, SSE `lifecycle:slippage_survival_evaluated`, Prometheus counter `tf_slippage_survival_blocks_total{breaks_at}`.
 
 ## Data flow
@@ -59,9 +66,9 @@ Engine writes `backtests.slippage_survival` JSONB. Exact shape both sides agree 
 |---|---|---|
 | `SLIPPAGE_SURVIVAL_GATE_ENABLED` | `false` | Master switch (advisory-only when false) |
 | `SLIPPAGE_SURVIVAL_BLOCK_MULT` | `2.0` | Block if edge dies at ≤ this multiple |
-| `SLIPPAGE_SURVIVAL_MULTIPLES` | `1,2,3` | Sweep points |
-| `SLIPPAGE_SURVIVAL_MIN_PF` | `1.0` | Survival PF floor |
-| `SLIPPAGE_SURVIVAL_MIN_TRADES` | `20` | Sample-size guard |
+| `SLIPPAGE_SURVIVAL_MULTIPLES` | `1,2,3` | Sweep points. Engine-side parser sorts ascending + drops non-positive values before use (review-pass fix, 2026-07-03) — `breaks_at` short-circuits on the first not-alive multiple in iteration order, so a misconfigured `"3,2,1"` would otherwise evaluate 3x first and report the wrong `breaks_at`. |
+| `SLIPPAGE_SURVIVAL_MIN_PF` | `1.0` | Survival PF floor. Negative overrides fall back to the default (review-pass fix, 2026-07-03). |
+| `SLIPPAGE_SURVIVAL_MIN_TRADES` | `20` | Sample-size guard. Negative overrides fall back to the default (review-pass fix, 2026-07-03) — a negative floor would make `insufficient_sample` structurally impossible to trigger. |
 
 ## Testing (no-bad-wiring bar)
 

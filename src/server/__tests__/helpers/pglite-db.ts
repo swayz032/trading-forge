@@ -147,6 +147,7 @@ CREATE TABLE IF NOT EXISTS backtests (
   wrc_result            JSONB,
   spa_result            JSONB,
   provenance_stamp      JSONB,
+  slippage_survival     JSONB,
   error_message         TEXT,
   execution_time_ms     INTEGER,
   created_at            TIMESTAMPTZ DEFAULT NOW(),

@@ -1,0 +1,30 @@
+-- Migration 0189: Slippage-Survival Gate (Wave A, 2026-07-03)
+-- Design spec: docs/superpowers/specs/2026-07-03-slippage-survival-gate-design.md
+--
+-- Adds slippage_survival JSONB column to the backtests table.
+--
+-- Producer (Python, parallel track — src/engine/statistics/slippage_survival.py)
+-- writes a fixed-signal re-price sweep at 1x/2x/3x slippage multiples:
+--   {
+--     "schema_version": 1,
+--     "multiples": [1.0, 2.0, 3.0],
+--     "pf": { "1x": 1.82, "2x": 1.31, "3x": 0.94 },
+--     "expectancy_r": { "1x": 0.41, "2x": 0.19, "3x": -0.03 },
+--     "breaks_at": 3.0,          -- smallest multiple where edge dies; null = survives all
+--     "retention_2x": 0.46,      -- expectancy_r.2x / expectancy_r.1x
+--     "n_trades": 214,
+--     "insufficient_sample": false,
+--     "computed_at": "2026-07-03T..."
+--   }
+--
+-- Consumer: src/server/lib/slippage-survival-gate.ts (pure reader), wired into
+-- lifecycle-service.ts at PAPER → DEPLOY_READY, advisory-only by default
+-- (SLIPPAGE_SURVIVAL_GATE_ENABLED=false).
+--
+-- Nullable JSONB. Pre-2026-07-03 backtests will have slippage_survival = NULL;
+-- the gate treats null as a legacy grandfather PASS (never blocks on missing data).
+--
+-- IDEMPOTENT: ADD COLUMN IF NOT EXISTS is safe to re-run.
+-- Boot-migration-runner keyed on meta/_journal.json idx 192 / tag 0189_backtests_slippage_survival
+
+ALTER TABLE backtests ADD COLUMN IF NOT EXISTS slippage_survival JSONB;
