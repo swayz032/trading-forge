@@ -219,6 +219,41 @@
     .kv-dish-stat-cap { font-size: 10px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.08em; text-align: right; margin-top: 2px; }
     .kv-dish-stat-sub { font-size: 11px; color: var(--dim); margin-top: 8px; text-align: right; }
 
+    /* ─── Chalkboard menu (real restaurant-menu look) + pages ───────────── */
+    .kv-board {
+      position: relative; border-radius: 14px; padding: 30px 34px 26px;
+      background:
+        radial-gradient(ellipse at 30% 12%, rgba(40, 60, 30, 0.5), transparent 70%),
+        linear-gradient(160deg, #0d1208, #060806);
+      border: 6px solid #2a1d10;
+      box-shadow: inset 0 0 60px rgba(0,0,0,0.85), inset 0 0 0 2px rgba(120,80,40,0.4), 0 18px 42px rgba(0,0,0,0.7);
+      overflow: hidden;
+    }
+    .kv-board::before {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background-image:
+        repeating-linear-gradient(105deg, rgba(255,255,255,0.018) 0 1px, transparent 1px 3px),
+        repeating-linear-gradient(-15deg, rgba(255,255,255,0.012) 0 1px, transparent 1px 5px);
+    }
+    .kv-board-title { position: relative; text-align: center; font-family: 'Caveat', 'Brush Script MT', cursive; font-size: 34px; font-weight: 700; color: rgba(245,255,230,0.95); text-shadow: 0 0 14px rgba(163,255,18,0.45), 0 1px 0 rgba(0,0,0,0.4); line-height: 1; }
+    .kv-board-rule { position: relative; width: 58%; margin: 6px auto 16px; border-top: 1.5px dashed rgba(163,255,18,0.5); filter: drop-shadow(0 0 6px rgba(163,255,18,0.4)); }
+    .kv-mitem {
+      position: relative; display: flex; align-items: baseline; gap: 10px;
+      padding: 12px 4px; cursor: pointer; text-decoration: none;
+      font-family: 'Caveat', 'Brush Script MT', cursive; color: rgba(245,255,230,0.9);
+    }
+    .kv-mitem .n { font-size: 17px; color: rgba(255,200,120,0.65); min-width: 26px; }
+    .kv-mitem .nm { font-size: 24px; letter-spacing: 0.01em; text-shadow: 0 0 10px rgba(163,255,18,0.22); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 62%; }
+    .kv-mitem .dots { flex: 1; align-self: flex-end; margin-bottom: 7px; border-bottom: 2px dotted rgba(245,255,230,0.26); }
+    .kv-mitem .tag { font-size: 15px; color: rgba(255,200,120,0.6); white-space: nowrap; }
+    .kv-mitem:hover .nm { color: #eaffcf; text-shadow: 0 0 16px rgba(163,255,18,0.5); }
+    .kv-mitem:hover .tag { color: #ffce5c; }
+    .kv-pages { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 20px; font-family: 'Caveat', 'Brush Script MT', cursive; }
+    .kv-pg-btn { cursor: pointer; font-size: 20px; color: rgba(245,255,230,0.78); padding: 3px 14px; border: 1.5px dashed rgba(163,255,18,0.4); border-radius: 10px; user-select: none; }
+    .kv-pg-btn:hover { color: #eaffcf; border-color: rgba(163,255,18,0.7); }
+    .kv-pg-btn.off { opacity: 0.28; pointer-events: none; }
+    .kv-pg-lbl { font-size: 18px; color: rgba(255,200,120,0.72); letter-spacing: 0.05em; }
+
     /* ─── Kitchen responsive (must live here so it beats source-order cascade) ─ */
     @media (max-width: 900px) {
       .kv-pipeline { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -502,7 +537,7 @@
 
       function plate(dish) {
         const gates = journeyForStage(dish.lifecycleState);
-        document.getElementById("kv-gates-name").textContent = dish.name || "This play";
+        document.getElementById("kv-gates-name").textContent = premiumTitle(dish.name) || "This play";
         document.getElementById("kv-gates-tag").textContent = dish.tag || "";
         gatesEl.innerHTML = "";
         gates.forEach(function (g, i) {
@@ -548,22 +583,62 @@
         });
         return out;
       }
+      function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]; }); }
+      // Real premium menu titles — keyword → clean name (curated, expandable).
+      const PREMIUM = [
+        [/silver\s*bullet/i, "Silver Bullet"],
+        [/opening\s*range|\borb\b|open(ing)?\s*(range\s*)?break|session\s*open/i, "Opening Heist"],
+        [/mean\s*revers|rubber|revert/i, "The Rubber Band"],
+        [/support|\bbounce\b|demand\s*zone|off\s*(a\s*)?level|level\s*bounce/i, "The Bounce"],
+        [/resist|supply\s*zone|rejection|reject/i, "The Rejection"],
+        [/break\s*out|breakout|range\s*break/i, "The Breakout"],
+        [/squeeze|bollinger|keltner|coil|nr7/i, "Squeeze Play"],
+        [/manipulat|\btrap\b|stop\s*hunt|sweep|liquidity\s*grab/i, "The Trap"],
+        [/reversal|reverse|\bflip\b/i, "The Flip"],
+        [/vwap|\bfade\b/i, "The Fade"],
+        [/gap\s*(and|&)?\s*go|gap\s*fill|\bgap\b/i, "Gap & Go"],
+        [/fvg|order\s*block|\bict\b|\bsmt\b|imbalance/i, "The Sweep"],
+        [/trend|continuation|momentum|pullback|rider/i, "Trend Rider"],
+        [/scalp/i, "Quick Bite"],
+        [/\brsi\b|oversold|overbought|connors/i, "The Dip Snatch"],
+        [/\bema\b|moving\s*average|\bsma\b|golden\s*cross|crossover/i, "The Crossover"],
+      ];
+      const FILLER = { i:1,use:1,my:1,the:1,a:1,an:1,of:1,or:1,and:1,to:1,look:1,lets:1,"let's":1,minute:1,min:1,trade:1,strategy:1,setup:1,entry:1,overall:1,using:1,with:1,on:1,for:1,how:1 };
+      function cleanName(name) {
+        var n = String(name || "").replace(/\s+(mes|mnq|mcl|es|nq|cl)\b/gi, "").replace(/\s+\d+\s*m(in)?\b/gi, "").replace(/\s+\d+\s*h\b/gi, "").replace(/\s+/g, " ").trim();
+        var words = n.split(" ").filter(Boolean);
+        var kept = words.filter(function (w) { return !FILLER[w.toLowerCase()]; });
+        var pick = (kept.length ? kept : words).slice(0, 3).join(" ").trim();
+        return pick || "House Special";
+      }
+      function premiumTitle(name) {
+        var n = String(name || "");
+        for (var i = 0; i < PREMIUM.length; i++) { if (PREMIUM[i][0].test(n)) return PREMIUM[i][1]; }
+        return cleanName(n);
+      }
       function board(sub) { return '<div class="kv-menu-empty"><div class="kv-menu-empty-board"><div class="kv-menu-empty-inner"><div class="kv-menu-empty-headline">The Menu</div><div class="kv-menu-empty-divider"></div><div class="kv-menu-empty-sub">' + sub + '</div></div><div class="kv-menu-empty-stamp">Slumdawg ☆ Kitchen</div></div></div>'; }
+      var PER_PAGE = 7;
+      var ps = { list: [], page: 0 };
+      function renderBoardPage() {
+        var list = ps.list, totalPages = Math.max(1, Math.ceil(list.length / PER_PAGE));
+        if (ps.page >= totalPages) ps.page = totalPages - 1;
+        if (ps.page < 0) ps.page = 0;
+        var start = ps.page * PER_PAGE, items = list.slice(start, start + PER_PAGE);
+        var itemsHtml = items.map(function (d, idx) {
+          return '<a class="kv-mitem" href="#" data-i="' + (start + idx) + '"><span class="n">' + String(start + idx + 1).padStart(2, "0") + '</span><span class="nm">' + esc(premiumTitle(d.name)) + '</span><span class="dots"></span><span class="tag">' + esc(d.tag || "") + '</span></a>';
+        }).join("");
+        var pagesHtml = totalPages > 1 ? ('<div class="kv-pages"><span class="kv-pg-btn' + (ps.page === 0 ? " off" : "") + '" data-pg="-1">‹ prev</span><span class="kv-pg-lbl">Page ' + (ps.page + 1) + ' / ' + totalPages + '</span><span class="kv-pg-btn' + (ps.page >= totalPages - 1 ? " off" : "") + '" data-pg="1">next ›</span></div>') : "";
+        rows.innerHTML = '<div class="kv-board"><div class="kv-board-title">' + esc(ps.title || "The Menu") + '</div><div class="kv-board-rule"></div>' + itemsHtml + '</div>' + pagesHtml;
+        rows.querySelectorAll(".kv-mitem").forEach(function (a) { a.addEventListener("click", function (e) { e.preventDefault(); plate(ps.list[+a.getAttribute("data-i")]); }); });
+        rows.querySelectorAll(".kv-pg-btn").forEach(function (b) { b.addEventListener("click", function () { ps.page += (+b.getAttribute("data-pg")); renderBoardPage(); document.getElementById("kv-menu-tabs").scrollIntoView({ behavior: "smooth", block: "nearest" }); }); });
+      }
       function renderDishes(list) {
-        rows.innerHTML = "";
         if (!list) { rows.innerHTML = board("Couldn't reach the kitchen. Try again."); return; }
-        if (list.length === 0) { rows.innerHTML = board("Nothing on this menu yet…"); return; }
-        list.forEach(function (d, i) {
-          const a = SH.el("a", { class: "kv-dish", href: "#" },
-            SH.el("div", { class: "kv-dish-num-c" }, String(i + 1).padStart(2, "0")),
-            SH.el("div", {}, SH.el("div", { class: "kv-dish-name" }, d.name), d.tag ? SH.el("div", { class: "kv-dish-note" }, d.tag) : null),
-            SH.el("div", {}, SH.el("div", { class: "kv-dish-stat-cap" }, "tap to plate →"))
-          );
-          a.addEventListener("click", function (e) { e.preventDefault(); plate(d); });
-          rows.appendChild(a);
-        });
+        if (!list.length) { rows.innerHTML = board("Nothing on this menu yet…"); return; }
+        ps.list = list; ps.page = 0; renderBoardPage();
       }
       async function loadTab(tab) {
+        ps.title = tab.label;
         rows.innerHTML = board("Plating…");
         const data = await SH.fetchJSON(tab.url);
         renderDishes(normalize(tab.kind, data));
