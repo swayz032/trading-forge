@@ -306,6 +306,80 @@ export async function fireDiscordCritical(title: string, message: string): Promi
   }
 }
 
+// ─── deepscan15 C1: guarded _journal.json read ──────────────────────────────────
+/**
+ * Read + parse _journal.json behind the SAME failure-signalling path a migration
+ * failure uses: audit row + Discord CRITICAL + crash-loop escalation, THEN
+ * rethrow (fail-closed boot). Previously `JSON.parse` here was unguarded — a
+ * corrupt journal (bad merge, unresolved rebase conflict markers, partial disk
+ * write, non-BOM encoding damage) threw a raw SyntaxError BEFORE any of the
+ * runner's alerting could fire. Because index.ts awaits runPendingMigrations at
+ * top-level module scope (before the process error handlers register), that raw
+ * throw exited the process with zero Discord signal, zero audit row, and NSSM
+ * respawned straight back into the same corrupt file — an indefinite silent
+ * crash-loop (a 30-day-vacation dark-bot). This guard makes the failure LOUD
+ * while preserving the fail-closed boot-block. `deps` are injectable for tests.
+ */
+export async function readJournalOrAlert(
+  journalPath: string,
+  correlationId: string | null,
+  deps: {
+    notify?: (title: string, message: string) => Promise<void>;
+    audit?: (row: Record<string, unknown>) => Promise<unknown>;
+    incrementFailure?: () => number;
+  } = {},
+): Promise<Journal> {
+  const notify = deps.notify ?? fireDiscordCritical;
+  const audit =
+    deps.audit ?? ((row: Record<string, unknown>) => insertAuditRowSafe(row as never));
+  const bumpFailure =
+    deps.incrementFailure ??
+    (() => {
+      const attempt = _readBootFailureCount() + 1;
+      _writeBootFailureCount(attempt);
+      return attempt;
+    });
+
+  const raw = readUtf8StripBom(journalPath);
+  try {
+    return JSON.parse(raw) as Journal;
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    logger.error(
+      { journalPath, err: errMsg },
+      "boot-migration: _journal.json parse FAILED — boot blocked",
+    );
+    await audit({
+      action: "migration.journal_parse_failed",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "gate",
+      input: { journal_path: journalPath } as Record<string, unknown>,
+      result: { error: errMsg } as Record<string, unknown>,
+      status: "failure",
+      correlationId,
+    });
+    await notify(
+      "BOOT BLOCKED — Migration Journal Corrupt",
+      `_journal.json failed to parse: ${errMsg}\n\n` +
+        `The backend cannot determine which migrations are pending and will NOT boot (fail-closed). ` +
+        `NSSM will keep respawning into the same corrupt file until this is fixed.\n\n` +
+        `Inspect src/server/db/migrations/meta/_journal.json for corruption ` +
+        `(bad merge / conflict markers / truncation) and restore from git.`,
+    );
+    const attempt = bumpFailure();
+    if (shouldAlertBootFailure(attempt)) {
+      await notify(
+        `BOOT BLOCKED — Migration Crash-Loop: ${attempt} attempt(s)`,
+        `boot-migration has failed ${attempt} time(s) in a row on journal parse. ` +
+          `On vacation this loop continues until manually resolved. ` +
+          `Check bin/boot-migration-failures.json.`,
+      );
+    }
+    throw new Error(`boot-migration: _journal.json parse failed: ${errMsg}`);
+  }
+}
+
 // ─── Post-apply object verification (deepscan6 O6) ──────────────────────────────
 // The runner keys idempotency on drizzle.__drizzle_migrations (when/hash) — it does NOT
 // verify that a migration actually produced its schema objects. The pinned "phantom-apply"
@@ -513,7 +587,10 @@ export async function runPendingMigrations(
     return;
   }
 
-  const journal: Journal = JSON.parse(readUtf8StripBom(journalPath));
+  // deepscan15 C1: guarded parse — a corrupt journal now fires audit + Discord
+  // CRITICAL + crash-loop escalation BEFORE the fail-closed rethrow, instead of
+  // a silent raw SyntaxError that bricked boot with zero signal.
+  const journal: Journal = await readJournalOrAlert(journalPath, correlationId);
 
   // ─── deepscan14 F2: orphan .sql file with no journal entry ──────────────────
   // The opposite gap from the "journal entry, file missing" case below (which is

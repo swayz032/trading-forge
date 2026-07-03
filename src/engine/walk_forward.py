@@ -1728,6 +1728,10 @@ def run_walk_forward(
     pbo_result: Optional[dict] = None
     pbo_gate_result: Optional[dict] = None
     pbo_audit_actions: list[str] = []
+    # deepscan15 C2: declared at FUNCTION scope (not inside the len>=4 block below)
+    # because wf_metadata assembly references it unconditionally — a plain/purged
+    # walk-forward with < 4 windows skips the block and hit UnboundLocalError.
+    _plain_wf_pbo_degenerate_reason: Optional[str] = None
     _pbo_threshold = float(os.environ.get("PBO_OVERFIT_THRESHOLD", str(_PBO_OVERFIT_THRESHOLD_DEFAULT)))
     if len(window_results) >= 4:
         try:
@@ -1838,7 +1842,8 @@ def run_walk_forward(
         # legacy-null grandfather-PROCEED path.  Placing the reason inside
         # wf_metadata ensures backtest-service persists it (it stores wf_metadata
         # wholesale) and lifecycle-service reads it at wf_metadata.pbo_degenerate_reason.
-        _plain_wf_pbo_degenerate_reason: Optional[str] = None
+        # deepscan15 C2: declaration hoisted to function scope above (was here) so the
+        # unconditional wf_metadata read never UnboundLocalErrors on < 4 windows.
         try:
             from src.engine.pbo_gate import (
                 _build_cpcv_paths_from_window_results as _build_paths,
