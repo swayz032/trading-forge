@@ -441,7 +441,10 @@ export async function buildProductionStatus(): Promise<ProductionStatusResponse>
 // ─── Route: GET /api/production/status ───────────────────────────────────────
 
 productionStatusRoutes.get(
-  "/",
+  // deep-scan #13: both frontends (ProductionStatusPanel.tsx + office-risk.js)
+  // poll /api/production/status, but the router mounts at /api/production, so
+  // "/status" was a 404 and the operator's 6-question panel silently aged out.
+  ["/", "/status"],
   async (_req: Request, res: Response): Promise<void> => {
     const requestStart = Date.now();
 
