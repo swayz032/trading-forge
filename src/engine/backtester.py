@@ -7120,6 +7120,63 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                     "tp2_liquidity_source", "backtest_no_historical_levels"
                 )
                 result["tp2_liquidity_unavailable"] = True
+    elif isinstance(config, dict) and config.get("compiled_spec"):
+        # ─── Band C: compiled-spec condition-family dispatch ──────────────
+        # Onboarded specs that did NOT match a named archetype (Band B) but
+        # DID clear the Band C binding-plan coverage threshold are executed
+        # here via SpecConditionStrategy — the same run_class_backtest() path
+        # every archetype strategy uses. ZERO effect on any pre-existing
+        # strategy_class or DSL-expression backtest (this branch only
+        # triggers when config["compiled_spec"] is present and strategy_class
+        # is not — additive, byte-identical for everything else).
+        from src.engine.spec_condition_compiler import from_compiled_spec
+
+        _spec_trace_enabled = os.environ.get("TF_SPEC_TRACE", "").strip().lower() in ("1", "true", "yes")
+        _strategy_cfg_for_spec = config.get("strategy", {}) if isinstance(config.get("strategy"), dict) else {}
+        strategy = from_compiled_spec(
+            config["compiled_spec"],
+            symbol=_strategy_cfg_for_spec.get("symbol", "MES"),
+            timeframe=_strategy_cfg_for_spec.get("timeframe", "5m"),
+            trace=_spec_trace_enabled,
+        )
+        if mode == "walkforward":
+            from src.engine.walk_forward import run_walk_forward_class
+
+            result = run_walk_forward_class(
+                strategy=strategy,
+                start_date=config.get("start_date", "2010-01-01"),
+                end_date=config.get("end_date", "2030-12-31"),
+                slippage_ticks=config.get("slippage_ticks", 1.0),
+                commission_per_side=config.get("commission_per_side", 0.62),
+                firm_key=config.get("firm_key"),
+                embargo_bars=config.get("embargo_bars", 0),
+            )
+        else:
+            result = run_class_backtest(
+                strategy=strategy,
+                start_date=config.get("start_date", "2010-01-01"),
+                end_date=config.get("end_date", "2030-12-31"),
+                slippage_ticks=config.get("slippage_ticks", 1.0),
+                commission_per_side=config.get("commission_per_side", 0.62),
+                firm_key=config.get("firm_key"),
+                skip_eligibility_gate=False,
+                exit_engine=exit_engine,
+                adaptive_ctx=None,
+            )
+        # Governance propagation (C1 mandate): honest approximation flag on
+        # every result produced by an approximation=True evaluator binding.
+        if "error" not in result:
+            gov = result.get("governance_labels")
+            if not isinstance(gov, dict):
+                gov = {}
+            gov["approximation"] = bool(strategy.approximation)
+            gov["spec_condition_compiled"] = True
+            gov["spec_hash"] = strategy.spec_hash
+            result["governance_labels"] = gov
+            # C3: trace is strictly additive — absent entirely when the flag
+            # is off, so off-path results stay byte-identical.
+            if _spec_trace_enabled:
+                result["spec_trace"] = strategy.last_trace
     else:
         # DSL expression-based strategy path (original)
         try:
