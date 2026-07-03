@@ -1,0 +1,1168 @@
+{
+ "video": "aHLIE_TXjpo",
+ "spec_hash": "26571611217a3e7a86b1f2b24a71de513749f5bc770b4a57e2d2627e4e88c020",
+ "graph_canonical_hash": "130e9b25288acd77",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 17603,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_SESSION:chart timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "chart timeframe",
+    "role": "spine",
+    "span": {
+     "start": 92,
+     "end": 191
+    },
+    "evidence": "T-aHLI-C0001"
+   },
+   {
+    "id": "WAIT_BIAS:chart timeframe#0",
+    "type": "WAIT_BIAS",
+    "object": "chart timeframe",
+    "role": "spine",
+    "span": {
+     "start": 191,
+     "end": 232
+    },
+    "evidence": "T-aHLI-C0002"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe selection#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe selection",
+    "role": "spine",
+    "span": {
+     "start": 424,
+     "end": 511
+    },
+    "evidence": "T-aHLI-C0007 to T-aHLI-C0009"
+   },
+   {
+    "id": "WAIT_BIAS:timeframe selection#0",
+    "type": "WAIT_BIAS",
+    "object": "timeframe selection",
+    "role": "spine",
+    "span": {
+     "start": 511,
+     "end": 541
+    },
+    "evidence": "T-aHLI-C0008"
+   },
+   {
+    "id": "WAIT_SESSION:trading session start time#0",
+    "type": "WAIT_SESSION",
+    "object": "trading session start time",
+    "role": "confluence",
+    "span": {
+     "start": 664,
+     "end": 717
+    },
+    "evidence": "T-aHLI-C0013"
+   },
+   {
+    "id": "WAIT_SESSION:chart context#0",
+    "type": "WAIT_SESSION",
+    "object": "chart context",
+    "role": "confluence",
+    "span": {
+     "start": 893,
+     "end": 933
+    },
+    "evidence": "T-aHLI-C0019"
+   },
+   {
+    "id": "WAIT_SESSION:similarity context#0",
+    "type": "WAIT_SESSION",
+    "object": "similarity context",
+    "role": "confluence",
+    "span": {
+     "start": 1116,
+     "end": 1186
+    },
+    "evidence": "T-aHLI-C0025"
+   },
+   {
+    "id": "WAIT_SESSION:primary chart timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "primary chart timeframe",
+    "role": "confluence",
+    "span": {
+     "start": 1186,
+     "end": 1238
+    },
+    "evidence": "T-aHLI-C0026"
+   },
+   {
+    "id": "WAIT_SESSION:entry chart timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "entry chart timeframe",
+    "role": "trigger",
+    "span": {
+     "start": 1238,
+     "end": 1285
+    },
+    "evidence": "T-aHLI-C0027"
+   },
+   {
+    "id": "WAIT_STRUCTURE:previous 4 hourly candle close#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "previous 4 hourly candle close",
+    "role": "spine",
+    "span": {
+     "start": 1437,
+     "end": 1520
+    },
+    "evidence": "T-aHLI-C0032 to T-aHLI-C0035"
+   },
+   {
+    "id": "WAIT_BIAS:bullish close#0",
+    "type": "WAIT_BIAS",
+    "object": "bullish close",
+    "role": "confluence",
+    "span": {
+     "start": 1602,
+     "end": 1664
+    },
+    "evidence": "T-aHLI-C0032 to T-aHLI-C0035"
+   },
+   {
+    "id": "WAIT_BIAS:bearish close 4h#0",
+    "type": "WAIT_BIAS",
+    "object": "bearish close 4h",
+    "role": "confluence",
+    "span": {
+     "start": 1684,
+     "end": 1747
+    },
+    "evidence": "And if it's closed bearish, we're looking for sells during the"
+   },
+   {
+    "id": "FILTER:previous 4h candle close#0",
+    "type": "FILTER",
+    "object": "previous 4h candle close",
+    "role": "spine",
+    "span": {
+     "start": 1767,
+     "end": 1882
+    },
+    "evidence": "The only thing that's slightly different is we do have to consider more how the previous 4-hour candle has closed."
+   },
+   {
+    "id": "ENABLE_ENTRY:aggressive trading style#0",
+    "type": "ENABLE_ENTRY",
+    "object": "aggressive trading style",
+    "role": "trigger",
+    "span": {
+     "start": 1921,
+     "end": 1951
+    },
+    "evidence": "a little bit more aggressive."
+   },
+   {
+    "id": "WAIT_SESSION:timeframe context#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe context",
+    "role": "confluence",
+    "span": {
+     "start": 2032,
+     "end": 2080
+    },
+    "evidence": "T-aHLI-C0044"
+   },
+   {
+    "id": "WAIT_SESSION:trading style timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "trading style timeframe",
+    "role": "confluence",
+    "span": {
+     "start": 2080,
+     "end": 2199
+    },
+    "evidence": "T-aHLI-C0045"
+   },
+   {
+    "id": "FILTER:5 minute entry filter#0",
+    "type": "FILTER",
+    "object": "5 minute entry filter",
+    "role": "trigger",
+    "span": {
+     "start": 2357,
+     "end": 2469
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:price breakout#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "price breakout",
+    "role": "spine",
+    "span": {
+     "start": 3041,
+     "end": 3096
+    },
+    "evidence": "T-aHLI-C0057"
+   },
+   {
+    "id": "FILTER:price location#0",
+    "type": "FILTER",
+    "object": "price location",
+    "role": "confluence",
+    "span": {
+     "start": 3382,
+     "end": 3435
+    },
+    "evidence": "T-aHLI-C0061"
+   },
+   {
+    "id": "FILTER:candle structure#0",
+    "type": "FILTER",
+    "object": "candle structure",
+    "role": "confluence",
+    "span": {
+     "start": 3435,
+     "end": 3483
+    },
+    "evidence": "T-aHLI-C0062"
+   },
+   {
+    "id": "INVALIDATE:buy#0",
+    "type": "INVALIDATE",
+    "object": "buy",
+    "role": "trigger",
+    "span": {
+     "start": 3483,
+     "end": 3521
+    },
+    "evidence": "T-aHLI-C0063"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:break high#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "break high",
+    "role": "confluence",
+    "span": {
+     "start": 3878,
+     "end": 3906
+    },
+    "evidence": "{}"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:break highs#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "break highs",
+    "role": "confluence",
+    "span": {
+     "start": 3969,
+     "end": 4017
+    },
+    "evidence": "{}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:bullish candle close#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "bullish candle close",
+    "role": "spine",
+    "span": {
+     "start": 4063,
+     "end": 4116
+    },
+    "evidence": "{}"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:high break#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "high break",
+    "role": "confluence",
+    "span": {
+     "start": 4190,
+     "end": 4252
+    },
+    "evidence": "T-aHLI-C0081"
+   },
+   {
+    "id": "ENABLE_ENTRY:buy signal#0",
+    "type": "ENABLE_ENTRY",
+    "object": "buy signal",
+    "role": "trigger",
+    "span": {
+     "start": 4298,
+     "end": 4445
+    },
+    "evidence": "T-aHLI-C0083"
+   },
+   {
+    "id": "FILTER:high break#0",
+    "type": "FILTER",
+    "object": "high break",
+    "role": "confluence",
+    "span": {
+     "start": 4482,
+     "end": 4562
+    },
+    "evidence": "T-aHLI-C0086"
+   },
+   {
+    "id": "WAIT_SESSION:10 00 m candle#0",
+    "type": "WAIT_SESSION",
+    "object": "10 00 m candle",
+    "role": "confluence",
+    "span": {
+     "start": 4746,
+     "end": 4773
+    },
+    "evidence": "T-aHLI-C0092"
+   },
+   {
+    "id": "FILTER:current hourly candle alignment#0",
+    "type": "FILTER",
+    "object": "current hourly candle alignment",
+    "role": "confluence",
+    "span": {
+     "start": 4827,
+     "end": 4977
+    },
+    "evidence": "T-aHLI-C0095"
+   },
+   {
+    "id": "WAIT_BIAS:buy bias#0",
+    "type": "WAIT_BIAS",
+    "object": "buy bias",
+    "role": "trigger",
+    "span": {
+     "start": 5001,
+     "end": 5027
+    },
+    "evidence": "T-aHLI-C0097"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:previous high break#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "previous high break",
+    "role": "spine",
+    "span": {
+     "start": 5027,
+     "end": 5077
+    },
+    "evidence": "T-aHLI-C0098"
+   },
+   {
+    "id": "WAIT_STRUCTURE:previous high break#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "previous high break",
+    "role": "spine",
+    "span": {
+     "start": 5264,
+     "end": 5300
+    },
+    "evidence": "{price}"
+   },
+   {
+    "id": "ENABLE_ENTRY:trade entry#0",
+    "type": "ENABLE_ENTRY",
+    "object": "trade entry",
+    "role": "trigger",
+    "span": {
+     "start": 5368,
+     "end": 5401
+    },
+    "evidence": "{state}"
+   },
+   {
+    "id": "WAIT_BIAS:bullish bias#0",
+    "type": "WAIT_BIAS",
+    "object": "bullish bias",
+    "role": "spine",
+    "span": {
+     "start": 5401,
+     "end": 5443
+    },
+    "evidence": "T-aHLI-C0108"
+   },
+   {
+    "id": "ENABLE_ENTRY:price movement#0",
+    "type": "ENABLE_ENTRY",
+    "object": "price movement",
+    "role": "trigger",
+    "span": {
+     "start": 6321,
+     "end": 6405
+    },
+    "evidence": "T-aHLI-C0128"
+   },
+   {
+    "id": "EXIT_HINT:trade duration#0",
+    "type": "EXIT_HINT",
+    "object": "trade duration",
+    "role": "spine",
+    "span": {
+     "start": 6474,
+     "end": 6545
+    },
+    "evidence": "T-aHLI-C0131"
+   },
+   {
+    "id": "WAIT_BIAS:higher highs and higher lows#0",
+    "type": "WAIT_BIAS",
+    "object": "higher highs and higher lows",
+    "role": "spine",
+    "span": {
+     "start": 7185,
+     "end": 7260
+    },
+    "evidence": "T-aHLI-C0141"
+   },
+   {
+    "id": "WAIT_SESSION:trading window#0",
+    "type": "WAIT_SESSION",
+    "object": "trading window",
+    "role": "confluence",
+    "span": {
+     "start": 7260,
+     "end": 7308
+    },
+    "evidence": "T-aHLI-C0142"
+   },
+   {
+    "id": "WAIT_SESSION:trading activity#0",
+    "type": "WAIT_SESSION",
+    "object": "trading activity",
+    "role": "confluence",
+    "span": {
+     "start": 7335,
+     "end": 7366
+    },
+    "evidence": "T-aHLI-C0145"
+   },
+   {
+    "id": "WAIT_STRUCTURE:current hourly candle#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "current hourly candle",
+    "role": "spine",
+    "span": {
+     "start": 7645,
+     "end": 7683
+    },
+    "evidence": "{T-aHLI-C0151}"
+   },
+   {
+    "id": "FILTER:current hourly candle#0",
+    "type": "FILTER",
+    "object": "current hourly candle",
+    "role": "spine",
+    "span": {
+     "start": 7683,
+     "end": 7701
+    },
+    "evidence": "{T-aHLI-C0152}"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:bearish candle close#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "bearish candle close",
+    "role": "spine",
+    "span": {
+     "start": 7871,
+     "end": 7919
+    },
+    "evidence": "{T-aHLI-C0157}"
+   },
+   {
+    "id": "WAIT_SESSION:time 10 00 m#0",
+    "type": "WAIT_SESSION",
+    "object": "time 10 00 m",
+    "role": "spine",
+    "span": {
+     "start": 7919,
+     "end": 7944
+    },
+    "evidence": "{T-aHLI-C0158}"
+   },
+   {
+    "id": "FILTER:candle type#0",
+    "type": "FILTER",
+    "object": "candle type",
+    "role": "confluence",
+    "span": {
+     "start": 8134,
+     "end": 8216
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:wick location#0",
+    "type": "FILTER",
+    "object": "wick location",
+    "role": "confluence",
+    "span": {
+     "start": 8216,
+     "end": 8277
+    },
+    "evidence": "If we do have a wick on a candle, it has to be at the bottom"
+   },
+   {
+    "id": "INVALIDATE:buy opportunity#0",
+    "type": "INVALIDATE",
+    "object": "buy opportunity",
+    "role": "trigger",
+    "span": {
+     "start": 8325,
+     "end": 8365
+    },
+    "evidence": "like this. We can't be looking for buys"
+   },
+   {
+    "id": "FILTER:candle wick#0",
+    "type": "FILTER",
+    "object": "candle wick",
+    "role": "spine",
+    "span": {
+     "start": 8365,
+     "end": 8407
+    },
+    "evidence": "if this candle had a huge top wick on it."
+   },
+   {
+    "id": "WAIT_STRUCTURE:bullish candle#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "bullish candle",
+    "role": "confluence",
+    "span": {
+     "start": 8451,
+     "end": 8505
+    },
+    "evidence": "T-aHLI-C0169"
+   },
+   {
+    "id": "WAIT_STRUCTURE:range confinement#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "range confinement",
+    "role": "confluence",
+    "span": {
+     "start": 8568,
+     "end": 8607
+    },
+    "evidence": "T-aHLI-C0171"
+   },
+   {
+    "id": "ENABLE_ENTRY:buys#0",
+    "type": "ENABLE_ENTRY",
+    "object": "buys",
+    "role": "trigger",
+    "span": {
+     "start": 8644,
+     "end": 8689
+    },
+    "evidence": "T-aHLI-C0173"
+   },
+   {
+    "id": "WAIT_STRUCTURE:4 hour area rejection#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "4 hour area rejection",
+    "role": "spine",
+    "span": {
+     "start": 8689,
+     "end": 8783
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:current 4 hour candle bias#0",
+    "type": "WAIT_BIAS",
+    "object": "current 4 hour candle bias",
+    "role": "spine",
+    "span": {
+     "start": 9111,
+     "end": 9192
+    },
+    "evidence": "T-aHLI-C0182"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "spine",
+    "span": {
+     "start": 9355,
+     "end": 9420
+    },
+    "evidence": "T-aHLI-C0187"
+   },
+   {
+    "id": "ENABLE_ENTRY:sell opportunity#0",
+    "type": "ENABLE_ENTRY",
+    "object": "sell opportunity",
+    "role": "trigger",
+    "span": {
+     "start": 9475,
+     "end": 9573
+    },
+    "evidence": "T-aHLI-C0189"
+   },
+   {
+    "id": "FILTER:price movement pattern#0",
+    "type": "FILTER",
+    "object": "price movement pattern",
+    "role": "confluence",
+    "span": {
+     "start": 9649,
+     "end": 9728
+    },
+    "evidence": "T-aHLI-C0194"
+   },
+   {
+    "id": "WAIT_SESSION:april#0",
+    "type": "WAIT_SESSION",
+    "object": "april",
+    "role": "confluence",
+    "span": {
+     "start": 10155,
+     "end": 10190
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:session creation#0",
+    "type": "WAIT_SESSION",
+    "object": "session creation",
+    "role": "confluence",
+    "span": {
+     "start": 10358,
+     "end": 10386
+    },
+    "evidence": "T-aHLI-C0206"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe and date#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe and date",
+    "role": "confluence",
+    "span": {
+     "start": 10386,
+     "end": 10431
+    },
+    "evidence": "T-aHLI-C0207"
+   },
+   {
+    "id": "WAIT_SESSION:symbol selection#0",
+    "type": "WAIT_SESSION",
+    "object": "symbol selection",
+    "role": "confluence",
+    "span": {
+     "start": 10431,
+     "end": 10498
+    },
+    "evidence": "T-aHLI-C0208"
+   },
+   {
+    "id": "WAIT_SESSION:date selection#0",
+    "type": "WAIT_SESSION",
+    "object": "date selection",
+    "role": "confluence",
+    "span": {
+     "start": 10498,
+     "end": 10532
+    },
+    "evidence": "T-aHLI-C0209"
+   },
+   {
+    "id": "WAIT_SESSION:start up#0",
+    "type": "WAIT_SESSION",
+    "object": "start up",
+    "role": "confluence",
+    "span": {
+     "start": 10532,
+     "end": 10563
+    },
+    "evidence": "T-aHLI-C0210"
+   },
+   {
+    "id": "WAIT_SESSION:end#0",
+    "type": "WAIT_SESSION",
+    "object": "end",
+    "role": "confluence",
+    "span": {
+     "start": 10563,
+     "end": 10578
+    },
+    "evidence": "T-aHLI-C0211"
+   },
+   {
+    "id": "WAIT_SESSION:session#0",
+    "type": "WAIT_SESSION",
+    "object": "session",
+    "role": "confluence",
+    "span": {
+     "start": 10645,
+     "end": 10661
+    },
+    "evidence": "T-aHLI-C0214"
+   },
+   {
+    "id": "INVALIDATE:sell entry#0",
+    "type": "INVALIDATE",
+    "object": "sell entry",
+    "role": "trigger",
+    "span": {
+     "start": 11071,
+     "end": 11191
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:trend direction#0",
+    "type": "WAIT_BIAS",
+    "object": "trend direction",
+    "role": "spine",
+    "span": {
+     "start": 11206,
+     "end": 11221
+    },
+    "evidence": "trending down."
+   },
+   {
+    "id": "FILTER:trade selection criteria#0",
+    "type": "FILTER",
+    "object": "trade selection criteria",
+    "role": "confluence",
+    "span": {
+     "start": 11221,
+     "end": 11290
+    },
+    "evidence": "However, we do have to be a little bit more picky with these trades."
+   },
+   {
+    "id": "FILTER:price push magnitude#0",
+    "type": "FILTER",
+    "object": "price push magnitude",
+    "role": "confluence",
+    "span": {
+     "start": 11375,
+     "end": 11440
+    },
+    "evidence": "T-aHLI-C0229"
+   },
+   {
+    "id": "INVALIDATE:entry at current location#0",
+    "type": "INVALIDATE",
+    "object": "entry at current location",
+    "role": "trigger",
+    "span": {
+     "start": 11440,
+     "end": 11480
+    },
+    "evidence": "T-aHLI-C0230"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price break low#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price break low",
+    "role": "spine",
+    "span": {
+     "start": 11564,
+     "end": 11604
+    },
+    "evidence": "T-aHLI-C0233"
+   },
+   {
+    "id": "WAIT_BIAS:price direction#0",
+    "type": "WAIT_BIAS",
+    "object": "price direction",
+    "role": "spine",
+    "span": {
+     "start": 11639,
+     "end": 11662
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:buy opportunities#0",
+    "type": "ENABLE_ENTRY",
+    "object": "buy opportunities",
+    "role": "trigger",
+    "span": {
+     "start": 11891,
+     "end": 11919
+    },
+    "evidence": "T-aHLI-C0240"
+   },
+   {
+    "id": "FILTER:entry pattern difference#0",
+    "type": "FILTER",
+    "object": "entry pattern difference",
+    "role": "trigger",
+    "span": {
+     "start": 12051,
+     "end": 12161
+    },
+    "evidence": "T-aHLI-C0243"
+   },
+   {
+    "id": "WAIT_SESSION:4 hour candle period#0",
+    "type": "WAIT_SESSION",
+    "object": "4 hour candle period",
+    "role": "confluence",
+    "span": {
+     "start": 12339,
+     "end": 12451
+    },
+    "evidence": "{T-aHLI-C0252}"
+   },
+   {
+    "id": "WAIT_SESSION:time until 2 00#0",
+    "type": "WAIT_SESSION",
+    "object": "time until 2 00",
+    "role": "confluence",
+    "span": {
+     "start": 12482,
+     "end": 12525
+    },
+    "evidence": "{T-aHLI-C0254}"
+   },
+   {
+    "id": "WAIT_SESSION:market open#0",
+    "type": "WAIT_SESSION",
+    "object": "market open",
+    "role": "confluence",
+    "span": {
+     "start": 12582,
+     "end": 12600
+    },
+    "evidence": "{T-aHLI-C0258}"
+   },
+   {
+    "id": "FILTER:candle size#0",
+    "type": "FILTER",
+    "object": "candle size",
+    "role": "confluence",
+    "span": {
+     "start": 12928,
+     "end": 12974
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:area rejection#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "area rejection",
+    "role": "spine",
+    "span": {
+     "start": 13268,
+     "end": 13339
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:buy entry#0",
+    "type": "INVALIDATE",
+    "object": "buy entry",
+    "role": "trigger",
+    "span": {
+     "start": 13446,
+     "end": 13528
+    },
+    "evidence": "So, I'm not interested in this buy because I think this candle's pushed too much."
+   },
+   {
+    "id": "WAIT_SESSION:gu#0",
+    "type": "WAIT_SESSION",
+    "object": "gu",
+    "role": "spine",
+    "span": {
+     "start": 13573,
+     "end": 13667
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:buy candle#0",
+    "type": "INVALIDATE",
+    "object": "buy candle",
+    "role": "trigger",
+    "span": {
+     "start": 13667,
+     "end": 13720
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:continuations#0",
+    "type": "ENABLE_ENTRY",
+    "object": "continuations",
+    "role": "trigger",
+    "span": {
+     "start": 13756,
+     "end": 13792
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:trading time#0",
+    "type": "WAIT_SESSION",
+    "object": "trading time",
+    "role": "spine",
+    "span": {
+     "start": 13792,
+     "end": 13826
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:6 00 to 10 00 candle#0",
+    "type": "WAIT_SESSION",
+    "object": "6 00 to 10 00 candle",
+    "role": "spine",
+    "span": {
+     "start": 14378,
+     "end": 14403
+    },
+    "evidence": "T-aHLI-C0292"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:candle close bearish with nice sized body#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "candle close bearish with nice sized body",
+    "role": "spine",
+    "span": {
+     "start": 14403,
+     "end": 14458
+    },
+    "evidence": "T-aHLI-C0293"
+   },
+   {
+    "id": "WAIT_RETEST:rejections off area#0",
+    "type": "WAIT_RETEST",
+    "object": "rejections off area",
+    "role": "spine",
+    "span": {
+     "start": 14458,
+     "end": 14505
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:buys here#0",
+    "type": "ENABLE_ENTRY",
+    "object": "buys here",
+    "role": "trigger",
+    "span": {
+     "start": 14643,
+     "end": 14692
+    },
+    "evidence": "So, potentially we can be looking for buys here."
+   },
+   {
+    "id": "WAIT_SESSION:now just like with 1 minute i am looking to get triggered in fairly quickly with one#0",
+    "type": "WAIT_SESSION",
+    "object": "now just like with 1 minute i am looking to get triggered in fairly quickly with one",
+    "role": "spine",
+    "span": {
+     "start": 15038,
+     "end": 15144
+    },
+    "evidence": "Now, just like with the 1-minute strategy, I am looking to get triggered in fairly quickly with this one."
+   },
+   {
+    "id": "WAIT_BIAS:gu pair trading#0",
+    "type": "WAIT_BIAS",
+    "object": "gu pair trading",
+    "role": "spine",
+    "span": {
+     "start": 15922,
+     "end": 16001
+    },
+    "evidence": "},{"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_SESSION:trading session start time#0",
+    "WAIT_SESSION:chart context#0",
+    "WAIT_SESSION:similarity context#0",
+    "WAIT_SESSION:primary chart timeframe#0",
+    "WAIT_SESSION:entry chart timeframe#0"
+   ],
+   [
+    "WAIT_BIAS:bullish close#0",
+    "WAIT_BIAS:bearish close 4h#0"
+   ],
+   [
+    "WAIT_SESSION:timeframe context#0",
+    "WAIT_SESSION:trading style timeframe#0",
+    "FILTER:5 minute entry filter#0"
+   ],
+   [
+    "FILTER:price location#0",
+    "FILTER:candle structure#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:break high#0",
+    "WAIT_CONFIRMATION:break highs#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:high break#0",
+    "ENABLE_ENTRY:buy signal#0"
+   ],
+   [
+    "FILTER:high break#0",
+    "WAIT_SESSION:10 00 m candle#0",
+    "FILTER:current hourly candle alignment#0"
+   ],
+   [
+    "WAIT_SESSION:trading window#0",
+    "WAIT_SESSION:trading activity#0"
+   ],
+   [
+    "FILTER:candle type#0",
+    "FILTER:wick location#0"
+   ],
+   [
+    "WAIT_STRUCTURE:bullish candle#0",
+    "WAIT_STRUCTURE:range confinement#0"
+   ],
+   [
+    "FILTER:price movement pattern#0",
+    "WAIT_SESSION:april#0",
+    "WAIT_SESSION:session creation#0",
+    "WAIT_SESSION:timeframe and date#0",
+    "WAIT_SESSION:symbol selection#0",
+    "WAIT_SESSION:date selection#0",
+    "WAIT_SESSION:start up#0",
+    "WAIT_SESSION:end#0",
+    "WAIT_SESSION:session#0"
+   ],
+   [
+    "FILTER:trade selection criteria#0",
+    "FILTER:price push magnitude#0"
+   ],
+   [
+    "FILTER:entry pattern difference#0",
+    "WAIT_SESSION:4 hour candle period#0",
+    "WAIT_SESSION:time until 2 00#0",
+    "WAIT_SESSION:market open#0",
+    "FILTER:candle size#0"
+   ]
+  ],
+  "or_branches": [],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:sideways movement or trapped ranges#0",
+    "type": "INVALIDATE",
+    "object": "sideways movement or trapped ranges",
+    "role": "invalidation",
+    "span": {
+     "start": 2904,
+     "end": 3008
+    },
+    "evidence": "T-aHLI-C0055 to T-aHLI-C0056"
+   },
+   {
+    "id": "INVALIDATE:previous high break failure#0",
+    "type": "INVALIDATE",
+    "object": "previous high break failure",
+    "role": "invalidation",
+    "span": {
+     "start": 5077,
+     "end": 5103
+    },
+    "evidence": "T-aHLI-C0099"
+   },
+   {
+    "id": "INVALIDATE:higher highs and higher lows#0",
+    "type": "INVALIDATE",
+    "object": "higher highs and higher lows",
+    "role": "invalidation",
+    "span": {
+     "start": 7043,
+     "end": 7185
+    },
+    "evidence": "T-aHLI-C0140"
+   },
+   {
+    "id": "INVALIDATE:sells off candle#0",
+    "type": "INVALIDATE",
+    "object": "sells off candle",
+    "role": "invalidation",
+    "span": {
+     "start": 7944,
+     "end": 8003
+    },
+    "evidence": "{T-aHLI-C0159}"
+   },
+   {
+    "id": "INVALIDATE:trade execution#0",
+    "type": "INVALIDATE",
+    "object": "trade execution",
+    "role": "invalidation",
+    "span": {
+     "start": 9224,
+     "end": 9283
+    },
+    "evidence": "T-aHLI-C0185"
+   },
+   {
+    "id": "INVALIDATE:reversals#0",
+    "type": "INVALIDATE",
+    "object": "reversals",
+    "role": "invalidation",
+    "span": {
+     "start": 13720,
+     "end": 13756
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:trade anything#0",
+    "type": "INVALIDATE",
+    "object": "trade anything",
+    "role": "invalidation",
+    "span": {
+     "start": 13826,
+     "end": 13864
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:trade based off previous 4 hour candle#0",
+    "type": "INVALIDATE",
+    "object": "trade based off previous 4 hour candle",
+    "role": "invalidation",
+    "span": {
+     "start": 14224,
+     "end": 14282
+    },
+    "evidence": "T-aHLI-C0288"
+   },
+   {
+    "id": "INVALIDATE:trades like#0",
+    "type": "INVALIDATE",
+    "object": "trades like",
+    "role": "invalidation",
+    "span": {
+     "start": 14314,
+     "end": 14350
+    },
+    "evidence": "T-aHLI-C0290"
+   },
+   {
+    "id": "INVALIDATE:trade interest#0",
+    "type": "INVALIDATE",
+    "object": "trade interest",
+    "role": "invalidation",
+    "span": {
+     "start": 15313,
+     "end": 15363
+    },
+    "evidence": "T-aHLI-C0309"
+   }
+  ],
+  "entry_trigger_id": "WAIT_SESSION:entry chart timeframe#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

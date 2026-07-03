@@ -1,0 +1,193 @@
+{
+ "video": "75DJN5UVQnw",
+ "spec_hash": "a0ab3d6291cd27b565391632c4f063588f5cd2e25d0501a3d7eb42f1a91f4801",
+ "graph_canonical_hash": "b76e1d9ce4df306a",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 7383,
+ "spec": {
+  "direction": "long",
+  "entry_conditions": [
+   {
+    "id": "FILTER:supply zone location#0",
+    "type": "FILTER",
+    "object": "supply zone location",
+    "role": "confluence",
+    "span": {
+     "start": 2900,
+     "end": 2964
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:30 minute time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "30 minute time frame",
+    "role": "confluence",
+    "span": {
+     "start": 3137,
+     "end": 3202
+    },
+    "evidence": "{T-75DJ-C0049}"
+   },
+   {
+    "id": "WAIT_SESSION:4 hour time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "4 hour time frame",
+    "role": "confluence",
+    "span": {
+     "start": 3202,
+     "end": 3221
+    },
+    "evidence": "{T-75DJ-C0050}"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe hierarchy#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe hierarchy",
+    "role": "confluence",
+    "span": {
+     "start": 3521,
+     "end": 3630
+    },
+    "evidence": "T-75DJ-C0055"
+   },
+   {
+    "id": "WAIT_STRUCTURE:demand zone boundary#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "demand zone boundary",
+    "role": "confluence",
+    "span": {
+     "start": 3977,
+     "end": 4026
+    },
+    "evidence": "{T-75DJ-C0061}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:supply zone boundary#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "supply zone boundary",
+    "role": "confluence",
+    "span": {
+     "start": 4114,
+     "end": 4164
+    },
+    "evidence": "{T-75DJ-C0063}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:supply zone#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "supply zone",
+    "role": "confluence",
+    "span": {
+     "start": 5121,
+     "end": 5188
+    },
+    "evidence": "{T-75DJ-C0080}"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe selection#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe selection",
+    "role": "spine",
+    "span": {
+     "start": 5465,
+     "end": 5606
+    },
+    "evidence": "T-75DJ-C0086"
+   },
+   {
+    "id": "ENABLE_ENTRY:5m minute support level#0",
+    "type": "ENABLE_ENTRY",
+    "object": "5m minute support level",
+    "role": "trigger",
+    "span": {
+     "start": 5799,
+     "end": 5894
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:area fvg#0",
+    "type": "FILTER",
+    "object": "area fvg",
+    "role": "confluence",
+    "span": {
+     "start": 6153,
+     "end": 6221
+    },
+    "evidence": "{}"
+   },
+   {
+    "id": "FILTER:tp level#0",
+    "type": "FILTER",
+    "object": "tp level",
+    "role": "confluence",
+    "span": {
+     "start": 6331,
+     "end": 6401
+    },
+    "evidence": "{}"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:rejection zone twice#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "rejection zone twice",
+    "role": "confluence",
+    "span": {
+     "start": 6528,
+     "end": 6560
+    },
+    "evidence": "T-75DJ-C0104"
+   },
+   {
+    "id": "ENABLE_ENTRY:15 minute support level#0",
+    "type": "ENABLE_ENTRY",
+    "object": "15 minute support level",
+    "role": "trigger",
+    "span": {
+     "start": 6560,
+     "end": 6668
+    },
+    "evidence": "T-75DJ-C0105"
+   }
+  ],
+  "and_groups": [
+   [
+    "FILTER:supply zone location#0",
+    "WAIT_SESSION:30 minute time frame#0",
+    "WAIT_SESSION:4 hour time frame#0",
+    "WAIT_SESSION:timeframe hierarchy#0"
+   ],
+   [
+    "WAIT_STRUCTURE:demand zone boundary#0",
+    "WAIT_STRUCTURE:supply zone boundary#0",
+    "WAIT_STRUCTURE:supply zone#0"
+   ],
+   [
+    "FILTER:area fvg#0",
+    "FILTER:tp level#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:rejection zone twice#0",
+    "ENABLE_ENTRY:15 minute support level#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "FILTER:supply zone location#0",
+    "FILTER:area fvg#0"
+   ],
+   [
+    "FILTER:area fvg#0",
+    "FILTER:tp level#0"
+   ]
+  ],
+  "invalidations": [],
+  "entry_trigger_id": "ENABLE_ENTRY:5m minute support level#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

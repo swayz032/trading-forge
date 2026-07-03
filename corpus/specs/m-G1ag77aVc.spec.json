@@ -1,0 +1,639 @@
+{
+ "video": "m-G1ag77aVc",
+ "spec_hash": "06bbe97283b5b3f2595835bea458aa52481ba60422eb236fe9706f634b02ac25",
+ "graph_canonical_hash": "382b9bc3c58ff329",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 17544,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_CONFIRMATION:last candle before impulse away#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "last candle before impulse away",
+    "role": "spine",
+    "span": {
+     "start": 897,
+     "end": 960
+    },
+    "evidence": "{T-m-G1-C0013}"
+   },
+   {
+    "id": "WAIT_BIAS:discount price to buy from#0",
+    "type": "WAIT_BIAS",
+    "object": "discount price to buy from",
+    "role": "trigger",
+    "span": {
+     "start": 1338,
+     "end": 1406
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_RETEST:retest#0",
+    "type": "WAIT_RETEST",
+    "object": "retest",
+    "role": "spine",
+    "span": {
+     "start": 1567,
+     "end": 1605
+    },
+    "evidence": "T-m-G1-C0024"
+   },
+   {
+    "id": "WAIT_STRUCTURE:supply zones#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "supply zones",
+    "role": "spine",
+    "span": {
+     "start": 1923,
+     "end": 1967
+    },
+    "evidence": "T-m-G1-C0031"
+   },
+   {
+    "id": "WAIT_BIAS:future selling#0",
+    "type": "WAIT_BIAS",
+    "object": "future selling",
+    "role": "spine",
+    "span": {
+     "start": 2082,
+     "end": 2112
+    },
+    "evidence": "T-m-G1-C0034"
+   },
+   {
+    "id": "WAIT_RETEST:supply zones#0",
+    "type": "WAIT_RETEST",
+    "object": "supply zones",
+    "role": "spine",
+    "span": {
+     "start": 2112,
+     "end": 2151
+    },
+    "evidence": "T-m-G1-C0035"
+   },
+   {
+    "id": "WAIT_BIAS:sell from supply zone#0",
+    "type": "WAIT_BIAS",
+    "object": "sell from supply zone",
+    "role": "trigger",
+    "span": {
+     "start": 2151,
+     "end": 2193
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame",
+    "role": "spine",
+    "span": {
+     "start": 2729,
+     "end": 2809
+    },
+    "evidence": "T-m-G1-C0045"
+   },
+   {
+    "id": "WAIT_BIAS:sell bias#0",
+    "type": "WAIT_BIAS",
+    "object": "sell bias",
+    "role": "trigger",
+    "span": {
+     "start": 2809,
+     "end": 2840
+    },
+    "evidence": "T-m-G1-C0046"
+   },
+   {
+    "id": "WAIT_SESSION:4hour time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "4hour time frame",
+    "role": "confluence",
+    "span": {
+     "start": 3440,
+     "end": 3514
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:1 hour time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "1 hour time frame",
+    "role": "confluence",
+    "span": {
+     "start": 3610,
+     "end": 3726
+    },
+    "evidence": "What we can do here is zoom in to the 1 hour time frame to identify smaller supply zones inside of this 4hour zone."
+   },
+   {
+    "id": "FILTER:supply zone refinement#0",
+    "type": "FILTER",
+    "object": "supply zone refinement",
+    "role": "confluence",
+    "span": {
+     "start": 3943,
+     "end": 4036
+    },
+    "evidence": "T-m-G1-C0069"
+   },
+   {
+    "id": "WAIT_SESSION:4hour time frame zone refinement#0",
+    "type": "WAIT_SESSION",
+    "object": "4hour time frame zone refinement",
+    "role": "confluence",
+    "span": {
+     "start": 4261,
+     "end": 4369
+    },
+    "evidence": "{T-m-G1-C0073}"
+   },
+   {
+    "id": "FILTER:trade parameters consistency#0",
+    "type": "FILTER",
+    "object": "trade parameters consistency",
+    "role": "confluence",
+    "span": {
+     "start": 4412,
+     "end": 4468
+    },
+    "evidence": "{T-m-G1-C0075}"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "confluence",
+    "span": {
+     "start": 4837,
+     "end": 4867
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:trend direction shift#0",
+    "type": "WAIT_BIAS",
+    "object": "trend direction shift",
+    "role": "spine",
+    "span": {
+     "start": 4962,
+     "end": 5031
+    },
+    "evidence": "We're looking at a market which has just shifted in trend direction."
+   },
+   {
+    "id": "FILTER:swing high#0",
+    "type": "FILTER",
+    "object": "swing high",
+    "role": "confluence",
+    "span": {
+     "start": 5313,
+     "end": 5357
+    },
+    "evidence": "T-m-G1-C0094"
+   },
+   {
+    "id": "FILTER:demand zone#0",
+    "type": "FILTER",
+    "object": "demand zone",
+    "role": "confluence",
+    "span": {
+     "start": 5538,
+     "end": 5628
+    },
+    "evidence": "T-m-G1-C0098"
+   },
+   {
+    "id": "ENABLE_ENTRY:long position entry#0",
+    "type": "ENABLE_ENTRY",
+    "object": "long position entry",
+    "role": "trigger",
+    "span": {
+     "start": 5678,
+     "end": 5765
+    },
+    "evidence": "T-m-G1-C0101"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe hierarchy check#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe hierarchy check",
+    "role": "confluence",
+    "span": {
+     "start": 6030,
+     "end": 6083
+    },
+    "evidence": "T-m-G1-C0109"
+   },
+   {
+    "id": "FILTER:candle count multiplier#0",
+    "type": "FILTER",
+    "object": "candle count multiplier",
+    "role": "confluence",
+    "span": {
+     "start": 6228,
+     "end": 6318
+    },
+    "evidence": "T-m-G1-C0113"
+   },
+   {
+    "id": "WAIT_STRUCTURE:demand zone market low structure#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "demand zone market low structure",
+    "role": "spine",
+    "span": {
+     "start": 6403,
+     "end": 6573
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:hourly buy limit order refinement#0",
+    "type": "WAIT_SESSION",
+    "object": "hourly buy limit order refinement",
+    "role": "trigger",
+    "span": {
+     "start": 6826,
+     "end": 6933
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:order placement location#0",
+    "type": "FILTER",
+    "object": "order placement location",
+    "role": "confluence",
+    "span": {
+     "start": 7836,
+     "end": 7925
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:retracement opportunity#0",
+    "type": "WAIT_BIAS",
+    "object": "retracement opportunity",
+    "role": "spine",
+    "span": {
+     "start": 8134,
+     "end": 8179
+    },
+    "evidence": "T-m-G1-C0145 to T-m-G1-C0147"
+   },
+   {
+    "id": "FILTER:lowest possible zone#0",
+    "type": "FILTER",
+    "object": "lowest possible zone",
+    "role": "spine",
+    "span": {
+     "start": 8327,
+     "end": 8377
+    },
+    "evidence": "T-m-G1-C0149"
+   },
+   {
+    "id": "INVALIDATE:trade entry#0",
+    "type": "INVALIDATE",
+    "object": "trade entry",
+    "role": "trigger",
+    "span": {
+     "start": 9202,
+     "end": 9261
+    },
+    "evidence": "T-m-G1-C0162"
+   },
+   {
+    "id": "WAIT_STRUCTURE:market reaches level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "market reaches level",
+    "role": "spine",
+    "span": {
+     "start": 9572,
+     "end": 9601
+    },
+    "evidence": "T-m-G1-C0170"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:lower time frame structure changes in agreement with larger trend direction#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "lower time frame structure changes in agreement with larger trend direction",
+    "role": "spine",
+    "span": {
+     "start": 9621,
+     "end": 9710
+    },
+    "evidence": "T-m-G1-C0172"
+   },
+   {
+    "id": "WAIT_STRUCTURE:market return into area demand#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "market return into area demand",
+    "role": "spine",
+    "span": {
+     "start": 9895,
+     "end": 9924
+    },
+    "evidence": "T-m-G1-C0176"
+   },
+   {
+    "id": "WAIT_SESSION:immediate market action from current position#0",
+    "type": "WAIT_SESSION",
+    "object": "immediate market action from current position",
+    "role": "spine",
+    "span": {
+     "start": 10017,
+     "end": 10098
+    },
+    "evidence": "T-m-G1-C0179"
+   },
+   {
+    "id": "ENABLE_ENTRY:take buy position#0",
+    "type": "ENABLE_ENTRY",
+    "object": "take buy position",
+    "role": "trigger",
+    "span": {
+     "start": 10569,
+     "end": 10598
+    },
+    "evidence": "T-m-G1-C0185"
+   },
+   {
+    "id": "WAIT_RETEST:demand zone identification and buy entry#0",
+    "type": "WAIT_RETEST",
+    "object": "demand zone identification and buy entry",
+    "role": "trigger",
+    "span": {
+     "start": 10630,
+     "end": 10744
+    },
+    "evidence": "T-m-G1-C0186 to T-m-G1-C0187"
+   },
+   {
+    "id": "ENABLE_ENTRY:place orders#0",
+    "type": "ENABLE_ENTRY",
+    "object": "place orders",
+    "role": "trigger",
+    "span": {
+     "start": 11478,
+     "end": 11505
+    },
+    "evidence": "T-m-G1-C0198:T-m-G1-C0200"
+   },
+   {
+    "id": "ENABLE_ENTRY:confirmation entries#0",
+    "type": "ENABLE_ENTRY",
+    "object": "confirmation entries",
+    "role": "trigger",
+    "span": {
+     "start": 11656,
+     "end": 11708
+    },
+    "evidence": "T-m-G1-C0203"
+   },
+   {
+    "id": "ENABLE_ENTRY:buy limit order#0",
+    "type": "ENABLE_ENTRY",
+    "object": "buy limit order",
+    "role": "trigger",
+    "span": {
+     "start": 11843,
+     "end": 11938
+    },
+    "evidence": "placed. You could place a buy limit there because you'd be quite happy to get in at that point"
+   },
+   {
+    "id": "FILTER:1hour zone context#0",
+    "type": "FILTER",
+    "object": "1hour zone context",
+    "role": "spine",
+    "span": {
+     "start": 12318,
+     "end": 12359
+    },
+    "evidence": "T-m-G1-C0214"
+   },
+   {
+    "id": "ENABLE_ENTRY:refined area#0",
+    "type": "ENABLE_ENTRY",
+    "object": "refined area",
+    "role": "trigger",
+    "span": {
+     "start": 12484,
+     "end": 12692
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:entry location#0",
+    "type": "FILTER",
+    "object": "entry location",
+    "role": "trigger",
+    "span": {
+     "start": 13324,
+     "end": 13369
+    },
+    "evidence": "T-m-G1-C0231"
+   },
+   {
+    "id": "FILTER:zone refinement limit#0",
+    "type": "FILTER",
+    "object": "zone refinement limit",
+    "role": "confluence",
+    "span": {
+     "start": 13637,
+     "end": 13701
+    },
+    "evidence": "T-m-G1-C0237"
+   },
+   {
+    "id": "WAIT_SESSION:time frame context#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame context",
+    "role": "confluence",
+    "span": {
+     "start": 13715,
+     "end": 13764
+    },
+    "evidence": "T-m-G1-C0239"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe selection#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe selection",
+    "role": "confluence",
+    "span": {
+     "start": 13855,
+     "end": 13929
+    },
+    "evidence": "T-m-G1-C0241"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price movement#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price movement",
+    "role": "spine",
+    "span": {
+     "start": 14032,
+     "end": 14085
+    },
+    "evidence": "T-m-G1-C0244"
+   },
+   {
+    "id": "FILTER:fvg into#0",
+    "type": "FILTER",
+    "object": "fvg into",
+    "role": "spine",
+    "span": {
+     "start": 14341,
+     "end": 14367
+    },
+    "evidence": "T-m-G1-C0249"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe hierarchy 4h 1h or 30m#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe hierarchy 4h 1h or 30m",
+    "role": "confluence",
+    "span": {
+     "start": 15188,
+     "end": 15308
+    },
+    "evidence": "T-m-G1-C0260"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe hierarchy daily 4h#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe hierarchy daily 4h",
+    "role": "confluence",
+    "span": {
+     "start": 15363,
+     "end": 15380
+    },
+    "evidence": "T-m-G1-C0262"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe hierarchy daily 4h 1h#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe hierarchy daily 4h 1h",
+    "role": "confluence",
+    "span": {
+     "start": 15380,
+     "end": 15421
+    },
+    "evidence": "T-m-G1-C0263"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe hierarchy#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe hierarchy",
+    "role": "confluence",
+    "span": {
+     "start": 15421,
+     "end": 15488
+    },
+    "evidence": "T-m-G1-C0264"
+   },
+   {
+    "id": "FILTER:timeframe depth limit#0",
+    "type": "FILTER",
+    "object": "timeframe depth limit",
+    "role": "confluence",
+    "span": {
+     "start": 15519,
+     "end": 15577
+    },
+    "evidence": "T-m-G1-C0266"
+   },
+   {
+    "id": "FILTER:stop placement#0",
+    "type": "FILTER",
+    "object": "stop placement",
+    "role": "confluence",
+    "span": {
+     "start": 16452,
+     "end": 16501
+    },
+    "evidence": "},{"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_SESSION:4hour time frame#0",
+    "WAIT_SESSION:1 hour time frame#0",
+    "FILTER:supply zone refinement#0",
+    "WAIT_SESSION:4hour time frame zone refinement#0",
+    "FILTER:trade parameters consistency#0",
+    "WAIT_SESSION:timeframe#0"
+   ],
+   [
+    "FILTER:swing high#0",
+    "FILTER:demand zone#0"
+   ],
+   [
+    "WAIT_SESSION:timeframe hierarchy check#0",
+    "FILTER:candle count multiplier#0"
+   ],
+   [
+    "WAIT_SESSION:hourly buy limit order refinement#0",
+    "FILTER:order placement location#0"
+   ],
+   [
+    "ENABLE_ENTRY:place orders#0",
+    "ENABLE_ENTRY:confirmation entries#0",
+    "ENABLE_ENTRY:buy limit order#0"
+   ],
+   [
+    "FILTER:entry location#0",
+    "FILTER:zone refinement limit#0",
+    "WAIT_SESSION:time frame context#0",
+    "WAIT_SESSION:timeframe selection#0"
+   ],
+   [
+    "WAIT_SESSION:timeframe hierarchy 4h 1h or 30m#0",
+    "WAIT_SESSION:timeframe hierarchy daily 4h#0",
+    "WAIT_SESSION:timeframe hierarchy daily 4h 1h#0",
+    "WAIT_SESSION:timeframe hierarchy#0",
+    "FILTER:timeframe depth limit#0",
+    "FILTER:stop placement#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "FILTER:1hour zone context#0",
+    "FILTER:entry location#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:timeframe#0",
+    "type": "INVALIDATE",
+    "object": "timeframe",
+    "role": "invalidation",
+    "span": {
+     "start": 14777,
+     "end": 14905
+    },
+    "evidence": "T-m-G1-C0255"
+   },
+   {
+    "id": "INVALIDATE:refinement level#0",
+    "type": "INVALIDATE",
+    "object": "refinement level",
+    "role": "invalidation",
+    "span": {
+     "start": 14905,
+     "end": 15006
+    },
+    "evidence": "T-m-G1-C0256"
+   }
+  ],
+  "entry_trigger_id": "WAIT_BIAS:discount price to buy from#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

@@ -1,0 +1,439 @@
+{
+ "video": "sVkmZklJDHI",
+ "spec_hash": "0507bff452f3f69f966519ce1be4b073ecbbd51e38b23ae12774c0449d0a7a42",
+ "graph_canonical_hash": "999c125cbe9f3b71",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 25071,
+ "spec": {
+  "direction": "long",
+  "entry_conditions": [
+   {
+    "id": "WAIT_STRUCTURE:avoiding two mistakes#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "avoiding two mistakes",
+    "role": "spine",
+    "span": {
+     "start": 658,
+     "end": 768
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:market applicability#0",
+    "type": "WAIT_SESSION",
+    "object": "market applicability",
+    "role": "confluence",
+    "span": {
+     "start": 6405,
+     "end": 6525
+    },
+    "evidence": "T-sVkm-C0106"
+   },
+   {
+    "id": "WAIT_SESSION:trading market#0",
+    "type": "WAIT_SESSION",
+    "object": "trading market",
+    "role": "confluence",
+    "span": {
+     "start": 6525,
+     "end": 6646
+    },
+    "evidence": "T-sVkm-C0107"
+   },
+   {
+    "id": "WAIT_SESSION:nasdaq#0",
+    "type": "WAIT_SESSION",
+    "object": "nasdaq",
+    "role": "confluence",
+    "span": {
+     "start": 6646,
+     "end": 6694
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:focus one thing#0",
+    "type": "WAIT_SESSION",
+    "object": "focus one thing",
+    "role": "confluence",
+    "span": {
+     "start": 7114,
+     "end": 7174
+    },
+    "evidence": "T-sVkm-C0117"
+   },
+   {
+    "id": "WAIT_SESSION:nasdaq chart#0",
+    "type": "WAIT_SESSION",
+    "object": "nasdaq chart",
+    "role": "confluence",
+    "span": {
+     "start": 7202,
+     "end": 7258
+    },
+    "evidence": "T-sVkm-C0119"
+   },
+   {
+    "id": "WAIT_SESSION:trading time#0",
+    "type": "WAIT_SESSION",
+    "object": "trading time",
+    "role": "confluence",
+    "span": {
+     "start": 7258,
+     "end": 7354
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:timezone#0",
+    "type": "WAIT_SESSION",
+    "object": "timezone",
+    "role": "confluence",
+    "span": {
+     "start": 7401,
+     "end": 7433
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:preparation time#0",
+    "type": "WAIT_SESSION",
+    "object": "preparation time",
+    "role": "confluence",
+    "span": {
+     "start": 7499,
+     "end": 7575
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:fiveinut time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "fiveinut time frame",
+    "role": "confluence",
+    "span": {
+     "start": 7713,
+     "end": 7837
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:time#0",
+    "type": "WAIT_SESSION",
+    "object": "time",
+    "role": "confluence",
+    "span": {
+     "start": 8191,
+     "end": 8208
+    },
+    "evidence": "T-sVkm-C0135"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "confluence",
+    "span": {
+     "start": 8208,
+     "end": 8252
+    },
+    "evidence": "T-sVkm-C0136"
+   },
+   {
+    "id": "WAIT_STRUCTURE:range boundaries#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "range boundaries",
+    "role": "spine",
+    "span": {
+     "start": 8819,
+     "end": 8940
+    },
+    "evidence": "T-sVkm-C0150"
+   },
+   {
+    "id": "WAIT_BIAS:price movement direction#0",
+    "type": "WAIT_BIAS",
+    "object": "price movement direction",
+    "role": "spine",
+    "span": {
+     "start": 9136,
+     "end": 9245
+    },
+    "evidence": "T-sVkm-C0155"
+   },
+   {
+    "id": "WAIT_STRUCTURE:one minute time frame candles to print into one these sides range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "one minute time frame candles to print into one these sides range",
+    "role": "confluence",
+    "span": {
+     "start": 9294,
+     "end": 9406
+    },
+    "evidence": "T-sVkm-C0158"
+   },
+   {
+    "id": "WAIT_STRUCTURE:candles need to close outside 5m minute range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "candles need to close outside 5m minute range",
+    "role": "confluence",
+    "span": {
+     "start": 9432,
+     "end": 9513
+    },
+    "evidence": "T-sVkm-C0160"
+   },
+   {
+    "id": "WAIT_SESSION:new york session start#0",
+    "type": "WAIT_SESSION",
+    "object": "new york session start",
+    "role": "spine",
+    "span": {
+     "start": 10308,
+     "end": 10329
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:price direction#0",
+    "type": "WAIT_BIAS",
+    "object": "price direction",
+    "role": "confluence",
+    "span": {
+     "start": 10882,
+     "end": 10982
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:trade direction#0",
+    "type": "WAIT_BIAS",
+    "object": "trade direction",
+    "role": "confluence",
+    "span": {
+     "start": 10982,
+     "end": 11016
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:fvg sequence#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "fvg sequence",
+    "role": "spine",
+    "span": {
+     "start": 11521,
+     "end": 11623
+    },
+    "evidence": "T-sVkm-C0196"
+   },
+   {
+    "id": "FILTER:fvg fvg#0",
+    "type": "FILTER",
+    "object": "fvg fvg",
+    "role": "confluence",
+    "span": {
+     "start": 11737,
+     "end": 11844
+    },
+    "evidence": "T-sVkm-C0200"
+   },
+   {
+    "id": "FILTER:5 minute range color#0",
+    "type": "FILTER",
+    "object": "5 minute range color",
+    "role": "confluence",
+    "span": {
+     "start": 12074,
+     "end": 12148
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:high and low level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "high and low level",
+    "role": "confluence",
+    "span": {
+     "start": 12164,
+     "end": 12214
+    },
+    "evidence": "the level marked out there, the high and the low."
+   },
+   {
+    "id": "WAIT_STRUCTURE:fvg#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "fvg",
+    "role": "confluence",
+    "span": {
+     "start": 12323,
+     "end": 12426
+    },
+    "evidence": "What's important for us to recognize is that the fair value gap has been printed outside of the range."
+   },
+   {
+    "id": "WAIT_CONFIRMATION:gap being printed outside range#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "gap being printed outside range",
+    "role": "spine",
+    "span": {
+     "start": 12482,
+     "end": 12504
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENTER:trade entry#0",
+    "type": "ENTER",
+    "object": "trade entry",
+    "role": "trigger",
+    "span": {
+     "start": 12504,
+     "end": 12533
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:fvg formation#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "fvg formation",
+    "role": "spine",
+    "span": {
+     "start": 12568,
+     "end": 12683
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry point#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry point",
+    "role": "trigger",
+    "span": {
+     "start": 13809,
+     "end": 13860
+    },
+    "evidence": "T-sVkm-C0238"
+   },
+   {
+    "id": "ENTER:position placement#0",
+    "type": "ENTER",
+    "object": "position placement",
+    "role": "trigger",
+    "span": {
+     "start": 15745,
+     "end": 15804
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:930 candle#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "930 candle",
+    "role": "spine",
+    "span": {
+     "start": 17850,
+     "end": 17922
+    },
+    "evidence": "T-sVkm-C0305"
+   },
+   {
+    "id": "WAIT_SESSION:time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame",
+    "role": "spine",
+    "span": {
+     "start": 18043,
+     "end": 18133
+    },
+    "evidence": "And we're just going to switch over to the one minute time frame and see what's going on."
+   },
+   {
+    "id": "WAIT_CONFIRMATION:break#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "break",
+    "role": "spine",
+    "span": {
+     "start": 18214,
+     "end": 18233
+    },
+    "evidence": "if we get a break."
+   },
+   {
+    "id": "ENTER:entry price#0",
+    "type": "ENTER",
+    "object": "entry price",
+    "role": "trigger",
+    "span": {
+     "start": 18678,
+     "end": 18721
+    },
+    "evidence": "So our entry would be at the candle close."
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_SESSION:market applicability#0",
+    "WAIT_SESSION:trading market#0",
+    "WAIT_SESSION:nasdaq#0",
+    "WAIT_SESSION:focus one thing#0",
+    "WAIT_SESSION:nasdaq chart#0",
+    "WAIT_SESSION:trading time#0",
+    "WAIT_SESSION:timezone#0",
+    "WAIT_SESSION:preparation time#0",
+    "WAIT_SESSION:fiveinut time frame#0",
+    "WAIT_SESSION:time#0",
+    "WAIT_SESSION:timeframe#0"
+   ],
+   [
+    "WAIT_STRUCTURE:one minute time frame candles to print into one these sides range#0",
+    "WAIT_STRUCTURE:candles need to close outside 5m minute range#0"
+   ],
+   [
+    "WAIT_BIAS:price direction#0",
+    "WAIT_BIAS:trade direction#0"
+   ],
+   [
+    "FILTER:fvg fvg#0",
+    "FILTER:5 minute range color#0"
+   ],
+   [
+    "WAIT_STRUCTURE:high and low level#0",
+    "WAIT_STRUCTURE:fvg#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "WAIT_STRUCTURE:avoiding two mistakes#0",
+    "WAIT_STRUCTURE:range boundaries#0"
+   ],
+   [
+    "WAIT_STRUCTURE:candles need to close outside 5m minute range#0",
+    "WAIT_STRUCTURE:fvg sequence#0"
+   ],
+   [
+    "ENTER:trade entry#0",
+    "ENTER:position placement#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:fvg#0",
+    "type": "INVALIDATE",
+    "object": "fvg",
+    "role": "invalidation",
+    "span": {
+     "start": 12917,
+     "end": 12966
+    },
+    "evidence": "T-sVkm-C0217, T-sVkm-C0218"
+   }
+  ],
+  "entry_trigger_id": "ENTER:trade entry#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

@@ -1,0 +1,689 @@
+{
+ "video": "NMUd0oX_7Pg",
+ "spec_hash": "abb722d3240c5f174adaea41a78675dc0f31c612f5e11dd46823f356538df697",
+ "graph_canonical_hash": "753c0cb722aaebad",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 15246,
+ "spec": {
+  "direction": "long",
+  "entry_conditions": [
+   {
+    "id": "WAIT_SESSION:time#0",
+    "type": "WAIT_SESSION",
+    "object": "time",
+    "role": "confluence",
+    "span": {
+     "start": 80,
+     "end": 111
+    },
+    "evidence": "T-NMUd-C0002"
+   },
+   {
+    "id": "FILTER:quality#0",
+    "type": "FILTER",
+    "object": "quality",
+    "role": "confluence",
+    "span": {
+     "start": 827,
+     "end": 933
+    },
+    "evidence": "T-NMUd-C0016 to T-NMUd-C0017"
+   },
+   {
+    "id": "WAIT_SESSION:chart selection#0",
+    "type": "WAIT_SESSION",
+    "object": "chart selection",
+    "role": "confluence",
+    "span": {
+     "start": 1057,
+     "end": 1123
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:first 15 minutes candle formed today#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "first 15 minutes candle formed today",
+    "role": "spine",
+    "span": {
+     "start": 1328,
+     "end": 1381
+    },
+    "evidence": "T-NMUd-C0027"
+   },
+   {
+    "id": "FILTER:15 minutes candle closure#0",
+    "type": "FILTER",
+    "object": "15 minutes candle closure",
+    "role": "spine",
+    "span": {
+     "start": 1627,
+     "end": 1695
+    },
+    "evidence": "T-NMUd-C0034"
+   },
+   {
+    "id": "WAIT_BIAS:manipulation candle characteristics#0",
+    "type": "WAIT_BIAS",
+    "object": "manipulation candle characteristics",
+    "role": "spine",
+    "span": {
+     "start": 2244,
+     "end": 2306
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:opening candle qualification#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "opening candle qualification",
+    "role": "spine",
+    "span": {
+     "start": 4666,
+     "end": 4770
+    },
+    "evidence": "T-NMUd-C0082 to T-NMUd-C0083"
+   },
+   {
+    "id": "WAIT_SESSION:chart timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "chart timeframe",
+    "role": "confluence",
+    "span": {
+     "start": 4770,
+     "end": 4801
+    },
+    "evidence": "T-NMUd-C0082"
+   },
+   {
+    "id": "FILTER:candle size#0",
+    "type": "FILTER",
+    "object": "candle size",
+    "role": "confluence",
+    "span": {
+     "start": 5077,
+     "end": 5123
+    },
+    "evidence": "{current}"
+   },
+   {
+    "id": "FILTER:candle range threshold#0",
+    "type": "FILTER",
+    "object": "candle range threshold",
+    "role": "confluence",
+    "span": {
+     "start": 5284,
+     "end": 5307
+    },
+    "evidence": "T-NMUd-C0090"
+   },
+   {
+    "id": "FILTER:price level 25 or higher#0",
+    "type": "FILTER",
+    "object": "price level 25 or higher",
+    "role": "confluence",
+    "span": {
+     "start": 5540,
+     "end": 5579
+    },
+    "evidence": "T-NMUd-C0099"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "confluence",
+    "span": {
+     "start": 5664,
+     "end": 5697
+    },
+    "evidence": "T-NMUd-C0101"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe selection#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe selection",
+    "role": "confluence",
+    "span": {
+     "start": 5697,
+     "end": 5765
+    },
+    "evidence": "T-NMUd-C0102"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:reversal candles#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "reversal candles",
+    "role": "spine",
+    "span": {
+     "start": 5783,
+     "end": 5901
+    },
+    "evidence": "T-NMUd-C0104"
+   },
+   {
+    "id": "FILTER:time window location#0",
+    "type": "FILTER",
+    "object": "time window location",
+    "role": "spine",
+    "span": {
+     "start": 6231,
+     "end": 6312
+    },
+    "evidence": "T-NMUd-C0111"
+   },
+   {
+    "id": "ENTER:hammer candle long side#0",
+    "type": "ENTER",
+    "object": "hammer candle long side",
+    "role": "trigger",
+    "span": {
+     "start": 6420,
+     "end": 6454
+    },
+    "evidence": "{T-NMUd-C0117}"
+   },
+   {
+    "id": "WAIT_BIAS:sharp red move downward#0",
+    "type": "WAIT_BIAS",
+    "object": "sharp red move downward",
+    "role": "spine",
+    "span": {
+     "start": 6475,
+     "end": 6514
+    },
+    "evidence": "{T-NMUd-C0119}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:next candle to break above hammer high#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "next candle to break above hammer high",
+    "role": "spine",
+    "span": {
+     "start": 6871,
+     "end": 6884
+    },
+    "evidence": "{T-NMUd-C0124}"
+   },
+   {
+    "id": "ENTER:entry#0",
+    "type": "ENTER",
+    "object": "entry",
+    "role": "trigger",
+    "span": {
+     "start": 6884,
+     "end": 6960
+    },
+    "evidence": "{T-NMUd-C0125}"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry limit order#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry limit order",
+    "role": "trigger",
+    "span": {
+     "start": 7368,
+     "end": 7456
+    },
+    "evidence": "T-NMUd-C0135"
+   },
+   {
+    "id": "ENTER:entry point#0",
+    "type": "ENTER",
+    "object": "entry point",
+    "role": "trigger",
+    "span": {
+     "start": 7612,
+     "end": 7683
+    },
+    "evidence": "{T-NMUd-C0139}"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:reversal pattern#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "reversal pattern",
+    "role": "spine",
+    "span": {
+     "start": 7833,
+     "end": 7963
+    },
+    "evidence": "{T-NMUd-C0143}"
+   },
+   {
+    "id": "WAIT_SESSION:5 minute chart#0",
+    "type": "WAIT_SESSION",
+    "object": "5 minute chart",
+    "role": "spine",
+    "span": {
+     "start": 7963,
+     "end": 8007
+    },
+    "evidence": "T-NMUd-C0144"
+   },
+   {
+    "id": "ENTER:break next candle#0",
+    "type": "ENTER",
+    "object": "break next candle",
+    "role": "trigger",
+    "span": {
+     "start": 8221,
+     "end": 8250
+    },
+    "evidence": "T-NMUd-C0152"
+   },
+   {
+    "id": "EXIT_HINT:stop goes below low#0",
+    "type": "EXIT_HINT",
+    "object": "stop goes below low",
+    "role": "spine",
+    "span": {
+     "start": 8263,
+     "end": 8288
+    },
+    "evidence": "T-NMUd-C0154"
+   },
+   {
+    "id": "WAIT_STRUCTURE:low opening candle and high#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "low opening candle and high",
+    "role": "spine",
+    "span": {
+     "start": 8479,
+     "end": 8523
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:these manipulation candles are often even more prominent#0",
+    "type": "WAIT_BIAS",
+    "object": "these manipulation candles are often even more prominent",
+    "role": "spine",
+    "span": {
+     "start": 10184,
+     "end": 10241
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:opening 15 minute candle range#0",
+    "type": "FILTER",
+    "object": "opening 15 minute candle range",
+    "role": "confluence",
+    "span": {
+     "start": 10716,
+     "end": 10813
+    },
+    "evidence": "T-NMUd-C0200"
+   },
+   {
+    "id": "WAIT_SESSION:market open#0",
+    "type": "WAIT_SESSION",
+    "object": "market open",
+    "role": "confluence",
+    "span": {
+     "start": 10813,
+     "end": 10827
+    },
+    "evidence": "T-NMUd-C0201"
+   },
+   {
+    "id": "WAIT_BIAS:stock gap up slightly#0",
+    "type": "WAIT_BIAS",
+    "object": "stock gap up slightly",
+    "role": "confluence",
+    "span": {
+     "start": 10827,
+     "end": 10854
+    },
+    "evidence": "T-NMUd-C0202"
+   },
+   {
+    "id": "WAIT_BIAS:stock starts moving#0",
+    "type": "WAIT_BIAS",
+    "object": "stock starts moving",
+    "role": "confluence",
+    "span": {
+     "start": 10854,
+     "end": 10877
+    },
+    "evidence": "T-NMUd-C0203"
+   },
+   {
+    "id": "WAIT_BIAS:bullish reversal#0",
+    "type": "WAIT_BIAS",
+    "object": "bullish reversal",
+    "role": "spine",
+    "span": {
+     "start": 11164,
+     "end": 11204
+    },
+    "evidence": "so we're hunting for a bullish reversal"
+   },
+   {
+    "id": "FILTER:entry location#0",
+    "type": "FILTER",
+    "object": "entry location",
+    "role": "trigger",
+    "span": {
+     "start": 11204,
+     "end": 11243
+    },
+    "evidence": "below the range on the 5-minute chart."
+   },
+   {
+    "id": "FILTER:reversal formation#0",
+    "type": "FILTER",
+    "object": "reversal formation",
+    "role": "spine",
+    "span": {
+     "start": 11343,
+     "end": 11389
+    },
+    "evidence": "T-NMUd-C0217"
+   },
+   {
+    "id": "WAIT_BIAS:directional push#0",
+    "type": "WAIT_BIAS",
+    "object": "directional push",
+    "role": "spine",
+    "span": {
+     "start": 11389,
+     "end": 11421
+    },
+    "evidence": "T-NMUd-C0218"
+   },
+   {
+    "id": "ENABLE_ENTRY:trade entry status#0",
+    "type": "ENABLE_ENTRY",
+    "object": "trade entry status",
+    "role": "trigger",
+    "span": {
+     "start": 11813,
+     "end": 11834
+    },
+    "evidence": "We are in the trade."
+   },
+   {
+    "id": "WAIT_CONFIRMATION:re entry into range#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "re entry into range",
+    "role": "trigger",
+    "span": {
+     "start": 11976,
+     "end": 12018
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:volume indicator#0",
+    "type": "WAIT_SESSION",
+    "object": "volume indicator",
+    "role": "spine",
+    "span": {
+     "start": 12566,
+     "end": 12660
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:opening 15 minute candle close#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "opening 15 minute candle close",
+    "role": "spine",
+    "span": {
+     "start": 13312,
+     "end": 13411
+    },
+    "evidence": "T-NMUd-C0254"
+   },
+   {
+    "id": "FILTER:volume comparison#0",
+    "type": "FILTER",
+    "object": "volume comparison",
+    "role": "spine",
+    "span": {
+     "start": 13445,
+     "end": 13515
+    },
+    "evidence": "T-NMUd-C0256"
+   },
+   {
+    "id": "WAIT_BIAS:manipulation likelihood#0",
+    "type": "WAIT_BIAS",
+    "object": "manipulation likelihood",
+    "role": "spine",
+    "span": {
+     "start": 14036,
+     "end": 14060
+    },
+    "evidence": "{T-NMUd-C0267}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:market readiness reversal#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "market readiness reversal",
+    "role": "spine",
+    "span": {
+     "start": 14082,
+     "end": 14104
+    },
+    "evidence": "{T-NMUd-C0269}"
+   },
+   {
+    "id": "INVALIDATE:do not force entry#0",
+    "type": "INVALIDATE",
+    "object": "do not force entry",
+    "role": "trigger",
+    "span": {
+     "start": 14104,
+     "end": 14128
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:wait reversal candle signal in step three before doing anything#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "wait reversal candle signal in step three before doing anything",
+    "role": "spine",
+    "span": {
+     "start": 14128,
+     "end": 14201
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:scenario three large candle volume below average#0",
+    "type": "FILTER",
+    "object": "scenario three large candle volume below average",
+    "role": "spine",
+    "span": {
+     "start": 14243,
+     "end": 14295
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:wait cleaner opportunity following day#0",
+    "type": "WAIT_SESSION",
+    "object": "wait cleaner opportunity following day",
+    "role": "spine",
+    "span": {
+     "start": 14526,
+     "end": 14576
+    },
+    "evidence": "{T-NMUd-C0279}"
+   },
+   {
+    "id": "WAIT_BIAS:institutional money readiness#0",
+    "type": "WAIT_BIAS",
+    "object": "institutional money readiness",
+    "role": "spine",
+    "span": {
+     "start": 14831,
+     "end": 14882
+    },
+    "evidence": "{T-NMUd-C0283, T-NMUd-C0285}"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_SESSION:time#0",
+    "FILTER:quality#0",
+    "WAIT_SESSION:chart selection#0"
+   ],
+   [
+    "WAIT_SESSION:chart timeframe#0",
+    "FILTER:candle size#0",
+    "FILTER:candle range threshold#0",
+    "FILTER:price level 25 or higher#0",
+    "WAIT_SESSION:timeframe#0",
+    "WAIT_SESSION:timeframe selection#0"
+   ],
+   [
+    "FILTER:opening 15 minute candle range#0",
+    "WAIT_SESSION:market open#0"
+   ],
+   [
+    "WAIT_BIAS:stock gap up slightly#0",
+    "WAIT_BIAS:stock starts moving#0"
+   ],
+   [
+    "ENABLE_ENTRY:trade entry status#0",
+    "WAIT_CONFIRMATION:re entry into range#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "INVALIDATE:candle formation status#0",
+    "INVALIDATE:price reversal after selling pressure absorption#0"
+   ],
+   [
+    "FILTER:candle size#0",
+    "FILTER:candle range threshold#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:opening candle qualification#0",
+    "WAIT_CONFIRMATION:reversal candles#0"
+   ],
+   [
+    "FILTER:price level 25 or higher#0",
+    "FILTER:time window location#0"
+   ],
+   [
+    "WAIT_STRUCTURE:low opening candle and high#0",
+    "WAIT_STRUCTURE:opening 15 minute candle close#0"
+   ],
+   [
+    "WAIT_BIAS:directional push#0",
+    "WAIT_BIAS:manipulation likelihood#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:candle formation status#0",
+    "type": "INVALIDATE",
+    "object": "candle formation status",
+    "role": "invalidation",
+    "span": {
+     "start": 1695,
+     "end": 1739
+    },
+    "evidence": "T-NMUd-C0035"
+   },
+   {
+    "id": "INVALIDATE:price reversal after selling pressure absorption#0",
+    "type": "INVALIDATE",
+    "object": "price reversal after selling pressure absorption",
+    "role": "invalidation",
+    "span": {
+     "start": 3695,
+     "end": 3836
+    },
+    "evidence": "T-NMUd-C0068"
+   },
+   {
+    "id": "INVALIDATE:breakdown validity#0",
+    "type": "INVALIDATE",
+    "object": "breakdown validity",
+    "role": "invalidation",
+    "span": {
+     "start": 3836,
+     "end": 3890
+    },
+    "evidence": "T-NMUd-C0069"
+   },
+   {
+    "id": "EXCEPTION:mechanism applicability#0",
+    "type": "EXCEPTION",
+    "object": "mechanism applicability",
+    "role": "invalidation",
+    "span": {
+     "start": 3909,
+     "end": 3950
+    },
+    "evidence": "T-NMUd-C0071"
+   },
+   {
+    "id": "INVALIDATE:move continuation#0",
+    "type": "INVALIDATE",
+    "object": "move continuation",
+    "role": "invalidation",
+    "span": {
+     "start": 5961,
+     "end": 6028
+    },
+    "evidence": "T-NMUd-C0106"
+   },
+   {
+    "id": "INVALIDATE:opportunity window#0",
+    "type": "INVALIDATE",
+    "object": "opportunity window",
+    "role": "invalidation",
+    "span": {
+     "start": 6312,
+     "end": 6363
+    },
+    "evidence": "T-NMUd-C0112"
+   },
+   {
+    "id": "INVALIDATE:trade window duration#0",
+    "type": "INVALIDATE",
+    "object": "trade window duration",
+    "role": "invalidation",
+    "span": {
+     "start": 11070,
+     "end": 11126
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:bullish reversal attempt#0",
+    "type": "INVALIDATE",
+    "object": "bullish reversal attempt",
+    "role": "invalidation",
+    "span": {
+     "start": 11288,
+     "end": 11324
+    },
+    "evidence": "but they're still inside the range."
+   },
+   {
+    "id": "INVALIDATE:treat with extra caution or skip it entirely and#0",
+    "type": "INVALIDATE",
+    "object": "treat with extra caution or skip it entirely and",
+    "role": "invalidation",
+    "span": {
+     "start": 14466,
+     "end": 14526
+    },
+    "evidence": "{T-NMUd-C0278}"
+   }
+  ],
+  "entry_trigger_id": "ENTER:hammer candle long side#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

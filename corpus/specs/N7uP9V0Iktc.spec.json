@@ -1,0 +1,516 @@
+{
+ "video": "N7uP9V0Iktc",
+ "spec_hash": "2892717cfcb2bb7e6b5456adacab14a8aec88a671fd1732c34fa8e17207fb726",
+ "graph_canonical_hash": "6e29e3300ac9e6e3",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 11515,
+ "spec": {
+  "direction": "short",
+  "entry_conditions": [
+   {
+    "id": "FILTER:vwop#0",
+    "type": "FILTER",
+    "object": "vwop",
+    "role": "confluence",
+    "span": {
+     "start": 1896,
+     "end": 1921
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:upper band lower band fill#0",
+    "type": "FILTER",
+    "object": "upper band lower band fill",
+    "role": "confluence",
+    "span": {
+     "start": 1921,
+     "end": 1949
+    },
+    "evidence": "upper band lower band fill?"
+   },
+   {
+    "id": "FILTER:upper band up#0",
+    "type": "FILTER",
+    "object": "upper band up",
+    "role": "confluence",
+    "span": {
+     "start": 1949,
+     "end": 1988
+    },
+    "evidence": "You're going to uncheck upper band up."
+   },
+   {
+    "id": "FILTER:lower band#0",
+    "type": "FILTER",
+    "object": "lower band",
+    "role": "confluence",
+    "span": {
+     "start": 1988,
+     "end": 2008
+    },
+    "evidence": "Uncheck lower band."
+   },
+   {
+    "id": "FILTER:band fill#0",
+    "type": "FILTER",
+    "object": "band fill",
+    "role": "confluence",
+    "span": {
+     "start": 2008,
+     "end": 2027
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:vwop#0",
+    "type": "WAIT_SESSION",
+    "object": "vwop",
+    "role": "confluence",
+    "span": {
+     "start": 2027,
+     "end": 2041
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:extended hours#0",
+    "type": "WAIT_SESSION",
+    "object": "extended hours",
+    "role": "confluence",
+    "span": {
+     "start": 2205,
+     "end": 2246
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:ema period#0",
+    "type": "WAIT_BIAS",
+    "object": "ema period",
+    "role": "spine",
+    "span": {
+     "start": 2489,
+     "end": 2527
+    },
+    "evidence": "I honestly I've been using the eight."
+   },
+   {
+    "id": "FILTER:vwap#0",
+    "type": "FILTER",
+    "object": "vwap",
+    "role": "spine",
+    "span": {
+     "start": 3271,
+     "end": 3334
+    },
+    "evidence": "{T-N7uP-C0076}"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:vwop retest#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "vwop retest",
+    "role": "spine",
+    "span": {
+     "start": 3472,
+     "end": 3524
+    },
+    "evidence": "then I'm looking to take puts on a VWOP retest, not"
+   },
+   {
+    "id": "FILTER:vwap retest vs pre market low retest#0",
+    "type": "FILTER",
+    "object": "vwap retest vs pre market low retest",
+    "role": "spine",
+    "span": {
+     "start": 3596,
+     "end": 3729
+    },
+    "evidence": "But, as you can see here, how VWAP is under our pre-market low, that means you're taking a VWAP retest, not a pre-market low retest."
+   },
+   {
+    "id": "WAIT_CONFIRMATION:ema#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "ema",
+    "role": "confluence",
+    "span": {
+     "start": 3909,
+     "end": 3944
+    },
+    "evidence": "T-N7uP-C0087"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:stock price relative to ema 5m minute#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "stock price relative to ema 5m minute",
+    "role": "confluence",
+    "span": {
+     "start": 4034,
+     "end": 4128
+    },
+    "evidence": "T-N7uP-C0089"
+   },
+   {
+    "id": "WAIT_RETEST:ema retests#0",
+    "type": "WAIT_RETEST",
+    "object": "ema retests",
+    "role": "confluence",
+    "span": {
+     "start": 4504,
+     "end": 4542
+    },
+    "evidence": "T-N7uP-C0100"
+   },
+   {
+    "id": "WAIT_RETEST:vwop retest#0",
+    "type": "WAIT_RETEST",
+    "object": "vwop retest",
+    "role": "confluence",
+    "span": {
+     "start": 4542,
+     "end": 4588
+    },
+    "evidence": "T-N7uP-C0101"
+   },
+   {
+    "id": "INVALIDATE:short puts entry#0",
+    "type": "INVALIDATE",
+    "object": "short puts entry",
+    "role": "trigger",
+    "span": {
+     "start": 4802,
+     "end": 4832
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:apple pre market high retest#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "apple pre market high retest",
+    "role": "spine",
+    "span": {
+     "start": 5053,
+     "end": 5088
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_RETEST:ema retest#0",
+    "type": "WAIT_RETEST",
+    "object": "ema retest",
+    "role": "spine",
+    "span": {
+     "start": 5446,
+     "end": 5473
+    },
+    "evidence": "{}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:apple retest pre market high#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "apple retest pre market high",
+    "role": "spine",
+    "span": {
+     "start": 5473,
+     "end": 5525
+    },
+    "evidence": "{}"
+   },
+   {
+    "id": "ENTER:calls#0",
+    "type": "ENTER",
+    "object": "calls",
+    "role": "trigger",
+    "span": {
+     "start": 5525,
+     "end": 5544
+    },
+    "evidence": "{}"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:ema level#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "ema level",
+    "role": "spine",
+    "span": {
+     "start": 5633,
+     "end": 5689
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:vwop retest number one#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "vwop retest number one",
+    "role": "spine",
+    "span": {
+     "start": 5927,
+     "end": 5964
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:ema#0",
+    "type": "FILTER",
+    "object": "ema",
+    "role": "confluence",
+    "span": {
+     "start": 5979,
+     "end": 6021
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:pre market low#0",
+    "type": "FILTER",
+    "object": "pre market low",
+    "role": "confluence",
+    "span": {
+     "start": 6021,
+     "end": 6055
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "EXIT_HINT:position out#0",
+    "type": "EXIT_HINT",
+    "object": "position out",
+    "role": "spine",
+    "span": {
+     "start": 6204,
+     "end": 6223
+    },
+    "evidence": "once it got above."
+   },
+   {
+    "id": "WAIT_STRUCTURE:vwap alignment with pre market high or low#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "vwap alignment with pre market high or low",
+    "role": "confluence",
+    "span": {
+     "start": 6461,
+     "end": 6637
+    },
+    "evidence": "{T-N7uP-C0155}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:pre market high retest and vwop retest#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "pre market high retest and vwop retest",
+    "role": "confluence",
+    "span": {
+     "start": 6637,
+     "end": 6711
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_RETEST:vwap retest#0",
+    "type": "WAIT_RETEST",
+    "object": "vwap retest",
+    "role": "confluence",
+    "span": {
+     "start": 7003,
+     "end": 7047
+    },
+    "evidence": "{T-N7uP-C0163, T-N7uP-C0164}"
+   },
+   {
+    "id": "WAIT_RETEST:pre market high retest#0",
+    "type": "WAIT_RETEST",
+    "object": "pre market high retest",
+    "role": "confluence",
+    "span": {
+     "start": 7047,
+     "end": 7060
+    },
+    "evidence": "{T-N7uP-C0163, T-N7uP-C0164}"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:ema trend confirmation#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "ema trend confirmation",
+    "role": "spine",
+    "span": {
+     "start": 7060,
+     "end": 7111
+    },
+    "evidence": "{T-N7uP-C0165}"
+   },
+   {
+    "id": "INVALIDATE:no reason to sell until about right here which again s freaking huge trade#0",
+    "type": "INVALIDATE",
+    "object": "no reason to sell until about right here which again s freaking huge trade",
+    "role": "trigger",
+    "span": {
+     "start": 7240,
+     "end": 7325
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:vwap#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "vwap",
+    "role": "spine",
+    "span": {
+     "start": 7568,
+     "end": 7602
+    },
+    "evidence": "and then we come and retest VWAP."
+   },
+   {
+    "id": "ENABLE_ENTRY:calls#0",
+    "type": "ENABLE_ENTRY",
+    "object": "calls",
+    "role": "trigger",
+    "span": {
+     "start": 7627,
+     "end": 7663
+    },
+    "evidence": "This means we're taking calls here."
+   },
+   {
+    "id": "FILTER:pre market high#0",
+    "type": "FILTER",
+    "object": "pre market high",
+    "role": "spine",
+    "span": {
+     "start": 7683,
+     "end": 7746
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:vwop retest#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "vwop retest",
+    "role": "spine",
+    "span": {
+     "start": 8186,
+     "end": 8250
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "CONFIRM_DIRECTION:ema#0",
+    "type": "CONFIRM_DIRECTION",
+    "object": "ema",
+    "role": "spine",
+    "span": {
+     "start": 8424,
+     "end": 8443
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_RETEST:ema#0",
+    "type": "WAIT_RETEST",
+    "object": "ema",
+    "role": "spine",
+    "span": {
+     "start": 8443,
+     "end": 8469
+    },
+    "evidence": "You also trade EMA retest"
+   }
+  ],
+  "and_groups": [
+   [
+    "FILTER:vwop#0",
+    "FILTER:upper band lower band fill#0",
+    "FILTER:upper band up#0",
+    "FILTER:lower band#0",
+    "FILTER:band fill#0",
+    "WAIT_SESSION:vwop#0",
+    "WAIT_SESSION:extended hours#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:ema#0",
+    "WAIT_CONFIRMATION:stock price relative to ema 5m minute#0"
+   ],
+   [
+    "WAIT_RETEST:ema retests#0",
+    "WAIT_RETEST:vwop retest#0"
+   ],
+   [
+    "FILTER:ema#0",
+    "FILTER:pre market low#0"
+   ],
+   [
+    "WAIT_STRUCTURE:vwap alignment with pre market high or low#0",
+    "WAIT_STRUCTURE:pre market high retest and vwop retest#0"
+   ],
+   [
+    "WAIT_RETEST:vwap retest#0",
+    "WAIT_RETEST:pre market high retest#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "FILTER:band fill#0",
+    "FILTER:vwap#0"
+   ],
+   [
+    "INVALIDATE:short position#0",
+    "INVALIDATE:calls stock#0"
+   ],
+   [
+    "INVALIDATE:position taking out#0",
+    "INVALIDATE:no reason to sell until about right here which again s freaking huge trade#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:short position#0",
+    "type": "INVALIDATE",
+    "object": "short position",
+    "role": "invalidation",
+    "span": {
+     "start": 3729,
+     "end": 3781
+    },
+    "evidence": "Because if it gets above VWAP, you can't take puts."
+   },
+   {
+    "id": "INVALIDATE:calls stock#0",
+    "type": "INVALIDATE",
+    "object": "calls stock",
+    "role": "invalidation",
+    "span": {
+     "start": 4681,
+     "end": 4739
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:position taking out#0",
+    "type": "INVALIDATE",
+    "object": "position taking out",
+    "role": "invalidation",
+    "span": {
+     "start": 6133,
+     "end": 6204
+    },
+    "evidence": "But on this one, you would have taken most your position out over here"
+   },
+   {
+    "id": "INVALIDATE:vwap cross below#0",
+    "type": "INVALIDATE",
+    "object": "vwap cross below",
+    "role": "invalidation",
+    "span": {
+     "start": 7934,
+     "end": 7991
+    },
+    "evidence": "},{"
+   }
+  ],
+  "entry_trigger_id": "ENTER:calls#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

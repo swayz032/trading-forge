@@ -1,0 +1,1355 @@
+{
+ "video": "VTEQ2fhGLqE",
+ "spec_hash": "769c8019aecca83606ddbbebdd1a61179cea267bd0f44867273d335cd573aa13",
+ "graph_canonical_hash": "1f2701be99e1e2d1",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 61176,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_STRUCTURE:price action relative to trend line#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price action relative to trend line",
+    "role": "spine",
+    "span": {
+     "start": 775,
+     "end": 812
+    },
+    "evidence": "{T-VTEQ-C0011}"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:price action structure#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "price action structure",
+    "role": "spine",
+    "span": {
+     "start": 1286,
+     "end": 1335
+    },
+    "evidence": "T-VTEQ-C0021"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "spine",
+    "span": {
+     "start": 2902,
+     "end": 2937
+    },
+    "evidence": "{T-VTEQ-C0053}"
+   },
+   {
+    "id": "WAIT_BIAS:directional bias#0",
+    "type": "WAIT_BIAS",
+    "object": "directional bias",
+    "role": "spine",
+    "span": {
+     "start": 3885,
+     "end": 3923
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:breakout capture#0",
+    "type": "ENABLE_ENTRY",
+    "object": "breakout capture",
+    "role": "trigger",
+    "span": {
+     "start": 3923,
+     "end": 3968
+    },
+    "evidence": "حسنًا. أتفوق عندما أتمكن من التقاط الاختراق."
+   },
+   {
+    "id": "INVALIDATE:buy point utilization#0",
+    "type": "INVALIDATE",
+    "object": "buy point utilization",
+    "role": "trigger",
+    "span": {
+     "start": 4355,
+     "end": 4455
+    },
+    "evidence": "T-VTEQ-C0079"
+   },
+   {
+    "id": "EXIT_HINT:exit signal#0",
+    "type": "EXIT_HINT",
+    "object": "exit signal",
+    "role": "spine",
+    "span": {
+     "start": 4523,
+     "end": 4570
+    },
+    "evidence": "T-VTEQ-C0082"
+   },
+   {
+    "id": "ENABLE_ENTRY:rebound entry#0",
+    "type": "ENABLE_ENTRY",
+    "object": "rebound entry",
+    "role": "trigger",
+    "span": {
+     "start": 4570,
+     "end": 4670
+    },
+    "evidence": "T-VTEQ-C0083"
+   },
+   {
+    "id": "WAIT_RETEST:price reaching or approaching trendline#0",
+    "type": "WAIT_RETEST",
+    "object": "price reaching or approaching trendline",
+    "role": "spine",
+    "span": {
+     "start": 5144,
+     "end": 5254
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:buy entry#0",
+    "type": "ENABLE_ENTRY",
+    "object": "buy entry",
+    "role": "trigger",
+    "span": {
+     "start": 5429,
+     "end": 5445
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry expansion#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry expansion",
+    "role": "trigger",
+    "span": {
+     "start": 5445,
+     "end": 5541
+    },
+    "evidence": "هنا، لنفترض أنني فاتني هذا، أو لنفترض أنني دخلت في هذا، ربما يمكنني التوسع وإضافة مركز آخر هنا."
+   },
+   {
+    "id": "WAIT_STRUCTURE:trend line#2",
+    "type": "WAIT_STRUCTURE",
+    "object": "trend line",
+    "role": "spine",
+    "span": {
+     "start": 6117,
+     "end": 6195
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:reversal signals#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "reversal signals",
+    "role": "spine",
+    "span": {
+     "start": 6405,
+     "end": 6455
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:sell opportunity areas#0",
+    "type": "FILTER",
+    "object": "sell opportunity areas",
+    "role": "trigger",
+    "span": {
+     "start": 6540,
+     "end": 6618
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:line work action#0",
+    "type": "WAIT_BIAS",
+    "object": "line work action",
+    "role": "spine",
+    "span": {
+     "start": 6744,
+     "end": 6769
+    },
+    "evidence": "T-VTEQ-C0131"
+   },
+   {
+    "id": "ENTER:sell order#0",
+    "type": "ENTER",
+    "object": "sell order",
+    "role": "trigger",
+    "span": {
+     "start": 6798,
+     "end": 6815
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:potential entry exit#0",
+    "type": "INVALIDATE",
+    "object": "potential entry exit",
+    "role": "trigger",
+    "span": {
+     "start": 7469,
+     "end": 7640
+    },
+    "evidence": "حتى لو لم يقترب السعر تمامًا من خط الاتجاه، فقد نشهد انخفاضًا كبيرًا، أو قد يخترق، مهما حدث بعد ذلك، بمجرد أن نصل إلى الاختراق هنا، حينها نفكر، حسنًا، علينا الإغلاق الآن."
+   },
+   {
+    "id": "ENTER:buy order#0",
+    "type": "ENTER",
+    "object": "buy order",
+    "role": "trigger",
+    "span": {
+     "start": 7640,
+     "end": 7683
+    },
+    "evidence": "حسنًا. الآن، الخروج، علينا وضع أمر الشراء."
+   },
+   {
+    "id": "FILTER:entry price relative to breakeven#0",
+    "type": "FILTER",
+    "object": "entry price relative to breakeven",
+    "role": "trigger",
+    "span": {
+     "start": 8050,
+     "end": 8104
+    },
+    "evidence": "T-VTEQ-C0165"
+   },
+   {
+    "id": "INVALIDATE:price break fake breakout entry#0",
+    "type": "INVALIDATE",
+    "object": "price break fake breakout entry",
+    "role": "trigger",
+    "span": {
+     "start": 8961,
+     "end": 9089
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:trading instrument#0",
+    "type": "WAIT_SESSION",
+    "object": "trading instrument",
+    "role": "spine",
+    "span": {
+     "start": 9263,
+     "end": 9281
+    },
+    "evidence": "سيكون تداول النفط"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:reversal details#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "reversal details",
+    "role": "spine",
+    "span": {
+     "start": 9391,
+     "end": 9541
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:entry point proximity#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "entry point proximity",
+    "role": "trigger",
+    "span": {
+     "start": 10637,
+     "end": 10687
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry timing#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry timing",
+    "role": "trigger",
+    "span": {
+     "start": 11559,
+     "end": 11696
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry point#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry point",
+    "role": "trigger",
+    "span": {
+     "start": 11908,
+     "end": 12030
+    },
+    "evidence": "T-VTEQ-C0235"
+   },
+   {
+    "id": "ENABLE_ENTRY:configuration testing#0",
+    "type": "ENABLE_ENTRY",
+    "object": "configuration testing",
+    "role": "trigger",
+    "span": {
+     "start": 14917,
+     "end": 15023
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:tool selection#0",
+    "type": "ENABLE_ENTRY",
+    "object": "tool selection",
+    "role": "trigger",
+    "span": {
+     "start": 15043,
+     "end": 15064
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:trading instrument and timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "trading instrument and timeframe",
+    "role": "spine",
+    "span": {
+     "start": 15265,
+     "end": 15329
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:trendline bounce scenario#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "trendline bounce scenario",
+    "role": "spine",
+    "span": {
+     "start": 15652,
+     "end": 15686
+    },
+    "evidence": "T-VTEQ-C0291"
+   },
+   {
+    "id": "FILTER:trend line bounce#0",
+    "type": "FILTER",
+    "object": "trend line bounce",
+    "role": "spine",
+    "span": {
+     "start": 16964,
+     "end": 17059
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_RETEST:trend line#0",
+    "type": "WAIT_RETEST",
+    "object": "trend line",
+    "role": "spine",
+    "span": {
+     "start": 17651,
+     "end": 17696
+    },
+    "evidence": "T-VTEQ-C0316"
+   },
+   {
+    "id": "WAIT_BIAS:price action visibility#0",
+    "type": "WAIT_BIAS",
+    "object": "price action visibility",
+    "role": "spine",
+    "span": {
+     "start": 17797,
+     "end": 17832
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:alert#0",
+    "type": "WAIT_SESSION",
+    "object": "alert",
+    "role": "confluence",
+    "span": {
+     "start": 18283,
+     "end": 18303
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:alerts all trend lines#0",
+    "type": "WAIT_SESSION",
+    "object": "alerts all trend lines",
+    "role": "confluence",
+    "span": {
+     "start": 18567,
+     "end": 18605
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:time delay#0",
+    "type": "WAIT_SESSION",
+    "object": "time delay",
+    "role": "confluence",
+    "span": {
+     "start": 18808,
+     "end": 18870
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "VERIFY_STRUCTURE:connection points verification#0",
+    "type": "VERIFY_STRUCTURE",
+    "object": "connection points verification",
+    "role": "spine",
+    "span": {
+     "start": 20207,
+     "end": 20234
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:day week#0",
+    "type": "FILTER",
+    "object": "day week",
+    "role": "confluence",
+    "span": {
+     "start": 20521,
+     "end": 20599
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:timeframe duration#0",
+    "type": "FILTER",
+    "object": "timeframe duration",
+    "role": "confluence",
+    "span": {
+     "start": 20599,
+     "end": 20673
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:break trend line#0",
+    "type": "FILTER",
+    "object": "break trend line",
+    "role": "confluence",
+    "span": {
+     "start": 21134,
+     "end": 21150
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:breakout and retest#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "breakout and retest",
+    "role": "spine",
+    "span": {
+     "start": 21445,
+     "end": 21511
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:trend line break#0",
+    "type": "FILTER",
+    "object": "trend line break",
+    "role": "spine",
+    "span": {
+     "start": 21844,
+     "end": 21860
+    },
+    "evidence": "T-VTEQ-C0418"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:candle close and break retest#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "candle close and break retest",
+    "role": "spine",
+    "span": {
+     "start": 22059,
+     "end": 22086
+    },
+    "evidence": "{T-VTEQ-C0422}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:break trendline#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "break trendline",
+    "role": "confluence",
+    "span": {
+     "start": 22326,
+     "end": 22368
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:break trend line#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "break trend line",
+    "role": "confluence",
+    "span": {
+     "start": 22617,
+     "end": 22651
+    },
+    "evidence": "{T-VTEQ-C0437}"
+   },
+   {
+    "id": "FILTER:trend lines color coding#0",
+    "type": "FILTER",
+    "object": "trend lines color coding",
+    "role": "confluence",
+    "span": {
+     "start": 22716,
+     "end": 22805
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:entry barrier#0",
+    "type": "FILTER",
+    "object": "entry barrier",
+    "role": "trigger",
+    "span": {
+     "start": 23731,
+     "end": 23766
+    },
+    "evidence": "T-VTEQ-C0457"
+   },
+   {
+    "id": "ENTER:price break#0",
+    "type": "ENTER",
+    "object": "price break",
+    "role": "trigger",
+    "span": {
+     "start": 24994,
+     "end": 25018
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:breakout trading#0",
+    "type": "WAIT_SESSION",
+    "object": "breakout trading",
+    "role": "confluence",
+    "span": {
+     "start": 25285,
+     "end": 25301
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:trade frequency#0",
+    "type": "FILTER",
+    "object": "trade frequency",
+    "role": "confluence",
+    "span": {
+     "start": 25301,
+     "end": 25330
+    },
+    "evidence": "لذا أبحث عن صفقات أقل أيضًا."
+   },
+   {
+    "id": "ENABLE_ENTRY:trade volume#0",
+    "type": "ENABLE_ENTRY",
+    "object": "trade volume",
+    "role": "trigger",
+    "span": {
+     "start": 25330,
+     "end": 25416
+    },
+    "evidence": "لذا إذا كنت سأدمج الارتداد والكسر ونقطتي لمس وثلاث نقاط لمس، فسأضع الكثير من الصفقات."
+   },
+   {
+    "id": "FILTER:trade scope#0",
+    "type": "FILTER",
+    "object": "trade scope",
+    "role": "spine",
+    "span": {
+     "start": 25416,
+     "end": 25443
+    },
+    "evidence": "لذا، أحاول تضييق نطاق هذا."
+   },
+   {
+    "id": "WAIT_CONFIRMATION:breakout#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "breakout",
+    "role": "spine",
+    "span": {
+     "start": 25477,
+     "end": 25505
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_RETEST:price level touch#0",
+    "type": "WAIT_RETEST",
+    "object": "price level touch",
+    "role": "spine",
+    "span": {
+     "start": 25640,
+     "end": 25718
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:price break#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "price break",
+    "role": "spine",
+    "span": {
+     "start": 25985,
+     "end": 26009
+    },
+    "evidence": "{current_context}"
+   },
+   {
+    "id": "WAIT_SESSION:alert trigger#0",
+    "type": "WAIT_SESSION",
+    "object": "alert trigger",
+    "role": "confluence",
+    "span": {
+     "start": 27108,
+     "end": 27132
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:price break#0",
+    "type": "FILTER",
+    "object": "price break",
+    "role": "confluence",
+    "span": {
+     "start": 27132,
+     "end": 27145
+    },
+    "evidence": "انكسر السعر."
+   },
+   {
+    "id": "VERIFY_STRUCTURE:contact points#0",
+    "type": "VERIFY_STRUCTURE",
+    "object": "contact points",
+    "role": "spine",
+    "span": {
+     "start": 28300,
+     "end": 28344
+    },
+    "evidence": "لذا، يمكنني التحقق من اثنتين من هذه النقاط."
+   },
+   {
+    "id": "FILTER:contact points count#0",
+    "type": "FILTER",
+    "object": "contact points count",
+    "role": "spine",
+    "span": {
+     "start": 28381,
+     "end": 28422
+    },
+    "evidence": "لكن لدينا نقطتا اتصال فقط بدلًا من ثلاث."
+   },
+   {
+    "id": "ENABLE_ENTRY:#0",
+    "type": "ENABLE_ENTRY",
+    "object": "",
+    "role": "trigger",
+    "span": {
+     "start": 29071,
+     "end": 29087
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:trend line modification#0",
+    "type": "FILTER",
+    "object": "trend line modification",
+    "role": "spine",
+    "span": {
+     "start": 29191,
+     "end": 29269
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:trend line breakout#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "trend line breakout",
+    "role": "spine",
+    "span": {
+     "start": 29368,
+     "end": 29446
+    },
+    "evidence": "سنعود إلى كلامي ونقول إن هذا الآن كسر لخط الاتجاه بنقطتي تلامس، وهو ما أمتلكه"
+   },
+   {
+    "id": "WAIT_STRUCTURE:break trendline with two touch points#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "break trendline with two touch points",
+    "role": "spine",
+    "span": {
+     "start": 29854,
+     "end": 29893
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:monthly timeframe chart#0",
+    "type": "WAIT_SESSION",
+    "object": "monthly timeframe chart",
+    "role": "spine",
+    "span": {
+     "start": 30319,
+     "end": 30374
+    },
+    "evidence": "حسنًا. إذن هذا رسم بياني لدينا على إطار زمني شهري هنا."
+   },
+   {
+    "id": "WAIT_STRUCTURE:price movement direction#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price movement direction",
+    "role": "spine",
+    "span": {
+     "start": 30402,
+     "end": 30417
+    },
+    "evidence": "أعلى إلى أسفل."
+   },
+   {
+    "id": "WAIT_SESSION:timeframe hierarchy check#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe hierarchy check",
+    "role": "spine",
+    "span": {
+     "start": 30817,
+     "end": 30933
+    },
+    "evidence": "T-VTEQ-C0614"
+   },
+   {
+    "id": "WAIT_BIAS:direction movement downward#0",
+    "type": "WAIT_BIAS",
+    "object": "direction movement downward",
+    "role": "spine",
+    "span": {
+     "start": 32621,
+     "end": 32648
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:touch points#0",
+    "type": "FILTER",
+    "object": "touch points",
+    "role": "spine",
+    "span": {
+     "start": 33370,
+     "end": 33480
+    },
+    "evidence": "لذا، إذا كنا في حالة توحيد، فأنا أحب أن أحاول تحديد أكبر عدد ممكن من نقاط التلامس على الانخفاضات والارتفاعات."
+   },
+   {
+    "id": "WAIT_CONFIRMATION:break trendline#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "break trendline",
+    "role": "confluence",
+    "span": {
+     "start": 34058,
+     "end": 34089
+    },
+    "evidence": "{}"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:break here#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "break here",
+    "role": "confluence",
+    "span": {
+     "start": 34243,
+     "end": 34277
+    },
+    "evidence": "{}"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe dependency 5m#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe dependency 5m",
+    "role": "confluence",
+    "span": {
+     "start": 35285,
+     "end": 35466
+    },
+    "evidence": "T-VTEQ-C0695"
+   },
+   {
+    "id": "FILTER:trend line bounce off channels#0",
+    "type": "FILTER",
+    "object": "trend line bounce off channels",
+    "role": "confluence",
+    "span": {
+     "start": 35527,
+     "end": 35679
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe selection#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe selection",
+    "role": "confluence",
+    "span": {
+     "start": 37001,
+     "end": 37126
+    },
+    "evidence": "T-VTEQ-C0722"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:break#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "break",
+    "role": "spine",
+    "span": {
+     "start": 37354,
+     "end": 37375
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:price#0",
+    "type": "WAIT_BIAS",
+    "object": "price",
+    "role": "confluence",
+    "span": {
+     "start": 37418,
+     "end": 37443
+    },
+    "evidence": "أحتاج إلى أن يرتفع السعر"
+   },
+   {
+    "id": "WAIT_BIAS:#0",
+    "type": "WAIT_BIAS",
+    "object": "",
+    "role": "confluence",
+    "span": {
+     "start": 37718,
+     "end": 37756
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:opposite trend line#0",
+    "type": "WAIT_BIAS",
+    "object": "opposite trend line",
+    "role": "confluence",
+    "span": {
+     "start": 38482,
+     "end": 38543
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:rising trend line#0",
+    "type": "ENABLE_ENTRY",
+    "object": "rising trend line",
+    "role": "trigger",
+    "span": {
+     "start": 38592,
+     "end": 38667
+    },
+    "evidence": "لذا في هذا السيناريو، كان خط الاتجاه الصاعد هو الإجراء الذي أخبرك بالدخول."
+   },
+   {
+    "id": "ENTER:entry point#0",
+    "type": "ENTER",
+    "object": "entry point",
+    "role": "trigger",
+    "span": {
+     "start": 38667,
+     "end": 38696
+    },
+    "evidence": "لذلك سنقول أن هذا هو دخولنا."
+   },
+   {
+    "id": "FILTER:safety line#0",
+    "type": "FILTER",
+    "object": "safety line",
+    "role": "spine",
+    "span": {
+     "start": 38953,
+     "end": 38989
+    },
+    "evidence": "T-VTEQ-C0784"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price break#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price break",
+    "role": "spine",
+    "span": {
+     "start": 39121,
+     "end": 39158
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:distance calculation#0",
+    "type": "FILTER",
+    "object": "distance calculation",
+    "role": "spine",
+    "span": {
+     "start": 39201,
+     "end": 39254
+    },
+    "evidence": "المسافة بين وقت كسر السعر وخط الأمان، والفرق بينهما."
+   },
+   {
+    "id": "WAIT_STRUCTURE:price crossing level potential support low in area#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price crossing level potential support low in area",
+    "role": "spine",
+    "span": {
+     "start": 39254,
+     "end": 39363
+    },
+    "evidence": "T-VTEQ-C0792"
+   },
+   {
+    "id": "FILTER:price movement relative to safety line#0",
+    "type": "FILTER",
+    "object": "price movement relative to safety line",
+    "role": "confluence",
+    "span": {
+     "start": 40003,
+     "end": 40066
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:trend line indicator#0",
+    "type": "FILTER",
+    "object": "trend line indicator",
+    "role": "confluence",
+    "span": {
+     "start": 41206,
+     "end": 41233
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENTER:#0",
+    "type": "ENTER",
+    "object": "",
+    "role": "trigger",
+    "span": {
+     "start": 41532,
+     "end": 41585
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:confirmation rule#0",
+    "type": "FILTER",
+    "object": "confirmation rule",
+    "role": "spine",
+    "span": {
+     "start": 41813,
+     "end": 41907
+    },
+    "evidence": "إذًا، هل تحتاج حقًا إلى إغلاق شمعة ومغادرة خط الاتجاه لتأكيده؟ ليس في إطار زمني مدته 4 ساعات."
+   },
+   {
+    "id": "ENABLE_ENTRY:entry condition based conviction and momentum#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry condition based conviction and momentum",
+    "role": "trigger",
+    "span": {
+     "start": 42058,
+     "end": 42195
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENTER:candle with momentum and downward body movement#0",
+    "type": "ENTER",
+    "object": "candle with momentum and downward body movement",
+    "role": "trigger",
+    "span": {
+     "start": 42285,
+     "end": 42398
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:price action#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "price action",
+    "role": "confluence",
+    "span": {
+     "start": 44631,
+     "end": 44678
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry condition#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry condition",
+    "role": "trigger",
+    "span": {
+     "start": 47046,
+     "end": 47075
+    },
+    "evidence": "يمكنني الدخول عند الاستراحة."
+   },
+   {
+    "id": "INVALIDATE:entry requirement#0",
+    "type": "INVALIDATE",
+    "object": "entry requirement",
+    "role": "trigger",
+    "span": {
+     "start": 47075,
+     "end": 47164
+    },
+    "evidence": "لست مضطرًا إلى انتظار إغلاق الشمعة أو لست مضطرًا إلى انتظار إعادة الاختبار أو ربما أفعل."
+   },
+   {
+    "id": "FILTER:platinum entry barrier#0",
+    "type": "FILTER",
+    "object": "platinum entry barrier",
+    "role": "trigger",
+    "span": {
+     "start": 47285,
+     "end": 47315
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe applicability#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe applicability",
+    "role": "confluence",
+    "span": {
+     "start": 48373,
+     "end": 48410
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:data requirements and rule modification#0",
+    "type": "FILTER",
+    "object": "data requirements and rule modification",
+    "role": "confluence",
+    "span": {
+     "start": 48410,
+     "end": 48466
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:rule modification capability#0",
+    "type": "FILTER",
+    "object": "rule modification capability",
+    "role": "confluence",
+    "span": {
+     "start": 48466,
+     "end": 48498
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:asset class#0",
+    "type": "WAIT_SESSION",
+    "object": "asset class",
+    "role": "confluence",
+    "span": {
+     "start": 49001,
+     "end": 49198
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:copper#0",
+    "type": "WAIT_SESSION",
+    "object": "copper",
+    "role": "confluence",
+    "span": {
+     "start": 51978,
+     "end": 52011
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:break retest range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "break retest range",
+    "role": "spine",
+    "span": {
+     "start": 54265,
+     "end": 54373
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:second level confirmation#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "second level confirmation",
+    "role": "spine",
+    "span": {
+     "start": 54534,
+     "end": 54583
+    },
+    "evidence": "لكن المستوى الثاني لم يُؤكد بعد حتى نكسر هبوطًا."
+   },
+   {
+    "id": "FILTER:trend line tool usage#0",
+    "type": "FILTER",
+    "object": "trend line tool usage",
+    "role": "spine",
+    "span": {
+     "start": 55942,
+     "end": 55969
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:data breakout potential#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "data breakout potential",
+    "role": "spine",
+    "span": {
+     "start": 58253,
+     "end": 58315
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:trendline break#0",
+    "type": "FILTER",
+    "object": "trendline break",
+    "role": "spine",
+    "span": {
+     "start": 58449,
+     "end": 58478
+    },
+    "evidence": "{C1153}"
+   }
+  ],
+  "and_groups": [
+   [
+    "ENABLE_ENTRY:buy entry#0",
+    "ENABLE_ENTRY:entry expansion#0"
+   ],
+   [
+    "ENABLE_ENTRY:entry timing#0",
+    "ENABLE_ENTRY:entry point#0",
+    "ENABLE_ENTRY:configuration testing#0",
+    "ENABLE_ENTRY:tool selection#0"
+   ],
+   [
+    "WAIT_SESSION:alert#0",
+    "WAIT_SESSION:alerts all trend lines#0",
+    "WAIT_SESSION:time delay#0"
+   ],
+   [
+    "FILTER:day week#0",
+    "FILTER:timeframe duration#0",
+    "FILTER:risk level#0",
+    "FILTER:break trend line#0"
+   ],
+   [
+    "WAIT_STRUCTURE:break trendline#0",
+    "WAIT_STRUCTURE:break trend line#0"
+   ],
+   [
+    "FILTER:trend lines color coding#0",
+    "FILTER:entry barrier#0"
+   ],
+   [
+    "WAIT_SESSION:breakout trading#0",
+    "FILTER:trade frequency#0"
+   ],
+   [
+    "WAIT_SESSION:alert trigger#0",
+    "FILTER:price break#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:break trendline#0",
+    "WAIT_CONFIRMATION:break here#0"
+   ],
+   [
+    "WAIT_SESSION:timeframe dependency 5m#0",
+    "FILTER:trend line bounce off channels#0",
+    "WAIT_SESSION:timeframe selection#0"
+   ],
+   [
+    "WAIT_BIAS:price#0",
+    "WAIT_BIAS:#0",
+    "WAIT_BIAS:opposite trend line#0"
+   ],
+   [
+    "FILTER:price movement relative to safety line#0",
+    "FILTER:trend line indicator#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:price action#0",
+    "ENABLE_ENTRY:entry condition#0"
+   ],
+   [
+    "FILTER:platinum entry barrier#0",
+    "WAIT_SESSION:timeframe applicability#0",
+    "FILTER:data requirements and rule modification#0",
+    "FILTER:rule modification capability#0",
+    "WAIT_SESSION:asset class#0",
+    "WAIT_SESSION:copper#0"
+   ]
+  ],
+  "or_branches": [],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:magnetic tool usage#0",
+    "type": "INVALIDATE",
+    "object": "magnetic tool usage",
+    "role": "invalidation",
+    "span": {
+     "start": 3484,
+     "end": 3521
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:trend continuation#0",
+    "type": "INVALIDATE",
+    "object": "trend continuation",
+    "role": "invalidation",
+    "span": {
+     "start": 3968,
+     "end": 4055
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:price crossing safety line#0",
+    "type": "INVALIDATE",
+    "object": "price crossing safety line",
+    "role": "invalidation",
+    "span": {
+     "start": 8254,
+     "end": 8320
+    },
+    "evidence": "T-VTEQ-C0169"
+   },
+   {
+    "id": "INVALIDATE:#0",
+    "type": "INVALIDATE",
+    "object": "",
+    "role": "invalidation",
+    "span": {
+     "start": 19244,
+     "end": 19286
+    },
+    "evidence": "T-VTEQ-C0359"
+   },
+   {
+    "id": "INVALIDATE:break confirmation#0",
+    "type": "INVALIDATE",
+    "object": "break confirmation",
+    "role": "invalidation",
+    "span": {
+     "start": 26009,
+     "end": 26062
+    },
+    "evidence": "{current_context}"
+   },
+   {
+    "id": "INVALIDATE:selection waiting low peak#0",
+    "type": "INVALIDATE",
+    "object": "selection waiting low peak",
+    "role": "invalidation",
+    "span": {
+     "start": 34980,
+     "end": 35109
+    },
+    "evidence": "T-VTEQ-C0691"
+   },
+   {
+    "id": "INVALIDATE:rising safety line break#0",
+    "type": "INVALIDATE",
+    "object": "rising safety line break",
+    "role": "invalidation",
+    "span": {
+     "start": 38543,
+     "end": 38592
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "RESET:decision process#0",
+    "type": "RESET",
+    "object": "decision process",
+    "role": "invalidation",
+    "span": {
+     "start": 38861,
+     "end": 38906
+    },
+    "evidence": "T-VTEQ-C0782"
+   },
+   {
+    "id": "INVALIDATE:reversal bounce break#0",
+    "type": "INVALIDATE",
+    "object": "reversal bounce break",
+    "role": "invalidation",
+    "span": {
+     "start": 54373,
+     "end": 54394
+    },
+    "evidence": "لذا، كسرنا ارتدادًا."
+   },
+   {
+    "id": "INVALIDATE:trading based#0",
+    "type": "INVALIDATE",
+    "object": "trading based",
+    "role": "invalidation",
+    "span": {
+     "start": 54411,
+     "end": 54534
+    },
+    "evidence": "وكما تقول الآن، على سبيل المثال، لو كسرنا هذا المستوى، لما تداولنا بناءً على هذا، لأن هذه لمستان فقط الآن، أليس كذلك؟ أجل."
+   },
+   {
+    "id": "INVALIDATE:price break recent high#0",
+    "type": "INVALIDATE",
+    "object": "price break recent high",
+    "role": "invalidation",
+    "span": {
+     "start": 54726,
+     "end": 54900
+    },
+    "evidence": "{T-VTEQ-C1076}"
+   },
+   {
+    "id": "INVALIDATE:price break and recovery#0",
+    "type": "INVALIDATE",
+    "object": "price break and recovery",
+    "role": "invalidation",
+    "span": {
+     "start": 56922,
+     "end": 56966
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:price movement against trade and break line at candle#0",
+    "type": "INVALIDATE",
+    "object": "price movement against trade and break line at candle",
+    "role": "invalidation",
+    "span": {
+     "start": 56966,
+     "end": 57052
+    },
+    "evidence": "},{"
+   }
+  ],
+  "entry_trigger_id": "ENABLE_ENTRY:breakout capture#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

@@ -1,0 +1,992 @@
+{
+ "video": "ktkqq7QsN9Q",
+ "spec_hash": "59b5772d750a7177af8b84039e4bcd79b37a59f33f13fc9d8b6bc9a3611c7028",
+ "graph_canonical_hash": "2de82e1fb98ac4ae",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 24704,
+ "spec": {
+  "direction": "long",
+  "entry_conditions": [
+   {
+    "id": "FILTER:vwap#0",
+    "type": "FILTER",
+    "object": "vwap",
+    "role": "spine",
+    "span": {
+     "start": 205,
+     "end": 222
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENTER:vwap cross#0",
+    "type": "ENTER",
+    "object": "vwap cross",
+    "role": "trigger",
+    "span": {
+     "start": 271,
+     "end": 293
+    },
+    "evidence": "{T-ktkq-C0006}"
+   },
+   {
+    "id": "FILTER:vwap resistance#0",
+    "type": "FILTER",
+    "object": "vwap resistance",
+    "role": "spine",
+    "span": {
+     "start": 1088,
+     "end": 1108
+    },
+    "evidence": "VWAP is resistance."
+   },
+   {
+    "id": "WAIT_CONFIRMATION:price rejection from it#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "price rejection from it",
+    "role": "spine",
+    "span": {
+     "start": 1108,
+     "end": 1131
+    },
+    "evidence": "Price rejects from it."
+   },
+   {
+    "id": "ENTER:vwap touch and buy#0",
+    "type": "ENTER",
+    "object": "vwap touch and buy",
+    "role": "trigger",
+    "span": {
+     "start": 1294,
+     "end": 1327
+    },
+    "evidence": "{T-ktkq-C0032}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:volume profile#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "volume profile",
+    "role": "spine",
+    "span": {
+     "start": 1564,
+     "end": 1608
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:vwap#0",
+    "type": "WAIT_BIAS",
+    "object": "vwap",
+    "role": "spine",
+    "span": {
+     "start": 2094,
+     "end": 2153
+    },
+    "evidence": "T-ktkq-C0050"
+   },
+   {
+    "id": "FILTER:price near vwap#0",
+    "type": "FILTER",
+    "object": "price near vwap",
+    "role": "spine",
+    "span": {
+     "start": 2153,
+     "end": 2238
+    },
+    "evidence": "T-ktkq-C0051"
+   },
+   {
+    "id": "WAIT_STRUCTURE:vwap#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "vwap",
+    "role": "spine",
+    "span": {
+     "start": 2384,
+     "end": 2409
+    },
+    "evidence": "{T-ktkq-C0054, T-ktkq-C0055}"
+   },
+   {
+    "id": "FILTER:vwap trading level#0",
+    "type": "FILTER",
+    "object": "vwap trading level",
+    "role": "spine",
+    "span": {
+     "start": 2409,
+     "end": 2477
+    },
+    "evidence": "{T-ktkq-C0056}"
+   },
+   {
+    "id": "WAIT_BIAS:persist in its current behavior rather than abruptly changing direction#0",
+    "type": "WAIT_BIAS",
+    "object": "persist in its current behavior rather than abruptly changing direction",
+    "role": "confluence",
+    "span": {
+     "start": 4162,
+     "end": 4235
+    },
+    "evidence": "{T-ktkq-C0093, T-ktkq-C0094}"
+   },
+   {
+    "id": "WAIT_BIAS:so instead trying to predict shifts we align with prevailing market conditions#0",
+    "type": "WAIT_BIAS",
+    "object": "so instead trying to predict shifts we align with prevailing market conditions",
+    "role": "confluence",
+    "span": {
+     "start": 4235,
+     "end": 4324
+    },
+    "evidence": "{T-ktkq-C0095}"
+   },
+   {
+    "id": "ENABLE_ENTRY:long entry bias#0",
+    "type": "ENABLE_ENTRY",
+    "object": "long entry bias",
+    "role": "trigger",
+    "span": {
+     "start": 4802,
+     "end": 4833
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:range continuation bias#0",
+    "type": "WAIT_BIAS",
+    "object": "range continuation bias",
+    "role": "spine",
+    "span": {
+     "start": 4945,
+     "end": 5014
+    },
+    "evidence": "If the market is ranging, you need to expect it to continue ranging."
+   },
+   {
+    "id": "INVALIDATE:we do not buy bottom#0",
+    "type": "INVALIDATE",
+    "object": "we do not buy bottom",
+    "role": "trigger",
+    "span": {
+     "start": 5121,
+     "end": 5147
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price holding or reentering vwap value area#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price holding or reentering vwap value area",
+    "role": "spine",
+    "span": {
+     "start": 5388,
+     "end": 5441
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:globex session#0",
+    "type": "WAIT_SESSION",
+    "object": "globex session",
+    "role": "confluence",
+    "span": {
+     "start": 5588,
+     "end": 5633
+    },
+    "evidence": "T-ktkq-C0121"
+   },
+   {
+    "id": "WAIT_SESSION:6 00 p m#0",
+    "type": "WAIT_SESSION",
+    "object": "6 00 p m",
+    "role": "confluence",
+    "span": {
+     "start": 5664,
+     "end": 5678
+    },
+    "evidence": "T-ktkq-C0123"
+   },
+   {
+    "id": "WAIT_SESSION:eastern standard time to 5 00 p m#0",
+    "type": "WAIT_SESSION",
+    "object": "eastern standard time to 5 00 p m",
+    "role": "confluence",
+    "span": {
+     "start": 5678,
+     "end": 5710
+    },
+    "evidence": "T-ktkq-C0124"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:vwap movement beyond current value band#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "vwap movement beyond current value band",
+    "role": "confluence",
+    "span": {
+     "start": 5816,
+     "end": 5845
+    },
+    "evidence": "T-ktkq-C0129"
+   },
+   {
+    "id": "WAIT_STRUCTURE:breakout#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "breakout",
+    "role": "spine",
+    "span": {
+     "start": 6051,
+     "end": 6082
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:vwap area#0",
+    "type": "WAIT_BIAS",
+    "object": "vwap area",
+    "role": "confluence",
+    "span": {
+     "start": 6496,
+     "end": 6534
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:price movement after vwap breakout#0",
+    "type": "WAIT_BIAS",
+    "object": "price movement after vwap breakout",
+    "role": "confluence",
+    "span": {
+     "start": 6776,
+     "end": 6924
+    },
+    "evidence": "T-ktkq-C0149"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:vwap value area breakout#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "vwap value area breakout",
+    "role": "confluence",
+    "span": {
+     "start": 6962,
+     "end": 7041
+    },
+    "evidence": "{T-ktkq-C0151}"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:vwap band breakout#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "vwap band breakout",
+    "role": "confluence",
+    "span": {
+     "start": 7080,
+     "end": 7171
+    },
+    "evidence": "{T-ktkq-C0153}"
+   },
+   {
+    "id": "WAIT_SESSION:previous few sessions#0",
+    "type": "WAIT_SESSION",
+    "object": "previous few sessions",
+    "role": "spine",
+    "span": {
+     "start": 7395,
+     "end": 7447
+    },
+    "evidence": "T-ktkq-C0159"
+   },
+   {
+    "id": "WAIT_BIAS:long entry#0",
+    "type": "WAIT_BIAS",
+    "object": "long entry",
+    "role": "trigger",
+    "span": {
+     "start": 8658,
+     "end": 8684
+    },
+    "evidence": "{T-ktkq-C0183}"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:retest#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "retest",
+    "role": "spine",
+    "span": {
+     "start": 8684,
+     "end": 8708
+    },
+    "evidence": "{T-ktkq-C0184}"
+   },
+   {
+    "id": "ENTER:entry#0",
+    "type": "ENTER",
+    "object": "entry",
+    "role": "trigger",
+    "span": {
+     "start": 8708,
+     "end": 8772
+    },
+    "evidence": "{T-ktkq-C0185}"
+   },
+   {
+    "id": "WAIT_RETEST:area#0",
+    "type": "WAIT_RETEST",
+    "object": "area",
+    "role": "spine",
+    "span": {
+     "start": 8862,
+     "end": 8900
+    },
+    "evidence": "T-ktkq-C0188 to T-ktkq-C0191"
+   },
+   {
+    "id": "WAIT_BIAS:first retest probability#0",
+    "type": "WAIT_BIAS",
+    "object": "first retest probability",
+    "role": "confluence",
+    "span": {
+     "start": 9024,
+     "end": 9067
+    },
+    "evidence": "T-ktkq-C0194"
+   },
+   {
+    "id": "WAIT_BIAS:retest to band after strong break#0",
+    "type": "WAIT_BIAS",
+    "object": "retest to band after strong break",
+    "role": "confluence",
+    "span": {
+     "start": 9082,
+     "end": 9155
+    },
+    "evidence": "T-ktkq-C0196"
+   },
+   {
+    "id": "WAIT_BIAS:contextual opportunity quality#0",
+    "type": "WAIT_BIAS",
+    "object": "contextual opportunity quality",
+    "role": "spine",
+    "span": {
+     "start": 9318,
+     "end": 9364
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:setups taking place#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "setups taking place",
+    "role": "spine",
+    "span": {
+     "start": 10150,
+     "end": 10185
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:moving out value#0",
+    "type": "WAIT_BIAS",
+    "object": "moving out value",
+    "role": "spine",
+    "span": {
+     "start": 13255,
+     "end": 13300
+    },
+    "evidence": "T-ktkq-C0280"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:sign strength#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "sign strength",
+    "role": "confluence",
+    "span": {
+     "start": 14174,
+     "end": 14197
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:strength#0",
+    "type": "ENABLE_ENTRY",
+    "object": "strength",
+    "role": "trigger",
+    "span": {
+     "start": 14404,
+     "end": 14440
+    },
+    "evidence": "T-ktkq-C0306 to T-ktkq-C0307"
+   },
+   {
+    "id": "ENABLE_ENTRY:break value#0",
+    "type": "ENABLE_ENTRY",
+    "object": "break value",
+    "role": "trigger",
+    "span": {
+     "start": 14721,
+     "end": 14762
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_RETEST:retest#0",
+    "type": "WAIT_RETEST",
+    "object": "retest",
+    "role": "spine",
+    "span": {
+     "start": 15193,
+     "end": 15252
+    },
+    "evidence": "T-ktkq-C0322"
+   },
+   {
+    "id": "WAIT_BIAS:continuation trend day#0",
+    "type": "WAIT_BIAS",
+    "object": "continuation trend day",
+    "role": "spine",
+    "span": {
+     "start": 15384,
+     "end": 15454
+    },
+    "evidence": "T-ktkq-C0328"
+   },
+   {
+    "id": "FILTER:price location#0",
+    "type": "FILTER",
+    "object": "price location",
+    "role": "spine",
+    "span": {
+     "start": 16158,
+     "end": 16241
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry condition#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry condition",
+    "role": "trigger",
+    "span": {
+     "start": 16457,
+     "end": 16481
+    },
+    "evidence": "T-ktkq-C0351"
+   },
+   {
+    "id": "FILTER:pierce band#0",
+    "type": "FILTER",
+    "object": "pierce band",
+    "role": "spine",
+    "span": {
+     "start": 16641,
+     "end": 16657
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry location#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry location",
+    "role": "trigger",
+    "span": {
+     "start": 16902,
+     "end": 16962
+    },
+    "evidence": "T-ktkq-C0362"
+   },
+   {
+    "id": "FILTER:stop placement rule#0",
+    "type": "FILTER",
+    "object": "stop placement rule",
+    "role": "spine",
+    "span": {
+     "start": 17199,
+     "end": 17281
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:value area break back into#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "value area break back into",
+    "role": "spine",
+    "span": {
+     "start": 17863,
+     "end": 17907
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_RETEST:band retest entry#0",
+    "type": "WAIT_RETEST",
+    "object": "band retest entry",
+    "role": "trigger",
+    "span": {
+     "start": 18263,
+     "end": 18333
+    },
+    "evidence": "Then we retest the band and this is our entry on strength or weakness"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry break into value#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry break into value",
+    "role": "trigger",
+    "span": {
+     "start": 18373,
+     "end": 18418
+    },
+    "evidence": "You can also get in on the break into value."
+   },
+   {
+    "id": "WAIT_BIAS:rejection#0",
+    "type": "WAIT_BIAS",
+    "object": "rejection",
+    "role": "spine",
+    "span": {
+     "start": 18418,
+     "end": 18491
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:break acceptance#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "break acceptance",
+    "role": "confluence",
+    "span": {
+     "start": 18562,
+     "end": 18621
+    },
+    "evidence": "are going to be the break acceptance with distance or time"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:hold back and entering strength#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "hold back and entering strength",
+    "role": "confluence",
+    "span": {
+     "start": 18621,
+     "end": 18670
+    },
+    "evidence": "and then the hold back and entering on strength."
+   },
+   {
+    "id": "FILTER:trend#0",
+    "type": "FILTER",
+    "object": "trend",
+    "role": "spine",
+    "span": {
+     "start": 19202,
+     "end": 19221
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price break into value trending day#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price break into value trending day",
+    "role": "spine",
+    "span": {
+     "start": 19382,
+     "end": 19431
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENTER:strength in direction away from vwap#0",
+    "type": "ENTER",
+    "object": "strength in direction away from vwap",
+    "role": "trigger",
+    "span": {
+     "start": 19554,
+     "end": 19636
+    },
+    "evidence": "After the test of VWAP, we enter on strength in the direction away from the VWAP."
+   },
+   {
+    "id": "WAIT_STRUCTURE:price break through vwap#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price break through vwap",
+    "role": "confluence",
+    "span": {
+     "start": 19806,
+     "end": 19841
+    },
+    "evidence": "T-ktkq-C0415"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price above or below vwap#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price above or below vwap",
+    "role": "confluence",
+    "span": {
+     "start": 19841,
+     "end": 19910
+    },
+    "evidence": "T-ktkq-C0416"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:price fails and reclaims vwap#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "price fails and reclaims vwap",
+    "role": "confluence",
+    "span": {
+     "start": 19910,
+     "end": 19951
+    },
+    "evidence": "T-ktkq-C0417"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:break#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "break",
+    "role": "confluence",
+    "span": {
+     "start": 20094,
+     "end": 20113
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:reclaim#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "reclaim",
+    "role": "confluence",
+    "span": {
+     "start": 20113,
+     "end": 20135
+    },
+    "evidence": "and then the reclaim."
+   },
+   {
+    "id": "ENTER:position#0",
+    "type": "ENTER",
+    "object": "position",
+    "role": "trigger",
+    "span": {
+     "start": 20161,
+     "end": 20183
+    },
+    "evidence": "in on the other side."
+   },
+   {
+    "id": "FILTER:vwap break and reclaim#0",
+    "type": "FILTER",
+    "object": "vwap break and reclaim",
+    "role": "confluence",
+    "span": {
+     "start": 20306,
+     "end": 20364
+    },
+    "evidence": "T-ktkq-C0427"
+   },
+   {
+    "id": "WAIT_SESSION:first 15 minutes open#0",
+    "type": "WAIT_SESSION",
+    "object": "first 15 minutes open",
+    "role": "confluence",
+    "span": {
+     "start": 20522,
+     "end": 20563
+    },
+    "evidence": "T-ktkq-C0433"
+   },
+   {
+    "id": "WAIT_SESSION:major news drops#0",
+    "type": "WAIT_SESSION",
+    "object": "major news drops",
+    "role": "confluence",
+    "span": {
+     "start": 20731,
+     "end": 20780
+    },
+    "evidence": "T-ktkq-C0436"
+   },
+   {
+    "id": "WAIT_SESSION:nonfarm payroll event#0",
+    "type": "WAIT_SESSION",
+    "object": "nonfarm payroll event",
+    "role": "confluence",
+    "span": {
+     "start": 20954,
+     "end": 20977
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:volume#0",
+    "type": "FILTER",
+    "object": "volume",
+    "role": "confluence",
+    "span": {
+     "start": 20977,
+     "end": 21022
+    },
+    "evidence": "Third, when the volume is 30% below average."
+   },
+   {
+    "id": "WAIT_CONFIRMATION:breakout acceptance retest entry#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "breakout acceptance retest entry",
+    "role": "trigger",
+    "span": {
+     "start": 21662,
+     "end": 21736
+    },
+    "evidence": "{}"
+   },
+   {
+    "id": "WAIT_RETEST:price acceptance and rejection towards vwap#0",
+    "type": "WAIT_RETEST",
+    "object": "price acceptance and rejection towards vwap",
+    "role": "spine",
+    "span": {
+     "start": 21832,
+     "end": 21943
+    },
+    "evidence": "{}"
+   },
+   {
+    "id": "FILTER:market condition#0",
+    "type": "FILTER",
+    "object": "market condition",
+    "role": "spine",
+    "span": {
+     "start": 22192,
+     "end": 22220
+    },
+    "evidence": "This is on trend days only."
+   },
+   {
+    "id": "WAIT_STRUCTURE:vwap test#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "vwap test",
+    "role": "spine",
+    "span": {
+     "start": 22241,
+     "end": 22260
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:trading session#0",
+    "type": "WAIT_SESSION",
+    "object": "trading session",
+    "role": "spine",
+    "span": {
+     "start": 23887,
+     "end": 24005
+    },
+    "evidence": "T-ktkq-C0510:T-ktkq-C0511"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_BIAS:persist in its current behavior rather than abruptly changing direction#0",
+    "WAIT_BIAS:so instead trying to predict shifts we align with prevailing market conditions#0"
+   ],
+   [
+    "WAIT_SESSION:globex session#0",
+    "WAIT_SESSION:6 00 p m#0",
+    "WAIT_SESSION:eastern standard time to 5 00 p m#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:vwap movement beyond current value band#0",
+    "WAIT_CONFIRMATION:target price level#0"
+   ],
+   [
+    "WAIT_BIAS:vwap area#0",
+    "WAIT_BIAS:price movement after vwap breakout#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:vwap value area breakout#0",
+    "WAIT_CONFIRMATION:vwap band breakout#0"
+   ],
+   [
+    "WAIT_BIAS:first retest probability#0",
+    "WAIT_BIAS:retest to band after strong break#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:sign strength#0",
+    "ENABLE_ENTRY:strength#0",
+    "ENABLE_ENTRY:break value#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:break acceptance#0",
+    "WAIT_CONFIRMATION:hold back and entering strength#0"
+   ],
+   [
+    "WAIT_STRUCTURE:price break through vwap#0",
+    "WAIT_STRUCTURE:price above or below vwap#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:price fails and reclaims vwap#0",
+    "WAIT_CONFIRMATION:break#0",
+    "WAIT_CONFIRMATION:reclaim#0"
+   ],
+   [
+    "FILTER:vwap break and reclaim#0",
+    "WAIT_SESSION:first 15 minutes open#0",
+    "WAIT_SESSION:major news drops#0",
+    "WAIT_SESSION:nonfarm payroll event#0",
+    "FILTER:volume#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "WAIT_BIAS:vwap#0",
+    "WAIT_BIAS:persist in its current behavior rather than abruptly changing direction#0"
+   ],
+   [
+    "INVALIDATE:vwap break#0",
+    "INVALIDATE:but in reality is bottom distribution#0"
+   ],
+   [
+    "WAIT_BIAS:vwap area#0",
+    "WAIT_BIAS:price movement after vwap breakout#0"
+   ],
+   [
+    "WAIT_BIAS:price movement after vwap breakout#0",
+    "WAIT_BIAS:long entry#0"
+   ],
+   [
+    "INVALIDATE:second touch band#0",
+    "INVALIDATE:they re buying top shorting bottoms and they re getting trapped#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:retest#0",
+    "WAIT_CONFIRMATION:sign strength#0"
+   ],
+   [
+    "ENABLE_ENTRY:long entry bias#0",
+    "ENABLE_ENTRY:strength#0"
+   ],
+   [
+    "ENABLE_ENTRY:strength#0",
+    "ENABLE_ENTRY:break value#0"
+   ],
+   [
+    "FILTER:vwap trading level#0",
+    "FILTER:price location#0"
+   ],
+   [
+    "FILTER:price location#0",
+    "FILTER:pierce band#0"
+   ],
+   [
+    "WAIT_STRUCTURE:setups taking place#0",
+    "WAIT_STRUCTURE:value area break back into#0"
+   ],
+   [
+    "WAIT_RETEST:retest#0",
+    "WAIT_RETEST:band retest entry#0"
+   ],
+   [
+    "FILTER:stop placement rule#0",
+    "FILTER:trend#0"
+   ],
+   [
+    "WAIT_STRUCTURE:value area break back into#0",
+    "WAIT_STRUCTURE:price break into value trending day#0"
+   ],
+   [
+    "WAIT_SESSION:major news drops#0",
+    "WAIT_SESSION:nonfarm payroll event#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:vwap break#0",
+    "type": "INVALIDATE",
+    "object": "vwap break",
+    "role": "invalidation",
+    "span": {
+     "start": 1327,
+     "end": 1363
+    },
+    "evidence": "{T-ktkq-C0033}"
+   },
+   {
+    "id": "INVALIDATE:but in reality is bottom distribution#0",
+    "type": "INVALIDATE",
+    "object": "but in reality is bottom distribution",
+    "role": "invalidation",
+    "span": {
+     "start": 4663,
+     "end": 4718
+    },
+    "evidence": "{T-ktkq-C0100}"
+   },
+   {
+    "id": "INVALIDATE:we do not fade top and#0",
+    "type": "INVALIDATE",
+    "object": "we do not fade top and",
+    "role": "invalidation",
+    "span": {
+     "start": 5093,
+     "end": 5121
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:second touch band#0",
+    "type": "INVALIDATE",
+    "object": "second touch band",
+    "role": "invalidation",
+    "span": {
+     "start": 9155,
+     "end": 9229
+    },
+    "evidence": "T-ktkq-C0197"
+   },
+   {
+    "id": "INVALIDATE:they re buying top shorting bottoms and they re getting trapped#0",
+    "type": "INVALIDATE",
+    "object": "they re buying top shorting bottoms and they re getting trapped",
+    "role": "invalidation",
+    "span": {
+     "start": 12016,
+     "end": 12091
+    },
+    "evidence": "T-ktkq-C0257"
+   },
+   {
+    "id": "INVALIDATE:stop placement relative to testing candle at vwap#0",
+    "type": "INVALIDATE",
+    "object": "stop placement relative to testing candle at vwap",
+    "role": "invalidation",
+    "span": {
+     "start": 19636,
+     "end": 19758
+    },
+    "evidence": "Long or short depending on the direction price is moving and the stop goes above or below the testing candle at the VWAP."
+   },
+   {
+    "id": "INVALIDATE:and fourth after two consecutive losses s not failing s me#0",
+    "type": "INVALIDATE",
+    "object": "and fourth after two consecutive losses s not failing s me",
+    "role": "invalidation",
+    "span": {
+     "start": 21159,
+     "end": 21242
+    },
+    "evidence": "T-ktkq-C0446"
+   },
+   {
+    "id": "INVALIDATE:i need to stop trading#0",
+    "type": "INVALIDATE",
+    "object": "i need to stop trading",
+    "role": "invalidation",
+    "span": {
+     "start": 21242,
+     "end": 21266
+    },
+    "evidence": "T-ktkq-C0447"
+   }
+  ],
+  "entry_trigger_id": "ENTER:vwap cross#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

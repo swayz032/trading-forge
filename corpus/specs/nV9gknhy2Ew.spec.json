@@ -1,0 +1,727 @@
+{
+ "video": "nV9gknhy2Ew",
+ "spec_hash": "b924c46f06402556f279e9b5c591f21f00ae8c14f245dad681fa784d6581107f",
+ "graph_canonical_hash": "4df5edaf21d23e8d",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 17694,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_STRUCTURE:sweep#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "sweep",
+    "role": "spine",
+    "span": {
+     "start": 1921,
+     "end": 2053
+    },
+    "evidence": "T-nV9g-C0038"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "confluence",
+    "span": {
+     "start": 2801,
+     "end": 2818
+    },
+    "evidence": "T-nV9g-C0055"
+   },
+   {
+    "id": "WAIT_SESSION:nq futures and gold futures#0",
+    "type": "WAIT_SESSION",
+    "object": "nq futures and gold futures",
+    "role": "confluence",
+    "span": {
+     "start": 2937,
+     "end": 2982
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:mss mss#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "mss mss",
+    "role": "spine",
+    "span": {
+     "start": 3367,
+     "end": 3399
+    },
+    "evidence": "T-nV9g-C0068"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:mss#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "mss",
+    "role": "spine",
+    "span": {
+     "start": 3606,
+     "end": 3654
+    },
+    "evidence": "And once we get the market structure shift, the"
+   },
+   {
+    "id": "WAIT_STRUCTURE:first mss#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "first mss",
+    "role": "confluence",
+    "span": {
+     "start": 3654,
+     "end": 3741
+    },
+    "evidence": "first market structure shift is going to give you uh the measurement for manipulation."
+   },
+   {
+    "id": "WAIT_STRUCTURE:fib retracement#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "fib retracement",
+    "role": "confluence",
+    "span": {
+     "start": 3987,
+     "end": 4075
+    },
+    "evidence": "T-nV9g-C0083"
+   },
+   {
+    "id": "FILTER:price location#0",
+    "type": "FILTER",
+    "object": "price location",
+    "role": "confluence",
+    "span": {
+     "start": 4726,
+     "end": 4764
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:price level requirement#0",
+    "type": "FILTER",
+    "object": "price level requirement",
+    "role": "confluence",
+    "span": {
+     "start": 4764,
+     "end": 4790
+    },
+    "evidence": "so it has to be above it."
+   },
+   {
+    "id": "CONFIRM_DIRECTION:downside delivery#0",
+    "type": "CONFIRM_DIRECTION",
+    "object": "downside delivery",
+    "role": "spine",
+    "span": {
+     "start": 5006,
+     "end": 5051
+    },
+    "evidence": "now we are going to deliver to the downside."
+   },
+   {
+    "id": "WAIT_STRUCTURE:mss#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "mss",
+    "role": "spine",
+    "span": {
+     "start": 5627,
+     "end": 5710
+    },
+    "evidence": "T-nV9g-C0118"
+   },
+   {
+    "id": "FILTER:unswept low#0",
+    "type": "FILTER",
+    "object": "unswept low",
+    "role": "spine",
+    "span": {
+     "start": 5818,
+     "end": 5862
+    },
+    "evidence": "T-nV9g-C0121"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:sweep#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "sweep",
+    "role": "spine",
+    "span": {
+     "start": 5952,
+     "end": 5990
+    },
+    "evidence": "T-nV9g-C0124"
+   },
+   {
+    "id": "WAIT_SESSION:smt analysis#0",
+    "type": "WAIT_SESSION",
+    "object": "smt analysis",
+    "role": "confluence",
+    "span": {
+     "start": 6136,
+     "end": 6186
+    },
+    "evidence": "T-nV9g-C0131"
+   },
+   {
+    "id": "FILTER:price above 2#0",
+    "type": "FILTER",
+    "object": "price above 2",
+    "role": "confluence",
+    "span": {
+     "start": 6514,
+     "end": 6549
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:mss or change in state delivery#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "mss or change in state delivery",
+    "role": "spine",
+    "span": {
+     "start": 6663,
+     "end": 6723
+    },
+    "evidence": "look for a market structure shift or change in the state of"
+   },
+   {
+    "id": "WAIT_STRUCTURE:sweep candle#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "sweep candle",
+    "role": "spine",
+    "span": {
+     "start": 6822,
+     "end": 6877
+    },
+    "evidence": "look for the candle in this move that swept liquidity."
+   },
+   {
+    "id": "FILTER:color and liquidity swap#0",
+    "type": "FILTER",
+    "object": "color and liquidity swap",
+    "role": "spine",
+    "span": {
+     "start": 7041,
+     "end": 7081
+    },
+    "evidence": "same color candles that swap liquidity."
+   },
+   {
+    "id": "WAIT_CONFIRMATION:price close below consecutive bullish candles sweep high#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "price close below consecutive bullish candles sweep high",
+    "role": "spine",
+    "span": {
+     "start": 7172,
+     "end": 7262
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_RETEST:entry#0",
+    "type": "WAIT_RETEST",
+    "object": "entry",
+    "role": "trigger",
+    "span": {
+     "start": 7365,
+     "end": 7417
+    },
+    "evidence": "What you can do is take your entry at the retest or"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry right away#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry right away",
+    "role": "trigger",
+    "span": {
+     "start": 7417,
+     "end": 7543
+    },
+    "evidence": "if we close slightly below the, you know, the the the five consecutive bullish candles or whatever, you can enter right away."
+   },
+   {
+    "id": "INVALIDATE:because you don t want to enter#0",
+    "type": "INVALIDATE",
+    "object": "because you don t want to enter",
+    "role": "trigger",
+    "span": {
+     "start": 8136,
+     "end": 8168
+    },
+    "evidence": "T-nV9g-C0170"
+   },
+   {
+    "id": "FILTER:significant low or sellside liquidity#0",
+    "type": "FILTER",
+    "object": "significant low or sellside liquidity",
+    "role": "confluence",
+    "span": {
+     "start": 8503,
+     "end": 8580
+    },
+    "evidence": "{T-nV9g-C0178}"
+   },
+   {
+    "id": "FILTER:low#0",
+    "type": "FILTER",
+    "object": "low",
+    "role": "confluence",
+    "span": {
+     "start": 8713,
+     "end": 8788
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENTER:entry stop placement#0",
+    "type": "ENTER",
+    "object": "entry stop placement",
+    "role": "trigger",
+    "span": {
+     "start": 8845,
+     "end": 8944
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:go to indicators#0",
+    "type": "WAIT_SESSION",
+    "object": "go to indicators",
+    "role": "confluence",
+    "span": {
+     "start": 9590,
+     "end": 9611
+    },
+    "evidence": "{C0201}"
+   },
+   {
+    "id": "WAIT_SESSION:htf bar three by 2#0",
+    "type": "WAIT_SESSION",
+    "object": "htf bar three by 2",
+    "role": "confluence",
+    "span": {
+     "start": 9611,
+     "end": 9647
+    },
+    "evidence": "{C0202}"
+   },
+   {
+    "id": "WAIT_SESSION:choose time frame 4 hours#0",
+    "type": "WAIT_SESSION",
+    "object": "choose time frame 4 hours",
+    "role": "confluence",
+    "span": {
+     "start": 9647,
+     "end": 9741
+    },
+    "evidence": "{C0203}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:opening price goes down#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "opening price goes down",
+    "role": "confluence",
+    "span": {
+     "start": 10128,
+     "end": 10192
+    },
+    "evidence": "T-nV9g-C0215"
+   },
+   {
+    "id": "WAIT_STRUCTURE:high sweep#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "high sweep",
+    "role": "confluence",
+    "span": {
+     "start": 10584,
+     "end": 10614
+    },
+    "evidence": "{ \"start\": null, \"end\": null } [Contextual: High swept on NQ]"
+   },
+   {
+    "id": "WAIT_STRUCTURE:bullish candle sweep high#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "bullish candle sweep high",
+    "role": "confluence",
+    "span": {
+     "start": 10883,
+     "end": 10973
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:liquidity pool alignment#0",
+    "type": "FILTER",
+    "object": "liquidity pool alignment",
+    "role": "confluence",
+    "span": {
+     "start": 11521,
+     "end": 11609
+    },
+    "evidence": "-2.5. But look to the left see which liquidity pool is being aligned with the -2 and -2."
+   },
+   {
+    "id": "WAIT_SESSION:nq#0",
+    "type": "WAIT_SESSION",
+    "object": "nq",
+    "role": "confluence",
+    "span": {
+     "start": 12258,
+     "end": 12299
+    },
+    "evidence": "T-nV9g-C0259"
+   },
+   {
+    "id": "WAIT_SESSION:time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame",
+    "role": "confluence",
+    "span": {
+     "start": 12426,
+     "end": 12471
+    },
+    "evidence": "T-nV9g-C0263"
+   },
+   {
+    "id": "WAIT_SESSION:market open time#0",
+    "type": "WAIT_SESSION",
+    "object": "market open time",
+    "role": "confluence",
+    "span": {
+     "start": 12521,
+     "end": 12563
+    },
+    "evidence": "T-nV9g-C0265"
+   },
+   {
+    "id": "FILTER:price level relative to mss#0",
+    "type": "FILTER",
+    "object": "price level relative to mss",
+    "role": "spine",
+    "span": {
+     "start": 12805,
+     "end": 12882
+    },
+    "evidence": "and then this right price is way far above the market structure shift level."
+   },
+   {
+    "id": "WAIT_STRUCTURE:range measurement#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "range measurement",
+    "role": "confluence",
+    "span": {
+     "start": 13294,
+     "end": 13335
+    },
+    "evidence": "{T-nV9g-C0284}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:market structure change#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "market structure change",
+    "role": "confluence",
+    "span": {
+     "start": 13366,
+     "end": 13401
+    },
+    "evidence": "{T-nV9g-C0286}"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:smt divergence#2",
+    "type": "WAIT_CONFIRMATION",
+    "object": "smt divergence",
+    "role": "spine",
+    "span": {
+     "start": 13760,
+     "end": 13816
+    },
+    "evidence": "{T-nV9g-C0297}"
+   },
+   {
+    "id": "FILTER:low sweep#0",
+    "type": "FILTER",
+    "object": "low sweep",
+    "role": "spine",
+    "span": {
+     "start": 13944,
+     "end": 13998
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:mss or change in state delivery#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "mss or change in state delivery",
+    "role": "spine",
+    "span": {
+     "start": 14150,
+     "end": 14218
+    },
+    "evidence": "T-nV9g-C0306"
+   },
+   {
+    "id": "ENABLE_ENTRY:long entry#0",
+    "type": "ENABLE_ENTRY",
+    "object": "long entry",
+    "role": "trigger",
+    "span": {
+     "start": 14361,
+     "end": 14405
+    },
+    "evidence": "T-nV9g-C0308"
+   },
+   {
+    "id": "INVALIDATE:entry level proximity#0",
+    "type": "INVALIDATE",
+    "object": "entry level proximity",
+    "role": "trigger",
+    "span": {
+     "start": 14405,
+     "end": 14455
+    },
+    "evidence": "T-nV9g-C0309"
+   },
+   {
+    "id": "WAIT_STRUCTURE:stop placement relative to low and negative 2 level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "stop placement relative to low and negative 2 level",
+    "role": "spine",
+    "span": {
+     "start": 14455,
+     "end": 14540
+    },
+    "evidence": "T-nV9g-C0310"
+   },
+   {
+    "id": "WAIT_SESSION:pd race 5m or 50m#0",
+    "type": "WAIT_SESSION",
+    "object": "pd race 5m or 50m",
+    "role": "spine",
+    "span": {
+     "start": 15381,
+     "end": 15437
+    },
+    "evidence": "T-nV9g-C0328"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price movement relative to opening price#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price movement relative to opening price",
+    "role": "spine",
+    "span": {
+     "start": 15716,
+     "end": 15771
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:smt divergence#0",
+    "type": "FILTER",
+    "object": "smt divergence",
+    "role": "spine",
+    "span": {
+     "start": 16517,
+     "end": 16591
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:nq sweep 5m low#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "nq sweep 5m low",
+    "role": "confluence",
+    "span": {
+     "start": 16644,
+     "end": 16770
+    },
+    "evidence": "if you look at it, this low, this significant low over here on the five minute, you can see that NQ swept this 5m minute low,"
+   },
+   {
+    "id": "WAIT_STRUCTURE:es failure to sweep 5m low#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "es failure to sweep 5m low",
+    "role": "confluence",
+    "span": {
+     "start": 16770,
+     "end": 16804
+    },
+    "evidence": "but ES didn't sweep that low out."
+   },
+   {
+    "id": "WAIT_SESSION:timeframe change or aggressive entry#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe change or aggressive entry",
+    "role": "trigger",
+    "span": {
+     "start": 16830,
+     "end": 16952
+    },
+    "evidence": "T-nV9g-C0361"
+   },
+   {
+    "id": "WAIT_STRUCTURE:mss or cisd#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "mss or cisd",
+    "role": "spine",
+    "span": {
+     "start": 16952,
+     "end": 17004
+    },
+    "evidence": "T-nV9g-C0362"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_SESSION:timeframe#0",
+    "WAIT_SESSION:nq futures and gold futures#0"
+   ],
+   [
+    "WAIT_STRUCTURE:first mss#0",
+    "WAIT_STRUCTURE:fib retracement#0"
+   ],
+   [
+    "FILTER:price location#0",
+    "FILTER:price level requirement#0"
+   ],
+   [
+    "WAIT_SESSION:smt analysis#0",
+    "FILTER:price above 2#0"
+   ],
+   [
+    "FILTER:significant low or sellside liquidity#0",
+    "FILTER:low#0"
+   ],
+   [
+    "WAIT_SESSION:go to indicators#0",
+    "WAIT_SESSION:htf bar three by 2#0",
+    "WAIT_SESSION:choose time frame 4 hours#0"
+   ],
+   [
+    "WAIT_STRUCTURE:opening price goes down#0",
+    "WAIT_STRUCTURE:high sweep#0",
+    "WAIT_STRUCTURE:bullish candle sweep high#0"
+   ],
+   [
+    "FILTER:liquidity pool alignment#0",
+    "WAIT_SESSION:nq#0",
+    "WAIT_SESSION:time frame#0",
+    "WAIT_SESSION:market open time#0"
+   ],
+   [
+    "WAIT_STRUCTURE:range measurement#0",
+    "WAIT_STRUCTURE:market structure change#0"
+   ],
+   [
+    "WAIT_STRUCTURE:nq sweep 5m low#0",
+    "WAIT_STRUCTURE:es failure to sweep 5m low#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "WAIT_STRUCTURE:sweep#0",
+    "WAIT_STRUCTURE:mss mss#0"
+   ],
+   [
+    "WAIT_STRUCTURE:fib retracement#0",
+    "WAIT_STRUCTURE:mss#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:sweep#0",
+    "WAIT_CONFIRMATION:mss or change in state delivery#0"
+   ],
+   [
+    "FILTER:price above 2#0",
+    "FILTER:color and liquidity swap#0"
+   ],
+   [
+    "INVALIDATE:mss look#0",
+    "INVALIDATE:because you don t want to enter#0"
+   ],
+   [
+    "WAIT_STRUCTURE:high sweep#0",
+    "WAIT_STRUCTURE:bullish candle sweep high#0"
+   ],
+   [
+    "WAIT_SESSION:choose time frame 4 hours#0",
+    "WAIT_SESSION:nq#0"
+   ],
+   [
+    "ENABLE_ENTRY:entry right away#0",
+    "ENABLE_ENTRY:long entry#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:sweep#0",
+    "type": "INVALIDATE",
+    "object": "sweep",
+    "role": "invalidation",
+    "span": {
+     "start": 5990,
+     "end": 6010
+    },
+    "evidence": "T-nV9g-C0125"
+   },
+   {
+    "id": "INVALIDATE:mss look#0",
+    "type": "INVALIDATE",
+    "object": "mss look",
+    "role": "invalidation",
+    "span": {
+     "start": 7317,
+     "end": 7365
+    },
+    "evidence": "look for a market structure shift in this case."
+   },
+   {
+    "id": "RESET:so similarly we#0",
+    "type": "RESET",
+    "object": "so similarly we",
+    "role": "invalidation",
+    "span": {
+     "start": 8225,
+     "end": 8242
+    },
+    "evidence": "T-nV9g-C0172"
+   },
+   {
+    "id": "INVALIDATE:mss#0",
+    "type": "INVALIDATE",
+    "object": "mss",
+    "role": "invalidation",
+    "span": {
+     "start": 12658,
+     "end": 12726
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:put it here#0",
+    "type": "INVALIDATE",
+    "object": "put it here",
+    "role": "invalidation",
+    "span": {
+     "start": 16115,
+     "end": 16150
+    },
+    "evidence": "T-nV9g-C0347"
+   },
+   {
+    "id": "INVALIDATE:stop placement and tp measurement#0",
+    "type": "INVALIDATE",
+    "object": "stop placement and tp measurement",
+    "role": "invalidation",
+    "span": {
+     "start": 17106,
+     "end": 17280
+    },
+    "evidence": "T-nV9g-C0364"
+   }
+  ],
+  "entry_trigger_id": "WAIT_RETEST:entry#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

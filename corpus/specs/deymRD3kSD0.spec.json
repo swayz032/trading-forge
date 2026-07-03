@@ -1,0 +1,568 @@
+{
+ "video": "deymRD3kSD0",
+ "spec_hash": "f4fa4a79b43e00cfcae0a15f7b5db098fd10318f4cf5b6adac779ed36413fceb",
+ "graph_canonical_hash": "f6bd877eae2b159c",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 12109,
+ "spec": {
+  "direction": "long",
+  "entry_conditions": [
+   {
+    "id": "WAIT_BIAS:look i use range breakouts confirmation trend direction#0",
+    "type": "WAIT_BIAS",
+    "object": "look i use range breakouts confirmation trend direction",
+    "role": "spine",
+    "span": {
+     "start": 128,
+     "end": 192
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_RETEST:i get retest to area interest and i collect profits withdrawing over 700 000 year#0",
+    "type": "WAIT_RETEST",
+    "object": "i get retest to area interest and i collect profits withdrawing over 700 000 year",
+    "role": "spine",
+    "span": {
+     "start": 192,
+     "end": 292
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:range setting#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "range setting",
+    "role": "spine",
+    "span": {
+     "start": 675,
+     "end": 720
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:930 candle#0",
+    "type": "WAIT_SESSION",
+    "object": "930 candle",
+    "role": "spine",
+    "span": {
+     "start": 850,
+     "end": 894
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:trading range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "trading range",
+    "role": "spine",
+    "span": {
+     "start": 962,
+     "end": 985
+    },
+    "evidence": "this to set our range."
+   },
+   {
+    "id": "FILTER:range boundaries#0",
+    "type": "FILTER",
+    "object": "range boundaries",
+    "role": "confluence",
+    "span": {
+     "start": 985,
+     "end": 1126
+    },
+    "evidence": "So once that candle is closed, we simply set the top of the range with the top wick and the bottom of the range with the bottom of the wick."
+   },
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "confluence",
+    "span": {
+     "start": 1169,
+     "end": 1208
+    },
+    "evidence": "{T-deym-C0024}"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:candle close relative to range#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "candle close relative to range",
+    "role": "spine",
+    "span": {
+     "start": 1235,
+     "end": 1282
+    },
+    "evidence": "{T-deym-C0026}"
+   },
+   {
+    "id": "ENTER:entry point#0",
+    "type": "ENTER",
+    "object": "entry point",
+    "role": "trigger",
+    "span": {
+     "start": 1922,
+     "end": 2010
+    },
+    "evidence": "T-deym-C0039"
+   },
+   {
+    "id": "ENABLE_ENTRY:range midline#0",
+    "type": "ENABLE_ENTRY",
+    "object": "range midline",
+    "role": "trigger",
+    "span": {
+     "start": 2139,
+     "end": 2226
+    },
+    "evidence": "{T-deym-C0043}"
+   },
+   {
+    "id": "ENABLE_ENTRY:range bottom line#0",
+    "type": "ENABLE_ENTRY",
+    "object": "range bottom line",
+    "role": "trigger",
+    "span": {
+     "start": 2291,
+     "end": 2352
+    },
+    "evidence": "{T-deym-C0047}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:level demand#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "level demand",
+    "role": "confluence",
+    "span": {
+     "start": 2496,
+     "end": 2570
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:fvg#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "fvg",
+    "role": "confluence",
+    "span": {
+     "start": 3081,
+     "end": 3204
+    },
+    "evidence": "T-deym-C0061:T-deym-C0062"
+   },
+   {
+    "id": "WAIT_BIAS:big buyers pushing market up#0",
+    "type": "WAIT_BIAS",
+    "object": "big buyers pushing market up",
+    "role": "spine",
+    "span": {
+     "start": 3220,
+     "end": 3270
+    },
+    "evidence": "T-deym-C0063"
+   },
+   {
+    "id": "ENTER:long entry price#0",
+    "type": "ENTER",
+    "object": "long entry price",
+    "role": "trigger",
+    "span": {
+     "start": 3466,
+     "end": 3526
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:candle close in demand zone#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "candle close in demand zone",
+    "role": "spine",
+    "span": {
+     "start": 3888,
+     "end": 3948
+    },
+    "evidence": "{T-deym-C0075}"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:demand zone hold#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "demand zone hold",
+    "role": "spine",
+    "span": {
+     "start": 3964,
+     "end": 4016
+    },
+    "evidence": "{T-deym-C0077}"
+   },
+   {
+    "id": "FILTER:massive range#0",
+    "type": "FILTER",
+    "object": "massive range",
+    "role": "confluence",
+    "span": {
+     "start": 4285,
+     "end": 4320
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:trading range size#0",
+    "type": "FILTER",
+    "object": "trading range size",
+    "role": "confluence",
+    "span": {
+     "start": 4484,
+     "end": 4509
+    },
+    "evidence": "a smaller trading range."
+   },
+   {
+    "id": "FILTER:big candles#0",
+    "type": "FILTER",
+    "object": "big candles",
+    "role": "confluence",
+    "span": {
+     "start": 4509,
+     "end": 4551
+    },
+    "evidence": "Rule number two, don't catch big candles."
+   },
+   {
+    "id": "WAIT_RETEST:trade entry#0",
+    "type": "WAIT_RETEST",
+    "object": "trade entry",
+    "role": "trigger",
+    "span": {
+     "start": 4803,
+     "end": 4842
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:time day#0",
+    "type": "WAIT_SESSION",
+    "object": "time day",
+    "role": "spine",
+    "span": {
+     "start": 4951,
+     "end": 4978
+    },
+    "evidence": "As soon as it hits 12:00 p."
+   },
+   {
+    "id": "WAIT_BIAS:price relative to ema200#0",
+    "type": "WAIT_BIAS",
+    "object": "price relative to ema200",
+    "role": "spine",
+    "span": {
+     "start": 5616,
+     "end": 5734
+    },
+    "evidence": "T-deym-C0115"
+   },
+   {
+    "id": "WAIT_STRUCTURE:range creation#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "range creation",
+    "role": "confluence",
+    "span": {
+     "start": 5761,
+     "end": 5810
+    },
+    "evidence": "T-deym-C0117"
+   },
+   {
+    "id": "WAIT_STRUCTURE:range boundaries#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "range boundaries",
+    "role": "confluence",
+    "span": {
+     "start": 5810,
+     "end": 5908
+    },
+    "evidence": "T-deym-C0118"
+   },
+   {
+    "id": "WAIT_STRUCTURE:breakout#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "breakout",
+    "role": "confluence",
+    "span": {
+     "start": 5908,
+     "end": 6001
+    },
+    "evidence": "T-deym-C0119"
+   },
+   {
+    "id": "WAIT_BIAS:impulsive move#0",
+    "type": "WAIT_BIAS",
+    "object": "impulsive move",
+    "role": "spine",
+    "span": {
+     "start": 6186,
+     "end": 6280
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:demand zone#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "demand zone",
+    "role": "confluence",
+    "span": {
+     "start": 6485,
+     "end": 6553
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:demand zone closure#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "demand zone closure",
+    "role": "confluence",
+    "span": {
+     "start": 6820,
+     "end": 6848
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENTER:trade entry#0",
+    "type": "ENTER",
+    "object": "trade entry",
+    "role": "trigger",
+    "span": {
+     "start": 7364,
+     "end": 7423
+    },
+    "evidence": "T-deym-C0145"
+   },
+   {
+    "id": "WAIT_SESSION:uptrend nasdaq#0",
+    "type": "WAIT_SESSION",
+    "object": "uptrend nasdaq",
+    "role": "spine",
+    "span": {
+     "start": 7548,
+     "end": 7611
+    },
+    "evidence": "T-deym-C0148"
+   },
+   {
+    "id": "WAIT_STRUCTURE:market structure break#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "market structure break",
+    "role": "confluence",
+    "span": {
+     "start": 7611,
+     "end": 7682
+    },
+    "evidence": "T-deym-C0149"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price reaching supply zone#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price reaching supply zone",
+    "role": "confluence",
+    "span": {
+     "start": 7707,
+     "end": 7780
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:range supply level#0",
+    "type": "FILTER",
+    "object": "range supply level",
+    "role": "spine",
+    "span": {
+     "start": 8159,
+     "end": 8278
+    },
+    "evidence": "T-deym-C0163"
+   },
+   {
+    "id": "WAIT_BIAS:downtrend#0",
+    "type": "WAIT_BIAS",
+    "object": "downtrend",
+    "role": "confluence",
+    "span": {
+     "start": 8376,
+     "end": 8443
+    },
+    "evidence": "T-deym-C0166"
+   },
+   {
+    "id": "WAIT_BIAS:trend direction#0",
+    "type": "WAIT_BIAS",
+    "object": "trend direction",
+    "role": "confluence",
+    "span": {
+     "start": 8443,
+     "end": 8479
+    },
+    "evidence": "T-deym-C0167"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:trend line break and close#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "trend line break and close",
+    "role": "spine",
+    "span": {
+     "start": 8697,
+     "end": 8758
+    },
+    "evidence": "{T-deym-C0173}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "range",
+    "role": "confluence",
+    "span": {
+     "start": 8823,
+     "end": 8889
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:top range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "top range",
+    "role": "confluence",
+    "span": {
+     "start": 9533,
+     "end": 9593
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_RETEST:price#0",
+    "type": "WAIT_RETEST",
+    "object": "price",
+    "role": "spine",
+    "span": {
+     "start": 9669,
+     "end": 9725
+    },
+    "evidence": "T-deym-C0192"
+   },
+   {
+    "id": "WAIT_STRUCTURE:resistance level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "resistance level",
+    "role": "spine",
+    "span": {
+     "start": 10530,
+     "end": 10564
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:breakout#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "breakout",
+    "role": "spine",
+    "span": {
+     "start": 10767,
+     "end": 10809
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "VERIFY_STRUCTURE:breakout#0",
+    "type": "VERIFY_STRUCTURE",
+    "object": "breakout",
+    "role": "spine",
+    "span": {
+     "start": 11092,
+     "end": 11124
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "EXIT_HINT:trade exit#0",
+    "type": "EXIT_HINT",
+    "object": "trade exit",
+    "role": "spine",
+    "span": {
+     "start": 11414,
+     "end": 11474
+    },
+    "evidence": "T-deym-C0230"
+   }
+  ],
+  "and_groups": [
+   [
+    "FILTER:range boundaries#0",
+    "WAIT_SESSION:timeframe#0"
+   ],
+   [
+    "WAIT_STRUCTURE:level demand#0",
+    "WAIT_STRUCTURE:fvg#0"
+   ],
+   [
+    "FILTER:massive range#0",
+    "FILTER:trading range size#0",
+    "FILTER:big candles#0"
+   ],
+   [
+    "WAIT_STRUCTURE:range creation#0",
+    "WAIT_STRUCTURE:range boundaries#0",
+    "WAIT_STRUCTURE:breakout#0"
+   ],
+   [
+    "WAIT_STRUCTURE:demand zone#0",
+    "WAIT_STRUCTURE:demand zone closure#0"
+   ],
+   [
+    "WAIT_STRUCTURE:market structure break#0",
+    "WAIT_STRUCTURE:price reaching supply zone#0"
+   ],
+   [
+    "WAIT_BIAS:downtrend#0",
+    "WAIT_BIAS:trend direction#0"
+   ],
+   [
+    "WAIT_STRUCTURE:range#0",
+    "WAIT_STRUCTURE:top range#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "FILTER:massive range#0",
+    "FILTER:trading range size#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:impulse strength#0",
+    "type": "INVALIDATE",
+    "object": "impulse strength",
+    "role": "invalidation",
+    "span": {
+     "start": 2048,
+     "end": 2091
+    },
+    "evidence": "T-deym-C0041"
+   },
+   {
+    "id": "INVALIDATE:move strength#0",
+    "type": "INVALIDATE",
+    "object": "move strength",
+    "role": "invalidation",
+    "span": {
+     "start": 2241,
+     "end": 2270
+    },
+    "evidence": "{T-deym-C0045}"
+   }
+  ],
+  "entry_trigger_id": "ENTER:entry point#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

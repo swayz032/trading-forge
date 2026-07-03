@@ -1,0 +1,241 @@
+{
+ "video": "snNkQSyWX4k",
+ "spec_hash": "43faefe7db6b21fd19511f3e00690031cf14e18c1ebe69c8c2fb3d26cf1c2c91",
+ "graph_canonical_hash": "bf733f8c6e5d159d",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 9189,
+ "spec": {
+  "direction": "short",
+  "entry_conditions": [
+   {
+    "id": "ENABLE_ENTRY:crossover#0",
+    "type": "ENABLE_ENTRY",
+    "object": "crossover",
+    "role": "trigger",
+    "span": {
+     "start": 351,
+     "end": 467
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:moving averages#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "moving averages",
+    "role": "spine",
+    "span": {
+     "start": 467,
+     "end": 538
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "EXIT_HINT:exit#0",
+    "type": "EXIT_HINT",
+    "object": "exit",
+    "role": "spine",
+    "span": {
+     "start": 807,
+     "end": 841
+    },
+    "evidence": "T-snNk-C0012"
+   },
+   {
+    "id": "FILTER:candle close below both moving averages#0",
+    "type": "FILTER",
+    "object": "candle close below both moving averages",
+    "role": "spine",
+    "span": {
+     "start": 2668,
+     "end": 2883
+    },
+    "evidence": "T-snNk-C0041"
+   },
+   {
+    "id": "WAIT_RETEST:candles retest one or both averages#0",
+    "type": "WAIT_RETEST",
+    "object": "candles retest one or both averages",
+    "role": "spine",
+    "span": {
+     "start": 2905,
+     "end": 2983
+    },
+    "evidence": "T-snNk-C0043"
+   },
+   {
+    "id": "ENTER:signal to sell#0",
+    "type": "ENTER",
+    "object": "signal to sell",
+    "role": "trigger",
+    "span": {
+     "start": 3201,
+     "end": 3266
+    },
+    "evidence": "T-snNk-C0046"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "spine",
+    "span": {
+     "start": 3948,
+     "end": 4081
+    },
+    "evidence": "T-snNk-C0055"
+   },
+   {
+    "id": "WAIT_STRUCTURE:zone sitting right in here#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "zone sitting right in here",
+    "role": "spine",
+    "span": {
+     "start": 4481,
+     "end": 4580
+    },
+    "evidence": "why because we can clearly see here that price has Wicked and we have a Zone sitting right in here"
+   },
+   {
+    "id": "WAIT_BIAS:go back up#0",
+    "type": "WAIT_BIAS",
+    "object": "go back up",
+    "role": "spine",
+    "span": {
+     "start": 4730,
+     "end": 4803
+    },
+    "evidence": "something like this in this particular scenario let's kind of go back up"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:price#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "price",
+    "role": "spine",
+    "span": {
+     "start": 5533,
+     "end": 5727
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:us session trading#0",
+    "type": "WAIT_SESSION",
+    "object": "us session trading",
+    "role": "spine",
+    "span": {
+     "start": 6133,
+     "end": 6222
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_RETEST:price retest average#0",
+    "type": "WAIT_RETEST",
+    "object": "price retest average",
+    "role": "spine",
+    "span": {
+     "start": 7412,
+     "end": 7470
+    },
+    "evidence": "now price came back down right here to retest the average"
+   },
+   {
+    "id": "ENTER:entry point#0",
+    "type": "ENTER",
+    "object": "entry point",
+    "role": "trigger",
+    "span": {
+     "start": 7470,
+     "end": 7491
+    },
+    "evidence": "so that is our entry"
+   },
+   {
+    "id": "WAIT_SESSION:crude oil trading context#0",
+    "type": "WAIT_SESSION",
+    "object": "crude oil trading context",
+    "role": "spine",
+    "span": {
+     "start": 7817,
+     "end": 7904
+    },
+    "evidence": "T-snNk-C0103"
+   },
+   {
+    "id": "WAIT_RETEST:wicks retest zones#0",
+    "type": "WAIT_RETEST",
+    "object": "wicks retest zones",
+    "role": "spine",
+    "span": {
+     "start": 8005,
+     "end": 8200
+    },
+    "evidence": "T-snNk-C0105"
+   },
+   {
+    "id": "WAIT_BIAS:consolidation period#0",
+    "type": "WAIT_BIAS",
+    "object": "consolidation period",
+    "role": "spine",
+    "span": {
+     "start": 8200,
+     "end": 8325
+    },
+    "evidence": "T-snNk-C0106"
+   },
+   {
+    "id": "WAIT_SESSION:moving averages#0",
+    "type": "WAIT_SESSION",
+    "object": "moving averages",
+    "role": "confluence",
+    "span": {
+     "start": 8721,
+     "end": 8818
+    },
+    "evidence": "{T-snNk-C0113}"
+   },
+   {
+    "id": "WAIT_SESSION:crude oil#0",
+    "type": "WAIT_SESSION",
+    "object": "crude oil",
+    "role": "confluence",
+    "span": {
+     "start": 8939,
+     "end": 8963
+    },
+    "evidence": "},{"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_SESSION:moving averages#0",
+    "WAIT_SESSION:crude oil#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "WAIT_SESSION:crude oil trading context#0",
+    "WAIT_SESSION:moving averages#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:retest failure#0",
+    "type": "INVALIDATE",
+    "object": "retest failure",
+    "role": "invalidation",
+    "span": {
+     "start": 5860,
+     "end": 5929
+    },
+    "evidence": "T-snNk-C0081"
+   }
+  ],
+  "entry_trigger_id": "ENABLE_ENTRY:crossover#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

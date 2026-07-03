@@ -1,0 +1,516 @@
+{
+ "video": "LOcaRWcc1xI",
+ "spec_hash": "84ce401702332df86afe4c915b0939ff6464f7148dcd3ea3fd9e583900c1ae0c",
+ "graph_canonical_hash": "cf86660f574df378",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 11673,
+ "spec": {
+  "direction": "long",
+  "entry_conditions": [
+   {
+    "id": "WAIT_SESSION:4 hour time frame candlestick formation and closure#0",
+    "type": "WAIT_SESSION",
+    "object": "4 hour time frame candlestick formation and closure",
+    "role": "spine",
+    "span": {
+     "start": 1367,
+     "end": 1508
+    },
+    "evidence": "{T-LOca-C0017}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:low and candle body s range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "low and candle body s range",
+    "role": "spine",
+    "span": {
+     "start": 1641,
+     "end": 1675
+    },
+    "evidence": "T-LOca-C0021"
+   },
+   {
+    "id": "WAIT_SESSION:new 4 hour candle open#0",
+    "type": "WAIT_SESSION",
+    "object": "new 4 hour candle open",
+    "role": "confluence",
+    "span": {
+     "start": 1675,
+     "end": 1762
+    },
+    "evidence": "T-LOca-C0022"
+   },
+   {
+    "id": "WAIT_SESSION:4 hour candle#0",
+    "type": "WAIT_SESSION",
+    "object": "4 hour candle",
+    "role": "confluence",
+    "span": {
+     "start": 1819,
+     "end": 1855
+    },
+    "evidence": "T-LOca-C0025 to T-LOca-C0029"
+   },
+   {
+    "id": "FILTER:4 hour candle#0",
+    "type": "FILTER",
+    "object": "4 hour candle",
+    "role": "confluence",
+    "span": {
+     "start": 1882,
+     "end": 1926
+    },
+    "evidence": "T-LOca-C0027 to T-LOca-C0029"
+   },
+   {
+    "id": "WAIT_SESSION:session start time#0",
+    "type": "WAIT_SESSION",
+    "object": "session start time",
+    "role": "confluence",
+    "span": {
+     "start": 1948,
+     "end": 1965
+    },
+    "evidence": "T-LOca-C0028 to T-LOca-C0029"
+   },
+   {
+    "id": "WAIT_SESSION:time duration#0",
+    "type": "WAIT_SESSION",
+    "object": "time duration",
+    "role": "confluence",
+    "span": {
+     "start": 2026,
+     "end": 2053
+    },
+    "evidence": "T-LOca-C0032"
+   },
+   {
+    "id": "WAIT_BIAS:market move nature#0",
+    "type": "WAIT_BIAS",
+    "object": "market move nature",
+    "role": "spine",
+    "span": {
+     "start": 2140,
+     "end": 2239
+    },
+    "evidence": "T-LOca-C0035"
+   },
+   {
+    "id": "ENABLE_ENTRY:bullish candle formation#0",
+    "type": "ENABLE_ENTRY",
+    "object": "bullish candle formation",
+    "role": "trigger",
+    "span": {
+     "start": 2447,
+     "end": 2514
+    },
+    "evidence": "{T-LOca-C0039}"
+   },
+   {
+    "id": "WAIT_SESSION:new 4 hour candle opens#0",
+    "type": "WAIT_SESSION",
+    "object": "new 4 hour candle opens",
+    "role": "spine",
+    "span": {
+     "start": 2905,
+     "end": 2950
+    },
+    "evidence": "T-LOca-C0046"
+   },
+   {
+    "id": "WAIT_STRUCTURE:making low or bottom wick within body range last 4 hour candle#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "making low or bottom wick within body range last 4 hour candle",
+    "role": "spine",
+    "span": {
+     "start": 2950,
+     "end": 3097
+    },
+    "evidence": "T-LOca-C0047"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "confluence",
+    "span": {
+     "start": 3155,
+     "end": 3204
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe transition#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe transition",
+    "role": "confluence",
+    "span": {
+     "start": 3364,
+     "end": 3412
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:htf power 3 indicator#0",
+    "type": "WAIT_SESSION",
+    "object": "htf power 3 indicator",
+    "role": "confluence",
+    "span": {
+     "start": 3731,
+     "end": 3807
+    },
+    "evidence": "T-LOca-C0059"
+   },
+   {
+    "id": "FILTER:high time frame candle beside low time frame#0",
+    "type": "FILTER",
+    "object": "high time frame candle beside low time frame",
+    "role": "confluence",
+    "span": {
+     "start": 3842,
+     "end": 3905
+    },
+    "evidence": "T-LOca-C0061"
+   },
+   {
+    "id": "WAIT_SESSION:indicator time frame setting#0",
+    "type": "WAIT_SESSION",
+    "object": "indicator time frame setting",
+    "role": "confluence",
+    "span": {
+     "start": 3905,
+     "end": 4003
+    },
+    "evidence": "T-LOca-C0062"
+   },
+   {
+    "id": "WAIT_SESSION:current chart time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "current chart time frame",
+    "role": "confluence",
+    "span": {
+     "start": 4163,
+     "end": 4222
+    },
+    "evidence": "T-LOca-C0065"
+   },
+   {
+    "id": "ENABLE_ENTRY:long entry#0",
+    "type": "ENABLE_ENTRY",
+    "object": "long entry",
+    "role": "trigger",
+    "span": {
+     "start": 4360,
+     "end": 4444
+    },
+    "evidence": "T-LOca-C0069"
+   },
+   {
+    "id": "ENTER:accumulation#0",
+    "type": "ENTER",
+    "object": "accumulation",
+    "role": "trigger",
+    "span": {
+     "start": 4577,
+     "end": 4604
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENTER:low placement#0",
+    "type": "ENTER",
+    "object": "low placement",
+    "role": "trigger",
+    "span": {
+     "start": 4604,
+     "end": 4627
+    },
+    "evidence": "and then put in a low."
+   },
+   {
+    "id": "WAIT_SESSION:10 00 m eastern#0",
+    "type": "WAIT_SESSION",
+    "object": "10 00 m eastern",
+    "role": "confluence",
+    "span": {
+     "start": 5038,
+     "end": 5080
+    },
+    "evidence": "T-LOca-C0086"
+   },
+   {
+    "id": "WAIT_SESSION:time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame",
+    "role": "confluence",
+    "span": {
+     "start": 5215,
+     "end": 5253
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:fvg#0",
+    "type": "FILTER",
+    "object": "fvg",
+    "role": "confluence",
+    "span": {
+     "start": 5307,
+     "end": 5394
+    },
+    "evidence": "look for the most recent 15-minute fair value gap that's going to be closest to price."
+   },
+   {
+    "id": "WAIT_STRUCTURE:fvg#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "fvg",
+    "role": "spine",
+    "span": {
+     "start": 5446,
+     "end": 5503
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:po3 1m timeframe#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "po3 1m timeframe",
+    "role": "spine",
+    "span": {
+     "start": 5570,
+     "end": 5666
+    },
+    "evidence": "Step three is you want to see a PO3 on the 1-minute time frame tapping into that 15-minute gap."
+   },
+   {
+    "id": "WAIT_SESSION:time frame offset#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame offset",
+    "role": "confluence",
+    "span": {
+     "start": 5763,
+     "end": 5784
+    },
+    "evidence": "T-LOca-C0103"
+   },
+   {
+    "id": "WAIT_SESSION:time frame structure#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame structure",
+    "role": "confluence",
+    "span": {
+     "start": 5798,
+     "end": 5844
+    },
+    "evidence": "T-LOca-C0105"
+   },
+   {
+    "id": "WAIT_STRUCTURE:bullish po3 structure#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "bullish po3 structure",
+    "role": "spine",
+    "span": {
+     "start": 6161,
+     "end": 6186
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:bullish fvg#0",
+    "type": "FILTER",
+    "object": "bullish fvg",
+    "role": "spine",
+    "span": {
+     "start": 6721,
+     "end": 6745
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENTER:trade entry#0",
+    "type": "ENTER",
+    "object": "trade entry",
+    "role": "trigger",
+    "span": {
+     "start": 6745,
+     "end": 6834
+    },
+    "evidence": "The second I see a candle body close through that fair value gap, I'm entering my trade."
+   },
+   {
+    "id": "WAIT_BIAS:trend direction#0",
+    "type": "WAIT_BIAS",
+    "object": "trend direction",
+    "role": "spine",
+    "span": {
+     "start": 7043,
+     "end": 7132
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_RETEST:gap up#0",
+    "type": "WAIT_RETEST",
+    "object": "gap up",
+    "role": "spine",
+    "span": {
+     "start": 7627,
+     "end": 7668
+    },
+    "evidence": "T-LOca-C0140"
+   },
+   {
+    "id": "INVALIDATE:entry readiness#0",
+    "type": "INVALIDATE",
+    "object": "entry readiness",
+    "role": "trigger",
+    "span": {
+     "start": 7668,
+     "end": 7684
+    },
+    "evidence": "T-LOca-C0141"
+   },
+   {
+    "id": "WAIT_STRUCTURE:liquidity point#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "liquidity point",
+    "role": "spine",
+    "span": {
+     "start": 8056,
+     "end": 8145
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "EXIT_HINT:liquidity point#0",
+    "type": "EXIT_HINT",
+    "object": "liquidity point",
+    "role": "spine",
+    "span": {
+     "start": 8145,
+     "end": 8222
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:top or bottom tick account#0",
+    "type": "WAIT_SESSION",
+    "object": "top or bottom tick account",
+    "role": "spine",
+    "span": {
+     "start": 9394,
+     "end": 9510
+    },
+    "evidence": "T-LOca-C0175"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:entry confirmation#2",
+    "type": "WAIT_CONFIRMATION",
+    "object": "entry confirmation",
+    "role": "trigger",
+    "span": {
+     "start": 9650,
+     "end": 9682
+    },
+    "evidence": "T-LOca-C0180"
+   },
+   {
+    "id": "ENTER:position entry#0",
+    "type": "ENTER",
+    "object": "position entry",
+    "role": "trigger",
+    "span": {
+     "start": 10010,
+     "end": 10107
+    },
+    "evidence": "T-LOca-C0186"
+   },
+   {
+    "id": "INVALIDATE:entry confirmation#0",
+    "type": "INVALIDATE",
+    "object": "entry confirmation",
+    "role": "trigger",
+    "span": {
+     "start": 10316,
+     "end": 10463
+    },
+    "evidence": "T-LOca-C0191"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_SESSION:new 4 hour candle open#0",
+    "WAIT_SESSION:4 hour candle#0",
+    "FILTER:4 hour candle#0",
+    "WAIT_SESSION:session start time#0",
+    "WAIT_SESSION:time duration#0"
+   ],
+   [
+    "WAIT_SESSION:timeframe#0",
+    "WAIT_SESSION:timeframe transition#0",
+    "WAIT_SESSION:htf power 3 indicator#0",
+    "FILTER:high time frame candle beside low time frame#0",
+    "WAIT_SESSION:indicator time frame setting#0",
+    "WAIT_SESSION:current chart time frame#0"
+   ],
+   [
+    "ENTER:accumulation#0",
+    "ENTER:low placement#0"
+   ],
+   [
+    "WAIT_SESSION:10 00 m eastern#0",
+    "WAIT_SESSION:time frame#0",
+    "FILTER:fvg#0"
+   ],
+   [
+    "WAIT_SESSION:time frame offset#0",
+    "WAIT_SESSION:time frame structure#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "WAIT_SESSION:time duration#0",
+    "WAIT_SESSION:new 4 hour candle opens#0"
+   ],
+   [
+    "WAIT_SESSION:timeframe#0",
+    "WAIT_SESSION:timeframe transition#0"
+   ],
+   [
+    "WAIT_SESSION:time frame offset#0",
+    "WAIT_SESSION:time frame structure#0"
+   ],
+   [
+    "WAIT_STRUCTURE:fvg#0",
+    "WAIT_STRUCTURE:bullish po3 structure#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:po3 1m timeframe#0",
+    "WAIT_CONFIRMATION:entry confirmation#2"
+   ],
+   [
+    "ENTER:trade entry#0",
+    "ENTER:position entry#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:home runs#0",
+    "type": "INVALIDATE",
+    "object": "home runs",
+    "role": "invalidation",
+    "span": {
+     "start": 9132,
+     "end": 9169
+    },
+    "evidence": "{T-LOca-C0171}"
+   }
+  ],
+  "entry_trigger_id": "ENABLE_ENTRY:bullish candle formation#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

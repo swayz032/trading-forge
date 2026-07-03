@@ -1,0 +1,383 @@
+{
+ "video": "c8VLqF0XDR4",
+ "spec_hash": "32bdad30b923e08c23f2aa69e108f7b479b65dad7f3f78a45c669e0c20fa9082",
+ "graph_canonical_hash": "a36a2d4248819878",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 10187,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "FILTER:first 15 minute candle color#0",
+    "type": "FILTER",
+    "object": "first 15 minute candle color",
+    "role": "confluence",
+    "span": {
+     "start": 591,
+     "end": 633
+    },
+    "evidence": "T-c8VL-C0013"
+   },
+   {
+    "id": "FILTER:upper wick presence#0",
+    "type": "FILTER",
+    "object": "upper wick presence",
+    "role": "confluence",
+    "span": {
+     "start": 677,
+     "end": 710
+    },
+    "evidence": "T-c8VL-C0014, T-c8VL-C0015"
+   },
+   {
+    "id": "FILTER:lower wick presence#0",
+    "type": "FILTER",
+    "object": "lower wick presence",
+    "role": "confluence",
+    "span": {
+     "start": 710,
+     "end": 743
+    },
+    "evidence": "T-c8VL-C0015, T-c8VL-C0016"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:price to break above 15 minute range#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "price to break above 15 minute range",
+    "role": "confluence",
+    "span": {
+     "start": 871,
+     "end": 965
+    },
+    "evidence": "T-c8VL-C0019"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:price to break below 15 minute range#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "price to break below 15 minute range",
+    "role": "confluence",
+    "span": {
+     "start": 965,
+     "end": 1005
+    },
+    "evidence": "T-c8VL-C0020"
+   },
+   {
+    "id": "ENABLE_ENTRY:long entry or short entry#0",
+    "type": "ENABLE_ENTRY",
+    "object": "long entry or short entry",
+    "role": "trigger",
+    "span": {
+     "start": 1005,
+     "end": 1045
+    },
+    "evidence": "T-c8VL-C0021"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:price break above orb#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "price break above orb",
+    "role": "confluence",
+    "span": {
+     "start": 1432,
+     "end": 1477
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:price break below orb#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "price break below orb",
+    "role": "confluence",
+    "span": {
+     "start": 1477,
+     "end": 1508
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "confluence",
+    "span": {
+     "start": 1603,
+     "end": 1620
+    },
+    "evidence": "T-c8VL-C0031"
+   },
+   {
+    "id": "WAIT_SESSION:price breaking down to fiveminut time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "price breaking down to fiveminut time frame",
+    "role": "confluence",
+    "span": {
+     "start": 2203,
+     "end": 2242
+    },
+    "evidence": "T-c8VL-C0046"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price break above below orb#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price break above below orb",
+    "role": "confluence",
+    "span": {
+     "start": 2273,
+     "end": 2352
+    },
+    "evidence": "look for is either for price to break above the orb or below the orb to either"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price break above below orb long short#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price break above below orb long short",
+    "role": "confluence",
+    "span": {
+     "start": 2380,
+     "end": 2525
+    },
+    "evidence": "But again it's not as simple as okay price broke below the low of the orb let's go short or price broke above the high of the orb let's go long."
+   },
+   {
+    "id": "WAIT_STRUCTURE:price holds pre market high and 30min orb high#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price holds pre market high and 30min orb high",
+    "role": "spine",
+    "span": {
+     "start": 3206,
+     "end": 3368
+    },
+    "evidence": "T-c8VL-C0063"
+   },
+   {
+    "id": "WAIT_RETEST:level#0",
+    "type": "WAIT_RETEST",
+    "object": "level",
+    "role": "spine",
+    "span": {
+     "start": 3595,
+     "end": 3670
+    },
+    "evidence": "T-c8VL-C0067"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price tried to break below area#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price tried to break below area",
+    "role": "spine",
+    "span": {
+     "start": 4024,
+     "end": 4083
+    },
+    "evidence": "T-c8VL-C0077"
+   },
+   {
+    "id": "WAIT_RETEST:price break below and retest as resistance#0",
+    "type": "WAIT_RETEST",
+    "object": "price break below and retest as resistance",
+    "role": "spine",
+    "span": {
+     "start": 4182,
+     "end": 4275
+    },
+    "evidence": "T-c8VL-C0081"
+   },
+   {
+    "id": "WAIT_STRUCTURE:level above low first 30 minutes#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "level above low first 30 minutes",
+    "role": "spine",
+    "span": {
+     "start": 6285,
+     "end": 6404
+    },
+    "evidence": "T-c8VL-C0116"
+   },
+   {
+    "id": "ENABLE_ENTRY:long entry opportunity#0",
+    "type": "ENABLE_ENTRY",
+    "object": "long entry opportunity",
+    "role": "trigger",
+    "span": {
+     "start": 6431,
+     "end": 6558
+    },
+    "evidence": "T-c8VL-C0118"
+   },
+   {
+    "id": "WAIT_SESSION:first 30 minutes high#0",
+    "type": "WAIT_SESSION",
+    "object": "first 30 minutes high",
+    "role": "spine",
+    "span": {
+     "start": 6558,
+     "end": 6576
+    },
+    "evidence": "T-c8VL-C0119"
+   },
+   {
+    "id": "ENTER:long position#0",
+    "type": "ENTER",
+    "object": "long position",
+    "role": "trigger",
+    "span": {
+     "start": 7590,
+     "end": 7638
+    },
+    "evidence": "{0141}"
+   },
+   {
+    "id": "WAIT_RETEST:retest into area#0",
+    "type": "WAIT_RETEST",
+    "object": "retest into area",
+    "role": "spine",
+    "span": {
+     "start": 8001,
+     "end": 8072
+    },
+    "evidence": "to pull back into this area because the market was very bullish today."
+   },
+   {
+    "id": "ENABLE_ENTRY:confluence and large buying participants at key level 6220 ish#0",
+    "type": "ENABLE_ENTRY",
+    "object": "confluence and large buying participants at key level 6220 ish",
+    "role": "trigger",
+    "span": {
+     "start": 8402,
+     "end": 8583
+    },
+    "evidence": "T-c8VL-C0153 to T-c8VL-C0154"
+   },
+   {
+    "id": "WAIT_STRUCTURE:30 minute high pre market high fvg#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "30 minute high pre market high fvg",
+    "role": "spine",
+    "span": {
+     "start": 8753,
+     "end": 8903
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:upside movement#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "upside movement",
+    "role": "spine",
+    "span": {
+     "start": 9275,
+     "end": 9381
+    },
+    "evidence": "T-c8VL-C0167"
+   }
+  ],
+  "and_groups": [
+   [
+    "FILTER:first 15 minute candle color#0",
+    "FILTER:upper wick presence#0",
+    "FILTER:lower wick presence#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:price to break above 15 minute range#0",
+    "WAIT_CONFIRMATION:price to break below 15 minute range#0",
+    "ENABLE_ENTRY:long entry or short entry#0",
+    "WAIT_CONFIRMATION:price break above orb#0",
+    "WAIT_CONFIRMATION:price break below orb#0"
+   ],
+   [
+    "WAIT_SESSION:timeframe#0",
+    "WAIT_SESSION:price breaking down to fiveminut time frame#0"
+   ],
+   [
+    "WAIT_STRUCTURE:price break above below orb#0",
+    "WAIT_STRUCTURE:price break above below orb long short#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "WAIT_SESSION:timeframe#0",
+    "WAIT_SESSION:price breaking down to fiveminut time frame#0"
+   ],
+   [
+    "WAIT_STRUCTURE:price break above below orb#0",
+    "WAIT_STRUCTURE:price break above below orb long short#0"
+   ],
+   [
+    "WAIT_STRUCTURE:price break above below orb long short#0",
+    "WAIT_STRUCTURE:price holds pre market high and 30min orb high#0"
+   ],
+   [
+    "INVALIDATE:short breakdown orb#0",
+    "INVALIDATE:break above high#0"
+   ],
+   [
+    "ENTER:short entry with stop loss above high candle#0",
+    "ENTER:long position#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:buying breakdowns#0",
+    "type": "INVALIDATE",
+    "object": "buying breakdowns",
+    "role": "invalidation",
+    "span": {
+     "start": 2525,
+     "end": 2564
+    },
+    "evidence": "I never buy breakdowns and I never buy"
+   },
+   {
+    "id": "INVALIDATE:hold below#0",
+    "type": "INVALIDATE",
+    "object": "hold below",
+    "role": "invalidation",
+    "span": {
+     "start": 4083,
+     "end": 4117
+    },
+    "evidence": "T-c8VL-C0078"
+   },
+   {
+    "id": "INVALIDATE:short breakdown orb#0",
+    "type": "INVALIDATE",
+    "object": "short breakdown orb",
+    "role": "invalidation",
+    "span": {
+     "start": 4117,
+     "end": 4169
+    },
+    "evidence": "T-c8VL-C0079"
+   },
+   {
+    "id": "INVALIDATE:break above high#0",
+    "type": "INVALIDATE",
+    "object": "break above high",
+    "role": "invalidation",
+    "span": {
+     "start": 6187,
+     "end": 6213
+    },
+    "evidence": "T-c8VL-C0113"
+   },
+   {
+    "id": "INVALIDATE:long position based 6220 buyers#0",
+    "type": "INVALIDATE",
+    "object": "long position based 6220 buyers",
+    "role": "invalidation",
+    "span": {
+     "start": 9181,
+     "end": 9203
+    },
+    "evidence": "T-c8VL-C0165"
+   }
+  ],
+  "entry_trigger_id": "ENABLE_ENTRY:long entry or short entry#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

@@ -1,0 +1,399 @@
+{
+ "video": "FqxEKDxemtI",
+ "spec_hash": "23f1bace82ff9501424e6929af90826f39d8e3fc4c5e4f4ae7c601e4344a19b3",
+ "graph_canonical_hash": "5bfb474166ad8014",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 14000,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_CONFIRMATION:momentum waning buyers losing appetite sellers easing flows#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "momentum waning buyers losing appetite sellers easing flows",
+    "role": "spine",
+    "span": {
+     "start": 1604,
+     "end": 1775
+    },
+    "evidence": "{T-FqxE-C0013}"
+   },
+   {
+    "id": "FILTER:binger band standard deviation#0",
+    "type": "FILTER",
+    "object": "binger band standard deviation",
+    "role": "spine",
+    "span": {
+     "start": 2903,
+     "end": 3201
+    },
+    "evidence": "T-FqxE-C0026"
+   },
+   {
+    "id": "ENABLE_ENTRY:ballinger bands#0",
+    "type": "ENABLE_ENTRY",
+    "object": "ballinger bands",
+    "role": "trigger",
+    "span": {
+     "start": 3305,
+     "end": 3349
+    },
+    "evidence": "T-FqxE-C0030"
+   },
+   {
+    "id": "WAIT_STRUCTURE:ballinger bands second set#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "ballinger bands second set",
+    "role": "spine",
+    "span": {
+     "start": 4891,
+     "end": 4937
+    },
+    "evidence": "T-FqxE-C0050"
+   },
+   {
+    "id": "FILTER:ballinger bands bases#0",
+    "type": "FILTER",
+    "object": "ballinger bands bases",
+    "role": "spine",
+    "span": {
+     "start": 5007,
+     "end": 5123
+    },
+    "evidence": "T-FqxE-C0052"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:currency pair close#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "currency pair close",
+    "role": "spine",
+    "span": {
+     "start": 5924,
+     "end": 5985
+    },
+    "evidence": "T-FqxE-C0067"
+   },
+   {
+    "id": "WAIT_SESSION:event occurrence#0",
+    "type": "WAIT_SESSION",
+    "object": "event occurrence",
+    "role": "spine",
+    "span": {
+     "start": 6851,
+     "end": 6889
+    },
+    "evidence": "T-FqxE-C0079"
+   },
+   {
+    "id": "WAIT_BIAS:trading time#0",
+    "type": "WAIT_BIAS",
+    "object": "trading time",
+    "role": "spine",
+    "span": {
+     "start": 7063,
+     "end": 7119
+    },
+    "evidence": "T-FqxE-C0086"
+   },
+   {
+    "id": "FILTER:binger band inside line#0",
+    "type": "FILTER",
+    "object": "binger band inside line",
+    "role": "spine",
+    "span": {
+     "start": 7385,
+     "end": 7523
+    },
+    "evidence": "T-FqxE-C0091"
+   },
+   {
+    "id": "ENABLE_ENTRY:long entry at 1095960#0",
+    "type": "ENABLE_ENTRY",
+    "object": "long entry at 1095960",
+    "role": "trigger",
+    "span": {
+     "start": 7523,
+     "end": 7616
+    },
+    "evidence": "T-FqxE-C0092"
+   },
+   {
+    "id": "EXIT_HINT:touch basis 20 sma#0",
+    "type": "EXIT_HINT",
+    "object": "touch basis 20 sma",
+    "role": "spine",
+    "span": {
+     "start": 7970,
+     "end": 8003
+    },
+    "evidence": "T-FqxE-C0100"
+   },
+   {
+    "id": "WAIT_SESSION:accuracy don t trade h forhead big news releases should be one cardinal rules anew york regardless what it is#0",
+    "type": "WAIT_SESSION",
+    "object": "accuracy don t trade h forhead big news releases should be one cardinal rules anew york regardless what it is",
+    "role": "spine",
+    "span": {
+     "start": 8962,
+     "end": 9097
+    },
+    "evidence": "T-FqxE-C0110"
+   },
+   {
+    "id": "ENTER:third standard deviation bing jaan you go short over here#0",
+    "type": "ENTER",
+    "object": "third standard deviation bing jaan you go short over here",
+    "role": "trigger",
+    "span": {
+     "start": 9397,
+     "end": 9455
+    },
+    "evidence": "T-FqxE-C0113"
+   },
+   {
+    "id": "ENTER:entry point#0",
+    "type": "ENTER",
+    "object": "entry point",
+    "role": "trigger",
+    "span": {
+     "start": 9622,
+     "end": 9645
+    },
+    "evidence": "T-FqxE-C0116"
+   },
+   {
+    "id": "FILTER:euro dollar trading context#0",
+    "type": "FILTER",
+    "object": "euro dollar trading context",
+    "role": "confluence",
+    "span": {
+     "start": 9925,
+     "end": 10041
+    },
+    "evidence": "T-FqxE-C0122"
+   },
+   {
+    "id": "FILTER:bollinger band#0",
+    "type": "FILTER",
+    "object": "bollinger band",
+    "role": "confluence",
+    "span": {
+     "start": 10041,
+     "end": 10081
+    },
+    "evidence": "T-FqxE-C0123"
+   },
+   {
+    "id": "WAIT_SESSION:pound dollar pair#0",
+    "type": "WAIT_SESSION",
+    "object": "pound dollar pair",
+    "role": "confluence",
+    "span": {
+     "start": 10184,
+     "end": 10244
+    },
+    "evidence": "T-FqxE-C0125"
+   },
+   {
+    "id": "WAIT_SESSION:us retail sales report#0",
+    "type": "WAIT_SESSION",
+    "object": "us retail sales report",
+    "role": "confluence",
+    "span": {
+     "start": 10336,
+     "end": 10406
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENTER:long entry at 12835#0",
+    "type": "ENTER",
+    "object": "long entry at 12835",
+    "role": "trigger",
+    "span": {
+     "start": 10782,
+     "end": 10883
+    },
+    "evidence": "T-FqxE-C0133"
+   },
+   {
+    "id": "INVALIDATE:entry condition#0",
+    "type": "INVALIDATE",
+    "object": "entry condition",
+    "role": "trigger",
+    "span": {
+     "start": 11148,
+     "end": 11204
+    },
+    "evidence": "T-FqxE-C0135"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:entry#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "entry",
+    "role": "trigger",
+    "span": {
+     "start": 11204,
+     "end": 11225
+    },
+    "evidence": "T-FqxE-C0136"
+   },
+   {
+    "id": "FILTER:close above third standard deviation here here and here#0",
+    "type": "FILTER",
+    "object": "close above third standard deviation here here and here",
+    "role": "spine",
+    "span": {
+     "start": 12180,
+     "end": 12224
+    },
+    "evidence": "T-FqxE-C0147"
+   },
+   {
+    "id": "INVALIDATE:go short over here which is 14905 stop 14925#0",
+    "type": "INVALIDATE",
+    "object": "go short over here which is 14905 stop 14925",
+    "role": "trigger",
+    "span": {
+     "start": 12224,
+     "end": 12363
+    },
+    "evidence": "T-FqxE-C0148"
+   },
+   {
+    "id": "FILTER:third standard deviation bowling band it does it again over here we go long over here which#0",
+    "type": "FILTER",
+    "object": "third standard deviation bowling band it does it again over here we go long over here which",
+    "role": "trigger",
+    "span": {
+     "start": 12707,
+     "end": 12804
+    },
+    "evidence": "over here we go long over here which is at 1 4646"
+   },
+   {
+    "id": "FILTER:close below third standard deviation binger band#0",
+    "type": "FILTER",
+    "object": "close below third standard deviation binger band",
+    "role": "confluence",
+    "span": {
+     "start": 12952,
+     "end": 13052
+    },
+    "evidence": "{C0158}"
+   },
+   {
+    "id": "FILTER:close above third standard deviation binger band#0",
+    "type": "FILTER",
+    "object": "close above third standard deviation binger band",
+    "role": "confluence",
+    "span": {
+     "start": 13052,
+     "end": 13123
+    },
+    "evidence": "{C0159}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:close at or above third standard deviation binger band#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "close at or above third standard deviation binger band",
+    "role": "spine",
+    "span": {
+     "start": 13123,
+     "end": 13243
+    },
+    "evidence": "{C0160}"
+   }
+  ],
+  "and_groups": [
+   [
+    "ENTER:third standard deviation bing jaan you go short over here#0",
+    "ENTER:entry point#0"
+   ],
+   [
+    "FILTER:euro dollar trading context#0",
+    "FILTER:bollinger band#0",
+    "WAIT_SESSION:pound dollar pair#0",
+    "WAIT_SESSION:us retail sales report#0"
+   ],
+   [
+    "FILTER:third standard deviation bowling band it does it again over here we go long over here which#0",
+    "FILTER:close below third standard deviation binger band#0",
+    "FILTER:close above third standard deviation binger band#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "INVALIDATE:bottom pick attempt#0",
+    "INVALIDATE:emergency stop#0"
+   ],
+   [
+    "ENTER:long entry at 12835#0",
+    "ENTER:sell at candle here you sell 12783 12763 is initial target#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:ratio unless course you get fooled into buying or selling pause instead turn in market#0",
+    "type": "INVALIDATE",
+    "object": "ratio unless course you get fooled into buying or selling pause instead turn in market",
+    "role": "invalidation",
+    "span": {
+     "start": 967,
+     "end": 1068
+    },
+    "evidence": "T-FqxE-C0008"
+   },
+   {
+    "id": "INVALIDATE:bottom pick attempt#0",
+    "type": "INVALIDATE",
+    "object": "bottom pick attempt",
+    "role": "invalidation",
+    "span": {
+     "start": 4661,
+     "end": 4769
+    },
+    "evidence": "so if you tried to pick the bottom during this phase here you would have been faced with a lot of fake outs"
+   },
+   {
+    "id": "INVALIDATE:emergency stop#0",
+    "type": "INVALIDATE",
+    "object": "emergency stop",
+    "role": "invalidation",
+    "span": {
+     "start": 8337,
+     "end": 8366
+    },
+    "evidence": "once again an emergency stop"
+   },
+   {
+    "id": "INVALIDATE:trade reconsideration stop trailing#0",
+    "type": "INVALIDATE",
+    "object": "trade reconsideration stop trailing",
+    "role": "invalidation",
+    "span": {
+     "start": 8366,
+     "end": 8502
+    },
+    "evidence": "if it kind of goes below this level you want to reconsider the the trade and as it moves in your favor you're quickly trailing the stop"
+   },
+   {
+    "id": "INVALIDATE:false signals#0",
+    "type": "INVALIDATE",
+    "object": "false signals",
+    "role": "invalidation",
+    "span": {
+     "start": 9893,
+     "end": 9925
+    },
+    "evidence": "T-FqxE-C0121"
+   }
+  ],
+  "entry_trigger_id": "ENABLE_ENTRY:ballinger bands#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

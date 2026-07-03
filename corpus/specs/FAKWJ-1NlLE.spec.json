@@ -1,0 +1,907 @@
+{
+ "video": "FAKWJ-1NlLE",
+ "spec_hash": "bed4da87bf35b05f9e3cf9ce1c537b28bd45e0ce521b8df24c840843fbdf5797",
+ "graph_canonical_hash": "fa5ca583532c62d9",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 22190,
+ "spec": {
+  "direction": "short",
+  "entry_conditions": [
+   {
+    "id": "WAIT_SESSION:4hour candle structure open high low close#0",
+    "type": "WAIT_SESSION",
+    "object": "4hour candle structure open high low close",
+    "role": "spine",
+    "span": {
+     "start": 59,
+     "end": 176
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:consolidation range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "consolidation range",
+    "role": "spine",
+    "span": {
+     "start": 521,
+     "end": 558
+    },
+    "evidence": "T-FAKW-C0007"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:distribution or real move#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "distribution or real move",
+    "role": "spine",
+    "span": {
+     "start": 584,
+     "end": 642
+    },
+    "evidence": "T-FAKW-C0009"
+   },
+   {
+    "id": "FILTER:candle 2 wick size#0",
+    "type": "FILTER",
+    "object": "candle 2 wick size",
+    "role": "spine",
+    "span": {
+     "start": 895,
+     "end": 963
+    },
+    "evidence": "T-FAKW-C0015"
+   },
+   {
+    "id": "WAIT_BIAS:distribution or expansion candle#0",
+    "type": "WAIT_BIAS",
+    "object": "distribution or expansion candle",
+    "role": "spine",
+    "span": {
+     "start": 1177,
+     "end": 1281
+    },
+    "evidence": "T-FAKW-C0021"
+   },
+   {
+    "id": "WAIT_SESSION:price open#0",
+    "type": "WAIT_SESSION",
+    "object": "price open",
+    "role": "confluence",
+    "span": {
+     "start": 1359,
+     "end": 1390
+    },
+    "evidence": "T-FAKW-C0023"
+   },
+   {
+    "id": "FILTER:shallow wick condition#0",
+    "type": "FILTER",
+    "object": "shallow wick condition",
+    "role": "confluence",
+    "span": {
+     "start": 1447,
+     "end": 1509
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:protected swing formation#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "protected swing formation",
+    "role": "spine",
+    "span": {
+     "start": 1509,
+     "end": 1594
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:expansion higher#0",
+    "type": "ENABLE_ENTRY",
+    "object": "expansion higher",
+    "role": "trigger",
+    "span": {
+     "start": 3329,
+     "end": 3374
+    },
+    "evidence": "T-FAKW-C0063"
+   },
+   {
+    "id": "WAIT_BIAS:daily bias alignment#0",
+    "type": "WAIT_BIAS",
+    "object": "daily bias alignment",
+    "role": "spine",
+    "span": {
+     "start": 3970,
+     "end": 4011
+    },
+    "evidence": "T-FAKW-C0077"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "confluence",
+    "span": {
+     "start": 4011,
+     "end": 4099
+    },
+    "evidence": "{T-FAKW-C0078}"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe structure#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe structure",
+    "role": "confluence",
+    "span": {
+     "start": 4642,
+     "end": 4739
+    },
+    "evidence": "T-FAKW-C0091"
+   },
+   {
+    "id": "WAIT_SESSION:time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame",
+    "role": "confluence",
+    "span": {
+     "start": 5307,
+     "end": 5350
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:time frame pairing#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame pairing",
+    "role": "confluence",
+    "span": {
+     "start": 5350,
+     "end": 5443
+    },
+    "evidence": "I'm using the 15-minut time frame in this example as it is paired with the 4hour time frame."
+   },
+   {
+    "id": "WAIT_BIAS:distribution higher#0",
+    "type": "WAIT_BIAS",
+    "object": "distribution higher",
+    "role": "spine",
+    "span": {
+     "start": 5719,
+     "end": 5767
+    },
+    "evidence": "T-FAKW-C0113"
+   },
+   {
+    "id": "WAIT_SESSION:time window#0",
+    "type": "WAIT_SESSION",
+    "object": "time window",
+    "role": "spine",
+    "span": {
+     "start": 6505,
+     "end": 6519
+    },
+    "evidence": "T-FAKW-C0127"
+   },
+   {
+    "id": "WAIT_STRUCTURE:protected swing#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "protected swing",
+    "role": "confluence",
+    "span": {
+     "start": 6668,
+     "end": 6706
+    },
+    "evidence": "T-FAKW-C0133"
+   },
+   {
+    "id": "WAIT_STRUCTURE:sweep low#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "sweep low",
+    "role": "confluence",
+    "span": {
+     "start": 6753,
+     "end": 6785
+    },
+    "evidence": "T-FAKW-C0136"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:protected swing#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "protected swing",
+    "role": "spine",
+    "span": {
+     "start": 6785,
+     "end": 6835
+    },
+    "evidence": "T-FAKW-C0137"
+   },
+   {
+    "id": "WAIT_STRUCTURE:protected swing in new higher time frame candle#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "protected swing in new higher time frame candle",
+    "role": "spine",
+    "span": {
+     "start": 6951,
+     "end": 7043
+    },
+    "evidence": "T-FAKW-C0140"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:reversal candle#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "reversal candle",
+    "role": "confluence",
+    "span": {
+     "start": 7543,
+     "end": 7589
+    },
+    "evidence": "{T-FAKW-C0149}"
+   },
+   {
+    "id": "WAIT_SESSION:usd jpy#0",
+    "type": "WAIT_SESSION",
+    "object": "usd jpy",
+    "role": "spine",
+    "span": {
+     "start": 7684,
+     "end": 7749
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:price expansion higher#0",
+    "type": "WAIT_BIAS",
+    "object": "price expansion higher",
+    "role": "spine",
+    "span": {
+     "start": 7824,
+     "end": 7900
+    },
+    "evidence": "So we could be looking for price to expand higher on the weekly time frame."
+   },
+   {
+    "id": "WAIT_CONFIRMATION:reversal off previous candle s low#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "reversal off previous candle s low",
+    "role": "spine",
+    "span": {
+     "start": 8641,
+     "end": 8740
+    },
+    "evidence": "{T-FAKW-C0170}"
+   },
+   {
+    "id": "WAIT_SESSION:open next candle#0",
+    "type": "WAIT_SESSION",
+    "object": "open next candle",
+    "role": "spine",
+    "span": {
+     "start": 8915,
+     "end": 8940
+    },
+    "evidence": "{T-FAKW-C0172}"
+   },
+   {
+    "id": "WAIT_BIAS:price direction#0",
+    "type": "WAIT_BIAS",
+    "object": "price direction",
+    "role": "spine",
+    "span": {
+     "start": 8962,
+     "end": 8979
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:opposing run#0",
+    "type": "FILTER",
+    "object": "opposing run",
+    "role": "spine",
+    "span": {
+     "start": 9020,
+     "end": 9067
+    },
+    "evidence": "if we're going to have a shallow opposing run,"
+   },
+   {
+    "id": "WAIT_STRUCTURE:ohlc range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "ohlc range",
+    "role": "confluence",
+    "span": {
+     "start": 9630,
+     "end": 9683
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:reaching into fvg fvg#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "reaching into fvg fvg",
+    "role": "confluence",
+    "span": {
+     "start": 10281,
+     "end": 10360
+    },
+    "evidence": "{T-FAKW-C0207}"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:close over down close candle into fvg#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "close over down close candle into fvg",
+    "role": "spine",
+    "span": {
+     "start": 10360,
+     "end": 10407
+    },
+    "evidence": "{T-FAKW-C0208}"
+   },
+   {
+    "id": "WAIT_SESSION:new candle start time#0",
+    "type": "WAIT_SESSION",
+    "object": "new candle start time",
+    "role": "spine",
+    "span": {
+     "start": 10795,
+     "end": 10837
+    },
+    "evidence": "T-FAKW-C0219"
+   },
+   {
+    "id": "WAIT_STRUCTURE:closure through downclosed candles sweep#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "closure through downclosed candles sweep",
+    "role": "spine",
+    "span": {
+     "start": 11439,
+     "end": 11522
+    },
+    "evidence": "So once we get the closure through the series of downclosed candles that swept out"
+   },
+   {
+    "id": "WAIT_SESSION:time frame selection#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame selection",
+    "role": "spine",
+    "span": {
+     "start": 12626,
+     "end": 12686
+    },
+    "evidence": "T-FAKW-C0257"
+   },
+   {
+    "id": "WAIT_BIAS:fractal alignment#0",
+    "type": "WAIT_BIAS",
+    "object": "fractal alignment",
+    "role": "spine",
+    "span": {
+     "start": 12705,
+     "end": 12767
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry condition with stop placement#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry condition with stop placement",
+    "role": "trigger",
+    "span": {
+     "start": 13491,
+     "end": 13678
+    },
+    "evidence": "T-FAKW-C0277"
+   },
+   {
+    "id": "WAIT_SESSION:time frame transition#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame transition",
+    "role": "spine",
+    "span": {
+     "start": 13762,
+     "end": 13814
+    },
+    "evidence": "T-FAKW-C0280"
+   },
+   {
+    "id": "WAIT_STRUCTURE:swing high low#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "swing high low",
+    "role": "spine",
+    "span": {
+     "start": 14181,
+     "end": 14229
+    },
+    "evidence": "And here we have a swing right above that area."
+   },
+   {
+    "id": "ENABLE_ENTRY:positional entry#0",
+    "type": "ENABLE_ENTRY",
+    "object": "positional entry",
+    "role": "trigger",
+    "span": {
+     "start": 14247,
+     "end": 14404
+    },
+    "evidence": "T-FAKW-C0289"
+   },
+   {
+    "id": "WAIT_STRUCTURE:swing formation requirement#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "swing formation requirement",
+    "role": "confluence",
+    "span": {
+     "start": 14882,
+     "end": 14961
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:swing formation possibility#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "swing formation possibility",
+    "role": "confluence",
+    "span": {
+     "start": 14976,
+     "end": 15026
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry",
+    "role": "trigger",
+    "span": {
+     "start": 15136,
+     "end": 15224
+    },
+    "evidence": "T-FAKW-C0311"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry preference#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry preference",
+    "role": "trigger",
+    "span": {
+     "start": 15313,
+     "end": 15356
+    },
+    "evidence": "{T-FAKW-C0314}"
+   },
+   {
+    "id": "WAIT_BIAS:positional entry#0",
+    "type": "WAIT_BIAS",
+    "object": "positional entry",
+    "role": "trigger",
+    "span": {
+     "start": 15356,
+     "end": 15390
+    },
+    "evidence": "{T-FAKW-C0315}"
+   },
+   {
+    "id": "WAIT_SESSION:nq#0",
+    "type": "WAIT_SESSION",
+    "object": "nq",
+    "role": "confluence",
+    "span": {
+     "start": 15757,
+     "end": 15795
+    },
+    "evidence": "{T-FAKW-C0325}"
+   },
+   {
+    "id": "FILTER:previous day high#0",
+    "type": "FILTER",
+    "object": "previous day high",
+    "role": "confluence",
+    "span": {
+     "start": 15795,
+     "end": 15854
+    },
+    "evidence": "{T-FAKW-C0326}"
+   },
+   {
+    "id": "ENABLE_ENTRY:reversal candle at 6 m#0",
+    "type": "ENABLE_ENTRY",
+    "object": "reversal candle at 6 m",
+    "role": "trigger",
+    "span": {
+     "start": 16024,
+     "end": 16049
+    },
+    "evidence": "T-FAKW-C0331"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:continuation lower at 10 00 m#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "continuation lower at 10 00 m",
+    "role": "confluence",
+    "span": {
+     "start": 16066,
+     "end": 16088
+    },
+    "evidence": "T-FAKW-C0333"
+   },
+   {
+    "id": "WAIT_SESSION:fractal#0",
+    "type": "WAIT_SESSION",
+    "object": "fractal",
+    "role": "spine",
+    "span": {
+     "start": 16212,
+     "end": 16324
+    },
+    "evidence": "T-FAKW-C0337"
+   },
+   {
+    "id": "ENTER:trade lower#0",
+    "type": "ENTER",
+    "object": "trade lower",
+    "role": "trigger",
+    "span": {
+     "start": 16407,
+     "end": 16429
+    },
+    "evidence": "T-FAKW-C0340"
+   },
+   {
+    "id": "FILTER:fvg#0",
+    "type": "FILTER",
+    "object": "fvg",
+    "role": "spine",
+    "span": {
+     "start": 16468,
+     "end": 16581
+    },
+    "evidence": "T-FAKW-C0342"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry zone#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry zone",
+    "role": "trigger",
+    "span": {
+     "start": 16639,
+     "end": 16750
+    },
+    "evidence": "T-FAKW-C0344"
+   },
+   {
+    "id": "ENABLE_ENTRY:trade lower#0",
+    "type": "ENABLE_ENTRY",
+    "object": "trade lower",
+    "role": "trigger",
+    "span": {
+     "start": 17187,
+     "end": 17216
+    },
+    "evidence": "T-FAKW-C0354, T-FAKW-C0355"
+   },
+   {
+    "id": "WAIT_STRUCTURE:bearish structure#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "bearish structure",
+    "role": "spine",
+    "span": {
+     "start": 17774,
+     "end": 17860
+    },
+    "evidence": "T-FAKW-C0368"
+   },
+   {
+    "id": "WAIT_SESSION:price open 9 30 and move higher#0",
+    "type": "WAIT_SESSION",
+    "object": "price open 9 30 and move higher",
+    "role": "confluence",
+    "span": {
+     "start": 17860,
+     "end": 17903
+    },
+    "evidence": "T-FAKW-C0369"
+   },
+   {
+    "id": "WAIT_SESSION:time#0",
+    "type": "WAIT_SESSION",
+    "object": "time",
+    "role": "confluence",
+    "span": {
+     "start": 18338,
+     "end": 18355
+    },
+    "evidence": "{T-FAKW-C0380}"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:reversal#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "reversal",
+    "role": "spine",
+    "span": {
+     "start": 18454,
+     "end": 18515
+    },
+    "evidence": "{T-FAKW-C0383}"
+   },
+   {
+    "id": "WAIT_BIAS:continuation higher#0",
+    "type": "WAIT_BIAS",
+    "object": "continuation higher",
+    "role": "spine",
+    "span": {
+     "start": 18661,
+     "end": 18693
+    },
+    "evidence": "T-FAKW-C0390"
+   },
+   {
+    "id": "WAIT_STRUCTURE:open low high close 10 m candle#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "open low high close 10 m candle",
+    "role": "spine",
+    "span": {
+     "start": 18693,
+     "end": 18776
+    },
+    "evidence": "T-FAKW-C0391"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry opportunity#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry opportunity",
+    "role": "trigger",
+    "span": {
+     "start": 19097,
+     "end": 19129
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:reversal candle#0",
+    "type": "ENABLE_ENTRY",
+    "object": "reversal candle",
+    "role": "trigger",
+    "span": {
+     "start": 19601,
+     "end": 19650
+    },
+    "evidence": "T-FAKW-C0410"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry condition#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry condition",
+    "role": "trigger",
+    "span": {
+     "start": 19841,
+     "end": 19899
+    },
+    "evidence": "T-FAKW-C0416"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:reversal candle formation and trade back into range#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "reversal candle formation and trade back into range",
+    "role": "confluence",
+    "span": {
+     "start": 20156,
+     "end": 20236
+    },
+    "evidence": "T-FAKW-C0422"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:reversal off previous candle s high#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "reversal off previous candle s high",
+    "role": "confluence",
+    "span": {
+     "start": 20490,
+     "end": 20576
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:reversal candle 4 hour with continuation here#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "reversal candle 4 hour with continuation here",
+    "role": "confluence",
+    "span": {
+     "start": 20945,
+     "end": 21024
+    },
+    "evidence": "4 hour reversal / current continuation"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry timing#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry timing",
+    "role": "trigger",
+    "span": {
+     "start": 21061,
+     "end": 21124
+    },
+    "evidence": "T-FAKW-C0439"
+   },
+   {
+    "id": "ENABLE_ENTRY:continuation#0",
+    "type": "ENABLE_ENTRY",
+    "object": "continuation",
+    "role": "trigger",
+    "span": {
+     "start": 21418,
+     "end": 21442
+    },
+    "evidence": "T-FAKW-C0447"
+   },
+   {
+    "id": "WAIT_SESSION:lower time frame entries#0",
+    "type": "WAIT_SESSION",
+    "object": "lower time frame entries",
+    "role": "spine",
+    "span": {
+     "start": 21882,
+     "end": 21948
+    },
+    "evidence": "T-FAKW-C0458"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_SESSION:price open#0",
+    "FILTER:shallow wick condition#0"
+   ],
+   [
+    "WAIT_SESSION:timeframe#0",
+    "WAIT_SESSION:timeframe structure#0",
+    "WAIT_SESSION:time frame#0",
+    "WAIT_SESSION:time frame pairing#0"
+   ],
+   [
+    "WAIT_STRUCTURE:protected swing#0",
+    "WAIT_STRUCTURE:sweep low#0"
+   ],
+   [
+    "ENABLE_ENTRY:entry in here with stop loss low looking to target previous day high#0",
+    "WAIT_CONFIRMATION:reversal candle#0"
+   ],
+   [
+    "WAIT_STRUCTURE:ohlc range#0",
+    "WAIT_STRUCTURE:reaching into fvg fvg#0"
+   ],
+   [
+    "WAIT_STRUCTURE:swing formation requirement#0",
+    "WAIT_STRUCTURE:swing formation possibility#0"
+   ],
+   [
+    "ENABLE_ENTRY:entry#0",
+    "ENABLE_ENTRY:entry preference#0"
+   ],
+   [
+    "WAIT_SESSION:nq#0",
+    "FILTER:previous day high#0"
+   ],
+   [
+    "ENABLE_ENTRY:reversal candle at 6 m#0",
+    "WAIT_CONFIRMATION:continuation lower at 10 00 m#0"
+   ],
+   [
+    "ENABLE_ENTRY:entry zone#0",
+    "ENABLE_ENTRY:trade lower#0"
+   ],
+   [
+    "WAIT_SESSION:price open 9 30 and move higher#0",
+    "WAIT_SESSION:time#0"
+   ],
+   [
+    "ENABLE_ENTRY:entry opportunity#0",
+    "ENABLE_ENTRY:reversal candle#0",
+    "ENABLE_ENTRY:entry condition#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:reversal candle formation and trade back into range#0",
+    "WAIT_CONFIRMATION:reversal off previous candle s high#0",
+    "WAIT_CONFIRMATION:reversal candle 4 hour with continuation here#0",
+    "ENABLE_ENTRY:entry timing#0",
+    "ENABLE_ENTRY:continuation#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "FILTER:candle 2 wick size#0",
+    "FILTER:shallow wick condition#0"
+   ],
+   [
+    "WAIT_SESSION:timeframe#0",
+    "WAIT_SESSION:timeframe structure#0"
+   ],
+   [
+    "WAIT_SESSION:usd jpy#0",
+    "WAIT_SESSION:open next candle#0"
+   ],
+   [
+    "WAIT_STRUCTURE:ohlc range#0",
+    "WAIT_STRUCTURE:reaching into fvg fvg#0"
+   ],
+   [
+    "ENABLE_ENTRY:entry in here with stop loss low looking to target previous day high#0",
+    "ENABLE_ENTRY:entry condition with stop placement#0"
+   ],
+   [
+    "WAIT_SESSION:time frame selection#0",
+    "WAIT_SESSION:time frame transition#0"
+   ],
+   [
+    "WAIT_STRUCTURE:swing high low#0",
+    "WAIT_STRUCTURE:swing formation requirement#0"
+   ],
+   [
+    "WAIT_SESSION:nq#0",
+    "WAIT_SESSION:fractal#0"
+   ],
+   [
+    "ENABLE_ENTRY:entry zone#0",
+    "ENABLE_ENTRY:trade lower#0"
+   ],
+   [
+    "ENABLE_ENTRY:entry opportunity#0",
+    "ENABLE_ENTRY:reversal candle#0"
+   ],
+   [
+    "ENABLE_ENTRY:entry timing#0",
+    "ENABLE_ENTRY:continuation#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:change in state delivery#0",
+    "type": "INVALIDATE",
+    "object": "change in state delivery",
+    "role": "invalidation",
+    "span": {
+     "start": 5935,
+     "end": 6007
+    },
+    "evidence": "T-FAKW-C0116"
+   },
+   {
+    "id": "INVALIDATE:reversal trade attempt#0",
+    "type": "INVALIDATE",
+    "object": "reversal trade attempt",
+    "role": "invalidation",
+    "span": {
+     "start": 9198,
+     "end": 9266
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:trading over old highs#0",
+    "type": "INVALIDATE",
+    "object": "trading over old highs",
+    "role": "invalidation",
+    "span": {
+     "start": 11647,
+     "end": 11692
+    },
+    "evidence": "{T-FAKW-C0237}"
+   },
+   {
+    "id": "INVALIDATE:trade#0",
+    "type": "INVALIDATE",
+    "object": "trade",
+    "role": "invalidation",
+    "span": {
+     "start": 19954,
+     "end": 20064
+    },
+    "evidence": "T-FAKW-C0419"
+   }
+  ],
+  "entry_trigger_id": "ENABLE_ENTRY:expansion higher#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

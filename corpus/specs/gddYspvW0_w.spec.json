@@ -1,0 +1,1085 @@
+{
+ "video": "gddYspvW0_w",
+ "spec_hash": "ca87e67409a384c226386337c55b1afbcfdc85beae9d112bd8e77389786f2d57",
+ "graph_canonical_hash": "5d7da4bfbda96a35",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 24720,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_SESSION:indicators#0",
+    "type": "WAIT_SESSION",
+    "object": "indicators",
+    "role": "spine",
+    "span": {
+     "start": 967,
+     "end": 1031
+    },
+    "evidence": "T-gddY-C0014"
+   },
+   {
+    "id": "WAIT_STRUCTURE:moving average#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "moving average",
+    "role": "spine",
+    "span": {
+     "start": 1563,
+     "end": 1601
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:ema length change#0",
+    "type": "FILTER",
+    "object": "ema length change",
+    "role": "confluence",
+    "span": {
+     "start": 2021,
+     "end": 2125
+    },
+    "evidence": "T-gddY-C0033"
+   },
+   {
+    "id": "FILTER:ema length#0",
+    "type": "FILTER",
+    "object": "ema length",
+    "role": "confluence",
+    "span": {
+     "start": 2245,
+     "end": 2272
+    },
+    "evidence": "change the length to nine."
+   },
+   {
+    "id": "FILTER:simple moving averages#0",
+    "type": "FILTER",
+    "object": "simple moving averages",
+    "role": "confluence",
+    "span": {
+     "start": 2584,
+     "end": 2636
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:macd#0",
+    "type": "FILTER",
+    "object": "macd",
+    "role": "confluence",
+    "span": {
+     "start": 2709,
+     "end": 2733
+    },
+    "evidence": "I have never used MACD."
+   },
+   {
+    "id": "WAIT_BIAS:trend direction#0",
+    "type": "WAIT_BIAS",
+    "object": "trend direction",
+    "role": "confluence",
+    "span": {
+     "start": 4860,
+     "end": 4924
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:price trend#0",
+    "type": "WAIT_BIAS",
+    "object": "price trend",
+    "role": "confluence",
+    "span": {
+     "start": 5213,
+     "end": 5270
+    },
+    "evidence": "T-gddY-C0091"
+   },
+   {
+    "id": "FILTER:20 ma#0",
+    "type": "FILTER",
+    "object": "20 ma",
+    "role": "confluence",
+    "span": {
+     "start": 5331,
+     "end": 5366
+    },
+    "evidence": "T-gddY-C0093"
+   },
+   {
+    "id": "FILTER:20 ma is flat#0",
+    "type": "FILTER",
+    "object": "20 ma is flat",
+    "role": "confluence",
+    "span": {
+     "start": 5946,
+     "end": 5977
+    },
+    "evidence": "T-gddY-C0104"
+   },
+   {
+    "id": "FILTER:moving averages are flat#0",
+    "type": "FILTER",
+    "object": "moving averages are flat",
+    "role": "confluence",
+    "span": {
+     "start": 6034,
+     "end": 6081
+    },
+    "evidence": "T-gddY-C0107"
+   },
+   {
+    "id": "WAIT_BIAS:20 ma slope#0",
+    "type": "WAIT_BIAS",
+    "object": "20 ma slope",
+    "role": "confluence",
+    "span": {
+     "start": 6200,
+     "end": 6288
+    },
+    "evidence": "T-gddY-C0109:T-gddY-C0111"
+   },
+   {
+    "id": "WAIT_BIAS:20 ma#0",
+    "type": "WAIT_BIAS",
+    "object": "20 ma",
+    "role": "confluence",
+    "span": {
+     "start": 6592,
+     "end": 6626
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:downtrend#0",
+    "type": "FILTER",
+    "object": "downtrend",
+    "role": "spine",
+    "span": {
+     "start": 7304,
+     "end": 7350
+    },
+    "evidence": "T-gddY-C0127"
+   },
+   {
+    "id": "WAIT_STRUCTURE:move down and retrace into 20 ma#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "move down and retrace into 20 ma",
+    "role": "spine",
+    "span": {
+     "start": 7395,
+     "end": 7521
+    },
+    "evidence": "T-gddY-C0129"
+   },
+   {
+    "id": "ENABLE_ENTRY:retracement opportunity#0",
+    "type": "ENABLE_ENTRY",
+    "object": "retracement opportunity",
+    "role": "trigger",
+    "span": {
+     "start": 7521,
+     "end": 7615
+    },
+    "evidence": "T-gddY-C0130"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry into established trend#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry into established trend",
+    "role": "trigger",
+    "span": {
+     "start": 7615,
+     "end": 7691
+    },
+    "evidence": "T-gddY-C0131"
+   },
+   {
+    "id": "ENABLE_ENTRY:short opportunity#0",
+    "type": "ENABLE_ENTRY",
+    "object": "short opportunity",
+    "role": "trigger",
+    "span": {
+     "start": 8324,
+     "end": 8355
+    },
+    "evidence": "T-gddY-C0144"
+   },
+   {
+    "id": "FILTER:flat 20s#0",
+    "type": "FILTER",
+    "object": "flat 20s",
+    "role": "spine",
+    "span": {
+     "start": 8355,
+     "end": 8400
+    },
+    "evidence": "T-gddY-C0145"
+   },
+   {
+    "id": "WAIT_BIAS:trend#0",
+    "type": "WAIT_BIAS",
+    "object": "trend",
+    "role": "spine",
+    "span": {
+     "start": 8647,
+     "end": 8681
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:ema20#0",
+    "type": "FILTER",
+    "object": "ema20",
+    "role": "spine",
+    "span": {
+     "start": 8725,
+     "end": 8744
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_RETEST:retracement or consolidation into 20 ma#0",
+    "type": "WAIT_RETEST",
+    "object": "retracement or consolidation into 20 ma",
+    "role": "spine",
+    "span": {
+     "start": 8840,
+     "end": 8863
+    },
+    "evidence": "T-gddY-C0157 to T-gddY-C0161"
+   },
+   {
+    "id": "WAIT_BIAS:rising 20 ma with established uptrend#0",
+    "type": "WAIT_BIAS",
+    "object": "rising 20 ma with established uptrend",
+    "role": "confluence",
+    "span": {
+     "start": 8982,
+     "end": 9024
+    },
+    "evidence": "T-gddY-C0161 to T-gddY-C0161"
+   },
+   {
+    "id": "WAIT_BIAS:downtrend#0",
+    "type": "WAIT_BIAS",
+    "object": "downtrend",
+    "role": "confluence",
+    "span": {
+     "start": 9047,
+     "end": 9068
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:trend direction#0",
+    "type": "FILTER",
+    "object": "trend direction",
+    "role": "spine",
+    "span": {
+     "start": 9433,
+     "end": 9503
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:price distance from 20 period moving average#0",
+    "type": "WAIT_BIAS",
+    "object": "price distance from 20 period moving average",
+    "role": "spine",
+    "span": {
+     "start": 10144,
+     "end": 10245
+    },
+    "evidence": "T-gddY-C0187 to T-gddY-C0190"
+   },
+   {
+    "id": "ENABLE_ENTRY:reversal#0",
+    "type": "ENABLE_ENTRY",
+    "object": "reversal",
+    "role": "trigger",
+    "span": {
+     "start": 10245,
+     "end": 10288
+    },
+    "evidence": "T-gddY-C0187 to T-gddY-C0190"
+   },
+   {
+    "id": "INVALIDATE:long entry#0",
+    "type": "INVALIDATE",
+    "object": "long entry",
+    "role": "trigger",
+    "span": {
+     "start": 10288,
+     "end": 10379
+    },
+    "evidence": "T-gddY-C0187 to T-gddY-C0191"
+   },
+   {
+    "id": "FILTER:ema200#0",
+    "type": "FILTER",
+    "object": "ema200",
+    "role": "confluence",
+    "span": {
+     "start": 10565,
+     "end": 10610
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:20 ma slope#0",
+    "type": "FILTER",
+    "object": "20 ma slope",
+    "role": "confluence",
+    "span": {
+     "start": 10694,
+     "end": 10734
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:200 ma slope#0",
+    "type": "FILTER",
+    "object": "200 ma slope",
+    "role": "confluence",
+    "span": {
+     "start": 10734,
+     "end": 10765
+    },
+    "evidence": "It's the opposite for the 200."
+   },
+   {
+    "id": "FILTER:200 period simple moving average#0",
+    "type": "FILTER",
+    "object": "200 period simple moving average",
+    "role": "confluence",
+    "span": {
+     "start": 10765,
+     "end": 10833
+    },
+    "evidence": "We want the 200 period simple moving average to be relatively flat."
+   },
+   {
+    "id": "FILTER:price action relative to 200 ma#0",
+    "type": "FILTER",
+    "object": "price action relative to 200 ma",
+    "role": "confluence",
+    "span": {
+     "start": 10959,
+     "end": 10997
+    },
+    "evidence": "T-gddY-C0204"
+   },
+   {
+    "id": "FILTER:200 ma behavior#0",
+    "type": "FILTER",
+    "object": "200 ma behavior",
+    "role": "confluence",
+    "span": {
+     "start": 11076,
+     "end": 11200
+    },
+    "evidence": "T-gddY-C0207"
+   },
+   {
+    "id": "FILTER:price relative to 200 ma#0",
+    "type": "FILTER",
+    "object": "price relative to 200 ma",
+    "role": "confluence",
+    "span": {
+     "start": 11291,
+     "end": 11320
+    },
+    "evidence": "T-gddY-C0210"
+   },
+   {
+    "id": "FILTER:support condition#0",
+    "type": "FILTER",
+    "object": "support condition",
+    "role": "confluence",
+    "span": {
+     "start": 11354,
+     "end": 11371
+    },
+    "evidence": "T-gddY-C0212"
+   },
+   {
+    "id": "FILTER:price action condition#0",
+    "type": "FILTER",
+    "object": "price action condition",
+    "role": "confluence",
+    "span": {
+     "start": 11371,
+     "end": 11447
+    },
+    "evidence": "T-gddY-C0213"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:breakout#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "breakout",
+    "role": "spine",
+    "span": {
+     "start": 12161,
+     "end": 12186
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:bearish bias#0",
+    "type": "WAIT_BIAS",
+    "object": "bearish bias",
+    "role": "spine",
+    "span": {
+     "start": 14029,
+     "end": 14083
+    },
+    "evidence": "T-gddY-C0253"
+   },
+   {
+    "id": "WAIT_SESSION:five minute time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "five minute time frame",
+    "role": "spine",
+    "span": {
+     "start": 14136,
+     "end": 14186
+    },
+    "evidence": "T-gddY-C0255"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price respecting 20 ma five minute timeframe#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price respecting 20 ma five minute timeframe",
+    "role": "spine",
+    "span": {
+     "start": 14234,
+     "end": 14311
+    },
+    "evidence": "T-gddY-C0257"
+   },
+   {
+    "id": "WAIT_BIAS:downtrend establishment#0",
+    "type": "WAIT_BIAS",
+    "object": "downtrend establishment",
+    "role": "confluence",
+    "span": {
+     "start": 14311,
+     "end": 14374
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:downtrend confirmation#0",
+    "type": "WAIT_BIAS",
+    "object": "downtrend confirmation",
+    "role": "confluence",
+    "span": {
+     "start": 14374,
+     "end": 14407
+    },
+    "evidence": "As soon as the 20 MA is trending"
+   },
+   {
+    "id": "WAIT_SESSION:gap down little bit#0",
+    "type": "WAIT_SESSION",
+    "object": "gap down little bit",
+    "role": "confluence",
+    "span": {
+     "start": 14684,
+     "end": 14722
+    },
+    "evidence": "{T-gddY-C0265}"
+   },
+   {
+    "id": "WAIT_SESSION:two minut#0",
+    "type": "WAIT_SESSION",
+    "object": "two minut",
+    "role": "confluence",
+    "span": {
+     "start": 14771,
+     "end": 14817
+    },
+    "evidence": "{T-gddY-C0268}"
+   },
+   {
+    "id": "ENABLE_ENTRY:short entry 20 ma touch#0",
+    "type": "ENABLE_ENTRY",
+    "object": "short entry 20 ma touch",
+    "role": "trigger",
+    "span": {
+     "start": 15069,
+     "end": 15139
+    },
+    "evidence": "T-gddY-C0275"
+   },
+   {
+    "id": "WAIT_BIAS:ema20#0",
+    "type": "WAIT_BIAS",
+    "object": "ema20",
+    "role": "spine",
+    "span": {
+     "start": 15211,
+     "end": 15272
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:trend alignment#0",
+    "type": "ENABLE_ENTRY",
+    "object": "trend alignment",
+    "role": "trigger",
+    "span": {
+     "start": 15682,
+     "end": 15778
+    },
+    "evidence": "beautiful downtrend where you could use the 20 MA for your entries to capitalize on this trend."
+   },
+   {
+    "id": "INVALIDATE:downtrend entry#0",
+    "type": "INVALIDATE",
+    "object": "downtrend entry",
+    "role": "trigger",
+    "span": {
+     "start": 15923,
+     "end": 16006
+    },
+    "evidence": "T-gddY-C0291"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "confluence",
+    "span": {
+     "start": 16021,
+     "end": 16067
+    },
+    "evidence": "T-gddY-C0293"
+   },
+   {
+    "id": "FILTER:200 ma daily#0",
+    "type": "FILTER",
+    "object": "200 ma daily",
+    "role": "confluence",
+    "span": {
+     "start": 16324,
+     "end": 16374
+    },
+    "evidence": "T-gddY-C0298"
+   },
+   {
+    "id": "WAIT_RETEST:price action#0",
+    "type": "WAIT_RETEST",
+    "object": "price action",
+    "role": "spine",
+    "span": {
+     "start": 16451,
+     "end": 16478
+    },
+    "evidence": "{T-gddY-C0301, T-gddY-C0302}"
+   },
+   {
+    "id": "WAIT_SESSION:time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame",
+    "role": "spine",
+    "span": {
+     "start": 16950,
+     "end": 16969
+    },
+    "evidence": "{ \"start\": null, \"end\": null } { \"description\": \"Switch to 15-minute time frame\" }"
+   },
+   {
+    "id": "WAIT_STRUCTURE:ema 20 and ema 200#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "ema 20 and ema 200",
+    "role": "spine",
+    "span": {
+     "start": 17244,
+     "end": 17281
+    },
+    "evidence": "T-gddY-C0322"
+   },
+   {
+    "id": "WAIT_BIAS:uptrend#0",
+    "type": "WAIT_BIAS",
+    "object": "uptrend",
+    "role": "spine",
+    "span": {
+     "start": 17504,
+     "end": 17602
+    },
+    "evidence": "then an established uptrend, and I know where I could potentially get into the trend using the 20"
+   },
+   {
+    "id": "WAIT_SESSION:daily time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "daily time frame",
+    "role": "confluence",
+    "span": {
+     "start": 18791,
+     "end": 18837
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:intraday time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "intraday time frame",
+    "role": "confluence",
+    "span": {
+     "start": 18882,
+     "end": 18917
+    },
+    "evidence": "MA during the intraday time frame."
+   },
+   {
+    "id": "WAIT_BIAS:bullish bias#0",
+    "type": "WAIT_BIAS",
+    "object": "bullish bias",
+    "role": "spine",
+    "span": {
+     "start": 19156,
+     "end": 19202
+    },
+    "evidence": "T-gddY-C0366"
+   },
+   {
+    "id": "WAIT_SESSION:fiveinut time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "fiveinut time frame",
+    "role": "confluence",
+    "span": {
+     "start": 19202,
+     "end": 19252
+    },
+    "evidence": "T-gddY-C0367"
+   },
+   {
+    "id": "WAIT_SESSION:200 ma daily time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "200 ma daily time frame",
+    "role": "confluence",
+    "span": {
+     "start": 19714,
+     "end": 19802
+    },
+    "evidence": "T-gddY-C0374"
+   },
+   {
+    "id": "WAIT_SESSION:20 ma intraday time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "20 ma intraday time frame",
+    "role": "confluence",
+    "span": {
+     "start": 19802,
+     "end": 19844
+    },
+    "evidence": "T-gddY-C0375"
+   },
+   {
+    "id": "WAIT_SESSION:intraday time frames#0",
+    "type": "WAIT_SESSION",
+    "object": "intraday time frames",
+    "role": "spine",
+    "span": {
+     "start": 20168,
+     "end": 20253
+    },
+    "evidence": "gap down and from there we go to the intraday time frames to find a potential setup."
+   },
+   {
+    "id": "WAIT_BIAS:even if we look at twominut again every time prices hit#0",
+    "type": "WAIT_BIAS",
+    "object": "even if we look at twominut again every time prices hit",
+    "role": "spine",
+    "span": {
+     "start": 20422,
+     "end": 20483
+    },
+    "evidence": "T-gddY-C0389"
+   },
+   {
+    "id": "CONFIRM_DIRECTION:two minute 20 ma we get move lower#0",
+    "type": "CONFIRM_DIRECTION",
+    "object": "two minute 20 ma we get move lower",
+    "role": "spine",
+    "span": {
+     "start": 20483,
+     "end": 20527
+    },
+    "evidence": "T-gddY-C0388"
+   },
+   {
+    "id": "WAIT_RETEST:20 ma and two drop#0",
+    "type": "WAIT_RETEST",
+    "object": "20 ma and two drop",
+    "role": "spine",
+    "span": {
+     "start": 20527,
+     "end": 20574
+    },
+    "evidence": "T-gddY-C0390"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:break above 20#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "break above 20",
+    "role": "confluence",
+    "span": {
+     "start": 20622,
+     "end": 20672
+    },
+    "evidence": "T-gddY-C0392"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:break over 20#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "break over 20",
+    "role": "confluence",
+    "span": {
+     "start": 20672,
+     "end": 20733
+    },
+    "evidence": "T-gddY-C0393"
+   },
+   {
+    "id": "WAIT_BIAS:20 ma rising under price#0",
+    "type": "WAIT_BIAS",
+    "object": "20 ma rising under price",
+    "role": "spine",
+    "span": {
+     "start": 21315,
+     "end": 21351
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:gap above 200 ma#0",
+    "type": "FILTER",
+    "object": "gap above 200 ma",
+    "role": "confluence",
+    "span": {
+     "start": 21472,
+     "end": 21545
+    },
+    "evidence": "T-gddY-C0408"
+   },
+   {
+    "id": "FILTER:20 ma under price#0",
+    "type": "FILTER",
+    "object": "20 ma under price",
+    "role": "confluence",
+    "span": {
+     "start": 21545,
+     "end": 21567
+    },
+    "evidence": "T-gddY-C0409"
+   },
+   {
+    "id": "WAIT_SESSION:uptrend#0",
+    "type": "WAIT_SESSION",
+    "object": "uptrend",
+    "role": "confluence",
+    "span": {
+     "start": 21567,
+     "end": 21645
+    },
+    "evidence": "T-gddY-C0410"
+   },
+   {
+    "id": "FILTER:prices respecting 20 ma#0",
+    "type": "FILTER",
+    "object": "prices respecting 20 ma",
+    "role": "confluence",
+    "span": {
+     "start": 21707,
+     "end": 21749
+    },
+    "evidence": "T-gddY-C0413"
+   },
+   {
+    "id": "WAIT_BIAS:initial move up#0",
+    "type": "WAIT_BIAS",
+    "object": "initial move up",
+    "role": "spine",
+    "span": {
+     "start": 21762,
+     "end": 21779
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:consolidation into 20 breakout over base#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "consolidation into 20 breakout over base",
+    "role": "spine",
+    "span": {
+     "start": 21779,
+     "end": 21839
+    },
+    "evidence": "We consolidate directly into the 20 breakout over the base."
+   },
+   {
+    "id": "WAIT_BIAS:another leg higher#0",
+    "type": "WAIT_BIAS",
+    "object": "another leg higher",
+    "role": "spine",
+    "span": {
+     "start": 21918,
+     "end": 21955
+    },
+    "evidence": "and then we have another leg higher."
+   },
+   {
+    "id": "WAIT_SESSION:spy#0",
+    "type": "WAIT_SESSION",
+    "object": "spy",
+    "role": "confluence",
+    "span": {
+     "start": 22094,
+     "end": 22158
+    },
+    "evidence": "T-gddY-C0424"
+   },
+   {
+    "id": "FILTER:break under 20#0",
+    "type": "FILTER",
+    "object": "break under 20",
+    "role": "confluence",
+    "span": {
+     "start": 22526,
+     "end": 22558
+    },
+    "evidence": "We actually broke under the 20."
+   },
+   {
+    "id": "FILTER:break under 20 and rejection#0",
+    "type": "FILTER",
+    "object": "break under 20 and rejection",
+    "role": "confluence",
+    "span": {
+     "start": 22584,
+     "end": 22627
+    },
+    "evidence": "We broke under the 20, instantly rejected."
+   },
+   {
+    "id": "ENABLE_ENTRY:buy into 20#0",
+    "type": "ENABLE_ENTRY",
+    "object": "buy into 20",
+    "role": "trigger",
+    "span": {
+     "start": 22688,
+     "end": 22716
+    },
+    "evidence": "T-gddY-C0439"
+   },
+   {
+    "id": "WAIT_SESSION:ethereum#0",
+    "type": "WAIT_SESSION",
+    "object": "ethereum",
+    "role": "spine",
+    "span": {
+     "start": 22813,
+     "end": 22834
+    },
+    "evidence": "T-gddY-C0442"
+   },
+   {
+    "id": "WAIT_STRUCTURE:retracement level 200#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "retracement level 200",
+    "role": "confluence",
+    "span": {
+     "start": 23702,
+     "end": 23724
+    },
+    "evidence": "T-gddY-C0462"
+   },
+   {
+    "id": "WAIT_STRUCTURE:breakout#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "breakout",
+    "role": "confluence",
+    "span": {
+     "start": 23768,
+     "end": 23791
+    },
+    "evidence": "T-gddY-C0465"
+   },
+   {
+    "id": "WAIT_SESSION:moving averages#0",
+    "type": "WAIT_SESSION",
+    "object": "moving averages",
+    "role": "spine",
+    "span": {
+     "start": 24235,
+     "end": 24290
+    },
+    "evidence": "T-gddY-C0476"
+   }
+  ],
+  "and_groups": [
+   [
+    "FILTER:ema length change#0",
+    "FILTER:ema length#0",
+    "FILTER:simple moving averages#0",
+    "FILTER:macd#0"
+   ],
+   [
+    "WAIT_BIAS:trend direction#0",
+    "WAIT_BIAS:price trend#0"
+   ],
+   [
+    "FILTER:20 ma#0",
+    "FILTER:20 ma is flat#0",
+    "FILTER:moving averages are flat#0"
+   ],
+   [
+    "WAIT_BIAS:20 ma slope#0",
+    "WAIT_BIAS:20 ma#0"
+   ],
+   [
+    "ENABLE_ENTRY:retracement opportunity#0",
+    "ENABLE_ENTRY:entry into established trend#0",
+    "ENABLE_ENTRY:short opportunity#0"
+   ],
+   [
+    "WAIT_BIAS:rising 20 ma with established uptrend#0",
+    "WAIT_BIAS:downtrend#0"
+   ],
+   [
+    "FILTER:ema200#0",
+    "FILTER:20 ma slope#0",
+    "FILTER:200 ma slope#0",
+    "FILTER:200 period simple moving average#0",
+    "FILTER:price action relative to 200 ma#0",
+    "FILTER:200 ma behavior#0",
+    "FILTER:price relative to 200 ma#0",
+    "FILTER:support condition#0",
+    "FILTER:price action condition#0"
+   ],
+   [
+    "WAIT_BIAS:downtrend establishment#0",
+    "WAIT_BIAS:downtrend confirmation#0"
+   ],
+   [
+    "WAIT_SESSION:gap down little bit#0",
+    "WAIT_SESSION:two minut#0"
+   ],
+   [
+    "WAIT_SESSION:timeframe#0",
+    "FILTER:200 ma daily#0"
+   ],
+   [
+    "WAIT_SESSION:daily time frame#0",
+    "WAIT_SESSION:intraday time frame#0"
+   ],
+   [
+    "WAIT_SESSION:fiveinut time frame#0",
+    "WAIT_SESSION:200 ma daily time frame#0",
+    "WAIT_SESSION:20 ma intraday time frame#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:break above 20#0",
+    "WAIT_CONFIRMATION:break over 20#0"
+   ],
+   [
+    "FILTER:gap above 200 ma#0",
+    "FILTER:20 ma under price#0",
+    "WAIT_SESSION:uptrend#0",
+    "FILTER:prices respecting 20 ma#0"
+   ],
+   [
+    "WAIT_SESSION:spy#0",
+    "FILTER:break under 20#0",
+    "FILTER:break under 20 and rejection#0"
+   ],
+   [
+    "WAIT_STRUCTURE:retracement level 200#0",
+    "WAIT_STRUCTURE:breakout#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "WAIT_BIAS:trend direction#0",
+    "WAIT_BIAS:price trend#0"
+   ],
+   [
+    "WAIT_BIAS:price trend#0",
+    "WAIT_BIAS:20 ma slope#0"
+   ],
+   [
+    "WAIT_BIAS:20 ma slope#0",
+    "WAIT_BIAS:20 ma#0"
+   ],
+   [
+    "FILTER:moving averages are flat#0",
+    "FILTER:downtrend#0"
+   ],
+   [
+    "ENABLE_ENTRY:entry into established trend#0",
+    "ENABLE_ENTRY:short opportunity#0"
+   ],
+   [
+    "WAIT_BIAS:downtrend#0",
+    "WAIT_BIAS:price distance from 20 period moving average#0"
+   ],
+   [
+    "FILTER:ema200#0",
+    "FILTER:20 ma slope#0"
+   ],
+   [
+    "WAIT_BIAS:price distance from 20 period moving average#0",
+    "WAIT_BIAS:bearish bias#0"
+   ],
+   [
+    "WAIT_SESSION:ethereum#0",
+    "WAIT_SESSION:moving averages#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:break down through 200#0",
+    "type": "INVALIDATE",
+    "object": "break down through 200",
+    "role": "invalidation",
+    "span": {
+     "start": 18402,
+     "end": 18449
+    },
+    "evidence": "{T-gddY-C0347}"
+   },
+   {
+    "id": "INVALIDATE:price action rejection#0",
+    "type": "INVALIDATE",
+    "object": "price action rejection",
+    "role": "invalidation",
+    "span": {
+     "start": 18449,
+     "end": 18476
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:gap into support#0",
+    "type": "INVALIDATE",
+    "object": "gap into support",
+    "role": "invalidation",
+    "span": {
+     "start": 20016,
+     "end": 20069
+    },
+    "evidence": "We didn't gap into it where it would act as support."
+   }
+  ],
+  "entry_trigger_id": "ENABLE_ENTRY:retracement opportunity#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

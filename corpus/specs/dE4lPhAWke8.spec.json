@@ -1,0 +1,1037 @@
+{
+ "video": "dE4lPhAWke8",
+ "spec_hash": "36ca283a17c56125ea4e55a5d04f8cca33169cda3f2d1bfaf7a912e193862a64",
+ "graph_canonical_hash": "1f47ddb985cef0b7",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 23220,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_BIAS:higher highs and higher lows#0",
+    "type": "WAIT_BIAS",
+    "object": "higher highs and higher lows",
+    "role": "confluence",
+    "span": {
+     "start": 905,
+     "end": 964
+    },
+    "evidence": "T-dE4l-C0014"
+   },
+   {
+    "id": "WAIT_BIAS:lower highs and lower lows#0",
+    "type": "WAIT_BIAS",
+    "object": "lower highs and lower lows",
+    "role": "confluence",
+    "span": {
+     "start": 1002,
+     "end": 1097
+    },
+    "evidence": "T-dE4l-C0016"
+   },
+   {
+    "id": "WAIT_STRUCTURE:mss#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "mss",
+    "role": "spine",
+    "span": {
+     "start": 1097,
+     "end": 1150
+    },
+    "evidence": "T-dE4l-C0017"
+   },
+   {
+    "id": "WAIT_BIAS:bullish bias#0",
+    "type": "WAIT_BIAS",
+    "object": "bullish bias",
+    "role": "spine",
+    "span": {
+     "start": 1232,
+     "end": 1283
+    },
+    "evidence": "T-dE4l-C0021"
+   },
+   {
+    "id": "ENTER:short entry#0",
+    "type": "ENTER",
+    "object": "short entry",
+    "role": "trigger",
+    "span": {
+     "start": 1664,
+     "end": 1687
+    },
+    "evidence": "T-dE4l-C0027"
+   },
+   {
+    "id": "WAIT_BIAS:higher time frame chart direction#0",
+    "type": "WAIT_BIAS",
+    "object": "higher time frame chart direction",
+    "role": "spine",
+    "span": {
+     "start": 1994,
+     "end": 2099
+    },
+    "evidence": "T-dE4l-C0032"
+   },
+   {
+    "id": "WAIT_STRUCTURE:weekly chart structure hh hl or lh ll#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "weekly chart structure hh hl or lh ll",
+    "role": "spine",
+    "span": {
+     "start": 2099,
+     "end": 2241
+    },
+    "evidence": "T-dE4l-C0033"
+   },
+   {
+    "id": "WAIT_BIAS:market bias bearish or bullish#0",
+    "type": "WAIT_BIAS",
+    "object": "market bias bearish or bullish",
+    "role": "spine",
+    "span": {
+     "start": 2241,
+     "end": 2279
+    },
+    "evidence": "T-dE4l-C0034"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:mss identification#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "mss identification",
+    "role": "spine",
+    "span": {
+     "start": 2279,
+     "end": 2406
+    },
+    "evidence": "T-dE4l-C0035"
+   },
+   {
+    "id": "WAIT_STRUCTURE:market structure weekly daily 4our#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "market structure weekly daily 4our",
+    "role": "spine",
+    "span": {
+     "start": 3703,
+     "end": 3835
+    },
+    "evidence": "T-dE4l-C0058"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:mss#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "mss",
+    "role": "spine",
+    "span": {
+     "start": 3835,
+     "end": 3890
+    },
+    "evidence": "T-dE4l-C0059"
+   },
+   {
+    "id": "WAIT_STRUCTURE:market structure#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "market structure",
+    "role": "confluence",
+    "span": {
+     "start": 5057,
+     "end": 5104
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:weekly low high#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "weekly low high",
+    "role": "confluence",
+    "span": {
+     "start": 5470,
+     "end": 5526
+    },
+    "evidence": "{T-dE4l-C0088}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:double tops and liquidity levels above them#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "double tops and liquidity levels above them",
+    "role": "confluence",
+    "span": {
+     "start": 5638,
+     "end": 5732
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:trend confirmation#0",
+    "type": "WAIT_BIAS",
+    "object": "trend confirmation",
+    "role": "confluence",
+    "span": {
+     "start": 6559,
+     "end": 6584
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:trend continuation#0",
+    "type": "WAIT_BIAS",
+    "object": "trend continuation",
+    "role": "confluence",
+    "span": {
+     "start": 6584,
+     "end": 6645
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_RETEST:fvgs#0",
+    "type": "WAIT_RETEST",
+    "object": "fvgs",
+    "role": "spine",
+    "span": {
+     "start": 6645,
+     "end": 6706
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:discount old low#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "discount old low",
+    "role": "spine",
+    "span": {
+     "start": 6810,
+     "end": 6893
+    },
+    "evidence": "T-dE4l-C0110"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:rejection#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "rejection",
+    "role": "spine",
+    "span": {
+     "start": 7339,
+     "end": 7367
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:directional bias#0",
+    "type": "WAIT_BIAS",
+    "object": "directional bias",
+    "role": "spine",
+    "span": {
+     "start": 7834,
+     "end": 7867
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:trading duration#0",
+    "type": "WAIT_SESSION",
+    "object": "trading duration",
+    "role": "spine",
+    "span": {
+     "start": 7867,
+     "end": 7920
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:fvg fvg#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "fvg fvg",
+    "role": "spine",
+    "span": {
+     "start": 7992,
+     "end": 8094
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:fvgs#0",
+    "type": "FILTER",
+    "object": "fvgs",
+    "role": "confluence",
+    "span": {
+     "start": 8322,
+     "end": 8343
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:price location#0",
+    "type": "FILTER",
+    "object": "price location",
+    "role": "confluence",
+    "span": {
+     "start": 8343,
+     "end": 8394
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price range",
+    "role": "confluence",
+    "span": {
+     "start": 8394,
+     "end": 8445
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:swing high#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "swing high",
+    "role": "confluence",
+    "span": {
+     "start": 8445,
+     "end": 8485
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:markets trading into fvgs#0",
+    "type": "WAIT_BIAS",
+    "object": "markets trading into fvgs",
+    "role": "spine",
+    "span": {
+     "start": 8884,
+     "end": 8928
+    },
+    "evidence": "And I would prefer to go into those markets"
+   },
+   {
+    "id": "WAIT_BIAS:market direction#0",
+    "type": "WAIT_BIAS",
+    "object": "market direction",
+    "role": "spine",
+    "span": {
+     "start": 9429,
+     "end": 9531
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:liquidity balance#0",
+    "type": "FILTER",
+    "object": "liquidity balance",
+    "role": "confluence",
+    "span": {
+     "start": 9652,
+     "end": 9710
+    },
+    "evidence": "T-dE4l-C0166"
+   },
+   {
+    "id": "FILTER:equal highs#0",
+    "type": "FILTER",
+    "object": "equal highs",
+    "role": "confluence",
+    "span": {
+     "start": 9710,
+     "end": 9764
+    },
+    "evidence": "T-dE4l-C0167"
+   },
+   {
+    "id": "WAIT_STRUCTURE:market structure higher lows highs#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "market structure higher lows highs",
+    "role": "spine",
+    "span": {
+     "start": 10414,
+     "end": 10523
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:trading style#0",
+    "type": "WAIT_SESSION",
+    "object": "trading style",
+    "role": "confluence",
+    "span": {
+     "start": 10710,
+     "end": 10743
+    },
+    "evidence": "T-dE4l-C0187"
+   },
+   {
+    "id": "WAIT_SESSION:market direction#0",
+    "type": "WAIT_SESSION",
+    "object": "market direction",
+    "role": "confluence",
+    "span": {
+     "start": 10824,
+     "end": 10887
+    },
+    "evidence": "T-dE4l-C0189"
+   },
+   {
+    "id": "ENABLE_ENTRY:positioning#0",
+    "type": "ENABLE_ENTRY",
+    "object": "positioning",
+    "role": "trigger",
+    "span": {
+     "start": 10887,
+     "end": 10921
+    },
+    "evidence": "T-dE4l-C0190"
+   },
+   {
+    "id": "WAIT_STRUCTURE:market structure deterioration#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "market structure deterioration",
+    "role": "spine",
+    "span": {
+     "start": 11078,
+     "end": 11174
+    },
+    "evidence": "until we start losing this market structure"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:bearish fvgs#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "bearish fvgs",
+    "role": "spine",
+    "span": {
+     "start": 11174,
+     "end": 11202
+    },
+    "evidence": "We need to see"
+   },
+   {
+    "id": "WAIT_BIAS:long bias#0",
+    "type": "WAIT_BIAS",
+    "object": "long bias",
+    "role": "spine",
+    "span": {
+     "start": 11289,
+     "end": 11361
+    },
+    "evidence": "And until that happens"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:mss taking out old swing low#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "mss taking out old swing low",
+    "role": "spine",
+    "span": {
+     "start": 12252,
+     "end": 12441
+    },
+    "evidence": "T-dE4l-C0212"
+   },
+   {
+    "id": "WAIT_STRUCTURE:low breakout#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "low breakout",
+    "role": "spine",
+    "span": {
+     "start": 12696,
+     "end": 12729
+    },
+    "evidence": "T-dE4l-C0218"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:strong rejection#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "strong rejection",
+    "role": "spine",
+    "span": {
+     "start": 12729,
+     "end": 12778
+    },
+    "evidence": "T-dE4l-C0219"
+   },
+   {
+    "id": "WAIT_BIAS:market structure going to upside#0",
+    "type": "WAIT_BIAS",
+    "object": "market structure going to upside",
+    "role": "spine",
+    "span": {
+     "start": 12924,
+     "end": 13015
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:bearish fvg#0",
+    "type": "FILTER",
+    "object": "bearish fvg",
+    "role": "spine",
+    "span": {
+     "start": 13316,
+     "end": 13361
+    },
+    "evidence": "So even if we have a bearish fair value gap,"
+   },
+   {
+    "id": "WAIT_RETEST:level above fair bearish fvg#0",
+    "type": "WAIT_RETEST",
+    "object": "level above fair bearish fvg",
+    "role": "spine",
+    "span": {
+     "start": 13543,
+     "end": 13594
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:rejection and continuation higher#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "rejection and continuation higher",
+    "role": "spine",
+    "span": {
+     "start": 13594,
+     "end": 13636
+    },
+    "evidence": "and then rejects and it continues higher."
+   },
+   {
+    "id": "WAIT_RETEST:bullish fvg retesting and rejecting#0",
+    "type": "WAIT_RETEST",
+    "object": "bullish fvg retesting and rejecting",
+    "role": "spine",
+    "span": {
+     "start": 13636,
+     "end": 13761
+    },
+    "evidence": "We have this bullish fair value gap here retesting, rejecting, creating another fair value gap, retesting, rejecting, right?"
+   },
+   {
+    "id": "WAIT_STRUCTURE:fvg#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "fvg",
+    "role": "spine",
+    "span": {
+     "start": 13935,
+     "end": 13970
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:higher time frames#0",
+    "type": "WAIT_SESSION",
+    "object": "higher time frames",
+    "role": "spine",
+    "span": {
+     "start": 14508,
+     "end": 14557
+    },
+    "evidence": "{T-dE4l-C0250}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:liquidity rate#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "liquidity rate",
+    "role": "spine",
+    "span": {
+     "start": 14824,
+     "end": 14872
+    },
+    "evidence": "{T-dE4l-C0257}"
+   },
+   {
+    "id": "FILTER:liquidity pool level#0",
+    "type": "FILTER",
+    "object": "liquidity pool level",
+    "role": "spine",
+    "span": {
+     "start": 15072,
+     "end": 15231
+    },
+    "evidence": "{C0262}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:sweep old high bearish#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "sweep old high bearish",
+    "role": "spine",
+    "span": {
+     "start": 15891,
+     "end": 15972
+    },
+    "evidence": "T-dE4l-C0273"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:closure below old high bearish#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "closure below old high bearish",
+    "role": "spine",
+    "span": {
+     "start": 16005,
+     "end": 16031
+    },
+    "evidence": "T-dE4l-C0275"
+   },
+   {
+    "id": "WAIT_BIAS:bearish bias#0",
+    "type": "WAIT_BIAS",
+    "object": "bearish bias",
+    "role": "confluence",
+    "span": {
+     "start": 16274,
+     "end": 16323
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:short term low#0",
+    "type": "WAIT_BIAS",
+    "object": "short term low",
+    "role": "confluence",
+    "span": {
+     "start": 16477,
+     "end": 16556
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:old low#0",
+    "type": "FILTER",
+    "object": "old low",
+    "role": "spine",
+    "span": {
+     "start": 16576,
+     "end": 16646
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:swing failure pattern#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "swing failure pattern",
+    "role": "confluence",
+    "span": {
+     "start": 16646,
+     "end": 16698
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:take out low purge liquidity#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "take out low purge liquidity",
+    "role": "confluence",
+    "span": {
+     "start": 17626,
+     "end": 17680
+    },
+    "evidence": "{T-dE4l-C0305}"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:next candle close above old swing low#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "next candle close above old swing low",
+    "role": "spine",
+    "span": {
+     "start": 18192,
+     "end": 18241
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:bullish rejection#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "bullish rejection",
+    "role": "spine",
+    "span": {
+     "start": 18404,
+     "end": 18491
+    },
+    "evidence": "But even if you waited for the bullish rejection here, maybe you got in on this candle"
+   },
+   {
+    "id": "WAIT_STRUCTURE:swing high in range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "swing high in range",
+    "role": "spine",
+    "span": {
+     "start": 18779,
+     "end": 18819
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:candle body size#0",
+    "type": "FILTER",
+    "object": "candle body size",
+    "role": "spine",
+    "span": {
+     "start": 19475,
+     "end": 19526
+    },
+    "evidence": "{T-dE4l-C0335}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:market structure break and fvg creation#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "market structure break and fvg creation",
+    "role": "spine",
+    "span": {
+     "start": 19526,
+     "end": 19586
+    },
+    "evidence": "T-dE4l-C0336"
+   },
+   {
+    "id": "WAIT_RETEST:entry position within gap or after rejection#0",
+    "type": "WAIT_RETEST",
+    "object": "entry position within gap or after rejection",
+    "role": "trigger",
+    "span": {
+     "start": 19648,
+     "end": 19714
+    },
+    "evidence": "T-dE4l-C0338"
+   },
+   {
+    "id": "WAIT_STRUCTURE:displacement higher and fvg creation#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "displacement higher and fvg creation",
+    "role": "confluence",
+    "span": {
+     "start": 19894,
+     "end": 20002
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:swing low#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "swing low",
+    "role": "confluence",
+    "span": {
+     "start": 20516,
+     "end": 20557
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:displacement#0",
+    "type": "WAIT_BIAS",
+    "object": "displacement",
+    "role": "spine",
+    "span": {
+     "start": 20750,
+     "end": 20795
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:fvg fvg#0",
+    "type": "FILTER",
+    "object": "fvg fvg",
+    "role": "spine",
+    "span": {
+     "start": 20809,
+     "end": 20908
+    },
+    "evidence": "if we don't have a fair value gap that appears, maybe we have a fair value gap that gets inversed."
+   },
+   {
+    "id": "WAIT_CONFIRMATION:fvg fvg#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "fvg fvg",
+    "role": "confluence",
+    "span": {
+     "start": 20908,
+     "end": 20975
+    },
+    "evidence": "Okay? So, we have this fair value gap here that closes through it."
+   },
+   {
+    "id": "ENABLE_ENTRY:fvg#0",
+    "type": "ENABLE_ENTRY",
+    "object": "fvg",
+    "role": "trigger",
+    "span": {
+     "start": 21127,
+     "end": 21207
+    },
+    "evidence": "T-dE4l-C0367"
+   },
+   {
+    "id": "ENTER:long position#0",
+    "type": "ENTER",
+    "object": "long position",
+    "role": "trigger",
+    "span": {
+     "start": 21207,
+     "end": 21287
+    },
+    "evidence": "T-dE4l-C0368"
+   },
+   {
+    "id": "FILTER:swing point#0",
+    "type": "FILTER",
+    "object": "swing point",
+    "role": "spine",
+    "span": {
+     "start": 21395,
+     "end": 21431
+    },
+    "evidence": "T-dE4l-C0371"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:displacement through fvg#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "displacement through fvg",
+    "role": "spine",
+    "span": {
+     "start": 21808,
+     "end": 21885
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:daily bias#0",
+    "type": "WAIT_BIAS",
+    "object": "daily bias",
+    "role": "spine",
+    "span": {
+     "start": 22875,
+     "end": 22900
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:liquidity sweeps#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "liquidity sweeps",
+    "role": "spine",
+    "span": {
+     "start": 22900,
+     "end": 22926
+    },
+    "evidence": "Wait for liquidity raids."
+   },
+   {
+    "id": "ENTER:displacement with fvgs#0",
+    "type": "ENTER",
+    "object": "displacement with fvgs",
+    "role": "trigger",
+    "span": {
+     "start": 22926,
+     "end": 22970
+    },
+    "evidence": "Enter on displacement with fair value gaps."
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_BIAS:higher highs and higher lows#0",
+    "WAIT_BIAS:lower highs and lower lows#0"
+   ],
+   [
+    "WAIT_STRUCTURE:market structure#0",
+    "WAIT_STRUCTURE:weekly low high#0",
+    "WAIT_STRUCTURE:double tops and liquidity levels above them#0"
+   ],
+   [
+    "WAIT_BIAS:trend confirmation#0",
+    "WAIT_BIAS:trend continuation#0"
+   ],
+   [
+    "FILTER:fvgs#0",
+    "FILTER:price location#0"
+   ],
+   [
+    "WAIT_STRUCTURE:price range#0",
+    "WAIT_STRUCTURE:swing high#0"
+   ],
+   [
+    "FILTER:liquidity balance#0",
+    "FILTER:equal highs#0"
+   ],
+   [
+    "WAIT_SESSION:trading style#0",
+    "WAIT_SESSION:market direction#0"
+   ],
+   [
+    "WAIT_BIAS:bearish bias#0",
+    "WAIT_BIAS:short term low#0"
+   ],
+   [
+    "WAIT_STRUCTURE:swing failure pattern#0",
+    "WAIT_STRUCTURE:take out low purge liquidity#0"
+   ],
+   [
+    "WAIT_STRUCTURE:displacement higher and fvg creation#0",
+    "WAIT_STRUCTURE:swing low#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:fvg fvg#0",
+    "ENABLE_ENTRY:fvg#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "WAIT_STRUCTURE:weekly chart structure hh hl or lh ll#0",
+    "WAIT_STRUCTURE:market structure weekly daily 4our#0"
+   ],
+   [
+    "WAIT_STRUCTURE:market structure weekly daily 4our#0",
+    "WAIT_STRUCTURE:market structure#0"
+   ],
+   [
+    "WAIT_STRUCTURE:market structure#0",
+    "WAIT_STRUCTURE:weekly low high#0"
+   ],
+   [
+    "WAIT_BIAS:market bias bearish or bullish#0",
+    "WAIT_BIAS:trend confirmation#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:mss#0",
+    "WAIT_CONFIRMATION:rejection#0"
+   ],
+   [
+    "WAIT_BIAS:trend continuation#0",
+    "WAIT_BIAS:directional bias#0"
+   ],
+   [
+    "WAIT_BIAS:markets trading into fvgs#0",
+    "WAIT_BIAS:market direction#0"
+   ],
+   [
+    "WAIT_STRUCTURE:swing high#0",
+    "WAIT_STRUCTURE:market structure higher lows highs#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:bearish fvgs#0",
+    "WAIT_CONFIRMATION:mss taking out old swing low#0"
+   ],
+   [
+    "WAIT_STRUCTURE:liquidity rate#0",
+    "WAIT_STRUCTURE:sweep old high bearish#0"
+   ],
+   [
+    "WAIT_STRUCTURE:displacement higher and fvg creation#0",
+    "WAIT_STRUCTURE:swing low#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:high#0",
+    "type": "INVALIDATE",
+    "object": "high",
+    "role": "invalidation",
+    "span": {
+     "start": 2498,
+     "end": 2561
+    },
+    "evidence": "And then, if we get a retest, I do not want to see it take out"
+   },
+   {
+    "id": "INVALIDATE:retracement higher#0",
+    "type": "INVALIDATE",
+    "object": "retracement higher",
+    "role": "invalidation",
+    "span": {
+     "start": 2561,
+     "end": 2713
+    },
+    "evidence": "this high. So, as long as this high is being protected, I would say any retracement higher is just manipulation to try and get people to go long again."
+   },
+   {
+    "id": "INVALIDATE:rejection#0",
+    "type": "INVALIDATE",
+    "object": "rejection",
+    "role": "invalidation",
+    "span": {
+     "start": 8094,
+     "end": 8118
+    },
+    "evidence": "T-dE4l-C0138"
+   },
+   {
+    "id": "INVALIDATE:market condition#0",
+    "type": "INVALIDATE",
+    "object": "market condition",
+    "role": "invalidation",
+    "span": {
+     "start": 8230,
+     "end": 8302
+    },
+    "evidence": "T-dE4l-C0143"
+   },
+   {
+    "id": "INVALIDATE:market state#0",
+    "type": "INVALIDATE",
+    "object": "market state",
+    "role": "invalidation",
+    "span": {
+     "start": 8965,
+     "end": 9023
+    },
+    "evidence": "than trying to trade a market that is neutral or ranging."
+   },
+   {
+    "id": "INVALIDATE:trade execution#0",
+    "type": "INVALIDATE",
+    "object": "trade execution",
+    "role": "invalidation",
+    "span": {
+     "start": 9921,
+     "end": 9995
+    },
+    "evidence": "T-dE4l-C0172"
+   },
+   {
+    "id": "INVALIDATE:bearish fvg continuation inversion#0",
+    "type": "INVALIDATE",
+    "object": "bearish fvg continuation inversion",
+    "role": "invalidation",
+    "span": {
+     "start": 13361,
+     "end": 13438
+    },
+    "evidence": "if it doesn't reject and continue trading lower and it gets inversed, right?"
+   },
+   {
+    "id": "INVALIDATE:fvgs not getting retested#0",
+    "type": "INVALIDATE",
+    "object": "fvgs not getting retested",
+    "role": "invalidation",
+    "span": {
+     "start": 13826,
+     "end": 13867
+    },
+    "evidence": "Some of these don't get retested at all."
+   },
+   {
+    "id": "INVALIDATE:low purge#0",
+    "type": "INVALIDATE",
+    "object": "low purge",
+    "role": "invalidation",
+    "span": {
+     "start": 18241,
+     "end": 18279
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:no closure#0",
+    "type": "INVALIDATE",
+    "object": "no closure",
+    "role": "invalidation",
+    "span": {
+     "start": 18279,
+     "end": 18305
+    },
+    "evidence": "},{"
+   }
+  ],
+  "entry_trigger_id": "ENTER:short entry#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

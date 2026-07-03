@@ -1,0 +1,1872 @@
+{
+ "video": "7ieYBa7Z-Hg",
+ "spec_hash": "4685624dd866873f59cccc614ad345a4250ea5273513a08bdbd7954efb443f59",
+ "graph_canonical_hash": "7987de2de0a61adb",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 62947,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_STRUCTURE:market structure component#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "market structure component",
+    "role": "spine",
+    "span": {
+     "start": 321,
+     "end": 345
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "confluence",
+    "span": {
+     "start": 592,
+     "end": 641
+    },
+    "evidence": "T-7ieY-C0008"
+   },
+   {
+    "id": "FILTER:timeframe#0",
+    "type": "FILTER",
+    "object": "timeframe",
+    "role": "confluence",
+    "span": {
+     "start": 2050,
+     "end": 2073
+    },
+    "evidence": "T-7ieY-C0038"
+   },
+   {
+    "id": "WAIT_SESSION:m1 timeframe is not noise#0",
+    "type": "WAIT_SESSION",
+    "object": "m1 timeframe is not noise",
+    "role": "confluence",
+    "span": {
+     "start": 2481,
+     "end": 2520
+    },
+    "evidence": "T-7ieY-C0046"
+   },
+   {
+    "id": "WAIT_BIAS:top down analysis#0",
+    "type": "WAIT_BIAS",
+    "object": "top down analysis",
+    "role": "spine",
+    "span": {
+     "start": 3000,
+     "end": 3033
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:daily time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "daily time frame",
+    "role": "spine",
+    "span": {
+     "start": 3282,
+     "end": 3377
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "",
+    "role": "spine",
+    "span": {
+     "start": 3529,
+     "end": 3544
+    },
+    "evidence": "T-7ieY-C0067"
+   },
+   {
+    "id": "WAIT_SESSION:4 hour timeframe analysis#0",
+    "type": "WAIT_SESSION",
+    "object": "4 hour timeframe analysis",
+    "role": "confluence",
+    "span": {
+     "start": 3544,
+     "end": 3608
+    },
+    "evidence": "T-7ieY-C0068"
+   },
+   {
+    "id": "FILTER:4 hour wicking#0",
+    "type": "FILTER",
+    "object": "4 hour wicking",
+    "role": "confluence",
+    "span": {
+     "start": 3608,
+     "end": 3631
+    },
+    "evidence": "T-7ieY-C0069"
+   },
+   {
+    "id": "FILTER:4 hour sweep#0",
+    "type": "FILTER",
+    "object": "4 hour sweep",
+    "role": "confluence",
+    "span": {
+     "start": 3631,
+     "end": 3652
+    },
+    "evidence": "T-7ieY-C0070"
+   },
+   {
+    "id": "WAIT_BIAS:direction trade#0",
+    "type": "WAIT_BIAS",
+    "object": "direction trade",
+    "role": "confluence",
+    "span": {
+     "start": 3842,
+     "end": 3911
+    },
+    "evidence": "T-7ieY-C0073"
+   },
+   {
+    "id": "WAIT_BIAS:market bias#0",
+    "type": "WAIT_BIAS",
+    "object": "market bias",
+    "role": "confluence",
+    "span": {
+     "start": 4164,
+     "end": 4345
+    },
+    "evidence": "T-7ieY-C0076"
+   },
+   {
+    "id": "INVALIDATE:entry trigger#0",
+    "type": "INVALIDATE",
+    "object": "entry trigger",
+    "role": "trigger",
+    "span": {
+     "start": 5231,
+     "end": 5273
+    },
+    "evidence": "T-7ieY-C0094:T-7ieY-C0095"
+   },
+   {
+    "id": "WAIT_STRUCTURE:sweep manipulation#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "sweep manipulation",
+    "role": "confluence",
+    "span": {
+     "start": 5548,
+     "end": 5579
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:demand zone#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "demand zone",
+    "role": "confluence",
+    "span": {
+     "start": 6058,
+     "end": 6081
+    },
+    "evidence": "T-7ieY-C0112"
+   },
+   {
+    "id": "WAIT_STRUCTURE:supply zone#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "supply zone",
+    "role": "confluence",
+    "span": {
+     "start": 6081,
+     "end": 6114
+    },
+    "evidence": "T-7ieY-C0113"
+   },
+   {
+    "id": "WAIT_STRUCTURE:demand supply zones#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "demand supply zones",
+    "role": "confluence",
+    "span": {
+     "start": 6136,
+     "end": 6237
+    },
+    "evidence": "T-7ieY-C0115"
+   },
+   {
+    "id": "FILTER:pivotal moment#0",
+    "type": "FILTER",
+    "object": "pivotal moment",
+    "role": "confluence",
+    "span": {
+     "start": 6285,
+     "end": 6320
+    },
+    "evidence": "T-7ieY-C0117"
+   },
+   {
+    "id": "FILTER:trend direction#0",
+    "type": "FILTER",
+    "object": "trend direction",
+    "role": "confluence",
+    "span": {
+     "start": 7013,
+     "end": 7046
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:point interest poi#0",
+    "type": "FILTER",
+    "object": "point interest poi",
+    "role": "confluence",
+    "span": {
+     "start": 7081,
+     "end": 7161
+    },
+    "evidence": "So a quality POI is more of a previous range that is the only thing that I use."
+   },
+   {
+    "id": "VERIFY_STRUCTURE:price break above previous swing high#0",
+    "type": "VERIFY_STRUCTURE",
+    "object": "price break above previous swing high",
+    "role": "confluence",
+    "span": {
+     "start": 7198,
+     "end": 7265
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:previous range breakup structure to low#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "previous range breakup structure to low",
+    "role": "confluence",
+    "span": {
+     "start": 7361,
+     "end": 7459
+    },
+    "evidence": "put in. That breakup structure from the breakup structure to the low, that is the previous range."
+   },
+   {
+    "id": "WAIT_RETEST:previous range#0",
+    "type": "WAIT_RETEST",
+    "object": "previous range",
+    "role": "spine",
+    "span": {
+     "start": 7459,
+     "end": 7545
+    },
+    "evidence": "So, I'm expecting price to drop back into that previous range by about 30, 50, or 70%"
+   },
+   {
+    "id": "WAIT_STRUCTURE:bos and change in state#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "bos and change in state",
+    "role": "confluence",
+    "span": {
+     "start": 8152,
+     "end": 8218
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price action relative to 15m candle structure#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price action relative to 15m candle structure",
+    "role": "confluence",
+    "span": {
+     "start": 8644,
+     "end": 8945
+    },
+    "evidence": "T-7ieY-C0158"
+   },
+   {
+    "id": "WAIT_SESSION:market structure#0",
+    "type": "WAIT_SESSION",
+    "object": "market structure",
+    "role": "spine",
+    "span": {
+     "start": 9169,
+     "end": 9236
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:going short#0",
+    "type": "WAIT_BIAS",
+    "object": "going short",
+    "role": "spine",
+    "span": {
+     "start": 9636,
+     "end": 9659
+    },
+    "evidence": "T-7ieY-C0172"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:continuing in freefall#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "continuing in freefall",
+    "role": "spine",
+    "span": {
+     "start": 9659,
+     "end": 9695
+    },
+    "evidence": "T-7ieY-C0173"
+   },
+   {
+    "id": "WAIT_SESSION:time day#0",
+    "type": "WAIT_SESSION",
+    "object": "time day",
+    "role": "confluence",
+    "span": {
+     "start": 9960,
+     "end": 10170
+    },
+    "evidence": "T-7ieY-C0179"
+   },
+   {
+    "id": "WAIT_SESSION:time zones#0",
+    "type": "WAIT_SESSION",
+    "object": "time zones",
+    "role": "confluence",
+    "span": {
+     "start": 10300,
+     "end": 10404
+    },
+    "evidence": "Asia range"
+   },
+   {
+    "id": "WAIT_STRUCTURE:range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "range",
+    "role": "spine",
+    "span": {
+     "start": 10563,
+     "end": 10588
+    },
+    "evidence": "as always within a range"
+   },
+   {
+    "id": "WAIT_SESSION:asia session context#0",
+    "type": "WAIT_SESSION",
+    "object": "asia session context",
+    "role": "confluence",
+    "span": {
+     "start": 10665,
+     "end": 10774
+    },
+    "evidence": "T-7ieY-C0187"
+   },
+   {
+    "id": "WAIT_SESSION:asia trading session#0",
+    "type": "WAIT_SESSION",
+    "object": "asia trading session",
+    "role": "confluence",
+    "span": {
+     "start": 10906,
+     "end": 10927
+    },
+    "evidence": "T-7ieY-C0191"
+   },
+   {
+    "id": "WAIT_SESSION:london trading session#0",
+    "type": "WAIT_SESSION",
+    "object": "london trading session",
+    "role": "confluence",
+    "span": {
+     "start": 10927,
+     "end": 10950
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:new york trading session#0",
+    "type": "WAIT_SESSION",
+    "object": "new york trading session",
+    "role": "confluence",
+    "span": {
+     "start": 10950,
+     "end": 10975
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:first hour trading#0",
+    "type": "WAIT_SESSION",
+    "object": "first hour trading",
+    "role": "confluence",
+    "span": {
+     "start": 13469,
+     "end": 13529
+    },
+    "evidence": "T-7ieY-C0229"
+   },
+   {
+    "id": "WAIT_SESSION:new york open#0",
+    "type": "WAIT_SESSION",
+    "object": "new york open",
+    "role": "confluence",
+    "span": {
+     "start": 13572,
+     "end": 13626
+    },
+    "evidence": "T-7ieY-C0231"
+   },
+   {
+    "id": "WAIT_SESSION:time window#0",
+    "type": "WAIT_SESSION",
+    "object": "time window",
+    "role": "confluence",
+    "span": {
+     "start": 13803,
+     "end": 13821
+    },
+    "evidence": "T-7ieY-C0235"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:price turn other way after tapping poi wick zone#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "price turn other way after tapping poi wick zone",
+    "role": "confluence",
+    "span": {
+     "start": 14653,
+     "end": 14682
+    },
+    "evidence": "T-7ieY-C0248"
+   },
+   {
+    "id": "ENABLE_ENTRY:manipulation trade#0",
+    "type": "ENABLE_ENTRY",
+    "object": "manipulation trade",
+    "role": "trigger",
+    "span": {
+     "start": 14682,
+     "end": 14714
+    },
+    "evidence": "T-7ieY-C0249"
+   },
+   {
+    "id": "WAIT_SESSION:first hour#0",
+    "type": "WAIT_SESSION",
+    "object": "first hour",
+    "role": "spine",
+    "span": {
+     "start": 14796,
+     "end": 14877
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:level above is like you re in range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "level above is like you re in range",
+    "role": "confluence",
+    "span": {
+     "start": 15278,
+     "end": 15334
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:bullish range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "bullish range",
+    "role": "confluence",
+    "span": {
+     "start": 15421,
+     "end": 15448
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:bos#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "bos",
+    "role": "confluence",
+    "span": {
+     "start": 15697,
+     "end": 15722
+    },
+    "evidence": "T-7ieY-C0272"
+   },
+   {
+    "id": "WAIT_STRUCTURE:second swing#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "second swing",
+    "role": "confluence",
+    "span": {
+     "start": 15791,
+     "end": 15823
+    },
+    "evidence": "T-7ieY-C0274"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price break up above range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price break up above range",
+    "role": "confluence",
+    "span": {
+     "start": 15837,
+     "end": 15880
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:low through low range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "low through low range",
+    "role": "confluence",
+    "span": {
+     "start": 15880,
+     "end": 15943
+    },
+    "evidence": "and then you see it put in a low through the low of the range."
+   },
+   {
+    "id": "WAIT_STRUCTURE:consolidation break up high#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "consolidation break up high",
+    "role": "confluence",
+    "span": {
+     "start": 16146,
+     "end": 16211
+    },
+    "evidence": "T-7ieY-C0282"
+   },
+   {
+    "id": "WAIT_BIAS:higher time frame poi#0",
+    "type": "WAIT_BIAS",
+    "object": "higher time frame poi",
+    "role": "confluence",
+    "span": {
+     "start": 19758,
+     "end": 19847
+    },
+    "evidence": "T-7ieY-C0331"
+   },
+   {
+    "id": "WAIT_BIAS:so there s one i take#0",
+    "type": "WAIT_BIAS",
+    "object": "so there s one i take",
+    "role": "confluence",
+    "span": {
+     "start": 20619,
+     "end": 20652
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price break location#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price break location",
+    "role": "confluence",
+    "span": {
+     "start": 21541,
+     "end": 21633
+    },
+    "evidence": "T-7ieY-C0356 to T-7ieY-C0359"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price break#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price break",
+    "role": "confluence",
+    "span": {
+     "start": 21734,
+     "end": 21761
+    },
+    "evidence": "T-7ieY-C0358 to T-7ieY-C0359"
+   },
+   {
+    "id": "WAIT_STRUCTURE:breakout#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "breakout",
+    "role": "confluence",
+    "span": {
+     "start": 23043,
+     "end": 23070
+    },
+    "evidence": "{T-7ieY-C0384, T-7ieY-C0385}"
+   },
+   {
+    "id": "WAIT_RETEST:range#0",
+    "type": "WAIT_RETEST",
+    "object": "range",
+    "role": "spine",
+    "span": {
+     "start": 23132,
+     "end": 23237
+    },
+    "evidence": "{T-7ieY-C0384, T-7ieY-C0387}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:range breakout#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "range breakout",
+    "role": "spine",
+    "span": {
+     "start": 23237,
+     "end": 23346
+    },
+    "evidence": "{T-7ieY-C0384, T-7ieY-C0388}"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:reversal#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "reversal",
+    "role": "confluence",
+    "span": {
+     "start": 23346,
+     "end": 23360
+    },
+    "evidence": "{T-7ieY-C0384, T-7ieY-C0389}"
+   },
+   {
+    "id": "CONFIRM_DIRECTION:trade direction#0",
+    "type": "CONFIRM_DIRECTION",
+    "object": "trade direction",
+    "role": "confluence",
+    "span": {
+     "start": 23983,
+     "end": 24002
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:price location#0",
+    "type": "FILTER",
+    "object": "price location",
+    "role": "spine",
+    "span": {
+     "start": 24002,
+     "end": 24022
+    },
+    "evidence": "above the range and"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:price action pattern break tap#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "price action pattern break tap",
+    "role": "spine",
+    "span": {
+     "start": 24572,
+     "end": 24625
+    },
+    "evidence": "T-7ieY-C0412"
+   },
+   {
+    "id": "WAIT_STRUCTURE:range and catalyst breakout#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "range and catalyst breakout",
+    "role": "spine",
+    "span": {
+     "start": 25075,
+     "end": 25156
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:sweep#0",
+    "type": "FILTER",
+    "object": "sweep",
+    "role": "spine",
+    "span": {
+     "start": 25412,
+     "end": 25483
+    },
+    "evidence": "T-7ieY-C0426"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:price sweep low and trade up above previous down candle high#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "price sweep low and trade up above previous down candle high",
+    "role": "spine",
+    "span": {
+     "start": 26242,
+     "end": 26312
+    },
+    "evidence": "T-7ieY-C0438"
+   },
+   {
+    "id": "WAIT_STRUCTURE:symptoms sweep#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "symptoms sweep",
+    "role": "spine",
+    "span": {
+     "start": 27521,
+     "end": 27544
+    },
+    "evidence": "T-7ieY-C0456 to T-7ieY-C0458"
+   },
+   {
+    "id": "FILTER:previous day high or previous week high#0",
+    "type": "FILTER",
+    "object": "previous day high or previous week high",
+    "role": "spine",
+    "span": {
+     "start": 27774,
+     "end": 27830
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:liquidity generation and sweep#0",
+    "type": "WAIT_BIAS",
+    "object": "liquidity generation and sweep",
+    "role": "confluence",
+    "span": {
+     "start": 28086,
+     "end": 28164
+    },
+    "evidence": "So I would say that I trade as a part of both the generation of liquidity and"
+   },
+   {
+    "id": "WAIT_BIAS:sweep liquidity#0",
+    "type": "WAIT_BIAS",
+    "object": "sweep liquidity",
+    "role": "confluence",
+    "span": {
+     "start": 28164,
+     "end": 28188
+    },
+    "evidence": "the sweep of liquidity."
+   },
+   {
+    "id": "WAIT_STRUCTURE:price sweep through lows#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price sweep through lows",
+    "role": "spine",
+    "span": {
+     "start": 28268,
+     "end": 28309
+    },
+    "evidence": "T-7ieY-C0468, T-7ieY-C0469"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:trade part generation or sweep and run back up above#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "trade part generation or sweep and run back up above",
+    "role": "confluence",
+    "span": {
+     "start": 28309,
+     "end": 28432
+    },
+    "evidence": "T-7ieY-C0471"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:generation before sweep low and reverse#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "generation before sweep low and reverse",
+    "role": "confluence",
+    "span": {
+     "start": 28486,
+     "end": 28588
+    },
+    "evidence": "T-7ieY-C0472, T-7ieY-C0473"
+   },
+   {
+    "id": "ENTER:buy#0",
+    "type": "ENTER",
+    "object": "buy",
+    "role": "trigger",
+    "span": {
+     "start": 28588,
+     "end": 28608
+    },
+    "evidence": "T-7ieY-C0474"
+   },
+   {
+    "id": "WAIT_STRUCTURE:liquidity generation low#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "liquidity generation low",
+    "role": "spine",
+    "span": {
+     "start": 29254,
+     "end": 29326
+    },
+    "evidence": "T-7ieY-C0488"
+   },
+   {
+    "id": "FILTER:price level low#0",
+    "type": "FILTER",
+    "object": "price level low",
+    "role": "spine",
+    "span": {
+     "start": 29326,
+     "end": 29358
+    },
+    "evidence": "T-7ieY-C0489"
+   },
+   {
+    "id": "WAIT_RETEST:low respect#0",
+    "type": "WAIT_RETEST",
+    "object": "low respect",
+    "role": "spine",
+    "span": {
+     "start": 29406,
+     "end": 29443
+    },
+    "evidence": "T-7ieY-C0491"
+   },
+   {
+    "id": "WAIT_STRUCTURE:break lows#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "break lows",
+    "role": "spine",
+    "span": {
+     "start": 29456,
+     "end": 29511
+    },
+    "evidence": "T-7ieY-C0493"
+   },
+   {
+    "id": "FILTER:prominent wick#0",
+    "type": "FILTER",
+    "object": "prominent wick",
+    "role": "spine",
+    "span": {
+     "start": 29511,
+     "end": 29570
+    },
+    "evidence": "T-7ieY-C0494"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:push trading back into range#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "push trading back into range",
+    "role": "confluence",
+    "span": {
+     "start": 29879,
+     "end": 29946
+    },
+    "evidence": "T-7ieY-C0500"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:price above range#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "price above range",
+    "role": "confluence",
+    "span": {
+     "start": 29946,
+     "end": 29968
+    },
+    "evidence": "T-7ieY-C0501"
+   },
+   {
+    "id": "WAIT_STRUCTURE:pool liquidity#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "pool liquidity",
+    "role": "spine",
+    "span": {
+     "start": 29968,
+     "end": 30008
+    },
+    "evidence": "T-7ieY-C0502"
+   },
+   {
+    "id": "FILTER:wick to left#0",
+    "type": "FILTER",
+    "object": "wick to left",
+    "role": "spine",
+    "span": {
+     "start": 31223,
+     "end": 31264
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:initial reversal participation#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "initial reversal participation",
+    "role": "spine",
+    "span": {
+     "start": 31773,
+     "end": 31823
+    },
+    "evidence": "T-7ieY-C0531 to T-7ieY-C0532"
+   },
+   {
+    "id": "ENTER:entry point#0",
+    "type": "ENTER",
+    "object": "entry point",
+    "role": "trigger",
+    "span": {
+     "start": 32598,
+     "end": 32641
+    },
+    "evidence": "T-7ieY-C0543"
+   },
+   {
+    "id": "ENABLE_ENTRY:feeler trade#0",
+    "type": "ENABLE_ENTRY",
+    "object": "feeler trade",
+    "role": "trigger",
+    "span": {
+     "start": 32897,
+     "end": 32937
+    },
+    "evidence": "T-7ieY-C0547"
+   },
+   {
+    "id": "ENABLE_ENTRY:trade below here#0",
+    "type": "ENABLE_ENTRY",
+    "object": "trade below here",
+    "role": "trigger",
+    "span": {
+     "start": 32963,
+     "end": 32992
+    },
+    "evidence": "T-7ieY-C0549"
+   },
+   {
+    "id": "ENTER:price turn other way#0",
+    "type": "ENTER",
+    "object": "price turn other way",
+    "role": "trigger",
+    "span": {
+     "start": 33553,
+     "end": 33603
+    },
+    "evidence": "T-7ieY-C0561"
+   },
+   {
+    "id": "WAIT_BIAS:bullish candles#0",
+    "type": "WAIT_BIAS",
+    "object": "bullish candles",
+    "role": "spine",
+    "span": {
+     "start": 33826,
+     "end": 33897
+    },
+    "evidence": "{T-7ieY-C0565}"
+   },
+   {
+    "id": "WAIT_SESSION:time frame requirement#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame requirement",
+    "role": "spine",
+    "span": {
+     "start": 33980,
+     "end": 34032
+    },
+    "evidence": "{T-7ieY-C0569}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:stop placement#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "stop placement",
+    "role": "spine",
+    "span": {
+     "start": 34073,
+     "end": 34169
+    },
+    "evidence": "T-7ieY-C0571"
+   },
+   {
+    "id": "WAIT_RETEST:fvg#0",
+    "type": "WAIT_RETEST",
+    "object": "fvg",
+    "role": "spine",
+    "span": {
+     "start": 34242,
+     "end": 34259
+    },
+    "evidence": "T-7ieY-C0573"
+   },
+   {
+    "id": "ENABLE_ENTRY:trade going up#0",
+    "type": "ENABLE_ENTRY",
+    "object": "trade going up",
+    "role": "trigger",
+    "span": {
+     "start": 34374,
+     "end": 34443
+    },
+    "evidence": "T-7ieY-C0577"
+   },
+   {
+    "id": "ENABLE_ENTRY:go higher#0",
+    "type": "ENABLE_ENTRY",
+    "object": "go higher",
+    "role": "trigger",
+    "span": {
+     "start": 34495,
+     "end": 34510
+    },
+    "evidence": "T-7ieY-C0579"
+   },
+   {
+    "id": "EXIT_HINT:break even to put it below low#0",
+    "type": "EXIT_HINT",
+    "object": "break even to put it below low",
+    "role": "spine",
+    "span": {
+     "start": 34510,
+     "end": 34561
+    },
+    "evidence": "T-7ieY-C0580"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:21 ema#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "21 ema",
+    "role": "confluence",
+    "span": {
+     "start": 34712,
+     "end": 34808
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:reversal bottom#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "reversal bottom",
+    "role": "confluence",
+    "span": {
+     "start": 34886,
+     "end": 34920
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:price close below ema#0",
+    "type": "FILTER",
+    "object": "price close below ema",
+    "role": "spine",
+    "span": {
+     "start": 34959,
+     "end": 34991
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:closures below 21 ema#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "closures below 21 ema",
+    "role": "spine",
+    "span": {
+     "start": 35388,
+     "end": 35429
+    },
+    "evidence": "T-7ieY-C0594"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:take out high brought it to ema#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "take out high brought it to ema",
+    "role": "spine",
+    "span": {
+     "start": 35492,
+     "end": 35524
+    },
+    "evidence": "T-7ieY-C0596"
+   },
+   {
+    "id": "WAIT_BIAS:trading style#0",
+    "type": "WAIT_BIAS",
+    "object": "trading style",
+    "role": "spine",
+    "span": {
+     "start": 36035,
+     "end": 36162
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:first move inside poi#0",
+    "type": "FILTER",
+    "object": "first move inside poi",
+    "role": "spine",
+    "span": {
+     "start": 36652,
+     "end": 36698
+    },
+    "evidence": "T-7ieY-C0616"
+   },
+   {
+    "id": "FILTER:stop placement#0",
+    "type": "FILTER",
+    "object": "stop placement",
+    "role": "spine",
+    "span": {
+     "start": 37761,
+     "end": 37786
+    },
+    "evidence": "T-7ieY-C0640"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:inducement sweep#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "inducement sweep",
+    "role": "confluence",
+    "span": {
+     "start": 37859,
+     "end": 38052
+    },
+    "evidence": "{T-7ieY-C0643}"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:sweep#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "sweep",
+    "role": "confluence",
+    "span": {
+     "start": 38171,
+     "end": 38188
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:liquidity pool#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "liquidity pool",
+    "role": "spine",
+    "span": {
+     "start": 40746,
+     "end": 40889
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:trade execution context#0",
+    "type": "WAIT_SESSION",
+    "object": "trade execution context",
+    "role": "spine",
+    "span": {
+     "start": 42000,
+     "end": 42115
+    },
+    "evidence": "T-7ieY-C0716"
+   },
+   {
+    "id": "WAIT_STRUCTURE:hourly zone formation#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "hourly zone formation",
+    "role": "spine",
+    "span": {
+     "start": 42115,
+     "end": 42189
+    },
+    "evidence": "T-7ieY-C0717"
+   },
+   {
+    "id": "WAIT_STRUCTURE:low high break#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "low high break",
+    "role": "confluence",
+    "span": {
+     "start": 42573,
+     "end": 42647
+    },
+    "evidence": "T-7ieY-C0728"
+   },
+   {
+    "id": "VERIFY_STRUCTURE:breakup structure#0",
+    "type": "VERIFY_STRUCTURE",
+    "object": "breakup structure",
+    "role": "confluence",
+    "span": {
+     "start": 42647,
+     "end": 42685
+    },
+    "evidence": "T-7ieY-C0729"
+   },
+   {
+    "id": "ENTER:entry stop placement#0",
+    "type": "ENTER",
+    "object": "entry stop placement",
+    "role": "trigger",
+    "span": {
+     "start": 43119,
+     "end": 43181
+    },
+    "evidence": "T-7ieY-C0739"
+   },
+   {
+    "id": "WAIT_RETEST:price retrace#0",
+    "type": "WAIT_RETEST",
+    "object": "price retrace",
+    "role": "spine",
+    "span": {
+     "start": 43350,
+     "end": 43397
+    },
+    "evidence": "T-7ieY-C0742"
+   },
+   {
+    "id": "ENTER:entry and stop placement#0",
+    "type": "ENTER",
+    "object": "entry and stop placement",
+    "role": "trigger",
+    "span": {
+     "start": 43422,
+     "end": 43524
+    },
+    "evidence": "T-7ieY-C0745"
+   },
+   {
+    "id": "FILTER:bullish candle structure#0",
+    "type": "FILTER",
+    "object": "bullish candle structure",
+    "role": "spine",
+    "span": {
+     "start": 43524,
+     "end": 43564
+    },
+    "evidence": "bullish candle that that went up above."
+   },
+   {
+    "id": "WAIT_CONFIRMATION:swing count#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "swing count",
+    "role": "spine",
+    "span": {
+     "start": 43843,
+     "end": 43962
+    },
+    "evidence": "T-7ieY-C0752"
+   },
+   {
+    "id": "WAIT_SESSION:time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame",
+    "role": "spine",
+    "span": {
+     "start": 44144,
+     "end": 44165
+    },
+    "evidence": "T-7ieY-C0754"
+   },
+   {
+    "id": "INVALIDATE:entry from supply#0",
+    "type": "INVALIDATE",
+    "object": "entry from supply",
+    "role": "trigger",
+    "span": {
+     "start": 44738,
+     "end": 44794
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:asian session profitability#0",
+    "type": "WAIT_SESSION",
+    "object": "asian session profitability",
+    "role": "spine",
+    "span": {
+     "start": 45785,
+     "end": 45929
+    },
+    "evidence": "{T-7ieY-C0784}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:tightening and going up to other range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "tightening and going up to other range",
+    "role": "spine",
+    "span": {
+     "start": 46136,
+     "end": 46188
+    },
+    "evidence": "T-7ieY-C0787"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:break range#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "break range",
+    "role": "spine",
+    "span": {
+     "start": 46188,
+     "end": 46224
+    },
+    "evidence": "T-7ieY-C0788"
+   },
+   {
+    "id": "WAIT_BIAS:going back down to lower portion range#0",
+    "type": "WAIT_BIAS",
+    "object": "going back down to lower portion range",
+    "role": "spine",
+    "span": {
+     "start": 46224,
+     "end": 46284
+    },
+    "evidence": "T-7ieY-C0789"
+   },
+   {
+    "id": "ENTER:order placement#0",
+    "type": "ENTER",
+    "object": "order placement",
+    "role": "trigger",
+    "span": {
+     "start": 49119,
+     "end": 49177
+    },
+    "evidence": "{T-7ieY-C0839}"
+   },
+   {
+    "id": "EXIT_HINT:trade completion#0",
+    "type": "EXIT_HINT",
+    "object": "trade completion",
+    "role": "spine",
+    "span": {
+     "start": 53498,
+     "end": 53569
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price action structure#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price action structure",
+    "role": "spine",
+    "span": {
+     "start": 56860,
+     "end": 56893
+    },
+    "evidence": "T-7ieY-C0984 to T-7ieY-C0986"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:price action structure confirmation#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "price action structure confirmation",
+    "role": "spine",
+    "span": {
+     "start": 56893,
+     "end": 56929
+    },
+    "evidence": "T-7ieY-C0987"
+   },
+   {
+    "id": "ENTER:short trade#0",
+    "type": "ENTER",
+    "object": "short trade",
+    "role": "trigger",
+    "span": {
+     "start": 56929,
+     "end": 56962
+    },
+    "evidence": "T-7ieY-C0988"
+   },
+   {
+    "id": "WAIT_SESSION:trading activity#0",
+    "type": "WAIT_SESSION",
+    "object": "trading activity",
+    "role": "spine",
+    "span": {
+     "start": 57149,
+     "end": 57205
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:live account trading#0",
+    "type": "WAIT_SESSION",
+    "object": "live account trading",
+    "role": "spine",
+    "span": {
+     "start": 59776,
+     "end": 59844
+    },
+    "evidence": "T-7ieY-C1040"
+   },
+   {
+    "id": "ENTER:trade selection based margin cost#0",
+    "type": "ENTER",
+    "object": "trade selection based margin cost",
+    "role": "trigger",
+    "span": {
+     "start": 60429,
+     "end": 60473
+    },
+    "evidence": "},{"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_SESSION:timeframe#0",
+    "FILTER:timeframe#0",
+    "WAIT_SESSION:m1 timeframe is not noise#0"
+   ],
+   [
+    "WAIT_SESSION:4 hour timeframe analysis#0",
+    "FILTER:4 hour wicking#0",
+    "FILTER:4 hour sweep#0"
+   ],
+   [
+    "WAIT_BIAS:direction trade#0",
+    "WAIT_BIAS:market bias#0"
+   ],
+   [
+    "WAIT_STRUCTURE:sweep manipulation#0",
+    "WAIT_STRUCTURE:demand zone#0",
+    "WAIT_STRUCTURE:supply zone#0",
+    "WAIT_STRUCTURE:demand supply zones#0"
+   ],
+   [
+    "FILTER:pivotal moment#0",
+    "FILTER:trend direction#0",
+    "FILTER:point interest poi#0"
+   ],
+   [
+    "VERIFY_STRUCTURE:price break above previous swing high#0",
+    "WAIT_STRUCTURE:previous range breakup structure to low#0"
+   ],
+   [
+    "WAIT_STRUCTURE:bos and change in state#0",
+    "WAIT_STRUCTURE:price action relative to 15m candle structure#0"
+   ],
+   [
+    "WAIT_SESSION:time day#0",
+    "WAIT_SESSION:time zones#0"
+   ],
+   [
+    "WAIT_SESSION:asia session context#0",
+    "WAIT_SESSION:asia trading session#0",
+    "WAIT_SESSION:london trading session#0",
+    "WAIT_SESSION:new york trading session#0",
+    "WAIT_SESSION:first hour trading#0",
+    "WAIT_SESSION:new york open#0",
+    "WAIT_SESSION:time window#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:price turn other way after tapping poi wick zone#0",
+    "ENABLE_ENTRY:manipulation trade#0"
+   ],
+   [
+    "WAIT_STRUCTURE:level above is like you re in range#0",
+    "WAIT_STRUCTURE:bullish range#0",
+    "WAIT_STRUCTURE:bos#0",
+    "WAIT_STRUCTURE:second swing#0",
+    "WAIT_STRUCTURE:price break up above range#0",
+    "WAIT_STRUCTURE:low through low range#0",
+    "WAIT_STRUCTURE:consolidation break up high#0"
+   ],
+   [
+    "WAIT_BIAS:higher time frame poi#0",
+    "WAIT_BIAS:so there s one i take#0"
+   ],
+   [
+    "WAIT_STRUCTURE:price break location#0",
+    "WAIT_STRUCTURE:price break#0",
+    "WAIT_STRUCTURE:breakout#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:reversal#0",
+    "CONFIRM_DIRECTION:trade direction#0"
+   ],
+   [
+    "WAIT_BIAS:liquidity generation and sweep#0",
+    "WAIT_BIAS:sweep liquidity#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:trade part generation or sweep and run back up above#0",
+    "WAIT_CONFIRMATION:generation before sweep low and reverse#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:push trading back into range#0",
+    "WAIT_CONFIRMATION:price above range#0"
+   ],
+   [
+    "ENABLE_ENTRY:feeler trade#0",
+    "ENABLE_ENTRY:trade below here#0"
+   ],
+   [
+    "ENABLE_ENTRY:trade going up#0",
+    "ENABLE_ENTRY:go higher#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:21 ema#0",
+    "WAIT_CONFIRMATION:reversal bottom#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:inducement sweep#0",
+    "WAIT_CONFIRMATION:sweep#0"
+   ],
+   [
+    "WAIT_STRUCTURE:low high break#0",
+    "VERIFY_STRUCTURE:breakup structure#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "WAIT_SESSION:m1 timeframe is not noise#0",
+    "WAIT_SESSION:daily time frame#0"
+   ],
+   [
+    "WAIT_BIAS:top down analysis#0",
+    "WAIT_BIAS:direction trade#0"
+   ],
+   [
+    "WAIT_BIAS:direction trade#0",
+    "WAIT_BIAS:market bias#0"
+   ],
+   [
+    "FILTER:pivotal moment#0",
+    "FILTER:trend direction#0"
+   ],
+   [
+    "WAIT_BIAS:market bias#0",
+    "WAIT_BIAS:going short#0"
+   ],
+   [
+    "WAIT_SESSION:time day#0",
+    "WAIT_SESSION:time zones#0"
+   ],
+   [
+    "WAIT_SESSION:new york trading session#0",
+    "WAIT_SESSION:first hour trading#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:continuing in freefall#0",
+    "WAIT_CONFIRMATION:price turn other way after tapping poi wick zone#0"
+   ],
+   [
+    "WAIT_STRUCTURE:range#0",
+    "WAIT_STRUCTURE:level above is like you re in range#0"
+   ],
+   [
+    "WAIT_STRUCTURE:level above is like you re in range#0",
+    "WAIT_STRUCTURE:bullish range#0"
+   ],
+   [
+    "INVALIDATE:consolidation break up high low sequence#0",
+    "INVALIDATE:if trade doesn t meet criteria i don t think trade will reach riskreward i won t take it#0"
+   ],
+   [
+    "WAIT_BIAS:going short#0",
+    "WAIT_BIAS:higher time frame poi#0"
+   ],
+   [
+    "WAIT_BIAS:higher time frame poi#0",
+    "WAIT_BIAS:so there s one i take#0"
+   ],
+   [
+    "WAIT_STRUCTURE:price break#0",
+    "WAIT_STRUCTURE:breakout#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:reversal#0",
+    "WAIT_CONFIRMATION:price action pattern break tap#0"
+   ],
+   [
+    "WAIT_STRUCTURE:range breakout#0",
+    "WAIT_STRUCTURE:range and catalyst breakout#0"
+   ],
+   [
+    "FILTER:price location#0",
+    "FILTER:sweep#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:price action pattern break tap#0",
+    "WAIT_CONFIRMATION:price sweep low and trade up above previous down candle high#0"
+   ],
+   [
+    "WAIT_STRUCTURE:range and catalyst breakout#0",
+    "WAIT_STRUCTURE:symptoms sweep#0"
+   ],
+   [
+    "FILTER:sweep#0",
+    "FILTER:previous day high or previous week high#0"
+   ],
+   [
+    "WAIT_BIAS:so there s one i take#0",
+    "WAIT_BIAS:liquidity generation and sweep#0"
+   ],
+   [
+    "FILTER:prominent wick#0",
+    "FILTER:wick to left#0"
+   ],
+   [
+    "INVALIDATE:sweep#0",
+    "INVALIDATE:pyramiding adding positions#0"
+   ],
+   [
+    "ENABLE_ENTRY:trade going up#0",
+    "ENABLE_ENTRY:go higher#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:initial reversal participation#0",
+    "WAIT_CONFIRMATION:21 ema#0"
+   ],
+   [
+    "FILTER:price close below ema#0",
+    "FILTER:first move inside poi#0"
+   ],
+   [
+    "EXCEPTION:stop placement relative to 21 ema closures#0",
+    "EXCEPTION:trailing stop adjustment#0"
+   ],
+   [
+    "INVALIDATE:price coming back to take out manipulation#0",
+    "INVALIDATE:first trade stop invalidation#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:inducement sweep#0",
+    "WAIT_CONFIRMATION:sweep#0"
+   ],
+   [
+    "WAIT_STRUCTURE:stop placement#0",
+    "WAIT_STRUCTURE:liquidity pool#0"
+   ],
+   [
+    "WAIT_SESSION:time frame requirement#0",
+    "WAIT_SESSION:trade execution context#0"
+   ],
+   [
+    "INVALIDATE:trade validity#0",
+    "INVALIDATE:invalidation#0"
+   ],
+   [
+    "ENTER:price turn other way#0",
+    "ENTER:entry stop placement#0"
+   ],
+   [
+    "WAIT_RETEST:fvg#0",
+    "WAIT_RETEST:price retrace#0"
+   ],
+   [
+    "INVALIDATE:invalidation#0",
+    "INVALIDATE:trade execution#0"
+   ],
+   [
+    "ENTER:entry and stop placement#0",
+    "ENTER:order placement#0"
+   ],
+   [
+    "EXIT_HINT:break even to put it below low#0",
+    "EXIT_HINT:trade completion#0"
+   ],
+   [
+    "INVALIDATE:entry from supply#0",
+    "INVALIDATE:environment#0"
+   ],
+   [
+    "INVALIDATE:price action structure validity#0",
+    "INVALIDATE:trading with prop firms#0"
+   ],
+   [
+    "WAIT_SESSION:trading activity#0",
+    "WAIT_SESSION:live account trading#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:consolidation break up high low sequence#0",
+    "type": "INVALIDATE",
+    "object": "consolidation break up high low sequence",
+    "role": "invalidation",
+    "span": {
+     "start": 16211,
+     "end": 16326
+    },
+    "evidence": "T-7ieY-C0283"
+   },
+   {
+    "id": "INVALIDATE:if trade doesn t meet criteria i don t think trade will reach riskreward i won t take it#0",
+    "type": "INVALIDATE",
+    "object": "if trade doesn t meet criteria i don t think trade will reach riskreward i won t take it",
+    "role": "invalidation",
+    "span": {
+     "start": 17045,
+     "end": 17157
+    },
+    "evidence": "T-7ieY-C0294"
+   },
+   {
+    "id": "INVALIDATE:but if it breaks particular part there it just means you wrong side and likely you ll see price take floor out#0",
+    "type": "INVALIDATE",
+    "object": "but if it breaks particular part there it just means you wrong side and likely you ll see price take floor out",
+    "role": "invalidation",
+    "span": {
+     "start": 24643,
+     "end": 24777
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:sweep#0",
+    "type": "INVALIDATE",
+    "object": "sweep",
+    "role": "invalidation",
+    "span": {
+     "start": 25695,
+     "end": 25719
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:pyramiding adding positions#0",
+    "type": "INVALIDATE",
+    "object": "pyramiding adding positions",
+    "role": "invalidation",
+    "span": {
+     "start": 32574,
+     "end": 32598
+    },
+    "evidence": "T-7ieY-C0542"
+   },
+   {
+    "id": "INVALIDATE:trade idea validity#0",
+    "type": "INVALIDATE",
+    "object": "trade idea validity",
+    "role": "invalidation",
+    "span": {
+     "start": 32731,
+     "end": 32866
+    },
+    "evidence": "T-7ieY-C0545"
+   },
+   {
+    "id": "INVALIDATE:i m not interested in sitting in draw down or anything#0",
+    "type": "INVALIDATE",
+    "object": "i m not interested in sitting in draw down or anything",
+    "role": "invalidation",
+    "span": {
+     "start": 33123,
+     "end": 33179
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:price coming back to take out manipulation#0",
+    "type": "INVALIDATE",
+    "object": "price coming back to take out manipulation",
+    "role": "invalidation",
+    "span": {
+     "start": 33603,
+     "end": 33655
+    },
+    "evidence": "T-7ieY-C0562"
+   },
+   {
+    "id": "EXCEPTION:stop placement relative to 21 ema closures#0",
+    "type": "EXCEPTION",
+    "object": "stop placement relative to 21 ema closures",
+    "role": "invalidation",
+    "span": {
+     "start": 35429,
+     "end": 35492
+    },
+    "evidence": "T-7ieY-C0595"
+   },
+   {
+    "id": "EXCEPTION:trailing stop adjustment#0",
+    "type": "EXCEPTION",
+    "object": "trailing stop adjustment",
+    "role": "invalidation",
+    "span": {
+     "start": 37336,
+     "end": 37425
+    },
+    "evidence": "T-7ieY-C0634"
+   },
+   {
+    "id": "INVALIDATE:first trade stop invalidation#0",
+    "type": "INVALIDATE",
+    "object": "first trade stop invalidation",
+    "role": "invalidation",
+    "span": {
+     "start": 37683,
+     "end": 37761
+    },
+    "evidence": "T-7ieY-C0639"
+   },
+   {
+    "id": "INVALIDATE:stop out#0",
+    "type": "INVALIDATE",
+    "object": "stop out",
+    "role": "invalidation",
+    "span": {
+     "start": 38984,
+     "end": 39041
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:trade validity#0",
+    "type": "INVALIDATE",
+    "object": "trade validity",
+    "role": "invalidation",
+    "span": {
+     "start": 42230,
+     "end": 42247
+    },
+    "evidence": "T-7ieY-C0719"
+   },
+   {
+    "id": "INVALIDATE:invalidation#0",
+    "type": "INVALIDATE",
+    "object": "invalidation",
+    "role": "invalidation",
+    "span": {
+     "start": 42511,
+     "end": 42552
+    },
+    "evidence": "T-7ieY-C0726"
+   },
+   {
+    "id": "INVALIDATE:trade execution#0",
+    "type": "INVALIDATE",
+    "object": "trade execution",
+    "role": "invalidation",
+    "span": {
+     "start": 44495,
+     "end": 44539
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:four swings#0",
+    "type": "INVALIDATE",
+    "object": "four swings",
+    "role": "invalidation",
+    "span": {
+     "start": 44693,
+     "end": 44738
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:environment#0",
+    "type": "INVALIDATE",
+    "object": "environment",
+    "role": "invalidation",
+    "span": {
+     "start": 56430,
+     "end": 56502
+    },
+    "evidence": "T-7ieY-C0981"
+   },
+   {
+    "id": "INVALIDATE:price action structure validity#0",
+    "type": "INVALIDATE",
+    "object": "price action structure validity",
+    "role": "invalidation",
+    "span": {
+     "start": 56962,
+     "end": 57063
+    },
+    "evidence": "T-7ieY-C0989"
+   },
+   {
+    "id": "INVALIDATE:trading with prop firms#0",
+    "type": "INVALIDATE",
+    "object": "trading with prop firms",
+    "role": "invalidation",
+    "span": {
+     "start": 58445,
+     "end": 58555
+    },
+    "evidence": "T-7ieY-C1018"
+   }
+  ],
+  "entry_trigger_id": "ENABLE_ENTRY:manipulation trade#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

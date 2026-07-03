@@ -1,0 +1,985 @@
+{
+ "video": "N7SM8a7Dc9s",
+ "spec_hash": "4d277df727a4cb641fe2982032bfb07690a1ea383cabbf52f4915e2f7970d42c",
+ "graph_canonical_hash": "a6552c268d86002b",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 30290,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_SESSION:trading session time#0",
+    "type": "WAIT_SESSION",
+    "object": "trading session time",
+    "role": "spine",
+    "span": {
+     "start": 3544,
+     "end": 3620
+    },
+    "evidence": "{T-N7SM-C0064}"
+   },
+   {
+    "id": "WAIT_BIAS:daily bias#0",
+    "type": "WAIT_BIAS",
+    "object": "daily bias",
+    "role": "confluence",
+    "span": {
+     "start": 7436,
+     "end": 7491
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:price direction#0",
+    "type": "WAIT_BIAS",
+    "object": "price direction",
+    "role": "confluence",
+    "span": {
+     "start": 7530,
+     "end": 7606
+    },
+    "evidence": "look for when trying to figure out where price wants to go just on the day."
+   },
+   {
+    "id": "EXIT_HINT:exit levels#0",
+    "type": "EXIT_HINT",
+    "object": "exit levels",
+    "role": "spine",
+    "span": {
+     "start": 8382,
+     "end": 8546
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:high time frame draws liquidity#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "high time frame draws liquidity",
+    "role": "spine",
+    "span": {
+     "start": 8758,
+     "end": 8809
+    },
+    "evidence": "By marking out high time frame draws on liquidity."
+   },
+   {
+    "id": "WAIT_BIAS:high time frame draws liquidity#0",
+    "type": "WAIT_BIAS",
+    "object": "high time frame draws liquidity",
+    "role": "spine",
+    "span": {
+     "start": 9601,
+     "end": 9658
+    },
+    "evidence": "{T-N7SM-C0167}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:daily bias#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "daily bias",
+    "role": "confluence",
+    "span": {
+     "start": 9847,
+     "end": 9898
+    },
+    "evidence": "T-N7SM-C0172"
+   },
+   {
+    "id": "WAIT_STRUCTURE:key level hit#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "key level hit",
+    "role": "confluence",
+    "span": {
+     "start": 10643,
+     "end": 10688
+    },
+    "evidence": "T-N7SM-C0187"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:reversal#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "reversal",
+    "role": "spine",
+    "span": {
+     "start": 10752,
+     "end": 10775
+    },
+    "evidence": "T-N7SM-C0189"
+   },
+   {
+    "id": "WAIT_SESSION:time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame",
+    "role": "spine",
+    "span": {
+     "start": 10775,
+     "end": 10829
+    },
+    "evidence": "T-N7SM-C0190"
+   },
+   {
+    "id": "WAIT_STRUCTURE:high time frame key level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "high time frame key level",
+    "role": "spine",
+    "span": {
+     "start": 10889,
+     "end": 10959
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:time frame selection#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame selection",
+    "role": "confluence",
+    "span": {
+     "start": 11077,
+     "end": 11188
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe interchangeability#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe interchangeability",
+    "role": "confluence",
+    "span": {
+     "start": 11317,
+     "end": 11392
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "confluence",
+    "span": {
+     "start": 11581,
+     "end": 11683
+    },
+    "evidence": "T-N7SM-C0205"
+   },
+   {
+    "id": "WAIT_STRUCTURE:low time frame reversal#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "low time frame reversal",
+    "role": "spine",
+    "span": {
+     "start": 12369,
+     "end": 12407
+    },
+    "evidence": "T-N7SM-C0220"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:wait number three which is showing continuation trend out key level got hit#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "wait number three which is showing continuation trend out key level got hit",
+    "role": "spine",
+    "span": {
+     "start": 12569,
+     "end": 12673
+    },
+    "evidence": "{T-N7SM-C0226}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:liquidity high time frame have have high probability filling orders#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "liquidity high time frame have have high probability filling orders",
+    "role": "spine",
+    "span": {
+     "start": 12806,
+     "end": 12897
+    },
+    "evidence": "T-N7SM-C0229"
+   },
+   {
+    "id": "FILTER:price relative to 1 hour highs and underneath 1 hour low#0",
+    "type": "FILTER",
+    "object": "price relative to 1 hour highs and underneath 1 hour low",
+    "role": "spine",
+    "span": {
+     "start": 13064,
+     "end": 13121
+    },
+    "evidence": "T-N7SM-C0233"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:reversal triggers#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "reversal triggers",
+    "role": "spine",
+    "span": {
+     "start": 13274,
+     "end": 13443
+    },
+    "evidence": "T-N7SM-C0236"
+   },
+   {
+    "id": "INVALIDATE:buy entry below 1 hour low#0",
+    "type": "INVALIDATE",
+    "object": "buy entry below 1 hour low",
+    "role": "trigger",
+    "span": {
+     "start": 13614,
+     "end": 13678
+    },
+    "evidence": "T-N7SM-C0241"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:low time frame continuation out fvg equilibrium breaker block or order block#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "low time frame continuation out fvg equilibrium breaker block or order block",
+    "role": "confluence",
+    "span": {
+     "start": 14588,
+     "end": 14703
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry",
+    "role": "trigger",
+    "span": {
+     "start": 14722,
+     "end": 14735
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry signal#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry signal",
+    "role": "trigger",
+    "span": {
+     "start": 14952,
+     "end": 14986
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:bos#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "bos",
+    "role": "spine",
+    "span": {
+     "start": 15252,
+     "end": 15300
+    },
+    "evidence": "T-N7SM-C0270"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:fvg get filled#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "fvg get filled",
+    "role": "spine",
+    "span": {
+     "start": 15300,
+     "end": 15360
+    },
+    "evidence": "T-N7SM-C0271"
+   },
+   {
+    "id": "ENTER:entry#0",
+    "type": "ENTER",
+    "object": "entry",
+    "role": "trigger",
+    "span": {
+     "start": 15391,
+     "end": 15409
+    },
+    "evidence": "T-N7SM-C0273"
+   },
+   {
+    "id": "WAIT_STRUCTURE:london highs#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "london highs",
+    "role": "confluence",
+    "span": {
+     "start": 15448,
+     "end": 15499
+    },
+    "evidence": "T-N7SM-C0275"
+   },
+   {
+    "id": "WAIT_STRUCTURE:session highs and lows#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "session highs and lows",
+    "role": "confluence",
+    "span": {
+     "start": 15892,
+     "end": 15962
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:new york market open or pre market#0",
+    "type": "WAIT_SESSION",
+    "object": "new york market open or pre market",
+    "role": "spine",
+    "span": {
+     "start": 16108,
+     "end": 16164
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:london high#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "london high",
+    "role": "confluence",
+    "span": {
+     "start": 16325,
+     "end": 16370
+    },
+    "evidence": "T-N7SM-C0295"
+   },
+   {
+    "id": "WAIT_STRUCTURE:asian session high#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "asian session high",
+    "role": "confluence",
+    "span": {
+     "start": 16370,
+     "end": 16418
+    },
+    "evidence": "T-N7SM-C0296"
+   },
+   {
+    "id": "WAIT_STRUCTURE:london low#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "london low",
+    "role": "confluence",
+    "span": {
+     "start": 16600,
+     "end": 16639
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:asian session low#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "asian session low",
+    "role": "confluence",
+    "span": {
+     "start": 16639,
+     "end": 16702
+    },
+    "evidence": "We have Asian session low down here, which is pretty far down."
+   },
+   {
+    "id": "ENABLE_ENTRY:scale down#0",
+    "type": "ENABLE_ENTRY",
+    "object": "scale down",
+    "role": "trigger",
+    "span": {
+     "start": 16963,
+     "end": 16978
+    },
+    "evidence": "scale on down."
+   },
+   {
+    "id": "WAIT_SESSION:market open#0",
+    "type": "WAIT_SESSION",
+    "object": "market open",
+    "role": "spine",
+    "span": {
+     "start": 17267,
+     "end": 17286
+    },
+    "evidence": "{T-N7SM-C0317}"
+   },
+   {
+    "id": "VERIFY_STRUCTURE:we get bos to downside#0",
+    "type": "VERIFY_STRUCTURE",
+    "object": "we get bos to downside",
+    "role": "spine",
+    "span": {
+     "start": 17744,
+     "end": 17789
+    },
+    "evidence": "T-N7SM-C0328"
+   },
+   {
+    "id": "WAIT_STRUCTURE:london lows#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "london lows",
+    "role": "confluence",
+    "span": {
+     "start": 18009,
+     "end": 18049
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:london lows hit#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "london lows hit",
+    "role": "confluence",
+    "span": {
+     "start": 18388,
+     "end": 18425
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:bos to upside#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "bos to upside",
+    "role": "confluence",
+    "span": {
+     "start": 18517,
+     "end": 18562
+    },
+    "evidence": "We're still waiting for a break of structure"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:bos confirmation#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "bos confirmation",
+    "role": "spine",
+    "span": {
+     "start": 18562,
+     "end": 18634
+    },
+    "evidence": "to the upside, a inverse fair for value gap or a 79% extension closure."
+   },
+   {
+    "id": "WAIT_STRUCTURE:high time frame key level hit#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "high time frame key level hit",
+    "role": "spine",
+    "span": {
+     "start": 18689,
+     "end": 18747
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:scale down to low time frames#0",
+    "type": "WAIT_SESSION",
+    "object": "scale down to low time frames",
+    "role": "confluence",
+    "span": {
+     "start": 18747,
+     "end": 18792
+    },
+    "evidence": "Step two, scale down to the low time frames."
+   },
+   {
+    "id": "FILTER:breaker block hit#0",
+    "type": "FILTER",
+    "object": "breaker block hit",
+    "role": "confluence",
+    "span": {
+     "start": 19099,
+     "end": 19175
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:bullish closure#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "bullish closure",
+    "role": "spine",
+    "span": {
+     "start": 19347,
+     "end": 19394
+    },
+    "evidence": "T-N7SM-C0368"
+   },
+   {
+    "id": "ENTER:buy#0",
+    "type": "ENTER",
+    "object": "buy",
+    "role": "trigger",
+    "span": {
+     "start": 19409,
+     "end": 19435
+    },
+    "evidence": "T-N7SM-C0370"
+   },
+   {
+    "id": "FILTER:level#0",
+    "type": "FILTER",
+    "object": "level",
+    "role": "spine",
+    "span": {
+     "start": 19596,
+     "end": 19634
+    },
+    "evidence": "{T-N7SM-C0374}"
+   },
+   {
+    "id": "VERIFY_STRUCTURE:level hit#0",
+    "type": "VERIFY_STRUCTURE",
+    "object": "level hit",
+    "role": "confluence",
+    "span": {
+     "start": 19634,
+     "end": 19658
+    },
+    "evidence": "{T-N7SM-C0375}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:hourly highs#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "hourly highs",
+    "role": "confluence",
+    "span": {
+     "start": 19658,
+     "end": 19685
+    },
+    "evidence": "{T-N7SM-C0376}"
+   },
+   {
+    "id": "WAIT_SESSION:yesterday s price action#0",
+    "type": "WAIT_SESSION",
+    "object": "yesterday s price action",
+    "role": "spine",
+    "span": {
+     "start": 19823,
+     "end": 19849
+    },
+    "evidence": "{T-N7SM-C0381}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:london s action asian session highs#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "london s action asian session highs",
+    "role": "spine",
+    "span": {
+     "start": 20258,
+     "end": 20293
+    },
+    "evidence": "T-N7SM-C0391"
+   },
+   {
+    "id": "WAIT_STRUCTURE:hourly highs taken out#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "hourly highs taken out",
+    "role": "confluence",
+    "span": {
+     "start": 20366,
+     "end": 20408
+    },
+    "evidence": "T-N7SM-C0394"
+   },
+   {
+    "id": "WAIT_STRUCTURE:hourly highs h1 h4#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "hourly highs h1 h4",
+    "role": "confluence",
+    "span": {
+     "start": 20408,
+     "end": 20468
+    },
+    "evidence": "T-N7SM-C0395"
+   },
+   {
+    "id": "WAIT_SESSION:nasdaq session#0",
+    "type": "WAIT_SESSION",
+    "object": "nasdaq session",
+    "role": "spine",
+    "span": {
+     "start": 20483,
+     "end": 20525
+    },
+    "evidence": "T-N7SM-C0396 to T-N7SM-C0401"
+   },
+   {
+    "id": "WAIT_STRUCTURE:asian session lows london highs london lows hourly high#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "asian session lows london highs london lows hourly high",
+    "role": "spine",
+    "span": {
+     "start": 20525,
+     "end": 20612
+    },
+    "evidence": "T-N7SM-C0398 to T-N7SM-C0401"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:sweep out london lows#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "sweep out london lows",
+    "role": "spine",
+    "span": {
+     "start": 20712,
+     "end": 20778
+    },
+    "evidence": "T-N7SM-C0401 to T-N7SM-C0401"
+   },
+   {
+    "id": "WAIT_SESSION:time frame scaling#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame scaling",
+    "role": "spine",
+    "span": {
+     "start": 20817,
+     "end": 20859
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:fvg equilibrium breaker block order block#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "fvg equilibrium breaker block order block",
+    "role": "confluence",
+    "span": {
+     "start": 21288,
+     "end": 21371
+    },
+    "evidence": "T-N7SM-C0415"
+   },
+   {
+    "id": "WAIT_STRUCTURE:equilibrium#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "equilibrium",
+    "role": "confluence",
+    "span": {
+     "start": 21427,
+     "end": 21445
+    },
+    "evidence": "T-N7SM-C0417"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:closure above equilibrium hit#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "closure above equilibrium hit",
+    "role": "confluence",
+    "span": {
+     "start": 21445,
+     "end": 21485
+    },
+    "evidence": "T-N7SM-C0418"
+   },
+   {
+    "id": "ENABLE_ENTRY:long entry#0",
+    "type": "ENABLE_ENTRY",
+    "object": "long entry",
+    "role": "trigger",
+    "span": {
+     "start": 21510,
+     "end": 21573
+    },
+    "evidence": "T-N7SM-C0420"
+   },
+   {
+    "id": "WAIT_SESSION:s p 500#0",
+    "type": "WAIT_SESSION",
+    "object": "s p 500",
+    "role": "spine",
+    "span": {
+     "start": 22024,
+     "end": 22087
+    },
+    "evidence": "Now, let's move over to the S&P 500 because the S&P 500 didn't"
+   },
+   {
+    "id": "WAIT_STRUCTURE:bos inverse value gap 79 extension closure#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "bos inverse value gap 79 extension closure",
+    "role": "spine",
+    "span": {
+     "start": 22791,
+     "end": 22895
+    },
+    "evidence": "T-N7SM-C0446"
+   },
+   {
+    "id": "FILTER:bos#0",
+    "type": "FILTER",
+    "object": "bos",
+    "role": "spine",
+    "span": {
+     "start": 22895,
+     "end": 22960
+    },
+    "evidence": "T-N7SM-C0447"
+   },
+   {
+    "id": "WAIT_STRUCTURE:order block breaker block equilibrium fvg#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "order block breaker block equilibrium fvg",
+    "role": "confluence",
+    "span": {
+     "start": 23150,
+     "end": 23217
+    },
+    "evidence": "T-N7SM-C0455"
+   },
+   {
+    "id": "WAIT_STRUCTURE:order block#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "order block",
+    "role": "confluence",
+    "span": {
+     "start": 23280,
+     "end": 23327
+    },
+    "evidence": "T-N7SM-C0457"
+   },
+   {
+    "id": "WAIT_SESSION:fiveminute time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "fiveminute time frame",
+    "role": "spine",
+    "span": {
+     "start": 23455,
+     "end": 23540
+    },
+    "evidence": "T-N7SM-C0461"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:trend reversal#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "trend reversal",
+    "role": "confluence",
+    "span": {
+     "start": 23647,
+     "end": 23674
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:short entry#0",
+    "type": "ENABLE_ENTRY",
+    "object": "short entry",
+    "role": "trigger",
+    "span": {
+     "start": 23767,
+     "end": 23804
+    },
+    "evidence": "{T-N7SM-C0468}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:asian session lows#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "asian session lows",
+    "role": "confluence",
+    "span": {
+     "start": 24252,
+     "end": 24285
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:first high time frame key level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "first high time frame key level",
+    "role": "confluence",
+    "span": {
+     "start": 24601,
+     "end": 24614
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price sweep#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price sweep",
+    "role": "confluence",
+    "span": {
+     "start": 25006,
+     "end": 25042
+    },
+    "evidence": "T-N7SM-C0497"
+   },
+   {
+    "id": "FILTER:s p 500 lows#0",
+    "type": "FILTER",
+    "object": "s p 500 lows",
+    "role": "spine",
+    "span": {
+     "start": 25089,
+     "end": 25135
+    },
+    "evidence": "On the S&P 500, we didn't sweep out the lows."
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_BIAS:daily bias#0",
+    "WAIT_BIAS:price direction#0"
+   ],
+   [
+    "WAIT_STRUCTURE:daily bias#0",
+    "WAIT_STRUCTURE:key level hit#0"
+   ],
+   [
+    "WAIT_SESSION:time frame selection#0",
+    "WAIT_SESSION:timeframe interchangeability#0",
+    "WAIT_SESSION:timeframe#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:low time frame continuation out fvg equilibrium breaker block or order block#0",
+    "ENABLE_ENTRY:entry#0",
+    "ENABLE_ENTRY:entry signal#0"
+   ],
+   [
+    "WAIT_STRUCTURE:london highs#0",
+    "WAIT_STRUCTURE:session highs and lows#0"
+   ],
+   [
+    "WAIT_STRUCTURE:london high#0",
+    "WAIT_STRUCTURE:asian session high#0"
+   ],
+   [
+    "WAIT_STRUCTURE:london low#0",
+    "WAIT_STRUCTURE:asian session low#0"
+   ],
+   [
+    "WAIT_STRUCTURE:london lows#0",
+    "WAIT_STRUCTURE:london lows hit#0",
+    "WAIT_STRUCTURE:bos to upside#0"
+   ],
+   [
+    "WAIT_SESSION:scale down to low time frames#0",
+    "FILTER:breaker block hit#0"
+   ],
+   [
+    "VERIFY_STRUCTURE:level hit#0",
+    "WAIT_STRUCTURE:hourly highs#0"
+   ],
+   [
+    "WAIT_STRUCTURE:hourly highs taken out#0",
+    "WAIT_STRUCTURE:hourly highs h1 h4#0"
+   ],
+   [
+    "WAIT_STRUCTURE:fvg equilibrium breaker block order block#0",
+    "WAIT_STRUCTURE:equilibrium#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:closure above equilibrium hit#0",
+    "ENABLE_ENTRY:long entry#0"
+   ],
+   [
+    "WAIT_STRUCTURE:order block breaker block equilibrium fvg#0",
+    "WAIT_STRUCTURE:order block#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:trend reversal#0",
+    "ENABLE_ENTRY:short entry#0"
+   ],
+   [
+    "WAIT_STRUCTURE:asian session lows#0",
+    "WAIT_STRUCTURE:first high time frame key level#0",
+    "WAIT_STRUCTURE:price sweep#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "WAIT_STRUCTURE:daily bias#0",
+    "WAIT_STRUCTURE:key level hit#0"
+   ],
+   [
+    "WAIT_STRUCTURE:high time frame key level#0",
+    "WAIT_STRUCTURE:low time frame reversal#0"
+   ],
+   [
+    "WAIT_STRUCTURE:london lows#0",
+    "WAIT_STRUCTURE:london lows hit#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:bos confirmation#0",
+    "WAIT_CONFIRMATION:bullish closure#0"
+   ],
+   [
+    "WAIT_STRUCTURE:asian session lows london highs london lows hourly high#0",
+    "WAIT_STRUCTURE:fvg equilibrium breaker block order block#0"
+   ],
+   [
+    "WAIT_STRUCTURE:order block#0",
+    "WAIT_STRUCTURE:asian session lows#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:we are not going to be entering just immediately off reversal#0",
+    "type": "INVALIDATE",
+    "object": "we are not going to be entering just immediately off reversal",
+    "role": "invalidation",
+    "span": {
+     "start": 12477,
+     "end": 12545
+    },
+    "evidence": "{T-N7SM-C0224}"
+   },
+   {
+    "id": "INVALIDATE:valid draw liquidity#0",
+    "type": "INVALIDATE",
+    "object": "valid draw liquidity",
+    "role": "invalidation",
+    "span": {
+     "start": 16418,
+     "end": 16515
+    },
+    "evidence": "T-N7SM-C0297"
+   },
+   {
+    "id": "INVALIDATE:paying attention to anymore#0",
+    "type": "INVALIDATE",
+    "object": "paying attention to anymore",
+    "role": "invalidation",
+    "span": {
+     "start": 16515,
+     "end": 16578
+    },
+    "evidence": "T-N7SM-C0298"
+   },
+   {
+    "id": "INVALIDATE:still ended up playing playing out except getting continuation confluence because we come up into hourly high#0",
+    "type": "INVALIDATE",
+    "object": "still ended up playing playing out except getting continuation confluence because we come up into hourly high",
+    "role": "invalidation",
+    "span": {
+     "start": 17603,
+     "end": 17744
+    },
+    "evidence": "T-N7SM-C0327"
+   },
+   {
+    "id": "INVALIDATE:we just aren t able to take shorts down because we didn t get our continuation confluence fvg equilibrium or breaker#0",
+    "type": "INVALIDATE",
+    "object": "we just aren t able to take shorts down because we didn t get our continuation confluence fvg equilibrium or breaker",
+    "role": "invalidation",
+    "span": {
+     "start": 17789,
+     "end": 17922
+    },
+    "evidence": "T-N7SM-C0329"
+   },
+   {
+    "id": "EXCEPTION:stop placement#0",
+    "type": "EXCEPTION",
+    "object": "stop placement",
+    "role": "invalidation",
+    "span": {
+     "start": 19435,
+     "end": 19519
+    },
+    "evidence": "T-N7SM-C0371"
+   },
+   {
+    "id": "INVALIDATE:asian session highs#0",
+    "type": "INVALIDATE",
+    "object": "asian session highs",
+    "role": "invalidation",
+    "span": {
+     "start": 20293,
+     "end": 20322
+    },
+    "evidence": "T-N7SM-C0392"
+   }
+  ],
+  "entry_trigger_id": "ENABLE_ENTRY:entry#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

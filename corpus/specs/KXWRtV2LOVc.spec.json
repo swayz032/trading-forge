@@ -1,0 +1,580 @@
+{
+ "video": "KXWRtV2LOVc",
+ "spec_hash": "1c46eeacf38894d8231e4772a93d6c90c7e0c87f3095c8e3b6f3bc36ab2b2528",
+ "graph_canonical_hash": "e85038e8924ac8f7",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 16616,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_SESSION:4 hour time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "4 hour time frame",
+    "role": "confluence",
+    "span": {
+     "start": 764,
+     "end": 814
+    },
+    "evidence": "T-KXWR-C0005"
+   },
+   {
+    "id": "WAIT_SESSION:6#0",
+    "type": "WAIT_SESSION",
+    "object": "6",
+    "role": "confluence",
+    "span": {
+     "start": 840,
+     "end": 887
+    },
+    "evidence": "T-KXWR-C0007"
+   },
+   {
+    "id": "WAIT_SESSION:purge period#0",
+    "type": "WAIT_SESSION",
+    "object": "purge period",
+    "role": "confluence",
+    "span": {
+     "start": 1024,
+     "end": 1181
+    },
+    "evidence": "T-KXWR-C0010"
+   },
+   {
+    "id": "WAIT_SESSION:acceptance window#0",
+    "type": "WAIT_SESSION",
+    "object": "acceptance window",
+    "role": "confluence",
+    "span": {
+     "start": 1181,
+     "end": 1216
+    },
+    "evidence": "m. hour up until 11:30 is accepted"
+   },
+   {
+    "id": "WAIT_SESSION:trading window#0",
+    "type": "WAIT_SESSION",
+    "object": "trading window",
+    "role": "confluence",
+    "span": {
+     "start": 1282,
+     "end": 1336
+    },
+    "evidence": "T-KXWR-C0013"
+   },
+   {
+    "id": "ENABLE_ENTRY:order block entry trigger#0",
+    "type": "ENABLE_ENTRY",
+    "object": "order block entry trigger",
+    "role": "trigger",
+    "span": {
+     "start": 1336,
+     "end": 1602
+    },
+    "evidence": "T-KXWR-C0014"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:crt confirmation#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "crt confirmation",
+    "role": "confluence",
+    "span": {
+     "start": 1623,
+     "end": 1849
+    },
+    "evidence": "T-KXWR-C0016"
+   },
+   {
+    "id": "WAIT_SESSION:range activity#0",
+    "type": "WAIT_SESSION",
+    "object": "range activity",
+    "role": "confluence",
+    "span": {
+     "start": 1950,
+     "end": 1994
+    },
+    "evidence": "T-KXWR-C0020"
+   },
+   {
+    "id": "WAIT_SESSION:purge timing#0",
+    "type": "WAIT_SESSION",
+    "object": "purge timing",
+    "role": "confluence",
+    "span": {
+     "start": 2014,
+     "end": 2076
+    },
+    "evidence": "T-KXWR-C0022"
+   },
+   {
+    "id": "WAIT_SESSION:4h hour time frame candle#0",
+    "type": "WAIT_SESSION",
+    "object": "4h hour time frame candle",
+    "role": "confluence",
+    "span": {
+     "start": 2567,
+     "end": 2627
+    },
+    "evidence": "T-KXWR-C0027"
+   },
+   {
+    "id": "WAIT_STRUCTURE:daily fvg 4h hour candle#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "daily fvg 4h hour candle",
+    "role": "spine",
+    "span": {
+     "start": 2674,
+     "end": 2810
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_RETEST:key level tap#0",
+    "type": "WAIT_RETEST",
+    "object": "key level tap",
+    "role": "spine",
+    "span": {
+     "start": 2810,
+     "end": 2882
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:short trade#0",
+    "type": "ENABLE_ENTRY",
+    "object": "short trade",
+    "role": "trigger",
+    "span": {
+     "start": 3407,
+     "end": 3523
+    },
+    "evidence": "T-KXWR-C0041 to T-KXWR-C0042"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "confluence",
+    "span": {
+     "start": 3742,
+     "end": 3812
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:crt structure#0",
+    "type": "FILTER",
+    "object": "crt structure",
+    "role": "confluence",
+    "span": {
+     "start": 4483,
+     "end": 4560
+    },
+    "evidence": "T-KXWR-C0057"
+   },
+   {
+    "id": "INVALIDATE:entry type#0",
+    "type": "INVALIDATE",
+    "object": "entry type",
+    "role": "trigger",
+    "span": {
+     "start": 4996,
+     "end": 5068
+    },
+    "evidence": "{T-KXWR-C0062}"
+   },
+   {
+    "id": "WAIT_SESSION:focus scope#0",
+    "type": "WAIT_SESSION",
+    "object": "focus scope",
+    "role": "spine",
+    "span": {
+     "start": 5126,
+     "end": 5150
+    },
+    "evidence": "{T-KXWR-C0064}"
+   },
+   {
+    "id": "WAIT_SESSION:4hour time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "4hour time frame",
+    "role": "spine",
+    "span": {
+     "start": 6132,
+     "end": 6196
+    },
+    "evidence": "T-KXWR-C0078"
+   },
+   {
+    "id": "WAIT_STRUCTURE:6 m candle 9 00#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "6 m candle 9 00",
+    "role": "spine",
+    "span": {
+     "start": 6404,
+     "end": 6429
+    },
+    "evidence": "T-KXWR-C0080"
+   },
+   {
+    "id": "WAIT_STRUCTURE:daily fvg daily high key level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "daily fvg daily high key level",
+    "role": "confluence",
+    "span": {
+     "start": 6721,
+     "end": 7042
+    },
+    "evidence": "{T-KXWR-C0086}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:4h crt into daily key level reversing lower#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "4h crt into daily key level reversing lower",
+    "role": "confluence",
+    "span": {
+     "start": 7042,
+     "end": 7130
+    },
+    "evidence": "{T-KXWR-C0087}"
+   },
+   {
+    "id": "WAIT_SESSION:2#0",
+    "type": "WAIT_SESSION",
+    "object": "2",
+    "role": "spine",
+    "span": {
+     "start": 7294,
+     "end": 7314
+    },
+    "evidence": "{T-KXWR-C0089}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:range high and low#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "range high and low",
+    "role": "spine",
+    "span": {
+     "start": 8324,
+     "end": 8341
+    },
+    "evidence": "T-KXWR-C0098"
+   },
+   {
+    "id": "FILTER:crt selection criteria#0",
+    "type": "FILTER",
+    "object": "crt selection criteria",
+    "role": "spine",
+    "span": {
+     "start": 8710,
+     "end": 8914
+    },
+    "evidence": "so the reason why I choose this CRT and not anyone any other CRT simply because we respected the low swept it and we respected the high and swept it that means this is a strong range and one to be chosen"
+   },
+   {
+    "id": "WAIT_STRUCTURE:sweep type#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "sweep type",
+    "role": "spine",
+    "span": {
+     "start": 8962,
+     "end": 8985
+    },
+    "evidence": "of course was a turtle"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:timed purge crt forms at 10 m and was purged#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "timed purge crt forms at 10 m and was purged",
+    "role": "spine",
+    "span": {
+     "start": 9200,
+     "end": 9267
+    },
+    "evidence": "T-KXWR-C0111"
+   },
+   {
+    "id": "WAIT_SESSION:one day time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "one day time frame",
+    "role": "spine",
+    "span": {
+     "start": 9285,
+     "end": 9358
+    },
+    "evidence": "T-KXWR-C0113"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:order block entry#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "order block entry",
+    "role": "trigger",
+    "span": {
+     "start": 9765,
+     "end": 9924
+    },
+    "evidence": "T-KXWR-C0118"
+   },
+   {
+    "id": "WAIT_SESSION:4hour candle turtle#0",
+    "type": "WAIT_SESSION",
+    "object": "4hour candle turtle",
+    "role": "spine",
+    "span": {
+     "start": 10733,
+     "end": 10755
+    },
+    "evidence": "T-KXWR-C0133"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:candle low and closing back within range#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "candle low and closing back within range",
+    "role": "spine",
+    "span": {
+     "start": 10771,
+     "end": 10886
+    },
+    "evidence": "T-KXWR-C0135"
+   },
+   {
+    "id": "WAIT_SESSION:15 minute crt range#0",
+    "type": "WAIT_SESSION",
+    "object": "15 minute crt range",
+    "role": "spine",
+    "span": {
+     "start": 11843,
+     "end": 11962
+    },
+    "evidence": "T-KXWR-C0145"
+   },
+   {
+    "id": "WAIT_STRUCTURE:15minute crt range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "15minute crt range",
+    "role": "spine",
+    "span": {
+     "start": 12164,
+     "end": 12213
+    },
+    "evidence": "T-KXWR-C0147"
+   },
+   {
+    "id": "ENTER:long entry at opposing end 4our crt#0",
+    "type": "ENTER",
+    "object": "long entry at opposing end 4our crt",
+    "role": "trigger",
+    "span": {
+     "start": 12638,
+     "end": 12772
+    },
+    "evidence": "T-KXWR-C0157"
+   },
+   {
+    "id": "WAIT_SESSION:entry refinement via lower time frames#0",
+    "type": "WAIT_SESSION",
+    "object": "entry refinement via lower time frames",
+    "role": "trigger",
+    "span": {
+     "start": 12802,
+     "end": 12877
+    },
+    "evidence": "T-KXWR-C0160"
+   },
+   {
+    "id": "WAIT_STRUCTURE:daily fvg and daily lows highs#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "daily fvg and daily lows highs",
+    "role": "confluence",
+    "span": {
+     "start": 13445,
+     "end": 13648
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:hit key level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "hit key level",
+    "role": "confluence",
+    "span": {
+     "start": 14437,
+     "end": 14460
+    },
+    "evidence": "T-KXWR-C0183"
+   },
+   {
+    "id": "WAIT_STRUCTURE:opposite price will form 4our crt while hitting key level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "opposite price will form 4our crt while hitting key level",
+    "role": "confluence",
+    "span": {
+     "start": 14460,
+     "end": 14576
+    },
+    "evidence": "T-KXWR-C0184"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:price close above order block candle#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "price close above order block candle",
+    "role": "spine",
+    "span": {
+     "start": 14980,
+     "end": 15044
+    },
+    "evidence": "T-KXWR-C0187"
+   },
+   {
+    "id": "ENTER:order block confirmation#0",
+    "type": "ENTER",
+    "object": "order block confirmation",
+    "role": "trigger",
+    "span": {
+     "start": 15044,
+     "end": 15098
+    },
+    "evidence": "T-KXWR-C0188"
+   },
+   {
+    "id": "ENTER:long entry from here#0",
+    "type": "ENTER",
+    "object": "long entry from here",
+    "role": "trigger",
+    "span": {
+     "start": 15098,
+     "end": 15225
+    },
+    "evidence": "T-KXWR-C0189"
+   },
+   {
+    "id": "FILTER:crt low#0",
+    "type": "FILTER",
+    "object": "crt low",
+    "role": "confluence",
+    "span": {
+     "start": 15333,
+     "end": 15362
+    },
+    "evidence": "souped the 15 minute CRT low"
+   },
+   {
+    "id": "FILTER:midpoint equilibrium hit#0",
+    "type": "FILTER",
+    "object": "midpoint equilibrium hit",
+    "role": "confluence",
+    "span": {
+     "start": 16017,
+     "end": 16169
+    },
+    "evidence": "},{"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_SESSION:4 hour time frame#0",
+    "WAIT_SESSION:6#0",
+    "WAIT_SESSION:purge period#0",
+    "WAIT_SESSION:acceptance window#0",
+    "WAIT_SESSION:trading window#0"
+   ],
+   [
+    "ENABLE_ENTRY:order block entry trigger#0",
+    "WAIT_CONFIRMATION:crt confirmation#0"
+   ],
+   [
+    "WAIT_SESSION:range activity#0",
+    "WAIT_SESSION:purge timing#0",
+    "WAIT_SESSION:4h hour time frame candle#0"
+   ],
+   [
+    "WAIT_SESSION:timeframe#0",
+    "FILTER:crt structure#0"
+   ],
+   [
+    "WAIT_STRUCTURE:daily fvg daily high key level#0",
+    "WAIT_STRUCTURE:4h crt into daily key level reversing lower#0"
+   ],
+   [
+    "WAIT_STRUCTURE:daily fvg and daily lows highs#0",
+    "WAIT_STRUCTURE:hit key level#0",
+    "WAIT_STRUCTURE:opposite price will form 4our crt while hitting key level#0"
+   ],
+   [
+    "ENTER:order block confirmation#0",
+    "ENTER:long entry from here#0"
+   ],
+   [
+    "FILTER:crt low#0",
+    "FILTER:midpoint equilibrium hit#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "WAIT_SESSION:6#0",
+    "WAIT_SESSION:purge period#0"
+   ],
+   [
+    "WAIT_SESSION:purge timing#0",
+    "WAIT_SESSION:4h hour time frame candle#0"
+   ],
+   [
+    "ENABLE_ENTRY:order block entry trigger#0",
+    "ENABLE_ENTRY:short trade#0"
+   ],
+   [
+    "INVALIDATE:entry type#0",
+    "INVALIDATE:trade execution#0"
+   ],
+   [
+    "WAIT_SESSION:4hour candle turtle#0",
+    "WAIT_SESSION:15 minute crt range#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:candle low and closing back within range#0",
+    "WAIT_CONFIRMATION:price close above order block candle#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:trade execution#0",
+    "type": "INVALIDATE",
+    "object": "trade execution",
+    "role": "invalidation",
+    "span": {
+     "start": 6081,
+     "end": 6102
+    },
+    "evidence": "T-KXWR-C0076"
+   },
+   {
+    "id": "INVALIDATE:break through low and continued crashing down#0",
+    "type": "INVALIDATE",
+    "object": "break through low and continued crashing down",
+    "role": "invalidation",
+    "span": {
+     "start": 6459,
+     "end": 6604
+    },
+    "evidence": "T-KXWR-C0083"
+   },
+   {
+    "id": "INVALIDATE:stop out#0",
+    "type": "INVALIDATE",
+    "object": "stop out",
+    "role": "invalidation",
+    "span": {
+     "start": 7683,
+     "end": 7850
+    },
+    "evidence": "move above"
+   }
+  ],
+  "entry_trigger_id": "ENABLE_ENTRY:order block entry trigger#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

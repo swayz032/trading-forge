@@ -1,0 +1,643 @@
+{
+ "video": "1HFoStW_wsc",
+ "spec_hash": "04e0ec2e460331dbb3c022549902aa0f732192566d5a9dc64ec0e58ecfe7a8b6",
+ "graph_canonical_hash": "3841c659151ead15",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 15596,
+ "spec": {
+  "direction": "long",
+  "entry_conditions": [
+   {
+    "id": "WAIT_STRUCTURE:daily vwap#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "daily vwap",
+    "role": "confluence",
+    "span": {
+     "start": 1771,
+     "end": 1850
+    },
+    "evidence": "{daily_vwap}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:weekly vwap#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "weekly vwap",
+    "role": "confluence",
+    "span": {
+     "start": 1850,
+     "end": 1907
+    },
+    "evidence": "{weekly_vwap}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:monthly vwap#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "monthly vwap",
+    "role": "confluence",
+    "span": {
+     "start": 1928,
+     "end": 1986
+    },
+    "evidence": "{monthly_vwap}"
+   },
+   {
+    "id": "FILTER:price relative to vwap#0",
+    "type": "FILTER",
+    "object": "price relative to vwap",
+    "role": "spine",
+    "span": {
+     "start": 2691,
+     "end": 2719
+    },
+    "evidence": "T-1HFo-C0041"
+   },
+   {
+    "id": "WAIT_STRUCTURE:vwap and volume profile combination#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "vwap and volume profile combination",
+    "role": "spine",
+    "span": {
+     "start": 2865,
+     "end": 2881
+    },
+    "evidence": "T-1HFo-C0045 to T-1HFo-C0046"
+   },
+   {
+    "id": "FILTER:vwap slope#0",
+    "type": "FILTER",
+    "object": "vwap slope",
+    "role": "spine",
+    "span": {
+     "start": 3203,
+     "end": 3254
+    },
+    "evidence": "{VWAP, Slope}"
+   },
+   {
+    "id": "WAIT_BIAS:vwap slope#0",
+    "type": "WAIT_BIAS",
+    "object": "vwap slope",
+    "role": "confluence",
+    "span": {
+     "start": 3335,
+     "end": 3392
+    },
+    "evidence": "{start: T-1HFo-C0055, end: T-1HFo-C0055}"
+   },
+   {
+    "id": "WAIT_BIAS:vwap slope angle#0",
+    "type": "WAIT_BIAS",
+    "object": "vwap slope angle",
+    "role": "confluence",
+    "span": {
+     "start": 3392,
+     "end": 3452
+    },
+    "evidence": "{start: T-1HFo-C0056, end: T-1HFo-C0056}"
+   },
+   {
+    "id": "WAIT_BIAS:vwap alignment#0",
+    "type": "WAIT_BIAS",
+    "object": "vwap alignment",
+    "role": "confluence",
+    "span": {
+     "start": 3607,
+     "end": 3711
+    },
+    "evidence": "{start: T-1HFo-C0059, end: T-1HFo-C0059}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:session vwap reset time#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "session vwap reset time",
+    "role": "spine",
+    "span": {
+     "start": 4592,
+     "end": 4638
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:vwap levels anchored to fed meetings or companew york keynotes#0",
+    "type": "FILTER",
+    "object": "vwap levels anchored to fed meetings or companew york keynotes",
+    "role": "confluence",
+    "span": {
+     "start": 4841,
+     "end": 4906
+    },
+    "evidence": "T-1HFo-C0084 - T-1HFo-C0085"
+   },
+   {
+    "id": "FILTER:vwap levels anchored to major news events#0",
+    "type": "FILTER",
+    "object": "vwap levels anchored to major news events",
+    "role": "confluence",
+    "span": {
+     "start": 4990,
+     "end": 5081
+    },
+    "evidence": "T-1HFo-C0087"
+   },
+   {
+    "id": "WAIT_STRUCTURE:vwap anchor point#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "vwap anchor point",
+    "role": "spine",
+    "span": {
+     "start": 5107,
+     "end": 5122
+    },
+    "evidence": "T-1HFo-C0089"
+   },
+   {
+    "id": "WAIT_SESSION:information events#0",
+    "type": "WAIT_SESSION",
+    "object": "information events",
+    "role": "confluence",
+    "span": {
+     "start": 5381,
+     "end": 5417
+    },
+    "evidence": "T-1HFo-C0094"
+   },
+   {
+    "id": "FILTER:stock movement significance#0",
+    "type": "FILTER",
+    "object": "stock movement significance",
+    "role": "confluence",
+    "span": {
+     "start": 5554,
+     "end": 5612
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:band usage#0",
+    "type": "FILTER",
+    "object": "band usage",
+    "role": "confluence",
+    "span": {
+     "start": 7206,
+     "end": 7266
+    },
+    "evidence": "{T-1HFo-C0129}"
+   },
+   {
+    "id": "WAIT_RETEST:vwap#0",
+    "type": "WAIT_RETEST",
+    "object": "vwap",
+    "role": "spine",
+    "span": {
+     "start": 7364,
+     "end": 7380
+    },
+    "evidence": "T-1HFo-C0132"
+   },
+   {
+    "id": "ENABLE_ENTRY:mean reversion#0",
+    "type": "ENABLE_ENTRY",
+    "object": "mean reversion",
+    "role": "trigger",
+    "span": {
+     "start": 7380,
+     "end": 7424
+    },
+    "evidence": "T-1HFo-C0133"
+   },
+   {
+    "id": "ENABLE_ENTRY:trend continuation#0",
+    "type": "ENABLE_ENTRY",
+    "object": "trend continuation",
+    "role": "trigger",
+    "span": {
+     "start": 7424,
+     "end": 7481
+    },
+    "evidence": "T-1HFo-C0134"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:long wick rejection#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "long wick rejection",
+    "role": "confluence",
+    "span": {
+     "start": 8065,
+     "end": 8116
+    },
+    "evidence": "{T-1HFo-C0146}"
+   },
+   {
+    "id": "FILTER:vwap behavior context#0",
+    "type": "FILTER",
+    "object": "vwap behavior context",
+    "role": "spine",
+    "span": {
+     "start": 9005,
+     "end": 9106
+    },
+    "evidence": "T-1HFo-C0167"
+   },
+   {
+    "id": "WAIT_BIAS:vwap behavior#0",
+    "type": "WAIT_BIAS",
+    "object": "vwap behavior",
+    "role": "spine",
+    "span": {
+     "start": 9241,
+     "end": 9283
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:vwap bands#0",
+    "type": "FILTER",
+    "object": "vwap bands",
+    "role": "confluence",
+    "span": {
+     "start": 9908,
+     "end": 9923
+    },
+    "evidence": "T-1HFo-C0181"
+   },
+   {
+    "id": "FILTER:probability thresholds#0",
+    "type": "FILTER",
+    "object": "probability thresholds",
+    "role": "confluence",
+    "span": {
+     "start": 9987,
+     "end": 10046
+    },
+    "evidence": "T-1HFo-C0184"
+   },
+   {
+    "id": "WAIT_SESSION:institutional participation#0",
+    "type": "WAIT_SESSION",
+    "object": "institutional participation",
+    "role": "confluence",
+    "span": {
+     "start": 10159,
+     "end": 10243
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:vwap usage adaptation#0",
+    "type": "WAIT_BIAS",
+    "object": "vwap usage adaptation",
+    "role": "spine",
+    "span": {
+     "start": 10510,
+     "end": 10564
+    },
+    "evidence": "T-1HFo-C0194"
+   },
+   {
+    "id": "WAIT_SESSION:vwap trading blueprint#0",
+    "type": "WAIT_SESSION",
+    "object": "vwap trading blueprint",
+    "role": "spine",
+    "span": {
+     "start": 10605,
+     "end": 10686
+    },
+    "evidence": "T-1HFo-C0197"
+   },
+   {
+    "id": "WAIT_BIAS:directional bias from higher time frame vwap stack#0",
+    "type": "WAIT_BIAS",
+    "object": "directional bias from higher time frame vwap stack",
+    "role": "spine",
+    "span": {
+     "start": 10999,
+     "end": 11058
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:vwap slope change or volume dry up or bands compress#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "vwap slope change or volume dry up or bands compress",
+    "role": "spine",
+    "span": {
+     "start": 11450,
+     "end": 11521
+    },
+    "evidence": "T-1HFo-C0218"
+   },
+   {
+    "id": "EXIT_HINT:reassessment position#0",
+    "type": "EXIT_HINT",
+    "object": "reassessment position",
+    "role": "spine",
+    "span": {
+     "start": 11557,
+     "end": 11589
+    },
+    "evidence": "T-1HFo-C0220"
+   },
+   {
+    "id": "ENABLE_ENTRY:buying opportunity#0",
+    "type": "ENABLE_ENTRY",
+    "object": "buying opportunity",
+    "role": "trigger",
+    "span": {
+     "start": 11879,
+     "end": 11971
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:daily buy signal#0",
+    "type": "WAIT_BIAS",
+    "object": "daily buy signal",
+    "role": "trigger",
+    "span": {
+     "start": 12530,
+     "end": 12551
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:weekly buy signal#0",
+    "type": "WAIT_BIAS",
+    "object": "weekly buy signal",
+    "role": "trigger",
+    "span": {
+     "start": 12586,
+     "end": 12608
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:vwap reliability#0",
+    "type": "FILTER",
+    "object": "vwap reliability",
+    "role": "confluence",
+    "span": {
+     "start": 13326,
+     "end": 13361
+    },
+    "evidence": "T-1HFo-C0254"
+   },
+   {
+    "id": "FILTER:vwap movement reliability#0",
+    "type": "FILTER",
+    "object": "vwap movement reliability",
+    "role": "confluence",
+    "span": {
+     "start": 13361,
+     "end": 13415
+    },
+    "evidence": "T-1HFo-C0255"
+   },
+   {
+    "id": "FILTER:price movement through vwap#0",
+    "type": "FILTER",
+    "object": "price movement through vwap",
+    "role": "confluence",
+    "span": {
+     "start": 13443,
+     "end": 13570
+    },
+    "evidence": "T-1HFo-C0257"
+   },
+   {
+    "id": "FILTER:vwap continuity#0",
+    "type": "FILTER",
+    "object": "vwap continuity",
+    "role": "confluence",
+    "span": {
+     "start": 13614,
+     "end": 13658
+    },
+    "evidence": "T-1HFo-C0259"
+   },
+   {
+    "id": "WAIT_STRUCTURE:vwap reference point#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "vwap reference point",
+    "role": "spine",
+    "span": {
+     "start": 13658,
+     "end": 13751
+    },
+    "evidence": "T-1HFo-C0260"
+   },
+   {
+    "id": "ENABLE_ENTRY:vwap cross frequency#0",
+    "type": "ENABLE_ENTRY",
+    "object": "vwap cross frequency",
+    "role": "trigger",
+    "span": {
+     "start": 13877,
+     "end": 13951
+    },
+    "evidence": "{Price crosses VWAP} {in an hour}"
+   },
+   {
+    "id": "FILTER:whipsaw environment#0",
+    "type": "FILTER",
+    "object": "whipsaw environment",
+    "role": "confluence",
+    "span": {
+     "start": 14001,
+     "end": 14086
+    },
+    "evidence": "{The key is recognizing the choppy price action and wider bands that signal a whipsaw environment}"
+   },
+   {
+    "id": "FILTER:vwap source selection#0",
+    "type": "FILTER",
+    "object": "vwap source selection",
+    "role": "confluence",
+    "span": {
+     "start": 14160,
+     "end": 14207
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:pre market vwap analysis routine#0",
+    "type": "WAIT_SESSION",
+    "object": "pre market vwap analysis routine",
+    "role": "confluence",
+    "span": {
+     "start": 14544,
+     "end": 14599
+    },
+    "evidence": "{T-1HFo-C0281}"
+   },
+   {
+    "id": "FILTER:vwap levels#0",
+    "type": "FILTER",
+    "object": "vwap levels",
+    "role": "confluence",
+    "span": {
+     "start": 14599,
+     "end": 14641
+    },
+    "evidence": "{T-1HFo-C0282}"
+   },
+   {
+    "id": "WAIT_BIAS:vwap hierarchy#0",
+    "type": "WAIT_BIAS",
+    "object": "vwap hierarchy",
+    "role": "spine",
+    "span": {
+     "start": 14737,
+     "end": 14791
+    },
+    "evidence": "{T-1HFo-C0286}"
+   },
+   {
+    "id": "FILTER:setups#0",
+    "type": "FILTER",
+    "object": "setups",
+    "role": "confluence",
+    "span": {
+     "start": 14791,
+     "end": 14868
+    },
+    "evidence": "{T-1HFo-C0287}"
+   },
+   {
+    "id": "FILTER:vwap alignment#0",
+    "type": "FILTER",
+    "object": "vwap alignment",
+    "role": "confluence",
+    "span": {
+     "start": 14868,
+     "end": 14934
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:multiple time frames aligned#0",
+    "type": "WAIT_BIAS",
+    "object": "multiple time frames aligned",
+    "role": "spine",
+    "span": {
+     "start": 15111,
+     "end": 15145
+    },
+    "evidence": "},{"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_STRUCTURE:daily vwap#0",
+    "WAIT_STRUCTURE:weekly vwap#0",
+    "WAIT_STRUCTURE:monthly vwap#0"
+   ],
+   [
+    "WAIT_BIAS:vwap slope#0",
+    "WAIT_BIAS:vwap slope angle#0",
+    "WAIT_BIAS:vwap alignment#0"
+   ],
+   [
+    "FILTER:vwap levels anchored to fed meetings or companew york keynotes#0",
+    "FILTER:vwap levels anchored to major news events#0"
+   ],
+   [
+    "WAIT_SESSION:information events#0",
+    "FILTER:stock movement significance#0",
+    "FILTER:band usage#0"
+   ],
+   [
+    "ENABLE_ENTRY:mean reversion#0",
+    "ENABLE_ENTRY:trend continuation#0",
+    "WAIT_CONFIRMATION:long wick rejection#0"
+   ],
+   [
+    "FILTER:vwap bands#0",
+    "FILTER:probability thresholds#0",
+    "WAIT_SESSION:institutional participation#0"
+   ],
+   [
+    "WAIT_BIAS:daily buy signal#0",
+    "WAIT_BIAS:weekly buy signal#0"
+   ],
+   [
+    "FILTER:vwap reliability#0",
+    "FILTER:vwap movement reliability#0",
+    "FILTER:price movement through vwap#0",
+    "FILTER:vwap continuity#0"
+   ],
+   [
+    "FILTER:whipsaw environment#0",
+    "FILTER:vwap source selection#0",
+    "WAIT_SESSION:pre market vwap analysis routine#0",
+    "FILTER:vwap levels#0"
+   ],
+   [
+    "FILTER:setups#0",
+    "FILTER:vwap alignment#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "FILTER:stock movement significance#0",
+    "FILTER:band usage#0"
+   ],
+   [
+    "INVALIDATE:strong close through vwap with volume#0",
+    "INVALIDATE:price break below vwap by few candles#0"
+   ],
+   [
+    "FILTER:vwap behavior context#0",
+    "FILTER:vwap bands#0"
+   ],
+   [
+    "WAIT_STRUCTURE:vwap anchor point#0",
+    "WAIT_STRUCTURE:vwap slope change or volume dry up or bands compress#0"
+   ],
+   [
+    "ENABLE_ENTRY:trend continuation#0",
+    "ENABLE_ENTRY:buying opportunity#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:strong close through vwap with volume#0",
+    "type": "INVALIDATE",
+    "object": "strong close through vwap with volume",
+    "role": "invalidation",
+    "span": {
+     "start": 8187,
+     "end": 8253
+    },
+    "evidence": "{T-1HFo-C0149}"
+   },
+   {
+    "id": "INVALIDATE:price break below vwap by few candles#0",
+    "type": "INVALIDATE",
+    "object": "price break below vwap by few candles",
+    "role": "invalidation",
+    "span": {
+     "start": 8469,
+     "end": 8535
+    },
+    "evidence": "T-1HFo-C0155"
+   },
+   {
+    "id": "INVALIDATE:snap back#0",
+    "type": "INVALIDATE",
+    "object": "snap back",
+    "role": "invalidation",
+    "span": {
+     "start": 8796,
+     "end": 8841
+    },
+    "evidence": "T-1HFo-C0162"
+   }
+  ],
+  "entry_trigger_id": "ENABLE_ENTRY:mean reversion#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

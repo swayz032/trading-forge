@@ -1,0 +1,425 @@
+{
+ "video": "bQp37aD1JLE",
+ "spec_hash": "ad99b3d59878051479cbd86d9ea2dd195dbdd783e18c2eaba65d4ca0af385237",
+ "graph_canonical_hash": "ce42320c5b9daed4",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 13625,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_SESSION:4hour chart#0",
+    "type": "WAIT_SESSION",
+    "object": "4hour chart",
+    "role": "confluence",
+    "span": {
+     "start": 239,
+     "end": 322
+    },
+    "evidence": "{T-bQp3-C0005}"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe selection#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe selection",
+    "role": "confluence",
+    "span": {
+     "start": 434,
+     "end": 497
+    },
+    "evidence": "T-bQp3-C0008"
+   },
+   {
+    "id": "WAIT_BIAS:overall trend#0",
+    "type": "WAIT_BIAS",
+    "object": "overall trend",
+    "role": "spine",
+    "span": {
+     "start": 497,
+     "end": 560
+    },
+    "evidence": "T-bQp3-C0009"
+   },
+   {
+    "id": "FILTER:timeframe constraint#0",
+    "type": "FILTER",
+    "object": "timeframe constraint",
+    "role": "spine",
+    "span": {
+     "start": 616,
+     "end": 643
+    },
+    "evidence": "T-bQp3-C0011"
+   },
+   {
+    "id": "WAIT_BIAS:bias#0",
+    "type": "WAIT_BIAS",
+    "object": "bias",
+    "role": "confluence",
+    "span": {
+     "start": 836,
+     "end": 898
+    },
+    "evidence": "T-bQp3-C0016"
+   },
+   {
+    "id": "WAIT_BIAS:overall market direction#0",
+    "type": "WAIT_BIAS",
+    "object": "overall market direction",
+    "role": "confluence",
+    "span": {
+     "start": 962,
+     "end": 1027
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:sweeps sweeps consolidation before breakout#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "sweeps sweeps consolidation before breakout",
+    "role": "spine",
+    "span": {
+     "start": 1678,
+     "end": 1830
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:market direction#0",
+    "type": "WAIT_BIAS",
+    "object": "market direction",
+    "role": "spine",
+    "span": {
+     "start": 3572,
+     "end": 3675
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:most recent swing in price action#0",
+    "type": "FILTER",
+    "object": "most recent swing in price action",
+    "role": "spine",
+    "span": {
+     "start": 3926,
+     "end": 3972
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:price action state#0",
+    "type": "WAIT_BIAS",
+    "object": "price action state",
+    "role": "spine",
+    "span": {
+     "start": 4798,
+     "end": 4998
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:fvg#0",
+    "type": "FILTER",
+    "object": "fvg",
+    "role": "spine",
+    "span": {
+     "start": 5763,
+     "end": 5792
+    },
+    "evidence": "T-bQp3-C0109"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:price reversal#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "price reversal",
+    "role": "spine",
+    "span": {
+     "start": 6126,
+     "end": 6168
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:sweep#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "sweep",
+    "role": "spine",
+    "span": {
+     "start": 6521,
+     "end": 6575
+    },
+    "evidence": "T-bQp3-C0128"
+   },
+   {
+    "id": "WAIT_BIAS:market bias#0",
+    "type": "WAIT_BIAS",
+    "object": "market bias",
+    "role": "spine",
+    "span": {
+     "start": 7633,
+     "end": 7661
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:chart timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "chart timeframe",
+    "role": "spine",
+    "span": {
+     "start": 8137,
+     "end": 8191
+    },
+    "evidence": "T-bQp3-C0160"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry",
+    "role": "trigger",
+    "span": {
+     "start": 8232,
+     "end": 8267
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:order block#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "order block",
+    "role": "spine",
+    "span": {
+     "start": 8636,
+     "end": 8761
+    },
+    "evidence": "T-bQp3-C0172"
+   },
+   {
+    "id": "WAIT_RETEST:price#0",
+    "type": "WAIT_RETEST",
+    "object": "price",
+    "role": "spine",
+    "span": {
+     "start": 8761,
+     "end": 8813
+    },
+    "evidence": "T-bQp3-C0173"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "spine",
+    "span": {
+     "start": 9279,
+     "end": 9335
+    },
+    "evidence": "T-bQp3-C0186"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:bullish trend#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "bullish trend",
+    "role": "spine",
+    "span": {
+     "start": 9335,
+     "end": 9448
+    },
+    "evidence": "T-bQp3-C0187"
+   },
+   {
+    "id": "WAIT_SESSION:5m up#0",
+    "type": "WAIT_SESSION",
+    "object": "5m up",
+    "role": "spine",
+    "span": {
+     "start": 9717,
+     "end": 9793
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price hits 4hour order block or fvg#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price hits 4hour order block or fvg",
+    "role": "spine",
+    "span": {
+     "start": 10449,
+     "end": 10504
+    },
+    "evidence": "T-bQp3-C0206"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:fvg#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "fvg",
+    "role": "spine",
+    "span": {
+     "start": 10606,
+     "end": 10667
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:4hour order clock#0",
+    "type": "WAIT_SESSION",
+    "object": "4hour order clock",
+    "role": "spine",
+    "span": {
+     "start": 10667,
+     "end": 10727
+    },
+    "evidence": "Now, remember remember this is a bullish 4hour order clock."
+   },
+   {
+    "id": "ENTER:entry#0",
+    "type": "ENTER",
+    "object": "entry",
+    "role": "trigger",
+    "span": {
+     "start": 11338,
+     "end": 11387
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:candle forming fvg#0",
+    "type": "FILTER",
+    "object": "candle forming fvg",
+    "role": "confluence",
+    "span": {
+     "start": 11523,
+     "end": 11589
+    },
+    "evidence": "T-bQp3-C0230"
+   },
+   {
+    "id": "FILTER:stop placement at low fvg candle#0",
+    "type": "FILTER",
+    "object": "stop placement at low fvg candle",
+    "role": "confluence",
+    "span": {
+     "start": 11668,
+     "end": 11841
+    },
+    "evidence": "T-bQp3-C0232"
+   },
+   {
+    "id": "WAIT_SESSION:asia session#0",
+    "type": "WAIT_SESSION",
+    "object": "asia session",
+    "role": "confluence",
+    "span": {
+     "start": 12110,
+     "end": 12162
+    },
+    "evidence": "T-bQp3-C0237"
+   },
+   {
+    "id": "WAIT_STRUCTURE:high level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "high level",
+    "role": "confluence",
+    "span": {
+     "start": 12802,
+     "end": 12843
+    },
+    "evidence": "{T-bQp3-C0251}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:liquidity#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "liquidity",
+    "role": "confluence",
+    "span": {
+     "start": 13075,
+     "end": 13095
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:liquidity context#0",
+    "type": "WAIT_SESSION",
+    "object": "liquidity context",
+    "role": "spine",
+    "span": {
+     "start": 13121,
+     "end": 13156
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "EXIT_HINT:exit condition#0",
+    "type": "EXIT_HINT",
+    "object": "exit condition",
+    "role": "spine",
+    "span": {
+     "start": 13156,
+     "end": 13227
+    },
+    "evidence": "},{"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_SESSION:4hour chart#0",
+    "WAIT_SESSION:timeframe selection#0"
+   ],
+   [
+    "WAIT_BIAS:bias#0",
+    "WAIT_BIAS:overall market direction#0"
+   ],
+   [
+    "FILTER:candle forming fvg#0",
+    "FILTER:stop placement at low fvg candle#0",
+    "WAIT_SESSION:asia session#0"
+   ],
+   [
+    "WAIT_STRUCTURE:liquidity target#0",
+    "WAIT_STRUCTURE:high level#0",
+    "WAIT_STRUCTURE:liquidity#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "WAIT_BIAS:overall market direction#0",
+    "WAIT_BIAS:market direction#0"
+   ],
+   [
+    "WAIT_BIAS:price action state#0",
+    "WAIT_BIAS:market bias#0"
+   ],
+   [
+    "WAIT_SESSION:chart timeframe#0",
+    "WAIT_SESSION:timeframe#0"
+   ],
+   [
+    "WAIT_SESSION:timeframe#0",
+    "WAIT_SESSION:5m up#0"
+   ],
+   [
+    "WAIT_STRUCTURE:order block#0",
+    "WAIT_STRUCTURE:price hits 4hour order block or fvg#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:short position#0",
+    "type": "INVALIDATE",
+    "object": "short position",
+    "role": "invalidation",
+    "span": {
+     "start": 10817,
+     "end": 10849
+    },
+    "evidence": "Um, we're not looking to short."
+   }
+  ],
+  "entry_trigger_id": "ENABLE_ENTRY:entry#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

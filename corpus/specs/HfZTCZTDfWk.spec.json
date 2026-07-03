@@ -1,0 +1,397 @@
+{
+ "video": "HfZTCZTDfWk",
+ "spec_hash": "29995667604acf5dd15b89322465a3e251881f3f692b3b109c51ee993958c92f",
+ "graph_canonical_hash": "dcf5946dd78af3f5",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 11260,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_SESSION:4 hour chart#0",
+    "type": "WAIT_SESSION",
+    "object": "4 hour chart",
+    "role": "spine",
+    "span": {
+     "start": 164,
+     "end": 321
+    },
+    "evidence": "T-HfZT-C0002"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:5 sma cross above 50 sma#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "5 sma cross above 50 sma",
+    "role": "confluence",
+    "span": {
+     "start": 2142,
+     "end": 2241
+    },
+    "evidence": "T-HfZT-C0019 to T-HfZT-C0020"
+   },
+   {
+    "id": "ENABLE_ENTRY:long opportunities#0",
+    "type": "ENABLE_ENTRY",
+    "object": "long opportunities",
+    "role": "trigger",
+    "span": {
+     "start": 2241,
+     "end": 2333
+    },
+    "evidence": "T-HfZT-C0019 to T-HfZT-C0020"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:5 sma cross below 50 sma#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "5 sma cross below 50 sma",
+    "role": "confluence",
+    "span": {
+     "start": 2396,
+     "end": 2548
+    },
+    "evidence": "T-HfZT-C0022 to T-HfZT-C0023"
+   },
+   {
+    "id": "ENABLE_ENTRY:short opportunities#0",
+    "type": "ENABLE_ENTRY",
+    "object": "short opportunities",
+    "role": "trigger",
+    "span": {
+     "start": 2548,
+     "end": 2571
+    },
+    "evidence": "T-HfZT-C0022 to T-HfZT-C0023"
+   },
+   {
+    "id": "WAIT_SESSION:currency pair#0",
+    "type": "WAIT_SESSION",
+    "object": "currency pair",
+    "role": "spine",
+    "span": {
+     "start": 2884,
+     "end": 2961
+    },
+    "evidence": "T-HfZT-C0025"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:5 sma crossing below 20 sma 4h chart#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "5 sma crossing below 20 sma 4h chart",
+    "role": "spine",
+    "span": {
+     "start": 3000,
+     "end": 3159
+    },
+    "evidence": "T-HfZT-C0027"
+   },
+   {
+    "id": "WAIT_RETEST:5 sma#0",
+    "type": "WAIT_RETEST",
+    "object": "5 sma",
+    "role": "spine",
+    "span": {
+     "start": 3159,
+     "end": 3196
+    },
+    "evidence": "T-HfZT-C0028"
+   },
+   {
+    "id": "EXIT_HINT:move stop to break even#0",
+    "type": "EXIT_HINT",
+    "object": "move stop to break even",
+    "role": "spine",
+    "span": {
+     "start": 3876,
+     "end": 3966
+    },
+    "evidence": "{30-minute chart}"
+   },
+   {
+    "id": "WAIT_SESSION:eur usd#0",
+    "type": "WAIT_SESSION",
+    "object": "eur usd",
+    "role": "spine",
+    "span": {
+     "start": 4140,
+     "end": 4161
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:sma 5#0",
+    "type": "FILTER",
+    "object": "sma 5",
+    "role": "confluence",
+    "span": {
+     "start": 4541,
+     "end": 4618
+    },
+    "evidence": "{T-HfZT-C0044}"
+   },
+   {
+    "id": "FILTER:sma 50#0",
+    "type": "FILTER",
+    "object": "sma 50",
+    "role": "confluence",
+    "span": {
+     "start": 4631,
+     "end": 4776
+    },
+    "evidence": "{T-HfZT-C0046}"
+   },
+   {
+    "id": "ENABLE_ENTRY:trade#0",
+    "type": "ENABLE_ENTRY",
+    "object": "trade",
+    "role": "trigger",
+    "span": {
+     "start": 4985,
+     "end": 5077
+    },
+    "evidence": "T-HfZT-C0049"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:moving average cross#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "moving average cross",
+    "role": "confluence",
+    "span": {
+     "start": 5265,
+     "end": 5358
+    },
+    "evidence": "T-HfZT-C0056"
+   },
+   {
+    "id": "ENTER:short entry#0",
+    "type": "ENTER",
+    "object": "short entry",
+    "role": "trigger",
+    "span": {
+     "start": 5358,
+     "end": 5426
+    },
+    "evidence": "T-HfZT-C0057"
+   },
+   {
+    "id": "WAIT_STRUCTURE:low price level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "low price level",
+    "role": "spine",
+    "span": {
+     "start": 5442,
+     "end": 5471
+    },
+    "evidence": "T-HfZT-C0059"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:cross#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "cross",
+    "role": "spine",
+    "span": {
+     "start": 5644,
+     "end": 5719
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_RETEST:retrace#0",
+    "type": "WAIT_RETEST",
+    "object": "retrace",
+    "role": "confluence",
+    "span": {
+     "start": 6058,
+     "end": 6082
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_RETEST:moving average#0",
+    "type": "WAIT_RETEST",
+    "object": "moving average",
+    "role": "confluence",
+    "span": {
+     "start": 6082,
+     "end": 6112
+    },
+    "evidence": "to the moving average at 1073"
+   },
+   {
+    "id": "ENTER:long entry at 10671#0",
+    "type": "ENTER",
+    "object": "long entry at 10671",
+    "role": "trigger",
+    "span": {
+     "start": 6406,
+     "end": 6598
+    },
+    "evidence": "T-HfZT-C0077"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:cross down and retrace#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "cross down and retrace",
+    "role": "spine",
+    "span": {
+     "start": 7561,
+     "end": 7684
+    },
+    "evidence": "{T-HfZT-C0089}"
+   },
+   {
+    "id": "ENTER:entry point#0",
+    "type": "ENTER",
+    "object": "entry point",
+    "role": "trigger",
+    "span": {
+     "start": 7994,
+     "end": 8014
+    },
+    "evidence": "here"
+   },
+   {
+    "id": "ENABLE_ENTRY:trend move#0",
+    "type": "ENABLE_ENTRY",
+    "object": "trend move",
+    "role": "trigger",
+    "span": {
+     "start": 8641,
+     "end": 8726
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:market hours#0",
+    "type": "WAIT_SESSION",
+    "object": "market hours",
+    "role": "confluence",
+    "span": {
+     "start": 9057,
+     "end": 9211
+    },
+    "evidence": "T-HfZT-C0111"
+   },
+   {
+    "id": "FILTER:buy zone#0",
+    "type": "FILTER",
+    "object": "buy zone",
+    "role": "trigger",
+    "span": {
+     "start": 9649,
+     "end": 9809
+    },
+    "evidence": "T-HfZT-C0116"
+   },
+   {
+    "id": "FILTER:sell zone#0",
+    "type": "FILTER",
+    "object": "sell zone",
+    "role": "trigger",
+    "span": {
+     "start": 9809,
+     "end": 9905
+    },
+    "evidence": "T-HfZT-C0117"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry signal#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry signal",
+    "role": "trigger",
+    "span": {
+     "start": 9923,
+     "end": 9977
+    },
+    "evidence": "T-HfZT-C0119"
+   },
+   {
+    "id": "WAIT_SESSION:market hours and fundamentals alignment#0",
+    "type": "WAIT_SESSION",
+    "object": "market hours and fundamentals alignment",
+    "role": "confluence",
+    "span": {
+     "start": 9977,
+     "end": 10195
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:4 hour chart trading using 5 sma#0",
+    "type": "WAIT_SESSION",
+    "object": "4 hour chart trading using 5 sma",
+    "role": "confluence",
+    "span": {
+     "start": 10787,
+     "end": 10881
+    },
+    "evidence": "T-HfZT-C0128"
+   },
+   {
+    "id": "WAIT_SESSION:trading euro dollar pound dollar dollan and q#0",
+    "type": "WAIT_SESSION",
+    "object": "trading euro dollar pound dollar dollan and q",
+    "role": "confluence",
+    "span": {
+     "start": 10881,
+     "end": 11060
+    },
+    "evidence": "T-HfZT-C0129"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_CONFIRMATION:5 sma cross above 50 sma#0",
+    "ENABLE_ENTRY:long opportunities#0",
+    "WAIT_CONFIRMATION:5 sma cross below 50 sma#0",
+    "ENABLE_ENTRY:short opportunities#0"
+   ],
+   [
+    "FILTER:sma 5#0",
+    "FILTER:sma 50#0"
+   ],
+   [
+    "ENABLE_ENTRY:trade#0",
+    "WAIT_CONFIRMATION:moving average cross#0"
+   ],
+   [
+    "WAIT_RETEST:retrace#0",
+    "WAIT_RETEST:moving average#0"
+   ],
+   [
+    "WAIT_SESSION:market hours#0",
+    "FILTER:buy zone#0",
+    "FILTER:sell zone#0"
+   ],
+   [
+    "WAIT_SESSION:market hours and fundamentals alignment#0",
+    "WAIT_SESSION:4 hour chart trading using 5 sma#0",
+    "WAIT_SESSION:trading euro dollar pound dollar dollan and q#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "WAIT_SESSION:market hours and fundamentals alignment#0",
+    "WAIT_SESSION:4 hour chart trading using 5 sma#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:trade validity#0",
+    "type": "INVALIDATE",
+    "object": "trade validity",
+    "role": "invalidation",
+    "span": {
+     "start": 4252,
+     "end": 4279
+    },
+    "evidence": "},{"
+   }
+  ],
+  "entry_trigger_id": "ENABLE_ENTRY:long opportunities#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

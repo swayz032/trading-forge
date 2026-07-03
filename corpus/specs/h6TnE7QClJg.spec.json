@@ -1,0 +1,393 @@
+{
+ "video": "h6TnE7QClJg",
+ "spec_hash": "eae4b6d74a42a3f75409c921c2c51e4df709dcdcb1c1ba5de6adf1eda4560e4f",
+ "graph_canonical_hash": "1d6ef400b56135ac",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 11899,
+ "spec": {
+  "direction": "long",
+  "entry_conditions": [
+   {
+    "id": "WAIT_CONFIRMATION:ema 10 cross above ema 20#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "ema 10 cross above ema 20",
+    "role": "confluence",
+    "span": {
+     "start": 3684,
+     "end": 3780
+    },
+    "evidence": "T-h6Tn-C0081"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:ema 10 cross below ema 20#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "ema 10 cross below ema 20",
+    "role": "confluence",
+    "span": {
+     "start": 3796,
+     "end": 3846
+    },
+    "evidence": "T-h6Tn-C0083"
+   },
+   {
+    "id": "WAIT_STRUCTURE:three fast steps#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "three fast steps",
+    "role": "spine",
+    "span": {
+     "start": 4266,
+     "end": 4294
+    },
+    "evidence": "They take three fast steps."
+   },
+   {
+    "id": "WAIT_CONFIRMATION:momentum strength#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "momentum strength",
+    "role": "spine",
+    "span": {
+     "start": 4600,
+     "end": 4652
+    },
+    "evidence": "{T-h6Tn-C0105}"
+   },
+   {
+    "id": "INVALIDATE:they see cross and they enter immediately#0",
+    "type": "INVALIDATE",
+    "object": "they see cross and they enter immediately",
+    "role": "trigger",
+    "span": {
+     "start": 4839,
+     "end": 4886
+    },
+    "evidence": "T-h6Tn-C0111"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:they don t confirm#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "they don t confirm",
+    "role": "confluence",
+    "span": {
+     "start": 4903,
+     "end": 4923
+    },
+    "evidence": "T-h6Tn-C0113"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:cci movement#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "cci movement",
+    "role": "confluence",
+    "span": {
+     "start": 6066,
+     "end": 6081
+    },
+    "evidence": "T-h6Tn-C0142 to T-h6Tn-C0143"
+   },
+   {
+    "id": "WAIT_BIAS:cci#0",
+    "type": "WAIT_BIAS",
+    "object": "cci",
+    "role": "spine",
+    "span": {
+     "start": 6293,
+     "end": 6350
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:ema crossover#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "ema crossover",
+    "role": "confluence",
+    "span": {
+     "start": 6871,
+     "end": 6894
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:momentum build in real time#0",
+    "type": "ENABLE_ENTRY",
+    "object": "momentum build in real time",
+    "role": "trigger",
+    "span": {
+     "start": 7141,
+     "end": 7166
+    },
+    "evidence": "T-h6Tn-C0166 to T-h6Tn-C0167"
+   },
+   {
+    "id": "FILTER:ema crossover trade#0",
+    "type": "FILTER",
+    "object": "ema crossover trade",
+    "role": "spine",
+    "span": {
+     "start": 7217,
+     "end": 7297
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:cci indicator#0",
+    "type": "WAIT_BIAS",
+    "object": "cci indicator",
+    "role": "spine",
+    "span": {
+     "start": 7538,
+     "end": 7564
+    },
+    "evidence": "{T-h6Tn-C0176}"
+   },
+   {
+    "id": "FILTER:cci sma line signal line#0",
+    "type": "FILTER",
+    "object": "cci sma line signal line",
+    "role": "confluence",
+    "span": {
+     "start": 8004,
+     "end": 8061
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:cci lines used#0",
+    "type": "FILTER",
+    "object": "cci lines used",
+    "role": "confluence",
+    "span": {
+     "start": 8114,
+     "end": 8171
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:cci line visibility#0",
+    "type": "FILTER",
+    "object": "cci line visibility",
+    "role": "spine",
+    "span": {
+     "start": 8678,
+     "end": 8715
+    },
+    "evidence": "Keep only the main CCI line visible."
+   },
+   {
+    "id": "WAIT_STRUCTURE:moving averages#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "moving averages",
+    "role": "spine",
+    "span": {
+     "start": 8859,
+     "end": 8915
+    },
+    "evidence": "{T-h6Tn-C0212}"
+   },
+   {
+    "id": "WAIT_SESSION:ema or exponential moving average#0",
+    "type": "WAIT_SESSION",
+    "object": "ema or exponential moving average",
+    "role": "spine",
+    "span": {
+     "start": 8963,
+     "end": 9008
+    },
+    "evidence": "{T-h6Tn-C0215}"
+   },
+   {
+    "id": "ENABLE_ENTRY:ema#0",
+    "type": "ENABLE_ENTRY",
+    "object": "ema",
+    "role": "trigger",
+    "span": {
+     "start": 9035,
+     "end": 9064
+    },
+    "evidence": "T-h6Tn-C0217"
+   },
+   {
+    "id": "FILTER:ema10 length#0",
+    "type": "FILTER",
+    "object": "ema10 length",
+    "role": "spine",
+    "span": {
+     "start": 9349,
+     "end": 9371
+    },
+    "evidence": "Set the length to 10."
+   },
+   {
+    "id": "WAIT_CONFIRMATION:ema10 cross above ema 20#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "ema10 cross above ema 20",
+    "role": "confluence",
+    "span": {
+     "start": 9705,
+     "end": 9761
+    },
+    "evidence": "T-h6Tn-C0239"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:cci#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "cci",
+    "role": "confluence",
+    "span": {
+     "start": 9803,
+     "end": 9824
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:trade entry#0",
+    "type": "ENABLE_ENTRY",
+    "object": "trade entry",
+    "role": "trigger",
+    "span": {
+     "start": 9967,
+     "end": 10000
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry condition#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry condition",
+    "role": "trigger",
+    "span": {
+     "start": 10034,
+     "end": 10091
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_RETEST:price retest#0",
+    "type": "WAIT_RETEST",
+    "object": "price retest",
+    "role": "spine",
+    "span": {
+     "start": 10119,
+     "end": 10186
+    },
+    "evidence": "wait for price to pull back slightly to the EMA10 and enter there."
+   },
+   {
+    "id": "WAIT_CONFIRMATION:ema10 cross below ema 20#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "ema10 cross below ema 20",
+    "role": "confluence",
+    "span": {
+     "start": 10552,
+     "end": 10618
+    },
+    "evidence": "Step one, EMA10 crosses below the EMA 20 bearish momentum signal."
+   },
+   {
+    "id": "WAIT_CONFIRMATION:cci below zero#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "cci below zero",
+    "role": "confluence",
+    "span": {
+     "start": 10618,
+     "end": 10699
+    },
+    "evidence": "Step two, CCI must be below zero at the time of the crossover or shortly before."
+   },
+   {
+    "id": "ENTER:entry#0",
+    "type": "ENTER",
+    "object": "entry",
+    "role": "trigger",
+    "span": {
+     "start": 10731,
+     "end": 10749
+    },
+    "evidence": "Step three, enter"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "spine",
+    "span": {
+     "start": 11025,
+     "end": 11095
+    },
+    "evidence": "T-h6Tn-C0267"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_CONFIRMATION:ema 10 cross above ema 20#0",
+    "WAIT_CONFIRMATION:ema 10 cross below ema 20#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:they don t confirm#0",
+    "WAIT_CONFIRMATION:cci movement#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:ema crossover#0",
+    "ENABLE_ENTRY:momentum build in real time#0"
+   ],
+   [
+    "FILTER:cci sma line signal line#0",
+    "FILTER:cci lines used#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:ema10 cross above ema 20#0",
+    "WAIT_CONFIRMATION:cci#0",
+    "ENABLE_ENTRY:trade entry#0",
+    "ENABLE_ENTRY:entry condition#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:ema10 cross below ema 20#0",
+    "WAIT_CONFIRMATION:cci below zero#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "WAIT_CONFIRMATION:ema 10 cross below ema 20#0",
+    "WAIT_CONFIRMATION:momentum strength#0"
+   ],
+   [
+    "FILTER:ema crossover trade#0",
+    "FILTER:cci sma line signal line#0"
+   ],
+   [
+    "INVALIDATE:they see cross and they enter immediately#0",
+    "INVALIDATE:price action#0"
+   ],
+   [
+    "ENABLE_ENTRY:ema#0",
+    "ENABLE_ENTRY:trade entry#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:cci#0",
+    "WAIT_CONFIRMATION:ema10 cross below ema 20#0"
+   ],
+   [
+    "WAIT_SESSION:ema or exponential moving average#0",
+    "WAIT_SESSION:timeframe#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:price action#0",
+    "type": "INVALIDATE",
+    "object": "price action",
+    "role": "invalidation",
+    "span": {
+     "start": 8615,
+     "end": 8640
+    },
+    "evidence": "},{"
+   }
+  ],
+  "entry_trigger_id": "ENABLE_ENTRY:momentum build in real time#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

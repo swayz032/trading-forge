@@ -1,0 +1,780 @@
+{
+ "video": "lRMFcsqhYBU",
+ "spec_hash": "3cca4af2fdf8addae351cdf2ce03a1bcaa89907320a570786d34471ebef8a16d",
+ "graph_canonical_hash": "7262b87b72a5a54e",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 31691,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_SESSION:currency pairs#0",
+    "type": "WAIT_SESSION",
+    "object": "currency pairs",
+    "role": "spine",
+    "span": {
+     "start": 364,
+     "end": 451
+    },
+    "evidence": "T-lRMF-C0004"
+   },
+   {
+    "id": "WAIT_STRUCTURE:major structure level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "major structure level",
+    "role": "spine",
+    "span": {
+     "start": 4681,
+     "end": 4805
+    },
+    "evidence": "{T-lRMF-C0047}"
+   },
+   {
+    "id": "WAIT_BIAS:trading application#0",
+    "type": "WAIT_BIAS",
+    "object": "trading application",
+    "role": "spine",
+    "span": {
+     "start": 6253,
+     "end": 6377
+    },
+    "evidence": "T-lRMF-C0067"
+   },
+   {
+    "id": "WAIT_SESSION:market condition#0",
+    "type": "WAIT_SESSION",
+    "object": "market condition",
+    "role": "confluence",
+    "span": {
+     "start": 6557,
+     "end": 6648
+    },
+    "evidence": "T-lRMF-C0071"
+   },
+   {
+    "id": "FILTER:retest levels#0",
+    "type": "FILTER",
+    "object": "retest levels",
+    "role": "confluence",
+    "span": {
+     "start": 7042,
+     "end": 7365
+    },
+    "evidence": "{start:0, end:1}"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:structure level#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "structure level",
+    "role": "spine",
+    "span": {
+     "start": 7365,
+     "end": 7539
+    },
+    "evidence": "{start:0, end:1}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:previous resistance level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "previous resistance level",
+    "role": "confluence",
+    "span": {
+     "start": 7574,
+     "end": 7687
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:previous swing low#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "previous swing low",
+    "role": "confluence",
+    "span": {
+     "start": 7772,
+     "end": 7894
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "level",
+    "role": "confluence",
+    "span": {
+     "start": 7894,
+     "end": 7942
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:level support resistance#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "level support resistance",
+    "role": "confluence",
+    "span": {
+     "start": 8635,
+     "end": 8700
+    },
+    "evidence": "previous level"
+   },
+   {
+    "id": "FILTER:swing low before start retest#0",
+    "type": "FILTER",
+    "object": "swing low before start retest",
+    "role": "confluence",
+    "span": {
+     "start": 9601,
+     "end": 9874
+    },
+    "evidence": "T-lRMF-C0101"
+   },
+   {
+    "id": "FILTER:level x#0",
+    "type": "FILTER",
+    "object": "level x",
+    "role": "confluence",
+    "span": {
+     "start": 10241,
+     "end": 10336
+    },
+    "evidence": "T-lRMF-C0107"
+   },
+   {
+    "id": "WAIT_BIAS:buy trades in counter trend trading environment#0",
+    "type": "WAIT_BIAS",
+    "object": "buy trades in counter trend trading environment",
+    "role": "trigger",
+    "span": {
+     "start": 10428,
+     "end": 10504
+    },
+    "evidence": "T-lRMF-C0110"
+   },
+   {
+    "id": "WAIT_STRUCTURE:next level price is going to hit up support#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "next level price is going to hit up support",
+    "role": "spine",
+    "span": {
+     "start": 10517,
+     "end": 10561
+    },
+    "evidence": "T-lRMF-C0112"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:level has been tested multiple times#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "level has been tested multiple times",
+    "role": "spine",
+    "span": {
+     "start": 10561,
+     "end": 10631
+    },
+    "evidence": "T-lRMF-C0113"
+   },
+   {
+    "id": "WAIT_SESSION:four hour chart#0",
+    "type": "WAIT_SESSION",
+    "object": "four hour chart",
+    "role": "spine",
+    "span": {
+     "start": 10644,
+     "end": 10781
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:most recent swing high#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "most recent swing high",
+    "role": "spine",
+    "span": {
+     "start": 10882,
+     "end": 11191
+    },
+    "evidence": "well so after a bearish trend we will almost always eventually see what see a reversal while this reversal is happening I'm going to take a look at price and at my most recent swing High I'm going to put a horizontal line there and am I going to use this level as a level of resistance well I'm in an uptrend"
+   },
+   {
+    "id": "WAIT_BIAS:uptrend continuation#0",
+    "type": "WAIT_BIAS",
+    "object": "uptrend continuation",
+    "role": "spine",
+    "span": {
+     "start": 11259,
+     "end": 11285
+    },
+    "evidence": "T-lRMF-C0120"
+   },
+   {
+    "id": "FILTER:break level#0",
+    "type": "FILTER",
+    "object": "break level",
+    "role": "spine",
+    "span": {
+     "start": 11397,
+     "end": 11526
+    },
+    "evidence": "T-lRMF-C0122"
+   },
+   {
+    "id": "WAIT_STRUCTURE:retest start#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "retest start",
+    "role": "spine",
+    "span": {
+     "start": 11526,
+     "end": 11606
+    },
+    "evidence": "T-lRMF-C0123"
+   },
+   {
+    "id": "FILTER:level tested multiple times#0",
+    "type": "FILTER",
+    "object": "level tested multiple times",
+    "role": "spine",
+    "span": {
+     "start": 11886,
+     "end": 11986
+    },
+    "evidence": "T-lRMF-C0127"
+   },
+   {
+    "id": "WAIT_STRUCTURE:counter trend bearish levels structure#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "counter trend bearish levels structure",
+    "role": "spine",
+    "span": {
+     "start": 11986,
+     "end": 12126
+    },
+    "evidence": "T-lRMF-C0128"
+   },
+   {
+    "id": "WAIT_SESSION:euro aussie daily chart#0",
+    "type": "WAIT_SESSION",
+    "object": "euro aussie daily chart",
+    "role": "spine",
+    "span": {
+     "start": 12534,
+     "end": 12644
+    },
+    "evidence": "{T-lRMF-C0136}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:major structure level daily chart#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "major structure level daily chart",
+    "role": "spine",
+    "span": {
+     "start": 12971,
+     "end": 13123
+    },
+    "evidence": "so if we were trading Trend continuation do you see a level that would qualify as a major structure level here on the daily chart hopefully you pointed"
+   },
+   {
+    "id": "FILTER:support level#0",
+    "type": "FILTER",
+    "object": "support level",
+    "role": "spine",
+    "span": {
+     "start": 13123,
+     "end": 13268
+    },
+    "evidence": "out this level the reason is this is an area that is the most recent support broken by price and along with that it's been tested multiple times"
+   },
+   {
+    "id": "WAIT_STRUCTURE:swing low#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "swing low",
+    "role": "confluence",
+    "span": {
+     "start": 13439,
+     "end": 13532
+    },
+    "evidence": "{T-lRMF-C0146}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:prominent level support#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "prominent level support",
+    "role": "confluence",
+    "span": {
+     "start": 13765,
+     "end": 13816
+    },
+    "evidence": "{T-lRMF-C0149}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:major structure level zone and optimal trading zone#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "major structure level zone and optimal trading zone",
+    "role": "confluence",
+    "span": {
+     "start": 14180,
+     "end": 14329
+    },
+    "evidence": "current/future"
+   },
+   {
+    "id": "WAIT_SESSION:time frame context#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame context",
+    "role": "spine",
+    "span": {
+     "start": 14457,
+     "end": 14548
+    },
+    "evidence": "when I would drop down to a smaller time frame the four hour chart for this exact strategy"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:confirmation pattern#1",
+    "type": "WAIT_CONFIRMATION",
+    "object": "confirmation pattern",
+    "role": "spine",
+    "span": {
+     "start": 14726,
+     "end": 14742
+    },
+    "evidence": "and double tops"
+   },
+   {
+    "id": "FILTER:candles can go below it with wick#0",
+    "type": "FILTER",
+    "object": "candles can go below it with wick",
+    "role": "spine",
+    "span": {
+     "start": 15683,
+     "end": 16002
+    },
+    "evidence": "T-lRMF-C0172"
+   },
+   {
+    "id": "WAIT_BIAS:when they re counter trend#0",
+    "type": "WAIT_BIAS",
+    "object": "when they re counter trend",
+    "role": "spine",
+    "span": {
+     "start": 17545,
+     "end": 17572
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:break trade down yet again we saw our major structure level daily chart it was counter trend level we#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "break trade down yet again we saw our major structure level daily chart it was counter trend level we",
+    "role": "spine",
+    "span": {
+     "start": 17603,
+     "end": 17719
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENTER:buy order#0",
+    "type": "ENTER",
+    "object": "buy order",
+    "role": "trigger",
+    "span": {
+     "start": 18162,
+     "end": 18192
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:canada swiss trade continuation opportunity#0",
+    "type": "WAIT_SESSION",
+    "object": "canada swiss trade continuation opportunity",
+    "role": "confluence",
+    "span": {
+     "start": 18578,
+     "end": 18742
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:resistance level identification#0",
+    "type": "FILTER",
+    "object": "resistance level identification",
+    "role": "confluence",
+    "span": {
+     "start": 19607,
+     "end": 19659
+    },
+    "evidence": "so we can tell that it's a resistance level and the"
+   },
+   {
+    "id": "WAIT_RETEST:price push back up into our zone#0",
+    "type": "WAIT_RETEST",
+    "object": "price push back up into our zone",
+    "role": "spine",
+    "span": {
+     "start": 19675,
+     "end": 19720
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "VERIFY_STRUCTURE:price has gotten into our zone#0",
+    "type": "VERIFY_STRUCTURE",
+    "object": "price has gotten into our zone",
+    "role": "spine",
+    "span": {
+     "start": 19791,
+     "end": 19830
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:double top#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "double top",
+    "role": "spine",
+    "span": {
+     "start": 20121,
+     "end": 20165
+    },
+    "evidence": "so at this point we're waiting for a double"
+   },
+   {
+    "id": "FILTER:termination zone close condition#0",
+    "type": "FILTER",
+    "object": "termination zone close condition",
+    "role": "spine",
+    "span": {
+     "start": 20663,
+     "end": 20746
+    },
+    "evidence": "T-lRMF-C0238"
+   },
+   {
+    "id": "ENTER:entry placement#0",
+    "type": "ENTER",
+    "object": "entry placement",
+    "role": "trigger",
+    "span": {
+     "start": 21367,
+     "end": 21430
+    },
+    "evidence": "so yes this would be where I would go ahead and place my entry"
+   },
+   {
+    "id": "WAIT_STRUCTURE:swing low before impulsive move up#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "swing low before impulsive move up",
+    "role": "spine",
+    "span": {
+     "start": 22721,
+     "end": 22856
+    },
+    "evidence": "T-lRMF-C0261"
+   },
+   {
+    "id": "WAIT_SESSION:daily chart structure levels#0",
+    "type": "WAIT_SESSION",
+    "object": "daily chart structure levels",
+    "role": "spine",
+    "span": {
+     "start": 24051,
+     "end": 24227
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:currency pairs and major levels structure#0",
+    "type": "WAIT_SESSION",
+    "object": "currency pairs and major levels structure",
+    "role": "spine",
+    "span": {
+     "start": 24808,
+     "end": 24947
+    },
+    "evidence": "T-lRMF-C0286"
+   },
+   {
+    "id": "WAIT_STRUCTURE:downtrend move pushing lower new swing low followed by new lower high followed by another new lower low#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "downtrend move pushing lower new swing low followed by new lower high followed by another new lower low",
+    "role": "confluence",
+    "span": {
+     "start": 25011,
+     "end": 25286
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:previous level structure support was broken it also has been tested multiple times looking left#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "previous level structure support was broken it also has been tested multiple times looking left",
+    "role": "confluence",
+    "span": {
+     "start": 25286,
+     "end": 25362
+    },
+    "evidence": "support that was broken it also has been tested multiple times looking left"
+   },
+   {
+    "id": "WAIT_SESSION:execution four hour chart#0",
+    "type": "WAIT_SESSION",
+    "object": "execution four hour chart",
+    "role": "spine",
+    "span": {
+     "start": 25441,
+     "end": 25576
+    },
+    "evidence": "if price gets into the zone I'm dropping down to my four hour chart and I'm going to execute the strategy exactly how you learned I'll"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:double top#1",
+    "type": "WAIT_CONFIRMATION",
+    "object": "double top",
+    "role": "confluence",
+    "span": {
+     "start": 25603,
+     "end": 25621
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:candlestick pattern with no double top confirmation#0",
+    "type": "ENABLE_ENTRY",
+    "object": "candlestick pattern with no double top confirmation",
+    "role": "trigger",
+    "span": {
+     "start": 26244,
+     "end": 26371
+    },
+    "evidence": "T-lRMF-C0304"
+   },
+   {
+    "id": "WAIT_SESSION:daily chart#0",
+    "type": "WAIT_SESSION",
+    "object": "daily chart",
+    "role": "spine",
+    "span": {
+     "start": 27111,
+     "end": 27202
+    },
+    "evidence": "T-lRMF-C0316"
+   },
+   {
+    "id": "WAIT_STRUCTURE:pair broken above previous level structure resistance#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "pair broken above previous level structure resistance",
+    "role": "confluence",
+    "span": {
+     "start": 27601,
+     "end": 27755
+    },
+    "evidence": "T-lRMF-C0322"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price retest#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price retest",
+    "role": "confluence",
+    "span": {
+     "start": 27936,
+     "end": 28131
+    },
+    "evidence": "so would that be the case this green area is going to be our major level of structure and with that being the case what I'm going to be waiting on is price to pull back into this level between 2."
+   },
+   {
+    "id": "WAIT_STRUCTURE:price retest to major structure level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price retest to major structure level",
+    "role": "confluence",
+    "span": {
+     "start": 28490,
+     "end": 28636
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:retest to major level structure#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "retest to major level structure",
+    "role": "confluence",
+    "span": {
+     "start": 28802,
+     "end": 28949
+    },
+    "evidence": "broken above a major level of structure that's been tested multiple times with this being the case I'll be waiting for a pullback to this area and"
+   },
+   {
+    "id": "WAIT_STRUCTURE:latest and most recent level structure resistance#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "latest and most recent level structure resistance",
+    "role": "confluence",
+    "span": {
+     "start": 28949,
+     "end": 29127
+    },
+    "evidence": "if you can't see the one two three move here let me back up here's our one two three move for a trending move this being the latest and most recent level of structure resistance"
+   },
+   {
+    "id": "WAIT_STRUCTURE:valid major structure level otz#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "valid major structure level otz",
+    "role": "confluence",
+    "span": {
+     "start": 29127,
+     "end": 29278
+    },
+    "evidence": "broken then looking left and seeing that it has been tested multiple times is what gave us a valid major structure level a valid otz here in this area"
+   },
+   {
+    "id": "FILTER:support test frequency#0",
+    "type": "FILTER",
+    "object": "support test frequency",
+    "role": "spine",
+    "span": {
+     "start": 29781,
+     "end": 29829
+    },
+    "evidence": "if it's been tested multiple times which it has"
+   },
+   {
+    "id": "WAIT_STRUCTURE:retest area#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "retest area",
+    "role": "spine",
+    "span": {
+     "start": 29829,
+     "end": 29903
+    },
+    "evidence": "so if we get a push up in this pullback all the way to the area between 0."
+   },
+   {
+    "id": "WAIT_CONFIRMATION:entry#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "entry",
+    "role": "trigger",
+    "span": {
+     "start": 29943,
+     "end": 30007
+    },
+    "evidence": "look for possible confirmation and entry from on the Euro Swiss"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_SESSION:market condition#0",
+    "FILTER:retest levels#0"
+   ],
+   [
+    "WAIT_STRUCTURE:previous resistance level#0",
+    "WAIT_STRUCTURE:previous swing low#0",
+    "WAIT_STRUCTURE:level#0",
+    "WAIT_STRUCTURE:level support resistance#0"
+   ],
+   [
+    "FILTER:swing low before start retest#0",
+    "FILTER:level x#0"
+   ],
+   [
+    "WAIT_STRUCTURE:swing low#0",
+    "WAIT_STRUCTURE:prominent level support#0",
+    "WAIT_STRUCTURE:major structure level zone and optimal trading zone#0"
+   ],
+   [
+    "WAIT_SESSION:canada swiss trade continuation opportunity#0",
+    "FILTER:resistance level identification#0"
+   ],
+   [
+    "WAIT_STRUCTURE:downtrend move pushing lower new swing low followed by new lower high followed by another new lower low#0",
+    "WAIT_STRUCTURE:previous level structure support was broken it also has been tested multiple times looking left#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:double top#1",
+    "ENABLE_ENTRY:candlestick pattern with no double top confirmation#0"
+   ],
+   [
+    "WAIT_STRUCTURE:pair broken above previous level structure resistance#0",
+    "WAIT_STRUCTURE:price retest#0",
+    "WAIT_STRUCTURE:price retest to major structure level#0",
+    "WAIT_STRUCTURE:retest to major level structure#0",
+    "WAIT_STRUCTURE:latest and most recent level structure resistance#0",
+    "WAIT_STRUCTURE:valid major structure level otz#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "WAIT_STRUCTURE:level#0",
+    "WAIT_STRUCTURE:level support resistance#0"
+   ],
+   [
+    "WAIT_BIAS:uptrend continuation#0",
+    "WAIT_BIAS:when they re counter trend#0"
+   ],
+   [
+    "INVALIDATE:previous resistance level#0",
+    "INVALIDATE:readiness to trade#0"
+   ],
+   [
+    "WAIT_SESSION:execution four hour chart#0",
+    "WAIT_SESSION:daily chart#0"
+   ],
+   [
+    "WAIT_STRUCTURE:previous level structure support was broken it also has been tested multiple times looking left#0",
+    "WAIT_STRUCTURE:pair broken above previous level structure resistance#0"
+   ],
+   [
+    "WAIT_STRUCTURE:pair broken above previous level structure resistance#0",
+    "WAIT_STRUCTURE:price retest#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:retest start#0",
+    "type": "INVALIDATE",
+    "object": "retest start",
+    "role": "invalidation",
+    "span": {
+     "start": 11205,
+     "end": 11259
+    },
+    "evidence": "before the pullback started it's very likely to break"
+   },
+   {
+    "id": "INVALIDATE:price close above termination zone#0",
+    "type": "INVALIDATE",
+    "object": "price close above termination zone",
+    "role": "invalidation",
+    "span": {
+     "start": 20746,
+     "end": 20808
+    },
+    "evidence": "T-lRMF-C0239"
+   },
+   {
+    "id": "INVALIDATE:previous resistance level#0",
+    "type": "INVALIDATE",
+    "object": "previous resistance level",
+    "role": "invalidation",
+    "span": {
+     "start": 22619,
+     "end": 22685
+    },
+    "evidence": "T-lRMF-C0258"
+   },
+   {
+    "id": "INVALIDATE:readiness to trade#0",
+    "type": "INVALIDATE",
+    "object": "readiness to trade",
+    "role": "invalidation",
+    "span": {
+     "start": 24545,
+     "end": 24644
+    },
+    "evidence": "T-lRMF-C0284"
+   }
+  ],
+  "entry_trigger_id": "WAIT_BIAS:buy trades in counter trend trading environment#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

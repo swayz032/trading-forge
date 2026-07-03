@@ -1,0 +1,768 @@
+{
+ "video": "x1ydP8bC7OE",
+ "spec_hash": "c7f26110de353dff411e14658b84c63ea5ed3ae44f74ba5daeb8f20de93908ee",
+ "graph_canonical_hash": "c3e39b72af57f6ac",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 21064,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_SESSION:4 hour candle structure#0",
+    "type": "WAIT_SESSION",
+    "object": "4 hour candle structure",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 88
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:candle type#0",
+    "type": "FILTER",
+    "object": "candle type",
+    "role": "confluence",
+    "span": {
+     "start": 1386,
+     "end": 1417
+    },
+    "evidence": "{T-x1yd-C0015}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:market move below opening price#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "market move below opening price",
+    "role": "spine",
+    "span": {
+     "start": 1544,
+     "end": 1602
+    },
+    "evidence": "T-x1yd-C0019"
+   },
+   {
+    "id": "ENABLE_ENTRY:buying opportunity#0",
+    "type": "ENABLE_ENTRY",
+    "object": "buying opportunity",
+    "role": "trigger",
+    "span": {
+     "start": 1602,
+     "end": 1659
+    },
+    "evidence": "T-x1yd-C0020"
+   },
+   {
+    "id": "WAIT_STRUCTURE:bearish candlestick#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "bearish candlestick",
+    "role": "confluence",
+    "span": {
+     "start": 1759,
+     "end": 1810
+    },
+    "evidence": "T-x1yd-C0023"
+   },
+   {
+    "id": "WAIT_STRUCTURE:market push up above opening#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "market push up above opening",
+    "role": "confluence",
+    "span": {
+     "start": 1810,
+     "end": 1871
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:candle open times#0",
+    "type": "WAIT_SESSION",
+    "object": "candle open times",
+    "role": "confluence",
+    "span": {
+     "start": 2384,
+     "end": 2519
+    },
+    "evidence": "T-x1yd-C0031"
+   },
+   {
+    "id": "WAIT_SESSION:fx candle open time adjustment#0",
+    "type": "WAIT_SESSION",
+    "object": "fx candle open time adjustment",
+    "role": "confluence",
+    "span": {
+     "start": 2519,
+     "end": 2560
+    },
+    "evidence": "T-x1yd-C0032"
+   },
+   {
+    "id": "WAIT_SESSION:specific candle open time futures#0",
+    "type": "WAIT_SESSION",
+    "object": "specific candle open time futures",
+    "role": "confluence",
+    "span": {
+     "start": 2594,
+     "end": 2642
+    },
+    "evidence": "T-x1yd-C0034"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "confluence",
+    "span": {
+     "start": 2698,
+     "end": 2713
+    },
+    "evidence": "{T-x1yd-C0036}"
+   },
+   {
+    "id": "WAIT_SESSION:trading session#0",
+    "type": "WAIT_SESSION",
+    "object": "trading session",
+    "role": "confluence",
+    "span": {
+     "start": 3227,
+     "end": 3341
+    },
+    "evidence": "T-x1yd-C0045"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:bullish engulfing#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "bullish engulfing",
+    "role": "spine",
+    "span": {
+     "start": 4126,
+     "end": 4161
+    },
+    "evidence": "T-x1yd-C0062, T-x1yd-C0065"
+   },
+   {
+    "id": "WAIT_STRUCTURE:bullish engulfing condition 1#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "bullish engulfing condition 1",
+    "role": "spine",
+    "span": {
+     "start": 4161,
+     "end": 4250
+    },
+    "evidence": "T-x1yd-C0062"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:bullish engulfing condition 2#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "bullish engulfing condition 2",
+    "role": "confluence",
+    "span": {
+     "start": 4333,
+     "end": 4381
+    },
+    "evidence": "T-x1yd-C0065"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:bullish pin bar candle#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "bullish pin bar candle",
+    "role": "confluence",
+    "span": {
+     "start": 4804,
+     "end": 4938
+    },
+    "evidence": "T-x1yd-C0076"
+   },
+   {
+    "id": "FILTER:opposing fvg to downside#0",
+    "type": "FILTER",
+    "object": "opposing fvg to downside",
+    "role": "spine",
+    "span": {
+     "start": 5330,
+     "end": 5391
+    },
+    "evidence": "T-x1yd-C0082"
+   },
+   {
+    "id": "ENTER:buy entry condition#0",
+    "type": "ENTER",
+    "object": "buy entry condition",
+    "role": "trigger",
+    "span": {
+     "start": 5764,
+     "end": 5874
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:sell positions#0",
+    "type": "ENABLE_ENTRY",
+    "object": "sell positions",
+    "role": "trigger",
+    "span": {
+     "start": 6008,
+     "end": 6039
+    },
+    "evidence": "T-x1yd-C0091"
+   },
+   {
+    "id": "WAIT_BIAS:market taking out swing high#0",
+    "type": "WAIT_BIAS",
+    "object": "market taking out swing high",
+    "role": "spine",
+    "span": {
+     "start": 6402,
+     "end": 6498
+    },
+    "evidence": "T-x1yd-C0098 to T-x1yd-C0099"
+   },
+   {
+    "id": "WAIT_SESSION:market opening up#0",
+    "type": "WAIT_SESSION",
+    "object": "market opening up",
+    "role": "spine",
+    "span": {
+     "start": 6683,
+     "end": 6723
+    },
+    "evidence": "T-x1yd-C0103"
+   },
+   {
+    "id": "ENABLE_ENTRY:market opening up#0",
+    "type": "ENABLE_ENTRY",
+    "object": "market opening up",
+    "role": "trigger",
+    "span": {
+     "start": 6723,
+     "end": 6742
+    },
+    "evidence": "T-x1yd-C0104"
+   },
+   {
+    "id": "WAIT_BIAS:market to trade lower#0",
+    "type": "WAIT_BIAS",
+    "object": "market to trade lower",
+    "role": "spine",
+    "span": {
+     "start": 6742,
+     "end": 6777
+    },
+    "evidence": "T-x1yd-C0105"
+   },
+   {
+    "id": "WAIT_STRUCTURE:ebp range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "ebp range",
+    "role": "spine",
+    "span": {
+     "start": 6880,
+     "end": 6919
+    },
+    "evidence": "T-x1yd-C0109"
+   },
+   {
+    "id": "FILTER:candle s range#0",
+    "type": "FILTER",
+    "object": "candle s range",
+    "role": "confluence",
+    "span": {
+     "start": 7044,
+     "end": 7178
+    },
+    "evidence": "T-x1yd-C0112"
+   },
+   {
+    "id": "FILTER:low potential bullish candle#0",
+    "type": "FILTER",
+    "object": "low potential bullish candle",
+    "role": "confluence",
+    "span": {
+     "start": 7364,
+     "end": 7503
+    },
+    "evidence": "T-x1yd-C0117"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:flip bullish#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "flip bullish",
+    "role": "spine",
+    "span": {
+     "start": 7716,
+     "end": 7753
+    },
+    "evidence": "T-x1yd-C0121 - T-x1yd-C0122"
+   },
+   {
+    "id": "WAIT_STRUCTURE:pin bar range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "pin bar range",
+    "role": "confluence",
+    "span": {
+     "start": 7929,
+     "end": 8002
+    },
+    "evidence": "T-x1yd-C0124 - T-x1yd-C0125"
+   },
+   {
+    "id": "WAIT_STRUCTURE:pb range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "pb range",
+    "role": "confluence",
+    "span": {
+     "start": 8002,
+     "end": 8127
+    },
+    "evidence": "T-x1yd-C0124 - T-x1yd-C0125"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:bullish candle expansion higher#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "bullish candle expansion higher",
+    "role": "spine",
+    "span": {
+     "start": 8338,
+     "end": 8402
+    },
+    "evidence": "T-x1yd-C0130"
+   },
+   {
+    "id": "FILTER:fvg presence#0",
+    "type": "FILTER",
+    "object": "fvg presence",
+    "role": "confluence",
+    "span": {
+     "start": 8402,
+     "end": 8510
+    },
+    "evidence": "T-x1yd-C0131"
+   },
+   {
+    "id": "WAIT_SESSION:trading hours#0",
+    "type": "WAIT_SESSION",
+    "object": "trading hours",
+    "role": "confluence",
+    "span": {
+     "start": 10374,
+     "end": 10438
+    },
+    "evidence": "T-x1yd-C0159"
+   },
+   {
+    "id": "WAIT_SESSION:pre new york period#0",
+    "type": "WAIT_SESSION",
+    "object": "pre new york period",
+    "role": "confluence",
+    "span": {
+     "start": 11070,
+     "end": 11121
+    },
+    "evidence": "T-x1yd-C0170"
+   },
+   {
+    "id": "WAIT_SESSION:new york session#0",
+    "type": "WAIT_SESSION",
+    "object": "new york session",
+    "role": "confluence",
+    "span": {
+     "start": 11226,
+     "end": 11265
+    },
+    "evidence": "T-x1yd-C0175"
+   },
+   {
+    "id": "WAIT_SESSION:market open#0",
+    "type": "WAIT_SESSION",
+    "object": "market open",
+    "role": "confluence",
+    "span": {
+     "start": 11265,
+     "end": 11324
+    },
+    "evidence": "T-x1yd-C0176"
+   },
+   {
+    "id": "WAIT_STRUCTURE:fibonacci retracement level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "fibonacci retracement level",
+    "role": "confluence",
+    "span": {
+     "start": 11769,
+     "end": 11784
+    },
+    "evidence": "T-x1yd-C0188"
+   },
+   {
+    "id": "WAIT_STRUCTURE:opening price push up#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "opening price push up",
+    "role": "confluence",
+    "span": {
+     "start": 12485,
+     "end": 12528
+    },
+    "evidence": "T-x1yd-C0204, T-x1yd-C0205"
+   },
+   {
+    "id": "WAIT_RETEST:50 level#0",
+    "type": "WAIT_RETEST",
+    "object": "50 level",
+    "role": "spine",
+    "span": {
+     "start": 12723,
+     "end": 12779
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:opening price at 10 00 m#0",
+    "type": "WAIT_SESSION",
+    "object": "opening price at 10 00 m",
+    "role": "confluence",
+    "span": {
+     "start": 13078,
+     "end": 13119
+    },
+    "evidence": "T-x1yd-C0217"
+   },
+   {
+    "id": "WAIT_SESSION:15 minute time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "15 minute time frame",
+    "role": "confluence",
+    "span": {
+     "start": 13213,
+     "end": 13277
+    },
+    "evidence": "T-x1yd-C0220"
+   },
+   {
+    "id": "WAIT_BIAS:bullish bias#0",
+    "type": "WAIT_BIAS",
+    "object": "bullish bias",
+    "role": "spine",
+    "span": {
+     "start": 13723,
+     "end": 13766
+    },
+    "evidence": "T-x1yd-C0230"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:closing above prior bar s opening price#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "closing above prior bar s opening price",
+    "role": "confluence",
+    "span": {
+     "start": 13835,
+     "end": 13890
+    },
+    "evidence": "T-x1yd-C0232"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:next candle to be bullish#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "next candle to be bullish",
+    "role": "confluence",
+    "span": {
+     "start": 13993,
+     "end": 14020
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:pre new york open session#0",
+    "type": "WAIT_SESSION",
+    "object": "pre new york open session",
+    "role": "spine",
+    "span": {
+     "start": 14134,
+     "end": 14282
+    },
+    "evidence": "{T-x1yd-C0240}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:candle drop and dip into 25 and 50 buy range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "candle drop and dip into 25 and 50 buy range",
+    "role": "trigger",
+    "span": {
+     "start": 14562,
+     "end": 14669
+    },
+    "evidence": "T-x1yd-C0248"
+   },
+   {
+    "id": "ENABLE_ENTRY:candle looks bearish at support level#0",
+    "type": "ENABLE_ENTRY",
+    "object": "candle looks bearish at support level",
+    "role": "trigger",
+    "span": {
+     "start": 15365,
+     "end": 15460
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:bearish pin bar#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "bearish pin bar",
+    "role": "confluence",
+    "span": {
+     "start": 15955,
+     "end": 16001
+    },
+    "evidence": "{T-x1yd-C0273, T-x1yd-C0274}"
+   },
+   {
+    "id": "FILTER:ebp closure condition#0",
+    "type": "FILTER",
+    "object": "ebp closure condition",
+    "role": "spine",
+    "span": {
+     "start": 16105,
+     "end": 16214
+    },
+    "evidence": "{T-x1yd-C0275}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:fvg below market#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "fvg below market",
+    "role": "spine",
+    "span": {
+     "start": 16353,
+     "end": 16426
+    },
+    "evidence": "T-x1yd-C0279"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:prior bar high breakout and close inside prior range#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "prior bar high breakout and close inside prior range",
+    "role": "confluence",
+    "span": {
+     "start": 16471,
+     "end": 16608
+    },
+    "evidence": "T-x1yd-C0281"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:candle s opening price push up into here#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "candle s opening price push up into here",
+    "role": "confluence",
+    "span": {
+     "start": 17757,
+     "end": 17823
+    },
+    "evidence": "T-x1yd-C0307"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price level above fvg#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price level above fvg",
+    "role": "spine",
+    "span": {
+     "start": 18601,
+     "end": 18632
+    },
+    "evidence": "T-x1yd-C0327"
+   },
+   {
+    "id": "FILTER:candle closures in region#0",
+    "type": "FILTER",
+    "object": "candle closures in region",
+    "role": "spine",
+    "span": {
+     "start": 18671,
+     "end": 18752
+    },
+    "evidence": "T-x1yd-C0329"
+   },
+   {
+    "id": "ENABLE_ENTRY:buy limit order placement#0",
+    "type": "ENABLE_ENTRY",
+    "object": "buy limit order placement",
+    "role": "trigger",
+    "span": {
+     "start": 18995,
+     "end": 19160
+    },
+    "evidence": "stop loss is going to be a few points below the 75%"
+   },
+   {
+    "id": "WAIT_STRUCTURE:potential bottom wick bullish side opening price#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "potential bottom wick bullish side opening price",
+    "role": "confluence",
+    "span": {
+     "start": 19615,
+     "end": 19709
+    },
+    "evidence": "T-x1yd-C0344"
+   },
+   {
+    "id": "WAIT_STRUCTURE:low potential bullish candle#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "low potential bullish candle",
+    "role": "confluence",
+    "span": {
+     "start": 20236,
+     "end": 20319
+    },
+    "evidence": "{T-x1yd-C0355}"
+   },
+   {
+    "id": "WAIT_SESSION:time frame applicability#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame applicability",
+    "role": "confluence",
+    "span": {
+     "start": 20400,
+     "end": 20449
+    },
+    "evidence": "{T-x1yd-C0357}"
+   },
+   {
+    "id": "WAIT_SESSION:weekly time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "weekly time frame",
+    "role": "confluence",
+    "span": {
+     "start": 20449,
+     "end": 20478
+    },
+    "evidence": "{T-x1yd-C0358}"
+   },
+   {
+    "id": "WAIT_BIAS:weekly bias#0",
+    "type": "WAIT_BIAS",
+    "object": "weekly bias",
+    "role": "spine",
+    "span": {
+     "start": 20478,
+     "end": 20513
+    },
+    "evidence": "{T-x1yd-C0359}"
+   },
+   {
+    "id": "WAIT_SESSION:daily time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "daily time frame",
+    "role": "spine",
+    "span": {
+     "start": 20513,
+     "end": 20541
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:daily bias#0",
+    "type": "WAIT_BIAS",
+    "object": "daily bias",
+    "role": "spine",
+    "span": {
+     "start": 20541,
+     "end": 20575
+    },
+    "evidence": "if you want to have a daily bias."
+   },
+   {
+    "id": "WAIT_SESSION:anew york time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "anew york time frame",
+    "role": "spine",
+    "span": {
+     "start": 20575,
+     "end": 20665
+    },
+    "evidence": "You can use this concept on any time frame, even the lower time frame such as the hourly."
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_SESSION:4 hour candle structure#0",
+    "FILTER:candle type#0"
+   ],
+   [
+    "WAIT_STRUCTURE:bearish candlestick#0",
+    "WAIT_STRUCTURE:market push up above opening#0"
+   ],
+   [
+    "WAIT_SESSION:candle open times#0",
+    "WAIT_SESSION:fx candle open time adjustment#0",
+    "WAIT_SESSION:specific candle open time futures#0",
+    "WAIT_SESSION:timeframe#0",
+    "WAIT_SESSION:trading session#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:bullish engulfing condition 2#0",
+    "WAIT_CONFIRMATION:bullish pin bar candle#0"
+   ],
+   [
+    "FILTER:candle s range#0",
+    "FILTER:low potential bullish candle#0"
+   ],
+   [
+    "WAIT_STRUCTURE:pin bar range#0",
+    "WAIT_STRUCTURE:pb range#0"
+   ],
+   [
+    "FILTER:fvg presence#0",
+    "WAIT_SESSION:trading hours#0",
+    "WAIT_SESSION:pre new york period#0",
+    "WAIT_SESSION:new york session#0",
+    "WAIT_SESSION:market open#0"
+   ],
+   [
+    "WAIT_STRUCTURE:fibonacci retracement level#0",
+    "WAIT_STRUCTURE:opening price push up#0"
+   ],
+   [
+    "WAIT_SESSION:opening price at 10 00 m#0",
+    "WAIT_SESSION:15 minute time frame#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:closing above prior bar s opening price#0",
+    "WAIT_CONFIRMATION:next candle to be bullish#0"
+   ],
+   [
+    "ENABLE_ENTRY:candle looks bearish at support level#0",
+    "WAIT_CONFIRMATION:bearish pin bar#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:prior bar high breakout and close inside prior range#0",
+    "WAIT_CONFIRMATION:candle s opening price push up into here#0"
+   ],
+   [
+    "WAIT_STRUCTURE:potential bottom wick bullish side opening price#0",
+    "WAIT_STRUCTURE:low potential bullish candle#0"
+   ],
+   [
+    "WAIT_SESSION:time frame applicability#0",
+    "WAIT_SESSION:weekly time frame#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "WAIT_SESSION:timeframe#0",
+    "WAIT_SESSION:trading session#0"
+   ],
+   [
+    "ENABLE_ENTRY:market opening up#0",
+    "ENABLE_ENTRY:candle looks bearish at support level#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:prior bar high breakout and close inside prior range#0",
+    "WAIT_CONFIRMATION:candle s opening price push up into here#0"
+   ]
+  ],
+  "invalidations": [],
+  "entry_trigger_id": "ENABLE_ENTRY:buying opportunity#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

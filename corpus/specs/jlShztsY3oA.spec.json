@@ -1,0 +1,99 @@
+{
+ "video": "jlShztsY3oA",
+ "spec_hash": "30e9000a73143e5894949033892ab88c7dede274b4c205c3a6f1c1f17d75be81",
+ "graph_canonical_hash": "824c969782f28473",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 4672,
+ "spec": {
+  "direction": "long",
+  "entry_conditions": [
+   {
+    "id": "ENABLE_ENTRY:price break above below high low#0",
+    "type": "ENABLE_ENTRY",
+    "object": "price break above below high low",
+    "role": "trigger",
+    "span": {
+     "start": 641,
+     "end": 928
+    },
+    "evidence": "T-jlSh-C0005"
+   },
+   {
+    "id": "WAIT_SESSION:trading asset#0",
+    "type": "WAIT_SESSION",
+    "object": "trading asset",
+    "role": "spine",
+    "span": {
+     "start": 977,
+     "end": 1073
+    },
+    "evidence": "T-jlSh-C0008 to T-jlSh-C0009"
+   },
+   {
+    "id": "WAIT_STRUCTURE:candle range range break#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "candle range range break",
+    "role": "spine",
+    "span": {
+     "start": 1307,
+     "end": 1531
+    },
+    "evidence": "Trek 'n reeks oor hierdie kers as 'n reeks\nhieronder breek as 'n kers uitgaan\nkort en om nie binne die reeks handel te dryf nie, plaas jy jou keerverlies\nonder die reeks en ek is baie konserwatief hier met behulp van 'n 1:1."
+   },
+   {
+    "id": "WAIT_CONFIRMATION:structure confirmation within range box#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "structure confirmation within range box",
+    "role": "spine",
+    "span": {
+     "start": 2611,
+     "end": 2864
+    },
+    "evidence": "T-jlSh-C0023"
+   },
+   {
+    "id": "WAIT_STRUCTURE:fibonacci retracement level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "fibonacci retracement level",
+    "role": "spine",
+    "span": {
+     "start": 2907,
+     "end": 3209
+    },
+    "evidence": "T-jlSh-C0026"
+   },
+   {
+    "id": "FILTER:downward tendency line#0",
+    "type": "FILTER",
+    "object": "downward tendency line",
+    "role": "spine",
+    "span": {
+     "start": 3351,
+     "end": 3525
+    },
+    "evidence": "T-jlSh-C0028"
+   }
+  ],
+  "and_groups": [],
+  "or_branches": [],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:downward trend breaking upward#0",
+    "type": "INVALIDATE",
+    "object": "downward trend breaking upward",
+    "role": "invalidation",
+    "span": {
+     "start": 3209,
+     "end": 3351
+    },
+    "evidence": "T-jlSh-C0027"
+   }
+  ],
+  "entry_trigger_id": "ENABLE_ENTRY:price break above below high low#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

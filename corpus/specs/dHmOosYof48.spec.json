@@ -1,0 +1,1159 @@
+{
+ "video": "dHmOosYof48",
+ "spec_hash": "9e6286f2a6c23477260aef5097c167fc6746a16c07c73b72b14773b9eed993c8",
+ "graph_canonical_hash": "7fee0bf3960e83f4",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 33396,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_BIAS:larger point view trend#0",
+    "type": "WAIT_BIAS",
+    "object": "larger point view trend",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 218
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:ideal entries#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "ideal entries",
+    "role": "spine",
+    "span": {
+     "start": 730,
+     "end": 775
+    },
+    "evidence": "T-dHmO-C0009"
+   },
+   {
+    "id": "WAIT_BIAS:plan#0",
+    "type": "WAIT_BIAS",
+    "object": "plan",
+    "role": "spine",
+    "span": {
+     "start": 1027,
+     "end": 1132
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:time frames#0",
+    "type": "WAIT_SESSION",
+    "object": "time frames",
+    "role": "confluence",
+    "span": {
+     "start": 1132,
+     "end": 1172
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:daily bias development#0",
+    "type": "WAIT_SESSION",
+    "object": "daily bias development",
+    "role": "confluence",
+    "span": {
+     "start": 2951,
+     "end": 3091
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:high#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "high",
+    "role": "spine",
+    "span": {
+     "start": 3440,
+     "end": 3475
+    },
+    "evidence": "T-dHmO-C0055"
+   },
+   {
+    "id": "CONFIRM_DIRECTION:bullish uptrend#0",
+    "type": "CONFIRM_DIRECTION",
+    "object": "bullish uptrend",
+    "role": "spine",
+    "span": {
+     "start": 3552,
+     "end": 3631
+    },
+    "evidence": "T-dHmO-C0058"
+   },
+   {
+    "id": "WAIT_SESSION:market open#0",
+    "type": "WAIT_SESSION",
+    "object": "market open",
+    "role": "confluence",
+    "span": {
+     "start": 3676,
+     "end": 3726
+    },
+    "evidence": "{T-dHmO-C0060}"
+   },
+   {
+    "id": "FILTER:lower high#0",
+    "type": "FILTER",
+    "object": "lower high",
+    "role": "confluence",
+    "span": {
+     "start": 3812,
+     "end": 3834
+    },
+    "evidence": "{T-dHmO-C0063}"
+   },
+   {
+    "id": "WAIT_BIAS:trend#0",
+    "type": "WAIT_BIAS",
+    "object": "trend",
+    "role": "spine",
+    "span": {
+     "start": 4395,
+     "end": 4433
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:trade analysis session start#0",
+    "type": "WAIT_SESSION",
+    "object": "trade analysis session start",
+    "role": "spine",
+    "span": {
+     "start": 5121,
+     "end": 5275
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:bearish bias#0",
+    "type": "WAIT_BIAS",
+    "object": "bearish bias",
+    "role": "spine",
+    "span": {
+     "start": 5442,
+     "end": 5533
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_RETEST:price#0",
+    "type": "WAIT_RETEST",
+    "object": "price",
+    "role": "spine",
+    "span": {
+     "start": 5776,
+     "end": 5845
+    },
+    "evidence": "T-dHmO-C0098"
+   },
+   {
+    "id": "FILTER:kpl#0",
+    "type": "FILTER",
+    "object": "kpl",
+    "role": "confluence",
+    "span": {
+     "start": 6837,
+     "end": 6869
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:daily bias#0",
+    "type": "WAIT_SESSION",
+    "object": "daily bias",
+    "role": "confluence",
+    "span": {
+     "start": 7041,
+     "end": 7092
+    },
+    "evidence": "T-dHmO-C0121"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:rejection down#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "rejection down",
+    "role": "spine",
+    "span": {
+     "start": 7092,
+     "end": 7131
+    },
+    "evidence": "T-dHmO-C0122"
+   },
+   {
+    "id": "WAIT_SESSION:oil#0",
+    "type": "WAIT_SESSION",
+    "object": "oil",
+    "role": "spine",
+    "span": {
+     "start": 7362,
+     "end": 7382
+    },
+    "evidence": "T-dHmO-C0126"
+   },
+   {
+    "id": "WAIT_STRUCTURE:range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "range",
+    "role": "spine",
+    "span": {
+     "start": 8903,
+     "end": 8963
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:downtrend#0",
+    "type": "WAIT_BIAS",
+    "object": "downtrend",
+    "role": "spine",
+    "span": {
+     "start": 9270,
+     "end": 9311
+    },
+    "evidence": "{C0159-C0160}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:uptrend break#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "uptrend break",
+    "role": "spine",
+    "span": {
+     "start": 9311,
+     "end": 9355
+    },
+    "evidence": "{C0160-C0161}"
+   },
+   {
+    "id": "WAIT_BIAS:therefore i am bearish biased based off assumption alone#0",
+    "type": "WAIT_BIAS",
+    "object": "therefore i am bearish biased based off assumption alone",
+    "role": "spine",
+    "span": {
+     "start": 9475,
+     "end": 9542
+    },
+    "evidence": "T-dHmO-C0164 to T-dHmO-C0165"
+   },
+   {
+    "id": "WAIT_SESSION:when i was looking to take oil short#0",
+    "type": "WAIT_SESSION",
+    "object": "when i was looking to take oil short",
+    "role": "confluence",
+    "span": {
+     "start": 9849,
+     "end": 9887
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "confluence",
+    "span": {
+     "start": 10029,
+     "end": 10064
+    },
+    "evidence": "T-dHmO-C0178"
+   },
+   {
+    "id": "FILTER:current range#0",
+    "type": "FILTER",
+    "object": "current range",
+    "role": "confluence",
+    "span": {
+     "start": 10561,
+     "end": 10582
+    },
+    "evidence": "{T-dHmO-C0190}"
+   },
+   {
+    "id": "WAIT_SESSION:chart cleanliness range reduction#0",
+    "type": "WAIT_SESSION",
+    "object": "chart cleanliness range reduction",
+    "role": "confluence",
+    "span": {
+     "start": 10653,
+     "end": 10746
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:trend line proximity#0",
+    "type": "FILTER",
+    "object": "trend line proximity",
+    "role": "confluence",
+    "span": {
+     "start": 11124,
+     "end": 11156
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:high#0",
+    "type": "FILTER",
+    "object": "high",
+    "role": "confluence",
+    "span": {
+     "start": 11945,
+     "end": 11980
+    },
+    "evidence": "T-dHmO-C0218"
+   },
+   {
+    "id": "WAIT_BIAS:lower highs formation#0",
+    "type": "WAIT_BIAS",
+    "object": "lower highs formation",
+    "role": "spine",
+    "span": {
+     "start": 12163,
+     "end": 12201
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:jump in downtrend#0",
+    "type": "ENABLE_ENTRY",
+    "object": "jump in downtrend",
+    "role": "trigger",
+    "span": {
+     "start": 12201,
+     "end": 12243
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:downtrend state#0",
+    "type": "WAIT_BIAS",
+    "object": "downtrend state",
+    "role": "confluence",
+    "span": {
+     "start": 12243,
+     "end": 12266
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:bearish market structure alignment#0",
+    "type": "WAIT_BIAS",
+    "object": "bearish market structure alignment",
+    "role": "confluence",
+    "span": {
+     "start": 12266,
+     "end": 12348
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:time frame zoom#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame zoom",
+    "role": "spine",
+    "span": {
+     "start": 12348,
+     "end": 12391
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:short bias#0",
+    "type": "WAIT_BIAS",
+    "object": "short bias",
+    "role": "spine",
+    "span": {
+     "start": 12391,
+     "end": 12429
+    },
+    "evidence": "entire clause"
+   },
+   {
+    "id": "FILTER:lower highs#0",
+    "type": "FILTER",
+    "object": "lower highs",
+    "role": "confluence",
+    "span": {
+     "start": 12556,
+     "end": 12583
+    },
+    "evidence": "entire clause"
+   },
+   {
+    "id": "WAIT_SESSION:1 hour chart#0",
+    "type": "WAIT_SESSION",
+    "object": "1 hour chart",
+    "role": "confluence",
+    "span": {
+     "start": 12805,
+     "end": 12901
+    },
+    "evidence": "out. Okay, now that we are on the 1 hour chart, what I like to start doing is marking out KPLs."
+   },
+   {
+    "id": "FILTER:kpl proximity#0",
+    "type": "FILTER",
+    "object": "kpl proximity",
+    "role": "confluence",
+    "span": {
+     "start": 13902,
+     "end": 13984
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:prior support level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "prior support level",
+    "role": "spine",
+    "span": {
+     "start": 14136,
+     "end": 14177
+    },
+    "evidence": "T-dHmO-C0265"
+   },
+   {
+    "id": "FILTER:prior support#0",
+    "type": "FILTER",
+    "object": "prior support",
+    "role": "spine",
+    "span": {
+     "start": 14402,
+     "end": 14429
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:range or key level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "range or key level",
+    "role": "confluence",
+    "span": {
+     "start": 15164,
+     "end": 15228
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:key level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "key level",
+    "role": "confluence",
+    "span": {
+     "start": 15300,
+     "end": 15362
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:parameter change#0",
+    "type": "FILTER",
+    "object": "parameter change",
+    "role": "confluence",
+    "span": {
+     "start": 15942,
+     "end": 15981
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:time frame size#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame size",
+    "role": "confluence",
+    "span": {
+     "start": 16111,
+     "end": 16156
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame",
+    "role": "confluence",
+    "span": {
+     "start": 16156,
+     "end": 16200
+    },
+    "evidence": "So, let's go to the 4our and let's zoom in."
+   },
+   {
+    "id": "FILTER:indicators#0",
+    "type": "FILTER",
+    "object": "indicators",
+    "role": "confluence",
+    "span": {
+     "start": 16200,
+     "end": 16224
+    },
+    "evidence": "So, the 50 and the 200."
+   },
+   {
+    "id": "WAIT_SESSION:time frame usage#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame usage",
+    "role": "confluence",
+    "span": {
+     "start": 17282,
+     "end": 17346
+    },
+    "evidence": "T-dHmO-C0327"
+   },
+   {
+    "id": "WAIT_SESSION:pre market activity#0",
+    "type": "WAIT_SESSION",
+    "object": "pre market activity",
+    "role": "confluence",
+    "span": {
+     "start": 17712,
+     "end": 17773
+    },
+    "evidence": "T-dHmO-C0333"
+   },
+   {
+    "id": "WAIT_BIAS:short trades#0",
+    "type": "WAIT_BIAS",
+    "object": "short trades",
+    "role": "spine",
+    "span": {
+     "start": 18241,
+     "end": 18283
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:but got severely rejected#0",
+    "type": "FILTER",
+    "object": "but got severely rejected",
+    "role": "spine",
+    "span": {
+     "start": 18474,
+     "end": 18501
+    },
+    "evidence": "{T-dHmO-C0349, T-dHmO-C0350}"
+   },
+   {
+    "id": "WAIT_BIAS:1 hour and 4 hour was helping me stay confident smaller time frames to continue to#0",
+    "type": "WAIT_BIAS",
+    "object": "1 hour and 4 hour was helping me stay confident smaller time frames to continue to",
+    "role": "confluence",
+    "span": {
+     "start": 18564,
+     "end": 18654
+    },
+    "evidence": "{T-dHmO-C0351, T-dHmO-C0352}"
+   },
+   {
+    "id": "WAIT_BIAS:entry direction#0",
+    "type": "WAIT_BIAS",
+    "object": "entry direction",
+    "role": "trigger",
+    "span": {
+     "start": 18935,
+     "end": 18985
+    },
+    "evidence": "T-dHmO-C0358"
+   },
+   {
+    "id": "WAIT_BIAS:kpl alignment in same range#0",
+    "type": "WAIT_BIAS",
+    "object": "kpl alignment in same range",
+    "role": "confluence",
+    "span": {
+     "start": 19954,
+     "end": 20164
+    },
+    "evidence": "T-dHmO-C0374"
+   },
+   {
+    "id": "ENABLE_ENTRY:short entry near kpls#0",
+    "type": "ENABLE_ENTRY",
+    "object": "short entry near kpls",
+    "role": "trigger",
+    "span": {
+     "start": 20164,
+     "end": 20319
+    },
+    "evidence": "T-dHmO-C0375"
+   },
+   {
+    "id": "WAIT_STRUCTURE:rejection 60 psych level and multi touch point smas 4h chart#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "rejection 60 psych level and multi touch point smas 4h chart",
+    "role": "spine",
+    "span": {
+     "start": 20319,
+     "end": 20471
+    },
+    "evidence": "T-dHmO-C0376"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:ema50 cross ema20#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "ema50 cross ema20",
+    "role": "spine",
+    "span": {
+     "start": 20747,
+     "end": 20801
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:50 not holding 200#0",
+    "type": "FILTER",
+    "object": "50 not holding 200",
+    "role": "confluence",
+    "span": {
+     "start": 20939,
+     "end": 21009
+    },
+    "evidence": "T-dHmO-C0388"
+   },
+   {
+    "id": "WAIT_SESSION:sma effectiveness#0",
+    "type": "WAIT_SESSION",
+    "object": "sma effectiveness",
+    "role": "confluence",
+    "span": {
+     "start": 21245,
+     "end": 21333
+    },
+    "evidence": "T-dHmO-C0393"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe observation#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe observation",
+    "role": "confluence",
+    "span": {
+     "start": 21444,
+     "end": 21486
+    },
+    "evidence": "T-dHmO-C0396"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe clarity#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe clarity",
+    "role": "confluence",
+    "span": {
+     "start": 21684,
+     "end": 21750
+    },
+    "evidence": "T-dHmO-C0402"
+   },
+   {
+    "id": "WAIT_STRUCTURE:level hit#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "level hit",
+    "role": "confluence",
+    "span": {
+     "start": 22138,
+     "end": 22159
+    },
+    "evidence": "T-dHmO-C0409"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price action until it got to level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price action until it got to level",
+    "role": "confluence",
+    "span": {
+     "start": 22178,
+     "end": 22245
+    },
+    "evidence": "T-dHmO-C0411"
+   },
+   {
+    "id": "WAIT_STRUCTURE:no i want level to hit#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "no i want level to hit",
+    "role": "spine",
+    "span": {
+     "start": 22548,
+     "end": 22576
+    },
+    "evidence": "T-dHmO-C0419"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:reversal signal#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "reversal signal",
+    "role": "spine",
+    "span": {
+     "start": 22721,
+     "end": 22807
+    },
+    "evidence": "{T-dHmO-C0425}"
+   },
+   {
+    "id": "WAIT_SESSION:lunch reversals#0",
+    "type": "WAIT_SESSION",
+    "object": "lunch reversals",
+    "role": "confluence",
+    "span": {
+     "start": 22847,
+     "end": 22895
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:charts start here#0",
+    "type": "WAIT_SESSION",
+    "object": "charts start here",
+    "role": "confluence",
+    "span": {
+     "start": 23335,
+     "end": 23364
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:short entry bias#0",
+    "type": "WAIT_BIAS",
+    "object": "short entry bias",
+    "role": "trigger",
+    "span": {
+     "start": 24001,
+     "end": 24018
+    },
+    "evidence": "T-dHmO-C0447"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:rejection 602#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "rejection 602",
+    "role": "confluence",
+    "span": {
+     "start": 24018,
+     "end": 24055
+    },
+    "evidence": "T-dHmO-C0448"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:kpl rejection confirmation#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "kpl rejection confirmation",
+    "role": "confluence",
+    "span": {
+     "start": 24229,
+     "end": 24322
+    },
+    "evidence": "T-dHmO-C0453"
+   },
+   {
+    "id": "WAIT_STRUCTURE:trend break#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "trend break",
+    "role": "spine",
+    "span": {
+     "start": 24426,
+     "end": 24483
+    },
+    "evidence": "T-dHmO-C0458"
+   },
+   {
+    "id": "WAIT_SESSION:smas#0",
+    "type": "WAIT_SESSION",
+    "object": "smas",
+    "role": "confluence",
+    "span": {
+     "start": 24720,
+     "end": 24800
+    },
+    "evidence": "T-dHmO-C0463"
+   },
+   {
+    "id": "WAIT_SESSION:es indices#0",
+    "type": "WAIT_SESSION",
+    "object": "es indices",
+    "role": "confluence",
+    "span": {
+     "start": 25032,
+     "end": 25192
+    },
+    "evidence": "T-dHmO-C0467"
+   },
+   {
+    "id": "WAIT_STRUCTURE:downtrend break#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "downtrend break",
+    "role": "confluence",
+    "span": {
+     "start": 25522,
+     "end": 25561
+    },
+    "evidence": "{T-dHmO-C0473}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:break lower highs structure#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "break lower highs structure",
+    "role": "confluence",
+    "span": {
+     "start": 25602,
+     "end": 25639
+    },
+    "evidence": "T-dHmO-C0475"
+   },
+   {
+    "id": "FILTER:lower highs formation#0",
+    "type": "FILTER",
+    "object": "lower highs formation",
+    "role": "spine",
+    "span": {
+     "start": 25639,
+     "end": 25676
+    },
+    "evidence": "T-dHmO-C0476"
+   },
+   {
+    "id": "WAIT_STRUCTURE:break downtrend structure#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "break downtrend structure",
+    "role": "spine",
+    "span": {
+     "start": 25770,
+     "end": 25800
+    },
+    "evidence": "T-dHmO-C0478"
+   },
+   {
+    "id": "CONFIRM_DIRECTION:downtrend break#0",
+    "type": "CONFIRM_DIRECTION",
+    "object": "downtrend break",
+    "role": "spine",
+    "span": {
+     "start": 26172,
+     "end": 26199
+    },
+    "evidence": "T-dHmO-C0487"
+   },
+   {
+    "id": "WAIT_BIAS:smas gauge reaction near smas#0",
+    "type": "WAIT_BIAS",
+    "object": "smas gauge reaction near smas",
+    "role": "spine",
+    "span": {
+     "start": 26475,
+     "end": 26562
+    },
+    "evidence": "T-dHmO-C0495"
+   },
+   {
+    "id": "WAIT_STRUCTURE:resistance level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "resistance level",
+    "role": "spine",
+    "span": {
+     "start": 27578,
+     "end": 27596
+    },
+    "evidence": "now reclaimed it"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:volume coming in#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "volume coming in",
+    "role": "spine",
+    "span": {
+     "start": 28353,
+     "end": 28381
+    },
+    "evidence": "T-dHmO-C0527"
+   },
+   {
+    "id": "FILTER:volume#0",
+    "type": "FILTER",
+    "object": "volume",
+    "role": "confluence",
+    "span": {
+     "start": 28434,
+     "end": 28458
+    },
+    "evidence": "T-dHmO-C0530"
+   },
+   {
+    "id": "FILTER:consolidation location#0",
+    "type": "FILTER",
+    "object": "consolidation location",
+    "role": "confluence",
+    "span": {
+     "start": 29246,
+     "end": 29317
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:candle close larger time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "candle close larger time frame",
+    "role": "confluence",
+    "span": {
+     "start": 29808,
+     "end": 29912
+    },
+    "evidence": "{T-dHmO-C0558}"
+   },
+   {
+    "id": "WAIT_BIAS:market bias#0",
+    "type": "WAIT_BIAS",
+    "object": "market bias",
+    "role": "spine",
+    "span": {
+     "start": 30228,
+     "end": 30282
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:market hours availability#0",
+    "type": "WAIT_SESSION",
+    "object": "market hours availability",
+    "role": "spine",
+    "span": {
+     "start": 32001,
+     "end": 32077
+    },
+    "evidence": "},{"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_SESSION:time frames#0",
+    "WAIT_SESSION:daily bias development#0"
+   ],
+   [
+    "WAIT_SESSION:market open#0",
+    "FILTER:lower high#0"
+   ],
+   [
+    "FILTER:kpl#0",
+    "WAIT_SESSION:daily bias#0"
+   ],
+   [
+    "WAIT_SESSION:when i was looking to take oil short#0",
+    "WAIT_SESSION:timeframe#0",
+    "FILTER:current range#0",
+    "WAIT_SESSION:chart cleanliness range reduction#0",
+    "FILTER:trend line proximity#0",
+    "FILTER:high#0"
+   ],
+   [
+    "WAIT_BIAS:downtrend state#0",
+    "WAIT_BIAS:bearish market structure alignment#0"
+   ],
+   [
+    "FILTER:lower highs#0",
+    "WAIT_SESSION:1 hour chart#0",
+    "FILTER:kpl proximity#0"
+   ],
+   [
+    "WAIT_STRUCTURE:range or key level#0",
+    "WAIT_STRUCTURE:key level#0"
+   ],
+   [
+    "FILTER:parameter change#0",
+    "WAIT_SESSION:time frame size#0",
+    "WAIT_SESSION:time frame#0",
+    "FILTER:indicators#0",
+    "WAIT_SESSION:time frame usage#0",
+    "WAIT_SESSION:pre market activity#0"
+   ],
+   [
+    "WAIT_BIAS:1 hour and 4 hour was helping me stay confident smaller time frames to continue to#0",
+    "WAIT_BIAS:entry direction#0",
+    "WAIT_BIAS:kpl alignment in same range#0"
+   ],
+   [
+    "FILTER:50 not holding 200#0",
+    "WAIT_SESSION:sma effectiveness#0"
+   ],
+   [
+    "WAIT_SESSION:timeframe observation#0",
+    "WAIT_SESSION:timeframe clarity#0"
+   ],
+   [
+    "WAIT_STRUCTURE:level hit#0",
+    "WAIT_STRUCTURE:price action until it got to level#0"
+   ],
+   [
+    "WAIT_SESSION:lunch reversals#0",
+    "WAIT_SESSION:charts start here#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:rejection 602#0",
+    "WAIT_CONFIRMATION:kpl rejection confirmation#0"
+   ],
+   [
+    "WAIT_SESSION:smas#0",
+    "WAIT_SESSION:es indices#0"
+   ],
+   [
+    "WAIT_STRUCTURE:downtrend break#0",
+    "WAIT_STRUCTURE:break lower highs structure#0"
+   ],
+   [
+    "FILTER:volume#0",
+    "FILTER:consolidation location#0",
+    "WAIT_SESSION:candle close larger time frame#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "WAIT_SESSION:time frames#0",
+    "WAIT_SESSION:daily bias development#0"
+   ],
+   [
+    "WAIT_BIAS:plan#0",
+    "WAIT_BIAS:trend#0"
+   ],
+   [
+    "WAIT_STRUCTURE:high#0",
+    "WAIT_STRUCTURE:range#0"
+   ],
+   [
+    "FILTER:lower highs#0",
+    "FILTER:kpl proximity#0"
+   ],
+   [
+    "WAIT_SESSION:time frame#0",
+    "WAIT_SESSION:time frame usage#0"
+   ],
+   [
+    "WAIT_BIAS:short bias#0",
+    "WAIT_BIAS:short trades#0"
+   ],
+   [
+    "INVALIDATE:high break assumption#0",
+    "INVALIDATE:if i would have just waited i would have taken short here or here and probably got stopped out#0"
+   ],
+   [
+    "WAIT_SESSION:charts start here#0",
+    "WAIT_SESSION:smas#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:kpl rejection confirmation#0",
+    "WAIT_CONFIRMATION:volume coming in#0"
+   ],
+   [
+    "FILTER:volume#0",
+    "FILTER:consolidation location#0"
+   ],
+   [
+    "WAIT_BIAS:smas gauge reaction near smas#0",
+    "WAIT_BIAS:market bias#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:short trade#0",
+    "type": "INVALIDATE",
+    "object": "short trade",
+    "role": "invalidation",
+    "span": {
+     "start": 4481,
+     "end": 4692
+    },
+    "evidence": "If the five-minute chart is technically on a downtrend, aka pulling back and the larger one-hour trend is still in a strong uptrend, do you think you are doing your best by trading with the trend taking shorts?"
+   },
+   {
+    "id": "INVALIDATE:trend alignment#0",
+    "type": "INVALIDATE",
+    "object": "trend alignment",
+    "role": "invalidation",
+    "span": {
+     "start": 4996,
+     "end": 5078
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:now broken and higher lows have broken#0",
+    "type": "INVALIDATE",
+    "object": "now broken and higher lows have broken",
+    "role": "invalidation",
+    "span": {
+     "start": 9431,
+     "end": 9475
+    },
+    "evidence": "T-dHmO-C0163 to T-dHmO-C0164"
+   },
+   {
+    "id": "INVALIDATE:i don t go just off support and resistance#0",
+    "type": "INVALIDATE",
+    "object": "i don t go just off support and resistance",
+    "role": "invalidation",
+    "span": {
+     "start": 9619,
+     "end": 9663
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:i don t go just off market structure#0",
+    "type": "INVALIDATE",
+    "object": "i don t go just off market structure",
+    "role": "invalidation",
+    "span": {
+     "start": 9663,
+     "end": 9701
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:high break assumption#0",
+    "type": "INVALIDATE",
+    "object": "high break assumption",
+    "role": "invalidation",
+    "span": {
+     "start": 12092,
+     "end": 12163
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "RESET:bias smas#0",
+    "type": "RESET",
+    "object": "bias smas",
+    "role": "invalidation",
+    "span": {
+     "start": 21406,
+     "end": 21444
+    },
+    "evidence": "T-dHmO-C0395"
+   },
+   {
+    "id": "INVALIDATE:if i would have just waited i would have taken short here or here and probably got stopped out#0",
+    "type": "INVALIDATE",
+    "object": "if i would have just waited i would have taken short here or here and probably got stopped out",
+    "role": "invalidation",
+    "span": {
+     "start": 22449,
+     "end": 22548
+    },
+    "evidence": "T-dHmO-C0418"
+   },
+   {
+    "id": "INVALIDATE:lower highs#0",
+    "type": "INVALIDATE",
+    "object": "lower highs",
+    "role": "invalidation",
+    "span": {
+     "start": 26135,
+     "end": 26172
+    },
+    "evidence": "T-dHmO-C0486"
+   }
+  ],
+  "entry_trigger_id": "ENABLE_ENTRY:jump in downtrend#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

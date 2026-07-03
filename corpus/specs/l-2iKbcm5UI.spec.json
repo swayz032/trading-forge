@@ -1,0 +1,598 @@
+{
+ "video": "l-2iKbcm5UI",
+ "spec_hash": "343c220d2389dea192a622784f20fe3b8a8fa01d2dcfdf2a7afd04f681d48bf7",
+ "graph_canonical_hash": "93d80b43c0cc8e5f",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 9836,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "spine",
+    "span": {
+     "start": 644,
+     "end": 700
+    },
+    "evidence": "T-l-2i-C0007"
+   },
+   {
+    "id": "WAIT_STRUCTURE:swing high low#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "swing high low",
+    "role": "confluence",
+    "span": {
+     "start": 961,
+     "end": 1014
+    },
+    "evidence": "T-l-2i-C0011"
+   },
+   {
+    "id": "WAIT_STRUCTURE:overall swing range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "overall swing range",
+    "role": "confluence",
+    "span": {
+     "start": 1050,
+     "end": 1161
+    },
+    "evidence": "T-l-2i-C0013"
+   },
+   {
+    "id": "WAIT_STRUCTURE:premium versus discount tool#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "premium versus discount tool",
+    "role": "confluence",
+    "span": {
+     "start": 1185,
+     "end": 1256
+    },
+    "evidence": "T-l-2i-C0015"
+   },
+   {
+    "id": "FILTER:fibonacci level#0",
+    "type": "FILTER",
+    "object": "fibonacci level",
+    "role": "spine",
+    "span": {
+     "start": 1354,
+     "end": 1381
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_RETEST:market retracement#0",
+    "type": "WAIT_RETEST",
+    "object": "market retracement",
+    "role": "spine",
+    "span": {
+     "start": 1595,
+     "end": 1641
+    },
+    "evidence": "T-l-2i-C0024"
+   },
+   {
+    "id": "WAIT_STRUCTURE:supply and demand structure#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "supply and demand structure",
+    "role": "confluence",
+    "span": {
+     "start": 1914,
+     "end": 1971
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:v shape reversal towards downside#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "v shape reversal towards downside",
+    "role": "confluence",
+    "span": {
+     "start": 2046,
+     "end": 2111
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:area supply#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "area supply",
+    "role": "confluence",
+    "span": {
+     "start": 2165,
+     "end": 2245
+    },
+    "evidence": "T-l-2i-C0037 to T-l-2i-C0041"
+   },
+   {
+    "id": "WAIT_STRUCTURE:liquidity#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "liquidity",
+    "role": "confluence",
+    "span": {
+     "start": 2334,
+     "end": 2350
+    },
+    "evidence": "T-l-2i-C0041"
+   },
+   {
+    "id": "WAIT_STRUCTURE:liquidity high#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "liquidity high",
+    "role": "confluence",
+    "span": {
+     "start": 2728,
+     "end": 2828
+    },
+    "evidence": "T-l-2i-C0048 - T-l-2i-C0049"
+   },
+   {
+    "id": "WAIT_STRUCTURE:retracement into daily area supply#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "retracement into daily area supply",
+    "role": "confluence",
+    "span": {
+     "start": 3104,
+     "end": 3171
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:impulse towards downside#0",
+    "type": "WAIT_BIAS",
+    "object": "impulse towards downside",
+    "role": "confluence",
+    "span": {
+     "start": 3492,
+     "end": 3530
+    },
+    "evidence": "T-l-2i-C0061 to T-l-2i-C0062"
+   },
+   {
+    "id": "WAIT_BIAS:short trades only#0",
+    "type": "WAIT_BIAS",
+    "object": "short trades only",
+    "role": "confluence",
+    "span": {
+     "start": 3530,
+     "end": 3576
+    },
+    "evidence": "T-l-2i-C0063"
+   },
+   {
+    "id": "FILTER:price action only#0",
+    "type": "FILTER",
+    "object": "price action only",
+    "role": "spine",
+    "span": {
+     "start": 3610,
+     "end": 3763
+    },
+    "evidence": "T-l-2i-C0065"
+   },
+   {
+    "id": "WAIT_STRUCTURE:structure break#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "structure break",
+    "role": "confluence",
+    "span": {
+     "start": 3843,
+     "end": 3860
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:market structure break#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "market structure break",
+    "role": "confluence",
+    "span": {
+     "start": 4162,
+     "end": 4191
+    },
+    "evidence": "T-l-2i-C0073"
+   },
+   {
+    "id": "WAIT_BIAS:market structure is bearish#0",
+    "type": "WAIT_BIAS",
+    "object": "market structure is bearish",
+    "role": "spine",
+    "span": {
+     "start": 4287,
+     "end": 4335
+    },
+    "evidence": "T-l-2i-C0076"
+   },
+   {
+    "id": "FILTER:price alignment with daily supply zone#0",
+    "type": "FILTER",
+    "object": "price alignment with daily supply zone",
+    "role": "spine",
+    "span": {
+     "start": 4511,
+     "end": 4627
+    },
+    "evidence": "T-l-2i-C0081 to T-l-2i-C0082"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price interaction with daily supply zone#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price interaction with daily supply zone",
+    "role": "spine",
+    "span": {
+     "start": 4627,
+     "end": 4720
+    },
+    "evidence": "T-l-2i-C0083"
+   },
+   {
+    "id": "WAIT_BIAS:market structure#0",
+    "type": "WAIT_BIAS",
+    "object": "market structure",
+    "role": "spine",
+    "span": {
+     "start": 4838,
+     "end": 4872
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:liquidity high#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "liquidity high",
+    "role": "spine",
+    "span": {
+     "start": 5120,
+     "end": 5146
+    },
+    "evidence": "{T-l-2i-C0094, T-l-2i-C0095}"
+   },
+   {
+    "id": "WAIT_BIAS:overall short position#0",
+    "type": "WAIT_BIAS",
+    "object": "overall short position",
+    "role": "spine",
+    "span": {
+     "start": 5166,
+     "end": 5203
+    },
+    "evidence": "T-l-2i-C0097"
+   },
+   {
+    "id": "FILTER:supply zone over here#0",
+    "type": "FILTER",
+    "object": "supply zone over here",
+    "role": "spine",
+    "span": {
+     "start": 5203,
+     "end": 5282
+    },
+    "evidence": "T-l-2i-C0098"
+   },
+   {
+    "id": "WAIT_STRUCTURE:market to retrace in towards daily supply zone#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "market to retrace in towards daily supply zone",
+    "role": "spine",
+    "span": {
+     "start": 5306,
+     "end": 5371
+    },
+    "evidence": "T-l-2i-C0100"
+   },
+   {
+    "id": "ENABLE_ENTRY:short position#0",
+    "type": "ENABLE_ENTRY",
+    "object": "short position",
+    "role": "trigger",
+    "span": {
+     "start": 5407,
+     "end": 5436
+    },
+    "evidence": "T-l-2i-C0102"
+   },
+   {
+    "id": "WAIT_STRUCTURE:liquidity supply zone#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "liquidity supply zone",
+    "role": "spine",
+    "span": {
+     "start": 6082,
+     "end": 6186
+    },
+    "evidence": "T-l-2i-C0113"
+   },
+   {
+    "id": "FILTER:price zone#0",
+    "type": "FILTER",
+    "object": "price zone",
+    "role": "spine",
+    "span": {
+     "start": 6402,
+     "end": 6419
+    },
+    "evidence": "T-l-2i-C0118"
+   },
+   {
+    "id": "WAIT_STRUCTURE:liquidity level#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "liquidity level",
+    "role": "confluence",
+    "span": {
+     "start": 6419,
+     "end": 6460
+    },
+    "evidence": "T-l-2i-C0119"
+   },
+   {
+    "id": "WAIT_STRUCTURE:4 hour bos down#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "4 hour bos down",
+    "role": "confluence",
+    "span": {
+     "start": 6806,
+     "end": 6889
+    },
+    "evidence": "T-l-2i-C0127"
+   },
+   {
+    "id": "FILTER:bullish candle s high#0",
+    "type": "FILTER",
+    "object": "bullish candle s high",
+    "role": "confluence",
+    "span": {
+     "start": 6974,
+     "end": 7018
+    },
+    "evidence": "T-l-2i-C0129"
+   },
+   {
+    "id": "FILTER:bullish candle liquidity high#0",
+    "type": "FILTER",
+    "object": "bullish candle liquidity high",
+    "role": "confluence",
+    "span": {
+     "start": 7036,
+     "end": 7154
+    },
+    "evidence": "T-l-2i-C0131"
+   },
+   {
+    "id": "WAIT_STRUCTURE:liquidity low#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "liquidity low",
+    "role": "spine",
+    "span": {
+     "start": 7177,
+     "end": 7227
+    },
+    "evidence": "{T-l-2i-C0133, T-l-2i-C0135}"
+   },
+   {
+    "id": "FILTER:bearish candle s low#0",
+    "type": "FILTER",
+    "object": "bearish candle s low",
+    "role": "confluence",
+    "span": {
+     "start": 7253,
+     "end": 7365
+    },
+    "evidence": "{T-l-2i-C0135}"
+   },
+   {
+    "id": "WAIT_SESSION:liquidity taken out#0",
+    "type": "WAIT_SESSION",
+    "object": "liquidity taken out",
+    "role": "confluence",
+    "span": {
+     "start": 7365,
+     "end": 7457
+    },
+    "evidence": "{T-l-2i-C0136}"
+   },
+   {
+    "id": "FILTER:fibonacci retracement level 5#0",
+    "type": "FILTER",
+    "object": "fibonacci retracement level 5",
+    "role": "confluence",
+    "span": {
+     "start": 7644,
+     "end": 7669
+    },
+    "evidence": "T-l-2i-C0141"
+   },
+   {
+    "id": "WAIT_STRUCTURE:supply zone#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "supply zone",
+    "role": "spine",
+    "span": {
+     "start": 7744,
+     "end": 7773
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:confluence conditions#0",
+    "type": "WAIT_BIAS",
+    "object": "confluence conditions",
+    "role": "spine",
+    "span": {
+     "start": 7773,
+     "end": 7935
+    },
+    "evidence": "So, we have the 4-hour supply zone, we have the 50-minute liquidity high, we've had 50-minute premium be reached, and we have 50-minute bearish market structure."
+   },
+   {
+    "id": "WAIT_STRUCTURE:supply zone formation#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "supply zone formation",
+    "role": "spine",
+    "span": {
+     "start": 8002,
+     "end": 8039
+    },
+    "evidence": "which is a supply zone to be formed."
+   },
+   {
+    "id": "WAIT_SESSION:confluences#0",
+    "type": "WAIT_SESSION",
+    "object": "confluences",
+    "role": "confluence",
+    "span": {
+     "start": 8499,
+     "end": 8579
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:50 minute time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "50 minute time frame",
+    "role": "confluence",
+    "span": {
+     "start": 8848,
+     "end": 8949
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:market structure#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "market structure",
+    "role": "spine",
+    "span": {
+     "start": 8963,
+     "end": 9005
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:liquidity high taken out#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "liquidity high taken out",
+    "role": "confluence",
+    "span": {
+     "start": 9179,
+     "end": 9239
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:first entry opportunity#0",
+    "type": "ENABLE_ENTRY",
+    "object": "first entry opportunity",
+    "role": "trigger",
+    "span": {
+     "start": 9412,
+     "end": 9444
+    },
+    "evidence": "T-l-2i-C0175"
+   },
+   {
+    "id": "CONFIRM_DIRECTION:confluence check#0",
+    "type": "CONFIRM_DIRECTION",
+    "object": "confluence check",
+    "role": "confluence",
+    "span": {
+     "start": 9515,
+     "end": 9560
+    },
+    "evidence": "T-l-2i-C0177"
+   },
+   {
+    "id": "WAIT_STRUCTURE:internal liquidity#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "internal liquidity",
+    "role": "confluence",
+    "span": {
+     "start": 9560,
+     "end": 9602
+    },
+    "evidence": "T-l-2i-C0178"
+   },
+   {
+    "id": "WAIT_STRUCTURE:bearish market structure#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "bearish market structure",
+    "role": "confluence",
+    "span": {
+     "start": 9602,
+     "end": 9662
+    },
+    "evidence": "T-l-2i-C0179"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_STRUCTURE:swing high low#0",
+    "WAIT_STRUCTURE:overall swing range#0",
+    "WAIT_STRUCTURE:premium versus discount tool#0"
+   ],
+   [
+    "WAIT_STRUCTURE:supply and demand structure#0",
+    "WAIT_STRUCTURE:v shape reversal towards downside#0",
+    "WAIT_STRUCTURE:area supply#0",
+    "WAIT_STRUCTURE:liquidity#0",
+    "WAIT_STRUCTURE:liquidity high#0",
+    "WAIT_STRUCTURE:retracement into daily area supply#0"
+   ],
+   [
+    "WAIT_BIAS:impulse towards downside#0",
+    "WAIT_BIAS:short trades only#0"
+   ],
+   [
+    "WAIT_STRUCTURE:structure break#0",
+    "WAIT_STRUCTURE:market structure break#0"
+   ],
+   [
+    "WAIT_STRUCTURE:liquidity level#0",
+    "WAIT_STRUCTURE:4 hour bos down#0"
+   ],
+   [
+    "FILTER:bullish candle s high#0",
+    "FILTER:bullish candle liquidity high#0"
+   ],
+   [
+    "FILTER:bearish candle s low#0",
+    "WAIT_SESSION:liquidity taken out#0",
+    "FILTER:fibonacci retracement level 5#0"
+   ],
+   [
+    "WAIT_SESSION:confluences#0",
+    "WAIT_SESSION:50 minute time frame#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:liquidity high taken out#0",
+    "ENABLE_ENTRY:first entry opportunity#0",
+    "CONFIRM_DIRECTION:confluence check#0"
+   ],
+   [
+    "WAIT_STRUCTURE:internal liquidity#0",
+    "WAIT_STRUCTURE:bearish market structure#0"
+   ]
+  ],
+  "or_branches": [],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:retrace into supply zone#0",
+    "type": "INVALIDATE",
+    "object": "retrace into supply zone",
+    "role": "invalidation",
+    "span": {
+     "start": 5549,
+     "end": 5659
+    },
+    "evidence": "T-l-2i-C0104"
+   }
+  ],
+  "entry_trigger_id": "ENABLE_ENTRY:short position#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

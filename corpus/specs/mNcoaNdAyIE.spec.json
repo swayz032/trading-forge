@@ -1,0 +1,528 @@
+{
+ "video": "mNcoaNdAyIE",
+ "spec_hash": "a30fe130b40ff5e7ec5a89f36db08427266d7c5cd15afa27dfe7bd80a9b4ae76",
+ "graph_canonical_hash": "1be73f53898a6881",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 22619,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_STRUCTURE:break and retest#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "break and retest",
+    "role": "spine",
+    "span": {
+     "start": 762,
+     "end": 822
+    },
+    "evidence": "T-mNco-C0013"
+   },
+   {
+    "id": "WAIT_RETEST:previous support zone#0",
+    "type": "WAIT_RETEST",
+    "object": "previous support zone",
+    "role": "spine",
+    "span": {
+     "start": 2231,
+     "end": 2350
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame",
+    "role": "confluence",
+    "span": {
+     "start": 2923,
+     "end": 3004
+    },
+    "evidence": "T-mNco-C0053"
+   },
+   {
+    "id": "FILTER:timeframe match#0",
+    "type": "FILTER",
+    "object": "timeframe match",
+    "role": "confluence",
+    "span": {
+     "start": 3274,
+     "end": 3319
+    },
+    "evidence": "{start: T-mNco-C0059, end: T-mNco-C0059}"
+   },
+   {
+    "id": "FILTER:candlestick close#0",
+    "type": "FILTER",
+    "object": "candlestick close",
+    "role": "confluence",
+    "span": {
+     "start": 3576,
+     "end": 3662
+    },
+    "evidence": "T-mNco-C0062"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:breakout confirmation#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "breakout confirmation",
+    "role": "spine",
+    "span": {
+     "start": 3843,
+     "end": 3880
+    },
+    "evidence": "{start: T-mNco-C0070, end: T-mNco-C0070}"
+   },
+   {
+    "id": "WAIT_BIAS:buy bias#0",
+    "type": "WAIT_BIAS",
+    "object": "buy bias",
+    "role": "trigger",
+    "span": {
+     "start": 3953,
+     "end": 4018
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:sell bias#0",
+    "type": "WAIT_BIAS",
+    "object": "sell bias",
+    "role": "trigger",
+    "span": {
+     "start": 4018,
+     "end": 4090
+    },
+    "evidence": "If it closes below a support zone, we're going to be looking for sells."
+   },
+   {
+    "id": "WAIT_STRUCTURE:consolidation#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "consolidation",
+    "role": "spine",
+    "span": {
+     "start": 5094,
+     "end": 5131
+    },
+    "evidence": "T-mNco-C0092"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:price retest consolidation hlh trend line break#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "price retest consolidation hlh trend line break",
+    "role": "confluence",
+    "span": {
+     "start": 5131,
+     "end": 5290
+    },
+    "evidence": "T-mNco-C0093"
+   },
+   {
+    "id": "ENABLE_ENTRY:trade entry#0",
+    "type": "ENABLE_ENTRY",
+    "object": "trade entry",
+    "role": "trigger",
+    "span": {
+     "start": 5290,
+     "end": 5356
+    },
+    "evidence": "T-mNco-C0094"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "spine",
+    "span": {
+     "start": 7363,
+     "end": 7410
+    },
+    "evidence": "T-mNco-C0134"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price break and close above#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price break and close above",
+    "role": "confluence",
+    "span": {
+     "start": 9558,
+     "end": 9602
+    },
+    "evidence": "T-mNco-C0165 to T-mNco-C0167"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price break and close above zone we drew#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "price break and close above zone we drew",
+    "role": "confluence",
+    "span": {
+     "start": 9638,
+     "end": 9696
+    },
+    "evidence": "T-mNco-C0167"
+   },
+   {
+    "id": "WAIT_RETEST:price tap back into area#0",
+    "type": "WAIT_RETEST",
+    "object": "price tap back into area",
+    "role": "spine",
+    "span": {
+     "start": 10818,
+     "end": 10865
+    },
+    "evidence": "T-mNco-C0188"
+   },
+   {
+    "id": "WAIT_BIAS:price action sequence sell down up#0",
+    "type": "WAIT_BIAS",
+    "object": "price action sequence sell down up",
+    "role": "trigger",
+    "span": {
+     "start": 10883,
+     "end": 10987
+    },
+    "evidence": "T-mNco-C0190"
+   },
+   {
+    "id": "FILTER:high point creation#0",
+    "type": "FILTER",
+    "object": "high point creation",
+    "role": "spine",
+    "span": {
+     "start": 11093,
+     "end": 11151
+    },
+    "evidence": "T-mNco-C0194"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:break above high or low#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "break above high or low",
+    "role": "spine",
+    "span": {
+     "start": 11346,
+     "end": 11426
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:direction trade sells or buys#0",
+    "type": "WAIT_BIAS",
+    "object": "direction trade sells or buys",
+    "role": "spine",
+    "span": {
+     "start": 11426,
+     "end": 11462
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:break above recent high#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "break above recent high",
+    "role": "spine",
+    "span": {
+     "start": 11462,
+     "end": 11521
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:reason looking at recent high#0",
+    "type": "WAIT_BIAS",
+    "object": "reason looking at recent high",
+    "role": "spine",
+    "span": {
+     "start": 11521,
+     "end": 11534
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry point#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry point",
+    "role": "trigger",
+    "span": {
+     "start": 11752,
+     "end": 11797
+    },
+    "evidence": "We then put an entry point for right up here"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:break above high#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "break above high",
+    "role": "confluence",
+    "span": {
+     "start": 11797,
+     "end": 11846
+    },
+    "evidence": "so that as soon as price broke above this recent"
+   },
+   {
+    "id": "ENTER:trade#0",
+    "type": "ENTER",
+    "object": "trade",
+    "role": "trigger",
+    "span": {
+     "start": 11846,
+     "end": 11909
+    },
+    "evidence": "high as we just talked about it would enter us into the trade."
+   },
+   {
+    "id": "VERIFY_STRUCTURE:trade entry point#0",
+    "type": "VERIFY_STRUCTURE",
+    "object": "trade entry point",
+    "role": "trigger",
+    "span": {
+     "start": 11979,
+     "end": 12033
+    },
+    "evidence": "T-mNco-C0211"
+   },
+   {
+    "id": "WAIT_SESSION:es#0",
+    "type": "WAIT_SESSION",
+    "object": "es",
+    "role": "confluence",
+    "span": {
+     "start": 13154,
+     "end": 13177
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:price close outside zone at red candlestick#0",
+    "type": "FILTER",
+    "object": "price close outside zone at red candlestick",
+    "role": "confluence",
+    "span": {
+     "start": 13446,
+     "end": 13503
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:consolidation break#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "consolidation break",
+    "role": "confluence",
+    "span": {
+     "start": 13900,
+     "end": 14005
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:four taps trend line and previous hourly zone#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "four taps trend line and previous hourly zone",
+    "role": "confluence",
+    "span": {
+     "start": 14277,
+     "end": 14362
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:application context change#0",
+    "type": "WAIT_SESSION",
+    "object": "application context change",
+    "role": "spine",
+    "span": {
+     "start": 14956,
+     "end": 15044
+    },
+    "evidence": "T-mNco-C0274"
+   },
+   {
+    "id": "WAIT_STRUCTURE:swing high#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "swing high",
+    "role": "spine",
+    "span": {
+     "start": 15156,
+     "end": 15206
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:time frame switch#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame switch",
+    "role": "spine",
+    "span": {
+     "start": 15700,
+     "end": 15780
+    },
+    "evidence": "Once we had our close outside of here, we went down to the 1 minute time frame."
+   },
+   {
+    "id": "WAIT_STRUCTURE:swing high break#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "swing high break",
+    "role": "spine",
+    "span": {
+     "start": 16278,
+     "end": 16325
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:price break above swing high#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "price break above swing high",
+    "role": "spine",
+    "span": {
+     "start": 16437,
+     "end": 16482
+    },
+    "evidence": "wait for price to come and break above here."
+   },
+   {
+    "id": "ENTER:trade entry#0",
+    "type": "ENTER",
+    "object": "trade entry",
+    "role": "trigger",
+    "span": {
+     "start": 16482,
+     "end": 16508
+    },
+    "evidence": "We entered into the trade"
+   },
+   {
+    "id": "ENABLE_ENTRY:price break above level#0",
+    "type": "ENABLE_ENTRY",
+    "object": "price break above level",
+    "role": "trigger",
+    "span": {
+     "start": 16508,
+     "end": 16537
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_SESSION:trading pair selection#0",
+    "type": "WAIT_SESSION",
+    "object": "trading pair selection",
+    "role": "spine",
+    "span": {
+     "start": 20663,
+     "end": 20698
+    },
+    "evidence": "},{"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_SESSION:time frame#0",
+    "FILTER:timeframe match#0",
+    "FILTER:candlestick close#0"
+   ],
+   [
+    "WAIT_BIAS:buy bias#0",
+    "WAIT_BIAS:sell bias#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:price retest consolidation hlh trend line break#0",
+    "ENABLE_ENTRY:trade entry#0"
+   ],
+   [
+    "WAIT_STRUCTURE:price break and close above#0",
+    "WAIT_STRUCTURE:price break and close above zone we drew#0"
+   ],
+   [
+    "ENABLE_ENTRY:entry point#0",
+    "WAIT_CONFIRMATION:break above high#0"
+   ],
+   [
+    "WAIT_SESSION:es#0",
+    "FILTER:price close outside zone at red candlestick#0"
+   ],
+   [
+    "WAIT_STRUCTURE:consolidation break#0",
+    "WAIT_STRUCTURE:four taps trend line and previous hourly zone#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "FILTER:timeframe match#0",
+    "FILTER:candlestick close#0"
+   ],
+   [
+    "WAIT_STRUCTURE:break and retest#0",
+    "WAIT_STRUCTURE:consolidation#0"
+   ],
+   [
+    "WAIT_STRUCTURE:consolidation#0",
+    "WAIT_STRUCTURE:price break and close above#0"
+   ],
+   [
+    "WAIT_CONFIRMATION:price retest consolidation hlh trend line break#0",
+    "WAIT_CONFIRMATION:break above high or low#0"
+   ],
+   [
+    "WAIT_STRUCTURE:break above recent high#0",
+    "WAIT_STRUCTURE:consolidation break#0"
+   ],
+   [
+    "WAIT_SESSION:time frame switch#0",
+    "WAIT_SESSION:trading pair selection#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:support zone#0",
+    "type": "INVALIDATE",
+    "object": "support zone",
+    "role": "invalidation",
+    "span": {
+     "start": 2190,
+     "end": 2231
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "RESET:price action before one hour candlestick close outside zone#0",
+    "type": "RESET",
+    "object": "price action before one hour candlestick close outside zone",
+    "role": "invalidation",
+    "span": {
+     "start": 10585,
+     "end": 10731
+    },
+    "evidence": "T-mNco-C0185"
+   },
+   {
+    "id": "EXCEPTION:trade outcome#0",
+    "type": "EXCEPTION",
+    "object": "trade outcome",
+    "role": "invalidation",
+    "span": {
+     "start": 12770,
+     "end": 12801
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:retest strength#0",
+    "type": "INVALIDATE",
+    "object": "retest strength",
+    "role": "invalidation",
+    "span": {
+     "start": 16663,
+     "end": 16766
+    },
+    "evidence": "But this wasn't strong enough of a pullback for me to feel confident putting my stop loss under there."
+   }
+  ],
+  "entry_trigger_id": "WAIT_BIAS:buy bias#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

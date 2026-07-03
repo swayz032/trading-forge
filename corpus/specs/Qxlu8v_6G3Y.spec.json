@@ -1,0 +1,239 @@
+{
+ "video": "Qxlu8v_6G3Y",
+ "spec_hash": "1a256f6dbae3e4ac75976f36c4b9d045f51f61ee8021b48eda81290189de28f3",
+ "graph_canonical_hash": "c0049513c0cb5338",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 15767,
+ "spec": {
+  "direction": "long",
+  "entry_conditions": [
+   {
+    "id": "WAIT_SESSION:trading duration limit#0",
+    "type": "WAIT_SESSION",
+    "object": "trading duration limit",
+    "role": "confluence",
+    "span": {
+     "start": 4873,
+     "end": 4963
+    },
+    "evidence": "T-Qxlu-C0081"
+   },
+   {
+    "id": "WAIT_SESSION:trading day start time#0",
+    "type": "WAIT_SESSION",
+    "object": "trading day start time",
+    "role": "confluence",
+    "span": {
+     "start": 5226,
+     "end": 5307
+    },
+    "evidence": "T-Qxlu-C0086"
+   },
+   {
+    "id": "WAIT_SESSION:nasdaq futures markets#0",
+    "type": "WAIT_SESSION",
+    "object": "nasdaq futures markets",
+    "role": "confluence",
+    "span": {
+     "start": 5614,
+     "end": 5681
+    },
+    "evidence": "T-Qxlu-C0092"
+   },
+   {
+    "id": "WAIT_SESSION:time window#0",
+    "type": "WAIT_SESSION",
+    "object": "time window",
+    "role": "confluence",
+    "span": {
+     "start": 6161,
+     "end": 6248
+    },
+    "evidence": "T-Qxlu-C0103"
+   },
+   {
+    "id": "WAIT_BIAS:market direction#0",
+    "type": "WAIT_BIAS",
+    "object": "market direction",
+    "role": "spine",
+    "span": {
+     "start": 6679,
+     "end": 6725
+    },
+    "evidence": "if we don't know which direction the market's"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "spine",
+    "span": {
+     "start": 6786,
+     "end": 6871
+    },
+    "evidence": "{T-Qxlu-C0115}"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:displacement break#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "displacement break",
+    "role": "spine",
+    "span": {
+     "start": 7044,
+     "end": 7108
+    },
+    "evidence": "{T-Qxlu-C0119}"
+   },
+   {
+    "id": "FILTER:displacement break#0",
+    "type": "FILTER",
+    "object": "displacement break",
+    "role": "confluence",
+    "span": {
+     "start": 7263,
+     "end": 7366
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:losing trades#0",
+    "type": "FILTER",
+    "object": "losing trades",
+    "role": "confluence",
+    "span": {
+     "start": 7630,
+     "end": 7677
+    },
+    "evidence": "T-Qxlu-C0126"
+   },
+   {
+    "id": "WAIT_STRUCTURE:breakout high#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "breakout high",
+    "role": "spine",
+    "span": {
+     "start": 8176,
+     "end": 8219
+    },
+    "evidence": "T-Qxlu-C0135"
+   },
+   {
+    "id": "CONFIRM_DIRECTION:direction is bullish#0",
+    "type": "CONFIRM_DIRECTION",
+    "object": "direction is bullish",
+    "role": "spine",
+    "span": {
+     "start": 8219,
+     "end": 8293
+    },
+    "evidence": "T-Qxlu-C0136"
+   },
+   {
+    "id": "WAIT_STRUCTURE:fvg prints 5 minute chart through first 15 minute range#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "fvg prints 5 minute chart through first 15 minute range",
+    "role": "spine",
+    "span": {
+     "start": 8801,
+     "end": 8873
+    },
+    "evidence": "T-Qxlu-C0144"
+   },
+   {
+    "id": "ENABLE_ENTRY:put limit order right fvg#0",
+    "type": "ENABLE_ENTRY",
+    "object": "put limit order right fvg",
+    "role": "trigger",
+    "span": {
+     "start": 8873,
+     "end": 8962
+    },
+    "evidence": "T-Qxlu-C0145"
+   },
+   {
+    "id": "FILTER:fvg to be valid one three candles has to close outside 15 minute range#0",
+    "type": "FILTER",
+    "object": "fvg to be valid one three candles has to close outside 15 minute range",
+    "role": "spine",
+    "span": {
+     "start": 9123,
+     "end": 9244
+    },
+    "evidence": "T-Qxlu-C0148"
+   },
+   {
+    "id": "WAIT_RETEST:market dip into zone#0",
+    "type": "WAIT_RETEST",
+    "object": "market dip into zone",
+    "role": "spine",
+    "span": {
+     "start": 9325,
+     "end": 9381
+    },
+    "evidence": "T-Qxlu-C0151"
+   },
+   {
+    "id": "ENABLE_ENTRY:entry into market#0",
+    "type": "ENABLE_ENTRY",
+    "object": "entry into market",
+    "role": "trigger",
+    "span": {
+     "start": 9381,
+     "end": 9498
+    },
+    "evidence": "T-Qxlu-C0152"
+   },
+   {
+    "id": "WAIT_SESSION:live trading access#0",
+    "type": "WAIT_SESSION",
+    "object": "live trading access",
+    "role": "spine",
+    "span": {
+     "start": 12893,
+     "end": 13027
+    },
+    "evidence": "T-Qxlu-C0201"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:execution timing#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "execution timing",
+    "role": "spine",
+    "span": {
+     "start": 13069,
+     "end": 13084
+    },
+    "evidence": "T-Qxlu-C0203"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_SESSION:trading duration limit#0",
+    "WAIT_SESSION:trading day start time#0",
+    "WAIT_SESSION:nasdaq futures markets#0",
+    "WAIT_SESSION:time window#0"
+   ],
+   [
+    "FILTER:displacement break#0",
+    "FILTER:losing trades#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "WAIT_SESSION:nasdaq futures markets#0",
+    "WAIT_SESSION:time window#0"
+   ],
+   [
+    "WAIT_SESSION:timeframe#0",
+    "WAIT_SESSION:live trading access#0"
+   ]
+  ],
+  "invalidations": [],
+  "entry_trigger_id": "ENABLE_ENTRY:put limit order right fvg#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}

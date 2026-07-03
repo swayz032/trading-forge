@@ -1,0 +1,571 @@
+{
+ "video": "e5HQXYBUW-Q",
+ "spec_hash": "7b6cbc3f46f8c16b9c16137526b6bf87d1591b6da3b644dc4f0f43abcfa82a9b",
+ "graph_canonical_hash": "1ed5b2c334680563",
+ "ledger_d": "CONSERVED",
+ "transcript_chars": 11193,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_STRUCTURE:15minute orb or opening range breakout#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "15minute orb or opening range breakout",
+    "role": "spine",
+    "span": {
+     "start": 487,
+     "end": 591
+    },
+    "evidence": "T-e5HQ-C0007 to T-e5HQ-C0008"
+   },
+   {
+    "id": "WAIT_SESSION:other sessions#0",
+    "type": "WAIT_SESSION",
+    "object": "other sessions",
+    "role": "confluence",
+    "span": {
+     "start": 643,
+     "end": 671
+    },
+    "evidence": "T-e5HQ-C0010"
+   },
+   {
+    "id": "WAIT_SESSION:new york session#0",
+    "type": "WAIT_SESSION",
+    "object": "new york session",
+    "role": "confluence",
+    "span": {
+     "start": 671,
+     "end": 702
+    },
+    "evidence": "T-e5HQ-C0011"
+   },
+   {
+    "id": "ENTER:short entry#0",
+    "type": "ENTER",
+    "object": "short entry",
+    "role": "trigger",
+    "span": {
+     "start": 763,
+     "end": 811
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENTER:long entry#0",
+    "type": "ENTER",
+    "object": "long entry",
+    "role": "trigger",
+    "span": {
+     "start": 811,
+     "end": 856
+    },
+    "evidence": "If it breaks out to the upside, you go long."
+   },
+   {
+    "id": "WAIT_STRUCTURE:breakout#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "breakout",
+    "role": "confluence",
+    "span": {
+     "start": 1894,
+     "end": 1922
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:reversal#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "reversal",
+    "role": "confluence",
+    "span": {
+     "start": 1936,
+     "end": 1982
+    },
+    "evidence": "then it violently reverses to the other side."
+   },
+   {
+    "id": "WAIT_BIAS:trend context#0",
+    "type": "WAIT_BIAS",
+    "object": "trend context",
+    "role": "spine",
+    "span": {
+     "start": 2082,
+     "end": 2163
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_STRUCTURE:vwap location#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "vwap location",
+    "role": "spine",
+    "span": {
+     "start": 2233,
+     "end": 2248
+    },
+    "evidence": "Where is VWAP?"
+   },
+   {
+    "id": "ENABLE_ENTRY:number one rule#0",
+    "type": "ENABLE_ENTRY",
+    "object": "number one rule",
+    "role": "trigger",
+    "span": {
+     "start": 3104,
+     "end": 3124
+    },
+    "evidence": "{T-e5HQ-C0065}"
+   },
+   {
+    "id": "WAIT_STRUCTURE:vwap#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "vwap",
+    "role": "spine",
+    "span": {
+     "start": 3138,
+     "end": 3190
+    },
+    "evidence": "{0:1}"
+   },
+   {
+    "id": "WAIT_SESSION:time frame#0",
+    "type": "WAIT_SESSION",
+    "object": "time frame",
+    "role": "confluence",
+    "span": {
+     "start": 3232,
+     "end": 3258
+    },
+    "evidence": "{0:1}"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe selection#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe selection",
+    "role": "confluence",
+    "span": {
+     "start": 3282,
+     "end": 3311
+    },
+    "evidence": "T-e5HQ-C0072"
+   },
+   {
+    "id": "FILTER:timeframe restriction#0",
+    "type": "FILTER",
+    "object": "timeframe restriction",
+    "role": "confluence",
+    "span": {
+     "start": 3325,
+     "end": 3393
+    },
+    "evidence": "T-e5HQ-C0074"
+   },
+   {
+    "id": "WAIT_BIAS:trend state#0",
+    "type": "WAIT_BIAS",
+    "object": "trend state",
+    "role": "confluence",
+    "span": {
+     "start": 3393,
+     "end": 3410
+    },
+    "evidence": "T-e5HQ-C0075"
+   },
+   {
+    "id": "WAIT_BIAS:range state#0",
+    "type": "WAIT_BIAS",
+    "object": "range state",
+    "role": "confluence",
+    "span": {
+     "start": 3410,
+     "end": 3426
+    },
+    "evidence": "T-e5HQ-C0076"
+   },
+   {
+    "id": "FILTER:vwop position#0",
+    "type": "FILTER",
+    "object": "vwop position",
+    "role": "confluence",
+    "span": {
+     "start": 3445,
+     "end": 3464
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:anchored vwop structure#0",
+    "type": "FILTER",
+    "object": "anchored vwop structure",
+    "role": "confluence",
+    "span": {
+     "start": 3464,
+     "end": 3522
+    },
+    "evidence": "Is there an anchored VWOP with a significant high or low?"
+   },
+   {
+    "id": "WAIT_STRUCTURE:liquidity zones#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "liquidity zones",
+    "role": "spine",
+    "span": {
+     "start": 3595,
+     "end": 3643
+    },
+    "evidence": "Use volume profile and look at liquidity zones."
+   },
+   {
+    "id": "WAIT_BIAS:higher time frame trend#0",
+    "type": "WAIT_BIAS",
+    "object": "higher time frame trend",
+    "role": "spine",
+    "span": {
+     "start": 4556,
+     "end": 4602
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENABLE_ENTRY:long breakout orb#0",
+    "type": "ENABLE_ENTRY",
+    "object": "long breakout orb",
+    "role": "trigger",
+    "span": {
+     "start": 4602,
+     "end": 4638
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "FILTER:checklist usage#0",
+    "type": "FILTER",
+    "object": "checklist usage",
+    "role": "spine",
+    "span": {
+     "start": 4925,
+     "end": 4942
+    },
+    "evidence": "T-e5HQ-C0110"
+   },
+   {
+    "id": "WAIT_BIAS:sitting out#0",
+    "type": "WAIT_BIAS",
+    "object": "sitting out",
+    "role": "spine",
+    "span": {
+     "start": 4978,
+     "end": 5010
+    },
+    "evidence": "T-e5HQ-C0112"
+   },
+   {
+    "id": "WAIT_SESSION:timeframe#0",
+    "type": "WAIT_SESSION",
+    "object": "timeframe",
+    "role": "spine",
+    "span": {
+     "start": 5428,
+     "end": 5450
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:break#0",
+    "type": "WAIT_CONFIRMATION",
+    "object": "break",
+    "role": "spine",
+    "span": {
+     "start": 5473,
+     "end": 5497
+    },
+    "evidence": "{C0121}"
+   },
+   {
+    "id": "ENTER:short position#0",
+    "type": "ENTER",
+    "object": "short position",
+    "role": "trigger",
+    "span": {
+     "start": 5497,
+     "end": 5526
+    },
+    "evidence": "{C0122}"
+   },
+   {
+    "id": "WAIT_BIAS:breakout direction#0",
+    "type": "WAIT_BIAS",
+    "object": "breakout direction",
+    "role": "spine",
+    "span": {
+     "start": 5879,
+     "end": 5916
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENTER:position direction#0",
+    "type": "ENTER",
+    "object": "position direction",
+    "role": "trigger",
+    "span": {
+     "start": 5916,
+     "end": 5944
+    },
+    "evidence": "Also, we're taking a short."
+   },
+   {
+    "id": "ENABLE_ENTRY:long entry#0",
+    "type": "ENABLE_ENTRY",
+    "object": "long entry",
+    "role": "trigger",
+    "span": {
+     "start": 6327,
+     "end": 6381
+    },
+    "evidence": "{T-e5HQ-C0145}"
+   },
+   {
+    "id": "FILTER:entry zone#0",
+    "type": "FILTER",
+    "object": "entry zone",
+    "role": "trigger",
+    "span": {
+     "start": 6467,
+     "end": 6540
+    },
+    "evidence": "{T-e5HQ-C0148}"
+   },
+   {
+    "id": "ENABLE_ENTRY:short trade#0",
+    "type": "ENABLE_ENTRY",
+    "object": "short trade",
+    "role": "trigger",
+    "span": {
+     "start": 6617,
+     "end": 6666
+    },
+    "evidence": "T-e5HQ-C0151"
+   },
+   {
+    "id": "FILTER:breakout to downside#0",
+    "type": "FILTER",
+    "object": "breakout to downside",
+    "role": "spine",
+    "span": {
+     "start": 6666,
+     "end": 6693
+    },
+    "evidence": "T-e5HQ-C0152"
+   },
+   {
+    "id": "FILTER:regular trading hours gap fill#0",
+    "type": "FILTER",
+    "object": "regular trading hours gap fill",
+    "role": "spine",
+    "span": {
+     "start": 7743,
+     "end": 7805
+    },
+    "evidence": "T-e5HQ-C0175"
+   },
+   {
+    "id": "WAIT_BIAS:market trend#0",
+    "type": "WAIT_BIAS",
+    "object": "market trend",
+    "role": "confluence",
+    "span": {
+     "start": 8515,
+     "end": 8591
+    },
+    "evidence": "15-minute opening range break trades work a lot better in a trending market"
+   },
+   {
+    "id": "WAIT_BIAS:momentum#0",
+    "type": "WAIT_BIAS",
+    "object": "momentum",
+    "role": "confluence",
+    "span": {
+     "start": 8591,
+     "end": 8644
+    },
+    "evidence": "when there's momentum in one direction or the other"
+   },
+   {
+    "id": "WAIT_STRUCTURE:wicks to upside five minute chart#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "wicks to upside five minute chart",
+    "role": "spine",
+    "span": {
+     "start": 9147,
+     "end": 9265
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "ENTER:i entered long and went to other end range#0",
+    "type": "ENTER",
+    "object": "i entered long and went to other end range",
+    "role": "trigger",
+    "span": {
+     "start": 9651,
+     "end": 9706
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "WAIT_BIAS:fake out bias#0",
+    "type": "WAIT_BIAS",
+    "object": "fake out bias",
+    "role": "spine",
+    "span": {
+     "start": 9763,
+     "end": 9840
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:short entry#0",
+    "type": "INVALIDATE",
+    "object": "short entry",
+    "role": "trigger",
+    "span": {
+     "start": 10189,
+     "end": 10225
+    },
+    "evidence": "T-e5HQ-C0224"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_SESSION:other sessions#0",
+    "WAIT_SESSION:new york session#0"
+   ],
+   [
+    "ENTER:short entry#0",
+    "ENTER:long entry#0"
+   ],
+   [
+    "WAIT_STRUCTURE:breakout#0",
+    "WAIT_STRUCTURE:reversal#0"
+   ],
+   [
+    "WAIT_SESSION:time frame#0",
+    "WAIT_SESSION:timeframe selection#0",
+    "FILTER:timeframe restriction#0"
+   ],
+   [
+    "WAIT_BIAS:trend state#0",
+    "WAIT_BIAS:range state#0"
+   ],
+   [
+    "FILTER:vwop position#0",
+    "FILTER:anchored vwop structure#0"
+   ],
+   [
+    "WAIT_BIAS:market trend#0",
+    "WAIT_BIAS:momentum#0"
+   ]
+  ],
+  "or_branches": [
+   [
+    "WAIT_STRUCTURE:15minute orb or opening range breakout#0",
+    "WAIT_STRUCTURE:breakout#0"
+   ],
+   [
+    "WAIT_BIAS:range state#0",
+    "WAIT_BIAS:higher time frame trend#0"
+   ],
+   [
+    "WAIT_BIAS:breakout direction#0",
+    "WAIT_BIAS:market trend#0"
+   ]
+  ],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:trade quality#0",
+    "type": "INVALIDATE",
+    "object": "trade quality",
+    "role": "invalidation",
+    "span": {
+     "start": 4942,
+     "end": 4978
+    },
+    "evidence": "T-e5HQ-C0111"
+   },
+   {
+    "id": "INVALIDATE:you actually would have gotten stopped out#0",
+    "type": "INVALIDATE",
+    "object": "you actually would have gotten stopped out",
+    "role": "invalidation",
+    "span": {
+     "start": 5718,
+     "end": 5761
+    },
+    "evidence": "{}"
+   },
+   {
+    "id": "INVALIDATE:so stopped out#0",
+    "type": "INVALIDATE",
+    "object": "so stopped out",
+    "role": "invalidation",
+    "span": {
+     "start": 5774,
+     "end": 5790
+    },
+    "evidence": "{}"
+   },
+   {
+    "id": "INVALIDATE:trade#0",
+    "type": "INVALIDATE",
+    "object": "trade",
+    "role": "invalidation",
+    "span": {
+     "start": 6401,
+     "end": 6467
+    },
+    "evidence": "{T-e5HQ-C0147}"
+   },
+   {
+    "id": "INVALIDATE:trade execution#0",
+    "type": "INVALIDATE",
+    "object": "trade execution",
+    "role": "invalidation",
+    "span": {
+     "start": 6987,
+     "end": 7033
+    },
+    "evidence": "T-e5HQ-C0159"
+   },
+   {
+    "id": "INVALIDATE:fake out#0",
+    "type": "INVALIDATE",
+    "object": "fake out",
+    "role": "invalidation",
+    "span": {
+     "start": 7114,
+     "end": 7236
+    },
+    "evidence": "},{"
+   },
+   {
+    "id": "INVALIDATE:is actually trade i took as fake out#0",
+    "type": "INVALIDATE",
+    "object": "is actually trade i took as fake out",
+    "role": "invalidation",
+    "span": {
+     "start": 9604,
+     "end": 9651
+    },
+    "evidence": "},{"
+   }
+  ],
+  "entry_trigger_id": "ENTER:short entry#0",
+  "framework_overlay": {
+   "stop": "framework_owned",
+   "take_profit": "framework_owned",
+   "sizing": "framework_owned"
+  }
+ }
+}
