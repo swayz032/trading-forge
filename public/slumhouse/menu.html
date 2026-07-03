@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Slumhouse · The Menu</title>
   <link rel="stylesheet" href="/slumhouse/slumhouse.css">
+  <link rel="stylesheet" href="/slumhouse/progress-line.css">
   <link rel="icon" type="image/png" sizes="32x32" href="/slumhouse/icons/slumdawg-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/slumhouse/icons/slumdawg-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/slumhouse/icons/slumdawg-180.png">
@@ -208,6 +209,61 @@
 
     .mn-loading { color: var(--mute); font-size: 13px; padding: 30px 4px; font-style: italic; }
 
+    /* ─── Cook-off — each family races its variants on the gate line ─── */
+    .mn-cookoff-list { display: flex; flex-direction: column; gap: 16px; }
+    .mn-cookoff {
+      position: relative;
+      background: rgba(8, 10, 8, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 18px 18px 8px;
+      overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.015), 0 8px 28px rgba(0, 0, 0, 0.55);
+    }
+    .mn-cookoff::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 18px; right: 18px; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.10), transparent);
+      pointer-events: none;
+    }
+    .mn-cookoff-head {
+      display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+    .mn-cookoff-name { font-size: 18px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; }
+    .mn-cookoff-sub { font-size: 11px; color: var(--mute); font-family: var(--num-font); letter-spacing: 0.02em; }
+
+    /* One variant row = its tag + a compact gate line, whole row links to recipe */
+    .mn-variant {
+      display: block;
+      text-decoration: none;
+      border-top: 1px dashed rgba(255, 255, 255, 0.07);
+      padding: 10px 4px 2px;
+      transition: background 0.16s;
+      border-radius: 10px;
+    }
+    .mn-variant:first-of-type { border-top: 0; }
+    .mn-variant:hover { background: rgba(163, 255, 18, 0.03); }
+    .mn-variant-top {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .mn-variant-tag {
+      font-size: 12px; font-weight: 700; color: var(--dim);
+      font-family: var(--num-font); letter-spacing: 0.02em;
+    }
+    .mn-variant-tf { font-size: 10px; color: var(--mute); font-family: var(--num-font); }
+    .mn-champ-badge {
+      font-size: 9.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+      font-family: var(--num-font);
+      padding: 3px 9px; border-radius: 999px;
+      background: rgba(163, 255, 18, 0.10);
+      border: 1px solid rgba(163, 255, 18, 0.35);
+      color: var(--lime);
+    }
+    .mn-variant.is-champ .mn-variant-tag { color: var(--lime); }
+    .mn-variant .pl-compact { pointer-events: none; }
+
     @media (max-width: 640px) {
       .mn-tab { padding: 8px 13px; font-size: 12px; }
       .mn-grid { grid-template-columns: minmax(0, 1fr); }
@@ -275,6 +331,7 @@
   </div>
 
   <script src="/slumhouse/slumhouse.js"></script>
+  <script src="/slumhouse/progress-line.js"></script>
   <script>
     // ─── Tab definitions ────────────────────────────────────────────────
     // Each tab knows its route + how to render the payload. "kitchen" carries
@@ -395,6 +452,37 @@
       );
     }
 
+    // ─── Cook-off builder (In the Kitchen tab) ─────────────────────────
+    // Each family becomes a group: family headline + one compact gate line
+    // per variant, champion marked with a lime "★ champion" badge. The line
+    // containers are collected in `pending` and rendered AFTER the group is in
+    // the DOM (renderProgressLine writes innerHTML into each container).
+    function cookoffGroup(f, pending) {
+      const champId = (f.champion && f.champion.id) || null;
+      const variants = Array.isArray(f.variants) ? f.variants : [];
+      const group = SH.el("div", { class: "mn-cookoff" },
+        SH.el("div", { class: "mn-cookoff-head" },
+          SH.el("span", { class: "mn-cookoff-name" }, f.premiumName || "Untitled family"),
+          SH.el("span", { class: "mn-cookoff-sub" }, `${variants.length} cut${variants.length === 1 ? "" : "s"} racing the line`)
+        )
+      );
+      for (const v of variants) {
+        const isChamp = champId != null && v.id === champId;
+        const line = SH.el("div", { class: "pl-compact" });
+        pending.push({ el: line, gates: Array.isArray(v.gateJourney) ? v.gateJourney : [] });
+        const top = SH.el("div", { class: "mn-variant-top" },
+          SH.el("span", { class: "mn-variant-tag" }, v.variantTag || v.premiumName || "cut"),
+          v.timeframe ? SH.el("span", { class: "mn-variant-tf" }, v.timeframe) : null,
+          isChamp ? SH.el("span", { class: "mn-champ-badge" }, "★ champion") : null
+        );
+        group.appendChild(SH.el("a",
+          { class: "mn-variant" + (isChamp ? " is-champ" : ""), href: recipeHref(v.id) },
+          top, line
+        ));
+      }
+      return group;
+    }
+
     // ─── Fetch + render the active tab ──────────────────────────────────
     async function loadActive() {
       const tab = TABS.find(t => t.key === activeTab);
@@ -414,6 +502,16 @@
         const grid = SH.el("div", { class: "mn-grid" });
         for (const d of dishes) grid.appendChild(dishCard(d, tab.showMonth));
         body.appendChild(grid);
+      } else if (tab.key === "kitchen") {
+        // Cook-off view: families race their variants on the gate line.
+        const families = Array.isArray(data.families) ? data.families : [];
+        if (families.length === 0) { showEmpty(); return; }
+        const list = SH.el("div", { class: "mn-cookoff-list" });
+        const pending = [];
+        for (const f of families) list.appendChild(cookoffGroup(f, pending));
+        body.appendChild(list);
+        // Render each compact line now that its container is in the DOM.
+        for (const p of pending) window.renderProgressLine(p.el, p.gates, { legend: false });
       } else {
         const families = Array.isArray(data.families) ? data.families : [];
         if (families.length === 0) { showEmpty(); return; }

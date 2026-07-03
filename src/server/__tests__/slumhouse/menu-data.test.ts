@@ -81,6 +81,25 @@ describe("menu-data", () => {
     for (const f of families) for (const v of f.variants) expect(v.symbol).toBe("MES");
   });
 
+  it("assembleKitchenMenu attaches a stage-derived gateJourney (length 8) to every variant + champion", async () => {
+    mocks.execute.mockResolvedValueOnce([
+      { id: "k1", name: "orb_5m", symbols: ["MES"], timeframe: "5m", lifecycle_state: "CANDIDATE", forge_score: 40, config: {} },
+      { id: "k2", name: "orb_15m", symbols: ["MES"], timeframe: "15m", lifecycle_state: "PAPER", forge_score: 55, config: {} },
+    ]);
+    const { assembleKitchenMenu } = await import("../../lib/slumhouse/menu-data.js");
+    const families = await assembleKitchenMenu("MES");
+    expect(families).toHaveLength(1);
+    const fam = families[0];
+    expect(fam.champion.gateJourney).toHaveLength(8);
+    for (const v of fam.variants) {
+      expect(v.gateJourney).toHaveLength(8);
+      expect(v.gateJourney.every((g) => typeof g.status === "string")).toBe(true);
+    }
+    // the PAPER champion's paper_trial gate is "now"
+    const paper = fam.variants.find((v) => v.id === "k2")!;
+    expect(paper.gateJourney.find((g) => g.key === "paper_trial")?.status).toBe("now");
+  });
+
   it("assembleKitchenMenu fails-soft on DB error", async () => {
     mocks.execute.mockRejectedValue(new Error("db down"));
     const { assembleKitchenMenu } = await import("../../lib/slumhouse/menu-data.js");

@@ -15,6 +15,7 @@ import { sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { groupIntoFamilies, type FamilyRow, type Family, type Variant } from "./strategy-families.js";
 import { assembleTodaysMenu } from "./kitchen-data.js";
+import { coarseJourneyForStage, type Gate } from "./gate-journey.js";
 
 // Raw DB shape returned by db.execute over the strategies table.
 interface StrategyRow {
@@ -39,12 +40,17 @@ export interface MenuChampion {
   monthMade: string | null;
 }
 
+/** Variant plus its cheap stage-derived gate journey (kitchen cook-off mini-line). */
+export interface KitchenVariant extends Variant {
+  gateJourney: Gate[];
+}
+
 /** Full family for the kitchen cook-off view. */
 export interface KitchenMenuFamily {
   familyKey: string;
   premiumName: string;
-  champion: Variant;
-  variants: Variant[];
+  champion: KitchenVariant;
+  variants: KitchenVariant[];
 }
 
 export interface GraveyardVariant extends Variant {
@@ -125,11 +131,12 @@ export async function assembleKitchenMenu(symbol: string): Promise<KitchenMenuFa
     AND ${sym} = ANY(symbols)
   `);
   const families = groupIntoFamilies(rows.map(toFamilyRow));
+  const withJourney = (v: Variant): KitchenVariant => ({ ...v, gateJourney: coarseJourneyForStage(v.lifecycleState) });
   return families.map((f) => ({
     familyKey: f.familyKey,
     premiumName: f.premiumName,
-    champion: f.champion,
-    variants: f.variants,
+    champion: withJourney(f.champion),
+    variants: f.variants.map(withJourney),
   }));
 }
 
