@@ -170,8 +170,10 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
   const wfe = Number(extras?.wfe_overall ?? 0);
   const b15Passed = extras?.b15_passed === true || extras?.b15_status === "pass";
   const a14Severity = String(extras?.a14_severity ?? "pass");
-  const b10Pass = extras?.b10_pass !== false; // default to pass if absent
-  const frankPass = extras?.frankenstein_pass !== false;
+  // Tri-state: true=pass, false=fail, absent=untested (deep-scan #13 —
+  // defaulting missing gate data to "pass" asserted success that never ran).
+  const b10Pass: boolean | null = extras?.b10_pass === true ? true : extras?.b10_pass === false ? false : null;
+  const frankPass: boolean | null = extras?.frankenstein_pass === true ? true : extras?.frankenstein_pass === false ? false : null;
   const shadowDiv = Number(shadow?.divergence_pct ?? 0);
   const compliancePassRate = Number(extras?.compliance_pass_rate ?? 1.0);
   const paperTotal = Number(paper?.paper_total ?? 0);
@@ -186,7 +188,9 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
     },
     {
       name: "Sloppy Bot Test",
-      sentence: "Cranked all its dials 20% off. Still cashed out.",
+      sentence: b15Passed
+        ? "Cranked all its dials 20% off. Still cashed out."
+        : "Cranked all its dials 20% off. Fell apart — needs tighter screws.",
       status: b15Passed ? "pass" : "fail",
     },
     {
@@ -196,13 +200,21 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
     },
     {
       name: "Every Mood Test",
-      sentence: "Made the bot play in 5 kinds of markets — trending, choppy, crashing, sleeping, wild. Won every one.",
-      status: b10Pass ? "pass" : "fail",
+      sentence: b10Pass === true
+        ? "Made the bot play in 5 kinds of markets — trending, choppy, crashing, sleeping, wild. Won every one."
+        : b10Pass === false
+          ? "Made the bot play in 5 kinds of markets — trending, choppy, crashing, sleeping, wild. Cracked in a few."
+          : "Made the bot play in 5 kinds of markets. Hasn't taken this test yet.",
+      status: b10Pass === true ? "pass" : b10Pass === false ? "fail" : "warn",
     },
     {
       name: "Real or Lucky",
-      sentence: "Shuffled its wins around to see if it was just hot. Wasn't. Got real game.",
-      status: frankPass ? "pass" : "fail",
+      sentence: frankPass === true
+        ? "Shuffled its wins around to see if it was just hot. Wasn't. Got real game."
+        : frankPass === false
+          ? "Shuffled its wins around to see if it was just hot. Looked hot — was just lucky."
+          : "Shuffled its wins around to see if it was just hot. Hasn't taken this test yet.",
+      status: frankPass === true ? "pass" : frankPass === false ? "fail" : "warn",
     },
     {
       name: "Preseason",
@@ -216,7 +228,9 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
     },
     {
       name: "Plays Clean",
-      sentence: "Followed every house rule. Won't get the account shut down.",
+      sentence: compliancePassRate >= 1.0
+        ? "Followed every house rule. Won't get the account shut down."
+        : "Broke house rules in testing. Not clean yet.",
       status: compliancePassRate >= 1.0 ? "pass" : compliancePassRate >= 0.95 ? "warn" : "fail",
     },
   ];
