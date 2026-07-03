@@ -798,8 +798,8 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
   //   - video_id: last segment of sourceUrl (YouTube video ID when available,
   //     URL hash otherwise — deterministic regardless of URL format)
   //   - transcript_hash: SHA-256(markdown) truncated to 16 hex chars (64-bit)
-  //   - extractor_version: local model name (e.g. "gemma4:e2b")
-  const _extractorVersion = process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4:e2b";
+  //   - extractor_version: local model name (e.g. "gemma4:e4b-it-qat")
+  const _extractorVersion = process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4:e4b-it-qat";
   const _transcriptHash = createHash("sha256").update(markdown, "utf8").digest("hex").slice(0, 16);
   const _videoId = (() => {
     try {
@@ -1698,7 +1698,7 @@ agentRoutes.post("/scout-extract", idempotencyMiddleware, async (req, res) => {
       //
       // TIER 1 (v13 Pass 1 LLM call) — small focused Gemma call that ONLY
       //   extracts speaker_concepts. Tiny schema = high compliance even on
-      //   gemma4:e2b's 2B-effective brain. Works on ANY domain (Volume Profile,
+      //   gemma4:e4b-it-qat's 2B-effective brain. Works on ANY domain (Volume Profile,
       //   Wyckoff, options flow) — not constrained to a hardcoded catalog.
       //   Research: arXiv 2604.05158 + MasterPrompting 2026-05-12 benchmark.
       //
@@ -2467,7 +2467,7 @@ agentRoutes.post("/robustness", async (req, res) => {
 });
 
 // ─── POST /api/agent/find-strategies ───────────────────────────────
-// Fire-and-forget — calls Ollama qwen2.5-coder:7b model to generate DSL strategies,
+// Fire-and-forget — calls Ollama gemma4:e4b-it-qat model to generate DSL strategies,
 // validates each, then submits valid ones for backtest via agentService.runStrategy.
 
 agentRoutes.post("/find-strategies", async (req, res) => {
@@ -2531,7 +2531,7 @@ Focus on proven edges: trend following, mean reversion, volatility expansion, or
 Target: $250+/day avg P&L, 60%+ win days, profit factor >= 1.75, max drawdown <= $2,000.${avoidBlock}
 Output ONLY the DSL JSON object, nothing else.`;
 
-        const response = await ollama.generate("qwen2.5-coder:7b", prompt, {
+        const response = await ollama.generate("gemma4:e4b-it-qat", prompt, {
           temperature: 0.7 + (i * 0.05), // Vary temperature for diversity
           num_ctx: 8192,
         });

@@ -474,6 +474,14 @@ app.get("/api/health", async (_req, res) => {
 // the general /api authMiddleware so tools-plane auth is self-contained.
 app.use("/api/carter", carterToolsRouter);
 
+// deep-scan #13: inbound webhooks from EXTERNAL senders (TradingView Pine alerts,
+// broker fill callbacks) carry their OWN HMAC auth and cannot send the /api Bearer.
+// Mount them BEFORE the general authMiddleware — same pattern as /api/carter/webhook
+// — so activating the Bearer gate does not 401 broker execution. Each router
+// validates its own HMAC (TRADINGVIEW webhook secret / BROKER_FILL_HMAC_SECRET).
+app.use("/api/tradingview", tradingViewWebhookRoutes);
+app.use("/api/broker/fill-callback", fillCallbackRoutes);
+
 // Auth gate
 app.use("/api", authMiddleware);
 
@@ -585,9 +593,9 @@ app.use("/api/bias-state", biasStateRoutes);
 // Track 5 Pass 2: Strategy Selection UI + Publish-to-Family Gate
 app.use("/api/strategy-assignments", strategyAssignmentRoutes);
 
-// Track 8 Pass 3: TradingView Marker Collector — HMAC-validated Pine alert webhooks
-// Rate-limited via strictRateLimit (already applied inside the route handler per account_id).
-app.use("/api/tradingview", tradingViewWebhookRoutes);
+// Track 8 Pass 3: TradingView Marker Collector — HMAC-validated Pine alert webhooks.
+// deep-scan #13: mounted ABOVE the auth gate (see near authMiddleware) so external
+// Pine alerts (own HMAC, no Bearer) are not 401'd by the API_KEY gate.
 
 // W23H.2: Pre-market routine state — daily 8:30 AM ET pre-market context per symbol
 app.use("/api/pre-market", preMarketRoutes);
@@ -622,9 +630,9 @@ app.use("/api/live-order", liveOrderRoutes);
 
 // Phase 1 Fill Reconciliation: broker fill callback + admin reconcile-clear.
 // POST /api/broker/fill-callback — HMAC-gated; requires BROKER_FILL_HMAC_SECRET.
-// POST /api/broker/fill-callback/reconcile-clear — admin clear of needs_reconcile block.
+// deep-scan #13: mounted ABOVE the auth gate (see near authMiddleware) so external
+// broker fill callbacks (own HMAC, no Bearer) are not 401'd by the API_KEY gate.
 // Flag-gated: SERVER_MEDIATED_EXECUTION_ENABLED=true (default OFF).
-app.use("/api/broker/fill-callback", fillCallbackRoutes);
 
 // Wave 4 Track 4B: Layer 15 Leak Detection — ADVISORY-ONLY, no lifecycle gate authority.
 // POST /api/leak-detection/run — called by 3AM orchestrator (Track 4A).
@@ -852,7 +860,7 @@ export const server = app.listen(port, () => {
     warmAppendixCache().catch((err) => {
       logger.info({ err }, "Appendix cache warm failed at boot — starting empty (non-blocking)");
     });
-    // ─── Wave 26: Ollama health check for transcript_extractor gemma4:e2b ─────
+    // ─── Wave 26: Ollama health check for transcript_extractor gemma4:e4b-it-qat ─────
     // Sets OLLAMA_HEALTHY module flag. If Ollama is down or model is missing,
     // transcript_extractor routes to cloud fallback. Fail-open: any error is
     // swallowed here; the check itself logs WARN.
@@ -864,7 +872,7 @@ export const server = app.listen(port, () => {
   });
 
   // ─── H5: 60s post-boot Ollama recheck ────────────────────────────────────────
-  // The boot-time probe runs at T+0 when gemma4:e2b (7GB) may still be cold-
+  // The boot-time probe runs at T+0 when gemma4:e4b-it-qat (7GB) may still be cold-
   // loading into VRAM, leaving OLLAMA_HEALTHY stuck false and routing all
   // extraction to cloud. This one-shot re-probe fires after the cold-load
   // window and corrects the flag before the first extraction cron fires.
@@ -1105,7 +1113,7 @@ export const server = app.listen(port, () => {
   //   - Track 2 VP routing preserved (hysteresis layer wraps _compute_proposed_playbook
   //     which calls _route_vp_conditional unchanged)
   //   - 9th GPT-5-mini role registered (bias_engine_evaluator, 25k tokens/day,
-  //     deepseek-r1:14b fallback, anti-pattern-catalog KB + 4 few-shot examples)
+  //     gemma4:e4b-it-qat fallback, anti-pattern-catalog KB + 4 few-shot examples)
   // Same idempotency / non-blocking pattern as Tracks 1, 2, and 3.
   import("./db/schema.js").then(async ({ auditLog: auditLogTable }) => {
     try {

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "TranscriptExtractorMinimalOutput",
-  "description": "Wave 26 Pass L (2026-05-27) — Minimal 8-field schema for the transcript_extractor role. Flat structure (no $ref nesting) to avoid the recursive-loop bug gemma4:e2b hits with the v11 schema. Passed as `format` object to Ollama /api/chat for GBNF grammar-constrained sampling.",
+  "description": "Wave 26 Pass L (2026-05-27) — Minimal 8-field schema for the transcript_extractor role. Flat structure (no $ref nesting) to avoid the recursive-loop bug gemma4:e4b-it-qat hits with the v11 schema. Passed as `format` object to Ollama /api/chat for GBNF grammar-constrained sampling.",
   "type": "object",
   "additionalProperties": false,
   "required": ["strategies", "instrument_classification"],

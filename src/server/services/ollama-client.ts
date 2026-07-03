@@ -36,10 +36,19 @@ const OLLAMA_STREAM_CHUNK_TIMEOUT_MS = parseInt(
 );
 
 // Model routing: task type → model name
+// 2026-07-03 tower-model consolidation: the tower now serves exactly ONE local
+// model — gemma4:e4b-it-qat (the YouTube/transcript extraction model). The old
+// deepseek-r1:14b / trading-quant / nomic-embed-text builds are no longer pulled.
+// All three roles collapse to the one model.
+// NOTE (embed): gemma4:e4b-it-qat is an instruct model, not a dedicated embedder.
+// Ollama /api/embed still returns vectors from it, but their dimensionality differs
+// from the retired nomic-embed-text — see graveyard-gate.ts (stored graveyard
+// embeddings are nomic-dim, so the similarity gate stays fail-open until they are
+// recomputed or the embedding feature is formally retired).
 const MODEL_ROUTES: Record<string, string> = {
-  fast: "deepseek-r1:14b",
-  generate: "trading-quant",
-  embed: "nomic-embed-text",
+  fast: "gemma4:e4b-it-qat",
+  generate: "gemma4:e4b-it-qat",
+  embed: "gemma4:e4b-it-qat",
 };
 
 export type ModelRole = keyof typeof MODEL_ROUTES;

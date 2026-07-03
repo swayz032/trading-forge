@@ -56,7 +56,7 @@ vi.mock("../services/notification-service.js", () => ({
 
 vi.mock("../services/model-router.js", () => ({
   callOpenAI: vi.fn(),
-  getFallback: vi.fn(() => ({ provider: "ollama", model: "deepseek-r1:14b" })),
+  getFallback: vi.fn(() => ({ provider: "ollama", model: "gemma4:e4b-it-qat" })),
   loadSystemPrompt: vi.fn(() => "You are a trade critic."),
 }));
 
@@ -404,7 +404,7 @@ describe("Wave 26 Pass 1 — TradeCritiqueService", () => {
 
     const insertValues = (mockDb.insert as any).mock.results[0]?.value?.values?.mock?.calls?.[0]?.[0];
     expect(insertValues?.provider).toBe("ollama");
-    expect(insertValues?.model).toBe("deepseek-r1:14b");
+    expect(insertValues?.model).toBe("gemma4:e4b-it-qat");
   });
 
   // ── Test 5: Both providers fail → consecutive_failures increments ─────────
@@ -800,7 +800,7 @@ describe("Wave 26 Pass 1 — TradeCritiqueService", () => {
     vi.mocked(callOpenAI).mockResolvedValue(null);
     const mockOllamaInstance = { generate: vi.fn().mockResolvedValue({ response: VALID_CRITIQUE_JSON }) };
     vi.mocked(OllamaClient).mockImplementation(() => mockOllamaInstance as any);
-    vi.mocked(getFallback).mockReturnValue({ provider: "ollama", model: "deepseek-r1:14b", temperature: 0.2, maxTokens: 8192 });
+    vi.mocked(getFallback).mockReturnValue({ provider: "ollama", model: "gemma4:e4b-it-qat", temperature: 0.2, maxTokens: 8192 });
 
     const mockDb = db as any;
     let selectCallCount = 0;
@@ -826,7 +826,7 @@ describe("Wave 26 Pass 1 — TradeCritiqueService", () => {
 
     const dbRowInsert = insertValuesMock.mock.calls.find((c: any[]) => c[0]?.positionId !== undefined);
     expect(dbRowInsert![0].provider).toBe("ollama");
-    expect(dbRowInsert![0].model).toBe("deepseek-r1:14b");
+    expect(dbRowInsert![0].model).toBe("gemma4:e4b-it-qat");
   });
 
   // ── Test 17: minimal data_completeness when 5+ fields missing ─────────────

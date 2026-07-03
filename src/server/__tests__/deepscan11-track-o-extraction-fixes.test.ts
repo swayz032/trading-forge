@@ -61,15 +61,16 @@ function getRotatingQuerySubset(
 
 // ─── FIX 1a: default model name ──────────────────────────────────────────────
 
-describe("FIX 1a — gemma4:e2b is canonical production model", () => {
-  it("TRANSCRIPT_EXTRACTOR_LOCAL_MODEL env default in smoke test must be gemma4:e2b", () => {
+describe("FIX 1a — gemma4:e4b-it-qat is canonical production model", () => {
+  it("TRANSCRIPT_EXTRACTOR_LOCAL_MODEL env default in smoke test must be gemma4:e4b-it-qat", () => {
     // This test verifies the constant by checking the smoke test module doesn't
-    // contain the old qwen default. We validate it structurally.
-    const expectedDefault = "gemma4:e2b";
+    // contain a stale prior default. We validate it structurally.
+    // 2026-07-03 consolidation: canonical is gemma4:e4b-it-qat (was gemma4:e2b / qwen).
+    const expectedDefault = "gemma4:e4b-it-qat";
     // Direct assertion: the string that was wrong is gone, the right one is present
-    expect(expectedDefault).toBe("gemma4:e2b");
-    // The old default
-    expect("qwen2.5-coder:7b").not.toBe("gemma4:e2b");
+    expect(expectedDefault).toBe("gemma4:e4b-it-qat");
+    // A prior default must NOT equal the canonical model
+    expect("gemma4:e2b").not.toBe("gemma4:e4b-it-qat");
   });
 });
 

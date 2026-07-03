@@ -15,7 +15,7 @@
  * ARCHITECTURE:
  * - Pass 1: TINY Gemma call. Input = transcript chunk. Output = ONLY
  *   {speaker_concepts: [...], instrument: string, has_strategy: bool}.
- *   Tiny schema = high compliance even on gemma4:e2b's 2B-effective brain.
+ *   Tiny schema = high compliance even on gemma4:e4b-it-qat's 2B-effective brain.
  * - Pass 2: existing full v11 schema call, but augmented with Pass 1's
  *   speaker_concepts as scaffolding context.
  *
@@ -198,7 +198,7 @@ function extractJsonFromResponse(raw: string): Record<string, unknown> | null {
  */
 export async function runPass1VocabularyExtraction(
   transcript: string,
-  model: string = "gemma4:e2b",
+  model: string = "gemma4:e4b-it-qat",
 ): Promise<Pass1Result | null> {
   if (!transcript || transcript.length < 300) return null;
   const startedAt = Date.now();

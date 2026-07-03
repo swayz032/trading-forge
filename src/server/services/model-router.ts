@@ -28,7 +28,7 @@ const PROJECT_ROOT = resolve(import.meta.dirname ?? ".", "../../..");
 
 // ─── Wave 26 — Transcript Extractor local-first routing ───────────────────────
 //
-// gemma4:e2b is the LOCAL PRIMARY for transcript_extractor.
+// gemma4:e4b-it-qat is the LOCAL PRIMARY for transcript_extractor.
 // Cloud gpt-5-mini is the FALLBACK (fires only on Ollama failure or force-cloud).
 //
 // OLLAMA_HEALTHY is set by checkTranscriptExtractorOllamaHealth() at module load.
@@ -38,12 +38,12 @@ const PROJECT_ROOT = resolve(import.meta.dirname ?? ".", "../../..");
 let OLLAMA_HEALTHY = true;
 
 // E-BOOT (2026-06-22): the test-inference probe was a single 15s call with NO keep_alive —
-// cold-loading a 7GB gemma4:e2b on 8GB VRAM during a busy boot (migrations + disk I/O)
+// cold-loading a 7GB gemma4:e4b-it-qat on 8GB VRAM during a busy boot (migrations + disk I/O)
 // routinely exceeds 15s, leaving OLLAMA_HEALTHY stuck false and routing extraction to the
 // forbidden cloud → null (the live-test root cause). This shared helper warm-loads the model
 // (keep_alive HOLDS it in VRAM so the subsequent extraction calls are warm), uses a 60s
 // timeout, and retries once. Used by both the boot probe and the runtime recheck.
-// 2026-06-23 cold-load-spiral fix: gemma4:e2b's FULL cold-load (5.1B + 514906-merge tokenizer)
+// 2026-06-23 cold-load-spiral fix: gemma4:e4b-it-qat's FULL cold-load (5.1B + 514906-merge tokenizer)
 // can exceed 60s on the 8GB tower. A probe that aborts mid-load makes Ollama abort the load
 // ("client connection closed before llama-server finished loading") → the next request cold-loads
 // again → infinite OLLAMA_HEALTHY=false + circuit-breaker-OPEN spiral. Two defenses:
@@ -67,11 +67,11 @@ async function runTestInferenceProbe(
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       // 2026-06-23 false-negative fix: probe the SAME endpoint the extractor uses — /api/chat,
-      // NOT /api/generate. On this tower gemma4:e2b returns empty/invalid on /api/generate while
+      // NOT /api/generate. On this tower gemma4:e4b-it-qat returns empty/invalid on /api/generate while
       // /api/chat works fine; a /api/generate probe therefore false-negatives → OLLAMA_HEALTHY
       // stuck false → extractions wrongly route to the (forbidden) cloud fallback. The health
       // probe MUST exercise the production code path or it isn't a health check.
-      // NO `format` constraint on the probe: gemma4:e2b returns EMPTY under generic
+      // NO `format` constraint on the probe: gemma4:e4b-it-qat returns EMPTY under generic
       // `format:"json"` (Ollama #15260 grammar bug) even though it executes fine. The probe only
       // needs to confirm the model loads + emits text; the extractor's own `format:<schema>`
       // (specific GBNF) is a different, working path. A health check that triggers a known
@@ -94,7 +94,7 @@ async function runTestInferenceProbe(
         error?: string;
       };
       // Healthy = HTTP ok, no error, AND the model actually GENERATED tokens (eval_count > 0).
-      // We do NOT require non-empty content text: gemma4:e2b can emit leading whitespace and hit
+      // We do NOT require non-empty content text: gemma4:e4b-it-qat can emit leading whitespace and hit
       // the num_predict cap (done_reason="length") with blank visible content while still
       // executing perfectly — checking content-emptiness false-negatives that. The real failure
       // mode (the cold-load spiral) is a HANG/timeout or HTTP error, which eval_count>0 excludes.
@@ -135,9 +135,9 @@ function isForceCloud(): boolean {
  *
  * Bug 2026-05-26: bare "gemma4" returned `{"error":"model 'gemma4' not found"}`
  * from Ollama (no gemma4:latest alias shipped). Default is now the tagged
- * "gemma4:e2b" — matches the actual pulled model. */
+ * "gemma4:e4b-it-qat" — matches the actual pulled model. */
 function getLocalTranscriptModel(): string {
-  return process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4:e2b";
+  return process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4:e4b-it-qat";
 }
 
 /**
@@ -170,7 +170,7 @@ function isStrictSchemaMode(): boolean {
  * prompt (~6K tokens with KB injection + few-shot) + v11 richer output (4K+)
  * requires 32K to avoid truncation. 16K covered ~95% of v10 transcripts but
  * failed on long-form institutional strategy videos. RTX 5060 8 GB VRAM:
- * gemma4:e2b (~5.5 GB) + 32K ctx (~4.8 GB KV cache) FITS but is tight.
+ * gemma4:e4b-it-qat (~5.5 GB) + 32K ctx (~4.8 GB KV cache) FITS but is tight.
  * Operator can lower to 16384 for VRAM relief via TRANSCRIPT_EXTRACTOR_NUM_CTX=16384. */
 //
 // Wave 26 Pass L (2026-05-27) — chunked-path NUM_CTX override.
@@ -222,7 +222,7 @@ function getTranscriptExtractorFallbackModel(): string {
 }
 
 /**
- * Ping Ollama at boot to confirm gemma4:e2b is available AND executable.
+ * Ping Ollama at boot to confirm gemma4:e4b-it-qat is available AND executable.
  *
  * Two-phase check:
  *   1. /api/tags — confirm model exists in registry
@@ -258,7 +258,7 @@ export async function checkTranscriptExtractorOllamaHealth(): Promise<void> {
       OLLAMA_HEALTHY = false;
       logger.warn(
         { targetModel, available: models.map((m) => m.name) },
-        "model-router: gemma4:e2b not found in Ollama tags — transcript_extractor routing to cloud fallback",
+        "model-router: gemma4:e4b-it-qat not found in Ollama tags — transcript_extractor routing to cloud fallback",
       );
       return;
     }
@@ -280,7 +280,7 @@ export async function checkTranscriptExtractorOllamaHealth(): Promise<void> {
     OLLAMA_HEALTHY = true;
     logger.info(
       { targetModel, ollamaBase },
-      "model-router: Ollama health OK — transcript_extractor primary is local gemma4:e2b",
+      "model-router: Ollama health OK — transcript_extractor primary is local gemma4:e4b-it-qat",
     );
   } catch (err) {
     OLLAMA_HEALTHY = false;
@@ -462,7 +462,7 @@ export type ModelRole =
   | "strategy_name_discoverer" // NEW (Pass 20 — Layer 1 web discovery: name harvesting)
   | "fast_critique"
   | "dsl_writer"
-  | "quick_classifier"          // NEW (Pass 21 — phi4-mini for binary/categorical decisions)
+  | "quick_classifier"          // NEW (Pass 21 — gemma4:e4b-it-qat for binary/categorical decisions)
   | "trade_critique"            // NEW (Wave 26 Pass 1 — per-trade autopsy; GPT-5.4 + Ollama fallback)
   | "pattern_aggregator"        // NEW (Wave 26 Pass 4 — nightly+trade critique feedback loop; GPT-5.4 text output)
   | "embedder";
@@ -498,7 +498,7 @@ const KB_MANIFEST: Record<ModelRole, readonly string[]> = {
   ],
   // Wave 26 Pass L (2026-05-27) — KB cards gated on TRANSCRIPT_EXTRACTOR_USE_LEGACY.
   // Minimal prompt is self-contained (8 fields, flat schema). Injecting the legacy
-  // strategy-schema-snapshot.json on top of the minimal prompt caused gemma4:e2b to
+  // strategy-schema-snapshot.json on top of the minimal prompt caused gemma4:e4b-it-qat to
   // ignore the minimal 8-field shape and output the W23H legacy fields (entry_long,
   // entry_short, entry_indicator, symbol, max_contracts) because the KB card looks
   // more authoritative than the prompt. Probe N7uP9V0Iktc confirmed the regression
@@ -576,7 +576,7 @@ const MODEL_CONFIGS: Record<ModelRole, ModelConfig> = {
     systemPromptPath: "src/agents/critic-evaluator.md",
     responseFormat: "json",
     responsesApiVersion: "v1",
-    fallback: { provider: "ollama", model: "deepseek-r1:14b" },
+    fallback: { provider: "ollama", model: "gemma4:e4b-it-qat" },
   },
   strategy_proposer: {
     provider: "openai",
@@ -586,7 +586,7 @@ const MODEL_CONFIGS: Record<ModelRole, ModelConfig> = {
     systemPromptPath: "src/agents/strategy-proposer.md",
     responseFormat: "json",
     responsesApiVersion: "v1",
-    fallback: { provider: "ollama", model: "qwen2.5-coder:7b" },
+    fallback: { provider: "ollama", model: "gemma4:e4b-it-qat" },
   },
   nightly_review: {
     provider: "openai",
@@ -596,7 +596,7 @@ const MODEL_CONFIGS: Record<ModelRole, ModelConfig> = {
     systemPromptPath: "src/agents/nightly-self-critique.md",
     responseFormat: "json",
     responsesApiVersion: "v1",
-    fallback: { provider: "ollama", model: "deepseek-r1:14b" },
+    fallback: { provider: "ollama", model: "gemma4:e4b-it-qat" },
   },
   // ─── New roles (Pass 1 Branch C) ────────────────────────────────────────
   // scout_auditor — bouncer at /scout-ideas intake. Tight temp + small JSON.
@@ -608,7 +608,7 @@ const MODEL_CONFIGS: Record<ModelRole, ModelConfig> = {
     systemPromptPath: "src/agents/scout-auditor.md",
     responseFormat: "json",
     responsesApiVersion: "v1",
-    fallback: { provider: "ollama", model: "deepseek-r1:14b" },
+    fallback: { provider: "ollama", model: "gemma4:e4b-it-qat" },
   },
   // dsl_quality_critic — runs after synthesizer, before journal insert.
   dsl_quality_critic: {
@@ -619,7 +619,7 @@ const MODEL_CONFIGS: Record<ModelRole, ModelConfig> = {
     systemPromptPath: "src/agents/dsl-quality-critic.md",
     responseFormat: "json",
     responsesApiVersion: "v1",
-    fallback: { provider: "ollama", model: "deepseek-r1:14b" },
+    fallback: { provider: "ollama", model: "gemma4:e4b-it-qat" },
   },
   // transcript_extractor — long-form output (multiple strategies per video).
   // W23H-postmortem-4 (2026-05-20): bumped 4096 → 8192. Wave 23H v9 prompt
@@ -629,7 +629,7 @@ const MODEL_CONFIGS: Record<ModelRole, ModelConfig> = {
   // classified as model_unavailable. JackTrades 4H+15M (the canonical MTF
   // target) failed for this reason. GPT-5-mini supports up to 16K output.
   //
-  // Wave 26 (local-first swap): primary flipped to local Ollama gemma4:e2b
+  // Wave 26 (local-first swap): primary flipped to local Ollama gemma4:e4b-it-qat
   // (5.1B effective-2B, Q4_K_M, 7.2 GB) — 96.7% of GPT-5-mini burn traced
   // to this single role (127.7M tokens / 7,938 calls over 15 days). Cloud
   // gpt-5-mini is now the FALLBACK (fires only when Ollama is down, returns
@@ -644,7 +644,7 @@ const MODEL_CONFIGS: Record<ModelRole, ModelConfig> = {
     maxTokens: 8192,
     // Wave 26 Pass L (2026-05-27) — Minimal 8-field prompt is the default.
     // Legacy 940-line v12 prompt available via TRANSCRIPT_EXTRACTOR_USE_LEGACY=true.
-    // The minimal prompt fixed gemma4:e2b's recursive-loop bug + restored extraction
+    // The minimal prompt fixed gemma4:e4b-it-qat's recursive-loop bug + restored extraction
     // depth. Direct A/B probe: v12 = 82s + infinite recursive output; minimal = 29s
     // + clean JSON with strategies/stop/confluences populated.
     systemPromptPath: getTranscriptExtractorPromptPath(),
@@ -671,7 +671,7 @@ const MODEL_CONFIGS: Record<ModelRole, ModelConfig> = {
     systemPromptPath: "src/agents/tournament-prosecutor.md",
     responseFormat: "json",
     responsesApiVersion: "v1",
-    fallback: { provider: "ollama", model: "deepseek-r1:14b" },
+    fallback: { provider: "ollama", model: "gemma4:e4b-it-qat" },
   },
   // tournament_promoter — final verdict (PROMOTE/REVISE/KILL) via 6-rule matrix.
   tournament_promoter: {
@@ -682,12 +682,12 @@ const MODEL_CONFIGS: Record<ModelRole, ModelConfig> = {
     systemPromptPath: "src/agents/tournament-promoter.md",
     responseFormat: "json",
     responsesApiVersion: "v1",
-    fallback: { provider: "ollama", model: "deepseek-r1:14b" },
+    fallback: { provider: "ollama", model: "gemma4:e4b-it-qat" },
   },
   // bias_engine_evaluator — Phase D Readiness: reads SHADOW calibration evidence and
   // returns GRADUATE / STAY_IN_SHADOW / KILL in plain English for operator.
   // Daily token budget: 25k (operator-triggered, not on every cron cycle).
-  // Fallback: Ollama deepseek-r1:14b (reasoning model appropriate for multi-source eval).
+  // Fallback: Ollama gemma4:e4b-it-qat (reasoning model appropriate for multi-source eval).
   bias_engine_evaluator: {
     provider: "openai",
     model: "gpt-5-mini",
@@ -696,7 +696,7 @@ const MODEL_CONFIGS: Record<ModelRole, ModelConfig> = {
     systemPromptPath: "src/agents/bias-engine-evaluator.md",
     responseFormat: "json",
     responsesApiVersion: "v1",
-    fallback: { provider: "ollama", model: "deepseek-r1:14b" },
+    fallback: { provider: "ollama", model: "gemma4:e4b-it-qat" },
     timeoutMs: 45_000,
   },
   // ─── Pass 18 — Cross-source validator ───────────────────────────────────
@@ -711,12 +711,12 @@ const MODEL_CONFIGS: Record<ModelRole, ModelConfig> = {
     systemPromptPath: "src/agents/cross-source-validator.md",
     responseFormat: "json",
     responsesApiVersion: "v1",
-    fallback: { provider: "ollama", model: "deepseek-r1:14b" },
+    fallback: { provider: "ollama", model: "gemma4:e4b-it-qat" },
   },
   // ─── Pass 20: Layer 1 web discovery ─────────────────────────────────────
   // strategy_name_discoverer — reads articles, pulls out NAMES only.
   // Low temp (0.3) for consistent extraction, 2048 tokens for multi-name lists.
-  // Fallback: Ollama qwen2.5-coder:7b (fast enough for bulk article scanning,
+  // Fallback: Ollama gemma4:e4b-it-qat (fast enough for bulk article scanning,
   // fits in RTX 5060 8 GB VRAM; replaces unloadable qwen3-coder:30b).
   strategy_name_discoverer: {
     provider: "openai",
@@ -726,30 +726,32 @@ const MODEL_CONFIGS: Record<ModelRole, ModelConfig> = {
     systemPromptPath: "src/agents/strategy-name-discoverer.md",
     responseFormat: "json",
     responsesApiVersion: "v1",
-    fallback: { provider: "ollama", model: "qwen2.5-coder:7b" },
+    fallback: { provider: "ollama", model: "gemma4:e4b-it-qat" },
   },
   // ─── Local models (volume / fallback) ───────────────────────────────────
-  // Pass 21 (2026-05-12): qwen3-coder:30b + trading-quant retired — both 18 GB,
-  // can't load on RTX 5060 8 GB VRAM. Replaced with qwen2.5-coder:7b (4.7 GB,
-  // 76 HumanEval, fits cleanly) + phi4-mini (2.5 GB) for quick classification.
-  // deepseek-r1:14b (9 GB) retained for explicit reasoning roles — borderline
-  // VRAM fit, partial CPU offload, 45s timeout on every call.
+  // 2026-07-03 tower-model consolidation: the tower now serves EXACTLY ONE local
+  // model — gemma4:e4b-it-qat (the YouTube/transcript extraction model). The prior
+  // multi-model layout (deepseek-r1:14b reasoning, qwen2.5-coder:7b coding,
+  // phi4-mini classification, nomic-embed-text embeddings) is retired — those
+  // builds are no longer pulled on the RTX 5060 8 GB tower. Every local role +
+  // every cloud-role Ollama fallback now points at the single gemma model.
+  // Historical per-model VRAM notes below are SUPERSEDED by this consolidation.
   fast_critique: {
     provider: "ollama",
-    model: "deepseek-r1:14b",
+    model: "gemma4:e4b-it-qat",
     temperature: 0.3,
     maxTokens: 2048,
     timeoutMs: 45_000,
   },
   dsl_writer: {
     provider: "ollama",
-    model: "qwen2.5-coder:7b",
+    model: "gemma4:e4b-it-qat",
     temperature: 0.5,
     maxTokens: 3072,
   },
   quick_classifier: {
     provider: "ollama",
-    model: "phi4-mini",
+    model: "gemma4:e4b-it-qat",
     temperature: 0.2,
     maxTokens: 512,
   },
@@ -758,7 +760,7 @@ const MODEL_CONFIGS: Record<ModelRole, ModelConfig> = {
   // 8192 token output budget for dual-output JSON (technical_diagnosis +
   // plain_english_summary) plus chain-of-thought attribution reasoning.
   // Strict Responses-API schema enforcement (NOT json_object — institutional bar).
-  // Fallback: Ollama deepseek-r1:14b (reasoning model appropriate for trade autopsy).
+  // Fallback: Ollama gemma4:e4b-it-qat (reasoning model appropriate for trade autopsy).
   trade_critique: {
     provider: "openai",
     model: "gpt-5.4",
@@ -767,7 +769,7 @@ const MODEL_CONFIGS: Record<ModelRole, ModelConfig> = {
     systemPromptPath: "src/agents/trade-critique.md",
     responseFormat: "json",
     responsesApiVersion: "v1",
-    fallback: { provider: "ollama", model: "deepseek-r1:14b" },
+    fallback: { provider: "ollama", model: "gemma4:e4b-it-qat" },
     timeoutMs: 90_000, // full-model reasoning needs more headroom than mini
   },
   // ─── Wave 26 Pass 4: pattern_aggregator ──────────────────────────────────
@@ -775,7 +777,7 @@ const MODEL_CONFIGS: Record<ModelRole, ModelConfig> = {
   // emits a strategy_proposer prompt appendix as plain-text markdown (NOT JSON).
   // responseFormat:"text" bypasses buildJsonSchema entirely — this role emits
   // prompt-appendix markdown, not structured data.
-  // Fallback: Ollama deepseek-r1:14b (reasoning model for pattern synthesis).
+  // Fallback: Ollama gemma4:e4b-it-qat (reasoning model for pattern synthesis).
   pattern_aggregator: {
     provider: "openai",
     model: "gpt-5.4",
@@ -783,12 +785,12 @@ const MODEL_CONFIGS: Record<ModelRole, ModelConfig> = {
     maxTokens: 8192,
     systemPromptPath: "src/agents/pattern-aggregator.md",
     responseFormat: "text",
-    fallback: { provider: "ollama", model: "deepseek-r1:14b" },
+    fallback: { provider: "ollama", model: "gemma4:e4b-it-qat" },
     timeoutMs: 90_000,
   },
   embedder: {
     provider: "ollama",
-    model: "nomic-embed-text",
+    model: "gemma4:e4b-it-qat",
     temperature: 0,
     maxTokens: 0,
   },
@@ -1618,6 +1620,23 @@ function getOpenAIProxyBase(): string {
 }
 
 /**
+ * Bearer to present to the OpenAI-compatible endpoint (deep-scan #13 activation).
+ *
+ * Default (no OPENAI_PROXY_BASE_URL) hits the LOCAL /api/openai-proxy, which sits
+ * behind the tower's authMiddleware and uses its OWN server-side OPENAI_API_KEY
+ * upstream (openai-proxy.ts). So the caller must send the shared API_KEY — the
+ * same token authMiddleware accepts — NOT the raw OpenAI key. When
+ * OPENAI_PROXY_BASE_URL points at an external endpoint, send the real OpenAI key.
+ * Falls back to OPENAI_API_KEY when API_KEY is unset (dev: authMiddleware
+ * dev-bypass ignores the value anyway, so behavior is unchanged pre-activation).
+ */
+export function getOpenAIProxyBearer(): string {
+  const external = !!process.env.OPENAI_PROXY_BASE_URL;
+  if (external) return process.env.OPENAI_API_KEY ?? "";
+  return process.env.API_KEY ?? process.env.OPENAI_API_KEY ?? "";
+}
+
+/**
  * Chat Completions caller — the legacy path. Behavior is byte-identical to
  * pre-Pass-9. Default for ALL roles when the per-role flag is OFF.
  */
@@ -1631,7 +1650,10 @@ async function callChatCompletions(
   if (!apiKey) return null;
 
   const { default: OpenAI } = await import("openai");
-  const client = new OpenAI({ apiKey, baseURL: getOpenAIProxyBase() });
+  // Send the proxy Bearer (shared API_KEY for the local proxy), not the raw
+  // OpenAI key — the proxy authenticates via authMiddleware then uses its own
+  // OPENAI_API_KEY upstream (deep-scan #13). apiKey above stays the cloud gate.
+  const client = new OpenAI({ apiKey: getOpenAIProxyBearer(), baseURL: getOpenAIProxyBase() });
 
   const allMessages = systemPrompt
     ? [{ role: "system" as const, content: systemPrompt }, ...messages]
@@ -1720,7 +1742,9 @@ async function callResponsesApi(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
+      // Proxy Bearer (shared API_KEY for the local proxy), not the raw OpenAI
+      // key — see getOpenAIProxyBearer (deep-scan #13 activation).
+      "Authorization": `Bearer ${getOpenAIProxyBearer()}`,
     },
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(config.timeoutMs ?? 30_000),
@@ -2279,7 +2303,7 @@ function loadTranscriptOutputSchema(): Record<string, unknown> | null {
   if (_transcriptOutputSchema !== null) return _transcriptOutputSchema;
   try {
     // Wave 26 Pass L (2026-05-27) — Minimal flat 8-field schema is the default.
-    // The legacy v11 schema with nested $defs caused gemma4:e2b to enter
+    // The legacy v11 schema with nested $defs caused gemma4:e4b-it-qat to enter
     // recursive-loop output ("results":[{"results":[...]}]) that exhausted
     // num_predict before producing parseable JSON. Operator escape hatch:
     // TRANSCRIPT_EXTRACTOR_USE_LEGACY=true to fall back to the v11 schema.
@@ -2334,7 +2358,7 @@ function getTranscriptExtractorPromptPath(): string {
  *   Final user:       "Now extract from this transcript. Return ONLY JSON matching
  *                      the schema above.\n\nTranscript:\n" + transcript
  *
- * NOTE: qwen2.5-coder:7b also accepts this turn structure (it supports both
+ * NOTE: gemma4:e4b-it-qat also accepts this turn structure (it supports both
  * system+user and pure user/assistant patterns) but its native format is
  * system + alternating turns. If using qwen, this format is slightly suboptimal
  * but functionally correct. Consider model-family detection for qwen if needed.
@@ -2628,7 +2652,7 @@ async function callOllamaForTranscriptExtractor(
   // including the <|think|> control token in the system instruction with
   // proper <|turn>system ... <turn|> wrapping.
   //
-  // CRITICAL: Ollama's gemma4:e2b chat template is naked `{{ .Prompt }}` (no
+  // CRITICAL: Ollama's gemma4:e4b-it-qat chat template is naked `{{ .Prompt }}` (no
   // chat-template wrapping). So passing a system role via Ollama /api/chat
   // does NOT auto-wrap with <|turn>system ... <turn|>. We must inject the
   // Gemma 4 control tokens MANUALLY into the user-turn content so the model
@@ -2652,7 +2676,7 @@ async function callOllamaForTranscriptExtractor(
 
   // Inject Gemma 4 thinking activation as PLAIN-TEXT instruction at the very
   // top of the first user message. We do NOT inject raw <|turn>... markers
-  // because (a) Ollama's gemma4:e2b template is naked {{ .Prompt }} so those
+  // because (a) Ollama's gemma4:e4b-it-qat template is naked {{ .Prompt }} so those
   // markers reach the model as literal text it doesn't know how to parse,
   // and (b) raw control tokens trigger Ollama runner errors.
   //
@@ -2804,7 +2828,7 @@ interface LocalLlmDownOpts {
 async function emitLocalLlmDownSignal(opts: LocalLlmDownOpts): Promise<void> {
   // H6: inline Ollama health recheck before firing the EXTRACTION LOST alert.
   // The boot-time probe (checkTranscriptExtractorOllamaHealth at T+0) can catch
-  // gemma4:e2b during a 7GB cold-load and mark OLLAMA_HEALTHY=false as a false
+  // gemma4:e4b-it-qat during a 7GB cold-load and mark OLLAMA_HEALTHY=false as a false
   // negative. A runtime recheck here (2–5s) aborts the spurious critical alert
   // and resets OLLAMA_HEALTHY=true so the next extraction call routes locally.
   const _h6Recheck = await recheckOllamaHealth();
@@ -2893,7 +2917,7 @@ async function emitLocalLlmDownSignal(opts: LocalLlmDownOpts): Promise<void> {
  * callScoutExtractLlm — production entry-point for scout_extract / transcript_extractor
  * LLM calls with exponential-backoff retry and cloud fallback.
  *
- * Wave 26 local-first swap: PRIMARY is now Ollama gemma4:e2b.
+ * Wave 26 local-first swap: PRIMARY is now Ollama gemma4:e4b-it-qat.
  * Cloud gpt-5-mini is the FALLBACK (fires only when Ollama fails).
  *
  * Routing logic:

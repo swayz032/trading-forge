@@ -120,7 +120,7 @@ export async function runNightlyCritique(): Promise<void> {
     // Fallback to Ollama
     logger.info("Nightly critique: cloud unavailable, falling back to Ollama");
     const fallback = getFallback("nightly_review");
-    const fallbackModel = fallback?.model ?? "deepseek-r1:14b";
+    const fallbackModel = fallback?.model ?? "gemma4:e4b-it-qat";
     const ollama = new OllamaClient();
     const systemPrompt = loadSystemPrompt("nightly_review");
     const fullPrompt = systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt;

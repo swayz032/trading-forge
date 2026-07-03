@@ -713,12 +713,12 @@ export const tournamentResults = pgTable(
     tournamentDate: timestamp("tournament_date").notNull(),
     candidateName: text("candidate_name").notNull(),
     candidateDsl: jsonb("candidate_dsl").notNull(),
-    proposerOutput: jsonb("proposer_output"), // qwen3 proposer reasoning
+    proposerOutput: jsonb("proposer_output"), // tournament proposer reasoning (LLM output)
     compilerPass: boolean("compiler_pass"),
     graveyardPass: boolean("graveyard_pass"),
     criticOutput: jsonb("critic_output"), // llama3.1:8b critic assessment
     prosecutorOutput: jsonb("prosecutor_output"), // llama3.1:8b prosecutor findings
-    promoterOutput: jsonb("promoter_output"), // qwen3 final decision
+    promoterOutput: jsonb("promoter_output"), // tournament promoter final decision (LLM output)
     finalVerdict: text("final_verdict").notNull(), // PROMOTE | REVISE | KILL
     revisionNotes: text("revision_notes"),
     backtestId: uuid("backtest_id").references(() => backtests.id, { onDelete: "set null" }),
@@ -1245,7 +1245,7 @@ export const criticCandidates = pgTable("critic_candidates", {
     selected: boolean("selected").default(false), // was this the survivor?
     governanceLabels: jsonb("governance_labels").notNull().default({}),
     // P2-2: critic model version and run IDs for full audit provenance
-    criticModelVersion: text("critic_model_version"), // e.g. "deepseek-r1:14b@2026-04"
+    criticModelVersion: text("critic_model_version"), // e.g. "gemma4:e4b-it-qat@2026-04"
     evidenceRunIds: jsonb("evidence_run_ids").$type<{
       mc?: string[];
       sqa?: string[];

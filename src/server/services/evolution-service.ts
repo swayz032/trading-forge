@@ -3,7 +3,7 @@
  *
  * When a strategy enters DECLINING:
  * 1. Load strategy config + last Optuna robust ranges
- * 2. Call Python parameter_evolver (which calls Ollama qwen2.5-coder:7b, env-overridable via PARAMETER_EVOLVER_MODEL)
+ * 2. Call Python parameter_evolver (which calls Ollama gemma4:e4b-it-qat, env-overridable via PARAMETER_EVOLVER_MODEL)
  * 3. Backtest each mutation (walk-forward)
  * 4. If any mutation beats parent OOS Sharpe by >= 10%, create new strategy (gen+1)
  * 5. If none beat parent, retire the strategy
@@ -301,7 +301,7 @@ export async function evolveStrategy(
 
   // H12: Two breakers wrap the evolver call — outer "python-evolution" tracks
   // Python-bridge health, inner "ollama" tracks Ollama health. parameter_evolver
-  // calls Ollama qwen3 internally; if Ollama is down every evolution call would
+  // calls Ollama gemma4:e4b-it-qat internally; if Ollama is down every evolution call would
   // crash raw, so the dedicated breaker fast-fails further calls instead. On
   // circuit-open we mark the run as DEFERRED (not failed) — the strategy stays
   // in its current lifecycle state and the next scheduler tick will retry once

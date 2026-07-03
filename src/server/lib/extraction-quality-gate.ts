@@ -186,7 +186,7 @@ export interface CompilabilityResult {
 }
 
 /**
- * The placeholder value gemma4:e2b emits when extraction fails to name a strategy.
+ * The placeholder value gemma4:e4b-it-qat emits when extraction fails to name a strategy.
  * Any concept_name matching this sentinel causes the entry to be treated as a
  * failed extraction regardless of other fields.
  */

@@ -118,7 +118,12 @@ function setAdminCookie(res: Response, token: string): void {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     maxAge: ADMIN_SESSION_TTL_SEC * 1000,
-    path: "/slumhouse",
+    // deep-scan #13: path "/" (was "/slumhouse") so the operator's admin session
+    // authenticates the /api surface too — the general authMiddleware accepts this
+    // cookie, and the Office's own cards (risk, conveyor) + the HMAC self-restart
+    // endpoint all live under /api. Scoping it to /slumhouse made those 401/503
+    // once the Bearer gate went live.
+    path: "/",
     // domain intentionally omitted — host-only (consistent with FIX 3 in auth.ts)
   });
 }
@@ -211,7 +216,7 @@ adminOfficeRouter.post("/slumhouse/admin/auth", async (req: Request, res: Respon
 });
 
 adminOfficeRouter.post("/slumhouse/admin/logout", (req: Request, res: Response) => {
-  res.clearCookie(ADMIN_COOKIE_NAME, { path: "/slumhouse" });
+  res.clearCookie(ADMIN_COOKIE_NAME, { path: "/" }); // deep-scan #13: match the "/" set path
   res.json({ ok: true });
 });
 

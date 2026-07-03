@@ -1,6 +1,6 @@
 <!-- PROMPT_VERSION: minimal-v1 -->
 <!-- Wave 26 Pass L (2026-05-27) — Replaces the 940-line v12 prompt that was
-     causing gemma4:e2b to enter infinite recursive output loops. This minimal
+     causing gemma4:e4b-it-qat to enter infinite recursive output loops. This minimal
      prompt asks gemma for ONLY the speaker's edge. Framework-overlay.ts owns
      exits / time-stops / sizing / risk caps authoritatively — no need for
      gemma to extract those. Direction is inferred downstream from entry_rule. -->

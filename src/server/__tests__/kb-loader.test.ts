@@ -331,35 +331,35 @@ describe("60-second TTL cache", () => {
 });
 
 describe("New role configs", () => {
-  it("scout_auditor config exists with deepseek-r1:14b fallback", () => {
+  it("scout_auditor config exists with gemma4:e4b-it-qat fallback", () => {
     const cfg = mod.MODEL_CONFIGS.scout_auditor;
     expect(cfg).toBeTruthy();
     expect(cfg.provider).toBe("openai");
     expect(cfg.model).toBe("gpt-5-mini");
     expect(cfg.responseFormat).toBe("json");
     expect(cfg.maxTokens).toBe(256);
-    expect(cfg.fallback?.model).toBe("deepseek-r1:14b");
+    expect(cfg.fallback?.model).toBe("gemma4:e4b-it-qat");
   });
 
-  it("dsl_quality_critic config exists with deepseek-r1:14b fallback", () => {
+  it("dsl_quality_critic config exists with gemma4:e4b-it-qat fallback", () => {
     const cfg = mod.MODEL_CONFIGS.dsl_quality_critic;
     expect(cfg).toBeTruthy();
     expect(cfg.provider).toBe("openai");
     expect(cfg.model).toBe("gpt-5-mini");
     expect(cfg.responseFormat).toBe("json");
     expect(cfg.maxTokens).toBe(1024);
-    expect(cfg.fallback?.model).toBe("deepseek-r1:14b");
+    expect(cfg.fallback?.model).toBe("gemma4:e4b-it-qat");
   });
 
   it("transcript_extractor config is Ollama-primary (gemma4) with gpt-5-mini cloud fallback", () => {
     // Wave 26 Pass A (2026-05-24): transcript_extractor swapped to Ollama-first
-    // (gemma4:e2b local); gpt-5-mini is now the CLOUD FALLBACK.
+    // (gemma4:e4b-it-qat local); gpt-5-mini is now the CLOUD FALLBACK.
     // OLLAMA_HEALTHY defaults true at module load → provider resolves to "ollama".
     // Wave 26 Pass I (v11): maxTokens 8192 (was 4096 pre-Pass-A).
     const cfg = mod.MODEL_CONFIGS.transcript_extractor;
     expect(cfg).toBeTruthy();
     expect(cfg.provider).toBe("ollama");
-    expect(cfg.model).toBe("gemma4:e2b");
+    expect(cfg.model).toBe("gemma4:e4b-it-qat");
     expect(cfg.responseFormat).toBe("json");
     expect(cfg.maxTokens).toBe(8192);
     expect(cfg.fallback?.provider).toBe("openai");

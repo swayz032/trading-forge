@@ -1,12 +1,21 @@
 """
-Strategy embedder using Ollama nomic-embed-text.
+Strategy embedder using the one local Ollama model (gemma4:e4b-it-qat).
 Converts strategy DSL + failure context into a vector for similarity search.
+
+2026-07-03 tower-model consolidation: the dedicated nomic-embed-text embedder was
+retired (tower now serves only gemma4:e4b-it-qat). ⚠️ CAVEAT: gemma is an instruct
+model, not a dedicated embedder — its /api/embeddings output has a DIFFERENT
+dimensionality than nomic's 768. Any graveyard embeddings persisted under nomic are
+NOT cosine-comparable to fresh gemma embeddings, so the similarity gate stays
+effectively bypassed until stored vectors are recomputed or the feature is retired.
+Override via EMBED_MODEL env if a true embedding model is pulled later.
 """
 import json
+import os
 from urllib.request import urlopen, Request
 
 OLLAMA_URL = "http://localhost:11434"
-EMBED_MODEL = "nomic-embed-text"
+EMBED_MODEL = os.getenv("EMBED_MODEL", "gemma4:e4b-it-qat")
 
 
 def embed_strategy(strategy_dsl: dict, failure_context: str = "") -> list[float]:
@@ -15,7 +24,8 @@ def embed_strategy(strategy_dsl: dict, failure_context: str = "") -> list[float]
     Combines strategy description, entry/exit types, params, and failure reason
     into a text representation, then embeds via Ollama.
 
-    Returns: 768-dimensional vector (nomic-embed-text output dim)
+    Returns: embedding vector from the local model (dim depends on EMBED_MODEL;
+    was 768 under the retired nomic-embed-text — see module docstring caveat).
     """
     parts: list[str] = []
 

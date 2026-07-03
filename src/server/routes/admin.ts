@@ -335,7 +335,7 @@ adminRoutes.post("/ollama-health-recheck", async (req, res) => {
     notifyWarning(
       "Ollama Health Restored",
       appendFamilyGradePostscript(
-        `OLLAMA_HEALTHY reset to true via runtime recheck. transcript_extractor routing restored to local gemma4:e2b. Reason: ${reason}`,
+        `OLLAMA_HEALTHY reset to true via runtime recheck. transcript_extractor routing restored to local gemma4:e4b-it-qat. Reason: ${reason}`,
         "The local AI model is working again.",
         "No action needed — the bot's AI features are restored.",
       ),

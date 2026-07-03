@@ -163,7 +163,7 @@ export interface DslQualityCriticResult {
 /**
  * P2E (Wave 9, 2026-05-17) — Ollama fallback path for dsl_quality_critic.
  * Called when cloud budget is exhausted AND OLLAMA_DSL_CRITIC_FALLBACK=true.
- * Uses qwen2.5-coder:7b (local, zero cost) with same JSON output contract.
+ * Uses gemma4:e4b-it-qat (local, zero cost) with same JSON output contract.
  * Returns DslQualityCriticResult or null on failure (caller then fails-CLOSED).
  */
 export async function runDslQualityCriticOllama(
@@ -173,7 +173,7 @@ export async function runDslQualityCriticOllama(
   try {
     const ollama = new OllamaClient("http://localhost:11434");
     const prompt = `You are a DSL quality critic for futures trading strategies. Given this strategy DSL and source context, evaluate quality and output JSON with: { score: 0-10, accept: boolean, concerns: [], reasoning: string }. Accept if score >= 7. Be strict — reject over-fit parameters, missing stops, or unrealistic risk.\n\nStrategy DSL:\n${JSON.stringify(payload.dsl, null, 2)}\n\nSource:\n${JSON.stringify(payload.sourceFind)}\n\nRespond with only valid JSON.`;
-    const res = await ollama.generate("qwen2.5-coder:7b", prompt, { temperature: 0.1 }, true);
+    const res = await ollama.generate("gemma4:e4b-it-qat", prompt, { temperature: 0.1 }, true);
     const raw = res.response;
     if (!raw) return null;
     let parsed: { score?: number; accept?: boolean; concerns?: unknown[]; reasoning?: string };
@@ -2008,7 +2008,7 @@ Rules:
 - Output ONLY the JSON object`;
 
         // Pass 4 — route through model-router strategy_proposer role.
-        // GPT-5-mini primary, Ollama qwen2.5-coder:7b deterministic fallback
+        // GPT-5-mini primary, Ollama gemma4:e4b-it-qat deterministic fallback
         // (configured in MODEL_CONFIGS.strategy_proposer.fallback). The new
         // strategy-proposer.md prompt allows refusal output:
         //   {reject: true, reason: "insufficient_signal", missing: [...]}
@@ -2021,7 +2021,7 @@ Rules:
 
         // Cloud unavailable / circuit open → fallback to Ollama deterministically.
         if (!proposerResponse) {
-          const ollamaResp = await this.ollama.generate("qwen2.5-coder:7b", prompt, undefined, true);
+          const ollamaResp = await this.ollama.generate("gemma4:e4b-it-qat", prompt, undefined, true);
           proposerResponse = ollamaResp.response;
         }
 

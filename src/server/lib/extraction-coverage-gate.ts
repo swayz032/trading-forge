@@ -34,7 +34,7 @@ import { chunkTranscript } from "./transcript-chunker.js";
 
 /** Max speaker_items after UNION across windows. windows × ~8 → 24 covers a dense 37K transcript. */
 const COVERAGE_ENUM_MAX_ITEMS = Number(process.env.COVERAGE_ENUM_MAX_ITEMS) || 24;
-/** Per-window enumeration size. ~12K chars ≈ 3K tokens — fits gemma4:e2b 8GB headroom. */
+/** Per-window enumeration size. ~12K chars ≈ 3K tokens — fits gemma4:e4b-it-qat 8GB headroom. */
 const COVERAGE_ENUM_WINDOW_CHARS = Number(process.env.COVERAGE_ENUM_WINDOW_CHARS) || 12_000;
 /** Cross-window overlap so a mechanic taught across a boundary isn't split. */
 const COVERAGE_ENUM_OVERLAP_CHARS = Number(process.env.COVERAGE_ENUM_OVERLAP_CHARS) || 2_000;
@@ -273,7 +273,7 @@ function parseSpeakerItems(raw: string | null, fullTranscript: string): SpeakerI
 /**
  * Enumerate all speaker-named tools/indicators across the FULL transcript via sliding
  * windows, UNIONed by normalized name (highest emphasis wins), capped at
- * COVERAGE_ENUM_MAX_ITEMS. Routes via callScoutExtractLlm (local-first gemma4:e2b).
+ * COVERAGE_ENUM_MAX_ITEMS. Routes via callScoutExtractLlm (local-first gemma4:e4b-it-qat).
  *
  * Sequential per window (single GPU, no parallel Ollama). Per-window failures are
  * tolerated (that window contributes nothing). @throws never — returns [] on total failure.
