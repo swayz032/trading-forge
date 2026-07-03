@@ -718,6 +718,10 @@
          (plain scripts, no build step). They wake on the `office:unlocked`
          document event and sleep on `office:locked`. -->
     <section id="of-risk" class="of-hide"></section>
+    <!-- deep-scan #13 (2026-07-03): conveyor visibility — the Office gates the
+         strategy-finder via Bot Power but could not see it. Rendered by
+         /slumhouse/office-conveyor.js (polls /api/scout/health same-origin). -->
+    <section id="of-conveyor" class="of-hide"></section>
     <section id="of-approvals" class="of-hide"></section>
   </div>
 
@@ -1127,6 +1131,7 @@
 
   <!-- Layer-4 Office P0: risk-truth + go-live approvals (no build step) -->
   <script src="/slumhouse/office-risk.js" defer></script>
+  <script src="/slumhouse/office-conveyor.js" defer></script>
   <script src="/slumhouse/office-approvals.js" defer></script>
 
   <!-- ElevenLabs ConvAI browser SDK — pinned to @elevenlabs/client@1.14.0 -->
