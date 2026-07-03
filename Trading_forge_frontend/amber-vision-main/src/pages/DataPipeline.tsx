@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSymbols, useHealth, useSyncData } from "@/hooks/useData";
 import { useSSE } from "@/hooks/useSSE";
+import { QueryErrorBanner } from "@/components/forge/QueryErrorBanner";
 import { num, timeAgo } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -21,7 +22,7 @@ export default function DataPipeline() {
     "scheduler:pre-market-alert",
   ]);
 
-  const { data: symbols, isLoading: symbolsLoading } = useSymbols();
+  const { data: symbols, isLoading: symbolsLoading, isError: symbolsError } = useSymbols();
   const { data: health, isLoading: healthLoading, refetch: refetchHealth } = useHealth();
   const syncData = useSyncData();
 
@@ -170,7 +171,9 @@ export default function DataPipeline() {
           <Database className="w-4 h-4 text-primary" />
           Symbol Coverage
         </h2>
-        {symbolsLoading ? (
+        {symbolsError ? (
+          <QueryErrorBanner message="Market data status unavailable — backend unreachable" queryKey={["data"]} />
+        ) : symbolsLoading ? (
           <div className="flex items-center justify-center py-8 text-text-muted gap-2">
             <Loader2 className="w-4 h-4 animate-spin" />
             <span className="text-sm">Loading symbols...</span>

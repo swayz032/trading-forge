@@ -9,6 +9,7 @@ import { FlaskConical, TrendingUp, Calendar, Clock } from "lucide-react";
 import { useBacktests } from "@/hooks/useBacktests";
 import { useStrategies } from "@/hooks/useStrategies";
 import { useSSE } from "@/hooks/useSSE";
+import { QueryErrorBanner } from "@/components/forge/QueryErrorBanner";
 import { num, timeAgo, formatReturnPct } from "@/lib/utils";
 import type { Backtest, Strategy } from "@/types/api";
 
@@ -33,7 +34,7 @@ export default function Backtests() {
   const [timeframeFilter, setTimeframeFilter] = useState<string>("All");
   const [page, setPage] = useState(1);
 
-  const { data: backtests, isLoading } = useBacktests();
+  const { data: backtests, isLoading, isError } = useBacktests();
   const { data: strategies } = useStrategies();
 
   useSSE(["backtest:completed", "backtest:complete"]);
@@ -151,6 +152,14 @@ export default function Backtests() {
         </StatusBadge>
       ) },
   ];
+
+  if (isError) {
+    return (
+      <div className="space-y-6 max-w-[1400px]">
+        <QueryErrorBanner message="Backtests unavailable — backend unreachable" queryKey={["backtests"]} />
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

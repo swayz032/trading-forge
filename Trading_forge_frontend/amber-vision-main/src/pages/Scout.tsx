@@ -20,6 +20,7 @@ import { StatusBadge } from "@/components/forge/StatusBadge";
 import { ForgeScoreRing } from "@/components/forge/ForgeScoreRing";
 import { useScoutFunnel, useJournal } from "@/hooks/useJournal";
 import type { JournalFilters } from "@/hooks/useJournal";
+import { QueryErrorBanner } from "@/components/forge/QueryErrorBanner";
 import { num, timeAgo } from "@/lib/utils";
 
 /* ── Helpers ─────────────────────────────────────────────── */
@@ -93,7 +94,7 @@ export default function Scout() {
     offset: page * PAGE_SIZE,
   }), [page]);
 
-  const { data: rawEntries, isLoading: entriesLoading } = useJournal(filters);
+  const { data: rawEntries, isLoading: entriesLoading, isError: entriesError } = useJournal(filters);
 
   // Deduplicate by title_hash, apply source/confidence filters
   const scoutResults = useMemo(() => {
@@ -264,7 +265,9 @@ export default function Scout() {
           Scout Results
         </h2>
 
-        {isLoading ? (
+        {entriesError ? (
+          <QueryErrorBanner message="Scout data unavailable — backend unreachable" queryKey={["journal"]} />
+        ) : isLoading ? (
           <div className="flex items-center justify-center py-12 text-text-muted gap-2">
             <Loader2 className="w-4 h-4 animate-spin" />
             <span className="text-sm">Loading scout data...</span>
