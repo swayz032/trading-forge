@@ -28,8 +28,7 @@
     .kv-hero-art {
       display: block;
       width: 100%;
-      aspect-ratio: 16 / 5;
-      /* Drop the new banner render at this path (overwrite the file) to swap it in. */
+      aspect-ratio: 1983 / 793; /* matches the banner render — shows full, edge-to-edge, uncropped */
       background-image: url('/slumhouse/images/slumdawg-kitchen.png');
       background-size: cover;
       background-position: center;
@@ -173,7 +172,7 @@
     }
     @media (max-width: 640px) {
       .kv-hero { margin-bottom: 20px; }
-      .kv-hero-art { aspect-ratio: 16 / 6; }
+      .kv-hero-art { aspect-ratio: 1983 / 793; }
 
       .kv-section-label { font-size: 10px; margin-bottom: 12px; }
       .kv-pipeline { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 24px; }
