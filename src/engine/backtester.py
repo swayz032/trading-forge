@@ -215,6 +215,33 @@ def _dst_correct_et_hour(utc_dt) -> str:
     return f"{et_hour:02d}:{utc_dt.minute:02d}"
 
 
+def _et_time_ge_flatten(et_str: str, flatten_hour: int = 15, flatten_minute: int = 55) -> bool:
+    """True if the ET time embedded in `et_str` is >= flatten_hour:flatten_minute.
+
+    deepscan14 B1: replaces an exact-substring match (`"15:55" in et_str`) that never
+    fires for exec timeframes whose bar grid doesn't land on the :55 minute (15m/30m/1h/4h
+    grids run ...15:30, 15:45, 16:00 — the literal "15:55" substring never appears), which
+    silently skipped the 15:55 ET hard flatten on those timeframes. Mirrors the inequality
+    semantics of `_is_time_stop()` in `src/engine/exits/style_d_handler.py` — fires on the
+    FIRST bar at or after the flatten time, not only on an exact match.
+
+    Parses "HH:MM" via regex so it accepts both a bare "HH:MM" string and a full
+    datetime-string repr (e.g. "2026-01-15 15:55:00" or ISO "...T15:55:00-05:00").
+    """
+    if not et_str:
+        return False
+    import re as _re_module
+    m = _re_module.search(r"(\d{1,2}):(\d{2})", et_str)
+    if not m:
+        return False
+    try:
+        hh = int(m.group(1))
+        mm = int(m.group(2))
+    except ValueError:
+        return False
+    return (hh, mm) >= (flatten_hour, flatten_minute)
+
+
 def apply_eligibility_gate(
     entry_signals,
     exit_signals,
@@ -2884,7 +2911,7 @@ def _apply_dsl_stop_loss_and_time_stop(
         if ts_et_timestamps is not None:
             if i < len(ts_et_timestamps) and ts_et_timestamps[i] is not None:
                 et_str = str(ts_et_timestamps[i])
-                is_1555 = "15:55" in et_str
+                is_1555 = _et_time_ge_flatten(et_str)
             elif i < len(ts_et_timestamps):
                 raise ValueError(
                     f"H1: ts_et_timestamps was provided but bar {i} has None value. "
@@ -2892,7 +2919,7 @@ def _apply_dsl_stop_loss_and_time_stop(
                 )
             else:
                 # ts_et_timestamps shorter than signal array — defensive fallback
-                is_1555 = "15:55" in ts_str
+                is_1555 = _et_time_ge_flatten(ts_str)
         else:
             # Legacy path: ts_et not available.
             # FIX 6 (2026-06-22): Old code did `"15:55" in ts_str` on the raw UTC
@@ -2912,10 +2939,10 @@ def _apply_dsl_stop_loss_and_time_stop(
                     # Assume UTC for tz-naive timestamps from historical Parquet data
                     _utc_dt = _utc_dt.replace(tzinfo=_dt_module.timezone.utc)
                 _et_str_converted = _dst_correct_et_hour(_utc_dt)
-                _legacy_is_1555 = "15:55" in _et_str_converted
+                _legacy_is_1555 = _et_time_ge_flatten(_et_str_converted)
             except Exception:
                 # Non-ISO string (e.g. integer nanoseconds) — fall back to raw search
-                _legacy_is_1555 = "15:55" in ts_str
+                _legacy_is_1555 = _et_time_ge_flatten(ts_str)
             is_1555 = _legacy_is_1555
         if is_1555:
             if in_long:
@@ -3685,13 +3712,40 @@ def run_backtest(
     # Tradeify backtests to use the contract spec default instead of the $0.62
     # firm rate, making P&L wrong for that firm. The correct test is whether a
     # firm was specified at all — if no firm, use the contract spec default.
+    #
+    # deepscan14 B2: the E7.1 fix only closed the Tradeify (firm_key set) case.
+    # It left the no-firm case ambiguous: `BacktestRequest.commission_per_side`
+    # is a pydantic field with default 0.62, so an explicit `commission_per_side:
+    # 0.62` in the request JSON is byte-identical to "caller didn't set it" —
+    # both silently resolved to spec.default_commission. The clean fix is to
+    # change the field default to `Optional[float] = None` (src/engine/config.py,
+    # out of scope for this track), so the ambiguity disappears entirely at the
+    # schema level. Until that lands, use pydantic v2's `model_fields_set` to
+    # distinguish "key present in the request payload" from "key omitted, using
+    # the class default" WITHOUT touching config.py — `model_fields_set` is
+    # populated at `BacktestRequest.model_validate(config)` from the keys
+    # actually present in the parsed JSON, so an explicit `"commission_per_side":
+    # 0.62` in the payload is correctly NOT overridden, while an omitted key
+    # (defaulted to 0.62 by pydantic) is.
+    # KNOWN CARRY-FORWARD: walk_forward.py's run_walk_forward() reconstructs a
+    # fresh `_shared_req = BacktestRequest(..., commission_per_side=request.
+    # commission_per_side, ...)` per OOS window — that reconstruction always
+    # explicitly sets the field (it's a plain kwarg forward), so
+    # model_fields_set can't distinguish origin at that layer. This is a no-op
+    # in practice for the current MES/MNQ/MCL universe because
+    # spec.default_commission == 0.62 for all three (ContractSpec base default),
+    # so the "wrong" branch and the "right" branch produce the same commission
+    # value. It only diverges for ES/NQ/CL mini specs (default_commission=3.70),
+    # which are gated off entirely by TF_PHASE_5_ENABLED=false. Full closure
+    # requires the config.py schema-default change described above.
     commission = request.commission_per_side
     if request.firm_key and request.firm_key in FIRM_COMMISSIONS:
         commission = get_commission_per_side(request.firm_key, config.symbol)
-    elif request.firm_key is None and request.commission_per_side == 0.62:
+    elif request.firm_key is None and "commission_per_side" not in request.model_fields_set:
         # No firm specified and no explicit commission override — use contract spec default.
-        # Only apply when commission equals the pydantic field default (0.62) to avoid
-        # silently overriding an explicit commission_per_side value from the caller.
+        commission = spec.default_commission
+    # Safety net: commission must never be None at the P&L-math boundary.
+    if commission is None:
         commission = spec.default_commission
 
     # ─── Firm contract cap (Task 3.12) ────────────────────────
@@ -4302,7 +4356,9 @@ def run_backtest(
     # never called from run_backtest() — they fired in class-based paths only.
     # Fix: apply them here, just before the vectorbt call, so DSL backtests
     # honour CLAUDE.md §4:
-    #   E.3 — ATR stop ceiling (14pt MES / 40pt MNQ / 25-tick MCL)
+    #   E.3 — ATR stop ceiling (14pt MES / 62pt MNQ / 100-tick MCL, deepscan14 B3:
+    #         comment previously said 40pt MNQ / 25-tick MCL — stale since the Wave 1
+    #         2026-06-27 recalibration; live values come from _get_stop_ceiling_for_symbol())
     #   E.5 — 15:55 ET hard time-stop
     #   E.4 — 67% personal DLL halt + 95% force-close
     #
@@ -5892,7 +5948,11 @@ def run_class_backtest(
     start_date: str,
     end_date: str,
     slippage_ticks: float = 1.0,
-    commission_per_side: float = 0.62,
+    # deepscan14 B2: default changed 0.62 → None. This is a plain Python param
+    # (no pydantic layer), so None is an unambiguous "caller didn't pass a
+    # commission" sentinel — unlike the old 0.62 default, which was
+    # indistinguishable from an explicit `commission_per_side=0.62` call.
+    commission_per_side: Optional[float] = None,
     firm_key: Optional[str] = None,
     data: Optional[pl.DataFrame] = None,
     fixed_contracts: Optional[int] = None,
@@ -6078,10 +6138,20 @@ def run_class_backtest(
     # explicit Tradeify $0.62 fee because 0.62 happened to equal the parameter
     # default sentinel. Mirrors the run_backtest fix at line ~931 — only fall back
     # to the contract spec when no firm was specified.
+    # deepscan14 B2: the comment above overstated what the code actually did —
+    # this branch had NO `== 0.62` guard at all (`elif firm_key is None:`
+    # unconditionally), so it discarded ANY explicit commission_per_side
+    # whenever firm_key was unset, not just the 0.62 sentinel. Fixed by testing
+    # `commission_per_side is None` (the new unambiguous default) instead of
+    # testing `firm_key is None` alone.
     commission = commission_per_side
     if firm_key:
         commission = get_commission_per_side(firm_key, symbol)
-    elif firm_key is None:  # No firm specified — use contract spec default
+    elif firm_key is None and commission_per_side is None:
+        # No firm specified and no explicit commission override — use contract spec default.
+        commission = spec.default_commission
+    # Safety net: commission must never be None at the P&L-math boundary.
+    if commission is None:
         commission = spec.default_commission
 
     # ─── Firm contract cap ─────────────────────────────────────
@@ -7034,7 +7104,12 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                 start_date=config.get("start_date", "2010-01-01"),
                 end_date=config.get("end_date", "2030-12-31"),
                 slippage_ticks=config.get("slippage_ticks", 1.0),
-                commission_per_side=config.get("commission_per_side", 0.62),
+                # deepscan14 B2: omit the 0.62 fallback here — `.get()` with no
+                # default returns None when the key is absent, which now flows
+                # through as an unambiguous "not provided" sentinel into
+                # run_class_backtest()/run_walk_forward_class() (vs. an explicit
+                # commission_per_side value in the JSON, which is preserved).
+                commission_per_side=config.get("commission_per_side"),
                 firm_key=config.get("firm_key"),
                 embargo_bars=config.get("embargo_bars", 0),
             )
@@ -7103,7 +7178,12 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                 start_date=config.get("start_date", "2010-01-01"),
                 end_date=config.get("end_date", "2030-12-31"),
                 slippage_ticks=config.get("slippage_ticks", 1.0),
-                commission_per_side=config.get("commission_per_side", 0.62),
+                # deepscan14 B2: omit the 0.62 fallback here — `.get()` with no
+                # default returns None when the key is absent, which now flows
+                # through as an unambiguous "not provided" sentinel into
+                # run_class_backtest()/run_walk_forward_class() (vs. an explicit
+                # commission_per_side value in the JSON, which is preserved).
+                commission_per_side=config.get("commission_per_side"),
                 firm_key=config.get("firm_key"),
                 skip_eligibility_gate=False,
                 exit_engine=exit_engine,
@@ -7156,7 +7236,12 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                 start_date=config.get("start_date", "2010-01-01"),
                 end_date=config.get("end_date", "2030-12-31"),
                 slippage_ticks=config.get("slippage_ticks", 1.0),
-                commission_per_side=config.get("commission_per_side", 0.62),
+                # deepscan14 B2: omit the 0.62 fallback here — `.get()` with no
+                # default returns None when the key is absent, which now flows
+                # through as an unambiguous "not provided" sentinel into
+                # run_class_backtest()/run_walk_forward_class() (vs. an explicit
+                # commission_per_side value in the JSON, which is preserved).
+                commission_per_side=config.get("commission_per_side"),
                 firm_key=config.get("firm_key"),
                 embargo_bars=config.get("embargo_bars", 0),
             )
@@ -7166,7 +7251,12 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
                 start_date=config.get("start_date", "2010-01-01"),
                 end_date=config.get("end_date", "2030-12-31"),
                 slippage_ticks=config.get("slippage_ticks", 1.0),
-                commission_per_side=config.get("commission_per_side", 0.62),
+                # deepscan14 B2: omit the 0.62 fallback here — `.get()` with no
+                # default returns None when the key is absent, which now flows
+                # through as an unambiguous "not provided" sentinel into
+                # run_class_backtest()/run_walk_forward_class() (vs. an explicit
+                # commission_per_side value in the JSON, which is preserved).
+                commission_per_side=config.get("commission_per_side"),
                 firm_key=config.get("firm_key"),
                 skip_eligibility_gate=False,
                 exit_engine=exit_engine,

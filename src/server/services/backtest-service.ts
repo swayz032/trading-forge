@@ -403,10 +403,42 @@ interface RlTrainingResult {
 // killing runs that are genuinely completing.
 const BACKTEST_TIMEOUT_MS = 30 * 60 * 1000;
 
-export async function runBacktest(strategyId: string, config: BacktestConfig, strategyClass?: string, externalId?: string, correlationId?: string, actor: "operator" | "automated" = "automated") {
+export async function runBacktest(strategyId: string, config: BacktestConfig, strategyClass?: string, externalId?: string, correlationId?: string, actor: "operator" | "automated" = "automated", idempotencyKey?: string) {
   // FIX 4 (deepscan8): synthesize correlationId when caller omits it so every
   // audit row and trace span is attributable even for fire-and-forget callers.
   correlationId ??= `bt-auto-${Date.now()}-${randomUUID().slice(0, 8)}`;
+
+  // ─── deepscan14 E7: idempotency-key dedup ─────────────────────────────
+  // n8n retry / dual-fire previously enqueued a second full backtest row for
+  // the same logical request (bare random-UUID insert, no dedup key) —
+  // silently double-counting downstream MC/WFE/pattern-aggregator stats.
+  // Callers that supply idempotencyKey get short-circuited here to the
+  // existing row instead of starting a second run. Callers that don't
+  // supply one keep prior behavior unchanged.
+  if (idempotencyKey) {
+    const [existingByKey] = await db
+      .select({ id: backtests.id, status: backtests.status })
+      .from(backtests)
+      .where(eq(backtests.idempotencyKey, idempotencyKey))
+      .limit(1);
+    if (existingByKey) {
+      void insertAuditRowSafe({
+        action: "backtest.duplicate_enqueue_deduped",
+        entityType: "strategy",
+        entityId: strategyId,
+        status: "success",
+        input: { strategyId, idempotencyKey },
+        result: { existingBacktestId: existingByKey.id, existingStatus: existingByKey.status },
+        correlationId,
+        decisionAuthority: "system",
+      });
+      logger.info(
+        { fn: "runBacktest", strategyId, idempotencyKey, existingBacktestId: existingByKey.id },
+        "Duplicate backtest enqueue detected via idempotency_key — returning existing row instead of re-running",
+      );
+      return { id: existingByKey.id, status: existingByKey.status, deduped: true };
+    }
+  }
 
   // ─── Pipeline pause guard ─────────────────────────────────────
   // Pause stops the AUTOMATED engine (scout-fed flow, schedulers, n8n drains)
@@ -549,22 +581,73 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     throw err;
   }
 
-  const [row] = await db
-    .insert(backtests)
-    .values({
-      ...(externalId ? { id: externalId } : {}),
-      strategyId,
-      symbol: config.strategy.symbol,
-      timeframe: config.strategy.timeframe,
-      startDate: new Date(config.start_date),
-      endDate: new Date(config.end_date),
-      status: "running",
-      config: configRecord,
-      firmRulesVersion: firmRulesVersionStamp,
-      complianceMode: resolvedComplianceMode,
-      provenanceStamp: provenanceStampValue as unknown as Record<string, unknown>,
-    })
-    .returning();
+  // deepscan14 E7: race-safety net. The pre-check above closes the common case;
+  // this handles the narrow window where two near-simultaneous calls both pass
+  // the pre-check before either INSERT lands. onConflictDoNothing on the
+  // partial unique index means the loser's insert is a no-op instead of a
+  // thrown unique-violation; we then re-select the winner's row so both
+  // callers converge on the same backtest instead of creating a second.
+  //
+  // The insert chain is branched (not a single chain with a conditional
+  // .onConflictDoNothing(idempotencyKey ? {...} : undefined)) so that callers
+  // WITHOUT an idempotencyKey get the byte-identical pre-existing chain shape —
+  // several existing test suites mock `db.insert().values().returning()` and
+  // do not implement `.onConflictDoNothing()`, and calling it unconditionally
+  // (even with `undefined`) broke those mocks.
+  const insertValues = {
+    ...(externalId ? { id: externalId } : {}),
+    strategyId,
+    symbol: config.strategy.symbol,
+    timeframe: config.strategy.timeframe,
+    startDate: new Date(config.start_date),
+    endDate: new Date(config.end_date),
+    status: "running",
+    config: configRecord,
+    firmRulesVersion: firmRulesVersionStamp,
+    complianceMode: resolvedComplianceMode,
+    provenanceStamp: provenanceStampValue as unknown as Record<string, unknown>,
+    ...(idempotencyKey ? { idempotencyKey } : {}),
+  };
+
+  const insertedRows = idempotencyKey
+    ? await db
+        .insert(backtests)
+        .values(insertValues)
+        // The arbiter target must restate the partial index's predicate (Postgres
+        // requires an exact predicate match to infer a partial unique index for
+        // ON CONFLICT) — matches migration 0188's `WHERE idempotency_key IS NOT NULL`.
+        .onConflictDoNothing({ target: backtests.idempotencyKey, where: sql`idempotency_key IS NOT NULL` })
+        .returning()
+    : await db.insert(backtests).values(insertValues).returning();
+
+  let row = insertedRows[0];
+  if (!row && idempotencyKey) {
+    // Lost the race — another caller's insert won. Converge on their row.
+    const [winnerRow] = await db
+      .select()
+      .from(backtests)
+      .where(eq(backtests.idempotencyKey, idempotencyKey))
+      .limit(1);
+    if (!winnerRow) {
+      throw new Error(
+        `runBacktest: idempotencyKey ${idempotencyKey} conflicted on insert but no existing row was found`,
+      );
+    }
+    void insertAuditRowSafe({
+      action: "backtest.duplicate_enqueue_deduped",
+      entityType: "strategy",
+      entityId: strategyId,
+      status: "success",
+      input: { strategyId, idempotencyKey, race: true },
+      result: { existingBacktestId: winnerRow.id, existingStatus: winnerRow.status },
+      correlationId,
+      decisionAuthority: "system",
+    });
+    return { id: winnerRow.id, status: winnerRow.status, deduped: true };
+  }
+  if (!row) {
+    throw new Error("runBacktest: insert returned no row");
+  }
 
   // Log research-mode override at INSERT time so operators can audit which backtests
   // were run in shadow mode (potentially over-optimistic P&L estimates).

@@ -332,7 +332,11 @@ async function processSessionBar(sessionId: string, bar: Bar) {
   const exitBarContext = await buildExitBarContext(bar);
 
   try {
-    await updatePositionPrices(sessionId, priceMap, exitBarContext);
+    // deepscan14 E1: thread the per-bar correlationId through so bookPartialClose/
+    // TP1/TP2/stop/trail audit rows fired from this bar carry it — previously this
+    // call omitted the 4th arg, so updatePositionPrices defaulted to
+    // correlationId=null on every real-time bar (§2 90-day reconstruction gap).
+    await updatePositionPrices(sessionId, priceMap, exitBarContext, { correlationId });
   } catch (err) {
     logger.error({ err, sessionId, symbol: bar.symbol, correlationId }, "Failed to update position prices");
   }

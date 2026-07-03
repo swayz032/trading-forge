@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS strategies (
   tags                        TEXT[],
   search_budget_used          INTEGER,
   parent_strategy_id          UUID REFERENCES strategies(id) ON DELETE SET NULL,
+  lineage_root_id             UUID REFERENCES strategies(id) ON DELETE SET NULL,
   generation                  INTEGER NOT NULL DEFAULT 0,
   source                      TEXT,
   use_weighted_scoring        BOOLEAN DEFAULT FALSE,
@@ -148,8 +149,14 @@ CREATE TABLE IF NOT EXISTS backtests (
   provenance_stamp      JSONB,
   error_message         TEXT,
   execution_time_ms     INTEGER,
-  created_at            TIMESTAMPTZ DEFAULT NOW()
+  created_at            TIMESTAMPTZ DEFAULT NOW(),
+  idempotency_key       TEXT
 );
+
+-- deepscan14 E7: partial unique index — only enforced when a caller supplies a key.
+CREATE UNIQUE INDEX IF NOT EXISTS backtests_idempotency_key_uq
+  ON backtests (idempotency_key)
+  WHERE idempotency_key IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS monte_carlo_runs (
   id                    UUID PRIMARY KEY,

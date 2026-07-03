@@ -1421,10 +1421,36 @@ export async function openPosition(sessionId: string, params: {
                 );
                 await forceCloseAllPositions("dll_95_force_close");
               } catch (forceCloseErr) {
+                // deepscan14 F1: this is the SECOND force-close site (Python
+                // compliance-gate D6 path) — it was failing silently (bare logger.error,
+                // no Discord, no audit, no timeout) while kill-switch.ts:126-169
+                // (_confirmedForceClose, "Track M") already had the full CRITICAL
+                // escalation. Mirror that pattern here so both sites are equally safe.
+                // Distinct audit action (paper.force_flatten_d6_failed vs
+                // paper.force_flatten_kill_switch_failed) keeps the two sites queryable.
+                const forceCloseErrMsg = forceCloseErr instanceof Error ? forceCloseErr.message : String(forceCloseErr);
                 logger.error(
                   { sessionId, firmKey, err: forceCloseErr },
                   "CRITICAL: Kill switch (D6) forceCloseAllPositions threw — positions may remain open. Manual flatten required.",
                 );
+                AlertFactory.systemError(
+                  "paper-force-flatten-d6-failed",
+                  new Error(
+                    `forceCloseAllPositions failed: ${forceCloseErrMsg}. Reason: ${killResult.reason}. ` +
+                    `SessionId: ${sessionId}. CorrelationId: ${correlationId}. ` +
+                    `IMMEDIATE ACTION REQUIRED — manually close all open positions.`
+                  )
+                );
+                await insertAuditRowSafe({
+                  action: "paper.force_flatten_d6_failed",
+                  entityType: "paper_session",
+                  entityId: sessionId,
+                  decisionAuthority: "system",
+                  input: { sessionId, firmKey, reason: killResult.reason } as Record<string, unknown>,
+                  result: { error: forceCloseErrMsg, positions_may_be_open: true } as Record<string, unknown>,
+                  status: "error",
+                  correlationId,
+                });
               }
             }
 
@@ -4650,10 +4676,31 @@ export async function checkRollAndFlatten(
           const closeResult = await closePosition(pos.id, exitPrice, undefined, { correlationId: correlationId ?? undefined });
           pnlAtClose = closeResult.pnl;
         } catch (closeErr) {
+          // deepscan14 E3: roll-day flatten failure was silent (logger.error + a
+          // calendar_error result row only) — a position that MUST flatten before
+          // contract expiry can stay open through rollover with no operator signal.
+          // Mirror the kill-switch.ts force-flatten-failed pattern: audit + Discord.
+          const closeErrMsg = closeErr instanceof Error ? closeErr.message : String(closeErr);
           logger.error(
             { sessionId, positionId: pos.id, symbol: pos.symbol, err: closeErr },
             "Roll handler: closePosition failed — position NOT closed",
           );
+          notifyCritical(
+            "Roll-day flatten failed",
+            `closePosition failed for ${pos.symbol} (position ${pos.id}, session ${sessionId}) ahead of contract roll: ${closeErrMsg}. ` +
+            `Position may remain open through rollover — IMMEDIATE MANUAL REVIEW REQUIRED.`,
+            { sessionId, positionId: pos.id, symbol: pos.symbol, rollDate: info.roll_date, correlationId },
+          );
+          await insertAuditRowSafe({
+            action: "paper.roll_flatten_failed",
+            entityType: "paper_position",
+            entityId: pos.id,
+            decisionAuthority: "system",
+            input: { sessionId, symbol: pos.symbol, rollDate: info.roll_date, flattenDate: info.flatten_date } as Record<string, unknown>,
+            result: { error: closeErrMsg, position_may_still_be_open: true } as Record<string, unknown>,
+            status: "error",
+            correlationId,
+          });
           results.push({
             positionId: pos.id, symbol: pos.symbol, action: "calendar_error",
             daysToRoll: info.days_to_roll, rollDate: info.roll_date,

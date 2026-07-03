@@ -860,6 +860,13 @@ interface SignalLogEntry {
   fillMiss?: boolean;               // true when fill probability model rejected the order
 }
 
+// deepscan14 D2: rate-limit price-lock gate-inactive telemetry to once per
+// session per day (not per-signal). The gate is evaluated on every signal, but
+// "the settlement feed is missing" is a slow-moving fact — flooding audit_log
+// once per signal would bury the one row that matters. Keyed by sessionId,
+// value is the last UTC day-string (YYYY-MM-DD) telemetry fired for that session.
+const priceLockGateInactiveTelemetryLastFired = new Map<string, string>();
+
 // ─── Session Config Cache ───────────────────────────────────
 
 const sessionCache = new Map<string, CachedSession>();
@@ -3892,6 +3899,28 @@ export async function evaluateSignals(
     if (!priceLockBlocked) {
       const refSettlement = (indicators["prior_settlement"] ?? indicators["daily_reference"] ?? null) as number | null;
       const lock = checkPriceLockLimit(symbolToUnderlying(symbol), bar.close, refSettlement);
+
+      // deepscan14 D2: `lock.inactive` means "no settlement feed — nothing was
+      // checked", distinct from `lock.blocked=false` meaning "checked, price is
+      // clear." Surface it as rate-limited (once/session/day) telemetry so the
+      // operator can see the gate is dark instead of reading it as a clean pass.
+      if (lock.inactive) {
+        const todayKey = new Date().toISOString().slice(0, 10);
+        if (priceLockGateInactiveTelemetryLastFired.get(sessionId) !== todayKey) {
+          priceLockGateInactiveTelemetryLastFired.set(sessionId, todayKey);
+          insertAuditRow({
+            action: "price_lock.gate_inactive_no_feed",
+            entityType: "paper_session", entityId: sessionId, decisionAuthority: "system", status: "success",
+            input: { sessionId, symbol } as Record<string, unknown>,
+            result: { inactive: true, reason: lock.reason ?? "no_reference" } as Record<string, unknown>,
+            correlationId: correlationId ?? null,
+          }).catch((e: unknown) => {
+            logger.warn({ e, action: "price_lock.gate_inactive_no_feed" }, "audit write failed — non-blocking");
+            auditWriteFailuresTotal.labels({ action: "price_lock.gate_inactive_no_feed" }).inc();
+          });
+        }
+      }
+
       if (lock.blocked) {
         priceLockBlocked = true;
         span.setAttribute("price_lock_limit_blocked", true);

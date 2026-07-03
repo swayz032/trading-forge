@@ -122,6 +122,16 @@ export interface PaperJournalReconResult {
   strategiesWithMissingBrokerData: number;
   results: PaperReconStrategyResult[];
   hasDrift: boolean;
+  /**
+   * deepscan14 C1: true when `production_trades` (the broker-tape proxy this recon
+   * joins against) has NEVER been populated by any TradersPost ingest pipeline. When
+   * true, every `missingBrokerData` strategy result below reflects a STRUCTURAL gap
+   * (nothing to verify), not a per-day data miss — `hasDrift=false` in that state
+   * means "unverified", not "clean". See `paper_reconciliation.inactive_no_broker_tape`.
+   */
+  brokerTapeSourceActive: boolean;
+  /** Convenience flag: recon ran but produced no verification signal at all. */
+  reconciliationInactive: boolean;
   /** M10 sub-check summary counts */
   shadowSignalSubcheck: ShadowSignalReconResult;
   quantumReplaySubcheck: QuantumReplayReconResult;
@@ -682,6 +692,8 @@ export async function runPaperJournalRecon(
       strategiesWithMissingBrokerData: 0,
       results: [],
       hasDrift: true,
+      brokerTapeSourceActive: false,
+      reconciliationInactive: false,
       ...emptySubchecks,
     };
   }
@@ -712,9 +724,18 @@ export async function runPaperJournalRecon(
       strategiesWithMissingBrokerData: 0,
       results: [],
       hasDrift: false,
+      brokerTapeSourceActive: true,
+      reconciliationInactive: false,
       ...emptySubchecks,
     };
   }
+
+  // ── deepscan14 C1: is the broker-tape proxy (production_trades) populated at
+  // all, system-wide? This is checked ONCE per run (not per-strategy) — it answers
+  // "does any ingest pipeline write this table", distinct from "did THIS strategy
+  // have a broker fill today". Fail-loud: a DB error here is treated as inactive
+  // (conservative — never silently assume the tape is healthy on an error).
+  const brokerTapeSourceActive = await checkBrokerTapeSourceActive();
 
   // ── Per-strategy evaluation ───────────────────────────────────────────────
   const results: PaperReconStrategyResult[] = [];
@@ -764,7 +785,34 @@ export async function runPaperJournalRecon(
     }
 
     fireCriticalAlert(reconDateStr, mismatchedResults);
+  } else if (strategiesWithMissingBrokerData > 0 && !brokerTapeSourceActive) {
+    // deepscan14 C1: production_trades has NEVER been populated (checked once,
+    // system-wide, above) — every "missing broker data" result below is a
+    // STRUCTURAL gap, not a per-day miss. Writing the routine
+    // `missing_broker_data` warn here would read as "occasional data hiccup"
+    // when the truth is "this reconciliation has verified nothing, ever."
+    // ONE aggregated, unmistakably distinct audit row instead of N per-strategy
+    // warns — the point is honesty about scope, not alert volume.
+    const affected = results.filter((r) => r.missingBrokerData);
+    await writeAuditRow({
+      action: "paper_reconciliation.inactive_no_broker_tape",
+      status: "warning",
+      correlationId,
+      payload: {
+        reconDate: reconDateStr,
+        message:
+          "Paper<->broker reconciliation is INACTIVE, not clean: production_trades " +
+          "(the broker-tape proxy this recon joins against) has zero rows system-wide. " +
+          "No TradersPost fill ingest writes this table yet. Nothing was verified today " +
+          "for the affected strategies — do NOT read hasDrift=false as a passing check.",
+        affected_strategy_ids: affected.map((r) => r.strategyId),
+        affected_strategy_count: affected.length,
+        paper_trade_counts: affected.map((r) => ({ strategyId: r.strategyId, paperTradeCount: r.paperTradeCount })),
+      },
+    });
   } else if (strategiesWithMissingBrokerData > 0) {
+    // Broker tape source IS populated in general — these specific strategies/days
+    // just have no matching rows. A genuine per-day data gap, not a structural one.
     for (const r of results.filter((r) => r.missingBrokerData)) {
       await writeAuditRow({
         action: "paper_reconciliation.missing_broker_data",
@@ -781,6 +829,8 @@ export async function runPaperJournalRecon(
     }
   }
 
+  const reconciliationInactive = !brokerTapeSourceActive && strategiesWithMissingBrokerData > 0;
+
   // Always write the top-level evaluated row (includes all 4 sub-check summaries)
   await writeAuditRow({
     action: "paper_reconciliation.evaluated",
@@ -792,6 +842,8 @@ export async function runPaperJournalRecon(
       strategiesWithMismatch,
       strategiesWithMissingBrokerData,
       hasDrift,
+      broker_tape_source_active: brokerTapeSourceActive,
+      reconciliation_inactive: reconciliationInactive,
       subcheck_summary: {
         paper_journal: {
           strategiesEvaluated: deployedStrategies.length,
@@ -839,10 +891,34 @@ export async function runPaperJournalRecon(
     strategiesWithMissingBrokerData,
     results,
     hasDrift,
+    brokerTapeSourceActive,
+    reconciliationInactive,
     shadowSignalSubcheck,
     quantumReplaySubcheck,
     abRoutingSubcheck,
   };
+}
+
+/**
+ * deepscan14 C1: has any TradersPost fill-ingest pipeline ever written to
+ * `production_trades`? Checked ONCE per recon run (not per-strategy) — cheap
+ * global existence probe, not a per-day/per-strategy query. Fail-loud: a query
+ * error is treated as inactive (conservative default; never silently assume
+ * healthy).
+ */
+async function checkBrokerTapeSourceActive(): Promise<boolean> {
+  try {
+    // `.where(sql\`1=1\`)` (rather than `.limit(1)`) matches the from().where()
+    // query shape used by every other query in this file/its test mocks.
+    const rows = await db.select({ cnt: sql<string>`count(*)` }).from(productionTrades).where(sql`1=1`);
+    return Number(rows[0]?.cnt ?? 0) > 0;
+  } catch (err) {
+    logger.warn(
+      { err },
+      "paper-journal-recon: broker-tape-source-active check failed — treating as INACTIVE (fail-loud, not fail-open)"
+    );
+    return false;
+  }
 }
 
 // ─── Per-strategy evaluation ──────────────────────────────────────────────────

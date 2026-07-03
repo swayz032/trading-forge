@@ -525,7 +525,11 @@ router.post("/prices", async (req, res) => {
     if (!sessionId || !prices) {
       return res.status(400).json({ error: "sessionId, prices required" });
     }
-    const result = await updatePositionPrices(sessionId, prices);
+    // deepscan14 E2: this is the external-reachable twin of the E1 WS-bar drop —
+    // mint a correlationId when the caller doesn't supply one so exit-handler
+    // audit rows fired from this route aren't stuck at correlation_id:null.
+    const correlationId = req.body.correlationId ?? randomUUID();
+    const result = await updatePositionPrices(sessionId, prices, undefined, { correlationId });
     res.json(result);
   } catch (err: any) {
     res.status(500).json({ error: err.message });

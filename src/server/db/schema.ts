@@ -78,6 +78,14 @@ export const strategies = pgTable("strategies", {
   // applies the FOREIGN KEY constraint at the database level.
   parentStrategyId: uuid("parent_strategy_id")
     .references((): AnyPgColumn => strategies.id, { onDelete: "set null" }),
+  // deepscan14 H4: evolution's 7-day cooldown previously keyed on parentStrategyId
+  // (one generation up), so gen2→gen3 mutations bypassed it — their parent is gen1,
+  // not the gen0 lineage root. Stamped at every evolution INSERT going forward with
+  // the TRUE root of the chain; legacy pre-fix rows read as NULL and fall back to a
+  // live parent-chain walk in evolution-service.ts. Applied migration:
+  // 0188_backtests_idempotency_lineage_root.sql.
+  lineageRootId: uuid("lineage_root_id")
+    .references((): AnyPgColumn => strategies.id, { onDelete: "set null" }),
   // Track E F-2: generation is capped at MAX_GENERATIONS (3) in service code.
   // A DB CHECK constraint (generation >= 0 AND generation <= 3) is applied via
   // migration 0125b (Track B) to enforce the cap at the database layer.
@@ -225,6 +233,12 @@ export const backtests = pgTable(
     errorMessage: text("error_message"),
     executionTimeMs: integer("execution_time_ms"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    // deepscan14 E7: n8n retry / dual-fire has no way to detect "this backtest was
+    // already enqueued" — every insert is a bare random-UUID row, so a duplicate
+    // fire silently double-counts downstream MC/WFE/pattern-aggregator stats.
+    // NULL for callers that don't supply a key (no behavior change for them).
+    // Applied migration: 0188_backtests_idempotency_lineage_root.sql.
+    idempotencyKey: text("idempotency_key"),
   },
   (table) => [
     index("backtests_strategy_idx").on(table.strategyId),
@@ -232,6 +246,12 @@ export const backtests = pgTable(
     index("backtests_tier_idx").on(table.tier),
     index("backtests_strategy_status_idx").on(table.strategyId, table.status),
     index("backtests_strategy_tier_idx").on(table.strategyId, table.tier),
+    // Partial index: only enforced when caller supplies a key. Rows with NULL
+    // idempotencyKey are unaffected (Postgres treats NULLs as distinct anyway,
+    // but the explicit WHERE keeps intent obvious and matches the migration).
+    uniqueIndex("backtests_idempotency_key_uq")
+      .on(table.idempotencyKey)
+      .where(sql`idempotency_key IS NOT NULL`),
   ]
 );
 
