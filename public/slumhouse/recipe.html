@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Slumhouse · The Recipe</title>
   <link rel="stylesheet" href="/slumhouse/slumhouse.css">
+  <link rel="stylesheet" href="/slumhouse/progress-line.css">
   <link rel="icon" type="image/png" sizes="32x32" href="/slumhouse/icons/slumdawg-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/slumhouse/icons/slumdawg-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/slumhouse/icons/slumdawg-180.png">
@@ -595,6 +596,7 @@
   </div>
 
   <script src="/slumhouse/slumhouse.js"></script>
+  <script src="/slumhouse/progress-line.js"></script>
   <script>
     (async () => {
       const id = new URLSearchParams(location.search).get("id");
@@ -649,11 +651,19 @@
       grid.appendChild(renderMC(r));
       app.appendChild(grid);
 
+      // Strategy progress line — the gate journey, driven by real gate results.
+      const progress = el("div", { id: "r-progress" });
+      app.appendChild(progress);
+
       // Bottom: 3D multi-year calendar + Other tests
       const bot = el("div", { class: "r-bot" });
       bot.appendChild(renderCalendar(r));
       bot.appendChild(renderFeed(r));
       app.appendChild(bot);
+
+      if (r.gateJourney && window.renderProgressLine) {
+        renderProgressLine(document.getElementById("r-progress"), r.gateJourney, { dead: r.dead });
+      }
     }
 
     function renderBacktest(r) {

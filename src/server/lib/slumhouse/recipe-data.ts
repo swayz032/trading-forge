@@ -16,6 +16,7 @@ import { db } from "../../db/index.js";
 import { formatBag, lifecycleToStation, oddsOuttaHundred } from "./translate.js";
 import { getB14CiHighThreshold } from "../b14-ci-gate.js";
 import { getWfeHardFloor } from "../wfe-gate.js";
+import { resolveGateJourney, type Gate, type GateSignals } from "./gate-journey.js";
 
 export interface RecipeData {
   identity: { id: string; name: string; symbol: string; stationStreet: string; lifecycleState: string };
@@ -48,6 +49,8 @@ export interface RecipeData {
   };
   calendar: Array<{ date: string; pnl: number; trades: number }>;
   otherTests: Array<{ name: string; sentence: string; status: "pass" | "warn" | "fail" }>;
+  gateJourney: Gate[];
+  dead: boolean;
 }
 
 export async function assembleRecipeData(args: { strategyId: string }): Promise<RecipeData> {
@@ -235,6 +238,25 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
     },
   ];
 
+  // ── Strategy progress line (Slumhouse gate journey) ─────────────────────
+  // Derive the 7 boolean gate signals from the already-computed otherTests
+  // statuses + lifecycle, then resolve the 8-gate journey. `backtested` is
+  // true when the composite score is above zero OR a completed backtest row
+  // exists (same evidence the Backtest/Preseason panels read).
+  const testStatus = (name: string) => otherTests.find((t) => t.name === name)?.status;
+  const signals: GateSignals = {
+    backtested: slumdawgScore > 0 || Boolean(bt),
+    wfe_pass: testStatus("Surprise Test") === "pass",
+    frankenstein_pass: testStatus("Real or Lucky") === "pass",
+    blackswan_pass: testStatus("Worst Day Test") === "pass",
+    paper_done: testStatus("Preseason") === "pass",
+    shadow_pass: testStatus("Real-Time Match") === "pass",
+    compliance_pass: testStatus("Plays Clean") === "pass",
+  };
+  const lifecycleUpper = String(strat.lifecycle_state).toUpperCase();
+  const dead = lifecycleUpper === "GRAVEYARD" || lifecycleUpper === "DECLINING";
+  const gateJourney = resolveGateJourney({ lifecycleState: String(strat.lifecycle_state), signals });
+
   return {
     identity: {
       id: String(strat.id),
@@ -277,6 +299,8 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
     },
     calendar: dailyList,
     otherTests,
+    gateJourney,
+    dead,
   };
 }
 
