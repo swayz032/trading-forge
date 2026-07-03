@@ -1,11 +1,12 @@
 {
-  "generatedAt": "2026-07-02T21:57:55.611Z",
+  "generatedAt": "2026-07-03T23:04:00.000Z",
   "overallStatus": "blocked",
   "onlyTradingViewManualAtLaunch": true,
   "blockers": [
     "adaptive_exit_engine:manual_gate:operator_opt_in_per_strategy",
     "dd_velocity_gate:manual_gate:operator-only-recovery",
     "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
+    "fade_the_losers:manual_gate:operator_invoke_for_cohort_validation",
     "frozen_policy_contract:manual_gate:operator_hmac_override",
     "pattern_aggregator_service:manual_gate:kill_switch",
     "phase5_contract_spec_scaffold:manual_gate:operator-approve",
@@ -55,9 +56,9 @@
     "workflow-source-missing:Weekly_Strategy_Hunt_sAIrnCVB4iOsodsy"
   ],
   "subsystemCounts": {
-    "total": 71,
+    "total": 72,
     "ready": 47,
-    "blocked": 17,
+    "blocked": 18,
     "manualGated": 2,
     "experimental": 5
   },
@@ -523,6 +524,30 @@
         "src/engine/tests/test_adaptive_exits_python.py",
         "src/engine/tests/test_apply_trade_management_branching.py",
         "src/engine/tests/test_exit_engine_ab.py"
+      ]
+    },
+    {
+      "id": "fade_the_losers",
+      "status": "blocked",
+      "productionTargetState": "production_autonomous",
+      "manualGate": "operator_invoke_for_cohort_validation",
+      "selfEvolving": false,
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "deploymentAuthority": "operator_only",
+      "blockers": [
+        "manual_gate:operator_invoke_for_cohort_validation"
+      ],
+      "requiredEvidence": [
+        "audit_log.fade.*",
+        "audit_log.fade.candidate_created",
+        "fade.candidate_created",
+        "fade.skipped_already_faded",
+        "fade.skipped_degenerate_death",
+        "fade.skipped_insufficient_trades",
+        "fade.skipped_not_directional",
+        "SELECT * FROM audit_log WHERE action LIKE 'fade.%' ORDER BY created_at DESC LIMIT 20",
+        "SELECT id, name, source, lifecycle_state FROM strategies WHERE source = 'fade_the_losers' ORDER BY created_at DESC LIMIT 20"
       ]
     },
     {

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-02T21:57:55.611Z",
+  "generatedAt": "2026-07-03T23:04:00.000Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -21,7 +21,7 @@
     "canonicalWorkflows": 28,
     "engineSubsystems": 29,
     "databaseTables": 110,
-    "registrySubsystems": 71
+    "registrySubsystems": 72
   },
   "routes": [
     "/api/ab-comparison",
@@ -934,34 +934,34 @@
     "workflow_backups"
   ],
   "registryCoverage": {
-    "registryEntries": 71,
+    "registryEntries": 72,
     "autonomousSubsystems": 63,
     "selfEvolvingSubsystems": 9,
     "proofStatusCounts": {
-      "runtime-proven": 65,
+      "runtime-proven": 66,
       "partially-proven": 1,
       "offline-by-design": 0,
       "experimental": 5,
       "drifted": 0
     },
     "runtimeStateCounts": {
-      "active": 65,
+      "active": 66,
       "experimental": 5,
       "scaffold": 1
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
       "partially_active_preprod": 0,
-      "active_preprod": 66,
+      "active_preprod": 67,
       "experimental_preprod": 5
     },
     "launchTargetCounts": {
-      "runtime_proven_autonomous": 64,
+      "runtime_proven_autonomous": 65,
       "runtime_proven_manual_gate": 2,
       "experimental_challenger": 5
     },
     "closedLoopCounts": {
-      "not_collecting": 58,
+      "not_collecting": 59,
       "collecting_only": 0,
       "learning_active": 8,
       "learning_blocked": 0,
@@ -969,13 +969,13 @@
     },
     "learningModeCounts": {
       "active_learning": 7,
-      "deterministic_instrumented": 57,
+      "deterministic_instrumented": 58,
       "manual_gate_only": 2,
       "shadow_experimental": 5
     },
     "operatingClassCounts": {
       "adaptive": 7,
-      "deterministic_instrumented": 62,
+      "deterministic_instrumented": 63,
       "manual_gated": 2
     },
     "manualGates": [
@@ -1020,15 +1020,16 @@
     "preprodIntegrity": {
       "status": "incomplete",
       "automationComplete": 58,
-      "dataCollectionComplete": 71,
-      "auditabilityComplete": 71,
-      "failureVisibilityComplete": 71,
-      "authorityCorrect": 71,
+      "dataCollectionComplete": 72,
+      "auditabilityComplete": 72,
+      "failureVisibilityComplete": 72,
+      "authorityCorrect": 72,
       "learningActive": 8,
       "incompleteSubsystems": [
         "adaptive_exit_engine",
         "carter_voice_agent",
         "exit_engine_ab_harness",
+        "fade_the_losers",
         "phase5_contract_spec_scaffold",
         "slumhouse_frontend",
         "slumhouse_routes",
@@ -1039,7 +1040,7 @@
     "productionConvergence": {
       "status": "blocked",
       "targetStateCounts": {
-        "production_autonomous": 64,
+        "production_autonomous": 65,
         "production_manual_gate": 2,
         "production_experimental": 5,
         "production_not_intended": 0
@@ -1099,6 +1100,7 @@
         "adaptive_exit_engine",
         "dd_velocity_gate",
         "exit_engine_ab_harness",
+        "fade_the_losers",
         "frozen_policy_contract",
         "pattern_aggregator_service",
         "phase5_contract_spec_scaffold",
@@ -1162,6 +1164,7 @@
         "adaptive_exit_engine:manual_gate:operator_opt_in_per_strategy",
         "dd_velocity_gate:manual_gate:operator-only-recovery",
         "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
+        "fade_the_losers:manual_gate:operator_invoke_for_cohort_validation",
         "frozen_policy_contract:manual_gate:operator_hmac_override",
         "pattern_aggregator_service:manual_gate:kill_switch",
         "phase5_contract_spec_scaffold:manual_gate:operator-approve",
@@ -1219,6 +1222,7 @@
         "cloud_qmc_ising:experimental_governance",
         "dd_velocity_gate:manual_gate:operator-only-recovery",
         "exit_engine_ab_harness:manual_gate:operator_invoke_for_cohort_validation",
+        "fade_the_losers:manual_gate:operator_invoke_for_cohort_validation",
         "frozen_policy_contract:manual_gate:operator_hmac_override",
         "pattern_aggregator_service:manual_gate:kill_switch",
         "phase5_contract_spec_scaffold:manual_gate:operator-approve",
@@ -1276,6 +1280,7 @@
         "cloud_qmc_ising",
         "dd_velocity_gate",
         "exit_engine_ab_harness",
+        "fade_the_losers",
         "frozen_policy_contract",
         "pattern_aggregator_service",
         "phase5_contract_spec_scaffold",
@@ -3215,6 +3220,96 @@
           "src/engine/tests/test_apply_trade_management_branching.py",
           "src/engine/tests/test_adaptive_exits_python.py",
           "src/engine/tests/test_adaptive_exits_parity.py"
+        ],
+        "coverageGaps": []
+      },
+      {
+        "id": "fade_the_losers",
+        "domain": "research",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "manual_invoke",
+        "decisionAuthority": "gate",
+        "manualGate": "operator_invoke_for_cohort_validation",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "production",
+        "deploymentAuthority": "operator_only",
+        "criticality": "important",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [
+          "manual_gate:operator_invoke_for_cohort_validation"
+        ],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "runtime evidence persisted"
+        ],
+        "runtimeEvidence": [
+          "audit_log.fade.*",
+          "audit_log.fade.candidate_created",
+          "fade.candidate_created",
+          "fade.skipped_already_faded",
+          "fade.skipped_degenerate_death",
+          "fade.skipped_insufficient_trades",
+          "fade.skipped_not_directional"
+        ],
+        "dataCollectionCoverage": [
+          "audit_log",
+          "strategies",
+          "strategies.config",
+          "strategy_graveyard",
+          "strategy_graveyard.backtest_summary",
+          "strategy_graveyard.death_reason",
+          "strategy_graveyard.failure_modes",
+          "strategy_graveyard.searchable_metrics"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": false,
+        "automationStatus": "incomplete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [
+          "manual_gate:operator_invoke_for_cohort_validation"
+        ],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log.fade.*",
+          "audit_log.fade.candidate_created",
+          "fade.candidate_created",
+          "fade.skipped_already_faded",
+          "fade.skipped_degenerate_death",
+          "fade.skipped_insufficient_trades",
+          "fade.skipped_not_directional",
+          "SELECT * FROM audit_log WHERE action LIKE 'fade.%' ORDER BY created_at DESC LIMIT 20",
+          "SELECT id, name, source, lifecycle_state FROM strategies WHERE source = 'fade_the_losers' ORDER BY created_at DESC LIMIT 20"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [],
+        "schedulerJobs": [],
+        "healthCheck": "src/server/lib/__tests__/fade-inverter.test.ts + src/server/services/__tests__/fade-the-losers-service.test.ts",
+        "freshnessSignals": [
+          "audit_log.fade.candidate_created"
+        ],
+        "evidenceQueries": [
+          "SELECT id, name, source, lifecycle_state FROM strategies WHERE source = 'fade_the_losers' ORDER BY created_at DESC LIMIT 20",
+          "SELECT * FROM audit_log WHERE action LIKE 'fade.%' ORDER BY created_at DESC LIMIT 20"
         ],
         "coverageGaps": []
       },
@@ -10132,6 +10227,96 @@
         "src/engine/tests/test_apply_trade_management_branching.py",
         "src/engine/tests/test_adaptive_exits_python.py",
         "src/engine/tests/test_adaptive_exits_parity.py"
+      ],
+      "coverageGaps": []
+    },
+    {
+      "id": "fade_the_losers",
+      "domain": "research",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "manual_invoke",
+      "decisionAuthority": "gate",
+      "manualGate": "operator_invoke_for_cohort_validation",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "production",
+      "deploymentAuthority": "operator_only",
+      "criticality": "important",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [
+        "manual_gate:operator_invoke_for_cohort_validation"
+      ],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "runtime evidence persisted"
+      ],
+      "runtimeEvidence": [
+        "audit_log.fade.*",
+        "audit_log.fade.candidate_created",
+        "fade.candidate_created",
+        "fade.skipped_already_faded",
+        "fade.skipped_degenerate_death",
+        "fade.skipped_insufficient_trades",
+        "fade.skipped_not_directional"
+      ],
+      "dataCollectionCoverage": [
+        "audit_log",
+        "strategies",
+        "strategies.config",
+        "strategy_graveyard",
+        "strategy_graveyard.backtest_summary",
+        "strategy_graveyard.death_reason",
+        "strategy_graveyard.failure_modes",
+        "strategy_graveyard.searchable_metrics"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": false,
+      "automationStatus": "incomplete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [
+        "manual_gate:operator_invoke_for_cohort_validation"
+      ],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log.fade.*",
+        "audit_log.fade.candidate_created",
+        "fade.candidate_created",
+        "fade.skipped_already_faded",
+        "fade.skipped_degenerate_death",
+        "fade.skipped_insufficient_trades",
+        "fade.skipped_not_directional",
+        "SELECT * FROM audit_log WHERE action LIKE 'fade.%' ORDER BY created_at DESC LIMIT 20",
+        "SELECT id, name, source, lifecycle_state FROM strategies WHERE source = 'fade_the_losers' ORDER BY created_at DESC LIMIT 20"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [],
+      "schedulerJobs": [],
+      "healthCheck": "src/server/lib/__tests__/fade-inverter.test.ts + src/server/services/__tests__/fade-the-losers-service.test.ts",
+      "freshnessSignals": [
+        "audit_log.fade.candidate_created"
+      ],
+      "evidenceQueries": [
+        "SELECT id, name, source, lifecycle_state FROM strategies WHERE source = 'fade_the_losers' ORDER BY created_at DESC LIMIT 20",
+        "SELECT * FROM audit_log WHERE action LIKE 'fade.%' ORDER BY created_at DESC LIMIT 20"
       ],
       "coverageGaps": []
     },
