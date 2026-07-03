@@ -1,6 +1,16 @@
 {
  "video": "dHmOosYof48",
  "spec_hash": "9e6286f2a6c23477260aef5097c167fc6746a16c07c73b72b14773b9eed993c8",
+ "extraction_provenance": {
+  "extraction_pipeline_version": "compiler-v3-union-1.0",
+  "pipeline_commit": "dc8a150",
+  "prompt_sha256": "c75a2da8f5c473e8c1204788db7b9dcb5a972d9e141cf0c10544745618a47c0a",
+  "model": "gemma4:e4b-it-qat",
+  "model_digest": "ee665637121887cf3befff38",
+  "atomization": "2-pass-union",
+  "certified_gate": "6-video-46of46-2026-07-02",
+  "provenance_backfilled": true
+ },
  "graph_canonical_hash": "7fee0bf3960e83f4",
  "ledger_d": "CONSERVED",
  "transcript_chars": 33396,

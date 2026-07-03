@@ -1,0 +1,14 @@
+{
+ "certified_gate": "6-video-46of46-2026-07-02",
+ "relocked_at_commit": "9776b38",
+ "note": "Only --relock after a PASSING full gate re-run (2 golds + 6 audit videos). Never relock to silence a mismatch.",
+ "hashes": {
+  "scripts/atomize-transcript.ts": "44cd5e72597711cbfbbfb926b924e298ae246c084874ee544cd77fbdd70e55b1",
+  "src/server/lib/predicate-compression.ts": "b16520d23ffdd0a11554a7fb1b179dcd23c7696790b077ab7ea6735f8c2ac964",
+  "src/server/lib/graph-compiler.ts": "1ba803c710aa12f899d867356068dff60746896f54999237dba84427d5a8d55c",
+  "src/server/lib/graph-to-engine.ts": "5556529f81a881bd8f8a32558c61974cc0ded855b82f1d46f15a2302ca2d347c",
+  "src/server/lib/decision-atom.ts": "c5faba09e000461094c26535cc164571051c4ab019d010c5b6fc35946ae52868",
+  "src/server/lib/clause-segmenter.ts": "497ee84e52ff06a83a9fa402026545278efb07555152781fb8e2f4869ad7679f",
+  "<gate-prompt>": "c75a2da8f5c473e8c1204788db7b9dcb5a972d9e141cf0c10544745618a47c0a"
+ }
+}

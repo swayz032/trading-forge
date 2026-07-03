@@ -228,9 +228,26 @@ const FRAMEWORK_OBJ = /\b(risk|reward|stop|target|profit|size|sizing|position|lo
     const { createHash } = await import("crypto");
     const { writeFileSync } = await import("fs");
     const specJson = JSON.stringify(dD.spec);
+    // EXTRACTION PROVENANCE (2026-07-03, aligns with provenance-stamp.ts spec_provenance_ref chain):
+    // backtest rows stamp spec_provenance_ref -> this artifact -> this block -> verbatim spans. A model/prompt/
+    // pipeline change re-hashes here; specs from different corpus generations are queryably distinguishable.
+    const { execSync } = await import("child_process");
+    let pipelineCommit = "unknown";
+    try { pipelineCommit = execSync("git rev-parse --short HEAD", { encoding: "utf8" }).trim(); } catch { /* keep unknown */ }
+    const extractionProvenance = {
+      extraction_pipeline_version: "compiler-v3-union-1.0",
+      pipeline_commit: pipelineCommit,
+      prompt_sha256: createHash("sha256").update(PROMPT).digest("hex"),
+      model: process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4:e4b-it-qat",
+      model_digest: process.env.TF_EXTRACTOR_MODEL_DIGEST ?? "ee665637121887cf3befff38",
+      atomization: "2-pass-union",
+      certified_gate: "6-video-46of46-2026-07-02",
+      provenance_backfilled: false,
+    };
     const artifact = {
       video: VIDEO,
       spec_hash: createHash("sha256").update(specJson).digest("hex"),
+      extraction_provenance: extractionProvenance,
       graph_canonical_hash: canonicalHash(graph),
       ledger_d: dD.ok ? "CONSERVED" : "VIOLATED",
       transcript_chars: transcript.length,
