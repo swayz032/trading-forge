@@ -104,6 +104,9 @@ interface EffectiveOverlayConfig {
   roll_spread_itemized: boolean;
   // Wave 27.5 Pass D default — zero-volume trade critical fail loud
   zero_volume_trade_critical_fail_loud: boolean;
+  // Layer 4 Mode A/B toggle — overlay disabled = a DIFFERENT overlay regime;
+  // rows from Mode A and Mode B must never share a hash (E1 coordination finding)
+  confluence_overlay_disabled: boolean;
   // Framework overlay stop ceiling values per symbol (CLAUDE.md §4)
   stop_ceiling_pts_mes: number;
   stop_ceiling_pts_mnq: number;
@@ -141,6 +144,8 @@ function captureEffectiveOverlayConfig(): EffectiveOverlayConfig {
       "BACKTEST_ZERO_VOLUME_TRADE_CRITICAL_FAIL_LOUD",
       true,
     ),
+    // Mode A/B research toggle (default false = overlay ON = production Mode B)
+    confluence_overlay_disabled: envBool("TF_CONFLUENCE_OVERLAY_DISABLED", false),
     // Framework overlay stop ceilings (CLAUDE.md §4: 14pt MES / 62pt MNQ / 1.00pt MCL)
     stop_ceiling_pts_mes: envFloat("STOP_CEILING_PTS_MES", 14),
     stop_ceiling_pts_mnq: envFloat("STOP_CEILING_PTS_MNQ", 62),

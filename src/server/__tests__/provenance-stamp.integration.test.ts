@@ -311,6 +311,24 @@ describe("Provenance stamp — hash stability (overlay_config_hash)", () => {
     expect(hashOff).toHaveLength(64);
   });
 
+  it("flipping TF_CONFLUENCE_OVERLAY_DISABLED (Mode A/B toggle) produces a different hash", () => {
+    // E1 coordination finding (2026-07-02): the hash previously omitted the
+    // Mode A/B toggle, so overlay-on and overlay-off rows were indistinguishable.
+    for (const key of TRACKED_VARS) {
+      delete process.env[key];
+    }
+    delete process.env["TF_CONFLUENCE_OVERLAY_DISABLED"];
+
+    const hashModeB = computeOverlayConfigHash(); // default: overlay ON
+
+    process.env["TF_CONFLUENCE_OVERLAY_DISABLED"] = "true"; // Mode A
+    const hashModeA = computeOverlayConfigHash();
+    delete process.env["TF_CONFLUENCE_OVERLAY_DISABLED"];
+
+    expect(hashModeB).not.toBe(hashModeA);
+    expect(hashModeA).toHaveLength(64);
+  });
+
   it("changing compliance_mode produces a different hash", () => {
     for (const key of TRACKED_VARS) {
       delete process.env[key];
