@@ -60,7 +60,9 @@ export interface RecipeData {
 export async function assembleRecipeData(args: { strategyId: string }): Promise<RecipeData> {
   // 1. Strategy identity (required)
   const [strat] = (await db.execute(sql`
-    SELECT id::text AS id, name, symbol, lifecycle_state
+    SELECT id::text AS id, name, symbol, lifecycle_state,
+           config->'metadata'->>'source_url' AS meta_source_url,
+           config->'compiled_spec'->>'video' AS spec_video
     FROM strategies WHERE id = ${args.strategyId}::uuid LIMIT 1
   `).catch(() => [] as any[])) as any[];
 
@@ -316,16 +318,23 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
   const dead = lifecycleUpper === "GRAVEYARD" || lifecycleUpper === "DECLINING";
   const gateJourney = resolveGateJourney({ lifecycleState: String(strat.lifecycle_state), signals });
 
-  // Source video URL for the recipe YouTube button (prefer a YouTube link;
-  // fail-soft to null — the client falls back to a search when null).
+  // Source video URL for the recipe YouTube button. The current spec-onboarded
+  // library stores the real video URL in config.metadata.source_url — prefer that
+  // (117/117 coverage). Fall back to the bucket-based resolver (older bucket-
+  // graduated strategies), then null (client shows a search link).
   let youtubeUrl: string | null = null;
-  try {
-    const urls = await getStrategySourceUrl(String(strat.name));
-    if (Array.isArray(urls) && urls.length > 0) {
-      youtubeUrl = urls.find((u) => /youtube\.com|youtu\.be/i.test(String(u))) ?? urls[0];
+  const metaUrl = strat.meta_source_url ?? strat.spec_video ?? null;
+  if (typeof metaUrl === "string" && /^https?:\/\//.test(metaUrl)) {
+    youtubeUrl = metaUrl;
+  } else {
+    try {
+      const urls = await getStrategySourceUrl(String(strat.name));
+      if (Array.isArray(urls) && urls.length > 0) {
+        youtubeUrl = urls.find((u) => /youtube\.com|youtu\.be/i.test(String(u))) ?? urls[0];
+      }
+    } catch {
+      /* fail-soft — button falls back to a search link */
     }
-  } catch {
-    /* fail-soft — button falls back to a search link */
   }
 
   return {
