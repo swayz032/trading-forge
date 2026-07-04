@@ -273,7 +273,16 @@ def apply_eligibility_gate(
     from src.engine.context.structural_stops import compute_structural_stop
     from src.engine.context.structural_targets import compute_targets
 
-    gate_stats = {"total": 0, "take": 0, "reduce": 0, "skip": 0, "skip_reasons": {}, "skipped_signals": []}
+    # H5 fix (deep-scan #15, 2026-07-03): "structural_stop_map" captures, per
+    # admission bar, the STRUCTURAL stop distance that justified the signal
+    # passing the ceiling check below — so the trade-management loop can use
+    # the SAME stop instead of independently recomputing a fresh ATR-clamped
+    # distance. Keyed by int(bar_idx); always present (possibly empty) so
+    # callers can safely read it via gate_stats.get("structural_stop_map", {}).
+    gate_stats = {
+        "total": 0, "take": 0, "reduce": 0, "skip": 0, "skip_reasons": {}, "skipped_signals": [],
+        "structural_stop_map": {},
+    }
 
     # ABLATION TOGGLE (2026-06-30, #4 two-mode backtest reporting): when TF_CONFLUENCE_OVERLAY_DISABLED=true the
     # institutional confluence overlay (this 7-layer A+ eligibility gate) is OFF, so the backtest measures the PURE
@@ -433,6 +442,17 @@ def apply_eligibility_gate(
                 symbol=symbol,
                 max_stop_points=_get_stop_ceiling_for_symbol(symbol),
             )
+
+            # H5 fix (deep-scan #15, 2026-07-03): record the structural stop
+            # distance for this admission bar. Recorded regardless of the
+            # eventual TAKE/REDUCE/SKIP decision — cheap, and harmless for
+            # SKIPped signals since they never become a trade and are never
+            # looked up by the management loop.
+            gate_stats["structural_stop_map"][int(idx)] = {
+                "distance": abs(entry_price - stop_plan.stop_price),
+                "stop_price": stop_plan.stop_price,
+                "stop_reason": stop_plan.stop_reason,
+            }
 
             # Structural targets
             target_plan = compute_targets(
@@ -888,6 +908,7 @@ def _apply_naked_management(
     df,
     open_np: Optional[np.ndarray] = None,
     atr_stop_multiplier: float = 1.5,
+    structural_stop_map: dict | None = None,
 ) -> list[dict]:
     """Exit Policy A — 'naked': session-EOD time exit ONLY.
 
@@ -923,9 +944,20 @@ def _apply_naked_management(
         if original_exit_idx - entry_idx > MAX_HOLD_BARS:
             original_exit_idx = entry_idx + MAX_HOLD_BARS
 
+        is_short = "Short" in direction_str
         atr_at_entry = float(atr_np[entry_idx]) if entry_idx < len(atr_np) and not np.isnan(atr_np[entry_idx]) else 1.0
         _stop_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
-        risk_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+        _atr_fallback_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+        # H5 fix (deep-scan #15, 2026-07-03): prefer the structural admission
+        # stop over the ATR clamp (see _resolve_stop_risk_points docstring).
+        # Policy A never actually places a stop (time-exit only) — risk_points
+        # here is metadata/reporting only — but it must stay consistent with
+        # the other 4 sites for R:R comparability across exit-policy axes.
+        risk_points, stop_basis = _resolve_stop_risk_points(
+            entry_idx=entry_idx, is_short=is_short,
+            atr_fallback_points=_atr_fallback_points, stop_ceiling=_stop_ceiling,
+            structural_stop_map=structural_stop_map,
+        )
 
         exit_price = original_exit_p
         exit_idx = original_exit_idx
@@ -963,6 +995,7 @@ def _apply_naked_management(
             "size": size,
             "direction": direction_str,
             "risk_points": round(risk_points, 2),
+            "stop_basis": stop_basis,
             "exit_price": exit_price,
             "exit_idx": exit_idx,
             "exit_reason": exit_reason,
@@ -984,6 +1017,7 @@ def _apply_stop_only_management(
     df,
     open_np: Optional[np.ndarray] = None,
     atr_stop_multiplier: float = 1.5,
+    structural_stop_map: dict | None = None,
 ) -> list[dict]:
     """Exit Policy B — 'stop_only': initial stop loss + 15:55 ET time-stop.
 
@@ -1020,7 +1054,14 @@ def _apply_stop_only_management(
         is_short = "Short" in direction_str
         atr_at_entry = float(atr_np[entry_idx]) if entry_idx < len(atr_np) and not np.isnan(atr_np[entry_idx]) else 1.0
         _stop_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
-        risk_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+        _atr_fallback_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+        # H5 fix (deep-scan #15, 2026-07-03): use the structural admission stop
+        # (see _resolve_stop_risk_points docstring) instead of the raw ATR clamp.
+        risk_points, stop_basis = _resolve_stop_risk_points(
+            entry_idx=entry_idx, is_short=is_short,
+            atr_fallback_points=_atr_fallback_points, stop_ceiling=_stop_ceiling,
+            structural_stop_map=structural_stop_map,
+        )
 
         # Initial stop — FIXED for the whole trade (no trailing, no BE move)
         if is_short:
@@ -1094,6 +1135,7 @@ def _apply_stop_only_management(
             "size": size,
             "direction": direction_str,
             "risk_points": round(risk_points, 2),
+            "stop_basis": stop_basis,
             "exit_price": exit_price,
             "exit_idx": exit_idx,
             "exit_reason": exit_reason,
@@ -1120,8 +1162,18 @@ def _apply_trade_management(
     exit_engine: str = "static_styleC",
     adaptive_ctx=None,  # type: Optional[AdaptiveExitContext]
     exit_policy: str = "full_overlay",  # layer4-replay: "naked" | "stop_only" | "full_overlay"
+    structural_stop_map: dict | None = None,
 ) -> list[dict]:
     """Bar-by-bar trade management dispatcher.
+
+    structural_stop_map (H5 fix, deep-scan #15, 2026-07-03): optional
+    {"long": {bar_idx: {...}}, "short": {...}} built by the caller from
+    apply_eligibility_gate()'s gate_stats["structural_stop_map"]. When
+    provided (and BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED is not disabled),
+    every downstream management function resolves its per-trade risk_points
+    from the STRUCTURAL admission stop instead of independently recomputing
+    an ATR-clamped distance. None (default) preserves pre-fix behavior
+    exactly — see _resolve_stop_risk_points().
 
     Wave 25 Gap B: branches on exit_engine to route to either the static Style C
     path (existing, unchanged) or the new adaptive path (Python mirror of TS engine).
@@ -1153,12 +1205,14 @@ def _apply_trade_management(
             trades_records, high_np, low_np, close_np, atr_np,
             spec, df, open_np=open_np,
             atr_stop_multiplier=atr_stop_multiplier,
+            structural_stop_map=structural_stop_map,
         )
     if exit_policy == "stop_only":
         return _apply_stop_only_management(
             trades_records, high_np, low_np, close_np, atr_np,
             spec, df, open_np=open_np,
             atr_stop_multiplier=atr_stop_multiplier,
+            structural_stop_map=structural_stop_map,
         )
     # exit_policy="full_overlay" (default) — fall through to existing dispatch below
 
@@ -1168,6 +1222,7 @@ def _apply_trade_management(
             trades_records, high_np, low_np, close_np, atr_np,
             spec, df, adaptive_ctx, open_np=open_np,
             atr_stop_multiplier=atr_stop_multiplier,
+            structural_stop_map=structural_stop_map,
         )
 
     # Wave 1 Track 1A: extract liquidity snapshot for static TP2 mapping.
@@ -1186,6 +1241,7 @@ def _apply_trade_management(
         spec, htf_cache, df, open_np=open_np,
         atr_stop_multiplier=atr_stop_multiplier,
         liquidity_snapshot=_static_liq_snapshot,
+        structural_stop_map=structural_stop_map,
     )
 
 
@@ -1201,6 +1257,7 @@ def _apply_static_styleC_management(
     open_np: Optional[np.ndarray] = None,
     atr_stop_multiplier: float = 1.5,
     liquidity_snapshot: Optional[list] = None,  # Wave 1 Track 1A: intraday levels for TP2 mapping
+    structural_stop_map: dict | None = None,  # H5 fix (deep-scan #15, 2026-07-03)
 ) -> list[dict]:
     """Style C static trade management.
 
@@ -1290,7 +1347,16 @@ def _apply_static_styleC_management(
         # the management loop must match or MNQ trades get a noise-level 6pt stop (5m ATR ~30-80pt)
         # → every MNQ Style C/adaptive trade was stopped on noise. MES/MCL unchanged in practice.
         _stop_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
-        risk_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+        _atr_fallback_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+        # H5 fix (deep-scan #15, 2026-07-03): use the structural admission stop
+        # (the one that actually justified this trade passing the ceiling check
+        # in apply_eligibility_gate) instead of independently recomputing an
+        # ATR-clamped distance. See _resolve_stop_risk_points() docstring.
+        risk_points, stop_basis = _resolve_stop_risk_points(
+            entry_idx=entry_idx, is_short=is_short,
+            atr_fallback_points=_atr_fallback_points, stop_ceiling=_stop_ceiling,
+            structural_stop_map=structural_stop_map,
+        )
         # Min breathing room: 2pt for MES/ES (tick_size=0.25), scaled for other instruments
         tick = spec.tick_size if spec else 0.25
         min_trail = max(2.0, tick * 8)  # 8 ticks minimum breathing room
@@ -1485,6 +1551,7 @@ def _apply_static_styleC_management(
                 "size": size,
                 "direction": direction_str,
                 "risk_points": round(risk_points, 2),
+                "stop_basis": stop_basis,
                 "exit_price": final_exit_p,
                 "exit_idx": exit_idx_p,
                 "exit_reason": exit_reason_p,
@@ -1529,6 +1596,7 @@ def _apply_static_styleC_management(
             "size": size,
             "direction": direction_str,
             "risk_points": round(risk_points, 2),
+            "stop_basis": stop_basis,
         }
 
         # If no structural TP gives >= 2R, use original exit (no TP enforcement
@@ -1682,6 +1750,7 @@ def _apply_adaptive_management(
     adaptive_ctx,   # AdaptiveExitContext — required (caller already checked not None)
     open_np: Optional[np.ndarray] = None,
     atr_stop_multiplier: float = 1.5,
+    structural_stop_map: dict | None = None,  # H5 fix (deep-scan #15, 2026-07-03)
 ) -> list[dict]:
     """Adaptive exit management — Wave 25 Gap B Python implementation.
 
@@ -1796,7 +1865,14 @@ def _apply_adaptive_management(
         # the management loop must match or MNQ trades get a noise-level 6pt stop (5m ATR ~30-80pt)
         # → every MNQ Style C/adaptive trade was stopped on noise. MES/MCL unchanged in practice.
         _stop_ceiling = _get_stop_ceiling_for_symbol(_symbol_of_spec(spec))
-        risk_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+        _atr_fallback_points = min(_stop_ceiling, atr_at_entry * atr_stop_multiplier)
+        # H5 fix (deep-scan #15, 2026-07-03): use the structural admission stop
+        # instead of the raw ATR clamp. See _resolve_stop_risk_points() docstring.
+        risk_points, stop_basis = _resolve_stop_risk_points(
+            entry_idx=entry_idx, is_short=is_short,
+            atr_fallback_points=_atr_fallback_points, stop_ceiling=_stop_ceiling,
+            structural_stop_map=structural_stop_map,
+        )
         tick = spec.tick_size if spec else 0.25
 
         # Initial stop price
@@ -2000,6 +2076,7 @@ def _apply_adaptive_management(
             "size": size,
             "direction": direction_str,
             "risk_points": round(risk_points, 2),
+            "stop_basis": stop_basis,
             "exit_price": final_exit,
             "exit_idx": exit_idx,
             "exit_reason": exit_reason,
@@ -2766,6 +2843,82 @@ def _get_stop_ceiling_for_symbol(symbol: str) -> float:
         except ValueError:
             return default
     return default
+
+
+# ─── H5 fix — admission-stop parity (deep-scan #15, 2026-07-03) ─────────────
+# FINDING: apply_eligibility_gate() computes compute_structural_stop() per
+# signal (sweep_wick > order_block > FVG > swing_point, ceiling-checked) to
+# decide TAKE/REDUCE/SKIP — but historically discarded that stop_plan after the
+# decision. The trade-management loops (naked / stop_only / static Style C /
+# adaptive / R:R reporting) then independently recomputed
+# risk_points = min(ceiling, atr_at_entry * atr_stop_multiplier) — a DIFFERENT,
+# purely ATR-based stop the strategy's own risk model never validated. So the
+# simulated stop-out fired at a price admission never approved.
+#
+# FIX: apply_eligibility_gate() now threads its per-bar structural distance
+# forward via gate_stats["structural_stop_map"] (see above). Callers merge the
+# long/short maps into {"long": {...}, "short": {...}} and pass it to
+# _apply_trade_management() / the 4 management functions, which resolve their
+# risk_points via _resolve_stop_risk_points() below instead of the raw ATR
+# clamp. Byte-identical fallback preserved when the flag is off or no
+# structural entry exists for the trade's admission bar.
+def _structural_stop_parity_enabled() -> bool:
+    """Feature flag for the H5 admission-stop-parity fix.
+
+    Default ON (2026-07-03): the operator explicitly authorized re-baselining
+    all backtests for this fix. Set
+    BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED=false to restore the legacy
+    atr_at_entry * atr_stop_multiplier ceiling-clamp behavior byte-identically
+    (e.g. for A/B comparison or if a regression is suspected).
+    """
+    return os.environ.get("BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED", "true").lower() not in ("0", "false", "no")
+
+
+def _resolve_stop_risk_points(
+    entry_idx: int,
+    is_short: bool,
+    atr_fallback_points: float,
+    stop_ceiling: float,
+    structural_stop_map: dict | None,
+) -> tuple:
+    """Resolve the per-trade stop distance (risk_points) for trade management.
+
+    H5 fix (deep-scan #15, 2026-07-03). Prefers the STRUCTURAL admission stop
+    distance captured by apply_eligibility_gate() over the legacy
+    atr_at_entry * atr_stop_multiplier clamp, when available and enabled.
+
+    `structural_stop_map` is the {"long": {bar_idx: {...}}, "short": {...}}
+    dict built by callers from apply_eligibility_gate()'s gate_stats. Lookup
+    key is `entry_idx - 1` because vectorbt's "Entry Idx" is the FILL bar
+    (signal bar shifted +1 by the next-bar-fill np.roll(entries_np, 1)), while
+    apply_eligibility_gate recorded distances against the original SIGNAL bar.
+
+    The ceiling is still applied as a belt-and-suspenders hard cap even though
+    an admitted trade's structural distance is already <= ceiling by
+    construction (compute_structural_stop sets skip_trade=True and the gate
+    discards the signal otherwise) — never trust a second code path blindly.
+
+    Falls back to `atr_fallback_points` (byte-identical to pre-fix behavior)
+    when the flag is off, no map was threaded through (e.g. htf_cache
+    unavailable — the gate ran in passthrough mode), or the admission bar
+    genuinely has no recorded structural entry.
+
+    Returns (risk_points: float, stop_basis: str) with stop_basis in
+    {"structural", "atr_fallback"}.
+    """
+    if structural_stop_map and _structural_stop_parity_enabled():
+        direction_key = "short" if is_short else "long"
+        sub_map = (
+            structural_stop_map.get(direction_key)
+            if isinstance(structural_stop_map, dict) else None
+        )
+        if sub_map:
+            signal_bar_idx = entry_idx - 1
+            entry = sub_map.get(signal_bar_idx)
+            distance = entry.get("distance") if isinstance(entry, dict) else entry
+            if distance is not None and distance > 0:
+                return min(float(distance), stop_ceiling), "structural"
+    return atr_fallback_points, "atr_fallback"
 
 
 # ─── Wave 1 Track 1A — Stop floor per symbol ─────────────────────────────────
@@ -4162,8 +4315,12 @@ def run_backtest(
     # ─── Eligibility gate (Wave 2.8 integration point) ─────────
     entries_np = df["entry_long"].to_numpy()
     exits_np = df["exit_long"].to_numpy()
+    # H5 fix (deep-scan #15, 2026-07-03): merged {"long": {...}, "short": {...}}
+    # structural-stop-distance map threaded to _apply_trade_management() below
+    # so the management loop uses the SAME stop that justified admission.
+    _dsl_structural_stop_map: dict = {"long": {}, "short": {}}
     if use_eligibility_gate:
-        entries_np, exits_np, _ = apply_eligibility_gate(
+        entries_np, exits_np, _long_gate_stats = apply_eligibility_gate(
             entries_np, exits_np, df,
             direction="long", symbol=config.symbol,
             firm_key=request.firm_key,
@@ -4171,6 +4328,7 @@ def run_backtest(
             strategy_name=_dsl_strategy_name,
             passthrough_reason=_dsl_htf_passthrough_reason,  # FIX 2 (deep-scan #10)
         )
+        _dsl_structural_stop_map["long"] = _long_gate_stats.get("structural_stop_map", {})
         # Update DataFrame with filtered signals
         df = df.with_columns([
             pl.Series("entry_long", entries_np),
@@ -4180,7 +4338,7 @@ def run_backtest(
         if "entry_short" in df.columns:
             short_entries_np = df["entry_short"].to_numpy()
             short_exits_np = df["exit_short"].to_numpy()
-            short_entries_np, short_exits_np, _ = apply_eligibility_gate(
+            short_entries_np, short_exits_np, _short_gate_stats = apply_eligibility_gate(
                 short_entries_np, short_exits_np, df,
                 direction="short", symbol=config.symbol,
                 firm_key=request.firm_key,
@@ -4188,6 +4346,7 @@ def run_backtest(
                 strategy_name=_dsl_strategy_name,
                 passthrough_reason=_dsl_htf_passthrough_reason,  # FIX 2 (deep-scan #10)
             )
+            _dsl_structural_stop_map["short"] = _short_gate_stats.get("structural_stop_map", {})
             df = df.with_columns([
                 pl.Series("entry_short", short_entries_np),
                 pl.Series("exit_short", short_exits_np),
@@ -4713,6 +4872,7 @@ def run_backtest(
             vbt_managed_trades = _apply_trade_management(
                 trades_records, high_np, low_np, vbt_close_np, vbt_atr_np,
                 spec, _dsl_htf_cache, df, open_np=vbt_open_np,
+                structural_stop_map=_dsl_structural_stop_map,
             )
             vbt_gap_through_count = sum(m.get("gap_through_stop_count", 0) for m in vbt_managed_trades)
             if vbt_gap_through_count > 0:
@@ -4762,15 +4922,23 @@ def run_backtest(
 
             # C4: Use managed exit price (correct intraday stop/TP price) when
             # available; fall back to vectorbt's bar-close exit price otherwise.
+            # H5 fix (deep-scan #15, 2026-07-03): also carry forward the
+            # risk_points/stop_basis the management loop actually used, so the
+            # R:R computed below (site 5 of the H5 fix) can never diverge from
+            # the risk basis the trade was actually managed against.
             if trade_i < len(vbt_managed_trades):
                 mgmt = vbt_managed_trades[trade_i]
                 exit_p = mgmt["exit_price"]
                 exit_idx = mgmt["exit_idx"]
                 exit_reason = mgmt.get("exit_reason", "signal")
+                _mgmt_risk_points = mgmt.get("risk_points")
+                _mgmt_stop_basis = mgmt.get("stop_basis", "atr_fallback")
             else:
                 exit_p = float(row["Avg Exit Price"])
                 exit_idx = int(row["Exit Idx"]) if "Exit Idx" in row.index else min(entry_idx + 1, len(slippage_clean) - 1)
                 exit_reason = "signal"
+                _mgmt_risk_points = None
+                _mgmt_stop_basis = "atr_fallback"
 
             # H2 FIX: Real brokers charge per integer contract only.
             # Fractional sizes (e.g. 4.3) from risk-derived sizing must be floored
@@ -4877,14 +5045,26 @@ def run_backtest(
             trade["RollSpreadCost"] = round(_roll_cost_usd, 4)
 
             # ─── Per-trade R:R (reward / risk) ─────────────────────
-            # Risk = ATR at entry × atr_sl_mult × point_value (1R stop in $)
-            # L3 FIX: Read atr_multiplier from config instead of hardcoded 2.0.
-            # The W23-D R-multiple gate depends on this being correct.
-            atr_col_name = "atr_14"
-            atr_at_entry = float(df[atr_col_name][entry_idx]) if atr_col_name in df.columns and entry_idx < len(df) else 0.0
-            sl_mult = float(config.stop_loss.multiplier) if hasattr(config, "stop_loss") and config.stop_loss else 1.5  # L3 fix: use config multiplier, fall back to 1.5
-            # C4 FIX (deepscan5 2026-06-29): per-symbol ceiling, not flat 6.0pt (see mgmt loops above).
-            risk_points = min(atr_at_entry * sl_mult, _get_stop_ceiling_for_symbol(_symbol_of_spec(spec)))
+            # H5 fix (deep-scan #15, 2026-07-03): read the risk_points the
+            # management loop ACTUALLY used (captured above as _mgmt_risk_points)
+            # instead of independently recomputing atr_at_entry * sl_mult. This
+            # guarantees R:R reporting can never diverge from the stop basis the
+            # trade was actually managed against (structural or ATR-fallback —
+            # see _resolve_stop_risk_points()). Falls back to the legacy ATR
+            # recompute only when no managed-trade record exists for this trade
+            # (mirrors the exit_p/exit_idx/exit_reason fallback above).
+            if _mgmt_risk_points is not None:
+                risk_points = _mgmt_risk_points
+            else:
+                # Risk = ATR at entry × atr_sl_mult × point_value (1R stop in $)
+                # L3 FIX: Read atr_multiplier from config instead of hardcoded 2.0.
+                # The W23-D R-multiple gate depends on this being correct.
+                atr_col_name = "atr_14"
+                atr_at_entry = float(df[atr_col_name][entry_idx]) if atr_col_name in df.columns and entry_idx < len(df) else 0.0
+                sl_mult = float(config.stop_loss.multiplier) if hasattr(config, "stop_loss") and config.stop_loss else 1.5  # L3 fix: use config multiplier, fall back to 1.5
+                # C4 FIX (deepscan5 2026-06-29): per-symbol ceiling, not flat 6.0pt (see mgmt loops above).
+                risk_points = min(atr_at_entry * sl_mult, _get_stop_ceiling_for_symbol(_symbol_of_spec(spec)))
+            trade["stop_basis"] = _mgmt_stop_basis
             risk_dollars = risk_points * spec.point_value
             if risk_dollars > 0 and size > 0:
                 reward_dollars = net_pnl / size
@@ -6387,6 +6567,15 @@ def run_class_backtest(
             compliance_mode_override=_cls_compliance_mode,
         )
 
+    # H5 fix (deep-scan #15, 2026-07-03): merged {"long": {...}, "short": {...}}
+    # structural-stop-distance map threaded to _apply_trade_management() below.
+    # .get() defaults handle the skip_eligibility_gate branch's empty_stats dict
+    # (which has no "structural_stop_map" key) safely.
+    _cls_structural_stop_map: dict = {
+        "long": long_gate_stats.get("structural_stop_map", {}),
+        "short": short_gate_stats.get("structural_stop_map", {}),
+    }
+
     # Merge gate stats
     gate_stats = {
         "long": long_gate_stats,
@@ -6550,6 +6739,7 @@ def run_class_backtest(
             exit_engine=exit_engine,
             adaptive_ctx=adaptive_ctx,
             exit_policy=exit_policy,
+            structural_stop_map=_cls_structural_stop_map,
         )
         {m["exit_reason"] for m in managed_trades}
         tp_count = sum(1 for m in managed_trades if m["exit_reason"] == "take_profit")
@@ -6598,10 +6788,12 @@ def run_class_backtest(
                 exit_idx = mgmt["exit_idx"]
                 exit_reason = mgmt["exit_reason"]
                 risk_pts = mgmt["risk_points"]
+                _cls_stop_basis = mgmt.get("stop_basis", "atr_fallback")
             else:
                 exit_p = float(row["Avg Exit Price"])
                 exit_idx = int(row["Exit Idx"]) if "Exit Idx" in row.index else min(entry_idx + 1, len(slippage_clean) - 1)
                 exit_reason = "signal"
+                _cls_stop_basis = "atr_fallback"
                 # C4 + M2 FIX (deepscan5 2026-06-29): per-symbol ceiling (was flat 6.0pt) AND
                 # config stop multiplier _cls_stop_mult (was hardcoded 2.0, overstating risk 33%
                 # for the Slumdawg 1.5× default — understated R:R on the class path).
@@ -6704,6 +6896,7 @@ def run_class_backtest(
             else:
                 trade["rr"] = 0.0
             trade["risk_points"] = round(risk_pts, 2)
+            trade["stop_basis"] = _cls_stop_basis
 
             # ─── Per-trade MAE/MFE ($ excursion from entry) ───────
             try:
