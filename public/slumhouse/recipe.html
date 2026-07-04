@@ -23,10 +23,10 @@
     .r-hero {
       position: relative;
       background:
-        linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.88) 100%),
-        url('/slumhouse/images/slumdawg-command.png');
+        linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.86) 100%),
+        url('/slumhouse/images/slumdawg-kitchen.png');
       background-size: cover;
-      background-position: center 30%;
+      background-position: center 35%;
       border: 1px solid rgba(255, 255, 255, 0.06);
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.015), 0 12px 40px rgba(0, 0, 0, 0.6);
       border-radius: 18px;
@@ -452,6 +452,13 @@
     .r-feed-light.pass { background: var(--lime); box-shadow: 0 0 10px var(--lime); }
     .r-feed-light.warn { background: var(--warm); }
     .r-feed-light.fail { background: var(--red); }
+    .r-feed-light.wait { background: #2a2f2a; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
+    /* YouTube button (replaces the Slumdawg Score ring, top-right of the recipe hero) */
+    .r-yt { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; white-space: nowrap;
+      color: #fff; background: linear-gradient(180deg, #ff2f2f, #cc0000); padding: 11px 16px; border-radius: 12px;
+      font-size: 13px; font-weight: 800; box-shadow: 0 8px 22px rgba(200,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.25); transition: transform 0.15s, box-shadow 0.15s; }
+    .r-yt:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(200,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3); }
+    .r-yt svg { flex: 0 0 auto; }
     .r-feed-name { font-size: 12px; font-weight: 700; color: var(--ink); }
     .r-feed-desc { font-size: 11px; color: var(--dim); margin-top: 2px; line-height: 1.45; }
 
@@ -620,6 +627,14 @@
     const HISTORICAL_FIRST_YEAR = 2015;
     const HISTORICAL_LAST_YEAR = 2026;
 
+    // ── Premium title + gate-title map (mirrors kitchen.html) ──
+    function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+    var PREMIUM=[[/silver\s*bullet/i,"Silver Bullet"],[/opening\s*range|\borb\b|open(ing)?\s*(range\s*)?break|session\s*open/i,"Opening Heist"],[/mean\s*revers|rubber|revert/i,"The Rubber Band"],[/support|\bbounce\b|demand\s*zone|off\s*(a\s*)?level|level\s*bounce/i,"The Bounce"],[/resist|supply\s*zone|rejection|reject/i,"The Rejection"],[/break\s*out|breakout|range\s*break/i,"The Breakout"],[/squeeze|bollinger|keltner|coil|nr7/i,"Squeeze Play"],[/manipulat|\btrap\b|stop\s*hunt|sweep|liquidity\s*grab/i,"The Trap"],[/reversal|reverse|\bflip\b/i,"The Flip"],[/vwap|\bfade\b/i,"The Fade"],[/gap\s*(and|&)?\s*go|gap\s*fill|\bgap\b/i,"Gap & Go"],[/fvg|order\s*block|\bict\b|\bsmt\b|imbalance/i,"The Sweep"],[/trend|continuation|momentum|pullback|rider/i,"Trend Rider"],[/scalp/i,"Quick Bite"],[/\brsi\b|oversold|overbought|connors/i,"The Dip Snatch"],[/\bema\b|moving\s*average|\bsma\b|golden\s*cross|crossover/i,"The Crossover"]];
+    var FILLER={i:1,use:1,my:1,the:1,a:1,an:1,of:1,or:1,and:1,to:1,look:1,lets:1,"let's":1,minute:1,min:1,trade:1,strategy:1,setup:1,entry:1,overall:1,using:1,with:1,on:1,for:1,how:1};
+    function cleanName(name){var n=String(name||"").replace(/\s+(mes|mnq|mcl|es|nq|cl)\b/gi,"").replace(/\s+\d+\s*m(in)?\b/gi,"").replace(/\s+\d+\s*h\b/gi,"").replace(/\s+/g," ").trim();var w=n.split(" ").filter(Boolean);var k=w.filter(function(x){return !FILLER[x.toLowerCase()];});return ((k.length?k:w).slice(0,3).join(" ").trim())||"House Special";}
+    function premiumTitle(name){var n=String(name||"");for(var i=0;i<PREMIUM.length;i++){if(PREMIUM[i][0].test(n))return PREMIUM[i][1];}return cleanName(n);}
+    var GATE_TITLE={"Surprise Test":"Holds Up","Real or Lucky":"Real Edge","Worst Day Test":"Crash-Proof","Preseason":"Paper Trial","Real-Time Match":"Live Match","Plays Clean":"Rule-Safe","Sloppy Bot Test":"Handles Rough","Every Mood Test":"Every Market"};
+
     function render(r) {
       const { el } = SH;
       const app = document.getElementById("r-app");
@@ -630,7 +645,7 @@
       app.appendChild(el("div", { class: "r-hero" },
         el("div", { style: "min-width:0" },
           el("div", { class: "r-hero-name" },
-            r.identity.name,
+            premiumTitle(r.identity.name),
             el("span", { class: "r-hero-badge" }, "● " + r.identity.stationStreet),
           ),
           el("div", { class: "r-hero-caveat" },
@@ -639,10 +654,12 @@
             ". Numbers below are from backtest replay and Monte Carlo simulation."
           ),
         ),
-        el("div", { class: "r-hero-score" },
-          el("div", { class: "r-ring", style: ringStyle }, el("span", {}, String(r.slumdawgScore))),
-          el("div", { class: "r-ring-lbl" }, "Slumdawg Score"),
-        ),
+        (function () {
+          var yt = r.youtubeUrl || ("https://www.youtube.com/results?search_query=" + encodeURIComponent(cleanName(r.identity.name) + " trading strategy"));
+          var btn = el("a", { class: "r-yt", href: yt, target: "_blank", rel: "noopener", title: "Watch the video this play came from" });
+          btn.innerHTML = '<svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg><span>Watch the source</span>';
+          return btn;
+        })(),
       ));
 
       // 2-col: Backtest + Monte Carlo (both pitch-black glassy 3D)
@@ -651,19 +668,11 @@
       grid.appendChild(renderMC(r));
       app.appendChild(grid);
 
-      // Strategy progress line — the gate journey, driven by real gate results.
-      const progress = el("div", { id: "r-progress" });
-      app.appendChild(progress);
-
-      // Bottom: 3D multi-year calendar + Other tests
+      // Bottom: 3D multi-year calendar + gate tests
       const bot = el("div", { class: "r-bot" });
       bot.appendChild(renderCalendar(r));
       bot.appendChild(renderFeed(r));
       app.appendChild(bot);
-
-      if (r.gateJourney && window.renderProgressLine) {
-        renderProgressLine(document.getElementById("r-progress"), r.gateJourney, { dead: r.dead });
-      }
     }
 
     function renderBacktest(r) {
@@ -1103,16 +1112,21 @@
 
     function renderFeed(r) {
       const { el } = SH;
+      var untested = ((r.backtest && r.backtest.tradesCount) || 0) === 0 && (r.slumdawgScore || 0) === 0;
       const panel = el("div", { class: "r-panel" },
-        el("div", { class: "r-h" }, "Other Tests"),
-        el("div", { class: "r-cap" }, "Every other system this play had to pass. Green = passed, amber = warning, red = failed."),
+        el("div", { class: "r-h" }, "The Gates"),
+        el("div", { class: "r-cap" }, untested
+          ? "This play hasn't been cooked yet — every gate is still waiting on real results."
+          : "Every gate this play had to clear. Green = cleared, amber = warning, red = failed, grey = not run."),
       );
       for (const t of (r.otherTests || [])) {
+        var status = untested ? "wait" : t.status;
+        var desc = untested ? "Not run yet." : t.sentence;
         panel.appendChild(el("div", { class: "r-feed-row" },
-          el("div", { class: "r-feed-light " + t.status }),
+          el("div", { class: "r-feed-light " + status }),
           el("div", {},
-            el("div", { class: "r-feed-name" }, t.name),
-            el("div", { class: "r-feed-desc" }, t.sentence),
+            el("div", { class: "r-feed-name" }, GATE_TITLE[t.name] || t.name),
+            el("div", { class: "r-feed-desc" }, desc),
           ),
         ));
       }
