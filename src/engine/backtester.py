@@ -2865,13 +2865,16 @@ def _get_stop_ceiling_for_symbol(symbol: str) -> float:
 def _structural_stop_parity_enabled() -> bool:
     """Feature flag for the H5 admission-stop-parity fix.
 
-    Default ON (2026-07-03): the operator explicitly authorized re-baselining
-    all backtests for this fix. Set
-    BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED=false to restore the legacy
-    atr_at_entry * atr_stop_multiplier ceiling-clamp behavior byte-identically
-    (e.g. for A/B comparison or if a regression is suspected).
+    Default OFF (2026-07-03, operator decision): the fix is correct and shipped,
+    but flipping it ON re-baselines every backtest (old vs new numbers stop being
+    apples-to-apples). To avoid a surprising system-wide change, it defaults OFF —
+    backtests keep their legacy atr_at_entry * atr_stop_multiplier ceiling-clamp
+    behavior BYTE-IDENTICALLY until the operator opts in after reviewing the real
+    A/B magnitude on their own strategies. Set
+    BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED=true to activate the corrected
+    structural-stop management (and re-run backtests before comparing metrics).
     """
-    return os.environ.get("BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED", "true").lower() not in ("0", "false", "no")
+    return os.environ.get("BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED", "false").lower() in ("1", "true", "yes")
 
 
 def _resolve_stop_risk_points(

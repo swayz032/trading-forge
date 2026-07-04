@@ -70,10 +70,11 @@ def _make_records(entry_idx: int, exit_idx: int, entry_p: float = 4400.0,
 # ──────────────────────────────────────────────────────────────────────────────
 
 class TestResolveStopRiskPoints:
-    def test_prefers_structural_when_tighter_than_atr_fallback(self):
+    def test_prefers_structural_when_tighter_than_atr_fallback(self, monkeypatch):
         """Structural distance (5.0) < ATR-clamped fallback (14.0) → use structural."""
         from src.engine.backtester import _resolve_stop_risk_points
 
+        monkeypatch.setenv("BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED", "true")  # H5 default OFF → opt in
         risk_points, stop_basis = _resolve_stop_risk_points(
             entry_idx=1, is_short=False,
             atr_fallback_points=14.0, stop_ceiling=14.0,
@@ -84,7 +85,7 @@ class TestResolveStopRiskPoints:
         assert stop_basis == "structural"
         assert risk_points == pytest.approx(5.0)
 
-    def test_ceiling_still_caps_structural_distance(self):
+    def test_ceiling_still_caps_structural_distance(self, monkeypatch):
         """Belt-and-suspenders: even a structural distance > ceiling gets capped.
 
         Should never happen for a trade that actually passed apply_eligibility_gate
@@ -94,6 +95,7 @@ class TestResolveStopRiskPoints:
         """
         from src.engine.backtester import _resolve_stop_risk_points
 
+        monkeypatch.setenv("BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED", "true")  # H5 default OFF → opt in
         risk_points, stop_basis = _resolve_stop_risk_points(
             entry_idx=1, is_short=False,
             atr_fallback_points=14.0, stop_ceiling=14.0,
@@ -149,10 +151,11 @@ class TestResolveStopRiskPoints:
         assert stop_basis == "atr_fallback"
         assert risk_points == pytest.approx(14.0)
 
-    def test_short_side_reads_short_sub_map(self):
+    def test_short_side_reads_short_sub_map(self, monkeypatch):
         """is_short=True must read structural_stop_map['short'], not ['long']."""
         from src.engine.backtester import _resolve_stop_risk_points
 
+        monkeypatch.setenv("BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED", "true")  # H5 default OFF → opt in
         risk_points, stop_basis = _resolve_stop_risk_points(
             entry_idx=1, is_short=True,
             atr_fallback_points=14.0, stop_ceiling=14.0,
@@ -188,12 +191,13 @@ def _bar_arrays():
 
 
 class TestApplyTradeManagementStructuralStopParity:
-    def test_structural_stop_fires_tighter_than_atr_fallback(self):
+    def test_structural_stop_fires_tighter_than_atr_fallback(self, monkeypatch):
         """Structural distance (5.0pt) is used → stop fires at bar 2 (4395.0),
         NOT the legacy ATR-clamped 14.0pt stop which would never fire in this
         bar sequence (low never dips to 4386)."""
         from src.engine.backtester import _apply_trade_management
 
+        monkeypatch.setenv("BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED", "true")  # H5 default OFF → opt in
         open_np, high_np, low_np, close_np, atr_np, df = _bar_arrays()
         records = _make_records(entry_idx=1, exit_idx=4)
         spec = _make_spec()
