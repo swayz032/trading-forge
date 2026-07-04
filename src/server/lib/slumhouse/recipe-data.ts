@@ -51,6 +51,8 @@ export interface RecipeData {
   };
   calendar: Array<{ date: string; pnl: number; trades: number }>;
   otherTests: Array<{ name: string; sentence: string; status: "pass" | "warn" | "fail" }>;
+  // Per-gate metric detail — the left card switches to show one of these when a gate is clicked.
+  gateMetrics: Record<string, { what: string; value: string; threshold: string; verdict: "pass" | "warn" | "fail" }>;
   gateJourney: Gate[];
   dead: boolean;
 }
@@ -240,6 +242,61 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
     },
   ];
 
+  // Per-gate metric detail — the left card swaps to one of these on gate click.
+  const wfeFloor = getWfeHardFloor();
+  const hasB15 = extras?.b15_passed !== undefined || extras?.b15_status !== undefined;
+  const hasCompliance = extras?.compliance_pass_rate != null;
+  const gateMetrics: RecipeData["gateMetrics"] = {
+    "Surprise Test": {
+      what: "Walk-Forward Efficiency — how well it holds up on data it never trained on.",
+      value: wfe > 0 ? wfe.toFixed(2) : "Not run yet",
+      threshold: "needs ≥ " + wfeFloor.toFixed(2),
+      verdict: otherTests[0].status,
+    },
+    "Sloppy Bot Test": {
+      what: "Knocked every dial ±20% off — did the edge survive the jitter?",
+      value: hasB15 ? (b15Passed ? "Held together" : "Fell apart") : "Not run yet",
+      threshold: "SDR ≥ 0.85 · PSI ≤ 0.05 · RWS ≤ 0.20",
+      verdict: otherTests[1].status,
+    },
+    "Worst Day Test": {
+      what: "Ran it through the worst historical crashes to see if it blows up.",
+      value: ciHighRaw !== null ? "Ruin odds " + Math.round(ciHigh * 100) + "%" : "Not run yet",
+      threshold: "worst year " + formatBag(worstYear),
+      verdict: otherTests[2].status,
+    },
+    "Every Mood Test": {
+      what: "Played it in 5 market moods — trending, choppy, crashing, sleeping, wild.",
+      value: b10Pass === true ? "Won every one" : b10Pass === false ? "Cracked in some" : "Not run yet",
+      threshold: "must survive all 5 regimes",
+      verdict: otherTests[3].status,
+    },
+    "Real or Lucky": {
+      what: "Shuffled the wins to see if the edge was real or just a hot streak.",
+      value: frankPass === true ? "Real edge" : frankPass === false ? "Just luck" : "Not run yet",
+      threshold: "must beat the shuffle",
+      verdict: otherTests[4].status,
+    },
+    "Preseason": {
+      what: "30 days of fake money on the live market — did it actually make money?",
+      value: paperTotal !== 0 ? formatBag(paperTotal) : "Not run yet",
+      threshold: "must end green",
+      verdict: otherTests[5].status,
+    },
+    "Real-Time Match": {
+      what: "Compared its live-called shots against the tested signals.",
+      value: shadow ? (shadowDiv * 100).toFixed(1) + "% drift" : "Not run yet",
+      threshold: "needs < 5% drift",
+      verdict: otherTests[6].status,
+    },
+    "Plays Clean": {
+      what: "Checked every trade against the prop-firm rulebook.",
+      value: hasCompliance ? Math.round(compliancePassRate * 100) + "% clean" : "Not run yet",
+      threshold: "needs 100% clean",
+      verdict: otherTests[7].status,
+    },
+  };
+
   // ── Strategy progress line (Slumhouse gate journey) ─────────────────────
   // Derive the 7 boolean gate signals from the already-computed otherTests
   // statuses + lifecycle, then resolve the 8-gate journey. `backtested` is
@@ -314,6 +371,7 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
     },
     calendar: dailyList,
     otherTests,
+    gateMetrics,
     gateJourney,
     dead,
   };

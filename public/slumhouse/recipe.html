@@ -459,6 +459,16 @@
       font-size: 13px; font-weight: 800; box-shadow: 0 8px 22px rgba(200,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.25); transition: transform 0.15s, box-shadow 0.15s; }
     .r-yt:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(200,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3); }
     .r-yt svg { flex: 0 0 auto; }
+    /* Clickable gate rows + the swapped-in gate-metric card */
+    .r-feed-click { cursor: pointer; border-radius: 8px; margin: 0 -8px; padding-left: 8px; padding-right: 8px; transition: background 0.12s; }
+    .r-feed-click:hover { background: rgba(163,255,18,0.05); }
+    .r-gate-back { font-size: 12px; color: var(--lime); text-decoration: none; white-space: nowrap; }
+    .r-gate-back:hover { text-decoration: underline; }
+    .r-gate-big { font-size: 42px; font-weight: 800; letter-spacing: -0.02em; margin: 20px 0 6px; line-height: 1; color: var(--ink); }
+    .r-gate-big.green { color: var(--lime); } .r-gate-big.red { color: var(--red); } .r-gate-big.amber { color: var(--warm); }
+    .r-gate-thresh { font-size: 12px; color: var(--dim); }
+    .r-gate-verdict { display: inline-block; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 18px; padding: 6px 12px; border-radius: 9px; }
+    .r-gate-verdict.green { color: var(--lime); background: rgba(163,255,18,0.1); } .r-gate-verdict.red { color: var(--red); background: rgba(255,80,80,0.1); } .r-gate-verdict.amber { color: var(--warm); background: rgba(255,200,120,0.1); }
     .r-feed-name { font-size: 12px; font-weight: 700; color: var(--ink); }
     .r-feed-desc { font-size: 11px; color: var(--dim); margin-top: 2px; line-height: 1.45; }
 
@@ -662,9 +672,12 @@
         })(),
       ));
 
-      // 2-col: Backtest + Monte Carlo (both pitch-black glassy 3D)
+      // 2-col: [switchable metrics card] + Monte Carlo. The left card starts on
+      // Backtest and swaps to a gate's metrics when a gate is clicked.
       const grid = el("div", { class: "r-grid" });
-      grid.appendChild(renderBacktest(r));
+      const left = el("div", { id: "r-left" });
+      left.appendChild(renderBacktest(r));
+      grid.appendChild(left);
       grid.appendChild(renderMC(r));
       app.appendChild(grid);
 
@@ -1116,21 +1129,55 @@
       const panel = el("div", { class: "r-panel" },
         el("div", { class: "r-h" }, "The Gates"),
         el("div", { class: "r-cap" }, untested
-          ? "This play hasn't been cooked yet — every gate is still waiting on real results."
-          : "Every gate this play had to clear. Green = cleared, amber = warning, red = failed, grey = not run."),
+          ? "This play hasn't been cooked yet. Tap a gate to see its number in the panel on the left."
+          : "Every gate this play had to clear. Tap one to see its number in the panel on the left."),
       );
       for (const t of (r.otherTests || [])) {
         var status = untested ? "wait" : t.status;
         var desc = untested ? "Not run yet." : t.sentence;
-        panel.appendChild(el("div", { class: "r-feed-row" },
+        var row = el("div", { class: "r-feed-row r-feed-click" },
           el("div", { class: "r-feed-light " + status }),
           el("div", {},
             el("div", { class: "r-feed-name" }, GATE_TITLE[t.name] || t.name),
             el("div", { class: "r-feed-desc" }, desc),
           ),
-        ));
+        );
+        (function (name) { row.addEventListener("click", function () { switchLeftToGate(r, name); }); })(t.name);
+        panel.appendChild(row);
       }
       return panel;
+    }
+
+    function switchLeftToGate(r, name) {
+      const left = document.getElementById("r-left");
+      if (!left) return;
+      left.innerHTML = "";
+      left.appendChild(renderGateMetric(r, name));
+      left.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+    function switchLeftToBacktest(r) {
+      const left = document.getElementById("r-left");
+      if (!left) return;
+      left.innerHTML = "";
+      left.appendChild(renderBacktest(r));
+    }
+    function renderGateMetric(r, name) {
+      const { el } = SH;
+      var untested = ((r.backtest && r.backtest.tradesCount) || 0) === 0 && (r.slumdawgScore || 0) === 0;
+      var m = (r.gateMetrics && r.gateMetrics[name]) || { what: "", value: "Not run yet", threshold: "", verdict: "warn" };
+      var verdict = untested ? "warn" : m.verdict;
+      var value = untested ? "Not run yet" : m.value;
+      var vclass = verdict === "pass" ? "green" : verdict === "fail" ? "red" : "amber";
+      var vword = verdict === "pass" ? "Cleared ✓" : verdict === "fail" ? "Failed ✗" : "Not run yet";
+      var back = el("a", { href: "#", class: "r-gate-back" }, "‹ Backtest");
+      back.addEventListener("click", function (e) { e.preventDefault(); switchLeftToBacktest(r); });
+      return el("div", { class: "r-panel" },
+        el("div", { class: "r-head" }, el("div", { class: "r-h" }, GATE_TITLE[name] || name), back),
+        el("div", { class: "r-cap" }, m.what),
+        el("div", { class: "r-gate-big " + vclass }, value),
+        m.threshold ? el("div", { class: "r-gate-thresh" }, m.threshold) : null,
+        el("div", { class: "r-gate-verdict " + vclass }, vword),
+      );
     }
 
     // ─── Helpers ────────────────────────────────────────────────────
