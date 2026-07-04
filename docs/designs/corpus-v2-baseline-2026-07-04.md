@@ -55,6 +55,23 @@ so the condition-compiler could not bind enough executable logic → parked, not
 roadmap item; it is retained as a **regression benchmark**. Promote a future reader improvement
 ONLY if it correctly extracts `aHLIE_TXjpo` **without** regressing the other 39.
 
+## Reporting discipline (claim scoping — MANDATORY for every result)
+
+Tie every conclusion to the evidence; never overgeneralize. The baseline exists so claims stay
+falsifiable and reproducible.
+
+- **Correct:** *"Under Corpus v2, this validation battery, engine version `<v>`, and market-data
+  snapshot `<hash>`, N of M compiled strategies satisfied the current acceptance criteria."*
+- **Wrong:** *"X% of YouTube strategies work."* (untethered from corpus/battery/engine/data; overgeneralized).
+- **Uncertainty:** a `0/100` null result is *"≤ ~3.6% at 95% confidence,"* not *"exactly 0%."* Report
+  observed rate + confidence bound, never a point estimate as if it were the true rate.
+- Always name: corpus_version, battery/gate set, engine version, data snapshot hash. A result without
+  its scope is not a result.
+
+Noise-floor reference (this baseline): full-battery false-pass **0/100 nulls** (N=100, seed=42) —
+`docs/replay-results/null-calibration-corpus-v2-2026-07-04-report.json`. DSR/WRC/SPA/B14 each 0% on
+nulls; wf_cpcv (67%) + PBO (81%) permissive alone but AND-stacked to 0. Battery validated selective.
+
 ## Next (evidence generation — sequence)
 
 1. **Null-strategy calibration** — establish the battery's false-pass noise floor
