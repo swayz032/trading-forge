@@ -38,7 +38,7 @@ import { getEnabledFirms } from "./strategy-assignment-service.js";
 import { getFirmLimit, CONTRACT_CAP_MAX, getFirmAccount, CONTRACT_SPECS, DEFAULT_ACCOUNT_SIZE } from "../../shared/firm-config.js";
 // deep-scan #15 FIX M3: shared firm↔broker_type topology invariant (single source
 // of truth for the F-3 dispatch guard AND the insert/update-time guard).
-import { validateFirmBrokerTopology } from "../lib/firm-broker-topology.js";
+import { validateFirmBrokerTopology, normalizeFirmKey } from "../lib/firm-broker-topology.js";
 // deep-scan #15 FIX M5: route-level MFFU 2%-per-trade enforcement helpers.
 import { getStopCeilingPts } from "../lib/contract-class.js";
 import { CircuitBreakerRegistry, CircuitOpenError } from "../lib/circuit-breaker.js";
@@ -830,13 +830,18 @@ export async function routeOrder(
   //
   // This block closes that gap: it derives the intended max loss from the signal's
   // own risk geometry (quantity × stop-distance × point value) and enforces the
-  // firm's 2% rule against the firm's NOMINAL account size. Nominal size is the
-  // conservative basis — live funded equity is >= nominal, so a nominal-basis 2%
-  // ceiling is TIGHTER (never looser) than the live-balance ceiling. Only fires for
-  // entry actions on firms that carry the 2% rule (MFFU). Exits add no per-trade risk.
+  // firm's 2% rule against the firm's NOMINAL account size. Only fires for entry
+  // actions on firms that carry the 2% rule (MFFU). Exits add no per-trade risk.
+  //
+  // deepscan15 L2 note: nominal size is the conservative basis ONLY when live funded
+  // equity >= nominal. On a DRAWN-DOWN account (equity < nominal) a nominal-basis 2%
+  // ceiling UNDER-enforces relative to 2% of actual equity — live equity is not
+  // available at route time, so paper-execution-service (which has the live balance)
+  // remains the authoritative 2% enforcer; this route-level guard is a defense-in-depth
+  // upper bound, not the primary check.
   if (signal.action === "enter_long" || signal.action === "enter_short") {
     try {
-      const firmKey = account.firmId.toLowerCase().replace(/_\d+k$/, "");
+      const firmKey = normalizeFirmKey(account.firmId); // deepscan15 L4: shared helper (was inline regex)
       const acct = getFirmAccount(firmKey);
       const twoPctRule = acct?.twoPercentRulePct;
       const contracts = typeof signal.quantity === "number" ? signal.quantity : NaN;
@@ -934,6 +939,27 @@ export async function routeOrder(
         { err: twoPctErr, accountId, firmId: account.firmId, correlationId },
         "broker-router: route-level 2% check threw — proceeding (fail-open; paper-execution-service is primary)",
       );
+      // deepscan15 L2: a silently-skipped compliance check must be reconstructable —
+      // write an audit row like every other skip/decision in this file (log-only left
+      // the fail-open invisible to a post-incident audit_log trace).
+      await db.insert(auditLog).values({
+        action: "broker_router.two_percent_rule_check_error",
+        entityType: "broker_account",
+        entityId: null,
+        decisionAuthority: "system",
+        input: {
+          accountId,
+          firmId: account.firmId,
+          ticker: signal.ticker,
+          action: signal.action,
+          quantity: signal.quantity,
+        } as Record<string, unknown>,
+        result: { error: String(twoPctErr), failOpen: true, primaryEnforcer: "paper-execution-service" } as Record<string, unknown>,
+        status: "warn",
+        correlationId: correlationId ?? null,
+      }).catch((auditErr: unknown) => {
+        logger.error({ err: auditErr, accountId, correlationId }, "broker-router: two_percent_rule_check_error audit write failed (non-blocking)");
+      });
     }
   }
 

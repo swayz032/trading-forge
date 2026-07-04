@@ -2695,10 +2695,14 @@ export const brokerAccounts = pgTable(
     // normalized firm 'topstep' ⇒ broker_type 'topstepx' (never traderspost);
     // any other firm (e.g. 'mffu') ⇒ broker_type 'traderspost'. Enforces CLAUDE.md §7
     // at the DB level so a mis-seeded row can never be persisted.
+    // deepscan15 L3 NOTE: the RUNTIME constraint is applied NOT VALID by migration 0190
+    // (existing-row-safe); this declared check() has no NOT VALID equivalent in Drizzle,
+    // so a `drizzle-kit generate` diff may show a spurious re-add/validate — do NOT ship
+    // that; 0190 is the source of truth for this constraint's validation state.
     check(
       "broker_accounts_firm_broker_topology_chk",
-      sql`(lower(regexp_replace(${table.firmId}, '_[0-9]+k$', ''))  = 'topstep' AND ${table.brokerType} = 'topstepx')
-        OR (lower(regexp_replace(${table.firmId}, '_[0-9]+k$', '')) <> 'topstep' AND ${table.brokerType} = 'traderspost')`,
+      sql`(regexp_replace(lower(${table.firmId}), '_[0-9]+k$', '')  = 'topstep' AND ${table.brokerType} = 'topstepx')
+        OR (regexp_replace(lower(${table.firmId}), '_[0-9]+k$', '') <> 'topstep' AND ${table.brokerType} = 'traderspost')`,
     ),
   ],
 );

@@ -355,9 +355,9 @@ CREATE TABLE IF NOT EXISTS broker_accounts (
   dll_opted_in        BOOLEAN NOT NULL DEFAULT TRUE,
   created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT broker_accounts_firm_broker_topology_chk CHECK (
-    (lower(regexp_replace(firm_id, '_[0-9]+k$', ''))  = 'topstep' AND broker_type = 'topstepx')
+    (regexp_replace(lower(firm_id), '_[0-9]+k$', '')  = 'topstep' AND broker_type = 'topstepx')
     OR
-    (lower(regexp_replace(firm_id, '_[0-9]+k$', '')) <> 'topstep' AND broker_type = 'traderspost')
+    (regexp_replace(lower(firm_id), '_[0-9]+k$', '') <> 'topstep' AND broker_type = 'traderspost')
   )
 );
 `;

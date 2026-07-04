@@ -2340,6 +2340,19 @@ describe("FIX M3: broker_accounts firm↔broker_type topology CHECK constraint (
     ).resolves.toBeDefined();
   });
 
+  // deepscan15 L1: mixed-case tier suffix. Before the lower-first regex fix, the SQL
+  // CHECK stripped BEFORE lowercasing with a lowercase-only 'k', so 'Topstep_50K' did
+  // NOT normalize to 'topstep' → the DB would have WRONGLY rejected a valid topstepx row
+  // while the TS guard (lowercases first) accepted it. Now both agree.
+  it("ACCEPTS Topstep_50K + topstepx (case-insensitive normalize — L1 regression)", async () => {
+    await expect(
+      ctx.pg.query(
+        `INSERT INTO broker_accounts (firm_id, broker_type) VALUES ($1, $2)`,
+        ["Topstep_50K", "topstepx"],
+      ),
+    ).resolves.toBeDefined();
+  });
+
   it("ACCEPTS mffu + traderspost (valid topology)", async () => {
     await expect(
       ctx.pg.query(

@@ -722,10 +722,16 @@ export class LifecycleService {
         // inline here (manual PATCH path) and again in the cron sweep below —
         // mirroring the BIF gate's dual-call-site pattern (manual + cron parity).
         // Advisory-only while SLIPPAGE_SURVIVAL_GATE_ENABLED=false (default).
+        // deepscan15 F-1: capture the slippage evidence bucket in an outer-scoped var
+        // so the evidence-completeness governor below counts it on the MANUAL path too
+        // (the shared evaluatePaperToDeployReadyGates has no slippage dimension). Without
+        // this, a malformed slippage producer was INCOMPLETE in cron but invisible here.
+        let slippageEvidenceStatusP2D: string | null = null;
         {
           const slippageSurvivalResultP2D = evaluateSlippageSurvivalGate(
             (latestBtP2D?.slippageSurvival ?? null) as import("../lib/slippage-survival-gate.js").SlippageSurvivalDict | null,
           );
+          slippageEvidenceStatusP2D = slippageEvidenceBucket(slippageSurvivalResultP2D.status);
 
           await db.insert(auditLog).values({
             action: "slippage_survival.gate_evaluated",
@@ -890,8 +896,14 @@ export class LifecycleService {
         // Same ≥3 threshold, same lifecycle.promotion_evidence_incomplete audit action.
         // Runs AFTER the first-time freeze, mirroring the cron's gate ordering.
         {
-          const incompleteCount = gatePdrResult.incompleteGateCount ?? 0;
-          const evidenceStatuses = gatePdrResult.gateEvidenceStatuses ?? [];
+          // deepscan15 F-1: fold the inline slippage-survival evidence bucket into the
+          // manual-path count so cron+manual parity is REAL for the slippage dimension
+          // (was cron-only). A malformed slippage producer now counts INCOMPLETE here too.
+          const evidenceStatuses = [...(gatePdrResult.gateEvidenceStatuses ?? [])];
+          if (slippageEvidenceStatusP2D !== null) evidenceStatuses.push(slippageEvidenceStatusP2D);
+          const incompleteCount =
+            (gatePdrResult.incompleteGateCount ?? 0) +
+            (slippageEvidenceStatusP2D !== null && isIncompleteEvidenceStatus(slippageEvidenceStatusP2D) ? 1 : 0);
           if (incompleteCount >= 3) {
             logger.warn(
               { strategyId: id, incompleteCount, gateEvidenceStatuses: evidenceStatuses, transition: "PAPER→DEPLOY_READY" },
