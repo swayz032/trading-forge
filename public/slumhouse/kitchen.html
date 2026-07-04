@@ -28,7 +28,7 @@
     .kv-hero-art {
       display: block;
       width: 100%;
-      height: 230px;               /* less tall, but full-width edge-to-edge (no side bars) */
+      height: 340px;               /* taller so more of the full image shows, still full-width */
       background-image: url('/slumhouse/images/slumdawg-kitchen.png');
       background-size: cover;      /* spans the full page width; trims a little top/bottom */
       background-position: center;
@@ -248,6 +248,8 @@
     .kv-mitem .tag { font-size: 15px; color: rgba(255,200,120,0.6); white-space: nowrap; }
     .kv-mitem:hover .nm { color: #eaffcf; text-shadow: 0 0 16px rgba(163,255,18,0.5); }
     .kv-mitem:hover .tag { color: #ffce5c; }
+    .kv-recipe { font-family: 'Caveat', 'Brush Script MT', cursive; font-size: 15px; color: rgba(163,255,18,0.85); text-decoration: none; white-space: nowrap; padding: 3px 13px; margin-left: 6px; border: 1.5px dashed rgba(163,255,18,0.42); border-radius: 10px; transition: all 0.15s; }
+    .kv-recipe:hover { color: #0a0d0a; background: var(--lime); border-color: var(--lime); text-shadow: none; }
     .kv-pages { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 20px; font-family: 'Caveat', 'Brush Script MT', cursive; }
     .kv-pg-btn { cursor: pointer; font-size: 20px; color: rgba(245,255,230,0.78); padding: 3px 14px; border: 1.5px dashed rgba(163,255,18,0.4); border-radius: 10px; user-select: none; }
     .kv-pg-btn:hover { color: #eaffcf; border-color: rgba(163,255,18,0.7); }
@@ -260,7 +262,7 @@
     }
     @media (max-width: 640px) {
       .kv-hero { margin-bottom: 20px; }
-      .kv-hero-art { height: 130px; }
+      .kv-hero-art { height: 190px; }
 
       .kv-section-label { font-size: 10px; margin-bottom: 12px; }
       .kv-pipeline { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 24px; }
@@ -643,11 +645,19 @@
         var itemsHtml = items.map(function (fam, idx) {
           var n = fam.variants.length;
           var right = n > 1 ? (n + " cuts") : esc(fam.champion.tag || "");
-          return '<a class="kv-mitem" href="#" data-i="' + (start + idx) + '"><span class="n">' + String(start + idx + 1).padStart(2, "0") + '</span><span class="nm">' + esc(fam.title) + '</span><span class="dots"></span><span class="tag">' + right + '</span></a>';
+          var rid = encodeURIComponent(fam.champion.id || "");
+          return '<div class="kv-mitem" data-i="' + (start + idx) + '">' +
+            '<span class="n">' + String(start + idx + 1).padStart(2, "0") + '</span>' +
+            '<span class="nm">' + esc(fam.title) + '</span>' +
+            '<span class="dots"></span>' +
+            '<span class="tag">' + right + '</span>' +
+            '<a class="kv-recipe" href="/slumhouse/recipe.html?id=' + rid + '">recipe →</a>' +
+            '</div>';
         }).join("");
         var pagesHtml = totalPages > 1 ? ('<div class="kv-pages"><span class="kv-pg-btn' + (ps.page === 0 ? " off" : "") + '" data-pg="-1">‹ prev</span><span class="kv-pg-lbl">Page ' + (ps.page + 1) + ' / ' + totalPages + '</span><span class="kv-pg-btn' + (ps.page >= totalPages - 1 ? " off" : "") + '" data-pg="1">next ›</span></div>') : "";
         rows.innerHTML = '<div class="kv-board"><div class="kv-board-title">' + esc(ps.title || "The Menu") + '</div><div class="kv-board-rule"></div>' + itemsHtml + '</div>' + pagesHtml;
-        rows.querySelectorAll(".kv-mitem").forEach(function (a) { a.addEventListener("click", function (e) { e.preventDefault(); plate(ps.list[+a.getAttribute("data-i")].champion); }); });
+        rows.querySelectorAll(".kv-mitem").forEach(function (row) { row.addEventListener("click", function () { plate(ps.list[+row.getAttribute("data-i")].champion); }); });
+        rows.querySelectorAll(".kv-recipe").forEach(function (link) { link.addEventListener("click", function (e) { e.stopPropagation(); }); });
         rows.querySelectorAll(".kv-pg-btn").forEach(function (b) { b.addEventListener("click", function () { ps.page += (+b.getAttribute("data-pg")); renderBoardPage(); document.getElementById("kv-menu-tabs").scrollIntoView({ behavior: "smooth", block: "nearest" }); }); });
       }
       function renderDishes(list) {
