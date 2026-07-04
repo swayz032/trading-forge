@@ -52,6 +52,35 @@ describe("playbook-registration-backfill — classifyStrategyForBackfill", () =>
     expect(result.proposedCategory).toBe("CONTINUATION_STRATS"); // no archetype -> documented default
   });
 
+  it("EXCLUDES a retired GRAVEYARD strategy from registration (unresolvable + reason, never registered)", () => {
+    const row: StrategyRowForBackfill = {
+      id: "gy-1",
+      name: "old_thin_extraction_mes_5m",
+      symbol: "MES",
+      source: "graduated_bucket",
+      lifecycleState: "GRAVEYARD",
+      config: {},
+    };
+    const result = classifyStrategyForBackfill(row, registered);
+    expect(result.status).toBe("unresolvable");
+    expect(result.reason).toBe("retired_graveyard_excluded_from_registration");
+  });
+
+  it("GRAVEYARD exclusion takes precedence even if the name is in the roster (retired never re-enters research)", () => {
+    const rosterWithGraveyard = new Set([...registered, "old_thin_extraction"]);
+    const row: StrategyRowForBackfill = {
+      id: "gy-2",
+      name: "old_thin_extraction",
+      symbol: "MES",
+      source: "graduated_bucket",
+      lifecycleState: "GRAVEYARD",
+      config: {},
+    };
+    const result = classifyStrategyForBackfill(row, rosterWithGraveyard);
+    expect(result.status).toBe("unresolvable");
+    expect(result.reason).toBe("retired_graveyard_excluded_from_registration");
+  });
+
   it("derives archetypeKey from config.strategy.entry_indicator = 'archetype:X' and proposes the matching category", () => {
     const row: StrategyRowForBackfill = {
       id: "3",
