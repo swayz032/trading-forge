@@ -469,6 +469,13 @@
     .r-gate-thresh { font-size: 12px; color: var(--dim); }
     .r-gate-verdict { display: inline-block; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 18px; padding: 6px 12px; border-radius: 9px; }
     .r-gate-verdict.green { color: var(--lime); background: rgba(163,255,18,0.1); } .r-gate-verdict.red { color: var(--red); background: rgba(255,80,80,0.1); } .r-gate-verdict.amber { color: var(--warm); background: rgba(255,200,120,0.1); }
+    /* Left card stretches to Monte Carlo's height; gate card fills it premium-style */
+    .r-grid { align-items: stretch; }
+    #r-left { display: flex; flex-direction: column; }
+    #r-left > .r-panel { flex: 1; display: flex; flex-direction: column; }
+    .r-gate-body { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 10px; padding: 12px 0; }
+    .r-gate-big { font-size: 56px; margin: 0; }
+    .r-gate-sentence { font-size: 13.5px; color: var(--dim); line-height: 1.65; margin-top: 10px; max-width: 92%; }
     .r-feed-name { font-size: 12px; font-weight: 700; color: var(--ink); }
     .r-feed-desc { font-size: 11px; color: var(--dim); margin-top: 2px; line-height: 1.45; }
 
@@ -641,8 +648,8 @@
     function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
     var PREMIUM=[[/silver\s*bullet/i,"Silver Bullet"],[/opening\s*range|\borb\b|open(ing)?\s*(range\s*)?break|session\s*open/i,"Opening Heist"],[/mean\s*revers|rubber|revert/i,"The Rubber Band"],[/support|\bbounce\b|demand\s*zone|off\s*(a\s*)?level|level\s*bounce/i,"The Bounce"],[/resist|supply\s*zone|rejection|reject/i,"The Rejection"],[/break\s*out|breakout|range\s*break/i,"The Breakout"],[/squeeze|bollinger|keltner|coil|nr7/i,"Squeeze Play"],[/manipulat|\btrap\b|stop\s*hunt|sweep|liquidity\s*grab/i,"The Trap"],[/reversal|reverse|\bflip\b/i,"The Flip"],[/vwap|\bfade\b/i,"The Fade"],[/gap\s*(and|&)?\s*go|gap\s*fill|\bgap\b/i,"Gap & Go"],[/fvg|order\s*block|\bict\b|\bsmt\b|imbalance/i,"The Sweep"],[/trend|continuation|momentum|pullback|rider/i,"Trend Rider"],[/scalp/i,"Quick Bite"],[/\brsi\b|oversold|overbought|connors/i,"The Dip Snatch"],[/\bema\b|moving\s*average|\bsma\b|golden\s*cross|crossover/i,"The Crossover"]];
     var FILLER={i:1,use:1,my:1,the:1,a:1,an:1,of:1,or:1,and:1,to:1,look:1,lets:1,"let's":1,minute:1,min:1,trade:1,strategy:1,setup:1,entry:1,overall:1,using:1,with:1,on:1,for:1,how:1};
-    function cleanName(name){var n=String(name||"").replace(/\s+(mes|mnq|mcl|es|nq|cl)\b/gi,"").replace(/\s+\d+\s*m(in)?\b/gi,"").replace(/\s+\d+\s*h\b/gi,"").replace(/\s+/g," ").trim();var w=n.split(" ").filter(Boolean);var k=w.filter(function(x){return !FILLER[x.toLowerCase()];});return ((k.length?k:w).slice(0,3).join(" ").trim())||"House Special";}
-    function premiumTitle(name){var n=String(name||"");for(var i=0;i<PREMIUM.length;i++){if(PREMIUM[i][0].test(n))return PREMIUM[i][1];}return cleanName(n);}
+    function cleanName(name){var n=String(name||"").replace(/_/g," ").replace(/\s+(mes|mnq|mcl|es|nq|cl)\b/gi,"").replace(/\s+\d+\s*m(in)?\b/gi,"").replace(/\s+\d+\s*h\b/gi,"").replace(/\s+/g," ").trim();var w=n.split(" ").filter(Boolean);var k=w.filter(function(x){return !FILLER[x.toLowerCase()];});return ((k.length?k:w).slice(0,3).join(" ").trim())||"House Special";}
+    function premiumTitle(name){var n=String(name||"").replace(/_/g," ");for(var i=0;i<PREMIUM.length;i++){if(PREMIUM[i][0].test(n))return PREMIUM[i][1];}return cleanName(n);}
     var GATE_TITLE={"Surprise Test":"Holds Up","Real or Lucky":"Real Edge","Worst Day Test":"Crash-Proof","Preseason":"Paper Trial","Real-Time Match":"Live Match","Plays Clean":"Rule-Safe","Sloppy Bot Test":"Handles Rough","Every Mood Test":"Every Market"};
 
     function render(r) {
@@ -1169,14 +1176,19 @@
       var value = untested ? "Not run yet" : m.value;
       var vclass = verdict === "pass" ? "green" : verdict === "fail" ? "red" : "amber";
       var vword = verdict === "pass" ? "Cleared ✓" : verdict === "fail" ? "Failed ✗" : "Not run yet";
+      var t = (r.otherTests || []).find(function (x) { return x.name === name; });
+      var sentence = untested ? "This gate hasn't been run yet — it needs a backtest first." : (t ? t.sentence : "");
       var back = el("a", { href: "#", class: "r-gate-back" }, "‹ Backtest");
       back.addEventListener("click", function (e) { e.preventDefault(); switchLeftToBacktest(r); });
       return el("div", { class: "r-panel" },
-        el("div", { class: "r-head" }, el("div", { class: "r-h" }, GATE_TITLE[name] || name), back),
+        el("div", { class: "r-head" }, el("div", { class: "r-h" }, GATE_TITLE[name] || name, el("span", { class: "src replay" }, "🔬 The Gate")), back),
         el("div", { class: "r-cap" }, m.what),
-        el("div", { class: "r-gate-big " + vclass }, value),
-        m.threshold ? el("div", { class: "r-gate-thresh" }, m.threshold) : null,
-        el("div", { class: "r-gate-verdict " + vclass }, vword),
+        el("div", { class: "r-gate-body" },
+          el("div", { class: "r-gate-big " + vclass }, value),
+          m.threshold ? el("div", { class: "r-gate-thresh" }, m.threshold) : null,
+          el("div", { class: "r-gate-verdict " + vclass }, vword),
+          sentence ? el("div", { class: "r-gate-sentence" }, sentence) : null,
+        ),
       );
     }
 

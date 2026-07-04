@@ -607,14 +607,14 @@
       ];
       const FILLER = { i:1,use:1,my:1,the:1,a:1,an:1,of:1,or:1,and:1,to:1,look:1,lets:1,"let's":1,minute:1,min:1,trade:1,strategy:1,setup:1,entry:1,overall:1,using:1,with:1,on:1,for:1,how:1 };
       function cleanName(name) {
-        var n = String(name || "").replace(/\s+(mes|mnq|mcl|es|nq|cl)\b/gi, "").replace(/\s+\d+\s*m(in)?\b/gi, "").replace(/\s+\d+\s*h\b/gi, "").replace(/\s+/g, " ").trim();
+        var n = String(name || "").replace(/_/g, " ").replace(/\s+(mes|mnq|mcl|es|nq|cl)\b/gi, "").replace(/\s+\d+\s*m(in)?\b/gi, "").replace(/\s+\d+\s*h\b/gi, "").replace(/\s+/g, " ").trim();
         var words = n.split(" ").filter(Boolean);
         var kept = words.filter(function (w) { return !FILLER[w.toLowerCase()]; });
         var pick = (kept.length ? kept : words).slice(0, 3).join(" ").trim();
         return pick || "House Special";
       }
       function premiumTitle(name) {
-        var n = String(name || "");
+        var n = String(name || "").replace(/_/g, " ");
         for (var i = 0; i < PREMIUM.length; i++) { if (PREMIUM[i][0].test(n)) return PREMIUM[i][1]; }
         return cleanName(n);
       }
