@@ -17,9 +17,11 @@ import { formatBag, lifecycleToStation, oddsOuttaHundred } from "./translate.js"
 import { getB14CiHighThreshold } from "../b14-ci-gate.js";
 import { getWfeHardFloor } from "../wfe-gate.js";
 import { resolveGateJourney, type Gate, type GateSignals } from "./gate-journey.js";
+import { getStrategySourceUrl } from "../strategy-source-resolver.js";
 
 export interface RecipeData {
   identity: { id: string; name: string; symbol: string; stationStreet: string; lifecycleState: string };
+  youtubeUrl: string | null;
   slumdawgScore: number;
   backtest: {
     totalMade: string;
@@ -257,6 +259,18 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
   const dead = lifecycleUpper === "GRAVEYARD" || lifecycleUpper === "DECLINING";
   const gateJourney = resolveGateJourney({ lifecycleState: String(strat.lifecycle_state), signals });
 
+  // Source video URL for the recipe YouTube button (prefer a YouTube link;
+  // fail-soft to null — the client falls back to a search when null).
+  let youtubeUrl: string | null = null;
+  try {
+    const urls = await getStrategySourceUrl(String(strat.name));
+    if (Array.isArray(urls) && urls.length > 0) {
+      youtubeUrl = urls.find((u) => /youtube\.com|youtu\.be/i.test(String(u))) ?? urls[0];
+    }
+  } catch {
+    /* fail-soft — button falls back to a search link */
+  }
+
   return {
     identity: {
       id: String(strat.id),
@@ -265,6 +279,7 @@ export async function assembleRecipeData(args: { strategyId: string }): Promise<
       stationStreet: lifecycleToStation(strat.lifecycle_state),
       lifecycleState: String(strat.lifecycle_state),
     },
+    youtubeUrl,
     slumdawgScore,
     backtest: {
       totalMade: formatBag(totalPnl),
