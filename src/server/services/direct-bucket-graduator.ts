@@ -25,6 +25,7 @@
  * candidates that need post-extraction LLM enrichment.
  */
 import { RAW_ARCHETYPES_RESPECTED as RAW_ARCHETYPES_RESPECTED_CANONICAL } from "../lib/archetype-registry-keys.js";
+import { isHandlerDrivenEntry } from "../lib/handler-driven-entry.js";
 import { db } from "../db/index.js";
 import { strategies, strategyPendingBuckets, auditLog, deadLetterQueue } from "../db/schema.js";
 import { eq, sql } from "drizzle-orm";
@@ -296,11 +297,23 @@ const BIDIR_SENTINEL = "high < low";
  * Gate 1 — Bidirectional Completeness Check.
  *
  * When direction === "both":
- *   Parametric path (no archetype): BOTH entry_long AND entry_short must be
- *   non-empty AND non-sentinel ("high < low").
- *   Structural-archetype path (archetype declared): both may be sentinel OR both
- *   may be real expressions — but never ONE sentinel and ONE empty/sentinel (mixed
- *   state means the LLM extracted only one side).
+ *   Parametric path (no archetype, not handler-driven): BOTH entry_long AND
+ *   entry_short must be non-empty AND non-sentinel ("high < low").
+ *   Handler-driven path (archetype declared, OR entry_long/entry_short/
+ *   entry_indicator match the shared `isHandlerDrivenEntry()` recognizer —
+ *   see src/server/lib/handler-driven-entry.ts): both may be sentinel/marker
+ *   OR both may be real expressions — but never ONE sentinel and ONE
+ *   empty/sentinel (mixed state means the LLM extracted only one side).
+ *
+ * 2026-07-04 dispatch-marker fix: this gate and framework-overlay.ts's
+ * direction="both" coercion guard used to each hand-roll their own "is this
+ * handler-driven" check and drifted apart — framework-overlay.ts didn't
+ * recognize spec-onboarding-service.ts's `archetype_dispatch:<key>` /
+ * `spec_conditions:<hash>` dispatch markers, silently amputating the short
+ * side of spec-onboarded "both" strategies downstream of this gate. Both call
+ * sites now route through the same `isHandlerDrivenEntry()` helper so they
+ * can never drift apart again. The legacy `archetype` field is preserved as
+ * an alternate (OR'd) signal for callers that don't have entry_indicator handy.
  *
  * Single-direction strategies (long/short) are NOT checked — asymmetric is allowed.
  */
@@ -314,6 +327,7 @@ export function auditBidirectionalCompleteness(compiledConfig: {
   archetype?: string | null;
   entry_long?: string;
   entry_short?: string;
+  entry_indicator?: string | null;
 }): BidirectionalAuditResult {
   const direction = compiledConfig.direction ?? "";
 
@@ -324,13 +338,14 @@ export function auditBidirectionalCompleteness(compiledConfig: {
 
   const entryLong  = compiledConfig.entry_long  ?? "";
   const entryShort = compiledConfig.entry_short ?? "";
-  const hasArchetype = Boolean(compiledConfig.archetype);
+  const isHandlerDriven = Boolean(compiledConfig.archetype) ||
+    isHandlerDrivenEntry(entryLong, entryShort, compiledConfig.entry_indicator ?? null);
 
   const longIsSentinel  = entryLong  === BIDIR_SENTINEL || entryLong  === "";
   const shortIsSentinel = entryShort === BIDIR_SENTINEL || entryShort === "";
 
-  if (hasArchetype) {
-    // Structural-archetype path: both sentinel or both real — mixed is a bug
+  if (isHandlerDriven) {
+    // Handler-driven path: both sentinel/marker or both real — mixed is a bug
     if (longIsSentinel !== shortIsSentinel) {
       return {
         pass: false,
@@ -2310,6 +2325,7 @@ export async function graduateBucketDirectly(opts: {
       archetype: isArchetype && archetypeName ? archetypeName : null,
       entry_long:  String(compiled.strategy?.entry_long  ?? ""),
       entry_short: String(compiled.strategy?.entry_short ?? ""),
+      entry_indicator: compiled.entry_indicator ?? null,
     });
     if (!biAudit.pass) {
       logger.warn(

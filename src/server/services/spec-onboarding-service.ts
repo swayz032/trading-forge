@@ -546,6 +546,7 @@ export async function onboardSpecArtifact(
       archetype: archetypeMatch.matched ? (archetypeMatch.archetypeKey as string) : null,
       entry_long,
       entry_short,
+      entry_indicator: entryIndicator,
     });
     if (!gate1.pass) {
       logger.warn({ video, specHash, symbol, reason: gate1.reason }, "spec_onboarding.rejected_incomplete_bidirectional");
