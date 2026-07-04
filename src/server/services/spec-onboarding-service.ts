@@ -49,6 +49,8 @@ import {
   type PlaybookCategory,
 } from "../lib/playbook-registration.js";
 import { logger } from "../lib/logger.js";
+import { recoverSpecTimeframe } from "../lib/spec-timeframe-recovery.js";
+import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 
 // ─── Lazy dynamic imports (sever static circular-import edges) ─────────────
 //
@@ -340,7 +342,15 @@ export type SymbolCode = "MES" | "MNQ" | "MCL";
 export interface OnboardSpecOptions {
   /** Default: MES leader + Wave 25 [MES, MNQ, MCL] fan-out (spec artifacts carry no market field). */
   symbols?: SymbolCode[];
-  /** Default "5m" — CONTRACT AMBIGUITY: the spec artifact carries no timeframe field. See runbook. */
+  /**
+   * EXPLICIT operator override for a known-uniform batch ONLY. When set, this TF
+   * is applied verbatim to every symbol and per-spec recovery is skipped.
+   * When UNSET (the default), the exec timeframe is RECOVERED per-spec from the
+   * artifact prose via recoverSpecTimeframe(). There is NO silent "5m" default:
+   * a spec whose timeframe cannot be recovered is QUARANTINED (fail-loud audit
+   * `onboard.timeframe_unrecoverable`), NEVER onboarded at a guessed 5m.
+   * (Timeframe Integrity Fix, 2026-07-03.)
+   */
   timeframe?: string;
   dryRun: boolean;
   /** Absolute path to playbook_router.py; overridable so tests point at a temp copy. */
@@ -439,7 +449,55 @@ export async function onboardSpecArtifact(
 
   const symbols: SymbolCode[] =
     opts.symbols ?? (inferSymbolSet(null, conceptName, "MES") as SymbolCode[]);
-  const timeframe = opts.timeframe ?? "5m";
+
+  // ── Per-spec timeframe (Timeframe Integrity Fix, 2026-07-03) ──────────────
+  // THE ONE INVIOLABLE PRINCIPLE: never silently default a timeframe to "5m".
+  // Explicit operator --timeframe override wins (known-uniform batch); otherwise
+  // recover the educator's exec (lower/trigger) + higher (context) TF from the
+  // artifact prose. If genuinely unrecoverable → QUARANTINE the whole spec with
+  // a loud `onboard.timeframe_unrecoverable` audit — never a guessed-5m row.
+  let timeframe: string;
+  let higherTimeframe: string | null = null;
+  let timeframeSource: string;
+  let timeframeConfidence = 1;
+  let timeframeEvidence = "operator override";
+  if (typeof opts.timeframe === "string" && opts.timeframe.length > 0) {
+    timeframe = opts.timeframe;
+    timeframeSource = "operator_override";
+  } else {
+    const rec = recoverSpecTimeframe(artifact);
+    if (!rec.recovered || !rec.exec_timeframe) {
+      if (!opts.dryRun) {
+        await insertAuditRowSafe({
+          action: "onboard.timeframe_unrecoverable",
+          entityType: "strategy",
+          status: "warning",
+          input: { video, spec_hash: specHash, concept: conceptName },
+          result: { evidence: rec.evidence, confidence: rec.confidence },
+          decisionAuthority: "gate",
+        });
+      }
+      logger.warn(
+        { video, specHash, conceptName, evidence: rec.evidence },
+        "spec_onboarding.timeframe_unrecoverable_quarantine",
+      );
+      return {
+        video,
+        specHash,
+        ok: false,
+        reason: `timeframe_unrecoverable: ${rec.evidence}`,
+        archetypeMatch,
+        conceptName,
+        confluenceFactors,
+        perSymbol: [],
+      };
+    }
+    timeframe = rec.exec_timeframe;
+    higherTimeframe = rec.higher_timeframe;
+    timeframeSource = "recovered_from_spec";
+    timeframeConfidence = rec.confidence;
+    timeframeEvidence = rec.evidence;
+  }
   const sourceUrl = `https://www.youtube.com/watch?v=${video}`;
   // Band C: condition-compiled specs (no named archetype, binding plan cleared
   // coverage) get a RESOLVED category from spine+trigger condition vocabulary,
@@ -519,6 +577,10 @@ export async function onboardSpecArtifact(
         entry_long,
         entry_short,
         entry_indicator: entryIndicator,
+        // Per-spec exec timeframe (trigger TF). Higher/context TF carried alongside.
+        timeframe,
+        trigger_tf: timeframe,
+        ...(higherTimeframe ? { htf_tf: higherTimeframe } : {}),
         stop_loss: { type: "atr", multiplier: 1.5 },
         position_size: { type: "risk_derived_pyramid" },
       },
@@ -530,6 +592,13 @@ export async function onboardSpecArtifact(
         graph_canonical_hash: artifact.graph_canonical_hash,
         ledger_d: artifact.ledger_d,
         pipeline_version: artifact.pipeline_version ?? null,
+        timeframe_recovery: {
+          exec_timeframe: timeframe,
+          higher_timeframe: higherTimeframe,
+          source: timeframeSource,
+          confidence: timeframeConfidence,
+          evidence: timeframeEvidence,
+        },
       },
     };
 
@@ -661,6 +730,9 @@ export async function onboardSpecArtifact(
         symbol,
         symbols: [symbol],
         timeframe,
+        // Wave 25 multi-TF columns: exec → trigger_tf, context → htf_tf.
+        triggerTf: timeframe,
+        ...(higherTimeframe ? { htfTf: higherTimeframe } : {}),
         config: finalConfig,
         lifecycleState,
         preferredRegime,
