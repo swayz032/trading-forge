@@ -261,6 +261,8 @@ ceiling = 14pts MES, 62pts MNQ, 100 ticks (1.00pt) MCL   (Wave 1 2026-06-27 reca
 If structural distance > ceiling → SKIP TRADE (widen to floor first, never clamp down)
 ```
 
+**H5 admission-stop parity (deepscan15, 2026-07-03) — the backtest now MANAGES each trade on the SAME structural stop that justified its admission**, instead of recomputing an ATR `min(ceiling, atr×1.5)` clamp the strategy's risk model never validated. `apply_eligibility_gate` captures a per-signal `structural_stop_map`; all 5 management/reporting sites resolve `risk_points` from it (per-symbol ceiling still caps; byte-identical fallback when unavailable). Env `BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED` **default TRUE**; set `false` for legacy/A-B. **RE-BASELINE: historical backtests are NOT comparable to post-2026-07-03 runs — re-run the flagged 15m/30m/1h/4h DSL backtests before comparing metrics or trusting them for promotion.** Stops now fire tighter/earlier where structure was tighter than ATR×1.5 (more honest, more conservative). A/B harness: `scripts/h5_structural_stop_parity_ab_report.py`.
+
 **Sweep-aware buffer (W24-P2, 2026-05-23)** — replaces old flat +1pt.
 1pt on MES sits inside the empirical sweep zone (r/FuturesTrading 2025-05 analysis,
 2026 funded-trader consensus). Per-symbol values:
