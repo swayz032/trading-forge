@@ -93,4 +93,33 @@ describe("authMiddleware (deep-scan #13 Track A)", () => {
     await authMiddleware(mockReq(), res, next);
     expect(next).toHaveBeenCalled();
   });
+
+  // deep-scan #17 CRITICAL: self-HMAC admin routes must survive the Bearer gate with API_KEY unset,
+  // else the dead-man's-heartbeat + n8n watchdog self-restart is dead on any deployment lacking API_KEY.
+  it("POST /api/admin/self-restart bypasses the Bearer gate (self-HMAC) even when API_KEY is unset", async () => {
+    const res = mockRes(); const next = vi.fn();
+    await authMiddleware(mockReq({ method: "POST", path: "/admin/self-restart" }), res, next);
+    expect(next).toHaveBeenCalled();
+    expect(res.statusCode).toBe(200);
+  });
+
+  it("POST /api/admin/ollama-health-recheck bypasses the Bearer gate (self-HMAC) even when API_KEY is unset", async () => {
+    const res = mockRes(); const next = vi.fn();
+    await authMiddleware(mockReq({ method: "POST", path: "/admin/ollama-health-recheck" }), res, next);
+    expect(next).toHaveBeenCalled();
+  });
+
+  it("does NOT exempt a normal admin POST (only self-HMAC restart paths bypass)", async () => {
+    const res = mockRes(); const next = vi.fn();
+    await authMiddleware(mockReq({ method: "POST", path: "/admin/clear-cache" }), res, next);
+    expect(next).not.toHaveBeenCalled();
+    expect(res.statusCode).toBe(503);
+  });
+
+  it("does NOT exempt a GET on the self-restart path (POST-only exemption)", async () => {
+    const res = mockRes(); const next = vi.fn();
+    await authMiddleware(mockReq({ method: "GET", path: "/admin/self-restart" }), res, next);
+    expect(next).not.toHaveBeenCalled();
+    expect(res.statusCode).toBe(503);
+  });
 });

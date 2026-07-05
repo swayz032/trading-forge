@@ -54,6 +54,27 @@ export async function authMiddleware(
   res: Response,
   next: NextFunction,
 ): Promise<void> {
+  // 0. Self-authenticating admin routes — deep-scan #17 CRITICAL.
+  //    /api/admin/self-restart and /ollama-health-recheck carry their OWN
+  //    ADMIN_RESTART_HMAC_SECRET HMAC (verifyRestartHmac, 60s replay window) and are
+  //    mounted AFTER this gate. When API_KEY is unset the gate returns 503
+  //    auth_not_configured BEFORE the route's HMAC runs — which silently kills the
+  //    dead-man's-heartbeat self-restart AND the n8n TF Health Watchdog restart (the
+  //    flagship vacation-safety path: on a 14-day absence a soft-hang could never
+  //    self-heal). The Bearer gate adds only a failure mode, never security, for these
+  //    HMAC-signed routes — the same rationale that mounts the tradingview/broker-fill
+  //    webhooks BEFORE this gate in index.ts. suffix-match is robust to base-path
+  //    stripping (req.path is "/admin/..." here; originalUrl is "/api/admin/...").
+  if (
+    req.method === "POST" &&
+    typeof req.path === "string" &&
+    (req.path.endsWith("/admin/self-restart") ||
+      req.path.endsWith("/admin/ollama-health-recheck"))
+  ) {
+    next();
+    return;
+  }
+
   // 1. Bearer API key
   const authHeader = req.headers.authorization;
   if (authHeader?.startsWith("Bearer ")) {
