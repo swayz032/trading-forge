@@ -102,7 +102,10 @@ async function _computeKillSwitchState(
       evaluatedAt: quantumRlRuns.evaluatedAt,
     })
     .from(quantumRlRuns)
-    .where(eq(quantumRlRuns.strategyId, Number(strategyId)))
+    // F-3 fix (deepscan16 W1 T4): quantumRlRuns.strategyId is a UUID column
+    // (schema.ts F-2 fix) — Number(strategyId) on a UUID string always
+    // produced NaN, so this WHERE clause never matched any row.
+    .where(eq(quantumRlRuns.strategyId, strategyId))
     .orderBy(desc(quantumRlRuns.evaluatedAt))
     .limit(lookbackSessions);
 
@@ -200,7 +203,9 @@ export async function fetchRlSignal(strategyId: string): Promise<RlSignalResult>
         regime: quantumRlRuns.regime,
       })
       .from(quantumRlRuns)
-      .where(eq(quantumRlRuns.strategyId, Number(strategyId)))
+      // F-3 fix (deepscan16 W1 T4): see the identical fix in
+      // _computeKillSwitchState above — Number(uuid) => NaN, always empty.
+      .where(eq(quantumRlRuns.strategyId, strategyId))
       .orderBy(desc(quantumRlRuns.evaluatedAt))
       .limit(1);
 
