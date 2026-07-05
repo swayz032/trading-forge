@@ -110,16 +110,31 @@ export interface EvolutionAbortData {
   stage: "child_promotion" | string;
 }
 
+/**
+ * `strategy:analyzed` — GROUNDED 2026-07-05 (deepscan18 E-E1 sweep): emitted
+ * by the n8n workflow "Strategy Deep Analysis Pipeline" (id
+ * `40q1SdSjUxyZ9Jux`) via POST /api/sse/broadcast on successful completion.
+ * Shape verified directly against the workflow's HTTP Request node body.
+ * CURRENTLY DORMANT — this workflow is inactive on the live n8n instance
+ * (confirmed via workflows/n8n/_live-snapshot-2026-06-29.json `active:false`;
+ * the workflow file now also lives under workflows/n8n/_archived/). The tile
+ * will start receiving events again if/when an operator reactivates it.
+ */
 export interface StrategyAnalyzedData {
   strategyId: string;
-  // TODO: scout/n8n analyzer payload — verify fields.
-  [key: string]: unknown;
+  forgeScore: number;
+  tier: string;
 }
 
+/**
+ * `strategy:analysis-error` — sibling failure event from the same n8n
+ * workflow (see `StrategyAnalyzedData`). Fired from its error-handling branch.
+ * Same dormancy caveat applies.
+ */
 export interface StrategyAnalysisErrorData {
-  strategyId?: string;
-  // TODO: confirm error envelope shape.
-  [key: string]: unknown;
+  error: string;
+  workflowName: string;
+  timestamp: string;
 }
 
 export interface StrategyPaperVsBacktestAlertData {
@@ -854,12 +869,8 @@ export interface PineExportDeliveredData {
   [key: string]: unknown;
 }
 
-/** `pending_bucket.expired` — pending bucket TTL expired without graduation */
-export interface PendingBucketExpiredData {
-  bucketId: string;
-  market?: string;
-  [key: string]: unknown;
-}
+// `PendingBucketExpiredData` REMOVED (deepscan18, 2026-07-05) — see the
+// "pending_bucket.expired" removal note at the SSEEvent union below.
 
 /** `auction:imbalance-updated` — opening auction order imbalance updated */
 export interface AuctionImbalanceUpdatedData {
@@ -911,41 +922,11 @@ export interface WindowsHealthCheckFailedData {
   [key: string]: unknown;
 }
 
-/** `windows:health-check-ram-warning` — RAM usage exceeding threshold */
-export interface WindowsHealthCheckRamWarningData {
-  usedGb?: number;
-  totalGb?: number;
-  [key: string]: unknown;
-}
-
-/** `windows:real-reboot-pending` — Windows reboot is pending */
-export interface WindowsRealRebootPendingData {
-  [key: string]: unknown;
-}
-
-/** `compliance:violation_detected` — 2026 MFFU compliance rule violation */
-export interface ComplianceViolationDetectedData {
-  rule: string;
-  strategy_id?: string | null;
-  position_id?: string | null;
-  firm: string;
-  details: Record<string, unknown>;
-  correlation_id?: string | null;
-}
-
-/** `migration:legacy_firm_cleanup_complete` — migration 0097 cleanup done */
-export interface MigrationLegacyFirmCleanupCompleteData {
-  retained_firms: string[];
-  removed_firms: string[];
-  applied_at: string;
-}
-
-/** `firm_count_changed` — active firm count changed */
-export interface FirmCountChangedData {
-  previous_count: number;
-  new_count: number;
-  active_firms: string[];
-}
+// `WindowsHealthCheckRamWarningData` / `WindowsRealRebootPendingData` /
+// `ComplianceViolationDetectedData` / `MigrationLegacyFirmCleanupCompleteData`
+// / `FirmCountChangedData` REMOVED (deepscan18, 2026-07-05) — see the
+// corresponding removal notes at the SSEEvent union below. None of these five
+// event names has a server-side emitter; grounded via full src/server grep.
 
 /**
  * `paper:tp1_filled` — TP1 fill in the Style C exit handler.
@@ -1772,7 +1753,9 @@ export type SSEEvent =
   | { type: "pine_export:hmac_persist_failed"; data: PineExportHmacPersistFailedData }
   | { type: "pine_export:recipient_generated"; data: PineExportRecipientGeneratedData }
   | { type: "pine_export:delivered"; data: PineExportDeliveredData }
-  | { type: "pending_bucket.expired"; data: PendingBucketExpiredData }
+  // deepscan18 (E-E1 sweep, 2026-07-05): "pending_bucket.expired" REMOVED —
+  // see useSSE.ts removal comment (server-side runPendingBucketExpiry()
+  // referenced only by its own test; never implemented, never fires).
   | { type: "auction:imbalance-updated"; data: AuctionImbalanceUpdatedData }
   | { type: "scout-health:reject-spike"; data: ScoutHealthRejectSpikeData }
   | { type: "scout-health:no-strategies-today"; data: ScoutHealthNoStrategiesTodayData }
@@ -1781,11 +1764,17 @@ export type SSEEvent =
   | { type: "prop-firm:suspension-cleared"; data: PropFirmSuspensionClearedData }
   | { type: "vp:levels-computed"; data: VpLevelsComputedData }
   | { type: "windows:health-check-failed"; data: WindowsHealthCheckFailedData }
-  | { type: "windows:health-check-ram-warning"; data: WindowsHealthCheckRamWarningData }
-  | { type: "windows:real-reboot-pending"; data: WindowsRealRebootPendingData }
-  | { type: "compliance:violation_detected"; data: ComplianceViolationDetectedData }
-  | { type: "migration:legacy_firm_cleanup_complete"; data: MigrationLegacyFirmCleanupCompleteData }
-  | { type: "firm_count_changed"; data: FirmCountChangedData }
+  // deepscan18 (E-E1 sweep, 2026-07-05): "windows:health-check-ram-warning"
+  // and "windows:real-reboot-pending" REMOVED — windows-health-check-service.ts
+  // folds both conditions into the single "windows:health-check-failed" event
+  // (discriminated by a `status` field), no separate emit site ever existed.
+  // "compliance:violation_detected" REMOVED — no matching server-side emitter;
+  // existing specific violation events (hedge/price-lock/2%/daily-cap/lunch
+  // blackout) already cover this surface under their own distinct names.
+  // "migration:legacy_firm_cleanup_complete" REMOVED — commemorates one-shot
+  // migration 0097 (applied 2026-05-10, historical, cannot recur).
+  // "firm_count_changed" REMOVED — enabled_firms is read-only at runtime;
+  // no writer exists that could ever trigger this event.
   | { type: "paper:tp1_filled"; data: PaperExitTp1FilledData }
   | { type: "paper:tp2_filled"; data: PaperExitTp2FilledData }
   | { type: "paper:be_stop_moved"; data: PaperExitBeStopMovedData }

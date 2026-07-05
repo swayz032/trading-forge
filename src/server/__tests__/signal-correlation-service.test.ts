@@ -64,6 +64,11 @@ vi.mock("../lib/logger.js", () => ({
   },
 }));
 
+const mockAuditWriteFailuresInc = vi.fn();
+vi.mock("../lib/metrics-registry.js", () => ({
+  auditWriteFailuresTotal: { labels: vi.fn(() => ({ inc: mockAuditWriteFailuresInc })) },
+}));
+
 import {
   compressSignalVector,
   decompressSignalVector,
@@ -73,9 +78,12 @@ import {
   loadLatestSignalVector,
   checkSignalCorrelationGate,
   buildCorrelationMatrix,
+  computePairwiseCorrelation,
 } from "../services/signal-correlation-service.js";
 import { isActive as isPipelineActive } from "../services/pipeline-control-service.js";
 import { db } from "../db/index.js";
+import { AlertFactory } from "../services/alert-service.js";
+import { logger } from "../lib/logger.js";
 
 // ─── 1. Compression round-trip ─────────────────────────────────────────────
 
@@ -270,6 +278,64 @@ describe("buildCorrelationMatrix", () => {
     vi.mocked(isPipelineActive).mockResolvedValue(false);
     const result = await buildCorrelationMatrix();
     expect(result).toEqual([]);
+  });
+});
+
+// ─── deepscan18 E-E3: A7 CRITICAL alert write-failure is now logged loudly ──
+
+describe("computePairwiseCorrelation — A7 alert write-failure visibility (deepscan18 E-E3)", () => {
+  const CANDIDATE_ID = "strategy-candidate-1";
+  const REF_ID = "strategy-ref-1";
+
+  beforeEach(() => {
+    vi.mocked(logger.error).mockClear();
+    vi.mocked(logger.warn).mockClear();
+    mockAuditWriteFailuresInc.mockClear();
+  });
+
+  function mockTwoIdenticalVectorLoads() {
+    // Both candidate and ref resolve to the SAME signal vector (similarity = 1.0,
+    // guaranteed to exceed SIGNAL_CORRELATION_THRESHOLD and fire the A7 alert).
+    const compressed = compressSignalVector([1, 0, -1, 0, 1, 1, -1, 0, 0, 1]);
+    const row = { signalVectorCompressed: compressed, backtestId: "bt-1", nBars: 10 };
+    // @ts-ignore — see W0.3 note above re: fluent-builder cast
+    vi.mocked(db.select).mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          orderBy: vi.fn().mockReturnValue({
+            limit: vi.fn().mockResolvedValue([row]),
+          }),
+        }),
+      }),
+    } as ReturnType<typeof db.select>);
+  }
+
+  it("logs loudly and increments the counter when the A7 CRITICAL alert write fails", async () => {
+    mockTwoIdenticalVectorLoads();
+    vi.mocked(AlertFactory.signalCorrelation).mockRejectedValueOnce(new Error("alerts DB insert failed"));
+
+    await computePairwiseCorrelation(CANDIDATE_ID, [REF_ID]);
+    // The alert call is fire-and-forget (.catch chained, not awaited) — flush microtasks.
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({ candidateStrategyId: CANDIDATE_ID, refStrategyId: REF_ID }),
+      expect.stringContaining("signal-correlation CRITICAL alert write failed"),
+    );
+    expect(mockAuditWriteFailuresInc).toHaveBeenCalled();
+  });
+
+  it("does not log an error when the A7 alert write succeeds", async () => {
+    mockTwoIdenticalVectorLoads();
+    vi.mocked(AlertFactory.signalCorrelation).mockResolvedValueOnce(undefined as never);
+
+    await computePairwiseCorrelation(CANDIDATE_ID, [REF_ID]);
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(logger.error).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.stringContaining("signal-correlation CRITICAL alert write failed"),
+    );
   });
 });
 
