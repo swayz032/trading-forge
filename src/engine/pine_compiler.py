@@ -1011,6 +1011,150 @@ bgcolor(state == 2 ? color.new(color.green, 92) : state == 4 ? color.new(color.r
 """
 
 
+# ─── Deep-Scan #18b P-1 — archetype single-declaration short-circuit ─────────
+#
+# Bug (fixed here): entry_indicator values prefixed 'archetype:' or
+# 'uncatalogued:' route through _build_pine_indicator_var() to
+# _build_archetype_alert_pine(), which returns a COMPLETE, self-contained
+# Pine v5 script (header + //@version=5 + indicator() + alertcondition() +
+# plotshape()) — not a single variable-declaration line like every other
+# indicator type returns. compile_strategy() / compile_dual_artifacts() used
+# to splice that whole script into the indicator_lines list and then wrap it
+# INSIDE their own generic indicator()/strategy() scaffold, producing TWO
+# top-level declarations in one .pine file. TradingView rejects any script
+# with more than one indicator()/strategy()/library() call — 100% of
+# archetype-governed strategies (39 registered archetype keys — the majority
+# of the live library) failed to compile on TradingView.
+#
+# Fix: detect the prefix BEFORE assembling the generic scaffold and
+# short-circuit to emit the archetype recipe VERBATIM as the sole, complete
+# artifact. This matches score_exportability()'s alert_only band contract
+# (score=60, exportable=True, faithful=True by design — archetypes execute
+# server-side via the Python engine; Pine is a passive marker + alert
+# emitter only, see _build_archetype_alert_pine docstring).
+
+
+def _resolve_archetype_prefix(strategy: dict) -> Optional[str]:
+    """Return the archetype/uncatalogued ind_type string if this strategy's
+    entry indicator is a structural archetype, else None.
+
+    Detection precedence mirrors score_exportability()'s prefix fast-path
+    EXACTLY (entry_indicator first, falling back to indicators[0].type) so
+    the compiler's short-circuit and the exportability scorer's alert_only
+    band always agree on which strategies are archetype-governed. Divergence
+    between the two would silently re-introduce the two-declaration bug for
+    any strategy shape the compiler fails to recognize but the scorer does.
+    """
+    entry_indicator = strategy.get("entry_indicator", "") or ""
+    if not entry_indicator:
+        indicators = strategy.get("indicators", [])
+        if indicators:
+            first = indicators[0]
+            entry_indicator = first.get("type", "") if isinstance(first, dict) else str(first)
+    if entry_indicator.startswith("archetype:") or entry_indicator.startswith("uncatalogued:"):
+        return entry_indicator
+    return None
+
+
+def _build_archetype_alerts_json(strategy_name: str, key: str, gateway_mode: Optional[str]) -> dict:
+    """Build alerts_json metadata describing an archetype recipe's single alertcondition.
+
+    Mirrors the ACTUAL alertcondition() emitted by _build_archetype_alert_pine
+    for the given gateway_mode — kept manually in sync since the archetype
+    recipe is a hand-authored Pine template, not assembled from the generic
+    _build_alerts() state-machine block (which references Pine variables
+    — state / stop_price / target_price / risk_lockout — that do not exist
+    in an archetype's passive-marker script).
+    """
+    display_name = " ".join(w.capitalize() for w in key.split("_"))
+    if gateway_mode == "tf_gateway":
+        return {
+            "strategy": strategy_name,
+            "pine_version": "v5",
+            "archetype": key,
+            "export_mode": "alert_only",
+            "gateway_mode": "tf_gateway",
+            "alerts": [
+                {
+                    "name": f"{display_name} [TF-GW]",
+                    "condition": "archetype_active (always true on every bar — passive marker; "
+                                 "Python engine resolves direction server-side)",
+                    "type": "signal",
+                    "routing": "tf_gateway",
+                    "action": "archetype_signal",
+                },
+            ],
+        }
+    return {
+        "strategy": strategy_name,
+        "pine_version": "v5",
+        "archetype": key,
+        "export_mode": "alert_only",
+        "gateway_mode": gateway_mode or "direct",
+        "alerts": [
+            {
+                "name": display_name,
+                "condition": "archetype_active (always true on every bar — passive marker; "
+                             "Python engine at src/engine/strategies/<class>.py owns entry/exit)",
+                "type": "signal",
+                "routing": "direct",
+                "action": "signal",
+            },
+        ],
+    }
+
+
+def _compile_archetype_only(
+    strategy: dict,
+    ind_type: str,
+    exportability: ExportabilityResult,
+    strategy_name: str,
+    export_type: str = "pine_indicator",
+) -> "CompilerResult":
+    """compile_strategy() counterpart of the P-1 fix — see module note above.
+
+    Emits the archetype recipe (already a complete Pine v5 script) VERBATIM
+    as the sole artifact. No strategy_shell / strategy() artifact is produced
+    for any export_type: Pine's strategy() cannot faithfully reproduce the
+    archetype's server-side structural detection, Style C exits, or the
+    11-factor confluence gate (see exportability.py::_pine_inexpressible_notes,
+    surfaced via exportability.deductions) — fabricating one here would be
+    fake equivalence, which is forbidden. This is explicit degradation, not
+    a silent drop.
+    """
+    result = CompilerResult(exportability=exportability, strategy_name=strategy_name)
+    safe_name = strategy_name.lower().replace(" ", "_").replace("-", "_")
+
+    key = ind_type.split(":", 1)[1] if ":" in ind_type else ind_type
+    _config = strategy.get("config", {})
+    gateway_mode = _config.get("gateway_mode") if isinstance(_config, dict) else None
+
+    _alerts_json = _build_archetype_alerts_json(strategy_name, key, gateway_mode)
+    alerts_json_artifact = PineArtifact(
+        artifact_type="alerts_json",
+        file_name=f"{safe_name}_alerts.json",
+        content=json.dumps(_alerts_json, indent=2),
+        size_bytes=len(json.dumps(_alerts_json).encode()),
+    )
+
+    if export_type == "alert_only":
+        result.artifacts.append(alerts_json_artifact)
+        return result
+
+    # _build_pine_indicator_var() returns the COMPLETE, self-contained archetype
+    # Pine script for this ind_type — emitted here VERBATIM as the sole artifact.
+    _, pine_code = _build_pine_indicator_var(ind_type, {}, 0, strategy=strategy)
+    result.content_hash = hashlib.sha256(pine_code.encode()).hexdigest()
+    result.artifacts.append(PineArtifact(
+        artifact_type="indicator",
+        file_name=f"{safe_name}_indicator.pine",
+        content=pine_code,
+        size_bytes=len(pine_code.encode()),
+    ))
+    result.artifacts.append(alerts_json_artifact)
+    return result
+
+
 def compile_strategy(
     strategy,
     firm_key: Optional[str] = None,
@@ -1059,6 +1203,21 @@ def compile_strategy(
 
     if not exportability.exportable:
         return result
+
+    # Deep-Scan #18b P-1 fix — see _compile_archetype_only docstring above.
+    # Must run BEFORE the generic indicator scaffold is assembled: archetype
+    # recipes are complete Pine scripts on their own, not variable-declaration
+    # lines, and wrapping them in a second indicator()/strategy() declaration
+    # produces invalid Pine (two top-level declarations in one file).
+    _archetype_ind_type = _resolve_archetype_prefix(strategy)
+    if _archetype_ind_type is not None:
+        return _compile_archetype_only(
+            strategy=strategy,
+            ind_type=_archetype_ind_type,
+            exportability=exportability,
+            strategy_name=strategy_name,
+            export_type=strategy.get("export_type", "pine_indicator"),
+        )
 
     # Stage 2: Build indicator declarations
     indicators = strategy.get("indicators", [])
@@ -2142,6 +2301,92 @@ if risk_lockout and strategy.position_size != 0
     )
 
 
+def _compile_dual_archetype_only(
+    strategy: dict,
+    ind_type: str,
+    exportability: ExportabilityResult,
+    strategy_name: str,
+    safe_name: str,
+    strategy_id: Optional[str],
+    account_id: Optional[str],
+    live_order_token: Optional[str],
+) -> "DualArtifactResult":
+    """compile_dual_artifacts() counterpart of the Deep-Scan #18b P-1 fix.
+
+    See the module note above _compile_archetype_only for the two-declaration
+    bug this closes. Only ONE Pine artifact is produced (indicator_artifact,
+    populated with the archetype recipe VERBATIM) — archetype recipes are
+    indicator()-based passive markers with no faithful strategy()/ATS
+    equivalent (Pine cannot reproduce the Python engine's structural
+    detection, Style C exits, or the 11-factor confluence gate). strategy_artifact
+    is left None — an explicit, documented degradation (degradation_notes),
+    NOT a fabricated shell (fake equivalence is forbidden).
+
+    Callers must invoke this AFTER any account_id/live_order_token credential
+    injection into strategy["config"] (compile_dual_artifacts does this before
+    Stage 2) so _build_pine_indicator_var() substitutes real tf_gateway
+    credentials rather than leaving literal placeholders.
+    """
+    sid = strategy_id or hashlib.sha256(strategy_name.encode()).hexdigest()[:16]
+    result = DualArtifactResult(exportability=exportability, strategy_name=strategy_name)
+
+    key = ind_type.split(":", 1)[1] if ":" in ind_type else ind_type
+    _config = strategy.get("config", {})
+    gateway_mode = _config.get("gateway_mode") if isinstance(_config, dict) else None
+
+    # _build_pine_indicator_var() returns the COMPLETE, self-contained archetype
+    # Pine script for this ind_type (with compile-time credential substitution
+    # applied when strategy["config"] carries account_id/live_order_token) —
+    # emitted here VERBATIM as the sole Pine artifact.
+    _, pine_code = _build_pine_indicator_var(ind_type, {}, 0, strategy=strategy)
+
+    result.content_hash = hashlib.sha256(pine_code.encode()).hexdigest()
+    result.indicator_artifact = PineArtifact(
+        artifact_type="dual_indicator",
+        file_name=f"{safe_name}_INDICATOR.pine",
+        content=pine_code,
+        size_bytes=len(pine_code.encode()),
+    )
+    alerts_json = _build_archetype_alerts_json(strategy_name, key, gateway_mode)
+    alerts_json["strategy_id"] = sid
+    result.alerts_artifact = PineArtifact(
+        artifact_type="dual_alerts_json",
+        file_name=f"{safe_name}_dual_alerts.json",
+        content=json.dumps(alerts_json, indent=2),
+        size_bytes=len(json.dumps(alerts_json).encode()),
+    )
+    result.indicator_firms = list(MANUAL_APPROVAL_FIRMS)
+    result.strategy_firms = []
+    result.degradation_notes.append(
+        f"archetype_strategy_alert_only: entry_indicator '{ind_type}' is a structural "
+        "archetype — Pine is a passive marker + alertcondition emitter only (Python "
+        "engine at src/engine/strategies/<class>.py owns entry/exit). No strategy_artifact "
+        "(ATS/TradersPost) is produced: Pine's strategy() cannot faithfully reproduce the "
+        "archetype's server-side structural detection, Style C exits, or the 11-factor "
+        "confluence gate. See exportability.deductions for the full list of dropped features."
+    )
+
+    # Post-compile assertion — fail-CLOSED placeholder substitution guard.
+    # Identical contract to the generic dual-artifact path: when both
+    # credentials were provided (compile-time substitution path), the emitted
+    # Pine MUST NOT contain the literal placeholder strings.
+    if account_id and live_order_token:
+        _unsubstituted = []
+        if "<account-id-placeholder>" in pine_code:
+            _unsubstituted.append("account_id (<account-id-placeholder>)")
+        if "<live-order-token-placeholder>" in pine_code:
+            _unsubstituted.append("live_order_token (<live-order-token-placeholder>)")
+        if _unsubstituted:
+            raise PineCompileError(
+                f"placeholder substitution failed for: {', '.join(_unsubstituted)}. "
+                "gatewayOptions were provided but the compiled archetype Pine artifact "
+                "still contains literal placeholder strings. This would cause silent "
+                "order drops via /api/live-order."
+            )
+
+    return result
+
+
 def compile_dual_artifacts(
     strategy,
     firm_key: Optional[str] = None,
@@ -2231,6 +2476,26 @@ def compile_dual_artifacts(
             _merged_config["live_order_token"] = live_order_token
         strategy = dict(strategy)
         strategy["config"] = _merged_config
+
+    # Deep-Scan #18b P-1 fix — see _compile_dual_archetype_only docstring above.
+    # Must run AFTER the credential injection block above (so tf_gateway
+    # account_id/live_order_token are already merged into strategy["config"]
+    # for _build_pine_indicator_var() to substitute) and BEFORE the generic
+    # indicator scaffold is assembled (archetype recipes are complete Pine
+    # scripts on their own — wrapping them in a second indicator()/strategy()
+    # declaration produces invalid Pine with two top-level declarations).
+    _archetype_ind_type = _resolve_archetype_prefix(strategy)
+    if _archetype_ind_type is not None:
+        return _compile_dual_archetype_only(
+            strategy=strategy,
+            ind_type=_archetype_ind_type,
+            exportability=exportability,
+            strategy_name=strategy_name,
+            safe_name=safe_name,
+            strategy_id=strategy_id,
+            account_id=account_id,
+            live_order_token=live_order_token,
+        )
 
     # Stage 2: Build indicator declarations (shared)
     # F4: Pre-check all indicators against INDICATOR_MAP before attempting to compile.
