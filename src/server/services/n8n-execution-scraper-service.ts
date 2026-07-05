@@ -40,6 +40,8 @@ import { n8nExecutionLog } from "../db/schema.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { logger } from "../lib/logger.js";
 import { broadcastSSE } from "../routes/sse.js";
+import { notify } from "./notification-service.js";
+import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 
 /** Shape of one execution returned by Railway n8n REST API. */
 interface RailwayExecution {
@@ -125,6 +127,11 @@ export async function runN8nExecutionScrape(): Promise<ScrapeResult> {
   result.fetched = executions.length;
   if (executions.length === 0) return result;
 
+  // Collected for the family-grade Discord alert emitted after the loop. SSE
+  // alone (broadcastSSE below) is invisible on vacation — nobody is watching the
+  // dashboard — so a NEW n8n runtime failure must also reach Discord.
+  const newFailureDetails: Array<{ workflowName: string; executionId: string }> = [];
+
   // 2) Insert each row with ON CONFLICT DO NOTHING. We do per-row inserts
   //    rather than a bulk values list so that `RETURNING` accurately tells
   //    us which rows were newly written (vs deduped).
@@ -158,6 +165,7 @@ export async function runN8nExecutionScrape(): Promise<ScrapeResult> {
         result.inserted += 1;
         if (status === "failed" || status === "error") {
           result.newFailures += 1;
+          newFailureDetails.push({ workflowName, executionId: e.id });
           broadcastSSE("n8n:workflow-failed", {
             workflowName,
             executionId: e.id,
@@ -171,6 +179,40 @@ export async function runN8nExecutionScrape(): Promise<ScrapeResult> {
       const msg = err instanceof Error ? err.message : String(err);
       result.errors.push(`insert_failed: ${e.id}: ${msg}`);
     }
+  }
+
+  // 2b) Family-grade Discord alert for NEW n8n runtime failures. Without this,
+  //     a failed nightly/lifecycle workflow is only visible via the
+  //     `n8n:workflow-failed` SSE event — which nobody watches on vacation.
+  //     WARNING severity is batched + title-deduped by the notification service,
+  //     so a burst of failures in one cycle collapses to a single Discord post.
+  if (newFailureDetails.length > 0) {
+    const uniqueNames = Array.from(
+      new Set(newFailureDetails.map((f) => f.workflowName)),
+    );
+    const listed = uniqueNames.slice(0, 10).join(", ");
+    const overflow = uniqueNames.length > 10 ? ` (+${uniqueNames.length - 10} more)` : "";
+    const operatorBody =
+      `${newFailureDetails.length} n8n workflow execution(s) failed on Railway.\n` +
+      `Workflows: ${listed}${overflow}\n` +
+      `Example execution id: ${newFailureDetails[0].executionId}\n` +
+      `Source: n8n-execution-scraper cycle ${cycleId}. ` +
+      `Check the workflow's executions tab in the n8n editor for the failed node + error.`;
+    notify({
+      severity: "WARNING",
+      title: `n8n workflow failure${newFailureDetails.length > 1 ? "s" : ""}: ${uniqueNames[0]}`,
+      body: appendFamilyGradePostscript(
+        operatorBody,
+        "One of the bot's automated background jobs failed to finish.",
+        "This is usually self-correcting. If the same job keeps failing for more than a day, tell Tony which workflow name is listed above.",
+      ),
+      metadata: {
+        cycleId,
+        newFailures: result.newFailures,
+        workflows: uniqueNames,
+        executionIds: newFailureDetails.slice(0, 20).map((f) => f.executionId),
+      },
+    });
   }
 
   // 3) Audit trail — only when we wrote at least one row, to avoid filling
