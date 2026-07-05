@@ -68,9 +68,15 @@ land Gate 2 → cut baseline → build classifier → Gates 1 & 3.
      the ONLY conditions allowed to inform the deterministic pattern lists — and a **held-out test set (30%)**
      never seen during rule design. Report agreement on the **held-out 30% only**.
    - **Stratify** the held-out agreement into **rule-covered** vs **gemma-adjudicated (margin)** strata; report both.
-   - **PRE-REGISTERED floors (fixed before first run):** held-out overall **≥ 85%**; **margin stratum ≥ 60%
-     AND strictly > the majority-class baseline of that stratum** (must beat the ambiguity baseline, not just
-     inherit it). Below either floor → Gate 1 FAILS.
+   - **PRE-REGISTERED floors (fixed before first run):** held-out overall **≥ 85%**; margin stratum passes ONLY
+     if the **95% binomial CI LOWER BOUND on classifier agreement strictly exceeds the margin-stratum majority-class
+     baseline** (operator pin — option (ii), the stricter small-N handling; forces the beat to be demonstrable, not
+     lucky). Point-estimate ≥60% is reported but the CI-lower-bound test is the pass condition.
+   - **Baseline population (operator pin):** majority-class baseline computed on the **held-out margin stratum
+     ITSELF** (self-consistent with the gate's held-out scope), NOT the full-221 margin stratum.
+   - **Low-power outcome (operator pin):** if the margin stratum is so small the 95% CI cannot clear the baseline
+     even at 100% agreement, the gate reports **LOW_POWER and does NOT certify** — this is the correct outcome, not
+     a gate failure. Report exact margin-stratum N + CI alongside every number.
    - **Scoped claim:** report as "agreement on the held-out DRI-audited slice," NOT "classifier accuracy."
    - New test `src/server/lib/__tests__/gate-strength.test.ts`.
 
