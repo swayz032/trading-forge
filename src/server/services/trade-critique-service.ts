@@ -36,6 +36,12 @@ import { OllamaClient } from "./ollama-client.js";
 import { notifyWarning } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { logger } from "../lib/logger.js";
+// Wave 1 — institutional RAG grounding + faithfulness verification.
+// Both are behind default-OFF feature flags (CRITIQUE_RAG_ENABLED /
+// CRITIQUE_FAITHFULNESS_CHECK). When the flags are off, neither is invoked and
+// behavior is byte-identical to the pre-Wave-1 single-message critique call.
+import { retrieveCritiqueKnowledge } from "./critique-knowledge-retriever.js";
+import { checkCritiqueFaithfulness } from "./critique-faithfulness-check.js";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -549,8 +555,31 @@ async function _runCritiqueInternal(
   let usedProvider: "openai" | "ollama" = "openai";
   let usedModel = "gpt-5.4";
 
+  // Wave 1 — institutional RAG grounding (default OFF via CRITIQUE_RAG_ENABLED).
+  // When ON, retrieve a structured INSTITUTIONAL REFERENCE block and pass it as a
+  // SEPARATE grounding message BEFORE the raw trade JSON, so the trade data stays
+  // primary and the reference is context. On ANY retrieval error, fall back to the
+  // no-RAG path (never fail the critique). When OFF: referenceBlock stays null and
+  // the call is byte-identical to the pre-Wave-1 single-message behavior.
+  let referenceBlock: string | null = null;
+  if (process.env.CRITIQUE_RAG_ENABLED === "true") {
+    try {
+      referenceBlock = await retrieveCritiqueKnowledge(llmInput);
+    } catch (ragErr) {
+      logger.warn({ positionId, err: ragErr }, "trade_critique: RAG retrieval failed — using no-RAG path");
+      referenceBlock = null;
+    }
+  }
+
+  const cloudMessages = referenceBlock
+    ? [
+        { role: "user" as const, content: referenceBlock },
+        { role: "user" as const, content: userPrompt },
+      ]
+    : [{ role: "user" as const, content: userPrompt }];
+
   // Cloud attempt
-  rawJson = await callOpenAI("trade_critique", [{ role: "user", content: userPrompt }]);
+  rawJson = await callOpenAI("trade_critique", cloudMessages);
   if (rawJson) {
     usedProvider = "openai";
     usedModel = "gpt-5.4";
@@ -560,7 +589,14 @@ async function _runCritiqueInternal(
     const fallback = getFallback("trade_critique");
     const fallbackModel = fallback?.model ?? "gemma4:e4b-it-qat";
     const systemPrompt = loadSystemPrompt("trade_critique");
-    const fullPrompt = systemPrompt ? `${systemPrompt}\n\nUser input:\n${userPrompt}` : userPrompt;
+    // Byte-identical to legacy when referenceBlock is null; injects grounding
+    // before the user input only when RAG is enabled and retrieval succeeded.
+    let fullPrompt = systemPrompt ? `${systemPrompt}\n\nUser input:\n${userPrompt}` : userPrompt;
+    if (referenceBlock) {
+      fullPrompt = systemPrompt
+        ? `${systemPrompt}\n\n${referenceBlock}\n\nUser input:\n${userPrompt}`
+        : `${referenceBlock}\n\nUser input:\n${userPrompt}`;
+    }
     try {
       const ollama = new OllamaClient();
       const ollamaResp = await ollama.generate(fallbackModel, fullPrompt, undefined, true);
@@ -661,6 +697,28 @@ async function _runCritiqueInternal(
       );
     }
     return { status: "failed", positionId };
+  }
+
+  // ─── 6b. Faithfulness check (Wave 1 — default OFF via CRITIQUE_FAITHFULNESS_CHECK) ──
+  // Advisory-only: verifies each material attribution weight is supported by a
+  // present data field, and every parameter_hint.field is whitelisted. Attaches
+  // nothing to the DB (no schema change this wave — persistence is a follow-up);
+  // logs the result structured. Never blocks the critique.
+  if (process.env.CRITIQUE_FAITHFULNESS_CHECK === "true") {
+    try {
+      const faithfulness = checkCritiqueFaithfulness(parsed as Record<string, unknown>, llmInput);
+      logger.info(
+        {
+          positionId,
+          supported: faithfulness.supported,
+          flags: faithfulness.flags,
+          correlationId: correlationId ?? null,
+        },
+        "trade_critique: faithfulness check",
+      );
+    } catch (faithErr) {
+      logger.warn({ positionId, err: faithErr }, "trade_critique: faithfulness check errored (non-blocking)");
+    }
   }
 
   // ─── 7. Persist critique row (skipped in dry-run) ───────────────
