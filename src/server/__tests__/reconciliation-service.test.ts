@@ -217,6 +217,57 @@ describe("ReconciliationService — runDailyReconciliation", () => {
     expect(result.alertFired).toBe(false);
   });
 
+  // ── Test 1b (Deep-Scan #18b X-1, genuine-green coverage-gap closed 2026-07-05) ──
+  // The X-1 fix landed a writer for production_trades (broker-router.ts) — this test
+  // exercises the recon path the writer makes reachable: when the production_trades
+  // proxy source actually yields non-zero rows (hasVerifiableData=true) AND every
+  // comparison agrees (production_trades vs traderspost proxy vs tradovate proxy vs
+  // tradingview markers), the recon must report a genuine severity=green — not the
+  // false-green tautology the X-1 fix eliminated (all-zeros), but a real agreement
+  // over real (mocked) non-zero data. This closes the coverage gap the Test 1 comment
+  // above documented: "that path cannot be exercised through this proxy mock today;
+  // when the writers land, add a test that feeds real non-zero counts and asserts green."
+  it("returns severity=green with a genuine non-zero agreement across all sources (production_trades writer now populates real rows)", async () => {
+    const { db } = await import("../db/index.js");
+
+    // Every count-producing select() resolves to the SAME non-zero count (3) —
+    // production_trades, its traderspost proxy, and its tradovate proxy are all
+    // derived from the SAME shared query per the M-7 consolidation, so they agree
+    // by construction once the underlying table has real rows.
+    //
+    // NOTE: fetchProxyCountsFromProductionTrades()/fetchExpectedPnl() await
+    // `.where(...)` DIRECTLY (no `.limit()` call) — so `.where()` itself must be a
+    // real thenable resolving to the rows array, not just an object exposing a
+    // `.limit()` method (that shape only serves callers that chain `.limit()`).
+    const rows = [{ cnt: 3, total: "450" }];
+    vi.mocked(db.select).mockReturnValue({
+      from: vi.fn(() => ({
+        where: vi.fn(() =>
+          Object.assign(Promise.resolve(rows), {
+            limit: vi.fn(async () => rows),
+            orderBy: vi.fn(() => ({ limit: vi.fn(async () => []) })),
+          }),
+        ),
+      })),
+    } as unknown as ReturnType<typeof db.select>);
+
+    // TradingView marker count (5th source, via raw db.execute) must also agree
+    // with the traderspost proxy count (3) for a clean green — the shared mock's
+    // default `{ rows: [] }` shape would otherwise read as 0 and force a mismatch.
+    vi.mocked(db.execute).mockResolvedValueOnce(
+      [{ cnt: "3" }] as unknown as Awaited<ReturnType<typeof db.execute>>,
+    );
+
+    const result = await reconModule.runDailyReconciliation(new Date("2026-05-09"));
+
+    expect(result.productionTradesCount).toBe(3);
+    expect(result.traderspostLogCount).toBe(3);
+    expect(result.tradovateFillsCount).toBe(3);
+    expect(result.mismatchCount).toBe(0);
+    expect(result.severity).toBe("green");
+    expect(result.alertFired).toBe(false);
+  });
+
   // ── Test 2: production_trades.count != traderspost count ─────────────────
   it("logs mismatch when production_trades count differs from traderspost count", async () => {
     // This test validates the mismatch_details structure exists and alert fires

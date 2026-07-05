@@ -21,13 +21,14 @@
  */
 
 import { eq } from "drizzle-orm";
+import { createHash } from "node:crypto";
 import { db } from "../db/index.js";
-import { auditLog, brokerAccounts } from "../db/schema.js";
+import { auditLog, brokerAccounts, productionTrades, strategies } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { loadBrokerCredentials } from "../lib/credential-loader.js";
-import { submitWebhookOrder } from "../integrations/traderspost/client.js";
+import { submitWebhookOrder, buildDeterministicIdempotencyKey } from "../integrations/traderspost/client.js";
 import type { IdempotencyKeyInputs } from "../integrations/traderspost/client.js";
 import { buildWebhookPayload } from "../integrations/traderspost/webhook-builder.js";
 import type { WebhookSignal } from "../integrations/traderspost/webhook-builder.js";
@@ -412,6 +413,143 @@ async function writeAuditLog(
   } catch (auditErr) {
     // Audit failure must never block the caller — log and continue
     logger.error({ auditErr, accountId }, "broker-router: failed to write audit log row (non-blocking)");
+  }
+}
+
+// ─── X-1 option a (Deep-Scan #18b, 2026-07-05): production_trades writer ──────
+//
+// Prior to this fix, `production_trades` had NO writer anywhere in the codebase
+// (Phase 4C scaffolded the columns; nothing ever INSERTed a row). That left
+// reconciliation-service.ts's fetchProxyCountsFromProductionTrades() reading
+// zero rows forever — daily recon could only report yellow/UNVERIFIABLE, never
+// a confirmed-clean green. This writes one row per successful TradersPost order
+// submission so recon has real data to compare against.
+//
+// HARD SAFETY CONTRACT (this touches the live-money order path):
+//   - FAIL-SOFT: this function must NEVER throw. Called fire-and-forget (`void`)
+//     AFTER submitResult has already resolved, so a write failure — or even the
+//     write itself taking time — can never delay or block order execution.
+//   - IDEMPOTENT: keyed on traderspost_webhook_id = the SAME deterministic
+//     bar-scoped idempotency key TradersPost itself dedupes on (see
+//     buildDeterministicIdempotencyKey in traderspost/client.ts). A retry of the
+//     same bar/signal produces the same key; `onConflictDoNothing` against the
+//     partial unique index (migration 0194) makes a retry a silent no-op rather
+//     than a duplicate row.
+//   - ADDITIVE ONLY: does not read or alter anything routeOrder() uses to decide
+//     the order outcome — this fires strictly after the outcome is already final.
+//
+// strategy_version_hash is best-effort observability: a SHA-256 canonical-JSON
+// hash of the strategy's current `config` (mirrors the sorted-key pattern used by
+// firm-rules-version.ts / frozen-policy-contract.ts). Nothing reads this column
+// yet (Phase 4C had zero writers OR readers), so a degraded fallback on lookup
+// failure is safe — it never blocks or corrupts a downstream consumer.
+//
+// expected_pnl is intentionally left NULL: routeOrder()/WebhookSignal carries no
+// take-profit target, so a genuine expected-PnL figure cannot be computed at this
+// layer without fabricating one. Per CLAUDE.md, never fabricate a number to fill
+// a column — NULL is the honest value until a real TP target is threaded through.
+function sortedKeyReplacer(_key: string, value: unknown): unknown {
+  if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+    const sorted: Record<string, unknown> = {};
+    for (const k of Object.keys(value as Record<string, unknown>).sort()) {
+      sorted[k] = (value as Record<string, unknown>)[k];
+    }
+    return sorted;
+  }
+  return value;
+}
+
+async function computeStrategyVersionHashForRouting(strategyId: string): Promise<string> {
+  const fallback = `unavailable:${createHash("sha256").update(strategyId, "utf8").digest("hex")}`;
+  try {
+    const rows = await db
+      .select({ config: strategies.config })
+      .from(strategies)
+      .where(eq(strategies.id, strategyId))
+      .limit(1);
+    const config = rows[0]?.config;
+    if (config === undefined || config === null) return fallback;
+    const canonical = JSON.stringify(config, sortedKeyReplacer);
+    return createHash("sha256").update(canonical, "utf8").digest("hex");
+  } catch {
+    // Fail-soft: an unreadable strategy row must never block the writer.
+    return fallback;
+  }
+}
+
+// Exported (not just internal) so unit tests can exercise the writer directly
+// without needing to thread a full routeOrder() call through every upstream gate.
+export async function writeProductionTradeRow(params: {
+  accountId: string;
+  signal: WebhookSignal;
+  idempotencyKey: string;
+  correlationId?: string | null;
+}): Promise<void> {
+  const { accountId, signal, idempotencyKey, correlationId } = params;
+
+  try {
+    if (!signal.strategyId) {
+      // production_trades.strategy_id is NOT NULL (uuid). Without a strategy id
+      // there is nothing safe to key the row on — skip silently. This is an
+      // observability write, not a correctness-critical one; the order itself
+      // already routed successfully before this function was ever invoked.
+      logger.debug(
+        { accountId, correlationId },
+        "broker-router: production_trades write skipped — signal has no strategyId",
+      );
+      return;
+    }
+
+    const strategyVersionHash = await computeStrategyVersionHashForRouting(signal.strategyId);
+
+    // Canonical +1 (long) / -1 (short) / 0 (exit/flat) encoding.
+    const signalValue =
+      signal.action === "enter_long" ? 1 : signal.action === "enter_short" ? -1 : 0;
+
+    let barTimestamp: Date;
+    if (signal.barTimestamp) {
+      const parsed = new Date(signal.barTimestamp);
+      barTimestamp = Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+    } else {
+      barTimestamp = new Date();
+    }
+
+    await db
+      .insert(productionTrades)
+      .values({
+        strategyId: signal.strategyId,
+        strategyVersionHash,
+        barTimestamp,
+        signalValue,
+        traderspostWebhookId: idempotencyKey,
+        expectedPnl: null,
+        correlationId: correlationId ?? null,
+      })
+      .onConflictDoNothing({ target: productionTrades.traderspostWebhookId });
+  } catch (err) {
+    // Fail-soft: log + audit a warning, never throw. This must never be allowed
+    // to affect routeOrder()'s already-returned order outcome.
+    logger.warn(
+      { err, accountId, correlationId },
+      "broker-router: production_trades.write_failed (non-blocking, recon-observability only)",
+    );
+    db.insert(auditLog)
+      .values({
+        action: "broker_router.production_trades_write_failed",
+        entityType: "broker_account",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { accountId, ticker: signal.ticker, action: signal.action } as Record<string, unknown>,
+        result: { error: err instanceof Error ? err.message : String(err) } as Record<string, unknown>,
+        status: "warning",
+        correlationId: correlationId ?? null,
+      })
+      .catch((auditErr: unknown) => {
+        logger.error(
+          { err: auditErr },
+          "broker-router: production_trades_write_failed audit write also failed (non-blocking)",
+        );
+      });
   }
 }
 
@@ -1255,6 +1393,20 @@ export async function routeOrder(
 
     broadcastSSE(BROKER_ORDER_ROUTED_EVENT, { ...result, correlationId: correlationId ?? null });
     await writeAuditLog(accountId, signal, result, correlationId);
+
+    // ── X-1 option a (Deep-Scan #18b): production_trades writer ──────────────
+    // Fire-and-forget, SUCCESS path only. Fired after the broker call and the
+    // audit/SSE emission above are already complete — cannot delay or block the
+    // order. See writeProductionTradeRow() docstring for the fail-soft +
+    // idempotency contract.
+    if (submitResult.success) {
+      void writeProductionTradeRow({
+        accountId,
+        signal,
+        idempotencyKey: buildDeterministicIdempotencyKey(idempotencyInputs),
+        correlationId,
+      });
+    }
 
     // ── Pass 4 Track C / M11: per-call TradersPost rejection Discord + Prom ───
     // Fires AFTER audit+SSE so observability is preserved even if the
