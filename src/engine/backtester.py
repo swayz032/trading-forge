@@ -3891,6 +3891,13 @@ def run_backtest(
     # behavior (gate at entry evaluation time, not indicator computation time).
     # Empty list → no restriction (backward compatible).
     skipped_outside_window_count = 0
+    # deepscan16 Wave-1 Track2 HIGH E-10: count of signals dropped because their bar
+    # timestamp was malformed/None and could not be checked against the declared
+    # entry-window restriction. Distinct from skipped_outside_window_count (a
+    # successfully-checked bar that fell outside the window) so operators/
+    # accuracy-validator can tell "window enforced, bar excluded" apart from
+    # "window could NOT be enforced, bar dropped defensively".
+    bad_timestamp_entry_window_count = 0
     _entry_windows_raw = getattr(config, "allowed_entry_windows", None)
     if _entry_windows_raw:
         import datetime as _dt
@@ -3928,6 +3935,13 @@ def run_backtest(
                     continue
 
                 # Convert ts to UTC-aware datetime for window check
+                # deepscan16 Wave-1 Track2 HIGH E-10 fix: a corrupted/malformed/None
+                # ts_event previously fell through to "allow signal" (fail-OPEN) with
+                # no counter and no log — silently bypassing the strategy's declared
+                # trading-window restriction and inflating promotion metrics. Both
+                # unparseable-timestamp branches below now fail-CLOSED (drop the
+                # signal, same as an out-of-window bar) and increment a dedicated
+                # counter so the result dict / promotion layer can see it happened.
                 if isinstance(ts_val, str):
                     # ISO string — parse to datetime
                     ts_str = ts_val.replace("T", " ").replace("Z", "+00:00")
@@ -3936,20 +3950,22 @@ def run_backtest(
                         if bar_dt.tzinfo is None:
                             bar_dt = bar_dt.replace(tzinfo=_dt.timezone.utc)
                     except Exception:
-                        # Unparseable timestamp — allow signal (fail-open)
-                        _new_long.append(el)
+                        # Unparseable timestamp — fail-CLOSED (drop signal)
+                        bad_timestamp_entry_window_count += (1 if el else 0) + (1 if es else 0)
+                        _new_long.append(False)
                         if _new_short is not None:
-                            _new_short.append(es)
+                            _new_short.append(False)
                         continue
                 elif isinstance(ts_val, _dt.datetime):
                     bar_dt = ts_val
                     if bar_dt.tzinfo is None:
                         bar_dt = bar_dt.replace(tzinfo=_dt.timezone.utc)
                 else:
-                    # Unknown type — allow signal (fail-open)
-                    _new_long.append(el)
+                    # Unknown/None type — fail-CLOSED (drop signal)
+                    bad_timestamp_entry_window_count += (1 if el else 0) + (1 if es else 0)
+                    _new_long.append(False)
                     if _new_short is not None:
-                        _new_short.append(es)
+                        _new_short.append(False)
                     continue
 
                 in_any_window = is_bar_in_any_window(bar_dt, _entry_windows)
@@ -3972,6 +3988,16 @@ def run_backtest(
                 print(
                     f"W23H.3 entry windows: masked {skipped_outside_window_count} entry signals "
                     f"outside windows {_entry_windows_raw}",
+                    file=sys.stderr,
+                )
+            if bad_timestamp_entry_window_count > 0:
+                # deepscan16 Wave-1 Track2 HIGH E-10: dedicated log line (mirrors the
+                # masked-count log above) so a corrupted ts_event run is visible in
+                # stderr, not just in the result dict.
+                print(
+                    f"W23H.3 WARNING: {bad_timestamp_entry_window_count} entry signals dropped "
+                    f"(fail-closed) due to unparseable/None bar timestamps — entry-window "
+                    f"restriction could not be evaluated for these bars",
                     file=sys.stderr,
                 )
 
@@ -4535,12 +4561,22 @@ def run_backtest(
     # Blackout gate: parity with paper-signal-service.ts blackout_windows.
     # Cross-symbol DLL: parity with cross-symbol-pnl.ts evaluateCrossSymbolDll().
     # Both are fail-safe: any error is logged and the run continues without them.
+    # deepscan16 Wave-1 Track2 E-1: guards_failed/guards_failed_reason default to the
+    # clean (guards-ran) state. The E.3/E.4/E.5 try/except below (search "CRITICAL #1")
+    # flips these to True/<reason> on ANY exception so the result dict carries a
+    # machine-readable "guards did not run" signal instead of silently proceeding
+    # clean. guards_failed_audit_action names the row the TS backtest-service should
+    # write to audit_log — mirrors the pbo_audit_actions / cross_symbol_dll disclosure
+    # pattern already used in this module (Python has no direct DB access here).
     _dsl_guards_meta: dict = {
         "stop_ceiling_skips": 0,
         "time_stop_exits": 0,
         "dll_halt_blocks": 0,
         "blackout_skips": 0,
         "cross_symbol_dll_halts": 0,
+        "guards_failed": False,
+        "guards_failed_reason": None,
+        "guards_failed_audit_action": None,
     }
 
     _guard_ts_list_early = (
@@ -4770,8 +4806,18 @@ def run_backtest(
             short_exits_pd = pd.Series(_guard_exit_short, index=short_exits_pd.index)
 
     except Exception as _dsl_guard_err:
-        # Guards are fail-safe: if anything goes wrong, log and continue without them.
-        # The backtest still runs; it just won't have E.3/E.4/E.5 enforcement.
+        # deepscan16 Wave-1 Track2 CRITICAL E-1 fix: this catch-all previously logged
+        # one stderr line and silently proceeded CLEAN — an unguarded backtest (no ATR
+        # stop-ceiling / no 67% DLL halt / no 15:55 hard time-stop) could show great
+        # Sharpe/PF/DSR and sail through WFE/PBO/B14 to DEPLOY_READY with zero
+        # machine-readable trace that the guards never ran. Guards are still fail-safe
+        # (the backtest itself does not abort), but the result dict now carries an
+        # explicit "guards did not run" flag + reason + audit-action name (mirrors the
+        # cross_symbol_dll disclosure block above) so the promotion layer / an operator
+        # / accuracy-validator can treat this run as UNGUARDED rather than clean.
+        _dsl_guards_meta["guards_failed"] = True
+        _dsl_guards_meta["guards_failed_reason"] = repr(_dsl_guard_err)
+        _dsl_guards_meta["guards_failed_audit_action"] = "backtest.dsl_guards_failed"
         print(
             f"[DSL guards] ERROR — guards skipped (non-fatal): {_dsl_guard_err!r}",
             file=sys.stderr,
@@ -5586,6 +5632,13 @@ def run_backtest(
             "forge_score_version": _full_forge_result.get("forge_score_version", "unknown"),
             # W23H.3: count of entry signals masked by allowed_entry_windows (0 when no windows configured)
             "skipped_outside_window_count": skipped_outside_window_count,
+            # deepscan16 Wave-1 Track2 HIGH E-10: count of entry signals dropped
+            # (fail-closed) because their bar timestamp was malformed/None and could
+            # not be evaluated against allowed_entry_windows. Non-zero here means the
+            # entry-window restriction could NOT be fully enforced for some bars —
+            # distinct from skipped_outside_window_count (successfully-evaluated bars
+            # that fell outside the window).
+            "bad_timestamp_entry_window_count": bad_timestamp_entry_window_count,
             # HIGH #5 — Symmetric exit slippage audit (Wave 27.5 Pass C.1).
             # session_mult_avg: average session multiplier applied to entry/exit slips.
             # asymmetry_delta: difference between entry avg and exit avg — should be ~0
@@ -5625,6 +5678,14 @@ def run_backtest(
         # - liquidity_haircut_applied: True when depth-ratio haircut != 1.0 (Wave 24 Pass 2)
         # All counts are 0 when guards are not applicable (e.g. unit-test data
         # that has no 15:55 bar, or ATR always under ceiling).
+        # - guards_failed / guards_failed_reason / guards_failed_audit_action
+        #   (deepscan16 Wave-1 Track2 CRITICAL E-1): guards_failed=True means the
+        #   E.3/E.4/E.5 try/except above hit an exception and NONE of the guards ran
+        #   for this backtest — treat stop_ceiling_skips/time_stop_exits/dll_halt_blocks
+        #   as UNKNOWN, not zero. The promotion layer MUST treat guards_failed=True as
+        #   an invalid/unguarded run, not a clean pass. TS backtest-service.ts should
+        #   write guards_failed_audit_action ("backtest.dsl_guards_failed") to
+        #   audit_log when set (same disclosure pattern as cross_symbol_dll below).
         "dsl_guards": {
             **_dsl_guards_meta,
             "vol_scale_applied": _parity_metadata["vol_scale_applied"],
